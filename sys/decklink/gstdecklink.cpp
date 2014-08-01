@@ -128,11 +128,11 @@ static const GstDecklinkMode modes[] = {
   {bmdModeHD1080p30, 1920, 1080, 30, 1, false, HD},
 
   {bmdModeHD1080i50, 1920, 1080, 25, 1, true, HD},
-  {bmdModeHD1080i5994, 1920, 1080, 30000, 1001, true, HD},
-  {bmdModeHD1080i6000, 1920, 1080, 30, 1, true, HD},
+  {bmdModeHD1080i5994, 1920, 1080, 60000, 1001, true, HD},
+  {bmdModeHD1080i6000, 1920, 1080, 60, 1, true, HD},
 
   {bmdModeHD1080p50, 1920, 1080, 50, 1, false, HD},
-  {bmdModeHD1080p5994, 1920, 1080, 30000, 1001, false, HD},
+  {bmdModeHD1080p5994, 1920, 1080, 60000, 1001, false, HD},
   {bmdModeHD1080p6000, 1920, 1080, 60, 1, false, HD},
 
   {bmdModeHD720p50, 1280, 720, 50, 1, false, HD},
