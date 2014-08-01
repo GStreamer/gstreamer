@@ -533,9 +533,11 @@ gst_decklink_sink_videosink_event (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (pad, "event: %" GST_PTR_FORMAT, event);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:{
+      decklinksink->pixel_format = bmdFormat8BitYUV;
+      res = TRUE;
       /* FIXME: this makes no sense, template caps don't contain v210 */
 #if 0
-    case GST_EVENT_CAPS:{
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
@@ -547,9 +549,9 @@ gst_decklink_sink_videosink_event (GstPad * pad, GstObject * parent,
           decklinksink->pixel_format = bmdFormat8BitYUV;
         }
       }
+#endif
       break;
     }
-#endif
     case GST_EVENT_EOS:
       /* FIXME: EOS aggregation with audio pad looks wrong */
       decklinksink->video_eos = TRUE;
