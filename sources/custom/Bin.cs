@@ -22,5 +22,17 @@ namespace Gst {
 
 	partial class Bin {
 		public Bin () : this (null) {}
+
+		public void Add (params Element [] elements) {
+			foreach (var elem in elements) {
+				Add (elem);
+			}
+		}
+
+		public void Remove (params Element [] elements) {
+			foreach (var elem in elements) {
+				Remove (elem);
+			}
+		}
 	}
 }
