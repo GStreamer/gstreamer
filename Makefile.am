@@ -22,6 +22,14 @@ check-valgrind:
 check-torture:
 	@true
 
+if HAVE_GST_CHECK
+build-checks:
+	cd tests/check && make build-checks
+else
+build-checks:
+	true
+endif
+
 CRUFT_FILES = \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
