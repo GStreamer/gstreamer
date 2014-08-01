@@ -243,7 +243,9 @@ gst_check_teardown_element (GstElement * element)
  * @element: element to setup pad on
  * @tmpl: pad template
  *
- * Returns: (transfer full): a new pad
+ * Does the same as #gst_check_setup_src_pad_by_name with the <emphasis> name </emphasis> parameter equal to "sink".
+ *
+ * Returns: (transfer full): A new pad that can be used to inject data on @element
  */
 GstPad *
 gst_check_setup_src_pad (GstElement * element, GstStaticPadTemplate * tmpl)
@@ -253,11 +255,43 @@ gst_check_setup_src_pad (GstElement * element, GstStaticPadTemplate * tmpl)
 
 /**
  * gst_check_setup_src_pad_by_name:
- * @element: element to setup pad on
+ * @element: element to setup src pad on
  * @tmpl: pad template
- * @name: name
+ * @name: Name of the @element sink pad that will be linked to the src pad that will be setup
  *
- * Returns: (transfer full): a new pad
+ * Creates a new src pad (based on the given @tmpl) and links it to the given @element sink pad (the pad that matches the given @name).
+ * Before using the src pad to push data on @element you need to call #gst_check_setup_events on the created src pad.
+ *
+ * Example of how to push a buffer on @element:
+ *
+ * |[<!-- language="C" -->
+ * static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+ * GST_PAD_SINK,
+ * GST_PAD_ALWAYS,
+ * GST_STATIC_CAPS (YOUR_CAPS_TEMPLATE_STRING)
+ * );
+ * static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+ * GST_PAD_SRC,
+ * GST_PAD_ALWAYS,
+ * GST_STATIC_CAPS (YOUR_CAPS_TEMPLATE_STRING)
+ * );
+ *
+ * GstElement * element = gst_check_setup_element ("element");
+ * GstPad * mysrcpad = gst_check_setup_src_pad (element, &srctemplate);
+ * GstPad * mysinkpad = gst_check_setup_sink_pad (element, &sinktemplate);
+ *
+ * gst_pad_set_active (mysrcpad, TRUE);
+ * gst_pad_set_active (mysinkpad, TRUE);
+ * fail_unless (gst_element_set_state (element, GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS, "could not set to playing");
+ *
+ * GstCaps * caps = gst_caps_from_string (YOUR_DESIRED_SINK_CAPS);
+ * gst_check_setup_events (mysrcpad, element, caps, GST_FORMAT_TIME);
+ * gst_caps_unref (caps);
+ *
+ * fail_unless (gst_pad_push (mysrcpad, gst_buffer_new_and_alloc(2)) == GST_FLOW_OK);
+ * ]|
+ *
+ * Returns: (transfer full): A new pad that can be used to inject data on @element
  */
 GstPad *
 gst_check_setup_src_pad_by_name (GstElement * element,
