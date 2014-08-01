@@ -3452,6 +3452,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
       GST_DEBUG_OBJECT (playbin, "requesting new sink pad %d", combine->type);
       combine->sinkpad =
           gst_play_sink_request_pad (playbin->playsink, combine->type);
+      gst_object_ref (combine->sinkpad);
     } else if (combine->srcpad && combine->sinkpad) {
       GST_DEBUG_OBJECT (playbin, "refreshing new sink pad %d", combine->type);
       gst_play_sink_refresh_pad (playbin->playsink, combine->sinkpad,
@@ -3459,6 +3460,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
     } else if (combine->sinkpad && combine->srcpad == NULL) {
       GST_DEBUG_OBJECT (playbin, "releasing sink pad %d", combine->type);
       gst_play_sink_release_pad (playbin->playsink, combine->sinkpad);
+      gst_object_unref (combine->sinkpad);
       combine->sinkpad = NULL;
     }
     if (combine->sinkpad && combine->srcpad &&
@@ -3564,6 +3566,7 @@ shutdown:
           combine->sinkpad =
               gst_play_sink_request_pad (playbin->playsink,
               GST_PLAY_SINK_TYPE_FLUSHING);
+          gst_object_ref (combine->sinkpad);
           res = gst_pad_link (combine->srcpad, combine->sinkpad);
           GST_DEBUG_OBJECT (playbin, "linked flushing, result: %d", res);
         }
@@ -5279,6 +5282,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
         /* release back */
         GST_LOG_OBJECT (playbin, "release sink pad");
         gst_play_sink_release_pad (playbin->playsink, combine->sinkpad);
+        gst_object_unref (combine->sinkpad);
         combine->sinkpad = NULL;
       }
 
