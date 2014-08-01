@@ -73,8 +73,9 @@ AC_SUBST(GACUTIL_FLAGS)
 AC_SUBST(LIB_PREFIX)
 AC_SUBST(LIB_SUFFIX)
 
+GTK_SHARP_VERSION=2.99.3
 dnl Check for glib-sharp
-PKG_CHECK_MODULES(GLIB_SHARP, glib-sharp-3.0 >= 2.99.3)
+PKG_CHECK_MODULES(GLIB_SHARP, glib-sharp-3.0 >= $GTK_SHARP_VERSION)
 AC_SUBST(GLIB_SHARP_CFLAGS)
 AC_SUBST(GLIB_SHARP_LIBS)
 gtksharp_prefix=`pkg-config --variable=prefix gtk-sharp-3.0`
@@ -83,12 +84,17 @@ AC_SUBST(gtksharp_prefix)
 AC_SUBST(gapidir)
 
 dnl Check for gio-sharp
-PKG_CHECK_MODULES(GIO_SHARP, gio-sharp-3.0 >= 2.99.3)
+PKG_CHECK_MODULES(GIO_SHARP, gio-sharp-3.0 >= $GTK_SHARP_VERSION)
 AC_SUBST(GIO_SHARP_CFLAGS)
 AC_SUBST(GIO_SHARP_LIBS)
 
+dnl Check for gtk-sharp
+PKG_CHECK_MODULES(GTK_SHARP, gtk-sharp-3.0 >= $GTK_SHARP_VERSION)
+AC_SUBST(GTK_SHARP_CFLAGS)
+AC_SUBST(GTK_SHARP_LIBS)
+
 dnl Find GAPI
-PKG_CHECK_MODULES(GAPI, gapi-3.0 >= 2.99.3)
+PKG_CHECK_MODULES(GAPI, gapi-3.0 >= $GTK_SHARP_VERSION)
 
 dnl Check for gapi
 AC_PATH_PROG(GAPI_PARSER, gapi3-parser, no)
@@ -151,7 +157,7 @@ PKG_CHECK_MODULES(GST,
 		gstreamer-tag-1.0 >= $GSTREAMER_REQUIRED_VERSION
 )
 
-gstreamer_prefix=/usr
+gstreamer_prefix=`pkg-config --variable=prefix gtk-sharp-3.0`
 AC_SUBST(gstreamer_prefix)
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
@@ -164,6 +170,7 @@ AC_CONFIG_FILES([
 	Makefile
 	sources/Makefile
 	sources/glue/Makefile
+    samples/Makefile
 	sources/AssemblyInfo.cs
 	gstreamer-sharp-1.0.pc
 	doc/Makefile

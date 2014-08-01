@@ -28,7 +28,7 @@ namespace GstreamerSharp
 			Loop = new GLib.MainLoop();
  			
 			Application.Init(ref args);
-			element = Gst.Parse.ParseLaunch("playbin uri=http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/Sintel_Trailer1.1080p.DivX_Plus_HD.mkv");
+			element = Gst.Parse.Launch("playbin uri=http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/Sintel_Trailer1.1080p.DivX_Plus_HD.mkv");
 
 			element.Bus.AddSignalWatch();
 			element.Bus.Message += Handle;

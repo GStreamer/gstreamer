@@ -14,9 +14,10 @@ libtool
 ltmain.sh
 missing
 stamp-h
+compile
 
 # gedit temporary files
-*.*~
+*~
 
 # glue binaries/objects (FIXME: kill the glue, kthxbye)
 sources/glue/.deps/
@@ -31,9 +32,13 @@ sources/glue/generated.c
 doc/*
 sources/generated-stamp
 sources/gstreamer-sharp-api.xml
+sources/*.gir
+sources/AssemblyInfo.cs
+gstreamer-sharp-1.0.pc
 
 # our "bin" folder when using makefile build
-out/*
+out/gstreamer-sharp.dll
+*.exe
 
 # Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
 [Bb]in/

@@ -1,4 +1,4 @@
-SUBDIRS = sources sources/glue doc
+SUBDIRS = sources sources/glue samples doc
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-sharp-1.0.pc
