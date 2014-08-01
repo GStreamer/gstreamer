@@ -24,12 +24,7 @@ namespace GstreamerSharp
 			var msg = bus.TimedPopFiltered (Constants.CLOCK_TIME_NONE, MessageType.Eos | MessageType.Error);
 
 			// Free resources
-			if (msg != null)
-				msg.Dispose ();
-
-			bus.Dispose ();
 			pipeline.SetState (State.Null);
-			pipeline.Dispose ();
 		}
 	}
 }

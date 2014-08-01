@@ -28,7 +28,6 @@ namespace GstreamerSharp
 			// Build the pipeline
 			pipeline.Add (source, sink);
 			if (!source.Link (sink)) {
-				pipeline.Dispose ();
 				Console.WriteLine ("Elements could not be linked");
 				return;
 			}
@@ -40,7 +39,6 @@ namespace GstreamerSharp
 			var ret = pipeline.SetState(State.Playing);
 			if (ret == StateChangeReturn.Failure) {
 				Console.WriteLine ("Unable to set the pipeline to the playing state");
-				pipeline.Dispose ();
 				return;
 			}
 
@@ -66,12 +64,9 @@ namespace GstreamerSharp
 					Console.WriteLine ("Unexpected messag received");
 					break;
 				}
-				msg.Dispose ();
 			}
 
-			bus.Dispose ();
 			pipeline.SetState (State.Null);
-			pipeline.Dispose ();
 		}
 	}
 }
