@@ -37,7 +37,7 @@
  *   'x11', 'wayland', 'win32' or 'cocoa'.
  * - GST_GL_PLATFORM influences the OpenGL platform to use.  Common values are
  *   'egl', 'glx', 'wgl' or 'cgl'.
- * - GST_GL_API influences the the OpenGL API requested by the OpenGL platform.
+ * - GST_GL_API influences the OpenGL API requested by the OpenGL platform.
  *   Common values are 'opengl' and 'gles2'.
  *
  * <note>Certain window systems require a special function to be called to
