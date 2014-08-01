@@ -831,6 +831,9 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
   }
 
   /* default values */
+  tim->cpb_removal_delay = 0;
+  tim->dpb_output_delay = 0;
+  tim->pic_struct_present_flag = FALSE;
   memset (tim->clock_timestamp_flag, 0, 3);
 
   if (nalparser->last_sps->vui_parameters_present_flag) {
