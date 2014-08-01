@@ -317,6 +317,7 @@ libgstvaapi_drm_@GST_API_VERSION@_la_CFLAGS =	\
 
 libgstvaapi_drm_@GST_API_VERSION@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
+	$(GST_LIBS)				\
 	$(UDEV_LIBS)				\
 	$(DRM_LIBS)				\
 	$(LIBVA_DRM_LIBS)			\
@@ -355,6 +356,7 @@ libgstvaapi_x11_@GST_API_VERSION@_la_CFLAGS =	\
 
 libgstvaapi_x11_@GST_API_VERSION@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
+	$(GST_LIBS)				\
 	$(X11_LIBS)				\
 	$(XRANDR_LIBS)				\
 	$(XRENDER_LIBS)				\
@@ -392,11 +394,14 @@ libgstvaapi_glx_@GST_API_VERSION@_la_CFLAGS =	\
 
 libgstvaapi_glx_@GST_API_VERSION@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
+	$(GST_LIBS)				\
 	$(GST_BASE_LIBS)			\
 	$(GST_VIDEO_LIBS)			\
+	$(X11_LIBS)				\
 	$(GL_LIBS)				\
 	$(LIBVA_GLX_LIBS)			\
 	libgstvaapi-x11-$(GST_API_VERSION).la	\
+	libgstvaapi-$(GST_API_VERSION).la	\
 	$(DLOPEN_LIBS)				\
 	$(NULL)
 
@@ -431,6 +436,8 @@ libgstvaapi_wayland_@GST_API_VERSION@_la_CFLAGS = \
 
 libgstvaapi_wayland_@GST_API_VERSION@_la_LIBADD = \
 	$(GLIB_LIBS)				\
+	$(GST_LIBS)				\
+	$(GST_VIDEO_LIBS)			\
 	$(WAYLAND_LIBS)				\
 	$(LIBVA_WAYLAND_LIBS)			\
 	libgstvaapi-$(GST_API_VERSION).la	\

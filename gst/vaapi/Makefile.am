@@ -7,7 +7,8 @@ libgstvaapi_CFLAGS = \
 	-I$(top_builddir)/gst-libs	\
 	$(NULL)
 
-libgstvaapi_LIBS =
+libgstvaapi_LIBS = \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_API_VERSION).la
 
 if USE_DRM
 libgstvaapi_LIBS += \
@@ -16,6 +17,7 @@ endif
 
 if USE_X11
 libgstvaapi_LIBS += \
+	$(X11_LIBS) \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_API_VERSION).la
 endif
 
