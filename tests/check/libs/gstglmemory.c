@@ -54,53 +54,55 @@ GST_START_TEST (test_basic)
   GstMemory *mem, *mem2;
   GstGLMemory *gl_mem, *gl_mem2;
   GstAllocator *gl_allocator;
-  gint i;
-  static GstVideoGLTextureType formats[] = {
-    GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_GL_TEXTURE_TYPE_RGB,
-    GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA,
-    GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
+  gint i, j;
+  static GstVideoFormat formats[] = {
+    GST_VIDEO_FORMAT_RGBA, GST_VIDEO_FORMAT_RGB,
+    GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_I420
   };
 
+  gl_allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+  fail_if (gl_allocator == NULL);
+
+  /* test allocator creation */
+  ASSERT_WARNING (mem = gst_allocator_alloc (gl_allocator, 0, NULL);
+      );
+
   for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    gsize width = 320, height = 240, stride = 324;
+    GstVideoInfo v_info;
+    gsize width = 320, height = 240;
 
-    gl_allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
-    fail_if (gl_allocator == NULL);
+    gst_video_info_set_format (&v_info, formats[i], width, height);
 
-    /* test allocator creation */
-    ASSERT_WARNING (mem = gst_allocator_alloc (gl_allocator, 0, NULL););
-    mem = gst_gl_memory_alloc (context, formats[i], width, height, stride);
-    fail_if (mem == NULL);
-    gl_mem = (GstGLMemory *) mem;
+    for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&v_info); j++) {
+      mem = gst_gl_memory_alloc (context, &v_info, j);
+      fail_if (mem == NULL);
+      gl_mem = (GstGLMemory *) mem;
 
-    /* test init params */
-    fail_if (gl_mem->width != width);
-    fail_if (gl_mem->height != height);
-    fail_if (gl_mem->stride != stride);
-    fail_if (gl_mem->context != context);
-    fail_if (gl_mem->tex_id == 0);
+      /* test init params */
+      fail_if (gst_video_info_is_equal (&v_info, &gl_mem->info) == FALSE);
+      fail_if (gl_mem->context != context);
+      fail_if (gl_mem->tex_id == 0);
 
-    /* copy the memory */
-    mem2 = gst_memory_copy (mem, 0, -1);
-    fail_if (mem2 == NULL);
-    gl_mem2 = (GstGLMemory *) mem2;
+      /* copy the memory */
+      mem2 = gst_memory_copy (mem, 0, -1);
+      fail_if (mem2 == NULL);
+      gl_mem2 = (GstGLMemory *) mem2;
 
-    /* test params */
-    fail_if (gl_mem->tex_id == gl_mem2->tex_id);
-    fail_if (gl_mem->tex_type != gl_mem2->tex_type);
-    fail_if (gl_mem->width != gl_mem2->width);
-    fail_if (gl_mem->stride != gl_mem2->stride);
-    fail_if (gl_mem->context != gl_mem2->context);
+      /* test params */
+      fail_if (gst_video_info_is_equal (&gl_mem2->info,
+              &gl_mem->info) == FALSE);
+      fail_if (gl_mem->context != gl_mem2->context);
 
-    if (gst_gl_context_get_error ())
-      printf ("%s\n", gst_gl_context_get_error ());
-    fail_if (gst_gl_context_get_error () != NULL);
+      if (gst_gl_context_get_error ())
+        printf ("%s\n", gst_gl_context_get_error ());
+      fail_if (gst_gl_context_get_error () != NULL);
 
-    gst_memory_unref (mem);
-    gst_memory_unref (mem2);
-
-    gst_object_unref (gl_allocator);
+      gst_memory_unref (mem);
+      gst_memory_unref (mem2);
+    }
   }
+
+  gst_object_unref (gl_allocator);
 }
 
 GST_END_TEST;

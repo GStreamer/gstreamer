@@ -264,8 +264,7 @@ GST_START_TEST (test_upload_buffer)
 
   /* create GL buffer */
   buffer = gst_buffer_new ();
-  gl_mem = gst_gl_memory_wrapped (context, FORMAT, WIDTH, HEIGHT, WIDTH * 4,
-      rgba_data, NULL, NULL);
+  gl_mem = gst_gl_memory_wrapped (context, &in_info, 0, rgba_data, NULL, NULL);
   gst_buffer_append_memory (buffer, (GstMemory *) gl_mem);
 
   gst_gl_upload_set_format (upload, &in_info);
@@ -304,8 +303,7 @@ GST_START_TEST (test_upload_meta_producer)
 
   /* create GL buffer */
   buffer = gst_buffer_new ();
-  gl_mem = gst_gl_memory_wrapped (context, FORMAT, WIDTH, HEIGHT, WIDTH * 4,
-      rgba_data, NULL, NULL);
+  gl_mem = gst_gl_memory_wrapped (context, &in_info, 0, rgba_data, NULL, NULL);
   gst_buffer_append_memory (buffer, (GstMemory *) gl_mem);
 
   gst_gl_context_gen_texture (context, &tex_ids[0], GST_VIDEO_FORMAT_RGBA,
