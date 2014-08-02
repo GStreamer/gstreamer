@@ -144,6 +144,9 @@ struct _TSDemuxStream
   /* Whether the pad was added or not */
   gboolean active;
 
+  /* Whether this is a sparse stream (subtitles or metadata) */
+  gboolean sparse;
+
   /* TRUE if we are waiting for a valid timestamp */
   gboolean pending_ts;
 
@@ -1024,6 +1027,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
   GstPadTemplate *template = NULL;
   const GstMpegtsDescriptor *desc = NULL;
   GstPad *pad = NULL;
+  gboolean sparse = FALSE;
 
   gst_ts_demux_create_tags (stream);
 
@@ -1075,6 +1079,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         template = gst_static_pad_template_get (&subpicture_template);
         name = g_strdup_printf ("subpicture_%04x", bstream->pid);
         caps = gst_caps_new_empty_simple ("subpicture/x-pgs");
+        sparse = TRUE;
         break;
       case ST_BD_AUDIO_DTS_HD:
       case ST_BD_AUDIO_DTS_HD_MASTER_AUDIO:
@@ -1152,6 +1157,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         template = gst_static_pad_template_get (&private_template);
         name = g_strdup_printf ("private_%04x", bstream->pid);
         caps = gst_caps_new_empty_simple ("application/x-teletext");
+        sparse = TRUE;
         break;
       }
       desc =
@@ -1162,6 +1168,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         template = gst_static_pad_template_get (&private_template);
         name = g_strdup_printf ("private_%04x", bstream->pid);
         caps = gst_caps_new_empty_simple ("subpicture/x-dvb");
+        sparse = TRUE;
         break;
       }
 
@@ -1324,6 +1331,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       template = gst_static_pad_template_get (&subpicture_template);
       name = g_strdup_printf ("subpicture_%04x", bstream->pid);
       caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
+      sparse = TRUE;
       break;
     default:
       GST_WARNING ("Non-media stream (stream_type:0x%x). Not creating pad",
@@ -1359,6 +1367,9 @@ done:
     event = gst_event_new_stream_start (stream_id);
     if (demux->have_group_id)
       gst_event_set_group_id (event, demux->group_id);
+    if (sparse)
+      gst_event_set_stream_flags (event, GST_STREAM_FLAG_SPARSE);
+    stream->sparse = sparse;
 
     gst_pad_push_event (pad, event);
     g_free (stream_id);
@@ -1476,6 +1487,14 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
     gst_element_add_pad ((GstElement *) tsdemux, stream->pad);
     stream->active = TRUE;
     GST_DEBUG_OBJECT (stream->pad, "done adding pad");
+    /* force sending of pending sticky events which have been stored on the
+     * pad already and which otherwise would only be sent on the first buffer
+     * or serialized event (which means very late in case of subtitle streams),
+     * and playsink waits for stream-start or another serialized event */
+    if (stream->sparse) {
+      GST_DEBUG_OBJECT (stream->pad, "sparse stream, pushing GAP event");
+      gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
+    }
   } else {
     GST_WARNING_OBJECT (tsdemux,
         "stream %p (pid 0x%04x, type:0x%03x) has no pad", stream,
