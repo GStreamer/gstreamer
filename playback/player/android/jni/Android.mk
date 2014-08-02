@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := gstplayer
-LOCAL_SRC_FILES := player.c ../../lib/gstplayer.c
+LOCAL_SRC_FILES := player.c ../../lib/gst/player/gstplayer.c
 LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -llog -landroid
 include $(BUILD_SHARED_LIBRARY)

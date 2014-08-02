@@ -10,11 +10,11 @@ clean:
 SOURCES = \
 	  gst-play.c \
 	  gst-play-kb.c \
-	  ../lib/gstplayer.c
+	  ../lib/gst/player/gstplayer.c
 
 HEADERS = \
 	  gst-play-kb.h \
-	  ../lib/gstplayer.h
+	  ../lib/gst/player/gstplayer.h
 
 gst-play: $(SOURCES) $(HEADERS)
 	$(CC) -o $@ $(SOURCES) $(CFLAGS) $(LIBS) -I../lib

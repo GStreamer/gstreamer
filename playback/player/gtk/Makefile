@@ -9,10 +9,10 @@ clean:
 
 SOURCES = \
 	  gtk-play.c \
-	  ../lib/gstplayer.c
+	  ../lib/gst/player/gstplayer.c
 
 HEADERS = \
-	  ../lib/gstplayer.h
+	  ../lib/gst/player/gstplayer.h
 
 gtk-play: $(SOURCES) $(HEADERS)
 	$(CC) -o $@ $(SOURCES) $(CFLAGS) $(LIBS) -I../lib
