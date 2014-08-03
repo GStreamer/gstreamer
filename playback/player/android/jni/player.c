@@ -161,11 +161,10 @@ on_error (GstPlayer * unused, GError * err, Player * player)
   JNIEnv *env = get_jni_env ();
   jstring error_msg;
 
-  // FIXME
-  error_msg = err ? (*env)->NewStringUTF (env, err->message) : NULL;
+  error_msg =(*env)->NewStringUTF (env, err->message);
 
   (*env)->CallVoidMethod (env, player->java_player, on_error_method_id,
-      error_msg);
+      err->code, error_msg);
   if ((*env)->ExceptionCheck (env)) {
     (*env)->ExceptionDescribe (env);
     (*env)->ExceptionClear (env);
@@ -427,7 +426,7 @@ native_class_init (JNIEnv * env, jclass klass)
   on_seek_finished_method_id =
       (*env)->GetMethodID (env, klass, "onSeekFinished", "()V");
   on_error_method_id =
-      (*env)->GetMethodID (env, klass, "onError", "(Ljava/lang/String;)V");
+      (*env)->GetMethodID (env, klass, "onError", "(ILjava/lang/String;)V");
   on_video_dimensions_changed_method_id =
       (*env)->GetMethodID (env, klass, "onVideoDimensionsChanged", "(II)V");
 

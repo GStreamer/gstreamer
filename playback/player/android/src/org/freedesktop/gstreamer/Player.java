@@ -183,9 +183,14 @@ public class Player implements Closeable {
         }
     }
 
+    // Keep these in sync with gstplayer.h
+    private static final Error[] errorMap = {Error.FAILED};
+    public enum Error {
+        FAILED
+    }
+
     public static interface ErrorListener {
-        // FIXME: enums
-        abstract void error(Player player, String errorMessage);
+        abstract void error(Player player, Error error, String errorMessage);
     }
 
     private ErrorListener errorListener;
@@ -193,9 +198,10 @@ public class Player implements Closeable {
         errorListener = listener;
     }
 
-    private void onError(String errorMessage) {
+    private void onError(int errorCode, String errorMessage) {
         if (errorListener != null) {
-            errorListener.error(this, errorMessage);
+            Error error = errorMap[errorCode];
+            errorListener.error(this, error, errorMessage);
         }
     }
 
