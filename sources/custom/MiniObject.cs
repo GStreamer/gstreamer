@@ -41,5 +41,14 @@ namespace Gst {
 		public static bool Take(ref Gst.MiniObject olddata, Gst.MiniObject newdata) {
 			return gst_mini_object_take(olddata.Handle, newdata == null ? IntPtr.Zero : newdata.Handle);
 		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_mini_object_make_writable(IntPtr mini_object);
+
+		public void MakeWritable() {
+			Console.WriteLine (Handle);
+			Raw = gst_mini_object_make_writable (Raw);
+			Console.WriteLine (Handle);
+		}
 	}
 }
