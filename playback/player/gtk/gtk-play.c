@@ -14,7 +14,7 @@
 
 #include <gtk/gtk.h>
 
-#include <gst/player/gstplayer.h>
+#include <gst/player/player.h>
 
 typedef struct
 {

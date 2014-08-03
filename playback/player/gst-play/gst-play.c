@@ -29,7 +29,7 @@
 #include <math.h>
 
 #include "gst-play-kb.h"
-#include <gst/player/gstplayer.h>
+#include <gst/player/player.h>
 
 #define VOLUME_STEPS 20
 
