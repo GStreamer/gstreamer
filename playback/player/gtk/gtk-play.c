@@ -154,7 +154,10 @@ static void
 video_dimensions_changed_cb (GstPlayer * unused, gint width, gint height,
     GtkPlay * play)
 {
-  gtk_widget_show (play->video_area);
+  if (width > 0 && height > 0)
+    gtk_widget_show (play->video_area);
+  else
+    gtk_widget_hide (play->video_area);
 }
 
 int
