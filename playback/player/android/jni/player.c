@@ -193,7 +193,7 @@ native_new (JNIEnv * env, jobject thiz)
 {
   Player *player = g_slice_new0 (Player);
 
-  player->player = gst_player_new (FALSE);
+  player->player = gst_player_new ();
   SET_CUSTOM_DATA (env, thiz, native_player_field_id, player);
   player->java_player = (*env)->NewGlobalRef (env, thiz);
 

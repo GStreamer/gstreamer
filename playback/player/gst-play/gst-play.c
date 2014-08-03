@@ -114,8 +114,9 @@ play_new (gchar ** uris, gdouble initial_volume)
   play->num_uris = g_strv_length (uris);
   play->cur_idx = -1;
 
-  play->player = gst_player_new (TRUE);
+  play->player = gst_player_new ();
 
+  g_object_set (play->player, "dispatch-to-main-context", TRUE, NULL);
   g_signal_connect (play->player, "position-updated",
       G_CALLBACK (position_updated_cb), play);
   g_signal_connect (play->player, "end-of-stream",

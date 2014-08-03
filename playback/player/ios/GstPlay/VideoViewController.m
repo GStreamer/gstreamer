@@ -63,7 +63,7 @@
     media_width = 320;
     media_height = 240;
 
-    player = gst_player_new(FALSE);
+    player = gst_player_new();
     g_object_set (player, "window-handle", video_view, NULL);
     g_object_set (player, "uri", [uri UTF8String], NULL);
     

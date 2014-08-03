@@ -191,7 +191,9 @@ main (gint argc, gchar ** argv)
     return 1;
   }
 
-  play.player = gst_player_new (TRUE);
+  play.player = gst_player_new ();
+
+  g_object_set (play.player, "dispatch-to-main-context", TRUE, NULL);
 
   if (!gst_uri_is_valid (play.uri)) {
     gchar *uri = gst_filename_to_uri (play.uri, NULL);
