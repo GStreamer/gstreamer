@@ -4457,6 +4457,7 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     gst_rtspsrc_activate_streams (src);
     src->need_activate = FALSE;
   }
+
   if ((event = src->start_segment) != NULL) {
     src->start_segment = NULL;
     gst_rtspsrc_push_event (src, event);
@@ -7324,7 +7325,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
       /* store the newsegment event so it can be sent from the streaming thread. */
       if (src->start_segment)
         gst_event_unref (src->start_segment);
-      src->start_segment = gst_event_new_segment (&src->segment);
+      src->start_segment = gst_event_new_segment (segment);
     }
 
     if (segment->rate != 1.0) {
