@@ -317,8 +317,7 @@ namespace GstreamerSharp
 			}
 
 			// Set the URI to play.
-			//Playbin ["uri"] = "http://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4";
-			Playbin ["uri"] = "file:///home/stephan/Downloads/sintel_trailer-1080p.mp4";
+			Playbin ["uri"] = "http://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4";
 
 			// Connect to interesting signals in playbin
 			Playbin.Connect ("video-tags-changed", HandleTags);
