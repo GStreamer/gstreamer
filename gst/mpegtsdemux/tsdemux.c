@@ -1965,10 +1965,13 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
     }
   } else if (demux->segment.start < firstts) {
     /* Take into account the offset to the first buffer timestamp */
-    if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))
-      demux->segment.stop += firstts - demux->segment.start;
-    demux->segment.position = firstts;
-    demux->segment.start = firstts;
+    if (demux->segment.rate > 0) {
+      demux->segment.start = firstts;
+
+      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop) )
+        demux->segment.stop += firstts - demux->segment.start;
+      demux->segment.position = firstts;
+    }
   }
 
   if (!demux->segment_event) {
