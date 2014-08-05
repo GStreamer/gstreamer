@@ -2730,3 +2730,81 @@ gst_rtsp_stream_is_blocking (GstRTSPStream * stream)
 
   return result;
 }
+
+/**
+ * gst_rtsp_stream_query_position:
+ * @stream: a #GstRTSPStream
+ *
+ * Query the position of the stream in %GST_FORMAT_TIME. This only considers
+ * the RTP parts of the pipeline and not the RTCP parts.
+ *
+ * Returns: %TRUE if the position could be queried
+ */
+gboolean
+gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
+{
+  GstRTSPStreamPrivate *priv;
+  GstElement *sink;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((sink = priv->udpsink[0]))
+    gst_object_ref (sink);
+  g_mutex_unlock (&priv->lock);
+
+  if (!sink)
+    return FALSE;
+
+  ret = gst_element_query_position (sink, GST_FORMAT_TIME, position);
+  gst_object_unref (sink);
+
+  return ret;
+}
+
+/**
+ * gst_rtsp_stream_query_stop:
+ * @stream: a #GstRTSPStream
+ *
+ * Query the stop of the stream in %GST_FORMAT_TIME. This only considers
+ * the RTP parts of the pipeline and not the RTCP parts.
+ *
+ * Returns: %TRUE if the stop could be queried
+ */
+gboolean
+gst_rtsp_stream_query_stop (GstRTSPStream * stream, gint64 * stop)
+{
+  GstRTSPStreamPrivate *priv;
+  GstElement *sink;
+  GstQuery *query;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((sink = priv->udpsink[0]))
+    gst_object_ref (sink);
+  g_mutex_unlock (&priv->lock);
+
+  if (!sink)
+    return FALSE;
+
+  query = gst_query_new_segment (GST_FORMAT_TIME);
+  if ((ret = gst_element_query (sink, query))) {
+    GstFormat format;
+
+    gst_query_parse_segment (query, NULL, &format, NULL, stop);
+    if (format != GST_FORMAT_TIME)
+      *stop = -1;
+  }
+  gst_query_unref (query);
+  gst_object_unref (sink);
+
+  return ret;
+
+}

@@ -452,28 +452,74 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
   }
 }
 
+typedef struct
+{
+  gint64 position;
+  gboolean ret;
+} DoQueryPositionData;
+
+static void
+do_query_position (GstRTSPStream * stream, DoQueryPositionData * data)
+{
+  gint64 tmp;
+
+  if (gst_rtsp_stream_query_position (stream, &tmp)) {
+    data->position = MAX (data->position, tmp);
+    data->ret = TRUE;
+  }
+}
+
 static gboolean
 default_query_position (GstRTSPMedia * media, gint64 * position)
 {
-  return gst_element_query_position (media->priv->pipeline, GST_FORMAT_TIME,
-      position);
+  GstRTSPMediaPrivate *priv;
+  DoQueryPositionData data;
+
+  priv = media->priv;
+
+  data.position = -1;
+  data.ret = FALSE;
+
+  g_ptr_array_foreach (priv->streams, (GFunc) do_query_position, &data);
+
+  *position = data.position;
+
+  return data.ret;
+}
+
+typedef struct
+{
+  gint64 stop;
+  gboolean ret;
+} DoQueryStopData;
+
+static void
+do_query_stop (GstRTSPStream * stream, DoQueryStopData * data)
+{
+  gint64 tmp;
+
+  if (gst_rtsp_stream_query_stop (stream, &tmp)) {
+    data->stop = MAX (data->stop, tmp);
+    data->ret = TRUE;
+  }
 }
 
 static gboolean
 default_query_stop (GstRTSPMedia * media, gint64 * stop)
 {
-  GstQuery *query;
-  gboolean res;
+  GstRTSPMediaPrivate *priv;
+  DoQueryStopData data;
 
-  query = gst_query_new_segment (GST_FORMAT_TIME);
-  if ((res = gst_element_query (media->priv->pipeline, query))) {
-    GstFormat format;
-    gst_query_parse_segment (query, NULL, &format, NULL, stop);
-    if (format != GST_FORMAT_TIME)
-      *stop = -1;
-  }
-  gst_query_unref (query);
-  return res;
+  priv = media->priv;
+
+  data.stop = -1;
+  data.ret = FALSE;
+
+  g_ptr_array_foreach (priv->streams, (GFunc) do_query_stop, &data);
+
+  *stop = data.stop;
+
+  return data.ret;
 }
 
 static GstElement *
@@ -491,7 +537,7 @@ static void
 collect_media_stats (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
-  gint64 position, stop;
+  gint64 position = 0, stop = -1;
 
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED &&
       priv->status != GST_RTSP_MEDIA_STATUS_PREPARING)
