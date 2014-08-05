@@ -560,20 +560,18 @@ validate_buffer (GstSrtpDec * filter, GstBuffer * buf, guint32 * ssrc,
     gboolean * is_rtcp)
 {
   GstSrtpDecSsrcStream *stream = NULL;
+  GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
 
-  if (!(*is_rtcp)) {
-    GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
+  if (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf)) {
+    if (gst_rtp_buffer_get_payload_type (&rtpbuf) < 64
+        || gst_rtp_buffer_get_payload_type (&rtpbuf) > 80) {
+      *ssrc = gst_rtp_buffer_get_ssrc (&rtpbuf);
 
-    if (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf)) {
-      if (gst_rtp_buffer_get_payload_type (&rtpbuf) < 64
-          || gst_rtp_buffer_get_payload_type (&rtpbuf) > 80) {
-        *ssrc = gst_rtp_buffer_get_ssrc (&rtpbuf);
-
-        gst_rtp_buffer_unmap (&rtpbuf);
-        goto have_ssrc;
-      }
       gst_rtp_buffer_unmap (&rtpbuf);
+      *is_rtcp = FALSE;
+      goto have_ssrc;
     }
+    gst_rtp_buffer_unmap (&rtpbuf);
   }
 
   if (rtcp_buffer_get_ssrc (buf, ssrc)) {
