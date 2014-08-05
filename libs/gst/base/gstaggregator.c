@@ -707,6 +707,7 @@ _sink_event (GstAggregator * self, GstAggregatorPad * aggpad, GstEvent * event)
     {
       PAD_LOCK_EVENT (aggpad);
       gst_event_copy_segment (event, &aggpad->segment);
+      self->priv->seqnum = gst_event_get_seqnum (event);
       PAD_UNLOCK_EVENT (aggpad);
       goto eat;
     }
@@ -1068,12 +1069,8 @@ _src_event (GstAggregator * self, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      gint old_seqnum = self->priv->seqnum;
-      self->priv->seqnum = gst_event_get_seqnum (event);
       gst_event_ref (event);
       res = _do_seek (self, event);
-      if (!res)
-        self->priv->seqnum = old_seqnum;
       gst_event_unref (event);
       event = NULL;
       goto done;
