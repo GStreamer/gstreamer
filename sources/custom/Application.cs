@@ -21,6 +21,17 @@ namespace Gst {
 
 	partial class Application 
 	{
+		static Application () {
+			GLib.GType.Register (List.GType, typeof(List));
+			GLib.GType.Register (Fraction.GType, typeof(Fraction));
+			GLib.GType.Register (DoubleRange.GType, typeof(DoubleRange));
+			GLib.GType.Register (IntRange.GType, typeof(IntRange));
+			GLib.GType.Register (FractionRange.GType, typeof(FractionRange));
+			GLib.GType.Register (DateTime.GType, typeof(DateTime));
+			GLib.GType.Register (Gst.Array.GType, typeof(Gst.Array));
+
+		}
+
 		public static void Init() {
 			gst_init (0, null);
 		}
