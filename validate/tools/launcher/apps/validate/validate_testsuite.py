@@ -99,13 +99,19 @@ def register_default_encoding_formats(self):
 
 def register_default_blacklist(self):
     self.set_default_blacklist([
+        # hls known issues
         ("validate.hls.playback.fast_forward.*",
          "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
         ("validate.hls.playback.seek_with_stop.*",
          "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
         ("validate.hls.playback.reverse_playback.*",
          "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
-        ("validate.hls.*scrub_forward_seeking.*", "This is not stable enough for now."),
+        ("validate.hls.*scrub_forward_seeking.*",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=606382"),
+        ("validate.hls.*seek_backward.*",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=606382"),
+        ("validate.hls.*seek_forward.*",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=606382"),
 
         # Matroska/WEBM known issues:
         ("validate.*.reverse_playback.*webm$",

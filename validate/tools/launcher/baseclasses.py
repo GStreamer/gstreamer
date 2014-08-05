@@ -656,8 +656,8 @@ class TestsManager(Loggable):
             return False
 
         if test.duration > 0 and int(self.options.long_limit) < int(test.duration):
-            self.info("Not activating test as it duration (%d) is superior"
-                      " than the long limit (%d)" % (test.duration,
+            self.info("Not activating %s as its duration (%d) is superior"
+                      " than the long limit (%d)" % (test, test.duration,
                                                      int(self.options.long_limit)))
             return False
 
