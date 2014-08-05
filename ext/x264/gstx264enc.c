@@ -1958,7 +1958,7 @@ gst_x264_enc_handle_frame (GstVideoEncoder * video_enc,
       gst_x264_enc_gst_to_x264_video_format (info->finfo->format, &nplanes);
   pic_in.img.i_plane = nplanes;
   for (i = 0; i < nplanes; i++) {
-    pic_in.img.plane[i] = GST_VIDEO_FRAME_PLANE_DATA (&fdata->vframe, i);
+    pic_in.img.plane[i] = GST_VIDEO_FRAME_COMP_DATA (&fdata->vframe, i);
     pic_in.img.i_stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (&fdata->vframe, i);
   }
 
