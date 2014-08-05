@@ -118,7 +118,6 @@ static void area_realize_cb(GtkWidget* widget, gpointer data)
 
     //avoid flickering when resizing or obscuring the main window
     gtk_widget_set_app_paintable(widget, TRUE);
-    gtk_widget_set_double_buffered(widget, FALSE);
 }
 
 
