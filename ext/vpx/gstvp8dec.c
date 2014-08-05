@@ -318,8 +318,16 @@ gst_vp8_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     vpx_codec_destroy (&gst_vp8_dec->decoder);
   gst_vp8_dec->decoder_inited = FALSE;
 
-  if (gst_vp8_dec->input_state)
+  if (gst_vp8_dec->output_state) {
+    gst_video_codec_state_unref (gst_vp8_dec->output_state);
+    gst_vp8_dec->output_state = NULL;
+  }
+
+  if (gst_vp8_dec->input_state) {
     gst_video_codec_state_unref (gst_vp8_dec->input_state);
+    gst_vp8_dec->input_state = NULL;
+  }
+
   gst_vp8_dec->input_state = gst_video_codec_state_ref (state);
 
   return TRUE;
