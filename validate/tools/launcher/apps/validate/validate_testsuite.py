@@ -124,9 +124,14 @@ def register_default_blacklist(self):
         # MPEG TS known issues:
         ('(?i)validate.*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
          "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
+        ('validate.file.transcode.to_vorbis_and_vp8_in_webm.GH1_00094_1920x1280_MTS',
+         'Got error: Internal data stream error. -- Debug message: mpegtsbase.c(1371):'
+         'mpegts_base_loop (): ...: stream stopped, reason not-negotiated'),
 
         # HTTP known issues:
         ("validate.http.*scrub_forward_seeking.*", "This is not stable enough for now."),
+        ("validate.http.playback.change_state_intensive.raw_video_mov",
+         "This is not stable enough for now. (flow return from pad push doesn't match expected value)"),
 
         # MXF known issues"
         (".*reverse_playback.*mxf", "Reverse playback is not handled in MXF"),
