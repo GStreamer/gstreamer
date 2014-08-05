@@ -395,11 +395,13 @@ gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
       profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
       /* combine into output caps */
       res = gst_rtp_base_payload_set_outcaps (basepayload,
+          "packetization-mode", G_TYPE_STRING, "1",
           "profile-level-id", G_TYPE_STRING, profile,
           "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
       g_free (profile);
     } else {
       res = gst_rtp_base_payload_set_outcaps (basepayload,
+          "packetization-mode", G_TYPE_STRING, "1",
           "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
     }
 
