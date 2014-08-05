@@ -168,21 +168,6 @@ public class Player implements Closeable {
         }
     }
 
-    public static interface SeekFinishedListener {
-        abstract void seekFinished(Player player);
-    }
-
-    private SeekFinishedListener seekFinishedListener;
-    public void setSeekFinishedListener(SeekFinishedListener listener) {
-        seekFinishedListener = listener;
-    }
-
-    private void onSeekFinished() {
-        if (seekFinishedListener != null) {
-            seekFinishedListener.seekFinished(this);
-        }
-    }
-
     // Keep these in sync with gstplayer.h
     private static final Error[] errorMap = {Error.FAILED};
     public enum Error {

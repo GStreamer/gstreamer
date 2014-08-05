@@ -56,7 +56,6 @@ static jfieldID native_player_field_id;
 static jmethodID on_position_updated_method_id;
 static jmethodID on_duration_changed_method_id;
 static jmethodID on_end_of_stream_method_id;
-static jmethodID on_seek_finished_method_id;
 static jmethodID on_error_method_id;
 static jmethodID on_video_dimensions_changed_method_id;
 
@@ -144,18 +143,6 @@ on_end_of_stream (GstPlayer * unused, Player * player)
 }
 
 static void
-on_seek_finished (GstPlayer * unused, Player * player)
-{
-  JNIEnv *env = get_jni_env ();
-
-  (*env)->CallVoidMethod (env, player->java_player, on_seek_finished_method_id);
-  if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionDescribe (env);
-    (*env)->ExceptionClear (env);
-  }
-}
-
-static void
 on_error (GstPlayer * unused, GError * err, Player * player)
 {
   JNIEnv *env = get_jni_env ();
@@ -202,8 +189,6 @@ native_new (JNIEnv * env, jobject thiz)
       G_CALLBACK (on_duration_changed), player);
   g_signal_connect (player->player, "end-of-stream",
       G_CALLBACK (on_end_of_stream), player);
-  g_signal_connect (player->player, "seek-finished",
-      G_CALLBACK (on_seek_finished), player);
   g_signal_connect (player->player, "error", G_CALLBACK (on_error), player);
   g_signal_connect (player->player, "video-dimensions-changed",
       G_CALLBACK (on_video_dimensions_changed), player);
@@ -423,8 +408,6 @@ native_class_init (JNIEnv * env, jclass klass)
       (*env)->GetMethodID (env, klass, "onDurationChanged", "(J)V");
   on_end_of_stream_method_id =
       (*env)->GetMethodID (env, klass, "onEndOfStream", "()V");
-  on_seek_finished_method_id =
-      (*env)->GetMethodID (env, klass, "onSeekFinished", "()V");
   on_error_method_id =
       (*env)->GetMethodID (env, klass, "onError", "(ILjava/lang/String;)V");
   on_video_dimensions_changed_method_id =
@@ -432,7 +415,7 @@ native_class_init (JNIEnv * env, jclass klass)
 
   if (!native_player_field_id ||
       !on_position_updated_method_id || !on_duration_changed_method_id ||
-      !on_end_of_stream_method_id || !on_seek_finished_method_id ||
+      !on_end_of_stream_method_id ||
       !on_error_method_id || !on_video_dimensions_changed_method_id) {
     static const gchar *message =
         "The calling class does not implement all necessary interface methods";
