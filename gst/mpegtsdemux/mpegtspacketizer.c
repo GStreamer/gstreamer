@@ -1578,8 +1578,9 @@ _reevaluate_group_pcr_offset (MpegTSPCR * pcrtable, PCROffsetGroup * group)
             gst_util_uint64_scale (PCR_SECOND,
             current->pending[current->last].offset,
             current->pending[current->last].pcr);
-        GST_DEBUG ("Previous group bitrate (%u / %" GST_TIME_FORMAT ") : %"
-            G_GUINT64_FORMAT, current->pending[current->last].offset,
+        GST_DEBUG ("Previous group bitrate (%" G_GUINT64_FORMAT " / %"
+            GST_TIME_FORMAT ") : %" G_GUINT64_FORMAT,
+            current->pending[current->last].offset,
             GST_TIME_ARGS (PCRTIME_TO_GSTTIME (current->pending[current->
                         last].pcr)), prevbr);
       } else if (prev->values[prev->last_value].offset) {
@@ -1590,8 +1591,9 @@ _reevaluate_group_pcr_offset (MpegTSPCR * pcrtable, PCROffsetGroup * group)
             gst_util_uint64_scale (PCR_SECOND,
             prev->values[prev->last_value].offset,
             prev->values[prev->last_value].pcr);
-        GST_DEBUG ("Previous group bitrate (%u / %" GST_TIME_FORMAT ") : %"
-            G_GUINT64_FORMAT, prev->values[prev->last_value].offset,
+        GST_DEBUG ("Previous group bitrate (%" G_GUINT64_FORMAT " / %"
+            GST_TIME_FORMAT ") : %" G_GUINT64_FORMAT,
+            prev->values[prev->last_value].offset,
             GST_TIME_ARGS (PCRTIME_TO_GSTTIME (prev->values[prev->
                         last_value].pcr)), prevbr);
       } else {
@@ -1838,7 +1840,7 @@ _append_group_values (PCROffsetGroup * group, PCROffset pcroffset)
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->first_pcr)),
       group->first_offset,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->pcr_offset)));
-  GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%u",
+  GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%" G_GUINT64_FORMAT,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (pcroffset.pcr)), pcroffset.offset);
 }
 
@@ -1900,7 +1902,7 @@ record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
           GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->first_pcr)),
           group->first_offset,
           GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->pcr_offset)));
-      GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%u",
+      GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%" G_GUINT64_FORMAT,
           GST_TIME_ARGS (PCRTIME_TO_GSTTIME (group->values[group->
                       last_value].pcr)),
           group->values[group->last_value].offset);
@@ -1940,7 +1942,7 @@ record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
   GST_DEBUG ("First PCR:%" GST_TIME_FORMAT " offset:%" G_GUINT64_FORMAT,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (current->first_pcr)),
       current->first_offset);
-  GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%u",
+  GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%" G_GUINT64_FORMAT,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (current->pending[current->last].pcr)),
       current->pending[current->last].offset);
   GST_DEBUG ("To add (corrected) PCR:%" GST_TIME_FORMAT " offset:%"
@@ -1991,7 +1993,7 @@ record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
   GST_DEBUG ("First PCR:%" GST_TIME_FORMAT " offset:%" G_GUINT64_FORMAT,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (current->first_pcr)),
       current->first_offset);
-  GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%u",
+  GST_DEBUG ("Last PCR: +%" GST_TIME_FORMAT " offset: +%" G_GUINT64_FORMAT,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (current->pending[current->last].pcr)),
       current->pending[current->last].offset);
 

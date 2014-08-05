@@ -99,10 +99,10 @@ typedef struct
 typedef struct _PCROffset
 {
   /* PCR value (units: 1/27MHz) */
-  guint32 pcr;
+  guint64 pcr;
 
   /* The offset (units: bytes) */
-  guint32 offset;
+  guint64 offset;
 } PCROffset;
 
 /* Flags used on groups */
