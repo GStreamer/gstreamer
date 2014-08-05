@@ -529,6 +529,8 @@ _add_seek_gsource (GnlComposition * comp, GstEvent * event)
   seekd->comp = comp;
   seekd->event = event;
 
+  comp->priv->next_eos_seqnum = 0;
+  comp->priv->real_eos_seqnum = 0;
   _add_gsource (comp, (GSourceFunc) _seek_pipeline_func, seekd,
       (GDestroyNotify) _free_seek_data, G_PRIORITY_DEFAULT);
 }
@@ -1322,6 +1324,7 @@ seek_handling (GnlComposition * comp, gint32 seqnum,
     gst_event_set_seqnum (toplevel_seek, seqnum);
     _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
 
+    _remove_all_update_sources (comp);
     _seek_current_stack (comp, toplevel_seek,
         _have_to_flush_downstream (update_stack_reason));
     update_operations_base_time (comp, !(comp->priv->segment->rate >= 0.0));
@@ -2777,7 +2780,7 @@ update_pipeline (GnlComposition * comp, GstClockTime currenttime, gint32 seqnum,
     ucompo->comp = comp;
     ucompo->reason = update_reason;
     ucompo->seqnum = seqnum;
-    comp->priv->awaited_caps_seqnum = priv->next_eos_seqnum;
+    comp->priv->awaited_caps_seqnum = seqnum;
     priv->commited_probeid = gst_pad_add_probe (GNL_OBJECT_SRC (comp),
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
         (GstPadProbeCallback) _is_update_done_cb, ucompo,
