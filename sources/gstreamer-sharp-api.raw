@@ -2478,6 +2478,9 @@
       <method name="AddMetadata" cname="gst_device_provider_class_add_metadata" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstDeviceProviderClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="key" type="const-gchar*"/>
           <parameter name="value" type="const-gchar*"/>
         </parameters>
@@ -2485,6 +2488,9 @@
       <method name="AddStaticMetadata" cname="gst_device_provider_class_add_static_metadata" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstDeviceProviderClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="key" type="const-gchar*"/>
           <parameter name="value" type="gchar*" owned="true"/>
         </parameters>
@@ -2492,12 +2498,18 @@
       <method name="GetMetadata" cname="gst_device_provider_class_get_metadata" shared="true">
         <return-type type="const-gchar*"/>
         <parameters>
+          <parameter name="klass" type="GstDeviceProviderClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="key" type="const-gchar*"/>
         </parameters>
       </method>
       <method name="SetMetadata" cname="gst_device_provider_class_set_metadata" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstDeviceProviderClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="longname" type="const-gchar*"/>
           <parameter name="classification" type="const-gchar*"/>
           <parameter name="description" type="const-gchar*"/>
@@ -2507,6 +2519,9 @@
       <method name="SetStaticMetadata" cname="gst_device_provider_class_set_static_metadata" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstDeviceProviderClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="longname" type="gchar*" owned="true"/>
           <parameter name="classification" type="gchar*" owned="true"/>
           <parameter name="description" type="gchar*" owned="true"/>
@@ -2670,6 +2685,9 @@
       <method name="AddMetadata" cname="gst_element_class_add_metadata" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstElementClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="key" type="const-gchar*"/>
           <parameter name="value" type="const-gchar*"/>
         </parameters>
@@ -2677,12 +2695,18 @@
       <method name="AddPadTemplate" cname="gst_element_class_add_pad_template" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstElementClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="templ" type="GstPadTemplate*" owned="true"/>
         </parameters>
       </method>
       <method name="AddStaticMetadata" cname="gst_element_class_add_static_metadata" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstElementClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="key" type="const-gchar*"/>
           <parameter name="value" type="const-gchar*"/>
         </parameters>
@@ -2690,22 +2714,35 @@
       <method name="GetMetadata" cname="gst_element_class_get_metadata" shared="true">
         <return-type type="const-gchar*"/>
         <parameters>
+          <parameter name="klass" type="GstElementClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="key" type="const-gchar*"/>
         </parameters>
       </method>
       <method name="GetPadTemplate" cname="gst_element_class_get_pad_template" shared="true">
         <return-type type="GstPadTemplate*"/>
         <parameters>
+          <parameter name="element_class" type="GstElementClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="name" type="const-gchar*"/>
         </parameters>
       </method>
       <method name="GetPadTemplateList" cname="gst_element_class_get_pad_template_list" shared="true">
         <return-type type="GList*" element_type="GstPadTemplate*"/>
-        <parameters/>
+        <parameters>
+          <parameter name="element_class" type="GstElementClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
       </method>
       <method name="SetMetadata" cname="gst_element_class_set_metadata" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstElementClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="longname" type="const-gchar*"/>
           <parameter name="classification" type="const-gchar*"/>
           <parameter name="description" type="const-gchar*"/>
@@ -2715,6 +2752,9 @@
       <method name="SetStaticMetadata" cname="gst_element_class_set_static_metadata" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstElementClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="longname" type="const-gchar*"/>
           <parameter name="classification" type="const-gchar*"/>
           <parameter name="description" type="const-gchar*"/>
@@ -11294,6 +11334,9 @@
       <method name="AddPadTemplates" cname="gst_audio_filter_class_add_pad_templates" shared="true">
         <return-type type="void"/>
         <parameters>
+          <parameter name="klass" type="GstAudioFilterClass*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
           <parameter name="allowed_caps" type="GstCaps*"/>
         </parameters>
       </method>
