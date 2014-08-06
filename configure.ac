@@ -175,7 +175,6 @@ AC_CONFIG_FILES([
 	gstreamer-sharp-1.0.pc
 	doc/Makefile
 ])
-AC_CONFIG_COMMANDS([default],[[ echo timestamp > stamp-h ]],[[]])
 AC_OUTPUT
 
 echo ""

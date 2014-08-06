@@ -17,4 +17,6 @@ libgstreamersharpglue.dll: $(libgstreamersharpglue_1_0_0_la_OBJECTS) libgstreame
 
 CLEANFILES = lib*.a lib*.dll generated.c
 
+MAINTAINERCLEANFILES = Makefile.in
+
 EXTRA_DIST =
