@@ -3435,6 +3435,7 @@ gst_ogg_demux_check_duration_push (GstOggDemux * ogg, GstSeekFlags flags,
       } else {
         GST_DEBUG_OBJECT (ogg, "File byte length unknown, assuming live");
         ogg->push_disable_seeking = TRUE;
+        gst_object_unref (peer);
         return TRUE;
       }
       res = gst_pad_query_duration (peer, GST_FORMAT_TIME, &length);
