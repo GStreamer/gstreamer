@@ -1413,6 +1413,8 @@ test_link (const gchar * expectation, const gchar * srcname,
     src = gst_element_factory_make ("fakesrc", NULL);
   else if (g_strcmp0 (srcname, "staticsink") == 0)
     src = gst_element_factory_make ("fakesink", NULL);
+  else
+    g_assert_not_reached ();
 
   if (g_strcmp0 (sinkname, "requestsink") == 0)
     sink = gst_element_factory_make ("funnel", NULL);
@@ -1424,6 +1426,8 @@ test_link (const gchar * expectation, const gchar * srcname,
     sink = gst_element_factory_make ("fakesrc", NULL);
   else if (g_strcmp0 (sinkname, "fakerequestsink") == 0)
     sink = gst_element_factory_make ("fakereqsink", NULL);
+  else
+    g_assert_not_reached ();
 
   othersrc = gst_element_factory_make ("fakesrc", NULL);
   othersink = gst_element_factory_make ("fakesink", NULL);
