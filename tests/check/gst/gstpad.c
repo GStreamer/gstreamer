@@ -1191,6 +1191,83 @@ GST_START_TEST (test_pad_probe_remove)
 
 GST_END_TEST;
 
+typedef struct
+{
+  gulong probe_id;
+  GstPad *probe_pad;
+  GThread *thread;
+} BlockReplaceProbeHelper;
+
+static gpointer
+unblock_probe_thread (gpointer user_data)
+{
+  BlockReplaceProbeHelper *helper = user_data;
+
+  GST_INFO_OBJECT (helper->probe_pad, "removing probe to unblock pad");
+  gst_pad_remove_probe (helper->probe_pad, helper->probe_id);
+  return NULL;
+}
+
+static GstPadProbeReturn
+block_and_replace_buffer_probe_cb (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  BlockReplaceProbeHelper *helper = user_data;
+
+  GST_INFO_OBJECT (pad, "about to block pad, replacing buffer");
+
+  /* we want to block, but also drop this buffer */
+  gst_buffer_unref (GST_BUFFER (info->data));
+  info->data = NULL;
+
+  helper->thread =
+      g_thread_new ("gst-pad-test-thread", unblock_probe_thread, helper);
+
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_pad_probe_block_and_drop_buffer)
+{
+  BlockReplaceProbeHelper helper;
+  GstFlowReturn flow;
+  GstPad *src, *sink;
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_active (src, TRUE);
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+  gst_pad_set_active (sink, TRUE);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
+  fail_unless_equals_int (gst_pad_link (src, sink), GST_PAD_LINK_OK);
+
+  helper.probe_id = gst_pad_add_probe (src,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER,
+      block_and_replace_buffer_probe_cb, &helper, NULL);
+  helper.probe_pad = src;
+
+  /* push a buffer so the events are propagated downstream */
+  flow = gst_pad_push (src, gst_buffer_new ());
+
+  g_thread_join (helper.thread);
+
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+
+  /* no buffer should have made it through to the sink pad, and especially
+   * not a NULL pointer buffer */
+  fail_if (buffers && buffers->data == NULL);
+  fail_unless (buffers == NULL);
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 static GstPadProbeReturn
 probe_block_a (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
@@ -2085,6 +2162,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_blocking);
   tcase_add_test (tc_chain, test_pad_probe_remove);
   tcase_add_test (tc_chain, test_pad_probe_block_add_remove);
+  tcase_add_test (tc_chain, test_pad_probe_block_and_drop_buffer);
   tcase_add_test (tc_chain, test_pad_probe_flush_events);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_linked);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_not_linked);
