@@ -449,7 +449,7 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
         upload->in_tex);
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (upload->in_tex[i] && upload->in_tex[i]->data != data[i]) {
+    if (upload->in_tex[i]) {
       upload->in_tex[i]->data = data[i];
       GST_GL_MEMORY_FLAG_SET (upload->in_tex[i],
           GST_GL_MEMORY_FLAG_NEED_UPLOAD);
