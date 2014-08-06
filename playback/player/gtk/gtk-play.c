@@ -102,17 +102,16 @@ skip_prev_clicked_cb (GtkButton *button, GtkPlay *play)
   prev = g_list_find_custom (play->uris,
                              gst_player_get_uri (play->player),
                              (GCompareFunc)strcmp);
-  if (prev != NULL) {
-    prev = g_list_previous (prev);
 
-    if (prev != NULL) {
-      gtk_widget_set_sensitive (play->next_button, TRUE);
-      gst_player_set_uri (play->player, prev->data);
-      gst_player_play (play->player);
-      set_title (play, prev->data);
-      gtk_widget_set_sensitive (play->prev_button, g_list_previous (prev) != NULL);
-    }
-  }
+  g_return_if_fail (prev != NULL);
+  prev = g_list_previous (prev);
+  g_return_if_fail (prev != NULL);
+
+  gtk_widget_set_sensitive (play->next_button, TRUE);
+  gst_player_set_uri (play->player, prev->data);
+  gst_player_play (play->player);
+  set_title (play, prev->data);
+  gtk_widget_set_sensitive (play->prev_button, g_list_previous (prev) != NULL);
 }
 
 static void
@@ -124,16 +123,16 @@ skip_next_clicked_cb (GtkButton *button, GtkPlay *play)
   next = g_list_find_custom (play->uris,
                              gst_player_get_uri (play->player),
                              (GCompareFunc)strcmp);
-  if (next != NULL) {
-    next = g_list_next (next);
-    if (next != NULL) {
-      gtk_widget_set_sensitive (play->prev_button, TRUE);
-      gst_player_set_uri (play->player, next->data);
-      gst_player_play (play->player);
-      set_title (play, next->data);
-      gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
-    }
-  }
+
+  g_return_if_fail (next != NULL);
+  next = g_list_next (next);
+  g_return_if_fail (next != NULL);
+
+  gtk_widget_set_sensitive (play->prev_button, TRUE);
+  gst_player_set_uri (play->player, next->data);
+  gst_player_play (play->player);
+  set_title (play, next->data);
+  gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
 }
 
 static void
