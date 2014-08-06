@@ -1,7 +1,7 @@
 /* GStreamer byte reader
  *
  * Copyright (C) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>.
- * Copyright (C) 2009 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2009,2014 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -97,6 +97,56 @@ gst_byte_reader_init (GstByteReader * reader, const guint8 * data, guint size)
   reader->data = data;
   reader->size = size;
   reader->byte = 0;
+}
+
+/**
+ * gst_byte_reader_peek_sub_reader: (skip)
+ * @reader: an existing and initialized #GstByteReader instance
+ * @sub_reader: a #GstByteReader instance to initialize as sub-reader
+ * @size: size of @sub_reader in bytes
+ *
+ * Initializes a #GstByteReader sub-reader instance to contain @size bytes of
+ * data from the current position of @reader. This is useful to read chunked
+ * formats and make sure that one doesn't read beyond the size of the sub-chunk.
+ *
+ * Unlike gst_byte_reader_get_sub_reader(), this function does not modify the
+ * current position of @reader.
+ *
+ * Returns: FALSE on error or if @reader does not contain @size more bytes from
+ *     the current position, and otherwise TRUE
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_byte_reader_peek_sub_reader (GstByteReader * reader,
+    GstByteReader * sub_reader, guint size)
+{
+  return _gst_byte_reader_peek_sub_reader_inline (reader, sub_reader, size);
+}
+
+/**
+ * gst_byte_reader_get_sub_reader: (skip)
+ * @reader: an existing and initialized #GstByteReader instance
+ * @sub_reader: a #GstByteReader instance to initialize as sub-reader
+ * @size: size of @sub_reader in bytes
+ *
+ * Initializes a #GstByteReader sub-reader instance to contain @size bytes of
+ * data from the current position of @reader. This is useful to read chunked
+ * formats and make sure that one doesn't read beyond the size of the sub-chunk.
+ *
+ * Unlike gst_byte_reader_peek_sub_reader(), this function also modifies the
+ * position of @reader and moves it forward by @size bytes.
+ *
+ * Returns: FALSE on error or if @reader does not contain @size more bytes from
+ *     the current position, and otherwise TRUE
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_byte_reader_get_sub_reader (GstByteReader * reader,
+    GstByteReader * sub_reader, guint size)
+{
+  return _gst_byte_reader_get_sub_reader_inline (reader, sub_reader, size);
 }
 
 /**

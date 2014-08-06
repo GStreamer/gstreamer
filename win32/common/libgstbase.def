@@ -142,6 +142,7 @@ EXPORTS
 	gst_byte_reader_get_remaining
 	gst_byte_reader_get_size
 	gst_byte_reader_get_string_utf8
+	gst_byte_reader_get_sub_reader
 	gst_byte_reader_get_uint16_be
 	gst_byte_reader_get_uint16_le
 	gst_byte_reader_get_uint24_be
@@ -170,6 +171,7 @@ EXPORTS
 	gst_byte_reader_peek_int64_le
 	gst_byte_reader_peek_int8
 	gst_byte_reader_peek_string_utf8
+	gst_byte_reader_peek_sub_reader
 	gst_byte_reader_peek_uint16_be
 	gst_byte_reader_peek_uint16_le
 	gst_byte_reader_peek_uint24_be
