@@ -1703,11 +1703,8 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 
     /* FIXME: we should really set durations on buffers if we can */
 
-    GST_LOG_OBJECT (stream->pad, "pushing buffer, ts=%" GST_TIME_FORMAT
-        ", dur=%" GST_TIME_FORMAT " size=%" G_GSIZE_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (payload->buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (payload->buf)),
-        gst_buffer_get_size (payload->buf));
+    GST_LOG_OBJECT (stream->pad, "pushing buffer, %" GST_PTR_FORMAT,
+        payload->buf);
 
     if (stream->active) {
       ret = gst_pad_push (stream->pad, payload->buf);
