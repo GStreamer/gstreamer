@@ -207,7 +207,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//object/field[@cname='object' and @type='GstObject*']" name="hidden">true</attr>
 	<attr path="//constant[@name='CLOCK_TIME_NONE']" name="ctype">guint64</attr>
 	<attr path="//method[parameters/parameter[contains(@type, 'Class*')]]" name="hidden">true</attr>
-
+	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="type">gpointer</attr>
+	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="array">false</attr>
+    <!-- buffer fixes -->
+	<attr path="//constructor[@cname='gst_buffer_new_wrapped']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//constructor[@cname='gst_buffer_new_wrapped']/parameters/parameter[@name='size']" name="name">n_length</attr>
+	<attr path="//method[@cname='gst_buffer_fill']/parameters/parameter[@name='src']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_buffer_fill']/parameters/parameter[@name='size']" name="name">n_length</attr>
+	<attr path="//method[@cname='gst_buffer_memcmp']/parameters/parameter[@name='mem']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_buffer_memcmp']/parameters/parameter[@name='size']" name="name">n_length</attr>
 	<!-- No way to correctly generate these without the element type -->
 	<attr path="//boxed[@cname='GstMpegtsDescriptor']//method[parameters/parameter[@type='GArray***']]" name="hidden">true</attr>
 </metadata>
