@@ -269,16 +269,19 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
     next = g_list_find_custom (play->uris,
                                gst_player_get_uri (play->player),
                                (GCompareFunc) strcmp);
+
+    g_return_if_fail (next != NULL);
+
+    next = g_list_next (next);
     if (next) {
-      next = g_list_next (next);
-      if (next) {
-        if (!gtk_widget_is_sensitive(play->prev_button))
-          gtk_widget_set_sensitive (play->prev_button, TRUE);
-        gst_player_set_uri (play->player, next->data);
-        gst_player_play (play->player);
-        set_title (play, next->data);
-      }
-      else
+      if (!gtk_widget_is_sensitive(play->prev_button))
+        gtk_widget_set_sensitive (play->prev_button, TRUE);
+      gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
+
+      gst_player_set_uri (play->player, next->data);
+      gst_player_play (play->player);
+      set_title (play, next->data);
+    } else {
         gst_player_stop (play->player);
     }
   }
