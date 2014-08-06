@@ -136,6 +136,7 @@ AC_SUBST(GAPI_CODEGEN)
 dnl Check for monodoc
 AC_PATH_PROG(MDASSEMBLER, mdassembler, no)
 AC_PATH_PROG(MONODOCER, monodocer, no)
+AC_PATH_PROG(MONODOCS2HTML, monodocs2html, no)
 if test "x$MONODOCER" = "xno" -o "x$MDASSEMBLER" = "xno"; then
 	enable_monodoc=no
 	doc_sources_dir=
@@ -145,6 +146,7 @@ else
 fi
 AC_SUBST(MDASSEMBLER)
 AC_SUBST(MONODOCER)
+AC_SUBST(MONODOCS2HTML)
 
 AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
 

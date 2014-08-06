@@ -17,6 +17,9 @@ all: $(TARGETS)
 update:
 	$(MONODOCER) $(UPDATE_ASSEMBLIES) -path:en
 
+html: $(srcdir)/en/*/*.xml $(srcdir)/en/*.xml
+	$(MONODOCS2HTML) -source:$(srcdir)/en -dest:html
+
 $(srcdir)/en/*/*.xml $(srcdir)/en/*.xml:
 	$(MONODOCER) $(UPDATE_ASSEMBLIES) -path:en
 
