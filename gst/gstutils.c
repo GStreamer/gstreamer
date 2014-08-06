@@ -1674,8 +1674,8 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
           gst_object_ref (temp);
         } else {
           temp = gst_element_get_compatible_pad (dest, srcpad, NULL);
-          if (!GST_IS_GHOST_PAD (temp) &&
-              GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (temp)) ==
+          if (temp && GST_PAD_PAD_TEMPLATE (temp)
+              && GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (temp)) ==
               GST_PAD_REQUEST) {
             temprequest = TRUE;
           }
@@ -1732,12 +1732,10 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
         GstPad *temp = gst_element_get_compatible_pad (src, destpad, NULL);
         gboolean temprequest = FALSE;
 
-        if (temp) {
-          if (!GST_IS_GHOST_PAD (temp) &&
-              GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (temp)) ==
-              GST_PAD_REQUEST) {
-            temprequest = TRUE;
-          }
+        if (temp && GST_PAD_PAD_TEMPLATE (temp)
+            && GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (temp)) ==
+            GST_PAD_REQUEST) {
+          temprequest = TRUE;
         }
 
         if (temp && pad_link_maybe_ghosting (temp, destpad, flags)) {
