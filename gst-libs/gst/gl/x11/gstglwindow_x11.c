@@ -77,6 +77,8 @@ gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
 void gst_gl_window_x11_close (GstGLWindow * window);
+static void gst_gl_window_x11_get_surface_dimensions (GstGLWindow * window,
+    guint * width, guint * height);
 
 static void
 gst_gl_window_x11_finalize (GObject * object)
@@ -109,6 +111,8 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_send_message_async);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_x11_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_x11_close);
+  window_class->get_surface_dimensions =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_surface_dimensions);
 }
 
 static void
@@ -704,4 +708,17 @@ gst_gl_window_x11_get_display (GstGLWindow * window)
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
 
   return (guintptr) window_x11->device;
+}
+
+static void
+gst_gl_window_x11_get_surface_dimensions (GstGLWindow * window, guint * width,
+    guint * height)
+{
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
+  XWindowAttributes attr;
+  XGetWindowAttributes (window_x11->device, window_x11->internal_win_id, &attr);
+  if (width != NULL)
+    *width = attr.width;
+  if (height != NULL)
+    *height = attr.height;
 }
