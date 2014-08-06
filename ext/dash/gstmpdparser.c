@@ -3574,7 +3574,7 @@ gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client,
 
 gboolean
 gst_mpd_client_get_next_fragment (GstMpdClient * client,
-    guint indexStream, GstMediaFragmentInfo * fragment)
+    guint indexStream, GstMediaFragmentInfo * fragment, gboolean forward)
 {
   GstActiveStream *stream = NULL;
   GstMediaSegment currentChunk;
@@ -3679,7 +3679,8 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
     }
   }
 
-  gst_mpd_client_set_segment_index (stream, segment_idx + 1);
+  gst_mpd_client_set_segment_index (stream,
+      forward ? segment_idx + 1 : segment_idx - 1);
   GST_MPD_CLIENT_UNLOCK (client);
 
   GST_DEBUG ("Loading chunk with URL %s", fragment->uri);
