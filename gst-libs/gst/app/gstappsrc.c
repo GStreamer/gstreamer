@@ -531,12 +531,13 @@ gst_app_src_init (GstAppSrc * appsrc)
 static void
 gst_app_src_flush_queued (GstAppSrc * src)
 {
-  GstMiniObject *caps_or_buffer;
+  GstMiniObject *obj;
   GstAppSrcPrivate *priv = src->priv;
 
-  while ((caps_or_buffer = g_queue_pop_head (priv->queue))) {
-    if (caps_or_buffer) {
-      gst_mini_object_unref (caps_or_buffer);
+  while (!g_queue_is_empty (priv->queue)) {
+    obj = g_queue_pop_head (priv->queue);
+    if (obj) {
+      gst_mini_object_unref (obj);
     }
   }
 
@@ -1066,11 +1067,10 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
     /* return data as long as we have some */
     if (!g_queue_is_empty (priv->queue)) {
       guint buf_size;
-      GstMiniObject *caps_or_buffer = g_queue_pop_head (priv->queue);
+      GstMiniObject *obj = g_queue_pop_head (priv->queue);
 
-      if (!GST_IS_BUFFER (caps_or_buffer)) {
-
-        GstCaps *next_caps = caps_or_buffer;
+      if (!GST_IS_BUFFER (obj)) {
+        GstCaps *next_caps = GST_CAPS (obj);
         gboolean caps_changed = TRUE;
 
         if (next_caps && priv->current_caps)
@@ -1093,10 +1093,12 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
          *- check queue has data */
         if (G_UNLIKELY (priv->flushing))
           goto flushing;
-        /* Contiue checks caps and queue */
+
+        /* Continue checks caps and queue */
         continue;
       }
-      *buf = GST_BUFFER (caps_or_buffer);
+
+      *buf = GST_BUFFER (obj);
       buf_size = gst_buffer_get_size (*buf);
 
       GST_DEBUG_OBJECT (appsrc, "we have buffer %p of size %u", *buf, buf_size);
@@ -1195,13 +1197,9 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
 
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
-  if (caps)
-    new_caps = gst_caps_copy (caps);
-  else
-    new_caps = NULL;
 
+  new_caps = caps ? gst_caps_copy (caps) : NULL;
   g_queue_push_tail (priv->queue, new_caps);
-
   gst_caps_replace (&priv->last_caps, new_caps);
 
   GST_OBJECT_UNLOCK (appsrc);
