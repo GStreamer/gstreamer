@@ -461,7 +461,7 @@ _gst_byte_reader_dup_data_inline (GstByteReader * reader, guint size, guint8 ** 
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (G_UNLIKELY (size > reader->size || _gst_byte_reader_get_remaining_inline (reader) < size))
+  if (G_UNLIKELY (size > reader->size || _gst_byte_reader_get_remaining_unchecked (reader) < size))
     return FALSE;
 
   *val = gst_byte_reader_dup_data_unchecked (reader, size);
@@ -474,7 +474,7 @@ _gst_byte_reader_get_data_inline (GstByteReader * reader, guint size, const guin
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (G_UNLIKELY (size > reader->size || _gst_byte_reader_get_remaining_inline (reader) < size))
+  if (G_UNLIKELY (size > reader->size || _gst_byte_reader_get_remaining_unchecked (reader) < size))
     return FALSE;
 
   *val = gst_byte_reader_get_data_unchecked (reader, size);
@@ -487,7 +487,7 @@ _gst_byte_reader_peek_data_inline (const GstByteReader * reader, guint size, con
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (G_UNLIKELY (size > reader->size || _gst_byte_reader_get_remaining_inline (reader) < size))
+  if (G_UNLIKELY (size > reader->size || _gst_byte_reader_get_remaining_unchecked (reader) < size))
     return FALSE;
 
   *val = gst_byte_reader_peek_data_unchecked (reader);
