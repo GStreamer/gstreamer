@@ -193,10 +193,33 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
   GstGLImageSink *sink = GST_GLIMAGE_SINK (navigation);
   GstEvent *event = NULL;
   GstPad *pad = NULL;
+  GstGLWindow *window = gst_gl_context_get_window (sink->context);
+  guint width, height;
+  gdouble x, y, xscale, yscale;
+
+  g_return_if_fail (GST_GL_IS_WINDOW (window));
+
+  width = GST_VIDEO_SINK_WIDTH (sink);
+  height = GST_VIDEO_SINK_HEIGHT (sink);
+  gst_gl_window_get_surface_dimensions (window, &width, &height);
 
   event = gst_event_new_navigation (structure);
 
   pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
+  /* Converting pointer coordinates to the non scaled geometry */
+  if (width != GST_VIDEO_SINK_WIDTH (sink) &&
+      width != 0 && gst_structure_get_double (structure, "pointer_x", &x)) {
+    xscale = (gdouble) GST_VIDEO_SINK_WIDTH (sink) / width;
+    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+        (gdouble) x * xscale, NULL);
+  }
+  if (height != GST_VIDEO_SINK_HEIGHT (sink) &&
+      height != 0 && gst_structure_get_double (structure, "pointer_y", &y)) {
+    yscale = (gdouble) GST_VIDEO_SINK_HEIGHT (sink) / height;
+    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+        (gdouble) y * yscale, NULL);
+  }
+
 
   if (GST_IS_PAD (pad) && GST_IS_EVENT (event))
     gst_pad_send_event (pad, event);

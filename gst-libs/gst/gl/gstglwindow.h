@@ -123,6 +123,7 @@ struct _GstGLWindowClass {
 
   gboolean (*open)               (GstGLWindow *window, GError **error);
   void     (*close)              (GstGLWindow *window);
+  void     (*get_surface_dimensions)  (GstGLWindow *window, guint *width, guint *height);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -148,6 +149,8 @@ void     gst_gl_window_quit                 (GstGLWindow *window);
 void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 void     gst_gl_window_send_message_async   (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 guintptr gst_gl_window_get_display          (GstGLWindow *window);
+void     gst_gl_window_get_surface_dimensions (GstGLWindow * window, guint * width,
+   guint * height);
 
 GstGLContext * gst_gl_window_get_context (GstGLWindow *window);
 
