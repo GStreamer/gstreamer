@@ -1,9 +1,11 @@
+PROJECTFILES = gstreamer-sharp.sln gstreamer-sharp.csproj
+
 SUBDIRS = sources sources/glue samples doc
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-sharp-1.0.pc
 
-EXTRA_DIST = gstreamer-sharp-1.0.pc.in out/gstreamer-sharp.dll.config gstreamer-sharp.snk
+EXTRA_DIST = gstreamer-sharp-1.0.pc.in out/gstreamer-sharp.dll.config gstreamer-sharp.snk $(PROJECTFILES)
 DISTCLEANFILES = gstreamer-sharp-1.0.pc
 
 MAINTAINERCLEANFILES = \
