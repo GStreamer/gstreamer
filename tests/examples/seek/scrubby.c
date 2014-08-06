@@ -559,6 +559,8 @@ main (int argc, char **argv)
   g_print ("NULL pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
+  gst_object_unref (bus);
+
   g_print ("free pipeline\n");
   gst_object_unref (pipeline);
 

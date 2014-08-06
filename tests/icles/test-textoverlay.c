@@ -106,6 +106,7 @@ test_textoverlay (int width, int height)
     }
   }
 
+  gst_object_unref (toverlay);
   g_free (pstr);
 }
 

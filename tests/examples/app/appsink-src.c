@@ -24,6 +24,7 @@ on_new_sample_from_sink (GstElement * elt, ProgramData * data)
   GstSample *sample;
   GstBuffer *app_buffer, *buffer;
   GstElement *source;
+  GstFlowReturn ret;
 
   /* get the sample from appsink */
   sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
@@ -37,7 +38,10 @@ on_new_sample_from_sink (GstElement * elt, ProgramData * data)
 
   /* get source an push new buffer */
   source = gst_bin_get_by_name (GST_BIN (data->sink), "testsource");
-  return gst_app_src_push_buffer (GST_APP_SRC (source), app_buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (source), app_buffer);
+  gst_object_unref (source);
+
+  return ret;
 }
 
 /* called when we get a GstMessage from the source pipeline when we get EOS, we
@@ -52,6 +56,7 @@ on_source_message (GstBus * bus, GstMessage * message, ProgramData * data)
       g_print ("The source got dry\n");
       source = gst_bin_get_by_name (GST_BIN (data->sink), "testsource");
       gst_app_src_end_of_stream (GST_APP_SRC (source));
+      gst_object_unref (source);
       break;
     case GST_MESSAGE_ERROR:
       g_print ("Received error\n");

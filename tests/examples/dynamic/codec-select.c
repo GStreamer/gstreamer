@@ -214,6 +214,7 @@ do_switch (GstElement * pipeline)
 
   /* set the active pad */
   g_object_set (select, "active-pad", pad, NULL);
+  gst_object_unref (select);
 
   return TRUE;
 }

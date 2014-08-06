@@ -150,6 +150,7 @@ on_source_message (GstBus * bus, GstMessage * message, ProgramData * data)
       source = gst_bin_get_by_name (GST_BIN (data->sink), "testsource");
       fail_unless (gst_app_src_end_of_stream (GST_APP_SRC (source)) ==
           GST_FLOW_OK);
+      gst_object_unref (source);
       break;
     case GST_MESSAGE_ERROR:
       g_main_loop_quit (data->loop);

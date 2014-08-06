@@ -242,5 +242,7 @@ main (int argc, char **argv)
 
   g_main_loop_unref (loop);
 
+  gst_object_unref (bus);
+
   return 0;
 }

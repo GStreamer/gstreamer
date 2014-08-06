@@ -104,6 +104,7 @@ main (int argc, char *argv[])
   /* get the preroll buffer from appsink, this block untils appsink really
    * prerolls */
   g_signal_emit_by_name (sink, "pull-preroll", &sample, NULL);
+  gst_object_unref (sink);
 
   /* if we have a buffer now, convert it to a pixbuf. It's possible that we
    * don't have a buffer because we went EOS right away or had an error. */
