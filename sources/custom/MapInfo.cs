@@ -27,14 +27,14 @@ namespace Gst {
 
 	partial struct MapInfo 
 	{
-		byte[] Data {
+		public byte[] Data {
 			get {
 				byte[] data = new byte[Size];
 				Marshal.Copy (_data, data, 0, (int)Size);
 				return data;
 			}
 			set {
-				Marshal.Copy (Data, 0, _data, Data.Length);
+				Marshal.Copy (value, 0, _data, Data.Length);
 			}
 		}
 
