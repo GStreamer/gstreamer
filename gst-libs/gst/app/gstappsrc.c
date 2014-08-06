@@ -104,14 +104,15 @@ struct _GstAppSrcPrivate
   GMutex mutex;
   GQueue *queue;
 
-  GstCaps *caps;
+  GstCaps *last_caps;
+  GstCaps *current_caps;
+
   gint64 size;
   GstAppStreamType stream_type;
   guint64 max_bytes;
   GstFormat format;
   gboolean block;
   gchar *uri;
-  gboolean new_caps;
 
   gboolean flushing;
   gboolean started;
@@ -530,11 +531,15 @@ gst_app_src_init (GstAppSrc * appsrc)
 static void
 gst_app_src_flush_queued (GstAppSrc * src)
 {
-  GstBuffer *buf;
+  GstMiniObject *caps_or_buffer;
   GstAppSrcPrivate *priv = src->priv;
 
-  while ((buf = g_queue_pop_head (priv->queue)))
-    gst_buffer_unref (buf);
+  while ((caps_or_buffer = g_queue_pop_head (priv->queue))) {
+    if (caps_or_buffer) {
+      gst_mini_object_unref (caps_or_buffer);
+    }
+  }
+
   priv->queued_bytes = 0;
 }
 
@@ -545,9 +550,13 @@ gst_app_src_dispose (GObject * obj)
   GstAppSrcPrivate *priv = appsrc->priv;
 
   GST_OBJECT_LOCK (appsrc);
-  if (priv->caps) {
-    gst_caps_unref (priv->caps);
-    priv->caps = NULL;
+  if (priv->current_caps) {
+    gst_caps_unref (priv->current_caps);
+    priv->current_caps = NULL;
+  }
+  if (priv->last_caps) {
+    gst_caps_unref (priv->last_caps);
+    priv->last_caps = NULL;
   }
   if (priv->notify) {
     priv->notify (priv->user_data);
@@ -583,7 +592,7 @@ gst_app_src_internal_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   GstCaps *caps;
 
   GST_OBJECT_LOCK (appsrc);
-  if ((caps = appsrc->priv->caps))
+  if ((caps = appsrc->priv->current_caps))
     gst_caps_ref (caps);
   GST_OBJECT_UNLOCK (appsrc);
 
@@ -767,7 +776,6 @@ gst_app_src_start (GstBaseSrc * bsrc)
 
   g_mutex_lock (&priv->mutex);
   GST_DEBUG_OBJECT (appsrc, "starting");
-  priv->new_caps = FALSE;
   priv->started = TRUE;
   /* set the offset to -1 so that we always do a first seek. This is only used
    * in random-access mode. */
@@ -978,7 +986,7 @@ gst_app_src_do_negotiate (GstBaseSrc * basesrc)
   GstCaps *caps;
 
   GST_OBJECT_LOCK (basesrc);
-  caps = priv->caps ? gst_caps_ref (priv->caps) : NULL;
+  caps = priv->current_caps ? gst_caps_ref (priv->current_caps) : NULL;
   GST_OBJECT_UNLOCK (basesrc);
 
   /* Avoid deadlock by unlocking mutex
@@ -1003,7 +1011,6 @@ gst_app_src_negotiate (GstBaseSrc * basesrc)
   gboolean result;
 
   g_mutex_lock (&priv->mutex);
-  priv->new_caps = FALSE;
   result = gst_app_src_do_negotiate (basesrc);
   g_mutex_unlock (&priv->mutex);
   return result;
@@ -1059,10 +1066,26 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
     /* return data as long as we have some */
     if (!g_queue_is_empty (priv->queue)) {
       guint buf_size;
+      GstMiniObject *caps_or_buffer = g_queue_pop_head (priv->queue);
 
-      if (priv->new_caps) {
-        priv->new_caps = FALSE;
-        gst_app_src_do_negotiate (bsrc);
+      if (!GST_IS_BUFFER (caps_or_buffer)) {
+
+        GstCaps *next_caps = caps_or_buffer;
+        gboolean caps_changed = TRUE;
+
+        if (next_caps && priv->current_caps)
+          caps_changed = !gst_caps_is_equal (next_caps, priv->current_caps);
+        else
+          caps_changed = (next_caps != priv->current_caps);
+
+        gst_caps_replace (&priv->current_caps, next_caps);
+
+        if (next_caps) {
+          gst_caps_unref (next_caps);
+        }
+
+        if (caps_changed)
+          gst_app_src_do_negotiate (bsrc);
 
         /* Lock has released so now may need
          *- flushing
@@ -1073,7 +1096,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
         /* Contiue checks caps and queue */
         continue;
       }
-      *buf = g_queue_pop_head (priv->queue);
+      *buf = GST_BUFFER (caps_or_buffer);
       buf_size = gst_buffer_get_size (*buf);
 
       GST_DEBUG_OBJECT (appsrc, "we have buffer %p of size %u", *buf, buf_size);
@@ -1161,7 +1184,7 @@ seek_error:
 void
 gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
 {
-  GstCaps *old;
+  GstCaps *new_caps;
   GstAppSrcPrivate *priv;
 
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
@@ -1172,15 +1195,15 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
 
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
-  if ((old = priv->caps) != caps) {
-    if (caps)
-      priv->caps = gst_caps_copy (caps);
-    else
-      priv->caps = NULL;
-    if (old)
-      gst_caps_unref (old);
-    priv->new_caps = TRUE;
-  }
+  if (caps)
+    new_caps = gst_caps_copy (caps);
+  else
+    new_caps = NULL;
+
+  g_queue_push_tail (priv->queue, new_caps);
+
+  gst_caps_replace (&priv->last_caps, new_caps);
+
   GST_OBJECT_UNLOCK (appsrc);
 
   g_mutex_unlock (&priv->mutex);
@@ -1197,9 +1220,18 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
 GstCaps *
 gst_app_src_get_caps (GstAppSrc * appsrc)
 {
+
+  GstCaps *caps;
+
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), NULL);
 
-  return gst_app_src_internal_get_caps (GST_BASE_SRC_CAST (appsrc), NULL);
+  GST_OBJECT_LOCK (appsrc);
+  if ((caps = appsrc->priv->last_caps))
+    gst_caps_ref (caps);
+  GST_OBJECT_UNLOCK (appsrc);
+
+  return caps;
+
 }
 
 /**
