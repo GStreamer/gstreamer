@@ -32,7 +32,7 @@ $(ASSEMBLY_NAME)-docs.zip $(ASSEMBLY_NAME)-docs.tree: $(srcdir)/en/*/*.xml $(src
 
 CLEANFILES = $(TARGETS)
 
-NAMESPACES=$(ASSEMBLY_NAMESPACE)
+NAMESPACES=$(ASSEMBLY_NAMESPACE) Gst.App Gst.Audio Gst.Base Gst.Controller Gst.FFT Gst.Net Gst.PbUtils Gst.Riff Gst.Rtp Gst.Rtsp Gst.Sdp Gst.Tags Gst.Video GtkSharp.GstreamerSharp
 
 dist-hook:
 	mkdir -p $(distdir)/en
