@@ -201,6 +201,7 @@ GST_START_TEST (test_eos)
   gst_pad_set_active (pad2, FALSE);
   gst_check_teardown_src_pad (sink1);
   gst_check_teardown_src_pad (sink2);
+  gst_object_unref (bus);
   gst_object_unref (pipeline);
 }
 
@@ -259,6 +260,7 @@ GST_START_TEST (test_stream_start)
   gst_pad_set_active (pad2, FALSE);
   gst_check_teardown_src_pad (sink1);
   gst_check_teardown_src_pad (sink2);
+  gst_object_unref (bus);
   gst_object_unref (pipeline);
 }
 

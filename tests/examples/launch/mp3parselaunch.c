@@ -72,6 +72,7 @@ main (int argc, char *argv[])
 
   filesrc = gst_bin_get_by_name (GST_BIN (bin), "my_filesrc");
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
+  gst_object_unref (filesrc);
 
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);

@@ -59,6 +59,7 @@ main (int argc, char *argv[])
   
   filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_filesrc");
   g_object_set (filesrc, "location", argv[1], NULL);
+  g_object_unref (filesrc);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

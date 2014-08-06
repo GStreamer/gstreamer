@@ -467,6 +467,7 @@ run_delayed_test (const gchar * pipe_str, const gchar * peer,
     fail_if (peer_elem == NULL, "Could not retrieve peer %s", peer);
 
     sinkpad = gst_element_get_static_pad (peer_elem, "sink");
+    gst_object_unref (peer_elem);
     fail_if (sinkpad == NULL, "Peer element did not have a 'sink' pad");
 
     fail_unless (peerpad == sinkpad,
