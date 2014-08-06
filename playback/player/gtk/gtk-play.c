@@ -110,8 +110,7 @@ skip_prev_clicked_cb (GtkButton *button, GtkPlay *play)
       gst_player_set_uri (play->player, prev->data);
       gst_player_play (play->player);
       set_title (play, prev->data);
-    } else {
-      gtk_widget_set_sensitive (play->prev_button, FALSE);
+      gtk_widget_set_sensitive (play->prev_button, g_list_previous (prev) != NULL);
     }
   }
 }
@@ -132,8 +131,7 @@ skip_next_clicked_cb (GtkButton *button, GtkPlay *play)
       gst_player_set_uri (play->player, next->data);
       gst_player_play (play->player);
       set_title (play, next->data);
-    } else {
-      gtk_widget_set_sensitive (play->next_button, FALSE);
+      gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
     }
   }
 }
