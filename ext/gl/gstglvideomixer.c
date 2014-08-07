@@ -47,7 +47,9 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 enum
 {
   PROP_0,
+  PROP_BACKGROUND,
 };
+#define DEFAULT_BACKGROUND GST_GL_VIDEO_MIXER_BACKGROUND_CHECKER
 
 #define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_gl_video_mixer_debug, "glvideomixer", 0, "glvideomixer element");
@@ -69,6 +71,7 @@ static gboolean gst_gl_video_mixer_process_textures (GstGLMixer * mixer,
     GPtrArray * in_frames, guint out_tex);
 static void gst_gl_video_mixer_callback (gpointer stuff);
 
+/* *INDENT-OFF* */
 /* vertex source */
 static const gchar *video_mixer_v_src =
     "attribute vec4 a_position;                                   \n"
@@ -92,6 +95,38 @@ static const gchar *video_mixer_f_src =
     "  vec4 rgba = texture2D( texture, v_texCoord );\n"
     "  gl_FragColor = vec4(rgba.rgb, rgba.a * alpha);\n"
     "}                                                   \n";
+
+/* checker vertex source */
+static const gchar *checker_v_src =
+    "attribute vec4 a_position;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = a_position;\n"
+    "}\n";
+
+/* checker fragment source */
+static const gchar *checker_f_src =
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "const float blocksize = 8.0;\n"
+    "void main ()\n"
+    "{\n"
+    "  vec4 high = vec4(0.667, 0.667, 0.667, 1.0);\n"
+    "  vec4 low = vec4(0.333, 0.333, 0.333, 1.0);\n"
+    "  if (mod(gl_FragCoord.x, blocksize * 2.0) >= blocksize) {\n"
+    "    if (mod(gl_FragCoord.y, blocksize * 2.0) >= blocksize)\n"
+    "      gl_FragColor = low;\n"
+    "    else\n"
+    "      gl_FragColor = high;\n"
+    "  } else {\n"
+    "    if (mod(gl_FragCoord.y, blocksize * 2.0) < blocksize)\n"
+    "      gl_FragColor = low;\n"
+    "    else\n"
+    "      gl_FragColor = high;\n"
+    "  }\n"
+    "}\n";
+/* *INDENT-ON* */
 
 #define GST_TYPE_GL_VIDEO_MIXER_PAD (gst_gl_video_mixer_pad_get_type())
 #define GST_GL_VIDEO_MIXER_PAD(obj) \
@@ -247,6 +282,28 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
   gst_object_unref (mix);
 }
 
+#define GST_GL_TYPE_VIDEO_MIXER_BACKGROUND (gst_gl_video_mixer_background_get_type())
+static GType
+gst_gl_video_mixer_background_get_type (void)
+{
+  static GType mixer_background_type = 0;
+
+  static const GEnumValue mixer_background[] = {
+    {GST_GL_VIDEO_MIXER_BACKGROUND_CHECKER, "Checker pattern", "checker"},
+    {GST_GL_VIDEO_MIXER_BACKGROUND_BLACK, "Black", "black"},
+    {GST_GL_VIDEO_MIXER_BACKGROUND_WHITE, "White", "white"},
+    {GST_GL_VIDEO_MIXER_BACKGROUND_TRANSPARENT,
+        "Transparent Background to enable further compositing", "transparent"},
+    {0, NULL, NULL},
+  };
+
+  if (!mixer_background_type) {
+    mixer_background_type =
+        g_enum_register_static ("GstGLVideoMixerBackground", mixer_background);
+  }
+  return mixer_background_type;
+}
+
 static void
 gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 {
@@ -265,6 +322,11 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
       "Filter/Effect/Video/Compositor", "OpenGL video_mixer",
       "Julien Isorce <julien.isorce@gmail.com>");
 
+  g_object_class_install_property (gobject_class, PROP_BACKGROUND,
+      g_param_spec_enum ("background", "Background", "Background type",
+          GST_GL_TYPE_VIDEO_MIXER_BACKGROUND,
+          DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_video_mixer_init_shader;
   GST_GL_MIXER_CLASS (klass)->reset = gst_gl_video_mixer_reset;
   GST_GL_MIXER_CLASS (klass)->process_textures =
@@ -278,6 +340,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 static void
 gst_gl_video_mixer_init (GstGLVideoMixer * video_mixer)
 {
+  video_mixer->background = DEFAULT_BACKGROUND;
   video_mixer->shader = NULL;
   video_mixer->input_frames = NULL;
 }
@@ -286,7 +349,12 @@ static void
 gst_gl_video_mixer_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstGLVideoMixer *mixer = GST_GL_VIDEO_MIXER (object);
+
   switch (prop_id) {
+    case PROP_BACKGROUND:
+      mixer->background = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -297,7 +365,12 @@ static void
 gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstGLVideoMixer *mixer = GST_GL_VIDEO_MIXER (object);
+
   switch (prop_id) {
+    case PROP_BACKGROUND:
+      g_value_set_enum (value, mixer->background);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -360,6 +433,10 @@ gst_gl_video_mixer_reset (GstGLMixer * mixer)
   if (video_mixer->shader)
     gst_gl_context_del_shader (mixer->context, video_mixer->shader);
   video_mixer->shader = NULL;
+
+  if (video_mixer->checker)
+    gst_gl_context_del_shader (mixer->context, video_mixer->checker);
+  video_mixer->checker = NULL;
 }
 
 static gboolean
@@ -387,6 +464,76 @@ gst_gl_video_mixer_process_textures (GstGLMixer * mix, GPtrArray * frames,
       GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR (mix)->info),
       mix->fbo, mix->depthbuffer,
       out_tex, gst_gl_video_mixer_callback, (gpointer) video_mixer);
+
+  return TRUE;
+}
+
+static gboolean
+_draw_checker_background (GstGLVideoMixer * video_mixer)
+{
+  GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
+  const GstGLFuncs *gl = mixer->context->gl_vtable;
+  gint attr_position_loc = 0;
+
+  const GLushort indices[] = {
+    0, 1, 2,
+    0, 2, 3
+  };
+  /* *INDENT-OFF* */
+  gfloat v_vertices[] = {
+    -1.0,-1.0,-1.0f,
+     1.0,-1.0,-1.0f,
+     1.0, 1.0,-1.0f,
+    -1.0, 1.0,-1.0f,
+  };
+  /* *INDENT-ON* */
+
+  attr_position_loc =
+      gst_gl_shader_get_attribute_location (video_mixer->shader, "a_position");
+
+  if (!video_mixer->checker) {
+    if (!gst_gl_context_gen_shader (mixer->context, checker_v_src,
+            checker_f_src, &video_mixer->checker))
+      return FALSE;
+  }
+
+  gst_gl_shader_use (video_mixer->checker);
+
+  gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
+      GL_FALSE, 3 * sizeof (GLfloat), &v_vertices[0]);
+
+  gl->EnableVertexAttribArray (attr_position_loc);
+
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+
+  return TRUE;
+}
+
+static gboolean
+_draw_background (GstGLVideoMixer * video_mixer)
+{
+  GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
+  const GstGLFuncs *gl = mixer->context->gl_vtable;
+
+  switch (video_mixer->background) {
+    case GST_GL_VIDEO_MIXER_BACKGROUND_BLACK:
+      gl->ClearColor (0.0, 0.0, 0.0, 1.0);
+      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      break;
+    case GST_GL_VIDEO_MIXER_BACKGROUND_WHITE:
+      gl->ClearColor (1.0, 1.0, 1.0, 1.0);
+      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      break;
+    case GST_GL_VIDEO_MIXER_BACKGROUND_TRANSPARENT:
+      gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      break;
+    case GST_GL_VIDEO_MIXER_BACKGROUND_CHECKER:
+      return _draw_checker_background (video_mixer);
+      break;
+    default:
+      break;
+  }
 
   return TRUE;
 }
@@ -420,8 +567,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
   gl->Disable (GL_DEPTH_TEST);
   gl->Disable (GL_CULL_FACE);
 
-  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (!_draw_background (video_mixer))
+    return;
 
   gst_gl_shader_use (video_mixer->shader);
 
