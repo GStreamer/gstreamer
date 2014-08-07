@@ -184,8 +184,10 @@ gst_rtp_h263p_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   peercaps =
       gst_pad_peer_query_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), NULL);
   if (peercaps) {
-    GstCaps *intersect = gst_caps_intersect (peercaps,
-        gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload)));
+    GstCaps *tcaps =
+        gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload));
+    GstCaps *intersect = gst_caps_intersect (peercaps, tcaps);
+    gst_caps_unref (tcaps);
 
     gst_caps_unref (peercaps);
     if (!gst_caps_is_empty (intersect)) {
