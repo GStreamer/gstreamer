@@ -2671,9 +2671,8 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   GST_BUFFER_FLAG_UNSET (output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
-  /* set PTS and DTS to both the PTS for decoded frames */
   GST_BUFFER_PTS (output_buffer) = frame->pts;
-  GST_BUFFER_DTS (output_buffer) = frame->pts;
+  GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (output_buffer) = frame->duration;
 
   GST_BUFFER_OFFSET (output_buffer) = GST_BUFFER_OFFSET_NONE;
