@@ -1252,7 +1252,11 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   }
 
   /* try to switch to another bitrate if needed */
-  gst_hls_demux_switch_playlist (demux);
+  /* FIXME: Currently several issues have be found when letting bitrate adaptation
+   * happen using trick modes (such as 'All streams finished without buffers') and
+   * the adaptive algorithm does not properly behave. */
+  if (demux->segment.rate == 1.0)
+    gst_hls_demux_switch_playlist (demux);
   demux->download_total_bytes = 0;
   demux->download_total_time = 0;
 
