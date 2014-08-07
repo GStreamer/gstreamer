@@ -525,7 +525,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
         if (prev_buf && (prev_pts = GST_BUFFER_TIMESTAMP(prev_buf)) != pts) {
             const GstClockTimeDiff pts_diff = GST_CLOCK_DIFF(prev_pts, pts);
             if (pts_diff < 0 || (postproc->field_duration > 0 &&
-                    pts_diff > postproc->field_duration * 2))
+                    pts_diff >= postproc->field_duration * 3 - 1))
                 ds_reset(ds);
         }
     }
