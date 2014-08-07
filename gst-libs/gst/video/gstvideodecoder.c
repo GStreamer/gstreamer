@@ -2039,51 +2039,55 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
       res = gst_video_decoder_flush_decode (dec);
       if (res != GST_FLOW_OK)
         goto done;
+
+      /* We need to tell the subclass to drain now */
+      GST_DEBUG_OBJECT (dec, "Finishing");
+      if (decoder_class->finish)
+        res = decoder_class->finish (dec);
+
+      if (res != GST_FLOW_OK)
+        goto done;
+
+      /* now send queued data downstream */
+      walk = priv->output_queued;
+      while (walk) {
+        GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+
+        if (G_LIKELY (res == GST_FLOW_OK)) {
+          /* avoid stray DISCONT from forward processing,
+           * which have no meaning in reverse pushing */
+          GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
+
+          /* Last chance to calculate a timestamp as we loop backwards
+           * through the list */
+          if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE)
+            priv->last_timestamp_out = GST_BUFFER_TIMESTAMP (buf);
+          else if (priv->last_timestamp_out != GST_CLOCK_TIME_NONE &&
+              GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE) {
+            GST_BUFFER_TIMESTAMP (buf) =
+                priv->last_timestamp_out - GST_BUFFER_DURATION (buf);
+            priv->last_timestamp_out = GST_BUFFER_TIMESTAMP (buf);
+            GST_LOG_OBJECT (dec,
+                "Calculated TS %" GST_TIME_FORMAT " working backwards",
+                GST_TIME_ARGS (priv->last_timestamp_out));
+          }
+
+          res = gst_video_decoder_clip_and_push_buf (dec, buf);
+        } else {
+          gst_buffer_unref (buf);
+        }
+
+        priv->output_queued =
+            g_list_delete_link (priv->output_queued, priv->output_queued);
+        walk = priv->output_queued;
+      }
+
+      /* clear buffer and decoder state again
+       * before moving to the previous keyframe */
+      gst_video_decoder_flush (dec, FALSE);
     }
 
     walk = priv->parse_gather;
-  }
-
-  /* We need to tell the subclass to drain now */
-  GST_DEBUG_OBJECT (dec, "Finishing");
-  if (decoder_class->finish)
-    res = decoder_class->finish (dec);
-
-  if (res != GST_FLOW_OK)
-    goto done;
-
-  /* now send queued data downstream */
-  walk = priv->output_queued;
-  while (walk) {
-    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
-
-    if (G_LIKELY (res == GST_FLOW_OK)) {
-      /* avoid stray DISCONT from forward processing,
-       * which have no meaning in reverse pushing */
-      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
-
-      /* Last chance to calculate a timestamp as we loop backwards
-       * through the list */
-      if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE)
-        priv->last_timestamp_out = GST_BUFFER_TIMESTAMP (buf);
-      else if (priv->last_timestamp_out != GST_CLOCK_TIME_NONE &&
-          GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE) {
-        GST_BUFFER_TIMESTAMP (buf) =
-            priv->last_timestamp_out - GST_BUFFER_DURATION (buf);
-        priv->last_timestamp_out = GST_BUFFER_TIMESTAMP (buf);
-        GST_LOG_OBJECT (dec,
-            "Calculated TS %" GST_TIME_FORMAT " working backwards",
-            GST_TIME_ARGS (priv->last_timestamp_out));
-      }
-
-      res = gst_video_decoder_clip_and_push_buf (dec, buf);
-    } else {
-      gst_buffer_unref (buf);
-    }
-
-    priv->output_queued =
-        g_list_delete_link (priv->output_queued, priv->output_queued);
-    walk = priv->output_queued;
   }
 
 done:
