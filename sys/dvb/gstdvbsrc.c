@@ -23,7 +23,7 @@
  * SECTION:element-dvbsrc
  *
  * dvbsrc can be used to capture video from DVB cards, DVB-T, DVB-S or DVB-T.
- * 
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
@@ -36,19 +36,19 @@
  * gst-launch dvbsrc polarity="h" frequency=11302000 symbol-rate=27500 diseqc-source=0 pids=50:102:103 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mad ! alsasink
  * ]| Captures and renders a transport stream from dvb card 0 that is a DVB-S card for a program at tuned frequency 11302000 kHz, symbol rate of 27500 kBd (kilo bauds with PMT pid of 50 and elementary stream pids of 102 and 103.
  * |[
- gst-launch dvbsrc frequency=515142857 guard=16 trans-mode="8k" isdbt-layer-enabled=7 isdbt-partial-reception=1 isdbt-sound-broadcasting=0 isdbt-sb-subchannel-id=0 isdbt-sb-segment-idx=0 isdbt-sb-segment-count=0 isdbt-layera-fec="2/3" isdbt-layera-modulation="QPSK" isdbt-layera-segment-count=1 isdbt-layera-time-interleaving=4 isdbt-layerb-fec="3/4" isdbt-layerb-modulation="qam-64" isdbt-layerb-segment-count=12 isdbt-layerb-time-interleaving=2 isdbt-layerc-fec="1/2" isdbt-layerc-modulation="qam-64" isdbt-layerc-segment-count=0 isdbt-layerc-time-interleaving=0 delsys=8 ! tsdemux name=d ! "video/x-h264" ! h264parse ! queue ! avdec_h264 ! videoconvert ! queue ! autovideosink 
+ gst-launch dvbsrc frequency=515142857 guard=16 trans-mode="8k" isdbt-layer-enabled=7 isdbt-partial-reception=1 isdbt-sound-broadcasting=0 isdbt-sb-subchannel-id=0 isdbt-sb-segment-idx=0 isdbt-sb-segment-count=0 isdbt-layera-fec="2/3" isdbt-layera-modulation="QPSK" isdbt-layera-segment-count=1 isdbt-layera-time-interleaving=4 isdbt-layerb-fec="3/4" isdbt-layerb-modulation="qam-64" isdbt-layerb-segment-count=12 isdbt-layerb-time-interleaving=2 isdbt-layerc-fec="1/2" isdbt-layerc-modulation="qam-64" isdbt-layerc-segment-count=0 isdbt-layerc-time-interleaving=0 delsys=8 ! tsdemux name=d ! "video/x-h264" ! h264parse ! queue ! avdec_h264 ! videoconvert ! queue ! autovideosink
  * ]| Captures and renders the video track of Tv Paraíba HD (Globo affiliate) in Campina Grande (Brasil). This is an ISDB-T (ISDB-Tb) broadcast.
  * </refsect2>
  */
 
-/* 
+/*
  * History of DVB_API_VERSION 5 minor changes
  *
  * API Addition/changes in reverse order (most recent first)
  *
  * Minor 10 (statistics properties)
  *   DTV_STAT_*
- *   FE_SCALE_* 
+ *   FE_SCALE_*
  *
  * Minor 9
  *   DTV_LNA
@@ -75,7 +75,7 @@
  *
  * Somewhere in between 5 and 6:
  *   SYS_DVBC_ANNEX_A / _C (Safety #define for _AC => A)
- * 
+ *
  * Minor 5 (Note : minimum version we support according to configure.ac)
  *   DTV_ENUM_DELSYS
  *
@@ -150,7 +150,7 @@ GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
  * Can't be greater than DTV_IOCTL_MAX_MSGS but we are
  * not using more than 25 for the largest use case (ISDB-T).
  *
- * Bump as needed. 
+ * Bump as needed.
  */
 #define NUM_DTV_PROPS 25
 
