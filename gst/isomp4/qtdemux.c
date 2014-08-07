@@ -3516,15 +3516,15 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
       stream->to_sample = G_MAXUINT32;
       GST_DEBUG_OBJECT (qtdemux, "moving data pointer to %" GST_TIME_FORMAT
           ", index: %u, pts %" GST_TIME_FORMAT, GST_TIME_ARGS (start), index,
-          GST_TIME_ARGS (gst_util_uint64_scale (stream->
-                  samples[index].timestamp, GST_SECOND, stream->timescale)));
+          GST_TIME_ARGS (gst_util_uint64_scale (stream->samples[index].
+                  timestamp, GST_SECOND, stream->timescale)));
     } else {
       index = gst_qtdemux_find_index_linear (qtdemux, stream, stop);
       stream->to_sample = index;
       GST_DEBUG_OBJECT (qtdemux, "moving data pointer to %" GST_TIME_FORMAT
           ", index: %u, pts %" GST_TIME_FORMAT, GST_TIME_ARGS (stop), index,
-          GST_TIME_ARGS (gst_util_uint64_scale (stream->
-                  samples[index].timestamp, GST_SECOND, stream->timescale)));
+          GST_TIME_ARGS (gst_util_uint64_scale (stream->samples[index].
+                  timestamp, GST_SECOND, stream->timescale)));
     }
   } else {
     GST_DEBUG_OBJECT (qtdemux, "No need to look for keyframe, "
@@ -3619,8 +3619,8 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   if (G_UNLIKELY (stream->segment_index != seg_idx))
     gst_qtdemux_activate_segment (qtdemux, stream, seg_idx, time_position);
 
-  if (G_UNLIKELY (QTSEGMENT_IS_EMPTY (&stream->
-              segments[stream->segment_index]))) {
+  if (G_UNLIKELY (QTSEGMENT_IS_EMPTY (&stream->segments[stream->
+                  segment_index]))) {
     QtDemuxSegment *seg = &stream->segments[stream->segment_index];
 
     GST_LOG_OBJECT (qtdemux, "Empty segment activated,"
@@ -6833,10 +6833,21 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       }
 
       GST_DEBUG_OBJECT (qtdemux, "created segment %d time %" GST_TIME_FORMAT
-          ", duration %" GST_TIME_FORMAT ", media_time %" GST_TIME_FORMAT
-          ", rate %g, (%d)", i, GST_TIME_ARGS (segment->time),
+          ", duration %" GST_TIME_FORMAT ", media_start %" GST_TIME_FORMAT
+          ", media_stop %" GST_TIME_FORMAT " stop_time %" GST_TIME_FORMAT
+          " rate %g, (%d)", i, GST_TIME_ARGS (segment->time),
           GST_TIME_ARGS (segment->duration),
-          GST_TIME_ARGS (segment->media_start), segment->rate, rate_int);
+          GST_TIME_ARGS (segment->media_start),
+          GST_TIME_ARGS (segment->media_stop),
+          GST_TIME_ARGS (segment->stop_time), segment->rate, rate_int);
+      if (segment->stop_time > qtdemux->segment.stop) {
+        GST_WARNING_OBJECT (qtdemux, "Segment %d "
+            " extends to %" GST_TIME_FORMAT
+            " past the end of the file duration %" GST_TIME_FORMAT
+            " it will be truncated", i, GST_TIME_ARGS (segment->stop_time),
+            GST_TIME_ARGS (qtdemux->segment.stop));
+        qtdemux->segment.stop = segment->stop_time;
+      }
     }
     GST_DEBUG_OBJECT (qtdemux, "found %d segments", count);
     stream->n_segments = count;
@@ -10229,14 +10240,6 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
       qtdemux_parse_mehd (qtdemux, &mehd_data);
   }
 
-  /* parse all traks */
-  trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
-  while (trak) {
-    qtdemux_parse_trak (qtdemux, trak);
-    /* iterate all siblings */
-    trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
-  }
-
   /* set duration in the segment info */
   gst_qtdemux_get_duration (qtdemux, &duration);
   if (duration) {
@@ -10245,6 +10248,14 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
      * and segment activation falls back to duration,
      * whereas loop only checks stop, so let's align this here as well */
     qtdemux->segment.stop = duration;
+  }
+
+  /* parse all traks */
+  trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
+  while (trak) {
+    qtdemux_parse_trak (qtdemux, trak);
+    /* iterate all siblings */
+    trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
   }
 
   /* find tags */

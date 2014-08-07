@@ -2002,7 +2002,15 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
           (guint32) (1 * 65536.0));
 
       /* need to add the empty time to the trak duration */
-      qtpad->trak->tkhd.duration += lateness;
+      duration += lateness;
+
+      qtpad->trak->tkhd.duration = duration;
+
+      /* And possibly grow the moov duration */
+      if (duration > qtmux->moov->mvhd.time_info.duration) {
+        qtmux->moov->mvhd.time_info.duration = duration;
+        qtmux->moov->mvex.mehd.fragment_duration = duration;
+      }
     }
   }
 
