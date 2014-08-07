@@ -1,4 +1,4 @@
-TARGETS = playback.exe video-overlay.exe basic-tutorial-1.exe basic-tutorial-2.exe basic-tutorial-3.exe basic-tutorial-4.exe basic-tutorial-5.exe basic-tutorial-6.exe basic-tutorial-7.exe basic-tutorial-8.exe basic-tutorial-9.exe basic-tutorial-12.exe basic-tutorial-13.exe playback-tutorial-1.exe
+TARGETS = playback.exe video-overlay.exe basic-tutorial-1.exe basic-tutorial-2.exe basic-tutorial-3.exe basic-tutorial-4.exe basic-tutorial-5.exe basic-tutorial-6.exe basic-tutorial-7.exe basic-tutorial-8.exe basic-tutorial-9.exe basic-tutorial-12.exe basic-tutorial-13.exe playback-tutorial-1.exe playback-tutorial-2.exe
 
 DEBUGS = $(addsuffix .mdb, $(TARGETS))
 assemblies = 					\
@@ -51,6 +51,9 @@ basic-tutorial-13.exe: $(srcdir)/BasicTutorial13.cs $(assemblies)
 playback-tutorial-1.exe: $(srcdir)/PlaybackTutorial1.cs $(assemblies)
 	$(CSC) $(CSFLAGS) -out:playback-tutorial-1.exe $(references) $(GLIB_SHARP_LIBS) $(srcdir)/PlaybackTutorial1.cs
 
+playback-tutorial-2.exe: $(srcdir)/PlaybackTutorial2.cs $(assemblies)
+	$(CSC) $(CSFLAGS) -out:playback-tutorial-2.exe $(references) $(GLIB_SHARP_LIBS) $(srcdir)/PlaybackTutorial2.cs
+
 EXTRA_DIST = 				\
 	Playback.cs \
     VideoOverlay.cs \
@@ -65,4 +68,5 @@ EXTRA_DIST = 				\
     BasicTutorial9.cs \
     BasicTutorial12.cs \
     BasicTutorial13.cs \
-    PlaybackTutorial1.cs
+    PlaybackTutorial1.cs \
+    PlaybackTutorial2.cs
