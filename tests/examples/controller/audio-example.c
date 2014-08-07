@@ -4,7 +4,7 @@
  * Builds a pipeline with [ audiotestsource ! autoaudiosink ] and sweeps
  * frequency and volume.
  *
- * Needs gst-plugin-base + gst-plugins-good installed.
+ * Needs gst-plugins-base + gst-plugins-good installed.
  */
 
 #include <gst/gst.h>
