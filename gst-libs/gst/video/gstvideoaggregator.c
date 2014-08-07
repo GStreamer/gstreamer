@@ -283,7 +283,6 @@ struct _GstVideoAggregatorPrivate
 
   /* current caps */
   GstCaps *current_caps;
-  gboolean send_caps;
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVideoAggregator, gst_videoaggregator,
@@ -502,7 +501,7 @@ gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
   if (vagg->priv->current_caps == NULL ||
       gst_caps_is_equal (caps, vagg->priv->current_caps) == FALSE) {
     gst_caps_replace (&vagg->priv->current_caps, caps);
-    vagg->priv->send_caps = TRUE;
+    gst_aggregator_set_src_caps (agg, caps);
   }
 
 done:
@@ -1188,11 +1187,6 @@ gst_videoaggregator_aggregate (GstAggregator * agg)
   if (gst_pad_check_reconfigure (agg->srcpad))
     gst_videoaggregator_update_src_caps (vagg);
 
-  if (vagg->priv->send_caps) {
-    gst_aggregator_set_src_caps (agg, vagg->priv->current_caps);
-    vagg->priv->send_caps = FALSE;
-  }
-
   GST_VIDEO_AGGREGATOR_LOCK (vagg);
 
   if (agg->segment.position == -1)
@@ -1652,7 +1646,6 @@ gst_videoaggregator_start (GstAggregator * agg)
   if (!GST_AGGREGATOR_CLASS (gst_videoaggregator_parent_class)->start (agg))
     return FALSE;
 
-  vagg->priv->send_caps = TRUE;
   gst_segment_init (&agg->segment, GST_FORMAT_TIME);
   gst_caps_replace (&vagg->priv->current_caps, NULL);
 
