@@ -1492,6 +1492,7 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
   gchar *frontend_dev;
   GstStructure *adapter_structure;
   char *adapter_name = NULL;
+  gint err;
 
   frontend_dev = g_strdup_printf ("/dev/dvb/adapter%d/frontend%d",
       object->adapter_number, object->frontend_number);
@@ -1518,7 +1519,8 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
 
   GST_DEBUG_OBJECT (object, "Device opened, querying information");
 
-  if (ioctl (object->fd_frontend, FE_GET_INFO, &fe_info) < 0) {
+  LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_GET_INFO, &fe_info));
+  if (err) {
     GST_ELEMENT_ERROR (object, RESOURCE, SETTINGS,
         (_("Could not get settings from frontend device \"%s\"."),
             frontend_dev), GST_ERROR_SYSTEM);
@@ -1534,7 +1536,8 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
   props.num = 1;
   props.props = dvb_prop;
 
-  if (ioctl (object->fd_frontend, FE_GET_PROPERTY, &props) < 0) {
+  LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_GET_PROPERTY, &props));
+  if (err) {
     GST_ELEMENT_ERROR (object, RESOURCE, SETTINGS,
         (_("Cannot enumerate delivery systems from frontend device \"%s\"."),
             frontend_dev), GST_ERROR_SYSTEM);
@@ -1679,6 +1682,7 @@ static gboolean
 gst_dvbsrc_open_dvr (GstDvbSrc * object)
 {
   gchar *dvr_dev;
+  gint err;
 
   dvr_dev = g_strdup_printf ("/dev/dvb/adapter%d/dvr%d",
       object->adapter_number, object->frontend_number);
@@ -1704,7 +1708,9 @@ gst_dvbsrc_open_dvr (GstDvbSrc * object)
 
   GST_INFO_OBJECT (object, "Setting DVB kernel buffer size to %d ",
       object->dvb_buffer_size);
-  if (ioctl (object->fd_dvr, DMX_SET_BUFFER_SIZE, object->dvb_buffer_size) < 0) {
+  LOOP_WHILE_EINTR (err, ioctl (object->fd_dvr, DMX_SET_BUFFER_SIZE,
+          object->dvb_buffer_size));
+  if (err) {
     GST_INFO_OBJECT (object, "ioctl DMX_SET_BUFFER_SIZE failed (%d)", errno);
     return FALSE;
   }
@@ -2010,12 +2016,16 @@ static void
 diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
     fe_sec_tone_mode_t t, fe_sec_mini_cmd_t b)
 {
-  if (ioctl (fd, FE_SET_TONE, SEC_TONE_OFF) == -1) {
+  gint err;
+
+  LOOP_WHILE_EINTR (err, ioctl (fd, FE_SET_TONE, SEC_TONE_OFF));
+  if (err) {
     GST_ERROR ("Setting tone to off failed");
     return;
   }
 
-  if (ioctl (fd, FE_SET_VOLTAGE, v) == -1) {
+  LOOP_WHILE_EINTR (err, ioctl (fd, FE_SET_VOLTAGE, v));
+  if (err) {
     GST_ERROR ("Setting voltage failed");
     return;
   }
@@ -2024,7 +2034,9 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
   GST_LOG ("diseqc: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", cmd->cmd.msg[0],
       cmd->cmd.msg[1], cmd->cmd.msg[2], cmd->cmd.msg[3], cmd->cmd.msg[4],
       cmd->cmd.msg[5]);
-  if (ioctl (fd, FE_DISEQC_SEND_MASTER_CMD, &cmd->cmd) == -1) {
+
+  LOOP_WHILE_EINTR (err, ioctl (fd, FE_DISEQC_SEND_MASTER_CMD, &cmd->cmd));
+  if (err) {
     GST_ERROR ("Sending DiSEqC command failed");
     return;
   }
@@ -2032,14 +2044,16 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
   g_usleep (cmd->wait * 1000);
   g_usleep (15 * 1000);
 
-  if (ioctl (fd, FE_DISEQC_SEND_BURST, b) == -1) {
+  LOOP_WHILE_EINTR (err, ioctl (fd, FE_DISEQC_SEND_BURST, b));
+  if (err) {
     GST_ERROR ("Sending burst failed");
     return;
   }
 
   g_usleep (15 * 1000);
 
-  if (ioctl (fd, FE_SET_TONE, t) == -1) {
+  LOOP_WHILE_EINTR (err, ioctl (fd, FE_SET_TONE, t));
+  if (err) {
     GST_ERROR ("Setting tone failed");
     return;
   }
@@ -2221,6 +2235,7 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
   unsigned int sym_rate = object->sym_rate * 1000;
   int inversion = object->inversion;
   int n;
+  gint err;
 
   /* first 3 entries are reserved */
   n = 3;
@@ -2259,7 +2274,9 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
 
         /* DTV_TONE not yet implemented
          * set_prop (fe_props_array, &n, DTV_TONE, object->tone) */
-        if (ioctl (object->fd_frontend, FE_SET_TONE, object->tone) < 0) {
+        LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_SET_TONE,
+                object->tone));
+        if (err) {
           GST_WARNING_OBJECT (object, "Couldn't set tone: %s",
               g_strerror (errno));
         }
@@ -2420,6 +2437,7 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
   int *fd;
   int pid, i;
   struct dmx_pes_filter_params pes_filter;
+  gint err;
   gchar *demux_dev = g_strdup_printf ("/dev/dvb/adapter%d/demux%d",
       object->adapter_number, object->frontend_number);
 
@@ -2450,7 +2468,8 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
     GST_INFO_OBJECT (object, "Setting pes-filter, pid = %d, type = %d",
         pes_filter.pid, pes_filter.pes_type);
 
-    if (ioctl (*fd, DMX_SET_PES_FILTER, &pes_filter) < 0)
+    LOOP_WHILE_EINTR (err, ioctl (*fd, DMX_SET_PES_FILTER, &pes_filter));
+    if (err)
       GST_WARNING_OBJECT (object, "Error setting PES filter on %s: %s",
           demux_dev, g_strerror (errno));
   }
