@@ -36,11 +36,32 @@ G_BEGIN_DECLS
 typedef struct _GstGLVideoMixer GstGLVideoMixer;
 typedef struct _GstGLVideoMixerClass GstGLVideoMixerClass;
 
+/**
+ * GstGLVideoMixerBackground:
+ * @GST_GL_VIDEO_MIXER_BACKGROUND_CHECKER: checker pattern background
+ * @GST_GL_VIDEO_MIXER_BACKGROUND_BLACK: solid color black background
+ * @GST_GL_VIDEO_MIXER_BACKGROUND_WHITE: solid color white background
+ * @GST_GL_VIDEO_MIXER_BACKGROUND_TRANSPARENT: background is left transparent and layers are composited using "A OVER B" composition rules. This is only applicable to AYUV and ARGB (and variants) as it preserves the alpha channel and allows for further mixing.
+ *
+ * The different backgrounds compositor can blend over.
+ */
+typedef enum
+{
+  GST_GL_VIDEO_MIXER_BACKGROUND_CHECKER,
+  GST_GL_VIDEO_MIXER_BACKGROUND_BLACK,
+  GST_GL_VIDEO_MIXER_BACKGROUND_WHITE,
+  GST_GL_VIDEO_MIXER_BACKGROUND_TRANSPARENT,
+}
+GstGLVideoMixerBackground;
+
 struct _GstGLVideoMixer
 {
     GstGLMixer mixer;
 
+    GstGLVideoMixerBackground background;
+
     GstGLShader *shader;
+    GstGLShader *checker;
     GPtrArray *input_frames;
 };
 
