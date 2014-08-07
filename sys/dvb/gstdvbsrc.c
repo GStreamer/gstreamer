@@ -521,8 +521,20 @@ static gboolean gst_dvbsrc_tune_fe (GstDvbSrc * object);
 
 static void gst_dvbsrc_set_pes_filters (GstDvbSrc * object);
 static void gst_dvbsrc_unset_pes_filters (GstDvbSrc * object);
-static inline int gst_dvbsrc_retry_ioctl (int fd, unsigned long req,
-    void *data);
+
+/**
+ * This loop should be safe enough considering:
+ *
+ * 1.- EINTR suggest the next ioctl might succeed
+ * 2.- It's highly unlikely you will end up spining
+ *     before your entire system goes nuts due to
+ *     the massive number of interrupts.
+ *
+ * We don't check for EAGAIN here cause we are opening
+ * the frontend in blocking mode.
+ */
+#define LOOP_WHILE_EINTR(v,func) do { (v) = (func); } \
+		while ((v) == -1 && errno == EINTR);
 
 static GstStaticPadTemplate ts_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -996,29 +1008,6 @@ gst_dvbsrc_init (GstDvbSrc * object)
   g_mutex_init (&object->tune_mutex);
   object->timeout = DEFAULT_TIMEOUT;
   object->tuning_timeout = DEFAULT_TUNING_TIMEOUT;
-}
-
-/**
- * This loop should be safe enough considering:
- *
- * 1.- EINTR suggest the next ioctl might succeed
- * 2.- It's highly unlikely you will end up spining
- *     before your entire system goes nuts due to
- *     the massive number of interrupts.
- *
- * We don't check for EAGAIN here cause we are opening
- * the frontend in blocking mode.
- */
-static inline int
-gst_dvbsrc_retry_ioctl (int fd, unsigned long req, void *data)
-{
-  int ret;
-
-  do
-    ret = ioctl (fd, req, data);
-  while (ret == -1 && errno == EINTR);
-
-  return ret;
 }
 
 static void
@@ -2101,6 +2090,7 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   struct dtv_property dvb_prop[NUM_DTV_PROPS];
   GstClockTimeDiff elapsed_time, timeout_step = 500 * GST_MSECOND;
   GstClockTime start;
+  gint err;
 
   GST_DEBUG_OBJECT (object, "Starting the frontend tuning process");
 
@@ -2115,7 +2105,8 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   props.num = 1;
   props.props = dvb_prop;
 
-  if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_GET_PROPERTY, &props)) {
+  LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_GET_PROPERTY, &props));
+  if (err) {
     GST_WARNING_OBJECT (object, "Error enumerating delsys: %s",
         g_strerror (errno));
 
@@ -2147,7 +2138,8 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   memset (dvb_prop, 0, sizeof (dvb_prop));
   dvb_prop[0].cmd = DTV_CLEAR;
 
-  if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_SET_PROPERTY, &props)) {
+  LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_SET_PROPERTY, &props));
+  if (err) {
     GST_WARNING_OBJECT (object, "Error resetting tuner: %s",
         g_strerror (errno));
   }
@@ -2159,7 +2151,9 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   }
 
   GST_DEBUG_OBJECT (object, "Setting %d properties", props.num);
-  if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_SET_PROPERTY, &props)) {
+
+  LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_SET_PROPERTY, &props));
+  if (err) {
     GST_WARNING_OBJECT (object, "Error tuning channel: %s (%d)",
         g_strerror (errno), errno);
     goto fail;
@@ -2167,7 +2161,8 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
 
   g_signal_emit (object, gst_dvbsrc_signals[SIGNAL_TUNING_START], 0);
 
-  if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_READ_STATUS, &status)) {
+  LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_READ_STATUS, &status));
+  if (err) {
     GST_WARNING_OBJECT (object, "Failed querying frontend for tuning status:"
         " %s (%d)", g_strerror (errno), errno);
     goto fail_with_signal;
@@ -2180,7 +2175,9 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   while (!(status & FE_HAS_LOCK) && elapsed_time <= object->tuning_timeout) {
     if (gst_poll_wait (poll_set, timeout_step) == -1)
       goto fail_with_signal;
-    if (gst_dvbsrc_retry_ioctl (object->fd_frontend, FE_READ_STATUS, &status)) {
+    LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_READ_STATUS,
+            &status));
+    if (err) {
       GST_WARNING_OBJECT (object, "Failed querying frontend for tuning status"
           " %s (%d)", g_strerror (errno), errno);
       goto fail_with_signal;
