@@ -36,7 +36,7 @@ typedef struct
 
 
 static void
-set_title (GtkPlay *play, const gchar *title)
+set_title (GtkPlay * play, const gchar * title)
 {
   if (title == NULL) {
     gtk_window_set_title (GTK_WINDOW (play->window), APP_NAME);
@@ -72,20 +72,24 @@ video_area_realize_cb (GtkWidget * widget, GtkPlay * play)
 }
 
 static void
-play_pause_clicked_cb (GtkButton *button, GtkPlay *play)
+play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   GtkWidget *image;
 
   if (gst_player_is_playing (play->player)) {
     gst_player_pause (play->player);
-    image = gtk_image_new_from_icon_name ("media-playback-start", GTK_ICON_SIZE_BUTTON);
-    gtk_button_set_image (GTK_BUTTON(play->play_pause_button), image);
+    image =
+        gtk_image_new_from_icon_name ("media-playback-start",
+        GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
   } else {
     gchar *title;
 
     gst_player_play (play->player);
-    image = gtk_image_new_from_icon_name ("media-playback-pause", GTK_ICON_SIZE_BUTTON);
-    gtk_button_set_image (GTK_BUTTON(play->play_pause_button), image);
+    image =
+        gtk_image_new_from_icon_name ("media-playback-pause",
+        GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
 
     title = gst_player_get_uri (play->player);
     set_title (play, title);
@@ -94,14 +98,13 @@ play_pause_clicked_cb (GtkButton *button, GtkPlay *play)
 }
 
 static void
-skip_prev_clicked_cb (GtkButton *button, GtkPlay *play)
+skip_prev_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   GList *prev;
   gchar *cur_uri;
 
   prev = g_list_find_custom (play->uris,
-                             gst_player_get_uri (play->player),
-                             (GCompareFunc)strcmp);
+      gst_player_get_uri (play->player), (GCompareFunc) strcmp);
 
   g_return_if_fail (prev != NULL);
   prev = g_list_previous (prev);
@@ -115,14 +118,13 @@ skip_prev_clicked_cb (GtkButton *button, GtkPlay *play)
 }
 
 static void
-skip_next_clicked_cb (GtkButton *button, GtkPlay *play)
+skip_next_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   GList *next, *l;
   gchar *cur_uri;
 
   next = g_list_find_custom (play->uris,
-                             gst_player_get_uri (play->player),
-                             (GCompareFunc)strcmp);
+      gst_player_get_uri (play->player), (GCompareFunc) strcmp);
 
   g_return_if_fail (next != NULL);
   next = g_list_next (next);
@@ -143,9 +145,7 @@ seekbar_value_changed_cb (GtkRange * range, GtkPlay * play)
 }
 
 void
-volume_changed_cb (GtkScaleButton *button,
-                   gdouble         value,
-                   GtkPlay        *play)
+volume_changed_cb (GtkScaleButton * button, gdouble value, GtkPlay * play)
 {
   gst_player_set_volume (play->player, value);
 }
@@ -181,30 +181,31 @@ create_ui (GtkPlay * play)
 
   /* Skip backward button */
   play->prev_button =
-    gtk_button_new_from_icon_name ("media-skip-backward",
-    GTK_ICON_SIZE_BUTTON);
+      gtk_button_new_from_icon_name ("media-skip-backward",
+      GTK_ICON_SIZE_BUTTON);
   g_signal_connect (G_OBJECT (play->prev_button), "clicked",
-    G_CALLBACK (skip_prev_clicked_cb), play);
+      G_CALLBACK (skip_prev_clicked_cb), play);
   gtk_widget_set_sensitive (play->prev_button, FALSE);
 
   /* Skip forward button */
-    play->next_button =
-    gtk_button_new_from_icon_name ("media-skip-forward",
-    GTK_ICON_SIZE_BUTTON);
+  play->next_button =
+      gtk_button_new_from_icon_name ("media-skip-forward",
+      GTK_ICON_SIZE_BUTTON);
   g_signal_connect (G_OBJECT (play->next_button), "clicked",
-    G_CALLBACK (skip_next_clicked_cb), play);
+      G_CALLBACK (skip_next_clicked_cb), play);
   gtk_widget_set_sensitive (play->next_button, FALSE);
 
   /* Volume control button */
   play->volume_button = gtk_volume_button_new ();
   gtk_scale_button_set_value (GTK_SCALE_BUTTON (play->volume_button),
-                              gst_player_get_volume (play->player));
+      gst_player_get_volume (play->player));
   g_signal_connect (G_OBJECT (play->volume_button), "value-changed",
-                    G_CALLBACK (volume_changed_cb), play);
+      G_CALLBACK (volume_changed_cb), play);
 
   controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (controls), play->prev_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (controls), play->play_pause_button, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (controls), play->play_pause_button, FALSE, FALSE,
+      2);
   gtk_box_pack_start (GTK_BOX (controls), play->next_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->seekbar, TRUE, TRUE, 2);
   gtk_box_pack_start (GTK_BOX (controls), play->volume_button, FALSE, FALSE, 2);
@@ -267,14 +268,13 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
     gchar *uri;
 
     next = g_list_find_custom (play->uris,
-                               gst_player_get_uri (play->player),
-                               (GCompareFunc) strcmp);
+        gst_player_get_uri (play->player), (GCompareFunc) strcmp);
 
     g_return_if_fail (next != NULL);
 
     next = g_list_next (next);
     if (next) {
-      if (!gtk_widget_is_sensitive(play->prev_button))
+      if (!gtk_widget_is_sensitive (play->prev_button))
         gtk_widget_set_sensitive (play->prev_button, TRUE);
       gtk_widget_set_sensitive (play->next_button, g_list_next (next) != NULL);
 
@@ -282,7 +282,7 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
       gst_player_play (play->player);
       set_title (play, next->data);
     } else {
-        gst_player_stop (play->player);
+      gst_player_stop (play->player);
     }
   }
 }
@@ -294,8 +294,8 @@ main (gint argc, gchar ** argv)
   gchar **file_names = NULL;
   GOptionContext *ctx;
   GOptionEntry options[] = {
-    { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &file_names,
-    "Files to play" },
+    {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &file_names,
+        "Files to play"},
     {NULL}
   };
   guint list_length = 0;
@@ -327,10 +327,9 @@ main (gint argc, gchar ** argv)
     list_length = g_strv_length (file_names);
     for (i = 0; i < list_length; i++) {
       play.uris =
-        g_list_append (play.uris,
-                       gst_uri_is_valid (file_names[i]) ?
-                       g_strdup (file_names[i]) :
-                       gst_filename_to_uri (file_names[i], NULL));
+          g_list_append (play.uris,
+          gst_uri_is_valid (file_names[i]) ?
+          g_strdup (file_names[i]) : gst_filename_to_uri (file_names[i], NULL));
     }
 
     g_strfreev (file_names);
@@ -346,7 +345,7 @@ main (gint argc, gchar ** argv)
   create_ui (&play);
 
   if (list_length > 1)
-        gtk_widget_set_sensitive (play.next_button, TRUE);
+    gtk_widget_set_sensitive (play.next_button, TRUE);
 
   g_signal_connect (play.player, "position-updated",
       G_CALLBACK (position_updated_cb), &play);
@@ -354,8 +353,7 @@ main (gint argc, gchar ** argv)
       G_CALLBACK (duration_changed_cb), &play);
   g_signal_connect (play.player, "video-dimensions-changed",
       G_CALLBACK (video_dimensions_changed_cb), &play);
-  g_signal_connect (play.player, "end-of-stream",
-      G_CALLBACK (eos_cb), &play);
+  g_signal_connect (play.player, "end-of-stream", G_CALLBACK (eos_cb), &play);
 
   /* We have file(s) that need playing. */
   set_title (&play, g_list_first (play.uris)->data);

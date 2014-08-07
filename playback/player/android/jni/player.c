@@ -148,7 +148,7 @@ on_error (GstPlayer * unused, GError * err, Player * player)
   JNIEnv *env = get_jni_env ();
   jstring error_msg;
 
-  error_msg =(*env)->NewStringUTF (env, err->message);
+  error_msg = (*env)->NewStringUTF (env, err->message);
 
   (*env)->CallVoidMethod (env, player->java_player, on_error_method_id,
       err->code, error_msg);
