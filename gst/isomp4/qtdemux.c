@@ -4618,6 +4618,17 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
   GstQTDemux *demux;
 
   demux = GST_QTDEMUX (parent);
+
+  if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DISCONT)) {
+    gint i;
+
+    GST_DEBUG_OBJECT (demux, "Got DISCONT, marking all streams as DISCONT");
+
+    for (i = 0; i < demux->n_streams; i++) {
+      demux->streams[i]->discont = TRUE;
+    }
+  }
+
   gst_adapter_push (demux->adapter, inbuf);
 
   GST_DEBUG_OBJECT (demux,
