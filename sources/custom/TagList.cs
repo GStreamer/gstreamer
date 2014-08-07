@@ -28,10 +28,10 @@ namespace Gst
 
 		public object this [string tag] {
 			get {
-				GLib.Value v;
+				var v = GLib.Value.Empty;
 				bool success;
 
-				success = CopyValue (out v, this, tag);
+				success = CopyValue (ref v, this, tag);
 
 				if (!success)
 					return null;

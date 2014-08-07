@@ -209,6 +209,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//method[parameters/parameter[contains(@type, 'Class*')]]" name="hidden">true</attr>
 	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="type">gpointer</attr>
 	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="array">false</attr>
+	<attr path="//method[@cname='gst_tag_list_copy_value']/parameters/parameter[@name='dest']" name="pass_as">ref</attr>
     <!-- buffer fixes -->
 	<attr path="//constructor[@cname='gst_buffer_new_wrapped']/parameters/parameter[@name='data']" name="type">guint8*</attr>
 	<attr path="//constructor[@cname='gst_buffer_new_wrapped']/parameters/parameter[@name='size']" name="name">n_length</attr>
