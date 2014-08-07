@@ -277,19 +277,6 @@ _check_all_pads_with_data_or_eos (GstAggregator * self,
   return FALSE;
 }
 
-/**
- * gst_aggregator_set_src_caps:
- * @self: The #GstAggregator
- * @caps: The #GstCaps to set later on the src pad.
- *
- * Sets the caps to be used on the src pad.
- */
-void
-gst_aggregator_set_src_caps (GstAggregator * self, GstCaps * caps)
-{
-  gst_caps_replace (&self->priv->srccaps, caps);
-}
-
 static void
 _reset_flow_values (GstAggregator * self)
 {
@@ -348,6 +335,20 @@ _push_mandatory_events (GstAggregator * self)
         gst_event_new_tag (gst_tag_list_ref (priv->tags)));
     priv->tags_changed = FALSE;
   }
+}
+
+/**
+ * gst_aggregator_set_src_caps:
+ * @self: The #GstAggregator
+ * @caps: The #GstCaps to set later on the src pad.
+ *
+ * Sets the caps to be used on the src pad.
+ */
+void
+gst_aggregator_set_src_caps (GstAggregator * self, GstCaps * caps)
+{
+  gst_caps_replace (&self->priv->srccaps, caps);
+  _push_mandatory_events (self);
 }
 
 /**
