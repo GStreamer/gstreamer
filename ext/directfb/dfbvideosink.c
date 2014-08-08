@@ -1349,8 +1349,10 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   dfbvideosink = GST_DFBVIDEOSINK (bsink);
 
   if (!dfbvideosink->setup) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
-            (dfbvideosink)));
+    GstCaps *tcaps =
+        gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (dfbvideosink));
+    caps = gst_caps_copy (tcaps);
+    gst_caps_unref (tcaps);
     GST_DEBUG_OBJECT (dfbvideosink, "getcaps called and we are not setup yet, "
         "returning template %" GST_PTR_FORMAT, caps);
     goto beach;
