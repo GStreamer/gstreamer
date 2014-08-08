@@ -632,21 +632,24 @@ gst_rtp_mux_getcaps (GstPad * pad, GstRTPMux * mux, GstCaps * filter)
   GstIteratorResult res;
   GstCaps *peercaps;
   GstCaps *othercaps;
+  GstCaps *tcaps;
 
   peercaps = gst_pad_peer_query_caps (mux->srcpad, filter);
 
   if (peercaps) {
-    othercaps = gst_caps_intersect_full (peercaps,
-        gst_pad_get_pad_template_caps (pad), GST_CAPS_INTERSECT_FIRST);
+    tcaps = gst_pad_get_pad_template_caps (pad);
+    othercaps = gst_caps_intersect_full (peercaps, tcaps,
+        GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
   } else {
+    tcaps = gst_pad_get_pad_template_caps (mux->srcpad);
     if (filter)
-      othercaps = gst_caps_intersect_full (filter,
-          gst_pad_get_pad_template_caps (mux->srcpad),
+      othercaps = gst_caps_intersect_full (filter, tcaps,
           GST_CAPS_INTERSECT_FIRST);
     else
-      othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (mux->srcpad));
+      othercaps = gst_caps_copy (tcaps);
   }
+  gst_caps_unref (tcaps);
 
   clear_caps (othercaps, FALSE);
 
