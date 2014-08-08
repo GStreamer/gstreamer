@@ -892,19 +892,18 @@ gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
     {
       GstSegment segment;
 
-      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-
       gst_event_copy_segment (event, &segment);
 
       GST_DEBUG_OBJECT (decoder, "segment %" GST_SEGMENT_FORMAT, &segment);
 
       if (segment.format != GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (decoder, "received non TIME newsegment");
-        GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
         break;
       }
 
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       decoder->output_segment = segment;
+      decoder->priv->last_timestamp_out = GST_CLOCK_TIME_NONE;
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
     }
@@ -1122,8 +1121,6 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     {
       GstSegment segment;
 
-      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-
       gst_event_copy_segment (event, &segment);
 
       if (segment.format == GST_FORMAT_TIME) {
@@ -1153,10 +1150,11 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
           gst_event_unref (event);
           event = gst_event_new_segment (&segment);
         } else {
-          GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
           goto newseg_wrong_format;
         }
       }
+
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
       priv->base_timestamp = GST_CLOCK_TIME_NONE;
       priv->base_picture_number = 0;
@@ -1600,9 +1598,11 @@ gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       res =
           gst_video_encoded_video_convert (priv->bytes_out, priv->time, src_fmt,
           src_val, &dest_fmt, &dest_val);
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       if (!res)
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
