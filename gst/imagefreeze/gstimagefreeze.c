@@ -192,6 +192,7 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
   GST_DEBUG_OBJECT (pad, "with: %" GST_PTR_FORMAT, othercaps);
   GST_DEBUG_OBJECT (pad, "gave: %" GST_PTR_FORMAT, intersection);
   gst_caps_unref (caps);
+  gst_caps_unref (othercaps);
   caps = intersection;
   intersection = othercaps = NULL;
 
