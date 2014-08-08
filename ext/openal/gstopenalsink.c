@@ -575,7 +575,9 @@ gst_openal_sink_getcaps (GstBaseSink * basesink, GstCaps * filter)
 
   if (sink->default_device == NULL) {
     GstPad *pad = GST_BASE_SINK_PAD (basesink);
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    GstCaps *tcaps = gst_pad_get_pad_template_caps (pad);
+    caps = gst_caps_copy (tcaps);
+    gst_caps_unref (tcaps);
   } else if (sink->probed_caps)
     caps = gst_caps_copy (sink->probed_caps);
   else {

@@ -335,9 +335,12 @@ gst_openal_src_getcaps (GstBaseSrc * basesrc, GstCaps * filter)
 
   if (device == NULL) {
     GstPad *pad = GST_BASE_SRC_PAD (basesrc);
+    GstCaps *tcaps = gst_pad_get_pad_template_caps (pad);
+
     GST_ELEMENT_WARNING (openalsrc, RESOURCE, OPEN_WRITE,
         ("Could not open temporary device."), GST_ALC_ERROR (device));
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_caps_copy (tcaps);
+    gst_caps_unref (tcaps);
   } else if (openalsrc->probed_caps)
     caps = gst_caps_copy (openalsrc->probed_caps);
   else {
