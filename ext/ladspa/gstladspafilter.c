@@ -105,6 +105,9 @@ gst_ladspa_filter_type_transform_caps (GstBaseTransform * base,
       g_assert_not_reached ();
   }
 
+  gst_caps_unref (srccaps);
+  gst_caps_unref (sinkcaps);
+
   GST_DEBUG_OBJECT (ladspa_debug, "transformed %" GST_PTR_FORMAT, ret);
 
   if (filter) {
