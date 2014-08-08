@@ -214,7 +214,8 @@ struct _GstVideoDecoder
  * @handle_frame:   Provides input data frame to subclass.
  * @finish:         Optional.
  *                  Called to request subclass to dispatch any pending remaining
- *                  data (e.g. at EOS).
+ *                  data (e.g. at EOS or segment end). Sub-classes should be prepared
+ *                  to handle new data afterward, or seamless segment processing will break.
  * @sink_event:     Optional.
  *                  Event handler on the sink pad. This function should return
  *                  TRUE if the event was handled and should be discarded
