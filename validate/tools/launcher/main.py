@@ -334,7 +334,10 @@ user argument, you can thus overrides command line options using that.
         options.paths = os.path.join(options.clone_dir, MEDIAS_FOLDER)
 
     if options.http_server_dir is None:
-        options.http_server_dir = options.paths
+        if isinstance(options.paths, list):
+            options.http_server_dir = options.paths[0]
+        else:
+            options.http_server_dir = options.paths
 
     if not options.sync and not os.path.exists(options.clone_dir) and \
             options.clone_dir == os.path.join(options.clone_dir, MEDIAS_FOLDER):
