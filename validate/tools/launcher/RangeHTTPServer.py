@@ -32,17 +32,21 @@ __version__ = "0.1"
 __all__ = ["RangeHTTPRequestHandler"]
 
 import os
+import sys
 import posixpath
 import BaseHTTPServer
 import urllib
 import cgi
 import shutil
 import mimetypes
+import time
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
 
+
+_bandwidth = 0
 
 class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -70,6 +74,11 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             while chunk > 0:
                 if start_range + chunk > end_range:
                     chunk = end_range - start_range
+
+                if _bandwidth != 0:
+                    time_to_sleep = float(float(chunk) / float(_bandwidth))
+                    time.sleep(time_to_sleep)
+
                 try:
                     self.wfile.write(f.read(chunk))
                 except:
@@ -146,7 +155,6 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_header("Content-Length", end_range - start_range)
         self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
         self.end_headers()
-        print "Sending Bytes ",start_range, " to ", end_range, "...\n"
         return (f, start_range, end_range)
 
     def list_directory(self, path):
@@ -271,4 +279,6 @@ def test(HandlerClass = RangeHTTPRequestHandler,
 
 
 if __name__ == '__main__':
+    if len(sys.argv) > 2:
+        _bandwidth = int(sys.argv[2])
     test()

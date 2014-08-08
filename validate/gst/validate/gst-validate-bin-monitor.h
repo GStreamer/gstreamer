@@ -62,6 +62,7 @@ struct _GstValidateBinMonitor {
   gulong element_added_id;
   guint print_pos_srcid;
   gboolean stateless;
+  gboolean buffering;
 };
 
 /**

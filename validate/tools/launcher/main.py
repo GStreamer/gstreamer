@@ -272,6 +272,9 @@ user argument, you can thus overrides command line options using that.
     http_server_group.add_argument("--http-server-port", dest="http_server_port",
                       default=8079,
                       help="Port on which to run the http server on localhost")
+    http_server_group.add_argument("--http-bandwith-limitation", dest="http_bandwith",
+                      default=1024 * 1024,
+                      help="The artificial bandwith limitation to introduce to the local server (in Bytes/sec) (default: 1 MBps)")
     http_server_group.add_argument("-s", "--folder-for-http-server", dest="http_server_dir",
                       default=None,
                       help="Folder in which to create an http server on localhost. Default is PATHS")

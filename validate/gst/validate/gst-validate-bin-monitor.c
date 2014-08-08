@@ -186,18 +186,50 @@ _bus_handler (GstBus * bus, GstMessage * message,
   GError *err;
   gchar *debug;
 
-  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
-    gst_message_parse_error (message, &err, &debug);
-    GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
-        "Got error: %s -- Debug message: %s", err->message, debug);
-    g_error_free (err);
-    g_free (debug);
-  } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING) {
-    gst_message_parse_warning (message, &err, &debug);
-    GST_VALIDATE_REPORT (monitor, WARNING_ON_BUS,
-        "Got warning: %s -- Debug message: %s", err->message, debug);
-    g_error_free (err);
-    g_free (debug);
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+      gst_message_parse_error (message, &err, &debug);
+      GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
+          "Got error: %s -- Debug message: %s", err->message, debug);
+      g_error_free (err);
+      g_free (debug);
+      break;
+    case GST_MESSAGE_WARNING:
+      gst_message_parse_warning (message, &err, &debug);
+      GST_VALIDATE_REPORT (monitor, WARNING_ON_BUS,
+          "Got warning: %s -- Debug message: %s", err->message, debug);
+      g_error_free (err);
+      g_free (debug);
+      break;
+    case GST_MESSAGE_BUFFERING:
+    {
+      GstBufferingMode mode;
+      gint percent;
+
+      gst_message_parse_buffering (message, &percent);
+      gst_message_parse_buffering_stats (message, &mode, NULL, NULL, NULL);
+
+      if (percent == 100) {
+        /* a 100% message means buffering is done */
+        if (monitor->buffering) {
+          monitor->print_pos_srcid =
+              g_timeout_add (PRINT_POSITION_TIMEOUT,
+              (GSourceFunc) print_position, monitor);
+          monitor->buffering = FALSE;
+        }
+      } else {
+        /* buffering... */
+        if (!monitor->buffering) {
+          monitor->buffering = TRUE;
+          if (monitor->print_pos_srcid
+              && g_source_remove (monitor->print_pos_srcid))
+            monitor->print_pos_srcid = 0;
+        }
+      }
+      break;
+    }
+    default:
+      break;
   }
 }
 
