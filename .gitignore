@@ -34,10 +34,15 @@ sources/generated-stamp
 sources/gstreamer-sharp-api.xml
 sources/*.gir
 sources/AssemblyInfo.cs
+sources/gstreamer-sharp.snk
 gstreamer-sharp-1.0.pc
+
+# tarball
+*.tar.gz
 
 # our "bin" folder when using makefile build
 out/gstreamer-sharp.dll
+out/gstreamer-sharp.dll.mdb
 *.exe
 
 # Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
