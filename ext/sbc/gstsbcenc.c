@@ -80,7 +80,7 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
   GstSbcEnc *enc = GST_SBC_ENC (audio_enc);
   GstStructure *s;
   GstCaps *caps, *filter_caps;
-  GstCaps *output_caps;
+  GstCaps *output_caps = NULL;
   guint sampleframes_per_frame;
 
   enc->rate = GST_AUDIO_INFO_RATE (info);
@@ -88,10 +88,8 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
 
   /* negotiate output format based on downstream caps restrictions */
   caps = gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (enc));
-  if (caps == GST_CAPS_NONE || gst_caps_is_empty (caps)) {
-    gst_caps_unref (caps);
-    return FALSE;
-  }
+  if (caps == GST_CAPS_NONE || gst_caps_is_empty (caps))
+    goto failure;
 
   if (caps == NULL)
     caps = gst_static_pad_template_get_caps (&sbc_enc_src_factory);
@@ -106,10 +104,7 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
     GST_WARNING_OBJECT (enc, "Couldn't negotiate output caps with input rate "
         "%d and input channels %d and allowed output caps %" GST_PTR_FORMAT,
         enc->rate, enc->channels, caps);
-    if (output_caps)
-      gst_caps_unref (output_caps);
-    gst_caps_unref (caps);
-    return FALSE;
+    goto failure;
   }
 
   gst_caps_unref (caps);
@@ -148,8 +143,7 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
     if (g_strcmp0 (channel_mode, "mono") != 0) {
       GST_ERROR_OBJECT (enc, "Can't have channel-mode '%s' for 1 channel",
           channel_mode);
-      gst_caps_unref (output_caps);
-      return FALSE;
+      goto failure;
     }
   } else {
     if (g_strcmp0 (channel_mode, "joint") != 0 &&
@@ -157,8 +151,7 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
         g_strcmp0 (channel_mode, "dual") != 0) {
       GST_ERROR_OBJECT (enc, "Can't have channel-mode '%s' for 2 channels",
           channel_mode);
-      gst_caps_unref (output_caps);
-      return FALSE;
+      goto failure;
     }
   }
 
@@ -182,7 +175,7 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
   else if (enc->rate == 48000)
     enc->sbc.frequency = SBC_FREQ_48000;
   else
-    return FALSE;
+    goto failure;
 
   if (enc->blocks == 4)
     enc->sbc.blocks = SBC_BLK_4;
@@ -193,13 +186,13 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
   else if (enc->blocks == 16)
     enc->sbc.blocks = SBC_BLK_16;
   else
-    return FALSE;
+    goto failure;
 
   enc->sbc.subbands = (enc->subbands == 4) ? SBC_SB_4 : SBC_SB_8;
   enc->sbc.bitpool = enc->bitpool;
 
   if (channel_mode == NULL || allocation_method == NULL)
-    return FALSE;
+    goto failure;
 
   if (strcmp (channel_mode, "joint") == 0)
     enc->sbc.mode = SBC_MODE_JOINT_STEREO;
@@ -212,19 +205,26 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
   else if (strcmp (channel_mode, "auto") == 0)
     enc->sbc.mode = SBC_MODE_JOINT_STEREO;
   else
-    return FALSE;
+    goto failure;
 
   if (strcmp (allocation_method, "loudness") == 0)
     enc->sbc.allocation = SBC_AM_LOUDNESS;
   else if (strcmp (allocation_method, "snr") == 0)
     enc->sbc.allocation = SBC_AM_SNR;
   else
-    return FALSE;
+    goto failure;
 
   if (!gst_audio_encoder_set_output_format (audio_enc, output_caps))
-    return FALSE;
+    goto failure;
 
   return gst_audio_encoder_negotiate (audio_enc);
+
+failure:
+  if (output_caps)
+    gst_caps_unref (output_caps);
+  if (caps)
+    gst_caps_unref (caps);
+  return FALSE;
 }
 
 static GstFlowReturn
