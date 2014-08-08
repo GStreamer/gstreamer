@@ -126,6 +126,21 @@ gst_capsfilter_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-concat</FILE>
+<TITLE>concat</TITLE>
+GstConcat
+<SUBSECTION Standard>
+GstConcatClass
+GST_CONCAT
+GST_IS_CONCAT
+GST_TYPE_CONCAT
+GST_CONCAT_CLASS
+GST_IS_CONCAT_CLASS
+<SUBSECTION Private>
+gst_concat_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-downloadbuffer</FILE>
 <TITLE>downloadbuffer</TITLE>
 GstDownloadBuffer

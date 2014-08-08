@@ -18,6 +18,26 @@
  * Boston, MA 02110-1301, USA.
  *
  */
+/**
+ * SECTION:element-concat
+ * @see_also: #GstFunnel
+ *
+ * Concatenates streams together to one continous stream.
+ *
+ * All streams but the current one are blocked until the current one
+ * finished with %GST_EVENT_EOS. Then the next stream is enabled, while
+ * keeping the running time continous for %GST_FORMAT_TIME segments or
+ * keeping the segment continous for %GST_FORMAT_BYTES segments.
+ *
+ * Streams are switched in the order in which the sinkpads were requested.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 concat name=c ! xvimagesink  videotestsrc num-buffers=100 ! c.   videotestsrc num-buffers=100 pattern=ball ! c.
+ * ]| Plays two video streams one after another.
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -449,7 +469,7 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         /* We know no duration */
         segment.duration = -1;
 
-        /* Update segment values to be contiguous with last stream */
+        /* Update segment values to be continous with last stream */
         if (self->format == GST_FORMAT_TIME) {
           segment.base += self->current_start_offset;
         } else {

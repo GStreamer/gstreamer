@@ -3,10 +3,10 @@
   <description>GStreamer core elements</description>
   <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
   <basename>libgstcoreelements.so</basename>
-  <version>1.4.0</version>
+  <version>1.5.0.1</version>
   <license>LGPL</license>
   <source>gstreamer</source>
-  <package>GStreamer source release</package>
+  <package>GStreamer git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,6 +20,27 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>concat</name>
+      <longname>Concat</longname>
+      <class>Generic</class>
+      <description>Concatenate multiple streams</description>
+      <author>Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
           <details>ANY</details>
         </caps>
         <caps>
