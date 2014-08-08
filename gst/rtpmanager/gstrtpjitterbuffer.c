@@ -342,9 +342,9 @@ static GstStaticPadTemplate gst_rtp_jitter_buffer_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp, "
-        "clock-rate = (int) [ 1, 2147483647 ]"
-        /* "payload = (int) , "
+    GST_STATIC_CAPS ("application/x-rtp"
+        /* "clock-rate = (int) [ 1, 2147483647 ], "
+         * "payload = (int) , "
          * "encoding-name = (string) "
          */ )
     );
@@ -1364,9 +1364,7 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      if (!gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps))
-        goto wrong_caps;
-
+      gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -1397,12 +1395,6 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
   return TRUE;
 
   /* ERRORS */
-wrong_caps:
-  {
-    GST_DEBUG_OBJECT (jitterbuffer, "received invalid caps");
-    gst_event_unref (event);
-    return FALSE;
-  }
 newseg_wrong_format:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "received non TIME newsegment");
