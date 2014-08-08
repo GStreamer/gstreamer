@@ -530,6 +530,8 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
       NULL);
 
+  gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
+
   g_object_get (monitor, "handles-states", needs_setting_state, NULL);
   *needs_setting_state = !*needs_setting_state;
   g_object_set_data (G_OBJECT (pipeline), MONITOR_ON_PIPELINE, monitor);
