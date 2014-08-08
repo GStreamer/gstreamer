@@ -154,9 +154,22 @@ dnl Check for Gst
 GSTREAMER_REQUIRED_VERSION=1.4.0
 PKG_CHECK_MODULES(GST,
 		gstreamer-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-app-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-audio-1.0 >= $GSTREAMER_REQUIRED_VERSION
 		gstreamer-base-1.0 >= $GSTREAMER_REQUIRED_VERSION
-		gstreamer-plugins-base-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-controller-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-fft-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-mpegts-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-net-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-pbutils-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-riff-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-rtp-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-rtsp-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-sdp-1.0 >= $GSTREAMER_REQUIRED_VERSION
 		gstreamer-tag-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-video-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-plugins-bad-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-plugins-base-1.0 >= $GSTREAMER_REQUIRED_VERSION
 )
 
 gstreamer_prefix=`pkg-config --variable=prefix gtk-sharp-3.0`
