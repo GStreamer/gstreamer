@@ -1451,6 +1451,7 @@ gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec)
       if (len < 0 || have_data == 0)
         break;
     } while (try++ < 10);
+    avcodec_flush_buffers (ffmpegdec->context);
   }
 }
 
