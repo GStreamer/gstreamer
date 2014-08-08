@@ -3,6 +3,7 @@ API = $(ASSEMBLY_NAME)-api.xml
 METADATA = $(ASSEMBLY_NAME).metadata
 DLL = ../out/$(ASSEMBLY_NAME).dll
 DLLMAP = ../out/$(ASSEMBLY_NAME).dll.config
+MDB = $(DLL).mdb
 GLUEDIR = glue
 KEYFILE = $(ASSEMBLY_NAME).snk
 
@@ -35,7 +36,7 @@ sources = \
 
 build_sources = AssemblyInfo.cs $(addprefix $(srcdir)/custom/, $(sources))
 
-CLEANFILES = $(DLL) generated-stamp generated/*/*.cs $(API) $(KEYFILE)
+CLEANFILES = $(DLL) $(MDB) generated-stamp generated/*/*.cs $(API) $(KEYFILE)
 
 DISTCLEANFILES = AssemblyInfo.cs $(DLLMAP) $(DLL)
 
@@ -72,7 +73,7 @@ $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
 
 $(DLL): $(build_sources) generated-stamp $(KEYFILE)
 	test -d ../out || mkdir ../out
-	$(CSC) -nowarn:169 -nowarn:108 -nowarn:114 -unsafe -target:library $(GLIB_SHARP_LIBS) $(GIO_SHARP_LIBS) \
+	$(CSC) -debug -nowarn:169 -nowarn:108 -nowarn:114 -unsafe -target:library $(GLIB_SHARP_LIBS) $(GIO_SHARP_LIBS) \
 		$(build_sources)  generated/*/*.cs -out:$(DLL)
 
 install-data-local:
@@ -83,4 +84,4 @@ uninstall-local:
 	echo "$(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS)"; \
         $(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS) || exit 1;
 clean-local:
-	-rm -r generated/*
+	rm -r generated/*
