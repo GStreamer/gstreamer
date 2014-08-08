@@ -53,7 +53,8 @@ static GstPad *myvideosrcpad, *mytextsrcpad, *mysinkpad;
     "format = (string) I420"
 
 #define VIDEO_CAPS_TEMPLATE_WITH_FEATURE_STRING                              \
-    "video/x-raw(" GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION "), " \
+    "video/x-raw(" GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ", "                \
+    GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION "), "                \
     "format = (string) I420;"                                                \
     "video/x-raw, "                                                          \
     "format = (string) I420;"

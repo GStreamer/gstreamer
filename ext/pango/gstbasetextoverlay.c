@@ -708,46 +708,92 @@ gst_base_text_overlay_setcaps_txt (GstBaseTextOverlay * overlay, GstCaps * caps)
   return TRUE;
 }
 
-/* FIXME: upstream nego (e.g. when the video window is resized) */
-
 /* only negotiate/query video overlay composition support for now */
 static gboolean
-gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay)
+gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
 {
-  GstCaps *target;
   GstQuery *query;
   gboolean attach = FALSE;
+  gboolean caps_has_meta = TRUE;
+  gboolean ret;
+  GstCapsFeatures *f;
 
   GST_DEBUG_OBJECT (overlay, "performing negotiation");
 
-  target = gst_pad_get_current_caps (overlay->srcpad);
+  if (!caps)
+    caps = gst_pad_get_current_caps (overlay->video_sinkpad);
+  else
+    gst_caps_ref (caps);
 
-  if (!target || gst_caps_is_empty (target))
+  if (!caps || gst_caps_is_empty (caps))
     goto no_format;
 
-  /* find supported meta */
-  query = gst_query_new_allocation (target, TRUE);
+  /* Try to use the overlay meta if possible */
+  f = gst_caps_get_features (caps, 0);
 
-  if (!gst_pad_peer_query (overlay->srcpad, query)) {
-    /* no problem, we use the query defaults */
-    GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
+  /* if the caps doesn't have the overlay meta, we query if downstream
+   * accepts it before trying the version without the meta
+   * If upstream already is using the meta then we can only use it */
+  if (!f
+      || !gst_caps_features_contains (f,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
+    GstCaps *overlay_caps;
+
+    /* In this case we added the meta, but we can work without it
+     * so preserve the original caps so we can use it as a fallback */
+    overlay_caps = gst_caps_copy (caps);
+
+    f = gst_caps_get_features (overlay_caps, 0);
+    if (f == NULL) {
+      f = gst_caps_features_new
+          (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
+    } else {
+      gst_caps_features_add (f,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+    }
+
+    ret = gst_pad_peer_query_accept_caps (overlay->srcpad, overlay_caps);
+    GST_DEBUG_OBJECT (overlay, "Downstream accepts the overlay meta: %d", ret);
+    if (ret) {
+      gst_caps_unref (caps);
+      caps = overlay_caps;
+
+    } else {
+      /* fallback to the original */
+      gst_caps_unref (overlay_caps);
+      caps_has_meta = FALSE;
+    }
+
   }
+  GST_DEBUG_OBJECT (overlay, "Using caps %" GST_PTR_FORMAT, caps);
+  ret = gst_pad_set_caps (overlay->srcpad, caps);
 
-  if (gst_query_find_allocation_meta (query,
-          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL))
-    attach = TRUE;
+  if (ret) {
+    /* find supported meta */
+    query = gst_query_new_allocation (caps, TRUE);
 
-  overlay->attach_compo_to_buffer = attach;
+    if (!gst_pad_peer_query (overlay->srcpad, query)) {
+      /* no problem, we use the query defaults */
+      GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
+    }
 
-  gst_query_unref (query);
-  gst_caps_unref (target);
+    if (caps_has_meta && gst_query_find_allocation_meta (query,
+            GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL))
+      attach = TRUE;
 
-  return TRUE;
+    overlay->attach_compo_to_buffer = attach;
+    gst_query_unref (query);
+  } else {
+    overlay->attach_compo_to_buffer = FALSE;
+  }
+  gst_caps_unref (caps);
+
+  return ret;
 
 no_format:
   {
-    if (target)
-      gst_caps_unref (target);
+    if (caps)
+      gst_caps_unref (caps);
     return FALSE;
   }
 }
@@ -780,23 +826,19 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
   overlay->width = GST_VIDEO_INFO_WIDTH (&info);
   overlay->height = GST_VIDEO_INFO_HEIGHT (&info);
 
-  ret = gst_pad_set_caps (overlay->srcpad, caps);
+  GST_BASE_TEXT_OVERLAY_LOCK (overlay);
+  g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
+  ret = gst_base_text_overlay_negotiate (overlay, caps);
 
-  if (ret) {
-    GST_BASE_TEXT_OVERLAY_LOCK (overlay);
-    g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
-    gst_base_text_overlay_negotiate (overlay);
-
-    if (!overlay->attach_compo_to_buffer &&
-        !gst_base_text_overlay_can_handle_caps (caps)) {
-      GST_DEBUG_OBJECT (overlay, "unsupported caps %" GST_PTR_FORMAT, caps);
-      ret = FALSE;
-    }
-
-    gst_base_text_overlay_update_wrap_mode (overlay);
-    g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
-    GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
+  if (!overlay->attach_compo_to_buffer &&
+      !gst_base_text_overlay_can_handle_caps (caps)) {
+    GST_DEBUG_OBJECT (overlay, "unsupported caps %" GST_PTR_FORMAT, caps);
+    ret = FALSE;
   }
+
+  gst_base_text_overlay_update_wrap_mode (overlay);
+  g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
+  GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
 
   return ret;
 
@@ -1852,7 +1894,7 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
     goto done;
 
   if (gst_pad_check_reconfigure (overlay->srcpad))
-    gst_base_text_overlay_negotiate (overlay);
+    gst_base_text_overlay_negotiate (overlay, NULL);
 
   video_frame = gst_buffer_make_writable (video_frame);
 
