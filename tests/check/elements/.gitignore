@@ -1,5 +1,6 @@
 .dirstamp
 capsfilter
+concat
 fakesrc
 fakesink
 fdsrc
