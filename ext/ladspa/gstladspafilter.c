@@ -121,6 +121,9 @@ gst_ladspa_filter_type_transform_caps (GstBaseTransform * base,
     GST_DEBUG_OBJECT (ladspa_debug, "Intersection %" GST_PTR_FORMAT, ret);
   }
 
+  gst_caps_unref (srccaps);
+  gst_caps_unref (sinkcaps);
+
   return ret;
 }
 
