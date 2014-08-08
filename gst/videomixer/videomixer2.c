@@ -316,8 +316,11 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
 
   downstream_caps = gst_pad_get_allowed_caps (mix->srcpad);
 
-  if (!downstream_caps || gst_caps_is_empty (downstream_caps))
+  if (!downstream_caps || gst_caps_is_empty (downstream_caps)) {
+    if (downstream_caps)
+      gst_caps_unref (downstream_caps);
     return FALSE;
+  }
 
   formats_table = g_hash_table_new (g_direct_hash, g_direct_equal);
 
