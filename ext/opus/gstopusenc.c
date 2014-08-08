@@ -717,6 +717,7 @@ gst_opus_enc_sink_getcaps (GstAudioEncoder * benc, GstCaps * filter)
 {
   GstOpusEnc *enc;
   GstCaps *caps;
+  GstCaps *tcaps;
   GstCaps *peercaps = NULL;
   GstCaps *intersect = NULL;
   guint i;
@@ -734,8 +735,9 @@ gst_opus_enc_sink_getcaps (GstAudioEncoder * benc, GstCaps * filter)
         (GST_AUDIO_ENCODER_SINK_PAD (benc)));
   }
 
-  intersect = gst_caps_intersect (peercaps,
-      gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (benc)));
+  tcaps = gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (benc));
+  intersect = gst_caps_intersect (peercaps, tcaps);
+  gst_caps_unref (tcaps);
   gst_caps_unref (peercaps);
 
   if (gst_caps_is_empty (intersect))
@@ -756,9 +758,8 @@ gst_opus_enc_sink_getcaps (GstAudioEncoder * benc, GstCaps * filter)
 
   gst_caps_unref (intersect);
 
-  caps =
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SINK_PAD
-          (benc)));
+  caps = gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SINK_PAD (benc));
+  caps = gst_caps_make_writable (caps);
   if (!allow_multistream) {
     GValue range = { 0 };
     g_value_init (&range, GST_TYPE_INT_RANGE);
