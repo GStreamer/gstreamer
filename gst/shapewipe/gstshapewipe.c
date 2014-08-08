@@ -448,20 +448,20 @@ static GstCaps *
 gst_shape_wipe_mask_sink_getcaps (GstShapeWipe * self, GstPad * pad,
     GstCaps * filter)
 {
-  GstCaps *ret, *tmp;
+  GstCaps *ret, *tmp, *tcaps;
   guint i, n;
 
   if (gst_pad_has_current_caps (pad))
     return gst_pad_get_current_caps (pad);
 
+  tcaps = gst_pad_get_pad_template_caps (self->video_sinkpad);
   tmp = gst_pad_peer_query_caps (self->video_sinkpad, NULL);
   if (tmp) {
-    ret =
-        gst_caps_intersect (tmp,
-        gst_pad_get_pad_template_caps (self->video_sinkpad));
+    ret = gst_caps_intersect (tmp, tcaps);
+    gst_caps_unref (tcaps);
     gst_caps_unref (tmp);
   } else {
-    ret = gst_pad_get_pad_template_caps (self->video_sinkpad);
+    ret = tcaps;
   }
 
   GST_LOG_OBJECT (pad, "video sink accepted caps: %" GST_PTR_FORMAT, ret);
