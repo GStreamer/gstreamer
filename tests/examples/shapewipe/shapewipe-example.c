@@ -101,6 +101,7 @@ main (gint argc, gchar ** argv)
   gst_object_add_control_binding (GST_OBJECT_CAST (shapewipe),
       gst_direct_control_binding_new (GST_OBJECT_CAST (shapewipe), "position",
           cs));
+  gst_object_unref (shapewipe);
 
   g_object_set (cs,
       "amplitude", 0.5,
