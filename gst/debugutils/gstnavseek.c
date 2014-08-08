@@ -173,6 +173,7 @@ gst_navseek_change_playback_rate (GstNavSeek * navseek, gdouble rate)
 
     gst_pad_send_event (peer_pad, event);
   }
+  gst_object_unref (peer_pad);
 }
 
 static void
