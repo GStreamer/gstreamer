@@ -42,6 +42,7 @@ expose_cb (GtkWidget * widget, gpointer data)
           GST_TYPE_VIDEO_OVERLAY));
 
   gst_video_overlay_set_gtk_window (overlay, widget);
+  gst_object_unref (overlay);
 
   return FALSE;
 }
