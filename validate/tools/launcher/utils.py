@@ -49,6 +49,7 @@ class Protocols(object):
     HTTP = "http"
     FILE = "file"
     HLS = "hls"
+    DASH = "dash"
 
 
 class Colors(object):

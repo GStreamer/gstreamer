@@ -52,9 +52,11 @@ AUDIO_ONLY_FILE_TRANSCODING_RATIO = 5
 """
 Some info about protocols and how to handle them
 """
-GST_VALIDATE_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS)]
+GST_VALIDATE_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS),
+                                 ("application/dash+xml", Protocols.DASH)]
 GST_VALIDATE_PROTOCOL_TIMEOUTS = {Protocols.HTTP: 120,
-                                  Protocols.HLS: 240}
+                                  Protocols.HLS: 240,
+                                  Protocols.DASH: 240}
 
 
 class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
@@ -553,7 +555,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 protocol = test.media_descriptor.get_protocol()
                 uri = test.media_descriptor.get_uri()
 
-                if protocol == Protocols.HTTP and \
+                if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] and \
                     "127.0.0.1:%s" % (self.options.http_server_port) in uri:
                     return True
         return False
