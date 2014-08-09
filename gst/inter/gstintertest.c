@@ -135,6 +135,11 @@ gst_inter_test_free (GstInterTest * intertest)
     intertest->sink_element = NULL;
   }
 
+  if (intertest->bus) {
+    gst_object_unref (intertest->bus);
+    intertest->bus = NULL;
+  }
+
   if (intertest->pipeline) {
     gst_element_set_state (intertest->pipeline, GST_STATE_NULL);
     gst_object_unref (intertest->pipeline);
