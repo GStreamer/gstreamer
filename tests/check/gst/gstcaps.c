@@ -1122,6 +1122,7 @@ GST_START_TEST (test_features)
   gst_caps_features_add (f1, "memory:VASurface");
 
   fail_unless (gst_caps_features_is_equal (f1, gst_caps_get_features (c1, 0)));
+  fail_if (gst_caps_can_intersect (c1, c2));
 
   f2 = gst_caps_get_features (c2, 0);
   fail_unless (gst_caps_features_is_equal
