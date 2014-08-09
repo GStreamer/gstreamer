@@ -1288,11 +1288,8 @@ gst_amc_video_enc_set_format (GstVideoEncoder * encoder,
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
   if (!allowed_caps) {
     GST_DEBUG_OBJECT (self, "... but no peer, using template caps");
-    /* we need to copy because get_allowed_caps returns a ref, and
-     * get_pad_template_caps doesn't */
     allowed_caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD
-            (encoder)));
+        gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
   }
   GST_DEBUG_OBJECT (self, "chose caps %" GST_PTR_FORMAT, allowed_caps);
   allowed_caps = gst_caps_truncate (allowed_caps);
