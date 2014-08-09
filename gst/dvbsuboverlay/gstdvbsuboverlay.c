@@ -549,7 +549,7 @@ gst_dvbsub_overlay_get_videosink_caps (GstDVBSubOverlay * render, GstPad * pad,
     if (gst_caps_is_any (peer_caps)) {
 
       /* if peer returns ANY caps, return filtered src pad template caps */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (srcpad));
+      caps = gst_pad_get_pad_template_caps (srcpad);
       if (filter) {
         GstCaps *intersection = gst_caps_intersect_full (filter, caps,
             GST_CAPS_INTERSECT_FIRST);
@@ -617,7 +617,7 @@ gst_dvbsub_overlay_get_src_caps (GstDVBSubOverlay * render, GstPad * pad,
     if (gst_caps_is_any (peer_caps)) {
 
       /* if peer returns ANY caps, return filtered sink pad template caps */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (sinkpad));
+      caps = gst_pad_get_pad_template_caps (sinkpad);
       if (filter) {
         GstCaps *intersection = gst_caps_intersect_full (filter, caps,
             GST_CAPS_INTERSECT_FIRST);
