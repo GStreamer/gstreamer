@@ -611,16 +611,17 @@ done:
 /*
  * (really really) FIXME: move into core (dixit tpm)
  */
-/**
+/*
  * _gst_caps_set_buffer_array:
- * @caps: a #GstCaps
+ * @caps: (transfer full): a #GstCaps
  * @field: field in caps to set
  * @buf: header buffers
  *
  * Adds given buffers to an array of buffers set as the given @field
  * on the given @caps.  List of buffer arguments must be NULL-terminated.
  *
- * Returns: input caps with a streamheader field added, or NULL if some error
+ * Returns: (transfer full): input caps with a streamheader field added, or NULL
+ *     if some error occurred
  */
 static GstCaps *
 _gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
