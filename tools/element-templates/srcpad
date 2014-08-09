@@ -76,7 +76,7 @@ gst_replace_src_getcaps (GstPad *pad)
 
   GST_DEBUG_OBJECT(replace, "getcaps");
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  caps = gst_pad_get_pad_template_caps (pad);
 
   gst_object_unref (replace);
   return caps;
