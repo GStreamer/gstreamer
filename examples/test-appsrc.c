@@ -87,6 +87,7 @@ media_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media,
   /* install the callback that will be called when a buffer is needed */
   g_signal_connect (appsrc, "need-data", (GCallback) need_data, ctx);
   gst_object_unref (appsrc);
+  gst_object_unref (element);
 }
 
 int
