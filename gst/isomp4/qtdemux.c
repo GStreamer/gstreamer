@@ -8092,6 +8092,45 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           gst_buffer_unref (buf);
           break;
         }
+        case GST_MAKE_FOURCC ('v', 'c', '-', '1'):
+        {
+          gint len = QT_UINT32 (stsd_data) - 0x66;
+          const guint8 *vc1_data = stsd_data + 0x66;
+
+          /* find dvc1 */
+          while (len >= 8) {
+            gint size;
+
+            if (QT_UINT32 (vc1_data) <= len)
+              size = QT_UINT32 (vc1_data) - 8;
+            else
+              size = len - 8;
+
+            if (size < 1)
+              /* No real data, so break out */
+              break;
+
+            switch (QT_FOURCC (vc1_data + 0x4)) {
+              case GST_MAKE_FOURCC ('d', 'v', 'c', '1'):
+              {
+                GstBuffer *buf;
+
+                GST_DEBUG_OBJECT (qtdemux, "found dvc1 codec_data in stsd");
+                buf = gst_buffer_new_and_alloc (size);
+                gst_buffer_fill (buf, 0, vc1_data + 8, size);
+                gst_caps_set_simple (stream->caps,
+                    "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                gst_buffer_unref (buf);
+                break;
+              }
+              default:
+                break;
+            }
+            len -= size + 8;
+            vc1_data += size + 8;
+          }
+          break;
+        }
         default:
           break;
       }
@@ -10906,6 +10945,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING,
           "4444", NULL);
       break;
+    case GST_MAKE_FOURCC ('v', 'c', '-', '1'):
     case FOURCC_ovc1:
       _codec ("VC-1");
       caps = gst_caps_new_simple ("video/x-wmv",
