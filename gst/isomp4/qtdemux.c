@@ -8384,6 +8384,113 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         break;
       }
+      case GST_MAKE_FOURCC ('w', 'm', 'a', ' '):
+      {
+        gint len = QT_UINT32 (stsd_data) - offset;
+        const guint8 *wfex_data = stsd_data + offset;
+        const gchar *codec_name = NULL;
+        gint version = 1;
+        /* from http://msdn.microsoft.com/en-us/library/dd757720(VS.85).aspx */
+        /* FIXME this should also be gst_riff_strf_auds,
+         * but the latter one is actually missing bits-per-sample :( */
+        typedef struct
+        {
+          gint16 wFormatTag;
+          gint16 nChannels;
+          gint32 nSamplesPerSec;
+          gint32 nAvgBytesPerSec;
+          gint16 nBlockAlign;
+          gint16 wBitsPerSample;
+          gint16 cbSize;
+        } WAVEFORMATEX;
+        WAVEFORMATEX wfex;
+
+        /* FIXME: unify with similar wavformatex parsing code above */
+        GST_DEBUG_OBJECT (qtdemux, "parse wma, looking for wfex");
+
+        /* find wfex */
+        while (len >= 8) {
+          gint size;
+
+          if (QT_UINT32 (wfex_data) <= len)
+            size = QT_UINT32 (wfex_data) - 8;
+          else
+            size = len - 8;
+
+          if (size < 1)
+            /* No real data, so break out */
+            break;
+
+          switch (QT_FOURCC (wfex_data + 4)) {
+            case GST_MAKE_FOURCC ('w', 'f', 'e', 'x'):
+            {
+              GST_DEBUG_OBJECT (qtdemux, "found wfex in stsd");
+
+              if (size < 8 + 18)
+                break;
+
+              wfex.wFormatTag = GST_READ_UINT16_LE (wfex_data + 8 + 0);
+              wfex.nChannels = GST_READ_UINT16_LE (wfex_data + 8 + 2);
+              wfex.nSamplesPerSec = GST_READ_UINT32_LE (wfex_data + 8 + 4);
+              wfex.nAvgBytesPerSec = GST_READ_UINT32_LE (wfex_data + 8 + 8);
+              wfex.nBlockAlign = GST_READ_UINT16_LE (wfex_data + 8 + 12);
+              wfex.wBitsPerSample = GST_READ_UINT16_LE (wfex_data + 8 + 14);
+              wfex.cbSize = GST_READ_UINT16_LE (wfex_data + 8 + 16);
+
+              GST_LOG_OBJECT (qtdemux, "Found wfex box in stsd:");
+              GST_LOG_OBJECT (qtdemux, "FormatTag = 0x%04x, Channels = %u, "
+                  "SamplesPerSec = %u, AvgBytesPerSec = %u, BlockAlign = %u, "
+                  "BitsPerSample = %u, Size = %u", wfex.wFormatTag,
+                  wfex.nChannels, wfex.nSamplesPerSec, wfex.nAvgBytesPerSec,
+                  wfex.nBlockAlign, wfex.wBitsPerSample, wfex.cbSize);
+
+              if (wfex.wFormatTag == 0x0161) {
+                codec_name = "Windows Media Audio";
+                version = 2;
+              } else if (wfex.wFormatTag == 0x0162) {
+                codec_name = "Windows Media Audio 9 Pro";
+                version = 3;
+              } else if (wfex.wFormatTag == 0x0163) {
+                codec_name = "Windows Media Audio 9 Lossless";
+                /* is that correct? gstffmpegcodecmap.c is missing it, but
+                 * fluendo codec seems to support it */
+                version = 4;
+              }
+
+              gst_caps_set_simple (stream->caps,
+                  "wmaversion", G_TYPE_INT, version,
+                  "block_align", G_TYPE_INT, wfex.nBlockAlign,
+                  "bitrate", G_TYPE_INT, wfex.nAvgBytesPerSec,
+                  "width", G_TYPE_INT, wfex.wBitsPerSample,
+                  "depth", G_TYPE_INT, wfex.wBitsPerSample, NULL);
+
+              if (size > wfex.cbSize) {
+                GstBuffer *buf;
+
+                buf = gst_buffer_new_and_alloc (size - wfex.cbSize);
+                gst_buffer_fill (buf, 0, wfex_data + 8 + wfex.cbSize,
+                    size - wfex.cbSize);
+                gst_caps_set_simple (stream->caps,
+                    "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                gst_buffer_unref (buf);
+              } else {
+                GST_WARNING_OBJECT (qtdemux, "no codec data");
+              }
+
+              if (codec_name) {
+                g_free (codec);
+                codec = g_strdup (codec_name);
+              }
+              break;
+            }
+            default:
+              break;
+          }
+          len -= size + 8;
+          wfex_data += size + 8;
+        }
+        break;
+      }
       default:
         break;
     }
@@ -11177,6 +11284,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("QualComm PureVoice");
       caps = gst_caps_from_string ("audio/qcelp");
       break;
+    case GST_MAKE_FOURCC ('w', 'm', 'a', ' '):
     case FOURCC_owma:
       _codec ("WMA");
       caps = gst_caps_new_empty_simple ("audio/x-wma");
