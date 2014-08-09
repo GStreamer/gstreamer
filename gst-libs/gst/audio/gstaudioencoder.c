@@ -2705,7 +2705,7 @@ gst_audio_encoder_negotiate (GstAudioEncoder * enc)
 /*
  * gst_audio_encoder_set_output_format:
  * @enc: a #GstAudioEncoder
- * @caps: #GstCaps
+ * @caps: (transfer none): #GstCaps
  *
  * Configure output caps on the srcpad of @enc.
  *
