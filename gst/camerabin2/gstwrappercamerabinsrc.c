@@ -484,8 +484,10 @@ check_and_replace_src (GstWrapperCameraBinSrc * self)
     if (videoconvert) {
       if (!gst_element_link_pads (self->src_vid_src, "src", videoconvert,
               "sink")) {
+        gst_object_unref (videoconvert);
         return FALSE;
       }
+      gst_object_unref (videoconvert);
     }
   }
 
@@ -675,8 +677,13 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       if (gst_pad_is_linked (gst_element_get_static_pad (src_csp, "src")))
         gst_element_unlink (src_csp, capsfilter);
       if (!gst_element_link_many (src_csp, self->video_filter, filter_csp,
-              capsfilter, NULL))
+              capsfilter, NULL)) {
+        gst_object_unref (src_csp);
+        gst_object_unref (capsfilter);
         goto done;
+      }
+      gst_object_unref (src_csp);
+      gst_object_unref (capsfilter);
     }
   }
   ret = TRUE;
@@ -870,6 +877,7 @@ start_image_capture (GstWrapperCameraBinSrc * self)
     ret = gst_photography_prepare_for_capture (photography,
         (GstPhotographyCapturePrepared) img_capture_prepared,
         self->image_capture_caps, self);
+    gst_object_unref (photography);
   } else {
     g_mutex_unlock (&bcamsrc->capturing_mutex);
     gst_wrapper_camera_bin_reset_video_src_caps (self,
@@ -909,6 +917,7 @@ gst_wrapper_camera_bin_src_set_mode (GstBaseCameraSrc * bcamsrc,
             "capture-mode")) {
       g_object_set (G_OBJECT (photography), "capture-mode", mode, NULL);
     }
+    gst_object_unref (photography);
   } else {
     GstCaps *anycaps = gst_caps_new_any ();
     gst_wrapper_camera_bin_reset_video_src_caps (self, anycaps);
