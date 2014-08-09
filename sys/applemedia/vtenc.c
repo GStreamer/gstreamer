@@ -425,7 +425,8 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     return TRUE;
   }
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (self->srcpad));
+  caps = gst_pad_get_pad_template_caps (self->srcpad);
+  caps = gst_caps_make_writable (caps);
   s = gst_caps_get_structure (caps, 0);
   gst_structure_set (s,
       "width", G_TYPE_INT, self->negotiated_width,
@@ -459,6 +460,7 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
   }
 
   result = gst_pad_push_event (self->srcpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
 
   self->caps_width = self->negotiated_width;
   self->caps_height = self->negotiated_height;
