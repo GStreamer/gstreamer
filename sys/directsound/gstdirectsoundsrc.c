@@ -201,8 +201,7 @@ gst_directsound_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
   GstCaps *caps = NULL;
   GST_DEBUG_OBJECT (bsrc, "get caps");
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD
-          (bsrc)));
+  caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   return caps;
 }
 
