@@ -164,6 +164,7 @@ main (int argc, char *argv[])
 
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, actor,
       NULL);
+  gst_object_unref (bus);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
