@@ -11094,7 +11094,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   const gchar *name;
   gint endian = 0;
 
-  GST_DEBUG_OBJECT (qtdemux, "resolve fourcc %08x", fourcc);
+  GST_DEBUG_OBJECT (qtdemux, "resolve fourcc 0x%08x", GUINT32_TO_BE (fourcc));
 
   switch (fourcc) {
     case GST_MAKE_FOURCC ('N', 'O', 'N', 'E'):
@@ -11385,7 +11385,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 {
   GstCaps *caps;
 
-  GST_DEBUG_OBJECT (qtdemux, "resolve fourcc %08x", fourcc);
+  GST_DEBUG_OBJECT (qtdemux, "resolve fourcc 0x%08x", GUINT32_TO_BE (fourcc));
 
   switch (fourcc) {
     case GST_MAKE_FOURCC ('m', 'p', '4', 's'):
