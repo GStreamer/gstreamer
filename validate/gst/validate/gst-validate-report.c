@@ -41,7 +41,7 @@
 static GstClockTime _gst_validate_report_start_time = 0;
 static GstValidateDebugFlags _gst_validate_flags = 0;
 static GHashTable *_gst_validate_issues = NULL;
-static FILE *log_file;
+static FILE **log_files = NULL;
 
 #ifndef GST_DISABLE_GST_DEBUG
 static GRegex *regex = NULL;
@@ -276,14 +276,36 @@ gst_validate_report_init (void)
 
   file_env = g_getenv ("GST_VALIDATE_FILE");
   if (file_env != NULL && *file_env != '\0') {
-    log_file = g_fopen (file_env, "w");
-    if (log_file == NULL) {
-      g_printerr ("Could not open log file '%s' for writing: %s\n", file_env,
-          g_strerror (errno));
-      log_file = stderr;
+    gint i;
+    gchar **wanted_files;
+    wanted_files = g_strsplit (file_env, G_SEARCHPATH_SEPARATOR_S, 0);
+
+    /* FIXME: Make sure it is freed in the deinit function when that is
+     * implemented */
+    log_files =
+        g_malloc0 (sizeof (FILE *) * (g_strv_length (wanted_files) + 1));
+    for (i = 0; i < g_strv_length (wanted_files); i++) {
+      FILE *log_file;
+
+      if (g_strcmp0 (wanted_files[i], "stderr") == 0) {
+        log_file = stderr;
+      } else if (g_strcmp0 (wanted_files[i], "stdout") == 0)
+        log_file = stdout;
+      else {
+        log_file = g_fopen (wanted_files[i], "w");
+      }
+
+      if (log_file == NULL) {
+        g_printerr ("Could not open log file '%s' for writing: %s\n", file_env,
+            g_strerror (errno));
+        log_file = stderr;
+      }
+
+      log_files[i] = log_file;
     }
   } else {
-    log_file = stdout;
+    log_files = g_malloc0 (sizeof (FILE *) * 2);
+    log_files[0] = stdout;
   }
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -436,6 +458,7 @@ gst_validate_printf (gpointer source, const gchar * format, ...)
 void
 gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 {
+  gint i;
   GString *string = g_string_new (NULL);
 
   if (source) {
@@ -471,8 +494,10 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
   }
 #endif
 
-  fprintf (log_file, "%s", string->str);
-  fflush (log_file);
+  for (i = 0; log_files[i]; i++) {
+    fprintf (log_files[i], "%s", string->str);
+    fflush (log_files[i]);
+  }
 
   g_string_free (string, TRUE);
 }
