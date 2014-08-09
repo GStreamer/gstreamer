@@ -68,6 +68,7 @@
 #include "gstrtpj2kpay.h"
 #include "gstrtpjpegdepay.h"
 #include "gstrtpjpegpay.h"
+#include "gstrtpklvpay.h"
 #include "gstrtpL16depay.h"
 #include "gstrtpL16pay.h"
 #include "gstrtpL24depay.h"
@@ -240,6 +241,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_jpeg_pay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_klv_pay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_L16_pay_plugin_init (plugin))
