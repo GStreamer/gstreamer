@@ -523,6 +523,7 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   if (othercaps) {
     icaps = gst_caps_intersect (othercaps, tcaps);
     gst_caps_unref (othercaps);
+    gst_caps_unref (tcaps);
   } else {
     icaps = tcaps;
   }
@@ -541,8 +542,6 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   }
   gst_caps_set_simple (icaps, "interlace-mode", G_TYPE_STRING,
       pad == interlace->srcpad ? mode : "progressive", NULL);
-
-  gst_caps_unref (tcaps);
 
   if (clean_filter)
     gst_caps_unref (clean_filter);
