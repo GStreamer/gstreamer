@@ -7,6 +7,12 @@ MDB = $(DLL).mdb
 GLUEDIR = glue
 KEYFILE = $(ASSEMBLY_NAME).snk
 
+GLUEINCLUDES = gst/gst.h,gst/app/app.h,gst/audio/audio.h,gst/base/base.h,gst/controller/controller.h,gst/fft/fft.h,gst/mpegts/mpegts.h,gst/net/net.h\,gst/pbutils/pbutils.h,gst/rtp/rtp.h,gst/rtsp/rtsp.h,gst/sdp/sdp.h,gst/tag/tag.h,gst/video/video.h
+
+COMMA =,
+SPACE = $(eval)
+glue_list = gst/gst.h$(addprefix $(COMMA), $(GLUEINCLUDES))
+
 sources = \
 	Adapter.cs \
 	Application.cs \
@@ -65,7 +71,7 @@ generated-stamp: $(API)
 	$(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GLIB_SHARP_CFLAGS) $(GIO_SHARP_CFLAGS) \
 		--outdir=generated \
 		--glue-filename=$(GLUEDIR)/generated.c --gluelib-name=libgstreamersharpglue-1.0.0.dll \
-		--glue-includes=gst/gst.h,`cd $(GST_INCLUDEDIR);find gst -type f -name "*.h" -not -path "gst/gl/*" | tr "\n" ","` \
+		--glue-includes=$(glue_list) \
 	 	--assembly-name=$(ASSEMBLY_NAME) && touch generated-stamp
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
