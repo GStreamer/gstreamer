@@ -386,6 +386,8 @@ gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
   if (!downstream_caps || gst_caps_is_empty (downstream_caps)) {
     GST_INFO_OBJECT (vagg, "No downstream caps found %"
         GST_PTR_FORMAT, downstream_caps);
+    if (downstream_caps)
+      gst_caps_unref (downstream_caps);
     return FALSE;
   }
 
