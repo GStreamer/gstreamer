@@ -544,20 +544,6 @@ gst_edgedetect_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-eglglessink</FILE>
-<TITLE>eglglessink</TITLE>
-GstEglGlesSink
-<SUBSECTION Standard>
-GstEglGlesSinkClass
-GST_TYPE_EGLGLESSINK
-GST_EGLGLESSINK
-GST_IS_EGLGLESSINK
-GST_EGLGLESSINK_CLASS
-GST_IS_EGLGLESSINK_CLASS
-gst_eglglessink_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-exclusion</FILE>
 <TITLE>exclusion</TITLE>
 GstExclusion

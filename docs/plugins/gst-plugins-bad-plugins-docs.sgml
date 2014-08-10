@@ -44,7 +44,6 @@
     <xi:include href="xml/element-dvdspu.xml" />
     <xi:include href="xml/element-exclusion.xml" />
     <xi:include href="xml/element-edgedetect.xml" />
-    <xi:include href="xml/element-eglglessink.xml" />
     <xi:include href="xml/element-faac.xml" />
     <xi:include href="xml/element-faad.xml" />
     <xi:include href="xml/element-faceblur.xml" />
@@ -112,7 +111,6 @@
     <xi:include href="xml/plugin-dtsdec.xml" />
     <xi:include href="xml/plugin-dvb.xml" />
     <xi:include href="xml/plugin-dvdspu.xml" />
-    <xi:include href="xml/plugin-eglglessink.xml" />
     <xi:include href="xml/plugin-faac.xml" />
     <xi:include href="xml/plugin-faad.xml" />
     <xi:include href="xml/plugin-festival.xml" />
