@@ -625,9 +625,9 @@ gst_xvimage_memory_render (GstXvImageMemory * mem, GstVideoRectangle * src_crop,
   }
 #ifdef HAVE_XSHM
   if (context->use_xshm) {
-    GST_LOG ("XvShmPutImage with image %dx%d and window %dx%d, from xvimage %"
-        GST_PTR_FORMAT, src_crop->w, src_crop->h,
-        window->render_rect.w, window->render_rect.h, mem);
+    GST_LOG ("XvShmPutImage with image %dx%d and window %dx%d, from xvimage %p",
+        src_crop->w, src_crop->h, window->render_rect.w, window->render_rect.h,
+        mem);
 
     XvShmPutImage (context->disp,
         context->xv_port_id,
