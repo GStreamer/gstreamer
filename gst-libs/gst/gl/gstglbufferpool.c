@@ -83,8 +83,8 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
   GstGLBufferPoolPrivate *priv = glpool->priv;
   GstVideoInfo info;
-  GstCaps *caps;
-  GstAllocator *allocator;
+  GstCaps *caps = NULL;
+  GstAllocator *allocator = NULL;
   GstAllocationParams alloc_params;
   gboolean reset = TRUE;
 
@@ -104,11 +104,16 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, &alloc_params))
     goto wrong_config;
 
+  if (priv->allocator)
+    gst_object_unref (priv->allocator);
+
   if (!allocator) {
     gst_gl_memory_init ();
-    allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+    priv->allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
+  } else {
+    priv->allocator = gst_object_ref (allocator);
   }
-  priv->allocator = allocator;
+
   priv->params = alloc_params;
 
   priv->im_format = GST_VIDEO_INFO_FORMAT (&info);
@@ -125,8 +130,9 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
 #if GST_GL_HAVE_PLATFORM_EGL
-  priv->want_eglimage = (priv->allocator
-      && g_strcmp0 (priv->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
+  g_assert (priv->allocator != NULL);
+  priv->want_eglimage =
+      (g_strcmp0 (priv->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
 #else
   priv->want_eglimage = FALSE;
 #endif
@@ -367,5 +373,10 @@ gst_gl_buffer_pool_finalize (GObject * object)
   if (pool->context) {
     gst_object_unref (pool->context);
     pool->context = NULL;
+  }
+
+  if (priv->allocator) {
+    gst_object_unref (priv->allocator);
+    priv->allocator = NULL;
   }
 }
