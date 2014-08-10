@@ -422,6 +422,16 @@ class GstValidateTestManager(GstValidateBaseTestManager):
 
     name = "validate"
 
+    # List of all classes to create testsuites
+    GstValidateMediaCheckTestsGenerator = GstValidateMediaCheckTestsGenerator
+    GstValidateTranscodingTestsGenerator = GstValidateTranscodingTestsGenerator
+    GstValidatePipelineTestsGenerator = GstValidatePipelineTestsGenerator
+    GstValidatePlaybinTestsGenerator = GstValidatePlaybinTestsGenerator
+    GstValidateMixerTestsGenerator = GstValidateMixerTestsGenerator
+    GstValidateLaunchTest = GstValidateLaunchTest
+    GstValidateMediaCheckTest = GstValidateMediaCheckTest
+    GstValidateTranscodingTest = GstValidateTranscodingTest
+
     def __init__(self):
         super(GstValidateTestManager, self).__init__()
         self._uris = []
