@@ -26,15 +26,15 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v videotestsrc ! glupload ! glfiltercube ! glimagesink
+ * gst-launch-1.0 -v videotestsrc ! glfiltercube ! glimagesink
  * ]| A pipeline to mpa textures on the 6 cube faces..
  * FBO is required.
  * |[
- * gst-launch -v videotestsrc ! glupload ! glfiltercube ! video/x-raw-gl, width=640, height=480 ! glimagesink
+ * gst-launch-1.0 -v videotestsrc ! glfiltercube ! video/x-raw, width=640, height=480 ! glimagesink
  * ]| Resize scene after drawing the cube.
  * The scene size is greater than the input video size.
   |[
- * gst-launch -v videotestsrc ! glupload ! video/x-raw-gl, width=640, height=480  ! glfiltercube ! glimagesink
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw, width=640, height=480  ! glfiltercube ! glimagesink
  * ]| Resize scene before drawing the cube.
  * The scene size is greater than the input video size.
  * </refsect2>

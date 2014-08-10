@@ -32,12 +32,12 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v videotestsrc ! "video/x-raw-yuv" ! glcolorscale ! ximagesink
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw ! glcolorscale ! ximagesink
  * ]| A pipeline to test colorspace conversion.
  * FBO is required.
   |[
- * gst-launch -v videotestsrc ! "video/x-raw-yuv, width=640, height=480, format=(fourcc)AYUV" ! glcolorscale ! \
- *   "video/x-raw-yuv, width=320, height=240, format=(fourcc)YV12" ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw, width=640, height=480, format=AYUV ! glcolorscale ! \
+ *   video/x-raw, width=320, height=240, format=YV12 ! videoconvert ! autovideosink
  * ]| A pipeline to test hardware scaling and colorspace conversion.
  * FBO and GLSL are required.
  * </refsect2>
