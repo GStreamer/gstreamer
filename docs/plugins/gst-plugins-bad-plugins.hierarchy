@@ -56,6 +56,7 @@ GObject
           GstH265Parse
           GstIRTSPParse
           GstIvfParse
+          GstJpegParse
           GstMpeg4VParse
           GstMpegvParse
           GstOpusParse
@@ -75,6 +76,7 @@ GObject
           GstInterAudioSink
           GstInterSubSink
           GstInterVideoSink
+          GstRTMPSink
           GstShmSink
           GstVideoSink
             GstDfbVideoSink
@@ -97,6 +99,8 @@ GObject
             GstDvbSrc
             GstGLTestSrc
             GstMMS
+            GstNeonhttpSrc
+            GstRTMPSrc
             GstRfbSrc
             GstShmSrc
         GstBaseTransform
@@ -229,7 +233,6 @@ GObject
         GstInterlace
         GstJP2kDecimator
         GstJifMux
-        GstJpegParse
         GstKateDec
         GstKateEnc
         GstKateParse
@@ -247,7 +250,6 @@ GObject
         GstOpencvTextOverlay
         GstPcapParse
         GstPitch
-        GstPnmenc
         GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
@@ -282,6 +284,7 @@ GObject
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
+          GstPnmenc
           GstSchroEnc
         GstWebvttEnc
         GstWildmidi

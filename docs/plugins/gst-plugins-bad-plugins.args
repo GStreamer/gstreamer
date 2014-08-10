@@ -1823,8 +1823,8 @@
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>frequency</NICK>
-<BLURB>Frequency.</BLURB>
+<NICK>Center frequency</NICK>
+<BLURB>Center frequency to tune into. Measured in kHz for the satellite distribution standars and Hz for all the rest.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1854,7 +1854,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>symbol rate</NICK>
-<BLURB>(DVB-S/S2, DVB-C) Symbol rate in bauds.</BLURB>
+<BLURB>(DVB-S/S2, DVB-C) Symbol rate in kBd (kilo bauds).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1936,6 +1936,216 @@
 <NICK>Tuning Timeout</NICK>
 <BLURB>Milliseconds to wait before giving up tuning/locking on a signal.</BLURB>
 <DEFAULT>10000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layer-enabled</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,7]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer enabled</NICK>
+<BLURB>(ISDB-T) Layer Enabled (7 = All layers).</BLURB>
+<DEFAULT>7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layera-fec</NAME>
+<TYPE>GstDvbSrcCode_Rate</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDB-T layer A FEC</NICK>
+<BLURB>(ISDB-T) layer A Forward Error Correction.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layera-modulation</NAME>
+<TYPE>GstDvbSrcModulation</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDBT layer A modulation</NICK>
+<BLURB>(ISDB-T) Layer A modulation type.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layera-segment-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,13]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer A segment count</NICK>
+<BLURB>(ISDB-T) Layer A segment count (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layera-time-interleaving</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer A time interleaving </NICK>
+<BLURB>(ISDB-T) Layer A time interleaving (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layerb-fec</NAME>
+<TYPE>GstDvbSrcCode_Rate</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDB-T layer B FEC</NICK>
+<BLURB>(ISDB-T) layer B Forward Error Correction.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layerb-modulation</NAME>
+<TYPE>GstDvbSrcModulation</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDBT layer B modulation</NICK>
+<BLURB>(ISDB-T) Layer B modulation type.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layerb-segment-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,13]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer B segment count</NICK>
+<BLURB>(ISDB-T) Layer B segment count (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layerb-time-interleaving</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer B time interleaving </NICK>
+<BLURB>(ISDB-T) Layer B time interleaving (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layerc-fec</NAME>
+<TYPE>GstDvbSrcCode_Rate</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDB-T layer A FEC</NICK>
+<BLURB>(ISDB-T) layer C Forward Error Correction.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layerc-modulation</NAME>
+<TYPE>GstDvbSrcModulation</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDBT layer C modulation</NICK>
+<BLURB>(ISDB-T) Layer C modulation type.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layerc-segment-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,13]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer C segment count</NICK>
+<BLURB>(ISDB-T) Layer C segment count (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-layerc-time-interleaving</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer C time interleaving </NICK>
+<BLURB>(ISDB-T) Layer C time interleaving (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-partial-reception</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T partial reception</NICK>
+<BLURB>(ISDB-T) Partial Reception (-1 = AUTO).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-sb-segment-count</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,13]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T SB segment count</NICK>
+<BLURB>(ISDB-T) SB segment count.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-sb-segment-idx</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T SB segment IDX</NICK>
+<BLURB>(ISDB-T) SB segment IDX.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-sb-subchannel-id</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,41]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T SB subchannel ID</NICK>
+<BLURB>(ISDB-T) SB Subchannel ID (-1 = AUTO).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::isdbt-sound-broadcasting</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T sound broadcasting</NICK>
+<BLURB>(ISDB-T) Sound Broadcasting.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::lnb-lof1</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low band local oscillator frequency</NICK>
+<BLURB>LNB's Local oscillator frequency used for low band reception (kHz).</BLURB>
+<DEFAULT>9750000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::lnb-lof2</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High band local oscillator frequency</NICK>
+<BLURB>LNB's Local oscillator frequency used for high band reception (kHz).</BLURB>
+<DEFAULT>10600000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::lnb-slof</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tuning Timeout</NICK>
+<BLURB>LNB's Upper bound for low band reception (kHz).</BLURB>
+<DEFAULT>11700000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17983,8 +18193,8 @@
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>frequency</NICK>
-<BLURB>Frequency.</BLURB>
+<NICK>Center frequency</NICK>
+<BLURB>Center frequency to tune into. Measured in kHz for the satellite distribution standars and Hz for all the rest.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -18074,7 +18284,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>symbol rate</NICK>
-<BLURB>(DVB-S/S2, DVB-C) Symbol rate in bauds.</BLURB>
+<BLURB>(DVB-S/S2, DVB-C) Symbol rate in kBd (kilo bauds).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -18146,6 +18356,216 @@
 <NICK>Tuning Timeout</NICK>
 <BLURB>Milliseconds to wait before giving up tuning/locking on a signal.</BLURB>
 <DEFAULT>10000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layer-enabled</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,7]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer enabled</NICK>
+<BLURB>(ISDB-T) Layer Enabled (7 = All layers).</BLURB>
+<DEFAULT>7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layera-fec</NAME>
+<TYPE>GstDvbSrcCode_Rate</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDB-T layer A FEC</NICK>
+<BLURB>(ISDB-T) layer A Forward Error Correction.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layera-modulation</NAME>
+<TYPE>GstDvbSrcModulation</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDBT layer A modulation</NICK>
+<BLURB>(ISDB-T) Layer A modulation type.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layera-segment-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,13]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer A segment count</NICK>
+<BLURB>(ISDB-T) Layer A segment count (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layera-time-interleaving</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer A time interleaving </NICK>
+<BLURB>(ISDB-T) Layer A time interleaving (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layerb-fec</NAME>
+<TYPE>GstDvbSrcCode_Rate</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDB-T layer B FEC</NICK>
+<BLURB>(ISDB-T) layer B Forward Error Correction.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layerb-modulation</NAME>
+<TYPE>GstDvbSrcModulation</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDBT layer B modulation</NICK>
+<BLURB>(ISDB-T) Layer B modulation type.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layerb-segment-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,13]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer B segment count</NICK>
+<BLURB>(ISDB-T) Layer B segment count (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layerb-time-interleaving</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer B time interleaving </NICK>
+<BLURB>(ISDB-T) Layer B time interleaving (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layerc-fec</NAME>
+<TYPE>GstDvbSrcCode_Rate</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDB-T layer A FEC</NICK>
+<BLURB>(ISDB-T) layer C Forward Error Correction.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layerc-modulation</NAME>
+<TYPE>GstDvbSrcModulation</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISDBT layer C modulation</NICK>
+<BLURB>(ISDB-T) Layer C modulation type.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layerc-segment-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,13]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer C segment count</NICK>
+<BLURB>(ISDB-T) Layer C segment count (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-layerc-time-interleaving</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T layer C time interleaving </NICK>
+<BLURB>(ISDB-T) Layer C time interleaving (-1 = AUTO).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-partial-reception</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T partial reception</NICK>
+<BLURB>(ISDB-T) Partial Reception (-1 = AUTO).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-sb-segment-count</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,13]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T SB segment count</NICK>
+<BLURB>(ISDB-T) SB segment count.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-sb-segment-idx</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,12]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T SB segment IDX</NICK>
+<BLURB>(ISDB-T) SB segment IDX.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-sb-subchannel-id</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,41]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T SB subchannel ID</NICK>
+<BLURB>(ISDB-T) SB Subchannel ID (-1 = AUTO).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::isdbt-sound-broadcasting</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISB-T sound broadcasting</NICK>
+<BLURB>(ISDB-T) Sound Broadcasting.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::lnb-lof1</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low band local oscillator frequency</NICK>
+<BLURB>LNB's Local oscillator frequency used for low band reception (kHz).</BLURB>
+<DEFAULT>9750000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::lnb-lof2</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High band local oscillator frequency</NICK>
+<BLURB>LNB's Local oscillator frequency used for high band reception (kHz).</BLURB>
+<DEFAULT>10600000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::lnb-slof</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tuning Timeout</NICK>
+<BLURB>LNB's Upper bound for low band reception (kHz).</BLURB>
+<DEFAULT>11700000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59370,7 +59790,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Flags</NICK>
 <BLURB>Flags to cvHaarDetectObjects.</BLURB>
-<DEFAULT></DEFAULT>
+<DEFAULT>Do Canny edge detection to discard some regions</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59390,7 +59810,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Minimum face height</NICK>
 <BLURB>Minimum area height to be recognized as a face.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>30</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59400,7 +59820,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Minimum face width</NICK>
 <BLURB>Minimum area width to be recognized as a face.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>30</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59440,7 +59860,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Scale factor</NICK>
 <BLURB>Factor by which the frame is scaled after each object scan.</BLURB>
-<DEFAULT>1.1</DEFAULT>
+<DEFAULT>1.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59461,6 +59881,56 @@
 <NICK>Profile</NICK>
 <BLURB>Location of Haar cascade file to use for face blurion.</BLURB>
 <DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceBlur::flags</NAME>
+<TYPE>GstOpencvFaceBlurFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags to cvHaarDetectObjects.</BLURB>
+<DEFAULT>Do Canny edge detection to discard some regions</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceBlur::min-neighbors</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mininum neighbors</NICK>
+<BLURB>Minimum number (minus 1) of neighbor rectangles that makes up an object.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceBlur::min-size-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum size height</NICK>
+<BLURB>Minimum window height size.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceBlur::min-size-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum size width</NICK>
+<BLURB>Minimum window width size.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceBlur::scale-factor</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[1.1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scale factor</NICK>
+<BLURB>Factor by which the windows is scaled after each scan.</BLURB>
+<DEFAULT>1.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -67868,6 +68338,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <ARG>
 <NAME>GstCompositor::background</NAME>
 <TYPE>GstCompositorBackground</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Background</NICK>
+<BLURB>Background type.</BLURB>
+<DEFAULT>Checker pattern</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLVideoMixer::background</NAME>
+<TYPE>GstGLVideoMixerBackground</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Background</NICK>

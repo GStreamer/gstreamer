@@ -28,6 +28,7 @@ GstFaac GstPreset
 GstFaceOverlay GstChildProxy
 GstFreeverb GstPreset
 GstGLImageSink GstVideoOverlay
+GstGLImageSink GstVideoOverlay GstNavigation
 GstGLMixer GstChildProxy
 GstGLMosaic GstChildProxy
 GstGLVideoMixer GstChildProxy
@@ -54,6 +55,7 @@ GstNeonhttpSrc GstURIHandler
 GstOpenJPEGEnc GstPreset
 GstOpusEnc GstPreset GstTagSetter
 GstPipeline GstChildProxy
+GstPnmenc GstPreset
 GstRTMPSink GstURIHandler
 GstRTMPSrc GstURIHandler
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
