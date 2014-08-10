@@ -111,11 +111,5 @@ namespace Gst {
 				this.enumerator = new Enumerator (this);
 			return this.enumerator;
 		}
-
-		~Iterator () {
-			if (Raw != IntPtr.Zero)
-				Free (Handle);
-		}
-
 	}
 }
