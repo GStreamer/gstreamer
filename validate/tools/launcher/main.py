@@ -257,7 +257,9 @@ user argument, you can thus overrides command line options using that.
                          help="Directory where to store logs and rendered files. Default is MAIN_DIR")
     dir_group.add_argument("-l", "--logs-dir", dest="logsdir",
                       default=None,
-                      help="Directory where to store logs, default is OUTPUT_DIR/logs")
+                      help="Directory where to store logs, default is OUTPUT_DIR/logs."
+                           " Note that 'stdout' and 'sdterr' are valid values that lets you get all the logs"
+                           " printed in the terminal")
     dir_group.add_argument("-R", "--render-path", dest="dest",
                      default=None,
                      help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")

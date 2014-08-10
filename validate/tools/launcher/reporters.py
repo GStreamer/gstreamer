@@ -21,6 +21,7 @@
 
 import os
 import re
+import sys
 import time
 import codecs
 import datetime
@@ -65,14 +66,24 @@ class Reporter(Loggable):
                       }
         self.results = []
 
+    def uses_standard_output(self):
+        return self.out in [sys.stdout, sys.stderr]
+
     def before_test(self, test):
         """Initialize a timer before starting a test."""
-        path = os.path.join(self.options.logsdir,
-                            test.classname.replace(".", os.sep))
-        mkdir(os.path.dirname(path))
-        self.out = open(path, 'w+')
+        if self.options.logsdir == 'stdout':
+            self.out = sys.stdout
+            test.logfile = 'stdout'
+        elif self.options.logsdir == 'stderr':
+            self.out = sys.stderr
+            test.logfile = 'stderr'
+        else:
+            path = os.path.join(self.options.logsdir,
+                                test.classname.replace(".", os.sep))
+            mkdir(os.path.dirname(path))
+            self.out = open(path, 'w+')
+            test.logfile = path
         self._current_test = test
-        test.logfile = path
 
         if self._start_time == 0:
             self._start_time = time.time()
@@ -98,7 +109,9 @@ class Reporter(Loggable):
             self.results.append(self._current_test)
 
         self.add_results(self._current_test)
-        self.out.close()
+        if not self.uses_standard_output():
+            self.out.close()
+
         self.out = None
         self._current_test = None
 
@@ -146,7 +159,7 @@ class XunitReporter(Reporter):
 
     def _get_captured(self):
         captured = ""
-        if self.out:
+        if self.out and not self.uses_standard_output():
             self.out.seek(0)
             value = self.out.read()
             if value:

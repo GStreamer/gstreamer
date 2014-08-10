@@ -30,6 +30,7 @@ import subprocess
 import reporters
 import ConfigParser
 import loggable
+import tempfile
 from loggable import Loggable
 from optparse import OptionGroup
 import xml.etree.ElementTree as ET
@@ -61,9 +62,12 @@ class Test(Loggable):
         self.process = None
         self.duration = duration
 
-        self.clean()
+        self.clean(True)
 
-    def clean(self):
+    def clean(self, full=True):
+        if not full:
+            return
+
         self.message = ""
         self.error_str = ""
         self.time_taken = 0.0
@@ -78,10 +82,11 @@ class Test(Loggable):
             string += ": " + self.result
             if self.result in [Result.FAILED, Result.TIMEOUT]:
                 string += " '%s'\n" \
-                          "       You can reproduce with: %s\n" \
-                          "       You can find logs in:\n" \
-                          "             - %s" % (self.message, self.command,
-                                                 self.logfile)
+                          "       You can reproduce with: %s\n" % (self.message, self.command)
+
+                if not self.reporter.uses_standard_output():
+                    string += "       You can find logs in:\n" \
+                              "             - %s" % (self.logfile)
                 for log in self.extra_logfiles:
                     string += "\n             - %s" % log
 
@@ -205,12 +210,13 @@ class Test(Loggable):
         proc_env = self.get_subproc_env()
 
         message = "Launching: %s%s\n" \
-                  "    Command: '%s'\n" \
-                  "    Logs:\n" \
-                  "         - %s" % (Colors.ENDC, self.classname,
-                  self.command, self.logfile)
-        for log in self.extra_logfiles:
-            message += "\n         - %s" % log
+                  "    Command: '%s'\n" %(Colors.ENDC, self.classname,
+                                          self.command)
+        if not self.reporter.uses_standard_output():
+            message += "    Logs:\n" \
+                       "         - %s" % (self.logfile)
+            for log in self.extra_logfiles:
+                message += "\n         - %s" % log
 
         printc(message, Colors.OKBLUE)
 
@@ -232,12 +238,14 @@ class Test(Loggable):
 
         self.time_taken = time.time() - self._starting_time
 
-        self.reporter.out.seek(0)
-        self.reporter.out.write("=================\n"
-                                "Test name: %s\n"
-                                "Command: '%s'\n"
-                                "=================\n\n"
-                                % (self.classname, self.command))
+        if not self.reporter.uses_standard_output():
+            self.reporter.out.seek(0)
+            self.reporter.out.write("=================\n"
+                                    "Test name: %s\n"
+                                    "Command: '%s'\n"
+                                    "=================\n\n"
+                                    % (self.classname, self.command))
+
         printc("Result: %s%s\n" % (self.result,
                " (" + self.message + ")" if self.message else ""),
                color=utils.get_color_for_result(self.result))
@@ -270,23 +278,38 @@ class GstValidateTest(Test):
             self.scenario = scenario
 
     def get_subproc_env(self):
+        if self.reporter.uses_standard_output():
+            self.validatelogs = os.path.join (tempfile.gettempdir(), 'tmp.validate.logs')
+            logfiles = self.validatelogs
+            logfiles += os.pathsep + self.reporter.out.name.replace("<", '').replace(">", '')
+        else:
+            self.validatelogs = self.logfile + '.validate.logs'
+            logfiles = self.validatelogs
+
         subproc_env = os.environ.copy()
 
-        self.validatelogs = self.logfile + '.validate.logs'
         utils.touch(self.validatelogs)
-        subproc_env["GST_VALIDATE_FILE"] = self.validatelogs
+        subproc_env["GST_VALIDATE_FILE"] = logfiles
         self.extra_logfiles.append(self.validatelogs)
 
-        if 'GST_DEBUG' in os.environ:
+        if 'GST_DEBUG' in os.environ and \
+                not self.reporter.uses_standard_output():
             gstlogsfile = self.logfile + '.gstdebug'
             self.extra_logfiles.append(gstlogsfile)
             subproc_env["GST_DEBUG_FILE"] = gstlogsfile
 
         return subproc_env
 
-    def clean(self):
-        Test.clean(self)
-        self._sent_eos_pos = None
+    def clean(self, full=True):
+        Test.clean(self, full=full)
+        if self.reporter.uses_standard_output():
+            try:
+                os.remove(self.validatelogs)
+            except OSError:
+                pass
+
+        if full:
+            self._sent_eos_pos = None
 
     def build_arguments(self):
         if self.scenario is not None:
@@ -681,6 +704,7 @@ class TestsManager(Loggable):
             self.reporter.after_test()
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
+                test.clean(full=False)
                 return test.result
 
         return Result.PASSED
@@ -754,7 +778,8 @@ class _TestsLauncher(Loggable):
 
     def set_settings(self, options, args):
         self.reporter = reporters.XunitReporter(options)
-        mkdir(options.logsdir)
+        if not options.logsdir in[sys.stderr, sys.stdout]:
+            mkdir(options.logsdir)
 
         self.options = options
         wanted_testers = None
@@ -920,7 +945,11 @@ class ScenarioManager(Loggable):
         """
         scenarios = []
         scenario_defs = os.path.join(self.config.main_dir, "scenarios.def")
-        logs = open(os.path.join(self.config.logsdir, "scenarios_discovery.log"), 'w')
+        if self.config.logsdir in ["stdout", "stderr"]:
+            logs = open(os.devnull)
+        else:
+            logs = open(os.path.join(self.config.logsdir, "scenarios_discovery.log"), 'w')
+
         try:
             command = [self.GST_VALIDATE_COMMAND, "--scenarios-defs-output-file", scenario_defs]
             command.extend(scenario_paths)
