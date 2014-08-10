@@ -56,12 +56,12 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v videotestsrc ! "video/x-raw-rgb" ! glimagesink
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw ! glimagesink
  * ]| A pipeline to test hardware scaling.
  * No special opengl extension is used in this pipeline, that's why it should work
  * with OpenGL >= 1.1. That's the case if you are using the MESA3D driver v1.3.
  * |[
- * gst-launch -v videotestsrc ! "video/x-raw-yuv, format=(fourcc)I420" ! glimagesink
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw,format=I420 ! glimagesink
  * ]| A pipeline to test hardware scaling and hardware colorspace conversion.
  * When your driver supports GLSL (OpenGL Shading Language needs OpenGL >= 2.1),
  * the 4 following format YUY2, UYVY, I420, YV12 and AYUV are converted to RGB32
@@ -70,12 +70,12 @@
  * the you can use YUY2 and UYVY. In this case the colorspace conversion is automatically
  * made when loading the texture and therefore no framebuffer is used.
  * |[
- * gst-launch -v gltestsrc ! glimagesink
+ * gst-launch-1.0 -v gltestsrc ! glimagesink
  * ]| A pipeline 100% OpenGL.
  * No special opengl extension is used in this pipeline, that's why it should work
  * with OpenGL >= 1.1. That's the case if you are using the MESA3D driver v1.3.
  * |[
- * gst-plugins-gl/tests/examples/generic/cube
+ * gst-plugins-bas/tests/examples/gl/generic/cube
  * ]| The graphic FPS scene can be greater than the input video FPS.
  * The graphic scene can be written from a client code through the
  * two glfilterapp properties.

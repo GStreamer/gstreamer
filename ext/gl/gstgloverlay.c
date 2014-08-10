@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch  videotestsrc ! "video/x-raw-rgb" ! glupload ! gloverlay location=imagefile ! glimagesink
+ * gst-launch-1.0 videotestsrc ! gloverlay location=image.jpg ! glimagesink
  * ]|
  * FBO (Frame Buffer Object) is required.
  * </refsect2>
