@@ -193,8 +193,7 @@ endif
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
-	elements/zbar     \
-	pipeline/colorspace
+	elements/zbar
 
 # valgrind testing
 VALGRIND_TESTS_DISABLE = \
@@ -202,9 +201,7 @@ VALGRIND_TESTS_DISABLE = \
 
 # these tests don't even pass
 # neon: too flaky (almost always fails 'the first time')
-# colorspace: bad memory accesses in orc code for odd width buffers - https://bugzilla.gnome.org/show_bug.cgi?id=663248
 noinst_PROGRAMS = \
-	pipelines/colorspace \
 	pipelines/streamheader \
 	$(check_neon)
 
