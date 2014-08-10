@@ -542,34 +542,30 @@ dnl *** X11 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesink], [
-  AG_GST_CHECK_X
+  AG_GST_PKG_CHECK_MODULES(X, x11)
 ])
 
 dnl Check for Xv extension
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 AG_GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
                   [xvimagesink], [
-  AG_GST_CHECK_XV
+  AG_GST_PKG_CHECK_MODULES(XVIDEO, x11 xv)
 ])
 
 dnl check for X Shm
 translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
-AG_GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
+AG_GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], [ ], [
   if test x$HAVE_X = xyes; then
-    AC_CHECK_LIB(Xext, XShmAttach,
-		 HAVE_XSHM="yes", HAVE_XSHM="no",
-		 $X_LIBS)
-    if test "x$HAVE_XSHM" = "xyes"; then
-      XSHM_LIBS="-lXext"
-    else
-      dnl On AIX, it is in XextSam instead, but we still need -lXext
-      AC_CHECK_LIB(XextSam, XShmAttach,
-		   HAVE_XSHM="yes", HAVE_XSHM="no",
-		   $X_LIBS)
-      if test "x$HAVE_XSHM" = "xyes"; then
-	XSHM_LIBS="-lXext -lXextSam"
-      fi
-    fi
+    PKG_CHECK_MODULES(XSHM, xext, [
+      AC_CHECK_LIB(Xext, XShmAttach, [
+        HAVE_XSHM="yes"
+      ], [
+        HAVE_XSHM="no"
+        XSHM_LIBS=""
+      ], [ $X_LIBS ])
+    ], [
+      HAVE_XSHM="no"
+    ])
   fi
 ], , [
   AC_SUBST(HAVE_XSHM)
