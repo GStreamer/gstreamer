@@ -75,6 +75,7 @@ class Test(Loggable):
         self.result = Result.NOT_RUN
         self.logfile = None
         self.extra_logfiles = []
+        self._env_variable = ''
 
     def __str__(self):
         string = self.classname
@@ -82,7 +83,8 @@ class Test(Loggable):
             string += ": " + self.result
             if self.result in [Result.FAILED, Result.TIMEOUT]:
                 string += " '%s'\n" \
-                          "       You can reproduce with: %s\n" % (self.message, self.command)
+                          "       You can reproduce with: %s %s\n" \
+                    % (self.message, self._env_variable, self.command)
 
                 if not self.reporter.uses_standard_output():
                     string += "       You can find logs in:\n" \
@@ -91,6 +93,15 @@ class Test(Loggable):
                     string += "\n             - %s" % log
 
         return string
+
+    def add_env_variable(self, variable, value):
+        """
+        Only usefull so that the gst-validate-launcher can print the exact
+        right command line to reproduce the tests
+        """
+        if self._env_variable:
+            self._env_variable += " "
+        self._env_variable += "%s=%s" % (variable, value)
 
     def get_extra_log_content(self, extralog):
         if extralog not in self.extra_logfiles:
@@ -210,8 +221,8 @@ class Test(Loggable):
         proc_env = self.get_subproc_env()
 
         message = "Launching: %s%s\n" \
-                  "    Command: '%s'\n" %(Colors.ENDC, self.classname,
-                                          self.command)
+                  "    Command: '%s %s'\n" %(Colors.ENDC, self.classname,
+                                          self._env_variable, self.command)
         if not self.reporter.uses_standard_output():
             message += "    Logs:\n" \
                        "         - %s" % (self.logfile)
@@ -312,6 +323,12 @@ class GstValidateTest(Test):
             self._sent_eos_pos = None
 
     def build_arguments(self):
+        if "GST_VALIDATE" in os.environ:
+            self.add_env_variable("GST_VALIDATE", os.environ["GST_VALIDATE"])
+
+        if "GST_VALIDATE_SCENARIOS_PATH" in os.environ:
+            self.add_env_variable("GST_VALIDATE_SCENARIOS_PATH",
+                                  os.environ["GST_VALIDATE_SCENARIOS_PATH"])
         if self.scenario is not None:
             self.add_arguments("--set-scenario",
                                self.scenario.get_execution_name())
