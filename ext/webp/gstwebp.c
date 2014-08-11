@@ -26,11 +26,13 @@
 #include <gst/gst.h>
 
 #include "gstwebpdec.h"
+#include "gstwebpenc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gst_webp_dec_register (plugin);
+  gst_webp_enc_register (plugin);
 
   return TRUE;
 }

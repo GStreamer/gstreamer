@@ -1,9 +1,10 @@
 plugin_LTLIBRARIES = libgstwebp.la
 
-noinst_HEADERS = gstwebpdec.h
+noinst_HEADERS = gstwebpdec.h gstwebpenc.h
 
 libgstwebp_la_SOURCES = gstwebp.c \
-			gstwebpdec.c
+			gstwebpdec.c \
+			gstwebpenc.c
 
 libgstwebp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(WEBP_CFLAGS)
 libgstwebp_la_LIBADD = \
