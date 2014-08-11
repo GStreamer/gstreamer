@@ -121,11 +121,10 @@ enum
  * FIXME: add r210 support
  */
 
-/* FIXME: if we can do NV12, NV21 shouldn't be so hard */
 #define GST_VIDEO_FORMATS "{ I420, YV12, YUY2, UYVY, AYUV, RGBx, " \
     "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, " \
     "BGR, Y41B, Y42B, YVYU, Y444, GRAY8, GRAY16_BE, GRAY16_LE, " \
-    "v308, RGB16, RGB15, ARGB64, AYUV64, NV12 } "
+    "v308, RGB16, RGB15, ARGB64, AYUV64, NV12, NV21 } "
 
 
 static GstStaticCaps gst_video_scale_format_caps =
@@ -1120,6 +1119,7 @@ _get_black_for_format (GstVideoFormat format)
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
       return black[4];          /* Y, U, V, 0 */
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_RGB15:
@@ -1376,6 +1376,9 @@ do_scale (GstVideoFilter * filter, VSImage dest[4], VSImage src[4])
       }
       break;
     case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      /* NV21 format is exactly same as NV12 with the difference that u, v are reversed. 
+         So same functions of NV12 could be reused */
       if (add_borders) {
         vs_fill_borders_Y (&dest[0], black);
         vs_fill_borders_Y16 (&dest[1], (black[1] << 8) | black[2]);
