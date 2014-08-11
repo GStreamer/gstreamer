@@ -510,6 +510,7 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
         gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
         GST_VIDEO_DECODER_STREAM_LOCK(vdec);
     }
+    decode->decoder_finish = FALSE;
     return ret;
 }
 
