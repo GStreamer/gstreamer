@@ -793,13 +793,57 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
   gdouble dar;
   GstVideoInfo info;
   gboolean attach = FALSE;
+  gboolean caps_has_meta = TRUE;
+  GstCapsFeatures *f;
+  GstCaps *original_caps = caps;
 
   if (!gst_video_info_from_caps (&info, caps))
     goto invalid_caps;
 
   render->info = info;
+  gst_caps_ref (caps);
 
+  /* Try to use the overlay meta if possible */
+  f = gst_caps_get_features (caps, 0);
+
+  /* if the caps doesn't have the overlay meta, we query if downstream
+   * accepts it before trying the version without the meta
+   * If upstream already is using the meta then we can only use it */
+  if (!f
+      || !gst_caps_features_contains (f,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
+    GstCaps *overlay_caps;
+
+    /* In this case we added the meta, but we can work without it
+     * so preserve the original caps so we can use it as a fallback */
+    overlay_caps = gst_caps_copy (caps);
+
+    f = gst_caps_get_features (overlay_caps, 0);
+    if (f == NULL) {
+      f = gst_caps_features_new
+          (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
+    } else {
+      gst_caps_features_add (f,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+    }
+
+    ret = gst_pad_peer_query_accept_caps (render->srcpad, overlay_caps);
+    GST_DEBUG_OBJECT (render, "Downstream accepts the overlay meta: %d", ret);
+    if (ret) {
+      gst_caps_unref (caps);
+      caps = overlay_caps;
+
+    } else {
+      /* fallback to the original */
+      gst_caps_unref (overlay_caps);
+      caps_has_meta = FALSE;
+    }
+
+  }
+  GST_DEBUG_OBJECT (render, "Using caps %" GST_PTR_FORMAT, caps);
   ret = gst_pad_set_caps (render->srcpad, caps);
+  gst_caps_unref (caps);
+
   if (!ret)
     goto out;
 
@@ -807,7 +851,7 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
   render->height = info.height;
 
   query = gst_query_new_allocation (caps, FALSE);
-  if (gst_pad_peer_query (render->srcpad, query)) {
+  if (caps_has_meta && gst_pad_peer_query (render->srcpad, query)) {
     if (gst_query_find_allocation_meta (query,
             GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL))
       attach = TRUE;
@@ -816,8 +860,19 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
 
   render->attach_compo_to_buffer = attach;
 
-  if (!attach && !gst_ass_render_can_handle_caps (caps))
-    goto unsupported_caps;
+  if (!attach) {
+    if (caps_has_meta) {
+      /* Some elements (fakesink) claim to accept the meta on caps but won't
+         put it in the allocation query result, this leads below
+         check to fail. Prevent this by removing the meta from caps */
+      caps = original_caps;
+      ret = gst_pad_set_caps (render->srcpad, caps);
+      if (!ret)
+        goto out;
+    }
+    if (!gst_ass_render_can_handle_caps (caps))
+      goto unsupported_caps;
+  }
 
   g_mutex_lock (&render->ass_mutex);
   ass_set_frame_size (render->ass_renderer, render->width, render->height);
