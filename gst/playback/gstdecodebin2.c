@@ -239,7 +239,6 @@ enum
  * as low as possible (try to aim for 5 buffers) */
 #define AUTO_PLAY_SIZE_BYTES        2 * 1024 * 1024
 #define AUTO_PLAY_SIZE_BUFFERS      5
-#define AUTO_PLAY_ADAPTIVE_SIZE_BUFFERS 2
 #define AUTO_PLAY_SIZE_TIME         0
 
 #define DEFAULT_SUBTITLE_ENCODING NULL
@@ -285,8 +284,7 @@ static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
 
 static void decodebin_set_queue_size (GstDecodeBin * dbin,
-    GstElement * multiqueue, gboolean preroll, gboolean seekable,
-    gboolean adaptive_streaming);
+    GstElement * multiqueue, gboolean preroll, gboolean seekable);
 
 static gboolean gst_decode_bin_autoplug_continue (GstElement * element,
     GstPad * pad, GstCaps * caps);
@@ -2191,7 +2189,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     chain->adaptive_demuxer = is_adaptive_demuxer_element (element);
 
     /* For adaptive streaming demuxer we insert a multiqueue after
-     * this demuxer. This multiqueue will get one fragment per buffer.
+     * this demuxer.
      * Now for the case where we have a container stream inside these
      * buffers, another demuxer will be plugged and after this second
      * demuxer there will be a second multiqueue. This second multiqueue
@@ -3275,7 +3273,7 @@ gst_decode_group_hide (GstDecodeGroup * group)
  * playing or prerolling. */
 static void
 decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
-    gboolean preroll, gboolean seekable, gboolean adaptive_streaming)
+    gboolean preroll, gboolean seekable)
 {
   guint max_bytes, max_buffers;
   guint64 max_time;
@@ -3300,14 +3298,6 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
         max_time = seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
             AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
     }
-  } else if (adaptive_streaming && dbin->use_buffering) {
-    /* If we're doing adaptive streaming and this is *not*
-     * the multiqueue doing the buffering messages, we only
-     * want a buffers limit here
-     */
-    max_buffers = AUTO_PLAY_ADAPTIVE_SIZE_BUFFERS;
-    max_time = 0;
-    max_bytes = 0;
   } else {
     /* update runtime limits. At runtime, we try to keep the amount of buffers
      * in the queues as low as possible (but at least 5 buffers). */
@@ -3315,9 +3305,6 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
       max_bytes = 0;
     else if ((max_bytes = dbin->max_size_bytes) == 0)
       max_bytes = AUTO_PLAY_SIZE_BYTES;
-    /* if we're after an adaptive streaming demuxer keep
-     * a lower number of buffers as they are usually very
-     * large */
     if ((max_buffers = dbin->max_size_buffers) == 0)
       max_buffers = AUTO_PLAY_SIZE_BUFFERS;
     /* this is a multiqueue with disabled buffering, don't limit max_time */
@@ -3369,8 +3356,7 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
       gst_object_unref (pad);
     }
   }
-  decodebin_set_queue_size (dbin, mq, TRUE, seekable,
-      (parent ? parent->adaptive_demuxer : FALSE));
+  decodebin_set_queue_size (dbin, mq, TRUE, seekable);
 
   group->overrunsig = g_signal_connect (mq, "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
@@ -3785,8 +3771,7 @@ gst_decode_group_reset_buffering (GstDecodeGroup * group)
         "high-percent", group->dbin->high_percent, NULL);
   }
   decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
-      (group->parent ? group->parent->seekable : TRUE),
-      (group->parent ? group->parent->adaptive_demuxer : FALSE));
+      (group->parent ? group->parent->seekable : TRUE));
 
   GST_DEBUG_OBJECT (group->dbin, "Setting %s buffering to %d",
       GST_ELEMENT_NAME (group->multiqueue), !ret);
