@@ -554,28 +554,28 @@ dnl Check for X11
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesrc], [
-  PKG_CHECK_MODULES(X, x11, [
+  PKG_CHECK_MODULES([X], [x11], [
     dnl check for Xfixes
-    PKG_CHECK_MODULES(XFIXES, xfixes, [
+    PKG_CHECK_MODULES([XFIXES], [ xfixes ], [
       AC_DEFINE(HAVE_XFIXES, 1, [Defined if Xfixes is available])
-    ])
+    ], [ HAVE_XFIXES="no" ])
 
     dnl check for Xdamage
-    PKG_CHECK_MODULES(XDAMAGE, xdamage, [
+    PKG_CHECK_MODULES([XDAMAGE], [ xdamage ], [
       AC_DEFINE(HAVE_XDAMAGE, 1, [Defined if Xdamage is available])
-    ])
+    ], [ HAVE_XDAMAGE="no" ])
 
     dnl check for X Shm
-    PKG_CHECK_MODULES(XEXT, xext, [
-      AC_CHECK_LIB(Xext, XShmAttach, [
+    PKG_CHECK_MODULES([XEXT], [ xext ], [
+      AC_CHECK_LIB([Xext], [ XShmAttach ], [
         AC_DEFINE(HAVE_XSHM, 1, [Defined if XShm is available])
         XSHM_LIBS="$XEXT_LIBS"
         XSHM_CFLAGS="$XEXT_CFLAGS"
-      ], [ $X_LIBS ])
+      ], [ HAVE_XEXT="no" ] , [ $X_LIBS ])
     ])
     AC_SUBST(XSHM_LIBS)
     AC_SUBST(XSHM_CFLAGS)
-  ])
+  ], [ HAVE_X="no" ])
 ])
 
 dnl *** ext plug-ins ***
