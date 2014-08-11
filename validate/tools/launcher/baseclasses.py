@@ -816,7 +816,10 @@ class _TestsLauncher(Loggable):
                 tester.options = options
                 globals()[tester.name] = tester
             globals()["options"] = options
+            c__file__ = __file__
+            globals()["__file__"] = self.options.config
             execfile(self.options.config, globals())
+            globals()["__file__"] = c__file__
 
         for tester in self.testers:
             tester.set_settings(options, args, self.reporter)
