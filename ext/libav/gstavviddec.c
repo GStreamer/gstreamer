@@ -1083,7 +1083,7 @@ gst_ffmpegviddec_do_qos (GstFFMpegVidDec * ffmpegdec,
       frame);
 
   /* if we don't have timing info, then we don't do QoS */
-  if (G_UNLIKELY(diff == G_MAXINT64))
+  if (G_UNLIKELY (diff == G_MAXINT64))
     return;
 
   GST_DEBUG_OBJECT (ffmpegdec, "decoding time %" G_GINT64_FORMAT, diff);
@@ -1181,10 +1181,10 @@ gst_avpacket_init (AVPacket * packet, guint8 * data, guint size)
  */
 static gint
 gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
-    guint8 * data, guint size, GstVideoCodecFrame * frame, GstFlowReturn * ret)
+    guint8 * data, guint size, gint * have_data, GstVideoCodecFrame * frame,
+    GstFlowReturn * ret)
 {
   gint len = -1;
-  gint have_data;
   gboolean mode_switch;
   GstVideoCodecFrame *out_frame;
   GstFFMpegVidDecVideoFrame *out_dframe;
@@ -1239,10 +1239,10 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   }
 
   len = avcodec_decode_video2 (ffmpegdec->context,
-      ffmpegdec->picture, &have_data, &packet);
+      ffmpegdec->picture, have_data, &packet);
 
   GST_DEBUG_OBJECT (ffmpegdec, "after decode: len %d, have_data %d",
-      len, have_data);
+      len, *have_data);
 
   /* when we are in skip_frame mode, don't complain when ffmpeg returned
    * no data because we told it to skip stuff. */
@@ -1250,7 +1250,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     len = 0;
 
   /* no data, we're done */
-  if (len < 0 || have_data <= 0)
+  if (len < 0 || *have_data == 0)
     goto beach;
 
   /* get the output picture timing info again */
@@ -1390,11 +1390,11 @@ negotiation_error:
 
 static gint
 gst_ffmpegviddec_frame (GstFFMpegVidDec * ffmpegdec,
-    guint8 * data, guint size, gint * got_data, GstVideoCodecFrame * frame,
+    guint8 * data, guint size, gint * have_data, GstVideoCodecFrame * frame,
     GstFlowReturn * ret)
 {
   GstFFMpegVidDecClass *oclass;
-  gint have_data = 0, len = 0;
+  gint len = 0;
 
   if (G_UNLIKELY (ffmpegdec->context->codec == NULL))
     goto no_codec;
@@ -1406,27 +1406,16 @@ gst_ffmpegviddec_frame (GstFFMpegVidDec * ffmpegdec,
 
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  len = gst_ffmpegviddec_video_frame (ffmpegdec, data, size, frame, ret);
+  len =
+      gst_ffmpegviddec_video_frame (ffmpegdec, data, size, have_data, frame,
+      ret);
 
-  if (frame && frame->output_buffer)
-    have_data = 1;
-
-  if (len < 0 || have_data < 0) {
+  if (len < 0) {
     GST_WARNING_OBJECT (ffmpegdec,
         "avdec_%s: decoding error (len: %d, have_data: %d)",
-        oclass->in_plugin->name, len, have_data);
-    *got_data = 0;
-    goto beach;
-  }
-  if (len == 0 && have_data == 0) {
-    *got_data = 0;
-    goto beach;
+        oclass->in_plugin->name, len, *have_data);
   }
 
-  /* this is where I lost my last clue on ffmpeg... */
-  *got_data = 1;
-
-beach:
   return len;
 
   /* ERRORS */
@@ -1458,6 +1447,7 @@ gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec)
       GstFlowReturn ret;
 
       len = gst_ffmpegviddec_frame (ffmpegdec, NULL, 0, &have_data, NULL, &ret);
+
       if (len < 0 || have_data == 0)
         break;
     } while (try++ < 10);
@@ -1544,7 +1534,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
       break;
     }
 
-    if (len == 0 && !have_data) {
+    if (len == 0 && have_data == 0) {
       /* nothing was decoded, this could be because no data was available or
        * because we were skipping frames.
        * If we have no context we must exit and wait for more data, we keep the
