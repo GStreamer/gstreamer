@@ -281,6 +281,7 @@ po/Makefile.in
 tools/Makefile
 tools/launcher/Makefile
 tools/launcher/apps/Makefile
+tools/launcher/apps/validate/Makefile
 ])
 AC_OUTPUT
 

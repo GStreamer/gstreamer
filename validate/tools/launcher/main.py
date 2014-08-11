@@ -180,7 +180,7 @@ class PrintUsage(argparse.Action):
         print(HELP)
         parser.exit()
 
-def main():
+def main(libsdir):
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, prog='gst-validate-launcher',
                                      description=HELP)
     parser.add_argument("-d", "--debug", dest="debug",
@@ -301,7 +301,7 @@ user argument, you can thus overrides command line options using that.
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
-    tests_launcher = _TestsLauncher()
+    tests_launcher = _TestsLauncher(libsdir)
     tests_launcher.add_options(parser)
 
     (options, args) = parser.parse_known_args()

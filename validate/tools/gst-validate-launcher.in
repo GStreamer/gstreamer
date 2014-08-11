@@ -24,7 +24,8 @@ LIBDIR = '@LIBDIR@'
 
 
 def _in_devel():
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    root_dir = os.path.abspath(os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                            "..", "..", "..")))
     return os.path.exists(os.path.join(root_dir, '.git'))
 
 
@@ -32,9 +33,13 @@ def _add_gst_launcher_path():
     if not _in_devel():
         root = os.path.join(LIBDIR, 'gst-validate-launcher', 'python')
         sys.path.insert(0, root)
+    else:
+        root = os.path.dirname(__file__)
+
+    return os.path.join(root, "launcher")
 
 
 if "__main__" == __name__:
-    _add_gst_launcher_path()
+    libsdir = _add_gst_launcher_path()
     from launcher.main import main
-    exit(main())
+    exit(main(libsdir))

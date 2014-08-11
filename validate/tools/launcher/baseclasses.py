@@ -763,10 +763,11 @@ class GstValidateTestsGenerator(TestsGenerator):
 
 
 class _TestsLauncher(Loggable):
-    def __init__(self):
+    def __init__(self, libsdir):
 
         Loggable.__init__(self)
 
+        self.libsdir = libsdir
         self.options = None
         self.testers = []
         self.tests = []
@@ -776,10 +777,10 @@ class _TestsLauncher(Loggable):
 
     def _list_testers(self):
         env = globals().copy()
-        d = os.path.dirname(__file__)
-        for f in os.listdir(os.path.join(d, "apps")):
+        appsdir = os.path.join(self.libsdir, "apps")
+        for f in os.listdir(appsdir):
             if f.endswith(".py"):
-                execfile(os.path.join(d, "apps", f), env)
+                execfile(os.path.join(appsdir, f), env)
 
         testers = [i() for i in utils.get_subclasses(TestsManager, env)]
         for tester in testers:
