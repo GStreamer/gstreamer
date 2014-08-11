@@ -340,7 +340,7 @@ _push_mandatory_events (GstAggregator * self)
 /**
  * gst_aggregator_set_src_caps:
  * @self: The #GstAggregator
- * @caps: The #GstCaps to set later on the src pad.
+ * @caps: The #GstCaps to set on the src pad.
  *
  * Sets the caps to be used on the src pad.
  */
