@@ -463,6 +463,9 @@ gst_vaapidecode_flush(GstVideoDecoder *vdec)
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstVaapiDecoderStatus status;
 
+    if (!decode->decoder)
+      return TRUE;
+
     /* If there is something in GstVideoDecoder's output adapter, then
        submit the frame for decoding */
     if (decode->current_frame_size) {
@@ -488,6 +491,9 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstFlowReturn ret = GST_FLOW_OK;
+
+    if (!decode->decoder)
+      return GST_FLOW_OK;
 
     if (!gst_vaapidecode_flush(vdec))
         ret = GST_FLOW_OK;
