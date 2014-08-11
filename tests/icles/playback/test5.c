@@ -30,7 +30,7 @@
 static GMainLoop *loop;
 
 static void
-new_pad (GstElement * element, GstPad * pad, gboolean last, GstElement * sink)
+pad_added_cb (GstElement * element, GstPad * pad, GstElement * sink)
 {
   g_print ("New pad...\n");
 }
@@ -108,8 +108,8 @@ main (gint argc, gchar * argv[])
   decodebin = gst_element_factory_make ("decodebin", "decodebin");
   g_assert (decodebin);
 
-  g_signal_connect (G_OBJECT (decodebin), "new-decoded-pad",
-      G_CALLBACK (new_pad), NULL);
+  g_signal_connect (G_OBJECT (decodebin), "pad-added",
+      G_CALLBACK (pad_added_cb), NULL);
   g_signal_connect (G_OBJECT (decodebin), "no-more-pads",
       G_CALLBACK (no_more_pads), NULL);
 
@@ -120,7 +120,12 @@ main (gint argc, gchar * argv[])
     g_print ("usage: %s <uri>\n", argv[0]);
     exit (-1);
   }
-  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
+
+  if (!g_str_has_prefix (argv[1], "file://")) {
+    g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
+  } else {
+    g_object_set (G_OBJECT (filesrc), "location", argv[1] + 7, NULL);
+  }
 
   /* event based programming approach */
   loop = g_main_loop_new (NULL, TRUE);
