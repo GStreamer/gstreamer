@@ -929,7 +929,13 @@ gst_vaapidecode_change_state (GstElement * element, GstStateChange transition)
 
     switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+        g_mutex_lock(&decode->decoder_mutex);
+        decode->decoder_finish = TRUE;
+        g_cond_signal(&decode->decoder_finish_done);
+        g_cond_signal(&decode->decoder_ready);
+        g_mutex_unlock(&decode->decoder_mutex);
         gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
+        decode->decoder_finish = FALSE;
         break;
     default:
         break;
