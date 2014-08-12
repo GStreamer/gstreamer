@@ -518,7 +518,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
 
     deint_method = postproc->deinterlace_method;
     deint_refs = deint_method_is_advanced(deint_method);
-    if (deint_refs) {
+    if (deint_refs && 0) {
         GstBuffer * const prev_buf = ds_get_buffer(ds, 0);
         GstClockTime prev_pts, pts = GST_BUFFER_TIMESTAMP(inbuf);
         /* Reset deinterlacing state when there is a discontinuity */
