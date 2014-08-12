@@ -555,6 +555,7 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesrc], [
   PKG_CHECK_MODULES([X], [x11], [
+    HAVE_X="yes"
     dnl check for Xfixes
     PKG_CHECK_MODULES([XFIXES], [ xfixes ], [
       AC_DEFINE(HAVE_XFIXES, 1, [Defined if Xfixes is available])
