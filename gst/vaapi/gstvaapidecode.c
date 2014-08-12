@@ -500,8 +500,8 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
 
     /* Make sure the decode loop function has a chance to return, thus
        possibly unlocking gst_video_decoder_finish_frame() */
-    decode->decoder_finish = TRUE;
     if (decode->decoder_loop_status == GST_FLOW_OK) {
+        decode->decoder_finish = TRUE;
         GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
         g_mutex_lock(&decode->decoder_mutex);
         while (decode->decoder_loop_status == GST_FLOW_OK)
@@ -509,8 +509,10 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
         g_mutex_unlock(&decode->decoder_mutex);
         gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
         GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+        decode->decoder_finish = FALSE;
+        gst_pad_start_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode),
+            (GstTaskFunction)gst_vaapidecode_decode_loop, decode, NULL);
     }
-    decode->decoder_finish = FALSE;
     return ret;
 }
 
