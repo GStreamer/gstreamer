@@ -1983,7 +1983,10 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:
       GST_AUDIO_DECODER_STREAM_LOCK (dec);
+      /* finish any data in current segment and clear the decoder
+       * to be ready for new stream data */
       gst_audio_decoder_drain (dec);
+      gst_audio_decoder_flush (dec, FALSE);
 
       GST_DEBUG_OBJECT (dec, "received STREAM_START. Clearing taglist");
       /* Flush our merged taglist after a STREAM_START */
@@ -2038,19 +2041,13 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
         }
       }
 
-      /* finish current segment */
-      gst_audio_decoder_drain (dec);
-
-      {
-        /* prepare for next one */
-        gst_audio_decoder_flush (dec, FALSE);
-        /* and that's where we time from,
-         * in case upstream does not come up with anything better
-         * (e.g. upstream BYTE) */
-        if (format != GST_FORMAT_TIME) {
-          dec->priv->base_ts = seg.start;
-          dec->priv->samples = 0;
-        }
+      /* prepare for next segment */
+      /* Use the segment start as a base timstamp
+       * in case upstream does not come up with anything better
+       * (e.g. upstream BYTE) */
+      if (format != GST_FORMAT_TIME) {
+        dec->priv->base_ts = seg.start;
+        dec->priv->samples = 0;
       }
 
       /* and follow along with segment */
