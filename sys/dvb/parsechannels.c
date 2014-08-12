@@ -96,8 +96,17 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
           g_hash_table_insert (params, g_strdup (satellite[j - 2]),
               g_strdup (fields[j]));
         }
-        g_hash_table_insert (params, g_strdup ("frequency"),
-            g_strdup_printf ("%d", atoi (fields[1]) * 1000));
+        /**
+         * Some ZAP format variations store freqs in MHz
+         * but we internally use kHz for DVB-S/S2.
+         */
+        if (strlen (fields[1]) < 6) {
+          g_hash_table_insert (params, g_strdup ("frequency"),
+              g_strdup_printf ("%d", atoi (fields[1]) * 1000));
+        } else {
+          g_hash_table_insert (params, g_strdup ("frequency"),
+              g_strdup_printf ("%d", atoi (fields[1])));
+        }
         parsed = TRUE;
       } else if (numfields == 13) {
         /* terrestrial */
