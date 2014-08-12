@@ -144,11 +144,13 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         /* a 100% message means buffering is done */
         if (buffering) {
           buffering = FALSE;
+          g_print ("Done buffering, setting pipeline to PLAYING\n");
           gst_element_set_state (pipeline, GST_STATE_PLAYING);
         }
       } else {
         /* buffering... */
         if (!buffering) {
+          g_print ("Start buffering, setting pipeline to PAUSED\n");
           gst_element_set_state (pipeline, GST_STATE_PAUSED);
           buffering = TRUE;
         }
