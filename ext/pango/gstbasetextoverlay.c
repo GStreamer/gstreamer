@@ -1294,12 +1294,6 @@ gst_base_text_overlay_get_src_caps (GstPad * pad, GstBaseTextOverlay * overlay,
 
       /* if peer returns ANY caps, return filtered sink pad template caps */
       caps = gst_caps_copy (gst_pad_get_pad_template_caps (sinkpad));
-      if (filter) {
-        GstCaps *intersection = gst_caps_intersect_full (filter, caps,
-            GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (caps);
-        caps = intersection;
-      }
 
     } else {
 
@@ -1316,16 +1310,16 @@ gst_base_text_overlay_get_src_caps (GstPad * pad, GstBaseTextOverlay * overlay,
   } else {
     /* no peer, our padtemplate is enough then */
     caps = gst_pad_get_pad_template_caps (pad);
-    if (filter) {
-      GstCaps *intersection;
-
-      intersection =
-          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
-      gst_caps_unref (caps);
-      caps = intersection;
-    }
   }
 
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
+  }
   GST_DEBUG_OBJECT (overlay, "returning  %" GST_PTR_FORMAT, caps);
 
   return caps;
