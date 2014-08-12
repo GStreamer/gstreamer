@@ -1587,7 +1587,8 @@ gst_validate_scenario_dispose (GObject * object)
   if (priv->last_seek)
     gst_event_unref (priv->last_seek);
   if (GST_VALIDATE_SCENARIO (object)->pipeline)
-    gst_object_unref (GST_VALIDATE_SCENARIO (object)->pipeline);
+    g_object_weak_unref (G_OBJECT (GST_VALIDATE_SCENARIO (object)->pipeline),
+        (GWeakNotify) _pipeline_freed_cb, object);
   g_list_free_full (priv->actions, (GDestroyNotify) gst_mini_object_unref);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
