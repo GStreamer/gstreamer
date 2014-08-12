@@ -3,10 +3,10 @@
   <description>JPeg plugin library</description>
   <filename>../../ext/jpeg/.libs/libgstjpeg.so</filename>
   <basename>libgstjpeg.so</basename>
-  <version>1.4.0</version>
+  <version>1.5.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, Y41B, Y42B, YVYU, Y444, RGB, BGR, RGBx, xRGB, BGRx, xBGR, GRAY8 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, Y41B, Y42B, YVYU, Y444, NV21, NV12, RGB, BGR, RGBx, xRGB, BGRx, xBGR, GRAY8 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
