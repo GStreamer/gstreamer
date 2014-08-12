@@ -535,12 +535,86 @@ _add_seek_gsource (GnlComposition * comp, GstEvent * event)
       (GDestroyNotify) _free_seek_data, G_PRIORITY_DEFAULT);
 }
 
+/*  Must be called with OBJECTS_LOCK taken */
+static void
+_process_pending_entries (GnlComposition * comp)
+{
+  GnlObject *object;
+  GHashTableIter iter;
+  gboolean deactivated_stack = FALSE;
+
+  GnlCompositionPrivate *priv = comp->priv;
+
+  g_hash_table_iter_init (&iter, priv->pending_io);
+  while (g_hash_table_iter_next (&iter, (gpointer *) & object, NULL)) {
+    if (g_hash_table_contains (priv->objects_hash, object)) {
+
+      if (GST_OBJECT_PARENT (object) == GST_OBJECT_CAST (priv->current_bin) &&
+          deactivated_stack == FALSE) {
+        deactivated_stack = TRUE;
+
+        _deactivate_stack (comp, TRUE);
+      }
+
+      _gnl_composition_remove_object (comp, object);
+    } else {
+      _gnl_composition_add_object (comp, object);
+    }
+  }
+
+  g_hash_table_remove_all (priv->pending_io);
+}
+
+
+static inline gboolean
+_commit_values (GnlComposition * comp)
+{
+  GList *tmp;
+  gboolean commited = FALSE;
+  GnlCompositionPrivate *priv = comp->priv;
+
+  for (tmp = priv->objects_start; tmp; tmp = tmp->next) {
+    if (gnl_object_commit (tmp->data, TRUE))
+      commited = TRUE;
+  }
+
+  GST_DEBUG_OBJECT (comp, "Linking up commit vmethod");
+  commited |= GNL_OBJECT_CLASS (parent_class)->commit (GNL_OBJECT (comp), TRUE);
+
+  return commited;
+}
+
+static gboolean
+_commit_all_values (GnlComposition * comp)
+{
+  GnlCompositionPrivate *priv = comp->priv;
+
+  priv->next_base_time = 0;
+  GST_ERROR_OBJECT (comp, "Commiting state");
+
+  _process_pending_entries (comp);
+
+  if (_commit_values (comp) == FALSE) {
+
+    return FALSE;;
+  }
+
+  /* The topology of the composition might have changed, update the lists */
+  priv->objects_start = g_list_sort
+      (priv->objects_start, (GCompareFunc) objects_start_compare);
+  priv->objects_stop = g_list_sort
+      (priv->objects_stop, (GCompareFunc) objects_stop_compare);
+
+  return TRUE;
+}
 
 static gboolean
 _initialize_stack_func (UpdateCompositionData * ucompo)
 {
   GnlComposition *comp = ucompo->comp;
   GnlCompositionPrivate *priv = comp->priv;
+
+  _commit_all_values (comp);
 
   _post_start_composition_update (comp, ucompo->seqnum, ucompo->reason);
   comp->priv->next_base_time = 0;
@@ -1909,8 +1983,7 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
   gst_element_set_state (priv->current_bin, GST_STATE_READY);
 
   if (ptarget) {
-    if (flush_downstream)
-    {
+    if (flush_downstream) {
       flush_event = gst_event_new_flush_stop (TRUE);
       gst_event_set_seqnum (flush_event, priv->flush_seqnum);
       gst_pad_push_event (ptarget, flush_event);
@@ -1921,36 +1994,6 @@ _set_current_bin_to_ready (GnlComposition * comp, gboolean flush_downstream)
   }
 
   comp->priv->tearing_down_stack = FALSE;
-}
-
-/*  Must be called with OBJECTS_LOCK taken */
-static void
-_process_pending_entries (GnlComposition * comp)
-{
-  GnlObject *object;
-  GHashTableIter iter;
-  gboolean deactivated_stack = FALSE;
-
-  GnlCompositionPrivate *priv = comp->priv;
-
-  g_hash_table_iter_init (&iter, priv->pending_io);
-  while (g_hash_table_iter_next (&iter, (gpointer *) & object, NULL)) {
-    if (g_hash_table_contains (priv->objects_hash, object)) {
-
-      if (GST_OBJECT_PARENT (object) == GST_OBJECT_CAST (priv->current_bin) &&
-          deactivated_stack == FALSE) {
-        deactivated_stack = TRUE;
-
-        _deactivate_stack (comp, TRUE);
-      }
-
-      _gnl_composition_remove_object (comp, object);
-    } else {
-      _gnl_composition_add_object (comp, object);
-    }
-  }
-
-  g_hash_table_remove_all (priv->pending_io);
 }
 
 static gboolean
@@ -2028,24 +2071,6 @@ _is_update_done_cb (GstPad * pad, GstPadProbeInfo * info,
   return GST_PAD_PROBE_OK;
 }
 
-static inline gboolean
-_commit_values (GnlComposition * comp)
-{
-  GList *tmp;
-  gboolean commited = FALSE;
-  GnlCompositionPrivate *priv = comp->priv;
-
-  for (tmp = priv->objects_start; tmp; tmp = tmp->next) {
-    if (gnl_object_commit (tmp->data, TRUE))
-      commited = TRUE;
-  }
-
-  GST_DEBUG_OBJECT (comp, "Linking up commit vmethod");
-  commited |= GNL_OBJECT_CLASS (parent_class)->commit (GNL_OBJECT (comp), TRUE);
-
-  return commited;
-}
-
 static gboolean
 _commit_func (UpdateCompositionData * ucompo)
 {
@@ -2055,29 +2080,18 @@ _commit_func (UpdateCompositionData * ucompo)
 
   _post_start_composition_update (comp, ucompo->seqnum, ucompo->reason);
 
-  priv->next_base_time = 0;
-  GST_INFO_OBJECT (comp, "Commiting state");
-
   /* Get current so that it represent the duration it was
    * before commiting children */
   curpos = get_current_position (comp);
 
-  _process_pending_entries (comp);
-
-  if (_commit_values (comp) == FALSE) {
-    GST_INFO_OBJECT (comp, "Nothing to commit, leaving");
+  if (!_commit_all_values (comp)) {
+    GST_DEUBG_OBJECT (comp, "Nothing to commit, leaving");
 
     g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, FALSE);
     _post_start_composition_update_done (comp, ucompo->seqnum, ucompo->reason);
 
     return G_SOURCE_REMOVE;
   }
-
-  /* The topology of the composition might have changed, update the lists */
-  priv->objects_start = g_list_sort
-      (priv->objects_start, (GCompareFunc) objects_start_compare);
-  priv->objects_stop = g_list_sort
-      (priv->objects_stop, (GCompareFunc) objects_stop_compare);
 
   if (priv->initialized == FALSE) {
     GST_DEBUG_OBJECT (comp, "Not initialized yet, just updating values");
