@@ -795,7 +795,7 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
 /**
  * gst_pad_new_from_template:
  * @templ: the pad template to use
- * @name: (allow-none): the name of the element
+ * @name: (allow-none): the name of the pad
  *
  * Creates a new pad with the given name from the given template.
  * If name is %NULL, a guaranteed unique name (across all pads)
@@ -817,7 +817,7 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
 /**
  * gst_pad_new_from_static_template:
  * @templ: the #GstStaticPadTemplate to use
- * @name: the name of the element
+ * @name: the name of the pad
  *
  * Creates a new pad with the given name from the given static template.
  * If name is %NULL, a guaranteed unique name (across all pads)
