@@ -246,7 +246,7 @@ AC_ARG_WITH(system-libav,
             [AC_HELP_STRING([--with-system-libav], [use system Libav libraries])])
 
 if test "x$with_system_libav" = "xyes"; then
-  PKG_CHECK_MODULES(LIBAV, libavformat libavcodec libavutil) 
+  PKG_CHECK_MODULES(LIBAV, libavformat libavcodec libavresample libavutil)
   PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $LIBAV_CFLAGS"
@@ -265,12 +265,13 @@ else
 
   LIBAV_DEPS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
               \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
+              \$(top_builddir)/gst-libs/ext/libav/libavresample/libavresample.a \
               \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
   if test "x$enable_static_plugins" = xyes; then
       dnl with static linking we can't use the .a archive directly as they would
       dnl be included in the final libgstlibav.a as a file and won't be usable.
       dnl libav*.a must be copied to the final destination too
-      LIBAV_LIBS="-lavformat -lavcodec -lavutil"
+      LIBAV_LIBS="-lavformat -lavcodec -lavresample -lavutil"
   else
       dnl libgstlibav.la: libs to statically link to
       LIBAV_LIBS="$LIBAV_DEPS"

@@ -176,7 +176,7 @@ gst_ffmpeg_idct_algo_get_type (void)
       {FF_IDCT_SH4, "SH4", "sh4"},
       {FF_IDCT_SIMPLEARM, "Simple ARM", "simplearm"},
       {FF_IDCT_IPP, "IPP", "ipp"},
-      {FF_IDCT_XVIDMMX, "XVID MMX", "xvidmmx"},
+      {FF_IDCT_XVID, "XVID", "xvid"},
       {FF_IDCT_SIMPLEARMV5TE, "Simple ARMV5TE", "simplearmv5te"},
       {FF_IDCT_SIMPLEARMV6, "Simple ARMV6", "simplearmv6"},
       {FF_IDCT_SIMPLEVIS, "Simple Vis", "simplevis"},
