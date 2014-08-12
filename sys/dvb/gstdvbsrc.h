@@ -135,6 +135,8 @@ struct _GstDvbSrcClass
 
   void (*adapter_type) (GstElement * element, gint type);
   void (*signal_quality) (GstElement * element, gint strength, gint snr);
+
+  void (*do_tune) (GstDvbSrc * self);
 };
 
 

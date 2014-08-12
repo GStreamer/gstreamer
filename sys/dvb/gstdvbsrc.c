@@ -160,6 +160,7 @@ enum
   SIGNAL_TUNING_START,
   SIGNAL_TUNING_DONE,
   SIGNAL_TUNING_FAIL,
+  SIGNAL_TUNE,
   LAST_SIGNAL
 };
 
@@ -512,6 +513,7 @@ static gboolean gst_dvbsrc_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_dvbsrc_is_seekable (GstBaseSrc * bsrc);
 static gboolean gst_dvbsrc_get_size (GstBaseSrc * src, guint64 * size);
 
+static void gst_dvbsrc_do_tune (GstDvbSrc * src);
 static gboolean gst_dvbsrc_tune (GstDvbSrc * object);
 static gboolean gst_dvbsrc_set_fe_params (GstDvbSrc * object,
     struct dtv_properties *props);
@@ -551,11 +553,13 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
+  GstDvbSrcClass *gstdvbsrc_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
+  gstdvbsrc_class = (GstDvbSrcClass *) klass;
 
   gobject_class->set_property = gst_dvbsrc_set_property;
   gobject_class->get_property = gst_dvbsrc_get_property;
@@ -581,6 +585,8 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_dvbsrc_get_size);
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_dvbsrc_create);
+
+  gstdvbsrc_class->do_tune = GST_DEBUG_FUNCPTR (gst_dvbsrc_do_tune);
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_ADAPTER,
       g_param_spec_int ("adapter", "The adapter device number",
@@ -895,6 +901,19 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
       g_signal_new ("tuning-fail", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
+  /**
+   * GstDvbSrc::tune:
+   * @gstdvbsrc: the element on which the signal is emitted
+   *
+   * Signal emited from the application to the element, instructing it
+   * to tune.
+   */
+  gst_dvbsrc_signals[SIGNAL_TUNING_FAIL] =
+      g_signal_new ("tune", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstDvbSrcClass, do_tune),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
 }
 
 /* initialize the new element
@@ -1147,18 +1166,10 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     case ARG_DVBSRC_INVERSION:
       object->inversion = g_value_get_enum (value);
       break;
-    case ARG_DVBSRC_TUNE:{
+    case ARG_DVBSRC_TUNE:
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_TUNE");
-
-      /* if we are in paused/playing state tune now, otherwise in ready
-       * to paused state change */
-      if (GST_STATE (object) > GST_STATE_READY) {
-        g_mutex_lock (&object->tune_mutex);
-        gst_dvbsrc_tune (object);
-        g_mutex_unlock (&object->tune_mutex);
-      }
+      gst_dvbsrc_do_tune (object);
       break;
-    }
     case ARG_DVBSRC_STATS_REPORTING_INTERVAL:
       object->stats_interval = g_value_get_uint (value);
       object->stats_counter = 0;
@@ -1959,6 +1970,18 @@ static gboolean
 gst_dvbsrc_get_size (GstBaseSrc * src, guint64 * size)
 {
   return FALSE;
+}
+
+static void
+gst_dvbsrc_do_tune (GstDvbSrc * src)
+{
+  /* if we are in paused/playing state tune now, otherwise in ready
+   * to paused state change */
+  if (GST_STATE (src) > GST_STATE_READY) {
+    g_mutex_lock (&src->tune_mutex);
+    gst_dvbsrc_tune (src);
+    g_mutex_unlock (&src->tune_mutex);
+  }
 }
 
 static void

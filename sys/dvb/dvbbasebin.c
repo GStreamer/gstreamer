@@ -54,6 +54,7 @@ enum
   SIGNAL_TUNING_START,
   SIGNAL_TUNING_DONE,
   SIGNAL_TUNING_FAIL,
+  SIGNAL_TUNE,
   LAST_SIGNAL
 };
 
@@ -160,6 +161,8 @@ static void tuning_start_signal_cb (GObject * object, DvbBaseBin * dvbbasebin);
 static void tuning_done_signal_cb (GObject * object, DvbBaseBin * dvbbasebin);
 static void tuning_fail_signal_cb (GObject * object, DvbBaseBin * dvbbasebin);
 
+static void dvb_base_bin_do_tune (DvbBaseBin * dvbbasebin);
+
 #define dvb_base_bin_parent_class parent_class
 G_DEFINE_TYPE_EXTENDED (DvbBaseBin, dvb_base_bin, GST_TYPE_BIN,
     0,
@@ -252,6 +255,11 @@ tuning_fail_signal_cb (GObject * object, DvbBaseBin * dvbbasebin)
   g_signal_emit (dvbbasebin, dvb_base_bin_signals[SIGNAL_TUNING_FAIL], 0);
 }
 
+static void
+dvb_base_bin_do_tune (DvbBaseBin * dvbbasebin)
+{
+  g_signal_emit_by_name (dvbbasebin->dvbsrc, "tune", NULL);
+}
 
 static void
 dvb_base_bin_class_init (DvbBaseBinClass * klass)
@@ -259,6 +267,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstBinClass *bin_class;
+  DvbBaseBinClass *dvbbasebin_class;
   GstElementFactory *dvbsrc_factory;
   GObjectClass *dvbsrc_class;
   typedef struct
@@ -338,6 +347,9 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   gobject_class->get_property = dvb_base_bin_get_property;
   gobject_class->dispose = dvb_base_bin_dispose;
   gobject_class->finalize = dvb_base_bin_finalize;
+
+  dvbbasebin_class = (DvbBaseBinClass *) klass;
+  dvbbasebin_class->do_tune = dvb_base_bin_do_tune;
 
   /* install dvbsrc properties */
   dvbsrc_factory = gst_element_factory_find ("dvbsrc");
@@ -434,6 +446,18 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
       g_signal_new ("tuning-fail", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
+  /**
+   * DvbBaseBin::tune:
+   * @dvbbasesink: the element on which the signal is emitted
+   *
+   * Signal emited from the application to the element, instructing it
+   * to tune.
+   */
+  dvb_base_bin_signals[SIGNAL_TUNE] =
+      g_signal_new ("tune", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (DvbBaseBinClass, do_tune),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 static void
