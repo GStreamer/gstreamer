@@ -111,11 +111,10 @@ struct _GstBusPrivate
   gpointer sync_handler_data;
   GDestroyNotify sync_handler_notify;
 
-  guint signal_watch_id;
   guint num_signal_watchers;
 
   guint num_sync_message_emitters;
-  GSource *watch_id;
+  GSource *signal_watch;
 
   gboolean enable_async;
   GstPoll *poll;
@@ -799,8 +798,8 @@ gst_bus_source_finalize (GSource * source)
   GST_DEBUG_OBJECT (bus, "finalize source %p", source);
 
   GST_OBJECT_LOCK (bus);
-  if (bus->priv->watch_id == source)
-    bus->priv->watch_id = NULL;
+  if (bus->priv->signal_watch == source)
+    bus->priv->signal_watch = NULL;
   GST_OBJECT_UNLOCK (bus);
 
   gst_object_unref (bsource->bus);
@@ -852,7 +851,7 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
   guint id;
   GSource *source;
 
-  if (bus->priv->watch_id) {
+  if (bus->priv->signal_watch) {
     GST_ERROR_OBJECT (bus,
         "Tried to add new watch while one was already there");
     return 0;
@@ -870,7 +869,7 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
   g_source_unref (source);
 
   if (id) {
-    bus->priv->watch_id = source;
+    bus->priv->signal_watch = source;
   }
 
   GST_DEBUG_OBJECT (bus, "New source %p with id %u", source, id);
@@ -1255,13 +1254,12 @@ gst_bus_add_signal_watch_full (GstBus * bus, gint priority)
     goto done;
 
   /* this should not fail because the counter above takes care of it */
-  g_assert (bus->priv->signal_watch_id == 0);
+  g_assert (!bus->priv->signal_watch);
 
-  bus->priv->signal_watch_id =
-      gst_bus_add_watch_full_unlocked (bus, priority, gst_bus_async_signal_func,
+  gst_bus_add_watch_full_unlocked (bus, priority, gst_bus_async_signal_func,
       NULL, NULL);
 
-  if (G_UNLIKELY (bus->priv->signal_watch_id == 0))
+  if (G_UNLIKELY (!bus->priv->signal_watch))
     goto add_failed;
 
 done:
@@ -1316,7 +1314,7 @@ gst_bus_add_signal_watch (GstBus * bus)
 void
 gst_bus_remove_signal_watch (GstBus * bus)
 {
-  guint id = 0;
+  GSource *source = NULL;
 
   g_return_if_fail (GST_IS_BUS (bus));
 
@@ -1331,16 +1329,16 @@ gst_bus_remove_signal_watch (GstBus * bus)
   if (bus->priv->num_signal_watchers > 0)
     goto done;
 
-  id = bus->priv->signal_watch_id;
-  bus->priv->signal_watch_id = 0;
+  GST_DEBUG_OBJECT (bus, "removing signal watch %u",
+      g_source_get_id (bus->priv->signal_watch));
 
-  GST_DEBUG_OBJECT (bus, "removing signal watch %u", id);
+  source = bus->priv->signal_watch;
 
 done:
   GST_OBJECT_UNLOCK (bus);
 
-  if (id)
-    g_source_remove (id);
+  if (source)
+    g_source_destroy (source);
 
   return;
 
