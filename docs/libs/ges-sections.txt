@@ -363,6 +363,7 @@ ges_timeline_is_updating
 ges_timeline_get_tracks
 ges_timeline_get_layers
 ges_timeline_get_track_for_pad
+ges_timeline_get_pad_for_track
 ges_timeline_get_duration
 ges_timeline_get_project
 ges_timeline_get_auto_transition

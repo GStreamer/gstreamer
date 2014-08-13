@@ -2962,6 +2962,39 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
 }
 
 /**
+ * ges_timeline_get_pad_for_track:
+ * @timeline: The #GESTimeline
+ * @track: The #GESTrack
+ *
+ * Search the #GstPad corresponding to the given @timeline's @track.
+ *
+ * Returns: (transfer none): The corresponding #GstPad if it is found,
+ * or %NULL if there is an error.
+ */
+
+GstPad *
+ges_timeline_get_pad_for_track (GESTimeline * timeline, GESTrack * track)
+{
+  GList *tmp;
+
+  LOCK_DYN (timeline);
+  for (tmp = timeline->priv->priv_tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+
+    if (track == tr_priv->track) {
+      if (tr_priv->ghostpad)
+        gst_object_ref (tr_priv->ghostpad);
+
+      UNLOCK_DYN (timeline);
+      return tr_priv->ghostpad;
+    }
+  }
+  UNLOCK_DYN (timeline);
+
+  return NULL;
+}
+
+/**
  * ges_timeline_get_tracks:
  * @timeline: a #GESTimeline
  *
