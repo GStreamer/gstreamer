@@ -1949,6 +1949,7 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
 {
   GstRTSPStreamPrivate *priv;
   gint i;
+  GList *l;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
@@ -1999,6 +2000,18 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
       gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
       gst_bin_remove (bin, priv->udpsrc_v6[i]);
     }
+
+    for (l = priv->transport_sources; l; l = l->next) {
+      GstRTSPMulticastTransportSource *s = l->data;
+
+      if (!s->udpsrc[i])
+        continue;
+
+      gst_element_set_locked_state (s->udpsrc[i], FALSE);
+      gst_element_set_state (s->udpsrc[i], GST_STATE_NULL);
+      gst_bin_remove (bin, s->udpsrc[i]);
+    }
+
     if (priv->udpsink[i])
       gst_bin_remove (bin, priv->udpsink[i]);
     if (priv->appsrc[i])
@@ -2025,6 +2038,14 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     priv->tee[i] = NULL;
     priv->funnel[i] = NULL;
   }
+
+  for (l = priv->transport_sources; l; l = l->next) {
+    GstRTSPMulticastTransportSource *s = l->data;
+    g_slice_free (GstRTSPMulticastTransportSource, s);
+  }
+  g_list_free (priv->transport_sources);
+  priv->transport_sources = NULL;
+
   gst_object_unref (priv->send_src[0]);
   priv->send_src[0] = NULL;
 
