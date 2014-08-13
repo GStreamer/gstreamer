@@ -1108,7 +1108,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* detect (and deem to be resyncs)  large pts gaps */
   if (gst_flv_demux_update_resync (demux, pts, demux->audio_need_discont,
-      &demux->last_audio_pts, &demux->audio_time_offset)) {
+          &demux->last_audio_pts, &demux->audio_time_offset)) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
   }
 
@@ -1495,7 +1495,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* detect (and deem to be resyncs)  large pts gaps */
   if (gst_flv_demux_update_resync (demux, pts, demux->video_need_discont,
-      &demux->last_video_pts, &demux->video_time_offset)) {
+          &demux->last_video_pts, &demux->video_time_offset)) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
   }
 
