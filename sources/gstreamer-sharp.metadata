@@ -210,13 +210,41 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="type">gpointer</attr>
 	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="array">false</attr>
 	<attr path="//method[@cname='gst_tag_list_copy_value']/parameters/parameter[@name='dest']" name="pass_as">ref</attr>
+	<attr path="//object/field[@cname='parent']" name="hidden">true</attr>
     <!-- buffer fixes -->
 	<attr path="//constructor[@cname='gst_buffer_new_wrapped']/parameters/parameter[@name='data']" name="type">guint8*</attr>
 	<attr path="//constructor[@cname='gst_buffer_new_wrapped']/parameters/parameter[@name='size']" name="name">n_length</attr>
+	<attr path="//constructor[@cname='gst_buffer_new_wrapped_full']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//constructor[@cname='gst_memory_new_wrapped']/parameters/parameter[@name='data']" name="type">guint8*</attr>
 	<attr path="//method[@cname='gst_buffer_fill']/parameters/parameter[@name='src']" name="type">guint8*</attr>
 	<attr path="//method[@cname='gst_buffer_fill']/parameters/parameter[@name='size']" name="name">n_length</attr>
 	<attr path="//method[@cname='gst_buffer_memcmp']/parameters/parameter[@name='mem']" name="type">guint8*</attr>
 	<attr path="//method[@cname='gst_buffer_memcmp']/parameters/parameter[@name='size']" name="name">n_length</attr>
+	<!-- array fixes -->
+	<attr path="//method[@cname='gst_rtp_buffer_new_copy_data']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_rtp_buffer_new_copy_data']/parameters/parameter[@name='len']" name="name">n_length</attr>
+	<attr path="//method[@cname='gst_rtp_buffer_new_take_data']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_rtp_buffer_new_take_data']/parameters/parameter[@name='len']" name="name">n_length</attr>
+	<attr path="//method[@cname='gst_rtcp_buffer_new_copy_data']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_rtcp_buffer_new_copy_data']/parameters/parameter[@name='len']" name="name">n_length</attr>
+	<attr path="//method[@cname='gst_rtcp_buffer_new_take_data']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_rtcp_buffer_new_take_data']/parameters/parameter[@name='len']" name="name">n_length</attr>
+	<attr path="//method[@cname='gst_rtp_buffer_add_extension_onebyte_header']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_rtp_buffer_add_extension_onebyte_header']/parameters/parameter[@name='size']" name="name">n_length</attr>
+	<attr path="//method[@cname='gst_rtp_buffer_add_extension_twobytes_header']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_rtp_buffer_add_extension_twobytes_header']/parameters/parameter[@name='size']" name="name">n_length</attr>
+	<attr path="//constructor[@cname='gst_mikey_message_new_from_data']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//constructor[@cname='gst_mikey_message_new_from_data']/parameters/parameter[@name='size']" name="name">n_length</attr>
+	<attr path="//method[@cname='gst_audio_reorder_channels']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_audio_reorder_channels']/parameters/parameter[@name='size']" name="name">n_length</attr>
+	<attr path="//method[@cname='gst_audio_format_fill_silence']/parameters/parameter[@name='dest']" name="type">guint8*</attr>
+	<attr path="//method[@cname='gst_audio_format_fill_silence']/parameters/parameter[@name='length']" name="name">n_length</attr>
+	<attr path="//callback[@cname='GstAudioFormatPack']/parameters/parameter[@name='src']" name="type">guint8*</attr>
+	<attr path="//callback[@cname='GstAudioFormatPack']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//callback[@cname='GstAudioFormatPack']/parameters/parameter[@name='length']" name="name">n_length</attr>
+	<attr path="//callback[@cname='GstAudioFormatUnpack']/parameters/parameter[@name='data']" name="type">guint8*</attr>
+	<attr path="//callback[@cname='GstAudioFormatUnpack']/parameters/parameter[@name='dest']" name="type">guint8*</attr>
+	<attr path="//callback[@cname='GstAudioFormatUnpack']/parameters/parameter[@name='length']" name="name">n_length</attr>
 	<!-- No way to correctly generate these without the element type -->
 	<attr path="//boxed[@cname='GstMpegtsDescriptor']//method[parameters/parameter[@type='GArray***']]" name="hidden">true</attr>
 </metadata>
