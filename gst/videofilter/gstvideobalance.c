@@ -67,24 +67,25 @@ enum
   PROP_SATURATION
 };
 
+#define PROCESSING_CAPS \
+  "{ AYUV, ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, " \
+  "xBGR, BGRx, RGB, BGR, Y42B, YUY2, UYVY, YVYU, " \
+  "I420, YV12, IYUV, Y41B, NV12, NV21 }"
+
 static GstStaticPadTemplate gst_video_balance_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", "{ AYUV, "
-            "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, "
-            "xBGR, BGRx, RGB, BGR, Y42B, YUY2, UYVY, YVYU, "
-            "I420, YV12, IYUV, Y41B, NV12, NV21 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (PROCESSING_CAPS) ";"
+        "video/x-raw(ANY)")
     );
 
 static GstStaticPadTemplate gst_video_balance_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", "{ AYUV, "
-            "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, "
-            "xBGR, BGRx, RGB, BGR, Y42B, YUY2, UYVY, YVYU, "
-            "I420, YV12, IYUV, Y41B, NV12, NV21 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (PROCESSING_CAPS) ";"
+        "video/x-raw(ANY)")
     );
 
 static void gst_video_balance_colorbalance_init (GstColorBalanceInterface *
@@ -492,7 +493,8 @@ gst_video_balance_transform_caps (GstBaseTransform * trans,
   GstCaps *ret;
 
   if (!gst_video_balance_is_passthrough (balance)) {
-    static GstStaticCaps raw_caps = GST_STATIC_CAPS ("video/x-raw");
+    static GstStaticCaps raw_caps =
+        GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (PROCESSING_CAPS));
 
     caps = gst_caps_intersect (caps, gst_static_caps_get (&raw_caps));
 
