@@ -975,8 +975,9 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * retrieves request pads. The pad should be released with
  * gst_element_release_request_pad().
  *
- * This method is slow and will be deprecated in the future. New code should
- * use gst_element_request_pad() with the requested template.
+ * This method is slower than manually getting the pad template and calling
+ * gst_element_request_pad() if the pads should have a specific name (e.g.
+ * @name is "src_1" instead of "src_%u").
  *
  * Returns: (transfer full) (nullable): requested #GstPad if found,
  *     otherwise %NULL.  Release after usage.
