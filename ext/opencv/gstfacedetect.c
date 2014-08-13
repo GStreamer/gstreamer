@@ -770,6 +770,8 @@ gst_face_detect_load_profile (GstFaceDetect * filter, gchar * profile)
 {
   CvHaarClassifierCascade *cascade;
 
+  if (profile == NULL)
+    return NULL;
   if (!(cascade = (CvHaarClassifierCascade *) cvLoad (profile, 0, 0, 0))) {
     GST_WARNING_OBJECT (filter, "Couldn't load Haar classifier cascade: %s.",
         profile);
