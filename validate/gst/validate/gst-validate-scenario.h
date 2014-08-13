@@ -65,25 +65,12 @@ struct _GstValidateAction
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))
 GType gst_validate_action_get_type (void);
 
-struct _GstValidateActionType
-{
-  GstMiniObject          mini_object;
-
-  GstValidateExecuteAction execute;
-
-  gchar **mandatory_fields;
-  gchar **option_fields;
-
-  gchar *description;
-  gboolean is_config;
-
-  gpointer _gst_reserved[GST_PADDING_LARGE];
-};
-
 #define GST_TYPE_VALIDATE_ACTION_TYPE       (gst_validate_action_type_get_type ())
 #define GST_IS_VALIDATE_ACTION_TYPE(obj)    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION_TYPE))
-GType gst_validate_action_type_get_type (void);
+#define GST_VALIDATE_ACTION_TYPE(obj)       ((GstValidateActionType*) obj)
+GType gst_validate_action_type_get_type     (void);
 
+gboolean gst_validate_print_action_types    (gchar ** wanted_types, gint num_wanted_types);
 
 struct _GstValidateScenarioClass
 {

@@ -26,6 +26,28 @@
 
 GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 #define GST_CAT_DEFAULT gstvalidate_debug
+
+typedef struct _GstValidateScenario        GstValidateScenario;
+typedef struct _GstValidateAction          GstValidateAction;
+typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
+
+struct _GstValidateActionType
+{
+  GstMiniObject          mini_object;
+
+  gchar *name;
+
+  GstValidateExecuteAction execute;
+
+  gchar **mandatory_fields;
+  gchar **option_fields;
+
+  gchar *description;
+  gboolean is_config;
+
+  gpointer _gst_reserved[GST_PADDING_LARGE];
+};
+
 void init_scenarios (void);
 
 #endif

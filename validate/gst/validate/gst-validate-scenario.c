@@ -187,6 +187,7 @@ _action_type_free (GstValidateActionType * type)
 {
   g_strfreev (type->mandatory_fields);
   g_free (type->description);
+  g_free (type->name);
 }
 
 static void
@@ -1856,6 +1857,7 @@ gst_validate_add_action_type (const gchar * type_name,
         g_free, (GDestroyNotify) _free_action_type);
 
   type->execute = function;
+  type->name = g_strdup (type_name);
   type->mandatory_fields = g_strdupv ((gchar **) mandatory_fields);
   type->description = g_strdup (description);
   type->is_config = is_config;
@@ -1863,6 +1865,50 @@ gst_validate_add_action_type (const gchar * type_name,
   g_hash_table_insert (action_types_table, g_strdup (type_name), type);
 }
 
+static GList *
+gst_validate_list_action_types (void)
+{
+  if (action_types_table)
+    return g_hash_table_get_values (action_types_table);
+
+  return NULL;
+}
+
+gboolean
+gst_validate_print_action_types (gchar ** wanted_types, gint num_wanted_types)
+{
+  GList *tmp;
+  gint nfound;
+
+  for (tmp = gst_validate_list_action_types (); tmp; tmp = tmp->next) {
+    gboolean print = FALSE;
+
+    if (num_wanted_types) {
+      gint n;
+
+      for (n = 0; n < num_wanted_types; n++) {
+        if (g_strcmp0 (((GstValidateActionType *) tmp->data)->name,
+                wanted_types[n]) == 0) {
+          nfound++;
+          print = TRUE;
+
+          break;
+        }
+      }
+    } else {
+      print = TRUE;
+    }
+
+    if (print)
+      gst_validate_printf (tmp->data, "\n");
+  }
+
+  if (num_wanted_types && num_wanted_types != nfound) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
 
 void
 init_scenarios (void)
@@ -1885,43 +1931,47 @@ init_scenarios (void)
 
   clean_action_str = g_regex_new ("\\\\\n|#.*\n", G_REGEX_CASELESS, 0, NULL);
   gst_validate_add_action_type ("seek", _execute_seek, seek_mandatory_fields,
-      "Allows to seek into the files", FALSE);
+      "Seeks into the files", FALSE);
   gst_validate_add_action_type ("pause", _execute_pause, NULL,
-      "Make it possible to set pipeline to PAUSED, you can add a duration"
-      " parametter so the pipeline goaes back to playing after that duration"
-      " (in second)", FALSE);
+      "Sets pipeline to PAUSED. You can add a 'duration'\n"
+      "parametter so the pipeline goaes back to playing after that duration\n"
+      "(in second)", FALSE);
   gst_validate_add_action_type ("play", _execute_play, NULL,
-      "Make it possible to set the pipeline state to PLAYING", FALSE);
+      "Sets the pipeline state to PLAYING", FALSE);
   gst_validate_add_action_type ("stop", _execute_stop, NULL,
-      "Make it possible to set the pipeline state to NULL", FALSE);
+      "Sets the pipeline state to NULL", FALSE);
   gst_validate_add_action_type ("eos", _execute_eos, NULL,
-      "Make it possible to send an EOS to the pipeline", FALSE);
+      "Sends an EOS event to the pipeline", FALSE);
   gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
       "The 'switch-track' command can be used to switch tracks.\n"
       "The 'type' argument selects which track type to change (can be 'audio', 'video',"
-      " or 'text'). The 'index' argument selects which track of this type"
-      " to use: it can be either a number, which will be the Nth track of"
-      " the given type, or a number with a '+' or '-' prefix, which means"
-      " a relative change (eg, '+1' means 'next track', '-1' means 'previous"
-      " track'), note that you need to state that it is a string in the scenario file"
-      " prefixing it with (string).", FALSE);
+      " or 'text').\nThe 'index' argument selects which track of this type\n"
+      "to use: it can be either a number, which will be the Nth track of\n"
+      "the given type, or a number with a '+' or '-' prefix, which means\n"
+      "a relative change (eg, '+1' means 'next track', '-1' means 'previous\n"
+      "track'), note that you need to state that it is a string in the scenario file\n"
+      "prefixing it with (string).", FALSE);
   gst_validate_add_action_type ("wait", _execute_wait, wait_mandatory_fields,
-      "Action to wait during 'duration' seconds", FALSE);
+      "Waits during 'duration' seconds", FALSE);
   gst_validate_add_action_type ("dot-pipeline", _execute_dot_pipeline, NULL,
-      "Action to wait dot the pipeline (the 'name' property will be included in the"
-      " dot filename. Also the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set",
+      "Dots the pipeline (the 'name' property will be used in the\n"
+      "dot filename).\n"
+      "For more information have a look at the GST_DEBUG_BIN_TO_DOT_FILE documentation."
+      "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set\n",
       FALSE);
   gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
-      "Allows you to change the ranking of a particular plugin feature", TRUE);
+      "Changes the ranking of a particular plugin feature", TRUE);
   gst_validate_add_action_type ("set-state", _execute_set_state,
       set_state_mandatory_fields,
-      "Allows to change the state of the pipeline to any GstState", FALSE);
+      "Change the state of the pipeline to any GstState as a string like:\n"
+      "    * 'null'\n"
+      "    * 'ready'\n" "    * 'paused'\n" "    * 'play'\n", FALSE);
   gst_validate_add_action_type ("set-property", _execute_set_property,
       set_property_mandatory_fields,
-      "Allows to set a property of any element in the pipeline", FALSE);
+      "Sets a property of any element in the pipeline", FALSE);
   gst_validate_add_action_type ("set-debug-threshold",
       _execute_set_debug_threshold, set_debug_threshold_mandatory_fields,
-      "Sets the debug level to be used, same format as "
+      "Sets the debug level to be used, same format as\n"
       "setting the GST_DEBUG env variable", FALSE);
   gst_validate_add_action_type ("emit-signal", _execute_emit_signal,
       emit_signal_mandatory_fields,

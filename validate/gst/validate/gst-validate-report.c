@@ -44,7 +44,7 @@ static GHashTable *_gst_validate_issues = NULL;
 static FILE **log_files = NULL;
 
 #ifndef GST_DISABLE_GST_DEBUG
-static GRegex *regex = NULL;
+static GRegex *newline_regex = NULL;
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_validate_report_debug);
@@ -309,7 +309,9 @@ gst_validate_report_init (void)
   }
 
 #ifndef GST_DISABLE_GST_DEBUG
-  regex = g_regex_new ("\n", G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
+  if (!newline_regex)
+    newline_regex =
+        g_regex_new ("\n", G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
 #endif
 }
 
@@ -470,6 +472,42 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
           " repeat: %i) | ", g_strcmp0 (action->name,
               "") == 0 ? "Unnamed" : action->name, action->action_number,
           GST_TIME_ARGS (action->playback_time), action->repeat);
+
+    } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
+      gint i;
+      gchar *desc, *tmp;
+      GstValidateActionType *type = GST_VALIDATE_ACTION_TYPE (source);
+
+      g_string_printf (string, "\n%s  Action type:", type->name);
+      g_string_append_printf (string, "\n%s    Name: %s", type->name,
+          type->name);
+
+      if (type->is_config)
+        g_string_append_printf (string,
+            "\n%s    Is config action (meaning it will be executing right "
+            "at the begining of the execution of the pipeline)", type->name);
+
+      tmp = g_strdup_printf ("\n%s        ", type->name);
+      desc =
+          g_regex_replace (newline_regex, type->description, -1, 0, tmp, 0,
+          NULL);
+      g_string_append_printf (string, "\n%s    Description: \n%s        %s",
+          type->name, type->name, desc);
+      g_free (desc);
+      g_free (tmp);
+
+
+      if (type->mandatory_fields) {
+        g_string_append_printf (string, "\n%s    Mandatory fileds:",
+            type->name);
+        for (i = 0; type->mandatory_fields[i]; i++)
+          g_string_append_printf (string,
+              "\n%s        %s", type->name, type->mandatory_fields[i]);
+      } else {
+        g_string_append_printf (string, "\n%s    No mandatory field",
+            type->name);
+
+      }
     } else if (GST_IS_OBJECT (source)) {
       g_string_printf (string, "\n%s --> ", GST_OBJECT_NAME (source));
     } else if (G_IS_OBJECT (source)) {
@@ -482,7 +520,13 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
-    gchar *str = g_regex_replace (regex, string->str, string->len, 0,
+    gchar *str;
+
+    if (!newline_regex)
+      newline_regex =
+          g_regex_new ("\n", G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
+
+    str = g_regex_replace (newline_regex, string->str, string->len, 0,
         "", 0, NULL);
 
     if (source)

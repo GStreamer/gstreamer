@@ -300,12 +300,45 @@ _execute_switch_track (GstValidateScenario * scenario,
   return TRUE;
 }
 
+static void
+_register_playbin_actions (void)
+{
+/* *INDENT-OFF* */
+  gst_validate_add_action_type ("set-subtitle", _execute_set_subtitles,
+      (GstValidateActionParameter [])
+      {
+        {"subtitle-file", "", TRUE}
+        , {NULL}
+      },
+      "Action to set a subtitle file to use on a playbin pipeline.\n"
+      "The subtitles file that will be used should will be specified\n"
+      "relatively to the playbin URI in use thanks to the subtitle-file\n"
+      "action property. You can also specify a folder with subtitle-dir\n"
+      "For example if playbin.uri='file://some/uri.mov\n"
+      "and action looks like 'set-subtitle, subtitle-file=en.srt'\n"
+      "the subtitle URI will be set to 'file:///some/uri.mov.en.srt'\n",
+      FALSE);
+
+  /* Overriding default implementation */
+  gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
+      "The 'switch-track' command can be used to switch tracks.\n"
+      "The 'type' argument selects which track type to change (can be 'audio', 'video',"
+      " or 'text').\nThe 'index' argument selects which track of this type\n"
+      "to use: it can be either a number, which will be the Nth track of\n"
+      "the given type, or a number with a '+' or '-' prefix, which means\n"
+      "a relative change (eg, '+1' means 'next track', '-1' means 'previous\n"
+      "track'), note that you need to state that it is a string in the scenario file\n"
+      "prefixing it with (string).", FALSE);
+/* *INDENT-ON* */
+}
+
 int
 main (int argc, gchar ** argv)
 {
   GError *err = NULL;
   const gchar *scenario = NULL, *configs = NULL;
-  gboolean list_scenarios = FALSE, monitor_handles_state;
+  gboolean list_scenarios = FALSE, monitor_handles_state,
+      list_action_types = FALSE;
   GstStateChangeReturn sret;
   gchar *output_file = NULL;
   gint ret = 0;
@@ -325,6 +358,8 @@ main (int argc, gchar ** argv)
           &output_file, "The output file to store scenarios details. "
           "Implies --list-scenario",
         NULL},
+    {"list-action-types", 't', 0, G_OPTION_ARG_NONE, &list_action_types,
+        "List the avalaible action types with which to write scenarios", NULL},
     {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
           "Let you set a config scenario, the scenario needs to be set as 'config"
           "' you can specify a list of scenario separated by ':'"
@@ -380,6 +415,17 @@ main (int argc, gchar ** argv)
     return 0;
   }
 
+  if (list_action_types) {
+    _register_playbin_actions ();
+
+    if (!gst_validate_print_action_types (argv + 1, argc - 1)) {
+      GST_ERROR ("Could not print all wanted types");
+      return -1;
+    }
+
+    return 0;
+  }
+
   if (argc == 1) {
     g_print ("%s", g_option_context_get_help (ctx, FALSE, NULL));
     g_option_context_free (ctx);
@@ -413,30 +459,7 @@ main (int argc, gchar ** argv)
 #endif
 
   if (_is_playbin_pipeline (argc, argv + 1)) {
-    const gchar *sub_mandatory_fields[] = { "subtitle-file", NULL };
-
-    gst_validate_add_action_type ("set-subtitle", _execute_set_subtitles,
-        sub_mandatory_fields,
-        "Action to wait set the subtitle file to use on a playbin pipeline. "
-        "The subtitles file that will be use should will be specified "
-        "relatively to the playbin URI in use thanks to the subtitle-file "
-        " action property. You can also specify a folder with subtitle-dir\n"
-        "For example if playbin.uri='file://some/uri.mov"
-        " and action looks like 'set-subtitle, subtitle-file=en.srt'"
-        " the subtitle URI will be set to 'file:///some/uri.mov.en.srt'",
-        FALSE);
-
-    /* Overriding default implementation */
-    gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
-        "The 'switch-track' command can be used to switch tracks.\n"
-        "The 'type' argument selects which track type to change (can be 'audio', 'video',"
-        " or 'text'). The 'index' argument selects which track of this type"
-        " to use: it can be either a number, which will be the Nth track of"
-        " the given type, or a number with a '+' or '-' prefix, which means"
-        " a relative change (eg, '+1' means 'next track', '-1' means 'previous"
-        " track'), note that you need to state that it is a string in the scenario file"
-        " prefixing it with (string). You can also disable the track type"
-        " setting the 'disable' field (to anything)", FALSE);
+    _register_playbin_actions ();
   }
 
   runner = gst_validate_runner_new ();
