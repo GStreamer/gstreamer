@@ -36,10 +36,10 @@ G_BEGIN_DECLS
 #define GST_IS_VALIDATE_SCENARIO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VALIDATE_SCENARIO))
 #define GST_VALIDATE_SCENARIO_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioClass))
 
-typedef struct _GstValidateScenario      GstValidateScenario;
-typedef struct _GstValidateScenarioClass GstValidateScenarioClass;
+typedef struct _GstValidateScenario        GstValidateScenario;
+typedef struct _GstValidateScenarioClass   GstValidateScenarioClass;
 typedef struct _GstValidateScenarioPrivate GstValidateScenarioPrivate;
-typedef struct _GstValidateAction        GstValidateAction;
+typedef struct _GstValidateAction          GstValidateAction;
 
 typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
@@ -55,12 +55,15 @@ struct _GstValidateAction
   gint repeat;
   GstClockTime playback_time;
   GstStructure *structure;
+
+  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 struct _GstValidateScenarioClass
 {
   GObjectClass parent_class;
 
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstValidateScenario
@@ -69,6 +72,8 @@ struct _GstValidateScenario
 
   GstElement *pipeline;
   GstValidateScenarioPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_validate_scenario_get_type (void);
@@ -99,10 +104,6 @@ gboolean gst_validate_scenario_execute_seek (GstValidateScenario *scenario,
                                              GstClockTime start,
                                              GstSeekType stop_type,
                                              GstClockTime stop);
-
-#define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
-#define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))
-GType gst_validate_action_get_type (void);
 
 G_END_DECLS
 

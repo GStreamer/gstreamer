@@ -135,6 +135,7 @@ G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
     G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER,
         _reporter_iface_init));
 
+/* GstValidateAction implementation */
 GType _gst_validate_action_type;
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
