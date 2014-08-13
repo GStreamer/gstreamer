@@ -3143,11 +3143,6 @@ gst_flv_demux_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       GstFormat format;
 
-      /* Try to push upstream first */
-      res = gst_pad_peer_query (demux->sinkpad, query);
-      if (res)
-        goto beach;
-
       gst_query_parse_duration (query, &format, NULL);
 
       /* duration is time only */
@@ -3158,11 +3153,16 @@ gst_flv_demux_query (GstPad * pad, GstObject * parent, GstQuery * query)
         goto beach;
       }
 
+      /* Try to push upstream first */
+      res = gst_pad_peer_query (demux->sinkpad, query);
+      if (res)
+        goto beach;
+
       GST_DEBUG_OBJECT (pad, "duration query, replying %" GST_TIME_FORMAT,
           GST_TIME_ARGS (demux->duration));
 
       gst_query_set_duration (query, GST_FORMAT_TIME, demux->duration);
-
+      res = TRUE;
       break;
     }
     case GST_QUERY_POSITION:
