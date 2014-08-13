@@ -537,7 +537,7 @@ gst_bin_dispose (GObject * object)
 
 /**
  * gst_bin_new:
- * @name: (nullable): the name of the new bin
+ * @name: (allow-none): the name of the new bin
  *
  * Creates a new bin with the given name.
  *
