@@ -382,7 +382,29 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
        * it doesn't handle the filter caps but we could still convert
        * to these caps */
       if (filter) {
-        downstream_filter = gst_caps_copy (filter);
+        guint i, n;
+
+        downstream_filter = gst_caps_new_empty ();
+
+        /* Intersect raw video caps in the filter caps with the converter
+         * caps. This makes sure that we don't accept raw video that we
+         * can't handle, e.g. because of caps features */
+        n = gst_caps_get_size (filter);
+        for (i = 0; i < n; i++) {
+          GstStructure *s;
+          GstCaps *tmp, *tmp2;
+
+          s = gst_structure_copy (gst_caps_get_structure (filter, i));
+          if (gst_structure_has_name (s,
+                  self->audio ? "audio/x-raw" : "video/x-raw")) {
+            tmp = gst_caps_new_full (s, NULL);
+            tmp2 = gst_caps_intersect (tmp, self->converter_caps);
+            gst_caps_append (downstream_filter, tmp2);
+            gst_caps_unref (tmp);
+          } else {
+            gst_caps_append_structure (downstream_filter, s);
+          }
+        }
         downstream_filter =
             gst_caps_merge (downstream_filter,
             gst_caps_ref (self->converter_caps));
