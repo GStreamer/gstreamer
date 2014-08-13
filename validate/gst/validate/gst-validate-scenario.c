@@ -63,14 +63,6 @@ static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
 static GRegex *clean_action_str;
 
-typedef struct _GstValidateActionType
-{
-  GstValidateExecuteAction execute;
-  gchar **mandatory_fields;
-  gchar *description;
-  gboolean is_config;
-} GstValidateActionType;
-
 struct _GstValidateScenarioPrivate
 {
   GstValidateRunner *runner;
@@ -183,6 +175,36 @@ gst_validate_action_new (void)
   gst_validate_action_init (action);
 
   return action;
+}
+
+/* GstValidateActionType implementation */
+GType _gst_validate_action_type_type;
+GST_DEFINE_MINI_OBJECT_TYPE (GstValidateActionType, gst_validate_action_type);
+static GstValidateActionType *gst_validate_action_type_new (void);
+
+static void
+_action_type_free (GstValidateActionType * type)
+{
+  g_strfreev (type->mandatory_fields);
+  g_free (type->description);
+}
+
+static void
+gst_validate_action_type_init (GstValidateActionType * type)
+{
+  gst_mini_object_init ((GstMiniObject *) type, 0,
+      _gst_validate_action_type_type, NULL, NULL,
+      (GstMiniObjectFreeFunction) _action_type_free);
+}
+
+GstValidateActionType *
+gst_validate_action_type_new (void)
+{
+  GstValidateActionType *type = g_slice_new0 (GstValidateActionType);
+
+  gst_validate_action_type_init (type);
+
+  return type;
 }
 
 static gboolean
@@ -1827,7 +1849,7 @@ gst_validate_add_action_type (const gchar * type_name,
     GstValidateExecuteAction function, const gchar * const *mandatory_fields,
     const gchar * description, gboolean is_config)
 {
-  GstValidateActionType *type = g_slice_new0 (GstValidateActionType);
+  GstValidateActionType *type = gst_validate_action_type_new ();
 
   if (action_types_table == NULL)
     action_types_table = g_hash_table_new_full (g_str_hash, g_str_equal,
@@ -1859,6 +1881,7 @@ init_scenarios (void)
       GST_DEBUG_FG_YELLOW, "Gst validate scenarios");
 
   _gst_validate_action_type = gst_validate_action_get_type ();
+  _gst_validate_action_type_type = gst_validate_action_type_get_type ();
 
   clean_action_str = g_regex_new ("\\\\\n|#.*\n", G_REGEX_CASELESS, 0, NULL);
   gst_validate_add_action_type ("seek", _execute_seek, seek_mandatory_fields,
