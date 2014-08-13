@@ -1470,7 +1470,7 @@ out_flushing:
      * has returned an error flow return. After EOS there
      * will be no further buffer which could propagate the
      * error upstream */
-    if (sq->is_eos) {
+    if (sq->is_eos && sq->srcresult < GST_FLOW_EOS) {
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       GST_ELEMENT_ERROR (mq, STREAM, FAILED,
           ("Internal data stream error."),
