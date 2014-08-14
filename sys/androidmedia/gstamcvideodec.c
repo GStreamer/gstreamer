@@ -88,8 +88,7 @@ static GstFlowReturn gst_amc_video_dec_finish (GstVideoDecoder * decoder);
 static gboolean gst_amc_video_dec_decide_allocation (GstVideoDecoder * bdec,
     GstQuery * query);
 
-static GstFlowReturn gst_amc_video_dec_drain (GstAmcVideoDec * self,
-    gboolean at_eos);
+static GstFlowReturn gst_amc_video_dec_drain (GstAmcVideoDec * self);
 
 enum
 {
@@ -874,7 +873,7 @@ gst_amc_video_dec_start (GstVideoDecoder * decoder)
 
   self = GST_AMC_VIDEO_DEC (decoder);
   self->last_upstream_ts = 0;
-  self->eos = FALSE;
+  self->drained = TRUE;
   self->downstream_flow_ret = GST_FLOW_OK;
   self->started = FALSE;
   self->flushing = TRUE;
@@ -909,7 +908,7 @@ gst_amc_video_dec_stop (GstVideoDecoder * decoder)
   gst_pad_stop_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
 
   self->downstream_flow_ret = GST_FLOW_FLUSHING;
-  self->eos = FALSE;
+  self->drained = TRUE;
   g_mutex_lock (&self->drain_lock);
   self->draining = FALSE;
   g_cond_broadcast (&self->drain_cond);
@@ -983,7 +982,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
   }
 
   if (needs_disable && is_format_change) {
-    gst_amc_video_dec_drain (self, FALSE);
+    gst_amc_video_dec_drain (self);
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     gst_amc_video_dec_stop (GST_VIDEO_DECODER (self));
     GST_VIDEO_DECODER_STREAM_LOCK (self);
@@ -1104,7 +1103,7 @@ gst_amc_video_dec_flush (GstVideoDecoder * decoder)
 
   /* Start the srcpad loop again */
   self->last_upstream_ts = 0;
-  self->eos = FALSE;
+  self->drained = TRUE;
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
       (GstTaskFunction) gst_amc_video_dec_loop, decoder, NULL);
@@ -1137,12 +1136,6 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
     GST_ERROR_OBJECT (self, "Codec not started yet");
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_NOT_NEGOTIATED;
-  }
-
-  if (self->eos) {
-    GST_WARNING_OBJECT (self, "Got frame after EOS");
-    gst_video_codec_frame_unref (frame);
-    return GST_FLOW_EOS;
   }
 
   if (self->flushing)
@@ -1254,6 +1247,7 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
       }
       goto queue_error;
     }
+    self->drained = FALSE;
   }
 
   gst_buffer_unmap (frame->input_buffer, &minfo);
@@ -1312,11 +1306,11 @@ gst_amc_video_dec_finish (GstVideoDecoder * decoder)
 
   self = GST_AMC_VIDEO_DEC (decoder);
 
-  return gst_amc_video_dec_drain (self, TRUE);
+  return gst_amc_video_dec_drain (self);
 }
 
 static GstFlowReturn
-gst_amc_video_dec_drain (GstAmcVideoDec * self, gboolean at_eos)
+gst_amc_video_dec_drain (GstAmcVideoDec * self)
 {
   GstFlowReturn ret;
   gint idx;
@@ -1328,13 +1322,11 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self, gboolean at_eos)
     return GST_FLOW_OK;
   }
 
-  /* Don't send EOS buffer twice, this doesn't work */
-  if (self->eos) {
-    GST_DEBUG_OBJECT (self, "Codec is EOS already");
+  /* Don't send drain buffer twice, this doesn't work */
+  if (self->drained) {
+    GST_DEBUG_OBJECT (self, "Codec is drained already");
     return GST_FLOW_OK;
   }
-  if (at_eos)
-    self->eos = TRUE;
 
   /* Make sure to release the base class stream lock, otherwise
    * _loop() can't call _finish_frame() and we might block forever
@@ -1376,6 +1368,8 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self, gboolean at_eos)
       }
     }
 
+    self->drained = TRUE;
+    self->draining = FALSE;
     g_mutex_unlock (&self->drain_lock);
     GST_VIDEO_DECODER_STREAM_LOCK (self);
   } else if (idx >= self->n_input_buffers) {

@@ -78,9 +78,8 @@ struct _GstAmcVideoEnc
   GCond drain_cond;
   /* TRUE if EOS buffers shouldn't be forwarded */
   gboolean draining;
-
-  /* TRUE if upstream is EOS */
-  gboolean eos;
+  /* TRUE if the component is drained */
+  gboolean drained;
 
   GstFlowReturn downstream_flow_ret;
 };

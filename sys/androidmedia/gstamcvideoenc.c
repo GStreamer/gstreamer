@@ -1172,7 +1172,7 @@ gst_amc_video_enc_start (GstVideoEncoder * encoder)
 
   self = GST_AMC_VIDEO_ENC (encoder);
   self->last_upstream_ts = 0;
-  self->eos = FALSE;
+  self->drained = TRUE;
   self->downstream_flow_ret = GST_FLOW_OK;
   self->started = FALSE;
   self->flushing = TRUE;
@@ -1207,7 +1207,7 @@ gst_amc_video_enc_stop (GstVideoEncoder * encoder)
   gst_pad_stop_task (GST_VIDEO_ENCODER_SRC_PAD (encoder));
 
   self->downstream_flow_ret = GST_FLOW_FLUSHING;
-  self->eos = FALSE;
+  self->drained = TRUE;
   g_mutex_lock (&self->drain_lock);
   self->draining = FALSE;
   g_cond_broadcast (&self->drain_cond);
@@ -1384,7 +1384,7 @@ gst_amc_video_enc_flush (GstVideoEncoder * encoder)
 
   /* Start the srcpad loop again */
   self->last_upstream_ts = 0;
-  self->eos = FALSE;
+  self->drained = TRUE;
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_VIDEO_ENCODER_SRC_PAD (self),
       (GstTaskFunction) gst_amc_video_enc_loop, encoder, NULL);
@@ -1414,12 +1414,6 @@ gst_amc_video_enc_handle_frame (GstVideoEncoder * encoder,
     GST_ERROR_OBJECT (self, "Codec not started yet");
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_NOT_NEGOTIATED;
-  }
-
-  if (self->eos) {
-    GST_WARNING_OBJECT (self, "Got frame after EOS");
-    gst_video_codec_frame_unref (frame);
-    return GST_FLOW_EOS;
   }
 
   if (self->flushing)
@@ -1527,6 +1521,8 @@ again:
     goto queue_error;
   }
 
+  self->drained = FALSE;
+
   gst_video_codec_frame_unref (frame);
 
   return self->downstream_flow_ret;
@@ -1578,57 +1574,10 @@ static GstFlowReturn
 gst_amc_video_enc_finish (GstVideoEncoder * encoder)
 {
   GstAmcVideoEnc *self;
-  gint idx;
-  GError *err = NULL;
 
   self = GST_AMC_VIDEO_ENC (encoder);
-  GST_DEBUG_OBJECT (self, "Sending EOS to the component");
 
-  /* Don't send EOS buffer twice, this doesn't work */
-  if (self->eos) {
-    GST_DEBUG_OBJECT (self, "Component is already EOS");
-    return GST_VIDEO_ENCODER_FLOW_DROPPED;
-  }
-  self->eos = TRUE;
-
-  /* Make sure to release the base class stream lock, otherwise
-   * _loop() can't call _finish_frame() and we might block forever
-   * because no input buffers are released */
-  GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
-  /* Send an EOS buffer to the component and let the base
-   * class drop the EOS event. We will send it later when
-   * the EOS buffer arrives on the output port.
-   * Wait at most 0.5s here. */
-  idx = gst_amc_codec_dequeue_input_buffer (self->codec, 500000, &err);
-  GST_VIDEO_ENCODER_STREAM_LOCK (self);
-
-  if (idx >= 0 && idx < self->n_input_buffers) {
-    GstAmcBufferInfo buffer_info;
-
-    memset (&buffer_info, 0, sizeof (buffer_info));
-    buffer_info.size = 0;
-    buffer_info.presentation_time_us =
-        gst_util_uint64_scale (self->last_upstream_ts, 1, GST_USECOND);
-    buffer_info.flags |= BUFFER_FLAG_END_OF_STREAM;
-
-    if (gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info, &err)) {
-      GST_DEBUG_OBJECT (self, "Sent EOS to the codec");
-    } else {
-      GST_ERROR_OBJECT (self, "Failed to send EOS to the codec");
-      if (!self->flushing)
-        GST_ELEMENT_WARNING_FROM_ERROR (self, err);
-      g_clear_error (&err);
-    }
-  } else if (idx >= self->n_input_buffers) {
-    GST_ERROR_OBJECT (self, "Invalid input buffer index %d of %d",
-        idx, self->n_input_buffers);
-  } else {
-    GST_ERROR_OBJECT (self, "Failed to dequeue input buffer for EOS: %d", idx);
-    if (err)
-      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
-  }
-
-  return GST_VIDEO_ENCODER_FLOW_DROPPED;
+  return gst_amc_video_enc_drain (self);
 }
 
 static GstFlowReturn
@@ -1644,9 +1593,9 @@ gst_amc_video_enc_drain (GstAmcVideoEnc * self)
     return GST_FLOW_OK;
   }
 
-  /* Don't send EOS buffer twice, this doesn't work */
-  if (self->eos) {
-    GST_DEBUG_OBJECT (self, "Codec is EOS already");
+  /* Don't send drain buffer twice, this doesn't work */
+  if (self->drained) {
+    GST_DEBUG_OBJECT (self, "Codec is drained already");
     return GST_FLOW_OK;
   }
 
@@ -1690,6 +1639,8 @@ gst_amc_video_enc_drain (GstAmcVideoEnc * self)
       }
     }
 
+    self->drained = TRUE;
+    self->draining = FALSE;
     g_mutex_unlock (&self->drain_lock);
     GST_VIDEO_ENCODER_STREAM_LOCK (self);
   } else if (idx >= self->n_input_buffers) {
