@@ -184,6 +184,7 @@ gst_scene_change_transform_frame_ip (GstVideoFilter * filter,
     scenechange->n_diffs = 0;
     memset (scenechange->diffs, 0, sizeof (double) * SC_N_DIFFS);
     scenechange->oldbuf = gst_buffer_ref (frame->buffer);
+    memcpy (&scenechange->oldinfo, &frame->info, sizeof (GstVideoInfo));
     return GST_FLOW_OK;
   }
 
