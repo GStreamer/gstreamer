@@ -248,7 +248,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
     caps = gst_video_info_to_caps (&info);
 
     peercaps = gst_pad_peer_query_caps (mix->srcpad, NULL);
-    if (peercaps) {
+    if (peercaps && !gst_caps_can_intersect (peercaps, caps)) {
       GstCaps *tmp;
 
       s = gst_caps_get_structure (caps, 0);
