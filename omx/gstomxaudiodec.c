@@ -920,11 +920,7 @@ gst_omx_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
     return FALSE;
   }
 
-  /* Start the srcpad loop again */
-  GST_DEBUG_OBJECT (self, "Starting task again");
   self->downstream_flow_ret = GST_FLOW_OK;
-  gst_pad_start_task (GST_AUDIO_DECODER_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_audio_dec_loop, decoder, NULL);
 
   return TRUE;
 }
@@ -933,28 +929,53 @@ static void
 gst_omx_audio_dec_flush (GstAudioDecoder * decoder, gboolean hard)
 {
   GstOMXAudioDec *self = GST_OMX_AUDIO_DEC (decoder);
+  OMX_ERRORTYPE err = OMX_ErrorNone;
 
-  GST_DEBUG_OBJECT (self, "Resetting decoder");
+  GST_DEBUG_OBJECT (self, "Flushing decoder");
 
+  if (gst_omx_component_get_state (self->dec, 0) == OMX_StateLoaded)
+    return;
+
+  /* 0) Pause the components */
+  if (gst_omx_component_get_state (self->dec, 0) == OMX_StateExecuting) {
+    gst_omx_component_set_state (self->dec, OMX_StatePause);
+    gst_omx_component_get_state (self->dec, GST_CLOCK_TIME_NONE);
+  }
+
+  /* 1) Wait until the srcpad loop is stopped,
+   * unlock GST_AUDIO_DECODER_STREAM_LOCK to prevent deadlocks
+   * caused by using this lock from inside the loop function */
+  GST_AUDIO_DECODER_STREAM_UNLOCK (self);
+  gst_pad_stop_task (GST_AUDIO_DECODER_SRC_PAD (decoder));
+  GST_DEBUG_OBJECT (self, "Flushing -- task stopped");
+  GST_AUDIO_DECODER_STREAM_LOCK (self);
+
+  /* 2) Flush the ports */
+  GST_DEBUG_OBJECT (self, "flushing ports");
   gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
   gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
 
-  /* Wait until the srcpad loop is finished */
-  GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
-  GST_PAD_STREAM_LOCK (GST_AUDIO_ENCODER_SRC_PAD (self));
-  GST_PAD_STREAM_UNLOCK (GST_AUDIO_ENCODER_SRC_PAD (self));
-  GST_AUDIO_ENCODER_STREAM_LOCK (self);
+  /* 3) Resume components */
+  gst_omx_component_set_state (self->dec, OMX_StateExecuting);
+  gst_omx_component_get_state (self->dec, GST_CLOCK_TIME_NONE);
 
+  /* 4) Unset flushing to allow ports to accept data again */
   gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, FALSE);
   gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, FALSE);
-  gst_omx_port_populate (self->dec_out_port);
 
-  /* Start the srcpad loop again */
+  err = gst_omx_port_populate (self->dec_out_port);
+
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (self, "Failed to populate output port: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+  }
+
+  /* Reset our state */
   self->last_upstream_ts = 0;
-  self->downstream_flow_ret = GST_FLOW_OK;
   self->eos = FALSE;
-  gst_pad_start_task (GST_AUDIO_DECODER_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_audio_dec_loop, decoder, NULL);
+  self->downstream_flow_ret = GST_FLOW_OK;
+  self->started = FALSE;
+  GST_DEBUG_OBJECT (self, "Flush finished");
 }
 
 static GstFlowReturn
@@ -991,6 +1012,12 @@ gst_omx_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     if (inbuf)
       gst_buffer_unref (inbuf);
     return self->downstream_flow_ret;
+  }
+
+  if (!self->started) {
+    GST_DEBUG_OBJECT (self, "Starting task");
+    gst_pad_start_task (GST_AUDIO_DECODER_SRC_PAD (self),
+        (GstTaskFunction) gst_omx_audio_dec_loop, decoder, NULL);
   }
 
   if (inbuf == NULL)
