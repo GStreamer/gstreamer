@@ -128,17 +128,21 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     }
     case GST_MESSAGE_BUFFERING:{
       gint percent;
+      GstBufferingMode mode;
 
       if (!buffering) {
         g_print ("\n");
       }
 
       gst_message_parse_buffering (message, &percent);
+      gst_message_parse_buffering_stats (message, &mode, NULL, NULL, NULL);
       g_print ("%s %d%%  \r", "Buffering...", percent);
 
       /* no state management needed for live pipelines */
-      if (is_live)
+      if (mode == GST_BUFFERING_LIVE) {
+        is_live = TRUE;
         break;
+      }
 
       if (percent == 100) {
         /* a 100% message means buffering is done */
