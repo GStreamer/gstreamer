@@ -154,6 +154,7 @@ EXPORTS
 	gst_video_gl_texture_upload_meta_api_get_type
 	gst_video_gl_texture_upload_meta_get_info
 	gst_video_gl_texture_upload_meta_upload
+	gst_video_guess_framerate
 	gst_video_info_align
 	gst_video_info_convert
 	gst_video_info_from_caps
