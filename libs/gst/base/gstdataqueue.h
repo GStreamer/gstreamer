@@ -121,7 +121,7 @@ struct _GstDataQueue
 };
 
 /**
- * GstDataQueueClass: (skip)
+ * GstDataQueueClass:
  */
 struct _GstDataQueueClass
 {
