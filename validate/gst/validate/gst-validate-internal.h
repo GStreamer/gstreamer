@@ -29,6 +29,7 @@ GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 
 typedef struct _GstValidateScenario        GstValidateScenario;
 typedef struct _GstValidateAction          GstValidateAction;
+typedef struct _GstValidateActionParameter GstValidateActionParameter;
 typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
 struct _GstValidateActionType
@@ -39,8 +40,7 @@ struct _GstValidateActionType
 
   GstValidateExecuteAction execute;
 
-  gchar **mandatory_fields;
-  gchar **option_fields;
+  GstValidateActionParameter *parameters;
 
   gchar *description;
   gboolean is_config;

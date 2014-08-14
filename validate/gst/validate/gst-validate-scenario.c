@@ -185,7 +185,7 @@ static GstValidateActionType *gst_validate_action_type_new (void);
 static void
 _action_type_free (GstValidateActionType * type)
 {
-  g_strfreev (type->mandatory_fields);
+  g_free (type->parameters);
   g_free (type->description);
   g_free (type->name);
 }
@@ -1353,15 +1353,16 @@ _load_scenario_file (GstValidateScenario * scenario,
       goto failed;
     }
 
-    if (action_type->mandatory_fields) {
+    if (action_type->parameters) {
       guint i;
 
-      for (i = 0; action_type->mandatory_fields[i]; i++) {
-        if (gst_structure_has_field (structure,
-                action_type->mandatory_fields[i]) == FALSE) {
+      for (i = 0; action_type->parameters[i].name; i++) {
+        if (action_type->parameters[i].mandatory &&
+            gst_structure_has_field (structure,
+                action_type->parameters[i].name) == FALSE) {
           GST_ERROR_OBJECT (scenario,
               "Mandatory field '%s' not present in structure: %" GST_PTR_FORMAT,
-              action_type->mandatory_fields[i], structure);
+              action_type->parameters[i].name, structure);
           goto failed;
         }
       }
@@ -1834,31 +1835,48 @@ done:
   return res;
 }
 
-static void
-_free_action_type (GstValidateActionType * type)
-{
-  if (type->mandatory_fields)
-    g_strfreev (type->mandatory_fields);
-
-  g_free (type->description);
-
-  g_slice_free (GstValidateActionType, type);
-}
-
 void
 gst_validate_add_action_type (const gchar * type_name,
-    GstValidateExecuteAction function, const gchar * const *mandatory_fields,
+    GstValidateExecuteAction function,
+    GstValidateActionParameter * parameters,
     const gchar * description, gboolean is_config)
 {
   GstValidateActionType *type = gst_validate_action_type_new ();
+  gint n_params = is_config ? 0 : 2;
+
+  if (parameters) {
+    for (n_params = 0; parameters[n_params].name != NULL; n_params++);
+
+    n_params += 2;
+  }
+
+  if (n_params) {
+    type->parameters = g_new0 (GstValidateActionParameter, n_params);
+  }
+
+  if (parameters) {
+    memcpy (type->parameters, parameters,
+        sizeof (GstValidateActionParameter) * (n_params));
+  }
+
+  if (!is_config) {
+    type->parameters[n_params - 1].name = "playback_time";
+    type->parameters[n_params - 1].description =
+        "The playback time at which the action " "will be executed";
+    type->parameters[n_params - 1].mandatory = FALSE;
+    type->parameters[n_params - 1].types = "double,string";
+    type->parameters[n_params - 1].possible_variables =
+        "position: The current position in the stream\n"
+        "duration: The duration of the stream";
+    type->parameters[n_params - 1].def = "0.0";
+  }
 
   if (action_types_table == NULL)
     action_types_table = g_hash_table_new_full (g_str_hash, g_str_equal,
-        g_free, (GDestroyNotify) _free_action_type);
+        g_free, (GDestroyNotify) gst_mini_object_unref);
 
   type->execute = function;
   type->name = g_strdup (type_name);
-  type->mandatory_fields = g_strdupv ((gchar **) mandatory_fields);
   type->description = g_strdup (description);
   type->is_config = is_config;
 
@@ -1878,7 +1896,7 @@ gboolean
 gst_validate_print_action_types (gchar ** wanted_types, gint num_wanted_types)
 {
   GList *tmp;
-  gint nfound;
+  gint nfound = 0;
 
   for (tmp = gst_validate_list_action_types (); tmp; tmp = tmp->next) {
     gboolean print = FALSE;
@@ -1913,16 +1931,6 @@ gst_validate_print_action_types (gchar ** wanted_types, gint num_wanted_types)
 void
 init_scenarios (void)
 {
-  const gchar *seek_mandatory_fields[] = { "start", NULL };
-  const gchar *wait_mandatory_fields[] = { "duration", NULL };
-  const gchar *set_state_mandatory_fields[] = { "state", NULL };
-  const gchar *set_property_mandatory_fields[] =
-      { "target-element-name", "property-name", "property-value", NULL };
-  const gchar *set_debug_threshold_mandatory_fields[] =
-      { "debug-threshold", NULL };
-  const gchar *emit_signal_mandatory_fields[] =
-      { "target-element-name", "signal-name", NULL };
-
   GST_DEBUG_CATEGORY_INIT (gst_validate_scenario_debug, "gstvalidatescenario",
       GST_DEBUG_FG_YELLOW, "Gst validate scenarios");
 
@@ -1930,50 +1938,310 @@ init_scenarios (void)
   _gst_validate_action_type_type = gst_validate_action_type_get_type ();
 
   clean_action_str = g_regex_new ("\\\\\n|#.*\n", G_REGEX_CASELESS, 0, NULL);
-  gst_validate_add_action_type ("seek", _execute_seek, seek_mandatory_fields,
-      "Seeks into the files", FALSE);
-  gst_validate_add_action_type ("pause", _execute_pause, NULL,
+
+  /*  *INDENT-OFF* */
+  gst_validate_add_action_type ("description", _execute_seek,
+      (GstValidateActionParameter [])  {
+      {
+        .name = "summary",
+        .description = "Whether the scenario is a config only scenario (ie. explain what it does)",
+        .mandatory = FALSE,
+        .types = "sting",
+        .possible_variables = NULL,
+        .def = "'Nothing'"},
+      {
+        .name = "is-config",
+        .description = "Whether the scenario is a config only scenario",
+        .mandatory = FALSE,
+        .types = "boolean",
+        .possible_variables = NULL,
+        .def = "false"
+      },
+      {
+        .name = "handles-states",
+        .description = "Whether the scenario handles pipeline state changes from the beginning\n"
+        "in that case the application should not set the state of the pipeline to anything\n"
+        "and the scenario action will be executed from the beginning",
+        .mandatory = FALSE,
+        .types = "boolean",
+        .possible_variables = NULL,
+        .def = "false"},
+      {
+        .name = "seek",
+        .description = "Whether the scenario executes seek action or not",
+        .mandatory = FALSE,
+        .types = "boolean",
+        .possible_variables = NULL,
+        .def = "false"
+      },
+      {
+        .name = "reverse-playback",
+        .description = "Whether the scenario plays the stream backward",
+        .mandatory = FALSE,
+        .types = "boolean",
+        .possible_variables = NULL,
+        .def = "false"
+      },
+      {
+        .name = "need-clock-sync",
+        .description = "Whether the scenario needs the execution to be syncronized with the pipeline\n"
+                       "clock. Letting the user know if it can be used with a 'fakesink sync=false' sink",
+        .mandatory = FALSE,
+        .types = "boolean",
+        .possible_variables = NULL,
+        .def = "false"
+      },
+      {
+        .name = "min-media-duration",
+        .description = "Lets the user know the minimum duration of the stream for the scenario\n"
+                       "to be usable",
+        .mandatory = FALSE,
+        .types = "double",
+        .possible_variables = NULL,
+        .def = "0.0"
+      },
+      {
+        .name = "min-audio-track",
+        .description = "Lets the user know the minimum number of audio tracks the stream needs to contain\n"
+                       "for the scenario to be usable",
+        .mandatory = FALSE,
+        .types = "int",
+        .possible_variables = NULL,
+        .def = "0"
+      },
+      {
+       .name = "min-video-track",
+       .description = "Lets the user know the minimum number of video tracks the stream needs to contain\n"
+                      "for the scenario to be usable",
+       .mandatory = FALSE,
+       .types = "int",
+       .possible_variables = NULL,
+       .def = "0"
+      },
+      {
+        .name = "duration",
+        .description = "Lets the user know the time the scenario needs to be fully executed",
+        .mandatory = FALSE,
+        .types = "double, int",
+        .possible_variables = NULL,
+        .def = "infinite (GST_CLOCK_TIME_NONE)"
+      },
+      {NULL}
+      },
+      "Allows to describe the scenario in various ways",
+      TRUE);
+
+  gst_validate_add_action_type ("seek", _execute_seek,
+      (GstValidateActionParameter [])  {
+        {
+          .name = "start",
+          .description = "The starting value of the seek",
+          .mandatory = TRUE,
+          .types = "double or string",
+          .possible_variables = "position: The current position in the stream\n"
+            "duration: The duration of the stream",
+           NULL
+        },
+        {
+          .name = "rate",
+          .description = "The rate value of the seek",
+          .mandatory = FALSE,
+          .types = "double",
+          .possible_variables = NULL,
+          .def = "1.0"
+        },
+        {
+          .name = "start_type",
+          .description = "The GstSeekType to use for the start of the seek, in:\n"
+          "  [none, set, end]",
+          .mandatory = FALSE,
+          .types = "string",
+        .possible_variables = NULL,
+          .def = "set"
+        },
+        {
+          .name = "stop_type",
+          .description = "The GstSeekType to use for the stop of the seek, in:\n"
+                         "  [none, set, end]",
+          .mandatory = FALSE,
+          .types = "string",
+          .possible_variables = NULL,
+          .def = "set"
+        },
+        {"stop", "The stop value of the seek", FALSE, "double or ",
+          "position: The current position in the stream\n"
+            "duration: The duration of the stream"
+            "GST_CLOCK_TIME_NONE",
+        },
+        {NULL}
+      },
+      "Seeks into the stream, example of a seek happening when the stream reaches 5 seconds\n"
+      "or 1 eighth of its duration and seeks at 10sec or 2 eighth of its duration:\n"
+      "  seek, playback_time=\"min(5.0, (duration/8))\", start=\"min(10, 2*(duration/8))\", flags=accurate+flush",
+      FALSE
+  );
+
+  gst_validate_add_action_type ("pause", _execute_pause,
+      (GstValidateActionParameter []) {
+        {
+          .name = "duration",
+          .description = "The duration during which the stream will be paused",
+          .mandatory = FALSE,
+          .types = "double",
+          .possible_variables = NULL,
+          .def = "0.0",
+        },
+        {NULL}
+      },
       "Sets pipeline to PAUSED. You can add a 'duration'\n"
-      "parametter so the pipeline goaes back to playing after that duration\n"
+      "parametter so the pipeline goes back to playing after that duration\n"
       "(in second)", FALSE);
+
   gst_validate_add_action_type ("play", _execute_play, NULL,
       "Sets the pipeline state to PLAYING", FALSE);
+
   gst_validate_add_action_type ("stop", _execute_stop, NULL,
       "Sets the pipeline state to NULL", FALSE);
+
   gst_validate_add_action_type ("eos", _execute_eos, NULL,
       "Sends an EOS event to the pipeline", FALSE);
-  gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
+
+  gst_validate_add_action_type ("switch-track", _execute_switch_track,
+      (GstValidateActionParameter []) {
+        {
+          .name = "type",
+          .description = "Selects which track type to change (can be 'audio', 'video',"
+                          " or 'text').",
+          .mandatory = FALSE,
+          .types = "string",
+          .possible_variables = NULL,
+          .def = "audio",
+        },
+        {
+          .name = "index",
+          .description = "Selects which track of this type to use: it can be either a number,\n"
+                         "which will be the Nth track of the given type, or a number with a '+' or\n"
+                         "'-' prefix, which means a relative change (eg, '+1' means 'next track',\n"
+                         "'-1' means 'previous track')",
+          .mandatory = FALSE,
+          .types = "string: to switch track relatively\n"
+                   "int: To use the actual index to use",
+          .possible_variables = NULL,
+          .def = "+1",
+        },
+        {NULL}
+      },
       "The 'switch-track' command can be used to switch tracks.\n"
-      "The 'type' argument selects which track type to change (can be 'audio', 'video',"
-      " or 'text').\nThe 'index' argument selects which track of this type\n"
-      "to use: it can be either a number, which will be the Nth track of\n"
-      "the given type, or a number with a '+' or '-' prefix, which means\n"
-      "a relative change (eg, '+1' means 'next track', '-1' means 'previous\n"
-      "track'), note that you need to state that it is a string in the scenario file\n"
-      "prefixing it with (string).", FALSE);
-  gst_validate_add_action_type ("wait", _execute_wait, wait_mandatory_fields,
+      , FALSE);
+
+  gst_validate_add_action_type ("wait", _execute_wait,
+      (GstValidateActionParameter []) {
+        {
+          .name = "duration",
+          .description = "the duration while no other action will be executed",
+          .mandatory = TRUE,
+          NULL},
+        {NULL}
+      },
       "Waits during 'duration' seconds", FALSE);
+
   gst_validate_add_action_type ("dot-pipeline", _execute_dot_pipeline, NULL,
-      "Dots the pipeline (the 'name' property will be used in the\n"
-      "dot filename).\n"
-      "For more information have a look at the GST_DEBUG_BIN_TO_DOT_FILE documentation."
+      "Dots the pipeline (the 'name' property will be used in the dot filename).\n"
+      "For more information have a look at the GST_DEBUG_BIN_TO_DOT_FILE documentation.\n"
       "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set\n",
       FALSE);
-  gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
+
+  gst_validate_add_action_type ("set-feature-rank", _set_rank,
+      (GstValidateActionParameter []) {
+        {
+          .name = "feature-name",
+          .description = "The name of a GstFeature",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL},
+        {
+          .name = "rank",
+          .description = "The GstRank to set on @feature-name",
+          .mandatory = TRUE,
+          .types = "string, int",
+          NULL},
+        {NULL}
+      },
       "Changes the ranking of a particular plugin feature", TRUE);
+
   gst_validate_add_action_type ("set-state", _execute_set_state,
-      set_state_mandatory_fields,
-      "Change the state of the pipeline to any GstState as a string like:\n"
-      "    * 'null'\n"
-      "    * 'ready'\n" "    * 'paused'\n" "    * 'play'\n", FALSE);
+      (GstValidateActionParameter []) {
+        {
+          .name = "state",
+          .description = "A GstState as a string, should be in: \n"
+                         "    * ['null', 'ready', 'paused', 'playing']",
+          .mandatory = TRUE,
+          .types = "string",
+        },
+        {NULL}
+      },
+      "Changes the state of the pipeline to any GstState", FALSE);
+
   gst_validate_add_action_type ("set-property", _execute_set_property,
-      set_property_mandatory_fields,
+      (GstValidateActionParameter []) {
+        {
+          .name = "target-element-name",
+          .description = "The name of the GstElement to set a property on",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL},
+        {
+          .name = "property-name",
+          .description = "The name of the property to set on @target-element-name",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "property-value",
+          .description = "The value of @property-name to be set on the element",
+          .mandatory = TRUE,
+          .types = "The same type of @property-name",
+          NULL
+        },
+        {NULL}
+      },
       "Sets a property of any element in the pipeline", FALSE);
+
   gst_validate_add_action_type ("set-debug-threshold",
-      _execute_set_debug_threshold, set_debug_threshold_mandatory_fields,
+      _execute_set_debug_threshold,
+      (GstValidateActionParameter [])
+        {
+          {
+            .name = "debug-threshold",
+            .description = "String defining debug threshold\n"
+                           "See gst_debug_set_threshold_from_string",
+            .mandatory = TRUE,
+            .types = "string"},
+          {NULL}
+        },
       "Sets the debug level to be used, same format as\n"
       "setting the GST_DEBUG env variable", FALSE);
+
   gst_validate_add_action_type ("emit-signal", _execute_emit_signal,
-      emit_signal_mandatory_fields,
-      "Allows to emit a signal to an element in the pipeline", FALSE);
+      (GstValidateActionParameter [])
+      {
+        {
+          .name = "target-element-name",
+          .description = "The name of the GstElement to emit a signal on",
+          .mandatory = TRUE,
+          .types = "string"
+        },
+        {
+          .name = "signal-name",
+          .description = "The name of the signal to emit on @target-element-name",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL
+        },
+        {NULL}
+      },
+      "Emits a signal to an element in the pipeline", FALSE);
+  /*  *INDENT-ON* */
+
 }

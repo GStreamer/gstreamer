@@ -41,6 +41,7 @@ typedef struct _GstValidateScenarioClass   GstValidateScenarioClass;
 typedef struct _GstValidateScenarioPrivate GstValidateScenarioPrivate;
 typedef struct _GstValidateAction          GstValidateAction;
 typedef struct _GstValidateActionType      GstValidateActionType;
+typedef struct _GstValidateActionParameter GstValidateActionParameter;
 
 typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
@@ -72,6 +73,19 @@ GType gst_validate_action_type_get_type     (void);
 
 gboolean gst_validate_print_action_types    (gchar ** wanted_types, gint num_wanted_types);
 
+struct _GstValidateActionParameter
+{
+  const gchar  *name;
+  const gchar  *description;
+  gboolean     mandatory;
+  const gchar  *types;
+  const gchar  *possible_variables;
+  const gchar  *def;
+
+  /*< private >*/
+  gpointer     _gst_reserved[GST_PADDING];
+};
+
 struct _GstValidateScenarioClass
 {
   GObjectClass parent_class;
@@ -100,8 +114,9 @@ gst_validate_list_scenarios       (gchar **scenarios,
                                    gchar * output_file);
 
 void gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction function,
-                                   const gchar * const * mandatory_fields, const gchar *description,
-                                   gboolean is_config);
+                                   GstValidateActionParameter * parameters,
+                                   const gchar *description, gboolean is_config);
+
 
 gboolean gst_validate_action_get_clocktime (GstValidateScenario * scenario,
                                             GstValidateAction *action,

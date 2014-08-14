@@ -487,24 +487,86 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
             "\n%s    Is config action (meaning it will be executing right "
             "at the begining of the execution of the pipeline)", type->name);
 
-      tmp = g_strdup_printf ("\n%s        ", type->name);
+      tmp = g_strdup_printf ("\n%s      ", type->name);
       desc =
           g_regex_replace (newline_regex, type->description, -1, 0, tmp, 0,
           NULL);
-      g_string_append_printf (string, "\n%s    Description: \n%s        %s",
-          type->name, type->name, desc);
+      g_string_append_printf (string, "\n%s\n%s    Description: \n%s      %s",
+          type->name, type->name, type->name, desc);
       g_free (desc);
       g_free (tmp);
 
+      if (type->parameters) {
+        g_string_append_printf (string, "\n%s\n%s    Parametters:",
+            type->name, type->name);
 
-      if (type->mandatory_fields) {
-        g_string_append_printf (string, "\n%s    Mandatory fileds:",
-            type->name);
-        for (i = 0; type->mandatory_fields[i]; i++)
-          g_string_append_printf (string,
-              "\n%s        %s", type->name, type->mandatory_fields[i]);
+        for (i = 0; type->parameters[i].name; i++) {
+          gint nw = 0;
+          gchar *param_head =
+              g_strdup_printf ("      %s", type->parameters[i].name);
+          gchar *tmp_head = g_strdup_printf ("\n%s %-30s : %s", type->name,
+              param_head, "something");
+
+
+          while (tmp_head[nw] != ':')
+            nw++;
+
+          g_free (tmp_head);
+
+          tmp =
+              g_strdup_printf ("\n%s%*s", type->name,
+              nw - (gint) strlen (type->name) + 1, " ");
+
+          if (g_strcmp0 (type->parameters[i].description, "")) {
+            desc =
+                g_regex_replace (newline_regex, type->parameters[i].description,
+                -1, 0, tmp, 0, NULL);
+          } else {
+            desc = g_strdup_printf ("No description");
+          }
+
+          g_string_append_printf (string, "\n%s %-30s : %s", type->name,
+              param_head, desc);
+          g_free (desc);
+
+          if (type->parameters[i].possible_variables) {
+            gchar *tmp1 = g_strdup_printf ("\n%s%*s", type->name,
+                nw - (gint) strlen (type->name) + 4, " ");
+            desc =
+                g_regex_replace (newline_regex,
+                type->parameters[i].possible_variables, -1, 0, tmp1, 0, NULL);
+            g_string_append_printf (string, "%sPossible variables:%s%s", tmp,
+                tmp1, desc);
+
+            g_free (tmp1);
+          }
+
+          if (type->parameters[i].types) {
+            gchar *tmp1 = g_strdup_printf ("\n%s%*s", type->name,
+                nw - (gint) strlen (type->name) + 4, " ");
+            desc =
+                g_regex_replace (newline_regex,
+                type->parameters[i].types, -1, 0, tmp1, 0, NULL);
+            g_string_append_printf (string, "%sPossible types:%s%s", tmp,
+                tmp1, desc);
+
+            g_free (tmp1);
+          }
+
+          if (!type->parameters[i].mandatory) {
+            g_string_append_printf (string, "%sDefault: %s", tmp,
+                type->parameters[i].def);
+          }
+
+          g_string_append_printf (string, "%s%s", tmp,
+              type->parameters[i].mandatory ? "Mandatory." : "Optional.");
+
+          g_free (tmp);
+          g_free (param_head);
+
+        }
       } else {
-        g_string_append_printf (string, "\n%s    No mandatory field",
+        g_string_append_printf (string, "\n%s\n%s    No Parameters", type->name,
             type->name);
 
       }

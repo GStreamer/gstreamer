@@ -701,17 +701,60 @@ _parse_encoding_profile (const gchar * option_name, const gchar * value,
 static void
 _register_actions (void)
 {
-  const gchar *resize_video_mandatory_fields[] = { "restriction-caps", NULL };
-  const gchar *force_key_unit_mandatory_fields[] = { "direction",
-    "running-time", "all-headers", "count", NULL
-  };
-
+/* *INDENT-OFF* */
   gst_validate_add_action_type ("set-restriction", _execute_set_restriction,
-      resize_video_mandatory_fields, "Change the restriction caps on the fly",
+      (GstValidateActionParameter []) {
+        {
+          .name = "restriction-caps",
+          .description = "The restriction caps to set on the encodebin"
+                         "encoding profile.\nSee gst_encoding_profile_set_restriction()",
+          .mandatory = TRUE,
+          .types = "GstCaps serialized as a string"
+        },
+        {NULL}
+      },
+      "Change the restriction caps on the fly",
       FALSE);
   gst_validate_add_action_type ("video-request-key-unit",
-      _execute_request_key_unit, force_key_unit_mandatory_fields,
+      _execute_request_key_unit,
+      (GstValidateActionParameter []) {
+        {
+          .name = "direction",
+          .description = "The direction for the event to travel, should be in\n"
+                          "  * [upstream, downstream]",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "running-time",
+          .description = "The running_time can be set to request a new key unit at a specific running_time.\n"
+                          "If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a new key unit"
+                          "as soon as possible.",
+          .mandatory = FALSE,
+          .types = "double or string",
+          .possible_variables = "position: The current position in the stream\n"
+            "duration: The duration of the stream",
+          NULL
+        },
+        {
+          .name = "all-headers",
+          .description = "TRUE to produce headers when starting a new key unit",
+          .mandatory = TRUE,
+          .types = "boolean",
+          NULL
+        },
+        {
+          .name = "count",
+          .description = "integer that can be used to number key units",
+          .mandatory = TRUE,
+          .types = "int",
+          NULL
+        },
+        {NULL}
+      },
       "Request a video key unit", FALSE);
+/* *INDENT-ON* */
 }
 
 int

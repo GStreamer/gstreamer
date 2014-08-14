@@ -305,10 +305,15 @@ _register_playbin_actions (void)
 {
 /* *INDENT-OFF* */
   gst_validate_add_action_type ("set-subtitle", _execute_set_subtitles,
-      (GstValidateActionParameter [])
-      {
-        {"subtitle-file", "", TRUE}
-        , {NULL}
+      (GstValidateActionParameter []) {
+        {
+          .name = "subtitle-file",
+          .description = "Sets a subtitles file on a playbin pipeline",
+          .mandatory = TRUE,
+          .types = "string (A URI)",
+          NULL
+        },
+        {NULL}
       },
       "Action to set a subtitle file to use on a playbin pipeline.\n"
       "The subtitles file that will be used should will be specified\n"
