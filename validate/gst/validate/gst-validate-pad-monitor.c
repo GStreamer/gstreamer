@@ -1166,6 +1166,8 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
     switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
         otherpad = g_value_get_object (&value);
+        if (!otherpad)
+          continue;
         othermonitor =
             g_object_get_data ((GObject *) otherpad, "validate-monitor");
         GST_VALIDATE_MONITOR_LOCK (othermonitor);
