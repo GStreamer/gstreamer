@@ -588,8 +588,13 @@ static gboolean
 gst_selector_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
+  GstInputSelector *self = (GstInputSelector *) parent;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+      /* always proxy caps query, regardless of active pad or not */
+      res = gst_pad_peer_query (self->srcpad, query);
+      break;
     case GST_QUERY_ALLOCATION:{
       GstPad *active_sinkpad;
       GstInputSelector *sel = GST_INPUT_SELECTOR (parent);
