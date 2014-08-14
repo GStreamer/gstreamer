@@ -2119,6 +2119,7 @@ gst_videomixer2_release_pad (GstElement * element, GstPad * pad)
 
   if (mixpad->convert)
     videomixer_videoconvert_convert_free (mixpad->convert);
+  mixpad->convert = NULL;
 
   mix->sinkpads = g_slist_remove (mix->sinkpads, pad);
   gst_child_proxy_child_removed (GST_CHILD_PROXY (mix), G_OBJECT (mixpad),
@@ -2167,6 +2168,7 @@ gst_videomixer2_dispose (GObject * o)
 
     if (mixpad->convert)
       videomixer_videoconvert_convert_free (mixpad->convert);
+    mixpad->convert = NULL;
   }
 
   if (mix->pending_tags) {
