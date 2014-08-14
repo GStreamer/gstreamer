@@ -420,8 +420,6 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
         GstStructure *s;
         guint i, n;
 
-        GST_PLAY_SINK_CONVERT_BIN_FILTER_CAPS (filter, converter_caps);
-
         ret = gst_caps_make_writable (peer_caps);
 
         /* Filter out ANY capsfeatures from the converter caps. We can't
@@ -443,12 +441,12 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
         gst_caps_unref (converter_caps);
       } else {
         ret = peer_caps;
-        GST_PLAY_SINK_CONVERT_BIN_FILTER_CAPS (filter, ret);
       }
     } else {
       ret = gst_caps_ref (self->converter_caps);
-      GST_PLAY_SINK_CONVERT_BIN_FILTER_CAPS (filter, ret);
     }
+    GST_PLAY_SINK_CONVERT_BIN_FILTER_CAPS (filter, ret);
+
   } else {
     ret = filter ? gst_caps_ref (filter) : gst_caps_new_any ();
   }
