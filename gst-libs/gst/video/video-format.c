@@ -2728,6 +2728,15 @@ gst_video_format_to_fourcc (GstVideoFormat format)
   return formats[format].fourcc;
 }
 
+/**
+ * gst_video_format_to_string:
+ * @format: a #GstVideoFormat video format
+ *
+ * Returns a string containing a descriptive name for
+ * the #GstVideoFormat if there is one, or NULL otherwise.
+ *
+ * Returns: the name corresponding to @format
+ */
 const gchar *
 gst_video_format_to_string (GstVideoFormat format)
 {

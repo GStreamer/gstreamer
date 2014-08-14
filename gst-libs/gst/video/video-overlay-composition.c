@@ -1485,12 +1485,13 @@ gst_video_overlay_rectangle_get_global_alpha (GstVideoOverlayRectangle *
 /**
  * gst_video_overlay_rectangle_set_global_alpha:
  * @rectangle: a #GstVideoOverlayRectangle
+ * @global_alpha: Global alpha value (0 to 1.0)
  *
  * Sets the global alpha value associated with a #GstVideoOverlayRectangle. Per-
  * pixel alpha values are multiplied with this value. Valid
  * values: 0 <= global_alpha <= 1; 1 to deactivate.
  *
- # @rectangle must be writable, meaning its refcount must be 1. You can
+ * @rectangle must be writable, meaning its refcount must be 1. You can
  * make the rectangles inside a #GstVideoOverlayComposition writable using
  * gst_video_overlay_composition_make_writable() or
  * gst_video_overlay_composition_copy().

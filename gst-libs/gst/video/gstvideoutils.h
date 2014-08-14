@@ -213,7 +213,6 @@ typedef enum
  *           owned by the frame and references to the frame instead of the
  *           buffer should be kept.
  * @deadline: Running time when the frame will be used.
- * @events: Events that will be pushed downstream before this frame is pushed.
  *
  * A #GstVideoCodecFrame represents a video frame both in raw and
  * encoded form.

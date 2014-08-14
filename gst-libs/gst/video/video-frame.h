@@ -53,6 +53,7 @@ typedef enum {
 /**
  * GstVideoFrame:
  * @info: the #GstVideoInfo
+ * @flags: #GstVideoFrameFlags for the frame
  * @buffer: the mapped buffer
  * @meta: pointer to metadata if any
  * @id: id of the mapped frame. the id can for example be used to
@@ -135,6 +136,7 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
  * @GST_VIDEO_BUFFER_FLAG_ONEFIELD:    If the #GstBuffer is interlaced, then only the
  *                                     first field (as defined by the %GST_VIDEO_BUFFER_TFF
  *                                     flag setting) is to be displayed.
+ * @GST_VIDEO_BUFFER_FLAG_LAST:        Offset to define more flags
  *
  * Additional video buffer flags.
  */

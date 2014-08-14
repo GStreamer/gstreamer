@@ -255,8 +255,8 @@ gboolean  gst_video_gl_texture_upload_meta_upload     (GstVideoGLTextureUploadMe
  * @parent_id: identifier of its parent ROI, used f.i. for ROI hierarchisation.
  * @x: x component of upper-left corner
  * @y: y component of upper-left corner
- * @width: bounding box width
- * @height: bounding box height
+ * @w: bounding box width
+ * @h: bounding box height
  *
  * Extra buffer metadata describing an image region of interest
  */
