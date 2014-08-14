@@ -67,9 +67,6 @@ struct _GstOMXVideoEnc
   /* TRUE if EOS buffers shouldn't be forwarded */
   gboolean draining;
 
-  /* TRUE if upstream is EOS */
-  gboolean eos;
-
   /* properties */
   guint32 control_rate;
   guint32 target_bitrate;

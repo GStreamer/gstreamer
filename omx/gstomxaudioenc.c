@@ -41,8 +41,6 @@ static gboolean gst_omx_audio_enc_start (GstAudioEncoder * encoder);
 static gboolean gst_omx_audio_enc_stop (GstAudioEncoder * encoder);
 static gboolean gst_omx_audio_enc_set_format (GstAudioEncoder * encoder,
     GstAudioInfo * info);
-static gboolean gst_omx_audio_enc_sink_event (GstAudioEncoder * encoder,
-    GstEvent * event);
 static GstFlowReturn gst_omx_audio_enc_handle_frame (GstAudioEncoder *
     encoder, GstBuffer * buffer);
 static void gst_omx_audio_enc_flush (GstAudioEncoder * encoder);
@@ -82,8 +80,6 @@ gst_omx_audio_enc_class_init (GstOMXAudioEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_omx_audio_enc_set_format);
   audio_encoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_omx_audio_enc_handle_frame);
-  audio_encoder_class->sink_event =
-      GST_DEBUG_FUNCPTR (gst_omx_audio_enc_sink_event);
 
   klass->cdata.type = GST_OMX_COMPONENT_TYPE_FILTER;
   klass->cdata.default_sink_template_caps = "audio/x-raw, "
@@ -592,7 +588,6 @@ gst_omx_audio_enc_start (GstAudioEncoder * encoder)
   self = GST_OMX_AUDIO_ENC (encoder);
 
   self->last_upstream_ts = 0;
-  self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
 
   return TRUE;
@@ -617,7 +612,6 @@ gst_omx_audio_enc_stop (GstAudioEncoder * encoder)
 
   self->downstream_flow_ret = GST_FLOW_FLUSHING;
   self->started = FALSE;
-  self->eos = FALSE;
 
   g_mutex_lock (&self->drain_lock);
   self->draining = FALSE;
@@ -887,7 +881,7 @@ gst_omx_audio_enc_flush (GstAudioEncoder * encoder)
   /* Start the srcpad loop again */
   self->last_upstream_ts = 0;
   self->downstream_flow_ret = GST_FLOW_OK;
-  self->eos = FALSE;
+  self->started = FALSE;
   gst_pad_start_task (GST_AUDIO_ENCODER_SRC_PAD (self),
       (GstTaskFunction) gst_omx_audio_enc_loop, encoder, NULL);
 }
@@ -905,11 +899,6 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
   OMX_ERRORTYPE err;
 
   self = GST_OMX_AUDIO_ENC (encoder);
-
-  if (self->eos) {
-    GST_WARNING_OBJECT (self, "Got frame after EOS");
-    return GST_FLOW_EOS;
-  }
 
   if (self->downstream_flow_ret != GST_FLOW_OK) {
     return self->downstream_flow_ret;
@@ -1085,77 +1074,6 @@ release_error:
   }
 }
 
-static gboolean
-gst_omx_audio_enc_sink_event (GstAudioEncoder * encoder, GstEvent * event)
-{
-  GstOMXAudioEnc *self;
-  GstOMXAudioEncClass *klass;
-  OMX_ERRORTYPE err;
-
-  self = GST_OMX_AUDIO_ENC (encoder);
-  klass = GST_OMX_AUDIO_ENC_GET_CLASS (self);
-
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    GstOMXBuffer *buf;
-    GstOMXAcquireBufferReturn acq_ret;
-
-    GST_DEBUG_OBJECT (self, "Sending EOS to the component");
-
-    /* Don't send EOS buffer twice, this doesn't work */
-    if (self->eos) {
-      GST_DEBUG_OBJECT (self, "Component is already EOS");
-      return TRUE;
-    }
-    self->eos = TRUE;
-
-    if ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER)) {
-      GST_WARNING_OBJECT (self, "Component does not support empty EOS buffers");
-
-      /* Insert a NULL into the queue to signal EOS */
-      g_mutex_lock (&self->enc->lock);
-      g_queue_push_tail (&self->enc_out_port->pending_buffers, NULL);
-      g_mutex_unlock (&self->enc->lock);
-      g_mutex_lock (&self->enc->messages_lock);
-      g_cond_broadcast (&self->enc->messages_cond);
-      g_mutex_unlock (&self->enc->messages_lock);
-      return TRUE;
-    }
-
-    /* Make sure to release the base class stream lock, otherwise
-     * _loop() can't call _finish_frame() and we might block forever
-     * because no input buffers are released */
-    GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
-
-    /* Send an EOS buffer to the component and let the base
-     * class drop the EOS event. We will send it later when
-     * the EOS buffer arrives on the output port. */
-    acq_ret = gst_omx_port_acquire_buffer (self->enc_in_port, &buf);
-    if (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK) {
-      buf->omx_buf->nFilledLen = 0;
-      buf->omx_buf->nTimeStamp =
-          gst_util_uint64_scale (self->last_upstream_ts, OMX_TICKS_PER_SECOND,
-          GST_SECOND);
-      buf->omx_buf->nTickCount = 0;
-      buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
-      err = gst_omx_port_release_buffer (self->enc_in_port, buf);
-      if (err != OMX_ErrorNone) {
-        GST_ERROR_OBJECT (self, "Failed to send EOS to component: %s (0x%08x)",
-            gst_omx_error_to_string (err), err);
-      } else {
-        GST_DEBUG_OBJECT (self, "Sent EOS to the component");
-      }
-    } else {
-      GST_ERROR_OBJECT (self, "Failed to acquire buffer for EOS: %d", acq_ret);
-    }
-
-    GST_AUDIO_ENCODER_STREAM_LOCK (self);
-
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
 static GstFlowReturn
 gst_omx_audio_enc_drain (GstOMXAudioEnc * self)
 {
@@ -1173,12 +1091,6 @@ gst_omx_audio_enc_drain (GstOMXAudioEnc * self)
     return GST_FLOW_OK;
   }
   self->started = FALSE;
-
-  /* Don't send EOS buffer twice, this doesn't work */
-  if (self->eos) {
-    GST_DEBUG_OBJECT (self, "Component is EOS already");
-    return GST_FLOW_OK;
-  }
 
   if ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER)) {
     GST_WARNING_OBJECT (self, "Component does not support empty EOS buffers");

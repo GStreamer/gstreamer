@@ -60,9 +60,6 @@ struct _GstOMXAudioEnc
 
   GstClockTime last_upstream_ts;
 
-  /* TRUE if upstream is EOS */
-  gboolean eos;
-
   /* Draining state */
   GMutex drain_lock;
   GCond drain_cond;

@@ -75,8 +75,7 @@ static GstFlowReturn gst_omx_video_dec_finish (GstVideoDecoder * decoder);
 static gboolean gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec,
     GstQuery * query);
 
-static GstFlowReturn gst_omx_video_dec_drain (GstOMXVideoDec * self,
-    gboolean is_eos);
+static GstFlowReturn gst_omx_video_dec_drain (GstOMXVideoDec * self);
 
 static OMX_ERRORTYPE gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec *
     self);
@@ -1654,7 +1653,6 @@ gst_omx_video_dec_start (GstVideoDecoder * decoder)
   self = GST_OMX_VIDEO_DEC (decoder);
 
   self->last_upstream_ts = 0;
-  self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
 
   return TRUE;
@@ -1688,7 +1686,6 @@ gst_omx_video_dec_stop (GstVideoDecoder * decoder)
 
   self->downstream_flow_ret = GST_FLOW_FLUSHING;
   self->started = FALSE;
-  self->eos = FALSE;
 
   g_mutex_lock (&self->drain_lock);
   self->draining = FALSE;
@@ -1862,7 +1859,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
 
     GST_DEBUG_OBJECT (self, "Need to disable and drain decoder");
 
-    gst_omx_video_dec_drain (self, FALSE);
+    gst_omx_video_dec_drain (self);
     gst_omx_video_dec_flush (decoder);
     gst_omx_port_set_flushing (out_port, 5 * GST_SECOND, TRUE);
 
@@ -2067,15 +2064,7 @@ gst_omx_video_dec_flush (GstVideoDecoder * decoder)
   if (gst_omx_component_get_state (self->dec, 0) == OMX_StateLoaded)
     return TRUE;
 
-  /* 0) Wait until the srcpad loop is stopped,
-   * unlock GST_VIDEO_DECODER_STREAM_LOCK to prevent deadlocks
-   * caused by using this lock from inside the loop function */
-  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-  gst_pad_stop_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
-  GST_DEBUG_OBJECT (self, "Flushing -- task stopped");
-  GST_VIDEO_DECODER_STREAM_LOCK (self);
-
-  /* 1) Pause the components */
+  /* 0) Pause the components */
   if (gst_omx_component_get_state (self->dec, 0) == OMX_StateExecuting) {
     gst_omx_component_set_state (self->dec, OMX_StatePause);
     gst_omx_component_get_state (self->dec, GST_CLOCK_TIME_NONE);
@@ -2088,6 +2077,14 @@ gst_omx_video_dec_flush (GstVideoDecoder * decoder)
     }
   }
 #endif
+
+  /* 1) Wait until the srcpad loop is stopped,
+   * unlock GST_VIDEO_DECODER_STREAM_LOCK to prevent deadlocks
+   * caused by using this lock from inside the loop function */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+  gst_pad_stop_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
+  GST_DEBUG_OBJECT (self, "Flushing -- task stopped");
+  GST_VIDEO_DECODER_STREAM_LOCK (self);
 
   /* 2) Flush the ports */
   GST_DEBUG_OBJECT (self, "flushing ports");
@@ -2135,7 +2132,6 @@ gst_omx_video_dec_flush (GstVideoDecoder * decoder)
 
   /* Reset our state */
   self->last_upstream_ts = 0;
-  self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
   self->started = FALSE;
   GST_DEBUG_OBJECT (self, "Flush finished");
@@ -2161,12 +2157,6 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
   klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "Handling frame");
-
-  if (self->eos) {
-    GST_WARNING_OBJECT (self, "Got frame after EOS");
-    gst_video_codec_frame_unref (frame);
-    return GST_FLOW_EOS;
-  }
 
   if (!self->started) {
     if (!GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
@@ -2434,11 +2424,11 @@ gst_omx_video_dec_finish (GstVideoDecoder * decoder)
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
-  return gst_omx_video_dec_drain (self, TRUE);
+  return gst_omx_video_dec_drain (self);
 }
 
 static GstFlowReturn
-gst_omx_video_dec_drain (GstOMXVideoDec * self, gboolean is_eos)
+gst_omx_video_dec_drain (GstOMXVideoDec * self)
 {
   GstOMXVideoDecClass *klass;
   GstOMXBuffer *buf;
@@ -2454,14 +2444,6 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self, gboolean is_eos)
     return GST_FLOW_OK;
   }
   self->started = FALSE;
-
-  /* Don't send EOS buffer twice, this doesn't work */
-  if (self->eos) {
-    GST_DEBUG_OBJECT (self, "Component is EOS already");
-    return GST_FLOW_OK;
-  }
-  if (is_eos)
-    self->eos = TRUE;
 
   if ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER)) {
     GST_WARNING_OBJECT (self, "Component does not support empty EOS buffers");
