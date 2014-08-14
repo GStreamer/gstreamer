@@ -98,11 +98,12 @@ gboolean gst_gl_context_check_framebuffer_status (GstGLContext * context);
 void gst_gl_context_set_error (GstGLContext * context, const char * format, ...);
 gchar *gst_gl_context_get_error (void);
 
-gboolean gst_gl_ensure_display (gpointer element, GstGLDisplay **display_ptr);
+gboolean gst_gl_ensure_element_data (gpointer element,
+    GstGLDisplay **display_ptr, GstGLContext ** other_context_ptr);
 gboolean gst_gl_handle_set_context (GstElement * element, GstContext * context, 
-    GstGLDisplay ** display);
+    GstGLDisplay ** display, GstGLContext ** other_context);
 gboolean gst_gl_handle_context_query (GstElement * element, GstQuery * query, 
-    GstGLDisplay ** display);
+    GstGLDisplay ** display, GstGLContext ** other_context);
 
 G_END_DECLS
 

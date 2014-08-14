@@ -592,8 +592,8 @@ run_context_query (GstElement * element, GstQuery * query,
 }
 
 static GstQuery *
-_gst_gl_display_context_query (GstElement * element,
-    GstGLDisplay ** display_ptr, const gchar * display_type)
+_gst_context_query (GstElement * element,
+    gpointer ptr, const gchar * display_type)
 {
   GstQuery *query;
   GstContext *ctxt;
@@ -637,8 +637,7 @@ _gst_gl_display_context_query (GstElement * element,
 }
 
 static void
-gst_gl_display_context_prepare (GstElement * element,
-    GstGLDisplay ** display_ptr)
+gst_gl_display_context_query (GstElement * element, GstGLDisplay ** display_ptr)
 {
   GstContext *ctxt;
   GstQuery *query;
@@ -649,8 +648,7 @@ gst_gl_display_context_prepare (GstElement * element,
 #endif
 
   query =
-      _gst_gl_display_context_query (element, display_ptr,
-      GST_GL_DISPLAY_CONTEXT_TYPE);
+      _gst_context_query (element, display_ptr, GST_GL_DISPLAY_CONTEXT_TYPE);
   gst_query_parse_context (query, &ctxt);
   if (ctxt && gst_context_has_context_type (ctxt, GST_GL_DISPLAY_CONTEXT_TYPE)) {
     gst_context_get_gl_display (ctxt, display_ptr);
@@ -659,9 +657,7 @@ gst_gl_display_context_prepare (GstElement * element,
   }
 #if GST_GL_HAVE_WINDOW_X11
   gst_query_unref (query);
-  query =
-      _gst_gl_display_context_query (element, display_ptr,
-      "gst.x11.display.handle");
+  query = _gst_context_query (element, display_ptr, "gst.x11.display.handle");
   gst_query_parse_context (query, &ctxt);
   if (ctxt && gst_context_has_context_type (ctxt, "gst.x11.display.handle")) {
     const GstStructure *s;
@@ -678,6 +674,27 @@ gst_gl_display_context_prepare (GstElement * element,
 #endif
 
 out:
+  gst_query_unref (query);
+}
+
+static void
+gst_gl_context_query (GstElement * element, GstGLContext ** context_ptr)
+{
+  GstContext *ctxt;
+  GstQuery *query;
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (!GST_CAT_CONTEXT)
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+#endif
+
+  query = _gst_context_query (element, context_ptr, "gst.gl.app_context");
+  gst_query_parse_context (query, &ctxt);
+  if (ctxt && gst_context_has_context_type (ctxt, "gst.gl.app_context")) {
+    const GstStructure *s = gst_context_get_structure (ctxt);
+    gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, context_ptr, NULL);
+  }
+
   gst_query_unref (query);
 }
 
@@ -705,25 +722,27 @@ gst_gl_display_context_propagate (GstElement * element, GstGLDisplay * display)
 }
 
 gboolean
-gst_gl_ensure_display (gpointer element, GstGLDisplay ** display_ptr)
+gst_gl_ensure_element_data (gpointer element, GstGLDisplay ** display_ptr,
+    GstGLContext ** context_ptr)
 {
   GstGLDisplay *display;
 
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (display_ptr != NULL, FALSE);
+  g_return_val_if_fail (context_ptr != NULL, FALSE);
 
   /*  1) Check if the element already has a context of the specific
    *     type.
    */
   display = *display_ptr;
   if (gst_gl_display_found (element, display))
-    return TRUE;
+    goto get_gl_context;
 
-  gst_gl_display_context_prepare (element, display_ptr);
+  gst_gl_display_context_query (element, display_ptr);
 
   /* Neighbour found and it updated the display */
   if (gst_gl_display_found (element, *display_ptr))
-    return TRUE;
+    goto get_gl_context;
 
   /* If no neighboor, or application not interested, use system default */
   display = gst_gl_display_new ();
@@ -732,17 +751,26 @@ gst_gl_ensure_display (gpointer element, GstGLDisplay ** display_ptr)
 
   gst_gl_display_context_propagate (element, display);
 
-  return display != NULL;
+get_gl_context:
+  if (*context_ptr)
+    goto done;
+
+  gst_gl_context_query (element, context_ptr);
+
+done:
+  return *display_ptr != NULL;
 }
 
 gboolean
 gst_gl_handle_set_context (GstElement * element, GstContext * context,
-    GstGLDisplay ** display)
+    GstGLDisplay ** display, GstGLContext ** other_context)
 {
-  GstGLDisplay *replacement = NULL;
+  GstGLDisplay *display_replacement = NULL;
+  GstGLContext *context_replacement = NULL;
   const gchar *context_type;
 
-  g_return_val_if_fail (display, FALSE);
+  g_return_val_if_fail (display != NULL, FALSE);
+  g_return_val_if_fail (other_context != NULL, FALSE);
 
   if (!context)
     return FALSE;
@@ -750,7 +778,7 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
   context_type = gst_context_get_context_type (context);
 
   if (g_strcmp0 (context_type, GST_GL_DISPLAY_CONTEXT_TYPE) == 0) {
-    if (!gst_context_get_gl_display (context, &replacement)) {
+    if (!gst_context_get_gl_display (context, &display_replacement)) {
       GST_WARNING_OBJECT (element, "Failed to get display from context");
       return FALSE;
     }
@@ -762,14 +790,43 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
 
     s = gst_context_get_structure (context);
     if (gst_structure_get (s, "display", G_TYPE_POINTER, &display, NULL))
-      replacement =
+      display_replacement =
           (GstGLDisplay *) gst_gl_display_x11_new_with_display (display);
   }
 #endif
+  else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
+    const GstStructure *s = gst_context_get_structure (context);
+    GstGLDisplay *context_display;
+    GstGLDisplay *element_display;
 
-  if (replacement) {
+    if (gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT,
+            &context_replacement, NULL)) {
+      context_display = gst_gl_context_get_display (context_replacement);
+      element_display = display_replacement ? display_replacement : *display;
+      if (element_display
+          && (gst_gl_display_get_handle_type (element_display) &
+              gst_gl_display_get_handle_type (context_display)) == 0) {
+        GST_ELEMENT_WARNING (element, LIBRARY, SETTINGS, ("%s",
+                "Cannot set a GL context with a different display type"), ("%s",
+                "Cannot set a GL context with a different display type"));
+        gst_object_unref (context_replacement);
+        context_replacement = NULL;
+      }
+      gst_object_unref (context_display);
+    }
+  }
+
+  if (display_replacement) {
     GstGLDisplay *old = *display;
-    *display = replacement;
+    *display = display_replacement;
+
+    if (old)
+      gst_object_unref (old);
+  }
+
+  if (context_replacement) {
+    GstGLContext *old = *other_context;
+    *other_context = context_replacement;
 
     if (old)
       gst_object_unref (old);
@@ -780,7 +837,7 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
 
 gboolean
 gst_gl_handle_context_query (GstElement * element, GstQuery * query,
-    GstGLDisplay ** display)
+    GstGLDisplay ** display, GstGLContext ** other_context)
 {
   gboolean res = FALSE;
   const gchar *context_type;
@@ -789,6 +846,7 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (query != NULL, FALSE);
   g_return_val_if_fail (display != NULL, FALSE);
+  g_return_val_if_fail (other_context != NULL, FALSE);
 
   gst_query_parse_context_type (query, &context_type);
 
@@ -833,6 +891,23 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
     res = x11_display != NULL;
   }
 #endif
+  else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
+    GstStructure *s;
+
+    gst_query_parse_context (query, &old_context);
+
+    if (old_context)
+      context = gst_context_copy (old_context);
+    else
+      context = gst_context_new ("gst.gl.app_context", TRUE);
+
+    s = gst_context_writable_structure (context);
+    gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, *other_context, NULL);
+    gst_query_set_context (query, context);
+    gst_context_unref (context);
+
+    res = *other_context != NULL;
+  }
 
   return res;
 }

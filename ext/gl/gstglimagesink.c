@@ -173,8 +173,7 @@ enum
   ARG_DISPLAY,
   PROP_FORCE_ASPECT_RATIO,
   PROP_PIXEL_ASPECT_RATIO,
-  PROP_CONTEXT,
-  PROP_OTHER_CONTEXT
+  PROP_CONTEXT
 };
 
 enum
@@ -276,12 +275,6 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
       gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
           "The pixel aspect ratio of the device", 0, 1, G_MAXINT, 1, 1, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_OTHER_CONTEXT,
-      g_param_spec_object ("other-context",
-          "External OpenGL context",
-          "Give an external OpenGL context with which to share textures",
-          GST_GL_TYPE_CONTEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONTEXT,
       g_param_spec_object ("context",
@@ -393,13 +386,6 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
       glimage_sink->par_d = gst_value_get_fraction_denominator (value);
       break;
     }
-    case PROP_OTHER_CONTEXT:
-    {
-      if (glimage_sink->other_context)
-        gst_object_unref (glimage_sink->other_context);
-      glimage_sink->other_context = g_value_dup_object (value);
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -451,9 +437,6 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
     case PROP_CONTEXT:
       g_value_set_object (value, glimage_sink->context);
       break;
-    case PROP_OTHER_CONTEXT:
-      g_value_set_object (value, glimage_sink->other_context);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -485,7 +468,7 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
 {
   GError *error = NULL;
 
-  if (!gst_gl_ensure_display (gl_sink, &gl_sink->display))
+  if (!gst_gl_ensure_element_data (gl_sink, &gl_sink->display, &gl_sink->other_context))
     return FALSE;
 
   if (!gl_sink->context) {
@@ -558,7 +541,7 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
     case GST_QUERY_CONTEXT:
     {
       return gst_gl_handle_context_query ((GstElement *) glimage_sink, query,
-          &glimage_sink->display);
+          &glimage_sink->display, &glimage_sink->other_context);
     }
     default:
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
@@ -601,7 +584,7 @@ gst_glimage_sink_set_context (GstElement * element, GstContext * context)
 {
   GstGLImageSink *gl_sink = GST_GLIMAGE_SINK (element);
 
-  gst_gl_handle_set_context (element, context, &gl_sink->display);
+  gst_gl_handle_set_context (element, context, &gl_sink->display, &gl_sink->other_context);
 }
 
 static GstStateChangeReturn
@@ -622,7 +605,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_atomic_int_set (&glimage_sink->to_quit, 0);
       if (!glimage_sink->display) {
-        if (!gst_gl_ensure_display (glimage_sink, &glimage_sink->display))
+        if (!gst_gl_ensure_element_data (glimage_sink, &glimage_sink->display, &glimage_sink->other_context))
           return GST_STATE_CHANGE_FAILURE;
       }
       break;
