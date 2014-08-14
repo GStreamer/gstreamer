@@ -233,7 +233,7 @@ struct _QtDemuxStream
   guint32 n_samples;
   QtDemuxSample *samples;
   gboolean all_keyframe;        /* TRUE when all samples are keyframes (no stss) */
-  guint32 min_duration;         /* duration in timescale of first sample, used for figuring out
+  guint32 first_duration;       /* duration in timescale of first sample, used for figuring out
                                    the framerate, in timescale units */
   guint32 offset_in_sample;
   guint32 max_buffer_size;
@@ -5815,26 +5815,37 @@ static gboolean
 gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
   if (stream->subtype == FOURCC_vide) {
-    /* fps is calculated base on the duration of the first frames since
+    /* fps is calculated base on the duration of the average framerate since
      * qt does not have a fixed framerate. */
-    if ((stream->n_samples == 1) && (stream->min_duration == 0)) {
+    if ((stream->n_samples == 1) && (stream->first_duration == 0)) {
       /* still frame */
       stream->fps_n = 0;
       stream->fps_d = 1;
     } else {
-      /* we might need to scale the timescale to get precise framerate */
-      const int required_scale = rint (log (10000) / 2.303);    /* divide to get log10 */
-      int current_scale = rint (log (stream->timescale) / 2.303);
-      int factor = pow (10.0, MAX (0, required_scale - current_scale));
+      if (stream->duration == 0 || stream->n_samples < 2) {
+        stream->fps_n = stream->timescale;
+        stream->fps_d = 1;
+      } else {
+        /* Calculate a framerate, ignoring the first sample which is sometimes truncated */
+        /* stream->duration is guint64, timescale, n_samples are guint32 */
+        GstClockTime avg_duration =
+            gst_util_uint64_scale_round (stream->duration -
+            stream->first_duration, GST_SECOND,
+            (guint64) (stream->timescale) * (stream->n_samples - 1));
 
-      stream->fps_n = stream->timescale * factor;
+        GST_LOG_OBJECT (qtdemux,
+            "Calculating avg sample duration based on stream duration %"
+            G_GUINT64_FORMAT
+            " minus first sample %u, leaving %d samples gives %"
+            GST_TIME_FORMAT, stream->duration, stream->first_duration,
+            stream->n_samples - 1, GST_TIME_ARGS (avg_duration));
 
-      if (stream->duration == 0 || stream->n_samples == 0)
-        stream->fps_d = factor;
-      else
-        stream->fps_d =
-            gst_util_uint64_scale_int_round (stream->duration, factor,
-            stream->n_samples);
+        gst_video_guess_framerate (avg_duration, &stream->fps_n,
+            &stream->fps_d);
+      }
+      GST_DEBUG_OBJECT (qtdemux,
+          "Calculating framerate, timescale %u gave fps_n %d fps_d %d",
+          stream->timescale, stream->fps_n, stream->fps_d);
     }
 
     if (stream->caps) {
@@ -7089,14 +7100,6 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
     }
   }
   return uri;
-}
-
-static gint
-less_than (gconstpointer a, gconstpointer b)
-{
-  const guint32 *av = a, *bv = b;
-
-  return *av - *bv;
 }
 
 #define AMR_NB_ALL_MODES        0x81ff
@@ -9019,8 +9022,6 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
   for (i = 0; ret == GST_FLOW_OK && i < qtdemux->n_streams; i++) {
     QtDemuxStream *stream = qtdemux->streams[i];
     guint32 sample_num = 0;
-    guint samples = 20;
-    GArray *durations;
 
     GST_DEBUG_OBJECT (qtdemux, "stream %d, id %d, fourcc %" GST_FOURCC_FORMAT,
         i, stream->track_id, GST_FOURCC_ARGS (stream->fourcc));
@@ -9051,26 +9052,15 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
       continue;
     }
 
-    /* parse number of initial sample to set frame rate cap */
-    while (sample_num < stream->n_samples && sample_num < samples) {
+    /* parse the initial sample for use in setting the frame rate cap */
+    while (sample_num == 0) {
       if (!qtdemux_parse_samples (qtdemux, stream, sample_num))
         break;
       ++sample_num;
     }
-    /* collect and sort durations */
-    samples = MIN (stream->stbl_index + 1, samples);
-    GST_DEBUG_OBJECT (qtdemux, "%d samples for framerate", samples);
-    if (samples) {
-      durations = g_array_sized_new (FALSE, FALSE, sizeof (guint32), samples);
-      sample_num = 0;
-      while (sample_num < samples) {
-        g_array_append_val (durations, stream->samples[sample_num].duration);
-        sample_num++;
-      }
-      g_array_sort (durations, less_than);
-      stream->min_duration = g_array_index (durations, guint32, samples / 2);
-      g_array_free (durations, TRUE);
-    }
+    stream->first_duration = stream->samples[0].duration;
+    GST_LOG_OBJECT (qtdemux, "stream %d first duration %u",
+        stream->track_id, stream->first_duration);
   }
 
   return ret;
