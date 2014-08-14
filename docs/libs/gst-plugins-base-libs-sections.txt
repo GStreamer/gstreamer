@@ -2202,6 +2202,7 @@ GstEncodingTargetClass
 #video.h
 <SUBSECTION>
 gst_video_calculate_display_ratio
+gst_video_guess_framerate
 GstVideoConvertSampleCallback
 gst_video_convert_sample
 gst_video_convert_sample_async

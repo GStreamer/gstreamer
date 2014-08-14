@@ -100,6 +100,9 @@ gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint   display_par_n,
                                                   guint   display_par_d);
 
+gboolean       gst_video_guess_framerate (GstClockTime duration,
+                                          gint * dest_n, gint * dest_d);
+
 /* convert/encode video sample from one format to another */
 
 typedef void (*GstVideoConvertSampleCallback) (GstSample * sample, GError *error, gpointer user_data);
