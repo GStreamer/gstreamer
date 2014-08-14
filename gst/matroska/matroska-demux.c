@@ -4728,33 +4728,6 @@ gst_matroska_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
   }
 }
 
-static void
-gst_duration_to_fraction (guint64 duration, gint * dest_n, gint * dest_d)
-{
-  static const int common_den[] = { 1, 2, 3, 4, 1001 };
-  int n, d;
-  int i;
-  guint64 a;
-
-  for (i = 0; i < G_N_ELEMENTS (common_den); i++) {
-    d = common_den[i];
-    n = floor (0.5 + (d * 1e9) / duration);
-    if (n > 0) {
-      a = gst_util_uint64_scale_int (1000000000, d, n);
-      if (duration >= a - 2 && duration <= a + 2) {
-        goto out;
-      }
-    }
-  }
-
-  gst_util_double_to_fraction (1e9 / duration, &n, &d);
-
-out:
-  /* set results */
-  *dest_n = n;
-  *dest_d = d;
-}
-
 static GstCaps *
 gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     videocontext, const gchar * codec_id, guint8 * data, guint size,
@@ -5075,7 +5048,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       } else if (context->default_duration > 0) {
         int fps_n, fps_d;
 
-        gst_duration_to_fraction (context->default_duration, &fps_n, &fps_d);
+        gst_video_guess_framerate (context->default_duration, &fps_n, &fps_d);
 
         GST_INFO ("using default duration %" G_GUINT64_FORMAT
             " framerate %d/%d", context->default_duration, fps_n, fps_d);
