@@ -59,7 +59,6 @@ GST_DEBUG_CATEGORY_STATIC (gl_test_src_debug);
 enum
 {
   PROP_0,
-  PROP_OTHER_CONTEXT,
   PROP_PATTERN,
   PROP_TIMESTAMP_OFFSET,
   PROP_IS_LIVE
@@ -165,11 +164,6 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
   gobject_class->get_property = gst_gl_test_src_get_property;
   gobject_class->dispose = gst_gl_test_src_dispose;
 
-  g_object_class_install_property (gobject_class, PROP_OTHER_CONTEXT,
-      g_param_spec_object ("other-context",
-          "External OpenGL context",
-          "Give an external OpenGL context with which to share textures",
-          GST_GL_TYPE_CONTEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PATTERN,
       g_param_spec_enum ("pattern", "Pattern",
           "Type of test pattern to generate", GST_TYPE_GL_TEST_SRC_PATTERN,
@@ -415,11 +409,6 @@ gst_gl_test_src_set_property (GObject * object, guint prop_id,
   GstGLTestSrc *src = GST_GL_TEST_SRC (object);
 
   switch (prop_id) {
-    case PROP_OTHER_CONTEXT:
-      if (src->other_context)
-        gst_object_unref (src->other_context);
-      src->other_context = g_value_dup_object (value);
-      break;
     case PROP_PATTERN:
       gst_gl_test_src_set_pattern (src, g_value_get_enum (value));
       break;
@@ -441,9 +430,6 @@ gst_gl_test_src_get_property (GObject * object, guint prop_id,
   GstGLTestSrc *src = GST_GL_TEST_SRC (object);
 
   switch (prop_id) {
-    case PROP_OTHER_CONTEXT:
-      g_value_set_object (value, src->other_context);
-      break;
     case PROP_PATTERN:
       g_value_set_enum (value, src->pattern_type);
       break;
@@ -488,7 +474,7 @@ gst_gl_test_src_set_context (GstElement * element, GstContext * context)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (element);
 
-  gst_gl_handle_set_context (element, context, &src->display);
+  gst_gl_handle_set_context (element, context, &src->display, &src->other_context);
 }
 
 static gboolean
@@ -503,7 +489,7 @@ gst_gl_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
     case GST_QUERY_CONTEXT:
     {
       res = gst_gl_handle_context_query ((GstElement *) src, query,
-          &src->display);
+          &src->display, &src->other_context);
       break;
     }
     case GST_QUERY_CONVERT:
@@ -712,7 +698,7 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
 
-  if (!gst_gl_ensure_display (src, &src->display))
+  if (!gst_gl_ensure_element_data (src, &src->display, &src->other_context))
     return FALSE;
 
   src->running_time = 0;
@@ -771,7 +757,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   guint out_width, out_height;
   GstGLContext *other_context = NULL;
 
-  if (!gst_gl_ensure_display (src, &src->display))
+  if (!gst_gl_ensure_element_data (src, &src->display, &src->other_context))
     return FALSE;
 
   if (gst_query_find_allocation_meta (query,

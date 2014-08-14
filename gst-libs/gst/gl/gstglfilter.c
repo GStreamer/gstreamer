@@ -71,8 +71,7 @@ static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
 /* Properties */
 enum
 {
-  PROP_0,
-  PROP_OTHER_CONTEXT
+  PROP_0
 };
 
 #define DEBUG_INIT \
@@ -140,12 +139,6 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
 
   element_class->set_context = gst_gl_filter_set_context;
 
-  g_object_class_install_property (gobject_class, PROP_OTHER_CONTEXT,
-      g_param_spec_object ("other-context",
-          "External OpenGL context",
-          "Give an external OpenGL context with which to share textures",
-          GST_GL_TYPE_CONTEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_filter_src_pad_template));
   gst_element_class_add_pad_template (element_class,
@@ -172,16 +165,7 @@ static void
 gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstGLFilter *filter = GST_GL_FILTER (object);
-
   switch (prop_id) {
-    case PROP_OTHER_CONTEXT:
-    {
-      if (filter->other_context)
-        gst_object_unref (filter->other_context);
-      filter->other_context = g_value_dup_object (value);
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -192,12 +176,7 @@ static void
 gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstGLFilter *filter = GST_GL_FILTER (object);
-
   switch (prop_id) {
-    case PROP_OTHER_CONTEXT:
-      g_value_set_object (value, filter->other_context);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -209,7 +188,8 @@ gst_gl_filter_set_context (GstElement * element, GstContext * context)
 {
   GstGLFilter *filter = GST_GL_FILTER (element);
 
-  gst_gl_handle_set_context (element, context, &filter->display);
+  gst_gl_handle_set_context (element, context, &filter->display,
+      &filter->other_context);
 }
 
 static gboolean
@@ -231,7 +211,7 @@ gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     case GST_QUERY_CONTEXT:
     {
       return gst_gl_handle_context_query ((GstElement *) filter, query,
-          &filter->display);
+          &filter->display, &filter->other_context);
     }
     default:
       break;
@@ -314,7 +294,7 @@ gst_gl_filter_start (GstBaseTransform * bt)
   GstGLFilter *filter = GST_GL_FILTER (bt);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  if (!gst_gl_ensure_display (filter, &filter->display))
+  if (!gst_gl_ensure_element_data (filter, &filter->display, &filter->other_context))
     return FALSE;
 
   if (filter_class->onStart)
@@ -894,7 +874,7 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     gst_structure_free (config);
   }
 
-  if (!gst_gl_ensure_display (filter, &filter->display))
+  if (!gst_gl_ensure_element_data (filter, &filter->display, &filter->other_context))
     return FALSE;
 
   if (!filter->context) {
@@ -1015,7 +995,7 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   guint in_width, in_height, out_width, out_height;
   GstGLContext *other_context = NULL;
 
-  if (!gst_gl_ensure_display (filter, &filter->display))
+  if (!gst_gl_ensure_element_data (filter, &filter->display, &filter->other_context))
     return FALSE;
 
   if (gst_query_find_allocation_meta (query,
@@ -1262,7 +1242,7 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (bt);
 
-  if (!gst_gl_ensure_display (filter, &filter->display))
+  if (!gst_gl_ensure_element_data (filter, &filter->display, &filter->other_context))
     return GST_FLOW_NOT_NEGOTIATED;
 
   if (!filter->upload) {

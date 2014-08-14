@@ -183,7 +183,7 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
     gst_structure_free (config);
   }
 
-  if (!gst_gl_ensure_display (mix, &mix->display))
+  if (!gst_gl_ensure_element_data (mix, &mix->display, &mix->other_context))
     return FALSE;
 
   if (!mix->context) {
@@ -308,7 +308,7 @@ gst_gl_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
     case GST_QUERY_CONTEXT:
     {
       ret = gst_gl_handle_context_query ((GstElement *) mix, query,
-          &mix->display);
+          &mix->display, &mix->other_context);
       break;
     }
     default:
@@ -333,8 +333,7 @@ enum
 
 enum
 {
-  PROP_0,
-  PROP_OTHER_CONTEXT
+  PROP_0
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -410,12 +409,6 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   gobject_class->get_property = gst_gl_mixer_get_property;
   gobject_class->set_property = gst_gl_mixer_set_property;
 
-  g_object_class_install_property (gobject_class, PROP_OTHER_CONTEXT,
-      g_param_spec_object ("other-context",
-          "External OpenGL context",
-          "Give an external OpenGL context with which to share textures",
-          GST_GL_TYPE_CONTEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
@@ -487,7 +480,7 @@ gst_gl_mixer_set_context (GstElement * element, GstContext * context)
 {
   GstGLMixer *mix = GST_GL_MIXER (element);
 
-  gst_gl_handle_set_context (element, context, &mix->display);
+  gst_gl_handle_set_context (element, context, &mix->display, &mix->context);
 }
 
 static gboolean
@@ -496,7 +489,7 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean active)
   gboolean result = TRUE;
 
   if (active) {
-    if (!gst_gl_ensure_display (mix, &mix->display))
+    if (!gst_gl_ensure_element_data (mix, &mix->display, &mix->other_context))
       result = FALSE;
   }
 
@@ -665,7 +658,7 @@ gst_gl_mixer_src_query (GstAggregator * agg, GstQuery * query)
     case GST_QUERY_CONTEXT:
     {
       res = gst_gl_handle_context_query ((GstElement *) mix, query,
-          &mix->display);
+          &mix->display, &mix->other_context);
       break;
     }
     case GST_QUERY_CAPS:
@@ -712,7 +705,7 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   GstGLContext *other_context = NULL;
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
 
-  if (!gst_gl_ensure_display (mix, &mix->display))
+  if (!gst_gl_ensure_element_data (mix, &mix->display, &mix->other_context))
     return FALSE;
 
   if (gst_query_find_allocation_meta (query,
@@ -1121,12 +1114,7 @@ static void
 gst_gl_mixer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstGLMixer *mix = GST_GL_MIXER (object);
-
   switch (prop_id) {
-    case PROP_OTHER_CONTEXT:
-      g_value_set_object (value, mix->other_context);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1137,16 +1125,7 @@ static void
 gst_gl_mixer_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstGLMixer *mix = GST_GL_MIXER (object);
-
   switch (prop_id) {
-    case PROP_OTHER_CONTEXT:
-    {
-      if (mix->other_context)
-        gst_object_unref (mix->other_context);
-      mix->other_context = g_value_dup_object (value);
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
