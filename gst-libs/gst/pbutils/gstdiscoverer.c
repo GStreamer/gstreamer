@@ -1462,6 +1462,11 @@ handle_current_sync (GstDiscoverer * dc)
     dc->priv->current_info->result = GST_DISCOVERER_TIMEOUT;
   }
 
+  DISCO_LOCK (dc);
+  dc->priv->processing = FALSE;
+  DISCO_UNLOCK (dc);
+
+
   GST_DEBUG ("Done");
 
   g_timer_stop (timer);
