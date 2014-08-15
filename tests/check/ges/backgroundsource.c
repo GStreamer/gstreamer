@@ -205,6 +205,7 @@ GST_START_TEST (test_test_source_in_layer)
 
 GST_END_TEST;
 
+#if 0
 static gint
 find_composition_func (const GValue * velement)
 {
@@ -244,6 +245,7 @@ find_composition (GESTrack * track)
   assert_equals_uint64 (pdur, duration);                     \
   assert_equals_int (pprio, priority);                       \
 }
+
 GST_START_TEST (test_gap_filling_basic)
 {
   GList *tmp;
@@ -395,6 +397,7 @@ GST_START_TEST (test_gap_filling_empty_track)
 }
 
 GST_END_TEST;
+#endif
 
 static Suite *
 ges_suite (void)
@@ -407,8 +410,11 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_test_source_basic);
   tcase_add_test (tc_chain, test_test_source_properties);
   tcase_add_test (tc_chain, test_test_source_in_layer);
+
+#if 0
   tcase_add_test (tc_chain, test_gap_filling_basic);
   tcase_add_test (tc_chain, test_gap_filling_empty_track);
+#endif
 
   return s;
 }
