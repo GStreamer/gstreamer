@@ -6,6 +6,6 @@ gapidir=@gapidir@
 Name: @ASSEMBLY_TITLE@
 Description: @ASSEMBLY_DESCRIPTION@
 Version: @VERSION@
-Requires: 
+Requires: gtk-sharp-3.0
 Cflags: -I:${gapidir}/gstreamer-sharp-api.xml
 Libs: -r:${libdir}/mono/@ASSEMBLY_NAME@/@ASSEMBLY_NAME@.dll
