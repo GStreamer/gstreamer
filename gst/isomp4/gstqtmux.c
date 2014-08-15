@@ -185,7 +185,7 @@ enum
 /* some spare for header size as well */
 #define MDAT_LARGE_FILE_LIMIT           ((guint64) 1024 * 1024 * 1024 * 2)
 
-#define DEFAULT_MOVIE_TIMESCALE         1000
+#define DEFAULT_MOVIE_TIMESCALE         1800
 #define DEFAULT_TRAK_TIMESCALE          0
 #define DEFAULT_DO_CTTS                 TRUE
 #define DEFAULT_FAST_START              FALSE
