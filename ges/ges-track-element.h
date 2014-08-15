@@ -71,17 +71,17 @@ struct _GESTrackElement {
 
 /**
  * GESTrackElementClass:
- * @gnlobject_factorytype: name of the GNonLin GStElementFactory type to use.
- * @create_gnl_object: method to create the GNonLin container object.
- * @create_element: method to return the GstElement to put in the gnlobject.
- * @active_changed: active property of gnlobject has changed
+ * @nleobject_factorytype: name of the GNonLin GStElementFactory type to use.
+ * @create_nle_object: method to create the GNonLin container object.
+ * @create_element: method to return the GstElement to put in the nleobject.
+ * @active_changed: active property of nleobject has changed
  * @list_children_properties: method to get children properties that user could
  *                            like to configure.
  *                            The default implementation will create an object
- *                            of type @gnlobject_factorytype and call
+ *                            of type @nleobject_factorytype and call
  *                            @create_element.
  *
- * Subclasses can override the @create_gnl_object method to override what type
+ * Subclasses can override the @create_nle_object method to override what type
  * of GNonLin object will be created.
  */
 struct _GESTrackElementClass {
@@ -90,8 +90,8 @@ struct _GESTrackElementClass {
 
   /*< public >*/
   /* virtual methods for subclasses */
-  const gchar  *gnlobject_factorytype;
-  GstElement*  (*create_gnl_object)        (GESTrackElement * object);
+  const gchar  *nleobject_factorytype;
+  GstElement*  (*create_nle_object)        (GESTrackElement * object);
   GstElement*  (*create_element)           (GESTrackElement * object);
 
   void (*active_changed)       (GESTrackElement *object, gboolean active);
@@ -117,7 +117,7 @@ GESTrackType ges_track_element_get_track_type  (GESTrackElement * object);
 void ges_track_element_set_track_type          (GESTrackElement * object,
                                                GESTrackType     type);
 
-GstElement * ges_track_element_get_gnlobject   (GESTrackElement * object);
+GstElement * ges_track_element_get_nleobject   (GESTrackElement * object);
 
 GstElement * ges_track_element_get_element     (GESTrackElement * object);
 

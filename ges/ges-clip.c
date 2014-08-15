@@ -92,10 +92,10 @@ _get_priority_range (GESContainer * container, guint32 * min_priority,
   GESLayer *layer = GES_CLIP (container)->priv->layer;
 
   if (layer) {
-    *min_priority = layer->min_gnl_priority;
-    *max_priority = layer->max_gnl_priority;
+    *min_priority = layer->min_nle_priority;
+    *max_priority = layer->max_nle_priority;
   } else {
-    *min_priority = MIN_GNL_PRIO;
+    *min_priority = MIN_NLE_PRIO;
     *max_priority = G_MAXUINT32;
   }
 }
@@ -223,7 +223,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     guint32 real_tck_prio;
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-    gint off = _PRIORITY (child) - _PRIORITY (element) - MIN_GNL_PRIO;
+    gint off = _PRIORITY (child) - _PRIORITY (element) - MIN_NLE_PRIO;
 
     if (off >= LAYER_HEIGHT)
       off = 0;

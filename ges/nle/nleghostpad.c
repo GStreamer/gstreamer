@@ -21,17 +21,17 @@
 #include "config.h"
 #endif
 
-#include "gnl.h"
+#include "nle.h"
 
-GST_DEBUG_CATEGORY_STATIC (gnlghostpad);
-#define GST_CAT_DEFAULT gnlghostpad
+GST_DEBUG_CATEGORY_STATIC (nleghostpad);
+#define GST_CAT_DEFAULT nleghostpad
 
-typedef struct _GnlPadPrivate GnlPadPrivate;
+typedef struct _NlePadPrivate NlePadPrivate;
 
-struct _GnlPadPrivate
+struct _NlePadPrivate
 {
-  GnlObject *object;
-  GnlPadPrivate *ghostpriv;
+  NleObject *object;
+  NlePadPrivate *ghostpriv;
   GstPadDirection dir;
   GstPadEventFunction eventfunc;
   GstPadQueryFunction queryfunc;
@@ -40,7 +40,7 @@ struct _GnlPadPrivate
 };
 
 GstEvent *
-gnl_object_translate_incoming_seek (GnlObject * object, GstEvent * event)
+nle_object_translate_incoming_seek (NleObject * object, GstEvent * event)
 {
   GstEvent *event2;
   GstFormat format;
@@ -68,7 +68,7 @@ gnl_object_translate_incoming_seek (GnlObject * object, GstEvent * event)
   /* convert cur */
   ncurtype = GST_SEEK_TYPE_SET;
   if (G_LIKELY ((curtype == GST_SEEK_TYPE_SET)
-          && (gnl_object_to_media_time (object, cur, &ncur)))) {
+          && (nle_object_to_media_time (object, cur, &ncur)))) {
     /* cur is TYPE_SET and value is valid */
     if (ncur > G_MAXINT64)
       GST_WARNING_OBJECT (object, "return value too big...");
@@ -85,14 +85,14 @@ gnl_object_translate_incoming_seek (GnlObject * object, GstEvent * event)
 
   /* convert stop, we also need to limit it to object->stop */
   if (G_LIKELY ((stoptype == GST_SEEK_TYPE_SET)
-          && (gnl_object_to_media_time (object, stop, &nstop)))) {
+          && (nle_object_to_media_time (object, stop, &nstop)))) {
     if (nstop > G_MAXINT64)
       GST_WARNING_OBJECT (object, "return value too big...");
     GST_LOG_OBJECT (object, "Setting stop to %" GST_TIME_FORMAT,
         GST_TIME_ARGS (nstop));
   } else {
     GST_DEBUG_OBJECT (object, "Limiting end of seek to media_stop");
-    gnl_object_to_media_time (object, object->stop, &nstop);
+    nle_object_to_media_time (object, object->stop, &nstop);
     if (nstop > G_MAXINT64)
       GST_WARNING_OBJECT (object, "return value too big...");
     GST_LOG_OBJECT (object, "Setting stop to %" GST_TIME_FORMAT,
@@ -131,7 +131,7 @@ invalid_format:
 }
 
 static GstEvent *
-translate_outgoing_seek (GnlObject * object, GstEvent * event)
+translate_outgoing_seek (NleObject * object, GstEvent * event)
 {
   GstEvent *event2;
   GstFormat format;
@@ -159,7 +159,7 @@ translate_outgoing_seek (GnlObject * object, GstEvent * event)
   /* convert cur */
   ncurtype = GST_SEEK_TYPE_SET;
   if (G_LIKELY ((curtype == GST_SEEK_TYPE_SET)
-          && (gnl_media_to_object_time (object, cur, &ncur)))) {
+          && (nle_media_to_object_time (object, cur, &ncur)))) {
     /* cur is TYPE_SET and value is valid */
     if (ncur > G_MAXINT64)
       GST_WARNING_OBJECT (object, "return value too big...");
@@ -176,7 +176,7 @@ translate_outgoing_seek (GnlObject * object, GstEvent * event)
 
   /* convert stop, we also need to limit it to object->stop */
   if (G_LIKELY ((stoptype == GST_SEEK_TYPE_SET)
-          && (gnl_media_to_object_time (object, stop, &nstop)))) {
+          && (nle_media_to_object_time (object, stop, &nstop)))) {
     if (nstop > G_MAXINT64)
       GST_WARNING_OBJECT (object, "return value too big...");
     GST_LOG_OBJECT (object, "Setting stop to %" GST_TIME_FORMAT,
@@ -212,7 +212,7 @@ invalid_format:
 }
 
 static GstEvent *
-translate_outgoing_segment (GnlObject * object, GstEvent * event)
+translate_outgoing_segment (NleObject * object, GstEvent * event)
 {
   const GstSegment *orig;
   GstSegment segment;
@@ -235,7 +235,7 @@ translate_outgoing_segment (GnlObject * object, GstEvent * event)
 
   gst_segment_copy_into (orig, &segment);
 
-  gnl_media_to_object_time (object, orig->time, &segment.time);
+  nle_media_to_object_time (object, orig->time, &segment.time);
 
   if (G_UNLIKELY (segment.time > G_MAXINT64))
     GST_WARNING_OBJECT (object, "Return value too big...");
@@ -253,7 +253,7 @@ translate_outgoing_segment (GnlObject * object, GstEvent * event)
 }
 
 static GstEvent *
-translate_incoming_segment (GnlObject * object, GstEvent * event)
+translate_incoming_segment (NleObject * object, GstEvent * event)
 {
   GstEvent *event2;
   const GstSegment *orig;
@@ -276,15 +276,15 @@ translate_incoming_segment (GnlObject * object, GstEvent * event)
 
   gst_segment_copy_into (orig, &segment);
 
-  if (!gnl_object_to_media_time (object, orig->time, &segment.time)) {
+  if (!nle_object_to_media_time (object, orig->time, &segment.time)) {
     GST_DEBUG ("Can't convert media_time, using 0");
     segment.time = 0;
   };
 
-  if (GNL_IS_OPERATION (object)) {
-    segment.base = GNL_OPERATION (object)->next_base_time;
+  if (NLE_IS_OPERATION (object)) {
+    segment.base = NLE_OPERATION (object)->next_base_time;
     GST_INFO_OBJECT (object, "Using operation base time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GNL_OPERATION (object)->next_base_time));
+        GST_TIME_ARGS (NLE_OPERATION (object)->next_base_time));
   }
 
   if (G_UNLIKELY (segment.time > G_MAXINT64))
@@ -306,8 +306,8 @@ static gboolean
 internalpad_event_function (GstPad * internal, GstObject * parent,
     GstEvent * event)
 {
-  GnlPadPrivate *priv = gst_pad_get_element_private (internal);
-  GnlObject *object = priv->object;
+  NlePadPrivate *priv = gst_pad_get_element_private (internal);
+  NleObject *object = priv->object;
   gboolean res;
 
   GST_DEBUG_OBJECT (internal, "event:%s (seqnum::%d)",
@@ -362,7 +362,7 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
 */
 
 static gboolean
-translate_incoming_position_query (GnlObject * object, GstQuery * query)
+translate_incoming_position_query (NleObject * object, GstQuery * query)
 {
   GstFormat format;
   gint64 cur, cur2;
@@ -374,7 +374,7 @@ translate_incoming_position_query (GnlObject * object, GstQuery * query)
     goto beach;
   }
 
-  gnl_media_to_object_time (object, (guint64) cur, (guint64 *) & cur2);
+  nle_media_to_object_time (object, (guint64) cur, (guint64 *) & cur2);
 
   GST_DEBUG_OBJECT (object,
       "Adjust position from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
@@ -386,7 +386,7 @@ beach:
 }
 
 static gboolean
-translate_outgoing_position_query (GnlObject * object, GstQuery * query)
+translate_outgoing_position_query (NleObject * object, GstQuery * query)
 {
   GstFormat format;
   gint64 cur, cur2;
@@ -398,7 +398,7 @@ translate_outgoing_position_query (GnlObject * object, GstQuery * query)
     goto beach;
   }
 
-  if (G_UNLIKELY (!(gnl_object_to_media_time (object, (guint64) cur,
+  if (G_UNLIKELY (!(nle_object_to_media_time (object, (guint64) cur,
                   (guint64 *) & cur2)))) {
     GST_WARNING_OBJECT (object,
         "Couldn't get media time for %" GST_TIME_FORMAT, GST_TIME_ARGS (cur));
@@ -415,7 +415,7 @@ beach:
 }
 
 static gboolean
-translate_incoming_duration_query (GnlObject * object, GstQuery * query)
+translate_incoming_duration_query (NleObject * object, GstQuery * query)
 {
   GstFormat format;
   gint64 cur;
@@ -436,8 +436,8 @@ static gboolean
 internalpad_query_function (GstPad * internal, GstObject * parent,
     GstQuery * query)
 {
-  GnlPadPrivate *priv = gst_pad_get_element_private (internal);
-  GnlObject *object = priv->object;
+  NlePadPrivate *priv = gst_pad_get_element_private (internal);
+  NleObject *object = priv->object;
   gboolean ret;
 
   GST_DEBUG_OBJECT (internal, "querytype:%s",
@@ -474,8 +474,8 @@ static gboolean
 ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
     GstEvent * event)
 {
-  GnlPadPrivate *priv;
-  GnlObject *object;
+  NlePadPrivate *priv;
+  NleObject *object;
   gboolean ret = FALSE;
 
   priv = gst_pad_get_element_private (ghostpad);
@@ -494,7 +494,7 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
         {
           GstPad *target;
 
-          event = gnl_object_translate_incoming_seek (object, event);
+          event = nle_object_translate_incoming_seek (object, event);
           if (!(target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghostpad)))) {
             g_assert ("Seeked a pad with not target SHOULD NOT HAPPEND");
             ret = FALSE;
@@ -545,8 +545,8 @@ static gboolean
 ghostpad_query_function (GstPad * ghostpad, GstObject * parent,
     GstQuery * query)
 {
-  GnlPadPrivate *priv = gst_pad_get_element_private (ghostpad);
-  GnlObject *object = GNL_OBJECT (parent);
+  NlePadPrivate *priv = gst_pad_get_element_private (ghostpad);
+  NleObject *object = NLE_OBJECT (parent);
   gboolean pret = TRUE;
 
   GST_DEBUG_OBJECT (ghostpad, "querytype:%s", GST_QUERY_TYPE_NAME (query));
@@ -578,9 +578,9 @@ ghostpad_query_function (GstPad * ghostpad, GstObject * parent,
 
 /* internal pad going away */
 static void
-internal_pad_finalizing (GnlPadPrivate * priv, GObject * pad G_GNUC_UNUSED)
+internal_pad_finalizing (NlePadPrivate * priv, GObject * pad G_GNUC_UNUSED)
 {
-  g_slice_free (GnlPadPrivate, priv);
+  g_slice_free (NlePadPrivate, priv);
 }
 
 static inline GstPad *
@@ -602,10 +602,10 @@ get_proxy_pad (GstPad * ghostpad)
 }
 
 static void
-control_internal_pad (GstPad * ghostpad, GnlObject * object)
+control_internal_pad (GstPad * ghostpad, NleObject * object)
 {
-  GnlPadPrivate *priv;
-  GnlPadPrivate *privghost;
+  NlePadPrivate *priv;
+  NlePadPrivate *privghost;
   GstPad *internal;
 
   if (!ghostpad) {
@@ -620,8 +620,8 @@ control_internal_pad (GstPad * ghostpad, GnlObject * object)
 
   if (G_UNLIKELY (!(priv = gst_pad_get_element_private (internal)))) {
     GST_DEBUG_OBJECT (internal,
-        "Creating a GnlPadPrivate to put in element_private");
-    priv = g_slice_new0 (GnlPadPrivate);
+        "Creating a NlePadPrivate to put in element_private");
+    priv = g_slice_new0 (NlePadPrivate);
 
     /* Remember existing pad functions */
     priv->eventfunc = GST_PAD_EVENTFUNC (internal);
@@ -649,14 +649,14 @@ control_internal_pad (GstPad * ghostpad, GnlObject * object)
 
 
 /**
- * gnl_object_ghost_pad:
- * @object: #GnlObject to add the ghostpad to
+ * nle_object_ghost_pad:
+ * @object: #NleObject to add the ghostpad to
  * @name: Name for the new pad
  * @target: Target #GstPad to ghost
  *
  * Adds a #GstGhostPad overridding the correct pad [query|event]_function so
  * that time shifting is done correctly
- * The #GstGhostPad is added to the #GnlObject
+ * The #GstGhostPad is added to the #NleObject
  *
  * /!\ This function doesn't check if the existing [src|sink] pad was removed
  * first, so you might end up with more pads than wanted
@@ -664,7 +664,7 @@ control_internal_pad (GstPad * ghostpad, GnlObject * object)
  * Returns: The #GstPad if everything went correctly, else NULL.
  */
 GstPad *
-gnl_object_ghost_pad (GnlObject * object, const gchar * name, GstPad * target)
+nle_object_ghost_pad (NleObject * object, const gchar * name, GstPad * target)
 {
   GstPadDirection dir = GST_PAD_DIRECTION (target);
   GstPad *ghost;
@@ -674,13 +674,13 @@ gnl_object_ghost_pad (GnlObject * object, const gchar * name, GstPad * target)
   g_return_val_if_fail (target, FALSE);
   g_return_val_if_fail ((dir != GST_PAD_UNKNOWN), FALSE);
 
-  ghost = gnl_object_ghost_pad_no_target (object, name, dir, NULL);
+  ghost = nle_object_ghost_pad_no_target (object, name, dir, NULL);
   if (!ghost) {
     GST_WARNING_OBJECT (object, "Couldn't create ghostpad");
     return NULL;
   }
 
-  if (!(gnl_object_ghost_pad_set_target (object, ghost, target))) {
+  if (!(nle_object_ghost_pad_set_target (object, ghost, target))) {
     GST_WARNING_OBJECT (object,
         "Couldn't set the target pad... removing ghostpad");
     gst_object_unref (ghost);
@@ -700,15 +700,15 @@ gnl_object_ghost_pad (GnlObject * object, const gchar * name, GstPad * target)
 }
 
 /*
- * gnl_object_ghost_pad_no_target:
- * /!\ Doesn't add the pad to the GnlObject....
+ * nle_object_ghost_pad_no_target:
+ * /!\ Doesn't add the pad to the NleObject....
  */
 GstPad *
-gnl_object_ghost_pad_no_target (GnlObject * object, const gchar * name,
+nle_object_ghost_pad_no_target (NleObject * object, const gchar * name,
     GstPadDirection dir, GstPadTemplate * template)
 {
   GstPad *ghost;
-  GnlPadPrivate *priv;
+  NlePadPrivate *priv;
 
   /* create a no_target ghostpad */
   if (template)
@@ -720,7 +720,7 @@ gnl_object_ghost_pad_no_target (GnlObject * object, const gchar * name,
 
 
   /* remember the existing ghostpad event/query/link/unlink functions */
-  priv = g_slice_new0 (GnlPadPrivate);
+  priv = g_slice_new0 (NlePadPrivate);
   priv->dir = dir;
   priv->object = object;
 
@@ -744,9 +744,9 @@ gnl_object_ghost_pad_no_target (GnlObject * object, const gchar * name,
 
 
 void
-gnl_object_remove_ghost_pad (GnlObject * object, GstPad * ghost)
+nle_object_remove_ghost_pad (NleObject * object, GstPad * ghost)
 {
-  GnlPadPrivate *priv;
+  NlePadPrivate *priv;
 
   GST_DEBUG_OBJECT (object, "ghostpad %s:%s", GST_DEBUG_PAD_NAME (ghost));
 
@@ -754,14 +754,14 @@ gnl_object_remove_ghost_pad (GnlObject * object, GstPad * ghost)
   gst_ghost_pad_set_target (GST_GHOST_PAD (ghost), NULL);
   gst_element_remove_pad (GST_ELEMENT (object), ghost);
   if (priv)
-    g_slice_free (GnlPadPrivate, priv);
+    g_slice_free (NlePadPrivate, priv);
 }
 
 gboolean
-gnl_object_ghost_pad_set_target (GnlObject * object, GstPad * ghost,
+nle_object_ghost_pad_set_target (NleObject * object, GstPad * ghost,
     GstPad * target)
 {
-  GnlPadPrivate *priv = gst_pad_get_element_private (ghost);
+  NlePadPrivate *priv = gst_pad_get_element_private (ghost);
 
   g_return_val_if_fail (priv, FALSE);
   g_return_val_if_fail (GST_IS_PAD (ghost), FALSE);
@@ -795,9 +795,9 @@ gnl_object_ghost_pad_set_target (GnlObject * object, GstPad * ghost,
 }
 
 void
-gnl_init_ghostpad_category (void)
+nle_init_ghostpad_category (void)
 {
-  GST_DEBUG_CATEGORY_INIT (gnlghostpad, "gnlghostpad",
+  GST_DEBUG_CATEGORY_INIT (nleghostpad, "nleghostpad",
       GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin GhostPad");
 
 }

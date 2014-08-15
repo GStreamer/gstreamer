@@ -2,7 +2,7 @@
  * Copyright (C) 2001 Wim Taymans <wim.taymans@gmail.com>
  *               2004-2008 Edward Hervey <bilboed@bilboed.com>
  *
- * gnlsource.h: Header for base GnlSource
+ * nlesource.h: Header for base NleSource
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,46 +21,46 @@
  */
 
 
-#ifndef __GNL_SOURCE_H__
-#define __GNL_SOURCE_H__
+#ifndef __NLE_SOURCE_H__
+#define __NLE_SOURCE_H__
 
 #include <gst/gst.h>
-#include "gnlobject.h"
+#include "nleobject.h"
 
 G_BEGIN_DECLS
-#define GNL_TYPE_SOURCE \
-  (gnl_source_get_type())
-#define GNL_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GNL_TYPE_SOURCE,GnlSource))
-#define GNL_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GNL_TYPE_SOURCE,GnlSourceClass))
-#define GNL_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GNL_TYPE_SOURCE, GnlSourceClass))
-#define GNL_IS_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GNL_TYPE_SOURCE))
-#define GNL_IS_SOURCE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GNL_TYPE_SOURCE))
-typedef struct _GnlSourcePrivate GnlSourcePrivate;
+#define NLE_TYPE_SOURCE \
+  (nle_source_get_type())
+#define NLE_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),NLE_TYPE_SOURCE,NleSource))
+#define NLE_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),NLE_TYPE_SOURCE,NleSourceClass))
+#define NLE_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), NLE_TYPE_SOURCE, NleSourceClass))
+#define NLE_IS_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),NLE_TYPE_SOURCE))
+#define NLE_IS_SOURCE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),NLE_TYPE_SOURCE))
+typedef struct _NleSourcePrivate NleSourcePrivate;
 
-struct _GnlSource
+struct _NleSource
 {
-  GnlObject parent;
+  NleObject parent;
 
   /* controlled source element, acces with gst_bin_[add|remove]_element */
   GstElement *element;
 
-  GnlSourcePrivate *priv;
+  NleSourcePrivate *priv;
 };
 
-struct _GnlSourceClass
+struct _NleSourceClass
 {
-  GnlObjectClass parent_class;
+  NleObjectClass parent_class;
 
   /* control_element() takes care of controlling the given element */
-    gboolean (*control_element) (GnlSource * source, GstElement * element);
+    gboolean (*control_element) (NleSource * source, GstElement * element);
 };
 
-GType gnl_source_get_type (void);
+GType nle_source_get_type (void);
 
 G_END_DECLS
-#endif /* __GNL_SOURCE_H__ */
+#endif /* __NLE_SOURCE_H__ */

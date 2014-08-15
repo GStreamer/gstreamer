@@ -23,30 +23,30 @@
 #include "config.h"
 #endif
 
-#include "gnl.h"
+#include "nle.h"
 
 /**
- * SECTION:element-gnlsource
+ * SECTION:element-nlesource
  *
- * The GnlSource encapsulates a pipeline which produces data for processing
- * in a #GnlComposition.
+ * The NleSource encapsulates a pipeline which produces data for processing
+ * in a #NleComposition.
  */
 
-static GstStaticPadTemplate gnl_source_src_template =
+static GstStaticPadTemplate nle_source_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (gnlsource);
-#define GST_CAT_DEFAULT gnlsource
+GST_DEBUG_CATEGORY_STATIC (nlesource);
+#define GST_CAT_DEFAULT nlesource
 
 #define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gnlsource, "gnlsource", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin Source Element");
-#define gnl_source_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GnlSource, gnl_source, GNL_TYPE_OBJECT, _do_init);
+  GST_DEBUG_CATEGORY_INIT (nlesource, "nlesource", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin Source Element");
+#define nle_source_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (NleSource, nle_source, NLE_TYPE_OBJECT, _do_init);
 
-struct _GnlSourcePrivate
+struct _NleSourcePrivate
 {
   gboolean dispose_has_run;
 
@@ -60,69 +60,69 @@ struct _GnlSourcePrivate
   GstPad *staticpad;            /* The only pad. We keep an extra ref */
 };
 
-static gboolean gnl_source_prepare (GnlObject * object);
-static gboolean gnl_source_add_element (GstBin * bin, GstElement * element);
-static gboolean gnl_source_remove_element (GstBin * bin, GstElement * element);
-static void gnl_source_dispose (GObject * object);
+static gboolean nle_source_prepare (NleObject * object);
+static gboolean nle_source_add_element (GstBin * bin, GstElement * element);
+static gboolean nle_source_remove_element (GstBin * bin, GstElement * element);
+static void nle_source_dispose (GObject * object);
 
 static gboolean
-gnl_source_control_element_func (GnlSource * source, GstElement * element);
+nle_source_control_element_func (NleSource * source, GstElement * element);
 
 static void
-gnl_source_class_init (GnlSourceClass * klass)
+nle_source_class_init (NleSourceClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBinClass *gstbin_class;
-  GnlObjectClass *gnlobject_class;
+  NleObjectClass *nleobject_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbin_class = (GstBinClass *) klass;
-  gnlobject_class = (GnlObjectClass *) klass;
+  nleobject_class = (NleObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GnlSourcePrivate));
+  g_type_class_add_private (klass, sizeof (NleSourcePrivate));
 
   gst_element_class_set_static_metadata (gstelement_class, "GNonLin Source",
       "Filter/Editor",
       "Manages source elements",
       "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>");
 
-  parent_class = g_type_class_ref (GNL_TYPE_OBJECT);
+  parent_class = g_type_class_ref (NLE_TYPE_OBJECT);
 
-  klass->control_element = GST_DEBUG_FUNCPTR (gnl_source_control_element_func);
+  klass->control_element = GST_DEBUG_FUNCPTR (nle_source_control_element_func);
 
-  gnlobject_class->prepare = GST_DEBUG_FUNCPTR (gnl_source_prepare);
+  nleobject_class->prepare = GST_DEBUG_FUNCPTR (nle_source_prepare);
 
-  gstbin_class->add_element = GST_DEBUG_FUNCPTR (gnl_source_add_element);
-  gstbin_class->remove_element = GST_DEBUG_FUNCPTR (gnl_source_remove_element);
+  gstbin_class->add_element = GST_DEBUG_FUNCPTR (nle_source_add_element);
+  gstbin_class->remove_element = GST_DEBUG_FUNCPTR (nle_source_remove_element);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gnl_source_dispose);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (nle_source_dispose);
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gnl_source_src_template));
+      gst_static_pad_template_get (&nle_source_src_template));
 
 }
 
 
 static void
-gnl_source_init (GnlSource * source)
+nle_source_init (NleSource * source)
 {
-  GST_OBJECT_FLAG_SET (source, GNL_OBJECT_SOURCE);
+  GST_OBJECT_FLAG_SET (source, NLE_OBJECT_SOURCE);
   source->element = NULL;
   source->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (source, GNL_TYPE_SOURCE, GnlSourcePrivate);
+      G_TYPE_INSTANCE_GET_PRIVATE (source, NLE_TYPE_SOURCE, NleSourcePrivate);
 
   GST_DEBUG_OBJECT (source, "Setting GstBin async-handling to TRUE");
   g_object_set (G_OBJECT (source), "async-handling", TRUE, NULL);
 }
 
 static void
-gnl_source_dispose (GObject * object)
+nle_source_dispose (GObject * object)
 {
-  GnlObject *gnlobject = (GnlObject *) object;
-  GnlSource *source = (GnlSource *) object;
-  GnlSourcePrivate *priv = source->priv;
+  NleObject *nleobject = (NleObject *) object;
+  NleSource *source = (NleSource *) object;
+  NleSourcePrivate *priv = source->priv;
 
   GST_DEBUG_OBJECT (object, "dispose");
 
@@ -136,7 +136,7 @@ gnl_source_dispose (GObject * object)
 
   priv->dispose_has_run = TRUE;
   if (priv->ghostedpad)
-    gnl_object_ghost_pad_set_target (gnlobject, gnlobject->srcpad, NULL);
+    nle_object_ghost_pad_set_target (nleobject, nleobject->srcpad, NULL);
 
   if (priv->staticpad) {
     gst_object_unref (priv->staticpad);
@@ -148,11 +148,11 @@ gnl_source_dispose (GObject * object)
 
 static void
 element_pad_added_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
-    GnlSource * source)
+    NleSource * source)
 {
   GstCaps *srccaps;
-  GnlSourcePrivate *priv = source->priv;
-  GnlObject *gnlobject = (GnlObject *) source;
+  NleSourcePrivate *priv = source->priv;
+  NleObject *nleobject = (NleObject *) source;
 
   GST_DEBUG_OBJECT (source, "pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -166,7 +166,7 @@ element_pad_added_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
 
   /* FIXME: pass filter caps to query_caps directly */
   srccaps = gst_pad_query_caps (pad, NULL);
-  if (gnlobject->caps && !gst_caps_can_intersect (srccaps, gnlobject->caps)) {
+  if (nleobject->caps && !gst_caps_can_intersect (srccaps, nleobject->caps)) {
     gst_caps_unref (srccaps);
     GST_DEBUG_OBJECT (source, "Pad doesn't have valid caps, ignoring");
     return;
@@ -174,8 +174,8 @@ element_pad_added_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
   gst_caps_unref (srccaps);
 
   priv->ghostedpad = pad;
-  GST_DEBUG_OBJECT (gnlobject, "SET target %" GST_PTR_FORMAT, pad);
-  gnl_object_ghost_pad_set_target (gnlobject, gnlobject->srcpad, pad);
+  GST_DEBUG_OBJECT (nleobject, "SET target %" GST_PTR_FORMAT, pad);
+  nle_object_ghost_pad_set_target (nleobject, nleobject->srcpad, pad);
 
   GST_DEBUG_OBJECT (source, "Using pad pad %s:%s as a target now!",
       GST_DEBUG_PAD_NAME (pad));
@@ -183,10 +183,10 @@ element_pad_added_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
 
 static void
 element_pad_removed_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
-    GnlSource * source)
+    NleSource * source)
 {
-  GnlSourcePrivate *priv = source->priv;
-  GnlObject *gnlobject = (GnlObject *) source;
+  NleSourcePrivate *priv = source->priv;
+  NleObject *nleobject = (NleObject *) source;
 
   GST_DEBUG_OBJECT (source, "pad %s:%s (controlled pad %s:%s)",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (priv->ghostedpad));
@@ -197,7 +197,7 @@ element_pad_removed_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
 
     GST_DEBUG_OBJECT (source, "Clearing up ghostpad");
 
-    gnl_object_ghost_pad_set_target (GNL_OBJECT (source), gnlobject->srcpad,
+    nle_object_ghost_pad_set_target (NLE_OBJECT (source), nleobject->srcpad,
         NULL);
     priv->ghostedpad = NULL;
   } else {
@@ -228,12 +228,12 @@ compare_src_pad (GValue * item, GstCaps * caps)
 /*
   get_valid_src_pad
 
-  Returns True if there's a src pad compatible with the GnlObject caps in the
+  Returns True if there's a src pad compatible with the NleObject caps in the
   given element. Fills in pad if so. The returned pad has an incremented refcount
 */
 
 static gboolean
-get_valid_src_pad (GnlSource * source, GstElement * element, GstPad ** pad)
+get_valid_src_pad (NleSource * source, GstElement * element, GstPad ** pad)
 {
   gboolean res = FALSE;
   GstIterator *srcpads;
@@ -243,7 +243,7 @@ get_valid_src_pad (GnlSource * source, GstElement * element, GstPad ** pad)
 
   srcpads = gst_element_iterate_src_pads (element);
   if (gst_iterator_find_custom (srcpads, (GCompareFunc) compare_src_pad, &item,
-          GNL_OBJECT (source)->caps)) {
+          NLE_OBJECT (source)->caps)) {
     *pad = g_value_get_object (&item);
     gst_object_ref (*pad);
     g_value_reset (&item);
@@ -285,9 +285,9 @@ has_dynamic_srcpads (GstElement * element)
 }
 
 static gboolean
-gnl_source_control_element_func (GnlSource * source, GstElement * element)
+nle_source_control_element_func (NleSource * source, GstElement * element)
 {
-  GnlSourcePrivate *priv = source->priv;
+  NleSourcePrivate *priv = source->priv;
   GstPad *pad = NULL;
 
   g_return_val_if_fail (source->element == NULL, FALSE);
@@ -300,8 +300,8 @@ gnl_source_control_element_func (GnlSource * source, GstElement * element)
 
   if (get_valid_src_pad (source, source->element, &pad)) {
     priv->staticpad = pad;
-    gnl_object_ghost_pad_set_target (GNL_OBJECT (source),
-        GNL_OBJECT_SRC (source), pad);
+    nle_object_ghost_pad_set_target (NLE_OBJECT (source),
+        NLE_OBJECT_SRC (source), pad);
     priv->dynamicpads = FALSE;
   } else {
     priv->dynamicpads = has_dynamic_srcpads (element);
@@ -322,15 +322,15 @@ gnl_source_control_element_func (GnlSource * source, GstElement * element)
 }
 
 static gboolean
-gnl_source_add_element (GstBin * bin, GstElement * element)
+nle_source_add_element (GstBin * bin, GstElement * element)
 {
-  GnlSource *source = (GnlSource *) bin;
+  NleSource *source = (NleSource *) bin;
   gboolean pret;
 
   GST_DEBUG_OBJECT (source, "Adding element %s", GST_ELEMENT_NAME (element));
 
   if (source->element) {
-    GST_WARNING_OBJECT (bin, "GnlSource can only handle one element at a time");
+    GST_WARNING_OBJECT (bin, "NleSource can only handle one element at a time");
     return FALSE;
   }
 
@@ -338,17 +338,17 @@ gnl_source_add_element (GstBin * bin, GstElement * element)
   pret = GST_BIN_CLASS (parent_class)->add_element (bin, element);
 
   if (pret) {
-    gnl_source_control_element_func (source, element);
+    nle_source_control_element_func (source, element);
   }
   return pret;
 }
 
 static gboolean
-gnl_source_remove_element (GstBin * bin, GstElement * element)
+nle_source_remove_element (GstBin * bin, GstElement * element)
 {
-  GnlSource *source = (GnlSource *) bin;
-  GnlObject *gnlobject = (GnlObject *) element;
-  GnlSourcePrivate *priv = source->priv;
+  NleSource *source = (NleSource *) bin;
+  NleObject *nleobject = (NleObject *) element;
+  NleSourcePrivate *priv = source->priv;
   gboolean pret;
 
   GST_DEBUG_OBJECT (source, "Removing element %s", GST_ELEMENT_NAME (element));
@@ -361,7 +361,7 @@ gnl_source_remove_element (GstBin * bin, GstElement * element)
   }
 
   if (pret) {
-    gnl_object_ghost_pad_set_target (GNL_OBJECT (source), gnlobject->srcpad,
+    nle_object_ghost_pad_set_target (NLE_OBJECT (source), nleobject->srcpad,
         NULL);
 
     /* remove signal handlers */
@@ -382,17 +382,17 @@ gnl_source_remove_element (GstBin * bin, GstElement * element)
 }
 
 static gboolean
-gnl_source_prepare (GnlObject * object)
+nle_source_prepare (NleObject * object)
 {
   GstPad *pad;
-  GnlSource *source = GNL_SOURCE (object);
-  GnlSourcePrivate *priv = source->priv;
+  NleSource *source = NLE_SOURCE (object);
+  NleSourcePrivate *priv = source->priv;
   GstElement *parent =
       (GstElement *) gst_element_get_parent ((GstElement *) object);
 
   if (!source->element) {
     GST_WARNING_OBJECT (source,
-        "GnlSource doesn't have an element to control !");
+        "NleSource doesn't have an element to control !");
     if (parent)
       gst_object_unref (parent);
     return FALSE;

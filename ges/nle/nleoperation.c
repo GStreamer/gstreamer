@@ -23,39 +23,39 @@
 #include "config.h"
 #endif
 
-#include "gnl.h"
+#include "nle.h"
 
 /**
- * SECTION:element-gnloperation
+ * SECTION:element-nleoperation
  *
  * <refsect2>
  * <para>
- * A GnlOperation performs a transformation or mixing operation on the
- * data from one or more #GnlSources, which is used to implement filters or 
+ * A NleOperation performs a transformation or mixing operation on the
+ * data from one or more #NleSources, which is used to implement filters or 
  * effects.
  * </para>
  * </refsect2>
  */
 
-static GstStaticPadTemplate gnl_operation_src_template =
+static GstStaticPadTemplate nle_operation_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static GstStaticPadTemplate gnl_operation_sink_template =
+static GstStaticPadTemplate nle_operation_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (gnloperation);
-#define GST_CAT_DEFAULT gnloperation
+GST_DEBUG_CATEGORY_STATIC (nleoperation);
+#define GST_CAT_DEFAULT nleoperation
 
 #define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gnloperation, "gnloperation", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin Operation element");
-#define gnl_operation_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GnlOperation, gnl_operation, GNL_TYPE_OBJECT,
+  GST_DEBUG_CATEGORY_INIT (nleoperation, "nleoperation", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin Operation element");
+#define nle_operation_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (NleOperation, nle_operation, NLE_TYPE_OBJECT,
     _do_init);
 
 enum
@@ -70,50 +70,50 @@ enum
   LAST_SIGNAL
 };
 
-static guint gnl_operation_signals[LAST_SIGNAL] = { 0 };
+static guint nle_operation_signals[LAST_SIGNAL] = { 0 };
 
-static void gnl_operation_dispose (GObject * object);
+static void nle_operation_dispose (GObject * object);
 
-static void gnl_operation_set_property (GObject * object, guint prop_id,
+static void nle_operation_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gnl_operation_get_property (GObject * object, guint prop_id,
+static void nle_operation_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gnl_operation_prepare (GnlObject * object);
-static gboolean gnl_operation_cleanup (GnlObject * object);
+static gboolean nle_operation_prepare (NleObject * object);
+static gboolean nle_operation_cleanup (NleObject * object);
 
-static gboolean gnl_operation_add_element (GstBin * bin, GstElement * element);
-static gboolean gnl_operation_remove_element (GstBin * bin,
+static gboolean nle_operation_add_element (GstBin * bin, GstElement * element);
+static gboolean nle_operation_remove_element (GstBin * bin,
     GstElement * element);
 
-static GstPad *gnl_operation_request_new_pad (GstElement * element,
+static GstPad *nle_operation_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
-static void gnl_operation_release_pad (GstElement * element, GstPad * pad);
+static void nle_operation_release_pad (GstElement * element, GstPad * pad);
 
-static void synchronize_sinks (GnlOperation * operation);
-static gboolean remove_sink_pad (GnlOperation * operation, GstPad * sinkpad);
+static void synchronize_sinks (NleOperation * operation);
+static gboolean remove_sink_pad (NleOperation * operation, GstPad * sinkpad);
 
 static void
-gnl_operation_class_init (GnlOperationClass * klass)
+nle_operation_class_init (NleOperationClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBinClass *gstbin_class = (GstBinClass *) klass;
 
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  GnlObjectClass *gnlobject_class = (GnlObjectClass *) klass;
+  NleObjectClass *nleobject_class = (NleObjectClass *) klass;
 
   gst_element_class_set_static_metadata (gstelement_class, "GNonLin Operation",
       "Filter/Editor",
-      "Encapsulates filters/effects for use with GNL Objects",
+      "Encapsulates filters/effects for use with NLE Objects",
       "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>");
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gnl_operation_dispose);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (nle_operation_dispose);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gnl_operation_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gnl_operation_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (nle_operation_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (nle_operation_get_property);
 
   /**
-   * GnlOperation:sinks:
+   * NleOperation:sinks:
    *
    * Specifies the number of sink pads the operation should provide.
    * If the sinks property is -1 (the default) pads are only created as
@@ -125,47 +125,47 @@ gnl_operation_class_init (GnlOperationClass * klass)
           G_PARAM_READWRITE));
 
   /**
-   * GnlOperation:input-priority-changed:
+   * NleOperation:input-priority-changed:
    * @pad: The operation's input pad whose priority changed.
    * @priority: The new priority
    *
    * Signals that the @priority of the stream being fed to the given @pad
    * might have changed.
    */
-  gnl_operation_signals[INPUT_PRIORITY_CHANGED] =
+  nle_operation_signals[INPUT_PRIORITY_CHANGED] =
       g_signal_new ("input-priority-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GnlOperationClass,
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (NleOperationClass,
           input_priority_changed), NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, GST_TYPE_PAD, G_TYPE_UINT);
 
   gstelement_class->request_new_pad =
-      GST_DEBUG_FUNCPTR (gnl_operation_request_new_pad);
-  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gnl_operation_release_pad);
+      GST_DEBUG_FUNCPTR (nle_operation_request_new_pad);
+  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (nle_operation_release_pad);
 
-  gstbin_class->add_element = GST_DEBUG_FUNCPTR (gnl_operation_add_element);
+  gstbin_class->add_element = GST_DEBUG_FUNCPTR (nle_operation_add_element);
   gstbin_class->remove_element =
-      GST_DEBUG_FUNCPTR (gnl_operation_remove_element);
+      GST_DEBUG_FUNCPTR (nle_operation_remove_element);
 
-  gnlobject_class->prepare = GST_DEBUG_FUNCPTR (gnl_operation_prepare);
-  gnlobject_class->cleanup = GST_DEBUG_FUNCPTR (gnl_operation_cleanup);
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gnl_operation_src_template));
+  nleobject_class->prepare = GST_DEBUG_FUNCPTR (nle_operation_prepare);
+  nleobject_class->cleanup = GST_DEBUG_FUNCPTR (nle_operation_cleanup);
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gnl_operation_sink_template));
+      gst_static_pad_template_get (&nle_operation_src_template));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&nle_operation_sink_template));
 
 }
 
 static void
-gnl_operation_dispose (GObject * object)
+nle_operation_dispose (GObject * object)
 {
-  GnlOperation *oper = (GnlOperation *) object;
+  NleOperation *oper = (NleOperation *) object;
 
   GST_DEBUG_OBJECT (object, "Disposing of source pad");
 
-  gnl_object_ghost_pad_set_target (GNL_OBJECT (object),
-      GNL_OBJECT (object)->srcpad, NULL);
+  nle_object_ghost_pad_set_target (NLE_OBJECT (object),
+      NLE_OBJECT (object)->srcpad, NULL);
 
   GST_DEBUG_OBJECT (object, "Disposing of sink pad(s)");
   while (oper->sinks) {
@@ -178,7 +178,7 @@ gnl_operation_dispose (GObject * object)
 }
 
 static void
-gnl_operation_reset (GnlOperation * operation)
+nle_operation_reset (NleOperation * operation)
 {
   operation->num_sinks = 1;
   operation->realsinks = 0;
@@ -186,9 +186,9 @@ gnl_operation_reset (GnlOperation * operation)
 }
 
 static void
-gnl_operation_init (GnlOperation * operation)
+nle_operation_init (NleOperation * operation)
 {
-  gnl_operation_reset (operation);
+  nle_operation_reset (operation);
   operation->element = NULL;
 }
 
@@ -296,7 +296,7 @@ get_src_pad (GstElement * element)
  * Returns : The number of static sink pads of the controlled element.
  */
 static guint
-get_nb_static_sinks (GnlOperation * oper)
+get_nb_static_sinks (NleOperation * oper)
 {
   GstIterator *sinkpads;
   gboolean done = FALSE;
@@ -332,9 +332,9 @@ get_nb_static_sinks (GnlOperation * oper)
 }
 
 static gboolean
-gnl_operation_add_element (GstBin * bin, GstElement * element)
+nle_operation_add_element (GstBin * bin, GstElement * element)
 {
-  GnlOperation *operation = (GnlOperation *) bin;
+  NleOperation *operation = (NleOperation *) bin;
   gboolean res = FALSE;
   gboolean isdynamic;
 
@@ -360,8 +360,8 @@ gnl_operation_add_element (GstBin * bin, GstElement * element)
         operation->element = element;
         operation->dynamicsinks = isdynamic;
 
-        gnl_object_ghost_pad_set_target (GNL_OBJECT (operation),
-            GNL_OBJECT (operation)->srcpad, srcpad);
+        nle_object_ghost_pad_set_target (NLE_OBJECT (operation),
+            NLE_OBJECT (operation)->srcpad, srcpad);
 
         /* Remove the reference get_src_pad gave us */
         gst_object_unref (srcpad);
@@ -379,9 +379,9 @@ gnl_operation_add_element (GstBin * bin, GstElement * element)
 }
 
 static gboolean
-gnl_operation_remove_element (GstBin * bin, GstElement * element)
+nle_operation_remove_element (GstBin * bin, GstElement * element)
 {
-  GnlOperation *operation = (GnlOperation *) bin;
+  NleOperation *operation = (NleOperation *) bin;
   gboolean res = FALSE;
 
   if (operation->element) {
@@ -396,7 +396,7 @@ gnl_operation_remove_element (GstBin * bin, GstElement * element)
 }
 
 static void
-gnl_operation_set_sinks (GnlOperation * operation, guint sinks)
+nle_operation_set_sinks (NleOperation * operation, guint sinks)
 {
   /* FIXME : Check if sinkpad of element is on-demand .... */
 
@@ -405,14 +405,14 @@ gnl_operation_set_sinks (GnlOperation * operation, guint sinks)
 }
 
 static void
-gnl_operation_set_property (GObject * object, guint prop_id,
+nle_operation_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GnlOperation *operation = (GnlOperation *) object;
+  NleOperation *operation = (NleOperation *) object;
 
   switch (prop_id) {
     case ARG_SINKS:
-      gnl_operation_set_sinks (operation, g_value_get_int (value));
+      nle_operation_set_sinks (operation, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -421,10 +421,10 @@ gnl_operation_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gnl_operation_get_property (GObject * object, guint prop_id,
+nle_operation_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GnlOperation *operation = (GnlOperation *) object;
+  NleOperation *operation = (NleOperation *) object;
 
   switch (prop_id) {
     case ARG_SINKS:
@@ -443,7 +443,7 @@ gnl_operation_get_property (GObject * object, guint prop_id,
  * Returns NULL if there's no more unused sink pads.
  */
 static GstPad *
-get_unused_static_sink_pad (GnlOperation * operation)
+get_unused_static_sink_pad (NleOperation * operation)
 {
   GstIterator *pads;
   gboolean done = FALSE;
@@ -513,7 +513,7 @@ get_unused_static_sink_pad (GnlOperation * operation)
 }
 
 GstPad *
-get_unlinked_sink_ghost_pad (GnlOperation * operation)
+get_unlinked_sink_ghost_pad (NleOperation * operation)
 {
   GstIterator *pads;
   gboolean done = FALSE;
@@ -566,7 +566,7 @@ get_unlinked_sink_ghost_pad (GnlOperation * operation)
 }
 
 static GstPad *
-get_request_sink_pad (GnlOperation * operation)
+get_request_sink_pad (NleOperation * operation)
 {
   GstPad *pad = NULL;
   GList *templates;
@@ -597,7 +597,7 @@ get_request_sink_pad (GnlOperation * operation)
 }
 
 static GstPad *
-add_sink_pad (GnlOperation * operation)
+add_sink_pad (NleOperation * operation)
 {
   GstPad *gpad = NULL;
   GstPad *ret = NULL;
@@ -614,7 +614,7 @@ add_sink_pad (GnlOperation * operation)
     /* static sink pads */
     ret = get_unused_static_sink_pad (operation);
     if (ret) {
-      gpad = gnl_object_ghost_pad ((GnlObject *) operation, GST_PAD_NAME (ret),
+      gpad = nle_object_ghost_pad ((NleObject *) operation, GST_PAD_NAME (ret),
           ret);
       gst_object_unref (ret);
     }
@@ -624,7 +624,7 @@ add_sink_pad (GnlOperation * operation)
     /* request sink pads */
     ret = get_request_sink_pad (operation);
     if (ret) {
-      gpad = gnl_object_ghost_pad ((GnlObject *) operation, GST_PAD_NAME (ret),
+      gpad = nle_object_ghost_pad ((NleObject *) operation, GST_PAD_NAME (ret),
           ret);
       gst_object_unref (ret);
     }
@@ -643,7 +643,7 @@ add_sink_pad (GnlOperation * operation)
 }
 
 static gboolean
-remove_sink_pad (GnlOperation * operation, GstPad * sinkpad)
+remove_sink_pad (NleOperation * operation, GstPad * sinkpad)
 {
   gboolean ret = TRUE;
 
@@ -668,13 +668,13 @@ remove_sink_pad (GnlOperation * operation, GstPad * sinkpad)
 
     if (target) {
       /* release the target pad */
-      gnl_object_ghost_pad_set_target ((GnlObject *) operation, sinkpad, NULL);
+      nle_object_ghost_pad_set_target ((NleObject *) operation, sinkpad, NULL);
       if (operation->dynamicsinks)
         gst_element_release_request_pad (operation->element, target);
       gst_object_unref (target);
     }
     operation->sinks = g_list_remove (operation->sinks, sinkpad);
-    gnl_object_remove_ghost_pad ((GnlObject *) operation, sinkpad);
+    nle_object_remove_ghost_pad ((NleObject *) operation, sinkpad);
     operation->realsinks--;
   }
 
@@ -683,7 +683,7 @@ beach:
 }
 
 static void
-synchronize_sinks (GnlOperation * operation)
+synchronize_sinks (NleOperation * operation)
 {
 
   GST_DEBUG_OBJECT (operation, "num_sinks:%d , realsinks:%d, dynamicsinks:%d",
@@ -707,29 +707,29 @@ synchronize_sinks (GnlOperation * operation)
 }
 
 static gboolean
-gnl_operation_prepare (GnlObject * object)
+nle_operation_prepare (NleObject * object)
 {
   /* Prepare the pads */
-  synchronize_sinks ((GnlOperation *) object);
+  synchronize_sinks ((NleOperation *) object);
 
   return TRUE;
 }
 
 static gboolean
-gnl_operation_cleanup (GnlObject * object)
+nle_operation_cleanup (NleObject * object)
 {
-  GnlOperation *oper = (GnlOperation *) object;
+  NleOperation *oper = (NleOperation *) object;
 
   if (oper->dynamicsinks) {
     GST_DEBUG ("Resetting dynamic sinks");
-    gnl_operation_set_sinks (oper, 0);
+    nle_operation_set_sinks (oper, 0);
   }
 
   return TRUE;
 }
 
 void
-gnl_operation_hard_cleanup (GnlOperation * operation)
+nle_operation_hard_cleanup (NleOperation * operation)
 {
   gboolean done = FALSE;
 
@@ -764,15 +764,15 @@ gnl_operation_hard_cleanup (GnlOperation * operation)
         break;
     }
   }
-  gnl_object_cleanup (GNL_OBJECT (operation));
+  nle_object_cleanup (NLE_OBJECT (operation));
 }
 
 
 static GstPad *
-gnl_operation_request_new_pad (GstElement * element, GstPadTemplate * templ,
+nle_operation_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
 {
-  GnlOperation *operation = (GnlOperation *) element;
+  NleOperation *operation = (NleOperation *) element;
   GstPad *ret;
 
   GST_DEBUG ("template:%s name:%s", templ->name_template, name);
@@ -784,34 +784,34 @@ gnl_operation_request_new_pad (GstElement * element, GstPadTemplate * templ,
     return NULL;
   }
 
-  ret = add_sink_pad ((GnlOperation *) element);
+  ret = add_sink_pad ((NleOperation *) element);
 
   return ret;
 }
 
 static void
-gnl_operation_release_pad (GstElement * element, GstPad * pad)
+nle_operation_release_pad (GstElement * element, GstPad * pad)
 {
   GST_DEBUG ("pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  remove_sink_pad ((GnlOperation *) element, pad);
+  remove_sink_pad ((NleOperation *) element, pad);
 }
 
 void
-gnl_operation_signal_input_priority_changed (GnlOperation * operation,
+nle_operation_signal_input_priority_changed (NleOperation * operation,
     GstPad * pad, guint32 priority)
 {
   GST_DEBUG_OBJECT (operation, "pad:%s:%s, priority:%d",
       GST_DEBUG_PAD_NAME (pad), priority);
-  g_signal_emit (operation, gnl_operation_signals[INPUT_PRIORITY_CHANGED],
+  g_signal_emit (operation, nle_operation_signals[INPUT_PRIORITY_CHANGED],
       0, pad, priority);
 }
 
 void
-gnl_operation_update_base_time (GnlOperation * operation,
+nle_operation_update_base_time (NleOperation * operation,
     GstClockTime timestamp)
 {
-  if (!gnl_object_to_media_time (GNL_OBJECT (operation),
+  if (!nle_object_to_media_time (NLE_OBJECT (operation),
           timestamp, &operation->next_base_time)) {
     GST_WARNING_OBJECT (operation, "Trying to set a basetime outside of "
         "ourself");

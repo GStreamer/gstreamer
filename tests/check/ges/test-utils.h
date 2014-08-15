@@ -26,11 +26,11 @@
 #include <gst/check/gstcheck.h>
 
 GESPipeline * ges_test_create_pipeline (GESTimeline *timeline);
-/*  The first 2 GNL priorities are used for:
+/*  The first 2 NLE priorities are used for:
  *    0- The Mixing element
  *    1- The Gaps
  */
-#define MIN_GNL_PRIO 2
+#define MIN_NLE_PRIO 2
 
 #define LAYER_HEIGHT 1000
 
@@ -49,9 +49,9 @@ ges_generate_test_file_audio_video (const gchar * filedest,
 gboolean
 play_timeline (GESTimeline * timeline);
 
-#define gnl_object_check(gnlobj, start, duration, mstart, mduration, priority, active) { \
+#define nle_object_check(nleobj, start, duration, mstart, mduration, priority, active) { \
   guint64 pstart, pdur, inpoint, pprio, pact;			\
-  g_object_get (gnlobj, "start", &pstart, "duration", &pdur,		\
+  g_object_get (nleobj, "start", &pstart, "duration", &pdur,		\
 		"inpoint", &inpoint, "priority", &pprio, "active", &pact,			\
 		NULL);							\
   assert_equals_uint64 (pstart, start);					\
@@ -61,7 +61,7 @@ play_timeline (GESTimeline * timeline);
   assert_equals_int (pact, active);					\
   }
 
-/* copied from gnl */
+/* copied from nle */
 #define fail_error_message(msg)			\
   G_STMT_START {				\
     GError *error;				\

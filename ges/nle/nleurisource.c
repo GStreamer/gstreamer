@@ -22,30 +22,30 @@
 #include "config.h"
 #endif
 
-#include "gnl.h"
-#include "gnlurisource.h"
+#include "nle.h"
+#include "nleurisource.h"
 
 /**
- * SECTION:element-gnlurisource
+ * SECTION:element-nleurisource
  *
- * GnlURISource is a #GnlSource which reads and decodes the contents
+ * NleURISource is a #NleSource which reads and decodes the contents
  * of a given file. The data in the file is decoded using any available
  * GStreamer plugins.
  */
 
-static GstStaticPadTemplate gnl_urisource_src_template =
+static GstStaticPadTemplate nle_urisource_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (gnlurisource);
-#define GST_CAT_DEFAULT gnlurisource
+GST_DEBUG_CATEGORY_STATIC (nleurisource);
+#define GST_CAT_DEFAULT nleurisource
 
 #define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gnlurisource, "gnlurisource", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin URI Source Element");
-#define  gnl_urisource_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GnlURISource, gnl_urisource, GNL_TYPE_SOURCE,
+  GST_DEBUG_CATEGORY_INIT (nleurisource, "nleurisource", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin URI Source Element");
+#define  nle_urisource_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (NleURISource, nle_urisource, NLE_TYPE_SOURCE,
     _do_init);
 
 enum
@@ -54,51 +54,51 @@ enum
   ARG_URI,
 };
 
-static gboolean gnl_urisource_prepare (GnlObject * object);
+static gboolean nle_urisource_prepare (NleObject * object);
 
 static void
-gnl_urisource_set_property (GObject * object, guint prop_id,
+nle_urisource_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static void
-gnl_urisource_get_property (GObject * object, guint prop_id,
+nle_urisource_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void
-gnl_urisource_class_init (GnlURISourceClass * klass)
+nle_urisource_class_init (NleURISourceClass * klass)
 {
   GObjectClass *gobject_class;
-  GnlObjectClass *gnlobject_class;
+  NleObjectClass *nleobject_class;
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gnlobject_class = (GnlObjectClass *) klass;
-  parent_class = g_type_class_ref (GNL_TYPE_SOURCE);
+  nleobject_class = (NleObjectClass *) klass;
+  parent_class = g_type_class_ref (NLE_TYPE_SOURCE);
 
   gst_element_class_set_static_metadata (gstelement_class, "GNonLin URI Source",
       "Filter/Editor",
       "High-level URI Source element", "Edward Hervey <bilboed@bilboed.com>");
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gnl_urisource_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gnl_urisource_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (nle_urisource_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (nle_urisource_get_property);
 
   g_object_class_install_property (gobject_class, ARG_URI,
       g_param_spec_string ("uri", "Uri",
           "Uri of the file to use", NULL, G_PARAM_READWRITE));
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gnl_urisource_src_template));
+      gst_static_pad_template_get (&nle_urisource_src_template));
 
-  gnlobject_class->prepare = gnl_urisource_prepare;
+  nleobject_class->prepare = nle_urisource_prepare;
 }
 
 static void
-gnl_urisource_init (GnlURISource * urisource)
+nle_urisource_init (NleURISource * urisource)
 {
   GstElement *decodebin = NULL;
 
-  GST_OBJECT_FLAG_SET (urisource, GNL_OBJECT_SOURCE);
+  GST_OBJECT_FLAG_SET (urisource, NLE_OBJECT_SOURCE);
 
   /* We create a bin with source and decodebin within */
   decodebin =
@@ -109,20 +109,20 @@ gnl_urisource_init (GnlURISource * urisource)
 }
 
 static inline void
-gnl_urisource_set_uri (GnlURISource * fs, const gchar * uri)
+nle_urisource_set_uri (NleURISource * fs, const gchar * uri)
 {
-  g_object_set (GNL_SOURCE (fs)->element, "uri", uri, NULL);
+  g_object_set (NLE_SOURCE (fs)->element, "uri", uri, NULL);
 }
 
 static void
-gnl_urisource_set_property (GObject * object, guint prop_id,
+nle_urisource_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GnlURISource *fs = (GnlURISource *) object;
+  NleURISource *fs = (NleURISource *) object;
 
   switch (prop_id) {
     case ARG_URI:
-      gnl_urisource_set_uri (fs, g_value_get_string (value));
+      nle_urisource_set_uri (fs, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -131,14 +131,14 @@ gnl_urisource_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gnl_urisource_get_property (GObject * object, guint prop_id,
+nle_urisource_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GnlURISource *fs = (GnlURISource *) object;
+  NleURISource *fs = (NleURISource *) object;
 
   switch (prop_id) {
     case ARG_URI:
-      g_object_get_property ((GObject *) GNL_SOURCE (fs)->element, "uri",
+      g_object_get_property ((GObject *) NLE_SOURCE (fs)->element, "uri",
           value);
       break;
     default:
@@ -149,9 +149,9 @@ gnl_urisource_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gnl_urisource_prepare (GnlObject * object)
+nle_urisource_prepare (NleObject * object)
 {
-  GnlSource *fs = (GnlSource *) object;
+  NleSource *fs = (NleSource *) object;
 
   GST_DEBUG ("prepare");
 
@@ -162,5 +162,5 @@ gnl_urisource_prepare (GnlObject * object)
     g_object_set (fs->element, "caps", object->caps, NULL);
   }
 
-  return GNL_OBJECT_CLASS (parent_class)->prepare (object);
+  return NLE_OBJECT_CLASS (parent_class)->prepare (object);
 }

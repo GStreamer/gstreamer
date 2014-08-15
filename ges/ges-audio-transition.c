@@ -254,12 +254,12 @@ ges_audio_transition_duration_changed (GESTrackElement * track_element,
     guint64 duration)
 {
   GESAudioTransition *self;
-  GstElement *gnlobj = ges_track_element_get_gnlobject (track_element);
+  GstElement *nleobj = ges_track_element_get_nleobject (track_element);
   GstTimedValueControlSource *ta, *tb;
 
   self = GES_AUDIO_TRANSITION (track_element);
 
-  GST_INFO ("updating controller: gnlobj (%p)", gnlobj);
+  GST_INFO ("updating controller: nleobj (%p)", nleobj);
 
   if (G_UNLIKELY ((!self->priv->a_control_source ||
               !self->priv->b_control_source)))

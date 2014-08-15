@@ -267,11 +267,11 @@ _test_project (GESProject * project, GESTimeline * timeline)
                 "scratch-lines", &nb_scratch_lines, NULL);
             assert_equals_int (nb_scratch_lines, 12);
 
-            gnl_object_check (ges_track_element_get_gnlobject (trackelement),
-                0, 1000000000, 0, 1000000000, MIN_GNL_PRIO, TRUE);
+            nle_object_check (ges_track_element_get_nleobject (trackelement),
+                0, 1000000000, 0, 1000000000, MIN_NLE_PRIO, TRUE);
           } else {
-            gnl_object_check (ges_track_element_get_gnlobject (trackelement),
-                0, 1000000000, 0, 1000000000, MIN_GNL_PRIO + 1, TRUE);
+            nle_object_check (ges_track_element_get_nleobject (trackelement),
+                0, 1000000000, 0, 1000000000, MIN_NLE_PRIO + 1, TRUE);
           }
         }
         break;

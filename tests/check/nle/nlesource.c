@@ -3,7 +3,7 @@
 GST_START_TEST (test_simple_videotestsrc)
 {
   GstElement *pipeline;
-  GstElement *gnlsource, *sink;
+  GstElement *nlesource, *sink;
   CollectStructure *collect;
   GstBus *bus;
   GstMessage *message;
@@ -18,20 +18,20 @@ GST_START_TEST (test_simple_videotestsrc)
      Duration : 1s
      Priority : 1
    */
-  gnlsource =
-      videotest_gnl_src ("source1", 1 * GST_SECOND, 1 * GST_SECOND, 2, 1);
-  fail_if (gnlsource == NULL);
-  check_start_stop_duration (gnlsource, 1 * GST_SECOND, 2 * GST_SECOND,
+  nlesource =
+      videotest_nle_src ("source1", 1 * GST_SECOND, 1 * GST_SECOND, 2, 1);
+  fail_if (nlesource == NULL);
+  check_start_stop_duration (nlesource, 1 * GST_SECOND, 2 * GST_SECOND,
       1 * GST_SECOND);
 
   sink = gst_element_factory_make_or_warn ("fakesink", "sink");
   fail_if (sink == NULL);
 
-  gst_bin_add_many (GST_BIN (pipeline), gnlsource, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), nlesource, sink, NULL);
 
   /* Shared data */
   collect = g_new0 (CollectStructure, 1);
-  collect->comp = gnlsource;
+  collect->comp = nlesource;
   collect->sink = sink;
 
   /* Expected segments */
@@ -39,7 +39,7 @@ GST_START_TEST (test_simple_videotestsrc)
       segment_new (1.0, GST_FORMAT_TIME,
           1 * GST_SECOND, 2 * GST_SECOND, 1 * GST_SECOND));
 
-  gst_element_link (gnlsource, sink);
+  gst_element_link (nlesource, sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_if (sinkpad == NULL);
@@ -49,7 +49,7 @@ GST_START_TEST (test_simple_videotestsrc)
   bus = gst_element_get_bus (pipeline);
 
   GST_DEBUG ("Setting pipeline to PLAYING");
-  ASSERT_OBJECT_REFCOUNT (gnlsource, "gnlsource", 1);
+  ASSERT_OBJECT_REFCOUNT (nlesource, "nlesource", 1);
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -104,7 +104,7 @@ GST_END_TEST;
 GST_START_TEST (test_videotestsrc_in_bin)
 {
   GstElement *pipeline;
-  GstElement *gnlsource, *sink;
+  GstElement *nlesource, *sink;
   CollectStructure *collect;
   GstBus *bus;
   GstMessage *message;
@@ -119,26 +119,26 @@ GST_START_TEST (test_videotestsrc_in_bin)
      Duration : 1s
      Priority : 1
    */
-  gnlsource = videotest_in_bin_gnl_src ("source1", 0, 1 * GST_SECOND, 2, 1);
+  nlesource = videotest_in_bin_nle_src ("source1", 0, 1 * GST_SECOND, 2, 1);
   /* Handle systems which don't have alpha available */
-  if (gnlsource == NULL)
+  if (nlesource == NULL)
     return;
 
   sink = gst_element_factory_make_or_warn ("fakesink", "sink");
   fail_if (sink == NULL);
 
-  gst_bin_add_many (GST_BIN (pipeline), gnlsource, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), nlesource, sink, NULL);
 
   /* Shared data */
   collect = g_new0 (CollectStructure, 1);
-  collect->comp = gnlsource;
+  collect->comp = nlesource;
   collect->sink = sink;
 
   /* Expected segments */
   collect->expected_segments = g_list_append (collect->expected_segments,
       segment_new (1.0, GST_FORMAT_TIME, 0, 1 * GST_SECOND, 0));
 
-  gst_element_link (gnlsource, sink);
+  gst_element_link (nlesource, sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_if (sinkpad == NULL);
@@ -148,7 +148,7 @@ GST_START_TEST (test_videotestsrc_in_bin)
   bus = gst_element_get_bus (pipeline);
 
   GST_DEBUG ("Setting pipeline to PLAYING");
-  ASSERT_OBJECT_REFCOUNT (gnlsource, "gnlsource", 1);
+  ASSERT_OBJECT_REFCOUNT (nlesource, "nlesource", 1);
 
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -203,9 +203,10 @@ GST_END_TEST;
 static Suite *
 gnonlin_suite (void)
 {
-  Suite *s = suite_create ("gnlsource");
-  TCase *tc_chain = tcase_create ("gnlsource");
+  Suite *s = suite_create ("nlesource");
+  TCase *tc_chain = tcase_create ("nlesource");
 
+  ges_init ();
   suite_add_tcase (s, tc_chain);
 
   if (0)

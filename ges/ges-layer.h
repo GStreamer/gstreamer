@@ -57,7 +57,7 @@ struct _GESLayer {
   GESTimeline *timeline;
 
   /*< protected >*/
-  guint32 min_gnl_priority, max_gnl_priority;
+  guint32 min_nle_priority, max_nle_priority;
 
   GESLayerPrivate *priv;
 

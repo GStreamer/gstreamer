@@ -84,8 +84,8 @@ GST_START_TEST (test_test_source_properties)
 
   fail_unless (ges_timeline_commit (timeline));
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
-      51, MIN_GNL_PRIO, TRUE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 51, 12,
+      51, MIN_NLE_PRIO, TRUE);
 
   /* Change more properties, see if they propagate */
   g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
@@ -99,18 +99,18 @@ GST_START_TEST (test_test_source_properties)
 
   fail_unless (ges_timeline_commit (timeline));
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
-      120, 510, MIN_GNL_PRIO + 0, TRUE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
+      120, 510, MIN_NLE_PRIO + 0, TRUE);
 
   /* Test mute support */
   g_object_set (clip, "mute", TRUE, NULL);
   fail_unless (ges_timeline_commit (timeline));
-  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
-      120, 510, MIN_GNL_PRIO + 0, FALSE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
+      120, 510, MIN_NLE_PRIO + 0, FALSE);
   g_object_set (clip, "mute", FALSE, NULL);
   fail_unless (ges_timeline_commit (timeline));
-  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
-      120, 510, MIN_GNL_PRIO + 0, TRUE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
+      120, 510, MIN_NLE_PRIO + 0, TRUE);
 
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
@@ -213,7 +213,7 @@ find_composition_func (const GValue * velement)
   GstElementFactory *fac = gst_element_get_factory (element);
   const gchar *name = gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (fac));
 
-  if (g_strcmp0 (name, "gnlcomposition") == 0)
+  if (g_strcmp0 (name, "nlecomposition") == 0)
     return 0;
 
   return 1;
@@ -236,10 +236,10 @@ find_composition (GESTrack * track)
   return ret;
 }
 
-#define gap_object_check(gnlobj, start, duration, priority)  \
+#define gap_object_check(nleobj, start, duration, priority)  \
 {                                                            \
   guint64 pstart, pdur, pprio;                               \
-  g_object_get (gnlobj, "start", &pstart, "duration", &pdur, \
+  g_object_get (nleobj, "start", &pstart, "duration", &pdur, \
     "priority", &pprio, NULL);                               \
   assert_equals_uint64 (pstart, start);                      \
   assert_equals_uint64 (pdur, duration);                     \
@@ -255,7 +255,7 @@ GST_START_TEST (test_gap_filling_basic)
   GESLayer *layer;
   GESClip *clip, *clip1, *clip2;
 
-  GstElement *gnlsrc, *gnlsrc1, *gap = NULL;
+  GstElement *nlesrc, *nlesrc1, *gap = NULL;
   GESTrackElement *trackelement, *trackelement1, *trackelement2;
 
   ges_init ();
@@ -288,8 +288,8 @@ GST_START_TEST (test_gap_filling_basic)
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_get_track (trackelement) == track);
 
-  gnlsrc = ges_track_element_get_gnlobject (trackelement);
-  fail_unless (gnlsrc != NULL);
+  nlesrc = ges_track_element_get_nleobject (trackelement);
+  fail_unless (nlesrc != NULL);
 
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 0);
@@ -312,8 +312,8 @@ GST_START_TEST (test_gap_filling_basic)
   trackelement1 = GES_CONTAINER_CHILDREN (clip1)->data;
   fail_unless (trackelement1 != NULL);
   fail_unless (ges_track_element_get_track (trackelement1) == track);
-  gnlsrc1 = ges_track_element_get_gnlobject (trackelement1);
-  fail_unless (gnlsrc1 != NULL);
+  nlesrc1 = ges_track_element_get_nleobject (trackelement1);
+  fail_unless (nlesrc1 != NULL);
 
   /* Check that trackelement1 has the same properties */
   assert_equals_uint64 (_START (trackelement1), 15);
@@ -324,11 +324,11 @@ GST_START_TEST (test_gap_filling_basic)
 
   for (tmp = GST_BIN_CHILDREN (composition); tmp; tmp = tmp->next) {
     guint prio;
-    GstElement *tmp_gnlobj = GST_ELEMENT (tmp->data);
+    GstElement *tmp_nleobj = GST_ELEMENT (tmp->data);
 
-    g_object_get (tmp_gnlobj, "priority", &prio, NULL);
-    if (tmp_gnlobj != gnlsrc && tmp_gnlobj != gnlsrc1 && prio == 1) {
-      gap = tmp_gnlobj;
+    g_object_get (tmp_nleobj, "priority", &prio, NULL);
+    if (tmp_nleobj != nlesrc && tmp_nleobj != nlesrc1 && prio == 1) {
+      gap = tmp_nleobj;
     }
   }
   fail_unless (gap != NULL);

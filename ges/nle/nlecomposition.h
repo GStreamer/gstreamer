@@ -2,7 +2,7 @@
  * Copyright (C) 2001 Wim Taymans <wim.taymans@gmail.com>
  *               2004-2008 Edward Hervey <bilboed@bilboed.com>
  *
- * gnlcomposition.h: Header for base GnlComposition
+ * nlecomposition.h: Header for base NleComposition
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,46 +21,46 @@
  */
 
 
-#ifndef __GNL_COMPOSITION_H__
-#define __GNL_COMPOSITION_H__
+#ifndef __NLE_COMPOSITION_H__
+#define __NLE_COMPOSITION_H__
 
 #include <gst/gst.h>
-#include "gnlobject.h"
+#include "nleobject.h"
 
 G_BEGIN_DECLS
-#define GNL_TYPE_COMPOSITION \
-  (gnl_composition_get_type())
-#define GNL_COMPOSITION(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GNL_TYPE_COMPOSITION,GnlComposition))
-#define GNL_COMPOSITION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GNL_TYPE_COMPOSITION,GnlCompositionClass))
-#define GNL_COMPOSITION_GET_CLASS(obj) \
-  (GNL_COMPOSITION_CLASS (G_OBJECT_GET_CLASS (obj)))
-#define GNL_IS_COMPOSITION(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GNL_TYPE_COMPOSITION))
-#define GNL_IS_COMPOSITION_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GNL_TYPE_COMPOSITION))
+#define NLE_TYPE_COMPOSITION \
+  (nle_composition_get_type())
+#define NLE_COMPOSITION(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),NLE_TYPE_COMPOSITION,NleComposition))
+#define NLE_COMPOSITION_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),NLE_TYPE_COMPOSITION,NleCompositionClass))
+#define NLE_COMPOSITION_GET_CLASS(obj) \
+  (NLE_COMPOSITION_CLASS (G_OBJECT_GET_CLASS (obj)))
+#define NLE_IS_COMPOSITION(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),NLE_TYPE_COMPOSITION))
+#define NLE_IS_COMPOSITION_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),NLE_TYPE_COMPOSITION))
 
-typedef struct _GnlCompositionPrivate GnlCompositionPrivate;
+typedef struct _NleCompositionPrivate NleCompositionPrivate;
 
-struct _GnlComposition
+struct _NleComposition
 {
-  GnlObject parent;
+  NleObject parent;
 
   GstTask               * task;
   GRecMutex		            task_rec_lock;
 
   /*< private >*/
-  GnlCompositionPrivate * priv;
+  NleCompositionPrivate * priv;
 
 };
 
-struct _GnlCompositionClass
+struct _NleCompositionClass
 {
-  GnlObjectClass parent_class;
+  NleObjectClass parent_class;
 };
 
-GType gnl_composition_get_type (void);
+GType nle_composition_get_type (void);
 
 G_END_DECLS
-#endif /* __GNL_COMPOSITION_H__ */
+#endif /* __NLE_COMPOSITION_H__ */

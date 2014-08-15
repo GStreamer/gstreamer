@@ -21,6 +21,7 @@
 #include <ges/ges.h>
 #include "ges/gstframepositionner.h"
 #include "ges-internal.h"
+#include "ges/nle/nle.h"
 
 #define GES_GNONLIN_VERSION_NEEDED_MAJOR 1
 #define GES_GNONLIN_VERSION_NEEDED_MINOR 2
@@ -30,25 +31,19 @@ GST_DEBUG_CATEGORY (_ges_debug);
 
 static gboolean ges_initialized = FALSE;
 
-/**
- * SECTION:ges-common
- * @short_description: Initialization.
- */
-
-static gboolean
-ges_check_gnonlin_availability (void)
+struct _elements_entry
 {
-  gboolean ret = TRUE;
-  if (!gst_registry_check_feature_version (gst_registry_get (),
-          "gnlcomposition", GES_GNONLIN_VERSION_NEEDED_MAJOR,
-          GES_GNONLIN_VERSION_NEEDED_MINOR, GES_GNONLIN_VERSION_NEEDED_MICRO)) {
-    GST_ERROR ("GNonLin plugins not found, or not at least version %u.%u.%u",
-        GES_GNONLIN_VERSION_NEEDED_MAJOR, GES_GNONLIN_VERSION_NEEDED_MINOR,
-        GES_GNONLIN_VERSION_NEEDED_MICRO);
-    ret = FALSE;
-  }
-  return ret;
-}
+  const gchar *name;
+    GType (*type) (void);
+};
+
+static struct _elements_entry _elements[] = {
+  {"nlesource", nle_source_get_type},
+  {"nlecomposition", nle_composition_get_type},
+  {"nleoperation", nle_operation_get_type},
+  {"nleurisource", nle_urisource_get_type},
+  {NULL, 0}
+};
 
 /**
  * ges_init:
@@ -61,6 +56,8 @@ ges_check_gnonlin_availability (void)
 gboolean
 ges_init (void)
 {
+  gint i = 0;
+
   /* initialize debugging category */
   GST_DEBUG_CATEGORY_INIT (_ges_debug, "ges", GST_DEBUG_FG_YELLOW,
       "GStreamer Editing Services");
@@ -92,13 +89,16 @@ ges_init (void)
 
   ges_asset_cache_init ();
 
-  /* check the gnonlin elements are available */
-  if (!ges_check_gnonlin_availability ())
-    return FALSE;
-
   gst_element_register (NULL, "framepositionner", 0,
       GST_TYPE_FRAME_POSITIONNER);
   gst_element_register (NULL, "gespipeline", 0, GES_TYPE_PIPELINE);
+
+  for (; _elements[i].name; i++)
+    if (!(gst_element_register (NULL,
+                _elements[i].name, GST_RANK_NONE, (_elements[i].type) ())))
+      return FALSE;
+
+  nle_init_ghostpad_category ();
 
   /* TODO: user-defined types? */
   ges_initialized = TRUE;

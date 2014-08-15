@@ -42,7 +42,7 @@ ges_operation_class_init (GESOperationClass * klass)
 
   g_type_class_add_private (klass, sizeof (GESOperationPrivate));
 
-  track_class->gnlobject_factorytype = "gnloperation";
+  track_class->nleobject_factorytype = "nleoperation";
 }
 
 static void

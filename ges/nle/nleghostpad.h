@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2009 Edward Hervey <bilboed@bilboed.com>
  *
- * gnlghostpad.h: Header for helper ghostpad
+ * nleghostpad.h: Header for helper ghostpad
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,29 +20,29 @@
  */
 
 
-#ifndef __GNL_GHOSTPAD_H__
-#define __GNL_GHOSTPAD_H__
+#ifndef __NLE_GHOSTPAD_H__
+#define __NLE_GHOSTPAD_H__
 
 #include <gst/gst.h>
 
-#include "gnltypes.h"
+#include "nletypes.h"
 
 G_BEGIN_DECLS
 
-GstPad *gnl_object_ghost_pad (GnlObject * object,
+GstPad *nle_object_ghost_pad (NleObject * object,
     const gchar * name, GstPad * target);
 
-GstPad *gnl_object_ghost_pad_no_target (GnlObject * object,
+GstPad *nle_object_ghost_pad_no_target (NleObject * object,
     const gchar * name, GstPadDirection dir, GstPadTemplate *templ);
 
-gboolean gnl_object_ghost_pad_set_target (GnlObject * object,
+gboolean nle_object_ghost_pad_set_target (NleObject * object,
     GstPad * ghost, GstPad * target);
 
-void gnl_object_remove_ghost_pad (GnlObject * object, GstPad * ghost);
-GstEvent * gnl_object_translate_incoming_seek (GnlObject * object, GstEvent * event);
+void nle_object_remove_ghost_pad (NleObject * object, GstPad * ghost);
+GstEvent * nle_object_translate_incoming_seek (NleObject * object, GstEvent * event);
 
-void gnl_init_ghostpad_category (void);
+void nle_init_ghostpad_category (void);
 
 G_END_DECLS
 
-#endif /* __GNL_GHOSTPAD_H__ */
+#endif /* __NLE_GHOSTPAD_H__ */

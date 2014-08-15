@@ -12,7 +12,7 @@ ges_timeline_layer_add_object(layer, tlobj)
         trobj = GESTimelineObject::create_track_objects
         ges_track_add_object(TRACK, trobj)
           ges_track_object_set_track(troj, TRACK)
-            gnlobj = GESTrackObject::create_gnl_object
-            ges_timeline_object_fill_track_object(tlobj, trobj, gnlobj)
+            nleobj = GESTrackObject::create_nle_object
+            ges_timeline_object_fill_track_object(tlobj, trobj, nleobj)
               GESTimelineObject::fill_track_object
 

@@ -161,3 +161,15 @@ ges_get_compositor_factory (void)
 
   return compositor_factory;
 }
+
+gboolean
+nle_composition_add_object (GstElement * comp, GstElement * object)
+{
+  return gst_bin_add (GST_BIN (comp), object);
+}
+
+gboolean
+nle_composition_remove_object (GstElement * comp, GstElement * object)
+{
+  return gst_bin_remove (GST_BIN (comp), object);
+}

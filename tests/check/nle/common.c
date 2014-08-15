@@ -167,25 +167,25 @@ sinkpad_probe (GstPad * sinkpad, GstPadProbeInfo * info,
 }
 
 static GstElement *
-new_gnl_src (const gchar * name, guint64 start, gint64 duration, gint priority)
+new_nle_src (const gchar * name, guint64 start, gint64 duration, gint priority)
 {
-  GstElement *gnlsource = NULL;
+  GstElement *nlesource = NULL;
 
-  gnlsource = gst_element_factory_make_or_warn ("gnlsource", name);
-  fail_if (gnlsource == NULL);
+  nlesource = gst_element_factory_make_or_warn ("nlesource", name);
+  fail_if (nlesource == NULL);
 
-  g_object_set (G_OBJECT (gnlsource),
+  g_object_set (G_OBJECT (nlesource),
       "start", start,
       "duration", duration, "inpoint", start, "priority", priority, NULL);
 
-  return gnlsource;
+  return nlesource;
 }
 
 GstElement *
-videotest_gnl_src (const gchar * name, guint64 start, gint64 duration,
+videotest_nle_src (const gchar * name, guint64 start, gint64 duration,
     gint pattern, guint priority)
 {
-  GstElement *gnlsource = NULL;
+  GstElement *nlesource = NULL;
   GstElement *videotestsrc = NULL;
   GstCaps *caps =
       gst_caps_from_string
@@ -196,35 +196,35 @@ videotest_gnl_src (const gchar * name, guint64 start, gint64 duration,
   videotestsrc = gst_element_factory_make_or_warn ("videotestsrc", NULL);
   g_object_set (G_OBJECT (videotestsrc), "pattern", pattern, NULL);
 
-  gnlsource = new_gnl_src (name, start, duration, priority);
-  g_object_set (G_OBJECT (gnlsource), "caps", caps, NULL);
+  nlesource = new_nle_src (name, start, duration, priority);
+  g_object_set (G_OBJECT (nlesource), "caps", caps, NULL);
   gst_caps_unref (caps);
 
-  gst_bin_add (GST_BIN (gnlsource), videotestsrc);
+  gst_bin_add (GST_BIN (nlesource), videotestsrc);
 
-  return gnlsource;
+  return nlesource;
 }
 
 GstElement *
-videotest_gnl_src_full (const gchar * name, guint64 start, gint64 duration,
+videotest_nle_src_full (const gchar * name, guint64 start, gint64 duration,
     guint64 inpoint, gint pattern, guint priority)
 {
-  GstElement *gnls;
+  GstElement *nles;
 
-  gnls = videotest_gnl_src (name, start, duration, pattern, priority);
-  if (gnls) {
-    g_object_set (G_OBJECT (gnls), "inpoint", inpoint, NULL);
+  nles = videotest_nle_src (name, start, duration, pattern, priority);
+  if (nles) {
+    g_object_set (G_OBJECT (nles), "inpoint", inpoint, NULL);
   }
 
 
-  return gnls;
+  return nles;
 }
 
 GstElement *
-videotest_in_bin_gnl_src (const gchar * name, guint64 start, gint64 duration,
+videotest_in_bin_nle_src (const gchar * name, guint64 start, gint64 duration,
     gint pattern, guint priority)
 {
-  GstElement *gnlsource = NULL;
+  GstElement *nlesource = NULL;
   GstElement *videotestsrc = NULL;
   GstElement *bin = NULL;
   GstElement *alpha = NULL;
@@ -238,7 +238,7 @@ videotest_in_bin_gnl_src (const gchar * name, guint64 start, gint64 duration,
   g_object_set (G_OBJECT (videotestsrc), "pattern", pattern, NULL);
   bin = gst_bin_new (NULL);
 
-  gnlsource = new_gnl_src (name, start, duration, priority);
+  nlesource = new_nle_src (name, start, duration, priority);
 
   gst_bin_add (GST_BIN (bin), videotestsrc);
   gst_bin_add (GST_BIN (bin), alpha);
@@ -246,7 +246,7 @@ videotest_in_bin_gnl_src (const gchar * name, guint64 start, gint64 duration,
   gst_element_link_pads_full (videotestsrc, "src", alpha, "sink",
       GST_PAD_LINK_CHECK_NOTHING);
 
-  gst_bin_add (GST_BIN (gnlsource), bin);
+  gst_bin_add (GST_BIN (nlesource), bin);
 
   srcpad = gst_element_get_static_pad (alpha, "src");
 
@@ -254,7 +254,7 @@ videotest_in_bin_gnl_src (const gchar * name, guint64 start, gint64 duration,
 
   gst_object_unref (srcpad);
 
-  return gnlsource;
+  return nlesource;
 }
 
 GstElement *
@@ -272,7 +272,7 @@ audiotest_bin_src (const gchar * name, guint64 start,
   audiotestsrc = gst_element_factory_make_or_warn ("audiotestsrc", NULL);
   identity = gst_element_factory_make_or_warn ("identity", NULL);
   bin = gst_bin_new (NULL);
-  source = new_gnl_src (name, start, duration, priority);
+  source = new_nle_src (name, start, duration, priority);
   audioconvert = gst_element_factory_make_or_warn ("audioconvert", NULL);
 
   if (intaudio)
@@ -302,18 +302,18 @@ GstElement *
 new_operation (const gchar * name, const gchar * factory, guint64 start,
     gint64 duration, guint priority)
 {
-  GstElement *gnloperation = NULL;
+  GstElement *nleoperation = NULL;
   GstElement *operation = NULL;
 
   operation = gst_element_factory_make_or_warn (factory, NULL);
-  gnloperation = gst_element_factory_make_or_warn ("gnloperation", name);
+  nleoperation = gst_element_factory_make_or_warn ("nleoperation", name);
 
-  g_object_set (G_OBJECT (gnloperation),
+  g_object_set (G_OBJECT (nleoperation),
       "start", start, "duration", duration, "priority", priority, NULL);
 
-  gst_bin_add (GST_BIN (gnloperation), operation);
+  gst_bin_add (GST_BIN (nleoperation), operation);
 
-  return gnloperation;
+  return nleoperation;
 }
 
 
@@ -376,7 +376,7 @@ commit_and_wait (GstElement * comp, gboolean * ret)
 }
 
 gboolean
-gnl_composition_remove (GstBin * comp, GstElement * object)
+nle_composition_remove (GstBin * comp, GstElement * object)
 {
   gboolean ret;
 
@@ -390,7 +390,7 @@ gnl_composition_remove (GstBin * comp, GstElement * object)
 }
 
 gboolean
-gnl_composition_add (GstBin * comp, GstElement * object)
+nle_composition_add (GstBin * comp, GstElement * object)
 {
   return gst_bin_add (comp, object);
 }

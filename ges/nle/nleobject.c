@@ -23,15 +23,15 @@
 #endif
 
 #include <string.h>
-#include "gnl.h"
+#include "nle.h"
 
 /**
- * SECTION:gnlobject
+ * SECTION:nleobject
  * @short_description: Base class for GNonLin elements
  *
  * <refsect2>
  * <para>
- * GnlObject encapsulates default behaviour and implements standard
+ * NleObject encapsulates default behaviour and implements standard
  * properties provided by all the GNonLin elements.
  * </para>
  * </refsect2>
@@ -39,8 +39,8 @@
  */
 
 
-GST_DEBUG_CATEGORY_STATIC (gnlobject_debug);
-#define GST_CAT_DEFAULT gnlobject_debug
+GST_DEBUG_CATEGORY_STATIC (nleobject_debug);
+#define GST_CAT_DEFAULT nleobject_debug
 
 static GObjectClass *parent_class = NULL;
 
@@ -58,11 +58,11 @@ if (object->pending_##property != object->property)      {            \
 }
 
 #define SET_PENDING_VALUE(property, property_str, type, print_format)      \
-gnlobject->pending_##property = g_value_get_##type (value);                \
-if (gnlobject->property != gnlobject->pending_##property) {                \
+nleobject->pending_##property = g_value_get_##type (value);                \
+if (nleobject->property != nleobject->pending_##property) {                \
   GST_DEBUG_OBJECT(object, "Setting pending " property_str " to %"         \
-      print_format, gnlobject->pending_##property);                        \
-  gnl_object_set_commit_needed (gnlobject);                                \
+      print_format, nleobject->pending_##property);                        \
+  nle_object_set_commit_needed (nleobject);                                \
 } else                                                                     \
   GST_DEBUG_OBJECT(object, "Pending " property_str " did not change");
 
@@ -82,50 +82,50 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
-static void gnl_object_dispose (GObject * object);
+static void nle_object_dispose (GObject * object);
 
-static void gnl_object_set_property (GObject * object, guint prop_id,
+static void nle_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gnl_object_get_property (GObject * object, guint prop_id,
+static void nle_object_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gnl_object_change_state (GstElement * element,
+static GstStateChangeReturn nle_object_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gnl_object_prepare_func (GnlObject * object);
-static gboolean gnl_object_cleanup_func (GnlObject * object);
-static gboolean gnl_object_commit_func (GnlObject * object, gboolean recurse);
+static gboolean nle_object_prepare_func (NleObject * object);
+static gboolean nle_object_cleanup_func (NleObject * object);
+static gboolean nle_object_commit_func (NleObject * object, gboolean recurse);
 
-static GstStateChangeReturn gnl_object_prepare (GnlObject * object);
+static GstStateChangeReturn nle_object_prepare (NleObject * object);
 
 static void
-gnl_object_class_init (GnlObjectClass * klass)
+nle_object_class_init (NleObjectClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GnlObjectClass *gnlobject_class;
+  NleObjectClass *nleobject_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gnlobject_class = (GnlObjectClass *) klass;
-  GST_DEBUG_CATEGORY_INIT (gnlobject_debug, "gnlobject",
+  nleobject_class = (NleObjectClass *) klass;
+  GST_DEBUG_CATEGORY_INIT (nleobject_debug, "nleobject",
       GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin object");
   parent_class = g_type_class_ref (GST_TYPE_BIN);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gnl_object_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gnl_object_get_property);
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gnl_object_dispose);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (nle_object_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (nle_object_get_property);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (nle_object_dispose);
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gnl_object_change_state);
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (nle_object_change_state);
 
-  gnlobject_class->prepare = GST_DEBUG_FUNCPTR (gnl_object_prepare_func);
-  gnlobject_class->cleanup = GST_DEBUG_FUNCPTR (gnl_object_cleanup_func);
-  gnlobject_class->commit_signal_handler =
-      GST_DEBUG_FUNCPTR (gnl_object_commit);
-  gnlobject_class->commit = GST_DEBUG_FUNCPTR (gnl_object_commit_func);
+  nleobject_class->prepare = GST_DEBUG_FUNCPTR (nle_object_prepare_func);
+  nleobject_class->cleanup = GST_DEBUG_FUNCPTR (nle_object_cleanup_func);
+  nleobject_class->commit_signal_handler =
+      GST_DEBUG_FUNCPTR (nle_object_commit);
+  nleobject_class->commit = GST_DEBUG_FUNCPTR (nle_object_commit_func);
 
   /**
-   * GnlObject:start
+   * NleObject:start
    *
    * The start position relative to the parent in nanoseconds.
    */
@@ -136,7 +136,7 @@ gnl_object_class_init (GnlObjectClass * klass)
       properties[PROP_START]);
 
   /**
-   * GnlObject:duration
+   * NleObject:duration
    *
    * The outgoing duration in nanoseconds.
    */
@@ -147,7 +147,7 @@ gnl_object_class_init (GnlObjectClass * klass)
       properties[PROP_DURATION]);
 
   /**
-   * GnlObject:stop
+   * NleObject:stop
    *
    * The stop position relative to the parent in nanoseconds.
    *
@@ -160,7 +160,7 @@ gnl_object_class_init (GnlObjectClass * klass)
       properties[PROP_STOP]);
 
   /**
-   * GnlObject:inpoint
+   * NleObject:inpoint
    *
    * The media start position in nanoseconds.
    *
@@ -175,7 +175,7 @@ gnl_object_class_init (GnlObjectClass * klass)
       properties[PROP_INPOINT]);
 
   /**
-   * GnlObject:priority
+   * NleObject:priority
    *
    * The priority of the object in the container.
    *
@@ -185,7 +185,7 @@ gnl_object_class_init (GnlObjectClass * klass)
    * The lowest priority is G_MAXUINT32.
    *
    * Objects whose priority is (-1) will be considered as 'default' objects
-   * in GnlComposition and their start/stop values will be modified as to
+   * in NleComposition and their start/stop values will be modified as to
    * fit the whole duration of the composition.
    */
   properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
@@ -195,19 +195,19 @@ gnl_object_class_init (GnlObjectClass * klass)
       properties[PROP_PRIORITY]);
 
   /**
-   * GnlObject:active
+   * NleObject:active
    *
    * Indicates whether this object should be used by its container.
    *
-   * Set to #TRUE to temporarily disable this object in a #GnlComposition.
+   * Set to #TRUE to temporarily disable this object in a #NleComposition.
    */
   properties[PROP_ACTIVE] = g_param_spec_boolean ("active", "Active",
-      "Use this object in the GnlComposition", TRUE, G_PARAM_READWRITE);
+      "Use this object in the NleComposition", TRUE, G_PARAM_READWRITE);
   g_object_class_install_property (gobject_class, PROP_ACTIVE,
       properties[PROP_ACTIVE]);
 
   /**
-   * GnlObject:caps
+   * NleObject:caps
    *
    * Caps used to filter/choose the output stream.
    *
@@ -223,10 +223,10 @@ gnl_object_class_init (GnlObjectClass * klass)
       properties[PROP_CAPS]);
 
   /**
-   * GnlObject:expandable
+   * NleObject:expandable
    *
    * Indicates whether this object should expand to the full duration of its
-   * container #GnlComposition.
+   * container #NleComposition.
    */
   properties[PROP_EXPANDABLE] =
       g_param_spec_boolean ("expandable", "Expandable",
@@ -237,7 +237,7 @@ gnl_object_class_init (GnlObjectClass * klass)
 }
 
 static void
-gnl_object_init (GnlObject * object, GnlObjectClass * klass)
+nle_object_init (NleObject * object, NleObjectClass * klass)
 {
   object->start = object->pending_start = 0;
   object->duration = object->pending_duration = 0;
@@ -253,7 +253,7 @@ gnl_object_init (GnlObject * object, GnlObjectClass * klass)
   object->segment_start = -1;
   object->segment_stop = -1;
 
-  object->srcpad = gnl_object_ghost_pad_no_target (object,
+  object->srcpad = nle_object_ghost_pad_no_target (object,
       "src", GST_PAD_SRC,
       gst_element_class_get_pad_template ((GstElementClass *) klass, "src"));
 
@@ -261,21 +261,21 @@ gnl_object_init (GnlObject * object, GnlObjectClass * klass)
 }
 
 static void
-gnl_object_dispose (GObject * object)
+nle_object_dispose (GObject * object)
 {
-  GnlObject *gnl = (GnlObject *) object;
+  NleObject *nle = (NleObject *) object;
 
-  if (gnl->caps) {
-    gst_caps_unref (gnl->caps);
-    gnl->caps = NULL;
+  if (nle->caps) {
+    gst_caps_unref (nle->caps);
+    nle->caps = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /**
- * gnl_object_to_media_time:
- * @object: a #GnlObject
+ * nle_object_to_media_time:
+ * @object: a #NleObject
  * @objecttime: The #GstClockTime we want to convert
  * @mediatime: A pointer on a #GstClockTime to fill
  *
@@ -285,7 +285,7 @@ gnl_object_dispose (GObject * object)
  * FALSE otherwise
  */
 gboolean
-gnl_object_to_media_time (GnlObject * object, GstClockTime otime,
+nle_object_to_media_time (NleObject * object, GstClockTime otime,
     GstClockTime * mtime)
 {
   g_return_val_if_fail (mtime, FALSE);
@@ -328,8 +328,8 @@ gnl_object_to_media_time (GnlObject * object, GstClockTime otime,
 }
 
 /**
- * gnl_media_to_object_time:
- * @object: The #GnlObject
+ * nle_media_to_object_time:
+ * @object: The #NleObject
  * @mediatime: The #GstClockTime we want to convert
  * @objecttime: A pointer on a #GstClockTime to fill
  *
@@ -340,7 +340,7 @@ gnl_object_to_media_time (GnlObject * object, GstClockTime otime,
  */
 
 gboolean
-gnl_media_to_object_time (GnlObject * object, GstClockTime mtime,
+nle_media_to_object_time (NleObject * object, GstClockTime mtime,
     GstClockTime * otime)
 {
   g_return_val_if_fail (otime, FALSE);
@@ -373,7 +373,7 @@ gnl_media_to_object_time (GnlObject * object, GstClockTime mtime,
 }
 
 static gboolean
-gnl_object_prepare_func (GnlObject * object)
+nle_object_prepare_func (NleObject * object)
 {
   GST_DEBUG_OBJECT (object, "default prepare function, returning TRUE");
 
@@ -381,13 +381,13 @@ gnl_object_prepare_func (GnlObject * object)
 }
 
 static GstStateChangeReturn
-gnl_object_prepare (GnlObject * object)
+nle_object_prepare (NleObject * object)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   GST_DEBUG_OBJECT (object, "preparing");
 
-  if (!(GNL_OBJECT_GET_CLASS (object)->prepare (object)))
+  if (!(NLE_OBJECT_GET_CLASS (object)->prepare (object)))
     ret = GST_STATE_CHANGE_FAILURE;
 
   GST_DEBUG_OBJECT (object, "finished preparing, returning %d", ret);
@@ -396,7 +396,7 @@ gnl_object_prepare (GnlObject * object)
 }
 
 static gboolean
-gnl_object_cleanup_func (GnlObject * object)
+nle_object_cleanup_func (NleObject * object)
 {
   GST_DEBUG_OBJECT (object, "default cleanup function, returning TRUE");
 
@@ -404,13 +404,13 @@ gnl_object_cleanup_func (GnlObject * object)
 }
 
 GstStateChangeReturn
-gnl_object_cleanup (GnlObject * object)
+nle_object_cleanup (NleObject * object)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   GST_DEBUG_OBJECT (object, "cleaning-up");
 
-  if (!(GNL_OBJECT_GET_CLASS (object)->cleanup (object)))
+  if (!(NLE_OBJECT_GET_CLASS (object)->cleanup (object)))
     ret = GST_STATE_CHANGE_FAILURE;
 
   GST_DEBUG_OBJECT (object, "finished preparing, returning %d", ret);
@@ -419,7 +419,7 @@ gnl_object_cleanup (GnlObject * object)
 }
 
 void
-gnl_object_set_caps (GnlObject * object, const GstCaps * caps)
+nle_object_set_caps (NleObject * object, const GstCaps * caps)
 {
   if (object->caps)
     gst_caps_unref (object->caps);
@@ -428,25 +428,25 @@ gnl_object_set_caps (GnlObject * object, const GstCaps * caps)
 }
 
 static inline void
-_update_stop (GnlObject * gnlobject)
+_update_stop (NleObject * nleobject)
 {
   /* check if start/duration has changed */
 
-  if ((gnlobject->pending_start + gnlobject->pending_duration) !=
-      gnlobject->stop) {
-    gnlobject->stop = gnlobject->pending_start + gnlobject->pending_duration;
+  if ((nleobject->pending_start + nleobject->pending_duration) !=
+      nleobject->stop) {
+    nleobject->stop = nleobject->pending_start + nleobject->pending_duration;
 
-    GST_LOG_OBJECT (gnlobject,
+    GST_LOG_OBJECT (nleobject,
         "Updating stop value : %" GST_TIME_FORMAT " [start:%" GST_TIME_FORMAT
-        ", duration:%" GST_TIME_FORMAT "]", GST_TIME_ARGS (gnlobject->stop),
-        GST_TIME_ARGS (gnlobject->pending_start),
-        GST_TIME_ARGS (gnlobject->pending_duration));
-    g_object_notify_by_pspec (G_OBJECT (gnlobject), properties[PROP_STOP]);
+        ", duration:%" GST_TIME_FORMAT "]", GST_TIME_ARGS (nleobject->stop),
+        GST_TIME_ARGS (nleobject->pending_start),
+        GST_TIME_ARGS (nleobject->pending_duration));
+    g_object_notify_by_pspec (G_OBJECT (nleobject), properties[PROP_STOP]);
   }
 }
 
 static void
-update_values (GnlObject * object)
+update_values (NleObject * object)
 {
   CHECK_AND_SET (START, start, "start", G_GUINT64_FORMAT);
   CHECK_AND_SET (INPOINT, inpoint, "inpoint", G_GUINT64_FORMAT);
@@ -458,7 +458,7 @@ update_values (GnlObject * object)
 }
 
 static gboolean
-gnl_object_commit_func (GnlObject * object, gboolean recurse)
+nle_object_commit_func (NleObject * object, gboolean recurse)
 {
   GST_INFO_OBJECT (object, "Commiting object changed");
 
@@ -476,12 +476,12 @@ gnl_object_commit_func (GnlObject * object, gboolean recurse)
 }
 
 static void
-gnl_object_set_property (GObject * object, guint prop_id,
+nle_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GnlObject *gnlobject = (GnlObject *) object;
+  NleObject *nleobject = (NleObject *) object;
 
-  g_return_if_fail (GNL_IS_OBJECT (object));
+  g_return_if_fail (NLE_IS_OBJECT (object));
 
   GST_OBJECT_LOCK (object);
   switch (prop_id) {
@@ -501,13 +501,13 @@ gnl_object_set_property (GObject * object, guint prop_id,
       SET_PENDING_VALUE (active, "active", boolean, G_GUINT32_FORMAT);
       break;
     case PROP_CAPS:
-      gnl_object_set_caps (gnlobject, gst_value_get_caps (value));
+      nle_object_set_caps (nleobject, gst_value_get_caps (value));
       break;
     case PROP_EXPANDABLE:
       if (g_value_get_boolean (value))
-        GST_OBJECT_FLAG_SET (gnlobject, GNL_OBJECT_EXPANDABLE);
+        GST_OBJECT_FLAG_SET (nleobject, NLE_OBJECT_EXPANDABLE);
       else
-        GST_OBJECT_FLAG_UNSET (gnlobject, GNL_OBJECT_EXPANDABLE);
+        GST_OBJECT_FLAG_UNSET (nleobject, NLE_OBJECT_EXPANDABLE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -515,39 +515,39 @@ gnl_object_set_property (GObject * object, guint prop_id,
   }
   GST_OBJECT_UNLOCK (object);
 
-  _update_stop (gnlobject);
+  _update_stop (nleobject);
 }
 
 static void
-gnl_object_get_property (GObject * object, guint prop_id,
+nle_object_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GnlObject *gnlobject = (GnlObject *) object;
+  NleObject *nleobject = (NleObject *) object;
 
   switch (prop_id) {
     case PROP_START:
-      g_value_set_uint64 (value, gnlobject->pending_start);
+      g_value_set_uint64 (value, nleobject->pending_start);
       break;
     case PROP_DURATION:
-      g_value_set_int64 (value, gnlobject->pending_duration);
+      g_value_set_int64 (value, nleobject->pending_duration);
       break;
     case PROP_STOP:
-      g_value_set_uint64 (value, gnlobject->stop);
+      g_value_set_uint64 (value, nleobject->stop);
       break;
     case PROP_INPOINT:
-      g_value_set_uint64 (value, gnlobject->pending_inpoint);
+      g_value_set_uint64 (value, nleobject->pending_inpoint);
       break;
     case PROP_PRIORITY:
-      g_value_set_uint (value, gnlobject->pending_priority);
+      g_value_set_uint (value, nleobject->pending_priority);
       break;
     case PROP_ACTIVE:
-      g_value_set_boolean (value, gnlobject->pending_active);
+      g_value_set_boolean (value, nleobject->pending_active);
       break;
     case PROP_CAPS:
-      gst_value_set_caps (value, gnlobject->caps);
+      gst_value_set_caps (value, nleobject->caps);
       break;
     case PROP_EXPANDABLE:
-      g_value_set_boolean (value, GNL_OBJECT_IS_EXPANDABLE (object));
+      g_value_set_boolean (value, NLE_OBJECT_IS_EXPANDABLE (object));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -556,7 +556,7 @@ gnl_object_get_property (GObject * object, guint prop_id,
 }
 
 static GstStateChangeReturn
-gnl_object_change_state (GstElement * element, GstStateChange transition)
+nle_object_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
@@ -568,11 +568,12 @@ gnl_object_change_state (GstElement * element, GstStateChange transition)
       /* Going to READY and if we are not in a composition, we need to make
        * sure that the object positioning state is properly commited  */
       if (parent) {
-        if (g_strcmp0 (gst_element_get_name (GST_ELEMENT (parent)), "current-bin") &&
-            !GNL_OBJECT_IS_COMPOSITION (GNL_OBJECT (element))) {
-          GST_INFO ("Adding gnlobject to something that is not a composition,"
+        if (g_strcmp0 (gst_element_get_name (GST_ELEMENT (parent)),
+                "current-bin")
+            && !NLE_OBJECT_IS_COMPOSITION (NLE_OBJECT (element))) {
+          GST_INFO ("Adding nleobject to something that is not a composition,"
               " commiting ourself");
-          gnl_object_commit (GNL_OBJECT (element), FALSE);
+          nle_object_commit (NLE_OBJECT (element), FALSE);
         }
 
         gst_object_unref (parent);
@@ -580,7 +581,7 @@ gnl_object_change_state (GstElement * element, GstStateChange transition)
     }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (gnl_object_prepare (GNL_OBJECT (element)) == GST_STATE_CHANGE_FAILURE) {
+      if (nle_object_prepare (NLE_OBJECT (element)) == GST_STATE_CHANGE_FAILURE) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto beach;
       }
@@ -600,8 +601,8 @@ gnl_object_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* cleanup gnlobject */
-      if (gnl_object_cleanup (GNL_OBJECT (element)) == GST_STATE_CHANGE_FAILURE)
+      /* cleanup nleobject */
+      if (nle_object_cleanup (NLE_OBJECT (element)) == GST_STATE_CHANGE_FAILURE)
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     default:
@@ -613,7 +614,7 @@ beach:
 }
 
 void
-gnl_object_set_commit_needed (GnlObject * object)
+nle_object_set_commit_needed (NleObject * object)
 {
   if (G_UNLIKELY (object->commiting)) {
     GST_WARNING_OBJECT (object,
@@ -627,14 +628,14 @@ gnl_object_set_commit_needed (GnlObject * object)
 }
 
 gboolean
-gnl_object_commit (GnlObject * object, gboolean recurse)
+nle_object_commit (NleObject * object, gboolean recurse)
 {
   gboolean ret;
 
   GST_DEBUG_OBJECT (object, "Commiting object state");
 
   object->commiting = TRUE;
-  ret = GNL_OBJECT_GET_CLASS (object)->commit (object, recurse);
+  ret = NLE_OBJECT_GET_CLASS (object)->commit (object, recurse);
   object->commiting = FALSE;
 
   return ret;
@@ -642,7 +643,7 @@ gnl_object_commit (GnlObject * object, gboolean recurse)
 }
 
 void
-gnl_object_reset (GnlObject * object)
+nle_object_reset (NleObject * object)
 {
   GST_INFO_OBJECT (object, "Resetting child timing values to default");
 
@@ -655,26 +656,26 @@ gnl_object_reset (GnlObject * object)
 }
 
 GType
-gnl_object_get_type (void)
+nle_object_get_type (void)
 {
   static volatile gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;
     static const GTypeInfo info = {
-      sizeof (GnlObjectClass),
+      sizeof (NleObjectClass),
       NULL,
       NULL,
-      (GClassInitFunc) gnl_object_class_init,
+      (GClassInitFunc) nle_object_class_init,
       NULL,
       NULL,
-      sizeof (GnlObject),
+      sizeof (NleObject),
       0,
-      (GInstanceInitFunc) gnl_object_init,
+      (GInstanceInitFunc) nle_object_init,
     };
 
     _type = g_type_register_static (GST_TYPE_BIN,
-        "GnlObject", &info, G_TYPE_FLAG_ABSTRACT);
+        "NleObject", &info, G_TYPE_FLAG_ABSTRACT);
     g_once_init_leave (&type, _type);
   }
   return type;

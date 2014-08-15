@@ -18,19 +18,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GNL_H__
-#define __GNL_H__
+#ifndef __NLE_H__
+#define __NLE_H__
 
 #include <gst/gst.h>
 
-#include "gnltypes.h"
+#include "nletypes.h"
 
-#include "gnlobject.h"
-#include "gnlghostpad.h"
-#include "gnlsource.h"
-#include "gnlcomposition.h"
-#include "gnloperation.h"
+#include "nleobject.h"
+#include "nleghostpad.h"
+#include "nlesource.h"
+#include "nlecomposition.h"
+#include "nleoperation.h"
 
-#include "gnlurisource.h"
+#include "nleurisource.h"
 
 #endif /* __GST_H__ */

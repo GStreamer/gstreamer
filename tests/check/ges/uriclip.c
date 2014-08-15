@@ -167,8 +167,8 @@ GST_START_TEST (test_filesource_properties)
   assert_equals_uint64 (_INPOINT (trackelement), 12);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
-      51, MIN_GNL_PRIO, TRUE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 51, 12,
+      51, MIN_NLE_PRIO, TRUE);
 
   /* Change more properties, see if they propagate */
   g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
@@ -182,18 +182,18 @@ GST_START_TEST (test_filesource_properties)
   assert_equals_uint64 (_INPOINT (trackelement), 120);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
-      120, 510, MIN_GNL_PRIO + 0, TRUE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
+      120, 510, MIN_NLE_PRIO + 0, TRUE);
 
   /* Test mute support */
   g_object_set (clip, "mute", TRUE, NULL);
   ges_timeline_commit (timeline);
-  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
-      120, 510, MIN_GNL_PRIO + 0, FALSE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
+      120, 510, MIN_NLE_PRIO + 0, FALSE);
   g_object_set (clip, "mute", FALSE, NULL);
   ges_timeline_commit (timeline);
-  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
-      120, 510, MIN_GNL_PRIO + 0, TRUE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
+      120, 510, MIN_NLE_PRIO + 0, TRUE);
 
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));

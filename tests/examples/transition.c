@@ -58,7 +58,7 @@ gboolean
 print_transition_data (GESClip * tr)
 {
   GESTrackElement *trackelement;
-  GstElement *gnlobj;
+  GstElement *nleobj;
   guint64 start, duration;
   gint priority;
   char *name;
@@ -71,12 +71,12 @@ print_transition_data (GESClip * tr)
     return FALSE;
   if (!(trackelement = GES_TRACK_ELEMENT (trackelements->data)))
     return FALSE;
-  if (!(gnlobj = ges_track_element_get_gnlobject (trackelement)))
+  if (!(nleobj = ges_track_element_get_nleobject (trackelement)))
     return FALSE;
 
-  g_object_get (gnlobj, "start", &start, "duration", &duration,
+  g_object_get (nleobj, "start", &start, "duration", &duration,
       "priority", &priority, "name", &name, NULL);
-  g_print ("gnlobject for %s: %f %f %d\n", name,
+  g_print ("nleobject for %s: %f %f %d\n", name,
       ((gfloat) start) / GST_SECOND,
       ((gfloat) duration) / GST_SECOND, priority);
 

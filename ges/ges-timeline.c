@@ -331,7 +331,7 @@ ges_timeline_dispose (GObject * object)
 
   /* FIXME: it should be possible to remove tracks before removing
    * layers, but at the moment this creates a problem because the track
-   * objects aren't notified that their gnlobjects have been destroyed.
+   * objects aren't notified that their nleobjects have been destroyed.
    */
 
   while (tl->tracks)
@@ -379,7 +379,7 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
     GstMessage *amessage = NULL;
     const GstStructure *mstructure = gst_message_get_structure (message);
 
-    if (gst_structure_has_name (mstructure, "GnlCompositionStartUpdate")) {
+    if (gst_structure_has_name (mstructure, "NleCompositionStartUpdate")) {
       if (g_strcmp0 (gst_structure_get_string (mstructure, "reason"), "Seek")) {
         GST_INFO_OBJECT (timeline,
             "A composition is starting an update because of %s"
@@ -398,7 +398,7 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
       }
       GST_OBJECT_UNLOCK (timeline);
 
-    } else if (gst_structure_has_name (mstructure, "GnlCompositionUpdateDone")) {
+    } else if (gst_structure_has_name (mstructure, "NleCompositionUpdateDone")) {
       if (g_strcmp0 (gst_structure_get_string (mstructure, "reason"), "Seek")) {
         GST_INFO_OBJECT (timeline,
             "A composition is done updating because of %s"
@@ -3042,7 +3042,7 @@ ges_timeline_get_layers (GESTimeline * timeline)
  * @timeline.
  *
  * When timing changes happen in a timeline, the changes are not
- * directly done inside GNL. This method needs to be called so any changes
+ * directly done inside NLE. This method needs to be called so any changes
  * on a clip contained in the timeline actually happen at the media
  * processing level.
  *

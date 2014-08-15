@@ -44,15 +44,15 @@ struct _GESTrackElementPrivate
 {
   GESTrackType track_type;
 
-  /* These fields are only used before the gnlobject is available */
+  /* These fields are only used before the nleobject is available */
   guint64 pending_start;
   guint64 pending_inpoint;
   guint64 pending_duration;
   guint32 pending_priority;
   gboolean pending_active;
 
-  GstElement *gnlobject;        /* The GnlObject */
-  GstElement *element;          /* The element contained in the gnlobject (can be NULL) */
+  GstElement *nleobject;        /* The NleObject */
+  GstElement *element;          /* The element contained in the nleobject (can be NULL) */
 
   /* We keep a link between properties name and elements internally
    * The hashtable should look like
@@ -98,7 +98,7 @@ enum
 
 static guint ges_track_element_signals[LAST_SIGNAL] = { 0 };
 
-static GstElement *ges_track_element_create_gnl_object_func (GESTrackElement *
+static GstElement *ges_track_element_create_nle_object_func (GESTrackElement *
     object);
 
 static void connect_properties_signals (GESTrackElement * object);
@@ -169,7 +169,7 @@ ges_track_element_dispose (GObject * object)
   if (priv->bindings_hashtable)
     g_hash_table_destroy (priv->bindings_hashtable);
 
-  if (priv->gnlobject) {
+  if (priv->nleobject) {
     GstState cstate;
 
     if (priv->track != NULL) {
@@ -179,15 +179,15 @@ ges_track_element_dispose (GObject * object)
           " reference\n"
           "This problem may also be caused by a refcounting bug in"
           " the application or GES itself.", object, priv->track);
-      gst_element_get_state (priv->gnlobject, &cstate, NULL, 0);
+      gst_element_get_state (priv->nleobject, &cstate, NULL, 0);
       if (cstate != GST_STATE_NULL)
-        gst_element_set_state (priv->gnlobject, GST_STATE_NULL);
+        gst_element_set_state (priv->nleobject, GST_STATE_NULL);
     }
 
-    g_object_set_qdata (G_OBJECT (priv->gnlobject),
-        GNL_OBJECT_TRACK_ELEMENT_QUARK, NULL);
-    gst_object_unref (priv->gnlobject);
-    priv->gnlobject = NULL;
+    g_object_set_qdata (G_OBJECT (priv->nleobject),
+        NLE_OBJECT_TRACK_ELEMENT_QUARK, NULL);
+    gst_object_unref (priv->nleobject);
+    priv->nleobject = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_element_parent_class)->dispose (object);
@@ -258,7 +258,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   element_class->set_priority = _set_priority;
   element_class->deep_copy = ges_track_element_copy_properties;
 
-  klass->create_gnl_object = ges_track_element_create_gnl_object_func;
+  klass->create_nle_object = ges_track_element_create_nle_object_func;
   klass->list_children_properties = default_list_children_properties;
 }
 
@@ -272,7 +272,7 @@ ges_track_element_init (GESTrackElement * self)
   priv->pending_start = 0;
   priv->pending_inpoint = 0;
   priv->pending_duration = GST_SECOND;
-  priv->pending_priority = MIN_GNL_PRIO;
+  priv->pending_priority = MIN_NLE_PRIO;
   priv->pending_active = TRUE;
   priv->bindings_hashtable = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, NULL);
@@ -406,11 +406,11 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
 
-  if (object->priv->gnlobject != NULL) {
+  if (object->priv->nleobject != NULL) {
     if (G_UNLIKELY (start == _START (object)))
       return FALSE;
 
-    g_object_set (object->priv->gnlobject, "start", start, NULL);
+    g_object_set (object->priv->nleobject, "start", start, NULL);
   } else
     object->priv->pending_start = start;
 
@@ -422,12 +422,12 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
 
-  if (object->priv->gnlobject != NULL) {
+  if (object->priv->nleobject != NULL) {
     if (G_UNLIKELY (inpoint == _INPOINT (object)))
 
       return FALSE;
 
-    g_object_set (object->priv->gnlobject, "inpoint", inpoint, NULL);
+    g_object_set (object->priv->nleobject, "inpoint", inpoint, NULL);
   } else
     object->priv->pending_inpoint = inpoint;
 
@@ -446,11 +446,11 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
       duration > _INPOINT (object) + _MAXDURATION (element))
     duration = _MAXDURATION (element) - _INPOINT (object);
 
-  if (priv->gnlobject != NULL) {
+  if (priv->nleobject != NULL) {
     if (G_UNLIKELY (duration == _DURATION (object)))
       return FALSE;
 
-    g_object_set (priv->gnlobject, "duration", duration, NULL);
+    g_object_set (priv->nleobject, "duration", duration, NULL);
   } else
     priv->pending_duration = duration;
 
@@ -465,19 +465,19 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
 
-  if (priority < MIN_GNL_PRIO) {
-    GST_INFO_OBJECT (element, "Priority (%d) < MIN_GNL_PRIO, setting it to %d",
-        priority, MIN_GNL_PRIO);
-    priority = MIN_GNL_PRIO;
+  if (priority < MIN_NLE_PRIO) {
+    GST_INFO_OBJECT (element, "Priority (%d) < MIN_NLE_PRIO, setting it to %d",
+        priority, MIN_NLE_PRIO);
+    priority = MIN_NLE_PRIO;
   }
 
   GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
 
-  if (object->priv->gnlobject != NULL) {
+  if (object->priv->nleobject != NULL) {
     if (G_UNLIKELY (priority == _PRIORITY (object)))
       return FALSE;
 
-    g_object_set (object->priv->gnlobject, "priority", priority, NULL);
+    g_object_set (object->priv->nleobject, "priority", priority, NULL);
   } else
     object->priv->pending_priority = priority;
 
@@ -501,11 +501,11 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
 
   GST_DEBUG_OBJECT (object, "object:%p, active:%d", object, active);
 
-  if (object->priv->gnlobject != NULL) {
+  if (object->priv->nleobject != NULL) {
     if (G_UNLIKELY (active == object->active))
       return FALSE;
 
-    g_object_set (object->priv->gnlobject, "active", active, NULL);
+    g_object_set (object->priv->nleobject, "active", active, NULL);
 
     if (active != object->active) {
       object->active = active;
@@ -564,29 +564,29 @@ connect_properties_signals (GESTrackElement * object)
       (GHFunc) connect_signal, object);
 }
 
-/* default 'create_gnl_object' virtual method implementation */
+/* default 'create_nle_object' virtual method implementation */
 static GstElement *
-ges_track_element_create_gnl_object_func (GESTrackElement * self)
+ges_track_element_create_nle_object_func (GESTrackElement * self)
 {
   GESTrackElementClass *klass = NULL;
   GstElement *child = NULL;
-  GstElement *gnlobject;
+  GstElement *nleobject;
 
   klass = GES_TRACK_ELEMENT_GET_CLASS (self);
 
-  if (G_UNLIKELY (self->priv->gnlobject != NULL))
-    goto already_have_gnlobject;
+  if (G_UNLIKELY (self->priv->nleobject != NULL))
+    goto already_have_nleobject;
 
-  if (G_UNLIKELY (klass->gnlobject_factorytype == NULL))
-    goto no_gnlfactory;
+  if (G_UNLIKELY (klass->nleobject_factorytype == NULL))
+    goto no_nlefactory;
 
-  GST_DEBUG ("Creating a supporting gnlobject of type '%s'",
-      klass->gnlobject_factorytype);
+  GST_DEBUG ("Creating a supporting nleobject of type '%s'",
+      klass->nleobject_factorytype);
 
-  gnlobject = gst_element_factory_make (klass->gnlobject_factorytype, NULL);
+  nleobject = gst_element_factory_make (klass->nleobject_factorytype, NULL);
 
-  if (G_UNLIKELY (gnlobject == NULL))
-    goto no_gnlobject;
+  if (G_UNLIKELY (nleobject == NULL))
+    goto no_nleobject;
 
   if (klass->create_element) {
     GST_DEBUG ("Calling subclass 'create_element' vmethod");
@@ -595,97 +595,97 @@ ges_track_element_create_gnl_object_func (GESTrackElement * self)
     if (G_UNLIKELY (!child))
       goto child_failure;
 
-    if (!gst_bin_add (GST_BIN (gnlobject), child))
+    if (!gst_bin_add (GST_BIN (nleobject), child))
       goto add_failure;
 
-    GST_DEBUG ("Succesfully got the element to put in the gnlobject");
+    GST_DEBUG ("Succesfully got the element to put in the nleobject");
     self->priv->element = child;
   }
 
   GST_DEBUG ("done");
-  return gnlobject;
+  return nleobject;
 
 
   /* ERROR CASES */
 
-already_have_gnlobject:
+already_have_nleobject:
   {
-    GST_ERROR ("Already controlling a GnlObject %s",
-        GST_ELEMENT_NAME (self->priv->gnlobject));
+    GST_ERROR ("Already controlling a NleObject %s",
+        GST_ELEMENT_NAME (self->priv->nleobject));
     return NULL;
   }
 
-no_gnlfactory:
+no_nlefactory:
   {
-    GST_ERROR ("No GESTrackElement::gnlobject_factorytype implementation!");
+    GST_ERROR ("No GESTrackElement::nleobject_factorytype implementation!");
     return NULL;
   }
 
-no_gnlobject:
+no_nleobject:
   {
-    GST_ERROR ("Error creating a gnlobject of type '%s'",
-        klass->gnlobject_factorytype);
+    GST_ERROR ("Error creating a nleobject of type '%s'",
+        klass->nleobject_factorytype);
     return NULL;
   }
 
 child_failure:
   {
     GST_ERROR ("create_element returned NULL");
-    gst_object_unref (gnlobject);
+    gst_object_unref (nleobject);
     return NULL;
   }
 
 add_failure:
   {
-    GST_ERROR ("Error adding the contents to the gnlobject");
+    GST_ERROR ("Error adding the contents to the nleobject");
     gst_object_unref (child);
-    gst_object_unref (gnlobject);
+    gst_object_unref (nleobject);
     return NULL;
   }
 }
 
 static gboolean
-ensure_gnl_object (GESTrackElement * object)
+ensure_nle_object (GESTrackElement * object)
 {
   GESTrackElementClass *class;
-  GstElement *gnlobject;
+  GstElement *nleobject;
   gboolean res = TRUE;
 
-  if (object->priv->gnlobject && object->priv->valid)
+  if (object->priv->nleobject && object->priv->valid)
     return FALSE;
 
-  /* 1. Create the GnlObject */
-  GST_DEBUG ("Creating GnlObject");
+  /* 1. Create the NleObject */
+  GST_DEBUG ("Creating NleObject");
 
   class = GES_TRACK_ELEMENT_GET_CLASS (object);
 
-  if (G_UNLIKELY (class->create_gnl_object == NULL)) {
-    GST_ERROR ("No 'create_gnl_object' implementation !");
+  if (G_UNLIKELY (class->create_nle_object == NULL)) {
+    GST_ERROR ("No 'create_nle_object' implementation !");
     goto done;
   }
 
   GST_DEBUG ("Calling virtual method");
 
-  /* 2. Fill in the GnlObject */
-  if (object->priv->gnlobject == NULL) {
+  /* 2. Fill in the NleObject */
+  if (object->priv->nleobject == NULL) {
 
-    /* call the create_gnl_object virtual method */
-    gnlobject = class->create_gnl_object (object);
+    /* call the create_nle_object virtual method */
+    nleobject = class->create_nle_object (object);
 
-    if (G_UNLIKELY (gnlobject == NULL)) {
+    if (G_UNLIKELY (nleobject == NULL)) {
       GST_ERROR
-          ("'create_gnl_object' implementation returned TRUE but no GnlObject is available");
+          ("'create_nle_object' implementation returned TRUE but no NleObject is available");
       goto done;
     }
 
-    GST_DEBUG_OBJECT (object, "Got a valid GnlObject, now filling it in");
+    GST_DEBUG_OBJECT (object, "Got a valid NleObject, now filling it in");
 
-    object->priv->gnlobject = gst_object_ref (gnlobject);
-    g_object_set_qdata (G_OBJECT (gnlobject), GNL_OBJECT_TRACK_ELEMENT_QUARK,
+    object->priv->nleobject = gst_object_ref (nleobject);
+    g_object_set_qdata (G_OBJECT (nleobject), NLE_OBJECT_TRACK_ELEMENT_QUARK,
         object);
 
-    /* Set some properties on the GnlObject */
-    g_object_set (object->priv->gnlobject,
+    /* Set some properties on the NleObject */
+    g_object_set (object->priv->nleobject,
         "duration", object->priv->pending_duration,
         "start", object->priv->pending_start,
         "inpoint", object->priv->pending_inpoint,
@@ -701,7 +701,7 @@ ensure_gnl_object (GESTrackElement * object)
 
 
     if (object->priv->track != NULL)
-      g_object_set (object->priv->gnlobject,
+      g_object_set (object->priv->nleobject,
           "caps", ges_track_get_caps (object->priv->track), NULL);
 
   }
@@ -881,12 +881,12 @@ ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
   object->priv->track = track;
 
   if (object->priv->track) {
-    /* If we already have a gnlobject, we just set its caps properly */
-    if (object->priv->gnlobject) {
-      g_object_set (object->priv->gnlobject,
+    /* If we already have a nleobject, we just set its caps properly */
+    if (object->priv->nleobject) {
+      g_object_set (object->priv->nleobject,
           "caps", ges_track_get_caps (object->priv->track), NULL);
     } else {
-      ret = ensure_gnl_object (object);
+      ret = ensure_nle_object (object);
 
       /* if we had pending control bindings, add them and free them */
       if (ret && object->priv->pending_bindings) {
@@ -923,10 +923,10 @@ ges_track_element_get_bindings_hashtable (GESTrackElement * trackelement)
 guint32
 _ges_track_element_get_layer_priority (GESTrackElement * element)
 {
-  if (_PRIORITY (element) < LAYER_HEIGHT + MIN_GNL_PRIO)
+  if (_PRIORITY (element) < LAYER_HEIGHT + MIN_NLE_PRIO)
     return 0;
 
-  return (_PRIORITY (element) - MIN_GNL_PRIO) / LAYER_HEIGHT;
+  return (_PRIORITY (element) - MIN_NLE_PRIO) / LAYER_HEIGHT;
 }
 
 /**
@@ -947,7 +947,7 @@ ges_track_element_get_track (GESTrackElement * object)
 }
 
 /**
- * ges_track_element_get_gnlobject:
+ * ges_track_element_get_nleobject:
  * @object: a #GESTrackElement
  *
  * Get the GNonLin object this object is controlling.
@@ -955,11 +955,11 @@ ges_track_element_get_track (GESTrackElement * object)
  * Returns: (transfer none): the GNonLin object this object is controlling.
  */
 GstElement *
-ges_track_element_get_gnlobject (GESTrackElement * object)
+ges_track_element_get_nleobject (GESTrackElement * object)
 {
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
 
-  return object->priv->gnlobject;
+  return object->priv->nleobject;
 }
 
 /**
@@ -993,7 +993,7 @@ ges_track_element_is_active (GESTrackElement * object)
 {
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
-  if (G_UNLIKELY (object->priv->gnlobject == NULL))
+  if (G_UNLIKELY (object->priv->nleobject == NULL))
     return object->priv->pending_active;
   else
     return object->active;
@@ -1449,7 +1449,7 @@ ges_track_element_copy_properties (GESTimelineElement * element,
   GValue val = { 0 };
   GESTrackElement *copy = GES_TRACK_ELEMENT (elementcopy);
 
-  ensure_gnl_object (copy);
+  ensure_nle_object (copy);
   specs =
       ges_track_element_list_children_properties (GES_TRACK_ELEMENT (element),
       &n_specs);

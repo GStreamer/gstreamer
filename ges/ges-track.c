@@ -25,8 +25,6 @@
  * Corresponds to one output format (i.e. audio OR video).
  *
  * Contains the compatible TrackElement(s).
- *
- * Wraps GNonLin's 'gnlcomposition' element.
  */
 
 #include "ges-internal.h"
@@ -43,7 +41,7 @@ G_DEFINE_TYPE_WITH_CODE (GESTrack, ges_track, GST_TYPE_BIN,
  * of the gaps filled in the track */
 typedef struct
 {
-  GstElement *gnlobj;
+  GstElement *nleobj;
 
   GstClockTime start;
   GstClockTime duration;
@@ -111,17 +109,17 @@ add_trackelement_to_list_foreach (GESTrackElement * trackelement, GList ** list)
 static Gap *
 gap_new (GESTrack * track, GstClockTime start, GstClockTime duration)
 {
-  GstElement *gnlsrc, *elem;
+  GstElement *nlesrc, *elem;
 
   Gap *new_gap;
 
-  gnlsrc = gst_element_factory_make ("gnlsource", NULL);
+  nlesrc = gst_element_factory_make ("nlesource", NULL);
   elem = track->priv->create_element_for_gaps (track);
-  if (G_UNLIKELY (gst_bin_add (GST_BIN (gnlsrc), elem) == FALSE)) {
+  if (G_UNLIKELY (gst_bin_add (GST_BIN (nlesrc), elem) == FALSE)) {
     GST_WARNING_OBJECT (track, "Could not create gap filler");
 
-    if (gnlsrc)
-      gst_object_unref (gnlsrc);
+    if (nlesrc)
+      gst_object_unref (nlesrc);
 
     if (elem)
       gst_object_unref (elem);
@@ -129,12 +127,12 @@ gap_new (GESTrack * track, GstClockTime start, GstClockTime duration)
     return NULL;
   }
 
-  if (G_UNLIKELY (gst_bin_add (GST_BIN (track->priv->composition),
-              gnlsrc) == FALSE)) {
+  if (G_UNLIKELY (nle_composition_add_object (track->priv->composition,
+              nlesrc) == FALSE)) {
     GST_WARNING_OBJECT (track, "Could not add gap to the composition");
 
-    if (gnlsrc)
-      gst_object_unref (gnlsrc);
+    if (nlesrc)
+      gst_object_unref (nlesrc);
 
     if (elem)
       gst_object_unref (elem);
@@ -146,10 +144,10 @@ gap_new (GESTrack * track, GstClockTime start, GstClockTime duration)
   new_gap->start = start;
   new_gap->duration = duration;
   new_gap->track = track;
-  new_gap->gnlobj = gst_object_ref (gnlsrc);
+  new_gap->nleobj = nlesrc;
 
 
-  g_object_set (gnlsrc, "start", new_gap->start, "duration", new_gap->duration,
+  g_object_set (nlesrc, "start", new_gap->start, "duration", new_gap->duration,
       "priority", 1, NULL);
 
   GST_DEBUG_OBJECT (track,
@@ -168,9 +166,7 @@ free_gap (Gap * gap)
   GST_DEBUG_OBJECT (track, "Removed gap with start %" GST_TIME_FORMAT
       " duration %" GST_TIME_FORMAT, GST_TIME_ARGS (gap->start),
       GST_TIME_ARGS (gap->duration));
-  gst_bin_remove (GST_BIN (track->priv->composition), gap->gnlobj);
-  gst_element_set_state (gap->gnlobj, GST_STATE_NULL);
-  gst_object_unref (gap->gnlobj);
+  nle_composition_remove_object (track->priv->composition, gap->nleobj);
 
   g_slice_free (Gap, gap);
 }
@@ -258,7 +254,7 @@ sort_track_elements_cb (GESTrackElement * child,
 }
 
 static void
-pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track)
+_ghost_nlecomposition_srcpad (GESTrack * track)
 {
   GESTrackPrivate *priv = track->priv;
   GstPad *capsfilter_sink;
@@ -328,7 +324,7 @@ static gboolean
 remove_object_internal (GESTrack * track, GESTrackElement * object)
 {
   GESTrackPrivate *priv;
-  GstElement *gnlobject;
+  GstElement *nleobject;
 
   GST_DEBUG_OBJECT (track, "object:%p", object);
 
@@ -339,16 +335,16 @@ remove_object_internal (GESTrack * track, GESTrackElement * object)
     return FALSE;
   }
 
-  if ((gnlobject = ges_track_element_get_gnlobject (object))) {
-    GST_DEBUG ("Removing GnlObject '%s' from composition '%s'",
-        GST_ELEMENT_NAME (gnlobject), GST_ELEMENT_NAME (priv->composition));
+  if ((nleobject = ges_track_element_get_nleobject (object))) {
+    GST_DEBUG ("Removing NleObject '%s' from composition '%s'",
+        GST_ELEMENT_NAME (nleobject), GST_ELEMENT_NAME (priv->composition));
 
-    if (!gst_bin_remove (GST_BIN (priv->composition), gnlobject)) {
-      GST_WARNING ("Failed to remove gnlobject from composition");
+    if (!nle_composition_remove_object (priv->composition, nleobject)) {
+      GST_WARNING ("Failed to remove nleobject from composition");
       return FALSE;
     }
 
-    gst_element_set_state (gnlobject, GST_STATE_NULL);
+    gst_element_set_state (nleobject, GST_STATE_NULL);
   }
 
   g_signal_handlers_disconnect_by_func (object, sort_track_elements_cb, NULL);
@@ -473,8 +469,9 @@ ges_track_constructed (GObject * object)
   if (!gst_bin_add (GST_BIN (self), self->priv->capsfilter))
     GST_ERROR ("Couldn't add capsfilter to bin !");
 
+  _ghost_nlecomposition_srcpad (self);
   if (GES_TRACK_GET_CLASS (self)->get_mixing_element) {
-    GstElement *gnlobject;
+    GstElement *nleobject;
     GstElement *mixer = GES_TRACK_GET_CLASS (self)->get_mixing_element (self);
 
     if (mixer == NULL) {
@@ -483,24 +480,24 @@ ges_track_constructed (GObject * object)
       return;
     }
 
-    gnlobject = gst_element_factory_make ("gnloperation", "mixing-operation");
-    if (!gst_bin_add (GST_BIN (gnlobject), mixer)) {
+    nleobject = gst_element_factory_make ("nleoperation", "mixing-operation");
+    if (!gst_bin_add (GST_BIN (nleobject), mixer)) {
       GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
-      gst_object_unref (gnlobject);
+      gst_object_unref (nleobject);
 
       return;
     }
-    g_object_set (gnlobject, "expandable", TRUE, NULL);
+    g_object_set (nleobject, "expandable", TRUE, NULL);
 
     if (self->priv->mixing) {
-      if (!gst_bin_add (GST_BIN (self->priv->composition), gnlobject)) {
+      if (!nle_composition_add_object (self->priv->composition, nleobject)) {
         GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
 
         return;
       }
     }
 
-    self->priv->mixing_operation = gst_object_ref (gnlobject);
+    self->priv->mixing_operation = gst_object_ref (nleobject);
 
   } else {
     GST_INFO_OBJECT (self, "No way to create a main mixer");
@@ -622,7 +619,7 @@ ges_track_init (GESTrack * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK, GESTrackPrivate);
 
-  self->priv->composition = gst_element_factory_make ("gnlcomposition", NULL);
+  self->priv->composition = gst_element_factory_make ("nlecomposition", NULL);
   self->priv->capsfilter = gst_element_factory_make ("capsfilter", NULL);
   self->priv->updating = TRUE;
   self->priv->trackelements_by_start = g_sequence_new (NULL);
@@ -788,13 +785,13 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
   if (mixing) {
     /* increase ref count to hold the object */
     gst_object_ref (track->priv->mixing_operation);
-    if (!gst_bin_add (GST_BIN (track->priv->composition),
+    if (!nle_composition_add_object (track->priv->composition,
             track->priv->mixing_operation)) {
       GST_WARNING_OBJECT (track, "Could not add the mixer to our composition");
       return;
     }
   } else {
-    if (!gst_bin_remove (GST_BIN (track->priv->composition),
+    if (!nle_composition_remove_object (track->priv->composition,
             track->priv->mixing_operation)) {
       GST_WARNING_OBJECT (track,
           "Could not remove the mixer from our composition");
@@ -839,12 +836,12 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
   }
 
   GST_DEBUG ("Adding object %s to ourself %s",
-      GST_OBJECT_NAME (ges_track_element_get_gnlobject (object)),
+      GST_OBJECT_NAME (ges_track_element_get_nleobject (object)),
       GST_OBJECT_NAME (track->priv->composition));
 
-  if (G_UNLIKELY (!gst_bin_add (GST_BIN (track->priv->composition),
-              ges_track_element_get_gnlobject (object)))) {
-    GST_WARNING ("Couldn't add object to the GnlComposition");
+  if (G_UNLIKELY (!nle_composition_add_object (track->priv->composition,
+              ges_track_element_get_nleobject (object)))) {
+    GST_WARNING ("Couldn't add object to the NleComposition");
     return FALSE;
   }
 
@@ -972,7 +969,7 @@ ges_track_get_timeline (GESTrack * track)
  * ges_track_get_mixing:
  * @track: a #GESTrack
  *
- *  Gets if the underlying #GnlComposition contains an expandable mixer.
+ *  Gets if the underlying #NleComposition contains an expandable mixer.
  *
  * Returns: #True if there is a mixer, #False otherwise.
  */
@@ -992,7 +989,7 @@ ges_track_get_mixing (GESTrack * track)
  * track.
  *
  * When timing changes happen in a timeline, the changes are not
- * directly done inside GNL. This method needs to be called so any changes
+ * directly done inside NLE. This method needs to be called so any changes
  * on a clip contained in the timeline actually happen at the media
  * processing level.
  *

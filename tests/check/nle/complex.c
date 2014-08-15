@@ -151,7 +151,7 @@ GST_START_TEST (test_one_space_another)
   GList *segments = NULL;
 
   comp =
-      gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+      gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
   gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
@@ -168,7 +168,7 @@ GST_START_TEST (test_one_space_another)
      Duration : 1s
      Priority : 1
    */
-  source1 = videotest_gnl_src ("source1", 0, 1 * GST_SECOND, 2, 1);
+  source1 = videotest_nle_src ("source1", 0, 1 * GST_SECOND, 2, 1);
   fail_if (source1 == NULL);
   check_start_stop_duration (source1, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
@@ -178,14 +178,14 @@ GST_START_TEST (test_one_space_another)
      Duration : 1s
      Priority : 1
    */
-  source2 = videotest_gnl_src ("source2", 2 * GST_SECOND, 1 * GST_SECOND, 3, 1);
+  source2 = videotest_nle_src ("source2", 2 * GST_SECOND, 1 * GST_SECOND, 3, 1);
   fail_if (source2 == NULL);
   check_start_stop_duration (source2, 2 * GST_SECOND, 3 * GST_SECOND,
       1 * GST_SECOND);
 
   /* Add one source */
 
-  gnl_composition_add (GST_BIN (comp), source1);
+  nle_composition_add (GST_BIN (comp), source1);
   GST_ERROR ("doing one commit");
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
@@ -193,7 +193,7 @@ GST_START_TEST (test_one_space_another)
 
   /* Second source */
 
-  gnl_composition_add (GST_BIN (comp), source2);
+  nle_composition_add (GST_BIN (comp), source2);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
   commit_and_wait (comp, &ret);
   ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
@@ -201,14 +201,14 @@ GST_START_TEST (test_one_space_another)
   /* Remove first source */
 
   gst_object_ref (source1);
-  gnl_composition_remove (GST_BIN (comp), source1);
+  nle_composition_remove (GST_BIN (comp), source1);
   check_start_stop_duration (comp, 2 * GST_SECOND, 3 * GST_SECOND,
       1 * GST_SECOND);
   ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   /* Re-add first source */
 
-  gnl_composition_add (GST_BIN (comp), source1);
+  nle_composition_add (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
   gst_object_unref (source1);
@@ -230,7 +230,7 @@ GST_START_TEST (test_one_default_another)
   GList *segments = NULL;
 
   comp =
-      gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+      gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
   gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
@@ -251,7 +251,7 @@ GST_START_TEST (test_one_default_another)
    */
 
   defaultsrc =
-      videotest_gnl_src ("defaultsrc", 0, 5 * GST_SECOND, 2, G_MAXUINT32);
+      videotest_nle_src ("defaultsrc", 0, 5 * GST_SECOND, 2, G_MAXUINT32);
   g_object_set (defaultsrc, "expandable", TRUE, NULL);
   fail_if (defaultsrc == NULL);
   check_start_stop_duration (defaultsrc, 0, 5 * GST_SECOND, 5 * GST_SECOND);
@@ -262,7 +262,7 @@ GST_START_TEST (test_one_default_another)
      Duration : 1s
      Priority : 1
    */
-  source1 = videotest_gnl_src ("source1", 1 * GST_SECOND, 1 * GST_SECOND, 3, 1);
+  source1 = videotest_nle_src ("source1", 1 * GST_SECOND, 1 * GST_SECOND, 3, 1);
   fail_if (source1 == NULL);
   check_start_stop_duration (source1, GST_SECOND, 2 * GST_SECOND,
       1 * GST_SECOND);
@@ -273,7 +273,7 @@ GST_START_TEST (test_one_default_another)
      Duration : 1s
      Priority : 1
    */
-  source2 = videotest_gnl_src ("source2", 3 * GST_SECOND, 1 * GST_SECOND, 2, 1);
+  source2 = videotest_nle_src ("source2", 3 * GST_SECOND, 1 * GST_SECOND, 2, 1);
   fail_if (source2 == NULL);
   check_start_stop_duration (source2, 3 * GST_SECOND, 4 * GST_SECOND,
       1 * GST_SECOND);
@@ -284,7 +284,7 @@ GST_START_TEST (test_one_default_another)
      Duration : 1s
      Priority : 1
    */
-  source3 = videotest_gnl_src ("source3", 4 * GST_SECOND, 1 * GST_SECOND, 2, 1);
+  source3 = videotest_nle_src ("source3", 4 * GST_SECOND, 1 * GST_SECOND, 2, 1);
   fail_if (source3 == NULL);
   check_start_stop_duration (source3, 4 * GST_SECOND, 5 * GST_SECOND,
       1 * GST_SECOND);
@@ -292,14 +292,14 @@ GST_START_TEST (test_one_default_another)
 
   /* Add one source */
 
-  gnl_composition_add (GST_BIN (comp), source1);
+  nle_composition_add (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, GST_SECOND, 2 * GST_SECOND, 1 * GST_SECOND);
 
   ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
   /* defaultsrc source */
-  gnl_composition_add (GST_BIN (comp), defaultsrc);
+  nle_composition_add (GST_BIN (comp), defaultsrc);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   check_start_stop_duration (defaultsrc, 0, 2 * GST_SECOND, 2 * GST_SECOND);
@@ -308,10 +308,10 @@ GST_START_TEST (test_one_default_another)
 
   /* Second source */
 
-  gnl_composition_add (GST_BIN (comp), source2);
+  nle_composition_add (GST_BIN (comp), source2);
   ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
   /* Third source */
-  gnl_composition_add (GST_BIN (comp), source3);
+  nle_composition_add (GST_BIN (comp), source3);
   commit_and_wait (comp, &ret);
   fail_unless (ret);
   check_start_stop_duration (comp, 0, 5 * GST_SECOND, 5 * GST_SECOND);
@@ -347,7 +347,7 @@ GST_START_TEST (test_one_expandable_another)
   gboolean ret = FALSE;
 
   comp =
-      gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+      gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
   gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
@@ -366,7 +366,7 @@ GST_START_TEST (test_one_expandable_another)
      Priority : 1000
    */
 
-  defaultsrc = videotest_gnl_src ("defaultsrc", 0, 5 * GST_SECOND, 2, 1000);
+  defaultsrc = videotest_nle_src ("defaultsrc", 0, 5 * GST_SECOND, 2, 1000);
   g_object_set (defaultsrc, "expandable", TRUE, NULL);
   fail_if (defaultsrc == NULL);
   check_start_stop_duration (defaultsrc, 0, 5 * GST_SECOND, 5 * GST_SECOND);
@@ -377,7 +377,7 @@ GST_START_TEST (test_one_expandable_another)
      Duration : 1s
      Priority : 1
    */
-  source1 = videotest_gnl_src ("source1", 1 * GST_SECOND, 1 * GST_SECOND, 3, 1);
+  source1 = videotest_nle_src ("source1", 1 * GST_SECOND, 1 * GST_SECOND, 3, 1);
   fail_if (source1 == NULL);
   check_start_stop_duration (source1, GST_SECOND, 2 * GST_SECOND,
       1 * GST_SECOND);
@@ -388,7 +388,7 @@ GST_START_TEST (test_one_expandable_another)
      Duration : 1s
      Priority : 1
    */
-  source2 = videotest_gnl_src ("source2", 3 * GST_SECOND, 1 * GST_SECOND, 2, 1);
+  source2 = videotest_nle_src ("source2", 3 * GST_SECOND, 1 * GST_SECOND, 2, 1);
   fail_if (source2 == NULL);
   check_start_stop_duration (source2, 3 * GST_SECOND, 4 * GST_SECOND,
       1 * GST_SECOND);
@@ -399,7 +399,7 @@ GST_START_TEST (test_one_expandable_another)
      Duration : 1s
      Priority : 1
    */
-  source3 = videotest_gnl_src ("source3", 4 * GST_SECOND, 1 * GST_SECOND, 2, 1);
+  source3 = videotest_nle_src ("source3", 4 * GST_SECOND, 1 * GST_SECOND, 2, 1);
   fail_if (source3 == NULL);
   check_start_stop_duration (source3, 4 * GST_SECOND, 5 * GST_SECOND,
       1 * GST_SECOND);
@@ -407,7 +407,7 @@ GST_START_TEST (test_one_expandable_another)
 
   /* Add one source */
 
-  gnl_composition_add (GST_BIN (comp), source1);
+  nle_composition_add (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, GST_SECOND, 2 * GST_SECOND, 1 * GST_SECOND);
 
@@ -415,7 +415,7 @@ GST_START_TEST (test_one_expandable_another)
 
   /* defaultsrc source */
 
-  gnl_composition_add (GST_BIN (comp), defaultsrc);
+  nle_composition_add (GST_BIN (comp), defaultsrc);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
   check_start_stop_duration (defaultsrc, 0, 2 * GST_SECOND, 2 * GST_SECOND);
@@ -424,7 +424,7 @@ GST_START_TEST (test_one_expandable_another)
 
   /* Second source */
 
-  gnl_composition_add (GST_BIN (comp), source2);
+  nle_composition_add (GST_BIN (comp), source2);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 4 * GST_SECOND, 4 * GST_SECOND);
   check_start_stop_duration (defaultsrc, 0, 4 * GST_SECOND, 4 * GST_SECOND);
@@ -434,7 +434,7 @@ GST_START_TEST (test_one_expandable_another)
 
   /* Third source */
 
-  gnl_composition_add (GST_BIN (comp), source3);
+  nle_composition_add (GST_BIN (comp), source3);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 5 * GST_SECOND, 5 * GST_SECOND);
   check_start_stop_duration (defaultsrc, 0, 5 * GST_SECOND, 5 * GST_SECOND);
@@ -479,7 +479,7 @@ GST_START_TEST (test_renegotiation)
 
   pipeline = gst_pipeline_new ("test_pipeline");
   comp =
-      gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+      gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
   gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
@@ -518,7 +518,7 @@ GST_START_TEST (test_renegotiation)
 
   /* Add one source */
 
-  gnl_composition_add (GST_BIN (comp), source1);
+  nle_composition_add (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
@@ -526,7 +526,7 @@ GST_START_TEST (test_renegotiation)
 
   /* Second source */
 
-  gnl_composition_add (GST_BIN (comp), source2);
+  nle_composition_add (GST_BIN (comp), source2);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
@@ -535,7 +535,7 @@ GST_START_TEST (test_renegotiation)
 
   /* Third source */
 
-  gnl_composition_add (GST_BIN (comp), source3);
+  nle_composition_add (GST_BIN (comp), source3);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
 
@@ -685,7 +685,7 @@ GST_START_TEST (test_one_bin_space_another)
   GList *segments = NULL;
 
   comp =
-      gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+      gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
   gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
@@ -695,7 +695,7 @@ GST_START_TEST (test_one_bin_space_another)
      Duration : 1s
      Priority : 1
    */
-  source1 = videotest_in_bin_gnl_src ("source1", 0, 1 * GST_SECOND, 3, 1);
+  source1 = videotest_in_bin_nle_src ("source1", 0, 1 * GST_SECOND, 3, 1);
   fail_if (source1 == NULL);
   check_start_stop_duration (source1, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
@@ -706,7 +706,7 @@ GST_START_TEST (test_one_bin_space_another)
      Priority : 1
    */
   source2 =
-      videotest_in_bin_gnl_src ("source2", 2 * GST_SECOND, 1 * GST_SECOND, 2,
+      videotest_in_bin_nle_src ("source2", 2 * GST_SECOND, 1 * GST_SECOND, 2,
       1);
   fail_if (source2 == NULL);
   check_start_stop_duration (source2, 2 * GST_SECOND, 3 * GST_SECOND,
@@ -714,26 +714,26 @@ GST_START_TEST (test_one_bin_space_another)
 
   /* Add one source */
 
-  gnl_composition_add (GST_BIN (comp), source1);
+  nle_composition_add (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
 
   /* Second source */
 
-  gnl_composition_add (GST_BIN (comp), source2);
+  nle_composition_add (GST_BIN (comp), source2);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
 
   /* Remove second source */
 
   gst_object_ref (source1);
-  gnl_composition_remove (GST_BIN (comp), source1);
+  nle_composition_remove (GST_BIN (comp), source1);
   check_start_stop_duration (comp, 2 * GST_SECOND, 3 * GST_SECOND,
       1 * GST_SECOND);
 
   /* Re-add second source */
 
-  gnl_composition_add (GST_BIN (comp), source1);
+  nle_composition_add (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
   gst_object_unref (source1);
@@ -754,7 +754,7 @@ GST_START_TEST (test_one_above_another)
   GList *segments = NULL;
 
   comp =
-      gst_element_factory_make_or_warn ("gnlcomposition", "test_composition");
+      gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
   gst_element_set_state (comp, GST_STATE_READY);
   fail_if (comp == NULL);
 
@@ -764,7 +764,7 @@ GST_START_TEST (test_one_above_another)
      Duration : 2s
      Priority : 2
    */
-  source1 = videotest_gnl_src ("source1", 0, 2 * GST_SECOND, 3, 2);
+  source1 = videotest_nle_src ("source1", 0, 2 * GST_SECOND, 3, 2);
   fail_if (source1 == NULL);
   check_start_stop_duration (source1, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
@@ -774,33 +774,33 @@ GST_START_TEST (test_one_above_another)
      Duration : 2s
      Priority : 1
    */
-  source2 = videotest_gnl_src ("source2", 1 * GST_SECOND, 2 * GST_SECOND, 2, 1);
+  source2 = videotest_nle_src ("source2", 1 * GST_SECOND, 2 * GST_SECOND, 2, 1);
   fail_if (source2 == NULL);
   check_start_stop_duration (source2, 1 * GST_SECOND, 3 * GST_SECOND,
       2 * GST_SECOND);
 
   /* Add one source */
 
-  gnl_composition_add (GST_BIN (comp), source1);
+  nle_composition_add (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
 
   /* Second source */
 
-  gnl_composition_add (GST_BIN (comp), source2);
+  nle_composition_add (GST_BIN (comp), source2);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
 
   /* Remove second source */
 
   gst_object_ref (source1);
-  gnl_composition_remove (GST_BIN (comp), source1);
+  nle_composition_remove (GST_BIN (comp), source1);
   check_start_stop_duration (comp, 1 * GST_SECOND, 3 * GST_SECOND,
       2 * GST_SECOND);
 
   /* Re-add second source */
 
-  gnl_composition_add (GST_BIN (comp), source1);
+  nle_composition_add (GST_BIN (comp), source1);
   commit_and_wait (comp, &ret);
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
   gst_object_unref (source1);
@@ -824,6 +824,7 @@ gnonlin_suite (void)
   Suite *s = suite_create ("gnonlin-complex");
   TCase *tc_chain = tcase_create ("complex");
 
+  ges_init ();
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_one_space_another);

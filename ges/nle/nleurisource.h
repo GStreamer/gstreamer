@@ -2,7 +2,7 @@
  * Copyright (C) 2001 Wim Taymans <wim.taymans@gmail.com>
  *               2004-2008 Edward Hervey <bilboed@bilboed.com>
  *
- * gnlurisource.h: Header for GnlURISource
+ * nleurisource.h: Header for NleURISource
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,37 +21,37 @@
  */
 
 
-#ifndef __GNL_URI_SOURCE_H__
-#define __GNL_URI_SOURCE_H__
+#ifndef __NLE_URI_SOURCE_H__
+#define __NLE_URI_SOURCE_H__
 
 #include <gst/gst.h>
-#include "gnlsource.h"
+#include "nlesource.h"
 
 G_BEGIN_DECLS
-#define GNL_TYPE_URI_SOURCE \
-  (gnl_urisource_get_type())
-#define GNL_URI_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GNL_TYPE_URI_SOURCE,GnlURIsource))
-#define GNL_URI_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GNL_TYPE_URI_SOURCE,GnlURIsourceClass))
-#define GNL_IS_URI_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GNL_TYPE_URI_SOURCE))
-#define GNL_IS_URI_SOURCE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GNL_TYPE_URI_SOURCE))
+#define NLE_TYPE_URI_SOURCE \
+  (nle_urisource_get_type())
+#define NLE_URI_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),NLE_TYPE_URI_SOURCE,NleURIsource))
+#define NLE_URI_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),NLE_TYPE_URI_SOURCE,NleURIsourceClass))
+#define NLE_IS_URI_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),NLE_TYPE_URI_SOURCE))
+#define NLE_IS_URI_SOURCE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),NLE_TYPE_URI_SOURCE))
 
-struct _GnlURISource
+struct _NleURISource
 {
-  GnlSource parent;
+  NleSource parent;
 
   gchar *uri;
 };
 
-struct _GnlURISourceClass
+struct _NleURISourceClass
 {
-  GnlSourceClass parent_class;
+  NleSourceClass parent_class;
 };
 
-GType gnl_urisource_get_type (void);
+GType nle_urisource_get_type (void);
 
 G_END_DECLS
-#endif /* __GNL_URI_SOURCE_H__ */
+#endif /* __NLE_URI_SOURCE_H__ */

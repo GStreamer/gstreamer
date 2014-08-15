@@ -129,7 +129,7 @@ ges_source_class_init (GESSourceClass * klass)
 
   g_type_class_add_private (klass, sizeof (GESSourcePrivate));
 
-  track_class->gnlobject_factorytype = "gnlsource";
+  track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = NULL;
 }
 

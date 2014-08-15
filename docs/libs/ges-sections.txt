@@ -130,7 +130,7 @@ GESTrackElement
 GESTrackElementClass
 ges_track_element_set_active
 ges_track_element_get_track
-ges_track_element_get_gnlobject
+ges_track_element_get_nleobject
 ges_track_element_get_element
 ges_track_element_is_active
 ges_track_element_lookup_child

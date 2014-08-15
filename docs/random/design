@@ -342,7 +342,7 @@ Index of features:
   GESTimelineObject, which proxies it to the relevant GESTrackObject.
 
   Create a new GESTrack{Audio|Video}Compositing GstElement which will
-  be put in each track as a priority 0 expandable GnlOperation.
+  be put in each track as a priority 0 expandable NleOperation.
   That object will be able to figure out which
   mixing/scaling/conversion elements to use at any given time by
   inspecting:
@@ -392,11 +392,11 @@ Index of features:
    through publically available APIs (GObject and GStreamer APIs).
 
    The GESTrackObject for example has to duplicate exactly the same
-   properties as GnlObject for no reason.
+   properties as NleObject for no reason.
 
    Other properties are also expensive to re-compute and also become
    non-MT-safe (like computing the exact 'tree' of objects at a
-   certain position in a GnlComposition).
+   certain position in a NleComposition).
 
   Merge the GES and GNonLin modules together into one single module,
   and keep the same previous API for both for backward compatibility.

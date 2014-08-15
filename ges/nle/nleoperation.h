@@ -2,7 +2,7 @@
  * Copyright (C) 2001 Wim Taymans <wim.taymans@chello.be>
  *               2004 Edward Hervey <bilboed@bilboed.com>
  *
- * gnloperation.h: Header for base GnlOperation
+ * nleoperation.h: Header for base NleOperation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,26 +21,26 @@
  */
 
 
-#ifndef __GNL_OPERATION_H__
-#define __GNL_OPERATION_H__
+#ifndef __NLE_OPERATION_H__
+#define __NLE_OPERATION_H__
 
 #include <gst/gst.h>
-#include "gnlobject.h"
+#include "nleobject.h"
 
 G_BEGIN_DECLS
-#define GNL_TYPE_OPERATION \
-  (gnl_operation_get_type())
-#define GNL_OPERATION(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GNL_TYPE_OPERATION,GnlOperation))
-#define GNL_OPERATION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GNL_TYPE_OPERATION,GnlOperationClass))
-#define GNL_IS_OPERATION(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GNL_TYPE_OPERATION))
-#define GNL_IS_OPERATION_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GNL_TYPE_OPERATION))
-    struct _GnlOperation
+#define NLE_TYPE_OPERATION \
+  (nle_operation_get_type())
+#define NLE_OPERATION(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),NLE_TYPE_OPERATION,NleOperation))
+#define NLE_OPERATION_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),NLE_TYPE_OPERATION,NleOperationClass))
+#define NLE_IS_OPERATION(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),NLE_TYPE_OPERATION))
+#define NLE_IS_OPERATION_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),NLE_TYPE_OPERATION))
+    struct _NleOperation
 {
-  GnlObject parent;
+  NleObject parent;
 
   /* <private> */
 
@@ -64,27 +64,27 @@ G_BEGIN_DECLS
   GstClockTime next_base_time;
 };
 
-struct _GnlOperationClass
+struct _NleOperationClass
 {
-  GnlObjectClass parent_class;
+  NleObjectClass parent_class;
 
-  void	(*input_priority_changed) (GnlOperation * operation, GstPad *pad, guint32 priority);
+  void	(*input_priority_changed) (NleOperation * operation, GstPad *pad, guint32 priority);
 };
 
-GstPad * get_unlinked_sink_ghost_pad (GnlOperation * operation);
+GstPad * get_unlinked_sink_ghost_pad (NleOperation * operation);
 
 void
-gnl_operation_signal_input_priority_changed(GnlOperation * operation, GstPad *pad,
+nle_operation_signal_input_priority_changed(NleOperation * operation, GstPad *pad,
 					    guint32 priority);
 
-void gnl_operation_update_base_time (GnlOperation *operation,
+void nle_operation_update_base_time (NleOperation *operation,
                                      GstClockTime timestamp);
 
-void gnl_operation_hard_cleanup (GnlOperation *operation);
+void nle_operation_hard_cleanup (NleOperation *operation);
 
 
 /* normal GOperation stuff */
-GType gnl_operation_get_type (void);
+GType nle_operation_get_type (void);
 
 G_END_DECLS
-#endif /* __GNL_OPERATION_H__ */
+#endif /* __NLE_OPERATION_H__ */

@@ -101,7 +101,7 @@ ges_audio_source_class_init (GESAudioSourceClass * klass)
 
   g_type_class_add_private (klass, sizeof (GESAudioSourcePrivate));
 
-  track_class->gnlobject_factorytype = "gnlsource";
+  track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = ges_audio_source_create_element;
   audio_source_class->create_source = NULL;
 }

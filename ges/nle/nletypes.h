@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2004 Edward Hervey <bilboed@bilboed.com>
  *
- * gnltypes.h: Header for class definition
+ * nletypes.h: Header for class definition
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,24 +19,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GNL_TYPES_H__
-#define __GNL_TYPES_H__
+#ifndef __NLE_TYPES_H__
+#define __NLE_TYPES_H__
 
 #include <glib.h>
 
-typedef struct _GnlObject GnlObject;
-typedef struct _GnlObjectClass GnlObjectClass;
+typedef struct _NleObject NleObject;
+typedef struct _NleObjectClass NleObjectClass;
 
-typedef struct _GnlComposition GnlComposition;
-typedef struct _GnlCompositionClass GnlCompositionClass;
+typedef struct _NleComposition NleComposition;
+typedef struct _NleCompositionClass NleCompositionClass;
 
-typedef struct _GnlOperation GnlOperation;
-typedef struct _GnlOperationClass GnlOperationClass;
+typedef struct _NleOperation NleOperation;
+typedef struct _NleOperationClass NleOperationClass;
 
-typedef struct _GnlSource GnlSource;
-typedef struct _GnlSourceClass GnlSourceClass;
+typedef struct _NleSource NleSource;
+typedef struct _NleSourceClass NleSourceClass;
 
-typedef struct _GnlURISource GnlURISource;
-typedef struct _GnlURISourceClass GnlURISourceClass;
+typedef struct _NleURISource NleURISource;
+typedef struct _NleURISourceClass NleURISourceClass;
 
 #endif

@@ -190,7 +190,7 @@ ges_video_source_class_init (GESVideoSourceClass * klass)
   g_type_class_add_private (klass, sizeof (GESVideoSourcePrivate));
 
   element_class->set_parent = _set_parent;
-  track_class->gnlobject_factorytype = "gnlsource";
+  track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = ges_video_source_create_element;
   video_source_class->create_source = NULL;
 }

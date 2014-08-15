@@ -37,7 +37,7 @@ SCENARIOS
         ==> ges_track_add_object (track, trackobject);
           Set the track on the TrackObject
             ==> ges_track_object_set_track (track)
-	      The GESTrackObject can create the GnlObject
+	      The GESTrackObject can create the NleObject
 
 
 
@@ -108,7 +108,7 @@ Methods
          return ges_track_source_new();
 
 * gboolean
-  ges_timeline_object_fill_track_object (GESTimelineObject *tlo, GESTrackObject *tro, GstElement *gnlobj);
+  ges_timeline_object_fill_track_object (GESTimelineObject *tlo, GESTrackObject *tro, GstElement *nleobj);
 
     * up to the implementation :)
 
@@ -120,8 +120,8 @@ Methods
 
     * Set the track on the track_object
       ges_track_object_set_track (object, track);
-    * Add the GnlObject of the TrackObject to the composition
-      gst_bin_add (track->composition, object->gnlobject);
+    * Add the NleObject of the TrackObject to the composition
+      gst_bin_add (track->composition, object->nleobject);
 
 
 [ GESTrackObject ]
@@ -130,14 +130,14 @@ Methods
   ges_track_object_set_track (GESTrackObject * object, GESTrack * track);
 
     * Set the track field of the TrackObject
-    * if no GnlObject is available yet:
-        * Call the 'create_gnl_object' virtual method
+    * if no NleObject is available yet:
+        * Call the 'create_nle_object' virtual method
 
 
-* Virtual-method for GESTrackObject::create_gnl_object
+* Virtual-method for GESTrackObject::create_nle_object
 
-    * Create a GnlObject of the proper type
-      Ex : gnlobject = gst_element_factory_make("gnlsource", NULL);
-    * Ask the TimelineObject to fill in the GnlObject
-      => ges_timeline_object_fill_track_object (GESTimelineObject * tlo, GESTrackObject * tro, GstElement * gnlobj);
+    * Create a NleObject of the proper type
+      Ex : nleobject = gst_element_factory_make("nlesource", NULL);
+    * Ask the TimelineObject to fill in the NleObject
+      => ges_timeline_object_fill_track_object (GESTimelineObject * tlo, GESTrackObject * tro, GstElement * nleobj);
 
