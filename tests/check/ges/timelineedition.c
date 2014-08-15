@@ -47,8 +47,6 @@ GST_START_TEST (test_basic_timeline_edition)
   GESTrackElement *trackelement, *trackelement1, *trackelement2;
   GESContainer *clip, *clip1, *clip2;
 
-  ges_init ();
-
   track = GES_TRACK (ges_audio_track_new ());
   fail_unless (track != NULL);
 
@@ -248,8 +246,6 @@ GST_START_TEST (test_snapping)
   GESContainer *clip, *clip1, *clip2;
   GESLayer *layer;
   GList *trackelements;
-
-  ges_init ();
 
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
@@ -493,8 +489,6 @@ GST_START_TEST (test_simple_triming)
 
   gchar *uri = ges_test_file_uri ("audio_video.ogg");
 
-  ges_init ();
-
   project = ges_project_new (NULL);
 
   mainloop = g_main_loop_new (NULL, FALSE);
@@ -542,8 +536,6 @@ GST_START_TEST (test_timeline_edition_mode)
   GESContainer *clip, *clip1, *clip2;
   GESLayer *layer, *layer1, *layer2;
   GList *trackelements, *layers, *tmp;
-
-  ges_init ();
 
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
@@ -991,8 +983,6 @@ GST_START_TEST (test_groups)
 
   GList *clips = NULL;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
 
   /* Our timeline
@@ -1177,8 +1167,6 @@ GST_START_TEST (test_snapping_groups)
 
   GList *clips = NULL;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
   g_object_set (timeline, "snapping-distance", (guint64) 3, NULL);
 
@@ -1317,7 +1305,6 @@ GST_START_TEST (test_scaling)
       gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, 1200, "height",
       G_TYPE_INT, 1000, NULL);
 
-  ges_init ();
   timeline = ges_timeline_new ();
   ges_timeline_add_track (timeline, trackv);
   layer = ges_layer_new ();
@@ -1480,6 +1467,8 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-timeline-edition");
   TCase *tc_chain = tcase_create ("timeline-edition");
+
+  ges_init ();
 
   suite_add_tcase (s, tc_chain);
 
