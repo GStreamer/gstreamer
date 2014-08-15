@@ -3106,7 +3106,12 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       if (!qtdemux->moof_offset) {
         qtdemux->moof_offset = qtdemux->offset;
       }
-      /* fall-through */
+      if (qtdemux->got_moov) {
+        GST_INFO_OBJECT (qtdemux, "moof header, got moov, done with headers");
+        ret = GST_FLOW_EOS;
+        goto beach;
+      }
+      break;
     case FOURCC_mdat:
     case FOURCC_free:
     case FOURCC_wide:
