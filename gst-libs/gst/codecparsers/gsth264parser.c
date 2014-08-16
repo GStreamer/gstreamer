@@ -731,9 +731,9 @@ gst_h264_parser_parse_buffering_period (GstH264NalParser * nalparser,
 
       for (sched_sel_idx = 0; sched_sel_idx <= hrd->cpb_cnt_minus1;
           sched_sel_idx++) {
-        READ_UINT8 (nr, per->nal_initial_cpb_removal_delay[sched_sel_idx],
+        READ_UINT32 (nr, per->nal_initial_cpb_removal_delay[sched_sel_idx],
             nbits);
-        READ_UINT8 (nr,
+        READ_UINT32 (nr,
             per->nal_initial_cpb_removal_delay_offset[sched_sel_idx], nbits);
       }
     }
@@ -745,9 +745,9 @@ gst_h264_parser_parse_buffering_period (GstH264NalParser * nalparser,
 
       for (sched_sel_idx = 0; sched_sel_idx <= hrd->cpb_cnt_minus1;
           sched_sel_idx++) {
-        READ_UINT8 (nr, per->vcl_initial_cpb_removal_delay[sched_sel_idx],
+        READ_UINT32 (nr, per->vcl_initial_cpb_removal_delay[sched_sel_idx],
             nbits);
-        READ_UINT8 (nr,
+        READ_UINT32 (nr,
             per->vcl_initial_cpb_removal_delay_offset[sched_sel_idx], nbits);
       }
     }

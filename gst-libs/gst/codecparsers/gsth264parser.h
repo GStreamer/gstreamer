@@ -705,12 +705,12 @@ struct _GstH264BufferingPeriod
   GstH264SPS *sps;
 
   /* seq->vui_parameters->nal_hrd_parameters_present_flag */
-  guint8 nal_initial_cpb_removal_delay[32];
-  guint8 nal_initial_cpb_removal_delay_offset[32];
+  guint32 nal_initial_cpb_removal_delay[32];
+  guint32 nal_initial_cpb_removal_delay_offset[32];
 
   /* seq->vui_parameters->vcl_hrd_parameters_present_flag */
-  guint8 vcl_initial_cpb_removal_delay[32];
-  guint8 vcl_initial_cpb_removal_delay_offset[32];
+  guint32 vcl_initial_cpb_removal_delay[32];
+  guint32 vcl_initial_cpb_removal_delay_offset[32];
 };
 
 struct _GstH264RecoveryPoint
