@@ -157,7 +157,7 @@ main (int argc, char *argv[])
 
   spectrum = gst_element_factory_make ("spectrum", "spectrum");
   g_object_set (G_OBJECT (spectrum), "bands", spect_bands, "threshold", -80,
-      "message", TRUE, "interval", 500 * GST_MSECOND, NULL);
+      "post-messages", TRUE, "interval", 500 * GST_MSECOND, NULL);
 
   audioconvert = gst_element_factory_make ("audioconvert", "audioconvert");
 
