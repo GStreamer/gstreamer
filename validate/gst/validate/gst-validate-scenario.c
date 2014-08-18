@@ -20,6 +20,103 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gst-validate-scenario
+ * @short_description: A GstValidateScenario represents a set of actions to be executed on a pipeline.
+ *
+ * A #GstValidateScenario represents the scenario that will be executed on a #GstPipeline.
+ * It is basically an ordered list of #GstValidateAction that will be executed during the
+ * execution of the pipeline.
+ *
+ * To be able to simply define that list of actions, a dedicated file format is used. This
+ * file format is based on the #GstStructure serialized format which is a basic, type aware,
+ * key value format. It takes the type of the action as first coma separeted field, and then
+ * the key values pair of the form 'parameter=value' are separated by comas. The values
+ * type will be guessed if not casted as in 'parameter=(string)value'. You can force the type
+ * guessing system to actually know what type you want by giving it the right hints. For example
+ * to make sure the value is a double, you should add a decimal (ie '1' will be concidered as a
+ * int, but '1.0' will be concidered as a double and '"1.0"' will be concidered as a string)
+ *
+ * For example to represent a seek action, you should add the following line in the '.scenario'
+ * file.
+ *
+ * |[
+ * seek, playback_time=10.0, start=0.0, flags=accurate+flush
+ * ]|
+ *
+ *
+ * The files to be used as scenario should have a '.scenario' extension and
+ * should be placed either in $USER_DATA_DIR/gstreamer-1.0/validate-scenario ,
+ * $GST_DATADIR/gstreamer-1.0/validate-scenario or in a path defined in the
+ * $GST_VALIDATE_SCENARIOS_PATH environment variable.
+ *
+ * Each line in the '.scenario' file represent an action (you can also use \ at the end of a line
+ * write a single action on multiple lines). Usually you should start you scenario with a 'description'
+ * "config" action in order for the user to have more information about the scenario. It can contain
+ * a 'summary' field which is a string explaning what the scenario does and then several info fields
+ * about the scenario. You can find more info about it running:
+ *
+ * |[
+ *  gst-validate-1.0 --list-action-types description
+ * ]|
+ *
+ * So a basic scenario file that will seek three times and stop would look like:
+ *
+ * |[
+ *
+ *    description, summary="Seeks at 1.0 to 2.0 then at \
+ *                          3.0 to 0.0 and then seeks at \
+ *                          1.0 to 2.0 for 1.0 second (between 2.0 and 3.0).", \
+ *                          seek=true, duration=5.0, min-media-duration=4.0
+ *    seek, playback_time=1.0, rate=1.0, start=2.0, flags=accurate+flush
+ *    seek, playback_time=3.0, rate=1.0, start=0.0, flags=accurate+flush
+ *    seek, playback_time=1.0, rate=1.0, start=2.0, stop=3.0, flags=accurate+flush
+ * ]|
+ *
+ * Many action types have been implemented to help users define their own scenarios.
+ * For example there are:
+ * <itemizedlist><title>Action type examples:</title>
+ *   <listitem><para>
+ *     seek: Seeks into the stream
+ *   </para></listitem>
+ *   <listitem><para>
+ *     play: Set the pipeline state to GST_STATE_PLAYING
+ *   </para></listitem>
+ *   <listitem><para>
+ *     pause: Set the pipeline state to GST_STATE_PAUSED
+ *   </para></listitem>
+ *   <listitem><para>
+ *     stop: Stop the execution of the pipeline. NOTE: That action actually post a
+ *           #GST_MESSAGE_REQUEST_STATE (requesting #GST_STATE_NULL) message on the bus and
+ *           the application should quit.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     ...
+ *   </para></listitem>
+ * </itemizedlist>
+ *
+ * To get all the details about the registered action types, you can list them all with:
+ *
+ * |[
+ *  gst-validate-1.0 --list-action-types
+ * ]|
+ *
+ * and (includes transcoding specific action types):
+ *
+ * |[
+ *  gst-validate-transcoding-1.0 --list-action-types
+ * ]|
+ *
+ * You can also register new types yourself thanks to #gst_validate_add_action_type. And you will be able
+ * to print the action types details thanks to the #gst_validate_print_action_types function in your own
+ * tool.
+ *
+ * Many scenarios are distributed with gst-validate, you can list them all using:
+ *
+ * |[
+ *  gst-validate-1.0 --list-scenarios
+ * ]|
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -249,6 +346,25 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
   return FALSE;
 }
 
+/**
+ * gst_validate_action_get_clocktime:
+ * @scenario: The #GstValidateScenario from which to get a time
+ *            for a parameter of an action
+ * @action: The action from which to retrieve the time for @name
+ *          parameter.
+ * @name: The name of the parameter for which to retrive a time
+ * @retval: (out): The return value for the wanted time
+ *
+ *
+ * Get a time value for the @name parameter of an action. This
+ * method should be called to retrived and compute a timed value of a given
+ * action. It will first try to retrieve the value as a double,
+ * then get it as a string and execute any formula taking into account
+ * the 'position' and 'duration' variables. And it will always convert that
+ * value to a GstClockTime.
+ *
+ * Returns: %TRUE if the time value could be retrieved/computed or %FALSE otherwize
+ */
 gboolean
 gst_validate_action_get_clocktime (GstValidateScenario * scenario,
     GstValidateAction * action, const gchar * name, GstClockTime * retval)
@@ -283,6 +399,26 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
   return TRUE;
 }
 
+/**
+ * gst_validate_scenario_execute_seek:
+ * @scenario: The #GstValidateScenario for which to execute a seek action
+ * @action: The seek action to execute
+ * @rate: The playback rate of the seek
+ * @format: The #GstFormat of the seek
+ * @flags: The #GstSeekFlags of the seek
+ * @start_type: The #GstSeekType of the start value of the seek
+ * @start: The start time of the seek
+ * @stop_type: The #GstSeekType of the stop value of the seek
+ * @stop: The stop time of the seek
+ *
+ * Executes a seek event on the scenario' pipeline. You should always use
+ * that method when you want to execute a seek inside a new action types
+ * so that the scenario state is updated taking into account that seek.
+ *
+ * For more information you should have a look at #gst_event_new_seek
+ *
+ * Returns: %TRUE if the seek could be executed, %FALSE otherwize
+ */
 gboolean
 gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
     GstValidateAction * action, gdouble rate, GstFormat format,
@@ -1835,6 +1971,18 @@ done:
   return res;
 }
 
+/**
+ * gst_validate_add_action_type:
+ * @type_name: The name of the new action type to add
+ * @function: (scope notified): The function to be called to execute the action
+ * @parameters: The #GstValidateActionParameter usable as parameter of the type
+ * @description: A description of the new type
+ * @is_config: Whether the action is a config action or not. A config action will
+ * be executed even before the pipeline starts processing
+ *
+ * Register a new action type to the action type system. If the action type already
+ * exists, it will be overriden by that new definition
+ */
 void
 gst_validate_add_action_type (const gchar * type_name,
     GstValidateExecuteAction function,
@@ -1892,6 +2040,15 @@ gst_validate_list_action_types (void)
   return NULL;
 }
 
+/**
+ * gst_validate_print_action_types:
+ * @wanted_types: (array length=num_wanted_types): (optional):  List of types to be printed
+ * @num_wanted_types: (optional): Length of @wanted_types
+ *
+ * Prints the action types details wanted in @wanted_types
+ *
+ * Returns: True if all types could be printed
+ */
 gboolean
 gst_validate_print_action_types (gchar ** wanted_types, gint num_wanted_types)
 {

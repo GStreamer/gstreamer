@@ -20,6 +20,10 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:validate
+ * @short_description: Initialize GstValidate
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -30,6 +34,13 @@
 
 GST_DEBUG_CATEGORY (gstvalidate_debug);
 
+/**
+ * gst_validate_init:
+ *
+ * Initializes GstValidate, call that before any usage of GstValidate.
+ * You should take care of initilizing GStreamer before calling this
+ * function.
+ */
 void
 gst_validate_init (void)
 {

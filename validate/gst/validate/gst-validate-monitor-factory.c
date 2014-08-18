@@ -21,6 +21,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gst-validate-monitor-factory
+ * @short_description: Lets you start monitoring a #GstObject with GstValidate
+ *
+ * To start monitoring and thus run GstValidate tests on a #GstPipeline, the only thing to
+ * do is to instanciate a #GstValidateRunner and then attach a #GstValidateMonitor
+ * to it with #gst_validate_monitor_factory_create
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -30,6 +39,16 @@
 #include "gst-validate-pad-monitor.h"
 #include "gst-validate-override-registry.h"
 
+/**
+ * gst_validate_monitor_factory_create:
+ * @target: The #GstObject to create a #GstValidateMonitor for
+ * @runner: The #GstValidateRunner to use for the new monitor
+ * @parent: (optional): The parent of the new monitor
+ *
+ * Create a new monitor for @target and starts monitoring it.
+ *
+ * Returns: The newly created #GstValidateMonitor
+ */
 GstValidateMonitor *
 gst_validate_monitor_factory_create (GstObject * target,
     GstValidateRunner * runner, GstValidateMonitor * parent)

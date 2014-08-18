@@ -6,6 +6,7 @@ SUBDIRS = 	\
 	gst 	\
 	tools 	\
 	pkgconfig 	\
+	docs    \
 	po
 
 DIST_SUBDIRS = $(SUBDIRS)

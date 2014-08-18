@@ -282,6 +282,9 @@ tools/Makefile
 tools/launcher/Makefile
 tools/launcher/apps/Makefile
 tools/launcher/apps/validate/Makefile
+docs/Makefile
+docs/version.entities
+docs/validate/Makefile
 ])
 AC_OUTPUT
 

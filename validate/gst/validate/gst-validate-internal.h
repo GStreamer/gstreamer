@@ -30,6 +30,7 @@ GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 typedef struct _GstValidateScenario        GstValidateScenario;
 typedef struct _GstValidateAction          GstValidateAction;
 typedef struct _GstValidateActionParameter GstValidateActionParameter;
+typedef struct _GstValidateActionType      GstValidateActionType;
 typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
 struct _GstValidateActionType
@@ -47,6 +48,9 @@ struct _GstValidateActionType
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
+
+
+GST_EXPORT GType _gst_validate_action_type_type;
 
 void init_scenarios (void);
 

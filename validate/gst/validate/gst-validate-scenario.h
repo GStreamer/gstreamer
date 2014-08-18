@@ -40,24 +40,46 @@ typedef struct _GstValidateScenario        GstValidateScenario;
 typedef struct _GstValidateScenarioClass   GstValidateScenarioClass;
 typedef struct _GstValidateScenarioPrivate GstValidateScenarioPrivate;
 typedef struct _GstValidateAction          GstValidateAction;
-typedef struct _GstValidateActionType      GstValidateActionType;
 typedef struct _GstValidateActionParameter GstValidateActionParameter;
 
+GST_EXPORT GType _gst_validate_action_type;
+
+/**
+ * GstValidateExecuteAction:
+ * @scenario: The #GstValidateScenario from which the @action is executed
+ * @action: The #GstValidateAction being executed
+ *
+ *
+ * This function that executes a #GstValidateAction
+ *
+ * Returns: %True if the action could be executed %FALSE otherwise
+ */
 typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
-GST_EXPORT GType _gst_validate_action_type;
-GST_EXPORT GType _gst_validate_action_type_type;
 
+/**
+ * GstValidateAction:
+ * @type: The type of the #GstValidateAction, which is the name of the
+ *        GstValidateActionType registered with
+ *        #gst_validate_add_action_type
+ * @name: The name of the action, set from the user in the scenario
+ * @structure: the #GstStructure defining the action
+ *
+ * The GstValidateAction defined to be executed as part of a scenario
+ */
 struct _GstValidateAction
 {
   GstMiniObject          mini_object;
 
+  /*< public > */
   const gchar *type;
   const gchar *name;
+  GstStructure *structure;
+
+  /* < private > */
   guint action_number;
   gint repeat;
   GstClockTime playback_time;
-  GstStructure *structure;
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
@@ -73,6 +95,24 @@ GType gst_validate_action_type_get_type     (void);
 
 gboolean gst_validate_print_action_types    (gchar ** wanted_types, gint num_wanted_types);
 
+/**
+ * GstValidateActionParameter:
+ * @name: The name of the parameter
+ * @description: The description of the parameter
+ * @mandatory: Whether the parameter is mandatory for
+ *             a specific action type
+ * @types: The types the parameter can take described as a
+ * string. It can be precisely describing how the typing works
+ *         using '\n' between the various acceptable types.
+ * @possible_variables: The name of the variables that can be
+ *                      used to compute the value of the parameter.
+ *                      For example for the start value of a seek
+ *                      action, we will accept to take 'duration'
+ *                      which will be replace by the total duration
+ *                      of the stream on which the action is executed.
+ * @def: The default value of a parametter as a string, should be %NULL
+ *       for mandatory streams.
+ */
 struct _GstValidateActionParameter
 {
   const gchar  *name;
@@ -90,14 +130,23 @@ struct _GstValidateScenarioClass
 {
   GObjectClass parent_class;
 
+  /*< public >*/
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstValidateScenario:
+ * @pipeline: The #GstPipeline on which the scenario is being executed.
+ */
 struct _GstValidateScenario
 {
   GObject parent;
 
+  /*< public >*/
   GstElement *pipeline;
+
+  /*< private >*/
   GstValidateScenarioPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING];

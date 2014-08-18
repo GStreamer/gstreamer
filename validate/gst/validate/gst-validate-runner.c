@@ -35,7 +35,25 @@
  * SECTION:gst-validate-runner
  * @short_description: Class that runs Gst Validate tests for a pipeline
  *
- * TODO
+ * Allows you to test a pipeline within GstValidate. It is the object where
+ * all issue reporting is done.
+ *
+ * In the tools using GstValidate the only minimal code to be able to monitor
+ * your pipelines is:
+ *
+ * |[
+ *  GstPipeline *pipeline = gst_pipeline_new ("monitored-pipeline");
+ *  GstValidateRunner *runner = gst_validate_runner_new ();
+ *  GstValidateMonitor *monitor = gst_validate_monitor_factory_create (
+ *          GST_OBJECT (pipeline), runner, NULL);
+ *
+ *  // Run the pipeline and do whatever you want with it
+ *
+ *  // In that same order
+ *  gst_object_unref (pipeline);
+ *  gst_object_unref (runner);
+ *  gst_object_unref (monitor);
+ * ]|
  */
 
 #define gst_validate_runner_parent_class parent_class
@@ -86,6 +104,10 @@ gst_validate_runner_init (GstValidateRunner * runner)
 
 /**
  * gst_validate_runner_new:
+ *
+ * Create a new #GstValidateRunner
+ *
+ * Returns: A newly created #GstValidateRunner
  */
 GstValidateRunner *
 gst_validate_runner_new (void)
@@ -102,6 +124,14 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
   g_signal_emit (runner, _signals[REPORT_ADDED_SIGNAL], 0, report);
 }
 
+/**
+ * gst_validate_runner_get_reports_count:
+ * @runner: The $GstValidateRunner to get the number of report from
+ *
+ * Get the number of reports present in the runner:
+ *
+ * Returns: The number of report present in the runner.
+ */
 guint
 gst_validate_runner_get_reports_count (GstValidateRunner * runner)
 {
@@ -117,6 +147,17 @@ gst_validate_runner_get_reports (GstValidateRunner * runner)
   return runner->reports;
 }
 
+/**
+ * gst_validate_runner_printf:
+ * @runner: The #GstValidateRunner to print all the reports for
+ *
+ * Prints all the report on the terminal or on wherever set
+ * on the #GST_VALIDATE_FILE env variable.
+ *
+ * Retrurns: 0 if no critical error has been found and 18 if a critical
+ * error as been detected. That return value is usually to be used as
+ * exit code of the application.
+ * */
 int
 gst_validate_runner_printf (GstValidateRunner * runner)
 {
