@@ -9053,14 +9053,16 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
     }
 
     /* parse the initial sample for use in setting the frame rate cap */
-    while (sample_num == 0) {
+    while (sample_num == 0 && sample_num < stream->n_samples) {
       if (!qtdemux_parse_samples (qtdemux, stream, sample_num))
         break;
       ++sample_num;
     }
-    stream->first_duration = stream->samples[0].duration;
-    GST_LOG_OBJECT (qtdemux, "stream %d first duration %u",
-        stream->track_id, stream->first_duration);
+    if (stream->n_samples > 0 && stream->stbl_index > 0) {
+      stream->first_duration = stream->samples[0].duration;
+      GST_LOG_OBJECT (qtdemux, "stream %d first duration %u",
+          stream->track_id, stream->first_duration);
+    }
   }
 
   return ret;
