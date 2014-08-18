@@ -34,7 +34,7 @@
  * udpsrc can read from multicast groups by setting the #GstUDPSrc:multicast-group
  * property to the IP address of the multicast group.
  *
- * Alternatively one can provide a custom socket to udpsrc with the #GstUDPSrc:sockfd
+ * Alternatively one can provide a custom socket to udpsrc with the #GstUDPSrc:socket
  * property, udpsrc will then not allocate a socket itself but use the provided
  * one.
  *
@@ -80,10 +80,10 @@
  * because it is blocked by a firewall.
  *
  * A custom file descriptor can be configured with the
- * #GstUDPSrc:sockfd property. The socket will be closed when setting the
- * element to READY by default. This behaviour can be
- * overriden with the #GstUDPSrc:closefd property, in which case the application
- * is responsible for closing the file descriptor.
+ * #GstUDPSrc:socket property. The socket will be closed when setting
+ * the element to READY by default. This behaviour can be overriden
+ * with the #GstUDPSrc:close-socket property, in which case the
+ * application is responsible for closing the file descriptor.
  *
  * <refsect2>
  * <title>Examples</title>
