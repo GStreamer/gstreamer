@@ -81,8 +81,10 @@ rm -rf $RPM_BUILD_ROOT
 # helper programs
 %{_bindir}/gst-discoverer-%{majorminor}
 %{_bindir}/gst-play-%{majorminor}
+%{_bindir}/gst-device-monitor-%{majorminor}
 %{_mandir}/man1/gst-discoverer-%{majorminor}*
 %{_mandir}/man1/gst-play-%{majorminor}*
+%{_mandir}/man1/gst-device-monitor-%{majorminor}*
 
 # libraries
 %{_libdir}/libgstaudio-%{majorminor}.so.*
