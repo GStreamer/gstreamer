@@ -92,9 +92,12 @@ class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
                 continue
 
             for comb in self.test_manager.get_encoding_formats():
+                suffix = os.path.basename (mediainfo.media_descriptor.get_path())
+                suffix = suffix.replace (".media_info", "")
+                suffix = suffix.replace (".stream_info", "")
                 classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.media_descriptor.get_protocol(),
                                                                 str(comb).replace(' ', '_'),
-                                                                os.path.basename(uri).replace(".", "_"))
+                                                                suffix)
                 self.add_test(GstValidateTranscodingTest(classname,
                                                          self.test_manager.options,
                                                          self.test_manager.reporter,
@@ -179,7 +182,8 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
                 fname = "%s.%s" % (self.get_fname(scenario,
                                    protocol),
-                                   os.path.basename(uri).replace(".", "_"))
+                                   os.path.basename(minfo.media_descriptor.get_path()).replace(".stream_info",
+                                       '').replace(".media_info", ''))
                 self.debug("Adding: %s", fname)
 
                 if scenario.does_reverse_playback() and protocol == Protocols.HTTP:
