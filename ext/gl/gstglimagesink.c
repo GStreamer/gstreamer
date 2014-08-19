@@ -225,6 +225,7 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
     gst_pad_send_event (pad, event);
 
   gst_object_unref (pad);
+  gst_object_unref (window);
 }
 
 static void
