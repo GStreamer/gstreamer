@@ -494,9 +494,6 @@ _draw_checker_background (GstGLVideoMixer * video_mixer)
   };
   /* *INDENT-ON* */
 
-  attr_position_loc =
-      gst_gl_shader_get_attribute_location (video_mixer->shader, "a_position");
-
   if (!video_mixer->checker) {
     if (!gst_gl_context_gen_shader (mixer->context, checker_v_src,
             checker_f_src, &video_mixer->checker))
@@ -504,6 +501,8 @@ _draw_checker_background (GstGLVideoMixer * video_mixer)
   }
 
   gst_gl_shader_use (video_mixer->checker);
+  attr_position_loc =
+      gst_gl_shader_get_attribute_location (video_mixer->checker, "a_position");
 
   gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
       GL_FALSE, 3 * sizeof (GLfloat), &v_vertices[0]);
