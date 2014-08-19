@@ -753,7 +753,14 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     gst_pad_push_event (stream->pad, gst_event_new_caps (caps));
 
     if (active_stream->cur_adapt_set) {
-      lang = active_stream->cur_adapt_set->lang;
+      GstAdaptationSetNode *adp_set = active_stream->cur_adapt_set;
+      lang = adp_set->lang;
+
+      /* Fallback to the language in ContentComponent node */
+      if (lang == NULL && g_list_length (adp_set->ContentComponents) == 1) {
+        GstContentComponentNode *cc_node = adp_set->ContentComponents->data;
+        lang = cc_node->lang;
+      }
     }
 
     if (lang) {
