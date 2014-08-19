@@ -49,6 +49,7 @@ static void gst_gl_mixer_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static void gst_gl_mixer_pad_finalize (GObject * object);
 
 static void gst_gl_mixer_set_context (GstElement * element,
     GstContext * context);
@@ -85,6 +86,19 @@ gst_gl_mixer_pad_class_init (GstGLMixerPadClass * klass)
 
   gobject_class->set_property = gst_gl_mixer_pad_set_property;
   gobject_class->get_property = gst_gl_mixer_pad_get_property;
+
+  gobject_class->finalize = gst_gl_mixer_pad_finalize;
+}
+
+static void
+gst_gl_mixer_pad_finalize (GObject * object)
+{
+  GstGLMixerPad *pad = GST_GL_MIXER_PAD (object);
+
+  if (pad->upload) {
+    gst_object_unref (pad->upload);
+    pad->upload = NULL;
+  }
 }
 
 static void
