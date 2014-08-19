@@ -2077,9 +2077,11 @@ gst_dash_demux_stream_update_source (GstDashDemuxStream * stream,
         GST_DEBUG_OBJECT (demux, "Failed to re-use old source element: %s",
             err->message);
         g_clear_error (&err);
+        gst_object_unref (stream->src_srcpad);
         gst_element_set_state (stream->src, GST_STATE_NULL);
         gst_bin_remove (GST_BIN_CAST (demux), stream->src);
         stream->src = NULL;
+        stream->src_srcpad = NULL;
       }
     }
     g_free (old_uri);
