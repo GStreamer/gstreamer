@@ -159,6 +159,7 @@ guint                   gst_bus_add_watch_full          (GstBus * bus,
 guint                   gst_bus_add_watch               (GstBus * bus,
                                                          GstBusFunc func,
                                                          gpointer user_data);
+gboolean                gst_bus_remove_watch            (GstBus * bus);
 
 /* polling the bus */
 GstMessage*             gst_bus_poll                    (GstBus *bus, GstMessageType events,

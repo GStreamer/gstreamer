@@ -188,7 +188,7 @@ GST_START_TEST (test_watch)
   fail_unless_equals_int (num_eos, 10);
   fail_unless_equals_int (num_app, 10);
 
-  g_source_remove (id);
+  fail_unless (gst_bus_remove_watch (test_bus));
   g_main_loop_unref (main_loop);
 
   gst_object_unref ((GstObject *) test_bus);

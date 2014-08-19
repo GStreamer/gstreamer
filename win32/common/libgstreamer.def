@@ -206,6 +206,7 @@ EXPORTS
 	gst_bus_pop_filtered
 	gst_bus_post
 	gst_bus_remove_signal_watch
+	gst_bus_remove_watch
 	gst_bus_set_flushing
 	gst_bus_set_sync_handler
 	gst_bus_sync_reply_get_type

@@ -897,8 +897,9 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  * When @func is called, the message belongs to the caller; if you want to
  * keep a copy of it, call gst_message_ref() before leaving @func.
  *
- * The watch can be removed using g_source_remove() or by returning %FALSE
- * from @func.
+ * The watch can be removed using gst_bus_remove_watch() or by returning %FALSE
+ * from @func. If the watch was added to the default main context it is also
+ * possible to remove the watch using g_source_remove().
  *
  * MT safe.
  *
@@ -936,8 +937,9 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * There can only be a single bus watch per bus, you must remove it before you
  * can set a new one.
  *
- * The watch can be removed using g_source_remove() or by returning %FALSE
- * from @func.
+ * The watch can be removed using gst_bus_remove_watch() or by returning %FALSE
+ * from @func. If the watch was added to the default main context it is also
+ * possible to remove the watch using g_source_remove().
  *
  * Returns: The event source id or 0 if @bus already got an event source.
  *
@@ -948,6 +950,45 @@ gst_bus_add_watch (GstBus * bus, GstBusFunc func, gpointer user_data)
 {
   return gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT, func,
       user_data, NULL);
+}
+
+/**
+ * gst_bus_remove_watch:
+ * @bus: a #GstBus to remove the watch from.
+ *
+ * Removes an installed bus watch from @bus.
+ *
+ * Returns: %TRUE on success or %FALSE if @bus has no event source.
+ *
+ * Since: 1.6
+ *
+ */
+gboolean
+gst_bus_remove_watch (GstBus * bus)
+{
+  GSource *watch_id;
+
+  g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
+
+  GST_OBJECT_LOCK (bus);
+
+  if (bus->priv->signal_watch == NULL) {
+    GST_ERROR_OBJECT (bus, "no bus watch was present");
+    goto no_watch;
+  }
+
+  watch_id = bus->priv->signal_watch;
+
+  GST_OBJECT_UNLOCK (bus);
+
+  g_source_destroy (watch_id);
+
+  return TRUE;
+
+no_watch:
+  GST_OBJECT_UNLOCK (bus);
+
+  return FALSE;
 }
 
 typedef struct
