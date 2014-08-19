@@ -342,8 +342,8 @@ _update_info (GstVideoAggregator * vagg, GstVideoInfo * info)
   GST_OBJECT_UNLOCK (vagg);
 
   if (best_width > 0 && best_height > 0) {
-    gst_video_info_set_format (info, GST_VIDEO_INFO_FORMAT (info),
-        best_width, best_height);
+    info->width = best_width;
+    info->height = best_height;
     ret = TRUE;
   }
 
