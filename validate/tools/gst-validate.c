@@ -285,6 +285,7 @@ _execute_switch_track (GstValidateScenario * scenario,
         " (from %s:%s to %s:%s)\n", index, GST_DEBUG_PAD_NAME (oldpad),
         GST_DEBUG_PAD_NAME (newpad));
     flags |= tflag;
+    g_free (tmp);
   } else {
     gst_validate_printf (action, "Disabling track type %s", type);
   }
@@ -350,6 +351,7 @@ main (int argc, gchar ** argv)
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_printerr ("Error initializing: %s\n", err->message);
     g_option_context_free (ctx);
+    g_clear_error (&err);
     exit (1);
   }
 
@@ -390,6 +392,7 @@ main (int argc, gchar ** argv)
   if (!pipeline) {
     g_print ("Failed to create pipeline: %s\n",
         err ? err->message : "unknown reason");
+    g_clear_error (&err);
     exit (1);
   }
   if (!GST_IS_PIPELINE (pipeline)) {
@@ -493,6 +496,7 @@ exit:
   g_object_unref (pipeline);
   g_object_unref (runner);
   g_object_unref (monitor);
+  g_clear_error (&err);
 #ifdef G_OS_UNIX
   g_source_remove (signal_watch_id);
 #endif
