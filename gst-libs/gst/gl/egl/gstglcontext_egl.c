@@ -216,7 +216,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   GstGLWindow *window = NULL;
   EGLNativeWindowType window_handle = (EGLNativeWindowType) 0;
   gint i = 0;
-  EGLint context_attrib[3];
+  EGLint context_attrib[5];
   EGLint majorVersion;
   EGLint minorVersion;
   const gchar *egl_exts;
@@ -334,6 +334,10 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     context_attrib[i++] = EGL_CONTEXT_CLIENT_VERSION;
     context_attrib[i++] = 2;
   }
+#if !defined(GST_DISABLE_GST_DEBUG)
+  context_attrib[i++] = EGL_CONTEXT_FLAGS_KHR;
+  context_attrib[i++] = EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+#endif
   context_attrib[i++] = EGL_NONE;
 
   egl->egl_context =
