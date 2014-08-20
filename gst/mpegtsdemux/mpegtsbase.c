@@ -1410,15 +1410,17 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
         GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
       else {
         GstEvent *new_seek;
-        base->mode = BASE_MODE_SEEKING;
 
-        new_seek = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
-            GST_SEEK_TYPE_SET, base->seek_offset, GST_SEEK_TYPE_NONE, -1);
-        gst_event_set_seqnum (new_seek, GST_EVENT_SEQNUM (event));
-        if (!gst_pad_push_event (base->sinkpad, new_seek))
-          ret = GST_FLOW_ERROR;
-        else
-          base->last_seek_seqnum = GST_EVENT_SEQNUM (event);
+        if (GST_CLOCK_TIME_IS_VALID (base->seek_offset)) {
+          base->mode = BASE_MODE_SEEKING;
+          new_seek = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
+              GST_SEEK_TYPE_SET, base->seek_offset, GST_SEEK_TYPE_NONE, -1);
+          gst_event_set_seqnum (new_seek, GST_EVENT_SEQNUM (event));
+          if (!gst_pad_push_event (base->sinkpad, new_seek))
+            ret = GST_FLOW_ERROR;
+          else
+            base->last_seek_seqnum = GST_EVENT_SEQNUM (event);
+        }
         base->mode = BASE_MODE_PUSHING;
       }
     }

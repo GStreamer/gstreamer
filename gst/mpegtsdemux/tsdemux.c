@@ -800,12 +800,29 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   /* configure the segment with the seek variables */
   GST_DEBUG_OBJECT (demux, "configuring seek");
 
-  start_offset =
-      mpegts_packetizer_ts_to_offset (base->packetizer, MAX (0,
-          start - SEEK_TIMESTAMP_OFFSET), demux->program->pcr_pid);
+  if (start_type != GST_SEEK_TYPE_NONE) {
+    start_offset =
+        mpegts_packetizer_ts_to_offset (base->packetizer, MAX (0,
+            start - SEEK_TIMESTAMP_OFFSET), demux->program->pcr_pid);
 
-  if (G_UNLIKELY (start_offset == -1)) {
-    GST_WARNING ("Couldn't convert start position to an offset");
+    if (G_UNLIKELY (start_offset == -1)) {
+      GST_WARNING ("Couldn't convert start position to an offset");
+      goto done;
+    }
+  } else {
+    start_offset = GST_CLOCK_TIME_NONE;
+    for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+      TSDemuxStream *stream = tmp->data;
+
+      stream->need_newsegment = TRUE;
+    }
+    gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
+    if (demux->segment_event) {
+      gst_event_unref (demux->segment_event);
+      demux->segment_event = NULL;
+    }
+    demux->rate = rate;
+    res = GST_FLOW_OK;
     goto done;
   }
 
