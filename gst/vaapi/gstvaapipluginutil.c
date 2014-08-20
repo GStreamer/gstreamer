@@ -612,3 +612,47 @@ gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip)
 #endif
   return TRUE;
 }
+
+/* Checks whether the supplied caps contain VA surfaces */
+gboolean
+gst_caps_has_vaapi_surface (GstCaps * caps)
+{
+  gboolean found_caps = FALSE;
+  guint i, num_structures;
+
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  num_structures = gst_caps_get_size (caps);
+  if (num_structures < 1)
+    return FALSE;
+
+#if GST_CHECK_VERSION(1,1,0)
+  for (i = 0; i < num_structures && !found_caps; i++) {
+    GstCapsFeatures *const features = gst_caps_get_features (caps, i);
+
+#if GST_CHECK_VERSION(1,3,0)
+    /* Skip ANY features, we need an exact match for correct evaluation */
+    if (gst_caps_features_is_any (features))
+      continue;
+#endif
+
+    found_caps = gst_caps_features_contains (features,
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE);
+  }
+#else
+  for (i = 0; i < num_structures && !found_caps; i++) {
+    GstStructure *const structure = gst_caps_get_structure (caps, i);
+    GstCaps *test_caps;
+    GstVideoInfo vi;
+
+    test_caps = gst_caps_new_full (gst_structure_copy (structure), NULL);
+    if (!test_caps)
+      continue;
+
+    found_caps = gst_video_info_from_caps (&vi, test_caps) &&
+        GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED;
+    gst_caps_unref (test_caps);
+  }
+#endif
+  return found_caps;
+}

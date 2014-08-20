@@ -109,4 +109,8 @@ G_GNUC_INTERNAL
 gboolean
 gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip);
 
+G_GNUC_INTERNAL
+gboolean
+gst_caps_has_vaapi_surface (GstCaps * caps);
+
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */
