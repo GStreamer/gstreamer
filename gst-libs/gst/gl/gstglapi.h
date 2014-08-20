@@ -22,7 +22,6 @@
 #define __GST_GL_API_H__
 
 #include <gst/gl/gstglconfig.h>
-#include <gst/gl/glprototypes/gstgl_compat.h>
 
 #if GST_GL_HAVE_PLATFORM_EGL
 
@@ -86,6 +85,7 @@
 #else
 #define GSTGLAPI
 #endif
+#include <gst/gl/glprototypes/gstgl_compat.h>
 
 #include <gst/gst.h>
 

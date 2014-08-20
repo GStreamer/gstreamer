@@ -37,4 +37,22 @@ typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
 #endif
 
+#if !defined(GST_GL_DEBUG_PROC)
+#if defined(GLDEBUGPROC)
+#define GST_GL_DEBUG_PROC GLDEBUGPROC
+#elif defined(GLDEBUGPROCARB)
+#define GST_GL_DEBUG_PROC GLDEBUGPROCARB
+#elif defined(GLDEBUGPROCKHR)
+#define GST_GL_DEBUG_PROC GLDEBUGPROCKHR
+#else
+typedef void (GSTGLAPI *GST_GL_DEBUG_PROC) (GLenum source,
+                                            GLenum type,
+                                            GLuint id,
+                                            GLenum severity,
+                                            GLsizei length,
+                                            const gchar* message,
+                                            gpointer user_data);
+#endif
+#endif
+
 #endif
