@@ -894,6 +894,49 @@ GST_START_TEST (test_queries_while_flushing)
 
 GST_END_TEST;
 
+static gpointer
+push_event_thread_func (gpointer data)
+{
+  GstEvent *event;
+
+  event = GST_EVENT (data);
+
+  GST_DEBUG ("pushing event %p on pad %p", event, mysrcpad);
+  gst_pad_push_event (mysrcpad, event);
+
+  return NULL;
+}
+
+GST_START_TEST (test_state_change_when_flushing)
+{
+  GstEvent *event;
+  GThread *thread;
+
+  mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  fail_unless (gst_element_set_state (queue, GST_STATE_PAUSED) ==
+      GST_STATE_CHANGE_SUCCESS);
+
+  event = gst_event_new_flush_start ();
+  gst_pad_push_event (mysrcpad, event);
+
+  event = gst_event_new_flush_stop (TRUE);
+  thread = g_thread_new ("send event", push_event_thread_func, event);
+
+  GST_DEBUG ("changing state to READY");
+  fail_unless (gst_element_set_state (queue, GST_STATE_READY) ==
+      GST_STATE_CHANGE_SUCCESS);
+  GST_DEBUG ("state changed");
+
+  g_thread_join (thread);
+
+  fail_unless (gst_element_set_state (queue, GST_STATE_NULL) ==
+      GST_STATE_CHANGE_SUCCESS);
+}
+
+GST_END_TEST;
+
 static Suite *
 queue_suite (void)
 {
@@ -909,6 +952,7 @@ queue_suite (void)
   tcase_add_test (tc_chain, test_time_level);
   tcase_add_test (tc_chain, test_time_level_task_not_started);
   tcase_add_test (tc_chain, test_queries_while_flushing);
+  tcase_add_test (tc_chain, test_state_change_when_flushing);
 #if 0
   tcase_add_test (tc_chain, test_newsegment);
 #endif
