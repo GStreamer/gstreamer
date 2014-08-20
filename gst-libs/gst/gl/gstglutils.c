@@ -770,7 +770,9 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
   if (replacement) {
     GstGLDisplay *old = *display;
     *display = replacement;
-    gst_object_unref (old);
+
+    if (old)
+      gst_object_unref (old);
   }
 
   return TRUE;
