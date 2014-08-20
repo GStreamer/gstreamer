@@ -166,7 +166,7 @@ struct _GstVaapiPostproc {
     gfloat                      brightness;
     gfloat                      contrast;
 
-    guint                       is_raw_yuv      : 1;
+    guint                       get_va_surfaces : 1;
     guint                       use_vpp         : 1;
     guint                       keep_aspect     : 1;
 };

@@ -830,7 +830,7 @@ gst_vaapipostproc_update_sink_caps(GstVaapiPostproc *postproc, GstCaps *caps,
         gst_util_uint64_scale(GST_SECOND, GST_VIDEO_INFO_FPS_D(&vi),
             (1 + deinterlace) * GST_VIDEO_INFO_FPS_N(&vi)) : 0;
 
-    postproc->is_raw_yuv = GST_VIDEO_INFO_IS_YUV(&vi);
+    postproc->get_va_surfaces = gst_caps_has_vaapi_surface(caps);
     return TRUE;
 }
 
@@ -1098,7 +1098,7 @@ gst_vaapipostproc_transform_size(GstBaseTransform *trans,
 {
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
 
-    if (direction == GST_PAD_SINK || !postproc->is_raw_yuv)
+    if (direction == GST_PAD_SINK || postproc->get_va_surfaces)
         *othersize = 0;
     else
         *othersize = size;
@@ -1237,7 +1237,7 @@ gst_vaapipostproc_propose_allocation(GstBaseTransform *trans,
     GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(trans);
 
     /* Let vaapidecode allocate the video buffers */
-    if (!postproc->is_raw_yuv)
+    if (postproc->get_va_surfaces)
         return FALSE;
     if (!gst_vaapi_plugin_base_propose_allocation(plugin, query))
         return FALSE;
@@ -1587,6 +1587,7 @@ gst_vaapipostproc_init(GstVaapiPostproc *postproc)
     postproc->deinterlace_method        = DEFAULT_DEINTERLACE_METHOD;
     postproc->field_duration            = GST_CLOCK_TIME_NONE;
     postproc->keep_aspect               = TRUE;
+    postproc->get_va_surfaces           = TRUE;
 
     gst_video_info_init(&postproc->sinkpad_info);
     gst_video_info_init(&postproc->srcpad_info);
