@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapipostproc);
 #if GST_CHECK_VERSION(1,1,0)
 # define GST_VAAPIPOSTPROC_SURFACE_CAPS \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(  \
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, NV12, I420, YV12 }")
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, I420, YV12, NV12 }")
 #else
 # define GST_VAAPIPOSTPROC_SURFACE_CAPS \
     GST_VAAPI_SURFACE_CAPS
@@ -845,7 +845,8 @@ gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps,
     if (video_info_changed(&vi, &postproc->srcpad_info))
         postproc->srcpad_info = vi, *caps_changed_ptr = TRUE;
 
-    if (postproc->format != GST_VIDEO_INFO_FORMAT(&postproc->sinkpad_info))
+    if (postproc->format != GST_VIDEO_INFO_FORMAT(&postproc->sinkpad_info) ||
+        postproc->format != DEFAULT_FORMAT)
         postproc->flags |= GST_VAAPI_POSTPROC_FLAG_FORMAT;
 
     if ((postproc->width || postproc->height) &&
