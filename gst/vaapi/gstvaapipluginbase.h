@@ -123,6 +123,7 @@ struct _GstVaapiPluginBase
   GstPad *sinkpad;
   GstCaps *sinkpad_caps;
   gboolean sinkpad_caps_changed;
+  gboolean sinkpad_caps_is_raw;
   GstVideoInfo sinkpad_info;
   GstPadQueryFunction sinkpad_query;
 #if GST_CHECK_VERSION(1,0,0)

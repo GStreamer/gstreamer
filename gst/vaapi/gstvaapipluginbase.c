@@ -389,6 +389,7 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     if (!gst_video_info_from_caps (&plugin->sinkpad_info, incaps))
       return FALSE;
     plugin->sinkpad_caps_changed = TRUE;
+    plugin->sinkpad_caps_is_raw = !gst_caps_has_vaapi_surface (incaps);
   }
 
   if (outcaps && outcaps != plugin->srcpad_caps) {
@@ -398,7 +399,7 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     plugin->srcpad_caps_changed = TRUE;
   }
 
-  if (plugin->uploader && GST_VIDEO_INFO_IS_YUV (&plugin->sinkpad_info)) {
+  if (plugin->uploader && plugin->sinkpad_caps_is_raw) {
     if (!gst_vaapi_uploader_ensure_display (plugin->uploader, plugin->display))
       return FALSE;
     if (!gst_vaapi_uploader_ensure_caps (plugin->uploader,
@@ -477,7 +478,7 @@ gst_vaapi_plugin_base_allocate_input_buffer (GstVaapiPluginBase * plugin,
     plugin->sinkpad_caps_changed = TRUE;
   }
 
-  if (!GST_VIDEO_INFO_IS_YUV (&plugin->sinkpad_info))
+  if (!plugin->sinkpad_caps_is_raw)
     return GST_FLOW_OK;
 
   if (!gst_vaapi_uploader_ensure_display (plugin->uploader, plugin->display))
@@ -529,7 +530,7 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
     return GST_FLOW_OK;
   }
 
-  if (!GST_VIDEO_INFO_IS_YUV (&plugin->sinkpad_info))
+  if (!plugin->sinkpad_caps_is_raw)
     goto error_invalid_buffer;
 
   if (!plugin->sinkpad_buffer_pool)
@@ -586,7 +587,7 @@ error_map_src_buffer:
 #else
   if (meta)
     outbuf = gst_buffer_ref (inbuf);
-  else if (GST_VIDEO_INFO_IS_YUV (&plugin->sinkpad_info)) {
+  else if (plugin->sinkpad_caps_is_raw) {
     outbuf = gst_vaapi_uploader_get_buffer (plugin->uploader);
     if (!outbuf)
       goto error_create_buffer;
@@ -595,7 +596,7 @@ error_map_src_buffer:
   } else
     goto error_invalid_buffer;
 
-  if (GST_VIDEO_INFO_IS_YUV (&plugin->sinkpad_info) &&
+  if (plugin->sinkpad_caps_is_raw &&
       !gst_vaapi_uploader_process (plugin->uploader, inbuf, outbuf))
     goto error_copy_buffer;
 
