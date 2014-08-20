@@ -65,6 +65,7 @@
 #include "eagl/gstglcontext_eagl.h"
 #endif
 
+GST_DEBUG_CATEGORY_STATIC (gst_performance);
 static GModule *module_self;
 
 #if GST_GL_HAVE_OPENGL
@@ -238,6 +239,7 @@ _init_debug (void)
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_gl_context_debug, "glcontext", 0,
         "glcontext element");
+    GST_DEBUG_CATEGORY_GET (gst_performance, "GST_PERFORMANCE");
     g_once_init_leave (&_init, 1);
   }
 }
@@ -597,6 +599,154 @@ gst_gl_context_create (GstGLContext * context,
   return alive;
 }
 
+#ifndef GL_DEBUG_TYPE_ERROR
+#define GL_DEBUG_TYPE_ERROR 0x824C
+#endif
+#ifndef GL_DEBUG_TYPE_DEPRECATED_BEHAVIOUR
+#define GL_DEBUG_TYPE_DEPRECATED_BEHAVIOUR 0x824D
+#endif
+#ifndef GL_DEBUG_TYPE_UNDEFINED_BEHAVIOUR
+#define GL_DEBUG_TYPE_UNDEFINED_BEHAVIOUR 0x824E
+#endif
+#ifndef GL_DEBUG_TYPE_PORTABILITY
+#define GL_DEBUG_TYPE_PORTABILITY 0x824F
+#endif
+#ifndef GL_DEBUG_TYPE_PERFORMANCE
+#define GL_DEBUG_TYPE_PERFORMANCE 0x8250
+#endif
+#ifndef GL_DEBUG_TYPE_MARKER
+#define GL_DEBUG_TYPE_MARKER 0x8268
+#endif
+#ifndef GL_DEBUG_TYPE_OTHER
+#define GL_DEBUG_TYPE_OTHER 0x8251
+#endif
+
+#ifndef GL_DEBUG_SEVERITY_HIGH
+#define GL_DEBUG_SEVERITY_HIGH 0x9146
+#endif
+#ifndef GL_DEBUG_SEVERITY_MEDIUM
+#define GL_DEBUG_SEVERITY_MEDIUM 0x9147
+#endif
+#ifndef GL_DEBUG_SEVERITY_LOW
+#define GL_DEBUG_SEVERITY_LOW 0x9148
+#endif
+#ifndef GL_DEBUG_SEVERITY_NOTIFICATION
+#define GL_DEBUG_SEVERITY_NOTIFICATION 0x826B
+#endif
+
+#ifndef GL_DEBUG_SOURCE_API
+#define GL_DEBUG_SOURCE_API 0x8246
+#endif
+#ifndef GL_DEBUG_SOURCE_WINDOW_SYSTEM
+#define GL_DEBUG_SOURCE_WINDOW_SYSTEM 0x8247
+#endif
+#ifndef GL_DEBUG_SOURCE_SHADER_COMPILER
+#define GL_DEBUG_SOURCE_SHADER_COMPILER 0x8248
+#endif
+#ifndef GL_DEBUG_SOURCE_THIRD_PARTY
+#define GL_DEBUG_SOURCE_THIRD_PARTY 0x8249
+#endif
+#ifndef GL_DEBUG_SOURCE_APPLICATION
+#define GL_DEBUG_SOURCE_APPLICATION 0x824A
+#endif
+#ifndef GL_DEBUG_SOURCE_OTHER
+#define GL_DEBUG_SOURCE_OTHER 0x824B
+#endif
+
+#if !defined(GST_DISABLE_GST_DEBUG)
+static inline const gchar *
+_debug_severity_to_string (GLenum severity)
+{
+  switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:
+      return "high";
+    case GL_DEBUG_SEVERITY_MEDIUM:
+      return "medium";
+    case GL_DEBUG_SEVERITY_LOW:
+      return "low";
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+      return "notification";
+    default:
+      return "invalid";
+  }
+}
+
+static inline const gchar *
+_debug_source_to_string (GLenum source)
+{
+  switch (source) {
+    case GL_DEBUG_SOURCE_API:
+      return "API";
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+      return "winsys";
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+      return "shader compiler";
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+      return "third party";
+    case GL_DEBUG_SOURCE_APPLICATION:
+      return "application";
+    case GL_DEBUG_SOURCE_OTHER:
+      return "other";
+    default:
+      return "invalid";
+  }
+}
+
+static inline const gchar *
+_debug_type_to_string (GLenum type)
+{
+  switch (type) {
+    case GL_DEBUG_TYPE_ERROR:
+      return "error";
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOUR:
+      return "deprecated";
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOUR:
+      return "undefined";
+    case GL_DEBUG_TYPE_PORTABILITY:
+      return "portability";
+    case GL_DEBUG_TYPE_PERFORMANCE:
+      return "performance";
+    case GL_DEBUG_TYPE_MARKER:
+      return "debug marker";
+    case GL_DEBUG_TYPE_OTHER:
+      return "other";
+    default:
+      return "invalid";
+  }
+}
+
+static void
+_gst_gl_debug_callback (GLenum source, GLenum type, GLuint id, GLenum severity,
+    GLsizei length, const gchar * message, gpointer user_data)
+{
+  GstGLContext *context = user_data;
+  const gchar *severity_str = _debug_severity_to_string (severity);
+  const gchar *source_str = _debug_source_to_string (source);
+  const gchar *type_str = _debug_type_to_string (type);
+
+  switch (type) {
+    case GL_DEBUG_TYPE_ERROR:
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOUR:
+      GST_ERROR_OBJECT (context, "%s: GL %s from %s id:%u, %s", severity_str,
+          type_str, source_str, id, message);
+      break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOUR:
+    case GL_DEBUG_TYPE_PORTABILITY:
+      GST_FIXME_OBJECT (context, "%s: GL %s from %s id:%u, %s", severity_str,
+          type_str, source_str, id, message);
+      break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+      GST_CAT_DEBUG_OBJECT (gst_performance, context, "%s: GL %s from %s id:%u,"
+          " %s", severity_str, type_str, source_str, id, message);
+      break;
+    default:
+      GST_DEBUG_OBJECT (context, "%s: GL %s from %s id:%u, %s", severity_str,
+          type_str, source_str, id, message);
+      break;
+  }
+}
+#endif
+
 static gboolean
 _create_context_info (GstGLContext * context, GstGLAPI gl_api, gint * gl_major,
     gint * gl_minor, GError ** error)
@@ -835,6 +985,16 @@ gst_gl_context_create_thread (GstGLContext * context)
   }
 
   context->priv->alive = TRUE;
+
+  if (gl->DebugMessageCallback) {
+#if !defined(GST_DISABLE_GST_DEBUG)
+    GST_INFO ("Enabling GL context debugging");
+    /* enable them all */
+    gl->DebugMessageControl (GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0,
+        GL_TRUE);
+    gl->DebugMessageCallback (_gst_gl_debug_callback, context);
+#endif
+  }
 
   g_cond_signal (&context->priv->create_cond);
 
