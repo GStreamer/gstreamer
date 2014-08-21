@@ -686,6 +686,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
   gst_active_streams_free (demux->client);
 
   if (!gst_dash_demux_setup_mpdparser_streams (demux, demux->client)) {
+    GST_MPD_CLIENT_UNLOCK (demux->client);
     return FALSE;
   }
 
