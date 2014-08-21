@@ -792,8 +792,13 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       queue->srcresult = GST_FLOW_OK;
       queue->eos = FALSE;
       queue->unexpected = FALSE;
-      gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
-          queue->srcpad, NULL);
+      if (gst_pad_is_active (queue->srcpad)) {
+        gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
+            queue->srcpad, NULL);
+      } else {
+        GST_INFO_OBJECT (queue->srcpad, "not re-starting task on srcpad, "
+            "pad not active any longer");
+      }
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
       STATUS (queue, pad, "after flush");
