@@ -31,43 +31,37 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX \
-    (gst_vaapi_video_converter_glx_get_type ())
-
-#define GST_VAAPI_VIDEO_CONVERTER_GLX(obj)              \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-        GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX,             \
-        GstVaapiVideoConverterGLX))
-
-#define GST_VAAPI_VIDEO_CONVERTER_GLX_CLASS(klass)      \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-        GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX,             \
-        GstVaapiVideoConverterGLXClass))
-
+  (gst_vaapi_video_converter_glx_get_type ())
+#define GST_VAAPI_VIDEO_CONVERTER_GLX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX, \
+      GstVaapiVideoConverterGLX))
+#define GST_VAAPI_VIDEO_CONVERTER_GLX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX, \
+      GstVaapiVideoConverterGLXClass))
 #define GST_VAAPI_IS_VIDEO_CONVERTER_GLX(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX))
-
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX))
 #define GST_VAAPI_IS_VIDEO_CONVERTER_GLX_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX))
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX))
+#define GST_VAAPI_VIDEO_CONVERTER_GLX_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX, \
+      GstVaapiVideoConverterGLXClass))
 
-#define GST_VAAPI_VIDEO_CONVERTER_GLX_GET_CLASS(obj)    \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-        GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX,             \
-        GstVaapiVideoConverterGLXClass))
-
-typedef struct _GstVaapiVideoConverterGLX        GstVaapiVideoConverterGLX;
-typedef struct _GstVaapiVideoConverterGLXPrivate GstVaapiVideoConverterGLXPrivate;
-typedef struct _GstVaapiVideoConverterGLXClass   GstVaapiVideoConverterGLXClass;
+typedef struct _GstVaapiVideoConverterGLX GstVaapiVideoConverterGLX;
+typedef struct _GstVaapiVideoConverterGLXPrivate
+    GstVaapiVideoConverterGLXPrivate;
+typedef struct _GstVaapiVideoConverterGLXClass GstVaapiVideoConverterGLXClass;
 
 /**
  * GstVaapiVideoConverterGLX:
  *
  * Converter to transform VA buffers into GL textures.
  */
-struct _GstVaapiVideoConverterGLX {
-    /*< private >*/
-    GObject parent_instance;
+struct _GstVaapiVideoConverterGLX
+{
+  /*< private >*/
+  GObject parent_instance;
 
-    GstVaapiVideoConverterGLXPrivate *priv;
+  GstVaapiVideoConverterGLXPrivate *priv;
 };
 
 /**
@@ -75,19 +69,20 @@ struct _GstVaapiVideoConverterGLX {
  *
  * Converter class to transform VA buffers into GL textures.
  */
-struct _GstVaapiVideoConverterGLXClass {
-    /*< private >*/
-    GObjectClass parent_class;
+struct _GstVaapiVideoConverterGLXClass
+{
+  /*< private >*/
+  GObjectClass parent_class;
 };
 
 G_GNUC_INTERNAL
 GType
-gst_vaapi_video_converter_glx_get_type(void) G_GNUC_CONST;
+gst_vaapi_video_converter_glx_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstSurfaceConverter *
-gst_vaapi_video_converter_glx_new(GstBuffer *buffer, const gchar *type,
-    GValue *dest);
+gst_vaapi_video_converter_glx_new (GstBuffer * buffer, const gchar * type,
+    GValue * dest);
 
 G_END_DECLS
 

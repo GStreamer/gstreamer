@@ -29,31 +29,31 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstVaapiVideoBuffer             GstVaapiVideoBuffer;
+typedef struct _GstVaapiVideoBuffer GstVaapiVideoBuffer;
 
 G_GNUC_INTERNAL
 GstBuffer *
-gst_vaapi_video_buffer_new(GstVaapiVideoMeta *meta);
+gst_vaapi_video_buffer_new (GstVaapiVideoMeta * meta);
 
 G_GNUC_INTERNAL
 GstBuffer *
-gst_vaapi_video_buffer_new_empty(void);
+gst_vaapi_video_buffer_new_empty (void);
 
 G_GNUC_INTERNAL
 GstBuffer *
-gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool);
+gst_vaapi_video_buffer_new_from_pool (GstVaapiVideoPool * pool);
 
 G_GNUC_INTERNAL
 GstBuffer *
-gst_vaapi_video_buffer_new_from_buffer(GstBuffer *buffer);
+gst_vaapi_video_buffer_new_from_buffer (GstBuffer * buffer);
 
 G_GNUC_INTERNAL
 GstBuffer *
-gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image);
+gst_vaapi_video_buffer_new_with_image (GstVaapiImage * image);
 
 G_GNUC_INTERNAL
 GstBuffer *
-gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy);
+gst_vaapi_video_buffer_new_with_surface_proxy (GstVaapiSurfaceProxy * proxy);
 
 G_END_DECLS
 

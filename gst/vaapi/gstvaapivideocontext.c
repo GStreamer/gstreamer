@@ -31,18 +31,18 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
 #define GST_VAAPI_TYPE_DISPLAY \
-    gst_vaapi_display_get_type()
+  gst_vaapi_display_get_type ()
 
 GType
-gst_vaapi_display_get_type (void)
-    G_GNUC_CONST;
+gst_vaapi_display_get_type (void) G_GNUC_CONST;
 
 G_DEFINE_BOXED_TYPE (GstVaapiDisplay, gst_vaapi_display,
     (GBoxedCopyFunc) gst_vaapi_display_ref,
-    (GBoxedFreeFunc) gst_vaapi_display_unref)
+    (GBoxedFreeFunc) gst_vaapi_display_unref);
 
-     GstContext *gst_vaapi_video_context_new_with_display (GstVaapiDisplay *
-    display, gboolean persistent)
+GstContext *
+gst_vaapi_video_context_new_with_display (GstVaapiDisplay * display,
+    gboolean persistent)
 {
   GstContext *context;
   GstStructure *structure;

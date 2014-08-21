@@ -33,169 +33,169 @@
 #include "gstvaapivideometa.h"
 
 #define GST_VAAPI_VIDEO_META(obj) \
-    ((GstVaapiVideoMeta *)(obj))
-
+  ((GstVaapiVideoMeta *) (obj))
 #define GST_VAAPI_IS_VIDEO_META(obj) \
-    (GST_VAAPI_VIDEO_META(obj) != NULL)
+  (GST_VAAPI_VIDEO_META (obj) != NULL)
 
-struct _GstVaapiVideoMeta {
-    gint                        ref_count;
-    GstVaapiDisplay            *display;
-    GstVaapiVideoPool          *image_pool;
-    GstVaapiImage              *image;
-    GstVaapiSurfaceProxy       *proxy;
-    GFunc                       converter;
-    guint                       render_flags;
-    GstVaapiRectangle           render_rect;
-    guint                       has_render_rect : 1;
+struct _GstVaapiVideoMeta
+{
+  gint ref_count;
+  GstVaapiDisplay *display;
+  GstVaapiVideoPool *image_pool;
+  GstVaapiImage *image;
+  GstVaapiSurfaceProxy *proxy;
+  GFunc converter;
+  guint render_flags;
+  GstVaapiRectangle render_rect;
+  guint has_render_rect:1;
 };
 
 static inline void
-set_display(GstVaapiVideoMeta *meta, GstVaapiDisplay *display)
+set_display (GstVaapiVideoMeta * meta, GstVaapiDisplay * display)
 {
-    gst_vaapi_display_replace(&meta->display, display);
+  gst_vaapi_display_replace (&meta->display, display);
 }
 
 static inline void
-set_image(GstVaapiVideoMeta *meta, GstVaapiImage *image)
+set_image (GstVaapiVideoMeta * meta, GstVaapiImage * image)
 {
-    meta->image = gst_vaapi_object_ref(image);
-    set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(image)));
+  meta->image = gst_vaapi_object_ref (image);
+  set_display (meta, gst_vaapi_object_get_display (GST_VAAPI_OBJECT (image)));
 }
 
 static gboolean
-set_image_from_pool(GstVaapiVideoMeta *meta, GstVaapiVideoPool *pool)
+set_image_from_pool (GstVaapiVideoMeta * meta, GstVaapiVideoPool * pool)
 {
-    GstVaapiImage *image;
+  GstVaapiImage *image;
 
-    image = gst_vaapi_video_pool_get_object(pool);
-    if (!image)
-        return FALSE;
+  image = gst_vaapi_video_pool_get_object (pool);
+  if (!image)
+    return FALSE;
 
-    set_image(meta, image);
-    meta->image_pool = gst_vaapi_video_pool_ref(pool);
-    return TRUE;
+  set_image (meta, image);
+  meta->image_pool = gst_vaapi_video_pool_ref (pool);
+  return TRUE;
 }
 
 static gboolean
-set_surface_proxy(GstVaapiVideoMeta *meta, GstVaapiSurfaceProxy *proxy)
+set_surface_proxy (GstVaapiVideoMeta * meta, GstVaapiSurfaceProxy * proxy)
 {
-    GstVaapiSurface *surface;
+  GstVaapiSurface *surface;
 
-    surface = GST_VAAPI_SURFACE_PROXY_SURFACE(proxy);
-    if (!surface)
-        return FALSE;
+  surface = GST_VAAPI_SURFACE_PROXY_SURFACE (proxy);
+  if (!surface)
+    return FALSE;
 
-    meta->proxy = gst_vaapi_surface_proxy_ref(proxy);
-    set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface)));
-    return TRUE;
+  meta->proxy = gst_vaapi_surface_proxy_ref (proxy);
+  set_display (meta, gst_vaapi_object_get_display (GST_VAAPI_OBJECT (surface)));
+  return TRUE;
 }
 
 static gboolean
-set_surface_proxy_from_pool(GstVaapiVideoMeta *meta, GstVaapiVideoPool *pool)
+set_surface_proxy_from_pool (GstVaapiVideoMeta * meta, GstVaapiVideoPool * pool)
 {
-    GstVaapiSurfaceProxy *proxy;
-    gboolean success;
+  GstVaapiSurfaceProxy *proxy;
+  gboolean success;
 
-    proxy = gst_vaapi_surface_proxy_new_from_pool(GST_VAAPI_SURFACE_POOL(pool));
-    if (!proxy)
-        return FALSE;
+  proxy = gst_vaapi_surface_proxy_new_from_pool (GST_VAAPI_SURFACE_POOL (pool));
+  if (!proxy)
+    return FALSE;
 
-    success = set_surface_proxy(meta, proxy);
-    gst_vaapi_surface_proxy_unref(proxy);
-    return success;
+  success = set_surface_proxy (meta, proxy);
+  gst_vaapi_surface_proxy_unref (proxy);
+  return success;
 }
 
 static void
-gst_vaapi_video_meta_destroy_image(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_destroy_image (GstVaapiVideoMeta * meta)
 {
-    if (meta->image) {
-        if (meta->image_pool)
-            gst_vaapi_video_pool_put_object(meta->image_pool, meta->image);
-        gst_vaapi_object_unref(meta->image);
-        meta->image = NULL;
-    }
-    gst_vaapi_video_pool_replace(&meta->image_pool, NULL);
+  if (meta->image) {
+    if (meta->image_pool)
+      gst_vaapi_video_pool_put_object (meta->image_pool, meta->image);
+    gst_vaapi_object_unref (meta->image);
+    meta->image = NULL;
+  }
+  gst_vaapi_video_pool_replace (&meta->image_pool, NULL);
 }
 
 static inline void
-gst_vaapi_video_meta_destroy_proxy(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_destroy_proxy (GstVaapiVideoMeta * meta)
 {
-    gst_vaapi_surface_proxy_replace(&meta->proxy, NULL);
+  gst_vaapi_surface_proxy_replace (&meta->proxy, NULL);
 }
 
 #if !GST_CHECK_VERSION(1,0,0)
-#define GST_VAAPI_TYPE_VIDEO_META gst_vaapi_video_meta_get_type()
+#define GST_VAAPI_TYPE_VIDEO_META gst_vaapi_video_meta_get_type ()
 static GType
-gst_vaapi_video_meta_get_type(void)
+gst_vaapi_video_meta_get_type (void)
 {
-    static gsize g_type;
+  static gsize g_type;
 
-    if (g_once_init_enter(&g_type)) {
-        GType type;
-        type = g_boxed_type_register_static("GstVaapiVideoMeta",
-            (GBoxedCopyFunc)gst_vaapi_video_meta_ref,
-            (GBoxedFreeFunc)gst_vaapi_video_meta_unref);
-        g_once_init_leave(&g_type, type);
-    }
-    return (GType)g_type;
+  if (g_once_init_enter (&g_type)) {
+    GType type;
+    type = g_boxed_type_register_static ("GstVaapiVideoMeta",
+        (GBoxedCopyFunc) gst_vaapi_video_meta_ref,
+        (GBoxedFreeFunc) gst_vaapi_video_meta_unref);
+    g_once_init_leave (&g_type, type);
+  }
+  return (GType) g_type;
 }
 #endif
 
 static void
-gst_vaapi_video_meta_finalize(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_finalize (GstVaapiVideoMeta * meta)
 {
-    gst_vaapi_video_meta_destroy_image(meta);
-    gst_vaapi_video_meta_destroy_proxy(meta);
-    gst_vaapi_display_replace(&meta->display, NULL);
+  gst_vaapi_video_meta_destroy_image (meta);
+  gst_vaapi_video_meta_destroy_proxy (meta);
+  gst_vaapi_display_replace (&meta->display, NULL);
 }
 
 static void
-gst_vaapi_video_meta_init(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_init (GstVaapiVideoMeta * meta)
 {
-    meta->ref_count     = 1;
-    meta->display       = NULL;
-    meta->image_pool    = NULL;
-    meta->image         = NULL;
-    meta->proxy         = NULL;
-    meta->converter     = NULL;
-    meta->render_flags  = 0;
-    meta->has_render_rect = FALSE;
+  meta->ref_count = 1;
+  meta->display = NULL;
+  meta->image_pool = NULL;
+  meta->image = NULL;
+  meta->proxy = NULL;
+  meta->converter = NULL;
+  meta->render_flags = 0;
+  meta->has_render_rect = FALSE;
 }
 
 static inline GstVaapiVideoMeta *
-_gst_vaapi_video_meta_create(void)
+_gst_vaapi_video_meta_create (void)
 {
-    return g_slice_new(GstVaapiVideoMeta);
+  return g_slice_new (GstVaapiVideoMeta);
 }
 
 static inline void
-_gst_vaapi_video_meta_destroy(GstVaapiVideoMeta *meta)
+_gst_vaapi_video_meta_destroy (GstVaapiVideoMeta * meta)
 {
-    g_slice_free1(sizeof(*meta), meta);
+  g_slice_free1 (sizeof (*meta), meta);
 }
 
 static inline GstVaapiVideoMeta *
-_gst_vaapi_video_meta_new(void)
+_gst_vaapi_video_meta_new (void)
 {
-    GstVaapiVideoMeta *meta;
+  GstVaapiVideoMeta *meta;
 
-    meta = _gst_vaapi_video_meta_create();
-    if (!meta)
-        return NULL;
-    gst_vaapi_video_meta_init(meta);
-    return meta;
+  meta = _gst_vaapi_video_meta_create ();
+  if (!meta)
+    return NULL;
+  gst_vaapi_video_meta_init (meta);
+  return meta;
 }
 
 static inline void
-_gst_vaapi_video_meta_free(GstVaapiVideoMeta *meta)
+_gst_vaapi_video_meta_free (GstVaapiVideoMeta * meta)
 {
-    g_atomic_int_inc(&meta->ref_count);
+  g_atomic_int_inc (&meta->ref_count);
 
-    gst_vaapi_video_meta_finalize(meta);
+  gst_vaapi_video_meta_finalize (meta);
 
-    if (G_LIKELY(g_atomic_int_dec_and_test(&meta->ref_count)))
-        _gst_vaapi_video_meta_destroy(meta);
+  if (G_LIKELY (g_atomic_int_dec_and_test (&meta->ref_count)))
+    _gst_vaapi_video_meta_destroy (meta);
 }
 
 /**
@@ -209,32 +209,31 @@ _gst_vaapi_video_meta_free(GstVaapiVideoMeta *meta)
  * Return value: the newly allocated #GstVaapiVideoMeta, or %NULL on error
  */
 GstVaapiVideoMeta *
-gst_vaapi_video_meta_copy(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_copy (GstVaapiVideoMeta * meta)
 {
-    GstVaapiVideoMeta *copy;
+  GstVaapiVideoMeta *copy;
 
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), NULL);
 
-    if (meta->image_pool)
-        return NULL;
+  if (meta->image_pool)
+    return NULL;
 
-    copy = _gst_vaapi_video_meta_create();
-    if (!copy)
-        return NULL;
+  copy = _gst_vaapi_video_meta_create ();
+  if (!copy)
+    return NULL;
 
-    copy->ref_count     = 1;
-    copy->display       = gst_vaapi_display_ref(meta->display);
-    copy->image_pool    = NULL;
-    copy->image         = meta->image ? gst_vaapi_object_ref(meta->image) : NULL;
-    copy->proxy         = meta->proxy ?
-        gst_vaapi_surface_proxy_copy(meta->proxy) : NULL;
-    copy->converter     = meta->converter;
-    copy->render_flags  = meta->render_flags;
+  copy->ref_count = 1;
+  copy->display = gst_vaapi_display_ref (meta->display);
+  copy->image_pool = NULL;
+  copy->image = meta->image ? gst_vaapi_object_ref (meta->image) : NULL;
+  copy->proxy = meta->proxy ? gst_vaapi_surface_proxy_copy (meta->proxy) : NULL;
+  copy->converter = meta->converter;
+  copy->render_flags = meta->render_flags;
 
-    copy->has_render_rect = meta->has_render_rect;
-    if (copy->has_render_rect)
-        copy->render_rect = meta->render_rect;
-    return copy;
+  copy->has_render_rect = meta->has_render_rect;
+  if (copy->has_render_rect)
+    copy->render_rect = meta->render_rect;
+  return copy;
 }
 
 /**
@@ -251,18 +250,18 @@ gst_vaapi_video_meta_copy(GstVaapiVideoMeta *meta)
  * Return value: the newly allocated #GstVaapiVideoMeta, or %NULL or error
  */
 GstVaapiVideoMeta *
-gst_vaapi_video_meta_new(GstVaapiDisplay *display)
+gst_vaapi_video_meta_new (GstVaapiDisplay * display)
 {
-    GstVaapiVideoMeta *meta;
+  GstVaapiVideoMeta *meta;
 
-    g_return_val_if_fail(display != NULL, NULL);
+  g_return_val_if_fail (display != NULL, NULL);
 
-    meta = _gst_vaapi_video_meta_new();
-    if (G_UNLIKELY(!meta))
-        return NULL;
+  meta = _gst_vaapi_video_meta_new ();
+  if (G_UNLIKELY (!meta))
+    return NULL;
 
-    set_display(meta, display);
-    return meta;
+  set_display (meta, display);
+  return meta;
 }
 
 /**
@@ -279,37 +278,37 @@ gst_vaapi_video_meta_new(GstVaapiDisplay *display)
  * Return value: the newly allocated #GstVaapiVideoMeta, or %NULL on error
  */
 GstVaapiVideoMeta *
-gst_vaapi_video_meta_new_from_pool(GstVaapiVideoPool *pool)
+gst_vaapi_video_meta_new_from_pool (GstVaapiVideoPool * pool)
 {
-    GstVaapiVideoMeta *meta;
-    GstVaapiVideoPoolObjectType object_type;
+  GstVaapiVideoMeta *meta;
+  GstVaapiVideoPoolObjectType object_type;
 
-    g_return_val_if_fail(pool != NULL, NULL);
+  g_return_val_if_fail (pool != NULL, NULL);
 
-    meta = _gst_vaapi_video_meta_new();
-    if (G_UNLIKELY(!meta))
-        return NULL;
+  meta = _gst_vaapi_video_meta_new ();
+  if (G_UNLIKELY (!meta))
+    return NULL;
 
-    object_type = gst_vaapi_video_pool_get_object_type(pool);
-    switch (object_type) {
+  object_type = gst_vaapi_video_pool_get_object_type (pool);
+  switch (object_type) {
     case GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE:
-        if (!set_image_from_pool(meta, pool))
-            goto error;
-        break;
-    case GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE:
-        if (!set_surface_proxy_from_pool(meta, pool))
-            goto error;
-        break;
-    default:
-        GST_ERROR("unsupported video buffer pool of type %d", object_type);
+      if (!set_image_from_pool (meta, pool))
         goto error;
-    }
-    set_display(meta, gst_vaapi_video_pool_get_display(pool));
-    return meta;
+      break;
+    case GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE:
+      if (!set_surface_proxy_from_pool (meta, pool))
+        goto error;
+      break;
+    default:
+      GST_ERROR ("unsupported video buffer pool of type %d", object_type);
+      goto error;
+  }
+  set_display (meta, gst_vaapi_video_pool_get_display (pool));
+  return meta;
 
 error:
-    gst_vaapi_video_meta_unref(meta);
-    return NULL;
+  gst_vaapi_video_meta_unref (meta);
+  return NULL;
 }
 
 /**
@@ -325,18 +324,18 @@ error:
  * Return value: the newly allocated #GstVaapiVideoMeta, or %NULL on error
  */
 GstVaapiVideoMeta *
-gst_vaapi_video_meta_new_with_image(GstVaapiImage *image)
+gst_vaapi_video_meta_new_with_image (GstVaapiImage * image)
 {
-    GstVaapiVideoMeta *meta;
+  GstVaapiVideoMeta *meta;
 
-    g_return_val_if_fail(image != NULL, NULL);
+  g_return_val_if_fail (image != NULL, NULL);
 
-    meta = _gst_vaapi_video_meta_new();
-    if (G_UNLIKELY(!meta))
-        return NULL;
+  meta = _gst_vaapi_video_meta_new ();
+  if (G_UNLIKELY (!meta))
+    return NULL;
 
-    gst_vaapi_video_meta_set_image(meta, image);
-    return meta;
+  gst_vaapi_video_meta_set_image (meta, image);
+  return meta;
 }
 
 /**
@@ -352,18 +351,18 @@ gst_vaapi_video_meta_new_with_image(GstVaapiImage *image)
  * Return value: the newly allocated #GstVaapiVideoMeta, or %NULL on error
  */
 GstVaapiVideoMeta *
-gst_vaapi_video_meta_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
+gst_vaapi_video_meta_new_with_surface_proxy (GstVaapiSurfaceProxy * proxy)
 {
-    GstVaapiVideoMeta *meta;
+  GstVaapiVideoMeta *meta;
 
-    g_return_val_if_fail(proxy != NULL, NULL);
+  g_return_val_if_fail (proxy != NULL, NULL);
 
-    meta = _gst_vaapi_video_meta_new();
-    if (G_UNLIKELY(!meta))
-        return NULL;
+  meta = _gst_vaapi_video_meta_new ();
+  if (G_UNLIKELY (!meta))
+    return NULL;
 
-    gst_vaapi_video_meta_set_surface_proxy(meta, proxy);
-    return meta;
+  gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
+  return meta;
 }
 
 /**
@@ -375,12 +374,12 @@ gst_vaapi_video_meta_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
  * Returns: The same @meta argument
  */
 GstVaapiVideoMeta *
-gst_vaapi_video_meta_ref(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_ref (GstVaapiVideoMeta * meta)
 {
-    g_return_val_if_fail(meta != NULL, NULL);
+  g_return_val_if_fail (meta != NULL, NULL);
 
-    g_atomic_int_inc(&meta->ref_count);
-    return meta;
+  g_atomic_int_inc (&meta->ref_count);
+  return meta;
 }
 
 /**
@@ -391,13 +390,13 @@ gst_vaapi_video_meta_ref(GstVaapiVideoMeta *meta)
  * the reference count reaches zero, the object will be free'd.
  */
 void
-gst_vaapi_video_meta_unref(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_unref (GstVaapiVideoMeta * meta)
 {
-    g_return_if_fail(meta != NULL);
-    g_return_if_fail(meta->ref_count > 0);
+  g_return_if_fail (meta != NULL);
+  g_return_if_fail (meta->ref_count > 0);
 
-    if (g_atomic_int_dec_and_test(&meta->ref_count))
-        _gst_vaapi_video_meta_free(meta);
+  if (g_atomic_int_dec_and_test (&meta->ref_count))
+    _gst_vaapi_video_meta_free (meta);
 }
 
 /**
@@ -410,27 +409,27 @@ gst_vaapi_video_meta_unref(GstVaapiVideoMeta *meta)
  * object. However, @new_meta can be NULL.
  */
 void
-gst_vaapi_video_meta_replace(GstVaapiVideoMeta **old_meta_ptr,
-    GstVaapiVideoMeta *new_meta)
+gst_vaapi_video_meta_replace (GstVaapiVideoMeta ** old_meta_ptr,
+    GstVaapiVideoMeta * new_meta)
 {
-    GstVaapiVideoMeta *old_meta;
+  GstVaapiVideoMeta *old_meta;
 
-    g_return_if_fail(old_meta_ptr != NULL);
+  g_return_if_fail (old_meta_ptr != NULL);
 
-    old_meta = g_atomic_pointer_get((gpointer *)old_meta_ptr);
+  old_meta = g_atomic_pointer_get ((gpointer *) old_meta_ptr);
 
-    if (old_meta == new_meta)
-        return;
+  if (old_meta == new_meta)
+    return;
 
-    if (new_meta)
-        gst_vaapi_video_meta_ref(new_meta);
+  if (new_meta)
+    gst_vaapi_video_meta_ref (new_meta);
 
-    while (!g_atomic_pointer_compare_and_exchange((gpointer *)old_meta_ptr,
-               old_meta, new_meta))
-        old_meta = g_atomic_pointer_get((gpointer *)old_meta_ptr);
+  while (!g_atomic_pointer_compare_and_exchange ((gpointer *) old_meta_ptr,
+          old_meta, new_meta))
+    old_meta = g_atomic_pointer_get ((gpointer *) old_meta_ptr);
 
-    if (old_meta)
-        gst_vaapi_video_meta_unref(old_meta);
+  if (old_meta)
+    gst_vaapi_video_meta_unref (old_meta);
 }
 
 /**
@@ -444,11 +443,11 @@ gst_vaapi_video_meta_replace(GstVaapiVideoMeta **old_meta_ptr,
  * Return value: the #GstVaapiDisplay the @meta is bound to
  */
 GstVaapiDisplay *
-gst_vaapi_video_meta_get_display(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_get_display (GstVaapiVideoMeta * meta)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), NULL);
 
-    return meta->display;
+  return meta->display;
 }
 
 /**
@@ -463,11 +462,11 @@ gst_vaapi_video_meta_get_display(GstVaapiVideoMeta *meta)
  *   there is none
  */
 GstVaapiImage *
-gst_vaapi_video_meta_get_image(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_get_image (GstVaapiVideoMeta * meta)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), NULL);
 
-    return meta->image;
+  return meta->image;
 }
 
 /**
@@ -480,14 +479,14 @@ gst_vaapi_video_meta_get_image(GstVaapiVideoMeta *meta)
  * pool and the pool is also released.
  */
 void
-gst_vaapi_video_meta_set_image(GstVaapiVideoMeta *meta, GstVaapiImage *image)
+gst_vaapi_video_meta_set_image (GstVaapiVideoMeta * meta, GstVaapiImage * image)
 {
-    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
+  g_return_if_fail (GST_VAAPI_IS_VIDEO_META (meta));
 
-    gst_vaapi_video_meta_destroy_image(meta);
+  gst_vaapi_video_meta_destroy_image (meta);
 
-    if (image)
-        set_image(meta, image);
+  if (image)
+    set_image (meta, image);
 }
 
 /**
@@ -502,17 +501,17 @@ gst_vaapi_video_meta_set_image(GstVaapiVideoMeta *meta, GstVaapiImage *image)
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_video_meta_set_image_from_pool(GstVaapiVideoMeta *meta,
-    GstVaapiVideoPool *pool)
+gst_vaapi_video_meta_set_image_from_pool (GstVaapiVideoMeta * meta,
+    GstVaapiVideoPool * pool)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), FALSE);
-    g_return_val_if_fail(pool != NULL, FALSE);
-    g_return_val_if_fail(gst_vaapi_video_pool_get_object_type(pool) ==
-        GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE, FALSE);
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), FALSE);
+  g_return_val_if_fail (pool != NULL, FALSE);
+  g_return_val_if_fail (gst_vaapi_video_pool_get_object_type (pool) ==
+      GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE, FALSE);
 
-    gst_vaapi_video_meta_destroy_image(meta);
+  gst_vaapi_video_meta_destroy_image (meta);
 
-    return set_image_from_pool(meta, pool);
+  return set_image_from_pool (meta, pool);
 }
 
 /**
@@ -527,11 +526,11 @@ gst_vaapi_video_meta_set_image_from_pool(GstVaapiVideoMeta *meta,
  *   there is none
  */
 GstVaapiSurface *
-gst_vaapi_video_meta_get_surface(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_get_surface (GstVaapiVideoMeta * meta)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), NULL);
 
-    return meta->proxy ? GST_VAAPI_SURFACE_PROXY_SURFACE(meta->proxy) : NULL;
+  return meta->proxy ? GST_VAAPI_SURFACE_PROXY_SURFACE (meta->proxy) : NULL;
 }
 
 /**
@@ -546,11 +545,11 @@ gst_vaapi_video_meta_get_surface(GstVaapiVideoMeta *meta)
  *   %NULL if there is none
  */
 GstVaapiSurfaceProxy *
-gst_vaapi_video_meta_get_surface_proxy(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_get_surface_proxy (GstVaapiVideoMeta * meta)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), NULL);
 
-    return meta->proxy;
+  return meta->proxy;
 }
 
 /**
@@ -563,23 +562,23 @@ gst_vaapi_video_meta_get_surface_proxy(GstVaapiVideoMeta *meta)
  * parent pool and the pool is also released.
  */
 void
-gst_vaapi_video_meta_set_surface_proxy(GstVaapiVideoMeta *meta,
-    GstVaapiSurfaceProxy *proxy)
+gst_vaapi_video_meta_set_surface_proxy (GstVaapiVideoMeta * meta,
+    GstVaapiSurfaceProxy * proxy)
 {
-    const GstVaapiRectangle *crop_rect;
+  const GstVaapiRectangle *crop_rect;
 
-    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
+  g_return_if_fail (GST_VAAPI_IS_VIDEO_META (meta));
 
-    gst_vaapi_video_meta_destroy_proxy(meta);
+  gst_vaapi_video_meta_destroy_proxy (meta);
 
-    if (proxy) {
-        if (!set_surface_proxy(meta, proxy))
-            return;
+  if (proxy) {
+    if (!set_surface_proxy (meta, proxy))
+      return;
 
-        crop_rect = gst_vaapi_surface_proxy_get_crop_rect(proxy);
-        if (crop_rect)
-            gst_vaapi_video_meta_set_render_rect(meta, crop_rect);
-    }
+    crop_rect = gst_vaapi_surface_proxy_get_crop_rect (proxy);
+    if (crop_rect)
+      gst_vaapi_video_meta_set_render_rect (meta, crop_rect);
+  }
 }
 
 /**
@@ -591,11 +590,11 @@ gst_vaapi_video_meta_set_surface_proxy(GstVaapiVideoMeta *meta,
  * Return value: the surface converter associated with the video @meta
  */
 GFunc
-gst_vaapi_video_meta_get_surface_converter(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_get_surface_converter (GstVaapiVideoMeta * meta)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), NULL);
 
-    return meta->converter;
+  return meta->converter;
 }
 
 /**
@@ -606,11 +605,12 @@ gst_vaapi_video_meta_get_surface_converter(GstVaapiVideoMeta *meta)
  * Sets the @meta surface converter function to @func.
  */
 void
-gst_vaapi_video_meta_set_surface_converter(GstVaapiVideoMeta *meta, GFunc func)
+gst_vaapi_video_meta_set_surface_converter (GstVaapiVideoMeta * meta,
+    GFunc func)
 {
-    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
+  g_return_if_fail (GST_VAAPI_IS_VIDEO_META (meta));
 
-    meta->converter = func;
+  meta->converter = func;
 }
 
 /**
@@ -622,12 +622,12 @@ gst_vaapi_video_meta_set_surface_converter(GstVaapiVideoMeta *meta, GFunc func)
  * Return value: a combination for #GstVaapiSurfaceRenderFlags
  */
 guint
-gst_vaapi_video_meta_get_render_flags(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_get_render_flags (GstVaapiVideoMeta * meta)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), 0);
-    g_return_val_if_fail(meta->proxy != NULL, 0);
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), 0);
+  g_return_val_if_fail (meta->proxy != NULL, 0);
 
-    return meta->render_flags;
+  return meta->render_flags;
 }
 
 /**
@@ -638,12 +638,12 @@ gst_vaapi_video_meta_get_render_flags(GstVaapiVideoMeta *meta)
  * Sets #GstVaapiSurfaceRenderFlags to the @meta.
  */
 void
-gst_vaapi_video_meta_set_render_flags(GstVaapiVideoMeta *meta, guint flags)
+gst_vaapi_video_meta_set_render_flags (GstVaapiVideoMeta * meta, guint flags)
 {
-    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
-    g_return_if_fail(meta->proxy != NULL);
+  g_return_if_fail (GST_VAAPI_IS_VIDEO_META (meta));
+  g_return_if_fail (meta->proxy != NULL);
 
-    meta->render_flags = flags;
+  meta->render_flags = flags;
 }
 
 /**
@@ -655,13 +655,13 @@ gst_vaapi_video_meta_set_render_flags(GstVaapiVideoMeta *meta, guint flags)
  * Return value: render rectangle associated with the video meta.
  */
 const GstVaapiRectangle *
-gst_vaapi_video_meta_get_render_rect(GstVaapiVideoMeta *meta)
+gst_vaapi_video_meta_get_render_rect (GstVaapiVideoMeta * meta)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), NULL);
 
-    if (!meta->has_render_rect)
-        return NULL;
-    return &meta->render_rect;
+  if (!meta->has_render_rect)
+    return NULL;
+  return &meta->render_rect;
 }
 
 /**
@@ -672,171 +672,171 @@ gst_vaapi_video_meta_get_render_rect(GstVaapiVideoMeta *meta)
  * Sets the render rectangle @rect to the @meta.
  */
 void
-gst_vaapi_video_meta_set_render_rect(GstVaapiVideoMeta *meta,
-    const GstVaapiRectangle *rect)
+gst_vaapi_video_meta_set_render_rect (GstVaapiVideoMeta * meta,
+    const GstVaapiRectangle * rect)
 {
-    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
+  g_return_if_fail (GST_VAAPI_IS_VIDEO_META (meta));
 
-    meta->has_render_rect = rect != NULL;
-    if (meta->has_render_rect)
-        meta->render_rect = *rect;
+  meta->has_render_rect = rect != NULL;
+  if (meta->has_render_rect)
+    meta->render_rect = *rect;
 }
 
 #if GST_CHECK_VERSION(1,0,0)
 
 #define GST_VAAPI_VIDEO_META_HOLDER(meta) \
-    ((GstVaapiVideoMetaHolder *)(meta))
+  ((GstVaapiVideoMetaHolder *) (meta))
 
 typedef struct _GstVaapiVideoMetaHolder GstVaapiVideoMetaHolder;
-struct _GstVaapiVideoMetaHolder {
-    GstMeta             base;
-    GstVaapiVideoMeta  *meta;
+struct _GstVaapiVideoMetaHolder
+{
+  GstMeta base;
+  GstVaapiVideoMeta *meta;
 };
 
 static gboolean
-gst_vaapi_video_meta_holder_init(GstVaapiVideoMetaHolder *meta,
-    gpointer params, GstBuffer *buffer)
+gst_vaapi_video_meta_holder_init (GstVaapiVideoMetaHolder * meta,
+    gpointer params, GstBuffer * buffer)
 {
-    meta->meta = NULL;
-    return TRUE;
+  meta->meta = NULL;
+  return TRUE;
 }
 
 static void
-gst_vaapi_video_meta_holder_free(GstVaapiVideoMetaHolder *meta,
-     GstBuffer *buffer)
+gst_vaapi_video_meta_holder_free (GstVaapiVideoMetaHolder * meta,
+    GstBuffer * buffer)
 {
-    if (meta->meta)
-        gst_vaapi_video_meta_unref(meta->meta);
+  if (meta->meta)
+    gst_vaapi_video_meta_unref (meta->meta);
 }
 
 static gboolean
-gst_vaapi_video_meta_holder_transform(GstBuffer *dst_buffer, GstMeta *meta,
-    GstBuffer *src_buffer, GQuark type, gpointer data)
+gst_vaapi_video_meta_holder_transform (GstBuffer * dst_buffer, GstMeta * meta,
+    GstBuffer * src_buffer, GQuark type, gpointer data)
 {
-    GstVaapiVideoMetaHolder * const src_meta =
-        GST_VAAPI_VIDEO_META_HOLDER(meta);
+  GstVaapiVideoMetaHolder *const src_meta = GST_VAAPI_VIDEO_META_HOLDER (meta);
 
-    if (GST_META_TRANSFORM_IS_COPY(type)) {
-        GstVaapiVideoMeta * const dst_meta =
-            gst_vaapi_video_meta_copy(src_meta->meta);
-        gst_buffer_set_vaapi_video_meta(dst_buffer, dst_meta);
-        gst_vaapi_video_meta_unref(dst_meta);
-        return TRUE;
-    }
-    return FALSE;
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    GstVaapiVideoMeta *const dst_meta =
+        gst_vaapi_video_meta_copy (src_meta->meta);
+    gst_buffer_set_vaapi_video_meta (dst_buffer, dst_meta);
+    gst_vaapi_video_meta_unref (dst_meta);
+    return TRUE;
+  }
+  return FALSE;
 }
 
 GType
-gst_vaapi_video_meta_api_get_type(void)
+gst_vaapi_video_meta_api_get_type (void)
 {
-    static gsize g_type;
-    static const gchar *tags[] = { "memory", NULL };
+  static gsize g_type;
+  static const gchar *tags[] = { "memory", NULL };
 
-    if (g_once_init_enter(&g_type)) {
-        GType type = gst_meta_api_type_register("GstVaapiVideoMetaAPI", tags);
-        g_once_init_leave(&g_type, type);
-    }
-    return g_type;
+  if (g_once_init_enter (&g_type)) {
+    GType type = gst_meta_api_type_register ("GstVaapiVideoMetaAPI", tags);
+    g_once_init_leave (&g_type, type);
+  }
+  return g_type;
 }
 
-#define GST_VAAPI_VIDEO_META_INFO gst_vaapi_video_meta_info_get()
+#define GST_VAAPI_VIDEO_META_INFO gst_vaapi_video_meta_info_get ()
 static const GstMetaInfo *
-gst_vaapi_video_meta_info_get(void)
+gst_vaapi_video_meta_info_get (void)
 {
-    static gsize g_meta_info;
+  static gsize g_meta_info;
 
-    if (g_once_init_enter(&g_meta_info)) {
-        gsize meta_info = GPOINTER_TO_SIZE(gst_meta_register(
-            GST_VAAPI_VIDEO_META_API_TYPE,
-            "GstVaapiVideoMeta", sizeof(GstVaapiVideoMetaHolder),
-            (GstMetaInitFunction)gst_vaapi_video_meta_holder_init,
-            (GstMetaFreeFunction)gst_vaapi_video_meta_holder_free,
-            (GstMetaTransformFunction)gst_vaapi_video_meta_holder_transform));
-        g_once_init_leave(&g_meta_info, meta_info);
-    }
-    return GSIZE_TO_POINTER(g_meta_info);
+  if (g_once_init_enter (&g_meta_info)) {
+    gsize meta_info =
+        GPOINTER_TO_SIZE (gst_meta_register (GST_VAAPI_VIDEO_META_API_TYPE,
+            "GstVaapiVideoMeta", sizeof (GstVaapiVideoMetaHolder),
+            (GstMetaInitFunction) gst_vaapi_video_meta_holder_init,
+            (GstMetaFreeFunction) gst_vaapi_video_meta_holder_free,
+            (GstMetaTransformFunction) gst_vaapi_video_meta_holder_transform));
+    g_once_init_leave (&g_meta_info, meta_info);
+  }
+  return GSIZE_TO_POINTER (g_meta_info);
 }
 
 GstVaapiVideoMeta *
-gst_buffer_get_vaapi_video_meta(GstBuffer *buffer)
+gst_buffer_get_vaapi_video_meta (GstBuffer * buffer)
 {
-    GstMeta *m;
+  GstMeta *m;
 
-    g_return_val_if_fail(GST_IS_BUFFER(buffer), NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
-    m = gst_buffer_get_meta(buffer, GST_VAAPI_VIDEO_META_API_TYPE);
-    if (!m)
-        return NULL;
-    return GST_VAAPI_VIDEO_META_HOLDER(m)->meta;
+  m = gst_buffer_get_meta (buffer, GST_VAAPI_VIDEO_META_API_TYPE);
+  if (!m)
+    return NULL;
+  return GST_VAAPI_VIDEO_META_HOLDER (m)->meta;
 }
 
 void
-gst_buffer_set_vaapi_video_meta(GstBuffer *buffer, GstVaapiVideoMeta *meta)
+gst_buffer_set_vaapi_video_meta (GstBuffer * buffer, GstVaapiVideoMeta * meta)
 {
-    GstMeta *m;
+  GstMeta *m;
 
-    g_return_if_fail(GST_IS_BUFFER(buffer));
-    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (GST_VAAPI_IS_VIDEO_META (meta));
 
-    m = gst_buffer_add_meta(buffer, GST_VAAPI_VIDEO_META_INFO, NULL);
-    if (m)
-        GST_VAAPI_VIDEO_META_HOLDER(m)->meta = gst_vaapi_video_meta_ref(meta);
+  m = gst_buffer_add_meta (buffer, GST_VAAPI_VIDEO_META_INFO, NULL);
+  if (m)
+    GST_VAAPI_VIDEO_META_HOLDER (m)->meta = gst_vaapi_video_meta_ref (meta);
 }
 #else
 
-#define GST_VAAPI_VIDEO_META_QUARK gst_vaapi_video_meta_quark_get()
+#define GST_VAAPI_VIDEO_META_QUARK gst_vaapi_video_meta_quark_get ()
 static GQuark
-gst_vaapi_video_meta_quark_get(void)
+gst_vaapi_video_meta_quark_get (void)
 {
-    static gsize g_quark;
+  static gsize g_quark;
 
-    if (g_once_init_enter(&g_quark)) {
-        gsize quark = (gsize)g_quark_from_static_string("GstVaapiVideoMeta");
-        g_once_init_leave(&g_quark, quark);
-    }
-    return g_quark;
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("GstVaapiVideoMeta");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
 }
 
-#define META_QUARK meta_quark_get()
+#define META_QUARK meta_quark_get ()
 static GQuark
-meta_quark_get(void)
+meta_quark_get (void)
 {
-    static gsize g_quark;
+  static gsize g_quark;
 
-    if (g_once_init_enter(&g_quark)) {
-        gsize quark = (gsize)g_quark_from_static_string("meta");
-        g_once_init_leave(&g_quark, quark);
-    }
-    return g_quark;
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("meta");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
 }
 
 GstVaapiVideoMeta *
-gst_buffer_get_vaapi_video_meta(GstBuffer *buffer)
+gst_buffer_get_vaapi_video_meta (GstBuffer * buffer)
 {
-    const GstStructure *structure;
-    const GValue *value;
+  const GstStructure *structure;
+  const GValue *value;
 
-    g_return_val_if_fail(GST_IS_BUFFER(buffer), NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
-    structure = gst_buffer_get_qdata(buffer, GST_VAAPI_VIDEO_META_QUARK);
-    if (!structure)
-        return NULL;
+  structure = gst_buffer_get_qdata (buffer, GST_VAAPI_VIDEO_META_QUARK);
+  if (!structure)
+    return NULL;
 
-    value = gst_structure_id_get_value(structure, META_QUARK);
-    if (!value)
-        return NULL;
+  value = gst_structure_id_get_value (structure, META_QUARK);
+  if (!value)
+    return NULL;
 
-    return GST_VAAPI_VIDEO_META(g_value_get_boxed(value));
+  return GST_VAAPI_VIDEO_META (g_value_get_boxed (value));
 }
 
 void
-gst_buffer_set_vaapi_video_meta(GstBuffer *buffer, GstVaapiVideoMeta *meta)
+gst_buffer_set_vaapi_video_meta (GstBuffer * buffer, GstVaapiVideoMeta * meta)
 {
-    g_return_if_fail(GST_IS_BUFFER(buffer));
-    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (GST_VAAPI_IS_VIDEO_META (meta));
 
-    gst_buffer_set_qdata(buffer, GST_VAAPI_VIDEO_META_QUARK,
-        gst_structure_id_new(GST_VAAPI_VIDEO_META_QUARK,
-            META_QUARK, GST_VAAPI_TYPE_VIDEO_META, meta, NULL));
+  gst_buffer_set_qdata (buffer, GST_VAAPI_VIDEO_META_QUARK,
+      gst_structure_id_new (GST_VAAPI_VIDEO_META_QUARK,
+          META_QUARK, GST_VAAPI_TYPE_VIDEO_META, meta, NULL));
 }
 #endif

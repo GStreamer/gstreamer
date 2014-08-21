@@ -31,16 +31,16 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstVaapiVideoMemory             GstVaapiVideoMemory;
-typedef struct _GstVaapiVideoAllocator          GstVaapiVideoAllocator;
-typedef struct _GstVaapiVideoAllocatorClass     GstVaapiVideoAllocatorClass;
+typedef struct _GstVaapiVideoMemory GstVaapiVideoMemory;
+typedef struct _GstVaapiVideoAllocator GstVaapiVideoAllocator;
+typedef struct _GstVaapiVideoAllocatorClass GstVaapiVideoAllocatorClass;
 
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoMemory                                              --- */
 /* ------------------------------------------------------------------------ */
 
 #define GST_VAAPI_VIDEO_MEMORY_CAST(mem) \
-    ((GstVaapiVideoMemory *)(mem))
+  ((GstVaapiVideoMemory *) (mem))
 
 #define GST_VAAPI_VIDEO_MEMORY_NAME             "GstVaapiVideoMemory"
 
@@ -59,10 +59,11 @@ typedef struct _GstVaapiVideoAllocatorClass     GstVaapiVideoAllocatorClass;
  *
  * The set of all #GstVaapiVideoMemory map types.
  */
-typedef enum {
-    GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE = 1,
-    GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR,
-    GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR
+typedef enum
+{
+  GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE = 1,
+  GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR,
+  GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR
 } GstVaapiVideoMemoryMapType;
 
 /**
@@ -71,56 +72,54 @@ typedef enum {
  * A VA video memory object holder, including VA surfaces, images and
  * proxies.
  */
-struct _GstVaapiVideoMemory {
-    GstMemory parent_instance;
+struct _GstVaapiVideoMemory
+{
+  GstMemory parent_instance;
 
-    /*< private >*/
-    GstVaapiSurfaceProxy *proxy;
-    const GstVideoInfo *surface_info;
-    GstVaapiSurface    *surface;
-    const GstVideoInfo *image_info;
-    GstVaapiImage      *image;
-    GstVaapiVideoMeta  *meta;
-    guint               map_type;
-    gint                map_count;
-    gboolean            use_direct_rendering;
+  /*< private >*/
+  GstVaapiSurfaceProxy *proxy;
+  const GstVideoInfo *surface_info;
+  GstVaapiSurface *surface;
+  const GstVideoInfo *image_info;
+  GstVaapiImage *image;
+  GstVaapiVideoMeta *meta;
+  guint map_type;
+  gint map_count;
+  gboolean use_direct_rendering;
 };
 
 G_GNUC_INTERNAL
 GstMemory *
-gst_vaapi_video_memory_new(GstAllocator *allocator, GstVaapiVideoMeta *meta);
+gst_vaapi_video_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta);
 
 G_GNUC_INTERNAL
 gboolean
-gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
-    GstMapInfo *info, gpointer *data, gint *stride, GstMapFlags flags);
+gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
+    GstMapInfo * info, gpointer * data, gint * stride, GstMapFlags flags);
 
 G_GNUC_INTERNAL
 gboolean
-gst_video_meta_unmap_vaapi_memory(GstVideoMeta *meta, guint plane,
-    GstMapInfo *info);
+gst_video_meta_unmap_vaapi_memory (GstVideoMeta * meta, guint plane,
+    GstMapInfo * info);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_video_memory_reset_surface(GstVaapiVideoMemory *mem);
+gst_vaapi_video_memory_reset_surface (GstVaapiVideoMemory * mem);
 
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoAllocator                                           --- */
 /* ------------------------------------------------------------------------ */
 
 #define GST_VAAPI_VIDEO_ALLOCATOR_CAST(allocator) \
-    ((GstVaapiVideoAllocator *)(allocator))
+  ((GstVaapiVideoAllocator *) (allocator))
 
 #define GST_VAAPI_TYPE_VIDEO_ALLOCATOR \
-    (gst_vaapi_video_allocator_get_type())
-
-#define GST_VAAPI_VIDEO_ALLOCATOR(obj)          \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),          \
-        GST_VAAPI_TYPE_VIDEO_ALLOCATOR,         \
-        GstVaapiVideoAllocator))
-
+  (gst_vaapi_video_allocator_get_type ())
+#define GST_VAAPI_VIDEO_ALLOCATOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_VAAPI_TYPE_VIDEO_ALLOCATOR, \
+      GstVaapiVideoAllocator))
 #define GST_VAAPI_IS_VIDEO_ALLOCATOR(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_VIDEO_ALLOCATOR))
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_VAAPI_TYPE_VIDEO_ALLOCATOR))
 
 #define GST_VAAPI_VIDEO_ALLOCATOR_NAME          "GstVaapiVideoAllocator"
 
@@ -129,16 +128,17 @@ gst_vaapi_video_memory_reset_surface(GstVaapiVideoMemory *mem);
  *
  * A VA video memory allocator object.
  */
-struct _GstVaapiVideoAllocator {
-    GstAllocator parent_instance;
+struct _GstVaapiVideoAllocator
+{
+  GstAllocator parent_instance;
 
-    /*< private >*/
-    GstVideoInfo        video_info;
-    GstVideoInfo        surface_info;
-    GstVaapiVideoPool  *surface_pool;
-    GstVideoInfo        image_info;
-    GstVaapiVideoPool  *image_pool;
-    gboolean            has_direct_rendering;
+  /*< private >*/
+  GstVideoInfo video_info;
+  GstVideoInfo surface_info;
+  GstVaapiVideoPool *surface_pool;
+  GstVideoInfo image_info;
+  GstVaapiVideoPool *image_pool;
+  gboolean has_direct_rendering;
 };
 
 /**
@@ -146,18 +146,19 @@ struct _GstVaapiVideoAllocator {
  *
  * A VA video memory allocator class.
  */
-struct _GstVaapiVideoAllocatorClass {
-    GstAllocatorClass parent_class;
+struct _GstVaapiVideoAllocatorClass
+{
+  GstAllocatorClass parent_class;
 };
 
 G_GNUC_INTERNAL
 GType
-gst_vaapi_video_allocator_get_type(void) G_GNUC_CONST;
+gst_vaapi_video_allocator_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstAllocator *
-gst_vaapi_video_allocator_new(GstVaapiDisplay *display,
-    const GstVideoInfo *vip);
+gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
+    const GstVideoInfo * vip);
 
 G_END_DECLS
 

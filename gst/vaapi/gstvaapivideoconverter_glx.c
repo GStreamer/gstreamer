@@ -30,68 +30,68 @@
 #include "gstvaapivideometa.h"
 
 #if GST_CHECK_VERSION(1,0,0)
-typedef gboolean (*GstSurfaceUploadFunction)(GstSurfaceConverter *,
+typedef gboolean (*GstSurfaceUploadFunction) (GstSurfaceConverter *,
     GstBuffer *);
 #else
-typedef gboolean (*GstSurfaceUploadFunction)(GstSurfaceConverter *,
+typedef gboolean (*GstSurfaceUploadFunction) (GstSurfaceConverter *,
     GstSurfaceBuffer *);
 #endif
 
 static void
-gst_vaapi_video_converter_glx_iface_init(GstSurfaceConverterInterface *iface);
+gst_vaapi_video_converter_glx_iface_init (GstSurfaceConverterInterface * iface);
 
-G_DEFINE_TYPE_WITH_CODE(
-    GstVaapiVideoConverterGLX,
+G_DEFINE_TYPE_WITH_CODE (GstVaapiVideoConverterGLX,
     gst_vaapi_video_converter_glx,
     G_TYPE_OBJECT,
-    G_IMPLEMENT_INTERFACE(GST_TYPE_SURFACE_CONVERTER,
-                          gst_vaapi_video_converter_glx_iface_init))
+    G_IMPLEMENT_INTERFACE (GST_TYPE_SURFACE_CONVERTER,
+        gst_vaapi_video_converter_glx_iface_init));
 
-#define GST_VAAPI_VIDEO_CONVERTER_GLX_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                 \
-        GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX,             \
-        GstVaapiVideoConverterGLXPrivate))
+#define GST_VAAPI_VIDEO_CONVERTER_GLX_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX, \
+      GstVaapiVideoConverterGLXPrivate))
 
-struct _GstVaapiVideoConverterGLXPrivate {
-    GstVaapiTexture *texture;
+struct _GstVaapiVideoConverterGLXPrivate
+{
+  GstVaapiTexture *texture;
 };
 
 static gboolean
-gst_vaapi_video_converter_glx_upload(GstSurfaceConverter *self,
-    GstBuffer *buffer);
+gst_vaapi_video_converter_glx_upload (GstSurfaceConverter * self,
+    GstBuffer * buffer);
 
 static void
-gst_vaapi_video_converter_glx_dispose(GObject *object)
+gst_vaapi_video_converter_glx_dispose (GObject * object)
 {
-    GstVaapiVideoConverterGLXPrivate * const priv =
-        GST_VAAPI_VIDEO_CONVERTER_GLX(object)->priv;
+  GstVaapiVideoConverterGLXPrivate *const priv =
+      GST_VAAPI_VIDEO_CONVERTER_GLX (object)->priv;
 
-    gst_vaapi_texture_replace(&priv->texture, NULL);
+  gst_vaapi_texture_replace (&priv->texture, NULL);
 
-    G_OBJECT_CLASS(gst_vaapi_video_converter_glx_parent_class)->dispose(object);
+  G_OBJECT_CLASS (gst_vaapi_video_converter_glx_parent_class)->dispose (object);
 }
 
 static void
-gst_vaapi_video_converter_glx_class_init(GstVaapiVideoConverterGLXClass *klass)
+gst_vaapi_video_converter_glx_class_init (GstVaapiVideoConverterGLXClass *
+    klass)
 {
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
 
-    g_type_class_add_private(klass, sizeof(GstVaapiVideoConverterGLXPrivate));
+  g_type_class_add_private (klass, sizeof (GstVaapiVideoConverterGLXPrivate));
 
-    object_class->dispose = gst_vaapi_video_converter_glx_dispose;
+  object_class->dispose = gst_vaapi_video_converter_glx_dispose;
 }
 
 static void
-gst_vaapi_video_converter_glx_init(GstVaapiVideoConverterGLX *buffer)
+gst_vaapi_video_converter_glx_init (GstVaapiVideoConverterGLX * buffer)
 {
-    buffer->priv = GST_VAAPI_VIDEO_CONVERTER_GLX_GET_PRIVATE(buffer);
+  buffer->priv = GST_VAAPI_VIDEO_CONVERTER_GLX_GET_PRIVATE (buffer);
 }
 
 static void
-gst_vaapi_video_converter_glx_iface_init(GstSurfaceConverterInterface *iface)
+gst_vaapi_video_converter_glx_iface_init (GstSurfaceConverterInterface * iface)
 {
-    iface->upload = (GstSurfaceUploadFunction)
-        gst_vaapi_video_converter_glx_upload;
+  iface->upload = (GstSurfaceUploadFunction)
+      gst_vaapi_video_converter_glx_upload;
 }
 
 /**
@@ -107,53 +107,53 @@ gst_vaapi_video_converter_glx_iface_init(GstSurfaceConverterInterface *iface)
  * Return value: the newly allocated #GstBuffer, or %NULL on error
  */
 GstSurfaceConverter *
-gst_vaapi_video_converter_glx_new(GstBuffer *buffer, const gchar *type,
-    GValue *dest)
+gst_vaapi_video_converter_glx_new (GstBuffer * buffer, const gchar * type,
+    GValue * dest)
 {
-    GstVaapiVideoMeta * const meta = gst_buffer_get_vaapi_video_meta(buffer);
-    GstVaapiTexture *texture;
-    GstVaapiVideoConverterGLX *converter;
+  GstVaapiVideoMeta *const meta = gst_buffer_get_vaapi_video_meta (buffer);
+  GstVaapiTexture *texture;
+  GstVaapiVideoConverterGLX *converter;
 
-    /* Check for "opengl" request, or chain up to X11 converter */
-    if (strcmp(type, "opengl") != 0 || !G_VALUE_HOLDS_UINT(dest))
-        return gst_vaapi_video_converter_x11_new(buffer, type, dest);
+  /* Check for "opengl" request, or chain up to X11 converter */
+  if (strcmp (type, "opengl") != 0 || !G_VALUE_HOLDS_UINT (dest))
+    return gst_vaapi_video_converter_x11_new (buffer, type, dest);
 
-    /* FIXME Should we assume target and format ? */
-    texture = gst_vaapi_texture_new_with_texture(
-        gst_vaapi_video_meta_get_display(meta),
-        g_value_get_uint(dest), GL_TEXTURE_2D, GL_BGRA);
-    if (!texture)
-        return NULL;
+  /* FIXME Should we assume target and format ? */
+  texture =
+      gst_vaapi_texture_new_with_texture (gst_vaapi_video_meta_get_display
+      (meta), g_value_get_uint (dest), GL_TEXTURE_2D, GL_BGRA);
+  if (!texture)
+    return NULL;
 
-    converter = g_object_new(GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX, NULL);
-    converter->priv->texture = texture;
-    return GST_SURFACE_CONVERTER(converter);
+  converter = g_object_new (GST_VAAPI_TYPE_VIDEO_CONVERTER_GLX, NULL);
+  converter->priv->texture = texture;
+  return GST_SURFACE_CONVERTER (converter);
 }
 
 gboolean
-gst_vaapi_video_converter_glx_upload(GstSurfaceConverter *self,
-    GstBuffer *buffer)
+gst_vaapi_video_converter_glx_upload (GstSurfaceConverter * self,
+    GstBuffer * buffer)
 {
-    GstVaapiVideoConverterGLXPrivate * const priv =
-        GST_VAAPI_VIDEO_CONVERTER_GLX(self)->priv;
-    GstVaapiVideoMeta * const meta = gst_buffer_get_vaapi_video_meta(buffer);
-    GstVaapiSurface * const surface = gst_vaapi_video_meta_get_surface(meta);
-    GstVaapiDisplay *new_dpy, *old_dpy;
+  GstVaapiVideoConverterGLXPrivate *const priv =
+      GST_VAAPI_VIDEO_CONVERTER_GLX (self)->priv;
+  GstVaapiVideoMeta *const meta = gst_buffer_get_vaapi_video_meta (buffer);
+  GstVaapiSurface *const surface = gst_vaapi_video_meta_get_surface (meta);
+  GstVaapiDisplay *new_dpy, *old_dpy;
 
-    new_dpy = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface));
-    old_dpy = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(priv->texture));
+  new_dpy = gst_vaapi_object_get_display (GST_VAAPI_OBJECT (surface));
+  old_dpy = gst_vaapi_object_get_display (GST_VAAPI_OBJECT (priv->texture));
 
-    if (old_dpy != new_dpy) {
-        const guint texture = gst_vaapi_texture_get_id(priv->texture);
+  if (old_dpy != new_dpy) {
+    const guint texture = gst_vaapi_texture_get_id (priv->texture);
 
-        gst_vaapi_texture_replace(&priv->texture, NULL);
-        priv->texture = gst_vaapi_texture_new_with_texture(new_dpy,
-            texture, GL_TEXTURE_2D, GL_BGRA);
-    }
+    gst_vaapi_texture_replace (&priv->texture, NULL);
+    priv->texture = gst_vaapi_texture_new_with_texture (new_dpy,
+        texture, GL_TEXTURE_2D, GL_BGRA);
+  }
 
-    if (!gst_vaapi_apply_composition(surface, buffer))
-        GST_WARNING("could not update subtitles");
+  if (!gst_vaapi_apply_composition (surface, buffer))
+    GST_WARNING ("could not update subtitles");
 
-    return gst_vaapi_texture_put_surface(priv->texture, surface,
-        gst_vaapi_video_meta_get_render_flags(meta));
+  return gst_vaapi_texture_put_surface (priv->texture, surface,
+      gst_vaapi_video_meta_get_render_flags (meta));
 }

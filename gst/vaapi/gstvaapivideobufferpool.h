@@ -29,27 +29,21 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_TYPE_VIDEO_BUFFER_POOL \
-    (gst_vaapi_video_buffer_pool_get_type())
-
-#define GST_VAAPI_VIDEO_BUFFER_POOL(obj)                \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-        GST_VAAPI_TYPE_VIDEO_BUFFER_POOL,               \
-        GstVaapiVideoBufferPool))
-
-#define GST_VAAPI_VIDEO_BUFFER_POOL_CLASS(klass)        \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-        GST_VAAPI_TYPE_VIDEO_BUFFER_POOL,               \
-        GstVaapiVideoBufferPoolClass))
-
+  (gst_vaapi_video_buffer_pool_get_type ())
+#define GST_VAAPI_VIDEO_BUFFER_POOL(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_VAAPI_TYPE_VIDEO_BUFFER_POOL, \
+      GstVaapiVideoBufferPool))
+#define GST_VAAPI_VIDEO_BUFFER_POOL_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_VAAPI_TYPE_VIDEO_BUFFER_POOL, \
+      GstVaapiVideoBufferPoolClass))
 #define GST_VAAPI_IS_VIDEO_BUFFER_POOL(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_VIDEO_BUFFER_POOL))
-
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_VAAPI_TYPE_VIDEO_BUFFER_POOL))
 #define GST_VAAPI_IS_VIDEO_BUFFER_POOL_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_VIDEO_BUFFER_POOL))
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_VAAPI_TYPE_VIDEO_BUFFER_POOL))
 
-typedef struct _GstVaapiVideoBufferPool         GstVaapiVideoBufferPool;
-typedef struct _GstVaapiVideoBufferPoolClass    GstVaapiVideoBufferPoolClass;
-typedef struct _GstVaapiVideoBufferPoolPrivate  GstVaapiVideoBufferPoolPrivate;
+typedef struct _GstVaapiVideoBufferPool GstVaapiVideoBufferPool;
+typedef struct _GstVaapiVideoBufferPoolClass GstVaapiVideoBufferPoolClass;
+typedef struct _GstVaapiVideoBufferPoolPrivate GstVaapiVideoBufferPoolPrivate;
 
 /**
  * GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META:
@@ -57,7 +51,8 @@ typedef struct _GstVaapiVideoBufferPoolPrivate  GstVaapiVideoBufferPoolPrivate;
  * An option that can be activated on bufferpool to request vaapi
  * video metadata on buffers from the pool.
  */
-#define GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META "GstBufferPoolOptionVaapiVideoMeta"
+#define GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META \
+  "GstBufferPoolOptionVaapiVideoMeta"
 
 /**
  *
@@ -71,7 +66,7 @@ typedef struct _GstVaapiVideoBufferPoolPrivate  GstVaapiVideoBufferPoolPrivate;
  */
 #ifndef GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META
 #define GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META \
-    "GstBufferPoolOptionVideoGLTextureUploadMeta"
+  "GstBufferPoolOptionVideoGLTextureUploadMeta"
 #endif
 
 /**
@@ -79,11 +74,12 @@ typedef struct _GstVaapiVideoBufferPoolPrivate  GstVaapiVideoBufferPoolPrivate;
  *
  * A VA video buffer pool object.
  */
-struct _GstVaapiVideoBufferPool {
-    GstBufferPool parent_instance;
+struct _GstVaapiVideoBufferPool
+{
+  GstBufferPool parent_instance;
 
-    /*< private >*/
-    GstVaapiVideoBufferPoolPrivate *priv;
+  /*< private >*/
+  GstVaapiVideoBufferPoolPrivate *priv;
 };
 
 /**
@@ -91,17 +87,18 @@ struct _GstVaapiVideoBufferPool {
  *
  * A VA video buffer pool class.
  */
-struct _GstVaapiVideoBufferPoolClass {
-    GstBufferPoolClass parent_class;
+struct _GstVaapiVideoBufferPoolClass
+{
+  GstBufferPoolClass parent_class;
 };
 
 G_GNUC_INTERNAL
 GType
-gst_vaapi_video_buffer_pool_get_type(void) G_GNUC_CONST;
+gst_vaapi_video_buffer_pool_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstBufferPool *
-gst_vaapi_video_buffer_pool_new(GstVaapiDisplay *display) G_GNUC_CONST;
+gst_vaapi_video_buffer_pool_new (GstVaapiDisplay * display) G_GNUC_CONST;
 
 G_END_DECLS
 
