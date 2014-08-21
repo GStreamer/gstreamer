@@ -98,6 +98,8 @@ struct _GstGLTestSrc {
     GLuint fbo;
     GLuint depthbuffer;
 
+    GstGLShader *shader;
+
     GstBuffer* buffer;
     GstBufferPool *pool;
 
@@ -110,6 +112,9 @@ struct _GstGLTestSrc {
     GstClockTime running_time;            /* total running time */
     gint64 n_frames;                      /* total frames sent */
     gboolean negotiated;
+
+    const gchar *vertex_src;
+    const gchar *fragment_src;
 
     void (*make_image) (GstGLTestSrc* v, GstBuffer* buffer, gint w, gint h);
 };

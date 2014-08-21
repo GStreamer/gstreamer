@@ -32,7 +32,7 @@ struct vts_color_struct {
 
 void    gst_gl_test_src_smpte        (GstGLTestSrc * v,
                                          GstBuffer *buffer, int w, int h);
-void    gst_gl_test_src_snow         (GstGLTestSrc * v,
+void    gst_gl_test_src_shader       (GstGLTestSrc * v,
                                          GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_black        (GstGLTestSrc * v,
                                          GstBuffer *buffer, int w, int h);
