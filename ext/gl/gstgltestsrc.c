@@ -111,6 +111,8 @@ static gboolean gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc,
 
 static void gst_gl_test_src_callback (gpointer stuff);
 
+static gboolean gst_gl_test_src_init_shader (GstGLTestSrc * gltestsrc);
+
 #define GST_TYPE_GL_TEST_SRC_PATTERN (gst_gl_test_src_pattern_get_type ())
 static GType
 gst_gl_test_src_pattern_get_type (void)
@@ -227,6 +229,27 @@ gst_gl_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   return caps;
 }
 
+const gchar *snow_vertex_src = "attribute vec4 position; \
+    attribute vec2 uv; \
+    uniform mat4 mvp; \
+    varying vec2 out_uv; \
+    void main() \
+    { \
+       gl_Position = mvp * position; \
+       out_uv = uv; \
+    }";
+
+const gchar *snow_fragment_src = "uniform float time; \
+    varying vec2 out_uv; \
+    \
+    float rand(vec2 co){ \
+        return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453); \
+    } \
+    void main() \
+    { \
+      gl_FragColor = rand(time * out_uv) * vec4(1); \
+    }";
+
 static void
 gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc, gint pattern_type)
 {
@@ -239,7 +262,9 @@ gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc, gint pattern_type)
       gltestsrc->make_image = gst_gl_test_src_smpte;
       break;
     case GST_GL_TEST_SRC_SNOW:
-      gltestsrc->make_image = gst_gl_test_src_snow;
+      gltestsrc->vertex_src = snow_vertex_src;
+      gltestsrc->fragment_src = snow_fragment_src;
+      gltestsrc->make_image = gst_gl_test_src_shader;
       break;
     case GST_GL_TEST_SRC_BLACK:
       gltestsrc->make_image = gst_gl_test_src_black;
@@ -443,6 +468,19 @@ static gboolean
 gst_gl_test_src_is_seekable (GstBaseSrc * psrc)
 {
   /* we're seekable... */
+  return TRUE;
+}
+
+static gboolean
+gst_gl_test_src_init_shader (GstGLTestSrc * gltestsrc)
+{
+  if (gst_gl_context_get_gl_api (gltestsrc->context)) {
+    /* blocking call, wait until the opengl thread has compiled the shader */
+    if (gltestsrc->vertex_src == NULL)
+      return FALSE;
+    return gst_gl_context_gen_shader (gltestsrc->context, gltestsrc->vertex_src,
+        gltestsrc->fragment_src, &gltestsrc->shader);
+  }
   return TRUE;
 }
 
@@ -690,6 +728,8 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  gst_gl_test_src_init_shader (src);
 
   gst_object_unref (pool);
 

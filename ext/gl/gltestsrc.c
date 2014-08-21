@@ -189,29 +189,78 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 }
 
 void
-gst_gl_test_src_snow (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
+gst_gl_test_src_shader (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
-#if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (v->context) & GST_GL_API_OPENGL) {
-    glClearColor (0.0, 0.0, 0.0, 1.0);
-    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glMatrixMode (GL_PROJECTION);
-    glLoadIdentity ();
+  GstGLFuncs *gl = v->context->gl_vtable;
 
-    glMatrixMode (GL_MODELVIEW);
-    glLoadIdentity ();
+/* *INDENT-OFF* */
 
-    /* FIXME snow requires a fragment shader.  Please write. */
-    glColor4f (0.5, 0.5, 0.5, 1.0);
-    glBegin (GL_QUADS);
-    glVertex3f (-1.0 + 2.0 * (0.0), -1.0 + 2.0 * 1, 0);
-    glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * 1, 0);
-    glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * (0.0), 0);
-    glVertex3f (-1.0 + 2.0 * (0.0), -1.0 + 2.0 * (0.0), 0);
-    glEnd ();
+  const GLfloat positions[] = {
+     -1.0,  1.0,  0.0, 1.0,
+      1.0,  1.0,  0.0, 1.0,
+      1.0, -1.0,  0.0, 1.0,
+     -1.0, -1.0,  0.0, 1.0,
+  };
+
+  const GLfloat identitiy_matrix[] = {
+      1.0,  0.0,  0.0, 0.0,
+      0.0,  1.0,  0.0, 0.0,
+      0.0,  0.0,  1.0, 0.0,
+      0.0,  0.0,  0.0, 1.0,
+  };
+
+  const GLfloat uvs[] = {
+     0.0,  1.0,
+     1.0,  1.0,
+     1.0,  0.0,
+     0.0,  0.0,
+  };
+/* *INDENT-ON* */
+
+  GLushort indices[] = { 0, 1, 2, 3, 0 };
+
+  GLint attr_position_loc = 0;
+  GLint attr_uv_loc = 0;
+
+  if (gst_gl_context_get_gl_api (v->context)) {
+
+    gst_gl_context_clear_shader (v->context);
+    gl->BindTexture (GL_TEXTURE_2D, 0);
+    gl->Disable (GL_TEXTURE_2D);
+
+    gst_gl_shader_use (v->shader);
+
+    attr_position_loc =
+        gst_gl_shader_get_attribute_location (v->shader, "position");
+
+    attr_uv_loc = gst_gl_shader_get_attribute_location (v->shader, "uv");
+
+    /* Load the vertex position */
+    gl->VertexAttribPointer (attr_position_loc, 4, GL_FLOAT,
+        GL_FALSE, 0, positions);
+    /* Load the texture coordinate */
+    gl->VertexAttribPointer (attr_uv_loc, 2, GL_FLOAT, GL_FALSE, 0, uvs);
+
+    gl->EnableVertexAttribArray (attr_position_loc);
+    gl->EnableVertexAttribArray (attr_uv_loc);
+
+    gst_gl_shader_set_uniform_matrix_4fv (v->shader, "mvp",
+        1, GL_FALSE, identitiy_matrix);
+
+    gst_gl_shader_set_uniform_1f (v->shader, "time",
+        (gfloat) v->running_time / GST_SECOND);
+
+    gst_gl_shader_set_uniform_1f (v->shader, "aspect_ratio",
+        (gfloat) w / (gfloat) h);
+
+    gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
+
+    gl->DisableVertexAttribArray (attr_position_loc);
+    gl->DisableVertexAttribArray (attr_uv_loc);
+
+    gst_gl_context_clear_shader (v->context);
   }
-#endif
 }
 
 static void
