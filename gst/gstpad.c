@@ -4774,6 +4774,9 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
       type |= GST_PAD_PROBE_TYPE_EVENT_FLUSH;
       break;
     case GST_EVENT_FLUSH_STOP:
+      if (G_UNLIKELY (!GST_PAD_IS_ACTIVE (pad)))
+        goto inactive;
+
       GST_PAD_UNSET_FLUSHING (pad);
 
       /* Remove sticky EOS events */
@@ -4859,6 +4862,12 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
 flushed:
   {
     GST_DEBUG_OBJECT (pad, "We're flushing");
+    gst_event_unref (event);
+    return GST_FLOW_FLUSHING;
+  }
+inactive:
+  {
+    GST_DEBUG_OBJECT (pad, "flush-stop on inactive pad");
     gst_event_unref (event);
     return GST_FLOW_FLUSHING;
   }
@@ -5064,17 +5073,22 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
           "have event type %d (FLUSH_START)", GST_EVENT_TYPE (event));
 
       /* can't even accept a flush begin event when flushing */
-      if (GST_PAD_IS_FLUSHING (pad))
+      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
 
       GST_PAD_SET_FLUSHING (pad);
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "set flush flag");
       break;
     case GST_EVENT_FLUSH_STOP:
-      if (G_LIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_NONE)) {
-        GST_PAD_UNSET_FLUSHING (pad);
-        GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
-      }
+      /* we can't accept flush-stop on inactive pads else the flushing flag
+       * would be cleared and it would look like the pad can accept data.
+       * Also, some elements restart a streaming thread in flush-stop which we
+       * can't allow on inactive pads */
+      if (G_UNLIKELY (!GST_PAD_IS_ACTIVE (pad)))
+        goto inactive;
+
+      GST_PAD_UNSET_FLUSHING (pad);
+      GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
       /* Remove pending EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS and SEGMENT events");
       remove_event_by_type (pad, GST_EVENT_EOS);
@@ -5186,6 +5200,16 @@ flushing:
       GST_PAD_STREAM_UNLOCK (pad);
     GST_CAT_INFO_OBJECT (GST_CAT_EVENT, pad,
         "Received event on flushing pad. Discarding");
+    gst_event_unref (event);
+    return GST_FLOW_FLUSHING;
+  }
+inactive:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
+    GST_CAT_INFO_OBJECT (GST_CAT_EVENT, pad,
+        "Received flush-stop on inactive pad. Discarding");
     gst_event_unref (event);
     return GST_FLOW_FLUSHING;
   }
