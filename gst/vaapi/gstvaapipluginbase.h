@@ -136,6 +136,9 @@ struct _GstVaapiPluginBase
   gboolean srcpad_caps_changed;
   GstVideoInfo srcpad_info;
   GstPadQueryFunction srcpad_query;
+#if GST_CHECK_VERSION(1,0,0)
+  GstBufferPool *srcpad_buffer_pool;
+#endif
 
   GstVaapiDisplay *display;
   GstVaapiDisplayType display_type;
@@ -214,6 +217,11 @@ G_GNUC_INTERNAL
 gboolean
 gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
     GstQuery * query);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
+    GstQuery * query, guint feature);
 
 G_GNUC_INTERNAL
 GstFlowReturn

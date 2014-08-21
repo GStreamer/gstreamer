@@ -206,6 +206,7 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
     gst_object_unref (plugin->sinkpad_buffer_pool);
     plugin->sinkpad_buffer_pool = NULL;
   }
+  g_clear_object (&plugin->srcpad_buffer_pool);
 #endif
 
   gst_caps_replace (&plugin->srcpad_caps, NULL);
@@ -448,6 +449,146 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
 error_no_caps:
   {
     GST_ERROR ("no caps specified");
+    return FALSE;
+  }
+}
+#endif
+
+/**
+ * gst_vaapi_plugin_base_decide_allocation:
+ * @plugin: a #GstVaapiPluginBase
+ * @query: the allocation query to parse
+ * @feature: the desired #GstVaapiCapsFeature, or zero to find the
+ *   preferred one
+ *
+ * Decides allocation parameters for the downstream elements.
+ *
+ * Returns: %TRUE if successful, %FALSE otherwise.
+ */
+#if GST_CHECK_VERSION(1,0,0)
+gboolean
+gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
+    GstQuery * query, guint feature)
+{
+  GstCaps *caps = NULL;
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstVideoInfo vi;
+  guint size, min, max;
+  gboolean need_pool, update_pool;
+  gboolean has_video_meta = FALSE;
+  gboolean has_video_alignment = FALSE;
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+  gboolean has_texture_upload_meta = FALSE;
+#endif
+
+  g_return_val_if_fail (plugin->display != NULL, FALSE);
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+
+  if (!caps)
+    goto error_no_caps;
+
+  if (!feature)
+    feature =
+        gst_vaapi_find_preferred_caps_feature (plugin->srcpad,
+        GST_VIDEO_FORMAT_ENCODED);
+
+  has_video_meta = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, NULL);
+
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+  has_texture_upload_meta = gst_query_find_allocation_meta (query,
+      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
+#endif
+
+  gst_video_info_init (&vi);
+  gst_video_info_from_caps (&vi, caps);
+  if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED)
+    gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_I420,
+        GST_VIDEO_INFO_WIDTH (&vi), GST_VIDEO_INFO_HEIGHT (&vi));
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    size = MAX (size, vi.size);
+    update_pool = TRUE;
+
+    /* Check whether downstream element proposed a bufferpool but did
+       not provide a correct propose_allocation() implementation */
+    has_video_alignment = gst_buffer_pool_has_option (pool,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+  } else {
+    pool = NULL;
+    size = vi.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
+
+  /* GstVaapiVideoMeta is mandatory, and this implies VA surface memory */
+  if (!pool || !gst_buffer_pool_has_option (pool,
+          GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META)) {
+    GST_INFO_OBJECT (plugin, "no pool or doesn't support GstVaapiVideoMeta, "
+        "making new pool");
+    if (pool)
+      gst_object_unref (pool);
+    pool = gst_vaapi_video_buffer_pool_new (plugin->display);
+    if (!pool)
+      goto error_create_pool;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  /* Check whether GstVideoMeta, or GstVideoAlignment, is needed (raw video) */
+  if (has_video_meta) {
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+    if (has_texture_upload_meta)
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
+#endif
+    gst_buffer_pool_set_config (pool, config);
+  } else if (has_video_alignment) {
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  /* GstVideoGLTextureUploadMeta (OpenGL) */
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+  if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META
+      && !has_texture_upload_meta) {
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
+    gst_buffer_pool_set_config (pool, config);
+  }
+#endif
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  g_clear_object (&plugin->srcpad_buffer_pool);
+  plugin->srcpad_buffer_pool = pool;
+  return TRUE;
+
+  /* ERRORS */
+error_no_caps:
+  {
+    GST_ERROR_OBJECT (plugin, "no caps specified");
+    return FALSE;
+  }
+error_create_pool:
+  {
+    GST_ERROR_OBJECT (plugin, "failed to create buffer pool");
     return FALSE;
   }
 }
