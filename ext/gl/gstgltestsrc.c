@@ -132,6 +132,7 @@ gst_gl_test_src_pattern_get_type (void)
     {GST_GL_TEST_SRC_CHECKERS8, "Checkers 8px", "checkers-8"},
     {GST_GL_TEST_SRC_CIRCULAR, "Circular", "circular"},
     {GST_GL_TEST_SRC_BLINK, "Blink", "blink"},
+    {GST_GL_TEST_SRC_MANDELBROT, "Mandelbrot Fractal", "mandelbrot"},
     {0, NULL, NULL}
   };
 
@@ -250,6 +251,56 @@ const gchar *snow_fragment_src = "uniform float time; \
       gl_FragColor = rand(time * out_uv) * vec4(1); \
     }";
 
+const gchar *mandelbrot_vertex_src = "attribute vec4 position; \
+    attribute vec2 uv; \
+    uniform mat4 mvp; \
+    uniform float aspect_ratio; \
+    varying vec2 fractal_position; \
+    \
+    void main() \
+    { \
+       gl_Position = mvp * position; \
+       fractal_position = vec2(uv.y - 0.8, aspect_ratio * (uv.x - 0.5)); \
+       fractal_position *= 2.5; \
+    }";
+
+const gchar *mandelbrot_fragment_src = "uniform float time; \
+    varying vec2 fractal_position; \
+    \
+    const vec4 K = vec4(1.0, 0.66, 0.33, 3.0); \
+    \
+    vec4 hsv_to_rgb(float hue, float saturation, float value) { \
+      vec4 p = abs(fract(vec4(hue) + K) * 6.0 - K.wwww); \
+      return value * mix(K.xxxx, clamp(p - K.xxxx, 0.0, 1.0), saturation); \
+    } \
+    \
+    vec4 i_to_rgb(int i) { \
+      float hue = float(i) / 100.0 + sin(time); \
+      return hsv_to_rgb(hue, 0.5, 0.8); \
+    } \
+    \
+    vec2 pow_2_complex(vec2 c) { \
+      return vec2(c.x*c.x - c.y*c.y, 2.0 * c.x * c.y); \
+    } \
+    \
+    vec2 mandelbrot(vec2 c, vec2 c0) { \
+      return pow_2_complex(c) + c0; \
+    } \
+    \
+    vec4 iterate_pixel(vec2 position) { \
+      vec2 c = vec2(0); \
+      for (int i=0; i < 100; i++) { \
+        if (c.x*c.x + c.y*c.y > 2.0*2.0) \
+          return i_to_rgb(i); \
+        c = mandelbrot(c, position); \
+      } \
+      return vec4(0, 0, 0, 1); \
+    } \
+    \
+    void main() { \
+      gl_FragColor = iterate_pixel(fractal_position); \
+    }";
+
 static void
 gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc, gint pattern_type)
 {
@@ -298,6 +349,11 @@ gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc, gint pattern_type)
       break;
     case GST_GL_TEST_SRC_BLINK:
       gltestsrc->make_image = gst_gl_test_src_black;
+      break;
+    case GST_GL_TEST_SRC_MANDELBROT:
+      gltestsrc->vertex_src = mandelbrot_vertex_src;
+      gltestsrc->fragment_src = mandelbrot_fragment_src;
+      gltestsrc->make_image = gst_gl_test_src_shader;
       break;
     default:
       g_assert_not_reached ();

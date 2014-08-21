@@ -72,7 +72,8 @@ typedef enum {
     GST_GL_TEST_SRC_CHECKERS4,
     GST_GL_TEST_SRC_CHECKERS8,
     GST_GL_TEST_SRC_CIRCULAR,
-    GST_GL_TEST_SRC_BLINK
+    GST_GL_TEST_SRC_BLINK,
+    GST_GL_TEST_SRC_MANDELBROT
 } GstGLTestSrcPattern;
 
 typedef struct _GstGLTestSrc GstGLTestSrc;
