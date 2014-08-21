@@ -1860,8 +1860,9 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   gst_h264_parse_format_from_caps (caps, &format, &align);
 
   /* packetized video has a codec_data */
-  if (format != GST_H264_PARSE_FORMAT_BYTE &&
-      (value = gst_structure_get_value (str, "codec_data"))) {
+  if ((format == GST_H264_PARSE_FORMAT_AVC
+          || format == GST_H264_PARSE_FORMAT_AVC3)
+      && (value = gst_structure_get_value (str, "codec_data"))) {
     GstMapInfo map;
     guint8 *data;
     guint num_sps, num_pps;
