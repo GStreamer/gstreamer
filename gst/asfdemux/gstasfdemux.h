@@ -96,9 +96,12 @@ typedef struct
 
   GstCaps    *caps;
 
+  GstBuffer *streamheader;
+
   GstTagList *pending_tags;
 
   gboolean    discont;
+  gboolean    first_buffer;
 
   /* Descrambler settings */
   guint8               span;

@@ -147,6 +147,10 @@ gst_asf_demux_free_stream (GstASFDemux * demux, AsfStream * stream)
     gst_tag_list_unref (stream->pending_tags);
     stream->pending_tags = NULL;
   }
+  if (stream->streamheader) {
+    gst_buffer_unref (stream->streamheader);
+    stream->streamheader = NULL;
+  }
   if (stream->pad) {
     if (stream->active) {
       gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
@@ -525,6 +529,7 @@ gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * demux)
 
   for (n = 0; n < demux->num_streams; n++) {
     demux->stream[n].discont = TRUE;
+    demux->stream[n].first_buffer = TRUE;
 
     while (demux->stream[n].payloads->len > 0) {
       AsfPayload *payload;
@@ -1707,6 +1712,15 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
         payload->buf);
 
     if (stream->active) {
+      if (G_UNLIKELY (stream->first_buffer)) {
+        if (stream->streamheader != NULL) {
+          GST_DEBUG_OBJECT (stream->pad,
+              "Pushing streamheader before first buffer");
+          gst_pad_push (stream->pad, gst_buffer_ref (stream->streamheader));
+        }
+        stream->first_buffer = FALSE;
+      }
+
       ret = gst_pad_push (stream->pad, payload->buf);
       ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
     } else {
@@ -2339,7 +2353,8 @@ gst_asf_demux_get_stream (GstASFDemux * demux, guint16 id)
 
 static AsfStream *
 gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
-    GstCaps * caps, guint16 id, gboolean is_video, GstTagList * tags)
+    GstCaps * caps, guint16 id, gboolean is_video, GstBuffer * streamheader,
+    GstTagList * tags)
 {
   AsfStream *stream;
 
@@ -2359,6 +2374,12 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
   stream->is_video = is_video;
   stream->pending_tags = tags;
   stream->discont = TRUE;
+  stream->first_buffer = TRUE;
+  stream->streamheader = streamheader;
+  if (stream->streamheader) {
+    stream->streamheader = gst_buffer_make_writable (streamheader);
+    GST_BUFFER_FLAG_SET (stream->streamheader, GST_BUFFER_FLAG_HEADER);
+  }
   if (is_video) {
     GstStructure *st;
     gint par_x, par_y;
@@ -2381,6 +2402,22 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
   stream->active = FALSE;
 
   return stream;
+}
+
+static void
+gst_asf_demux_add_stream_headers_to_caps (GstASFDemux * demux,
+    GstBuffer * buffer, GstStructure * structure)
+{
+  GValue arr_val = G_VALUE_INIT;
+  GValue buf_val = G_VALUE_INIT;
+
+  g_value_init (&arr_val, GST_TYPE_ARRAY);
+  g_value_init (&buf_val, GST_TYPE_BUFFER);
+
+  gst_value_set_buffer (&buf_val, buffer);
+  gst_value_array_append_and_take_value (&arr_val, &buf_val);
+
+  gst_structure_take_value (structure, "streamheader", &arr_val);
 }
 
 static AsfStream *
@@ -2439,7 +2476,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
 
   ++demux->num_audio_streams;
 
-  return gst_asf_demux_setup_pad (demux, src_pad, caps, id, FALSE, tags);
+  return gst_asf_demux_setup_pad (demux, src_pad, caps, id, FALSE, NULL, tags);
 }
 
 static AsfStream *
@@ -2456,6 +2493,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   gchar *name = NULL;
   gchar *codec_name = NULL;
   gint size_left = video->size - 40;
+  GstBuffer *streamheader = NULL;
 
   /* Create the video pad */
   name = g_strdup_printf ("video_%u", demux->num_video_streams);
@@ -2513,6 +2551,23 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
     str = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (video->tag));
     gst_caps_set_simple (caps, "format", G_TYPE_STRING, str, NULL);
     g_free (str);
+
+    /* check if h264 has codec_data (avc) or streamheaders (bytestream) */
+  } else if (gst_structure_has_name (caps_s, "video/x-h264")) {
+    const GValue *value = gst_structure_get_value (caps_s, "codec_data");
+    GstBuffer *buf = gst_value_get_buffer (value);
+    GstMapInfo mapinfo;
+
+    if (gst_buffer_map (buf, &mapinfo, GST_MAP_READ)) {
+      if (mapinfo.size >= 4 && GST_READ_UINT32_BE (mapinfo.data) == 1) {
+        /* this looks like a bytestream start */
+        streamheader = gst_buffer_ref (buf);
+        gst_asf_demux_add_stream_headers_to_caps (demux, buf, caps_s);
+        gst_structure_remove_field (caps_s, "codec_data");
+      }
+
+      gst_buffer_unmap (buf, &mapinfo);
+    }
   }
 
   if (codec_name) {
@@ -2529,7 +2584,8 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
 
   ++demux->num_video_streams;
 
-  return gst_asf_demux_setup_pad (demux, src_pad, caps, id, TRUE, tags);
+  return gst_asf_demux_setup_pad (demux, src_pad, caps, id, TRUE,
+      streamheader, tags);
 }
 
 static void
