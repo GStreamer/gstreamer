@@ -70,6 +70,20 @@ typedef struct _GstVaapiVideoBufferPoolPrivate GstVaapiVideoBufferPoolPrivate;
 #endif
 
 /**
+ * GstVaapiVideoBufferPoolAcquireFlags:
+ * @GST_VAAPI_VIDEO_BUFFER_POOL_ACQUIRE_FLAG_NO_ALLOC: option to
+ *   request that vaapi video metadata are not initially allocated,
+ *   but are subsequently provided by the user.
+ *
+ * The set of #GstVaapiVideoBufferPool specific flags for
+ * gst_buffer_pool_acquire_buffer().
+ */
+typedef enum {
+  GST_VAAPI_VIDEO_BUFFER_POOL_ACQUIRE_FLAG_NO_ALLOC =
+      GST_BUFFER_POOL_ACQUIRE_FLAG_LAST << 0,
+} GstVaapiVideoBufferPoolAcquireFlags;
+
+/**
  * GstVaapiVideoBufferPool:
  *
  * A VA video buffer pool object.

@@ -216,21 +216,29 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
   GstMemory *mem;
   GstBuffer *buffer;
 
+  const gboolean alloc_vaapi_video_meta = !params ||
+      !(params->flags & GST_VAAPI_VIDEO_BUFFER_POOL_ACQUIRE_FLAG_NO_ALLOC);
+
   if (!priv->allocator)
     goto error_no_allocator;
 
-  meta = gst_vaapi_video_meta_new (priv->display);
-  if (!meta)
-    goto error_create_meta;
+  if (alloc_vaapi_video_meta) {
+    meta = gst_vaapi_video_meta_new (priv->display);
+    if (!meta)
+      goto error_create_meta;
 
-  buffer = gst_vaapi_video_buffer_new (meta);
+    buffer = gst_vaapi_video_buffer_new (meta);
+  } else {
+    meta = NULL;
+    buffer = gst_vaapi_video_buffer_new_empty ();
+  }
   if (!buffer)
     goto error_create_buffer;
 
   mem = gst_vaapi_video_memory_new (priv->allocator, meta);
   if (!mem)
     goto error_create_memory;
-  gst_vaapi_video_meta_unref (meta);
+  gst_vaapi_video_meta_replace (&meta, NULL);
   gst_buffer_append_memory (buffer, mem);
 
   if (priv->has_video_meta) {

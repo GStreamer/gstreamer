@@ -281,7 +281,7 @@ gst_vaapi_video_memory_new (GstAllocator * base_allocator,
   mem->surface = NULL;
   mem->image_info = &allocator->image_info;
   mem->image = NULL;
-  mem->meta = gst_vaapi_video_meta_ref (meta);
+  mem->meta = meta ? gst_vaapi_video_meta_ref (meta) : NULL;
   mem->map_type = 0;
   mem->map_count = 0;
   mem->use_direct_rendering = allocator->has_direct_rendering;
@@ -294,7 +294,7 @@ gst_vaapi_video_memory_free (GstVaapiVideoMemory * mem)
   mem->surface = NULL;
   gst_vaapi_video_memory_reset_image (mem);
   gst_vaapi_surface_proxy_replace (&mem->proxy, NULL);
-  gst_vaapi_video_meta_unref (mem->meta);
+  gst_vaapi_video_meta_replace (&mem->meta, NULL);
   gst_object_unref (GST_MEMORY_CAST (mem)->allocator);
   g_slice_free (GstVaapiVideoMemory, mem);
 }
@@ -319,7 +319,8 @@ gst_vaapi_video_memory_reset_surface (GstVaapiVideoMemory * mem)
   mem->surface = NULL;
   gst_vaapi_video_memory_reset_image (mem);
   gst_vaapi_surface_proxy_replace (&mem->proxy, NULL);
-  gst_vaapi_video_meta_set_surface_proxy (mem->meta, NULL);
+  if (mem->meta)
+    gst_vaapi_video_meta_set_surface_proxy (mem->meta, NULL);
 }
 
 static gpointer
@@ -327,6 +328,9 @@ gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
     guint flags)
 {
   gpointer data;
+
+  g_return_val_if_fail (mem, NULL);
+  g_return_val_if_fail (mem->meta, NULL);
 
   if (mem->map_count == 0) {
     switch (flags & GST_MAP_READWRITE) {
@@ -425,6 +429,9 @@ gst_vaapi_video_memory_copy (GstVaapiVideoMemory * mem,
   GstVaapiVideoMeta *meta;
   GstMemory *out_mem;
   gsize maxsize;
+
+  g_return_val_if_fail (mem, NULL);
+  g_return_val_if_fail (mem->meta, NULL);
 
   /* XXX: this implements a soft-copy, i.e. underlying VA surfaces
      are not copied */
