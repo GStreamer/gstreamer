@@ -654,7 +654,8 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
       gst_video_info_update_from_image (&allocator->image_info, image);
       gst_vaapi_image_unmap (image);
     } while (0);
-    gst_vaapi_object_unref (image);
+    if (image)
+      gst_vaapi_object_unref (image);
   }
 
   allocator->image_pool = gst_vaapi_image_pool_new (display,
