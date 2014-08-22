@@ -476,35 +476,33 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
       gchar *desc, *tmp;
+
       GstValidateActionType *type = GST_VALIDATE_ACTION_TYPE (source);
 
-      g_string_printf (string, "\n%s  Action type:", type->name);
-      g_string_append_printf (string, "\n%s    Name: %s", type->name,
-          type->name);
+      g_string_printf (string, "\nAction type:");
+      g_string_append_printf (string, "\n  Name: %s", type->name);
 
       if (type->is_config)
         g_string_append_printf (string,
-            "\n%s    Is config action (meaning it will be executing right "
-            "at the begining of the execution of the pipeline)", type->name);
+            "\n    Is config action (meaning it will be executing right "
+            "at the begining of the execution of the pipeline)");
 
-      tmp = g_strdup_printf ("\n%s      ", type->name);
+      tmp = g_strdup_printf ("\n    ");
       desc =
           g_regex_replace (newline_regex, type->description, -1, 0, tmp, 0,
           NULL);
-      g_string_append_printf (string, "\n%s\n%s    Description: \n%s      %s",
-          type->name, type->name, type->name, desc);
+      g_string_append_printf (string, "\n\n  Description: \n    %s", desc);
       g_free (desc);
       g_free (tmp);
 
       if (type->parameters) {
-        g_string_append_printf (string, "\n%s\n%s    Parametters:",
-            type->name, type->name);
+        g_string_append_printf (string, "\n\n  Parametters:");
 
         for (i = 0; type->parameters[i].name; i++) {
           gint nw = 0;
           gchar *param_head =
-              g_strdup_printf ("      %s", type->parameters[i].name);
-          gchar *tmp_head = g_strdup_printf ("\n%s %-30s : %s", type->name,
+              g_strdup_printf ("    %s", type->parameters[i].name);
+          gchar *tmp_head = g_strdup_printf ("\n %-30s : %s",
               param_head, "something");
 
 
@@ -513,9 +511,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
           g_free (tmp_head);
 
-          tmp =
-              g_strdup_printf ("\n%s%*s", type->name,
-              nw - (gint) strlen (type->name) + 1, " ");
+          tmp = g_strdup_printf ("\n%*s", nw + 1, " ");
 
           if (g_strcmp0 (type->parameters[i].description, "")) {
             desc =
@@ -525,13 +521,11 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
             desc = g_strdup_printf ("No description");
           }
 
-          g_string_append_printf (string, "\n%s %-30s : %s", type->name,
-              param_head, desc);
+          g_string_append_printf (string, "\n %-30s : %s", param_head, desc);
           g_free (desc);
 
           if (type->parameters[i].possible_variables) {
-            gchar *tmp1 = g_strdup_printf ("\n%s%*s", type->name,
-                nw - (gint) strlen (type->name) + 4, " ");
+            gchar *tmp1 = g_strdup_printf ("\n%*s", nw + 4, " ");
             desc =
                 g_regex_replace (newline_regex,
                 type->parameters[i].possible_variables, -1, 0, tmp1, 0, NULL);
@@ -542,8 +536,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
           }
 
           if (type->parameters[i].types) {
-            gchar *tmp1 = g_strdup_printf ("\n%s%*s", type->name,
-                nw - (gint) strlen (type->name) + 4, " ");
+            gchar *tmp1 = g_strdup_printf ("\n%*s", nw + 4, " ");
             desc =
                 g_regex_replace (newline_regex,
                 type->parameters[i].types, -1, 0, tmp1, 0, NULL);
@@ -566,8 +559,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
         }
       } else {
-        g_string_append_printf (string, "\n%s\n%s    No Parameters", type->name,
-            type->name);
+        g_string_append_printf (string, "\n\n  No Parameters");
 
       }
     } else if (GST_IS_OBJECT (source)) {
