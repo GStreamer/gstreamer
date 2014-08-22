@@ -1117,7 +1117,8 @@ gst_vaapipostproc_transform(GstBaseTransform *trans, GstBuffer *inbuf,
     if (postproc->flags) {
         /* Use VA/VPP extensions to process this frame */
         if (postproc->use_vpp &&
-            postproc->flags != GST_VAAPI_POSTPROC_FLAG_DEINTERLACE) {
+            (postproc->flags != GST_VAAPI_POSTPROC_FLAG_DEINTERLACE ||
+             deint_method_is_advanced(postproc->deinterlace_method))) {
             ret = gst_vaapipostproc_process_vpp(trans, buf, outbuf);
             if (ret != GST_FLOW_NOT_SUPPORTED)
                 goto done;
