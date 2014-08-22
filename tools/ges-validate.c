@@ -355,14 +355,14 @@ beach:
 }
 
 static gboolean
-_edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
+_edit_container (GstValidateScenario * scenario, GstValidateAction * action)
 {
   gint64 cpos;
   gdouble rate;
   GList *layers = NULL;
   GESTimeline *timeline;
   GstQuery *query_segment;
-  GESTimelineElement *clip;
+  GESTimelineElement *container;
   GstClockTime position;
   gint64 stop_value;
   gboolean res = FALSE;
@@ -374,13 +374,13 @@ _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
   const gchar *edit_mode_str = NULL, *edge_str = NULL;
   const gchar *clip_name;
 
-  clip_name = gst_structure_get_string (action->structure, "clip-name");
+  clip_name = gst_structure_get_string (action->structure, "container-name");
 
   timeline = get_timeline (scenario);
   g_return_val_if_fail (timeline, FALSE);
 
-  clip = ges_timeline_get_element (timeline, clip_name);
-  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
+  container = ges_timeline_get_element (timeline, clip_name);
+  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
 
   if (!gst_validate_action_get_clocktime (scenario, action,
           "position", &position)) {
@@ -407,12 +407,12 @@ _edit_clip (GstValidateScenario * scenario, GstValidateAction * action)
       edit_mode_str ? edit_mode_str : "normal",
       edge_str ? edge_str : "None", new_layer_priority);
 
-  if (!ges_container_edit (GES_CONTAINER (clip), layers, new_layer_priority,
-          mode, edge, position)) {
-    gst_object_unref (clip);
+  if (!ges_container_edit (GES_CONTAINER (container), layers,
+          new_layer_priority, mode, edge, position)) {
+    gst_object_unref (container);
     goto beach;
   }
-  gst_object_unref (clip);
+  gst_object_unref (container);
 
   query_segment = gst_query_new_segment (GST_FORMAT_TIME);
   if (!gst_element_query (scenario->pipeline, query_segment)) {
@@ -449,17 +449,17 @@ ges_validate_register_action_types (void)
   gst_validate_init ();
 
   /*  *INDENT-OFF* */
-  gst_validate_add_action_type ("edit-clip", _edit_clip,
+  gst_validate_add_action_type ("edit-container", _edit_container,
       (GstValidateActionParameter [])  {
         {
-         .name = "clip-name",
-         .description = "The name of the clip to edit",
+         .name = "container-name",
+         .description = "The name of the GESContainer to edit",
          .mandatory = TRUE,
          .types = "string",
         },
         {
           .name = "position",
-          .description = "The new position of the clip",
+          .description = "The new position of the GESContainer",
           .mandatory = TRUE,
           .types = "double or string",
           .possible_variables = "position: The current position in the stream\n"
@@ -468,14 +468,14 @@ ges_validate_register_action_types (void)
         },
         {
           .name = "edit-mode",
-          .description = "The GESEditMode to use to edit @clip-name",
+          .description = "The GESEditMode to use to edit @container-name",
           .mandatory = FALSE,
           .types = "string",
           .def = "normal",
         },
         {
           .name = "edge",
-          .description = "The GESEdge to use to edit @clip-name\n"
+          .description = "The GESEdge to use to edit @container-name\n"
                          "should be in [ edge_start, edge_end, edge_none ] ",
           .mandatory = FALSE,
           .types = "string",
@@ -492,7 +492,7 @@ ges_validate_register_action_types (void)
         },
         {NULL}
        },
-       "Allows to edit a clip, for more details, have a look at:\n"
+       "Allows to edit a container (like a GESClip), for more details, have a look at:\n"
        "ges_container_edit documentation, Note that the timeline will\n"
        "be commited, and flushed so that the edition is taken into account",
        FALSE);
