@@ -261,8 +261,9 @@ gst_vaapipostproc_create(GstVaapiPostproc *postproc)
         return FALSE;
     if (!gst_vaapipostproc_ensure_uploader(postproc))
         return FALSE;
-    if (gst_vaapipostproc_ensure_filter(postproc))
-        postproc->use_vpp = TRUE;
+
+    postproc->use_vpp = FALSE;
+    postproc->has_vpp = gst_vaapipostproc_ensure_filter(postproc);
     return TRUE;
 }
 
@@ -359,7 +360,6 @@ create_output_buffer(GstVaapiPostproc *postproc)
 #if GST_CHECK_VERSION(1,0,0)
     GstBufferPool * const pool =
         GST_VAAPI_PLUGIN_BASE(postproc)->srcpad_buffer_pool;
-    GstBufferPoolAcquireParams params = { 0, };
     GstFlowReturn ret;
 
     g_return_val_if_fail(pool != NULL, NULL);
@@ -371,8 +371,7 @@ create_output_buffer(GstVaapiPostproc *postproc)
     }
 
     outbuf = NULL;
-    params.flags = GST_VAAPI_VIDEO_BUFFER_POOL_ACQUIRE_FLAG_NO_ALLOC;
-    ret = gst_buffer_pool_acquire_buffer(pool, &outbuf, &params);
+    ret = gst_buffer_pool_acquire_buffer(pool, &outbuf, NULL);
     if (ret != GST_FLOW_OK || !outbuf)
         goto error_create_buffer;
 #else
@@ -401,12 +400,43 @@ error_create_buffer:
     }
 }
 
-static inline void
-append_output_buffer_metadata(GstBuffer *outbuf, GstBuffer *inbuf, guint flags)
+static gboolean
+append_output_buffer_metadata(GstVaapiPostproc *postproc, GstBuffer *outbuf,
+    GstBuffer *inbuf, guint flags)
 {
-    gst_buffer_copy_into(outbuf, inbuf, flags |
-        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_META | GST_BUFFER_COPY_MEMORY,
-        0, -1);
+    GstVaapiVideoMeta *inbuf_meta, *outbuf_meta;
+    GstVaapiSurfaceProxy *proxy;
+
+    gst_buffer_copy_into(outbuf, inbuf, flags | GST_BUFFER_COPY_FLAGS, 0, -1);
+
+    /* GstVideoCropMeta */
+#if GST_CHECK_VERSION(1,0,0)
+    if (!postproc->use_vpp) {
+        GstVideoCropMeta * const crop_meta =
+            gst_buffer_get_video_crop_meta(inbuf);
+        if (crop_meta) {
+            GstVideoCropMeta * const out_crop_meta =
+                gst_buffer_add_video_crop_meta(outbuf);
+            if (out_crop_meta)
+                *out_crop_meta = *crop_meta;
+        }
+    }
+#endif
+
+    /* GstVaapiVideoMeta */
+    inbuf_meta = gst_buffer_get_vaapi_video_meta(inbuf);
+    g_return_val_if_fail(inbuf_meta != NULL, FALSE);
+    proxy = gst_vaapi_video_meta_get_surface_proxy(inbuf_meta);
+
+    outbuf_meta = gst_buffer_get_vaapi_video_meta(outbuf);
+    g_return_val_if_fail(outbuf_meta != NULL, FALSE);
+    proxy = gst_vaapi_surface_proxy_copy(proxy);
+    if (!proxy)
+        return FALSE;
+
+    gst_vaapi_video_meta_set_surface_proxy(outbuf_meta, proxy);
+    gst_vaapi_surface_proxy_unref(proxy);
+    return TRUE;
 }
 
 static gboolean
@@ -467,6 +497,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     GstVaapiDeinterlaceState * const ds = &postproc->deinterlace_state;
     GstVaapiVideoMeta *inbuf_meta, *outbuf_meta;
     GstVaapiSurface *inbuf_surface, *outbuf_surface;
+    GstVaapiSurfaceProxy *proxy;
     GstVaapiFilterStatus status;
     GstClockTime timestamp;
     GstFlowReturn ret;
@@ -569,10 +600,16 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
         if (!fieldbuf)
             goto error_create_buffer;
 
-        outbuf_meta = gst_vaapi_video_meta_new_from_pool(postproc->filter_pool);
+        outbuf_meta = gst_buffer_get_vaapi_video_meta(fieldbuf);
         if (!outbuf_meta)
             goto error_create_meta;
-        outbuf_surface = gst_vaapi_video_meta_get_surface(outbuf_meta);
+
+        proxy = gst_vaapi_surface_proxy_new_from_pool(
+            GST_VAAPI_SURFACE_POOL(postproc->filter_pool));
+        if (!proxy)
+            goto error_create_proxy;
+        gst_vaapi_video_meta_set_surface_proxy(outbuf_meta, proxy);
+        gst_vaapi_surface_proxy_unref(proxy);
 
         if (deint) {
             deint_flags = (tff ? GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD : 0);
@@ -604,14 +641,12 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
                 goto error_op_deinterlace;
         }
 
+        outbuf_surface = gst_vaapi_video_meta_get_surface(outbuf_meta);
         gst_vaapi_filter_set_cropping_rectangle(postproc->filter, crop_rect);
         status = gst_vaapi_filter_process(postproc->filter, inbuf_surface,
             outbuf_surface, flags);
         if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
             goto error_process_vpp;
-
-        gst_buffer_set_vaapi_video_meta(fieldbuf, outbuf_meta);
-        gst_vaapi_video_meta_unref(outbuf_meta);
 
         GST_BUFFER_TIMESTAMP(fieldbuf) = timestamp;
         GST_BUFFER_DURATION(fieldbuf)  = postproc->field_duration;
@@ -622,10 +657,16 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     fieldbuf = NULL;
 
     /* Second field */
-    outbuf_meta = gst_vaapi_video_meta_new_from_pool(postproc->filter_pool);
+    outbuf_meta = gst_buffer_get_vaapi_video_meta(outbuf);
     if (!outbuf_meta)
         goto error_create_meta;
-    outbuf_surface = gst_vaapi_video_meta_get_surface(outbuf_meta);
+
+    proxy = gst_vaapi_surface_proxy_new_from_pool(
+        GST_VAAPI_SURFACE_POOL(postproc->filter_pool));
+    if (!proxy)
+        goto error_create_proxy;
+    gst_vaapi_video_meta_set_surface_proxy(outbuf_meta, proxy);
+    gst_vaapi_surface_proxy_unref(proxy);
 
     if (deint) {
         deint_flags = (tff ? 0 : GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD);
@@ -643,6 +684,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
                  postproc->filter, deint_method, 0))
         goto error_op_deinterlace;
 
+    outbuf_surface = gst_vaapi_video_meta_get_surface(outbuf_meta);
     gst_vaapi_filter_set_cropping_rectangle(postproc->filter, crop_rect);
     status = gst_vaapi_filter_process(postproc->filter, inbuf_surface,
         outbuf_surface, flags);
@@ -655,11 +697,10 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
         GST_BUFFER_TIMESTAMP(outbuf) = timestamp + postproc->field_duration;
         GST_BUFFER_DURATION(outbuf)  = postproc->field_duration;
     }
-    gst_buffer_set_vaapi_video_meta(outbuf, outbuf_meta);
-    gst_vaapi_video_meta_unref(outbuf_meta);
 
     if (deint && deint_refs)
         ds_add_buffer(ds, inbuf);
+    postproc->use_vpp = TRUE;
     return GST_FLOW_OK;
 
     /* ERRORS */
@@ -677,21 +718,24 @@ error_create_meta:
     {
         GST_ERROR("failed to create new output buffer meta");
         gst_buffer_replace(&fieldbuf, NULL);
-        gst_vaapi_video_meta_unref(outbuf_meta);
+        return GST_FLOW_ERROR;
+    }
+error_create_proxy:
+    {
+        GST_ERROR("failed to create surface proxy from pool");
+        gst_buffer_replace(&fieldbuf, NULL);
         return GST_FLOW_ERROR;
     }
 error_op_deinterlace:
     {
         GST_ERROR("failed to apply deinterlacing filter");
         gst_buffer_replace(&fieldbuf, NULL);
-        gst_vaapi_video_meta_unref(outbuf_meta);
         return GST_FLOW_NOT_SUPPORTED;
     }
 error_process_vpp:
     {
         GST_ERROR("failed to apply VPP filters (error %d)", status);
         gst_buffer_replace(&fieldbuf, NULL);
-        gst_vaapi_video_meta_unref(outbuf_meta);
         return GST_FLOW_ERROR;
     }
 error_push_buffer:
@@ -729,7 +773,7 @@ gst_vaapipostproc_process(GstBaseTransform *trans, GstBuffer *inbuf,
     fieldbuf = create_output_buffer(postproc);
     if (!fieldbuf)
         goto error_create_buffer;
-    append_output_buffer_metadata(fieldbuf, inbuf, 0);
+    append_output_buffer_metadata(postproc, fieldbuf, inbuf, 0);
 
     meta = gst_buffer_get_vaapi_video_meta(fieldbuf);
     fieldbuf_flags = flags;
@@ -747,7 +791,7 @@ gst_vaapipostproc_process(GstBaseTransform *trans, GstBuffer *inbuf,
         goto error_push_buffer;
 
     /* Second field */
-    append_output_buffer_metadata(outbuf, inbuf, 0);
+    append_output_buffer_metadata(postproc, outbuf, inbuf, 0);
 
     meta = gst_buffer_get_vaapi_video_meta(outbuf);
     outbuf_flags = flags;
@@ -792,7 +836,8 @@ gst_vaapipostproc_passthrough(GstBaseTransform *trans, GstBuffer *inbuf,
     if (!meta)
         goto error_invalid_buffer;
 
-    append_output_buffer_metadata(outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
+    append_output_buffer_metadata(GST_VAAPIPOSTPROC(trans), outbuf, inbuf,
+        GST_BUFFER_COPY_TIMESTAMPS);
     return GST_FLOW_OK;
 
     /* ERRORS */
@@ -1144,14 +1189,13 @@ gst_vaapipostproc_transform(GstBaseTransform *trans, GstBuffer *inbuf,
     ret = GST_FLOW_NOT_SUPPORTED;
     if (postproc->flags) {
         /* Use VA/VPP extensions to process this frame */
-        if (postproc->use_vpp &&
+        if (postproc->has_vpp &&
             (postproc->flags != GST_VAAPI_POSTPROC_FLAG_DEINTERLACE ||
              deint_method_is_advanced(postproc->deinterlace_method))) {
             ret = gst_vaapipostproc_process_vpp(trans, buf, outbuf);
             if (ret != GST_FLOW_NOT_SUPPORTED)
                 goto done;
             GST_WARNING("unsupported VPP filters. Disabling");
-            postproc->use_vpp = FALSE;
         }
 
         /* Only append picture structure meta data (top/bottom field) */
