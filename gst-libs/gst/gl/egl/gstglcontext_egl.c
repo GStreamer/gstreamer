@@ -328,6 +328,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     goto failure;
   }
 
+  egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
+
   GST_DEBUG ("about to create gl context\n");
 
   if (egl->gl_api & GST_GL_API_GLES2) {
@@ -335,14 +337,31 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     context_attrib[i++] = 2;
   }
 #if !defined(GST_DISABLE_GST_DEBUG)
-  context_attrib[i++] = EGL_CONTEXT_FLAGS_KHR;
-  context_attrib[i++] = EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+  if (gst_gl_check_extension ("EGL_KHR_create_context", egl_exts)) {
+    context_attrib[i++] = EGL_CONTEXT_FLAGS_KHR;
+    context_attrib[i++] = EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+  }
 #endif
   context_attrib[i++] = EGL_NONE;
 
   egl->egl_context =
       eglCreateContext (egl->egl_display, egl->egl_config,
       (EGLContext) external_gl_context, context_attrib);
+
+  if (egl->egl_context == EGL_NO_CONTEXT && egl->gl_api & GST_GL_API_GLES2
+      && eglGetError () != EGL_SUCCESS) {
+    /* try without EGL_CONTEXT_FLAGS flags as it was added to
+     * EGL_KHR_create_context for gles contexts */
+    int i;
+    for (i = 0; i < G_N_ELEMENTS (context_attrib); i++) {
+      if (context_attrib[i] == EGL_CONTEXT_FLAGS_KHR ||
+          context_attrib[i] == EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR)
+        context_attrib[i] = EGL_NONE;
+    }
+    egl->egl_context =
+        eglCreateContext (egl->egl_display, egl->egl_config,
+        (EGLContext) external_gl_context, context_attrib);
+  }
 
   if (egl->egl_context != EGL_NO_CONTEXT) {
     GST_INFO ("gl context created: %" G_GUINTPTR_FORMAT,
@@ -354,8 +373,6 @@ gst_gl_context_egl_create_context (GstGLContext * context,
         gst_gl_context_egl_get_error_string ());
     goto failure;
   }
-
-  egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
 
   if (other_context == NULL) {
     /* FIXME do we want a window vfunc ? */
