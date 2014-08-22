@@ -155,7 +155,7 @@ enum
   PROP_LAST
 };
 
-static GHashTable *action_types_table;
+static GList *action_types = NULL;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
 static GRegex *clean_action_str;
@@ -303,6 +303,19 @@ gst_validate_action_type_new (void)
   gst_validate_action_type_init (type);
 
   return type;
+}
+
+static GstValidateActionType *
+_find_action_type (const gchar * type_name)
+{
+  GList *tmp;
+
+  for (tmp = action_types; tmp; tmp = tmp->next) {
+    if (g_strcmp0 (((GstValidateActionType *) tmp->data)->name, type_name) == 0)
+      return tmp->data;
+  }
+
+  return NULL;
 }
 
 static gboolean
@@ -946,7 +959,7 @@ get_position (GstValidateScenario * scenario)
           (GST_STATE (pipeline) < GST_STATE_PAUSED))) {
     GstValidateActionType *type;
 
-    type = g_hash_table_lookup (action_types_table, act->type);
+    type = _find_action_type (act->type);
 
     if (act->repeat == -1 &&
         !gst_structure_get_int (act->structure, "repeat", &act->repeat)) {
@@ -1484,7 +1497,7 @@ _load_scenario_file (GstValidateScenario * scenario,
       gst_structure_get_boolean (structure, "handles-states",
           &priv->handles_state);
       continue;
-    } else if (!(action_type = g_hash_table_lookup (action_types_table, type))) {
+    } else if (!(action_type = _find_action_type (type))) {
       GST_ERROR_OBJECT (scenario, "We do not handle action types %s", type);
       goto failed;
     }
@@ -1989,6 +2002,7 @@ gst_validate_add_action_type (const gchar * type_name,
     GstValidateActionParameter * parameters,
     const gchar * description, gboolean is_config)
 {
+  GstValidateActionType *tmptype;
   GstValidateActionType *type = gst_validate_action_type_new ();
   gint n_params = is_config ? 0 : 2;
 
@@ -2019,25 +2033,23 @@ gst_validate_add_action_type (const gchar * type_name,
     type->parameters[n_params - 1].def = "0.0";
   }
 
-  if (action_types_table == NULL)
-    action_types_table = g_hash_table_new_full (g_str_hash, g_str_equal,
-        g_free, (GDestroyNotify) gst_mini_object_unref);
-
   type->execute = function;
   type->name = g_strdup (type_name);
   type->description = g_strdup (description);
   type->is_config = is_config;
 
-  g_hash_table_insert (action_types_table, g_strdup (type_name), type);
+  if ((tmptype = _find_action_type (type_name))) {
+    action_types = g_list_remove (action_types, tmptype);
+    gst_mini_object_unref (GST_MINI_OBJECT (tmptype));
+  }
+
+  action_types = g_list_append (action_types, type);
 }
 
 static GList *
 gst_validate_list_action_types (void)
 {
-  if (action_types_table)
-    return g_hash_table_get_values (action_types_table);
-
-  return NULL;
+  return action_types;
 }
 
 /**
