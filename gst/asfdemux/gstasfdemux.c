@@ -623,6 +623,19 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   guint32 seqnum;
   GstEvent *fevent;
 
+  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+      &stop_type, &stop);
+
+  if (G_UNLIKELY (format != GST_FORMAT_TIME)) {
+    GST_LOG_OBJECT (demux, "seeking is only supported in TIME format");
+    return FALSE;
+  }
+
+  /* upstream might handle TIME seek, e.g. mms or rtsp, or not, e.g. http,
+   * so first try to let it handle the seek event. */
+  if (gst_pad_push_event (demux->sinkpad, gst_event_ref (event)))
+    return TRUE;
+
   if (G_UNLIKELY (demux->seekable == FALSE || demux->packet_size == 0 ||
           demux->num_packets == 0 || demux->play_time == 0)) {
     GST_LOG_OBJECT (demux, "stream is not seekable");
@@ -634,20 +647,12 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
     return FALSE;
   }
 
-  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
-      &stop_type, &stop);
-  seqnum = gst_event_get_seqnum (event);
-
-  if (G_UNLIKELY (format != GST_FORMAT_TIME)) {
-    GST_LOG_OBJECT (demux, "seeking is only supported in TIME format");
-    return FALSE;
-  }
-
   if (G_UNLIKELY (rate <= 0.0)) {
     GST_LOG_OBJECT (demux, "backward playback is not supported yet");
     return FALSE;
   }
 
+  seqnum = gst_event_get_seqnum (event);
   flush = ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
   demux->accurate =
       ((flags & GST_SEEK_FLAG_ACCURATE) == GST_SEEK_FLAG_ACCURATE);
@@ -668,13 +673,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
       GST_LOG_OBJECT (demux, "streaming; end position must be NONE");
       return FALSE;
     }
-    gst_event_ref (event);
-    /* upstream might handle TIME seek, e.g. mms or rtsp,
-     * or not, e.g. http, then we give it a hand */
-    if (!gst_pad_push_event (demux->sinkpad, event))
-      return gst_asf_demux_handle_seek_push (demux, event);
-    else
-      return TRUE;
+    return gst_asf_demux_handle_seek_push (demux, event);
   }
 
   /* unlock the streaming thread */
