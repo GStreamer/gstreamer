@@ -873,7 +873,7 @@ gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps,
     if (video_info_changed(&vi, &postproc->srcpad_info))
         postproc->srcpad_info = vi, *caps_changed_ptr = TRUE;
 
-    if (postproc->format != GST_VIDEO_INFO_FORMAT(&postproc->sinkpad_info) ||
+    if (postproc->format != GST_VIDEO_INFO_FORMAT(&postproc->sinkpad_info) &&
         postproc->format != DEFAULT_FORMAT)
         postproc->flags |= GST_VAAPI_POSTPROC_FLAG_FORMAT;
 
