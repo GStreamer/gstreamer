@@ -582,6 +582,30 @@ cleanup:
   return feature;
 }
 
+const gchar *
+gst_vaapi_caps_feature_to_string (GstVaapiCapsFeature feature)
+{
+  const gchar *str;
+
+  switch (feature) {
+#if GST_CHECK_VERSION(1,1,0)
+    case GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY:
+      str = GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY;
+      break;
+    case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
+      str = GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META;
+      break;
+    case GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE:
+      str = GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE;
+      break;
+#endif
+    default:
+      str = NULL;
+      break;
+  }
+  return str;
+}
+
 gboolean
 gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip)
 {

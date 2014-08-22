@@ -71,6 +71,15 @@ static const char gst_vaapipostproc_sink_caps_str[] =
 
 static const char gst_vaapipostproc_src_caps_str[] =
     GST_VAAPIPOSTPROC_SURFACE_CAPS ", "
+    GST_CAPS_INTERLACED_FALSE "; "
+#if GST_CHECK_VERSION(1,0,0)
+    GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL) ", "
+#else
+    "video/x-raw-yuv, "
+    "width  = " GST_VIDEO_SIZE_RANGE ", "
+    "height = " GST_VIDEO_SIZE_RANGE ", "
+    "framerate = " GST_VIDEO_FPS_RANGE ", "
+#endif
     GST_CAPS_INTERLACED_FALSE;
 
 static GstStaticPadTemplate gst_vaapipostproc_sink_factory =
@@ -1056,8 +1065,12 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
 {
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
     GstVideoInfo vi;
-    GstVideoFormat format;
+    GstVideoFormat format, out_format;
     GstCaps *out_caps;
+#if GST_CHECK_VERSION(1,1,0)
+    GstVaapiCapsFeature feature;
+    const gchar *feature_str;
+#endif
     guint width, height;
 
     /* Generate the sink pad caps, that could be fixated afterwards */
@@ -1094,21 +1107,45 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
     GST_VIDEO_INFO_INTERLACE_MODE(&vi) = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
     // Update size from user-specified parameters
+    format = GST_VIDEO_INFO_FORMAT(&vi);
 #if GST_CHECK_VERSION(1,1,0)
-    format = postproc->format;
+    out_format = postproc->format;
 #else
-    format = GST_VIDEO_FORMAT_ENCODED;
+    out_format = GST_VIDEO_FORMAT_ENCODED;
 #endif
     find_best_size(postproc, &vi, &width, &height);
-    gst_video_info_set_format(&vi, format, width, height);
+    gst_video_info_set_format(&vi, out_format, width, height);
 
 #if GST_CHECK_VERSION(1,1,0)
     out_caps = gst_video_info_to_caps(&vi);
     if (!out_caps)
         return NULL;
 
-    gst_caps_set_features(out_caps, 0,
-        gst_caps_features_new(GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, NULL));
+    feature = gst_vaapi_find_preferred_caps_feature(
+        GST_BASE_TRANSFORM_SRC_PAD(trans), out_format);
+    if (feature) {
+        if (out_format == GST_VIDEO_FORMAT_ENCODED &&
+            feature == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY) {
+            GstCaps *sink_caps, *peer_caps =
+                gst_pad_peer_query_caps(GST_BASE_TRANSFORM_SRC_PAD(trans),
+                    postproc->allowed_srcpad_caps);
+
+            gst_video_info_set_format(&vi, format, width, height);
+            sink_caps = gst_video_info_to_caps(&vi);
+            if (sink_caps) {
+                if (gst_caps_can_intersect(peer_caps, sink_caps))
+                    gst_caps_set_simple(out_caps, "format", G_TYPE_STRING,
+                        gst_video_format_to_string(format), NULL);
+                gst_caps_unref(sink_caps);
+            }
+            gst_caps_unref(peer_caps);
+        }
+
+        feature_str = gst_vaapi_caps_feature_to_string(feature);
+        if (feature_str)
+            gst_caps_set_features(out_caps, 0,
+                gst_caps_features_new(feature_str, NULL));
+    }
 #else
     /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
        reconstruct suitable caps for "encoded" video formats */

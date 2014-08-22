@@ -92,6 +92,10 @@ G_GNUC_INTERNAL
 GstVaapiCapsFeature
 gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format);
 
+G_GNUC_INTERNAL
+const gchar *
+gst_vaapi_caps_feature_to_string (GstVaapiCapsFeature feature);
+
 /* Helpers to handle interlaced contents */
 #if GST_CHECK_VERSION(1,0,0)
 # define GST_CAPS_INTERLACED_MODES \
