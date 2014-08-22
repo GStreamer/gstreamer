@@ -32,6 +32,7 @@ gint
 ges_validate_clean (GstPipeline *pipeline);
 
 void ges_validate_handle_request_state_change (GstMessage *message, GMainLoop *mainloop);
+gint ges_validate_print_action_types (gchar **types, gint num_types);
 
 G_END_DECLS
 

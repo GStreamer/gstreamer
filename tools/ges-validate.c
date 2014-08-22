@@ -443,6 +443,198 @@ beach:
   return res;
 }
 
+static void
+ges_validate_register_action_types (void)
+{
+  gst_validate_init ();
+
+  /*  *INDENT-OFF* */
+  gst_validate_add_action_type ("edit-clip", _edit_clip,
+      (GstValidateActionParameter [])  {
+        {
+         .name = "clip-name",
+         .description = "The name of the clip to edit",
+         .mandatory = TRUE,
+         .types = "string",
+        },
+        {
+          .name = "position",
+          .description = "The new position of the clip",
+          .mandatory = TRUE,
+          .types = "double or string",
+          .possible_variables = "position: The current position in the stream\n"
+            "duration: The duration of the stream",
+           NULL
+        },
+        {
+          .name = "edit-mode",
+          .description = "The GESEditMode to use to edit @clip-name",
+          .mandatory = FALSE,
+          .types = "string",
+          .def = "normal",
+        },
+        {
+          .name = "edge",
+          .description = "The GESEdge to use to edit @clip-name\n"
+                         "should be in [ edge_start, edge_end, edge_none ] ",
+          .mandatory = FALSE,
+          .types = "string",
+          .def = "edge_none",
+        },
+        {
+          .name = "new-layer-priority",
+          .description = "The priority of the layer @container should land in.\n"
+                         "If the layer you're trying to move the container to doesn't exist, it will\n"
+                         "be created automatically. -1 means no move.",
+          .mandatory = FALSE,
+          .types = "int",
+          .def = "-1",
+        },
+        {NULL}
+       },
+       "Allows to edit a clip, for more details, have a look at:\n"
+       "ges_container_edit documentation, Note that the timeline will\n"
+       "be commited, and flushed so that the edition is taken into account",
+       FALSE);
+
+  gst_validate_add_action_type ("add-asset", _add_asset,
+      (GstValidateActionParameter [])  {
+        {
+          .name = "id",
+          .description = "",
+          .mandatory = TRUE,
+          NULL
+        },
+        {
+          .name = "type",
+          .description = "The type of asset to add",
+          .mandatory = TRUE,
+          NULL
+        },
+        {NULL}
+      },
+      "Allows to add an asset to the current project", FALSE);
+
+  gst_validate_add_action_type ("remove-asset", _remove_asset,
+      (GstValidateActionParameter [])  {
+        {
+          .name = "id",
+          .description = "The ID of the clip to remove",
+          .mandatory = TRUE,
+          NULL
+        },
+        {
+          .name = "type",
+          .description = "The type of asset to remove",
+          .mandatory = TRUE,
+          NULL
+        },
+        { NULL }
+      },
+      "Allows to remove an asset from the current project", FALSE);
+
+  gst_validate_add_action_type ("add-layer", _add_layer,
+      (GstValidateActionParameter [])  {
+        {
+          .name = "priority",
+          .description = "The priority of the new layer to add",
+          .mandatory = TRUE,
+          NULL
+        },
+        { NULL }
+      },
+      "Allows to add a layer to the current timeline", FALSE);
+
+  gst_validate_add_action_type ("remove-layer", _remove_layer,
+      (GstValidateActionParameter [])  {
+        {
+          .name = "priority",
+          .description = "The priority of the layer to remove",
+          .mandatory = TRUE,
+          NULL
+        },
+        { NULL }
+      },
+      "Allows to remove a layer from the current timeline", FALSE);
+
+  gst_validate_add_action_type ("add-clip", _add_clip,
+      (GstValidateActionParameter []) {
+        {
+          .name = "name",
+          .description = "The name of the clip to add",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "layer-priority",
+          .description = "The priority of the clip to add",
+          .types = "int",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "asset-id",
+          .description = "The id of the asset from which to extract the clip",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "type",
+          .description = "The type of the clip to create",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Allows to add a clip to a given layer", FALSE);
+
+  gst_validate_add_action_type ("remove-clip", _remove_clip,
+      (GstValidateActionParameter []) {
+        {
+          .name = "clip-name",
+          .description = "The name of the clip to remove",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Allows to remove a clip from a given layer", FALSE);
+
+  gst_validate_add_action_type ("serialize-project", _serialize_project,
+      (GstValidateActionParameter []) {
+        {
+          .name = "uri",
+          .description = "The uri where to store the serialized project",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "serializes a project", FALSE);
+
+  gst_validate_add_action_type ("set-child-property", _set_child_property,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the element on which to modify the property",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "property",
+          .description = "The name of the property to modify",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "value",
+          .description = "The value of the property",
+          .types = "gvalue",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Allows to change child property of an object", FALSE);
+
+  /*  *INDENT-ON* */
+}
+
+
 gboolean
 ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
     gboolean * needs_setting_state)
@@ -451,43 +643,7 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
 
-  const gchar *move_clip_mandatory_fields[] = { "clip-name", "position",
-    NULL
-  };
-
-  const gchar *set_child_property_mandatory_fields[] =
-      { "element-name", "property", "value", NULL };
-
-  const gchar *serialize_project_mandatory_fields[] = { "uri",
-    NULL
-  };
-
-  const gchar *add_asset_mandatory_fields[] = { "id", "type",
-    NULL
-  };
-
-  const gchar *remove_asset_mandatory_fields[] = { "id", "type",
-    NULL
-  };
-
-  const gchar *add_layer_mandatory_fields[] = { "priority",
-    NULL
-  };
-
-  const gchar *remove_layer_mandatory_fields[] = { "priority",
-    NULL
-  };
-
-  const gchar *add_clip_mandatory_fields[] = { "name", "layer-priority",
-    "asset-id", "type",
-    NULL
-  };
-
-  const gchar *remove_clip_mandatory_fields[] = { "name",
-    NULL
-  };
-
-  gst_validate_init ();
+  ges_validate_register_action_types ();
 
   if (scenario) {
     if (g_strcmp0 (scenario, "none")) {
@@ -496,33 +652,6 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
       g_free (scenario_name);
     }
   }
-
-  gst_validate_add_action_type ("edit-clip", _edit_clip,
-      move_clip_mandatory_fields, "Allows to seek into the files", FALSE);
-  gst_validate_add_action_type ("add-asset", _add_asset,
-      add_asset_mandatory_fields,
-      "Allows to add an asset to the current project", FALSE);
-  gst_validate_add_action_type ("remove-asset", _remove_asset,
-      remove_asset_mandatory_fields,
-      "Allows to remove an asset from the current project", FALSE);
-  gst_validate_add_action_type ("add-layer", _add_layer,
-      add_layer_mandatory_fields,
-      "Allows to add a layer to the current timeline", FALSE);
-  gst_validate_add_action_type ("remove-layer", _remove_layer,
-      remove_layer_mandatory_fields,
-      "Allows to remove a layer from the current timeline", FALSE);
-  gst_validate_add_action_type ("add-clip", _add_clip,
-      add_clip_mandatory_fields, "Allows to add a clip to a given layer",
-      FALSE);
-  gst_validate_add_action_type ("remove-clip", _remove_clip,
-      remove_clip_mandatory_fields,
-      "Allows to remove a clip from a given layer", FALSE);
-  gst_validate_add_action_type ("serialize-project", _serialize_project,
-      serialize_project_mandatory_fields, "serializes a project", FALSE);
-
-  gst_validate_add_action_type ("set-child-property", _set_child_property,
-      set_child_property_mandatory_fields,
-      "Allows to change child property of an object", FALSE);
 
   o = gst_validate_override_new ();
   gst_validate_override_change_severity (o,
@@ -585,6 +714,19 @@ ges_validate_handle_request_state_change (GstMessage * message,
   }
 }
 
+gint
+ges_validate_print_action_types (gchar ** types, gint num_types)
+{
+  ges_validate_register_action_types ();
+
+  if (!gst_validate_print_action_types (types, num_types)) {
+    GST_ERROR ("Could not print all wanted types");
+    return 1;
+  }
+
+  return 0;
+}
+
 #else
 static gboolean
 _print_position (GstElement * pipeline)
@@ -640,6 +782,12 @@ ges_validate_handle_request_state_change (GstMessage * message,
     GMainLoop * mainloop)
 {
   return;
+}
+
+gint
+ges_validate_print_action_types (const gchar ** types, gint num_types)
+{
+  return 0;
 }
 
 #endif

@@ -740,6 +740,7 @@ main (int argc, gchar ** argv)
   gchar *load_path = NULL;
   gchar *videosink = NULL, *audiosink = NULL;
   const gchar *scenario = NULL;
+  gboolean list_action_types = FALSE;
 
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
@@ -787,6 +788,8 @@ main (int argc, gchar ** argv)
     {"audiosink", 'a', 0, G_OPTION_ARG_STRING, &audiosink,
         "The audio sink used for playing back", "<audiosink>"},
 #ifdef HAVE_GST_VALIDATE
+    {"list-action-types", 'y', 0, G_OPTION_ARG_NONE, &list_action_types,
+        "List the avalaible action types with which to write scenarios", NULL},
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &scenario,
         "Specify a GstValidate scenario to run, 'none' means load gst-validate"
           " but run no scenario on it", "<scenario_name>"},
@@ -842,6 +845,9 @@ main (int argc, gchar ** argv)
     print_pattern_list ();
     exit (0);
   }
+
+  if (list_action_types)
+    return ges_validate_print_action_types (argv + 1, argc - 1);
 
   tried_uris = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
   if (((!load_path && !scenario && (argc < 4)))) {
