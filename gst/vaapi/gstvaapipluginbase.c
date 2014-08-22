@@ -164,6 +164,7 @@ void
 gst_vaapi_plugin_base_finalize (GstVaapiPluginBase * plugin)
 {
   gst_vaapi_plugin_base_close (plugin);
+  g_free (plugin->display_name);
   if (plugin->sinkpad)
     gst_object_unref (plugin->sinkpad);
   if (plugin->srcpad)

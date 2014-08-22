@@ -456,6 +456,7 @@ gst_vaapi_video_format_new_template_caps_from_list (GArray * formats)
 
   gst_caps_set_value (caps, "format", &v_formats);
   set_video_template_caps (caps);
+  g_value_unset (&v_formats);
 #else
   GstCaps *caps, *tmp_caps;
   guint i;
