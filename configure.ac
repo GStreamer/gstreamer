@@ -3002,7 +3002,13 @@ AG_GST_CHECK_FEATURE(HLS, [http live streaming plugin], hls, [
       AC_DEFINE(HAVE_LIBGCRYPT, 1, [Define if libgcrypt is available])
       HAVE_HLS="yes"
     ], [
-      HAVE_HLS="no"
+      PKG_CHECK_MODULES(OPENSSL, openssl,
+      [
+        AC_DEFINE(HAVE_OPENSSL, 1, [Define if openssl is available])
+        HAVE_HLS="yes"
+      ], [
+        HAVE_HLS="no"
+      ])
     ])
   ])
 ])

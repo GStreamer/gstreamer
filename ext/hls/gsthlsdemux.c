@@ -1779,7 +1779,44 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
   return gst_hls_demux_change_playlist (demux, bitrate * demux->bitrate_limit);
 }
 
-#ifdef HAVE_NETTLE
+#if defined(HAVE_OPENSSL)
+static gboolean
+gst_hls_demux_decrypt_start (GstHLSDemux * demux, const guint8 * key_data,
+    const guint8 * iv_data)
+{
+  EVP_CIPHER_CTX_init (&demux->aes_ctx);
+  if (!EVP_DecryptInit_ex (&demux->aes_ctx, EVP_aes_128_cbc (), NULL, key_data,
+          iv_data))
+    return FALSE;
+  EVP_CIPHER_CTX_set_padding (&demux->aes_ctx, 0);
+  return TRUE;
+}
+
+static gboolean
+decrypt_fragment (GstHLSDemux * demux, gsize length,
+    const guint8 * encrypted_data, guint8 * decrypted_data)
+{
+  int len, flen = 0;
+
+  if (G_UNLIKELY (length > G_MAXINT || length % 16 != 0))
+    return FALSE;
+
+  len = (int) length;
+  if (!EVP_DecryptUpdate (&demux->aes_ctx, decrypted_data, &len, encrypted_data,
+          len))
+    return FALSE;
+  EVP_DecryptFinal_ex (&demux->aes_ctx, decrypted_data + len, &flen);
+  g_return_val_if_fail (len + flen == length, FALSE);
+  return TRUE;
+}
+
+static void
+gst_hls_demux_decrypt_end (GstHLSDemux * demux)
+{
+  EVP_CIPHER_CTX_cleanup (&demux->aes_ctx);
+}
+
+#elif defined(HAVE_NETTLE)
 static gboolean
 gst_hls_demux_decrypt_start (GstHLSDemux * demux, const guint8 * key_data,
     const guint8 * iv_data)
