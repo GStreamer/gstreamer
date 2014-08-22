@@ -72,6 +72,11 @@ static const char gst_vaapipostproc_sink_caps_str[] =
 static const char gst_vaapipostproc_src_caps_str[] =
     GST_VAAPIPOSTPROC_SURFACE_CAPS ", "
     GST_CAPS_INTERLACED_FALSE "; "
+#if GST_CHECK_VERSION(1,1,0)
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
+        GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA") ", "
+    GST_CAPS_INTERLACED_FALSE "; "
+#endif
 #if GST_CHECK_VERSION(1,0,0)
     GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL) ", "
 #else
@@ -994,6 +999,13 @@ expand_allowed_srcpad_caps(GstVaapiPostproc *postproc, GstCaps *caps)
 
     num_structures = gst_caps_get_size(caps);
     for (i = 0; i < num_structures; i++) {
+#if GST_CHECK_VERSION(1,1,0)
+        GstCapsFeatures * const features = gst_caps_get_features (caps, i);
+        if (gst_caps_features_contains(features,
+                GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META))
+            continue;
+#endif
+
         GstStructure * const structure = gst_caps_get_structure(caps, i);
         if (!structure)
             continue;
@@ -1124,15 +1136,26 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
     feature = gst_vaapi_find_preferred_caps_feature(
         GST_BASE_TRANSFORM_SRC_PAD(trans), out_format);
     if (feature) {
+        feature_str = gst_vaapi_caps_feature_to_string(feature);
+        if (feature_str)
+            gst_caps_set_features(out_caps, 0,
+                gst_caps_features_new(feature_str, NULL));
+
         if (out_format == GST_VIDEO_FORMAT_ENCODED &&
-            feature == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY) {
+            feature != GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE) {
             GstCaps *sink_caps, *peer_caps =
                 gst_pad_peer_query_caps(GST_BASE_TRANSFORM_SRC_PAD(trans),
                     postproc->allowed_srcpad_caps);
 
+            if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META)
+                format = GST_VIDEO_FORMAT_RGBA;
+
             gst_video_info_set_format(&vi, format, width, height);
             sink_caps = gst_video_info_to_caps(&vi);
             if (sink_caps) {
+                if (feature_str)
+                    gst_caps_set_features(sink_caps, 0,
+                        gst_caps_features_new(feature_str, NULL));
                 if (gst_caps_can_intersect(peer_caps, sink_caps))
                     gst_caps_set_simple(out_caps, "format", G_TYPE_STRING,
                         gst_video_format_to_string(format), NULL);
@@ -1140,11 +1163,6 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
             }
             gst_caps_unref(peer_caps);
         }
-
-        feature_str = gst_vaapi_caps_feature_to_string(feature);
-        if (feature_str)
-            gst_caps_set_features(out_caps, 0,
-                gst_caps_features_new(feature_str, NULL));
     }
 #else
     /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
