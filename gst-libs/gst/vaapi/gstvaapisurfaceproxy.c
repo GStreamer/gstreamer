@@ -136,6 +136,7 @@ gst_vaapi_surface_proxy_copy(GstVaapiSurfaceProxy *proxy)
         proxy->parent : proxy);
     copy->pool = gst_vaapi_video_pool_ref(proxy->pool);
     copy->surface = gst_vaapi_object_ref(proxy->surface);
+    copy->view_id = proxy->view_id;
     copy->timestamp = proxy->timestamp;
     copy->duration = proxy->duration;
     copy->destroy_func = NULL;
