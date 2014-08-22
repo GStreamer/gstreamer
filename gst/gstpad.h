@@ -351,7 +351,7 @@ typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, GstObject *parent
  * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
- * @event: the #GstEvent to handle.
+ * @event: (transfer full): the #GstEvent to handle.
  *
  * Function signature to handle an event for the pad.
  *
