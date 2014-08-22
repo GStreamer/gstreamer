@@ -744,25 +744,25 @@ qtdemux_dump_trun (GstQTDemux * qtdemux, GstByteReader * data, int depth)
     if (flags & TR_SAMPLE_DURATION) {
       if (!gst_byte_reader_get_uint32_be (data, &sample_duration))
         return FALSE;
-      GST_LOG ("%*s    sample-duration:  %u", depth, "", sample_duration);
+      GST_TRACE ("%*s    sample-duration:  %u", depth, "", sample_duration);
     }
 
     if (flags & TR_SAMPLE_SIZE) {
       if (!gst_byte_reader_get_uint32_be (data, &sample_size))
         return FALSE;
-      GST_LOG ("%*s    sample-size:  %u", depth, "", sample_size);
+      GST_TRACE ("%*s    sample-size:  %u", depth, "", sample_size);
     }
 
     if (flags & TR_SAMPLE_FLAGS) {
       if (!gst_byte_reader_get_uint32_be (data, &sample_flags))
         return FALSE;
-      GST_LOG ("%*s    sample-flags:  %u", depth, "", sample_flags);
+      GST_TRACE ("%*s    sample-flags:  %u", depth, "", sample_flags);
     }
 
     if (flags & TR_COMPOSITION_TIME_OFFSETS) {
       if (!gst_byte_reader_get_uint32_be (data, &composition_time_offsets))
         return FALSE;
-      GST_LOG ("%*s    composition_time_offsets:  %u", depth, "",
+      GST_TRACE ("%*s    composition_time_offsets:  %u", depth, "",
           composition_time_offsets);
     }
   }
