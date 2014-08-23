@@ -254,7 +254,7 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, GstObject *parent,
  * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
- * @buffer: the #GstBuffer that is chained, not %NULL.
+ * @buffer: (transfer full): the #GstBuffer that is chained, not %NULL.
  *
  * A function that will be called on sinkpads when chaining buffers.
  * The function typically processes the data contained in the buffer and
@@ -277,7 +277,7 @@ typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstObject *parent,
  * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
- * @list: the #GstBufferList that is chained, not %NULL.
+ * @list: (transfer full): the #GstBufferList that is chained, not %NULL.
  *
  * A function that will be called on sinkpads when chaining buffer lists.
  * The function typically processes the data contained in the buffer list and
