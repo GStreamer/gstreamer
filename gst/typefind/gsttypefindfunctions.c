@@ -1255,6 +1255,7 @@ mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
   channels = (mode == 3) ? 1 : 2;
   samplerate = mp3types_freqs[version > 0 ? version - 1 : 0][samplerate];
   if (bitrate == 0) {
+    /* possible freeform mp3 */
     if (layer == 1) {
       length *= 4;
       length += possible_free_framelen;
@@ -1264,6 +1265,11 @@ mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
       bitrate = length * samplerate /
           ((layer == 3 && version != 3) ? 72000 : 144000);
     }
+    /* freeform mp3 should have a higher-than-usually-allowed bitrate */
+    GST_LOG ("calculated bitrate: %u, max usually: %u", bitrate,
+        mp3types_bitrates[version == 3 ? 0 : 1][layer - 1][14]);
+    if (bitrate < mp3types_bitrates[version == 3 ? 0 : 1][layer - 1][14])
+      return 0;
   } else {
     /* calculating */
     bitrate = mp3types_bitrates[version == 3 ? 0 : 1][layer - 1][bitrate];
