@@ -359,6 +359,8 @@ struct _QtDemuxStream
   QtDemuxRandomAccessEntry *ra_entries;
   guint n_ra_entries;
 
+  const QtDemuxRandomAccessEntry *pending_seek;
+
   /* ctts */
   gboolean ctts_present;
   guint32 n_composition_times;
@@ -390,6 +392,8 @@ static GNode *qtdemux_tree_get_child_by_type_full (GNode * node,
 static GNode *qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc);
 static GNode *qtdemux_tree_get_sibling_by_type_full (GNode * node,
     guint32 fourcc, GstByteReader * parser);
+
+static GstFlowReturn qtdemux_add_fragmented_samples (GstQTDemux * qtdemux);
 
 static GstStaticPadTemplate gst_qtdemux_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -1424,6 +1428,9 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
   /* we stop at the end */
   if (segment->stop == -1)
     segment->stop = segment->duration;
+
+  if (qtdemux->fragmented)
+    qtdemux->fragmented_seek_pending = TRUE;
 
   return TRUE;
 }
@@ -2462,6 +2469,11 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       "decode ts %" G_GINT64_FORMAT, stream->track_id, d_sample_duration,
       d_sample_size, d_sample_flags, *base_offset, decode_ts);
 
+  if (stream->pending_seek && moof_offset < stream->pending_seek->moof_offset) {
+    GST_INFO_OBJECT (stream->pad, "skipping trun before seek target fragment");
+    return TRUE;
+  }
+
   /* presence of stss or not can't really tell us much,
    * and flags and so on tend to be marginally reliable in these files */
   if (stream->subtype == FOURCC_soun) {
@@ -2571,10 +2583,20 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     qtdemux->fragment_start = -1;
   } else {
     if (G_UNLIKELY (stream->n_samples == 0)) {
-      /* the timestamp of the first sample is also provided by the tfra entry
-       * but we shouldn't rely on it as it is at the end of files */
-      if (decode_ts >= 0) {
+      if (decode_ts > 0) {
         timestamp = decode_ts;
+      } else if (stream->pending_seek != NULL) {
+        /* if we don't have a timestamp from a tfdt box, we'll use the one
+         * from the mfra seek table */
+        GST_INFO_OBJECT (stream->pad, "pending seek ts = %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (stream->pending_seek->ts));
+
+        /* FIXME: this is not fully correct, the timestamp refers to the random
+         * access sample refered to in the tfra entry, which may not necessarily
+         * be the first sample in the tfrag/trun (but hopefully/usually is) */
+        timestamp =
+            gst_util_uint64_scale (stream->pending_seek->ts,
+            stream->timescale, GST_SECOND);
       } else {
         timestamp = 0;
       }
@@ -2642,6 +2664,9 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   }
 
   stream->n_samples += samples_count;
+
+  if (stream->pending_seek != NULL)
+    stream->pending_seek = NULL;
 
   return TRUE;
 
@@ -3605,6 +3630,17 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     gst_qtdemux_push_tags (qtdemux, stream);
   }
 
+  /* in the fragmented case, we pick a fragment that starts before our
+   * desired position and rely on downstream to wait for a keyframe
+   * (FIXME: doesn't seem to work so well with ismv and wmv, as no parser; the
+   * tfra entries tells us which trun/sample the key unit is in, but we don't
+   * make use of this additional information at the moment) */
+  if (qtdemux->fragmented) {
+    index = 0;
+    stream->to_sample = G_MAXUINT32;
+    return TRUE;
+  }
+
   /* and move to the keyframe before the indicated media time of the
    * segment */
   if (G_LIKELY (!QTSEGMENT_IS_EMPTY (segment))) {
@@ -3732,11 +3768,29 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
 
   *empty = FALSE;
 
+  if (stream->sample_index == -1)
+    stream->sample_index = 0;
+
   GST_LOG_OBJECT (qtdemux, "segment active, index = %u of %u",
       stream->sample_index, stream->n_samples);
 
-  if (G_UNLIKELY (stream->sample_index >= stream->n_samples))
-    goto eos;
+  if (G_UNLIKELY (stream->sample_index >= stream->n_samples)) {
+    if (!qtdemux->fragmented)
+      goto eos;
+
+    GST_INFO_OBJECT (qtdemux, "out of samples, trying to add more");
+    do {
+      GstFlowReturn flow;
+
+      GST_OBJECT_LOCK (qtdemux);
+      flow = qtdemux_add_fragmented_samples (qtdemux);
+      GST_OBJECT_UNLOCK (qtdemux);
+
+      if (flow != GST_FLOW_OK)
+        goto eos;
+    }
+    while (stream->sample_index >= stream->n_samples);
+  }
 
   if (!qtdemux_parse_samples (qtdemux, stream, stream->sample_index)) {
     GST_LOG_OBJECT (qtdemux, "Parsing of index %u failed!",
@@ -4244,6 +4298,95 @@ exit:
   return ret;
 }
 
+static const QtDemuxRandomAccessEntry *
+gst_qtdemux_stream_seek_fragment (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstClockTime pos, gboolean after)
+{
+  QtDemuxRandomAccessEntry *entries = stream->ra_entries;
+  guint n_entries = stream->n_ra_entries;
+  guint i;
+
+  /* we assume the table is sorted */
+  for (i = 0; i < n_entries; ++i) {
+    if (entries[i].ts > pos)
+      break;
+  }
+
+  /* FIXME: maybe save first moof_offset somewhere instead, but for now it's
+   * probably okay to assume that the index lists the very first fragment */
+  if (i == 0)
+    return &entries[0];
+
+  if (after)
+    return &entries[i];
+  else
+    return &entries[i - 1];
+}
+
+static gboolean
+gst_qtdemux_do_fragmented_seek (GstQTDemux * qtdemux)
+{
+  const QtDemuxRandomAccessEntry *best_entry = NULL;
+  guint i;
+
+  GST_OBJECT_LOCK (qtdemux);
+
+  g_assert (qtdemux->n_streams > 0);
+
+  for (i = 0; i < qtdemux->n_streams; i++) {
+    const QtDemuxRandomAccessEntry *entry;
+    QtDemuxStream *stream;
+    gboolean is_audio_or_video;
+
+    stream = qtdemux->streams[i];
+
+    g_free (stream->samples);
+    stream->samples = NULL;
+    stream->n_samples = 0;
+    stream->stbl_index = -1;    /* no samples have yet been parsed */
+    stream->sample_index = -1;
+
+    if (stream->ra_entries == NULL)
+      continue;
+
+    if (stream->subtype == FOURCC_vide || stream->subtype == FOURCC_soun)
+      is_audio_or_video = TRUE;
+    else
+      is_audio_or_video = FALSE;
+
+    entry =
+        gst_qtdemux_stream_seek_fragment (qtdemux, stream,
+        stream->time_position, !is_audio_or_video);
+
+    GST_INFO_OBJECT (stream->pad, "%" GST_TIME_FORMAT " at offset "
+        "%" G_GUINT64_FORMAT, GST_TIME_ARGS (entry->ts), entry->moof_offset);
+
+    stream->pending_seek = entry;
+
+    /* decide position to jump to just based on audio/video tracks, not subs */
+    if (!is_audio_or_video)
+      continue;
+
+    if (best_entry == NULL || entry->moof_offset < best_entry->moof_offset)
+      best_entry = entry;
+  }
+
+  if (best_entry == NULL)
+    return FALSE;
+
+  GST_INFO_OBJECT (qtdemux, "seek to %" GST_TIME_FORMAT ", best fragment "
+      "moof offset: %" G_GUINT64_FORMAT ", ts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (qtdemux->streams[0]->time_position),
+      best_entry->moof_offset, GST_TIME_ARGS (best_entry->ts));
+
+  qtdemux->moof_offset = best_entry->moof_offset;
+
+  qtdemux_add_fragmented_samples (qtdemux);
+
+  GST_OBJECT_UNLOCK (qtdemux);
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 {
@@ -4263,6 +4406,13 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   gint i;
 
   gst_qtdemux_push_pending_newsegment (qtdemux);
+
+  if (qtdemux->fragmented_seek_pending) {
+    GST_INFO_OBJECT (qtdemux, "pending fragmented seek");
+    gst_qtdemux_do_fragmented_seek (qtdemux);
+    GST_INFO_OBJECT (qtdemux, "fragmented seek done!");
+    qtdemux->fragmented_seek_pending = FALSE;
+  }
 
   /* Figure out the next stream sample to output, min_time is expressed in
    * global time and runs over the edit list segments. */

@@ -79,6 +79,7 @@ struct _GstQTDemux {
   guint64 duration;
 
   gboolean fragmented;
+  gboolean fragmented_seek_pending;
   guint64 moof_offset;
 
   gint state;
