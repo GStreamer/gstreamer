@@ -391,7 +391,6 @@ GInterface
   GstChildProxy
   GstColorBalance
   GstNavigation
-  GstPhotography
   GstPreset
   GstTagSetter
   GstTagXmpWriter

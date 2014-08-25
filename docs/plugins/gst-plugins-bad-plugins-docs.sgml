@@ -141,9 +141,4 @@
     <xi:include href="xml/plugin-voamrwbenc.xml" />
     <xi:include href="xml/plugin-zbar.xml" />
   </chapter>
-
-  <chapter>
-    <title>gst-plugins-bad Interfaces</title>
-    <xi:include href="xml/gstphotography.xml" />
-  </chapter>
 </book>

@@ -97,6 +97,11 @@
       <xi:include href="xml/gstglwindowwin32.xml"/>
       <xi:include href="xml/gstglwindowx11.xml"/>
     </chapter>
+
+    <chapter>
+      <title>Interfaces</title>
+      <xi:include href="xml/gstphotography.xml" />
+    </chapter>
   </part>
 
   <part id="gstreamer-libs-hierarchy">

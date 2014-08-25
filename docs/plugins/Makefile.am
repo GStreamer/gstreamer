@@ -166,8 +166,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
 	$(top_srcdir)/sys/dvb/gstdvbsrc.h \
 	$(top_srcdir)/sys/shm/gstshmsink.h \
-	$(top_srcdir)/sys/shm/gstshmsrc.h \
-	$(top_srcdir)/gst-libs/gst/interfaces/photography.h
+	$(top_srcdir)/sys/shm/gstshmsrc.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES = camerabin.png
@@ -182,7 +181,6 @@ extra_files =
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = -DGST_USE_UNSTABLE_API $(GST_PLUGINS_BAD_CFLAGS) $(GST_BASE_CFLAGS) -I$(top_builddir)
 GTKDOC_LIBS = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
