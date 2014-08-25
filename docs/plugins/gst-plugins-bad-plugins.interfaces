@@ -74,6 +74,7 @@ GstViewfinderBin GstChildProxy
 GstVoAacEnc GstPreset
 GstVoAmrWbEnc GstPreset
 GstWaylandSink GstVideoOverlay GstWaylandVideo
+GstWebpEnc GstPreset
 GstWrapperCameraBinSrc GstChildProxy
 GstXvidEnc GstPreset
 MXFDMS1ClipFramework MXFDescriptiveMetadataFrameworkInterface

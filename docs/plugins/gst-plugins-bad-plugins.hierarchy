@@ -286,6 +286,7 @@ GObject
           GstOpenJPEGEnc
           GstPnmenc
           GstSchroEnc
+          GstWebpEnc
         GstWebvttEnc
         GstWildmidi
         GstY4mDec

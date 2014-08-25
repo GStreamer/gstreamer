@@ -1339,6 +1339,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstGLImageSink::context</NAME>
+<TYPE>GstGLContext*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>OpenGL context</NICK>
+<BLURB>Get OpenGL context.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRgAnalysis::forced</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -47654,56 +47664,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstLegacyH264Parse::access-unit</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Access Units</NICK>
-<BLURB>Output Acess Units rather than NALUs.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLegacyH264Parse::config-interval</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 3600</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>SPS PPS Send Interval</NICK>
-<BLURB>Send SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLegacyH264Parse::output-format</NAME>
-<TYPE>GstH264ParseFormat</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Output Format</NICK>
-<BLURB>Output Format of stream (bytestream or otherwise).</BLURB>
-<DEFAULT>Input Format</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLegacyH264Parse::split-packetized</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Split packetized</NICK>
-<BLURB>Split NAL units of packetized streams.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstCsp::dither</NAME>
-<TYPE>GstColorspaceDitherMethod</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Dither</NICK>
-<BLURB>Apply dithering while converting.</BLURB>
-<DEFAULT>No dithering (default)</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>MpegTSParse2::program-numbers</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -67513,5 +67473,45 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Background</NICK>
 <BLURB>Background type.</BLURB>
 <DEFAULT>Checker pattern</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebpEnc::lossless</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Lossless</NICK>
+<BLURB>Enable lossless encoding.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebpEnc::preset</NAME>
+<TYPE>GstWebpEncPreset</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>preset tuning</NICK>
+<BLURB>Preset name for visual tuning.</BLURB>
+<DEFAULT>Outdoor photo, natural lighting</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebpEnc::quality</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>quality-level</NICK>
+<BLURB>quality level, between 0 (smallest file) and 100 (biggest).</BLURB>
+<DEFAULT>90</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebpEnc::speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Compression Method</NICK>
+<BLURB>quality/speed trade-off (0=fast, 6=slower-better).</BLURB>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
