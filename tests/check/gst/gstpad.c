@@ -1976,6 +1976,82 @@ GST_START_TEST (test_last_flow_return_pull)
 
 GST_END_TEST;
 
+GST_START_TEST (test_flush_stop_inactive)
+{
+  GstPad *sinkpad, *srcpad;
+
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_unless (sinkpad != NULL);
+
+  /* new pads are inactive and flushing */
+  fail_if (GST_PAD_IS_ACTIVE (sinkpad));
+  fail_unless (GST_PAD_IS_FLUSHING (sinkpad));
+
+  /* this should fail, pad is inactive */
+  fail_if (gst_pad_send_event (sinkpad, gst_event_new_flush_stop (FALSE)));
+
+  /* nothing should have changed */
+  fail_if (GST_PAD_IS_ACTIVE (sinkpad));
+  fail_unless (GST_PAD_IS_FLUSHING (sinkpad));
+
+  gst_pad_set_active (sinkpad, TRUE);
+
+  /* pad is now active an not flushing anymore */
+  fail_unless (GST_PAD_IS_ACTIVE (sinkpad));
+  fail_if (GST_PAD_IS_FLUSHING (sinkpad));
+
+  /* do flush, does not deactivate the pad */
+  fail_unless (gst_pad_send_event (sinkpad, gst_event_new_flush_start ()));
+  fail_unless (GST_PAD_IS_ACTIVE (sinkpad));
+  fail_unless (GST_PAD_IS_FLUSHING (sinkpad));
+
+  fail_unless (gst_pad_send_event (sinkpad, gst_event_new_flush_stop (FALSE)));
+  fail_unless (GST_PAD_IS_ACTIVE (sinkpad));
+  fail_if (GST_PAD_IS_FLUSHING (sinkpad));
+
+  gst_pad_set_active (sinkpad, FALSE);
+  fail_if (GST_PAD_IS_ACTIVE (sinkpad));
+  fail_unless (GST_PAD_IS_FLUSHING (sinkpad));
+
+  gst_object_unref (sinkpad);
+
+  /* we should not be able to push on an inactive srcpad */
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+
+  fail_if (GST_PAD_IS_ACTIVE (srcpad));
+  fail_unless (GST_PAD_IS_FLUSHING (srcpad));
+
+  fail_if (gst_pad_push_event (srcpad, gst_event_new_flush_stop (FALSE)));
+
+  /* should still be inactive and flushing */
+  fail_if (GST_PAD_IS_ACTIVE (srcpad));
+  fail_unless (GST_PAD_IS_FLUSHING (srcpad));
+
+  gst_pad_set_active (srcpad, TRUE);
+
+  /* pad is now active an not flushing anymore */
+  fail_unless (GST_PAD_IS_ACTIVE (srcpad));
+  fail_if (GST_PAD_IS_FLUSHING (srcpad));
+
+  /* do flush, does not deactivate the pad */
+  fail_if (gst_pad_push_event (srcpad, gst_event_new_flush_start ()));
+  fail_unless (GST_PAD_IS_ACTIVE (srcpad));
+  fail_unless (GST_PAD_IS_FLUSHING (srcpad));
+
+  fail_if (gst_pad_push_event (srcpad, gst_event_new_flush_stop (FALSE)));
+  fail_unless (GST_PAD_IS_ACTIVE (srcpad));
+  fail_if (GST_PAD_IS_FLUSHING (srcpad));
+
+  gst_pad_set_active (srcpad, FALSE);
+  fail_if (GST_PAD_IS_ACTIVE (srcpad));
+  fail_unless (GST_PAD_IS_FLUSHING (srcpad));
+
+  gst_object_unref (srcpad);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_pad_suite (void)
 {
@@ -2021,6 +2097,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_sticky_events);
   tcase_add_test (tc_chain, test_last_flow_return_push);
   tcase_add_test (tc_chain, test_last_flow_return_pull);
+  tcase_add_test (tc_chain, test_flush_stop_inactive);
 
   return s;
 }
