@@ -2655,7 +2655,7 @@ gst_audio_decoder_stop (GstAudioDecoder * dec)
   if (ret)
     dec->priv->active = FALSE;
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
@@ -2678,7 +2678,7 @@ gst_audio_decoder_start (GstAudioDecoder * dec)
   if (ret)
     dec->priv->active = TRUE;
 
-  return TRUE;
+  return ret;
 }
 
 static void
