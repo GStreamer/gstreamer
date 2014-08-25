@@ -44,29 +44,14 @@ gst_sf_create_audio_template_caps (void)
     sf_command (NULL, SFC_GET_FORMAT_MAJOR, &format_info, sizeof (format_info));
 
     switch (format_info.format) {
-      case SF_FORMAT_AIFF:     /* Apple/SGI AIFF format */
-        fmt = "audio/x-aiff";
-        break;
-      case SF_FORMAT_AU:       /* Sun/NeXT AU format */
-        fmt = "audio/x-au";
-        break;
-      case SF_FORMAT_FLAC:     /* FLAC lossless file format */
-        fmt = "audio/x-flac";
-        break;
       case SF_FORMAT_IRCAM:    /* Berkeley/IRCAM/CARL */
         fmt = "audio/x-ircam";
         break;
       case SF_FORMAT_NIST:     /* Sphere NIST format. */
         fmt = "audio/x-nist";
         break;
-      case SF_FORMAT_OGG:      /* Xiph OGG container */
-        fmt = "audio/ogg";
-        break;
       case SF_FORMAT_PAF:      /* Ensoniq PARIS file format. */
         fmt = "audio/x-paris";
-        break;
-      case SF_FORMAT_RAW:      /* RAW PCM data. */
-        fmt = "audio/x-raw";
         break;
       case SF_FORMAT_SDS:      /* Midi Sample Dump Standard */
         fmt = "audio/x-sds";
@@ -77,10 +62,6 @@ gst_sf_create_audio_template_caps (void)
       case SF_FORMAT_VOC:      /* VOC files. */
         fmt = "audio/x-voc";
         break;
-      case SF_FORMAT_WAV:      /* Microsoft WAV format */
-      case SF_FORMAT_WAVEX:    /* MS WAVE with WAVEFORMATEX */
-        fmt = "audio/x-wav";
-        break;
       case SF_FORMAT_W64:      /* Sonic Foundry's 64 bit RIFF/WAV */
         fmt = "audio/x-w64";
         break;
@@ -89,6 +70,18 @@ gst_sf_create_audio_template_caps (void)
         break;
       case SF_FORMAT_RF64:     /* RF64 WAV file */
         fmt = "audio/x-rf64";
+        break;
+        /* does not make sense to expose that */
+      case SF_FORMAT_RAW:      /* RAW PCM data. */
+        /* we have other elements to handle these */
+      case SF_FORMAT_AIFF:     /* Apple/SGI AIFF format */
+      case SF_FORMAT_AU:       /* Sun/NeXT AU format */
+      case SF_FORMAT_FLAC:     /* FLAC lossless file format */
+      case SF_FORMAT_OGG:      /* Xiph OGG container */
+      case SF_FORMAT_WAV:      /* Microsoft WAV format */
+      case SF_FORMAT_WAVEX:    /* MS WAVE with WAVEFORMATEX */
+        fmt = NULL;
+        GST_LOG ("skipping format '%s'", format_info.name);
         break;
       case SF_FORMAT_MAT4:     /* Matlab (tm) V4.2 / GNU Octave 2.0 */
       case SF_FORMAT_MAT5:     /* Matlab (tm) V5.0 / GNU Octave 2.1 */
