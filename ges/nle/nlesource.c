@@ -56,11 +56,16 @@ struct _NleSourcePrivate
   gulong padaddedid;            /* signal handler for element pad-added signal */
 
   gboolean pendingblock;        /* We have a pending pad_block */
+  gboolean areblocked;          /* We already got blocked */
   GstPad *ghostedpad;           /* Pad (to be) ghosted */
   GstPad *staticpad;            /* The only pad. We keep an extra ref */
+
+  GstEvent *seek_event;
+  gulong probeid;
 };
 
 static gboolean nle_source_prepare (NleObject * object);
+static gboolean nle_source_send_event (GstElement * element, GstEvent * event);
 static gboolean nle_source_add_element (GstBin * bin, GstElement * element);
 static gboolean nle_source_remove_element (GstBin * bin, GstElement * element);
 static void nle_source_dispose (GObject * object);
@@ -87,6 +92,8 @@ nle_source_class_init (NleSourceClass * klass)
       "Filter/Editor",
       "Manages source elements",
       "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>");
+
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (nle_source_send_event);
 
   parent_class = g_type_class_ref (NLE_TYPE_OBJECT);
 
@@ -382,6 +389,66 @@ nle_source_remove_element (GstBin * bin, GstElement * element)
 }
 
 static gboolean
+nle_source_send_event (GstElement * element, GstEvent * event)
+{
+  gboolean res = TRUE;
+  NleSource *source = (NleSource *) element;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      GST_ERROR ("saving seek now");
+      source->priv->seek_event = event;
+      break;
+      /* Fall through that shit nigga */
+    default:
+      res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+      break;
+  }
+
+  return res;
+}
+
+static gpointer
+ghost_seek_pad (NleSource * source)
+{
+  NleSourcePrivate *priv = source->priv;
+
+  if (priv->seek_event) {
+    GstEvent *seek_event = priv->seek_event;
+    priv->seek_event = NULL;
+
+    if (!(gst_pad_send_event (priv->ghostedpad, seek_event)))
+      GST_ELEMENT_ERROR (source, RESOURCE, SEEK,
+          (NULL), ("Sending initial seek to upstream element failed"));
+  }
+
+  if (priv->probeid) {
+    GST_DEBUG_OBJECT (source, "Removing blocking probe! %lu", priv->probeid);
+    priv->areblocked = FALSE;
+    gst_pad_remove_probe (priv->ghostedpad, priv->probeid);
+    priv->probeid = 0;
+  }
+
+  return NULL;
+}
+
+static GstPadProbeReturn
+pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, NleSource * source)
+{
+  GThread *lthread;
+
+  if (!source->priv->areblocked) {
+    GST_INFO_OBJECT (pad, "Blocked now, launching seek");
+    source->priv->areblocked = TRUE;
+    lthread =
+        g_thread_new ("gnlsourceseek", (GThreadFunc) ghost_seek_pad, source);
+    g_thread_unref (lthread);
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+static gboolean
 nle_source_prepare (NleObject * object)
 {
   GstPad *pad;
@@ -413,9 +480,10 @@ nle_source_prepare (NleObject * object)
   } else {
     if (priv->staticpad)
       pad = gst_object_ref (priv->staticpad);
-    GST_LOG_OBJECT (source, "Trying to async block source pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
     priv->ghostedpad = pad;
+    priv->probeid = gst_pad_add_probe (pad,
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+        (GstPadProbeCallback) pad_blocked_cb, source, NULL);
     gst_object_unref (pad);
   }
 
