@@ -1,0 +1,55 @@
+<plugin>
+  <name>aiff</name>
+  <description>Create and parse Audio Interchange File Format (AIFF) files</description>
+  <filename>../../gst/aiff/.libs/libgstaiff.so</filename>
+  <basename>libgstaiff.so</basename>
+  <version>1.5.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>aiffmux</name>
+      <longname>AIFF audio muxer</longname>
+      <class>Muxer/Audio</class>
+      <description>Multiplex raw audio into AIFF</description>
+      <author>Robert Swain &lt;robert.swain@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, S16BE, S24BE, S32BE }, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-aiff</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>aiffparse</name>
+      <longname>AIFF audio demuxer</longname>
+      <class>Codec/Demuxer/Audio</class>
+      <description>Parse a .aiff file into raw audio</description>
+      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-aiff</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, S16BE, S16LE, S24BE, S24LE, S32LE, S32BE, F32BE, F64BE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
