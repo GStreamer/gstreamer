@@ -1,0 +1,34 @@
+<plugin>
+  <name>audiomixer</name>
+  <description>Mixes multiple audio streams</description>
+  <filename>../../gst/audiomixer/.libs/libgstaudiomixer.so</filename>
+  <basename>libgstaudiomixer.so</basename>
+  <version>1.5.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>audiomixer</name>
+      <longname>AudioMixer</longname>
+      <class>Generic/Audio</class>
+      <description>Mixes multiple audio streams</description>
+      <author>Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-raw, format=(string){ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

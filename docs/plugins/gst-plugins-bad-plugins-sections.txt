@@ -56,6 +56,20 @@ gst_ass_render_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audiomixer</FILE>
+<TITLE>audiomixer</TITLE>
+GstAudioMixer
+<SUBSECTION Standard>
+GstAudioMixerClass
+GST_AUDIO_MIXER
+GST_AUDIO_MIXER_CLASS
+GST_IS_AUDIO_MIXER
+GST_IS_AUDIO_MIXER_CLASS
+GST_TYPE_AUDIO_MIXER
+gst_audio_mixer_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-audioparse</FILE>
 <TITLE>audioparse</TITLE>
 GstAudioParse
@@ -68,7 +82,6 @@ GST_IS_AUDIO_PARSE_CLASS
 GST_TYPE_AUDIO_PARSE
 gst_audio_parse_get_type
 </SECTION>
-
 
 <SECTION>
 <FILE>element-autoconvert</FILE>
