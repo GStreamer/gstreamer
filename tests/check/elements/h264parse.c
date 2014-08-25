@@ -381,7 +381,8 @@ GST_START_TEST (test_parse_packetized)
   cdata =
       gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, h264_codec_data,
       h264_codec_data_size, 0, h264_codec_data_size, NULL, NULL);
-  gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, cdata, NULL);
+  gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, cdata,
+      "stream-format", G_TYPE_STRING, "avc", NULL);
   gst_buffer_unref (cdata);
   desc = gst_caps_to_string (caps);
   gst_caps_unref (caps);
