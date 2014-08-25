@@ -4020,12 +4020,17 @@ debug_sticky_event (GstPad * pad, GstEvent ** event, gpointer user_data)
 static gboolean
 gst_decode_bin_expose (GstDecodeBin * dbin)
 {
-  GList *tmp, *endpads = NULL;
-  gboolean missing_plugin = FALSE;
-  gboolean already_exposed = TRUE;
-  gboolean last_group = TRUE;
+  GList *tmp, *endpads;
+  gboolean missing_plugin;
+  gboolean already_exposed;
+  gboolean last_group;
 
 retry:
+  endpads = NULL;
+  missing_plugin = FALSE;
+  already_exposed = TRUE;
+  last_group = TRUE;
+
   GST_DEBUG_OBJECT (dbin, "Exposing currently active chains/groups");
 
   /* Don't expose if we're currently shutting down */
