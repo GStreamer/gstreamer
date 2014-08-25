@@ -350,6 +350,9 @@ struct _GstBaseParsePrivate
   GList *detect_buffers;
   guint detect_buffers_size;
 
+  /* True when no buffers have been received yet */
+  gboolean first_buffer;
+
   /* if TRUE, a STREAM_START event needs to be pushed */
   gboolean push_stream_start;
 };
@@ -855,6 +858,8 @@ gst_base_parse_reset (GstBaseParse * parse)
     gst_adapter_clear (parse->priv->adapter);
 
   parse->priv->new_frame = TRUE;
+
+  parse->priv->first_buffer = TRUE;
 
   g_list_foreach (parse->priv->detect_buffers, (GFunc) gst_buffer_unref, NULL);
   g_list_free (parse->priv->detect_buffers);
@@ -2714,6 +2719,53 @@ gst_base_parse_check_sync (GstBaseParse * parse)
 }
 
 static GstFlowReturn
+gst_base_parse_process_streamheader (GstBaseParse * parse)
+{
+  GstCaps *caps;
+  GstStructure *str;
+  const GValue *value;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (parse));
+  if (caps == NULL)
+    goto notfound;
+
+  str = gst_caps_get_structure (caps, 0);
+  value = gst_structure_get_value (str, "streamheader");
+  if (value == NULL)
+    goto notfound;
+
+  GST_DEBUG_OBJECT (parse, "Found streamheader field on input caps");
+
+  if (GST_VALUE_HOLDS_ARRAY (value)) {
+    gint i;
+    gsize len = gst_value_array_get_size (value);
+
+    for (i = 0; i < len; i++) {
+      GstBuffer *buffer =
+          gst_value_get_buffer (gst_value_array_get_value (value, i));
+      ret =
+          gst_base_parse_chain (GST_BASE_PARSE_SINK_PAD (parse),
+          GST_OBJECT_CAST (parse), gst_buffer_ref (buffer));
+    }
+
+  } else if (GST_VALUE_HOLDS_BUFFER (value)) {
+    GstBuffer *buffer = gst_value_get_buffer (value);
+    ret =
+        gst_base_parse_chain (GST_BASE_PARSE_SINK_PAD (parse),
+        GST_OBJECT_CAST (parse), gst_buffer_ref (buffer));
+  }
+
+  return ret;
+
+notfound:
+  {
+    GST_DEBUG_OBJECT (parse, "No streamheader on caps");
+    return GST_FLOW_OK;
+  }
+}
+
+static GstFlowReturn
 gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstBaseParseClass *bclass;
@@ -2729,6 +2781,20 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   parse = GST_BASE_PARSE (parent);
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
+
+  if (G_UNLIKELY (parse->priv->first_buffer)) {
+    parse->priv->first_buffer = FALSE;
+    if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER)) {
+      /* this stream has no header buffers, check if we just prepend the
+       * streamheader from caps to the stream */
+      GST_DEBUG_OBJECT (parse, "Looking for streamheader field on caps to "
+          "prepend to the stream");
+      gst_base_parse_process_streamheader (parse);
+    } else {
+      GST_DEBUG_OBJECT (parse, "Stream has header buffers, not prepending "
+          "streamheader from caps");
+    }
+  }
 
   if (parse->priv->detecting) {
     GstBuffer *detect_buf;
