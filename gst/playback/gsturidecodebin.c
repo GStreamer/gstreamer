@@ -110,6 +110,7 @@ struct _GstURIDecodeBin
   guint src_np_sig_id;          /* new-pad signal id */
   guint src_nmp_sig_id;         /* no-more-pads signal id */
   gint pending;
+  GList *missing_plugin_errors;
 
   gboolean async_pending;       /* async-start has been emitted */
 
@@ -986,8 +987,29 @@ done:
      * decodebins had missing plugins for all of their streams!
      */
     if (!decoder->streams || g_hash_table_size (decoder->streams) == 0) {
-      GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
-          ("no suitable plugins found"));
+      if (decoder->missing_plugin_errors) {
+        GString *str = g_string_new ("");
+        GList *l;
+
+        for (l = decoder->missing_plugin_errors; l; l = l->next) {
+          GstMessage *msg = l->data;
+          gchar *debug;
+
+          gst_message_parse_error (msg, NULL, &debug);
+          g_string_append (str, debug);
+          g_free (debug);
+          gst_message_unref (msg);
+        }
+        g_list_free (decoder->missing_plugin_errors);
+        decoder->missing_plugin_errors = NULL;
+
+        GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
+            ("no suitable plugins found:\n%s", str->str));
+        g_string_free (str, TRUE);
+      } else {
+        GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
+            ("no suitable plugins found"));
+      }
     } else {
       gst_element_no_more_pads (GST_ELEMENT_CAST (decoder));
     }
@@ -2400,6 +2422,8 @@ handle_redirect_message (GstURIDecodeBin * dec, GstMessage * msg)
 static void
 handle_message (GstBin * bin, GstMessage * msg)
 {
+  GstURIDecodeBin *dec = GST_URI_DECODE_BIN (bin);
+
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ELEMENT:{
       if (gst_message_has_name (msg, "redirect")) {
@@ -2407,7 +2431,7 @@ handle_message (GstBin * bin, GstMessage * msg)
          * the user of this element as it can in most cases just pick the first item
          * of the sorted list as a good redirection candidate. It can of course
          * choose something else from the list if it has a better way. */
-        msg = handle_redirect_message (GST_URI_DECODE_BIN (bin), msg);
+        msg = handle_redirect_message (dec, msg);
       }
       break;
     }
@@ -2422,6 +2446,9 @@ handle_message (GstBin * bin, GstMessage * msg)
       if (g_error_matches (err, GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN)
           || g_error_matches (err, GST_STREAM_ERROR,
               GST_STREAM_ERROR_CODEC_NOT_FOUND)) {
+        dec->missing_plugin_errors =
+            g_list_prepend (dec->missing_plugin_errors, gst_message_ref (msg));
+
         no_more_pads_full (GST_ELEMENT (GST_MESSAGE_SRC (msg)), FALSE,
             GST_URI_DECODE_BIN (bin));
         gst_message_unref (msg);
@@ -2767,6 +2794,9 @@ gst_uri_decode_bin_change_state (GstElement * element,
       remove_decoders (decoder, FALSE);
       remove_source (decoder);
       do_async_done (decoder);
+      g_list_free_full (decoder->missing_plugin_errors,
+          (GDestroyNotify) gst_message_unref);
+      decoder->missing_plugin_errors = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_DEBUG ("ready to null");

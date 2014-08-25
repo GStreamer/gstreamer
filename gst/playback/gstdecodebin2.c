@@ -183,6 +183,7 @@ struct _GstDecodeBin
   gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
 
   GList *filtered;              /* elements for which error messages are filtered */
+  GList *filtered_errors;       /* filtered error messages */
 
   GList *buffering_status;      /* element currently buffering messages */
 };
@@ -445,6 +446,7 @@ struct _GstDecodeChain
                                    e.g. no suitable decoder could be found
                                    e.g. stream got EOS without buffers
                                  */
+  gchar *deadend_details;
   GstCaps *endcaps;             /* Caps that were used when linking to the endpad
                                    or that resulted in the deadend
                                  */
@@ -462,7 +464,8 @@ static GstDecodeGroup *gst_decode_group_new (GstDecodeBin * dbin,
     GstDecodeChain * chain);
 static gboolean gst_decode_chain_is_complete (GstDecodeChain * chain);
 static gboolean gst_decode_chain_expose (GstDecodeChain * chain,
-    GList ** endpads, gboolean * missing_plugin, gboolean * last_group);
+    GList ** endpads, gboolean * missing_plugin,
+    GString * missing_plugin_details, gboolean * last_group);
 static gboolean gst_decode_chain_is_drained (GstDecodeChain * chain);
 static gboolean gst_decode_chain_reset_buffering (GstDecodeChain * chain);
 static gboolean gst_decode_group_is_complete (GstDecodeGroup * group);
@@ -1419,7 +1422,7 @@ static gboolean is_adaptive_demuxer_element (GstElement * srcelement);
 
 static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
     GstDecodePad * dpad, GstPad * pad, GstCaps * caps, GValueArray * factories,
-    GstDecodeChain * chain);
+    GstDecodeChain * chain, gchar ** deadend_details);
 static GList *connect_element (GstDecodeBin * dbin, GstDecodeElement * delem,
     GstDecodeChain * chain);
 static void expose_pad (GstDecodeBin * dbin, GstElement * src,
@@ -1488,6 +1491,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   const gchar *classification;
   gboolean is_parser_converter = FALSE;
   gboolean res;
+  gchar *deadend_details = NULL;
 
   GST_DEBUG_OBJECT (dbin, "Pad %s:%s caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -1756,7 +1760,9 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   /* 1.h else continue autoplugging something from the list. */
   GST_LOG_OBJECT (pad, "Let's continue discovery on this pad");
-  res = connect_pad (dbin, src, dpad, pad, caps, factories, chain);
+  res =
+      connect_pad (dbin, src, dpad, pad, caps, factories, chain,
+      &deadend_details);
 
   /* Need to unref the capsfilter srcpad here if
    * we inserted a capsfilter */
@@ -1804,6 +1810,7 @@ unknown_type:
   {
     GST_LOG_OBJECT (pad, "Unknown type, posting message and firing signal");
 
+    chain->deadend_details = deadend_details;
     chain->deadend = TRUE;
     chain->endcaps = caps;
     gst_object_replace ((GstObject **) & chain->current_pad, NULL);
@@ -1880,10 +1887,31 @@ add_error_filter (GstDecodeBin * dbin, GstElement * element)
 }
 
 static void
-remove_error_filter (GstDecodeBin * dbin, GstElement * element)
+remove_error_filter (GstDecodeBin * dbin, GstElement * element,
+    GstMessage ** error)
 {
+  GList *l;
+
   GST_OBJECT_LOCK (dbin);
   dbin->filtered = g_list_remove (dbin->filtered, element);
+
+  if (error)
+    *error = NULL;
+
+  l = dbin->filtered_errors;
+  while (l) {
+    GstMessage *msg = l->data;
+
+    if (GST_MESSAGE_SRC (msg) == GST_OBJECT_CAST (element)) {
+      /* Get the last error of this element, i.e. the earliest */
+      if (error)
+        gst_message_replace (error, msg);
+      gst_message_unref (msg);
+      l = g_list_delete_link (dbin->filtered_errors, l);
+    } else {
+      l = l->next;
+    }
+  }
   GST_OBJECT_UNLOCK (dbin);
 }
 
@@ -1921,6 +1949,28 @@ send_sticky_events (GstDecodeBin * dbin, GstPad * pad)
   return data.ret;
 }
 
+static gchar *
+error_message_to_string (GstMessage * msg)
+{
+  GError *err;
+  gchar *debug, *message, *full_message;
+
+  gst_message_parse_error (msg, &err, &debug);
+
+  message = gst_error_get_message (err->domain, err->code);
+
+  if (debug)
+    full_message = g_strdup_printf ("%s\n%s\n%s", message, err->message, debug);
+  else
+    full_message = g_strdup_printf ("%s\n%s", message, err->message);
+
+  g_free (message);
+  g_free (debug);
+  g_clear_error (&err);
+
+  return full_message;
+}
+
 /* connect_pad:
  *
  * Try to connect the given pad to an element created from one of the factories,
@@ -1934,11 +1984,12 @@ send_sticky_events (GstDecodeBin * dbin, GstPad * pad)
 static gboolean
 connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GstPad * pad, GstCaps * caps, GValueArray * factories,
-    GstDecodeChain * chain)
+    GstDecodeChain * chain, gchar ** deadend_details)
 {
   gboolean res = FALSE;
   GstPad *mqpad = NULL;
   gboolean is_demuxer = chain->parent && !chain->elements;      /* First pad after the demuxer */
+  GString *error_details = NULL;
 
   g_return_val_if_fail (factories != NULL, FALSE);
   g_return_val_if_fail (factories->n_values > 0, FALSE);
@@ -1960,6 +2011,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     pad = mqpad;
     decode_pad_set_target (dpad, pad);
   }
+
+  error_details = g_string_new ("");
 
   /* 2. Try to create an element and link to it */
   while (factories->n_values > 0) {
@@ -2103,6 +2156,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
       GST_WARNING_OBJECT (dbin, "Could not create an element from %s",
           gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+      g_string_append_printf (error_details,
+          "Could not create an element from %s\n",
+          gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
       continue;
     }
 
@@ -2117,7 +2173,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     if (!(gst_bin_add (GST_BIN_CAST (dbin), element))) {
       GST_WARNING_OBJECT (dbin, "Couldn't add %s to the bin",
           GST_ELEMENT_NAME (element));
-      remove_error_filter (dbin, element);
+      remove_error_filter (dbin, element, NULL);
+      g_string_append_printf (error_details, "Couldn't add %s to the bin\n",
+          GST_ELEMENT_NAME (element));
       gst_object_unref (element);
       continue;
     }
@@ -2126,7 +2184,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     if (!(sinkpad = find_sink_pad (element))) {
       GST_WARNING_OBJECT (dbin, "Element %s doesn't have a sink pad",
           GST_ELEMENT_NAME (element));
-      remove_error_filter (dbin, element);
+      remove_error_filter (dbin, element, NULL);
+      g_string_append_printf (error_details,
+          "Element %s doesn't have a sink pad", GST_ELEMENT_NAME (element));
       gst_bin_remove (GST_BIN (dbin), element);
       continue;
     }
@@ -2135,7 +2195,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     if ((gst_pad_link (pad, sinkpad)) != GST_PAD_LINK_OK) {
       GST_WARNING_OBJECT (dbin, "Link failed on pad %s:%s",
           GST_DEBUG_PAD_NAME (sinkpad));
-      remove_error_filter (dbin, element);
+      remove_error_filter (dbin, element, NULL);
+      g_string_append_printf (error_details, "Link failed on pad %s:%s",
+          GST_DEBUG_PAD_NAME (sinkpad));
       gst_object_unref (sinkpad);
       gst_bin_remove (GST_BIN (dbin), element);
       continue;
@@ -2144,9 +2206,22 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* ... activate it ... */
     if ((gst_element_set_state (element,
                 GST_STATE_READY)) == GST_STATE_CHANGE_FAILURE) {
+      GstMessage *error_msg;
+
       GST_WARNING_OBJECT (dbin, "Couldn't set %s to READY",
           GST_ELEMENT_NAME (element));
-      remove_error_filter (dbin, element);
+      remove_error_filter (dbin, element, &error_msg);
+
+      if (error_msg) {
+        gchar *error_string = error_message_to_string (error_msg);
+        g_string_append_printf (error_details, "Couldn't set %s to READY:\n%s",
+            GST_ELEMENT_NAME (element), error_string);
+        gst_message_unref (error_msg);
+        g_free (error_string);
+      } else {
+        g_string_append_printf (error_details, "Couldn't set %s to READY",
+            GST_ELEMENT_NAME (element));
+      }
       gst_object_unref (sinkpad);
       gst_bin_remove (GST_BIN (dbin), element);
       continue;
@@ -2155,10 +2230,24 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* check if we still accept the caps on the pad after setting
      * the element to READY */
     if (!gst_pad_query_accept_caps (sinkpad, caps)) {
+      GstMessage *error_msg;
+
       GST_WARNING_OBJECT (dbin, "Element %s does not accept caps",
           GST_ELEMENT_NAME (element));
 
-      remove_error_filter (dbin, element);
+      remove_error_filter (dbin, element, &error_msg);
+
+      if (error_msg) {
+        gchar *error_string = error_message_to_string (error_msg);
+        g_string_append_printf (error_details,
+            "Element %s does not accept caps:\n%s", GST_ELEMENT_NAME (element),
+            error_string);
+        gst_message_unref (error_msg);
+        g_free (error_string);
+      } else {
+        g_string_append_printf (error_details,
+            "Element %s does not accept caps", GST_ELEMENT_NAME (element));
+      }
 
       gst_element_set_state (element, GST_STATE_NULL);
       gst_object_unref (sinkpad);
@@ -2281,6 +2370,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         !send_sticky_events (dbin, pad)) {
       GstDecodeElement *dtmp = NULL;
       GstElement *tmp = NULL;
+      GstMessage *error_msg;
 
       GST_WARNING_OBJECT (dbin, "Couldn't set %s to PAUSED",
           GST_ELEMENT_NAME (element));
@@ -2289,7 +2379,18 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       g_list_free (to_connect);
       to_connect = NULL;
 
-      remove_error_filter (dbin, element);
+      remove_error_filter (dbin, element, &error_msg);
+
+      if (error_msg) {
+        gchar *error_string = error_message_to_string (error_msg);
+        g_string_append_printf (error_details, "Couldn't set %s to PAUSED:\n%s",
+            GST_ELEMENT_NAME (element), error_string);
+        gst_message_unref (error_msg);
+        g_free (error_string);
+      } else {
+        g_string_append_printf (error_details, "Couldn't set %s to PAUSED",
+            GST_ELEMENT_NAME (element));
+      }
 
       /* Remove all elements in this chain that were just added. No
        * other thread could've added elements in the meantime */
@@ -2348,7 +2449,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
     /* Remove error filter now, from now on we can't gracefully
      * handle errors of the element anymore */
-    remove_error_filter (dbin, element);
+    remove_error_filter (dbin, element, NULL);
 
     /* Now let the bin handle the state */
     gst_element_set_locked_state (element, FALSE);
@@ -2385,6 +2486,11 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 beach:
   if (mqpad)
     gst_object_unref (mqpad);
+
+  if (error_details)
+    *deadend_details = g_string_free (error_details, (error_details->len == 0));
+  else
+    *deadend_details = NULL;
 
   return res;
 }
@@ -3091,6 +3197,8 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
     gst_caps_unref (chain->endcaps);
     chain->endcaps = NULL;
   }
+  g_free (chain->deadend_details);
+  chain->deadend_details = NULL;
 
   GST_DEBUG_OBJECT (chain->dbin, "%s chain %p", (hide ? "Hidden" : "Freed"),
       chain);
@@ -4022,6 +4130,7 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
 {
   GList *tmp, *endpads;
   gboolean missing_plugin;
+  GString *missing_plugin_details;
   gboolean already_exposed;
   gboolean last_group;
 
@@ -4030,6 +4139,8 @@ retry:
   missing_plugin = FALSE;
   already_exposed = TRUE;
   last_group = TRUE;
+
+  missing_plugin_details = g_string_new ("");
 
   GST_DEBUG_OBJECT (dbin, "Exposing currently active chains/groups");
 
@@ -4044,21 +4155,31 @@ retry:
 
   /* Get the pads that we're going to expose and mark things as exposed */
   if (!gst_decode_chain_expose (dbin->decode_chain, &endpads, &missing_plugin,
-          &last_group)) {
+          missing_plugin_details, &last_group)) {
     g_list_foreach (endpads, (GFunc) gst_object_unref, NULL);
     g_list_free (endpads);
+    g_string_free (missing_plugin_details, TRUE);
     GST_ERROR_OBJECT (dbin, "Broken chain/group tree");
     g_return_val_if_reached (FALSE);
     return FALSE;
   }
   if (endpads == NULL) {
     if (missing_plugin) {
-      GST_WARNING_OBJECT (dbin, "No suitable plugins found");
-      GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL),
-          ("no suitable plugins found"));
+      if (missing_plugin_details->len > 0) {
+        gchar *details = g_string_free (missing_plugin_details, FALSE);
+        GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL),
+            ("no suitable plugins found:\n%s", details));
+        g_free (details);
+      } else {
+        g_string_free (missing_plugin_details, TRUE);
+        GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL),
+            ("no suitable plugins found"));
+      }
     } else {
       /* in this case, the stream ended without buffers,
        * just post a warning */
+      g_string_free (missing_plugin_details, TRUE);
+
       GST_WARNING_OBJECT (dbin, "All streams finished without buffers. "
           "Last group: %d", last_group);
       if (last_group) {
@@ -4080,6 +4201,8 @@ retry:
     do_async_done (dbin);
     return FALSE;
   }
+
+  g_string_free (missing_plugin_details, TRUE);
 
   /* Check if this was called when everything was exposed already */
   for (tmp = endpads; tmp && already_exposed; tmp = tmp->next) {
@@ -4181,15 +4304,21 @@ retry:
  */
 static gboolean
 gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
-    gboolean * missing_plugin, gboolean * last_group)
+    gboolean * missing_plugin, GString * missing_plugin_details,
+    gboolean * last_group)
 {
   GstDecodeGroup *group;
   GList *l;
   GstDecodeBin *dbin;
 
   if (chain->deadend) {
-    if (chain->endcaps)
+    if (chain->endcaps) {
+      if (chain->deadend_details) {
+        g_string_append (missing_plugin_details, chain->deadend_details);
+        g_string_append_c (missing_plugin_details, '\n');
+      }
       *missing_plugin = TRUE;
+    }
     return TRUE;
   }
 
@@ -4223,7 +4352,7 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
     GstDecodeChain *childchain = l->data;
 
     if (!gst_decode_chain_expose (childchain, endpads, missing_plugin,
-            last_group))
+            missing_plugin_details, last_group))
       return FALSE;
   }
 
@@ -4701,6 +4830,9 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
     GST_OBJECT_LOCK (dbin);
     drop = (g_list_find (dbin->filtered, GST_MESSAGE_SRC (msg)) != NULL);
+    if (drop)
+      dbin->filtered_errors =
+          g_list_prepend (dbin->filtered_errors, gst_message_ref (msg));
     GST_OBJECT_UNLOCK (dbin);
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_BUFFERING) {
     gint perc, msg_perc;
