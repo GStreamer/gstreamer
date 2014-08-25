@@ -64,6 +64,8 @@
     <xi:include href="xml/element-mirror.xml" />
     <xi:include href="xml/element-modplug.xml" />
     <xi:include href="xml/element-mpeg2enc.xml" />
+    <xi:include href="xml/element-mpegpsmux.xml" />
+    <xi:include href="xml/element-mpegtsmux.xml" />
     <xi:include href="xml/element-mplex.xml" />
     <xi:include href="xml/element-mpg123audiodec.xml" />
     <xi:include href="xml/element-neonhttpsrc.xml" />
@@ -128,6 +130,7 @@
     <xi:include href="xml/plugin-mms.xml" />
     <xi:include href="xml/plugin-modplug.xml" />
     <xi:include href="xml/plugin-mpeg2enc.xml" />
+    <xi:include href="xml/plugin-mpegpsmux.xml" />
     <xi:include href="xml/plugin-mpegtsmux.xml" />
     <xi:include href="xml/plugin-mplex.xml" />
     <xi:include href="xml/plugin-neon.xml" />
