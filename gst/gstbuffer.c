@@ -397,7 +397,11 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
   if (flags & GST_BUFFER_COPY_FLAGS) {
     /* copy flags */
-    GST_MINI_OBJECT_FLAGS (dest) = GST_MINI_OBJECT_FLAGS (src);
+    guint flags_mask = ~GST_BUFFER_FLAG_TAG_MEMORY;
+
+    GST_MINI_OBJECT_FLAGS (dest) =
+        (GST_MINI_OBJECT_FLAGS (src) & flags_mask) |
+        (GST_MINI_OBJECT_FLAGS (dest) & ~flags_mask);
   }
 
   if (flags & GST_BUFFER_COPY_TIMESTAMPS) {
