@@ -122,6 +122,10 @@ QGLRenderer::newFrame()
     this->updateGL();
 }
 
+static void flushGstreamerGL(GstGLContext* context,void *data){
+    context->gl_vtable->Flush();
+}
+
 void
 QGLRenderer::paintGL()
 {
@@ -141,6 +145,10 @@ QGLRenderer::paintGL()
         v_meta = gst_buffer_get_video_meta (this->frame);
 
         Q_ASSERT(gst_is_gl_memory (mem));
+
+        GstGLMemory *gl_memory=(GstGLMemory*)mem;
+
+        gst_gl_context_thread_add(gl_memory->context,flushGstreamerGL,NULL);
 
         gst_video_info_set_format (&v_info, v_meta->format, v_meta->width,
                 v_meta->height);

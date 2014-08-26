@@ -18,6 +18,7 @@ INCLUDEPATH += \
 LIBS += -L"C:/gstreamer/lib" \
     -L"C:/gstreamer/bin" \
     -lgstreamer-1.0 \
+    -lgstgl-1.0 \
     -lgstvideo-1.0 \
     -lglib-2.0 \
     -lgmodule-2.0 \
@@ -74,7 +75,6 @@ HEADERS += gstthread.h \
     pipeline.h \
     qglrenderer.h \
     AsyncQueue.h \
-    glcontextid.h
 
 # Source files
 SOURCES += gstthread.cpp \
