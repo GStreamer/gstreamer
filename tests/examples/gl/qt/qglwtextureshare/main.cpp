@@ -22,10 +22,12 @@
 #include <QApplication>
 #include "qglrenderer.h"
 
+#include <gst/gst.h>
 
 int
 main(int argc, char *argv[])
 {
+  gst_init (NULL, NULL);
   QApplication a(argc, argv);
   a.connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
   QGLRenderer w(argc > 1 ? argv[1] : "");

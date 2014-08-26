@@ -26,7 +26,6 @@
 
 #include <gst/gl/gstglcontext.h>
 
-#include "glcontextid.h"
 
 class Pipeline;
 

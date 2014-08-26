@@ -42,7 +42,6 @@ Pipeline::~Pipeline()
 void
 Pipeline::configure()
 {
-    gst_init (NULL, NULL);
 
 #ifdef Q_WS_WIN
     m_loop = g_main_loop_new (NULL, FALSE);
