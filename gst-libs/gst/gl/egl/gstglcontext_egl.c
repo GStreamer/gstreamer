@@ -336,7 +336,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     context_attrib[i++] = EGL_CONTEXT_CLIENT_VERSION;
     context_attrib[i++] = 2;
   }
-#if !defined(GST_DISABLE_GST_DEBUG)
+#if !defined(GST_DISABLE_GST_DEBUG) && defined(EGL_KHR_create_context)
   if (gst_gl_check_extension ("EGL_KHR_create_context", egl_exts)) {
     context_attrib[i++] = EGL_CONTEXT_FLAGS_KHR;
     context_attrib[i++] = EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
@@ -348,6 +348,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
       eglCreateContext (egl->egl_display, egl->egl_config,
       (EGLContext) external_gl_context, context_attrib);
 
+#ifdef EGL_KHR_create_context
   if (egl->egl_context == EGL_NO_CONTEXT && egl->gl_api & GST_GL_API_GLES2
       && eglGetError () != EGL_SUCCESS) {
     /* try without EGL_CONTEXT_FLAGS flags as it was added to
@@ -362,6 +363,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
         eglCreateContext (egl->egl_display, egl->egl_config,
         (EGLContext) external_gl_context, context_attrib);
   }
+#endif
 
   if (egl->egl_context != EGL_NO_CONTEXT) {
     GST_INFO ("gl context created: %" G_GUINTPTR_FORMAT,
