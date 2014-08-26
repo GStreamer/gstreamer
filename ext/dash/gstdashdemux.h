@@ -31,10 +31,10 @@
 #define __GST_DASH_DEMUX_H__
 
 #include <gst/gst.h>
+#include <gst/adaptivedemux/gstadaptivedemux.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstdataqueue.h>
 #include "gstmpdparser.h"
-#include <gst/tag/tag.h>
 #include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
@@ -57,43 +57,12 @@ typedef struct _GstDashDemuxClass GstDashDemuxClass;
 
 struct _GstDashDemuxStream
 {
-  GstPad *pad;
-
-  GstDashDemux *demux;
+  GstAdaptiveDemuxStream parent;
 
   gint index;
   GstActiveStream *active_stream;
 
-  GstCaps *input_caps;
-
-  GstFlowReturn last_ret;
-  GstClockTime position;
-  gboolean restart_download;
-
-  GstEvent *pending_segment;
-
-  gboolean stream_eos;
-  gboolean need_header;
-  gboolean discont;
-
-  /* Download task */
-  GMutex download_mutex;
-  GCond download_cond;
-  GstTask *download_task;
-  GRecMutex download_task_lock;
-
-  /* download tooling */
-  GstElement *src;
-  GstPad *src_srcpad;
-  GMutex fragment_download_lock;
-  GCond fragment_download_cond;
-  gboolean download_finished;
   GstMediaFragmentInfo current_fragment;
-  gboolean starting_fragment;
-  gint64 download_start_time;
-  gint64 download_total_time;
-  gint64 download_total_bytes;
-  gint current_download_rate;
 };
 
 /**
@@ -103,20 +72,12 @@ struct _GstDashDemuxStream
  */
 struct _GstDashDemux
 {
-  GstBin parent;
-  GstPad *sinkpad;
+  GstAdaptiveDemux parent;
 
-  gboolean have_group_id;
-  guint group_id;
-
-  GSList *streams;
   GSList *next_periods;
 
   GstSegment segment;
-  GstClockTime timestamp_offset;
 
-  GstBuffer *manifest;
-  GstUriDownloader *downloader;
   GstMpdClient *client;         /* MPD client */
   GMutex client_lock;
 
@@ -127,16 +88,11 @@ struct _GstDashDemux
   GstClockTime max_buffering_time;      /* Maximum buffering time accumulated during playback */
   gfloat bandwidth_usage;       /* Percentage of the available bandwidth to use       */
   guint64 max_bitrate;          /* max of bitrate supported by target decoder         */
-
-  gboolean cancelled;
-
-  /* Manifest update */
-  GstClockTime last_manifest_update;
 };
 
 struct _GstDashDemuxClass
 {
-  GstBinClass parent_class;
+  GstAdaptiveDemuxClass parent_class;
 };
 
 GType gst_dash_demux_get_type (void);

@@ -471,7 +471,6 @@ struct _GstMpdClient
   gchar *mpd_uri;                             /* manifest file URI */
   gchar *mpd_base_uri;                        /* base URI for resolving relative URIs.
                                                * this will be different for redirects */
-  GMutex lock;
 };
 
 /* Basic initialization/deinitialization functions */
@@ -492,7 +491,7 @@ GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client, G
 GstClockTime gst_mpd_client_get_media_presentation_duration (GstMpdClient *client);
 gboolean gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
 gboolean gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
-gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, GstMediaFragmentInfo * fragment, gboolean forward);
+gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, GstMediaFragmentInfo * fragment);
 gboolean gst_mpd_client_get_next_header (GstMpdClient *client, gchar **uri, guint stream_idx, gint64 * range_start, gint64 * range_end);
 gboolean gst_mpd_client_get_next_header_index (GstMpdClient *client, gchar **uri, guint stream_idx, gint64 * range_start, gint64 * range_end);
 gboolean gst_mpd_client_is_live (GstMpdClient * client);
@@ -508,6 +507,7 @@ gboolean gst_mpd_client_set_period_id (GstMpdClient *client, const gchar * perio
 guint gst_mpd_client_get_period_index (GstMpdClient *client);
 const gchar *gst_mpd_client_get_period_id (GstMpdClient *client);
 gboolean gst_mpd_client_has_next_period (GstMpdClient *client);
+gboolean gst_mpd_client_has_previous_period (GstMpdClient * client);
 GstDateTime *gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client, GstActiveStream * stream);
 
 /* Representation selection */
@@ -529,6 +529,7 @@ guint gst_mpdparser_get_nb_adaptationSet (GstMpdClient *client);
 void gst_mpd_client_set_segment_index_for_all_streams (GstMpdClient * client, guint segment_idx);
 guint gst_mpd_client_get_segment_index (GstActiveStream * stream);
 void gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_idx);
+GstFlowReturn gst_mpd_client_advance_segment (GstMpdClient * client, GstActiveStream * stream, gboolean forward);
 
 /* Get audio/video stream parameters (mimeType, width, height, rate, number of channels) */
 const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream);

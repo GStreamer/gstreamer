@@ -13,14 +13,14 @@ noinst_HEADERS =        \
 	gstdash_debug.h
 
 # compiler and linker flags used to compile this plugin, set in configure.ac
-libgstdashdemux_la_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) \
+libgstdashdemux_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(LIBXML2_CFLAGS)
 libgstdashdemux_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la \
 	-lgsttag-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
