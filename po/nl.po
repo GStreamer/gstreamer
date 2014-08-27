@@ -1,13 +1,13 @@
-# translation of gst-plugins-good-1.3.2.nl.po to Dutch
+# translation of gst-plugins-good-1.3.90.nl.po to Dutch
 # This file is put in the public domain.
 #
 # Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.3.2\n"
+"Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:30+0200\n"
-"PO-Revision-Date: 2014-05-22 00:41+0200\n"
+"POT-Creation-Date: 2014-08-27 12:31+0300\n"
+"PO-Revision-Date: 2014-07-22 10:55+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -301,33 +301,32 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "De gedempte status van apparaat '%s' wijzigen is mislukt."
 
 msgid "Failed to allocated required memory."
-msgstr ""
+msgstr "Vereist geheugen toekennen is mislukt."
 
 msgid "Failed to allocate required memory."
-msgstr ""
+msgstr "Vereist geheugen toekennen is mislukt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "Video-apparaat gebruikt een niet ondersteund pixelformaat."
+msgstr "Converter op apparaat %s heeft geen ondersteund invoerformaat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Video-apparaat gebruikt een niet ondersteund pixelformaat."
+msgstr "Converter op apparaat %s heeft geen ondersteund uitvoerformaat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Video-apparaat gebruikt een niet ondersteund pixelformaat."
+msgstr "Codeerder op apparaat %s heeft geen ondersteund invoerformaat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Video-apparaat gebruikt een niet ondersteund pixelformaat."
+msgstr "Codeerder op apparaat %s heeft geen ondersteund uitvoerformaat"
 
-#, fuzzy
 msgid "Failed to start decoding thread."
-msgstr "Kan de JPEG-afbeelding niet decoderen"
+msgstr "Beginnen met decoderen van thread is mislukt."
 
 msgid "Failed to process frame."
-msgstr ""
+msgstr "Bewerken van frame is mislukt."
 
 #, c-format
 msgid ""
