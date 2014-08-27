@@ -534,29 +534,26 @@ gst_output_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
   sel = GST_OUTPUT_SELECTOR (parent);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEGMENT:
+    case GST_EVENT_EOS:
     {
-      gst_event_copy_segment (event, &sel->segment);
-
-      GST_DEBUG_OBJECT (sel, "configured SEGMENT %" GST_SEGMENT_FORMAT,
-          &sel->segment);
-
       res = gst_output_selector_forward_event (sel, event);
       break;
     }
+    case GST_EVENT_SEGMENT:
+    {
+      gst_event_copy_segment (event, &sel->segment);
+      GST_DEBUG_OBJECT (sel, "configured SEGMENT %" GST_SEGMENT_FORMAT,
+          &sel->segment);
+      /* fall through */
+    }
     default:
     {
-      if (GST_EVENT_IS_STICKY (event)) {
-        res = gst_output_selector_forward_event (sel, event);
+      active = gst_output_selector_get_active (sel);
+      if (active) {
+        res = gst_pad_push_event (active, event);
+        gst_object_unref (active);
       } else {
-        /* Send other events to pending or active src pad */
-        active = gst_output_selector_get_active (sel);
-        if (active) {
-          res = gst_pad_push_event (active, event);
-          gst_object_unref (active);
-        } else {
-          gst_event_unref (event);
-        }
+        gst_event_unref (event);
       }
       break;
     }
