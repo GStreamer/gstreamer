@@ -563,9 +563,19 @@ gst_concat_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
-      /* We don't support seeking */
-      gst_event_unref (event);
-      ret = FALSE;
+      GstPad *sinkpad = NULL;
+
+      g_mutex_lock (&self->lock);
+      if ((sinkpad = self->current_sinkpad))
+        gst_object_ref (sinkpad);
+      g_mutex_unlock (&self->lock);
+      if (sinkpad) {
+        ret = gst_pad_push_event (sinkpad, event);
+        gst_object_unref (sinkpad);
+      } else {
+        gst_event_unref (event);
+        ret = FALSE;
+      }
       break;
     }
     case GST_EVENT_QOS:{
