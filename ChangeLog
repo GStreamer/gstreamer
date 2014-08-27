@@ -1,9 +1,240 @@
-=== release 1.4.0 ===
+=== release 1.4.1 ===
 
-2014-07-19  Sebastian Dröge <slomo@coaxion.net>
+2014-08-27  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.0
+	  releasing 1.4.1
+
+2014-08-27 12:32:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/nb.po:
+	* po/nl.po:
+	  po: Update translations
+
+2014-08-14 16:36:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Use the best width/height/etc if downstream can handle that
+	  Before it was always using whatever downstream preferred, while
+	  the code and documentation claimed something different.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727180
+
+2014-08-14 11:29:00 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Avoid double free of VideoConvert
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734764
+
+2014-08-13 11:54:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: un-break duration querying
+	  Commit 2b9493b5 broke this in two ways: a) we should only
+	  pass duration queries in TIME format upstream (or at least
+	  not those in DEFAULT or BYTE format), and b) we mustn't
+	  overwrite the default value of 'res' from TRUE to FALSE
+	  and not set it again later. This led to bogus durations
+	  being reported for FLV playback from file, because TIME
+	  queries would fail (as 'res' had been set to FALSE) and
+	  parsers then do a BYTE query as fallback and try to
+	  guesstimate something in return, which of course goes
+	  horribly wrong since the BYTE size returned is for the
+	  muxed file.
+
+2014-08-08 12:54:30 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/shapewipe/gstshapewipe.c:
+	* tests/examples/shapewipe/shapewipe-example.c:
+	  shapewipe: Unref caps and element after usage
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734478
+
+2014-07-28 16:49:16 +0200  Philippe Normand <philn@igalia.com>
+
+	* gst/interleave/interleave.c:
+	* tests/check/elements/interleave.c:
+	  interleave: set output caps layout to interleaved
+	  Set output caps layout independently from input caps layout which can
+	  be either non-interleaved or interleaved.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733866
+
+2014-08-10 12:30:07 +0200  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* tests/check/elements/rtp-payloading.c:
+	  tests: rtp-payloading: adjust test data to avoid NAL chopping
+	  ... and correspondingly unexpected buffer sizes.
+
+2014-08-07 16:34:36 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtp/gstrtph263ppay.c:
+	  rtph263ppay: Unref pad template caps after use
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=734435
+
+2014-08-08 12:36:01 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Unref allowed caps after usage
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=734474
+
+2014-08-08 12:40:49 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: Unref pad template caps after usage
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=734475
+
+2014-08-08 12:44:09 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/debugutils/gstnavseek.c:
+	  navseek: Unref peer pad after usage
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=734476
+
+2014-08-08 12:29:52 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/rtpmanager/gstrtpmux.c:
+	  rtpmux: Unref pad template caps after usage
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=734473
+
+2014-08-03 12:33:32 +0200  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: unbreak au aligned byte-stream payloading
+
+2014-07-31 09:53:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/ximage/ximageutil.c:
+	  ximagesrc: Fix warning about missing return value
+
+2014-07-24 15:28:09 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/ximage/gstximagesrc.c:
+	* sys/ximage/ximageutil.c:
+	* sys/ximage/ximageutil.h:
+	  ximagesrc: Add missing return value to Buffer dispose function
+	  Depending ont he build, the method could return FALSE, hence never
+	  free the buffers, or already TRUE and lead to a crash:
+	  Fixes: https://bugzilla.gnome.org/show_bug.cgi?id=733695
+
+=== release 1.4.0 ===
+
+2014-07-19 17:20:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.4.0
+
+2014-07-19 16:35:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-07-19 12:32:22 +0200  Sebastian Dröge <sebastian@centricular.com>
 
