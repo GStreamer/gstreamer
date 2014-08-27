@@ -66,6 +66,10 @@ GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
 #define GST_BWF_TAG_link GST_MAKE_FOURCC ('l','i','n','k')
 #define GST_BWF_TAG_axml GST_MAKE_FOURCC ('a','x','m','l')
 
+/* Data size chunk of RF64,
+ * see http://tech.ebu.ch/docs/tech/tech3306-2009.pdf */
+#define GST_RS64_TAG_DS64 GST_MAKE_FOURCC ('d','s','6','4')
+
 static void gst_wavparse_dispose (GObject * object);
 
 static gboolean gst_wavparse_sink_activate (GstPad * sinkpad,
@@ -1024,6 +1028,31 @@ gst_wavparse_create_toc (GstWavParse * wav)
 
 #define MAX_BUFFER_SIZE 4096
 
+static gboolean
+parse_ds64 (GstWavParse * wav, GstBuffer * buf)
+{
+  GstMapInfo map;
+  guint32 dataSizeLow, dataSizeHigh;
+  guint32 sampleCountLow, sampleCountHigh;
+
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  dataSizeLow = GST_READ_UINT32_LE (map.data + 2 * 4);
+  dataSizeHigh = GST_READ_UINT32_LE (map.data + 3 * 4);
+  sampleCountLow = GST_READ_UINT32_LE (map.data + 4 * 4);
+  sampleCountHigh = GST_READ_UINT32_LE (map.data + 5 * 4);
+  gst_buffer_unmap (buf, &map);
+  if (dataSizeHigh != 0xFFFFFFFF && dataSizeLow != 0xFFFFFFFF) {
+    wav->datasize = ((guint64) dataSizeHigh << 32) | dataSizeLow;
+  }
+  if (sampleCountHigh != 0xFFFFFFFF && sampleCountLow != 0xFFFFFFFF) {
+    wav->fact = ((guint64) sampleCountHigh << 32) | sampleCountLow;
+  }
+
+  GST_DEBUG_OBJECT (wav, "Got 'ds64' TAG, datasize : %" G_GINT64_FORMAT
+      " fact: %" G_GINT64_FORMAT, wav->datasize, wav->fact);
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_wavparse_stream_headers (GstWavParse * wav)
 {
@@ -1076,6 +1105,13 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       gst_buffer_unref (buf);
       buf = NULL;
       continue;
+    }
+
+    if (tag == GST_RS64_TAG_DS64) {
+      if (!parse_ds64 (wav, buf))
+        goto fail;
+      else
+        continue;
     }
 
     if (tag != GST_RIFF_TAG_fmt)
@@ -1238,6 +1274,11 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         }
         wav->offset += 8;
         wav->datastart = wav->offset;
+        /* use size from ds64 chunk if available */
+        if (size == -1 && wav->datasize > 0) {
+          GST_DEBUG_OBJECT (wav, "Using ds64 datasize");
+          size = wav->datasize;
+        }
         /* If size is zero, then the data chunk probably actually extends to
            the end of the file */
         if (size == 0 && upstream_size) {
@@ -1258,7 +1299,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         break;
       }
       case GST_RIFF_TAG_fact:{
-        if (wav->format != GST_RIFF_WAVE_FORMAT_MPEGL12 &&
+        if (wav->fact == 0 &&
+            wav->format != GST_RIFF_WAVE_FORMAT_MPEGL12 &&
             wav->format != GST_RIFF_WAVE_FORMAT_MPEGL3) {
           const guint data_size = 4;
 
@@ -1295,7 +1337,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             wav->fact = GUINT32_FROM_LE (wav->fact);
             gst_buffer_unref (buf);
           }
-          GST_DEBUG_OBJECT (wav, "have fact %u", wav->fact);
+          GST_DEBUG_OBJECT (wav, "have fact %" G_GUINT64_FORMAT, wav->fact);
           wav->offset += 8 + GST_ROUND_UP_2 (size);
           break;
         } else {
