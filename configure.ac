@@ -661,10 +661,16 @@ case $host in
     fi
   ;;
   *)
-    AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,, GL/gl.h)
-    AG_GST_CHECK_LIBHEADER(GLU, GLU, gluSphere,, GL/glu.h)
-    AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
-    AG_GST_CHECK_LIBHEADER(EGL, EGL, eglGetError,, EGL/egl.h)
+    if test "x$NEED_GL" != "xno"; then
+      AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,, GL/gl.h)
+      AG_GST_CHECK_LIBHEADER(GLU, GLU, gluSphere,, GL/glu.h)
+    fi
+    if test "x$NEED_GLES2" != "xno"; then
+      AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
+    fi
+    if test "x$NEED_EGL" != "xno"; then
+      AG_GST_CHECK_LIBHEADER(EGL, EGL, eglGetError,, EGL/egl.h)
+    fi
 
     old_LIBS=$LIBS
     old_CFLAGS=$CFLAGS
