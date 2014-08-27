@@ -1,9 +1,212 @@
-=== release 1.4.0 ===
+=== release 1.4.1 ===
 
-2014-07-19  Sebastian Dröge <slomo@coaxion.net>
+2014-08-27  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.0
+	  releasing 1.4.1
+
+2014-08-21 14:02:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: fix race when flush-stop event comes in whilst shutting down
+	  Don't re-start the queue push task on the source pad when a
+	  flush-stop event comes in and we're in the process of shutting
+	  down, otherwise that task will never be stopped again.
+	  When the element is set to READY state, the pads get de-activated.
+	  The source pad gets deactivated before the queue's own activate_mode
+	  function on the source pads gets called (which will stop the thread),
+	  so checking whether the pad is active before re-starting the task on
+	  receiving flush-stop should be fine. The problem would happen when the
+	  flush-stop handler was called just after the queue's activate mode
+	  function had stopped the task.
+	  Spotted and debugged by Linus Svensson <linux.svensson@axis.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734688
+
+2014-08-14 18:53:40 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: always proxy caps query
+	  Otherwise it would only be proxied for the active pad which can lead
+	  upstream to use an incompatible caps for the downstream element.
+	  Even if a reconfigure event is sent upstream when the pad is activated, this
+	  will save the caps reconfiguration if it is already using an acceptable caps.
+
+2014-08-14 14:37:56 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstdataqueue.h:
+	  base: and fix build with new g-i again
+
+2014-08-14 14:25:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstdataqueue.h:
+	  base: remove g-i annotation that makes older g-ir-scanner crash
+	  Just remove one skip annotation that causes this:
+	  ** (g-ir-compiler:12458): ERROR **: Caught NULL node, parent=empty
+	  with older g-i versions such as 1.32.1.
+
+2014-08-13 13:01:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Only handle flow returns < EOS as errors, not e.g. flushing
+
+2014-08-13 12:40:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Use allow-none instead of nullable until we depend on a new enough GI version
+
+2014-08-13 12:39:47 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: gst_bin_new() can accept NULL as name
+
+2014-08-13 12:37:08 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstelement.c:
+	  element: Clarify docs about gst_element_get_request_pad() and remove deprecation part
+	  This function is not really pad or slow for the common case of requesting a
+	  pad with the name of the template. It is only slower if you to name your pads
+	  directly instead of letting the element handle it.
+	  Also there's no reason to deprecate it in favor of a more complicated function
+	  for the common case.
+
+2014-08-13 12:20:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Post errors if we receive EOS after downstream reported an error
+	  There will be no further data flow that would allow us to propagate the
+	  error upstream, causing nobody at all to post an error message.
+
+2014-08-13 12:15:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Post errors when receiving EOS after downstream returned an error
+	  There might be no further data flow that would allow us to propagate the
+	  error upstream, causing nobody to post an error at all.
+
+2014-08-13 12:10:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Post errors ourselves if they are received after EOS
+	  After EOS there will be no further buffer which could propagate the
+	  error upstream, so nothing is going to post an error message and
+	  the pipeline just idles around.
+
+2014-07-27 03:06:16 +0000  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/gstpoll.c:
+	  poll: Prevent false-negative from WAKE_EVENT() on W32
+	  SetEvent() seems to not call SetLastError(0) internally, so checking last
+	  error after calling SetEvent() may return the error from an earlier W32 API
+	  call. Fix this by calling SetlastError(0) explicitly.
+	  Currently WAKE_EVENT() code is cramped into a macro and doesn't look to be
+	  entirely correct. Particularly, it does not check the return value of
+	  SetEvent(), only the thread-local W32 error value. It is likely that SetEvent()
+	  actually just returns non-zero value, but the code mistakenly thinks that the
+	  call has failed, because GetLastError() seems to indicate so.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733805
+
+2014-07-30 15:46:22 +0300  Mohammed Sameer <msameer@foolab.org>
+
+	* gst/gstbufferpool.c:
+	  bufferpool: Add missing error checking to default_alloc_buffer()
+	  default_alloc_buffer() calls gst_buffer_new_allocate() but does not check for
+	  failed allocation.
+	  This patch makes default_alloc_buffer() return an error (GST_FLOW_ERROR) if
+	  buffer allocation fails.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733974
+
+2014-07-29 14:21:33 -0300  Thiago Santos <ts.santos@osg.sisa.samsung.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: avoid using infinite buffers limit if finite is requested
+	  If the current max-buffers limit it infinite and a finite value is
+	  requested, switch to the MAX (requested, current-value) to set some
+	  limit but not below what we know that we've needed so far.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733837
+
+2014-07-24 22:02:58 +0200  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/parse/grammar.y:
+	  parse: Unref reference to enclosing bins
+	  Previously all reference to enclosing bins of an element were leaked
+	  when doing delaying setting a property.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=733697
+
+2014-07-26 14:42:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gst.h:
+	  gst: include atomicqueue.h again in gst.h
+	  It's a public header of gstreamer core, so #include <gst/gst.h>
+	  should make the API available.
+
+2014-07-09 15:48:10 +0200  Srimanta Panda <srimanta@axis.com>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Fix for racy EOS event handling
+	  When eos events are forwarded simultaneouly from two sinkpads on
+	  funnel, it doesnot forward the eos to sourcepad. The reason is
+	  sticky events are stored after the event callbacks are returned.
+	  Therefore while one is about to store the sticky events on the its
+	  sinkpad, other sinkpad starts checking for the eos events on all other
+	  sinkpads and assumes eos is not present yet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732851
+
+=== release 1.4.0 ===
+
+2014-07-19 16:46:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.4.0
+
+2014-07-19 16:21:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-07-19 12:16:58 +0200  Sebastian Dröge <sebastian@centricular.com>
 
