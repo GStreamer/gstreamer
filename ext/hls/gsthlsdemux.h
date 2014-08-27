@@ -29,6 +29,7 @@
 #include "m3u8.h"
 #include "gstfragmented.h"
 #include <gst/uridownloader/gsturidownloader.h>
+#include <gst/adaptivedemux/gstadaptivedemux.h>
 #if defined(HAVE_OPENSSL)
 #include <openssl/evp.h>
 #elif defined(HAVE_NETTLE)
@@ -63,16 +64,10 @@ typedef struct _GstHLSDemuxClass GstHLSDemuxClass;
  */
 struct _GstHLSDemux
 {
-  GstBin parent;
+  GstAdaptiveDemux parent;
 
-  GstPad *sinkpad;
-  GstPad *srcpad;
   gint srcpad_counter;
 
-  gboolean have_group_id;
-  guint group_id;
-
-  GstBuffer *playlist;
   GstCaps *input_caps;
   GstUriDownloader *downloader;
   gchar *uri;                   /* Original playlist URI */
@@ -86,50 +81,11 @@ struct _GstHLSDemux
   guint connection_speed;       /* Network connection speed in kbps (0 = unknown) */
 
   /* Streaming task */
-  GstTask *stream_task;
-  GRecMutex stream_lock;
-  gboolean stop_stream_task;
-  GMutex download_lock;         /* Used for protecting queue and the two conds */
-  GCond download_cond;          /* Signalled when something is added to the queue */
-  gboolean end_of_playlist;
-  gint download_failed_count;
   gint64 next_download;
-
-  /* Updates task */
-  GstTask *updates_task;
-  GRecMutex updates_lock;
-  gint64 next_update;           /* Time of the next update */
-  gboolean stop_updates_task;
-  GMutex updates_timed_lock;
-  GCond updates_timed_cond;     /* Signalled when the playlist should be updated */
-
-  /* Position in the stream */
-  GstSegment segment;
-  gboolean need_segment;
-  gboolean discont;
 
   /* Cache for the last key */
   gchar *key_url;
   GstFragment *key_fragment;
-
-  /* Current download rate (bps) */
-  gint current_download_rate;
-
-  /* fragment download tooling */
-  GstElement *src;
-  GstPad *src_srcpad; /* handy link to src's src pad */
-  GMutex fragment_download_lock;
-  gboolean download_finished;
-  GCond fragment_download_cond;
-  GstClockTime current_timestamp;
-  GstClockTime current_duration;
-  gboolean starting_fragment;
-  gboolean reset_crypto;
-  gint64 download_start_time;
-  gint64 download_total_time;
-  gint64 download_total_bytes;
-  GstFlowReturn last_ret;
-  GError *last_error;
 
   /* decryption tooling */
 #if defined(HAVE_OPENSSL)
@@ -150,7 +106,7 @@ struct _GstHLSDemux
 
 struct _GstHLSDemuxClass
 {
-  GstBinClass parent_class;
+  GstAdaptiveDemuxClass parent_class;
 };
 
 GType gst_hls_demux_get_type (void);
