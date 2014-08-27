@@ -3,7 +3,7 @@
   <description>zbar barcode scanner</description>
   <filename>../../ext/zbar/.libs/libgstzbar.so</filename>
   <basename>libgstzbar.so</basename>
-  <version>1.4.0</version>
+  <version>1.4.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

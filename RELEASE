@@ -1,23 +1,28 @@
 
-Release notes for GStreamer Bad Plugins 1.4.0
+Release notes for GStreamer Bad Plugins 1.4.1
 
 
-The GStreamer team is pleased to announce the first release of
-the stable 1.4 release series. The 1.4 release series is adding new
-features on top of the 1.0 and 1.2 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce a bugfix release of the stable
+1.4 release series. The 1.4 release series is adding new features on top
+of the 1.2 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework that contains new features.
+The 1.4.x bugfix releases only contain important bugfixes compared to 1.4.0.
 
 
-
-Binaries for Android, iOS, Mac OS X and Windows are provided together
-with this release.
-
+Binaries for Android, iOS, Mac OS X and Windows are provided by the
+GStreamer project for this release.
 
 
-The stable 1.4 release series is API and ABI compatible with 1.0.x,
-1.2.x and any other 1.x release series in the future. Compared to 1.2.x
-it contains some new features and more intrusive changes that were
-considered too risky as a bugfix.
+The 1.x series is a stable series targeted at end users. It is not API
+or ABI compatible with the 0.10.x series. It can, however, be installed
+in parallel with the 0.10.x series and will not affect an existing
+0.10.x installation.
+
+
+The stable 1.4.x release series is API and ABI compatible with 1.0.x and
+any other 1.x release series in the future. Compared to 1.0.x it contains
+some new features and more intrusive changes that were considered too
+risky as a bugfix.
 
 
 
@@ -69,12 +74,38 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 726555 : POTFILES.in is out of date
-      * 733052 : Include windsock header for Windows targets
-      * 733063 : examples: gl fxtest example fails to build on win32 with gtk+ 3.0
-      * 733072 : camerabin: Taking a picture in cheese leads to all sort of race
-      * 733123 : mxfmux: Avoid taking unnecessary ref
-      * 733248 : gl: GLintptr/GLsizeiptr/etc typechecks ignore GL_CFLAGS, potentially causing typedef redefinition errors from gst-libs/gst/gl/glprototypes/gstgl_compat.h at buildtime
+      * 678485 : templatematch: element improvements
+      * 725871 : decklinksink: no output, only black
+      * 730509 : facedetect: fix update on change
+      * 731824 : hlsdemux pause after first filesegment (apple test files)
+      * 733245 : gl: Document GST_GL_PLATFORM, GST_GL_API and GST_GL_WINDOW somewhere
+      * 733426 : gl/sdl example fails to build (missing include directory?)
+      * 733487 : openjpeg: Win32-compatible OpenJPEG-2.0 detection
+      * 733490 : tsdemux: H264 seeking broken in push mode
+      * 733545 : GL element leaks FBO when caps changed dynamically
+      * 733726 : glimagesink: Flashes white sometimes (unpausing, seeking, window scaling)
+      * 733837 : hlsdemux: doesn't stop buffering more segments after overrun
+      * 734014 : dashdemux: stream downloader try to download next segments after pipeline interupt
+      * 734015 : tsdemux: bad timestamping
+      * 734269 : GLUpload didn't update texture properly
+      * 734394 : tsdemux: Can not change program except destroy pipeline
+      * 734517 : opusenc: Unref pad template caps after usage
+      * 734519 : ladspa: Unref pad template caps after usage
+      * 734520 : openal: Unref pad template caps after usage
+      * 734521 : sbcenc: Unref output caps in error cases
+      * 734522 : videoaggregator: Unref allowed caps after usage
+      * 734524 : wrappercamerabinsrc: Unref elements after usage
+      * 734528 : dvbsuboverlay: Avoid leaking copy of caps object
+      * 734531 : interlace: Unref pad template caps after usage
+      * 734533 : amcvideoenc: Avoid leaking copy of caps object
+      * 734534 : vtenc: Avoid leaking caps object and its copy
+      * 734536 : directsoundsrc: Avoid leaking copy of caps object
+      * 734537 : pvrvideosink: Avoid leaking bufferpool configuration
+      * 734539 : element-maker: Avoid leaking copy of caps object
+      * 734544 : gstgsmenc: Unref caps object after usage
+      * 734763 : scenechange: fix crash on startup
+      * 734830 : GstGLMixer gl resource race condition
+      * 735078 : gst_gl_handle_set_context may unref a NULL GstGLDisplay
 
 ==== Download ====
 
@@ -111,28 +142,16 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Alexey Pavlov
-      * Arun Raghavan
-      * Edward Hervey
-      * Gwenole Beauchesne
-      * Göran Jönsson
-      * Jan Alexander Steffens (heftig)
-      * Jan Schmidt
-      * Julien Isorce
-      * Mart Raudsepp
+      * Aurélien Zanelli
+      * David Rothlisberger
+      * George Kiagiadakis
       * Mathieu Duponchelle
       * Matthew Waters
-      * Matthieu Bouron
-      * Nicolas Dufresne
-      * Philip Withnall
-      * Piotr Drąg
+      * Nicola Murino
       * Sebastian Dröge
       * Sebastian Rasmussen
-      * Stefan Ringel
       * Thiago Santos
-      * Thibault Saunier
-      * Tim-Philipp Müller
-      * Vincent Penquerc'h
+      * Vineeth T M
       * Wang Xin-yu (王昕宇)
+      * Руслан Ижбулатов
  
