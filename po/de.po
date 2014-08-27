@@ -1,4 +1,4 @@
-# German messages for gst-plugins-base 1.3.2
+# German messages for gst-plugins-base 1.4.0
 # Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.3.2\n"
+"Project-Id-Version: gst-plugins-base 1.4.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:23+0200\n"
-"PO-Revision-Date: 2014-05-22 20:43+0100\n"
+"POT-Creation-Date: 2014-08-27 12:29+0300\n"
+"PO-Revision-Date: 2014-07-24 23:58+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -525,6 +525,8 @@ msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"Nicht nach dem Anzeigen der anfänglichen Geräteliste beenden, sondern auf "
+"das Hinzufügen/Entfernen von Geräten warten."
 
 msgid "Buffering..."
 msgstr "Zwischenspeichern …"

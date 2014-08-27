@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.2.1\n"
+"Project-Id-Version: gst-plugins-base 1.4.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:23+0200\n"
-"PO-Revision-Date: 2014-01-22 17:42+0100\n"
+"POT-Creation-Date: 2014-08-27 12:29+0300\n"
+"PO-Revision-Date: 2014-07-22 12:38+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: nb_NO\n"
@@ -517,12 +517,14 @@ msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"Ikke avslutt etter å ha vist den første enheteslisten, men vent på at "
+"enheter blir lagt til/fjernet."
 
 msgid "Buffering..."
 msgstr "Bufrer ..."
 
 msgid "Clock lost, selecting a new one\n"
-msgstr ""
+msgstr "Klokke tapt, velger en ny\n"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Video-sink som skal brukes (standard er autovideosink)"
@@ -534,16 +536,16 @@ msgid "Enable gapless playback"
 msgstr "Aktiver sømløs avspilling"
 
 msgid "Shuffle playlist"
-msgstr ""
+msgstr "Stokke spilleliste"
 
 msgid "Interactive control via keyboard"
-msgstr ""
+msgstr "Interaktiv kontroll via tastatur"
 
 msgid "Volume"
-msgstr ""
+msgstr "Volum"
 
 msgid "Playlist file containing input media files"
-msgstr ""
+msgstr "Spillelistefil som inneholder inngangsmediefiler"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
