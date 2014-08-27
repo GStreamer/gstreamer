@@ -3127,6 +3127,7 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
   if (res == GST_RTSP_EINTR)
     goto done;
   else if (G_UNLIKELY (res == GST_RTSP_EEOF)) {
+    g_mutex_lock (&watch->mutex);
     if (watch->readsrc) {
       g_source_remove_child_source ((GSource *) watch, watch->readsrc);
       g_source_unref (watch->readsrc);
@@ -3139,6 +3140,7 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
       conn->socket1 = NULL;
       conn->input_stream = NULL;
     }
+    g_mutex_unlock (&watch->mutex);
 
     /* When we are in tunnelled mode, the read socket can be closed and we
      * should be prepared for a new POST method to reopen it */
@@ -3150,6 +3152,7 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
       if (watch->funcs.tunnel_lost)
         res = watch->funcs.tunnel_lost (watch, watch->user_data);
       /* we add read source on the write socket able to detect when client closes get channel in tunneled mode */
+      g_mutex_lock (&watch->mutex);
       if (watch->conn->control_stream && !watch->controlsrc) {
         watch->controlsrc =
             g_pollable_input_stream_create_source (G_POLLABLE_INPUT_STREAM
@@ -3159,6 +3162,7 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
             NULL);
         g_source_add_child_source ((GSource *) watch, watch->controlsrc);
       }
+      g_mutex_unlock (&watch->mutex);
       goto read_done;
     } else
       goto eof;
@@ -3471,6 +3475,7 @@ gst_rtsp_watch_new (GstRTSPConnection * conn,
 void
 gst_rtsp_watch_reset (GstRTSPWatch * watch)
 {
+  g_mutex_lock (&watch->mutex);
   if (watch->readsrc) {
     g_source_remove_child_source ((GSource *) watch, watch->readsrc);
     g_source_unref (watch->readsrc);
@@ -3513,6 +3518,7 @@ gst_rtsp_watch_reset (GstRTSPWatch * watch)
   } else {
     watch->controlsrc = NULL;
   }
+  g_mutex_unlock (&watch->mutex);
 }
 
 /**
