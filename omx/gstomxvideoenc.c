@@ -958,26 +958,37 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     gst_pad_stop_task (GST_VIDEO_ENCODER_SRC_PAD (encoder));
     GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
-    if (gst_omx_port_set_enabled (self->enc_in_port, FALSE) != OMX_ErrorNone)
-      return FALSE;
-    if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
-      return FALSE;
-    if (gst_omx_port_wait_buffers_released (self->enc_in_port,
-            5 * GST_SECOND) != OMX_ErrorNone)
-      return FALSE;
-    if (gst_omx_port_wait_buffers_released (self->enc_out_port,
-            1 * GST_SECOND) != OMX_ErrorNone)
-      return FALSE;
-    if (gst_omx_port_deallocate_buffers (self->enc_in_port) != OMX_ErrorNone)
-      return FALSE;
-    if (gst_omx_port_deallocate_buffers (self->enc_out_port) != OMX_ErrorNone)
-      return FALSE;
-    if (gst_omx_port_wait_enabled (self->enc_in_port,
-            1 * GST_SECOND) != OMX_ErrorNone)
-      return FALSE;
-    if (gst_omx_port_wait_enabled (self->enc_out_port,
-            1 * GST_SECOND) != OMX_ErrorNone)
-      return FALSE;
+    if (klass->cdata.hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
+      GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
+      gst_omx_video_enc_stop (GST_VIDEO_ENCODER (self));
+      gst_omx_video_enc_close (GST_VIDEO_ENCODER (self));
+      GST_VIDEO_ENCODER_STREAM_LOCK (self);
+
+      if (!gst_omx_video_enc_open (GST_VIDEO_ENCODER (self)))
+        return FALSE;
+      needs_disable = FALSE;
+    } else {
+      if (gst_omx_port_set_enabled (self->enc_in_port, FALSE) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_wait_buffers_released (self->enc_in_port,
+              5 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_wait_buffers_released (self->enc_out_port,
+              1 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_deallocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_deallocate_buffers (self->enc_out_port) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_wait_enabled (self->enc_in_port,
+              1 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_wait_enabled (self->enc_out_port,
+              1 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
+    }
 
     GST_DEBUG_OBJECT (self, "Encoder drained and disabled");
   }
