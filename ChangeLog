@@ -1,9 +1,185 @@
-=== release 1.4.0 ===
+=== release 1.4.1 ===
 
-2014-07-19  Sebastian Dröge <slomo@coaxion.net>
+2014-08-27  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.0
+	  releasing 1.4.1
+
+2014-08-27 12:30:10 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/de.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	  po: Update translations
+
+2014-08-25 13:14:36 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: Don't ignore ::start/stop return values
+
+2014-08-14 16:57:01 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/playback/gstplaysinkconvertbin.c:
+	  playsinkconvertbin: only intersect with the filter at the end
+	  Otherwise we might change some capsfeatures from ANY to the specific
+	  value from the filter and do not filter those out in case the
+	  sink doesn't support them
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734822
+
+2014-08-12 13:41:04 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: fix caps negotiation filter
+
+2014-08-13 14:28:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysinkconvertbin.c:
+	  playsinkconvertbin: Make sure to intersect raw caps with our converter caps
+	  Otherwise we end up allowing video/x-raw with arbitrary caps features that are
+	  not handled by our converters.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734683
+
+2014-08-08 12:46:47 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	* tests/check/elements/textoverlay.c:
+	  basetextoverlay: rework caps negotiation
+	  Make textoverlay negotiate caps more correctly.
+	  1) Check what caps we received in the video-sink
+	  2) If it already has the overlay meta -> use it directly
+	  3) If it doesn't, textoverlay try adding the overlay meta and using it,
+	  if downstream doesn't support it, just use what is received in the
+	  video-sink
+	  4) Check if the allocation query also supports the meta to enable
+	  really using it
+	  Before it wasn't really doing renegotiation of any kind, just
+	  re-checking if it should use the overlay meta or not
+	  Also had to update the caps in the test as memory:SystemMemory seems
+	  to be required when you use a caps feature otherwise intersection/subset
+	  checks will fail.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733916
+
+2014-08-07 17:35:05 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: always intersect with the filter caps
+	  Avoids returning values that upstream can't produce
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733916
+
+2014-08-01 15:00:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Keep a reference to the playsink sinkpads
+	  Otherwise playsink might get shut down without us noticing
+	  that our pad references are gone now.
+	  Probably fixes https://bugzilla.gnome.org/show_bug.cgi?id=733165
+
+2014-07-31 16:09:41 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/libs/rtpbasedepayload.c:
+	* tests/check/libs/rtpbasepayload.c:
+	  check: Fix include path of rtp checks
+	  Fixes make distcheck
+
+2014-07-30 15:23:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  pbutils: discoverer: Always set the pipeline back to NULL after an error
+	  Otherwize the pipeline would be in an wrong state and on the next
+	  iteration any kind of error could happen
+	  Everytime an error happens in a pipeline the application has to set the
+	  pipeline back to NULL instead of READY.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733976
+
+=== release 1.4.0 ===
+
+2014-07-19 17:04:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.4.0
+
+2014-07-19 16:27:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2014-07-18 21:19:03 -0400  Youness Alaoui <kakaroto@kakaroto.homelinux.net>
 
