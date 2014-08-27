@@ -1,9 +1,37 @@
-=== release 1.4.0 ===
+=== release 1.4.1 ===
 
-2014-07-19  Sebastian Dröge <slomo@coaxion.net>
+2014-08-27  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.0
+	  releasing 1.4.1
+
+2014-08-05 16:12:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-media: Query position and stop time only on the RTP parts of the pipeline
+	  The RTCP parts, in specific the RTCP udpsinks, are not flushed when
+	  seeking and will always continue counting the time. This leads to
+	  the NPT after a backwards seek to be something completely different
+	  to the actual seek position.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732644
+
+2014-07-02 22:45:07 +0530  Arun Raghavan <arun@accosted.net>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  signals: Fix copy-pasto in target-state signal offset
+
+=== release 1.4.0 ===
+
+2014-07-19 17:56:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.4.0
 
 2014-07-16 20:39:42 +0900  Hyunjun Ko <zzoonis@gmail.com>
 
