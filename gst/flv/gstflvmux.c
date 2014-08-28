@@ -253,6 +253,7 @@ gst_flv_mux_reset (GstElement * element)
   mux->have_audio = mux->have_video = FALSE;
   mux->duration = GST_CLOCK_TIME_NONE;
   mux->new_tags = FALSE;
+  mux->first_timestamp = GST_CLOCK_TIME_NONE;
 
   mux->state = GST_FLV_MUX_STATE_HEADER;
 
@@ -529,7 +530,6 @@ gst_flv_mux_reset_pad (GstFlvMux * mux, GstFlvPad * cpad, gboolean video)
     gst_buffer_unref (cpad->video_codec_data);
   cpad->video_codec_data = NULL;
   cpad->video_codec = G_MAXUINT;
-  cpad->first_timestamp = GST_CLOCK_TIME_NONE;
   cpad->last_timestamp = 0;
 }
 
@@ -1021,11 +1021,11 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   else
     cts = 0;
 
-  if (!GST_CLOCK_TIME_IS_VALID (cpad->first_timestamp))
-    cpad->first_timestamp = dts;
-
   /* Timestamp must start at zero */
-  dts -= cpad->first_timestamp;
+  if (GST_CLOCK_TIME_IS_VALID (mux->first_timestamp)) {
+    dts -= mux->first_timestamp / GST_MSECOND;
+    pts = dts + cts;
+  }
 
   GST_LOG_OBJECT (mux, "got pts %i dts %i cts %i\n", pts, dts, cts);
 
@@ -1502,6 +1502,11 @@ gst_flv_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
     if (ret != GST_FLOW_OK)
       return ret;
     mux->state = GST_FLV_MUX_STATE_DATA;
+
+    if (GST_BUFFER_DTS_IS_VALID (buffer))
+      mux->first_timestamp = GST_BUFFER_DTS (buffer);
+    else
+      mux->first_timestamp = 0;
   }
 
   if (mux->new_tags) {

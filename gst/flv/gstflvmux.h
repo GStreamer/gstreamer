@@ -53,7 +53,6 @@ typedef struct
   GstBuffer *video_codec_data;
 
   GstClockTime last_timestamp;
-  GstClockTime first_timestamp;
 } GstFlvPad;
 
 typedef enum
@@ -79,6 +78,7 @@ typedef struct _GstFlvMux {
   GList *index;
   guint64 byte_count;
   guint64 duration;
+  GstClockTime first_timestamp;
 } GstFlvMux;
 
 typedef struct _GstFlvMuxClass {
