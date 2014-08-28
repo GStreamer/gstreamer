@@ -37,6 +37,8 @@ static GstStateChangeReturn
 gst_omx_audio_enc_change_state (GstElement * element,
     GstStateChange transition);
 
+static gboolean gst_omx_audio_enc_open (GstAudioEncoder * encoder);
+static gboolean gst_omx_audio_enc_close (GstAudioEncoder * encoder);
 static gboolean gst_omx_audio_enc_start (GstAudioEncoder * encoder);
 static gboolean gst_omx_audio_enc_stop (GstAudioEncoder * encoder);
 static gboolean gst_omx_audio_enc_set_format (GstAudioEncoder * encoder,
@@ -73,6 +75,8 @@ gst_omx_audio_enc_class_init (GstOMXAudioEncClass * klass)
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_omx_audio_enc_change_state);
 
+  audio_encoder_class->open = GST_DEBUG_FUNCPTR (gst_omx_audio_enc_open);
+  audio_encoder_class->close = GST_DEBUG_FUNCPTR (gst_omx_audio_enc_close);
   audio_encoder_class->start = GST_DEBUG_FUNCPTR (gst_omx_audio_enc_start);
   audio_encoder_class->stop = GST_DEBUG_FUNCPTR (gst_omx_audio_enc_stop);
   audio_encoder_class->flush = GST_DEBUG_FUNCPTR (gst_omx_audio_enc_flush);
@@ -97,8 +101,9 @@ gst_omx_audio_enc_init (GstOMXAudioEnc * self)
 }
 
 static gboolean
-gst_omx_audio_enc_open (GstOMXAudioEnc * self)
+gst_omx_audio_enc_open (GstAudioEncoder * encoder)
 {
+  GstOMXAudioEnc *self = GST_OMX_AUDIO_ENC (encoder);
   GstOMXAudioEncClass *klass = GST_OMX_AUDIO_ENC_GET_CLASS (self);
   gint in_port_index, out_port_index;
 
@@ -175,8 +180,10 @@ gst_omx_audio_enc_shutdown (GstOMXAudioEnc * self)
 }
 
 static gboolean
-gst_omx_audio_enc_close (GstOMXAudioEnc * self)
+gst_omx_audio_enc_close (GstAudioEncoder * encoder)
 {
+  GstOMXAudioEnc *self = GST_OMX_AUDIO_ENC (encoder);
+
   GST_DEBUG_OBJECT (self, "Closing encoder");
 
   if (!gst_omx_audio_enc_shutdown (self))
@@ -214,8 +221,6 @@ gst_omx_audio_enc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_omx_audio_enc_open (self))
-        ret = GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->downstream_flow_ret = GST_FLOW_OK;
@@ -261,8 +266,6 @@ gst_omx_audio_enc_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (!gst_omx_audio_enc_close (self))
-        ret = GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
