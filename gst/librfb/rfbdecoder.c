@@ -663,28 +663,38 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
 
   if (decoder->offset_x > 0) {
     if (decoder->offset_x > decoder->width) {
-      GST_WARNING ("Trying to crop more than the width of the server");
+      GST_WARNING
+          ("Trying to crop more than the width of the server.  Setting offset-x to 0.");
+      decoder->offset_x = 0;
     } else {
       decoder->width -= decoder->offset_x;
     }
   }
   if (decoder->offset_y > 0) {
     if (decoder->offset_y > decoder->height) {
-      GST_WARNING ("Trying to crop more than the height of the server");
+      GST_WARNING
+          ("Trying to crop more than the height of the server. Setting offset-y to 0.");
+      decoder->offset_y = 0;
     } else {
       decoder->height -= decoder->offset_y;
     }
   }
   if (decoder->rect_width > 0) {
     if (decoder->rect_width > decoder->width) {
-      GST_WARNING ("Trying to crop more than the width of the server");
+      GST_WARNING
+          ("Trying to crop more than the width of the server. Setting width to %u.",
+          decoder->width);
+      decoder->rect_width = decoder->width;
     } else {
       decoder->width = decoder->rect_width;
     }
   }
   if (decoder->rect_height > 0) {
     if (decoder->rect_height > decoder->height) {
-      GST_WARNING ("Trying to crop more than the height of the server");
+      GST_WARNING
+          ("Trying to crop more than the height of the server. Setting height to %u.",
+          decoder->height);
+      decoder->rect_height = decoder->height;
     } else {
       decoder->height = decoder->rect_height;
     }
