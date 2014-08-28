@@ -202,6 +202,7 @@ gst_raw_parse_reset (GstRawParse * rp)
 {
   rp->n_frames = 0;
   rp->discont = TRUE;
+  rp->negotiated = FALSE;
 
   gst_segment_init (&rp->segment, GST_FORMAT_TIME);
   gst_adapter_clear (rp->adapter);
