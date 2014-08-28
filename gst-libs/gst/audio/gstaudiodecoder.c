@@ -2183,7 +2183,7 @@ gst_audio_decoder_do_seek (GstAudioDecoder * dec, GstEvent * event)
     return FALSE;
   }
 
-  if (end_type != GST_SEEK_TYPE_NONE ||
+  if ((end_type != GST_SEEK_TYPE_SET && end_type != GST_SEEK_TYPE_NONE) ||
       (end_type == GST_SEEK_TYPE_SET && end_time != GST_CLOCK_TIME_NONE)) {
     GST_DEBUG_OBJECT (dec, "unsupported seek: end time");
     return FALSE;
