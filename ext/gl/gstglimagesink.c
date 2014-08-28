@@ -445,6 +445,7 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONTEXT:
       g_value_set_object (value, glimage_sink->context);
+      break;
     case PROP_OTHER_CONTEXT:
       g_value_set_object (value, glimage_sink->other_context);
       break;
