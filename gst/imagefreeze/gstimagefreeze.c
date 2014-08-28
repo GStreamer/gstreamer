@@ -669,14 +669,9 @@ gst_image_freeze_sink_chain (GstPad * pad, GstObject * parent,
 {
   GstImageFreeze *self = GST_IMAGE_FREEZE (parent);
 
-  g_mutex_lock (&self->lock);
-  if (self->buffer) {
-    GST_DEBUG_OBJECT (pad, "Already have a buffer, dropping");
-    gst_buffer_unref (buffer);
-    g_mutex_unlock (&self->lock);
-    return GST_FLOW_EOS;
-  }
+  g_return_val_if_fail (self->buffer == NULL, GST_FLOW_ERROR);
 
+  g_mutex_lock (&self->lock);
   self->buffer = buffer;
 
   gst_pad_start_task (self->srcpad, (GstTaskFunction) gst_image_freeze_src_loop,
