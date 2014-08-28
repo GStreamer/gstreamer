@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_convert_bin_debug);
 
 #define parent_class gst_play_sink_convert_bin_parent_class
 
-static gboolean gst_play_sink_convert_bin_sink_setcaps (GstPlaySinkConvertBin *
+static void gst_play_sink_convert_bin_sink_setcaps (GstPlaySinkConvertBin *
     self, GstCaps * caps);
 
 G_DEFINE_TYPE (GstPlaySinkConvertBin, gst_play_sink_convert_bin, GST_TYPE_BIN);
@@ -250,7 +250,7 @@ gst_play_sink_convert_bin_sink_event (GstPad * pad, GstObject * parent,
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_play_sink_convert_bin_sink_setcaps (self, caps);
+      gst_play_sink_convert_bin_sink_setcaps (self, caps);
       break;
     }
     default:
@@ -283,7 +283,7 @@ unblock_proxypad (GstPlaySinkConvertBin * self)
   }
 }
 
-static gboolean
+static void
 gst_play_sink_convert_bin_sink_setcaps (GstPlaySinkConvertBin * self,
     GstCaps * caps)
 {
@@ -292,7 +292,8 @@ gst_play_sink_convert_bin_sink_setcaps (GstPlaySinkConvertBin * self,
   gboolean reconfigure = FALSE;
   gboolean raw;
 
-  GST_DEBUG_OBJECT (self, "setcaps");
+  GST_DEBUG_OBJECT (self, "Setting sink caps %" GST_PTR_FORMAT, caps);
+
   GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
@@ -338,10 +339,6 @@ gst_play_sink_convert_bin_sink_setcaps (GstPlaySinkConvertBin * self,
   }
 
   GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
-
-  GST_DEBUG_OBJECT (self, "Setting sink caps %" GST_PTR_FORMAT, caps);
-
-  return TRUE;
 }
 
 #define GST_PLAY_SINK_CONVERT_BIN_FILTER_CAPS(filter,caps) G_STMT_START {     \
