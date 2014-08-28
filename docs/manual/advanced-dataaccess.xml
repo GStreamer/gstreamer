@@ -311,7 +311,6 @@ main (gint   argc,
         the sink element, unblock the source pads and set the pipeline to
         the playing state. You will see that exactly the requested
         region is played by the sink before it goes to EOS.
-        What follows
       </para>
       <para>
         What follows is an example application that loosly follows this
