@@ -1008,6 +1008,8 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
 
   if (GST_BUFFER_DTS_IS_VALID (buffer))
     dts = GST_BUFFER_DTS (buffer) / GST_MSECOND;
+  else if (GST_BUFFER_PTS_IS_VALID (buffer))
+    dts = GST_BUFFER_PTS (buffer) / GST_MSECOND;
   else
     dts = cpad->last_timestamp / GST_MSECOND;
 
