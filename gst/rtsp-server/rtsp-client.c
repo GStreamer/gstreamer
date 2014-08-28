@@ -59,6 +59,7 @@ struct _GstRTSPClientPrivate
 {
   GMutex lock;                  /* protects everything else */
   GMutex send_lock;
+  GMutex watch_lock;
   GstRTSPConnection *connection;
   GstRTSPWatch *watch;
   GMainContext *watch_context;
@@ -278,6 +279,7 @@ gst_rtsp_client_init (GstRTSPClient * client)
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->send_lock);
+  g_mutex_init (&priv->watch_lock);
   priv->close_seq = 0;
   priv->drop_backlog = DEFAULT_DROP_BACKLOG;
 }
@@ -406,6 +408,7 @@ gst_rtsp_client_finalize (GObject * obj)
   g_free (priv->server_ip);
   g_mutex_clear (&priv->lock);
   g_mutex_clear (&priv->send_lock);
+  g_mutex_clear (&priv->watch_lock);
 
   G_OBJECT_CLASS (gst_rtsp_client_parent_class)->finalize (obj);
 }
@@ -3164,7 +3167,9 @@ closed (GstRTSPWatch * watch, gpointer user_data)
   }
 
   gst_rtsp_watch_set_flushing (watch, TRUE);
+  g_mutex_lock (&priv->watch_lock);
   gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
+  g_mutex_unlock (&priv->watch_lock);
 
   return GST_RTSP_OK;
 }
@@ -3284,6 +3289,7 @@ handle_tunnel (GstRTSPClient * client)
 
     opriv = oclient->priv;
 
+    g_mutex_lock (&opriv->watch_lock);
     if (opriv->watch == NULL)
       goto tunnel_closed;
 
@@ -3293,6 +3299,7 @@ handle_tunnel (GstRTSPClient * client)
     gst_rtsp_connection_do_tunnel (opriv->connection, priv->connection);
     gst_rtsp_watch_reset (priv->watch);
     gst_rtsp_watch_reset (opriv->watch);
+    g_mutex_unlock (&opriv->watch_lock);
     g_object_unref (oclient);
 
     /* the old client owns the tunnel now, the new one will be freed */
@@ -3312,6 +3319,7 @@ no_tunnelid:
 tunnel_closed:
   {
     GST_ERROR ("client %p: tunnel session %s was closed", client, tunnelid);
+    g_mutex_unlock (&opriv->watch_lock);
     g_object_unref (oclient);
     return FALSE;
   }
