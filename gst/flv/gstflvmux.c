@@ -1301,6 +1301,7 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad, GstBuffer * buffer)
 {
   GstBuffer *tag;
   GstFlowReturn ret;
+  GstClockTime dts = GST_BUFFER_DTS (buffer);
 
   /* clipping function arranged for running_time */
 
@@ -1313,8 +1314,9 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad, GstBuffer * buffer)
 
   ret = gst_flv_mux_push (mux, tag);
 
-  if (ret == GST_FLOW_OK && GST_BUFFER_DTS_IS_VALID (tag))
-    cpad->last_timestamp = GST_BUFFER_DTS (tag);
+  if (ret == GST_FLOW_OK && GST_CLOCK_TIME_IS_VALID (dts))
+    cpad->last_timestamp = dts;
+
 
   return ret;
 }
