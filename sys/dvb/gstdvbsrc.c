@@ -741,8 +741,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   /* Additional ISDB-T properties */
 
-  /* FIXME: bitmask, double check range, is 1 - 7, allowed
-     values are 0x1 0x2 0x3 |-ables */
+  /* Valid values are 0x1 0x2 0x4 |-ables */
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYER_ENABLED,
       g_param_spec_uint ("isdbt-layer-enabled",
