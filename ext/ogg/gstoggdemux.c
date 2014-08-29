@@ -4186,7 +4186,7 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
       segment.start = start;
       segment.stop = chain->segment_stop;
       segment.time = chain->begin_time;
-      segment.base = chain->begin_time;
+      segment.base += chain->begin_time;
       event = gst_event_new_segment (&segment);
       gst_event_set_seqnum (event, ogg->seqnum);
 
