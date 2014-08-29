@@ -814,13 +814,8 @@ gst_ass_render_setcaps_video (GstPad * pad, GstAssRender * render,
     overlay_caps = gst_caps_copy (caps);
 
     f = gst_caps_get_features (overlay_caps, 0);
-    if (f == NULL) {
-      f = gst_caps_features_new
-          (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
-    } else {
-      gst_caps_features_add (f,
-          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-    }
+    gst_caps_features_add (f,
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
 
     ret = gst_pad_peer_query_accept_caps (render->srcpad, overlay_caps);
     GST_DEBUG_OBJECT (render, "Downstream accepts the overlay meta: %d", ret);
