@@ -2141,6 +2141,24 @@ default_frame_sizes:
 }
 
 static gboolean
+gst_v4l2_object_get_interlace (int field, gboolean * interlaced)
+{
+  switch (field) {
+    case V4L2_FIELD_ANY:
+    case V4L2_FIELD_NONE:
+      *interlaced = FALSE;
+      return TRUE;
+    case V4L2_FIELD_INTERLACED:
+    case V4L2_FIELD_INTERLACED_TB:
+    case V4L2_FIELD_INTERLACED_BT:
+      *interlaced = TRUE;
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
+static gboolean
 gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
     guint32 pixelformat, gint * width, gint * height, gboolean * interlaced)
 {
@@ -2169,7 +2187,8 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   fmt.fmt.pix.field = V4L2_FIELD_NONE;
 
   r = v4l2_ioctl (fd, VIDIOC_TRY_FMT, &fmt);
-  if (r < 0 && errno == EINVAL) {
+  if ((r < 0 && errno == EINVAL) ||
+      !gst_v4l2_object_get_interlace (fmt.fmt.pix.field, interlaced)) {
     /* try again with interlaced video */
     memset (&fmt, 0, sizeof (fmt));
     fmt.type = v4l2object->type;
@@ -2202,7 +2221,8 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
     fmt.fmt.pix.field = V4L2_FIELD_NONE;
 
     r = v4l2_ioctl (fd, VIDIOC_S_FMT, &fmt);
-    if (r < 0 && errno == EINVAL) {
+    if ((r < 0 && errno == EINVAL) ||
+        !gst_v4l2_object_get_interlace (fmt.fmt.pix.field, interlaced)) {
       /* try again with interlaced video */
       memset (&fmt, 0, sizeof (fmt));
       fmt.type = v4l2object->type;
@@ -2223,21 +2243,11 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   *width = fmt.fmt.pix.width;
   *height = fmt.fmt.pix.height;
 
-  switch (fmt.fmt.pix.field) {
-    case V4L2_FIELD_ANY:
-    case V4L2_FIELD_NONE:
-      *interlaced = FALSE;
-      break;
-    case V4L2_FIELD_INTERLACED:
-    case V4L2_FIELD_INTERLACED_TB:
-    case V4L2_FIELD_INTERLACED_BT:
-      *interlaced = TRUE;
-      break;
-    default:
-      GST_WARNING_OBJECT (v4l2object->element,
-          "Unsupported field type for %" GST_FOURCC_FORMAT "@%ux%u",
-          GST_FOURCC_ARGS (pixelformat), *width, *height);
-      goto error;
+  if (!gst_v4l2_object_get_interlace (fmt.fmt.pix.field, interlaced)) {
+    GST_WARNING_OBJECT (v4l2object->element,
+        "Unsupported field type for %" GST_FOURCC_FORMAT "@%ux%u: %u",
+        GST_FOURCC_ARGS (pixelformat), *width, *height, fmt.fmt.pix.field);
+    goto error;
   }
 
   ret = TRUE;
