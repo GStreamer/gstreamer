@@ -525,6 +525,7 @@ static gboolean gst_dvbsrc_tune_fe (GstDvbSrc * object);
 
 static void gst_dvbsrc_set_pes_filters (GstDvbSrc * object);
 static void gst_dvbsrc_unset_pes_filters (GstDvbSrc * object);
+static gboolean gst_dvbsrc_is_valid_modulation (guint delsys, guint mod);
 
 /**
  * This loop should be safe enough considering:
@@ -1965,6 +1966,24 @@ gst_dvbsrc_is_seekable (GstBaseSrc * bsrc)
 }
 
 static gboolean
+gst_dvbsrc_is_valid_modulation (guint delsys, guint mod)
+{
+  /* FIXME: check valid modulations for other broadcast standards */
+  switch (mod) {
+    case SYS_ISDBT:
+      if (mod == QAM_AUTO || mod == QPSK || mod == QAM_16 ||
+          mod == QAM_64 || mod == DQPSK)
+        return TRUE;
+      break;
+    default:
+      GST_FIXME ("No delsys/modulation sanity checks implemented for this "
+          "delivery system");
+      return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
 gst_dvbsrc_get_size (GstBaseSrc * src, guint64 * size)
 {
   return FALSE;
@@ -2243,6 +2262,12 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
   /* first 3 entries are reserved */
   n = 3;
 
+  /**
+   * We are not dropping out but issuing a warning in case of wrong
+   * parameter combinations as this behavior should be mandated by the
+   * driver. Worst case scenario it will just fail at tuning.
+   */
+
   switch (object->delsys) {
     case SYS_DVBS:
     case SYS_DVBS2:
@@ -2336,10 +2361,30 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
       set_prop (props->props, &n, DTV_MODULATION, object->modulation);
       break;
     case SYS_ISDBT:
-      /* FIXME: This works but further parameter sanity checking
-       * can be done for some property combinatios. This is still
-       * safe anyway, as the current worst case scenario is just
-       * a fail at tuning/locking */
+
+      if (object->isdbt_partial_reception == 1 &&
+          object->isdbt_layera_segment_count != 1) {
+        GST_WARNING_OBJECT (object, "Wrong ISDB-T parameter combination: "
+            "partial reception is set but layer A segment count is not 1");
+      }
+
+      if (!object->isdbt_sound_broadcasting) {
+        GST_INFO_OBJECT (object, "ISDB-T sound broadcasting is not set. "
+            "Driver will likely ignore values set for isdbt-sb-subchannel-id, "
+            "isdbt-sb-segment-idx and isdbt-sb-segment-count");
+      }
+
+      if (object->isdbt_layerc_modulation == DQPSK &&
+          object->isdbt_layerb_modulation != DQPSK) {
+        GST_WARNING_OBJECT (object, "Wrong ISDB-T parameter combination: "
+            "layer C modulation is DQPSK but layer B modulation is different");
+      }
+
+      if (object->bandwidth != 6000000) {
+        GST_WARNING_OBJECT (object, "Wrong ISDB-T parameter value: bandwidth "
+            "is %d but only 6 MHz is allowed", object->bandwidth);
+      }
+
       GST_INFO_OBJECT (object, "Tuning ISDB-T to %d", freq);
       set_prop (props->props, &n, DTV_BANDWIDTH_HZ, object->bandwidth);
       set_prop (props->props, &n, DTV_GUARD_INTERVAL, object->guard_interval);
@@ -2385,6 +2430,11 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
     default:
       GST_ERROR_OBJECT (object, "Unknown frontend type %u", object->delsys);
       return FALSE;
+  }
+
+  if (!gst_dvbsrc_is_valid_modulation (object->delsys, object->modulation)) {
+    GST_WARNING_OBJECT (object,
+        "Attempting an invalid modulation/delsys combination");
   }
 
   set_prop (props->props, &n, DTV_TUNE, 0);
