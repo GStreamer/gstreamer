@@ -49,11 +49,14 @@
  * |[
  * gst-launch-1.0 filesrc location=file.mp3 ! decodebin ! audioconvert ! "audio/x-raw,channels=2" ! deinterleave name=d  interleave name=i ! audioconvert ! wavenc ! filesink location=test.wav    d.src_0 ! queue ! audioconvert ! i.sink_1    d.src_1 ! queue ! audioconvert ! i.sink_0
  * ]| Decodes and deinterleaves a Stereo MP3 file into separate channels and
- * then interleaves the channels again to a WAV file with the channel with the
- * channels exchanged.
+ * then interleaves the channels again to a WAV file with the channels
+ * exchanged.
  * |[
- * gst-launch-1.0 interleave name=i ! audioconvert ! wavenc ! filesink location=file.wav  filesrc location=file1.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=1" ! queue ! i.sink_0   filesrc location=file2.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=1" ! queue ! i.sink_1
- * ]| Interleaves two Mono WAV files to a single Stereo WAV file.
+ * gst-launch-1.0 interleave name=i ! audioconvert ! wavenc ! filesink location=file.wav  filesrc location=file1.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=1,channel-mask=(bitmask)0x1" ! queue ! i.sink_0   filesrc location=file2.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=1,channel-mask=(bitmask)0x2" ! queue ! i.sink_1
+ * ]| Interleaves two Mono WAV files to a single Stereo WAV file. Having
+ * channel-masks defined in the sink pads ensures a sane mapping of the mono
+ * streams into the stereo stream. NOTE: the proper way to map channels in
+ * code is by using the channel-positions property of the interleave element.
  * </refsect2>
  */
 
