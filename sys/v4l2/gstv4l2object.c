@@ -2171,6 +2171,8 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   r = v4l2_ioctl (fd, VIDIOC_TRY_FMT, &fmt);
   if (r < 0 && errno == EINVAL) {
     /* try again with interlaced video */
+    memset (&fmt, 0, sizeof (fmt));
+    fmt.type = v4l2object->type;
     fmt.fmt.pix.width = *width;
     fmt.fmt.pix.height = *height;
     fmt.fmt.pix.pixelformat = pixelformat;
@@ -2192,16 +2194,22 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
     GST_LOG_OBJECT (v4l2object->element,
         "Failed to probe size limit with VIDIOC_TRY_FMT, trying VIDIOC_S_FMT");
 
+    memset (&fmt, 0, sizeof (fmt));
+    fmt.type = v4l2object->type;
     fmt.fmt.pix.width = *width;
     fmt.fmt.pix.height = *height;
+    fmt.fmt.pix.pixelformat = pixelformat;
+    fmt.fmt.pix.field = V4L2_FIELD_NONE;
 
     r = v4l2_ioctl (fd, VIDIOC_S_FMT, &fmt);
     if (r < 0 && errno == EINVAL) {
-      /* try again with progressive video */
+      /* try again with interlaced video */
+      memset (&fmt, 0, sizeof (fmt));
+      fmt.type = v4l2object->type;
       fmt.fmt.pix.width = *width;
       fmt.fmt.pix.height = *height;
       fmt.fmt.pix.pixelformat = pixelformat;
-      fmt.fmt.pix.field = V4L2_FIELD_NONE;
+      fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
       r = v4l2_ioctl (fd, VIDIOC_S_FMT, &fmt);
     }
 
