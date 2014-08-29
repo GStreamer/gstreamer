@@ -86,6 +86,7 @@ struct _GstDashDemuxStream
   GstPad *src_srcpad;
   GMutex fragment_download_lock;
   GCond fragment_download_cond;
+  gboolean download_finished;
   GstMediaFragmentInfo current_fragment;
   gboolean starting_fragment;
   gint64 download_start_time;
