@@ -307,6 +307,10 @@ gst_dvbsrc_modulation_get_type (void)
     {VSB_8, "8VSB", "8vsb"},
     {VSB_16, "16VSB", "16vsb"},
     {PSK_8, "8PSK", "8psk"},
+    {APSK_16, "16APSK", "16apsk"},
+    {APSK_32, "32APSK", "32apsk"},
+    {DQPSK, "DQPSK", "dqpsk"},
+    {QAM_4_NR, "QAM 4 NR", "qam-4-nr"},
     {0, NULL, NULL},
   };
 
