@@ -348,8 +348,7 @@ gst_wavparse_time_to_bytepos (GstWavParse * wav, gint64 ts, gint64 * bytepos)
     *bytepos = gst_util_uint64_scale_ceil (ts, (guint64) wav->bps, GST_SECOND);
     return TRUE;
   } else if (wav->fact) {
-    guint64 bps =
-        gst_util_uint64_scale_int (wav->datasize, wav->rate, wav->fact);
+    guint64 bps = gst_util_uint64_scale (wav->datasize, wav->rate, wav->fact);
     *bytepos = gst_util_uint64_scale_ceil (ts, bps, GST_SECOND);
     return TRUE;
   }
@@ -697,7 +696,7 @@ gst_wavparse_calculate_duration (GstWavParse * wav)
     return TRUE;
   } else if (wav->fact) {
     wav->duration =
-        gst_util_uint64_scale_int_ceil (GST_SECOND, wav->fact, wav->rate);
+        gst_util_uint64_scale_ceil (GST_SECOND, wav->fact, wav->rate);
     GST_INFO_OBJECT (wav, "Got duration (fact) %" GST_TIME_FORMAT,
         GST_TIME_ARGS (wav->duration));
     return TRUE;
