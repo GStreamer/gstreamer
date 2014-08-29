@@ -1260,10 +1260,13 @@ gst_wavparse_stream_headers (GstWavParse * wav)
      */
     switch (tag) {
       case GST_RIFF_TAG_data:{
+        guint64 size64;
+
         GST_DEBUG_OBJECT (wav, "Got 'data' TAG, size : %u", size);
+        size64 = size;
         if (wav->ignore_length) {
           GST_DEBUG_OBJECT (wav, "Ignoring length");
-          size = 0;
+          size64 = 0;
         }
         if (wav->streaming) {
           gst_adapter_flush (wav->adapter, 8);
@@ -1274,27 +1277,27 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         wav->offset += 8;
         wav->datastart = wav->offset;
         /* use size from ds64 chunk if available */
-        if (size == -1 && wav->datasize > 0) {
+        if (size64 == -1 && wav->datasize > 0) {
           GST_DEBUG_OBJECT (wav, "Using ds64 datasize");
-          size = wav->datasize;
+          size64 = wav->datasize;
         }
         /* If size is zero, then the data chunk probably actually extends to
            the end of the file */
-        if (size == 0 && upstream_size) {
-          size = upstream_size - wav->datastart;
+        if (size64 == 0 && upstream_size) {
+          size64 = upstream_size - wav->datastart;
         }
         /* Or the file might be truncated */
         else if (upstream_size) {
-          size = MIN (size, (upstream_size - wav->datastart));
+          size64 = MIN (size64, (upstream_size - wav->datastart));
         }
-        wav->datasize = (guint64) size;
-        wav->dataleft = (guint64) size;
-        wav->end_offset = size + wav->datastart;
+        wav->datasize = size64;
+        wav->dataleft = size64;
+        wav->end_offset = size64 + wav->datastart;
         if (!wav->streaming) {
           /* We will continue parsing tags 'till end */
-          wav->offset += size;
+          wav->offset += size64;
         }
-        GST_DEBUG_OBJECT (wav, "datasize = %u", size);
+        GST_DEBUG_OBJECT (wav, "datasize = %" G_GUINT64_FORMAT, size64);
         break;
       }
       case GST_RIFF_TAG_fact:{
