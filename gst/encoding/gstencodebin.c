@@ -1321,7 +1321,6 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   GST_LOG ("Adding encoder");
   sgroup->encoder = _get_encoder (ebin, sprof);
   if (sgroup->encoder != NULL) {
-    last = sgroup->encoder;
     gst_bin_add ((GstBin *) ebin, sgroup->encoder);
     tosync = g_list_append (tosync, sgroup->encoder);
 
