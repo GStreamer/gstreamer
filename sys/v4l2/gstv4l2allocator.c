@@ -637,20 +637,20 @@ gst_v4l2_allocator_new (GstObject * parent, gint video_fd,
   flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, USERPTR);
   flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, DMABUF);
 
+
+  if (flags == 0) {
+    /* Drivers not ported from videobuf to videbuf2 don't allow freeing buffers
+     * using REQBUFS(0). This is a workaround to still support these drivers,
+     * which are known to have MMAP support. */
+    GST_WARNING_OBJECT (allocator, "Could not probe supported memory type, "
+        "assuming MMAP is supported, this is expected for older drivers not "
+        " yet ported to videobuf2 framework");
+    flags = GST_V4L2_ALLOCATOR_FLAG_MMAP_REQBUFS;
+  }
+
   GST_OBJECT_FLAG_SET (allocator, flags);
 
-  if (flags == 0)
-    goto not_supported;
-
   return allocator;
-
-not_supported:
-  {
-    GST_ERROR_OBJECT (allocator,
-        "No memory model supported by GStreamer for this device");
-    g_object_unref (allocator);
-    return NULL;
-  }
 }
 
 guint
@@ -766,8 +766,10 @@ gst_v4l2_allocator_stop (GstV4l2Allocator * allocator)
       gst_v4l2_memory_group_free (group);
   }
 
+  /* Not all drivers support rebufs(0), so warn only */
   if (v4l2_ioctl (allocator->video_fd, VIDIOC_REQBUFS, &breq) < 0)
-    goto reqbufs_failed;
+    GST_WARNING_OBJECT (allocator,
+        "error releasing buffers buffers: %s", g_strerror (errno));
 
   allocator->count = 0;
 
@@ -776,14 +778,6 @@ gst_v4l2_allocator_stop (GstV4l2Allocator * allocator)
 done:
   GST_OBJECT_UNLOCK (allocator);
   return ret;
-
-reqbufs_failed:
-  {
-    GST_ERROR_OBJECT (allocator,
-        "error releasing buffers buffers: %s", g_strerror (errno));
-    ret = GST_V4L2_ERROR;
-    goto done;
-  }
 }
 
 GstV4l2MemoryGroup *
