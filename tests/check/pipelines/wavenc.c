@@ -110,8 +110,8 @@ make_n_channel_wav (const gint channels, const GValueArray * arr)
   for (i = 0; i < channels; i++) {
     audiotestsrc[i] = gst_element_factory_make ("audiotestsrc", NULL);
     fail_unless (audiotestsrc[i] != NULL);
-    g_object_set (G_OBJECT (audiotestsrc[i]), "wave", 0, "freq", 440.0 * i,
-        "num-buffers", 100, NULL);
+    g_object_set (G_OBJECT (audiotestsrc[i]), "wave", 0, "freq",
+        440.0 * (i + 1), "num-buffers", 100, NULL);
     gst_bin_add (GST_BIN (pipeline), audiotestsrc[i]);
     fail_unless (gst_element_link (audiotestsrc[i], interleave));
   }
