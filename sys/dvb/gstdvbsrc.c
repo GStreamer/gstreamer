@@ -682,7 +682,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_MODULATION,
       g_param_spec_enum ("modulation", "modulation",
-          "(DVB-T and DVB-C) Modulation type",
+          "(DVB-T/T2/C/S2, TURBO and ATSC) Modulation type",
           GST_TYPE_DVBSRC_MODULATION, DEFAULT_MODULATION, G_PARAM_READWRITE));
 
   /* FIXME: property should be named 'transmission-mode' */
