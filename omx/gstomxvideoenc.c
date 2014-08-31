@@ -29,6 +29,11 @@
 #include "gstomxvideo.h"
 #include "gstomxvideoenc.h"
 
+#ifdef USE_OMX_TARGET_RPI
+#include <OMX_Broadcom.h>
+#include <OMX_Index.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_omx_video_enc_debug_category);
 #define GST_CAT_DEFAULT gst_omx_video_enc_debug_category
 
@@ -1068,6 +1073,44 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   if (gst_omx_port_update_port_definition (self->enc_in_port,
           &port_def) != OMX_ErrorNone)
     return FALSE;
+
+#ifdef USE_OMX_TARGET_RPI
+  /* aspect ratio */
+  {
+    OMX_ERRORTYPE err;
+    OMX_CONFIG_POINTTYPE aspect_ratio_param;
+
+    GST_OMX_INIT_STRUCT (&aspect_ratio_param);
+    aspect_ratio_param.nPortIndex = self->enc_out_port->index;
+
+    err = gst_omx_component_get_parameter (self->enc,
+        OMX_IndexParamBrcmPixelAspectRatio, &aspect_ratio_param);
+
+    if (err == OMX_ErrorNone) {
+
+      aspect_ratio_param.nX = info->par_n;
+      aspect_ratio_param.nY = info->par_d;
+
+      err =
+          gst_omx_component_set_parameter (self->enc,
+          OMX_IndexParamBrcmPixelAspectRatio, &aspect_ratio_param);
+
+      if (err == OMX_ErrorUnsupportedIndex) {
+        GST_WARNING_OBJECT (self,
+            "Setting aspect ratio parameters not supported by the component");
+      } else if (err == OMX_ErrorUnsupportedSetting) {
+        GST_WARNING_OBJECT (self,
+            "Setting aspect ratio %u %u not supported by the component",
+            aspect_ratio_param.nX, aspect_ratio_param.nY);
+      } else if (err != OMX_ErrorNone) {
+        GST_ERROR_OBJECT (self,
+            "Failed to set aspect ratio: %s (0x%08x)",
+            gst_omx_error_to_string (err), err);
+        return FALSE;
+      }
+    }
+  }
+#endif // USE_OMX_TARGET_RPI
 
   if (klass->set_format) {
     if (!klass->set_format (self, self->enc_in_port, state)) {
