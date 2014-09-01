@@ -174,7 +174,7 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
   GstPad *pad;
 
   pad = self->sinkpad;
-  caps = gst_caps_make_writable (gst_caps_ref (caps));
+  caps = gst_caps_copy (caps);
 
   GST_DEBUG_OBJECT (pad, "Setting caps: %" GST_PTR_FORMAT, caps);
 
@@ -285,7 +285,8 @@ gst_image_freeze_sink_getcaps (GstImageFreeze * self, GstCaps * filter)
     GST_LOG_OBJECT (self, "going to copy");
     ret = gst_caps_copy (templ);
   }
-  gst_caps_unref (templ);
+  if (templ)
+    gst_caps_unref (templ);
   if (filter)
     gst_caps_unref (filter);
 
