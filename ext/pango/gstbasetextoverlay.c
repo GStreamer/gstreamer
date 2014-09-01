@@ -821,10 +821,10 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
   overlay->width = GST_VIDEO_INFO_WIDTH (&info);
   overlay->height = GST_VIDEO_INFO_HEIGHT (&info);
 
-  GST_BASE_TEXT_OVERLAY_LOCK (overlay);
-  g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
   ret = gst_base_text_overlay_negotiate (overlay, caps);
 
+  GST_BASE_TEXT_OVERLAY_LOCK (overlay);
+  g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
   if (!overlay->attach_compo_to_buffer &&
       !gst_base_text_overlay_can_handle_caps (caps)) {
     GST_DEBUG_OBJECT (overlay, "unsupported caps %" GST_PTR_FORMAT, caps);
