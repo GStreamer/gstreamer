@@ -310,9 +310,11 @@ static void gst_base_text_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_base_text_overlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
 static void
 gst_base_text_overlay_adjust_values_with_fontdesc (GstBaseTextOverlay * overlay,
     PangoFontDescription * desc);
+static gboolean gst_base_text_overlay_can_handle_caps (GstCaps * incaps);
 
 GType
 gst_base_text_overlay_get_type (void)
@@ -717,6 +719,8 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   gboolean caps_has_meta = TRUE;
   gboolean ret;
   GstCapsFeatures *f;
+  GstCaps *original_caps;
+  gboolean original_has_meta = FALSE;
 
   GST_DEBUG_OBJECT (overlay, "performing negotiation");
 
@@ -727,6 +731,8 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   if (!caps || gst_caps_is_empty (caps))
     goto no_format;
+
+  original_caps = caps;
 
   /* Try to use the overlay meta if possible */
   f = gst_caps_get_features (caps, 0);
@@ -763,7 +769,8 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
       gst_caps_unref (overlay_caps);
       caps_has_meta = FALSE;
     }
-
+  } else {
+    original_has_meta = TRUE;
   }
   GST_DEBUG_OBJECT (overlay, "Using caps %" GST_PTR_FORMAT, caps);
   ret = gst_pad_set_caps (overlay->srcpad, caps);
@@ -786,6 +793,20 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   } else {
     overlay->attach_compo_to_buffer = FALSE;
   }
+
+  if (original_caps && !original_has_meta && !attach) {
+    if (caps_has_meta) {
+      /* Some elements (fakesink) claim to accept the meta on caps but won't
+         put it in the allocation query result, this leads below
+         check to fail. Prevent this by removing the meta from caps */
+      gst_caps_unref (caps);
+      caps = gst_caps_ref (original_caps);
+      ret = gst_pad_set_caps (overlay->srcpad, caps);
+      if (ret && !gst_base_text_overlay_can_handle_caps (caps))
+        ret = FALSE;
+    }
+  }
+
   gst_caps_unref (caps);
 
   return ret;
