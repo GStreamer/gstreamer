@@ -200,105 +200,49 @@ gst_zebra_stripe_stop (GstBaseTransform * trans)
 }
 
 static GstFlowReturn
-gst_zebra_stripe_transform_frame_ip_planarY (GstZebraStripe * zebrastripe,
+gst_zebra_stripe_transform_frame_ip (GstVideoFilter * filter,
     GstVideoFrame * frame)
 {
-  int width = frame->info.width;
-  int height = frame->info.height;
-  int i, j;
-  int threshold = zebrastripe->y_threshold;
-  int t = zebrastripe->t;
-
-  for (j = 0; j < height; j++) {
-    guint8 *data = (guint8 *) frame->data[0] + frame->info.stride[0] * j;
-    for (i = 0; i < width; i++) {
-      if (data[i] >= threshold) {
-        if ((i + j + t) & 0x4)
-          data[i] = 16;
-      }
-    }
-  }
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_zebra_stripe_transform_frame_ip_YUY2 (GstZebraStripe * zebrastripe,
-    GstVideoFrame * frame)
-{
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (filter);
   int width = frame->info.width;
   int height = frame->info.height;
   int i, j;
   int threshold = zebrastripe->y_threshold;
   int t = zebrastripe->t;
   int offset = 0;
-
-  if (frame->info.finfo->format == GST_VIDEO_FORMAT_UYVY) {
-    offset = 1;
-  }
-
-  for (j = 0; j < height; j++) {
-    guint8 *data =
-        (guint8 *) frame->data[0] + frame->info.stride[0] * j + offset;
-    for (i = 0; i < width; i++) {
-      if (data[2 * i] >= threshold) {
-        if ((i + j + t) & 0x4)
-          data[2 * i] = 16;
-      }
-    }
-  }
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_zebra_stripe_transform_frame_ip_AYUV (GstZebraStripe * zebrastripe,
-    GstVideoFrame * frame)
-{
-  int width = frame->info.width;
-  int height = frame->info.height;
-  int i, j;
-  int threshold = zebrastripe->y_threshold;
-  int t = zebrastripe->t;
-
-  for (j = 0; j < height; j++) {
-    guint8 *data = (guint8 *) frame->data[0] + frame->info.stride[0] * j;
-    for (i = 0; i < width; i++) {
-      if (data[4 * i + 1] >= threshold) {
-        if ((i + j + t) & 0x4)
-          data[4 * i + 1] = 16;
-      }
-    }
-  }
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_zebra_stripe_transform_frame_ip (GstVideoFilter * filter,
-    GstVideoFrame * frame)
-{
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (filter);
+  int pixel_stride = 0, y_position = 0;
 
   GST_DEBUG_OBJECT (zebrastripe, "transform_frame_ip");
   zebrastripe->t++;
+  pixel_stride = GST_VIDEO_FORMAT_INFO_PSTRIDE (frame->info.finfo, 0);
 
   switch (frame->info.finfo->format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
-      gst_zebra_stripe_transform_frame_ip_planarY (zebrastripe, frame);
-      break;
     case GST_VIDEO_FORMAT_YUY2:
+      break;
     case GST_VIDEO_FORMAT_UYVY:
-      gst_zebra_stripe_transform_frame_ip_YUY2 (zebrastripe, frame);
+      offset = 1;
       break;
     case GST_VIDEO_FORMAT_AYUV:
-      gst_zebra_stripe_transform_frame_ip_AYUV (zebrastripe, frame);
+      y_position = 1;
       break;
     default:
       g_assert_not_reached ();
   }
 
+  for (j = 0; j < height; j++) {
+    guint8 *data =
+        (guint8 *) frame->data[0] + frame->info.stride[0] * j + offset;
+    for (i = 0; i < width; i++) {
+      if (data[pixel_stride * i + y_position] >= threshold) {
+        if ((i + j + t) & 0x4)
+          data[pixel_stride * i + y_position] = 16;
+      }
+    }
+  }
 
   return GST_FLOW_OK;
 }
