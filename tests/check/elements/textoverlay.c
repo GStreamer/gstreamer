@@ -109,6 +109,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (UNSUPPORTED_VIDEO_CAPS_TEMPLATE_WITH_FEATURE_STRING)
     );
 
+static GstStaticPadTemplate sinktemplate_any = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 static GstStaticPadTemplate unsupported_video_srctemplate =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -354,6 +359,34 @@ create_text_buffer (const gchar * txt, GstClockTime ts, GstClockTime duration)
   GST_BUFFER_DURATION (buffer) = duration;
 
   return buffer;
+}
+
+static gboolean
+_test_textoverlay_check_caps_has_feature (GstElement * textoverlay,
+    const gchar * padname, const gchar * feature)
+{
+  GstPad *pad;
+  GstCaps *caps;
+  GstCapsFeatures *f;
+  gboolean ret;
+
+  pad = gst_element_get_static_pad (textoverlay, padname);
+  fail_unless (pad != NULL);
+
+  caps = gst_pad_get_current_caps (pad);
+  fail_unless (caps != NULL);
+
+  gst_object_unref (pad);
+
+  f = gst_caps_get_features (caps, 0);
+  if (f != NULL) {
+    ret = gst_caps_features_contains (f, feature);
+  } else {
+    ret = FALSE;
+  }
+
+  gst_caps_unref (caps);
+  return ret;
 }
 
 static void
@@ -648,6 +681,78 @@ GST_START_TEST (test_video_passthrough_with_feature_and_unsupported_caps)
 }
 
 GST_END_TEST;
+
+
+GST_START_TEST (test_video_render_with_any_features_and_no_allocation_meta)
+{
+  GstElement *textoverlay;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *incaps, *outcaps;
+  GstVideoOverlayCompositionMeta *comp_meta;
+
+  textoverlay =
+      setup_textoverlay_with_templates (&video_srctemplate,
+      NULL, &sinktemplate_any, FALSE);
+
+  /* set static text to render */
+  g_object_set (textoverlay, "text", "XLX", NULL);
+
+  fail_unless (gst_element_set_state (textoverlay,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  incaps = create_video_caps (VIDEO_CAPS_STRING);
+  gst_check_setup_events_textoverlay (myvideosrcpad, textoverlay, incaps,
+      GST_FORMAT_TIME, "video");
+  inbuffer = create_black_buffer (incaps);
+  gst_caps_unref (incaps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  GST_BUFFER_DURATION (inbuffer) = GST_SECOND / 10;
+
+  /* take additional ref to keep it alive */
+  gst_buffer_ref (inbuffer);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 2);
+
+  /* pushing gives away one of the two references we have ... */
+  fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_OK);
+
+  /* should have been dropped in favour of a new writable buffer */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  outbuffer = GST_BUFFER_CAST (buffers->data);
+  outcaps = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (outbuffer != inbuffer);
+
+  /* output buffer should have rendered text */
+  fail_if (buffer_is_all_black (outbuffer, outcaps));
+  gst_caps_unref (outcaps);
+
+  /* output buffer should not have the composition meta */
+  comp_meta = gst_buffer_get_video_overlay_composition_meta (outbuffer);
+  fail_unless (comp_meta == NULL);
+
+  fail_unless (GST_BUFFER_TIMESTAMP (outbuffer) == 0);
+  fail_unless (GST_BUFFER_DURATION (outbuffer) == (GST_SECOND / 10));
+
+  /* output caps shouldn't have the composition meta */
+  fail_if (_test_textoverlay_check_caps_has_feature (textoverlay, "src",
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION));
+
+  /* and clean up */
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* cleanup */
+  cleanup_textoverlay (textoverlay);
+  gst_buffer_unref (inbuffer);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_video_render_static_text)
 {
@@ -1043,6 +1148,8 @@ textoverlay_suite (void)
   tcase_add_test (tc_chain, test_video_passthrough_with_feature);
   tcase_add_test (tc_chain,
       test_video_passthrough_with_feature_and_unsupported_caps);
+  tcase_add_test (tc_chain,
+      test_video_render_with_any_features_and_no_allocation_meta);
   tcase_add_test (tc_chain, test_video_render_static_text);
   tcase_add_test (tc_chain, test_render_continuity);
   tcase_add_test (tc_chain, test_video_waits_for_text);
