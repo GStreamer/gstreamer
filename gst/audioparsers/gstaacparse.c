@@ -393,8 +393,10 @@ gst_aac_parse_check_adts_frame (GstAacParse * aacparse,
 
   /* Absolute minimum to perform the ADTS syncword,
      layer and sampling frequency tests */
-  if (G_UNLIKELY (avail < 3))
+  if (G_UNLIKELY (avail < 3)) {
+    *needed_data = 3;
     return FALSE;
+  }
 
   /* Syncword and layer tests */
   if ((data[0] == 0xff) && ((data[1] & 0xf6) == 0xf0)) {
@@ -417,8 +419,10 @@ gst_aac_parse_check_adts_frame (GstAacParse * aacparse,
     crc_size = (data[1] & 0x01) ? 0 : 2;
 
     /* CRC size test */
-    if (*framesize < 7 + crc_size)
+    if (*framesize < 7 + crc_size) {
+      *needed_data = 7 + crc_size;
       return FALSE;
+    }
 
     /* In EOS mode this is enough. No need to examine the data further.
        We also relax the check when we have sync, on the assumption that
@@ -701,8 +705,10 @@ gst_aac_parse_check_loas_frame (GstAacParse * aacparse,
   *needed_data = 0;
 
   /* 3 byte header */
-  if (G_UNLIKELY (avail < 3))
+  if (G_UNLIKELY (avail < 3)) {
+    *needed_data = 3;
     return FALSE;
+  }
 
   if ((data[0] == 0x56) && ((data[1] & 0xe0) == 0xe0)) {
     *framesize = gst_aac_parse_loas_get_frame_len (data);
@@ -1213,8 +1219,9 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
     ret = gst_aac_parse_check_adts_frame (aacparse, map.data, map.size,
         GST_BASE_PARSE_DRAINING (parse), &framesize, &needed_data);
 
-    if (!ret) {
+    if (!ret && needed_data) {
       GST_DEBUG ("buffer didn't contain valid frame");
+      *skipsize = 0;
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse),
           needed_data);
     }
@@ -1225,8 +1232,9 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
     ret = gst_aac_parse_check_loas_frame (aacparse, map.data,
         map.size, GST_BASE_PARSE_DRAINING (parse), &framesize, &needed_data);
 
-    if (!ret) {
+    if (!ret && needed_data) {
       GST_DEBUG ("buffer didn't contain valid frame");
+      *skipsize = 0;
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse),
           needed_data);
     }
