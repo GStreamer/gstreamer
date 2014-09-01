@@ -82,9 +82,6 @@ struct _GstAmcAudioDec
   gboolean drained;
 
   GstFlowReturn downstream_flow_ret;
-
-  /* Output buffers counter */
-  gint n_buffers;
 };
 
 struct _GstAmcAudioDecClass

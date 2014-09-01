@@ -490,7 +490,6 @@ retry:
       buffer_info.flags);
 
   is_eos = ! !(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
-  self->n_buffers++;
 
   if (buffer_info.size > 0) {
     GstAmcAudioDecClass *klass = GST_AMC_AUDIO_DEC_GET_CLASS (self);
@@ -505,16 +504,6 @@ retry:
      */
     if (idx >= self->n_output_buffers)
       goto invalid_buffer_index;
-
-    if (strcmp (klass->codec_info->name, "OMX.google.mp3.decoder") == 0) {
-      /* Google's MP3 decoder outputs garbage in the first output buffer
-       * so we just drop it here */
-      if (self->n_buffers == 1) {
-        GST_DEBUG_OBJECT (self,
-            "Skipping first buffer of Google MP3 decoder output");
-        goto done;
-      }
-    }
 
     if (buffer_info.size % self->info.bpf != 0)
       goto invalid_buffer_size;
@@ -934,7 +923,6 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
       GST_STR_NULL (format_string));
   g_free (format_string);
 
-  self->n_buffers = 0;
   if (!gst_amc_codec_configure (self->codec, format, 0, &err)) {
     GST_ERROR_OBJECT (self, "Failed to configure codec");
     GST_ELEMENT_ERROR_FROM_ERROR (self, err);
