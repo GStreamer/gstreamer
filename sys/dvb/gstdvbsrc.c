@@ -1189,109 +1189,67 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       object->stream_id = g_value_get_int (value);
       break;
     case ARG_DVBSRC_ISDBT_LAYER_ENABLED:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layer_enabled = g_value_get_uint (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_PARTIAL_RECEPTION:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_partial_reception = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_SOUND_BROADCASTING:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_sound_broadcasting = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_SB_SUBCHANNEL_ID:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_sb_subchannel_id = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_SB_SEGMENT_IDX:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_sb_segment_idx = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_SB_SEGMENT_COUNT:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_sb_segment_count = g_value_get_uint (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERA_FEC:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layera_fec = g_value_get_enum (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERA_MODULATION:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layera_modulation = g_value_get_enum (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERA_SEGMENT_COUNT:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layera_segment_count = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERA_TIME_INTERLEAVING:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layera_time_interleaving = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERB_FEC:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layerb_fec = g_value_get_enum (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERB_MODULATION:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layerb_modulation = g_value_get_enum (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERB_SEGMENT_COUNT:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layerb_segment_count = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERB_TIME_INTERLEAVING:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layerb_time_interleaving = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERC_FEC:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layerc_fec = g_value_get_enum (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERC_MODULATION:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layerc_modulation = g_value_get_enum (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERC_SEGMENT_COUNT:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layerc_segment_count = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_ISDBT_LAYERC_TIME_INTERLEAVING:
-      g_mutex_lock (&object->tune_mutex);
       object->isdbt_layerc_time_interleaving = g_value_get_int (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_LNB_SLOF:
-      g_mutex_lock (&object->tune_mutex);
       object->lnb_slof = g_value_get_uint (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_LNB_LOF1:
-      g_mutex_lock (&object->tune_mutex);
       object->lnb_lof1 = g_value_get_uint (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     case ARG_DVBSRC_LNB_LOF2:
-      g_mutex_lock (&object->tune_mutex);
       object->lnb_lof2 = g_value_get_uint (value);
-      g_mutex_unlock (&object->tune_mutex);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1994,11 +1952,8 @@ gst_dvbsrc_do_tune (GstDvbSrc * src)
 {
   /* if we are in paused/playing state tune now, otherwise in ready
    * to paused state change */
-  if (GST_STATE (src) > GST_STATE_READY) {
-    g_mutex_lock (&src->tune_mutex);
+  if (GST_STATE (src) > GST_STATE_READY)
     gst_dvbsrc_tune (src);
-    g_mutex_unlock (&src->tune_mutex);
-  }
 }
 
 static void
@@ -2160,6 +2115,8 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
 
   gst_dvbsrc_unset_pes_filters (object);
 
+  g_mutex_lock (&object->tune_mutex);
+
   gst_poll_fd_init (&fe_fd);
   fe_fd.fd = object->fd_frontend;
   poll_set = gst_poll_new (TRUE);
@@ -2239,6 +2196,7 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   GST_DEBUG_OBJECT (object, "Successfully set frontend tuning params");
 
   gst_poll_free (poll_set);
+  g_mutex_unlock (&object->tune_mutex);
   return TRUE;
 
 fail_with_signal:
@@ -2246,6 +2204,7 @@ fail_with_signal:
 fail:
   GST_WARNING_OBJECT (object, "Could not tune to desired frequency");
   gst_poll_free (poll_set);
+  g_mutex_unlock (&object->tune_mutex);
   return FALSE;
 }
 
