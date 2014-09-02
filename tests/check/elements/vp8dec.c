@@ -59,6 +59,9 @@ setup_vp8dec (const gchar * src_caps_str)
   vp8dec = gst_check_setup_element ("vp8dec");
   fail_unless (vp8dec != NULL);
 
+  g_object_set (vp8enc, "name", "encoder", NULL);
+  g_object_set (vp8dec, "name", "decoder", NULL);
+
   gst_bin_add_many (GST_BIN (bin), vp8enc, vp8dec, NULL);
   fail_unless (gst_element_link_pads (vp8enc, "src", vp8dec, "sink"));
 
@@ -116,6 +119,31 @@ cleanup_vp8dec (GstElement * bin)
   gst_check_teardown_element (bin);
 }
 
+static void
+_gst_vp8_test_check_output_caps (gint width, gint height, gint fps_n,
+    gint fps_d)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+  gint caps_w, caps_h, caps_fpsn, caps_fpsd;
+
+  caps = gst_pad_get_current_caps (sinkpad);
+  fail_unless (caps != NULL);
+  structure = gst_caps_get_structure (caps, 0);
+
+  fail_unless (gst_structure_get_int (structure, "width", &caps_w));
+  fail_unless (gst_structure_get_int (structure, "height", &caps_h));
+  fail_unless (gst_structure_get_fraction (structure, "framerate", &caps_fpsn,
+          &caps_fpsd));
+
+  fail_unless (width == caps_w);
+  fail_unless (height == caps_h);
+  fail_unless (fps_n == caps_fpsn);
+  fail_unless (fps_d == caps_fpsd);
+
+  gst_caps_unref (caps);
+}
+
 GST_START_TEST (test_decode_simple)
 {
   GstElement *bin;
@@ -162,6 +190,65 @@ GST_START_TEST (test_decode_simple)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_decode_caps_change)
+{
+  GstElement *bin;
+  GstBuffer *buffer;
+  GstSegment seg;
+  GstElement *encoder;
+  GstCaps *caps;
+
+  bin =
+      setup_vp8dec
+      ("video/x-raw,format=(string)I420,width=(int)320,height=(int)240,framerate=(fraction)25/1");
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&seg)));
+
+  buffer = gst_buffer_new_and_alloc (320 * 240 + 2 * 160 * 120);
+  gst_buffer_memset (buffer, 0, 0, -1);
+
+  GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (0, GST_SECOND, 25);
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (1, GST_SECOND, 25);
+  fail_unless (gst_pad_push (srcpad, buffer) == GST_FLOW_OK);
+
+  /* at this point, the output caps should be the same as the input */
+  _gst_vp8_test_check_output_caps (320, 240, 25, 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  /* now change the caps */
+  encoder = gst_bin_get_by_name (GST_BIN (bin), "encoder");
+  gst_element_set_state (encoder, GST_STATE_NULL);
+  gst_element_sync_state_with_parent (encoder);
+  gst_object_unref (encoder);
+  caps = gst_caps_from_string
+      ("video/x-raw,format=(string)I420,width=(int)64,"
+      "height=(int)32,framerate=(fraction)30/1");
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&seg)));
+  buffer = gst_buffer_new_and_alloc (64 * 32 + 2 * 32 * 16);
+  gst_buffer_memset (buffer, 0, 0, -1);
+  gst_caps_unref (caps);
+
+  GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (0, GST_SECOND, 30);
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (1, GST_SECOND, 30);
+  fail_unless (gst_pad_push (srcpad, buffer) == GST_FLOW_OK);
+
+  /* at this point, the output caps should be the same as the input */
+  _gst_vp8_test_check_output_caps (64, 32, 30, 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  cleanup_vp8dec (bin);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 vp8dec_suite (void)
 {
@@ -171,6 +258,7 @@ vp8dec_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_decode_simple);
+  tcase_add_test (tc_chain, test_decode_caps_change);
 
   return s;
 }
