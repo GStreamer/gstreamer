@@ -401,6 +401,20 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
 
   best_colorimetry = gst_video_colorimetry_to_string (&(best_info.colorimetry));
   best_chroma = gst_video_chroma_to_string (best_info.chroma_site);
+
+  if (GST_VIDEO_INFO_FPS_N (&mix->info) != GST_VIDEO_INFO_FPS_N (&best_info) ||
+      GST_VIDEO_INFO_FPS_D (&mix->info) != GST_VIDEO_INFO_FPS_D (&best_info)) {
+    if (mix->segment.position != -1) {
+      mix->ts_offset = mix->segment.position - mix->segment.start;
+      mix->nframes = 0;
+    } else {
+      mix->ts_offset += gst_util_uint64_scale_round (mix->nframes,
+          GST_SECOND * GST_VIDEO_INFO_FPS_D (&mix->info),
+          GST_VIDEO_INFO_FPS_N (&mix->info));
+      mix->nframes = 0;
+    }
+  }
+
   mix->info = best_info;
 
   GST_DEBUG_OBJECT (mix,
