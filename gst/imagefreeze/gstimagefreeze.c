@@ -706,8 +706,8 @@ gst_image_freeze_src_loop (GstPad * pad)
     g_mutex_unlock (&self->lock);
     goto pause_task;
   }
-  buffer = gst_buffer_ref (self->buffer);
-  buffer = gst_buffer_make_writable (buffer);
+  buffer = gst_buffer_copy (self->buffer);
+
   g_mutex_unlock (&self->lock);
 
   if (self->need_segment) {
