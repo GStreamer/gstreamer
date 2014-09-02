@@ -507,10 +507,7 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
     gst_buffer_unmap (in2, &map);
   }
 
-  if (GST_VIDEO_INFO_WIDTH (&smpte->vinfo1) !=
-      GST_VIDEO_INFO_WIDTH (&smpte->vinfo2) ||
-      GST_VIDEO_INFO_HEIGHT (&smpte->vinfo1) !=
-      GST_VIDEO_INFO_HEIGHT (&smpte->vinfo2))
+  if (!gst_video_info_is_equal (&smpte->vinfo1, &smpte->vinfo2))
     goto input_formats_do_not_match;
 
   if (smpte->position < smpte->end_position) {
@@ -521,12 +518,7 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
       GstCaps *caps;
       GstSegment segment;
 
-      caps =
-          gst_caps_make_writable (gst_static_caps_get
-          (&gst_smpte_src_template.static_caps));
-      gst_caps_set_simple (caps, "width", G_TYPE_INT, smpte->width, "height",
-          G_TYPE_INT, smpte->height, "framerate", GST_TYPE_FRACTION,
-          smpte->fps_num, smpte->fps_denom, NULL);
+      caps = gst_video_info_to_caps (&smpte->vinfo1);
 
       gst_pad_set_caps (smpte->srcpad, caps);
       gst_caps_unref (caps);
