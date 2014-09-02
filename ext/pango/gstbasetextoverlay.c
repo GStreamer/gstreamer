@@ -89,7 +89,6 @@
  *  - use proper strides and offset for I420
  *  - if text is wider than the video picture, it does not get
  *    clipped properly during blitting (if wrapping is disabled)
- *  - make 'shading_value' a property (or enum:  light/normal/dark/verydark)?
  */
 
 GST_DEBUG_CATEGORY (pango_debug);
@@ -114,9 +113,7 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define DEFAULT_PROP_VERTICAL_RENDER  FALSE
 #define DEFAULT_PROP_COLOR      0xffffffff
 #define DEFAULT_PROP_OUTLINE_COLOR 0xff000000
-
-/* make a property of me */
-#define DEFAULT_SHADING_VALUE    -80
+#define DEFAULT_PROP_SHADING_VALUE    80
 
 #define MINIMUM_OUTLINE_OFFSET 1.0
 #define DEFAULT_SCALE_BASIS    640
@@ -126,6 +123,7 @@ enum
   PROP_0,
   PROP_TEXT,
   PROP_SHADING,
+  PROP_SHADING_VALUE,
   PROP_HALIGNMENT,
   PROP_VALIGNMENT,
   PROP_XPAD,
@@ -403,6 +401,11 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
       g_param_spec_boolean ("shaded-background", "shaded background",
           "Whether to shade the background under the text area",
           DEFAULT_PROP_SHADING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHADING_VALUE,
+      g_param_spec_uint ("shading-value", "background shading value",
+          "Shading value to apply if shaded-background is true", 1, 255,
+          DEFAULT_PROP_SHADING_VALUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGNMENT,
       g_param_spec_enum ("valignment", "vertical alignment",
           "Vertical alignment of the text", GST_TYPE_BASE_TEXT_OVERLAY_VALIGN,
@@ -631,7 +634,7 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   overlay->wrap_mode = DEFAULT_PROP_WRAP_MODE;
 
   overlay->want_shading = DEFAULT_PROP_SHADING;
-  overlay->shading_value = DEFAULT_SHADING_VALUE;
+  overlay->shading_value = DEFAULT_PROP_SHADING_VALUE;
   overlay->silent = DEFAULT_PROP_SILENT;
   overlay->wait_text = DEFAULT_PROP_WAIT_TEXT;
   overlay->auto_adjust_size = DEFAULT_PROP_AUTO_ADJUST_SIZE;
@@ -962,6 +965,9 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
       g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       overlay->need_render = TRUE;
       break;
+    case PROP_SHADING_VALUE:
+      overlay->shading_value = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1032,6 +1038,9 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_OUTLINE_COLOR:
       g_value_set_uint (value, overlay->outline_color);
+      break;
+    case PROP_SHADING_VALUE:
+      g_value_set_uint (value, overlay->shading_value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1551,7 +1560,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
   if (overlay->want_shading)
-    cairo_paint_with_alpha (cr, overlay->shading_value);
+    cairo_paint_with_alpha (cr, -overlay->shading_value);
 
   /* apply transformations */
   cairo_set_matrix (cr, &cairo_matrix);
@@ -1641,7 +1650,7 @@ gst_base_text_overlay_shade_planar_Y (GstBaseTextOverlay * overlay,
 
   for (i = y0; i < y1; ++i) {
     for (j = x0; j < x1; ++j) {
-      gint y = dest_ptr[(i * dest_stride) + j] + overlay->shading_value;
+      gint y = dest_ptr[(i * dest_stride) + j] - overlay->shading_value;
 
       dest_ptr[(i * dest_stride) + j] = CLAMP (y, 0, 255);
     }
@@ -1676,7 +1685,7 @@ gst_base_text_overlay_shade_packed_Y (GstBaseTextOverlay * overlay,
       gint y_pos;
 
       y_pos = (i * dest_stride) + j * pixel_stride;
-      y = dest_ptr[y_pos] + overlay->shading_value;
+      y = dest_ptr[y_pos] - overlay->shading_value;
 
       dest_ptr[y_pos] = CLAMP (y, 0, 255);
     }
@@ -1701,7 +1710,7 @@ gst_base_text_overlay_shade_xRGB (GstBaseTextOverlay * overlay,
 
       y_pos = (i * 4 * overlay->width) + j * 4;
       for (k = 0; k < 4; k++) {
-        y = dest_ptr[y_pos + k] + overlay->shading_value;
+        y = dest_ptr[y_pos + k] - overlay->shading_value;
         dest_ptr[y_pos + k] = CLAMP (y, 0, 255);
       }
     }
@@ -1717,7 +1726,7 @@ gst_base_text_overlay_shade_rgb24 (GstBaseTextOverlay * overlay,
   gint y, x, stride, shading_val, tmp;
   guint8 *p;
 
-  shading_val = overlay->shading_value;
+  shading_val = -overlay->shading_value;
   stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
   for (y = y0; y < y1; ++y) {
@@ -1741,7 +1750,7 @@ gst_base_text_overlay_shade_IYU1 (GstBaseTextOverlay * overlay,
   gint y, x, stride, shading_val, tmp;
   guint8 *p;
 
-  shading_val = overlay->shading_value;
+  shading_val = -overlay->shading_value;
   stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
   /* IYU1: packed 4:1:1 YUV (Cb-Y0-Y1-Cr-Y2-Y3 ...) */
@@ -1777,7 +1786,7 @@ gint x0, gint x1, gint y0, gint y1) \
       gint y, y_pos, k;\
       y_pos = (i * 4 * overlay->width) + j * 4;\
       for (k = OFFSET; k < 3+OFFSET; k++) {\
-        y = dest_ptr[y_pos + k] + overlay->shading_value;\
+        y = dest_ptr[y_pos + k] - overlay->shading_value;\
         dest_ptr[y_pos + k] = CLAMP (y, 0, 255);\
       }\
     }\
