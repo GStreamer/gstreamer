@@ -4316,6 +4316,11 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
       if (chain->deadend_details) {
         g_string_append (missing_plugin_details, chain->deadend_details);
         g_string_append_c (missing_plugin_details, '\n');
+      } else {
+        gchar *desc = gst_pb_utils_get_codec_description (chain->endcaps);
+        g_string_append_printf (missing_plugin_details, "Missing decoder: %s\n",
+            desc);
+        g_free (desc);
       }
       *missing_plugin = TRUE;
     }
