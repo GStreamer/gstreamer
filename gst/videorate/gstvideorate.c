@@ -366,6 +366,7 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
 
     s1 = gst_structure_copy (s);
     s2 = gst_structure_copy (s);
+    s3 = NULL;
 
     if (videorate->drop_only) {
       gint min_num = 0, min_denom = 1;
