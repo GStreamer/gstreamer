@@ -10635,11 +10635,15 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case 0x6C:                 /* MJPEG */
-      caps = gst_caps_new_empty_simple ("image/jpeg");
+      caps =
+          gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+          NULL);
       codec_name = "Motion-JPEG";
       break;
     case 0x6D:                 /* PNG */
-      caps = gst_caps_new_empty_simple ("image/png");
+      caps =
+          gst_caps_new_simple ("image/png", "parsed", G_TYPE_BOOLEAN, TRUE,
+          NULL);
       codec_name = "PNG still images";
       break;
     case 0x6E:                 /* JPEG2000 */
@@ -10718,14 +10722,18 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case GST_MAKE_FOURCC ('j', 'p', 'e', 'g'):
       _codec ("JPEG still images");
-      caps = gst_caps_new_empty_simple ("image/jpeg");
+      caps =
+          gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+          NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'a'):
     case GST_MAKE_FOURCC ('A', 'V', 'D', 'J'):
     case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'):
     case GST_MAKE_FOURCC ('d', 'm', 'b', '1'):
       _codec ("Motion-JPEG");
-      caps = gst_caps_new_empty_simple ("image/jpeg");
+      caps =
+          gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+          NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'b'):
       _codec ("Motion-JPEG format B");
