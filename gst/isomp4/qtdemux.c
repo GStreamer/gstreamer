@@ -8305,8 +8305,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           QT_UINT32 (stsd_data + offset + 28));
       GST_LOG_OBJECT (qtdemux, "LPCM frames/packet: %d",
           QT_UINT32 (stsd_data + offset + 32));
-    } else {
-      GST_WARNING_OBJECT (qtdemux, "unknown version %08x", version);
+    } else if (version != 0x00000) {
+      GST_WARNING_OBJECT (qtdemux, "unknown audio STSD version %08x", version);
     }
 
     stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc,
