@@ -41,7 +41,7 @@
  *   my_bus_func (GstBus * bus, GstMessage * message, gpointer user_data)
  *   {
  *      GstDevice *device;
- *      gchar name;
+ *      gchar *name;
  *
  *      switch (GST_MESSAGE_TYPE (message)) {
  *        case GST_MESSAGE_DEVICE_ADDED:
@@ -75,7 +75,7 @@
  *      gst_bus_add_watch (bus, my_bus_func, NULL);
  *      gst_object_unref (bus);
  *
- *      caps = gst_caps_new_simple_empty ("video/x-raw");
+ *      caps = gst_caps_new_empty_simple ("video/x-raw");
  *      gst_device_monitor_add_filter (monitor, "Video/Source", caps);
  *      gst_caps_unref (caps);
  *
