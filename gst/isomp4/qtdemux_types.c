@@ -180,6 +180,8 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_hvcC, "HEVC codec configuration container", 0},
   {FOURCC_tfdt, "Track fragment decode time", 0, qtdemux_dump_tfdt},
   {FOURCC_chap, "Chapter Reference"},
+  {FOURCC_btrt, "Bitrate information", 0},
+  {FOURCC_frma, "Audio codec format", 0},
   {0, "unknown", 0,},
 };
 
