@@ -246,6 +246,8 @@ gst_gdk_pixbuf_dec_setup_pool (GstGdkPixbufDec * filter, GstVideoInfo * info)
     min = max = 0;
   }
 
+  gst_query_unref (query);
+
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
     pool = gst_buffer_pool_new ();
