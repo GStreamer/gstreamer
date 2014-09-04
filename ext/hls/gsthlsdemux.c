@@ -2090,10 +2090,6 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
     }
 
     if (G_LIKELY (demux->last_ret == GST_FLOW_OK)) {
-      /* flush the proxypads so that the EOS state is reset */
-      gst_pad_push_event (demux->src_srcpad, gst_event_new_flush_start ());
-      gst_pad_push_event (demux->src_srcpad, gst_event_new_flush_stop (TRUE));
-
       demux->download_start_time = g_get_monotonic_time ();
       download_start_time = gst_util_get_timestamp ();
       gst_element_sync_state_with_parent (demux->src);
@@ -2108,6 +2104,10 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
     demux->last_ret = GST_FLOW_CUSTOM_ERROR;
   }
   g_mutex_unlock (&demux->fragment_download_lock);
+
+  /* flush the proxypads so that the EOS state is reset */
+  gst_pad_push_event (demux->src_srcpad, gst_event_new_flush_start ());
+  gst_pad_push_event (demux->src_srcpad, gst_event_new_flush_stop (TRUE));
 
   if (demux->last_ret != GST_FLOW_OK) {
     gst_element_set_state (demux->src, GST_STATE_NULL);
