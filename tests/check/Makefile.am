@@ -154,6 +154,12 @@ else
 check_curl_sftp =
 endif
 
+if USE_HLS
+check_hlsdemux = elements/hlsdemux_m3u8
+else
+check_hlsdemux =
+endif
+
 if USE_CURL
 check_curl = elements/curlhttpsink \
 	elements/curlfilesink \
@@ -258,6 +264,7 @@ check_PROGRAMS = \
 	$(check_orc) \
 	libs/insertbin \
 	$(check_gl) \
+	$(check_hlsdemux) \
 	$(EXPERIMENTAL_CHECKS)
 
 noinst_HEADERS = elements/mxfdemux.h
@@ -473,6 +480,11 @@ libs_aggregator_CFLAGS = \
 
 elements_compositor_LDADD = $(LDADD)  $(GST_BASE_LIBS)
 elements_compositor_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
+elements_hlsdemux_m3u8_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS) -I$(top_builddir)/ext/hls
+elements_hlsdemux_m3u8_LDADD = $(GST_BASE_LIBS) $(LDADD) \
+			  $(top_builddir)/ext/hls/.libs/libgstfragmented_la-m3u8.o
+elements_hlsdemux_m3u8_SOURCES = elements/hlsdemux_m3u8.c
 
 orc_compositor_CFLAGS = $(ORC_CFLAGS)
 orc_compositor_LDADD = $(ORC_LIBS) -lorc-test-0.4

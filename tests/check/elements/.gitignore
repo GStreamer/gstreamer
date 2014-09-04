@@ -22,6 +22,7 @@ gdpdepay
 gdppay
 h263parse
 h264parse
+hlsdemux_m3u8
 id3mux
 imagecapturebin
 interleave
