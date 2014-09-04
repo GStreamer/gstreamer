@@ -373,6 +373,23 @@ gst_ximage_src_recalc (GstXImageSrc * src)
   return TRUE;
 }
 
+static gboolean
+gst_ximage_is_pointer_in_region (GstXImageSrc * src)
+{
+  Window window_returned;
+  int root_x, root_y;
+  int win_x, win_y;
+  unsigned int mask_return;
+  Bool on_window;
+
+  on_window = XQueryPointer (src->xcontext->disp, src->xwindow,
+      &window_returned, &window_returned, &root_x, &root_y, &win_x, &win_y,
+      &mask_return);
+
+  return (on_window && (win_x >= src->startx) && (win_y >= src->starty) &&
+      (win_x < src->endx) && (win_y < src->endy));
+}
+
 #ifdef HAVE_XFIXES
 static void
 composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
@@ -700,7 +717,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 #endif
 
 #ifdef HAVE_XFIXES
-  if (ximagesrc->show_pointer && ximagesrc->have_xfixes) {
+  if (ximagesrc->show_pointer && ximagesrc->have_xfixes
+      && gst_ximage_is_pointer_in_region (ximagesrc)) {
 
     GST_DEBUG_OBJECT (ximagesrc, "Using XFixes to draw cursor");
     /* get cursor */
