@@ -154,7 +154,7 @@ typedef struct {
 struct _GstValidateReport {
   gint    refcount;
 
-  /* issue: The issue this report corresponds to (to get dsecription, summary,...) */
+  /* issue: The issue this report corresponds to (to get description, summary,...) */
   GstValidateIssue *issue;
 
   GstValidateReportLevel level;

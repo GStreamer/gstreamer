@@ -142,7 +142,7 @@ gst_validate_runner_get_reports_count (GstValidateRunner * runner)
 GSList *
 gst_validate_runner_get_reports (GstValidateRunner * runner)
 {
-  /* TODO should we need locking or put in htte docs to always call this
+  /* TODO should we need locking or put in the docs to always call this
    * after pipeline ends? */
   return runner->reports;
 }
