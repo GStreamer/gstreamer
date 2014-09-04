@@ -780,19 +780,23 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
     if (!gst_pad_peer_query (overlay->srcpad, query)) {
       /* no problem, we use the query defaults */
       GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
+      ret = FALSE;
     }
 
     if (caps_has_meta && gst_query_find_allocation_meta (query,
             GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL))
       attach = TRUE;
 
-    overlay->attach_compo_to_buffer = attach;
     gst_query_unref (query);
-  } else {
-    overlay->attach_compo_to_buffer = FALSE;
   }
 
-  if (original_caps && !original_has_meta && !attach) {
+  overlay->attach_compo_to_buffer = attach;
+
+  if (!ret && overlay->video_flushing) {
+    GST_DEBUG_OBJECT (overlay, "negotiation failed, schedule reconfigure");
+    gst_pad_mark_reconfigure (overlay->srcpad);
+
+  } else if (original_caps && !original_has_meta && !attach) {
     if (caps_has_meta) {
       /* Some elements (fakesink) claim to accept the meta on caps but won't
          put it in the allocation query result, this leads below
