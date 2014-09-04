@@ -1559,9 +1559,6 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-  if (overlay->want_shading)
-    cairo_paint_with_alpha (cr, -overlay->shading_value);
-
   /* apply transformations */
   cairo_set_matrix (cr, &cairo_matrix);
 
