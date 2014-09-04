@@ -82,7 +82,6 @@ struct _GstAssRender
 
   /* overlay stuff */
   GstVideoOverlayComposition *composition;
-  gint width, height;
   gboolean attach_compo_to_buffer;
 };
 
