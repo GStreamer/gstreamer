@@ -4020,6 +4020,7 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_INDEX_PARAMETERS:
     case ASF_OBJ_STREAM_PRIORITIZATION:
     case ASF_OBJ_SCRIPT_COMMAND:
+    case ASF_OBJ_METADATA_LIBRARY_OBJECT:
     default:
       /* Unknown/unhandled object, skip it and hope for the best */
       GST_INFO ("%s: skipping object", demux->objpath);
