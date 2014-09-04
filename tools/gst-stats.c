@@ -41,7 +41,7 @@ static guint64 num_buffers = 0, num_events = 0, num_messages = 0, num_queries =
     0;
 static guint num_elements = 0, num_bins = 0, num_pads = 0, num_ghostpads = 0;
 static GstClockTime last_ts = G_GUINT64_CONSTANT (0);
-static GstClockTime tproc = G_GUINT64_CONSTANT (0);
+static guint total_cpuload = 0;
 
 typedef struct
 {
@@ -76,8 +76,6 @@ typedef struct
   guint num_events, num_messages, num_queries;
   /* first activity on the element */
   GstClockTime first_ts, last_ts;
-  /* time spend in this element */
-  GstClockTime tthread;
   /* hierarchy */
   guint parent_ix;
 } GstElementStats;
@@ -86,6 +84,7 @@ typedef struct
 {
   /* time spend in this thread */
   GstClockTime tthread;
+  guint cpuload;
 } GstThreadStats;
 
 /* stats helper */
@@ -378,18 +377,28 @@ do_query_stats (GstStructure * s)
 }
 
 static void
-do_rusage_stats (GstStructure * s)
+do_thread_rusage_stats (GstStructure * s)
 {
   guint64 ts, tthread;
-  guint thread_id;
+  guint thread_id, cpuload;
   GstThreadStats *thread_stats;
 
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
       "thread-id", G_TYPE_UINT, &thread_id,
-      "thread-time", G_TYPE_UINT64, &tthread,
-      "proc-time", G_TYPE_UINT64, &tproc, NULL);
+      "cpuload", G_TYPE_UINT, &cpuload, "time", G_TYPE_UINT64, &tthread, NULL);
   thread_stats = get_thread_stats (thread_id);
+  thread_stats->cpuload = cpuload;
   thread_stats->tthread = tthread;
+  last_ts = MAX (last_ts, ts);
+}
+
+static void
+do_proc_rusage_stats (GstStructure * s)
+{
+  guint64 ts;
+
+  gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
+      "cpuload", G_TYPE_UINT, &total_cpuload, NULL);
   last_ts = MAX (last_ts, ts);
 }
 
@@ -451,19 +460,14 @@ print_thread_stats (gpointer key, gpointer value, gpointer user_data)
   GSList *list = user_data;
   GSList *node = g_slist_find_custom (list, key, find_pad_stats_for_thread);
   GstThreadStats *stats = (GstThreadStats *) value;
-  guint cpuload;
 
   /* skip stats if there are no pads for that thread (e.g. a pipeline) */
   if (!node)
     return;
 
-  cpuload =
-      (guint) gst_util_uint64_scale (stats->tthread, G_GINT64_CONSTANT (100),
-      last_ts);
-
   printf ("Thread %p Statistics:\n", key);
   printf ("  Time: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (stats->tthread));
-  printf ("  Avg CPU load: %u %%\n", cpuload);
+  printf ("  Avg CPU load: %u %%\n", stats->cpuload);
 
   puts ("  Pad Statistics:");
   g_slist_foreach (node, print_pad_stats, key);
@@ -679,7 +683,6 @@ static void
 print_stats (void)
 {
   guint num_threads = g_hash_table_size (threads);
-  guint64 total_cpuload = 0;
 
   /* print overall stats */
   puts ("\nOverall Statistics:");
@@ -693,11 +696,7 @@ print_stats (void)
   printf ("Number of Message sent: %" G_GUINT64_FORMAT "\n", num_messages);
   printf ("Number of Queries sent: %" G_GUINT64_FORMAT "\n", num_queries);
   printf ("Time: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (last_ts));
-  if (tproc) {
-    total_cpuload = gst_util_uint64_scale (tproc,
-        G_GINT64_CONSTANT (100), last_ts);
-    printf ("Avg CPU load: %u %%\n", (guint) total_cpuload);
-  }
+  printf ("Avg CPU load: %u %%\n", (guint) total_cpuload);
   puts ("");
 
   /* thread stats */
@@ -800,8 +799,10 @@ collect_stats (const gchar * filename)
                   do_message_stats (s);
                 } else if (!strcmp (name, "query")) {
                   do_query_stats (s);
-                } else if (!strcmp (name, "rusage")) {
-                  do_rusage_stats (s);
+                } else if (!strcmp (name, "thread-rusage")) {
+                  do_thread_rusage_stats (s);
+                } else if (!strcmp (name, "proc-rusage")) {
+                  do_proc_rusage_stats (s);
                 } else {
                   GST_WARNING ("unknown log entry: '%s'", data);
                 }
