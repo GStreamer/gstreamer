@@ -789,8 +789,9 @@ main (int argc, gchar ** argv)
           "video/webm:video/x-vp8|<presence>:audio/x-vorbis\n",
         "properties-values"},
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
-        "Let you set a scenario, it will override the GST_VALIDATE_SCENARIO "
-          "environment variable", NULL},
+        "Let you set a scenario, it can be a full path to a scenario file"
+          " or the name of the scenario (name of the file without the"
+          " '.scenario' extension).", NULL},
     {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
           "Let you set a config scenario, the scenario needs to be set as 'config"
           "' you can specify a list of scenario separated by ':'"

@@ -355,8 +355,9 @@ main (int argc, gchar ** argv)
 
   GOptionEntry options[] = {
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
-        "Let you set a scenario, it will override the GST_VALIDATE_SCENARIO "
-          "environment variable", NULL},
+        "Let you set a scenario, it can be a full path to a scenario file"
+          " or the name of the scenario (name of the file without the"
+          " '.scenario' extension).", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the avalaible scenarios that can be run", NULL},
     {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,

@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+<refentry id="envvariables" revision="4 Sept 2014">
+  <refmeta>
+    <refentrytitle>GstValidate environment variables</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo>GstValidate</refmiscinfo>
+  </refmeta>
+  <refnamediv>
+    <refname>GstValidate environment variables</refname>
+    <refpurpose>The environment variable variable influencing the run of GstValidate</refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <para>
+       The runtime behaviour of GstValidate applications can be influenced by a number of environment variables. 
+    </para>
+
+<formalpara id="GST-VALIDATE:CAPS">
+  <title><envar>GST_VALIDATE</envar></title>
+
+  <para>
+    This environment variable can be set to a list of debug options,
+    which cause GstValidate to print out different types of test result informations
+    and concider differently the level of the reported issues.
+    <variablelist>
+      <varlistentry>
+        <term>fatal-criticals</term>
+        <listitem><para>Causes GstValidate to concider only critical issues as import enough to concider the test failed (default behaviour)</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>fatal-warnings</term>
+        <listitem><para>Causes GstValidate to concider warning, and critical issues as import enough to concider the test failed</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>fatal-issues</term>
+        <listitem><para>Causes GstValidate to concider issue, warning, and critical issues as import enough to concider the test failed</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>print-issues</term>
+        <listitem><para>Causes GstValidate to print issue, warning and critical issues in the final reports (default behaviour)</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>print-warnings</term>
+        <listitem><para>Causes GstValidate to only print warning and critical issues in the final reports</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>print-criticals</term>
+        <listitem><para>Causes GstValidate to only print criticals issues in the final reports</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </para>
+</formalpara>
+
+<formalpara id="GST-VALIDATE-FILE">
+  <title><envar>GST_VALIDATE_FILE</envar></title>
+
+  <para>
+    Set this variable to a to a colon-separated list of paths to redirect all
+    GstValidate messages to this file.  If left unset, debug messages will be
+    outputed into the standard error.
+  </para>
+
+  <para>
+    You can use the special names "stdout" and "stderr" to use those output.
+  </para>
+</formalpara>
+
+<formalpara id="GST-VALIDATE-SCENARIOS-PATH">
+  <title><envar>GST_VALIDATE_SCENARIOS_PATH</envar></title>
+
+  <para>
+    Set this variable to a to a colon-separated list of paths. GstValidate will
+    scan these paths for GstValidate scenario files.
+
+    By default GstValidate will look for scenarios in the user data directory as
+    specified in the XDG standard: <filename>.local/share/gstreamer-&GST_API_VERSION;/validate-scenario</filename>
+    and the system wide user data directory: <filename>/usr/lib/gstreamer-&GST_API_VERSION;/validate-scenario</filename>
+  </para>
+</formalpara>
+
+<formalpara id="GST-VALIDATE-OVERRIDE">
+  <title><envar>GST_VALIDATE_OVERRIDE</envar></title>
+
+  <para>
+    Set this variable to a to a colon-separated list of dynamically linkable files. GstValidate will
+    scan these paths for GstValidate overrides
+
+    By default GstValidate will look for scenarios in the user data directory as
+    specified in the XDG standard: <filename>.local/share/gstreamer-&GST_API_VERSION;/validate-scenario</filename>
+    and the system wide user data directory: <filename>/usr/lib/gstreamer-&GST_API_VERSION;/validate-scenario</filename>
+  </para>
+</formalpara>
+
+  </refsect1>
+</refentry>

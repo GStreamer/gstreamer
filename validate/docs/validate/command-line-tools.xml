@@ -1,0 +1,292 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+<refentry id="command-line-tools" revision="4 Sept 2014">
+  <refmeta>
+    <refentrytitle>GstValidate Command line tools</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo>GstValidate</refmiscinfo>
+  </refmeta>
+  <refnamediv>
+    <refname>GstValidate command line tools</refname>
+    <refpurpose>Documenation of the various command line tools provided by GstValidate</refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Introduction</title>
+
+    <para>
+      In order to make gst-validate usage simple, dedicated tools that allow plugin developers test there elements in many use cases from a high level perspective
+      are provided with GstValidate.
+    </para>
+  </refsect1>
+  <refsynopsisdiv id="command-line-tools.synopsis" role="synopsis">
+    <synopsis>
+  <link linkend="gst-validate">gst-validate</link>: The simplest gst-launch like pipeline launcher running inside GstValidate monitoring infrastructure
+  <link linkend="gst-validate-transcoding">gst-validate-transcoding</link>: A tool to easily create media files transcoding pipeline running inside GstValidate monitoring infrastructure
+      * <link linkend="gst-validate-transcoding--encoding-profile">Encoding Profile: </link>The serialization format of a GstEncodingProfile
+  <link linkend="gst-validate-media-check">gst-validate-media-check</link>: A tool to easily check that the discovering of a media file works properly over runs
+  <link linkend="gst-validate-launcher">gst-validate-launcher</link>: An application permitting to create testsuites on top of GstValidate tools
+</synopsis></refsynopsisdiv>
+
+  <refsect1 id="gst-validate">
+    <title>gst-validate-&GST_API_VERSION;</title>
+    <para>
+      It is the simplest tool and is used to run a gst
+      launch style pipeline. Monitors are added to it to identify issues in the
+      used elements. At the end a report will be printed, this report will
+      contain informations about all issues that were encontered while running
+      gst-validate. To view issues as they are created, set the environment
+      variable GST_DEBUG=validate:2 and it will be printed as gstreamer
+      debugging. You can basically run any GstPipeline pipeline using it.
+      If you are not familiar with gst-launch syntax, please refer to
+      gst-launch's documentation.
+      <informalexample>
+        Simple playback pipeline:
+        <programlisting>gst-validate-1.0 playbin uri=file:///path/to/some/media/file</programlisting>
+
+        Transcoding pipeline:
+        <programlisting>gst-validate-1.0 filesrc location=/media/file/location ! qtdemux name=d ! queue ! x264enc ! h264parse !  mpegtsmux name=m ! progressreport ! filesink location=/root/test.ts d. ! queue ! faac ! m.</programlisting>
+      </informalexample>
+    </para>
+    <para>
+      <informalexample>
+        It will report what issues happened during the execution of that pipeline in a human readable report like:
+        <programlisting>
+          issue : buffer is out of the segment range Detected on theoradec0.srcpad at 0:00:00.096556426
+
+          Details : buffer is out of segment and shouldn't be pushed. Timestamp: 0:00:25.000 - duration: 0:00:00.040 Range: 0:00:00.000 - 0:00:04.520
+          Description : buffer being pushed is out of the current segment's start-stop  range. Meaning it is going to be discarded downstream without any use</programlisting>
+      </informalexample>
+    </para>
+    <para>
+      The return code of the process will be 18 in case a CRITICAL issue has been found
+    </para>
+  </refsect1>
+  <refsect1 id="gst-validate-transcoding">
+    <title>The gst-validate-transcoding tool</title>
+    <para>
+      <informalexample>
+        A command line tool allowing to test media files transcoding with a straight forward syntax. You can for example transcode any media file to vorbis vp8 in webm doing:
+        <programlisting>gst-validate-transcoding-&GST_API_VERSION; file:///./file.ogg file:///.../transcoded.webm -o 'video/webm:video/x-vp8:audio/x-vorbis'</programlisting>
+      </informalexample>
+    </para>
+
+    <para>
+
+      <informalexample>
+        It will report what issues happened during the execution of that pipeline in a human readable report like:
+        <programlisting>
+          issue : buffer is out of the segment range Detected on theoradec0.srcpad at 0:00:00.096556426
+
+          Details : buffer is out of segment and shouldn't be pushed. Timestamp: 0:00:25.000 - duration: 0:00:00.040 Range: 0:00:00.000 - 0:00:04.520
+          Description : buffer being pushed is out of the current segment's start-stop  range. Meaning it is going to be discarded downstream without any use</programlisting>
+      </informalexample>
+    </para>
+    <para>
+      The return code of the process will be 18 in case a CRITICAL issue has been found
+    </para>
+
+    <refsect2 id="gst-validate-transcoding--encoding-profile">
+      <title>The Encoding profile serialization format</title>
+      <para>
+        Internally the transcoding application uses <link linkend="GstEncodeBin"><type>GstEncodeBin</type></link>. gst-validate-transcoding-&GST_API_VERSION; uses its own
+        serialization format to describe the <link linkend="GstEncodeBin--profile"><type>GstEncodeBin.profile</type></link>
+        property of the encodebin.
+      </para>
+
+      <para>
+        <informalexample>
+          The simplest serialized profile looks like:
+          <programlisting>muxer_source_caps:videoencoder_source_caps:audioencoder_source_caps</programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        <informalexample>
+          For example to encode a stream into a webm container, with a ogg audio stream and a h264 video stream,
+          the serialized <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> will look like:
+          <programlisting>video/webm:video/x-vp8:audio/x-vorbis</programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        <informalexample>
+          You can also set the preset name of the encoding profile using the caps+preset_name syntax such as in:
+          <programlisting>video/webm:video/x-vp8+youtube-preset:audio/x-vorbis</programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        <informalexample>
+          Moreover, you can set the <link linkend="gst-encoding-profile-set-presence">presence</link> property of an
+          encoding profile using the '|presence' synthax such as in:
+          <programlisting>video/webm:video/x-vp8|1:audio/x-vorbis</programlisting>
+        </informalexample>
+
+        This field allows you to specify how many times maximum a GstEncodingProfile can be used inside a encodebin.
+      </para>
+      <para>
+        You can also use the 'restriction_caps->encoded_format_caps' to specify the
+        <link linked="gst-encoding-profile-get-restriction">restriction caps</link>
+        to be set on a GstEncodingProfile. It corresponds to the restriction GstCaps to apply before
+        the encoder that will be used in the profile. The fields present in restriction
+        caps are properties of the raw stream (that is before encoding), such as height
+        and width for video and depth and sampling rate for audio. This property does not
+        make sense for muxers.
+
+      </para>
+      <para>
+        <informalexample>
+          To force to encode a video in full HD (using webm as a container,
+          vp8 as a video codec and vorbis as an audio codec), you should use:
+          <programlisting>video/webm:video/x-raw-yuv,width=1920,height=1080-->video/x-vp8:audio/x-vorbis</programlisting>
+        </informalexample>
+      </para>
+    <refsect3>
+      <title>Some serialized encoding formats examples:</title>
+      <informalexample>
+        MP3 audio and H264 in MP4:
+        <programlisting>video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3</programlisting>
+
+        Vorbis and theora in OGG:
+        <programlisting>application/ogg:video/x-theora:audio/x-vorbis</programlisting>
+
+        AC3 and H264 in MPEG-TS:
+        <programlisting>video/mpegts:video/x-h264:audio/x-ac3</programlisting>
+      </informalexample>
+    </refsect3>
+    </refsect2>
+  </refsect1>
+  <refsect1 id="gst-validate-media-check">
+    <title>The gst-validate-media-check tool</title>
+    <para>
+      <informalexample>
+        A command line tool checking that media files discovering works properly with gst-discoverer. Basically it
+        needs a reference text file containing valid information about a media file (which can be generated with the same tool)
+        and then it will be able to check that those informations correspond to what is reported by gst-discoverer over new runs.
+        For example, given that we have a valid reference.media_info file, we can run:
+        <programlisting>gst-validate-media-check-&GST_API_VERSION; file:///./file.ogv --expected-results reference.media_info</programlisting>
+      </informalexample>
+    </para>
+    <para>
+      That will then output found errors if any and return an exist code different from 0 if an error was found.
+      </para>
+  </refsect1>
+  <refsect1>
+    <para>
+      As you can notice, those tools let us test static pipelines execution and not that the pipeline reacts properly during execution of actions from the end user such as seeking, or changing the pipeline state, etc… In order to make that possible and easy to use we introduced the concept of
+      <link linkend="ScenarioFileFormat"><type>scenarios</type></link>
+     </para>
+  </refsect1>
+  <refsect1 id="gst-validate-launcher">
+    <title>gst-validate-launcher</title>
+    <para>
+      To be able to implement actual testsuite based on the previously described command line tools,
+      a test launcher has been developed: gst-validate-launcher.
+    </para>
+    <para>
+      <informalexample>
+        You can find detailed informations about the launcher reading its help manual:
+        <programlisting>gst-validate-launcher --help</programlisting>
+      </informalexample>
+    </para>
+    <refsect2>
+      <title>Example of a testsuite implementation</title>
+      <para>
+        To implement a testsuite, you will have to write some simple python code that will define
+        the test to be launched by the gst-validate-launcher.
+      </para>
+      <para>
+        In that example, we will concider that you want to write a whole new testsuite based on
+        your own media samples and <link linkend="ScenarioFileFormat">scenarios</link>.
+        That set of file and the testsuite implementation file will be structured as follow:
+        <synopsis>
+testsuite_folder/
+  |-> testsuite.py
+  |-> sample_files/
+      |-> file.mp4
+      |-> file1.mkv
+      |-> file2.ogv
+  |-> scenarios
+      |-> scenario.scenario
+      |-> scenario1.scenario
+        </synopsis>
+      </para>
+      <para>
+        <informalexample>
+          You should generate the .media_infos files. To generate them for local files,
+          you can use:
+          <programlisting>gst-validate-launch --medias-paths /path/to/sample_files/ --generate-media-info</programlisting>
+            For remote streams, you should use gst-validate-media-check-&GST_API_VERSION;. For an http stream you can for example do:
+            <programlisting>gst-validate-media-check-&GST_API_VERSION; http://someonlinestream.com/thestream --output-file /path/to/testsuite_folder/sample_files/thestream.stream_info</programlisting>
+        </informalexample>
+      </para>
+        The gst-validate-launcher will use those .media_info and .stream_info files to generate the tests as those contain the necessary informations.
+      <para>
+      </para>
+      <para>
+        Then you will need to write the testsuite.py file. You can for example implement the following testsuite:
+        <informalexample>
+          <programlisting>
+import os
+
+# Make sure gst-validate-launcher uses our special media files
+options.paths = os.path.dirname(os.path.realpath(__file__))
+
+# Make sure GstValidate will be able to use our special scenarios
+# from the testsuite_folder/scenarios folder
+os.environ["GST_VALIDATE_SCENARIOS_PATH"] = \
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "scenarios")
+
+# You can activate the following if you care only about the critical issues in
+# the report:
+# os.environ["GST_VALIDATE"] = "print_criticals"
+
+# Make gst-validate use our scenarios
+validate.add_scenarios(["scenario", "scenario1"])
+
+
+# Now add the thearo and vorbis in OGG as a wanted transcoding format. That means
+# that tests with all the media files/streams will be converted to that format.
+validate.add_encoding_formats([MediaFormatCombination("ogg", "vorbis", "theora")])
+
+# Use the GstValidatePlaybinTestsGenerator to generate tests that will use playbin
+# and GstValidateTranscodingTestsGenerator to create media transcoding tests that
+# will use all the media format added with validate.add_encoding_formats
+validate.add_generators([validate.GstValidatePlaybinTestsGenerator(validate),
+                         GstValidateTranscodingTestsGenerator(self)])
+
+# Blacklist some test that are known to fail because a feature is not supported
+# or any reason.
+# The tuple defining those tests is of the form:
+# ("regex defining the test name", "Reason why the test should be disabled")
+validate.set_default_blacklist([
+        ("validate.*.scenario1.*ogv$"
+         "oggdemux does not support some action executed in scenario1")]
+        )
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        Once this is done, we got a testsuite that will:
+        <itemizedlist>
+          <listitem>
+            Run playbin pipelines on file.mp4, file1.mkv and file2.ogv executing "scenario" and "scenario1" scenarios
+          </listitem>
+          <listitem>
+            Transcode file.mp4, file1.mkv and file2.ogv to thearo and vorbis in OGG
+          </listitem>
+        </itemizedlist>
+        <informalexample>
+          The only thing to do to run the testsuite is:
+          <programlisting>gst-validate-launcher --config /path/to/testsuite_folder/testsuite.py</programlisting>
+        </informalexample>
+      </para>
+    </refsect2>
+  </refsect1>
+</refentry>

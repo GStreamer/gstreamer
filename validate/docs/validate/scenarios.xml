@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<refentry id="ScenarioFileFormat">
+  <refmeta>
+    <refentrytitle role="top_of_page" id="Scenarios.top_of_page">GstValidate Scenario File Format</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo>
+      GST-VALIDATE Library
+    </refmiscinfo>
+  </refmeta>
+  <refnamediv>
+    <refname>Scenario File Format</refname>
+    <refpurpose>The GstValidate Scenarios file format</refpurpose>
+  </refnamediv>
+
+  <refsect1 id="GstValidateScenario.description" role="desc">
+    <title role="desc.title">Description</title>
+    <para>
+      To be able to define a list of actions to execute on a <link linkend="GstPipeline"><type>GstPipeline</type></link>, a dedicated file format is used.
+      The name of the scenario is the name of the file without its '.scenario' extension.
+      The scenario file file format is based on the <link linkend="GstStructure"><type>GstStructure</type></link> serialized format which is a basic, type aware,
+      key value format.
+      It takes the type of the action as first coma separeted field, and then
+      the key values pair of the form 'parameter=value' separated by comas. The values
+      type will be guessed if not casted as in 'parameter=(string)value'. You can force the type
+      guessing system to actually know what type you want by giving it the right hints. For example
+      to make sure the value is a double, you should add a decimal (ie '1' will be concidered as a
+      int, but '1.0' will be concidered as a double and '"1.0"' will be concidered as a string)
+    </para>
+    <para>
+      For example to represent a seek action, you should add the following line in the '.scenario'
+      file.
+    </para>
+    <para>
+      <informalexample>
+        <programlisting>
+          seek, playback_time=10.0, start=0.0, flags=accurate+flush
+        </programlisting>
+      </informalexample>
+    </para>
+    <para>
+      The files to be used as scenario should have a '.scenario' extension and
+      should be placed either in $USER_DATA_DIR/gstreamer-1.0/validate-scenario ,
+      $GST_DATADIR/gstreamer-1.0/validate-scenario or in a path defined in the
+      $GST_VALIDATE_SCENARIOS_PATH environment variable.
+    </para>
+    <para>
+      Each line in the '.scenario' file represent an action (you can also use \ at the end of a line
+      write a single action on multiple lines). Usually you should start you scenario with a 'description'
+      "config" action in order for the user to have more information about the scenario. It can contain
+      a 'summary' field which is a string explaning what the scenario does and then several info fields
+      about the scenario. You can find more info about it running:
+    </para>
+    <para>
+      <informalexample>
+        <programlisting>
+          gst-validate-1.0 --list-action-types description
+        </programlisting>
+      </informalexample>
+    </para>
+    <para>
+      So a basic scenario file that will seek three times and stop would look like:
+    </para>
+    <para>
+      <informalexample>
+        <programlisting>
+
+          description, summary="Seeks at 1.0 to 2.0 then at \
+          3.0 to 0.0 and then seeks at \
+          1.0 to 2.0 for 1.0 second (between 2.0 and 3.0).", \
+          seek=true, duration=5.0, min-media-duration=4.0
+          seek, playback_time=1.0, rate=1.0, start=2.0, flags=accurate+flush
+          seek, playback_time=3.0, rate=1.0, start=0.0, flags=accurate+flush
+          seek, playback_time=1.0, rate=1.0, start=2.0, stop=3.0, flags=accurate+flush
+        </programlisting>
+      </informalexample>
+    </para>
+    <para>
+      Many action types have been implemented to help users define their own scenarios.
+      For example there are:
+      <itemizedlist><title>Action type examples:</title><listitem><para>
+            seek: Seeks into the stream
+            </para></listitem><listitem><para>
+            play: Set the pipeline state to GST_STATE_PLAYING
+            </para></listitem><listitem><para>
+            pause: Set the pipeline state to GST_STATE_PAUSED
+            </para></listitem><listitem><para>
+            stop: Stop the execution of the pipeline. NOTE: That action actually post a
+            <link linkend="GST-MESSAGE-REQUEST-STATE:CAPS"><type>GST_MESSAGE_REQUEST_STATE</type></link> (requesting <link linkend="GST-STATE-NULL:CAPS"><type>GST_STATE_NULL</type></link>) message on the bus and
+            the application should quit.
+            </para></listitem><listitem><para>
+            ...
+      </para></listitem></itemizedlist>
+    </para>
+    <para>
+      To get all the details about the registered action types, you can list them all with:
+    </para>
+    <para>
+      <informalexample>
+        <programlisting>
+          gst-validate-1.0 --list-action-types
+        </programlisting>
+      </informalexample>
+    </para>
+    <para>
+      and (includes transcoding specific action types):
+    </para>
+    <para>
+      <informalexample>
+        <programlisting>
+          gst-validate-transcoding-1.0 --list-action-types
+        </programlisting>
+      </informalexample>
+    </para>
+    <para>
+      Many scenarios are distributed with gst-validate, you can list them all using:
+    </para>
+    <para>
+      <informalexample>
+        <programlisting>
+          gst-validate-1.0 --list-scenarios
+        </programlisting>
+      </informalexample>
+    </para>
+    <para>
+      You can find more information about the implementation of GstValidateScenario and the action types <link linkend="GstValidateScenario"><type>here</type></link>
+    </para>
+  </refsect1>
+</refentry>

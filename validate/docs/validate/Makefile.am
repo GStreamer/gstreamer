@@ -77,7 +77,7 @@ IGNORE_CFILES = \
 # HTML_IMAGES = gdp-header.png
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
-content_files =
+content_files = scenarios.xml command-line-tools.xml envvariables.xml
 
 # Other files to distribute.
 extra_files =

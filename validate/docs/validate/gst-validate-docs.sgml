@@ -1,19 +1,57 @@
 <?xml version="1.0"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
-[
-  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
 ]>
-<book id="index">
+
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>gst-validate Reference Manual</title>
+    <title>GstValidate Reference Manual</title>
     <releaseinfo>
       for GstValidate &GST_API_VERSION;
     </releaseinfo>
   </bookinfo>
 
   <chapter>
-    <title>GstValidate documentation</title>
+    <title>Overview and usage</title>
+    <para>
+      GstValidate is a tool that allows GStreamer developers to check
+      that the GstElements they write behave the way they are supposed to.
+      It was first started to provide plug-ins developers with a tool to
+      check that they use the framework the proper way.
+    </para>
+
+    <para>
+      GstValidate implements a monitoring logic that allows the system to check
+      that the elements of a GstPipeline respect some rules GStreamer components
+      have to follow so that elements can properly interact together.
+      For example, a GstValidatePadMonitor will make sure that if we receive a GstSegment
+      from upstream, an equivalent segment is sent downstream before any buffer gets out.
+    </para>
+    <para>
+      Then GstValidate implements a reporting system that allows users to
+      get detailed informations about what was not properly handle in elements.
+      The reports are order by level of importance from "issue" to "critical".
+    </para>
+    <para>
+      Some tools have been implemented to help the developer validate and test
+      their GstElement, you can have a look at the command line tools section to find more information
+    </para>
+    <para>
+      On top of those tools, the notion of
+      scenario has been implemented so that developers can easily execute a set
+      of actions on pipelines and thus test real world interactive cases and reproduce existing
+      issues in a convenient way.
+    </para>
+
+    <xi:include href="command-line-tools.xml"/>
+    <xi:include href="scenarios.xml"/>
+    <xi:include href="envvariables.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>API Documentation</title>
     <xi:include href="xml/validate.xml"/>
     <xi:include href="xml/gst-validate-runner.xml"/>
     <xi:include href="xml/gst-validate-scenario.xml"/>
