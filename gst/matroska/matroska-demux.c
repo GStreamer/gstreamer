@@ -3890,7 +3890,7 @@ gst_matroska_demux_check_read_size (GstMatroskaDemux * demux, guint64 bytes)
 }
 
 /* returns TRUE if we truely are in error state, and should give up */
-static inline gboolean
+static inline GstFlowReturn
 gst_matroska_demux_check_parse_error (GstMatroskaDemux * demux)
 {
   if (!demux->streaming && demux->next_cluster_offset > 0) {
@@ -3899,22 +3899,23 @@ gst_matroska_demux_check_parse_error (GstMatroskaDemux * demux)
         G_GUINT64_FORMAT, demux->next_cluster_offset);
     demux->common.offset = demux->next_cluster_offset;
     demux->next_cluster_offset = 0;
-    return FALSE;
+    return GST_FLOW_OK;
   } else {
     gint64 pos;
+    GstFlowReturn ret;
 
     /* sigh, one last attempt above and beyond call of duty ...;
      * search for cluster mark following current pos */
     pos = demux->common.offset;
     GST_WARNING_OBJECT (demux, "parse error, looking for next cluster");
-    if (gst_matroska_demux_search_cluster (demux, &pos) != GST_FLOW_OK) {
+    if ((ret = gst_matroska_demux_search_cluster (demux, &pos)) != GST_FLOW_OK) {
       /* did not work, give up */
-      return TRUE;
+      return ret;
     } else {
       GST_DEBUG_OBJECT (demux, "... found at  %" G_GUINT64_FORMAT, pos);
       /* try that position */
       demux->common.offset = pos;
-      return FALSE;
+      return GST_FLOW_OK;
     }
   }
 }
@@ -4113,11 +4114,14 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           /* eat segment prefix */
           GST_READ_CHECK (gst_matroska_demux_flush (demux, needed));
           GST_DEBUG_OBJECT (demux,
-              "Found Segment start at offset %" G_GUINT64_FORMAT,
-              demux->common.offset);
+              "Found Segment start at offset %" G_GUINT64_FORMAT " with size %"
+              G_GUINT64_FORMAT, demux->common.offset, length);
           /* seeks are from the beginning of the segment,
            * after the segment ID/length */
           demux->common.ebml_segment_start = demux->common.offset;
+          if (length == 0)
+            length = G_MAXUINT64;
+          demux->common.ebml_segment_length = length;
           demux->common.state = GST_MATROSKA_READ_STATE_HEADER;
           break;
         default:
@@ -4385,7 +4389,15 @@ gst_matroska_demux_loop (GstPad * pad)
   } else if (ret == GST_FLOW_FLUSHING) {
     goto pause;
   } else if (ret != GST_FLOW_OK) {
-    if (gst_matroska_demux_check_parse_error (demux))
+    ret = gst_matroska_demux_check_parse_error (demux);
+
+    /* Only handle EOS as no error if we're outside the segment already */
+    if (ret == GST_FLOW_EOS && (demux->common.ebml_segment_length != G_MAXUINT64
+            && demux->common.offset >=
+            demux->common.ebml_segment_start +
+            demux->common.ebml_segment_length))
+      goto eos;
+    else if (ret != GST_FLOW_OK)
       goto pause;
     else
       return;
@@ -4552,8 +4564,13 @@ next:
 
   ret = gst_matroska_read_common_peek_id_length_push (&demux->common,
       GST_ELEMENT_CAST (demux), &id, &length, &needed);
-  if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_EOS))
+  if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_EOS)) {
+    if (demux->common.ebml_segment_length != G_MAXUINT64
+        && demux->common.offset >=
+        demux->common.ebml_segment_start + demux->common.ebml_segment_length)
+      ret = GST_FLOW_EOS;
     return ret;
+  }
 
   GST_LOG_OBJECT (demux, "Offset %" G_GUINT64_FORMAT ", Element id 0x%x, "
       "size %" G_GUINT64_FORMAT ", needed %d, available %d",
