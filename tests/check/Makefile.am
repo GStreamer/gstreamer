@@ -482,9 +482,9 @@ elements_compositor_LDADD = $(LDADD)  $(GST_BASE_LIBS)
 elements_compositor_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 elements_hlsdemux_m3u8_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS) -I$(top_srcdir)/ext/hls
-elements_hlsdemux_m3u8_LDADD = $(GST_BASE_LIBS) $(LDADD) \
-			  $(top_builddir)/ext/hls/m3u8.c
-elements_hlsdemux_m3u8_SOURCES = elements/hlsdemux_m3u8.c
+elements_hlsdemux_m3u8_LDADD = $(GST_BASE_LIBS) $(LDADD)
+elements_hlsdemux_m3u8_SOURCES = elements/hlsdemux_m3u8.c \
+	$(top_srcdir)/ext/hls/m3u8.c
 
 orc_compositor_CFLAGS = $(ORC_CFLAGS)
 orc_compositor_LDADD = $(ORC_LIBS) -lorc-test-0.4
