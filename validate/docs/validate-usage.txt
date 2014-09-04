@@ -34,8 +34,18 @@ You can list all available scenarios using:
 
     gst-validate-transcoding-1.0 --list-scenarios
 
-Scenarios are XML files describing a list of actions, you can find the
-source XML files in gst-validate/data/
+Scenarios are simple text files describing a list of actions, you can find the
+source scenario files in validate/data/
+
+You can find more information about scenarios on the GstValidateScenario documentation: http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-validate/html/GstValidateScenario.html
+
+You can find more information about the various action types avalaible to be executed with:
+
+    gst-validate-1.0 -t <optional-action-type>
+
+or:
+
+    gst-validate-transcoding-1.0 -t <optional-action-type>
 
   2- gst-validate-transcoding-1.0: Transcodes input-uri to output-uri,
 using the given encoding profile. The pipeline will be monitored for
