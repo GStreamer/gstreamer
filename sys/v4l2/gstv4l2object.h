@@ -121,6 +121,9 @@ struct _GstV4l2Object {
    * calculate the minimum latency of a m2m decoder. */
   guint32 min_buffers_for_capture;
 
+  /* This will be set if supported in propose allocation. */
+  guint32 min_buffers_for_output;
+
   /* wanted mode */
   GstV4l2IOMode req_mode;
 

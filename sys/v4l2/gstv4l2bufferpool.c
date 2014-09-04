@@ -623,8 +623,10 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
           &max_buffers))
     goto wrong_config;
 
-  /* TODO Also consider min_buffers_for_output when implemented */
-  min_latency = MAX (GST_V4L2_MIN_BUFFERS, obj->min_buffers_for_capture);
+  if (V4L2_TYPE_IS_OUTPUT (obj->type))
+    min_latency = MAX (GST_V4L2_MIN_BUFFERS, obj->min_buffers_for_output);
+  else
+    min_latency = MAX (GST_V4L2_MIN_BUFFERS, obj->min_buffers_for_capture);
 
   switch (obj->mode) {
     case GST_V4L2_IO_RW:

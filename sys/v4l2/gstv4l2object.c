@@ -3472,9 +3472,12 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
   if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CTRL, &ctl) >= 0) {
     GST_DEBUG_OBJECT (obj->element, "driver require a miminum of %d buffers",
         ctl.value);
-
-    min = MAX (ctl.value, GST_V4L2_MIN_BUFFERS);
+    obj->min_buffers_for_output = ctl.value;
+  } else {
+    obj->min_buffers_for_output = 0;
   }
+
+  min = MAX (obj->min_buffers_for_output, GST_V4L2_MIN_BUFFERS);
 
   gst_query_add_allocation_pool (query, pool, size, min, max);
 
