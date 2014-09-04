@@ -615,8 +615,7 @@ gst_v4l2_video_dec_decide_allocation (GstVideoDecoder * decoder,
     ret = GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
         query);
 
-  latency = self->v4l2capture->min_buffers_for_capture *
-      self->v4l2capture->duration;
+  latency = self->v4l2capture->min_buffers * self->v4l2capture->duration;
   gst_video_decoder_set_latency (decoder, latency, latency);
 
   return ret;

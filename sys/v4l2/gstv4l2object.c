@@ -3206,13 +3206,13 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CTRL, &ctl) >= 0) {
     GST_DEBUG_OBJECT (obj->element, "driver require a minimum of %d buffers",
         ctl.value);
-    obj->min_buffers_for_capture = ctl.value;
+    obj->min_buffers = ctl.value;
   } else {
-    obj->min_buffers_for_capture = 0;
+    obj->min_buffers = 0;
   }
 
   /* We can't share our own pool, if it exceed V4L2 capacity */
-  if (min + obj->min_buffers_for_capture + 1 > VIDEO_MAX_FRAME)
+  if (min + obj->min_buffers + 1 > VIDEO_MAX_FRAME)
     can_share_own_pool = FALSE;
 
   /* select a pool */
@@ -3289,11 +3289,11 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
      * to fill the pipeline, the minimum required to decoder according to the
      * driver and 1 more, so we don't endup up with everything downstream or
      * held by the decoder. */
-    own_min = min + obj->min_buffers_for_capture + 1;
+    own_min = min + obj->min_buffers + 1;
   } else {
     /* In this case we'll have to configure two buffer pool. For our buffer
      * pool, we'll need what the driver one, and one more, so we can dequeu */
-    own_min = obj->min_buffers_for_capture + 1;
+    own_min = obj->min_buffers + 1;
     own_min = MAX (own_min, GST_V4L2_MIN_BUFFERS);
 
     /* for the downstream pool, we keep what downstream wants, though ensure
@@ -3472,12 +3472,12 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
   if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CTRL, &ctl) >= 0) {
     GST_DEBUG_OBJECT (obj->element, "driver require a miminum of %d buffers",
         ctl.value);
-    obj->min_buffers_for_output = ctl.value;
+    obj->min_buffers = ctl.value;
   } else {
-    obj->min_buffers_for_output = 0;
+    obj->min_buffers = 0;
   }
 
-  min = MAX (obj->min_buffers_for_output, GST_V4L2_MIN_BUFFERS);
+  min = MAX (obj->min_buffers, GST_V4L2_MIN_BUFFERS);
 
   gst_query_add_allocation_pool (query, pool, size, min, max);
 

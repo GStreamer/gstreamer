@@ -118,8 +118,8 @@ struct _GstV4l2Object {
   gboolean prefered_non_contiguous;
 
   /* This will be set if supported in decide_allocation. It can be used to
-   * calculate the minimum latency of a m2m decoder. */
-  guint32 min_buffers_for_capture;
+   * calculate the minimum latency. */
+  guint32 min_buffers;
 
   /* This will be set if supported in propose allocation. */
   guint32 min_buffers_for_output;
