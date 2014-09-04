@@ -49,6 +49,8 @@ struct _GstXImageSrc
 
   /* Information on display */
   GstXContext *xcontext;
+  gint x;
+  gint y;
   gint width;
   gint height;
 

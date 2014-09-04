@@ -169,6 +169,9 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
     int status;
     XWindowAttributes attrs;
     Window window;
+    int x, y;
+    Window child;
+    Bool coord_translated;
 
     if (s->xid != 0) {
       status = XGetWindowAttributes (s->xcontext->disp, s->xid, &attrs);
@@ -205,8 +208,19 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
     g_assert (s->xwindow != 0);
     s->width = attrs.width;
     s->height = attrs.height;
-    GST_INFO_OBJECT (s, "Using default window size of %dx%d",
-        s->width, s->height);
+
+    coord_translated = XTranslateCoordinates (s->xcontext->disp, s->xwindow,
+        s->xcontext->root, 0, 0, &x, &y, &child);
+    if (coord_translated) {
+      s->x = x;
+      s->y = y;
+    } else {
+      s->x = 0;
+      s->y = 0;
+    }
+
+    GST_INFO_OBJECT (s, "Using default window size of %dx%d at location %d,%d",
+        s->width, s->height, s->x, s->y);
   }
 use_root_window:
 
@@ -601,8 +615,10 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     if (ximagesrc->cursor_image) {
       gint x, y, width, height;
 
-      x = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot;
-      y = ximagesrc->cursor_image->y - ximagesrc->cursor_image->yhot;
+      x = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot -
+          ximagesrc->x;
+      y = ximagesrc->cursor_image->y - ximagesrc->cursor_image->yhot -
+          ximagesrc->y;
       width = ximagesrc->cursor_image->width;
       height = ximagesrc->cursor_image->height;
 
@@ -696,10 +712,12 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
       int startx, starty, iwidth, iheight;
       gboolean cursor_in_image = TRUE;
 
-      cx = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot;
+      cx = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot -
+          ximagesrc->x;
       if (cx < 0)
         cx = 0;
-      cy = ximagesrc->cursor_image->y - ximagesrc->cursor_image->yhot;
+      cy = ximagesrc->cursor_image->y - ximagesrc->cursor_image->yhot -
+          ximagesrc->y;
       if (cy < 0)
         cy = 0;
       count = ximagesrc->cursor_image->width * ximagesrc->cursor_image->height;
