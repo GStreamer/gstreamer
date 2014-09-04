@@ -1344,10 +1344,6 @@ gst_mss_demux_stream_download_uri (GstMssDemux * demux,
     }
 
     if (G_LIKELY (stream->last_ret == GST_FLOW_OK)) {
-      /* flush the proxypads so that the EOS state is reset */
-      gst_pad_push_event (stream->src_srcpad, gst_event_new_flush_start ());
-      gst_pad_push_event (stream->src_srcpad, gst_event_new_flush_stop (TRUE));
-
       stream->download_start_time = g_get_monotonic_time ();
       gst_element_sync_state_with_parent (stream->src);
 
@@ -1360,6 +1356,10 @@ gst_mss_demux_stream_download_uri (GstMssDemux * demux,
   } else {
     stream->last_ret = GST_FLOW_CUSTOM_ERROR;
   }
+
+  /* flush the proxypads so that the EOS state is reset */
+  gst_pad_push_event (stream->src_srcpad, gst_event_new_flush_start ());
+  gst_pad_push_event (stream->src_srcpad, gst_event_new_flush_stop (TRUE));
 
   gst_element_set_state (stream->src, GST_STATE_READY);
 }
