@@ -494,6 +494,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
             } else {
               offset = prev->offset + prev->size;
             }
+            file->offset = offset;
           }
         } else {
           file->size = -1;
