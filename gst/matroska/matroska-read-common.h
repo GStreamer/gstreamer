@@ -76,8 +76,9 @@ typedef struct _GstMatroskaReadCommon {
   GstToc                  *toc;
   gboolean                toc_updated;
 
-  /* start-of-segment */
+  /* start-of-segment and length */
   guint64                  ebml_segment_start;
+  guint64                  ebml_segment_length;
 
   /* a cue (index) table */
   GArray                  *index;
