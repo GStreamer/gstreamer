@@ -70,7 +70,6 @@ gst_validate_monitor_factory_create (GstObject * target,
         (GST_ELEMENT_CAST (target), runner, parent));
   }
 
-  g_return_val_if_fail (target != NULL, NULL);
   gst_validate_override_registry_attach_overrides (monitor);
   return monitor;
 }
