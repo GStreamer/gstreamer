@@ -715,7 +715,7 @@ ges_validate_handle_request_state_change (GstMessage * message,
 }
 
 gint
-ges_validate_print_action_types (gchar ** types, gint num_types)
+ges_validate_print_action_types (const gchar ** types, gint num_types)
 {
   ges_validate_register_action_types ();
 
