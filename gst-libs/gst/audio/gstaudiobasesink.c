@@ -1464,15 +1464,21 @@ gst_audio_base_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
      * yet. if some other error occures, we continue. */
   } while (status == GST_CLOCK_UNSCHEDULED);
 
-  GST_OBJECT_LOCK (sink);
   GST_DEBUG_OBJECT (sink, "latency synced");
+
+  /* Do not acquire the sink object lock before trying to get time on the Sink. 
+   * The get_time call may need to acquire the pulse audio mainloop lock. This can 
+   * cause a deadlock with the Pulse Audio main loop thread which in turn has 
+   * acquired its mainloop lock and now needs to acquire Object lock on the sink. */
+  itime = gst_audio_clock_get_time (sink->provided_clock);
+  itime = gst_audio_clock_adjust (sink->provided_clock, itime);
+
+  GST_OBJECT_LOCK (sink);
 
   /* when we prerolled in time, we can accurately set the calibration,
    * our internal clock should exactly have been the latency (== the running
    * time of the external clock) */
   etime = GST_ELEMENT_CAST (sink)->base_time + time;
-  itime = gst_audio_clock_get_time (sink->provided_clock);
-  itime = gst_audio_clock_adjust (sink->provided_clock, itime);
 
   if (status == GST_CLOCK_EARLY) {
     /* when we prerolled late, we have to take into account the lateness */
