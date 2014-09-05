@@ -60,6 +60,10 @@ struct _GstV4l2Src
   guint64 offset;
 
   GstClockTime ctrl_time;
+
+  /* Timestamp sanity check */
+  GstClockTime last_timestamp;
+  gboolean has_bad_timestamp;
 };
 
 struct _GstV4l2SrcClass

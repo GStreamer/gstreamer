@@ -561,6 +561,9 @@ gst_v4l2src_start (GstBaseSrc * src)
   v4l2src->ctrl_time = 0;
   gst_object_sync_values (GST_OBJECT (src), v4l2src->ctrl_time);
 
+  v4l2src->has_bad_timestamp = FALSE;
+  v4l2src->last_timestamp = 0;
+
   return TRUE;
 }
 
@@ -575,6 +578,9 @@ static gboolean
 gst_v4l2src_unlock_stop (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
+
+  v4l2src->last_timestamp = 0;
+
   return gst_v4l2_object_unlock_stop (v4l2src->v4l2object);
 }
 
@@ -670,7 +676,8 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     abs_time = GST_CLOCK_TIME_NONE;
   }
 
-  if (timestamp != GST_CLOCK_TIME_NONE) {
+retry:
+  if (!v4l2src->has_bad_timestamp && timestamp != GST_CLOCK_TIME_NONE) {
     struct timespec now;
     GstClockTime gstnow;
 
@@ -680,7 +687,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     clock_gettime (CLOCK_MONOTONIC, &now);
     gstnow = GST_TIMESPEC_TO_TIME (now);
 
-    if (gstnow < timestamp && (timestamp - gstnow) > (10 * GST_SECOND)) {
+    if (timestamp > gstnow || (gstnow - timestamp) > (10 * GST_SECOND)) {
       GTimeVal now;
 
       /* very large diff, fall back to system time */
@@ -688,11 +695,38 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
       gstnow = GST_TIMEVAL_TO_TIME (now);
     }
 
-    if (gstnow > timestamp) {
-      delay = gstnow - timestamp;
-    } else {
-      delay = 0;
+    /* Detect buggy drivers here, and stop using their timestamp. Failing any
+     * of these condition would imply a very buggy driver:
+     *   - Timestamp in the future
+     *   - Timestamp is going backward compare to last seen timestamp
+     *   - Timestamp is jumping forward for less then a frame duration
+     *   - Delay is bigger then the actual timestamp
+     * */
+    if (timestamp > gstnow) {
+      GST_WARNING_OBJECT (v4l2src,
+          "Timestamp in the future detected, ignoring driver timestamps");
+      v4l2src->has_bad_timestamp = TRUE;
+      goto retry;
     }
+
+    if (v4l2src->last_timestamp > timestamp) {
+      GST_WARNING_OBJECT (v4l2src,
+          "Timestamp going backward, ignoring driver timestamps");
+      v4l2src->has_bad_timestamp = TRUE;
+      goto retry;
+    }
+
+    delay = gstnow - timestamp;
+
+    if (delay > timestamp) {
+      GST_WARNING_OBJECT (v4l2src,
+          "Timestamp does not correlate with any clock, ignoring driver timestamps");
+      v4l2src->has_bad_timestamp = TRUE;
+      goto retry;
+    }
+
+    /* Save last timestamp for sanity checks */
+    v4l2src->last_timestamp = timestamp;
 
     GST_DEBUG_OBJECT (v4l2src, "ts: %" GST_TIME_FORMAT " now %" GST_TIME_FORMAT
         " delay %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
