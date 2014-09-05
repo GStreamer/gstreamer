@@ -431,7 +431,8 @@ gst_dash_demux_handle_message (GstBin * bin, GstMessage * msg)
           /* error, but ask to retry */
           g_mutex_lock (&stream->fragment_download_lock);
           if (!stream->download_finished) {
-            stream->last_ret = GST_FLOW_CUSTOM_ERROR;
+            if (stream->last_ret == GST_FLOW_OK)
+              stream->last_ret = GST_FLOW_CUSTOM_ERROR;
             stream->download_finished = TRUE;
           }
           g_cond_signal (&stream->fragment_download_cond);
@@ -2288,7 +2289,9 @@ gst_dash_demux_stream_download_uri (GstDashDemux * demux,
     g_mutex_unlock (&stream->fragment_download_lock);
   } else {
     g_mutex_lock (&stream->fragment_download_lock);
-    ret = stream->last_ret = GST_FLOW_CUSTOM_ERROR;
+    if (stream->last_ret == GST_FLOW_OK)
+      stream->last_ret = GST_FLOW_CUSTOM_ERROR;
+    ret = stream->last_ret;
     g_mutex_unlock (&stream->fragment_download_lock);
   }
 
