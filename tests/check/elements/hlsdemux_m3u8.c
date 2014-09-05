@@ -26,11 +26,11 @@
 
 #include <gst/check/gstcheck.h>
 
-GST_DEBUG_CATEGORY (fragmented_debug);
-
 #undef GST_CAT_DEFAULT
 #include "m3u8.h"
 #include "m3u8.c"
+
+GST_DEBUG_CATEGORY (fragmented_debug);
 
 static const gchar *INVALID_PLAYLIST = "#EXTM3 UINVALID";
 
