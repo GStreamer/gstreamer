@@ -22,6 +22,7 @@ EXPORTS
 	gst_app_src_get_stream_type
 	gst_app_src_get_type
 	gst_app_src_push_buffer
+	gst_app_src_push_sample
 	gst_app_src_set_callbacks
 	gst_app_src_set_caps
 	gst_app_src_set_emit_signals

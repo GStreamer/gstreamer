@@ -107,6 +107,7 @@ struct _GstAppSrcClass
   /* actions */
   GstFlowReturn (*push_buffer)     (GstAppSrc *appsrc, GstBuffer *buffer);
   GstFlowReturn (*end_of_stream)   (GstAppSrc *appsrc);
+  GstFlowReturn (*push_sample)     (GstAppSrc *appsrc, GstSample *sample);
 
   /*< private >*/
   gpointer     _gst_reserved[GST_PADDING];
@@ -140,6 +141,7 @@ gboolean         gst_app_src_get_emit_signals        (GstAppSrc *appsrc);
 
 GstFlowReturn    gst_app_src_push_buffer             (GstAppSrc *appsrc, GstBuffer *buffer);
 GstFlowReturn    gst_app_src_end_of_stream           (GstAppSrc *appsrc);
+GstFlowReturn    gst_app_src_push_sample             (GstAppSrc *appsrc, GstSample *sample);
 
 void             gst_app_src_set_callbacks           (GstAppSrc * appsrc,
                                                       GstAppSrcCallbacks *callbacks,

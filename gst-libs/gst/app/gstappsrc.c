@@ -34,7 +34,10 @@
  * describing the format of the data that will be pushed with appsrc. An
  * exception to this is when pushing buffers with unknown caps, in which case no
  * caps should be set. This is typically true of file-like sources that push raw
- * byte buffers.
+ * byte buffers. If you don't want to explicitly set the caps you can use
+ * gst_app_src_push_sample, this method get the caps associated with the
+ * sample and set them on appsrc replacing any previous setted caps if
+ * different from that of the sample.
  *
  * The main way of handing data to the appsrc element is by calling the
  * gst_app_src_push_buffer() method or by emitting the push-buffer action signal.
@@ -62,12 +65,12 @@
  * These signals allow the application to operate the appsrc in two different
  * ways:
  *
- * The push model, in which the application repeatedly calls the push-buffer method
- * with a new buffer. Optionally, the queue size in the appsrc can be controlled
- * with the enough-data and need-data signals by respectively stopping/starting
- * the push-buffer calls. This is a typical mode of operation for the
- * stream-type "stream" and "seekable". Use this model when implementing various
- * network protocols or hardware devices.
+ * The push model, in which the application repeatedly calls the push-buffer/push-sample 
+ * method with a new buffer/sample. Optionally, the queue size in the appsrc 
+ * can be controlled with the enough-data and need-data signals by respectively 
+ * stopping/starting the push-buffer/push-sample calls. This is a typical 
+ * mode of operation for the stream-type "stream" and "seekable". Use this 
+ * model when implementing various network protocols or hardware devices.
  *
  * The pull model where the need-data signal triggers the next push-buffer call.
  * This mode is typically used in the "random-access" stream-type. Use this
@@ -144,6 +147,7 @@ enum
   /* actions */
   SIGNAL_PUSH_BUFFER,
   SIGNAL_END_OF_STREAM,
+  SIGNAL_PUSH_SAMPLE,
 
   LAST_SIGNAL
 };
@@ -236,6 +240,8 @@ static gboolean gst_app_src_query (GstBaseSrc * src, GstQuery * query);
 
 static GstFlowReturn gst_app_src_push_buffer_action (GstAppSrc * appsrc,
     GstBuffer * buffer);
+static GstFlowReturn gst_app_src_push_sample_action (GstAppSrc * appsrc,
+    GstSample * sample);
 
 static guint gst_app_src_signals[LAST_SIGNAL] = { 0 };
 
@@ -463,6 +469,33 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           push_buffer), NULL, NULL, __gst_app_marshal_ENUM__BOXED,
       GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER);
 
+  /**
+    * GstAppSrc::push-sample:
+    * @appsrc: the appsrc
+    * @sample: a sample from which extract buffer to push
+    *
+    * Extract a buffer from the provided sample and adds the extracted buffer 
+    * to the queue of buffers that the appsrc element will
+    * push to its source pad. This function set the appsrc caps based on the caps
+    * in the sample and reset the caps if they change. 
+    * Only the caps and the buffer of the provided sample are used and not 
+    * for example the segment in the sample. 
+    * This function does not take ownership of the
+    * sample so the sample needs to be unreffed after calling this function.
+    *
+    * When the block property is TRUE, this function can block until free space
+    * becomes available in the queue.
+    * 
+    * Since: 1.6
+    * 
+    */
+  gst_app_src_signals[SIGNAL_PUSH_SAMPLE] =
+      g_signal_new ("push-sample", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSrcClass,
+          push_sample), NULL, NULL, __gst_app_marshal_ENUM__BOXED,
+      GST_TYPE_FLOW_RETURN, 1, GST_TYPE_SAMPLE);
+
+
    /**
     * GstAppSrc::end-of-stream:
     * @appsrc: the appsrc
@@ -498,6 +531,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   basesrc_class->query = gst_app_src_query;
 
   klass->push_buffer = gst_app_src_push_buffer_action;
+  klass->push_sample = gst_app_src_push_sample_action;
   klass->end_of_stream = gst_app_src_end_of_stream;
 
   g_type_class_add_private (klass, sizeof (GstAppSrcPrivate));
@@ -897,12 +931,12 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
 
   desired_position = segment->position;
 
-  GST_DEBUG_OBJECT (appsrc, "seeking to %" G_GINT64_FORMAT ", format %s",
-      desired_position, gst_format_get_name (segment->format));
-
   /* no need to try to seek in streaming mode */
   if (priv->stream_type == GST_APP_STREAM_TYPE_STREAM)
     return TRUE;
+
+  GST_DEBUG_OBJECT (appsrc, "seeking to %" G_GINT64_FORMAT ", format %s",
+      desired_position, gst_format_get_name (segment->format));
 
   if (priv->callbacks.seek_data)
     res = priv->callbacks.seek_data (appsrc, desired_position, priv->user_data);
@@ -1186,8 +1220,8 @@ seek_error:
 void
 gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
 {
-  GstCaps *new_caps;
   GstAppSrcPrivate *priv;
+  gboolean caps_changed;
 
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
@@ -1196,11 +1230,18 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
   g_mutex_lock (&priv->mutex);
 
   GST_OBJECT_LOCK (appsrc);
-  GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
+  if (caps && priv->last_caps)
+    caps_changed = !gst_caps_is_equal (caps, priv->last_caps);
+  else
+    caps_changed = (caps != priv->last_caps);
 
-  new_caps = caps ? gst_caps_copy (caps) : NULL;
-  g_queue_push_tail (priv->queue, new_caps);
-  gst_caps_replace (&priv->last_caps, new_caps);
+  if (caps_changed) {
+    GstCaps *new_caps;
+    new_caps = caps ? gst_caps_copy (caps) : NULL;
+    GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
+    g_queue_push_tail (priv->queue, new_caps);
+    gst_caps_replace (&priv->last_caps, new_caps);
+  }
 
   GST_OBJECT_UNLOCK (appsrc);
 
@@ -1620,6 +1661,18 @@ eos:
   }
 }
 
+static GstFlowReturn
+gst_app_src_push_sample_internal (GstAppSrc * appsrc, GstSample * sample)
+{
+  GstBuffer *buffer;
+  GstCaps *caps;
+  g_return_val_if_fail (GST_IS_SAMPLE (sample), GST_FLOW_ERROR);
+  caps = gst_sample_get_caps (sample);
+  gst_app_src_set_caps (appsrc, caps);
+  buffer = gst_sample_get_buffer (sample);
+  return gst_app_src_push_buffer_full (appsrc, buffer, FALSE);
+}
+
 /**
  * gst_app_src_push_buffer:
  * @appsrc: a #GstAppSrc
@@ -1641,12 +1694,47 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
   return gst_app_src_push_buffer_full (appsrc, buffer, TRUE);
 }
 
+/**
+ * gst_app_src_push_sample:
+ * @appsrc: a #GstAppSrc
+ * @sample: (transfer none): a #GstSample from wich extract buffer to 
+ * push and caps to set
+ *
+ * Extract a buffer from the provided sample and adds it to the queue of 
+ * buffers that the appsrc element will push to its source pad. Any 
+ * previous caps setted on appsrc will be replaced by the caps associated 
+ * with the sample if not equal.
+ *
+ * When the block property is TRUE, this function can block until free
+ * space becomes available in the queue.
+ *
+ * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
+ * #GST_FLOW_FLUSHING when @appsrc is not PAUSED or PLAYING.
+ * #GST_FLOW_EOS when EOS occured.
+ * 
+ * Since: 1.6
+ * 
+ */
+GstFlowReturn
+gst_app_src_push_sample (GstAppSrc * appsrc, GstSample * sample)
+{
+  return gst_app_src_push_sample_internal (appsrc, sample);
+}
+
 /* push a buffer without stealing the ref of the buffer. This is used for the
  * action signal. */
 static GstFlowReturn
 gst_app_src_push_buffer_action (GstAppSrc * appsrc, GstBuffer * buffer)
 {
   return gst_app_src_push_buffer_full (appsrc, buffer, FALSE);
+}
+
+/* push a sample without stealing the ref. This is used for the
+ * action signal. */
+static GstFlowReturn
+gst_app_src_push_sample_action (GstAppSrc * appsrc, GstSample * sample)
+{
+  return gst_app_src_push_sample_internal (appsrc, sample);
 }
 
 /**
