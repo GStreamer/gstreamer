@@ -22,22 +22,23 @@
 /**
  * SECTION:element-dvbsrc
  *
- * dvbsrc can be used to capture video from DVB cards, DVB-T, DVB-S or DVB-T.
+ * dvbsrc can be used to capture media from DVB cards. Supported DTV
+ * broadcasting standards include DVB-T/C/S, ATSC and ISDBT.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
  * gst-launch dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mad ! alsasink
- * ]| Captures a full transport stream from dvb card 0 that is a DVB-T card at tuned frequency 514000000 Hz with other parameters as seen in the pipeline and renders the first tv program on the transport stream.
+ * ]| Captures a full transport stream from DVB card 0 that is a DVB-T card at tuned frequency 514000000 Hz with other parameters as seen in the pipeline and renders the first TV program on the transport stream.
  * |[
  * gst-launch dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 pids=100:256:257 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mad ! alsasink
- * ]| Captures and renders a transport stream from dvb card 0 that is a DVB-T card for a program at tuned frequency 514000000 Hz with PMT pid 100 and elementary stream pids of 256, 257 with other parameters as seen in the pipeline.
+ * ]| Captures and renders a transport stream from DVB card 0 that is a DVB-T card for a program at tuned frequency 514000000 Hz with PMT PID 100 and elementary stream PIDs of 256, 257 with other parameters as seen in the pipeline.
  * |[
  * gst-launch dvbsrc polarity="h" frequency=11302000 symbol-rate=27500 diseqc-source=0 pids=50:102:103 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mad ! alsasink
- * ]| Captures and renders a transport stream from dvb card 0 that is a DVB-S card for a program at tuned frequency 11302000 kHz, symbol rate of 27500 kBd (kilo bauds with PMT pid of 50 and elementary stream pids of 102 and 103.
+ * ]| Captures and renders a transport stream from DVB card 0 that is a DVB-S card for a program at tuned frequency 11302000 kHz, symbol rate of 27500 kBd (kilo bauds) with PMT PID of 50 and elementary stream PIDs of 102 and 103.
  * |[
  gst-launch dvbsrc frequency=515142857 guard=16 trans-mode="8k" isdbt-layer-enabled=7 isdbt-partial-reception=1 isdbt-layera-fec="2/3" isdbt-layera-modulation="QPSK" isdbt-layera-segment-count=1 isdbt-layera-time-interleaving=4 isdbt-layerb-fec="3/4" isdbt-layerb-modulation="qam-64" isdbt-layerb-segment-count=12 isdbt-layerb-time-interleaving=2 isdbt-layerc-fec="1/2" isdbt-layerc-modulation="qam-64" isdbt-layerc-segment-count=0 isdbt-layerc-time-interleaving=0 delsys="isdb-t" ! tsdemux ! "video/x-h264" ! h264parse ! queue ! avdec_h264 ! videoconvert ! queue ! autovideosink
- * ]| Captures and renders the video track of Tv Paraíba HD (Globo affiliate) in Campina Grande (Brasil). This is an ISDB-T (ISDB-Tb) broadcast.
+ * ]| Captures and renders the video track of TV Paraíba HD (Globo affiliate) in Campina Grande, Brazil. This is an ISDB-T (Brazilian ISDB-Tb variant) broadcast.
  * </refsect2>
  */
 
@@ -1133,7 +1134,7 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
           object->bandwidth = 6000000;
           break;
         default:
-          /* we don't know which bandwidth are set */
+          /* we don't know which bandwidth is set */
           object->bandwidth = 0;
           break;
       }
@@ -1441,7 +1442,7 @@ gst_dvbsrc_check_delsys (struct dtv_property *prop, guchar delsys)
     if (prop->u.buffer.data[i] == delsys)
       return TRUE;
   }
-  GST_LOG ("Adapter does not suport delsys: %d", delsys);
+  GST_LOG ("Adapter does not support delsys: %d", delsys);
   return FALSE;
 }
 
