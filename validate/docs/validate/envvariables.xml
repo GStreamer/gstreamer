@@ -25,22 +25,22 @@
 
   <para>
     This environment variable can be set to a list of debug options,
-    which cause GstValidate to print out different types of test result informations
-    and concider differently the level of the reported issues.
+    which cause GstValidate to print out different types of test result information
+    and consider differently the level of the reported issues.
     <variablelist>
       <varlistentry>
         <term>fatal-criticals</term>
-        <listitem><para>Causes GstValidate to concider only critical issues as import enough to concider the test failed (default behaviour)</para>
+        <listitem><para>Causes GstValidate to consider only critical issues as import enough to consider the test failed (default behaviour)</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term>fatal-warnings</term>
-        <listitem><para>Causes GstValidate to concider warning, and critical issues as import enough to concider the test failed</para>
+        <listitem><para>Causes GstValidate to consider warning, and critical issues as import enough to consider the test failed</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term>fatal-issues</term>
-        <listitem><para>Causes GstValidate to concider issue, warning, and critical issues as import enough to concider the test failed</para>
+        <listitem><para>Causes GstValidate to consider issue, warning, and critical issues as import enough to consider the test failed</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -55,7 +55,7 @@
       </varlistentry>
       <varlistentry>
         <term>print-criticals</term>
-        <listitem><para>Causes GstValidate to only print criticals issues in the final reports</para>
+        <listitem><para>Causes GstValidate to only print critical issues in the final reports</para>
         </listitem>
       </varlistentry>
     </variablelist>

@@ -28,7 +28,7 @@ this helps tracking down the problem and fixing it.
 
 = Runner
 The GstValidateRunner is the point of communication for the app to gst-validate
-monitoring. It provides an API to gather reports and to make them acessible
+monitoring. It provides an API to gather reports and to make them accessible
 to the application.
 
 == Reporter types

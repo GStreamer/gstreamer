@@ -12,7 +12,7 @@
   </refmeta>
   <refnamediv>
     <refname>GstValidate command line tools</refname>
-    <refpurpose>Documenation of the various command line tools provided by GstValidate</refpurpose>
+    <refpurpose>Documentation of the various command line tools provided by GstValidate</refpurpose>
   </refnamediv>
 
   <refsect1>
@@ -38,7 +38,7 @@
       It is the simplest tool and is used to run a gst
       launch style pipeline. Monitors are added to it to identify issues in the
       used elements. At the end a report will be printed, this report will
-      contain informations about all issues that were encontered while running
+      contain information about all issues that were encountered while running
       gst-validate. To view issues as they are created, set the environment
       variable GST_DEBUG=validate:2 and it will be printed as gstreamer
       debugging. You can basically run any GstPipeline pipeline using it.
@@ -123,7 +123,7 @@
       <para>
         <informalexample>
           Moreover, you can set the <link linkend="gst-encoding-profile-set-presence">presence</link> property of an
-          encoding profile using the '|presence' synthax such as in:
+          encoding profile using the '|presence' syntax such as in:
           <programlisting>video/webm:video/x-vp8|1:audio/x-vorbis</programlisting>
         </informalexample>
 
@@ -167,7 +167,7 @@
       <informalexample>
         A command line tool checking that media files discovering works properly with gst-discoverer. Basically it
         needs a reference text file containing valid information about a media file (which can be generated with the same tool)
-        and then it will be able to check that those informations correspond to what is reported by gst-discoverer over new runs.
+        and then it will be able to check that those information correspond to what is reported by gst-discoverer over new runs.
         For example, given that we have a valid reference.media_info file, we can run:
         <programlisting>gst-validate-media-check-&GST_API_VERSION; file:///./file.ogv --expected-results reference.media_info</programlisting>
       </informalexample>
@@ -190,7 +190,7 @@
     </para>
     <para>
       <informalexample>
-        You can find detailed informations about the launcher reading its help manual:
+        You can find detailed information about the launcher reading its help manual:
         <programlisting>gst-validate-launcher --help</programlisting>
       </informalexample>
     </para>
@@ -201,7 +201,7 @@
         the test to be launched by the gst-validate-launcher.
       </para>
       <para>
-        In that example, we will concider that you want to write a whole new testsuite based on
+        In that example, we will consider that you want to write a whole new testsuite based on
         your own media samples and <link linkend="ScenarioFileFormat">scenarios</link>.
         That set of file and the testsuite implementation file will be structured as follow:
         <synopsis>
@@ -225,7 +225,7 @@ testsuite_folder/
             <programlisting>gst-validate-media-check-&GST_API_VERSION; http://someonlinestream.com/thestream --output-file /path/to/testsuite_folder/sample_files/thestream.stream_info</programlisting>
         </informalexample>
       </para>
-        The gst-validate-launcher will use those .media_info and .stream_info files to generate the tests as those contain the necessary informations.
+        The gst-validate-launcher will use those .media_info and .stream_info files to generate the tests as those contain the necessary information.
       <para>
       </para>
       <para>
@@ -250,7 +250,7 @@ os.environ["GST_VALIDATE_SCENARIOS_PATH"] = \
 validate.add_scenarios(["scenario", "scenario1"])
 
 
-# Now add the thearo and vorbis in OGG as a wanted transcoding format. That means
+# Now add the theora and vorbis in OGG as a wanted transcoding format. That means
 # that tests with all the media files/streams will be converted to that format.
 validate.add_encoding_formats([MediaFormatCombination("ogg", "vorbis", "theora")])
 
@@ -279,7 +279,7 @@ validate.set_default_blacklist([
             Run playbin pipelines on file.mp4, file1.mkv and file2.ogv executing "scenario" and "scenario1" scenarios
           </listitem>
           <listitem>
-            Transcode file.mp4, file1.mkv and file2.ogv to thearo and vorbis in OGG
+            Transcode file.mp4, file1.mkv and file2.ogv to theora and vorbis in OGG
           </listitem>
         </itemizedlist>
         <informalexample>

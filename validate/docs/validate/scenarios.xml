@@ -25,12 +25,12 @@
       The name of the scenario is the name of the file without its '.scenario' extension.
       The scenario file file format is based on the <link linkend="GstStructure"><type>GstStructure</type></link> serialized format which is a basic, type aware,
       key value format.
-      It takes the type of the action as first coma separeted field, and then
+      It takes the type of the action as first coma separated field, and then
       the key values pair of the form 'parameter=value' separated by comas. The values
       type will be guessed if not casted as in 'parameter=(string)value'. You can force the type
       guessing system to actually know what type you want by giving it the right hints. For example
-      to make sure the value is a double, you should add a decimal (ie '1' will be concidered as a
-      int, but '1.0' will be concidered as a double and '"1.0"' will be concidered as a string)
+      to make sure the value is a double, you should add a decimal (ie '1' will be considered as a
+      int, but '1.0' will be considered as a double and '"1.0"' will be considered as a string)
     </para>
     <para>
       For example to represent a seek action, you should add the following line in the '.scenario'
@@ -53,7 +53,7 @@
       Each line in the '.scenario' file represent an action (you can also use \ at the end of a line
       write a single action on multiple lines). Usually you should start you scenario with a 'description'
       "config" action in order for the user to have more information about the scenario. It can contain
-      a 'summary' field which is a string explaning what the scenario does and then several info fields
+      a 'summary' field which is a string explaining what the scenario does and then several info fields
       about the scenario. You can find more info about it running:
     </para>
     <para>
