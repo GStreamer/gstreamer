@@ -1462,8 +1462,9 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
   GST_INFO_OBJECT (object, "Using frontend device: %s", frontend_dev);
 
   /* open frontend */
-  if ((object->fd_frontend =
-          open (frontend_dev, writable ? O_RDWR : O_RDONLY)) < 0) {
+  LOOP_WHILE_EINTR (object->fd_frontend,
+      open (frontend_dev, writable ? O_RDWR : O_RDONLY));
+  if (object->fd_frontend < 0) {
     switch (errno) {
       case ENOENT:
         GST_ELEMENT_ERROR (object, RESOURCE, NOT_FOUND,
