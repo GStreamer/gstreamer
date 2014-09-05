@@ -3135,6 +3135,11 @@ gst_v4l2_object_set_crop (GstV4l2Object * obj)
     return FALSE;
   }
 
+  if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CROP, &crop) < 0) {
+    GST_WARNING_OBJECT (obj->element, "VIDIOC_G_CROP failed");
+    return FALSE;
+  }
+
   GST_DEBUG_OBJECT (obj->element,
       "Got cropping left %u, top %u, size %ux%u", crop.c.left, crop.c.top,
       crop.c.width, crop.c.height);

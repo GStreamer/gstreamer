@@ -321,6 +321,11 @@ gst_v4l2sink_sync_crop_fields (GstV4l2Sink * v4l2sink)
       return;
     }
 
+    if (v4l2_ioctl (fd, VIDIOC_G_CROP, &crop) < 0) {
+      GST_WARNING_OBJECT (v4l2sink, "VIDIOC_G_CROP failed");
+      return;
+    }
+
     v4l2sink->crop_fields_set = 0;
     v4l2sink->crop = crop.c;
   }
