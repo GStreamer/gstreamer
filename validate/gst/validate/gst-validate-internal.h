@@ -27,6 +27,9 @@
 GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 #define GST_CAT_DEFAULT gstvalidate_debug
 
+extern GRegex *newline_regex;
+
+
 typedef struct _GstValidateScenario        GstValidateScenario;
 typedef struct _GstValidateAction          GstValidateAction;
 typedef struct _GstValidateActionParameter GstValidateActionParameter;
@@ -38,6 +41,7 @@ struct _GstValidateActionType
   GstMiniObject          mini_object;
 
   gchar *name;
+  gchar *implementer_namespace;
 
   GstValidateExecuteAction execute;
 

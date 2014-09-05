@@ -304,7 +304,7 @@ static void
 _register_playbin_actions (void)
 {
 /* *INDENT-OFF* */
-  gst_validate_add_action_type ("set-subtitle", _execute_set_subtitles,
+  gst_validate_add_action_type ("set-subtitle", "validate-launcher", _execute_set_subtitles,
       (GstValidateActionParameter []) {
         {
           .name = "subtitle-file",
@@ -325,7 +325,7 @@ _register_playbin_actions (void)
       FALSE);
 
   /* Overriding default implementation */
-  gst_validate_add_action_type ("switch-track", _execute_switch_track,
+  gst_validate_add_action_type ("switch-track", "validate-launcher", _execute_switch_track,
       (GstValidateActionParameter []) {
         {
           .name = "type",

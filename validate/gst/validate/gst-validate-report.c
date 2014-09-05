@@ -43,9 +43,8 @@ static GstValidateDebugFlags _gst_validate_flags = 0;
 static GHashTable *_gst_validate_issues = NULL;
 static FILE **log_files = NULL;
 
-#ifndef GST_DISABLE_GST_DEBUG
-static GRegex *newline_regex = NULL;
-#endif
+
+GRegex *newline_regex = NULL;
 
 GST_DEBUG_CATEGORY_STATIC (gst_validate_report_debug);
 #undef GST_CAT_DEFAULT
@@ -481,6 +480,8 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
       g_string_printf (string, "\nAction type:");
       g_string_append_printf (string, "\n  Name: %s", type->name);
+      g_string_append_printf (string, "\n  Implementer namespace: %s",
+          type->implementer_namespace);
 
       if (type->is_config)
         g_string_append_printf (string,
@@ -572,13 +573,13 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
   g_string_append_vprintf (string, format, args);
 
+  if (!newline_regex)
+    newline_regex =
+        g_regex_new ("\n", G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
+
 #ifndef GST_DISABLE_GST_DEBUG
   {
     gchar *str;
-
-    if (!newline_regex)
-      newline_regex =
-          g_regex_new ("\n", G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
 
     str = g_regex_replace (newline_regex, string->str, string->len, 0,
         "", 0, NULL);
