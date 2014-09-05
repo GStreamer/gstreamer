@@ -724,6 +724,7 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   GstCapsFeatures *f;
   GstCaps *original_caps;
   gboolean original_has_meta = FALSE;
+  gboolean allocation_ret = TRUE;
 
   GST_DEBUG_OBJECT (overlay, "performing negotiation");
 
@@ -780,7 +781,7 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
     if (!gst_pad_peer_query (overlay->srcpad, query)) {
       /* no problem, we use the query defaults */
       GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
-      ret = FALSE;
+      allocation_ret = FALSE;
     }
 
     if (caps_has_meta && gst_query_find_allocation_meta (query,
@@ -792,10 +793,8 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   overlay->attach_compo_to_buffer = attach;
 
-  if (!ret && overlay->video_flushing) {
-    GST_DEBUG_OBJECT (overlay, "negotiation failed, schedule reconfigure");
-    gst_pad_mark_reconfigure (overlay->srcpad);
-
+  if (!allocation_ret && overlay->video_flushing) {
+    ret = FALSE;
   } else if (original_caps && !original_has_meta && !attach) {
     if (caps_has_meta) {
       /* Some elements (fakesink) claim to accept the meta on caps but won't
@@ -807,6 +806,11 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
       if (ret && !gst_base_text_overlay_can_handle_caps (caps))
         ret = FALSE;
     }
+  }
+
+  if (!ret) {
+    GST_DEBUG_OBJECT (overlay, "negotiation failed, schedule reconfigure");
+    gst_pad_mark_reconfigure (overlay->srcpad);
   }
 
   gst_caps_unref (caps);
