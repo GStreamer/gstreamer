@@ -325,7 +325,31 @@ _register_playbin_actions (void)
       FALSE);
 
   /* Overriding default implementation */
-  gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
+  gst_validate_add_action_type ("switch-track", _execute_switch_track,
+      (GstValidateActionParameter []) {
+        {
+          .name = "type",
+          .description = "Selects which track type to change (can be 'audio', 'video',"
+                          " or 'text').",
+          .mandatory = FALSE,
+          .types = "string",
+          .possible_variables = NULL,
+          .def = "audio",
+        },
+        {
+          .name = "index",
+          .description = "Selects which track of this type to use: it can be either a number,\n"
+                         "which will be the Nth track of the given type, or a number with a '+' or\n"
+                         "'-' prefix, which means a relative change (eg, '+1' means 'next track',\n"
+                         "'-1' means 'previous track')",
+          .mandatory = FALSE,
+          .types = "string: to switch track relatively\n"
+                   "int: To use the actual index to use",
+          .possible_variables = NULL,
+          .def = "+1",
+        },
+        {NULL}
+      },
       "The 'switch-track' command can be used to switch tracks.\n"
       "The 'type' argument selects which track type to change (can be 'audio', 'video',"
       " or 'text').\nThe 'index' argument selects which track of this type\n"
