@@ -28,7 +28,9 @@
 
 GST_DEBUG_CATEGORY (fragmented_debug);
 
+#undef GST_CAT_DEFAULT
 #include "m3u8.h"
+#include "m3u8.c"
 
 static const gchar *INVALID_PLAYLIST = "#EXTM3 UINVALID";
 
