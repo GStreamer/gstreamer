@@ -714,31 +714,27 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
       cx = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot -
           ximagesrc->x;
-      if (cx < 0)
-        cx = 0;
       cy = ximagesrc->cursor_image->y - ximagesrc->cursor_image->yhot -
           ximagesrc->y;
-      if (cy < 0)
-        cy = 0;
       count = ximagesrc->cursor_image->width * ximagesrc->cursor_image->height;
 
       /* only get where cursor last was, if it is in our range */
       if (ximagesrc->endx > ximagesrc->startx &&
           ximagesrc->endy > ximagesrc->starty) {
         /* check bounds */
-        if (cx + ximagesrc->cursor_image->width < ximagesrc->startx ||
-            cx > ximagesrc->endx) {
+        if (cx + ximagesrc->cursor_image->width < (int) ximagesrc->startx ||
+            cx > (int) ximagesrc->endx) {
           /* trivial reject */
           cursor_in_image = FALSE;
-        } else if (cy + ximagesrc->cursor_image->height < ximagesrc->starty ||
-            cy > ximagesrc->endy) {
+        } else if (cy + ximagesrc->cursor_image->height <
+            (int) ximagesrc->starty || cy > (int) ximagesrc->endy) {
           /* trivial reject */
           cursor_in_image = FALSE;
         } else {
           /* find intersect region */
 
-          startx = (cx < ximagesrc->startx) ? ximagesrc->startx : cx;
-          starty = (cy < ximagesrc->starty) ? ximagesrc->starty : cy;
+          startx = (cx < (int) ximagesrc->startx) ? ximagesrc->startx : cx;
+          starty = (cy < (int) ximagesrc->starty) ? ximagesrc->starty : cy;
           iwidth = (cx + ximagesrc->cursor_image->width < ximagesrc->endx) ?
               cx + ximagesrc->cursor_image->width - startx :
               ximagesrc->endx - startx;
