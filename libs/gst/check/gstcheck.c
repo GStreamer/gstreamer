@@ -291,6 +291,8 @@ gst_check_setup_src_pad (GstElement * element, GstStaticPadTemplate * tmpl)
  * fail_unless (gst_pad_push (mysrcpad, gst_buffer_new_and_alloc(2)) == GST_FLOW_OK);
  * ]|
  *
+ * For very simple input/output test scenarios checkout #gst_check_element_push_buffer_list and #gst_check_element_push_buffer.
+ *
  * Returns: (transfer full): A new pad that can be used to inject data on @element
  */
 GstPad *
@@ -404,7 +406,9 @@ gst_check_teardown_src_pad (GstElement * element)
  * @element: element to setup pad on
  * @tmpl: pad template
  *
- * Returns: (transfer full): a new pad
+ * Does the same as #gst_check_setup_sink_pad_by_name with the <emphasis> name </emphasis> parameter equal to "src".
+ *
+ * Returns: (transfer full): a new pad that can be used to check the output of @element
  */
 GstPad *
 gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * tmpl)
@@ -416,9 +420,13 @@ gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * tmpl)
  * gst_check_setup_sink_pad_by_name:
  * @element: element to setup pad on
  * @tmpl: pad template
- * @name: name
+ * @name: Name of the @element src pad that will be linked to the sink pad that will be setup
  *
- * Returns: (transfer full): a new pad
+ * Creates a new sink pad (based on the given @tmpl) and links it to the given @element src pad 
+ * (the pad that matches the given @name).
+ * You can set event/chain/query functions on this pad to check the output of the @element.
+ *
+ * Returns: (transfer full): a new pad that can be used to check the output of @element
  */
 GstPad *
 gst_check_setup_sink_pad_by_name (GstElement * element,
