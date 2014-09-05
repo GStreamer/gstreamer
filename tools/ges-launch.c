@@ -847,7 +847,8 @@ main (int argc, gchar ** argv)
   }
 
   if (list_action_types)
-    return ges_validate_print_action_types (argv + 1, argc - 1);
+    return ges_validate_print_action_types ((const gchar **) argv + 1,
+        argc - 1);
 
   tried_uris = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
   if (((!load_path && !scenario && (argc < 4)))) {
