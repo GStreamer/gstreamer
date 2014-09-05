@@ -871,7 +871,7 @@ main (int argc, gchar ** argv)
   _register_actions ();
 
   if (list_action_types) {
-    if (gst_validate_print_action_types (argv + 1, argc - 1))
+    if (gst_validate_print_action_types ((const gchar **) argv + 1, argc - 1))
       return 0;
 
     return -1;

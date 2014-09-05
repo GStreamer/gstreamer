@@ -93,7 +93,7 @@ GType gst_validate_action_get_type (void);
 #define GST_VALIDATE_ACTION_TYPE(obj)       ((GstValidateActionType*) obj)
 GType gst_validate_action_type_get_type     (void);
 
-gboolean gst_validate_print_action_types    (gchar ** wanted_types, gint num_wanted_types);
+gboolean gst_validate_print_action_types (const gchar ** wanted_types, gint num_wanted_types);
 
 /**
  * GstValidateActionParameter:

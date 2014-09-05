@@ -1981,7 +1981,8 @@ gst_validate_list_action_types (void)
  * Returns: True if all types could be printed
  */
 gboolean
-gst_validate_print_action_types (gchar ** wanted_types, gint num_wanted_types)
+gst_validate_print_action_types (const gchar ** wanted_types,
+    gint num_wanted_types)
 {
   GList *tmp;
   gint nfound = 0;

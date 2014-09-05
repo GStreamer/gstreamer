@@ -448,7 +448,7 @@ main (int argc, gchar ** argv)
   if (list_action_types) {
     _register_playbin_actions ();
 
-    if (!gst_validate_print_action_types (argv + 1, argc - 1)) {
+    if (!gst_validate_print_action_types ((const gchar **) argv + 1, argc - 1)) {
       GST_ERROR ("Could not print all wanted types");
       return -1;
     }
