@@ -789,7 +789,7 @@ main (int argc, gchar ** argv)
         "The audio sink used for playing back", "<audiosink>"},
 #ifdef HAVE_GST_VALIDATE
     {"list-action-types", 'y', 0, G_OPTION_ARG_NONE, &list_action_types,
-        "List the avalaible action types with which to write scenarios", NULL},
+        "List the available action types with which to write scenarios", NULL},
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &scenario,
         "Specify a GstValidate scenario to run, 'none' means load gst-validate"
           " but run no scenario on it", "<scenario_name>"},
