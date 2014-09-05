@@ -103,6 +103,7 @@ struct _GstFaceDetect
   gint flags;
   gint min_size_width;
   gint min_size_height;
+  gint min_stddev;
   gint updates;
 
   IplImage *cvGray;

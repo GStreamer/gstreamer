@@ -97,6 +97,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_face_detect_debug);
 #define DEFAULT_MIN_NEIGHBORS 3
 #define DEFAULT_MIN_SIZE_WIDTH 30
 #define DEFAULT_MIN_SIZE_HEIGHT 30
+#define DEFAULT_MIN_STDDEV 0
 
 /* Filter signals and args */
 enum
@@ -118,7 +119,8 @@ enum
   PROP_FLAGS,
   PROP_MIN_SIZE_WIDTH,
   PROP_MIN_SIZE_HEIGHT,
-  PROP_UPDATES
+  PROP_UPDATES,
+  PROP_MIN_STDDEV
 };
 
 
@@ -306,6 +308,14 @@ gst_face_detect_class_init (GstFaceDetectClass * klass)
           "When send update bus messages, if at all",
           GST_TYPE_FACE_DETECT_UPDATES, GST_FACEDETECT_UPDATES_EVERY_FRAME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MIN_STDDEV,
+      g_param_spec_int ("min-stddev", "Minimum image standard deviation",
+          "Minimum image average standard deviation: on images with standard "
+          "deviation lesser than this value facedetection will not be "
+          "performed. Setting this property help to save cpu and reduce "
+          "false positives not performing face detection on images with "
+          "little changes", 0,
+          255, DEFAULT_MIN_STDDEV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "facedetect",
@@ -336,6 +346,7 @@ gst_face_detect_init (GstFaceDetect * filter)
   filter->flags = DEFAULT_FLAGS;
   filter->min_size_width = DEFAULT_MIN_SIZE_WIDTH;
   filter->min_size_height = DEFAULT_MIN_SIZE_HEIGHT;
+  filter->min_stddev = DEFAULT_MIN_STDDEV;
   filter->cvFaceDetect =
       gst_face_detect_load_profile (filter, filter->face_profile);
   filter->cvNoseDetect =
@@ -404,6 +415,9 @@ gst_face_detect_set_property (GObject * object, guint prop_id,
     case PROP_MIN_SIZE_HEIGHT:
       filter->min_size_height = g_value_get_int (value);
       break;
+    case PROP_MIN_STDDEV:
+      filter->min_stddev = g_value_get_int (value);
+      break;
     case PROP_FLAGS:
       filter->flags = g_value_get_flags (value);
       break;
@@ -449,6 +463,9 @@ gst_face_detect_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MIN_SIZE_HEIGHT:
       g_value_set_int (value, filter->min_size_height);
+      break;
+    case PROP_MIN_STDDEV:
+      g_value_set_int (value, filter->min_stddev);
       break;
     case PROP_FLAGS:
       g_value_set_flags (value, filter->flags);
@@ -514,13 +531,26 @@ gst_face_detect_run_detector (GstFaceDetect * filter,
     CvHaarClassifierCascade * detector, gint min_size_width,
     gint min_size_height)
 {
-  return cvHaarDetectObjects (filter->cvGray, detector,
-      filter->cvStorage, filter->scale_factor, filter->min_neighbors,
-      filter->flags, cvSize (min_size_width, min_size_height)
+  double img_stddev = 0;
+  if (filter->min_stddev > 0) {
+    CvScalar mean, stddev;
+    cvAvgSdv (filter->cvGray, &mean, &stddev, NULL);
+    img_stddev = stddev.val[0];
+  }
+  if (img_stddev >= filter->min_stddev) {
+    return cvHaarDetectObjects (filter->cvGray, detector,
+        filter->cvStorage, filter->scale_factor, filter->min_neighbors,
+        filter->flags, cvSize (min_size_width, min_size_height)
 #if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-      , cvSize (0, 0)
+        , cvSize (0, 0)
 #endif
-      );
+        );
+  } else {
+    GST_LOG_OBJECT (filter,
+        "Calculated stddev %f lesser than min_stddev %d, detection not performed",
+        img_stddev, filter->min_stddev);
+    return cvCreateSeq (0, sizeof (CvSeq), sizeof (CvPoint), filter->cvStorage);
+  }
 }
 
 /* 
