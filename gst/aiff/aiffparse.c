@@ -830,7 +830,7 @@ gst_aiff_parse_create_caps (GstAiffParse * aiff)
     if (aiff->endianness == G_BIG_ENDIAN) {
       if (aiff->width == 32)
         format = "F32BE";
-      else if (aiff->width == 32)
+      else if (aiff->width == 64)
         format = "F64BE";
     }
   } else {
