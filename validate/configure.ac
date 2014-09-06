@@ -285,6 +285,7 @@ tools/launcher/apps/validate/Makefile
 docs/Makefile
 docs/version.entities
 docs/validate/Makefile
+docs/launcher/Makefile
 ])
 AC_OUTPUT
 
