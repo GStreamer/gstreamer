@@ -102,6 +102,10 @@ dnl check for documentation tools
 AG_GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.3])
 
+
+AC_CHECK_PROG(enable_sphinx_doc, sphinx-build, yes, no)
+AM_CONDITIONAL(HAVE_SPHINHX, test ! "x$enable_sphinx_doc" = "xno")
+
 dnl *** checks for libraries ***
 
 dnl *** checks for header files ***
