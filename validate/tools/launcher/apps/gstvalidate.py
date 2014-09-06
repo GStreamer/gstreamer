@@ -17,6 +17,7 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import os
+import sys
 import time
 import urlparse
 import subprocess
@@ -25,7 +26,8 @@ from loggable import Loggable
 
 from baseclasses import GstValidateTest, TestsManager, Test, \
     ScenarioManager, NamedDic, GstValidateTestsGenerator, \
-    GstValidateMediaDescriptor
+    GstValidateMediaDescriptor, GstValidateEncodingTestInterface, \
+    GstValidateBaseTestManager
 
 from utils import path2url, DEFAULT_TIMEOUT, which, \
     GST_SECOND, Result, Protocols

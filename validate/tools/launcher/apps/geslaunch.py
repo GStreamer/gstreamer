@@ -24,7 +24,8 @@ import subprocess
 import utils
 from urllib import unquote
 import xml.etree.ElementTree as ET
-from baseclasses import GstValidateTest, TestsManager, ScenarioManager, MediaFormatCombination
+from baseclasses import GstValidateTest, TestsManager, ScenarioManager, MediaFormatCombination, \
+    MediaDescriptor, GstValidateEncodingTestInterface
 
 GES_DURATION_TOLERANCE = utils.GST_SECOND / 2
 
