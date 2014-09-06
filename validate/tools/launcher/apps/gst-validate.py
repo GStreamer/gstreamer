@@ -97,7 +97,7 @@ class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
                 suffix = suffix.replace (".stream_info", "")
                 classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.media_descriptor.get_protocol(),
                                                                 str(comb).replace(' ', '_'),
-                                                                suffix)
+                                                                suffix.replace('.', '_'))
                 self.add_test(GstValidateTranscodingTest(classname,
                                                          self.test_manager.options,
                                                          self.test_manager.reporter,
