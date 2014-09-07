@@ -5107,7 +5107,7 @@ gst_avi_demux_find_next (GstAviDemux * avi, gfloat rate)
     stream = &avi->stream[i];
 
     /* ignore streams that finished */
-    if (GST_PAD_LAST_FLOW_RETURN (stream->pad) == GST_FLOW_EOS)
+    if (stream->pad && GST_PAD_LAST_FLOW_RETURN (stream->pad) == GST_FLOW_EOS)
       continue;
 
     position = stream->current_timestamp;
