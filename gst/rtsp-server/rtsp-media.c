@@ -2713,6 +2713,14 @@ no_setup_sdp:
   }
 }
 
+static void
+do_set_seqnum (GstRTSPStream * stream)
+{
+  guint16 seq_num;
+  seq_num = gst_rtsp_stream_get_current_seqnum (stream);
+  gst_rtsp_stream_set_seqnum_offset (stream, seq_num + 1);
+}
+
 /* call with state_lock */
 gboolean
 default_suspend (GstRTSPMedia * media)
@@ -2735,6 +2743,12 @@ default_suspend (GstRTSPMedia * media)
       ret = set_target_state (media, GST_STATE_NULL, TRUE);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
+      /* Because payloader needs to set the sequence number as
+       * monotonic, we need to preserve the sequence number
+       * after pause. (otherwise going from pause to play,  which
+       * is actually from NULL to PLAY will create a new sequence
+       * number. */
+      g_ptr_array_foreach (priv->streams, (GFunc) do_set_seqnum, NULL);
       break;
     default:
       break;
