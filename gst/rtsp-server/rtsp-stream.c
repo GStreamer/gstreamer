@@ -2468,6 +2468,48 @@ gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
 }
 
 /**
+ * gst_rtsp_stream_set_seqnum:
+ * @stream: a #GstRTSPStream
+ * @seqnum: a new sequence number
+ *
+ * Configure the sequence number in the payloader of @stream to @seqnum.
+ */
+void
+gst_rtsp_stream_set_seqnum_offset (GstRTSPStream * stream, guint16 seqnum)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  priv = stream->priv;
+
+  g_object_set (G_OBJECT (priv->payloader), "seqnum-offset", seqnum, NULL);
+}
+
+/**
+ * gst_rtsp_stream_get_seqnum:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the configured sequence number in the payloader of @stream.
+ *
+ * Returns: the sequence number of the payloader.
+ */
+guint16
+gst_rtsp_stream_get_current_seqnum (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  guint seqnum;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), 0);
+
+  priv = stream->priv;
+
+  g_object_get (G_OBJECT (priv->payloader), "seqnum", &seqnum, NULL);
+
+  return seqnum;
+}
+
+/**
  * gst_rtsp_stream_transport_filter:
  * @stream: a #GstRTSPStream
  * @func: (scope call) (allow-none): a callback
