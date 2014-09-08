@@ -23,6 +23,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -53,10 +54,14 @@ struct _GstWavEnc {
   GList     *notes;
 
   /* useful audio data */
+  GstAudioFormat audio_format;
   guint16    format;
   guint      width;
   guint      rate;
   guint      channels;
+  guint64    channel_mask;
+  GstAudioChannelPosition srcPos[64];
+  GstAudioChannelPosition destPos[64];
   
   /* data sizes */
   guint32    audio_length;

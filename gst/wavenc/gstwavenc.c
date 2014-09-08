@@ -49,37 +49,6 @@
 GST_DEBUG_CATEGORY_STATIC (wavenc_debug);
 #define GST_CAT_DEFAULT wavenc_debug
 
-struct riff_struct
-{
-  guint8 id[4];                 /* RIFF */
-  guint32 len;
-  guint8 wav_id[4];             /* WAVE */
-};
-
-struct chunk_struct
-{
-  guint8 id[4];
-  guint32 len;
-};
-
-struct common_struct
-{
-  guint16 wFormatTag;
-  guint16 wChannels;
-  guint32 dwSamplesPerSec;
-  guint32 dwAvgBytesPerSec;
-  guint16 wBlockAlign;
-  guint16 wBitsPerSample;       /* Only for PCM */
-};
-
-struct wave_header
-{
-  struct riff_struct riff;
-  struct chunk_struct format;
-  struct common_struct common;
-  struct chunk_struct data;
-};
-
 typedef struct
 {
   /* Offset Size    Description   Value
@@ -113,19 +82,10 @@ typedef struct
 } GstWavEncLabl, GstWavEncNote;
 
 /* FIXME: mono doesn't produce correct files it seems, at least mplayer xruns */
-/* Max. of two channels, more channels need WAVFORMATEX with
- * channel layout, which we do not support yet */
 #define SINK_CAPS \
     "audio/x-raw, "                      \
     "rate = (int) [ 1, MAX ], "          \
-    "channels = (int) 1, "               \
-    "format = (string) { S32LE, S24LE, S16LE, U8, F32LE, F64LE }, " \
-    "layout = (string) interleaved"      \
-    "; "                                 \
-    "audio/x-raw, "                      \
-    "rate = (int) [ 1, MAX ], "          \
-    "channels = (int) 2, "               \
-    "channel-mask = (bitmask) 0x3, "     \
+    "channels = (int) [ 1, 65535 ], "      \
     "format = (string) { S32LE, S24LE, S16LE, U8, F32LE, F64LE }, " \
     "layout = (string) interleaved"      \
     "; "                                 \
@@ -202,53 +162,187 @@ gst_wavenc_init (GstWavEnc * wavenc)
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->srcpad);
 }
 
-#define WAV_HEADER_LEN 44
+#define RIFF_CHUNK_LEN    12
+#define FMT_WAV_CHUNK_LEN 24
+#define FMT_EXT_CHUNK_LEN 48
+#define FACT_CHUNK_LEN    12
+#define DATA_HEADER_LEN   8
+
+static gboolean
+use_format_ext (GstWavEnc * wavenc)
+{
+  return wavenc->channels > 2;
+}
+
+static int
+get_header_len (GstWavEnc * wavenc)
+{
+  int len = RIFF_CHUNK_LEN;
+
+  if (use_format_ext (wavenc))
+    len += FMT_EXT_CHUNK_LEN + FACT_CHUNK_LEN;
+  else
+    len += FMT_WAV_CHUNK_LEN;
+
+  return len + DATA_HEADER_LEN;
+}
+
+static guint64
+gstmask_to_wavmask (guint64 gstmask, GstAudioChannelPosition * pos)
+{
+  const GstAudioChannelPosition valid_pos =
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT |
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT |
+      GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER |
+      GST_AUDIO_CHANNEL_POSITION_LFE1 |
+      GST_AUDIO_CHANNEL_POSITION_REAR_LEFT |
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT |
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER |
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER |
+      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER |
+      GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT |
+      GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT |
+      GST_AUDIO_CHANNEL_POSITION_TOP_CENTER |
+      GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT |
+      GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER |
+      GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT |
+      GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT |
+      GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER |
+      GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT;
+
+  const GstAudioChannelPosition wav_pos[] = {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_LFE1,
+    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_TOP_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT,
+  };
+  int k;
+  int chan = 0;
+  guint64 ret = 0;
+  guint64 mask = 1;
+
+  if (gstmask == 0 || ((gstmask & ~valid_pos) != 0))
+    return 0;
+
+  for (k = 0; k < G_N_ELEMENTS (wav_pos); ++k) {
+    if (gstmask & wav_pos[k]) {
+      ret |= mask;
+      pos[chan++] = wav_pos[k];
+    }
+    mask <<= 1;
+  }
+
+  return ret;
+}
+
+static guint8 *
+write_fmt_chunk (GstWavEnc * wavenc, guint8 * header)
+{
+  guint16 wBlockAlign;
+
+  wBlockAlign = (wavenc->width / 8) * wavenc->channels;
+
+  memcpy (header, "fmt ", 4);
+  /* wChannels */
+  GST_WRITE_UINT16_LE (header + 10, wavenc->channels);
+  /* dwSamplesPerSec */
+  GST_WRITE_UINT32_LE (header + 12, wavenc->rate);
+  /* dwAvgBytesPerSec */
+  GST_WRITE_UINT32_LE (header + 16, wBlockAlign * wavenc->rate);
+  /* wBlockAlign */
+  GST_WRITE_UINT16_LE (header + 20, wBlockAlign);
+  /* wBitsPerSample */
+  GST_WRITE_UINT16_LE (header + 22, wavenc->width);
+
+  if (use_format_ext (wavenc)) {
+    GST_DEBUG_OBJECT (wavenc, "Using WAVE_FORMAT_EXTENSIBLE");
+
+    GST_WRITE_UINT32_LE (header + 4, FMT_EXT_CHUNK_LEN - 8);
+
+    /* wFormatTag */
+    GST_WRITE_UINT16_LE (header + 8, 0xFFFE);
+    /* cbSize */
+    GST_WRITE_UINT16_LE (header + 24, 22);
+    /* wValidBitsPerSample */
+    GST_WRITE_UINT16_LE (header + 26, wavenc->width);
+    /* dwChannelMask */
+    GST_WRITE_UINT32_LE (header + 28, (guint32) wavenc->channel_mask);
+
+    GST_WRITE_UINT16_LE (header + 32, wavenc->format);
+
+    memcpy (header + 34,
+        "\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71", 14);
+
+    header += FMT_EXT_CHUNK_LEN;
+
+  } else {
+    GST_WRITE_UINT32_LE (header + 4, FMT_WAV_CHUNK_LEN - 8);
+
+    /* wFormatTag */
+    GST_WRITE_UINT16_LE (header + 8, wavenc->format);
+    header += FMT_WAV_CHUNK_LEN;
+  }
+
+
+  return header;
+}
+
+static guint8 *
+write_fact_chunk (GstWavEnc * wavenc, guint8 * header)
+{
+  memcpy (header, "fact", 4);
+  GST_WRITE_UINT32_LE (header + 4, FACT_CHUNK_LEN - 8);
+  /* compressed files are only supported up to 2 channels,
+   * that means we never write a fact chunk for them */
+  GST_WRITE_UINT32_LE (header + 8,
+      wavenc->audio_length / (wavenc->width / 8) / wavenc->channels);
+  return header + FACT_CHUNK_LEN;
+}
 
 static GstBuffer *
 gst_wavenc_create_header_buf (GstWavEnc * wavenc)
 {
-  struct wave_header wave;
   GstBuffer *buf;
   GstMapInfo map;
   guint8 *header;
+  guint32 riffLen;
 
-  buf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
+  GST_DEBUG_OBJECT (wavenc, "Header size: %d", get_header_len (wavenc));
+  buf = gst_buffer_new_and_alloc (get_header_len (wavenc));
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   header = map.data;
-  memset (header, 0, WAV_HEADER_LEN);
+  memset (header, 0, get_header_len (wavenc));
 
-  memcpy (wave.riff.id, "RIFF", 4);
-  wave.riff.len =
-      wavenc->meta_length + wavenc->audio_length + WAV_HEADER_LEN - 8;
-  memcpy (wave.riff.wav_id, "WAVE", 4);
+  riffLen = wavenc->meta_length + wavenc->audio_length
+      + get_header_len (wavenc) - 8;
 
-  memcpy (wave.format.id, "fmt ", 4);
-  wave.format.len = 16;
+  /* RIFF chunk */
+  memcpy (header, "RIFF", 4);
+  GST_WRITE_UINT32_LE (header + 4, riffLen);
+  memcpy (header + 8, "WAVE", 4);
+  header += RIFF_CHUNK_LEN;
 
-  wave.common.wChannels = wavenc->channels;
-  wave.common.wBitsPerSample = wavenc->width;
-  wave.common.dwSamplesPerSec = wavenc->rate;
-  wave.common.wFormatTag = wavenc->format;
-  wave.common.wBlockAlign = (wavenc->width / 8) * wave.common.wChannels;
-  wave.common.dwAvgBytesPerSec =
-      wave.common.wBlockAlign * wave.common.dwSamplesPerSec;
+  header = write_fmt_chunk (wavenc, header);
+  if (use_format_ext (wavenc))
+    header = write_fact_chunk (wavenc, header);
 
-  memcpy (wave.data.id, "data", 4);
-  wave.data.len = wavenc->audio_length;
-
-  memcpy (header, (char *) wave.riff.id, 4);
-  GST_WRITE_UINT32_LE (header + 4, wave.riff.len);
-  memcpy (header + 8, (char *) wave.riff.wav_id, 4);
-  memcpy (header + 12, (char *) wave.format.id, 4);
-  GST_WRITE_UINT32_LE (header + 16, wave.format.len);
-  GST_WRITE_UINT16_LE (header + 20, wave.common.wFormatTag);
-  GST_WRITE_UINT16_LE (header + 22, wave.common.wChannels);
-  GST_WRITE_UINT32_LE (header + 24, wave.common.dwSamplesPerSec);
-  GST_WRITE_UINT32_LE (header + 28, wave.common.dwAvgBytesPerSec);
-  GST_WRITE_UINT16_LE (header + 32, wave.common.wBlockAlign);
-  GST_WRITE_UINT16_LE (header + 34, wave.common.wBitsPerSample);
-  memcpy (header + 36, (char *) wave.data.id, 4);
-  GST_WRITE_UINT32_LE (header + 40, wave.data.len);
+  /* data chunk */
+  memcpy (header, "data ", 4);
+  GST_WRITE_UINT32_LE (header + 4, wavenc->audio_length);
 
   gst_buffer_unmap (buf, &map);
 
@@ -313,11 +407,26 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto fail;
   }
 
+  wavenc->channels = chans;
+  wavenc->rate = rate;
+  wavenc->channel_mask = 0;
+
   if (strcmp (name, "audio/x-raw") == 0) {
     GstAudioInfo info;
+    guint64 gstmask;
 
-    if (!gst_audio_info_from_caps (&info, caps))
+    if (!gst_audio_info_from_caps (&info, caps)) {
+      GST_WARNING_OBJECT (wavenc, "Could not retrieve audio info from caps");
       goto fail;
+    }
+    if (gst_audio_channel_positions_to_mask (info.position, wavenc->channels,
+            FALSE, &gstmask)) {
+      wavenc->channel_mask = gstmask_to_wavmask (gstmask, wavenc->destPos);
+      memcpy (wavenc->srcPos, info.position, sizeof (info.position));
+      GST_DEBUG_OBJECT (wavenc, "Channel mask input: %" G_GUINT64_FORMAT
+          " output: %" G_GUINT64_FORMAT, gstmask, wavenc->channel_mask);
+    }
+    wavenc->audio_format = GST_AUDIO_INFO_FORMAT (&info);
 
     if (GST_AUDIO_INFO_IS_INTEGER (&info))
       wavenc->format = GST_RIFF_WAVE_FORMAT_PCM;
@@ -337,9 +446,6 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
     GST_WARNING_OBJECT (wavenc, "Unsupported format %s", name);
     goto fail;
   }
-
-  wavenc->channels = chans;
-  wavenc->rate = rate;
 
   GST_LOG_OBJECT (wavenc,
       "accepted caps: format=0x%04x chans=%u width=%u rate=%u",
@@ -875,10 +981,16 @@ gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   buf = gst_buffer_make_writable (buf);
 
-  GST_BUFFER_OFFSET (buf) = WAV_HEADER_LEN + wavenc->audio_length;
+  GST_BUFFER_OFFSET (buf) = get_header_len (wavenc) + wavenc->audio_length;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
 
   wavenc->audio_length += gst_buffer_get_size (buf);
+
+  if (wavenc->channel_mask != 0 &&
+      !gst_audio_buffer_reorder_channels (buf, wavenc->audio_format,
+          wavenc->channels, wavenc->srcPos, wavenc->destPos)) {
+    GST_WARNING_OBJECT (wavenc, "Could not reorder channels");
+  }
 
   flow = gst_pad_push (wavenc->srcpad, buf);
 
