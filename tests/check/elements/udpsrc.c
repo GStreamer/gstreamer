@@ -134,6 +134,103 @@ no_socket:
 
 GST_END_TEST;
 
+GST_START_TEST (test_udpsrc)
+{
+  GSocketAddress *sa = NULL;
+  GstElement *udpsrc = NULL;
+  GSocket *socket = NULL;
+  GstPad *sinkpad = NULL;
+  GstBuffer *buf;
+  GstMemory *mem;
+  gchar data[48000];
+  gsize max_size;
+  int i, len;
+
+  for (i = 0; i < G_N_ELEMENTS (data); ++i)
+    data[i] = i & 0xff;
+
+  if (!udpsrc_setup (&udpsrc, &socket, &sinkpad, &sa))
+    goto no_socket;
+
+  if (g_socket_send_to (socket, sa, data, 48000, NULL, NULL) != 48000)
+    goto send_failure;
+
+  if (g_socket_send_to (socket, sa, data, 21000, NULL, NULL) != 21000)
+    goto send_failure;
+
+  if (g_socket_send_to (socket, sa, data, 500, NULL, NULL) != 500)
+    goto send_failure;
+
+  if (g_socket_send_to (socket, sa, data, 1600, NULL, NULL) != 1600)
+    goto send_failure;
+
+  if (g_socket_send_to (socket, sa, data, 1600, NULL, NULL) != 1400)
+    goto send_failure;
+
+  GST_INFO ("sent some packets");
+
+  g_mutex_lock (&check_mutex);
+  do {
+    g_cond_wait (&check_cond, &check_mutex);
+    len = g_list_length (buffers);
+    GST_INFO ("%u buffers", len);
+  } while (len < 5);
+
+  /* check that large packets are made up of multiple memory chunks and that
+   * the first one is fairly small */
+  buf = GST_BUFFER (g_list_nth_data (buffers, 0));
+  fail_unless_equals_int (gst_buffer_get_size (buf), 48000);
+  fail_unless_equals_int (gst_buffer_n_memory (buf), 2);
+  mem = gst_buffer_peek_memory (buf, 0);
+  gst_memory_get_sizes (mem, NULL, &max_size);
+  fail_unless (max_size <= 2000);
+
+  buf = GST_BUFFER (g_list_nth_data (buffers, 1));
+  fail_unless_equals_int (gst_buffer_get_size (buf), 21000);
+  fail_unless_equals_int (gst_buffer_n_memory (buf), 2);
+  mem = gst_buffer_peek_memory (buf, 0);
+  gst_memory_get_sizes (mem, NULL, &max_size);
+  fail_unless (max_size <= 2000);
+
+  buf = GST_BUFFER (g_list_nth_data (buffers, 2));
+  fail_unless_equals_int (gst_buffer_get_size (buf), 500);
+  fail_unless_equals_int (gst_buffer_n_memory (buf), 1);
+  mem = gst_buffer_peek_memory (buf, 0);
+  gst_memory_get_sizes (mem, NULL, &max_size);
+  fail_unless (max_size <= 2000);
+
+  buf = GST_BUFFER (g_list_nth_data (buffers, 3));
+  fail_unless_equals_int (gst_buffer_get_size (buf), 1600);
+  fail_unless_equals_int (gst_buffer_n_memory (buf), 2);
+  mem = gst_buffer_peek_memory (buf, 0);
+  gst_memory_get_sizes (mem, NULL, &max_size);
+  fail_unless (max_size <= 2000);
+
+  buf = GST_BUFFER (g_list_nth_data (buffers, 4));
+  fail_unless_equals_int (gst_buffer_get_size (buf), 1400);
+  fail_unless_equals_int (gst_buffer_n_memory (buf), 1);
+  mem = gst_buffer_peek_memory (buf, 0);
+  gst_memory_get_sizes (mem, NULL, &max_size);
+  fail_unless (max_size <= 2000);
+
+  g_list_foreach (buffers, (GFunc) gst_buffer_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
+
+no_socket:
+send_failure:
+
+  gst_element_set_state (udpsrc, GST_STATE_NULL);
+
+  gst_check_teardown_pad_by_name (udpsrc, "src");
+  gst_check_teardown_element (udpsrc);
+
+  g_object_unref (socket);
+  g_object_unref (sa);
+}
+
+GST_END_TEST;
+
 static Suite *
 udpsrc_suite (void)
 {
@@ -142,6 +239,7 @@ udpsrc_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_udpsrc_empty_packet);
+  tcase_add_test (tc_chain, test_udpsrc);
   return s;
 }
 
