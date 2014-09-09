@@ -73,6 +73,7 @@ struct _GstDashDemuxStream
 
   gboolean stream_eos;
   gboolean need_header;
+  gboolean discont;
 
   /* Download task */
   GMutex download_mutex;

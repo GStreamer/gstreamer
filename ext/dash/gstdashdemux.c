@@ -605,6 +605,7 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             stream->last_ret = GST_FLOW_OK;
             stream->restart_download = TRUE;
             stream->need_header = TRUE;
+            stream->discont = TRUE;
             GST_DEBUG_OBJECT (stream->pad, "Restarting download loop");
             gst_task_start (stream->download_task);
           }
@@ -704,6 +705,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     stream = g_new0 (GstDashDemuxStream, 1);
     stream->demux = demux;
     stream->active_stream = active_stream;
+    stream->discont = FALSE;
     caps = gst_dash_demux_get_input_caps (demux, active_stream);
 
     g_rec_mutex_init (&stream->download_task_lock);
@@ -1940,6 +1942,11 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
+  }
+
+  if (stream->discont) {
+    discont = TRUE;
+    stream->discont = FALSE;
   }
 
   if (discont) {
