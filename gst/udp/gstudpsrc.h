@@ -61,11 +61,18 @@ struct _GstUDPSrc {
   gboolean   auto_multicast;
   gboolean   reuse;
 
+  /* stats */
+  guint      max_size;
+
   /* our sockets */
   GSocket   *used_socket;
   GCancellable *cancellable;
   GInetSocketAddress *addr;
   gboolean   external_socket;
+
+  /* memory management */
+  GstAllocator *allocator;
+  GstAllocationParams params;
 
   gchar     *uri;
 };

@@ -182,6 +182,7 @@ static GstFlowReturn gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf);
 static gboolean gst_udpsrc_close (GstUDPSrc * src);
 static gboolean gst_udpsrc_unlock (GstBaseSrc * bsrc);
 static gboolean gst_udpsrc_unlock_stop (GstBaseSrc * bsrc);
+static gboolean gst_udpsrc_negotiate (GstBaseSrc * basesrc);
 
 static void gst_udpsrc_finalize (GObject * object);
 
@@ -294,6 +295,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   gstbasesrc_class->unlock = gst_udpsrc_unlock;
   gstbasesrc_class->unlock_stop = gst_udpsrc_unlock_stop;
   gstbasesrc_class->get_caps = gst_udpsrc_getcaps;
+  gstbasesrc_class->negotiate = gst_udpsrc_negotiate;
 
   gstpushsrc_class->create = gst_udpsrc_create;
 }
@@ -388,6 +390,32 @@ gst_udpsrc_getcaps (GstBaseSrc * src, GstCaps * filter)
     result = (filter) ? gst_caps_ref (filter) : gst_caps_new_any ();
   }
   return result;
+}
+
+static gboolean
+gst_udpsrc_negotiate (GstBaseSrc * basesrc)
+{
+  gboolean ret;
+
+  /* just chain up to the default implementation, we just want to
+   * retrieve the allocator at the end of it (if there is one) */
+  ret = GST_BASE_SRC_CLASS (parent_class)->negotiate (basesrc);
+
+  if (ret) {
+    GstUDPSrc *src;
+
+    src = GST_UDPSRC (basesrc);
+
+    if (src->allocator != NULL) {
+      gst_object_unref (src->allocator);
+      src->allocator = NULL;
+    }
+
+    gst_base_src_get_allocator (basesrc, &src->allocator, &src->params);
+    GST_INFO_OBJECT (src, "allocator: %" GST_PTR_FORMAT, src->allocator);
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -506,6 +534,10 @@ no_select:
     }
     goto receive_error;
   }
+
+  /* remember maximum packet size */
+  if (res > udpsrc->max_size)
+    udpsrc->max_size = res;
 
   /* patch offset and size when stripping off the headers */
   if (G_UNLIKELY (udpsrc->skip_first_bytes != 0)) {
@@ -997,6 +1029,11 @@ gst_udpsrc_open (GstUDPSrc * src)
     g_object_unref (addr);
   }
 
+  src->allocator = NULL;
+  gst_allocation_params_init (&src->params);
+
+  src->max_size = 0;
+
   return TRUE;
 
   /* ERRORS */
@@ -1100,6 +1137,11 @@ gst_udpsrc_close (GstUDPSrc * src)
     src->used_socket = NULL;
     g_object_unref (src->addr);
     src->addr = NULL;
+  }
+
+  if (src->allocator != NULL) {
+    gst_object_unref (src->allocator);
+    src->allocator = NULL;
   }
 
   return TRUE;
