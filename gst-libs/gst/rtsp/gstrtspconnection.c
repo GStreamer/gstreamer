@@ -1782,6 +1782,19 @@ parse_line (guint8 * buffer, GstRTSPMessage * msg)
       next_value++;
     }
 
+    if (field == GST_RTSP_HDR_SESSION) {
+      /* The timeout parameter is only allowed in a session response header
+       * but some clients send it as part of the session request header.
+       * Ignore everything from the semicolon to the end of the line. */
+      next_value = value;
+      while (*next_value != '\0') {
+        if (*next_value == ';') {
+          break;
+        }
+        next_value++;
+      }
+    }
+
     /* trim space */
     if (value != next_value && next_value[-1] == ' ')
       next_value[-1] = '\0';
