@@ -3,6 +3,8 @@
  * Copyright (C) <2005> Nokia Corporation <kai.vehmanen@nokia.com>
  * Copyright (C) <2012> Collabora Ltd.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2014 Tim-Philipp Müller <tim@centricular.com>
+ * Copyright (C) 2014 Centricular Ltd
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -392,9 +394,35 @@ gst_udpsrc_getcaps (GstBaseSrc * src, GstCaps * filter)
   return result;
 }
 
+static void
+gst_udpsrc_reset_memory_allocator (GstUDPSrc * src)
+{
+  if (src->mem != NULL) {
+    gst_memory_unmap (src->mem, &src->map);
+    gst_memory_unref (src->mem);
+    src->mem = NULL;
+  }
+  if (src->mem_max != NULL) {
+    gst_memory_unmap (src->mem_max, &src->map_max);
+    gst_memory_unref (src->mem_max);
+    src->mem_max = NULL;
+  }
+
+  src->vec[0].buffer = NULL;
+  src->vec[0].size = 0;
+  src->vec[1].buffer = NULL;
+  src->vec[1].size = 0;
+
+  if (src->allocator != NULL) {
+    gst_object_unref (src->allocator);
+    src->allocator = NULL;
+  }
+}
+
 static gboolean
 gst_udpsrc_negotiate (GstBaseSrc * basesrc)
 {
+  GstUDPSrc *src = GST_UDPSRC_CAST (basesrc);
   gboolean ret;
 
   /* just chain up to the default implementation, we just want to
@@ -402,20 +430,74 @@ gst_udpsrc_negotiate (GstBaseSrc * basesrc)
   ret = GST_BASE_SRC_CLASS (parent_class)->negotiate (basesrc);
 
   if (ret) {
-    GstUDPSrc *src;
+    GstAllocationParams new_params;
+    GstAllocator *new_allocator = NULL;
 
-    src = GST_UDPSRC (basesrc);
+    /* retrieve new allocator */
+    gst_base_src_get_allocator (basesrc, &new_allocator, &new_params);
 
-    if (src->allocator != NULL) {
-      gst_object_unref (src->allocator);
-      src->allocator = NULL;
+    if (src->allocator != new_allocator ||
+        memcmp (&src->params, &new_params, sizeof (GstAllocationParams)) != 0) {
+      /* drop old allocator and throw away any memory allocated with it */
+      gst_udpsrc_reset_memory_allocator (src);
+
+      /* and save the new allocator and/or new allocation parameters */
+      src->allocator = new_allocator;
+      src->params = new_params;
+
+      GST_INFO_OBJECT (src, "new allocator: %" GST_PTR_FORMAT, new_allocator);
     }
-
-    gst_base_src_get_allocator (basesrc, &src->allocator, &src->params);
-    GST_INFO_OBJECT (src, "allocator: %" GST_PTR_FORMAT, src->allocator);
   }
 
   return ret;
+}
+
+static gboolean
+gst_udpsrc_alloc_mem (GstUDPSrc * src, GstMemory ** p_mem, GstMapInfo * map,
+    gsize size)
+{
+  GstMemory *mem;
+
+  mem = gst_allocator_alloc (src->allocator, size, &src->params);
+
+  if (!gst_memory_map (mem, map, GST_MAP_WRITE)) {
+    gst_memory_unref (mem);
+    memset (map, 0, sizeof (GstMapInfo));
+    return FALSE;
+  }
+  *p_mem = mem;
+  return TRUE;
+}
+
+static gboolean
+gst_udpsrc_ensure_mem (GstUDPSrc * src)
+{
+  if (src->mem == NULL) {
+    gsize mem_size = 1500;      /* typical max. MTU */
+
+    /* if packets are likely to be smaller, just use that size, otherwise
+     * default to assuming incoming packets are around MTU size */
+    if (src->max_size > 0 && src->max_size < mem_size)
+      mem_size = src->max_size;
+
+    if (!gst_udpsrc_alloc_mem (src, &src->mem, &src->map, mem_size))
+      return FALSE;
+
+    src->vec[0].buffer = src->map.data;
+    src->vec[0].size = src->map.size;
+  }
+
+  if (src->mem_max == NULL) {
+    gsize max_size = MAX_IPV4_UDP_PACKET_SIZE;
+
+    if (!gst_udpsrc_alloc_mem (src, &src->mem_max, &src->map_max, max_size))
+      return FALSE;
+
+    src->vec[1].buffer = src->map_max.data;
+    src->vec[1].size = src->map_max.size;
+  }
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -433,6 +515,9 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   GError *err = NULL;
 
   udpsrc = GST_UDPSRC_CAST (psrc);
+
+  if (!gst_udpsrc_ensure_mem (udpsrc))
+    goto memory_alloc_error;
 
 retry:
   /* quick check, avoid going in select when we already have data */
@@ -565,6 +650,12 @@ no_select:
   return ret;
 
   /* ERRORS */
+memory_alloc_error:
+  {
+    GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
+        ("Failed to allocate or map memory"));
+    return GST_FLOW_ERROR;
+  }
 select_error:
   {
     GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
@@ -1139,10 +1230,7 @@ gst_udpsrc_close (GstUDPSrc * src)
     src->addr = NULL;
   }
 
-  if (src->allocator != NULL) {
-    gst_object_unref (src->allocator);
-    src->allocator = NULL;
-  }
+  gst_udpsrc_reset_memory_allocator (src);
 
   return TRUE;
 }

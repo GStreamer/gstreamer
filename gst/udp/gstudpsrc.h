@@ -74,6 +74,12 @@ struct _GstUDPSrc {
   GstAllocator *allocator;
   GstAllocationParams params;
 
+  GstMemory   *mem;
+  GstMapInfo   map;
+  GstMemory   *mem_max;
+  GstMapInfo   map_max;
+  GInputVector vec[2];
+
   gchar     *uri;
 };
 
