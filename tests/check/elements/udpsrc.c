@@ -83,10 +83,22 @@ GST_START_TEST (test_udpsrc_empty_packet)
 
       GST_INFO ("sent 6 bytes");
 
-      g_usleep (G_USEC_PER_SEC / 2);
+      g_mutex_lock (&check_mutex);
+      do {
+        g_cond_wait (&check_cond, &check_mutex);
+        len = g_list_length (buffers);
+        GST_INFO ("%u buffers", len);
+      } while (len < 1);
 
-      len = g_list_length (buffers);
-      GST_INFO ("%u buffers", len);
+      /* wait a bit more for a second buffer */
+      if (len < 2) {
+        g_cond_wait_until (&check_cond, &check_mutex,
+            g_get_monotonic_time () + G_TIME_SPAN_SECOND / 100);
+
+        len = g_list_length (buffers);
+        GST_INFO ("%u buffers", len);
+      }
+
       fail_unless (len == 1 || len == 2);
 
       /* last buffer should be our HeLL0 string */
@@ -101,6 +113,7 @@ GST_START_TEST (test_udpsrc_empty_packet)
         buf = GST_BUFFER (g_list_nth_data (buffers, 0));
         fail_unless_equals_int (gst_buffer_get_size (buf), 0);
       }
+      g_mutex_unlock (&check_mutex);
     } else {
       GST_WARNING ("send_to(6 bytes) failed");
     }
