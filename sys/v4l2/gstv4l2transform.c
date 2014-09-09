@@ -749,7 +749,7 @@ gst_v4l2_transform_register (GstPlugin * plugin, const gchar * basename,
   type_name = g_strdup_printf ("v4l2%sconvert", basename);
   subtype = g_type_register_static (type, type_name, &type_info, 0);
 
-  gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1, subtype);
+  gst_element_register (plugin, type_name, GST_RANK_NONE, subtype);
 
   g_free (type_name);
 
