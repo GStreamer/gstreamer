@@ -501,3 +501,35 @@ gst_rtsp_stream_transport_keep_alive (GstRTSPStreamTransport * trans)
   if (priv->keep_alive)
     priv->keep_alive (priv->ka_user_data);
 }
+
+/**
+ * gst_rtsp_stream_transport_recv_data:
+ * @trans: a #GstRTSPStreamTransport
+ * @channel: a channel
+ * @buffer: (transfer full): a #GstBuffer
+ *
+ * Receive @buffer on @channel @trans.
+ *
+ * Returns: a #GstFlowReturn. Returns GST_FLOW_NOT_LINKED when @channel is not
+ *    configured in the transport of @trans.
+ */
+GstFlowReturn
+gst_rtsp_stream_transport_recv_data (GstRTSPStreamTransport * trans,
+    guint channel, GstBuffer * buffer)
+{
+  GstRTSPStreamTransportPrivate *priv;
+  const GstRTSPTransport *tr;
+  GstFlowReturn res;
+
+  priv = trans->priv;
+  tr = priv->transport;
+
+  if (tr->interleaved.min == channel) {
+    res = gst_rtsp_stream_recv_rtp (priv->stream, buffer);
+  } else if (tr->interleaved.max == channel) {
+    res = gst_rtsp_stream_recv_rtcp (priv->stream, buffer);
+  } else {
+    res = GST_FLOW_NOT_LINKED;
+  }
+  return res;
+}
