@@ -67,6 +67,11 @@ struct _GstGLWindow {
   GstObject parent;
 
   GMutex        lock;
+  GMutex        nav_lock;
+  GCond         nav_create_cond;
+  GCond         nav_destroy_cond;
+  gboolean      nav_created;
+  gboolean      nav_alive;
 
   GstGLDisplay *display;
   GWeakRef      context_ref;
@@ -87,6 +92,8 @@ struct _GstGLWindow {
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
+  GMainContext *navigation_context;
+  GMainLoop *navigation_loop;
 
   GstGLWindowPrivate *priv;
 };
@@ -129,6 +136,21 @@ struct _GstGLWindowClass {
   gpointer _reserved[GST_PADDING];
 };
 
+struct key_event
+{
+  GstGLWindow *window;
+  const char *event_type;
+  const char *key_str;
+};
+
+struct mouse_event
+{
+  GstGLWindow *window;
+  const char *event_type;
+  int button;
+  double posx;
+  double posy;
+};
 /* methods */
 
 GQuark gst_gl_window_error_quark (void);
@@ -155,6 +177,12 @@ void     gst_gl_window_get_surface_dimensions (GstGLWindow * window, guint * wid
 GstGLContext * gst_gl_window_get_context (GstGLWindow *window);
 
 gboolean gst_gl_window_is_running (GstGLWindow *window);
+
+gboolean
+gst_gl_window_key_event_cb (gpointer data);
+
+gboolean
+gst_gl_window_mouse_event_cb (gpointer data);
 
 void gst_gl_window_send_key_event(GstGLWindow * window, const char * event_type,
     const char * key_str);
