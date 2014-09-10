@@ -179,6 +179,7 @@ AC_SUBST(GIO_LIBS)
 dnl checks for gstreamer
 
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
+AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
 dnl *** set variables based on configure arguments ***
 
@@ -278,6 +279,8 @@ gst/Makefile
 gst/validate/Makefile
 gst/preload/Makefile
 gst/overrides/Makefile
+tests/Makefile
+tests/check/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-validate-uninstalled.pc
 pkgconfig/gst-validate.pc

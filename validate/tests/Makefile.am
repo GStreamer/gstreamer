@@ -1,0 +1,10 @@
+if HAVE_GST_CHECK
+CHECK_SUBDIRS= check
+else
+CHECK_SUBDIRS=
+endif
+
+SUBDIRS= $(CHECK_SUBDIRS)
+
+DIST_SUBDIRS = check
+
