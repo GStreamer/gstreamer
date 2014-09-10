@@ -203,11 +203,21 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
 void
 gst_tracer_log_trace (GstStructure * s)
 {
-  gchar *data;
-
-  // TODO(ensonic): use a GVariant?
-  data = gst_structure_to_string (s);
-  GST_TRACE ("%s", data);
-  g_free (data);
+  GST_TRACE ("%" GST_PTR_FORMAT, s);
+  /* expands to:
+     gst_debug_log_valist (
+     GST_CAT_DEFAULT, GST_LEVEL_TRACE,
+     file, func, line, object
+     "%" GST_PTR_FORMAT, s);
+     // does it make sense to use the {file, line, func} from the tracer hook?
+     // a)
+     // - we'd need to pass them in the macros to gst_tracer_dispatch()
+     // - and each tracer needs to grab them from the va_list and pass them here
+     // b)
+     // - we create a content in dispatch, pass that to the tracer
+     // - and the tracer will pass that here
+     // ideally we also use *our* ts instead of the one that
+     // gst_debug_log_default() will pick
+   */
   gst_structure_free (s);
 }
