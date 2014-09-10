@@ -66,7 +66,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
-        "mpegversion = (int) { 1 }, "
+        "mpegversion = (int) 1, "
         "layer = (int) [ 1, 3 ], "
         "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ], " "parsed = (boolean) true ")
