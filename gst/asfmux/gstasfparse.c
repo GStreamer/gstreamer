@@ -75,17 +75,17 @@ static GstFlowReturn
 gst_asf_parse_parse_data_object (GstAsfParse * asfparse, guint8 * data,
     gsize size)
 {
-  GstByteReader *reader;
+  GstByteReader reader;
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 packet_count = 0;
 
   GST_DEBUG_OBJECT (asfparse, "Parsing data object");
 
-  reader = gst_byte_reader_new (data, size);
+  gst_byte_reader_init (&reader, data, size);
   /* skip to packet count */
-  if (!gst_byte_reader_skip (reader, 40))
+  if (!gst_byte_reader_skip (&reader, 40))
     goto error;
-  if (!gst_byte_reader_get_uint64_le (reader, &packet_count))
+  if (!gst_byte_reader_get_uint64_le (&reader, &packet_count))
     goto error;
 
   if (asfparse->asfinfo->packets_count != packet_count) {
@@ -97,13 +97,11 @@ gst_asf_parse_parse_data_object (GstAsfParse * asfparse, guint8 * data,
         packet_count);
   }
 
-  gst_byte_reader_free (reader);
   return GST_FLOW_OK;
 
 error:
   ret = GST_FLOW_ERROR;
   GST_ERROR_OBJECT (asfparse, "Error while parsing data object headers");
-  gst_byte_reader_free (reader);
   return ret;
 }
 
