@@ -824,7 +824,7 @@ find_next_pad (GstElement * element, GstPad * pad)
   GValue value = { 0, };
 
   iterator = gst_element_iterate_sink_pads (element);
-  done = FALSE;
+
   while (!done) {
     switch (gst_iterator_next (iterator, &value)) {
       case GST_ITERATOR_OK:
