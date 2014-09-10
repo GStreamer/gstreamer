@@ -242,7 +242,7 @@ gst_aiff_mux_push_header (GstAiffMux * aiffmux, guint32 audio_data_size)
 {
   GstFlowReturn ret;
   GstBuffer *outbuf;
-  GstByteWriter *writer;
+  GstByteWriter writer;
   GstSegment seg;
 
   /* seek to beginning of file */
@@ -258,13 +258,13 @@ gst_aiff_mux_push_header (GstAiffMux * aiffmux, guint32 audio_data_size)
   GST_DEBUG_OBJECT (aiffmux, "writing header with datasize=%u",
       audio_data_size);
 
-  writer = gst_byte_writer_new_with_size (AIFF_HEADER_LEN, TRUE);
+  gst_byte_writer_init_with_size (&writer, AIFF_HEADER_LEN, TRUE);
 
-  gst_aiff_mux_write_form_header (aiffmux, audio_data_size, writer);
-  gst_aiff_mux_write_comm_header (aiffmux, audio_data_size, writer);
-  gst_aiff_mux_write_ssnd_header (aiffmux, audio_data_size, writer);
+  gst_aiff_mux_write_form_header (aiffmux, audio_data_size, &writer);
+  gst_aiff_mux_write_comm_header (aiffmux, audio_data_size, &writer);
+  gst_aiff_mux_write_ssnd_header (aiffmux, audio_data_size, &writer);
 
-  outbuf = gst_byte_writer_free_and_get_buffer (writer);
+  outbuf = gst_byte_writer_reset_and_get_buffer (&writer);
 
   ret = gst_pad_push (aiffmux->srcpad, outbuf);
 
