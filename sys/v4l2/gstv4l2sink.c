@@ -554,6 +554,7 @@ gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       max = min;
 
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+    gst_object_unref (pool);
   }
 
   return TRUE;
