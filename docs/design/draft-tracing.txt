@@ -36,7 +36,7 @@ condition to check if active.
 Certain GStreamer core function (such as gst_pad_push or gst_element_add_pad)
 will call into the tracer subsystem to dispatch into active tracing modules.
 Developers will be able to select a list of plugins by setting an environment
-variable, such as GST_TRACE="meminfo,dbus". One can also pass parameters to
+variable, such as GST_TRACE="meminfo;dbus". One can also pass parameters to
 plugins:  GST_TRACE="log(events,buffers);stats(all)".
 When then plugins are loaded, we'll add them to certain hooks according to which
 they are interested in.
@@ -81,7 +81,10 @@ TODO(ensonic): liblttng-ust provides such a mechanism for user-space
 
 In addition to api hooks we should also provide timer hooks. Interval timers are
 useful to get e.g. resource usage snapshots. Also absolute timers might make
-sense. All this could be implemented with a clock thread.
+sense. All this could be implemented with a clock thread. We can use another
+env-var GST_TRACE_TIMERS="100ms,75ms" to configure timers and then pass them to
+the tracers like, GST_TRACE="rusage(timer=100ms);meminfo(timer=75ms)". Maybe
+we can create them ad-hoc and avoid the GST_TRACE_TIMERS var.
 
 Hooks (* already implemented)
 -----
@@ -98,64 +101,89 @@ Hooks (* already implemented)
 * gst_pad_push_event
 - gst_pad_unlink
 
-Plugin api
+Tracer api
 ----------
+Tracers are plugin features. They have a simple api:
 
-TracerPlugins are plugin features. They have a simple api:
+class init
+Here the tracers describe the data the will emit.
 
-instance creation
-Plugins can attach handlers to one or more hooks. They use a HookMask to tell
-which events they are interested in. The params are the extra detail from the
-environment var.
+instance init
+Tracers attach handlers to one or more hooks using gst_tracer_register_hook().
+In case the are configurable, they can read the options from the 'params'
+property. This is the extra detail from the environment var.
 
-void invoke(GstTracerHookId id, GstStructure *s);
+hook functions
 Hooks marshal the parameters given to a trace hook into varargs and also
 add some extra into such as a timestamp. Hooks will be called from misc threads.
-The trace plugins should only consume (=read) the provided data.
+The trace plugins should only consume (=read) the provided data. Expensive
+computation should be avoided to not affect the execution too much.
 Most trace plugins will log data to a trace channel.
 
 instance destruction
-Plugins can output results and release data. This would ideally be done at the
+Tracers can output results and release data. This would ideally be done at the
 end of the applications, but gst_deinit() is not mandatory. gst_tracelib was
-using a gcc_destructor. Ideally tracer modules log data as they have it and
-leave aggregation to a tool that processed the log.
+using a gcc_destructor. Ideally tracer modules log data as they have them and
+leave aggregation to a tool that processes the log.
 
-tracer event classes (not implemented yet)
+tracer event classes
 --------------------
-tracers will describe the data the log here (gst_tracer_class_add_event_class).
 Most tracers will log some kind of 'events' : a data transfer, an event,
-a message, a query or a measurement.
+a message, a query or a measurement. Every tracers should describe the data
+format. This way tools that process tracer logs can show the data in a
+meaningful way without having to know about the tracer plugin.
 
-GstTraceEventClass { // meta data for events, can be printed from gst-inspect
-  gchar *name;         // something that front ends can use as a label for a graph
-                       // should ideally contain a unit
-  gchar *description;  // something that front ends can use as a tooltip
-  
-  GstTraceEventScope scope; // a way to associate the event
-  // enum(per process, thread, element, pad, ...)
+One way would be to introspect the data from the plugin. This has the
+disadvantage that the postprocessing app needs to load the plugins or talk to
+the gstreamer registry. An alternative is to also log the format description
+into the log. Right now we're logging several nested GstStructure from the
+_tracer_class_init() function (except in the log tracer).
 
-  Gst??? type; // some kind of hierarchical event type? or make name a 'path'
-  // event.eos, event.seek.flushing, measurement.cpu.load, ...
-  
-  GstTraceEventClassFlags flags;  // cummulative, ...
-}
+// the name is the value name + ".class"
+// the content describes a single log record
+gst_structure_new ("thread-rusage.class",
+    // value in the log record (order does not matter)
+    // 'thread-id' is a 'key' to related the record to something as indicated
+    // by 'scope' substructure
+    "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+        // enum { process, thread, element, pad, context?, ... }
+        "related-to", G_TYPE_STRING, "thread",
+        NULL),
+    // next value in the record
+    // 'average-cpuload' is a measurement as indicated by the 'value'
+    // substructure
+    "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+        // value type
+        "type", G_TYPE_GTYPE, G_TYPE_UINT,
+        // human readable description, that can be used as a graph label
+        "description", G_TYPE_STRING, "average cpu usage per thread",
+        // flags that help to use the right graph type
+        // flags { aggregated, windowed, cumulative, ... }
+        "flags", G_TYPE_STRING, "aggregated",
+        // value range
+        "min", G_TYPE_UINT, 0, 
+        "max", G_TYPE_UINT, 100,
+        NULL),
+    ...
+    NULL);
 
-GstTraceEvent {
-  GstClockTime ts; // when did it happen
-  gpointer owner;  // GThread, GObject, ...
-  // payloads:
-  // - array of unions
-  // - GstStructure
-  //   - we can just serialize this for logging and easily deserialize it in
-  //     the front-ends using gst_structure_{from,to}_string()
-  //   - we would have 'ts' and 'owner' in the structure
-  //   - the structure 'name-id' can be used to lookup the GstTraceEventClass
-  // - GVariant ?
-}
+A few ideas that are not yet in the above spec:
+- it would be nice to describe the unit of values
+  - putting it into the description is not flexible though, e.g. time would be
+    a guint64 but a ui would reformat it to e.g. h:m:s.ms
+  - other units are e.g.: percent, per-mille, or kbit/s
+- we'd like to have some metadata on scopes
+  - e.g. we'd like to log the thread-names, so that a UI can show that instead
+    of thread-ids
+  - the stats tracer logs 'new-element' and 'new-pad' messages
+    - they add a unique 'ix' to each instance as the memory ptr can be reused
+      for new instances, the data is attached to the objects as qdata
+    - the latency tracer would like to also ref this metadata
+- right now we log the classes as structures, it would be nice to add them to
+  the registry, so that gst-inspect can show them
 
-instead of "gpointer owner", we could send a trace-events that register new
-owners with an id (atomic int) and unregister them at the end of their
-live-time. Then we can reference the owner as "guint owner".
+In addition to the above spec, each log event will contain a "ts" field as a
+G_TYPE_UINT64 to specify the time of the event.
 
 We could also consider to add each value as a READABLE gobject property. The
 property has name/description. We could use qdata for scope and flags (or have
@@ -166,9 +194,6 @@ the logging. The core tracer would register the notify handlers and emit the
 log.
 Or we just add a gst_tracer_class_install_event() and that mimics the 
 g_object_class_install_property().
-
-The log would have a bunch of streams. A stream has a reference to the 
-GstTraceEventClass.
 
 Frontends can:
 - do an events over time histogram
@@ -217,6 +242,12 @@ stats
 - register to buffer, event, message and query flow
 - tracing apps can do e.g. statistics
 
+refcounts (not yet implemented)
+---------
+- log ref-counts of objects
+- just logging them outside of glib/gobject would still make it hard to detect
+  issues though
+
 User interfaces
 ===============
 
@@ -245,9 +276,6 @@ Maybe we can even feed the log into existing live graphers, with a little driver
 Problems / Open items
 =====================
 - should tracers log into the debug.log or into a separate log?
-  - in the log we need a bit of protocol:
-    - log the GST_TRACE var, so that front-ends can understand what tracers 
-      where active and what parameters where passed.
   - separate log
     - use a binary format?
     - worse performance (we're writing two logs at the same time)
@@ -271,8 +299,8 @@ Problems / Open items
       GST_TRACER="timer(10ms);rusage"
     right now the tracer hooks are defined as an enum though.
 - when connecting to a running app, we can't easily get the 'current' state if
-  logging is using a socket, as past events are not explicitly stored, we could
-  determine the current topology and emit events with GST_CLOCK_TIME_NONE as ts
+  logging is using a socket, as past events are not explicitly stored, we could 
+  determine the current topology and emit events with GST_CLOCK_TIME_NONE as ts                                      
   to indicate that the events are synthetic.
 
 Try it
@@ -284,8 +312,30 @@ GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" gst-launch-1.0 2>trace.log fak
 gst-stats-1.0 trace.log
 - print some pipeline stats on exit
 
-grep "proc-rusage" trace.log | cut -c154- | sed -e 's#ts=(guint64)##' -e 's#cpuload=(uint)##' -e 's#time=(guint64)##' -e 's#;##'
-
+GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" /usr/bin/gst-play-1.0 2>trace.log --interactive $HOME/Videos/movie.mp4
+./tools/gst-plot-traces.sh --format=png | gnuplot
+eog trace.log.*.png
+- get ts, average-cpuload, current-cpuload, time and plot
 
 GST_DEBUG="GST_TRACER:7" GST_TRACE=latency gst-launch-1.0 audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! autoaudiosink
 - print processing latencies
+
+Performance
+===========
+GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" /usr/bin/gst-launch-1.0 2>trace.log playbin uri=file:///home/ensonic/Music/1.mp3 audio-sink="fakesink sync=false"
+0:00:42.531147106 (GList)
+0:00:09.273174008 (GQueue)!
+
+GST_DEBUG="GST_TRACER:7" GST_TRACE="rusage" /usr/bin/gst-launch-1.0 2>trace.log playbin uri=file:///home/ensonic/Music/1.mp3 audio-sink="fakesink sync=false"
+0:00:07.388375834
+
+GST_TRACE="rusage" /usr/bin/gst-launch-1.0 2>trace.log playbin uri=file:///home/ensonic/Music/1.mp3 audio-sink="fakesink sync=false"
+0:00:01.691596186
+
+/usr/bin/gst-launch-1.0 playbin uri=file:///home/ensonic/Music/1.mp3 audio-sink="fakesink sync=false"
+0:00:00.788497775
+
+egrep -c "(proc|thread)-rusage" trace.log 
+658618
+
+- we can optimize most with using quarks in structures or eventually avoid structures totally
