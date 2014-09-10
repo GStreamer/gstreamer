@@ -280,6 +280,7 @@ mpegts_packetizer_dispose (GObject * object)
 
     gst_adapter_clear (packetizer->adapter);
     g_object_unref (packetizer->adapter);
+    g_mutex_clear (&packetizer->group_lock);
     packetizer->disposed = TRUE;
     packetizer->offset = 0;
     packetizer->empty = TRUE;
