@@ -2224,9 +2224,34 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
       GST_DEBUG_OBJECT (stream->pad, "Downstream position: %"
           GST_TIME_FORMAT, GST_TIME_ARGS (ts));
     } else {
-      ts = demux->segment.position;
-      GST_DEBUG_OBJECT (stream->pad, "Downstream position query failed, "
-          "failling back to looking at other pads");
+      gboolean have_pos = FALSE;
+
+      /* query other pads as some faulty element in the pad's branch might
+       * reject position queries. This should be better than using the
+       * demux segment position that can be much ahead */
+      for (GSList * iter = demux->streams; iter != NULL;
+          iter = g_slist_next (iter)) {
+        GstDashDemuxStream *cur_stream = iter->data;
+
+        if (!cur_stream->active_stream || cur_stream->pad == stream->pad)
+          continue;
+
+        have_pos =
+            gst_pad_peer_query_position (cur_stream->pad, GST_FORMAT_TIME,
+            &pos);
+        if (have_pos) {
+          ts = (GstClockTime) pos;
+          GST_DEBUG_OBJECT (stream->pad, "Downstream position: %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+          break;
+        }
+      }
+
+      if (!have_pos) {
+        ts = demux->segment.position;
+        GST_DEBUG_OBJECT (stream->pad, "Downstream position query failed, "
+            "failling back to looking at other pads");
+      }
     }
 
     GST_DEBUG_OBJECT (stream->pad, "Restarting stream at "
