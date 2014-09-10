@@ -170,7 +170,7 @@ G_DEFINE_TYPE (GstUvcH264Src, gst_uvc_h264_src, GST_TYPE_BASE_CAMERA_SRC);
   "height = " GST_VIDEO_SIZE_RANGE ", "                                 \
   "framerate = " GST_VIDEO_FPS_RANGE ", "                               \
   "stream-format = (string) { byte-stream, avc }, "                     \
-  "alignment = (string) { au }, "                                       \
+  "alignment = (string) au, "                                           \
   "profile = (string) { high, main, baseline, constrained-baseline }"
 
 static GstStaticPadTemplate vfsrc_template =

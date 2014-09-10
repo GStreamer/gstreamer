@@ -56,7 +56,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) { " GST_AUDIO_NE (S16) " }, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, "
         "rate = (int) { 48000, 24000, 16000, 12000, 8000 }, "
         "channels = (int) [ 1, 8 ] ")

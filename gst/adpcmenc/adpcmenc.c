@@ -57,7 +57,7 @@ static GstStaticPadTemplate adpcmenc_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-adpcm, "
-        " layout=(string){dvi}, "
+        " layout=(string)dvi, "
         " block_align = (int) [64, 8192], "
         " rate = (int)[ 1, MAX ], " "channels = (int)[1,2];")
     );
