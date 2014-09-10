@@ -385,7 +385,8 @@ do_thread_rusage_stats (GstStructure * s)
 
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
       "thread-id", G_TYPE_UINT, &thread_id,
-      "cpuload", G_TYPE_UINT, &cpuload, "time", G_TYPE_UINT64, &tthread, NULL);
+      "average-cpuload", G_TYPE_UINT, &cpuload, "time", G_TYPE_UINT64, &tthread,
+      NULL);
   thread_stats = get_thread_stats (thread_id);
   thread_stats->cpuload = cpuload;
   thread_stats->tthread = tthread;
@@ -398,7 +399,7 @@ do_proc_rusage_stats (GstStructure * s)
   guint64 ts;
 
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
-      "cpuload", G_TYPE_UINT, &total_cpuload, NULL);
+      "average-cpuload", G_TYPE_UINT, &total_cpuload, NULL);
   last_ts = MAX (last_ts, ts);
 }
 
