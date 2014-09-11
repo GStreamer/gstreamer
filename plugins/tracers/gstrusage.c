@@ -29,9 +29,13 @@
 #  include "config.h"
 #endif
 
+#include <unistd.h>
 #include "gstrusage.h"
 
 #ifdef HAVE_SYS_RESOURCE_H
+#ifndef __USE_GNU
+# define __USE_GNU              /* RUSAGE_THREAD */
+#endif
 #include <sys/resource.h>
 #endif
 
@@ -50,6 +54,7 @@ G_DEFINE_TYPE_WITH_CODE (GstRUsageTracer, gst_rusage_tracer, GST_TYPE_TRACER,
 /* for ts calibration */
 static gpointer main_thread_id = NULL;
 static guint64 tproc_base = G_GINT64_CONSTANT (0);
+static glong num_cpus = 1;
 
 typedef struct
 {
@@ -176,7 +181,15 @@ gst_rusage_tracer_init (GstRUsageTracer * self)
 
   main_thread_id = g_thread_self ();
   tvs_proc = make_trace_values (GST_SECOND);
-  GST_DEBUG ("rusage: main thread=%p", main_thread_id);
+  if ((num_cpus = sysconf (_SC_NPROCESSORS_ONLN)) == -1) {
+    GST_WARNING_OBJECT (self, "failed to get number of cpus online");
+    if ((num_cpus = sysconf (_SC_NPROCESSORS_CONF)) == -1) {
+      GST_WARNING_OBJECT (self, "failed to get number of cpus, assuming 1");
+      num_cpus = 1;
+    }
+  }
+
+  GST_DEBUG ("rusage: main thread=%p, num_cpus=%ld", main_thread_id, num_cpus);
 
   /* announce trace formats */
   /* *INDENT-OFF* */
@@ -186,17 +199,17 @@ gst_rusage_tracer_init (GstRUsageTracer * self)
           NULL),
       "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "description", G_TYPE_STRING, "average cpu usage per thread",
+          "description", G_TYPE_STRING, "average cpu usage per thread in ‰",
           "flags", G_TYPE_STRING, "aggregated",  // use gflags 
           "min", G_TYPE_UINT, 0, 
-          "max", G_TYPE_UINT, 100,
+          "max", G_TYPE_UINT, 1000,
           NULL),
       "current-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "description", G_TYPE_STRING, "current cpu usage per thread",
+          "description", G_TYPE_STRING, "current cpu usage per thread in ‰",
           "flags", G_TYPE_STRING, "windowed",  // use gflags 
           "min", G_TYPE_UINT, 0, 
-          "max", G_TYPE_UINT, 100,
+          "max", G_TYPE_UINT, 1000,
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
@@ -212,17 +225,17 @@ gst_rusage_tracer_init (GstRUsageTracer * self)
           NULL),
       "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "description", G_TYPE_STRING, "average cpu usage per process",
+          "description", G_TYPE_STRING, "average cpu usage per process in ‰",
           "flags", G_TYPE_STRING, "aggregated",  // use gflags 
           "min", G_TYPE_UINT, 0, 
-          "max", G_TYPE_UINT, 100,
+          "max", G_TYPE_UINT, 1000,
           NULL),
       "current-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "description", G_TYPE_STRING, "current cpu usage per process",
+          "description", G_TYPE_STRING, "current cpu usage per process in ‰",
           "flags", G_TYPE_STRING, "windowed",  // use gflags 
           "min", G_TYPE_UINT, 0, 
-          "max", G_TYPE_UINT, 100,
+          "max", G_TYPE_UINT, 1000,
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
@@ -246,17 +259,9 @@ gst_rusage_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
   guint avg_cpuload, cur_cpuload;
   struct rusage ru;
   GstClockTime tproc = G_GUINT64_CONSTANT (0);
+  GstClockTime tthread = G_GUINT64_CONSTANT (0);
   GstClockTime dts, dtproc;
-  static GstClockTime last_ts = G_GUINT64_CONSTANT (0);
 
-  getrusage (RUSAGE_SELF, &ru);
-
-  /* get stats record for current thread */
-  if (!(stats = g_hash_table_lookup (self->threads, thread_id))) {
-    stats = g_slice_new0 (GstThreadStats);
-    stats->tvs_thread = make_trace_values (GST_SECOND);
-    g_hash_table_insert (self->threads, thread_id, stats);
-  }
 #ifdef HAVE_CLOCK_GETTIME
   {
     struct timespec now;
@@ -264,24 +269,40 @@ gst_rusage_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
     if (!clock_gettime (CLOCK_PROCESS_CPUTIME_ID, &now)) {
       tproc = GST_TIMESPEC_TO_TIME (now);
     } else {
-      GST_WARNING ("clock_gettime (CLOCK_PROCESS_CPUTIME_ID,...) failed.");
+      GST_WARNING_OBJECT (obj,
+          "clock_gettime (CLOCK_PROCESS_CPUTIME_ID,...) failed: %s",
+          g_strerror (errno));
+      getrusage (RUSAGE_SELF, &ru);
       tproc =
           GST_TIMEVAL_TO_TIME (ru.ru_utime) + GST_TIMEVAL_TO_TIME (ru.ru_stime);
     }
 
     /* cpu time per thread */
     if (!clock_gettime (CLOCK_THREAD_CPUTIME_ID, &now)) {
-      stats->tthread = GST_TIMESPEC_TO_TIME (now);
+      tthread = GST_TIMESPEC_TO_TIME (now);
     } else {
-      GST_WARNING ("clock_gettime (CLOCK_THREAD_CPUTIME_ID,...) failed.");
-      stats->tthread += GST_CLOCK_DIFF (last_ts, ts);
+      GST_WARNING_OBJECT (obj,
+          "clock_gettime (CLOCK_THREAD_CPUTIME_ID,...) failed: %s",
+          g_strerror (errno));
+      getrusage (RUSAGE_THREAD, &ru);
+      tthread =
+          GST_TIMEVAL_TO_TIME (ru.ru_utime) + GST_TIMEVAL_TO_TIME (ru.ru_stime);
     }
   }
 #else
+  getrusage (RUSAGE_SELF, &ru);
   tproc = GST_TIMEVAL_TO_TIME (ru.ru_utime) + GST_TIMEVAL_TO_TIME (ru.ru_stime);
-  /* crude way to meassure time spend in which thread */
-  stats->tthread += GST_CLOCK_DIFF (last_ts, ts);
+  getrusage (RUSAGE_THREAD, &ru);
+  tthread =
+      GST_TIMEVAL_TO_TIME (ru.ru_utime) + GST_TIMEVAL_TO_TIME (ru.ru_stime);
 #endif
+  /* get stats record for current thread */
+  if (!(stats = g_hash_table_lookup (self->threads, thread_id))) {
+    stats = g_slice_new0 (GstThreadStats);
+    stats->tvs_thread = make_trace_values (GST_SECOND);
+    g_hash_table_insert (self->threads, thread_id, stats);
+  }
+  stats->tthread = tthread;
 
   /* Calibrate ts for the process and main thread. For tthread[main] and tproc
    * the time is larger than ts, as our base-ts is taken after the process has
@@ -312,9 +333,10 @@ gst_rusage_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
    */
   /* *INDENT-OFF* */
   avg_cpuload = (guint) gst_util_uint64_scale (stats->tthread,
-      G_GINT64_CONSTANT (100), ts);
+      G_GINT64_CONSTANT (1000), ts);
   update_trace_value (stats->tvs_thread, ts, stats->tthread, &dts, &dtproc);
-  cur_cpuload = (guint) gst_util_uint64_scale (dtproc, G_GINT64_CONSTANT (100), dts);
+  cur_cpuload = (guint) gst_util_uint64_scale (dtproc,
+      G_GINT64_CONSTANT (1000), dts);
   gst_tracer_log_trace (gst_structure_new ("thread-rusage", 
       "ts", G_TYPE_UINT64, ts, 
       "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (thread_id), 
@@ -323,13 +345,13 @@ gst_rusage_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
       "time", G_TYPE_UINT64, stats->tthread,
       NULL));
 
-  avg_cpuload = (guint) gst_util_uint64_scale (tproc, G_GINT64_CONSTANT (100), ts);
+  avg_cpuload = (guint) gst_util_uint64_scale (tproc / num_cpus,
+      G_GINT64_CONSTANT (1000), ts);
   g_mutex_lock (&tvs_proc->lock);
   update_trace_value (tvs_proc, ts, tproc, &dts, &dtproc);
-  /* remember last timestamp for fallback calculations */
-  last_ts = ts;
   g_mutex_unlock (&tvs_proc->lock);
-  cur_cpuload = (guint) gst_util_uint64_scale (dtproc, G_GINT64_CONSTANT (100), dts);
+  cur_cpuload = (guint) gst_util_uint64_scale (dtproc / num_cpus,
+      G_GINT64_CONSTANT (1000), dts);
   gst_tracer_log_trace (gst_structure_new ("proc-rusage", 
       "ts", G_TYPE_UINT64, ts, 
       "average-cpuload", G_TYPE_UINT, MIN (avg_cpuload, 1000),
