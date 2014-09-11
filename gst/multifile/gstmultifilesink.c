@@ -232,7 +232,7 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
       g_param_spec_enum ("next-file", "Next File",
           "When to start a new file",
           GST_TYPE_MULTI_FILE_SINK_NEXT, DEFAULT_NEXT_FILE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
   /**
