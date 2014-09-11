@@ -4625,6 +4625,7 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
      *    on the list to this new value
      */
 
+    GST_OBJECT_LOCK (dbin);
     gst_message_parse_buffering (msg, &msg_perc);
 
     /*
@@ -4678,6 +4679,7 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
     } else {
       gst_message_replace (&msg, smaller);
     }
+    GST_OBJECT_UNLOCK (dbin);
   }
 
   if (drop)
