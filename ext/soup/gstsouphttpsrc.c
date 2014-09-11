@@ -1034,6 +1034,7 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   GHashTable *params = NULL;
   GstEvent *http_headers_event;
   GstStructure *http_headers, *headers;
+  const gchar *accept_ranges;
 
   GST_INFO_OBJECT (src, "got headers");
 
@@ -1096,6 +1097,16 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
       gst_element_post_message (GST_ELEMENT (src),
           gst_message_new_duration_changed (GST_OBJECT (src)));
     }
+  }
+
+  /* If the server reports Accept-Ranges: none we don't have to try
+   * doing range requests at all
+   */
+  if ((accept_ranges =
+          soup_message_headers_get_one (msg->response_headers,
+              "Accept-Ranges"))) {
+    if (g_ascii_strcasecmp (accept_ranges, "none") == 0)
+      src->seekable = FALSE;
   }
 
   /* Icecast stuff */
