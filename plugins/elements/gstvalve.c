@@ -26,7 +26,7 @@
  * The valve is a simple element that drops buffers when the #GstValve:drop
  * property is set to %TRUE and lets then through otherwise.
  *
- * Any downstream error received while the #GstValve:drop property is %FALSE
+ * Any downstream error received while the #GstValve:drop property is %TRUE
  * is ignored. So downstream element can be set to  %GST_STATE_NULL and removed,
  * without using pad blocking.
  */
