@@ -48,6 +48,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbytewriter.h>
 #include <gst/tag/tag.h>
+#include <gst/video/video.h>
 
 /**
  * Creates a new AtomsContext for the given flavor.
@@ -3483,7 +3484,7 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     VisualSampleEntry * entry, guint32 scale, GList * ext_atoms_list)
 {
   SampleTableEntryMP4V *ste;
-  gint dwidth, dheight;
+  guint dwidth, dheight;
   gint par_n = 0, par_d = 0;
 
   if ((entry->par_n != 1 || entry->par_d != 1) &&
@@ -3497,12 +3498,10 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
   /* ISO file spec says track header w/h indicates track's visual presentation
    * (so this together with pixels w/h implicitly defines PAR) */
   if (par_n && (context->flavor != ATOMS_TREE_FLAVOR_MOV)) {
-    if (par_n > par_d) {
-      dwidth = entry->width * par_n / par_d;
-      dheight = entry->height;
-    } else {
-      dwidth = entry->width * par_n / par_d;
-      dheight = entry->height;
+    /* Assumes square pixels display */
+    if (!gst_video_calculate_display_ratio (&dwidth, &dheight, entry->width,
+            entry->height, par_n, par_d, 1, 1)) {
+      GST_WARNING ("Could not calculate display ratio");
     }
   }
 
