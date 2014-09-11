@@ -144,7 +144,7 @@ gst_validate_runner_get_reports (GstValidateRunner * runner)
 {
   /* TODO should we need locking or put in the docs to always call this
    * after pipeline ends? */
-  return runner->reports;
+  return g_slist_reverse (runner->reports);
 }
 
 /**
