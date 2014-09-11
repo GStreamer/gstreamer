@@ -1,9 +1,8 @@
 SUBDIRS = validate
-DIST_SUBDIRS = validate
+DIST_SUBDIRS = validate launcher
 
 if HAVE_SPHINHX
 SUBDIRS += launcher
-DIST_SUBDIRS += launcher
 endif
 
 upload:
