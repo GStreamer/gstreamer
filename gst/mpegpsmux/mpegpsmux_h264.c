@@ -197,6 +197,7 @@ mpegpsmux_prepare_h264 (GstBuffer * buf, MpegPsPadData * data, MpegPsMux * mux)
         MIN (nal_size, map.size - in_offset));
     in_offset += nal_size;
   }
+  gst_buffer_unmap (buf, &map);
 
   out_buf = gst_byte_writer_reset_and_get_buffer (&bw);
 
