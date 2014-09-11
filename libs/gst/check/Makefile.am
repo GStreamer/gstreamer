@@ -93,6 +93,8 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_check_teardown_pad_by_name \
 	gst_check_teardown_sink_pad \
 	gst_check_teardown_src_pad \
+	gst_check_objects_destroyed_on_unref \
+	gst_check_object_destroyed_on_unref \
 	gst_consistency_checker_add_pad \
 	gst_consistency_checker_new \
 	gst_consistency_checker_reset \

@@ -107,6 +107,9 @@ void gst_check_setup_events (GstPad * srcpad, GstElement * element,
 void gst_check_setup_events_with_stream_id (GstPad * srcpad,
     GstElement * element, GstCaps * caps, GstFormat format,
     const gchar * stream_id);
+void gst_check_objects_destroyed_on_unref (gpointer object_to_unref, gpointer first_object, ...)
+  G_GNUC_NULL_TERMINATED;
+void gst_check_object_destroyed_on_unref (gpointer object_to_unref);
 
 #define fail_unless_message_error(msg, domain, code)            \
 gst_check_message_error (msg, GST_MESSAGE_ERROR,                \

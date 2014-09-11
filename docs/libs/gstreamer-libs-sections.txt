@@ -985,6 +985,8 @@ gst_check_setup_sink_pad_by_name_from_template
 gst_check_setup_sink_pad_from_template
 gst_check_setup_src_pad_by_name_from_template
 gst_check_setup_src_pad_from_template
+gst_check_objects_destroyed_on_unref
+gst_check_object_destroyed_on_unref
 
 <SUBSECTION Private>
 MAIN_INIT

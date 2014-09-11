@@ -927,3 +927,87 @@ gst_check_setup_events (GstPad * srcpad, GstElement * element,
       stream_id);
   g_free (stream_id);
 }
+
+typedef struct _DestroyedObjectStruct
+{
+  GObject *object;
+  gboolean destroyed;
+} DestroyedObjectStruct;
+
+static void
+weak_notify (DestroyedObjectStruct * destroyed, GObject ** object)
+{
+  destroyed->destroyed = TRUE;
+}
+
+/**
+ * gst_check_objects_destroyed_on_unref:
+ * @object_to_unref: The #GObject to unref
+ * @first_object: (allow-none) The first object that should be destroyed as a
+ * concequence of unrefing @object_to_unref.
+ * @... : Additional object that should have been destroyed.
+ *
+ * Unrefs @object_to_unref and checks that is has properly been
+ * destroyed, also checks that the other objects passed in
+ * parametter have been destroyed as a concequence of
+ * unrefing @object_to_unref. Last variable argument should be NULL.
+ *
+ * Since: 1.6
+ */
+void
+gst_check_objects_destroyed_on_unref (gpointer object_to_unref, gpointer first_object, ...)
+{
+  GObject *object;
+  GList *objs = NULL, *tmp;
+  DestroyedObjectStruct *destroyed = g_slice_new0 (DestroyedObjectStruct);
+
+  destroyed->object = object_to_unref;
+  g_object_weak_ref (object_to_unref, (GWeakNotify) weak_notify, destroyed);
+  objs = g_list_prepend (objs, destroyed);
+
+  if (first_object) {
+    va_list varargs;
+
+    object = first_object;
+
+    va_start (varargs, first_object);
+    while (object) {
+      destroyed = g_slice_new0 (DestroyedObjectStruct);
+      destroyed->object = object;
+      g_object_weak_ref (object, (GWeakNotify) weak_notify, destroyed);
+      objs = g_list_prepend (objs, destroyed);
+      object = va_arg (varargs, GObject *);
+    }
+    va_end (varargs);
+  }
+  gst_object_unref (object_to_unref);
+
+  for (tmp = objs; tmp; tmp = tmp->next) {
+    DestroyedObjectStruct *destroyed = tmp->data;
+
+    if (destroyed->destroyed == FALSE) {
+      fail_unless (destroyed->destroyed == TRUE,
+          "%s_%p is not destroyed, %d refcounts left!",
+          GST_IS_OBJECT (destroyed->object) ? GST_OBJECT_NAME (destroyed->object) :
+          G_OBJECT_TYPE_NAME (destroyed),
+          destroyed->object, destroyed->object->ref_count);
+    }
+    g_slice_free (DestroyedObjectStruct, tmp->data);
+  }
+  g_list_free (objs);
+}
+
+/**
+ * gst_check_object_destroyed_on_unref:
+ * @object_to_unref: The #GObject to unref
+ *
+ * Unrefs @object_to_unref and checks that is has properly been
+ * destroyed.
+ *
+ * Since: 1.6
+ */
+void
+gst_check_object_destroyed_on_unref (gpointer object_to_unref)
+{
+  gst_check_objects_destroyed_on_unref (object_to_unref, NULL, NULL);
+}
