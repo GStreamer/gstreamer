@@ -692,17 +692,23 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
           seq_hdr |= (vc1parse->seq_layer.struct_c.frmrtq_postproc << 25);
           seq_hdr |= (vc1parse->seq_layer.struct_c.bitrtq_postproc << 20);
           seq_hdr |= (vc1parse->seq_layer.struct_c.loop_filter << 19);
+          /* Reserved3 shall be set to zero */
           seq_hdr |= (vc1parse->seq_layer.struct_c.multires << 17);
+          /* Reserved4 shall be set to one */
+          seq_hdr |= (1 << 16);
           seq_hdr |= (vc1parse->seq_layer.struct_c.fastuvmc << 15);
           seq_hdr |= (vc1parse->seq_layer.struct_c.extended_mv << 14);
           seq_hdr |= (vc1parse->seq_layer.struct_c.dquant << 12);
           seq_hdr |= (vc1parse->seq_layer.struct_c.vstransform << 11);
+          /* Reserved5 shall be set to zero */
           seq_hdr |= (vc1parse->seq_layer.struct_c.overlap << 9);
           seq_hdr |= (vc1parse->seq_layer.struct_c.syncmarker << 8);
           seq_hdr |= (vc1parse->seq_layer.struct_c.rangered << 7);
           seq_hdr |= (vc1parse->seq_layer.struct_c.maxbframes << 4);
           seq_hdr |= (vc1parse->seq_layer.struct_c.quantizer << 2);
           seq_hdr |= (vc1parse->seq_layer.struct_c.finterpflag << 1);
+          /* Reserved6 shall be set to one */
+          seq_hdr |= 1;
           codec_data = gst_buffer_new_and_alloc (4);
 
           gst_buffer_map (codec_data, &minfo, GST_MAP_WRITE);
@@ -760,11 +766,20 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
         gst_buffer_map (codec_data, &minfo, GST_MAP_WRITE);
 
         data = minfo.data;
+        /* According to SMPTE 421M Annex L, the sequence layer shall be
+         * represented as a sequence of 32 bit unsigned integers and each
+         * integers should be serialized in little-endian byte-order except for
+         * STRUCT_C which should be serialized in big-endian byte-order. */
+
         /* Unknown number of frames and start code */
         data[0] = 0xff;
         data[1] = 0xff;
         data[2] = 0xff;
         data[3] = 0xc5;
+
+        /* 0x00000004 */
+        GST_WRITE_UINT32_LE (data + 4, 4);
+
         /* structC */
         structC |= (vc1parse->profile << 30);
         if (vc1parse->profile != GST_VC1_PROFILE_ADVANCED) {
@@ -772,51 +787,57 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
           structC |= (vc1parse->seq_layer.struct_c.frmrtq_postproc << 25);
           structC |= (vc1parse->seq_layer.struct_c.bitrtq_postproc << 20);
           structC |= (vc1parse->seq_layer.struct_c.loop_filter << 19);
+          /* Reserved3 shall be set to zero */
           structC |= (vc1parse->seq_layer.struct_c.multires << 17);
+          /* Reserved4 shall be set to one */
+          structC |= (1 << 16);
           structC |= (vc1parse->seq_layer.struct_c.fastuvmc << 15);
           structC |= (vc1parse->seq_layer.struct_c.extended_mv << 14);
           structC |= (vc1parse->seq_layer.struct_c.dquant << 12);
           structC |= (vc1parse->seq_layer.struct_c.vstransform << 11);
+          /* Reserved5 shall be set to zero */
           structC |= (vc1parse->seq_layer.struct_c.overlap << 9);
           structC |= (vc1parse->seq_layer.struct_c.syncmarker << 8);
           structC |= (vc1parse->seq_layer.struct_c.rangered << 7);
           structC |= (vc1parse->seq_layer.struct_c.maxbframes << 4);
           structC |= (vc1parse->seq_layer.struct_c.quantizer << 2);
           structC |= (vc1parse->seq_layer.struct_c.finterpflag << 1);
+          /* Reserved6 shall be set to one */
+          structC |= 1;
         }
-        GST_WRITE_UINT32_BE (data + 4, structC);
-        /* 0x00000004 */
-        GST_WRITE_UINT32_BE (data + 8, 4);
+        GST_WRITE_UINT32_BE (data + 8, structC);
+
         /* structA */
         if (vc1parse->profile != GST_VC1_PROFILE_ADVANCED) {
-          GST_WRITE_UINT32_BE (data + 12, vc1parse->height);
-          GST_WRITE_UINT32_BE (data + 16, vc1parse->width);
+          GST_WRITE_UINT32_LE (data + 12, vc1parse->height);
+          GST_WRITE_UINT32_LE (data + 16, vc1parse->width);
         } else {
-          GST_WRITE_UINT32_BE (data + 12, 0);
-          GST_WRITE_UINT32_BE (data + 16, 0);
+          GST_WRITE_UINT32_LE (data + 12, 0);
+          GST_WRITE_UINT32_LE (data + 16, 0);
         }
 
         /* 0x0000000c */
-        GST_WRITE_UINT32_BE (data + 20, 0x0000000c);
+        GST_WRITE_UINT32_LE (data + 20, 0x0000000c);
+
         /* structB */
-        if ((gint) vc1parse->level != -1)
-          data[24] = (vc1parse->level << 5);
-        else
-          data[24] = 0x40;      /* Use HIGH level */
         /* Unknown HRD_BUFFER */
-        GST_WRITE_UINT24_BE (data + 25, 0);
+        GST_WRITE_UINT24_LE (data + 24, 0);
+        if ((gint) vc1parse->level != -1)
+          data[27] = (vc1parse->level << 5);
+        else
+          data[27] = (0x4 << 5);        /* Use HIGH level */
         /* Unknown HRD_RATE */
-        GST_WRITE_UINT32_BE (data + 28, 0);
+        GST_WRITE_UINT32_LE (data + 28, 0);
         /* Framerate */
         if (vc1parse->fps_d == 0) {
           /* If not known, it seems we need to put in the maximum framerate
              possible for the profile/level used (this is for RTP
              (https://tools.ietf.org/html/draft-ietf-avt-rtp-vc1-06#section-6.1),
              so likely elsewhere too */
-          GST_WRITE_UINT32_BE (data + 32,
+          GST_WRITE_UINT32_LE (data + 32,
               gst_vc1_parse_get_max_framerate (vc1parse));
         } else {
-          GST_WRITE_UINT32_BE (data + 32,
+          GST_WRITE_UINT32_LE (data + 32,
               ((guint32) (((gdouble) vc1parse->fps_n) /
                       ((gdouble) vc1parse->fps_d) + 0.5)));
         }
