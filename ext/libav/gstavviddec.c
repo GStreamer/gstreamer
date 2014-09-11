@@ -1438,7 +1438,7 @@ gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec)
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
-    gint have_data, len, try = 0;
+    gint have_data, len;
 
     GST_LOG_OBJECT (ffmpegdec,
         "codec has delay capabilities, calling until ffmpeg has drained everything");
@@ -1448,9 +1448,7 @@ gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec)
 
       len = gst_ffmpegviddec_frame (ffmpegdec, NULL, 0, &have_data, NULL, &ret);
 
-      if (len < 0 || have_data == 0)
-        break;
-    } while (try++ < 10);
+    } while (len >= 0 && have_data == 1);
     avcodec_flush_buffers (ffmpegdec->context);
   }
 }
