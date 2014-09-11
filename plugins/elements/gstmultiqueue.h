@@ -74,6 +74,9 @@ struct _GstMultiQueue {
 			/* GstMultiQueueSize, counter and highid */
 
   gint numwaiting;	/* number of not-linked pads waiting */
+
+  gboolean percent_changed;
+  GMutex buffering_post_lock; /* assures only one posted at a time */
 };
 
 struct _GstMultiQueueClass {
