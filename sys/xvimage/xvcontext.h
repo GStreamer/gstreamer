@@ -156,6 +156,7 @@ struct _GstXvContext
   gboolean have_autopaint_colorkey;
   gboolean have_colorkey;
   gboolean have_double_buffer;
+  gboolean have_iturbt709;
 
   GList *formats_list;
 

@@ -153,18 +153,20 @@ gst_xvcontext_get_xv_support (GstXvContext * context,
 
   /* Set XV_AUTOPAINT_COLORKEY and XV_DOUBLE_BUFFER and XV_COLORKEY */
   {
-    int count, todo = 3;
+    int count, todo = 4;
     XvAttribute *const attr = XvQueryPortAttributes (context->disp,
         context->xv_port_id, &count);
     static const char autopaint[] = "XV_AUTOPAINT_COLORKEY";
     static const char dbl_buffer[] = "XV_DOUBLE_BUFFER";
     static const char colorkey[] = "XV_COLORKEY";
+    static const char iturbt709[] = "XV_ITURBT_709";
 
     GST_DEBUG ("Checking %d Xv port attributes", count);
 
     context->have_autopaint_colorkey = FALSE;
     context->have_double_buffer = FALSE;
     context->have_colorkey = FALSE;
+    context->have_iturbt709 = FALSE;
 
     for (i = 0; ((i < count) && todo); i++) {
       GST_DEBUG ("Got attribute %s", attr[i].name);
@@ -230,6 +232,9 @@ gst_xvcontext_get_xv_support (GstXvContext * context,
         }
         todo--;
         context->have_colorkey = TRUE;
+      } else if (!strcmp (attr[i].name, iturbt709)) {
+        todo--;
+        context->have_iturbt709 = TRUE;
       }
     }
 
@@ -890,6 +895,9 @@ gst_xvcontext_set_colorimetry (GstXvContext * context,
 {
   Atom prop_atom;
   int xv_value;
+
+  if (!context->have_iturbt709)
+    return;
 
   switch (colorimetry->matrix) {
     case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
