@@ -165,7 +165,6 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
     factory = GST_TRACER_FACTORY_CAST (existing_feature);
     factory->type = type;
     existing_feature->loaded = TRUE;
-    //g_type_set_qdata (type, __gst_elementclass_factory, factory);
     gst_object_unref (existing_feature);
     return TRUE;
   }
