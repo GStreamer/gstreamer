@@ -149,6 +149,24 @@ typedef enum {
   GST_VIDEO_BUFFER_FLAG_LAST        = (GST_BUFFER_FLAG_LAST << 8)
 } GstVideoBufferFlags;
 
+/**
+ * GstVideoBufferFlags:
+ * @GST_VIDEO_FRAME_MAP_FLAG_NO_REF:  Don't take another reference of the buffer and store it in
+ *                                    the GstVideoFrame. This makes sure that the buffer stays
+ *                                    writable while the frame is mapped, but requires that the
+ *                                    buffer reference stays valid until the frame is unmapped again.
+ * @GST_VIDEO_FRAME_MAP_FLAG_LAST:    Offset to define more flags
+ *
+ * Additional mapping flags for gst_video_frame_map().
+ *
+ * Since: 1.6
+ */
+typedef enum {
+  GST_VIDEO_FRAME_MAP_FLAG_NO_REF   = (GST_MAP_FLAG_LAST << 0),
+  GST_VIDEO_FRAME_MAP_FLAG_LAST     = (GST_MAP_FLAG_LAST << 8)
+  /* 8 more flags possible afterwards */
+} GstVideoFrameMapFlags;
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_FRAME_H__ */

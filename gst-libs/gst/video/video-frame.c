@@ -106,6 +106,9 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     }
   }
   frame->buffer = gst_buffer_ref (buffer);
+  if ((flags & GST_VIDEO_FRAME_MAP_FLAG_NO_REF) == 0)
+    gst_buffer_ref (frame->buffer);
+
   frame->meta = meta;
 
   /* buffer flags enhance the frame flags */
@@ -189,11 +192,13 @@ gst_video_frame_unmap (GstVideoFrame * frame)
   GstBuffer *buffer;
   GstVideoMeta *meta;
   gint i;
+  GstMapFlags flags;
 
   g_return_if_fail (frame != NULL);
 
   buffer = frame->buffer;
   meta = frame->meta;
+  flags = frame->map[0].flags;
 
   if (meta) {
     for (i = 0; i < frame->info.finfo->n_planes; i++) {
@@ -202,7 +207,9 @@ gst_video_frame_unmap (GstVideoFrame * frame)
   } else {
     gst_buffer_unmap (buffer, &frame->map[0]);
   }
-  gst_buffer_unref (buffer);
+
+  if ((flags & GST_VIDEO_FRAME_MAP_FLAG_NO_REF) == 0)
+    gst_buffer_unref (frame->buffer);
 }
 
 /**
