@@ -85,6 +85,7 @@ struct _GstMssDemuxStream {
   GstPad *src_srcpad;
   GMutex fragment_download_lock;
   GCond fragment_download_cond;
+  gboolean download_finished;
   gboolean starting_fragment;
   gint64 download_start_time;
   gint64 download_total_time;
