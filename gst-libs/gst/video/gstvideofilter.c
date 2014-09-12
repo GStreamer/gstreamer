@@ -260,23 +260,15 @@ gst_video_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   if (fclass->transform_frame) {
     GstVideoFrame in_frame, out_frame;
 
-    if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf, GST_MAP_READ))
+    if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf,
+            GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
       goto invalid_buffer;
 
     if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
-            GST_MAP_WRITE))
+            GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
       goto invalid_buffer;
 
-    /* GstVideoFrame has another reference, so the buffer looks unwriteable,
-     * meaning that we can't attach any metas or anything to it. Other
-     * map() functions like gst_buffer_map() don't get another reference
-     * of the buffer and expect the buffer reference to be kept until
-     * the buffer is unmapped again. */
-    gst_buffer_unref (inbuf);
-    gst_buffer_unref (outbuf);
     res = fclass->transform_frame (filter, &in_frame, &out_frame);
-    gst_buffer_ref (inbuf);
-    gst_buffer_ref (outbuf);
 
     gst_video_frame_unmap (&out_frame);
     gst_video_frame_unmap (&in_frame);
@@ -317,7 +309,7 @@ gst_video_filter_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GstVideoFrame frame;
     GstMapFlags flags;
 
-    flags = GST_MAP_READ;
+    flags = GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF;
 
     if (!gst_base_transform_is_passthrough (trans))
       flags |= GST_MAP_WRITE;
@@ -325,14 +317,7 @@ gst_video_filter_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     if (!gst_video_frame_map (&frame, &filter->in_info, buf, flags))
       goto invalid_buffer;
 
-    /* GstVideoFrame has another reference, so the buffer looks unwriteable,
-     * meaning that we can't attach any metas or anything to it. Other
-     * map() functions like gst_buffer_map() don't get another reference
-     * of the buffer and expect the buffer reference to be kept until
-     * the buffer is unmapped again. */
-    gst_buffer_unref (buf);
     res = fclass->transform_frame_ip (filter, &frame);
-    gst_buffer_ref (buf);
 
     gst_video_frame_unmap (&frame);
   } else {
