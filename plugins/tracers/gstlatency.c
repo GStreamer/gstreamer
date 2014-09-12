@@ -102,6 +102,26 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
   latency_probe_id = g_quark_from_static_string ("latency_probe.id");
   latency_probe_pad = g_quark_from_static_string ("latency_probe.pad");
   latency_probe_ts = g_quark_from_static_string ("latency_probe.ts");
+
+  /* announce trace formats */
+  /* *INDENT-OFF* */
+  gst_tracer_log_trace (gst_structure_new ("latency.class",
+      "src", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "sink", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING,
+              "time it took for the buffer to go from src to sink ns",
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      NULL));
+  /* *INDENT-ON* */
 }
 
 static void

@@ -195,52 +195,52 @@ gst_rusage_tracer_init (GstRUsageTracer * self)
   /* *INDENT-OFF* */
   gst_tracer_log_trace (gst_structure_new ("thread-rusage.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "thread",  // use genum
+          "related-to", G_TYPE_STRING, "thread",  /* TODO: use genum */
           NULL),
       "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
           "description", G_TYPE_STRING, "average cpu usage per thread in ‰",
-          "flags", G_TYPE_STRING, "aggregated",  // use gflags 
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
           "min", G_TYPE_UINT, 0, 
           "max", G_TYPE_UINT, 1000,
           NULL),
       "current-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
           "description", G_TYPE_STRING, "current cpu usage per thread in ‰",
-          "flags", G_TYPE_STRING, "windowed",  // use gflags 
+          "flags", G_TYPE_STRING, "windowed",  /* TODO: use gflags */ 
           "min", G_TYPE_UINT, 0, 
           "max", G_TYPE_UINT, 1000,
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "time spent in thread",
-          "flags", G_TYPE_STRING, "aggregated",  // use gflags 
+          "description", G_TYPE_STRING, "time spent in thread in ns",
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
       NULL));
   gst_tracer_log_trace (gst_structure_new ("proc-rusage.class",
       "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "process",  // use genum
+          "related-to", G_TYPE_STRING, "process",  /* TODO: use genum */
           NULL),
       "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
           "description", G_TYPE_STRING, "average cpu usage per process in ‰",
-          "flags", G_TYPE_STRING, "aggregated",  // use gflags 
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
           "min", G_TYPE_UINT, 0, 
           "max", G_TYPE_UINT, 1000,
           NULL),
       "current-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT,
           "description", G_TYPE_STRING, "current cpu usage per process in ‰",
-          "flags", G_TYPE_STRING, "windowed",  // use gflags 
+          "flags", G_TYPE_STRING, "windowed",  /* TODO: use gflags */ 
           "min", G_TYPE_UINT, 0, 
           "max", G_TYPE_UINT, 1000,
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "time spent in process",
-          "flags", G_TYPE_STRING, "aggregated",  // use gflags 
+          "description", G_TYPE_STRING, "time spent in process in ns",
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),

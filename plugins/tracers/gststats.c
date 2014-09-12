@@ -251,6 +251,7 @@ do_buffer_stats (GstStatsTracer * self, GstPad * this_pad,
           "peer-pad-ix", G_TYPE_UINT, that_pad_stats->index,
           "peer-elem-ix", G_TYPE_UINT, that_elem_stats->index,
           "buffer-size", G_TYPE_UINT, gst_buffer_get_size (buf),
+          /* TODO(ensonic): do PTS and DTS */
           "buffer-ts", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (buf),
           "buffer-duration", G_TYPE_UINT64, GST_BUFFER_DURATION (buf),
           "buffer-flags", GST_TYPE_BUFFER_FLAGS, GST_BUFFER_FLAGS (buf),
@@ -360,6 +361,79 @@ gst_stats_tracer_init (GstStatsTracer * self)
       GST_TRACER_HOOK_MESSAGES | GST_TRACER_HOOK_QUERIES, NULL);
   self->elements = g_ptr_array_new_with_free_func (free_element_stats);
   self->pads = g_ptr_array_new_with_free_func (free_pad_stats);
+
+  /* announce trace formats */
+  /* *INDENT-OFF* */
+  gst_tracer_log_trace (gst_structure_new ("buffer.class",
+      "pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "peer-pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "peer-element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "buffer-size", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT,
+          "description", G_TYPE_STRING, "size of buffer in bytes",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          "min", G_TYPE_UINT, 0, 
+          "max", G_TYPE_UINT, G_MAXUINT,
+          NULL),
+      "buffer-ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "timestamp of the buffer in ns",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      "buffer-duration", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "duration of the buffer in ns",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      /* TODO(ensonic): "buffer-flags" */
+      NULL));
+  gst_tracer_log_trace (gst_structure_new ("event.class",
+      "pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
+          "description", G_TYPE_STRING, "name of the event",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          NULL),
+      NULL));
+  gst_tracer_log_trace (gst_structure_new ("message.class",
+      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
+          "description", G_TYPE_STRING, "name of the message",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          NULL),
+      NULL));
+  gst_tracer_log_trace (gst_structure_new ("query.class",
+      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
+          "description", G_TYPE_STRING, "name of the query",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          NULL),
+      NULL));
+  /* *INDENT-ON* */
 }
 
 /* hooks */
