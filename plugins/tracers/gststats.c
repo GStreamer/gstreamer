@@ -19,7 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:gstrusage
+ * SECTION:gststats
  * @short_description: log event stats
  *
  * A tracing module that builds usage statistic for elements and pads. 
@@ -661,7 +661,5 @@ gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
 static void
 gst_stats_tracer_finalize (GObject * obj)
 {
-  //GstStatsTracer *self = GST_STATS_TRACER_CAST (obj);
-
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
