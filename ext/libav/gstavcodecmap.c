@@ -1712,6 +1712,12 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           "video/x-apple-intermediate-codec", NULL);
       break;
 
+    case AV_CODEC_ID_CAVS:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode,
+          "video/x-cavs", NULL);
+      break;
+
     case AV_CODEC_ID_WS_VQA:
     case AV_CODEC_ID_IDCIN:
     case AV_CODEC_ID_8BPS:
@@ -1728,7 +1734,6 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
     case AV_CODEC_ID_WESTWOOD_SND1:
     case AV_CODEC_ID_MMVIDEO:
     case AV_CODEC_ID_AVS:
-    case AV_CODEC_ID_CAVS:
       buildcaps = TRUE;
       break;
 
