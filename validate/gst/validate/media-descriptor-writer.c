@@ -147,11 +147,13 @@ serialize_filenode (GstMediaDescriptorWriter * writer)
     }
 
     tagsnode = snode->tags;
-    STR_APPEND3 (tagsnode->str_open);
-    for (tmp3 = tagsnode->tags; tmp3; tmp3 = tmp3->next) {
-      STR_APPEND4 (((TagNode *) tmp3->data)->str_open);
+    if (tagsnode) {
+      STR_APPEND3 (tagsnode->str_open);
+      for (tmp3 = tagsnode->tags; tmp3; tmp3 = tmp3->next) {
+        STR_APPEND4 (((TagNode *) tmp3->data)->str_open);
+      }
+      STR_APPEND3 (tagsnode->str_close);
     }
-    STR_APPEND3 (tagsnode->str_close);
 
     STR_APPEND2 (snode->str_close);
   }
