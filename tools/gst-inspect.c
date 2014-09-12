@@ -715,24 +715,6 @@ print_pad_info (GstElement * element)
 
     g_print ("\n");
 
-    n_print ("    Implementation:\n");
-    if (pad->chainfunc)
-      n_print ("      Has chainfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (pad->chainfunc));
-    if (pad->getrangefunc)
-      n_print ("      Has getrangefunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (pad->getrangefunc));
-    if (pad->eventfunc != gst_pad_event_default)
-      n_print ("      Has custom eventfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (pad->eventfunc));
-    if (pad->queryfunc != gst_pad_query_default)
-      n_print ("      Has custom queryfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (pad->queryfunc));
-
-    if (pad->iterintlinkfunc != gst_pad_iterate_internal_links_default)
-      n_print ("      Has custom iterintlinkfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (pad->iterintlinkfunc));
-
     if (pad->padtemplate)
       n_print ("    Pad Template: '%s'\n", pad->padtemplate->name_template);
 
