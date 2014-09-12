@@ -119,6 +119,7 @@ struct _GstHLSDemux
   GstElement *src;
   GstPad *src_srcpad; /* handy link to src's src pad */
   GMutex fragment_download_lock;
+  gboolean download_finished;
   GCond fragment_download_cond;
   GstClockTime current_timestamp;
   GstClockTime current_duration;
