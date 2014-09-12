@@ -267,7 +267,16 @@ gst_video_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
             GST_MAP_WRITE))
       goto invalid_buffer;
 
+    /* GstVideoFrame has another reference, so the buffer looks unwriteable,
+     * meaning that we can't attach any metas or anything to it. Other
+     * map() functions like gst_buffer_map() don't get another reference
+     * of the buffer and expect the buffer reference to be kept until
+     * the buffer is unmapped again. */
+    gst_buffer_unref (inbuf);
+    gst_buffer_unref (outbuf);
     res = fclass->transform_frame (filter, &in_frame, &out_frame);
+    gst_buffer_ref (inbuf);
+    gst_buffer_ref (outbuf);
 
     gst_video_frame_unmap (&out_frame);
     gst_video_frame_unmap (&in_frame);
@@ -316,7 +325,14 @@ gst_video_filter_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     if (!gst_video_frame_map (&frame, &filter->in_info, buf, flags))
       goto invalid_buffer;
 
+    /* GstVideoFrame has another reference, so the buffer looks unwriteable,
+     * meaning that we can't attach any metas or anything to it. Other
+     * map() functions like gst_buffer_map() don't get another reference
+     * of the buffer and expect the buffer reference to be kept until
+     * the buffer is unmapped again. */
+    gst_buffer_unref (buf);
     res = fclass->transform_frame_ip (filter, &frame);
+    gst_buffer_ref (buf);
 
     gst_video_frame_unmap (&frame);
   } else {
