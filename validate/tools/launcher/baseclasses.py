@@ -1219,6 +1219,11 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
         return n
 
+    def get_clean_name(self):
+        name = os.path.basename(self.get_path())
+        name = re.sub("\.stream_info|\.media_info", "", name)
+
+        return name.replace('.', "_")
 
 class MediaFormatCombination(object):
     _FORMATS = {"aac": "audio/mpeg,mpegversion=4",
