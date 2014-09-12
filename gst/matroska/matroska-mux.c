@@ -327,8 +327,7 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       g_param_spec_boolean ("streamable", "Determines whether output should "
           "be streamable", "If set to true, the output should be as if it is "
           "to be streamed and hence no indexes written or duration written.",
-          DEFAULT_STREAMABLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_STATIC_STRINGS));
+          DEFAULT_STREAMABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
