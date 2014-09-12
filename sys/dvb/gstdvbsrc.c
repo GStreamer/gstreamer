@@ -1929,7 +1929,7 @@ static gboolean
 gst_dvbsrc_is_valid_modulation (guint delsys, guint mod)
 {
   /* FIXME: check valid modulations for other broadcast standards */
-  switch (mod) {
+  switch (delsys) {
     case SYS_ISDBT:
       if (mod == QAM_AUTO || mod == QPSK || mod == QAM_16 ||
           mod == QAM_64 || mod == DQPSK)
