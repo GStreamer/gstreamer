@@ -5415,7 +5415,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     context->postprocess_frame = gst_matroska_demux_add_wvpk_header;
     audiocontext->wvpk_block_index = 0;
   } else if ((!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4)) ||
-      (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4)) ||
+      (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_28_8)) ||
       (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK))) {
     gint raversion = -1;
 
