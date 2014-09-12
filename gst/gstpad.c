@@ -4419,8 +4419,8 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (*buffer == NULL
-      || GST_IS_BUFFER (*buffer), GST_FLOW_ERROR);
+  g_return_val_if_fail (*buffer == NULL || (GST_IS_BUFFER (*buffer)
+          && gst_buffer_get_size (*buffer) >= size), GST_FLOW_ERROR);
 
   return gst_pad_get_range_unchecked (pad, offset, size, buffer);
 }
@@ -4474,8 +4474,8 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (*buffer == NULL
-      || GST_IS_BUFFER (*buffer), GST_FLOW_ERROR);
+  g_return_val_if_fail (*buffer == NULL || (GST_IS_BUFFER (*buffer)
+          && gst_buffer_get_size (*buffer) >= size), GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
