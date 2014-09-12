@@ -107,6 +107,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include "gstudpsrc.h"
 
 #include <gst/net/gstnetaddressmeta.h>
