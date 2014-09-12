@@ -1972,7 +1972,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
     if (demux->segment.rate > 0) {
       demux->segment.start = firstts;
 
-      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop) )
+      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))
         demux->segment.stop += firstts - demux->segment.start;
       demux->segment.position = firstts;
     }
