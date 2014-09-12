@@ -264,8 +264,6 @@ static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
 static volatile gint G_GNUC_MAY_ALIAS __default_level = GST_LEVEL_DEFAULT;
 static volatile gint G_GNUC_MAY_ALIAS __use_color = GST_DEBUG_COLOR_MODE_ON;
 
-static FILE *log_file;
-
 /* FIXME: export this? */
 gboolean
 _priv_gst_in_valgrind (void)
@@ -304,6 +302,7 @@ void
 _priv_gst_debug_init (void)
 {
   const gchar *env;
+  FILE *log_file;
 
   env = g_getenv ("GST_DEBUG_FILE");
   if (env != NULL && *env != '\0') {
@@ -333,7 +332,7 @@ _priv_gst_debug_init (void)
   _GST_CAT_DEBUG = _gst_debug_category_new ("GST_DEBUG",
       GST_DEBUG_BOLD | GST_DEBUG_FG_YELLOW, "debugging subsystem");
 
-  gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
+  gst_debug_add_log_function (gst_debug_log_default, log_file, NULL);
 
   /* FIXME: add descriptions here */
   GST_CAT_GST_INIT = _gst_debug_category_new ("GST_INIT",
@@ -962,12 +961,13 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
  * @message: the actual message
  * @object: (transfer none) (allow-none): the object this message relates to,
  *     or %NULL if none
- * @unused: an unused variable, reserved for some user_data.
+ * @user_data: the FILE* to log to
  *
  * The default logging handler used by GStreamer. Logging functions get called
- * whenever a macro like GST_DEBUG or similar is used. This function outputs the
- * message and additional info to stderr (or the log file specified via the
- * GST_DEBUG_FILE environment variable).
+ * whenever a macro like GST_DEBUG or similar is used. By default this function
+ * is setup to output the message and additional info to stderr (or the log file
+ * specified via the GST_DEBUG_FILE environment variable) as received via
+ * @user_data.
  *
  * You can add other handlers by using gst_debug_add_log_function().
  * And you can remove this handler by calling
@@ -976,12 +976,13 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
 void
 gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line,
-    GObject * object, GstDebugMessage * message, gpointer unused)
+    GObject * object, GstDebugMessage * message, gpointer user_data)
 {
   gint pid;
   GstClockTime elapsed;
   gchar *obj = NULL;
   GstDebugColorMode color_mode;
+  FILE *log_file = user_data ? user_data : stderr;
 
   if (level > gst_debug_category_get_threshold (category))
     return;
