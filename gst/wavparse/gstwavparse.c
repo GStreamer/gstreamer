@@ -886,6 +886,12 @@ gst_wavparse_adtl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
   while (size >= 8) {
     ltag = GST_READ_UINT32_LE (data + offset);
     lsize = GST_READ_UINT32_LE (data + offset + 4);
+
+    if (lsize + 8 > size) {
+      GST_WARNING_OBJECT (wav, "Invalid adtl size: %u + 8 > %u", lsize, size);
+      return FALSE;
+    }
+
     switch (ltag) {
       case GST_RIFF_TAG_labl:
         gst_wavparse_labl_chunk (wav, data + offset, size);
@@ -1426,13 +1432,14 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             break;
           }
           case GST_RIFF_LIST_adtl:{
-            const gint data_size = size;
+            const gint data_size = size - 4;
 
             GST_INFO_OBJECT (wav, "Have 'adtl' LIST, size %u", data_size);
             if (wav->streaming) {
               const guint8 *data = NULL;
 
               gst_adapter_flush (wav->adapter, 12);
+              wav->offset += 12;
               data = gst_adapter_map (wav->adapter, data_size);
               gst_wavparse_adtl_chunk (wav, data, data_size);
               gst_adapter_unmap (wav->adapter);
@@ -1441,8 +1448,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
               gst_buffer_unref (buf);
               buf = NULL;
+              wav->offset += 12;
               if ((res =
-                      gst_pad_pull_range (wav->sinkpad, wav->offset + 12,
+                      gst_pad_pull_range (wav->sinkpad, wav->offset,
                           data_size, &buf)) != GST_FLOW_OK)
                 goto header_read_error;
               gst_buffer_map (buf, &map, GST_MAP_READ);
