@@ -78,8 +78,8 @@ typedef struct
 
 static GstTraceValues *tvs_proc;
 
-static void gst_rusage_tracer_invoke (GstTracer * self, GstTracerHookId id,
-    GstTracerMessageId mid, va_list var_args);
+static void gst_rusage_tracer_invoke (GstTracer * self, GstTracerMessageId mid,
+    va_list var_args);
 
 /* data helper */
 
@@ -249,8 +249,8 @@ gst_rusage_tracer_init (GstRUsageTracer * self)
 }
 
 static void
-gst_rusage_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
-    GstTracerMessageId mid, va_list var_args)
+gst_rusage_tracer_invoke (GstTracer * obj, GstTracerMessageId mid,
+    va_list var_args)
 {
   GstRUsageTracer *self = GST_RUSAGE_TRACER_CAST (obj);
   guint64 ts = va_arg (var_args, guint64);

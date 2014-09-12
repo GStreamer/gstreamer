@@ -89,8 +89,8 @@ get_real_pad_parent (GstPad * pad)
 
 /* tracer class */
 
-static void gst_latency_tracer_invoke (GstTracer * obj, GstTracerHookId id,
-    GstTracerMessageId mid, va_list var_args);
+static void gst_latency_tracer_invoke (GstTracer * obj, GstTracerMessageId mid,
+    va_list var_args);
 
 static void
 gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
@@ -251,8 +251,8 @@ do_push_event_pre (GstLatencyTracer * self, va_list var_args)
 }
 
 static void
-gst_latency_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
-    GstTracerMessageId mid, va_list var_args)
+gst_latency_tracer_invoke (GstTracer * obj, GstTracerMessageId mid,
+    va_list var_args)
 {
   GstLatencyTracer *self = GST_LATENCY_TRACER_CAST (obj);
 

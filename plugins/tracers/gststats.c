@@ -339,8 +339,8 @@ do_element_stats (GstStatsTracer * self, GstPad * pad, GstClockTime elapsed1,
 /* tracer class */
 
 static void gst_stats_tracer_finalize (GObject * obj);
-static void gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId id,
-    GstTracerMessageId mid, va_list var_args);
+static void gst_stats_tracer_invoke (GstTracer * obj, GstTracerMessageId mid,
+    va_list var_args);
 
 static void
 gst_stats_tracer_class_init (GstStatsTracerClass * klass)
@@ -611,8 +611,8 @@ do_query_post (GstStatsTracer * self, va_list var_args)
 }
 
 static void
-gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
-    GstTracerMessageId mid, va_list var_args)
+gst_stats_tracer_invoke (GstTracer * obj, GstTracerMessageId mid,
+    va_list var_args)
 {
   GstStatsTracer *self = GST_STATS_TRACER_CAST (obj);
 

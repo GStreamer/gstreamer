@@ -131,14 +131,13 @@ gst_tracer_get_property (GObject * object, guint prop_id,
 }
 
 void
-gst_tracer_invoke (GstTracer * self, GstTracerHookId hid,
-    GstTracerMessageId mid, va_list var_args)
+gst_tracer_invoke (GstTracer * self, GstTracerMessageId mid, va_list var_args)
 {
   GstTracerClass *klass = GST_TRACER_GET_CLASS (self);
 
   g_return_if_fail (klass->invoke);
 
-  klass->invoke (self, hid, mid, var_args);
+  klass->invoke (self, mid, var_args);
 }
 
 /* tracing modules */

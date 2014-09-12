@@ -53,7 +53,7 @@ struct _GstTracer {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-typedef void (*GstTracerInvokeFunction) (GstTracer * self, GstTracerHookId hid,
+typedef void (*GstTracerInvokeFunction) (GstTracer * self, 
     GstTracerMessageId mid, va_list var_args);
 
 struct _GstTracerClass {
@@ -66,8 +66,8 @@ struct _GstTracerClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void gst_tracer_invoke (GstTracer * self, GstTracerHookId hid,
-    GstTracerMessageId mid, va_list var_args);
+void gst_tracer_invoke (GstTracer * self, GstTracerMessageId mid, 
+    va_list var_args);
 
 GType gst_tracer_get_type          (void);
 

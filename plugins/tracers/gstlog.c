@@ -52,8 +52,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_QUERY);
 G_DEFINE_TYPE_WITH_CODE (GstLogTracer, gst_log_tracer, GST_TYPE_TRACER,
     _do_init);
 
-static void gst_log_tracer_invoke (GstTracer * self, GstTracerHookId id,
-    GstTracerMessageId mid, va_list var_args);
+static void gst_log_tracer_invoke (GstTracer * self, GstTracerMessageId mid,
+    va_list var_args);
 
 static void
 gst_log_tracer_class_init (GstLogTracerClass * klass)
@@ -70,8 +70,8 @@ gst_log_tracer_init (GstLogTracer * self)
 }
 
 static void
-gst_log_tracer_invoke (GstTracer * self, GstTracerHookId hid,
-    GstTracerMessageId mid, va_list var_args)
+gst_log_tracer_invoke (GstTracer * self, GstTracerMessageId mid,
+    va_list var_args)
 {
   const gchar *fmt = NULL;
   GstDebugCategory *cat = GST_CAT_DEFAULT;
@@ -137,11 +137,10 @@ gst_log_tracer_invoke (GstTracer * self, GstTracerHookId hid,
     gchar *str;
 
     __gst_vasprintf (&str, fmt, var_args);
-    GST_CAT_TRACE (cat, "[%d,%d] %" GST_TIME_FORMAT ", %s",
-        hid, mid, GST_TIME_ARGS (ts), str);
+    GST_CAT_TRACE (cat, "[%d] %" GST_TIME_FORMAT ", %s",
+        mid, GST_TIME_ARGS (ts), str);
     g_free (str);
   } else {
-    GST_CAT_TRACE (cat, "[%d,%d] %" GST_TIME_FORMAT,
-        hid, mid, GST_TIME_ARGS (ts));
+    GST_CAT_TRACE (cat, "[%d] %" GST_TIME_FORMAT, mid, GST_TIME_ARGS (ts));
   }
 }

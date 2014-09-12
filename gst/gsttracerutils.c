@@ -143,7 +143,7 @@ gst_tracer_dispatch (GstTracerHookId hid, GstTracerMessageId mid, ...)
 
   for (node = _priv_tracers[hid]; node; node = g_list_next (node)) {
     va_start (var_args, mid);
-    gst_tracer_invoke (node->data, hid, mid, var_args);
+    gst_tracer_invoke (node->data, mid, var_args);
     va_end (var_args);
   }
 }
