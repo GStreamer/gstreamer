@@ -23,6 +23,7 @@
 #define __GST_VALIDATE_INTERNAL_H__
 
 #include <gst/gst.h>
+#include "gst-validate-scenario.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 #define GST_CAT_DEFAULT gstvalidate_debug
@@ -30,11 +31,7 @@ GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 extern GRegex *newline_regex;
 
 
-typedef struct _GstValidateScenario        GstValidateScenario;
-typedef struct _GstValidateAction          GstValidateAction;
-typedef struct _GstValidateActionParameter GstValidateActionParameter;
 typedef struct _GstValidateActionType      GstValidateActionType;
-typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
 struct _GstValidateActionType
 {
