@@ -149,7 +149,7 @@ PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ,
 AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYGOBJECT" = "xyes"])
 
 dnl check for pygobject
-PKG_CHECK_MODULES(GST_VALIDATE, gst-validate-1.0 >= 0.0.1.0,
+PKG_CHECK_MODULES(GST_VALIDATE, gst-validate-1.0 >= 1.0.0.0,
   [
     HAVE_GST_VALIDATE=yes
     AC_DEFINE(HAVE_GST_VALIDATE, 1, [Define if build with gst-validate support])
