@@ -92,7 +92,8 @@ gst_valve_class_init (GstValveClass * klass)
   g_object_class_install_property (gobject_class, PROP_DROP,
       g_param_spec_boolean ("drop", "Drop buffers and events",
           "Whether to drop buffers and events or let them through",
-          DEFAULT_DROP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_DROP, G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));

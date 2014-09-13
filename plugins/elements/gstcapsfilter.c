@@ -104,7 +104,8 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
           _("Restrict the possible allowed capabilities (NULL means ANY). "
               "Setting this property takes a reference to the supplied GstCaps "
               "object."), GST_TYPE_CAPS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
 
   gstelement_class = GST_ELEMENT_CLASS (klass);
   gst_element_class_set_static_metadata (gstelement_class,
