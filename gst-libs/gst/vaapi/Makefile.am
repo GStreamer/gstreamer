@@ -45,6 +45,7 @@ libgstvaapi_libs =				\
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstvaapi-codecparsers.la
 
 libgstvaapi_source_c =				\
+	gstvaapibufferproxy.c			\
 	gstvaapicodec_objects.c			\
 	gstvaapicontext.c			\
 	gstvaapicontext_overlay.c		\
@@ -82,6 +83,7 @@ libgstvaapi_source_c =				\
 	$(NULL)
 
 libgstvaapi_source_h =				\
+	gstvaapibufferproxy.h			\
 	gstvaapidecoder.h			\
 	gstvaapidecoder_h264.h			\
 	gstvaapidecoder_mpeg2.h			\
@@ -111,6 +113,7 @@ libgstvaapi_source_h =				\
 libgstvaapi_source_priv_h =			\
 	glibcompat.h				\
 	gstcompat.h				\
+	gstvaapibufferproxy_priv.h		\
 	gstvaapicodec_objects.h			\
 	gstvaapicompat.h			\
 	gstvaapicontext.h			\
