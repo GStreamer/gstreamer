@@ -1592,7 +1592,7 @@ gst_dash_demux_stream_download_loop (GstDashDemuxStream * stream)
         demux->client->update_failed_count++;
       }
 
-      if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
+      if (demux->client->update_failed_count <= DEFAULT_FAILED_COUNT) {
         GST_WARNING_OBJECT (stream->pad, "Could not fetch the next fragment");
         goto quit;
       } else {
