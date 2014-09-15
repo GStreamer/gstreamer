@@ -729,8 +729,15 @@ gst_media_descriptor_writer_add_frame (GstMediaDescriptorWriter
     StreamNode *streamnode = (StreamNode *) tmp->data;
 
     if (streamnode->pad == pad) {
+      GstMapInfo map;
+      gchar *checksum;
       guint id = g_list_length (streamnode->frames);
       FrameNode *fnode = g_slice_new0 (FrameNode);
+
+      g_assert (gst_buffer_map (buf, &map, GST_MAP_READ));
+      checksum = g_compute_checksum_for_data (G_CHECKSUM_MD5,
+          (const guchar *) map.data, map.size);
+      gst_buffer_unmap (buf, &map);
 
       fnode->id = id;
       fnode->offset = GST_BUFFER_OFFSET (buf);
@@ -745,14 +752,16 @@ gst_media_descriptor_writer_add_frame (GstMediaDescriptorWriter
           g_markup_printf_escaped (" <frame duration=\"%" G_GUINT64_FORMAT
           "\" id=\"%i\" is-keyframe=\"%s\" offset=\"%" G_GUINT64_FORMAT
           "\" offset-end=\"%" G_GUINT64_FORMAT "\" pts=\"%" G_GUINT64_FORMAT
-          "\"  dts=\"%" G_GUINT64_FORMAT "\" />", fnode->duration, id,
-          fnode->is_keyframe ? "true" : "false",
-          fnode->offset, fnode->offset_end, fnode->pts, fnode->dts);
+          "\"  dts=\"%" G_GUINT64_FORMAT "\" checksum=\"%s\"/>",
+          fnode->duration, id, fnode->is_keyframe ? "true" : "false",
+          fnode->offset, fnode->offset_end, fnode->pts, fnode->dts, checksum);
 
       fnode->str_close = NULL;
 
       streamnode->frames = g_list_append (streamnode->frames, fnode);
       GST_MEDIA_DESCRIPTOR_UNLOCK (writer);
+
+      g_free (checksum);
       return TRUE;
     }
   }

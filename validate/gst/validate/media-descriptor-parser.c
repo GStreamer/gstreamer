@@ -21,6 +21,7 @@
  */
 
 #include "media-descriptor-parser.h"
+#include <string.h>
 
 G_DEFINE_TYPE (GstMediaDescriptorParser, gst_media_descriptor_parser,
     GST_TYPE_MEDIA_DESCRIPTOR);
@@ -134,15 +135,18 @@ deserialize_framenode (const gchar ** names, const gchar ** values)
       framenode->pts = g_ascii_strtoull (values[i], NULL, 0);
     else if (g_strcmp0 (names[i], "dts") == 0)
       framenode->dts = g_ascii_strtoull (values[i], NULL, 0);
+    else if (g_strcmp0 (names[i], "checksum") == 0)
+      framenode->checksum = g_strdup (values[i]);
     else if (g_strcmp0 (names[i], "is-keyframe") == 0) {
-      if (g_ascii_strcasecmp (values[i], "true"))
+      if (!g_ascii_strcasecmp (values[i], "true"))
         framenode->is_keyframe = TRUE;
       else
         framenode->is_keyframe = FALSE;
     }
   }
 
-  framenode->buf = gst_buffer_new ();
+  framenode->buf = gst_buffer_new_wrapped (framenode->checksum,
+      strlen (framenode->checksum) + 1);
 
   GST_BUFFER_OFFSET (framenode->buf) = framenode->offset;
   GST_BUFFER_OFFSET_END (framenode->buf) = framenode->offset_end;
@@ -150,8 +154,11 @@ deserialize_framenode (const gchar ** names, const gchar ** values)
   GST_BUFFER_PTS (framenode->buf) = framenode->pts;
   GST_BUFFER_DTS (framenode->buf) = framenode->dts;
 
-  if (framenode->is_keyframe == FALSE)
+  if (framenode->is_keyframe) {
+    GST_BUFFER_FLAG_UNSET (framenode->buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else {
     GST_BUFFER_FLAG_SET (framenode->buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
 
   return framenode;
 }
@@ -167,7 +174,7 @@ frame_node_compare (FrameNode * fnode, GstBuffer * buf, GstBuffer * expected)
     GST_BUFFER_PTS (expected) = fnode->pts;
     GST_BUFFER_DTS (expected) = fnode->dts;
     if (fnode->is_keyframe)
-      GST_BUFFER_FLAG_SET (expected, GST_BUFFER_FLAG_DELTA_UNIT);
+      GST_BUFFER_FLAG_UNSET (expected, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
   if ((fnode->offset == GST_BUFFER_OFFSET (buf) &&

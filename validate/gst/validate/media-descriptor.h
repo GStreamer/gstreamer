@@ -108,6 +108,7 @@ typedef struct
 
   GstBuffer *buf;
 
+  gchar *checksum;
   gchar *str_open;
   gchar *str_close;
 } FrameNode;
