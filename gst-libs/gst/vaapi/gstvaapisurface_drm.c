@@ -150,3 +150,41 @@ gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display,
   gst_vaapi_buffer_proxy_unref (proxy);
   return surface;
 }
+
+/**
+ * gst_vaapi_surface_new_with_dma_buf_handle:
+ * @display: a #GstVaapiDisplay
+ * @name: the DRM GEM buffer name
+ * @size: the underlying DRM buffer size
+ * @format: the desired surface format
+ * @width: the desired surface width in pixels
+ * @height: the desired surface height in pixels
+ * @offset: the offsets to each plane
+ * @stride: the pitches for each plane
+ *
+ * Creates a new #GstVaapiSurface with an external DRM GEM buffer
+ * name. The newly created VA surfaces owns the supplied buffer
+ * handle.
+ *
+ * Return value: the newly allocated #GstVaapiSurface object, or %NULL
+ *   if creation from DRM PRIME fd failed, or is not supported
+ */
+GstVaapiSurface *
+gst_vaapi_surface_new_with_gem_buf_handle (GstVaapiDisplay * display,
+    guint32 name, guint size, GstVideoFormat format, guint width, guint height,
+    gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES])
+{
+  GstVaapiBufferProxy *proxy;
+  GstVaapiSurface *surface;
+  GstVideoInfo vi;
+
+  proxy = gst_vaapi_buffer_proxy_new ((guintptr) name,
+      GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF, size, NULL, NULL);
+  if (!proxy)
+    return NULL;
+
+  fill_video_info (&vi, format, width, height, offset, stride);
+  surface = gst_vaapi_surface_new_from_buffer_proxy (display, proxy, &vi);
+  gst_vaapi_buffer_proxy_unref (proxy);
+  return surface;
+}

@@ -39,6 +39,11 @@ gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display,
     gint fd, guint size, GstVideoFormat format, guint width, guint height,
     gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES]);
 
+GstVaapiSurface *
+gst_vaapi_surface_new_with_gem_buf_handle (GstVaapiDisplay * display,
+    guint32 name, guint size, GstVideoFormat format, guint width, guint height,
+    gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES]);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_SURFACE_DRM_H */
