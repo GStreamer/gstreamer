@@ -1205,6 +1205,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
             && !gst_m3u8_client_is_live (demux->client)
             && gst_hls_demux_update_playlist (demux, FALSE, &err)) {
           /* Retry immediately, the playlist actually has changed */
+          GST_DEBUG_OBJECT (demux, "Updated the playlist");
           return;
         } else {
           /* Wait half the fragment duration before retrying */
@@ -1225,6 +1226,12 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
             demux->next_download);
         g_mutex_unlock (&demux->download_lock);
         GST_DEBUG_OBJECT (demux, "Retrying now");
+
+        /* Refetch the playlist now after we waited */
+        if (!gst_m3u8_client_is_live (demux->client)
+            && gst_hls_demux_update_playlist (demux, FALSE, &err)) {
+          GST_DEBUG_OBJECT (demux, "Updated the playlist");
+        }
         return;
       } else {
         GST_ELEMENT_ERROR_FROM_ERROR (demux,
