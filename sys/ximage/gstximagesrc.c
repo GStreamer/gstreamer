@@ -66,7 +66,6 @@ enum
 {
   PROP_0,
   PROP_DISPLAY_NAME,
-  PROP_SCREEN_NUM,
   PROP_SHOW_POINTER,
   PROP_USE_DAMAGE,
   PROP_STARTX,
@@ -920,9 +919,6 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
       g_free (src->display_name);
       src->display_name = g_strdup (g_value_get_string (value));
       break;
-    case PROP_SCREEN_NUM:
-      src->screen_num = g_value_get_uint (value);
-      break;
     case PROP_SHOW_POINTER:
       src->show_pointer = g_value_get_boolean (value);
       break;
@@ -977,9 +973,6 @@ gst_ximage_src_get_property (GObject * object, guint prop_id, GValue * value,
       else
         g_value_set_string (value, src->display_name);
 
-      break;
-    case PROP_SCREEN_NUM:
-      g_value_set_uint (value, src->screen_num);
       break;
     case PROP_SHOW_POINTER:
       g_value_set_boolean (value, src->show_pointer);
@@ -1193,9 +1186,6 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
   g_object_class_install_property (gc, PROP_DISPLAY_NAME,
       g_param_spec_string ("display-name", "Display", "X Display Name", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gc, PROP_SCREEN_NUM,
-      g_param_spec_uint ("screen-num", "Screen number", "X Screen Number",
-          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gc, PROP_SHOW_POINTER,
       g_param_spec_boolean ("show-pointer", "Show Mouse Pointer",
           "Show mouse pointer (if XFixes extension enabled)", TRUE,

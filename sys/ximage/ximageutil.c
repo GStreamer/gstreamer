@@ -175,18 +175,17 @@ ximageutil_xcontext_get (GstElement * parent, const gchar * display_name)
     return NULL;
   }
   xcontext->screen = DefaultScreenOfDisplay (xcontext->disp);
-  xcontext->screen_num = DefaultScreen (xcontext->disp);
-  xcontext->visual = DefaultVisual (xcontext->disp, xcontext->screen_num);
-  xcontext->root = DefaultRootWindow (xcontext->disp);
-  xcontext->white = XWhitePixel (xcontext->disp, xcontext->screen_num);
-  xcontext->black = XBlackPixel (xcontext->disp, xcontext->screen_num);
+  xcontext->visual = DefaultVisualOfScreen (xcontext->screen);
+  xcontext->root = RootWindowOfScreen (xcontext->screen);
+  xcontext->white = WhitePixelOfScreen (xcontext->screen);
+  xcontext->black = BlackPixelOfScreen (xcontext->screen);
   xcontext->depth = DefaultDepthOfScreen (xcontext->screen);
 
-  xcontext->width = DisplayWidth (xcontext->disp, xcontext->screen_num);
-  xcontext->height = DisplayHeight (xcontext->disp, xcontext->screen_num);
+  xcontext->width = WidthOfScreen (xcontext->screen);
+  xcontext->height = HeightOfScreen (xcontext->screen);
 
-  xcontext->widthmm = DisplayWidthMM (xcontext->disp, xcontext->screen_num);
-  xcontext->heightmm = DisplayHeightMM (xcontext->disp, xcontext->screen_num);
+  xcontext->widthmm = WidthMMOfScreen (xcontext->screen);
+  xcontext->heightmm = HeightMMOfScreen (xcontext->screen);
 
   xcontext->caps = NULL;
 

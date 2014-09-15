@@ -56,7 +56,6 @@ struct _GstXImageSrc
 
   Window xwindow;
   gchar *display_name;
-  guint screen_num;
 
   /* Window selection */
   guint64 xid;
