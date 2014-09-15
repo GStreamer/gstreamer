@@ -105,7 +105,7 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
       frame->data[i] = frame->map[0].data + info->offset[i];
     }
   }
-  frame->buffer = gst_buffer_ref (buffer);
+  frame->buffer = buffer;
   if ((flags & GST_VIDEO_FRAME_MAP_FLAG_NO_REF) == 0)
     gst_buffer_ref (frame->buffer);
 
