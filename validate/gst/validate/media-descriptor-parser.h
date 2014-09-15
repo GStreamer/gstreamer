@@ -59,7 +59,6 @@ GstMediaDescriptorParser * gst_media_descriptor_parser_new (GstValidateRunner *r
                                                             const gchar * xmlpath,
                                                             GError **error);
 gchar * gst_media_descriptor_parser_get_xml_path        (GstMediaDescriptorParser *parser);
-gboolean gst_media_descriptor_parser_detects_frames     (GstMediaDescriptorParser *parser);
 GstClockTime gst_media_descriptor_parser_get_duration   (GstMediaDescriptorParser *parser);
 gboolean gst_media_descriptor_parser_get_seekable       (GstMediaDescriptorParser * parser);
 gboolean gst_media_descriptor_parser_add_stream         (GstMediaDescriptorParser *parser,
@@ -72,10 +71,6 @@ gboolean gst_media_descriptor_parser_add_frame          (GstMediaDescriptorParse
                                                                   GstPad *pad,
                                                                   GstBuffer *buf,
                                                                   GstBuffer *expected);
-GList * gst_media_descriptor_parser_get_buffers         (GstMediaDescriptorParser * parser,
-                                                                  GstPad *pad,
-                                                                  GCompareFunc compare_func);
-GList * gst_media_descriptor_parser_get_pads           (GstMediaDescriptorParser * parser);
 
 G_END_DECLS
 

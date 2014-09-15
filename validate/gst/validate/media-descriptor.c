@@ -327,3 +327,93 @@ gst_media_descriptors_compare (GstMediaDescriptor * ref,
 
   return TRUE;
 }
+
+gboolean
+gst_media_descriptor_detects_frames (GstMediaDescriptor * self)
+{
+  g_return_val_if_fail (GST_IS_MEDIA_DESCRIPTOR (self), FALSE);
+  g_return_val_if_fail (self->filenode, FALSE);
+
+  return self->filenode->frame_detection;
+}
+
+gboolean
+gst_media_descriptor_get_buffers (GstMediaDescriptor * self,
+    GstPad * pad, GCompareFunc compare_func, GList ** bufs)
+{
+  GList *tmpstream, *tmpframe;
+  gboolean check = (pad == NULL), ret = FALSE;
+  GstCaps *pad_caps = gst_pad_get_current_caps (pad);
+
+  g_return_val_if_fail (GST_IS_MEDIA_DESCRIPTOR (self), FALSE);
+  g_return_val_if_fail (self->filenode, FALSE);
+
+  for (tmpstream = self->filenode->streams;
+      tmpstream; tmpstream = tmpstream->next) {
+    StreamNode *streamnode = (StreamNode *) tmpstream->data;
+
+    if (pad && streamnode->pad == pad)
+      check = TRUE;
+
+    if (!streamnode->pad && gst_caps_is_subset (pad_caps, streamnode->caps)) {
+      check = TRUE;
+    }
+
+    if (check) {
+      ret = TRUE;
+      for (tmpframe = streamnode->frames; tmpframe; tmpframe = tmpframe->next) {
+        if (compare_func)
+          *bufs =
+              g_list_insert_sorted (*bufs,
+              gst_buffer_ref (((FrameNode *) tmpframe->data)->buf),
+              compare_func);
+        else
+          *bufs =
+              g_list_prepend (*bufs,
+              gst_buffer_ref (((FrameNode *) tmpframe->data)->buf));
+      }
+
+      if (pad != NULL)
+        goto done;
+    }
+  }
+
+
+done:
+
+  if (compare_func == NULL)
+    *bufs = g_list_reverse (*bufs);
+
+  return ret;
+}
+
+GstClockTime
+gst_media_descriptor_get_duration (GstMediaDescriptor * self)
+{
+  g_return_val_if_fail (GST_IS_MEDIA_DESCRIPTOR (self), FALSE);
+  g_return_val_if_fail (self->filenode, FALSE);
+
+  return self->filenode->duration;
+}
+
+gboolean
+gst_media_descriptor_get_seekable (GstMediaDescriptor * self)
+{
+  g_return_val_if_fail (GST_IS_MEDIA_DESCRIPTOR (self), FALSE);
+  g_return_val_if_fail (self->filenode, FALSE);
+
+  return self->filenode->seekable;
+}
+
+GList *
+gst_media_descriptor_get_pads (GstMediaDescriptor * self)
+{
+  GList *ret = NULL, *tmp;
+
+  for (tmp = self->filenode->streams; tmp; tmp = tmp->next) {
+    StreamNode *snode = (StreamNode *) tmp->data;
+    ret = g_list_append (ret, gst_pad_new (snode->padname, GST_PAD_UNKNOWN));
+  }
+
+  return ret;
+}
