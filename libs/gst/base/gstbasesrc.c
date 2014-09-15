@@ -2965,6 +2965,11 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
   oldalloc = priv->allocator;
   priv->allocator = allocator;
 
+  if (priv->pool)
+    gst_object_ref (priv->pool);
+  if (priv->allocator)
+    gst_object_ref (priv->allocator);
+
   if (params)
     priv->params = *params;
   else
@@ -3140,6 +3145,11 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
 
   result = gst_base_src_set_allocation (basesrc, pool, allocator, &params);
+
+  if (allocator)
+    gst_object_unref (allocator);
+  if (pool)
+    gst_object_unref (pool);
 
   gst_query_unref (query);
 
