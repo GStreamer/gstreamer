@@ -97,7 +97,7 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
 #endif
 
 /* define EnableHardwareAcceleratedVideoDecoder in < 10.9 */
-#if (defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_8_0) || (defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 1090)
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 const CFStringRef
     kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder =
 CFSTR ("EnableHardwareAcceleratedVideoDecoder");
