@@ -517,7 +517,7 @@ if test "x$HAVE_IOS" = "xyes"; then
   AC_MSG_CHECKING([Checking for __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_8_0])
 
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <AvailabilityMacros.h>]], [[
-        #if !defined(__IPHONE_OS_VERSION_MIN_REQUIRED) || __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_8_0)
+        #if !defined(__IPHONE_OS_VERSION_MIN_REQUIRED) || __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_8_0
         #error "Need iOS >= 8.0 for VideoToolbox"
         #endif
   ]])], [ AC_MSG_RESULT(yes)
