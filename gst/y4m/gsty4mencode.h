@@ -43,13 +43,10 @@ typedef struct _GstY4mEncode GstY4mEncode;
 typedef struct _GstY4mEncodeClass GstY4mEncodeClass;
 
 struct _GstY4mEncode {
-  GstElement element;
-
-  GstPad *sinkpad,*srcpad;
+  GstVideoEncoder parent;
 
   /* caps information */
   GstVideoInfo info;
-  gboolean negotiated;
 
   const gchar *colorspace;
   /* state information */
@@ -57,7 +54,7 @@ struct _GstY4mEncode {
 };
 
 struct _GstY4mEncodeClass {
-  GstElementClass parent_class;
+  GstVideoEncoderClass parent_class;
 };
 
 GType gst_y4m_encode_get_type(void);
