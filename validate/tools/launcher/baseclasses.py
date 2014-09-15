@@ -1138,13 +1138,15 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         self.media_xml.attrib["seekable"]
 
     @staticmethod
-    def new_from_uri(uri, verbose=False):
+    def new_from_uri(uri, verbose=False, full=False):
         media_path = utils.url2path(uri)
         descriptor_path = "%s.%s" % (media_path, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
         args = GstValidateMediaDescriptor.DISCOVERER_COMMAND.split(" ")
         args.append(uri)
 
         args.extend(["--output-file", descriptor_path])
+        if full:
+            args.extend(["--full"])
 
         if verbose:
             printc("Generating media info for %s\n"
@@ -1162,7 +1164,6 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
         if verbose:
             printc("Result: Passed", Colors.OKGREEN)
-
 
         return GstValidateMediaDescriptor(descriptor_path)
 

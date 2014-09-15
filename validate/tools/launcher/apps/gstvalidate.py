@@ -526,8 +526,12 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             elif not self.options.generate_info:
                 return True
 
-            media_descriptor = GstValidateMediaDescriptor.new_from_uri(uri, True)
-            self._add_media(media_descriptor, uri)
+            media_descriptor = GstValidateMediaDescriptor.new_from_uri(uri, True,
+                                                                       self.options.generate_info_full)
+            if media_descriptor:
+                self._add_media(media_descriptor, uri)
+            else:
+                self.warning("Could not get any descriptor for %s" % uri)
 
             return True
 

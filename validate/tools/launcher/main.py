@@ -218,6 +218,10 @@ def main(libsdir):
     parser.add_argument("-g", "--generate-media-info", dest="generate_info",
                      action="store_true", default=False,
                      help="Set it in order to generate the missing .media_infos files")
+    parser.add_argument("-G", "--generate-media-info-with-frame-detection", dest="generate_info_full",
+                     action="store_true", default=False,
+                     help="Set it in order to generate the missing .media_infos files"
+                        "It implies --generate-media-info but enabling frame detection")
     parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
                      default=utils.LONG_TEST, action='store',
                      help="Defines the limite from which a test is concidered as long (in seconds)"),
@@ -334,6 +338,10 @@ user argument, you can thus overrides command line options using that.
         options.clone_dir = os.path.join(options.main_dir, QA_ASSETS)
     if options.paths is None:
         options.paths = os.path.join(options.clone_dir, MEDIAS_FOLDER)
+
+    if options.generate_info_full is True:
+        options.generate_info = True
+
 
     if options.http_server_dir is None:
         if isinstance(options.paths, list):
