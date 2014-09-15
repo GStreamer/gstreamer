@@ -67,15 +67,16 @@ G_BEGIN_DECLS
  *
  * The set of all chroma types for #GstVaapiSurface.
  */
-typedef enum {
-    GST_VAAPI_CHROMA_TYPE_YUV420 = 1,
-    GST_VAAPI_CHROMA_TYPE_YUV422,
-    GST_VAAPI_CHROMA_TYPE_YUV444,
-    GST_VAAPI_CHROMA_TYPE_YUV411,
-    GST_VAAPI_CHROMA_TYPE_YUV410,
-    GST_VAAPI_CHROMA_TYPE_YUV400,
-    GST_VAAPI_CHROMA_TYPE_RGB32,
-    GST_VAAPI_CHROMA_TYPE_RGB16
+typedef enum
+{
+  GST_VAAPI_CHROMA_TYPE_YUV420 = 1,
+  GST_VAAPI_CHROMA_TYPE_YUV422,
+  GST_VAAPI_CHROMA_TYPE_YUV444,
+  GST_VAAPI_CHROMA_TYPE_YUV411,
+  GST_VAAPI_CHROMA_TYPE_YUV410,
+  GST_VAAPI_CHROMA_TYPE_YUV400,
+  GST_VAAPI_CHROMA_TYPE_RGB32,
+  GST_VAAPI_CHROMA_TYPE_RGB16
 } GstVaapiChromaType;
 
 /**
@@ -91,11 +92,12 @@ typedef enum {
  *
  * The set of all surface status for #GstVaapiSurface.
  */
-typedef enum {
-    GST_VAAPI_SURFACE_STATUS_IDLE       = 1 << 0,
-    GST_VAAPI_SURFACE_STATUS_RENDERING  = 1 << 1,
-    GST_VAAPI_SURFACE_STATUS_DISPLAYING = 1 << 2,
-    GST_VAAPI_SURFACE_STATUS_SKIPPED    = 1 << 3
+typedef enum
+{
+  GST_VAAPI_SURFACE_STATUS_IDLE = 1 << 0,
+  GST_VAAPI_SURFACE_STATUS_RENDERING = 1 << 1,
+  GST_VAAPI_SURFACE_STATUS_DISPLAYING = 1 << 2,
+  GST_VAAPI_SURFACE_STATUS_SKIPPED = 1 << 3
 } GstVaapiSurfaceStatus;
 
 /**
@@ -121,21 +123,22 @@ typedef enum {
  *
  * The set of all render flags for gst_vaapi_window_put_surface().
  */
-typedef enum {
-    /* Picture structure */
-    GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD       = 0x01 << 0,
-    GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD    = 0x02 << 0,
-    GST_VAAPI_PICTURE_STRUCTURE_FRAME           = 0x03 << 0,
-    GST_VAAPI_PICTURE_STRUCTURE_MASK            = 0x00000003, /* 2 bits */
+typedef enum
+{
+  /* Picture structure */
+  GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD         = 0x01 << 0,
+  GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD      = 0x02 << 0,
+  GST_VAAPI_PICTURE_STRUCTURE_FRAME             = 0x03 << 0,
+  GST_VAAPI_PICTURE_STRUCTURE_MASK              = 0x00000003, /* 2 bits */
 
-    /* Color standard */
-    GST_VAAPI_COLOR_STANDARD_ITUR_BT_601        = 0x01 << 2,
-    GST_VAAPI_COLOR_STANDARD_ITUR_BT_709        = 0x02 << 2,
-    GST_VAAPI_COLOR_STANDARD_ITUR_BT_470M       = 0x03 << 2,
-    GST_VAAPI_COLOR_STANDARD_ITUR_BT_470BG      = 0x04 << 2,
-    GST_VAAPI_COLOR_STANDARD_SMPTE_170M         = 0x05 << 2,
-    GST_VAAPI_COLOR_STANDARD_SMPTE_240M         = 0x06 << 2,
-    GST_VAAPI_COLOR_STANDARD_MASK               = 0x0000003c, /* 4 bits */
+  /* Color standard */
+  GST_VAAPI_COLOR_STANDARD_ITUR_BT_601          = 0x01 << 2,
+  GST_VAAPI_COLOR_STANDARD_ITUR_BT_709          = 0x02 << 2,
+  GST_VAAPI_COLOR_STANDARD_ITUR_BT_470M         = 0x03 << 2,
+  GST_VAAPI_COLOR_STANDARD_ITUR_BT_470BG        = 0x04 << 2,
+  GST_VAAPI_COLOR_STANDARD_SMPTE_170M           = 0x05 << 2,
+  GST_VAAPI_COLOR_STANDARD_SMPTE_240M           = 0x06 << 2,
+  GST_VAAPI_COLOR_STANDARD_MASK                 = 0x0000003c, /* 4 bits */
 } GstVaapiSurfaceRenderFlags;
 
 #define GST_VAAPI_SURFACE(obj) \
@@ -145,81 +148,60 @@ typedef struct _GstVaapiSurface                 GstVaapiSurface;
 typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
 
 GstVaapiSurface *
-gst_vaapi_surface_new(
-    GstVaapiDisplay    *display,
-    GstVaapiChromaType  chroma_type,
-    guint               width,
-    guint               height
-);
+gst_vaapi_surface_new (GstVaapiDisplay * display,
+    GstVaapiChromaType chroma_type, guint width, guint height);
 
 GstVaapiSurface *
-gst_vaapi_surface_new_with_format(
-    GstVaapiDisplay    *display,
-    GstVideoFormat      format,
-    guint               width,
-    guint               height
-);
+gst_vaapi_surface_new_with_format (GstVaapiDisplay * display,
+    GstVideoFormat format, guint width, guint height);
 
 GstVaapiID
-gst_vaapi_surface_get_id(GstVaapiSurface *surface);
+gst_vaapi_surface_get_id (GstVaapiSurface * surface);
 
 GstVaapiChromaType
-gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface);
+gst_vaapi_surface_get_chroma_type (GstVaapiSurface * surface);
 
 GstVideoFormat
-gst_vaapi_surface_get_format(GstVaapiSurface *surface);
+gst_vaapi_surface_get_format (GstVaapiSurface * surface);
 
 guint
-gst_vaapi_surface_get_width(GstVaapiSurface *surface);
+gst_vaapi_surface_get_width (GstVaapiSurface * surface);
 
 guint
-gst_vaapi_surface_get_height(GstVaapiSurface *surface);
+gst_vaapi_surface_get_height (GstVaapiSurface * surface);
 
 void
-gst_vaapi_surface_get_size(
-    GstVaapiSurface *surface,
-    guint           *pwidth,
-    guint           *pheight
-);
+gst_vaapi_surface_get_size (GstVaapiSurface * surface, guint * width_ptr,
+    guint * height_ptr);
 
 GstVaapiImage *
-gst_vaapi_surface_derive_image(GstVaapiSurface *surface);
+gst_vaapi_surface_derive_image (GstVaapiSurface * surface);
 
 gboolean
-gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image);
+gst_vaapi_surface_get_image (GstVaapiSurface * surface, GstVaapiImage * image);
 
 gboolean
-gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image);
+gst_vaapi_surface_put_image (GstVaapiSurface * surface, GstVaapiImage * image);
 
 gboolean
-gst_vaapi_surface_associate_subpicture(
-    GstVaapiSurface         *surface,
-    GstVaapiSubpicture      *subpicture,
-    const GstVaapiRectangle *src_rect,
-    const GstVaapiRectangle *dst_rect
-);
+gst_vaapi_surface_associate_subpicture (GstVaapiSurface * surface,
+    GstVaapiSubpicture * subpicture, const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect);
 
 gboolean
-gst_vaapi_surface_deassociate_subpicture(
-    GstVaapiSurface         *surface,
-    GstVaapiSubpicture      *subpicture
-);
+gst_vaapi_surface_deassociate_subpicture (GstVaapiSurface * surface,
+    GstVaapiSubpicture * subpicture);
 
 gboolean
-gst_vaapi_surface_sync(GstVaapiSurface *surface);
+gst_vaapi_surface_sync (GstVaapiSurface * surface);
 
 gboolean
-gst_vaapi_surface_query_status(
-    GstVaapiSurface       *surface,
-    GstVaapiSurfaceStatus *pstatus
-);
+gst_vaapi_surface_query_status (GstVaapiSurface * surface,
+    GstVaapiSurfaceStatus * pstatus);
 
 gboolean
-gst_vaapi_surface_set_subpictures_from_composition(
-    GstVaapiSurface            *surface,
-    GstVideoOverlayComposition *composition,
-    gboolean                    propagate_context
-);
+gst_vaapi_surface_set_subpictures_from_composition (GstVaapiSurface * surface,
+    GstVideoOverlayComposition * composition, gboolean propagate_context);
 
 G_END_DECLS
 

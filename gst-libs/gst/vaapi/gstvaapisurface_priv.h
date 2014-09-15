@@ -27,6 +27,8 @@
 #include <gst/vaapi/gstvaapisurface.h>
 #include "gstvaapiobject_priv.h"
 
+G_BEGIN_DECLS
+
 typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
 
 /**
@@ -34,16 +36,17 @@ typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
  *
  * A VA surface wrapper.
  */
-struct _GstVaapiSurface {
-    /*< private >*/
-    GstVaapiObject      parent_instance;
+struct _GstVaapiSurface
+{
+  /*< private >*/
+  GstVaapiObject parent_instance;
 
-    GstVideoFormat      format;
-    guint               width;
-    guint               height;
-    GstVaapiChromaType  chroma_type;
-    GPtrArray          *subpictures;
-    GstVaapiContext    *parent_context;
+  GstVideoFormat format;
+  guint width;
+  guint height;
+  GstVaapiChromaType chroma_type;
+  GPtrArray *subpictures;
+  GstVaapiContext *parent_context;
 };
 
 /**
@@ -51,9 +54,10 @@ struct _GstVaapiSurface {
  *
  * A VA surface wrapper class.
  */
-struct _GstVaapiSurfaceClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
+struct _GstVaapiSurfaceClass
+{
+  /*< private >*/
+  GstVaapiObjectClass parent_class;
 };
 
 /**
@@ -66,7 +70,7 @@ struct _GstVaapiSurfaceClass {
  */
 #undef  GST_VAAPI_SURFACE_CHROMA_TYPE
 #define GST_VAAPI_SURFACE_CHROMA_TYPE(surface) \
-    GST_VAAPI_SURFACE(surface)->chroma_type
+  (GST_VAAPI_SURFACE (surface)->chroma_type)
 
 /**
  * GST_VAAPI_SURFACE_SURFACE_FORMAT:
@@ -78,7 +82,7 @@ struct _GstVaapiSurfaceClass {
  */
 #undef  GST_VAAPI_SURFACE_FORMAT
 #define GST_VAAPI_SURFACE_FORMAT(surface) \
-    GST_VAAPI_SURFACE(surface)->format
+  (GST_VAAPI_SURFACE (surface)->format)
 
 /**
  * GST_VAAPI_SURFACE_SURFACE_WIDTH:
@@ -90,7 +94,7 @@ struct _GstVaapiSurfaceClass {
  */
 #undef  GST_VAAPI_SURFACE_WIDTH
 #define GST_VAAPI_SURFACE_WIDTH(surface) \
-    GST_VAAPI_SURFACE(surface)->width
+  (GST_VAAPI_SURFACE (surface)->width)
 
 /**
  * GST_VAAPI_SURFACE_SURFACE_HEIGHT:
@@ -102,17 +106,17 @@ struct _GstVaapiSurfaceClass {
  */
 #undef  GST_VAAPI_SURFACE_HEIGHT
 #define GST_VAAPI_SURFACE_HEIGHT(surface) \
-    GST_VAAPI_SURFACE(surface)->height
+  (GST_VAAPI_SURFACE (surface)->height)
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_surface_set_parent_context(
-    GstVaapiSurface *surface,
-    GstVaapiContext *context
-);
+gst_vaapi_surface_set_parent_context (GstVaapiSurface * surface,
+    GstVaapiContext * context);
 
 G_GNUC_INTERNAL
 GstVaapiContext *
-gst_vaapi_surface_get_parent_context(GstVaapiSurface *surface);
+gst_vaapi_surface_get_parent_context (GstVaapiSurface * surface);
+
+G_END_DECLS
 
 #endif /* GST_VAAPI_SURFACE_PRIV_H */
