@@ -513,7 +513,6 @@ if test "x$HAVE_IOS" = "xyes"; then
   AC_DEFINE(HAVE_IOS, 1, [Define if building for Apple iOS])
 fi
 
-AM_CONDITIONAL(HAVE_VIDEOTOOLBOX, test "x$HAVE_VIDEOTOOLBOX" = "xyes")
 if test "x$HAVE_IOS" = "xyes"; then
   AC_MSG_CHECKING([Checking for __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_8_0])
 
@@ -527,6 +526,8 @@ if test "x$HAVE_IOS" = "xyes"; then
     HAVE_VIDEOTOOLBOX="no"
   ])
 fi
+
+AM_CONDITIONAL(HAVE_VIDEOTOOLBOX, test "x$HAVE_VIDEOTOOLBOX" = "xyes")
 if test "x$HAVE_VIDEOTOOLBOX" = "xyes"; then
   AC_DEFINE(HAVE_VIDEOTOOLBOX, 1, [Define if building with VideoToolbox])
 fi
