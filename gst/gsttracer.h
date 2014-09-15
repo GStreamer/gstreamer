@@ -53,23 +53,19 @@ struct _GstTracer {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-typedef void (*GstTracerInvokeFunction) (GstTracer * self, 
-    GstTracerMessageId mid, va_list var_args);
+typedef void (*GstTracerHookFunction) (GstTracer * self, va_list var_args);
 
 struct _GstTracerClass {
   GstObjectClass parent_class;
-  
-  /* plugin vmethods */
-  GstTracerInvokeFunction invoke;
-  
+    
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void gst_tracer_invoke (GstTracer * self, GstTracerMessageId mid, 
-    va_list var_args);
-
 GType gst_tracer_get_type          (void);
+
+void gst_tracer_register_hook (GstTracer *tracer, GstTracerHookId id, 
+  GstTracerHookFunction func);
 
 G_END_DECLS
 

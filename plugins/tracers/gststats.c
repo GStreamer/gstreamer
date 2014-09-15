@@ -336,106 +336,6 @@ do_element_stats (GstStatsTracer * self, GstPad * pad, GstClockTime elapsed1,
 #endif
 }
 
-/* tracer class */
-
-static void gst_stats_tracer_finalize (GObject * obj);
-static void gst_stats_tracer_invoke (GstTracer * obj, GstTracerMessageId mid,
-    va_list var_args);
-
-static void
-gst_stats_tracer_class_init (GstStatsTracerClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstTracerClass *gst_tracer_class = GST_TRACER_CLASS (klass);
-
-  gobject_class->finalize = gst_stats_tracer_finalize;
-
-  gst_tracer_class->invoke = gst_stats_tracer_invoke;
-}
-
-static void
-gst_stats_tracer_init (GstStatsTracer * self)
-{
-  g_object_set (self, "mask",
-      GST_TRACER_HOOK_BUFFERS | GST_TRACER_HOOK_EVENTS |
-      GST_TRACER_HOOK_MESSAGES | GST_TRACER_HOOK_QUERIES, NULL);
-  self->elements = g_ptr_array_new_with_free_func (free_element_stats);
-  self->pads = g_ptr_array_new_with_free_func (free_pad_stats);
-
-  /* announce trace formats */
-  /* *INDENT-OFF* */
-  gst_tracer_log_trace (gst_structure_new ("buffer.class",
-      "pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
-          NULL),
-      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
-          NULL),
-      "peer-pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
-          NULL),
-      "peer-element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
-          NULL),
-      "buffer-size", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "description", G_TYPE_STRING, "size of buffer in bytes",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
-          "min", G_TYPE_UINT, 0, 
-          "max", G_TYPE_UINT, G_MAXUINT,
-          NULL),
-      "buffer-ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "timestamp of the buffer in ns",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      "buffer-duration", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "duration of the buffer in ns",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      /* TODO(ensonic): "buffer-flags" */
-      NULL));
-  gst_tracer_log_trace (gst_structure_new ("event.class",
-      "pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
-          NULL),
-      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
-          NULL),
-      "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "description", G_TYPE_STRING, "name of the event",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
-          NULL),
-      NULL));
-  gst_tracer_log_trace (gst_structure_new ("message.class",
-      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
-          NULL),
-      "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "description", G_TYPE_STRING, "name of the message",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
-          NULL),
-      NULL));
-  gst_tracer_log_trace (gst_structure_new ("query.class",
-      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
-          NULL),
-      "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "description", G_TYPE_STRING, "name of the query",
-          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
-          NULL),
-      NULL));
-  /* *INDENT-ON* */
-}
-
 /* hooks */
 
 static void
@@ -610,56 +510,117 @@ do_query_post (GstStatsTracer * self, va_list var_args)
 #endif
 }
 
-static void
-gst_stats_tracer_invoke (GstTracer * obj, GstTracerMessageId mid,
-    va_list var_args)
-{
-  GstStatsTracer *self = GST_STATS_TRACER_CAST (obj);
+/* tracer class */
 
-  switch (mid) {
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_PRE:
-      do_push_buffer_pre (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_POST:
-      do_push_buffer_post (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_PRE:
-      do_push_buffer_list_pre (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST:
-      do_push_buffer_list_post (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_PRE:
-      do_pull_range_pre (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_POST:
-      do_pull_range_post (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_PRE:
-      do_push_event_pre (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_POST:
-      do_push_event_post (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_ELEMENT_POST_MESSAGE_PRE:
-      do_post_message_pre (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_ELEMENT_POST_MESSAGE_POST:
-      do_post_message_post (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_PRE:
-      do_query_pre (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_POST:
-      do_query_post (self, var_args);
-      break;
-    default:
-      break;
-  }
+static void
+gst_stats_tracer_class_init (GstStatsTracerClass * klass)
+{
+  /* announce trace formats */
+  /* *INDENT-OFF* */
+  gst_tracer_log_trace (gst_structure_new ("buffer.class",
+      "pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "peer-pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "peer-element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "buffer-size", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT,
+          "description", G_TYPE_STRING, "size of buffer in bytes",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          "min", G_TYPE_UINT, 0, 
+          "max", G_TYPE_UINT, G_MAXUINT,
+          NULL),
+      "buffer-ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "timestamp of the buffer in ns",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      "buffer-duration", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "duration of the buffer in ns",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      /* TODO(ensonic): "buffer-flags" */
+      NULL));
+  gst_tracer_log_trace (gst_structure_new ("event.class",
+      "pad-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
+          "description", G_TYPE_STRING, "name of the event",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          NULL),
+      NULL));
+  gst_tracer_log_trace (gst_structure_new ("message.class",
+      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
+          "description", G_TYPE_STRING, "name of the message",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          NULL),
+      NULL));
+  gst_tracer_log_trace (gst_structure_new ("query.class",
+      "element-ix", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "element",  /* TODO: use genum */
+          NULL),
+      "name", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
+          "description", G_TYPE_STRING, "name of the query",
+          "flags", G_TYPE_STRING, "",  /* TODO: use gflags */ 
+          NULL),
+      NULL));
+  /* *INDENT-ON* */
 }
 
 static void
-gst_stats_tracer_finalize (GObject * obj)
+gst_stats_tracer_init (GstStatsTracer * self)
 {
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
+  GstTracer *tracer = GST_TRACER (self);
+
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_PRE,
+      (GstTracerHookFunction) do_push_buffer_pre);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_POST,
+      (GstTracerHookFunction) do_push_buffer_post);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_LIST_PRE,
+      (GstTracerHookFunction) do_push_buffer_list_pre);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_LIST_POST,
+      (GstTracerHookFunction) do_push_buffer_list_post);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PULL_RANGE_PRE,
+      (GstTracerHookFunction) do_pull_range_pre);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PULL_RANGE_POST,
+      (GstTracerHookFunction) do_pull_range_post);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_EVENT_PRE,
+      (GstTracerHookFunction) do_push_event_pre);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_EVENT_POST,
+      (GstTracerHookFunction) do_push_event_post);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_ELEMENT_POST_MESSAGE_PRE,
+      (GstTracerHookFunction) do_post_message_pre);
+  gst_tracer_register_hook (tracer,
+      GST_TRACER_HOOK_ID_ELEMENT_POST_MESSAGE_POST,
+      (GstTracerHookFunction) do_post_message_post);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_ELEMENT_QUERY_PRE,
+      (GstTracerHookFunction) do_query_pre);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_ELEMENT_QUERY_POST,
+      (GstTracerHookFunction) do_query_post);
+
+
+  self->elements = g_ptr_array_new_with_free_func (free_element_stats);
+  self->pads = g_ptr_array_new_with_free_func (free_pad_stats);
 }

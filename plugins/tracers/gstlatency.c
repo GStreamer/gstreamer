@@ -87,50 +87,6 @@ get_real_pad_parent (GstPad * pad)
   return GST_ELEMENT_CAST (parent);
 }
 
-/* tracer class */
-
-static void gst_latency_tracer_invoke (GstTracer * obj, GstTracerMessageId mid,
-    va_list var_args);
-
-static void
-gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
-{
-  GstTracerClass *gst_tracer_class = GST_TRACER_CLASS (klass);
-
-  gst_tracer_class->invoke = gst_latency_tracer_invoke;
-
-  latency_probe_id = g_quark_from_static_string ("latency_probe.id");
-  latency_probe_pad = g_quark_from_static_string ("latency_probe.pad");
-  latency_probe_ts = g_quark_from_static_string ("latency_probe.ts");
-
-  /* announce trace formats */
-  /* *INDENT-OFF* */
-  gst_tracer_log_trace (gst_structure_new ("latency.class",
-      "src", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
-          NULL),
-      "sink", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
-          NULL),
-      "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING,
-              "time it took for the buffer to go from src to sink ns",
-          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      NULL));
-  /* *INDENT-ON* */
-}
-
-static void
-gst_latency_tracer_init (GstLatencyTracer * self)
-{
-  g_object_set (self, "mask", GST_TRACER_HOOK_BUFFERS | GST_TRACER_HOOK_EVENTS,
-      NULL);
-}
-
 /* hooks */
 
 static void
@@ -172,24 +128,24 @@ send_latency_probe (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
 }
 
 static void
-do_push_buffer_pre (GstLatencyTracer * self, va_list var_args)
+do_push_buffer_pre (GstTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
   GstPad *pad = va_arg (var_args, GstPad *);
   GstElement *parent = get_real_pad_parent (pad);
 
-  send_latency_probe (self, parent, pad, ts);
+  send_latency_probe ((GstLatencyTracer *) self, parent, pad, ts);
 }
 
 static void
-do_pull_buffer_pre (GstLatencyTracer * self, va_list var_args)
+do_pull_range_pre (GstTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
   GstPad *pad = va_arg (var_args, GstPad *);
   GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (peer_pad);
 
-  send_latency_probe (self, parent, peer_pad, ts);
+  send_latency_probe ((GstLatencyTracer *) self, parent, peer_pad, ts);
 }
 
 static void
@@ -206,28 +162,28 @@ calculate_latency (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
 }
 
 static void
-do_push_buffer_post (GstLatencyTracer * self, va_list var_args)
+do_push_buffer_post (GstTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
   GstPad *pad = va_arg (var_args, GstPad *);
   GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (peer_pad);
 
-  calculate_latency (self, parent, peer_pad, ts);
+  calculate_latency ((GstLatencyTracer *) self, parent, peer_pad, ts);
 }
 
 static void
-do_pull_range_post (GstLatencyTracer * self, va_list var_args)
+do_pull_range_post (GstTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
   GstPad *pad = va_arg (var_args, GstPad *);
   GstElement *parent = get_real_pad_parent (pad);
 
-  calculate_latency (self, parent, pad, ts);
+  calculate_latency ((GstLatencyTracer *) self, parent, pad, ts);
 }
 
 static void
-do_push_event_pre (GstLatencyTracer * self, va_list var_args)
+do_push_event_pre (GstTracer * self, va_list var_args)
 {
   G_GNUC_UNUSED guint64 ts = va_arg (var_args, guint64);
   GstPad *pad = va_arg (var_args, GstPad *);
@@ -250,31 +206,59 @@ do_push_event_pre (GstLatencyTracer * self, va_list var_args)
   }
 }
 
-static void
-gst_latency_tracer_invoke (GstTracer * obj, GstTracerMessageId mid,
-    va_list var_args)
-{
-  GstLatencyTracer *self = GST_LATENCY_TRACER_CAST (obj);
+/* tracer class */
 
-  switch (mid) {
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_PRE:
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_PRE:
-      do_push_buffer_pre (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_POST:
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST:
-      do_push_buffer_post (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_PRE:
-      do_pull_buffer_pre (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_POST:
-      do_pull_range_post (self, var_args);
-      break;
-    case GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_PRE:
-      do_push_event_pre (self, var_args);
-      break;
-    default:
-      break;
-  }
+static void
+gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
+{
+  latency_probe_id = g_quark_from_static_string ("latency_probe.id");
+  latency_probe_pad = g_quark_from_static_string ("latency_probe.pad");
+  latency_probe_ts = g_quark_from_static_string ("latency_probe.ts");
+
+  /* announce trace formats */
+  /* *INDENT-OFF* */
+  gst_tracer_log_trace (gst_structure_new ("latency.class",
+      "src", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "sink", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "related-to", G_TYPE_STRING, "pad",  /* TODO: use genum */
+          NULL),
+      "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING,
+              "time it took for the buffer to go from src to sink ns",
+          "flags", G_TYPE_STRING, "aggregated",  /* TODO: use gflags */ 
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      NULL));
+  /* *INDENT-ON* */
+}
+
+static void
+gst_latency_tracer_init (GstLatencyTracer * self)
+{
+  GstTracer *tracer = GST_TRACER (self);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_PRE,
+      do_push_buffer_pre);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_LIST_PRE,
+      do_push_buffer_pre);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_POST,
+      do_push_buffer_post);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_LIST_POST,
+      do_push_buffer_post);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PULL_RANGE_PRE,
+      do_pull_range_pre);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PULL_RANGE_POST,
+      do_pull_range_post);
+  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_EVENT_PRE,
+      do_push_event_pre);
+  /*
+     - we should also replace GstTracerHookId with a 'detail' string like in
+     signals
+     - then we can attach to *all* hooks with 'null' as detail
+     gst_tracer_register_hook (self, gchar *detail, func);
+     gst_tracer_register_hook_id (self, GQuark detail, func);
+   */
 }

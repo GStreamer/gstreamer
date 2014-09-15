@@ -45,7 +45,6 @@ enum
 {
   PROP_0,
   PROP_PARAMS,
-  PROP_MASK,
   PROP_LAST
 };
 
@@ -59,7 +58,6 @@ static void gst_tracer_get_property (GObject * object, guint prop_id,
 struct _GstTracerPrivate
 {
   const gchar *params;
-  GstTracerHook mask;
 };
 
 #define gst_tracer_parent_class parent_class
@@ -76,10 +74,6 @@ gst_tracer_class_init (GstTracerClass * klass)
   properties[PROP_PARAMS] =
       g_param_spec_string ("params", "Params", "Extra configuration parameters",
       NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
-
-  properties[PROP_MASK] =
-      g_param_spec_flags ("mask", "Mask", "Event mask", GST_TYPE_TRACER_HOOK,
-      GST_TRACER_HOOK_NONE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
   g_type_class_add_private (klass, sizeof (GstTracerPrivate));
@@ -102,9 +96,6 @@ gst_tracer_set_property (GObject * object, guint prop_id,
     case PROP_PARAMS:
       self->priv->params = g_value_get_string (value);
       break;
-    case PROP_MASK:
-      self->priv->mask = g_value_get_flags (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -121,23 +112,10 @@ gst_tracer_get_property (GObject * object, guint prop_id,
     case PROP_PARAMS:
       g_value_set_string (value, self->priv->params);
       break;
-    case PROP_MASK:
-      g_value_set_flags (value, self->priv->mask);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-void
-gst_tracer_invoke (GstTracer * self, GstTracerMessageId mid, va_list var_args)
-{
-  GstTracerClass *klass = GST_TRACER_GET_CLASS (self);
-
-  g_return_if_fail (klass->invoke);
-
-  klass->invoke (self, mid, var_args);
 }
 
 /* tracing modules */

@@ -45,6 +45,12 @@ gboolean _priv_tracer_enabled = FALSE;
 /* TODO(ensonic): use array of GPtrArray* ? */
 GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST] = { NULL, };
 
+typedef struct
+{
+  GstTracer *tracer;
+  GstTracerHookFunction func;
+} GstTracerHook;
+
 /* Initialize the tracing system */
 void
 _priv_gst_tracer_init (void)
@@ -55,10 +61,8 @@ _priv_gst_tracer_init (void)
     GstRegistry *registry = gst_registry_get ();
     GstPluginFeature *feature;
     GstTracerFactory *factory;
-    GstTracerHook mask;
-    GstObject *tracer;
     gchar **t = g_strsplit_set (env, ";", 0);
-    gint i = 0, j;
+    gint i = 0;
     gchar *params;
 
     GST_INFO ("enabling tracers: '%s'", env);
@@ -83,28 +87,9 @@ _priv_gst_tracer_init (void)
           GST_INFO_OBJECT (factory, "creating tracer: type-id=%u",
               (guint) factory->type);
 
-          tracer = g_object_new (factory->type, "params", params, NULL);
-          g_object_get (tracer, "mask", &mask, NULL);
-
-          if (mask) {
-            /* add to lists according to mask */
-            j = 0;
-            while (mask && (j < GST_TRACER_HOOK_ID_LAST)) {
-              if (mask & 1) {
-                _priv_tracers[j] = g_list_prepend (_priv_tracers[j],
-                    gst_object_ref (tracer));
-                GST_WARNING_OBJECT (tracer, "added tracer to hook %d", j);
-              }
-              mask >>= 1;
-              j++;
-            }
-
-            _priv_tracer_enabled = TRUE;
-          } else {
-            GST_WARNING_OBJECT (tracer,
-                "tracer with zero mask won't have any effect");
-          }
-          gst_object_unref (tracer);
+          /* tracers register them self to the hooks */
+          gst_object_unref (g_object_new (factory->type, "params", params,
+                  NULL));
         } else {
           GST_WARNING_OBJECT (feature,
               "loading plugin containing feature %s failed!", t[i]);
@@ -123,11 +108,14 @@ _priv_gst_tracer_deinit (void)
 {
   gint i;
   GList *node;
+  GstTracerHook *hook;
 
   /* shutdown tracers for final reports */
   for (i = 0; i < GST_TRACER_HOOK_ID_LAST; i++) {
     for (node = _priv_tracers[i]; node; node = g_list_next (node)) {
-      gst_object_unref (node->data);
+      hook = (GstTracerHook *) node->data;
+      gst_object_unref (hook->tracer);
+      g_slice_free (GstTracerHook, hook);
     }
     g_list_free (_priv_tracers[i]);
     _priv_tracers[i] = NULL;
@@ -136,14 +124,28 @@ _priv_gst_tracer_deinit (void)
 }
 
 void
-gst_tracer_dispatch (GstTracerHookId hid, GstTracerMessageId mid, ...)
+gst_tracer_register_hook (GstTracer * tracer, GstTracerHookId id,
+    GstTracerHookFunction func)
+{
+  GstTracerHook *hook = g_slice_new0 (GstTracerHook);
+  hook->tracer = gst_object_ref (tracer);
+  hook->func = func;
+  _priv_tracers[id] = g_list_prepend (_priv_tracers[id], hook);
+  GST_DEBUG_OBJECT (tracer, "added tracer to hook %d", id);
+  _priv_tracer_enabled = TRUE;
+}
+
+void
+gst_tracer_dispatch (GstTracerHookId id, ...)
 {
   va_list var_args;
   GList *node;
+  GstTracerHook *hook;
 
-  for (node = _priv_tracers[hid]; node; node = g_list_next (node)) {
-    va_start (var_args, mid);
-    gst_tracer_invoke (node->data, mid, var_args);
+  for (node = _priv_tracers[id]; node; node = g_list_next (node)) {
+    hook = (GstTracerHook *) node->data;
+    va_start (var_args, id);
+    hook->func (hook->tracer, var_args);
     va_end (var_args);
   }
 }
