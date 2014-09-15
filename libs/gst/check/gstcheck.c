@@ -302,8 +302,7 @@ gst_check_setup_src_pad_by_name (GstElement * element,
   GstPadTemplate *ptmpl = gst_static_pad_template_get (tmpl);
   GstPad *srcpad;
 
-  srcpad =
-      gst_check_setup_src_pad_by_name_from_template (element, ptmpl, "sink");
+  srcpad = gst_check_setup_src_pad_by_name_from_template (element, ptmpl, name);
 
   gst_object_unref (ptmpl);
 
@@ -436,7 +435,7 @@ gst_check_setup_sink_pad_by_name (GstElement * element,
   GstPad *sinkpad;
 
   sinkpad =
-      gst_check_setup_sink_pad_by_name_from_template (element, ptmpl, "src");
+      gst_check_setup_sink_pad_by_name_from_template (element, ptmpl, name);
 
   gst_object_unref (ptmpl);
 
