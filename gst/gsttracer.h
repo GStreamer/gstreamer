@@ -64,8 +64,12 @@ struct _GstTracerClass {
 
 GType gst_tracer_get_type          (void);
 
-void gst_tracer_register_hook (GstTracer *tracer, GstTracerHookId id, 
+void gst_tracer_register_hook (GstTracer *tracer, const gchar *detail, 
   GstTracerHookFunction func);
+void gst_tracer_register_hook_id (GstTracer *tracer, GQuark detail, 
+  GstTracerHookFunction func);
+
+void gst_tracer_log_trace (GstStructure * s);
 
 G_END_DECLS
 

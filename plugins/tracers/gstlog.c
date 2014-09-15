@@ -162,28 +162,20 @@ gst_log_tracer_init (GstLogTracer * self)
 {
   GstTracer *tracer = GST_TRACER (self);
 
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_PRE,
-      do_push_buffer_pre);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_POST,
-      do_push_buffer_post);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_LIST_PRE,
+  gst_tracer_register_hook (tracer, "pad-push-pre", do_push_buffer_pre);
+  gst_tracer_register_hook (tracer, "pad-push-post", do_push_buffer_post);
+  gst_tracer_register_hook (tracer, "pad-push-list-pre",
       do_push_buffer_list_pre);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_LIST_POST,
+  gst_tracer_register_hook (tracer, "pad-push-list-post",
       do_push_buffer_list_post);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PULL_RANGE_PRE,
-      do_pull_range_pre);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PULL_RANGE_POST,
-      do_pull_range_post);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_EVENT_PRE,
-      do_push_event_pre);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_EVENT_POST,
-      do_push_event_post);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_ELEMENT_POST_MESSAGE_PRE,
+  gst_tracer_register_hook (tracer, "pad-pull-range-pre", do_pull_range_pre);
+  gst_tracer_register_hook (tracer, "pad-pull-range-post", do_pull_range_post);
+  gst_tracer_register_hook (tracer, "pad-push-event-pre", do_push_event_pre);
+  gst_tracer_register_hook (tracer, "pad-push-event-post", do_push_event_post);
+  gst_tracer_register_hook (tracer, "element-post-message-pre",
       do_post_message_pre);
-  gst_tracer_register_hook (tracer,
-      GST_TRACER_HOOK_ID_ELEMENT_POST_MESSAGE_POST, do_post_message_post);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_ELEMENT_QUERY_PRE,
-      do_query_pre);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_ELEMENT_QUERY_POST,
-      do_query_post);
+  gst_tracer_register_hook (tracer, "element-post-message-post",
+      do_post_message_post);
+  gst_tracer_register_hook (tracer, "element-query-pre", do_query_pre);
+  gst_tracer_register_hook (tracer, "element-query-post", do_query_post);
 }

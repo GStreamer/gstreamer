@@ -240,25 +240,11 @@ static void
 gst_latency_tracer_init (GstLatencyTracer * self)
 {
   GstTracer *tracer = GST_TRACER (self);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_PRE,
-      do_push_buffer_pre);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_LIST_PRE,
-      do_push_buffer_pre);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_POST,
-      do_push_buffer_post);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_LIST_POST,
-      do_push_buffer_post);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PULL_RANGE_PRE,
-      do_pull_range_pre);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PULL_RANGE_POST,
-      do_pull_range_post);
-  gst_tracer_register_hook (tracer, GST_TRACER_HOOK_ID_PAD_PUSH_EVENT_PRE,
-      do_push_event_pre);
-  /*
-     - we should also replace GstTracerHookId with a 'detail' string like in
-     signals
-     - then we can attach to *all* hooks with 'null' as detail
-     gst_tracer_register_hook (self, gchar *detail, func);
-     gst_tracer_register_hook_id (self, GQuark detail, func);
-   */
+  gst_tracer_register_hook (tracer, "pad-push-pre", do_push_buffer_pre);
+  gst_tracer_register_hook (tracer, "pad-push-list-pre", do_push_buffer_pre);
+  gst_tracer_register_hook (tracer, "pad-push-post", do_push_buffer_post);
+  gst_tracer_register_hook (tracer, "pad-push-list-post", do_push_buffer_post);
+  gst_tracer_register_hook (tracer, "pad-pull-range-pre", do_pull_range_pre);
+  gst_tracer_register_hook (tracer, "pad-pull-range-post", do_pull_range_post);
+  gst_tracer_register_hook (tracer, "pad-push-event-pre", do_push_event_pre);
 }
