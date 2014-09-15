@@ -59,8 +59,6 @@ GstMediaDescriptorParser * gst_media_descriptor_parser_new (GstValidateRunner *r
                                                             const gchar * xmlpath,
                                                             GError **error);
 gchar * gst_media_descriptor_parser_get_xml_path        (GstMediaDescriptorParser *parser);
-GstClockTime gst_media_descriptor_parser_get_duration   (GstMediaDescriptorParser *parser);
-gboolean gst_media_descriptor_parser_get_seekable       (GstMediaDescriptorParser * parser);
 gboolean gst_media_descriptor_parser_add_stream         (GstMediaDescriptorParser *parser,
                                                                   GstPad *pad);
 gboolean gst_media_descriptor_parser_add_taglist        (GstMediaDescriptorParser *parser,
