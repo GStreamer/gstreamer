@@ -45,6 +45,9 @@ from_GstVaapiBufferMemoryType (guint type)
     case GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF:
       va_type = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME;
       break;
+    case GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF:
+      va_type = VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM;
+      break;
     default:
       va_type = 0;
       break;
@@ -60,6 +63,9 @@ to_GstVaapiBufferMemoryType (guint va_type)
   switch (va_type) {
     case VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME:
       type = GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF;
+      break;
+    case VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM:
+      type = GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF;
       break;
     default:
       type = 0;

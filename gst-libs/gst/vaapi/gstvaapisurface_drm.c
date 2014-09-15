@@ -75,3 +75,25 @@ gst_vaapi_surface_get_dma_buf_handle (GstVaapiSurface * surface)
   return gst_vaapi_surface_get_drm_buf_handle (surface,
       GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF);
 }
+
+/**
+ * gst_vaapi_surface_get_gem_buf_handle:
+ * @surface: a #GstVaapiSurface
+ *
+ * If the underlying VA driver implementation supports it, this
+ * function allows for returning a suitable GEM buffer handle as a
+ * #GstVaapiBufferProxy instance. The resulting buffer handle is live
+ * until the last reference to the proxy gets released. Besides, any
+ * further change to the parent VA @surface may fail.
+ *
+ * Return value: the underlying buffer as a #GstVaapiBufferProxy
+ * instance.
+ */
+GstVaapiBufferProxy *
+gst_vaapi_surface_get_gem_buf_handle (GstVaapiSurface * surface)
+{
+  g_return_val_if_fail (surface != NULL, NULL);
+
+  return gst_vaapi_surface_get_drm_buf_handle (surface,
+      GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF);
+}

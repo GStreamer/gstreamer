@@ -60,11 +60,13 @@ typedef struct _GstVaapiBufferProxy             GstVaapiBufferProxy;
 /**
  * GstVaapiBufferMemoryType:
  * @GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF: DRM PRIME buffer memory type.
+ * @GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF: Kernel DRM buffer memory type.
  *
  * Set of underlying VA buffer memory types.
  */
 typedef enum {
   GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF = 1,
+  GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF,
 } GstVaapiBufferMemoryType;
 
 GstVaapiBufferProxy *

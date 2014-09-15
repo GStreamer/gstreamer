@@ -31,6 +31,9 @@ G_BEGIN_DECLS
 GstVaapiBufferProxy *
 gst_vaapi_surface_get_dma_buf_handle (GstVaapiSurface * surface);
 
+GstVaapiBufferProxy *
+gst_vaapi_surface_get_gem_buf_handle (GstVaapiSurface * surface);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_SURFACE_DRM_H */
