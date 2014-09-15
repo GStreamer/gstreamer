@@ -1199,7 +1199,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
       }
     } else {
       demux->download_failed_count++;
-      if (demux->download_failed_count < DEFAULT_FAILED_COUNT) {
+      if (demux->download_failed_count <= DEFAULT_FAILED_COUNT) {
         GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
         g_clear_error (&err);
 
@@ -1441,7 +1441,7 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
       if (demux->stop_updates_task)
         goto quit;
       demux->client->update_failed_count++;
-      if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
+      if (demux->client->update_failed_count <= DEFAULT_FAILED_COUNT) {
         GST_WARNING_OBJECT (demux, "Could not update the playlist");
         demux->next_update =
             g_get_monotonic_time () +
