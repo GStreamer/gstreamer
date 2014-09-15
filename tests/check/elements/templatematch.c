@@ -54,7 +54,7 @@ create_input_buffer (void)
   data = g_malloc0 (size);
 
   /* blue and green */
-  for (j = 0; i < 8; j++) {
+  for (j = 0; j < 8; j++) {
     for (i = 0; i < 8; i++) {
       base = j * 16;
       data[base + i] = 255;
@@ -67,7 +67,7 @@ create_input_buffer (void)
     }
   }
   /* red */
-  for (j = 0; i < 8; j++) {
+  for (j = 0; j < 8; j++) {
     for (i = 0; i < 8; i++) {
       base = 8 * 8 + j * 16;
       data[base + i] = 0;
