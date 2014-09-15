@@ -42,6 +42,8 @@ typedef struct _GstAppSrc GstAppSrc;
 typedef struct _GstAppSrcClass GstAppSrcClass;
 typedef struct _GstAppSrcPrivate GstAppSrcPrivate;
 
+/* FIXME 2.0: Make the instance/class struct private */
+
 /**
  * GstAppSrcCallbacks: (skip)
  * @need_data: Called when the appsrc needs more data. A buffer or EOS should be

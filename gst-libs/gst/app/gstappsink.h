@@ -42,6 +42,8 @@ typedef struct _GstAppSink GstAppSink;
 typedef struct _GstAppSinkClass GstAppSinkClass;
 typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
 
+/* FIXME 2.0: Make the instance/class struct private */
+
 /**
  * GstAppSinkCallbacks: (skip)
  * @eos: Called when the end-of-stream has been reached. This callback
