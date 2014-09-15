@@ -130,6 +130,12 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (WARNING, FIRST_BUFFER_RUNNING_TIME_IS_NOT_ZERO,
       _("first buffer's running time isn't 0"),
       _("the first buffer's received running time is expected to be 0"));
+  REGISTER_VALIDATE_ISSUE (WARNING, WRONG_BUFFER,
+      _("Received buffer does not correspond to wanted one."),
+      _("When checking playback of a file against a MediaInfo file"
+          " all buffers coming into the decoders might be checked"
+          " and should have the exact expected metadatas and hash of the"
+          " content"));
   REGISTER_VALIDATE_ISSUE (CRITICAL, WRONG_FLOW_RETURN,
       _("flow return from pad push doesn't match expected value"),
       _("flow return from a 1:1 sink/src pad element is as simple as "

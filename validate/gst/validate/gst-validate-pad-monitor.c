@@ -1471,6 +1471,94 @@ mark_pads_eos (GstValidatePadMonitor *pad_monitor)
   }
 }
 
+static inline gboolean
+_should_check_buffers (GstValidatePadMonitor * pad_monitor,
+    gboolean force_checks)
+{
+  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
+  GstValidateMonitor *monitor = GST_VALIDATE_MONITOR (pad_monitor);
+
+  if (pad_monitor->first_buffer || force_checks) {
+    if (pad_monitor->segment.rate != 1.0) {
+      GST_INFO_OBJECT (pad_monitor, "We do not support buffer checking"
+          " for trick modes");
+
+      pad_monitor->check_buffers = FALSE;
+    } else if (!PAD_PARENT_IS_DECODER (pad_monitor)) {
+      GST_DEBUG_OBJECT (pad, "Not on a decoder => no buffer checking");
+
+      pad_monitor->check_buffers = FALSE;
+    } else if (GST_PAD_DIRECTION (pad) != GST_PAD_SINK) {
+      GST_DEBUG_OBJECT (pad, "Not a sinkpad => no buffer checking");
+
+      pad_monitor->check_buffers = FALSE;
+    } else if (!pad_monitor->caps_is_video) {
+      GST_DEBUG_OBJECT (pad, "Not working with video => no buffer checking");
+
+      pad_monitor->check_buffers = FALSE;
+    } else if (monitor->media_descriptor == NULL) {
+      GST_DEBUG_OBJECT (pad, "No media_descriptor set => no buffer checking");
+
+      pad_monitor->check_buffers = FALSE;
+    } else if (!gst_media_descriptor_detects_frames (monitor->media_descriptor)) {
+      GST_DEBUG_OBJECT (pad, "No frame detection media descriptor "
+          "=> not buffer checking");
+      pad_monitor->check_buffers = FALSE;
+    } else if (pad_monitor->all_bufs == NULL &&
+        !gst_media_descriptor_get_buffers (monitor->media_descriptor, pad, NULL,
+            &pad_monitor->all_bufs)) {
+
+      GST_INFO_OBJECT (monitor,
+          "The MediaInfo is marked as detecting frame, but getting frames"
+          " from pad %" GST_PTR_FORMAT " did not work (some format conversion"
+          " might be happening)", pad);
+
+      pad_monitor->check_buffers = FALSE;
+    } else {
+      if (!pad_monitor->current_buf)
+        pad_monitor->current_buf = pad_monitor->all_bufs;
+      pad_monitor->check_buffers = TRUE;
+    }
+  }
+
+  return pad_monitor->check_buffers;
+}
+
+static void
+gst_validate_monitor_find_next_buffer (GstValidatePadMonitor * pad_monitor)
+{
+  GList *tmp;
+  gboolean passed_start = FALSE;
+
+  if (!_should_check_buffers (pad_monitor, TRUE))
+    return;
+
+  for (tmp = g_list_last (pad_monitor->all_bufs); tmp; tmp = tmp->prev) {
+    GstBuffer *cbuf = tmp->data;
+    GstClockTime ts =
+        GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (cbuf)) ? GST_BUFFER_DTS (cbuf)
+        : GST_BUFFER_PTS (cbuf);
+
+    if (!GST_CLOCK_TIME_IS_VALID (ts))
+      continue;
+
+    if (ts <= pad_monitor->segment.start)
+      passed_start = TRUE;
+
+    if (!passed_start)
+      continue;
+
+    if (!GST_BUFFER_FLAG_IS_SET (cbuf, GST_BUFFER_FLAG_DELTA_UNIT)) {
+      break;
+    }
+  }
+
+  if (tmp == NULL)
+    pad_monitor->current_buf = pad_monitor->all_bufs;
+  else
+    pad_monitor->current_buf = tmp;
+}
+
 static gboolean
 gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
     pad_monitor, GstObject * parent, GstEvent * event,
@@ -1582,6 +1670,7 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
         }
         gst_segment_copy_into (segment, &pad_monitor->segment);
         pad_monitor->has_segment = TRUE;
+        gst_validate_monitor_find_next_buffer (pad_monitor);
       }
       break;
     case GST_EVENT_CAPS:{
@@ -1685,6 +1774,90 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
   return ret;
 }
 
+static gboolean
+gst_validate_pad_monitor_check_right_buffer (GstValidatePadMonitor *
+    pad_monitor, GstBuffer * buffer)
+{
+  gchar *checksum;
+  GstBuffer *wanted_buf;
+  GstMapInfo map, wanted_map;
+
+  gboolean ret = TRUE;
+  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
+
+  if (_should_check_buffers (pad_monitor, FALSE) == FALSE)
+    return FALSE;
+
+  if (pad_monitor->current_buf == NULL) {
+    GST_INFO_OBJECT (pad, "No current buffer one pad, Why?");
+    return FALSE;
+  }
+
+  wanted_buf = pad_monitor->current_buf->data;
+
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (wanted_buf)) &&
+      GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buffer)) &&
+      GST_BUFFER_PTS (wanted_buf) != GST_BUFFER_PTS (buffer)) {
+
+    GST_VALIDATE_REPORT (pad_monitor, WRONG_BUFFER,
+        "buffer %" GST_PTR_FORMAT " PTS %ld"
+        " different than expected: %ld", buffer,
+        GST_BUFFER_PTS (buffer), GST_BUFFER_PTS (wanted_buf));
+
+    ret = FALSE;
+  }
+
+  if (GST_BUFFER_DTS (wanted_buf) != GST_BUFFER_DTS (buffer)) {
+    GST_VALIDATE_REPORT (pad_monitor, WRONG_BUFFER,
+        "buffer %" GST_PTR_FORMAT " DTS %" GST_TIME_FORMAT
+        " different than expected: %" GST_TIME_FORMAT, buffer,
+        GST_TIME_ARGS (GST_BUFFER_DTS (buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DTS (wanted_buf)));
+    ret = FALSE;
+  }
+
+  if (GST_BUFFER_DURATION (wanted_buf) != GST_BUFFER_DURATION (buffer)) {
+    GST_VALIDATE_REPORT (pad_monitor, WRONG_BUFFER,
+        "buffer %" GST_PTR_FORMAT " DURATION %" GST_TIME_FORMAT
+        " different than expected: %" GST_TIME_FORMAT, buffer,
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (wanted_buf)));
+    ret = FALSE;
+  }
+
+  if (GST_BUFFER_FLAG_IS_SET (wanted_buf, GST_BUFFER_FLAG_DELTA_UNIT) !=
+      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+    GST_VALIDATE_REPORT (pad_monitor, WRONG_BUFFER,
+        "buffer %" GST_PTR_FORMAT "  Delta unit is set to %s but expected %s",
+        buffer, GST_BUFFER_FLAG_IS_SET (buffer,
+            GST_BUFFER_FLAG_DELTA_UNIT) ? "True" : "False",
+        GST_BUFFER_FLAG_IS_SET (wanted_buf,
+            GST_BUFFER_FLAG_DELTA_UNIT) ? "True" : "False");
+    ret = FALSE;
+  }
+
+  g_assert (gst_buffer_map (wanted_buf, &wanted_map, GST_MAP_READ));
+  g_assert (gst_buffer_map (buffer, &map, GST_MAP_READ));
+
+  checksum = g_compute_checksum_for_data (G_CHECKSUM_MD5,
+      (const guchar *) map.data, map.size);
+
+  if (g_strcmp0 ((gchar *) wanted_map.data, checksum)) {
+    GST_VALIDATE_REPORT (pad_monitor, WRONG_BUFFER,
+        "buffer %" GST_PTR_FORMAT " checksum %s different from expected: %s",
+        buffer, checksum, wanted_map.data);
+    ret = FALSE;
+  }
+
+  gst_buffer_unmap (wanted_buf, &wanted_map);
+  gst_buffer_unmap (buffer, &map);
+  g_free (checksum);
+
+  pad_monitor->current_buf = pad_monitor->current_buf->next;
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -1696,6 +1869,7 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
+  gst_validate_pad_monitor_check_right_buffer (pad_monitor, buffer);
   gst_validate_pad_monitor_check_first_buffer (pad_monitor, buffer);
   gst_validate_pad_monitor_update_buffer_data (pad_monitor, buffer);
   gst_validate_pad_monitor_check_eos (pad_monitor, buffer);

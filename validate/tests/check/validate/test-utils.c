@@ -102,18 +102,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("something")
     );
 
-static void
-fake_demuxer_dispose (FakeDemuxer * self)
-{
-}
-
-static void
-fake_demuxer_finalize (FakeDemuxer * self)
-{
-}
-
 static GstFlowReturn
-_chain (GstPad * pad, GstObject * self, GstBuffer * buffer)
+_demuxer_chain (GstPad * pad, GstObject * self, GstBuffer * buffer)
 {
   gst_buffer_unref (buffer);
 
@@ -146,17 +136,13 @@ fake_demuxer_init (FakeDemuxer * self, gpointer * g_class)
 
   self->return_value = GST_FLOW_OK;
 
-  gst_pad_set_chain_function (pad, _chain);
+  gst_pad_set_chain_function (pad, _demuxer_chain);
 }
 
 static void
 fake_demuxer_class_init (FakeDemuxerClass * self_class)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (self_class);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (self_class);
-
-  object_class->dispose = (void (*)(GObject * object)) fake_demuxer_dispose;
-  object_class->finalize = (void (*)(GObject * object)) fake_demuxer_finalize;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&fake_demuxer_src_template));
@@ -221,4 +207,92 @@ free_element_monitor (GstElement *element)
   monitor = (GstValidateMonitor *) g_object_get_data (G_OBJECT (element), "validate-monitor");
 
   g_object_unref (G_OBJECT(monitor));
+}
+
+static GstStaticPadTemplate fake_decoder_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS ("video/x-fake")
+    );
+
+static GstStaticPadTemplate fake_decoder_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-fake")
+    );
+
+static GstFlowReturn
+_decoder_chain (GstPad * pad, GstObject * self, GstBuffer * buffer)
+{
+  gst_buffer_unref (buffer);
+
+  return FAKE_DECODER (self)->return_value;
+}
+
+static void
+fake_decoder_init (FakeDecoder * self, gpointer * g_class)
+{
+  GstPad *pad;
+  GstElement *element = GST_ELEMENT (self);
+  GstPadTemplate *pad_template;
+
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
+  pad = gst_pad_new_from_template (pad_template, "src");
+  gst_element_add_pad (element, pad);
+
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
+  pad = gst_pad_new_from_template (pad_template, "sink");
+  gst_element_add_pad (element, pad);
+
+  self->return_value = GST_FLOW_OK;
+
+  gst_pad_set_chain_function (pad, _decoder_chain);
+}
+
+static void
+fake_decoder_class_init (FakeDecoderClass * self_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (self_class);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&fake_decoder_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&fake_decoder_sink_template));
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Fake Decoder", "Decoder", "Some decoder", "Thibault Saunier");
+}
+
+GType
+fake_decoder_get_type (void)
+{
+  static volatile gsize type = 0;
+
+  if (g_once_init_enter (&type)) {
+    GType _type;
+    static const GTypeInfo info = {
+      sizeof (FakeDecoderClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) fake_decoder_class_init,
+      NULL,
+      NULL,
+      sizeof (FakeDecoder),
+      0,
+      (GInstanceInitFunc) fake_decoder_init,
+    };
+
+    _type = g_type_register_static (GST_TYPE_ELEMENT, "FakeDecoder", &info, 0);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+GstElement *
+fake_decoder_new (void)
+{
+  return GST_ELEMENT (g_object_new (FAKE_DECODER_TYPE, NULL));
 }

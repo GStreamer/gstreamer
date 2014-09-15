@@ -294,6 +294,8 @@ class GstValidateLaunchTest(GstValidateTest):
     def build_arguments(self):
         GstValidateTest.build_arguments(self)
         self.add_arguments(self.pipeline_desc)
+        if self.media_descriptor is not None:
+            self.add_arguments("--set-media-info", self.media_descriptor.get_path())
 
     def get_current_value(self):
         if self.scenario:

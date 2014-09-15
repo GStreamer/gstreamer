@@ -29,6 +29,7 @@ typedef struct _GstValidatePadMonitor GstValidatePadMonitor;
 typedef struct _GstValidatePadMonitorClass GstValidatePadMonitorClass;
 
 #include <gst/validate/gst-validate-monitor.h>
+#include <gst/validate/media-descriptor-parser.h>
 #include <gst/validate/gst-validate-element-monitor.h>
 
 G_BEGIN_DECLS
@@ -110,6 +111,12 @@ struct _GstValidatePadMonitor {
    */
   GstClockTime timestamp_range_start;
   GstClockTime timestamp_range_end;
+
+  /* GstMediaCheck related fields */
+  GList *all_bufs;
+  /* The GstBuffer that should arrive next in a GList */
+  GList *current_buf;
+  gboolean check_buffers;
 };
 
 /**

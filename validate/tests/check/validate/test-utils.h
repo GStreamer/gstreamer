@@ -54,6 +54,25 @@ typedef struct {
 GType fake_demuxer_get_type  (void);
 GstElement * fake_demuxer_new (void);
 
+typedef struct {
+  GstElement parent;
+
+  GstFlowReturn return_value;
+} FakeDecoder;
+
+typedef struct {
+  GstElementClass parent;
+} FakeDecoderClass;
+
+#define FAKE_DECODER_TYPE (fake_decoder_get_type ())
+#define FAKE_DECODER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), FAKE_DECODER_TYPE, FakeDecoder))
+#define FAKE_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), FAKE_DECODER_TYPE, FakeDecoderClass))
+#define IS_FAKE_DECODER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), FAKE_DECODER_TYPE))
+#define IS_FAKE_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), FAKE_DECODER_TYPE))
+#define FAKE_DECODER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), FAKE_DECODER_TYPE, FakeDecoderClass))
+
+GType fake_decoder_get_type  (void);
+GstElement * fake_decoder_new (void);
 
 G_END_DECLS
 

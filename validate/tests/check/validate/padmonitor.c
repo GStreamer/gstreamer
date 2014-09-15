@@ -19,6 +19,7 @@
 
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-pad-monitor.h>
+#include <gst/validate/media-descriptor-parser.h>
 #include <gst/check/gstcheck.h>
 #include "test-utils.h"
 
@@ -545,6 +546,260 @@ GST_START_TEST (issue_concatenation)
   check_destroyed (sink, sinkpad, NULL);
   check_destroyed (runner, NULL, NULL);
 }
+GST_END_TEST;
+
+/* *INDENT-OFF* */
+static const gchar * media_info =
+"<file duration='10031000000' frame-detection='1' uri='file:///I/am/so/fake.fakery' seekable='true'>"
+"  <streams caps='video/quicktime'>"
+"    <stream type='video' caps='video/x-fake'>"
+"       <frame duration='1' id='0' is-keyframe='true'  offset='18446744073709551615' offset-end='18446744073709551615' pts='0'  dts='0' checksum='cfeb9b47da2bb540cd3fa84cffea4df9'/>"  /* buffer1 */
+"       <frame duration='1' id='1' is-keyframe='false' offset='18446744073709551615' offset-end='18446744073709551615' pts='1'  dts='1' checksum='e40d7cd997bd14462468d201f1e1a3d4'/>" /* buffer2 */
+"       <frame duration='1' id='2' is-keyframe='false' offset='18446744073709551615' offset-end='18446744073709551615' pts='2'  dts='2' checksum='4136320f0da0738a06c787dce827f034'/>" /* buffer3 */
+"       <frame duration='1' id='3' is-keyframe='false' offset='18446744073709551615' offset-end='18446744073709551615' pts='3'  dts='3' checksum='sure my dear'/>" /* gonna fail */
+"       <frame duration='1' id='4' is-keyframe='true'  offset='18446744073709551615' offset-end='18446744073709551615' pts='4'  dts='4' checksum='569d8927835c44fd4ff40b8408657f9e'/>"  /* buffer4 */
+"       <frame duration='1' id='5' is-keyframe='false' offset='18446744073709551615' offset-end='18446744073709551615' pts='5'  dts='5' checksum='fcea4caed9b2c610fac1f2a6b38b1d5f'/>" /* buffer5 */
+"       <frame duration='1' id='6' is-keyframe='false' offset='18446744073709551615' offset-end='18446744073709551615' pts='6'  dts='6' checksum='c7536747446a1503b1d9b02744144fa9'/>" /* buffer6 */
+"       <frame duration='1' id='7' is-keyframe='false' offset='18446744073709551615' offset-end='18446744073709551615' pts='7'  dts='7' checksum='sure my dear'/>" /* gonna fail */
+"      <tags>"
+"      </tags>"
+"    </stream>"
+"  </streams>"
+"</file>";
+/* *INDENT-ON* */
+
+typedef struct _BufferDesc
+{
+  const gchar *content;
+  GstClockTime pts;
+  GstClockTime dts;
+  GstClockTime duration;
+  gboolean keyframe;
+
+  gint num_issues;
+} BufferDesc;
+
+static GstBuffer *
+_create_buffer (BufferDesc * bdesc)
+{
+  gchar *tmp = g_strdup (bdesc->content);
+  GstBuffer *buffer =
+      gst_buffer_new_wrapped (tmp, strlen (tmp) * sizeof (gchar));
+
+  GST_BUFFER_DTS (buffer) = bdesc->dts;
+  GST_BUFFER_PTS (buffer) = bdesc->pts;
+  GST_BUFFER_DURATION (buffer) = bdesc->duration;
+
+  if (bdesc->keyframe)
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  else
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  return buffer;
+}
+
+static void
+_check_media_info (GstSegment * segment, BufferDesc * bufs)
+{
+  GList *reports;
+  GstEvent *segev;
+  GstBuffer *buffer;
+  GstElement *decoder;
+  GstPad *srcpad, *sinkpad;
+  GstValidateReport *report;
+  GstValidateMonitor *monitor;
+  GstValidateRunner *runner;
+  GstMediaDescriptor *mdesc;
+
+  GError *err = NULL;
+  gint i, num_issues = 0;
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  runner = gst_validate_runner_new ();
+
+  mdesc = (GstMediaDescriptor *)
+      gst_media_descriptor_parser_new_from_xml (runner, media_info, &err);
+
+  decoder = fake_decoder_new ();
+  monitor = gst_validate_monitor_factory_create (GST_OBJECT (decoder),
+      runner, NULL);
+  gst_validate_monitor_set_media_descriptor (monitor, mdesc);
+
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  sinkpad = decoder->sinkpads->data;
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "decoder ref", 1);
+  fail_unless (gst_pad_activate_mode (srcpad, GST_PAD_MODE_PUSH, TRUE));
+  fail_unless_equals_int (gst_element_set_state (decoder, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  assert_equals_string (gst_pad_link_get_name (gst_pad_link (srcpad, sinkpad)),
+      gst_pad_link_get_name (GST_PAD_LINK_OK));
+
+  gst_check_setup_events_with_stream_id (srcpad, decoder,
+      gst_caps_from_string ("video/x-fake"), GST_FORMAT_TIME, "the-stream");
+
+
+  if (segment) {
+    segev = gst_event_new_segment (segment);
+    fail_unless (gst_pad_push_event (srcpad, segev));
+  }
+
+  for (i = 0; bufs[i].content != NULL; i++) {
+    BufferDesc *buf = &bufs[i];
+    buffer = _create_buffer (buf);
+
+    assert_equals_string (gst_flow_get_name (gst_pad_push (srcpad, buffer)),
+        gst_flow_get_name (GST_FLOW_OK));
+    reports = gst_validate_runner_get_reports (runner);
+
+    num_issues += buf->num_issues;
+    assert_equals_int (g_list_length (reports), num_issues);
+
+    if (buf->num_issues) {
+      GList *tmp = g_list_nth (reports, num_issues - buf->num_issues);
+
+      while (tmp) {
+        report = tmp->data;
+
+        fail_unless_equals_int (report->level,
+            GST_VALIDATE_REPORT_LEVEL_WARNING);
+        fail_unless_equals_int (report->issue->issue_id,
+            GST_VALIDATE_ISSUE_ID_WRONG_BUFFER);
+        tmp = tmp->next;
+      }
+    }
+  }
+
+  /* clean up */
+  fail_unless (gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, FALSE));
+  fail_unless_equals_int (gst_element_set_state (decoder, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (srcpad);
+  check_destroyed (decoder, sinkpad, NULL);
+  check_destroyed (runner, NULL, NULL);
+}
+
+GST_START_TEST (check_media_info)
+{
+  GstSegment segment;
+
+
+/* *INDENT-OFF* */
+  _check_media_info (NULL,
+      (BufferDesc []) {
+      {
+        .content = "buffer1",
+        .pts = 0,
+        .dts = 0,
+        .duration = 1,
+        .keyframe = TRUE,
+        .num_issues = 0
+      },
+      {
+        .content = "buffer2",
+        .pts = 1,
+        .dts = 1,
+        .duration = 1,
+        .keyframe = FALSE,
+        .num_issues = 0
+      },
+      {
+        .content = "buffer3",
+        .pts = 2,
+        .dts = 2,
+        .duration = 1,
+        .keyframe = FALSE,
+        .num_issues = 0
+      },
+      {
+        .content = "fail please",
+        .pts = 3,
+        .dts = 3,
+        .duration = 1,
+        .keyframe = FALSE,
+        .num_issues = 1
+      },
+      { NULL}
+    });
+/* *INDENT-ON* */
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  /* Segment start is 2, the first buffer is expected (first Keyframe) */
+  segment.start = 2;
+
+/* *INDENT-OFF* */
+  _check_media_info (&segment,
+      (BufferDesc []) {
+      {
+        .content = "buffer2", /* Wrong checksum */
+        .pts = 0,
+        .dts = 0,
+        .duration = 1,
+        .keyframe = TRUE,
+        .num_issues = 1
+      },
+      { NULL}
+    });
+/* *INDENT-ON* */
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  /* Segment start is 2, the first buffer is expected (first Keyframe) */
+  segment.start = 2;
+
+/* *INDENT-OFF* */
+  _check_media_info (&segment,
+      (BufferDesc []) {
+      { /*  The right first buffer */
+        .content = "buffer1",
+        .pts = 0,
+        .dts = 0,
+        .duration = 1,
+        .keyframe = TRUE,
+        .num_issues = 0
+      },
+      { NULL}
+    });
+/* *INDENT-ON* */
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  /* Segment start is 6, the 4th buffer is expected (first Keyframe) */
+  segment.start = 6;
+
+/* *INDENT-OFF* */
+  _check_media_info (&segment,
+      (BufferDesc []) {
+      { /*  The right fourth buffer */
+        .content = "buffer4",
+        .pts = 4,
+        .dts = 4,
+        .duration = 1,
+        .keyframe = TRUE,
+        .num_issues = 0
+      },
+      { NULL}
+    });
+/* *INDENT-ON* */
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  /* Segment start is 6, the 4th buffer is expected (first Keyframe) */
+  segment.start = 6;
+
+/* *INDENT-OFF* */
+  _check_media_info (&segment,
+      (BufferDesc []) {
+      { /*  The sixth buffer... all wrong! */
+        .content = "buffer6",
+        .pts = 6,
+        .dts = 6,
+        .duration = 1,
+        .keyframe = FALSE,
+        .num_issues = 1
+      },
+      { NULL}
+    });
+/* *INDENT-ON* */
+}
 
 GST_END_TEST;
 
@@ -562,6 +817,7 @@ gst_validate_suite (void)
   tcase_add_test (tc_chain, first_buffer_running_time);
   tcase_add_test (tc_chain, flow_aggregation);
   tcase_add_test (tc_chain, issue_concatenation);
+  tcase_add_test (tc_chain, check_media_info);
 
   return s;
 }
