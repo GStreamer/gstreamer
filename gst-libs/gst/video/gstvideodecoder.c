@@ -3261,6 +3261,10 @@ gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
   return TRUE;
 
 config_failed:
+  if (allocator)
+    gst_object_unref (allocator);
+  if (pool)
+    gst_object_unref (pool);
   GST_ELEMENT_ERROR (decoder, RESOURCE, SETTINGS,
       ("Failed to configure the buffer pool"),
       ("Configuration is most likely invalid, please report this issue."));
