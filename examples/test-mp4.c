@@ -21,6 +21,61 @@
 
 #include <gst/rtsp-server/rtsp-server.h>
 
+/* called when a stream has received an RTCP packet from the client */
+static void
+on_ssrc_active (GObject * session, GObject * source, GstRTSPMedia * media)
+{
+  GstStructure *stats;
+
+  GST_INFO ("source %p in session %p is active", source, session);
+
+  g_object_get (source, "stats", &stats, NULL);
+  if (stats) {
+    gchar *sstr;
+
+    sstr = gst_structure_to_string (stats);
+    g_print ("structure: %s\n", sstr);
+    g_free (sstr);
+
+    gst_structure_free (stats);
+  }
+}
+
+/* signal callback when the media is prepared for streaming. We can get the
+ * session manager for each of the streams and connect to some signals. */
+static void
+media_prepared_cb (GstRTSPMedia * media)
+{
+  guint i, n_streams;
+
+  n_streams = gst_rtsp_media_n_streams (media);
+
+  GST_INFO ("media %p is prepared and has %u streams", media, n_streams);
+
+  for (i = 0; i < n_streams; i++) {
+    GstRTSPStream *stream;
+    GObject *session;
+
+    stream = gst_rtsp_media_get_stream (media, i);
+    if (stream == NULL)
+      continue;
+
+    session = gst_rtsp_stream_get_rtpsession (stream);
+    GST_INFO ("watching session %p on stream %u", session, i);
+
+    g_signal_connect (session, "on-ssrc-active",
+        (GCallback) on_ssrc_active, media);
+  }
+}
+
+static void
+media_configure_cb (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
+{
+  /* connect our prepared signal so that we can see when this media is
+   * prepared for streaming */
+  g_signal_connect (media, "prepared", (GCallback) media_prepared_cb, factory);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -57,6 +112,8 @@ main (int argc, char *argv[])
    * element with pay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_launch (factory, str);
+  g_signal_connect (factory, "media-configure", (GCallback) media_configure_cb,
+      factory);
   g_free (str);
 
   /* attach the test factory to the /test url */
