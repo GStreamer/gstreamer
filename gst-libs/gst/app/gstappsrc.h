@@ -110,7 +110,7 @@ struct _GstAppSrcClass
   GstFlowReturn (*push_sample)     (GstAppSrc *appsrc, GstSample *sample);
 
   /*< private >*/
-  gpointer     _gst_reserved[GST_PADDING];
+  gpointer     _gst_reserved[GST_PADDING-1];
 };
 
 GType gst_app_src_get_type(void);
