@@ -55,6 +55,49 @@ _validate_element_pad_added (GstElement * element, GstPad * pad,
     GstValidateElementMonitor * monitor);
 
 static void
+gst_validate_element_set_media_descriptor (GstValidateMonitor * monitor,
+    GstMediaDescriptor * media_descriptor)
+{
+  gboolean done;
+  GstPad *pad;
+  GstValidateMonitor *pmonitor;
+  GstIterator *iterator;
+
+  iterator =
+      gst_element_iterate_pads (GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT
+          (monitor)));
+  done = FALSE;
+  while (!done) {
+    GValue value = { 0, };
+
+    switch (gst_iterator_next (iterator, &value)) {
+      case GST_ITERATOR_OK:
+
+        pad = g_value_get_object (&value);
+
+        pmonitor = g_object_get_data ((GObject *) pad, "validate-monitor");
+        if (pmonitor)
+          gst_validate_monitor_set_media_descriptor (pmonitor,
+              media_descriptor);
+        g_value_reset (&value);
+        break;
+      case GST_ITERATOR_RESYNC:
+        /* TODO how to handle this? */
+        gst_iterator_resync (iterator);
+        break;
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iterator);
+}
+
+
+static void
 gst_validate_element_monitor_dispose (GObject * object)
 {
   GstValidateElementMonitor *monitor =
@@ -83,6 +126,8 @@ gst_validate_element_monitor_class_init (GstValidateElementMonitorClass * klass)
 
   monitor_klass->setup = gst_validate_element_monitor_do_setup;
   monitor_klass->get_element = gst_validate_element_monitor_get_element;
+  monitor_klass->set_media_descriptor =
+      gst_validate_element_set_media_descriptor;
 }
 
 static void

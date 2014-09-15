@@ -33,6 +33,7 @@
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-scenario.h>
 #include <gst/validate/gst-validate-utils.h>
+#include <gst/validate/media-descriptor-parser.h>
 
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
@@ -365,7 +366,7 @@ int
 main (int argc, gchar ** argv)
 {
   GError *err = NULL;
-  const gchar *scenario = NULL, *configs = NULL;
+  const gchar *scenario = NULL, *configs = NULL, *media_info = NULL;
   gboolean list_scenarios = FALSE, monitor_handles_state,
       inspect_action_type = FALSE;
   GstStateChangeReturn sret;
@@ -393,10 +394,14 @@ main (int argc, gchar ** argv)
           " if no parameter passed, it will list all avalaible action types"
           " otherwize will print the full description of the wanted types",
         NULL},
+    {"set-media-info", '\0', 0, G_OPTION_ARG_STRING, &media_info,
+          "Set a media_info XML file descriptor to share information about the"
+          " media file that will be reproduced.",
+        NULL},
     {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
           "Let you set a config scenario, the scenario needs to be set as 'config"
           "' you can specify a list of scenario separated by ':'"
-          " it will override the GST_VALIDATE_SCENARIO environment variable,",
+          " it will override the GST_VALIDATE_SCENARIO environment variable.",
         NULL},
     {NULL}
   };
@@ -504,6 +509,23 @@ main (int argc, gchar ** argv)
   monitor = gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline),
       runner, NULL);
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
+
+  if (media_info) {
+    GError *err = NULL;
+    GstMediaDescriptorParser *parser = gst_media_descriptor_parser_new (runner,
+        media_info, &err);
+
+    if (parser == NULL) {
+      GST_ERROR ("Could not use %s as a media-info file (error: %s)",
+          media_info, err ? err->message : "Unknown error");
+
+      exit (1);
+    }
+
+    gst_validate_monitor_set_media_descriptor (monitor,
+        GST_MEDIA_DESCRIPTOR (parser));
+    gst_object_unref (parser);
+  }
 
   mainloop = g_main_loop_new (NULL, FALSE);
   bus = gst_element_get_bus (pipeline);

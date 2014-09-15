@@ -99,6 +99,9 @@ gst_validate_monitor_dispose (GObject * object)
     g_object_weak_unref (G_OBJECT (monitor->target),
         (GWeakNotify) _target_freed_cb, monitor);
 
+  if (monitor->media_descriptor)
+    gst_object_unref (monitor->media_descriptor);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -151,6 +154,13 @@ gst_validate_monitor_constructor (GType type, guint n_construct_params,
       (type,
           n_construct_params,
           construct_params));
+
+  if (monitor->parent) {
+    gst_validate_monitor_set_media_descriptor (monitor,
+        monitor->parent->media_descriptor);
+  }
+
+
   gst_validate_monitor_setup (monitor);
   return (GObject *) monitor;
 }
@@ -359,4 +369,23 @@ gst_validate_monitor_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+void
+gst_validate_monitor_set_media_descriptor (GstValidateMonitor * monitor,
+    GstMediaDescriptor * media_descriptor)
+{
+  GstValidateMonitorClass *klass = GST_VALIDATE_MONITOR_GET_CLASS (monitor);
+
+  GST_DEBUG_OBJECT (monitor->target, "Set media desc: %" GST_PTR_FORMAT,
+      media_descriptor);
+  if (monitor->media_descriptor)
+    gst_object_unref (monitor->media_descriptor);
+
+  if (media_descriptor)
+    gst_object_ref (media_descriptor);
+
+  monitor->media_descriptor = media_descriptor;
+  if (klass->set_media_descriptor)
+    klass->set_media_descriptor (monitor, media_descriptor);
 }

@@ -32,6 +32,7 @@ typedef struct _GstValidateMonitorClass GstValidateMonitorClass;
 #include <gst/validate/gst-validate-reporter.h>
 #include <gst/validate/gst-validate-runner.h>
 #include <gst/validate/gst-validate-override.h>
+#include <gst/validate/media-descriptor-parser.h>
 
 G_BEGIN_DECLS
 
@@ -90,6 +91,7 @@ struct _GstValidateMonitor {
 
   GMutex        overrides_mutex;
   GQueue        overrides;
+  GstMediaDescriptor *media_descriptor;
 
   GstValidateReportingLevel level;
 
@@ -108,6 +110,8 @@ struct _GstValidateMonitorClass {
 
   gboolean (* setup) (GstValidateMonitor * monitor);
   GstElement *(* get_element) (GstValidateMonitor * monitor);
+  void (*set_media_descriptor) (GstValidateMonitor * monitor,
+          GstMediaDescriptor * media_descriptor);
 };
 
 /* normal GObject stuff */
@@ -118,7 +122,8 @@ void            gst_validate_monitor_attach_override  (GstValidateMonitor * moni
 
 GstElement *    gst_validate_monitor_get_element (GstValidateMonitor * monitor);
 const gchar *   gst_validate_monitor_get_element_name (GstValidateMonitor * monitor);
-
+void gst_validate_monitor_set_media_descriptor (GstValidateMonitor * monitor,
+                                                GstMediaDescriptor *media_descriptor);
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_MONITOR_H__ */

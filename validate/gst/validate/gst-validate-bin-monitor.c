@@ -65,6 +65,22 @@ _validate_bin_element_added (GstBin * bin, GstElement * pad,
     GstValidateBinMonitor * monitor);
 
 static void
+gst_validate_bin_set_media_descriptor (GstValidateMonitor * monitor,
+    GstMediaDescriptor * media_descriptor)
+{
+  GList *tmp;
+
+  GST_VALIDATE_MONITOR_LOCK (monitor);
+  for (tmp = GST_VALIDATE_BIN_MONITOR_CAST (monitor)->element_monitors; tmp;
+      tmp = tmp->next)
+    gst_validate_monitor_set_media_descriptor (tmp->data, media_descriptor);
+  GST_VALIDATE_MONITOR_UNLOCK (monitor);
+
+  GST_VALIDATE_MONITOR_CLASS (parent_class)->set_media_descriptor (monitor,
+      media_descriptor);
+}
+
+static void
 gst_validate_bin_monitor_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -143,6 +159,8 @@ gst_validate_bin_monitor_class_init (GstValidateBinMonitorClass * klass)
           FALSE, G_PARAM_READABLE));
 
   validatemonitor_class->setup = gst_validate_bin_monitor_setup;
+  validatemonitor_class->set_media_descriptor =
+      gst_validate_bin_set_media_descriptor;
 }
 
 static void
