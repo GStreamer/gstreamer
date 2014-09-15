@@ -185,7 +185,7 @@ gst_caps_setter_transform_caps (GstBaseTransform * trans,
   GstCaps *ret = NULL, *filter_caps = NULL;
   GstStructure *structure, *merge;
   const gchar *name;
-  gint i, j;
+  gint i, j, k;
 
   GST_DEBUG_OBJECT (trans,
       "receiving caps: %" GST_PTR_FORMAT ", with filter: %" GST_PTR_FORMAT,
@@ -202,33 +202,31 @@ gst_caps_setter_transform_caps (GstBaseTransform * trans,
 
   ret = gst_caps_copy (caps);
 
-  /* this function is always called with a simple caps */
-  if (!GST_CAPS_IS_SIMPLE (ret))
-    return ret;
-
-  structure = gst_caps_get_structure (ret, 0);
-  name = gst_structure_get_name (structure);
-
   GST_OBJECT_LOCK (filter);
   filter_caps = gst_caps_ref (filter->caps);
   GST_OBJECT_UNLOCK (filter);
 
-  for (i = 0; i < gst_caps_get_size (filter_caps); ++i) {
-    merge = gst_caps_get_structure (filter_caps, i);
-    if (gst_structure_has_name (merge, name) || !filter->join) {
+  for (k = 0; k < gst_caps_get_size (ret); k++) {
+    structure = gst_caps_get_structure (ret, k);
+    name = gst_structure_get_name (structure);
 
-      if (!filter->join)
-        gst_structure_set_name (structure, gst_structure_get_name (merge));
+    for (i = 0; i < gst_caps_get_size (filter_caps); ++i) {
+      merge = gst_caps_get_structure (filter_caps, i);
+      if (gst_structure_has_name (merge, name) || !filter->join) {
 
-      if (filter->replace)
-        gst_structure_remove_all_fields (structure);
+        if (!filter->join)
+          gst_structure_set_name (structure, gst_structure_get_name (merge));
 
-      for (j = 0; j < gst_structure_n_fields (merge); ++j) {
-        const gchar *fname;
+        if (filter->replace)
+          gst_structure_remove_all_fields (structure);
 
-        fname = gst_structure_nth_field_name (merge, j);
-        gst_structure_set_value (structure, fname,
-            gst_structure_get_value (merge, fname));
+        for (j = 0; j < gst_structure_n_fields (merge); ++j) {
+          const gchar *fname;
+
+          fname = gst_structure_nth_field_name (merge, j);
+          gst_structure_set_value (structure, fname,
+              gst_structure_get_value (merge, fname));
+        }
       }
     }
   }
