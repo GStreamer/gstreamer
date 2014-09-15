@@ -69,6 +69,7 @@ libgstvaapi_source_c =				\
 	gstvaapiprofile.c			\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
+	gstvaapisurface_drm.c			\
 	gstvaapisurfacepool.c			\
 	gstvaapisurfaceproxy.c			\
 	gstvaapitexture.c			\
@@ -98,6 +99,7 @@ libgstvaapi_source_h =				\
 	gstvaapiprofile.h			\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
+	gstvaapisurface_drm.h			\
 	gstvaapisurfacepool.h			\
 	gstvaapisurfaceproxy.h			\
 	gstvaapitexture.h			\

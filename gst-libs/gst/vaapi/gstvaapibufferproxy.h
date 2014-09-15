@@ -57,6 +57,16 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiBufferProxy             GstVaapiBufferProxy;
 
+/**
+ * GstVaapiBufferMemoryType:
+ * @GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF: DRM PRIME buffer memory type.
+ *
+ * Set of underlying VA buffer memory types.
+ */
+typedef enum {
+  GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF = 1,
+} GstVaapiBufferMemoryType;
+
 GstVaapiBufferProxy *
 gst_vaapi_buffer_proxy_new (guintptr handle, guint type, gsize size,
     GDestroyNotify destroy_func, gpointer user_data);
