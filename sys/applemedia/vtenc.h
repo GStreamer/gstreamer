@@ -48,17 +48,14 @@ struct _GstVTEncoderDetails
 
 struct _GstVTEncClass
 {
-  GstElementClass parent_class;
+  GstVideoEncoderClass parent_class;
 };
 
 struct _GstVTEnc
 {
-  GstElement parent;
+  GstVideoEncoder parent;
 
   const GstVTEncoderDetails * details;
-
-  GstPad * sinkpad;
-  GstPad * srcpad;
 
   guint bitrate;
 
@@ -69,12 +66,12 @@ struct _GstVTEnc
   gint negotiated_fps_n, negotiated_fps_d;
   gint caps_width, caps_height;
   gint caps_fps_n, caps_fps_d;
+  GstVideoCodecState *input_state;
   GstVideoInfo video_info;
   VTCompressionSessionRef session;
   CFMutableDictionaryRef options;
 
-  GstBuffer * cur_inbuf;
-  GPtrArray * cur_outbufs;
+  GPtrArray * cur_outframes;
   gboolean expect_keyframe;
 };
 
