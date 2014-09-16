@@ -236,7 +236,6 @@ static gboolean
 gst_webp_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstWebPDec *webpdec = (GstWebPDec *) decoder;
-  GstVideoInfo *info = &state->info;
 
   if (webpdec->input_state)
     gst_video_codec_state_unref (webpdec->input_state);
