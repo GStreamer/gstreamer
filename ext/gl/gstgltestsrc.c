@@ -608,22 +608,6 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   guint out_width, out_height;
   GstGLContext *other_context = NULL;
 
-  gst_query_parse_allocation (query, &caps, NULL);
-
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-
-    update_pool = TRUE;
-  } else {
-    GstVideoInfo vinfo;
-
-    gst_video_info_init (&vinfo);
-    gst_video_info_from_caps (&vinfo, caps);
-    size = vinfo.size;
-    min = max = 0;
-    update_pool = FALSE;
-  }
-
   if (!gst_gl_ensure_display (src, &src->display))
     return FALSE;
 
@@ -677,6 +661,22 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   if (!gst_gl_context_gen_fbo (src->context, out_width, out_height,
           &src->fbo, &src->depthbuffer))
     goto context_error;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    update_pool = TRUE;
+  } else {
+    GstVideoInfo vinfo;
+
+    gst_video_info_init (&vinfo);
+    gst_video_info_from_caps (&vinfo, caps);
+    size = vinfo.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
 
   if (!pool)
     pool = gst_gl_buffer_pool_new (src->context);
