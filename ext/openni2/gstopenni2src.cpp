@@ -511,6 +511,8 @@ gst_openni2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
+  gst_object_unref (pool);
+
   return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
 }
 
