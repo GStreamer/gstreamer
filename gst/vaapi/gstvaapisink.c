@@ -41,6 +41,7 @@
 #if GST_CHECK_VERSION(1,0,0)
 # include <gst/video/videooverlay.h>
 # include <gst/video/colorbalance.h>
+# include <gst/video/navigation.h>
 #else
 # include <gst/interfaces/xoverlay.h>
 # include <gst/interfaces/colorbalance.h>
@@ -107,6 +108,9 @@ gst_vaapisink_video_overlay_iface_init (GstVideoOverlayInterface * iface);
 static void
 gst_vaapisink_color_balance_iface_init (GstColorBalanceInterface * iface);
 
+static void
+gst_vaapisink_navigation_iface_init (GstNavigationInterface *iface);
+
 G_DEFINE_TYPE_WITH_CODE (GstVaapiSink,
     gst_vaapisink,
     GST_TYPE_VIDEO_SINK,
@@ -114,7 +118,9 @@ G_DEFINE_TYPE_WITH_CODE (GstVaapiSink,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
         gst_vaapisink_video_overlay_iface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
-        gst_vaapisink_color_balance_iface_init));
+        gst_vaapisink_color_balance_iface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
+        gst_vaapisink_navigation_iface_init));
 
 enum
 {
@@ -321,6 +327,8 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
 {
   GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (sink);
   gboolean has_events, do_expose = FALSE;
+  guint pointer_x = 0, pointer_y = 0;
+  gboolean pointer_moved = FALSE;
   XEvent e;
 
   if (sink->window) {
@@ -328,6 +336,72 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
         gst_vaapi_display_x11_get_display (GST_VAAPI_DISPLAY_X11 (display));
     Window x11_win =
         gst_vaapi_window_x11_get_xid (GST_VAAPI_WINDOW_X11 (sink->window));
+
+    /* Track MousePointer interaction */
+    for (;;) {
+      gst_vaapi_display_lock (display);
+      has_events = XCheckWindowEvent (x11_dpy, x11_win,
+          PointerMotionMask, &e);
+      gst_vaapi_display_unlock (display);
+      if (!has_events)
+        break;
+
+      switch (e.type) {
+        case MotionNotify:
+          pointer_x = e.xmotion.x;
+          pointer_y = e.xmotion.y;
+          pointer_moved = TRUE;
+          break;
+        default:
+          break;
+      }
+    }
+    if (pointer_moved) {
+      gst_vaapi_display_lock (display);
+      gst_navigation_send_mouse_event (GST_NAVIGATION (sink),
+        "mouse-move", 0, e.xbutton.x, e.xbutton.y);
+      gst_vaapi_display_unlock (display);
+    }
+
+    /* Track KeyPress, KeyRelease, ButtonPress, ButtonRelease */
+    for (;;) {
+      KeySym keysym;
+      const char *key_str = NULL;
+      gst_vaapi_display_lock (display);
+      has_events = XCheckWindowEvent (x11_dpy, x11_win,
+          KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask
+          , &e);
+      gst_vaapi_display_unlock (display);
+      if (!has_events)
+        break;
+
+      switch (e.type) {
+        case ButtonPress:
+          gst_navigation_send_mouse_event (GST_NAVIGATION (sink),
+            "mouse-button-press", e.xbutton.button, e.xbutton.x, e.xbutton.y);
+          break;
+        case ButtonRelease:
+          gst_navigation_send_mouse_event (GST_NAVIGATION (sink),
+            "mouse-button-release", e.xbutton.button, e.xbutton.x, e.xbutton.y);
+          break;
+        case KeyPress:
+        case KeyRelease:
+          gst_vaapi_display_lock (display);
+          keysym = XkbKeycodeToKeysym (x11_dpy, x11_win,
+            e.xkey.keycode, 0, 0);
+          if (keysym != NoSymbol) {
+            key_str = XKeysymToString (keysym);
+          } else {
+            key_str = "unknown";
+          }
+          gst_vaapi_display_unlock (display);
+          gst_navigation_send_key_event (GST_NAVIGATION (sink),
+            e.type == KeyPress ? "key-press" : "key-release", key_str);
+          break;
+        default:
+          break;
+      }
+    }
 
     /* Handle Expose + ConfigureNotify */
     /* Need to lock whole loop or we corrupt the XEvent queue: */
@@ -353,7 +427,6 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
     }
     if (do_expose)
       gst_vaapisink_video_overlay_expose (GST_VIDEO_OVERLAY (sink));
-    /* FIXME: handle mouse and key events */
   }
   return TRUE;
 }
@@ -363,11 +436,19 @@ gst_vaapisink_x11_pre_start_event_thread (GstVaapiSink * sink)
 {
   GstVaapiDisplayX11 *const display =
       GST_VAAPI_DISPLAY_X11 (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
+  static const int x11_event_mask =
+    (KeyPressMask         |
+     KeyReleaseMask       |
+     ButtonPressMask      |
+     ButtonReleaseMask    |
+     PointerMotionMask    |
+     ExposureMask         |
+     StructureNotifyMask);
 
   if (sink->window) {
     XSelectInput (gst_vaapi_display_x11_get_display (display),
         gst_vaapi_window_x11_get_xid (GST_VAAPI_WINDOW_X11 (sink->window)),
-        StructureNotifyMask | ExposureMask);
+        x11_event_mask);
   }
   return TRUE;
 }
@@ -741,6 +822,58 @@ gst_vaapisink_color_balance_iface_init (GstColorBalanceInterface * iface)
 #else
   iface->balance_type = gst_vaapisink_color_balance_get_type (NULL);
 #endif
+}
+
+/* ------------------------------------------------------------------------ */
+/* --- GstNavigation interface                                          --- */
+/* ------------------------------------------------------------------------ */
+
+static void
+gst_vaapisink_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstVaapiSink *const sink = GST_VAAPISINK (navigation);
+  GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (sink);
+  GstPad *peer;
+
+  if ((peer = gst_pad_get_peer (GST_VAAPI_PLUGIN_BASE_SINK_PAD (sink)))) {
+    GstEvent *event;
+    GstVaapiRectangle *disp_rect = &sink->display_rect;
+    gdouble x, y, xscale = 1.0, yscale = 1.0;
+
+    event = gst_event_new_navigation (structure);
+
+    if (!sink->window)
+      return;
+
+    /* We calculate scaling using the original video frames geometry to include
+       pixel aspect ratio scaling. */
+    xscale = (gdouble) sink->video_width / disp_rect->width;
+    yscale = (gdouble) sink->video_height / disp_rect->height;
+
+    /* Converting pointer coordinates to the non scaled geometry */
+    if (gst_structure_get_double (structure, "pointer_x", &x)) {
+      x = MIN (x, disp_rect->x + disp_rect->width);
+      x = MAX (x - disp_rect->x, 0);
+      gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+          (gdouble) x * xscale, NULL);
+    }
+   if (gst_structure_get_double (structure, "pointer_y", &y)) {
+      y = MIN (y, disp_rect->y + disp_rect->height);
+      y = MAX (y - disp_rect->y, 0);
+      gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+          (gdouble) y * yscale, NULL);
+    }
+
+    gst_pad_send_event (peer, event);
+    gst_object_unref (peer);
+  }
+}
+
+static void
+gst_vaapisink_navigation_iface_init (GstNavigationInterface * iface)
+{
+  iface->send_event = gst_vaapisink_navigation_send_event;
 }
 
 /* ------------------------------------------------------------------------ */
