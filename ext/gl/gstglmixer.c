@@ -600,22 +600,6 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   GstGLContext *other_context = NULL;
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
 
-  gst_query_parse_allocation (query, &caps, NULL);
-
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-
-    update_pool = TRUE;
-  } else {
-    GstVideoInfo vinfo;
-
-    gst_video_info_init (&vinfo);
-    gst_video_info_from_caps (&vinfo, caps);
-    size = vinfo.size;
-    min = max = 0;
-    update_pool = FALSE;
-  }
-
   if (!gst_gl_ensure_display (mix, &mix->display))
     return FALSE;
 
@@ -686,12 +670,28 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   gst_gl_context_gen_texture (mix->context, &mix->out_tex_id,
       GST_VIDEO_FORMAT_RGBA, out_width, out_height);
 
+  gst_query_parse_allocation (query, &caps, NULL);
+
   if (mixer_class->set_caps)
     mixer_class->set_caps (mix, caps);
 
   mix->priv->gl_resource_ready = TRUE;
   g_cond_signal (&mix->priv->gl_resource_cond);
   g_mutex_unlock (&mix->priv->gl_resource_lock);
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    update_pool = TRUE;
+  } else {
+    GstVideoInfo vinfo;
+
+    gst_video_info_init (&vinfo);
+    gst_video_info_from_caps (&vinfo, caps);
+    size = vinfo.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
 
   if (!pool)
     pool = gst_gl_buffer_pool_new (mix->context);
