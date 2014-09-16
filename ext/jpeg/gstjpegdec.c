@@ -593,9 +593,8 @@ static gboolean
 gst_jpeg_dec_set_format (GstVideoDecoder * dec, GstVideoCodecState * state)
 {
   GstJpegDec *jpeg = GST_JPEG_DEC (dec);
-  GstVideoInfo *info = &state->info;
 
-  if (decoder->input_segment.format == GST_FORMAT_TIME)
+  if (dec->input_segment.format == GST_FORMAT_TIME)
     gst_video_decoder_set_packetized (dec, TRUE);
   else
     gst_video_decoder_set_packetized (dec, FALSE);
