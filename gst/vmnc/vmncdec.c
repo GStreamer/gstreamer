@@ -848,9 +848,10 @@ gst_vmnc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   /* We require a format descriptor in-stream, so we ignore the info from the
    * container here. We just use the framerate */
 
-  /* Declare it packetized if a valid framerate was parsed, not ideal */
-  gst_video_decoder_set_packetized (decoder,
-      state->info.fps_n && state->info.fps_d);
+  if (decoder->input_segment.format == GST_FORMAT_TIME)
+    gst_video_decoder_set_packetized (decoder, TRUE);
+  else
+    gst_video_decoder_set_packetized (decoder, FALSE);
 
   if (dec->input_state)
     gst_video_codec_state_unref (dec->input_state);
