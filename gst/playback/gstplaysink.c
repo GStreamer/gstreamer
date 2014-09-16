@@ -99,6 +99,7 @@ typedef struct
   GstPlayChain chain;
   GstPad *sinkpad;
   GstElement *queue;
+  GstElement *filter_conv;
   GstElement *filter;
   GstElement *conv;
   GstElement *volume;           /* element with the volume property */
@@ -123,6 +124,7 @@ typedef struct
   GstPlayChain chain;
   GstPad *sinkpad;
   GstElement *queue;
+  GstElement *filter_conv;
   GstElement *filter;
   GstElement *conv;
   GstElement *sink;
@@ -1824,8 +1826,29 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
       }
     } else {
       GST_DEBUG_OBJECT (playsink, "adding video filter");
+      chain->filter_conv =
+          gst_element_factory_make ("videoconvert", "filter-convert");
+      if (!chain->filter_conv) {
+        post_missing_element_message (playsink, "videoconvert");
+        GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+            (_("Missing element '%s' - check your GStreamer installation."),
+                "videoconvert"),
+            ("video playback and visualizations might not work"));
+      } else {
+        gst_bin_add (bin, chain->filter_conv);
+        head = prev = chain->filter_conv;
+      }
+
       gst_bin_add (bin, chain->filter);
-      head = prev = chain->filter;
+      if (prev) {
+        if (!gst_element_link_pads_full (prev, "src", chain->filter, "sink",
+                GST_PAD_LINK_CHECK_TEMPLATE_CAPS)) {
+          goto link_failed;
+        }
+      } else {
+        head = chain->filter;
+      }
+      prev = chain->filter;
     }
   }
 
@@ -2674,12 +2697,33 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
         goto filter_with_nonraw;
       } else {
         GST_DEBUG_OBJECT (playsink,
-            "skipping video filter since we're not raw");
+            "skipping audio filter since we're not raw");
       }
     } else {
-      GST_DEBUG_OBJECT (playsink, "adding video filter");
+      GST_DEBUG_OBJECT (playsink, "adding audio filter");
+      chain->filter_conv =
+          gst_element_factory_make ("audioconvert", "filter-convert");
+      if (!chain->filter_conv) {
+        post_missing_element_message (playsink, "audioconvert");
+        GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+            (_("Missing element '%s' - check your GStreamer installation."),
+                "audioconvert"),
+            ("audio playback and visualizations might not work"));
+      } else {
+        gst_bin_add (bin, chain->filter_conv);
+        head = prev = chain->filter_conv;
+      }
+
       gst_bin_add (bin, chain->filter);
-      head = prev = chain->filter;
+      if (prev) {
+        if (!gst_element_link_pads_full (prev, "src", chain->filter, "sink",
+                GST_PAD_LINK_CHECK_TEMPLATE_CAPS)) {
+          goto link_failed;
+        }
+      } else {
+        head = chain->filter;
+      }
+      prev = chain->filter;
     }
   }
 
