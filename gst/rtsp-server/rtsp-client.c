@@ -961,6 +961,7 @@ bad_request:
 static gboolean
 handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPSession *session;
   GstRTSPClientClass *klass;
   GstRTSPSessionMedia *sessmedia;
@@ -996,6 +997,11 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
       rtspstate != GST_RTSP_STATE_RECORDING)
     goto invalid_state;
 
+  /* No limit on watch queue because else we might be blocking in the appsink
+   * render method and the PAUSE below will hang */
+  if (priv->watch != NULL)
+    gst_rtsp_watch_set_send_backlog (priv->watch, 0, 0);
+
   /* then pause sending */
   gst_rtsp_session_media_set_state (sessmedia, GST_STATE_PAUSED);
 
@@ -1005,6 +1011,9 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
       gst_rtsp_status_as_text (code), ctx->request);
 
   send_message (client, ctx, ctx->response, FALSE);
+
+  if (priv->watch != NULL)
+    gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
 
   /* the state is now READY */
   gst_rtsp_session_media_set_rtsp_state (sessmedia, GST_RTSP_STATE_READY);
