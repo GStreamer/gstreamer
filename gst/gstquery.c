@@ -1584,7 +1584,7 @@ allocation_pool_free (AllocationPool * ap)
 /**
  * gst_query_add_allocation_pool:
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
- * @pool: the #GstBufferPool
+ * @pool: (transfer none) (allow-none): the #GstBufferPool
  * @size: the size
  * @min_buffers: the min buffers
  * @max_buffers: the max buffers
