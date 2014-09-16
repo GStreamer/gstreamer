@@ -72,8 +72,6 @@ static void gst_vtenc_destroy_session (GstVTEnc * self,
     VTCompressionSessionRef * session);
 static void gst_vtenc_session_dump_properties (GstVTEnc * self,
     VTCompressionSessionRef session);
-static void gst_vtenc_session_configure_usage (GstVTEnc * self,
-    VTCompressionSessionRef session, gint usage);
 static void gst_vtenc_session_configure_expected_framerate (GstVTEnc * self,
     VTCompressionSessionRef session, gdouble framerate);
 static void gst_vtenc_session_configure_expected_duration (GstVTEnc * self,
@@ -84,14 +82,16 @@ static void gst_vtenc_session_configure_max_keyframe_interval_duration
     (GstVTEnc * self, VTCompressionSessionRef session, gdouble duration);
 static void gst_vtenc_session_configure_bitrate (GstVTEnc * self,
     VTCompressionSessionRef session, guint bitrate);
-static VTStatus gst_vtenc_session_configure_property_int (GstVTEnc * self,
+static OSStatus gst_vtenc_session_configure_property_int (GstVTEnc * self,
     VTCompressionSessionRef session, CFStringRef name, gint value);
-static VTStatus gst_vtenc_session_configure_property_double (GstVTEnc * self,
+static OSStatus gst_vtenc_session_configure_property_double (GstVTEnc * self,
     VTCompressionSessionRef session, CFStringRef name, gdouble value);
 
 static GstFlowReturn gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf);
-static VTStatus gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
-    CMSampleBufferRef sbuf, int a6, int a7);
+static void gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
+    void *sourceFrameRefCon,
+    OSStatus status,
+    VTEncodeInfoFlags infoFlags, CMSampleBufferRef sampleBuffer);
 static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
     CMSampleBufferRef sbuf);
 
@@ -139,7 +139,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
       "height", GST_TYPE_INT_RANGE, min_height, max_height,
       "framerate", GST_TYPE_FRACTION_RANGE,
       min_fps_n, min_fps_d, max_fps_n, max_fps_d, NULL);
-  if (codec_details->format_id == kVTFormatH264) {
+  if (codec_details->format_id == kCMVideoCodecType_H264) {
     gst_structure_set (gst_caps_get_structure (src_caps, 0),
         "stream-format", G_TYPE_STRING, "avc", NULL);
   }
@@ -164,11 +164,6 @@ gst_vtenc_class_init (GstVTEncClass * klass)
 
   gstelement_class->change_state = gst_vtenc_change_state;
 
-  g_object_class_install_property (gobject_class, PROP_USAGE,
-      g_param_spec_int ("usage", "Usage",
-          "Usage enumeration value",
-          G_MININT, G_MAXINT, VTENC_DEFAULT_USAGE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
           "Target video bitrate in kbps",
@@ -203,31 +198,6 @@ gst_vtenc_init (GstVTEnc * self)
   self->session = NULL;
 }
 
-static gint
-gst_vtenc_get_usage (GstVTEnc * self)
-{
-  gint result;
-
-  GST_OBJECT_LOCK (self);
-  result = self->usage;
-  GST_OBJECT_UNLOCK (self);
-
-  return result;
-}
-
-static void
-gst_vtenc_set_usage (GstVTEnc * self, gint usage)
-{
-  GST_OBJECT_LOCK (self);
-
-  self->usage = usage;
-
-  if (self->session != NULL)
-    gst_vtenc_session_configure_usage (self, self->session, usage);
-
-  GST_OBJECT_UNLOCK (self);
-}
-
 static guint
 gst_vtenc_get_bitrate (GstVTEnc * self)
 {
@@ -260,9 +230,6 @@ gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
   GstVTEnc *self = GST_VTENC_CAST (obj);
 
   switch (prop_id) {
-    case PROP_USAGE:
-      g_value_set_int (value, gst_vtenc_get_usage (self));
-      break;
     case PROP_BITRATE:
       g_value_set_uint (value, gst_vtenc_get_bitrate (self) * 8 / 1000);
       break;
@@ -279,9 +246,6 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
   GstVTEnc *self = GST_VTENC_CAST (obj);
 
   switch (prop_id) {
-    case PROP_USAGE:
-      gst_vtenc_set_usage (self, g_value_get_int (value));
-      break;
     case PROP_BITRATE:
       gst_vtenc_set_bitrate (self, g_value_get_uint (value) * 1000 / 8);
       break;
@@ -295,14 +259,9 @@ static GstStateChangeReturn
 gst_vtenc_change_state (GstElement * element, GstStateChange transition)
 {
   GstVTEnc *self = GST_VTENC_CAST (element);
-  GError *error = NULL;
   GstStateChangeReturn ret;
 
   if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
-    self->ctx = gst_core_media_ctx_new (GST_API_VIDEO_TOOLBOX, &error);
-    if (error != NULL)
-      goto api_error;
-
     self->cur_outbufs = g_ptr_array_new ();
   }
 
@@ -327,20 +286,9 @@ gst_vtenc_change_state (GstElement * element, GstStateChange transition)
 
     g_ptr_array_free (self->cur_outbufs, TRUE);
     self->cur_outbufs = NULL;
-
-    g_object_unref (self->ctx);
-    self->ctx = NULL;
   }
 
   return ret;
-
-api_error:
-  {
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, ("API error"),
-        ("%s", error->message));
-    g_clear_error (&error);
-    return GST_STATE_CHANGE_FAILURE;
-  }
 }
 
 static gboolean
@@ -434,7 +382,7 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
       "framerate", GST_TYPE_FRACTION,
       self->negotiated_fps_n, self->negotiated_fps_d, NULL);
 
-  if (self->details->format_id == kVTFormatH264) {
+  if (self->details->format_id == kCMVideoCodecType_H264) {
     CMFormatDescriptionRef fmt;
     CFDictionaryRef atoms;
     CFStringRef avccKey;
@@ -506,8 +454,7 @@ gst_vtenc_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (self->options != NULL) {
           GST_INFO_OBJECT (self, "received PLI, will force intra");
           CFDictionaryAddValue (self->options,
-              *(self->ctx->vt->kVTEncodeFrameOptionKey_ForceKeyFrame),
-              kCFBooleanTrue);
+              kVTEncodeFrameOptionKey_ForceKeyFrame, kCFBooleanTrue);
         } else {
           GST_INFO_OBJECT (self,
               "received PLI but encode not yet started, ignoring");
@@ -532,10 +479,8 @@ static VTCompressionSessionRef
 gst_vtenc_create_session (GstVTEnc * self)
 {
   VTCompressionSessionRef session = NULL;
-  GstVTApi *vt = self->ctx->vt;
   CFMutableDictionaryRef pb_attrs;
-  VTCompressionOutputCallback callback;
-  VTStatus status;
+  OSStatus status;
 
   pb_attrs = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
@@ -544,15 +489,13 @@ gst_vtenc_create_session (GstVTEnc * self)
   gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferHeightKey,
       self->negotiated_height);
 
-  callback.func = gst_vtenc_enqueue_buffer;
-  callback.data = self;
-
-  status = vt->VTCompressionSessionCreate (NULL,
+  status = VTCompressionSessionCreate (NULL,
       self->negotiated_width, self->negotiated_height,
-      self->details->format_id, 0, pb_attrs, 0, callback, &session);
+      self->details->format_id, NULL, pb_attrs, NULL, gst_vtenc_enqueue_buffer,
+      self, &session);
   GST_INFO_OBJECT (self, "VTCompressionSessionCreate for %d x %d => %d",
-      self->negotiated_width, self->negotiated_height, status);
-  if (status != kVTSuccess)
+      self->negotiated_width, self->negotiated_height, (int) status);
+  if (status != noErr)
     goto beach;
 
   if (self->dump_properties) {
@@ -561,24 +504,21 @@ gst_vtenc_create_session (GstVTEnc * self)
     self->dump_properties = FALSE;
   }
 
-  gst_vtenc_session_configure_usage (self, session, gst_vtenc_get_usage (self));
-
   gst_vtenc_session_configure_expected_framerate (self, session,
       (gdouble) self->negotiated_fps_n / (gdouble) self->negotiated_fps_d);
   gst_vtenc_session_configure_expected_duration (self, session,
       (gdouble) self->negotiated_fps_d / (gdouble) self->negotiated_fps_n);
 
-  status = vt->VTCompressionSessionSetProperty (session,
-      *(vt->kVTCompressionPropertyKey_ProfileLevel),
-      *(vt->kVTProfileLevel_H264_Baseline_3_0));
+  status = VTSessionSetProperty (session,
+      kVTCompressionPropertyKey_ProfileLevel,
+      kVTProfileLevel_H264_Baseline_3_0);
   GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_ProfileLevel => %d",
-      status);
+      (int) status);
 
-  status = vt->VTCompressionSessionSetProperty (session,
-      *(vt->kVTCompressionPropertyKey_AllowTemporalCompression),
-      kCFBooleanTrue);
+  status = VTSessionSetProperty (session,
+      kVTCompressionPropertyKey_AllowTemporalCompression, kCFBooleanTrue);
   GST_DEBUG_OBJECT (self,
-      "kVTCompressionPropertyKey_AllowTemporalCompression => %d", status);
+      "kVTCompressionPropertyKey_AllowTemporalCompression => %d", (int) status);
 
   gst_vtenc_session_configure_max_keyframe_interval (self, session, 0);
   gst_vtenc_session_configure_max_keyframe_interval_duration (self, session,
@@ -596,7 +536,7 @@ beach:
 static void
 gst_vtenc_destroy_session (GstVTEnc * self, VTCompressionSessionRef * session)
 {
-  self->ctx->vt->VTCompressionSessionInvalidate (*session);
+  VTCompressionSessionInvalidate (*session);
   if (*session != NULL) {
     CFRelease (*session);
     *session = NULL;
@@ -606,7 +546,6 @@ gst_vtenc_destroy_session (GstVTEnc * self, VTCompressionSessionRef * session)
 typedef struct
 {
   GstVTEnc *self;
-  GstVTApi *vt;
   VTCompressionSessionRef session;
 } GstVTDumpPropCtx;
 
@@ -616,7 +555,7 @@ gst_vtenc_session_dump_property (CFStringRef prop_name,
 {
   gchar *name_str;
   CFTypeRef prop_value;
-  VTStatus status;
+  OSStatus status;
 
   name_str = gst_vtutil_string_to_utf8 (prop_name);
   if (dpc->self->dump_attributes) {
@@ -627,9 +566,8 @@ gst_vtenc_session_dump_property (CFStringRef prop_name,
     g_free (attrs_str);
   }
 
-  status = dpc->vt->VTCompressionSessionCopyProperty (dpc->session, prop_name,
-      NULL, &prop_value);
-  if (status == kVTSuccess) {
+  status = VTSessionCopyProperty (dpc->session, prop_name, NULL, &prop_value);
+  if (status == noErr) {
     gchar *value_str;
 
     value_str = gst_vtutil_object_to_string (prop_value);
@@ -640,7 +578,7 @@ gst_vtenc_session_dump_property (CFStringRef prop_name,
       CFRelease (prop_value);
   } else {
     GST_DEBUG_OBJECT (dpc->self, "%s = <failed to query: %d>",
-        name_str, status);
+        name_str, (int) status);
   }
 
   g_free (name_str);
@@ -650,13 +588,12 @@ static void
 gst_vtenc_session_dump_properties (GstVTEnc * self,
     VTCompressionSessionRef session)
 {
-  GstVTDumpPropCtx dpc = { self, self->ctx->vt, session };
+  GstVTDumpPropCtx dpc = { self, session };
   CFDictionaryRef dict;
-  VTStatus status;
+  OSStatus status;
 
-  status = self->ctx->vt->VTCompressionSessionCopySupportedPropertyDictionary
-      (session, &dict);
-  if (status != kVTSuccess)
+  status = VTSessionCopySupportedPropertyDictionary (session, &dict);
+  if (status != noErr)
     goto error;
   CFDictionaryApplyFunction (dict,
       (CFDictionaryApplierFunction) gst_vtenc_session_dump_property, &dpc);
@@ -669,19 +606,11 @@ error:
 }
 
 static void
-gst_vtenc_session_configure_usage (GstVTEnc * self,
-    VTCompressionSessionRef session, gint usage)
-{
-  gst_vtenc_session_configure_property_int (self, session,
-      *(self->ctx->vt->kVTCompressionPropertyKey_Usage), usage);
-}
-
-static void
 gst_vtenc_session_configure_expected_framerate (GstVTEnc * self,
     VTCompressionSessionRef session, gdouble framerate)
 {
   gst_vtenc_session_configure_property_double (self, session,
-      *(self->ctx->vt->kVTCompressionPropertyKey_ExpectedFrameRate), framerate);
+      kVTCompressionPropertyKey_ExpectedFrameRate, framerate);
 }
 
 static void
@@ -689,7 +618,7 @@ gst_vtenc_session_configure_expected_duration (GstVTEnc * self,
     VTCompressionSessionRef session, gdouble duration)
 {
   gst_vtenc_session_configure_property_double (self, session,
-      *(self->ctx->vt->kVTCompressionPropertyKey_ExpectedDuration), duration);
+      kVTCompressionPropertyKey_ExpectedDuration, duration);
 }
 
 static void
@@ -697,8 +626,7 @@ gst_vtenc_session_configure_max_keyframe_interval (GstVTEnc * self,
     VTCompressionSessionRef session, gint interval)
 {
   gst_vtenc_session_configure_property_int (self, session,
-      *(self->ctx->vt->kVTCompressionPropertyKey_MaxKeyFrameInterval),
-      interval);
+      kVTCompressionPropertyKey_MaxKeyFrameInterval, interval);
 }
 
 static void
@@ -706,8 +634,7 @@ gst_vtenc_session_configure_max_keyframe_interval_duration (GstVTEnc * self,
     VTCompressionSessionRef session, gdouble duration)
 {
   gst_vtenc_session_configure_property_double (self, session,
-      *(self->ctx->vt->kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration),
-      duration);
+      kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration, duration);
 }
 
 static void
@@ -715,41 +642,41 @@ gst_vtenc_session_configure_bitrate (GstVTEnc * self,
     VTCompressionSessionRef session, guint bitrate)
 {
   gst_vtenc_session_configure_property_int (self, session,
-      *(self->ctx->vt->kVTCompressionPropertyKey_AverageDataRate), bitrate);
+      kVTCompressionPropertyKey_AverageBitRate, bitrate);
 }
 
-static VTStatus
+static OSStatus
 gst_vtenc_session_configure_property_int (GstVTEnc * self,
     VTCompressionSessionRef session, CFStringRef name, gint value)
 {
   CFNumberRef num;
-  VTStatus status;
+  OSStatus status;
   gchar name_str[128];
 
   num = CFNumberCreate (NULL, kCFNumberIntType, &value);
-  status = self->ctx->vt->VTCompressionSessionSetProperty (session, name, num);
+  status = VTSessionSetProperty (session, name, num);
   CFRelease (num);
 
   CFStringGetCString (name, name_str, sizeof (name_str), kCFStringEncodingUTF8);
-  GST_DEBUG_OBJECT (self, "%s(%d) => %d", name_str, value, status);
+  GST_DEBUG_OBJECT (self, "%s(%d) => %d", name_str, value, (int) status);
 
   return status;
 }
 
-static VTStatus
+static OSStatus
 gst_vtenc_session_configure_property_double (GstVTEnc * self,
     VTCompressionSessionRef session, CFStringRef name, gdouble value)
 {
   CFNumberRef num;
-  VTStatus status;
+  OSStatus status;
   gchar name_str[128];
 
   num = CFNumberCreate (NULL, kCFNumberDoubleType, &value);
-  status = self->ctx->vt->VTCompressionSessionSetProperty (session, name, num);
+  status = VTSessionSetProperty (session, name, num);
   CFRelease (num);
 
   CFStringGetCString (name, name_str, sizeof (name_str), kCFStringEncodingUTF8);
-  GST_DEBUG_OBJECT (self, "%s(%f) => %d", name_str, value, status);
+  GST_DEBUG_OBJECT (self, "%s(%f) => %d", name_str, value, (int) status);
 
   return status;
 }
@@ -757,11 +684,10 @@ gst_vtenc_session_configure_property_double (GstVTEnc * self,
 static GstFlowReturn
 gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
 {
-  GstVTApi *vt = self->ctx->vt;
   CMTime ts, duration;
   GstCoreMediaMeta *meta;
   CVPixelBufferRef pbuf = NULL;
-  VTStatus vt_status;
+  OSStatus vt_status;
   GstFlowReturn ret = GST_FLOW_OK;
   guint i;
 
@@ -835,20 +761,19 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   GST_OBJECT_LOCK (self);
 
   self->expect_keyframe = CFDictionaryContainsKey (self->options,
-      *(vt->kVTEncodeFrameOptionKey_ForceKeyFrame));
+      kVTEncodeFrameOptionKey_ForceKeyFrame);
   if (self->expect_keyframe)
     gst_vtenc_clear_cached_caps_downstream (self);
 
-  vt_status = self->ctx->vt->VTCompressionSessionEncodeFrame (self->session,
+  vt_status = VTCompressionSessionEncodeFrame (self->session,
       pbuf, ts, duration, self->options, NULL, NULL);
 
   if (vt_status != 0) {
     GST_WARNING_OBJECT (self, "VTCompressionSessionEncodeFrame returned %d",
-        vt_status);
+        (int) vt_status);
   }
 
-  self->ctx->vt->VTCompressionSessionCompleteFrames (self->session,
-      kCMTimeInvalid);
+  VTCompressionSessionCompleteFrames (self->session, kCMTimeInvalid);
 
   GST_OBJECT_UNLOCK (self);
 
@@ -886,30 +811,32 @@ cv_error:
   }
 }
 
-static VTStatus
-gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
-    CMSampleBufferRef sbuf, int a6, int a7)
+static void
+gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
+    void *sourceFrameRefCon,
+    OSStatus status,
+    VTEncodeInfoFlags infoFlags, CMSampleBufferRef sampleBuffer)
 {
-  GstVTEnc *self = data;
+  GstVTEnc *self = outputCallbackRefCon;
   gboolean is_keyframe;
   GstBuffer *buf;
 
   /* This may happen if we don't have enough bitrate */
-  if (sbuf == NULL)
+  if (sampleBuffer == NULL)
     goto beach;
 
-  is_keyframe = gst_vtenc_buffer_is_keyframe (self, sbuf);
+  is_keyframe = gst_vtenc_buffer_is_keyframe (self, sampleBuffer);
   if (self->expect_keyframe) {
     if (!is_keyframe)
       goto beach;
     CFDictionaryRemoveValue (self->options,
-        *(self->ctx->vt->kVTEncodeFrameOptionKey_ForceKeyFrame));
+        kVTEncodeFrameOptionKey_ForceKeyFrame);
   }
   self->expect_keyframe = FALSE;
 
   /* We are dealing with block buffers here, so we don't need
    * to enable the use of the video meta API on the core media buffer */
-  buf = gst_core_media_buffer_new (sbuf, FALSE);
+  buf = gst_core_media_buffer_new (sampleBuffer, FALSE);
   gst_buffer_copy_into (buf, self->cur_inbuf, GST_BUFFER_COPY_TIMESTAMPS,
       0, -1);
   if (is_keyframe) {
@@ -922,7 +849,7 @@ gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
   g_ptr_array_add (self->cur_outbufs, buf);
 
 beach:
-  return kVTSuccess;
+  return;
 }
 
 static gboolean
@@ -1013,7 +940,7 @@ gst_vtenc_register (GstPlugin * plugin,
 }
 
 static const GstVTEncoderDetails gst_vtenc_codecs[] = {
-  {"H.264", "h264", "video/x-h264", kVTFormatH264},
+  {"H.264", "h264", "video/x-h264", kCMVideoCodecType_H264},
 };
 
 void

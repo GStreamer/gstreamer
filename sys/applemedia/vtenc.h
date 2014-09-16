@@ -22,8 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-
-#include "coremediactx.h"
+#include <VideoToolbox/VideoToolbox.h>
 
 G_BEGIN_DECLS
 
@@ -44,7 +43,7 @@ struct _GstVTEncoderDetails
   const gchar * name;
   const gchar * element_name;
   const gchar * mimetype;
-  VTFormatId format_id;
+  CMVideoCodecType format_id;
 };
 
 struct _GstVTEncClass
@@ -61,10 +60,7 @@ struct _GstVTEnc
   GstPad * sinkpad;
   GstPad * srcpad;
 
-  gint usage;
   guint bitrate;
-
-  GstCoreMediaCtx * ctx;
 
   gboolean dump_properties;
   gboolean dump_attributes;
