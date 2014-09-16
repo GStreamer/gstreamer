@@ -423,8 +423,8 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
             FALSE, &gstmask)) {
       wavenc->channel_mask = gstmask_to_wavmask (gstmask, wavenc->destPos);
       memcpy (wavenc->srcPos, info.position, sizeof (info.position));
-      GST_DEBUG_OBJECT (wavenc, "Channel mask input: %" G_GUINT64_FORMAT
-          " output: %" G_GUINT64_FORMAT, gstmask, wavenc->channel_mask);
+      GST_DEBUG_OBJECT (wavenc, "Channel mask input: 0x%" G_GINT64_MODIFIER "x"
+          " output: 0x%" G_GINT64_MODIFIER "x", gstmask, wavenc->channel_mask);
     }
     wavenc->audio_format = GST_AUDIO_INFO_FORMAT (&info);
 
