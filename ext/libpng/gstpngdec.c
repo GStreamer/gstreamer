@@ -161,7 +161,7 @@ gst_pngdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     gst_video_codec_state_unref (pngdec->input_state);
   pngdec->input_state = gst_video_codec_state_ref (state);
 
-  if (GST_VIDEO_INFO_FPS_N (info) != 1 && GST_VIDEO_INFO_FPS_D (info) != 1)
+  if (decoder->input_segment.format == GST_FORMAT_TIME)
     gst_video_decoder_set_packetized (decoder, TRUE);
   else
     gst_video_decoder_set_packetized (decoder, FALSE);
