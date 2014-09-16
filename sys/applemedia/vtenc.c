@@ -56,16 +56,14 @@ static void gst_vtenc_get_property (GObject * obj, guint prop_id,
 static void gst_vtenc_set_property (GObject * obj, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_vtenc_change_state (GstElement * element,
-    GstStateChange transition);
-static gboolean gst_vtenc_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
-static gboolean gst_vtenc_sink_setcaps (GstVTEnc * self, GstCaps * caps);
+static gboolean gst_vtenc_start (GstVideoEncoder * enc);
+static gboolean gst_vtenc_stop (GstVideoEncoder * enc);
+static gboolean gst_vtenc_set_format (GstVideoEncoder * enc,
+    GstVideoCodecState * input_state);
+static GstFlowReturn gst_vtenc_handle_frame (GstVideoEncoder * enc,
+    GstVideoCodecFrame * frame);
+
 static void gst_vtenc_clear_cached_caps_downstream (GstVTEnc * self);
-static GstFlowReturn gst_vtenc_chain (GstPad * pad, GstObject * parent,
-    GstBuffer * buf);
-static gboolean gst_vtenc_src_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
 
 static VTCompressionSessionRef gst_vtenc_create_session (GstVTEnc * self);
 static void gst_vtenc_destroy_session (GstVTEnc * self,
@@ -87,11 +85,11 @@ static OSStatus gst_vtenc_session_configure_property_int (GstVTEnc * self,
 static OSStatus gst_vtenc_session_configure_property_double (GstVTEnc * self,
     VTCompressionSessionRef session, CFStringRef name, gdouble value);
 
-static GstFlowReturn gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf);
+static GstFlowReturn gst_vtenc_encode_frame (GstVTEnc * self,
+    GstVideoCodecFrame * frame);
 static void gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
-    void *sourceFrameRefCon,
-    OSStatus status,
-    VTEncodeInfoFlags infoFlags, CMSampleBufferRef sampleBuffer);
+    void *sourceFrameRefCon, OSStatus status, VTEncodeInfoFlags infoFlags,
+    CMSampleBufferRef sampleBuffer);
 static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
     CMSampleBufferRef sbuf);
 
@@ -152,17 +150,20 @@ static void
 gst_vtenc_class_init (GstVTEncClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstVideoEncoderClass *gstvideoencoder_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gstvideoencoder_class = (GstVideoEncoderClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->get_property = gst_vtenc_get_property;
   gobject_class->set_property = gst_vtenc_set_property;
 
-  gstelement_class->change_state = gst_vtenc_change_state;
+  gstvideoencoder_class->start = gst_vtenc_start;
+  gstvideoencoder_class->stop = gst_vtenc_stop;
+  gstvideoencoder_class->set_format = gst_vtenc_set_format;
+  gstvideoencoder_class->handle_frame = gst_vtenc_handle_frame;
 
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
@@ -175,21 +176,8 @@ static void
 gst_vtenc_init (GstVTEnc * self)
 {
   GstVTEncClass *klass = (GstVTEncClass *) G_OBJECT_GET_CLASS (self);
-  GstElementClass *element_klass = GST_ELEMENT_CLASS (klass);
-  GstElement *element = GST_ELEMENT (self);
 
   self->details = GST_VTENC_CLASS_GET_CODEC_DETAILS (klass);
-
-  self->sinkpad = gst_pad_new_from_template
-      (gst_element_class_get_pad_template (element_klass, "sink"), "sink");
-  gst_element_add_pad (element, self->sinkpad);
-  gst_pad_set_event_function (self->sinkpad, gst_vtenc_sink_event);
-  gst_pad_set_chain_function (self->sinkpad, gst_vtenc_chain);
-
-  self->srcpad = gst_pad_new_from_template
-      (gst_element_class_get_pad_template (element_klass, "src"), "src");
-  gst_pad_set_event_function (self->srcpad, gst_vtenc_src_event);
-  gst_element_add_pad (element, self->srcpad);
 
   /* These could be controlled by properties later */
   self->dump_properties = FALSE;
@@ -255,82 +243,63 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
   }
 }
 
-static GstStateChangeReturn
-gst_vtenc_change_state (GstElement * element, GstStateChange transition)
+static gboolean
+gst_vtenc_start (GstVideoEncoder * enc)
 {
-  GstVTEnc *self = GST_VTENC_CAST (element);
-  GstStateChangeReturn ret;
+  GstVTEnc *self = GST_VTENC_CAST (enc);
 
-  if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
-    self->cur_outbufs = g_ptr_array_new ();
-  }
+  self->cur_outframes = g_ptr_array_new ();
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  if (transition == GST_STATE_CHANGE_READY_TO_NULL) {
-    GST_OBJECT_LOCK (self);
-
-    gst_vtenc_destroy_session (self, &self->session);
-
-    if (self->options != NULL) {
-      CFRelease (self->options);
-      self->options = NULL;
-    }
-
-    self->negotiated_width = self->negotiated_height = 0;
-    self->negotiated_fps_n = self->negotiated_fps_d = 0;
-
-    gst_vtenc_clear_cached_caps_downstream (self);
-
-    GST_OBJECT_UNLOCK (self);
-
-    g_ptr_array_free (self->cur_outbufs, TRUE);
-    self->cur_outbufs = NULL;
-  }
-
-  return ret;
+  return TRUE;
 }
 
 static gboolean
-gst_vtenc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_vtenc_stop (GstVideoEncoder * enc)
 {
-  GstVTEnc *self = GST_VTENC_CAST (parent);
-  gboolean forward = TRUE;
-  gboolean res = TRUE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      res = gst_vtenc_sink_setcaps (self, caps);
-    }
-    default:
-      break;
-  }
-
-  if (forward)
-    res = gst_pad_event_default (pad, parent, event);
-  return res;
-}
-
-static gboolean
-gst_vtenc_sink_setcaps (GstVTEnc * self, GstCaps * caps)
-{
-  GstStructure *structure;
-  VTCompressionSessionRef session;
+  GstVTEnc *self = GST_VTENC_CAST (enc);
 
   GST_OBJECT_LOCK (self);
 
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &self->negotiated_width);
-  gst_structure_get_int (structure, "height", &self->negotiated_height);
-  gst_structure_get_fraction (structure, "framerate",
-      &self->negotiated_fps_n, &self->negotiated_fps_d);
+  gst_vtenc_destroy_session (self, &self->session);
 
-  if (!gst_video_info_from_caps (&self->video_info, caps))
-    return FALSE;
+  if (self->options != NULL) {
+    CFRelease (self->options);
+    self->options = NULL;
+  }
+
+  if (self->input_state)
+    gst_video_codec_state_unref (self->input_state);
+  self->input_state = NULL;
+
+  self->negotiated_width = self->negotiated_height = 0;
+  self->negotiated_fps_n = self->negotiated_fps_d = 0;
+
+  gst_vtenc_clear_cached_caps_downstream (self);
+
+  GST_OBJECT_UNLOCK (self);
+
+  g_ptr_array_free (self->cur_outframes, TRUE);
+  self->cur_outframes = NULL;
+
+  return TRUE;
+}
+
+static gboolean
+gst_vtenc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
+{
+  GstVTEnc *self = GST_VTENC_CAST (enc);
+  VTCompressionSessionRef session;
+
+  GST_OBJECT_LOCK (self);
+  if (self->input_state)
+    gst_video_codec_state_unref (self->input_state);
+  self->input_state = gst_video_codec_state_ref (state);
+
+  self->negotiated_width = state->info.width;
+  self->negotiated_height = state->info.height;
+  self->negotiated_fps_n = state->info.fps_n;
+  self->negotiated_fps_d = state->info.fps_d;
+  self->video_info = state->info;
 
   gst_vtenc_destroy_session (self, &self->session);
 
@@ -344,9 +313,6 @@ gst_vtenc_sink_setcaps (GstVTEnc * self, GstCaps * caps)
     CFRelease (self->options);
   self->options = CFDictionaryCreateMutable (NULL, 0,
       &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-
-  /* renegotiate when upstream caps change */
-  gst_pad_mark_reconfigure (self->srcpad);
 
   GST_OBJECT_UNLOCK (self);
 
@@ -365,6 +331,7 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
   gboolean result;
   GstCaps *caps;
   GstStructure *s;
+  GstVideoCodecState *state;
 
   if (self->caps_width == self->negotiated_width &&
       self->caps_height == self->negotiated_height &&
@@ -373,7 +340,7 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     return TRUE;
   }
 
-  caps = gst_pad_get_pad_template_caps (self->srcpad);
+  caps = gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (self));
   caps = gst_caps_make_writable (caps);
   s = gst_caps_get_structure (caps, 0);
   gst_structure_set (s,
@@ -407,8 +374,11 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     gst_buffer_unref (codec_data_buf);
   }
 
-  result = gst_pad_push_event (self->srcpad, gst_event_new_caps (caps));
-  gst_caps_unref (caps);
+  state =
+      gst_video_encoder_set_output_state (GST_VIDEO_ENCODER_CAST (self), caps,
+      self->input_state);
+  gst_video_codec_state_unref (state);
+  result = gst_video_encoder_negotiate (GST_VIDEO_ENCODER_CAST (self));
 
   self->caps_width = self->negotiated_width;
   self->caps_height = self->negotiated_height;
@@ -426,53 +396,18 @@ gst_vtenc_clear_cached_caps_downstream (GstVTEnc * self)
 }
 
 static GstFlowReturn
-gst_vtenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
+gst_vtenc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
 {
-  GstVTEnc *self = GST_VTENC_CAST (parent);
+  GstVTEnc *self = GST_VTENC_CAST (enc);
 
   if (!gst_vtenc_is_negotiated (self))
     goto not_negotiated;
 
-  return gst_vtenc_encode_frame (self, buf);
+  return gst_vtenc_encode_frame (self, frame);
 
 not_negotiated:
-  gst_buffer_unref (buf);
+  gst_video_codec_frame_unref (frame);
   return GST_FLOW_NOT_NEGOTIATED;
-}
-
-static gboolean
-gst_vtenc_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
-{
-  GstVTEnc *self = GST_VTENC_CAST (parent);
-  gboolean ret = TRUE;
-  gboolean handled = FALSE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CUSTOM_UPSTREAM:
-      if (gst_event_has_name (event, "rtcp-pli")) {
-        GST_OBJECT_LOCK (self);
-        if (self->options != NULL) {
-          GST_INFO_OBJECT (self, "received PLI, will force intra");
-          CFDictionaryAddValue (self->options,
-              kVTEncodeFrameOptionKey_ForceKeyFrame, kCFBooleanTrue);
-        } else {
-          GST_INFO_OBJECT (self,
-              "received PLI but encode not yet started, ignoring");
-        }
-        GST_OBJECT_UNLOCK (self);
-        handled = TRUE;
-      }
-      break;
-    default:
-      break;
-  }
-
-  if (handled)
-    gst_event_unref (event);
-  else
-    ret = gst_pad_push_event (self->sinkpad, event);
-
-  return ret;
 }
 
 static VTCompressionSessionRef
@@ -682,7 +617,7 @@ gst_vtenc_session_configure_property_double (GstVTEnc * self,
 }
 
 static GstFlowReturn
-gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
+gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
 {
   CMTime ts, duration;
   GstCoreMediaMeta *meta;
@@ -691,27 +626,37 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   guint i;
 
-  self->cur_inbuf = buf;
+  if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
+    GST_OBJECT_LOCK (self);
+    if (self->options != NULL) {
+      GST_INFO_OBJECT (self, "received PLI, will force intra");
+      CFDictionaryAddValue (self->options,
+          kVTEncodeFrameOptionKey_ForceKeyFrame, kCFBooleanTrue);
+    } else {
+      GST_INFO_OBJECT (self,
+          "received PLI but encode not yet started, ignoring");
+    }
+    GST_OBJECT_UNLOCK (self);
+  }
 
-  ts = CMTimeMake (GST_TIME_AS_MSECONDS (GST_BUFFER_TIMESTAMP (buf)), 1000);
-  duration = CMTimeMake
-      (GST_TIME_AS_MSECONDS (GST_BUFFER_DURATION (buf)), 1000);
+  ts = CMTimeMake (GST_TIME_AS_MSECONDS (frame->pts), 1000);
+  duration = CMTimeMake (GST_TIME_AS_MSECONDS (frame->duration), 1000);
 
-  meta = gst_buffer_get_core_media_meta (buf);
+  meta = gst_buffer_get_core_media_meta (frame->input_buffer);
   if (meta != NULL) {
-    pbuf = gst_core_media_buffer_get_pixel_buffer (buf);
+    pbuf = gst_core_media_buffer_get_pixel_buffer (frame->input_buffer);
   }
 
   if (pbuf == NULL) {
-    GstVTEncFrame *frame;
+    GstVTEncFrame *vframe;
     CVReturn cv_ret;
 
-    frame = gst_vtenc_frame_new (buf, &self->video_info);
-    if (!frame)
+    vframe = gst_vtenc_frame_new (frame->input_buffer, &self->video_info);
+    if (!vframe)
       goto cv_error;
 
     {
-      const size_t num_planes = GST_VIDEO_FRAME_N_PLANES (&frame->videoframe);
+      const size_t num_planes = GST_VIDEO_FRAME_N_PLANES (&vframe->videoframe);
       void *plane_base_addresses[GST_VIDEO_MAX_PLANES];
       size_t plane_widths[GST_VIDEO_MAX_PLANES];
       size_t plane_heights[GST_VIDEO_MAX_PLANES];
@@ -721,13 +666,13 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
 
       for (i = 0; i < num_planes; i++) {
         plane_base_addresses[i] =
-            GST_VIDEO_FRAME_PLANE_DATA (&frame->videoframe, i);
-        plane_widths[i] = GST_VIDEO_FRAME_COMP_WIDTH (&frame->videoframe, i);
-        plane_heights[i] = GST_VIDEO_FRAME_COMP_HEIGHT (&frame->videoframe, i);
+            GST_VIDEO_FRAME_PLANE_DATA (&vframe->videoframe, i);
+        plane_widths[i] = GST_VIDEO_FRAME_COMP_WIDTH (&vframe->videoframe, i);
+        plane_heights[i] = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe->videoframe, i);
         plane_bytes_per_row[i] =
-            GST_VIDEO_FRAME_COMP_STRIDE (&frame->videoframe, i);
+            GST_VIDEO_FRAME_COMP_STRIDE (&vframe->videoframe, i);
         plane_bytes_per_row[i] =
-            GST_VIDEO_FRAME_COMP_STRIDE (&frame->videoframe, i);
+            GST_VIDEO_FRAME_COMP_STRIDE (&vframe->videoframe, i);
       }
 
       switch (GST_VIDEO_INFO_FORMAT (&self->video_info)) {
@@ -745,14 +690,15 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
           self->negotiated_width, self->negotiated_height,
           pixel_format_type,
           frame,
-          GST_VIDEO_FRAME_SIZE (&frame->videoframe),
+          GST_VIDEO_FRAME_SIZE (&vframe->videoframe),
           num_planes,
           plane_base_addresses,
           plane_widths,
           plane_heights,
-          plane_bytes_per_row, gst_pixel_buffer_release_cb, frame, NULL, &pbuf);
+          plane_bytes_per_row, gst_pixel_buffer_release_cb, vframe, NULL,
+          &pbuf);
       if (cv_ret != kCVReturnSuccess) {
-        gst_vtenc_frame_free (frame);
+        gst_vtenc_frame_free (vframe);
         goto cv_error;
       }
     }
@@ -766,7 +712,8 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
     gst_vtenc_clear_cached_caps_downstream (self);
 
   vt_status = VTCompressionSessionEncodeFrame (self->session,
-      pbuf, ts, duration, self->options, NULL, NULL);
+      pbuf, ts, duration, self->options,
+      GINT_TO_POINTER (frame->system_frame_number), NULL);
 
   if (vt_status != 0) {
     GST_WARNING_OBJECT (self, "VTCompressionSessionEncodeFrame returned %d",
@@ -776,37 +723,32 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   VTCompressionSessionCompleteFrames (self->session, kCMTimeInvalid);
 
   GST_OBJECT_UNLOCK (self);
+  gst_video_codec_frame_unref (frame);
 
   CVPixelBufferRelease (pbuf);
-  self->cur_inbuf = NULL;
-  gst_buffer_unref (buf);
 
-  if (self->cur_outbufs->len > 0) {
-    meta =
-        gst_buffer_get_core_media_meta (g_ptr_array_index (self->cur_outbufs,
-            0));
+  if (self->cur_outframes->len > 0) {
+    GstVideoCodecFrame *outframe = g_ptr_array_index (self->cur_outframes,
+        0);
+    meta = gst_buffer_get_core_media_meta (outframe->output_buffer);
     if (!gst_vtenc_negotiate_downstream (self, meta->sample_buf))
       ret = GST_FLOW_NOT_NEGOTIATED;
   }
 
-  for (i = 0; i != self->cur_outbufs->len; i++) {
-    GstBuffer *buf = g_ptr_array_index (self->cur_outbufs, i);
+  for (i = 0; i != self->cur_outframes->len; i++) {
+    GstVideoCodecFrame *outframe = g_ptr_array_index (self->cur_outframes, i);
 
-    if (ret == GST_FLOW_OK) {
-      ret = gst_pad_push (self->srcpad, buf);
-    } else {
-      gst_buffer_unref (buf);
-    }
+    ret =
+        gst_video_encoder_finish_frame (GST_VIDEO_ENCODER_CAST (self),
+        outframe);
   }
-  g_ptr_array_set_size (self->cur_outbufs, 0);
+  g_ptr_array_set_size (self->cur_outframes, 0);
 
   return ret;
 
 cv_error:
   {
-    self->cur_inbuf = NULL;
-    gst_buffer_unref (buf);
-
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 }
@@ -819,7 +761,7 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
 {
   GstVTEnc *self = outputCallbackRefCon;
   gboolean is_keyframe;
-  GstBuffer *buf;
+  GstVideoCodecFrame *frame;
 
   /* This may happen if we don't have enough bitrate */
   if (sampleBuffer == NULL)
@@ -834,19 +776,15 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
   }
   self->expect_keyframe = FALSE;
 
+  frame =
+      gst_video_encoder_get_frame (GST_VIDEO_ENCODER_CAST (self),
+      GPOINTER_TO_INT (sourceFrameRefCon));
+
   /* We are dealing with block buffers here, so we don't need
    * to enable the use of the video meta API on the core media buffer */
-  buf = gst_core_media_buffer_new (sampleBuffer, FALSE);
-  gst_buffer_copy_into (buf, self->cur_inbuf, GST_BUFFER_COPY_TIMESTAMPS,
-      0, -1);
-  if (is_keyframe) {
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-  } else {
-    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-  }
+  frame->output_buffer = gst_core_media_buffer_new (sampleBuffer, FALSE);
 
-  g_ptr_array_add (self->cur_outbufs, buf);
+  g_ptr_array_add (self->cur_outframes, frame);
 
 beach:
   return;
@@ -926,7 +864,8 @@ gst_vtenc_register (GstPlugin * plugin,
 
   type_name = g_strdup_printf ("vtenc_%s", codec_details->element_name);
 
-  type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &type_info, 0);
+  type =
+      g_type_register_static (GST_TYPE_VIDEO_ENCODER, type_name, &type_info, 0);
 
   g_type_set_qdata (type, GST_VTENC_CODEC_DETAILS_QDATA,
       (gpointer) codec_details);
