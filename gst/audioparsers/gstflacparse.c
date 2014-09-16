@@ -1796,10 +1796,10 @@ gst_flac_parse_src_event (GstBaseParse * parse, GstEvent * event)
                 GST_BASE_PARSE_CLASS (parent_class)->src_event (parse,
                 seek_event);
 
-            g_free (uid);
           } else {
             GST_WARNING_OBJECT (parse, "no TOC entry with given UID: %s", uid);
           }
+          g_free (uid);
         }
         gst_toc_unref (toc);
       } else {
