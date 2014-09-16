@@ -455,8 +455,8 @@ gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
 #endif
 
   while (size >= 40) {
-    if (data[3] == 0xc5 && GST_READ_UINT32_BE (data + 4) == 0x00000004 &&
-        GST_READ_UINT32_BE (data + 20) == 0x0000000c) {
+    if (data[3] == 0xc5 && GST_READ_UINT32_LE (data + 4) == 0x00000004 &&
+        GST_READ_UINT32_LE (data + 20) == 0x0000000c) {
       guint32 startcode;
 
       GST_DEBUG_OBJECT (vc1parse, "Found sequence layer");
@@ -981,8 +981,8 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
           VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME
           || vc1parse->input_stream_format ==
           VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER)) {
-    if (data[3] == 0xc5 && GST_READ_UINT32_BE (data + 4) == 0x00000004
-        && GST_READ_UINT32_BE (data + 20) == 0x0000000c) {
+    if (data[3] == 0xc5 && GST_READ_UINT32_LE (data + 4) == 0x00000004
+        && GST_READ_UINT32_LE (data + 20) == 0x0000000c) {
       framesize = 36;
     } else {
       *skipsize = 1;
@@ -1050,7 +1050,7 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     /* frame-layer or sequence-layer-frame-layer */
     g_assert (size >= 8);
     /* Parse frame layer size */
-    framesize = GST_READ_UINT24_BE (data + 1) + 8;
+    framesize = GST_READ_UINT24_LE (data + 1) + 8;
   }
 
 
