@@ -1669,7 +1669,7 @@ gst_event_new_toc_select (const gchar * uid)
 /**
  * gst_event_parse_toc_select:
  * @event: a TOC select event.
- * @uid: (out): storage for the selection UID.
+ * @uid: (out) (transfer full) (allow-none): storage for the selection UID.
  *
  * Parse a TOC select @event and store the results in the given @uid location.
  */
