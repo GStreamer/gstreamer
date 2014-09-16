@@ -916,7 +916,7 @@ gst_vtenc_register (GstPlugin * plugin,
     (GClassInitFunc) gst_vtenc_class_init,
     NULL,
     NULL,
-    sizeof (GstVTEncClass),
+    sizeof (GstVTEnc),
     0,
     (GInstanceInitFunc) gst_vtenc_init,
   };
