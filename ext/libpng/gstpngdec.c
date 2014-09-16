@@ -155,7 +155,6 @@ static gboolean
 gst_pngdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstPngDec *pngdec = (GstPngDec *) decoder;
-  GstVideoInfo *info = &state->info;
 
   if (pngdec->input_state)
     gst_video_codec_state_unref (pngdec->input_state);
