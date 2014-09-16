@@ -530,6 +530,7 @@ pool_failed:
 config_failed:
   {
     GST_DEBUG_OBJECT (bsink, "failed setting config");
+    gst_object_unref (newpool);
     return FALSE;
   }
 }
