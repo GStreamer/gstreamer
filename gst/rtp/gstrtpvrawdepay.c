@@ -43,7 +43,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"RAW\"")
+        "clock-rate = (int) 90000, "
+        "encoding-name = (string) \"RAW\", "
+        "sampling = (string) { \"RGB\", \"RGBA\", \"BGR\", \"BGRA\", "
+        "\"YCbCr-4:4:4\", \"YCbCr-4:2:2\", \"YCbCr-4:2:0\", "
+        "\"YCbCr-4:1:1\" },"
+        /* we cannot express these as strings 
+         * "width = (string) [1 32767],"
+         * "height = (string) [1 32767],"
+         */
+        "depth = (string) { \"8\", \"10\", \"12\", \"16\" }")
     );
 
 #define gst_rtp_vraw_depay_parent_class parent_class
@@ -239,8 +248,9 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     format = GST_VIDEO_FORMAT_Y41B;
     pgroup = 6;
     xinc = 4;
-  } else
+  } else {
     goto unknown_format;
+  }
 
   gst_video_info_init (&rtpvrawdepay->vinfo);
   gst_video_info_set_format (&rtpvrawdepay->vinfo, format, width, height);
