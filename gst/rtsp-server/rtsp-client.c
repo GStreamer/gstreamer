@@ -92,6 +92,10 @@ struct _GstRTSPClientPrivate
 static GMutex tunnels_lock;
 static GHashTable *tunnels;     /* protected by tunnels_lock */
 
+/* FIXME make this configurable. We don't want to do this yet because it will
+ * be superceeded by a cache object later */
+#define WATCH_BACKLOG_SIZE              100
+
 #define DEFAULT_SESSION_POOL            NULL
 #define DEFAULT_MOUNT_POINTS            NULL
 #define DEFAULT_DROP_BACKLOG            TRUE
@@ -3324,9 +3328,7 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
   gst_rtsp_client_set_send_func (client, do_send_message, priv->watch,
       (GDestroyNotify) gst_rtsp_watch_unref);
 
-  /* FIXME make this configurable. We don't want to do this yet because it will
-   * be superceeded by a cache object later */
-  gst_rtsp_watch_set_send_backlog (priv->watch, 0, 100);
+  gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
 
   GST_INFO ("client %p: attaching to context %p", client, context);
   res = gst_rtsp_watch_attach (priv->watch, context);
