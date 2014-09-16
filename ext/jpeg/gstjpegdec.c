@@ -595,10 +595,7 @@ gst_jpeg_dec_set_format (GstVideoDecoder * dec, GstVideoCodecState * state)
   GstJpegDec *jpeg = GST_JPEG_DEC (dec);
   GstVideoInfo *info = &state->info;
 
-  /* FIXME : previously jpegdec would handled input as packetized
-   * if the framerate was present. Here we consider it packetized if
-   * the fps is != 1/1 */
-  if (GST_VIDEO_INFO_FPS_N (info) != 1 && GST_VIDEO_INFO_FPS_D (info) != 1)
+  if (decoder->input_segment.format == GST_FORMAT_TIME)
     gst_video_decoder_set_packetized (dec, TRUE);
   else
     gst_video_decoder_set_packetized (dec, FALSE);
