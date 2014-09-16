@@ -783,25 +783,26 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
         /* structC */
         structC |= (vc1parse->profile << 30);
         if (vc1parse->profile != GST_VC1_PROFILE_ADVANCED) {
-          structC |= (vc1parse->seq_layer.struct_c.wmvp << 28);
-          structC |= (vc1parse->seq_layer.struct_c.frmrtq_postproc << 25);
-          structC |= (vc1parse->seq_layer.struct_c.bitrtq_postproc << 20);
-          structC |= (vc1parse->seq_layer.struct_c.loop_filter << 19);
+          /* Build simple/main structC from sequence header */
+          structC |= (vc1parse->seq_hdr.struct_c.wmvp << 28);
+          structC |= (vc1parse->seq_hdr.struct_c.frmrtq_postproc << 25);
+          structC |= (vc1parse->seq_hdr.struct_c.bitrtq_postproc << 20);
+          structC |= (vc1parse->seq_hdr.struct_c.loop_filter << 19);
           /* Reserved3 shall be set to zero */
-          structC |= (vc1parse->seq_layer.struct_c.multires << 17);
+          structC |= (vc1parse->seq_hdr.struct_c.multires << 17);
           /* Reserved4 shall be set to one */
           structC |= (1 << 16);
-          structC |= (vc1parse->seq_layer.struct_c.fastuvmc << 15);
-          structC |= (vc1parse->seq_layer.struct_c.extended_mv << 14);
-          structC |= (vc1parse->seq_layer.struct_c.dquant << 12);
-          structC |= (vc1parse->seq_layer.struct_c.vstransform << 11);
+          structC |= (vc1parse->seq_hdr.struct_c.fastuvmc << 15);
+          structC |= (vc1parse->seq_hdr.struct_c.extended_mv << 14);
+          structC |= (vc1parse->seq_hdr.struct_c.dquant << 12);
+          structC |= (vc1parse->seq_hdr.struct_c.vstransform << 11);
           /* Reserved5 shall be set to zero */
-          structC |= (vc1parse->seq_layer.struct_c.overlap << 9);
-          structC |= (vc1parse->seq_layer.struct_c.syncmarker << 8);
-          structC |= (vc1parse->seq_layer.struct_c.rangered << 7);
-          structC |= (vc1parse->seq_layer.struct_c.maxbframes << 4);
-          structC |= (vc1parse->seq_layer.struct_c.quantizer << 2);
-          structC |= (vc1parse->seq_layer.struct_c.finterpflag << 1);
+          structC |= (vc1parse->seq_hdr.struct_c.overlap << 9);
+          structC |= (vc1parse->seq_hdr.struct_c.syncmarker << 8);
+          structC |= (vc1parse->seq_hdr.struct_c.rangered << 7);
+          structC |= (vc1parse->seq_hdr.struct_c.maxbframes << 4);
+          structC |= (vc1parse->seq_hdr.struct_c.quantizer << 2);
+          structC |= (vc1parse->seq_hdr.struct_c.finterpflag << 1);
           /* Reserved6 shall be set to one */
           structC |= 1;
         }
