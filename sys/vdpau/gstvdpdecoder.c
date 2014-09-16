@@ -203,7 +203,9 @@ gst_vdp_decoder_decide_allocation (GstVideoDecoder * video_decoder,
   if (pool == NULL
       || !gst_buffer_pool_has_option (pool,
           GST_BUFFER_POOL_OPTION_VDP_VIDEO_META)) {
-    /* no pool, we can make our own */
+    if (pool)
+      gst_object_unref (pool);
+    /* no pool or pool doesn't support GstVdpVideoMeta, we can make our own */
     GST_DEBUG_OBJECT (video_decoder,
         "no pool or doesn't support GstVdpVideoMeta, making new pool");
     pool = gst_vdp_video_buffer_pool_new (vdp_decoder->device);
