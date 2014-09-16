@@ -119,7 +119,7 @@ gst_my_sink_class_init (GstMySinkClass * klass)
         base-class.
       </para>
       <para>
-        The <classname>GstBaseAusioSink</classname> has little to no
+        The <classname>GstAudioBaseSink</classname> has little to no
         limitations and should fit virtually every implementation, but is
         hard to implement. The <classname>GstAudioSink</classname>, on the
         other hand, only fits those systems with a simple <function>open
