@@ -965,6 +965,7 @@ gst_audio_cd_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
         ret = gst_audio_cd_src_handle_track_seek (src, 1.0, GST_SEEK_FLAG_FLUSH,
             GST_SEEK_TYPE_SET, track_num, GST_SEEK_TYPE_NONE, -1);
       }
+      g_free (uid);
       break;
     }
     default:{
