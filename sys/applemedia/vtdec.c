@@ -306,7 +306,7 @@ out:
 
 error:
   GST_ELEMENT_ERROR (vtdec, STREAM, DECODE, (NULL),
-      ("VTDecompressionSessionDecodeFrame returned %d", status));
+      ("VTDecompressionSessionDecodeFrame returned %d", (int) status));
   ret = GST_FLOW_ERROR;
   goto out;
 }
@@ -350,7 +350,7 @@ gst_vtdec_create_session (GstVtdec * vtdec)
 
   if (status != noErr) {
     GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
-        ("VTDecompressionSessionCreate returned %d", status));
+        ("VTDecompressionSessionCreate returned %d", (int) status));
     return FALSE;
   }
 
@@ -471,12 +471,12 @@ out:
 
 block_error:
   GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
-      ("CMBlockBufferCreateWithMemoryBlock returned %d", status));
+      ("CMBlockBufferCreateWithMemoryBlock returned %d", (int) status));
   goto out;
 
 sample_error:
   GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
-      ("CMSampleBufferCreate returned %d", status));
+      ("CMSampleBufferCreate returned %d", (int) status));
 
   if (bbuf)
     CFRelease (bbuf);
@@ -520,7 +520,7 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
       frame->decode_frame_number, image_buffer);
 
   if (status != noErr) {
-    GST_ERROR_OBJECT (vtdec, "Error decoding frame %d", status);
+    GST_ERROR_OBJECT (vtdec, "Error decoding frame %d", (int) status);
     goto drop;
   }
 
