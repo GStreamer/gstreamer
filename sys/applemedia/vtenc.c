@@ -723,7 +723,12 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
         (int) vt_status);
   }
 
-  VTCompressionSessionCompleteFrames (self->session, kCMTimeInvalid);
+  vt_status =
+      VTCompressionSessionCompleteFrames (self->session, kCMTimeInvalid);
+  if (vt_status != 0) {
+    GST_WARNING_OBJECT (self, "VTCompressionSessionCompleteFrames returned %d",
+        (int) vt_status);
+  }
 
   GST_OBJECT_UNLOCK (self);
   gst_video_codec_frame_unref (frame);
