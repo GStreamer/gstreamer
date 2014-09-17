@@ -2196,6 +2196,14 @@ AG_GST_CHECK_FEATURE(LV2, [lv2], lv2, [
   AC_SUBST(SLV2_LIBS)
 ])
 
+dnl *** libde265 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDE265, true)
+AG_GST_CHECK_FEATURE(LIBDE265, [libde265 HEVC/H.265 decoder], libde265, [
+  PKG_CHECK_MODULES(LIBDE265, libde265 >= 0.9, HAVE_LIBDE265="yes", HAVE_LIBDE265="no")
+  AC_SUBST(LIBDE265_CFLAGS)
+  AC_SUBST(LIBDE265_LIBS)
+])
+
 dnl *** libmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
 AG_GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
@@ -3053,6 +3061,7 @@ AM_CONDITIONAL(USE_KATE, false)
 AM_CONDITIONAL(USE_TIGER, false)
 AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LV2, false)
+AM_CONDITIONAL(USE_LIBDE265, false)
 AM_CONDITIONAL(USE_LIBMMS, false)
 AM_CONDITIONAL(USE_LINSYS, false)
 AM_CONDITIONAL(USE_MODPLUG, false)
@@ -3352,6 +3361,7 @@ ext/hls/Makefile
 ext/kate/Makefile
 ext/ladspa/Makefile
 ext/lv2/Makefile
+ext/libde265/Makefile
 ext/libmms/Makefile
 ext/libvisual/Makefile
 ext/Makefile

@@ -31,6 +31,7 @@ BuildRequires: libass-devel
 %ifnarch s390 s390x
 BuildRequires: libdc1394-devel
 %endif
+BuildRequires: libde265-devel
 BuildRequires: libdvdnav-devel
 BuildRequires: libexif-devel
 BuildRequires: libiptcdata-devel
@@ -266,6 +267,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 %{_libdir}/gstreamer-%{majorminor}/libgstkate.so
 %{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
+%{_libdir}/gstreamer-%{majorminor}/libgstlibde265.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
 %{_libdir}/gstreamer-%{majorminor}/libgstofa.so
 %{_libdir}/gstreamer-%{majorminor}/libgstresindvd.so
