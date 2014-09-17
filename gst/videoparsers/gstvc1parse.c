@@ -1321,8 +1321,7 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     vc1parse->sent_codec_tag = TRUE;
   }
 
-  if (vc1parse->input_header_format != vc1parse->output_header_format ||
-      vc1parse->input_stream_format != vc1parse->output_stream_format) {
+  if (vc1parse->input_stream_format != vc1parse->output_stream_format) {
     GST_WARNING_OBJECT (vc1parse, "stream conversion not implemented yet");
     return GST_FLOW_ERROR;
   }
