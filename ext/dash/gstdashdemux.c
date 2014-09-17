@@ -538,7 +538,18 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
         if (list == NULL) {
           GST_WARNING_OBJECT (demux, "Could not find seeked Period");
-          return FALSE;
+
+          if (flags & GST_SEEK_FLAG_FLUSH) {
+            GST_DEBUG_OBJECT (demux, "Sending flush stop and eos on all pad");
+            for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+              GstDashDemuxStream *stream;
+
+              stream = iter->data;
+              stream->stream_eos = TRUE;
+              gst_pad_push_event (stream->pad, gst_event_new_flush_stop (TRUE));
+            }
+          }
+          goto restart;
         }
         if (current_period != gst_mpd_client_get_period_index (demux->client)) {
           GSList *streams = NULL;
@@ -583,6 +594,7 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
 
         /* Restart the demux */
+      restart:
         GST_DASH_DEMUX_CLIENT_LOCK (demux);
         demux->cancelled = FALSE;
         demux->end_of_manifest = FALSE;
