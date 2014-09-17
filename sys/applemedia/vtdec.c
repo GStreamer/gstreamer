@@ -455,9 +455,23 @@ cm_sample_buffer_from_gst_buffer (GstVtdec * vtdec, GstBuffer * buf)
     goto block_error;
 
   /* create a sample buffer, the CoreMedia equivalent of GstBuffer */
-  sample_timing.duration = CMTimeMake (GST_BUFFER_DURATION (buf), 1);
-  sample_timing.presentationTimeStamp = CMTimeMake (GST_BUFFER_PTS (buf), 1);
-  sample_timing.decodeTimeStamp = CMTimeMake (GST_BUFFER_DTS (buf), 1);
+  if (GST_BUFFER_DURATION_IS_VALID (buf))
+    sample_timing.duration = CMTimeMake (GST_BUFFER_DURATION (buf), GST_SECOND);
+  else
+    sample_timing.duration = kCMTimeInvalid;
+
+  if (GST_BUFFER_PTS_IS_VALID (buf))
+    sample_timing.presentationTimeStamp =
+        CMTimeMake (GST_BUFFER_PTS (buf), GST_SECOND);
+  else
+    sample_timing.presentationTimeStamp = kCMTimeInvalid;
+
+  if (GST_BUFFER_DTS_IS_VALID (buf))
+    sample_timing.decodeTimeStamp =
+        CMTimeMake (GST_BUFFER_DTS (buf), GST_SECOND);
+  else
+    sample_timing.decodeTimeStamp = kCMTimeInvalid;
+
   time_array[0] = sample_timing;
 
   status =
