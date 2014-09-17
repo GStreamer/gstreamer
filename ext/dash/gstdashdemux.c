@@ -2043,6 +2043,31 @@ _src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
+_dash_demux_pad_remove_eos_sticky (GstPad * pad, GstEvent ** event,
+    gpointer udata)
+{
+  if (GST_EVENT_TYPE (*event) == GST_EVENT_EOS) {
+    gst_event_replace (event, NULL);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static void
+gst_dash_demux_stream_clear_eos_state (GstDashDemuxStream * stream)
+{
+  GstPad *internal_pad;
+
+  internal_pad =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (stream->pad)));
+  gst_pad_sticky_events_foreach (internal_pad,
+      _dash_demux_pad_remove_eos_sticky, NULL);
+  GST_OBJECT_FLAG_UNSET (internal_pad, GST_PAD_FLAG_EOS);
+
+  gst_object_unref (internal_pad);
+}
+
+static gboolean
 gst_dash_demux_stream_update_source (GstDashDemuxStream * stream,
     const gchar * uri, const gchar * referer, gboolean refresh,
     gboolean allow_cache)
@@ -2197,8 +2222,8 @@ gst_dash_demux_stream_download_uri (GstDashDemux * demux,
   /* flush the proxypads so that the EOS state is reset */
   gst_pad_push_event (stream->src_srcpad, gst_event_new_flush_start ());
   gst_pad_push_event (stream->src_srcpad, gst_event_new_flush_stop (TRUE));
-
   gst_element_set_state (stream->src, GST_STATE_READY);
+  gst_dash_demux_stream_clear_eos_state (stream);
 }
 
 static void
