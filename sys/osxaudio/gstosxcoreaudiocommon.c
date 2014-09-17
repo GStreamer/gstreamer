@@ -39,8 +39,8 @@ gst_core_audio_remove_render_callback (GstCoreAudio * core_audio)
       &input, sizeof (input));
 
   if (status) {
-    GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to remove render callback %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_WARNING_OBJECT (core_audio->osxbuf,
+        "Failed to remove render callback %d", (int) status);
   }
 
   /* Remove the RenderNotify too */
@@ -49,8 +49,7 @@ gst_core_audio_remove_render_callback (GstCoreAudio * core_audio)
 
   if (status) {
     GST_WARNING_OBJECT (core_audio->osxbuf,
-        "Failed to remove render notify callback %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+        "Failed to remove render notify callback %d", (int) status);
   }
 
   /* We're deactivated.. */
@@ -103,8 +102,7 @@ gst_core_audio_io_proc_start (GstCoreAudio * core_audio)
 
     if (status) {
       GST_ERROR_OBJECT (core_audio->osxbuf,
-          "AudioUnitSetProperty failed: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
+          "AudioUnitSetProperty failed: %d", (int) status);
       return FALSE;
     }
     // ### does it make sense to do this notify stuff for input mode?
@@ -113,8 +111,7 @@ gst_core_audio_io_proc_start (GstCoreAudio * core_audio)
 
     if (status) {
       GST_ERROR_OBJECT (core_audio->osxbuf,
-          "AudioUnitAddRenderNotify failed %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+          "AudioUnitAddRenderNotify failed %d", (int) status);
       return FALSE;
     }
     core_audio->io_proc_active = TRUE;
@@ -124,8 +121,8 @@ gst_core_audio_io_proc_start (GstCoreAudio * core_audio)
 
   status = AudioOutputUnitStart (core_audio->audiounit);
   if (status) {
-    GST_ERROR_OBJECT (core_audio->osxbuf, "AudioOutputUnitStart failed: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_ERROR_OBJECT (core_audio->osxbuf, "AudioOutputUnitStart failed: %d",
+        (int) status);
     return FALSE;
   }
   return TRUE;
@@ -143,8 +140,7 @@ gst_core_audio_io_proc_stop (GstCoreAudio * core_audio)
   status = AudioOutputUnitStop (core_audio->audiounit);
   if (status) {
     GST_WARNING_OBJECT (core_audio->osxbuf,
-        "AudioOutputUnitStop failed: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+        "AudioOutputUnitStop failed: %d", (int) status);
   }
   // ###: why is it okay to directly remove from here but not from pause() ?
   if (core_audio->io_proc_active) {
@@ -198,8 +194,8 @@ gst_core_audio_bind_device (GstCoreAudio * core_audio)
       kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0,
       &core_audio->device_id, sizeof (AudioDeviceID));
   if (status) {
-    GST_ERROR_OBJECT (core_audio->osxbuf, "Failed binding to device: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_ERROR_OBJECT (core_audio->osxbuf, "Failed binding to device: %d",
+        (int) status);
     goto audiounit_error;
   }
   return TRUE;
@@ -272,8 +268,7 @@ gst_core_audio_set_channels_layout (GstCoreAudio * core_audio,
         scope, element, layout, layoutSize);
     if (status) {
       GST_WARNING_OBJECT (core_audio->osxbuf,
-          "Failed to set output channel layout: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
+          "Failed to set output channel layout: %d", (int) status);
       return FALSE;
     }
   }
@@ -303,8 +298,7 @@ gst_core_audio_set_format (GstCoreAudio * core_audio,
 
   if (status) {
     GST_WARNING_OBJECT (core_audio->osxbuf,
-        "Failed to set audio description: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+        "Failed to set audio description: %d", (int) status);
     return FALSE;;
   }
 
@@ -338,8 +332,8 @@ gst_core_audio_open_device (GstCoreAudio * core_audio, OSType sub_type,
   status = AudioComponentInstanceNew (comp, &unit);
 
   if (status) {
-    GST_ERROR_OBJECT (core_audio->osxbuf, "Couldn't open %s component %"
-        GST_FOURCC_FORMAT, adesc, GST_FOURCC_ARGS (status));
+    GST_ERROR_OBJECT (core_audio->osxbuf, "Couldn't open %s component %d",
+        adesc, (int) status);
     return FALSE;
   }
 
@@ -351,8 +345,8 @@ gst_core_audio_open_device (GstCoreAudio * core_audio, OSType sub_type,
 
     if (status) {
       AudioComponentInstanceDispose (unit);
-      GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to enable input: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+      GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to enable input: %d",
+          (int) status);
       return FALSE;
     }
 
@@ -363,8 +357,8 @@ gst_core_audio_open_device (GstCoreAudio * core_audio, OSType sub_type,
 
     if (status) {
       AudioComponentInstanceDispose (unit);
-      GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to disable output: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+      GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to disable output: %d",
+          (int) status);
       return FALSE;
     }
   }
