@@ -90,8 +90,11 @@ plugin_init (GstPlugin * plugin)
   res &= gst_element_register (plugin, "atdec", GST_RANK_MARGINAL, GST_TYPE_ATDEC);
 
 #ifdef HAVE_VIDEOTOOLBOX
-  res &= gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
-  gst_vtenc_register_elements (plugin);
+  /* Check if the framework actually exists at runtime */
+  if (VTCompressionSessionCreate != NULL) {
+    res &= gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
+    gst_vtenc_register_elements (plugin);
+  }
 #endif
 
   return res;

@@ -96,5 +96,5 @@ libgstapplemedia_la_SOURCES +=			\
 	vtenc.c 				\
 	vtdec.c
 
-libgstapplemedia_la_LDFLAGS += -Wl,-framework -Wl,VideoToolbox
+libgstapplemedia_la_LDFLAGS += -Wl,-weak_framework -Wl,VideoToolbox
 endif
