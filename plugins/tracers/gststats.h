@@ -51,8 +51,6 @@ struct _GstStatsTracer {
   GstTracer 	 parent;
 
   /*< private >*/
-  GPtrArray *elements;
-  GPtrArray *pads;
   guint num_elements, num_pads;
 };
 

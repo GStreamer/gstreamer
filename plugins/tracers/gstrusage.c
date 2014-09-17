@@ -42,32 +42,19 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rusage_debug);
 #define GST_CAT_DEFAULT gst_rusage_debug
 
+G_LOCK_DEFINE (_proc);
+
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_rusage_debug, "rusage", 0, "rusage tracer");
 #define gst_rusage_tracer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstRUsageTracer, gst_rusage_tracer, GST_TYPE_TRACER,
     _do_init);
 
-/* we remember x measurements per self->window */
+/* remember x measurements per self->window */
 #define WINDOW_SUBDIV 100
 
-/* for ts calibration */
-static gpointer main_thread_id = NULL;
-static guint64 tproc_base = G_GINT64_CONSTANT (0);
+/* number of cpus to scale cpu-usage in threads */
 static glong num_cpus = 1;
-
-typedef struct
-{
-  GstClockTime ts;
-  GstClockTime val;
-} GstTraceValue;
-
-typedef struct
-{
-  GstClockTime window;
-  GMutex lock;
-  GQueue values;                /* GstTraceValue* */
-} GstTraceValues;
 
 typedef struct
 {
@@ -75,8 +62,6 @@ typedef struct
   GstClockTime tthread;
   GstTraceValues *tvs_thread;
 } GstThreadStats;
-
-static GstTraceValues *tvs_proc;
 
 /* data helper */
 
@@ -91,7 +76,6 @@ make_trace_values (GstClockTime window)
 {
   GstTraceValues *self = g_slice_new0 (GstTraceValues);
   self->window = window;
-  g_mutex_init (&self->lock);
   g_queue_init (&self->values);
   return self;
 }
@@ -100,7 +84,6 @@ static void
 free_trace_values (GstTraceValues * self)
 {
   g_queue_free_full (&self->values, free_trace_value);
-  g_mutex_clear (&self->lock);
   g_slice_free (GstTraceValues, self);
 }
 
@@ -221,21 +204,21 @@ do_stats (GstTracer * obj, va_list var_args)
    * the time is larger than ts, as our base-ts is taken after the process has
    * started.
    */
-  if (G_UNLIKELY (thread_id == main_thread_id)) {
-    main_thread_id = NULL;
+  if (G_UNLIKELY (thread_id == self->main_thread_id)) {
+    self->main_thread_id = NULL;
     /* when the registry gets updated, the tproc is less than the debug time ? */
     /* TODO(ensonic): we still see cases where tproc overtakes ts, especially
      * when with sync=false, can this be due to multiple cores in use? */
     if (tproc > ts) {
-      tproc_base = tproc - ts;
+      self->tproc_base = tproc - ts;
       GST_DEBUG ("rusage: calibrating by %" G_GUINT64_FORMAT ", thread: %"
           G_GUINT64_FORMAT ", proc: %" G_GUINT64_FORMAT,
-          tproc_base, stats->tthread, tproc);
-      stats->tthread -= tproc_base;
+          self->tproc_base, stats->tthread, tproc);
+      stats->tthread -= self->tproc_base;
     }
   }
   /* we always need to correct proc time */
-  tproc -= tproc_base;
+  tproc -= self->tproc_base;
 
   /* FIXME: how can we take cpu-frequency scaling into account?
    * - looking at /sys/devices/system/cpu/cpu0/cpufreq/
@@ -260,9 +243,9 @@ do_stats (GstTracer * obj, va_list var_args)
 
   avg_cpuload = (guint) gst_util_uint64_scale (tproc / num_cpus,
       G_GINT64_CONSTANT (1000), ts);
-  g_mutex_lock (&tvs_proc->lock);
-  update_trace_value (tvs_proc, ts, tproc, &dts, &dtproc);
-  g_mutex_unlock (&tvs_proc->lock);
+  G_LOCK (_proc);
+  update_trace_value (self->tvs_proc, ts, tproc, &dts, &dtproc);
+  G_UNLOCK (_proc);
   cur_cpuload = (guint) gst_util_uint64_scale (dtproc / num_cpus,
       G_GINT64_CONSTANT (1000), dts);
   gst_tracer_log_trace (gst_structure_new ("proc-rusage", 
@@ -277,8 +260,32 @@ do_stats (GstTracer * obj, va_list var_args)
 /* tracer class */
 
 static void
+gst_rusage_tracer_finalize (GObject * obj)
+{
+  GstRUsageTracer *self = GST_RUSAGE_TRACER (obj);
+
+  g_hash_table_destroy (self->threads);
+  free_trace_values (self->tvs_proc);
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+static void
 gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->finalize = gst_rusage_tracer_finalize;
+
+  if ((num_cpus = sysconf (_SC_NPROCESSORS_ONLN)) == -1) {
+    GST_WARNING ("failed to get number of cpus online");
+    if ((num_cpus = sysconf (_SC_NPROCESSORS_CONF)) == -1) {
+      GST_WARNING ("failed to get number of cpus, assuming 1");
+      num_cpus = 1;
+    }
+  }
+  GST_DEBUG ("rusage: num_cpus=%ld", num_cpus);
+
   /* announce trace formats */
   /* *INDENT-OFF* */
   gst_tracer_log_trace (gst_structure_new ("thread-rusage.class",
@@ -344,15 +351,8 @@ gst_rusage_tracer_init (GstRUsageTracer * self)
   gst_tracer_register_hook_id (tracer, 0, do_stats);
 
   self->threads = g_hash_table_new_full (NULL, NULL, NULL, free_thread_stats);
+  self->tvs_proc = make_trace_values (GST_SECOND);
+  self->main_thread_id = g_thread_self ();
 
-  main_thread_id = g_thread_self ();
-  tvs_proc = make_trace_values (GST_SECOND);
-  if ((num_cpus = sysconf (_SC_NPROCESSORS_ONLN)) == -1) {
-    GST_WARNING_OBJECT (self, "failed to get number of cpus online");
-    if ((num_cpus = sysconf (_SC_NPROCESSORS_CONF)) == -1) {
-      GST_WARNING_OBJECT (self, "failed to get number of cpus, assuming 1");
-      num_cpus = 1;
-    }
-  }
-  GST_DEBUG ("rusage: main thread=%p, num_cpus=%ld", main_thread_id, num_cpus);
+  GST_DEBUG ("rusage: main thread=%p", self->main_thread_id);
 }

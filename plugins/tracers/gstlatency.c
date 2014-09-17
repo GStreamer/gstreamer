@@ -113,8 +113,7 @@ log_latency (const GstStructure * data, GstPad * sink_pad, guint64 sink_ts)
 }
 
 static void
-send_latency_probe (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
-    guint64 ts)
+send_latency_probe (GstElement * parent, GstPad * pad, guint64 ts)
 {
   if (parent && (!GST_IS_BIN (parent)) &&
       GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE)) {
@@ -134,7 +133,7 @@ do_push_buffer_pre (GstTracer * self, va_list var_args)
   GstPad *pad = va_arg (var_args, GstPad *);
   GstElement *parent = get_real_pad_parent (pad);
 
-  send_latency_probe ((GstLatencyTracer *) self, parent, pad, ts);
+  send_latency_probe (parent, pad, ts);
 }
 
 static void
@@ -145,12 +144,11 @@ do_pull_range_pre (GstTracer * self, va_list var_args)
   GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (peer_pad);
 
-  send_latency_probe ((GstLatencyTracer *) self, parent, peer_pad, ts);
+  send_latency_probe (parent, peer_pad, ts);
 }
 
 static void
-calculate_latency (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
-    guint64 ts)
+calculate_latency (GstElement * parent, GstPad * pad, guint64 ts)
 {
   if (parent && (!GST_IS_BIN (parent)) &&
       GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SINK)) {
@@ -169,7 +167,7 @@ do_push_buffer_post (GstTracer * self, va_list var_args)
   GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (peer_pad);
 
-  calculate_latency ((GstLatencyTracer *) self, parent, peer_pad, ts);
+  calculate_latency (parent, peer_pad, ts);
 }
 
 static void
@@ -179,7 +177,7 @@ do_pull_range_post (GstTracer * self, va_list var_args)
   GstPad *pad = va_arg (var_args, GstPad *);
   GstElement *parent = get_real_pad_parent (pad);
 
-  calculate_latency ((GstLatencyTracer *) self, parent, pad, ts);
+  calculate_latency (parent, pad, ts);
 }
 
 static void
