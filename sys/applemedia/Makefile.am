@@ -49,8 +49,6 @@ libgstapplemedia_la_LDFLAGS =			\
 noinst_HEADERS =				\
 	qtkitvideosrc.h				\
 	avfvideosrc.h				\
-	vth264decbin.h				\
-	vth264encbin.h				\
 	vtenc.h					\
 	vtdec.h					\
 	vtutil.h				\
