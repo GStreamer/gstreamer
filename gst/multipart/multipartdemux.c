@@ -348,6 +348,7 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
 
     gst_pad_push_event (pad, event);
     g_free (stream_id);
+    gst_event_unref (event);
 
     /* take the mime type, convert it to the caps name */
     capsname = gst_multipart_demux_get_gstname (demux, mime);
