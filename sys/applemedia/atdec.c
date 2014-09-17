@@ -441,7 +441,7 @@ gst_atdec_offline_render (GstATDec * atdec, GstAudioInfo * audio_info)
 
     GST_DEBUG_OBJECT (atdec,
         "Got output buffer of size %u at position %" G_GUINT64_FORMAT,
-        output_buffer->mAudioDataByteSize, atdec->output_position);
+        (guint) output_buffer->mAudioDataByteSize, atdec->output_position);
     atdec->output_position +=
         output_buffer->mAudioDataByteSize / audio_info->bpf;
 
@@ -487,7 +487,8 @@ invalid_buffer_size:
   {
     GST_AUDIO_DECODER_ERROR (atdec, 1, STREAM, DECODE, (NULL),
         ("AudioQueueOfflineRender returned invalid buffer size: %u (bpf %d)",
-            output_buffer->mAudioDataByteSize, audio_info->bpf), flow_ret);
+            (guint) output_buffer->mAudioDataByteSize, audio_info->bpf),
+        flow_ret);
 
     AudioQueueFreeBuffer (atdec->queue, output_buffer);
 
