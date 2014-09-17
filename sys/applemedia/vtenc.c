@@ -458,8 +458,11 @@ gst_vtenc_create_session (GstVTEnc * self)
       self, &session);
   GST_INFO_OBJECT (self, "VTCompressionSessionCreate for %d x %d => %d",
       self->negotiated_width, self->negotiated_height, (int) status);
-  if (status != noErr)
+  if (status != noErr) {
+    GST_ERROR_OBJECT (self, "VTCompressionSessionCreate() returned: %d",
+        (int) status);
     goto beach;
+  }
 
   if (self->dump_properties) {
     gst_vtenc_session_dump_properties (self, session);
@@ -489,6 +492,13 @@ gst_vtenc_create_session (GstVTEnc * self)
 
   gst_vtenc_session_configure_bitrate (self, session,
       gst_vtenc_get_bitrate (self));
+
+  status = VTCompressionSessionPrepareToEncodeFrames (session);
+  if (status != noErr) {
+    GST_ERROR_OBJECT (self,
+        "VTCompressionSessionPrepareToEncodeFrames() returned: %d",
+        (int) status);
+  }
 
 beach:
   CFRelease (pb_attrs);
