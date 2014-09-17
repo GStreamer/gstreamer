@@ -639,8 +639,11 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
     GST_OBJECT_UNLOCK (self);
   }
 
-  ts = CMTimeMake (GST_TIME_AS_MSECONDS (frame->pts), 1000);
-  duration = CMTimeMake (GST_TIME_AS_MSECONDS (frame->duration), 1000);
+  ts = CMTimeMake (frame->pts, GST_SECOND);
+  if (frame->duration != GST_CLOCK_TIME_NONE)
+    duration = CMTimeMake (frame->duration, GST_SECOND);
+  else
+    duration = kCMTimeInvalid;
 
   meta = gst_buffer_get_core_media_meta (frame->input_buffer);
   if (meta != NULL) {
