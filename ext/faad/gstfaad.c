@@ -459,7 +459,6 @@ gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos,
         GST_WARNING_OBJECT (faad,
             "Unsupported FAAD channel position 0x%x encountered", fpos[n]);
         return FALSE;
-        break;
       }
     }
   }
