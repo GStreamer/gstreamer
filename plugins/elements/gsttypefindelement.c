@@ -649,13 +649,12 @@ gst_type_find_element_sink_event (GstPad * pad, GstObject * parent,
           GST_OBJECT_LOCK (typefind);
 
           for (l = typefind->cached_events; l; l = l->next) {
-            if (!GST_EVENT_IS_STICKY (l->data) ||
-                GST_EVENT_TYPE (l->data) == GST_EVENT_SEGMENT ||
-                GST_EVENT_TYPE (l->data) == GST_EVENT_EOS) {
-              gst_event_unref (l->data);
-            } else {
+            if (GST_EVENT_IS_STICKY (l->data) &&
+                GST_EVENT_TYPE (l->data) != GST_EVENT_SEGMENT &&
+                GST_EVENT_TYPE (l->data) != GST_EVENT_EOS) {
               gst_pad_store_sticky_event (typefind->src, l->data);
             }
+            gst_event_unref (l->data);
           }
 
           g_list_free (typefind->cached_events);
