@@ -70,8 +70,7 @@ gst_core_audio_get_samples_and_latency_impl (GstCoreAudio * core_audio,
       latency, &size);
 
   if (status) {
-    GST_WARNING_OBJECT (core_audio, "Failed to get latency: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_WARNING_OBJECT (core_audio, "Failed to get latency: %d", (int) status);
     *samples = 0;
     return FALSE;
   }

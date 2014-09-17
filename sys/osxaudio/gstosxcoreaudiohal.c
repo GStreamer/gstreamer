@@ -42,8 +42,7 @@ _audio_system_set_runloop (CFRunLoopRef runLoop)
   if (status == noErr) {
     res = TRUE;
   } else {
-    GST_ERROR ("failed to set runloop to %p: %" GST_FOURCC_FORMAT,
-        runLoop, GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed to set runloop to %p: %d", runLoop, (int) status);
   }
 
   return res;
@@ -65,8 +64,7 @@ _audio_system_get_default_output (void)
   status = AudioObjectGetPropertyData (kAudioObjectSystemObject,
       &defaultDeviceAddress, 0, NULL, &propertySize, &device_id);
   if (status != noErr) {
-    GST_ERROR ("failed getting default output device: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed getting default output device: %d", (int) status);
   }
 
   return device_id;
@@ -88,8 +86,7 @@ _audio_system_get_devices (gint * ndevices)
   status = AudioObjectGetPropertyDataSize (kAudioObjectSystemObject,
       &audioDevicesAddress, 0, NULL, &propertySize);
   if (status != noErr) {
-    GST_WARNING ("failed getting number of devices: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_WARNING ("failed getting number of devices: %d", (int) status);
     return NULL;
   }
 
@@ -100,8 +97,7 @@ _audio_system_get_devices (gint * ndevices)
     status = AudioObjectGetPropertyData (kAudioObjectSystemObject,
         &audioDevicesAddress, 0, NULL, &propertySize, devices);
     if (status != noErr) {
-      GST_WARNING ("failed getting the list of devices: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+      GST_WARNING ("failed getting the list of devices: %d", (int) status);
       g_free (devices);
       *ndevices = 0;
       return NULL;
@@ -148,8 +144,7 @@ _audio_device_get_latency (AudioDeviceID device_id)
   status = AudioObjectGetPropertyData (device_id,
       &audioDeviceLatencyAddress, 0, NULL, &propertySize, &latency);
   if (status != noErr) {
-    GST_ERROR ("failed to get latency: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed to get latency: %d", (int) status);
     latency = -1;
   }
 
@@ -172,8 +167,7 @@ _audio_device_get_hog (AudioDeviceID device_id)
   status = AudioObjectGetPropertyData (device_id,
       &audioDeviceHogModeAddress, 0, NULL, &propertySize, &hog_pid);
   if (status != noErr) {
-    GST_ERROR ("failed to get hog: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed to get hog: %d", (int) status);
     hog_pid = -1;
   }
 
@@ -199,8 +193,7 @@ _audio_device_set_hog (AudioDeviceID device_id, pid_t hog_pid)
   if (status == noErr) {
     res = TRUE;
   } else {
-    GST_ERROR ("failed to set hog: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed to set hog: %d", (int) status);
   }
 
   return res;
@@ -225,20 +218,17 @@ _audio_device_set_mixing (AudioDeviceID device_id, gboolean enable_mix)
     status = AudioObjectIsPropertySettable (device_id,
         &audioDeviceSupportsMixingAddress, &writable);
     if (status) {
-      GST_DEBUG ("AudioObjectIsPropertySettable: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
+      GST_DEBUG ("AudioObjectIsPropertySettable: %d", (int) status);
     }
     status = AudioObjectGetPropertyDataSize (device_id,
         &audioDeviceSupportsMixingAddress, 0, NULL, &propertySize);
     if (status) {
-      GST_DEBUG ("AudioObjectGetPropertyDataSize: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
+      GST_DEBUG ("AudioObjectGetPropertyDataSize: %d", (int) status);
     }
     status = AudioObjectGetPropertyData (device_id,
         &audioDeviceSupportsMixingAddress, 0, NULL, &propertySize, &can_mix);
     if (status) {
-      GST_DEBUG ("AudioObjectGetPropertyData: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
+      GST_DEBUG ("AudioObjectGetPropertyData: %d", (int) status);
     }
 
     if (status == noErr && writable) {
@@ -249,8 +239,7 @@ _audio_device_set_mixing (AudioDeviceID device_id, gboolean enable_mix)
     }
 
     if (status != noErr) {
-      GST_ERROR ("failed to set mixmode: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
+      GST_ERROR ("failed to set mixmode: %d", (int) status);
     }
   } else {
     GST_DEBUG ("property not found, mixing coudln't be changed");
@@ -333,8 +322,7 @@ gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id)
   status = AudioObjectGetPropertyDataSize (device_id,
       &channelLayoutAddress, 0, NULL, &propertySize);
   if (status != noErr) {
-    GST_ERROR ("failed to get prefered layout: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed to get prefered layout: %d", (int) status);
     goto beach;
   }
 
@@ -343,8 +331,7 @@ gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id)
   status = AudioObjectGetPropertyData (device_id,
       &channelLayoutAddress, 0, NULL, &propertySize, layout);
   if (status != noErr) {
-    GST_ERROR ("failed to get prefered layout: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed to get prefered layout: %d", (int) status);
     goto failed;
   }
 
@@ -354,8 +341,7 @@ gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id)
         AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutForBitmap,
         sizeof (UInt32), &layout->mChannelBitmap, &propertySize, layout);
     if (status != noErr) {
-      GST_ERROR ("failed to get layout for bitmap: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
+      GST_ERROR ("failed to get layout for bitmap: %d", (int) status);
       goto failed;
     }
   } else if (layout->mChannelLayoutTag !=
@@ -365,8 +351,7 @@ gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id)
         sizeof (AudioChannelLayoutTag), &layout->mChannelLayoutTag,
         &propertySize, layout);
     if (status != noErr) {
-      GST_ERROR ("failed to get layout for tag: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
+      GST_ERROR ("failed to get layout for tag: %d", (int) status);
       goto failed;
     }
   }
@@ -397,8 +382,7 @@ _audio_device_get_streams (AudioDeviceID device_id, gint * nstreams)
   status = AudioObjectGetPropertyDataSize (device_id,
       &streamsAddress, 0, NULL, &propertySize);
   if (status != noErr) {
-    GST_WARNING ("failed getting number of streams: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_WARNING ("failed getting number of streams: %d", (int) status);
     return NULL;
   }
 
@@ -409,8 +393,7 @@ _audio_device_get_streams (AudioDeviceID device_id, gint * nstreams)
     status = AudioObjectGetPropertyData (device_id,
         &streamsAddress, 0, NULL, &propertySize, streams);
     if (status != noErr) {
-      GST_WARNING ("failed getting the list of streams: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+      GST_WARNING ("failed getting the list of streams: %d", (int) status);
       g_free (streams);
       *nstreams = 0;
       return NULL;
@@ -436,8 +419,7 @@ _audio_stream_get_latency (AudioStreamID stream_id)
   status = AudioObjectGetPropertyData (stream_id,
       &latencyAddress, 0, NULL, &propertySize, &latency);
   if (status != noErr) {
-    GST_ERROR ("failed to get latency: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed to get latency: %d", (int) status);
     latency = -1;
   }
 
@@ -460,8 +442,7 @@ _audio_stream_get_current_format (AudioStreamID stream_id,
   status = AudioObjectGetPropertyData (stream_id,
       &formatAddress, 0, NULL, &propertySize, format);
   if (status != noErr) {
-    GST_ERROR ("failed to get current format: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed to get current format: %d", (int) status);
     return FALSE;
   }
 
@@ -484,8 +465,7 @@ _audio_stream_set_current_format (AudioStreamID stream_id,
   status = AudioObjectSetPropertyData (stream_id,
       &formatAddress, 0, NULL, propertySize, &format);
   if (status != noErr) {
-    GST_ERROR ("failed to set current format: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+    GST_ERROR ("failed to set current format: %d", (int) status);
     return FALSE;
   }
 
@@ -508,8 +488,7 @@ _audio_stream_get_formats (AudioStreamID stream_id, gint * nformats)
   status = AudioObjectGetPropertyDataSize (stream_id,
       &formatsAddress, 0, NULL, &propertySize);
   if (status != noErr) {
-    GST_WARNING ("failed getting number of stream formats: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_WARNING ("failed getting number of stream formats: %d", (int) status);
     return NULL;
   }
 
@@ -520,8 +499,8 @@ _audio_stream_get_formats (AudioStreamID stream_id, gint * nformats)
     status = AudioObjectGetPropertyData (stream_id,
         &formatsAddress, 0, NULL, &propertySize, formats);
     if (status != noErr) {
-      GST_WARNING ("failed getting the list of stream formats: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+      GST_WARNING ("failed getting the list of stream formats: %d",
+          (int) status);
       g_free (formats);
       *nformats = 0;
       return NULL;
@@ -606,8 +585,7 @@ _audio_stream_change_format (AudioStreamID stream_id,
   status = AudioObjectAddPropertyListener (stream_id, &formatAddress,
       _audio_stream_format_listener, (void *) &prop_mutex);
   if (status != noErr) {
-    GST_ERROR ("AudioObjectAddPropertyListener failed: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_ERROR ("AudioObjectAddPropertyListener failed: %d", (int) status);
     goto done;
   }
 
@@ -655,8 +633,7 @@ done:
   status = AudioObjectRemovePropertyListener (stream_id,
       &formatAddress, _audio_stream_format_listener, (void *) &prop_mutex);
   if (status != noErr) {
-    GST_ERROR ("AudioObjectRemovePropertyListener failed: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_ERROR ("AudioObjectRemovePropertyListener failed: %d", (int) status);
   }
   /* Destroy the lock and condition */
   g_mutex_unlock (&prop_mutex.lock);
@@ -708,8 +685,7 @@ _monitorize_spdif (GstCoreAudio * core_audio)
       (void *) core_audio);
   if (status != noErr) {
     GST_ERROR_OBJECT (core_audio->osxbuf,
-        "AudioObjectAddPropertyListener failed: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+        "AudioObjectAddPropertyListener failed: %d", (int) status);
     ret = FALSE;
   }
 
@@ -734,8 +710,7 @@ _unmonitorize_spdif (GstCoreAudio * core_audio)
       (void *) core_audio);
   if (status != noErr) {
     GST_ERROR_OBJECT (core_audio->osxbuf,
-        "AudioObjectRemovePropertyListener failed: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+        "AudioObjectRemovePropertyListener failed: %d", (int) status);
     ret = FALSE;
   }
 
@@ -933,8 +908,7 @@ _remove_render_spdif_callback (GstCoreAudio * core_audio)
       AudioDeviceDestroyIOProcID (core_audio->device_id, core_audio->procID);
   if (status != noErr) {
     GST_ERROR_OBJECT (core_audio->osxbuf,
-        "AudioDeviceDestroyIOProcID failed: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+        "AudioDeviceDestroyIOProcID failed: %d", (int) status);
   }
 
   GST_DEBUG_OBJECT (core_audio,
@@ -963,8 +937,7 @@ _io_proc_spdif_start (GstCoreAudio * core_audio)
         (void *) core_audio, &core_audio->procID);
     if (status != noErr) {
       GST_ERROR_OBJECT (core_audio->osxbuf,
-          ":AudioDeviceCreateIOProcID failed: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+          ":AudioDeviceCreateIOProcID failed: %d", (int) status);
       return FALSE;
     }
     core_audio->io_proc_active = TRUE;
@@ -976,8 +949,7 @@ _io_proc_spdif_start (GstCoreAudio * core_audio)
   status = AudioDeviceStart (core_audio->device_id, core_audio->procID);
   if (status != noErr) {
     GST_ERROR_OBJECT (core_audio->osxbuf,
-        "AudioDeviceStart failed: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+        "AudioDeviceStart failed: %d", (int) status);
     return FALSE;
   }
   return TRUE;
@@ -992,8 +964,7 @@ _io_proc_spdif_stop (GstCoreAudio * core_audio)
   status = AudioDeviceStop (core_audio->device_id, core_audio->procID);
   if (status != noErr) {
     GST_ERROR_OBJECT (core_audio->osxbuf,
-        "AudioDeviceStop failed: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
+        "AudioDeviceStop failed: %d", (int) status);
   }
 
   GST_DEBUG_OBJECT (core_audio,
@@ -1099,8 +1070,8 @@ gst_core_audio_get_samples_and_latency_impl (GstCoreAudio * core_audio,
         latency, &size);
 
     if (status) {
-      GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to get latency: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+      GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to get latency: %d",
+          (int) status);
       *samples = 0;
       return FALSE;
     }
@@ -1143,8 +1114,8 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
           frame_size, &propertySize);
 
       if (status) {
-        GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to get frame size: %"
-            GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+        GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to get frame size: %d",
+            (int) status);
         goto done;
       }
     }

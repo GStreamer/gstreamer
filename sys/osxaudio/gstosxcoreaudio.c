@@ -101,8 +101,7 @@ gst_core_audio_open (GstCoreAudio * core_audio)
       AudioComponentInstanceDispose (core_audio->audiounit);
       core_audio->audiounit = NULL;
       GST_WARNING_OBJECT (core_audio,
-          "Unable to obtain device properties: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
+          "Unable to obtain device properties: %d", (int) status);
       return FALSE;
     } else {
       src->deviceChannels = asbd_in.mChannelsPerFrame;
@@ -164,8 +163,8 @@ gst_core_audio_initialize (GstCoreAudio * core_audio,
   /* Initialize the AudioUnit */
   status = AudioUnitInitialize (core_audio->audiounit);
   if (status) {
-    GST_ERROR_OBJECT (core_audio, "Failed to initialise AudioUnit: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
+    GST_ERROR_OBJECT (core_audio, "Failed to initialise AudioUnit: %d",
+        (int) status);
     goto error;
   }
   return TRUE;
