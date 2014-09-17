@@ -3663,16 +3663,16 @@ create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
     GstPadLinkReturn ret;
 
     GST_DEBUG_OBJECT (rtpbin, "linking RTCP encoder");
-    ename = g_strdup_printf ("rtcp_sink_%d", sessid);
-    encsink = gst_element_get_static_pad (encoder, ename);
-    g_free (ename);
+
     ename = g_strdup_printf ("rtcp_src_%d", sessid);
     encsrc = gst_element_get_static_pad (encoder, ename);
     g_free (ename);
-
     if (encsrc == NULL)
       goto enc_src_failed;
 
+    ename = g_strdup_printf ("rtcp_sink_%d", sessid);
+    encsink = gst_element_get_static_pad (encoder, ename);
+    g_free (ename);
     if (encsink == NULL)
       goto enc_sink_failed;
 
