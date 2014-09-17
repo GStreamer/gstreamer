@@ -771,6 +771,12 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
   gboolean is_keyframe;
   GstVideoCodecFrame *frame;
 
+  if (status != noErr) {
+    GST_ELEMENT_ERROR (self, LIBRARY, ENCODE, (NULL), ("Failed to encode: %d",
+            (int) status));
+    goto beach;
+  }
+
   /* This may happen if we don't have enough bitrate */
   if (sampleBuffer == NULL)
     goto beach;
