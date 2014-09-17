@@ -1,0 +1,42 @@
+
+== Dependencies ==
+
+ * CMake (tested with 2.8)
+
+ * Microsoft SDK
+   (http://www.microsoft.com/en-us/download/details.aspx?id=8279). Don't
+   use any after 7.1, they don't include the samples. You can uncheck
+   the .NET stuff.
+
+ * Visual Studio, in theory any version will do; tested with 2013
+   Express
+   (http://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx).
+
+== Build ==
+
+First build the SDK "baseclasses" sample; they should have been
+installed in <SDK>/Samples/multimedia/directshow/baseclasses. Just
+open the SLN and build both Debug_MBCS and Release_MBCS.
+
+Install the GStreamer development files (for version 1.4.1):
+http://gstreamer.freedesktop.org/data/pkg/windows/1.4.1/. I use the 32
+bits version even on a 64 bits system because CMake 2.8 does not seem
+to be able to generate a 64 bits configuration yet. It's probably
+doable with CMake 3.x.
+
+Then go to sys/dshowsrcwrapper and use CMake to generate the project
+file for your choosen version of Visual. There are two influential
+variables:
+
+ * GST_INSTALL_BASE: your GStreamer installation directory
+   (default C:\gstreamer\1.0\x86)
+
+ * SDK_INSTALL_BASE: the Windows SDK installation path (default
+   C:\Program Files\Microsoft SDKs\Windows\v7.0).
+
+mkdir build
+cd build
+cmake -G "Visual Studio 12" ..
+
+Open the SLN and build the project. Copy the DLL to the GStreamer
+plugins directory.

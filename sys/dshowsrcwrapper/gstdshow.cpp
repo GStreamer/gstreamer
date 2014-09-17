@@ -19,6 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gst/video/video-format.h>
+
 #include "gstdshow.h"
 #include "gstdshowfakesink.h"
 
@@ -424,16 +426,16 @@ gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
   /* raw video format */
   switch (video_format) {
     case GST_VIDEO_FORMAT_BGR:
-      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_BGR);
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("BGR"));
       break;
     case GST_VIDEO_FORMAT_I420:
-      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("I420"));
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("I420"));
 	  break;
     case GST_VIDEO_FORMAT_YUY2:
-      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("YUY2"));
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("YUY2"));
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("UYVY"));
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("UYVY"));
       break;
     default:
       break;
@@ -444,7 +446,7 @@ gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
     if (g_ascii_strncasecmp (name, "video/x-dv, systemstream=FALSE", 31) == 0) {
       video_caps = gst_caps_new_simple ("video/x-dv",
           "systemstream", G_TYPE_BOOLEAN, FALSE,
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
+		  "format", G_TYPE_STRING, "dvsd",
           NULL);
     } else if (g_ascii_strncasecmp (name, "video/x-dv, systemstream=TRUE", 31) == 0) {
       video_caps = gst_caps_new_simple ("video/x-dv",

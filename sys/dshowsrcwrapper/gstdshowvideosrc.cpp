@@ -34,22 +34,24 @@ GST_DEBUG_CATEGORY_STATIC (dshowvideosrc_debug);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_YUV ("{ I420 }") ";"
-        GST_VIDEO_CAPS_YUV ("{ YUY2 }") ";"
-        GST_VIDEO_CAPS_YUV ("{ UYVY }") ";"
-        "video/x-dv,"
-        "systemstream = (boolean) FALSE,"
-        "width = (int) [ 1, MAX ],"
-        "height = (int) [ 1, MAX ],"
-        "framerate = (fraction) [ 0, MAX ],"
-        "format = (fourcc) dvsd;" "video/x-dv," "systemstream = (boolean) TRUE")
+    GST_STATIC_CAPS ("video/x-raw, format=(string) { "
+        GST_VIDEO_NE(BGR)  ", "
+        GST_VIDEO_NE(I420) ", "
+        GST_VIDEO_NE(YUY2) ", "
+        GST_VIDEO_NE(UYVY) " }, "
+        "width = " GST_VIDEO_SIZE_RANGE ", "
+        "height = " GST_VIDEO_SIZE_RANGE ", "
+        "framerate = " GST_VIDEO_FPS_RANGE "; "
+
+        "video/x-dv, "
+        "format= (string) DVSD, "
+        "width = " GST_VIDEO_SIZE_RANGE ", "
+        "height = " GST_VIDEO_SIZE_RANGE ", "
+        "framerate = " GST_VIDEO_FPS_RANGE ", "
+        "systemstream = (boolean) { TRUE, FALSE }")
     );
 
-static void gst_dshowvideosrc_init_interfaces (GType type);
-
-GST_BOILERPLATE_FULL (GstDshowVideoSrc, gst_dshowvideosrc, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_dshowvideosrc_init_interfaces);
+G_DEFINE_TYPE (GstDshowVideoSrc, gst_dshowvideosrc, GST_TYPE_PUSH_SRC)
 
 enum
 {
@@ -58,26 +60,12 @@ enum
   PROP_DEVICE_NAME
 };
 
-static void gst_dshowvideosrc_probe_interface_init (GstPropertyProbeInterface *
-    iface);
-static const GList *gst_dshowvideosrc_probe_get_properties (GstPropertyProbe *
-    probe);
-static GValueArray *gst_dshowvideosrc_probe_get_values (GstPropertyProbe *
-    probe, guint prop_id, const GParamSpec * pspec);
-static GValueArray *gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc *
-    src);
-static gboolean gst_dshowvideosrc_probe_needs_probe (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec);
-static void gst_dshowvideosrc_probe_probe_property (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec);
-
 
 static void gst_dshowvideosrc_dispose (GObject * gobject);
 static void gst_dshowvideosrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_dshowvideosrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstCaps *gst_dshowvideosrc_get_caps (GstBaseSrc * src);
 static GstStateChangeReturn gst_dshowvideosrc_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -87,8 +75,8 @@ static gboolean gst_dshowvideosrc_stop (GstBaseSrc * bsrc);
 static gboolean gst_dshowvideosrc_unlock (GstBaseSrc * bsrc);
 static gboolean gst_dshowvideosrc_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps);
-static GstCaps *gst_dshowvideosrc_get_caps (GstBaseSrc * bsrc);
-static void gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
+static GstCaps *gst_dshowvideosrc_get_caps (GstBaseSrc * bsrc, GstCaps * filter);
+static GstCaps *gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static GstFlowReturn gst_dshowvideosrc_create (GstPushSrc * psrc,
     GstBuffer ** buf);
 
@@ -99,42 +87,6 @@ static GstCaps *gst_dshowvideosrc_getcaps_from_enum_mediatypes (GstDshowVideoSrc
     src, IPin * pin);
 static gboolean gst_dshowvideosrc_push_buffer (guint8 * buffer, guint size,
     gpointer src_object, GstClockTime duration);
-
-static void
-gst_dshowvideosrc_init_interfaces (GType type)
-{
-  static const GInterfaceInfo dshowvideosrc_info = {
-    (GInterfaceInitFunc) gst_dshowvideosrc_probe_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type,
-      GST_TYPE_PROPERTY_PROBE, &dshowvideosrc_info);
-}
-
-static void
-gst_dshowvideosrc_probe_interface_init (GstPropertyProbeInterface * iface)
-{
-  iface->get_properties = gst_dshowvideosrc_probe_get_properties;
-  iface->needs_probe = gst_dshowvideosrc_probe_needs_probe;
-  iface->probe_property = gst_dshowvideosrc_probe_probe_property;
-  iface->get_values = gst_dshowvideosrc_probe_get_values;
-}
-
-static void
-gst_dshowvideosrc_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_static_metadata (element_class,
-      "DirectShow video capture source", "Source/Video",
-      "Receive data from a directshow video capture graph",
-      "Sebastien Moutte <sebastien@moutte.net>");
-}
 
 static void
 gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
@@ -158,8 +110,8 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dshowvideosrc_change_state);
 
-  gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_get_caps);
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_set_caps);
+  gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_get_caps);
   gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_src_fixate);
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_stop);
@@ -181,13 +133,21 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
           "Human-readable name of the sound device", NULL,
           static_cast < GParamFlags > (G_PARAM_READWRITE)));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "DirectShow video capture source", "Source/Video",
+      "Receive data from a directshow video capture graph",
+      "Sebastien Moutte <sebastien@moutte.net>");
+
   GST_DEBUG_CATEGORY_INIT (dshowvideosrc_debug, "dshowvideosrc", 0,
       "Directshow video source");
 
 }
 
 static void
-gst_dshowvideosrc_init (GstDshowVideoSrc * src, GstDshowVideoSrcClass * klass)
+gst_dshowvideosrc_init (GstDshowVideoSrc * src)
 {
   src->device = NULL;
   src->device_name = NULL;
@@ -198,6 +158,7 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src, GstDshowVideoSrcClass * klass)
   src->caps = NULL;
   src->pins_mediatypes = NULL;
   src->is_rgb = FALSE;
+  src->is_running = FALSE;
 
   /*added for analog input*/
   src->graph_builder = NULL;
@@ -205,8 +166,8 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src, GstDshowVideoSrcClass * klass)
   src->pVC = NULL;
   src->pVSC = NULL;
 
-  src->buffer_cond = g_cond_new ();
-  src->buffer_mutex = g_mutex_new ();
+  g_cond_init(&src->buffer_cond);
+  g_mutex_init(&src->buffer_mutex);
   src->buffer = NULL;
   src->stop_requested = FALSE;
 
@@ -215,7 +176,7 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src, GstDshowVideoSrcClass * klass)
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
 }
 
-static void
+static GstCaps *
 gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   /* If there is no desired video size, set default video size to device preffered video size */
@@ -247,6 +208,10 @@ gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
           pin_mediatype->defaultFPS, 1);
     }
   }
+
+  caps = GST_BASE_SRC_CLASS (gst_dshowvideosrc_parent_class)->fixate(bsrc, caps);
+
+  return caps;
 }
 
 static void
@@ -280,156 +245,12 @@ gst_dshowvideosrc_dispose (GObject * gobject)
     src->video_cap_filter = NULL;
   }
 
-  if (src->buffer_mutex) {
-    g_mutex_free (src->buffer_mutex);
-    src->buffer_mutex = NULL;
-  }
-
-  if (src->buffer_cond) {
-    g_cond_free (src->buffer_cond);
-    src->buffer_cond = NULL;
-  }
-
-  if (src->buffer) {
-    gst_buffer_unref (src->buffer);
-    src->buffer = NULL;
-  }
+  g_cond_clear(&src->buffer_cond);
+  g_mutex_clear(&src->buffer_mutex);
 
   CoUninitialize ();
 
-  G_OBJECT_CLASS (parent_class)->dispose (gobject);
-}
-
-static gboolean
-gst_dshowvideosrc_probe_needs_probe (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec)
-{
-  static gboolean init = FALSE;
-  gboolean ret = FALSE;
-
-  if (!init) {
-    ret = TRUE;
-    init = TRUE;
-  }
-
-  return ret;
-}
-
-static void
-gst_dshowvideosrc_probe_probe_property (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec)
-{
-  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
-
-  switch (prop_id) {
-    case PROP_DEVICE_NAME:
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-}
-
-static const GList *
-gst_dshowvideosrc_probe_get_properties (GstPropertyProbe * probe)
-{
-  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
-  static GList *props = NULL;
-
-  if (!props) {
-    GParamSpec *pspec;
-
-    pspec = g_object_class_find_property (klass, "device-name");
-    props = g_list_append (props, pspec);
-  }
-
-  return props;
-}
-
-static GValueArray *
-gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
-{
-  GValueArray *array = g_value_array_new (0);
-  ICreateDevEnum *devices_enum = NULL;
-  IEnumMoniker *moniker_enum = NULL;
-  IMoniker *moniker = NULL;
-  HRESULT hres = S_FALSE;
-  ULONG fetched;
-
-  hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
-      IID_ICreateDevEnum, (LPVOID *) & devices_enum);
-  if (hres != S_OK) {
-    GST_ERROR ("Can't create system device enumerator (error=0x%x)", hres);
-    array = NULL;
-    goto clean;
-  }
-
-  hres = devices_enum->CreateClassEnumerator (CLSID_VideoInputDeviceCategory,
-      &moniker_enum, 0);
-  if (hres != S_OK || !moniker_enum) {
-    GST_ERROR ("Can't get enumeration of video devices (error=0x%x)", hres);
-    array = NULL;
-    goto clean;
-  }
-
-  moniker_enum->Reset ();
-
-  while (hres = moniker_enum->Next (1, &moniker, &fetched), hres == S_OK) {
-    IPropertyBag *property_bag = NULL;
-
-    hres =
-        moniker->BindToStorage (NULL, NULL, IID_IPropertyBag,
-        (LPVOID *) & property_bag);
-    if (SUCCEEDED (hres) && property_bag) {
-      VARIANT varFriendlyName;
-
-      VariantInit (&varFriendlyName);
-      hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
-      if (hres == S_OK && varFriendlyName.bstrVal) {
-        gchar *friendly_name =
-            g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
-            wcslen (varFriendlyName.bstrVal), NULL, NULL, NULL);
-
-        GValue value = { 0 };
-        g_value_init (&value, G_TYPE_STRING);
-        g_value_set_string (&value, friendly_name);
-        g_value_array_append (array, &value);
-        g_value_unset (&value);
-        g_free (friendly_name);
-        SysFreeString (varFriendlyName.bstrVal);
-      }
-      property_bag->Release ();
-    }
-    moniker->Release ();
-  }
-
-clean:
-  if (moniker_enum)
-    moniker_enum->Release ();
-
-  if (devices_enum)
-    devices_enum->Release ();
-
-  return array;
-}
-
-static GValueArray *
-gst_dshowvideosrc_probe_get_values (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec)
-{
-  GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (probe);
-  GValueArray *array = NULL;
-
-  switch (prop_id) {
-    case PROP_DEVICE_NAME:
-      array = gst_dshowvideosrc_get_device_name_values (src);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-
-  return array;
+  G_OBJECT_CLASS (gst_dshowvideosrc_parent_class)->dispose (gobject);
 }
 
 static void
@@ -475,7 +296,7 @@ gst_dshowvideosrc_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
+gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
 {
   HRESULT hres = S_OK;
   IBindCtx *lpbc = NULL;
@@ -569,7 +390,15 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
   }
 
   if (src->caps) {
-    return gst_caps_ref (src->caps);
+    GstCaps *caps;
+
+    if (filter) {
+      caps = gst_caps_intersect_full (filter, src->caps, GST_CAPS_INTERSECT_FIRST);
+    } else {
+      caps = gst_caps_ref (src->caps);
+    }
+
+    return caps;
   }
 
   return NULL;
@@ -587,10 +416,15 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      if (src->media_filter)
+      if (src->media_filter) {
+	/* Setting this to TRUE because set_caps may be invoked before
+	   Run() returns. */
+	src->is_running = TRUE;
         hres = src->media_filter->Run (0);
+      }
       if (hres != S_OK) {
         GST_ERROR ("Can't RUN the directshow capture graph (error=0x%x)", hres);
+	src->is_running = FALSE;
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
@@ -601,6 +435,7 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
         GST_ERROR ("Can't STOP the directshow capture graph (error=%d)", hres);
         return GST_STATE_CHANGE_FAILURE;
       }
+      src->is_running = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
@@ -608,7 +443,7 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return GST_ELEMENT_CLASS(gst_dshowvideosrc_parent_class)->change_state(element, transition);
 }
 
 static gboolean
@@ -690,7 +525,7 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
 											&MEDIATYPE_Video, src->video_cap_filter,
 											IID_IAMStreamConfig, (LPVOID *)&src->pVSC);
 	  if (hres != S_OK) {
-		  // this means we can't set frame rate (non-DV only)
+                  /* this means we can't set frame rate (non-DV only) */
 		  GST_ERROR ("Error %x: Cannot find VCapture:IAMStreamConfig",	hres);
 			goto error;
 	  }
@@ -741,6 +576,17 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   IPin *input_pin = NULL;
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
   GstStructure *s = gst_caps_get_structure (caps, 0);
+
+  /* Same remark as in gstdshowaudiosrc. */
+  gboolean was_running = src->is_running;
+  if (was_running) {
+    HRESULT hres = src->media_filter->Stop ();
+    if (hres != S_OK) {
+      GST_ERROR ("Can't STOP the directshow capture graph (error=0x%x)", hres);
+      return FALSE;
+    }
+    src->is_running = FALSE;
+  }
 
   /* search the negociated caps in our caps list to get its index and the corresponding mediatype */
   if (gst_caps_is_subset (caps, src->caps)) {
@@ -824,18 +670,28 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
         gst_structure_get_int (s, "width", &src->width);
         gst_structure_get_int (s, "height", &src->height);
 
-        src->is_rgb = FALSE;
-        caps_string = gst_caps_to_string (caps);
-        if (caps_string) {
-          if (strstr (caps_string, "video/x-raw-rgb")) {
-            src->is_rgb = TRUE;
-          } else {
-            src->is_rgb = FALSE;
-          }
-          g_free (caps_string);
-        }
+	GstVideoInfo info;
+	gst_video_info_from_caps(&info, caps);
+	switch (GST_VIDEO_INFO_FORMAT(&info)) {
+          case GST_VIDEO_FORMAT_RGB:
+          case GST_VIDEO_FORMAT_BGR:
+	    src->is_rgb = TRUE;
+	    break;
+	default:
+	  src->is_rgb = FALSE;
+	  break;
+	}
       }
     }
+  }
+
+  if (was_running) {
+    HRESULT hres = src->media_filter->Run (0);
+    if (hres != S_OK) {
+      GST_ERROR ("Can't RUN the directshow capture graph (error=0x%x)", hres);
+      return FALSE;
+    }
+    src->is_running = TRUE;
   }
 
   return TRUE;
@@ -924,10 +780,10 @@ gst_dshowvideosrc_unlock (GstBaseSrc * bsrc)
 {
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
 
-  g_mutex_lock (src->buffer_mutex);
+  g_mutex_lock (&src->buffer_mutex);
   src->stop_requested = TRUE;
-  g_cond_signal (src->buffer_cond);
-  g_mutex_unlock (src->buffer_mutex);
+  g_cond_signal (&src->buffer_cond);
+  g_mutex_unlock (&src->buffer_mutex);
 
   return TRUE;
 }
@@ -947,12 +803,12 @@ gst_dshowvideosrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (psrc);
 
-  g_mutex_lock (src->buffer_mutex);
+  g_mutex_lock (&src->buffer_mutex);
   while (src->buffer == NULL && !src->stop_requested)
-    g_cond_wait (src->buffer_cond, src->buffer_mutex);
+    g_cond_wait (&src->buffer_cond, &src->buffer_mutex);
   *buf = src->buffer;
   src->buffer = NULL;
-  g_mutex_unlock (src->buffer_mutex);
+  g_mutex_unlock (&src->buffer_mutex);
 
   if (src->stop_requested) {
     if (*buf != NULL) {
@@ -976,7 +832,6 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin)
   HRESULT hres = S_OK;
   int icount = 0;
   int isize = 0;
-  VIDEO_STREAM_CONFIG_CAPS vscc;
   int i = 0;
   IAMStreamConfig *streamcaps = NULL;
 
@@ -988,7 +843,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin)
 
   streamcaps->GetNumberOfCapabilities (&icount, &isize);
 
-  if (isize != sizeof (vscc)) {
+  if (isize != sizeof (VIDEO_STREAM_CONFIG_CAPS)) {
     streamcaps->Release ();
     return NULL;
   }
@@ -1068,10 +923,18 @@ gst_dshowvideosrc_getcaps_from_enum_mediatypes (GstDshowVideoSrc * src, IPin * p
     GstCaps *mediacaps = NULL;
     GstVideoFormat video_format = gst_dshow_guid_to_gst_video_format (pin_mediatype->mediatype);
 
-    if (video_format != GST_VIDEO_FORMAT_UNKNOWN)
-      mediacaps = gst_video_format_new_caps (video_format, 
-          pin_mediatype->defaultWidth, pin_mediatype->defaultHeight,
-          pin_mediatype->defaultFPS, 1, 1, 1);
+	if (video_format != GST_VIDEO_FORMAT_UNKNOWN) {
+		GstVideoInfo info;
+
+		gst_video_info_init(&info);
+		gst_video_info_set_format(&info, video_format, pin_mediatype->defaultWidth, pin_mediatype->defaultHeight);
+		info.fps_n = pin_mediatype->defaultFPS;
+		info.fps_d = 1;
+		info.par_n = 1;
+		info.par_d = 1;
+		info.interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE; /* XXX is this correct ? */
+		mediacaps = gst_video_info_to_caps(&info);
+	}
 
     if (mediacaps) {
       src->pins_mediatypes =
@@ -1102,6 +965,7 @@ gst_dshowvideosrc_push_buffer (guint8 * buffer, guint size, gpointer src_object,
   IPin *pPin = NULL;
   HRESULT hres = S_FALSE;
   AM_MEDIA_TYPE *pMediaType = NULL;
+  GstMapInfo info;
 
   if (!buffer || size == 0 || !src) {
     return FALSE;
@@ -1110,7 +974,7 @@ gst_dshowvideosrc_push_buffer (guint8 * buffer, guint size, gpointer src_object,
   /* create a new buffer assign to it the clock time as timestamp */
   buf = gst_buffer_new_and_alloc (size);
 
-  GST_BUFFER_SIZE (buf) = size;
+  gst_buffer_set_size(buf, size);
 
   GstClock *clock = gst_element_get_clock (GST_ELEMENT (src));
   GST_BUFFER_TIMESTAMP (buf) =
@@ -1118,6 +982,12 @@ gst_dshowvideosrc_push_buffer (guint8 * buffer, guint size, gpointer src_object,
   gst_object_unref (clock);
 
   GST_BUFFER_DURATION (buf) = duration;
+
+  if (!gst_buffer_map(buf, &info, GST_MAP_WRITE)) {
+	  gst_buffer_unref(buf);
+	  GST_ERROR("Failed to map buffer");
+	  return FALSE;
+  }
 
   if (src->is_rgb) {
     /* FOR RGB directshow decoder will return bottom-up BITMAP
@@ -1128,26 +998,25 @@ gst_dshowvideosrc_push_buffer (guint8 * buffer, guint size, gpointer src_object,
     gint stride = size / src->height;
 
     for (; line < src->height; line++) {
-      memcpy (GST_BUFFER_DATA (buf) + (line * stride),
+      memcpy (info.data + (line * stride),
           buffer + (size - ((line + 1) * (stride))), stride);
     }
   } else {
-    memcpy (GST_BUFFER_DATA (buf), buffer, size);
+    memcpy (info.data, buffer, size);
   }
+
+  gst_buffer_unmap(buf, &info);
 
   GST_DEBUG ("push_buffer => pts %" GST_TIME_FORMAT "duration %"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (duration));
 
-  /* the negotiate() method already set caps on the source pad */
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
-
-  g_mutex_lock (src->buffer_mutex);
+  g_mutex_lock (&src->buffer_mutex);
   if (src->buffer != NULL)
     gst_buffer_unref (src->buffer);
   src->buffer = buf;
-  g_cond_signal (src->buffer_cond);
-  g_mutex_unlock (src->buffer_mutex);
+  g_cond_signal (&src->buffer_cond);
+  g_mutex_unlock (&src->buffer_mutex);
 
   return TRUE;
 }

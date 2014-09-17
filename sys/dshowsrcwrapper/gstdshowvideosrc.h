@@ -25,7 +25,6 @@
 #include <glib.h>
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
-#include <gst/interfaces/propertyprobe.h>
 
 #include "gstdshow.h"
 #include "gstdshowfakesink.h"
@@ -80,12 +79,13 @@ struct _GstDshowVideoSrc
   IAMStreamConfig *pVSC;      // for video cap
 
   /* the last buffer from DirectShow */
-  GCond *buffer_cond;
-  GMutex *buffer_mutex;
+  GCond buffer_cond;
+  GMutex buffer_mutex;
   GstBuffer *buffer;
   gboolean stop_requested;
 
   gboolean is_rgb;
+  gboolean is_running;
   gint width;
   gint height;
 };

@@ -31,23 +31,18 @@ GST_DEBUG_CATEGORY_STATIC (dshowaudiosrc_debug);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) { " G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
-        "audio/x-raw-int, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string){ "
+	GST_AUDIO_NE (S16) ", "
+	GST_AUDIO_NE (U16) ", "
+	GST_AUDIO_NE (S8)  ", "
+	GST_AUDIO_NE (U8)
+        " }, "
+        "rate = " GST_AUDIO_RATE_RANGE ", "
+        "channels = (int) [ 1, 2 ]")
     );
 
-static void gst_dshowaudiosrc_init_interfaces (GType type);
-
-GST_BOILERPLATE_FULL (GstDshowAudioSrc, gst_dshowaudiosrc, GstAudioSrc,
-    GST_TYPE_AUDIO_SRC, gst_dshowaudiosrc_init_interfaces);
+G_DEFINE_TYPE(GstDshowAudioSrc, gst_dshowaudiosrc, GST_TYPE_AUDIO_SRC);
 
 enum
 {
@@ -56,32 +51,23 @@ enum
   PROP_DEVICE_NAME
 };
 
-static void gst_dshowaudiosrc_probe_interface_init (GstPropertyProbeInterface *
-    iface);
-static const GList *gst_dshowaudiosrc_probe_get_properties (GstPropertyProbe *
-    probe);
-static GValueArray *gst_dshowaudiosrc_probe_get_values (GstPropertyProbe *
-    probe, guint prop_id, const GParamSpec * pspec);
-static GValueArray *gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc *
-    src);
-
 
 static void gst_dshowaudiosrc_dispose (GObject * gobject);
 static void gst_dshowaudiosrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_dshowaudiosrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstCaps *gst_dshowaudiosrc_get_caps (GstBaseSrc * src);
+static GstCaps *gst_dshowaudiosrc_get_caps (GstBaseSrc * src, GstCaps * filter);
 static GstStateChangeReturn gst_dshowaudiosrc_change_state (GstElement *
     element, GstStateChange transition);
 
 static gboolean gst_dshowaudiosrc_open (GstAudioSrc * asrc);
 static gboolean gst_dshowaudiosrc_prepare (GstAudioSrc * asrc,
-    GstRingBufferSpec * spec);
+    GstAudioRingBufferSpec * spec);
 static gboolean gst_dshowaudiosrc_unprepare (GstAudioSrc * asrc);
 static gboolean gst_dshowaudiosrc_close (GstAudioSrc * asrc);
 static guint gst_dshowaudiosrc_read (GstAudioSrc * asrc, gpointer data,
-    guint length);
+    guint length, GstClockTime *timestamp);
 static guint gst_dshowaudiosrc_delay (GstAudioSrc * asrc);
 static void gst_dshowaudiosrc_reset (GstAudioSrc * asrc);
 
@@ -90,42 +76,6 @@ static GstCaps *gst_dshowaudiosrc_getcaps_from_streamcaps (GstDshowAudioSrc *
     src, IPin * pin, IAMStreamConfig * streamcaps);
 static gboolean gst_dshowaudiosrc_push_buffer (guint8 * buffer, guint size,
     gpointer src_object, GstClockTime duration);
-
-static void
-gst_dshowaudiosrc_init_interfaces (GType type)
-{
-  static const GInterfaceInfo dshowaudiosrc_info = {
-    (GInterfaceInitFunc) gst_dshowaudiosrc_probe_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type,
-      GST_TYPE_PROPERTY_PROBE, &dshowaudiosrc_info);
-}
-
-static void
-gst_dshowaudiosrc_probe_interface_init (GstPropertyProbeInterface * iface)
-{
-  iface->get_properties = gst_dshowaudiosrc_probe_get_properties;
-/*  iface->needs_probe    = gst_dshowaudiosrc_probe_needs_probe;
-  iface->probe_property = gst_dshowaudiosrc_probe_probe_property;*/
-  iface->get_values = gst_dshowaudiosrc_probe_get_values;
-}
-
-static void
-gst_dshowaudiosrc_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_static_metadata (element_class,
-      "Directshow audio capture source", "Source/Audio",
-      "Receive data from a directshow audio capture graph",
-      "Sebastien Moutte <sebastien@moutte.net>");
-}
 
 static void
 gst_dshowaudiosrc_class_init (GstDshowAudioSrcClass * klass)
@@ -146,10 +96,10 @@ gst_dshowaudiosrc_class_init (GstDshowAudioSrcClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_dshowaudiosrc_get_property);
 
+  gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_dshowaudiosrc_get_caps);
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dshowaudiosrc_change_state);
-
-  gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_dshowaudiosrc_get_caps);
 
   gstaudiosrc_class->open = GST_DEBUG_FUNCPTR (gst_dshowaudiosrc_open);
   gstaudiosrc_class->prepare = GST_DEBUG_FUNCPTR (gst_dshowaudiosrc_prepare);
@@ -172,12 +122,20 @@ gst_dshowaudiosrc_class_init (GstDshowAudioSrcClass * klass)
           "Human-readable name of the sound device", NULL,
           static_cast < GParamFlags > (G_PARAM_READWRITE)));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Directshow audio capture source", "Source/Audio",
+      "Receive data from a directshow audio capture graph",
+      "Sebastien Moutte <sebastien@moutte.net>");
+
   GST_DEBUG_CATEGORY_INIT (dshowaudiosrc_debug, "dshowaudiosrc", 0,
       "Directshow audio source");
 }
 
 static void
-gst_dshowaudiosrc_init (GstDshowAudioSrc * src, GstDshowAudioSrcClass * klass)
+gst_dshowaudiosrc_init (GstDshowAudioSrc * src)
 {
   src->device = NULL;
   src->device_name = NULL;
@@ -189,7 +147,7 @@ gst_dshowaudiosrc_init (GstDshowAudioSrc * src, GstDshowAudioSrcClass * klass)
   src->pins_mediatypes = NULL;
 
   src->gbarray = g_byte_array_new ();
-  src->gbarray_lock = g_mutex_new ();
+  g_mutex_init(&src->gbarray_lock);
 
   src->is_running = FALSE;
 
@@ -226,10 +184,7 @@ gst_dshowaudiosrc_dispose (GObject * gobject)
     src->gbarray = NULL;
   }
 
-  if (src->gbarray_lock) {
-    g_mutex_free (src->gbarray_lock);
-    src->gbarray_lock = NULL;
-  }
+  g_mutex_clear(&src->gbarray_lock);
 
   /* clean dshow */
   if (src->audio_cap_filter)
@@ -237,112 +192,9 @@ gst_dshowaudiosrc_dispose (GObject * gobject)
 
   CoUninitialize ();
 
-  G_OBJECT_CLASS (parent_class)->dispose (gobject);
+  G_OBJECT_CLASS (gst_dshowaudiosrc_parent_class)->dispose (gobject);
 }
 
-
-static const GList *
-gst_dshowaudiosrc_probe_get_properties (GstPropertyProbe * probe)
-{
-  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
-  static GList *props = NULL;
-
-  if (!props) {
-    GParamSpec *pspec;
-
-    pspec = g_object_class_find_property (klass, "device-name");
-    props = g_list_append (props, pspec);
-  }
-
-  return props;
-}
-
-static GValueArray *
-gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc * src)
-{
-  GValueArray *array = g_value_array_new (0);
-  ICreateDevEnum *devices_enum = NULL;
-  IEnumMoniker *moniker_enum = NULL;
-  IMoniker *moniker = NULL;
-  HRESULT hres = S_FALSE;
-  ULONG fetched;
-
-  hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
-      IID_ICreateDevEnum, (LPVOID *) & devices_enum);
-  if (hres != S_OK) {
-    GST_ERROR
-        ("Can't create an instance of the system device enumerator (error=0x%x)",
-        hres);
-    array = NULL;
-    goto clean;
-  }
-
-  hres = devices_enum->CreateClassEnumerator (CLSID_AudioInputDeviceCategory,
-      &moniker_enum, 0);
-  if (hres != S_OK || !moniker_enum) {
-    GST_ERROR ("Can't get enumeration of audio devices (error=0x%x)", hres);
-    array = NULL;
-    goto clean;
-  }
-
-  moniker_enum->Reset ();
-
-  while (hres = moniker_enum->Next (1, &moniker, &fetched), hres == S_OK) {
-    IPropertyBag *property_bag = NULL;
-
-    hres = moniker->BindToStorage (NULL, NULL, IID_IPropertyBag,
-        (LPVOID *) & property_bag);
-    if (SUCCEEDED (hres) && property_bag) {
-      VARIANT varFriendlyName;
-
-      VariantInit (&varFriendlyName);
-      hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
-      if (hres == S_OK && varFriendlyName.bstrVal) {
-        gchar *friendly_name =
-            g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
-            wcslen (varFriendlyName.bstrVal), NULL, NULL, NULL);
-
-        GValue value = { 0 };
-        g_value_init (&value, G_TYPE_STRING);
-        g_value_set_string (&value, friendly_name);
-        g_value_array_append (array, &value);
-        g_value_unset (&value);
-        g_free (friendly_name);
-        SysFreeString (varFriendlyName.bstrVal);
-      }
-      property_bag->Release ();
-    }
-    moniker->Release ();
-  }
-
-clean:
-  if (moniker_enum)
-    moniker_enum->Release ();
-
-  if (devices_enum)
-    devices_enum->Release ();
-
-  return array;
-}
-
-static GValueArray *
-gst_dshowaudiosrc_probe_get_values (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec)
-{
-  GstDshowAudioSrc *src = GST_DSHOWAUDIOSRC (probe);
-  GValueArray *array = NULL;
-
-  switch (prop_id) {
-    case PROP_DEVICE_NAME:
-      array = gst_dshowaudiosrc_get_device_name_values (src);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-
-  return array;
-}
 
 static void
 gst_dshowaudiosrc_set_property (GObject * object, guint prop_id,
@@ -387,7 +239,7 @@ gst_dshowaudiosrc_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc)
+gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
 {
   HRESULT hres = S_OK;
   IBindCtx *lpbc = NULL;
@@ -474,7 +326,15 @@ gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc)
   }
 
   if (src->caps) {
-    return gst_caps_ref (src->caps);
+    GstCaps *caps;
+
+    if (filter) {
+      caps = gst_caps_intersect_full (filter, src->caps, GST_CAPS_INTERSECT_FIRST);
+    } else {
+      caps = gst_caps_ref (src->caps);
+    }
+
+    return caps;
   }
 
   return NULL;
@@ -492,14 +352,14 @@ gst_dshowaudiosrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      if (src->media_filter)
+      if (src->media_filter) {
+        src->is_running = TRUE;
         hres = src->media_filter->Run (0);
+      }
       if (hres != S_OK) {
         GST_ERROR ("Can't RUN the directshow capture graph (error=0x%x)", hres);
         src->is_running = FALSE;
         return GST_STATE_CHANGE_FAILURE;
-      } else {
-        src->is_running = TRUE;
       }
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -521,7 +381,7 @@ gst_dshowaudiosrc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return GST_ELEMENT_CLASS(gst_dshowaudiosrc_parent_class)->change_state(element, transition);
 }
 
 static gboolean
@@ -587,11 +447,24 @@ error:
 }
 
 static gboolean
-gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
+gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 {
   HRESULT hres;
   IPin *input_pin = NULL;
   GstDshowAudioSrc *src = GST_DSHOWAUDIOSRC (asrc);
+
+  /* In 1.0, prepare() seems to be called in the PLAYING state. Most
+     of the time you can't do much on a running graph. */
+
+  gboolean was_running = src->is_running;
+  if (was_running) {
+    HRESULT hres = src->media_filter->Stop ();
+    if (hres != S_OK) {
+      GST_ERROR("Can't STOP the directshow capture graph for preparing (error=0x%x)", hres);
+      return FALSE;
+    }
+    src->is_running = FALSE;
+  }
 
   /* search the negociated caps in our caps list to get its index and the corresponding mediatype */
   if (gst_caps_is_subset (spec->caps, src->caps)) {
@@ -626,7 +499,7 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
           goto error;
         }
 
-        spec->segsize = (gint) (spec->bytes_per_sample * spec->rate * spec->latency_time /
+        spec->segsize = (gint) (spec->info.bpf * spec->info.rate * spec->latency_time /
             GST_MSECOND);
         spec->segtotal = (gint) ((gfloat) spec->buffer_time /
             (gfloat) spec->latency_time + 0.5);
@@ -634,7 +507,7 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
             spec->segsize))
         {
           GST_WARNING ("Could not change capture latency");
-          spec->segsize = spec->rate * spec->channels;
+          spec->segsize = spec->info.rate * spec->info.channels;
           spec->segtotal = 2;
         };
         GST_INFO ("Configuring with segsize:%d segtotal:%d", spec->segsize, spec->segtotal);
@@ -653,9 +526,20 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
     }
   }
 
+  if (was_running) {
+    HRESULT hres = src->media_filter->Run (0);
+    if (hres != S_OK) {
+      GST_ERROR("Can't RUN the directshow capture graph after prepare (error=0x%x)", hres);
+      return FALSE;
+    }
+
+    src->is_running = TRUE;
+  }
+
   return TRUE;
 
 error:
+  /* Don't restart the graph, we're out anyway. */
   return FALSE;
 }
 
@@ -711,7 +595,7 @@ gst_dshowaudiosrc_close (GstAudioSrc * asrc)
 }
 
 static guint
-gst_dshowaudiosrc_read (GstAudioSrc * asrc, gpointer data, guint length)
+gst_dshowaudiosrc_read (GstAudioSrc * asrc, gpointer data, guint length, GstClockTime *timestamp)
 {
   GstDshowAudioSrc *src = GST_DSHOWAUDIOSRC (asrc);
   guint ret = 0;
@@ -722,15 +606,15 @@ gst_dshowaudiosrc_read (GstAudioSrc * asrc, gpointer data, guint length)
   if (src->gbarray) {
   test:
     if (src->gbarray->len >= length) {
-      g_mutex_lock (src->gbarray_lock);
+      g_mutex_lock (&src->gbarray_lock);
       memcpy (data, src->gbarray->data + (src->gbarray->len - length), length);
       g_byte_array_remove_range (src->gbarray, src->gbarray->len - length,
           length);
       ret = length;
-      g_mutex_unlock (src->gbarray_lock);
+      g_mutex_unlock (&src->gbarray_lock);
     } else {
       if (src->is_running) {
-        Sleep (GST_BASE_AUDIO_SRC(src)->ringbuffer->spec.latency_time /
+        Sleep (GST_AUDIO_BASE_SRC(src)->ringbuffer->spec.latency_time /
             GST_MSECOND / 10);
         goto test;
       }
@@ -747,11 +631,11 @@ gst_dshowaudiosrc_delay (GstAudioSrc * asrc)
   guint ret = 0;
 
   if (src->gbarray) {
-    g_mutex_lock (src->gbarray_lock);
+    g_mutex_lock (&src->gbarray_lock);
     if (src->gbarray->len) {
       ret = src->gbarray->len / 4;
     }
-    g_mutex_unlock (src->gbarray_lock);
+    g_mutex_unlock (&src->gbarray_lock);
   }
 
   return ret;
@@ -762,11 +646,11 @@ gst_dshowaudiosrc_reset (GstAudioSrc * asrc)
 {
   GstDshowAudioSrc *src = GST_DSHOWAUDIOSRC (asrc);
 
-  g_mutex_lock (src->gbarray_lock);
+  g_mutex_lock (&src->gbarray_lock);
   GST_DEBUG ("byte array size= %d", src->gbarray->len);
   if (src->gbarray->len > 0)
     g_byte_array_remove_range (src->gbarray, 0, src->gbarray->len);
-  g_mutex_unlock (src->gbarray_lock);
+  g_mutex_unlock (&src->gbarray_lock);
 }
 
 static GstCaps *
@@ -804,15 +688,29 @@ gst_dshowaudiosrc_getcaps_from_streamcaps (GstDshowAudioSrc * src, IPin * pin,
 
       if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_PCM,
               FORMAT_WaveFormatEx)) {
+	GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
         WAVEFORMATEX *wavformat =
             (WAVEFORMATEX *) pin_mediatype->mediatype->pbFormat;
-        mediacaps =
-            gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT,
-            wavformat->wBitsPerSample, "depth", G_TYPE_INT,
-            wavformat->wBitsPerSample, "endianness", G_TYPE_INT, G_BYTE_ORDER,
-            "signed", G_TYPE_BOOLEAN, TRUE, "channels", G_TYPE_INT,
-            wavformat->nChannels, "rate", G_TYPE_INT, wavformat->nSamplesPerSec,
-            NULL);
+
+	switch (wavformat->wFormatTag) {
+            case WAVE_FORMAT_PCM:
+	      format = gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, wavformat->wBitsPerSample, wavformat->wBitsPerSample);
+	      break;
+            default:
+	      break;
+	}
+
+	if (format != GST_AUDIO_FORMAT_UNKNOWN) {
+	  GstAudioInfo info;
+
+	  gst_audio_info_init(&info);
+	  gst_audio_info_set_format(&info,
+				    format,
+				    wavformat->nSamplesPerSec,
+				    wavformat->nChannels,
+				    NULL);
+	  mediacaps = gst_audio_info_to_caps(&info);
+	}
 
         if (mediacaps) {
           src->pins_mediatypes =
@@ -847,9 +745,9 @@ gst_dshowaudiosrc_push_buffer (guint8 * buffer, guint size, gpointer src_object,
     return FALSE;
   }
 
-  g_mutex_lock (src->gbarray_lock);
+  g_mutex_lock (&src->gbarray_lock);
   g_byte_array_prepend (src->gbarray, buffer, size);
-  g_mutex_unlock (src->gbarray_lock);
+  g_mutex_unlock (&src->gbarray_lock);
 
   return TRUE;
 }
