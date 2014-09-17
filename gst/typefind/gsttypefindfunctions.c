@@ -2744,7 +2744,7 @@ h265_video_type_find (GstTypeFind * tf, gpointer unused)
           seen_sps = TRUE;
         else if (nut == 34)
           seen_pps = TRUE;
-        else if (nut >= 16 || nut <= 21) {
+        else if (nut >= 16 && nut <= 21) {
           /* BLA, IDR and CRA pictures are belongs to be IRAP picture */
           /* we are not counting the reserved IRAP pictures (22 and 23) to good */
           seen_irap = TRUE;
