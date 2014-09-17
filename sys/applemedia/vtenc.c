@@ -62,6 +62,7 @@ static gboolean gst_vtenc_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * input_state);
 static GstFlowReturn gst_vtenc_handle_frame (GstVideoEncoder * enc,
     GstVideoCodecFrame * frame);
+static GstFlowReturn gst_vtenc_finish (GstVideoEncoder * enc);
 
 static void gst_vtenc_clear_cached_caps_downstream (GstVTEnc * self);
 
@@ -164,6 +165,7 @@ gst_vtenc_class_init (GstVTEncClass * klass)
   gstvideoencoder_class->stop = gst_vtenc_stop;
   gstvideoencoder_class->set_format = gst_vtenc_set_format;
   gstvideoencoder_class->handle_frame = gst_vtenc_handle_frame;
+  gstvideoencoder_class->finish = gst_vtenc_finish;
 
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
@@ -248,7 +250,7 @@ gst_vtenc_start (GstVideoEncoder * enc)
 {
   GstVTEnc *self = GST_VTENC_CAST (enc);
 
-  self->cur_outframes = g_ptr_array_new ();
+  self->cur_outframes = g_async_queue_new ();
 
   return TRUE;
 }
@@ -278,7 +280,7 @@ gst_vtenc_stop (GstVideoEncoder * enc)
 
   GST_OBJECT_UNLOCK (self);
 
-  g_ptr_array_free (self->cur_outframes, TRUE);
+  g_async_queue_unref (self->cur_outframes);
   self->cur_outframes = NULL;
 
   return TRUE;
@@ -408,6 +410,32 @@ gst_vtenc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
 not_negotiated:
   gst_video_codec_frame_unref (frame);
   return GST_FLOW_NOT_NEGOTIATED;
+}
+
+static GstFlowReturn
+gst_vtenc_finish (GstVideoEncoder * enc)
+{
+  GstVTEnc *self = GST_VTENC_CAST (enc);
+  GstFlowReturn ret = GST_FLOW_OK;
+  OSStatus vt_status;
+
+  vt_status =
+      VTCompressionSessionCompleteFrames (self->session,
+      kCMTimePositiveInfinity);
+  if (vt_status != noErr) {
+    GST_WARNING_OBJECT (self, "VTCompressionSessionCompleteFrames returned %d",
+        (int) vt_status);
+  }
+
+  while (g_async_queue_length (self->cur_outframes) > 0) {
+    GstVideoCodecFrame *outframe = g_async_queue_try_pop (self->cur_outframes);
+
+    ret =
+        gst_video_encoder_finish_frame (GST_VIDEO_ENCODER_CAST (self),
+        outframe);
+  }
+
+  return ret;
 }
 
 static VTCompressionSessionRef
@@ -718,15 +746,8 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
       pbuf, ts, duration, self->options,
       GINT_TO_POINTER (frame->system_frame_number), NULL);
 
-  if (vt_status != 0) {
+  if (vt_status != noErr) {
     GST_WARNING_OBJECT (self, "VTCompressionSessionEncodeFrame returned %d",
-        (int) vt_status);
-  }
-
-  vt_status =
-      VTCompressionSessionCompleteFrames (self->session, kCMTimeInvalid);
-  if (vt_status != 0) {
-    GST_WARNING_OBJECT (self, "VTCompressionSessionCompleteFrames returned %d",
         (int) vt_status);
   }
 
@@ -735,22 +756,25 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
 
   CVPixelBufferRelease (pbuf);
 
-  if (self->cur_outframes->len > 0) {
-    GstVideoCodecFrame *outframe = g_ptr_array_index (self->cur_outframes,
-        0);
-    meta = gst_buffer_get_core_media_meta (outframe->output_buffer);
-    if (!gst_vtenc_negotiate_downstream (self, meta->sample_buf))
-      ret = GST_FLOW_NOT_NEGOTIATED;
-  }
+  i = 0;
+  while (g_async_queue_length (self->cur_outframes) > 0) {
+    GstVideoCodecFrame *outframe = g_async_queue_try_pop (self->cur_outframes);
 
-  for (i = 0; i != self->cur_outframes->len; i++) {
-    GstVideoCodecFrame *outframe = g_ptr_array_index (self->cur_outframes, i);
+    /* Try to renegotiate once */
+    if (i == 0) {
+      meta = gst_buffer_get_core_media_meta (outframe->output_buffer);
+      if (!gst_vtenc_negotiate_downstream (self, meta->sample_buf)) {
+        ret = GST_FLOW_NOT_NEGOTIATED;
+        gst_video_codec_frame_unref (outframe);
+        break;
+      }
+    }
 
     ret =
         gst_video_encoder_finish_frame (GST_VIDEO_ENCODER_CAST (self),
         outframe);
+    i++;
   }
-  g_ptr_array_set_size (self->cur_outframes, 0);
 
   return ret;
 
@@ -798,7 +822,7 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
    * to enable the use of the video meta API on the core media buffer */
   frame->output_buffer = gst_core_media_buffer_new (sampleBuffer, FALSE);
 
-  g_ptr_array_add (self->cur_outframes, frame);
+  g_async_queue_push (self->cur_outframes, frame);
 
 beach:
   return;
