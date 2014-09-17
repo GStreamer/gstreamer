@@ -346,10 +346,10 @@ class GstValidateTest(Test):
         errors = []
         for l in open(self.validatelogs, 'r').readlines():
             if "critical : " in l:
-                if ret != "[":
-                    ret += ", "
                 error = l.split("critical : ")[1].replace("\n", '')
                 if error not in errors:
+                    if ret != "[":
+                        ret += ", "
                     ret += error
                     errors.append(error)
 
