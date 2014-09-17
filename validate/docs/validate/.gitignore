@@ -1,0 +1,6 @@
+*.bak
+*.stamp
+html
+xml
+Makefile
+Makefile.in

@@ -35,6 +35,8 @@ stamp-h1
 tags
 stamp-h.in
 .dirstamp
+*.gir
+*.typefind
 
 /m4/*m4
 
