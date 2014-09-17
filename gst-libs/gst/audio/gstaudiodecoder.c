@@ -2007,8 +2007,10 @@ _flush_events (GstPad * pad, GList * events)
       gst_event_unref (tmp->data);
     } else {
       gst_pad_store_sticky_event (pad, GST_EVENT_CAST (tmp->data));
+      gst_event_unref (tmp->data);
     }
   }
+  g_list_free (events);
 
   return NULL;
 }
