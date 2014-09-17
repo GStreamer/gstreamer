@@ -155,13 +155,13 @@ _flush_events (GstPad * pad, GList * events)
   GList *tmp;
 
   for (tmp = events; tmp; tmp = tmp->next) {
-    if (GST_EVENT_TYPE (tmp->data) == GST_EVENT_EOS ||
-        GST_EVENT_TYPE (tmp->data) == GST_EVENT_SEGMENT ||
-        !GST_EVENT_IS_STICKY (tmp->data) || pad == NULL) {
-      gst_event_unref (tmp->data);
-    } else {
+    if (GST_EVENT_TYPE (tmp->data) != GST_EVENT_EOS &&
+        GST_EVENT_TYPE (tmp->data) != GST_EVENT_SEGMENT &&
+        GST_EVENT_IS_STICKY (tmp->data) &&
+        pad != NULL) {
       gst_pad_store_sticky_event (pad, GST_EVENT_CAST (tmp->data));
     }
+    gst_event_unref (tmp->data);
   }
   g_list_free (events);
 
