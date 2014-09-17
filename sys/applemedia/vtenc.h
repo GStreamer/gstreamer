@@ -71,7 +71,7 @@ struct _GstVTEnc
   VTCompressionSessionRef session;
   CFMutableDictionaryRef options;
 
-  GPtrArray * cur_outframes;
+  GAsyncQueue * cur_outframes;
   gboolean expect_keyframe;
 };
 
