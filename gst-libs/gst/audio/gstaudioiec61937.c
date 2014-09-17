@@ -116,7 +116,7 @@ gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
         frames = 384;
       else if (version == 2 && layer == 1 && spec->info.rate < 32000)
         frames = 768;
-      else if (version == 2 && layer == 1 && spec->info.rate < 32000)
+      else if (version == 2 && layer == 2 && spec->info.rate < 32000)
         frames = 2304;
       else
         frames = 1152;
