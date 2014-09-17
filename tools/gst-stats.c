@@ -786,8 +786,6 @@ collect_stats (const gchar * filename)
               if ((s = gst_structure_from_string (data, NULL))) {
                 const gchar *name = gst_structure_get_name (s);
 
-                // TODO(ensonic): add a function for each name-id quark
-                // these function will do the actual stats tracking
                 if (!strcmp (name, "new-pad")) {
                   new_pad_stats (s);
                 } else if (!strcmp (name, "new-element")) {
@@ -805,7 +803,10 @@ collect_stats (const gchar * filename)
                 } else if (!strcmp (name, "proc-rusage")) {
                   do_proc_rusage_stats (s);
                 } else {
-                  GST_WARNING ("unknown log entry: '%s'", data);
+                  // TODO(ensonic): parse the xxx.class log lines
+                  if (!g_str_has_suffix (data, ".class")) {
+                    GST_WARNING ("unknown log entry: '%s'", data);
+                  }
                 }
                 gst_structure_free (s);
               } else {
