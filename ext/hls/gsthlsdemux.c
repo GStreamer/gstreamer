@@ -1044,6 +1044,31 @@ _src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return gst_pad_query_default (pad, parent, query);
 }
 
+static gboolean
+_hls_demux_pad_remove_eos_sticky (GstPad * pad, GstEvent ** event,
+    gpointer udata)
+{
+  if (GST_EVENT_TYPE (*event) == GST_EVENT_EOS) {
+    gst_event_replace (event, NULL);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static void
+gst_hls_demux_stream_clear_eos_state (GstHLSDemux * demux)
+{
+  GstPad *internal_pad;
+
+  internal_pad =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (demux->srcpad)));
+  gst_pad_sticky_events_foreach (internal_pad,
+      _hls_demux_pad_remove_eos_sticky, NULL);
+  GST_OBJECT_FLAG_UNSET (internal_pad, GST_PAD_FLAG_EOS);
+
+  gst_object_unref (internal_pad);
+}
+
 static void
 switch_pads (GstHLSDemux * demux)
 {
@@ -2145,6 +2170,9 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
                 GST_TYPE_CLOCK_TIME, demux->download_total_time * GST_USECOND,
                 NULL)));
   }
+
+  /* clear the ghostpad eos state */
+  gst_hls_demux_stream_clear_eos_state (demux);
 
   if (demux->last_ret != GST_FLOW_OK)
     return FALSE;
