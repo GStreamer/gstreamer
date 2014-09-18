@@ -36,6 +36,10 @@ G_GNUC_INTERNAL void vs_image_scale_4tap_Y      (const VSImage * dest,
                                                  const VSImage * src,
                                                  uint8_t       * tmpbuf);
 
+G_GNUC_INTERNAL void vs_image_scale_4tap_NV12   (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
+
 G_GNUC_INTERNAL void vs_image_scale_4tap_RGBA   (const VSImage * dest,
                                                  const VSImage * src,
                                                  uint8_t       * tmpbuf);

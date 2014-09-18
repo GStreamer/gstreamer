@@ -413,7 +413,7 @@ get_formats_filter (GstVideoScaleMethod method)
           "ARGB, BGRA, ABGR, AYUV, ARGB64, AYUV64, "
           "RGB, BGR, v308, YUY2, YVYU, UYVY, "
           "GRAY8, GRAY16_LE, GRAY16_BE, I420, YV12, "
-          "Y444, Y42B, Y41B, RGB16, RGB15 }");
+          "Y444, Y42B, Y41B, RGB16, RGB15, NV12, NV21 }");
       return gst_static_caps_get (&fourtap_filter);
     }
     case GST_VIDEO_SCALE_LANCZOS:
@@ -1391,6 +1391,10 @@ do_scale (GstVideoFilter * filter, VSImage dest[4], VSImage src[4])
         case GST_VIDEO_SCALE_BILINEAR:
           vs_image_scale_linear_Y (&dest[0], &src[0], videoscale->tmp_buf);
           vs_image_scale_linear_NV12 (&dest[1], &src[1], videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_4TAP:
+          vs_image_scale_4tap_Y (&dest[0], &src[0], videoscale->tmp_buf);
+          vs_image_scale_4tap_NV12 (&dest[1], &src[1], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
