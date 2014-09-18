@@ -663,16 +663,18 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   OSStatus vt_status;
   GstFlowReturn ret = GST_FLOW_OK;
   guint i;
+  gboolean forced_keyframe = FALSE;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
     GST_OBJECT_LOCK (self);
     if (self->options != NULL) {
-      GST_INFO_OBJECT (self, "received PLI, will force intra");
+      GST_INFO_OBJECT (self, "received force-keyframe-event, will force intra");
       CFDictionaryAddValue (self->options,
           kVTEncodeFrameOptionKey_ForceKeyFrame, kCFBooleanTrue);
+      forced_keyframe = TRUE;
     } else {
       GST_INFO_OBJECT (self,
-          "received PLI but encode not yet started, ignoring");
+          "received force-keyframe-event but encode not yet started, ignoring");
     }
     GST_OBJECT_UNLOCK (self);
   }
@@ -747,14 +749,15 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
 
   GST_OBJECT_LOCK (self);
 
-  self->expect_keyframe = CFDictionaryContainsKey (self->options,
-      kVTEncodeFrameOptionKey_ForceKeyFrame);
-  if (self->expect_keyframe)
-    gst_vtenc_clear_cached_caps_downstream (self);
-
   vt_status = VTCompressionSessionEncodeFrame (self->session,
       pbuf, ts, duration, self->options,
       GINT_TO_POINTER (frame->system_frame_number), NULL);
+
+  /* Only force one keyframe */
+  if (forced_keyframe) {
+    CFDictionaryRemoveValue (self->options,
+        kVTEncodeFrameOptionKey_ForceKeyFrame);
+  }
 
   if (vt_status != noErr) {
     GST_WARNING_OBJECT (self, "VTCompressionSessionEncodeFrame returned %d",
@@ -816,17 +819,15 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
     goto beach;
 
   is_keyframe = gst_vtenc_buffer_is_keyframe (self, sampleBuffer);
-  if (self->expect_keyframe) {
-    if (!is_keyframe)
-      goto beach;
-    CFDictionaryRemoveValue (self->options,
-        kVTEncodeFrameOptionKey_ForceKeyFrame);
-  }
-  self->expect_keyframe = FALSE;
 
   frame =
       gst_video_encoder_get_frame (GST_VIDEO_ENCODER_CAST (self),
       GPOINTER_TO_INT (sourceFrameRefCon));
+
+  if (is_keyframe) {
+    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+    gst_vtenc_clear_cached_caps_downstream (self);
+  }
 
   /* We are dealing with block buffers here, so we don't need
    * to enable the use of the video meta API on the core media buffer */
