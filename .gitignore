@@ -19,6 +19,11 @@ compile
 # gedit temporary files
 *~
 
+#Mac OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
 # glue binaries/objects (FIXME: kill the glue, kthxbye)
 sources/glue/.deps/
 sources/glue/*.o
