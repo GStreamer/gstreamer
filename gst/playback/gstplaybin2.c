@@ -1890,6 +1890,9 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
         g_object_set (combiner, "active-pad", sinkpad, NULL);
       }
 
+      if (old_sinkpad)
+        gst_object_unref (old_sinkpad);
+
       gst_object_unref (combiner);
     }
     gst_object_unref (sinkpad);
@@ -1956,6 +1959,10 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
         /* activate the selected pad */
         g_object_set (combiner, "active-pad", sinkpad, NULL);
       }
+
+      if (old_sinkpad)
+        gst_object_unref (old_sinkpad);
+
       gst_object_unref (combiner);
     }
     gst_object_unref (sinkpad);
