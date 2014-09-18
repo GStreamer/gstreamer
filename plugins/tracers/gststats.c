@@ -336,11 +336,9 @@ do_element_stats (GstStatsTracer * self, GstPad * pad, GstClockTime elapsed1,
 /* hooks */
 
 static void
-do_push_buffer_pre (GstStatsTracer * self, va_list var_args)
+do_push_buffer_pre (GstStatsTracer * self, guint64 ts, GstPad * this_pad,
+    GstBuffer * buffer)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *this_pad = va_arg (var_args, GstPad *);
-  GstBuffer *buffer = va_arg (var_args, GstBuffer *);
   GstPadStats *this_pad_stats = get_pad_stats (self, this_pad);
   GstPad *that_pad = GST_PAD_PEER (this_pad);
   GstPadStats *that_pad_stats = get_pad_stats (self, that_pad);
@@ -350,10 +348,8 @@ do_push_buffer_pre (GstStatsTracer * self, va_list var_args)
 }
 
 static void
-do_push_buffer_post (GstStatsTracer * self, va_list var_args)
+do_push_buffer_post (GstStatsTracer * self, guint64 ts, GstPad * pad)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
   GstPadStats *stats = get_pad_stats (self, pad);
 
   do_element_stats (self, pad, stats->last_ts, ts);
@@ -380,11 +376,9 @@ do_push_buffer_list_item (GstBuffer ** buffer, guint idx, gpointer user_data)
 }
 
 static void
-do_push_buffer_list_pre (GstStatsTracer * self, va_list var_args)
+do_push_buffer_list_pre (GstStatsTracer * self, guint64 ts, GstPad * this_pad,
+    GstBufferList * list)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *this_pad = va_arg (var_args, GstPad *);
-  GstBufferList *list = va_arg (var_args, GstBufferList *);
   GstPadStats *this_pad_stats = get_pad_stats (self, this_pad);
   GstPad *that_pad = GST_PAD_PEER (this_pad);
   GstPadStats *that_pad_stats = get_pad_stats (self, that_pad);
@@ -396,30 +390,24 @@ do_push_buffer_list_pre (GstStatsTracer * self, va_list var_args)
 }
 
 static void
-do_push_buffer_list_post (GstStatsTracer * self, va_list var_args)
+do_push_buffer_list_post (GstStatsTracer * self, guint64 ts, GstPad * pad)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
   GstPadStats *stats = get_pad_stats (self, pad);
 
   do_element_stats (self, pad, stats->last_ts, ts);
 }
 
 static void
-do_pull_range_pre (GstStatsTracer * self, va_list var_args)
+do_pull_range_pre (GstStatsTracer * self, guint64 ts, GstPad * pad)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
   GstPadStats *stats = get_pad_stats (self, pad);
   stats->last_ts = ts;
 }
 
 static void
-do_pull_range_post (GstStatsTracer * self, va_list var_args)
+do_pull_range_post (GstStatsTracer * self, guint64 ts, GstPad * this_pad,
+    GstBuffer * buffer)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *this_pad = va_arg (var_args, GstPad *);
-  GstBuffer *buffer = va_arg (var_args, GstBuffer *);
   GstPadStats *this_pad_stats = get_pad_stats (self, this_pad);
   guint64 last_ts = this_pad_stats->last_ts;
   GstPad *that_pad = GST_PAD_PEER (this_pad);
@@ -433,11 +421,9 @@ do_pull_range_post (GstStatsTracer * self, va_list var_args)
 }
 
 static void
-do_push_event_pre (GstStatsTracer * self, va_list var_args)
+do_push_event_pre (GstStatsTracer * self, guint64 ts, GstPad * pad,
+    GstEvent * ev)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
-  GstEvent *ev = va_arg (var_args, GstEvent *);
   GstElement *elem = get_real_pad_parent (pad);
   GstElementStats *elem_stats = get_element_stats (self, elem);
   GstPadStats *pad_stats = get_pad_stats (self, pad);
@@ -451,11 +437,9 @@ do_push_event_pre (GstStatsTracer * self, va_list var_args)
 }
 
 static void
-do_post_message_pre (GstStatsTracer * self, va_list var_args)
+do_post_message_pre (GstStatsTracer * self, guint64 ts, GstElement * elem,
+    GstMessage * msg)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstElement *elem = va_arg (var_args, GstElement *);
-  GstMessage *msg = va_arg (var_args, GstMessage *);
   GstElementStats *stats = get_element_stats (self, elem);
 
   stats->last_ts = ts;
@@ -466,11 +450,9 @@ do_post_message_pre (GstStatsTracer * self, va_list var_args)
 }
 
 static void
-do_query_pre (GstStatsTracer * self, va_list var_args)
+do_query_pre (GstStatsTracer * self, guint64 ts, GstElement * elem,
+    GstQuery * qry)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstElement *elem = va_arg (var_args, GstElement *);
-  GstQuery *qry = va_arg (var_args, GstQuery *);
   GstElementStats *stats = get_element_stats (self, elem);
 
   stats->last_ts = ts;
@@ -565,21 +547,21 @@ gst_stats_tracer_init (GstStatsTracer * self)
   GstTracer *tracer = GST_TRACER (self);
 
   gst_tracer_register_hook (tracer, "pad-push-pre",
-      (GstTracerHookFunction) do_push_buffer_pre);
+      G_CALLBACK (do_push_buffer_pre));
   gst_tracer_register_hook (tracer, "pad-push-post",
-      (GstTracerHookFunction) do_push_buffer_post);
+      G_CALLBACK (do_push_buffer_post));
   gst_tracer_register_hook (tracer, "pad-push-list-pre",
-      (GstTracerHookFunction) do_push_buffer_list_pre);
+      G_CALLBACK (do_push_buffer_list_pre));
   gst_tracer_register_hook (tracer, "pad-push-list-post",
-      (GstTracerHookFunction) do_push_buffer_list_post);
+      G_CALLBACK (do_push_buffer_list_post));
   gst_tracer_register_hook (tracer, "pad-pull-range-pre",
-      (GstTracerHookFunction) do_pull_range_pre);
+      G_CALLBACK (do_pull_range_pre));
   gst_tracer_register_hook (tracer, "pad-pull-range-post",
-      (GstTracerHookFunction) do_pull_range_post);
+      G_CALLBACK (do_pull_range_post));
   gst_tracer_register_hook (tracer, "pad-push-event-pre",
-      (GstTracerHookFunction) do_push_event_pre);
+      G_CALLBACK (do_push_event_pre));
   gst_tracer_register_hook (tracer, "element-post-message-pre",
-      (GstTracerHookFunction) do_post_message_pre);
+      G_CALLBACK (do_post_message_pre));
   gst_tracer_register_hook (tracer, "element-query-pre",
-      (GstTracerHookFunction) do_query_pre);
+      G_CALLBACK (do_query_pre));
 }

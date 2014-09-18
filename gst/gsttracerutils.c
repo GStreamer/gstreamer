@@ -57,12 +57,6 @@ GQuark _priv_gst_tracer_quark_table[GST_TRACER_QUARK_MAX];
 gboolean _priv_tracer_enabled = FALSE;
 GHashTable *_priv_tracers = NULL;
 
-typedef struct
-{
-  GstTracer *tracer;
-  GstTracerHookFunction func;
-} GstTracerHook;
-
 /* Initialize the tracing system */
 void
 _priv_gst_tracer_init (void)
@@ -153,8 +147,7 @@ _priv_gst_tracer_deinit (void)
 }
 
 void
-gst_tracer_register_hook_id (GstTracer * tracer, GQuark detail,
-    GstTracerHookFunction func)
+gst_tracer_register_hook_id (GstTracer * tracer, GQuark detail, GCallback func)
 {
   gpointer key = GINT_TO_POINTER (detail);
   GList *list = g_hash_table_lookup (_priv_tracers, key);
@@ -171,36 +164,9 @@ gst_tracer_register_hook_id (GstTracer * tracer, GQuark detail,
 
 void
 gst_tracer_register_hook (GstTracer * tracer, const gchar * detail,
-    GstTracerHookFunction func)
+    GCallback func)
 {
   gst_tracer_register_hook_id (tracer, g_quark_try_string (detail), func);
-}
-
-void
-gst_tracer_dispatch (GQuark detail, ...)
-{
-  va_list var_args;
-  gpointer key = GINT_TO_POINTER (detail);
-  GList *list, *node;
-  GstTracerHook *hook;
-
-  list = g_hash_table_lookup (_priv_tracers, key);
-  GST_DEBUG ("calling %d tracers for '%s'", g_list_length (list),
-      g_quark_to_string (detail));
-  for (node = list; node; node = g_list_next (node)) {
-    hook = (GstTracerHook *) node->data;
-    va_start (var_args, detail);
-    hook->func (hook->tracer, var_args);
-    va_end (var_args);
-  }
-  list = g_hash_table_lookup (_priv_tracers, NULL);
-  GST_DEBUG ("calling %d tracers for '*'", g_list_length (list));
-  for (node = list; node; node = g_list_next (node)) {
-    hook = (GstTracerHook *) node->data;
-    va_start (var_args, detail);
-    hook->func (hook->tracer, var_args);
-    va_end (var_args);
-  }
 }
 
 #endif /* GST_DISABLE_GST_DEBUG */

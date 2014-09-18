@@ -127,20 +127,16 @@ send_latency_probe (GstElement * parent, GstPad * pad, guint64 ts)
 }
 
 static void
-do_push_buffer_pre (GstTracer * self, va_list var_args)
+do_push_buffer_pre (GstTracer * self, guint64 ts, GstPad * pad)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
   GstElement *parent = get_real_pad_parent (pad);
 
   send_latency_probe (parent, pad, ts);
 }
 
 static void
-do_pull_range_pre (GstTracer * self, va_list var_args)
+do_pull_range_pre (GstTracer * self, guint64 ts, GstPad * pad)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
   GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (peer_pad);
 
@@ -160,10 +156,8 @@ calculate_latency (GstElement * parent, GstPad * pad, guint64 ts)
 }
 
 static void
-do_push_buffer_post (GstTracer * self, va_list var_args)
+do_push_buffer_post (GstTracer * self, guint64 ts, GstPad * pad)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
   GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (peer_pad);
 
@@ -171,21 +165,16 @@ do_push_buffer_post (GstTracer * self, va_list var_args)
 }
 
 static void
-do_pull_range_post (GstTracer * self, va_list var_args)
+do_pull_range_post (GstTracer * self, guint64 ts, GstPad * pad)
 {
-  guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
   GstElement *parent = get_real_pad_parent (pad);
 
   calculate_latency (parent, pad, ts);
 }
 
 static void
-do_push_event_pre (GstTracer * self, va_list var_args)
+do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
 {
-  G_GNUC_UNUSED guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
-  GstEvent *ev = va_arg (var_args, GstEvent *);
   GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (peer_pad);
 
@@ -238,11 +227,18 @@ static void
 gst_latency_tracer_init (GstLatencyTracer * self)
 {
   GstTracer *tracer = GST_TRACER (self);
-  gst_tracer_register_hook (tracer, "pad-push-pre", do_push_buffer_pre);
-  gst_tracer_register_hook (tracer, "pad-push-list-pre", do_push_buffer_pre);
-  gst_tracer_register_hook (tracer, "pad-push-post", do_push_buffer_post);
-  gst_tracer_register_hook (tracer, "pad-push-list-post", do_push_buffer_post);
-  gst_tracer_register_hook (tracer, "pad-pull-range-pre", do_pull_range_pre);
-  gst_tracer_register_hook (tracer, "pad-pull-range-post", do_pull_range_post);
-  gst_tracer_register_hook (tracer, "pad-push-event-pre", do_push_event_pre);
+  gst_tracer_register_hook (tracer, "pad-push-pre",
+      G_CALLBACK (do_push_buffer_pre));
+  gst_tracer_register_hook (tracer, "pad-push-list-pre",
+      G_CALLBACK (do_push_buffer_pre));
+  gst_tracer_register_hook (tracer, "pad-push-post",
+      G_CALLBACK (do_push_buffer_post));
+  gst_tracer_register_hook (tracer, "pad-push-list-post",
+      G_CALLBACK (do_push_buffer_post));
+  gst_tracer_register_hook (tracer, "pad-pull-range-pre",
+      G_CALLBACK (do_pull_range_pre));
+  gst_tracer_register_hook (tracer, "pad-pull-range-post",
+      G_CALLBACK (do_pull_range_post));
+  gst_tracer_register_hook (tracer, "pad-push-event-pre",
+      G_CALLBACK (do_push_event_pre));
 }
