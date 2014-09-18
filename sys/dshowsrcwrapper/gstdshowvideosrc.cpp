@@ -576,6 +576,13 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   IPin *input_pin = NULL;
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
   GstStructure *s = gst_caps_get_structure (caps, 0);
+  GstCaps *current_caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc));
+
+  if (gst_caps_is_equal (caps, current_caps)) {
+    gst_caps_unref (current_caps);
+    return TRUE;
+  }
+  gst_caps_unref (current_caps);
 
   /* Same remark as in gstdshowaudiosrc. */
   gboolean was_running = src->is_running;
@@ -654,6 +661,16 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           goto error;
         }
 
+        if (gst_dshow_is_pin_connected (pin_mediatype->capture_pin)) {
+          GST_DEBUG_OBJECT (src,
+              "capture_pin already connected, disconnecting");
+          src->filter_graph->Disconnect (pin_mediatype->capture_pin);
+        }
+
+        if (gst_dshow_is_pin_connected (input_pin)) {
+          GST_DEBUG_OBJECT (src, "input_pin already connected, disconnecting");
+          src->filter_graph->Disconnect (input_pin);
+        }
 
         hres = src->filter_graph->ConnectDirect (pin_mediatype->capture_pin,
             input_pin, pin_mediatype->mediatype);

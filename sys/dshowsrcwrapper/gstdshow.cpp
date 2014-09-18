@@ -413,6 +413,22 @@ gst_dshow_guid_to_gst_video_format (AM_MEDIA_TYPE *mediatype)
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
+gboolean
+gst_dshow_is_pin_connected (IPin * pin)
+{
+  IPin *tmp_pin = NULL;
+  gboolean res;
+  HRESULT hres;
+
+  g_assert (pin);
+  hres = pin->ConnectedTo (&tmp_pin);
+  res = (hres != VFW_E_NOT_CONNECTED);
+  if (tmp_pin)
+    tmp_pin->Release ();
+
+  return res;
+}
+
 GstCaps *
 gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
     GstCapturePinMediaType * pin_mediatype)

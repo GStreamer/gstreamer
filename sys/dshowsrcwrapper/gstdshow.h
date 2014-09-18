@@ -92,6 +92,9 @@ gboolean gst_dshow_show_propertypage (IBaseFilter * base_filter);
 /* translate GUID format to gsteamer video format */
 GstVideoFormat gst_dshow_guid_to_gst_video_format (AM_MEDIA_TYPE *mediatype);
 
+/* check if IPin is connected */
+gboolean gst_dshow_is_pin_connected (IPin *pin);
+
 /* transform a dshow video caps to a gstreamer video caps */
 GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format,
     const gchar * name, GstCapturePinMediaType * pin_mediatype);

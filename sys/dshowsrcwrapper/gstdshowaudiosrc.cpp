@@ -452,6 +452,13 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   HRESULT hres;
   IPin *input_pin = NULL;
   GstDshowAudioSrc *src = GST_DSHOWAUDIOSRC (asrc);
+  GstCaps *current_caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (asrc));
+
+  if (gst_caps_is_equal (spec->caps, current_caps)) {
+    gst_caps_unref (current_caps);
+    return TRUE;
+  }
+  gst_caps_unref (current_caps);
 
   /* In 1.0, prepare() seems to be called in the PLAYING state. Most
      of the time you can't do much on a running graph. */
@@ -511,6 +518,18 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
           spec->segtotal = 2;
         };
         GST_INFO ("Configuring with segsize:%d segtotal:%d", spec->segsize, spec->segtotal);
+
+        if (gst_dshow_is_pin_connected (pin_mediatype->capture_pin)) {
+          GST_DEBUG_OBJECT (src,
+              "capture_pin already connected, disconnecting");
+          src->filter_graph->Disconnect (pin_mediatype->capture_pin);
+        }
+
+        if (gst_dshow_is_pin_connected (input_pin)) {
+          GST_DEBUG_OBJECT (src, "input_pin already connected, disconnecting");
+          src->filter_graph->Disconnect (input_pin);
+        }
+
         hres = src->filter_graph->ConnectDirect (pin_mediatype->capture_pin,
             input_pin, NULL);
         input_pin->Release ();
