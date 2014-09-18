@@ -73,8 +73,6 @@ static void gst_vtenc_session_dump_properties (GstVTEnc * self,
     VTCompressionSessionRef session);
 static void gst_vtenc_session_configure_expected_framerate (GstVTEnc * self,
     VTCompressionSessionRef session, gdouble framerate);
-static void gst_vtenc_session_configure_expected_duration (GstVTEnc * self,
-    VTCompressionSessionRef session, gdouble duration);
 static void gst_vtenc_session_configure_max_keyframe_interval (GstVTEnc * self,
     VTCompressionSessionRef session, gint interval);
 static void gst_vtenc_session_configure_max_keyframe_interval_duration
@@ -472,8 +470,6 @@ gst_vtenc_create_session (GstVTEnc * self)
 
   gst_vtenc_session_configure_expected_framerate (self, session,
       (gdouble) self->negotiated_fps_n / (gdouble) self->negotiated_fps_d);
-  gst_vtenc_session_configure_expected_duration (self, session,
-      (gdouble) self->negotiated_fps_d / (gdouble) self->negotiated_fps_n);
 
   status = VTSessionSetProperty (session,
       kVTCompressionPropertyKey_ProfileLevel,
@@ -584,14 +580,6 @@ gst_vtenc_session_configure_expected_framerate (GstVTEnc * self,
 {
   gst_vtenc_session_configure_property_double (self, session,
       kVTCompressionPropertyKey_ExpectedFrameRate, framerate);
-}
-
-static void
-gst_vtenc_session_configure_expected_duration (GstVTEnc * self,
-    VTCompressionSessionRef session, gdouble duration)
-{
-  gst_vtenc_session_configure_property_double (self, session,
-      kVTCompressionPropertyKey_ExpectedDuration, duration);
 }
 
 static void
