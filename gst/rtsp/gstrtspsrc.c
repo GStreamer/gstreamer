@@ -6251,7 +6251,8 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
               stream->id));
 
     /* handle the code ourselves */
-    if ((res = gst_rtspsrc_send (src, conn, &request, &response, &code) < 0))
+    res = gst_rtspsrc_send (src, conn, &request, &response, &code);
+    if (res < 0)
       goto send_error;
 
     switch (code) {
@@ -7935,11 +7936,13 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     goto was_ok;
 
   if (g_str_has_prefix (uri, "rtsp-sdp://")) {
-    if ((res = gst_sdp_message_new (&sdp) < 0))
+    res = gst_sdp_message_new (&sdp);
+    if (res < 0)
       goto sdp_failed;
 
     GST_DEBUG_OBJECT (src, "parsing SDP message");
-    if ((res = gst_sdp_message_parse_uri (uri, sdp) < 0))
+    res = gst_sdp_message_parse_uri (uri, sdp);
+    if (res < 0)
       goto invalid_sdp;
   } else {
     /* try to parse */
