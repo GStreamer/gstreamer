@@ -245,30 +245,10 @@ gst_videoaggregator_child_proxy_init (gpointer g_iface, gpointer iface_data)
   } G_STMT_END
 
 
-#define GST_VIDEO_AGGREGATOR_GET_SETCAPS_LOCK(vagg) (&GST_VIDEO_AGGREGATOR(vagg)->priv->setcaps_lock)
-#define GST_VIDEO_AGGREGATOR_SETCAPS_LOCK(vagg)   G_STMT_START {  \
-  GST_LOG_OBJECT (vagg, "Taking SETCAPS lock from thread %p",     \
-        g_thread_self());                                         \
-  g_mutex_lock(GST_VIDEO_AGGREGATOR_GET_SETCAPS_LOCK(vagg));      \
-  GST_LOG_OBJECT (vagg, "Took SETCAPS lock from thread %p",       \
-        g_thread_self());                                         \
-  } G_STMT_END
-
-#define GST_VIDEO_AGGREGATOR_SETCAPS_UNLOCK(vagg)   G_STMT_START {  \
-  GST_LOG_OBJECT (vagg, "Releasing SETCAPS lock from thread %p",    \
-        g_thread_self());                                           \
-  g_mutex_unlock(GST_VIDEO_AGGREGATOR_GET_SETCAPS_LOCK(vagg));      \
-  GST_LOG_OBJECT (vagg, "Took SETCAPS lock from thread %p",         \
-        g_thread_self());                                           \
-  } G_STMT_END
-
 struct _GstVideoAggregatorPrivate
 {
   /* Lock to prevent the state to change while aggregating */
   GMutex lock;
-
-  /* Lock to prevent two src setcaps from happening at the same time  */
-  GMutex setcaps_lock;
 
   /* Current downstream segment */
   GstClockTime ts_offset;
@@ -360,6 +340,11 @@ _find_best_video_format (GstVideoAggregator * vagg, GstCaps * downstream_caps,
   g_hash_table_unref (formats_table);
 }
 
+/* WITH GST_VIDEO_AGGREGATOR_LOCK TAKEN
+ * NOTE: After calling that method you **have to** call
+ *       gst_videoaggregator_update_src_caps (without releasing
+ *       the GST_VIDEO_AGGREGATOR_LOCK in between)
+ */
 static gboolean
 gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
 {
@@ -476,6 +461,7 @@ gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
   return TRUE;
 }
 
+/* WITH GST_VIDEO_AGGREGATOR_LOCK TAKEN */
 static gboolean
 gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
 {
@@ -492,8 +478,6 @@ gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
 
   ret = TRUE;
 
-  GST_VIDEO_AGGREGATOR_LOCK (vagg);
-
   if (GST_VIDEO_INFO_FPS_N (&vagg->info) != GST_VIDEO_INFO_FPS_N (&info) ||
       GST_VIDEO_INFO_FPS_D (&vagg->info) != GST_VIDEO_INFO_FPS_D (&info)) {
     if (agg->segment.position != -1) {
@@ -505,18 +489,21 @@ gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
 
   vagg->info = info;
 
-  GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
-
   if (vagg->priv->current_caps == NULL ||
       gst_caps_is_equal (caps, vagg->priv->current_caps) == FALSE) {
     gst_caps_replace (&vagg->priv->current_caps, caps);
+    GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
+
     gst_aggregator_set_src_caps (agg, caps);
+
+    GST_VIDEO_AGGREGATOR_LOCK (vagg);
   }
 
 done:
   return ret;
 }
 
+/* WITH GST_VIDEO_AGGREGATOR_LOCK TAKEN */
 static gboolean
 gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
 {
@@ -529,8 +516,6 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
   GstVideoAggregatorClass *vagg_klass = (GstVideoAggregatorClass *) klass;
   GstAggregator *agg = GST_AGGREGATOR (vagg);
 
-  GST_VIDEO_AGGREGATOR_SETCAPS_LOCK (vagg);
-  GST_VIDEO_AGGREGATOR_LOCK (vagg);
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
     GstVideoAggregatorPad *mpad = l->data;
@@ -596,7 +581,6 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
     if (vagg_klass->update_info) {
       if (!vagg_klass->update_info (vagg, &info)) {
         ret = FALSE;
-        GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
         goto done;
       }
     }
@@ -619,7 +603,6 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
       if (gst_caps_is_empty (caps)) {
         GST_DEBUG_OBJECT (vagg, "empty caps");
         ret = FALSE;
-        GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
         goto done;
       }
 
@@ -638,21 +621,15 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
     gst_caps_unref (caps);
     caps = gst_video_info_to_caps (&info);
 
-    GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
-
     if (gst_videoaggregator_src_setcaps (vagg, caps)) {
       if (vagg_klass->negotiated_caps)
         ret =
             GST_VIDEO_AGGREGATOR_GET_CLASS (vagg)->negotiated_caps (vagg, caps);
     }
     gst_caps_unref (caps);
-  } else {
-    GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
   }
 
 done:
-  GST_VIDEO_AGGREGATOR_SETCAPS_UNLOCK (vagg);
-
   return ret;
 }
 
@@ -692,10 +669,11 @@ gst_videoaggregator_pad_sink_setcaps (GstPad * pad, GstObject * parent,
   vaggpad->info = info;
 
   ret = gst_videoaggregator_update_converters (vagg);
-  GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
 
   if (ret)
     ret = gst_videoaggregator_update_src_caps (vagg);
+
+  GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
 
 beach:
   return ret;
@@ -1192,10 +1170,10 @@ gst_videoaggregator_aggregate (GstAggregator * agg)
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
+  GST_VIDEO_AGGREGATOR_LOCK (vagg);
+
   if (gst_pad_check_reconfigure (agg->srcpad))
     gst_videoaggregator_update_src_caps (vagg);
-
-  GST_VIDEO_AGGREGATOR_LOCK (vagg);
 
   if (agg->segment.position == -1)
     output_start_time = agg->segment.start;
@@ -1718,7 +1696,6 @@ gst_videoaggregator_release_pad (GstElement * element, GstPad * pad)
   gst_videoaggregator_update_converters (vagg);
   gst_buffer_replace (&vaggpad->buffer, NULL);
   update_caps = GST_VIDEO_INFO_FORMAT (&vagg->info) != GST_VIDEO_FORMAT_UNKNOWN;
-  GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
 
   gst_child_proxy_child_removed (GST_CHILD_PROXY (vagg), G_OBJECT (vaggpad),
       GST_OBJECT_NAME (vaggpad));
@@ -1729,6 +1706,7 @@ gst_videoaggregator_release_pad (GstElement * element, GstPad * pad)
   if (update_caps)
     gst_videoaggregator_update_src_caps (vagg);
 
+  GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
   return;
 }
 
@@ -1850,7 +1828,6 @@ gst_videoaggregator_finalize (GObject * o)
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (o);
 
   g_mutex_clear (&vagg->priv->lock);
-  g_mutex_clear (&vagg->priv->setcaps_lock);
 
   G_OBJECT_CLASS (gst_videoaggregator_parent_class)->finalize (o);
 }
@@ -1946,7 +1923,6 @@ gst_videoaggregator_init (GstVideoAggregator * vagg)
   vagg->priv->current_caps = NULL;
 
   g_mutex_init (&vagg->priv->lock);
-  g_mutex_init (&vagg->priv->setcaps_lock);
   /* initialize variables */
   gst_videoaggregator_reset (vagg);
 }
