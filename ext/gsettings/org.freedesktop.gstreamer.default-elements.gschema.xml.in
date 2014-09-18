@@ -5,7 +5,7 @@
       <summary>default GStreamer sound events audiosink</summary>
       <description>GStreamer can play audio using any number of
       output elements. Some possible choices are osssink, pulsesink
-      and alsasink. The audiosink can be a partial pipeline instea
+      and alsasink. The audiosink can be a partial pipeline instead
       of just one element.</description>
     </key>
     <key name="sounds-audiosink-description" type="s">
@@ -18,7 +18,7 @@
       <summary>default GStreamer audiosink for Audio/Video Conferencing</summary>
       <description>GStreamer can play audio using any number of
       output elements. Some possible choices are osssink, pulsesink
-      and alsasink. The audiosink can be a partial pipeline instea
+      and alsasink. The audiosink can be a partial pipeline instead
       of just one element.</description>
     </key>
     <key name="chat-audiosink-description" type="s">
@@ -31,7 +31,7 @@
       <summary>default GStreamer audiosink for Music and Movies</summary>
       <description>GStreamer can play audio using any number of
       output elements. Some possible choices are osssink, pulsesink
-      and alsasink. The audiosink can be a partial pipeline instea
+      and alsasink. The audiosink can be a partial pipeline instead
       of just one element.</description>
     </key>
     <key name="music-audiosink-description" type="s">
