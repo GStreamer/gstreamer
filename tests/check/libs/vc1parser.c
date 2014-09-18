@@ -784,6 +784,18 @@ static const guint8 pframe2_adv[] = {
   0xcf, 0x24, 0x39, 0x4c, 0xcd, 0x8d, 0x64, 0x8e, 0x82, 0x4d
 };
 
+static const guint8 sequence_layer_hdr[] = {
+  0x06, 0x00, 0x00, 0xc5,
+  0x04, 0x00, 0x00, 0x00,
+  0x41, 0xfb, 0xea, 0xb5,       /* structC    */
+  0x30, 0x00, 0x00, 0x00,       /* height: 48 */
+  0x30, 0x00, 0x00, 0x00,       /* width:  48 */
+  0x0c, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x58,       /* this structB violate res1 value */
+  0x00, 0x00, 0x00, 0x00,
+  0x1d, 0x00, 0x00, 0x00
+};
+
 GST_START_TEST (test_vc1_identify_bdu)
 {
   GstVC1ParserResult res;
@@ -1201,7 +1213,46 @@ GST_START_TEST (test_vc1_parse_p_frame_header_adv)
   assert_equals_int (pic->mvrange, 0);
 }
 
-GST_END_TEST static Suite *
+GST_END_TEST;
+
+GST_START_TEST (test_vc1_parse_sequence_layer)
+{
+  GstVC1SeqLayer seq_layer;
+
+  assert_equals_int (gst_vc1_parse_sequence_layer (sequence_layer_hdr,
+          sizeof (sequence_layer_hdr), &seq_layer), GST_VC1_PARSER_OK);
+
+  assert_equals_int (seq_layer.numframes, 6);
+
+  assert_equals_int (seq_layer.struct_a.vert_size, 48);
+  assert_equals_int (seq_layer.struct_a.horiz_size, 48);
+
+  assert_equals_int (seq_layer.struct_b.level, GST_VC1_LEVEL_HIGH);
+  assert_equals_int (seq_layer.struct_b.cbr, 1);
+  assert_equals_int (seq_layer.struct_b.framerate, 29);
+  assert_equals_int (seq_layer.struct_b.hrd_buffer, 0);
+  assert_equals_int (seq_layer.struct_b.hrd_rate, 0);
+
+  assert_equals_int (seq_layer.struct_c.profile, GST_VC1_PROFILE_MAIN);
+  assert_equals_int (seq_layer.struct_c.frmrtq_postproc, 0);
+  assert_equals_int (seq_layer.struct_c.bitrtq_postproc, 31);
+  assert_equals_int (seq_layer.struct_c.loop_filter, 1);
+  assert_equals_int (seq_layer.struct_c.multires, 1);
+  assert_equals_int (seq_layer.struct_c.fastuvmc, 1);
+  assert_equals_int (seq_layer.struct_c.extended_mv, 1);
+  assert_equals_int (seq_layer.struct_c.dquant, 2);
+  assert_equals_int (seq_layer.struct_c.vstransform, 1);
+  assert_equals_int (seq_layer.struct_c.overlap, 1);
+  assert_equals_int (seq_layer.struct_c.syncmarker, 0);
+  assert_equals_int (seq_layer.struct_c.rangered, 1);
+  assert_equals_int (seq_layer.struct_c.maxbframes, 3);
+  assert_equals_int (seq_layer.struct_c.quantizer, 1);
+  assert_equals_int (seq_layer.struct_c.finterpflag, 0);
+}
+
+GST_END_TEST;
+
+static Suite *
 vc1parser_suite (void)
 {
   Suite *s = suite_create ("VC1 Parser library");
@@ -1217,6 +1268,7 @@ vc1parser_suite (void)
   tcase_add_test (tc_chain, test_vc1_parse_i_frame_header_adv);
   tcase_add_test (tc_chain, test_vc1_parse_b_frame_header_adv);
   tcase_add_test (tc_chain, test_vc1_parse_p_frame_header_adv);
+  tcase_add_test (tc_chain, test_vc1_parse_sequence_layer);
 
   return s;
 }
