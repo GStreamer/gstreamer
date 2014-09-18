@@ -605,7 +605,7 @@ ifs_update (PluginInfo * goomInfo, Pixel * data, Pixel * back, int increment,
     if (((col[VERT] > 32) && (col[ROUGE] < col[VERT] + 40)
             && (col[VERT] < col[ROUGE] + 20) && (col[BLEU] < 64)
             && (RAND () % 20 == 0)) && (justChanged < 0)) {
-      mode = RAND () % 3 ? MOD_FEU : MOD_MERVER;
+      mode = (RAND () % 3) ? MOD_FEU : MOD_MERVER;
       justChanged = 250;
     }
   } else if (mode == MOD_MERVER) {
@@ -656,7 +656,7 @@ ifs_update (PluginInfo * goomInfo, Pixel * data, Pixel * back, int increment,
     if (((col[VERT] > 32) && (col[ROUGE] < col[VERT] + 40)
             && (col[VERT] < col[ROUGE] + 20) && (col[BLEU] < 64)
             && (RAND () % 20 == 0)) && (justChanged < 0)) {
-      mode = RAND () % 3 ? MOD_FEU : MOD_MER;
+      mode = (RAND () % 3) ? MOD_FEU : MOD_MER;
       justChanged = 250;
     }
   } else if (mode == MOD_FEU) {
@@ -714,7 +714,7 @@ ifs_update (PluginInfo * goomInfo, Pixel * data, Pixel * back, int increment,
     if (((col[ROUGE] < 64) && (col[VERT] > 32) && (col[VERT] < col[BLEU])
             && (col[BLEU] > 32)
             && (RAND () % 20 == 0)) && (justChanged < 0)) {
-      mode = RAND () % 2 ? MOD_MER : MOD_MERVER;
+      mode = (RAND () % 2) ? MOD_MER : MOD_MERVER;
       justChanged = 250;
     }
   }
