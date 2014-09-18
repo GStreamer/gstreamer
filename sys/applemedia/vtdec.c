@@ -750,9 +750,17 @@ compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
 static void
 gst_vtdec_set_latency (GstVtdec * vtdec)
 {
-  GstClockTime frame_duration = gst_util_uint64_scale (GST_SECOND,
+  GstClockTime frame_duration;
+  GstClockTime latency;
+
+  if (vtdec->video_info.fps_n == 0) {
+    GST_INFO_OBJECT (vtdec, "Framerate not known, can't set latency");
+    return;
+  }
+
+  duration = gst_util_uint64_scale (GST_SECOND,
       vtdec->video_info.fps_d, vtdec->video_info.fps_n);
-  GstClockTime latency = frame_duration * vtdec->reorder_queue_length;
+  latency = frame_duration * vtdec->reorder_queue_length;
 
   GST_INFO_OBJECT (vtdec, "setting latency frames:%d time:%" GST_TIME_FORMAT,
       vtdec->reorder_queue_length, GST_TIME_ARGS (latency));
