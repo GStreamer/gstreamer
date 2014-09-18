@@ -489,7 +489,7 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   guint16 orign_seqnum = 0;
   guint8 payload_type = 0;
   guint8 origin_payload_type = 0;
-  gboolean is_rtx = FALSE;
+  gboolean is_rtx;
   gboolean drop = FALSE;
 
   /* map current rtp packet to parse its header */

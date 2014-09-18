@@ -333,11 +333,8 @@ static gboolean
 gst_audio_dynamic_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioDynamic *filter = GST_AUDIO_DYNAMIC (base);
-  gboolean ret = TRUE;
 
-  ret = gst_audio_dynamic_set_process_function (filter, info);
-
-  return ret;
+  return gst_audio_dynamic_set_process_function (filter, info);
 }
 
 static void

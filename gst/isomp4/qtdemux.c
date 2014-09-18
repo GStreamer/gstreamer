@@ -2009,7 +2009,6 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       gst_event_unref (event);
       res = TRUE;
       goto drop;
-      break;
     }
     case GST_EVENT_FLUSH_STOP:
     {
@@ -2051,7 +2050,6 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       res = TRUE;
       gst_event_unref (event);
       goto drop;
-      break;
     }
     default:
       break;

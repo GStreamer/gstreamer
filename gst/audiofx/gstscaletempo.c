@@ -575,10 +575,9 @@ gst_scaletempo_query (GstBaseTransform * trans, GstPadDirection direction,
     switch (GST_QUERY_TYPE (query)) {
       case GST_QUERY_LATENCY:{
         GstPad *peer;
-        gboolean res;
 
         if ((peer = gst_pad_get_peer (GST_BASE_TRANSFORM_SINK_PAD (trans)))) {
-          if ((res = gst_pad_query (peer, query))) {
+          if ((gst_pad_query (peer, query))) {
             GstClockTime min, max;
             gboolean live;
 
@@ -604,12 +603,10 @@ gst_scaletempo_query (GstBaseTransform * trans, GstPadDirection direction,
         }
 
         return TRUE;
-        break;
       }
       default:{
         return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
             query);
-        break;
       }
     }
   } else {

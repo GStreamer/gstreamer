@@ -2455,7 +2455,6 @@ gst_alpha_set_process_function_full (GstAlpha * alpha, GstVideoInfo * in_info,
               break;
           }
           break;
-          break;
         default:
           break;
       }
@@ -2536,7 +2535,6 @@ gst_alpha_set_process_function_full (GstAlpha * alpha, GstVideoInfo * in_info,
             default:
               break;
           }
-          break;
           break;
         default:
           break;

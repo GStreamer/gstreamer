@@ -3016,7 +3016,7 @@ static GstFlowReturn
 gst_avi_demux_peek_tag (GstAviDemux * avi, guint64 offset, guint32 * tag,
     guint * size)
 {
-  GstFlowReturn res = GST_FLOW_OK;
+  GstFlowReturn res;
   GstBuffer *buf = NULL;
   GstMapInfo map;
 

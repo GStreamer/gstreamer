@@ -1436,7 +1436,6 @@ theora_streamheader_to_codecdata (const GValue * streamheader,
       videocontext->display_width = 0;
       videocontext->display_height = 0;
     }
-    hdr += 3 + 3;
 
     gst_buffer_unmap (buf0, &map);
   }

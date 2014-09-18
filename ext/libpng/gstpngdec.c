@@ -129,7 +129,7 @@ static void
 user_info_callback (png_structp png_ptr, png_infop info)
 {
   GstPngDec *pngdec = NULL;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret;
 
   GST_LOG ("info ready");
 

@@ -191,7 +191,7 @@ gst_rtp_mux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstRTPMux *rtp_mux = GST_RTP_MUX (parent);
   GstRTPMuxClass *klass;
-  gboolean ret = FALSE;
+  gboolean ret;
 
   klass = GST_RTP_MUX_GET_CLASS (rtp_mux);
 

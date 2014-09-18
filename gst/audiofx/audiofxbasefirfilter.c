@@ -110,10 +110,9 @@ process_##channels##_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * s
   gint off; \
   gdouble *buffer = self->buffer; \
   gdouble *kernel = self->kernel; \
-  guint buffer_length = self->buffer_length; \
   \
   if (!buffer) { \
-    self->buffer_length = buffer_length = kernel_length * channels; \
+    self->buffer_length = kernel_length * channels; \
     self->buffer = buffer = g_new0 (gdouble, self->buffer_length); \
   } \
   \

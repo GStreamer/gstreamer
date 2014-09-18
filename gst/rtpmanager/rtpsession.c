@@ -1409,8 +1409,8 @@ session_update_ptp (RTPSession * sess)
    * of each non-internal (=remotes) source have to be compared
    * to each other.
    */
-  gboolean is_doing_rtp_ptp = FALSE;
-  gboolean is_doing_rtcp_ptp = FALSE;
+  gboolean is_doing_rtp_ptp;
+  gboolean is_doing_rtcp_ptp;
   CompareAddrData data;
 
   /* compare the first remote source's ip addr that receive rtp packets
@@ -2852,7 +2852,7 @@ done:
 GstFlowReturn
 rtp_session_schedule_bye (RTPSession * sess, GstClockTime current_time)
 {
-  GstFlowReturn result = GST_FLOW_OK;
+  GstFlowReturn result;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
 

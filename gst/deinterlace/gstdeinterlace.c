@@ -1998,11 +1998,10 @@ static gboolean
 gst_deinterlace_get_latency (GstDeinterlace * self)
 {
   if (self->locking == GST_DEINTERLACE_LOCKING_AUTO) {
-    gboolean res;
     GstQuery *query;
 
     query = gst_query_new_latency ();
-    if ((res = gst_pad_peer_query (self->sinkpad, query))) {
+    if ((gst_pad_peer_query (self->sinkpad, query))) {
       gboolean is_live;
       /* if upstream is live, we use low-latency passive locking mode
        * else high-latency active locking mode */
