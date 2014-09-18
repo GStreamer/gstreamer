@@ -30,5 +30,13 @@ namespace Gst {
 				return ret;
 			}
 		}
+		public new PadFlags Flags {
+			get {
+				return (PadFlags)base.Flags;
+			}
+			set {
+				base.Flags = (uint)value;
+			}
+		}
 	}
 }
