@@ -38,5 +38,10 @@ namespace Gst {
 			}
 		}
 
+		public IntPtr DataPtr {
+			get {
+				return _data;
+			}
+		}
 	}
 }
