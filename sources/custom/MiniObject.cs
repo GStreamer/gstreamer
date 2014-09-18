@@ -46,9 +46,12 @@ namespace Gst {
 		static extern IntPtr gst_mini_object_make_writable(IntPtr mini_object);
 
 		public void MakeWritable() {
-			Console.WriteLine (Handle);
-			Raw = gst_mini_object_make_writable (Raw);
-			Console.WriteLine (Handle);
+			IntPtr raw = gst_mini_object_make_writable (Raw);
+			if (raw == Raw)
+				return;
+			Raw = raw;
+			if (raw != IntPtr.Zero)
+				Unref (raw);
 		}
 	}
 }
