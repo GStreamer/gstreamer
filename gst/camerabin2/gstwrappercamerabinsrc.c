@@ -1188,7 +1188,7 @@ static GstStateChangeReturn
 gst_wrapper_camera_bin_src_change_state (GstElement * element,
     GstStateChange trans)
 {
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstStateChangeReturn ret;
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (element);
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, trans);
