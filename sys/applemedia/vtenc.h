@@ -72,7 +72,6 @@ struct _GstVTEnc
   CFMutableDictionaryRef options;
 
   GAsyncQueue * cur_outframes;
-  gboolean expect_keyframe;
 };
 
 void gst_vtenc_register_elements (GstPlugin * plugin);
