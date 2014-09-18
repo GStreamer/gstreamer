@@ -190,8 +190,7 @@ gst_mplex_init (GstMplex * mplex)
 {
   GstElement *element = GST_ELEMENT (mplex);
 
-  mplex->srcpad =
-      gst_pad_new_from_static_template (&src_templ, "src");
+  mplex->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
   gst_element_add_pad (element, mplex->srcpad);
   gst_pad_use_fixed_caps (mplex->srcpad);
   gst_pad_set_activatemode_function (mplex->srcpad,
@@ -507,7 +506,7 @@ gst_mplex_sink_event (GstPad * sinkpad, GstObject * parent, GstEvent * event)
       result = gst_mplex_setcaps (sinkpad, caps);
       gst_event_unref (event);
       goto done;
-      break;
+
     }
     default:
       /* for a serialized event, wait until earlier data is gone,
@@ -537,7 +536,8 @@ gst_mplex_start_task (GstMplex * mplex)
   if (G_UNLIKELY (mplex->srcresult == GST_FLOW_CUSTOM_SUCCESS)
       && mplex->job->video_tracks == mplex->num_vpads
       && mplex->job->audio_tracks == mplex->num_apads) {
-    gst_pad_start_task (mplex->srcpad, (GstTaskFunction) gst_mplex_loop, mplex, NULL);
+    gst_pad_start_task (mplex->srcpad, (GstTaskFunction) gst_mplex_loop, mplex,
+        NULL);
     mplex->srcresult = GST_FLOW_OK;
   }
 }
