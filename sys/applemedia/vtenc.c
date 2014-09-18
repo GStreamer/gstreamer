@@ -483,8 +483,7 @@ gst_vtenc_create_session (GstVTEnc * self)
       "kVTCompressionPropertyKey_AllowTemporalCompression => %d", (int) status);
 
   gst_vtenc_session_configure_max_keyframe_interval (self, session, 0);
-  gst_vtenc_session_configure_max_keyframe_interval_duration (self, session,
-      G_MAXDOUBLE);
+  gst_vtenc_session_configure_max_keyframe_interval_duration (self, session, 0);
 
   gst_vtenc_session_configure_bitrate (self, session,
       gst_vtenc_get_bitrate (self));
