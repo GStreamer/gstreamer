@@ -758,7 +758,7 @@ gst_vtdec_set_latency (GstVtdec * vtdec)
     return;
   }
 
-  duration = gst_util_uint64_scale (GST_SECOND,
+  frame_duration = gst_util_uint64_scale (GST_SECOND,
       vtdec->video_info.fps_d, vtdec->video_info.fps_n);
   latency = frame_duration * vtdec->reorder_queue_length;
 
