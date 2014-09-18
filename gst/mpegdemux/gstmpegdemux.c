@@ -1102,7 +1102,6 @@ find_offset (GstFluPSDemux * demux, guint64 scr,
   guint64 scr_rate_n = max_scr_offset - min_scr_offset;
   guint64 scr_rate_d = max_scr - min_scr;
   guint64 fscr = scr;
-  gboolean found;
   guint64 offset;
 
   if (recursion_count > MAX_RECURSION_COUNT) {
@@ -1113,11 +1112,8 @@ find_offset (GstFluPSDemux * demux, guint64 scr,
       MIN (gst_util_uint64_scale (scr - min_scr, scr_rate_n,
           scr_rate_d), demux->sink_segment.stop);
 
-  found = gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr, 0);
-
-  if (!found) {
-    found =
-        gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &fscr, 0);
+  if (!gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr, 0)) {
+    gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &fscr, 0);
   }
 
   if (fscr == scr || fscr == min_scr || fscr == max_scr) {
@@ -2794,7 +2790,7 @@ static inline GstFlowReturn
 gst_flups_demux_pull_block (GstPad * pad, GstFluPSDemux * demux,
     guint64 offset, guint size)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret;
   GstBuffer *buffer = NULL;
 
   ret = gst_pad_pull_range (pad, offset, size, &buffer);
