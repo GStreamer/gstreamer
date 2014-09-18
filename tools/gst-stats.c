@@ -42,6 +42,7 @@ static guint64 num_buffers = 0, num_events = 0, num_messages = 0, num_queries =
 static guint num_elements = 0, num_bins = 0, num_pads = 0, num_ghostpads = 0;
 static GstClockTime last_ts = G_GUINT64_CONSTANT (0);
 static guint total_cpuload = 0;
+static gboolean have_cpuload = FALSE;
 
 typedef struct
 {
@@ -120,6 +121,7 @@ get_thread_stats (guint id)
 
   if (G_UNLIKELY (!stats)) {
     stats = g_slice_new0 (GstThreadStats);
+    stats->tthread = GST_CLOCK_TIME_NONE;
     g_hash_table_insert (threads, GUINT_TO_POINTER (id), stats);
   }
   return stats;
@@ -401,6 +403,7 @@ do_proc_rusage_stats (GstStructure * s)
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
       "average-cpuload", G_TYPE_UINT, &total_cpuload, NULL);
   last_ts = MAX (last_ts, ts);
+  have_cpuload = TRUE;
 }
 
 /* reporting */
@@ -467,8 +470,10 @@ print_thread_stats (gpointer key, gpointer value, gpointer user_data)
     return;
 
   printf ("Thread %p Statistics:\n", key);
-  printf ("  Time: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (stats->tthread));
-  printf ("  Avg CPU load: %u %%\n", stats->cpuload);
+  if (GST_CLOCK_TIME_IS_VALID (stats->tthread)) {
+    printf ("  Time: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (stats->tthread));
+    printf ("  Avg CPU load: %4.1f %%\n", (gfloat) stats->cpuload / 10.0);
+  }
 
   puts ("  Pad Statistics:");
   g_slist_foreach (node, print_pad_stats, key);
@@ -697,7 +702,9 @@ print_stats (void)
   printf ("Number of Message sent: %" G_GUINT64_FORMAT "\n", num_messages);
   printf ("Number of Queries sent: %" G_GUINT64_FORMAT "\n", num_queries);
   printf ("Time: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (last_ts));
-  printf ("Avg CPU load: %u %%\n", (guint) total_cpuload);
+  if (have_cpuload) {
+    printf ("Avg CPU load: %4.1f %%\n", (gfloat) total_cpuload / 10.0);
+  }
   puts ("");
 
   /* thread stats */
