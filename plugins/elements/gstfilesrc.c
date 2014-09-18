@@ -75,7 +75,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-/* FIXME we should be using glib for this */
 #ifndef S_ISREG
 #define S_ISREG(mode) ((mode)&_S_IFREG)
 #endif
