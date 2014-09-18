@@ -26,7 +26,7 @@
  *                     graphs.
  *
  * GStreamer is a framework for constructing graphs of various filters
- * (termed elements here) that will handle streaming media.  Any discreet
+ * (termed elements here) that will handle streaming media.  Any discrete
  * (packetizable) media type is supported, with provisions for automatically
  * determining source type.  Formatting/framing information is provided with
  * a powerful negotiation framework.  Plugins are heavily used to provide for
