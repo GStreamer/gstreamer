@@ -54,7 +54,7 @@
     <title>Reading Tags from Streams</title>
     <para>
       The basic object for tags is a <ulink type="http"
-      url="../../gstreamer/html/gstreamer-GstTagList.html"><classname>GstTagList
+      url="../../gstreamer/html/GstTagList.html"><classname>GstTagList
       </classname></ulink>. An element that is reading tags from a stream should
       create an empty taglist and fill this with individual tags. Empty tag
       lists can be created with <function>gst_tag_list_new ()</function>. Then,

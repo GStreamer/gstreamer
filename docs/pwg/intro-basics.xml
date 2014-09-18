@@ -190,8 +190,8 @@
       See the &GstLibRef; for the current implementation details of a <ulink
       type="http"
       url="../../gstreamer/html/gstreamer-GstMiniObject.html"><classname>GstMiniObject</classname></ulink>, <ulink type="http"
-      url="../../gstreamer/html/gstreamer-GstBuffer.html"><classname>GstBuffer</classname></ulink> and <ulink type="http"
-      url="../../gstreamer/html/gstreamer-GstEvent.html"><classname>GstEvent</classname></ulink>.
+      url="../../gstreamer/html/GstBuffer.html"><classname>GstBuffer</classname></ulink> and <ulink type="http"
+      url="../../gstreamer/html/GstEvent.html"><classname>GstEvent</classname></ulink>.
     </para>
 
     <sect2 id="sect2-buffer-allocation" xreflabel="Buffer Allocation">
