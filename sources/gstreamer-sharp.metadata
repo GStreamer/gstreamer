@@ -247,4 +247,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//callback[@cname='GstAudioFormatUnpack']/parameters/parameter[@name='length']" name="name">n_length</attr>
 	<!-- No way to correctly generate these without the element type -->
 	<attr path="//boxed[@cname='GstMpegtsDescriptor']//method[parameters/parameter[@type='GArray***']]" name="hidden">true</attr>
+	
+	<!-- Fixed in 1.4.1 -->
+	<attr path="//callback[@cname='GstPadEventFunction']/parameters/parameter[@name='event']" name="owned">true</attr>
+	<attr path="//callback[@cname='GstPadChainListFunction']/parameters/parameter[@name='list']" name="owned">true</attr>
+	<attr path="//callback[@cname='GstPadChainFunction']/parameters/parameter[@name='buffer']" name="owned">true</attr>
 </metadata>
