@@ -1094,7 +1094,6 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         /* Use that buffer data in the caps */
         gst_flv_demux_audio_negotiate (demux, codec_tag, rate, channels, width);
         goto beach;
-        break;
       }
       case 1:
         /* AAC raw packet */
@@ -1477,7 +1476,6 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
         /* Use that buffer data in the caps */
         gst_flv_demux_video_negotiate (demux, codec_tag);
         goto beach;
-        break;
       }
       case 1:
         /* H.264 NALU packet */
