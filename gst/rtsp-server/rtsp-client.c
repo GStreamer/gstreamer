@@ -2211,7 +2211,11 @@ client_session_removed (GstRTSPSessionPool * pool, GstRTSPSession * session,
   GST_INFO ("client %p: session %p removed", client, session);
 
   g_mutex_lock (&priv->lock);
+  if (priv->watch != NULL)
+    gst_rtsp_watch_set_send_backlog (priv->watch, 0, 0);
   client_unwatch_session (client, session, NULL);
+  if (priv->watch != NULL)
+    gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
   g_mutex_unlock (&priv->lock);
 }
 
