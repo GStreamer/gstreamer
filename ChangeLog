@@ -1,9 +1,182 @@
-=== release 1.4.1 ===
+=== release 1.4.2 ===
 
-2014-08-27  Sebastian Dröge <slomo@coaxion.net>
+2014-09-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.1
+	  releasing 1.4.2
+
+2014-09-19 00:33:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/pwg/advanced-tagging.xml:
+	* docs/pwg/intro-basics.xml:
+	  docs: pwg: fix some links to the API docs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736762
+
+2014-09-17 17:17:10 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefindelement: do not leak sticky events in flush_stop
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736813
+
+2014-09-16 13:48:18 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/gstevent.c:
+	  event: add annotations to gst_event_parse_toc_select()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736739
+
+2014-09-16 12:17:48 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/gstquery.c:
+	  query: Add annotations to gst_query_add_allocation_pool()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736736
+
+2014-09-11 18:01:58 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gstmultiqueue.h:
+	  multiqueue: do not post messages holding the lock
+	  It might cause deadlocks to post messages while holding the multiqueue
+	  lock. To avoid this a new boolean flag is set whenever a new buffering percent
+	  is found. The message is posted after the lock can be released.
+	  To make sure the buffering messages are posted in the right order, messages
+	  are posted holding another lock. This prevents 2 threads trying to post
+	  messages at the same time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736295
+
+2014-09-15 16:38:17 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: handle reference in set_allocation rather than in prepare_allocation
+	  Otherwise we can forget to unref objects in error cases.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736680
+
+2014-09-15 13:06:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/check/gstcheck.c:
+	  check: Use the name parameter of gst_check_setup_src_pad_by_name() and the sink variant
+	  This was hardcoded to "sink" / "src" by accident in previous refactoring.
+
+2014-09-10 14:53:00 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/gstquery.c:
+	  query: add annotations to gst_query_set_nth_allocation_pool()
+	  https://bugzilla.gnome.org//show_bug.cgi?id=736424
+
+2014-09-11 09:35:17 +0200  Rémi Lefèvre <remi.lefevre@parrot.com>
+
+	* plugins/elements/gstvalve.c:
+	  valve: fix typo in description
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736455
+
+2014-08-27 17:06:57 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* plugins/elements/gstoutputselector.c:
+	  output-selector: Send all events to active src pad and EOS to all src pads
+	  Fixes tests/icles/output-selector-test
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729811
+
+2014-09-03 17:38:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstdevicemonitor.c:
+	  devicemonitor: fix typo in sample code in docs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735975
+
+2014-08-07 12:18:04 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Not post BUFFERING message if one of the singlequeue doesn't need it
+	  Imagine the following 'pipeline'
+	  --------------
+	  p1/| 'fullqueue'  |--- 'laggy' downstream
+	  ---------  / |              |
+	  -| demuxer |   | multiqueue   |
+	  ---------  \ |              |
+	  p2\| 'emptyqueue' |--- 'fast' downstream
+	  --------------
+	  In the case downstream of one single queue (fullqueue) has (a lot of) latency
+	  (for example for reverse playback with video), we can end up having the other
+	  SingleQueue (emptyqueue) emptied, before that fullqueue gets
+	  unblocked. In the meantime, the demuxer tries to push on fullqueue, and
+	  is blocking there.
+	  In that case the current code will post a BUFFERING message on the bus when
+	  emptyqueue gets emptied, that leads to the application setting the pipeline state to
+	  PAUSED. So now we end up in a situation where 'laggy downstream' is
+	  prerolled and will not unblock anymore because the pipeline is set to
+	  PAUSED, the fullequeue does not have a chance to be emptied and
+	  the emptyqueue can not get filled anymore so no more BUFERRING message
+	  will be posted and the pipeline is stucked in PAUSED for the eternity.
+	  Making sure that we do not try to "buffer" if one of the single queue
+	  does not need buffering, prevents this situtation from happening though it lets the
+	  oportunity for buffering in all other cases.
+	  That implements a new logic where we need all singlequeue to need
+	  buffering for the multiqueue to actually state buffering is needed,
+	  taking the maximum buffering of the single queue as the reference point.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734412
+
+2014-08-26 20:14:40 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/gstbuffer.c:
+	  buffer: do not touch memory tag flag when copying buffer flags
+	  The tag memory flag will be set later if the memory is also copied. This
+	  patch avoids buffers being freed needlessly in bufferpools.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735574
+
+=== release 1.4.1 ===
+
+2014-08-27 15:03:36 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.4.1
+
+2014-08-27 14:22:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-08-21 14:02:16 +0100  Tim-Philipp Müller <tim@centricular.com>
 
