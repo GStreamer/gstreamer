@@ -1,9 +1,44 @@
-=== release 1.4.1 ===
+=== release 1.4.2 ===
 
-2014-08-27  Sebastian Dröge <slomo@coaxion.net>
+2014-09-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.1
+	  releasing 1.4.2
+
+2014-09-11 19:37:33 -0400  IBM Thinklab <oblong@wall-center.(none)>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: drain frames until libav doesn't have more data
+	  We use have_data (that comes from libav), instead of only trying 10 times,
+	  to know if there are more frames available. The old code was machine
+	  dependant as different amount of frames could be decoded by different
+	  type of (more powerful) machines, and 10 times was not always sufficient.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736515
+
+2014-08-08 20:04:20 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: After draining frames, flush the libav decoder
+	  Makes sure that there's really nothing stale left in the decoder
+	  after draining.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734661
+
+2014-09-12 16:27:50 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v10.5
+
+=== release 1.4.1 ===
+
+2014-08-27 15:05:00 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.4.1
 
 2014-08-27 12:38:35 +0300  Sebastian Dröge <sebastian@centricular.com>
 
