@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#define GDK_VERSION_MIN_REQUIRED (GDK_VERSION_3_0)
+
 #include <glib.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
