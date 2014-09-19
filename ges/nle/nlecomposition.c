@@ -2042,7 +2042,13 @@ _set_current_bin_to_ready (NleComposition * comp, gboolean flush_downstream)
     if (flush_downstream) {
       flush_event = gst_event_new_flush_stop (TRUE);
       gst_event_set_seqnum (flush_event, priv->flush_seqnum);
+
+      /* Force ad activation so that the event can actually travel.
+       * Not doing that would lead to the event being discarded.
+       */
+      gst_pad_set_active (ptarget, TRUE);
       gst_pad_push_event (ptarget, flush_event);
+      gst_pad_set_active (ptarget, FALSE);
     }
 
     gst_pad_remove_probe (ptarget, probe_id);
