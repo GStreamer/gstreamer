@@ -540,7 +540,12 @@ gboolean
 ges_project_set_loaded (GESProject * project, GESFormatter * formatter)
 {
   GST_INFO_OBJECT (project, "Emit project loaded");
-  ges_timeline_commit (formatter->timeline);
+  if (GST_STATE (formatter->timeline) < GST_STATE_PAUSED) {
+    timeline_fill_gaps (formatter->timeline);
+  } else {
+    ges_timeline_commit (formatter->timeline);
+  }
+
   g_signal_emit (project, _signals[LOADED_SIGNAL], 0, formatter->timeline);
 
   /* We are now done with that formatter */

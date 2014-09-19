@@ -237,8 +237,8 @@ update_gaps (GESTrack * track)
   g_list_free_full (gaps, (GDestroyNotify) free_gap);
 }
 
-static inline void
-resort_and_fill_gaps (GESTrack * track)
+void
+track_resort_and_fill_gaps (GESTrack * track)
 {
   g_sequence_sort (track->priv->trackelements_by_start,
       (GCompareDataFunc) element_start_compare, NULL);
@@ -691,7 +691,7 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
   GST_DEBUG ("track:%p, timeline:%p", track, timeline);
 
   track->priv->timeline = timeline;
-  resort_and_fill_gaps (track);
+  track_resort_and_fill_gaps (track);
 }
 
 /**
@@ -907,7 +907,7 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
 
   it = g_hash_table_lookup (priv->trackelements_iter, object);
   g_sequence_remove (it);
-  resort_and_fill_gaps (track);
+  track_resort_and_fill_gaps (track);
 
   if (remove_object_internal (track, object) == TRUE) {
     ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
@@ -990,7 +990,7 @@ ges_track_commit (GESTrack * track)
 {
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
 
-  resort_and_fill_gaps (track);
+  track_resort_and_fill_gaps (track);
 
   return nle_object_commit (NLE_OBJECT (track->priv->composition), TRUE);
 }

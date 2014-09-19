@@ -2474,6 +2474,16 @@ timeline_remove_element (GESTimeline * timeline, GESTimelineElement * element)
   return g_hash_table_remove (timeline->priv->all_elements, element->name);
 }
 
+void
+timeline_fill_gaps (GESTimeline * timeline)
+{
+  GList *tmp;
+
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+    track_resort_and_fill_gaps (tmp->data);
+  }
+}
+
 /**** API *****/
 /**
  * ges_timeline_new:

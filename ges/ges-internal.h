@@ -100,6 +100,14 @@ gboolean
 timeline_remove_element       (GESTimeline *timeline,
                                GESTimelineElement *element);
 
+G_GNUC_INTERNAL
+void
+timeline_fill_gaps            (GESTimeline *timeline);
+
+G_GNUC_INTERNAL
+void
+track_resort_and_fill_gaps    (GESTrack *track);
+
 G_GNUC_INTERNAL void
 ges_asset_cache_init (void);
 
