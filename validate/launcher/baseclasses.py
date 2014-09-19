@@ -562,6 +562,10 @@ class GstValidateEncodingTestInterface(object):
     def check_encoded_file(self):
         result_descriptor = GstValidateMediaDescriptor.new_from_uri(
             self.dest_file)
+        if result_descriptor is None:
+            return (Result.FAILED, "Could not discover encoded file %s"
+                    % self.dest_file)
+
         duration = result_descriptor.get_duration()
         orig_duration = self.media_descriptor.get_duration()
         tolerance = self._duration_tolerance
@@ -1182,7 +1186,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             if verbose:
                 printc("Result: Failed", Colors.FAIL)
             else:
-                loggable.error("Exception: %s", e)
+                loggable.warning("GstValidateMediaDescriptor", "Exception: %s" % e)
             return None
 
         if verbose:
