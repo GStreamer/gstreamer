@@ -345,7 +345,7 @@ vs_image_scale_4tap_Y (const VSImage * dest, const VSImage * src,
   k = 0;
   for (i = 0; i < 4; i++) {
     xacc = 0;
-    vs_scanline_resample_4tap_Y (tmpbuf + i * dest->width,
+    vs_scanline_resample_4tap_Y (tmpbuf + i * dest->stride,
         src->pixels + CLAMP (i, 0, src->height - 1) * src->stride, dest->width,
         src->width, &xacc, x_increment);
   }
@@ -360,7 +360,7 @@ vs_image_scale_4tap_Y (const VSImage * dest, const VSImage * src,
       k++;
       if (k + 3 < src->height) {
         xacc = 0;
-        vs_scanline_resample_4tap_Y (tmpbuf + ((k + 3) & 3) * dest->width,
+        vs_scanline_resample_4tap_Y (tmpbuf + ((k + 3) & 3) * dest->stride,
             src->pixels + (k + 3) * src->stride,
             dest->width, src->width, &xacc, x_increment);
       }
