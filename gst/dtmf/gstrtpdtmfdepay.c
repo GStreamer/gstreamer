@@ -108,29 +108,27 @@
 
 typedef struct st_dtmf_key
 {
-  const char *event_name;
-  int event_encoding;
   float low_frequency;
   float high_frequency;
 } DTMF_KEY;
 
 static const DTMF_KEY DTMF_KEYS[] = {
-  {"DTMF_KEY_EVENT_0", 0, 941, 1336},
-  {"DTMF_KEY_EVENT_1", 1, 697, 1209},
-  {"DTMF_KEY_EVENT_2", 2, 697, 1336},
-  {"DTMF_KEY_EVENT_3", 3, 697, 1477},
-  {"DTMF_KEY_EVENT_4", 4, 770, 1209},
-  {"DTMF_KEY_EVENT_5", 5, 770, 1336},
-  {"DTMF_KEY_EVENT_6", 6, 770, 1477},
-  {"DTMF_KEY_EVENT_7", 7, 852, 1209},
-  {"DTMF_KEY_EVENT_8", 8, 852, 1336},
-  {"DTMF_KEY_EVENT_9", 9, 852, 1477},
-  {"DTMF_KEY_EVENT_S", 10, 941, 1209},
-  {"DTMF_KEY_EVENT_P", 11, 941, 1477},
-  {"DTMF_KEY_EVENT_A", 12, 697, 1633},
-  {"DTMF_KEY_EVENT_B", 13, 770, 1633},
-  {"DTMF_KEY_EVENT_C", 14, 852, 1633},
-  {"DTMF_KEY_EVENT_D", 15, 941, 1633},
+  {941, 1336},
+  {697, 1209},
+  {697, 1336},
+  {697, 1477},
+  {770, 1209},
+  {770, 1336},
+  {770, 1477},
+  {852, 1209},
+  {852, 1336},
+  {852, 1477},
+  {941, 1209},
+  {941, 1477},
+  {697, 1633},
+  {770, 1633},
+  {852, 1633},
+  {941, 1633},
 };
 
 #define MAX_DTMF_EVENTS 16
@@ -343,7 +341,7 @@ gst_dtmf_src_generate_tone (GstRtpDTMFDepay * rtpdtmfdepay,
   double amplitude, f1, f2;
   double volume_factor;
   DTMF_KEY key = DTMF_KEYS[payload.event];
-  guint32 clock_rate = 8000 /* default */ ;
+  guint32 clock_rate;
   GstRTPBaseDepayload *depayload = GST_RTP_BASE_DEPAYLOAD (rtpdtmfdepay);
   gint volume;
   static GstAllocationParams params = { 0, 1, 0, 0, };
