@@ -262,6 +262,7 @@ gst_vc1_parse_reset (GstVC1Parse * vc1parse)
 
   vc1parse->renegotiate = TRUE;
   vc1parse->update_caps = TRUE;
+  vc1parse->sent_codec_tag = FALSE;
 
   vc1parse->input_header_format = VC1_HEADER_FORMAT_NONE;
   vc1parse->input_stream_format = VC1_STREAM_FORMAT_BDU;
