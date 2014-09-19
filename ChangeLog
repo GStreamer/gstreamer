@@ -1,9 +1,41 @@
-=== release 1.4.1 ===
+=== release 1.4.2 ===
 
-2014-08-27  Sebastian Dröge <slomo@coaxion.net>
+2014-09-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.1
+	  releasing 1.4.2
+
+2014-09-08 09:26:23 +0200  Srimanta Panda <srimanta@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-media: Make sure that sequence numbers are monotonic after pause
+	  The sequence number is not monotonic for RTP packets after pause. The
+	  reason is basepayloader generates a randon sequence number when the
+	  pipeline goes from ready to pause. With this fix generation of sequence
+	  number will be monotonic when going from pause to play request.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736017
+
+2014-08-28 13:35:15 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Protect saved clients watch with a mutex
+	  Fixes a crash when close() is called while merging clients
+	  in handle_tunnel(). In that case close() would destroy the
+	  watch while it is still being used in handle_tunnel().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735570
+
+=== release 1.4.1 ===
+
+2014-08-27 15:05:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.4.1
 
 2014-08-05 16:12:19 +0200  Sebastian Dröge <sebastian@centricular.com>
 

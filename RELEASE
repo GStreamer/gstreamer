@@ -1,6 +1,5 @@
 
-Release notes for GStreamer RTSP Server Library 1.4.1
-
+Release notes for GStreamer RTSP Server Library 1.4.2
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -24,12 +23,12 @@ any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
 
-
   
 
 Bugs fixed in this release
      
-      * 732644 : RTSP PLAY with specified range replies with wrong range
+      * 735570 : Race condition between close() and handle_tunnel() causing crash
+      * 736017 : Sequence number is not monotonic after PAUSE command
 
 ==== Download ====
 
@@ -64,8 +63,10 @@ Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
         
+Applications
+  
 Contributors to this release
     
-      * Arun Raghavan
-      * Sebastian Dröge
+      * Göran Jönsson
+      * Srimanta Panda
  
