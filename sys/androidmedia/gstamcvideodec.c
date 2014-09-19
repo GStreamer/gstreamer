@@ -652,16 +652,13 @@ retry:
           goto get_output_buffers_error;
 
         goto retry;
-        break;
       }
       case INFO_TRY_AGAIN_LATER:
         GST_DEBUG_OBJECT (self, "Dequeueing output buffer timed out");
         goto retry;
-        break;
       case G_MININT:
         GST_ERROR_OBJECT (self, "Failure dequeueing output buffer");
         goto dequeue_error;
-        break;
       default:
         g_assert_not_reached ();
         break;
