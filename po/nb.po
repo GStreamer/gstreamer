@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.4.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-08-27 14:38+0300\n"
+"POT-Creation-Date: 2014-09-19 10:01+0300\n"
 "PO-Revision-Date: 2014-07-22 12:38+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -148,17 +148,6 @@ msgstr "Kunne ikke laste ned fragmenter"
 msgid "Could not open sndfile stream for reading."
 msgstr "Kunne ikke åpne sndfile for lesing."
 
-msgid "No file name specified for writing."
-msgstr "Ingen filnavn oppgitt for skriving."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kunne ikke åpne filen «%s» for skriving."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Kunne ikke skrive til fil «%s»."
-
 msgid "Could not establish connection to sndio"
 msgstr "Kunne ikke opprette forbindelse til sndio"
 
@@ -188,9 +177,16 @@ msgstr ""
 msgid "Subpicture format was not configured before data flow"
 msgstr "Underbildeformat er ikke konfigurert før dataflyt"
 
+msgid "No file name specified for writing."
+msgstr "Ingen filnavn oppgitt for skriving."
+
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr "Oppgitt filnavn «%s» kan ikke konverteres til lokal filnavnkoding."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kunne ikke åpne filen «%s» for skriving."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -225,3 +221,6 @@ msgstr "DVB-kanalkonfigurasjonsfilen inneholder ingen kanaler"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Kunne ikke finne detaljer for DVB-kanal %s"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Kunne ikke skrive til fil «%s»."

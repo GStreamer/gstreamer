@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-08-27 14:38+0300\n"
+"POT-Creation-Date: 2014-09-19 10:01+0300\n"
 "PO-Revision-Date: 2007-11-13 17:16+0600\n"
 "Last-Translator: Ilyas Bakirov <just_ilyas@yahoo.com>\n"
 "Language-Team: Kirghiz <i18n-team-ky-kyrgyz@lists.sourceforge.net>\n"
@@ -146,17 +146,6 @@ msgstr ""
 msgid "Could not open sndfile stream for reading."
 msgstr "\"%s\"  файлы окууга ачылган жок."
 
-msgid "No file name specified for writing."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "\"%s\"  файлы окууга ачылган жок."
-
-#, fuzzy, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Алдын \"%s\" жабдыкты ачалган жок."
-
 msgid "Could not establish connection to sndio"
 msgstr ""
 
@@ -186,9 +175,16 @@ msgstr ""
 msgid "Subpicture format was not configured before data flow"
 msgstr ""
 
+msgid "No file name specified for writing."
+msgstr ""
+
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "\"%s\"  файлы окууга ачылган жок."
 
 #, c-format
 msgid "Device \"%s\" does not exist."

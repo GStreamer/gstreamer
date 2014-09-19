@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-08-27 14:38+0300\n"
+"POT-Creation-Date: 2014-09-19 10:01+0300\n"
 "PO-Revision-Date: 2013-09-18 10:05+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -153,17 +153,6 @@ msgstr "Nelze stáhnout fragmenty"
 msgid "Could not open sndfile stream for reading."
 msgstr "Nezdařilo se otevření souboru „%s“ ke čtení."
 
-msgid "No file name specified for writing."
-msgstr "K zápisu nebyl zadán žádný název souboru."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nezdařilo se otevření souboru „%s“ k zápisu."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Nezdařil se zápis do souboru „%s“."
-
 msgid "Could not establish connection to sndio"
 msgstr "Nelze ustanovit spojení se sndio"
 
@@ -196,10 +185,17 @@ msgstr ""
 msgid "Subpicture format was not configured before data flow"
 msgstr "Formát podřízeného obrázku nebyl nastaven před datovým tokem"
 
+msgid "No file name specified for writing."
+msgstr "K zápisu nebyl zadán žádný název souboru."
+
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "Zadaný název souboru „%s“ nelze převést do kódování místních názvů souborů."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nezdařilo se otevření souboru „%s“ k zápisu."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -234,3 +230,6 @@ msgstr "Soubor s nastavením kanálů DVB neobsahuje žádné kanály"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Nelze najít podrobnosti ke kanálu DVB %s"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nezdařil se zápis do souboru „%s“."

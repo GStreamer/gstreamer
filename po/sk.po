@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-08-27 14:38+0300\n"
+"POT-Creation-Date: 2014-09-19 10:01+0300\n"
 "PO-Revision-Date: 2014-01-30 10:44+0100\n"
 "Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -152,17 +152,6 @@ msgstr "Nepodarilo sa získať fragmenty"
 msgid "Could not open sndfile stream for reading."
 msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
 
-msgid "No file name specified for writing."
-msgstr "Nebolo zadané žiadne meno súboru pre zápis."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nepodarilo sa otvoriť súbor \"%s\" pre zápis."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Nepodarilo sa zapísať do súboru \"%s\"."
-
 msgid "Could not establish connection to sndio"
 msgstr "Nepodarilo sa pripojiť na sndio"
 
@@ -194,11 +183,18 @@ msgstr ""
 msgid "Subpicture format was not configured before data flow"
 msgstr "Formát podobrázku nebol nastavený pred prúdom údajov."
 
+msgid "No file name specified for writing."
+msgstr "Nebolo zadané žiadne meno súboru pre zápis."
+
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "Zadaný názov súboru \"%s\" sa nedá previesť na miestne kódovanie názvu "
 "súboru."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nepodarilo sa otvoriť súbor \"%s\" pre zápis."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -233,6 +229,9 @@ msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nepodarilo sa zapísať do súboru \"%s\"."
 
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr ""

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.6.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-08-27 14:38+0300\n"
+"POT-Creation-Date: 2014-09-19 10:01+0300\n"
 "PO-Revision-Date: 2008-05-14 02:13+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -149,17 +149,6 @@ msgstr ""
 msgid "Could not open sndfile stream for reading."
 msgstr "Nepavyko atverti failo „%s“ skaitymui."
 
-msgid "No file name specified for writing."
-msgstr "Nenurodytas failo rašymui pavadinimas."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nepavyko atverti failo „%s“ rašymui."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Nepavyko rašyti į failą „%s“."
-
 msgid "Could not establish connection to sndio"
 msgstr ""
 
@@ -191,9 +180,16 @@ msgstr ""
 msgid "Subpicture format was not configured before data flow"
 msgstr ""
 
+msgid "No file name specified for writing."
+msgstr "Nenurodytas failo rašymui pavadinimas."
+
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nepavyko atverti failo „%s“ rašymui."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -228,6 +224,9 @@ msgstr ""
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr ""
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nepavyko rašyti į failą „%s“."
 
 #, fuzzy
 #~ msgid "Internal clock error."

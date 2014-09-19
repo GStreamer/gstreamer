@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-08-27 14:38+0300\n"
+"POT-Creation-Date: 2014-09-19 10:01+0300\n"
 "PO-Revision-Date: 2013-12-17 01:09-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -150,17 +150,6 @@ msgstr "Não foi possível baixar os fragmentos"
 msgid "Could not open sndfile stream for reading."
 msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
 
-msgid "No file name specified for writing."
-msgstr "Nenhum nome de arquivo especificado para gravação."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Não foi possível abrir o arquivo \"%s\" para gravação."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Não foi possível gravar no arquivo \"%s\"."
-
 msgid "Could not establish connection to sndio"
 msgstr "Não foi possível estabelecer a conexão para sndio"
 
@@ -192,11 +181,18 @@ msgstr ""
 msgid "Subpicture format was not configured before data flow"
 msgstr "O formato de subimagem não foi configurado antes do fluxo de dados"
 
+msgid "No file name specified for writing."
+msgstr "Nenhum nome de arquivo especificado para gravação."
+
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "O nome de arquivo fornecido \"%s\" não pode ser convertido para a "
 "codificação de nome de arquivo local."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Não foi possível abrir o arquivo \"%s\" para gravação."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -233,3 +229,6 @@ msgstr "O arquivo de configuração de canal DVB não contém nenhum canal"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Não foi possível encontrar detalhes para o canal DVB %s"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Não foi possível gravar no arquivo \"%s\"."

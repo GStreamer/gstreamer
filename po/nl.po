@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.4.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-08-27 14:38+0300\n"
+"POT-Creation-Date: 2014-09-19 10:01+0300\n"
 "PO-Revision-Date: 2014-07-22 10:49+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -149,17 +149,6 @@ msgstr "Kan fragmenten niet downloaden"
 msgid "Could not open sndfile stream for reading."
 msgstr "Kan sndfile-stream niet openen om te lezen."
 
-msgid "No file name specified for writing."
-msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Kan niet in bestand \"%s\" schrijven."
-
 msgid "Could not establish connection to sndio"
 msgstr "Kon geen verbinding opzetten naar sndio"
 
@@ -192,11 +181,18 @@ msgid "Subpicture format was not configured before data flow"
 msgstr ""
 "Het format van de subafbeelding was niet ingesteld voor de gegevensstroom"
 
+msgid "No file name specified for writing."
+msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
+
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "Ingegeven bestandsnaam \"%s\" kan niet geconverteerd worden naar de codering "
 "van een lokale bestandsnaam."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -231,6 +227,9 @@ msgstr "Het instellingenbestand van het DVB-kanaal bevat geen kanalen"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Kon de details voor het DVB-kanaal %s niet vinden"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Kan niet in bestand \"%s\" schrijven."
 
 #~ msgid "Internal clock error."
 #~ msgstr "Interne fout met de klok."

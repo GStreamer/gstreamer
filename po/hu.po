@@ -6,10 +6,10 @@
 # Balázs Úr <urbalazs@gmail.com>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.4.0\n"
+"Project-Id-Version: gst-plugins-bad 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-08-27 14:38+0300\n"
-"PO-Revision-Date: 2014-07-26 00:25+0200\n"
+"POT-Creation-Date: 2014-09-19 10:01+0300\n"
+"PO-Revision-Date: 2014-08-31 11:18+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -26,80 +26,97 @@ msgid "format wasn't negotiated before get function"
 msgstr "a formátum nem lett egyeztetve a függvény lekérése előtt"
 
 msgid "default GStreamer sound events audiosink"
-msgstr ""
+msgstr "alapértelmezett GStreamer hangesemények audiosink"
 
 msgid ""
 "GStreamer can play audio using any number of output elements. Some possible "
 "choices are osssink, pulsesink and alsasink. The audiosink can be a partial "
 "pipeline instea of just one element."
 msgstr ""
+"A GStreamer képes hangot lejátszani bármilyen számú kimeneti elem "
+"használatával. Néhány lehetséges választás a következő lehet: osssink, "
+"pulsesink és alsasink. Az audiosink lehet egy részleges adatcsatorna is "
+"egyetlen elem helyett."
 
 msgid "description for default GStreamer sound events audiosink"
-msgstr ""
+msgstr "az alapértelmezett GStreamer hangesemények audiosink leírása"
 
 msgid "Describes the selected audiosink element."
-msgstr ""
+msgstr "Leírja a kiválasztott audiosink elemet."
 
 msgid "default GStreamer audiosink for Audio/Video Conferencing"
-msgstr ""
+msgstr "alapértelmezett GStreamer audiosink a hang/videó konferenciához"
 
 msgid ""
 "description for default GStreamer audiosink for Audio/Video Conferencing"
 msgstr ""
+"az alapértelmezett GStreamer audiosink leírása a hang/videó konferenciához"
 
 msgid "default GStreamer audiosink for Music and Movies"
-msgstr ""
+msgstr "alapértelmezett GStreamer audiosink zenékhez és filmekhez"
 
 msgid "description for default GStreamer audiosink for Music and Movies"
-msgstr ""
+msgstr "az alapértelmezett GStreamer audiosink leírása zenékhez és filmekhez"
 
 msgid "default GStreamer videosink"
-msgstr ""
+msgstr "alapértelmezett GStreamer videosink"
 
 msgid ""
 "GStreamer can play video using any number of output elements. Some possible "
 "choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink "
 "can be a partial pipeline instead of just one element."
 msgstr ""
+"A GStreamer képes videót lejátszani bármilyen számú kimeneti elem "
+"használatával. Néhány lehetséges választás a következő lehet: xvimagesink, "
+"ximagesink, sdlvideosink és aasink. Az videosink lehet egy részleges "
+"adatcsatorna is egyetlen elem helyett."
 
 msgid "description for default GStreamer videosink"
-msgstr ""
+msgstr "az alapértelmezett GStreamer videosink leírása"
 
 msgid "Describes the selected videosink element."
-msgstr ""
+msgstr "Leírja a kiválasztott videosink elemet."
 
 msgid "default GStreamer audiosrc"
-msgstr ""
+msgstr "alapértelmezett GStreamer audiosrc"
 
 msgid ""
 "GStreamer can record audio using any number of input elements. Some possible "
 "choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial "
 "pipeline instead of just one element."
 msgstr ""
+"A GStreamer képes hangot felvenni bármilyen számú bemeneti elem "
+"használatával. Néhány lehetséges választás a következő lehet: osssrc, "
+"pulsesrc és alsasrc. A hangforrás lehet egy részleges adatcsatorna is "
+"egyetlen elem helyett."
 
 msgid "description for default GStreamer audiosrc"
-msgstr ""
+msgstr "az alapértelmezett GStreamer audiosrc leírása"
 
 msgid "Describes the selected audiosrc element."
-msgstr ""
+msgstr "Leírja a kiválasztott audiosrc elemet."
 
 msgid "default GStreamer videosrc"
-msgstr ""
+msgstr "alapértelmezett GStreamer videosrc"
 
 msgid ""
 "GStreamer can record video from any number of input elements. Some possible "
 "choices are v4lsrc, v4l2src and videotestsrc. The video source can be a "
 "partial pipeline instead of just one element."
 msgstr ""
+"A GStreamer képes videót felvenni bármilyen számú bemeneti elem "
+"használatával. Néhány lehetséges választás a következő lehet: v4lsrc, "
+"v4l2src és videotestsrc. A videoforrás lehet egy részleges adatcsatorna is "
+"egyetlen elem helyett."
 
 msgid "description for default GStreamer videosrc"
-msgstr ""
+msgstr "az alapértelmezett GStreamer videosrc leírása"
 
 msgid "Describes the selected videosrc element."
-msgstr ""
+msgstr "Leírja a kiválasztott videosrc elemet."
 
 msgid "default GStreamer visualization"
-msgstr ""
+msgstr "alapértelmezett GStreamer képi megjelenítés"
 
 msgid ""
 "GStreamer can put visualization plugins in a pipeline to transform audio "
@@ -107,12 +124,17 @@ msgid ""
 "synaesthesia. The visualization plugin can be a partial pipeline instead of "
 "just one element."
 msgstr ""
+"A GStreamer képes képi megjelenítő bővítményeket elhelyezni egy "
+"adatcsatornába a videoképkockákban lévő hangfolyamok átalakításához. Néhány "
+"lehetséges választás a következő lehet: goom, goom2k1 és synaesthesia. A "
+"képi megjelenítő bővítmény lehet egy részleges adatcsatorna is egyetlen elem "
+"helyett."
 
 msgid "description for default GStreamer visualization"
-msgstr ""
+msgstr "az alapértelmezett GStreamer képi megjelenítés leírása"
 
 msgid "Describes the selected visualization element."
-msgstr ""
+msgstr "Leírja a kiválasztott képi megjelenítés elemet."
 
 msgid "Could not read title information for DVD."
 msgstr "Nem lehet címinformációkat olvasni a DVD-ről."
@@ -149,17 +171,6 @@ msgstr "Nem sikerült letölteni a töredékeket"
 msgid "Could not open sndfile stream for reading."
 msgstr "A hangfájl folyam nem nyitható meg olvasásra."
 
-msgid "No file name specified for writing."
-msgstr "Nincs megadva fájlnév az íráshoz."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "A fájl („%s”) nem nyitható meg írásra."
-
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Nem lehet írni a fájlba („%s”)."
-
 msgid "Could not establish connection to sndio"
 msgstr "Nem hozható létre kapcsolat az sndio programmal"
 
@@ -192,10 +203,17 @@ msgstr ""
 msgid "Subpicture format was not configured before data flow"
 msgstr "A részkép formátuma nem lett beállítva az adatfolyam előtt"
 
+msgid "No file name specified for writing."
+msgstr "Nincs megadva fájlnév az íráshoz."
+
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 "A kapott „%s” fájlnevet nem lehet átalakítani a helyi fájlnév kódolásra."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "A fájl („%s”) nem nyitható meg írásra."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -231,6 +249,9 @@ msgstr "A DVB-csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
 msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nem lehet írni a fájlba („%s”)."
 
 #~ msgid "Internal clock error."
 #~ msgstr "Belső órahiba."
