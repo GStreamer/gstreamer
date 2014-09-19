@@ -8694,6 +8694,39 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           }
           break;
         }
+        case FOURCC_mp4a:
+        {
+          /* mp4a atom withtout ESDS; Attempt to build codec data from atom */
+          gint len = QT_UINT32 (stsd_data);
+
+          if (len >= 50) {
+            guint16 sound_version = QT_UINT16 (stsd_data + 32);
+
+            if (sound_version == 1) {
+              guint16 channels = QT_UINT16 (stsd_data + 40);
+              guint32 time_scale = QT_UINT32 (stsd_data + 46);
+              guint8 codec_data[2];
+              GstBuffer *buf;
+              gint profile = 2; /* FIXME: Can this be determined somehow? There doesn't seem to be anything in mp4a atom that specifis compression */
+
+              gint sample_rate_index =
+                  gst_codec_utils_aac_get_index_from_sample_rate (time_scale);
+
+              /* build AAC codec data */
+              codec_data[0] = profile << 3;
+              codec_data[0] |= ((sample_rate_index >> 1) & 0x7);
+              codec_data[1] = (sample_rate_index & 0x01) << 7;
+              codec_data[1] |= (channels & 0xF) << 3;
+
+              buf = gst_buffer_new_and_alloc (2);
+              gst_buffer_fill (buf, 0, codec_data, 2);
+              gst_caps_set_simple (stream->caps,
+                  "codec_data", GST_TYPE_BUFFER, buf, NULL);
+              gst_buffer_unref (buf);
+            }
+          }
+          break;
+        }
         default:
           GST_INFO_OBJECT (qtdemux,
               "unhandled type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
