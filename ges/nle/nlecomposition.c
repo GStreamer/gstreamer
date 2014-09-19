@@ -367,6 +367,7 @@ _execute_actions (NleComposition * comp)
     GST_INFO_OBJECT (comp, "Invoking %p:%s",
         lact->data, GST_DEBUG_FUNCPTR_NAME ((ACTION_CALLBACK (lact->data))));
     g_closure_invoke (lact->data, NULL, 1, params, NULL);
+    g_value_unset (&params[0]);
   } else {
     ACTIONS_UNLOCK (comp);
   }
@@ -2500,7 +2501,7 @@ _relink_single_node (NleComposition * comp, GNode * node,
 
   srcpad = NLE_OBJECT_SRC (newobj);
 
-  gst_bin_add (GST_BIN (comp->priv->current_bin), gst_object_ref (newobj));
+  gst_bin_add (GST_BIN (comp->priv->current_bin), GST_ELEMENT (newobj));
   gst_element_sync_state_with_parent (GST_ELEMENT_CAST (newobj));
 
   translated_seek = nle_object_translate_incoming_seek (newobj, toplevel_seek);
@@ -2866,6 +2867,7 @@ nle_composition_add_object (GstBin * bin, GstElement * element)
   g_return_val_if_fail (NLE_IS_OBJECT (element), FALSE);
 
   object = NLE_OBJECT (element);
+  gst_object_ref_sink (object);
 
   object->in_composition = TRUE;
   _add_add_object_action (comp, object);
@@ -2883,8 +2885,6 @@ _nle_composition_add_object (NleComposition * comp, NleObject * object)
   GST_DEBUG_OBJECT (object, "%" GST_TIME_FORMAT "--%" GST_TIME_FORMAT,
       GST_TIME_ARGS (NLE_OBJECT_START (object)),
       GST_TIME_ARGS (NLE_OBJECT_STOP (object)));
-
-  g_object_ref_sink (object);
 
   if ((NLE_OBJECT_IS_EXPANDABLE (object)) &&
       g_list_find (priv->expandables, object)) {
