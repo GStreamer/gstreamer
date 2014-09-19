@@ -615,9 +615,11 @@ _initialize_stack_func (NleComposition * comp, UpdateCompositionData * ucompo)
 {
   NleCompositionPrivate *priv = comp->priv;
 
-  _commit_all_values (comp);
 
   _post_start_composition_update (comp, ucompo->seqnum, ucompo->reason);
+
+  _commit_all_values (comp);
+  update_start_stop_duration (comp);
   comp->priv->next_base_time = 0;
   /* set ghostpad target */
   if (!(update_pipeline (comp, COMP_REAL_START (comp),
@@ -2311,7 +2313,7 @@ update_start_stop_duration (NleComposition * comp)
   _assert_proper_thread (comp);
 
   if (!priv->objects_start) {
-    GST_LOG ("no objects, resetting everything to 0");
+    GST_INFO_OBJECT (comp, "no objects, resetting everything to 0");
 
     if (cobj->start) {
       cobj->start = cobj->pending_start = 0;
@@ -2337,7 +2339,7 @@ update_start_stop_duration (NleComposition * comp)
 
   /* If we have a default object, the start position is 0 */
   if (priv->expandables) {
-    GST_LOG_OBJECT (cobj,
+    GST_INFO_OBJECT (cobj,
         "Setting start to 0 because we have a default object");
 
     if (cobj->start != 0) {
@@ -2352,7 +2354,7 @@ update_start_stop_duration (NleComposition * comp)
     obj = (NleObject *) priv->objects_start->data;
 
     if (obj->start != cobj->start) {
-      GST_LOG_OBJECT (obj, "setting start from %s to %" GST_TIME_FORMAT,
+      GST_INFO_OBJECT (obj, "setting start from %s to %" GST_TIME_FORMAT,
           GST_OBJECT_NAME (obj), GST_TIME_ARGS (obj->start));
       cobj->pending_start = cobj->start = obj->start;
       g_object_notify_by_pspec (G_OBJECT (cobj),
@@ -2364,7 +2366,7 @@ update_start_stop_duration (NleComposition * comp)
   obj = (NleObject *) priv->objects_stop->data;
 
   if (obj->stop != cobj->stop) {
-    GST_LOG_OBJECT (obj, "setting stop from %s to %" GST_TIME_FORMAT,
+    GST_INFO_OBJECT (obj, "setting stop from %s to %" GST_TIME_FORMAT,
         GST_OBJECT_NAME (obj), GST_TIME_ARGS (obj->stop));
 
     if (priv->expandables) {
@@ -2390,7 +2392,7 @@ update_start_stop_duration (NleComposition * comp)
     signal_duration_change (comp);
   }
 
-  GST_LOG_OBJECT (comp,
+  GST_INFO_OBJECT (comp,
       "start:%" GST_TIME_FORMAT
       " stop:%" GST_TIME_FORMAT
       " duration:%" GST_TIME_FORMAT,
