@@ -1431,7 +1431,7 @@ rtspserver_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_checked_fixture (tc, setup, teardown);
-  tcase_set_timeout (tc, 20);
+  tcase_set_timeout (tc, 120);
   tcase_add_test (tc, test_connect);
   tcase_add_test (tc, test_describe);
   tcase_add_test (tc, test_describe_non_existing_mount_point);
