@@ -1,6 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.4.1
-
+Release notes for GStreamer Good Plugins 1.4.2
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -23,7 +22,6 @@ The stable 1.4.x release series is API and ABI compatible with 1.0.x and
 any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
-
 
 
 "Such ingratitude.  After all the times I've saved your life."
@@ -69,16 +67,20 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 727180 : videomixer: Unexpected behaviour when scaling after the mixer
-      * 733695 : ximagesrc: Use after free
-      * 733866 : interleave: caps negotiation fails when input caps have non-interleaved layout
-      * 734435 : rtph263ppay: Unref pad template caps after use
-      * 734473 : rtpmux: Unref pad template caps after usage
-      * 734474 : videomixer: Unref allowed caps after usage
-      * 734475 : imagefreeze: Unref pad template caps after usage
-      * 734476 : navseek: Unref peer pad after usage
-      * 734478 : shapewipe: Unref caps and element after usage
-      * 734764 : videomixer: Avoid double free of videoconvert
+      * 719359 : vp8dec: Doesn't handle changes in resolution
+      * 733607 : v4l2transform: Rank should have been NONE
+      * 734266 : vp8dec: fails when input format changes
+      * 735520 : aacparse: skip valid ADTS/LOAS frames
+      * 735804 : smpte: Creates incomplete raw video caps
+      * 735833 : matroskademux: parse error at end of file
+      * 735859 : videomixer: Dynamically changing the FPS leads to an incorrect buffer time
+      * 736192 : avidemux: some AVI files crash (regression)
+      * 736266 : wavparse: error in reading adtl chunk
+      * 736384 : v4l2sink: pool not unreffed after usage
+      * 736670 : v4l2allocator: O_CLOEXEC needs _GNU_SOURCE
+      * 736805 : multipartdemux leaks new stream events
+      * 736807 : rtpbin: pad leaked in error case
+      * 735660 : v4l2: fix new v4l2 code not working with certain devices (regression)
 
 ==== Download ====
 
@@ -115,11 +117,18 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Mark Nauwelaerts
+      * Andrei Sarakeev
+      * Hans de Goede
+      * Jan Schmidt
+      * Jose Antonio Santos Cadenas
       * Nicolas Dufresne
-      * Philippe Normand
+      * Nicolas Huet
+      * Ognyan Tonchev
+      * Peter Korsgaard
       * Ravi Kiran K N
       * Sebastian Dröge
-      * Sebastian Rasmussen
+      * Thiago Santos
       * Tim-Philipp Müller
+      * Tom Greenwood
+      * Wim Taymans
  

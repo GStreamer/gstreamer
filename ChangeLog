@@ -1,9 +1,336 @@
-=== release 1.4.1 ===
+=== release 1.4.2 ===
 
-2014-08-27  Sebastian Dröge <slomo@coaxion.net>
+2014-09-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.1
+	  releasing 1.4.2
+
+2014-09-19 10:00:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/sr.po:
+	  po: Update translations
+
+2014-09-17 16:37:11 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: do not leak encsink pad in error case
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736807
+
+2014-09-17 16:23:21 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/multipart/multipartdemux.c:
+	  multipartdemux: do not leak new stream event
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736805
+
+2014-09-17 13:55:18 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/osxaudio/gstosxcoreaudio.c:
+	* sys/osxaudio/gstosxcoreaudiocommon.c:
+	* sys/osxaudio/gstosxcoreaudiohal.c:
+	* sys/osxaudio/gstosxcoreaudioremoteio.c:
+	  osxaudio: OSStatus is not a fourcc, so don't print it as one...
+
+2014-09-16 14:26:08 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: do not leak uid after parsing TOC event
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736739
+
+2014-09-15 14:51:24 +0200  Peter Korsgaard <peter@korsgaard.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: O_CLOEXEC needs _GNU_SOURCE
+	  Similar to 94f3d6fc / bz 709423
+	  On some systems (E.G. uClibc and older Glibc versions), O_CLOEXEC is only
+	  defined when _GNU_SOURCE is specified, so do so.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736670
+
+2014-09-15 18:11:37 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/debugutils/gstcapssetter.c:
+	  capssetter: update to 1.0 transform_caps sematics
+	  In 1.0, we pass the complete caps to transform_caps to allow for better
+	  optimizations. Make this function actually work on non-simple caps
+	  instead of just ignoring the configured filter caps.
+
+2014-09-12 15:06:50 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Fix parsing of adtl chunks
+	  We have to skip 12 bytes of data for the chunk, and the data size
+	  passed to the sub-chunk parsing functions should have 4 bytes less
+	  than the data size.
+	  Also when parsing the sub-chunks, check if we actually have enough
+	  data to read instead of just crashing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736266
+
+2014-09-04 16:21:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-read-common.h:
+	  matroska-demux: Don't handle parse errors at the end of file as an error
+	  But only if they happen after the Matroska segment.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735833
+
+2014-09-11 12:52:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: If the server reports "Accept-Ranges: none" don't try range requests
+
+2014-09-10 09:50:45 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* sys/v4l2/gstv4l2sink.c:
+	  v4l2sink: Unref pool after usage
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736384
+
+2014-09-09 19:03:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Don't rank it for now
+	  This will prevent the converter to be picked automatically in case
+	  someone implement dynamic converter selection support. I'd like this
+	  to be ranked only for known device, as it's hard to be sure a device is
+	  a converter suited for general purpose. Re-negotiation is also needed
+	  before we can rank it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733607
+
+2014-08-29 17:09:30 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Workaround driver that don't support REQBUFS(0)
+	  There is still around 18 drivers not yet ported to videobuf2. These driver
+	  don't support freeing buffetrs through REQBUFS(0) hence for these the
+	  memory type probing fails. In order to gain back our previous behaviour in
+	  presence of these, we implement a workaround that assuming MMAP is
+	  supported. Note that an allocator is only created for device with
+	  STREAMING support in the device capabilities. In such case one of MMAP,
+	  USERPTR and DMABUF is required. Though DMABUF came afterward, so is
+	  not an option and in practice none of these drivers will only do USERPTR.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735660
+	  Also-by: Hans de Goede <hdegoede@redhat.com>
+
+2014-09-07 12:46:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: fix crash with certain videos
+	  This is a regression from 1.2 caused by the port
+	  to the pad flow combiner.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736192
+
+2014-09-01 09:56:02 +0200  Nicolas Huet <nicolas.huet@parrot.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: Fix parsing issue when the buffer does not have a complete ADTS/LOAS frame
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735520
+
+2014-09-04 12:14:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: Include redirection target in error messages
+	  Just giving the original URI can give the false impression that e.g.
+	  that one failed host name resolution, while actually the redirection target
+	  did.
+
+2014-09-02 11:13:44 +0400  Andrei Sarakeev <sarakusha@gmail.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Fix synchronization if dynamically changing the FPS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735859
+
+2014-09-02 13:52:43 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* gst/smpte/gstsmpte.c:
+	  smpte: Check if input caps are the same and create output caps from video info
+	  This makes sure that also properties like the pixel-aspect-ratio are the same
+	  between both streams and that the output caps contain all fields necessary for
+	  complete video caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735804
+
+2014-09-03 23:46:34 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux_types.c:
+	  qtdemux: Silence some warnings for normal file contents
+
+2014-09-02 09:09:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/vpx/gstvp9dec.c:
+	  vp9dec: Get input width/height from the codec instead of the input caps
+	  They are reported properly by libvpx if the correct struct members are used.
+	  This also fixes handling of resolution changes without input caps changes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719359
+
+2013-10-22 18:49:22 +0100  Tom Greenwood <tcdgreenwood@hotmail.com>
+
+	* ext/vpx/gstvp8dec.c:
+	  vp8dec: Fix for handling resolution changes when decoding VP8
+	  If the resolution changes in the bitstream without the input caps changing we
+	  would previously output corrupted video or crash.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719359
+
+2014-08-05 10:34:39 +0200  Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+
+	* ext/vpx/gstvp8dec.c:
+	  vp8dec: Reset output and input states when changing format
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734266
+
+2014-09-02 00:55:17 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/vpx/gstvp9dec.c:
+	  vp9dec: Fix segfault when a new caps is received
+	  Remember to unref the output caps when a new caps event is received
+	  as it should generate a new one based on the new caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734266
+
+2014-08-29 12:01:27 +0200  Hans de Goede <hdegoede@redhat.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: get_nearest_size: Fix "Unsupported field type" errors
+	  Most V4L2 ioctls like try_fmt will adjust input fields to match what the
+	  hardware can do rather then returning -EINVAL. As is docmented here:
+	  http://linuxtv.org/downloads/v4l-dvb-apis/vidioc-g-fmt.html
+	  EINVAL is only returned if the buffer type field is invalid or not supported.
+	  So upon requesting V4L2_FIELD_NONE devices which can only do interlaced
+	  mode will change the field value to e.g. V4L2_FIELD_BOTTOM as only returning
+	  half the lines is the closest they can do to progressive modes.
+	  In essence this means that we've failed to get a (usable) progessive mode
+	  and should fall back to interlaced mode.
+	  This commit adds a check for having gotten a usable field value after the first
+	  try_fmt, to force fallback to interlaced mode even if the try_fmt succeeded,
+	  thereby fixing get_nearest_size failing on these devices.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735660
+
+2014-08-29 10:57:20 +0200  Hans de Goede <hdegoede@redhat.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: get_nearest_size: Always reinit all struct fields on retry
+	  They may have been modified by the ioctl even if it failed. This also makes
+	  the S_FMT fallback path try progressive first, making it consistent with the
+	  preferred TRY_FMT path.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735660
+
+=== release 1.4.1 ===
+
+2014-08-27 15:04:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.4.1
+
+2014-08-27 14:32:41 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-08-27 12:32:30 +0300  Sebastian Dröge <sebastian@centricular.com>
 
