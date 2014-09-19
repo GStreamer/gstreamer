@@ -1,4 +1,5 @@
 #include "common.h"
+#include "../../../ges/nle/nleobject.h"
 
 void
 poll_the_bus (GstBus * bus)
@@ -369,7 +370,7 @@ commit_and_wait (GstElement * comp, gboolean * ret)
   gulong handler_id =
       g_signal_connect (comp, "commited", (GCallback) commited_cb, NULL);
   g_mutex_lock (&lock);
-  g_signal_emit_by_name (comp, "commit", TRUE, ret);
+  *ret = nle_object_commit (NLE_OBJECT (comp), TRUE);
   g_cond_wait (&cond, &lock);
   g_mutex_unlock (&lock);
   g_signal_handler_disconnect (comp, handler_id);
