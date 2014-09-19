@@ -159,7 +159,6 @@ PKG_CHECK_MODULES(GST,
 		gstreamer-base-1.0 >= $GSTREAMER_REQUIRED_VERSION
 		gstreamer-controller-1.0 >= $GSTREAMER_REQUIRED_VERSION
 		gstreamer-fft-1.0 >= $GSTREAMER_REQUIRED_VERSION
-		gstreamer-mpegts-1.0 >= $GSTREAMER_REQUIRED_VERSION
 		gstreamer-net-1.0 >= $GSTREAMER_REQUIRED_VERSION
 		gstreamer-pbutils-1.0 >= $GSTREAMER_REQUIRED_VERSION
 		gstreamer-riff-1.0 >= $GSTREAMER_REQUIRED_VERSION
