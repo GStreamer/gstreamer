@@ -58,6 +58,7 @@ struct _GstRTSPSessionPrivate
   guint timeout;
   gboolean timeout_always_visible;
   GTimeVal create_time;         /* immutable */
+  GMutex last_access_lock;
   GTimeVal last_access;
   gint expire_count;
 
@@ -132,6 +133,7 @@ gst_rtsp_session_init (GstRTSPSession * session)
   GST_INFO ("init session %p", session);
 
   g_mutex_init (&priv->lock);
+  g_mutex_init (&priv->last_access_lock);
   priv->timeout = DEFAULT_TIMEOUT;
   g_get_current_time (&priv->create_time);
   gst_rtsp_session_touch (session);
@@ -153,6 +155,7 @@ gst_rtsp_session_finalize (GObject * obj)
 
   /* free session id */
   g_free (priv->sessionid);
+  g_mutex_clear (&priv->last_access_lock);
   g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_session_parent_class)->finalize (obj);
@@ -555,9 +558,9 @@ gst_rtsp_session_touch (GstRTSPSession * session)
 
   priv = session->priv;
 
-  g_mutex_lock (&priv->lock);
+  g_mutex_lock (&priv->last_access_lock);
   g_get_current_time (&priv->last_access);
-  g_mutex_unlock (&priv->lock);
+  g_mutex_unlock (&priv->last_access_lock);
 }
 
 /**
@@ -608,7 +611,7 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 
   priv = session->priv;
 
-  g_mutex_lock (&priv->lock);
+  g_mutex_lock (&priv->last_access_lock);
   if (g_atomic_int_get (&priv->expire_count) != 0) {
     /* touch session when the expire count is not 0 */
     g_get_current_time (&priv->last_access);
@@ -617,7 +620,7 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
   last_access = GST_TIMEVAL_TO_TIME (priv->last_access);
   /* add timeout allow for 5 seconds of extra time */
   last_access += priv->timeout * GST_SECOND + (5 * GST_SECOND);
-  g_mutex_unlock (&priv->lock);
+  g_mutex_unlock (&priv->last_access_lock);
 
   now_ns = GST_TIMEVAL_TO_TIME (*now);
 

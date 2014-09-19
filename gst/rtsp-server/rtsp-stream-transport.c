@@ -456,6 +456,9 @@ gst_rtsp_stream_transport_send_rtp (GstRTSPStreamTransport * trans,
         priv->send_rtp (buffer, priv->transport->interleaved.min,
         priv->user_data);
 
+  if (res)
+    gst_rtsp_stream_transport_keep_alive (trans);
+
   return res;
 }
 
@@ -481,6 +484,9 @@ gst_rtsp_stream_transport_send_rtcp (GstRTSPStreamTransport * trans,
     res =
         priv->send_rtcp (buffer, priv->transport->interleaved.max,
         priv->user_data);
+
+  if (res)
+    gst_rtsp_stream_transport_keep_alive (trans);
 
   return res;
 }

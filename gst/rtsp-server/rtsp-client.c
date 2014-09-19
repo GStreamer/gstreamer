@@ -691,6 +691,7 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 {
   GstRTSPClientPrivate *priv = client->priv;
   GstRTSPMessage message = { 0 };
+  GstRTSPResult res = GST_RTSP_OK;
   GstMapInfo map_info;
   guint8 *data;
   guint usize;
@@ -705,7 +706,7 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 
   g_mutex_lock (&priv->send_lock);
   if (priv->send_func)
-    priv->send_func (client, &message, FALSE, priv->send_data);
+    res = priv->send_func (client, &message, FALSE, priv->send_data);
   g_mutex_unlock (&priv->send_lock);
 
   gst_rtsp_message_steal_body (&message, &data, &usize);
@@ -713,7 +714,7 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 
   gst_rtsp_message_unset (&message);
 
-  return TRUE;
+  return res == GST_RTSP_OK;
 }
 
 /**
