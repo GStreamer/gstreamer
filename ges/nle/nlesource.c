@@ -136,6 +136,16 @@ nle_source_dispose (GObject * object)
   if (priv->dispose_has_run)
     return;
 
+  GST_OBJECT_LOCK (object);
+  if (priv->probeid) {
+    GST_DEBUG_OBJECT (source, "Removing blocking probe! %lu", priv->probeid);
+    priv->areblocked = FALSE;
+    gst_pad_remove_probe (priv->ghostedpad, priv->probeid);
+    priv->probeid = 0;
+  }
+  GST_OBJECT_UNLOCK (object);
+
+
   if (source->element) {
     gst_object_unref (source->element);
     source->element = NULL;
@@ -422,12 +432,14 @@ ghost_seek_pad (NleSource * source)
           (NULL), ("Sending initial seek to upstream element failed"));
   }
 
+  GST_OBJECT_LOCK (source);
   if (priv->probeid) {
     GST_DEBUG_OBJECT (source, "Removing blocking probe! %lu", priv->probeid);
     priv->areblocked = FALSE;
     gst_pad_remove_probe (priv->ghostedpad, priv->probeid);
     priv->probeid = 0;
   }
+  GST_OBJECT_UNLOCK (source);
 
   return NULL;
 }
@@ -481,9 +493,11 @@ nle_source_prepare (NleObject * object)
     if (priv->staticpad)
       pad = gst_object_ref (priv->staticpad);
     priv->ghostedpad = pad;
+    GST_OBJECT_LOCK (source);
     priv->probeid = gst_pad_add_probe (pad,
         GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
         (GstPadProbeCallback) pad_blocked_cb, source, NULL);
+    GST_OBJECT_UNLOCK (source);
     gst_object_unref (pad);
   }
 
