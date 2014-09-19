@@ -1,9 +1,319 @@
-=== release 1.4.1 ===
+=== release 1.4.2 ===
 
-2014-08-27  Sebastian Dröge <slomo@coaxion.net>
+2014-09-19  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.1
+	  releasing 1.4.2
+
+2014-09-19 09:58:48 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	* po/sr.po:
+	  po: Update translations
+
+2014-09-18 12:29:37 +0400  Andrei Sarakeev <sarakusha@gmail.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Don't leak input-selector sinkpads
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736861
+
+2014-09-17 14:18:49 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	  audioencoder: do not leak events when flushing them
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736796
+
+2014-09-17 14:34:25 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/encoding/gststreamsplitter.c:
+	  streamsplitter: do not leak events when flushing them
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736796
+
+2014-09-17 14:11:21 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: do not leak events when flushing them
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736796
+
+2014-09-18 12:39:48 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: Simplify code a bit
+
+2014-09-17 14:08:17 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: do not leak events when flushing them
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736796
+
+2014-09-17 12:17:53 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: Don't leak events
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736788
+
+2014-09-17 12:17:27 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* tests/check/libs/audiodecoder.c:
+	  audiodecoder: extend flush_events test to check for event leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736788
+
+2014-09-05 13:49:46 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: Do not fail the negotiation if query fails
+	  The allocation query failure doesn't mean that the negotiation
+	  has failed as the element can allocate buffers itself.
+	  Instead, only fail if the pads are flushing and the allocation
+	  query failed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735844
+
+2013-01-31 13:49:00 +0100  Arnaud Vrac <avrac@freebox.fr>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: get framerate from previously parsed video info
+
+2013-01-31 13:47:35 +0100  Arnaud Vrac <avrac@freebox.fr>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: do not ask for a bufferpool when checking for composition meta
+
+2014-09-04 15:06:31 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: schedule reconfigure on source pad when negotiation fails
+	  The source pad might be flushing while negotiating, resulting in
+	  set_caps or the ALLOCATION query failing. In this case set the
+	  reconfigure flag on the source pad so that negotiation is retried on the
+	  next buffer.
+
+2014-09-16 13:32:52 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/audio/gstaudiocdsrc.c:
+	  audiocdsrc: do not leak uid after parsing TOC select event
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736739
+
+2014-09-17 10:51:59 +0530  Ravi Kiran K N <ravi.kiran@samsung.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: correct the condition for irap flag
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736779
+
+2014-09-16 21:42:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Add audio/videoconvert in front of the audio/video-filters
+	  audioresample and videoscale is something the application will have to do if
+	  required, but we can at least help here by adding the
+	  audioconvert/videoconvert elements.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735748
+
+2014-09-15 16:23:57 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: do not leak pool and allocator in error case
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736679
+
+2014-09-05 09:54:10 -0700  Garg <aksg86@gmail.com>
+
+	* gst-libs/gst/audio/gstaudiobasesink.c:
+	  audiobasesink: Fix deadlock caused by holding object lock while calling clock functions
+	  Issue:
+	  During a PAUSED->PLAYING transition when we are rendering an audio buffer in AudioBaseSink
+	  we make adjustments to the sink's provided clock i.e. fix clock calibration using the external
+	  pipeline clock, within "gst_audio_base_sink_sync_latency function inside gstaudiobasesink.c".
+	  For the calibration adjustment we need to get the sink clock time using "gst_audio_clock_get_time".
+	  But before calling "gst_audio_clock_get_time" we acquire the Object Lock on the Sink. If sink is
+	  a pulsesink, "gst_audio_clock_get_time" internally calls "gst_pulsesink_get_time" which needs to
+	  acquire Pulse Audio Main Loop Lock before querying Pulse Audio for its stream time using
+	  "pa_stream_get_time". Please see "gst_pulsesink_get_time in pulsesink.c".
+	  So the situation here is we have acquired the Object lock on Sink and need PA Main Loop Lock.
+	  Now Pulse Audio Main Thread itself might be in the process of posting a stream status
+	  message after Paused to Playing transition which in turn acquires the PA Main loop lock and
+	  needs the Object Lock on Pulse Sink. This causes a deadlock with the earlier render thread.
+	  Fix:
+	  Do not acquire the object Lock on Sink before querying the time on PulseSink clock. This is
+	  similar to the way we have used get_time at other places in the code. Acquire it after the
+	  get_time call. This way PA Main loop will be able to post its stream status message by
+	  acquiring the Sink Object lock and will eventually release its Main Loop lock needed for
+	  gst_pulsesink_get_time to continue.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736071
+
+2014-09-12 14:27:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/gstvideofilter.c:
+	  videofilter: Unref buffers before calling the transform_frame functions
+	  GstVideoFrame has another reference, so the buffer looks unwriteable,
+	  meaning that we can't attach any metas or anything to it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736118
+
+2014-09-11 16:58:35 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: protect buffering message handling
+	  Use the object lock to avoid concurrent processing which leads
+	  to small disasters (assertions or crashes)
+
+2014-03-28 13:02:54 +0100  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: filter out buffering messages when switching uri
+	  When switching URI from about-to-finish, playbin starts decoding the new
+	  URI and the queue2 inside uridecodebin starts emitting buffering messages
+	  immediately. However, the queue(s) inside playsink still have buffers to
+	  play and the pipeline doesn't need to pause for buffering, so we should
+	  not send those buffering messages up to the application, otherwise there
+	  is an audible glitch caused by pausing the pipeline for a very short time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727255
+
+2014-07-08 12:37:41 -0400  Kipp Cannon <kipp.cannon@ligo.org>
+
+	* gst/audioresample/resample.c:
+	  audioresample: don't skip input samples
+	  when downsampling, the output buffer can be filled before all the input
+	  samples are consumed.  this is correct:  when downsampling, several input
+	  samples are needed for each output sample, so when only a small number of
+	  input samples are available the number of output samples produced can be 0.
+	  the resampler, however, was discarding those extra input samples instead of
+	  clocking them into its filter history for the next iteration.  this patch
+	  fixes this by removing the check that the output buffer is full.  the code
+	  now always loops until all input samples are consumed, and relies on the
+	  calling code to have provided a suitably sized location for the output.
+	  note that there are already other checks in place in the calling code to
+	  ensure that this is the case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732908
+
+2014-08-27 13:45:57 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: Protect readsrc, writesrc and controllsrc with a mutex
+	  Fixes a crash when controlsrc, readsrc or writesrc are modified from
+	  gst_rtsp_source_dispatch_read/write and gst_rtsp_watch_reset at the
+	  same time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735569
+
+2014-09-03 15:23:26 +0530  Vineeth T M <vineeth.tm@samsung.com>
+
+	* gst/videorate/gstvideorate.c:
+	  videorate: GstStructure refcount critical message
+	  s3 is not being initialized when run in a loop
+	  and the same was being freed, which resulted in the crash
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735952
+
+2014-09-01 15:23:27 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tests/check/elements/textoverlay.c:
+	  tests: textoverlay: add test to reproduce fakesink scenario
+	  Adds a new test to textoverlay to make sure it can properly handle
+	  elements that have ANY caps but fail to add the overlay meta in
+	  the allocation query.
+	  This test verifies that textoverlay won't use the caps features even
+	  knowing that the overlay meta is accepted when querying the downstream
+	  caps because it also needs downstream to confirm by putting the meta
+	  in the allocation query.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735800
+
+2014-09-01 12:38:02 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: properly fallback to non-overlay caps
+	  When downstream claims to accept the overlay meta but fails to
+	  provide it in the allocation query, properly fallback to setting
+	  a new caps without the overlay meta as that is not going to be used.
+	  Only do this if the original caps doesn't have the overlay already,
+	  otherwise there isn't much that can be done.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735800
+
+2014-09-01 12:28:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: Don't hold any mutexes while calling negotiate
+	  It's not done in any other code calling negotiate and will cause deadlocks
+	  as it is sending events and queries in the pipeline.
+	  Specifically this pipeline was deadlocking:
+	  gst-launch-1.0 videotestsrc ! textoverlay ! textoverlay ! fakesink
+
+=== release 1.4.1 ===
+
+2014-08-27 15:04:06 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.4.1
+
+2014-08-27 14:27:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2014-08-27 12:30:10 +0300  Sebastian Dröge <sebastian@centricular.com>
 
