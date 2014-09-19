@@ -17,10 +17,14 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "vtenc.h"
 
 #include "coremediabuffer.h"
+#include "corevideobuffer.h"
 #include "vtutil.h"
 
 #define VTENC_DEFAULT_USAGE       6     /* Profile: Baseline  Level: 2.1 */
@@ -92,6 +96,7 @@ static void gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
 static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
     CMSampleBufferRef sbuf);
 
+#ifndef HAVE_IOS
 static GstVTEncFrame *gst_vtenc_frame_new (GstBuffer * buf,
     GstVideoInfo * videoinfo);
 static void gst_vtenc_frame_free (GstVTEncFrame * frame);
@@ -99,6 +104,7 @@ static void gst_vtenc_frame_free (GstVTEncFrame * frame);
 static void gst_pixel_buffer_release_cb (void *releaseRefCon,
     const void *dataPtr, size_t dataSize, size_t numberOfPlanes,
     const void *planeAddresses[]);
+#endif
 
 static GstStaticCaps sink_caps =
 GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420 }"));
@@ -676,7 +682,63 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   if (meta != NULL) {
     pbuf = gst_core_media_buffer_get_pixel_buffer (frame->input_buffer);
   }
+#ifdef HAVE_IOS
+  if (pbuf == NULL) {
+    GstVideoFrame inframe, outframe;
+    GstBuffer *outbuf;
+    OSType pixel_format_type;
+    CVReturn cv_ret;
 
+    /* FIXME: iOS has special stride requirements that we don't know yet.
+     * Copy into a newly allocated pixelbuffer for now. Probably makes
+     * sense to create a buffer pool around these at some point.
+     */
+
+    switch (GST_VIDEO_INFO_FORMAT (&self->video_info)) {
+      case GST_VIDEO_FORMAT_I420:
+        pixel_format_type = kCVPixelFormatType_420YpCbCr8Planar;
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+        pixel_format_type = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+        break;
+      default:
+        goto cv_error;
+    }
+
+    if (!gst_video_frame_map (&inframe, &self->video_info, frame->input_buffer,
+            GST_MAP_READ))
+      goto cv_error;
+
+    cv_ret =
+        CVPixelBufferCreate (NULL, self->negotiated_width,
+        self->negotiated_height, pixel_format_type, NULL, &pbuf);
+
+    if (cv_ret != kCVReturnSuccess) {
+      gst_video_frame_unmap (&inframe);
+      goto cv_error;
+    }
+
+    outbuf = gst_core_video_buffer_new ((CVBufferRef) pbuf, &self->video_info);
+    if (!gst_video_frame_map (&outframe, &self->video_info, outbuf,
+            GST_MAP_WRITE)) {
+      gst_video_frame_unmap (&inframe);
+      gst_buffer_unref (outbuf);
+      CVPixelBufferRelease (pbuf);
+      goto cv_error;
+    }
+
+    if (!gst_video_frame_copy (&outframe, &inframe)) {
+      gst_video_frame_unmap (&inframe);
+      gst_buffer_unref (outbuf);
+      CVPixelBufferRelease (pbuf);
+      goto cv_error;
+    }
+
+    gst_buffer_unref (outbuf);
+    gst_video_frame_unmap (&inframe);
+    gst_video_frame_unmap (&outframe);
+  }
+#else
   if (pbuf == NULL) {
     GstVTEncFrame *vframe;
     CVReturn cv_ret;
@@ -733,6 +795,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
       }
     }
   }
+#endif
 
   GST_OBJECT_LOCK (self);
 
@@ -846,6 +909,7 @@ gst_vtenc_buffer_is_keyframe (GstVTEnc * self, CMSampleBufferRef sbuf)
   return result;
 }
 
+#ifndef HAVE_IOS
 static GstVTEncFrame *
 gst_vtenc_frame_new (GstBuffer * buf, GstVideoInfo * video_info)
 {
@@ -875,9 +939,9 @@ gst_pixel_buffer_release_cb (void *releaseRefCon, const void *dataPtr,
     size_t dataSize, size_t numberOfPlanes, const void *planeAddresses[])
 {
   GstVTEncFrame *frame = (GstVTEncFrame *) releaseRefCon;
-
   gst_vtenc_frame_free (frame);
 }
+#endif
 
 static void
 gst_vtenc_register (GstPlugin * plugin,
