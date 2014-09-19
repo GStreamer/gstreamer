@@ -272,10 +272,9 @@ gst_gl_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
     case GST_QUERY_ALLOCATION:
     {
       GstQuery *decide_query = NULL;
-      gboolean negotiated;
 
       GST_OBJECT_LOCK (mix);
-      if (G_UNLIKELY (!(negotiated = mix->priv->negotiated))) {
+      if (G_UNLIKELY (!mix->priv->negotiated)) {
         GST_DEBUG_OBJECT (mix,
             "not negotiated yet, can't answer ALLOCATION query");
         GST_OBJECT_UNLOCK (mix);
@@ -624,7 +623,7 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
               G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
               &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
           && handle) {
-        GstGLPlatform platform = GST_GL_PLATFORM_NONE;
+        GstGLPlatform platform;
         GstGLAPI gl_apis;
 
         GST_DEBUG ("got GL context handle 0x%p with type %s and apis %s",
