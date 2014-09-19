@@ -197,6 +197,9 @@ ges_frame_positionner_set_source_and_filter (GstFramePositionner * pos,
   pos->track_source = trksrc;
   pos->capsfilter = capsfilter;
   pos->current_track = ges_track_element_get_track (trksrc);
+
+  g_object_add_weak_pointer (G_OBJECT (pos->track_source),
+      ((gpointer *) & pos->track_source));
   g_object_weak_ref (G_OBJECT (pos->current_track),
       (GWeakNotify) _weak_notify_cb, pos);
 
