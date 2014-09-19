@@ -2,13 +2,13 @@
 # Copyright (C) 2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2014.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.3.2\n"
+"Project-Id-Version: gst-plugins-good-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-08-27 14:30+0300\n"
-"PO-Revision-Date: 2014-06-18 19:56+0200\n"
+"POT-Creation-Date: 2014-09-19 09:59+0300\n"
+"PO-Revision-Date: 2014-09-13 10:50+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -300,33 +300,32 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Нисам успео да изменим стање утишаности за уређај „%s“."
 
 msgid "Failed to allocated required memory."
-msgstr ""
+msgstr "Нисам успео да доделим затражену меморију."
 
 msgid "Failed to allocate required memory."
-msgstr ""
+msgstr "Нисам успео да доделим затражену меморију."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "Видео уређаји користе неподржани запис сличице."
+msgstr "Претварач на уређају „%s“ нема подржани улазни запис"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Видео уређаји користе неподржани запис сличице."
+msgstr "Претварач на уређају „%s“ нема подржани излазни запис"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Видео уређаји користе неподржани запис сличице."
+msgstr "Кодер на уређају „%s“ нема подржани улазни запис"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Видео уређаји користе неподржани запис сличице."
+msgstr "Кодер на уређају „%s“ нема подржани излазни запис"
 
-#, fuzzy
 msgid "Failed to start decoding thread."
-msgstr "Нисам успео да декодирам ЈПЕГ слику"
+msgstr "Нисам успео да покренем нит декодирања."
 
 msgid "Failed to process frame."
-msgstr ""
+msgstr "Нисам успео да обрадим кадар."
 
 #, c-format
 msgid ""
