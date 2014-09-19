@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.4.1
+Release notes for GStreamer Bad Plugins 1.4.2
 
 
 The GStreamer team is pleased to announce a bugfix release of the stable
@@ -23,6 +23,7 @@ The stable 1.4.x release series is API and ABI compatible with 1.0.x and
 any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
+
 
 
 
@@ -74,38 +75,21 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 678485 : templatematch: element improvements
-      * 725871 : decklinksink: no output, only black
-      * 730509 : facedetect: fix update on change
-      * 731824 : hlsdemux pause after first filesegment (apple test files)
-      * 733245 : gl: Document GST_GL_PLATFORM, GST_GL_API and GST_GL_WINDOW somewhere
-      * 733426 : gl/sdl example fails to build (missing include directory?)
-      * 733487 : openjpeg: Win32-compatible OpenJPEG-2.0 detection
-      * 733490 : tsdemux: H264 seeking broken in push mode
-      * 733545 : GL element leaks FBO when caps changed dynamically
-      * 733726 : glimagesink: Flashes white sometimes (unpausing, seeking, window scaling)
-      * 733837 : hlsdemux: doesn't stop buffering more segments after overrun
-      * 734014 : dashdemux: stream downloader try to download next segments after pipeline interupt
-      * 734015 : tsdemux: bad timestamping
-      * 734269 : GLUpload didn't update texture properly
-      * 734394 : tsdemux: Can not change program except destroy pipeline
-      * 734517 : opusenc: Unref pad template caps after usage
-      * 734519 : ladspa: Unref pad template caps after usage
-      * 734520 : openal: Unref pad template caps after usage
-      * 734521 : sbcenc: Unref output caps in error cases
-      * 734522 : videoaggregator: Unref allowed caps after usage
-      * 734524 : wrappercamerabinsrc: Unref elements after usage
-      * 734528 : dvbsuboverlay: Avoid leaking copy of caps object
-      * 734531 : interlace: Unref pad template caps after usage
-      * 734533 : amcvideoenc: Avoid leaking copy of caps object
-      * 734534 : vtenc: Avoid leaking caps object and its copy
-      * 734536 : directsoundsrc: Avoid leaking copy of caps object
-      * 734537 : pvrvideosink: Avoid leaking bufferpool configuration
-      * 734539 : element-maker: Avoid leaking copy of caps object
-      * 734544 : gstgsmenc: Unref caps object after usage
-      * 734763 : scenechange: fix crash on startup
-      * 734830 : GstGLMixer gl resource race condition
-      * 735078 : gst_gl_handle_set_context may unref a NULL GstGLDisplay
+      * 735861 : dataurisrc: make src thread safe
+      * 736090 : aiffparse: duplicate else-if condition
+      * 736390 : tsdemux: plug for a memory leak
+      * 736426 : mpegpsmux: memory leak with h264/avc stream
+      * 736474 : vc1parse: malformed sequence layer header and STRUCT_C
+      * 736490 : tsdemux: fix overflow of packet_length field of PESHeader
+      * 736729 : glmixer: do not leak pool in error cases
+      * 736730 : gltestsrc: do not leak pool in error cases
+      * 736731 : openni2src: do not leak pool
+      * 736732 : glfilter: do not leak pool in error cases
+      * 736733 : vdpdecoder: do not leak pool
+      * 736735 : waylandsink: do not leak buffer pool in error case
+      * 736750 : vc1parse: fix sequence-layer/frame-layer endianness
+      * 736871 : codecparsers_vc1: sequence-layer parser is broken due to endianness issue.
+      * 736919 : hlsdemux: attempt to unlock an already unlocked mutex in gst_hls_demux_change_playlist
 
 ==== Download ====
 
@@ -143,15 +127,12 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Aurélien Zanelli
-      * David Rothlisberger
-      * George Kiagiadakis
-      * Mathieu Duponchelle
-      * Matthew Waters
-      * Nicola Murino
+      * Belozorov Semen
+      * Edward Hervey
+      * Jesper Larsen
+      * Ognyan Tonchev
+      * Philippe Normand
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Thiago Santos
+      * Tim-Philipp Müller
       * Vineeth T M
-      * Wang Xin-yu (王昕宇)
-      * Руслан Ижбулатов
  
