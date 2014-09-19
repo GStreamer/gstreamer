@@ -554,7 +554,6 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
     {
       return gst_gl_handle_context_query ((GstElement *) glimage_sink, query,
           &glimage_sink->display);
-      break;
     }
     default:
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
