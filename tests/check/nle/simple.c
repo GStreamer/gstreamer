@@ -102,9 +102,8 @@ test_simplest_full (void)
           GST_STATE_NULL) == GST_STATE_CHANGE_FAILURE);
 
   ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "main pipeline", 1, 2);
-  gst_object_unref (pipeline);
+  gst_check_objects_destroyed_on_unref (pipeline, comp, source1, NULL);
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
-  gst_object_unref (bus);
 
   g_free (collect);
 }

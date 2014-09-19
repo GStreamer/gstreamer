@@ -153,12 +153,11 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_NULL) == GST_STATE_CHANGE_FAILURE);
   gst_element_set_state (source1, GST_STATE_NULL);
-  gst_object_unref (source1);
 
   GST_DEBUG ("Resetted pipeline to NULL");
 
   ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "main pipeline", 1, 2);
-  gst_object_unref (pipeline);
+  gst_check_objects_destroyed_on_unref (pipeline, comp, def, NULL);
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
   gst_object_unref (bus);
 }
