@@ -282,6 +282,9 @@ gst_dvbsrc_code_rate_get_type (void)
     {FEC_7_8, "7/8", "7/8"},
     {FEC_8_9, "8/9", "8/9"},
     {FEC_AUTO, "AUTO", "auto"},
+    {FEC_3_5, "3/5", "3/5"},
+    {FEC_9_10, "9/10", "9/10"},
+    {FEC_2_5, "2/5", "2/5"},
     {0, NULL, NULL},
   };
 
