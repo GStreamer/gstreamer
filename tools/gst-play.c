@@ -34,6 +34,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <glib/gprintf.h>
+
 #include "gst-play-kb.h"
 
 #define VOLUME_STEPS 20
@@ -65,6 +67,8 @@ typedef struct
   gboolean gapless;
 } GstPlay;
 
+static gboolean quiet = FALSE;
+
 static gboolean play_bus_msg (GstBus * bus, GstMessage * msg, gpointer data);
 static gboolean play_next (GstPlay * play);
 static gboolean play_prev (GstPlay * play);
@@ -72,6 +76,30 @@ static gboolean play_timeout (gpointer user_data);
 static void play_about_to_finish (GstElement * playbin, gpointer user_data);
 static void play_reset (GstPlay * play);
 static void play_set_relative_volume (GstPlay * play, gdouble volume_step);
+
+static void
+gst_play_printf (const gchar * format, ...)
+{
+  gchar *str = NULL;
+  va_list args;
+  int len;
+
+  if (quiet)
+    return;
+
+  va_start (args, format);
+
+  len = g_vasprintf (&str, format, args);
+
+  va_end (args);
+
+  if (len > 0 && str != NULL)
+    g_print ("%s", str);
+
+  g_free (str);
+}
+
+#define g_print gst_play_printf
 
 static GstPlay *
 play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
@@ -676,6 +704,8 @@ main (int argc, char **argv)
         N_("Volume"), NULL},
     {"playlist", 0, 0, G_OPTION_ARG_FILENAME, &playlist_file,
         N_("Playlist file containing input media files"), NULL},
+    {"quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet,
+        N_("Do not print any output (apart from errors)"), NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
   };
