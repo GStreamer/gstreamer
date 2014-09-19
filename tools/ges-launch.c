@@ -974,10 +974,12 @@ main (int argc, gchar ** argv)
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), mainloop);
 
-  if (needs_set_state && gst_element_set_state (GST_ELEMENT (pipeline),
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-    g_error ("Failed to start the pipeline\n");
-    return 1;
+  if (!load_path) {
+    if (needs_set_state && gst_element_set_state (GST_ELEMENT (pipeline),
+            GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+      g_error ("Failed to start the pipeline\n");
+      return 1;
+    }
   }
   g_main_loop_run (mainloop);
 
