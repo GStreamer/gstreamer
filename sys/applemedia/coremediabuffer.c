@@ -25,8 +25,7 @@ static void
 gst_core_media_meta_free (GstCoreMediaMeta * meta, GstBuffer * buf)
 {
   if (meta->image_buf != NULL) {
-    CVPixelBufferUnlockBaseAddress (meta->image_buf,
-        kCVPixelBufferLock_ReadOnly);
+    CVPixelBufferUnlockBaseAddress (meta->image_buf, 0);
     CVBufferRelease (meta->image_buf);
   }
   if (meta->block_buf != NULL) {
@@ -93,8 +92,7 @@ gst_core_media_buffer_wrap_pixel_buffer (GstBuffer * buf, GstVideoInfo * info,
   GstVideoMeta *video_meta;
   UInt32 size;
 
-  if (CVPixelBufferLockBaseAddress (pixel_buf,
-          kCVPixelBufferLock_ReadOnly) != kCVReturnSuccess) {
+  if (CVPixelBufferLockBaseAddress (pixel_buf, 0) != kCVReturnSuccess) {
     GST_ERROR ("Could not lock pixel buffer base address");
     return FALSE;
   }

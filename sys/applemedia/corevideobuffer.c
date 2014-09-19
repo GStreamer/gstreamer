@@ -23,7 +23,7 @@ static void
 gst_core_video_meta_free (GstCoreVideoMeta * meta, GstBuffer * buf)
 {
   if (meta->pixbuf != NULL) {
-    CVPixelBufferUnlockBaseAddress (meta->pixbuf, kCVPixelBufferLock_ReadOnly);
+    CVPixelBufferUnlockBaseAddress (meta->pixbuf, 0);
   }
 
   CVBufferRelease (meta->cvbuf);
@@ -74,8 +74,7 @@ gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
 
   pixbuf = (CVPixelBufferRef) cvbuf;
 
-  if (CVPixelBufferLockBaseAddress (pixbuf,
-          kCVPixelBufferLock_ReadOnly) != kCVReturnSuccess) {
+  if (CVPixelBufferLockBaseAddress (pixbuf, 0) != kCVReturnSuccess) {
     goto error;
   }
 
