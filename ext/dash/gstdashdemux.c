@@ -2283,9 +2283,10 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (G_UNLIKELY (stream->restart_download)) {
+    GstSegment segment;
     GstClockTime cur, ts;
     gint64 pos;
-    GstEvent *gap;
+    GstEvent *seg_event;
 
     GST_DEBUG_OBJECT (stream->pad,
         "Reactivating stream after to reconfigure event");
@@ -2330,14 +2331,18 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
     GST_DEBUG_OBJECT (stream->pad, "Restarting stream at "
         "position %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
 
+    gst_segment_copy_into (&demux->segment, &segment);
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
       gst_mpd_client_stream_seek (demux->client, stream->active_stream, ts);
 
       if (cur < ts) {
-        gap = gst_event_new_gap (cur, ts - cur);
-        gst_pad_push_event (stream->pad, gap);
+        segment.position = ts;
       }
     }
+    seg_event = gst_event_new_segment (&segment);
+    GST_DEBUG_OBJECT (stream->pad, "Sending restart segment: %"
+        GST_PTR_FORMAT, seg_event);
+    gst_pad_push_event (stream->pad, seg_event);
 
     stream->restart_download = FALSE;
   }
