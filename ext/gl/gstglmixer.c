@@ -882,7 +882,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       }
 
       if (!gst_gl_upload_perform_with_buffer (pad->upload,
-              vaggpad->buffer, &in_tex)) {
+              vaggpad->buffer, &in_tex, NULL)) {
         ++array_index;
         pad->mapped = FALSE;
         continue;

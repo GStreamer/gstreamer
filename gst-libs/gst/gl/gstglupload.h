@@ -78,12 +78,12 @@ GstGLUpload * gst_gl_upload_new            (GstGLContext * context);
 void           gst_gl_upload_set_format    (GstGLUpload * upload, GstVideoInfo * in_info);
 GstVideoInfo * gst_gl_upload_get_format    (GstGLUpload * upload);
 
-gboolean gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer, guint * tex_id);
+gboolean gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer, guint * tex_id, GstBuffer ** outbuf);
 void gst_gl_upload_release_buffer (GstGLUpload * upload);
 gboolean gst_gl_upload_perform_with_data          (GstGLUpload * upload, GLuint * texture_id,
-                                                   gpointer data[GST_VIDEO_MAX_PLANES]);
+                                                   gpointer data[GST_VIDEO_MAX_PLANES], GstBuffer ** outbuf);
 
-gboolean gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload *upload, GstVideoGLTextureUploadMeta *meta, guint texture_id[4]);
+gboolean gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload *upload, GstVideoGLTextureUploadMeta *meta, guint texture_id[4], GstBuffer ** outbuf);
 
 G_END_DECLS
 
