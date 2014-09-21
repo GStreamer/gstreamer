@@ -925,6 +925,8 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
 {
   GstGLMemory *gl_mem = (GstGLMemory *) mem;
 
+  GST_CAT_TRACE (GST_CAT_GL_MEMORY, "freeing texture %u", gl_mem->tex_id);
+
   gst_gl_context_thread_add (gl_mem->context,
       (GstGLContextThreadFunc) _destroy_gl_objects, gl_mem);
 
