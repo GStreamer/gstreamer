@@ -1175,7 +1175,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
 
   filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  if (!gst_gl_upload_perform_with_buffer (filter->upload, inbuf, &in_tex))
+  if (!gst_gl_upload_perform_with_buffer (filter->upload, inbuf, &in_tex, NULL))
     return FALSE;
 
   if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,

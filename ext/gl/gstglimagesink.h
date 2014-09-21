@@ -68,6 +68,7 @@ struct _GstGLImageSink
 
     GstGLUpload *upload;
     guint      next_tex;
+    GstBuffer *next_buffer;
 
     volatile gint to_quit;
     gboolean keep_aspect_ratio;

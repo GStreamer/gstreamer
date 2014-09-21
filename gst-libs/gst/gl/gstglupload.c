@@ -50,7 +50,8 @@
 static gboolean _upload_memory (GstGLUpload * upload);
 static gboolean _init_upload (GstGLUpload * upload);
 static gboolean _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
-    GLuint * texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
+    GLuint * texture_id, gpointer data[GST_VIDEO_MAX_PLANES],
+    GstBuffer ** outbuf);
 static void _do_upload_with_meta (GstGLContext * context, GstGLUpload * upload);
 static void gst_gl_upload_reset (GstGLUpload * upload);
 
@@ -223,6 +224,7 @@ gst_gl_upload_get_format (GstGLUpload * upload)
  * @upload: a #GstGLUpload
  * @buffer: a #GstBuffer
  * @tex_id: resulting texture
+ * @outbuf: (allow-none): resulting buffer
  *
  * Uploads @buffer to the texture given by @tex_id.  @tex_id is valid
  * until gst_gl_upload_release_buffer() is called.
@@ -231,7 +233,7 @@ gst_gl_upload_get_format (GstGLUpload * upload)
  */
 gboolean
 gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
-    guint * tex_id)
+    guint * tex_id, GstBuffer ** outbuf)
 {
   GstMemory *mem;
   GstVideoGLTextureUploadMeta *gl_tex_upload_meta;
@@ -257,6 +259,10 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
       gst_memory_unmap (mem, &map_info);
 
       *tex_id = ((GstGLMemory *) mem)->tex_id;
+
+      if (outbuf)
+        *outbuf = gst_buffer_ref (buffer);
+
       return TRUE;
     }
 
@@ -271,6 +277,10 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
       upload->in_tex[i] = NULL;
     }
+
+    if (ret && outbuf != NULL)
+      *outbuf = gst_buffer_ref (upload->priv->outbuf);
+
     return ret;
   }
 #if GST_GL_HAVE_PLATFORM_EGL
@@ -292,7 +302,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     texture_ids[0] = upload->priv->tex_id;
 
     if (!gst_gl_upload_perform_with_gl_texture_upload_meta (upload,
-            gl_tex_upload_meta, texture_ids)) {
+            gl_tex_upload_meta, texture_ids, outbuf)) {
       GST_DEBUG_OBJECT (upload, "Upload with GstVideoGLTextureUploadMeta "
           "failed");
     } else {
@@ -315,7 +325,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   gst_gl_upload_set_format (upload, &upload->priv->frame.info);
 
   if (!gst_gl_upload_perform_with_data (upload, tex_id,
-          upload->priv->frame.data)) {
+          upload->priv->frame.data, outbuf)) {
     return FALSE;
   }
 
@@ -364,6 +374,7 @@ error:
  * @upload: a #GstGLUpload
  * @meta: a #GstVideoGLTextureUploadMeta
  * @texture_id: resulting GL textures to place the data into.
+ * @outbuf: (allow-none): resulting buffer
  *
  * Uploads @meta into @texture_id.
  *
@@ -371,7 +382,8 @@ error:
  */
 gboolean
 gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload * upload,
-    GstVideoGLTextureUploadMeta * meta, guint texture_id[4])
+    GstVideoGLTextureUploadMeta * meta, guint texture_id[4],
+    GstBuffer ** outbuf)
 {
   gboolean ret;
 
@@ -403,6 +415,9 @@ gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload * upload,
 
   ret = upload->priv->result;
 
+  if (ret && outbuf != NULL)
+    *outbuf = gst_buffer_ref (upload->priv->outbuf);
+
   GST_OBJECT_UNLOCK (upload);
 
   return ret;
@@ -413,6 +428,7 @@ gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload * upload,
  * @upload: a #GstGLUpload
  * @texture_id: (out): the texture id to upload into
  * @data: where the downloaded data should go
+ * @outbuf: (allow-none): resulting buffer
  *
  * Uploads @data into @texture_id. data size and format is specified by
  * the #GstVideoInfo<!--  -->s passed to gst_gl_upload_set_format() 
@@ -421,14 +437,16 @@ gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload * upload,
  */
 gboolean
 gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint * texture_id,
-    gpointer data[GST_VIDEO_MAX_PLANES])
+    gpointer data[GST_VIDEO_MAX_PLANES], GstBuffer ** outbuf)
 {
   gboolean ret;
 
   g_return_val_if_fail (upload != NULL, FALSE);
 
   GST_OBJECT_LOCK (upload);
-  ret = _gst_gl_upload_perform_with_data_unlocked (upload, texture_id, data);
+  ret =
+      _gst_gl_upload_perform_with_data_unlocked (upload, texture_id, data,
+      outbuf);
   GST_OBJECT_UNLOCK (upload);
 
   return ret;
@@ -436,7 +454,8 @@ gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint * texture_id,
 
 static gboolean
 _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
-    GLuint * texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
+    GLuint * texture_id, gpointer data[GST_VIDEO_MAX_PLANES],
+    GstBuffer ** outbuf)
 {
   gboolean ret;
   guint i;
@@ -458,6 +477,9 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
 
   ret = _upload_memory (upload);
   *texture_id = upload->out_tex->tex_id;
+
+  if (ret && outbuf != NULL)
+    *outbuf = gst_buffer_ref (upload->priv->outbuf);
 
   return ret;
 }

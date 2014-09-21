@@ -646,6 +646,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         glimage_sink->stored_buffer = NULL;
       }
       GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
+      gst_buffer_replace (&glimage_sink->next_buffer, NULL);
 
       if (glimage_sink->upload) {
         gst_object_unref (glimage_sink->upload);
@@ -822,6 +823,7 @@ static GstFlowReturn
 gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
+  GstBuffer *next_buffer = NULL;
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
@@ -836,8 +838,11 @@ gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
     return GST_FLOW_NOT_NEGOTIATED;
 
   if (!gst_gl_upload_perform_with_buffer (glimage_sink->upload, buf,
-          &glimage_sink->next_tex))
+          &glimage_sink->next_tex, &next_buffer))
     goto upload_failed;
+
+  gst_buffer_replace (&glimage_sink->next_buffer, next_buffer);
+  gst_buffer_unref (next_buffer);
 
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
     GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
@@ -878,16 +883,17 @@ gst_glimage_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GST_GLIMAGE_SINK_LOCK (glimage_sink);
   glimage_sink->redisplay_texture = glimage_sink->next_tex;
   stored_buffer = glimage_sink->stored_buffer;
-  glimage_sink->stored_buffer = gst_buffer_ref (buf);
+  glimage_sink->stored_buffer = gst_buffer_ref (glimage_sink->next_buffer);
   GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
-  if (stored_buffer)
-    gst_buffer_unref (stored_buffer);
 
   /* Ask the underlying window to redraw its content */
   if (!gst_glimage_sink_redisplay (glimage_sink))
     goto redisplay_failed;
 
   GST_TRACE ("post redisplay");
+
+  if (stored_buffer)
+    gst_buffer_unref (stored_buffer);
 
   if (g_atomic_int_get (&glimage_sink->to_quit) != 0) {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
