@@ -139,6 +139,7 @@ struct _GstGLContextPrivate
   GstGLDisplay *display;
 
   GThread *gl_thread;
+  GThread *active_thread;
 
   /* conditions */
   GMutex render_lock;
@@ -407,9 +408,32 @@ gst_gl_context_activate (GstGLContext * context, gboolean activate)
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   g_return_val_if_fail (context_class->activate != NULL, FALSE);
 
+  GST_OBJECT_LOCK (context);
   result = context_class->activate (context, activate);
 
+  context->priv->active_thread = result
+      && activate ? context->priv->gl_thread : NULL;
+  GST_OBJECT_UNLOCK (context);
+
   return result;
+}
+
+/**
+ * gst_gl_context_get_thread:
+ * @context: a #GstGLContext
+ *
+ * Returns: The #GThread, @context is current in or NULL
+ */
+GThread *
+gst_gl_context_get_thread (GstGLContext * context)
+{
+  GThread *ret;
+
+  GST_OBJECT_LOCK (context);
+  ret = context->priv->active_thread;
+  GST_OBJECT_UNLOCK (context);
+
+  return ret;
 }
 
 /**
