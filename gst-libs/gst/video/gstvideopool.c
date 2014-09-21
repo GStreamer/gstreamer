@@ -233,7 +233,7 @@ no_memory:
  * Create a new bufferpool that can allocate video frames. This bufferpool
  * supports all the video bufferpool options.
  *
- * Returns: a new #GstBufferPool to allocate video frames
+ * Returns: (transfer floating): a new #GstBufferPool to allocate video frames
  */
 GstBufferPool *
 gst_video_buffer_pool_new ()
