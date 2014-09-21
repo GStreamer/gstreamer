@@ -423,6 +423,8 @@ gst_gl_context_activate (GstGLContext * context, gboolean activate)
  * @context: a #GstGLContext
  *
  * Returns: The #GThread, @context is current in or NULL
+ *
+ * Since: 1.6
  */
 GThread *
 gst_gl_context_get_thread (GstGLContext * context)
