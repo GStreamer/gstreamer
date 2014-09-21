@@ -804,6 +804,7 @@ gst_gl_context_get_display
 gst_gl_context_get_gl_api
 gst_gl_context_get_gl_context
 gst_gl_context_get_gl_platform
+gst_gl_context_get_thread
 gst_gl_context_check_feature
 gst_gl_context_check_gl_version
 gst_gl_context_get_gl_version
