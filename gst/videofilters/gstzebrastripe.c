@@ -79,7 +79,7 @@ enum
 /* pad templates */
 
 #define VIDEO_CAPS GST_VIDEO_CAPS_MAKE( \
-    "{ I420, Y444, Y42B, Y41B, YUY2, UYVY, AYUV }")
+    "{ I420, Y444, Y42B, Y41B, YUY2, UYVY, AYUV, NV12, NV21, YV12 }")
 
 
 /* class initialization */
@@ -222,6 +222,9 @@ gst_zebra_stripe_transform_frame_ip (GstVideoFilter * filter,
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_YV12:
       break;
     case GST_VIDEO_FORMAT_UYVY:
       offset = 1;
