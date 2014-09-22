@@ -2550,7 +2550,8 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
 
   buffer = gst_buffer_new_wrapped (data, size);
 
-  trans = g_hash_table_lookup (priv->transports, GINT_TO_POINTER (channel));
+  trans =
+      g_hash_table_lookup (priv->transports, GINT_TO_POINTER ((gint) channel));
   if (trans) {
     /* dispatch to the stream based on the channel number */
     gst_rtsp_stream_transport_recv_data (trans, channel, buffer);
