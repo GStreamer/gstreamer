@@ -460,11 +460,10 @@ gst_avpacket_init (AVPacket * packet, guint8 * data, guint size)
 
 static gint
 gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
-    AVCodec * in_plugin, guint8 * data, guint size,
+    AVCodec * in_plugin, guint8 * data, guint size, gint * have_data,
     GstBuffer ** outbuf, GstFlowReturn * ret)
 {
   gint len = -1;
-  gint have_data = 0;
   AVPacket packet;
   AVFrame frame;
 
@@ -473,12 +472,12 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
   gst_avpacket_init (&packet, data, size);
   memset (&frame, 0, sizeof (frame));
   avcodec_get_frame_defaults (&frame);
-  len = avcodec_decode_audio4 (ffmpegdec->context, &frame, &have_data, &packet);
+  len = avcodec_decode_audio4 (ffmpegdec->context, &frame, have_data, &packet);
 
   GST_DEBUG_OBJECT (ffmpegdec,
-      "Decode audio: len=%d, have_data=%d", len, have_data);
+      "Decode audio: len=%d, have_data=%d", len, *have_data);
 
-  if (len >= 0 && have_data) {
+  if (len >= 0 && *have_data) {
     BufferInfo *buffer_info = frame.opaque;
     gint nsamples, channels, byte_per_sample;
     gsize output_size;
@@ -612,11 +611,11 @@ beach:
 
 static gint
 gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec,
-    guint8 * data, guint size, gint * got_data, GstFlowReturn * ret)
+    guint8 * data, guint size, gint * have_data, GstFlowReturn * ret)
 {
   GstFFMpegAudDecClass *oclass;
   GstBuffer *outbuf = NULL;
-  gint have_data = 0, len = 0;
+  gint len = 0;
 
   if (G_UNLIKELY (ffmpegdec->context->codec == NULL))
     goto no_codec;
@@ -630,23 +629,13 @@ gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec,
 
   len =
       gst_ffmpegauddec_audio_frame (ffmpegdec, oclass->in_plugin, data, size,
-      &outbuf, ret);
+      have_data, &outbuf, ret);
 
-  if (outbuf)
-    have_data = 1;
-
-  if (len < 0 || have_data < 0) {
+  if (len < 0) {
     GST_WARNING_OBJECT (ffmpegdec,
         "avdec_%s: decoding error (len: %d, have_data: %d)",
-        oclass->in_plugin->name, len, have_data);
-    *got_data = 0;
+        oclass->in_plugin->name, len, *have_data);
     goto beach;
-  } else if (len == 0 && have_data == 0) {
-    *got_data = 0;
-    goto beach;
-  } else {
-    /* this is where I lost my last clue on ffmpeg... */
-    *got_data = 1;
   }
 
   if (outbuf) {
@@ -679,7 +668,7 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
-    gint have_data, len, try = 0;
+    gint have_data, len;
 
     GST_LOG_OBJECT (ffmpegdec,
         "codec has delay capabilities, calling until libav has drained everything");
@@ -688,9 +677,9 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
       GstFlowReturn ret;
 
       len = gst_ffmpegauddec_frame (ffmpegdec, NULL, 0, &have_data, &ret);
-      if (len < 0 || have_data == 0)
-        break;
-    } while (try++ < 10);
+
+    } while (len >= 0 && have_data == 1);
+    avcodec_flush_buffers (ffmpegdec->context);
   }
 
   if (ffmpegdec->outbuf)
@@ -769,7 +758,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
       break;
     }
 
-    if (len == 0 && !have_data) {
+    if (len == 0 && have_data == 0) {
       /* nothing was decoded, this could be because no data was available or
        * because we were skipping frames.
        * If we have no context we must exit and wait for more data, we keep the
