@@ -814,10 +814,12 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
            * return FALSE here though and report an error.
            */
           if (!GST_EVENT_IS_STICKY (event)) {
+            GST_QUEUE_MUTEX_UNLOCK (queue);
             goto out_flow_error;
           } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
             if (queue->srcresult == GST_FLOW_NOT_LINKED
                 || queue->srcresult < GST_FLOW_EOS) {
+              GST_QUEUE_MUTEX_UNLOCK (queue);
               GST_ELEMENT_ERROR (queue, STREAM, FAILED,
                   (_("Internal data flow error.")),
                   ("streaming task paused, reason %s (%d)",
@@ -852,7 +854,6 @@ out_flow_error:
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "refusing event, we have a downstream flow error: %s",
         gst_flow_get_name (queue->srcresult));
-    GST_QUEUE_MUTEX_UNLOCK (queue);
     gst_event_unref (event);
     return FALSE;
   }
