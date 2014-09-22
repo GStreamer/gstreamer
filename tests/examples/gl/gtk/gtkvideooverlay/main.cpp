@@ -27,34 +27,60 @@
 
 static GstBusSyncReply create_window (GstBus* bus, GstMessage* message, GtkWidget* widget)
 {
-    // ignore anything but 'prepare-window-handle' element messages
-    if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
-        return GST_BUS_PASS;
+  /* ignore anything but 'prepare-window-handle' element messages */
+  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
+      return GST_BUS_PASS;
 
-    if (!gst_is_video_overlay_prepare_window_handle_message (message))
-        return GST_BUS_PASS;
+  if (!gst_is_video_overlay_prepare_window_handle_message (message))
+      return GST_BUS_PASS;
 
-    g_print ("setting window handle\n");
+  g_print ("setting window handle\n");
 
-    //do not call gdk_window_ensure_native for the first time here because
-    //we are in a different thread than the main thread
-    //(and the main thread the onne)
-    gst_video_overlay_set_gtk_window (GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message)), widget);
+  /* do not call gdk_window_ensure_native for the first time here because
+   * we are in a different thread than the main thread */
+  gst_video_overlay_set_gtk_window (GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message)), widget);
 
-    gst_message_unref (message);
+  gst_message_unref (message);
 
-    return GST_BUS_DROP;
+  return GST_BUS_DROP;
 }
 
 
 static void end_stream_cb(GstBus* bus, GstMessage* message, GstElement* pipeline)
 {
-    g_print("End of stream\n");
+  switch (GST_MESSAGE_TYPE (message))
+  {
+    case GST_MESSAGE_EOS:
+      g_print ("End of stream\n");
 
-    gst_element_set_state (pipeline, GST_STATE_NULL);
-    gst_object_unref(pipeline);
+      gst_element_set_state (pipeline, GST_STATE_NULL);
+      gst_object_unref(pipeline);
+      gtk_main_quit ();
+      break;
+    case GST_MESSAGE_ERROR:
+    {
+      gchar *debug = NULL;
+      GError *err = NULL;
 
-    gtk_main_quit();
+      gst_message_parse_error (message, &err, &debug);
+
+      g_print ("Error: %s\n", err->message);
+      g_error_free (err);
+
+      if (debug)
+      {
+        g_print ("Debug details: %s\n", debug);
+        g_free (debug);
+      }
+
+      gst_element_set_state (pipeline, GST_STATE_NULL);
+      gst_object_unref(pipeline);
+      gtk_main_quit ();
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 static gboolean draw_cb(GtkWidget* widget, cairo_t *cr, GstElement* videosink)
