@@ -864,6 +864,14 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
   return TRUE;
 }
 
+static inline void
+calculate_mb_size (GstVC1SeqHdr * seqhdr, guint width, guint height)
+{
+  seqhdr->mb_width = (width + 15) >> 4;
+  seqhdr->mb_height = (height + 15) >> 4;
+  seqhdr->mb_stride = seqhdr->mb_width + 1;
+}
+
 static gboolean
 gst_vc1_parse_handle_bdu (GstVC1Parse * vc1parse, GstVC1StartCode startcode,
     GstBuffer * buffer, guint offset, guint size)
@@ -1174,6 +1182,34 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
         /* Must be a frame or a frame + field */
         /* TODO: Check if keyframe */
       }
+    } else {
+      /* In simple/main, we basically have a raw frame, so parse it */
+      GstVC1ParserResult pres;
+      GstVC1FrameHdr frame_hdr;
+      GstVC1SeqHdr seq_hdr;
+
+      if (!vc1parse->seq_hdr_buffer) {
+        /* Build seq_hdr from sequence-layer to be able to parse frame */
+        seq_hdr.profile = vc1parse->profile;
+        seq_hdr.struct_c = vc1parse->seq_layer.struct_c;
+        calculate_mb_size (&seq_hdr, vc1parse->seq_layer.struct_a.horiz_size,
+            vc1parse->seq_layer.struct_a.vert_size);
+      } else {
+        seq_hdr = vc1parse->seq_hdr;
+      }
+
+      pres = gst_vc1_parse_frame_header (data, size, &frame_hdr,
+          &seq_hdr, NULL);
+      if (pres != GST_VC1_PARSER_OK) {
+        GST_ERROR_OBJECT (vc1parse, "Invalid VC1 frame header");
+        ret = GST_FLOW_ERROR;
+        goto done;
+      }
+
+      if (frame_hdr.ptype == GST_VC1_PICTURE_TYPE_I)
+        GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+      else
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
     ret = GST_FLOW_OK;
   } else {
