@@ -422,7 +422,7 @@ gst_gl_context_activate (GstGLContext * context, gboolean activate)
  * gst_gl_context_get_thread:
  * @context: a #GstGLContext
  *
- * Returns: The #GThread, @context is current in or NULL
+ * Returns: (transfer full): The #GThread, @context is current in or NULL
  *
  * Since: 1.6
  */
@@ -433,6 +433,8 @@ gst_gl_context_get_thread (GstGLContext * context)
 
   GST_OBJECT_LOCK (context);
   ret = context->priv->active_thread;
+  if (ret)
+    g_thread_ref (ret);
   GST_OBJECT_UNLOCK (context);
 
   return ret;
