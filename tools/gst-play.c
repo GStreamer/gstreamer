@@ -77,6 +77,7 @@ static void play_about_to_finish (GstElement * playbin, gpointer user_data);
 static void play_reset (GstPlay * play);
 static void play_set_relative_volume (GstPlay * play, gdouble volume_step);
 
+G_GNUC_PRINTF (1, 2)
 static void
 gst_play_printf (const gchar * format, ...)
 {
