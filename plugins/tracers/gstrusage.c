@@ -347,7 +347,7 @@ gst_rusage_tracer_init (GstRUsageTracer * self)
 {
   GstTracer *tracer = GST_TRACER (self);
 
-  gst_tracer_register_hook_id (tracer, 0, G_CALLBACK (do_stats));
+  gst_tracing_register_hook_id (tracer, 0, G_CALLBACK (do_stats));
 
   self->threads = g_hash_table_new_full (NULL, NULL, NULL, free_thread_stats);
   self->tvs_proc = make_trace_values (GST_SECOND);

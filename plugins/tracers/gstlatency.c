@@ -227,18 +227,18 @@ static void
 gst_latency_tracer_init (GstLatencyTracer * self)
 {
   GstTracer *tracer = GST_TRACER (self);
-  gst_tracer_register_hook (tracer, "pad-push-pre",
+  gst_tracing_register_hook (tracer, "pad-push-pre",
       G_CALLBACK (do_push_buffer_pre));
-  gst_tracer_register_hook (tracer, "pad-push-list-pre",
+  gst_tracing_register_hook (tracer, "pad-push-list-pre",
       G_CALLBACK (do_push_buffer_pre));
-  gst_tracer_register_hook (tracer, "pad-push-post",
+  gst_tracing_register_hook (tracer, "pad-push-post",
       G_CALLBACK (do_push_buffer_post));
-  gst_tracer_register_hook (tracer, "pad-push-list-post",
+  gst_tracing_register_hook (tracer, "pad-push-list-post",
       G_CALLBACK (do_push_buffer_post));
-  gst_tracer_register_hook (tracer, "pad-pull-range-pre",
+  gst_tracing_register_hook (tracer, "pad-pull-range-pre",
       G_CALLBACK (do_pull_range_pre));
-  gst_tracer_register_hook (tracer, "pad-pull-range-post",
+  gst_tracing_register_hook (tracer, "pad-pull-range-post",
       G_CALLBACK (do_pull_range_post));
-  gst_tracer_register_hook (tracer, "pad-push-event-pre",
+  gst_tracing_register_hook (tracer, "pad-push-event-pre",
       G_CALLBACK (do_push_event_pre));
 }

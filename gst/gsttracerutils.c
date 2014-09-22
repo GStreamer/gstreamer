@@ -59,7 +59,7 @@ GHashTable *_priv_tracers = NULL;
 
 /* Initialize the tracing system */
 void
-_priv_gst_tracer_init (void)
+_priv_gst_tracing_init (void)
 {
   const gchar *env = g_getenv ("GST_TRACE");
 
@@ -122,7 +122,7 @@ _priv_gst_tracer_init (void)
 }
 
 void
-_priv_gst_tracer_deinit (void)
+_priv_gst_tracing_deinit (void)
 {
   GList *h_list, *h_node, *t_node;
   GstTracerHook *hook;
@@ -146,8 +146,16 @@ _priv_gst_tracer_deinit (void)
   _priv_tracers = NULL;
 }
 
+/**
+ * gst_tracing_register_hook_id:
+ * @tracer: the tracer
+ * @detail: the detailed hook
+ * @func: (scope async): the callback
+ *
+ * Register @func to be called when the trace hook @detail is getting invoked.
+ */
 void
-gst_tracer_register_hook_id (GstTracer * tracer, GQuark detail, GCallback func)
+gst_tracing_register_hook_id (GstTracer * tracer, GQuark detail, GCallback func)
 {
   gpointer key = GINT_TO_POINTER (detail);
   GList *list = g_hash_table_lookup (_priv_tracers, key);
@@ -162,11 +170,19 @@ gst_tracer_register_hook_id (GstTracer * tracer, GQuark detail, GCallback func)
   _priv_tracer_enabled = TRUE;
 }
 
+/**
+ * gst_tracing_register_hook:
+ * @tracer: the tracer
+ * @detail: the detailed hook
+ * @func: (scope async): the callback
+ *
+ * Register @func to be called when the trace hook @detail is getting invoked.
+ */
 void
-gst_tracer_register_hook (GstTracer * tracer, const gchar * detail,
+gst_tracing_register_hook (GstTracer * tracer, const gchar * detail,
     GCallback func)
 {
-  gst_tracer_register_hook_id (tracer, g_quark_try_string (detail), func);
+  gst_tracing_register_hook_id (tracer, g_quark_try_string (detail), func);
 }
 
 #endif /* GST_DISABLE_GST_DEBUG */
