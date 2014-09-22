@@ -1114,9 +1114,9 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, gint length)
  * in @buffer.
  *
  * When this function returns %TRUE, @idx will contain the index of the first
- * memory bock where the byte for @offset can be found and @length contains the
+ * memory block where the byte for @offset can be found and @length contains the
  * number of memory blocks containing the @size remaining bytes. @skip contains
- * the number of bytes to skip in the memory bock at @idx to get to the byte
+ * the number of bytes to skip in the memory block at @idx to get to the byte
  * for @offset.
  *
  * @size can be -1 to get all the memory blocks after @idx.
