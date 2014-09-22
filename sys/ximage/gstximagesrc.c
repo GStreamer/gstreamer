@@ -372,6 +372,7 @@ gst_ximage_src_recalc (GstXImageSrc * src)
   return TRUE;
 }
 
+#ifdef HAVE_XFIXES
 static gboolean
 gst_ximage_is_pointer_in_region (GstXImageSrc * src)
 {
@@ -388,6 +389,7 @@ gst_ximage_is_pointer_in_region (GstXImageSrc * src)
   return (on_window && (win_x >= src->startx) && (win_y >= src->starty) &&
       (win_x < src->endx) && (win_y < src->endy));
 }
+#endif
 
 #ifdef HAVE_XFIXES
 static void
