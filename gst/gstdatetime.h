@@ -20,8 +20,11 @@
 #ifndef __GST_DATE_TIME_H__
 #define __GST_DATE_TIME_H__
 
+#include <gst/gstconfig.h>
+
 #include <time.h>
 #include <glib.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
