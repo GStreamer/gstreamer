@@ -1935,8 +1935,11 @@ gst_buffer_append_region (GstBuffer * buf1, GstBuffer * buf2, gssize offset,
  * @buffer: a #GstBuffer
  * @api: the #GType of an API
  *
- * Get the metadata for @api on buffer. When there is no such
- * metadata, %NULL is returned.
+ * Get the metadata for @api on buffer. When there is no such metadata, %NULL is
+ * returned. If multiple metadata with the given @api are attached to this
+ * buffer only the first one is returned.  To handle multiple metadata with a
+ * given API use gst_buffer_iterate_meta() or gst_buffer_foreach_meta() instead
+ * and check the meta->info.api member for the API type.
  *
  * Returns: (transfer none) (nullable): the metadata for @api on
  * @buffer.
