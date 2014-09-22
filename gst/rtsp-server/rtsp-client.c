@@ -750,6 +750,8 @@ gst_rtsp_client_close (GstRTSPClient * client)
     g_source_destroy ((GSource *) priv->watch);
     priv->watch = NULL;
     gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
+    g_main_context_unref (priv->watch_context);
+    priv->watch_context = NULL;
   }
 }
 
@@ -3301,8 +3303,6 @@ client_watch_notify (GstRTSPClient * client)
 
   GST_INFO ("client %p: watch destroyed", client);
   priv->watch = NULL;
-  g_main_context_unref (priv->watch_context);
-  priv->watch_context = NULL;
   /* remove all sessions and so drop the extra client ref */
   gst_rtsp_client_session_filter (client, cleanup_session, NULL);
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
