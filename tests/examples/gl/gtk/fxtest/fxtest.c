@@ -33,15 +33,74 @@
 #include <gst/video/videooverlay.h>
 
 
-/* TODO: use video overlay in the proper way (like suggested in docs, see gtkvideooverlay example) */
+static GstBusSyncReply
+create_window (GstBus * bus, GstMessage * message, GtkWidget * widget)
+{
+  /* ignore anything but 'prepare-window-handle' element messages */
+  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
+    return GST_BUS_PASS;
+
+  if (!gst_is_video_overlay_prepare_window_handle_message (message))
+    return GST_BUS_PASS;
+
+  g_print ("setting window handle\n");
+
+  /* do not call gdk_window_ensure_native for the first time here because
+   * we are in a different thread than the main thread
+   * (and the main thread the one) */
+  gst_video_overlay_set_gtk_window (GST_VIDEO_OVERLAY (GST_MESSAGE_SRC
+          (message)), widget);
+
+  gst_message_unref (message);
+
+  return GST_BUS_DROP;
+}
+
+
+static void
+end_stream_cb (GstBus * bus, GstMessage * message, GstElement * pipeline)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_EOS:
+      g_print ("End of stream\n");
+
+      gst_element_set_state (pipeline, GST_STATE_NULL);
+      gst_object_unref (pipeline);
+      gtk_main_quit ();
+      break;
+    case GST_MESSAGE_ERROR:
+    {
+      gchar *debug = NULL;
+      GError *err = NULL;
+
+      gst_message_parse_error (message, &err, &debug);
+
+      g_print ("Error: %s\n", err->message);
+      g_error_free (err);
+
+      if (debug) {
+        g_print ("Debug details: %s\n", debug);
+        g_free (debug);
+      }
+
+      gst_element_set_state (pipeline, GST_STATE_NULL);
+      gst_object_unref (pipeline);
+      gtk_main_quit ();
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 static gboolean
-expose_cb (GtkWidget * widget, gpointer data)
+expose_cb (GtkWidget * widget, gpointer unused, gpointer data)
 {
   GstVideoOverlay *overlay =
       GST_VIDEO_OVERLAY (gst_bin_get_by_interface (GST_BIN (data),
           GST_TYPE_VIDEO_OVERLAY));
 
-  gst_video_overlay_set_gtk_window (overlay, widget);
+  gst_video_overlay_expose (overlay);
   gst_object_unref (overlay);
 
   return FALSE;
@@ -117,6 +176,7 @@ main (gint argc, gchar * argv[])
   GstElement *pipeline;
   GstElement *filter, *sink;
   GstElement *sourcebin;
+  GstBus *bus;
   GError *error = NULL;
 
   GtkWidget *window;
@@ -188,6 +248,17 @@ main (gint argc, gchar * argv[])
       G_CALLBACK (destroy_cb), pipeline);
 
   screen = gtk_drawing_area_new ();
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb),
+      pipeline);
+  g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb),
+      pipeline);
+  g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), pipeline);
+
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, screen,
+      NULL);
+  gst_object_unref (bus);
 
   gtk_widget_set_size_request (screen, 640, 480);       // 500 x 376
 
@@ -247,7 +318,10 @@ main (gint argc, gchar * argv[])
 
   gtk_container_add (GTK_CONTAINER (window), vbox);
 
-  g_signal_connect (screen, "realize", G_CALLBACK (expose_cb), pipeline);
+  g_signal_connect (screen, "draw", G_CALLBACK (expose_cb), pipeline);
+  g_signal_connect (screen, "configure-event", G_CALLBACK (expose_cb),
+      pipeline);
+  gtk_widget_realize (screen);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
