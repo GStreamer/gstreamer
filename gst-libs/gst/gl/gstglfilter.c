@@ -230,7 +230,6 @@ gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     {
       return gst_gl_handle_context_query ((GstElement *) filter, query,
           &filter->display);
-      break;
     }
     default:
       break;
