@@ -1971,7 +1971,9 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
     if (!GST_CLOCK_TIME_IS_VALID (frame->dts)) {
       frame->dts = frame->pts;
     } else if (GST_CLOCK_TIME_IS_VALID (frame->pts) && frame->pts != frame->dts) {
-      GST_WARNING_OBJECT (encoder, "keyframe PTS != DTS");
+      GST_WARNING_OBJECT (encoder, "keyframe PTS (%" GST_TIME_FORMAT
+          ") != DTS (%" GST_TIME_FORMAT ")", GST_TIME_ARGS (frame->pts),
+          GST_TIME_ARGS (frame->dts));
     }
   } else {
     GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
