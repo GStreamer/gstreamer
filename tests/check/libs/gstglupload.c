@@ -235,7 +235,7 @@ GST_START_TEST (test_upload_data)
 
   gst_gl_upload_set_format (upload, &in_info);
 
-  res = gst_gl_upload_perform_with_data (upload, &tex_id, data);
+  res = gst_gl_upload_perform_with_data (upload, &tex_id, data, NULL);
   fail_if (res == FALSE, "Failed to upload buffer: %s\n",
       gst_gl_context_get_error ());
 
@@ -269,7 +269,7 @@ GST_START_TEST (test_upload_buffer)
 
   gst_gl_upload_set_format (upload, &in_info);
 
-  res = gst_gl_upload_perform_with_buffer (upload, buffer, &tex_id);
+  res = gst_gl_upload_perform_with_buffer (upload, buffer, &tex_id, NULL);
   fail_if (res == FALSE, "Failed to upload buffer: %s\n",
       gst_gl_context_get_error ());
 
