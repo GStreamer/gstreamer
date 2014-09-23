@@ -741,9 +741,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
     /* advance sample view */
     if (G_UNLIKELY (samples * ctx->info.bpf > priv->offset)) {
       if (G_LIKELY (!priv->force)) {
-        /* no way we can let this pass */
-        g_assert_not_reached ();
-        /* really no way */
+        /* we should have received EOS to enable force */
         goto overflow;
       } else {
         priv->offset = 0;
@@ -893,11 +891,14 @@ no_caps:
 overflow:
   {
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
-        ("received more encoded samples %d than provided %d",
+        ("received more encoded samples %d than provided %d as inputs",
             samples, priv->offset / ctx->info.bpf), (NULL));
     if (buf)
       gst_buffer_unref (buf);
     ret = GST_FLOW_ERROR;
+    /* no way we can let this pass */
+    g_assert_not_reached ();
+    /* really no way */
     goto exit;
   }
 }
