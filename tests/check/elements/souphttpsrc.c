@@ -27,6 +27,8 @@
 
 #include <glib.h>
 #include <glib/gprintf.h>
+
+#define SOUP_VERSION_MIN_REQUIRED (SOUP_VERSION_2_40)
 #include <libsoup/soup.h>
 #include <gst/check/gstcheck.h>
 
