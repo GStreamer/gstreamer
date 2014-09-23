@@ -1463,7 +1463,7 @@ gst_flac_parse_generate_headers (GstFlacParse * flacparse)
     gint64 duration;
 
     if (gst_pad_peer_query_duration (GST_BASE_PARSE_SINK_PAD (flacparse),
-            GST_FORMAT_TIME, &duration)) {
+            GST_FORMAT_TIME, &duration) && duration != -1) {
       duration = GST_CLOCK_TIME_TO_FRAMES (duration, flacparse->samplerate);
 
       map.data[17] |= (duration >> 32) & 0xff;
