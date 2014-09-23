@@ -1951,9 +1951,7 @@ copy_rgb32_ayuv (guint i_alpha, GstVideoFrame * dest_frame,
   gint r, g, b;
   guint8 *dest, *src;
 
-  dest = GST_VIDEO_FRAME_PLANE_DATA (dest_frame, 0);
   dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dest_frame, 0);
-
   src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
   in_bpp = GST_VIDEO_FRAME_COMP_PSTRIDE (src_frame, 0);
   packed_in = (in_bpp < 4);
@@ -2059,9 +2057,7 @@ copy_ayuv_rgb32 (guint i_alpha, GstVideoFrame * dest_frame,
   gint r, g, b;
   guint8 *src, *dest;
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
   src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
-
   dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dest_frame, 0);
   out_bpp = GST_VIDEO_FRAME_COMP_PSTRIDE (dest_frame, 0);
   packed_out = (out_bpp < 4);
