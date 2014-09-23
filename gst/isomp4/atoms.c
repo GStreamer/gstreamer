@@ -3426,6 +3426,9 @@ atom_trak_set_subtitle_commons (AtomTRAK * trak, AtomsContext * context)
 {
   atom_trak_set_subtitle (trak, context);
   trak->mdia.mdhd.time_info.timescale = 1000;
+
+  trak->tkhd.alternate_group = 2;       /* same for all subtitles */
+  trak->tkhd.layer = -1;        /* above video (layer 0) */
 }
 
 void
