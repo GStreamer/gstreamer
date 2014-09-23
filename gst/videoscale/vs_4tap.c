@@ -234,10 +234,10 @@ vs_image_scale_4tap_Y (const VSImage * dest, const VSImage * src,
       }
     }
 
-    t0 = tmpbuf + (CLAMP (j - 1, 0, src->height - 1) & 3) * dest->width;
-    t1 = tmpbuf + (CLAMP (j, 0, src->height - 1) & 3) * dest->width;
-    t2 = tmpbuf + (CLAMP (j + 1, 0, src->height - 1) & 3) * dest->width;
-    t3 = tmpbuf + (CLAMP (j + 2, 0, src->height - 1) & 3) * dest->width;
+    t0 = tmpbuf + (CLAMP (j - 1, 0, src->height - 1) & 3) * dest->stride;
+    t1 = tmpbuf + (CLAMP (j, 0, src->height - 1) & 3) * dest->stride;
+    t2 = tmpbuf + (CLAMP (j + 1, 0, src->height - 1) & 3) * dest->stride;
+    t3 = tmpbuf + (CLAMP (j + 2, 0, src->height - 1) & 3) * dest->stride;
     vs_scanline_merge_4tap_Y (dest->pixels + i * dest->stride,
         t0, t1, t2, t3, dest->width, yacc & 0xffff);
 
