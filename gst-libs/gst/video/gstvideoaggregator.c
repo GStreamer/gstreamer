@@ -782,7 +782,6 @@ gst_videoaggregator_reset (GstVideoAggregator * vagg)
   vagg->priv->ts_offset = 0;
   vagg->priv->nframes = 0;
 
-  gst_segment_init (&agg->segment, GST_FORMAT_TIME);
   agg->segment.position = -1;
 
   gst_videoaggregator_reset_qos (vagg);
@@ -1638,7 +1637,6 @@ gst_videoaggregator_start (GstAggregator * agg)
   if (!GST_AGGREGATOR_CLASS (gst_videoaggregator_parent_class)->start (agg))
     return FALSE;
 
-  gst_segment_init (&agg->segment, GST_FORMAT_TIME);
   gst_caps_replace (&vagg->priv->current_caps, NULL);
 
   return TRUE;
