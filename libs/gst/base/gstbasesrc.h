@@ -127,7 +127,8 @@ struct _GstBaseSrc {
  * @get_times: Given a buffer, return the start and stop time when it
  *    should be pushed out. The base class will sync on the clock using
  *    these times.
- * @get_size: Return the total size of the resource, in the configured format.
+ * @get_size: Return the total size of the resource, in the format set by
+ *     gst_base_src_set_format().
  * @is_seekable: Check if the source can seek
  * @prepare_seek_segment: Prepare the #GstSegment that will be passed to the
  *   #GstBaseSrcClass.do_seek() vmethod for executing a seek
@@ -190,7 +191,8 @@ struct _GstBaseSrcClass {
   void          (*get_times)    (GstBaseSrc *src, GstBuffer *buffer,
                                  GstClockTime *start, GstClockTime *end);
 
-  /* get the total size of the resource in bytes */
+  /* get the total size of the resource in the format set by
+   * gst_base_src_set_format() */
   gboolean      (*get_size)     (GstBaseSrc *src, guint64 *size);
 
   /* check if the resource is seekable */
