@@ -2274,9 +2274,13 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   last_buf = pad->last_buf;
 
-  /* if buffer has missing DTS, we take either segment start or previous buffer end time, 
-     which ever is later */
-  if (buf && !GST_BUFFER_DTS_IS_VALID (buf)) {
+  /* DTS delta is used to calculate sample duration.
+   * If buffer has missing DTS, we take either segment start or
+   *  previous buffer end time, whichever is later.
+   * This must only be done for non sparse streams, sparse streams
+   * can have gaps between buffers (which is handled later by adding
+   * extra empty buffer with duration that fills the gap). */
+  if (!pad->sparse && buf && !GST_BUFFER_DTS_IS_VALID (buf)) {
     GstClockTime last_buf_duration = last_buf
         && GST_BUFFER_DURATION_IS_VALID (last_buf) ?
         GST_BUFFER_DURATION (last_buf) : 0;
