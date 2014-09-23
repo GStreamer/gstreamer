@@ -837,6 +837,8 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
                   (_("Internal data flow error.")),
                   ("streaming task paused, reason %s (%d)",
                       gst_flow_get_name (queue->srcresult), queue->srcresult));
+            } else {
+              GST_QUEUE_MUTEX_UNLOCK (queue);
             }
             goto out_flow_error;
           }
