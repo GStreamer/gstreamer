@@ -399,6 +399,7 @@ gst_audio_sink_ring_buffer_acquire (GstAudioRingBuffer * buf,
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
   gboolean result = FALSE;
+  GstAudioClock *clock;
 
   sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
@@ -407,6 +408,10 @@ gst_audio_sink_ring_buffer_acquire (GstAudioRingBuffer * buf,
     result = csink->prepare (sink, spec);
   if (!result)
     goto could_not_prepare;
+
+  /* our clock will now start from 0 again */
+  clock = GST_AUDIO_CLOCK (GST_AUDIO_BASE_SINK (sink)->provided_clock);
+  gst_audio_clock_reset (clock, 0);
 
   /* set latency to one more segment as we need some headroom */
   spec->seglatency = spec->segtotal + 1;
