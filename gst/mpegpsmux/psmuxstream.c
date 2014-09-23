@@ -190,8 +190,8 @@ psmux_stream_new (PsMux * mux, PsMuxStreamType stream_type)
       stream->max_buffer_size = 400 * 1024;
     else if (stream->is_audio_stream)
       stream->max_buffer_size = 4 * 1024;
-    else                        /* Unknown */
-      stream->max_buffer_size = 4 * 1024;
+    else
+      g_assert_not_reached ();
   }
 
   return stream;
