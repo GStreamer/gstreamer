@@ -127,6 +127,7 @@ gpointer      gst_gl_context_get_proc_address (GstGLContext *context, const gcha
 GstGLPlatform gst_gl_context_get_gl_platform  (GstGLContext *context);
 GstGLAPI      gst_gl_context_get_gl_api       (GstGLContext *context);
 guintptr      gst_gl_context_get_gl_context   (GstGLContext *context);
+gboolean      gst_gl_context_can_share        (GstGLContext * context, GstGLContext *other_context);
 
 gboolean      gst_gl_context_create           (GstGLContext *context, GstGLContext *other_context, GError ** error);
 void          gst_gl_context_destroy          (GstGLContext *context);

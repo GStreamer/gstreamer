@@ -149,7 +149,7 @@ struct _GstGLContextPrivate
   gboolean created;
   gboolean alive;
 
-  GstGLContext *other_context;
+  GWeakRef other_context_ref;
   GError **error;
 
   gint gl_major;
@@ -217,6 +217,8 @@ gst_gl_context_init (GstGLContext * context)
   g_cond_init (&context->priv->create_cond);
   g_cond_init (&context->priv->destroy_cond);
   context->priv->created = FALSE;
+
+  g_weak_ref_init (&context->priv->other_context_ref, NULL);
 }
 
 static void
@@ -382,6 +384,7 @@ gst_gl_context_finalize (GObject * object)
   g_cond_clear (&context->priv->create_cond);
 
   g_free (context->priv->gl_exts);
+  g_weak_ref_clear (&context->priv->other_context_ref);
 
   G_OBJECT_CLASS (gst_gl_context_parent_class)->finalize (object);
 }
@@ -577,6 +580,47 @@ gst_gl_context_get_window (GstGLContext * context)
   return gst_object_ref (context->window);
 }
 
+static gboolean
+_share_group_descendant (GstGLContext * context, GstGLContext * other_context)
+{
+  GstGLContext *next = gst_object_ref (context);
+  while (next != NULL) {
+    GstGLContext *prev;
+
+    if (next == other_context) {
+      gst_object_unref (next);
+      return TRUE;
+    }
+
+    prev = next;
+    next = g_weak_ref_get (&next->priv->other_context_ref);
+    gst_object_unref (prev);
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_gl_context_can_share:
+ * @context: a #GstGLContext
+ * @other_context: another #GstGLContext
+ *
+ * Returns: whether @context and @other_context are able to share OpenGL
+ *      resources.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_gl_context_can_share (GstGLContext * context, GstGLContext * other_context)
+{
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (other_context), FALSE);
+
+  return context == other_context
+      || _share_group_descendant (context, other_context)
+      || _share_group_descendant (other_context, context);
+}
+
 /**
  * gst_gl_context_create:
  * @context: a #GstGLContext:
@@ -607,7 +651,7 @@ gst_gl_context_create (GstGLContext * context,
   g_mutex_lock (&context->priv->render_lock);
 
   if (!context->priv->created) {
-    context->priv->other_context = other_context;
+    g_weak_ref_set (&context->priv->other_context_ref, other_context);
     context->priv->error = error;
 
     context->priv->gl_thread = g_thread_new ("gstglcontext",
@@ -889,7 +933,7 @@ gst_gl_context_create_thread (GstGLContext * context)
   g_mutex_lock (&context->priv->render_lock);
 
   error = context->priv->error;
-  other_context = context->priv->other_context;
+  other_context = g_weak_ref_get (&context->priv->other_context_ref);
 
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   window_class = GST_GL_WINDOW_GET_CLASS (context->window);
@@ -1024,6 +1068,9 @@ gst_gl_context_create_thread (GstGLContext * context)
 #endif
   }
 
+  if (other_context)
+    gst_object_unref (other_context);
+
   g_cond_signal (&context->priv->create_cond);
 
 //  g_mutex_unlock (&context->priv->render_lock);
@@ -1059,6 +1106,9 @@ gst_gl_context_create_thread (GstGLContext * context)
 
 failure:
   {
+    if (other_context)
+      gst_object_unref (other_context);
+
     g_cond_signal (&context->priv->create_cond);
     g_mutex_unlock (&context->priv->render_lock);
     return NULL;
