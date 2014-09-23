@@ -255,9 +255,24 @@ gst_interleave_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gint
+compare_positions (gconstpointer a, gconstpointer b, gpointer user_data)
+{
+  const gint i = *(const gint *) a;
+  const gint j = *(const gint *) b;
+  const gint *pos = (const gint *) user_data;
+
+  if (pos[i] < pos[j])
+    return -1;
+  else if (pos[i] > pos[j])
+    return 1;
+  else
+    return 0;
+}
+
 static gboolean
 gst_interleave_channel_positions_to_mask (GValueArray * positions,
-    guint64 * mask)
+    gint default_ordering_map[64], guint64 * mask)
 {
   gint i;
   guint channels;
@@ -274,6 +289,13 @@ gst_interleave_channel_positions_to_mask (GValueArray * positions,
     pos[i] = g_value_get_enum (val);
   }
 
+  /* sort the default ordering map according to the position order */
+  for (i = 0; i < channels; i++) {
+    default_ordering_map[i] = i;
+  }
+  g_qsort_with_data (default_ordering_map, channels,
+      sizeof (*default_ordering_map), compare_positions, pos);
+
   ret = gst_audio_channel_positions_to_mask (pos, channels, FALSE, mask);
   g_free (pos);
 
@@ -288,7 +310,7 @@ gst_interleave_set_channel_positions (GstInterleave * self, GstStructure * s)
   if (self->channel_positions != NULL &&
       self->channels == self->channel_positions->n_values) {
     if (!gst_interleave_channel_positions_to_mask (self->channel_positions,
-            &channel_mask)) {
+            self->default_channels_ordering_map, &channel_mask)) {
       GST_WARNING_OBJECT (self, "Invalid channel positions, using NONE");
       channel_mask = 0;
     }
@@ -1264,6 +1286,7 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
     GstBuffer *inbuf;
     guint8 *outdata;
     GstMapInfo input_info;
+    gint channel;
 
     cdata = (GstCollectData *) collected->data;
 
@@ -1282,8 +1305,9 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
       goto next;
 
     empty = FALSE;
+    channel = GST_INTERLEAVE_PAD_CAST (cdata->pad)->channel;
     outdata =
-        write_info.data + width * GST_INTERLEAVE_PAD_CAST (cdata->pad)->channel;
+        write_info.data + width * self->default_channels_ordering_map[channel];
 
     self->func (outdata, input_info.data, self->channels, nsamples);
     gst_buffer_unmap (inbuf, &input_info);
