@@ -173,6 +173,7 @@ struct _NleCompositionPrivate
 
   /* 0 means that we already received the right caps or segment */
   gint seqnum_to_restart_task;
+  gboolean waiting_for_buffer;
 
   gboolean tearing_down_stack;
 
@@ -1106,7 +1107,16 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
 {
   GstPadProbeReturn retval = GST_PAD_PROBE_OK;
   NleCompositionPrivate *priv = comp->priv;
-  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+  GstEvent *event;
+
+  if (GST_IS_BUFFER (info->data)) {
+    if (priv->waiting_for_buffer)
+      _restart_task (comp);
+
+    return GST_PAD_PROBE_OK;
+  }
+
+  event = GST_PAD_PROBE_INFO_EVENT (info);
 
   GST_DEBUG_OBJECT (comp, "event: %s", GST_EVENT_TYPE_NAME (event));
 
@@ -1637,7 +1647,8 @@ nle_composition_ghost_pad_set_target (NleComposition * comp, GstPad * target)
   if (target && (priv->ghosteventprobe == 0)) {
     priv->ghosteventprobe =
         gst_pad_add_probe (target,
-        GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+        GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH |
+        GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
         (GstPadProbeCallback) ghost_event_probe_handler, comp, NULL);
     GST_DEBUG_OBJECT (comp, "added event probe %lu", priv->ghosteventprobe);
   }
@@ -2085,6 +2096,7 @@ _restart_task (NleComposition * comp)
         G_PRIORITY_HIGH);
 
   comp->priv->seqnum_to_restart_task = 0;
+  comp->priv->waiting_for_buffer = FALSE;
 
   comp->priv->updating_reason = COMP_UPDATE_STACK_NONE;
   gst_task_start (comp->task);
@@ -2093,6 +2105,7 @@ _restart_task (NleComposition * comp)
 static gboolean
 _is_ready_to_restart_task (NleComposition * comp, GstEvent * event)
 {
+  NleCompositionPrivate *priv = comp->priv;
   gint seqnum = gst_event_get_seqnum (event);
 
 
@@ -2109,7 +2122,11 @@ _is_ready_to_restart_task (NleComposition * comp, GstEvent * event)
         GST_DEBUG_GRAPH_SHOW_ALL, name);
     g_free (name);
 
-    return TRUE;
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+      return TRUE;
+
+    priv->waiting_for_buffer = TRUE;
+    return FALSE;
 
   } else if (comp->priv->seqnum_to_restart_task) {
     GST_INFO_OBJECT (comp, "WARNING: %s seqnum %i != wanted %i",
@@ -2836,8 +2853,9 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
 
     ucompo->comp = comp;
     ucompo->reason = update_reason;
-    comp->priv->updating_reason = update_reason;
     ucompo->seqnum = seqnum;
+
+    comp->priv->updating_reason = update_reason;
     comp->priv->seqnum_to_restart_task = seqnum;
 
     GST_OBJECT_LOCK (comp);
