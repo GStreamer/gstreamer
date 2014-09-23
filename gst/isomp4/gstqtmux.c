@@ -561,10 +561,11 @@ gst_qt_mux_prepare_tx3g_buffer (GstQTPad * qtpad, GstBuffer * buf,
   if (buf == NULL)
     return NULL;
 
-  size = gst_buffer_get_size (buf);
+  gst_buffer_map (buf, &frommap, GST_MAP_READ);
+
+  size = (gint16) strnlen ((const char *) frommap.data, frommap.size);
   newbuf = gst_buffer_new_and_alloc (size + 2);
 
-  gst_buffer_map (buf, &frommap, GST_MAP_READ);
   gst_buffer_map (newbuf, &tomap, GST_MAP_WRITE);
 
   GST_WRITE_UINT16_BE (tomap.data, size);
@@ -574,6 +575,10 @@ gst_qt_mux_prepare_tx3g_buffer (GstQTPad * qtpad, GstBuffer * buf,
   gst_buffer_unmap (buf, &frommap);
 
   gst_buffer_copy_into (newbuf, buf, GST_BUFFER_COPY_METADATA, 0, size);
+
+  /* gst_buffer_copy_into is trying to be too clever and
+   * won't copy duration when size is different */
+  GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf);
 
   gst_buffer_unref (buf);
 
@@ -588,7 +593,7 @@ gst_qt_mux_create_empty_tx3g_buffer (GstQTPad * qtpad, gint64 duration)
   data = g_malloc (2);
   GST_WRITE_UINT16_BE (data, 0);
 
-  return gst_buffer_new_wrapped (data, 2);;
+  return gst_buffer_new_wrapped (data, 2);
 }
 
 static void
