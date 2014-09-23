@@ -602,7 +602,12 @@ run_server (guint * http_port, guint * https_port)
 
   *http_port = *https_port = 0;
 
+  /* The G_ENABLE_DIAGNOSTIC is temporarily overriden to avoid
+   * property deprecation warnings (for the SOUP_SERVER_PORT
+   * property) */
+  g_setenv ("G_ENABLE_DIAGNOSTIC", "0", TRUE);
   server = soup_server_new (SOUP_SERVER_PORT, port, NULL);
+  g_setenv ("G_ENABLE_DIAGNOSTIC", "1", TRUE);
   if (!server) {
     GST_DEBUG ("Unable to bind to server port %u", port);
     return FALSE;
