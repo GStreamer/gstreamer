@@ -250,6 +250,11 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   mem = gst_buffer_peek_memory (buffer, 0);
 
   if (gst_is_gl_memory (mem)) {
+    GstGLMemory *gl_mem = (GstGLMemory *) gst_buffer_peek_memory (buffer, 0);
+
+    if (!gst_gl_context_can_share (upload->context, gl_mem->context))
+      goto raw_data_upload;
+
     if (GST_VIDEO_INFO_FORMAT (&upload->in_info) == GST_VIDEO_FORMAT_RGBA) {
       GstMapInfo map_info;
 
@@ -302,6 +307,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     }
   }
 
+raw_data_upload:
   GST_LOG_OBJECT (upload, "Attempting upload with raw data");
   /* GstVideoMeta map */
   if (!gst_video_frame_map (&upload->priv->frame, &upload->in_info, buffer,
