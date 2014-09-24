@@ -1,9 +1,162 @@
-=== release 1.2.0 ===
+=== release 1.3.90 ===
 
-2014-03-15  Thibault Saunier <tsaunier@gnome.org>
+2014-09-24  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.3.90
+
+2014-06-10 16:04:15 +0200  Rico Tzschichholz <ricotz@ubuntu.com>
+
+	* plugin/Makefile.am:
+	  plugin: Do not version the plugin library
+
+2014-06-05 19:54:13 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* examples/.gitignore:
+	* examples/Makefile.am:
+	* examples/audio-controller.py:
+	* examples/audioconcat.py:
+	* examples/bps.py:
+	* examples/buffer-draw.py:
+	* examples/cp.py:
+	* examples/cutter.py:
+	* examples/debugslider.py:
+	* examples/decodebin.py:
+	* examples/f2f.py:
+	* examples/filesrc.py:
+	* examples/fvumeter.py:
+	* examples/gst-discover:
+	* examples/gstfile.py:
+	* examples/helloworld.py:
+	* examples/maemogst.py:
+	* examples/mixer.py:
+	* examples/option-parser.py:
+	* examples/pipeline-tester:
+	* examples/play.py:
+	* examples/plugins/python/sinkelement.py:
+	* examples/pyidentity.py:
+	* examples/python/sinkelement.py:
+	* examples/remuxer.py:
+	* examples/segments.py:
+	* examples/sinkelement-registry.py:
+	* examples/sinkelement.py:
+	* examples/switch.py:
+	* examples/synchronizer.py:
+	* examples/tagsetter.py:
+	* examples/video-controller.py:
+	* examples/vumeter.py:
+	* old_examples/.gitignore:
+	* old_examples/Makefile.am:
+	* old_examples/audio-controller.py:
+	* old_examples/audioconcat.py:
+	* old_examples/bps.py:
+	* old_examples/buffer-draw.py:
+	* old_examples/cp.py:
+	* old_examples/cutter.py:
+	* old_examples/debugslider.py:
+	* old_examples/decodebin.py:
+	* old_examples/f2f.py:
+	* old_examples/filesrc.py:
+	* old_examples/fvumeter.py:
+	* old_examples/gst-discover:
+	* old_examples/gstfile.py:
+	* old_examples/helloworld.py:
+	* old_examples/maemogst.py:
+	* old_examples/mixer.py:
+	* old_examples/option-parser.py:
+	* old_examples/pipeline-tester:
+	* old_examples/play.py:
+	* old_examples/pyidentity.py:
+	* old_examples/remuxer.py:
+	* old_examples/segments.py:
+	* old_examples/sinkelement-registry.py:
+	* old_examples/sinkelement.py:
+	* old_examples/switch.py:
+	* old_examples/synchronizer.py:
+	* old_examples/tagsetter.py:
+	* old_examples/video-controller.py:
+	* old_examples/vumeter.py:
+	  Move old example to a dedicated folder so user know it is no up to date
+
+2014-06-06 10:30:07 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* examples/python/sinkelement.py:
+	* gi/overrides/Gst.py:
+	  Add an example sink element and override the chain and event functions of pads
+	  Otherwize we will get 2 time acces to the element in it, which does
+	  not make much sense. The _full variant can still be used.
+
+2014-02-06 16:17:03 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* Makefile.am:
+	* acinclude.m4:
+	* configure.ac:
+	* plugin/Makefile.am:
+	* plugin/gstpythonplugin.c:
+	  Reimplement gstpython plugin on top of PyGobject
+
+2014-06-05 17:22:23 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* common:
+	  Update common submodule
+
+2014-05-22 22:48:09 +0200  Christoph Reiter <reiter.christoph@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: Don't pass arguments to Boxed base class __init__() in Gst.Caps override.
+	  This is needed since: https://git.gnome.org/browse/pygobject/commit/?id=3a2bfc8bf01fcae3863
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730596
+
+2014-03-23 10:34:10 +0100  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  python3: apply pep 238 for division overload
+	  Python 3 needs an __truediv__ operator method, used in GstFraction.
+	  see: http://legacy.python.org/dev/peps/pep-0238/
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726920
+
+2014-04-01 09:53:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* gi/overrides/Gst.py:
+	  overrides: Import the _gi_gst module relative
+	  We always expect it to be in the same directory and it fixes its import
+	  with python3
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726921
+
+2014-03-29 15:15:27 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Modernize configure.ac a bit
+	  Especially create tar.xz files instead of tar.gz
+
+2014-03-29 15:01:26 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gi/overrides/Makefile.am:
+	  Fix automake warning
+	  INCLUDES is the old name of AM_CPPFLAGS and is deprecated.
+
+2014-03-29 14:51:39 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* gi/overrides/Makefile.am:
+	  Fix extension of native Python module
+	  When building debug modules this e.g. has to be _d.so instead of just .so
+
+2014-03-15 18:26:40 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.2.0 ===
+
+2014-03-15 18:02:45 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.2.0
 
 2014-03-15 12:40:32 +0100  Thibault Saunier <tsaunier@gnome.org>
 
@@ -157,6 +310,8 @@
 
 	* configure.ac:
 	  Back to development
+
+=== release 1.1.90 ===
 
 2013-09-28 20:48:40 +0200  Thibault Saunier <thibault.saunier@collabora.com>
 
