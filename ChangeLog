@@ -1,9 +1,32 @@
-=== release 1.4.2 ===
+=== release 1.4.3 ===
 
-2014-09-19  Sebastian Dröge <slomo@coaxion.net>
+2014-09-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.2
+	  releasing 1.4.3
+
+2014-09-22 14:00:07 -0700  Aleix Conchillo Flaqué <aconchillo@gmail.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: drain samples until libav doesn't have more data
+	  We use have_data (that comes from libav), instead of only trying 10
+	  times, to know if there are more samples available. The old code was
+	  machine dependent as different amount of samples could be decoded by
+	  different type of (more powerful) machines, and 10 times was not always
+	  sufficient.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737144
+
+=== release 1.4.2 ===
+
+2014-09-19 15:13:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.4.2
 
 2014-09-11 19:37:33 -0400  IBM Thinklab <oblong@wall-center.(none)>
 

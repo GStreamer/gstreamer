@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.4.2
+Release notes for GStreamer libav Plugins 1.4.3
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -49,8 +49,7 @@ contains a set of less supported plugins that haven't passed the
 
 Bugs fixed in this release
      
-      * 734661 : avviddec: After draining frames, flush the libav decoder
-      * 736515 : avviddec: keep draining buffers from libav until libav says so
+      * 737144 : avauddec: keep draining buffers from libav until libav says so
 
 ==== Download ====
 
@@ -88,6 +87,4 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Aleix Conchillo Flaqué
-      * Jan Schmidt
-      * Sebastian Dröge
  
