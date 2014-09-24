@@ -131,6 +131,8 @@ _negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
 
   mix->priv->negotiated = ret;
 
+  gst_caps_replace (&mix->out_caps, caps);
+
   return ret;
 }
 
@@ -826,32 +828,37 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   gboolean res = TRUE;
   guint array_index = 0;
   GstVideoFrame out_frame;
-  gboolean out_gl_wrapped = FALSE;
   GstElement *element = GST_ELEMENT (mix);
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
   GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
   GstGLMixerPrivate *priv = mix->priv;
+  gboolean to_download =
+      gst_caps_features_is_equal (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY,
+      gst_caps_get_features (mix->out_caps, 0));
+  GstMapFlags out_map_flags = GST_MAP_WRITE;
 
   GST_TRACE ("Processing buffers");
 
-  if (!gst_video_frame_map (&out_frame, &vagg->info, outbuf,
-          GST_MAP_WRITE | GST_MAP_GL)) {
+  to_download |= !gst_is_gl_memory (gst_buffer_peek_memory (outbuf, 0));
+
+  if (!to_download)
+    out_map_flags |= GST_MAP_GL;
+
+  if (!gst_video_frame_map (&out_frame, &vagg->info, outbuf, out_map_flags)) {
     return FALSE;
   }
 
-  if (gst_is_gl_memory (out_frame.map[0].memory)) {
+  if (!to_download) {
     out_tex = *(guint *) out_frame.data[0];
   } else {
     GST_INFO ("Output Buffer does not contain correct memory, "
         "attempting to wrap for download");
 
-    out_tex = mix->out_tex_id;;
-
     if (!mix->download)
       mix->download = gst_gl_download_new (mix->context);
 
     gst_gl_download_set_format (mix->download, &out_frame.info);
-    out_gl_wrapped = TRUE;
+    out_tex = mix->out_tex_id;
   }
 
   GST_OBJECT_LOCK (mix);
@@ -910,7 +917,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
   g_mutex_unlock (&priv->gl_resource_lock);
 
-  if (out_gl_wrapped) {
+  if (to_download) {
     if (!gst_gl_download_perform_with_data (mix->download, out_tex,
             out_frame.data)) {
       GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s",
