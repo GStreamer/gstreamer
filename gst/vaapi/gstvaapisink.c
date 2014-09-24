@@ -359,7 +359,7 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
     if (pointer_moved) {
       gst_vaapi_display_lock (display);
       gst_navigation_send_mouse_event (GST_NAVIGATION (sink),
-        "mouse-move", 0, e.xbutton.x, e.xbutton.y);
+        "mouse-move", 0, pointer_x, pointer_y);
       gst_vaapi_display_unlock (display);
     }
 
