@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.4.2
+Release notes for GStreamer Good Plugins 1.4.3
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -22,6 +22,7 @@ The stable 1.4.x release series is API and ABI compatible with 1.0.x and
 any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
+
 
 
 "Such ingratitude.  After all the times I've saved your life."
@@ -67,20 +68,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 719359 : vp8dec: Doesn't handle changes in resolution
-      * 733607 : v4l2transform: Rank should have been NONE
-      * 734266 : vp8dec: fails when input format changes
-      * 735520 : aacparse: skip valid ADTS/LOAS frames
-      * 735804 : smpte: Creates incomplete raw video caps
-      * 735833 : matroskademux: parse error at end of file
-      * 735859 : videomixer: Dynamically changing the FPS leads to an incorrect buffer time
-      * 736192 : avidemux: some AVI files crash (regression)
-      * 736266 : wavparse: error in reading adtl chunk
-      * 736384 : v4l2sink: pool not unreffed after usage
-      * 736670 : v4l2allocator: O_CLOEXEC needs _GNU_SOURCE
-      * 736805 : multipartdemux leaks new stream events
-      * 736807 : rtpbin: pad leaked in error case
-      * 735660 : v4l2: fix new v4l2 code not working with certain devices (regression)
+      * 736944 : videoscale: vs_image_scale_4tap_Y offset should use stride to calculate buffer offset
+      * 737219 : flacparse:  When generating headers, leave total_samples at 0 if upstream duration query returns GST_CLOCK_TIME_NONE.
 
 ==== Download ====
 
@@ -117,18 +106,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andrei Sarakeev
-      * Hans de Goede
-      * Jan Schmidt
-      * Jose Antonio Santos Cadenas
-      * Nicolas Dufresne
-      * Nicolas Huet
-      * Ognyan Tonchev
-      * Peter Korsgaard
-      * Ravi Kiran K N
+      * Edward Hervey
       * Sebastian Dröge
-      * Thiago Santos
-      * Tim-Philipp Müller
-      * Tom Greenwood
-      * Wim Taymans
  
