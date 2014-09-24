@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.4.2
+Release notes for GStreamer Ugly Plugins 1.4.3
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -67,9 +67,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 736060 : asfdemux: add GUID for ASF_Metadata_Library_Object
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -107,4 +106,5 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Guillaume Desmottes
+      * Sebastian Dröge
  
