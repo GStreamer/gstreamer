@@ -276,7 +276,8 @@ gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
        *                            06 = MPEG 2, with extension
        *                            08 - MPEG 2 LSF, Layer 1
        *                            09 - MPEG 2 LSF, Layer 2
-       *                            10 - MPEG 2 LSF, Layer 3 */
+       *                            10 - MPEG 2 LSF, Layer 3
+       *                 FIXME: we don't handle type 06 at the moment */
       if (version == 1 && layer == 1)
         dst[five] = 0x04;
       else if ((version == 1 && (layer == 2 || layer == 3)) ||
