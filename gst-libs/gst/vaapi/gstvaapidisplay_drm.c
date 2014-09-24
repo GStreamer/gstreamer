@@ -42,6 +42,15 @@
 
 static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_DRM;
 
+typedef enum
+{
+  DRM_DEVICE_LEGACY = 1,
+  DRM_DEVICE_RENDERNODES,
+} DRMDeviceType;
+
+static DRMDeviceType g_drm_device_type;
+static GMutex g_drm_device_type_lock;
+
 /* Get default device path. Actually, the first match in the DRM subsystem */
 static const gchar *
 get_default_device_path (GstVaapiDisplay * display)
@@ -65,6 +74,17 @@ get_default_device_path (GstVaapiDisplay * display)
       goto end;
 
     udev_enumerate_add_match_subsystem (e, "drm");
+    switch (g_drm_device_type) {
+      case DRM_DEVICE_LEGACY:
+        udev_enumerate_add_match_sysname (e, "card[0-9]*");
+        break;
+      case DRM_DEVICE_RENDERNODES:
+        udev_enumerate_add_match_sysname (e, "renderD[0-9]*");
+        break;
+      default:
+        GST_ERROR ("unknown drm device type (%d)", g_drm_device_type);
+        goto end;
+    }
     udev_enumerate_scan_devices (e);
     udev_list_entry_foreach (l, udev_enumerate_get_list_entry (e)) {
       syspath = udev_list_entry_get_name (l);
@@ -176,7 +196,8 @@ set_device_path_from_fd (GstVaapiDisplay * display, gint drm_device)
     path_length = strlen (path);
     if (str + busid_length >= path + path_length)
       continue;
-    if (strncmp (&str[busid_length], "/drm/card", 9) != 0)
+    if (strncmp (&str[busid_length], "/drm/card", 9) != 0 &&
+        strncmp (&str[busid_length], "/drm/renderD", 12) != 0)
       continue;
 
     device = udev_device_new_from_syspath (udev, path);
@@ -348,8 +369,28 @@ gst_vaapi_display_drm_class (void)
 GstVaapiDisplay *
 gst_vaapi_display_drm_new (const gchar * device_path)
 {
-  return gst_vaapi_display_new (gst_vaapi_display_drm_class (),
-      GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME, (gpointer) device_path);
+  GstVaapiDisplay *display;
+  guint types[2], i, num_types = 0;
+
+  if (device_path)
+    types[num_types++] = 0;
+  else if (g_drm_device_type)
+    types[num_types++] = g_drm_device_type;
+  else {
+    types[num_types++] = DRM_DEVICE_RENDERNODES;
+    types[num_types++] = DRM_DEVICE_LEGACY;
+  }
+
+  g_mutex_lock (&g_drm_device_type_lock);
+  for (i = 0; i < num_types; i++) {
+    g_drm_device_type = types[i];
+    display = gst_vaapi_display_new (gst_vaapi_display_drm_class (),
+        GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME, (gpointer) device_path);
+    if (display || device_path)
+      break;
+  }
+  g_mutex_unlock (&g_drm_device_type_lock);
+  return display;
 }
 
 /**
