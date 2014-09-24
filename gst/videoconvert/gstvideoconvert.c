@@ -401,7 +401,7 @@ gst_video_convert_set_info (GstVideoFilter * filter,
   space = GST_VIDEO_CONVERT_CAST (filter);
 
   if (space->convert) {
-    gst_video_convertor_free (space->convert);
+    gst_video_converter_free (space->convert);
     space->convert = NULL;
   }
 
@@ -419,7 +419,7 @@ gst_video_convert_set_info (GstVideoFilter * filter,
     goto format_mismatch;
 
 
-  space->convert = gst_video_convertor_new (in_info, out_info,
+  space->convert = gst_video_converter_new (in_info, out_info,
       gst_structure_new ("GstVideoConvertConfig",
           "dither", GST_TYPE_VIDEO_DITHER_METHOD, space->dither, NULL));
   if (space->convert == NULL)
@@ -449,7 +449,7 @@ gst_video_convert_finalize (GObject * obj)
   GstVideoConvert *space = GST_VIDEO_CONVERT (obj);
 
   if (space->convert) {
-    gst_video_convertor_free (space->convert);
+    gst_video_converter_free (space->convert);
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
@@ -554,7 +554,7 @@ gst_video_convert_transform_frame (GstVideoFilter * filter,
       GST_VIDEO_INFO_NAME (&filter->in_info),
       GST_VIDEO_INFO_NAME (&filter->out_info));
 
-  gst_video_convertor_frame (space->convert, out_frame, in_frame);
+  gst_video_converter_frame (space->convert, out_frame, in_frame);
 
   return GST_FLOW_OK;
 }

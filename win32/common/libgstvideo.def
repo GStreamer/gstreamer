@@ -81,11 +81,11 @@ EXPORTS
 	gst_video_colorimetry_to_string
 	gst_video_convert_sample
 	gst_video_convert_sample_async
-	gst_video_convertor_frame
-	gst_video_convertor_free
-	gst_video_convertor_get_config
-	gst_video_convertor_new
-	gst_video_convertor_set_config
+	gst_video_converter_frame
+	gst_video_converter_free
+	gst_video_converter_get_config
+	gst_video_converter_new
+	gst_video_converter_set_config
 	gst_video_crop_meta_api_get_type
 	gst_video_crop_meta_get_info
 	gst_video_decoder_add_to_frame

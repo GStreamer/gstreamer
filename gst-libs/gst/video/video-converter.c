@@ -22,7 +22,7 @@
 #include "config.h"
 #endif
 
-#include "video-convertor.h"
+#include "video-converter.h"
 
 #include <glib.h>
 #include <string.h>
@@ -31,7 +31,7 @@
 #include "video-orc.h"
 
 /**
- * SECTION:videoconvertor
+ * SECTION:videoconverter
  * @short_description: Generic video conversion
  *
  * <refsect2>
@@ -55,7 +55,7 @@
  * </refsect2>
  */
 
-struct _GstVideoConvertor
+struct _GstVideoConverter
 {
   GstVideoInfo in_info;
   GstVideoInfo out_info;
@@ -83,25 +83,25 @@ struct _GstVideoConvertor
   guint down_n_lines;
   gint down_offset;
 
-  void (*convert) (GstVideoConvertor * convert, GstVideoFrame * dest,
+  void (*convert) (GstVideoConverter * convert, GstVideoFrame * dest,
       const GstVideoFrame * src);
-  void (*matrix) (GstVideoConvertor * convert, gpointer pixels);
-  void (*dither16) (GstVideoConvertor * convert, guint16 * pixels, int j);
+  void (*matrix) (GstVideoConverter * convert, gpointer pixels);
+  void (*dither16) (GstVideoConverter * convert, guint16 * pixels, int j);
 };
 
 
-static void video_convertor_generic (GstVideoConvertor * convert,
+static void video_converter_generic (GstVideoConverter * convert,
     GstVideoFrame * dest, const GstVideoFrame * src);
-static void video_convertor_matrix8 (GstVideoConvertor * convert,
+static void video_converter_matrix8 (GstVideoConverter * convert,
     gpointer pixels);
-static void video_convertor_matrix16 (GstVideoConvertor * convert,
+static void video_converter_matrix16 (GstVideoConverter * convert,
     gpointer pixels);
-static gboolean video_convertor_lookup_fastpath (GstVideoConvertor * convert);
-static gboolean video_convertor_compute_matrix (GstVideoConvertor * convert);
-static gboolean video_convertor_compute_resample (GstVideoConvertor * convert);
+static gboolean video_converter_lookup_fastpath (GstVideoConverter * convert);
+static gboolean video_converter_compute_matrix (GstVideoConverter * convert);
+static gboolean video_converter_compute_resample (GstVideoConverter * convert);
 
 /**
- * gst_video_convertor_new:
+ * gst_video_converter_new:
  * @in_info: a #GstVideoInfo
  * @out_info: a #GstVideoInfo
  * @config: a #GstStructure with configuration options
@@ -109,15 +109,15 @@ static gboolean video_convertor_compute_resample (GstVideoConvertor * convert);
  * Create a new converter object to convert between @in_info and @out_info
  * with @config.
  *
- * Returns: a #GstVideoConvertor or %NULL if conversion is not possible.
+ * Returns: a #GstVideoConverter or %NULL if conversion is not possible.
  *
  * Since: 1.6
  */
-GstVideoConvertor *
-gst_video_convertor_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
+GstVideoConverter *
+gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
     GstStructure * config)
 {
-  GstVideoConvertor *convert;
+  GstVideoConverter *convert;
   gint width;
 
   g_return_val_if_fail (in_info != NULL, NULL);
@@ -134,7 +134,7 @@ gst_video_convertor_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   g_return_val_if_fail (in_info->interlace_mode == out_info->interlace_mode,
       NULL);
 
-  convert = g_malloc0 (sizeof (GstVideoConvertor));
+  convert = g_malloc0 (sizeof (GstVideoConverter));
 
   convert->in_info = *in_info;
   convert->out_info = *out_info;
@@ -142,12 +142,12 @@ gst_video_convertor_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   convert->width = GST_VIDEO_INFO_WIDTH (in_info);
   convert->height = GST_VIDEO_INFO_HEIGHT (in_info);
 
-  if (!video_convertor_lookup_fastpath (convert)) {
-    convert->convert = video_convertor_generic;
-    if (!video_convertor_compute_matrix (convert))
+  if (!video_converter_lookup_fastpath (convert)) {
+    convert->convert = video_converter_generic;
+    if (!video_converter_compute_matrix (convert))
       goto no_convert;
 
-    if (!video_convertor_compute_resample (convert))
+    if (!video_converter_compute_resample (convert))
       goto no_convert;
   }
 
@@ -157,32 +157,32 @@ gst_video_convertor_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
 
   /* default config */
-  convert->config = gst_structure_new ("GstVideoConvertor",
+  convert->config = gst_structure_new ("GstVideoConverter",
       "dither", GST_TYPE_VIDEO_DITHER_METHOD, GST_VIDEO_DITHER_NONE, NULL);
 
   if (config)
-    gst_video_convertor_set_config (convert, config);
+    gst_video_converter_set_config (convert, config);
 
   return convert;
 
   /* ERRORS */
 no_convert:
   {
-    gst_video_convertor_free (convert);
+    gst_video_converter_free (convert);
     return NULL;
   }
 }
 
 /**
- * gst_video_convertor_free:
- * @convert: a #GstVideoConvertor
+ * gst_video_converter_free:
+ * @convert: a #GstVideoConverter
  *
  * Free @convert
  *
  * Since: 1.6
  */
 void
-gst_video_convertor_free (GstVideoConvertor * convert)
+gst_video_converter_free (GstVideoConverter * convert)
 {
   gint i;
 
@@ -202,7 +202,7 @@ gst_video_convertor_free (GstVideoConvertor * convert)
 }
 
 static void
-video_dither_verterr (GstVideoConvertor * convert, guint16 * pixels, int j)
+video_dither_verterr (GstVideoConverter * convert, guint16 * pixels, int j)
 {
   int i;
   guint16 *errline = convert->errline;
@@ -218,7 +218,7 @@ video_dither_verterr (GstVideoConvertor * convert, guint16 * pixels, int j)
 }
 
 static void
-video_dither_halftone (GstVideoConvertor * convert, guint16 * pixels, int j)
+video_dither_halftone (GstVideoConverter * convert, guint16 * pixels, int j)
 {
   int i;
   static guint16 halftone[8][8] = {
@@ -242,15 +242,15 @@ video_dither_halftone (GstVideoConvertor * convert, guint16 * pixels, int j)
 }
 
 /**
- * gst_video_convertor_set_config:
- * @convert: a #GstVideoConvertor
+ * gst_video_converter_set_config:
+ * @convert: a #GstVideoConverter
  * @config: (transfer full): a #GstStructure
  *
  * Set @config as extra configuraion for @convert.
  *
  * If the parameters in @config can not be set exactly, this function returns
  * %FALSE and will try to update as much state as possible. The new state can
- * then be retrieved and refined with gst_video_convertor_get_config().
+ * then be retrieved and refined with gst_video_converter_get_config().
  *
  * The config is a GstStructure that can contain the the following fields:
  *
@@ -262,7 +262,7 @@ video_dither_halftone (GstVideoConvertor * convert, guint16 * pixels, int j)
  * Since: 1.6
  */
 gboolean
-gst_video_convertor_set_config (GstVideoConvertor * convert,
+gst_video_converter_set_config (GstVideoConverter * convert,
     GstStructure * config)
 {
   gint dither;
@@ -301,16 +301,16 @@ gst_video_convertor_set_config (GstVideoConvertor * convert,
 }
 
 /**
- * gst_video_convertor_get_config:
- * @@convert: a #GstVideoConvertor
+ * gst_video_converter_get_config:
+ * @@convert: a #GstVideoConverter
  *
  * Get the current configuration of @convert.
  *
  * Returns: a #GstStructure that remains valid for as long as @convert is valid
- *   or until gst_video_convertor_set_config() is called.
+ *   or until gst_video_converter_set_config() is called.
  */
 const GstStructure *
-gst_video_convertor_get_config (GstVideoConvertor * convert)
+gst_video_converter_get_config (GstVideoConverter * convert)
 {
   g_return_val_if_fail (convert != NULL, NULL);
 
@@ -318,8 +318,8 @@ gst_video_convertor_get_config (GstVideoConvertor * convert)
 }
 
 /**
- * gst_video_convertor_frame:
- * @convert: a #GstVideoConvertor
+ * gst_video_converter_frame:
+ * @convert: a #GstVideoConverter
  * @dest: a #GstVideoFrame
  * @src: a #GstVideoFrame
  *
@@ -328,7 +328,7 @@ gst_video_convertor_get_config (GstVideoConvertor * convert)
  * Since: 1.6
  */
 void
-gst_video_convertor_frame (GstVideoConvertor * convert,
+gst_video_converter_frame (GstVideoConverter * convert,
     GstVideoFrame * dest, const GstVideoFrame * src)
 {
   g_return_if_fail (convert != NULL);
@@ -342,7 +342,7 @@ gst_video_convertor_frame (GstVideoConvertor * convert,
 #define SCALE_F  ((float) (1 << SCALE))
 
 static void
-video_convertor_matrix8 (GstVideoConvertor * convert, gpointer pixels)
+video_converter_matrix8 (GstVideoConverter * convert, gpointer pixels)
 {
   int i;
   int r, g, b;
@@ -368,7 +368,7 @@ video_convertor_matrix8 (GstVideoConvertor * convert, gpointer pixels)
 }
 
 static void
-video_convertor_matrix16 (GstVideoConvertor * convert, gpointer pixels)
+video_converter_matrix16 (GstVideoConverter * convert, gpointer pixels)
 {
   int i;
   int r, g, b;
@@ -507,7 +507,7 @@ color_matrix_RGB_to_YCbCr (ColorMatrix * m, double Kr, double Kb)
 }
 
 static gboolean
-video_convertor_compute_matrix (GstVideoConvertor * convert)
+video_converter_compute_matrix (GstVideoConverter * convert)
 {
   GstVideoInfo *in_info, *out_info;
   ColorMatrix dst;
@@ -547,7 +547,7 @@ video_convertor_compute_matrix (GstVideoConvertor * convert)
   /* calculate intermediate format for the matrix. When unpacking, we expand
    * input to 16 when one of the inputs is 16 bits */
   if (convert->in_bits == 16 || convert->out_bits == 16) {
-    convert->matrix = video_convertor_matrix16;
+    convert->matrix = video_converter_matrix16;
 
     if (GST_VIDEO_FORMAT_INFO_IS_RGB (suinfo))
       suinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_ARGB64);
@@ -559,7 +559,7 @@ video_convertor_compute_matrix (GstVideoConvertor * convert)
     else
       duinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_AYUV64);
   } else {
-    convert->matrix = video_convertor_matrix8;
+    convert->matrix = video_converter_matrix8;
   }
 
   color_matrix_set_identity (&dst);
@@ -632,7 +632,7 @@ no_pack_func:
 }
 
 static void
-alloc_tmplines (GstVideoConvertor * convert, guint lines, gint width)
+alloc_tmplines (GstVideoConverter * convert, guint lines, gint width)
 {
   gint i;
 
@@ -643,7 +643,7 @@ alloc_tmplines (GstVideoConvertor * convert, guint lines, gint width)
 }
 
 static gboolean
-video_convertor_compute_resample (GstVideoConvertor * convert)
+video_converter_compute_resample (GstVideoConverter * convert)
 {
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *sfinfo, *dfinfo;
@@ -739,7 +739,7 @@ convert_to8 (gpointer line, gint width)
       frame->info.chroma_site, line, width);
 
 static void
-video_convertor_generic (GstVideoConvertor * convert, GstVideoFrame * dest,
+video_converter_generic (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   int j, k;
@@ -913,7 +913,7 @@ video_convertor_generic (GstVideoConvertor * convert, GstVideoFrame * dest,
 
 
 static void
-convert_I420_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_I420_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   int i;
@@ -941,7 +941,7 @@ convert_I420_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_UYVY (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_I420_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   int i;
@@ -969,7 +969,7 @@ convert_I420_UYVY (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_I420_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   int i;
@@ -996,7 +996,7 @@ convert_I420_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_I420_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1018,7 +1018,7 @@ convert_I420_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_I420_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1046,7 +1046,7 @@ convert_I420_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_YUY2_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_YUY2_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   int i;
@@ -1073,7 +1073,7 @@ convert_YUY2_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_YUY2_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_YUY2_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1085,7 +1085,7 @@ convert_YUY2_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_YUY2_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_YUY2_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1099,7 +1099,7 @@ convert_YUY2_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_YUY2_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_YUY2_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1114,7 +1114,7 @@ convert_YUY2_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
 
 
 static void
-convert_UYVY_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_UYVY_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   int i;
@@ -1141,7 +1141,7 @@ convert_UYVY_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_UYVY_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_UYVY_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1153,7 +1153,7 @@ convert_UYVY_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_UYVY_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_UYVY_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1165,7 +1165,7 @@ convert_UYVY_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_UYVY_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_UYVY_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1179,7 +1179,7 @@ convert_UYVY_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_UYVY_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_UYVY_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1193,7 +1193,7 @@ convert_UYVY_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_AYUV_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1210,7 +1210,7 @@ convert_AYUV_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_AYUV_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1223,7 +1223,7 @@ convert_AYUV_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_UYVY (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_AYUV_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1236,7 +1236,7 @@ convert_AYUV_UYVY (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_AYUV_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1251,7 +1251,7 @@ convert_AYUV_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_AYUV_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1265,7 +1265,7 @@ convert_AYUV_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y42B_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1293,7 +1293,7 @@ convert_Y42B_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y42B_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1313,7 +1313,7 @@ convert_Y42B_Y444 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y42B_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1327,7 +1327,7 @@ convert_Y42B_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_UYVY (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y42B_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1341,7 +1341,7 @@ convert_Y42B_UYVY (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y42B_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1356,7 +1356,7 @@ convert_Y42B_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y444_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1384,7 +1384,7 @@ convert_Y444_I420 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y444_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1404,7 +1404,7 @@ convert_Y444_Y42B (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y444_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1418,7 +1418,7 @@ convert_Y444_YUY2 (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_UYVY (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y444_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1432,7 +1432,7 @@ convert_Y444_UYVY (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_Y444_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1447,7 +1447,7 @@ convert_Y444_AYUV (GstVideoConvertor * convert, GstVideoFrame * dest,
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 static void
-convert_AYUV_ARGB (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_AYUV_ARGB (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1461,7 +1461,7 @@ convert_AYUV_ARGB (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_BGRA (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_AYUV_BGRA (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1475,7 +1475,7 @@ convert_AYUV_BGRA (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_ABGR (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_AYUV_ABGR (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1489,7 +1489,7 @@ convert_AYUV_ABGR (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_RGBA (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_AYUV_RGBA (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   gint width = convert->width;
@@ -1503,7 +1503,7 @@ convert_AYUV_RGBA (GstVideoConvertor * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_BGRA (GstVideoConvertor * convert, GstVideoFrame * dest,
+convert_I420_BGRA (GstVideoConverter * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   int i;
@@ -1535,7 +1535,7 @@ typedef struct
   gboolean keeps_interlaced;
   gboolean needs_color_matrix;
   gint width_align, height_align;
-  void (*convert) (GstVideoConvertor * convert, GstVideoFrame * dest,
+  void (*convert) (GstVideoConverter * convert, GstVideoFrame * dest,
       const GstVideoFrame * src);
 } VideoTransform;
 
@@ -1704,7 +1704,7 @@ static const VideoTransform transforms[] = {
 };
 
 static gboolean
-video_convertor_lookup_fastpath (GstVideoConvertor * convert)
+video_converter_lookup_fastpath (GstVideoConverter * convert)
 {
   int i;
   GstVideoFormat in_format, out_format;
@@ -1735,7 +1735,7 @@ video_convertor_lookup_fastpath (GstVideoConvertor * convert)
         (transforms[i].height_align & height) == 0) {
       GST_DEBUG ("using fastpath");
       if (transforms[i].needs_color_matrix)
-        if (!video_convertor_compute_matrix (convert))
+        if (!video_converter_compute_matrix (convert))
           goto no_convert;
       convert->convert = transforms[i].convert;
       alloc_tmplines (convert, 1, GST_VIDEO_INFO_WIDTH (&convert->in_info));

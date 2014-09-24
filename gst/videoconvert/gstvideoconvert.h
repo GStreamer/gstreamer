@@ -46,7 +46,7 @@ typedef struct _GstVideoConvertClass GstVideoConvertClass;
 struct _GstVideoConvert {
   GstVideoFilter element;
 
-  GstVideoConvertor *convert;
+  GstVideoConverter *convert;
   GstVideoDitherMethod dither;
 };
 

@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_VIDEO_CONVERTOR_H__
-#define __GST_VIDEO_CONVERTOR_H__
+#ifndef __GST_VIDEO_CONVERTER_H__
+#define __GST_VIDEO_CONVERTER_H__
 
 #include <gst/video/video.h>
 
@@ -30,20 +30,20 @@ typedef enum {
   GST_VIDEO_DITHER_HALFTONE
 } GstVideoDitherMethod;
 
-typedef struct _GstVideoConvertor GstVideoConvertor;
+typedef struct _GstVideoConverter GstVideoConverter;
 
-GstVideoConvertor *  gst_video_convertor_new            (GstVideoInfo *in_info,
+GstVideoConverter *  gst_video_converter_new            (GstVideoInfo *in_info,
                                                          GstVideoInfo *out_info,
                                                          GstStructure *config);
-void                 gst_video_convertor_free           (GstVideoConvertor * convert);
+void                 gst_video_converter_free           (GstVideoConverter * convert);
 
-gboolean             gst_video_convertor_set_config     (GstVideoConvertor * convert, GstStructure *config);
-const GstStructure * gst_video_convertor_get_config     (GstVideoConvertor * convert);
+gboolean             gst_video_converter_set_config     (GstVideoConverter * convert, GstStructure *config);
+const GstStructure * gst_video_converter_get_config     (GstVideoConverter * convert);
 
-void                 gst_video_convertor_frame          (GstVideoConvertor * convert,
+void                 gst_video_converter_frame          (GstVideoConverter * convert,
                                                          GstVideoFrame *dest, const GstVideoFrame *src);
 
 
 G_END_DECLS
 
-#endif /* __GST_VIDEO_CONVERTOR_H__ */
+#endif /* __GST_VIDEO_CONVERTER_H__ */

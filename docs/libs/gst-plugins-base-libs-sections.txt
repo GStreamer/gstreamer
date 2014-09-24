@@ -2408,13 +2408,13 @@ GST_VIDEO_TILE_MAKE_STRIDE
 GST_VIDEO_TILE_X_TILES
 GST_VIDEO_TILE_Y_TILES
 
-#video-convertor.h
+#video-converter.h
 <SUBSECTION>
-gst_video_convertor_new
-gst_video_convertor_free
-gst_video_convertor_get_config
-gst_video_convertor_set_config
-gst_video_convertor_frame
+gst_video_converter_new
+gst_video_converter_free
+gst_video_converter_get_config
+gst_video_converter_set_config
+gst_video_converter_frame
 <SUBSECTION Standard>
 gst_video_dither_method_get_type
 GST_TYPE_VIDEO_DITHER_METHOD
