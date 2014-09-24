@@ -90,24 +90,6 @@ static gboolean gst_video_convert_set_info (GstVideoFilter * filter,
 static GstFlowReturn gst_video_convert_transform_frame (GstVideoFilter * filter,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame);
 
-static GType
-dither_method_get_type (void)
-{
-  static GType gtype = 0;
-
-  if (gtype == 0) {
-    static const GEnumValue values[] = {
-      {DITHER_NONE, "No dithering (default)", "none"},
-      {DITHER_VERTERR, "Vertical error propogation", "verterr"},
-      {DITHER_HALFTONE, "Half-tone", "halftone"},
-      {0, NULL, NULL}
-    };
-
-    gtype = g_enum_register_static ("GstVideoConvertDitherMethod", values);
-  }
-  return gtype;
-}
-
 /* copies the given caps */
 static GstCaps *
 gst_video_convert_caps_remove_format_info (GstCaps * caps)
@@ -419,7 +401,7 @@ gst_video_convert_set_info (GstVideoFilter * filter,
   space = GST_VIDEO_CONVERT_CAST (filter);
 
   if (space->convert) {
-    videoconvert_convert_free (space->convert);
+    gst_video_convertor_free (space->convert);
     space->convert = NULL;
   }
 
@@ -436,7 +418,10 @@ gst_video_convert_set_info (GstVideoFilter * filter,
   if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
 
-  space->convert = videoconvert_convert_new (in_info, out_info);
+
+  space->convert = gst_video_convertor_new (in_info, out_info,
+      gst_structure_new ("GstVideoConvertConfig",
+          "dither", GST_TYPE_VIDEO_DITHER_METHOD, space->dither, NULL));
   if (space->convert == NULL)
     goto no_convert;
 
@@ -464,7 +449,7 @@ gst_video_convert_finalize (GObject * obj)
   GstVideoConvert *space = GST_VIDEO_CONVERT (obj);
 
   if (space->convert) {
-    videoconvert_convert_free (space->convert);
+    gst_video_convertor_free (space->convert);
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
@@ -511,7 +496,7 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DITHER,
       g_param_spec_enum ("dither", "Dither", "Apply dithering while converting",
-          dither_method_get_type (), DITHER_NONE,
+          gst_video_dither_method_get_type (), 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -569,9 +554,7 @@ gst_video_convert_transform_frame (GstVideoFilter * filter,
       GST_VIDEO_INFO_NAME (&filter->in_info),
       GST_VIDEO_INFO_NAME (&filter->out_info));
 
-  videoconvert_convert_set_dither (space->convert, space->dither);
-
-  videoconvert_convert_convert (space->convert, out_frame, in_frame);
+  gst_video_convertor_frame (space->convert, out_frame, in_frame);
 
   return GST_FLOW_OK;
 }

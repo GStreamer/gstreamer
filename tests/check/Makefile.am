@@ -140,8 +140,7 @@ check_adder =
 endif
 
 if HAVE_ORC
-check_orc = orc/video orc/audio orc/adder orc/audioconvert orc/volume orc/videoscale orc/videotestsrc \
-	    orc/videoconvert
+check_orc = orc/video orc/audio orc/adder orc/audioconvert orc/volume orc/videoscale orc/videotestsrc
 else
 check_orc =
 endif
@@ -638,9 +637,6 @@ nodist_orc_videoscale_SOURCES = orc/videoscale.c
 orc_videotestsrc_CFLAGS = $(ORC_CFLAGS)
 orc_videotestsrc_LDADD = $(ORC_LIBS) -lorc-test-0.4
 nodist_orc_videotestsrc_SOURCES = orc/videotestsrc.c
-orc_videoconvert_CFLAGS = $(ORC_CFLAGS)
-orc_videoconvert_LDADD = $(ORC_LIBS) -lorc-test-0.4
-nodist_orc_videoconvert_SOURCES = orc/videoconvert.c
 
 orc/video.c: $(top_srcdir)/gst-libs/gst/video/video-orc.orc
 	$(MKDIR_P) orc/
@@ -667,10 +663,6 @@ orc/videoscale.c: $(top_srcdir)/gst/videoscale/gstvideoscaleorc.orc
 	$(ORCC) --test -o $@ $<
 
 orc/videotestsrc.c: $(top_srcdir)/gst/videotestsrc/gstvideotestsrcorc.orc
-	$(MKDIR_P) orc/
-	$(ORCC) --test -o $@ $<
-
-orc/videoconvert.c: $(top_srcdir)/gst/videoconvert/gstvideoconvertorc.orc
 	$(MKDIR_P) orc/
 	$(ORCC) --test -o $@ $<
 
