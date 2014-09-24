@@ -284,6 +284,9 @@ gst_chop_my_data_process (GstChopMyData * chopmydata, gboolean flush)
     buffer =
         gst_adapter_take_buffer (chopmydata->adapter, chopmydata->next_size);
 
+    GST_BUFFER_PTS (buffer) = gst_adapter_prev_pts (chopmydata->adapter, NULL);
+    GST_BUFFER_DTS (buffer) = gst_adapter_prev_dts (chopmydata->adapter, NULL);
+
     chopmydata->next_size = 0;
 
     ret = gst_pad_push (chopmydata->srcpad, buffer);
