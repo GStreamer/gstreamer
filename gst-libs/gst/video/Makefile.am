@@ -1,13 +1,10 @@
 # variables used for enum generation
-ORC_SOURCE=bad-video-orc
-include $(top_srcdir)/common/orc.mak
-
 lib_LTLIBRARIES = libgstbadvideo-@GST_API_VERSION@.la
 
 CLEANFILES =
 
 libgstbadvideo_@GST_API_VERSION@_la_SOURCES = \
-	videoconvert.c gstvideoaggregator.c gstcms.c
+	gstvideoaggregator.c
 
 nodist_libgstbadvideo_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
@@ -23,4 +20,4 @@ libgstbadvideo_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(ORC_
 	$(top_builddir)/gst-libs/gst/base/libgstbadbase-$(GST_API_VERSION).la $(LIBM)
 libgstbadvideo_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
-noinst_HEADERS = gstcms.h videoconvert.h gstvideoaggregatorpad.h gstvideoaggregator.h
+noinst_HEADERS = gstvideoaggregatorpad.h gstvideoaggregator.h

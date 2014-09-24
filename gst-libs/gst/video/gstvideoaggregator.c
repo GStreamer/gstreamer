@@ -40,8 +40,6 @@
 
 #include <string.h>
 
-#include "videoconvert.h"
-
 #include "gstvideoaggregator.h"
 #include "gstvideoaggregatorpad.h"
 
@@ -66,7 +64,7 @@ enum
 struct _GstVideoAggregatorPadPrivate
 {
   /* Converter, if NULL no conversion is done */
-  VideoConvert *convert;
+  GstVideoConverter *convert;
 };
 
 G_DEFINE_TYPE (GstVideoAggregatorPad, gst_videoaggregator_pad,
@@ -139,7 +137,7 @@ gst_videoaggregator_pad_finalize (GObject * o)
   GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (o);
 
   if (vaggpad->priv->convert)
-    badvideoconvert_convert_free (vaggpad->priv->convert);
+    gst_video_converter_free (vaggpad->priv->convert);
   vaggpad->priv->convert = NULL;
 
   G_OBJECT_CLASS (gst_videoaggregator_pad_parent_class)->finalize (o);
@@ -434,7 +432,7 @@ gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
       continue;
 
     if (pad->priv->convert)
-      badvideoconvert_convert_free (pad->priv->convert);
+      gst_video_converter_free (pad->priv->convert);
 
     pad->priv->convert = NULL;
 
@@ -447,7 +445,8 @@ gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
       GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
           GST_VIDEO_INFO_FORMAT (&pad->info),
           GST_VIDEO_INFO_FORMAT (&best_info));
-      pad->priv->convert = badvideoconvert_convert_new (&pad->info, &best_info);
+      pad->priv->convert =
+          gst_video_converter_new (&pad->info, &best_info, NULL);
       pad->need_conversion_update = TRUE;
       if (!pad->priv->convert) {
         g_free (colorimetry);
@@ -1058,8 +1057,7 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
         return FALSE;
       }
 
-      badvideoconvert_convert_convert (pad->priv->convert, converted_frame,
-          frame);
+      gst_video_converter_frame (pad->priv->convert, converted_frame, frame);
       pad->converted_buffer = converted_buf;
       gst_video_frame_unmap (frame);
     } else {
