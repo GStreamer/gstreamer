@@ -243,3 +243,74 @@ static const PrimariesInfo primaries[] = {
       0.049}
 };
 #endif
+
+/**
+ * gst_video_color_matrix_get_Kr_Kb:
+ * @matrix: a #GstVideoColorMatrix
+ * @Kr: result red channel coefficient
+ * @Kb: result blue channel coefficient
+ *
+ * Get the coefficients used to convert between Y'PbPr and R'G'B' using @matrix.
+ *
+ * When:
+ *
+ * |[
+ *   0.0 <= [Y',R',G',B'] <= 1.0)
+ *   (-0.5 <= [Pb,Pr] <= 0.5)
+ * ]|
+ *
+ * the general conversion is given by:
+ *
+ * |[
+ *   Y' = Kr*R' + (1-Kr-Kb)*G' + Kb*B'
+ *   Pb = (B'-Y')/(2*(1-Kb))
+ *   Pr = (R'-Y')/(2*(1-Kr))
+ * ]|
+ *
+ * and the other way around:
+ *
+ * |[
+ *   R' = Y' + Cr*2*(1-Kr)
+ *   G' = Y' - Cb*2*(1-Kb)*Kb/(1-Kr-Kb) - Cr*2*(1-Kr)*Kr/(1-Kr-Kb)
+ *   B' = Y' + Cb*2*(1-Kb)
+ * ]|
+ *
+ * Returns: TRUE if @matrix was a YUV color format and @Kr and @Kb contain valid
+ *    values.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr,
+    gdouble * Kb)
+{
+  gboolean res = TRUE;
+
+  switch (matrix) {
+      /* RGB */
+    default:
+    case GST_VIDEO_COLOR_MATRIX_RGB:
+      res = FALSE;
+      break;
+      /* YUV */
+    case GST_VIDEO_COLOR_MATRIX_FCC:
+      *Kr = 0.30;
+      *Kb = 0.11;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      *Kr = 0.2126;
+      *Kb = 0.0722;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      *Kr = 0.2990;
+      *Kb = 0.1140;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+      *Kr = 0.212;
+      *Kb = 0.087;
+      break;
+  }
+  GST_DEBUG ("matrix: %d, Kr %f, Kb %f", matrix, *Kr, *Kb);
+
+  return res;
+}

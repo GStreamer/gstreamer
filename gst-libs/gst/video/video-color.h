@@ -63,6 +63,8 @@ typedef enum {
   GST_VIDEO_COLOR_MATRIX_SMPTE240M
 } GstVideoColorMatrix;
 
+gboolean gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr, gdouble * Kb);
+
 /**
  * GstVideoTransferFunction:
  * @GST_VIDEO_TRANSFER_UNKNOWN: unknown transfer function

@@ -183,39 +183,6 @@ videoconvert_convert_matrix16 (VideoConvert * convert, gpointer pixels)
 }
 
 static gboolean
-get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr, gdouble * Kb)
-{
-  gboolean res = TRUE;
-
-  switch (matrix) {
-      /* RGB */
-    default:
-    case GST_VIDEO_COLOR_MATRIX_RGB:
-      res = FALSE;
-      break;
-      /* YUV */
-    case GST_VIDEO_COLOR_MATRIX_FCC:
-      *Kr = 0.30;
-      *Kb = 0.11;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT709:
-      *Kr = 0.2126;
-      *Kb = 0.0722;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT601:
-      *Kr = 0.2990;
-      *Kb = 0.1140;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
-      *Kr = 0.212;
-      *Kb = 0.087;
-      break;
-  }
-  GST_DEBUG ("matrix: %d, Kr %f, Kb %f", matrix, *Kr, *Kb);
-  return res;
-}
-
-static gboolean
 videoconvert_convert_compute_matrix (VideoConvert * convert)
 {
   GstVideoInfo *in_info, *out_info;
@@ -283,7 +250,7 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
       1 / ((float) scale[1]), 1 / ((float) scale[2]));
 
   /* 2. bring components to R'G'B' space */
-  if (get_Kr_Kb (in_info->colorimetry.matrix, &Kr, &Kb))
+  if (gst_video_color_matrix_get_Kr_Kb (in_info->colorimetry.matrix, &Kr, &Kb))
     color_matrix_YCbCr_to_RGB (&dst, Kr, Kb);
 
   /* 3. inverse transfer function. R'G'B' to linear RGB */
@@ -295,7 +262,7 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   /* 6. transfer function. linear RGB to R'G'B' */
 
   /* 7. bring components to YCbCr space */
-  if (get_Kr_Kb (out_info->colorimetry.matrix, &Kr, &Kb))
+  if (gst_video_color_matrix_get_Kr_Kb (out_info->colorimetry.matrix, &Kr, &Kb))
     color_matrix_RGB_to_YCbCr (&dst, Kr, Kb);
 
   /* 8, bring color components to nominal range */

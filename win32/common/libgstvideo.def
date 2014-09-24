@@ -71,6 +71,7 @@ EXPORTS
 	gst_video_codec_state_get_type
 	gst_video_codec_state_ref
 	gst_video_codec_state_unref
+	gst_video_color_matrix_get_Kr_Kb
 	gst_video_color_matrix_get_type
 	gst_video_color_primaries_get_type
 	gst_video_color_range_get_type
