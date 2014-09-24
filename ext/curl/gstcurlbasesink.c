@@ -1134,7 +1134,9 @@ gst_curl_base_sink_transfer_setup_unlocked (GstCurlBaseSink * sink)
   }
 
   if (!gst_curl_base_sink_transfer_set_options_unlocked (sink)) {
-    sink->error = g_strdup ("failed to setup curl easy handle");
+    if (!sink->error) {
+      sink->error = g_strdup ("failed to setup curl easy handle");
+    }
     return FALSE;
   }
 
