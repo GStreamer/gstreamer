@@ -74,6 +74,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapisink);
 #define GST_CAT_DEFAULT gst_debug_vaapisink
 
 /* Default template */
+/* *INDENT-OFF* */
 static const char gst_vaapisink_sink_caps_str[] =
 #if GST_CHECK_VERSION(1,1,0)
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
@@ -89,6 +90,7 @@ static const char gst_vaapisink_sink_caps_str[] =
 #endif
     GST_VAAPI_SURFACE_CAPS;
 #endif
+/* *INDENT-ON* */
 
 static GstStaticPadTemplate gst_vaapisink_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -109,7 +111,7 @@ static void
 gst_vaapisink_color_balance_iface_init (GstColorBalanceInterface * iface);
 
 static void
-gst_vaapisink_navigation_iface_init (GstNavigationInterface *iface);
+gst_vaapisink_navigation_iface_init (GstNavigationInterface * iface);
 
 G_DEFINE_TYPE_WITH_CODE (GstVaapiSink,
     gst_vaapisink,
@@ -354,8 +356,7 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
     /* Track MousePointer interaction */
     for (;;) {
       gst_vaapi_display_lock (display);
-      has_events = XCheckWindowEvent (x11_dpy, x11_win,
-          PointerMotionMask, &e);
+      has_events = XCheckWindowEvent (x11_dpy, x11_win, PointerMotionMask, &e);
       gst_vaapi_display_unlock (display);
       if (!has_events)
         break;
@@ -373,7 +374,7 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
     if (pointer_moved) {
       gst_vaapi_display_lock (display);
       gst_navigation_send_mouse_event (GST_NAVIGATION (sink),
-        "mouse-move", 0, pointer_x, pointer_y);
+          "mouse-move", 0, pointer_x, pointer_y);
       gst_vaapi_display_unlock (display);
     }
 
@@ -383,8 +384,8 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
       const char *key_str = NULL;
       gst_vaapi_display_lock (display);
       has_events = XCheckWindowEvent (x11_dpy, x11_win,
-          KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask
-          , &e);
+          KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask,
+          &e);
       gst_vaapi_display_unlock (display);
       if (!has_events)
         break;
@@ -392,11 +393,12 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
       switch (e.type) {
         case ButtonPress:
           gst_navigation_send_mouse_event (GST_NAVIGATION (sink),
-            "mouse-button-press", e.xbutton.button, e.xbutton.x, e.xbutton.y);
+              "mouse-button-press", e.xbutton.button, e.xbutton.x, e.xbutton.y);
           break;
         case ButtonRelease:
           gst_navigation_send_mouse_event (GST_NAVIGATION (sink),
-            "mouse-button-release", e.xbutton.button, e.xbutton.x, e.xbutton.y);
+              "mouse-button-release", e.xbutton.button, e.xbutton.x,
+              e.xbutton.y);
           break;
         case KeyPress:
         case KeyRelease:
@@ -409,7 +411,7 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
           }
           gst_vaapi_display_unlock (display);
           gst_navigation_send_key_event (GST_NAVIGATION (sink),
-            e.type == KeyPress ? "key-press" : "key-release", key_str);
+              e.type == KeyPress ? "key-press" : "key-release", key_str);
           break;
         default:
           break;
@@ -449,14 +451,9 @@ gst_vaapisink_x11_pre_start_event_thread (GstVaapiSink * sink)
 {
   GstVaapiDisplayX11 *const display =
       GST_VAAPI_DISPLAY_X11 (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
-  static const int x11_event_mask =
-    (KeyPressMask         |
-     KeyReleaseMask       |
-     ButtonPressMask      |
-     ButtonReleaseMask    |
-     PointerMotionMask    |
-     ExposureMask         |
-     StructureNotifyMask);
+  static const int x11_event_mask = (KeyPressMask | KeyReleaseMask |
+      ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+      ExposureMask | StructureNotifyMask);
 
   if (sink->window) {
     XSelectInput (gst_vaapi_display_x11_get_display (display),
@@ -846,7 +843,6 @@ gst_vaapisink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure)
 {
   GstVaapiSink *const sink = GST_VAAPISINK (navigation);
-  GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (sink);
   GstPad *peer;
 
   if ((peer = gst_pad_get_peer (GST_VAAPI_PLUGIN_BASE_SINK_PAD (sink)))) {
@@ -871,7 +867,7 @@ gst_vaapisink_navigation_send_event (GstNavigation * navigation,
       gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
           (gdouble) x * xscale, NULL);
     }
-   if (gst_structure_get_double (structure, "pointer_y", &y)) {
+    if (gst_structure_get_double (structure, "pointer_y", &y)) {
       y = MIN (y, disp_rect->y + disp_rect->height);
       y = MAX (y - disp_rect->y, 0);
       gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
