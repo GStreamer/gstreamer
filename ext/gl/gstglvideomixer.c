@@ -611,12 +611,14 @@ gst_gl_video_mixer_callback (gpointer stuff)
     in_width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
     in_height = GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
 
-    if (!frame->texture || in_width <= 0 || in_height <= 0) {
-      GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
-          frame->texture, frame, in_width, in_height);
+    if (!frame->texture || in_width <= 0 || in_height <= 0
+        || pad->alpha == 0.0f) {
+      GST_DEBUG ("skipping texture:%u frame:%p width:%u height:%u alpha:%f",
+          frame->texture, frame, in_width, in_height, pad->alpha);
       count++;
       continue;
     }
+
     in_tex = frame->texture;
     pad_width = pad->width <= 0 ? in_width : pad->width;
     pad_height = pad->height <= 0 ? in_height : pad->height;
