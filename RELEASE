@@ -1,6 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.4.2
-
+Release notes for GStreamer Bad Plugins 1.4.3
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -23,8 +22,6 @@ The stable 1.4.x release series is API and ABI compatible with 1.0.x and
 any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
-
-
 
 
 "That an accusation?"
@@ -75,21 +72,7 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 735861 : dataurisrc: make src thread safe
-      * 736090 : aiffparse: duplicate else-if condition
-      * 736390 : tsdemux: plug for a memory leak
-      * 736426 : mpegpsmux: memory leak with h264/avc stream
-      * 736474 : vc1parse: malformed sequence layer header and STRUCT_C
-      * 736490 : tsdemux: fix overflow of packet_length field of PESHeader
-      * 736729 : glmixer: do not leak pool in error cases
-      * 736730 : gltestsrc: do not leak pool in error cases
-      * 736731 : openni2src: do not leak pool
-      * 736732 : glfilter: do not leak pool in error cases
-      * 736733 : vdpdecoder: do not leak pool
-      * 736735 : waylandsink: do not leak buffer pool in error case
-      * 736750 : vc1parse: fix sequence-layer/frame-layer endianness
-      * 736871 : codecparsers_vc1: sequence-layer parser is broken due to endianness issue.
-      * 736919 : hlsdemux: attempt to unlock an already unlocked mutex in gst_hls_demux_change_playlist
+      * 736951 : vc1parse: initialize sent_codec_tag before using it
 
 ==== Download ====
 
@@ -127,12 +110,4 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Aurélien Zanelli
-      * Belozorov Semen
-      * Edward Hervey
-      * Jesper Larsen
-      * Ognyan Tonchev
-      * Philippe Normand
-      * Sebastian Dröge
-      * Tim-Philipp Müller
-      * Vineeth T M
  
