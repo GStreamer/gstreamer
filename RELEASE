@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.4.2
+Release notes for GStreamer Base Plugins 1.4.3
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -70,22 +70,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 732908 : audioresample: skips samples unless input buffers have correct size
-      * 727255 : playbin: filter out buffering messages when switching URI and the previous URI is still playing
-      * 729811 : output-selector: test example in gstreamer plugin base is giving " Internal data flow error " 
-      * 735569 : rtspconnection: Crash due to no protection of watchs readsrc
-      * 735748 : playbin: can't play an avi file in totem with audio-filter=scaletempo
-      * 735800 : textoverlay: Two textoverlay in sequence fail to negotiate (regression)
-      * 735844 : basetextoverlay/pango: overlay negotiation fails when it should not
-      * 735952 : videorate: GstStructure refcount critical message
-      * 736071 : audiobasesink: Don't hold object lock while calling into other objects like the clock
-      * 736118 : videofilter: The buffer is not writable in transform_frame_ip
-      * 736739 : audiocdsrc: do not leak uid after parsing TOC select event
-      * 736779 : typefind: h265 IRAP picture always true
-      * 736788 : audiodecoder: leaks events
-      * 736796 : videoencoder: do not leak events when flushing them
-      * 736861 : playbin: Reference count bug
-      * 736679 : videodecoder: do not leak pool and allocator in error case
+      * 736969 : queue2: dead lock when buffering
+      * 709868 : Keep still meaningfull pending events on FLUSH_STOP
 
 ==== Download ====
 
@@ -122,15 +108,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andrei Sarakeev
-      * Arnaud Vrac
-      * Garg
-      * George Kiagiadakis
-      * Göran Jönsson
-      * Kipp Cannon
-      * Ognyan Tonchev
-      * Ravi Kiran K N
+      * Jan Schmidt
+      * Sanjay NM
       * Sebastian Dröge
-      * Thiago Santos
-      * Vineeth T M
+      * Tim-Philipp Müller
  
