@@ -181,8 +181,10 @@ export GST_PLUGIN_SCANNER=$GST/gstreamer/libs/gst/helpers/gst-plugin-scanner
 # this still doesn't make it work for the uninstalled case, since man goes
 # look for a man directory "nearby" instead of the directory I'm telling it to
 export MANPATH=$GST/gstreamer/tools:$GST_PREFIX/share/man:$MANPATH
-pythonver=`python -c "import sys; print (sys.version[:3])"`
-export PYTHONPATH=$GST/gst-python:$GST_PREFIX/lib/python$pythonver/site-packages${PYTHONPATH:+:$PYTHONPATH}
+if [ -z "$PYTHON" ]; then PYTHON="python"; fi
+pythonver=`$PYTHON -c "import sys; print (sys.version[:3])"`
+pythonsites=`$PYTHON -c "import site; print(':'.join(site.getsitepackages()))"`
+export PYTHONPATH="${PYTHONPATH}:${pythonsites}:${GST}/gst-python"
 
 # clutter-gst
 export PKG_CONFIG_PATH=$GST/clutter-gst:$PKG_CONFIG_PATH
