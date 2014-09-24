@@ -334,6 +334,8 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 
   gltestsrc->negotiated = TRUE;
 
+  gst_caps_replace (&gltestsrc->out_caps, caps);
+
   return TRUE;
 
 /* ERRORS */
@@ -449,14 +451,20 @@ gst_gl_test_src_is_seekable (GstBaseSrc * psrc)
 static GstFlowReturn
 gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 {
-  GstGLTestSrc *src;
+  GstGLTestSrc *src = GST_GL_TEST_SRC (psrc);
   GstClockTime next_time;
   gint width, height;
   GstVideoFrame out_frame;
-  gboolean out_gl_wrapped = FALSE;
   guint out_tex;
+  gboolean to_download =
+      gst_caps_features_is_equal (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY,
+      gst_caps_get_features (src->out_caps, 0));
+  GstMapFlags out_map_flags = GST_MAP_WRITE;
 
-  src = GST_GL_TEST_SRC (psrc);
+  to_download |= !gst_is_gl_memory (gst_buffer_peek_memory (buffer, 0));
+
+  if (!to_download)
+    out_map_flags |= GST_MAP_GL;
 
   if (G_UNLIKELY (!src->negotiated || !src->context))
     goto not_negotiated;
@@ -476,16 +484,20 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
       src->make_image = gst_gl_test_src_black;
   }
 
-  if (!gst_video_frame_map (&out_frame, &src->out_info, buffer,
-          GST_MAP_WRITE | GST_MAP_GL)) {
+  if (!gst_video_frame_map (&out_frame, &src->out_info, buffer, out_map_flags)) {
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  if (gst_is_gl_memory (out_frame.map[0].memory)) {
+  if (!to_download) {
     out_tex = *(guint *) out_frame.data[0];
   } else {
     GST_INFO ("Output Buffer does not contain correct meta, "
         "attempting to wrap for download");
+
+    if (!src->download)
+      src->download = gst_gl_download_new (src->context);
+
+    gst_gl_download_set_format (src->download, &out_frame.info);
 
     if (!src->out_tex_id) {
       gst_gl_context_gen_texture (src->context, &src->out_tex_id,
@@ -493,12 +505,6 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
           GST_VIDEO_FRAME_HEIGHT (&out_frame));
     }
     out_tex = src->out_tex_id;
-
-    if (!src->download)
-      src->download = gst_gl_download_new (src->context);
-
-    gst_gl_download_set_format (src->download, &out_frame.info);
-    out_gl_wrapped = TRUE;
   }
 
   gst_buffer_replace (&src->buffer, buffer);
@@ -510,7 +516,7 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     goto not_negotiated;
   }
 
-  if (out_gl_wrapped) {
+  if (to_download) {
     if (!gst_gl_download_perform_with_data (src->download, out_tex,
             out_frame.data)) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s",
@@ -570,6 +576,8 @@ static gboolean
 gst_gl_test_src_stop (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
+
+  gst_caps_replace (&src->out_caps, NULL);
 
   if (src->context) {
     if (src->out_tex_id) {

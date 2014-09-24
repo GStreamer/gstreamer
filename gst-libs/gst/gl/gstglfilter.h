@@ -68,6 +68,9 @@ struct _GstGLFilter
 
   GstVideoInfo       in_info;
   GstVideoInfo       out_info;
+
+  GstCaps           *out_caps;
+
   GLuint             fbo;
   GLuint             depthbuffer;
 

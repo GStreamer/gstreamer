@@ -112,6 +112,8 @@ struct _GstGLTestSrc {
     gboolean negotiated;
 
     void (*make_image) (GstGLTestSrc* v, GstBuffer* buffer, gint w, gint h);
+
+    GstCaps *out_caps;
 };
 
 struct _GstGLTestSrcClass {
