@@ -1,9 +1,113 @@
-=== release 1.4.2 ===
+=== release 1.4.3 ===
 
-2014-09-19  Sebastian Dröge <slomo@coaxion.net>
+2014-09-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.2
+	  releasing 1.4.3
+
+2014-06-03 14:23:30 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/elements/gstcapsfilter.c:
+	  capsfilter: Remove EOS event from pending_event list on FLUSH_STOP
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709868
+
+2014-09-22 19:05:32 +0200  Marcin Kolny <marcin.kolny@flytronic.pl>
+
+	* gst/gstdatetime.h:
+	  datetime: added missing include directives
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737133
+
+2014-09-23 14:31:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Do not forget to release the QUEUE_LOCK in the out_flow_error path
+	  Avoiding deadlocks!
+
+2014-09-22 09:33:04 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Do not hold GST_QUEUE_LOCK while posting ERROR messages
+	  This might create deadlocks and we need to avoid holding element
+	  specific lock while posting messages
+	  For example a deadlock will happen if while posting the message,
+	  someone connected on the bus (sync) tries to DOT the pipeline.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737102
+
+2014-08-13 14:02:47 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* scripts/git-update.sh:
+	  script:udpate: Try to rebase local changes when updating
+
+2014-09-19 12:02:46 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstqueue2.c:
+	* plugins/elements/gstqueue2.h:
+	  queue2: do not post buffering messages holding the lock
+	  It might cause deadlocks to post messages while holding the queue2
+	  lock. To avoid this a new boolean flag is set whenever a new
+	  buffering percent is found. The message is posted after the lock
+	  is released.
+	  To make sure the buffering messages are posted in the right order, messages
+	  are posted holding another lock. This prevents 2 threads trying to post
+	  messages at the same time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736969
+
+=== release 1.4.2 ===
+
+2014-09-19 14:19:08 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.4.2
+
+2014-09-19 10:45:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-09-19 00:33:58 +0100  Tim-Philipp Müller <tim@centricular.com>
 

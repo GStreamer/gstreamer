@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.4.2
+Release notes for GStreamer 1.4.3
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -22,6 +22,7 @@ The stable 1.4.x release series is API and ABI compatible with 1.0.x and
 any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
+
 
 
 This module, gstreamer, only contains core functionality.
@@ -47,13 +48,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 734412 : multiqueue: The buffering logic can lead to a pipeline stuck in PAUSED forever
-      * 735574 : buffer: do not touch memory tag flag when copying buffer flags
-      * 736295 : multiqueue: posts buffering message holding lock
-      * 736424 : query: add annotations to gst_query_set_nth_allocation_pool
-      * 736680 : basesrc: possible pool and allocator leak in prepare_allocation()
-      * 736736 : query: add annotations to gst_query_add_allocation_pool
-      * 736813 : typefindelement leaks sticky events upon flush_stop
+      * 737102 : queue: Do not hold GST_QUEUE_LOCK while posting ERROR messages
+      * 737133 : Missing gstconfig.h include
 
 ==== Download ====
 
@@ -90,13 +86,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arnaud Vrac
-      * Aurélien Zanelli
-      * Ognyan Tonchev
-      * Ravi Kiran K N
-      * Rémi Lefèvre
-      * Sebastian Dröge
+      * Marcin Kolny
       * Thiago Santos
       * Thibault Saunier
-      * Tim-Philipp Müller
  
