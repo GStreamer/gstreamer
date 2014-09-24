@@ -6,8 +6,6 @@ include $(top_srcdir)/common/orc.mak
 
 libgstvideomixer_la_SOURCES = \
 	blend.c \
-	videoconvert.c \
-	gstcms.c \
 	videomixer2.c
 
 nodist_libgstvideomixer_la_SOURCES = $(ORC_NODIST_SOURCES)
@@ -23,9 +21,7 @@ libgstvideomixer_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 noinst_HEADERS = \
 	blend.h \
 	videomixer2.h \
-	videomixer2pad.h \
-	videoconvert.h \
-	gstcms.h
+	videomixer2pad.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

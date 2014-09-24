@@ -84,7 +84,6 @@
 
 #include "videomixer2.h"
 #include "videomixer2pad.h"
-#include "videoconvert.h"
 
 #ifdef DISABLE_ORC
 #define orc_memset memset
@@ -435,7 +434,7 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
       continue;
 
     if (pad->convert)
-      videomixer_videoconvert_convert_free (pad->convert);
+      gst_video_converter_free (pad->convert);
 
     pad->convert = NULL;
 
@@ -448,8 +447,7 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
       GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
           GST_VIDEO_INFO_FORMAT (&pad->info),
           GST_VIDEO_INFO_FORMAT (&best_info));
-      pad->convert =
-          videomixer_videoconvert_convert_new (&pad->info, &best_info);
+      pad->convert = gst_video_converter_new (&pad->info, &best_info, NULL);
       pad->need_conversion_update = TRUE;
       if (!pad->convert) {
         g_free (colorimetry);
@@ -1140,8 +1138,7 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
 
         gst_video_frame_map (&converted_frame, &(pad->conversion_info),
             converted_buf, GST_MAP_READWRITE);
-        videomixer_videoconvert_convert_convert (pad->convert, &converted_frame,
-            &frame);
+        gst_video_converter_frame (pad->convert, &converted_frame, &frame);
         gst_video_frame_unmap (&frame);
       } else {
         converted_frame = frame;
@@ -2132,7 +2129,7 @@ gst_videomixer2_release_pad (GstElement * element, GstPad * pad)
   mixpad = GST_VIDEO_MIXER2_PAD (pad);
 
   if (mixpad->convert)
-    videomixer_videoconvert_convert_free (mixpad->convert);
+    gst_video_converter_free (mixpad->convert);
   mixpad->convert = NULL;
 
   mix->sinkpads = g_slist_remove (mix->sinkpads, pad);
@@ -2181,7 +2178,7 @@ gst_videomixer2_dispose (GObject * o)
     GstVideoMixer2Pad *mixpad = tmp->data;
 
     if (mixpad->convert)
-      videomixer_videoconvert_convert_free (mixpad->convert);
+      gst_video_converter_free (mixpad->convert);
     mixpad->convert = NULL;
   }
 

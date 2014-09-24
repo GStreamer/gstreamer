@@ -26,8 +26,6 @@
 
 #include <gst/base/gstcollectpads.h>
 
-#include "videoconvert.h"
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_VIDEO_MIXER2_PAD (gst_videomixer2_pad_get_type())
@@ -69,7 +67,7 @@ struct _GstVideoMixer2Pad
   GstVideoInfo conversion_info;
 
   /* Converter, if NULL no conversion is done */
-  VideoConvert *convert;
+  GstVideoConverter *convert;
 
   gboolean need_conversion_update;
 };
