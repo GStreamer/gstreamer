@@ -69,6 +69,8 @@ struct _GstGLMixer
   GstGLContext *context;
   GLuint fbo;
   GLuint depthbuffer;
+
+  GstCaps *out_caps;
 };
 
 struct _GstGLMixerClass

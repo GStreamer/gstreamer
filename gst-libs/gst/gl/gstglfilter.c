@@ -244,6 +244,8 @@ gst_gl_filter_reset (GstGLFilter * filter)
 {
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
+  gst_caps_replace (&filter->out_caps, NULL);
+
   if (filter->upload) {
     gst_object_unref (filter->upload);
     filter->upload = NULL;
@@ -822,6 +824,8 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
       goto error;
   }
 
+  gst_caps_replace (&filter->out_caps, outcaps);
+
   GST_DEBUG ("set_caps %dx%d", GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
@@ -1169,24 +1173,29 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
   GstGLFilterClass *filter_class;
   guint in_tex, out_tex;
   GstVideoFrame out_frame;
-  gboolean ret, out_gl_mem;
-  GstVideoGLTextureUploadMeta *out_tex_upload_meta;
+  gboolean ret;
+  gboolean to_download =
+      gst_caps_features_is_equal (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY,
+      gst_caps_get_features (filter->out_caps, 0));
+  GstMapFlags out_map_flags = GST_MAP_WRITE;
 
   filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
   if (!gst_gl_upload_perform_with_buffer (filter->upload, inbuf, &in_tex, NULL))
     return FALSE;
 
+  to_download |= !gst_is_gl_memory (gst_buffer_peek_memory (outbuf, 0));
+
+  if (!to_download)
+    out_map_flags |= GST_MAP_GL;
+
   if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
-          GST_MAP_WRITE | GST_MAP_GL)) {
+          out_map_flags)) {
     ret = FALSE;
     goto inbuf_error;
   }
 
-  out_gl_mem = gst_is_gl_memory (out_frame.map[0].memory);
-  out_tex_upload_meta = gst_buffer_get_video_gl_texture_upload_meta (outbuf);
-
-  if (out_gl_mem) {
+  if (!to_download) {
     out_tex = *(guint *) out_frame.data[0];
   } else {
     GST_LOG ("Output Buffer does not contain correct memory, "
@@ -1196,6 +1205,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
       filter->download = gst_gl_download_new (filter->context);
 
     gst_gl_download_set_format (filter->download, &out_frame.info);
+
     out_tex = filter->out_tex_id;
   }
 
@@ -1205,7 +1215,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
   g_assert (filter_class->filter_texture);
   ret = filter_class->filter_texture (filter, in_tex, out_tex);
 
-  if (!out_gl_mem && !out_tex_upload_meta) {
+  if (to_download) {
     if (!gst_gl_download_perform_with_data (filter->download, out_tex,
             out_frame.data)) {
       GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,

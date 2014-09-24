@@ -118,6 +118,8 @@ struct _GstGLTestSrc {
     const gchar *fragment_src;
 
     void (*make_image) (GstGLTestSrc* v, GstBuffer* buffer, gint w, gint h);
+
+    GstCaps *out_caps;
 };
 
 struct _GstGLTestSrcClass {
