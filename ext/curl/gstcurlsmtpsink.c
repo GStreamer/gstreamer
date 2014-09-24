@@ -918,6 +918,10 @@ gst_curl_smtp_sink_transfer_data_buffer (GstCurlBaseSink * bcsink,
   }
 
   if (sink->base64_chunk != NULL) {
+    if (sink->nbr_attachments_left == sink->nbr_attachments &&
+        bcsink->transfer_buf->len == 0) {
+      add_final_boundary_unlocked (sink);
+    }
     bytes_to_send =
         transfer_chunk (curl_ptr, bcsink->transfer_buf, sink->base64_chunk,
         block_size, last_chunk);
