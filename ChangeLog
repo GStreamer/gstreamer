@@ -1,9 +1,670 @@
-=== release 1.2.0 ===
+=== release 1.3.90 ===
 
-2014-03-16  Thibault Saunier <tsaunier@gnome.org>
+2014-09-24  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.3.90
+
+2014-09-13 16:16:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: bump (soft) gst-validate requirement
+	  Won't build against all older git versions with
+	  0.0.1.0 as version number.
+
+2014-07-20 11:47:18 +0200  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: option to select encoding profile from xml
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735121
+
+2014-07-20 11:47:56 +0200  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: clean up help page
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735121
+
+2014-09-05 23:14:10 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  validate: gst_validate_print_action_types now takes a const gchar **
+
+2014-09-05 23:08:41 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  validate: Add the "ges" as implementer namespace for our action types
+
+2014-09-05 22:09:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Fix typo in --help output
+
+2014-09-05 22:08:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* tools/ges-launch.c:
+	* tools/ges-validate.h:
+	  ges-launch: Fix compiler warnings
+	  ges_validate_print_action_types() takes a const gchar **.
+
+2014-08-22 21:02:58 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  ges-validate: Rename edit-clip to edit-container
+	  So it represent better what the action does at the GES level
+
+2014-08-22 21:01:07 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	* tools/ges-validate.c:
+	* tools/ges-validate.h:
+	  ges-validate: Port to the new GstValidate action registration API
+
+2014-07-24 19:03:50 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  tools:validate: Concider seek in PAUSED position being not exact as WARNING
+	  In some corner cases in GNL it is totally correct that a position in a
+	  seek in paused is not perfectly exact
+
+2014-08-08 10:41:48 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  ges-validate: Let GstValidate handle assert logs
+
+2014-07-27 15:42:42 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	* tools/ges-validate.c:
+	* tools/ges-validate.h:
+	  ges:validate: Port to the new handles-states API
+
+2014-08-01 10:44:57 +0200  Edward Hervey <edward@collabora.com>
+
+	* Makefile.am:
+	* common:
+	  Makefile: Add usage of build-checks step
+	  Allows building checks without running them
+
+2014-07-24 13:23:36 +0300  Lazar Claudiu <lazar.claudiu.florin@gmail.com>
+
+	* ges/ges-text-overlay.c:
+	  text-overlay: added text properties as child-properties
+
+2014-06-16 11:38:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-internal.h:
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-utils.c:
+	* ges/ges-video-transition.c:
+	  ges: Use registry to select the compositor element
+
+2014-07-18 18:27:20 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Set errno to 0 before g_ascii_strtoll.
+
+2014-06-12 09:51:02 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ges/ges-smart-video-mixer.c:
+	  smart-video-mixer: fix memory leak on error path
+	  Coverity 1212166
+
+2014-03-20 17:04:31 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track-element.c:
+	  trackelement: Sort paramspec by name in list_children_properties
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720023
+
+2014-06-06 12:08:47 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	  tools: Fix transition handling in ges-launch
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730806
+
+2014-06-05 04:20:15 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-clip.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/test-utils.h:
+	  clip: Fix the ges_clip_set_position function
+	  And enhance the new test
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731248
+
+2014-06-05 04:05:06 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	  clip: Rename top_effect_index to top_effect_index
+	  Keeping the old method to not break the API but removing it from the
+	  documentation as users should use the new method (which is the exact
+	  same with a better naming)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731248
+
+2014-06-05 03:48:12 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-clip.c:
+	* ges/ges-timeline.c:
+	* tests/check/ges/clip.c:
+	  tests: Check ges_clip_set_position behaviour
+	  + Minor fix to handle properly the feature when clip is not in any layer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731248
+
+2014-06-04 23:16:42 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* tests/check/ges/clip.c:
+	  clip: Add test for effects priorities
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731248
+
+2014-06-05 02:16:01 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-pipeline.c:
+	* tools/ges-launch.c:
+	  pipeline: Add support to rendering without container
+	  + Simplify the support in ges-launch as we should not require the
+	  profile desc to start with : in that case
+	  https://bugzilla.gnome.org/show_bug.cgi?id=731245
+
+2014-05-24 19:16:12 +0200  Christoph Reiter <reiter.christoph@gmail.com>
+
+	* ges/ges-enums.c:
+	  Fix invalid GEnumValue.value_name entries.
+	  This makes the enum entries in the gir have valid c:identifiers and documentation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730691
+
+2014-06-03 17:53:23 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ges/ges-track.c:
+	  ges-track: fill the gaps left empty by deactivated track elements.
+
+2014-05-21 10:54:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 211fa5f to 1f5d3c3
+
+2014-05-19 12:21:52 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* tests/check/ges/clip.c:
+	  ges:clip: Add a method to look for a list of TrackElement-s
+	  + Add unit tests to check it works properly.
+	  API:
+	  + ges_clip_find_track_elements
+
+2014-05-18 18:34:26 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	* tools/ges-validate.c:
+	* tools/ges-validate.h:
+	  tools: Handle request state changes from GstValidate
+
+2014-05-15 20:44:35 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline-element.c:
+	* tests/check/ges/basic.c:
+	  ges: Do not forget to update the count when updating already used name
+	  That could still lead to naming conflicts
+
+2014-05-15 19:37:05 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-source.c:
+	  ges: Add a queue after the decoder in video test src
+
+2014-05-14 22:06:55 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* tests/check/ges/basic.c:
+	  ges: Avoid GESTimelineElement naming conflicts
+	  When users (can be formatters) set timeline element names in the
+	  default 'namespace' we need to update our counter to avoid setting
+	  twice the same name on TimelineElements so afterward there is no
+	  problem adding them in the GESTimeline
+	  + add a testcase to check that new code and fix leaks on the
+	  existing testcases.
+	  + Sensibly enhance debugs
+
+2014-05-13 14:30:39 +0200  Edward Hervey <edward@collabora.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Don't leak children_props
+	  By going through the cleanup code-path
+	  CID #1212146
+
+2014-05-10 22:52:18 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-base-xml-formatter.c:
+	* tools/ges-launch.c:
+	  ges: Do not use freed pointers
+	  COVERTY CID 1212182
+	  COVERTY CID 1212184
+	  COVERTY CID 1212185
+
+2014-05-10 22:48:12 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-smart-adder.c:
+	  ges: Plug a leak in ges-smart-adder
+	  COVERTY CID 1212166
+
+2014-05-10 22:45:34 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-xml-formatter.c:
+	  ges-xml-formatter: fix memory leak
+	  COVERTY CID 1212148
+
+2014-05-10 22:41:23 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-xml-formatter.c:
+	  ges-xml-formatter: fix memory leak in error path
+	  COVERITY CID 1212147
+
+2014-05-10 22:38:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-asset.c:
+	  ges: Assert if an asset is not in the global hashtable
+	  COVERITY CID 1151679
+
+2014-05-10 22:33:15 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	  ges: Remove useless pointer assignement
+	  COVERITY CID: 1139442
+
+2014-05-10 22:30:00 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-meta-container.c:
+	  ges: Remove useless pointer assignement
+	  COVERITY CID: 1139941
+
+2014-05-10 22:28:01 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-meta-container.c:
+	  ges: Add license header in ges-meta-container
+
+2014-05-10 22:09:31 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	  ges: remove comparison of unsigned inferior to 0
+	  COVERITY CID 1139769
+
+2014-05-09 13:00:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/ges-xml-formatter.c:
+	  ges-xml-formatter: fix memory leak in error path
+	  CID 1212146
+
+2014-05-08 17:21:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	  tool: Add the option to set audiosink
+	  And use gst_parse_bin_from_description to create the sinks letting more
+	  control to users.
+
+2014-05-08 17:11:54 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-validate.c:
+	  scenarios: update the prototype of ges_validate_activate
+	  if validate is not present.
+
+2014-05-08 14:12:11 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: add an option to use a custom video sink
+
+2014-05-08 01:38:26 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-validate.c:
+	  validate: make sure we release our ref when we get_timeline.
+	  Conflicts:
+	  tools/ges-validate.c
+
+2014-05-08 01:15:42 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-validate.c:
+	  scenarios: Check priority before creating a layer.
+
+2014-05-06 15:32:18 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-launch.c:
+	* tools/ges-validate.c:
+	* tools/ges-validate.h:
+	  ges-launch: Make it so actions are executed directly when needed.
+
+2014-05-02 17:11:24 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-validate.c:
+	  validate: implement remove / add clip actions
+	  And a helper to get a layer by priority
+
+2014-05-02 16:48:46 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ges/ges-timeline-element.c:
+	  timeline-element: return TRUE in _set_name when both names match.
+
+2014-05-02 14:17:07 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Only create a layer if needed.
+	  That way scenarios can start with an empty timeline
+
+2014-05-02 13:37:04 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-validate.c:
+	  validate: Add add-layer and remove-layer
+
+2014-05-08 01:13:02 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-validate.c:
+	  scenarios: add a remove-asset action
+
+2014-05-01 17:02:05 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-validate.c:
+	  ges-validate: add an add-asset action
+	  Conflicts:
+	  tools/ges-validate.c
+
+2014-05-01 17:00:25 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: When a scenario is set, don't request triplets
+
+2014-05-01 16:59:15 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ges/ges-timeline.h:
+	  ges-timeline: Fix ges_timeline_get_project macro.
+	  This macro was a little confused about its own meaning.
+
+2014-05-05 11:58:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: remove dead code
+	  duration can't be smaller than 0 because it's unsigned,
+	  and it can't be 0 because 0 is transformed to CLOCK_TIME_NONE
+	  earlier.
+	  Coverity CID 1211822.
+
+2014-05-03 10:18:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From bcb1518 to 211fa5f
+
+2014-05-01 10:13:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	  tools: Add a way to look for moved media sample recursively
+	  In ges-launch let the user set a folder where the media sample that
+	  move can be found recursing into that specified folder.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-04-30 20:58:42 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-track.c:
+	* tools/ges-launch.c:
+	  tools: Add an option to disable mixing
+	  + Add a a GObject property so that the info is seralized
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-04-30 16:26:03 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-project.c:
+	  project: Enhance debugging when updating URI with an invalid one
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-05-02 16:49:10 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  tools: Always activate gst-validate to have position printing
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-04-29 21:29:54 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	  tools: Handle times as doubles + concider duration=0 as TIME_NONE
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-04-26 09:51:37 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	  tools: Disable --set-scenario if not compiled against gst-validate
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-04-26 08:55:31 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-clip.c:
+	  ges: Rename remaning tlobj to clip
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-05-02 16:43:42 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  ges-validate: Add an action to serialize the project
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+	  Conflicts:
+	  tools/ges-validate.c
+
+2014-04-25 18:23:06 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  tools:validate: Always seek after editing a clip
+	  Otherwize the displayed frame will not be updated when paused.
+	  + Add a get_timeline internal helper method in ges-validate.c
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-03-14 12:10:53 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-validate.c:
+	  ges-validate: Add a GstValidate action to set children properties
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-02-18 18:52:38 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* configure.ac:
+	* tests/Makefile.am:
+	* tests/scenarios/Makefile.am:
+	* tests/scenarios/ges-edit-clip-while-paused.scenario:
+	  scenario: Add a scenario that edits a clip while the pipeline is paused
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-02-18 17:25:05 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-validate.c:
+	  tools:validate: Add an action to allow editing clips
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-02-18 15:14:40 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* ges/ges-xml-formatter.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/ges/uriclip.c:
+	  Add a notion of 'name' in GESTimelineElement
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-04-23 11:28:20 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	* tools/ges-validate.c:
+	  tools: Position printing is now done at the gst-validate level
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729382
+
+2014-04-17 13:04:26 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: Check return value of gst_tag_list_copy_value
+	  CID 1139597
+
+2014-04-10 18:03:55 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/gstframepositionner.c:
+	  framepositioner: Set the proper default value
+	  Most likely a copy/paste error.
+	  CID #1139646
+
+2014-04-10 18:01:03 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Use proper value for string extraction
+	  The pass would be filled with some bogus (pointer) numerical value
+	  CID #1139652
+
+2014-04-10 17:52:20 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  base-xml-formatter: Don't attempt to use NULL entry
+	  Instead return straight away
+	  CID #1139739
+
+2014-04-07 21:02:48 +0200  Christoph Reiter <reiter.christoph@gmail.com>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* ges/ges-asset.c:
+	* ges/ges-audio-source.c:
+	* ges/ges-audio-test-source.c:
+	* ges/ges-audio-track.c:
+	* ges/ges-audio-transition.c:
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-base-effect-clip.c:
+	* ges/ges-base-effect.c:
+	* ges/ges-base-transition-clip.c:
+	* ges/ges-clip-asset.c:
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-effect-asset.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-extractable.c:
+	* ges/ges-formatter.c:
+	* ges/ges-group.c:
+	* ges/ges-image-source.c:
+	* ges/ges-layer.c:
+	* ges/ges-meta-container.c:
+	* ges/ges-multi-file-source.c:
+	* ges/ges-operation-clip.c:
+	* ges/ges-operation.c:
+	* ges/ges-overlay-clip.c:
+	* ges/ges-pipeline.c:
+	* ges/ges-pitivi-formatter.c:
+	* ges/ges-project.c:
+	* ges/ges-source-clip.c:
+	* ges/ges-source.c:
+	* ges/ges-test-clip.c:
+	* ges/ges-text-overlay-clip.c:
+	* ges/ges-text-overlay.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* ges/ges-track-element-asset.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* ges/ges-transition-clip.c:
+	* ges/ges-transition.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-clip.c:
+	* ges/ges-video-source.c:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-track.c:
+	* ges/ges-video-transition.c:
+	* ges/ges-video-uri-source.c:
+	  Include class related section documentation in the gir file.
+	  g-ir-scanner includes section docs as class/interface docs if the section name is equal to the lowercase type name.
+	  Since all the documentation is in section blocks, rename them to match the type names.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=727776
+
+2014-04-06 16:39:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/Makefile.am:
+	  build: Add reference to GstVideo in gir file
+
+2014-03-26 23:48:45 +0100  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* ges/ges-types.h:
+	  multifilesrc: remove unused class declaration
+
+2014-03-26 23:47:03 +0100  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* ges/Makefile.am:
+	  build: install ges-version.h
+
+2014-03-26 11:45:07 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	  ges-launch: Not being able to load an asset is an error
+
+2014-03-21 10:22:52 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Do not set EncodingProfile.presence when we have no track for the type
+	  That leads to freeze as encodebin will be waiting for a pad and EOS
+	  forever
+
+2014-01-09 16:31:01 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Format the position printing as in gst-validate and friends
+
+2013-09-13 18:15:21 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* configure.ac:
+	* tools/Makefile.am:
+	* tools/ges-launch.c:
+	* tools/ges-validate.c:
+	* tools/ges-validate.h:
+	  ges-launch: Play nicely with gst-validate if avalaible
+
+2013-09-20 01:31:10 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Add a way to mute test video and audio output
+
+2013-10-12 10:07:28 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Properly handle project loading
+	  So we start the pipeline only when the project is done loading, and we save it when it is
+	  loaded, taking into account possible media URI updates.
+
+2013-11-12 12:13:31 +0100  Lubosz Sarnecki <lubosz@gmail.com>
+
+	  ges: multifilesrc support
+	  * GESMultiFileSource class
+	  * multifilesrc example
+	  * Support multifile:// urls in uri asset
+	  * start/stop index modification
+	  * Doc
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719373
+
+2014-03-16 12:48:22 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.2.0 ===
+
+2014-03-16 12:46:26 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* ges/ges.c:
+	* gst-editing-services.doap:
+	  Release 1.2.0
 
 2014-03-15 10:34:17 +0100  Thibault Saunier <thibault.saunier@collabora.com>
 
