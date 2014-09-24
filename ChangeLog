@@ -1,9 +1,20 @@
-=== release 1.4.2 ===
+=== release 1.4.3 ===
 
-2014-09-19  Sebastian Dröge <slomo@coaxion.net>
+2014-09-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.2
+	  releasing 1.4.3
+
+=== release 1.4.2 ===
+
+2014-09-19 15:13:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.4.2
 
 2014-09-08 09:26:23 +0200  Srimanta Panda <srimanta@axis.com>
 
