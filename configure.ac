@@ -559,6 +559,16 @@ if test "$enable_x11" = "yes"; then
     fi
 fi
 
+dnl Check for XKB library
+HAVE_XKBLIB=0
+if test $USE_X11 -eq 1; then
+    AC_CHECK_HEADERS([X11/XKBlib.h], [HAVE_XKBLIB=1], [:])
+fi
+if test $HAVE_XKBLIB -eq 1; then
+    AC_DEFINE_UNQUOTED([HAVE_XKBLIB], 1,
+        [Defined to 1 if the XKB extension exists.])
+fi
+
 dnl Check for XRandR
 HAVE_XRANDR=0
 if test $USE_X11 -eq 1; then

@@ -218,6 +218,20 @@ gst_vaapisink_backend_drm (void)
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
 
+#if HAVE_XKBLIB
+# include <X11/XKBlib.h>
+#endif
+
+static inline KeySym
+x11_keycode_to_keysym (Display * dpy, unsigned int kc)
+{
+#if HAVE_XKBLIB
+  return XkbKeycodeToKeysym (dpy, kc, 0, 0);
+#else
+  return XKeycodeToKeysym (dpy, kc, 0);
+#endif
+}
+
 /* Checks whether a ConfigureNotify event is in the queue */
 typedef struct _ConfigureNotifyEventPendingArgs ConfigureNotifyEventPendingArgs;
 struct _ConfigureNotifyEventPendingArgs
@@ -387,8 +401,7 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
         case KeyPress:
         case KeyRelease:
           gst_vaapi_display_lock (display);
-          keysym = XkbKeycodeToKeysym (x11_dpy, x11_win,
-            e.xkey.keycode, 0, 0);
+          keysym = x11_keycode_to_keysym (x11_dpy, e.xkey.keycode);
           if (keysym != NoSymbol) {
             key_str = XKeysymToString (keysym);
           } else {
