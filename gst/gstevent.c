@@ -715,7 +715,7 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
  * downstream synchronized with the buffer flow and contains timing information
  * and playback properties for the buffers that will follow.
  *
- * The newsegment event marks the range of buffers to be processed. All
+ * The segment event marks the range of buffers to be processed. All
  * data not within the segment range is not to be processed. This can be
  * used intelligently by plugins to apply more efficient methods of skipping
  * unneeded data. The valid range is expressed with the @start and @stop
@@ -736,10 +736,10 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
  * stream. (@rate * @applied_rate) should always equal the rate that has been
  * requested for playback. For example, if an element has an input segment
  * with intended playback @rate of 2.0 and applied_rate of 1.0, it can adjust
- * incoming timestamps and buffer content by half and output a newsegment event
+ * incoming timestamps and buffer content by half and output a segment event
  * with @rate of 1.0 and @applied_rate of 2.0
  *
- * After a newsegment event, the buffer stream time is calculated with:
+ * After a segment event, the buffer stream time is calculated with:
  *
  *   time + (TIMESTAMP(buf) - start) * ABS (rate * applied_rate)
  *
