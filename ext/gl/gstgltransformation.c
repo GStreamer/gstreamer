@@ -253,8 +253,8 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
 
   graphene_matrix_init_look_at (&view_matrix, &eye, &center, &up);
 
-  graphene_matrix_multiply (&projection_matrix, &view_matrix, &vp_matrix);
-  graphene_matrix_multiply (&vp_matrix, &model_matrix,
+  graphene_matrix_multiply (&view_matrix, &projection_matrix, &vp_matrix);
+  graphene_matrix_multiply (&model_matrix, &vp_matrix,
       &transformation->mvp_matrix);
 }
 
