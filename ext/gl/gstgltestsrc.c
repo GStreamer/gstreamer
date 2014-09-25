@@ -674,6 +674,11 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
   gst_caps_replace (&src->out_caps, NULL);
 
   if (src->context) {
+    if (src->shader) {
+      gst_object_unref (src->shader);
+      src->shader = NULL;
+    }
+
     if (src->out_tex_id) {
       gst_gl_context_del_texture (src->context, &src->out_tex_id);
     }
