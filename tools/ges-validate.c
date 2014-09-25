@@ -361,13 +361,11 @@ static gboolean
 _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
 {
   gint64 cpos;
-  gdouble rate;
   GList *layers = NULL;
   GESTimeline *timeline;
   GstQuery *query_segment;
   GESTimelineElement *container;
   GstClockTime position;
-  gint64 stop_value;
   gboolean res = FALSE;
 
   gint new_layer_priority = -1;
@@ -428,22 +426,47 @@ _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
     goto beach;
   }
 
-  if (!ges_timeline_commit (timeline)) {
-    GST_DEBUG_OBJECT (scenario, "nothing changed, no need to seek");
-    res = TRUE;
-    goto beach;
-  }
-
-
-  gst_query_parse_segment (query_segment, &rate, NULL, NULL, &stop_value);
-
-  res = gst_validate_scenario_execute_seek (scenario, action,
-      rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
-      GST_SEEK_TYPE_SET, cpos, GST_SEEK_TYPE_SET, stop_value);
-
 beach:
   g_object_unref (timeline);
   return res;
+}
+
+static gboolean
+_commit (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GESTimeline *timeline = get_timeline (scenario);
+
+  gst_validate_printf (action, "Commiting timeline %s\n",
+      GST_OBJECT_NAME (timeline));
+
+  ges_timeline_commit (timeline);
+
+  gst_object_unref (timeline);
+
+  return TRUE;
+}
+
+static gboolean
+_split_clip (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GESTimeline *timeline;
+  const gchar *clip_name;
+  GESTimelineElement *element;
+  GstClockTime position;
+
+  clip_name = gst_structure_get_string (action->structure, "clip-name");
+
+  timeline = get_timeline (scenario);
+  g_return_val_if_fail (timeline, FALSE);
+
+  element = ges_timeline_get_element (timeline, clip_name);
+  g_return_val_if_fail (GES_IS_CLIP (element), FALSE);
+  g_object_unref (timeline);
+
+  g_return_val_if_fail (gst_validate_action_get_clocktime (scenario, action,
+          "position", &position), FALSE);
+
+  return (ges_clip_split (GES_CLIP (element), position) != NULL);
 }
 
 static void
@@ -651,6 +674,26 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Allows to change child property of an object", FALSE);
+
+  gst_validate_register_action_type ("split-clip", "ges", _split_clip,
+      (GstValidateActionParameter []) {
+        {
+          .name = "clip-name",
+          .description = "The name of the clip to split",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "position",
+          .description = "The position at which to split the clip",
+          .types = "double or string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Split a clip at a specified position.", FALSE);
+
+  gst_validate_register_action_type ("commit", "ges", _commit, NULL,
+       "Commit the timeline.", FALSE);
 
   /*  *INDENT-ON* */
 }
