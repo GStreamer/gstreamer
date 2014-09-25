@@ -206,7 +206,7 @@ _add_layer (GstValidateScenario * scenario, GstValidateAction * action)
   GESTimeline *timeline = get_timeline (scenario);
   GESLayer *layer;
   gint priority;
-  gboolean res = FALSE;
+  gboolean res = FALSE, auto_transition = FALSE;
 
   if (!gst_structure_get_int (action->structure, "priority", &priority)) {
     GST_ERROR ("priority is needed when adding a layer");
@@ -223,8 +223,12 @@ _add_layer (GstValidateScenario * scenario, GstValidateAction * action)
     goto beach;
   }
 
+  gst_structure_get_boolean (action->structure, "auto-transition",
+      &auto_transition);
+
   layer = ges_layer_new ();
-  g_object_set (layer, "priority", priority, NULL);
+  g_object_set (layer, "priority", priority, "auto-transition", auto_transition,
+      NULL);
   res = ges_timeline_add_layer (timeline, layer);
 
 beach:
@@ -579,6 +583,13 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
           NULL
         },
+        {
+          .name = "auto-transition",
+          .description = "Wheter auto-transition is activated on the new layer.",
+          .mandatory = FALSE,
+          .types="boolean",
+          .def = "False"
+        },
         { NULL }
       },
       "Allows to remove a layer from the current timeline", FALSE);
@@ -633,7 +644,7 @@ ges_validate_register_action_types (void)
   gst_validate_register_action_type ("remove-clip", "ges", _remove_clip,
       (GstValidateActionParameter []) {
         {
-          .name = "clip-name",
+          .name = "name",
           .description = "The name of the clip to remove",
           .types = "string",
           .mandatory = TRUE,
