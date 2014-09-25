@@ -53,6 +53,11 @@
 #if HAVE_GRAPHENE
 #include "gstgltransformation.h"
 #endif
+#if HAVE_JPEG
+#if HAVE_PNG
+#include "gstgloverlay.h"
+#endif /* HAVE_PNG */
+#endif /* HAVE_JPEG */
 
 #if GST_GL_HAVE_OPENGL
 #include "gstgltestsrc.h"
@@ -67,9 +72,6 @@
 #if HAVE_PNG
 #include "gstgldifferencematte.h"
 #include "gstglbumper.h"
-#if HAVE_JPEG
-#include "gstgloverlay.h"
-#endif /* HAVE_JPEG */
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
 
@@ -133,6 +135,14 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_filtershader_get_type ())) {
     return FALSE;
   }
+#if HAVE_JPEG
+#if HAVE_PNG
+  if (!gst_element_register (plugin, "gloverlay",
+          GST_RANK_NONE, gst_gl_overlay_get_type ())) {
+    return FALSE;
+  }
+#endif /* HAVE_PNG */
+#endif /* HAVE_JPEG */
 #if GST_GL_HAVE_OPENGL
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
@@ -188,12 +198,6 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_bumper_get_type ())) {
     return FALSE;
   }
-#if HAVE_JPEG
-  if (!gst_element_register (plugin, "gloverlay",
-          GST_RANK_NONE, gst_gl_overlay_get_type ())) {
-    return FALSE;
-  }
-#endif /* HAVE_JPEG */
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
 
