@@ -66,6 +66,9 @@ struct _GstVideoConverter
   gint in_bits;
   gint out_bits;
   gint cmatrix[4][4];
+  guint64 orc_p1;
+  guint64 orc_p2;
+  guint64 orc_p3;
 
   GstStructure *config;
   GstVideoDitherMethod dither;
@@ -344,6 +347,12 @@ gst_video_converter_frame (GstVideoConverter * convert,
 static void
 video_converter_matrix8 (GstVideoConverter * convert, gpointer pixels)
 {
+#if 1
+  video_orc_matrix8 (pixels, pixels, convert->orc_p1, convert->orc_p2,
+      convert->orc_p3, convert->width);
+#elif 0
+  /* FIXME we would like to set this as a backup function, it's faster than the
+   * orc generated one */
   int i;
   int r, g, b;
   int y, u, v;
@@ -365,6 +374,7 @@ video_converter_matrix8 (GstVideoConverter * convert, gpointer pixels)
     p[i * 4 + 2] = CLAMP (u, 0, 255);
     p[i * 4 + 3] = CLAMP (v, 0, 255);
   }
+#endif
 }
 
 static void
@@ -626,6 +636,16 @@ video_converter_compute_matrix (GstVideoConverter * convert)
       convert->cmatrix[2][1], convert->cmatrix[2][2], convert->cmatrix[2][3]);
   GST_DEBUG ("[%6d %6d %6d %6d]", convert->cmatrix[3][0],
       convert->cmatrix[3][1], convert->cmatrix[3][2], convert->cmatrix[3][3]);
+
+  convert->orc_p1 = (((guint64) (guint16) convert->cmatrix[2][0]) << 48) |
+      (((guint64) (guint16) convert->cmatrix[1][0]) << 32) |
+      (((guint64) (guint16) convert->cmatrix[0][0]) << 16);
+  convert->orc_p2 = (((guint64) (guint16) convert->cmatrix[2][1]) << 48) |
+      (((guint64) (guint16) convert->cmatrix[1][1]) << 32) |
+      (((guint64) (guint16) convert->cmatrix[0][1]) << 16);
+  convert->orc_p3 = (((guint64) (guint16) convert->cmatrix[2][2]) << 48) |
+      (((guint64) (guint16) convert->cmatrix[1][2]) << 32) |
+      (((guint64) (guint16) convert->cmatrix[0][2]) << 16);
 
   return TRUE;
 
