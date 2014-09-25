@@ -124,6 +124,10 @@ static size_t gst_curl_base_sink_transfer_write_cb (void *ptr, size_t size,
     size_t nmemb, void *stream);
 static size_t gst_curl_base_sink_transfer_data_buffer (GstCurlBaseSink * sink,
     void *curl_ptr, size_t block_size, guint * last_chunk);
+#ifndef GST_DISABLE_GST_DEBUG
+static int gst_curl_base_sink_debug_cb (CURL * handle, curl_infotype type,
+    char *data, size_t size, void *clientp);
+#endif
 static int gst_curl_base_sink_transfer_socket_cb (void *clientp,
     curl_socket_t curlfd, curlsocktype purpose);
 static gpointer gst_curl_base_sink_transfer_thread_func (gpointer data);
@@ -609,10 +613,23 @@ gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
   GstCurlBaseSinkClass *klass = GST_CURL_BASE_SINK_GET_CLASS (sink);
   CURLcode res;
 
-#ifdef DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
   res = curl_easy_setopt (sink->curl, CURLOPT_VERBOSE, 1);
   if (res != CURLE_OK) {
     sink->error = g_strdup_printf ("failed to set verbose: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
+  res = curl_easy_setopt (sink->curl, CURLOPT_DEBUGDATA, sink);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set debug user_data: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
+  res = curl_easy_setopt (sink->curl, CURLOPT_DEBUGFUNCTION,
+      gst_curl_base_sink_debug_cb);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set debug functions: %s",
         curl_easy_strerror (res));
     return FALSE;
   }
@@ -683,6 +700,7 @@ gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
     return FALSE;
   }
 
+  GST_LOG ("common options set");
   return TRUE;
 }
 
@@ -965,6 +983,44 @@ fail:
   return;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+static int
+gst_curl_base_sink_debug_cb (CURL * handle, curl_infotype type, char *data,
+    size_t size, void *clientp)
+{
+  GstCurlBaseSink *sink = (GstCurlBaseSink *) clientp;
+
+  switch (type) {
+    case CURLINFO_TEXT:
+      GST_DEBUG_OBJECT (sink, "%*s", (int) size, data);
+      break;
+    case CURLINFO_HEADER_IN:
+      GST_DEBUG_OBJECT (sink, "incoming header: %*s", (int) size, data);
+      break;
+    case CURLINFO_HEADER_OUT:
+      GST_DEBUG_OBJECT (sink, "outgoing header: %*s", (int) size, data);
+      break;
+    case CURLINFO_DATA_IN:
+      GST_MEMDUMP_OBJECT (sink, "incoming data", (guint8 *) data, size);
+      break;
+    case CURLINFO_DATA_OUT:
+      GST_MEMDUMP_OBJECT (sink, "outgoing data", (guint8 *) data, size);
+      break;
+    case CURLINFO_SSL_DATA_IN:
+      GST_MEMDUMP_OBJECT (sink, "incoming ssl data", (guint8 *) data, size);
+      break;
+    case CURLINFO_SSL_DATA_OUT:
+      GST_MEMDUMP_OBJECT (sink, "outgoing ssl data", (guint8 *) data, size);
+      break;
+    default:
+      GST_DEBUG_OBJECT (sink, "unknown debug info type %d", type);
+      GST_MEMDUMP_OBJECT (sink, "unknown data", (guint8 *) data, size);
+      break;
+  }
+  return 0;
+}
+#endif
+
 /* This function gets called by libcurl after the socket() call but before
  * the connect() call. */
 static int
@@ -982,26 +1038,23 @@ gst_curl_base_sink_transfer_socket_cb (void *clientp, curl_socket_t curlfd,
     /* signal an unrecoverable error to the library which will close the socket
        and return CURLE_COULDNT_CONNECT
      */
+    GST_DEBUG ("no curlfd");
     return 1;
   }
 
   gst_poll_fd_init (&sink->fd);
   sink->fd.fd = curlfd;
 
-  ret = ret && gst_poll_add_fd (sink->fdset, &sink->fd);
-  ret = ret && gst_poll_fd_ctl_write (sink->fdset, &sink->fd, TRUE);
-  ret = ret && gst_poll_fd_ctl_read (sink->fdset, &sink->fd, TRUE);
+  ret &= gst_poll_add_fd (sink->fdset, &sink->fd);
+  ret &= gst_poll_fd_ctl_write (sink->fdset, &sink->fd, TRUE);
+  ret &= gst_poll_fd_ctl_read (sink->fdset, &sink->fd, TRUE);
   GST_DEBUG ("fd: %d", sink->fd.fd);
   GST_OBJECT_LOCK (sink);
   gst_curl_base_sink_setup_dscp_unlocked (sink);
   GST_OBJECT_UNLOCK (sink);
 
   /* success */
-  if (ret) {
-    return 0;
-  } else {
-    return 1;
-  }
+  return ret ? 0 : 1;
 }
 
 static gboolean
@@ -1148,6 +1201,7 @@ gst_curl_base_sink_transfer_setup_unlocked (GstCurlBaseSink * sink)
     }
   }
 
+  GST_LOG ("transfer setup done");
   return TRUE;
 }
 
