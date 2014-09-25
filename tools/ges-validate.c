@@ -299,12 +299,17 @@ _add_clip (GstValidateScenario * scenario, GstValidateAction * action)
   const gchar *type_string;
   GType type;
   gboolean res = FALSE;
-  GstClockTime duration = 1 * GST_SECOND;
+  GstClockTime duration = 1 * GST_SECOND, inpoint = 0, start =
+      GST_CLOCK_TIME_NONE;
 
   gst_structure_get_int (action->structure, "layer-priority", &layer_priority);
   name = gst_structure_get_string (action->structure, "name");
   asset_id = gst_structure_get_string (action->structure, "asset-id");
   type_string = gst_structure_get_string (action->structure, "type");
+
+  gst_validate_action_get_clocktime (scenario, action, "start", &start);
+  gst_validate_action_get_clocktime (scenario, action, "inpoint", &inpoint);
+  gst_validate_action_get_clocktime (scenario, action, "duration", &duration);
 
   if (!(type = g_type_from_name (type_string))) {
     GST_ERROR ("This type doesn't exist : %s", type_string);
@@ -331,7 +336,7 @@ _add_clip (GstValidateScenario * scenario, GstValidateAction * action)
     duration = GST_CLOCK_TIME_NONE;
   }
 
-  clip = ges_layer_add_asset (layer, asset, GST_CLOCK_TIME_NONE, 0, duration,
+  clip = ges_layer_add_asset (layer, asset, start, inpoint, duration,
       GES_TRACK_TYPE_UNKNOWN);
 
   if (clip) {
@@ -346,8 +351,6 @@ _add_clip (GstValidateScenario * scenario, GstValidateAction * action)
   }
 
   gst_object_unref (layer);
-
-  ges_timeline_commit (timeline);
 
 beach:
   g_object_unref (timeline);
@@ -582,6 +585,24 @@ ges_validate_register_action_types (void)
           .description = "The type of the clip to create",
           .types = "string",
           .mandatory = TRUE,
+        },
+        {
+          .name = "start",
+          .description = "The start value to set on the new GESClip.",
+          .types = "double or string",
+          .mandatory = FALSE,
+        },
+        {
+          .name = "inpoint",
+          .description = "The  inpoint value to set on the new GESClip",
+          .types = "double or string",
+          .mandatory = FALSE,
+        },
+        {
+          .name = "duration",
+          .description = "The  duration value to set on the new GESClip",
+          .types = "double or string",
+          .mandatory = FALSE,
         },
         {NULL}
       }, "Allows to add a clip to a given layer", FALSE);
