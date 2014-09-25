@@ -517,6 +517,45 @@ _split_clip (GstValidateScenario * scenario, GstValidateAction * action)
   return (ges_clip_split (GES_CLIP (element), position) != NULL);
 }
 
+static gboolean
+_set_track_restriction_caps (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GList *tmp;
+  GstCaps *caps;
+  gboolean res = FALSE;
+  GESTrackType track_types;
+
+  GESTimeline *timeline = get_timeline (scenario);
+  const gchar *track_type_str =
+      gst_structure_get_string (action->structure, "track-type");
+  const gchar *caps_str = gst_structure_get_string (action->structure, "caps");
+
+  g_return_val_if_fail ((track_types =
+          gst_validate_utils_flags_from_str (GES_TYPE_TRACK_TYPE,
+              track_type_str)), FALSE);
+
+  g_return_val_if_fail ((caps =
+          gst_caps_from_string (caps_str)) != NULL, FALSE);
+
+  timeline = get_timeline (scenario);
+
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+    GESTrack *track = tmp->data;
+
+    if (track->type & track_types) {
+      ges_track_set_restriction_caps (track, caps);
+
+      res = TRUE;
+    }
+  }
+
+  gst_caps_unref (caps);
+  gst_object_unref (timeline);
+
+  return res;
+}
+
 static void
 ges_validate_register_action_types (void)
 {
@@ -746,6 +785,23 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Split a clip at a specified position.", FALSE);
+
+  gst_validate_register_action_type ("set-track-restriction-caps", "ges", _set_track_restriction_caps,
+      (GstValidateActionParameter []) {
+        {
+          .name = "track-type",
+          .description = "The type of track to set restriction caps on",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "caps",
+          .description = "The caps to set on the track",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Sets restriction caps on tracks of a specific type.", FALSE);
 
   gst_validate_register_action_type ("commit", "ges", _commit, NULL,
        "Commit the timeline.", FALSE);
