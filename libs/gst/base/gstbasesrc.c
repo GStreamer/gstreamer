@@ -2310,19 +2310,17 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length,
 {
   guint64 size, maxsize;
   GstBaseSrcClass *bclass;
-  GstFormat format;
   gint64 stop;
+
+  /* only operate if we are working with bytes */
+  if (src->segment.format != GST_FORMAT_BYTES)
+    return TRUE;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
-  format = src->segment.format;
   stop = src->segment.stop;
   /* get total file size */
   size = src->segment.duration;
-
-  /* only operate if we are working with bytes */
-  if (format != GST_FORMAT_BYTES)
-    return TRUE;
 
   /* when not doing automatic EOS, just use the stop position. We don't use
    * the size to check for EOS */
@@ -2379,6 +2377,7 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length,
   /* ERRORS */
 unexpected_length:
   {
+    GST_WARNING_OBJECT (src, "processing at or past EOS");
     return FALSE;
   }
 }
