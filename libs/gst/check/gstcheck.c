@@ -55,7 +55,7 @@ GList *buffers = NULL;
 GMutex check_mutex;
 GCond check_cond;
 
-/* FIXME 0.11: shouldn't _gst_check_debug be static? Not used anywhere */
+/* FIXME 2.0: shouldn't _gst_check_debug be static? Not used anywhere */
 gboolean _gst_check_debug = FALSE;
 gboolean _gst_check_raised_critical = FALSE;
 gboolean _gst_check_raised_warning = FALSE;
@@ -603,7 +603,7 @@ buffer_event_function (GstPad * pad, GstObject * noparent, GstEvent * event)
  * This can be used to set up a test which pushes some buffers and then an
  * invalid buffer, when the final buffer is expected to fail, for example.
  */
-/* FIXME 0.11: rename this function now that there's GstBufferList? */
+/* FIXME 2.0: rename this function now that there's GstBufferList? */
 void
 gst_check_element_push_buffer_list (const gchar * element_name,
     GList * buffer_in, GstCaps * caps_in, GList * buffer_out,

@@ -1103,7 +1103,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
             gst_base_src_seekable (src), 0, duration);
         res = TRUE;
       } else {
-        /* FIXME 0.11: return TRUE + seekable=FALSE for SEEKING query here */
+        /* FIXME 2.0: return TRUE + seekable=FALSE for SEEKING query here */
         /* Don't reply to the query to make up for demuxers which don't
          * handle the SEEKING query yet. Players like Totem will fall back
          * to the duration when the SEEKING query isn't answered. */

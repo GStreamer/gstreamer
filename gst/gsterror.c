@@ -96,13 +96,13 @@
  * </itemizedlist>
  */
 
-/* FIXME 0.11: the entire error system needs an overhaul - it's not very
+/* FIXME 2.0: the entire error system needs an overhaul - it's not very
  * useful the way it is. Also, we need to be able to specify additional
  * 'details' for errors (e.g. disk/file/resource error -> out-of-space; or
  * put the url/filename/device name that caused the error somewhere)
  * without having to add enums for every little thing.
  *
- * FIXME 0.11: get rid of GST_{CORE,LIBRARY,RESOURCE,STREAM}_ERROR_NUM_ERRORS.
+ * FIXME 2.0: get rid of GST_{CORE,LIBRARY,RESOURCE,STREAM}_ERROR_NUM_ERRORS.
  * Maybe also replace _quark() functions with g_quark_from_static_string()?
  */
 #ifdef HAVE_CONFIG_H

@@ -2709,7 +2709,7 @@ CREATE_USERIALIZATION (uint, UINT);
 CREATE_USERIALIZATION (uint64, UINT64);
 CREATE_USERIALIZATION (ulong, ULONG);
 
-/* FIXME 0.11: remove this again, plugins shouldn't have uchar properties */
+/* FIXME 2.0: remove this again, plugins shouldn't have uchar properties */
 #ifndef G_MAXUCHAR
 #define G_MAXUCHAR 255
 #endif

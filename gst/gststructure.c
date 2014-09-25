@@ -1512,7 +1512,7 @@ gst_structure_get_date_time (const GstStructure * structure,
   if (!GST_VALUE_HOLDS_DATE_TIME (&field->value))
     return FALSE;
 
-  /* FIXME: 0.11 g_value_dup_boxed() -> g_value_get_boxed() */
+  /* FIXME 2.0: g_value_dup_boxed() -> g_value_get_boxed() */
   *value = g_value_dup_boxed (&field->value);
 
   return TRUE;

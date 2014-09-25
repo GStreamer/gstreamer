@@ -1499,7 +1499,7 @@ gst_tag_list_copy_value (GValue * dest, const GstTagList * list,
   return TRUE;
 }
 
-/* FIXME 0.11: this whole merge function business is overdesigned, and the
+/* FIXME 2.0: this whole merge function business is overdesigned, and the
  * _get_foo() API is misleading as well - how many application developers will
  * expect gst_tag_list_get_string (list, GST_TAG_ARTIST, &val) might return a
  * string with multiple comma-separated artists? _get_foo() should just be
@@ -1798,7 +1798,7 @@ _gst_strdup0 (const gchar * s)
 TAG_MERGE_FUNCS (string, gchar *, (*value != NULL));
 
 /*
- *FIXME 0.11: Instead of _peek (non-copy) and _get (copy), we could have
+ *FIXME 2.0: Instead of _peek (non-copy) and _get (copy), we could have
  *            _get (non-copy) and _dup (copy) for strings, seems more
  *            widely used
  */

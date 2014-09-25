@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
+/* FIXME 2.0: suppress warnings for deprecated API such as GValueArray
  * with newer GLib versions (>= 2.31.0) */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 

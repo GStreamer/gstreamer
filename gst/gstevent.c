@@ -1390,7 +1390,7 @@ gst_event_new_reconfigure (void)
  *
  * Returns: (transfer full): a new #GstEvent
  */
-/* FIXME 0.11: take ownership of msg for consistency? */
+/* FIXME 2.0: take ownership of msg for consistency? */
 GstEvent *
 gst_event_new_sink_message (const gchar * name, GstMessage * msg)
 {

@@ -1247,7 +1247,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
         g_free (filename);
         continue;
       }
-      /* FIXME 0.11: Don't recurse into directories, this behaviour
+      /* FIXME 2.0: Don't recurse into directories, this behaviour
        * is inconsistent with other PATH environment variables
        */
       if (level > 0) {
