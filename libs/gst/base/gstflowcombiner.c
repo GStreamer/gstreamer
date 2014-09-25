@@ -41,9 +41,7 @@
  * Please be aware that this struct isn't thread safe as its designed to be
  *  used by demuxers, those usually will have a single thread operating it.
  *
- * None of these functions will take refs on the passed #GstPad<!-- -->s, it
- * is the caller's responsibility to make sure that the #GstPad exists as long
- * as this struct exists.
+ * These functions will take refs on the passed #GstPad<!-- -->s.
  *
  * Aside from reducing the user's code size, the main advantage of using this
  * helper struct is to follow the standard rules for #GstFlowReturn combination.
@@ -138,6 +136,26 @@ gst_flow_combiner_unref (GstFlowCombiner * combiner)
 
     g_slice_free (GstFlowCombiner, combiner);
   }
+}
+
+/**
+ * gst_flow_combiner_clear:
+ * @combiner: the #GstFlowCombiner to clear
+ *
+ * Removes all pads from a #GstFlowCombiner and resets it to its initial state.
+ *
+ * Since: 1.6
+ */
+void
+gst_flow_combiner_clear (GstFlowCombiner * combiner)
+{
+  GstPad *pad;
+
+  g_return_if_fail (combiner != NULL);
+
+  while ((pad = g_queue_pop_head (&combiner->pads)))
+    gst_object_unref (pad);
+  combiner->last_ret = GST_FLOW_OK;
 }
 
 static GstFlowReturn

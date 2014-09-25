@@ -763,6 +763,7 @@ gst_flow_combiner_free
 gst_flow_combiner_update_flow
 gst_flow_combiner_add_pad
 gst_flow_combiner_remove_pad
+gst_flow_combiner_clear
 <SUBSECTION Standard>
 GST_TYPE_FLOW_COMBINER
 <SUBSECTION Private>

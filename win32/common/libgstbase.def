@@ -271,6 +271,7 @@ EXPORTS
 	gst_flow_combiner_new
 	gst_flow_combiner_remove_pad
 	gst_flow_combiner_update_flow
+	gst_flow_combiner_clear
 	gst_push_src_get_type
 	gst_queue_array_drop_element
 	gst_queue_array_find

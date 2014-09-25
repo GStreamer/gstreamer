@@ -152,6 +152,86 @@ GST_START_TEST (test_combined_flows)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_clear)
+{
+  GstFlowCombiner *combiner;
+  GstPad *pad;
+  GstPad *peer;
+  GstSegment segment;
+  GstFlowReturn ret;
+
+  combiner = gst_flow_combiner_new ();
+
+  /* add a pad and make it return _FLUSHING */
+  pad = gst_pad_new ("src1", GST_PAD_SRC);
+  peer = gst_pad_new ("sink1", GST_PAD_SINK);
+  gst_pad_set_chain_function (peer, _sink_chain);
+  gst_pad_link (pad, peer);
+  gst_pad_set_active (peer, TRUE);
+  gst_pad_set_active (pad, TRUE);
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (pad, gst_event_new_stream_start ("test1"));
+  gst_pad_push_event (pad, gst_event_new_segment (&segment));
+  gst_flow_combiner_add_pad (combiner, pad);
+  sink_flowret = GST_FLOW_FLUSHING;
+  fail_unless_equals_int (gst_pad_push (pad, gst_buffer_new ()),
+      GST_FLOW_FLUSHING);
+
+  /* the combined flow is _FLUSHING */
+  ret = gst_flow_combiner_update_flow (combiner, GST_FLOW_FLUSHING);
+  fail_unless_equals_int (ret, GST_FLOW_FLUSHING);
+  gst_object_unref (pad);
+  gst_object_unref (peer);
+
+  /* add one more pad and make it return _OK */
+  pad = gst_pad_new ("src2", GST_PAD_SRC);
+  peer = gst_pad_new ("sink2", GST_PAD_SINK);
+  gst_pad_set_chain_function (peer, _sink_chain);
+  gst_pad_link (pad, peer);
+  gst_pad_set_active (peer, TRUE);
+  gst_pad_set_active (pad, TRUE);
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (pad, gst_event_new_stream_start ("test2"));
+  gst_pad_push_event (pad, gst_event_new_segment (&segment));
+  gst_flow_combiner_add_pad (combiner, pad);
+  sink_flowret = GST_FLOW_OK;
+  fail_unless_equals_int (gst_pad_push (pad, gst_buffer_new ()), GST_FLOW_OK);
+
+  /* the combined flow is _FLUSHING because of the first pad */
+  ret = gst_flow_combiner_update_flow (combiner, GST_FLOW_OK);
+  fail_unless_equals_int (ret, GST_FLOW_FLUSHING);
+  gst_object_unref (pad);
+  gst_object_unref (peer);
+
+  /* clear the combiner */
+  gst_flow_combiner_clear (combiner);
+
+  /* add a pad and make it return _OK */
+  pad = gst_pad_new ("src3", GST_PAD_SRC);
+  peer = gst_pad_new ("sink3", GST_PAD_SINK);
+  gst_pad_set_chain_function (peer, _sink_chain);
+  gst_pad_link (pad, peer);
+  gst_pad_set_active (peer, TRUE);
+  gst_pad_set_active (pad, TRUE);
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (pad, gst_event_new_stream_start ("test3"));
+  gst_pad_push_event (pad, gst_event_new_segment (&segment));
+  gst_flow_combiner_add_pad (combiner, pad);
+  sink_flowret = GST_FLOW_OK;
+  fail_unless_equals_int (gst_pad_push (pad, gst_buffer_new ()), GST_FLOW_OK);
+
+  /* the combined flow is _OK since the other pads have been removed */
+  ret = gst_flow_combiner_update_flow (combiner, GST_FLOW_OK);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+  gst_object_unref (pad);
+  gst_object_unref (peer);
+
+  gst_flow_combiner_free (combiner);
+}
+
+GST_END_TEST;
+
 static Suite *
 flow_combiner_suite (void)
 {
@@ -160,6 +240,7 @@ flow_combiner_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_combined_flows);
+  tcase_add_test (tc_chain, test_clear);
 
   return s;
 }
