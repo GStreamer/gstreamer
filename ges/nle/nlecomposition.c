@@ -1382,10 +1382,14 @@ get_current_position (NleComposition * comp)
 
 beach:
 
-  if (GST_CLOCK_TIME_IS_VALID (comp->priv->segment_start)) {
-    GST_INFO_OBJECT (comp, "Current position is unknown, " "setting it to 0");
+  if (!GST_CLOCK_TIME_IS_VALID (value)) {
+    if (GST_CLOCK_TIME_IS_VALID (comp->priv->segment_start)) {
+      value = comp->priv->segment_start;
+    } else {
+      GST_INFO_OBJECT (comp, "Current position is unknown, " "setting it to 0");
 
-    value = 0;
+      value = 0;
+    }
   }
 
   return (guint64) value;
