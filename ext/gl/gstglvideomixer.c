@@ -649,9 +649,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
     gl->EnableVertexAttribArray (attr_position_loc);
     gl->EnableVertexAttribArray (attr_texture_loc);
 
-    gl->BlendFuncSeparate (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
-        GL_ZERO);
-    gl->BlendEquationSeparate (GL_FUNC_ADD, GL_FUNC_ADD);
+    gl->BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    gl->BlendEquation (GL_FUNC_ADD);
 
     gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (GL_TEXTURE_2D, in_tex);
