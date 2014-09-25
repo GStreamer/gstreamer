@@ -85,13 +85,13 @@ endif
 
 if HAVE_CHECK
 check-valgrind:
-	cd tests/check && make check-valgrind
+	$(MAKE) -C tests/check check-valgrind
 
 check-torture:
-	cd tests/check && make torture
+	$(MAKE) -C tests/check torture
 
 build-checks:
-	cd tests/check && make build-checks
+	$(MAKE) -C tests/check build-checks
 else
 check-valgrind:
 	echo "'check' library not installed, skipping"
