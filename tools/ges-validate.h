@@ -27,6 +27,8 @@ G_BEGIN_DECLS
 
 gboolean
 ges_validate_activate (GstPipeline *pipeline, const gchar *scenario, gboolean *needs_set_state);
+gchar * ges_launch_get_new_uri_from_wrong_uri (const gchar *old_uri);
+void ges_launch_validate_uri (const gchar *nid);
 
 gint
 ges_validate_clean (GstPipeline *pipeline);

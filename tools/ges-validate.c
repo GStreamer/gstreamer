@@ -135,6 +135,52 @@ beach:
   return res;
 }
 
+static GESAsset *
+_get_asset (GType type, const gchar * id)
+{
+  GESAsset *asset;
+  GError *error = NULL;
+
+  const gchar *new_id = id;
+
+  if (type == GES_TYPE_URI_CLIP)
+    asset = (GESAsset *) ges_uri_clip_asset_request_sync (id, &error);
+  else
+    asset = ges_asset_request (type, id, &error);
+
+  while (error &&
+      error->domain == GST_RESOURCE_ERROR &&
+      error->code == GST_RESOURCE_ERROR_NOT_FOUND &&
+      type == GES_TYPE_URI_CLIP) {
+
+    if (new_id == NULL)
+      break;
+
+    g_clear_error (&error);
+    new_id = ges_launch_get_new_uri_from_wrong_uri (new_id);
+
+    if (new_id)
+      asset = (GESAsset *) ges_uri_clip_asset_request_sync (new_id, &error);
+    else
+      GST_ERROR ("Cant find anything for %s", new_id);
+
+    if (asset && !error)
+      ges_launch_validate_uri (new_id);
+  }
+
+  if (!asset || error) {
+    GST_ERROR
+        ("There was an error requesting the asset with id %s and type %s (%s)",
+        id, g_type_name (type), error ? error->message : "unknown");
+
+    return NULL;
+  }
+
+  return asset;
+}
+
+
+
 static gboolean
 _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
 {
@@ -144,11 +190,13 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
   GESTimeline *timeline = get_timeline (scenario);
   GESProject *project = ges_timeline_get_project (timeline);
   GESAsset *asset;
-  GError *error = NULL;
   gboolean res = FALSE;
 
   id = gst_structure_get_string (action->structure, "id");
   type_string = gst_structure_get_string (action->structure, "type");
+
+  gst_validate_printf (action, "Adding asset of type %s with ID %s\n",
+      id, type_string);
 
   if (!type_string || !id) {
     GST_ERROR ("Missing parameters, we got type %s and id %s", type_string, id);
@@ -160,16 +208,10 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
     goto beach;
   }
 
-  if (type == GES_TYPE_URI_CLIP)
-    asset = (GESAsset *) ges_uri_clip_asset_request_sync (id, &error);
-  else
-    asset = ges_asset_request (type, id, &error);
+  asset = _get_asset (type, id);
 
-  if (!asset || error) {
-    GST_ERROR ("There was an error requesting the asset with id %s and type %s",
-        id, type_string);
-    goto beach;
-  }
+  if (!asset)
+    return FALSE;
 
   res = ges_project_add_asset (project, asset);
 
@@ -296,7 +338,6 @@ _add_clip (GstValidateScenario * scenario, GstValidateAction * action)
   GESAsset *asset;
   GESLayer *layer;
   GESClip *clip;
-  GError *error = NULL;
   gint layer_priority;
   const gchar *name;
   const gchar *asset_id;
@@ -315,19 +356,22 @@ _add_clip (GstValidateScenario * scenario, GstValidateAction * action)
   gst_validate_action_get_clocktime (scenario, action, "inpoint", &inpoint);
   gst_validate_action_get_clocktime (scenario, action, "duration", &duration);
 
+  gst_validate_printf (action, "Adding clip from asset of type %s with ID %s"
+      " wanted name: %s"
+      " -- start: %" GST_TIME_FORMAT
+      ", inpoint: %" GST_TIME_FORMAT
+      ", duration: %" GST_TIME_FORMAT "\n",
+      type_string, asset_id, name,
+      GST_TIME_ARGS (start), GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration));
+
   if (!(type = g_type_from_name (type_string))) {
     GST_ERROR ("This type doesn't exist : %s", type_string);
     goto beach;
   }
 
-  asset = ges_asset_request (type, asset_id, &error);
-
-  if (!asset || error) {
-    GST_ERROR
-        ("There was an error requesting the asset with id %s and type %s (%s)",
-        asset_id, type_string, error->message);
-    goto beach;
-  }
+  asset = _get_asset (type, asset_id);
+  if (!asset)
+    return FALSE;
 
   layer = _get_layer_by_priority (timeline, layer_priority);
 

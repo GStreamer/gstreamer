@@ -154,11 +154,10 @@ thumbnail_cb (gpointer pipeline)
   return res;
 }
 
-static gchar *
-source_moved_cb (GESProject * project, GError * error, GESAsset * asset)
+gchar *
+ges_launch_get_new_uri_from_wrong_uri (const gchar * old_uri)
 {
   gint i;
-  const gchar *old_uri = ges_asset_get_id (asset);
 
   for (i = 0; i < new_paths->len; i++) {
     gchar *basename, *res;
@@ -177,6 +176,20 @@ source_moved_cb (GESProject * project, GError * error, GESAsset * asset)
   }
 
   return NULL;
+}
+
+void
+ges_launch_validate_uri (const gchar * nid)
+{
+  g_hash_table_remove (tried_uris, nid);
+}
+
+static gchar *
+source_moved_cb (GESProject * project, GError * error, GESAsset * asset)
+{
+  const gchar *old_uri = ges_asset_get_id (asset);
+
+  return ges_launch_get_new_uri_from_wrong_uri (old_uri);
 }
 
 static void
