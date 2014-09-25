@@ -328,11 +328,8 @@ gst_gl_context_cocoa_activate (GstGLContext * context, gboolean activate)
 
   if (activate)
     [context_cocoa->priv->gl_context makeCurrentContext];
-#if 0
   else
-    /* FIXME */
-    [context_cocoa->priv->gl_context clearCurrentContext];
-#endif
+    [NSOpenGLContext clearCurrentContext];
   return TRUE;
 }
 
