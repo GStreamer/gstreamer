@@ -429,6 +429,22 @@ build_failure:
   }
 }
 
+static gboolean
+_save_timeline (GESTimeline * timeline, const gchar * load_path)
+{
+  if (save_path && !load_path) {
+    gchar *uri;
+    if (!(uri = ensure_uri (save_path))) {
+      g_error ("couldn't create uri for '%s", save_path);
+      return FALSE;
+    }
+
+    return ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL);
+  }
+
+  return TRUE;
+}
+
 static GESPipeline *
 create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
     int argc, char **argv, const gchar * scenario)
@@ -456,14 +472,8 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
 
   /* save project if path is given. we do this now in case GES crashes or
    * hangs during playback. */
-  if (save_path && !load_path) {
-    gchar *uri;
-    if (!(uri = ensure_uri (save_path))) {
-      g_error ("couldn't create uri for '%s", save_path);
-      goto failure;
-    }
-    ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL);
-  }
+  if (!_save_timeline (timeline, load_path))
+    goto failure;
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
@@ -984,6 +994,9 @@ main (int argc, gchar ** argv)
   g_main_loop_run (mainloop);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+
+  /*  Re save the timeline in case the scenario changed it! */
+  _save_timeline (timeline, load_path);
 
   validate_res = ges_validate_clean (GST_PIPELINE (pipeline));
   if (seenerrors == FALSE)
