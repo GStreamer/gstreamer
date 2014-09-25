@@ -434,6 +434,7 @@ gst_curl_http_sink_transfer_prepare_poll_wait (GstCurlBaseSink * bcsink)
   if (!sink->proxy_conn_established
       && (sink->proxy_resp != RESPONSE_CONNECT_PROXY)
       && sink->proxy_auth) {
+    GST_DEBUG_OBJECT (sink, "prep transfers: connecting proxy");
     curl_easy_getinfo (bcsink->curl, CURLINFO_HTTP_CONNECTCODE,
         &sink->proxy_resp);
     if (sink->proxy_resp == RESPONSE_CONNECT_PROXY) {

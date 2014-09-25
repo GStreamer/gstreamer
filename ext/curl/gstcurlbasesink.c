@@ -909,12 +909,15 @@ handle_transfer (GstCurlBaseSink * sink)
   timeout = sink->timeout;
   GST_OBJECT_UNLOCK (sink);
 
+  GST_DEBUG_OBJECT (sink, "handling transfers");
+
   /* Receiving CURLM_CALL_MULTI_PERFORM means that libcurl may have more data
      available to send or receive - call simply curl_multi_perform before
      poll() on more actions */
   do {
     m_code = curl_multi_perform (sink->multi_handle, &running_handles);
   } while (m_code == CURLM_CALL_MULTI_PERFORM);
+  GST_DEBUG_OBJECT (sink, "running handles: %d", running_handles);
 
   while (running_handles && (m_code == CURLM_OK)) {
     if (klass->transfer_prepare_poll_wait) {
@@ -952,6 +955,7 @@ handle_transfer (GstCurlBaseSink * sink)
     do {
       m_code = curl_multi_perform (sink->multi_handle, &running_handles);
     } while (m_code == CURLM_CALL_MULTI_PERFORM);
+    GST_DEBUG_OBJECT (sink, "running handles: %d", running_handles);
   }
 
   if (m_code != CURLM_OK) {
@@ -1038,7 +1042,7 @@ gst_curl_base_sink_transfer_socket_cb (void *clientp, curl_socket_t curlfd,
     /* signal an unrecoverable error to the library which will close the socket
        and return CURLE_COULDNT_CONNECT
      */
-    GST_DEBUG ("no curlfd");
+    GST_DEBUG_OBJECT (sink, "no curlfd");
     return 1;
   }
 
@@ -1048,7 +1052,7 @@ gst_curl_base_sink_transfer_socket_cb (void *clientp, curl_socket_t curlfd,
   ret &= gst_poll_add_fd (sink->fdset, &sink->fd);
   ret &= gst_poll_fd_ctl_write (sink->fdset, &sink->fd, TRUE);
   ret &= gst_poll_fd_ctl_read (sink->fdset, &sink->fd, TRUE);
-  GST_DEBUG ("fd: %d", sink->fd.fd);
+  GST_DEBUG_OBJECT (sink, "fd: %d", sink->fd.fd);
   GST_OBJECT_LOCK (sink);
   gst_curl_base_sink_setup_dscp_unlocked (sink);
   GST_OBJECT_UNLOCK (sink);
@@ -1120,6 +1124,7 @@ gst_curl_base_sink_transfer_thread_func (gpointer data)
     GST_OBJECT_UNLOCK (sink);
 
     if (data_available) {
+      GST_LOG ("have data");
       if (!gst_curl_base_sink_is_live (sink)) {
         /* prepare transfer if needed */
         if (klass->prepare_transfer) {
@@ -1130,6 +1135,7 @@ gst_curl_base_sink_transfer_thread_func (gpointer data)
           }
           GST_OBJECT_UNLOCK (sink);
         }
+        GST_LOG ("adding handle");
         curl_multi_add_handle (sink->multi_handle, sink->curl);
       }
 
@@ -1139,8 +1145,11 @@ gst_curl_base_sink_transfer_thread_func (gpointer data)
       /* easy handle will be possibly re-used for next transfer, thus it needs
        * to be removed from the multi stack and re-added again */
       if (!gst_curl_base_sink_is_live (sink)) {
+        GST_LOG ("removing handle");
         curl_multi_remove_handle (sink->multi_handle, sink->curl);
       }
+    } else {
+      GST_LOG ("have no data yet");
     }
 
     /* lock again before looping to check the thread closed flag */
@@ -1148,6 +1157,7 @@ gst_curl_base_sink_transfer_thread_func (gpointer data)
   }
 
   if (sink->is_live) {
+    GST_LOG ("removing handle");
     curl_multi_remove_handle (sink->multi_handle, sink->curl);
   }
 
