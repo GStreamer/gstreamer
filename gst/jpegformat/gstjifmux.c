@@ -312,7 +312,6 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
         m = gst_jif_mux_new_marker (marker, 0, NULL, FALSE);
         self->priv->markers = g_list_prepend (self->priv->markers, m);
         goto done;
-        break;
       default:
         if (!gst_byte_reader_get_uint16_be (&reader, &size))
           goto error;

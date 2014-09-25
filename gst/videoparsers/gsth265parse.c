@@ -866,7 +866,6 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
       case GST_H265_PARSER_NO_NAL:
         *skipsize = size - 3;
         goto skip;
-        break;
       default:
         g_assert_not_reached ();
         break;
@@ -930,7 +929,6 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
           nalu.offset = nalu.sc_offset;
           goto end;
         }
-        break;
       default:
         g_assert_not_reached ();
         break;

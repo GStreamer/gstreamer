@@ -1170,7 +1170,6 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * video might still continue, though */
       gst_event_unref (event);
       goto done;
-      break;
     default:
       res = gst_pad_event_default (pad, parent, event);
       break;

@@ -1152,22 +1152,18 @@ parse_tile (GstJP2kDecimator * self, GstByteReader * reader,
         GST_ERROR_OBJECT (self, "COC marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_POC:
         GST_ERROR_OBJECT (self, "POC marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_RGN:
         GST_ERROR_OBJECT (self, "RGN marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_PPT:
         GST_ERROR_OBJECT (self, "PPT marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_PLT:{
         PacketLengthTilePart *plt = g_slice_new (PacketLengthTilePart);
 
@@ -1521,32 +1517,26 @@ parse_main_header (GstJP2kDecimator * self, GstByteReader * reader,
         GST_ERROR_OBJECT (self, "POC marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_COC:
         GST_ERROR_OBJECT (self, "COC marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_RGN:
         GST_ERROR_OBJECT (self, "RGN marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_TLM:
         GST_ERROR_OBJECT (self, "TLM marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_PLM:
         GST_ERROR_OBJECT (self, "PLM marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_PPM:
         GST_ERROR_OBJECT (self, "PPM marker not supported yet");
         ret = GST_FLOW_ERROR;
         goto done;
-        break;
       case MARKER_QCD:
         if (header->qcd.data != NULL) {
           GST_ERROR_OBJECT (self, "Multiple QCD markers");

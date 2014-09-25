@@ -509,7 +509,6 @@ next:
         mp4vparse->last_sc = size - 3;
       }
       goto out;
-      break;
     default:
       /* decide whether this startcode ends a frame */
       ret = gst_mpeg4vparse_process_sc (mp4vparse, &packet, size);

@@ -717,7 +717,6 @@ gst_nuv_demux_play (GstPad * pad)
       break;
     case GST_NUV_DEMUX_INVALID_DATA:
       goto pause;
-      break;
     default:
       g_assert_not_reached ();
   }
