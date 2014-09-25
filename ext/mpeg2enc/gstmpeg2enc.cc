@@ -448,7 +448,6 @@ gst_mpeg2enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* no special action as there is not much to flush;
        * neither is it possible to halt the mpeg encoding loop */
       goto done;
-      break;
     case GST_EVENT_FLUSH_STOP:
       /* forward event */
       result = gst_pad_push_event (enc->srcpad, event);
@@ -461,7 +460,6 @@ gst_mpeg2enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       enc->srcresult = GST_FLOW_OK;
       GST_MPEG2ENC_MUTEX_UNLOCK (enc);
       goto done;
-      break;
     case GST_EVENT_EOS:
       /* inform the encoding task that it can stop now */
       GST_MPEG2ENC_MUTEX_LOCK (enc);
@@ -472,7 +470,6 @@ gst_mpeg2enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* eat this event for now, task will send eos when finished */
       gst_event_unref (event);
       goto done;
-      break;
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
@@ -481,7 +478,6 @@ gst_mpeg2enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       result = gst_mpeg2enc_setcaps (enc, pad, caps);
       gst_event_unref (event);
       goto done;
-      break;
     }
     default:
       /* for a serialized event, wait until an earlier buffer is gone,
