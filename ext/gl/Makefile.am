@@ -47,11 +47,6 @@ OPENGL_SOURCES += \
 	gstglbumper.h \
 	gstgldifferencematte.c \
 	gstgldifferencematte.h
-if HAVE_JPEG
-OPENGL_SOURCES += \
-	gstgloverlay.c \
-	gstgloverlay.h
-endif
 endif
 endif
 
@@ -83,6 +78,14 @@ if HAVE_GRAPHENE
 libgstopengl_la_SOURCES += \
 	gstgltransformation.c \
 	gstgltransformation.h
+endif
+
+if HAVE_JPEG
+if HAVE_PNG
+libgstopengl_la_SOURCES += \
+	gstgloverlay.c \
+	gstgloverlay.h
+endif
 endif
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
