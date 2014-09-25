@@ -265,9 +265,10 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
 
   GST_OBJECT_FLAG_SET (demux, GST_ELEMENT_FLAG_INDEXABLE);
 
+  demux->flowcombiner = gst_flow_combiner_new ();
+
   /* finish off */
   gst_matroska_demux_reset (GST_ELEMENT (demux));
-  demux->flowcombiner = gst_flow_combiner_new ();
 }
 
 static void
@@ -327,6 +328,8 @@ gst_matroska_demux_reset (GstElement * element)
   }
 
   demux->invalid_duration = FALSE;
+
+  gst_flow_combiner_clear (demux->flowcombiner);
 }
 
 static GstBuffer *
