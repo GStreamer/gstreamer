@@ -30,25 +30,6 @@
 
 G_BEGIN_DECLS
 
-@interface AppThreadPerformer : NSObject {
-  GstGLWindowCocoa *m_cocoa;
-  GstGLWindowCB m_callback;
-  GstGLWindowResizeCB m_callback2;
-  gpointer m_data;
-  gint m_width;
-  gint m_height;
-}
-- (id) init: (GstGLWindowCocoa *)window;
-- (id) initWithCallback:(GstGLWindowCocoa *)window callback:(GstGLWindowCB)callback userData:(gpointer) data;
-- (id) initWithSize: (GstGLWindowCocoa *)window callback:(GstGLWindowResizeCB)callback userData:(gpointer)data toSize:(NSSize)size;
-- (id) initWithAll: (GstGLWindowCocoa *)window callback:(GstGLWindowCB)callback userData:(gpointer) data;
-- (void) updateWindow;
-- (void) sendToApp;
-- (void) setWindow;
-- (void) stopApp;
-- (void) closeWindow;
-@end
-
 struct _GstGLContextCocoaPrivate
 {
   NSOpenGLContext *gl_context;
