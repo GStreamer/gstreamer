@@ -210,8 +210,11 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
 
   asset = _get_asset (type, id);
 
-  if (!asset)
-    return FALSE;
+  if (!asset) {
+    res = FALSE;
+
+    goto beach;
+  }
 
   res = ges_project_add_asset (project, asset);
 
@@ -370,8 +373,11 @@ _add_clip (GstValidateScenario * scenario, GstValidateAction * action)
   }
 
   asset = _get_asset (type, asset_id);
-  if (!asset)
-    return FALSE;
+  if (!asset) {
+    res = FALSE;
+
+    goto beach;
+  }
 
   layer = _get_layer_by_priority (timeline, layer_priority);
 
@@ -408,10 +414,8 @@ beach:
 static gboolean
 _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  gint64 cpos;
   GList *layers = NULL;
   GESTimeline *timeline;
-  GstQuery *query_segment;
   GESTimelineElement *container;
   GstClockTime position;
   gboolean res = FALSE;
@@ -456,23 +460,13 @@ _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
       edit_mode_str ? edit_mode_str : "normal",
       edge_str ? edge_str : "None", new_layer_priority);
 
-  if (!ges_container_edit (GES_CONTAINER (container), layers,
-          new_layer_priority, mode, edge, position)) {
+  if (!(res = ges_container_edit (GES_CONTAINER (container), layers,
+              new_layer_priority, mode, edge, position))) {
     gst_object_unref (container);
+    GST_ERROR ("HERE");
     goto beach;
   }
   gst_object_unref (container);
-
-  query_segment = gst_query_new_segment (GST_FORMAT_TIME);
-  if (!gst_element_query (scenario->pipeline, query_segment)) {
-    GST_ERROR_OBJECT (scenario, "Could not query segment");
-    goto beach;
-  }
-
-  if (!gst_element_query_position (scenario->pipeline, GST_FORMAT_TIME, &cpos)) {
-    GST_ERROR_OBJECT (scenario, "Could not query position");
-    goto beach;
-  }
 
 beach:
   g_object_unref (timeline);
