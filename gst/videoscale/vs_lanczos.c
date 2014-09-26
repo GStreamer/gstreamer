@@ -186,10 +186,9 @@ struct _Scale
   Scale1D y_scale1d;
 };
 
-static void
-vs_image_scale_lanczos_Y_int16 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf, double sharpness, gboolean dither, double a,
-    double sharpen);
+static void vs_image_scale_lanczos_Y_int16 (const VSImage * dest,
+    const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
+    double a, double sharpen);
 static void vs_image_scale_lanczos_Y_int32 (const VSImage * dest,
     const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
     double a, double sharpen);
@@ -199,10 +198,9 @@ static void vs_image_scale_lanczos_Y_float (const VSImage * dest,
 static void vs_image_scale_lanczos_Y_double (const VSImage * dest,
     const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
     double a, double sharpen);
-static void
-vs_image_scale_lanczos_AYUV_int16 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf, double sharpness, gboolean dither, double a,
-    double sharpen);
+static void vs_image_scale_lanczos_AYUV_int16 (const VSImage * dest,
+    const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
+    double a, double sharpen);
 static void vs_image_scale_lanczos_AYUV_int32 (const VSImage * dest,
     const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
     double a, double sharpen);
@@ -216,10 +214,9 @@ static void vs_image_scale_lanczos_AYUV64_double (const VSImage * dest,
     const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
     double a, double sharpen);
 
-static void
-vs_image_scale_lanczos_NV_int16 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf, double sharpness, gboolean dither, double a,
-    double sharpen);
+static void vs_image_scale_lanczos_NV_int16 (const VSImage * dest,
+    const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
+    double a, double sharpen);
 static void vs_image_scale_lanczos_NV_int32 (const VSImage * dest,
     const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
     double a, double sharpen);
@@ -677,7 +674,9 @@ function (dest_type *dest, const gint32 *offsets, \
     const tap_type *taps, const src_type *src, int n_taps, int shift, int n) \
 { \
   int i; \
+  int j; \
   int k; \
+  int l; \
   dest_type sum1; \
   dest_type sum2; \
   dest_type sum3; \
@@ -692,15 +691,17 @@ function (dest_type *dest, const gint32 *offsets, \
     sum3 = 0; \
     sum4 = 0; \
     for (k = 0; k < _n_taps; k++) { \
-      sum1 += srcline[k*4+0] * tapsline[k]; \
-      sum2 += srcline[k*4+1] * tapsline[k]; \
-      sum3 += srcline[k*4+2] * tapsline[k]; \
-      sum4 += srcline[k*4+3] * tapsline[k]; \
+      l = k * 4; \
+      sum1 += srcline[l] * tapsline[k]; \
+      sum2 += srcline[l + 1] * tapsline[k]; \
+      sum3 += srcline[l + 2] * tapsline[k]; \
+      sum4 += srcline[l + 3] * tapsline[k]; \
     } \
-    dest[i*4+0] = sum1; \
-    dest[i*4+1] = sum2; \
-    dest[i*4+2] = sum3; \
-    dest[i*4+3] = sum4; \
+    j = i * 4; \
+    dest[j] = sum1; \
+    dest[j + 1] = sum2; \
+    dest[j + 2] = sum3; \
+    dest[j + 3] = sum4; \
   } \
 }
 
@@ -710,7 +711,9 @@ function (dest_type *dest, const gint32 *offsets, \
     const tap_type *taps, const src_type *src, int n_taps, int shift, int n) \
 { \
   int i; \
+  int j; \
   int k; \
+  int l; \
   dest_type sum1; \
   dest_type sum2; \
   dest_type sum3; \
@@ -728,15 +731,17 @@ function (dest_type *dest, const gint32 *offsets, \
     sum3 = 0; \
     sum4 = 0; \
     for (k = 0; k < _n_taps; k++) { \
-      sum1 += srcline[k*4+0] * tapsline[k]; \
-      sum2 += srcline[k*4+1] * tapsline[k]; \
-      sum3 += srcline[k*4+2] * tapsline[k]; \
-      sum4 += srcline[k*4+3] * tapsline[k]; \
+      l = k * 4; \
+      sum1 += srcline[l] * tapsline[k]; \
+      sum2 += srcline[l + 1] * tapsline[k]; \
+      sum3 += srcline[l + 2] * tapsline[k]; \
+      sum4 += srcline[l + 3] * tapsline[k]; \
     } \
-    dest[i*4+0] = (sum1 + offset) >> _shift; \
-    dest[i*4+1] = (sum2 + offset) >> _shift; \
-    dest[i*4+2] = (sum3 + offset) >> _shift; \
-    dest[i*4+3] = (sum4 + offset) >> _shift; \
+    j = i * 4; \
+    dest[j] = (sum1 + offset) >> _shift; \
+    dest[j + 1] = (sum2 + offset) >> _shift; \
+    dest[j + 2] = (sum3 + offset) >> _shift; \
+    dest[j + 3] = (sum4 + offset) >> _shift; \
   } \
 }
 
@@ -746,25 +751,29 @@ function (dest_type *dest, const gint32 *offsets, \
     const tap_type *taps, const src_type *src, int n_taps, int shift, int n) \
 { \
   int i; \
+  int j; \
   int k; \
+  int l; \
   dest_type sum1; \
   dest_type sum2; \
   const src_type *srcline; \
   const tap_type *tapsline; \
   int offset; \
-  if (_shift > 0) offset = (1<<_shift)>>1; \
+  if (_shift > 0) offset = (1 << _shift) >> 1; \
   else offset = 0; \
   for (i = 0; i < n; i++) { \
-    srcline = src + 2*offsets[i]; \
+    srcline = src + 2 * offsets[i]; \
     tapsline = taps + i * _n_taps; \
     sum1 = 0; \
     sum2 = 0; \
     for (k = 0; k < _n_taps; k++) { \
-      sum1 += srcline[k*2+0] * tapsline[k]; \
-      sum2 += srcline[k*2+1] * tapsline[k]; \
+      l = k * 2; \
+      sum1 += srcline[l] * tapsline[k]; \
+      sum2 += srcline[l + 1] * tapsline[k]; \
     } \
-    dest[i*2+0] = (sum1 + offset) >> _shift; \
-    dest[i*2+1] = (sum2 + offset) >> _shift; \
+    j = i * 2; \
+    dest[j] = (sum1 + offset) >> _shift; \
+    dest[j + 1] = (sum2 + offset) >> _shift; \
   } \
 }
 
@@ -774,22 +783,26 @@ function (dest_type *dest, const gint32 *offsets, \
     const tap_type *taps, const src_type *src, int n_taps, int shift, int n) \
 { \
   int i; \
+  int j; \
   int k; \
+  int l; \
   dest_type sum1; \
   dest_type sum2; \
   const src_type *srcline; \
   const tap_type *tapsline; \
   for (i = 0; i < n; i++) { \
-    srcline = src + 2*offsets[i]; \
+    srcline = src + 2 * offsets[i]; \
     tapsline = taps + i * _n_taps; \
     sum1 = 0; \
     sum2 = 0; \
     for (k = 0; k < _n_taps; k++) { \
-      sum1 += srcline[k*2+0] * tapsline[k]; \
-      sum2 += srcline[k*2+1] * tapsline[k]; \
+      l = k * 2; \
+      sum1 += srcline[l] * tapsline[k]; \
+      sum2 += srcline[l + 1] * tapsline[k]; \
     } \
-    dest[i*2+0] = sum1; \
-    dest[i*2+1] = sum2; \
+    j = i * 2; \
+    dest[j] = sum1; \
+    dest[j + 1] = sum2; \
   } \
 }
 
