@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
+ * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it un der the terms of the GNU Library General Public
@@ -34,7 +35,7 @@
 
 @interface GstGLNSWindow: NSWindow {
   BOOL m_isClosed;
-  GstGLWindowCocoa *m_cocoa;
+  GstGLWindowCocoa *window_cocoa;
 }
 - (id)initWithContentRect:(NSRect)contentRect
     styleMask: (unsigned int) styleMask
@@ -123,17 +124,12 @@ gst_gl_window_cocoa_new (void)
 }
 
 gboolean
-gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
+gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa, NSRect rect)
 {
-  GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
-  GstGLContext *context = gst_gl_window_get_context (window);
-  GstGLContextCocoa *context_cocoa = GST_GL_CONTEXT_COCOA (context);
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
-  NSRect rect = context_cocoa->priv->rect;
 
   /* FIXME: This should probably be done in the application main thread */
-  priv->internal_win_id = [GstGLNSWindow alloc];
-  [priv->internal_win_id initWithContentRect:rect styleMask: 
+  priv->internal_win_id = [[GstGLNSWindow alloc] initWithContentRect:rect styleMask: 
     (NSTitledWindowMask | NSClosableWindowMask |
     NSResizableWindowMask | NSMiniaturizableWindowMask)
     backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
@@ -141,8 +137,6 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
   GST_DEBUG ("NSWindow id: %"G_GUINTPTR_FORMAT, (guintptr) priv->internal_win_id);
 
   [NSApp setDelegate: priv->internal_win_id];
-
-  gst_object_unref (context);
 
   return TRUE;
 }
@@ -256,8 +250,8 @@ draw_cb (gpointer data)
   }
 
   if (!priv->external_view && !priv->visible) {
-    static gint x = 0;
-    static gint y = 0;
+    gint x = 0;
+    gint y = 0;
 
     /* FIXME: This should probably be done from the application main thread */
 
@@ -294,11 +288,16 @@ draw_cb (gpointer data)
 
   if (g_main_loop_is_running (priv->loop)) {
     if (![priv->internal_win_id isClosed]) {
+      GstGLContext *context = gst_gl_window_get_context (GST_GL_WINDOW (window_cocoa));
+      NSOpenGLContext * glContext = (NSOpenGLContext *) gst_gl_context_get_gl_context (context);
+
       /* draw opengl scene in the back buffer */
       GST_GL_WINDOW (window_cocoa)->draw (GST_GL_WINDOW (window_cocoa)->draw_data);
 
       /* Copy the back buffer to the front buffer */
-      [[[priv->internal_win_id contentView] openGLContext] flushBuffer];
+      [glContext flushBuffer];
+
+      gst_object_unref (context);
     }
   }
 }
@@ -393,7 +392,7 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
     gstWin: (GstGLWindowCocoa *) cocoa {
 
   m_isClosed = NO;
-  m_cocoa = cocoa;
+  window_cocoa = cocoa;
 
   self = [super initWithContentRect: contentRect
         styleMask: styleMask backing: bufferingType
@@ -407,14 +406,14 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 
   [self setBackgroundColor:[NSColor clearColor]];
 
-  [self orderOut:m_cocoa->priv->internal_win_id];
+  [self orderOut:window_cocoa->priv->internal_win_id];
 
-  if (m_cocoa->priv->external_view) {
+  if (window_cocoa->priv->external_view) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    NSView *view = [m_cocoa->priv->internal_win_id contentView];
+    NSView *view = [window_cocoa->priv->internal_win_id contentView];
 
-    [m_cocoa->priv->external_view addSubview: view];
-    [view setFrame: [m_cocoa->priv->external_view bounds]];
+    [window_cocoa->priv->external_view addSubview: view];
+    [view setFrame: [window_cocoa->priv->external_view bounds]];
     [view setAutoresizingMask: NSViewWidthSizable|NSViewHeightSizable];
 
     [pool release];
@@ -457,7 +456,7 @@ close_window_cb (gpointer data)
 - (BOOL) windowShouldClose:(id)sender {
 
   GST_DEBUG ("user clicked the close button\n");
-  gst_gl_window_send_message (GST_GL_WINDOW (m_cocoa), (GstGLWindowCB) close_window_cb, m_cocoa);
+  gst_gl_window_send_message (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) close_window_cb, window_cocoa);
   return YES;
 }
 
@@ -491,29 +490,39 @@ close_window_cb (gpointer data)
 
 /* =============================================================*/
 /*                                                              */
-/*                GstGLNSOpenGLView implementation              */
+/*                GstGLNSView implementation              */
 /*                                                              */
 /* =============================================================*/
 
-@implementation GstGLNSOpenGLView
+@implementation GstGLNSView
 
-- (id)initWithFrame:(GstGLWindowCocoa *)window rect:(NSRect)contentRect pixelFormat:(NSOpenGLPixelFormat *)fmt {
+- (id)initWithFrame:(GstGLWindowCocoa *)window rect:(NSRect)contentRect {
 
-  self = [super initWithFrame: contentRect pixelFormat: fmt];
+  /* FIXME: This should probably be done from the application main thread */
+  self = [super initWithFrame: contentRect];
 
-  m_cocoa = window;
+  window_cocoa = window;
 
 #ifndef GNUSTEP
   [self setWantsLayer:NO];
 #endif
 
+  /* Get notified about changes */
+  [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(reshape) name: NSViewFrameDidChangeNotification object: self];
+
   return self;
+}
+
+- (void) dealloc {
+  [[NSNotificationCenter defaultCenter] removeObserver: self];
+  [super dealloc];
 }
 
 struct resize
 {
   GstGLWindowCocoa * window;
-  gint width, height;
+  NSRect bounds, visibleRect;
+  NSSize frameSize;
 };
 
 static void
@@ -522,36 +531,56 @@ resize_cb (gpointer data)
   struct resize *resize_data = data;
   GstGLWindowCocoa *window_cocoa = resize_data->window;
   GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
+  GstGLContext *context = gst_gl_window_get_context (window);
+  NSOpenGLContext * glContext = (NSOpenGLContext *) gst_gl_context_get_gl_context (context);
 
   if (g_main_loop_is_running (window_cocoa->priv->loop) && ![window_cocoa->priv->internal_win_id isClosed]) {
+    /* FIXME: Need to adjust viewport for clipping here */
     if (window->resize) {
-      window->resize (window->resize_data, resize_data->width, resize_data->height);
+      window->resize (window->resize_data, resize_data->bounds.size.width, resize_data->bounds.size.height);
     }
 
-    [[[window_cocoa->priv->internal_win_id contentView] openGLContext] update];
-      GST_GL_WINDOW (window_cocoa)->draw (GST_GL_WINDOW (window_cocoa)->draw_data);
-    [[[window_cocoa->priv->internal_win_id contentView] openGLContext] flushBuffer];
+    [glContext update];
+    GST_GL_WINDOW (window_cocoa)->draw (GST_GL_WINDOW (window_cocoa)->draw_data);
+    [glContext flushBuffer];
   }
+  gst_object_unref (context);
 }
 
 - (void)reshape {
   GstGLWindow *window;
 
-  window = GST_GL_WINDOW (m_cocoa);
+  window = GST_GL_WINDOW (window_cocoa);
 
   if (window->resize) {
     NSRect bounds = [self bounds];
+    NSRect visibleRect = [self visibleRect];
+    NSSize frameSize = [self frame].size;
     struct resize resize_data;
 
-    resize_data.window = m_cocoa;
-    resize_data.width = bounds.size.width;
-    resize_data.height = bounds.size.height;
+    GST_DEBUG_OBJECT (window, "Window resized: bounds %lf %lf %lf %lf, "
+                      "visibleRect %lf %lf %lf %lf, frame size %lf %lf",
+                      bounds.origin.x, bounds.origin.y,
+                      bounds.size.width, bounds.size.height,
+                      visibleRect.origin.x, visibleRect.origin.y,
+                      visibleRect.size.width, visibleRect.size.height,
+                      frameSize.width, frameSize.height);
 
-    gst_gl_window_send_message (GST_GL_WINDOW (m_cocoa), (GstGLWindowCB) resize_cb, &resize_data);
+    resize_data.window = window_cocoa;
+    resize_data.bounds = bounds;
+    resize_data.visibleRect = visibleRect;
+    resize_data.frameSize = frameSize;
+
+    gst_gl_window_send_message (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) resize_cb, &resize_data);
   }
 }
 
-- (void) update {
+- (BOOL) isOpaque {
+    return YES;
+}
+
+- (BOOL) isFlipped {
+    return YES;
 }
 
 @end
