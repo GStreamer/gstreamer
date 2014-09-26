@@ -368,6 +368,15 @@ video_converter_matrix8 (GstVideoConverter * convert, gpointer pixels)
 }
 
 static void
+video_converter_matrix8_AYUV_ARGB (GstVideoConverter * convert, gpointer pixels)
+{
+  video_orc_convert_AYUV_ARGB (pixels, 0, pixels, 0,
+      convert->cmatrix[0][0], convert->cmatrix[0][2],
+      convert->cmatrix[2][1], convert->cmatrix[1][1], convert->cmatrix[1][2],
+      convert->width, 1);
+}
+
+static void
 video_converter_matrix16 (GstVideoConverter * convert, gpointer pixels)
 {
   int i;
@@ -559,7 +568,11 @@ video_converter_compute_matrix (GstVideoConverter * convert)
     else
       duinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_AYUV64);
   } else {
-    convert->matrix = video_converter_matrix8;
+    if (GST_VIDEO_FORMAT_INFO_IS_YUV (suinfo)
+        && GST_VIDEO_FORMAT_INFO_IS_RGB (duinfo))
+      convert->matrix = video_converter_matrix8_AYUV_ARGB;
+    else
+      convert->matrix = video_converter_matrix8;
   }
 
   color_matrix_set_identity (&dst);

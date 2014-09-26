@@ -990,21 +990,21 @@ splatbw wv, v
 mulhsw wy, wy, p1
 
 mulhsw wr, wv, p2
-addssw wr, wy, wr
+addw wr, wy, wr
+convssswb r, wr
+mergebw wr, a, r
 
 mulhsw wb, wu, p3
-addssw wb, wy, wb
-
-mulhsw wg, wu, p4
-addssw wg, wy, wg
-mulhsw wy, wv, p5
-addssw wg, wg, wy
-
-convssswb r, wr
-convssswb g, wg
+addw wb, wy, wb
 convssswb b, wb
 
-mergebw wr, a, r
+mulhsw wg, wu, p4
+addw wg, wy, wg
+mulhsw wy, wv, p5
+addw wg, wg, wy
+
+convssswb g, wg
+
 mergebw wb, g, b
 mergewl x, wr, wb
 x4 addb argb, x, c128
@@ -1046,22 +1046,22 @@ splatbw wv, v
 mulhsw wy, wy, p1
 
 mulhsw wr, wv, p2
-addssw wr, wy, wr
+addw wr, wy, wr
+convssswb r, wr
+mergebw wr, r, a
 
 mulhsw wb, wu, p3
-addssw wb, wy, wb
-
-mulhsw wg, wu, p4
-addssw wg, wy, wg
-mulhsw wy, wv, p5
-addssw wg, wg, wy
-
-convssswb r, wr
-convssswb g, wg
+addw wb, wy, wb
 convssswb b, wb
 
+mulhsw wg, wu, p4
+addw wg, wy, wg
+mulhsw wy, wv, p5
+addw wg, wg, wy
+
+convssswb g, wg
+
 mergebw wb, b, g
-mergebw wr, r, a
 mergewl x, wb, wr
 x4 addb bgra, x, c128
 
@@ -1103,21 +1103,21 @@ splatbw wv, v
 mulhsw wy, wy, p1
 
 mulhsw wr, wv, p2
-addssw wr, wy, wr
+addw wr, wy, wr
+convssswb r, wr
 
 mulhsw wb, wu, p3
-addssw wb, wy, wb
+addw wb, wy, wb
+convssswb b, wb
+mergebw wb, a, b
 
 mulhsw wg, wu, p4
-addssw wg, wy, wg
+addw wg, wy, wg
 mulhsw wy, wv, p5
-addssw wg, wg, wy
+addw wg, wg, wy
 
-convssswb r, wr
 convssswb g, wg
-convssswb b, wb
 
-mergebw wb, a, b
 mergebw wr, g, r
 mergewl x, wb, wr
 x4 addb argb, x, c128
@@ -1159,26 +1159,24 @@ splatbw wv, v
 mulhsw wy, wy, p1
 
 mulhsw wr, wv, p2
-addssw wr, wy, wr
+addw wr, wy, wr
+convssswb r, wr
 
 mulhsw wb, wu, p3
-addssw wb, wy, wb
+addw wb, wy, wb
+convssswb b, wb
+mergebw wb, b, a
 
 mulhsw wg, wu, p4
-addssw wg, wy, wg
+addw wg, wy, wg
 mulhsw wy, wv, p5
-addssw wg, wg, wy
+addw wg, wg, wy
 
-convssswb r, wr
 convssswb g, wg
-convssswb b, wb
 
 mergebw wr, r, g
-mergebw wb, b, a
 mergewl x, wr, wb
 x4 addb argb, x, c128
-
-
 
 .function video_orc_convert_I420_BGRA
 .dest 4 argb guint8
@@ -1214,22 +1212,21 @@ splatbw wv, r
 mulhsw wy, wy, p1
 
 mulhsw wr, wv, p2
-addssw wr, wy, wr
+addw wr, wy, wr
+convssswb r, wr
+mergebw wr, r, 127
 
 mulhsw wb, wu, p3
-addssw wb, wy, wb
-
-mulhsw wg, wu, p4
-addssw wg, wy, wg
-mulhsw wy, wv, p5
-addssw wg, wg, wy
-
-convssswb r, wr
-convssswb g, wg
+addw wb, wy, wb
 convssswb b, wb
 
+mulhsw wg, wu, p4
+addw wg, wy, wg
+mulhsw wy, wv, p5
+addw wg, wg, wy
+
+convssswb g, wg
+
 mergebw wb, b, g
-mergebw wr, r, 127
 mergewl x, wb, wr
 x4 addb argb, x, c128
-
