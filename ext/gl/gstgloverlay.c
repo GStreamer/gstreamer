@@ -475,12 +475,11 @@ gst_gl_overlay_filter_texture (GstGLFilter * filter, guint in_tex,
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
 
   if (overlay->location_has_changed) {
-    if (overlay->location == NULL) {
-      if (overlay->image_memory) {
-        gst_memory_unref ((GstMemory *) overlay->image_memory);
-        overlay->image_memory = NULL;
-      }
-    } else {
+    if (overlay->image_memory) {
+      gst_memory_unref ((GstMemory *) overlay->image_memory);
+      overlay->image_memory = NULL;
+    }
+    if (overlay->location != NULL) {
       if ((overlay->type_file = gst_gl_overlay_load_png (filter)) == 0) {
         if ((overlay->type_file = gst_gl_overlay_load_jpeg (filter)) == 0) {
           return FALSE;
