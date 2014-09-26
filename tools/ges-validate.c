@@ -550,6 +550,134 @@ _set_track_restriction_caps (GstValidateScenario * scenario,
   return res;
 }
 
+static gboolean
+_set_asset_on_element (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GESAsset *asset;
+  GESTimelineElement *element;
+  const gchar *element_name, *id;
+
+  gboolean res = TRUE;
+  GESTimeline *timeline = get_timeline (scenario);
+
+  element_name = gst_structure_get_string (action->structure, "element-name");
+  element = ges_timeline_get_element (timeline, element_name);
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element), FALSE);
+
+  id = gst_structure_get_string (action->structure, "asset-id");
+
+  gst_validate_printf (action, "Setting asset %s on element %s\n",
+      id, element_name);
+
+  asset = _get_asset (G_OBJECT_TYPE (element), id);
+  if (asset == NULL) {
+    res = FALSE;
+    GST_ERROR ("Could not find asset: %s", id);
+    goto beach;
+  }
+
+  res = ges_extractable_set_asset (GES_EXTRACTABLE (element), asset);
+
+beach:
+  gst_object_unref (timeline);
+
+  return res;
+}
+
+static gboolean
+_container_add_child (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GESAsset *asset;
+  GESContainer *container;
+  GESTimelineElement *child = NULL;
+  const gchar *container_name, *child_name, *child_type, *id;
+
+  gboolean res = TRUE;
+  GESTimeline *timeline = get_timeline (scenario);
+
+  container_name =
+      gst_structure_get_string (action->structure, "container-name");
+  container =
+      GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
+  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
+
+  id = gst_structure_get_string (action->structure, "asset-id");
+  child_type = gst_structure_get_string (action->structure, "child-type");
+
+  if (id && child_type) {
+    asset = _get_asset (g_type_from_name (child_type), id);
+
+    if (asset == NULL) {
+      res = FALSE;
+      GST_ERROR ("Could not find asset: %s", id);
+      goto beach;
+    }
+
+    child = GES_TIMELINE_ELEMENT (ges_asset_extract (asset, NULL));
+    g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
+  }
+
+  child_name = gst_structure_get_string (action->structure, "child-name");
+  if (!child && child_name) {
+    child = ges_timeline_get_element (timeline, child_name);
+    g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
+  }
+
+  if (!child) {
+    GST_ERROR_OBJECT (scenario, "Wong parametters, could not get a child");
+
+    return FALSE;
+  }
+
+  if (child_name)
+    ges_timeline_element_set_name (child, child_name);
+  else
+    child_name = GES_TIMELINE_ELEMENT_NAME (child);
+
+  gst_validate_printf (action, "Adding child %s to container %s\n",
+      child_name, GES_TIMELINE_ELEMENT_NAME (container));
+
+  res = ges_container_add (container, child);
+
+beach:
+  gst_object_unref (timeline);
+
+  return res;
+}
+
+static gboolean
+_container_remove_child (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GESContainer *container;
+  GESTimelineElement *child;
+  const gchar *container_name, *child_name;
+
+  gboolean res = TRUE;
+  GESTimeline *timeline = get_timeline (scenario);
+
+  container_name =
+      gst_structure_get_string (action->structure, "container-name");
+  container =
+      GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
+  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
+
+  child_name = gst_structure_get_string (action->structure, "child-name");
+  child = ges_timeline_get_element (timeline, child_name);
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
+
+  gst_validate_printf (action, "Remove child %s from container %s\n",
+      child_name, GES_TIMELINE_ELEMENT_NAME (container));
+
+  res = ges_container_remove (container, child);
+
+  gst_object_unref (timeline);
+
+  return res;
+}
+
 static void
 ges_validate_register_action_types (void)
 {
@@ -608,7 +736,7 @@ ges_validate_register_action_types (void)
       (GstValidateActionParameter [])  {
         {
           .name = "id",
-          .description = "",
+          .description = "Adds an asset to a project.",
           .mandatory = TRUE,
           NULL
         },
@@ -796,6 +924,75 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Sets restriction caps on tracks of a specific type.", FALSE);
+
+  gst_validate_register_action_type ("element-set-asset", "ges", _set_asset_on_element,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the TimelineElement to set an asset on",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "asset-id",
+          .description = "The id of the asset from which to extract the clip",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Sets restriction caps on tracks of a specific type.", FALSE);
+
+
+  gst_validate_register_action_type ("container-add-child", "ges", _container_add_child,
+      (GstValidateActionParameter []) {
+        {
+          .name = "container-name",
+          .description = "The name of the GESContainer to add a child to",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "child-name",
+          .description = "The name of the child to add to @container-name",
+          .types = "string",
+          .mandatory = FALSE,
+          .def = "NULL"
+        },
+        {
+          .name = "asset-id",
+          .description = "The id of the asset from which to extract the child",
+          .types = "string",
+          .mandatory = TRUE,
+          .def = "NULL"
+        },
+        {
+          .name = "child-type",
+          .description = "The type of the child to create",
+          .types = "string",
+          .mandatory = FALSE,
+          .def = "NULL"
+        },
+        {NULL}
+      }, "Add a child to @container-name. If asset-id and child-type are specified,"
+       " the child will be created and added. Otherwize @child-name has to be specified"
+       " and will be added to the container.", FALSE);
+
+  gst_validate_register_action_type ("container-remove-child", "ges", _container_remove_child,
+      (GstValidateActionParameter []) {
+        {
+          .name = "container-name",
+          .description = "The name of the GESContainer to remove a child from",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "child-name",
+          .description = "The name of the child to reomve from @container-name",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Remove a child from @container-name.", FALSE);
 
   gst_validate_register_action_type ("commit", "ges", _commit, NULL,
        "Commit the timeline.", FALSE);

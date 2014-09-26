@@ -301,15 +301,6 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
   }
 
   g_object_set (timeline, "auto-transition", TRUE, NULL);
-  if (track_types & GES_TRACK_TYPE_AUDIO) {
-    tracka = GES_TRACK (ges_audio_track_new ());
-    if (disable_mixing)
-      ges_track_set_mixing (tracka, FALSE);
-
-    if (!(ges_timeline_add_track (timeline, tracka)))
-      goto build_failure;
-  }
-
   if (track_types & GES_TRACK_TYPE_VIDEO) {
     trackv = GES_TRACK (ges_video_track_new ());
 
@@ -317,6 +308,15 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
       ges_track_set_mixing (trackv, FALSE);
 
     if (!(ges_timeline_add_track (timeline, trackv)))
+      goto build_failure;
+  }
+
+  if (track_types & GES_TRACK_TYPE_AUDIO) {
+    tracka = GES_TRACK (ges_audio_track_new ());
+    if (disable_mixing)
+      ges_track_set_mixing (tracka, FALSE);
+
+    if (!(ges_timeline_add_track (timeline, tracka)))
       goto build_failure;
   }
 
