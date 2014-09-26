@@ -286,10 +286,12 @@ gst_gl_overlay_load_texture (GstGLOverlay * o, GLuint tex,
   const GstGLFuncs *gl = filter->context->gl_vtable;
   gfloat x, y, width, height;
 
+#if GST_GL_HAVE_OPENGL
   if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
     gl->MatrixMode (GL_MODELVIEW);
     gl->LoadIdentity ();
   }
+#endif
 
   gl->Enable (GL_TEXTURE_2D);
   gl->ActiveTexture (GL_TEXTURE0);
@@ -447,10 +449,12 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
   GstMapInfo map_info;
   guint image_tex;
 
+#if GST_GL_HAVE_OPENGL
   if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();
   }
+#endif
 
   gst_gl_overlay_load_texture (overlay, texture, FALSE);
 
