@@ -1477,9 +1477,9 @@ seek_handling (NleComposition * comp, gint32 seqnum,
     _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
 
     _remove_update_actions (comp);
+    update_operations_base_time (comp, !(comp->priv->segment->rate >= 0.0));
     _seek_current_stack (comp, toplevel_seek,
         _have_to_flush_downstream (update_stack_reason));
-    update_operations_base_time (comp, !(comp->priv->segment->rate >= 0.0));
   }
 
   return TRUE;
