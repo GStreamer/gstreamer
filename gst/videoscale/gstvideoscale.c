@@ -422,7 +422,7 @@ get_formats_filter (GstVideoScaleMethod method)
           GST_STATIC_CAPS ("video/x-raw(ANY),"
           "format = (string) { RGBx, xRGB, BGRx, xBGR, RGBA, "
           "ARGB, BGRA, ABGR, AYUV, ARGB64, AYUV64, "
-          "I420, YV12, Y444, Y42B, Y41B }");
+          "I420, YV12, Y444, Y42B, Y41B, NV12, NV21 }");
       return gst_static_caps_get (&lanczos_filter);
     }
     default:
@@ -1396,6 +1396,15 @@ do_scale (GstVideoFilter * filter, VSImage dest[4], VSImage src[4])
           vs_image_scale_4tap_Y (&dest[0], &src[0], videoscale->tmp_buf);
           vs_image_scale_4tap_NV12 (&dest[1], &src[1], videoscale->tmp_buf);
           break;
+        case GST_VIDEO_SCALE_LANCZOS:
+          vs_image_scale_lanczos_Y (&dest[0], &src[0], videoscale->tmp_buf,
+              videoscale->sharpness, videoscale->dither, videoscale->submethod,
+              videoscale->envelope, videoscale->sharpen);
+          vs_image_scale_lanczos_NV (&dest[1], &src[1], videoscale->tmp_buf,
+              videoscale->sharpness, videoscale->dither, videoscale->submethod,
+              videoscale->envelope, videoscale->sharpen);
+          break;
+
         default:
           goto unknown_mode;
       }

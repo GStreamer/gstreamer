@@ -143,6 +143,10 @@
 #define TMP_LINE_S32_AYUV(i) ((gint32 *)scale->tmpdata + (i)*4*(scale->dest->width))
 #define TMP_LINE_FLOAT_AYUV(i) ((float *)scale->tmpdata + (i)*4*(scale->dest->width))
 #define TMP_LINE_DOUBLE_AYUV(i) ((double *)scale->tmpdata + (i)*4*(scale->dest->width))
+#define TMP_LINE_S32_NV(i) ((gint32 *)scale->tmpdata + (i)*2*(scale->dest->width))
+#define TMP_LINE_S16_NV(i) ((gint16 *)scale->tmpdata + (i)*2*(scale->dest->width))
+#define TMP_LINE_FLOAT_NV(i) ((float *)scale->tmpdata + (i)*2*(scale->dest->width))
+#define TMP_LINE_DOUBLE_NV(i) ((double *)scale->tmpdata + (i)*2*(scale->dest->width))
 
 #define PTR_OFFSET(a,b) ((void *)((char *)(a) + (b)))
 
@@ -209,6 +213,20 @@ static void vs_image_scale_lanczos_AYUV_double (const VSImage * dest,
     const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
     double a, double sharpen);
 static void vs_image_scale_lanczos_AYUV64_double (const VSImage * dest,
+    const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
+    double a, double sharpen);
+
+static void
+vs_image_scale_lanczos_NV_int16 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, double a,
+    double sharpen);
+static void vs_image_scale_lanczos_NV_int32 (const VSImage * dest,
+    const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
+    double a, double sharpen);
+static void vs_image_scale_lanczos_NV_float (const VSImage * dest,
+    const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
+    double a, double sharpen);
+static void vs_image_scale_lanczos_NV_double (const VSImage * dest,
     const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
     double a, double sharpen);
 
@@ -722,6 +740,60 @@ function (dest_type *dest, const gint32 *offsets, \
   } \
 }
 
+#define RESAMPLE_HORIZ_NV(function, dest_type, tap_type, src_type, _n_taps, _shift) \
+static void \
+function (dest_type *dest, const gint32 *offsets, \
+    const tap_type *taps, const src_type *src, int n_taps, int shift, int n) \
+{ \
+  int i; \
+  int k; \
+  dest_type sum1; \
+  dest_type sum2; \
+  const src_type *srcline; \
+  const tap_type *tapsline; \
+  int offset; \
+  if (_shift > 0) offset = (1<<_shift)>>1; \
+  else offset = 0; \
+  for (i = 0; i < n; i++) { \
+    srcline = src + 2*offsets[i]; \
+    tapsline = taps + i * _n_taps; \
+    sum1 = 0; \
+    sum2 = 0; \
+    for (k = 0; k < _n_taps; k++) { \
+      sum1 += srcline[k*2+0] * tapsline[k]; \
+      sum2 += srcline[k*2+1] * tapsline[k]; \
+    } \
+    dest[i*2+0] = (sum1 + offset) >> _shift; \
+    dest[i*2+1] = (sum2 + offset) >> _shift; \
+  } \
+}
+
+#define RESAMPLE_HORIZ_NV_FLOAT(function, dest_type, tap_type, src_type, _n_taps) \
+static void \
+function (dest_type *dest, const gint32 *offsets, \
+    const tap_type *taps, const src_type *src, int n_taps, int shift, int n) \
+{ \
+  int i; \
+  int k; \
+  dest_type sum1; \
+  dest_type sum2; \
+  const src_type *srcline; \
+  const tap_type *tapsline; \
+  for (i = 0; i < n; i++) { \
+    srcline = src + 2*offsets[i]; \
+    tapsline = taps + i * _n_taps; \
+    sum1 = 0; \
+    sum2 = 0; \
+    for (k = 0; k < _n_taps; k++) { \
+      sum1 += srcline[k*2+0] * tapsline[k]; \
+      sum2 += srcline[k*2+1] * tapsline[k]; \
+    } \
+    dest[i*2+0] = sum1; \
+    dest[i*2+1] = sum2; \
+  } \
+}
+
+
 /* *INDENT-OFF* */
 RESAMPLE_HORIZ_FLOAT (resample_horiz_double_u8_generic, double, double,
     guint8, n_taps)
@@ -734,6 +806,10 @@ RESAMPLE_HORIZ_AYUV_FLOAT (resample_horiz_float_ayuv_generic, float, float,
 
 RESAMPLE_HORIZ_AYUV_FLOAT (resample_horiz_double_ayuv_generic_s16, double, double,
     guint16, n_taps)
+RESAMPLE_HORIZ_NV_FLOAT (resample_horiz_double_nv_generic, double, double,
+    guint8, n_taps)
+RESAMPLE_HORIZ_NV_FLOAT (resample_horiz_float_nv_generic, float, float,
+    guint8, n_taps)
 
 RESAMPLE_HORIZ (resample_horiz_int32_int32_u8_generic, gint32, gint32,
     guint8, n_taps, shift)
@@ -778,6 +854,27 @@ RESAMPLE_HORIZ_AYUV (resample_horiz_int16_int16_ayuv_taps8_shift0, gint16, gint1
     guint8, 8, 0)
 RESAMPLE_HORIZ_AYUV (resample_horiz_int16_int16_ayuv_taps4_shift0, gint16, gint16,
     guint8, 4, 0)
+
+RESAMPLE_HORIZ_NV (resample_horiz_int32_int32_nv_taps16_shift0, gint32, gint32,
+    guint8, 16, 0)
+RESAMPLE_HORIZ_NV (resample_horiz_int32_int32_nv_taps12_shift0, gint32, gint32,
+    guint8, 12, 0)
+RESAMPLE_HORIZ_NV (resample_horiz_int32_int32_nv_taps8_shift0, gint32, gint32,
+    guint8, 8, 0)
+RESAMPLE_HORIZ_NV (resample_horiz_int32_int32_nv_taps4_shift0, gint32, gint32,
+    guint8, 4, 0)
+RESAMPLE_HORIZ_NV (resample_horiz_int32_int32_nv_generic, gint32, gint32,
+    guint8, n_taps, shift)
+RESAMPLE_HORIZ_NV (resample_horiz_int16_int16_nv_taps16_shift0, gint16, gint16,
+    guint8, 16, 0)
+RESAMPLE_HORIZ_NV (resample_horiz_int16_int16_nv_taps12_shift0, gint16, gint16,
+    guint8, 12, 0)
+RESAMPLE_HORIZ_NV (resample_horiz_int16_int16_nv_taps8_shift0, gint16, gint16,
+    guint8, 8, 0)
+RESAMPLE_HORIZ_NV (resample_horiz_int16_int16_nv_taps4_shift0, gint16, gint16,
+    guint8, 4, 0)
+RESAMPLE_HORIZ_NV (resample_horiz_int16_int16_nv_generic, gint32, gint32,
+    guint8, n_taps, shift)
 /* *INDENT-ON* */
 
 #define RESAMPLE_VERT(function, tap_type, src_type, _n_taps, _shift) \
@@ -872,8 +969,8 @@ function (dest_type *dest, \
     err_y -= floor (err_y); \
   } \
 }
-
 /* *INDENT-OFF* */
+
 RESAMPLE_VERT_FLOAT (resample_vert_double_generic, guint8, 255, double, double, n_taps,
     shift)
 RESAMPLE_VERT_FLOAT_DITHER (resample_vert_dither_double_generic, guint8, 255, double, double,
@@ -893,7 +990,6 @@ RESAMPLE_VERT_FLOAT_DITHER (resample_vert_dither_float_generic, guint8, 255, flo
 #define S16_SHIFT2 7
 #define S16_MIDSHIFT 0
 #define S16_POSTSHIFT (S16_SHIFT1+S16_SHIFT2-S16_MIDSHIFT)
-
 static void
 vs_scale_lanczos_Y_int16 (Scale * scale)
 {
@@ -1238,10 +1334,6 @@ vs_image_scale_lanczos_Y_float (const VSImage * dest, const VSImage * src,
   g_free (scale->tmpdata);
 }
 
-
-
-
-
 static void
 vs_scale_lanczos_AYUV_int16 (Scale * scale)
 {
@@ -1336,7 +1428,6 @@ vs_image_scale_lanczos_AYUV_int16 (const VSImage * dest, const VSImage * src,
   scale1d_cleanup (&scale->y_scale1d);
   g_free (scale->tmpdata);
 }
-
 
 static void
 vs_scale_lanczos_AYUV_int32 (Scale * scale)
@@ -1649,6 +1740,371 @@ vs_image_scale_lanczos_AYUV64_double (const VSImage * dest, const VSImage * src,
       g_malloc (sizeof (double) * scale->dest->width * scale->src->height * 4);
 
   vs_scale_lanczos_AYUV64_double (scale);
+
+  scale1d_cleanup (&scale->x_scale1d);
+  scale1d_cleanup (&scale->y_scale1d);
+  g_free (scale->tmpdata);
+}
+
+void
+vs_image_scale_lanczos_NV (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, int submethod,
+    double a, double sharpen)
+{
+
+  switch (submethod) {
+    case 0:
+    default:
+      vs_image_scale_lanczos_NV_int16 (dest, src, tmpbuf, sharpness, dither,
+          a, sharpen);
+      break;
+    case 1:
+      vs_image_scale_lanczos_NV_int32 (dest, src, tmpbuf, sharpness, dither,
+          a, sharpen);
+      break;
+    case 2:
+      vs_image_scale_lanczos_NV_float (dest, src, tmpbuf, sharpness, dither,
+          a, sharpen);
+      break;
+    case 3:
+      vs_image_scale_lanczos_NV_double (dest, src, tmpbuf, sharpness, dither,
+          a, sharpen);
+      break;
+  }
+}
+
+static void
+vs_scale_lanczos_NV_int16 (Scale * scale)
+{
+  int j;
+  int yi;
+  int tmp_yi;
+
+  tmp_yi = 0;
+
+  for (j = 0; j < scale->dest->height; j++) {
+    guint8 *destline;
+    gint16 *taps;
+
+    destline = scale->dest->pixels + scale->dest->stride * j;
+
+    yi = scale->y_scale1d.offsets[j];
+
+    while (tmp_yi < yi + scale->y_scale1d.n_taps) {
+      scale->horiz_resample_func (TMP_LINE_S16_NV (tmp_yi),
+          scale->x_scale1d.offsets, scale->x_scale1d.taps, SRC_LINE (tmp_yi),
+          scale->x_scale1d.n_taps, S16_MIDSHIFT, scale->dest->width);
+      tmp_yi++;
+    }
+
+    taps = (gint16 *) scale->y_scale1d.taps + j * scale->y_scale1d.n_taps;
+    if (scale->dither) {
+      resample_vert_dither_int16_generic (destline,
+          taps, TMP_LINE_S16_NV (scale->y_scale1d.offsets[j]),
+          sizeof (gint16) * 2 * scale->dest->width,
+          scale->y_scale1d.n_taps, S16_POSTSHIFT, scale->dest->width * 2);
+    } else {
+      resample_vert_int16_generic (destline,
+          taps, TMP_LINE_S16_NV (scale->y_scale1d.offsets[j]),
+          sizeof (gint16) * 2 * scale->dest->width,
+          scale->y_scale1d.n_taps, S16_POSTSHIFT, scale->dest->width * 2);
+    }
+  }
+}
+
+static void
+vs_scale_lanczos_NV_int32 (Scale * scale)
+{
+  int j;
+  int yi;
+  int tmp_yi;
+
+  tmp_yi = 0;
+
+  for (j = 0; j < scale->dest->height; j++) {
+    guint8 *destline;
+    gint32 *taps;
+
+    destline = scale->dest->pixels + scale->dest->stride * j;
+
+    yi = scale->y_scale1d.offsets[j];
+
+    while (tmp_yi < yi + scale->y_scale1d.n_taps) {
+      scale->horiz_resample_func (TMP_LINE_S32_NV (tmp_yi),
+          scale->x_scale1d.offsets, scale->x_scale1d.taps, SRC_LINE (tmp_yi),
+          scale->x_scale1d.n_taps, S32_MIDSHIFT, scale->dest->width);
+      tmp_yi++;
+    }
+
+    taps = (gint32 *) scale->y_scale1d.taps + j * scale->y_scale1d.n_taps;
+    if (scale->dither) {
+      resample_vert_dither_int32_generic (destline,
+          taps, TMP_LINE_S32_NV (scale->y_scale1d.offsets[j]),
+          sizeof (gint32) * 2 * scale->dest->width, scale->y_scale1d.n_taps,
+          S32_POSTSHIFT, scale->dest->width * 2);
+    } else {
+      resample_vert_int32_generic (destline,
+          taps, TMP_LINE_S32_NV (scale->y_scale1d.offsets[j]),
+          sizeof (gint32) * 2 * scale->dest->width, scale->y_scale1d.n_taps,
+          S32_POSTSHIFT, scale->dest->width * 2);
+    }
+  }
+}
+
+static void
+vs_scale_lanczos_NV_float (Scale * scale)
+{
+  int j;
+  int yi;
+  int tmp_yi;
+
+  tmp_yi = 0;
+
+  for (j = 0; j < scale->dest->height; j++) {
+    guint8 *destline;
+    float *taps;
+
+    destline = scale->dest->pixels + scale->dest->stride * j;
+
+    yi = scale->y_scale1d.offsets[j];
+
+    while (tmp_yi < yi + scale->y_scale1d.n_taps) {
+      scale->horiz_resample_func (TMP_LINE_FLOAT_NV (tmp_yi),
+          scale->x_scale1d.offsets, scale->x_scale1d.taps, SRC_LINE (tmp_yi),
+          scale->x_scale1d.n_taps, 0, scale->dest->width);
+      tmp_yi++;
+    }
+
+    taps = (float *) scale->y_scale1d.taps + j * scale->y_scale1d.n_taps;
+    if (scale->dither) {
+      resample_vert_dither_float_generic (destline,
+          taps, TMP_LINE_FLOAT_NV (scale->y_scale1d.offsets[j]),
+          sizeof (float) * 2 * scale->dest->width, scale->y_scale1d.n_taps, 0,
+          scale->dest->width * 2);
+    } else {
+      resample_vert_float_generic (destline,
+          taps, TMP_LINE_FLOAT_NV (scale->y_scale1d.offsets[j]),
+          sizeof (float) * 2 * scale->dest->width, scale->y_scale1d.n_taps, 0,
+          scale->dest->width * 2);
+    }
+  }
+}
+
+static void
+vs_scale_lanczos_NV_double (Scale * scale)
+{
+  int j;
+  int yi;
+  int tmp_yi;
+
+  tmp_yi = 0;
+
+  for (j = 0; j < scale->dest->height; j++) {
+    guint8 *destline;
+    double *taps;
+
+    destline = scale->dest->pixels + scale->dest->stride * j;
+
+    yi = scale->y_scale1d.offsets[j];
+
+    while (tmp_yi < yi + scale->y_scale1d.n_taps) {
+      scale->horiz_resample_func (TMP_LINE_DOUBLE_NV (tmp_yi),
+          scale->x_scale1d.offsets, scale->x_scale1d.taps, SRC_LINE (tmp_yi),
+          scale->x_scale1d.n_taps, 0, scale->dest->width);
+      tmp_yi++;
+    }
+
+    taps = (double *) scale->y_scale1d.taps + j * scale->y_scale1d.n_taps;
+    if (scale->dither) {
+      resample_vert_dither_double_generic (destline,
+          taps, TMP_LINE_DOUBLE_NV (scale->y_scale1d.offsets[j]),
+          sizeof (double) * 2 * scale->dest->width,
+          scale->y_scale1d.n_taps, 0, scale->dest->width * 2);
+    } else {
+      resample_vert_double_generic (destline,
+          taps, TMP_LINE_DOUBLE_NV (scale->y_scale1d.offsets[j]),
+          sizeof (double) * 2 * scale->dest->width,
+          scale->y_scale1d.n_taps, 0, scale->dest->width * 2);
+    }
+  }
+}
+
+void
+vs_image_scale_lanczos_NV_int32 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, double a,
+    double sharpen)
+{
+  Scale s = { 0 };
+  Scale *scale = &s;
+  int n_taps;
+
+  scale->dest = dest;
+  scale->src = src;
+
+  n_taps = scale1d_get_n_taps (src->width, dest->width, a, sharpness);
+  n_taps = ROUND_UP_4 (n_taps);
+  scale1d_calculate_taps_int32 (&scale->x_scale1d,
+      src->width, dest->width, n_taps, a, sharpness, sharpen, S32_SHIFT1);
+
+  n_taps = scale1d_get_n_taps (src->height, dest->height, a, sharpness);
+  scale1d_calculate_taps_int32 (&scale->y_scale1d,
+      src->height, dest->height, n_taps, a, sharpness, sharpen, S32_SHIFT2);
+
+  scale->dither = dither;
+
+  switch (scale->x_scale1d.n_taps) {
+    case 4:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int32_int32_nv_taps4_shift0;
+      break;
+    case 8:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int32_int32_nv_taps8_shift0;
+      break;
+    case 12:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int32_int32_nv_taps12_shift0;
+      break;
+    case 16:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int32_int32_nv_taps16_shift0;
+      break;
+    default:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int32_int32_nv_generic;
+      break;
+  }
+
+  scale->tmpdata =
+      g_malloc (sizeof (int32_t) * scale->dest->width * scale->src->height * 2);
+
+  vs_scale_lanczos_NV_int32 (scale);
+
+  scale1d_cleanup (&scale->x_scale1d);
+  scale1d_cleanup (&scale->y_scale1d);
+  g_free (scale->tmpdata);
+}
+
+void
+vs_image_scale_lanczos_NV_int16 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, double a,
+    double sharpen)
+{
+  Scale s = { 0 };
+  Scale *scale = &s;
+  int n_taps;
+
+  scale->dest = dest;
+  scale->src = src;
+
+  n_taps = scale1d_get_n_taps (src->width, dest->width, a, sharpness);
+  n_taps = ROUND_UP_4 (n_taps);
+  scale1d_calculate_taps_int16 (&scale->x_scale1d,
+      src->width, dest->width, n_taps, a, sharpness, sharpen, S16_SHIFT1);
+
+  n_taps = scale1d_get_n_taps (src->height, dest->height, a, sharpness);
+  scale1d_calculate_taps_int16 (&scale->y_scale1d,
+      src->height, dest->height, n_taps, a, sharpness, sharpen, S16_SHIFT2);
+
+  scale->dither = dither;
+
+  switch (scale->x_scale1d.n_taps) {
+    case 4:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int16_int16_nv_taps4_shift0;
+      break;
+    case 8:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int16_int16_nv_taps8_shift0;
+      break;
+    case 12:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int16_int16_nv_taps12_shift0;
+      break;
+    case 16:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int16_int16_nv_taps16_shift0;
+      break;
+    default:
+      scale->horiz_resample_func =
+          (HorizResampleFunc) resample_horiz_int16_int16_nv_generic;
+      break;
+  }
+
+  scale->tmpdata =
+      g_malloc (sizeof (gint16) * scale->dest->width * scale->src->height * 2);
+
+  vs_scale_lanczos_NV_int16 (scale);
+
+  scale1d_cleanup (&scale->x_scale1d);
+  scale1d_cleanup (&scale->y_scale1d);
+  g_free (scale->tmpdata);
+}
+
+void
+vs_image_scale_lanczos_NV_float (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, double a,
+    double sharpen)
+{
+  Scale s = { 0 };
+  Scale *scale = &s;
+  int n_taps;
+
+  scale->dest = dest;
+  scale->src = src;
+
+  n_taps = scale1d_get_n_taps (src->width, dest->width, a, sharpness);
+  scale1d_calculate_taps_float (&scale->x_scale1d,
+      src->width, dest->width, n_taps, a, sharpness, sharpen);
+
+  n_taps = scale1d_get_n_taps (src->height, dest->height, a, sharpness);
+  scale1d_calculate_taps_float (&scale->y_scale1d,
+      src->height, dest->height, n_taps, a, sharpness, sharpen);
+
+  scale->dither = dither;
+
+  scale->horiz_resample_func =
+      (HorizResampleFunc) resample_horiz_float_nv_generic;
+
+  scale->tmpdata =
+      g_malloc (sizeof (float) * scale->dest->width * scale->src->height * 2);
+
+  vs_scale_lanczos_NV_float (scale);
+
+  scale1d_cleanup (&scale->x_scale1d);
+  scale1d_cleanup (&scale->y_scale1d);
+  g_free (scale->tmpdata);
+}
+
+void
+vs_image_scale_lanczos_NV_double (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, double a,
+    double sharpen)
+{
+  Scale s = { 0 };
+  Scale *scale = &s;
+  int n_taps;
+
+  scale->dest = dest;
+  scale->src = src;
+
+  n_taps = scale1d_get_n_taps (src->width, dest->width, a, sharpness);
+  scale1d_calculate_taps (&scale->x_scale1d,
+      src->width, dest->width, n_taps, a, sharpness, sharpen);
+
+  n_taps = scale1d_get_n_taps (src->height, dest->height, a, sharpness);
+  scale1d_calculate_taps (&scale->y_scale1d,
+      src->height, dest->height, n_taps, a, sharpness, sharpen);
+
+  scale->dither = dither;
+
+  scale->horiz_resample_func =
+      (HorizResampleFunc) resample_horiz_double_nv_generic;
+
+  scale->tmpdata =
+      g_malloc (sizeof (double) * scale->dest->width * scale->src->height * 2);
+
+  vs_scale_lanczos_NV_double (scale);
 
   scale1d_cleanup (&scale->x_scale1d);
   scale1d_cleanup (&scale->y_scale1d);

@@ -125,6 +125,14 @@ G_GNUC_INTERNAL void vs_image_scale_lanczos_Y      (const VSImage * dest,
                                                     double          a,
                                                     double          sharpen);
 
+G_GNUC_INTERNAL void vs_image_scale_lanczos_NV     (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t * tmpbuf,
+                                                    double sharpness,
+                                                    gboolean dither,
+                                                    int submethod,
+                                                    double a,
+                                                    double sharpen);
 
 G_GNUC_INTERNAL void vs_image_scale_nearest_RGB565 (const VSImage * dest,
                                                     const VSImage * src,
