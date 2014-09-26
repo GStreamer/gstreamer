@@ -323,6 +323,7 @@ gst_gl_overlay_load_texture (GstGLOverlay * o, GLuint tex,
   }
 
   gst_gl_overlay_draw (o, overlay_image, x, y, width, height);
+  gl->Disable (GL_BLEND);
 }
 
 static void
