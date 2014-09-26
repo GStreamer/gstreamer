@@ -624,7 +624,7 @@ ges_project_add_asset (GESProject * project, GESAsset * asset)
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
 
   if (g_hash_table_lookup (project->priv->assets, ges_asset_get_id (asset)))
-    return FALSE;
+    return TRUE;
 
   g_hash_table_insert (project->priv->assets,
       g_strdup (ges_asset_get_id (asset)), gst_object_ref (asset));
