@@ -7926,6 +7926,7 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri,
 {
   GstRTSPSrc *src;
   GstRTSPResult res;
+  GstSDPResult sres;
   GstRTSPUrl *newurl = NULL;
   GstSDPMessage *sdp = NULL;
 
@@ -7936,13 +7937,13 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     goto was_ok;
 
   if (g_str_has_prefix (uri, "rtsp-sdp://")) {
-    res = gst_sdp_message_new (&sdp);
-    if (res < 0)
+    sres = gst_sdp_message_new (&sdp);
+    if (sres < 0)
       goto sdp_failed;
 
     GST_DEBUG_OBJECT (src, "parsing SDP message");
-    res = gst_sdp_message_parse_uri (uri, sdp);
-    if (res < 0)
+    sres = gst_sdp_message_parse_uri (uri, sdp);
+    if (sres < 0)
       goto invalid_sdp;
   } else {
     /* try to parse */
@@ -7983,14 +7984,14 @@ was_ok:
   }
 sdp_failed:
   {
-    GST_ERROR_OBJECT (src, "Could not create new SDP (%d)", res);
+    GST_ERROR_OBJECT (src, "Could not create new SDP (%d)", sres);
     g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
         "Could not create SDP");
     return FALSE;
   }
 invalid_sdp:
   {
-    GST_ERROR_OBJECT (src, "Not a valid SDP (%d) '%s'", res,
+    GST_ERROR_OBJECT (src, "Not a valid SDP (%d) '%s'", sres,
         GST_STR_NULL (uri));
     gst_sdp_message_free (sdp);
     g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
