@@ -123,20 +123,20 @@ gst_gl_window_cocoa_new (void)
   return window;
 }
 
+/* Must be called from the main thread */
 gboolean
 gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa, NSRect rect)
 {
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
 
-  /* FIXME: This should probably be done in the application main thread */
   priv->internal_win_id = [[GstGLNSWindow alloc] initWithContentRect:rect styleMask: 
-    (NSTitledWindowMask | NSClosableWindowMask |
-    NSResizableWindowMask | NSMiniaturizableWindowMask)
-    backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
+      (NSTitledWindowMask | NSClosableWindowMask |
+      NSResizableWindowMask | NSMiniaturizableWindowMask)
+      backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
 
-  GST_DEBUG ("NSWindow id: %"G_GUINTPTR_FORMAT, (guintptr) priv->internal_win_id);
+      GST_DEBUG ("NSWindow id: %"G_GUINTPTR_FORMAT, (guintptr) priv->internal_win_id);
 
-  [NSApp setDelegate: priv->internal_win_id];
+      [NSApp setDelegate: priv->internal_win_id];
 
   return TRUE;
 }
@@ -176,21 +176,6 @@ gst_gl_window_cocoa_get_window_handle (GstGLWindow *window)
 }
 
 static void
-set_window_handle_cb (gpointer data)
-{
-  GstGLWindowCocoa * window_cocoa = data;
-  NSView *view = [window_cocoa->priv->internal_win_id contentView];
-
-  /* FIXME: This should probably be in the application main thread! */
-  [window_cocoa->priv->internal_win_id orderOut:window_cocoa->priv->internal_win_id];
-
-  [window_cocoa->priv->external_view addSubview: view];
-
-  [view setFrame: [window_cocoa->priv->external_view bounds]];
-  [view setAutoresizingMask: NSViewWidthSizable|NSViewHeightSizable];
-}
-
-static void
 gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
 {
   GstGLWindowCocoa *window_cocoa;
@@ -200,16 +185,6 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
   priv = window_cocoa->priv;
 
   if (priv->internal_win_id) {
-    GstGLContextCocoa *context = (GstGLContextCocoa *) gst_gl_window_get_context (window);
-
-    if (context) {
-      if (context->priv->source_id) {
-        g_source_remove (context->priv->source_id);
-        context->priv->source_id = 0;
-      }
-      gst_object_unref (context);
-    }
-
     if (handle) {
       priv->external_view = (NSView *) handle;
       priv->visible = TRUE;
@@ -220,7 +195,15 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
     }
 
 
-    gst_gl_window_send_message (window, (GstGLWindowCB) set_window_handle_cb, window_cocoa);
+    dispatch_async (dispatch_get_main_queue (), ^{
+      NSView *view = [window_cocoa->priv->internal_win_id contentView];
+      [window_cocoa->priv->internal_win_id orderOut:window_cocoa->priv->internal_win_id];
+
+      [window_cocoa->priv->external_view addSubview: view];
+
+      [view setFrame: [window_cocoa->priv->external_view bounds]];
+      [view setAutoresizingMask: NSViewWidthSizable|NSViewHeightSizable];
+    });
   } else {
     /* no internal window yet so delay it to the next drawing */
     priv->external_view = (NSView*) handle;
@@ -250,39 +233,38 @@ draw_cb (gpointer data)
   }
 
   if (!priv->external_view && !priv->visible) {
-    gint x = 0;
-    gint y = 0;
+    dispatch_sync (dispatch_get_main_queue (), ^{
+      NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
+      NSRect windowRect = [priv->internal_win_id frame];
+      gint x = 0;
+      gint y = 0;
 
-    /* FIXME: This should probably be done from the application main thread */
+      GST_DEBUG ("main screen rect: %d %d %d %d\n", (int) mainRect.origin.x,
+          (int) mainRect.origin.y, (int) mainRect.size.width,
+          (int) mainRect.size.height);
 
-    NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
-    NSRect windowRect = [priv->internal_win_id frame];
+      windowRect.origin.x += x;
+      windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
+      windowRect.size.width = draw_data->width;
+      windowRect.size.height = draw_data->height;
 
-    GST_DEBUG ("main screen rect: %d %d %d %d\n", (int) mainRect.origin.x,
-        (int) mainRect.origin.y, (int) mainRect.size.width,
-        (int) mainRect.size.height);
+      GST_DEBUG ("window rect: %d %d %d %d\n", (int) windowRect.origin.x,
+          (int) windowRect.origin.y, (int) windowRect.size.width,
+          (int) windowRect.size.height);
 
-    windowRect.origin.x += x;
-    windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
-    windowRect.size.width = draw_data->width;
-    windowRect.size.height = draw_data->height;
-
-    GST_DEBUG ("window rect: %d %d %d %d\n", (int) windowRect.origin.x,
-        (int) windowRect.origin.y, (int) windowRect.size.width,
-        (int) windowRect.size.height);
-
-    x += 20;
-    y += 20;
+      x += 20;
+      y += 20;
 
 #ifndef GNUSTEP
-    [priv->internal_win_id setFrame:windowRect display:NO];
-    GST_DEBUG ("make the window available\n");
-    [priv->internal_win_id makeMainWindow];
+      [priv->internal_win_id setFrame:windowRect display:NO];
+      GST_DEBUG ("make the window available\n");
+      [priv->internal_win_id makeMainWindow];
 #endif
 
-    [priv->internal_win_id orderFrontRegardless];
+      [priv->internal_win_id orderFrontRegardless];
 
-    /*[priv->internal_win_id setViewsNeedDisplay:YES]; */
+      [priv->internal_win_id setViewsNeedDisplay:YES];
+    });
     priv->visible = TRUE;
   }
 
@@ -383,6 +365,7 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 /*                                                              */
 /* =============================================================*/
 
+/* Must be called from the main thread */
 @implementation GstGLNSWindow
 
 - (id) initWithContentRect: (NSRect) contentRect
@@ -446,7 +429,6 @@ close_window_cb (gpointer data)
 
   window = GST_GL_WINDOW (window_cocoa);
 
-  [window_cocoa->priv->internal_win_id setClosed];
   if (window->close) {
     window->close (window->close_data);
   }
@@ -456,7 +438,8 @@ close_window_cb (gpointer data)
 - (BOOL) windowShouldClose:(id)sender {
 
   GST_DEBUG ("user clicked the close button\n");
-  gst_gl_window_send_message (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) close_window_cb, window_cocoa);
+  [window_cocoa->priv->internal_win_id setClosed];
+  gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) close_window_cb, gst_object_ref (window_cocoa), (GDestroyNotify) gst_object_unref);
   return YES;
 }
 
@@ -496,9 +479,9 @@ close_window_cb (gpointer data)
 
 @implementation GstGLNSView
 
+/* Must be called from the application main thread */
 - (id)initWithFrame:(GstGLWindowCocoa *)window rect:(NSRect)contentRect {
 
-  /* FIXME: This should probably be done from the application main thread */
   self = [super initWithFrame: contentRect];
 
   window_cocoa = window;
@@ -556,7 +539,7 @@ resize_cb (gpointer data)
     NSRect bounds = [self bounds];
     NSRect visibleRect = [self visibleRect];
     NSSize frameSize = [self frame].size;
-    struct resize resize_data;
+    struct resize *resize_data = g_new (struct resize, 1);
 
     GST_DEBUG_OBJECT (window, "Window resized: bounds %lf %lf %lf %lf, "
                       "visibleRect %lf %lf %lf %lf, frame size %lf %lf",
@@ -566,12 +549,12 @@ resize_cb (gpointer data)
                       visibleRect.size.width, visibleRect.size.height,
                       frameSize.width, frameSize.height);
 
-    resize_data.window = window_cocoa;
-    resize_data.bounds = bounds;
-    resize_data.visibleRect = visibleRect;
-    resize_data.frameSize = frameSize;
+    resize_data->window = window_cocoa;
+    resize_data->bounds = bounds;
+    resize_data->visibleRect = visibleRect;
+    resize_data->frameSize = frameSize;
 
-    gst_gl_window_send_message (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) resize_cb, &resize_data);
+    gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) resize_cb, resize_data, (GDestroyNotify) g_free);
   }
 }
 
