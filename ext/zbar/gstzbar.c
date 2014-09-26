@@ -101,9 +101,8 @@ enum
 #define DEFAULT_CACHE    FALSE
 #define DEFAULT_MESSAGE  TRUE
 
-/* FIXME: add YVU9 and YUV9 once we have a GstVideoFormat for that */
 #define ZBAR_YUV_CAPS \
-    "{ Y800, I420, YV12, NV12, NV21, Y41B, Y42B }"
+    "{ Y800, I420, YV12, NV12, NV21, Y41B, Y42B, YUV9, YVU9 }"
 
 static GstStaticPadTemplate gst_zbar_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
