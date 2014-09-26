@@ -3,6 +3,6 @@
 .dest 4 d1 guint8
 .param 4 p1
 
-copyl d1, p1
+storel d1, p1
 
 
