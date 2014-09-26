@@ -201,7 +201,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   GstGLContextCocoaPrivate *priv = context_cocoa->priv;
   GstGLWindow *window = gst_gl_context_get_window (context);
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
-  GstGLNSOpenGLView *glView = nil;
+  GstGLNSView *glView = nil;
   NSWindow *window_handle;
   NSRect rect;
   NSAutoreleasePool *pool;
@@ -234,12 +234,10 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   rect.size.width = 320;
   rect.size.height = 240;
 
-  priv->rect = rect;
-
-  gst_gl_window_cocoa_create_window (window_cocoa);
+  gst_gl_window_cocoa_create_window (window_cocoa, rect);
   window_handle = (NSWindow *) gst_gl_window_get_window_handle (window);
 
-  glView = [GstGLNSOpenGLView alloc];
+  glView = [GstGLNSView alloc];
 
   fmt = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
 
@@ -249,7 +247,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
     return FALSE;
   }
 
-  glView = [glView initWithFrame:window_cocoa rect:rect pixelFormat:fmt];
+  glView = [glView initWithFrame:window_cocoa rect:rect];
 
   [window_handle setContentView:glView];
 
@@ -263,11 +261,9 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 
   [glContext setView:glView];
 
-  [glView setOpenGLContext:glContext];
-
 #else
   /* FIXME try to make context sharing work in GNUstep */
-  context_cocoa->priv->gl_context = [glView openGLContext];
+  context_cocoa->priv->gl_context = glContext;
 #endif
 
   /* OpenGL context is made current only one time threre.
@@ -287,7 +283,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 #else
       const GLint swapInterval = 1;
 #endif
-      [[glView openGLContext] setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
+      [glContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
     }
   } NS_HANDLER {
      GST_DEBUG ("your back-end does not implement NSOpenglContext::setValues\n");

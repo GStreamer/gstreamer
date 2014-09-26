@@ -34,25 +34,23 @@ struct _GstGLContextCocoaPrivate
 {
   NSOpenGLContext *gl_context;
   NSOpenGLContext *external_gl_context;
-  NSRect rect;
   gint source_id;
 };
 
 
 /* =============================================================*/
 /*                                                              */
-/*                  GstGLNSOpenGLView declaration               */
+/*                  GstGLNSView declaration               */
 /*                                                              */
 /* =============================================================*/
 
-@interface GstGLNSOpenGLView: NSOpenGLView {
-  GstGLWindowCocoa *m_cocoa;
+@interface GstGLNSView: NSView {
+  GstGLWindowCocoa *window_cocoa;
 }
-- (id) initWithFrame:(GstGLWindowCocoa *)window rect:(NSRect)contentRect
-    pixelFormat:(NSOpenGLPixelFormat *)fmt;
+- (id) initWithFrame:(GstGLWindowCocoa *)window rect:(NSRect)contentRect;
 @end
 
-gboolean gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa);
+gboolean gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa, NSRect rect);
 
 G_END_DECLS
 
