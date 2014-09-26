@@ -148,13 +148,18 @@ extractable_get_id (GESExtractable * self)
   return NULL;
 }
 
-static void
+static gboolean
 extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
   GEnumClass *enum_class;
   GESVideoStandardTransitionType value;
   GESTransitionClip *trans = GES_TRANSITION_CLIP (self);
   const gchar *vtype = ges_asset_get_id (asset);
+
+  if (!(ges_clip_get_supported_formats (GES_CLIP (self)) &
+          GES_TRACK_TYPE_VIDEO)) {
+    return FALSE;
+  }
 
   /* Update the transition type if we actually changed it */
   if (g_strcmp0 (vtype, trans->priv->vtype_name)) {
@@ -172,6 +177,8 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
     }
     ges_transition_clip_update_vtype_internal (GES_CLIP (self), value, FALSE);
   }
+
+  return TRUE;
 }
 
 static void
@@ -181,7 +188,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->get_id = extractable_get_id;
   iface->get_parameters_from_id = extractable_get_parameters_from_id;
   iface->can_update_asset = TRUE;
-  iface->set_asset = extractable_set_asset;
+  iface->set_asset_full = extractable_set_asset;
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESTransitionClip,

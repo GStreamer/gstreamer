@@ -63,6 +63,9 @@ struct _GESExtractableInterface
   void (*set_asset)                  (GESExtractable *self,
                                          GESAsset *asset);
 
+  gboolean (*set_asset_full)         (GESExtractable *self,
+                                      GESAsset *asset);
+
   GParameter *(*get_parameters_from_id) (const gchar *id,
                                          guint *n_params);
 
@@ -79,7 +82,7 @@ struct _GESExtractableInterface
 };
 
 GESAsset* ges_extractable_get_asset      (GESExtractable *self);
-void ges_extractable_set_asset              (GESExtractable *self,
+gboolean ges_extractable_set_asset              (GESExtractable *self,
                                                 GESAsset *asset);
 
 gchar * ges_extractable_get_id                 (GESExtractable *self);

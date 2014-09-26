@@ -71,6 +71,7 @@ ges_extractable_default_init (GESExtractableInterface * iface)
       ges_extractable_get_real_extractable_type_default;
   iface->get_parameters_from_id = extractable_get_parameters_from_id;
   iface->set_asset = NULL;
+  iface->set_asset_full = NULL;
   iface->get_id = extractable_get_id;
   iface->register_metas = NULL;
   iface->can_update_asset = FALSE;
@@ -98,13 +99,15 @@ ges_extractable_get_asset (GESExtractable * self)
  * @asset: (transfer none): The #GESAsset to set
  *
  * Method to set the asset which instantiated the specified object
+ *
+ * Return: %TRUE if @asset could be set %FALSE otherwize
  */
-void
+gboolean
 ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
   GESExtractableInterface *iface;
 
-  g_return_if_fail (GES_IS_EXTRACTABLE (self));
+  g_return_val_if_fail (GES_IS_EXTRACTABLE (self), FALSE);
 
   iface = GES_EXTRACTABLE_GET_INTERFACE (self);
   GST_DEBUG_OBJECT (self, "Setting asset to %" GST_PTR_FORMAT, asset);
@@ -113,15 +116,20 @@ ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)
       g_object_get_qdata (G_OBJECT (self), ges_asset_key)) {
     GST_WARNING_OBJECT (self, "Can not reset asset on object");
 
-    return;
+    return FALSE;
   }
 
   g_object_set_qdata_full (G_OBJECT (self), ges_asset_key,
       gst_object_ref (asset), gst_object_unref);
 
   /* Let classes that implement the interface know that a asset has been set */
+  if (iface->set_asset_full)
+    return iface->set_asset_full (self, asset);
+
   if (iface->set_asset)
     iface->set_asset (self, asset);
+
+  return TRUE;
 }
 
 /**
