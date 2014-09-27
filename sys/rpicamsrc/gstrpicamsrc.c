@@ -155,8 +155,8 @@ enum
   "width = " GST_VIDEO_SIZE_RANGE ", "          \
   "height = " GST_VIDEO_SIZE_RANGE ", "         \
   "framerate = " GST_VIDEO_FPS_RANGE ", "       \
-  "stream-format = (string) { byte-stream }, "  \
-  "alignment = (string) { au }, "               \
+  "stream-format = (string) byte-stream, "  \
+  "alignment = (string) au, "               \
   "profile = (string) { baseline, main, high }"
 
 static GstStaticPadTemplate video_src_template = GST_STATIC_PAD_TEMPLATE ("src",
