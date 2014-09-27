@@ -1117,6 +1117,38 @@ apply_buffer (GstMultiQueue * mq, GstSingleQueue * sq, GstClockTime timestamp,
   gst_multi_queue_post_buffering (mq);
 }
 
+static void
+apply_gap (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
+    GstSegment * segment)
+{
+  GstClockTime timestamp;
+  GstClockTime duration;
+
+  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+
+  gst_event_parse_gap (event, &timestamp, &duration);
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+
+    if (GST_CLOCK_TIME_IS_VALID (duration)) {
+      timestamp += duration;
+    }
+
+    segment->position = timestamp;
+
+    if (segment == &sq->sink_segment)
+      sq->sink_tainted = TRUE;
+    else
+      sq->src_tainted = TRUE;
+
+    /* calc diff with other end */
+    update_time_level (mq, sq);
+  }
+
+  GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+  gst_multi_queue_post_buffering (mq);
+}
+
 static GstClockTime
 get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
 {
@@ -1210,6 +1242,11 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
       case GST_EVENT_SEGMENT:
         apply_segment (mq, sq, event, &sq->src_segment);
         /* Applying the segment may have made the queue non-full again, unblock it if needed */
+        gst_data_queue_limits_changed (sq->queue);
+        break;
+      case GST_EVENT_GAP:
+        apply_gap (mq, sq, event, &sq->src_segment);
+        /* Applying the gap may have made the queue non-full again, unblock it if needed */
         gst_data_queue_limits_changed (sq->queue);
         break;
       default:
@@ -1697,7 +1734,9 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_single_queue_flush (mq, sq, FALSE, FALSE);
       goto done;
+
     case GST_EVENT_SEGMENT:
+    case GST_EVENT_GAP:
       /* take ref because the queue will take ownership and we need the event
        * afterwards to update the segment */
       sref = gst_event_ref (event);
@@ -1759,6 +1798,9 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       apply_segment (mq, sq, sref, &sq->sink_segment);
       gst_event_unref (sref);
       break;
+    case GST_EVENT_GAP:
+      apply_gap (mq, sq, sref, &sq->sink_segment);
+      gst_event_unref (sref);
     default:
       break;
   }
