@@ -339,6 +339,11 @@ typedef struct GESMultiFileURI
 
 G_GNUC_INTERNAL GESMultiFileURI * ges_multi_file_uri_new (const gchar * uri);
 
+/************************
+ * Our property masks   *
+ ************************/
+#define GES_PARAM_NO_SERIALIZATION (1 << (G_PARAM_USER_SHIFT + 1))
+
 /********************
  *  Gnonlin helpers *
  ********************/

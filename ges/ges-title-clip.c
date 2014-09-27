@@ -179,7 +179,8 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
    */
   g_object_class_install_property (object_class, PROP_TEXT,
       g_param_spec_string ("text", "Text", "The text to display",
-          DEFAULT_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+          GES_PARAM_NO_SERIALIZATION));
 
   /**
    * GESTitleClip:font-desc:
@@ -191,7 +192,8 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
           "Pango font description of font to be used for rendering. "
           "See documentation of pango_font_description_from_string "
           "for syntax.", DEFAULT_FONT_DESC,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS |
+          GES_PARAM_NO_SERIALIZATION));
 
   /**
    * GESTitleClip:valignment:
@@ -202,7 +204,8 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
       g_param_spec_enum ("valignment", "vertical alignment",
           "Vertical alignment of the text", GES_TEXT_VALIGN_TYPE,
           DEFAULT_VALIGNMENT,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS |
+          GES_PARAM_NO_SERIALIZATION));
   /**
    * GESTitleClip:halignment:
    *
@@ -212,7 +215,8 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
       g_param_spec_enum ("halignment", "horizontal alignment",
           "Horizontal alignment of the text",
           GES_TEXT_HALIGN_TYPE, DEFAULT_HALIGNMENT,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS |
+          GES_PARAM_NO_SERIALIZATION));
 
   timobj_class->create_track_element = ges_title_clip_create_track_element;
 
@@ -227,7 +231,8 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
 
   g_object_class_install_property (object_class, PROP_COLOR,
       g_param_spec_uint ("color", "Color", "The color of the text",
-          0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+          GES_PARAM_NO_SERIALIZATION));
 
   /**
    * GESTitleClip:background:
@@ -238,7 +243,7 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
   g_object_class_install_property (object_class, PROP_BACKGROUND,
       g_param_spec_uint ("background", "Background",
           "The background of the text", 0, G_MAXUINT32, G_MAXUINT32,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | GES_PARAM_NO_SERIALIZATION));
 
   /**
    * GESTitleClip:xpos:
@@ -248,7 +253,8 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
 
   g_object_class_install_property (object_class, PROP_XPOS,
       g_param_spec_double ("xpos", "Xpos", "The horizontal position",
-          0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT
+          | GES_PARAM_NO_SERIALIZATION));
 
   /**
    * GESTitleClip:ypos:
@@ -258,7 +264,8 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
 
   g_object_class_install_property (object_class, PROP_YPOS,
       g_param_spec_double ("ypos", "Ypos", "The vertical position",
-          0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT
+          | GES_PARAM_NO_SERIALIZATION));
 }
 
 static void

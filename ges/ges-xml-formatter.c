@@ -749,14 +749,39 @@ append_escaped (GString * str, gchar * tmpstr)
 static inline gboolean
 _can_serialize_spec (GParamSpec * spec)
 {
-  if (spec->flags & G_PARAM_WRITABLE && !(spec->flags & G_PARAM_CONSTRUCT_ONLY)
-      && !g_type_is_a (G_PARAM_SPEC_VALUE_TYPE (spec), G_TYPE_OBJECT)
-      && (!(g_type_is_a (spec->owner_type, GST_TYPE_OBJECT) &&
-              !g_strcmp0 (spec->name, "name")))
-      && G_PARAM_SPEC_VALUE_TYPE (spec) != G_TYPE_GTYPE)
-    return TRUE;
+  if (!(spec->flags & G_PARAM_WRITABLE)) {
+    GST_DEBUG ("%s from %s is not writable",
+        spec->name, g_type_name (spec->owner_type));
 
-  return FALSE;
+    return FALSE;
+  } else if (spec->flags & G_PARAM_CONSTRUCT_ONLY) {
+    GST_DEBUG ("%s from %s is construct only",
+        spec->name, g_type_name (spec->owner_type));
+
+    return FALSE;
+  } else if (spec->flags & GES_PARAM_NO_SERIALIZATION &&
+      g_type_is_a (spec->owner_type, GES_TYPE_TIMELINE_ELEMENT)) {
+    GST_DEBUG ("%s from %s is set as GES_PARAM_NO_SERIALIZATION",
+        spec->name, g_type_name (spec->owner_type));
+
+    return FALSE;
+  } else if (g_type_is_a (G_PARAM_SPEC_VALUE_TYPE (spec), G_TYPE_OBJECT)) {
+    GST_DEBUG ("%s from %s contains GObject, can't serialize that.",
+        spec->name, g_type_name (spec->owner_type));
+
+    return FALSE;
+  } else if ((g_type_is_a (spec->owner_type, GST_TYPE_OBJECT) &&
+          !g_strcmp0 (spec->name, "name"))) {
+
+    GST_DEBUG ("We do not want to serialize the name of GstObjects.");
+    return FALSE;
+  } else if (G_PARAM_SPEC_VALUE_TYPE (spec) == G_TYPE_GTYPE) {
+    GST_DEBUG ("%s from %s contains a GType, can't serialize.",
+        spec->name, g_type_name (spec->owner_type));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static inline void

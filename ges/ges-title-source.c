@@ -141,10 +141,15 @@ ges_title_source_set_property (GObject * object,
 static GstElement *
 ges_title_source_create_source (GESTrackElement * object)
 {
-  GESTitleSource *self = GES_TITLE_SOURCE (object);
-  GESTitleSourcePrivate *priv = self->priv;
   GstElement *topbin, *background, *text;
   GstPad *src, *pad;
+
+  GESTitleSource *self = GES_TITLE_SOURCE (object);
+  GESTitleSourcePrivate *priv = self->priv;
+  const gchar *bg_props[] = { "pattern", "foreground-color", NULL };
+  const gchar *text_props[] = { "text", "font-desc", "valignment", "halignment",
+    "color", "xpos", "ypos", NULL
+  };
 
   topbin = gst_bin_new ("titlesrc-bin");
   background = gst_element_factory_make ("videotestsrc", "titlesrc-bg");
@@ -158,14 +163,15 @@ ges_title_source_create_source (GESTrackElement * object)
   }
   g_object_set (text, "valignment", (gint) priv->valign, "halignment",
       (gint) priv->halign, NULL);
+  g_object_set (text, "color", (guint) self->priv->color, NULL);
+  g_object_set (text, "xpos", (gdouble) self->priv->xpos, NULL);
+  g_object_set (text, "ypos", (gdouble) self->priv->ypos, NULL);
+
 
   g_object_set (background, "pattern", (gint) GES_VIDEO_TEST_PATTERN_SOLID,
       NULL);
   g_object_set (background, "foreground-color", (guint) self->priv->background,
       NULL);
-  g_object_set (text, "color", (guint) self->priv->color, NULL);
-  g_object_set (text, "xpos", (gdouble) self->priv->xpos, NULL);
-  g_object_set (text, "ypos", (gdouble) self->priv->ypos, NULL);
 
   gst_bin_add_many (GST_BIN (topbin), background, text, NULL);
 
@@ -182,6 +188,10 @@ ges_title_source_create_source (GESTrackElement * object)
 
   priv->text_el = text;
   priv->background_el = background;
+
+  ges_track_element_add_children_props (object, text, NULL, NULL, text_props);
+  ges_track_element_add_children_props (object, background, NULL, NULL,
+      bg_props);
 
   return topbin;
 }
