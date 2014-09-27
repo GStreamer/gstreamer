@@ -43,7 +43,6 @@ typedef struct _GstXImageMemory GstXImageMemory;
 
 typedef struct _GstXImageBufferPool GstXImageBufferPool;
 typedef struct _GstXImageBufferPoolClass GstXImageBufferPoolClass;
-typedef struct _GstXImageBufferPoolPrivate GstXImageBufferPoolPrivate;
 
 #include "ximagesink.h"
 
@@ -88,7 +87,13 @@ struct _GstXImageBufferPool
   GstXImageSink *sink;
   GstAllocator *allocator;
 
-  GstXImageBufferPoolPrivate *priv;
+  GstCaps *caps;
+  GstVideoInfo info;
+  GstVideoAlignment align;
+  guint    padded_width;
+  guint    padded_height;
+  gboolean add_metavideo;
+  gboolean need_alignment;
 };
 
 struct _GstXImageBufferPoolClass
