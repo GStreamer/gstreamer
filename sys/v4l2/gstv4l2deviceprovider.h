@@ -36,7 +36,6 @@
 G_BEGIN_DECLS
 
 typedef struct _GstV4l2DeviceProvider GstV4l2DeviceProvider;
-typedef struct _GstV4l2DeviceProviderPrivate GstV4l2DeviceProviderPrivate;
 typedef struct _GstV4l2DeviceProviderClass GstV4l2DeviceProviderClass;
 
 #define GST_TYPE_V4L2_DEVICE_PROVIDER                 (gst_v4l2_device_provider_get_type())
@@ -73,7 +72,6 @@ GType        gst_v4l2_device_provider_get_type (void);
 
 
 typedef struct _GstV4l2Device GstV4l2Device;
-typedef struct _GstV4l2DevicePrivate GstV4l2DevicePrivate;
 typedef struct _GstV4l2DeviceClass GstV4l2DeviceClass;
 
 #define GST_TYPE_V4L2_DEVICE                 (gst_v4l2_device_get_type())
