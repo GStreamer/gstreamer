@@ -581,14 +581,33 @@ gst_gl_context_get_window (GstGLContext * context)
 }
 
 static gboolean
-_share_group_descendant (GstGLContext * context, GstGLContext * other_context)
+_share_group_descendant (GstGLContext * context, GstGLContext * other_context,
+    GstGLContext ** root)
 {
   GstGLContext *next = gst_object_ref (context);
-  while (next != NULL) {
-    GstGLContext *prev;
+  GstGLContext *prev;
 
+  /* given a context tree where --> means "has other gl context":
+   *
+   * a-->b-->c-->d
+   *    /   /
+   *   e   /
+   *      /
+   * f-->g
+   *
+   * return TRUE if @other_context is a descendant of @context
+   *
+   * e.g. [a, b], [f, d], [e, c] are all descendants
+   * but [b, a], [f, d], [e, f] are not descendants.  Provide the root node (d)
+   * so that we can check if two chains end up at the end with the same
+   * GstGLContext
+   */
+
+  while (next != NULL) {
     if (next == other_context) {
       gst_object_unref (next);
+      if (root)
+        *root = NULL;
       return TRUE;
     }
 
@@ -596,6 +615,9 @@ _share_group_descendant (GstGLContext * context, GstGLContext * other_context)
     next = g_weak_ref_get (&next->priv->other_context_ref);
     gst_object_unref (prev);
   }
+
+  if (root != NULL)
+    *root = prev;
 
   return FALSE;
 }
@@ -613,12 +635,16 @@ _share_group_descendant (GstGLContext * context, GstGLContext * other_context)
 gboolean
 gst_gl_context_can_share (GstGLContext * context, GstGLContext * other_context)
 {
+  GstGLContext *root1, *root2;
+
   g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
   g_return_val_if_fail (GST_GL_IS_CONTEXT (other_context), FALSE);
 
+  /* check if the contexts are descendants or the root nodes are the same */
   return context == other_context
-      || _share_group_descendant (context, other_context)
-      || _share_group_descendant (other_context, context);
+      || _share_group_descendant (context, other_context, &root1)
+      || _share_group_descendant (other_context, context, &root2)
+      || ((root1 != NULL || root2 != NULL) && root1 == root2);
 }
 
 /**
