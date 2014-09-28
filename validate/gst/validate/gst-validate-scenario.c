@@ -895,9 +895,14 @@ get_position (GstValidateScenario * scenario)
 
     GST_DEBUG_OBJECT (scenario, "Executing %" GST_PTR_FORMAT
         " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
-    if (!type->execute (scenario, act))
-      GST_WARNING_OBJECT (scenario, "Could not execute %" GST_PTR_FORMAT,
-          act->structure);
+    if (!type->execute (scenario, act)) {
+      gchar *str = gst_structure_to_string (act->structure);
+
+      GST_VALIDATE_REPORT (scenario,
+          SCENARIO_ACTION_EXECUTION_ERROR, "Could not execute %s", str);
+
+      g_free (str);
+    }
 
     if (act->repeat > 0) {
       act->repeat--;
