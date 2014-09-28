@@ -188,23 +188,6 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 #endif
 }
 
-/* *INDENT-OFF* */
-
-static const GLfloat positions[] = {
-     -1.0,  1.0,  0.0, 1.0,
-      1.0,  1.0,  0.0, 1.0,
-      1.0, -1.0,  0.0, 1.0,
-     -1.0, -1.0,  0.0, 1.0,
-  };
-static const GLfloat identitiy_matrix[] = {
-      1.0,  0.0,  0.0, 0.0,
-      0.0,  1.0,  0.0, 0.0,
-      0.0,  0.0,  1.0, 0.0,
-      0.0,  0.0,  0.0, 1.0,
-  };
-
-/* *INDENT-ON* */
-
 void
 gst_gl_test_src_shader (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
@@ -212,6 +195,21 @@ gst_gl_test_src_shader (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
   GstGLFuncs *gl = v->context->gl_vtable;
 
 /* *INDENT-OFF* */
+
+  const GLfloat positions[] = {
+     -1.0,  1.0,  0.0, 1.0,
+      1.0,  1.0,  0.0, 1.0,
+      1.0, -1.0,  0.0, 1.0,
+     -1.0, -1.0,  0.0, 1.0,
+  };
+
+  const GLfloat identitiy_matrix[] = {
+      1.0,  0.0,  0.0, 0.0,
+      0.0,  1.0,  0.0, 0.0,
+      0.0,  0.0,  1.0, 0.0,
+      0.0,  0.0,  0.0, 1.0,
+  };
+
   const GLfloat uvs[] = {
      0.0,  1.0,
      1.0,  1.0,
@@ -308,72 +306,168 @@ gst_gl_test_src_blue (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
   gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_BLUE);
 }
 
-static void
-gst_gl_test_src_checkers (GstGLTestSrc * v, gint checker_width)
-{
-
-  GstGLFuncs *gl = v->context->gl_vtable;
-
-  GLushort indices[] = { 0, 1, 2, 3, 0 };
-
-  GLint attr_position_loc = 0;
-
-  if (gst_gl_context_get_gl_api (v->context)) {
-
-    gst_gl_context_clear_shader (v->context);
-    gl->BindTexture (GL_TEXTURE_2D, 0);
-    gl->Disable (GL_TEXTURE_2D);
-
-    gst_gl_shader_use (v->shader);
-
-    attr_position_loc =
-        gst_gl_shader_get_attribute_location (v->shader, "position");
-
-    /* Load the vertex position */
-    gl->VertexAttribPointer (attr_position_loc, 4, GL_FLOAT,
-        GL_FALSE, 0, positions);
-
-    gl->EnableVertexAttribArray (attr_position_loc);
-
-    gst_gl_shader_set_uniform_matrix_4fv (v->shader, "mvp",
-        1, GL_FALSE, identitiy_matrix);
-
-    gst_gl_shader_set_uniform_1f (v->shader, "double_checker_width",
-        checker_width * 2);
-
-    gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
-
-    gl->DisableVertexAttribArray (attr_position_loc);
-
-    gst_gl_context_clear_shader (v->context);
-  }
-}
-
-
 void
 gst_gl_test_src_checkers1 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
-  gst_gl_test_src_checkers (v, 1);
-}
+#if 0
+  int x, y;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
 
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  for (y = 0; y < h; y++) {
+    p->color = vts_colors + COLOR_GREEN;
+    p->paint_hline (p, 0, y, w);
+    for (x = (y % 2); x < w; x += 2) {
+      p->color = vts_colors + COLOR_RED;
+      p->paint_hline (p, x, y, 1);
+    }
+  }
+#endif
+}
 
 void
 gst_gl_test_src_checkers2 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
-  gst_gl_test_src_checkers (v, 2);
+#if 0
+  int x, y;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  p->color = vts_colors + COLOR_GREEN;
+  for (y = 0; y < h; y++) {
+    p->paint_hline (p, 0, y, w);
+  }
+
+  for (y = 0; y < h; y += 2) {
+    for (x = ((y % 4) == 0) ? 0 : 2; x < w; x += 4) {
+      guint len = (x < (w - 1)) ? 2 : (w - x);
+
+      p->color = vts_colors + COLOR_RED;
+      p->paint_hline (p, x, y + 0, len);
+      if (G_LIKELY ((y + 1) < h)) {
+        p->paint_hline (p, x, y + 1, len);
+      }
+    }
+  }
+#endif
 }
 
 void
 gst_gl_test_src_checkers4 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
-  gst_gl_test_src_checkers (v, 4);
+#if 0
+  int x, y;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
 
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  p->color = vts_colors + COLOR_GREEN;
+  for (y = 0; y < h; y++) {
+    p->paint_hline (p, 0, y, w);
+  }
+
+  for (y = 0; y < h; y += 4) {
+    for (x = ((y % 8) == 0) ? 0 : 4; x < w; x += 8) {
+      guint len = (x < (w - 3)) ? 4 : (w - x);
+
+      p->color = vts_colors + COLOR_RED;
+      p->paint_hline (p, x, y + 0, len);
+      if (G_LIKELY ((y + 1) < h)) {
+        p->paint_hline (p, x, y + 1, len);
+        if (G_LIKELY ((y + 2) < h)) {
+          p->paint_hline (p, x, y + 2, len);
+          if (G_LIKELY ((y + 3) < h)) {
+            p->paint_hline (p, x, y + 3, len);
+          }
+        }
+      }
+    }
+  }
+#endif
 }
 
 void
 gst_gl_test_src_checkers8 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
-  gst_gl_test_src_checkers (v, 8);
+#if 0
+  int x, y;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  p->color = vts_colors + COLOR_GREEN;
+  for (y = 0; y < h; y++) {
+    p->paint_hline (p, 0, y, w);
+  }
+
+  for (y = 0; y < h; y += 8) {
+    for (x = ((GST_ROUND_UP_8 (y) % 16) == 0) ? 0 : 8; x < w; x += 16) {
+      guint len = (x < (w - 7)) ? 8 : (w - x);
+
+      p->color = vts_colors + COLOR_RED;
+      p->paint_hline (p, x, y + 0, len);
+      if (G_LIKELY ((y + 1) < h)) {
+        p->paint_hline (p, x, y + 1, len);
+        if (G_LIKELY ((y + 2) < h)) {
+          p->paint_hline (p, x, y + 2, len);
+          if (G_LIKELY ((y + 3) < h)) {
+            p->paint_hline (p, x, y + 3, len);
+            if (G_LIKELY ((y + 4) < h)) {
+              p->paint_hline (p, x, y + 4, len);
+              if (G_LIKELY ((y + 5) < h)) {
+                p->paint_hline (p, x, y + 5, len);
+                if (G_LIKELY ((y + 6) < h)) {
+                  p->paint_hline (p, x, y + 6, len);
+                  if (G_LIKELY ((y + 7) < h)) {
+                    p->paint_hline (p, x, y + 7, len);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+#endif
 }
 
 void

@@ -301,24 +301,6 @@ const gchar *mandelbrot_fragment_src = "uniform float time; \
       gl_FragColor = iterate_pixel(fractal_position); \
     }";
 
-
-const gchar *checkers_vertex_src = "attribute vec4 position; \
-    uniform mat4 mvp; \
-    void main() \
-    { \
-       gl_Position = mvp * position; \
-    }";
-
-const gchar *checkers_fragment_src = "uniform float double_checker_width; \
-    void main() \
-    { \
-      vec2 xy_index= floor((gl_FragCoord.xy-vec2(0.5,0.5))/double_checker_width); \
-	  vec2 xy_mod=mod(xy_index,vec2(2.0,2.0)); \
-	  float result=mod(xy_mod.x+xy_mod.y,2.0); \
-	  gl_FragColor.rgb=step(result,vec3(0.5,0.5,0.5)); \
-    }";
-
-
 static void
 gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc, gint pattern_type)
 {
@@ -351,23 +333,15 @@ gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc, gint pattern_type)
       gltestsrc->make_image = gst_gl_test_src_blue;
       break;
     case GST_GL_TEST_SRC_CHECKERS1:
-      gltestsrc->vertex_src = checkers_vertex_src;
-      gltestsrc->fragment_src = checkers_fragment_src;
       gltestsrc->make_image = gst_gl_test_src_checkers1;
       break;
     case GST_GL_TEST_SRC_CHECKERS2:
-      gltestsrc->vertex_src = checkers_vertex_src;
-      gltestsrc->fragment_src = checkers_fragment_src;
       gltestsrc->make_image = gst_gl_test_src_checkers2;
       break;
     case GST_GL_TEST_SRC_CHECKERS4:
-      gltestsrc->vertex_src = checkers_vertex_src;
-      gltestsrc->fragment_src = checkers_fragment_src;
       gltestsrc->make_image = gst_gl_test_src_checkers4;
       break;
     case GST_GL_TEST_SRC_CHECKERS8:
-      gltestsrc->vertex_src = checkers_vertex_src;
-      gltestsrc->fragment_src = checkers_fragment_src;
       gltestsrc->make_image = gst_gl_test_src_checkers8;
       break;
     case GST_GL_TEST_SRC_CIRCULAR:
