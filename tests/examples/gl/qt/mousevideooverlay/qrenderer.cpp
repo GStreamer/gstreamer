@@ -20,7 +20,7 @@
 
 #include "qrenderer.h"
 
-QRenderer::QRenderer(const QString videoLocation, QWidget *parent, Qt::WFlags flags)
+QRenderer::QRenderer(const QString videoLocation, QWidget *parent, Qt::WindowFlags flags)
     : QWidget(parent, flags),
       m_gt(winId(), videoLocation)
 {

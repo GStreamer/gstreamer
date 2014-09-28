@@ -32,6 +32,8 @@
 #include "qglrenderer.h"
 #include "pipeline.h"
 
+#include <GL/glx.h>
+
 #if defined(Q_WS_MAC)
 extern void *qt_current_nsopengl_context();
 #endif

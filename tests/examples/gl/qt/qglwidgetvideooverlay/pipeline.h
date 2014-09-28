@@ -59,10 +59,10 @@ private:
     WId winId() const { return m_winId; }
     void doExpose() const;
 
-    static gboolean reshapeCallback (void *sink, guint width, guint height, gpointer data);
-    static gboolean drawCallback (void *sink, guint texture, guint width, guint height, gpointer data);
+    static gboolean reshapeCallback (void *sink, void *context, guint width, guint height, gpointer data);
+    static gboolean drawCallback (void *sink, void *context, guint texture, guint width, guint height, gpointer data);
     static gboolean bus_call (GstBus *bus, GstMessage *msg, Pipeline* p);
-    static void cb_new_pad (GstElement* decodebin, GstPad* pad, gboolean last, Pipeline* p);
+    static void cb_new_pad (GstElement* decodebin, GstPad* pad, Pipeline* p);
     static gboolean cb_expose (gpointer data);
     static GstBusSyncReply create_window (GstBus* bus, GstMessage* message, const Pipeline* pipeline);
 };

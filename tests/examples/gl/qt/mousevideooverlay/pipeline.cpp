@@ -20,6 +20,7 @@
 
 #include <gst/video/videooverlay.h>
 #include <GL/gl.h>
+#include <GL/glu.h>
 #include "pipeline.h"
 
 Pipeline::Pipeline(const WId id, const QString videoLocation):
@@ -39,7 +40,7 @@ Pipeline::~Pipeline()
 
 void Pipeline::create()
 {
-    qDebug("Loading video: %s", m_videoLocation.toAscii().data());
+    qDebug("Loading video: %s", m_videoLocation.toLatin1().data());
 
     gst_init (NULL, NULL);
 
@@ -50,7 +51,7 @@ void Pipeline::create()
 
     m_bus = gst_pipeline_get_bus (GST_PIPELINE (m_pipeline));
     gst_bus_add_watch (m_bus, (GstBusFunc) bus_call, this);
-    gst_bus_set_sync_handler (m_bus, (GstBusSyncHandler) create_window, this);
+    gst_bus_set_sync_handler (m_bus, (GstBusSyncHandler) create_window, this, NULL);
     gst_object_unref (m_bus);
 
     GstElement* videosrc = gst_element_factory_make ("filesrc", "filesrc0");
@@ -64,7 +65,7 @@ void Pipeline::create()
     }
 
     g_object_set(G_OBJECT(videosrc), "num-buffers", 800, NULL);
-    g_object_set(G_OBJECT(videosrc), "location", m_videoLocation.toAscii().data(), NULL);
+    g_object_set(G_OBJECT(videosrc), "location", m_videoLocation.toLatin1().data(), NULL);
     g_signal_connect(G_OBJECT(m_glimagesink), "client-reshape", G_CALLBACK (reshapeCallback), NULL);
     g_signal_connect(G_OBJECT(m_glimagesink), "client-draw", G_CALLBACK (drawCallback), NULL);
 
@@ -72,7 +73,7 @@ void Pipeline::create()
 
     gst_element_link_pads (videosrc, "src", decodebin, "sink");
 
-    g_signal_connect (decodebin, "new-decoded-pad", G_CALLBACK (cb_new_pad), this);
+    g_signal_connect (decodebin, "pad-added", G_CALLBACK (cb_new_pad), this);
 }
 
 void Pipeline::start()
@@ -159,7 +160,7 @@ float Pipeline::m_yrot = 0;
 float Pipeline::m_zrot = 0;
 
 //client reshape callback
-gboolean Pipeline::reshapeCallback (void *sink, guint width, guint height, gpointer data)
+gboolean Pipeline::reshapeCallback (void *sink, void *context, guint width, guint height, gpointer data)
 {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
@@ -171,7 +172,7 @@ gboolean Pipeline::reshapeCallback (void *sink, guint width, guint height, gpoin
 }
 
 //client draw callback
-gboolean Pipeline::drawCallback (void *sink, uint texture, uint width, uint height, gpointer data)
+gboolean Pipeline::drawCallback (void *sink, void *context, uint texture, uint width, uint height, gpointer data)
 {
     static GTimeVal current_time;
     static glong last_sec = current_time.tv_sec;
@@ -182,7 +183,7 @@ gboolean Pipeline::drawCallback (void *sink, uint texture, uint width, uint heig
     
     if ((current_time.tv_sec - last_sec) >= 1)
     {
-        qDebug ("GRPHIC FPS = %d", nbFrames);
+        qDebug ("GRAPHIC FPS = %d", nbFrames);
         nbFrames = 0;
         last_sec = current_time.tv_sec;
     }
@@ -209,39 +210,39 @@ gboolean Pipeline::drawCallback (void *sink, uint texture, uint width, uint heig
 
     glBegin(GL_QUADS);
 	      // Front Face
-	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+	      glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
 	      glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f( 1.0f,  1.0f,  1.0f);
-	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f(-1.0f,  1.0f,  1.0f);
+	      glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+	      glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
 	      // Back Face
 	      glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
-	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f(-1.0f,  1.0f, -1.0f);
-	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f( 1.0f,  1.0f, -1.0f);
-	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+	      glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+	      glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+	      glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
 	      // Top Face
-	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f(-1.0f,  1.0f, -1.0f);
-	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+	      glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+	      glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
 	      glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f( 1.0f,  1.0f, -1.0f);
+	      glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
 	      // Bottom Face
-	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+	      glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
 	      glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
-	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f( 1.0f, -1.0f,  1.0f);
-	      glTexCoord2f((gfloat)width,(gfloat)height); glVertex3f(-1.0f, -1.0f,  1.0f);
+	      glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+	      glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
 	      // Right face
 	      glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
-	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f( 1.0f,  1.0f, -1.0f);
-	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f( 1.0f,  1.0f,  1.0f);
-	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+	      glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+	      glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+	      glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
 	      // Left Face
-	      glTexCoord2f((gfloat)width, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+	      glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
 	      glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-	      glTexCoord2f(0.0f, (gfloat)height); glVertex3f(-1.0f,  1.0f,  1.0f);
-	      glTexCoord2f((gfloat)width, (gfloat)height); glVertex3f(-1.0f,  1.0f, -1.0f);
+	      glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+	      glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
     glEnd(); 
 
     //return TRUE causes a postRedisplay
-    return FALSE;
+    return TRUE;
 }
 
 gboolean Pipeline::bus_call (GstBus *bus, GstMessage *msg, Pipeline* p)
@@ -274,10 +275,10 @@ gboolean Pipeline::bus_call (GstBus *bus, GstMessage *msg, Pipeline* p)
     return TRUE;
 }
 
-void Pipeline::cb_new_pad (GstElement* decodebin, GstPad* pad, gboolean last, Pipeline* p)
+void Pipeline::cb_new_pad (GstElement* decodebin, GstPad* pad, Pipeline* p)
 {
     GstElement* glimagesink = p->getVideoSink();
-    GstPad* glpad = gst_element_get_pad (glimagesink, "sink");
+    GstPad* glpad = gst_element_get_static_pad (glimagesink, "sink");
     
     //only link once 
     if (GST_PAD_IS_LINKED (glpad)) 
@@ -286,7 +287,7 @@ void Pipeline::cb_new_pad (GstElement* decodebin, GstPad* pad, gboolean last, Pi
         return;
     }
     
-    GstCaps* caps = gst_pad_get_caps (pad);
+    GstCaps* caps = gst_pad_get_current_caps (pad);
     GstStructure* str = gst_caps_get_structure (caps, 0);
     if (!g_strrstr (gst_structure_get_name (str), "video")) 
     {
