@@ -34,7 +34,7 @@ class Pipeline : public QObject
     Q_OBJECT
 
 public:
-    Pipeline(GstGLContext *context,
+    Pipeline(GstGLDisplay *display, GstGLContext *context,
         const QString &videoLocation,
         QObject *parent);
     ~Pipeline();
@@ -53,6 +53,7 @@ Q_SIGNALS:
     void stopRequested();
 
 private:
+    GstGLDisplay *display;
     GstGLContext *context;
     const QString m_videoLocation;
     GMainLoop* m_loop;
@@ -64,6 +65,7 @@ private:
 
     static void on_gst_buffer(GstElement * element, GstBuffer * buf, GstPad * pad, Pipeline* p);
     static gboolean bus_call (GstBus *bus, GstMessage *msg, Pipeline* p);
+    static gboolean sync_bus_call (GstBus *bus, GstMessage *msg, Pipeline* p);
 };
 
 #endif
