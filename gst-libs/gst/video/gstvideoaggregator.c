@@ -409,9 +409,14 @@ gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
     return FALSE;
   }
 
+  vagg->info = best_info;
+
+  /* short circuit */
+  if (vagg_klass->disable_frame_conversion)
+    return TRUE;
+
   best_colorimetry = gst_video_colorimetry_to_string (&(best_info.colorimetry));
   best_chroma = gst_video_chroma_to_string (best_info.chroma_site);
-  vagg->info = best_info;
 
   GST_DEBUG_OBJECT (vagg,
       "The output format will now be : %d with colorimetry : %s and chroma : %s",
