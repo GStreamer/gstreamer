@@ -87,7 +87,7 @@ static void identityCallback (GstElement *src, GstBuffer  *buffer, GstElement* t
 
 
 //client reshape callback
-static gboolean reshapeCallback (void * gl_sink, GLuint width, GLuint height, gpointer data)
+static gboolean reshapeCallback (void * gl_sink, void *context, GLuint width, GLuint height, gpointer data)
 {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
@@ -100,7 +100,7 @@ static gboolean reshapeCallback (void * gl_sink, GLuint width, GLuint height, gp
 
 
 //client draw callback
-static gboolean drawCallback (void * gl_sink, GLuint texture, GLuint width, GLuint height, gpointer data)
+static gboolean drawCallback (void * gl_sink, void *context, GLuint texture, GLuint width, GLuint height, gpointer data)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;
