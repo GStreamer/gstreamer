@@ -6,6 +6,8 @@ QT += opengl
 # the console on Windows
 # CONFIG += console
 DEFINES += UNICODE QT_THREAD_SUPPORT QT_CORE_LIB QT_GUI_LIB
+CONFIG += link_pkgconfig compile_libtool
+PKGCONFIG=gstreamer-1.0 gstreamer-video-1.0 gstreamer-gl-1.0
 
 win32 {
 DEFINES += WIN32
@@ -30,21 +32,8 @@ LIBS += -L"C:/gstreamer/lib" \
 }
 unix:!mac {
     DEFINES += UNIX
-    INCLUDEPATH += /home/matt/Projects/jhbuild/native/usr/include/gstreamer-1.0 \
-        /home/matt/Projects/jhbuild/native/usr/include/glib-2.0 \
-        /home/matt/Projects/jhbuild/native/usr/lib/glib-2.0/include \
-        /usr/include/gstreamer-1.0 \
-        /usr/local/include/gstreamer-1.0 \
-        /usr/include/glib-2.0 \
-        /usr/lib/glib-2.0/include \
-        /usr/include/libxml2
-    LIBS += -L/home/matt/Projects/jhbuild/native/usr/lib \
-        -lgstreamer-1.0 \
+    LIBS += \
         -lgstvideo-1.0 \
-        -lglib-2.0 \
-        -lgmodule-2.0 \
-        -lgobject-2.0 \
-        -lgthread-2.0 \
         -lgstgl-1.0 \
         -lGLU \
         -lGL

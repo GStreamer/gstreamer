@@ -1,9 +1,10 @@
 TEMPLATE = app
 TARGET = videooverlay
-DESTDIR = ./Debug
-CONFIG += debug
+DESTDIR = ./debug
+CONFIG += debug link_pkgconfig compile_libtool
 DEFINES += UNICODE QT_THREAD_SUPPORT QT_CORE_LIB QT_GUI_LIB
 QT += gui widgets
+PKGCONFIG=gstreamer-1.0 gstreamer-video-1.0
 
 win32 {
 DEFINES += WIN32
@@ -27,20 +28,8 @@ LIBS += -L"C:/gstreamer/bin" \
 unix {
 DEFINES += UNIX
 INCLUDEPATH += GeneratedFiles \
-    GeneratedFiles/Debug \
-    /usr/include/gstreamer-1.0 \
-    /usr/local/include/gstreamer-1.0 \
-    /usr/include/glib-2.0 \
-    /usr/lib/glib-2.0/include \
-    /usr/include/libxml2
-LIBS += -lgstreamer-1.0 \
-    -lgstvideo-1.0 \
-	-lglib-2.0 \
-	-lgmodule-2.0 \
-	-lgobject-2.0 \
-	-lgthread-2.0 \
-	-lGLU \
-	-lGL
+    GeneratedFiles/Debug
+LIBS += -lGLU -lGL
 }
 
 DEPENDPATH += .
