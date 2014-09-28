@@ -774,14 +774,16 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
     result = tmp;
   }
 
-  /* if output still intersects input then prefer the intersection */
-  f = gst_caps_get_features (caps, 0);
+  if (gst_caps_get_size (caps) > 0) {
+    f = gst_caps_get_features (caps, 0);
+    /* if output still intersects input then prefer the intersection */
 
-  if (!gst_caps_features_is_any (f)
-      && !gst_caps_features_is_equal (f,
-          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
-    tmp = gst_caps_intersect_full (result, caps, GST_CAPS_INTERSECT_FIRST);
-    result = gst_caps_merge (tmp, result);
+    if (!gst_caps_features_is_any (f)
+        && !gst_caps_features_is_equal (f,
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
+      tmp = gst_caps_intersect_full (result, caps, GST_CAPS_INTERSECT_FIRST);
+      result = gst_caps_merge (tmp, result);
+    }
   }
 
   GST_DEBUG_OBJECT (bt, "returning caps: %" GST_PTR_FORMAT, result);
