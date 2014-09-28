@@ -1,3 +1,6 @@
+Requires: >= Qt 5.1 for the x11extras module (or else you need to
+get x11extras from gitorious yourself)
+
 This example illustrates how to integrate Gstreamer GL plugin with
 Qt. In particular it uses glupload with fakesink elements to create
 texture with decoded video frame. This texture is shared with

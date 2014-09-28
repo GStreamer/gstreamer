@@ -37,6 +37,7 @@ unix:!mac {
         -lgstgl-1.0 \
         -lGLU \
         -lGL
+    QT += x11extras
 }
 mac {
     DEFINES += MACOSX
