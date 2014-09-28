@@ -89,7 +89,7 @@ static GstPadProbeReturn textoverlay_sink_pad_probe_cb (GstPad *pad, GstPadProbe
 
 
 //client reshape callback
-static gboolean reshapeCallback (void *gl_sink, GLuint width, GLuint height)
+static gboolean reshapeCallback (void *gl_sink, void *context, GLuint width, GLuint height)
 {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
@@ -102,7 +102,7 @@ static gboolean reshapeCallback (void *gl_sink, GLuint width, GLuint height)
 
 
 //client draw callback
-static gboolean drawCallback (void * gl_sink, GLuint texture, GLuint width, GLuint height)
+static gboolean drawCallback (void * gl_sink, void *context, GLuint texture, GLuint width, GLuint height)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;
