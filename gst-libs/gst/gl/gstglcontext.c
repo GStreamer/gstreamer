@@ -598,7 +598,7 @@ _share_group_descendant (GstGLContext * context, GstGLContext * other_context,
    * return TRUE if @other_context is a descendant of @context
    *
    * e.g. [a, b], [f, d], [e, c] are all descendants
-   * but [b, a], [f, d], [e, f] are not descendants.  Provide the root node (d)
+   * but [b, a], [d, f], [e, f] are not descendants.  Provide the root node (d)
    * so that we can check if two chains end up at the end with the same
    * GstGLContext
    */
