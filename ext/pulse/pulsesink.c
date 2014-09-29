@@ -1209,6 +1209,14 @@ gst_pulseringbuffer_start (GstAudioRingBuffer * buf)
       g_atomic_int_get (&GST_AUDIO_BASE_SINK (psink)->eos_rendering))
     gst_pulsering_set_corked (pbuf, FALSE, FALSE);
 
+  /* Wait for the stream status message to be posted. This needs to be done
+   * synchronously because the callback will take the mainloop lock
+   * (implicitly) and then take the GST_OBJECT_LOCK. Everywhere else, we take
+   * the locks in the reverse order, so not doing this synchronously could
+   * cause a deadlock. */
+  GST_DEBUG_OBJECT (psink, "waiting for stream status (ENTER) to be posted");
+  pa_threaded_mainloop_wait (mainloop);
+
   pa_threaded_mainloop_unlock (mainloop);
 
   return TRUE;
@@ -1314,6 +1322,14 @@ cleanup:
   psink->defer_pending++;
   pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
       mainloop_leave_defer_cb, psink);
+
+  /* Wait for the stream status message to be posted. This needs to be done
+   * synchronously because the callback will take the mainloop lock
+   * (implicitly) and then take the GST_OBJECT_LOCK. Everywhere else, we take
+   * the locks in the reverse order, so not doing this synchronously could
+   * cause a deadlock. */
+  GST_DEBUG_OBJECT (psink, "waiting for stream status (LEAVE) to be posted");
+  pa_threaded_mainloop_wait (mainloop);
 
   pa_threaded_mainloop_unlock (mainloop);
 
