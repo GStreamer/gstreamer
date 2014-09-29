@@ -60,6 +60,9 @@ GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 #define DEFAULT_MUTE            FALSE
 #define MAX_VOLUME              10.0
 
+/* See the pulsesink code for notes on how we interact with the PA mainloop
+ * thread. */
+
 enum
 {
   PROP_0,
