@@ -1466,10 +1466,8 @@ gst_audio_base_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
 
   GST_DEBUG_OBJECT (sink, "latency synced");
 
-  /* Do not acquire the sink object lock before trying to get time on the Sink. 
-   * The get_time call may need to acquire the pulse audio mainloop lock. This can 
-   * cause a deadlock with the Pulse Audio main loop thread which in turn has 
-   * acquired its mainloop lock and now needs to acquire Object lock on the sink. */
+  /* We might need to take the object lock within gst_audio_clock_get_time(),
+   * so call that before we take it again */
   itime = gst_audio_clock_get_time (sink->provided_clock);
   itime = gst_audio_clock_adjust (sink->provided_clock, itime);
 
