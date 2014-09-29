@@ -661,8 +661,10 @@ _gl_mem_unmap (GstGLMemory * gl_mem)
   if ((gl_mem->map_flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
     if ((gl_mem->map_flags & GST_MAP_GL) == GST_MAP_GL) {
       GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
+      GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
     } else {
       GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+      GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
     }
   }
 
