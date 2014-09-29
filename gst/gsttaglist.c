@@ -401,6 +401,10 @@ _priv_gst_tag_initialize (void)
   gst_tag_register_static (GST_TAG_MIDI_BASE_NOTE, GST_TAG_FLAG_META,
       G_TYPE_UINT,
       _("midi-base-note"), _("Midi note number of the audio track."), NULL);
+  gst_tag_register_static (GST_TAG_PRIVATE_DATA, GST_TAG_FLAG_META,
+      GST_TYPE_SAMPLE,
+      _("private-data"), _("Private data"), gst_tag_merge_use_first);
+
 }
 
 /**

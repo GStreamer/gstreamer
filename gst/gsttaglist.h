@@ -1060,6 +1060,23 @@ gst_tag_list_copy (const GstTagList * taglist)
  * Since: 1.4
  */
 #define GST_TAG_MIDI_BASE_NOTE                    "midi-base-note"
+/**
+ * GST_TAG_PRIVATE_DATA:
+ *
+ * Any private data that may be contained in tags (sample).
+ *
+ * It is represented by #GstSample in which #GstBuffer contains the
+ * binary data and the sample's info #GstStructure may contain any
+ * extra information that identifies the origin or meaning of the data.
+ *
+ * Private frames in ID3v2 tags ('PRIV' frames) will be represented
+ * using this tag, in which case the GstStructure will be named
+ * "ID3PrivateFrame" and contain a field named "owner" of type string
+ * which contains the owner-identification string from the tag.
+ *
+ * Since: 1.8
+ */
+#define GST_TAG_PRIVATE_DATA                         "private-data"
 
 G_END_DECLS
 
