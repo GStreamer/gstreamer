@@ -154,24 +154,40 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
      * glib main loop running this is for debugging
      * purposes so that's ok to let us a chance
      */
+    GMainContext *context;
     gboolean is_loop_running = FALSE;
     gint64 end_time = 0;
 
-    g_mutex_init (&nsapp_lock);
-    g_cond_init (&nsapp_cond);
+    context = g_main_context_default ();
 
-    g_mutex_lock (&nsapp_lock);
-    g_idle_add_full (G_PRIORITY_HIGH, gst_gl_window_cocoa_init_nsapp, NULL, NULL);
-    end_time = g_get_monotonic_time () + 2 * 1000 * 1000;
-    is_loop_running = g_cond_wait_until (&nsapp_cond, &nsapp_lock, end_time);
-    g_mutex_unlock (&nsapp_lock);
+    if (g_main_context_is_owner (context)) {
+      /* At the thread running the default GLib main context but
+       * not the Cocoa main thread
+       * We can't do anything here
+       */
+    } else if (g_main_context_acquire (context)) {
+      /* No main loop running on the default main context,
+       * we can't do anything here */
+      g_main_context_release (context);
+    } else {
+      /* Main loop running on the default main context but it
+       * is not running in this thread */
+      g_mutex_init (&nsapp_lock);
+      g_cond_init (&nsapp_cond);
 
-    if (!is_loop_running) {
-      GST_WARNING ("no mainloop running");
+      g_mutex_lock (&nsapp_lock);
+      g_idle_add_full (G_PRIORITY_HIGH, gst_gl_window_cocoa_init_nsapp, NULL, NULL);
+      end_time = g_get_monotonic_time () + 500 * 1000;
+      is_loop_running = g_cond_wait_until (&nsapp_cond, &nsapp_lock, end_time);
+      g_mutex_unlock (&nsapp_lock);
+
+      if (!is_loop_running) {
+        GST_WARNING ("no mainloop running");
+      }
+
+      g_cond_clear (&nsapp_cond);
+      g_mutex_clear (&nsapp_lock);
     }
-
-    g_cond_clear (&nsapp_cond);
-    g_mutex_clear (&nsapp_lock);
   }
 
   [pool release];
