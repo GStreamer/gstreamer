@@ -1748,7 +1748,7 @@ gst_uri_join (GstUri * base_uri, GstUri * ref_uri)
         else {
           GList *mrgd = _merge (base_uri->path, ref_uri->path);
           t->path = _remove_dot_segments (mrgd);
-          g_list_free (mrgd);
+          g_list_free_full (mrgd, g_free);
         }
         t->query = _gst_uri_copy_query_table (ref_uri->query);
       }
