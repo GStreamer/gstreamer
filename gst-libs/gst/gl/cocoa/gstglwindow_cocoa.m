@@ -530,6 +530,10 @@ resize_cb (gpointer data)
   gst_object_unref (context);
 }
 
+- (void)drawRect: (NSRect)dirtyRect {
+  [self reshape];
+}
+
 - (void)reshape {
   GstGLWindow *window;
 
