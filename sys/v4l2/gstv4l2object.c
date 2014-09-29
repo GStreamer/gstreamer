@@ -2569,6 +2569,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   gint n_v4l_planes;
   gint i = 0;
   gboolean is_mplane, format_changed;
+  enum v4l2_colorspace colorspace = 0;
 
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
@@ -2604,6 +2605,28 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     field = V4L2_FIELD_NONE;
   }
 
+  if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
+    /* We should set colorspace if we have it */
+    if (gst_video_colorimetry_matches (&info.colorimetry, "bt601")) {
+      colorspace = V4L2_COLORSPACE_SMPTE170M;
+    } else if (gst_video_colorimetry_matches (&info.colorimetry, "bt709")) {
+      colorspace = V4L2_COLORSPACE_REC709;
+    } else if (gst_video_colorimetry_matches (&info.colorimetry, "smpte240m")) {
+      colorspace = V4L2_COLORSPACE_SMPTE240M;
+    } else {
+      /* Try to guess colorspace according to pixelformat and size */
+      if (GST_VIDEO_INFO_IS_YUV (&info)) {
+        /* SD streams likely use SMPTE170M and HD streams REC709 */
+        if (width <= 720 && height <= 576)
+          colorspace = V4L2_COLORSPACE_SMPTE170M;
+        else
+          colorspace = V4L2_COLORSPACE_REC709;
+      } else if (GST_VIDEO_INFO_IS_RGB (&info)) {
+        colorspace = V4L2_COLORSPACE_SRGB;
+      }
+    }
+  }
+
   GST_DEBUG_OBJECT (v4l2object->element, "Desired format %dx%d, format "
       "%" GST_FOURCC_FORMAT " stride: %d", width, height,
       GST_FOURCC_ARGS (pixelformat), GST_VIDEO_INFO_PLANE_STRIDE (&info, 0));
@@ -2631,6 +2654,16 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         format.fmt.pix_mp.height != height ||
         format.fmt.pix_mp.pixelformat != pixelformat ||
         format.fmt.pix_mp.field != field;
+
+    if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
+      if (is_mplane) {
+        format_changed = format_changed ||
+            format.fmt.pix_mp.colorspace != colorspace;
+      } else {
+        format_changed = format_changed ||
+            format.fmt.pix.colorspace != colorspace;
+      }
+    }
   }
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -2720,14 +2753,25 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   }
 #endif
 
+  if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
+    if (is_mplane)
+      format.fmt.pix_mp.colorspace = colorspace;
+    else
+      format.fmt.pix.colorspace = colorspace;
+
+    GST_DEBUG_OBJECT (v4l2object->element, "Desired colorspace is %d",
+        colorspace);
+  }
+
   if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
     goto set_fmt_failed;
 
   GST_DEBUG_OBJECT (v4l2object->element, "Got format of %dx%d, format "
-      "%" GST_FOURCC_FORMAT ", nb planes %d", format.fmt.pix.width,
-      format.fmt.pix_mp.height,
+      "%" GST_FOURCC_FORMAT ", nb planes %d, colorspace %d",
+      format.fmt.pix.width, format.fmt.pix_mp.height,
       GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
-      is_mplane ? format.fmt.pix_mp.num_planes : 1);
+      is_mplane ? format.fmt.pix_mp.num_planes : 1,
+      is_mplane ? format.fmt.pix_mp.colorspace : format.fmt.pix.colorspace);
 
 #ifndef GST_DISABLE_GST_DEBUG
   if (is_mplane) {
