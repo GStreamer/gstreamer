@@ -585,7 +585,7 @@ _share_group_descendant (GstGLContext * context, GstGLContext * other_context,
     GstGLContext ** root)
 {
   GstGLContext *next = gst_object_ref (context);
-  GstGLContext *prev;
+  GstGLContext *prev = NULL;
 
   /* given a context tree where --> means "has other gl context":
    *
