@@ -76,6 +76,8 @@ struct _GstControlPoint
 
 };
 
+GType gst_control_point_get_type (void);
+
 /**
  * GstTimedValueControlSource:
  *
