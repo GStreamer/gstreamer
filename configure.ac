@@ -513,18 +513,9 @@ if test "x$HAVE_IOS" = "xyes"; then
   AC_DEFINE(HAVE_IOS, 1, [Define if building for Apple iOS])
 fi
 
+dnl VideoToolbox elements are not ported to iOS yet in 1.4
 if test "x$HAVE_IOS" = "xyes"; then
-  AC_MSG_CHECKING([Checking for __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_8_0])
-
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <AvailabilityMacros.h>]], [[
-        #if !defined(__IPHONE_OS_VERSION_MIN_REQUIRED) || __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_8_0
-        #error "Need iOS >= 8.0 for VideoToolbox"
-        #endif
-  ]])], [ AC_MSG_RESULT(yes)
-    HAVE_VIDEOTOOLBOX="yes"
-  ], [ AC_MSG_RESULT(no)
-    HAVE_VIDEOTOOLBOX="no"
-  ])
+  HAVE_VIDEOTOOLBOX="no"
 fi
 
 AM_CONDITIONAL(HAVE_VIDEOTOOLBOX, test "x$HAVE_VIDEOTOOLBOX" = "xyes")
