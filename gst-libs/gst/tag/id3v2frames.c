@@ -59,6 +59,7 @@ static gboolean
 id3v2_genre_fields_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
     GArray * tag_fields);
 static gboolean parse_picture_frame (ID3TagsWorking * work);
+static gboolean parse_private_frame_data (ID3TagsWorking * work);
 
 #define ID3V2_ENCODING_ISO8859 0x00
 #define ID3V2_ENCODING_UTF16   0x01
@@ -201,6 +202,9 @@ id3v2_parse_frame (ID3TagsWorking * work)
   } else if (!strcmp (work->frame_id, "UFID")) {
     /* Unique file identifier */
     tag_str = parse_unique_file_identifier (work, &tag_name);
+  } else if (!strcmp (work->frame_id, "PRIV")) {
+    /* private frame */
+    result = parse_private_frame_data (work);
   }
 #ifdef HAVE_ZLIB
   if (work->frame_flags & ID3V2_FRAME_FORMAT_COMPRESSION) {
@@ -458,6 +462,49 @@ parse_id_string (ID3TagsWorking * work, gchar ** p_str, gint * p_len,
   *p_str = g_strndup ((gchar *) work->parse_data, len);
   *p_len = len;
   *p_datalen = datalen;
+
+  return TRUE;
+}
+
+static gboolean
+parse_private_frame_data (ID3TagsWorking * work)
+{
+  GstBuffer *binary_data = NULL;
+  GstStructure *owner_info = NULL;
+  guint8 *owner_str = NULL;
+  gsize owner_len;
+  GstSample *priv_frame = NULL;
+
+  if (work->parse_size == 0) {
+    /* private frame data not available */
+    return FALSE;
+  }
+
+  owner_str =
+      (guint8 *) memchr ((guint8 *) work->parse_data, 0, work->parse_size);
+
+  if (owner_str == NULL) {
+    GST_WARNING ("Invalid PRIV frame received");
+    return FALSE;
+  }
+
+  owner_len = (gsize) (owner_str - work->parse_data) + 1;
+
+  owner_info =
+      gst_structure_new ("ID3PrivateFrame", "owner", G_TYPE_STRING,
+      work->parse_data, NULL);
+
+  binary_data = gst_buffer_new_and_alloc (work->parse_size - owner_len);
+  gst_buffer_fill (binary_data, 0, work->parse_data + owner_len,
+      work->parse_size - owner_len);
+
+  priv_frame = gst_sample_new (binary_data, NULL, NULL, owner_info);
+
+  gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
+      GST_TAG_PRIVATE_DATA, priv_frame, NULL);
+
+  gst_sample_unref (priv_frame);
+  gst_buffer_unref (binary_data);
 
   return TRUE;
 }

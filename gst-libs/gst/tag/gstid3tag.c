@@ -113,6 +113,7 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_PUBLISHER, "TPUB"},
   {GST_TAG_INTERPRETED_BY, "TPE4"},
   {GST_TAG_MUSICAL_KEY, "TKEY"},
+  {GST_TAG_PRIVATE_DATA, "PRIV"},
   {NULL, NULL}
 };
 
