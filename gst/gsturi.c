@@ -1258,7 +1258,7 @@ _gst_uri_string_to_table (const gchar * str, const gchar * part_sep,
   GHashTable *new_table = NULL;
 
   if (str) {
-    gchar *pct_part_sep, *pct_kv_sep;
+    gchar *pct_part_sep = NULL, *pct_kv_sep = NULL;
     gchar **split_parts;
 
     new_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
