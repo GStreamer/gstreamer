@@ -1,0 +1,4736 @@
+=== release 1.3.90 ===
+
+2014-09-29  Thibault Saunier <tsaunier@gnome.org>
+
+	* configure.ac:
+	  releasing 1.3.90
+
+2014-09-12 10:47:18 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gstvalidate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Factorize code to get a MediaDescriptor name for classname
+	  Instead of copy/pasting that code badly
+
+2014-09-12 10:22:15 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/docs/validate/gst-validate.types:
+	  validate/docs: Add location of Scenario/Action defines
+
+2014-09-10 16:45:41 +0530  Anuj Jaiswal <anuj.jaiswal@samsung.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  validate: (performance issue)refactor to remove duplicate assignment
+	  Signed-off-by: Anuj Jaiswal <anuj.jaiswal@samsung.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736412
+
+2014-09-11 10:54:43 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/docs/Makefile.am:
+	  validate: docs: Always dist the launcher directoty
+	  Fixing make distcheck
+
+2014-09-11 09:42:02 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Get the Runner reports in order of arrival
+	  Making sure they are printed in the right order
+
+2014-09-10 09:47:22 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	  validate: Start a testsuite
+	  Currently implemented tests are:
+	  * Settup and cleanup on monitor is done properly
+	  * Some tests in the PadMonitor are done properly, namely:
+	  - Buffer before segment
+	  - Buffer outside segment
+	  - First buffer running time is always 0
+	  - The Demuxer flow aggregation is properly checked
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736379
+
+2014-09-12 09:49:35 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	  validate/private: Avoid double typdef
+	  Instead just include required (public and local) header
+	  gst-validate-scenario.h:43:44: error: redefinition of typedef 'GstValidateActionParameter' is a C11 feature [-Werror,-Wtypedef-redefinition]
+
+2014-09-06 12:34:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/configure.ac:
+	* validate/docs/Makefile.am:
+	  validate: Make sphinx documentation generation optionnal
+
+2014-09-06 11:41:48 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/configure.ac:
+	* validate/docs/Makefile.am:
+	* validate/docs/launcher/Makefile.am:
+	* validate/docs/launcher/conf.py:
+	* validate/docs/launcher/index.rst:
+	* validate/docs/launcher/launcher.rst:
+	* validate/docs/launcher/modules.rst:
+	  validate:launcher: Add needed files to build documentation with sphinx
+
+2014-09-06 11:38:38 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/Makefile.am:
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/geslaunch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/apps/gstvalidate.py:
+	  validate: launcher: Cleanup and rename apps to avoid '-' in their name
+
+2014-09-06 10:02:13 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Avoid '.' before media file extension in test classnames
+
+2014-09-05 19:47:00 +0000  Felix Schwarz <felix.schwarz@oss.schwarz.eu>
+
+	* validate/docs/validate-design.txt:
+	* validate/docs/validate-usage.txt:
+	* validate/docs/validate/command-line-tools.xml:
+	* validate/docs/validate/envvariables.xml:
+	* validate/docs/validate/scenarios.xml:
+	  validate:docs: fix spelling mistakes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736160
+
+2014-09-05 23:15:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Take a const gchar ** in gst_validate_print_action_types
+	  This is what we actually need and thus is cleaner.
+
+2014-09-05 23:03:58 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Implement the notion of implementer namespace to the action types
+	  This allows users to know who implements an action type.
+	  + Enhance the printing of all action making it readable.
+
+2014-09-05 19:30:52 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	  validate: Add informations on the switch-track action overrided for playbin
+
+2014-09-04 23:54:34 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/docs/validate/Makefile.am:
+	* validate/docs/validate/command-line-tools.xml:
+	* validate/docs/validate/envvariables.xml:
+	* validate/docs/validate/gst-validate-docs.sgml:
+	* validate/docs/validate/scenarios.xml:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: docs: Add some GstValidate usage documentation
+	  + Fix minor issues in the gst-validate and gst-validate-transcoding
+	  tools documentation
+
+2014-09-04 11:54:41 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	  validate: remove redundant pre-condition in monitor_factory_create
+	  The same check is already done at the head of the function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736019
+
+2014-09-04 11:53:56 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: fix a couple of typos in comments
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736019
+
+2014-09-04 19:18:25 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/docs/validate-usage.txt:
+	  validate:docs: Sensibly update the usage file
+
+2014-08-22 19:30:14 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Use a GList to store action types instead of hashtable
+	  It is more adapted and allows us to print the action types in a stable
+	  maneer.
+
+2014-08-22 18:45:13 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: report: Do not repeat type name when printing its details
+
+2014-08-19 11:10:57 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/configure.ac:
+	  validate: Change the version to 1.0.0.1
+	  The 1.0.0.1 means that it is targetting the GStreamer 1.X serie,
+	  and is a git version (thus 0.1)
+	  GstValidate will most probably not be released and we should try to
+	  be able to use it with as many version of the GStreamer 1.X serie
+	  as possible.
+
+2014-08-18 18:41:50 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/Makefile.am:
+	* validate/configure.ac:
+	* validate/docs/Makefile.am:
+	* validate/docs/validate/Makefile.am:
+	* validate/docs/validate/gst-validate-docs.sgml:
+	* validate/docs/validate/gst-validate-sections.txt:
+	* validate/docs/validate/gst-validate.types:
+	* validate/docs/version.entities:
+	* validate/docs/version.entities.in:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/validate.c:
+	  validate: Document the API with gtk-doc
+
+2014-06-11 09:23:11 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/Makefile.am:
+	  validate: Add GObject Introspection support
+
+2014-08-14 10:55:44 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Rework the action parameter API
+	  Making it possible to properly define parameters, and describe them.
+	  + Document all action types!
+
+2014-08-13 23:07:47 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/validate.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Add an option to print all avalaible actions with details
+	  + Cleanup actions descriptions
+	  + Make GstValidateActionType internal only and only expose the structure
+
+2014-08-14 10:57:33 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: Use the buffering mode to see if pipeline is live or not
+
+2014-08-14 10:56:56 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: Do not segfault when receiving a segment on unlink pad
+	  For some reason we did no discover that before.
+
+2014-08-13 20:47:24 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: Make GstValidateActionType a GstMiniObject and expose it in the API
+
+2014-08-13 20:46:17 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate:scenario: Cleanup header and add some padding to classes
+	  Let's start making gst-validate ABI and API stable
+
+2014-08-20 18:59:26 +0530  Anuj Jaiswal <anuj.jaiswal@samsung.com>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate: fix some minor memory leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=735099
+
+2014-08-19 18:06:14 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: generate test names with the stream_info filename.
+	  And not with the contained uri string, which is variable.
+
+2014-08-12 15:14:28 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: The scenario only old a weak ref so unref the weak ref
+	  We were unrefing an object we did not actually own a ref on.
+
+2014-08-12 09:36:34 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	  validate: Print when we set pipeline state because of buffering
+
+2014-08-11 20:19:02 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/configure.ac:
+	* validate/tools/gst-validate-launcher.in:
+	* validate/tools/launcher/apps/Makefile.am:
+	* validate/tools/launcher/apps/validate/Makefile.am:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Properly handle libsdir when gst-validate is installed
+	  + Fix the _in_devel function
+	  + Install the validate default testsuite implementation in the right
+	  place
+
+2014-08-11 13:21:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Let testsuite know the actual file in which they are
+
+2014-08-11 13:19:22 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Add the logic of needed env variables in tests
+
+2014-08-10 12:41:57 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Expose all classes to be used to create testsuites
+	  To create testsuite from outside gst-validate, the user will need to be
+	  able to use the TestGenerator and subclasses of Test that we implement
+	  in the apps, to do so we publicly expose them in the TestManager class
+	  so that user have acces to everything they need.
+
+2014-08-10 12:04:31 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/httpserver.py:
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/reporters.py:
+	  validate:launcher: Handle stdout/stderr as possible logfiles
+	  Allowing people to get all the logs in the terminal
+
+2014-08-09 23:22:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Allow several outputs in GST_VALIDATE_FILE
+
+2014-08-09 16:34:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/utils.py:
+	  validate: Launcher: Add support for the dash protocol
+	  And make sure that the HTTP server is started if it is needed to serve
+	  some HLS or DASH streams
+
+2014-08-08 19:14:02 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/main.py:
+	  validate:Launcher: Use the first media path as a path for http server
+	  We need to have a default path and the first one sounds like a
+	  reasonnable default.
+
+2014-08-08 12:33:54 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/tools/launcher/RangeHTTPServer.py:
+	* validate/tools/launcher/httpserver.py:
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Allow limitating local HTTP server bandwith
+	  By default we limit its bandwith to 1MBps which is somehow similare to a
+	  good internet connection case.
+
+2014-08-05 18:51:20 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/switch_audio_track_while_paused.scenario:
+	* validate/tools/launcher/apps/validate/validate_testsuite.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Disable racy HLS tests
+	  + Add need-clock-synk to switch_audio_track_while_paused as it relies on
+	  the clock sync to pause and then display subtitles
+
+2014-08-05 10:59:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/apps/validate/validate_testsuite.py:
+	  validate:launcher: Take into account exitcode in transcoding tests
+	  And disable a few racy tests that were not detected because of that
+
+2014-07-29 12:17:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/validate/validate_testsuite.py:
+	  validate:launcher:testsuite: De activate backward playback where appropriate
+	  And re activate it where it works
+
+2014-07-26 11:42:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Actually accept rounding errors and small mistakes for position
+	  WHen seeking in paused the position right after should be pretty much
+	  the exact one, but sometimes it can be a little different because of
+	  rounding issues and similare.
+
+2014-07-26 11:41:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-runner.h:
+	  validate: Add a way to avoid printing all the issue in reports
+	  Avoiding user to be flooded by information he does not want while
+	  debugging
+
+2014-07-26 08:27:55 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate: Print the report when aborting because of an issue
+	  Letting a chance to the user to know what bug he faced!
+
+2014-07-24 19:26:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Enhance output about critical errors
+	  +Lower some warning to INFO
+
+2014-07-24 19:02:38 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-override-registry.h:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Allow overrides for scenario issues
+
+2014-07-21 18:00:42 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/reporters.py:
+	  validate: Avoid readding several time the same test in the tests result list
+
+2014-07-19 11:47:44 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Fix test number print
+
+2014-07-31 17:54:17 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/validate/validate_testsuite.py:
+	  tools: Launcher: Disable validate.file.*.simple.scrub_forward_seeking.synchronized
+	  It is still a bit racy and sometimes the seek just does not happen
+
+2014-07-31 17:43:51 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/validate/validate_testsuite.py:
+	  tools: launcher: Disable subtitle track switching scenario on Sintel
+	  It is racy at the moment.
+
+2014-07-23 20:39:05 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/change_state_intensive.scenario:
+	* validate/data/fast_backward.scenario:
+	* validate/data/fast_forward.scenario:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Allow informing minimum media duration in scenarios
+	  Allowing the launcher to avoid running tests on medias that are not long
+	  enough
+
+2014-07-23 17:49:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/reporters.py:
+	  validate:launcher: Always print final report + enhance output
+
+2014-07-23 14:51:43 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Properly check that remaining actions are not 'ending' ones
+	  When checking that all action were executed, we need to make sure that
+	  actions such as EOS or stop are not taken into account as we might have
+	  shorter medias than the duration of the scenario, and that should not be
+	  fatal.
+	  + Plug a leak on the way
+
+2014-07-23 14:43:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/change_state_intensive.scenario:
+	* validate/data/fast_backward.scenario:
+	* validate/data/fast_forward.scenario:
+	* validate/data/seek_backward.scenario:
+	* validate/data/seek_forward.scenario:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate: launcher: Force clock syncronization for some scenarios
+	  In some cases it is necessary that the clock is sync so that all the
+	  actions can be executed.
+
+2014-07-23 10:54:37 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  validate: Launcher: Make sure tests are always executed in same order
+
+2014-07-22 11:42:48 -0300  Thiago Santos <ts.santos@osg.samsung.com>
+
+	* validate/data/camerabin_signal.scenario:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  gst-validate-scenario: add emit-signal
+	  emit-signal action allows to emit signals to elements in scenarios.
+	  The implementation only accepts signals without arguments for now but
+	  it can be extended to use parameters if needed in the future
+
+2014-07-22 15:49:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate: Launcher: Fix a backtrace using self in a @staticmethod
+
+2014-07-21 22:41:28 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  gst-validate-scenario: the structure has the type
+	  Get the GValue directly from the structure and do not assume everything
+	  is stored as a string and use the GstStructure's GValue to set the property
+	  to the instances
+
+2014-07-21 22:01:27 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate: properly set pipeline to null before unref
+	  In case it fails when going ready->paused it will remain in ready state
+	  and be unref'd in ready, leading to an assertion
+
+2014-07-21 19:09:24 +0200  Arnaud Vrac <rawoul@gmail.com>
+
+	* validate/configure.ac:
+	* validate/gst/validate/Makefile.am:
+	  validate: Fix build on some custom platforms
+	  We need to explicitely pass GLIB_LIBS for GModule as it seems not to be included by
+	  GST_ALL_LIBS and we need LIBM
+
+2014-05-19 18:06:46 +0200  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* validate/tools/launcher/httpserver.py:
+	  httpserver: launch webserver with the same python interpreter.
+
+2014-07-19 09:48:17 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	  validate: Dot the pipeline on interuption
+
+2014-07-18 15:57:24 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  validate: duplicate strings in gst_validate_issue_new()
+	  Do this to avoid discarding 'const' qualifier when using it with
+	  constant strings. Moreover it will avoid a g_free on constant string.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733362
+
+2014-07-18 16:28:49 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Fix a backtrace using an undefined  method
+
+2014-07-17 16:48:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	  valdate:launcher: Do not refer to self in @staticmethod
+	  There is no self in there.
+
+2014-07-17 16:44:08 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add a set-debug-threshold scenario action
+	  Allowing users to activate the debug only at the interesting time
+
+2014-07-17 16:42:02 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Add Gst debugging when using gst-validate printing feature
+	  Giving usefull debugging informations in the GSt debug logs
+
+2014-07-17 12:17:31 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	  validate: Do not auto flush pipeline bus
+	  We want to see all messages in our async handler
+	  And flush it when we are done.
+
+2014-07-16 19:38:01 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Avoid using sync=true on fakesinks
+	  Making the test run much faster!
+
+2014-07-16 19:37:35 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/reporters.py:
+	  validate: Launcher: Print total time spent in the final report
+
+2014-07-16 18:21:16 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/switch_subtitle_track_while_paused.scenario:
+	  validate: Make switch_subtitle_track_while_paused handle states
+
+2014-07-16 14:46:32 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/disable_subtitle_track_while_paused.scenario:
+	  vaildate: Make disable_subtitle_track_while_paused handle states
+
+2014-07-13 18:21:50 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/scrub_forward_seeking.scenario:
+	  validate: Make scrub_forward_seeking handle states
+
+2014-07-16 13:54:54 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Properly check that encoded files have the exact wanted format
+
+2014-07-16 12:50:41 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Add a method to create a GstValidateMediaDescriptor from a uri
+
+2014-07-16 12:16:03 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:launcher: Move MediaFormatCombination to baseclasses.py
+	  + Add some simple helpers
+
+2014-07-16 12:03:14 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:launcher: Implement a GstValidateEncodingTestInterface class
+	  Allowing code to be shared between apps that run rendering tests
+
+2014-07-16 11:39:08 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	  validate:launcher:  Implement a MediaDescriptor subclass for xges project files
+
+2014-07-16 11:36:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Make a MediaDescriptor baseclass to be used by any application
+
+2014-07-16 10:35:34 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Give information to users when cloning asset failed
+	  It might not be obvious from the stacktrace so it is better to clearly
+	  explain what the failure was when we know it
+
+2014-07-16 10:16:19 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Fixup the default asset update command
+
+2014-07-16 10:12:04 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/utils.py:
+	  validate:launcher: Generate proper EncodingProfiles for audio/video only media files
+
+2014-07-16 10:10:44 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Move the MediaDescriptor class to the baseclasses.py file
+
+2014-07-16 10:09:32 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Allow transcoding audio only files 5 time longer than long_limit
+	  Transcoding audio is a lot shorter so we can concider that transcoding files that are only
+	  only is 5 time shorter than the actual file (empirical number)
+
+2014-07-16 10:03:11 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate-media-check.c:
+	  validate:media-check: Pass the GError where needed.
+
+2014-07-15 12:16:34 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: Avoid segfault in the error path
+
+2014-07-15 11:59:23 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate:media-descriptor-writer: Handle medias with 1 single stream
+
+2014-07-08 13:50:11 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Check that after a seek in PAUSED position is perfect
+	  In case of ACCURATE seeking, the position after a SEEK in PAUSED state
+	  should be *exactly* the one requested by the user.
+
+2014-07-11 15:45:18 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: add set_property scenario action
+	  Allows setting element's properties during a scenario. Very useful
+	  for testing that elements behave correctly when changing properties
+	  during playing state
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733070
+
+2014-07-02 17:53:55 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Execute actions if we get seeked in ready state
+
+2014-07-02 11:27:22 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/gst-validate.c:
+	  validate: Let scenarios tell the apps about whether it handles states
+	  The user only needs to add handles-states=true in the description line
+	  of the scenario
+
+2014-06-19 12:58:49 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Do not care about the position if we are not at least in PAUSED state
+	  At that time the position query will be meaningless so we should just go to the next
+	  action.
+
+2014-06-26 15:07:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/validate/validate_testsuite.py:
+	  validate: Handle MXF files
+
+2014-06-26 15:03:07 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/media-descriptor.c:
+	  validate:media-check: Changes in tags detection are not fatal issues
+
+2014-06-26 13:01:13 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/Makefile.am:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/apps/validate/validate_testsuite.py:
+	* validate/tools/launcher/apps/validate_default_testsuite.py:
+	  validate:launcher Add video mixing tests
+	  + Move default_testsuite.py to validate_testsuite.py as we are now
+	  exposing tests that are not enabled by default
+
+2014-06-26 12:42:38 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/apps/validate_default_testsuite.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Move the notion of test generator to the baseclasses
+	  This can be very usefull for all the TestManager and thus exposes a
+	  higher level API for test writers.
+
+2014-06-19 16:26:43 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/Makefile.am:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/apps/validate_default_testsuite.py:
+	  validate:launcher: Move default testsuite to a dedicated file
+	  Making the separation cleaner between the launcher and the test
+	  implementation
+
+2014-06-20 19:01:41 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Properly handle CLOCK_TIME_NONE position and duration values
+	  In the value parser.
+
+2014-06-19 13:03:48 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Print the return value at the end
+	  Making it easier to know whether the test passed or not.
+
+2014-06-19 12:56:34 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Move the check about whether we are still seeking upper in the function
+	  Avoiding to try to get position and do operations on a pipeline that is seeking
+
+2013-11-25 13:55:10 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: only use valid position/duration
+	  Position/duration query may fail, or yield unknown values (eg,
+	  unknown duration for live streams). In these cases, we must ensure
+	  we do not use those invalid values.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=715160
+
+2014-06-19 09:38:52 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Not concider all scenarios by default with --wanted-test
+	  Instead let the users activate that with -t ALL
+
+2014-06-19 09:22:36 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Let the user set user options in the config file
+
+2014-06-18 17:27:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Use RawTextHelpFormatter to (not) format user help
+
+2014-06-18 17:26:05 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Add a way to create test suite outside the three
+	  + Make sure to namespace the API
+	  + Remove cruft about G_V_PROTOCOL_VIDEO_RESTRICTION_CAPS
+
+2014-06-18 13:02:53 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: We are not changing state if the set_state failed.
+
+2014-06-18 13:02:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Add a debug category and add some debug
+
+2014-06-18 13:01:42 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: media-descirptor: Add more infos about discoverer error
+
+2014-06-18 12:51:02 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Cleanup the way we generate tests adding the notion of TestGenerator
+	  Making it easier to extend the testsuite.
+
+2014-06-18 15:57:14 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	  validate:tools: Dot the pipeline on usefull places
+	  Meaning on warning and state changes.
+
+2014-06-28 12:33:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate: Don't call gst_debug_log_valist() if debugging is disabled
+	  And also stop leaking a string every time.
+
+2014-06-28 11:36:27 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/tools/Makefile.am:
+	  gst-validate: Add $(GIO_LIBS) and $(GIO_CFLAGS) as required
+
+2014-06-17 15:10:41 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate-launcher.in:
+	  validate: Fix launcher when running installed
+
+2014-06-17 14:17:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/Makefile.am:
+	  validate: scenarios: Install play_15s.scenario
+
+2014-06-16 16:47:18 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/reporters.py:
+	  validate:launcher:reporter: Sort Final report by results
+
+2014-06-16 16:46:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/utils.py:
+	  validate:launcher:ges: Fix rendered duration checking
+
+2014-06-16 16:40:10 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: pad-monitor: Do not compare not fixed sinkpad caps fields
+	  We are only able to check that the sink pad caps values are inside the src pad
+	  value.
+
+2014-06-16 08:49:22 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Do not be so tolerant about seek drift
+
+2014-06-03 09:38:29 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Handle out-of-segment first buffer
+	  If the initial buffer is before segment.start, we don't want to raise
+	  the "first buffer doesn't have 0 running-time" issue.
+	  Also add debug for tracking issues
+
+2014-06-03 10:02:10 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Run gst-indent on all code
+	  so whitespace. much indent. spacing !
+
+2014-05-27 12:30:54 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/configure.ac:
+	  validate: Depend at least on GLib 2.36
+
+2014-05-19 19:42:46 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/Makefile.am:
+	* validate/data/scrub_backward_seeking.scenario:
+	* validate/tools/launcher/apps/ges-launch.py:
+	  validate: Add a scrub_backward_seeking scenario
+	  + Make use of it in ges-launch and do not try to seek while playing in
+	  GES as it is not supported yet
+
+2014-05-24 01:28:36 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Don't pass NULL to g_strsplit
+
+2014-05-22 16:13:31 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate-utils: Fix unitialized variable
+	  gst-validate-utils.c:413:7: error: variable 'v0' is used uninitialized whenever 'if' condition is true [-Werror,-Wsometimes-uninitialized]
+	  if (c == '!') {
+	  ^~~~~~~~
+	  gst-validate-utils.c:424:10: note: uninitialized use occurs here
+	  return v0;
+	  ^~
+	  gst-validate-utils.c:413:3: note: remove the 'if' if its condition is always false
+	  if (c == '!') {
+	  ^~~~~~~~~~~~~~~
+	  gst-validate-utils.c:411:13: note: initialize the variable 'v0' to silence this warning
+	  gdouble v0;
+	  ^
+	  = 0.0
+	  1
+
+2014-05-21 11:50:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/configure.ac:
+	* validate/gst/Makefile.am:
+	* validate/gst/overrides/Makefile.am:
+	* validate/gst/overrides/gst-validate-default-overrides.c:
+	* validate/gst/preload/Makefile.am:
+	* validate/gst/preload/gst-validate-monitor-preload.c:
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-default-overrides.c:
+	* validate/gst/validate/gst-validate-monitor-preload.c:
+	  validate: Move overrides and preload libraries to dedicated folders
+	  This way it is cleaner and it is simpler to handle the various compilation dependencies.
+
+2014-05-16 16:20:26 +0200  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* validate/tools/gst-validate-launcher.in:
+	* validate/tools/launcher/RangeHTTPServer.py:
+	* validate/tools/launcher/__init__.py:
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/httpserver.py:
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/reporters.py:
+	* validate/tools/launcher/utils.py:
+	  python: change shebangs to python2
+
+2014-05-15 09:46:24 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: Properly use boolean in XML
+
+2014-05-08 17:48:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: Improve perf when writing the XML file
+	  + Pass the file into gst-indent
+
+2014-05-07 13:14:51 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/Makefile.am:
+	* validate/data/change_state_intensive.scenario:
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: Add a scenario that switches state many intensively
+	  + Use it by default in the launcher tests
+
+2014-05-07 12:43:53 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/main.py:
+	  validate: Minor fix for blacklisted test output formatting
+
+2014-05-07 12:21:49 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Add an  option to only launch the http server
+
+2014-05-07 12:21:30 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate: Keep scenario discovering logs in a file
+
+2014-05-07 11:34:47 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/fast_forward.scenario:
+	  validate: Avoid using stop value in the fast_forward scenario
+
+2014-05-07 11:30:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: Properly check that outputed videos have a correct duration
+
+2014-05-07 11:30:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/utils.py:
+	  validate: Add the notion of "long" tests so that we can avoid some test to be run if they are too long
+
+2014-05-07 09:51:19 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Add a general action to set state
+
+2014-05-07 09:50:28 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/autogen.sh:
+	  validate: Properly set the pre commit hook
+
+2014-05-07 09:46:28 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Pass into gst-indent
+
+2014-05-07 09:15:34 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: The wait mandatory field is duration
+
+2014-05-07 09:11:12 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Make sure mandatory fields are present when parsing scenarios
+
+2014-05-06 15:34:08 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenarios: add a stateless property.
+	  This property enables the user to have actions executed independently
+	  of the state of the pipeline.
+	  Conflicts:
+	  validate/gst/validate/gst-validate-scenario.c
+
+2014-05-05 17:00:45 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: make sure to not execute actions when changing state.
+	  Conflicts:
+	  validate/gst/validate/gst-validate-scenario.c
+
+2014-05-04 09:30:14 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	  validate: The 'buffering' variable needs to be static
+	  We need its value between bus_callback calls to be the same
+
+2014-05-02 17:25:07 -0400  Luis de Bethencourt <luis@debethencourt.com>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate: some static variables can be local
+	  buffering is only used inside the bus_callback, so it can have that local
+	  scope. same thing with ret which is only used in the main function.
+
+2014-05-02 16:53:51 -0400  Luis de Bethencourt <luis@debethencourt.com>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate: small typo in usage summary
+
+2014-05-02 20:05:28 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Wait for the PAUSED state to be reached before executing actions
+
+2014-05-02 19:00:49 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: Fix the name of the sintel blacklisting
+
+2014-05-02 18:50:41 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/Makefile.am:
+	* validate/data/disable_subtitle_track_while_paused.scenario:
+	  validate: Add a scenario to disable subtitle track while paused
+
+2014-05-02 14:06:18 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/media-descriptor.h:
+	* validate/tools/gst-validate-media-check.c:
+	  validate: Implement frame by frame writing in the media descriptor writer
+	  + Add an option to fully parse media files in the gst-validate-media-check tool
+
+2014-05-01 14:58:14 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Execute position right when the pipeline reaches PAUSED
+	  We might go to PAUSED SYNC if nothing happens in the pipeline
+
+2014-05-01 14:11:24 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: Add a scenario that disable subtitles
+	  + Clean the sythax to define switch-track action that actually
+	  desactivate the track
+
+2014-05-01 12:52:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Do not execute action when buffering
+	  While buffering we should no try to execute anything as we would not be
+	  controlling properly the execution.
+	  + Activate scrub forward seeking for HTTP streams
+
+2014-05-01 12:34:35 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/Makefile.am:
+	* validate/data/switch_set_external_subtitle.scenario:
+	* validate/data/switch_subtitle_track_while_paused.scenario:
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: Add a scenario that switches subtitle track while paused
+	  + Integrate it in the launcher
+
+2014-05-01 11:32:42 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Sensibly simplify scenario handling
+
+2014-05-01 10:27:53 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Plug a minor leak
+
+2014-04-30 15:51:43 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	  validate: Use ges-launch recursing path new feature
+	  And fix path to URI conversion
+
+2014-04-30 15:40:10 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/utils.py:
+	  validate: Add a gst-validate-launcher documentation
+
+2014-04-30 11:52:00 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Port OptionParser to ArgParse
+
+2014-04-30 11:20:43 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/main.py:
+	  validate: Can not do reverse playback on sintel sample
+	  + Minor improvement in the CLI
+
+2014-04-30 11:13:51 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	  validate:launcher: Do not except meaningless argument in ges-launch
+
+2014-04-30 11:06:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate: Handle per file special scenarios
+	  When a file is int the same folder as a media file and has a name like:
+	  mediafilename.mkv.scenarios_name.scenario  we run that scenario on that
+	  particular file
+
+2014-04-30 09:35:03 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Allow specifying scenarios to parse when lisiting them
+	  It used to only handle the scenario present in proper paths, we
+	  also need to handle special scenarios provided by users on the fly
+
+2014-04-29 20:00:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Handle ERROR on the bus when monitoring the pipeline
+	  This way the user get a  clear information in the report about the issue
+	  + sensibly cleanup code
+
+2014-04-29 19:04:46 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/Makefile.am:
+	* validate/data/switch_subtitle_track.scenario:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate: Add a scenarios that switchs subtitle track
+	  + Make it easier and cleaner to tell that a switch is actually disabling
+	  a track type.
+	  And run the scenario in gst-validate-launcher by default
+
+2014-04-29 18:51:54 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/Makefile.am:
+	* validate/data/switch_audio_track_while_paused.scenario:
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: Add a switch_audio_track_while_paused scenario
+	  And run it as a default
+
+2014-05-01 18:20:25 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	  validate: Add an action to set an external URI file on playbin at runtime
+
+2014-05-01 18:19:50 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	  validate: Override switch_track action when using a playbin
+	  And use the playbin feature for that when the pipeline is based on playbin
+
+2014-05-01 18:17:44 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Do not g_strrstr with a NULL pointer as needle
+
+2014-05-01 18:16:16 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Print more details when executing the switch_track action
+	  + Fix some issue in the memory freeing codepath of GstValidateAction
+
+2014-04-29 17:16:50 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: Do not try to use a NULL iter
+
+2013-10-01 21:11:35 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  pad-monitor: check that no buffers are pushed after a pad is EOS
+	  Make sure no resources are wasted after elements are done with the
+	  current segment
+
+2014-04-28 13:08:09 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/utils.py:
+	  launcher: Now using git annex to handle media files
+
+2014-04-26 09:52:37 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: Expose a seeking method so other actions types can seek
+	  Other action types might need to seek and we GstValidateScenario need
+	  to know about it, add a method others can use to do the seeking
+
+2014-04-26 09:16:26 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/reporters.py:
+	  Revert "validate:launcher: Always put gst-validate result as stderr in reports"
+	  This reverts commit 925ff7542b69bb5516b6eb5b4488da23124a0cbc.
+	  Actually jenkins never  truncates on failure stacktrace... we do not
+	  want to set gst-validate as failure stacktrace in our results. That
+	  commit was not usefull.
+
+2014-04-26 08:11:20 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/reporters.py:
+	  validate:launcher: Always put gst-validate result as stderr in reports
+	  This way jenkins will always keep the information in its database even
+	  if the test passes
+
+2014-04-25 18:33:33 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Pass -scenario.c into gst-indent and fix some docs
+
+2014-04-25 18:27:30 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add a "dot-pipeline" action
+
+2014-04-25 18:26:50 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	  validate: Return a boolean when parsing an enum string
+
+2014-04-25 13:42:03 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/adaptive_video_framerate.scenario:
+	* validate/data/adaptive_video_framerate_size.scenario:
+	* validate/data/adaptive_video_size.scenario:
+	* validate/data/force_key_unit.scenario:
+	* validate/data/pause_resume.scenario:
+	* validate/data/play_15s.scenario:
+	* validate/data/scrub_forward_seeking.scenario:
+	* validate/data/seek_backward.scenario:
+	* validate/data/seek_forward.scenario:
+	* validate/data/switch_audio_track.scenario:
+	  validate:scenarios: Prefer stop action instead of EOS when appropriate
+
+2014-04-25 13:19:19 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Properly set error message when sending EOS did not work
+
+2014-04-25 13:18:41 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Add a way to specify tests filtering only on defaults
+
+2014-04-25 13:17:39 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/switch_audio_track.scenario:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Add support for audio track switching scenario
+
+2014-04-25 11:32:04 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Make it possible to run any scenario test in gst-validate
+
+2014-04-25 11:31:27 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Do not run reverse playback on mpegts files
+
+2014-04-25 11:31:01 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Cleanup media descriptor usage
+
+2014-04-25 10:23:21 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/main.py:
+	  validate:launch: Port to the new media_info format
+
+2014-04-24 15:41:50 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-parser.h:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	* validate/tools/gst-validate-media-check.c:
+	  validate: Add a media-descriptor parser and writer
+
+2014-04-23 13:25:44 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Minor printing cleanup
+
+2014-04-23 13:24:23 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Add a 'stop' action to stop a pipeline
+	  It uses the GST_MESSAGE_REQUEST state with the scenario as a source
+	  so that application can stop running when they receive it on the bus.
+
+2014-04-23 11:47:10 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/reporters.py:
+	* validate/tools/launcher/utils.py:
+	  validate:launcher: Use the new validatelog file
+	  Making the output cleaner and clearer in junit XML file
+
+2014-04-23 11:27:41 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Handle position printing at the monitor level
+	  Instead of replicating that code all around
+
+2014-04-23 11:16:29 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/validate.c:
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: Add printing utilities
+	  Allowing the user to print everyting in a file through the
+	  GST_VALIDATE_FILE env variable
+
+2014-04-22 16:50:08 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add an action to wait for a given amout of time
+	  During that time we will just not execute any new action
+	  + Lower WARNING to DEBUG when no playbcak_time is provided for an
+	  action, it should just be 0.
+
+2014-04-22 12:02:35 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	  validate: Check that for raw, buffers are strictly contained in segment
+	  For encoded data we might need buffers that have timestamp <
+	  segment.start to make sure that we have the keyframe, etc... but for raw
+	  data, buffer end should strictly be inside the segment, be more strict
+	  about that.
+
+2014-04-22 11:21:34 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: PAR is not a mandatory field
+	  Also make it possible to check other not mandatory fields in the future
+
+2014-04-22 11:10:01 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: Do not use GST_PTR_FORMAT when reporting
+	  It will not work now that we have our own implementation of printf for that in Gst and
+	  thus provide us with pretty useless infos
+
+2014-04-22 10:49:10 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Send SIGINT signal instead of killing the subprocess
+	  This way we get the result from GstValidate even on timeouts
+
+2014-04-22 09:42:57 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Always set sync=True on fakesink on playback pipelines
+	  This way we are in closer condition of real sink playback.
+	  + some minor cleanup in gst-validate.c
+
+2014-04-17 12:58:48 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: ring-buffer-max-size is in bytes
+
+2014-04-17 12:17:03 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Handle g_log errors at the gst-validate level
+
+2014-04-17 11:23:23 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Allow comments in scenario files
+	  Comment are per line only and start with #
+
+2014-04-15 15:26:36 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/main.py:
+	  validate:launcher: Fix default blacklist management
+
+2014-04-02 19:14:30 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Print the number of the test being run
+
+2014-04-02 19:13:50 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  validate: Avoid segfault when discovering fails
+	  In that case the x->stream_info might not be set
+
+2014-04-02 12:12:11 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Fix mixup in media_check tests expected file path
+
+2014-03-31 13:54:27 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/utils.py:
+	  validate:launcher: Flush stdout each time we print
+	  So everything gets printed on time on windows and jenkins
+
+2014-03-31 11:03:48 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: launcher: Use the ConfigPraser object everywhere for file_infos
+
+2014-03-28 15:01:12 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Properly handle missing scenarios on the system
+
+2014-03-28 15:00:45 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	  validate:launcher: Handle windows path to construct arguments
+
+2014-03-28 15:00:01 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:launcher: Handle the fact that win32 apps end with .exe
+
+2014-03-28 11:30:01 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/configure.ac:
+	* validate/gst/validate/Makefile.am:
+	  validate: Do not build LD_PRELOAD related code on windows
+	  And do not forget to link against gst-pbutils
+
+2014-03-28 10:30:21 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-override-registry.c:
+	  validate: Use GModule to 'dlopen' ovverrides
+	  We want gst-validate to be cross platform so use cross platform tools
+
+2014-03-26 20:09:12 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:launcher: Put gst logs in a specific file
+	  + Make default timeout 30seconds just in case.
+
+2014-03-26 19:37:44 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  validate: launcher: Let the use debug on test fail
+	  When a test timeouts, let the user know about the subprocess etc,
+	  and let him possibly connect gdb to it.
+
+2014-03-26 11:46:48 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	  validate:launcher: Do not set sample path to letter in ges-launch
+
+2014-03-26 11:00:32 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Start the server only when actually needed to run filtered tests
+
+2014-03-26 10:56:58 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: Do not query pad caps to check if caps are properly fowarded
+	  Query caps will actually get the caps from downstream and those caps
+	  might be different in case there is a Filter in between. What we want is
+	  to check that the caps set on the internally linked pads are correct.
+
+2014-03-19 18:42:37 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/launcher/main.py:
+	  launcher: Allow user to set media-files directory
+	  That was broken by 71dee6c3843d02d9d41bbb353cb3fa653190018d
+
+2014-03-19 17:43:43 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate.c:
+	  tools:validate: Start printing position on ASYNC_DONE
+	  As this is what is done in the scenarios.
+
+2014-03-19 18:09:09 +0100  Edward Hervey <edward@collabora.com>
+
+	* validate/tools/launcher/main.py:
+	  launcher: Don't hardcode option defaults
+	  Since they are relative to other options, we need to post-process them
+	  to get the proper value.
+	  Fixes using the launcher with non-default MAIN_DIR
+
+2014-03-19 17:13:14 +0100  Edward Hervey <edward@collabora.com>
+
+	* validate/tools/launcher/main.py:
+	  launcher: Warn if MAIN_DIR isn't present
+	  And move blacklist file listing to further down
+
+2014-03-19 17:04:14 +0100  Edward Hervey <edward@collabora.com>
+
+	* validate/tools/launcher/main.py:
+	  launcher: No need to start a web server when listing tests
+	  It's not needed and makes listing faster.
+	  Also sort the list of tests
+
+2014-03-19 17:03:05 +0100  Edward Hervey <edward@collabora.com>
+
+	* validate/tools/launcher/main.py:
+	  launcher: --sync: Only update/clone git repo if specified
+	  Allows:
+	  * handling non-git-based asset directory
+	  * working offline
+	  * working without forcing updates
+
+2014-03-19 17:02:03 +0100  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Handle non-set env variable
+	  Nothing guarantees it's present/set
+
+2014-03-12 15:23:33 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Do not be strict about position after not accurate seek
+
+2014-03-12 14:24:02 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Cleanup output and pass into gst-indent
+
+2014-03-12 12:21:38 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Cleanup output of --list-scenarios
+
+2014-03-12 12:04:52 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: Load scenario if the name is actually a path to a file
+
+2014-02-12 11:20:06 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/main.py:
+	  validate: tools: Fix path to media folder
+
+2014-02-19 13:07:03 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:tools: Clean test between runs when running forever
+
+2014-02-19 10:31:15 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate: Do not check result furthers if alredy set as passing
+
+2014-02-19 09:58:22 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Pass into gst-indent
+
+2014-02-19 09:56:12 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add actions to the actions list only when they are fully parsed
+	  Otherwize in some corner cases they can be executed before they are actually parsed
+
+2014-01-24 17:36:53 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Ignore EOS actions that can not be executed
+
+2014-02-18 18:49:00 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Handle various paths in GST_VALIDATE_SCENARIOS_PATH
+
+2014-02-18 18:15:33 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate:scenario: Make GstValidateAction a GstMiniObject
+
+2014-02-18 18:13:39 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	  validate: Move enums and flags deserialization from scenario to utilities
+	  This way it can be reused.
+
+2014-02-18 18:09:37 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate:scenario: Make the pipeline puiblic
+	  This way people can access it from outside the main action implementation.
+
+2014-02-14 16:07:51 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Avoid running useless tests
+	  For example we should not check if duration are equal when transcoding
+	  with scenario set.
+	  Also checking if position is in the seeked segment should be done at
+	  a lower level
+
+2014-02-13 15:35:01 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:launcher: Avoid seeking in output files to parse them
+	  Tihs creates issue and missing content.
+
+2014-02-13 15:34:10 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:launcher: Properly classify test for media check
+
+2014-02-13 15:33:25 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/utils.py:
+	  validate:launcher: Handle issue with unknown framerate in HLS while transcoding
+
+2014-02-13 15:31:58 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Handle cases were EOS does not stop the pipeline in the launcher
+	  + Fix parsing of GstClockTime
+	  + Avoid using play_15s scenario when not necessary
+
+2014-02-12 11:18:14 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/utils.py:
+	  validate: tools: Use the new scenario discovering fearure in the launcher
+
+2014-02-12 00:28:41 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/adaptive_video_framerate.scenario:
+	* validate/data/adaptive_video_framerate_size.scenario:
+	* validate/data/adaptive_video_size.scenario:
+	* validate/data/alternate_fast_backward_forward.scenario:
+	* validate/data/fast_backward.scenario:
+	* validate/data/fast_forward.scenario:
+	* validate/data/force_key_unit.scenario:
+	* validate/data/pause_resume.scenario:
+	* validate/data/play_15s.scenario:
+	* validate/data/reverse_playback.scenario:
+	* validate/data/scrub_forward_seeking.scenario:
+	* validate/data/seek_backward.scenario:
+	* validate/data/seek_forward.scenario:
+	* validate/data/seek_forward_backward.scenario:
+	* validate/data/seek_with_stop.scenario:
+	* validate/data/simple_seeks.scenario:
+	* validate/data/switch_audio_track.scenario:
+	* validate/data/update_start.scenario:
+	* validate/data/update_stop.scenario:
+	  validate: Update all scenario to use the new description feature
+	  + Fix minor issues in scenario files
+
+2014-02-12 00:28:18 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Add a way to save details about avalaible scenarios in a file
+
+2014-02-11 23:05:00 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tools/gst-validate.c:
+	  validate: Add a way to add a "description" to scenario files
+	  Print details about the descriptions when listing scenario in a KeyFile
+	  format
+	  The description can contain any information about the scenario such as its duration before
+	  EOS, how long the pipeline needs to be so the scenario can be applied...etc
+
+2014-02-11 23:09:57 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: tools: Init gst-validate before listing scenarios
+	  And return 0 when only listing scenarios
+
+2014-02-10 16:48:44 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Handle backslashes in scenario files
+
+2014-02-06 17:24:30 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Rework the way we handle options
+	  Make groups so it is easier for users to find what they look for
+	  By default have 1 single directory where everything is oututed
+	  (main-dir)
+	  Add a way to specify how and where to look for remote assets
+
+2014-02-06 17:23:10 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:tools:launcher: Take into account the position value when rendering
+	  When rendering a files we try to use the size of the outputed file to
+	  determine wether we are timeout or not, but if that fails
+	  try to check the position
+
+2014-02-06 17:22:36 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: Better organize rendered files
+
+2014-01-31 12:21:21 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Use regex for parsing when appropriate
+
+2014-01-31 00:23:29 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/main.py:
+	  validate:toold: Add a --output-dir parametter
+
+2014-01-31 00:22:57 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Keep file extension in test classnames
+	  + add test "namespace" in transcoded files
+
+2014-01-30 16:59:21 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Add a class to back pipeline creation in gst-validate
+
+2014-01-30 16:58:58 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Define supported protocols in an enum
+
+2014-01-30 16:56:51 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate: toold: Properly define scenario properties
+
+2014-01-30 16:38:37 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/reverse_playback.scenario:
+	* validate/data/simple_backward.scenario:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate: Rename simple_backward to reverse_playback as this is what it does
+
+2014-01-30 15:40:21 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Add namespace in apps global variables
+	  Avoiding conflicts
+
+2014-01-30 13:36:04 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/main.py:
+	  validate:tools: Allow user to append paths to medias
+
+2014-01-30 13:25:57 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:tools: Make use of the new seek_with_stop scenario
+
+2014-01-30 12:42:25 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Implement the logic of validate ouput parsing in the baseclass
+	  + Add some logic to check that we are mot playing outside wanted segment
+
+2014-01-30 12:20:33 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  tools:validate: Make default blacklist handled by managers themselves
+
+2014-01-30 11:59:54 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/scrub_forward_seeking.scenario:
+	* validate/data/seek_backward.scenario:
+	* validate/data/seek_forward.scenario:
+	* validate/data/seek_with_stop.scenario:
+	  validate: data: Avoid using seek.stop time when not necessary
+	  Instead send an EOS.
+	  And add a seek_with_stop scenario to test that particular feature
+
+2014-01-29 17:39:14 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Only discover files with media-check
+
+2014-01-29 17:37:57 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-media-info.h:
+	* validate/tools/gst-validate-media-check.c:
+	  validate:tools: Add a 'discover-only' option to media-check
+
+2014-01-27 12:20:02 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/seek_forward.scenario:
+	  data: Let playback until the end on last seek of seek_forward if duration < 30s
+
+2014-01-24 16:38:12 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  validate: tools: Add a --fatal-error option to the launcher
+
+2014-01-24 13:59:56 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate: tools: Implement the notion of hard timeout
+	  Allowing to define timeout that is not relative to the last observed number.
+
+2014-01-24 11:41:25 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate: tools: Create a class for scenarios
+
+2014-01-24 11:31:42 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate: tools: Change timeouts depending on used protocol
+
+2014-01-24 11:29:50 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Implement Buffering support in the various tools
+
+2014-01-23 00:15:54 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  validate:tools: Blacklist some scenario/protocol combinations
+	  And add the option for user to easilly blacklist tests
+
+2014-01-22 23:25:09 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate: Plug a leak in validate-reporter
+
+2014-01-22 23:22:59 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate:tools: Do not forget to give a ref for reporter's reports
+	  Also enhance a bit report 'wording'
+
+2014-01-15 16:11:39 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Print test result in the terminal after the end of each test
+
+2014-01-15 16:07:26 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Enhance explanation about seek execution failure
+
+2014-01-14 18:07:46 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	  validate:tools: Add an option to run testforever
+
+2014-01-14 18:05:45 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/utils.py:
+	  validate: tools: Cleanup the way we return code in position query
+
+2014-01-14 10:32:53 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:tools: Use the same semantic for all tests classnames
+
+2014-01-14 10:31:27 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Do not remove GSource if it has never been set
+
+2014-01-14 10:28:01 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/play_15s.scenario:
+	  data: Add a scenario where we send EOS after 15secs if the duration is > to that
+
+2014-01-13 17:31:57 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/Makefile.am:
+	* validate/tools/launcher/RangeHTTPServer.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/httpserver.py:
+	* validate/tools/launcher/main.py:
+	  validate:tools: Add support for testing http streams locally
+
+2014-01-13 09:47:45 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Some cleanup in gst-validate test launcher
+
+2014-01-13 11:13:02 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Add actuall tests for media checking
+
+2014-01-13 11:07:43 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-media-check.c:
+	  validate: tools: media-check: When comparing with a file just compare
+	  We do not want to know if the file is seekable etc, but in that case we
+	  want to see that the results are stable throughout the various runs
+	  Also make sure to report an understandable error if the media file info
+	  could not be parsed
+
+2014-01-13 09:32:14 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: tools: Do not dot the pipeline every 50ms, it is a bit exessive
+
+2014-01-10 18:00:27 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate:tools: Return an exit code != 0 if pipeline can't go to playing
+	  And give some information to the user about why the return code is !=0
+	  everywhere it happens
+
+2014-01-10 17:21:44 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:tools: Add informations about the test in the log files
+
+2014-01-10 16:56:44 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	  validate:tools: Remove reference to get_backtrace which is not implemented
+	  + Enhance Message about launched apps
+
+2014-01-10 16:46:00 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/reporters.py:
+	  validate:tools: Do not duplicated name in the classname in xunit reports
+
+2014-01-10 15:31:01 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Do not check if position > duration
+	  This is actually done by the scenario themselve. Instead if it is the
+	  case, we return 0, this way it will timeout if it happens too many times
+	  concecutively
+
+2014-01-10 15:30:38 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/reporters.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Properly inform the user about the log location when test fails
+
+2014-01-10 15:29:31 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/main.py:
+	  validate:tools: Add an option to generate .media_info files
+	  So we can properly choose what media should be tested only placing
+	  media_file as needed.
+
+2014-01-10 15:27:46 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: use more scenarios in gst-validate launcher
+	  And ensure that the list does not get mixed up with as we are sharing
+	  "symboles" between all the files
+
+2014-01-10 15:26:29 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/simple_backward.scenario:
+	  validate:tools: Play the entire file in simple_backward
+
+2014-01-10 14:31:24 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/fast_forward.scenario:
+	  validate:tools: Fix the fast forward scenario to handle any file duration
+
+2014-01-10 12:41:30 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Do not try to transcode images
+
+2014-01-10 12:01:43 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-media-info.h:
+	  validate: Properly handle images in the media-info helper
+	  In the case of images we should not check reverse playback, fast
+	  forward etc...
+	  We also should keep the information
+
+2014-01-10 11:36:10 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/configure.ac:
+	* validate/tools/launcher/loggable.py:
+	* validate/tools/launcher/main.py:
+	  validate:tools: Minor cleanups
+
+2014-01-10 11:35:47 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Fix classname in gst-launch transcoding tests
+
+2014-01-10 11:11:10 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/reporters.py:
+	  validate:tools: Properly name the project launcher in the report
+
+2014-01-10 10:58:54 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/main.py:
+	  validate:tools: Create the rendering directory if it does not exist
+
+2014-01-10 10:27:25 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/main.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Add an option to desativate ANSI colors
+	  And enhance some debugging output
+
+2014-01-10 10:12:13 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Remove our dependency to PyGobject
+
+2014-01-09 18:43:15 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/Makefile.am:
+	* validate/tools/launcher/apps/Makefile.am:
+	* validate/tools/launcher/main.py:
+	  validate:tools: Do not forget to add Makefile.am and main.py
+
+2014-01-09 16:57:54 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/baseclasses.py:
+	  validate:tools: Enhance the way we detect if ges-launch can be used
+	  We make sure it has been compiled against gst-validate
+
+2014-01-09 15:24:52 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Set video/webm instead of video/x-matroska as caps for webm
+	  + some mirore indentation cleanups
+
+2014-01-09 15:24:05 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Do not forget to keep our ref to file_info g-v-transcode
+
+2014-01-09 15:23:38 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Cleanup how we check result of rendering test
+	  Factor out a method in the utils, and make use of it for both ges-launch and
+	  gst-validate-transcode
+
+2014-01-09 15:20:46 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/gst-validate.py:
+	  validate:tools: Don't give file duration as timeout for gst-validate
+	  We use the other mean letting us actually control the process
+	  advancement.
+
+2014-01-09 15:17:53 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Veryfy test manager are operationnal before using them
+
+2014-01-09 15:15:51 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-launcher.in:
+	* validate/tools/launcher/apps/ges-launch.py:
+	  validate:tools: Move the main function in a dedictaed file
+
+2014-01-09 11:14:19 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/launcher/reporters.py:
+	* validate/tools/launcher/utils.py:
+	  validate:tools: Print some statistic at the end of the test run
+
+2014-01-09 11:13:40 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate.c:
+	  validate:tools: Print position every 50ms in gst-validate
+
+2014-01-09 09:39:05 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/configure.ac:
+	* validate/tools/Makefile.am:
+	* validate/tools/apps/ges-projects-tests.py:
+	* validate/tools/apps/gst-validate.py:
+	* validate/tools/gst-validate-launcher.in:
+	* validate/tools/gst-validate-launcher.py:
+	* validate/tools/launcher/__init__.py:
+	* validate/tools/launcher/apps/ges-launch.py:
+	* validate/tools/launcher/apps/gst-validate.py:
+	* validate/tools/launcher/baseclasses.py:
+	* validate/tools/launcher/loggable.py:
+	* validate/tools/launcher/reporters.py:
+	* validate/tools/launcher/utils.py:
+	* validate/tools/loggable.py:
+	* validate/tools/reporters.py:
+	* validate/tools/testdefinitions.py:
+	* validate/tools/utils.py:
+	  validate:tools: Rename files around and integrate into autotools
+	  File distribution used to be messy, clean it all up. Also make sure the
+	  launcher is integrated into the autotools.
+
+2014-01-09 09:28:02 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/testdefinitions.py:
+	  validate: tools: Enhance error message for GstValidate tests
+
+2014-01-09 09:27:50 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/testdefinitions.py:
+	* validate/tools/utils.py:
+	  validate: tools: Concider timeouts as errors when printing tests
+
+2014-01-09 09:14:27 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/apps/ges-projects-tests.py:
+	* validate/tools/apps/gst-validate.py:
+	* validate/tools/gst-validate-launcher.py:
+	* validate/tools/testdefinitions.py:
+	* validate/tools/utils.py:
+	  validate: tools: Refactor and add a GstValidateTranscodeTest class
+
+2014-01-08 18:51:14 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/apps/gst-validate.py:
+	* validate/tools/gst-validate-launcher.py:
+	* validate/tools/loggable.py:
+	* validate/tools/reporters.py:
+	* validate/tools/testdefinitions.py:
+	  validate: launcher: add the debug logger from pitivi
+	  It is way more powerfull, simple to use and usefull
+	  than the stock python one and has been proved to work reliably
+
+2014-01-13 09:41:16 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: tools: Unref the pipeline before the runner and monitor
+	  Avoids segfault in some cases, and monitors and runners have week ref on
+	  their targets.
+
+2014-01-08 09:49:38 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/apps/gst-validate.py:
+	  validate: tools: Add a gst-validate test manager
+
+2014-01-08 09:44:02 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  validate: tools: media-info: Fixes in the media file descriptor parsing code
+	  We used to always fail when the user was passing something not NULL as err
+
+2013-12-31 11:45:07 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/apps/ges-projects-tests.py:
+	* validate/tools/gst-validate-launcher.py:
+	* validate/tools/reporters.py:
+	* validate/tools/testdefinitions.py:
+	* validate/tools/utils.py:
+	  validate: tools: Cleanup test launcher tool
+	  Previous commit was not meant to be pushed and those two should have
+	  been fixed up together, sorry for the mistake
+
+2014-01-30 15:52:34 -0300  Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
+
+	* validate/gst/validate/Makefile.am:
+	  validate: fix parallel build
+	  Without this, parallel building with > 2 jobs fails.
+	  Also, LDFLAGS should not contain -l flags but _LIBADD.
+
+2014-01-30 15:47:15 -0300  Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
+
+	* validate/gst/validate/gst-validate-default-overrides.c:
+	  validate: drop unneeded stdio include
+
+2013-12-31 11:45:07 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/apps/ges-projects-tests.py:
+	* validate/tools/gst-validate-launcher.py:
+	* validate/tools/reporters.py:
+	* validate/tools/testdefinitions.py:
+	* validate/tools/utils.py:
+	  Add a test launcher tool
+
+2013-11-25 21:51:11 +0100  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/pkgconfig/gst-validate.pc.in:
+	  validate: fix installation
+	  * install headers
+	  * fix libname in pk file
+
+2013-11-15 05:22:24 -0500  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenarios: list scenarios in GST_VALIDATE_SCENARIOS_PATH
+	  GST_VALIDATE_SCENARIOS_PATH was used only for loading scenarios,
+	  so any in that path would not be listed by -l.
+	  Change-Id: If3cb94867ef3876933bda02477675c8ccf67baaf
+
+2013-10-18 16:22:03 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  tools: transcoding: Avoid reencoding unless explicitely specified
+
+2013-10-28 19:49:52 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Do not concider TIME_NONE as 0 for serialized events
+	  In case we have serialized events right after a buffer that had no
+	  timestamp set we concider that last timestamp was 0, but we can
+	  actually not concider the timestamp at all in that case as it is
+	  only "meaningless value".
+
+2013-10-19 13:41:01 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  tools: Simplify the setting of action scenario vs config scenario
+	  This make it easier for user to understand the difference between
+	  the two concepts and avoids confusion.
+	  Change-Id: Ib42913722c93a1e7e3c8b156173c458230946592
+	  Conflicts:
+	  validate/tools/gst-validate-transcoding.c
+	  validate/tools/gst-validate.c
+
+2013-10-25 11:33:54 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate.c:
+	  scenario: Do not execute anything when listing scenarios
+
+2013-10-25 11:31:58 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Add a "set-feature-rank" config action
+	  This action can be used to change the rank of a particular element,
+	  so you can force a particular element to be used when using
+	  autoplugging elements (such as decodebin, encodebin, and friends)
+
+2013-10-25 11:29:04 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tools/gst-validate-transcoding.c:
+	  scenario: Add support for "config" actions, actions executed at parse time
+	  This type of actions is used to change some parametter on GStreamer
+	  core and it plugins, it can be fore example, to change the rank of a
+	  plugin or things like that.
+
+2013-10-16 17:35:36 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate-transcoding: Dot pipeline on error
+
+2013-10-14 11:25:39 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/configure.ac:
+	* validate/tools/Makefile.am:
+	  Properly link against gstreamer-video as it is now needed
+
+2013-10-14 11:20:03 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  media-info: Do not use GST_PTR_FORMAT with g_print
+	  Fix compilation
+
+2013-10-14 11:07:03 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/scrub_forward_seeking.scenario:
+	  data: Avoid races in the scrub_forward seeking scenario
+	  Make sure that it does not last too long if the file is long (scrubing
+	  on 10 secs maximum), and make sure that we do not end up seeking after
+	  the max duration
+
+2013-10-14 11:05:48 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  report: Set refcount=1 when creating a report
+	  As it should start with 1 reference, not 0
+
+2013-10-09 09:35:29 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/force_key_unit.scenario:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/tools/gst-validate-transcoding.c:
+	  scenario: Add an action that checks the "force-key-unit" event execution
+
+2013-10-09 09:33:06 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  scenario: Make the get_clocktime helper a public method
+	  So it can be reused outside of the core code
+
+2013-10-07 19:47:15 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Do not try to compare 2 not fixed values
+	  There is no reliable way of checking those values in the case they
+	  are not fixed, let's just make sure we get fixed values before
+	  executing the check
+
+2013-10-07 17:40:54 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/adaptive_video_framerate_size.scenario:
+	  data: Add an adaptive video framerate and size scenario
+
+2013-10-07 17:18:37 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/adaptive_video_framerate.scenario:
+	* validate/tools/gst-validate-transcoding.c:
+	  data: Add an adaptive video framerate scenario
+
+2013-10-07 12:08:28 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/adaptive_video_size.scenario:
+	  data: Add a scenario where we change the video size on during playback
+
+2013-10-07 12:06:22 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  transcoding: Add a new action to change restriction caps at runtime
+
+2013-10-07 12:07:47 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  transcoding: Fix the way we get pad caps
+
+2013-10-05 13:29:52 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/alternate_fast_backward_forward.scenario:
+	* validate/data/fast_backward.scenario:
+	* validate/data/fast_forward.scenario:
+	* validate/data/seek_backward.scenario:
+	* validate/data/seek_forward.scenario:
+	* validate/data/seek_forward_backward.scenario:
+	* validate/data/simple_backward.scenario:
+	* validate/data/simple_seeks.scenario:
+	* validate/data/update_start.scenario:
+	* validate/data/update_stop.scenario:
+	  data: Set seeks to accurate+flush by default
+
+2013-10-05 12:44:39 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Pass through gst-indent
+
+2013-10-05 12:43:27 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Use g_error instead of exit (0)
+
+2013-10-05 12:43:03 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Factor out function to get GstClockTime out of a structure
+
+2013-10-05 12:01:46 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Use a weak ref to the pipeline
+	  We are listening to it, we should not be owning a ref to it.
+
+2013-10-05 12:00:35 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/docs/validate-usage.txt:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/tools/gst-validate-transcoding.c:
+	  runner: Use "18" as exit code in case of error
+	  It is a random number, but it will in most cases give people a hint
+	  that gst-validate reported a critical issue, and thus set the return
+	  code, only by looking at it
+	  Also make use of gst_validate_runner_print() in
+	  gst-validate-transcoding.c as we were copy pasting that method there.
+
+2013-10-03 19:23:57 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/seek_backward.scenario:
+	* validate/data/seek_forward.scenario:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Handle formulas in playback_time
+	  And port seek forward/backward scenarios to relative seeking
+
+2013-09-28 02:18:55 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Check that all action were properly executed
+
+2013-09-28 00:15:13 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/scrub_forward_seeking.scenario:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  scenario: Add the notion of repeated actions
+
+2013-09-28 00:05:51 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	  utils: Add util functions to parse simple mathematical expressions
+	  And make use of it to set the start of a seek
+
+2013-09-28 00:12:07 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Error out and exit when we fail loading a scenario
+
+2013-10-03 18:14:18 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.h:
+	  gst-validate-scenario: Only typedef the struct once
+	  Some gcc versions don't like the typedef being done twice
+
+2013-10-03 05:32:54 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: do not set default seek flags
+	  Seeks will be done with no particular flags, unless specified
+	  in the scenario.
+
+2013-09-30 09:51:21 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate: Don't use the GOptionContext after freeing it
+
+2013-09-21 00:23:17 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Check if channel-mask is present only if channels > 2
+	  As it is not a mandatory field otherwize
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708499
+
+2013-09-19 07:38:20 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Add GST_VALIDATE_SCENARIOS_PATH environment variable
+	  So you can specify the PATHS where to look for scenario files
+
+2013-09-16 10:03:07 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/data/update_start.scenario:
+	* validate/data/update_stop.scenario:
+	  scenarios: add 2 new scenarios for seeks with different seek types
+	  They test seeks that only update the stop or the start position, some
+	  demuxers seem not to handle the case where start type is set to None.
+
+2013-09-13 12:09:30 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: track position query results closer
+	  Always keep probing the pipeline for the current position and compare
+	  with the latest requested seek segment to detect if the seek boundaries
+	  are being respected
+
+2013-09-17 15:56:19 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  scenario: Make it possible to define mandatory fields
+	  And give a descrpition for actions
+
+2013-09-02 11:11:15 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/data/Makefile.am:
+	* validate/data/switch_audio_track.scenario:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: add a track switch command, and an audio track switch test
+	  The "switch-track" command can be used to switch tracks. The "type"
+	  argument selects which track type to change (can be "audio", "video",
+	  or "text"). The "index" argument selects which track of this type
+	  to use: it can be either a number, which will be the Nth track of
+	  the given type, or a number with a "+" or "-" prefix, which means
+	  a relative change (eg, "+1" means "next track", "-1" means "previous
+	  track").
+	  Conflicts:
+	  validate/gst/validate/gst-validate-scenario.c
+
+2013-09-16 18:48:38 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Make it possible to register action parsing funcs before init
+
+2013-09-13 15:48:56 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/Makefile.am:
+	* validate/configure.ac:
+	* validate/pkgconfig/Makefile.am:
+	* validate/pkgconfig/gst-validate-uninstalled.pc.in:
+	* validate/pkgconfig/gst-validate.pc.in:
+	  validate: Add .pc files so applications can link against us
+
+2013-09-13 11:43:33 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/seek_forward_backward.scenario:
+	* validate/data/simple_backward.scenario:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  data: Port remaning scenario files to new format
+	  And add support to user declared timestamps -1.0 as GST_CLOCK_TIME_NONE
+
+2013-09-09 19:04:48 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/alternate_fast_backward_forward.scenario:
+	* validate/data/fast_backward.scenario:
+	* validate/data/fast_forward.scenario:
+	* validate/data/pause_resume.scenario:
+	* validate/data/seek_backward.scenario:
+	* validate/data/seek_forward.scenario:
+	* validate/data/simple_seeks.scenario:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/validate.c:
+	  scenario: Rework scenarios to be: 1- Simpler to write them, 2- extendible
+	  Make the scenario files a list of GstStructure-s as strings
+
+2013-09-09 19:05:24 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	  bin-monitor: Add a way to specify pipelines on which to set scenarios
+	  When used with LD_PRELOAD,  the application might use various pipelines
+	  for several different thing, we need to make it possible to spcify a
+	  specific pipeline (or set of pipelines) on which to run the scenario.
+	  The format is in the form of:
+	  scenario_name:pipelinename_pattern*
+
+2013-09-09 19:01:44 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Try to run scenarios in development first
+
+2013-09-09 17:40:36 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/.gitmodules:
+	* validate/autogen.sh:
+	* validate/common:
+	  Adapt submodule usage for gst-devtools
+
+2013-09-02 15:42:40 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/.gitignore:
+	* validate/tools/.gitignore:
+	  tools: Update .gitignore for tools move
+
+2013-09-05 16:15:40 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: avoid false positives when a seek fails
+	  Remove the expected seqnums for events when a seek fails, preventing
+	  false positives at the final report
+
+2013-09-05 04:34:42 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-monitor-preload.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-runner.h:
+	* validate/tools/gst-validate.c:
+	  monitor-preload: schedule a report printout at exit
+	  Conflicts:
+	  tools/gst-validate.c
+
+2013-09-04 11:09:50 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate: ensure the top level element is a pipeline
+	  For instance, "fakesrc" will return a fakesrc, not a pipeline.
+	  This is similar to what gst-launch does, and avoids calling
+	  pipeline API on a non pipeline object (and thus asserting).
+
+2013-09-04 11:05:48 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate: do not try to use a pipeline which failed to create
+	  Instead, error out properly with the actual error, if available.
+
+2013-09-04 10:50:11 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate: initialize gst/glib before use in scenario listing
+	  Also ensure that if just -l is passed, we don't try creating a
+	  non existent pipeline.
+	  This makes gst-validate -l work properly again.
+
+2013-09-05 11:47:21 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: fix typo on macro usage
+	  Pass the correct variable to macro
+
+2013-09-05 11:46:46 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: allow flushing flow returns when pad is flushing
+	  It should always be acceptable to return GST_FLOW_FLUSHING when the
+	  pad is flushing
+
+2013-09-03 15:58:20 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: removing bad check
+	  Elements are allowed to accumulate segments, they don't have to push
+	  1:1 segments as they receive
+
+2013-09-03 15:35:36 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	  pad-monitor: buffer timestamp ranges check
+	  Improve buffer timestamp range check:
+	  * Only do it for encoders or decoders
+	  * Audio has an acceptable tolerance of 100ms
+	  To do this, keep track of the caps on the pad and store
+	  if it is dealing with audio or video
+
+2013-09-03 15:17:05 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: move caps check to common event handling
+	  Allows both src and sink pad to keep track of the current caps, but
+	  the duplicated caps check is still only applied to sink pads as
+	  src pads can push the same caps multiple times when it isn't linked
+
+2013-09-02 20:41:35 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: fix reference handling for expired events list
+
+2013-09-02 16:08:19 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/README:
+	* validate/docs/validate-usage.txt:
+	  docs: update and improve
+	  Thanks to Thibault Saunier for most of the explanatory texts
+
+2013-09-02 13:22:51 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/README:
+	* validate/data/Makefile.am:
+	* validate/docs/qa-design.txt:
+	* validate/docs/qa-usage.txt:
+	* validate/docs/validate-design.txt:
+	* validate/docs/validate-usage.txt:
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  Replacing mentions of qa with validate
+
+2013-09-02 12:18:07 -0300  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Check if iterator exists before trying to use it
+
+2013-09-02 12:15:24 -0300  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: make debug log more readable
+	  Use pad as the debug object to make logs more meaningful.
+	  Also adds a FIXME note
+
+2013-09-02 12:11:25 -0300  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	  element-monitor: protect agains elements that have no klass
+
+2013-09-02 11:37:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	  pad-monitor: use activate-mode function to detect when to clear pad data
+	  Clear as much as a flush-stop when pad is deactivated
+
+2013-08-23 09:15:29 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	  WIP: pad-monitor: Fix serialized event order check
+
+2013-09-02 10:46:55 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	  pad-monitor: also track eos event that should be emitted after a seek
+	  When seeking out of the media file length, the element should push an
+	  EOS with the same seqnum of the seek event
+
+2013-09-02 10:46:42 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: add missing space
+
+2013-08-25 19:53:27 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/tools/gst-validate.c:
+	  validate: prettify output of results
+	  Makes the result a bit more readable than a compact multi-line list.
+	  FIXME: Figure out how to print the description of the issues (which can
+	  spawn multiple lines) in a nice way.
+
+2013-08-29 14:27:34 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: add missing line break after print
+
+2013-08-29 14:26:05 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: avoid tracking tag events
+	  Tag events are hard to track and check if properly serialized because
+	  they mutate too much inside elements. There is no reliable way currently
+	  to match a tag event pushed into an element and another tag event
+	  leaving the element (other than if the pointers are actually the same).
+
+2013-08-29 11:48:33 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: only do combined return checks for demuxers
+	  Seems like the only place that gstreamer elements should really
+	  care about it
+
+2013-08-29 11:47:58 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: add two useful macros for readability
+	  Avoids using long macros and having to check for pad-monitor parent
+	  existance
+
+2013-08-28 06:07:40 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-media-info.h:
+	  media-info: add a track switching test
+	  This test will find the first input selector with more than one
+	  sink pad, and cycle through them till it gets back to the original
+	  one. Five seconds between switches. The test checks that some data
+	  was sent from the input selector when each of the sink pads was
+	  selected.
+
+2013-08-23 09:58:58 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Print on stdout when we seek
+
+2013-08-23 09:39:05 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Report an issue result of query state that position > duration
+
+2013-08-22 16:52:45 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Execute action whenever we pass the expected position
+	  We know are sequential so whenever the wanted position is passed we
+	  should execute the action.
+	  This avoid issue with the tolerance when we have high rate playback
+
+2013-08-22 12:16:55 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: Dump pipeline for each state change
+	  Ala gst-launch
+
+2013-08-22 11:17:26 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  transcoding: Print duration regularly
+
+2013-08-22 10:51:49 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: Print state changes to help debugging
+
+2013-08-28 16:58:11 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-default-overrides.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	* validate/gst/validate/gst-validate-monitor-preload.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/validate.c:
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  licenses: improving licensing info on all files
+
+2013-08-28 16:49:07 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: fix typo when acessing parents data
+
+2013-08-27 18:23:09 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: reset buffer timestamp data after a flush
+	  As the pad/element also clears its internal state
+
+2013-08-27 16:16:08 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: also track flush events on probes
+
+2013-08-27 11:56:33 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/Makefile.am:
+	* validate/autogen.sh:
+	* validate/configure.ac:
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-media-check.c:
+	* validate/gst/validate/gst-validate-transcoding.c:
+	* validate/gst/validate/gst-validate.c:
+	* validate/tools/Makefile.am:
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  tools: moving applications from gst/validate to tools
+	  Keeps the CLI applications separate from the libs files
+
+2013-08-27 05:15:19 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  gst-validate-scenario: fix scenario listing missing installed ones
+	  Only scenarii in the current directory or the user's home directory
+	  were being listed.
+
+2013-08-27 05:08:46 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-transcoding.c:
+	  gst-validate-transcoding: fix help text to refer to URIs as URIs
+	  Referring to them as files is confusing, as you'll try to use files
+	  and not URIs.
+
+2013-08-27 04:38:52 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/docs/qa-design.txt:
+	* validate/docs/qa-usage.txt:
+	  docs: minor spelling/grammar fixes
+
+2013-08-27 11:48:00 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Move repeated caps to test only on sinkpads
+	  Testing on source pads can lead to false positives when pads are
+	  unlinked. The caps event is sticky and will be pushed again later
+	  when another buffer/event is pushed, leading to an acceptable
+	  situation to push the caps twice.
+
+2013-08-26 20:30:07 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.h:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: add another acceptable flow return combination scenarios
+	  A demuxer knows when to return EOS after samples are over, so it is
+	  ok for it to return even when all src pads returned OK
+
+2013-08-26 18:38:27 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: improve serialized event checks
+	  If the event was already found at the first position of the array, it
+	  shouldn't be searched on the rest of it.
+	  This removes lots of false positives.
+
+2013-08-26 18:36:06 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: fix aggregate flow return check for error situations
+	  Flow flushing must be returned upstream to indicate an error situation
+	  downstream
+
+2013-08-26 20:31:22 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate.c:
+	  gst-validate: print error message when starting the pipeline fails
+	  Instead of just exiting silently
+
+2013-08-23 09:16:43 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  pad-monitor: New check for duplicate caps event
+	  We shouldn't get/push twice caps that are identical
+
+2013-08-23 17:26:51 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  media-info: avoid glib assert
+
+2013-08-23 11:38:15 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  report: Avoid repeating long macros
+	  Makes the code a bit more readable and compact
+
+2013-08-23 11:07:40 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate-report: Fix critical flag handling
+	  criticals are warnings/issues also
+	  warnings are issues also
+
+2013-08-20 17:25:48 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/alternate_fast_backward_forward.scenario:
+	  data: Add a test that alternates (fast) backward and forward playback
+
+2013-08-19 10:03:04 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/seek_backward.scenario:
+	* validate/data/seek_forward.scenario:
+	  data: Add a seek_backward/forward scenarios
+
+2013-08-19 10:02:35 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/simple_seeks.scenario:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Have GstClockTime as second (in double) inside scenario files
+	  Making it easier to read
+
+2013-08-15 17:32:23 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/fast_backward.scenario:
+	* validate/data/fast_forward.scenario:
+	* validate/data/simple_backward.scenario:
+	  data: Add fast_forward/backward and simple_backward scenarios
+
+2013-08-15 12:34:09 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/seek_forward_backward.scenario:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  data: Add a Backward and Forward seeking scenario
+
+2013-08-15 12:17:43 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/pause_resume.scenario:
+	  data: Add a Pause/Resume scenario
+
+2013-08-19 14:13:10 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-transcoding.c:
+	* validate/gst/validate/gst-validate.c:
+	  validate: Set return value of apps to -1 only if a critical issues was reported
+	  Conflicts:
+	  gst/validate/gst-validate-transcoding.c
+	  gst/validate/gst-validate.c
+
+2013-08-16 16:41:50 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-transcoding.c:
+	  transcoding: Make sure to initialize Gst before parsing options
+	  Avoiding to break the help
+
+2013-08-15 15:59:22 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-transcoding.c:
+	  transcoding: Connect to the bus signals watch as the main watch might already be connected
+
+2013-08-15 17:31:17 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Start monitoring the position only when the pipeline starts playing
+	  Otherwize seeking with a playback_time=0 won't work properly
+
+2013-08-15 17:30:34 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Fix negative rate management
+	  Properly parse the it has a gdouble and set the stop position of the seek as
+	  seeked_position if the rate is negative
+	  + Add some debug
+
+2013-08-15 12:33:23 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Actions order in xml file is the order in which they must be executed
+	  When seeking we might want to execute seeks at a playback time inferior than previous
+	  seek, so we need to be able to define the order in which actions have to be
+	  executed, the simplest way is to just concider that actions are always
+	  order in the XML files.
+	  + Add some more debugs
+	  Conflicts:
+	  gst/validate/gst-validate-scenario.c
+
+2013-08-15 15:57:52 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Rename the seeks list to actions, and initialize action to 0 when allocating
+
+2013-08-16 12:17:34 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/data/simple_seeks.scenario:
+	* validate/data/simple_seeks.xml:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Rename scenario xml files extension to .scenario
+
+2013-08-15 12:18:56 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate.c:
+	  validate: Connect to the bus signals watch as the main watch might already be connected
+
+2013-08-16 12:50:51 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/gst-validate-transcoding.c:
+	* validate/gst/validate/gst-validate.c:
+	  validate: Add a way to list avalaible scenarios
+	  Conflicts:
+	  gst/validate/gst-validate-transcoding.c
+
+2013-08-22 10:35:50 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-transcoding.c:
+	  gst-validate-transcoding: add signal handling and issues printing
+	  Update to have the same features as gst-validate.
+	  1) Handle interrupts properly, with the additional of having the
+	  'eos-on-shutdown' argument that sends EOS to the pipeline. This is
+	  very useful for transcoding processes to finish correctly.
+	  2) Print issues on the end of application
+
+2013-08-22 10:08:13 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate.c:
+	  gst-validate: add interrupt handler
+	  Handle interrupt properly to still print issues when exiting
+
+2013-08-21 18:21:41 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Fix source pad probe handling
+	  type is a bitmask and not an enum
+
+2013-08-21 13:10:42 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate.c:
+	  gst-validate: fix documentation after debug category changes
+
+2013-08-21 18:00:16 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate-reporter: More comprehensive debug message
+	  Some issues don't have any arguments, so put the full details in.
+
+2013-08-20 11:43:07 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/validate.c:
+	  validate: Only use one debugging category: validate
+	  There's no point in having a different debug category per file, you
+	  can filter it by source filename if you *really* want that.
+
+2013-08-21 12:11:40 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-check.c:
+	* validate/gst/validate/gst-validate.c:
+	  gst-validate: print issues at the end
+	  And improve documentation about usage
+
+2013-08-21 11:03:19 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-check.c:
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-media-info.h:
+	  media-check: add results file comparison
+	  Adds a new expected-results argument to receive a file that is used
+	  as a base for comparison with the new results. In case differences are
+	  found, the application will print those issues.
+
+2013-08-20 17:10:44 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  reporter: do not print issues to stdout
+
+2013-08-20 15:44:10 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  media-info: fix playback tests
+	  They weren't waiting for the pipeline to properly change state
+	  before sending seek events, that would cause some events to
+	  return TRUE even if they were not handled
+
+2013-08-20 15:42:54 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-check.c:
+	  media-check: return nonzero if a test failed
+
+2013-08-20 13:24:31 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-media-info.h:
+	  media-info: add playback and reverse-playback tests
+	  The tests are very simple as they only write the first error they
+	  found during playback. If no error is set, an empty string is
+	  printed.
+	  The playback pipeline isn't monitored with validate monitors for now
+
+2013-08-20 11:43:06 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-file-check.c:
+	* validate/gst/validate/gst-validate-media-check.c:
+	  rename: gst-validate-file-check -> gst-validate-media-check
+	  It not only validates files, takes any URI
+
+2013-08-20 11:41:15 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-media-info.h:
+	  media-info: add stream topology parsing
+	  Currently it only saves/loads the main type, but all topology is
+	  already being parsed for future use
+
+2013-08-19 16:52:12 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  media-info: add duration and seekable entries
+	  Add duration entry in ns and seekable as a boolean to a new group
+	  'media-info'
+
+2013-08-19 16:38:13 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-file-check.c:
+	* validate/gst/validate/gst-validate-file-checker.c:
+	* validate/gst/validate/gst-validate-file-checker.h:
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-media-info.h:
+	* validate/gst/validate/gst-validate-transcoding.c:
+	* validate/gst/validate/validate.h:
+	  media-info: replacing file-checker with a simpler media-info struct
+	  This struct stores information about a media and tests run on it. It
+	  also has a few helper functions that allows storing the results to a
+	  file and loading it back.
+	  Instead of having the file-checker object that would compare the
+	  extracted values from the file to expected results set to its properties,
+	  the media-info will store the values and it will be possible to compare
+	  old media-info with new media-info from the same file. This allows
+	  tracking improvements and regressions on different gstreamer versions.
+	  Right now, the media-info is very tiny and doesn't store much info, only
+	  the uri and the file size in bytes, but it will receive more additions in
+	  the upcoming commits for storing duration, media topology, seekability and
+	  playback information.
+
+2013-08-16 15:15:51 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/.gitignore:
+	* validate/gst/validate/.gitignore:
+	  .gitignore: Update for 1.0 and cleanup
+
+2013-08-16 15:05:54 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/configure.ac:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-default-overrides.c:
+	* validate/gst/validate/gst-validate-element-monitor.h:
+	* validate/gst/validate/gst-validate-monitor-factory.h:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-override-registry.h:
+	* validate/gst/validate/gst-validate-override.h:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-runner.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/validate.h:
+	  all: Enable more C warnings at build time
+	  And fix the issues:
+	  * Proper forward declaration
+	  * static functions marked properly
+	  * absolute includes
+	  * declaration order
+
+2013-08-16 14:27:29 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  reporter: Fix proper debug message output partially
+	  In order for the special gstreamer print argument handler to be used
+	  you can't use g_strdup_printf. You need to pass it the actual va_list.
+
+2013-08-16 14:26:35 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Handle case where internal pad iterator is NULL
+	  Can happen with inputselector
+
+2013-08-16 14:25:49 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Don't use signal that doesn't exist
+	  Note that we should just ensure we always get the pads from the parent
+
+2013-08-16 14:24:12 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Update raw audio caps checks
+
+2013-08-16 14:23:05 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Fix locking issues
+	  We were taking locks twice.
+	  Also add debugging info when taking/releasing locks to help further similar issues
+
+2013-08-16 11:24:11 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/validate/gst-validate-file-checker.c:
+	  file-checker: GstEncodingProfile is a GObject in 1.0
+
+2013-08-15 01:46:27 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/configure.ac:
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-file-checker.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-transcoding.c:
+	  gst-validate: port to 1.0
+
+2013-08-15 01:44:59 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/po/POTFILES.in:
+	  po: missing po rename
+
+2013-08-14 20:03:43 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	* validate/gst/validate/gst-validate-monitor-preload.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	  validade: add missing config.h includes
+
+2013-08-14 19:14:18 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-file-check.c:
+	* validate/gst/validate/gst-validate-monitor-preload.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-transcoding.c:
+	* validate/gst/validate/gst-validate.c:
+	* validate/gst/validate/validate.c:
+	* validate/gst/validate/validate.h:
+	  validate: add init function
+	  Adds an init() function that should be called before using the lib.
+	  It takes care of calling all internal initializing functions in
+	  gst-validete
+
+2013-08-14 18:04:23 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/validate/gst-validate-file-check.c:
+	* validate/gst/validate/gst-validate-transcoding.c:
+	* validate/gst/validate/gst-validate.c:
+	  tools: improve documentation
+
+2013-08-14 16:30:39 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/autogen.sh:
+	* validate/configure.ac:
+	* validate/gst/Makefile.am:
+	* validate/gst/qa/.gitignore:
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gettext.h:
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-bin-monitor.h:
+	* validate/gst/qa/gst-qa-default-overrides.c:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.h:
+	* validate/gst/qa/gst-qa-file-check.c:
+	* validate/gst/qa/gst-qa-file-checker.c:
+	* validate/gst/qa/gst-qa-file-checker.h:
+	* validate/gst/qa/gst-qa-i18n-lib.h:
+	* validate/gst/qa/gst-qa-monitor-factory.c:
+	* validate/gst/qa/gst-qa-monitor-factory.h:
+	* validate/gst/qa/gst-qa-monitor-preload.c:
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-override-registry.c:
+	* validate/gst/qa/gst-qa-override-registry.h:
+	* validate/gst/qa/gst-qa-override.c:
+	* validate/gst/qa/gst-qa-override.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-reporter.c:
+	* validate/gst/qa/gst-qa-reporter.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	* validate/gst/qa/gst-qa-scenario.c:
+	* validate/gst/qa/gst-qa-scenario.h:
+	* validate/gst/qa/gst-qa-transcoding.c:
+	* validate/gst/qa/gst-qa.c:
+	* validate/gst/qa/qa.h:
+	* validate/gst/validate/.gitignore:
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gettext.h:
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-default-overrides.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.h:
+	* validate/gst/validate/gst-validate-file-check.c:
+	* validate/gst/validate/gst-validate-file-checker.c:
+	* validate/gst/validate/gst-validate-file-checker.h:
+	* validate/gst/validate/gst-validate-i18n-lib.h:
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	* validate/gst/validate/gst-validate-monitor-factory.h:
+	* validate/gst/validate/gst-validate-monitor-preload.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-override-registry.h:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-override.h:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-runner.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/gst-validate-transcoding.c:
+	* validate/gst/validate/gst-validate.c:
+	* validate/gst/validate/validate.h:
+	  rename gst-qa -> gst-validate
+
+2013-08-14 15:58:34 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: only do complete caps checks on setcaps
+	  On get caps it is acceptable to have missing fields to simplify caps
+	  negotiation
+
+2013-08-13 13:40:48 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	  qa-preload: split to separate lib
+	  It should only be used separately, otherwise it will wrap around any
+	  pipeline from applications linking with gstqa
+
+2013-08-12 15:18:36 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-file-check.c:
+	* validate/gst/qa/gst-qa-file-checker.c:
+	* validate/gst/qa/gst-qa-file-checker.h:
+	  file-check: add reverse-playback test
+	  Adds a test that checks if reverse playback works without errors
+
+2013-08-13 11:07:31 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/qa/gst-qa-reporter.c:
+	  qa-reporter: Make debug message a bit more readable
+	  By surrounding it with double quotes
+
+2013-08-13 11:07:05 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: 0.10 uses "channel-positions" field in audio caps
+	  And it's an array, not a string
+
+2013-08-13 10:11:42 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/Makefile.am:
+	* validate/gst/qa/Makefile.am:
+	  Makefile: Clean up for make distcheck
+	  Directories, headers, files weren't properly disted
+	  Also clean up the various CFLAGS/HEADERS/SOURCES variables and remove
+	  ones that aren't needed.
+
+2013-08-13 09:44:50 +0200  Edward Hervey <edward@collabora.com>
+
+	* validate/po/Makevars:
+	  po: Add missing Makevars file
+
+2013-08-09 12:37:49 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: use correct variable for segment comparisons
+	  Use the expected versus the received instead of using the received
+	  twice.
+
+2013-08-09 12:33:27 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-reporter.c:
+	  reporter: fix printf format type
+
+2013-08-08 12:35:50 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/README:
+	* validate/docs/qa-design.txt:
+	* validate/docs/qa-usage.txt:
+	  docs: improve and update docs
+
+2013-08-07 17:31:17 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-bin-monitor.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	  qa-scenario: re add scenarios creation to bin-monitor
+	  GstPipelines are monitored by bin monitors. Create scenarios if
+	  requested from the bin monitors and store them there.
+
+2013-08-07 16:22:36 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-reporter.h:
+	  qa-monitor: remove reference to the runner
+	  qa-monitor implements qa-reporter, and we already have a runner stored
+	  there.
+
+2013-08-07 16:13:33 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/.gitignore:
+	  gitignore: ignore more binaries
+
+2013-08-07 16:12:45 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-file-check.c:
+	  qa-file-check: add new binary to run file checks easily
+	  It creates a GstQaFileChecker and runs it on the passed URI with
+	  the tests enabled as arguments
+
+2013-08-07 16:10:57 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor-preload.c:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	* validate/gst/qa/gst-qa-scenario.c:
+	* validate/gst/qa/gst-qa-scenario.h:
+	* validate/gst/qa/gst-qa-transcoding.c:
+	* validate/gst/qa/gst-qa.c:
+	* validate/gst/qa/qa.h:
+	  qa-runner: simplify runner to not hold refs to monitor/pipeline
+	  The GstQaRunner is now a simple aggregator of reports that it receives
+	  from monitors and filechecker. This allows it to be used in both
+	  scenarios without  APIs that expect GstElement or Monitors, that are
+	  only used on the pipeline monitoring QA tests.
+
+2013-08-07 11:31:04 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-file-checker.c:
+	* validate/gst/qa/gst-qa-file-checker.h:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-transcoding.c:
+	  file-checker: add file playback testing feature
+	  Adds a property that triggers the file playback tests on
+	  GstQaFileCheker. Also enable it in the gst-transcoding post file checks.
+	  The implementation is simple, just create a playbin2 and use fakesinks
+	  as sinks, set it to playing and wait for either EOS or ERROR messages.
+
+2013-08-06 19:42:21 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-reporter.h:
+	  qa-reporter: fix typo
+
+2013-08-06 19:39:58 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-file-checker.c:
+	  file-checker: include restriction caps tests when checking for profiles
+	  Also move the caps check earlier on the path, to error out sooner and
+	  avoid iterating the sub streams without needing
+
+2013-08-06 18:17:39 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-file-checker.c:
+	  file-checker: replace encoding profile comparison
+	  Use our own custom comparison to allow to add more fine grained error
+	  reporting. Also the encoding profile is_equal function is too strict as
+	  it also compares profiles names, that doesn't matter to us.
+	  This commit implementation is still initial and needs improvements as it
+	  isn't using the restriction caps, which includes information that might not be
+	  on the profile format caps.
+
+2013-08-06 10:36:58 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-reporter.c:
+	  qa-reporter: fix crash by avoiding unref an integer
+
+2013-08-06 10:36:47 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	  makefile: fix build of gst-qa- tools
+
+2013-08-06 10:36:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-file-checker.c:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	  file-checker: add error report and new report types
+	  Add a list of new report types and use them in the file-checker.
+	  The errors are mostly related to testing file attributes against
+	  expected values
+
+2013-08-05 14:16:06 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-file-checker.c:
+	* validate/gst/qa/gst-qa-file-checker.h:
+	* validate/gst/qa/gst-qa-transcoding.c:
+	  qa-file-checker: add a file checker object/runner
+	  It is an object that is capable to run a few file checks. The
+	  implemented tests are: file size, duration, if the file is seekable and
+	  comparing the file stream types with a encoding profile
+
+2013-08-01 18:08:44 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-scenario.c:
+	  qa-scenario: adding eos scenario action
+	  Allows sending EOS to the pipeline
+
+2013-08-01 09:35:59 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-scenario.c:
+	  qa-scenario: add new scenario action - Pause
+	  The pause action instructs the pipeline to go to paused state and then
+	  return to playing. It has the argument 'duration', that indicates the
+	  duration for which the pipeline will remain in paused
+
+2013-08-01 01:27:20 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/data/simple_seeks.xml:
+	* validate/gst/qa/gst-qa-scenario.c:
+	  qa-scenario: refactor to accomodate more actions
+	  Refactor to be able to reuse to add more actions to scenarios.
+	  Planned are pauses and encoding changes
+
+2013-07-31 15:01:13 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-scenario.c:
+	  qa-scenario: avoid assertion on dispose
+	  After an error, the pipeline might still be null, check before unreffing
+
+2013-07-31 15:00:56 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-scenario.c:
+	  qa-scenario: fix typo on define variable
+
+2013-07-31 15:00:33 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.c:
+	  qa-report: fix typo on assertion comparison
+
+2013-07-31 11:12:41 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	  gst-qa-element-monitor: do not bypass monitor factory
+	  A pad monitor was created directly. Prefer going through the
+	  factory.
+
+2013-07-31 11:05:05 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/qa/gst-qa-report.c:
+	  gst-qa-reporter: fix use of uninitialized repeat field
+
+2013-07-31 11:04:32 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/qa/gst-qa-reporter.c:
+	  gst-qa-reporter: fix report leak when discarding repeated report
+
+2013-07-31 10:49:48 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/autogen.sh:
+	* validate/configure.ac:
+	* validate/po/POTFILES.in:
+	  gst-qa: fix build in po
+	  Using a lot of grep and some cargo culting.
+
+2013-07-31 10:07:53 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/qa/Makefile.am:
+	  gst-qa: make tools depend on libraries
+	  This fixes parallel build randomly breaking.
+
+2013-07-30 17:07:13 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	  qa-report: expose API for adding custom issues
+	  expose gst_qa_issue_register and gst_qa_issue_new to allow applications
+	  to register their own custom issues.
+	  Issues IDs should use Areas higher than GST_QA_AREA_OTHER for custom
+	  areas. And to add more issues to existing areas, the IDs should be
+	  higher than GST_QA_ISSUE_ID_CUSTOM_FIRST.
+	  Custom issues registering should be done at startup and from the same
+	  thread as there is no locking around the issues hashtable
+
+2013-07-30 16:21:15 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-transcoding.c:
+	* validate/gst/qa/gst-qa.c:
+	  Fix typos
+
+2013-07-30 16:20:49 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	* validate/gst/qa/gst-qa-transcoding.c:
+	* validate/gst/qa/gst-qa.c:
+	  qa-runner: Remove printing API from qa-runner
+	  Replace it with functions to list the reports
+
+2013-07-30 12:17:48 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: fix NULL format string
+	  An empty message should be an empty string.
+
+2013-07-30 10:21:13 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor-preload.c:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	* validate/gst/qa/gst-qa-transcoding.c:
+	* validate/gst/qa/gst-qa.c:
+	  qa-runner: removing _setup call
+	  Do setup on the _new function directly instead of having a separate
+	  call for that
+
+2013-07-30 09:56:05 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-override.c:
+	* validate/gst/qa/gst-qa-override.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  qa-override: add more pad overrides for buffer probe and caps
+	  Add override functions for custom checking of buffer probe and
+	  getcaps/setcaps functions.
+
+2013-07-29 17:26:21 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-override.c:
+	* validate/gst/qa/gst-qa-override.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: call the event/query/buffer overrides
+	  Use the new event/buffer/query overrides to allow custom checks
+	  on those scenarios
+
+2013-07-29 16:26:52 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-override.c:
+	* validate/gst/qa/gst-qa-override.h:
+	  qa-override: add callbacks for query/buffer/event functions
+	  Add callbacks for pad event/buffer/query functions in case the
+	  override wants to do additional checks
+
+2013-07-30 10:20:43 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-default-overrides.c:
+	* validate/gst/qa/gst-qa-override-registry.c:
+	* validate/gst/qa/gst-qa-override-registry.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	  gst-qa-override-registry: load overrides dynamically
+	  Shared objects listed in GST_QA_OVERRIDE are loaded on startup,
+	  and the symbol gst_qa_create_overrides is run. It should create
+	  any override needed. While it can do anything it wants, this
+	  is discouraged.
+	  GST_QA_OVERRIDE should be a comma separated list of shared objects,
+	  any relative paths should be from the current working directory
+	  at the time they are loaded (ie, if the process to be traced
+	  changes cwd, use absolute paths).
+	  No attempt whatsoever is made at not running what was not meant.
+	  Includes a sample shared object for illustration purposes.
+
+2013-07-29 13:17:50 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-override-registry.c:
+	* validate/gst/qa/gst-qa-override-registry.h:
+	  qa-override-registry: register overrides by gtype and klass
+	  Overrides can now be registerd by gtype, meaning that they will
+	  be attached to monitors that the target is of the requested type.
+	  Also by element klass, that will check that the element has the
+	  selected class in its details
+
+2013-07-29 12:01:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	  qa-monitor: implement intercept_report
+	  It is used to iterate over overrides and modify the report level if
+	  the overrides wants to do so.
+	  Also adds a new mutex only for the overrides to avoid deadlocks when
+	  reporting if we used the same lock for iterating the overrides
+
+2013-07-29 11:35:20 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-reporter.h:
+	  qa-reporter: fix copy n paste left over
+
+2013-07-29 11:34:42 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-reporter.c:
+	* validate/gst/qa/gst-qa-reporter.h:
+	  qa-reporter: add function for intercepting reports
+	  after report creation, this function is called and implementers can
+	  modify the report to their liking before it is posted to the runner
+
+2013-07-29 09:37:46 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	  qa-monitor: chain gst_qa_monitor_finalize to parent's finalize
+	  It was chaining to the parent's dispose.
+
+2013-07-29 10:06:48 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.h:
+	  gst-qa-report: put the correct format to avoid compiler warnings
+
+2013-07-29 07:02:30 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gettext.h:
+	* validate/gst/qa/gst-qa-i18n-lib.h:
+	* validate/gst/qa/gst-qa-report.c:
+	  i18n: copy necessary files in-tree
+
+2013-07-29 07:20:50 -0400  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* validate/gst/qa/gst-qa-report.h:
+	  GstIssueId: make this uintptr_t
+	  As it's used a a placeholder pointer for g_hash_table use,
+	  it needs to be converted back and forth to a pointer.
+
+2013-07-26 19:05:31 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-monitor-factory.c:
+	* validate/gst/qa/gst-qa-monitor-factory.h:
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-override-registry.c:
+	* validate/gst/qa/gst-qa-override-registry.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	  gst-qa-override-registry: adding the override-registry
+	  This registry should contain the list of GstQaOverride to
+	  be used on the pipelines being monitored
+
+2013-07-26 00:14:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-override.c:
+	* validate/gst/qa/gst-qa-override.h:
+	  qa-override: adds qa-override that can change the report level of issues
+	  Useful for customizing the level of issues for particular elements/tests
+	  when they are more relevant or have to be disabled
+
+2013-07-25 23:25:22 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-reporter.c:
+	* validate/gst/qa/gst-qa-reporter.h:
+	* validate/gst/qa/gst-qa-scenario.c:
+	  qa-report: splitting a GstQaReport into a GstQaIssue and GstQaReport
+	  Reports now point to Issues, that are uniquely identified and have
+	  translatable descriptions. This way we are going to be able to uniquely
+	  identify the issues and applications can enable/disable checks for
+	  specific elements.
+
+2013-07-24 19:09:14 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-transcoding.c:
+	* validate/gst/qa/gst-qa.c:
+	  qa: Make it possible to set a scenario from the command line in test apps
+
+2013-07-23 10:13:06 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-reporter.c:
+	* validate/gst/qa/gst-qa-reporter.h:
+	* validate/gst/qa/gst-qa-scenario.c:
+	  qa: Properly set reporter's runner reference
+	  That was never set, but it is needed for the reporter to properly add
+	  reports to the runner.
+	  We still keep a reference on the monitor to make things simpler
+
+2013-07-23 08:55:24 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-reporter.c:
+	* validate/gst/qa/gst-qa-reporter.h:
+	  reporter: Use Gst debugging log in the _report method directly
+	  Using __VALIST__ was not properly working
+	  + Add a gstqareporter debug category
+
+2013-07-22 19:22:49 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-reporter.c:
+	* validate/gst/qa/gst-qa-reporter.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-scenario.c:
+	* validate/gst/qa/gst-qa-scenario.h:
+	  scenario: Implement the GstQaReporter interface and make use of it
+	  This way we can report issues from a scenario
+	  Also add a Seek aread to the known areas list
+	  We now need to pass the runner to the scenario instead of the
+	  pipeline as the GstQaReporter interface needs it.
+
+2013-07-22 19:17:53 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/data/Makefile.am:
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-reporter.c:
+	* validate/gst/qa/gst-qa-reporter.h:
+	  qa: Add a GstQaReporter interface that objects needing reporting can implement
+	  Various type of object should be able to do some reporting, so we have
+	  to make sure all the code to do that is in one place. Creating an interface
+	  makes it simple to share information and it avoid to have a baseclass for
+	  something that is not actually important enough to create a baseclass.
+	  Conflicts:
+	  gst/qa/gst-qa-pad-monitor.c
+
+2013-07-20 00:18:13 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/configure.ac:
+	* validate/data/Makefile.am:
+	* validate/data/simple_seeks.xml:
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	* validate/gst/qa/gst-qa-scenario.c:
+	* validate/gst/qa/gst-qa-scenario.h:
+	  qa: Add a GstQaScenario class making it possible to execute scenarios
+	  A scenario correspond to a suite of action to execute on a pipeline,
+	  for the time being, we only support seeking the pipeline, but in the
+	  future we can imagine doing some queries, setting pipeline state, etc...
+	  The scenario can be loaded thanks to the GST_QA_SCENARIO environment
+	  variable, making it usable with any existant application, in case, the
+	  application can be used interactively, the user should either, not load
+	  any scenario or let the application run without interacting with it.
+
+2013-07-24 16:04:03 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: add lots of locking
+	  When handling elements that spawn multiple threads (hardware
+	  enc/decoders), the pad monitor has to protect its variables specially
+	  because some checks involve iterating over internally linked pads to
+	  add/get some data for comparison (expected events, timestamp ranges,
+	  caps).
+	  Aside from locking its own mutex, the pad monitor can also lock the
+	  parent's mutex when it needs to use data from its internally linked
+	  pads. The locking order should always be parent and then individual
+	  pad-monitor mutexes. This should prevent deadlocks when multiple
+	  pad-monitors from the same element start doing checks at the same time
+	  from different threads.
+
+2013-07-24 10:05:31 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: remove already solved TODOs
+
+2013-07-24 09:51:05 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: accept unexpected flow return if pad is eos
+	  Track eos event and mark that pad as eos so that checking for the
+	  flow return knows when 'unexpected' is acceptable
+
+2013-07-23 15:18:51 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: improve caps proxying check on getcaps
+	  Only check if fields are proxied for sink getcaps as it is when
+	  downstream restrictions should be proxied. Also improve the
+	  fields comparison to handle single value x multi value
+	  (list/array/range) contain relations.
+
+2013-07-23 15:10:33 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: improve type conformance checking for caps
+	  Replace the macro with a more powerful variadic function that can
+	  check for more acceptable types for the same caps.
+	  This removes a few more false positives
+
+2013-07-23 12:52:22 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: only expect a new segment if pad is running on push mode
+	  For pull mode, it should just provide the buffers, regardless of getting
+	  a new segment or not
+
+2013-07-23 12:14:26 -0300  Edward Hervey <edward@collabora.com>
+
+	* validate/gst/qa/gst-qa.c:
+	  gst-qa: show help and exit when no arguments are provided
+	  Instead of attempting to create empty pipelines and weird things
+	  happening :)
+
+2013-07-23 12:11:08 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: fix flushes checking
+	  flush events shouldn't fail, so we don't need to rollback when it
+	  returns false from downstream (this is common when downstream is still
+	  not-linked) and it would cause gst-qa to spit false positives.
+	  Also refactor the common event handling for both sink and src event
+	  functions into a common place. Currently we handle flushes the same
+	  for both pad's directions
+
+2013-07-23 11:51:07 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: only merge caps if they exist
+	  Downtream can not be linked, so we shouldn't try to merge
+	  NULL caps
+
+2013-07-22 20:50:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/configure.ac:
+	  configure: add nano version to enable Werror
+
+2013-07-22 20:09:35 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: fix expected setcaps fields comparison
+	  Use the correct structure when getting the GValues and print different
+	  messages for missing and different fields on the setcaps caps
+
+2013-07-22 20:09:07 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: improve timestamp ranges comparison message a little
+	  Show the buffer range that is being compared.
+
+2013-07-22 15:05:04 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: add check for serialized events order
+	  Store expected serialized events and their 'timestamps' to check if
+	  they are pushed in the same order/time as they were received
+
+2013-07-22 09:50:23 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: add check for setcaps passing audio/video fields
+	  Checks that the common audio/video fields are correctly passed
+	  downstream after a setcaps
+
+2013-07-19 16:52:45 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-report.h:
+	  pad-monitor: add check for getcaps proxying audio/video fields
+	  Checks that the common audio/video fields are correctly proxied by
+	  the elements after a getcaps
+
+2013-07-19 16:52:11 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.h:
+	  element-monitor: add is_encoder flag
+	  Easy access to knowing if the monitored element is an encoder
+
+2013-07-18 16:53:46 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/configure.ac:
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-transcoding.c:
+	  qa-transcoding: Add a binary program to easily test transcoding
+
+2013-07-18 18:20:09 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  monitor(s): Avoid trying to disconnect handlers on instances that do not exist anymore
+
+2013-07-18 17:49:44 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	  qa-report: Avoid reporting tons of times the exact same issue to users
+	  Some of the issue can be reported once and for all. We are here avoiding to flood the
+	  user with the same information repeated infinitely.
+
+2013-07-18 13:59:11 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  qa-pad-monitor: Do not use gst_private.h
+
+2013-07-19 11:14:39 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/docs/qa-design.txt:
+	* validate/docs/qa-usage.txt:
+	  docs: add design and usage docs
+
+2013-07-19 09:57:07 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: improve timestamp ranges check
+	  Keep the full range stored by the element in the monitor and check
+	  if outgoing timestamps are within that range. It is simple and
+	  should generally work.
+
+2013-07-18 14:49:23 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: fix combined flow checks
+	  We can only check if we found a downstream monitor
+
+2013-07-18 14:49:01 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: fix caps field type checks
+	  The type is GstValueList and not GArray
+
+2013-07-18 14:48:46 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: improve report messages with arguments
+
+2013-07-18 12:11:00 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	  qa-report: Pass the whole monitor when creating a report
+	  So we have the proper source name already avalaible and in the future
+	  we might need some more informations about the monitor itself.
+
+2013-07-18 12:00:29 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  qa-pad-monitor: Properly set target_name with as much info as possible
+
+2013-07-18 11:49:54 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	  qa-monitor: Add a target name field that can be used even when the target is freed
+
+2013-07-18 11:49:25 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	  qa-monitor: Make the reference to the target a weak reference
+
+2013-07-18 12:09:13 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	  qa-report: add debug flags for criticals
+	  Allows the user to enable program abort if a report
+	  is created with a certain level.
+	  Use:
+	  GST_QA=fatal_criticals,fatal_warnings,fatal_issues
+
+2013-07-18 10:59:11 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	  qa-report: Do not keep a ref to the source but keep its name instead
+	  We currently do not need to access the object source after its creation
+	  but we need to be able to have a usefull for debugging name.
+
+2013-07-17 20:21:53 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-runner.c:
+	  qa-runner: Add a 'report-added' signal
+	  So it is possible to plug into the runner to get information about
+	  what is going from outside of it.
+
+2013-07-17 19:56:52 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	  qa-report: Make it a boxed type
+	  And make it refcounted, in 1.0 it should become a GstMiniObject, for
+	  now, it is enough that way.
+	  The goal is to be able to use it in signals
+
+2013-07-17 19:18:49 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	  qa-monitor: Allow detaill message to be in printf format
+	  So we can give proper informations about what is wrong to users
+
+2013-07-17 21:46:37 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor-preload.c:
+	  qa-monitor-preload: fix preload to work with pipeline creation
+	  Wrap around the main gstreamer pipeline creation functions as wrapping
+	  g_object_new requires rebuilding glib.
+
+2013-07-17 20:40:50 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: fix copy n paste mistake
+	  Do not use GstFlowReturn where a boolean is expected
+
+2013-07-17 20:40:38 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: fix initialization of timestamp ranges
+
+2013-07-17 17:57:39 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: check that returns are combined properly
+	  When getting a return from a sink pad, check that it combines properly
+	  the current returns from downstream source pads
+
+2013-07-17 14:36:44 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: verify that pushed segment matches what was received
+	  Check that src pads push segments that are compatible with what
+	  was received on the sink pads
+
+2013-07-17 11:31:38 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: output timestamps should be in range of received ones
+	  Checks if the timestamps of pushed buffers are in the range of the
+	  received buffer timestamps;
+
+2013-07-17 00:33:42 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: add check for out of segment buffers
+
+2013-07-17 00:30:21 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: track current buffer timestamp and duration
+	  This can be used to make sure outgoing buffers match the input
+	  timestamps
+
+2013-07-17 00:29:38 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: check for when a flush start isn't expected
+	  Complain when an unexpected flush-start is received
+
+2013-07-17 00:29:04 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-report.h:
+	  pad-monitor: add checks for raw caps completeness
+	  Check audio and video raw caps returned from getcaps for expected
+	  fields and types
+
+2013-07-17 00:25:11 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.h:
+	  qa-monitor: Fix typo in printf format for report debug messages
+	  Stringify the arguments correctly for printing
+
+2013-07-16 23:19:13 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: first buffer checks
+	  Check that a newsegment is received before the first buffer and that
+	  the first buffer running time is 0
+
+2013-07-16 21:15:09 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	* validate/gst/qa/gst-qa.c:
+	  qa-report: rework qa-report API
+	  Remove error from GstQaErrorReport, making it only GstQaReport. Add
+	  a level and use area and subarea code, with an extra string for message
+	  adding details.
+	  Provide macros on qa-monitor to make it easy to create reports.
+
+2013-07-16 09:17:44 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: add stubs for getcaps/setcaps function wrapping
+
+2013-07-16 08:06:27 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-element-monitor.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: add check for out of segment buffer data
+
+2013-07-15 10:15:06 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	  qa-report: use gst_util_get_timestamp for report times
+	  Makes it more aligned with GST_DEBUG output
+
+2013-07-15 09:27:34 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: split event checks for src and sink pads
+	  Keeping those handlers separate should keep the code smaller and
+	  easier to understand
+
+2013-07-12 16:02:25 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-bin-monitor.h:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.h:
+	* validate/gst/qa/gst-qa-monitor-factory.c:
+	* validate/gst/qa/gst-qa-monitor-factory.h:
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	  qa-monitor: add parent relation for monitors
+	  This is useful because Pad monitors will have to ask the
+	  parent element monitors for some element details for
+	  doing checks
+
+2013-07-12 15:42:56 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.h:
+	  qa-element-monitor: check if the element is a decoder
+	  This can be used on checks for timestamps being inside segment
+
+2013-07-12 14:18:22 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: add probes for src pads
+	  To be used for further monitoring events and buffers for
+	  src pads
+
+2013-07-12 13:32:08 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	  qa-report: add a timestamp to error reports
+
+2013-07-12 02:10:06 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-report.c:
+	* validate/gst/qa/gst-qa-report.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	* validate/gst/qa/gst-qa.c:
+	  qa-report: adds qa-report for reporting errors to GstQaRunner
+	  The errors are printed directly to stdout and are accumulated at
+	  GstQaRunner for being printed at the end if requested
+
+2013-07-12 01:23:48 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-monitor-preload.c:
+	  qa-monitor-preload: add functions to allow ld-preload to wrap pipelines
+	  The preload functions wrap functions that can create pipelines and
+	  attaches a runner to them for monitoring
+
+2013-07-12 00:41:43 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-bin-monitor.h:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.h:
+	* validate/gst/qa/gst-qa-monitor-factory.c:
+	* validate/gst/qa/gst-qa-monitor-factory.h:
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	  qa-monitor: add runner property
+	  runner stores the GstQaRunner that will receive the error reports
+	  from the monitors
+
+2013-07-11 13:43:52 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: make it able to initialize a segment
+	  Do not take the initial format set to TIME too seriously when we
+	  haven't got any newsegment event yet. If it is the first segment
+	  received, switch our internal segment tracker to the event format
+
+2013-07-11 13:41:25 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa.c:
+	  gst-qa: add seek-tests option
+	  The seek-tests does a simple seeking after the pipeline has started
+	  so that seeking checks can be performed by the monitors
+
+2013-07-11 02:07:41 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: track some events
+	  Segments, upstream seeks and flushes. Adding the following checks:
+	  * A flush stop is expected after a flush start
+	  * After a seek, the flushes/segment seqnum should be the same as the seek
+
+2013-07-11 00:05:17 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  pad-monitor: only set pad functions if they exist on the pad
+	  Some functions should only be set on pads if they were originally
+	  set, like the GetRange, Chain and BufferAlloc
+
+2013-07-11 00:04:41 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	  qa-bin-monitor/element-monitor: implement pad/element wrapping
+	  Add code that creates new monitors when elements/pads are found
+	  in bin and element monitors
+
+2013-07-11 00:03:54 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	  qa-monitor: fix various start up issues
+	  Fix reference count for monitored object, passing of constructor
+	  parameter and base monitor property flag
+
+2013-07-10 18:38:09 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  pad-monitor: instrument to monitor buffer/event/query/alloc flows
+	  Replace pad functions with monitor functions that can do pre/post
+	  checks and call the original functions
+
+2013-07-10 14:03:49 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-bin-monitor.h:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.h:
+	* validate/gst/qa/gst-qa-monitor-factory.c:
+	* validate/gst/qa/gst-qa-monitor.c:
+	* validate/gst/qa/gst-qa-monitor.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	  qa-monitor: add base class for monitors
+	  The base class adds a 'object' property to hold the monitored object,
+	  it can only be set on construction. Also the constructor now
+	  automatically calls the element set up
+
+2013-07-09 19:20:55 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-bin-monitor.c:
+	* validate/gst/qa/gst-qa-bin-monitor.h:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.h:
+	* validate/gst/qa/gst-qa-monitor-factory.c:
+	  qa-bin-monitor: adds a bin monitor
+	  Extends element-monitor to also wrap child elements
+
+2013-07-09 17:38:47 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-element-monitor.c:
+	* validate/gst/qa/gst-qa-element-monitor.h:
+	* validate/gst/qa/gst-qa-element-wrapper.c:
+	* validate/gst/qa/gst-qa-element-wrapper.h:
+	* validate/gst/qa/gst-qa-monitor-factory.c:
+	* validate/gst/qa/gst-qa-monitor-factory.h:
+	* validate/gst/qa/gst-qa-pad-monitor.c:
+	* validate/gst/qa/gst-qa-pad-monitor.h:
+	* validate/gst/qa/gst-qa-pad-wrapper.c:
+	* validate/gst/qa/gst-qa-pad-wrapper.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	* validate/gst/qa/gst-qa-wrapper-factory.c:
+	* validate/gst/qa/gst-qa-wrapper-factory.h:
+	  qa: renaming Wrapper -> Monitor
+
+2013-07-09 16:52:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-element-wrapper.c:
+	* validate/gst/qa/gst-qa-pad-wrapper.c:
+	* validate/gst/qa/gst-qa-pad-wrapper.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	  qa-pad-wrapper: adds stub class for pad QA wrapper
+	  Also fixes _new functions to ref the elements intead of
+	  ownership transfers
+
+2013-07-09 16:39:38 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/gst-qa-element-wrapper.c:
+	* validate/gst/qa/gst-qa-element-wrapper.h:
+	  qa-element-wrapper: add code for iterating and monitoring pads creation
+	  This will be used to create the wrappers for pads
+
+2013-07-09 16:13:00 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/gst/qa/.gitignore:
+	  gitignore: ignore gst-qa binary
+
+2013-07-09 16:08:30 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/AUTHORS:
+	* validate/COPYING:
+	* validate/ChangeLog:
+	* validate/Makefile.am:
+	* validate/NEWS:
+	* validate/README:
+	* validate/autogen.sh:
+	* validate/configure.ac:
+	* validate/gst/Makefile.am:
+	* validate/gst/qa/Makefile.am:
+	* validate/gst/qa/gst-qa-element-wrapper.c:
+	* validate/gst/qa/gst-qa-element-wrapper.h:
+	* validate/gst/qa/gst-qa-runner.c:
+	* validate/gst/qa/gst-qa-runner.h:
+	* validate/gst/qa/gst-qa-wrapper-factory.c:
+	* validate/gst/qa/gst-qa-wrapper-factory.h:
+	* validate/gst/qa/gst-qa.c:
+	* validate/gst/qa/qa.h:
+	  qa: adds gst-qa binary and basic classes to run the QA tests
+	  The classes are mostly a stub for now, but the gst-qa already
+	  has a minimum to start them;
+
+2013-07-09 16:07:58 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/.gitmodules:
+	  qa: add common submodule
+
+2013-07-09 16:06:36 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* validate/.gitignore:
+	  qa: initial empty repository
+

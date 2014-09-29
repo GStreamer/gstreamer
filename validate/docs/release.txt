@@ -1,0 +1,2 @@
+To be able to use the new-release script from www/bin/ you will need to link $GST/gst-devtools/validate to
+$GST/gst-validate/ -- After doing that you can follow the standard GStreamer releasing procedure.
