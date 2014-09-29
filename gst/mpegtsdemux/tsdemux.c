@@ -1850,7 +1850,8 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
   } else {
     GST_WARNING ("CONTINUITY: Mismatch packet %d, stream %d",
         cc, stream->continuity_counter);
-    stream->state = PENDING_PACKET_DISCONT;
+    if (stream->state != PENDING_PACKET_EMPTY)
+      stream->state = PENDING_PACKET_DISCONT;
   }
   stream->continuity_counter = cc;
 
