@@ -83,6 +83,9 @@ struct _GstGLWindowCocoaPrivate
   gboolean visible;
   GMainContext *main_context;
   GMainLoop *loop;
+
+  GLint viewport_dim[4];
+  NSRect bounds, visibleRect;
 };
 
 static void
@@ -505,7 +508,6 @@ struct resize
 {
   GstGLWindowCocoa * window;
   NSRect bounds, visibleRect;
-  NSSize frameSize;
 };
 
 static void
@@ -518,12 +520,29 @@ resize_cb (gpointer data)
   NSOpenGLContext * glContext = (NSOpenGLContext *) gst_gl_context_get_gl_context (context);
 
   if (g_main_loop_is_running (window_cocoa->priv->loop) && ![window_cocoa->priv->internal_win_id isClosed]) {
-    /* FIXME: Need to adjust viewport for clipping here */
-    if (window->resize) {
-      window->resize (window->resize_data, resize_data->bounds.size.width, resize_data->bounds.size.height);
-    }
+    const GstGLFuncs *gl;
 
     [glContext update];
+
+    if (window_cocoa->priv->bounds.size.width != resize_data->bounds.size.width ||
+       window_cocoa->priv->bounds.size.height != resize_data->bounds.size.height ||
+       window_cocoa->priv->visibleRect.origin.x != resize_data->visibleRect.origin.x ||
+       window_cocoa->priv->visibleRect.origin.y != resize_data->visibleRect.origin.y) {
+      gl = context->gl_vtable;
+
+      if (window->resize) {
+        window->resize (window->resize_data, resize_data->bounds.size.width, resize_data->bounds.size.height);
+        gl->GetIntegerv (GL_VIEWPORT, window_cocoa->priv->viewport_dim);
+      }
+
+      gl->Viewport (window_cocoa->priv->viewport_dim[0] - resize_data->visibleRect.origin.x,
+                    window_cocoa->priv->viewport_dim[1] - resize_data->visibleRect.origin.y,
+                    window_cocoa->priv->viewport_dim[2], window_cocoa->priv->viewport_dim[3]);
+
+      window_cocoa->priv->visibleRect = resize_data->visibleRect;
+      window_cocoa->priv->bounds = resize_data->bounds;
+    }
+
     GST_GL_WINDOW (window_cocoa)->draw (GST_GL_WINDOW (window_cocoa)->draw_data);
     [glContext flushBuffer];
   }
@@ -542,21 +561,18 @@ resize_cb (gpointer data)
   if (window->resize) {
     NSRect bounds = [self bounds];
     NSRect visibleRect = [self visibleRect];
-    NSSize frameSize = [self frame].size;
     struct resize *resize_data = g_new (struct resize, 1);
 
-    GST_DEBUG_OBJECT (window, "Window resized: bounds %lf %lf %lf %lf, "
-                      "visibleRect %lf %lf %lf %lf, frame size %lf %lf",
+    GST_DEBUG_OBJECT (window, "Window resized: bounds %lf %lf %lf %lf "
+                      "visibleRect %lf %lf %lf %lf",
                       bounds.origin.x, bounds.origin.y,
                       bounds.size.width, bounds.size.height,
                       visibleRect.origin.x, visibleRect.origin.y,
-                      visibleRect.size.width, visibleRect.size.height,
-                      frameSize.width, frameSize.height);
+                      visibleRect.size.width, visibleRect.size.height);
 
     resize_data->window = window_cocoa;
     resize_data->bounds = bounds;
     resize_data->visibleRect = visibleRect;
-    resize_data->frameSize = frameSize;
 
     gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) resize_cb, resize_data, (GDestroyNotify) g_free);
   }
@@ -567,7 +583,7 @@ resize_cb (gpointer data)
 }
 
 - (BOOL) isFlipped {
-    return YES;
+    return NO;
 }
 
 @end
