@@ -230,7 +230,8 @@ gst_validate_runner_printf (GstValidateRunner * runner)
     g_printerr ("\n");
   }
 
-  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref); 
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
   gst_validate_printf (NULL, "Issues found: %u\n", count);
+  g_list_free (criticals);
   return ret;
 }
