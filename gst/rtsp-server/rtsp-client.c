@@ -346,9 +346,6 @@ client_unwatch_session (GstRTSPClient * client, GstRTSPSession * session,
     priv->session_removed_id = 0;
   }
 
-  /* unlink all media managed in this session */
-  gst_rtsp_session_filter (session, filter_session_media, client);
-
   /* remove the session */
   g_object_unref (session);
 }
@@ -357,6 +354,10 @@ static GstRTSPFilterResult
 cleanup_session (GstRTSPClient * client, GstRTSPSession * sess,
     gpointer user_data)
 {
+  /* unlink all media managed in this session. This needs to happen
+   * without the client lock, so we really want to do it here. */
+  gst_rtsp_session_filter (sess, filter_session_media, client);
+
   return GST_RTSP_FILTER_REMOVE;
 }
 
