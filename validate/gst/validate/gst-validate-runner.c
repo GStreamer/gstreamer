@@ -59,7 +59,7 @@
 struct _GstValidateRunnerPrivate
 {
   GMutex         mutex;
-  GSList        *reports;
+  GList        *reports;
 };
 
 #define GST_VALIDATE_RUNNER_LOCK(r)			\
@@ -94,7 +94,7 @@ gst_validate_runner_dispose (GObject * object)
 {
   GstValidateRunner *runner = GST_VALIDATE_RUNNER_CAST (object);
 
-  g_slist_free_full (runner->priv->reports,
+  g_list_free_full (runner->priv->reports,
       (GDestroyNotify) gst_validate_report_unref);
 
   g_mutex_clear (&runner->priv->mutex);
@@ -145,7 +145,7 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
     GstValidateReport * report)
 {
   GST_VALIDATE_RUNNER_LOCK (runner);
-  runner->priv->reports = g_slist_prepend (runner->priv->reports, report);
+  runner->priv->reports = g_list_append (runner->priv->reports, report);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   g_signal_emit (runner, _signals[REPORT_ADDED_SIGNAL], 0, report);
@@ -167,19 +167,19 @@ gst_validate_runner_get_reports_count (GstValidateRunner * runner)
   g_return_val_if_fail (runner != NULL, 0);
 
   GST_VALIDATE_RUNNER_LOCK (runner);
-  l = g_slist_length (runner->priv->reports);
+  l = g_list_length (runner->priv->reports);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   return l;
 }
 
-GSList *
+GList *
 gst_validate_runner_get_reports (GstValidateRunner * runner)
 {
-  GSList *ret;
+  GList *ret;
 
   GST_VALIDATE_RUNNER_LOCK (runner);
-  ret = g_slist_reverse (runner->priv->reports);
+  ret = g_list_copy_deep (runner->priv->reports, (GCopyFunc) gst_validate_report_ref, NULL);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   return ret;
@@ -199,12 +199,13 @@ gst_validate_runner_get_reports (GstValidateRunner * runner)
 int
 gst_validate_runner_printf (GstValidateRunner * runner)
 {
-  GSList *tmp;
+  GList *reports, *tmp;
   guint count = 0;
   int ret = 0;
   GList *criticals = NULL;
 
-  for (tmp = gst_validate_runner_get_reports (runner); tmp; tmp = tmp->next) {
+  reports = gst_validate_runner_get_reports (runner);
+  for (tmp = reports; tmp; tmp = tmp->next) {
     GstValidateReport *report = tmp->data;
 
     if (gst_validate_report_should_print (report))
@@ -229,6 +230,7 @@ gst_validate_runner_printf (GstValidateRunner * runner)
     g_printerr ("\n");
   }
 
-  gst_validate_printf (NULL, "Pipeline finished, issues found: %u\n", count);
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref); 
+  gst_validate_printf (NULL, "Issues found: %u\n", count);
   return ret;
 }

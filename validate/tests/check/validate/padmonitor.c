@@ -29,6 +29,7 @@ GST_START_TEST (buffer_before_segment)
   GstValidateRunner *runner;
   GstValidateReport *report;
   GstValidateMonitor *monitor;
+  GList *reports;
 
   /* getting an existing element class is cheating, but easier */
   src = gst_element_factory_make ("fakesrc", "fakesrc");
@@ -55,11 +56,13 @@ GST_START_TEST (buffer_before_segment)
     fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_new ()),
         GST_FLOW_OK);
 
-    assert_equals_int (g_slist_length (gst_validate_runner_get_reports(runner)), 1);
-    report = gst_validate_runner_get_reports (runner)->data;
+    reports = gst_validate_runner_get_reports (runner);
+    assert_equals_int (g_list_length (reports), 1);
+    report = reports->data;
     fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_WARNING);
     fail_unless_equals_int (report->issue->issue_id,
         GST_VALIDATE_ISSUE_ID_BUFFER_BEFORE_SEGMENT);
+    g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
   }
 
   /* Setup all needed event and push a new buffer (WORKS) */
@@ -68,7 +71,9 @@ GST_START_TEST (buffer_before_segment)
     gst_check_setup_events (srcpad, src, NULL, GST_FORMAT_TIME);
     fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_new ()),
         GST_FLOW_OK);
-    assert_equals_int (g_slist_length (gst_validate_runner_get_reports (runner)), 1);
+    reports = gst_validate_runner_get_reports (runner);
+    assert_equals_int (g_list_length (reports), 1);
+    g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
   }
 
   /* clean up */
@@ -94,6 +99,7 @@ GST_START_TEST (buffer_outside_segment)
   GstValidateReport *report;
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
+  GList *reports;
 
   /* getting an existing element class is cheating, but easier */
   src = gst_element_factory_make ("fakesrc", "fakesrc");
@@ -136,17 +142,21 @@ GST_START_TEST (buffer_outside_segment)
     GST_BUFFER_DURATION (buffer) = GST_SECOND;
     fail_unless (gst_pad_push (srcpad, buffer));
 
-    assert_equals_int (g_slist_length (gst_validate_runner_get_reports (runner)), 1);
-    report = gst_validate_runner_get_reports (runner)->data;
+    reports = gst_validate_runner_get_reports (runner);
+    assert_equals_int (g_list_length (reports), 1);
+    report = reports->data;
     fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_ISSUE);
     fail_unless_equals_int (report->issue->issue_id,
         GST_VALIDATE_ISSUE_ID_BUFFER_IS_OUT_OF_SEGMENT);
+    g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
   }
 
   /* Pushing a buffer inside the segment */
   {
     fail_unless (gst_pad_push (srcpad, gst_buffer_new ()));
-    assert_equals_int (g_slist_length (gst_validate_runner_get_reports (runner)), 1);
+    reports = gst_validate_runner_get_reports (runner);
+    assert_equals_int (g_list_length (reports), 1);
+    g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
   }
 
 
@@ -175,6 +185,7 @@ _first_buffer_running_time (gboolean failing)
   GstValidateReport *report;
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
+  GList *reports;
 
   /* getting an existing element class is cheating, but easier */
   src = gst_element_factory_make ("fakesrc", "fakesrc");
@@ -205,15 +216,17 @@ _first_buffer_running_time (gboolean failing)
     GST_BUFFER_DURATION (buffer) = GST_SECOND;
     fail_unless (gst_pad_push (srcpad, buffer));
 
+    reports = gst_validate_runner_get_reports (runner);
     if (failing) {
-      assert_equals_int (g_slist_length (gst_validate_runner_get_reports (runner)), 1);
-      report = gst_validate_runner_get_reports (runner)->data;
+      assert_equals_int (g_list_length (reports), 1);
+      report = reports->data;
       fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_WARNING);
       fail_unless_equals_int (report->issue->issue_id,
           GST_VALIDATE_ISSUE_ID_FIRST_BUFFER_RUNNING_TIME_IS_NOT_ZERO);
     } else {
-      assert_equals_int (g_slist_length (gst_validate_runner_get_reports (runner)), 0);
+      assert_equals_int (g_list_length (reports), 0);
     }
+    g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
   }
 
   /* clean up */
@@ -286,6 +299,7 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
   GstValidatePadMonitor *pmonitor, *pmonitor1, *pmonitor2;
   GstElement *demuxer = fake_demuxer_new ();
   GstBin *pipeline = GST_BIN (gst_pipeline_new ("validate-pipeline"));
+  GList *reports;
 
   GstValidateRunner *runner = gst_validate_runner_new ();
   GstValidateMonitor *monitor =
@@ -316,17 +330,19 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
 
   fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_new ()), demux_flow);
 
+  reports = gst_validate_runner_get_reports (runner);
   if (should_fail) {
-    assert_equals_int (g_slist_length (gst_validate_runner_get_reports (runner)), 1);
-    report = gst_validate_runner_get_reports (runner)->data;
+    assert_equals_int (g_list_length (reports), 1);
+    report = reports->data;
     fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_CRITICAL);
     fail_unless_equals_int (report->issue->issue_id,
         GST_VALIDATE_ISSUE_ID_WRONG_FLOW_RETURN);
   } else {
-    assert_equals_int (g_slist_length (gst_validate_runner_get_reports (runner)), 0);
+    assert_equals_int (g_list_length (reports), 0);
 
   }
 
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
   clean_bus (GST_ELEMENT (pipeline));
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
