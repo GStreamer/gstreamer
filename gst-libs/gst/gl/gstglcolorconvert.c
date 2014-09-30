@@ -673,8 +673,17 @@ _RGB_to_RGB (GstGLColorConvert * convert)
 
   info->in_n_textures = 1;
   info->out_n_textures = 1;
-  if (_is_RGBx (in_format))
-    alpha = g_strdup_printf ("t.%c = 1.0;", pixel_order[3]);
+  if (_is_RGBx (in_format)) {
+    int i;
+    char input_alpha_channel = 'a';
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+      if (in_format_str[i] == 'X' || in_format_str[i] == 'x') {
+        input_alpha_channel = _index_to_shader_swizzle (i);
+        break;
+      }
+    }
+    alpha = g_strdup_printf ("t.%c = 1.0;", input_alpha_channel);
+  }
   info->frag_prog = g_strdup_printf (frag_REORDER, alpha ? alpha : "",
       pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
   info->shader_tex_names[0] = "tex";
