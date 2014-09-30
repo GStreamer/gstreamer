@@ -991,15 +991,7 @@ gst_omx_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
-  /* Make sure to keep a reference to the input here,
-   * it can be unreffed from the other thread if
-   * finish_frame() is called */
-  if (inbuf)
-    gst_buffer_ref (inbuf);
-
   if (self->downstream_flow_ret != GST_FLOW_OK) {
-    if (inbuf)
-      gst_buffer_unref (inbuf);
     return self->downstream_flow_ret;
   }
 
@@ -1011,6 +1003,11 @@ gst_omx_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
 
   if (inbuf == NULL)
     return gst_omx_audio_dec_drain (self);
+
+  /* Make sure to keep a reference to the input here,
+   * it can be unreffed from the other thread if
+   * finish_frame() is called */
+  gst_buffer_ref (inbuf);
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   duration = GST_BUFFER_DURATION (inbuf);
@@ -1181,18 +1178,16 @@ gst_omx_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
       goto release_error;
   }
   gst_buffer_unmap (inbuf, &minfo);
+  gst_buffer_unref (inbuf);
 
   GST_DEBUG_OBJECT (self, "Passed frame to component");
-  if (inbuf)
-    gst_buffer_unref (inbuf);
 
   return self->downstream_flow_ret;
 
 full_buffer:
   {
     gst_buffer_unmap (inbuf, &minfo);
-    if (inbuf)
-      gst_buffer_unref (inbuf);
+    gst_buffer_unref (inbuf);
 
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
@@ -1203,8 +1198,7 @@ full_buffer:
 flow_error:
   {
     gst_buffer_unmap (inbuf, &minfo);
-    if (inbuf)
-      gst_buffer_unref (inbuf);
+    gst_buffer_unref (inbuf);
 
     return self->downstream_flow_ret;
   }
@@ -1212,8 +1206,7 @@ flow_error:
 too_large_codec_data:
   {
     gst_buffer_unmap (inbuf, &minfo);
-    if (inbuf)
-      gst_buffer_unref (inbuf);
+    gst_buffer_unref (inbuf);
 
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
         ("codec_data larger than supported by OpenMAX port "
@@ -1225,8 +1218,7 @@ too_large_codec_data:
 component_error:
   {
     gst_buffer_unmap (inbuf, &minfo);
-    if (inbuf)
-      gst_buffer_unref (inbuf);
+    gst_buffer_unref (inbuf);
 
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("OpenMAX component in error state %s (0x%08x)",
@@ -1238,8 +1230,7 @@ component_error:
 flushing:
   {
     gst_buffer_unmap (inbuf, &minfo);
-    if (inbuf)
-      gst_buffer_unref (inbuf);
+    gst_buffer_unref (inbuf);
 
     GST_DEBUG_OBJECT (self, "Flushing -- returning FLUSHING");
     return GST_FLOW_FLUSHING;
@@ -1247,8 +1238,7 @@ flushing:
 reconfigure_error:
   {
     gst_buffer_unmap (inbuf, &minfo);
-    if (inbuf)
-      gst_buffer_unref (inbuf);
+    gst_buffer_unref (inbuf);
 
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
         ("Unable to reconfigure input port"));
@@ -1257,8 +1247,7 @@ reconfigure_error:
 release_error:
   {
     gst_buffer_unmap (inbuf, &minfo);
-    if (inbuf)
-      gst_buffer_unref (inbuf);
+    gst_buffer_unref (inbuf);
 
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
         ("Failed to relase input buffer to component: %s (0x%08x)",
