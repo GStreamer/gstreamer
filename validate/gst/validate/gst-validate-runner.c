@@ -77,6 +77,8 @@ gst_validate_runner_dispose (GObject * object)
   g_slist_free_full (runner->reports,
       (GDestroyNotify) gst_validate_report_unref);
 
+  g_mutex_clear (&runner->mutex);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -100,6 +102,7 @@ gst_validate_runner_init (GstValidateRunner * runner)
 {
   runner->setup = FALSE;
   runner->max_printed_level = GST_VALIDATE_REPORT_LEVEL_NUM_ENTRIES;
+  g_mutex_init (&runner->mutex);
 }
 
 /**
@@ -119,7 +122,9 @@ void
 gst_validate_runner_add_report (GstValidateRunner * runner,
     GstValidateReport * report)
 {
+  GST_VALIDATE_RUNNER_LOCK (runner);
   runner->reports = g_slist_prepend (runner->reports, report);
+  GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   g_signal_emit (runner, _signals[REPORT_ADDED_SIGNAL], 0, report);
 }
@@ -135,16 +140,27 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 guint
 gst_validate_runner_get_reports_count (GstValidateRunner * runner)
 {
+  guint l;
+
   g_return_val_if_fail (runner != NULL, 0);
-  return g_slist_length (runner->reports);
+
+  GST_VALIDATE_RUNNER_LOCK (runner);
+  l = g_slist_length (runner->reports);
+  GST_VALIDATE_RUNNER_UNLOCK (runner);
+
+  return l;
 }
 
 GSList *
 gst_validate_runner_get_reports (GstValidateRunner * runner)
 {
-  /* TODO should we need locking or put in the docs to always call this
-   * after pipeline ends? */
-  return g_slist_reverse (runner->reports);
+  GSList *ret;
+
+  GST_VALIDATE_RUNNER_LOCK (runner);
+  ret = g_slist_reverse (runner->reports);
+  GST_VALIDATE_RUNNER_UNLOCK (runner);
+
+  return ret;
 }
 
 /**
