@@ -2464,6 +2464,8 @@ default_unprepare (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
 
+  gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_UNPREPARING);
+
   if (priv->eos_shutdown) {
     GST_DEBUG ("sending EOS for shutdown");
     /* ref so that we don't disappear */
@@ -2471,7 +2473,6 @@ default_unprepare (GstRTSPMedia * media)
     /* we need to go to playing again for the EOS to propagate, normally in this
      * state, nothing is receiving data from us anymore so this is ok. */
     set_state (media, GST_STATE_PLAYING);
-    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_UNPREPARING);
   } else {
     finish_unprepare (media);
   }
