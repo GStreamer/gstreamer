@@ -56,6 +56,26 @@
  * ]|
  */
 
+struct _GstValidateRunnerPrivate
+{
+  GMutex         mutex;
+  GSList        *reports;
+};
+
+#define GST_VALIDATE_RUNNER_LOCK(r)			\
+  G_STMT_START {					\
+  GST_LOG_OBJECT (r, "About to lock %p", &GST_VALIDATE_RUNNER_CAST(r)->priv->mutex); \
+  (g_mutex_lock (&GST_VALIDATE_RUNNER_CAST(r)->priv->mutex));		\
+  GST_LOG_OBJECT (r, "Acquired lock %p", &GST_VALIDATE_RUNNER_CAST(r)->priv->mutex); \
+  } G_STMT_END
+
+#define GST_VALIDATE_RUNNER_UNLOCK(r)			\
+  G_STMT_START {					\
+  GST_LOG_OBJECT (r, "About to unlock %p", &GST_VALIDATE_RUNNER_CAST(r)->priv->mutex); \
+  (g_mutex_unlock (&GST_VALIDATE_RUNNER_CAST(r)->priv->mutex));		\
+  GST_LOG_OBJECT (r, "Released lock %p", &GST_VALIDATE_RUNNER_CAST(r)->priv->mutex); \
+  } G_STMT_END
+
 #define gst_validate_runner_parent_class parent_class
 G_DEFINE_TYPE (GstValidateRunner, gst_validate_runner, G_TYPE_OBJECT);
 
@@ -74,10 +94,10 @@ gst_validate_runner_dispose (GObject * object)
 {
   GstValidateRunner *runner = GST_VALIDATE_RUNNER_CAST (object);
 
-  g_slist_free_full (runner->reports,
+  g_slist_free_full (runner->priv->reports,
       (GDestroyNotify) gst_validate_report_unref);
 
-  g_mutex_clear (&runner->mutex);
+  g_mutex_clear (&runner->priv->mutex);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -91,6 +111,8 @@ gst_validate_runner_class_init (GstValidateRunnerClass * klass)
 
   gobject_class->dispose = gst_validate_runner_dispose;
 
+  g_type_class_add_private (klass, sizeof (GstValidateRunnerPrivate));
+
   _signals[REPORT_ADDED_SIGNAL] =
       g_signal_new ("report-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1,
@@ -100,9 +122,9 @@ gst_validate_runner_class_init (GstValidateRunnerClass * klass)
 static void
 gst_validate_runner_init (GstValidateRunner * runner)
 {
-  runner->setup = FALSE;
-  runner->max_printed_level = GST_VALIDATE_REPORT_LEVEL_NUM_ENTRIES;
-  g_mutex_init (&runner->mutex);
+  runner->priv = G_TYPE_INSTANCE_GET_PRIVATE (runner, GST_TYPE_VALIDATE_RUNNER,
+      GstValidateRunnerPrivate);
+  g_mutex_init (&runner->priv->mutex);
 }
 
 /**
@@ -123,7 +145,7 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
     GstValidateReport * report)
 {
   GST_VALIDATE_RUNNER_LOCK (runner);
-  runner->reports = g_slist_prepend (runner->reports, report);
+  runner->priv->reports = g_slist_prepend (runner->priv->reports, report);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   g_signal_emit (runner, _signals[REPORT_ADDED_SIGNAL], 0, report);
@@ -145,7 +167,7 @@ gst_validate_runner_get_reports_count (GstValidateRunner * runner)
   g_return_val_if_fail (runner != NULL, 0);
 
   GST_VALIDATE_RUNNER_LOCK (runner);
-  l = g_slist_length (runner->reports);
+  l = g_slist_length (runner->priv->reports);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   return l;
@@ -157,7 +179,7 @@ gst_validate_runner_get_reports (GstValidateRunner * runner)
   GSList *ret;
 
   GST_VALIDATE_RUNNER_LOCK (runner);
-  ret = g_slist_reverse (runner->reports);
+  ret = g_slist_reverse (runner->priv->reports);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   return ret;

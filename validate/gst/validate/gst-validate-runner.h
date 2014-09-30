@@ -41,21 +41,8 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_RUNNER_CAST(obj)                 ((GstValidateRunner*)(obj))
 #define GST_VALIDATE_RUNNER_CLASS_CAST(klass)         ((GstValidateRunnerClass*)(klass))
 
-#define GST_VALIDATE_RUNNER_LOCK(r)			\
-  G_STMT_START {					\
-  GST_LOG_OBJECT (r, "About to lock %p", &GST_VALIDATE_RUNNER_CAST(r)->mutex); \
-  (g_mutex_lock (&GST_VALIDATE_RUNNER_CAST(r)->mutex));		\
-  GST_LOG_OBJECT (r, "Acquired lock %p", &GST_VALIDATE_RUNNER_CAST(r)->mutex); \
-  } G_STMT_END
+typedef struct _GstValidateRunnerPrivate GstValidateRunnerPrivate;
 
-#define GST_VALIDATE_RUNNER_UNLOCK(r)			\
-  G_STMT_START {					\
-  GST_LOG_OBJECT (r, "About to unlock %p", &GST_VALIDATE_RUNNER_CAST(r)->mutex); \
-  (g_mutex_unlock (&GST_VALIDATE_RUNNER_CAST(r)->mutex));		\
-  GST_LOG_OBJECT (r, "Released lock %p", &GST_VALIDATE_RUNNER_CAST(r)->mutex); \
-  } G_STMT_END
-
-/* TODO hide this to be opaque? */
 /**
  * GstValidateRunner:
  *
@@ -66,12 +53,7 @@ G_BEGIN_DECLS
 struct _GstValidateRunner {
   GObject 	 object;
 
-  gboolean       setup;
-  guint max_printed_level;
-  GMutex         mutex;
-
-  /*< private >*/
-  GSList *reports;
+  GstValidateRunnerPrivate *priv;
 };
 
 /**
