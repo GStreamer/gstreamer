@@ -396,6 +396,9 @@ handle_buffer (GstFluidDec * fluiddec, GstBuffer * buffer)
 
   gst_buffer_map (buffer, &info, GST_MAP_READ);
 
+  if (info.size == 0)
+    goto done;
+
   event = info.data[0];
 
   switch (event & 0xf0) {
@@ -461,6 +464,9 @@ handle_buffer (GstFluidDec * fluiddec, GstBuffer * buffer)
       break;
     }
   }
+
+done:
+
   gst_buffer_unmap (buffer, &info);
 }
 
