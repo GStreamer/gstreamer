@@ -21,10 +21,8 @@
 /**
  * SECTION:element-glvideomixer
  *
- * glmixer sub element. N gl sink pads to 1 source pad.
- * N + 1 OpenGL contexts shared together.
- * N <= 6 because the rendering is more a like a cube than a video_mixer
- * Each opengl input stream is rendered on a cube face
+ * Composites a number of streams into a single output scene using OpenGL in
+ * a similar fashion to compositor and videomixer.
  *
  * <refsect2>
  * <title>Examples</title>
@@ -37,7 +35,6 @@
  *     videotestsrc ! glfiltercube ! queue ! m. \
  *     videotestsrc ! gleffects effect=6 ! queue ! m.
  * ]|
- * FBO (Frame Buffer Object) is required.
  * </refsect2>
  */
 
