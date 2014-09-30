@@ -107,6 +107,10 @@ struct _GstVC1Parse
    * valid if the GstBaseParseFrame has the
    * GST_BASE_PARSE_FRAME_FLAG_PARSING flag */
   GstVC1StartCode startcode;
+
+  /* TRUE if we have already sent the sequence-layer,
+   * use for stream-format conversion */
+  gboolean seq_layer_sent;
 };
 
 struct _GstVC1ParseClass

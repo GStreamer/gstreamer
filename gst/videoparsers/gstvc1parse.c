@@ -1382,6 +1382,19 @@ done:
 }
 
 static GstFlowReturn
+gst_vc1_parse_push_sequence_layer (GstVC1Parse * vc1parse)
+{
+  GstBuffer *seq_layer;
+
+  if ((seq_layer = vc1parse->seq_layer_buffer))
+    gst_buffer_ref (seq_layer);
+  else
+    seq_layer = gst_vc1_parse_make_sequence_layer (vc1parse);
+
+  return gst_pad_push (GST_BASE_PARSE_SRC_PAD (vc1parse), seq_layer);
+}
+
+static GstFlowReturn
 gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstVC1Parse *vc1parse = GST_VC1_PARSE (parse);
@@ -1470,6 +1483,16 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
       switch (vc1parse->input_stream_format) {
         case VC1_STREAM_FORMAT_BDU:
+          /* We just need to send the sequence-layer first */
+          if (!vc1parse->seq_layer_sent) {
+            ret = gst_vc1_parse_push_sequence_layer (vc1parse);
+            if (ret != GST_FLOW_OK) {
+              GST_ERROR_OBJECT (vc1parse, "push sequence layer failed");
+              break;
+            }
+            vc1parse->seq_layer_sent = TRUE;
+          }
+          break;
         case VC1_STREAM_FORMAT_BDU_FRAME:
           goto conversion_not_supported;
           break;
@@ -1492,7 +1515,19 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
       switch (vc1parse->input_stream_format) {
         case VC1_STREAM_FORMAT_BDU:
+          goto conversion_not_supported;
+          break;
         case VC1_STREAM_FORMAT_BDU_FRAME:
+          /* We just need to send the sequence-layer first */
+          if (!vc1parse->seq_layer_sent) {
+            ret = gst_vc1_parse_push_sequence_layer (vc1parse);
+            if (ret != GST_FLOW_OK) {
+              GST_ERROR_OBJECT (vc1parse, "push sequence layer failed");
+              break;
+            }
+            vc1parse->seq_layer_sent = TRUE;
+          }
+          break;
         case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
           goto conversion_not_supported;
           break;
@@ -1546,8 +1581,18 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           g_assert_not_reached ();
           break;
         case VC1_STREAM_FORMAT_ASF:
-        case VC1_STREAM_FORMAT_FRAME_LAYER:
           goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_FRAME_LAYER:
+          /* We just need to send the sequence-layer first */
+          if (!vc1parse->seq_layer_sent) {
+            ret = gst_vc1_parse_push_sequence_layer (vc1parse);
+            if (ret != GST_FLOW_OK) {
+              GST_ERROR_OBJECT (vc1parse, "push sequence layer failed");
+              break;
+            }
+            vc1parse->seq_layer_sent = TRUE;
+          }
           break;
         default:
           g_assert_not_reached ();
