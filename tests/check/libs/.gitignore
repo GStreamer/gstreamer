@@ -9,3 +9,4 @@ insertbin
 gstglcontext
 gstglmemory
 gstglupload
+gstglcolorconvert
