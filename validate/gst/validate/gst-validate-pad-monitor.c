@@ -39,9 +39,21 @@
  * TODO
  */
 
+static void gst_validate_pad_monitor_intercept_report (GstValidateReporter *
+    reporter, GstValidateReport * report);
+
+#define _do_init \
+  G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init)
+
+static void
+_reporter_iface_init (GstValidateReporterInterface * iface)
+{
+  iface->intercept_report = gst_validate_pad_monitor_intercept_report;
+}
+
 #define gst_validate_pad_monitor_parent_class parent_class
-G_DEFINE_TYPE (GstValidatePadMonitor, gst_validate_pad_monitor,
-    GST_TYPE_VALIDATE_MONITOR);
+G_DEFINE_TYPE_WITH_CODE (GstValidatePadMonitor, gst_validate_pad_monitor,
+    GST_TYPE_VALIDATE_MONITOR, _do_init);
 
 #define PENDING_FIELDS "pending-fields"
 #define AUDIO_TIMESTAMP_TOLERANCE (GST_MSECOND * 100)
@@ -107,6 +119,21 @@ typedef struct
   GstClockTime timestamp;
   GstEvent *event;
 } SerializedEventData;
+
+
+static void
+gst_validate_pad_monitor_intercept_report (GstValidateReporter *
+    reporter, GstValidateReport * report)
+{
+  GstValidateReporterInterface *iface_class, *old_iface_class;
+
+  iface_class =
+      G_TYPE_INSTANCE_GET_INTERFACE (reporter, GST_TYPE_VALIDATE_REPORTER,
+      GstValidateReporterInterface);
+  old_iface_class = g_type_interface_peek_parent (iface_class);
+
+  old_iface_class->intercept_report (reporter, report);
+}
 
 static void
 debug_pending_event (GstPad * pad, GPtrArray * array)
