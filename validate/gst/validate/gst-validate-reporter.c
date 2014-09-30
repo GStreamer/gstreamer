@@ -36,6 +36,7 @@ typedef struct _GstValidateReporterPrivate
   GHashTable *reports;
   char *name;
   guint log_handler_id;
+  GMutex reports_lock;
 } GstValidateReporterPrivate;
 
 static GstValidateReporterPrivate *g_log_handler = NULL;
@@ -63,6 +64,7 @@ _free_priv (GstValidateReporterPrivate * priv)
 
   g_hash_table_unref (priv->reports);
   g_free (priv->name);
+  g_mutex_clear (&priv->reports_lock);
   g_slice_free (GstValidateReporterPrivate, priv);
 }
 
@@ -78,12 +80,23 @@ gst_validate_reporter_get_priv (GstValidateReporter * reporter)
     priv->reports = g_hash_table_new_full (g_direct_hash,
         g_direct_equal, NULL, (GDestroyNotify) gst_validate_report_unref);
 
+    g_mutex_init (&priv->reports_lock);
     g_object_set_data_full (G_OBJECT (reporter), REPORTER_PRIVATE, priv,
         (GDestroyNotify) _free_priv);
   }
 
   return priv;
 }
+
+#define GST_VALIDATE_REPORTER_REPORTS_LOCK(r)			\
+  G_STMT_START {					\
+  (g_mutex_lock (&gst_validate_reporter_get_priv(GST_VALIDATE_REPORTER_CAST(r))->reports_lock));		\
+  } G_STMT_END
+
+#define GST_VALIDATE_REPORTER_REPORTS_UNLOCK(r)			\
+  G_STMT_START {					\
+  (g_mutex_unlock (&gst_validate_reporter_get_priv(GST_VALIDATE_REPORTER_CAST(r))->reports_lock));		\
+  } G_STMT_END
 
 static void
 gst_validate_reporter_intercept_report (GstValidateReporter * reporter,
@@ -95,6 +108,19 @@ gst_validate_reporter_intercept_report (GstValidateReporter * reporter,
   if (iface->intercept_report) {
     iface->intercept_report (reporter, report);
   }
+}
+
+GstValidateReport *
+gst_validate_reporter_get_report (GstValidateReporter *reporter,
+    GstValidateIssueId issue_id) {
+  GstValidateReport *report;
+  GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
+
+  GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
+  report = g_hash_table_lookup (priv->reports, (gconstpointer) issue_id);
+  GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
+
+  return report;
 }
 
 void
@@ -126,10 +152,13 @@ gst_validate_report_valist (GstValidateReporter * reporter,
       gst_validate_report_unref (report);
       return;
     }
-
-    g_hash_table_insert (priv->reports, (gpointer) issue_id,
-        gst_validate_report_ref (report));
   }
+
+  GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
+  g_hash_table_insert (priv->reports, (gpointer) issue_id,
+      gst_validate_report_ref (report));
+  GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
+
 #ifndef GST_DISABLE_GST_DEBUG
   combo =
       g_strdup_printf ("<%s> %" GST_VALIDATE_ISSUE_FORMAT " : %s", priv->name,
