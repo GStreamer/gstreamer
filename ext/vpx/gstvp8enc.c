@@ -1512,10 +1512,13 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
 
   if (encoder->inited) {
     gst_vp8_enc_drain (video_encoder);
+    g_mutex_lock (&encoder->encoder_lock);
     vpx_codec_destroy (&encoder->encoder);
+    encoder->inited = FALSE;
+  } else {
+    g_mutex_lock (&encoder->encoder_lock);
   }
 
-  g_mutex_lock (&encoder->encoder_lock);
   encoder->cfg.g_profile = gst_vp8_enc_get_downstream_profile (encoder);
 
   /* Scale default bitrate to our size */
@@ -1888,11 +1891,11 @@ gst_vp8_enc_drain (GstVideoEncoder * video_encoder)
 
   g_mutex_lock (&encoder->encoder_lock);
   deadline = encoder->deadline;
-  g_mutex_unlock (&encoder->encoder_lock);
 
   status =
       vpx_codec_encode (&encoder->encoder, NULL, encoder->n_frames, 1, flags,
       deadline);
+  g_mutex_unlock (&encoder->encoder_lock);
 
   if (status != 0) {
     GST_ERROR_OBJECT (encoder, "encode returned %d %s", status,
