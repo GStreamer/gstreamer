@@ -369,8 +369,8 @@ static gboolean gst_vp8_enc_start (GstVideoEncoder * encoder);
 static gboolean gst_vp8_enc_stop (GstVideoEncoder * encoder);
 static gboolean gst_vp8_enc_set_format (GstVideoEncoder *
     video_encoder, GstVideoCodecState * state);
-static gboolean gst_vp8_enc_finish (GstVideoEncoder * video_encoder);
-static gboolean gst_vp8_enc_drain (GstVideoEncoder * video_encoder);
+static GstFlowReturn gst_vp8_enc_finish (GstVideoEncoder * video_encoder);
+static GstFlowReturn gst_vp8_enc_drain (GstVideoEncoder * video_encoder);
 static GstFlowReturn gst_vp8_enc_handle_frame (GstVideoEncoder *
     video_encoder, GstVideoCodecFrame * frame);
 static GstFlowReturn gst_vp8_enc_pre_push (GstVideoEncoder * encoder,
