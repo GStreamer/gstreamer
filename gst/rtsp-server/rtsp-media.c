@@ -2471,6 +2471,7 @@ default_unprepare (GstRTSPMedia * media)
     /* we need to go to playing again for the EOS to propagate, normally in this
      * state, nothing is receiving data from us anymore so this is ok. */
     set_state (media, GST_STATE_PLAYING);
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_UNPREPARING);
   } else {
     finish_unprepare (media);
   }
@@ -2510,8 +2511,6 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
     media_streams_set_blocked (media, FALSE);
   set_target_state (media, GST_STATE_NULL, FALSE);
   success = TRUE;
-
-  gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_UNPREPARING);
 
   if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
     GstRTSPMediaClass *klass;
