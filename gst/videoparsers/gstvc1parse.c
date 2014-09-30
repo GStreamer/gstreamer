@@ -1385,6 +1385,7 @@ static GstFlowReturn
 gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstVC1Parse *vc1parse = GST_VC1_PARSE (parse);
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!vc1parse->sent_codec_tag) {
     GstTagList *taglist;
@@ -1405,12 +1406,211 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     vc1parse->sent_codec_tag = TRUE;
   }
 
-  if (vc1parse->input_stream_format != vc1parse->output_stream_format) {
-    GST_WARNING_OBJECT (vc1parse, "stream conversion not implemented yet");
-    return GST_FLOW_ERROR;
+  /* Nothing to do here */
+  if (vc1parse->input_stream_format == vc1parse->output_stream_format)
+    return GST_FLOW_OK;
+
+  switch (vc1parse->output_stream_format) {
+    case VC1_STREAM_FORMAT_BDU:
+      switch (vc1parse->input_stream_format) {
+        case VC1_STREAM_FORMAT_BDU:
+          g_assert_not_reached ();
+          break;
+        case VC1_STREAM_FORMAT_BDU_FRAME:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+          /* We just need to drop sequence-layer buffer */
+          if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_NO_FRAME) {
+            ret = GST_BASE_PARSE_FLOW_DROPPED;
+          }
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+        case VC1_STREAM_FORMAT_ASF:
+        case VC1_STREAM_FORMAT_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+
+    case VC1_STREAM_FORMAT_BDU_FRAME:
+      switch (vc1parse->input_stream_format) {
+        case VC1_STREAM_FORMAT_BDU:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_BDU_FRAME:
+          g_assert_not_reached ();
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+          /* We just need to drop sequence-layer buffer */
+          if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_NO_FRAME) {
+            ret = GST_BASE_PARSE_FLOW_DROPPED;
+          }
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+        case VC1_STREAM_FORMAT_ASF:
+        case VC1_STREAM_FORMAT_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+
+    case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+      switch (vc1parse->input_stream_format) {
+        case VC1_STREAM_FORMAT_BDU:
+        case VC1_STREAM_FORMAT_BDU_FRAME:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+          g_assert_not_reached ();
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+        case VC1_STREAM_FORMAT_ASF:
+        case VC1_STREAM_FORMAT_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+
+    case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+      switch (vc1parse->input_stream_format) {
+        case VC1_STREAM_FORMAT_BDU:
+        case VC1_STREAM_FORMAT_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+          g_assert_not_reached ();
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+        case VC1_STREAM_FORMAT_ASF:
+        case VC1_STREAM_FORMAT_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+
+    case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+      switch (vc1parse->input_stream_format) {
+        case VC1_STREAM_FORMAT_BDU:
+        case VC1_STREAM_FORMAT_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+          g_assert_not_reached ();
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+        case VC1_STREAM_FORMAT_ASF:
+        case VC1_STREAM_FORMAT_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+
+    case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+      switch (vc1parse->input_stream_format) {
+        case VC1_STREAM_FORMAT_BDU:
+        case VC1_STREAM_FORMAT_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+          g_assert_not_reached ();
+          break;
+        case VC1_STREAM_FORMAT_ASF:
+        case VC1_STREAM_FORMAT_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+
+    case VC1_STREAM_FORMAT_ASF:
+      switch (vc1parse->input_stream_format) {
+        case VC1_STREAM_FORMAT_BDU:
+        case VC1_STREAM_FORMAT_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_ASF:
+          g_assert_not_reached ();
+          break;
+        case VC1_STREAM_FORMAT_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+
+    case VC1_STREAM_FORMAT_FRAME_LAYER:
+      switch (vc1parse->input_stream_format) {
+        case VC1_STREAM_FORMAT_BDU:
+        case VC1_STREAM_FORMAT_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+          /* We just need to drop sequence-layer buffer */
+          if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_NO_FRAME) {
+            ret = GST_BASE_PARSE_FLOW_DROPPED;
+          }
+          break;
+        case VC1_STREAM_FORMAT_ASF:
+          goto conversion_not_supported;
+          break;
+        case VC1_STREAM_FORMAT_FRAME_LAYER:
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+
+    default:
+      g_assert_not_reached ();
+      break;
   }
 
-  return GST_FLOW_OK;
+  return ret;
+
+conversion_not_supported:
+  GST_WARNING_OBJECT (vc1parse, "stream conversion not implemented yet");
+  return GST_FLOW_NOT_NEGOTIATED;
 }
 
 /* SMPTE 421M Table 7 */
