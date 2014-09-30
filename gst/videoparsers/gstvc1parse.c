@@ -1395,6 +1395,63 @@ gst_vc1_parse_push_sequence_layer (GstVC1Parse * vc1parse)
 }
 
 static GstFlowReturn
+gst_vc1_parse_convert_asf_to_bdu (GstVC1Parse * vc1parse,
+    GstBaseParseFrame * frame)
+{
+  GstByteWriter bw;
+  GstBuffer *buffer;
+  GstBuffer *tmp;
+  GstMemory *mem;
+  guint8 sc_data[4];
+  guint32 startcode;
+  gboolean ok;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  buffer = frame->buffer;
+
+  /* Simple profile doesn't have start codes so bdu format is not possible */
+  if (vc1parse->profile == GST_VC1_PROFILE_SIMPLE) {
+    GST_ERROR_OBJECT (vc1parse, "can't convert to bdu in simple profile");
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+
+  /* ASF frame could have a start code at the beginning or not. So we first
+   * check for a start code if we have at least 4 bytes in the buffer. */
+  if (gst_buffer_extract (buffer, 0, sc_data, 4) == 4) {
+    startcode = GST_READ_UINT32_BE (sc_data);
+    if (((startcode & 0xffffff00) == 0x00000100)) {
+      /* Start code found */
+      goto done;
+    }
+  }
+
+  /* Yes, a frame could be smaller than 4 bytes and valid, for instance
+   * black video. */
+
+  /* We will prepend 4 bytes to buffer */
+  gst_byte_writer_init_with_size (&bw, 4, TRUE);
+
+  /* Set start code and suffixe, we assume raw asf data is a frame */
+  ok = gst_byte_writer_put_uint24_be (&bw, 0x000001);
+  ok &= gst_byte_writer_put_uint8 (&bw, 0x0D);
+  tmp = gst_byte_writer_reset_and_get_buffer (&bw);
+
+  /* Prepend startcode buffer to frame buffer */
+  mem = gst_buffer_get_all_memory (tmp);
+  gst_buffer_prepend_memory (buffer, mem);
+  gst_buffer_unref (tmp);
+
+  if (G_UNLIKELY (!ok)) {
+    GST_ERROR_OBJECT (vc1parse, "convert asf to bdu failed");
+    ret = GST_FLOW_ERROR;
+  }
+
+done:
+  return ret;
+}
+
+static GstFlowReturn
 gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstVC1Parse *vc1parse = GST_VC1_PARSE (parse);
@@ -1441,7 +1498,11 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
         case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
         case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
         case VC1_STREAM_FORMAT_ASF:
+          ret = gst_vc1_parse_convert_asf_to_bdu (vc1parse, frame);
+          break;
         case VC1_STREAM_FORMAT_FRAME_LAYER:
           goto conversion_not_supported;
           break;
@@ -1502,7 +1563,22 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
         case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
         case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+          goto conversion_not_supported;
+          break;
         case VC1_STREAM_FORMAT_ASF:
+          /* We just need to send the sequence-layer first */
+          if (!vc1parse->seq_layer_sent) {
+            ret = gst_vc1_parse_push_sequence_layer (vc1parse);
+            if (ret != GST_FLOW_OK) {
+              GST_ERROR_OBJECT (vc1parse, "push sequence layer failed");
+              break;
+            }
+            vc1parse->seq_layer_sent = TRUE;
+          }
+          /* FIXME: We may only authorize this when header-format is set to
+           * none and we should add the entrypoint for advanced profile. */
+          ret = gst_vc1_parse_convert_asf_to_bdu (vc1parse, frame);
+          break;
         case VC1_STREAM_FORMAT_FRAME_LAYER:
           goto conversion_not_supported;
           break;
@@ -1547,6 +1623,12 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       break;
 
     case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+      if (vc1parse->profile != GST_VC1_PROFILE_SIMPLE &&
+          vc1parse->profile != GST_VC1_PROFILE_MAIN) {
+        GST_ERROR_OBJECT (vc1parse,
+            "sequence-layer-raw-frame is only for simple/main profile");
+        goto conversion_not_supported;
+      }
       switch (vc1parse->input_stream_format) {
         case VC1_STREAM_FORMAT_BDU:
         case VC1_STREAM_FORMAT_BDU_FRAME:
@@ -1558,7 +1640,19 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           g_assert_not_reached ();
           break;
         case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+          goto conversion_not_supported;
         case VC1_STREAM_FORMAT_ASF:
+          /* ASF contains raw frame for simple/main profile, so we just
+           * have to send sequence-layer before frames */
+          if (!vc1parse->seq_layer_sent) {
+            ret = gst_vc1_parse_push_sequence_layer (vc1parse);
+            if (ret != GST_FLOW_OK) {
+              GST_ERROR_OBJECT (vc1parse, "push sequence layer failed");
+              break;
+            }
+            vc1parse->seq_layer_sent = TRUE;
+          }
+          break;
         case VC1_STREAM_FORMAT_FRAME_LAYER:
           goto conversion_not_supported;
           break;
