@@ -56,7 +56,7 @@ typedef enum {
 } VC1StreamFormat;
 
 typedef enum {
-  GST_VC1_PARSE_FORMAT_WMV3,
+  GST_VC1_PARSE_FORMAT_WMV3 = 0,
   GST_VC1_PARSE_FORMAT_WVC1
 } GstVC1ParseFormat;
 
