@@ -3395,6 +3395,9 @@ gst_rtsp_source_finalize (GSource * source)
 {
   GstRTSPWatch *watch = (GstRTSPWatch *) source;
 
+  if (watch->notify)
+    watch->notify (watch->user_data);
+
   build_reset (&watch->builder);
   gst_rtsp_message_unset (&watch->message);
 
@@ -3414,9 +3417,6 @@ gst_rtsp_source_finalize (GSource * source)
     g_source_unref (watch->controlsrc);
 
   g_mutex_clear (&watch->mutex);
-
-  if (watch->notify)
-    watch->notify (watch->user_data);
 }
 
 static GSourceFuncs gst_rtsp_source_funcs = {
