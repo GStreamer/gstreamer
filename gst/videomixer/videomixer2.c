@@ -447,7 +447,12 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
       GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
           GST_VIDEO_INFO_FORMAT (&pad->info),
           GST_VIDEO_INFO_FORMAT (&best_info));
-      pad->convert = gst_video_converter_new (&pad->info, &best_info, NULL);
+      /* TODO: GstVideoConverter currently can't rescale! */
+      if (pad->info.width == best_info.width &&
+          pad->info.height == best_info.height &&
+          pad->info.par_n == best_info.par_n &&
+          pad->info.par_d == best_info.par_d)
+        pad->convert = gst_video_converter_new (&pad->info, &best_info, NULL);
       pad->need_conversion_update = TRUE;
       if (!pad->convert) {
         g_free (colorimetry);
