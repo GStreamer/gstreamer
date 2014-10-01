@@ -93,6 +93,7 @@ static GParamSpec *properties[PROP_LAST];
 enum
 {
   DEEP_NOTIFY,
+  CONTROL_BINDING_ADDED,
   LAST_SIGNAL
 };
 
@@ -236,7 +237,6 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   g_object_class_install_property (object_class, PROP_TRACK,
       properties[PROP_TRACK]);
 
-
   /**
    * GESTrackElement::deep-notify:
    * @track_element: a #GESTrackElement
@@ -251,6 +251,19 @@ ges_track_element_class_init (GESTrackElementClass * klass)
       G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
       G_SIGNAL_NO_HOOKS, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, GST_TYPE_ELEMENT, G_TYPE_PARAM);
+
+  /**
+   * GESTrackElement::control-binding-added:
+   * @track_element: a #GESTrackElement
+   * @control_binding: the #GstControlBinding that has been added
+   *
+   * The control-bunding-added  is emitted each time a control binding
+   * is added for a child property of @track_element
+   */
+  ges_track_element_signals[CONTROL_BINDING_ADDED] =
+      g_signal_new ("control-binding-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_CONTROL_BINDING);
 
   element_class->set_start = _set_start;
   element_class->set_duration = _set_duration;
@@ -1677,6 +1690,8 @@ ges_track_element_set_control_source (GESTrackElement * object,
     gst_object_add_control_binding (GST_OBJECT (element), binding);
     g_hash_table_insert (priv->bindings_hashtable, g_strdup (property_name),
         binding);
+    g_signal_emit (object, ges_track_element_signals[CONTROL_BINDING_ADDED],
+        0, binding);
     return TRUE;
   }
 
