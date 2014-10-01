@@ -2104,6 +2104,7 @@ done:
   /* ERRORS */
 no_output_state:
   {
+    gst_video_encoder_release_frame (encoder, frame);
     GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
     GST_ERROR_OBJECT (encoder, "Output state was not configured");
     return GST_FLOW_ERROR;
