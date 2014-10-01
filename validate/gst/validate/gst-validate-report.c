@@ -432,6 +432,8 @@ gst_validate_report_new (GstValidateIssue * issue,
 void
 gst_validate_report_unref (GstValidateReport * report)
 {
+  g_return_if_fail (report != NULL);
+
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&report->refcount))) {
     g_free (report->message);
     g_slice_free (GstValidateReport, report);
@@ -441,6 +443,8 @@ gst_validate_report_unref (GstValidateReport * report)
 GstValidateReport *
 gst_validate_report_ref (GstValidateReport * report)
 {
+  g_return_val_if_fail (report != NULL, NULL);
+
   g_atomic_int_inc (&report->refcount);
 
   return report;
