@@ -81,6 +81,28 @@ copy_samples (vorbis_sample_t * out, vorbis_sample_t ** in, guint samples,
 #endif
 }
 
+static void
+copy_samples_no_reorder (vorbis_sample_t * out, vorbis_sample_t ** in,
+    guint samples, gint channels)
+{
+#ifdef GST_VORBIS_DEC_SEQUENTIAL
+  gint i;
+
+  for (i = 0; i < channels; i++) {
+    memcpy (out, in[i], samples * sizeof (float));
+    out += samples;
+  }
+#else
+  gint i, j;
+
+  for (j = 0; j < samples; j++) {
+    for (i = 0; i < channels; i++) {
+      *out++ = in[i][j];
+    }
+  }
+#endif
+}
+
 CopySampleFunc
 gst_vorbis_get_copy_sample_func (gint channels)
 {
@@ -93,8 +115,16 @@ gst_vorbis_get_copy_sample_func (gint channels)
     case 2:
       f = copy_samples_s;
       break;
-    default:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
       f = copy_samples;
+      break;
+    default:
+      f = copy_samples_no_reorder;
       break;
   }
 
