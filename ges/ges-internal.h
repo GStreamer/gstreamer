@@ -120,9 +120,6 @@ ges_asset_cache_put (GESAsset * asset, GSimpleAsyncResult *res);
 G_GNUC_INTERNAL gboolean
 ges_asset_cache_set_loaded(GType extractable_type, const gchar * id, GError *error);
 
-G_GNUC_INTERNAL GHashTable *
-ges_track_element_get_bindings_hashtable(GESTrackElement *element);
-
 GESAsset*
 ges_asset_cache_lookup(GType extractable_type, const gchar * id);
 

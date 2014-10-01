@@ -927,7 +927,8 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
   GHashTableIter iter;
   gpointer key, value;
 
-  bindings_hashtable = ges_track_element_get_bindings_hashtable (trackelement);
+  bindings_hashtable =
+      ges_track_element_get_all_control_bindings (trackelement);
 
   g_hash_table_iter_init (&iter, bindings_hashtable);
 

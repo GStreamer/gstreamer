@@ -146,6 +146,7 @@ ges_track_element_get_child_property_by_pspec
 ges_track_element_edit
 ges_track_element_set_control_source
 ges_track_element_get_control_binding
+ges_track_element_get_all_control_bindings
 <SUBSECTION Standard>
 GESTrackElementPrivate
 ges_track_element_set_track
