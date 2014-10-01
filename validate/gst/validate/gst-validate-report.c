@@ -50,6 +50,16 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_report_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT gst_validate_report_debug
 
+#define GST_VALIDATE_REPORT_SHADOW_REPORTS_LOCK(r)			\
+  G_STMT_START {					\
+  (g_mutex_lock (&((GstValidateReport *) r)->shadow_reports_lock));		\
+  } G_STMT_END
+
+#define GST_VALIDATE_REPORT_SHADOW_REPORTS_UNLOCK(r)			\
+  G_STMT_START {					\
+  (g_mutex_unlock (&((GstValidateReport *) r)->shadow_reports_lock));		\
+  } G_STMT_END
+
 G_DEFINE_BOXED_TYPE (GstValidateReport, gst_validate_report,
     (GBoxedCopyFunc) gst_validate_report_ref,
     (GBoxedFreeFunc) gst_validate_report_unref);
@@ -422,6 +432,7 @@ gst_validate_report_new (GstValidateIssue * issue,
   report->issue = issue;
   report->reporter = reporter;  /* TODO should we ref? */
   report->message = g_strdup (message);
+  g_mutex_init (&report->shadow_reports_lock);
   report->timestamp =
       gst_util_get_timestamp () - _gst_validate_report_start_time;
   report->level = issue->default_level;
@@ -436,7 +447,9 @@ gst_validate_report_unref (GstValidateReport * report)
 
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&report->refcount))) {
     g_free (report->message);
+    g_list_free_full (report->shadow_reports, (GDestroyNotify) gst_validate_report_unref);
     g_slice_free (GstValidateReport, report);
+    g_mutex_clear (&report->shadow_reports_lock);
   }
 }
 
@@ -606,16 +619,50 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 }
 
 void
+gst_validate_report_set_master_report (GstValidateReport * report,
+    GstValidateReport * master_report)
+{
+  GList *tmp;
+  gboolean add_shadow_report = TRUE;
+
+  report->master_report = master_report;
+
+  GST_VALIDATE_REPORT_SHADOW_REPORTS_LOCK (master_report);
+  for (tmp = master_report->shadow_reports; tmp; tmp = tmp->next) {
+    GstValidateReport *shadow_report = (GstValidateReport *) tmp->data;
+    if (report->reporter == shadow_report->reporter) {
+      add_shadow_report = FALSE;
+      break;
+    }
+  }
+  if (add_shadow_report)
+    master_report->shadow_reports =
+        g_list_append (master_report->shadow_reports, gst_validate_report_ref (report));
+  GST_VALIDATE_REPORT_SHADOW_REPORTS_UNLOCK (master_report);
+}
+
+void
 gst_validate_report_printf (GstValidateReport * report)
 {
+  GList *tmp;
+
   gst_validate_printf (NULL, "%10s : %s\n",
       gst_validate_report_level_get_name (report->level),
       report->issue->summary);
-  gst_validate_printf (NULL, "%*s Detected on <%s> at %" GST_TIME_FORMAT "\n",
-      12, "", gst_validate_reporter_get_name (report->reporter),
-      GST_TIME_ARGS (report->timestamp));
+  gst_validate_printf (NULL, "%*s Detected on <%s",
+      12, "", gst_validate_reporter_get_name (report->reporter));
+
+  for (tmp = report->shadow_reports; tmp; tmp = tmp->next) {
+    GstValidateReport *shadow_report = (GstValidateReport *) tmp->data;
+    gst_validate_printf (NULL, ", %s",
+        gst_validate_reporter_get_name (shadow_report->reporter));
+  }
+
+  gst_validate_printf (NULL, ">\n");
+
   if (report->message)
     gst_validate_printf (NULL, "%*s Details : %s\n", 12, "", report->message);
+
   if (report->issue->description)
     gst_validate_printf (NULL, "%*s Description : %s\n", 12, "",
         report->issue->description);

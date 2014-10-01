@@ -169,6 +169,13 @@ struct _GstValidateReport {
   /* message: issue-specific message. Gives more detail on the actual
    * issue. Can be NULL */
   gchar *message;
+
+  /* When reporter->intercept_report returns KEEP, the report is not
+   * added to the runner. It can be added as a "shadow_report" to
+   * the upstream report, which is tracked by the runner. */
+  GMutex shadow_reports_lock;
+  GstValidateReport *master_report;
+  GList *shadow_reports;
 };
 
 #define GST_VALIDATE_ISSUE_FORMAT G_GUINTPTR_FORMAT " (%s) : %s(%" G_GUINTPTR_FORMAT "): %s"
@@ -212,6 +219,7 @@ void               gst_validate_printf_valist (gpointer source,
                                                const gchar      * format,
                                                va_list            args) G_GNUC_NO_INSTRUMENT;
 gboolean gst_validate_report_should_print (GstValidateReport * report);
+void gst_validate_report_set_master_report(GstValidateReport *report, GstValidateReport *master_report);
 
 G_END_DECLS
 
