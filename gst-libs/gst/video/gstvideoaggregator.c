@@ -447,16 +447,14 @@ gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
     if (best_format != GST_VIDEO_INFO_FORMAT (&pad->info) ||
         g_strcmp0 (colorimetry, best_colorimetry) ||
         g_strcmp0 (chroma, best_chroma)) {
+      GstVideoInfo tmp_info = pad->info;
+      tmp_info.finfo = best_info.finfo;
+
       GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
           GST_VIDEO_INFO_FORMAT (&pad->info),
           GST_VIDEO_INFO_FORMAT (&best_info));
-      /* TODO: GstVideoConverter currently can't rescale! */
-      if (pad->info.width == best_info.width &&
-          pad->info.height == best_info.height &&
-          pad->info.par_n == best_info.par_n &&
-          pad->info.par_d == best_info.par_d)
-        pad->priv->convert =
-            gst_video_converter_new (&pad->info, &best_info, NULL);
+      pad->priv->convert =
+          gst_video_converter_new (&pad->info, &tmp_info, NULL);
       pad->need_conversion_update = TRUE;
       if (!pad->priv->convert) {
         g_free (colorimetry);
