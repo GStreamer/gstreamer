@@ -345,6 +345,7 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
     }
   } else if (gst_caps_is_empty (allowed_caps)) {
     GST_ERROR_OBJECT (vc1parse, "Empty caps");
+    gst_caps_unref (allowed_caps);
     return FALSE;
   } else {
     GST_DEBUG_OBJECT (vc1parse, "Using input header/stream format");
