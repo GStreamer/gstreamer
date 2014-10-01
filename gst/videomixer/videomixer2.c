@@ -452,7 +452,7 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
       GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
           GST_VIDEO_INFO_FORMAT (&pad->info),
           GST_VIDEO_INFO_FORMAT (&best_info));
-      pad->convert = gst_video_converter_new (&pad->info, &best_info, NULL);
+      pad->convert = gst_video_converter_new (&pad->info, &tmp_info, NULL);
       pad->need_conversion_update = TRUE;
       if (!pad->convert) {
         g_free (colorimetry);
