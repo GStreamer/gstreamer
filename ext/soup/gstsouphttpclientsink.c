@@ -639,6 +639,7 @@ send_message_locked (GstSoupHttpClientSink * souphttpsink)
 
   /* If the URI went away, drop all these buffers */
   if (souphttpsink->location == NULL) {
+    GST_DEBUG_OBJECT (souphttpsink, "URI went away, dropping queued buffers");
     free_buffer_list (souphttpsink->queued_buffers);
     souphttpsink->queued_buffers = NULL;
     return;
@@ -685,6 +686,8 @@ send_message_locked (GstSoupHttpClientSink * souphttpsink)
   }
 
   if (n == 0) {
+    GST_DEBUG_OBJECT (souphttpsink,
+        "total size of buffers queued is 0, freeing everything");
     free_buffer_list (souphttpsink->queued_buffers);
     souphttpsink->queued_buffers = NULL;
     g_object_unref (souphttpsink->message);
@@ -763,6 +766,7 @@ gst_soup_http_client_sink_render (GstBaseSink * sink, GstBuffer * buffer)
         g_list_append (souphttpsink->queued_buffers, gst_buffer_ref (buffer));
 
     if (wake) {
+      GST_DEBUG_OBJECT (souphttpsink, "setting callback for new buffers");
       source = g_idle_source_new ();
       g_source_set_callback (source, (GSourceFunc) (send_message),
           souphttpsink, NULL);
