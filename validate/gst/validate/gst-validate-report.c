@@ -248,7 +248,7 @@ gst_validate_report_load_issues (void)
       _("An issue happend during the execution of a scenario"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
       NULL);
-  REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_CRITICAL,
+  REGISTER_VALIDATE_ISSUE (CRITICAL, G_LOG_CRITICAL,
       _("We got a g_log critical issue"), NULL);
   REGISTER_VALIDATE_ISSUE (ISSUE, G_LOG_ISSUE, _("We got a g_log issue"), NULL);
 }
