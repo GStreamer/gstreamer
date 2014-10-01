@@ -449,6 +449,8 @@ gst_videoaggregator_update_converters (GstVideoAggregator * vagg)
         g_strcmp0 (chroma, best_chroma)) {
       GstVideoInfo tmp_info = pad->info;
       tmp_info.finfo = best_info.finfo;
+      tmp_info.chroma_site = best_info.chroma_site;
+      tmp_info.colorimetry = best_info.colorimetry;
 
       GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
           GST_VIDEO_INFO_FORMAT (&pad->info),
