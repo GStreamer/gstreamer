@@ -2997,11 +2997,16 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
 
   activate = deactivate = FALSE;
 
-  GST_INFO ("going to state %s media %p", gst_element_state_get_name (state),
-      media);
+  GST_INFO ("going to state %s media %p, target state %s",
+      gst_element_state_get_name (state), media,
+      gst_element_state_get_name (priv->target_state));
 
   switch (state) {
     case GST_STATE_NULL:
+      /* we're going from PLAYING or PAUSED to READY or NULL, deactivate */
+      if (priv->target_state >= GST_STATE_PAUSED)
+        deactivate = TRUE;
+      break;
     case GST_STATE_PAUSED:
       /* we're going from PLAYING to PAUSED, READY or NULL, deactivate */
       if (priv->target_state == GST_STATE_PLAYING)
@@ -3016,6 +3021,8 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   }
   old_active = priv->n_active;
 
+  GST_DEBUG ("%d transports, activate %d, deactivate %d", transports->len,
+      activate, deactivate);
   for (i = 0; i < transports->len; i++) {
     GstRTSPStreamTransport *trans;
 
