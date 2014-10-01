@@ -39,8 +39,9 @@
  * TODO
  */
 
-static void gst_validate_pad_monitor_intercept_report (GstValidateReporter *
-    reporter, GstValidateReport * report);
+static GstValidateInterceptionReturn
+gst_validate_pad_monitor_intercept_report (GstValidateReporter * reporter,
+    GstValidateReport * report);
 
 #define _do_init \
   G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init)
@@ -121,7 +122,7 @@ typedef struct
 } SerializedEventData;
 
 
-static void
+static GstValidateInterceptionReturn
 gst_validate_pad_monitor_intercept_report (GstValidateReporter *
     reporter, GstValidateReport * report)
 {
@@ -133,6 +134,7 @@ gst_validate_pad_monitor_intercept_report (GstValidateReporter *
   old_iface_class = g_type_interface_peek_parent (iface_class);
 
   old_iface_class->intercept_report (reporter, report);
+  return GST_VALIDATE_REPORTER_REPORT;
 }
 
 static void

@@ -56,8 +56,9 @@ static GObject *gst_validate_monitor_constructor (GType type,
 
 gboolean gst_validate_monitor_setup (GstValidateMonitor * monitor);
 
-static void gst_validate_monitor_intercept_report (GstValidateReporter *
-    reporter, GstValidateReport * report);
+static GstValidateInterceptionReturn
+gst_validate_monitor_intercept_report (GstValidateReporter * reporter,
+    GstValidateReport * report);
 
 #define _do_init \
   G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init)
@@ -218,7 +219,7 @@ gst_validate_monitor_get_element_name (GstValidateMonitor * monitor)
 }
 
 /* Check if any of our overrides wants to change the report severity */
-static void
+static GstValidateInterceptionReturn
 gst_validate_monitor_intercept_report (GstValidateReporter * reporter,
     GstValidateReport * report)
 {
@@ -232,6 +233,8 @@ gst_validate_monitor_intercept_report (GstValidateReporter * reporter,
         gst_validate_issue_get_id (report->issue), report->level);
   }
   GST_VALIDATE_MONITOR_OVERRIDES_UNLOCK (monitor);
+
+  return GST_VALIDATE_REPORTER_REPORT;
 }
 
 void

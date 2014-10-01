@@ -115,7 +115,7 @@ typedef struct KeyFileGroupName
   gchar *group_name;
 } KeyFileGroupName;
 
-static void
+static GstValidateInterceptionReturn
 gst_validate_scenario_intercept_report (GstValidateReporter * reporter,
     GstValidateReport * report)
 {
@@ -127,6 +127,8 @@ gst_validate_scenario_intercept_report (GstValidateReporter * reporter,
         gst_validate_override_get_severity (tmp->data,
         gst_validate_issue_get_id (report->issue), report->level);
   }
+
+  return GST_VALIDATE_REPORTER_REPORT;
 }
 
 static void

@@ -51,11 +51,25 @@ G_BEGIN_DECLS
     gst_validate_report (GST_VALIDATE_REPORTER (m),			\
 			 GST_VALIDATE_ISSUE_ID_##issue_id, ##args );	\
   } G_STMT_END
-
 #endif /* G_HAVE_ISO_VARARGS */
 #endif /* G_HAVE_GNUC_VARARGS */
-
 GType gst_validate_reporter_get_type (void);
+
+/**
+ * GstValidateInterceptionReturn:
+ *
+ * @GST_VALIDATE_REPORTER_DROP: The report will be completely ignored.
+ * @GST_VALIDATE_REPORTER_KEEP: The report will be kept by the reporter,
+ *                              but not reported to the runner.
+ * @GST_VALIDATE_REPORTER_REPORT: The report will be kept by the reporter
+ *                                and reported to the runner.
+ */
+typedef enum
+{
+  GST_VALIDATE_REPORTER_DROP,
+  GST_VALIDATE_REPORTER_KEEP,
+  GST_VALIDATE_REPORTER_REPORT
+} GstValidateInterceptionReturn;
 
 /**
  * GstValidateReporter:
@@ -64,7 +78,8 @@ struct _GstValidateReporterInterface
 {
   GTypeInterface parent;
 
-  void (*intercept_report)(GstValidateReporter * reporter, GstValidateReport * report);
+    GstValidateInterceptionReturn (*intercept_report) (GstValidateReporter *
+      reporter, GstValidateReport * report);
 };
 
 void gst_validate_reporter_set_name            (GstValidateReporter * reporter,

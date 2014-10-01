@@ -98,21 +98,25 @@ gst_validate_reporter_get_priv (GstValidateReporter * reporter)
   (g_mutex_unlock (&gst_validate_reporter_get_priv(GST_VALIDATE_REPORTER_CAST(r))->reports_lock));		\
   } G_STMT_END
 
-static void
+static GstValidateInterceptionReturn
 gst_validate_reporter_intercept_report (GstValidateReporter * reporter,
     GstValidateReport * report)
 {
+  GstValidateInterceptionReturn ret = GST_VALIDATE_REPORTER_REPORT;
   GstValidateReporterInterface *iface =
       GST_VALIDATE_REPORTER_GET_INTERFACE (reporter);
 
   if (iface->intercept_report) {
-    iface->intercept_report (reporter, report);
+    ret = iface->intercept_report (reporter, report);
   }
+
+  return ret;
 }
 
 GstValidateReport *
-gst_validate_reporter_get_report (GstValidateReporter *reporter,
-    GstValidateIssueId issue_id) {
+gst_validate_reporter_get_report (GstValidateReporter * reporter,
+    GstValidateIssueId issue_id)
+{
   GstValidateReport *report;
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
 
@@ -132,6 +136,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   va_list vacopy;
   GstValidateIssue *issue;
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
+  GstValidateInterceptionReturn int_ret;
 
   issue = gst_validate_issue_from_id (issue_id);
 
@@ -141,7 +146,13 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   message = g_strdup_vprintf (format, vacopy);
   report = gst_validate_report_new (issue, reporter, message);
 
-  gst_validate_reporter_intercept_report (reporter, report);
+  int_ret = gst_validate_reporter_intercept_report (reporter, report);
+
+  if (int_ret == GST_VALIDATE_REPORTER_DROP) {
+    gst_validate_report_unref (report);
+    g_free (message);
+    return;
+  }
 
   if (issue->repeat == FALSE) {
     GstValidateIssueId issue_id = gst_validate_issue_get_id (issue);
@@ -179,7 +190,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   g_free (combo);
 #endif
 
-  if (priv->runner) {
+  if (priv->runner && int_ret == GST_VALIDATE_REPORTER_REPORT) {
     gst_validate_runner_add_report (priv->runner, report);
   } else {
     gst_validate_report_unref (report);
