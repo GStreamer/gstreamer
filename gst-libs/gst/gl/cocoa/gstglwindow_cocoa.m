@@ -85,7 +85,6 @@ struct _GstGLWindowCocoaPrivate
   GMainLoop *loop;
 
   GLint viewport_dim[4];
-  NSRect bounds, visibleRect;
 };
 
 static void
@@ -524,24 +523,16 @@ resize_cb (gpointer data)
 
     [glContext update];
 
-    if (window_cocoa->priv->bounds.size.width != resize_data->bounds.size.width ||
-       window_cocoa->priv->bounds.size.height != resize_data->bounds.size.height ||
-       window_cocoa->priv->visibleRect.origin.x != resize_data->visibleRect.origin.x ||
-       window_cocoa->priv->visibleRect.origin.y != resize_data->visibleRect.origin.y) {
-      gl = context->gl_vtable;
+    gl = context->gl_vtable;
 
-      if (window->resize) {
-        window->resize (window->resize_data, resize_data->bounds.size.width, resize_data->bounds.size.height);
-        gl->GetIntegerv (GL_VIEWPORT, window_cocoa->priv->viewport_dim);
-      }
-
-      gl->Viewport (window_cocoa->priv->viewport_dim[0] - resize_data->visibleRect.origin.x,
-                    window_cocoa->priv->viewport_dim[1] - resize_data->visibleRect.origin.y,
-                    window_cocoa->priv->viewport_dim[2], window_cocoa->priv->viewport_dim[3]);
-
-      window_cocoa->priv->visibleRect = resize_data->visibleRect;
-      window_cocoa->priv->bounds = resize_data->bounds;
+    if (window->resize) {
+      window->resize (window->resize_data, resize_data->bounds.size.width, resize_data->bounds.size.height);
+      gl->GetIntegerv (GL_VIEWPORT, window_cocoa->priv->viewport_dim);
     }
+
+    gl->Viewport (window_cocoa->priv->viewport_dim[0] - resize_data->visibleRect.origin.x,
+                  window_cocoa->priv->viewport_dim[1] - resize_data->visibleRect.origin.y,
+                  window_cocoa->priv->viewport_dim[2], window_cocoa->priv->viewport_dim[3]);
 
     GST_GL_WINDOW (window_cocoa)->draw (GST_GL_WINDOW (window_cocoa)->draw_data);
     [glContext flushBuffer];
