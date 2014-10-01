@@ -96,6 +96,8 @@ void gst_validate_reporter_set_runner          (GstValidateReporter * reporter, 
 void gst_validate_reporter_set_handle_g_logs   (GstValidateReporter * reporter);
 GstValidateReport * gst_validate_reporter_get_report (GstValidateReporter *reporter,
                                                       GstValidateIssueId issue_id);
+GList * gst_validate_reporter_get_reports (GstValidateReporter * reporter);
+gint gst_validate_reporter_get_reports_count (GstValidateReporter *reporter);
 
 G_END_DECLS
 #endif /* _GST_VALIDATE_REPORTER_ */

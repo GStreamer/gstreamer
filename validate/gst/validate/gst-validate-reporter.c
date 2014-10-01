@@ -275,3 +275,56 @@ gst_validate_reporter_set_handle_g_logs (GstValidateReporter * reporter)
 
   g_log_handler = gst_validate_reporter_get_priv (reporter);
 }
+
+/**
+ * gst_validate_reporter_get_reports:
+ * @reporter: a #GstValidateReporter
+ *
+ * Get the list of reports present in the reporter.
+ *
+ * Returns: (transfer full) (element-type GstValidateReport): the list of
+ * #GstValidateReport present in the reporter.
+ * The caller should unref each report once it is done with them.
+ */
+GList *
+gst_validate_reporter_get_reports (GstValidateReporter *reporter)
+{
+  GstValidateReporterPrivate *priv;
+  GList *reports, *tmp;
+  GList *ret = NULL;
+
+  priv = g_object_get_data (G_OBJECT (reporter), REPORTER_PRIVATE);
+
+  GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
+  reports = g_hash_table_get_values (priv->reports);
+  for (tmp = reports; tmp; tmp = tmp->next) {
+    ret = g_list_append (ret, gst_validate_report_ref ((GstValidateReport *) (tmp->data)));
+  }
+  g_list_free (reports);
+  GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
+
+  return ret;
+}
+
+/**
+ * gst_validate_reporter_get_reports_count:
+ * @reporter: a #GstValidateReporter
+ *
+ * Get the number of reports present in the reporter.
+ *
+ * Returns: the number of reports currently present in @reporter.
+ */
+gint
+gst_validate_reporter_get_reports_count (GstValidateReporter *reporter)
+{
+  GstValidateReporterPrivate *priv;
+  gint ret;
+
+  priv = g_object_get_data (G_OBJECT (reporter), REPORTER_PRIVATE);
+
+  GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
+  ret = g_hash_table_size (priv->reports);
+  GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
+
+  return ret;
+}
