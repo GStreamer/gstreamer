@@ -244,6 +244,9 @@ gst_soup_http_client_sink_init (GstSoupHttpClientSink * souphttpsink)
 static void
 gst_soup_http_client_sink_reset (GstSoupHttpClientSink * souphttpsink)
 {
+  g_list_free_full (souphttpsink->queued_buffers,
+      (GDestroyNotify) gst_buffer_unref);
+  souphttpsink->queued_buffers = NULL;
   g_free (souphttpsink->reason_phrase);
   souphttpsink->reason_phrase = NULL;
   souphttpsink->status_code = 0;
