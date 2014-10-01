@@ -549,6 +549,16 @@ resize_cb (gpointer data)
   gst_object_unref (context);
 }
 
+- (void)renewGState {
+  /* Don't update the screen until we redraw, this
+   * prevents flickering during scrolling, clipping,
+   * resizing, etc
+   */
+  [[self window] disableScreenUpdatesUntilFlush];
+
+  [super renewGState];
+}
+
 - (void)drawRect: (NSRect)dirtyRect {
   [self reshape];
 }
