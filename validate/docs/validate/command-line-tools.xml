@@ -30,6 +30,8 @@
       * <link linkend="gst-validate-transcoding--encoding-profile">Encoding Profile: </link>The serialization format of a GstEncodingProfile
   <link linkend="gst-validate-media-check">gst-validate-media-check</link>: A tool to easily check that the discovering of a media file works properly over runs
   <link linkend="gst-validate-launcher">gst-validate-launcher</link>: An application permitting to create testsuites on top of GstValidate tools
+      * <link linkend="gst-validate-launcher--default-testsuite">The default testsuite </link>The default GstValidate testsuite
+      * <link linkend="gst-validate-launcher--implement-testsuite">Implementing a testsuite </link>How to implement a testsuite
 </synopsis></refsynopsisdiv>
 
   <refsect1 id="gst-validate">
@@ -194,7 +196,29 @@
         <programlisting>gst-validate-launcher --help</programlisting>
       </informalexample>
     </para>
-    <refsect2>
+    <refsect2 id="gst-validate-launcher--default-testsuite">
+      <title>Run the GstValidate default testsuite</title>
+      <para>
+      GstValidate comes with a default testsuite to be executed on a default set of media samples.
+      Those media samples are stored with git-annex so you will need it to be able to launch that
+      default testsuite.
+      </para>
+      <informalexample>
+        The first time you launch the testsuite, you will need to make sure that the media samples are
+        downloaded. To do so and launch the testsuite you can simply do:
+          <programlisting>gst-validate-launch validate --sync</programlisting>
+      </informalexample>
+      <para>
+        This will only launch the GstValidate tests and not other application that might be supported
+        (currently ges-launch is also supported and has its own default testsuite).
+      </para>
+      <informalexample>
+        Launching the default testsuite will open/close many windows, you might want to mute it
+        so you can keep using your computer:
+        <programlisting>gst-validate-launch validate --sync --mute</programlisting>
+      </informalexample>
+    </refsect2>
+    <refsect2 id="gst-validate-launcher--implement-testsuite">
       <title>Example of a testsuite implementation</title>
       <para>
         To implement a testsuite, you will have to write some simple python code that will define
