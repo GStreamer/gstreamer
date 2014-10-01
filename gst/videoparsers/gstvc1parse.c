@@ -115,6 +115,16 @@ static const struct
   "frame-layer", VC1_STREAM_FORMAT_FRAME_LAYER}
 };
 
+static const struct
+{
+  gchar str[5];
+  GstVC1ParseFormat en;
+} parse_formats[] = {
+  {
+  "WMV3", GST_VC1_PARSE_FORMAT_WMV3}, {
+  "WVC1", GST_VC1_PARSE_FORMAT_WVC1}
+};
+
 static const gchar *
 stream_format_to_string (VC1StreamFormat stream_format)
 {
@@ -149,6 +159,12 @@ header_format_from_string (const gchar * header_format)
       return header_formats[i].en;
   }
   return -1;
+}
+
+static const gchar *
+parse_format_to_string (GstVC1ParseFormat format)
+{
+  return parse_formats[format].str;
 }
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -300,7 +316,9 @@ gst_vc1_parse_stop (GstBaseParse * parse)
 static gboolean
 gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
 {
+  GstCaps *in_caps;
   GstCaps *allowed_caps;
+  GstCaps *tmp;
 
   /* Negotiate with downstream here */
   GST_DEBUG_OBJECT (vc1parse, "Renegotiating");
@@ -314,9 +332,25 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
     GST_DEBUG_OBJECT (vc1parse, "Downstream allowed caps: %" GST_PTR_FORMAT,
         allowed_caps);
 
-    allowed_caps = gst_caps_make_writable (allowed_caps);
-    allowed_caps = gst_caps_truncate (allowed_caps);
-    s = gst_caps_get_structure (allowed_caps, 0);
+    /* Downstream element can have differents caps according to wmv format
+     * so intersect to select the good caps */
+    in_caps = gst_caps_new_simple ("video/x-wmv",
+        "format", G_TYPE_STRING, parse_format_to_string (vc1parse->format),
+        NULL);
+
+    tmp = gst_caps_intersect_full (allowed_caps, in_caps,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (in_caps);
+
+    if (gst_caps_is_empty (tmp)) {
+      GST_ERROR_OBJECT (vc1parse, "Empty caps, downstream doesn't support %s",
+          parse_format_to_string (vc1parse->format));
+      gst_caps_unref (tmp);
+      return FALSE;
+    }
+
+    tmp = gst_caps_make_writable (tmp);
+    s = gst_caps_get_structure (tmp, 0);
 
     /* If already fixed this does nothing */
     gst_structure_fixate_field_string (s, "header-format", "asf");
@@ -343,6 +377,7 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
       vc1parse->output_stream_format =
           stream_format_from_string (stream_format);
     }
+    gst_caps_unref (tmp);
   } else if (gst_caps_is_empty (allowed_caps)) {
     GST_ERROR_OBJECT (vc1parse, "Empty caps");
     gst_caps_unref (allowed_caps);
