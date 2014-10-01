@@ -678,6 +678,141 @@ _container_remove_child (GstValidateScenario * scenario,
   return res;
 }
 
+static gboolean
+_set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GESTrackElement *element;
+
+  gboolean ret = FALSE;
+  GstControlSource *source = NULL;
+  gchar *element_name, *property_name, *binding_type = NULL,
+      *source_type = NULL, *interpolation_mode = NULL;
+
+  GESTimeline *timeline = get_timeline (scenario);
+
+  gst_structure_get (action->structure,
+      "element-name", G_TYPE_STRING, &element_name,
+      "property-name", G_TYPE_STRING, &property_name,
+      "binding-type", G_TYPE_STRING, &binding_type,
+      "source-type", G_TYPE_STRING, &source_type,
+      "interpolation-mode", G_TYPE_STRING, &interpolation_mode, NULL);
+
+  element =
+      GES_TRACK_ELEMENT (ges_timeline_get_element (timeline, element_name));
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
+
+  if (!binding_type)
+    binding_type = g_strdup ("direct");
+
+  if (source_type == NULL || !g_strcmp0 (source_type, "interpolation")) {
+    GstInterpolationMode mode;
+
+    source = gst_interpolation_control_source_new ();
+
+    if (interpolation_mode)
+      g_return_val_if_fail (gst_validate_utils_enum_from_str
+          (GST_TYPE_INTERPOLATION_MODE, interpolation_mode, &mode), FALSE);
+    else
+      mode = GST_INTERPOLATION_MODE_LINEAR;
+
+    g_object_set (source, "mode", mode, NULL);
+
+  } else {
+    GST_ERROR_OBJECT (scenario, "Interpolation type %s not supported",
+        source_type);
+
+    goto done;
+  }
+
+  ret = ges_track_element_set_control_source (element,
+      source, property_name, binding_type);
+
+
+done:
+  gst_object_unref (timeline);
+  g_free (element_name);
+  g_free (binding_type);
+  g_free (source_type);
+  g_free (interpolation_mode);
+
+  if (ret == FALSE) {
+    GST_ERROR_OBJECT (scenario, "NOP, COULD NOT!");
+  } else {
+    GST_ERROR_OBJECT (scenario, "===> GOOD TO GO!!");
+  }
+
+  return ret;
+}
+
+static gboolean
+_add_remove_keyframe (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GESTrackElement *element;
+
+  gdouble value;
+  GstClockTime timestamp;
+  GstControlBinding *binding = NULL;
+  GstTimedValueControlSource *source = NULL;
+  gchar *element_name, *property_name;
+
+  gboolean ret = FALSE;
+  GESTimeline *timeline = get_timeline (scenario);
+
+  gst_structure_get (action->structure,
+      "element-name", G_TYPE_STRING, &element_name,
+      "property-name", G_TYPE_STRING, &property_name,
+      "value", G_TYPE_DOUBLE, &value, NULL);
+
+  gst_validate_action_get_clocktime (scenario, action, "timestamp", &timestamp);
+
+  element =
+      GES_TRACK_ELEMENT (ges_timeline_get_element (timeline, element_name));
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
+
+  binding = ges_track_element_get_control_binding (element, property_name);
+  if (binding == NULL) {
+    GST_ERROR_OBJECT (scenario, "No control binding found for %s:%s"
+        " you should first set-control-binding on it",
+        element_name, property_name);
+
+    goto done;
+  }
+
+  g_object_get (binding, "control-source", &source, NULL);
+
+  if (source == NULL) {
+    GST_ERROR_OBJECT (scenario, "No control source found for %s:%s"
+        " you should first set-control-binding on it",
+        element_name, property_name);
+
+    goto done;
+  }
+
+  if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)) {
+    GST_ERROR_OBJECT (scenario, "You can use add-keyframe"
+        " only on GstTimedValueControlSource not %s",
+        G_OBJECT_TYPE_NAME (source));
+
+    goto done;
+  }
+
+  if (!g_strcmp0 (action->type, "add-keyframe"))
+    ret = gst_timed_value_control_source_set (source, timestamp, value);
+  else
+    ret = gst_timed_value_control_source_unset (source, timestamp);
+
+done:
+  gst_object_unref (timeline);
+  if (source)
+    gst_object_unref (source);
+  g_free (element_name);
+  g_free (property_name);
+
+  return ret;
+}
+
 static void
 ges_validate_register_action_types (void)
 {
@@ -993,6 +1128,99 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Remove a child from @container-name.", FALSE);
+
+  gst_validate_register_action_type ("set-control-source", "ges", _set_control_source,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the GESTrackElement to set the control source on",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "property-name",
+          .description = "The name of the property for which to set a control source",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "binding-type",
+          .description = "The name of the type of binding to use",
+          .types = "string",
+          .mandatory = FALSE,
+          .def = "direct",
+        },
+        {
+          .name = "source-type",
+          .description = "The name of the type of ControlSource to use",
+          .types = "string",
+          .mandatory = FALSE,
+          .def = "interpolation",
+        },
+        {
+          .name = "interpolation-mode",
+          .description = "The name of the GstInterpolationMode to on the source",
+          .types = "string",
+          .mandatory = FALSE,
+          .def = "linear",
+        },
+        {NULL}
+      }, "Adds a GstControlSource on @element-name::@property-name"
+         " allowing you to then add keyframes on that property.", FALSE);
+
+  gst_validate_register_action_type ("add-keyframe", "ges", _add_remove_keyframe,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the GESTrackElement to add a keyframe on",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "property-name",
+          .description = "The name of the property for which to add a keyframe on",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "timestamp",
+          .description = "The timestamp of the keyframe",
+          .types = "string or float",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "value",
+          .description = "The value of the keyframe",
+          .types = "float",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Remove a child from @container-name.", FALSE);
+
+  gst_validate_register_action_type ("remove-keyframe", "ges", _add_remove_keyframe,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the GESTrackElement to add a keyframe on",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "property-name",
+          .description = "The name of the property for which to add a keyframe on",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "timestamp",
+          .description = "The timestamp of the keyframe",
+          .types = "string or float",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Remove a child from @container-name.", FALSE);
+
+
 
   gst_validate_register_action_type ("commit", "ges", _commit, NULL,
        "Commit the timeline.", FALSE);
