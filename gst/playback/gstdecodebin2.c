@@ -1592,6 +1592,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     caps = gst_pad_get_current_caps (pad);
     if (!caps) {
       GST_DEBUG_OBJECT (dbin, "No final caps set yet, delaying autoplugging");
+      gst_object_unref (dpad);
       goto setup_caps_delay;
     }
   }
@@ -1754,6 +1755,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     caps = gst_pad_get_current_caps (pad);
     if (!caps) {
       GST_DEBUG_OBJECT (dbin, "No final caps set yet, delaying autoplugging");
+      gst_object_unref (dpad);
       goto setup_caps_delay;
     }
   }
