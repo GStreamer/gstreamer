@@ -297,7 +297,7 @@ _find_stream_id (GstPad * pad, GstEvent ** event,
     }
 
     if (!snode || snode->pad) {
-      GST_VALIDATE_REPORT (writer, FILE_CHECK_FAILURE,
+      GST_VALIDATE_REPORT (writer, FILE_NO_STREAM_ID,
           "Got pad %s:%s where Discoverer found no stream ID",
           GST_DEBUG_PAD_NAME (pad));
 

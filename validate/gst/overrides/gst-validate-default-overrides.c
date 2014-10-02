@@ -40,7 +40,7 @@ gst_validate_create_overrides (void)
      gst-launch videotestsrc num-buffers=10 ! video/x-raw-yuv !  fakesink */
   o = gst_validate_override_new ();
   gst_validate_override_change_severity (o,
-      GST_VALIDATE_ISSUE_ID_CAPS_IS_MISSING_FIELD,
+      g_quark_from_string ("caps::is-missing-field"),
       GST_VALIDATE_REPORT_LEVEL_CRITICAL);
   gst_validate_override_register_by_name ("capsfilter0", o);
   return 1;

@@ -53,81 +53,57 @@ typedef enum {
   GST_VALIDATE_REPORT_LEVEL_NUM_ENTRIES,
 } GstValidateReportLevel;
 
-typedef enum {
-  GST_VALIDATE_AREA_EVENT=1,
-  GST_VALIDATE_AREA_BUFFER,
-  GST_VALIDATE_AREA_QUERY,
-  GST_VALIDATE_AREA_CAPS,
-  GST_VALIDATE_AREA_SEEK,
-  GST_VALIDATE_AREA_STATE,
-  GST_VALIDATE_AREA_FILE_CHECK,
-  GST_VALIDATE_AREA_SCENARIO,
-  GST_VALIDATE_AREA_RUN_ERROR,
-  GST_VALIDATE_AREA_OTHER=100,
-} GstValidateReportArea;
+#define _QUARK g_quark_from_static_string
 
-#define GST_VALIDATE_ISSUE_ID_UNKNOWN 0
+#define BUFFER_BEFORE_SEGMENT                    _QUARK("buffer::before-segment")
+#define BUFFER_IS_OUT_OF_SEGMENT                 _QUARK("buffer::is-out-of-segment")
+#define BUFFER_TIMESTAMP_OUT_OF_RECEIVED_RANGE   _QUARK("buffer::timestamp-out-of-received-range")
+#define FIRST_BUFFER_RUNNING_TIME_IS_NOT_ZERO    _QUARK("buffer::first-buffer-running-time-is-not-zero")
+#define WRONG_FLOW_RETURN                        _QUARK("buffer::wrong-flow-return")
+#define BUFFER_AFTER_EOS                         _QUARK("buffer::after-eos")
+#define WRONG_BUFFER                             _QUARK("buffer::not-expected-one")
 
-#define GST_VALIDATE_ISSUE_ID_SHIFT 16
-#define GST_VALIDATE_ISSUE_ID_CUSTOM_FIRST (2 << 15)
+#define CAPS_IS_MISSING_FIELD                    _QUARK("caps::is-missing-field")
+#define CAPS_FIELD_HAS_BAD_TYPE                  _QUARK("caps::field-has-bad-type")
+#define CAPS_EXPECTED_FIELD_NOT_FOUND            _QUARK("caps::expected-field-not-found")
+#define GET_CAPS_NOT_PROXYING_FIELDS             _QUARK("caps::not-proxying-fields")
+#define CAPS_FIELD_UNEXPECTED_VALUE              _QUARK("caps::field-unexpected-value")
 
-#define GST_VALIDATE_ISSUE_ID_BUFFER_BEFORE_SEGMENT                    (((GstValidateIssueId) GST_VALIDATE_AREA_BUFFER) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
-#define GST_VALIDATE_ISSUE_ID_BUFFER_IS_OUT_OF_SEGMENT                 (((GstValidateIssueId) GST_VALIDATE_AREA_BUFFER) << GST_VALIDATE_ISSUE_ID_SHIFT | 2)
-#define GST_VALIDATE_ISSUE_ID_BUFFER_TIMESTAMP_OUT_OF_RECEIVED_RANGE   (((GstValidateIssueId) GST_VALIDATE_AREA_BUFFER) << GST_VALIDATE_ISSUE_ID_SHIFT | 3)
-#define GST_VALIDATE_ISSUE_ID_FIRST_BUFFER_RUNNING_TIME_IS_NOT_ZERO    (((GstValidateIssueId) GST_VALIDATE_AREA_BUFFER) << GST_VALIDATE_ISSUE_ID_SHIFT | 4)
-#define GST_VALIDATE_ISSUE_ID_WRONG_FLOW_RETURN                        (((GstValidateIssueId) GST_VALIDATE_AREA_BUFFER) << GST_VALIDATE_ISSUE_ID_SHIFT | 5)
-#define GST_VALIDATE_ISSUE_ID_BUFFER_AFTER_EOS                         (((GstValidateIssueId) GST_VALIDATE_AREA_BUFFER) << GST_VALIDATE_ISSUE_ID_SHIFT | 6)
-#define GST_VALIDATE_ISSUE_ID_WRONG_BUFFER                             (((GstValidateIssueId) GST_VALIDATE_AREA_BUFFER) << GST_VALIDATE_ISSUE_ID_SHIFT | 7)
+#define EVENT_NEWSEGMENT_NOT_PUSHED              _QUARK("event::newsegment-not-pushed")
+#define SERIALIZED_EVENT_WASNT_PUSHED_IN_TIME    _QUARK("event::serialized-event-wasnt-pushed-in-time")
+#define EVENT_HAS_WRONG_SEQNUM                   _QUARK("event::has-wrong-seqnum")
+#define EVENT_SERIALIZED_OUT_OF_ORDER            _QUARK("event::serialized-out-of-order")
+#define EVENT_NEW_SEGMENT_MISMATCH               _QUARK("event::segment-mismatch")
+#define EVENT_FLUSH_START_UNEXPECTED             _QUARK("event::flush-start-unexpected")
+#define EVENT_FLUSH_STOP_UNEXPECTED              _QUARK("event::flush-stop-unexpected")
+#define EVENT_CAPS_DUPLICATE                     _QUARK("event::caps-duplicate")
+#define EVENT_SEEK_NOT_HANDLED                   _QUARK("event::seek-not-handled")
+#define EVENT_SEEK_RESULT_POSITION_WRONG         _QUARK("event::seek-result-position-wrong")
 
-#define GST_VALIDATE_ISSUE_ID_CAPS_IS_MISSING_FIELD         (((GstValidateIssueId) GST_VALIDATE_AREA_CAPS) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
-#define GST_VALIDATE_ISSUE_ID_CAPS_FIELD_HAS_BAD_TYPE       (((GstValidateIssueId) GST_VALIDATE_AREA_CAPS) << GST_VALIDATE_ISSUE_ID_SHIFT | 2)
-#define GST_VALIDATE_ISSUE_ID_CAPS_EXPECTED_FIELD_NOT_FOUND (((GstValidateIssueId) GST_VALIDATE_AREA_CAPS) << GST_VALIDATE_ISSUE_ID_SHIFT | 3)
-#define GST_VALIDATE_ISSUE_ID_GET_CAPS_NOT_PROXYING_FIELDS  (((GstValidateIssueId) GST_VALIDATE_AREA_CAPS) << GST_VALIDATE_ISSUE_ID_SHIFT | 4)
-#define GST_VALIDATE_ISSUE_ID_CAPS_FIELD_UNEXPECTED_VALUE   (((GstValidateIssueId) GST_VALIDATE_AREA_CAPS) << GST_VALIDATE_ISSUE_ID_SHIFT | 5)
+#define STATE_CHANGE_FAILURE                     _QUARK("state::change-failure")
 
-#define GST_VALIDATE_ISSUE_ID_EVENT_NEWSEGMENT_NOT_PUSHED           (((GstValidateIssueId) GST_VALIDATE_AREA_EVENT) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
-#define GST_VALIDATE_ISSUE_ID_SERIALIZED_EVENT_WASNT_PUSHED_IN_TIME (((GstValidateIssueId) GST_VALIDATE_AREA_EVENT) << GST_VALIDATE_ISSUE_ID_SHIFT | 2)
-#define GST_VALIDATE_ISSUE_ID_EVENT_HAS_WRONG_SEQNUM                (((GstValidateIssueId) GST_VALIDATE_AREA_EVENT) << GST_VALIDATE_ISSUE_ID_SHIFT | 3)
-#define GST_VALIDATE_ISSUE_ID_EVENT_SERIALIZED_OUT_OF_ORDER         (((GstValidateIssueId) GST_VALIDATE_AREA_EVENT) << GST_VALIDATE_ISSUE_ID_SHIFT | 4)
-#define GST_VALIDATE_ISSUE_ID_EVENT_NEW_SEGMENT_MISMATCH            (((GstValidateIssueId) GST_VALIDATE_AREA_EVENT) << GST_VALIDATE_ISSUE_ID_SHIFT | 5)
-#define GST_VALIDATE_ISSUE_ID_EVENT_FLUSH_START_UNEXPECTED          (((GstValidateIssueId) GST_VALIDATE_AREA_EVENT) << GST_VALIDATE_ISSUE_ID_SHIFT | 6)
-#define GST_VALIDATE_ISSUE_ID_EVENT_FLUSH_STOP_UNEXPECTED           (((GstValidateIssueId) GST_VALIDATE_AREA_EVENT) << GST_VALIDATE_ISSUE_ID_SHIFT | 7)
-#define GST_VALIDATE_ISSUE_ID_EVENT_CAPS_DUPLICATE                  (((GstValidateIssueId) GST_VALIDATE_AREA_EVENT) << GST_VALIDATE_ISSUE_ID_SHIFT | 8)
+#define FILE_NO_STREAM_ID                        _QUARK("file-checking::no-stream-id")
+#define FILE_TAG_DETECTION_INCORRECT             _QUARK("file-checking::tag-detection-incorrect")
+#define FILE_SIZE_INCORRECT                      _QUARK("file-checking::size-incorrect")
+#define FILE_DURATION_INCORRECT                  _QUARK("file-checking::duration-incorrect")
+#define FILE_SEEKABLE_INCORRECT                  _QUARK("file-checking::seekable-incorrect")
+#define FILE_PROFILE_INCORRECT                   _QUARK("file-checking::profile-incorrect")
 
-#define GST_VALIDATE_ISSUE_ID_EVENT_SEEK_NOT_HANDLED           (((GstValidateIssueId) GST_VALIDATE_AREA_SEEK) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
-#define GST_VALIDATE_ISSUE_ID_EVENT_SEEK_RESULT_POSITION_WRONG (((GstValidateIssueId) GST_VALIDATE_AREA_SEEK) << GST_VALIDATE_ISSUE_ID_SHIFT | 2)
+#define ALLOCATION_FAILURE                       _QUARK("runtime::allocation-failure")
+#define MISSING_PLUGIN                           _QUARK("runtime::missing-plugin")
+#define WARNING_ON_BUS                           _QUARK("runtime::warning-on-bus")
+#define ERROR_ON_BUS                             _QUARK("runtime::error-on-bus")
 
-#define GST_VALIDATE_ISSUE_ID_STATE_CHANGE_FAILURE (((GstValidateIssueId) GST_VALIDATE_AREA_STATE) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
+#define QUERY_POSITION_SUPERIOR_DURATION         _QUARK("query::position-superior-duration")
+#define QUERY_POSITION_OUT_OF_SEGMENT            _QUARK("query::position-out-of-segment")
 
-#define GST_VALIDATE_ISSUE_ID_FILE_SIZE_IS_ZERO    (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
-#define GST_VALIDATE_ISSUE_ID_FILE_SIZE_INCORRECT      (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 2)
-#define GST_VALIDATE_ISSUE_ID_FILE_DURATION_INCORRECT  (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 3)
-#define GST_VALIDATE_ISSUE_ID_FILE_SEEKABLE_INCORRECT  (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 4)
-#define GST_VALIDATE_ISSUE_ID_FILE_PROFILE_INCORRECT  (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 5)
-#define GST_VALIDATE_ISSUE_ID_FILE_NOT_FOUND  (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 6)
-#define GST_VALIDATE_ISSUE_ID_FILE_CHECK_FAILURE  (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 7)
-#define GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_START_FAILURE (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 8)
-#define GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_ERROR (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 9)
-#define GST_VALIDATE_ISSUE_ID_FILE_NO_STREAM_ID  (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 10)
-#define GST_VALIDATE_ISSUE_ID_FILE_TAG_DETECTION_INCORRECT  (((GstValidateIssueId) GST_VALIDATE_AREA_FILE_CHECK) << GST_VALIDATE_ISSUE_ID_SHIFT | 11)
+#define SCENARIO_NOT_ENDED                       _QUARK("scenario::not-ended")
+#define SCENARIO_ACTION_EXECUTION_ERROR          _QUARK("scenario::execution-error")
+#define SCENARIO_ACTION_EXECUTION_ISSUE          _QUARK("scenario::execution-issue")
 
-#define GST_VALIDATE_ISSUE_ID_ALLOCATION_FAILURE (((GstValidateIssueId) GST_VALIDATE_AREA_RUN_ERROR) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
-#define GST_VALIDATE_ISSUE_ID_MISSING_PLUGIN     (((GstValidateIssueId) GST_VALIDATE_AREA_RUN_ERROR) << GST_VALIDATE_ISSUE_ID_SHIFT | 2)
-#define GST_VALIDATE_ISSUE_ID_WARNING_ON_BUS     (((GstValidateIssueId) GST_VALIDATE_AREA_RUN_ERROR) << GST_VALIDATE_ISSUE_ID_SHIFT | 3)
-#define GST_VALIDATE_ISSUE_ID_ERROR_ON_BUS       (((GstValidateIssueId) GST_VALIDATE_AREA_RUN_ERROR) << GST_VALIDATE_ISSUE_ID_SHIFT | 4)
-
-#define GST_VALIDATE_ISSUE_ID_QUERY_POSITION_SUPERIOR_DURATION (((GstValidateIssueId) GST_VALIDATE_AREA_QUERY) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
-#define GST_VALIDATE_ISSUE_ID_QUERY_POSITION_OUT_OF_SEGMENT    (((GstValidateIssueId) GST_VALIDATE_AREA_QUERY) << GST_VALIDATE_ISSUE_ID_SHIFT | 2)
-
-#define GST_VALIDATE_ISSUE_ID_SCENARIO_NOT_ENDED               (((GstValidateIssueId) GST_VALIDATE_AREA_SCENARIO) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
-#define GST_VALIDATE_ISSUE_ID_SCENARIO_ACTION_EXECUTION_ERROR  (((GstValidateIssueId) GST_VALIDATE_AREA_SCENARIO) << GST_VALIDATE_ISSUE_ID_SHIFT | 2)
-#define GST_VALIDATE_ISSUE_ID_SCENARIO_ACTION_EXECUTION_ISSUE  (((GstValidateIssueId) GST_VALIDATE_AREA_SCENARIO) << GST_VALIDATE_ISSUE_ID_SHIFT | 3)
-
-#define GST_VALIDATE_ISSUE_ID_G_LOG_ISSUE  (((GstValidateIssueId) GST_VALIDATE_AREA_OTHER) << GST_VALIDATE_ISSUE_ID_SHIFT | 1)
-#define GST_VALIDATE_ISSUE_ID_G_LOG_WARNING   (((GstValidateIssueId) GST_VALIDATE_AREA_OTHER) << GST_VALIDATE_ISSUE_ID_SHIFT | 2)
-#define GST_VALIDATE_ISSUE_ID_G_LOG_CRITICAL  (((GstValidateIssueId) GST_VALIDATE_AREA_OTHER) << GST_VALIDATE_ISSUE_ID_SHIFT | 3)
-
-#define GST_VALIDATE_ISSUE_ID_AREA(id) ((guintptr)(id >> GST_VALIDATE_ISSUE_ID_SHIFT))
+#define G_LOG_ISSUE                              _QUARK("g-log::issue")
+#define G_LOG_WARNING                            _QUARK("g-log::warning")
+#define G_LOG_CRITICAL                           _QUARK("g-log::critical")
 
 typedef struct {
   GstValidateIssueId issue_id;
@@ -141,13 +117,17 @@ typedef struct {
   */
   gchar *description;
 
+  /* The name of the area of issue
+   * this one is in */
+  gchar *area;
+  /*  The name of the issue type */
+  gchar *name;
+
   /* default_level: The default level of severity for this
   * issue. */
   GstValidateReportLevel default_level;
 
 } GstValidateIssue;
-
-#define GST_VALIDATE_ISSUE_AREA(i) (GST_VALIDATE_ISSUE_ID_AREA (gst_validate_issue_get_id (i)))
 
 struct _GstValidateReport {
   gint    refcount;
@@ -156,10 +136,10 @@ struct _GstValidateReport {
   GstValidateIssue *issue;
 
   GstValidateReportLevel level;
- 
+
   /* The reporter that reported the issue (to get names, info, ...) */
   GstValidateReporter *reporter;
- 
+
   /* timestamp: The time at which this issue happened since
    * the process start (to stay in sync with gst logging) */
   GstClockTime timestamp;
@@ -181,10 +161,14 @@ struct _GstValidateReport {
   GstValidateReportingLevel reporting_level;
 };
 
-#define GST_VALIDATE_ISSUE_FORMAT G_GUINTPTR_FORMAT " (%s) : %s(%" G_GUINTPTR_FORMAT "): %s"
-#define GST_VALIDATE_ISSUE_ARGS(i) gst_validate_issue_get_id (i), gst_validate_report_level_get_name (i->default_level), \
-                             gst_validate_report_area_get_name (GST_VALIDATE_ISSUE_AREA (i)), GST_VALIDATE_ISSUE_AREA (i), \
-                             i->summary
+void gst_validate_report_add_message (GstValidateReport *report,
+    const gchar *message);
+
+#define GST_VALIDATE_ISSUE_FORMAT G_GUINTPTR_FORMAT " (%s) : %s: %s"
+#define GST_VALIDATE_ISSUE_ARGS(i) gst_validate_issue_get_id (i), \
+                                   gst_validate_report_level_get_name (i->default_level), \
+                                   i->area, \
+                                   i->summary
 
 #define GST_VALIDATE_ERROR_REPORT_PRINT_FORMAT GST_TIME_FORMAT " <%s>: %" GST_VALIDATE_ISSUE_FORMAT ": %s"
 #define GST_VALIDATE_REPORT_PRINT_ARGS(r) GST_TIME_ARGS (r->timestamp), \
@@ -201,8 +185,8 @@ GstValidateIssue  *gst_validate_issue_new (GstValidateIssueId issue_id, const gc
 					   GstValidateReportLevel default_level);
 
 GstValidateReport *gst_validate_report_new (GstValidateIssue * issue,
-					    GstValidateReporter * reporter,
-					    const gchar * message);
+              GstValidateReporter * reporter,
+              const gchar * message);
 void               gst_validate_report_unref (GstValidateReport * report);
 GstValidateReport *gst_validate_report_ref   (GstValidateReport * report);
 
@@ -216,8 +200,6 @@ void               gst_validate_report_print_details (GstValidateReport *report)
 void               gst_validate_report_print_description (GstValidateReport *report);
 
 const gchar *      gst_validate_report_level_get_name (GstValidateReportLevel level);
-const gchar *      gst_validate_report_area_get_name (GstValidateReportArea area);
-const gchar *      gst_validate_report_subarea_get_name (GstValidateReportArea area, gint subarea);
 
 void               gst_validate_printf        (gpointer source,
                                                const gchar      * format,

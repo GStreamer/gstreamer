@@ -233,10 +233,6 @@ check_file_size (GstValidateMediaInfo * mi)
 
   filepath = g_filename_from_uri (mi->uri, NULL, &err);
   if (!filepath) {
-#if 0
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_NOT_FOUND,
-        "Failed to get filepath from uri %s. %s", fc->uri, err->message);
-#endif
     g_error_free (err);
     return FALSE;
   }
@@ -244,10 +240,6 @@ check_file_size (GstValidateMediaInfo * mi)
   if (g_stat (filepath, &statbuf) == 0) {
     size = statbuf.st_size;
   } else {
-#if 0
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_NOT_FOUND,
-        "Failed to get file stats from uri %s", fc->uri);
-#endif
     ret = FALSE;
     goto end;
   }
@@ -531,10 +523,6 @@ check_playback_scenario (GstValidateMediaInfo * mi,
 
   if (!playbin || !videosink || !audiosink) {
     *error_message = g_strdup ("Playbin and/or fakesink not available");
-#if 0
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_MISSING_PLUGIN,
-        "file check requires " "playbin and fakesink to be available");
-#endif
   }
 
   g_object_set (playbin, "video-sink", videosink, "audio-sink", audiosink,
@@ -544,10 +532,6 @@ check_playback_scenario (GstValidateMediaInfo * mi,
 
   state_ret = gst_element_set_state (playbin, GST_STATE_PAUSED);
   if (state_ret == GST_STATE_CHANGE_FAILURE) {
-#if 0
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_START_FAILURE,
-        "Failed to " "change pipeline state to playing");
-#endif
     *error_message = g_strdup ("Failed to change pipeline to paused");
     ret = FALSE;
     goto end;
@@ -590,11 +574,6 @@ check_playback_scenario (GstValidateMediaInfo * mi,
       gst_message_parse_error (msg, &error, &debug);
       *error_message = g_strdup_printf ("Playback error: %s : %s",
           error->message, debug);
-#if 0
-      GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_ERROR,
-          "%s - File %s failed " "during playback. Error: %s : %s",
-          messages_prefix, fc->uri, error->message, debug);
-#endif
       g_error_free (error);
       g_free (debug);
 
@@ -606,10 +585,6 @@ check_playback_scenario (GstValidateMediaInfo * mi,
   } else {
     ret = FALSE;
     *error_message = g_strdup ("Playback finihshed unexpectedly");
-#if 0
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_ERROR, "%s - "
-        "File playback finished unexpectedly", messages_prefix);
-#endif
   }
 
 end:
@@ -637,10 +612,6 @@ send_reverse_seek (GstValidateMediaInfo * mi, GstElement * pipeline,
 
   if (!ret) {
     *msg = g_strdup ("Reverse playback seek failed");
-#if 0
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_ERROR,
-        "Reverse playback seek failed");
-#endif
   }
   return ret;
 }
@@ -910,10 +881,6 @@ check_track_selection (GstValidateMediaInfo * mi, gchar ** error_message)
 
   if (!playbin || !videosink || !audiosink) {
     *error_message = g_strdup ("Playbin and/or fakesink not available");
-#if 0
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_MISSING_PLUGIN,
-        "file check requires " "playbin and fakesink to be available");
-#endif
   }
 
   g_object_set (playbin, "video-sink", videosink, "audio-sink", audiosink,
@@ -925,10 +892,6 @@ check_track_selection (GstValidateMediaInfo * mi, gchar ** error_message)
 
   state_ret = gst_element_set_state (playbin, GST_STATE_PAUSED);
   if (state_ret == GST_STATE_CHANGE_FAILURE) {
-#if 0
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_START_FAILURE,
-        "Failed to " "change pipeline state to playing");
-#endif
     *error_message = g_strdup ("Failed to change pipeline to paused");
     ret = FALSE;
     goto end;
@@ -990,11 +953,6 @@ check_track_selection (GstValidateMediaInfo * mi, gchar ** error_message)
         gst_message_parse_error (msg, &error, &debug);
         *error_message = g_strdup_printf ("Playback error: %s : %s",
             error->message, debug);
-#if 0
-        GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_ERROR,
-            "%s - File %s failed " "during playback. Error: %s : %s",
-            messages_prefix, fc->uri, error->message, debug);
-#endif
         g_error_free (error);
         g_free (debug);
 

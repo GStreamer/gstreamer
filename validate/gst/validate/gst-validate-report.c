@@ -75,11 +75,17 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
     const gchar * description, GstValidateReportLevel default_level)
 {
   GstValidateIssue *issue = g_slice_new (GstValidateIssue);
+  gchar **area_name = g_strsplit (g_quark_to_string (issue_id), "::", 2);
+
+  g_return_val_if_fail (area_name[0] != NULL && area_name[1] != 0 &&
+      area_name[2] == NULL, NULL);
 
   issue->issue_id = issue_id;
   issue->summary = g_strdup (summary);
   issue->description = g_strdup (description);
   issue->default_level = default_level;
+  issue->area = area_name[0];
+  issue->name = area_name[1];
 
   return issue;
 }
@@ -89,6 +95,9 @@ gst_validate_issue_free (GstValidateIssue * issue)
 {
   g_free (issue->summary);
   g_free (issue->description);
+
+  /* We are using an string array for area and name */
+  g_strfreev (&issue->area);
   g_slice_free (GstValidateIssue, issue);
 }
 
@@ -103,7 +112,7 @@ gst_validate_issue_register (GstValidateIssue * issue)
 }
 
 #define REGISTER_VALIDATE_ISSUE(lvl,id,sum,desc)			\
-  gst_validate_issue_register (gst_validate_issue_new (GST_VALIDATE_ISSUE_ID_##id, \
+  gst_validate_issue_register (gst_validate_issue_new (id, \
 						       sum, desc, GST_VALIDATE_REPORT_LEVEL_##lvl))
 static void
 gst_validate_report_load_issues (void)
@@ -208,28 +217,19 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (CRITICAL, STATE_CHANGE_FAILURE,
       _("state change failed"), NULL);
 
-  REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_SIZE_IS_ZERO,
-      _("resulting file size is 0"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_SIZE_INCORRECT,
       _("resulting file size wasn't within the expected values"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_DURATION_INCORRECT,
       _("resulting file duration wasn't within the expected values"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_SEEKABLE_INCORRECT,
       _("resulting file wasn't seekable or not seekable as expected"), NULL);
-  REGISTER_VALIDATE_ISSUE (ISSUE, FILE_TAG_DETECTION_INCORRECT,
-      _("detected tags are different than expected ones"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_PROFILE_INCORRECT,
       _("resulting file stream profiles didn't match expected values"), NULL);
-  REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_NOT_FOUND,
-      _("resulting file could not be found for testing"), NULL);
-  REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_CHECK_FAILURE,
-      _("an error occured while checking the file for conformance"), NULL);
-  REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_PLAYBACK_START_FAILURE,
-      _("an error occured while starting playback of the test file"), NULL);
-  REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_PLAYBACK_ERROR,
-      _("an error during playback of the file"), NULL);
+  REGISTER_VALIDATE_ISSUE (ISSUE, FILE_TAG_DETECTION_INCORRECT,
+      _("detected tags are different than expected ones"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_NO_STREAM_ID,
       _("the discoverer found a stream that had no stream ID"), NULL);
+
 
   REGISTER_VALIDATE_ISSUE (CRITICAL, ALLOCATION_FAILURE,
       _("a memory allocation failed during Validate run"), NULL);
@@ -349,36 +349,6 @@ gst_validate_report_level_get_name (GstValidateReportLevel level)
     case GST_VALIDATE_REPORT_LEVEL_IGNORE:
       return "ignore";
     default:
-      return "unknown";
-  }
-}
-
-const gchar *
-gst_validate_report_area_get_name (GstValidateReportArea area)
-{
-  switch (area) {
-    case GST_VALIDATE_AREA_EVENT:
-      return "event";
-    case GST_VALIDATE_AREA_BUFFER:
-      return "buffer";
-    case GST_VALIDATE_AREA_QUERY:
-      return "query";
-    case GST_VALIDATE_AREA_CAPS:
-      return "caps";
-    case GST_VALIDATE_AREA_SEEK:
-      return "seek";
-    case GST_VALIDATE_AREA_STATE:
-      return "state";
-    case GST_VALIDATE_AREA_FILE_CHECK:
-      return "file-check";
-    case GST_VALIDATE_AREA_RUN_ERROR:
-      return "run-error";
-    case GST_VALIDATE_AREA_OTHER:
-      return "other";
-    case GST_VALIDATE_AREA_SCENARIO:
-      return "scenario";
-    default:
-      g_assert_not_reached ();
       return "unknown";
   }
 }
