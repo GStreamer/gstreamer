@@ -2753,7 +2753,7 @@ gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
       }
 
       frame_size =
-          stride * slice_height + 2 * (((stride + 1) / 2) * (slice_height +
+          stride * slice_height + 2 * ((stride + 1) / 2) * ((slice_height +
               1) / 2);
       break;
     }
