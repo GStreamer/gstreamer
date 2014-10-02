@@ -283,9 +283,9 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
       return GST_FLOW_EOS;
     }
 
+    /* No output available yet */
     if (dst_buf_info.iBufferStatus != 1) {
-        GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY(frame);
-        goto finish;
+        return GST_FLOW_OK;
     }
 
     actual_width  = dst_buf_info.UsrData.sSystemBuffer.iWidth;
@@ -333,11 +333,8 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
         }
     }
     gst_video_codec_state_unref (state);
-
     gst_video_frame_unmap(&video_frame);
 
-
-finish:
     return gst_video_decoder_finish_frame(decoder, frame);
 }
 
