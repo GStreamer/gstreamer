@@ -264,25 +264,41 @@ static const GMarkupParser content_parser = {
 };
 
 static gboolean
+_set_content (GstMediaDescriptorParser * parser,
+    const gchar * content, gsize size, GError ** error)
+{
+  GError *err = NULL;
+  GstMediaDescriptorParserPrivate *priv = parser->priv;
+
+  priv->parsecontext = g_markup_parse_context_new (&content_parser,
+      G_MARKUP_TREAT_CDATA_AS_TEXT, parser, NULL);
+
+  if (g_markup_parse_context_parse (priv->parsecontext, content,
+          size, &err) == FALSE)
+    goto failed;
+
+  return TRUE;
+
+failed:
+  g_propagate_error (error, err);
+  return FALSE;
+}
+
+static gboolean
 set_xml_path (GstMediaDescriptorParser * parser, const gchar * path,
     GError ** error)
 {
   gsize xmlsize;
+  gchar *content;
   GError *err = NULL;
   GstMediaDescriptorParserPrivate *priv = parser->priv;
 
-  if (!g_file_get_contents (path, &priv->xmlcontent, &xmlsize, &err))
+  if (!g_file_get_contents (path, &content, &xmlsize, &err))
     goto failed;
 
   priv->xmlpath = g_strdup (path);
-  priv->parsecontext = g_markup_parse_context_new (&content_parser,
-      G_MARKUP_TREAT_CDATA_AS_TEXT, parser, NULL);
 
-  if (g_markup_parse_context_parse (priv->parsecontext, priv->xmlcontent,
-          xmlsize, &err) == FALSE)
-    goto failed;
-
-  return TRUE;
+  return _set_content (parser, content, xmlsize, error);
 
 failed:
   g_propagate_error (error, err);
@@ -372,6 +388,25 @@ gst_media_descriptor_parser_new (GstValidateRunner * runner,
       runner, NULL);
 
   if (set_xml_path (parser, xmlpath, error) == FALSE) {
+    g_object_unref (parser);
+
+    return NULL;
+  }
+
+
+  return parser;
+}
+
+GstMediaDescriptorParser *
+gst_media_descriptor_parser_new_from_xml (GstValidateRunner * runner,
+    const gchar * xml, GError ** error)
+{
+  GstMediaDescriptorParser *parser;
+
+  parser = g_object_new (GST_TYPE_MEDIA_DESCRIPTOR_PARSER, "validate-runner",
+      runner, NULL);
+  if (_set_content (parser, g_strdup (xml), strlen (xml) * sizeof (gchar),
+          error) == FALSE) {
     g_object_unref (parser);
 
     return NULL;
