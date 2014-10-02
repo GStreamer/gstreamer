@@ -35,7 +35,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
-#include <gst/codecparsers/gsth264parser.h>
 #include <string.h> /* for memcpy */
 
 
@@ -73,7 +72,6 @@ enum
 struct _GstOpenh264DecPrivate
 {
     ISVCDecoder *decoder;
-    GstH264NalParser *nal_parser;
     GstVideoCodecState *input_state;
     guint width, height;
 };
@@ -83,7 +81,7 @@ struct _GstOpenh264DecPrivate
 static GstStaticPadTemplate gst_openh264dec_sink_template = GST_STATIC_PAD_TEMPLATE("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS("video/x-h264, stream-format=(string)\"byte-stream\", alignment=(string)\"nal\""));
+    GST_STATIC_CAPS("video/x-h264, stream-format=(string)byte-stream, alignment=(string)nal"));
 
 static GstStaticPadTemplate gst_openh264dec_src_template = GST_STATIC_PAD_TEMPLATE("src",
     GST_PAD_SRC,
@@ -127,7 +125,6 @@ static void gst_openh264dec_class_init(GstOpenh264DecClass *klass)
 static void gst_openh264dec_init(GstOpenh264Dec *openh264dec)
 {
     openh264dec->priv = GST_OPENH264DEC_GET_PRIVATE(openh264dec);
-    openh264dec->priv->nal_parser = NULL;
     openh264dec->priv->decoder = NULL;
 
     gst_video_decoder_set_packetized(GST_VIDEO_DECODER(openh264dec), TRUE);
@@ -166,7 +163,6 @@ static gboolean gst_openh264dec_start(GstVideoDecoder *decoder)
     GstOpenh264Dec *openh264dec = GST_OPENH264DEC(decoder);
     gint ret;
     SDecodingParam dec_param = {0};
-    openh264dec->priv->nal_parser = gst_h264_nal_parser_new();
 
     if (openh264dec->priv->decoder != NULL)
     {
@@ -192,11 +188,6 @@ static gboolean gst_openh264dec_stop(GstVideoDecoder *decoder)
 {
     GstOpenh264Dec *openh264dec = GST_OPENH264DEC(decoder);
     gint ret = TRUE;
-
-    if (openh264dec->priv->nal_parser) {
-      gst_h264_nal_parser_free(openh264dec->priv->nal_parser);
-      openh264dec->priv->nal_parser = NULL;
-    }
 
     if (openh264dec->priv->decoder) {
       ret = openh264dec->priv->decoder->Uninitialize();
@@ -243,10 +234,6 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
     GstMapInfo map_info;
     GstVideoCodecState *state;
     SBufferInfo dst_buf_info;
-    guint offset = 0;
-    GstH264ParserResult parser_result;
-    GstH264NalUnit nalu;
-    GstH264SPS sps;
     DECODING_STATE ret;
     guint8 *yuvdata[3];
     GstFlowReturn flow_status;
@@ -264,56 +251,20 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
 
         GST_LOG_OBJECT(openh264dec, "handle frame, %d", map_info.size > 4 ? map_info.data[4] & 0x1f : -1);
 
-        while (offset < map_info.size) {
-            memset (&dst_buf_info, 0, sizeof (SBufferInfo));
-            parser_result = gst_h264_parser_identify_nalu(openh264dec->priv->nal_parser,
-                map_info.data, offset, map_info.size, &nalu);
-            offset = nalu.offset + nalu.size;
+        memset (&dst_buf_info, 0, sizeof (SBufferInfo));
+        ret = openh264dec->priv->decoder->DecodeFrame2(map_info.data, map_info.size, yuvdata, &dst_buf_info);
 
-            if (parser_result != GST_H264_PARSER_OK && parser_result != GST_H264_PARSER_NO_NAL_END) {
-                GST_WARNING_OBJECT(openh264dec, "Failed to identify nalu, parser result: %u", parser_result);
-                break;
-            }
+        if (ret == dsNoParamSets) {
+            GST_DEBUG_OBJECT(openh264dec, "Requesting a key unit");
+            gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(decoder),
+                gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, FALSE, 0));
+        }
 
-            memset (&dst_buf_info, 0, sizeof (SBufferInfo));
-
-            ret = openh264dec->priv->decoder->DecodeFrame2(nalu.data, nalu.size + 4, yuvdata, &dst_buf_info);
-
-            if (ret == dsNoParamSets) {
-                GST_DEBUG_OBJECT(openh264dec, "Requesting a key unit");
-                gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(decoder),
-                    gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, FALSE, 0));
-            }
-
-            if (ret != dsErrorFree && ret != dsNoParamSets) {
-                GST_DEBUG_OBJECT(openh264dec, "Requesting a key unit");
-                gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(decoder),
-                                   gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, FALSE, 0));
-                GST_LOG_OBJECT(openh264dec, "error decoding nal, return code: %d", ret);
-                GST_LOG_OBJECT(openh264dec, "nal first byte: %u", (guint) nalu.data[0]);
-                GST_LOG_OBJECT(openh264dec, "nal size: %u", nalu.size);
-            }
-
-            if (nalu.type == GST_H264_NAL_SPS) {
-                parser_result = gst_h264_parser_parse_sps(openh264dec->priv->nal_parser, &nalu, &sps, TRUE);
-                if (parser_result == GST_H264_PARSER_OK) {
-                    GST_DEBUG_OBJECT(openh264dec, "Got SPS, fps_n: %u fps_d: %u", sps.fps_num, sps.fps_den);
-                    openh264dec->priv->input_state->info.fps_n = sps.fps_num ? sps.fps_num : 30;
-                    openh264dec->priv->input_state->info.fps_d = sps.fps_num ? sps.fps_den : 1;
-                } else {
-                    GST_WARNING_OBJECT(openh264dec, "Failed to parse SPS, parser result: %u", parser_result);
-                }
-            } else {
-                parser_result = gst_h264_parser_parse_nal(openh264dec->priv->nal_parser, &nalu);
-                if (parser_result == GST_H264_PARSER_OK) {
-                    if (nalu.type == GST_H264_NAL_SLICE_IDR) {
-                        GST_DEBUG_OBJECT(openh264dec, "Got an intra picture");
-                        GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT(frame);
-                    }
-                } else {
-                    GST_WARNING_OBJECT(openh264dec, "Failed to parse nal, parser result: %u", parser_result);
-                }
-            }
+        if (ret != dsErrorFree && ret != dsNoParamSets) {
+            GST_DEBUG_OBJECT(openh264dec, "Requesting a key unit");
+            gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(decoder),
+                               gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, FALSE, 0));
+            GST_LOG_OBJECT(openh264dec, "error decoding nal, return code: %d", ret);
         }
 
         gst_buffer_unmap(frame->input_buffer, &map_info);
