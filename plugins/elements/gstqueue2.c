@@ -716,6 +716,33 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
   update_time_level (queue);
 }
 
+static void
+apply_gap (GstQueue2 * queue, GstEvent * event,
+    GstSegment * segment, gboolean is_sink)
+{
+  GstClockTime timestamp;
+  GstClockTime duration;
+
+  gst_event_parse_gap (event, &timestamp, &duration);
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+
+    if (GST_CLOCK_TIME_IS_VALID (duration)) {
+      timestamp += duration;
+    }
+
+    segment->position = timestamp;
+
+    if (is_sink)
+      queue->sink_tainted = TRUE;
+    else
+      queue->src_tainted = TRUE;
+
+    /* calc diff with other end */
+    update_time_level (queue);
+  }
+}
+
 /* take a buffer and update segment, updating the time level of the queue. */
 static void
 apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
@@ -2046,6 +2073,9 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
          * from downstream */
         queue->unexpected = FALSE;
         break;
+      case GST_EVENT_GAP:
+        apply_gap (queue, event, &queue->sink_segment, TRUE);
+        break;
       case GST_EVENT_STREAM_START:
         if (!QUEUE_IS_USING_QUEUE (queue)) {
           gst_event_replace (&queue->stream_start_event, event);
@@ -2173,6 +2203,9 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, GstQueue2ItemType * item_type)
         break;
       case GST_EVENT_SEGMENT:
         apply_segment (queue, event, &queue->src_segment, FALSE);
+        break;
+      case GST_EVENT_GAP:
+        apply_gap (queue, event, &queue->src_segment, FALSE);
         break;
       default:
         break;
