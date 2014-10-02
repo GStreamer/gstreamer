@@ -228,6 +228,32 @@ static gboolean gst_openh264dec_reset(GstVideoDecoder *decoder, gboolean hard)
     return TRUE;
 }
 
+static GstVideoCodecFrame *
+get_oldest_pts_frame (GstVideoDecoder * decoder)
+{
+  GList *frames, *l;
+  GstVideoCodecFrame *oldest = NULL;
+
+  frames = gst_video_decoder_get_frames (decoder);
+  for (l = frames; l; l = l->next) {
+    GstVideoCodecFrame *tmp = (GstVideoCodecFrame *) l->data;
+
+    if (tmp->pts != GST_CLOCK_TIME_NONE &&
+        (oldest == NULL || oldest->pts > tmp->pts))
+      oldest = tmp;
+  }
+
+  if (oldest)
+    gst_video_codec_frame_ref (oldest);
+  else
+    oldest = gst_video_decoder_get_oldest_frame (decoder);
+
+  g_list_foreach (frames, (GFunc) gst_video_codec_frame_unref, NULL);
+  g_list_free (frames);
+
+  return oldest;
+}
+
 static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstVideoCodecFrame *frame)
 {
     GstOpenh264Dec *openh264dec = GST_OPENH264DEC(decoder);
@@ -277,7 +303,7 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
             return GST_FLOW_EOS;
     }
 
-    frame = gst_video_decoder_get_oldest_frame (decoder);
+    frame = get_oldest_pts_frame (decoder);
     if (!frame) {
       /* Can only happen in finish() */
       return GST_FLOW_EOS;
