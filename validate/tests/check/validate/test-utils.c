@@ -196,3 +196,20 @@ fake_demuxer_new (void)
 {
   return GST_ELEMENT (g_object_new (FAKE_DEMUXER_TYPE, NULL));
 }
+
+GstElement * create_and_monitor_element (const gchar *factoryname, const gchar *name,
+    GstValidateRunner *runner)
+{
+  GstElement *element;
+  GstValidateMonitor *monitor;
+
+  element = gst_element_factory_make (factoryname, name);
+  if (runner) {
+    monitor =
+        gst_validate_monitor_factory_create (GST_OBJECT (element), runner, NULL);
+    gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
+    fail_unless (GST_IS_VALIDATE_ELEMENT_MONITOR (monitor));
+  }
+
+ return element;
+}

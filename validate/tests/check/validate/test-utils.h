@@ -31,6 +31,7 @@ void check_destroyed (gpointer object_to_unref, gpointer first_object, ...) G_GN
 GstValidateRunner * setup_runner (GstObject * object);
 void clean_bus (GstElement *element);
 GstValidatePadMonitor * get_pad_monitor (GstPad *pad);
+GstElement * create_and_monitor_element (const gchar *factoryname, const gchar *name, GstValidateRunner *runner);
 
 typedef struct {
   GstElement parent;
