@@ -30,6 +30,7 @@
 #include "gstopenh264enc.h"
 
 #include <gst/gst.h>
+#include <gst/base/base.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideoencoder.h>
 #include <string.h>
@@ -568,8 +569,6 @@ static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder, GstV
     gboolean force_keyframe;
     gint ret;
     SFrameBSInfo frame_info;
-    guchar* tmpbuf;
-    GstMemory *mem;
     gfloat fps;
     GstVideoEncoder *base_encoder = GST_VIDEO_ENCODER(openh264enc);
 
@@ -653,6 +652,8 @@ static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder, GstV
     gint nal_sps_length, nal_pps_length, idr_length, tmp_buf_length;
 
     if (videoFrameTypeIDR == frame_info.eFrameType) {
+        GstMapInfo map;
+
         /* sps */
         nal_sps_data = frame_info.sLayerInfo[0].pBsBuf + 4;
         nal_sps_length = frame_info.sLayerInfo[0].pNalLengthInByte[0] - 4;
@@ -664,34 +665,35 @@ static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder, GstV
         idr_length = bs_info->pNalLengthInByte[0] - 4;
 
         tmp_buf_length = nal_sps_length + 2 + nal_pps_length + 2 + idr_length + 2;
-        tmpbuf = (guchar *)g_malloc(tmp_buf_length);
+        frame->output_buffer = gst_video_encoder_allocate_output_buffer (encoder, tmp_buf_length);
+        gst_buffer_map (frame->output_buffer, &map, GST_MAP_WRITE);
 
-        GST_WRITE_UINT16_BE(tmpbuf, nal_sps_length);
-        memcpy(tmpbuf + 2, nal_sps_data, nal_sps_length);
+        GST_WRITE_UINT16_BE(map.data, nal_sps_length);
+        memcpy(map.data + 2, nal_sps_data, nal_sps_length);
 
-        GST_WRITE_UINT16_BE(tmpbuf + nal_sps_length + 2, nal_pps_length);
-        memcpy(tmpbuf + nal_sps_length + 2 + 2, nal_pps_data, nal_pps_length);
+        GST_WRITE_UINT16_BE(map.data + nal_sps_length + 2, nal_pps_length);
+        memcpy(map.data + nal_sps_length + 2 + 2, nal_pps_data, nal_pps_length);
 
-        GST_WRITE_UINT16_BE(tmpbuf + nal_sps_length + 2 + nal_pps_length + 2 , idr_length);
-        memcpy(tmpbuf + nal_sps_length + 2 + nal_pps_length + 2 + 2, bs_info->pBsBuf + 4, idr_length);
+        GST_WRITE_UINT16_BE(map.data + nal_sps_length + 2 + nal_pps_length + 2 , idr_length);
+        memcpy(map.data + nal_sps_length + 2 + nal_pps_length + 2 + 2, bs_info->pBsBuf + 4, idr_length);
+
+        gst_buffer_unmap (frame->output_buffer, &map);
 
         GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT(frame);
     } else {
+        GstMapInfo map;
+
         tmp_buf_length = nal_size + 2;
-        tmpbuf = (guchar *)g_malloc(tmp_buf_length);
-        GST_WRITE_UINT16_BE(tmpbuf, nal_size);
-        memcpy(tmpbuf + 2, bs_info->pBsBuf + 4, nal_size);
+        frame->output_buffer = gst_video_encoder_allocate_output_buffer (encoder, tmp_buf_length);
+        gst_buffer_map (frame->output_buffer, &map, GST_MAP_WRITE);
+
+        GST_WRITE_UINT16_BE(map.data, nal_size);
+        memcpy(map.data + 2, bs_info->pBsBuf + 4, nal_size);
+
+        gst_buffer_unmap (frame->output_buffer, &map);
+
         GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT(frame);
     }
-
-    if (frame->output_buffer) {
-        mem = gst_memory_new_wrapped(GST_MEMORY_FLAG_READONLY, tmpbuf, tmp_buf_length, 0, tmp_buf_length, tmpbuf, g_free);
-        gst_buffer_append_memory(frame->output_buffer, mem);
-    } else {
-        frame->output_buffer = gst_buffer_new_wrapped(tmpbuf, tmp_buf_length);
-    }
-
-    delete src_pic;
 
     GST_LOG_OBJECT(openh264enc, "openh264 picture %scoded OK!", (ret != cmResultSuccess) ? "NOT " : "");
 
