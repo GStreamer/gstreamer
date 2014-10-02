@@ -341,6 +341,9 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
         } else {
           ret = GST_FLOW_NOT_NEGOTIATED;
         }
+      } else {
+        gst_capsfilter_push_pending_events (filter, pending_events);
+        pending_events = NULL;
       }
 
       g_list_free_full (pending_events, (GDestroyNotify) gst_event_unref);
