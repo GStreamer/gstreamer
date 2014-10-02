@@ -386,6 +386,7 @@ void gst_openh264enc_finalize(GObject * object)
     if (openh264enc->priv->input_state) {
         gst_video_codec_state_unref(openh264enc->priv->input_state);
     }
+    openh264enc->priv->input_state = NULL;
 
     G_OBJECT_CLASS(gst_openh264enc_parent_class)->finalize(object);
 }
@@ -409,8 +410,13 @@ static gboolean gst_openh264enc_stop(GstVideoEncoder *encoder)
         WelsDestroySVCEncoder(openh264enc->priv->encoder);
         openh264enc->priv->encoder = NULL;
     }
-
     openh264enc->priv->encoder = NULL;
+
+    if (openh264enc->priv->input_state) {
+        gst_video_codec_state_unref(openh264enc->priv->input_state);
+    }
+    openh264enc->priv->input_state = NULL;
+
     GST_DEBUG_OBJECT(openh264enc, "openh264_enc_stop called");
 
     return TRUE;
@@ -423,7 +429,7 @@ static gboolean gst_openh264enc_set_format(GstVideoEncoder *encoder, GstVideoCod
     GstOpenh264EncPrivate *priv = openh264enc->priv;
     gchar *debug_caps;
     SFrameBSInfo bsInfo;
-    guint width, height, fps_n, fps_d, par_n, par_d;
+    guint width, height, fps_n, fps_d;
     SEncParamExt enc_params;
     gint ret;
     guchar *nal_sps_data = NULL;
@@ -452,8 +458,6 @@ static gboolean gst_openh264enc_set_format(GstVideoEncoder *encoder, GstVideoCod
     height = GST_VIDEO_INFO_HEIGHT(&state->info);
     fps_n = GST_VIDEO_INFO_FPS_N(&state->info);
     fps_d = GST_VIDEO_INFO_FPS_D(&state->info);
-    par_n = GST_VIDEO_INFO_PAR_N(&state->info);
-    par_d = GST_VIDEO_INFO_PAR_D(&state->info);
 
     if (priv->encoder != NULL) {
         priv->encoder->Uninitialize();
@@ -538,10 +542,6 @@ static gboolean gst_openh264enc_set_format(GstVideoEncoder *encoder, GstVideoCod
 
     outcaps = gst_caps_copy(gst_static_pad_template_get_caps(&gst_openh264enc_src_template));
     gst_caps_set_simple(outcaps,
-                        "width", G_TYPE_INT, width,
-                        "height", G_TYPE_INT, height,
-                        "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
-                        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
                         "codec_data", GST_TYPE_BUFFER, codec_data,
                         NULL);
     gst_buffer_unref(codec_data);
@@ -604,10 +604,11 @@ static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder, GstV
     }
 
     gst_video_frame_map(&video_frame, &openh264enc->priv->input_state->info, frame->input_buffer, GST_MAP_READ);
-    src_pic->iPicWidth = GST_VIDEO_FRAME_COMP_WIDTH(&video_frame, 0);
-    src_pic->iPicHeight = GST_VIDEO_FRAME_COMP_HEIGHT(&video_frame, 0);
-    src_pic->iStride[0] = src_pic->iPicWidth;
-    src_pic->iStride[1] = src_pic->iStride[2] = src_pic->iStride[0] >> 1;
+    src_pic->iPicWidth = GST_VIDEO_FRAME_WIDTH(&video_frame);
+    src_pic->iPicHeight = GST_VIDEO_FRAME_HEIGHT(&video_frame);
+    src_pic->iStride[0] = GST_VIDEO_FRAME_COMP_STRIDE(&video_frame, 0);
+    src_pic->iStride[1] = GST_VIDEO_FRAME_COMP_STRIDE(&video_frame, 1);
+    src_pic->iStride[2] = GST_VIDEO_FRAME_COMP_STRIDE(&video_frame, 2);
     src_pic->pData[0] = GST_VIDEO_FRAME_COMP_DATA(&video_frame, 0);
     src_pic->pData[1] = GST_VIDEO_FRAME_COMP_DATA(&video_frame, 1);
     src_pic->pData[2] = GST_VIDEO_FRAME_COMP_DATA(&video_frame, 2);
