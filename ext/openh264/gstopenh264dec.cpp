@@ -255,12 +255,12 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
     GstH264NalUnit nalu;
     GstH264SPS sps;
     DECODING_STATE ret;
-    guchar *yuvdata[3];
+    guint8 *yuvdata[3];
     GstFlowReturn flow_status;
     GstVideoFrame video_frame;
     guint actual_width, actual_height;
     guint i;
-    gpointer p;
+    guint8 *p;
     guint row_stride, component_width, component_height, src_width, row;
 
 
@@ -369,7 +369,9 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
         component_height = GST_VIDEO_FRAME_COMP_HEIGHT(&video_frame, i);
         src_width = i < 1 ? dst_buf_info.UsrData.sSystemBuffer.iStride[0] : dst_buf_info.UsrData.sSystemBuffer.iStride[1];
         for (row = 0; row < component_height; row++) {
-            memcpy((guchar *)p + (row * row_stride), yuvdata[i] + (row * src_width), component_width);
+            memcpy(p, yuvdata[i], component_width);
+            p += row_stride;
+            yuvdata[i] += src_width;
         }
     }
     gst_video_codec_state_unref (state);
