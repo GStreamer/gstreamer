@@ -197,8 +197,6 @@ gst_wavenc_init (GstWavEnc * wavenc)
 
   wavenc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_use_fixed_caps (wavenc->srcpad);
-  gst_pad_set_caps (wavenc->srcpad,
-      gst_static_pad_template_get_caps (&src_factory));
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->srcpad);
 }
 
@@ -264,7 +262,10 @@ gst_wavenc_push_header (GstWavEnc * wavenc)
 
   /* seek to beginning of file */
   gst_segment_init (&segment, GST_FORMAT_BYTES);
-  gst_pad_push_event (wavenc->srcpad, gst_event_new_segment (&segment));
+  if (!gst_pad_push_event (wavenc->srcpad, gst_event_new_segment (&segment))) {
+    GST_WARNING_OBJECT (wavenc, "Seek to the beginning failed");
+    return GST_FLOW_ERROR;
+  }
 
   GST_DEBUG_OBJECT (wavenc, "writing header, meta_size=%u, audio_size=%u",
       wavenc->meta_length, wavenc->audio_length);
@@ -854,6 +855,9 @@ gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   if (G_UNLIKELY (!wavenc->sent_header)) {
+    gst_pad_set_caps (wavenc->srcpad,
+        gst_static_pad_template_get_caps (&src_factory));
+
     /* starting a file, means we have to finish it properly */
     wavenc->finished_properly = FALSE;
 
