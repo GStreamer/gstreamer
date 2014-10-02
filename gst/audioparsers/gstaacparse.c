@@ -1152,7 +1152,7 @@ gst_aac_parse_prepend_adts_headers (GstAacParse * aacparse,
   adts_headers[6] = 0xFCU;
 
   mem = gst_memory_new_wrapped (0, adts_headers, ADTS_HEADERS_LENGTH, 0,
-      ADTS_HEADERS_LENGTH, NULL, NULL);
+      ADTS_HEADERS_LENGTH, adts_headers, g_free);
   gst_buffer_prepend_memory (frame->out_buffer, mem);
 
   return TRUE;
