@@ -139,8 +139,8 @@ struct _GstHLSDemux
 #else
   gcry_cipher_hd_t aes_ctx;
 #endif
-  const gchar *current_key;
-  const guint8 *current_iv;
+  gchar *current_key;
+  guint8 *current_iv;
   GstAdapter *adapter; /* used to accumulate 16 bytes multiple chunks */
   GstBuffer *pending_buffer; /* decryption scenario:
                               * the last buffer can only be pushed when

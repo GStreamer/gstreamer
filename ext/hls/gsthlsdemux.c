@@ -588,7 +588,7 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (event->type) {
     case GST_EVENT_EOS:{
-      gchar *playlist = NULL;
+      gchar *uri, *playlist = NULL;
 
       if (demux->playlist == NULL) {
         GST_WARNING_OBJECT (demux, "Received EOS without a playlist.");
@@ -602,7 +602,7 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       ret = gst_pad_peer_query (demux->sinkpad, query);
       if (ret) {
         gboolean permanent;
-        gchar *uri, *redirect_uri;
+        gchar *redirect_uri;
 
         gst_query_parse_uri (query, &uri);
         gst_query_parse_uri_redirection (query, &redirect_uri);
@@ -618,16 +618,17 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       gst_query_unref (query);
 
+      uri = gst_m3u8_client_get_uri (demux->client);
       gst_element_post_message (GST_ELEMENT_CAST (demux),
           gst_message_new_element (GST_OBJECT_CAST (demux),
               gst_structure_new (STATISTICS_MESSAGE_NAME,
-                  "manifest-uri", G_TYPE_STRING,
-                  gst_m3u8_client_get_uri (demux->client), "uri", G_TYPE_STRING,
-                  gst_m3u8_client_get_uri (demux->client),
+                  "manifest-uri", G_TYPE_STRING, uri,
+                  "uri", G_TYPE_STRING, uri,
                   "manifest-download-start", GST_TYPE_CLOCK_TIME,
                   GST_CLOCK_TIME_NONE,
                   "manifest-download-stop", GST_TYPE_CLOCK_TIME,
                   gst_util_get_timestamp (), NULL)));
+      g_free (uri);
 
       playlist = gst_hls_src_buf_to_utf8_playlist (demux->playlist);
       demux->playlist = NULL;
@@ -694,9 +695,14 @@ gst_hls_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_URI:
       if (hlsdemux->client) {
+        gchar *uri;
+
         /* FIXME: Do we answer with the variant playlist, with the current
          * playlist or the the uri of the least downlowaded fragment? */
-        gst_query_set_uri (query, gst_m3u8_client_get_uri (hlsdemux->client));
+        uri = gst_m3u8_client_get_uri (hlsdemux->client);
+        gst_query_set_uri (query, uri);
+        g_free (uri);
+
         ret = TRUE;
       }
       break;
@@ -1405,8 +1411,14 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
   if (demux->pending_buffer)
     gst_buffer_unref (demux->pending_buffer);
   demux->pending_buffer = NULL;
-  demux->current_key = NULL;
-  demux->current_iv = NULL;
+  if (demux->current_key) {
+    g_free (demux->current_key);
+    demux->current_key = NULL;
+  }
+  if (demux->current_iv) {
+    g_free (demux->current_iv);
+    demux->current_iv = NULL;
+  }
   gst_hls_demux_decrypt_end (demux);
 
   demux->current_download_rate = -1;
@@ -1575,25 +1587,28 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   GstBuffer *buf;
   gchar *playlist;
   gboolean main_checked = FALSE, updated = FALSE;
-  const gchar *uri;
+  gchar *uri, *main_uri;
 
 retry:
   uri = gst_m3u8_client_get_current_uri (demux->client);
+  main_uri = gst_m3u8_client_get_uri (demux->client);
   download =
       gst_uri_downloader_fetch_uri (demux->downloader, uri,
-      demux->client->main ? demux->client->main->uri : NULL, TRUE, TRUE, TRUE,
-      err);
+      main_uri, TRUE, TRUE, TRUE, err);
+  g_free (main_uri);
   if (download == NULL) {
     if (update && !main_checked
         && gst_m3u8_client_has_variant_playlist (demux->client)
-        && demux->client->main) {
+        && gst_m3u8_client_has_main (demux->client)) {
       GError *err2 = NULL;
+      main_uri = gst_m3u8_client_get_uri (demux->client);
       GST_INFO_OBJECT (demux,
           "Updating playlist %s failed, attempt to refresh variant playlist %s",
-          uri, demux->client->main->uri);
+          uri, main_uri);
       download =
           gst_uri_downloader_fetch_uri (demux->downloader,
-          demux->client->main->uri, NULL, TRUE, TRUE, TRUE, &err2);
+          main_uri, NULL, TRUE, TRUE, TRUE, &err2);
+      g_free (main_uri);
       g_clear_error (&err2);
       if (download != NULL) {
         gchar *base_uri;
@@ -1607,6 +1622,7 @@ retry:
           return FALSE;
         }
 
+        g_free (uri);
         if (download->redirect_permanent && download->redirect_uri) {
           uri = download->redirect_uri;
           base_uri = NULL;
@@ -1627,12 +1643,16 @@ retry:
         main_checked = TRUE;
         goto retry;
       } else {
+        g_free (uri);
         return FALSE;
       }
     } else {
+      g_free (uri);
       return FALSE;
     }
   }
+
+  g_free (uri);
 
   /* Set the base URI of the playlist to the redirect target if any */
   GST_M3U8_CLIENT_LOCK (demux->client);
@@ -1667,26 +1687,30 @@ retry:
     return FALSE;
   }
 
+  uri = gst_m3u8_client_get_current_uri(demux->client);
+  main_uri = gst_m3u8_client_get_uri (demux->client);
   gst_element_post_message (GST_ELEMENT_CAST (demux),
       gst_message_new_element (GST_OBJECT_CAST (demux),
           gst_structure_new (STATISTICS_MESSAGE_NAME,
-              "manifest-uri", G_TYPE_STRING,
-              gst_m3u8_client_get_uri (demux->client), "uri", G_TYPE_STRING,
-              gst_m3u8_client_get_current_uri (demux->client),
+              "manifest-uri", G_TYPE_STRING, main_uri,
+              "uri", G_TYPE_STRING, uri,
               "manifest-download-start", GST_TYPE_CLOCK_TIME,
               download->download_start_time,
               "manifest-download-stop", GST_TYPE_CLOCK_TIME,
               download->download_stop_time, NULL)));
+  g_free (main_uri);
+  g_free (uri);
 
   g_object_unref (download);
+
+  GST_M3U8_CLIENT_LOCK (demux->client);
 
   /* If it's a live source, do not let the sequence number go beyond
    * three fragments before the end of the list */
   if (update == FALSE && demux->client->current &&
-      gst_m3u8_client_is_live (demux->client)) {
+      GST_M3U8_CLIENT_IS_LIVE (demux->client)) {
     gint64 last_sequence;
 
-    GST_M3U8_CLIENT_LOCK (demux->client);
     last_sequence =
         GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->
             files)->data)->sequence;
@@ -1697,8 +1721,7 @@ retry:
       demux->need_segment = TRUE;
       demux->client->sequence = last_sequence - 3;
     }
-    GST_M3U8_CLIENT_UNLOCK (demux->client);
-  } else if (demux->client->current && !gst_m3u8_client_is_live (demux->client)) {
+  } else if (demux->client->current && !GST_M3U8_CLIENT_IS_LIVE (demux->client)) {
     GstClockTime current_pos, target_pos;
     guint sequence = 0;
     GList *walk;
@@ -1707,7 +1730,6 @@ retry:
      * playlists, so get the correct fragment here based on the current
      * position
      */
-    GST_M3U8_CLIENT_LOCK (demux->client);
     current_pos = 0;
     target_pos = demux->segment.position;
     for (walk = demux->client->current->files; walk; walk = walk->next) {
@@ -1725,8 +1747,9 @@ retry:
       sequence++;
     demux->client->sequence = sequence;
     demux->client->sequence_position = current_pos;
-    GST_M3U8_CLIENT_UNLOCK (demux->client);
   }
+
+  GST_M3U8_CLIENT_UNLOCK (demux->client);
 
   return updated;
 }
@@ -1769,13 +1792,17 @@ retry_failover_protection:
   demux->new_playlist = TRUE;
 
   if (gst_hls_demux_update_playlist (demux, FALSE, NULL)) {
+    gchar *uri, *main_uri;
+    uri = gst_m3u8_client_get_current_uri (demux->client);
+    main_uri = gst_m3u8_client_get_uri (demux->client);
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT_CAST (demux),
             gst_structure_new (STATISTICS_MESSAGE_NAME,
-                "manifest-uri", G_TYPE_STRING,
-                gst_m3u8_client_get_uri (demux->client), "uri", G_TYPE_STRING,
-                gst_m3u8_client_get_current_uri (demux->client), "bitrate",
-                G_TYPE_INT, new_bandwidth, NULL)));
+                "manifest-uri", G_TYPE_STRING, main_uri,
+                "uri", G_TYPE_STRING, uri,
+                "bitrate", G_TYPE_INT, new_bandwidth, NULL)));
+    g_free (uri);
+    g_free (main_uri);
   } else {
     GList *failover = NULL;
 
@@ -2090,13 +2117,13 @@ static gboolean
 gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
     gboolean * end_of_playlist, GError ** err)
 {
-  const gchar *next_fragment_uri;
+  gchar *uri, *next_fragment_uri;
   GstClockTime duration;
   GstClockTime timestamp;
   gboolean discont;
   gint64 range_start, range_end;
-  const gchar *key = NULL;
-  const guint8 *iv = NULL;
+  gchar *key = NULL;
+  guint8 *iv = NULL;
   GstClockTime download_start_time = 0;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -2120,7 +2147,11 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   demux->current_duration = duration;
   demux->starting_fragment = TRUE;
   demux->reset_crypto = TRUE;
+  if (demux->current_key)
+    g_free (demux->current_key);
   demux->current_key = key;
+  if (demux->current_iv)
+    g_free (demux->current_iv);
   demux->current_iv = iv;
 
   /* Reset last flow return */
@@ -2129,15 +2160,19 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
   g_clear_error (&demux->last_error);
   g_mutex_unlock (&demux->fragment_download_lock);
 
+  GST_M3U8_CLIENT_LOCK (demux->client);
   if (!gst_hls_demux_update_source (demux, next_fragment_uri,
           demux->client->main ? demux->client->main->uri : NULL,
           FALSE,
           demux->client->current ? demux->client->current->allowcache : TRUE)) {
+    GST_M3U8_CLIENT_UNLOCK (demux->client);
     *err =
         g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN,
         "Missing plugin to handle URI: '%s'", next_fragment_uri);
+    g_free (next_fragment_uri);
     return FALSE;
   }
+  GST_M3U8_CLIENT_UNLOCK (demux->client);
 
   gst_hls_demux_configure_src_pad (demux);
 
@@ -2155,6 +2190,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
             "Source element can't handle range requests");
         demux->last_ret = GST_FLOW_ERROR;
         g_mutex_unlock (&demux->fragment_download_lock);
+        g_free (next_fragment_uri);
         return FALSE;
       }
     }
@@ -2207,22 +2243,25 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
     if (demux->segment.rate > 0)
       demux->segment.position += demux->current_duration;
 
+    uri = gst_m3u8_client_get_uri (demux->client);
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT_CAST (demux),
             gst_structure_new (STATISTICS_MESSAGE_NAME,
-                "manifest-uri", G_TYPE_STRING,
-                gst_m3u8_client_get_uri (demux->client), "uri", G_TYPE_STRING,
-                next_fragment_uri, "fragment-start-time",
-                GST_TYPE_CLOCK_TIME, download_start_time,
+                "manifest-uri", G_TYPE_STRING, uri,
+                "uri", G_TYPE_STRING, next_fragment_uri,
+                "fragment-start-time", GST_TYPE_CLOCK_TIME, download_start_time,
                 "fragment-stop-time", GST_TYPE_CLOCK_TIME,
                 gst_util_get_timestamp (), "fragment-size", G_TYPE_UINT64,
                 demux->download_total_bytes, "fragment-download-time",
                 GST_TYPE_CLOCK_TIME, demux->download_total_time * GST_USECOND,
                 NULL)));
+    g_free (uri);
   }
 
   /* clear the ghostpad eos state */
   gst_hls_demux_stream_clear_eos_state (demux);
+
+  g_free (next_fragment_uri);
 
   if (ret != GST_FLOW_OK)
     return FALSE;

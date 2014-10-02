@@ -35,6 +35,8 @@ typedef struct _GstM3U8Client GstM3U8Client;
 #define GST_M3U8_CLIENT_LOCK(c) g_mutex_lock (&c->lock);
 #define GST_M3U8_CLIENT_UNLOCK(c) g_mutex_unlock (&c->lock);
 
+#define GST_M3U8_CLIENT_IS_LIVE(c) ((!(c)->current || (c)->current->endlist) ? FALSE : TRUE)
+
 struct _GstM3U8
 {
   gchar *uri;                   /* actually downloaded URI */
@@ -94,14 +96,15 @@ gboolean gst_m3u8_client_update (GstM3U8Client * client, gchar * data);
 gboolean gst_m3u8_client_update_variant_playlist (GstM3U8Client * client, gchar * data, const gchar * uri, const gchar * base_uri);
 void gst_m3u8_client_set_current (GstM3U8Client * client, GstM3U8 * m3u8);
 gboolean gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
-    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
+    gboolean * discontinuity, gchar ** uri, GstClockTime * duration,
     GstClockTime * timestamp, gint64 * range_start, gint64 * range_end,
-    const gchar ** key, const guint8 ** iv, gboolean forward);
+    gchar ** key, guint8 ** iv, gboolean forward);
 void gst_m3u8_client_advance_fragment (GstM3U8Client * client, gboolean forward);
 GstClockTime gst_m3u8_client_get_duration (GstM3U8Client * client);
 GstClockTime gst_m3u8_client_get_target_duration (GstM3U8Client * client);
-const gchar *gst_m3u8_client_get_uri(GstM3U8Client * client);
-const gchar *gst_m3u8_client_get_current_uri(GstM3U8Client * client);
+gchar *gst_m3u8_client_get_uri(GstM3U8Client * client);
+gchar *gst_m3u8_client_get_current_uri(GstM3U8Client * client);
+gboolean gst_m3u8_client_has_main(GstM3U8Client * client);
 gboolean gst_m3u8_client_has_variant_playlist(GstM3U8Client * client);
 gboolean gst_m3u8_client_is_live(GstM3U8Client * client);
 GList * gst_m3u8_client_get_playlist_for_bitrate (GstM3U8Client * client,

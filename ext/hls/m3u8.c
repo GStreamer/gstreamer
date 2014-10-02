@@ -932,9 +932,9 @@ find_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
 
 gboolean
 gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
-    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
+    gboolean * discontinuity, gchar ** uri, GstClockTime * duration,
     GstClockTime * timestamp, gint64 * range_start, gint64 * range_end,
-    const gchar ** key, const guint8 ** iv, gboolean forward)
+    gchar ** key, guint8 ** iv, gboolean forward)
 {
   GList *l;
   GstM3U8MediaFile *file;
@@ -964,7 +964,7 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
   if (discontinuity)
     *discontinuity = client->sequence != file->sequence || file->discont;
   if (uri)
-    *uri = file->uri;
+    *uri = g_strdup (file->uri);
   if (duration)
     *duration = file->duration;
   if (range_start)
@@ -972,9 +972,11 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
   if (range_end)
     *range_end = file->size != -1 ? file->offset + file->size - 1 : -1;
   if (key)
-    *key = file->key;
-  if (iv)
-    *iv = file->iv;
+    *key = g_strdup (file->key);
+  if (iv) {
+    *iv = g_new (guint8, sizeof (file->iv));
+    memcpy (*iv, file->iv, sizeof (file->iv));
+  }
 
   client->sequence = file->sequence;
 
@@ -1054,30 +1056,46 @@ gst_m3u8_client_get_target_duration (GstM3U8Client * client)
   return duration;
 }
 
-const gchar *
+gchar *
 gst_m3u8_client_get_uri (GstM3U8Client * client)
 {
-  const gchar *uri;
+  gchar *uri;
 
   g_return_val_if_fail (client != NULL, NULL);
 
   GST_M3U8_CLIENT_LOCK (client);
-  uri = client->main->uri;
+  uri = client->main ? g_strdup (client->main->uri) : NULL;
   GST_M3U8_CLIENT_UNLOCK (client);
   return uri;
 }
 
-const gchar *
+gchar *
 gst_m3u8_client_get_current_uri (GstM3U8Client * client)
 {
-  const gchar *uri;
+  gchar *uri;
 
   g_return_val_if_fail (client != NULL, NULL);
 
   GST_M3U8_CLIENT_LOCK (client);
-  uri = client->current->uri;
+  uri = g_strdup (client->current->uri);
   GST_M3U8_CLIENT_UNLOCK (client);
   return uri;
+}
+
+gboolean
+gst_m3u8_client_has_main(GstM3U8Client * client)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (client != NULL, FALSE);
+
+  GST_M3U8_CLIENT_LOCK (client);
+  if (client->main)
+    ret = TRUE;
+  else
+    ret = FALSE;
+  GST_M3U8_CLIENT_UNLOCK (client);
+  return ret;
 }
 
 gboolean
@@ -1101,10 +1119,7 @@ gst_m3u8_client_is_live (GstM3U8Client * client)
   g_return_val_if_fail (client != NULL, FALSE);
 
   GST_M3U8_CLIENT_LOCK (client);
-  if (!client->current || client->current->endlist)
-    ret = FALSE;
-  else
-    ret = TRUE;
+  ret = GST_M3U8_CLIENT_IS_LIVE (client);
   GST_M3U8_CLIENT_UNLOCK (client);
   return ret;
 }
