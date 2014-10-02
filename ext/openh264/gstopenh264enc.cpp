@@ -100,6 +100,7 @@ static gboolean gst_openh264enc_stop(GstVideoEncoder *encoder);
 static gboolean gst_openh264enc_set_format(GstVideoEncoder *encoder, GstVideoCodecState *state);
 static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder,
     GstVideoCodecFrame *frame);
+static gboolean gst_openh264enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query);
 static void gst_openh264enc_set_usage_type (GstOpenh264Enc *openh264enc, gint usage_type);
 static void gst_openh264enc_set_rate_control (GstOpenh264Enc *openh264enc, gint rc_mode);
 
@@ -150,7 +151,7 @@ struct _GstOpenh264EncPrivate
 static GstStaticPadTemplate gst_openh264enc_sink_template = GST_STATIC_PAD_TEMPLATE("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS(GST_VIDEO_CAPS_MAKE("{ I420 }"))
+    GST_STATIC_CAPS(GST_VIDEO_CAPS_MAKE("I420"))
 );
 
 static GstStaticPadTemplate gst_openh264enc_src_template = GST_STATIC_PAD_TEMPLATE("src",
@@ -188,6 +189,7 @@ static void gst_openh264enc_class_init(GstOpenh264EncClass *klass)
     video_encoder_class->stop = GST_DEBUG_FUNCPTR(gst_openh264enc_stop);
     video_encoder_class->set_format = GST_DEBUG_FUNCPTR(gst_openh264enc_set_format);
     video_encoder_class->handle_frame = GST_DEBUG_FUNCPTR(gst_openh264enc_handle_frame);
+    video_encoder_class->propose_allocation = GST_DEBUG_FUNCPTR(gst_openh264enc_propose_allocation);
 
     /* define properties */
     g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_USAGE_TYPE,
@@ -548,6 +550,14 @@ static gboolean gst_openh264enc_set_format(GstVideoEncoder *encoder, GstVideoCod
     gst_video_codec_state_unref(output_state);
 
     return gst_video_encoder_negotiate (encoder);
+}
+
+static gboolean gst_openh264enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  return GST_VIDEO_ENCODER_CLASS (gst_openh264enc_parent_class)->propose_allocation (encoder,
+      query);
 }
 
 static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder, GstVideoCodecFrame *frame)
