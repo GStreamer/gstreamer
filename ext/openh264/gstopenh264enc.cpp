@@ -101,6 +101,7 @@ static gboolean gst_openh264enc_stop(GstVideoEncoder *encoder);
 static gboolean gst_openh264enc_set_format(GstVideoEncoder *encoder, GstVideoCodecState *state);
 static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder,
     GstVideoCodecFrame *frame);
+static GstFlowReturn gst_openh264enc_finish (GstVideoEncoder *encoder);
 static gboolean gst_openh264enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query);
 static void gst_openh264enc_set_usage_type (GstOpenh264Enc *openh264enc, gint usage_type);
 static void gst_openh264enc_set_rate_control (GstOpenh264Enc *openh264enc, gint rc_mode);
@@ -191,6 +192,7 @@ static void gst_openh264enc_class_init(GstOpenh264EncClass *klass)
     video_encoder_class->set_format = GST_DEBUG_FUNCPTR(gst_openh264enc_set_format);
     video_encoder_class->handle_frame = GST_DEBUG_FUNCPTR(gst_openh264enc_handle_frame);
     video_encoder_class->propose_allocation = GST_DEBUG_FUNCPTR(gst_openh264enc_propose_allocation);
+    video_encoder_class->finish = GST_DEBUG_FUNCPTR(gst_openh264enc_finish);
 
     /* define properties */
     g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_USAGE_TYPE,
@@ -572,77 +574,98 @@ static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder, GstV
     gfloat fps;
     GstVideoEncoder *base_encoder = GST_VIDEO_ENCODER(openh264enc);
 
-    src_pic = new SSourcePicture;
-    if (src_pic == NULL) {
-        gst_video_codec_frame_unref(frame);
-        return GST_FLOW_ERROR;
+    if (frame) {
+      src_pic = new SSourcePicture;
+
+      if (src_pic == NULL) {
+          if (frame)
+              gst_video_codec_frame_unref(frame);
+          return GST_FLOW_ERROR;
+      }
+      //fill default src_pic
+      src_pic->iColorFormat = videoFormatI420;
+      src_pic->uiTimeStamp = 0;
     }
-    //fill default src_pic
-    src_pic->iColorFormat = videoFormatI420;
-    src_pic->uiTimeStamp = 0;
 
     openh264enc->priv->frame_count++;
-    if (G_UNLIKELY(openh264enc->priv->frame_count == 1)) {
-        openh264enc->priv->time_per_frame = (GST_NSECOND / openh264enc->priv->framerate);
-        openh264enc->priv->previous_timestamp = frame->pts;
-    } else {
-        openh264enc->priv->time_per_frame = openh264enc->priv->time_per_frame * 0.8 +
-            (frame->pts - openh264enc->priv->previous_timestamp) * 0.2;
-        openh264enc->priv->previous_timestamp = frame->pts;
-        if (openh264enc->priv->frame_count % 10 == 0) {
-            fps =  GST_SECOND/(gdouble)openh264enc->priv->time_per_frame;
-            openh264enc->priv->encoder->SetOption(ENCODER_OPTION_FRAME_RATE, &fps);
+    if (frame) {
+        if (G_UNLIKELY(openh264enc->priv->frame_count == 1)) {
+            openh264enc->priv->time_per_frame = (GST_NSECOND / openh264enc->priv->framerate);
+            openh264enc->priv->previous_timestamp = frame->pts;
+        } else {
+            openh264enc->priv->time_per_frame = openh264enc->priv->time_per_frame * 0.8 +
+                (frame->pts - openh264enc->priv->previous_timestamp) * 0.2;
+            openh264enc->priv->previous_timestamp = frame->pts;
+            if (openh264enc->priv->frame_count % 10 == 0) {
+                fps =  GST_SECOND/(gdouble)openh264enc->priv->time_per_frame;
+                openh264enc->priv->encoder->SetOption(ENCODER_OPTION_FRAME_RATE, &fps);
+            }
         }
     }
 
     if (openh264enc->priv->bitrate <= openh264enc->priv->drop_bitrate) {
         GST_LOG_OBJECT(openh264enc, "Dropped frame due to too low bitrate");
-        gst_video_encoder_finish_frame(encoder, frame);
-        if (src_pic != NULL) delete src_pic;
+        if (frame) {
+            gst_video_encoder_finish_frame(encoder, frame);
+            delete src_pic;
+        }
         return GST_FLOW_OK;
     }
 
-    gst_video_frame_map(&video_frame, &openh264enc->priv->input_state->info, frame->input_buffer, GST_MAP_READ);
-    src_pic->iPicWidth = GST_VIDEO_FRAME_WIDTH(&video_frame);
-    src_pic->iPicHeight = GST_VIDEO_FRAME_HEIGHT(&video_frame);
-    src_pic->iStride[0] = GST_VIDEO_FRAME_COMP_STRIDE(&video_frame, 0);
-    src_pic->iStride[1] = GST_VIDEO_FRAME_COMP_STRIDE(&video_frame, 1);
-    src_pic->iStride[2] = GST_VIDEO_FRAME_COMP_STRIDE(&video_frame, 2);
-    src_pic->pData[0] = GST_VIDEO_FRAME_COMP_DATA(&video_frame, 0);
-    src_pic->pData[1] = GST_VIDEO_FRAME_COMP_DATA(&video_frame, 1);
-    src_pic->pData[2] = GST_VIDEO_FRAME_COMP_DATA(&video_frame, 2);
+    if (frame) {
+        gst_video_frame_map(&video_frame, &openh264enc->priv->input_state->info, frame->input_buffer, GST_MAP_READ);
+        src_pic->iPicWidth = GST_VIDEO_FRAME_WIDTH(&video_frame);
+        src_pic->iPicHeight = GST_VIDEO_FRAME_HEIGHT(&video_frame);
+        src_pic->iStride[0] = GST_VIDEO_FRAME_COMP_STRIDE(&video_frame, 0);
+        src_pic->iStride[1] = GST_VIDEO_FRAME_COMP_STRIDE(&video_frame, 1);
+        src_pic->iStride[2] = GST_VIDEO_FRAME_COMP_STRIDE(&video_frame, 2);
+        src_pic->pData[0] = GST_VIDEO_FRAME_COMP_DATA(&video_frame, 0);
+        src_pic->pData[1] = GST_VIDEO_FRAME_COMP_DATA(&video_frame, 1);
+        src_pic->pData[2] = GST_VIDEO_FRAME_COMP_DATA(&video_frame, 2);
 
-    force_keyframe = GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME(frame);
-    if (force_keyframe) {
-        openh264enc->priv->encoder->ForceIntraFrame(true);
-        GST_DEBUG_OBJECT(openh264enc,"Got force key unit event, next frame coded as intra picture");
+        force_keyframe = GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME(frame);
+        if (force_keyframe) {
+            openh264enc->priv->encoder->ForceIntraFrame(true);
+            GST_DEBUG_OBJECT(openh264enc,"Got force key unit event, next frame coded as intra picture");
+        }
     }
 
     memset (&frame_info, 0, sizeof (SFrameBSInfo));
     ret = openh264enc->priv->encoder->EncodeFrame(src_pic, &frame_info);
     if (ret != cmResultSuccess) {
-        gst_video_frame_unmap(&video_frame);
-        GST_ELEMENT_ERROR(openh264enc, STREAM, ENCODE, ("Could not encode frame"), ("Openh264 returned %d", ret));
-        gst_video_codec_frame_unref(frame);
-        if (src_pic != NULL) delete src_pic;
-        return GST_FLOW_ERROR;
+        if (frame) {
+            gst_video_frame_unmap(&video_frame);
+            gst_video_codec_frame_unref(frame);
+            delete src_pic;
+            GST_ELEMENT_ERROR(openh264enc, STREAM, ENCODE, ("Could not encode frame"), ("Openh264 returned %d", ret));
+            return GST_FLOW_ERROR;
+        } else {
+            return GST_FLOW_EOS;
+        }
     }
 
     if (videoFrameTypeSkip == frame_info.eFrameType) {
-        gst_video_frame_unmap(&video_frame);
-        gst_video_encoder_finish_frame(base_encoder, frame);
-        if (src_pic != NULL) delete src_pic;
+        if (frame) {
+            gst_video_frame_unmap(&video_frame);
+            gst_video_encoder_finish_frame(base_encoder, frame);
+            delete src_pic;
+        }
+
         return GST_FLOW_OK;
     }
 
-    gst_video_codec_frame_unref(frame);
+    if (frame) {
+      gst_video_frame_unmap(&video_frame);
+      gst_video_codec_frame_unref(frame);
+      delete src_pic;
+      src_pic = NULL;
+      frame = NULL;
+    }
 
     frame = gst_video_encoder_get_oldest_frame(base_encoder);
     if (!frame) {
-        gst_video_frame_unmap(&video_frame);
         GST_ELEMENT_ERROR(openh264enc, STREAM, ENCODE, ("Could not encode frame"),  ("openh264enc returned %d", ret));
         gst_video_codec_frame_unref(frame);
-        if (src_pic != NULL) delete src_pic;
         return GST_FLOW_ERROR;
     }
 
@@ -697,14 +720,18 @@ static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder, GstV
 
     GST_LOG_OBJECT(openh264enc, "openh264 picture %scoded OK!", (ret != cmResultSuccess) ? "NOT " : "");
 
-    gst_video_frame_unmap(&video_frame);
+    return gst_video_encoder_finish_frame(encoder, frame);
+}
 
-    if (ret == cmResultSuccess) {
-        gst_video_encoder_finish_frame(encoder, frame);
-    } else {
-        gst_video_codec_frame_unref(frame);
-        GST_ELEMENT_ERROR(openh264enc, STREAM, ENCODE, ("Could not encode frame"),  ("openh264enc returned %d", ret));
-    }
+static GstFlowReturn gst_openh264enc_finish (GstVideoEncoder *encoder)
+{
+    GstOpenh264Enc *openh264enc = GST_OPENH264ENC(encoder);
 
-    return (ret == cmResultSuccess) ? GST_FLOW_OK : GST_FLOW_ERROR;
+    if (openh264enc->priv->frame_count == 0)
+      return GST_FLOW_OK;
+
+    /* Drain encoder */
+    while ((gst_openh264enc_handle_frame (encoder, NULL)) == GST_FLOW_OK);
+
+    return GST_FLOW_OK;
 }
