@@ -694,6 +694,7 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
       /* a new segment allows us to accept more buffers if we got EOS
        * from downstream */
       queue->unexpected = FALSE;
+      break;
     case GST_EVENT_GAP:
       apply_gap (queue, event, &queue->sink_segment, TRUE);
       break;
