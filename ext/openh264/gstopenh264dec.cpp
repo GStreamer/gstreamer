@@ -62,6 +62,7 @@ static gboolean gst_openh264dec_reset(GstVideoDecoder *decoder, gboolean hard);
 static GstFlowReturn gst_openh264dec_finish(GstVideoDecoder *decoder);
 static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder,
     GstVideoCodecFrame *frame);
+static gboolean gst_openh264dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query);
 
 enum
 {
@@ -120,6 +121,7 @@ static void gst_openh264dec_class_init(GstOpenh264DecClass *klass)
     video_decoder_class->reset = GST_DEBUG_FUNCPTR(gst_openh264dec_reset);
     video_decoder_class->finish = GST_DEBUG_FUNCPTR(gst_openh264dec_finish);
     video_decoder_class->handle_frame = GST_DEBUG_FUNCPTR(gst_openh264dec_handle_frame);
+    video_decoder_class->decide_allocation = GST_DEBUG_FUNCPTR(gst_openh264dec_decide_allocation);
 }
 
 static void gst_openh264dec_init(GstOpenh264Dec *openh264dec)
@@ -384,3 +386,35 @@ finish:
 
     return GST_FLOW_OK;
 }
+
+static gboolean gst_openh264dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
+{
+  GstVideoCodecState *state;
+  GstBufferPool *pool;
+  guint size, min, max;
+  GstStructure *config;
+
+  if (!GST_VIDEO_DECODER_CLASS (gst_openh264dec_parent_class)->decide_allocation (decoder,
+          query))
+    return FALSE;
+
+  state = gst_video_decoder_get_output_state (decoder);
+
+  gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+  config = gst_buffer_pool_get_config (pool);
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+
+  gst_buffer_pool_set_config (pool, config);
+
+  gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+
+  gst_object_unref (pool);
+  gst_video_codec_state_unref (state);
+
+  return TRUE;
+}
+
