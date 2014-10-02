@@ -1962,7 +1962,8 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     goto was_not_joined;
 
   /* all transports must be removed by now */
-  g_return_val_if_fail (priv->transports == NULL, FALSE);
+  if (priv->transports != NULL)
+    goto transports_not_removed;
 
   clear_tr_cache (priv);
 
@@ -2071,6 +2072,12 @@ was_not_joined:
   {
     g_mutex_unlock (&priv->lock);
     return TRUE;
+  }
+transports_not_removed:
+  {
+    GST_ERROR_OBJECT (stream, "can't leave bin (transports not removed)");
+    g_mutex_unlock (&priv->lock);
+    return FALSE;
   }
 }
 
