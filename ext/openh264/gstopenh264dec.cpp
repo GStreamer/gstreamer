@@ -352,11 +352,13 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
 
     flow_status = gst_video_decoder_allocate_output_frame(decoder, frame);
     if (flow_status != GST_FLOW_OK) {
+        gst_video_codec_state_unref (state);
         return flow_status;
     }
 
     if (!gst_video_frame_map(&video_frame, &state->info, frame->output_buffer, GST_MAP_WRITE)) {
         GST_ERROR_OBJECT(openh264dec, "Cannot map output buffer!");
+        gst_video_codec_state_unref (state);
         return GST_FLOW_ERROR;
     }
 
@@ -370,6 +372,7 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
             memcpy((guchar *)p + (row * row_stride), yuvdata[i] + (row * src_width), component_width);
         }
     }
+    gst_video_codec_state_unref (state);
 
     gst_video_frame_unmap(&video_frame);
 
