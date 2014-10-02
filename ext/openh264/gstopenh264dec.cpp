@@ -73,10 +73,8 @@ struct _GstOpenh264DecPrivate
 {
     ISVCDecoder *decoder;
     GstH264NalParser *nal_parser;
-    guint width;
-    guint height;
-    guint fps_n;
-    guint fps_d;
+    GstVideoCodecState *input_state;
+    guint width, height;
 };
 
 /* pad templates */
@@ -89,7 +87,7 @@ static GstStaticPadTemplate gst_openh264dec_sink_template = GST_STATIC_PAD_TEMPL
 static GstStaticPadTemplate gst_openh264dec_src_template = GST_STATIC_PAD_TEMPLATE("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS(GST_VIDEO_CAPS_MAKE("{ I420 }")));
+    GST_STATIC_CAPS(GST_VIDEO_CAPS_MAKE("I420")));
 
 /* class initialization */
 
@@ -129,12 +127,9 @@ static void gst_openh264dec_init(GstOpenh264Dec *openh264dec)
     openh264dec->priv = GST_OPENH264DEC_GET_PRIVATE(openh264dec);
     openh264dec->priv->nal_parser = NULL;
     openh264dec->priv->decoder = NULL;
-    openh264dec->priv->width = 0;
-    openh264dec->priv->height = 0;
-    openh264dec->priv->fps_n = 0;
-    openh264dec->priv->fps_d = 1;
 
     gst_video_decoder_set_packetized(GST_VIDEO_DECODER(openh264dec), TRUE);
+    gst_video_decoder_set_needs_format(GST_VIDEO_DECODER(openh264dec), TRUE);
 }
 
 void gst_openh264dec_set_property(GObject *object, guint property_id,
@@ -203,6 +198,12 @@ static gboolean gst_openh264dec_stop(GstVideoDecoder *decoder)
     WelsDestroyDecoder(openh264dec->priv->decoder);
     openh264dec->priv->decoder = NULL;
 
+    if (openh264dec->priv->input_state) {
+      gst_video_codec_state_unref (openh264dec->priv->input_state);
+      openh264dec->priv->input_state = NULL;
+    }
+    openh264dec->priv->width = openh264dec->priv->height = 0;
+
     return ret;
 }
 
@@ -219,6 +220,12 @@ static gboolean gst_openh264dec_set_format(GstVideoDecoder *decoder, GstVideoCod
     gint ret;
 
     GST_DEBUG_OBJECT(openh264dec, "openh264_dec_set_format called, caps: %" GST_PTR_FORMAT, state->caps);
+
+    if (openh264dec->priv->input_state) {
+      gst_video_codec_state_unref (openh264dec->priv->input_state);
+      openh264dec->priv->input_state = NULL;
+    }
+    openh264dec->priv->input_state = gst_video_codec_state_ref (state);
 
     caps_data = gst_caps_get_structure(state->caps, 0);
     sprop_parameter_sets = gst_structure_get_string(caps_data, "sprop-parameter-sets");
@@ -330,8 +337,8 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
             parser_result = gst_h264_parser_parse_sps(openh264dec->priv->nal_parser, &nalu, &sps, TRUE);
             if (parser_result == GST_H264_PARSER_OK) {
                 GST_DEBUG_OBJECT(openh264dec, "Got SPS, fps_n: %u fps_d: %u", sps.fps_num, sps.fps_den);
-                openh264dec->priv->fps_n = sps.fps_num ? sps.fps_num : 30;
-                openh264dec->priv->fps_d = sps.fps_num ? sps.fps_den : 1;
+                openh264dec->priv->input_state->info.fps_n = sps.fps_num ? sps.fps_num : 30;
+                openh264dec->priv->input_state->info.fps_d = sps.fps_num ? sps.fps_den : 1;
             } else {
                 GST_WARNING_OBJECT(openh264dec, "Failed to parse SPS, parser result: %u", parser_result);
             }
@@ -357,24 +364,18 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
     actual_width  = dst_buf_info.UsrData.sSystemBuffer.iWidth;
     actual_height = dst_buf_info.UsrData.sSystemBuffer.iHeight;
 
-    if (actual_width != openh264dec->priv->width || actual_height != openh264dec->priv->height) {
+    if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (openh264dec)) || actual_width != openh264dec->priv->width || actual_height != openh264dec->priv->height) {
         state = gst_video_decoder_set_output_state(decoder,
             GST_VIDEO_FORMAT_I420,
             actual_width,
             actual_height,
-            NULL);
+            openh264dec->priv->input_state);
         openh264dec->priv->width = actual_width;
         openh264dec->priv->height = actual_height;
 
-        state->caps = gst_caps_new_simple("video/x-raw",
-            "format", G_TYPE_STRING, "I420",
-            "width", G_TYPE_INT, actual_width,
-            "height", G_TYPE_INT, actual_height,
-            "framerate", GST_TYPE_FRACTION, openh264dec->priv->fps_n, openh264dec->priv->fps_d,
-            NULL);
-
         if (!gst_video_decoder_negotiate(decoder)) {
             GST_ERROR_OBJECT(openh264dec, "Failed to negotiate with downstream elements");
+            return GST_FLOW_NOT_NEGOTIATED;
         }
     } else {
         state = gst_video_decoder_get_output_state(decoder);
