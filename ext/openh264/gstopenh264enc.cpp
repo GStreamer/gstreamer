@@ -542,13 +542,12 @@ static gboolean gst_openh264enc_set_format(GstVideoEncoder *encoder, GstVideoCod
                         "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
                         "codec_data", GST_TYPE_BUFFER, codec_data,
                         NULL);
-    ret = gst_pad_set_caps(GST_VIDEO_ENCODER_SRC_PAD(openh264enc), outcaps);
     gst_buffer_unref(codec_data);
 
     output_state = gst_video_encoder_set_output_state(encoder, outcaps, state);
     gst_video_codec_state_unref(output_state);
 
-    return TRUE;
+    return gst_video_encoder_negotiate (encoder);
 }
 
 static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder, GstVideoCodecFrame *frame)
