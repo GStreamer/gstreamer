@@ -303,6 +303,9 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
             return GST_FLOW_EOS;
     }
 
+    /* FIXME: openh264 has no way for us to get a connection
+     * between the input and output frames, we just have to
+     * guess based on the input */
     frame = get_oldest_pts_frame (decoder);
     if (!frame) {
       /* Can only happen in finish() */

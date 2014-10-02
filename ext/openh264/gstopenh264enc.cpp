@@ -662,6 +662,9 @@ static GstFlowReturn gst_openh264enc_handle_frame(GstVideoEncoder *encoder, GstV
       frame = NULL;
     }
 
+    /* FIXME: openh264 has no way for us to get a connection
+     * between the input and output frames, we just have to
+     * guess based on the input */
     frame = gst_video_encoder_get_oldest_frame(base_encoder);
     if (!frame) {
         GST_ELEMENT_ERROR(openh264enc, STREAM, ENCODE, ("Could not encode frame"),  ("openh264enc returned %d", ret));
