@@ -189,14 +189,18 @@ static gboolean gst_openh264dec_start(GstVideoDecoder *decoder)
 static gboolean gst_openh264dec_stop(GstVideoDecoder *decoder)
 {
     GstOpenh264Dec *openh264dec = GST_OPENH264DEC(decoder);
-    gint ret;
+    gint ret = TRUE;
 
-    gst_h264_nal_parser_free(openh264dec->priv->nal_parser);
-    openh264dec->priv->nal_parser = NULL;
+    if (openh264dec->priv->nal_parser) {
+      gst_h264_nal_parser_free(openh264dec->priv->nal_parser);
+      openh264dec->priv->nal_parser = NULL;
+    }
 
-    ret = openh264dec->priv->decoder->Uninitialize();
-    WelsDestroyDecoder(openh264dec->priv->decoder);
-    openh264dec->priv->decoder = NULL;
+    if (openh264dec->priv->decoder) {
+      ret = openh264dec->priv->decoder->Uninitialize();
+      WelsDestroyDecoder(openh264dec->priv->decoder);
+      openh264dec->priv->decoder = NULL;
+    }
 
     if (openh264dec->priv->input_state) {
       gst_video_codec_state_unref (openh264dec->priv->input_state);
