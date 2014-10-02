@@ -237,15 +237,6 @@ static gboolean gst_openh264dec_reset(GstVideoDecoder *decoder, gboolean hard)
     return TRUE;
 }
 
-static GstFlowReturn gst_openh264dec_finish(GstVideoDecoder *decoder)
-{
-    GstOpenh264Dec *openh264dec = GST_OPENH264DEC(decoder);
-
-    GST_DEBUG_OBJECT(openh264dec, "finish");
-
-    return GST_FLOW_OK;
-}
-
 static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstVideoCodecFrame *frame)
 {
     GstOpenh264Dec *openh264dec = GST_OPENH264DEC(decoder);
@@ -265,67 +256,81 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
     guint8 *p;
     guint row_stride, component_width, component_height, src_width, row;
 
-
-    if (!gst_buffer_map(frame->input_buffer, &map_info, GST_MAP_READ)) {
-        GST_ERROR_OBJECT(openh264dec, "Cannot map input buffer!");
-        return GST_FLOW_ERROR;
-    }
-
-    GST_LOG_OBJECT(openh264dec, "handle frame, %d", map_info.size > 4 ? map_info.data[4] & 0x1f : -1);
-
-    memset (&dst_buf_info, 0, sizeof (SBufferInfo));
-    while (offset < map_info.size) {
-
-        parser_result = gst_h264_parser_identify_nalu(openh264dec->priv->nal_parser,
-            map_info.data, offset, map_info.size, &nalu);
-        offset = nalu.offset + nalu.size;
-
-        if (parser_result != GST_H264_PARSER_OK && parser_result != GST_H264_PARSER_NO_NAL_END) {
-            GST_WARNING_OBJECT(openh264dec, "Failed to identify nalu, parser result: %u", parser_result);
-            break;
+    if (frame) {
+        if (!gst_buffer_map(frame->input_buffer, &map_info, GST_MAP_READ)) {
+            GST_ERROR_OBJECT(openh264dec, "Cannot map input buffer!");
+            return GST_FLOW_ERROR;
         }
 
-        memset (&dst_buf_info, 0, sizeof (SBufferInfo));
+        GST_LOG_OBJECT(openh264dec, "handle frame, %d", map_info.size > 4 ? map_info.data[4] & 0x1f : -1);
 
-        ret = openh264dec->priv->decoder->DecodeFrame2(nalu.data, nalu.size + 4, yuvdata, &dst_buf_info);
+        while (offset < map_info.size) {
+            memset (&dst_buf_info, 0, sizeof (SBufferInfo));
+            parser_result = gst_h264_parser_identify_nalu(openh264dec->priv->nal_parser,
+                map_info.data, offset, map_info.size, &nalu);
+            offset = nalu.offset + nalu.size;
 
-        if (ret == dsNoParamSets) {
-            GST_DEBUG_OBJECT(openh264dec, "Requesting a key unit");
-            gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(decoder),
-                gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, FALSE, 0));
-        }
-
-        if (ret != dsErrorFree && ret != dsNoParamSets) {
-            GST_DEBUG_OBJECT(openh264dec, "Requesting a key unit");
-            gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(decoder),
-                               gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, FALSE, 0));
-            GST_LOG_OBJECT(openh264dec, "error decoding nal, return code: %d", ret);
-            GST_LOG_OBJECT(openh264dec, "nal first byte: %u", (guint) nalu.data[0]);
-            GST_LOG_OBJECT(openh264dec, "nal size: %u", nalu.size);
-        }
-
-        if (nalu.type == GST_H264_NAL_SPS) {
-            parser_result = gst_h264_parser_parse_sps(openh264dec->priv->nal_parser, &nalu, &sps, TRUE);
-            if (parser_result == GST_H264_PARSER_OK) {
-                GST_DEBUG_OBJECT(openh264dec, "Got SPS, fps_n: %u fps_d: %u", sps.fps_num, sps.fps_den);
-                openh264dec->priv->input_state->info.fps_n = sps.fps_num ? sps.fps_num : 30;
-                openh264dec->priv->input_state->info.fps_d = sps.fps_num ? sps.fps_den : 1;
-            } else {
-                GST_WARNING_OBJECT(openh264dec, "Failed to parse SPS, parser result: %u", parser_result);
+            if (parser_result != GST_H264_PARSER_OK && parser_result != GST_H264_PARSER_NO_NAL_END) {
+                GST_WARNING_OBJECT(openh264dec, "Failed to identify nalu, parser result: %u", parser_result);
+                break;
             }
-        } else {
-            parser_result = gst_h264_parser_parse_nal(openh264dec->priv->nal_parser, &nalu);
-            if (parser_result == GST_H264_PARSER_OK) {
-                if (nalu.type == GST_H264_NAL_SLICE_IDR) {
-                    GST_DEBUG_OBJECT(openh264dec, "Got an intra picture");
-                    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT(frame);
+
+            memset (&dst_buf_info, 0, sizeof (SBufferInfo));
+
+            ret = openh264dec->priv->decoder->DecodeFrame2(nalu.data, nalu.size + 4, yuvdata, &dst_buf_info);
+
+            if (ret == dsNoParamSets) {
+                GST_DEBUG_OBJECT(openh264dec, "Requesting a key unit");
+                gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(decoder),
+                    gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, FALSE, 0));
+            }
+
+            if (ret != dsErrorFree && ret != dsNoParamSets) {
+                GST_DEBUG_OBJECT(openh264dec, "Requesting a key unit");
+                gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(decoder),
+                                   gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, FALSE, 0));
+                GST_LOG_OBJECT(openh264dec, "error decoding nal, return code: %d", ret);
+                GST_LOG_OBJECT(openh264dec, "nal first byte: %u", (guint) nalu.data[0]);
+                GST_LOG_OBJECT(openh264dec, "nal size: %u", nalu.size);
+            }
+
+            if (nalu.type == GST_H264_NAL_SPS) {
+                parser_result = gst_h264_parser_parse_sps(openh264dec->priv->nal_parser, &nalu, &sps, TRUE);
+                if (parser_result == GST_H264_PARSER_OK) {
+                    GST_DEBUG_OBJECT(openh264dec, "Got SPS, fps_n: %u fps_d: %u", sps.fps_num, sps.fps_den);
+                    openh264dec->priv->input_state->info.fps_n = sps.fps_num ? sps.fps_num : 30;
+                    openh264dec->priv->input_state->info.fps_d = sps.fps_num ? sps.fps_den : 1;
+                } else {
+                    GST_WARNING_OBJECT(openh264dec, "Failed to parse SPS, parser result: %u", parser_result);
                 }
             } else {
-                GST_WARNING_OBJECT(openh264dec, "Failed to parse nal, parser result: %u", parser_result);
+                parser_result = gst_h264_parser_parse_nal(openh264dec->priv->nal_parser, &nalu);
+                if (parser_result == GST_H264_PARSER_OK) {
+                    if (nalu.type == GST_H264_NAL_SLICE_IDR) {
+                        GST_DEBUG_OBJECT(openh264dec, "Got an intra picture");
+                        GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT(frame);
+                    }
+                } else {
+                    GST_WARNING_OBJECT(openh264dec, "Failed to parse nal, parser result: %u", parser_result);
+                }
             }
         }
+
+        gst_buffer_unmap(frame->input_buffer, &map_info);
+        gst_video_codec_frame_unref (frame);
+        frame = NULL;
+    } else {
+        memset (&dst_buf_info, 0, sizeof (SBufferInfo));
+        ret = openh264dec->priv->decoder->DecodeFrame2(NULL, 0, yuvdata, &dst_buf_info);
+        if (ret != dsErrorFree)
+            return GST_FLOW_EOS;
     }
-    gst_buffer_unmap(frame->input_buffer, &map_info);
+
+    frame = gst_video_decoder_get_oldest_frame (decoder);
+    if (!frame) {
+      /* Can only happen in finish() */
+      return GST_FLOW_EOS;
+    }
 
     if (dst_buf_info.iBufferStatus != 1) {
         GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY(frame);
@@ -382,7 +387,21 @@ static GstFlowReturn gst_openh264dec_handle_frame(GstVideoDecoder *decoder, GstV
 
 
 finish:
-    gst_video_decoder_finish_frame(decoder, frame);
+    return gst_video_decoder_finish_frame(decoder, frame);
+}
+
+static GstFlowReturn gst_openh264dec_finish(GstVideoDecoder *decoder)
+{
+    GstOpenh264Dec *openh264dec = GST_OPENH264DEC(decoder);
+
+    GST_DEBUG_OBJECT(openh264dec, "finish");
+
+    /* Decoder not negotiated yet */
+    if (openh264dec->priv->width == 0)
+      return GST_FLOW_OK;
+
+    /* Drain all pending frames */
+    while ((gst_openh264dec_handle_frame (decoder, NULL)) == GST_FLOW_OK);
 
     return GST_FLOW_OK;
 }
