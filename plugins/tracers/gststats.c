@@ -248,8 +248,8 @@ do_buffer_stats (GstStatsTracer * self, GstPad * this_pad,
           "peer-pad-ix", G_TYPE_UINT, that_pad_stats->index,
           "peer-elem-ix", G_TYPE_UINT, that_elem_stats->index,
           "buffer-size", G_TYPE_UINT, gst_buffer_get_size (buf),
-          /* TODO(ensonic): do PTS and DTS */
-          "buffer-ts", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (buf),
+          "buffer-pts", G_TYPE_UINT64, GST_BUFFER_PTS (buf),
+          "buffer-dts", G_TYPE_UINT64, GST_BUFFER_DTS (buf),
           "buffer-duration", G_TYPE_UINT64, GST_BUFFER_DURATION (buf),
           "buffer-flags", GST_TYPE_BUFFER_FLAGS, GST_BUFFER_FLAGS (buf),
           /*

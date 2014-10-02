@@ -278,7 +278,7 @@ do_element_stats (GstElementStats * stats, GstElementStats * peer_stats,
 static void
 do_buffer_stats (GstStructure * s)
 {
-  guint64 ts, buffer_ts, buffer_dur;
+  guint64 ts, buffer_pts, buffer_dur;
   guint pad_ix, elem_ix, peer_elem_ix;
   guint size;
   GstBufferFlags buffer_flags;
@@ -291,7 +291,7 @@ do_buffer_stats (GstStructure * s)
       "elem-ix", G_TYPE_UINT, &elem_ix,
       "peer-elem-ix", G_TYPE_UINT, &peer_elem_ix,
       "buffer-size", G_TYPE_UINT, &size,
-      "buffer-ts", G_TYPE_UINT64, &buffer_ts,
+      "buffer-pts", G_TYPE_UINT64, &buffer_pts,
       "buffer-duration", G_TYPE_UINT64, &buffer_dur,
       "buffer-flags", GST_TYPE_BUFFER_FLAGS, &buffer_flags, NULL);
   last_ts = MAX (last_ts, ts);
@@ -307,7 +307,7 @@ do_buffer_stats (GstStructure * s)
     GST_WARNING ("no element stats found for ix=%u", peer_elem_ix);
     return;
   }
-  do_pad_stats (pad_stats, elem_ix, size, ts, buffer_ts, buffer_dur,
+  do_pad_stats (pad_stats, elem_ix, size, ts, buffer_pts, buffer_dur,
       buffer_flags);
   if (pad_stats->dir == GST_PAD_SRC) {
     /* push */
