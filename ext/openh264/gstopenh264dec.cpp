@@ -210,14 +210,6 @@ static gboolean gst_openh264dec_stop(GstVideoDecoder *decoder)
 static gboolean gst_openh264dec_set_format(GstVideoDecoder *decoder, GstVideoCodecState *state)
 {
     GstOpenh264Dec *openh264dec = GST_OPENH264DEC(decoder);
-    GstStructure *caps_data;
-    const gchar *sprop_parameter_sets;
-    gchar *comma;
-    SBufferInfo dst_buf_info;
-    guchar *pps, *sps;
-    guchar *tmpdata[3];
-    gsize pps_len = 0, sps_len = 0;
-    gint ret;
 
     GST_DEBUG_OBJECT(openh264dec, "openh264_dec_set_format called, caps: %" GST_PTR_FORMAT, state->caps);
 
@@ -226,33 +218,6 @@ static gboolean gst_openh264dec_set_format(GstVideoDecoder *decoder, GstVideoCod
       openh264dec->priv->input_state = NULL;
     }
     openh264dec->priv->input_state = gst_video_codec_state_ref (state);
-
-    caps_data = gst_caps_get_structure(state->caps, 0);
-    sprop_parameter_sets = gst_structure_get_string(caps_data, "sprop-parameter-sets");
-    if (!sprop_parameter_sets) {
-        return TRUE;
-    }
-
-    for (comma = (gchar *)sprop_parameter_sets; *comma != 0 && *comma != ','; comma++);
-    if (*comma == 0) {
-        return TRUE;
-    }
-
-    pps = g_base64_decode(comma + 1, &pps_len);
-    *comma = 0;
-    sps = g_base64_decode(sprop_parameter_sets, &sps_len);
-
-    memset (&dst_buf_info, 0, sizeof (SBufferInfo));
-    ret = openh264dec->priv->decoder->DecodeFrame2(sps, sps_len, tmpdata, &dst_buf_info);
-    if (ret != cmResultSuccess) {
-        GST_DEBUG_OBJECT(openh264dec, "error decoding sps nal, return code: %d", ret);
-    }
-
-    memset (&dst_buf_info, 0, sizeof (SBufferInfo));
-    ret = openh264dec->priv->decoder->DecodeFrame2(pps, pps_len, tmpdata, &dst_buf_info);
-    if (ret != cmResultSuccess) {
-        GST_DEBUG_OBJECT(openh264dec, "error decoding pps nal, return code: %d", ret);
-    }
 
     return TRUE;
 }
