@@ -379,6 +379,11 @@ gst_dvbsrc_guard_get_type (void)
     {GUARD_INTERVAL_1_128, "128", "128"},
     {GUARD_INTERVAL_19_128, "19/128", "19/128"},
     {GUARD_INTERVAL_19_256, "19/256", "19/256"},
+#if HAVE_V5_MINOR(7)
+    {GUARD_INTERVAL_PN420, "PN420", "pn420"},
+    {GUARD_INTERVAL_PN595, "PN595", "pn595"},
+    {GUARD_INTERVAL_PN945, "PN945", "pn945"},
+#endif
     {0, NULL, NULL},
   };
 
