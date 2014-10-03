@@ -2756,16 +2756,10 @@ gst_base_parse_process_streamheader (GstBaseParse * parse)
         GST_OBJECT_CAST (parse), gst_buffer_ref (buffer));
   }
 
-  gst_caps_unref (caps);
-
   return ret;
 
 notfound:
   {
-    if (caps) {
-      gst_caps_unref (caps);
-    }
-
     GST_DEBUG_OBJECT (parse, "No streamheader on caps");
     return GST_FLOW_OK;
   }
