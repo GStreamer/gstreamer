@@ -2436,6 +2436,21 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
       set_prop (props->props, &n, DTV_ISDBT_LAYERC_TIME_INTERLEAVING,
           object->isdbt_layerc_time_interleaving);
       break;
+#if HAVE_V5_MINOR(7)
+    case SYS_DTMB:
+      set_prop (props->props, &n, DTV_BANDWIDTH_HZ, object->bandwidth);
+      set_prop (props->props, &n, DTV_MODULATION, object->modulation);
+      set_prop (props->props, &n, DTV_INVERSION, object->inversion);
+      set_prop (props->props, &n, DTV_INNER_FEC, object->code_rate_hp);
+      set_prop (props->props, &n, DTV_TRANSMISSION_MODE,
+          object->transmission_mode);
+      set_prop (props->props, &n, DTV_GUARD_INTERVAL, object->guard_interval);
+      /* FIXME: Make these properties and proxy them on dvbbasebin */
+      set_prop (props->props, &n, DTV_INTERLEAVING, INTERLEAVING_AUTO);
+      set_prop (props->props, &n, DTV_LNA, LNA_AUTO);
+      GST_INFO_OBJECT (object, "Tuning DTMB to %d Hz", freq);
+      break;
+#endif
     default:
       GST_ERROR_OBJECT (object, "Unknown frontend type %u", object->delsys);
       return FALSE;
