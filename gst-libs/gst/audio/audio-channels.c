@@ -301,6 +301,8 @@ gst_audio_channel_positions_to_mask (const GstAudioChannelPosition * position,
  * (which should have at least @channels entries ensured by caller).
  * If @channel_mask is set to 0, it is considered as 'not present' for purpose
  * of conversion.
+ * A partially valid @channel_mask with less bits set than the number
+ * of channels is considered valid.
  *
  * Returns: %TRUE if channel and channel mask are valid and could be converted
  */
@@ -331,14 +333,12 @@ gst_audio_channel_positions_from_mask (gint channels, guint64 channel_mask,
       if ((channel_mask & (G_GUINT64_CONSTANT (1) << i))) {
         if (j < channels)
           position[j] = default_channel_order[i];
-        if (default_channel_order[i] == GST_AUDIO_CHANNEL_POSITION_INVALID)
-          goto invalid_channel_mask;
         j++;
       }
     }
-
     if (j != channels)
-      goto invalid_channel_mask;
+      GST_WARNING ("Only partially valid channel mask 0x%016" G_GINT64_MODIFIER
+          "x for %d channels", channel_mask, channels);
   }
 
   return TRUE;
@@ -347,12 +347,6 @@ gst_audio_channel_positions_from_mask (gint channels, guint64 channel_mask,
 no_channel_mask:
   {
     GST_ERROR ("no channel-mask property given");
-    return FALSE;
-  }
-invalid_channel_mask:
-  {
-    GST_ERROR ("Invalid channel mask 0x%016" G_GINT64_MODIFIER
-        "x for %d channels", channel_mask, channels);
     return FALSE;
   }
 }
