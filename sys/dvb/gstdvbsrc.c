@@ -623,23 +623,26 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
       g_param_spec_uint ("frequency", "Center frequency",
           "Center frequency to tune into. Measured in kHz for the satellite "
           "distribution standars and Hz for all the rest",
-          0, G_MAXUINT, DEFAULT_FREQUENCY, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_FREQUENCY,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_POLARITY,
       g_param_spec_string ("polarity", "polarity",
           "(DVB-S/S2) Polarity [vhHV] (eg. V for Vertical)",
-          DEFAULT_POLARITY, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_POLARITY,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_PIDS,
       g_param_spec_string ("pids", "pids",
           "Colon seperated list of pids (eg. 110:120)",
-          DEFAULT_PIDS, G_PARAM_WRITABLE));
+          DEFAULT_PIDS, GST_PARAM_MUTABLE_PLAYING | G_PARAM_WRITABLE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_SYM_RATE,
       g_param_spec_uint ("symbol-rate",
           "symbol rate",
           "(DVB-S/S2, DVB-C) Symbol rate in kBd (kilo bauds)",
-          0, G_MAXUINT, DEFAULT_SYMBOL_RATE, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_SYMBOL_RATE,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_TUNE,
       g_param_spec_pointer ("tune",
@@ -650,44 +653,48 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
           "diseqc source",
           "(DVB-S/S2) Selected DiSEqC source. Only needed if you have a "
           "DiSEqC switch. Otherwise leave at -1 (disabled)", -1, 7,
-          DEFAULT_DISEQC_SRC, G_PARAM_READWRITE));
+          DEFAULT_DISEQC_SRC, GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   /* DVB-T, additional properties */
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH_HZ,
       g_param_spec_uint ("bandwidth-hz", "bandwidth-hz",
           "(DVB-T) Bandwidth in Hz", 0, G_MAXUINT, DEFAULT_BANDWIDTH_HZ,
-          G_PARAM_READWRITE));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH,
       g_param_spec_enum ("bandwidth", "bandwidth",
           "(DVB-T) Bandwidth. Deprecated", GST_TYPE_DVBSRC_BANDWIDTH,
-          DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
+          DEFAULT_BANDWIDTH, GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   /* FIXME: DVB-C, DVB-S, DVB-S2 named it as innerFEC */
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_HP,
       g_param_spec_enum ("code-rate-hp",
           "code-rate-hp",
           "(DVB-T, DVB-S/S2 and DVB-C) High priority code rate",
-          GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_CODE_RATE_HP, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_CODE_RATE_HP,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_LP,
       g_param_spec_enum ("code-rate-lp",
           "code-rate-lp",
           "(DVB-T) Low priority code rate",
-          GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_CODE_RATE_LP, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_CODE_RATE_LP,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   /* FIXME: should the property be called 'guard-interval' then? */
   g_object_class_install_property (gobject_class, ARG_DVBSRC_GUARD,
       g_param_spec_enum ("guard",
           "guard",
           "(DVB-T) Guard Interval",
-          GST_TYPE_DVBSRC_GUARD, DEFAULT_GUARD, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_GUARD, DEFAULT_GUARD,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_MODULATION,
       g_param_spec_enum ("modulation", "modulation",
           "(DVB-T/T2/C/S2, TURBO and ATSC) Modulation type",
-          GST_TYPE_DVBSRC_MODULATION, DEFAULT_MODULATION, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_MODULATION, DEFAULT_MODULATION,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   /* FIXME: property should be named 'transmission-mode' */
   g_object_class_install_property (gobject_class,
@@ -695,24 +702,27 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
       g_param_spec_enum ("trans-mode", "trans-mode",
           "(DVB-T) Transmission mode",
           GST_TYPE_DVBSRC_TRANSMISSION_MODE, DEFAULT_TRANSMISSION_MODE,
-          G_PARAM_READWRITE));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_HIERARCHY_INF,
       g_param_spec_enum ("hierarchy", "hierarchy",
           "(DVB-T) Hierarchy information",
-          GST_TYPE_DVBSRC_HIERARCHY, DEFAULT_HIERARCHY, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_HIERARCHY, DEFAULT_HIERARCHY,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_INVERSION,
       g_param_spec_enum ("inversion", "inversion",
           "(DVB-T and DVB-C) Inversion information",
-          GST_TYPE_DVBSRC_INVERSION, DEFAULT_INVERSION, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_INVERSION, DEFAULT_INVERSION,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_STATS_REPORTING_INTERVAL,
       g_param_spec_uint ("stats-reporting-interval",
           "stats-reporting-interval",
           "The number of reads before reporting frontend stats",
-          0, G_MAXUINT, DEFAULT_STATS_REPORTING_INTERVAL, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_STATS_REPORTING_INTERVAL,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
@@ -722,7 +732,8 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_TUNING_TIMEOUT,
       g_param_spec_uint64 ("tuning-timeout", "Tuning Timeout",
           "Milliseconds to wait before giving up tuning/locking on a signal",
-          0, G_MAXUINT64, DEFAULT_TUNING_TIMEOUT, G_PARAM_READWRITE));
+          0, G_MAXUINT64, DEFAULT_TUNING_TIMEOUT,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_DVB_BUFFER_SIZE,
@@ -737,16 +748,19 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_PILOT,
       g_param_spec_enum ("pilot", "pilot", "Pilot (DVB-S2)",
-          GST_TYPE_DVBSRC_PILOT, DEFAULT_PILOT, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_PILOT, DEFAULT_PILOT,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_ROLLOFF,
       g_param_spec_enum ("rolloff", "rolloff", "Rolloff (DVB-S2)",
-          GST_TYPE_DVBSRC_ROLLOFF, DEFAULT_ROLLOFF, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_ROLLOFF, DEFAULT_ROLLOFF,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_STREAM_ID,
       g_param_spec_int ("stream-id", "stream-id",
           "(DVB-T2 and DVB-S2 max 255, ISDB max 65535) Stream ID "
-          "(-1 = disabled)", -1, 65535, DEFAULT_STREAM_ID, G_PARAM_READWRITE));
+          "(-1 = disabled)", -1, 65535, DEFAULT_STREAM_ID,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   /* Additional ISDB-T properties */
 
@@ -756,140 +770,155 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
       g_param_spec_uint ("isdbt-layer-enabled",
           "ISB-T layer enabled",
           "(ISDB-T) Layer Enabled (7 = All layers)", 1, 7,
-          DEFAULT_ISDBT_LAYER_ENABLED, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_LAYER_ENABLED,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_PARTIAL_RECEPTION,
       g_param_spec_int ("isdbt-partial-reception",
           "ISB-T partial reception",
           "(ISDB-T) Partial Reception (-1 = AUTO)", -1, 1,
-          DEFAULT_ISDBT_PARTIAL_RECEPTION, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_PARTIAL_RECEPTION,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_SOUND_BROADCASTING,
       g_param_spec_int ("isdbt-sound-broadcasting",
           "ISB-T sound broadcasting",
           "(ISDB-T) Sound Broadcasting", 0, 1,
-          DEFAULT_ISDBT_SOUND_BROADCASTING, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_SOUND_BROADCASTING,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_SB_SUBCHANNEL_ID,
       g_param_spec_int ("isdbt-sb-subchannel-id",
           "ISB-T SB subchannel ID",
           "(ISDB-T) SB Subchannel ID (-1 = AUTO)", -1, 41,
-          DEFAULT_ISDBT_SB_SEGMENT_IDX, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_SB_SEGMENT_IDX,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_SB_SEGMENT_IDX,
       g_param_spec_int ("isdbt-sb-segment-idx",
           "ISB-T SB segment IDX",
           "(ISDB-T) SB segment IDX", 0, 12,
-          DEFAULT_ISDBT_SB_SEGMENT_IDX, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_SB_SEGMENT_IDX,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_SB_SEGMENT_COUNT,
       g_param_spec_uint ("isdbt-sb-segment-count",
           "ISB-T SB segment count",
           "(ISDB-T) SB segment count", 1, 13,
-          DEFAULT_ISDBT_SB_SEGMENT_COUNT, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_SB_SEGMENT_COUNT,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_ISDBT_LAYERA_FEC,
       g_param_spec_enum ("isdbt-layera-fec",
           "ISDB-T layer A FEC", "(ISDB-T) layer A Forward Error Correction",
           GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_ISDBT_LAYERA_FEC,
-          G_PARAM_READWRITE));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_ISDBT_LAYERB_FEC,
       g_param_spec_enum ("isdbt-layerb-fec",
           "ISDB-T layer B FEC", "(ISDB-T) layer B Forward Error Correction",
           GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_ISDBT_LAYERB_FEC,
-          G_PARAM_READWRITE));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_ISDBT_LAYERC_FEC,
       g_param_spec_enum ("isdbt-layerc-fec",
           "ISDB-T layer A FEC", "(ISDB-T) layer C Forward Error Correction",
           GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_ISDBT_LAYERC_FEC,
-          G_PARAM_READWRITE));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERA_MODULATION,
       g_param_spec_enum ("isdbt-layera-modulation", "ISDBT layer A modulation",
           "(ISDB-T) Layer A modulation type",
           GST_TYPE_DVBSRC_MODULATION, DEFAULT_ISDBT_LAYERA_MODULATION,
-          G_PARAM_READWRITE));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERB_MODULATION,
       g_param_spec_enum ("isdbt-layerb-modulation", "ISDBT layer B modulation",
           "(ISDB-T) Layer B modulation type",
           GST_TYPE_DVBSRC_MODULATION, DEFAULT_ISDBT_LAYERB_MODULATION,
-          G_PARAM_READWRITE));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERC_MODULATION,
       g_param_spec_enum ("isdbt-layerc-modulation", "ISDBT layer C modulation",
           "(ISDB-T) Layer C modulation type",
           GST_TYPE_DVBSRC_MODULATION, DEFAULT_ISDBT_LAYERC_MODULATION,
-          G_PARAM_READWRITE));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERA_SEGMENT_COUNT,
       g_param_spec_int ("isdbt-layera-segment-count",
           "ISB-T layer A segment count",
           "(ISDB-T) Layer A segment count (-1 = AUTO)", -1, 13,
-          DEFAULT_ISDBT_LAYERA_SEGMENT_COUNT, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_LAYERA_SEGMENT_COUNT,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERB_SEGMENT_COUNT,
       g_param_spec_int ("isdbt-layerb-segment-count",
           "ISB-T layer B segment count",
           "(ISDB-T) Layer B segment count (-1 = AUTO)", -1, 13,
-          DEFAULT_ISDBT_LAYERB_SEGMENT_COUNT, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_LAYERB_SEGMENT_COUNT,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERC_SEGMENT_COUNT,
       g_param_spec_int ("isdbt-layerc-segment-count",
           "ISB-T layer C segment count",
           "(ISDB-T) Layer C segment count (-1 = AUTO)", -1, 13,
-          DEFAULT_ISDBT_LAYERC_SEGMENT_COUNT, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_LAYERC_SEGMENT_COUNT,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERA_TIME_INTERLEAVING,
       g_param_spec_int ("isdbt-layera-time-interleaving",
           "ISB-T layer A time interleaving ",
           "(ISDB-T) Layer A time interleaving (-1 = AUTO)", -1, 8,
-          DEFAULT_ISDBT_LAYERA_TIME_INTERLEAVING, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_LAYERA_TIME_INTERLEAVING,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERB_TIME_INTERLEAVING,
       g_param_spec_int ("isdbt-layerb-time-interleaving",
           "ISB-T layer B time interleaving ",
           "(ISDB-T) Layer B time interleaving (-1 = AUTO)", -1, 8,
-          DEFAULT_ISDBT_LAYERB_TIME_INTERLEAVING, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_LAYERB_TIME_INTERLEAVING,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_ISDBT_LAYERC_TIME_INTERLEAVING,
       g_param_spec_int ("isdbt-layerc-time-interleaving",
           "ISB-T layer C time interleaving ",
           "(ISDB-T) Layer C time interleaving (-1 = AUTO)", -1, 8,
-          DEFAULT_ISDBT_LAYERC_TIME_INTERLEAVING, G_PARAM_READWRITE));
+          DEFAULT_ISDBT_LAYERC_TIME_INTERLEAVING,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   /* LNB properties (Satellite distribution standards) */
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_LNB_SLOF,
       g_param_spec_uint ("lnb-slof", "Tuning Timeout",
           "LNB's Upper bound for low band reception (kHz)",
-          0, G_MAXUINT, DEFAULT_LNB_SLOF, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_LNB_SLOF,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_LNB_LOF1,
       g_param_spec_uint ("lnb-lof1", "Low band local oscillator frequency",
           "LNB's Local oscillator frequency used for low band reception (kHz)",
-          0, G_MAXUINT, DEFAULT_LNB_LOF1, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_LNB_LOF1,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_LNB_LOF2,
       g_param_spec_uint ("lnb-lof2", "High band local oscillator frequency",
           "LNB's Local oscillator frequency used for high band reception (kHz)",
-          0, G_MAXUINT, DEFAULT_LNB_LOF2, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_LNB_LOF2,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
   /**
    * GstDvbSrc::tuning-start:
