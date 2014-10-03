@@ -95,7 +95,8 @@ print_tag_foreach (const GstTagList * tags, const gchar * tag,
   gchar *str;
   guint depth = GPOINTER_TO_UINT (user_data);
 
-  gst_tag_list_copy_value (&val, tags, tag);
+  if (!gst_tag_list_copy_value (&val, tags, tag))
+    return;
 
   if (G_VALUE_HOLDS_STRING (&val)) {
     str = g_value_dup_string (&val);
