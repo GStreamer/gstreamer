@@ -632,9 +632,9 @@ gst_input_selector_wait (GstInputSelector * self, GstSelectorPad * pad)
 }
 
 static GstClockTime
-gst_input_selector_get_clipped_running_time (GstSegment * seg, GstBuffer buf)
+gst_input_selector_get_clipped_running_time (GstSegment * seg, GstBuffer * buf)
 {
-  GstClockTime *running_time;
+  GstClockTime running_time;
 
   running_time = GST_BUFFER_PTS (buf);
   /* If possible try to get the running time at the end of the buffer */
@@ -901,7 +901,7 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
       /* the buffer is still valid if its duration is valid and the
        * timestamp + duration is >= time, or if its duration is invalid
        * and the timestamp is >= time */
-      running_time = gst_input_selector_get_clipped_running_time (seg, buf);
+      running_time = gst_input_selector_get_clipped_running_time (seg, buffer);
       GST_DEBUG_OBJECT (selpad,
           "checking if buffer %p running time=%" GST_TIME_FORMAT
           " >= stream time=%" GST_TIME_FORMAT, buffer,
