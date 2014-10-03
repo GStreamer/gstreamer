@@ -36,21 +36,19 @@
 #include "gstopenh264enc.h"
 
 static gboolean
-plugin_init(GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-    gst_element_register(plugin, "openh264dec", GST_RANK_NONE, GST_TYPE_OPENH264DEC);
-    gst_element_register(plugin, "openh264enc", GST_RANK_NONE, GST_TYPE_OPENH264ENC);
+  gst_element_register (plugin, "openh264dec", GST_RANK_NONE,
+      GST_TYPE_OPENH264DEC);
+  gst_element_register (plugin, "openh264enc", GST_RANK_NONE,
+      GST_TYPE_OPENH264ENC);
 
-    return TRUE;
+  return TRUE;
 }
 
-GST_PLUGIN_DEFINE(
-                  GST_VERSION_MAJOR,
-                  GST_VERSION_MINOR,
-                  openh264,
-                  "OpenH264 encoder/decoder plugin",
-                  plugin_init,
-                  VERSION,
-                  "BSD",
-                  "OpenWebRTC GStreamer plugins",
-                  "http://www.ericsson.com")
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    openh264,
+    "OpenH264 encoder/decoder plugin",
+    plugin_init,
+    VERSION, "BSD", "OpenWebRTC GStreamer plugins", "http://www.ericsson.com")
