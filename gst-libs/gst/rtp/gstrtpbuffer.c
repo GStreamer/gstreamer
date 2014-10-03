@@ -1520,7 +1520,7 @@ gst_rtp_buffer_add_extension_onebyte_header (GstRTPBuffer * rtp, guint8 id,
 
 
 static guint
-get_twobytes_header_end_offset (guint8 * pdata, guint wordlen)
+get_twobytes_header_end_offset (const guint8 * pdata, guint wordlen)
 {
   guint offset = 0;
   guint bytelen = wordlen * 4;
