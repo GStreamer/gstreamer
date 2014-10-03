@@ -76,6 +76,7 @@ enum
 #define DEFAULT_FILLTYPE        FAKE_SRC_FILLTYPE_ZERO
 #define DEFAULT_DATARATE        0
 #define DEFAULT_SYNC            FALSE
+#define DEFAULT_PATTERN         NULL
 #define DEFAULT_EOS             FALSE
 #define DEFAULT_SIGNAL_HANDOFFS FALSE
 #define DEFAULT_SILENT          TRUE
@@ -96,6 +97,7 @@ enum
   PROP_FILLTYPE,
   PROP_DATARATE,
   PROP_SYNC,
+  PROP_PATTERN,
   PROP_EOS,
   PROP_SIGNAL_HANDOFFS,
   PROP_SILENT,
@@ -277,6 +279,10 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync to the clock to the datarate",
           DEFAULT_SYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /*  FIXME 2.0: Remove unused pattern property. Not implemented */
+  g_object_class_install_property (gobject_class, PROP_PATTERN,
+      g_param_spec_string ("pattern", "pattern", "Set the pattern (unused)",
+          DEFAULT_PATTERN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   pspec_last_message = g_param_spec_string ("last-message", "last-message",
       "The last status message", NULL,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
@@ -476,6 +482,8 @@ gst_fake_src_set_property (GObject * object, guint prop_id,
     case PROP_SYNC:
       src->sync = g_value_get_boolean (value);
       break;
+    case PROP_PATTERN:
+      break;
     case PROP_SILENT:
       src->silent = g_value_get_boolean (value);
       break;
@@ -546,6 +554,8 @@ gst_fake_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SYNC:
       g_value_set_boolean (value, src->sync);
+      break;
+    case PROP_PATTERN:
       break;
     case PROP_SILENT:
       g_value_set_boolean (value, src->silent);
