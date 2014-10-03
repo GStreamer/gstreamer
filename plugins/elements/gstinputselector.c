@@ -1688,7 +1688,7 @@ gst_input_selector_request_new_pad (GstElement * element,
 
   GST_INPUT_SELECTOR_LOCK (sel);
 
-  GST_LOG_OBJECT (sel, "Creating new pad %d", sel->padcount);
+  GST_LOG_OBJECT (sel, "Creating new pad sink_%u", sel->padcount);
   name = g_strdup_printf ("sink_%u", sel->padcount++);
   sinkpad = g_object_new (GST_TYPE_SELECTOR_PAD,
       "name", name, "direction", templ->direction, "template", templ, NULL);

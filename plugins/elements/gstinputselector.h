@@ -66,8 +66,8 @@ struct _GstInputSelector {
   GstPad *srcpad;
 
   GstPad *active_sinkpad;
-  guint n_pads;
-  guint padcount;
+  guint n_pads;           /* number of pads */
+  guint padcount;         /* sequence number for pads */
   gboolean sync_streams;
   GstInputSelectorSyncMode sync_mode;
   gboolean cache_buffers;
