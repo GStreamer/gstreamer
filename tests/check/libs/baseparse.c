@@ -68,7 +68,6 @@ static gboolean
 gst_parser_tester_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 {
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
-  gst_caps_unref (caps);
   return TRUE;
 }
 
