@@ -106,6 +106,22 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
   g_cond_broadcast(&(((GstAggregatorPad* )pad)->priv->event_cond)); \
   }
 
+#define GST_AGGREGATOR_SETCAPS_LOCK(self)   G_STMT_START {        \
+  GST_LOG_OBJECT (self, "Taking SETCAPS lock from thread %p",   \
+        g_thread_self());                                         \
+  g_mutex_lock(&self->priv->setcaps_lock);                         \
+  GST_LOG_OBJECT (self, "Took SETCAPS lock from thread %p",     \
+        g_thread_self());                                         \
+  } G_STMT_END
+
+#define GST_AGGREGATOR_SETCAPS_UNLOCK(self)   G_STMT_START {        \
+  GST_LOG_OBJECT (self, "Releasing SETCAPS lock from thread %p",  \
+        g_thread_self());                                           \
+  g_mutex_unlock(&self->priv->setcaps_lock);                         \
+  GST_LOG_OBJECT (self, "Took SETCAPS lock from thread %p",       \
+        g_thread_self());                                           \
+  } G_STMT_END
+
 struct _GstAggregatorPadPrivate
 {
   gboolean pending_flush_start;
@@ -177,6 +193,9 @@ struct _GstAggregatorPrivate
 
   GstTagList *tags;
   gboolean tags_changed;
+
+  /* Lock to prevent two src setcaps from happening at the same time  */
+  GMutex setcaps_lock;
 };
 
 typedef struct
@@ -347,8 +366,10 @@ _push_mandatory_events (GstAggregator * self)
 void
 gst_aggregator_set_src_caps (GstAggregator * self, GstCaps * caps)
 {
+  GST_AGGREGATOR_SETCAPS_LOCK (self);
   gst_caps_replace (&self->priv->srccaps, caps);
   _push_mandatory_events (self);
+  GST_AGGREGATOR_SETCAPS_UNLOCK (self);
 }
 
 /**
@@ -1053,6 +1074,7 @@ gst_aggregator_finalize (GObject * object)
   GstAggregator *self = (GstAggregator *) object;
 
   g_mutex_clear (&self->priv->mcontext_lock);
+  g_mutex_clear (&self->priv->setcaps_lock);
 
   G_OBJECT_CLASS (aggregator_parent_class)->finalize (object);
 }
@@ -1134,6 +1156,7 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   g_mutex_init (&self->priv->mcontext_lock);
+  g_mutex_init (&self->priv->setcaps_lock);
 }
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
