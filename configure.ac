@@ -2550,6 +2550,15 @@ AG_GST_CHECK_FEATURE(OPENEXR, [openexr library], openexr, [
   AG_GST_PKG_CHECK_MODULES(OPENEXR, OpenEXR)
 ])
 
+dnl *** openh264 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENH264, true)
+AG_GST_CHECK_FEATURE(OPENH264, [openh264 library], openh264, [
+  HAVE_OPENH264="yes"
+  AG_GST_CHECK_LIBHEADER(OPENH264, openh264, WelsSnprintf, ,wels/codec_api.h,
+    OPENH264_LIBS="-lopenh264", HAVE_OPENH264="no")
+  AC_SUBST(OPENH264_LIBS)
+])
+
 dnl *** OpenJPEG ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENJPEG, true)
 AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
@@ -3089,6 +3098,7 @@ AM_CONDITIONAL(USE_TELETEXTDEC, false)
 AM_CONDITIONAL(USE_SNDIO, false)
 AM_CONDITIONAL(USE_UVCH264, false)
 AM_CONDITIONAL(USE_WEBP, false)
+AM_CONDITIONAL(USE_OPENH264, false)
 
 fi dnl of EXT plugins
 
@@ -3358,6 +3368,7 @@ ext/ofa/Makefile
 ext/openal/Makefile
 ext/opencv/Makefile
 ext/openexr/Makefile
+ext/openh264/Makefile
 ext/openjpeg/Makefile
 ext/openni2/Makefile
 ext/opus/Makefile
