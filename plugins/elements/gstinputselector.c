@@ -631,6 +631,25 @@ gst_input_selector_wait (GstInputSelector * self, GstSelectorPad * pad)
   return self->flushing;
 }
 
+static GstClockTime
+gst_input_selector_get_clipped_running_time (GstSegment * seg, GstBuffer buf)
+{
+  GstClockTime *running_time;
+
+  running_time = GST_BUFFER_PTS (buf);
+  /* If possible try to get the running time at the end of the buffer */
+  if (GST_BUFFER_DURATION_IS_VALID (buf))
+    running_time += GST_BUFFER_DURATION (buf);
+  /* Only use the segment to convert to running time if the segment is
+   * in TIME format, otherwise do our best to try to sync */
+  if (GST_CLOCK_TIME_IS_VALID (seg->stop)) {
+    if (running_time > seg->stop) {
+      running_time = seg->stop;
+    }
+  }
+  return gst_segment_to_running_time (seg, GST_FORMAT_TIME, running_time);
+}
+
 /* must be called without the SELECTOR_LOCK, will wait until the running time
  * of the active pad is after this pad or return TRUE when flushing */
 static gboolean
@@ -677,19 +696,7 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
       return FALSE;
     }
 
-    running_time = GST_BUFFER_PTS (buf);
-    /* If possible try to get the running time at the end of the buffer */
-    if (GST_BUFFER_DURATION_IS_VALID (buf))
-      running_time += GST_BUFFER_DURATION (buf);
-    /* Only use the segment to convert to running time if the segment is
-     * in TIME format, otherwise do our best to try to sync */
-    if (GST_CLOCK_TIME_IS_VALID (seg->stop)) {
-      if (running_time > seg->stop) {
-        running_time = seg->stop;
-      }
-    }
-    running_time =
-        gst_segment_to_running_time (seg, GST_FORMAT_TIME, running_time);
+    running_time = gst_input_selector_get_clipped_running_time (seg, buf);
     /* If this is outside the segment don't sync */
     if (running_time == -1) {
       GST_DEBUG_OBJECT (selpad,
@@ -735,7 +742,7 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
     }
 
     if (selpad != active_selpad && !sel->flushing && !selpad->flushing &&
-        (sel->blocked || cur_running_time == -1
+        (sel->blocked || cur_running_time == GST_CLOCK_TIME_NONE
             || running_time >= cur_running_time)) {
       if (!sel->blocked) {
         GST_DEBUG_OBJECT (selpad,
@@ -894,20 +901,7 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
       /* the buffer is still valid if its duration is valid and the
        * timestamp + duration is >= time, or if its duration is invalid
        * and the timestamp is >= time */
-      running_time = GST_BUFFER_PTS (buffer);
-      /* If possible try to get the running time at the end of the buffer */
-      if (GST_BUFFER_DURATION_IS_VALID (buffer))
-        running_time += GST_BUFFER_DURATION (buffer);
-      /* Only use the segment to convert to running time if the segment is
-       * in TIME format, otherwise do our best to try to sync */
-      if (GST_CLOCK_TIME_IS_VALID (seg->stop)) {
-        if (running_time > seg->stop) {
-          running_time = seg->stop;
-        }
-      }
-      running_time =
-          gst_segment_to_running_time (seg, GST_FORMAT_TIME, running_time);
-
+      running_time = gst_input_selector_get_clipped_running_time (seg, buf);
       GST_DEBUG_OBJECT (selpad,
           "checking if buffer %p running time=%" GST_TIME_FORMAT
           " >= stream time=%" GST_TIME_FORMAT, buffer,
