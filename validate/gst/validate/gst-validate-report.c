@@ -90,6 +90,17 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
   return issue;
 }
 
+void
+gst_validate_issue_set_default_level (GstValidateIssue * issue,
+    GstValidateReportLevel default_level)
+{
+  GST_INFO ("Setting issue %s::%s default level to %s",
+      issue->area, issue->name,
+      gst_validate_report_level_get_name (default_level));
+
+  issue->default_level = default_level;
+}
+
 static void
 gst_validate_issue_free (GstValidateIssue * issue)
 {
@@ -351,6 +362,24 @@ gst_validate_report_level_get_name (GstValidateReportLevel level)
     default:
       return "unknown";
   }
+}
+
+GstValidateReportLevel
+gst_validate_report_level_from_name (const gchar * issue_name)
+{
+  if (g_strcmp0 (issue_name, "critical") == 0)
+    return GST_VALIDATE_REPORT_LEVEL_CRITICAL;
+
+  else if (g_strcmp0 (issue_name, "warning") == 0)
+    return GST_VALIDATE_REPORT_LEVEL_WARNING;
+
+  else if (g_strcmp0 (issue_name, "issue") == 0)
+    return GST_VALIDATE_REPORT_LEVEL_ISSUE;
+
+  else if (g_strcmp0 (issue_name, "ignore") == 0)
+    return GST_VALIDATE_REPORT_LEVEL_IGNORE;
+
+  return GST_VALIDATE_REPORT_LEVEL_UNKNOWN;
 }
 
 gboolean

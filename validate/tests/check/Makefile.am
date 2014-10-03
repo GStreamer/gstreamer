@@ -29,7 +29,8 @@ clean-local: clean-local-check
 check_PROGRAMS = \
 	validate/padmonitor \
 	validate/monitoring \
-	validate/reporting
+	validate/reporting \
+	validate/overrides
 
 noinst_LTLIBRARIES=$(testutils_noisnt_libraries)
 noinst_HEADERS=$(testutils_noinst_headers)

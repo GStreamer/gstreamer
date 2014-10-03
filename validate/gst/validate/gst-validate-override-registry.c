@@ -29,6 +29,7 @@
 
 #include <gmodule.h>
 
+#include "gst-validate-utils.h"
 #include "gst-validate-internal.h"
 #include "gst-validate-override-registry.h"
 
@@ -134,7 +135,7 @@ static void
   name = gst_validate_monitor_get_element_name (monitor);
   for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
     entry = iter->data;
-    if (strcmp (name, entry->name) == 0) {
+    if (g_strcmp0 (name, entry->name) == 0) {
       gst_validate_monitor_attach_override (monitor, entry->override);
     }
   }
@@ -152,7 +153,7 @@ static void
   if (!element)
     return;
 
-  for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
+  for (iter = registry->gtype_overrides.head; iter; iter = g_list_next (iter)) {
     entry = iter->data;
     if (G_TYPE_CHECK_INSTANCE_TYPE (element, entry->gtype)) {
       gst_validate_monitor_attach_override (monitor, entry->override);
@@ -201,6 +202,129 @@ gst_validate_override_registry_attach_overrides (GstValidateMonitor * monitor)
   GST_VALIDATE_OVERRIDE_REGISTRY_UNLOCK (reg);
 }
 
+enum
+{
+  WRONG_FILE,
+  WRONG_OVERRIDES,
+  OK
+};
+
+static gboolean
+_add_override_from_struct (GstStructure * soverride)
+{
+  GQuark issue_id;
+  GstValidateReportLevel level;
+  GstValidateOverride *override;
+  const gchar *str_issue_id, *str_new_severity,
+      *factory_name = NULL, *name = NULL, *klass = NULL;
+
+  gboolean registered = FALSE;
+
+  if (!gst_structure_has_name (soverride, "change-severity")) {
+    GST_ERROR ("Currently only 'change-severity' overrides are supported");
+
+    return FALSE;
+  }
+
+  str_issue_id = gst_structure_get_string (soverride, "issue-id");
+  if (!str_issue_id) {
+    GST_ERROR ("No issue id provided in override: %" GST_PTR_FORMAT, soverride);
+
+    return FALSE;
+  }
+
+  issue_id = g_quark_from_string (str_issue_id);
+  if (gst_validate_issue_from_id (issue_id) == NULL) {
+    GST_ERROR ("No GstValidateIssue registered for %s", str_issue_id);
+
+    return FALSE;
+  }
+
+  str_new_severity = gst_structure_get_string (soverride, "new-severity");
+  if (str_new_severity == NULL) {
+    GST_ERROR ("No 'new-severity' field found in %" GST_PTR_FORMAT, soverride);
+
+    return FALSE;
+  }
+
+  level = gst_validate_report_level_from_name (str_new_severity);
+  if (level == GST_VALIDATE_REPORT_LEVEL_UNKNOWN) {
+    GST_ERROR ("Unknown level name %s", str_new_severity);
+
+    return FALSE;
+  }
+
+  override = gst_validate_override_new ();
+  gst_validate_override_change_severity (override, issue_id, level);
+
+  name = gst_structure_get_string (soverride, "element-name");
+  klass = gst_structure_get_string (soverride, "element-classification");
+  factory_name = gst_structure_get_string (soverride, "element-factory-name");
+
+  if (factory_name) {
+    GType type;
+    GstElement *element = gst_element_factory_make (factory_name, NULL);
+
+    if (element == NULL) {
+      GST_ERROR ("Unknown element factory name: %s (gst is %sinitialized)",
+          factory_name, gst_is_initialized ()? "" : "NOT ");
+
+      if (!name && !klass)
+        return FALSE;
+    } else {
+      type = G_OBJECT_TYPE (element);
+      gst_validate_override_register_by_type (type, override);
+    }
+
+    registered = TRUE;
+  }
+
+  if (name) {
+    gst_validate_override_register_by_name (name, override);
+    registered = TRUE;
+  }
+
+  if (klass) {
+    gst_validate_override_register_by_klass (klass, override);
+    registered = TRUE;
+  }
+
+  if (!registered) {
+    GstValidateIssue *issue = gst_validate_issue_from_id (issue_id);
+
+    if (!issue) {
+
+      return FALSE;
+    }
+
+    gst_validate_issue_set_default_level (issue, level);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_load_text_override_file (const gchar * filename)
+{
+  gint ret = OK;
+  GList *structs = structs_parse_from_filename (filename);
+
+  if (structs) {
+    GList *tmp;
+
+    for (tmp = structs; tmp; tmp = tmp->next) {
+      if (!_add_override_from_struct (tmp->data)) {
+        GST_ERROR ("Wrong overrides %" GST_PTR_FORMAT, tmp->data);
+        ret = WRONG_OVERRIDES;
+      }
+    }
+
+    return ret;
+  }
+
+  return WRONG_FILE;
+}
+
 int
 gst_validate_override_registry_preload (void)
 {
@@ -221,9 +345,13 @@ gst_validate_override_registry_preload (void)
     GST_INFO ("Loading overrides from %s", *modname);
     module = g_module_open (*modname, G_MODULE_BIND_LAZY);
     if (module == NULL) {
-      loaderr = g_module_error ();
-      GST_ERROR ("Failed to load %s %s", *modname,
-          loaderr ? loaderr : "no idea why");
+
+      if (_load_text_override_file (*modname) == WRONG_FILE) {
+        loaderr = g_module_error ();
+        GST_ERROR ("Failed to load %s %s", *modname,
+            loaderr ? loaderr : "no idea why");
+      }
+
       continue;
     }
     if (g_module_symbol (module, GST_VALIDATE_OVERRIDE_INIT_SYMBOL,
