@@ -334,6 +334,14 @@ gst_dvbsrc_transmission_mode_get_type (void)
     {TRANSMISSION_MODE_2K, "2K", "2k"},
     {TRANSMISSION_MODE_8K, "8K", "8k"},
     {TRANSMISSION_MODE_AUTO, "AUTO", "auto"},
+    {TRANSMISSION_MODE_4K, "4K", "4k"},
+    {TRANSMISSION_MODE_1K, "1K", "1k"},
+    {TRANSMISSION_MODE_16K, "16K", "16k"},
+    {TRANSMISSION_MODE_32K, "32K", "32k"},
+#if HAVE_V5_MINOR(7)
+    {TRANSMISSION_MODE_C1, "C1", "c1"},
+    {TRANSMISSION_MODE_C3780, "C3780", "c3780"},
+#endif
     {0, NULL, NULL},
   };
 
