@@ -1021,26 +1021,24 @@ gst_riff_wavext_add_channel_mask (GstCaps * caps, gint num_channels,
 {
   gint i, p;
   guint64 channel_mask = 0;
-  GstAudioChannelPosition from[18], to[18];
+  GstAudioChannelPosition *from, *to;
+  gboolean ret = FALSE;
 
-  if (num_channels < 1 || num_channels > MAX_CHANNEL_POSITIONS) {
+  if (num_channels < 1) {
     GST_DEBUG ("invalid number of channels: %d", num_channels);
     return FALSE;
   }
 
+  from = g_new (GstAudioChannelPosition, num_channels);
+  to = g_new (GstAudioChannelPosition, num_channels);
   p = 0;
   for (i = 0; i < MAX_CHANNEL_POSITIONS; ++i) {
     if ((layout & layout_mapping[i].ms_mask) != 0) {
       if (p >= num_channels) {
         GST_WARNING ("More bits set in the channel layout map than there "
-            "are channels! Broken file");
-        return FALSE;
-      }
-      if (layout_mapping[i].gst_pos == GST_AUDIO_CHANNEL_POSITION_INVALID) {
-        GST_WARNING ("Unsupported channel position (mask 0x%08x) in channel "
-            "layout map - ignoring those channels", layout_mapping[i].ms_mask);
-        /* what to do? just ignore it and let downstream deal with a channel
-         * layout that has INVALID positions in it for now ... */
+            "are channels! Setting channel-mask to 0.");
+        channel_mask = 0;
+        break;
       }
       channel_mask |= G_GUINT64_CONSTANT (1) << layout_mapping[i].gst_pos;
       from[p] = layout_mapping[i].gst_pos;
@@ -1048,25 +1046,33 @@ gst_riff_wavext_add_channel_mask (GstCaps * caps, gint num_channels,
     }
   }
 
-  if (p != num_channels) {
-    GST_WARNING ("Only %d bits set in the channel layout map, but there are "
-        "supposed to be %d channels! Broken file", p, num_channels);
-    return FALSE;
-  }
-
-  if (channel_reorder_map) {
+  if (channel_mask > 0 && channel_reorder_map) {
+    if (p != num_channels) {
+      /* WAVEFORMATEXTENSIBLE allows to have more channels than bits in
+       * the channel mask. We accept this, too, and hope that downstream
+       * can handle this */
+      GST_WARNING ("Partially unknown positions in channel mask");
+      for (; p < num_channels; ++p)
+        from[p] = GST_AUDIO_CHANNEL_POSITION_INVALID;
+    }
     memcpy (to, from, sizeof (from[0]) * num_channels);
     if (!gst_audio_channel_positions_to_valid_order (to, num_channels))
-      return FALSE;
+      goto fail;
     if (!gst_audio_get_channel_reorder_map (num_channels, from, to,
             channel_reorder_map))
-      return FALSE;
+      goto fail;
   }
 
   gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
       NULL);
 
-  return TRUE;
+  ret = TRUE;
+
+fail:
+  g_free (from);
+  g_free (to);
+
+  return ret;
 }
 
 static gboolean
