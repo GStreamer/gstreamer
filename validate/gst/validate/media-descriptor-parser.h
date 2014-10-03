@@ -69,10 +69,6 @@ gboolean gst_media_descriptor_parser_add_taglist        (GstMediaDescriptorParse
                                                                   GstTagList *taglist);
 gboolean gst_media_descriptor_parser_all_stream_found   (GstMediaDescriptorParser *parser);
 gboolean gst_media_descriptor_parser_all_tags_found     (GstMediaDescriptorParser *parser);
-gboolean gst_media_descriptor_parser_add_frame          (GstMediaDescriptorParser *parser,
-                                                                  GstPad *pad,
-                                                                  GstBuffer *buf,
-                                                                  GstBuffer *expected);
 
 G_END_DECLS
 

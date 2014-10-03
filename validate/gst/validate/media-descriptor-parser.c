@@ -164,32 +164,6 @@ deserialize_framenode (const gchar ** names, const gchar ** values)
 }
 
 
-static gboolean
-frame_node_compare (FrameNode * fnode, GstBuffer * buf, GstBuffer * expected)
-{
-  if (expected != NULL) {
-    GST_BUFFER_OFFSET (expected) = fnode->offset;
-    GST_BUFFER_OFFSET_END (expected) = fnode->offset_end;
-    GST_BUFFER_DURATION (expected) = fnode->duration;
-    GST_BUFFER_PTS (expected) = fnode->pts;
-    GST_BUFFER_DTS (expected) = fnode->dts;
-    if (fnode->is_keyframe)
-      GST_BUFFER_FLAG_UNSET (expected, GST_BUFFER_FLAG_DELTA_UNIT);
-  }
-
-  if ((fnode->offset == GST_BUFFER_OFFSET (buf) &&
-          fnode->offset_end == GST_BUFFER_OFFSET_END (buf) &&
-          fnode->duration == GST_BUFFER_DURATION (buf) &&
-          fnode->pts == GST_BUFFER_PTS (buf) &&
-          fnode->dts == GST_BUFFER_DTS (buf) &&
-          fnode->is_keyframe == GST_BUFFER_FLAG_IS_SET (buf,
-              GST_BUFFER_FLAG_DELTA_UNIT)) == FALSE) {
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
 static void
 on_end_element_cb (GMarkupParseContext * context,
     const gchar * element_name, gpointer user_data, GError ** error)
@@ -473,30 +447,6 @@ gst_media_descriptor_parser_all_stream_found (GstMediaDescriptorParser * parser)
   }
 
   return TRUE;
-}
-
-gboolean
-gst_media_descriptor_parser_add_frame (GstMediaDescriptorParser * parser,
-    GstPad * pad, GstBuffer * buf, GstBuffer * expected)
-{
-  GList *tmp;
-
-  g_return_val_if_fail (GST_IS_MEDIA_DESCRIPTOR_PARSER (parser), FALSE);
-  g_return_val_if_fail (((GstMediaDescriptor *) parser)->filenode, FALSE);
-
-  for (tmp = ((GstMediaDescriptor *) parser)->filenode->streams; tmp;
-      tmp = tmp->next) {
-    StreamNode *streamnode = (StreamNode *) tmp->data;
-
-    if (streamnode->pad == pad && streamnode->cframe) {
-      FrameNode *fnode = streamnode->cframe->data;
-
-      streamnode->cframe = streamnode->cframe->next;
-      return frame_node_compare (fnode, buf, expected);
-    }
-  }
-
-  return FALSE;
 }
 
 gboolean
