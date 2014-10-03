@@ -73,7 +73,6 @@ enum
 static GList *action_types = NULL;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
-static GRegex *clean_action_str;
 
 struct _GstValidateScenarioPrivate
 {
@@ -1259,133 +1258,6 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
   GST_DEBUG_OBJECT (scenario, "pipeline was freed");
 }
 
-static gchar **
-_scenario_file_get_lines (GFile * file)
-{
-  gsize size;
-
-  GError *err = NULL;
-  gchar *content = NULL, *escaped_content = NULL, **lines = NULL;
-
-  /* TODO Handle GCancellable */
-  if (!g_file_load_contents (file, NULL, &content, &size, NULL, &err))
-    goto failed;
-
-  if (g_strcmp0 (content, "") == 0)
-    goto failed;
-
-  escaped_content = g_regex_replace (clean_action_str, content, -1, 0, "", 0,
-      NULL);
-  g_free (content);
-
-  lines = g_strsplit (escaped_content, "\n", 0);
-  g_free (escaped_content);
-
-done:
-
-  return lines;
-
-failed:
-  if (err) {
-    GST_WARNING ("Failed to load contents: %d %s", err->code, err->message);
-    g_error_free (err);
-  }
-
-  if (content)
-    g_free (content);
-  content = NULL;
-
-  if (escaped_content)
-    g_free (escaped_content);
-  escaped_content = NULL;
-
-  if (lines)
-    g_strfreev (lines);
-  lines = NULL;
-
-  goto done;
-}
-
-static gchar **
-_scenario_get_lines (const gchar * scenario_file)
-{
-  GFile *file = NULL;
-  gchar **lines = NULL;
-
-  GST_DEBUG ("Trying to load %s", scenario_file);
-  if ((file = g_file_new_for_path (scenario_file)) == NULL) {
-    GST_WARNING ("%s wrong uri", scenario_file);
-    return NULL;
-  }
-
-  lines = _scenario_file_get_lines (file);
-
-  g_object_unref (file);
-
-  return lines;
-}
-
-static GList *
-_scenario_lines_get_strutures (gchar ** lines)
-{
-  gint i;
-  GList *structures = NULL;
-
-  for (i = 0; lines[i]; i++) {
-    GstStructure *structure;
-
-    if (g_strcmp0 (lines[i], "") == 0)
-      continue;
-
-    structure = gst_structure_from_string (lines[i], NULL);
-    if (structure == NULL) {
-      GST_ERROR ("Could not parse action %s", lines[i]);
-      goto failed;
-    }
-
-    structures = g_list_append (structures, structure);
-  }
-
-done:
-  if (lines)
-    g_strfreev (lines);
-
-  return structures;
-
-failed:
-  if (structures)
-    g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
-  structures = NULL;
-
-  goto done;
-}
-
-static GList *
-_scenario_get_structures (const gchar * scenario_file)
-{
-  gchar **lines;
-
-  lines = _scenario_get_lines (scenario_file);
-
-  if (lines == NULL)
-    return NULL;
-
-  return _scenario_lines_get_strutures (lines);
-}
-
-static GList *
-_scenario_file_get_structures (GFile * scenario_file)
-{
-  gchar **lines;
-
-  lines = _scenario_file_get_lines (scenario_file);
-
-  if (lines == NULL)
-    return NULL;
-
-  return _scenario_lines_get_strutures (lines);
-}
-
 static gboolean
 _load_scenario_file (GstValidateScenario * scenario,
     const gchar * scenario_file, gboolean * is_config)
@@ -1396,7 +1268,7 @@ _load_scenario_file (GstValidateScenario * scenario,
 
   *is_config = FALSE;
 
-  structures = _scenario_get_structures (scenario_file);
+  structures = structs_parse_from_filename (scenario_file);
   if (structures == NULL)
     goto failed;
 
@@ -1765,7 +1637,7 @@ _parse_scenario (GFile * f, GKeyFile * kf)
     GstStructure *desc = NULL;
 
     gchar **name = g_strsplit (fname, GST_VALIDATE_SCENARIO_SUFFIX, 0);
-    GList *tmp, *structures = _scenario_file_get_structures (f);
+    GList *tmp, *structures = structs_parse_from_gfile (f);
 
     for (tmp = structures; tmp; tmp = tmp->next) {
       if (gst_structure_has_name (tmp->data, "description")) {
@@ -2042,8 +1914,6 @@ init_scenarios (void)
 
   _gst_validate_action_type = gst_validate_action_get_type ();
   _gst_validate_action_type_type = gst_validate_action_type_get_type ();
-
-  clean_action_str = g_regex_new ("\\\\\n|#.*\n", G_REGEX_CASELESS, 0, NULL);
 
   /*  *INDENT-OFF* */
   REGISTER_ACTION_TYPE ("description", NULL,

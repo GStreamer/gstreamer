@@ -26,6 +26,7 @@
 #include<setjmp.h>
 #include<stdlib.h>
 #include<glib.h>
+#include<gio/gio.h>
 #include <gst/gst.h>
 
 typedef int (*ParseVariableFunc) (const gchar *name,
@@ -39,4 +40,8 @@ guint gst_validate_utils_flags_from_str     (GType type, const gchar * str_flags
 gboolean gst_validate_utils_enum_from_str   (GType type,
                                              const gchar * str_enum,
                                              guint * enum_value);
+
+GList * structs_parse_from_filename         (const gchar * scenario_file);
+GList * structs_parse_from_gfile            (GFile * scenario_file);
+
 #endif
