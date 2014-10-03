@@ -333,10 +333,8 @@ gst_selector_pad_get_running_time (GstSelectorPad * pad)
 
   GST_OBJECT_LOCK (pad);
   if (pad->active) {
-    GstFormat format = pad->segment.format;
-
     ret =
-        gst_segment_to_running_time (&pad->segment, format,
+        gst_segment_to_running_time (&pad->segment, pad->segment.format,
         pad->segment.position);
   }
   GST_OBJECT_UNLOCK (pad);
@@ -403,15 +401,12 @@ gst_selector_pad_cache_buffer (GstSelectorPad * selpad, GstBuffer * buffer)
 static void
 gst_selector_pad_free_cached_buffers (GstSelectorPad * selpad)
 {
-  GstSelectorPadCachedBuffer *cached_buffer;
-
   if (!selpad->cached_buffers)
     return;
 
   GST_DEBUG_OBJECT (selpad, "Freeing cached buffers");
-  while ((cached_buffer = g_queue_pop_head (selpad->cached_buffers)))
-    gst_selector_pad_free_cached_buffer (cached_buffer);
-  g_queue_free (selpad->cached_buffers);
+  g_queue_free_full (selpad->cached_buffers,
+      (GDestroyNotify) gst_selector_pad_free_cached_buffer);
   selpad->cached_buffers = NULL;
 }
 
@@ -470,7 +465,6 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
     gst_object_unref (prev_active_sinkpad);
 
   GST_INPUT_SELECTOR_LOCK (sel);
-  active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
 
   /* only forward if we are dealing with the active sinkpad */
   forward = (pad == active_sinkpad);
@@ -648,7 +642,7 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
   GST_DEBUG_OBJECT (selpad, "entering wait for buffer %p", buf);
 
   /* If we have no valid timestamp we can't sync this buffer */
-  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+  if (!GST_BUFFER_PTS_IS_VALID (buf)) {
     GST_DEBUG_OBJECT (selpad, "leaving wait for buffer with "
         "invalid timestamp");
     return FALSE;
@@ -683,7 +677,7 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
       return FALSE;
     }
 
-    running_time = GST_BUFFER_TIMESTAMP (buf);
+    running_time = GST_BUFFER_PTS (buf);
     /* If possible try to get the running time at the end of the buffer */
     if (GST_BUFFER_DURATION_IS_VALID (buf))
       running_time += GST_BUFFER_DURATION (buf);
@@ -817,7 +811,7 @@ gst_input_selector_debug_cached_buffers (GstInputSelector * sel)
 
       cached_buffer = g_queue_peek_nth (selpad->cached_buffers, i);
       g_string_append_printf (timestamps, " %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (cached_buffer->buffer)));
+          GST_TIME_ARGS (GST_BUFFER_PTS (cached_buffer->buffer)));
     }
     str = g_string_free (timestamps, FALSE);
     GST_DEBUG_OBJECT (selpad, "%s", str);
@@ -891,7 +885,7 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
       GSList *l;
 
       /* If we have no valid timestamp we can't sync this buffer */
-      if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+      if (!GST_BUFFER_PTS_IS_VALID (buffer)) {
         maybe_remove = g_slist_append (maybe_remove, cached_buffer);
         queue_position = g_slist_length (maybe_remove);
         continue;
@@ -900,7 +894,7 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
       /* the buffer is still valid if its duration is valid and the
        * timestamp + duration is >= time, or if its duration is invalid
        * and the timestamp is >= time */
-      running_time = GST_BUFFER_TIMESTAMP (buffer);
+      running_time = GST_BUFFER_PTS (buffer);
       /* If possible try to get the running time at the end of the buffer */
       if (GST_BUFFER_DURATION_IS_VALID (buffer))
         running_time += GST_BUFFER_DURATION (buffer);
@@ -961,14 +955,13 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstPad *active_sinkpad;
   GstPad *prev_active_sinkpad = NULL;
   GstSelectorPad *selpad;
-  GstClockTime start_time;
 
   sel = GST_INPUT_SELECTOR (parent);
   selpad = GST_SELECTOR_PAD_CAST (pad);
 
   GST_DEBUG_OBJECT (selpad,
       "entering chain for buf %p with timestamp %" GST_TIME_FORMAT, buf,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
 
   GST_INPUT_SELECTOR_LOCK (sel);
   /* wait or check for flushing */
@@ -1038,8 +1031,9 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   /* update the segment on the srcpad */
-  start_time = GST_BUFFER_TIMESTAMP (buf);
-  if (GST_CLOCK_TIME_IS_VALID (start_time)) {
+  if (GST_BUFFER_PTS_IS_VALID (buf)) {
+    GstClockTime start_time = GST_BUFFER_PTS (buf);
+
     GST_LOG_OBJECT (pad, "received start time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start_time));
     if (GST_BUFFER_DURATION_IS_VALID (buf))
@@ -1076,9 +1070,10 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     selpad->events_pending = FALSE;
   }
 
-  if (prev_active_sinkpad)
+  if (prev_active_sinkpad) {
     gst_object_unref (prev_active_sinkpad);
-  prev_active_sinkpad = NULL;
+    prev_active_sinkpad = NULL;
+  }
 
   if (selpad->discont) {
     buf = gst_buffer_make_writable (buf);
@@ -1090,7 +1085,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   /* forward */
   GST_LOG_OBJECT (pad, "Forwarding buffer %p with timestamp %" GST_TIME_FORMAT,
-      buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      buf, GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
 
   /* Only make the buffer read-only when necessary */
   if (sel->sync_streams && sel->cache_buffers)
@@ -1651,7 +1646,7 @@ gst_input_selector_activate_sinkpad (GstInputSelector * sel, GstPad * pad)
 
   selpad->active = TRUE;
   active_sinkpad = sel->active_sinkpad;
-  if (sel->active_sinkpad == NULL) {
+  if (active_sinkpad == NULL) {
     GValue item = G_VALUE_INIT;
     GstIterator *iter = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (sel));
     GstIteratorResult ires;
