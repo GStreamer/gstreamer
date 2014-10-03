@@ -505,8 +505,6 @@ xml_check_first_element_from_data (const guint8 * data, guint length,
 
   /* skip XMLDec in any case if we've got one */
   if (got_xmldec) {
-    if (pos + 5 >= length)
-      return FALSE;
     pos += 5;
     data += 5;
   }
