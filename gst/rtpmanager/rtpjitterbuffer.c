@@ -170,6 +170,7 @@ rtp_jitter_buffer_set_delay (RTPJitterBuffer * jbuf, GstClockTime delay)
 /**
  * rtp_jitter_buffer_set_clock_rate:
  * @jbuf: an #RTPJitterBuffer
+ * @clock_rate: the new clock rate
  *
  * Set the clock rate in the jitterbuffer.
  */
@@ -177,13 +178,8 @@ void
 rtp_jitter_buffer_set_clock_rate (RTPJitterBuffer * jbuf, guint32 clock_rate)
 {
   if (jbuf->clock_rate != clock_rate) {
-    if (jbuf->clock_rate == -1) {
-      GST_DEBUG ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
-          G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
-    } else {
-      GST_WARNING ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
-          G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
-    }
+    GST_DEBUG ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
+        G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
     jbuf->clock_rate = clock_rate;
     rtp_jitter_buffer_reset_skew (jbuf);
   }
