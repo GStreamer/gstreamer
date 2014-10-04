@@ -97,6 +97,7 @@ struct _GstX264Enc
   GString *tunings;
   GString *option_string_prop; /* option-string property */
   GString *option_string; /* used by set prop */
+  gint frame_packing;
 
   /* input description */
   GstVideoCodecState *input_state;

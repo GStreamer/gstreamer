@@ -151,6 +151,7 @@ enum
   ARG_SPEED_PRESET,
   ARG_PSY_TUNE,
   ARG_TUNE,
+  ARG_FRAME_PACKING,
 };
 
 #define ARG_THREADS_DEFAULT            0        /* 0 means 'auto' which is 1.5x number of CPU cores */
@@ -191,6 +192,7 @@ static GString *x264enc_defaults;
 #define ARG_SPEED_PRESET_DEFAULT       6        /* 'medium' preset - matches x264 CLI default */
 #define ARG_PSY_TUNE_DEFAULT           0        /* no psy tuning */
 #define ARG_TUNE_DEFAULT               0        /* no tuning */
+#define ARG_FRAME_PACKING_DEFAULT      -1       /* automatic (none, or from input caps) */
 
 enum
 {
@@ -391,6 +393,52 @@ gst_x264_enc_build_tunings_string (GstX264Enc * x264enc)
   if (x264enc->tunings->len)
     GST_DEBUG_OBJECT (x264enc, "Constructed tunings string: %s",
         x264enc->tunings->str);
+}
+
+#define GST_X264_ENC_FRAME_PACKING_TYPE (gst_x264_enc_frame_packing_get_type())
+static GType
+gst_x264_enc_frame_packing_get_type (void)
+{
+  static GType fpa_type = 0;
+
+  static const GEnumValue fpa_types[] = {
+    {-1, "Automatic (use incoming video information)", "auto"},
+    {0, "checkerboard - Left and Right pixels alternate in a checkerboard pattern", "checkerboard"},
+    {1, "column interleaved - Alternating pixel columns represent Left and Right views", "column-interleaved"},
+    {2, "row interleaved - Alternating pixel rows represent Left and Right views", "row-interleaved"},
+    {3, "side by side - The left half of the frame contains the Left eye view, the right half the Right eye view", "side-by-side"},
+    {4, "top bottom - L is on top, R on bottom", "top-bottom"},
+    {5, "frame interleaved - Each frame contains either Left or Right view alternately", "frame-interleaved"},
+    {0, NULL, NULL}
+  };
+
+  if (!fpa_type) {
+    fpa_type = g_enum_register_static ("GstX264EncFramePacking", fpa_types);
+  }
+  return fpa_type;
+}
+
+static gint
+gst_x264_enc_mview_mode_to_frame_packing (GstVideoMultiviewMode mode)
+{
+  switch (mode) {
+    case GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD:
+      return 0;
+    case GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED:
+      return 1;
+    case GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED:
+      return 2;
+    case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
+      return 3;
+    case GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM:
+      return 4;
+    case GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME:
+      return 5;
+    default:
+      break;
+  }
+
+  return -1;
 }
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -759,6 +807,12 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           ARG_OPTION_STRING_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, ARG_FRAME_PACKING,
+      g_param_spec_enum ("frame-packing", "Frame Packing",
+          "Set frame packing mode for Stereoscopic content",
+          GST_X264_ENC_FRAME_PACKING_TYPE, ARG_FRAME_PACKING_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* options for which we _do_ use string equivalents */
   g_object_class_install_property (gobject_class, ARG_THREADS,
       g_param_spec_uint ("threads", "Threads",
@@ -1032,6 +1086,7 @@ gst_x264_enc_init (GstX264Enc * encoder)
   encoder->speed_preset = ARG_SPEED_PRESET_DEFAULT;
   encoder->psy_tune = ARG_PSY_TUNE_DEFAULT;
   encoder->tune = ARG_TUNE_DEFAULT;
+  encoder->frame_packing = ARG_FRAME_PACKING_DEFAULT;
 
   x264_param_default (&encoder->x264param);
 
@@ -1472,6 +1527,17 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     }
   }
 
+  /* Set 3D frame packing */
+  if (encoder->frame_packing != GST_VIDEO_MULTIVIEW_MODE_NONE)
+    encoder->x264param.i_frame_packing = encoder->frame_packing;
+  else
+    encoder->x264param.i_frame_packing =
+        gst_x264_enc_mview_mode_to_frame_packing (GST_VIDEO_INFO_MULTIVIEW_MODE
+        (info));
+
+  GST_DEBUG_OBJECT (encoder, "Stereo frame packing = %d",
+      encoder->x264param.i_frame_packing);
+
   encoder->reconfig = FALSE;
   /* good start, will be corrected if needed */
   encoder->ts_offset = 0;
@@ -1716,6 +1782,37 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstCaps * caps)
   state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (encoder),
       outcaps, encoder->input_state);
   GST_DEBUG_OBJECT (encoder, "output caps: %" GST_PTR_FORMAT, state->caps);
+
+  /* If set, local frame packing setting overrides any upstream config */
+  switch (encoder->frame_packing) {
+    case 0:
+      GST_VIDEO_INFO_MULTIVIEW_MODE (&state->info) =
+          GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD;
+      break;
+    case 1:
+      GST_VIDEO_INFO_MULTIVIEW_MODE (&state->info) =
+          GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED;
+      break;
+    case 2:
+      GST_VIDEO_INFO_MULTIVIEW_MODE (&state->info) =
+          GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED;
+      break;
+    case 3:
+      GST_VIDEO_INFO_MULTIVIEW_MODE (&state->info) =
+          GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE;
+      break;
+    case 4:
+      GST_VIDEO_INFO_MULTIVIEW_MODE (&state->info) =
+          GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM;
+      break;
+    case 5:
+      GST_VIDEO_INFO_MULTIVIEW_MODE (&state->info) =
+          GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME;
+      break;
+    default:
+      break;
+  }
+
   gst_video_codec_state_unref (state);
 
   tags = gst_tag_list_new_empty ();
@@ -2352,6 +2449,9 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       g_string_append_printf (encoder->option_string, ":interlaced=%d",
           encoder->interlaced);
       break;
+    case ARG_FRAME_PACKING:
+      encoder->frame_packing = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2487,6 +2587,9 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_OPTION_STRING:
       g_value_set_string (value, encoder->option_string_prop->str);
+      break;
+    case ARG_FRAME_PACKING:
+      g_value_set_enum (value, encoder->frame_packing);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
