@@ -501,7 +501,6 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.iMultipleThreadIdc = openh264enc->priv->multi_thread;
   enc_params.bEnableDenoise = openh264enc->priv->enable_denoise;
   enc_params.uiIntraPeriod = priv->gop_size;
-  enc_params.bEnableDenoise = 0;
   enc_params.bEnableBackgroundDetection = 1;
   enc_params.bEnableAdaptiveQuant = 1;
   enc_params.bEnableFrameSkip = 1;
