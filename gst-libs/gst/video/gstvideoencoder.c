@@ -137,7 +137,6 @@ struct _GstVideoEncoderPrivate
 
   /* FIXME : (and introduce a context ?) */
   gboolean drained;
-  gboolean at_eos;
 
   gint64 min_latency;
   gint64 max_latency;
@@ -453,7 +452,6 @@ gst_video_encoder_init (GstVideoEncoder * encoder, GstVideoEncoderClass * klass)
 
   g_rec_mutex_init (&encoder->stream_lock);
 
-  priv->at_eos = FALSE;
   priv->headers = NULL;
   priv->new_headers = FALSE;
 
@@ -990,7 +988,6 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
       GstFlowReturn flow_ret;
 
       GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
-      encoder->priv->at_eos = TRUE;
 
       if (encoder_class->finish) {
         flow_ret = encoder_class->finish (encoder);
@@ -1032,8 +1029,6 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
         GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
         break;
       }
-
-      encoder->priv->at_eos = FALSE;
 
       encoder->input_segment = segment;
       ret = TRUE;
@@ -1364,11 +1359,6 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       ", DTS %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
       gst_buffer_get_size (buf), GST_TIME_ARGS (pts),
       GST_TIME_ARGS (GST_BUFFER_DTS (buf)), GST_TIME_ARGS (duration));
-
-  if (priv->at_eos) {
-    ret = GST_FLOW_EOS;
-    goto done;
-  }
 
   start = pts;
   if (GST_CLOCK_TIME_IS_VALID (duration))
