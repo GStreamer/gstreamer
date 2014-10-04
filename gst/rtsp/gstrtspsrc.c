@@ -4443,6 +4443,7 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
 
     for (streams = src->streams; streams; streams = g_list_next (streams)) {
       GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
+      GstCaps *caps;
 
       stream_id =
           g_strdup_printf ("%s/%d", g_checksum_get_string (cs), ostream->id);
@@ -4451,6 +4452,11 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
 
       g_free (stream_id);
       gst_rtspsrc_stream_push_event (src, ostream, event);
+
+      if ((caps = stream_get_caps_for_pt (ostream, ostream->default_pt))) {
+        gst_pad_push_event (ostream->channelpad[0], gst_event_new_caps (caps));
+        gst_caps_unref (caps);
+      }
     }
     g_checksum_free (cs);
 
