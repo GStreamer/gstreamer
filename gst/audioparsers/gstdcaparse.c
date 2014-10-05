@@ -245,7 +245,7 @@ gst_dca_parse_parse_header (GstDcaParse * dcaparse,
   if (chans < G_N_ELEMENTS (channels_table))
     *channels = channels_table[chans] + ((lfe) ? 1 : 0);
   else
-    *channels = 0;
+    return FALSE;
 
   if (depth)
     *depth = (marker == 0x1FFFE800 || marker == 0xFF1F00E8) ? 14 : 16;
