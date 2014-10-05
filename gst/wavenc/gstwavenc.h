@@ -64,9 +64,10 @@ struct _GstWavEnc {
   GstAudioChannelPosition destPos[64];
   
   /* data sizes */
-  guint32    audio_length;
+  guint64    audio_length;
   guint32    meta_length;
 
+  gboolean   use_rf64;
   gboolean   sent_header;
   gboolean   finished_properly;
 };

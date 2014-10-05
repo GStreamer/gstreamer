@@ -96,6 +96,9 @@ typedef struct
     "rate = (int) [ 8000, 192000 ], "    \
     "channels = (int) [ 1, 2 ]"
 
+#define SRC_CAPS \
+    "audio/x-wav; " \
+    "audio/x-rf64"
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -106,7 +109,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-wav")
+    GST_STATIC_CAPS (SRC_CAPS)
     );
 
 #define gst_wavenc_parent_class parent_class
@@ -165,11 +168,18 @@ gst_wavenc_init (GstWavEnc * wavenc)
 #define FMT_EXT_CHUNK_LEN 48
 #define FACT_CHUNK_LEN    12
 #define DATA_HEADER_LEN   8
+#define DS64_CHUNK_LEN    36
 
 static gboolean
 use_format_ext (GstWavEnc * wavenc)
 {
   return wavenc->channels > 2;
+}
+
+static gboolean
+use_fact_chunk (GstWavEnc * wavenc)
+{
+  return use_format_ext (wavenc) && !wavenc->use_rf64;
 }
 
 static int
@@ -178,9 +188,15 @@ get_header_len (GstWavEnc * wavenc)
   int len = RIFF_CHUNK_LEN;
 
   if (use_format_ext (wavenc))
-    len += FMT_EXT_CHUNK_LEN + FACT_CHUNK_LEN;
+    len += FMT_EXT_CHUNK_LEN;
   else
     len += FMT_WAV_CHUNK_LEN;
+
+  if (use_fact_chunk (wavenc))
+    len += FACT_CHUNK_LEN;
+
+  if (wavenc->use_rf64)
+    len += DS64_CHUNK_LEN;
 
   return len + DATA_HEADER_LEN;
 }
@@ -295,8 +311,15 @@ write_fmt_chunk (GstWavEnc * wavenc, guint8 * header)
     header += FMT_WAV_CHUNK_LEN;
   }
 
-
   return header;
+}
+
+static guint64
+get_num_frames (GstWavEnc * wavenc)
+{
+  if (wavenc->channels == 0 || wavenc->width == 0)
+    return 0;
+  return wavenc->audio_length / (wavenc->width / 8) / wavenc->channels;
 }
 
 static guint8 *
@@ -306,9 +329,38 @@ write_fact_chunk (GstWavEnc * wavenc, guint8 * header)
   GST_WRITE_UINT32_LE (header + 4, FACT_CHUNK_LEN - 8);
   /* compressed files are only supported up to 2 channels,
    * that means we never write a fact chunk for them */
-  GST_WRITE_UINT32_LE (header + 8,
-      wavenc->audio_length / (wavenc->width / 8) / wavenc->channels);
+  if (wavenc->use_rf64)
+    GST_WRITE_UINT32_LE (header + 8, 0xFFFFFFFF);
+  else
+    GST_WRITE_UINT32_LE (header + 8, (guint32) get_num_frames (wavenc));
   return header + FACT_CHUNK_LEN;
+}
+
+static guint8 *
+write_ds64_chunk (GstWavEnc * wavenc, guint64 riffLen, guint8 * header)
+{
+  guint64 numFrames = get_num_frames (wavenc);
+
+  GST_DEBUG_OBJECT (wavenc, "riffLen=%" G_GUINT64_FORMAT
+      ", audio length=%" G_GUINT64_FORMAT ", numFrames=%" G_GUINT64_FORMAT,
+      riffLen, wavenc->audio_length, numFrames);
+
+  memcpy (header, "ds64", 4);
+  GST_WRITE_UINT32_LE (header + 4, DS64_CHUNK_LEN - 8);
+  /* riffSize */
+  GST_WRITE_UINT32_LE (header + 8, (guint32) (riffLen & 0xFFFFFFFF));
+  GST_WRITE_UINT32_LE (header + 12, (guint32) (riffLen >> 32));
+  /* dataSize */
+  GST_WRITE_UINT32_LE (header + 16,
+      (guint32) (wavenc->audio_length & 0xFFFFFFFF));
+  GST_WRITE_UINT32_LE (header + 20, (guint32) (wavenc->audio_length >> 32));
+  /* sampleCount */
+  GST_WRITE_UINT32_LE (header + 24, (guint32) (numFrames & 0xFFFFFFFF));
+  GST_WRITE_UINT32_LE (header + 28, (guint32) (numFrames >> 32));
+  /* tableLength always zero for now */
+  GST_WRITE_UINT32_LE (header + 32, 0);
+
+  return header + DS64_CHUNK_LEN;
 }
 
 static GstBuffer *
@@ -317,7 +369,7 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc)
   GstBuffer *buf;
   GstMapInfo map;
   guint8 *header;
-  guint32 riffLen;
+  guint64 riffLen;
 
   GST_DEBUG_OBJECT (wavenc, "Header size: %d", get_header_len (wavenc));
   buf = gst_buffer_new_and_alloc (get_header_len (wavenc));
@@ -329,18 +381,30 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc)
       + get_header_len (wavenc) - 8;
 
   /* RIFF chunk */
-  memcpy (header, "RIFF", 4);
-  GST_WRITE_UINT32_LE (header + 4, riffLen);
+  if (wavenc->use_rf64) {
+    GST_DEBUG_OBJECT (wavenc, "Using RF64");
+    memcpy (header, "RF64", 4);
+    GST_WRITE_UINT32_LE (header + 4, 0xFFFFFFFF);
+  } else {
+    memcpy (header, "RIFF", 4);
+    GST_WRITE_UINT32_LE (header + 4, (guint32) riffLen);
+  }
   memcpy (header + 8, "WAVE", 4);
   header += RIFF_CHUNK_LEN;
 
+  if (wavenc->use_rf64)
+    header = write_ds64_chunk (wavenc, riffLen, header);
+
   header = write_fmt_chunk (wavenc, header);
-  if (use_format_ext (wavenc))
+  if (use_fact_chunk (wavenc))
     header = write_fact_chunk (wavenc, header);
 
   /* data chunk */
   memcpy (header, "data ", 4);
-  GST_WRITE_UINT32_LE (header + 4, wavenc->audio_length);
+  if (wavenc->use_rf64)
+    GST_WRITE_UINT32_LE (header + 4, 0xFFFFFFFF);
+  else
+    GST_WRITE_UINT32_LE (header + 4, (guint32) wavenc->audio_length);
 
   gst_buffer_unmap (buf, &map);
 
@@ -361,8 +425,8 @@ gst_wavenc_push_header (GstWavEnc * wavenc)
     return GST_FLOW_ERROR;
   }
 
-  GST_DEBUG_OBJECT (wavenc, "writing header, meta_size=%u, audio_size=%u",
-      wavenc->meta_length, wavenc->audio_length);
+  GST_DEBUG_OBJECT (wavenc, "writing header, meta_size=%u, audio_size=%"
+      G_GUINT64_FORMAT, wavenc->meta_length, wavenc->audio_length);
 
   outbuf = gst_wavenc_create_header_buf (wavenc);
   GST_BUFFER_OFFSET (outbuf) = 0;
@@ -961,8 +1025,18 @@ gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   if (G_UNLIKELY (!wavenc->sent_header)) {
-    gst_pad_set_caps (wavenc->srcpad,
-        gst_static_pad_template_get_caps (&src_factory));
+    GstStructure *s;
+    GstCaps *caps = gst_pad_get_allowed_caps (wavenc->srcpad);
+
+    GST_DEBUG_OBJECT (wavenc, "allowed src caps: %" GST_PTR_FORMAT, caps);
+    if (!gst_caps_is_fixed (caps)) {
+      caps = gst_caps_truncate (caps);
+    }
+    s = gst_caps_get_structure (caps, 0);
+    wavenc->use_rf64 = gst_structure_has_name (s, "audio/x-rf64");
+
+    gst_pad_set_caps (wavenc->srcpad, caps);
+    gst_caps_unref (caps);
 
     /* starting a file, means we have to finish it properly */
     wavenc->finished_properly = FALSE;
