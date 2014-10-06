@@ -575,8 +575,8 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
 }
 
 /* FIXME move into baseparse, or anything equivalent;
- * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
-#define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
+ * see https://bugzilla.gnome.org/show_bug.cgi?id=650093
+ * #define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x100000 */
 
 static inline void
 update_frame_parsing_status (GstMpegvParse * mpvparse,
