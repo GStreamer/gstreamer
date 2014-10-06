@@ -64,9 +64,6 @@ struct _GstAudioResample {
   guint64 num_gap_samples;
   guint64 num_nongap_samples;
 
-  GstAudioInfo in;
-  GstAudioInfo out;
-
   /* properties */
   gint quality;
 
