@@ -706,6 +706,10 @@ _stop (GstAggregator * agg)
   gst_aggregator_iterate_sinkpads (agg,
       (GstAggregatorPadForeachFunc) _flush_pad, NULL);
 
+  if (agg->priv->tags)
+    gst_tag_list_unref (agg->priv->tags);
+  agg->priv->tags = NULL;
+
   return TRUE;
 }
 
