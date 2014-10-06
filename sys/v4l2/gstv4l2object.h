@@ -247,6 +247,9 @@ GstCaps*      gst_v4l2_object_get_raw_caps (void);
 
 GstCaps*      gst_v4l2_object_get_codec_caps (void);
 
+gint          gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * finfo,
+                                                  gint plane, gint stride);
+
 gboolean      gst_v4l2_object_set_format  (GstV4l2Object * v4l2object, GstCaps * caps);
 
 gboolean      gst_v4l2_object_caps_equal  (GstV4l2Object * v4l2object, GstCaps * caps);

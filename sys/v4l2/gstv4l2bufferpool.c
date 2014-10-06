@@ -246,6 +246,25 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
       }
     }
 
+    /* In the single planar API, planes must be contiguous in memory and
+     * therefore they must have expected size. ie: no padding.
+     * To check these conditions, we check that plane 'i' start address
+     * + plane 'i' size equals to plane 'i+1' start address */
+    if (!V4L2_TYPE_IS_MULTIPLANAR (pool->obj->type)) {
+      for (i = 0; i < (GST_VIDEO_FORMAT_INFO_N_PLANES (finfo) - 1); i++) {
+        const struct v4l2_pix_format *pix_fmt = &pool->obj->format.fmt.pix;
+        gpointer tmp;
+        gint estride = gst_v4l2_object_extrapolate_stride (finfo, i,
+            pix_fmt->bytesperline);
+        guint eheight = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i,
+            pix_fmt->height);
+
+        tmp = ((guint8 *) data->frame.data[i]) + estride * eheight;
+        if (tmp != data->frame.data[i + 1])
+          goto non_contiguous_mem;
+      }
+    }
+
     if (!gst_v4l2_allocator_import_userptr (pool->vallocator, group,
             data->frame.info.size, finfo->n_planes, data->frame.data, size))
       goto import_failed;
@@ -282,6 +301,12 @@ invalid_buffer:
   {
     GST_ERROR_OBJECT (pool, "could not map buffer");
     g_slice_free (struct UserPtrData, data);
+    return GST_FLOW_ERROR;
+  }
+non_contiguous_mem:
+  {
+    GST_ERROR_OBJECT (pool, "memory is not contiguous or plane size mismatch");
+    _unmap_userptr_frame (data);
     return GST_FLOW_ERROR;
   }
 import_failed:

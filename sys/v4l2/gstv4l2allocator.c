@@ -1143,32 +1143,34 @@ gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
   g_return_val_if_fail (allocator->memory == V4L2_MEMORY_USERPTR, FALSE);
 
   /* TODO Support passing N plane from 1 memory to MPLANE v4l2 format */
-  if (n_planes != group->n_mem)
+  if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type) && n_planes != group->n_mem)
     goto n_mem_missmatch;
 
   for (i = 0; i < group->n_mem; i++) {
-    gsize maxsize;
+    gsize maxsize, psize;
 
     if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
       struct v4l2_pix_format_mplane *pix = &allocator->format.fmt.pix_mp;
       maxsize = pix->plane_fmt[i].sizeimage;
+      psize = size[i];
     } else {
       maxsize = allocator->format.fmt.pix.sizeimage;
+      psize = img_size;
     }
 
-    g_assert (size[i] <= img_size);
+    g_assert (psize <= img_size);
 
     GST_LOG_OBJECT (allocator, "imported USERPTR %p plane %d size %"
-        G_GSIZE_FORMAT, data[i], i, size[i]);
+        G_GSIZE_FORMAT, data[i], i, psize);
 
     mem = (GstV4l2Memory *) group->mem[i];
 
     mem->mem.maxsize = maxsize;
-    mem->mem.size = size[i];
+    mem->mem.size = psize;
     mem->data = data[i];
 
     group->planes[i].length = maxsize;
-    group->planes[i].bytesused = size[i];
+    group->planes[i].bytesused = psize;
     group->planes[i].m.userptr = (unsigned long) data[i];
     group->planes[i].data_offset = 0;
   }
