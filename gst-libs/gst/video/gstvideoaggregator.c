@@ -824,6 +824,8 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
     bpad = GST_AGGREGATOR_PAD (pad);
     segment = &bpad->segment;
     is_eos = bpad->eos;
+    if (!is_eos)
+      eos = FALSE;
     buf = gst_aggregator_pad_get_buffer (bpad);
     if (buf) {
       GstClockTime start_time, end_time;
@@ -897,7 +899,8 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         end_time *= ABS (agg->segment.rate);
       }
 
-      if (pad->end_time != -1 && pad->end_time > end_time) {
+      if (pad->end_time != -1 && pad->end_time > end_time
+          && !bpad->unresponsive) {
         GST_DEBUG_OBJECT (pad, "Buffer from the past, dropping");
         gst_buffer_unref (buf);
         buf = gst_aggregator_pad_steal_buffer (bpad);
@@ -939,9 +942,8 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         continue;
       }
     } else {
-      if (pad->end_time != -1) {
+      if (!bpad->unresponsive && pad->end_time != -1) {
         if (pad->end_time <= output_start_time) {
-          gst_buffer_replace (&pad->buffer, NULL);
           pad->start_time = pad->end_time = -1;
           if (is_eos) {
             GST_DEBUG ("I just need more data");
@@ -950,6 +952,8 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         } else if (is_eos) {
           eos = FALSE;
         }
+      } else if (is_eos) {
+        gst_buffer_replace (&pad->buffer, NULL);
       }
     }
   }
