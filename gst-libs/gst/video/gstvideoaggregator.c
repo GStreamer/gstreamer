@@ -791,7 +791,6 @@ gst_videoaggregator_reset (GstVideoAggregator * vagg)
     GstVideoAggregatorPad *p = l->data;
 
     gst_buffer_replace (&p->buffer, NULL);
-    gst_buffer_replace (&p->queued, NULL);
     p->start_time = -1;
     p->end_time = -1;
 
@@ -809,6 +808,9 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
   GList *l;
   gboolean eos = TRUE;
   gboolean need_more_data = FALSE;
+
+  /* get a set of buffers into pad->buffer that are within output_start_time
+   * and output_end_time taking into account finished and unresponsive pads */
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
@@ -838,8 +840,8 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
 
       /* FIXME: Make all this work with negative rates */
 
-      if ((pad->buffer && start_time < GST_BUFFER_TIMESTAMP (pad->buffer))
-          || (pad->queued && start_time < GST_BUFFER_TIMESTAMP (pad->queued))) {
+      if ((start_time < GST_BUFFER_TIMESTAMP (buf))
+          || (pad->buffer && start_time < GST_BUFFER_TIMESTAMP (pad->buffer))) {
         GST_DEBUG_OBJECT (pad, "Buffer from the past, dropping");
         gst_buffer_unref (buf);
         buf = gst_aggregator_pad_steal_buffer (bpad);
@@ -848,24 +850,15 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         continue;
       }
 
-      if (pad->queued) {
-        end_time = start_time - GST_BUFFER_TIMESTAMP (pad->queued);
-        start_time = GST_BUFFER_TIMESTAMP (pad->queued);
-        gst_buffer_unref (buf);
-        buf = gst_buffer_ref (pad->queued);
-        vinfo = &pad->queued_vinfo;
-      } else {
-        end_time = GST_BUFFER_DURATION (buf);
+      end_time = GST_BUFFER_DURATION (buf);
 
-        if (end_time == -1) {
-          pad->queued = buf;
-          buf = gst_aggregator_pad_steal_buffer (bpad);
-          gst_buffer_unref (buf);
-          pad->queued_vinfo = pad->info;
-          GST_DEBUG ("end time is -1 and nothing queued");
-          need_more_data = TRUE;
-          continue;
-        }
+      if (end_time == -1) {
+        gst_buffer_unref (buf);
+        buf = gst_aggregator_pad_steal_buffer (bpad);
+        gst_buffer_replace (&pad->buffer, buf);
+        gst_buffer_unref (buf);
+        GST_DEBUG_OBJECT (pad, "buffer duration is -1");
+        continue;
       }
 
       g_assert (start_time != -1 && end_time != -1);
@@ -880,14 +873,9 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
             GST_TIME_ARGS (segment->start), GST_TIME_ARGS (start_time),
             GST_TIME_ARGS (end_time));
 
-        if (buf == pad->queued) {
-          gst_buffer_unref (buf);
-          gst_buffer_replace (&pad->queued, NULL);
-        } else {
-          gst_buffer_unref (buf);
-          buf = gst_aggregator_pad_steal_buffer (bpad);
-          gst_buffer_unref (buf);
-        }
+        gst_buffer_unref (buf);
+        buf = gst_aggregator_pad_steal_buffer (bpad);
+        gst_buffer_unref (buf);
 
         need_more_data = TRUE;
         continue;
@@ -911,15 +899,9 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
 
       if (pad->end_time != -1 && pad->end_time > end_time) {
         GST_DEBUG_OBJECT (pad, "Buffer from the past, dropping");
-        if (buf == pad->queued) {
-          gst_buffer_unref (buf);
-          gst_buffer_replace (&pad->queued, NULL);
-        } else {
-          gst_buffer_unref (buf);
-          buf = gst_aggregator_pad_steal_buffer (bpad);
-          gst_buffer_unref (buf);
-        }
-
+        gst_buffer_unref (buf);
+        buf = gst_aggregator_pad_steal_buffer (bpad);
+        gst_buffer_unref (buf);
         need_more_data = TRUE;
         continue;
       }
@@ -933,15 +915,10 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         pad->start_time = start_time;
         pad->end_time = end_time;
 
-        if (buf == pad->queued) {
+        gst_buffer_unref (buf);
+        buf = gst_aggregator_pad_steal_buffer (bpad);
+        if (buf)
           gst_buffer_unref (buf);
-          gst_buffer_replace (&pad->queued, NULL);
-        } else {
-          gst_buffer_unref (buf);
-          buf = gst_aggregator_pad_steal_buffer (bpad);
-          if (buf)
-            gst_buffer_unref (buf);
-        }
         eos = FALSE;
       } else if (start_time >= output_end_time) {
         GST_DEBUG_OBJECT (pad, "Keeping buffer until %" GST_TIME_FORMAT,
@@ -949,16 +926,14 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         gst_buffer_unref (buf);
         eos = FALSE;
       } else {
-        GST_DEBUG_OBJECT (pad, "Too old buffer -- dropping");
-        if (buf == pad->queued) {
+        GST_DEBUG_OBJECT (pad,
+            "Too old buffer -- dropping start %" GST_TIME_FORMAT " out end %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (start_time),
+            GST_TIME_ARGS (output_end_time));
+        gst_buffer_unref (buf);
+        buf = gst_aggregator_pad_steal_buffer (bpad);
+        if (buf)
           gst_buffer_unref (buf);
-          gst_buffer_replace (&pad->queued, NULL);
-        } else {
-          gst_buffer_unref (buf);
-          buf = gst_aggregator_pad_steal_buffer (bpad);
-          if (buf)
-            gst_buffer_unref (buf);
-        }
 
         need_more_data = TRUE;
         continue;
