@@ -824,6 +824,23 @@ gst_audiomixer_flush (GstAggregator * agg)
   return GST_FLOW_OK;
 }
 
+static gboolean
+gst_audiomixer_send_event (GstElement * element, GstEvent * event)
+{
+  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (element);
+
+  gboolean res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+
+  GST_STATE_LOCK (element);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK &&
+      GST_STATE (element) < GST_STATE_PAUSED) {
+    audiomixer->base_time = GST_AGGREGATOR (element)->segment.start;
+  }
+  GST_STATE_UNLOCK (element);
+
+  return res;
+}
+
 
 static void
 gst_audiomixer_class_init (GstAudioMixerClass * klass)
@@ -874,6 +891,8 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
       GST_DEBUG_FUNCPTR (gst_audiomixer_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_audiomixer_release_pad);
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_audiomixer_send_event);
+
 
   agg_class->sinkpads_type = GST_TYPE_AUDIO_MIXER_PAD;
   agg_class->start = gst_audiomixer_start;
