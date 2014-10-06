@@ -201,6 +201,9 @@ gst_video_converter_free (GstVideoConverter * convert)
   g_free (convert->tmplines);
   g_free (convert->errline);
 
+  if (convert->config)
+    gst_structure_free (convert->config);
+
   g_free (convert);
 }
 
