@@ -725,6 +725,13 @@ gst_curl_smtp_sink_set_transfer_options_unlocked (GstCurlBaseSink * bcsink)
     return FALSE;
   }
 
+  res = curl_easy_setopt (bcsink->curl, CURLOPT_UPLOAD, 1L);
+  if (res != CURLE_OK) {
+    bcsink->error = g_strdup_printf ("failed to prepare for upload: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
+
   parent_class = GST_CURL_TLS_SINK_GET_CLASS (sink);
 
   if (sink->use_ssl) {
