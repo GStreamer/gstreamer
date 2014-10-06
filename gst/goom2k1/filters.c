@@ -334,48 +334,6 @@ zoomFilterSetResolution (GoomData * gd, ZoomFilterData * zf)
       sintable[us] = (int) (1024.0f * sin (us * 2 * 3.31415f / 0xffff));
     }
   }
-
-  {
-    int loopv;
-
-    for (loopv = zf->res_y; loopv != 0;) {
-      int decc = 0;
-      int spdc = 0;
-      int accel = 0;
-
-      loopv--;
-      zf->firedec[loopv] = decc;
-      decc += spdc / 10;
-      spdc += RAND (gd) % 3;
-      spdc -= RAND (gd) % 3;
-
-      if (decc > 4)
-        spdc -= 1;
-      if (decc < -4)
-        spdc += 1;
-
-      if (spdc > 30)
-        spdc = spdc - RAND (gd) % 3 + accel / 10;
-      if (spdc < -30)
-        spdc = spdc + RAND (gd) % 3 + accel / 10;
-
-      if (decc > 8 && spdc > 1)
-        spdc -= RAND (gd) % 3 - 2;
-
-      if (decc < -8 && spdc < -1)
-        spdc += RAND (gd) % 3 + 2;
-
-      if (decc > 8 || decc < -8)
-        decc = decc * 8 / 9;
-
-      accel += RAND (gd) % 2;
-      accel -= RAND (gd) % 2;
-      if (accel > 20)
-        accel -= 2;
-      if (accel < -20)
-        accel += 2;
-    }
-  }
 }
 
 void
