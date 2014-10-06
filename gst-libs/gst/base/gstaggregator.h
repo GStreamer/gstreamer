@@ -73,6 +73,7 @@ struct _GstAggregatorPad
   GstBuffer                 *  buffer;
   GstSegment                   segment;
   gboolean                     eos;
+  gboolean                     unresponsive;
 
   /* < Private > */
   GstAggregatorPadPrivate   *  priv;
@@ -136,6 +137,11 @@ struct _GstAggregator
 
   /*< private >*/
   GstAggregatorPrivate  *  priv;
+
+  GstClock              *  clock;
+
+  /* properties */
+  gint64                   timeout;
 
   gpointer                 _gst_reserved[GST_PADDING];
 };
