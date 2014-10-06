@@ -1056,6 +1056,9 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
               converted_buf, GST_MAP_READWRITE)) {
         GST_WARNING_OBJECT (vagg, "Could not map converted frame");
 
+        g_slice_free (GstVideoFrame, converted_frame);
+        gst_video_frame_unmap (frame);
+        g_slice_free (GstVideoFrame, frame);
         return FALSE;
       }
 
@@ -1063,6 +1066,7 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
           frame);
       pad->converted_buffer = converted_buf;
       gst_video_frame_unmap (frame);
+      g_slice_free (GstVideoFrame, frame);
     } else {
       converted_frame = frame;
       converted_buf = pad->buffer;
