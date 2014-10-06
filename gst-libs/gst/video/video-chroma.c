@@ -105,7 +105,7 @@ struct _GstVideoChromaResample
 #define PB3(i)         (l3[3 + 4 * (i)])
 
 #define FILT_1_1(a,b)          ((a) + (b) + 1) >> 1
-#define FILT_1_1_1_1(a,b,c,d)  ((a) + (b) + (c) + (d) + 2) >> 2
+#define FILT_1_3_3_1(a,b,c,d)  ((a) + 3*(b) + 3*(c) + (d) + 4) >> 3
 
 #define FILT_3_1(a,b)          (3*(a) + (b) + 2) >> 2
 #define FILT_1_3(a,b)          ((a) + 3*(b) + 2) >> 2
@@ -448,7 +448,7 @@ video_chroma_up_vi4_##type (GstVideoChromaResample *resample,           \
 
 /* 4x horizontal downsampling without cositing
  *
- *    +------ (a + b + c + d + 2) >> 2
+ *    +------ (a + 3*b + 3*c + d + 4) >> 3
  *    |
  *    v
  * ---O-------O---
@@ -467,8 +467,8 @@ video_chroma_down_h4_##type (GstVideoChromaResample *resample,         \
     type tr0 = PR(i), tr1 = PR(i+1), tr2 = PR(i+2), tr3 = PR(i+3);      \
     type tb0 = PB(i), tb1 = PB(i+1), tb2 = PB(i+2), tb3 = PB(i+3);      \
                                                                         \
-    PR(i) = FILT_1_1_1_1 (tr0, tr1, tr2, tr3);                          \
-    PB(i) = FILT_1_1_1_1 (tb0, tb1, tb2, tb3);                          \
+    PR(i) = FILT_1_3_3_1 (tr0, tr1, tr2, tr3);                          \
+    PB(i) = FILT_1_3_3_1 (tb0, tb1, tb2, tb3);                          \
   }                                                                     \
 }
 
@@ -476,7 +476,7 @@ video_chroma_down_h4_##type (GstVideoChromaResample *resample,         \
  *
  * a x--x--x-
  * b x--x--x-
- *   O  O  O   <---- (a + b + c + d + 2) >> 2
+ *   O  O  O   <---- (a + 3*b + 3*c + d + 4) >> 4
  * c x--x--x-
  * d x--x--x-
  * e x--x--x-
@@ -511,8 +511,8 @@ video_chroma_down_v4_##type (GstVideoChromaResample *resample,          \
     type tb0 = PB0(i), tb1 = PB1(i);                                    \
     type tb2 = PB2(i), tb3 = PB3(i);                                    \
                                                                         \
-    PR0(i) = FILT_1_1_1_1 (tr0, tr1, tr2, tr3);                         \
-    PB0(i) = FILT_1_1_1_1 (tb0, tb1, tb2, tb3);                         \
+    PR0(i) = FILT_1_3_3_1 (tr0, tr1, tr2, tr3);                         \
+    PB0(i) = FILT_1_3_3_1 (tb0, tb1, tb2, tb3);                         \
   }                                                                     \
 }
 /* 4x vertical downsampling interlaced without cositing
