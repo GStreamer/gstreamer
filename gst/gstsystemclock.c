@@ -637,7 +637,8 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
   GstClockTimeDiff diff;
   GstClockReturn status;
 
-  if (G_UNLIKELY (GET_ENTRY_STATUS (entry) == GST_CLOCK_UNSCHEDULED))
+  status = GET_ENTRY_STATUS (entry);
+  if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED))
     return GST_CLOCK_UNSCHEDULED;
 
   /* need to call the overridden method because we want to sync against the time
@@ -737,8 +738,13 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
 
         if (diff <= 0) {
           /* timeout, this is fine, we can report success now */
-          status = GST_CLOCK_OK;
-          SET_ENTRY_STATUS (entry, status);
+          if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, GST_CLOCK_DONE, GST_CLOCK_OK))) {
+            GST_CAT_DEBUG (GST_CAT_CLOCK, "unexpected status for entry %p", entry);
+            status = GET_ENTRY_STATUS (entry);
+            goto done;
+          } else {
+            status = GST_CLOCK_OK;
+          }
 
           GST_CAT_DEBUG (GST_CAT_CLOCK,
               "entry %p finished, diff %" G_GINT64_FORMAT, entry, diff);
@@ -762,12 +768,21 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
     }
   } else {
     /* we are right on time or too late */
-    if (G_UNLIKELY (diff == 0))
-      status = GST_CLOCK_OK;
-    else
-      status = GST_CLOCK_EARLY;
-
-    SET_ENTRY_STATUS (entry, status);
+    if (G_UNLIKELY (diff == 0)) {
+      if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_OK))) {
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "unexpected status for entry %p", entry);
+        status = GET_ENTRY_STATUS (entry);
+      } else {
+        status = GST_CLOCK_OK;
+      }
+    } else {
+      if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_EARLY))) {
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "unexpected status for entry %p", entry);
+        status = GET_ENTRY_STATUS (entry);
+      } else {
+        status = GST_CLOCK_EARLY;
+      }
+    }
   }
 done:
   return status;
