@@ -512,91 +512,6 @@ gst_audiomixer_query_duration (GstAudioMixer * audiomixer, GstQuery * query)
 }
 
 static gboolean
-gst_audiomixer_query_latency (GstAudioMixer * audiomixer, GstQuery * query)
-{
-  GstClockTime min, max;
-  gboolean live;
-  gboolean res;
-  GstIterator *it;
-  gboolean done;
-  GValue item = { 0, };
-
-  res = TRUE;
-  done = FALSE;
-
-  live = FALSE;
-  min = 0;
-  max = GST_CLOCK_TIME_NONE;
-
-  /* Take maximum of all latency values */
-  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (audiomixer));
-  while (!done) {
-    GstIteratorResult ires;
-
-    ires = gst_iterator_next (it, &item);
-    switch (ires) {
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-      case GST_ITERATOR_OK:
-      {
-        GstPad *pad = g_value_get_object (&item);
-        GstQuery *peerquery;
-        GstClockTime min_cur, max_cur;
-        gboolean live_cur;
-
-        peerquery = gst_query_new_latency ();
-
-        /* Ask peer for latency */
-        res &= gst_pad_peer_query (pad, peerquery);
-
-        /* take max from all valid return values */
-        if (res) {
-          gst_query_parse_latency (peerquery, &live_cur, &min_cur, &max_cur);
-
-          if (min_cur > min)
-            min = min_cur;
-
-          if (max_cur != GST_CLOCK_TIME_NONE &&
-              ((max != GST_CLOCK_TIME_NONE && max_cur > max) ||
-                  (max == GST_CLOCK_TIME_NONE)))
-            max = max_cur;
-
-          live = live || live_cur;
-        }
-
-        gst_query_unref (peerquery);
-        g_value_reset (&item);
-        break;
-      }
-      case GST_ITERATOR_RESYNC:
-        live = FALSE;
-        min = 0;
-        max = GST_CLOCK_TIME_NONE;
-        res = TRUE;
-        gst_iterator_resync (it);
-        break;
-      default:
-        res = FALSE;
-        done = TRUE;
-        break;
-    }
-  }
-  g_value_unset (&item);
-  gst_iterator_free (it);
-
-  if (res) {
-    /* store the results */
-    GST_DEBUG_OBJECT (audiomixer, "Calculated total latency: live %s, min %"
-        GST_TIME_FORMAT ", max %" GST_TIME_FORMAT,
-        (live ? "yes" : "no"), GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-    gst_query_set_latency (query, live, min, max);
-  }
-
-  return res;
-}
-
-static gboolean
 gst_audiomixer_src_query (GstAggregator * agg, GstQuery * query)
 {
   GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
@@ -628,7 +543,9 @@ gst_audiomixer_src_query (GstAggregator * agg, GstQuery * query)
       res = gst_audiomixer_query_duration (audiomixer, query);
       break;
     case GST_QUERY_LATENCY:
-      res = gst_audiomixer_query_latency (audiomixer, query);
+      res =
+          GST_AGGREGATOR_CLASS (gst_audiomixer_parent_class)->src_query
+          (agg, query);
       break;
     default:
       /* FIXME, needs a custom query handler because we have multiple
@@ -783,7 +700,7 @@ gst_audiomixer_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
 }
 
 static void
-gst_audiomixer_reset (GstAudioMixer *audiomixer)
+gst_audiomixer_reset (GstAudioMixer * audiomixer)
 {
   audiomixer->offset = 0;
   gst_caps_replace (&audiomixer->current_caps, NULL);
