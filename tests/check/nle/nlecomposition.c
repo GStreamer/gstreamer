@@ -218,15 +218,14 @@ GST_START_TEST (test_dispose_on_commit)
 
 GST_END_TEST;
 
-GST_START_TEST (test_simple_adder)
+GST_START_TEST (test_simple_audiomixer)
 {
   GstBus *bus;
   GstMessage *message;
   GstElement *pipeline;
-  GstElement *nle_adder;
+  GstElement *nle_audiomixer;
   GstElement *composition;
-  GstElement *adder, *fakesink;
-  GstClockTime start_playing_time;
+  GstElement *audiomixer, *fakesink;
   GstElement *nlesource1, *nlesource2;
   GstElement *audiotestsrc1, *audiotestsrc2;
 
@@ -241,15 +240,15 @@ GST_START_TEST (test_simple_adder)
   gst_element_set_state (composition, GST_STATE_READY);
   fakesink = gst_element_factory_make ("fakesink", NULL);
 
-  /* nle_adder */
-  nle_adder = gst_element_factory_make ("nleoperation", "nle_adder");
-  adder = gst_element_factory_make ("adder", "adder");
-  fail_unless (adder != NULL);
-  gst_bin_add (GST_BIN (nle_adder), adder);
-  g_object_set (nle_adder, "start", (guint64) 0 * GST_SECOND,
+  /* nle_audiomixer */
+  nle_audiomixer = gst_element_factory_make ("nleoperation", "nle_audiomixer");
+  audiomixer = gst_element_factory_make ("audiomixer", "audiomixer");
+  fail_unless (audiomixer != NULL);
+  gst_bin_add (GST_BIN (nle_audiomixer), audiomixer);
+  g_object_set (nle_audiomixer, "start", (guint64) 0 * GST_SECOND,
       "duration", total_time, "inpoint", (guint64) 0 * GST_SECOND,
       "priority", 0, NULL);
-  nle_composition_add (GST_BIN (composition), nle_adder);
+  nle_composition_add (GST_BIN (composition), nle_audiomixer);
 
   GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
   /* source 1 */
@@ -290,24 +289,10 @@ GST_START_TEST (test_simple_adder)
     fail_error_message (message);
 
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-      GST_DEBUG_GRAPH_SHOW_ALL, "nle-simple-adder-test-play");
+      GST_DEBUG_GRAPH_SHOW_ALL, "nle-simple-audiomixer-test-play");
 
   /* Now play the 10 second composition */
-  start_playing_time = gst_util_get_timestamp ();
   while (carry_on) {
-
-    if (GST_CLOCK_DIFF (start_playing_time, gst_util_get_timestamp ()) >
-        total_time + GST_SECOND) {
-      GST_ERROR ("No EOS found after %" GST_TIME_FORMAT " sec",
-          GST_TIME_ARGS ((total_time / GST_SECOND) + 1));
-      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-          GST_DEBUG_GRAPH_SHOW_ALL, "nle-simple-adder-test-fail");
-
-      fail_unless ("No EOS received" == NULL);
-
-      break;
-    }
-
     message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 10);
     GST_LOG ("poll: %" GST_PTR_FORMAT, message);
     if (message) {
@@ -354,11 +339,11 @@ gnonlin_suite (void)
 
   tcase_add_test (tc_chain, test_dispose_on_commit);
 
-  if (gst_registry_check_feature_version (gst_registry_get (), "adder", 1,
+  if (gst_registry_check_feature_version (gst_registry_get (), "audiomixer", 1,
           0, 0)) {
-    tcase_add_test (tc_chain, test_simple_adder);
+    tcase_add_test (tc_chain, test_simple_audiomixer);
   } else {
-    GST_WARNING ("adder element not available, skipping 1 test");
+    GST_WARNING ("audiomixer element not available, skipping 1 test");
   }
 
   return s;
