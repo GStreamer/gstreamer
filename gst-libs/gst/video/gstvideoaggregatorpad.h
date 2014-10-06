@@ -66,8 +66,6 @@ struct _GstVideoAggregatorPad
   GstBuffer *converted_buffer;
 
   GstBuffer *buffer;
-  GstVideoInfo queued_vinfo;
-  GstBuffer *queued;
   GstVideoInfo buffer_vinfo;
 
   GstClockTime start_time;
