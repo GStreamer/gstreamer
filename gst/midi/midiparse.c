@@ -21,7 +21,7 @@
 
 /**
  * SECTION:element-midiparse
- * @see_also: fluidsynth
+ * @see_also: fluiddec
  *
  * This element parses midi-files into midi events. You would need a midi
  * renderer such as fluidsynth to convert the events into raw samples.
@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch-1.0 filesrc location=song.mid ! midiparse ! fluidsynth ! pulsesink
+ * gst-launch-1.0 filesrc location=song.mid ! midiparse ! fluiddec ! pulsesink
  * ]| This example pipeline will parse the midi and render to raw audio which is
  * played via pulseaudio.
  * </refsect2>
