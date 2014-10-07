@@ -751,7 +751,7 @@ GST_START_TEST (test_get_next_fragment)
 {
   GstM3U8Client *client;
   gboolean discontinous;
-  const gchar *uri;
+  gchar *uri;
   GstClockTime duration, timestamp;
   gint64 range_start, range_end;
 
@@ -766,6 +766,7 @@ GST_START_TEST (test_get_next_fragment)
   assert_equals_uint64 (duration, 10 * GST_SECOND);
   assert_equals_uint64 (range_start, 100);
   assert_equals_uint64 (range_end, 1099);
+  g_free (uri);
 
   gst_m3u8_client_advance_fragment (client, TRUE);
 
@@ -778,6 +779,7 @@ GST_START_TEST (test_get_next_fragment)
   assert_equals_uint64 (duration, 10 * GST_SECOND);
   assert_equals_uint64 (range_start, 1000);
   assert_equals_uint64 (range_end, 1999);
+  g_free (uri);
 
   gst_m3u8_client_advance_fragment (client, TRUE);
 
@@ -790,6 +792,7 @@ GST_START_TEST (test_get_next_fragment)
   assert_equals_uint64 (duration, 10 * GST_SECOND);
   assert_equals_uint64 (range_start, 2000);
   assert_equals_uint64 (range_end, 2999);
+  g_free (uri);
 
   gst_m3u8_client_free (client);
 }
