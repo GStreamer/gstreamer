@@ -13,7 +13,7 @@
  *   Zaheer Abbas Merali <zaheerabbas at merali dot org>
  *   Edward Hervey <edward@collabora.com>
  *
- * This library is free softwagre; you can redistribute it and/or
+ * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
@@ -49,7 +49,7 @@
  * @include: gst/mpegts/mpegts.h
  *
  * For more details, refer to the ITU H.222.0 or ISO/IEC 13818-1 specifications
- * and other specifications mentionned in the documentation.
+ * and other specifications mentioned in the documentation.
  */
 
 /*
@@ -127,7 +127,7 @@ static const guint32 crc_tab[256] = {
   0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4
 };
 
-/* _calc_crc32 relicenced to LGPL from fluendo ts demuxer */
+/* _calc_crc32 relicensed to LGPL from fluendo ts demuxer */
 guint32
 _calc_crc32 (const guint8 * data, guint datalen)
 {
@@ -656,7 +656,7 @@ _parse_pmt (GstMpegtsSection * section)
 
   GST_DEBUG ("Parsing %d Program Map Table", section->subtable_extension);
 
-  /* Assign program number from subtable extenstion,
+  /* Assign program number from subtable extension,
      and skip already parsed data */
   pmt->program_number = section->subtable_extension;
   data += 8;
@@ -929,7 +929,7 @@ _parse_cat (GstMpegtsSection * section)
  * gst_mpegts_section_get_cat:
  * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_CAT
  *
- * Returns the array of #GstMpegtsDescriptor contained in the Condtional
+ * Returns the array of #GstMpegtsDescriptor contained in the Conditional
  * Access Table.
  *
  * Returns: (transfer container) (element-type GstMpegtsDescriptor): The
@@ -1232,7 +1232,7 @@ short_packet:
  * @section: (transfer none): the #GstMpegtsSection that holds the data
  * @output_size: (out): #gsize to hold the size of the data
  *
- * If the data in @section has aldready been packetized, the data pointer is returned
+ * If the data in @section has already been packetized, the data pointer is returned
  * immediately. Otherwise, the data field is allocated and populated.
  *
  * Returns: (transfer none): pointer to section data, or %NULL on fail

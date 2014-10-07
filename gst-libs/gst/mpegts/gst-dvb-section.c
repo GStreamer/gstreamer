@@ -13,7 +13,7 @@
  *   Zaheer Abbas Merali <zaheerabbas at merali dot org>
  *   Edward Hervey <edward@collabora.com>
  *
- * This library is free softwagre; you can redistribute it and/or
+ * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
@@ -360,7 +360,7 @@ _parse_bat (GstMpegtsSection * section)
     g_ptr_array_add (bat->streams, stream);
 
     if (transport_stream_loop_length < 6) {
-      /* each entry must be at least 6 bytes (+ 4bytes CRC) */
+      /* each entry must be at least 6 bytes (+ 4 bytes CRC) */
       GST_WARNING ("PID %d invalid BAT entry size %d",
           section->pid, transport_stream_loop_length);
       goto error;
@@ -541,7 +541,7 @@ _parse_nit (GstMpegtsSection * section)
     g_ptr_array_add (nit->streams, stream);
 
     if (transport_stream_loop_length < 6) {
-      /* each entry must be at least 6 bytes (+ 4bytes CRC) */
+      /* each entry must be at least 6 bytes (+ 4 bytes CRC) */
       GST_WARNING ("PID %d invalid NIT entry size %d",
           section->pid, transport_stream_loop_length);
       goto error;
