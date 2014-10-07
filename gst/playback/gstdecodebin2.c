@@ -3558,7 +3558,7 @@ beach:
 
   *drained = chain->drained;
 
-  if (*drained)
+  if (*drained && chain == dbin->decode_chain)
     g_signal_emit (dbin, gst_decode_bin_signals[SIGNAL_DRAINED], 0, NULL);
 
   return handled;
