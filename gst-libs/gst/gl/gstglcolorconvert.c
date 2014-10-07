@@ -326,25 +326,32 @@ static const gchar frag_RGB_to_YUY2_UYVY[] =
     "void main(void) {\n"
     "  vec4 texel1, texel2;\n"
     "  vec2 texel3;\n"
-    "  float fx, fy, y1, y2, u, v;\n"
-    "  fx = v_texcoord.x;\n"
-    "  fy = v_texcoord.y;\n"
+    "  float fx, dx, fy, y, u, u1, u2, v, v1, v2;\n"
     "  float inorder = mod (v_texcoord.x * width, 2.0);\n"
-    "  texel1 = texture2D(tex, vec2(fx,     fy)).%c%c%c%c;\n"
-    "  texel2 = texture2D(tex, vec2(fx+1.0 / width, fy)).%c%c%c%c;\n"
-    "  y1 = dot(texel1.rgb, coeff1);\n"
-    "  y2 = dot(texel2.rgb, coeff1);\n"
-    "  u = dot(texel1.rgb, coeff2);\n"
-    "  v = dot(texel1.rgb, coeff3);\n"
-    "  y1 += offset.x;\n"
-    "  y2 += offset.x;\n"
-    "  u += offset.y;\n"
-    "  v += offset.z;\n"
+    "  fx = v_texcoord.x;\n"
+    "  dx = 1.0 / width;\n"
+    "  if (v_texcoord.x >= (1.0 - 0.5 * dx) || (v_texcoord.x > 0.5 * dx && inorder < 1.0)) {\n"
+    "    dx = -dx;\n"
+    "  }\n"
+    "  fy = v_texcoord.y;\n"
+    "  texel1 = texture2D(tex, vec2(fx, fy)).%c%c%c%c;\n"
+    "  texel2 = texture2D(tex, vec2(fx + dx, fy)).%c%c%c%c;\n"
+    "  y = dot(texel1.rgb, coeff1);\n"
+    "  u1 = dot(texel1.rgb, coeff2);\n"
+    "  u2 = dot(texel2.rgb, coeff2);\n"
+    "  v1 = dot(texel1.rgb, coeff3);\n"
+    "  v2 = dot(texel2.rgb, coeff3);\n"
+    "  y += offset.x;\n"
+    "  u1 += offset.y;\n"
+    "  u2 += offset.y;\n"
+    "  v1 += offset.z;\n"
+    "  v2 += offset.z;\n"
+    "  u = (u1 + u2) / 2.0;\n"
+    "  v = (v1 + v2) / 2.0;\n"
+    "  texel3.r = y;\n"
     "  if (inorder < 1.0) {\n"
-    "    texel3.r = %s;\n"
     "    texel3.g = %s;\n"
     "  } else {\n"
-    "    texel3.r = %s;\n"
     "    texel3.g = %s;\n"
     "  }\n"
     "  gl_FragColor = vec4(texel3.r, texel3.g, 0.0, 0.0);\n"
@@ -831,14 +838,14 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       info->frag_prog = g_strdup_printf (frag_RGB_to_YUY2_UYVY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
-          "y1", "u", "y2", "v");
+          "u", "v");
       info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_UYVY:
       info->frag_prog = g_strdup_printf (frag_RGB_to_YUY2_UYVY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
-          "u", "y1", "v", "y2");
+          "u", "v");
       info->out_n_textures = 1;
       break;
     default:
