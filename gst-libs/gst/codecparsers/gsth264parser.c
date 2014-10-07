@@ -1118,14 +1118,15 @@ gst_h264_parser_parse_frame_packing (GstH264NalParser * nalparser,
         16384);
   }
 
+  READ_UINT8 (nr, frame_packing_extension_flag, 1);
+
   /* All data that follows within a frame packing arrangement SEI message
      after the value 1 for frame_packing_arrangement_extension_flag shall
      be ignored (D.2.25) */
-  READ_UINT8 (nr, frame_packing_extension_flag, 1);
-  if (!frame_packing_extension_flag)
-    goto error;
-  nal_reader_skip_long (nr,
-      payload_size - (nal_reader_get_pos (nr) - start_pos));
+  if (frame_packing_extension_flag) {
+    nal_reader_skip_long (nr,
+        payload_size - (nal_reader_get_pos (nr) - start_pos));
+  }
 
   return GST_H264_PARSER_OK;
 
