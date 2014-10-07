@@ -667,6 +667,12 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     }
   }
 
+  /* drop double rendering */
+  if (G_UNLIKELY (to_render == sink->last_buffer)) {
+    GST_LOG_OBJECT (sink, "Buffer already being rendered");
+    goto done;
+  }
+
   gst_buffer_replace (&sink->last_buffer, to_render);
   render_last_buffer (sink);
 
