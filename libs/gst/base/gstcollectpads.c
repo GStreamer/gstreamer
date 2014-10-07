@@ -939,7 +939,7 @@ gst_collect_pads_peek (GstCollectPads * pads, GstCollectData * data)
   if ((result = data->buffer))
     gst_buffer_ref (result);
 
-  GST_DEBUG_OBJECT (pads, "Peeking at pad %s:%s: buffer=%p",
+  GST_DEBUG_OBJECT (pads, "Peeking at pad %s:%s: buffer=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (data->pad), result);
 
   return result;
@@ -978,7 +978,7 @@ gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
 
   GST_COLLECT_PADS_EVT_BROADCAST (pads);
 
-  GST_DEBUG_OBJECT (pads, "Pop buffer on pad %s:%s: buffer=%p",
+  GST_DEBUG_OBJECT (pads, "Pop buffer on pad %s:%s: buffer=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (data->pad), result);
 
   return result;
