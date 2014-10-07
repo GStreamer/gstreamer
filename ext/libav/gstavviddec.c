@@ -1026,12 +1026,21 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
       fps_d = 1;
     }
   }
+
   GST_LOG_OBJECT (ffmpegdec, "setting framerate: %d/%d", fps_n, fps_d);
   out_info->fps_n = fps_n;
   out_info->fps_d = fps_d;
 
   /* calculate and update par now */
   gst_ffmpegviddec_update_par (ffmpegdec, in_info, out_info);
+
+  /* Copy stereo/multiview info from upstream if set */
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+    GST_VIDEO_INFO_MULTIVIEW_MODE (out_info) =
+        GST_VIDEO_INFO_MULTIVIEW_MODE (in_info);
+    GST_VIDEO_INFO_MULTIVIEW_FLAGS (out_info) =
+        GST_VIDEO_INFO_MULTIVIEW_FLAGS (in_info);
+  }
 
   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (ffmpegdec)))
     goto negotiate_failed;
