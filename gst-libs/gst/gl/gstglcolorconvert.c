@@ -348,10 +348,11 @@ static const gchar frag_RGB_to_YUY2_UYVY[] =
     "  v2 += offset.z;\n"
     "  u = (u1 + u2) / 2.0;\n"
     "  v = (v1 + v2) / 2.0;\n"
-    "  texel3.r = y;\n"
     "  if (inorder < 1.0) {\n"
+    "    texel3.r =%s;\n"
     "    texel3.g = %s;\n"
     "  } else {\n"
+    "    texel3.r =%s;\n"
     "    texel3.g = %s;\n"
     "  }\n"
     "  gl_FragColor = vec4(texel3.r, texel3.g, 0.0, 0.0);\n"
@@ -838,14 +839,14 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       info->frag_prog = g_strdup_printf (frag_RGB_to_YUY2_UYVY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
-          "u", "v");
+          "y", "u", "y", "v");
       info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_UYVY:
       info->frag_prog = g_strdup_printf (frag_RGB_to_YUY2_UYVY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
-          "u", "v");
+          "u", "y", "v", "y");
       info->out_n_textures = 1;
       break;
     default:
