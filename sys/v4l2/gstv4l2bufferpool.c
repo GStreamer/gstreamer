@@ -1717,7 +1717,21 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
           /* if we are not streaming yet (this is the first buffer, start
            * streaming now */
           if (!gst_v4l2_buffer_pool_streamon (pool)) {
+            /* don't check return value because qbuf would have failed */
+            gst_v4l2_is_buffer_valid (to_queue, &group);
+
+            /* qbuf has taken the ref of the to_queue buffer but we are no in
+             * streaming state, so the flush logic won't be performed.
+             * To avoid leaks, flush the allocator and restore the queued
+             * buffer as non-queued */
+            gst_v4l2_allocator_flush (pool->vallocator);
+
+            pool->buffers[group->buffer.index] = NULL;
+
+            gst_mini_object_set_qdata (GST_MINI_OBJECT (to_queue),
+                GST_V4L2_IMPORT_QUARK, NULL, NULL);
             gst_buffer_unref (to_queue);
+            g_atomic_int_add (&pool->num_queued, -1);
             goto start_failed;
           }
 
