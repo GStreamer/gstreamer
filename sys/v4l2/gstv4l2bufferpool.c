@@ -1319,7 +1319,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 }
 
 static void
-gst_v4l2_buffer_pool_finalize (GObject * object)
+gst_v4l2_buffer_pool_dispose (GObject * object)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (object);
   gint i;
@@ -1329,21 +1329,35 @@ gst_v4l2_buffer_pool_finalize (GObject * object)
       gst_buffer_replace (&(pool->buffers[i]), NULL);
   }
 
+  if (pool->vallocator)
+    gst_object_unref (pool->vallocator);
+  pool->vallocator = NULL;
+
+  if (pool->allocator)
+    gst_object_unref (pool->allocator);
+  pool->allocator = NULL;
+
+  if (pool->other_pool)
+    gst_object_unref (pool->other_pool);
+  pool->other_pool = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_v4l2_buffer_pool_finalize (GObject * object)
+{
+  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (object);
+
   if (pool->video_fd >= 0)
     v4l2_close (pool->video_fd);
 
   gst_poll_free (pool->poll);
 
-  if (pool->vallocator)
-    gst_object_unref (pool->vallocator);
-
-  if (pool->allocator)
-    gst_object_unref (pool->allocator);
-
-  if (pool->other_pool)
-    gst_object_unref (pool->other_pool);
-
-  /* FIXME Is this required to keep around ? */
+  /* FIXME Is this required to keep around ?
+   * This can't be done in dispose method because we must not set pointer
+   * to NULL as it is part of the v4l2object and dispose could be called
+   * multiple times */
   gst_object_unref (pool->obj->element);
 
   g_cond_clear (&pool->empty_cond);
@@ -1368,6 +1382,7 @@ gst_v4l2_buffer_pool_class_init (GstV4l2BufferPoolClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstBufferPoolClass *bufferpool_class = GST_BUFFER_POOL_CLASS (klass);
 
+  object_class->dispose = gst_v4l2_buffer_pool_dispose;
   object_class->finalize = gst_v4l2_buffer_pool_finalize;
 
   bufferpool_class->start = gst_v4l2_buffer_pool_start;
