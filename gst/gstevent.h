@@ -346,15 +346,15 @@ gst_event_take (GstEvent **old_event, GstEvent *new_event)
 
 /**
  * GstQOSType:
- * @GST_QOS_TYPE_OVERFLOW: The QoS event type that is produced when downstream
+ * @GST_QOS_TYPE_OVERFLOW: The QoS event type that is produced when upstream
  *    elements are producing data too quickly and the element can't keep up
- *    processing the data. Upstream should reduce their processing rate. This
+ *    processing the data. Upstream should reduce their production rate. This
  *    type is also used when buffers arrive early or in time.
- * @GST_QOS_TYPE_UNDERFLOW: The QoS event type that is produced when downstream
- *    elements are producing data too slowly and need to speed up their processing
- *    rate.
+ * @GST_QOS_TYPE_UNDERFLOW: The QoS event type that is produced when upstream
+ *    elements are producing data too slowly and need to speed up their
+ *    production rate.
  * @GST_QOS_TYPE_THROTTLE: The QoS event type that is produced when the
- *    application enabled throttling to limit the datarate.
+ *    application enabled throttling to limit the data rate.
  *
  * The different types of QoS events that can be given to the
  * gst_event_new_qos() method.
