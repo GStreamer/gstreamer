@@ -445,11 +445,11 @@ static void
 gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (stuff);
-  GstGLFilter *filter = GST_GL_FILTER (overlay);
   GstMapInfo map_info;
   guint image_tex;
-
 #if GST_GL_HAVE_OPENGL
+  GstGLFilter *filter = GST_GL_FILTER (overlay);
+
   if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
     const GstGLFuncs *gl = filter->context->gl_vtable;
 
