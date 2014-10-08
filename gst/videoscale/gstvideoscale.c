@@ -112,7 +112,6 @@ enum
 
 /* FIXME: add v210 support
  * FIXME: add v216 support
- * FIXME: add NV21 support
  * FIXME: add UYVP support
  * FIXME: add A420 support
  * FIXME: add YUV9 support
