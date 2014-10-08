@@ -29,6 +29,7 @@ typedef struct _GstValidateRunner GstValidateRunner;
 typedef struct _GstValidateRunnerClass GstValidateRunnerClass;
 
 #include <gst/validate/gst-validate-report.h>
+#include <gst/validate/gst-validate-enums.h>
 
 G_BEGIN_DECLS
 
@@ -77,6 +78,8 @@ guint           gst_validate_runner_get_reports_count (GstValidateRunner * runne
 GList *        gst_validate_runner_get_reports (GstValidateRunner * runner);
 
 int             gst_validate_runner_printf (GstValidateRunner * runner);
+
+GstValidateReportingLevel gst_validate_runner_get_default_reporting_level (GstValidateRunner *runner);
 
 G_END_DECLS
 

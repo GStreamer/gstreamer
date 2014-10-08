@@ -21,6 +21,7 @@ libgstvalidate_@GST_API_VERSION@include_HEADERS = \
 	validate.h \
 	gst-validate-bin-monitor.h \
 	gst-validate-element-monitor.h \
+	gst-validate-enums.h \
 	gst-validate-monitor-factory.h \
 	gst-validate-monitor.h \
 	gst-validate-override.h \

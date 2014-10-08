@@ -58,8 +58,9 @@
 
 struct _GstValidateRunnerPrivate
 {
-  GMutex         mutex;
-  GList        *reports;
+  GMutex mutex;
+  GList *reports;
+  GstValidateReportingLevel default_level;
 };
 
 #define GST_VALIDATE_RUNNER_LOCK(r)			\
@@ -88,6 +89,22 @@ enum
 };
 
 static guint _signals[LAST_SIGNAL] = { 0 };
+
+static void
+_set_report_levels_from_string (GstValidateRunner * self, const gchar * list)
+{
+  GST_DEBUG_OBJECT (self, "setting report levels from string [%s]", list);
+}
+
+static void
+_init_report_levels (GstValidateRunner * self)
+{
+  const gchar *env;
+
+  env = g_getenv ("GST_VALIDATE_REPORT_LEVEL");
+  if (env)
+    _set_report_levels_from_string (self, env);
+}
 
 static void
 gst_validate_runner_dispose (GObject * object)
@@ -125,6 +142,9 @@ gst_validate_runner_init (GstValidateRunner * runner)
   runner->priv = G_TYPE_INSTANCE_GET_PRIVATE (runner, GST_TYPE_VALIDATE_RUNNER,
       GstValidateRunnerPrivate);
   g_mutex_init (&runner->priv->mutex);
+
+  runner->priv->default_level = GST_VALIDATE_REPORTING_LEVEL_DEFAULT;
+  _init_report_levels (runner);
 }
 
 /**
@@ -138,6 +158,12 @@ GstValidateRunner *
 gst_validate_runner_new (void)
 {
   return g_object_new (GST_TYPE_VALIDATE_RUNNER, NULL);
+}
+
+GstValidateReportingLevel
+gst_validate_runner_get_default_reporting_level (GstValidateRunner * runner)
+{
+  return runner->priv->default_level;
 }
 
 void
@@ -179,7 +205,9 @@ gst_validate_runner_get_reports (GstValidateRunner * runner)
   GList *ret;
 
   GST_VALIDATE_RUNNER_LOCK (runner);
-  ret = g_list_copy_deep (runner->priv->reports, (GCopyFunc) gst_validate_report_ref, NULL);
+  ret =
+      g_list_copy_deep (runner->priv->reports,
+      (GCopyFunc) gst_validate_report_ref, NULL);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   return ret;
@@ -190,10 +218,10 @@ gst_validate_runner_get_reports (GstValidateRunner * runner)
  * @runner: The #GstValidateRunner to print all the reports for
  *
  * Prints all the report on the terminal or on wherever set
- * on the #GST_VALIDATE_FILE env variable.
+ * in the #GST_VALIDATE_FILE env variable.
  *
- * Retrurns: 0 if no critical error has been found and 18 if a critical
- * error as been detected. That return value is usually to be used as
+ * Returns: 0 if no critical error has been found and 18 if a critical
+ * error has been detected. That return value is usually to be used as
  * exit code of the application.
  * */
 int
