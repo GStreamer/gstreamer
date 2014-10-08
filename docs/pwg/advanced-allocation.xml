@@ -2,7 +2,7 @@
   <title>Memory allocation</title>
   <para>
     Memory allocation and management is a very important topic in
-    multimedia. High definition video uses many magabytes to store
+    multimedia. High definition video uses many megabytes to store
     one single frame of video. It is important to reuse the memory
     when possible instead of constantly allocating and freeing
     the memory.

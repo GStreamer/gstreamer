@@ -77,7 +77,7 @@
       second long, it is operating at twice the required speed. If, on the
       other hand, it takes 2 seconds to produce a buffer with 1 seconds worth
       of data, upstream is producing buffers too slow and we won't be able to
-      keep sycnhronization. Usually, a running average is kept of the
+      keep synchronization. Usually, a running average is kept of the
       proportion.
     </para>
     <para>
