@@ -151,6 +151,7 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_BAR, "Bar", "bar"},
     {GST_VIDEO_TEST_SRC_PINWHEEL, "Pinwheel", "pinwheel"},
     {GST_VIDEO_TEST_SRC_SPOKES, "Spokes", "spokes"},
+    {GST_VIDEO_TEST_SRC_GRADIENT, "Gradient", "gradient"},
     {0, NULL, NULL}
   };
 
@@ -422,6 +423,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_SPOKES:
       videotestsrc->make_image = gst_video_test_src_spokes;
+      break;
+    case GST_VIDEO_TEST_SRC_GRADIENT:
+      videotestsrc->make_image = gst_video_test_src_gradient;
       break;
     default:
       g_assert_not_reached ();

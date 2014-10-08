@@ -82,5 +82,6 @@ void    gst_video_test_src_smpte100     (GstVideoTestSrc * v, GstVideoFrame *fra
 void    gst_video_test_src_bar          (GstVideoTestSrc * v, GstVideoFrame *frame);
 void    gst_video_test_src_pinwheel     (GstVideoTestSrc * v, GstVideoFrame * frame);
 void    gst_video_test_src_spokes       (GstVideoTestSrc * v, GstVideoFrame * frame);
+void    gst_video_test_src_gradient     (GstVideoTestSrc * v, GstVideoFrame * frame);
 
 #endif
