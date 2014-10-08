@@ -1364,6 +1364,19 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
         gst_buffer_replace (&h264parse->codec_data, NULL);
       }
 
+      /* set profile and level in caps */
+      if (sps) {
+        GstMapInfo map;
+        GstBuffer *sps_buf = h264parse->sps_nals[sps->id];
+
+        if (sps_buf) {
+          gst_buffer_map (sps_buf, &map, GST_MAP_READ);
+          gst_codec_utils_h264_caps_set_level_and_profile (caps,
+              map.data + 1, map.size - 1);
+          gst_buffer_unmap (sps_buf, &map);
+        }
+      }
+
       gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (h264parse), caps);
     }
 
