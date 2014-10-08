@@ -4325,25 +4325,29 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     GstSourceGroup * group)
 {
   gboolean ret = TRUE;
-  GstElement *sink;
   GstPad *sinkpad = NULL;
+  gboolean activated_sink;
 
   GST_SOURCE_GROUP_LOCK (group);
 
-  if ((sink = group->text_sink))
-    sinkpad = gst_element_get_static_pad (sink, "sink");
-  if (sinkpad) {
-    GstCaps *sinkcaps;
+  if (group->text_sink &&
+      activate_sink (group->playbin, group->text_sink, &activated_sink)) {
+    sinkpad = gst_element_get_static_pad (group->text_sink, "sink");
+    if (sinkpad) {
+      GstCaps *sinkcaps;
 
-    sinkcaps = gst_pad_query_caps (sinkpad, NULL);
-    if (!gst_caps_is_any (sinkcaps))
-      ret = !gst_pad_query_accept_caps (sinkpad, caps);
-    gst_caps_unref (sinkcaps);
-    gst_object_unref (sinkpad);
-  } else {
-    GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
-    ret = !gst_caps_is_subset (caps, subcaps);
-    gst_caps_unref (subcaps);
+      sinkcaps = gst_pad_query_caps (sinkpad, NULL);
+      if (!gst_caps_is_any (sinkcaps))
+        ret = !gst_pad_query_accept_caps (sinkpad, caps);
+      gst_caps_unref (sinkcaps);
+      gst_object_unref (sinkpad);
+    } else {
+      GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
+      ret = !gst_caps_is_subset (caps, subcaps);
+      gst_caps_unref (subcaps);
+    }
+    if (activated_sink)
+      gst_element_set_state (group->text_sink, GST_STATE_NULL);
   }
   /* If autoplugging can stop don't do additional checks */
   if (!ret)
@@ -4356,8 +4360,10 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
           GST_OBJECT_CAST (group->suburidecodebin)))
     goto done;
 
-  if ((sink = group->audio_sink)) {
-    sinkpad = gst_element_get_static_pad (sink, "sink");
+  if (group->audio_sink &&
+      activate_sink (group->playbin, group->audio_sink, &activated_sink)) {
+
+    sinkpad = gst_element_get_static_pad (group->audio_sink, "sink");
     if (sinkpad) {
       GstCaps *sinkcaps;
 
@@ -4367,12 +4373,15 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
       gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
     }
+    if (activated_sink)
+      gst_element_set_state (group->audio_sink, GST_STATE_NULL);
   }
   if (!ret)
     goto done;
 
-  if ((sink = group->video_sink)) {
-    sinkpad = gst_element_get_static_pad (sink, "sink");
+  if (group->video_sink
+      && activate_sink (group->playbin, group->video_sink, &activated_sink)) {
+    sinkpad = gst_element_get_static_pad (group->video_sink, "sink");
     if (sinkpad) {
       GstCaps *sinkcaps;
 
@@ -4382,6 +4391,8 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
       gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
     }
+    if (activated_sink)
+      gst_element_set_state (group->video_sink, GST_STATE_NULL);
   }
 
 done:
@@ -4628,7 +4639,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
 
   /* now see if we already have a sink element */
   GST_SOURCE_GROUP_LOCK (group);
-  if (*sinkp) {
+  if (*sinkp && GST_STATE (*sinkp) >= GST_STATE_READY) {
     GstElement *sink = gst_object_ref (*sinkp);
 
     if (sink_accepts_caps (playbin, sink, caps)) {
