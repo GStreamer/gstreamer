@@ -370,7 +370,7 @@ static gboolean
 gst_my_filter_setcaps (GstMyFilter *filter,
 		       GstCaps *caps)
 {
-  if (gst_pad_set_caps (filter->sinkpad, caps)) {
+  if (gst_pad_set_caps (filter->srcpad, caps)) {
     filter->passthrough = TRUE;
   } else {
     GstCaps *othercaps, *newcaps;
