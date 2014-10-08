@@ -150,7 +150,7 @@ typedef enum {
 } GstVideoBufferFlags;
 
 /**
- * GstVideoBufferFlags:
+ * GstVideoFrameMapFlags:
  * @GST_VIDEO_FRAME_MAP_FLAG_NO_REF:  Don't take another reference of the buffer and store it in
  *                                    the GstVideoFrame. This makes sure that the buffer stays
  *                                    writable while the frame is mapped, but requires that the
