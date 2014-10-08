@@ -97,6 +97,38 @@ gst_video_meta_get_info (void)
 }
 
 /**
+ * gst_buffer_get_video_meta:
+ * @buffer: a #GstBuffer
+ *
+ * Find the #GstVideoMeta on @buffer with the lowest @id.
+ *
+ * Buffers can contain multiple #GstVideoMeta metadata items when dealing with
+ * multiview buffers.
+ *
+ * Returns: the #GstVideoMeta with lowest id (usually 0) or %NULL when there
+ * is no such metadata on @buffer.
+ */
+GstVideoMeta *
+gst_buffer_get_video_meta (GstBuffer * buffer)
+{
+  gpointer state = NULL;
+  GstVideoMeta *out = NULL;
+  GstMeta *meta;
+  const GstMetaInfo *info = GST_VIDEO_META_INFO;
+
+  while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
+    if (meta->info->api == info->api) {
+      GstVideoMeta *vmeta = (GstVideoMeta *) meta;
+      if (vmeta->id == 0)
+        return vmeta;           /* Early out for id 0 */
+      if (out == NULL || vmeta->id < out->id)
+        out = vmeta;
+    }
+  }
+  return out;
+}
+
+/**
  * gst_buffer_get_video_meta_id:
  * @buffer: a #GstBuffer
  * @id: a metadata id

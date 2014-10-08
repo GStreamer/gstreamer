@@ -78,7 +78,7 @@ struct _GstVideoMeta {
 GType gst_video_meta_api_get_type (void);
 const GstMetaInfo * gst_video_meta_get_info (void);
 
-#define gst_buffer_get_video_meta(b) ((GstVideoMeta*)gst_buffer_get_meta((b),GST_VIDEO_META_API_TYPE))
+GstVideoMeta * gst_buffer_get_video_meta (GstBuffer *buffer);
 GstVideoMeta * gst_buffer_get_video_meta_id    (GstBuffer *buffer, gint id);
 
 GstVideoMeta * gst_buffer_add_video_meta       (GstBuffer *buffer, GstVideoFrameFlags flags,
