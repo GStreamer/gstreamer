@@ -171,6 +171,7 @@ struct _GstSingleQueue
   /* for serialized queries */
   GCond query_handled;
   gboolean last_query;
+  GstQuery *last_handled_query;
 };
 
 
@@ -1264,6 +1265,7 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
 
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
     sq->last_query = res;
+    sq->last_handled_query = query;
     g_cond_signal (&sq->query_handled);
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   } else {
@@ -1857,9 +1859,19 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
           GST_DEBUG_OBJECT (mq,
               "SingleQueue %d : Enqueuing query %p of type %s with id %d",
               sq->id, query, GST_QUERY_TYPE_NAME (query), curid);
+          GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
           res = gst_data_queue_push (sq->queue, (GstDataQueueItem *) item);
-          g_cond_wait (&sq->query_handled, &mq->qlock);
+          GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+          /* it might be that the query has been taken out of the queue
+           * while we were unlocked. So, we need to check if the last
+           * handled query is the same one than the one we just
+           * pushed. If it is, we don't need to wait for the condition
+           * variable, otherwise we wait for the condition variable to
+           * be signaled. */
+          if (sq->last_handled_query != query)
+            g_cond_wait (&sq->query_handled, &mq->qlock);
           res = sq->last_query;
+          sq->last_handled_query = NULL;
         } else {
           GST_DEBUG_OBJECT (mq, "refusing query, we are buffering and the "
               "queue is not empty");
