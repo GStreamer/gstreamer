@@ -806,7 +806,8 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   if (!gst_v4l2_buffer_pool_streamoff (pool))
     goto streamoff_failed;
 
-  gst_v4l2_allocator_flush (pool->vallocator);
+  if (pool->vallocator)
+    gst_v4l2_allocator_flush (pool->vallocator);
 
   for (i = 0; i < VIDEO_MAX_FRAME; i++) {
     if (pool->buffers[i]) {
@@ -825,7 +826,7 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
 
   ret = GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
 
-  if (ret) {
+  if (ret && pool->vallocator) {
     GstV4l2Return vret;
 
     vret = gst_v4l2_allocator_stop (pool->vallocator);
