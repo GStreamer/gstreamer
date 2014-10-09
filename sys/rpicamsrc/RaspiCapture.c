@@ -752,6 +752,21 @@ static void destroy_camera_component(RASPIVID_STATE *state)
    }
 }
 
+gboolean raspi_capture_request_i_frame(RASPIVID_STATE *state)
+{
+   MMAL_PORT_T *encoder_output = NULL;
+   MMAL_STATUS_T status;
+   MMAL_PARAMETER_BOOLEAN_T param = {{  MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, sizeof(param)}, 1};
+   encoder_output = state->encoder_component->output[0];
+   status = mmal_port_parameter_set(encoder_output, &param.hdr);
+   if (status != MMAL_SUCCESS)
+   {
+      vcos_log_error("Unable to request I-frame");
+      return FALSE;
+   }
+   return TRUE;
+}
+
 /**
  * Create the encoder component, set up its ports
  *

@@ -181,6 +181,8 @@ static GstFlowReturn gst_rpi_cam_src_create (GstPushSrc * parent,
 static GstCaps *gst_rpi_cam_src_get_caps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_rpi_cam_src_set_caps (GstBaseSrc * src, GstCaps * caps);
 static GstCaps *gst_rpi_cam_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
+static gboolean gst_rpi_cam_src_event (GstBaseSrc * src, GstEvent * event);
+static gboolean gst_rpi_cam_src_send_event (GstElement * element, GstEvent * event);
 
 static void
 gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
@@ -312,6 +314,8 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_get_caps);
   basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_set_caps);
   basesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_fixate);
+  basesrc_class->event = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_event);
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_send_event);
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_create);
 
   raspicapture_init ();
@@ -530,6 +534,58 @@ gst_rpi_cam_src_stop (GstBaseSrc * parent)
   raspi_capture_free (src->capture_state);
   src->capture_state = NULL;
   return TRUE;
+}
+
+static gboolean
+gst_rpi_cam_src_send_event (GstElement * parent, GstEvent * event)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (parent);
+  gboolean ret;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    case GST_EVENT_CUSTOM_UPSTREAM:
+      if (gst_video_event_is_force_key_unit (event)) {
+        if (src->started) {
+          ret = raspi_capture_request_i_frame (src->capture_state);
+        } else {
+          ret = FALSE;
+        }
+        gst_event_unref (event);
+      } else {
+        ret = GST_ELEMENT_CLASS (parent_class)->send_event(parent, event);
+      }
+      break;
+    default:
+     ret = GST_ELEMENT_CLASS (parent_class)->send_event(parent, event);
+     break;
+  }
+  return ret;
+}
+
+static gboolean
+gst_rpi_cam_src_event (GstBaseSrc * parent, GstEvent * event)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC (parent);
+  gboolean ret;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    case GST_EVENT_CUSTOM_UPSTREAM:
+      if (gst_video_event_is_force_key_unit (event)) {
+        if (src->started) {
+          ret = raspi_capture_request_i_frame (src->capture_state);
+        } else {
+          ret = FALSE;
+        }
+        gst_event_unref (event);
+      } else {
+        ret = GST_BASE_SRC_CLASS (parent_class)->event(parent, event);
+      }
+      break;
+    default:
+     ret = GST_BASE_SRC_CLASS (parent_class)->event(parent, event);
+     break;
+  }
+  return ret;
 }
 
 static GstCaps *
