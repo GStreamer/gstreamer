@@ -563,10 +563,14 @@ gst_fluid_dec_open (GstFluidDec * fluiddec)
           fluiddec->sf = fluid_synth_sfload (fluiddec->synth, filename, 1);
           if (fluiddec->sf != -1) {
             GST_DEBUG_OBJECT (fluiddec, "loaded soundfont file %s", filename);
+            g_free (filename);
+            g_dir_close (dir);
+            g_free (soundfont_path);
             goto done;
           }
           GST_DEBUG_OBJECT (fluiddec, "could not load soundfont file %s",
               filename);
+          g_free (filename);
         }
         g_dir_close (dir);
         g_free (soundfont_path);
