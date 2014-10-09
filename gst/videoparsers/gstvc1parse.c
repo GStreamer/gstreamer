@@ -288,6 +288,7 @@ gst_vc1_parse_reset (GstVC1Parse * vc1parse)
   gst_buffer_replace (&vc1parse->seq_hdr_buffer, NULL);
   gst_buffer_replace (&vc1parse->entrypoint_buffer, NULL);
 
+  vc1parse->seq_layer_sent = FALSE;
   vc1parse->frame_layer_first_frame_sent = FALSE;
 }
 
