@@ -1227,7 +1227,7 @@ GST_START_TEST (test_vc1_parse_sequence_layer)
   assert_equals_int (seq_layer.struct_a.vert_size, 48);
   assert_equals_int (seq_layer.struct_a.horiz_size, 48);
 
-  assert_equals_int (seq_layer.struct_b.level, GST_VC1_LEVEL_HIGH);
+  assert_equals_int (seq_layer.struct_b.level, GST_VC1_LEVEL_MEDIUM);
   assert_equals_int (seq_layer.struct_b.cbr, 1);
   assert_equals_int (seq_layer.struct_b.framerate, 29);
   assert_equals_int (seq_layer.struct_b.hrd_buffer, 0);
