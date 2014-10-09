@@ -882,8 +882,9 @@ static void
 handoff_buffer_cb (GstElement * fakesink, GstBuffer * buffer, GstPad * pad,
     GstClockTime * wanted_end)
 {
-  GST_DEBUG ("got buffer -- SIZE: %ld -- %p DURATION is %" GST_TIME_FORMAT
-      " -- WANTED END %" GST_TIME_FORMAT, gst_buffer_get_size (buffer), buffer,
+  GST_DEBUG ("got buffer -- SIZE: %" G_GSIZE_FORMAT
+      " -- %p DURATION is %" GST_TIME_FORMAT " -- WANTED END %" GST_TIME_FORMAT,
+      gst_buffer_get_size (buffer), buffer,
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)),
       GST_TIME_ARGS (*wanted_end));
 
