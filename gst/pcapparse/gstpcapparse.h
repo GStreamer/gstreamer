@@ -47,8 +47,9 @@ typedef enum
 
 typedef enum
 {
-  DLT_ETHER  = 1,
-  DLT_SLL = 113
+  LINKTYPE_ETHER  = 1,
+  LINKTYPE_RAW = 101,
+  LINKTYPE_SLL = 113
 } GstPcapParseLinktype;
 
 /**

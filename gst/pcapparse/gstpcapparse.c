@@ -360,20 +360,28 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
   guint16 len;
 
   switch (self->linktype) {
-    case DLT_ETHER:
+    case LINKTYPE_ETHER:
       if (buf_size < ETH_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
         return FALSE;
 
       eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 12)));
       buf_ip = buf + ETH_HEADER_LEN;
       break;
-    case DLT_SLL:
+    case LINKTYPE_SLL:
       if (buf_size < SLL_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
         return FALSE;
 
       eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 14)));
       buf_ip = buf + SLL_HEADER_LEN;
       break;
+    case LINKTYPE_RAW:
+      if (buf_size < IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
+        return FALSE;
+
+      eth_type = 0x800;         /* This is fine since IPv4/IPv6 is parse elsewhere */
+      buf_ip = buf;
+      break;
+
     default:
       return FALSE;
   }
@@ -569,10 +577,11 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         goto out;
       }
 
-      if (linktype != DLT_ETHER && linktype != DLT_SLL) {
+      if (linktype != LINKTYPE_ETHER && linktype != LINKTYPE_SLL &&
+          linktype != LINKTYPE_RAW) {
         GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE, (NULL),
-            ("Only dumps of type Ethernet or Linux Coooked (SLL) understood,"
-                " type %d unknown", linktype));
+            ("Only dumps of type Ethernet, raw IP or Linux Cooked (SLL) "
+                "understood; type %d unknown", linktype));
         ret = GST_FLOW_ERROR;
         goto out;
       }
