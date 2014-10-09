@@ -287,6 +287,8 @@ gst_vc1_parse_reset (GstVC1Parse * vc1parse)
   gst_buffer_replace (&vc1parse->seq_layer_buffer, NULL);
   gst_buffer_replace (&vc1parse->seq_hdr_buffer, NULL);
   gst_buffer_replace (&vc1parse->entrypoint_buffer, NULL);
+
+  vc1parse->frame_layer_first_frame_sent = FALSE;
 }
 
 static gboolean
@@ -439,7 +441,8 @@ gst_vc1_parse_is_format_allowed (GstVC1Parse * vc1parse)
       break;
 
     case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
-      if (vc1parse->input_stream_format != VC1_STREAM_FORMAT_FRAME_LAYER)
+      if (vc1parse->input_stream_format != VC1_STREAM_FORMAT_FRAME_LAYER &&
+          vc1parse->input_stream_format != VC1_STREAM_FORMAT_ASF)
         goto conversion_not_supported;
       break;
 
@@ -449,7 +452,8 @@ gst_vc1_parse_is_format_allowed (GstVC1Parse * vc1parse)
 
     case VC1_STREAM_FORMAT_FRAME_LAYER:
       if (vc1parse->input_stream_format !=
-          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER)
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER &&
+          vc1parse->input_stream_format != VC1_STREAM_FORMAT_ASF)
         goto conversion_not_supported;
       break;
 
@@ -1608,6 +1612,91 @@ done:
 }
 
 static GstFlowReturn
+gst_vc1_parse_convert_to_frame_layer (GstVC1Parse * vc1parse,
+    GstBaseParseFrame * frame)
+{
+  GstByteWriter bw;
+  GstBuffer *buffer;
+  GstBuffer *frame_layer;
+  gsize frame_layer_size;
+  GstMemory *mem;
+  gboolean ok;
+  gboolean keyframe;
+  guint8 sc_data[4];
+  guint32 startcode;
+
+  buffer = frame->buffer;
+  keyframe = !(GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+
+  /* We need 8 bytes for frame-layer header */
+  frame_layer_size = 8;
+  if (vc1parse->profile == GST_VC1_PROFILE_ADVANCED) {
+    if (!vc1parse->frame_layer_first_frame_sent) {
+      /* First frame should contain sequence-header, entry-point and frame */
+      frame_layer_size += 4 + gst_buffer_get_size (vc1parse->seq_hdr_buffer)
+          + 4 + gst_buffer_get_size (vc1parse->entrypoint_buffer) + 4;
+    } else if (keyframe) {
+      /* Keyframe should contain entry point */
+      frame_layer_size += 4 +
+          gst_buffer_get_size (vc1parse->entrypoint_buffer) + 4;
+    }
+  }
+
+  gst_byte_writer_init_with_size (&bw, frame_layer_size, TRUE);
+
+  /* frame-layer header shall be serialized in little-endian byte order */
+  ok = gst_byte_writer_put_uint24_le (&bw, gst_buffer_get_size (buffer));
+
+  if (keyframe)
+    ok &= gst_byte_writer_put_uint8 (&bw, 0x80);        /* keyframe */
+  else
+    ok &= gst_byte_writer_put_uint8 (&bw, 0x00);
+
+  ok &= gst_byte_writer_put_uint32_le (&bw, GST_BUFFER_PTS (buffer));
+
+  if (vc1parse->profile != GST_VC1_PROFILE_ADVANCED)
+    goto headers_done;
+
+  if (!vc1parse->frame_layer_first_frame_sent) {
+    /* Write sequence-header start code, sequence-header entrypoint startcode
+     * and entrypoint */
+    ok &= gst_byte_writer_put_uint32_be (&bw, 0x0000010f);
+    ok &= gst_byte_writer_put_buffer (&bw, vc1parse->seq_hdr_buffer, 0, -1);
+    ok &= gst_byte_writer_put_uint32_be (&bw, 0x0000010e);
+    ok &= gst_byte_writer_put_buffer (&bw, vc1parse->entrypoint_buffer, 0, -1);
+  } else if (keyframe) {
+    /* Write entrypoint startcode and entrypoint */
+    ok &= gst_byte_writer_put_uint32_be (&bw, 0x0000010e);
+    ok &= gst_byte_writer_put_buffer (&bw, vc1parse->entrypoint_buffer, 0, -1);
+  }
+
+  /* frame can begin with startcode, in this case, don't prepend it */
+  if (gst_buffer_extract (buffer, 0, sc_data, 4) == 4) {
+    startcode = GST_READ_UINT32_BE (sc_data);
+    if (((startcode & 0xffffff00) == 0x00000100)) {
+      /* Start code found */
+      goto headers_done;
+    }
+  }
+
+  ok &= gst_byte_writer_put_uint32_be (&bw, 0x0000010d);
+
+headers_done:
+  frame_layer = gst_byte_writer_reset_and_get_buffer (&bw);
+  mem = gst_buffer_get_all_memory (frame_layer);
+  gst_buffer_prepend_memory (buffer, mem);
+  gst_buffer_unref (frame_layer);
+
+  if (G_UNLIKELY (!ok)) {
+    GST_ERROR_OBJECT (vc1parse, "failed to convert to frame layer");
+    return GST_FLOW_ERROR;
+  }
+
+  vc1parse->frame_layer_first_frame_sent = TRUE;
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
 gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstVC1Parse *vc1parse = GST_VC1_PARSE (parse);
@@ -1831,7 +1920,16 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           g_assert_not_reached ();
           break;
         case VC1_STREAM_FORMAT_ASF:
-          goto conversion_not_supported;
+          /* Make sure we push the sequence layer */
+          if (!vc1parse->seq_layer_sent) {
+            ret = gst_vc1_parse_push_sequence_layer (vc1parse);
+            if (ret != GST_FLOW_OK) {
+              GST_ERROR_OBJECT (vc1parse, "push sequence layer failed");
+              break;
+            }
+            vc1parse->seq_layer_sent = TRUE;
+          }
+          ret = gst_vc1_parse_convert_to_frame_layer (vc1parse, frame);
           break;
         case VC1_STREAM_FORMAT_FRAME_LAYER:
           /* We just need to send the sequence-layer first */
@@ -1887,7 +1985,7 @@ gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           }
           break;
         case VC1_STREAM_FORMAT_ASF:
-          goto conversion_not_supported;
+          ret = gst_vc1_parse_convert_to_frame_layer (vc1parse, frame);
           break;
         case VC1_STREAM_FORMAT_FRAME_LAYER:
         default:

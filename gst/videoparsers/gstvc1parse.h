@@ -111,6 +111,10 @@ struct _GstVC1Parse
   /* TRUE if we have already sent the sequence-layer,
    * use for stream-format conversion */
   gboolean seq_layer_sent;
+
+  /* TRUE if we have already sent the frame-layer first frame,
+   * use for stream-format conversion */
+  gboolean frame_layer_first_frame_sent;
 };
 
 struct _GstVC1ParseClass
