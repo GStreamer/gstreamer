@@ -314,6 +314,158 @@ gst_vc1_parse_stop (GstBaseParse * parse)
 }
 
 static gboolean
+gst_vc1_parse_is_format_allowed (GstVC1Parse * vc1parse)
+{
+  if (vc1parse->profile == GST_VC1_PROFILE_ADVANCED &&
+      vc1parse->output_stream_format ==
+      VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME) {
+    GST_ERROR_OBJECT (vc1parse,
+        "sequence-layer-raw-frame is not allowed in advanced profile");
+    return FALSE;
+  } else if (vc1parse->profile == GST_VC1_PROFILE_SIMPLE &&
+      (vc1parse->output_stream_format == VC1_STREAM_FORMAT_BDU ||
+          vc1parse->output_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
+          vc1parse->output_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU ||
+          vc1parse->output_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME)) {
+    GST_ERROR_OBJECT (vc1parse,
+        "output stream-format not allowed in simple profile");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (vc1parse, "check output header-format");
+  switch (vc1parse->output_header_format) {
+    case VC1_HEADER_FORMAT_ASF:
+    case VC1_HEADER_FORMAT_SEQUENCE_LAYER:
+      /* Doesn't make sense to have sequence-layer-* stream-format */
+      if (vc1parse->output_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU ||
+          vc1parse->output_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME ||
+          vc1parse->output_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME ||
+          vc1parse->output_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER)
+        return FALSE;
+      break;
+    case VC1_HEADER_FORMAT_NONE:
+      /* In simple/main profile, there is no sequence header BDU */
+      if (vc1parse->profile != GST_VC1_PROFILE_ADVANCED &&
+          (vc1parse->output_stream_format == VC1_STREAM_FORMAT_BDU ||
+              vc1parse->output_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
+              vc1parse->output_stream_format == VC1_STREAM_FORMAT_FRAME_LAYER))
+        return FALSE;
+
+      /* ASF stream-format doesn't carry sequence header */
+      if (vc1parse->output_stream_format == VC1_STREAM_FORMAT_ASF)
+        return FALSE;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  if (vc1parse->output_stream_format == vc1parse->input_stream_format)
+    return TRUE;
+
+  GST_DEBUG_OBJECT (vc1parse, "check stream-format conversion");
+  switch (vc1parse->output_stream_format) {
+    case VC1_STREAM_FORMAT_BDU:
+      if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER ||
+          vc1parse->input_stream_format == VC1_STREAM_FORMAT_FRAME_LAYER)
+        goto conversion_not_supported;
+      break;
+
+    case VC1_STREAM_FORMAT_BDU_FRAME:
+      if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER ||
+          vc1parse->input_stream_format == VC1_STREAM_FORMAT_ASF ||
+          vc1parse->input_stream_format == VC1_STREAM_FORMAT_FRAME_LAYER)
+        goto conversion_not_supported;
+
+      if (vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME)
+        return FALSE;
+      break;
+
+    case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU:
+      if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER ||
+          vc1parse->input_stream_format == VC1_STREAM_FORMAT_FRAME_LAYER)
+        goto conversion_not_supported;
+      break;
+
+    case VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME:
+      if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER ||
+          vc1parse->input_stream_format == VC1_STREAM_FORMAT_ASF ||
+          vc1parse->input_stream_format == VC1_STREAM_FORMAT_FRAME_LAYER)
+        goto conversion_not_supported;
+
+      if (vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME)
+        return FALSE;
+      break;
+
+    case VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME:
+      if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU ||
+          vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME ||
+          vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER ||
+          vc1parse->input_stream_format == VC1_STREAM_FORMAT_FRAME_LAYER)
+        goto conversion_not_supported;
+      break;
+
+    case VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER:
+      if (vc1parse->input_stream_format != VC1_STREAM_FORMAT_FRAME_LAYER)
+        goto conversion_not_supported;
+      break;
+
+    case VC1_STREAM_FORMAT_ASF:
+      goto conversion_not_supported;
+      break;
+
+    case VC1_STREAM_FORMAT_FRAME_LAYER:
+      if (vc1parse->input_stream_format !=
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER)
+        goto conversion_not_supported;
+      break;
+
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  return TRUE;
+
+conversion_not_supported:
+  GST_ERROR_OBJECT (vc1parse, "stream conversion not implemented yet");
+  return FALSE;
+}
+
+static gboolean
 gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
 {
   GstCaps *in_caps;
@@ -390,6 +542,10 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
 
   if (allowed_caps)
     gst_caps_unref (allowed_caps);
+
+  if (!gst_vc1_parse_is_format_allowed (vc1parse))
+    return FALSE;
+
   vc1parse->renegotiate = FALSE;
   vc1parse->update_caps = TRUE;
 
