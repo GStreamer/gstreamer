@@ -1052,7 +1052,7 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     /* frame-layer or sequence-layer-frame-layer */
     g_assert (size >= 8);
     /* Parse frame layer size */
-    framesize = GST_READ_UINT24_LE (data + 1) + 8;
+    framesize = GST_READ_UINT24_LE (data) + 8;
   }
 
 
