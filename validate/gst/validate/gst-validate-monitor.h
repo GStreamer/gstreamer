@@ -91,6 +91,8 @@ struct _GstValidateMonitor {
   GMutex        overrides_mutex;
   GQueue        overrides;
 
+  GstValidateReportingLevel level;
+
   /*< private >*/
   GHashTable *reports;
 };

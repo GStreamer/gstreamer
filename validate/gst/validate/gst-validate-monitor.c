@@ -188,10 +188,38 @@ gst_validate_monitor_do_setup (GstValidateMonitor * monitor)
   return TRUE;
 }
 
+static void
+_determine_reporting_level (GstValidateMonitor *monitor)
+{
+  GstValidateRunner *runner;
+  GstObject *object, *parent;
+  const gchar *object_name;
+  GstValidateReportingLevel level = GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
+
+  object = gst_object_ref(monitor->target);
+  runner = gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
+
+  do {
+    object_name = gst_object_get_name (object);
+    level = gst_validate_runner_get_reporting_level_for_name (runner, object_name);
+    parent = gst_object_get_parent (object);
+    gst_object_unref (object);
+    object = parent;
+  } while (object && level == GST_VALIDATE_REPORTING_LEVEL_UNKNOWN);
+
+  if (object)
+    gst_object_unref (object);
+
+  monitor->level = level;
+}
+
 gboolean
 gst_validate_monitor_setup (GstValidateMonitor * monitor)
 {
   GST_DEBUG_OBJECT (monitor, "Starting monitor setup");
+
+  /* For now we just need to do this at setup time */
+  _determine_reporting_level (monitor);
   return GST_VALIDATE_MONITOR_GET_CLASS (monitor)->setup (monitor);
 }
 
