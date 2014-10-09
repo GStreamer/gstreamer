@@ -1257,11 +1257,14 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
     convert->priv->in_tex[i] =
         (GstGLMemory *) gst_buffer_peek_memory (convert->inbuf, i);
     if (!gst_is_gl_memory ((GstMemory *) convert->priv->in_tex[i])) {
+      GST_ERROR_OBJECT (convert, "input must be GstGLMemory");
       res = FALSE;
       goto out;
     }
     if (!gst_memory_map ((GstMemory *) convert->priv->in_tex[i], &in_info[i],
             GST_MAP_READ | GST_MAP_GL)) {
+      GST_ERROR_OBJECT (convert, "failed to map input memory %p",
+          convert->priv->in_tex[i]);
       res = FALSE;
       goto out;
     }
@@ -1273,6 +1276,7 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
     gint mem_width, mem_height;
 
     if (!gst_is_gl_memory ((GstMemory *) out_tex)) {
+      GST_ERROR_OBJECT (convert, "output must be GstGLMemory");
       res = FALSE;
       goto out;
     }
@@ -1300,6 +1304,8 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
 
     if (!gst_memory_map ((GstMemory *) convert->priv->out_tex[j], &out_info[j],
             GST_MAP_WRITE | GST_MAP_GL)) {
+      GST_ERROR_OBJECT (convert, "failed to map output memory %p",
+          convert->priv->out_tex[i]);
       res = FALSE;
       goto out;
     }
