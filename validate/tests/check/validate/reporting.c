@@ -25,9 +25,37 @@ GST_START_TEST (test_report_levels)
 {
   GstValidateRunner *runner;
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
-  runner = gst_validate_runner_new ();
+  /* FIXME: for now the only interface to set the reporting level is through an
+   * environment variable parsed at the time of the runner initialization,
+   * we can simplify that if the runner exposes API for that at some point
+   */
 
+  /* Try to set the default reporting level to ALL, the code is supposed to
+   * be case insensitive */
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "AlL", TRUE));
+  runner = gst_validate_runner_new ();
+  fail_unless (gst_validate_runner_get_default_reporting_level (runner) ==
+      GST_VALIDATE_REPORTING_LEVEL_ALL);
+  g_object_unref (runner);
+
+  /* Try to set the default reporting level to subchain, the code is supposed to
+   * parse numbers as well */
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "2", TRUE));
+  runner = gst_validate_runner_new ();
+  fail_unless (gst_validate_runner_get_default_reporting_level (runner) ==
+      GST_VALIDATE_REPORTING_LEVEL_SYNTHETIC);
+  g_object_unref (runner);
+
+  /* Try to set the reporting level for an object */
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL",
+          "synthetic,test_object:monitor,other_*:all", TRUE));
+  runner = gst_validate_runner_new ();
+  fail_unless (gst_validate_runner_get_reporting_level_for_name (runner,
+          "test_object") == GST_VALIDATE_REPORTING_LEVEL_MONITOR);
+  fail_unless (gst_validate_runner_get_reporting_level_for_name (runner,
+          "other_test_object") == GST_VALIDATE_REPORTING_LEVEL_ALL);
+  fail_unless (gst_validate_runner_get_reporting_level_for_name (runner,
+          "dummy_test_object") == GST_VALIDATE_REPORTING_LEVEL_UNKNOWN);
   g_object_unref (runner);
 }
 

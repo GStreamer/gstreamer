@@ -80,6 +80,8 @@ GList *        gst_validate_runner_get_reports (GstValidateRunner * runner);
 int             gst_validate_runner_printf (GstValidateRunner * runner);
 
 GstValidateReportingLevel gst_validate_runner_get_default_reporting_level (GstValidateRunner *runner);
+GstValidateReportingLevel gst_validate_runner_get_reporting_level_for_name (GstValidateRunner *runner,
+                                                                            const gchar *name);
 
 G_END_DECLS
 

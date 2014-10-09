@@ -21,6 +21,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+#include <stdlib.h>
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -61,7 +64,17 @@ struct _GstValidateRunnerPrivate
   GMutex mutex;
   GList *reports;
   GstValidateReportingLevel default_level;
+
+  /* A list of PatternLevel */
+  GList *report_pattern_levels;
 };
+
+/* Describes the reporting level to apply to a name pattern */
+typedef struct _PatternLevel
+{
+  GPatternSpec *pattern;
+  GstValidateReportingLevel level;
+} PatternLevel;
 
 #define GST_VALIDATE_RUNNER_LOCK(r)			\
   G_STMT_START {					\
@@ -90,10 +103,94 @@ enum
 
 static guint _signals[LAST_SIGNAL] = { 0 };
 
+static gboolean
+_parse_reporting_level (gchar * str, GstValidateReportingLevel * level)
+{
+  if (!str)
+    return FALSE;
+
+  /* works in place */
+  g_strstrip (str);
+
+  if (g_ascii_isdigit (str[0])) {
+    unsigned long l;
+    char *endptr;
+    l = strtoul (str, &endptr, 10);
+    if (endptr > str && endptr[0] == 0) {
+      *level = (GstValidateReportingLevel) l;
+    } else {
+      return FALSE;
+    }
+  } else if (g_ascii_strcasecmp (str, "none") == 0) {
+    *level = GST_VALIDATE_REPORTING_LEVEL_NONE;
+  } else if (g_ascii_strcasecmp (str, "synthetic") == 0) {
+    *level = GST_VALIDATE_REPORTING_LEVEL_SYNTHETIC;
+  } else if (g_ascii_strcasecmp (str, "subchain") == 0) {
+    *level = GST_VALIDATE_REPORTING_LEVEL_SUBCHAIN;
+  } else if (g_ascii_strcasecmp (str, "monitor") == 0) {
+    *level = GST_VALIDATE_REPORTING_LEVEL_MONITOR;
+  } else if (g_ascii_strcasecmp (str, "all") == 0) {
+    *level = GST_VALIDATE_REPORTING_LEVEL_ALL;
+  } else
+    return FALSE;
+
+  return TRUE;
+}
+
+static void
+_free_report_pattern_level (PatternLevel * pattern_level)
+{
+  g_pattern_spec_free (pattern_level->pattern);
+  g_free (pattern_level);
+}
+
+static void
+_set_reporting_level_for_name (GstValidateRunner * runner,
+    const gchar * pattern, GstValidateReportingLevel level)
+{
+  PatternLevel *pattern_level = g_malloc (sizeof (PatternLevel));
+  GPatternSpec *pattern_spec = g_pattern_spec_new (pattern);
+
+  pattern_level->pattern = pattern_spec;
+  pattern_level->level = level;
+
+  runner->priv->report_pattern_levels =
+      g_list_append (runner->priv->report_pattern_levels, pattern_level);
+}
+
 static void
 _set_report_levels_from_string (GstValidateRunner * self, const gchar * list)
 {
+  gchar **split;
+  gchar **walk;
+
+  g_assert (list);
+
   GST_DEBUG_OBJECT (self, "setting report levels from string [%s]", list);
+
+  split = g_strsplit (list, ",", 0);
+
+  for (walk = split; *walk; walk++) {
+    if (strchr (*walk, ':')) {
+      gchar **values = g_strsplit (*walk, ":", 2);
+
+      if (values[0] && values[1]) {
+        GstValidateReportingLevel level;
+
+        if (_parse_reporting_level (values[1], &level))
+          _set_reporting_level_for_name (self, values[0], level);
+      }
+
+      g_strfreev (values);
+    } else {
+      GstValidateReportingLevel level;
+
+      if (_parse_reporting_level (*walk, &level))
+        self->priv->default_level = level;
+    }
+  }
+
+  g_strfreev (split);
 }
 
 static void
@@ -113,6 +210,8 @@ gst_validate_runner_dispose (GObject * object)
 
   g_list_free_full (runner->priv->reports,
       (GDestroyNotify) gst_validate_report_unref);
+  g_list_free_full (runner->priv->report_pattern_levels,
+      (GDestroyNotify) _free_report_pattern_level);
 
   g_mutex_clear (&runner->priv->mutex);
 
@@ -160,10 +259,38 @@ gst_validate_runner_new (void)
   return g_object_new (GST_TYPE_VALIDATE_RUNNER, NULL);
 }
 
+/*
+ * gst_validate_runner_get_default_reporting_level:
+ *
+ * Returns: the default #GstValidateReportingLevel used to output a report.
+ */
 GstValidateReportingLevel
 gst_validate_runner_get_default_reporting_level (GstValidateRunner * runner)
 {
   return runner->priv->default_level;
+}
+
+/*
+ * gst_validate_runner_get_reporting_level_for_name:
+ *
+ * Returns: the #GstValidateReportingLevel that will be applied for a given name.
+ * If no pattern was set for such a name, this function will return
+ * #GST_VALIDATE_REPORTING_LEVEL_UNKNOWN, and reporting for that name will
+ * default to the global reporting level.
+ */
+GstValidateReportingLevel
+gst_validate_runner_get_reporting_level_for_name (GstValidateRunner * runner,
+    const gchar * name)
+{
+  GList *tmp;
+
+  for (tmp = runner->priv->report_pattern_levels; tmp; tmp = tmp->next) {
+    PatternLevel *pattern_level = (PatternLevel *) tmp->data;
+    if (g_pattern_match_string (pattern_level->pattern, name))
+      return pattern_level->level;
+  }
+
+  return GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
 }
 
 void
