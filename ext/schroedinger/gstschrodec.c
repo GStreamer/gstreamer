@@ -58,6 +58,10 @@ struct _GstSchroDec
   SchroDecoder *decoder;
 
   gboolean seq_header_buffer_seen;
+  gint next;
+  gint prev;
+  gint parse_code;
+  gboolean header_read;
 };
 
 struct _GstSchroDecClass
@@ -151,6 +155,7 @@ gst_schro_dec_init (GstSchroDec * schro_dec)
 
   schro_dec->decoder = schro_decoder_new ();
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (schro_dec), FALSE);
+  schro_dec->header_read = FALSE;
 }
 
 static gboolean
@@ -163,7 +168,11 @@ gst_schro_dec_start (GstVideoDecoder * dec)
 static gboolean
 gst_schro_dec_stop (GstVideoDecoder * dec)
 {
+  GstSchroDec *schro_dec;
 
+  schro_dec = GST_SCHRO_DEC (dec);
+
+  schro_dec->header_read = FALSE;
   return TRUE;
 }
 
@@ -178,7 +187,7 @@ gst_schro_dec_flush (GstVideoDecoder * dec)
 
   if (schro_dec->decoder)
     schro_decoder_reset (schro_dec->decoder);
-
+  schro_dec->header_read = FALSE;
   return TRUE;
 }
 
@@ -278,9 +287,6 @@ gst_schro_dec_parse (GstVideoDecoder * base_video_decoder,
 {
   GstSchroDec *schro_decoder;
   unsigned char header[SCHRO_PARSE_HEADER_SIZE];
-  int next;
-  int prev;
-  int parse_code;
   int av, loc;
 
   GST_DEBUG_OBJECT (base_video_decoder, "parse");
@@ -295,58 +301,65 @@ gst_schro_dec_parse (GstVideoDecoder * base_video_decoder,
   GST_DEBUG ("available %d", av);
 
   /* Check for header */
-  loc =
-      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x42424344, 0,
-      av - 3);
-  if (G_UNLIKELY (loc == -1)) {
-    GST_DEBUG_OBJECT (schro_decoder, "No header");
-    gst_adapter_flush (adapter, av - 3);
-    return GST_VIDEO_DECODER_FLOW_NEED_DATA;
+  if (schro_decoder->header_read == FALSE) {
+    /* Check for header */
+    loc =
+        gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x42424344, 0,
+        av - (SCHRO_PARSE_HEADER_SIZE - 1));
+    if (G_UNLIKELY (loc == -1)) {
+      GST_DEBUG_OBJECT (schro_decoder, "No header");
+      gst_adapter_flush (adapter, av - (SCHRO_PARSE_HEADER_SIZE - 1));
+      return GST_VIDEO_DECODER_FLOW_NEED_DATA;
+    }
+
+    /* Skip data until header */
+    if (loc > 0)
+      gst_adapter_flush (adapter, loc);
+
+    gst_adapter_copy (adapter, header, 0, SCHRO_PARSE_HEADER_SIZE);
+
+    schro_decoder->parse_code = header[4];
+    schro_decoder->next = GST_READ_UINT32_BE (header + 5);
+    schro_decoder->prev = GST_READ_UINT32_BE (header + 9);
+
+    GST_DEBUG ("%08x %02x %08x %08x",
+        GST_READ_UINT32_BE (header), schro_decoder->parse_code,
+        schro_decoder->next, schro_decoder->prev);
+
+    if (memcmp (header, "BBCD", 4) != 0 || (schro_decoder->next & 0xf0000000)
+        || (schro_decoder->prev & 0xf0000000)) {
+      gst_adapter_flush (adapter, 1);
+      return GST_VIDEO_DECODER_FLOW_NEED_DATA;
+    }
+    schro_decoder->header_read = TRUE;
   }
-
-  /* Skip data until header */
-  if (loc > 0)
-    gst_adapter_flush (adapter, loc);
-
-  gst_adapter_copy (adapter, header, 0, SCHRO_PARSE_HEADER_SIZE);
-
-  parse_code = header[4];
-  next = GST_READ_UINT32_BE (header + 5);
-  prev = GST_READ_UINT32_BE (header + 9);
-
-  GST_DEBUG ("%08x %02x %08x %08x",
-      GST_READ_UINT32_BE (header), parse_code, next, prev);
-
-  if (memcmp (header, "BBCD", 4) != 0 ||
-      (next & 0xf0000000) || (prev & 0xf0000000)) {
-    gst_adapter_flush (adapter, 1);
-    return GST_VIDEO_DECODER_FLOW_NEED_DATA;
-  }
-
-  if (SCHRO_PARSE_CODE_IS_END_OF_SEQUENCE (parse_code)) {
-    if (next != 0 && next != SCHRO_PARSE_HEADER_SIZE) {
-      GST_WARNING ("next is not 0 or 13 in EOS packet (%d)", next);
+  if (SCHRO_PARSE_CODE_IS_END_OF_SEQUENCE (schro_decoder->parse_code)) {
+    if (schro_decoder->next != 0
+        && schro_decoder->next != SCHRO_PARSE_HEADER_SIZE) {
+      GST_WARNING ("next is not 0 or 13 in EOS packet (%d)",
+          schro_decoder->next);
     }
 
     gst_video_decoder_add_to_frame (base_video_decoder,
         SCHRO_PARSE_HEADER_SIZE);
 
     SCHRO_DEBUG ("eos");
-
+    schro_decoder->header_read = FALSE;
     return gst_video_decoder_have_frame (base_video_decoder);
   }
 
-  if (gst_adapter_available (adapter) < next) {
+  if (gst_adapter_available (adapter) < schro_decoder->next) {
     return GST_VIDEO_DECODER_FLOW_NEED_DATA;
-  }
+  } else
+    schro_decoder->header_read = FALSE;
 
-  if (SCHRO_PARSE_CODE_IS_SEQ_HEADER (parse_code)) {
+  if (SCHRO_PARSE_CODE_IS_SEQ_HEADER (schro_decoder->parse_code)) {
     guint8 *data;
 
-    data = g_malloc (next);
+    data = g_malloc (schro_decoder->next);
 
-    gst_adapter_copy (adapter, data, 0, next);
-    parse_sequence_header (schro_decoder, data, next);
+    gst_adapter_copy (adapter, data, 0, schro_decoder->next);
+    parse_sequence_header (schro_decoder, data, schro_decoder->next);
 
     GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
 
@@ -395,11 +408,11 @@ gst_schro_dec_parse (GstVideoDecoder * base_video_decoder,
   }
 
   if (!schro_decoder->seq_header_buffer_seen) {
-    gst_adapter_flush (adapter, next);
+    gst_adapter_flush (adapter, schro_decoder->next);
     return GST_FLOW_OK;
   }
 
-  if (SCHRO_PARSE_CODE_IS_PICTURE (parse_code)) {
+  if (SCHRO_PARSE_CODE_IS_PICTURE (schro_decoder->parse_code)) {
     guint8 tmp[4];
 
     gst_adapter_copy (adapter, tmp, SCHRO_PARSE_HEADER_SIZE, 4);
@@ -408,11 +421,10 @@ gst_schro_dec_parse (GstVideoDecoder * base_video_decoder,
      * do anything with presentation_frame_number */
     frame->presentation_frame_number = GST_READ_UINT32_BE (tmp);
 
-    gst_video_decoder_add_to_frame (base_video_decoder, next);
-
+    gst_video_decoder_add_to_frame (base_video_decoder, schro_decoder->next);
     return gst_video_decoder_have_frame (base_video_decoder);
   } else {
-    gst_video_decoder_add_to_frame (base_video_decoder, next);
+    gst_video_decoder_add_to_frame (base_video_decoder, schro_decoder->next);
   }
 
   return GST_FLOW_OK;
