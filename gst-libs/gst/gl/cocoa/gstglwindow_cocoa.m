@@ -494,6 +494,7 @@ close_window_cb (gpointer data)
 
   /* Get notified about changes */
   [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(reshape) name: NSViewFrameDidChangeNotification object: self];
+  [self setWantsBestResolutionOpenGLSurface:YES];
 
   return self;
 }
@@ -563,6 +564,9 @@ resize_cb (gpointer data)
     NSRect bounds = [self bounds];
     NSRect visibleRect = [self visibleRect];
     struct resize *resize_data = g_new (struct resize, 1);
+
+    bounds = [self convertRectToBacking:bounds];
+    visibleRect = [self convertRectToBacking:visibleRect];
 
     GST_DEBUG_OBJECT (window, "Window resized: bounds %lf %lf %lf %lf "
                       "visibleRect %lf %lf %lf %lf",
