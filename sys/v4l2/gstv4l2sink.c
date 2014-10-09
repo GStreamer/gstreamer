@@ -116,6 +116,8 @@ static GstCaps *gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter);
 static gboolean gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_v4l2sink_show_frame (GstVideoSink * bsink,
     GstBuffer * buf);
+static gboolean gst_v4l2sink_unlock (GstBaseSink * sink);
+static gboolean gst_v4l2sink_unlock_stop (GstBaseSink * sink);
 
 static void
 gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
@@ -185,6 +187,8 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_set_caps);
   basesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2sink_propose_allocation);
+  basesink_class->unlock = GST_DEBUG_FUNCPTR (gst_v4l2sink_unlock);
+  basesink_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_v4l2sink_unlock_stop);
 
   videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_v4l2sink_show_frame);
 
@@ -607,4 +611,18 @@ activate_failed:
         ("Buffer pool activation failed"));
     return GST_FLOW_ERROR;
   }
+}
+
+static gboolean
+gst_v4l2sink_unlock (GstBaseSink * sink)
+{
+  GstV4l2Sink *v4l2sink = GST_V4L2SINK (sink);
+  return gst_v4l2_object_unlock (v4l2sink->v4l2object);
+}
+
+static gboolean
+gst_v4l2sink_unlock_stop (GstBaseSink * sink)
+{
+  GstV4l2Sink *v4l2sink = GST_V4L2SINK (sink);
+  return gst_v4l2_object_unlock_stop (v4l2sink->v4l2object);
 }
