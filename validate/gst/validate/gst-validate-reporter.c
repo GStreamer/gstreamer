@@ -166,8 +166,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   }
 
   GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
-  g_hash_table_insert (priv->reports, (gpointer) issue_id,
-      gst_validate_report_ref (report));
+  g_hash_table_insert (priv->reports, (gpointer) issue_id, report);
   GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -192,8 +191,6 @@ gst_validate_report_valist (GstValidateReporter * reporter,
 
   if (priv->runner && int_ret == GST_VALIDATE_REPORTER_REPORT) {
     gst_validate_runner_add_report (priv->runner, report);
-  } else {
-    gst_validate_report_unref (report);
   }
 
   if (gst_validate_report_check_abort (report)) {
@@ -287,7 +284,7 @@ gst_validate_reporter_set_handle_g_logs (GstValidateReporter * reporter)
  * The caller should unref each report once it is done with them.
  */
 GList *
-gst_validate_reporter_get_reports (GstValidateReporter *reporter)
+gst_validate_reporter_get_reports (GstValidateReporter * reporter)
 {
   GstValidateReporterPrivate *priv;
   GList *reports, *tmp;
@@ -298,7 +295,9 @@ gst_validate_reporter_get_reports (GstValidateReporter *reporter)
   GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
   reports = g_hash_table_get_values (priv->reports);
   for (tmp = reports; tmp; tmp = tmp->next) {
-    ret = g_list_append (ret, gst_validate_report_ref ((GstValidateReport *) (tmp->data)));
+    ret =
+        g_list_append (ret,
+        gst_validate_report_ref ((GstValidateReport *) (tmp->data)));
   }
   g_list_free (reports);
   GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
@@ -315,7 +314,7 @@ gst_validate_reporter_get_reports (GstValidateReporter *reporter)
  * Returns: the number of reports currently present in @reporter.
  */
 gint
-gst_validate_reporter_get_reports_count (GstValidateReporter *reporter)
+gst_validate_reporter_get_reports_count (GstValidateReporter * reporter)
 {
   GstValidateReporterPrivate *priv;
   gint ret;

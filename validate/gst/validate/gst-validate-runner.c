@@ -297,8 +297,10 @@ void
 gst_validate_runner_add_report (GstValidateRunner * runner,
     GstValidateReport * report)
 {
+
   GST_VALIDATE_RUNNER_LOCK (runner);
-  runner->priv->reports = g_list_append (runner->priv->reports, report);
+  runner->priv->reports =
+      g_list_append (runner->priv->reports, gst_validate_report_ref (report));
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   g_signal_emit (runner, _signals[REPORT_ADDED_SIGNAL], 0, report);
