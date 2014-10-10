@@ -154,11 +154,11 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
           gst_event_new_stream_start ("stream2")));
 
   gst_caps_set_simple (sinkcaps,
-      "payload", G_TYPE_INT, 98, "seqnum-base", G_TYPE_UINT, 100,
-      "clock-base", G_TYPE_UINT, 1000, "ssrc", G_TYPE_UINT, 66, NULL);
+      "payload", G_TYPE_INT, 98, "seqnum-offset", G_TYPE_UINT, 100,
+      "timestamp-offset", G_TYPE_UINT, 1000, "ssrc", G_TYPE_UINT, 66, NULL);
   caps = gst_caps_new_simple ("application/x-rtp",
       "payload", G_TYPE_INT, 98, "clock-rate", G_TYPE_INT, 3,
-      "seqnum-base", G_TYPE_UINT, 56, "clock-base", G_TYPE_UINT, 57,
+      "seqnum-offset", G_TYPE_UINT, 56, "timestamp-offset", G_TYPE_UINT, 57,
       "ssrc", G_TYPE_UINT, 66, NULL);
   fail_unless (gst_pad_set_caps (src1, caps));
 
