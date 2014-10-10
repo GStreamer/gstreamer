@@ -154,8 +154,26 @@ _set_reporting_level_for_name (GstValidateRunner * runner,
   pattern_level->pattern = pattern_spec;
   pattern_level->level = level;
 
-  runner->priv->report_pattern_levels =
-      g_list_append (runner->priv->report_pattern_levels, pattern_level);
+  /* Allow the user to single out a pad with the "element-name__pad-name" syntax
+   */
+  if (g_strrstr (pattern, "__"))
+    runner->priv->report_pattern_levels =
+        g_list_prepend (runner->priv->report_pattern_levels, pattern_level);
+  else
+    runner->priv->report_pattern_levels =
+        g_list_append (runner->priv->report_pattern_levels, pattern_level);
+}
+
+static void
+_replace_double_colons (gchar *word)
+{
+  while (word) {
+    word = strstr (word, "::");
+    if (word) {
+      word[0] = '_';
+      word[1] = '_';
+    }
+  }
 }
 
 static void
@@ -171,6 +189,7 @@ _set_report_levels_from_string (GstValidateRunner * self, const gchar * list)
   split = g_strsplit (list, ",", 0);
 
   for (walk = split; *walk; walk++) {
+    _replace_double_colons (*walk);
     if (strchr (*walk, ':')) {
       gchar **values = g_strsplit (*walk, ":", 2);
 
