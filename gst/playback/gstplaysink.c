@@ -525,7 +525,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
    * unless GST_PLAY_FLAG_FORCE_FILTERS is set. playsink must be in
    * %GST_STATE_NULL
    */
-  g_object_class_install_property (gobject_klass, PROP_VIDEO_SINK,
+  g_object_class_install_property (gobject_klass, PROP_VIDEO_FILTER,
       g_param_spec_object ("video-filter", "Video filter",
           "the video filter(s) to apply, if possible",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
