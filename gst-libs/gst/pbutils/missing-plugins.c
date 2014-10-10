@@ -144,9 +144,9 @@ copy_and_clean_caps (const GstCaps * caps)
   /* rtp fields */
   gst_structure_remove_field (s, "config");
   gst_structure_remove_field (s, "clock-rate");
-  gst_structure_remove_field (s, "clock-base");
+  gst_structure_remove_field (s, "timestamp-offset");
   gst_structure_remove_field (s, "maxps");
-  gst_structure_remove_field (s, "seqnum-base");
+  gst_structure_remove_field (s, "seqnum-offset");
   gst_structure_remove_field (s, "npt-start");
   gst_structure_remove_field (s, "npt-stop");
   gst_structure_remove_field (s, "play-speed");
