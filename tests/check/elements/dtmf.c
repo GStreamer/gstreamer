@@ -233,8 +233,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "media = (string) \"audio\", "
         "payload = (int) 99, "
         "clock-rate = (int) 1000, "
-        "seqnum-base = (uint) 333, "
-        "clock-base = (uint) 666, "
+        "seqnum-offset = (uint) 333, "
+        "timestamp-offset = (uint) 666, "
         "ssrc = (uint) 999, "
         "maxptime = (uint) 20, encoding-name = (string) \"TELEPHONE-EVENT\"")
     );
@@ -444,8 +444,8 @@ GST_START_TEST (test_rtpdtmfsrc_min_duration)
       "encoding-name", G_TYPE_STRING, "TELEPHONE-EVENT",
       "media", G_TYPE_STRING, "audio",
       "clock-rate", G_TYPE_INT, 1000, "payload", G_TYPE_INT, 99,
-      "seqnum-base", G_TYPE_UINT, 333,
-      "clock-base", G_TYPE_UINT, 666,
+      "seqnum-offset", G_TYPE_UINT, 333,
+      "timestamp-offset", G_TYPE_UINT, 666,
       "ssrc", G_TYPE_UINT, 999, "ptime", G_TYPE_UINT, 20, NULL);
   caps = gst_pad_get_current_caps (sink);
   fail_unless (gst_caps_can_intersect (caps, expected_caps));
