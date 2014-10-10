@@ -332,9 +332,9 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
       continue;
     if (!strcmp (fname, "ssrc"))
       continue;
-    if (!strcmp (fname, "clock-base"))
+    if (!strcmp (fname, "timestamp-offset"))
       continue;
-    if (!strcmp (fname, "seqnum-base"))
+    if (!strcmp (fname, "seqnum-offset"))
       continue;
     if (g_str_has_prefix (fname, "srtp-"))
       continue;
