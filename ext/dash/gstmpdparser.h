@@ -502,6 +502,7 @@ gint gst_mpd_client_get_segment_index_at_time (GstMpdClient *client, GstActiveSt
 gint gst_mpd_client_check_time_position (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts, gint64 * diff);
 
 /* Period selection */
+guint gst_mpd_client_get_period_index_at_time (GstMpdClient * client, GstDateTime * time);
 gboolean gst_mpd_client_set_period_index (GstMpdClient *client, guint period_idx);
 gboolean gst_mpd_client_set_period_id (GstMpdClient *client, const gchar * period_id);
 guint gst_mpd_client_get_period_index (GstMpdClient *client);

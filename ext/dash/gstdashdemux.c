@@ -488,9 +488,37 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
 {
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   gboolean ret = TRUE;
+  GstDateTime *now = NULL;
+  guint period_idx;
 
-  /* setup video, audio and subtitle streams, starting from first Period */
-  if (!gst_mpd_client_set_period_index (dashdemux->client, 0) ||
+  /* setup video, audio and subtitle streams, starting from first Period if
+   * non-live */
+  period_idx = 0;
+  if (gst_mpd_client_is_live (dashdemux->client)) {
+
+    /* get period index for period encompassing the current time */
+    now = gst_date_time_new_now_utc ();
+    if (dashdemux->client->mpd_node->suggestedPresentationDelay != -1) {
+      GstDateTime *target = gst_mpd_client_add_time_difference (now,
+          dashdemux->client->mpd_node->suggestedPresentationDelay * -1000);
+      gst_date_time_unref (now);
+      now = target;
+    }
+    period_idx =
+        gst_mpd_client_get_period_index_at_time (dashdemux->client, now);
+    if (period_idx == G_MAXUINT) {
+#ifndef GST_DISABLE_GST_DEBUG
+      gchar *date_str = gst_date_time_to_iso8601_string (now);
+      GST_DEBUG_OBJECT (demux, "Unable to find live period active at %s",
+          date_str);
+      g_free (date_str);
+#endif
+      ret = FALSE;
+      goto done;
+    }
+  }
+
+  if (!gst_mpd_client_set_period_index (dashdemux->client, period_idx) ||
       !gst_dash_demux_setup_all_streams (dashdemux)) {
     ret = FALSE;
     goto done;
@@ -500,16 +528,9 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
    * is closest to current time */
   if (gst_mpd_client_is_live (dashdemux->client)) {
     GList *iter;
-    GstDateTime *now = gst_date_time_new_now_utc ();
     gint seg_idx;
 
     GST_DEBUG_OBJECT (demux, "Seeking to current time of day for live stream ");
-    if (dashdemux->client->mpd_node->suggestedPresentationDelay != -1) {
-      GstDateTime *target = gst_mpd_client_add_time_difference (now,
-          dashdemux->client->mpd_node->suggestedPresentationDelay * -1000);
-      gst_date_time_unref (now);
-      now = target;
-    }
     for (iter = demux->streams; iter; iter = g_list_next (iter)) {
       GstDashDemuxStream *stream = iter->data;
       GstActiveStream *active_stream = stream->active_stream;
@@ -539,6 +560,8 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
   }
 
 done:
+  if (now != NULL)
+    gst_date_time_unref (now);
   return ret;
 }
 

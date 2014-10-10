@@ -2598,6 +2598,40 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
   return ret;
 }
 
+guint
+gst_mpd_client_get_period_index_at_time (GstMpdClient * client,
+      GstDateTime * time)
+{
+  GList *iter;
+  guint period_idx = G_MAXUINT;
+  guint idx;
+  gint64 time_offset;
+  GstDateTime *avail_start =
+      gst_mpd_client_get_availability_start_time (client);
+  GstStreamPeriod *stream_period;
+
+  if (avail_start == NULL)
+    return 0;
+
+  time_offset = gst_mpd_client_calculate_time_difference (avail_start, time);
+  gst_date_time_unref (avail_start);
+
+  if (time_offset < 0)
+    return 0;
+
+  for (idx = 0, iter = client->periods; iter;
+       idx++, iter = g_list_next (iter)) {
+    stream_period = iter->data;
+    if (stream_period->start <= time_offset
+        && stream_period->start + stream_period->duration > time_offset) {
+      period_idx = idx;
+      break;
+    }
+  }
+
+  return period_idx;
+}
+
 static GstStreamPeriod *
 gst_mpdparser_get_stream_period (GstMpdClient * client)
 {
