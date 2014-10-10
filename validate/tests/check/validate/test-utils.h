@@ -32,6 +32,7 @@ GstValidateRunner * setup_runner (GstObject * object);
 void clean_bus (GstElement *element);
 GstValidatePadMonitor * get_pad_monitor (GstPad *pad);
 GstElement * create_and_monitor_element (const gchar *factoryname, const gchar *name, GstValidateRunner *runner);
+void free_element_monitor (GstElement *element);
 
 typedef struct {
   GstElement parent;

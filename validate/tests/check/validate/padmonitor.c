@@ -22,6 +22,22 @@
 #include <gst/check/gstcheck.h>
 #include "test-utils.h"
 
+static void
+_check_reports_refcount (GstPad *pad, gint refcount)
+{
+  GList *tmp, *reports;
+  GstValidateReporter *reporter = (GstValidateReporter *) g_object_get_data (G_OBJECT (pad), "validate-monitor");
+
+  reports = gst_validate_reporter_get_reports (reporter);
+  /* We take a ref here */
+  refcount += 1;
+
+  for (tmp = reports; tmp; tmp = tmp->next)
+    fail_unless_equals_int (((GstValidateReport *) tmp->data)->refcount, refcount);
+
+  g_list_free_full (reports, (GDestroyNotify )gst_validate_report_unref);
+}
+
 GST_START_TEST (buffer_before_segment)
 {
   GstPad *srcpad;
@@ -81,6 +97,7 @@ GST_START_TEST (buffer_before_segment)
   fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
 
+  _check_reports_refcount (srcpad, 2);
   gst_object_unref (srcpad);
   check_destroyed (src, srcpad, NULL);
   check_destroyed (sink, NULL, NULL);
@@ -504,6 +521,14 @@ GST_START_TEST (issue_concatenation)
   gst_pad_remove_probe (srcpad1, probe_id1);
   gst_pad_remove_probe (srcpad2, probe_id2);
 
+  /* The reporter, the runner */
+  _check_reports_refcount (srcpad1, 2);
+  /* The reporter, the master report */
+  _check_reports_refcount (funnel_sink1, 2);
+  free_element_monitor (src1);
+  free_element_monitor (src2);
+  free_element_monitor (funnel);
+  free_element_monitor (sink);
   gst_object_unref (srcpad1);
   gst_object_unref (srcpad2);
   gst_object_unref (sinkpad);

@@ -213,3 +213,12 @@ GstElement * create_and_monitor_element (const gchar *factoryname, const gchar *
 
  return element;
 }
+
+void
+free_element_monitor (GstElement *element)
+{
+  GstValidateMonitor *monitor;
+  monitor = (GstValidateMonitor *) g_object_get_data (G_OBJECT (element), "validate-monitor");
+
+  g_object_unref (G_OBJECT(monitor));
+}
