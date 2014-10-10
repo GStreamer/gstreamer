@@ -1364,34 +1364,42 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
       *xpos = 0;
   }
   *xpos += overlay->deltax;
+  if (*xpos > overlay->width) {
+    /* Clip text if out of frame */
+    overlay->silent = TRUE;
+  } else {
+    if (overlay->use_vertical_render)
+      valign = GST_BASE_TEXT_OVERLAY_VALIGN_TOP;
+    else
+      valign = overlay->valign;
 
-  if (overlay->use_vertical_render)
-    valign = GST_BASE_TEXT_OVERLAY_VALIGN_TOP;
-  else
-    valign = overlay->valign;
-
-  switch (valign) {
-    case GST_BASE_TEXT_OVERLAY_VALIGN_BOTTOM:
-      *ypos = overlay->height - height - overlay->ypad;
-      break;
-    case GST_BASE_TEXT_OVERLAY_VALIGN_BASELINE:
-      *ypos = overlay->height - (height + overlay->ypad);
-      break;
-    case GST_BASE_TEXT_OVERLAY_VALIGN_TOP:
-      *ypos = overlay->ypad;
-      break;
-    case GST_BASE_TEXT_OVERLAY_VALIGN_POS:
-      *ypos = (gint) (overlay->height * overlay->ypos) - height / 2;
-      *ypos = CLAMP (*ypos, 0, overlay->height - height);
-      break;
-    case GST_BASE_TEXT_OVERLAY_VALIGN_CENTER:
-      *ypos = (overlay->height - height) / 2;
-      break;
-    default:
-      *ypos = overlay->ypad;
-      break;
+    switch (valign) {
+      case GST_BASE_TEXT_OVERLAY_VALIGN_BOTTOM:
+        *ypos = overlay->height - height - overlay->ypad;
+        break;
+      case GST_BASE_TEXT_OVERLAY_VALIGN_BASELINE:
+        *ypos = overlay->height - (height + overlay->ypad);
+        break;
+      case GST_BASE_TEXT_OVERLAY_VALIGN_TOP:
+        *ypos = overlay->ypad;
+        break;
+      case GST_BASE_TEXT_OVERLAY_VALIGN_POS:
+        *ypos = (gint) (overlay->height * overlay->ypos) - height / 2;
+        *ypos = CLAMP (*ypos, 0, overlay->height - height);
+        break;
+      case GST_BASE_TEXT_OVERLAY_VALIGN_CENTER:
+        *ypos = (overlay->height - height) / 2;
+        break;
+      default:
+        *ypos = overlay->ypad;
+        break;
+    }
+    *ypos += overlay->deltay;
+    if (*ypos > overlay->height) {
+      /* Clip text if out of frame */
+      overlay->silent = TRUE;
+    }
   }
-  *ypos += overlay->deltay;
 }
 
 static inline void
