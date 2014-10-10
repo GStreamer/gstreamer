@@ -212,12 +212,11 @@ GST_START_TEST (test_global_levels)
 {
   GstValidateRunner *runner;
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "none,fakesrc1:synthetic",
-          TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "none", TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
-  /* One issue should get through the none filter */
-  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
+  /* None shall pass */
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 0);
   g_object_unref (runner);
 
   fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "synthetic", TRUE));
@@ -225,6 +224,57 @@ GST_START_TEST (test_global_levels)
   _create_issues (runner);
   /* Two reports of the same type */
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
+  g_object_unref (runner);
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "monitor", TRUE));
+  runner = gst_validate_runner_new ();
+  _create_issues (runner);
+  /* One report for each pad monitor */
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 6);
+  g_object_unref (runner);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_specific_levels)
+{
+  GstValidateRunner *runner;
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "none,fakesrc1:synthetic",
+          TRUE));
+  runner = gst_validate_runner_new ();
+  _create_issues (runner);
+  /* One issue should go through the none filter */
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
+  g_object_unref (runner);
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "monitor,sink:none",
+          TRUE));
+  runner = gst_validate_runner_new ();
+  _create_issues (runner);
+  /* 5 issues because all pads will report their own issues separately, except
+   * for the sink which will not report an issue */
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 5);
+  g_object_unref (runner);
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "subchain,sink:monitor",
+          TRUE));
+  runner = gst_validate_runner_new ();
+  _create_issues (runner);
+  /* 3 issues because both fake sources will have subsequent subchains of
+   * issues, and the sink will report its issue separately */
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 3);
+  g_object_unref (runner);
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL",
+          "synthetic,fakesrc1:subchain,fakesrc2:subchain,funnel*::src*:monitor",
+          TRUE));
+  runner = gst_validate_runner_new ();
+  _create_issues (runner);
+  /* 4 issues because the funnel sink issues will be concatenated with the
+   * fakesrc issues, the funnel src will report its issue separately, and the
+   * sink will not find a report immediately upstream */
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 4);
   g_object_unref (runner);
 }
 
@@ -241,6 +291,7 @@ gst_validate_suite (void)
 
   tcase_add_test (tc_chain, test_report_levels);
   tcase_add_test (tc_chain, test_global_levels);
+  tcase_add_test (tc_chain, test_specific_levels);
 
   return s;
 }

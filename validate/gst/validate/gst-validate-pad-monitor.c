@@ -234,19 +234,9 @@ _find_master_report_for_src_pad (GstValidatePadMonitor * pad_monitor,
 }
 
 static GstValidateInterceptionReturn
-gst_validate_pad_monitor_intercept_report (GstValidateReporter *
-    reporter, GstValidateReport * report)
+_concatenate_issues (GstValidatePadMonitor * pad_monitor,
+    GstValidateReport * report)
 {
-  GstValidateReporterInterface *iface_class, *old_iface_class;
-  GstValidatePadMonitor *pad_monitor = GST_VALIDATE_PAD_MONITOR (reporter);
-
-  iface_class =
-      G_TYPE_INSTANCE_GET_INTERFACE (reporter, GST_TYPE_VALIDATE_REPORTER,
-      GstValidateReporterInterface);
-  old_iface_class = g_type_interface_peek_parent (iface_class);
-
-  old_iface_class->intercept_report (reporter, report);
-
   if (GST_PAD_IS_SINK (pad_monitor->pad)
       && _find_master_report_for_sink_pad (pad_monitor, report))
     return GST_VALIDATE_REPORTER_KEEP;
@@ -255,6 +245,41 @@ gst_validate_pad_monitor_intercept_report (GstValidateReporter *
     return GST_VALIDATE_REPORTER_KEEP;
 
   return GST_VALIDATE_REPORTER_REPORT;
+}
+
+static GstValidateInterceptionReturn
+gst_validate_pad_monitor_intercept_report (GstValidateReporter *
+    reporter, GstValidateReport * report)
+{
+  GstValidateReporterInterface *iface_class, *old_iface_class;
+  GstValidatePadMonitor *pad_monitor = GST_VALIDATE_PAD_MONITOR (reporter);
+  GstValidateReportingLevel monitor_reporting_level;
+  GstValidateInterceptionReturn ret;
+
+  monitor_reporting_level =
+      gst_validate_reporter_get_reporting_level (reporter);
+
+  iface_class =
+      G_TYPE_INSTANCE_GET_INTERFACE (reporter, GST_TYPE_VALIDATE_REPORTER,
+      GstValidateReporterInterface);
+  old_iface_class = g_type_interface_peek_parent (iface_class);
+
+  old_iface_class->intercept_report (reporter, report);
+
+  switch (monitor_reporting_level) {
+    case GST_VALIDATE_REPORTING_LEVEL_NONE:
+      ret = GST_VALIDATE_REPORTER_DROP;
+      break;
+    case GST_VALIDATE_REPORTING_LEVEL_UNKNOWN:
+      ret = _concatenate_issues (pad_monitor, report);
+      break;
+    default:
+      ret = GST_VALIDATE_REPORTER_REPORT;
+      break;
+  }
+
+  gst_validate_report_set_reporting_level (report, monitor_reporting_level);
+  return ret;
 }
 
 static void

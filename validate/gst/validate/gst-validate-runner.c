@@ -352,6 +352,8 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 
   /* Let's use our own reporting strategy */
   if (reporter_level == GST_VALIDATE_REPORTING_LEVEL_UNKNOWN) {
+    gst_validate_report_set_reporting_level (report,
+        runner->priv->default_level);
     switch (runner->priv->default_level) {
       case GST_VALIDATE_REPORTING_LEVEL_NONE:
         return;
