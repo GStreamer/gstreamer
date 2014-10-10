@@ -322,6 +322,7 @@ gst_fluid_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       res = gst_pad_push_event (fluiddec->srcpad, gst_event_new_caps (caps));
       gst_caps_unref (caps);
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_SEGMENT:
