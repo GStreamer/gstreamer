@@ -42,8 +42,8 @@ typedef struct _GstRTPMuxClass GstRTPMuxClass;
 
 typedef struct
 {
-  gboolean have_clock_base;
-  guint clock_base;
+  gboolean have_timestamp_offset;
+  guint timestamp_offset;
 
   GstSegment segment;
 
