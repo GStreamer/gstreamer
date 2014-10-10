@@ -158,7 +158,7 @@ struct _RTPSource {
   gint          payload;
   GstCaps      *caps;
   gint          clock_rate;
-  gint32        seqnum_base;
+  gint32        seqnum_offset;
 
   GstClockTime  bye_time;
   GstClockTime  last_activity;
