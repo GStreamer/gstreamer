@@ -120,6 +120,108 @@ GST_START_TEST (test_report_levels)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+drop_buffers (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
+{
+  return GST_PAD_PROBE_DROP;
+}
+
+static void
+_create_issues (GstValidateRunner * runner)
+{
+  GstPad *srcpad1, *srcpad2, *sinkpad, *funnel_sink1, *funnel_sink2;
+  GstElement *src1, *src2, *sink, *funnel;
+  GstSegment segment;
+  gulong probe_id1, probe_id2;
+
+  src1 = create_and_monitor_element ("fakesrc", "fakesrc1", runner);
+  src2 = create_and_monitor_element ("fakesrc", "fakesrc2", runner);
+  funnel = create_and_monitor_element ("funnel", "funnel", runner);
+  sink = create_and_monitor_element ("fakesink", "fakesink", runner);
+
+  srcpad1 = gst_element_get_static_pad (src1, "src");
+  srcpad2 = gst_element_get_static_pad (src2, "src");
+  funnel_sink1 = gst_element_get_request_pad (funnel, "sink_%u");
+  funnel_sink2 = gst_element_get_request_pad (funnel, "sink_%u");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+
+  fail_unless (gst_element_link (funnel, sink));
+  fail_unless (gst_pad_link (srcpad1, funnel_sink1) == GST_PAD_LINK_OK);
+  fail_unless (gst_pad_link (srcpad2, funnel_sink2) == GST_PAD_LINK_OK);
+
+  /* There's gonna be some clunkiness in here because of funnel */
+  probe_id1 = gst_pad_add_probe (srcpad1,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+      (GstPadProbeCallback) drop_buffers, NULL, NULL);
+  probe_id2 = gst_pad_add_probe (srcpad2,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+      (GstPadProbeCallback) drop_buffers, NULL, NULL);
+
+  /* We want to handle the src behaviour ourselves */
+  fail_unless (gst_pad_activate_mode (srcpad1, GST_PAD_MODE_PUSH, TRUE));
+  fail_unless (gst_pad_activate_mode (srcpad2, GST_PAD_MODE_PUSH, TRUE));
+
+  /* Setup all needed events */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 0;
+  segment.stop = GST_SECOND;
+
+  fail_unless (gst_pad_push_event (srcpad1,
+          gst_event_new_stream_start ("the-stream")));
+  fail_unless (gst_pad_push_event (srcpad1, gst_event_new_segment (&segment)));
+
+  fail_unless (gst_pad_push_event (srcpad2,
+          gst_event_new_stream_start ("the-stream")));
+  fail_unless (gst_pad_push_event (srcpad2, gst_event_new_segment (&segment)));
+
+  fail_unless_equals_int (gst_element_set_state (funnel, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  /* Send an unexpected flush stop */
+  _gst_check_expecting_log = TRUE;
+  fail_unless (gst_pad_push_event (srcpad1, gst_event_new_flush_stop (TRUE)));
+
+  /* Once again but on the other funnel sink */
+  fail_unless (gst_pad_push_event (srcpad2, gst_event_new_flush_stop (TRUE)));
+
+  /* clean up */
+  fail_unless (gst_pad_activate_mode (srcpad1, GST_PAD_MODE_PUSH, FALSE));
+  fail_unless (gst_pad_activate_mode (srcpad2, GST_PAD_MODE_PUSH, FALSE));
+  fail_unless_equals_int (gst_element_set_state (funnel, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_pad_remove_probe (srcpad1, probe_id1);
+  gst_pad_remove_probe (srcpad2, probe_id2);
+
+  gst_object_unref (srcpad1);
+  gst_object_unref (srcpad2);
+  gst_object_unref (sinkpad);
+  gst_object_unref (funnel_sink1);
+  gst_object_unref (funnel_sink2);
+  check_destroyed (funnel, funnel_sink1, funnel_sink2, NULL);
+  check_destroyed (src1, srcpad1, NULL);
+  check_destroyed (src2, srcpad2, NULL);
+  check_destroyed (sink, sinkpad, NULL);
+}
+
+GST_START_TEST (test_global_levels)
+{
+  GstValidateRunner *runner;
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "none,fakesrc1:synthetic",
+          TRUE));
+  runner = gst_validate_runner_new ();
+  _create_issues (runner);
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
+  g_object_unref (runner);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_validate_suite (void)
 {
@@ -130,6 +232,7 @@ gst_validate_suite (void)
   gst_validate_init ();
 
   tcase_add_test (tc_chain, test_report_levels);
+  tcase_add_test (tc_chain, test_global_levels);
 
   return s;
 }
