@@ -113,6 +113,20 @@ gst_validate_reporter_intercept_report (GstValidateReporter * reporter,
   return ret;
 }
 
+GstValidateReportingLevel
+gst_validate_reporter_get_reporting_level (GstValidateReporter * reporter)
+{
+  GstValidateInterceptionReturn ret = GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
+  GstValidateReporterInterface *iface =
+      GST_VALIDATE_REPORTER_GET_INTERFACE (reporter);
+
+  if (iface->get_reporting_level) {
+    ret = iface->get_reporting_level (reporter);
+  }
+
+  return ret;
+}
+
 GstValidateReport *
 gst_validate_reporter_get_report (GstValidateReporter * reporter,
     GstValidateIssueId issue_id)

@@ -26,6 +26,7 @@ typedef struct _GstValidateReporterInterface GstValidateReporterInterface;
 #include <glib-object.h>
 #include <gst/validate/gst-validate-report.h>
 #include <gst/validate/gst-validate-runner.h>
+#include <gst/validate/gst-validate-enums.h>
 
 G_BEGIN_DECLS
 
@@ -80,6 +81,8 @@ struct _GstValidateReporterInterface
 
     GstValidateInterceptionReturn (*intercept_report) (GstValidateReporter *
       reporter, GstValidateReport * report);
+    GstValidateReportingLevel (*get_reporting_level) (GstValidateReporter *
+      reporter);
 };
 
 void gst_validate_reporter_set_name            (GstValidateReporter * reporter,
@@ -98,6 +101,7 @@ GstValidateReport * gst_validate_reporter_get_report (GstValidateReporter *repor
                                                       GstValidateIssueId issue_id);
 GList * gst_validate_reporter_get_reports (GstValidateReporter * reporter);
 gint gst_validate_reporter_get_reports_count (GstValidateReporter *reporter);
+GstValidateReportingLevel gst_validate_reporter_get_reporting_level (GstValidateReporter *reporter);
 
 G_END_DECLS
 #endif /* _GST_VALIDATE_REPORTER_ */

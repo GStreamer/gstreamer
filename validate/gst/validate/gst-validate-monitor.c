@@ -63,10 +63,16 @@ gst_validate_monitor_intercept_report (GstValidateReporter * reporter,
 #define _do_init \
   G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init)
 
+static GstValidateReportingLevel
+_get_reporting_level (GstValidateReporter *monitor)
+{
+  return GST_VALIDATE_MONITOR (monitor)->level;
+}
 static void
 _reporter_iface_init (GstValidateReporterInterface * iface)
 {
   iface->intercept_report = gst_validate_monitor_intercept_report;
+  iface->get_reporting_level = _get_reporting_level;
 }
 
 #define gst_validate_monitor_parent_class parent_class

@@ -24,6 +24,11 @@
 GST_START_TEST (test_report_levels)
 {
   GstValidateRunner *runner;
+  GstObject *pipeline;
+  GError *error = NULL;
+  GstElement *element;
+  GstValidateMonitor *monitor, *pipeline_monitor;
+  GstPad *pad;
 
   /* FIXME: for now the only interface to set the reporting level is through an
    * environment variable parsed at the time of the runner initialization,
@@ -56,6 +61,60 @@ GST_START_TEST (test_report_levels)
           "other_test_object") == GST_VALIDATE_REPORTING_LEVEL_ALL);
   fail_unless (gst_validate_runner_get_reporting_level_for_name (runner,
           "dummy_test_object") == GST_VALIDATE_REPORTING_LEVEL_UNKNOWN);
+
+  g_object_unref (runner);
+
+  /* Now let's try to see if the created monitors actually understand the
+   * situation they've put themselves into */
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL",
+          "none,pipeline*:monitor,sofake1:all,sofake*::sink:subchain", TRUE));
+  runner = gst_validate_runner_new ();
+
+  pipeline = (GstObject *)
+      gst_parse_launch ("fakesrc name=sofake1 ! fakesink name=sofake2", &error);
+  fail_unless (pipeline != NULL);
+  pipeline_monitor =
+      gst_validate_monitor_factory_create (GST_OBJECT (pipeline), runner, NULL);
+
+  element = gst_bin_get_by_name (GST_BIN (pipeline), "sofake1");
+  monitor =
+      (GstValidateMonitor *) g_object_get_data (G_OBJECT (element),
+      "validate-monitor");
+  fail_unless (gst_validate_reporter_get_reporting_level (GST_VALIDATE_REPORTER
+          (monitor)) == GST_VALIDATE_REPORTING_LEVEL_ALL);
+
+  pad = gst_element_get_static_pad (element, "src");
+  monitor =
+      (GstValidateMonitor *) g_object_get_data (G_OBJECT (pad),
+      "validate-monitor");
+  /* The pad should have inherited the reporting level */
+  fail_unless (gst_validate_reporter_get_reporting_level (GST_VALIDATE_REPORTER
+          (monitor)) == GST_VALIDATE_REPORTING_LEVEL_ALL);
+  gst_object_unref (pad);
+
+  gst_object_unref (element);
+
+  element = gst_bin_get_by_name (GST_BIN (pipeline), "sofake2");
+  monitor =
+      (GstValidateMonitor *) g_object_get_data (G_OBJECT (element),
+      "validate-monitor");
+  /* The element should have inherited its reporting level from the pipeline */
+  fail_unless (gst_validate_reporter_get_reporting_level (GST_VALIDATE_REPORTER
+          (monitor)) == GST_VALIDATE_REPORTING_LEVEL_MONITOR);
+
+  pad = gst_element_get_static_pad (element, "sink");
+  monitor =
+      (GstValidateMonitor *) g_object_get_data (G_OBJECT (pad),
+      "validate-monitor");
+  /* But its pad should not as it falls in the sofake*::sink pattern */
+  fail_unless (gst_validate_reporter_get_reporting_level (GST_VALIDATE_REPORTER
+          (monitor)) == GST_VALIDATE_REPORTING_LEVEL_SUBCHAIN);
+  gst_object_unref (pad);
+
+  gst_object_unref (element);
+
+  g_object_unref (pipeline_monitor);
+  gst_object_unref (pipeline);
   g_object_unref (runner);
 }
 
