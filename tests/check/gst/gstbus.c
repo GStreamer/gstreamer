@@ -286,6 +286,31 @@ GST_START_TEST (test_add_watch_with_custom_context)
 
 GST_END_TEST;
 
+static gboolean
+dummy_bus_func (GstBus * bus, GstMessage * msg, gpointer user_data)
+{
+  return TRUE;
+}
+
+GST_START_TEST (test_remove_watch)
+{
+  test_bus = gst_bus_new ();
+
+  /* removing a non-existing watch should fail */
+  fail_if (gst_bus_remove_watch (test_bus));
+
+  gst_bus_add_watch (test_bus, dummy_bus_func, NULL);
+
+  fail_unless (gst_bus_remove_watch (test_bus));
+
+  /* now it should fail to remove the watch again */
+  fail_if (gst_bus_remove_watch (test_bus));
+
+  gst_object_unref (test_bus);
+}
+
+GST_END_TEST;
+
 static gint messages_seen;
 
 static void
@@ -718,6 +743,7 @@ gst_bus_suite (void)
   tcase_add_test (tc_chain, test_watch_with_poll);
   tcase_add_test (tc_chain, test_watch_with_custom_context);
   tcase_add_test (tc_chain, test_add_watch_with_custom_context);
+  tcase_add_test (tc_chain, test_remove_watch);
   tcase_add_test (tc_chain, test_timed_pop);
   tcase_add_test (tc_chain, test_timed_pop_thread);
   tcase_add_test (tc_chain, test_timed_pop_filtered);
