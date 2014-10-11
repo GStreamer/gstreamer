@@ -362,6 +362,7 @@ gst_iir_equalizer_class_init (GstIirEqualizerClass * klass)
   gobject_class->finalize = gst_iir_equalizer_finalize;
   audio_filter_class->setup = gst_iir_equalizer_setup;
   btrans_class->transform_ip = gst_iir_equalizer_transform_ip;
+  btrans_class->transform_ip_on_passthrough = FALSE;
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (audio_filter_class, caps);
@@ -830,9 +831,6 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   BANDS_LOCK (equ);
   need_new_coefficients = equ->need_new_coefficients;
   BANDS_UNLOCK (equ);
-
-  if (!need_new_coefficients && gst_base_transform_is_passthrough (btrans))
-    return GST_FLOW_OK;
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   timestamp =
