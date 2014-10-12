@@ -2093,8 +2093,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
      * parser is the only one that does not change the data. A
      * valid example for this would be multiple id3demux in a row.
      */
-    if (strstr (gst_element_factory_get_metadata (factory,
-                GST_ELEMENT_METADATA_KLASS), "Parser")) {
+    is_parser_converter = strstr (gst_element_factory_get_metadata (factory,
+            GST_ELEMENT_METADATA_KLASS), "Parser") != NULL;
+    if (is_parser_converter) {
       gboolean skip = FALSE;
       GList *l;
 
@@ -2125,8 +2126,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         continue;
       }
 
-      is_parser_converter = strstr (gst_element_factory_get_metadata (factory,
-              GST_ELEMENT_METADATA_KLASS), "Parser") != NULL;
     }
 
     /* emit autoplug-select to see what we should do with it. */
