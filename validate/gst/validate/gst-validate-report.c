@@ -620,12 +620,15 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
   g_string_free (string, TRUE);
 }
 
-void
+gboolean
 gst_validate_report_set_master_report (GstValidateReport * report,
     GstValidateReport * master_report)
 {
   GList *tmp;
   gboolean add_shadow_report = TRUE;
+
+  if (master_report->reporting_level >= GST_VALIDATE_REPORTING_LEVEL_MONITOR)
+    return FALSE;
 
   report->master_report = master_report;
 
@@ -642,6 +645,8 @@ gst_validate_report_set_master_report (GstValidateReport * report,
         g_list_append (master_report->shadow_reports,
         gst_validate_report_ref (report));
   GST_VALIDATE_REPORT_SHADOW_REPORTS_UNLOCK (master_report);
+
+  return TRUE;
 }
 
 void

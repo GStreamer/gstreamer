@@ -225,7 +225,7 @@ void               gst_validate_printf_valist (gpointer source,
                                                const gchar      * format,
                                                va_list            args) G_GNUC_NO_INSTRUMENT;
 gboolean gst_validate_report_should_print (GstValidateReport * report);
-void gst_validate_report_set_master_report(GstValidateReport *report, GstValidateReport *master_report);
+gboolean gst_validate_report_set_master_report(GstValidateReport *report, GstValidateReport *master_report);
 void gst_validate_report_set_reporting_level (GstValidateReport *report, GstValidateReportingLevel level);
 
 G_END_DECLS

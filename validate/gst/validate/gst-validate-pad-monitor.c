@@ -157,11 +157,10 @@ _find_master_report_on_pad (GstPad * pad, GstValidateReport * report)
 
   if (prev_report) {
     if (prev_report->master_report)
-      gst_validate_report_set_master_report (report,
+      result = gst_validate_report_set_master_report (report,
           prev_report->master_report);
     else
-      gst_validate_report_set_master_report (report, prev_report);
-    result = TRUE;
+      result = gst_validate_report_set_master_report (report, prev_report);
   }
 
 done:
