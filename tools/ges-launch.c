@@ -740,7 +740,7 @@ main (int argc, gchar ** argv)
   gchar *load_path = NULL;
   gchar *videosink = NULL, *audiosink = NULL;
   const gchar *scenario = NULL;
-  gboolean list_action_types = FALSE;
+  gboolean inspect_action_type = FALSE;
   gchar *encoding_profile = NULL;
 
   GOptionEntry options[] = {
@@ -785,8 +785,11 @@ main (int argc, gchar ** argv)
     {"audiosink", 'a', 0, G_OPTION_ARG_STRING, &audiosink,
         "The audio sink used for playing back", "<audiosink>"},
 #ifdef HAVE_GST_VALIDATE
-    {"list-action-types", 'y', 0, G_OPTION_ARG_NONE, &list_action_types,
-        "List the available action types with which to write scenarios", NULL},
+    {"inspect-action-type", 'y', 0, G_OPTION_ARG_NONE, &inspect_action_type,
+          "Inspect the avalaible action types with which to write scenarios"
+          " if no parameter passed, it will list all avalaible action types"
+          " otherwize will print the full description of the wanted types",
+        NULL},
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &scenario,
         "Specify a GstValidate scenario to run, 'none' means load gst-validate"
           " but run no scenario on it", "<scenario_name>"},
@@ -862,7 +865,7 @@ main (int argc, gchar ** argv)
     exit (0);
   }
 
-  if (list_action_types)
+  if (inspect_action_type)
     return ges_validate_print_action_types ((const gchar **) argv + 1,
         argc - 1);
 
