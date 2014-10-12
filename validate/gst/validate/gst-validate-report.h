@@ -176,6 +176,8 @@ struct _GstValidateReport {
   GMutex shadow_reports_lock;
   GstValidateReport *master_report;
   GList *shadow_reports;
+
+  GstValidateReportingLevel reporting_level;
 };
 
 #define GST_VALIDATE_ISSUE_FORMAT G_GUINTPTR_FORMAT " (%s) : %s(%" G_GUINTPTR_FORMAT "): %s"
@@ -224,6 +226,7 @@ void               gst_validate_printf_valist (gpointer source,
                                                va_list            args) G_GNUC_NO_INSTRUMENT;
 gboolean gst_validate_report_should_print (GstValidateReport * report);
 void gst_validate_report_set_master_report(GstValidateReport *report, GstValidateReport *master_report);
+void gst_validate_report_set_reporting_level (GstValidateReport *report, GstValidateReportingLevel level);
 
 G_END_DECLS
 
