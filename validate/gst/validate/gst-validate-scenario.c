@@ -1927,7 +1927,8 @@ gst_validate_add_action_type (const gchar * type_name,
   if (parameters) {
     for (n_params = 0; parameters[n_params].name != NULL; n_params++);
 
-    n_params += 2;
+    if (is_config)
+      n_params += 1;
   }
 
   if (n_params) {
@@ -2040,7 +2041,7 @@ init_scenarios (void)
   clean_action_str = g_regex_new ("\\\\\n|#.*\n", G_REGEX_CASELESS, 0, NULL);
 
   /*  *INDENT-OFF* */
-  ADD_ACTION_TYPE ("description", _execute_seek,
+  ADD_ACTION_TYPE ("description", NULL,
       ((GstValidateActionParameter [])  {
       {
         .name = "summary",
