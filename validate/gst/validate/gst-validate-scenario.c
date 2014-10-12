@@ -2143,6 +2143,13 @@ init_scenarios (void)
            NULL
         },
         {
+          .name = "flags",
+          .description = "The GstSeekFlags to use",
+          .mandatory = TRUE,
+          .types = "string describing the GstSeekFlags to set",
+          NULL,
+        },
+        {
           .name = "rate",
           .description = "The rate value of the seek",
           .mandatory = FALSE,
