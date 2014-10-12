@@ -144,9 +144,6 @@ typedef struct {
   * issue. */
   GstValidateReportLevel default_level;
 
-  /* repeat: whether the issue might be triggered
-  * multiple times but only remembered once */
-  gboolean repeat;
 } GstValidateIssue;
 
 #define GST_VALIDATE_ISSUE_AREA(i) (GST_VALIDATE_ISSUE_ID_AREA (gst_validate_issue_get_id (i)))
@@ -176,6 +173,9 @@ struct _GstValidateReport {
   GMutex shadow_reports_lock;
   GstValidateReport *master_report;
   GList *shadow_reports;
+
+  /* Lists the reports that were repeated inside the same reporter */
+  GList *repeated_reports;
 
   GstValidateReportingLevel reporting_level;
 };
@@ -227,6 +227,7 @@ void               gst_validate_printf_valist (gpointer source,
 gboolean gst_validate_report_should_print (GstValidateReport * report);
 gboolean gst_validate_report_set_master_report(GstValidateReport *report, GstValidateReport *master_report);
 void gst_validate_report_set_reporting_level (GstValidateReport *report, GstValidateReportingLevel level);
+void gst_validate_report_add_repeated_report (GstValidateReport *report, GstValidateReport *repeated_report);
 
 G_END_DECLS
 

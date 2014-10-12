@@ -80,7 +80,6 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
   issue->summary = g_strdup (summary);
   issue->description = g_strdup (description);
   issue->default_level = default_level;
-  issue->repeat = FALSE;
 
   return issue;
 }
@@ -450,6 +449,8 @@ gst_validate_report_unref (GstValidateReport * report)
     g_free (report->message);
     g_list_free_full (report->shadow_reports,
         (GDestroyNotify) gst_validate_report_unref);
+    g_list_free_full (report->repeated_reports,
+        (GDestroyNotify) gst_validate_report_unref);
     g_slice_free (GstValidateReport, report);
     g_mutex_clear (&report->shadow_reports_lock);
   }
@@ -690,9 +691,16 @@ gst_validate_report_print_description (GstValidateReport * report)
 void
 gst_validate_report_printf (GstValidateReport * report)
 {
+  GList *tmp;
+
   gst_validate_report_print_level (report);
   gst_validate_report_print_detected_on (report);
   gst_validate_report_print_details (report);
+
+  for (tmp = report->repeated_reports; tmp; tmp = tmp->next) {
+    gst_validate_report_print_details (report);
+  }
+
   gst_validate_report_print_description (report);
   gst_validate_printf (NULL, "\n");
 }
@@ -702,4 +710,13 @@ gst_validate_report_set_reporting_level (GstValidateReport * report,
     GstValidateReportingLevel level)
 {
   report->reporting_level = level;
+}
+
+void
+gst_validate_report_add_repeated_report (GstValidateReport * report,
+    GstValidateReport * repeated_report)
+{
+  report->repeated_reports =
+      g_list_append (report->repeated_reports,
+      gst_validate_report_ref (repeated_report));
 }

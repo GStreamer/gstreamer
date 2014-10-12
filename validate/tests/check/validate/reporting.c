@@ -232,6 +232,13 @@ GST_START_TEST (test_global_levels)
   /* One report for each pad monitor */
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 6);
   g_object_unref (runner);
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  runner = gst_validate_runner_new ();
+  _create_issues (runner);
+  /* One report for each pad monitor, plus one for funnel src and fakesink sink */
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 8);
+  g_object_unref (runner);
 }
 
 GST_END_TEST;
@@ -275,6 +282,14 @@ GST_START_TEST (test_specific_levels)
    * fakesrc issues, the funnel src will report its issue separately, and the
    * sink will not find a report immediately upstream */
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 4);
+  g_object_unref (runner);
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "none,fakesink*:all",
+          TRUE));
+  runner = gst_validate_runner_new ();
+  _create_issues (runner);
+  /* 2 issues repeated on the fakesink's sink */
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 2);
   g_object_unref (runner);
 }
 

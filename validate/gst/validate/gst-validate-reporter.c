@@ -145,7 +145,7 @@ void
 gst_validate_report_valist (GstValidateReporter * reporter,
     GstValidateIssueId issue_id, const gchar * format, va_list var_args)
 {
-  GstValidateReport *report;
+  GstValidateReport *report, *prev_report;
   gchar *message, *combo;
   va_list vacopy;
   GstValidateIssue *issue;
@@ -168,15 +168,25 @@ gst_validate_report_valist (GstValidateReporter * reporter,
     return;
   }
 
-  if (issue->repeat == FALSE) {
-    GstValidateIssueId issue_id = gst_validate_issue_get_id (issue);
+  prev_report = g_hash_table_lookup (priv->reports, (gconstpointer) issue_id);
 
-    if (g_hash_table_lookup (priv->reports, (gconstpointer) issue_id)) {
-      GST_DEBUG ("Report \"%" G_GUINTPTR_FORMAT ":%s\" already present",
-          issue_id, issue->summary);
-      gst_validate_report_unref (report);
-      return;
-    }
+  if (prev_report) {
+    GstValidateReportingLevel reporter_level =
+        gst_validate_reporter_get_reporting_level (reporter);
+    GstValidateReportingLevel runner_level =
+        GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
+
+    if (priv->runner)
+      runner_level =
+          gst_validate_runner_get_default_reporting_level (priv->runner);
+
+    if (reporter_level == GST_VALIDATE_REPORTING_LEVEL_ALL ||
+        (runner_level == GST_VALIDATE_REPORTING_LEVEL_ALL &&
+            reporter_level == GST_VALIDATE_REPORTING_LEVEL_UNKNOWN))
+      gst_validate_report_add_repeated_report (prev_report, report);
+
+    gst_validate_report_unref (report);
+    return;
   }
 
   GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);

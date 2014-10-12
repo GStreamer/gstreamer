@@ -384,12 +384,15 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 guint
 gst_validate_runner_get_reports_count (GstValidateRunner * runner)
 {
+  GList *tmp;
   guint l;
 
   g_return_val_if_fail (runner != NULL, 0);
 
   GST_VALIDATE_RUNNER_LOCK (runner);
   l = g_list_length (runner->priv->reports);
+  for (tmp = runner->priv->reports; tmp; tmp = tmp->next)
+    l += g_list_length (((GstValidateReport *) tmp->data)->repeated_reports);
   l += g_hash_table_size (runner->priv->reports_by_type);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
