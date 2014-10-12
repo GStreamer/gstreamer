@@ -3,4 +3,4 @@ pause;
 switch-track, name="Disable subtitle", type=text, disable=true
 wait, duration=0.5
 play;
-stop, playback_time=2.0
+stop, playback-time=2.0

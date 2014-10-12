@@ -1148,10 +1148,10 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
           GstValidateAction *action = tmp->data;
 
           if (!gst_validate_action_get_clocktime (scenario, action,
-                  "playback_time", &action->playback_time)) {
+                  "playback-time", &action->playback_time)) {
             gchar *str = gst_structure_to_string (action->structure);
 
-            g_error ("Could not parse playback_time on structure: %s", str);
+            g_error ("Could not parse playback-time on structure: %s", str);
             g_free (str);
 
             return FALSE;
@@ -1436,9 +1436,12 @@ _load_scenario_file (GstValidateScenario * scenario,
     action = gst_validate_action_new ();
     action->type = type;
     action->repeat = -1;
-    if (gst_structure_get_double (structure, "playback_time", &playback_time)) {
+    if (gst_structure_get_double (structure, "playback-time", &playback_time) ||
+        gst_structure_get_double (structure, "playback_time", &playback_time)) {
       action->playback_time = playback_time * GST_SECOND;
     } else if ((str_playback_time =
+            gst_structure_get_string (structure, "playback-time")) ||
+        (str_playback_time =
             gst_structure_get_string (structure, "playback_time"))) {
       priv->needs_parsing = g_list_append (priv->needs_parsing, action);
     } else
@@ -1941,7 +1944,7 @@ gst_validate_register_action_type (const gchar * type_name,
   }
 
   if (!is_config) {
-    type->parameters[n_params - 1].name = "playback_time";
+    type->parameters[n_params - 1].name = "playback-time";
     type->parameters[n_params - 1].description =
         "The playback time at which the action " "will be executed";
     type->parameters[n_params - 1].mandatory = FALSE;
@@ -2185,7 +2188,7 @@ init_scenarios (void)
       }),
       "Seeks into the stream, example of a seek happening when the stream reaches 5 seconds\n"
       "or 1 eighth of its duration and seeks at 10sec or 2 eighth of its duration:\n"
-      "  seek, playback_time=\"min(5.0, (duration/8))\", start=\"min(10, 2*(duration/8))\", flags=accurate+flush",
+      "  seek, playback-time=\"min(5.0, (duration/8))\", start=\"min(10, 2*(duration/8))\", flags=accurate+flush",
       FALSE
   );
 

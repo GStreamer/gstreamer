@@ -39,7 +39,7 @@
     <para>
       <informalexample>
         <programlisting>
-          seek, playback_time=10.0, start=0.0, flags=accurate+flush
+          seek, playback-time=10.0, start=0.0, flags=accurate+flush
         </programlisting>
       </informalexample>
     </para>
@@ -74,9 +74,9 @@
           3.0 to 0.0 and then seeks at \
           1.0 to 2.0 for 1.0 second (between 2.0 and 3.0).", \
           seek=true, duration=5.0, min-media-duration=4.0
-          seek, playback_time=1.0, rate=1.0, start=2.0, flags=accurate+flush
-          seek, playback_time=3.0, rate=1.0, start=0.0, flags=accurate+flush
-          seek, playback_time=1.0, rate=1.0, start=2.0, stop=3.0, flags=accurate+flush
+          seek, playback-time=1.0, rate=1.0, start=2.0, flags=accurate+flush
+          seek, playback-time=3.0, rate=1.0, start=0.0, flags=accurate+flush
+          seek, playback-time=1.0, rate=1.0, start=2.0, stop=3.0, flags=accurate+flush
         </programlisting>
       </informalexample>
     </para>
