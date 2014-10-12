@@ -2318,7 +2318,25 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
       }
       break;
     case SYS_DVBT:
+      if (object->transmission_mode != TRANSMISSION_MODE_AUTO &&
+          object->transmission_mode != TRANSMISSION_MODE_2K &&
+          object->transmission_mode != TRANSMISSION_MODE_8K) {
+        GST_WARNING_OBJECT (object, "Wrong DVB-T parameter combination: "
+            "transmission mode should be either AUTO, 2K or 8K");
+      }
     case SYS_DVBT2:
+      if (object->delsys != SYS_DVBT &&
+          object->transmission_mode != TRANSMISSION_MODE_AUTO &&
+          object->transmission_mode != TRANSMISSION_MODE_1K &&
+          object->transmission_mode != TRANSMISSION_MODE_2K &&
+          object->transmission_mode != TRANSMISSION_MODE_4K &&
+          object->transmission_mode != TRANSMISSION_MODE_8K &&
+          object->transmission_mode != TRANSMISSION_MODE_16K &&
+          object->transmission_mode != TRANSMISSION_MODE_32K) {
+        GST_WARNING_OBJECT (object, "Wrong DVB-T2 parameter combination: "
+            "transmission mode should be either AUTO, 1K, 2K, 4K, 8K, 16K "
+            "or 32K");
+      }
       set_prop (props->props, &n, DTV_BANDWIDTH_HZ, object->bandwidth);
       set_prop (props->props, &n, DTV_CODE_RATE_HP, object->code_rate_hp);
       set_prop (props->props, &n, DTV_CODE_RATE_LP, object->code_rate_lp);
