@@ -58,8 +58,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT gst_validate_scenario_debug
 
-#define ADD_ACTION_TYPE(_tname, _function, _params, _desc, _is_config) G_STMT_START { \
-  gst_validate_add_action_type ((_tname), "core", (_function), (_params), (_desc), (_is_config)); \
+#define REGISTER_ACTION_TYPE(_tname, _function, _params, _desc, _is_config) G_STMT_START { \
+  gst_validate_register_action_type ((_tname), "core", (_function), (_params), (_desc), (_is_config)); \
 } G_STMT_END
 
 enum
@@ -1901,7 +1901,7 @@ done:
 }
 
 /**
- * gst_validate_add_action_type:
+ * gst_validate_register_action_type:
  * @type_name: The name of the new action type to add
  * @implementer_namespace: The namespace of the implementer of the action type
  * @function: (scope notified): The function to be called to execute the action
@@ -1914,7 +1914,7 @@ done:
  * exists, it will be overriden by that new definition
  */
 void
-gst_validate_add_action_type (const gchar * type_name,
+gst_validate_register_action_type (const gchar * type_name,
     const gchar * implementer_namespace,
     GstValidateExecuteAction function,
     GstValidateActionParameter * parameters,
@@ -2041,7 +2041,7 @@ init_scenarios (void)
   clean_action_str = g_regex_new ("\\\\\n|#.*\n", G_REGEX_CASELESS, 0, NULL);
 
   /*  *INDENT-OFF* */
-  ADD_ACTION_TYPE ("description", NULL,
+  REGISTER_ACTION_TYPE ("description", NULL,
       ((GstValidateActionParameter [])  {
       {
         .name = "summary",
@@ -2132,7 +2132,7 @@ init_scenarios (void)
       "Allows to describe the scenario in various ways",
       TRUE);
 
-  ADD_ACTION_TYPE ("seek", _execute_seek,
+  REGISTER_ACTION_TYPE ("seek", _execute_seek,
       ((GstValidateActionParameter [])  {
         {
           .name = "start",
@@ -2189,7 +2189,7 @@ init_scenarios (void)
       FALSE
   );
 
-  ADD_ACTION_TYPE ("pause", _execute_pause,
+  REGISTER_ACTION_TYPE ("pause", _execute_pause,
       ((GstValidateActionParameter []) {
         {
           .name = "duration",
@@ -2205,16 +2205,16 @@ init_scenarios (void)
       "parametter so the pipeline goes back to playing after that duration\n"
       "(in second)", FALSE);
 
-  ADD_ACTION_TYPE ("play", _execute_play, NULL,
+  REGISTER_ACTION_TYPE ("play", _execute_play, NULL,
       "Sets the pipeline state to PLAYING", FALSE);
 
-  ADD_ACTION_TYPE ("stop", _execute_stop, NULL,
+  REGISTER_ACTION_TYPE ("stop", _execute_stop, NULL,
       "Sets the pipeline state to NULL", FALSE);
 
-  ADD_ACTION_TYPE ("eos", _execute_eos, NULL,
+  REGISTER_ACTION_TYPE ("eos", _execute_eos, NULL,
       "Sends an EOS event to the pipeline", FALSE);
 
-  ADD_ACTION_TYPE ("switch-track", _execute_switch_track,
+  REGISTER_ACTION_TYPE ("switch-track", _execute_switch_track,
       ((GstValidateActionParameter []) {
         {
           .name = "type",
@@ -2242,7 +2242,7 @@ init_scenarios (void)
       "The 'switch-track' command can be used to switch tracks.\n"
       , FALSE);
 
-  ADD_ACTION_TYPE ("wait", _execute_wait,
+  REGISTER_ACTION_TYPE ("wait", _execute_wait,
       ((GstValidateActionParameter []) {
         {
           .name = "duration",
@@ -2253,13 +2253,13 @@ init_scenarios (void)
       }),
       "Waits during 'duration' seconds", FALSE);
 
-  ADD_ACTION_TYPE ("dot-pipeline", _execute_dot_pipeline, NULL,
+  REGISTER_ACTION_TYPE ("dot-pipeline", _execute_dot_pipeline, NULL,
       "Dots the pipeline (the 'name' property will be used in the dot filename).\n"
       "For more information have a look at the GST_DEBUG_BIN_TO_DOT_FILE documentation.\n"
       "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set\n",
       FALSE);
 
-  ADD_ACTION_TYPE ("set-feature-rank", _set_rank,
+  REGISTER_ACTION_TYPE ("set-feature-rank", _set_rank,
       ((GstValidateActionParameter []) {
         {
           .name = "feature-name",
@@ -2277,7 +2277,7 @@ init_scenarios (void)
       }),
       "Changes the ranking of a particular plugin feature", TRUE);
 
-  ADD_ACTION_TYPE ("set-state", _execute_set_state,
+  REGISTER_ACTION_TYPE ("set-state", _execute_set_state,
       ((GstValidateActionParameter []) {
         {
           .name = "state",
@@ -2290,7 +2290,7 @@ init_scenarios (void)
       }),
       "Changes the state of the pipeline to any GstState", FALSE);
 
-  ADD_ACTION_TYPE ("set-property", _execute_set_property,
+  REGISTER_ACTION_TYPE ("set-property", _execute_set_property,
       ((GstValidateActionParameter []) {
         {
           .name = "target-element-name",
@@ -2316,7 +2316,7 @@ init_scenarios (void)
       }),
       "Sets a property of any element in the pipeline", FALSE);
 
-  ADD_ACTION_TYPE ("set-debug-threshold",
+  REGISTER_ACTION_TYPE ("set-debug-threshold",
       _execute_set_debug_threshold,
       ((GstValidateActionParameter [])
         {
@@ -2331,7 +2331,7 @@ init_scenarios (void)
       "Sets the debug level to be used, same format as\n"
       "setting the GST_DEBUG env variable", FALSE);
 
-  ADD_ACTION_TYPE ("emit-signal", _execute_emit_signal,
+  REGISTER_ACTION_TYPE ("emit-signal", _execute_emit_signal,
       ((GstValidateActionParameter [])
       {
         {

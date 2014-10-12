@@ -61,7 +61,7 @@ typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, Gs
  * GstValidateAction:
  * @type: The type of the #GstValidateAction, which is the name of the
  *        GstValidateActionType registered with
- *        #gst_validate_add_action_type
+ *        #gst_validate_register_action_type
  * @name: The name of the action, set from the user in the scenario
  * @structure: the #GstStructure defining the action
  *
@@ -162,11 +162,11 @@ gst_validate_list_scenarios       (gchar **scenarios,
                                    gint num_scenarios,
                                    gchar * output_file);
 
-void gst_validate_add_action_type (const gchar *type_name,
-                                   const gchar *implementer_namespace,
-                                   GstValidateExecuteAction function,
-                                   GstValidateActionParameter * parameters,
-                                   const gchar *description, gboolean is_config);
+void gst_validate_register_action_type (const gchar *type_name,
+                                        const gchar *implementer_namespace,
+                                        GstValidateExecuteAction function,
+                                        GstValidateActionParameter * parameters,
+                                        const gchar *description, gboolean is_config);
 
 
 gboolean gst_validate_action_get_clocktime (GstValidateScenario * scenario,

@@ -702,7 +702,7 @@ static void
 _register_actions (void)
 {
 /* *INDENT-OFF* */
-  gst_validate_add_action_type ("set-restriction", "validate-transcoding", _execute_set_restriction,
+  gst_validate_register_action_type ("set-restriction", "validate-transcoding", _execute_set_restriction,
       (GstValidateActionParameter []) {
         {
           .name = "restriction-caps",
@@ -716,7 +716,7 @@ _register_actions (void)
       "Change the restriction caps on the fly",
       FALSE);
 
-  gst_validate_add_action_type ("video-request-key-unit", "validate-transcoding",
+  gst_validate_register_action_type ("video-request-key-unit", "validate-transcoding",
       _execute_request_key_unit,
       (GstValidateActionParameter []) {
         {
