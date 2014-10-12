@@ -1560,7 +1560,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   /* 1. Emit 'autoplug-continue' the result will tell us if this pads needs
    * further autoplugging. Only do this for fixed caps, for unfixed caps
    * we will later come here again from the notify::caps handler. The
-   * problem with unfixed caps is that we can reliably tell if the output
+   * problem with unfixed caps is that, we can't reliably tell if the output
    * is e.g. accepted by a sink because only parts of the possible final
    * caps might be accepted by the sink. */
   if (gst_caps_is_fixed (caps))
