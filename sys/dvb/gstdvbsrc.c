@@ -23,7 +23,7 @@
  * SECTION:element-dvbsrc
  *
  * dvbsrc can be used to capture media from DVB cards. Supported DTV
- * broadcasting standards include DVB-T/C/S, ATSC and ISDBT.
+ * broadcasting standards include DVB-T/C/S, ATSC ,ISDB-T and DTMB.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -79,29 +79,9 @@
  *
  * Minor 5 (Note : minimum version we support according to configure.ac)
  *   DTV_ENUM_DELSYS
- *
- * Minor 4
- *   SYS_TURBO
- *
- * Minor 3 (DVB-T2)
- *   TRANSMISSION_MODE_1K / _16K / _32K
- *   BANDWIDTH_5_MHZ / _10_MHZ / _1_712_MHZ
- *   GUARD_INTERVAL_1_128 / _19_128 / _19_256
- *   DTV_DVBT2_PLP_ID (/!\ renamed in minor 8 !)
- *   SYS_DVBT2
- *
- * Minor 2
- *   FE_CAN_TURBO_FEC
- *   DTV_ISDBS_TS_ID (/!\ renamed in minor 8 !)
- *
- * Minor 1 (ISDB-T and ISDB-Tsb)
- *   TRANSMISSION_MODE_4K
- *   DTV_ISDBT_* (for those not defined in later version)
- *
- * Minor 0 : initial version
  */
 
-/* We know we have at least DVB_API_VERSION >= 5 */
+/* We know we have at least DVB_API_VERSION >= 5 (minor 5) */
 #define HAVE_V5_MINOR(minor) ((DVB_API_VERSION > 5) || \
 			      (DVB_API_VERSION_MINOR >= (minor)))
 
