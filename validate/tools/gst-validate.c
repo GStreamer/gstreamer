@@ -367,7 +367,7 @@ main (int argc, gchar ** argv)
   GError *err = NULL;
   const gchar *scenario = NULL, *configs = NULL;
   gboolean list_scenarios = FALSE, monitor_handles_state,
-      list_action_types = FALSE;
+      inspect_action_type = FALSE;
   GstStateChangeReturn sret;
   gchar *output_file = NULL;
   gint ret = 0;
@@ -388,8 +388,11 @@ main (int argc, gchar ** argv)
           &output_file, "The output file to store scenarios details. "
           "Implies --list-scenario",
         NULL},
-    {"list-action-types", 't', 0, G_OPTION_ARG_NONE, &list_action_types,
-        "List the avalaible action types with which to write scenarios", NULL},
+    {"inspect-action-type", 't', 0, G_OPTION_ARG_NONE, &inspect_action_type,
+          "Inspect the avalaible action types with which to write scenarios"
+          " if no parameter passed, it will list all avalaible action types"
+          " otherwize will print the full description of the wanted types",
+        NULL},
     {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
           "Let you set a config scenario, the scenario needs to be set as 'config"
           "' you can specify a list of scenario separated by ':'"
@@ -445,7 +448,7 @@ main (int argc, gchar ** argv)
     return 0;
   }
 
-  if (list_action_types) {
+  if (inspect_action_type) {
     _register_playbin_actions ();
 
     if (!gst_validate_print_action_types ((const gchar **) argv + 1, argc - 1)) {

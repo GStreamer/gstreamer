@@ -59,7 +59,7 @@
     <para>
       <informalexample>
         <programlisting>
-          gst-validate-1.0 --list-action-types description
+          gst-validate-1.0 --inspect-action-type action_type_name
         </programlisting>
       </informalexample>
     </para>
@@ -103,7 +103,7 @@
     <para>
       <informalexample>
         <programlisting>
-          gst-validate-1.0 --list-action-types
+          gst-validate-1.0 --inspect-action-type
         </programlisting>
       </informalexample>
     </para>
@@ -113,7 +113,7 @@
     <para>
       <informalexample>
         <programlisting>
-          gst-validate-transcoding-1.0 --list-action-types
+          gst-validate-transcoding-1.0 --inspect-action-type
         </programlisting>
       </informalexample>
     </para>

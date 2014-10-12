@@ -777,7 +777,7 @@ main (int argc, gchar ** argv)
   GError *err = NULL;
   const gchar *scenario = NULL, *configs = NULL;
   gboolean want_help = FALSE;
-  gboolean list_scenarios = FALSE, list_action_types = FALSE;
+  gboolean list_scenarios = FALSE, inspect_action_type = FALSE;
 
   GOptionEntry options[] = {
     {"output-format", 'o', 0, G_OPTION_ARG_CALLBACK, &_parse_encoding_profile,
@@ -805,8 +805,11 @@ main (int argc, gchar ** argv)
           "exiting.", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the avalaible scenarios that can be run", NULL},
-    {"list-action-types", 't', 0, G_OPTION_ARG_NONE, &list_action_types,
-        "List the avalaible action types with which to write scenarios", NULL},
+    {"inspect-action-type", 't', 0, G_OPTION_ARG_NONE, &inspect_action_type,
+          "Inspect the avalaible action types with which to write scenarios"
+          " if no parameter passed, it will list all avalaible action types"
+          " otherwize will print the full description of the wanted types",
+        NULL},
     {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
           &output_file, "The output file to store scenarios details. "
           "Implies --list-scenario",
@@ -870,7 +873,7 @@ main (int argc, gchar ** argv)
 
   _register_actions ();
 
-  if (list_action_types) {
+  if (inspect_action_type) {
     if (gst_validate_print_action_types ((const gchar **) argv + 1, argc - 1))
       return 0;
 
