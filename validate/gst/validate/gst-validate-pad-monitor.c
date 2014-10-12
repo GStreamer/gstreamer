@@ -121,17 +121,12 @@ typedef struct
   GstEvent *event;
 } SerializedEventData;
 
-
-static gboolean
-_find_master_report_on_pad (GstPad * pad, GstValidateReport * report)
+static GstPad *
+_get_actual_pad (GstPad *pad)
 {
-  GstValidatePadMonitor *pad_monitor;
-  GstValidateReport *prev_report;
   GstPad *tmp_pad;
-  gboolean result = FALSE;
 
   gst_object_ref (pad);
-
 
   /* We don't monitor ghost pads */
   while (GST_IS_GHOST_PAD (pad)) {
@@ -145,6 +140,18 @@ _find_master_report_on_pad (GstPad * pad, GstValidateReport * report)
     pad = gst_pad_get_peer (pad);
     gst_object_unref (tmp_pad);
   }
+
+  return pad;
+}
+
+static gboolean
+_find_master_report_on_pad (GstPad * pad, GstValidateReport * report)
+{
+  GstValidatePadMonitor *pad_monitor;
+  GstValidateReport *prev_report;
+  gboolean result = FALSE;
+
+  pad = _get_actual_pad (pad);
 
   pad_monitor = g_object_get_data ((GObject *) pad, "validate-monitor");
 
@@ -1446,6 +1453,24 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
   }
 }
 
+static void
+mark_pads_eos (GstValidatePadMonitor *pad_monitor)
+{
+  GstValidatePadMonitor *peer_monitor;
+  GstPad *peer = gst_pad_get_peer (pad_monitor->pad);
+  GstPad *real_peer;
+
+  pad_monitor->is_eos = TRUE;
+  if (peer) {
+    real_peer = _get_actual_pad (peer);
+    peer_monitor = g_object_get_data ((GObject *) real_peer, "validate-monitor");
+    if (peer_monitor)
+      peer_monitor->is_eos = TRUE;
+    gst_object_unref (peer);
+    gst_object_unref (real_peer);
+  }
+}
+
 static gboolean
 gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
     pad_monitor, GstObject * parent, GstEvent * event,
@@ -1687,7 +1712,7 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
 
   pad_monitor->last_flow_return = ret;
   if (ret == GST_FLOW_EOS) {
-    pad_monitor->is_eos = ret;
+    mark_pads_eos (pad_monitor);
   }
   if (PAD_PARENT_IS_DEMUXER (pad_monitor))
     gst_validate_pad_monitor_check_aggregated_return (pad_monitor, ret);
