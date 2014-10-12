@@ -363,6 +363,9 @@ gst_dvbsrc_bandwidth_get_type (void)
     {BANDWIDTH_7_MHZ, "7", "7"},
     {BANDWIDTH_6_MHZ, "6", "6"},
     {BANDWIDTH_AUTO, "AUTO", "AUTO"},
+    {BANDWIDTH_5_MHZ, "5", "5"},
+    {BANDWIDTH_10_MHZ, "10", "10"},
+    {BANDWIDTH_1_712_MHZ, "1.712", "1.712"},
     {0, NULL, NULL},
   };
 
