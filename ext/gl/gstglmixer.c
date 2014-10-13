@@ -99,6 +99,8 @@ gst_gl_mixer_pad_finalize (GObject * object)
     gst_object_unref (pad->upload);
     pad->upload = NULL;
   }
+
+  G_OBJECT_CLASS (gst_gl_mixer_pad_parent_class)->finalize (object);
 }
 
 static void
