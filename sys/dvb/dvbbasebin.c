@@ -103,7 +103,8 @@ enum
   PROP_ISDBT_LAYERC_TIME_INTERLEAVING,
   PROP_LNB_SLOF,
   PROP_LNB_LOF1,
-  PROP_LNB_LOF2
+  PROP_LNB_LOF2,
+  PROP_INTERLEAVING
 };
 
 typedef struct
@@ -319,6 +320,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
     {PROP_LNB_SLOF, "lnb-slof"},
     {PROP_LNB_LOF1, "lnb-lof1"},
     {PROP_LNB_LOF2, "lnb-lof2"},
+    {PROP_INTERLEAVING, "interleaving"},
     {0, NULL}
   };
 
@@ -650,6 +652,7 @@ dvb_base_bin_set_property (GObject * object, guint prop_id,
     case PROP_LNB_SLOF:
     case PROP_LNB_LOF1:
     case PROP_LNB_LOF2:
+    case PROP_INTERLEAVING:
       /* FIXME: check if we can tune (state < PLAYING || program-numbers == "") */
       g_object_set_property (G_OBJECT (dvbbasebin->dvbsrc), pspec->name, value);
       break;
@@ -710,6 +713,7 @@ dvb_base_bin_get_property (GObject * object, guint prop_id,
     case PROP_LNB_SLOF:
     case PROP_LNB_LOF1:
     case PROP_LNB_LOF2:
+    case PROP_INTERLEAVING:
       g_object_get_property (G_OBJECT (dvbbasebin->dvbsrc), pspec->name, value);
       break;
     case PROP_PROGRAM_NUMBERS:

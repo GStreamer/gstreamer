@@ -127,6 +127,9 @@ struct _GstDvbSrc
   unsigned int lnb_slof;
   unsigned int lnb_lof1;
   unsigned int lnb_lof2;
+
+  /* Only used for DTMB if available */
+  int interleaving;
 };
 
 struct _GstDvbSrcClass

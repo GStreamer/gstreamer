@@ -194,7 +194,8 @@ enum
   ARG_DVBSRC_ISDBT_LAYERC_TIME_INTERLEAVING,
   ARG_DVBSRC_LNB_SLOF,
   ARG_DVBSRC_LNB_LOF1,
-  ARG_DVBSRC_LNB_LOF2
+  ARG_DVBSRC_LNB_LOF2,
+  ARG_DVBSRC_INTERLEAVING
 };
 
 #define DEFAULT_ADAPTER 0
@@ -243,6 +244,11 @@ enum
 #define DEFAULT_LNB_SLOF (11700*1000UL)
 #define DEFAULT_LNB_LOF1 (9750*1000UL)
 #define DEFAULT_LNB_LOF2 (10600*1000UL)
+#if HAVE_V5_MINOR(7)
+#define DEFAULT_INTERLEAVING INTERLEAVING_AUTO
+#else
+#define DEFAULT_INTERLEAVING 0
+#endif
 
 static void gst_dvbsrc_output_frontend_stats (GstDvbSrc * src);
 
@@ -499,6 +505,28 @@ gst_dvbsrc_rolloff_get_type (void)
         g_enum_register_static ("GstDvbSrcRolloff", rolloff_types);
   }
   return dvbsrc_rolloff_type;
+}
+
+#define GST_TYPE_INTERLEAVING (gst_dvbsrc_interleaving_get_type ())
+static GType
+gst_dvbsrc_interleaving_get_type (void)
+{
+  static GType dvbsrc_interleaving_type = 0;
+  static GEnumValue interleaving_types[] = {
+#if HAVE_V5_MINOR(7)
+    {INTERLEAVING_NONE, "NONE", "none"},
+    {INTERLEAVING_AUTO, "AUTO", "auto"},
+    {INTERLEAVING_240, "240", "240"},
+    {INTERLEAVING_720, "720", "720"},
+#endif
+    {0, NULL, NULL},
+  };
+
+  if (!dvbsrc_interleaving_type) {
+    dvbsrc_interleaving_type =
+        g_enum_register_static ("GstDvbSrcInterleaving", interleaving_types);
+  }
+  return dvbsrc_interleaving_type;
 }
 
 static void gst_dvbsrc_finalize (GObject * object);
@@ -919,6 +947,15 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
           0, G_MAXUINT, DEFAULT_LNB_LOF2,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
+  /* Additional DTMB properties */
+
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_INTERLEAVING,
+      g_param_spec_enum ("interleaving", "DTMB Interleaving",
+          "(DTMB) Interleaving type",
+          GST_TYPE_INTERLEAVING, DEFAULT_INTERLEAVING,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
+
   /**
    * GstDvbSrc::tuning-start:
    * @gstdvbsrc: the element on which the signal is emitted
@@ -1040,6 +1077,8 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->lnb_slof = DEFAULT_LNB_SLOF;
   object->lnb_lof1 = DEFAULT_LNB_LOF1;
   object->lnb_lof2 = DEFAULT_LNB_LOF2;
+
+  object->interleaving = DEFAULT_INTERLEAVING;
 
   g_mutex_init (&object->tune_mutex);
   object->timeout = DEFAULT_TIMEOUT;
@@ -1283,6 +1322,9 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     case ARG_DVBSRC_LNB_LOF2:
       object->lnb_lof2 = g_value_get_uint (value);
       break;
+    case ARG_DVBSRC_INTERLEAVING:
+      object->interleaving = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -1445,6 +1487,9 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_LNB_LOF2:
       g_value_set_uint (value, object->lnb_lof2);
+      break;
+    case ARG_DVBSRC_INTERLEAVING:
+      g_value_set_enum (value, object->interleaving);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2446,8 +2491,8 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
       set_prop (props->props, &n, DTV_TRANSMISSION_MODE,
           object->transmission_mode);
       set_prop (props->props, &n, DTV_GUARD_INTERVAL, object->guard_interval);
-      /* FIXME: Make these properties and proxy them on dvbbasebin */
-      set_prop (props->props, &n, DTV_INTERLEAVING, INTERLEAVING_AUTO);
+      set_prop (props->props, &n, DTV_INTERLEAVING, object->interleaving);
+      /* FIXME: Make the LNA on/off switch a property and proxy on dvbbasebin */
       set_prop (props->props, &n, DTV_LNA, LNA_AUTO);
       GST_INFO_OBJECT (object, "Tuning DTMB to %d Hz", freq);
       break;
