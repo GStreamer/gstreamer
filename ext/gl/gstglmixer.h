@@ -66,7 +66,7 @@ struct _GstGLMixer
   GstGLDownload *download;
 
   GstGLDisplay *display;
-  GstGLContext *context;
+  GstGLContext *context, *other_context;
   GLuint fbo;
   GLuint depthbuffer;
 
