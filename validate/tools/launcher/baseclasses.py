@@ -1026,7 +1026,7 @@ class GstValidateBaseTestManager(TestsManager):
 
     def add_scenarios(self, scenarios):
         """
-        @scenarios: A list or a unic scenario name(s) to be run on the tests.
+        @scenarios A list or a unic scenario name(s) to be run on the tests.
                     They are just the default scenarios, and then depending on
                     the TestsGenerator to be used you can have more fine grained
                     control on what to be run on each serie of tests.
@@ -1042,7 +1042,7 @@ class GstValidateBaseTestManager(TestsManager):
 
     def add_encoding_formats(self, encoding_formats):
         """
-        @encoding_formats: A list or one single #MediaFormatCombinations describing wanted output
+        :param encoding_formats: A list or one single #MediaFormatCombinations describing wanted output
                            formats for transcoding test.
                            They are just the default encoding formats, and then depending on
                            the TestsGenerator to be used you can have more fine grained
@@ -1226,7 +1226,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         return name.replace('.', "_")
 
 class MediaFormatCombination(object):
-    _FORMATS = {"aac": "audio/mpeg,mpegversion=4",
+    FORMATS = {"aac": "audio/mpeg,mpegversion=4",
                "ac3": "audio/x-ac3",
                "vorbis": "audio/x-vorbis",
                "mp3": "audio/mpeg,mpegversion=1,layer=3",
@@ -1243,13 +1243,20 @@ class MediaFormatCombination(object):
         return "%s and %s in %s" % (self.audio, self.video, self.container)
 
     def __init__(self, container, audio, video):
+        """
+        Describes a media format to be used for transcoding tests.
+
+        :param container: A string defining the container format to be used, must bin in self.FORMATS
+        :param audio: A string defining the audio format to be used, must bin in self.FORMATS
+        :param video: A string defining the video format to be used, must bin in self.FORMATS
+        """
         self.container = container
         self.audio = audio
         self.video = video
 
     def get_caps(self, track_type):
         try:
-            return self._FORMATS[self.__dict__[track_type]]
+            return self.FORMATS[self.__dict__[track_type]]
         except KeyError:
             return None
 
