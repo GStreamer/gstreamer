@@ -161,20 +161,29 @@ print_position (GstValidateMonitor * monitor)
   gdouble rate = 1.0;
   GstFormat format = GST_FORMAT_TIME;
 
-  gst_element_query_position (pipeline, format, &position);
+  if (!gst_element_query_position (pipeline, format, &position)) {
+    GST_DEBUG_OBJECT (monitor, "Could not query position");
+
+    return TRUE;
+  }
 
   format = GST_FORMAT_TIME;
-  gst_element_query_duration (pipeline, format, &duration);
+  if (!gst_element_query_duration (pipeline, format, &duration)) {
+    GST_DEBUG_OBJECT (monitor, "Could not query duration");
+
+    return TRUE;
+  }
 
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
-  if (gst_element_query (pipeline, query))
+  if (gst_element_query (pipeline, query)) {
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
-  gst_query_unref (query);
 
-  gst_validate_printf (NULL,
-      "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-      " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
-      rate);
+    gst_validate_printf (NULL,
+        "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+        " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
+        rate);
+  }
+  gst_query_unref (query);
 
   return TRUE;
 }
