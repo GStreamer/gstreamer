@@ -588,6 +588,11 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
     glimage_sink->pool = NULL;
   }
 
+  if (glimage_sink->other_context) {
+    gst_object_unref (glimage_sink->other_context);
+    glimage_sink->other_context = NULL;
+  }
+
   return TRUE;
 }
 
@@ -677,6 +682,11 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         gst_object_unref (window);
         gst_object_unref (glimage_sink->context);
         glimage_sink->context = NULL;
+      }
+
+      if (glimage_sink->other_context) {
+        gst_object_unref (glimage_sink->other_context);
+        glimage_sink->other_context = NULL;
       }
 
       if (glimage_sink->display) {
