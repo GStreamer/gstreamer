@@ -463,7 +463,13 @@ gst_gl_mixer_init (GstGLMixer * mix)
 static void
 gst_gl_mixer_finalize (GObject * object)
 {
-  GstGLMixerPrivate *priv = GST_GL_MIXER (object)->priv;
+  GstGLMixer *mix = GST_GL_MIXER (object);
+  GstGLMixerPrivate *priv = mix->priv;
+
+  if (mix->other_context) {
+    gst_object_unref (mix->other_context);
+    mix->other_context = NULL;
+  }
 
   g_mutex_clear (&priv->gl_resource_lock);
   g_cond_clear (&priv->gl_resource_cond);
@@ -1140,11 +1146,6 @@ gst_gl_mixer_stop (GstAggregator * agg)
   if (mix->context) {
     gst_object_unref (mix->context);
     mix->context = NULL;
-  }
-
-  if (mix->other_context) {
-    gst_object_unref (mix->other_context);
-    mix->other_context = NULL;
   }
 
   gst_gl_mixer_reset (mix);
