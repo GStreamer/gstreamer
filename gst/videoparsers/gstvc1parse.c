@@ -1773,9 +1773,7 @@ gst_vc1_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     gst_buffer_unmap (codec_data, &minfo);
   } else {
     vc1parse->input_header_format = VC1_HEADER_FORMAT_NONE;
-    if (header_format && strcmp (header_format, "sequence-layer") != 0)
-      vc1parse->input_header_format = VC1_HEADER_FORMAT_SEQUENCE_LAYER;
-    else if (header_format && strcmp (header_format, "none") != 0)
+    if (header_format && strcmp (header_format, "none") != 0)
       GST_WARNING_OBJECT (vc1parse,
           "Upstream claimed '%s' header format but 'none' detected",
           header_format);
