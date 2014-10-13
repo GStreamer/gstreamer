@@ -182,7 +182,7 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
 
   if (!mix->context) {
     mix->context = gst_gl_context_new (mix->display);
-    if (!gst_gl_context_create (mix->context, NULL, &error))
+    if (!gst_gl_context_create (mix->context, mix->other_context, &error))
       goto context_error;
   }
 
@@ -327,7 +327,8 @@ enum
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_OTHER_CONTEXT
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -402,6 +403,12 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
 
   gobject_class->get_property = gst_gl_mixer_get_property;
   gobject_class->set_property = gst_gl_mixer_set_property;
+
+  g_object_class_install_property (gobject_class, PROP_OTHER_CONTEXT,
+      g_param_spec_object ("other-context",
+          "External OpenGL context",
+          "Give an external OpenGL context with which to share textures",
+          GST_GL_TYPE_CONTEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -639,6 +646,16 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
               gst_gl_context_new_wrapped (mix->display, (guintptr) handle,
               platform, gl_apis);
       }
+    }
+  }
+
+  if (mix->other_context) {
+    if (!other_context) {
+      other_context = mix->other_context;
+    } else {
+      GST_ELEMENT_WARNING (mix, LIBRARY, SETTINGS,
+          ("%s", "Cannot share with more than one GL context"),
+          ("%s", "Cannot share with more than one GL context"));
     }
   }
 
@@ -998,7 +1015,12 @@ static void
 gst_gl_mixer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
+  GstGLMixer *mix = GST_GL_MIXER (object);
+
   switch (prop_id) {
+    case PROP_OTHER_CONTEXT:
+      g_value_set_object (value, mix->other_context);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1009,7 +1031,16 @@ static void
 gst_gl_mixer_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
+  GstGLMixer *mix = GST_GL_MIXER (object);
+
   switch (prop_id) {
+    case PROP_OTHER_CONTEXT:
+    {
+      if (mix->other_context)
+        gst_object_unref (mix->other_context);
+      mix->other_context = g_value_dup_object (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1110,6 +1141,12 @@ gst_gl_mixer_stop (GstAggregator * agg)
     gst_object_unref (mix->context);
     mix->context = NULL;
   }
+
+  if (mix->other_context) {
+    gst_object_unref (mix->other_context);
+    mix->other_context = NULL;
+  }
+
   gst_gl_mixer_reset (mix);
 
   return TRUE;
