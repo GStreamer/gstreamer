@@ -317,6 +317,7 @@ static gboolean gst_encode_bin_setup_profile (GstEncodeBin * ebin,
 static StreamGroup *_create_stream_group (GstEncodeBin * ebin,
     GstEncodingProfile * sprof, const gchar * sinkpadname, GstCaps * sinkcaps);
 static void stream_group_remove (GstEncodeBin * ebin, StreamGroup * sgroup);
+static void stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup);
 static GstPad *gst_encode_bin_request_pad_signal (GstEncodeBin * encodebin,
     GstCaps * caps);
 static GstPad *gst_encode_bin_request_profile_pad_signal (GstEncodeBin *
@@ -1585,7 +1586,8 @@ cleanup:
     gst_caps_unref (format);
   if (restriction)
     gst_caps_unref (restriction);
-  g_slice_free (StreamGroup, sgroup);
+  stream_group_free (ebin, sgroup);
+  g_list_free (tosync);
   return NULL;
 }
 
@@ -1920,7 +1922,7 @@ release_pads (const GValue * item, GstElement * elt)
   gst_element_release_request_pad (elt, pad);
 }
 
-static void inline
+static void
 stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
 {
   GList *tmp;
@@ -1929,7 +1931,8 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
 
   GST_DEBUG_OBJECT (ebin, "Freeing StreamGroup %p", sgroup);
 
-  g_signal_handler_disconnect (sgroup->profile, sgroup->restriction_sid);
+  if (sgroup->restriction_sid != 0)
+    g_signal_handler_disconnect (sgroup->profile, sgroup->restriction_sid);
 
   if (ebin->muxer) {
     /* outqueue - Muxer */
@@ -1972,8 +1975,12 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
   }
 
   /* Sink Ghostpad */
-  if (sgroup->ghostpad)
-    gst_element_remove_pad (GST_ELEMENT_CAST (ebin), sgroup->ghostpad);
+  if (sgroup->ghostpad) {
+    if (GST_PAD_PARENT (sgroup->ghostpad) != NULL)
+      gst_element_remove_pad (GST_ELEMENT_CAST (ebin), sgroup->ghostpad);
+    else
+      gst_object_unref (sgroup->ghostpad);
+  }
 
   if (sgroup->inqueue)
     gst_element_set_state (sgroup->inqueue, GST_STATE_NULL);
