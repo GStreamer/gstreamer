@@ -256,6 +256,11 @@ gst_gl_filter_reset (GstGLFilter * filter)
     filter->download = NULL;
   }
 
+  if (filter->uploaded_buffer) {
+    gst_buffer_unref (filter->uploaded_buffer);
+    filter->uploaded_buffer = NULL;
+  }
+
   if (filter->context) {
     if (filter_class->onReset)
       filter_class->onReset (filter);
@@ -1183,7 +1188,13 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
 
   filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  if (!gst_gl_upload_perform_with_buffer (filter->upload, inbuf, &in_tex, NULL))
+  if (filter->uploaded_buffer) {
+    gst_buffer_unref (filter->uploaded_buffer);
+    filter->uploaded_buffer = NULL;
+  }
+
+  if (!gst_gl_upload_perform_with_buffer (filter->upload, inbuf, &in_tex,
+          &filter->uploaded_buffer))
     return FALSE;
 
   to_download |= !gst_is_gl_memory (gst_buffer_peek_memory (outbuf, 0));
