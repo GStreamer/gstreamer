@@ -253,7 +253,7 @@ gst_gl_deinterlace_filter (GstGLFilter * filter, GstBuffer * inbuf,
   if (deinterlace_filter->prev_buffer) {
     gst_buffer_unref (deinterlace_filter->prev_buffer);
   }
-  deinterlace_filter->prev_buffer = gst_buffer_ref (inbuf);
+  deinterlace_filter->prev_buffer = gst_buffer_ref (filter->uploaded_buffer);
 
   return TRUE;
 }
