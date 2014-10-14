@@ -1174,7 +1174,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   /* frame and ts book-keeping */
   if (G_UNLIKELY (frames < 0)) {
     if (G_UNLIKELY (-frames - 1 > priv->frames.length)) {
-      GST_ELEMENT_WARNING (dec, STREAM, ENCODE,
+      GST_ELEMENT_WARNING (dec, STREAM, DECODE,
           ("received more decoded frames %d than provided %d", frames,
               priv->frames.length), (NULL));
       frames = 0;
@@ -1183,7 +1183,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     }
   } else if (G_UNLIKELY (frames > priv->frames.length)) {
     if (G_LIKELY (!priv->force)) {
-      GST_ELEMENT_WARNING (dec, STREAM, ENCODE,
+      GST_ELEMENT_WARNING (dec, STREAM, DECODE,
           ("received more decoded frames %d than provided %d", frames,
               priv->frames.length), (NULL));
     }
@@ -1289,7 +1289,7 @@ exit:
   /* ERRORS */
 wrong_buffer:
   {
-    GST_ELEMENT_ERROR (dec, STREAM, ENCODE, (NULL),
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
         ("buffer size %" G_GSIZE_FORMAT " not a multiple of %d", size,
             ctx->info.bpf));
     gst_buffer_unref (buf);
