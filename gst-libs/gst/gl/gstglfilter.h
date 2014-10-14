@@ -77,6 +77,8 @@ struct _GstGLFilter
   GstGLUpload       *upload;
   GstGLDownload     *download;
 
+  GstBuffer         *uploaded_buffer;
+
   /* <private> */
   GLuint             in_tex_id;
   GLuint             out_tex_id;
