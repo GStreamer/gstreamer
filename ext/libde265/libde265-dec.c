@@ -888,7 +888,7 @@ gst_libde265_dec_plugin_init (GstPlugin * plugin)
 {
   /* create an elementfactory for the libde265 decoder element */
   if (!gst_element_register (plugin, "libde265dec",
-          GST_RANK_PRIMARY, GST_TYPE_LIBDE265_DEC))
+          GST_RANK_SECONDARY, GST_TYPE_LIBDE265_DEC))
     return FALSE;
 
   return TRUE;
