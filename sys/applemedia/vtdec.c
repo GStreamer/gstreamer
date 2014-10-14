@@ -729,6 +729,8 @@ compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
   int width_in_mb_s = vtdec->video_info.width / dpb_mb_size;
   int height_in_mb_s = vtdec->video_info.height / dpb_mb_size;
 
+  *length = 0;
+
   if (!parse_h264_profile_and_level_from_codec_data (vtdec, codec_data,
           &profile, &level))
     return FALSE;
