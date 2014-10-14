@@ -513,11 +513,6 @@ if test "x$HAVE_IOS" = "xyes"; then
   AC_DEFINE(HAVE_IOS, 1, [Define if building for Apple iOS])
 fi
 
-dnl VideoToolbox elements are not ported to iOS yet in 1.4
-if test "x$HAVE_IOS" = "xyes"; then
-  HAVE_VIDEOTOOLBOX="no"
-fi
-
 AM_CONDITIONAL(HAVE_VIDEOTOOLBOX, test "x$HAVE_VIDEOTOOLBOX" = "xyes")
 if test "x$HAVE_VIDEOTOOLBOX" = "xyes"; then
   AC_DEFINE(HAVE_VIDEOTOOLBOX, 1, [Define if building with VideoToolbox])
