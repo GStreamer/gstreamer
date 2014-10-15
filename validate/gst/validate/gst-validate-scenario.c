@@ -36,6 +36,7 @@
 #include <gst/gst.h>
 #include <gio/gio.h>
 #include <string.h>
+#include <errno.h>
 
 #include "gst-validate-internal.h"
 #include "gst-validate-scenario.h"
@@ -936,14 +937,37 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstClockTime duration;
 
+  gdouble wait_multiplier = 1;
+  const gchar *str_wait_multiplier =
+      g_getenv ("GST_VALIDATE_SCENARIO_WAIT_MULTIPLIER");
+
+  if (str_wait_multiplier) {
+    errno = 0;
+    wait_multiplier = g_ascii_strtod (str_wait_multiplier, NULL);
+
+    if (errno) {
+      GST_ERROR ("Could not use the WAIT MULTIPLIER");
+
+      wait_multiplier = 1;
+    }
+
+    if (wait_multiplier == 0) {
+      GST_INFO_OBJECT (scenario, "I have been told not to wait...");
+      return TRUE;
+    }
+  }
+
   if (!gst_validate_action_get_clocktime (scenario, action,
           "duration", &duration)) {
     GST_DEBUG_OBJECT (scenario, "Duration could not be parsed");
     return FALSE;
   }
 
-  gst_validate_printf (action, "Waiting for %" GST_TIME_FORMAT "\n",
-      GST_TIME_ARGS (duration));
+  duration *= wait_multiplier;
+  gst_validate_printf (action,
+      "Waiting for %" GST_TIME_FORMAT " (wait_multiplier: %f)\n",
+      GST_TIME_ARGS (duration), wait_multiplier);
+
   if (priv->get_pos_id) {
     g_source_remove (priv->get_pos_id);
     priv->get_pos_id = 0;

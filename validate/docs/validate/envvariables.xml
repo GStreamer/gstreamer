@@ -102,5 +102,15 @@
   </para>
 </formalpara>
 
+<formalpara id="GST-VALIDATE-WAIT-MULTIPLIER">
+  <title><envar>GST_VALIDATE_SCENARIO_WAIT_MULITPLIER</envar></title>
+
+  <para>
+      A decimal number to set as a multiplier for the wait actions. For example if you set
+      GST_VALIDATE_SCENARIO_WAIT_MULITPLIER=0.5, for a wait action that has a duration of 2.0
+      the waiting time will only be of 1.0 second. If set to 0, wait action will be ignored.
+  </para>
+</formalpara>
+
   </refsect1>
 </refentry>
