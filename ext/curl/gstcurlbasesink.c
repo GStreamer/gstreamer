@@ -989,16 +989,31 @@ gst_curl_base_sink_debug_cb (CURL * handle, curl_infotype type, char *data,
     size_t size, void *clientp)
 {
   GstCurlBaseSink *sink = (GstCurlBaseSink *) clientp;
+  gchar *msg = NULL;
 
   switch (type) {
     case CURLINFO_TEXT:
-      GST_DEBUG_OBJECT (sink, "%*s", (int) size, data);
+    case CURLINFO_HEADER_IN:
+    case CURLINFO_HEADER_OUT:
+      msg = g_memdup (data, size);
+      if (size > 0) {
+        msg[size - 1] = '\0';
+        g_strchomp (msg);
+      }
+      break;
+    default:
+      break;
+  }
+
+  switch (type) {
+    case CURLINFO_TEXT:
+      GST_DEBUG_OBJECT (sink, "%s", msg);
       break;
     case CURLINFO_HEADER_IN:
-      GST_DEBUG_OBJECT (sink, "incoming header: %*s", (int) size, data);
+      GST_DEBUG_OBJECT (sink, "incoming header: %s", msg);
       break;
     case CURLINFO_HEADER_OUT:
-      GST_DEBUG_OBJECT (sink, "outgoing header: %*s", (int) size, data);
+      GST_DEBUG_OBJECT (sink, "outgoing header: %s", msg);
       break;
     case CURLINFO_DATA_IN:
       GST_MEMDUMP_OBJECT (sink, "incoming data", (guint8 *) data, size);
@@ -1017,6 +1032,7 @@ gst_curl_base_sink_debug_cb (CURL * handle, curl_infotype type, char *data,
       GST_MEMDUMP_OBJECT (sink, "unknown data", (guint8 *) data, size);
       break;
   }
+  g_free (msg);
   return 0;
 }
 #endif
