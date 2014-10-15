@@ -106,6 +106,12 @@ else
 check_schro=
 endif
 
+if USE_X265
+check_x265enc=elements/x265enc
+else
+check_x265enc=
+endif
+
 if USE_TIMIDITY
 check_timidity=elements/timidity
 else
@@ -260,6 +266,7 @@ check_PROGRAMS = \
 	$(check_uvch264) \
 	libs/vc1parser \
 	$(check_schro) \
+	$(check_x265enc) \
 	elements/viewfinderbin \
 	$(check_zbar) \
 	$(check_orc) \
