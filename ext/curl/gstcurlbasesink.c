@@ -765,7 +765,6 @@ gst_curl_base_sink_transfer_data_buffer (GstCurlBaseSink * sink,
     void *curl_ptr, size_t block_size, guint * last_chunk)
 {
   TransferBuffer *buffer;
-  size_t bytes_to_send;
 
   buffer = sink->transfer_buf;
   GST_LOG ("write buf len=%" G_GSIZE_FORMAT ", offset=%" G_GSIZE_FORMAT,
@@ -778,10 +777,7 @@ gst_curl_base_sink_transfer_data_buffer (GstCurlBaseSink * sink,
   }
 
   /* more data in buffer(s) */
-  bytes_to_send = transfer_data_buffer (curl_ptr, sink->transfer_buf,
-      block_size, last_chunk);
-
-  return bytes_to_send;
+  return transfer_data_buffer (curl_ptr, buffer, block_size, last_chunk);
 }
 
 static size_t
