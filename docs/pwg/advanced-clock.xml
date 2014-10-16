@@ -64,7 +64,7 @@
     <title> Buffer running-time </title>
     <para>
       To calculate a buffer running-time, we need a buffer timestamp and
-      the SEGMENT event that preceeded the buffer. First we can convert
+      the SEGMENT event that preceded the buffer. First we can convert
       the SEGMENT event into a <classname>GstSegment</classname> object
       and then we can use the
       <function>gst_segment_to_running_time ()</function> function to

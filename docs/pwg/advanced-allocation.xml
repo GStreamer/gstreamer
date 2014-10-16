@@ -117,7 +117,7 @@
     </para>
     <para>
       The buffer contains one or more <classname>GstMemory</classname>
-      objects thet represent the data in the buffer.
+      objects that represent the data in the buffer.
     </para>
     <para>
       Metadata in the buffer consists of:
@@ -398,7 +398,7 @@ my_example_meta_api_get_type (void)
           macro. You will also make a method to add your metadata
           implementation to a <classname>GstBuffer</classname>.
           Your <filename>my-example-meta.h</filename> header file will
-          need thse additions:
+          need these additions:
         </para>
         <programlisting>
 <![CDATA[

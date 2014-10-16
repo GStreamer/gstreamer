@@ -109,7 +109,7 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
       TagSetter interface (which is just a layer). Pipeline tags are tags
       provided to the element from within the pipeline. The element receives
       such tags via the <symbol>GST_EVENT_TAG</symbol> event, which means
-      that tags writers should implment an event handler. The tag writer is
+      that tags writers should implement an event handler. The tag writer is
       responsible for combining all these three into one list and writing them
       to the output stream.
     </para>

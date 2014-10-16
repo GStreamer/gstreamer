@@ -372,7 +372,7 @@ gst_my_filter_sink_event (GstPad  *pad, GstObject * parent, GstEvent * event)
         The flush-stop event is created with
         <function>gst_event_new_flush_stop ()</function>. It has one
         parameter that controls if the running-time of the pipeline should
-        be reset to 0 or not. Normally aftera flushing seek, the
+        be reset to 0 or not. Normally after a flushing seek, the
         running_time is set back to 0.
       </para>
     </sect2>

@@ -2,7 +2,7 @@
   <title>Quality Of Service (QoS)</title>
 
   <para>
-    Quality of Service in &GStreamer; is about measuring and ajusting
+    Quality of Service in &GStreamer; is about measuring and adjusting
     the real-time performance of a pipeline. The real-time performance is
     always measured relative to the pipeline clock and typically happens in
     the sinks when they synchronize buffers against the clock.
@@ -82,7 +82,7 @@
     </para>
     <para>
       A synchronizing element also needs to measure its own performance in
-      order to figure out if the performace problem is upstream of itself.
+      order to figure out if the performance problem is upstream of itself.
     </para>
     <para>
       These measurements are used to construct a QOS event that is sent
@@ -184,7 +184,7 @@
       <para>
         Long term corrections are a bit more difficult to perform. They
         rely on the value of the proportion in the QOS event. Elements should
-        reduce the amount of resources they comsume by the proportion 
+        reduce the amount of resources they consume by the proportion
         field in the QoS message.
       </para>
       <para>
