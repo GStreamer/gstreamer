@@ -1541,6 +1541,14 @@ gst_multi_queue_loop (GstPad * pad)
   GST_LOG_OBJECT (mq, "AFTER PUSHING sq->srcresult: %s",
       gst_flow_get_name (sq->srcresult));
 
+  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+  if (mq->numwaiting > 0 && sq->srcresult == GST_FLOW_EOS) {
+    compute_high_time (mq);
+    compute_high_id (mq);
+    wake_up_next_non_linked (mq);
+  }
+  GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+
   return;
 
 out_flushing:
