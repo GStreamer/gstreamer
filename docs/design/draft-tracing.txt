@@ -178,9 +178,13 @@ A few ideas that are not yet in the above spec:
   - the stats tracer logs 'new-element' and 'new-pad' messages
     - they add a unique 'ix' to each instance as the memory ptr can be reused
       for new instances, the data is attached to the objects as qdata
-    - the latency tracer would like to also ref this metadata
-- right now we log the classes as structures, it would be nice to add them to
-  the registry, so that gst-inspect can show them
+    - the latency tracer would like to also reference this metadata
+- enums and flags are logged as comma separated string to not require the front-
+  ends to know the flag values (is that okay?)
+- right now we log the classes as structures
+  - this is important so that the log is self contained
+  - it would be nice to add them to the registry, so that gst-inspect can show
+    them
 
 In addition to the above spec, each log event will contain a "ts" field as a
 G_TYPE_UINT64 to specify the time of the event.
@@ -248,6 +252,12 @@ refcounts (not yet implemented)
 - just logging them outside of glib/gobject would still make it hard to detect
   issues though
 
+opengl (not yet implemented)
+------
+- upload/download times
+- there is not hardware agnostic way to get e.g. memory usage info
+  (gl extensions)
+
 User interfaces
 ===============
 
@@ -293,27 +303,43 @@ Problems / Open items
       statements can be replaced by generic logging as shown in the log-tracer
     - add tools/gst-debug to extract a human readable debug log from the trace
       log
+  - we could maintain a list of log functions, where gst_tracer_log_trace() is
+    the default one. This way e.g. gst-validate could consume the traces
+    directly.
 
 - when hooking into a timer, should we just have some predefined intervals?
   - can we add a tracer module that registers the timer hook? then we could do
       GST_TRACER="timer(10ms);rusage"
     right now the tracer hooks are defined as an enum though.
+
 - when connecting to a running app, we can't easily get the 'current' state if
   logging is using a socket, as past events are not explicitly stored, we could 
   determine the current topology and emit events with GST_CLOCK_TIME_NONE as ts                                      
   to indicate that the events are synthetic.
+
+- we need stable ids for scopes (elements, pads)
+  - the address can be reused
+  - we can use gst_util_seqnum_next()
+  - something like gst_object_get_path_string() won't work as objects are 
+    initially without parent
+
+- right now the tracer is enabled/disabled from configure with 
+  --{enable,disable}-debug, we should probably add --{enable,disable}-tracer
+  although it is confusing with "--disable-trace disable tracing subsystem"
+  where we could at least change the doc-string to say "disable memory tracing
+  subsystem"
 
 Try it
 ======
 GST_DEBUG="GST_TRACER:7,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7" GST_TRACE=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
 - traces for buffer flow in TRACE level
 
-GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" gst-launch-1.0 2>trace.log fakesrc num-buffers=10 sizetype=fixed ! queue ! fakesink
+GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" GST_DEBUG_FILE=trace.log gst-launch-1.0 fakesrc num-buffers=10 sizetype=fixed ! queue ! fakesink
 gst-stats-1.0 trace.log
 - print some pipeline stats on exit
 
-GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" /usr/bin/gst-play-1.0 2>trace.log --interactive $HOME/Videos/movie.mp4
-./tools/gst-plot-traces.sh --format=png | gnuplot
+GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" GST_DEBUG_FILE=trace.log /usr/bin/gst-play-1.0 --interactive $HOME/Videos/movie.mp4
+./scripts/gst-plot-traces.sh --format=png | gnuplot
 eog trace.log.*.png
 - get ts, average-cpuload, current-cpuload, time and plot
 
@@ -322,20 +348,12 @@ GST_DEBUG="GST_TRACER:7" GST_TRACE=latency gst-launch-1.0 audiotestsrc num-buffe
 
 Performance
 ===========
-GST_DEBUG="GST_TRACER:7" GST_TRACE="stats;rusage" /usr/bin/gst-launch-1.0 2>trace.log playbin uri=file:///home/ensonic/Music/1.mp3 audio-sink="fakesink sync=false"
-0:00:42.531147106 (GList)
-0:00:09.273174008 (GQueue)!
-
-GST_DEBUG="GST_TRACER:7" GST_TRACE="rusage" /usr/bin/gst-launch-1.0 2>trace.log playbin uri=file:///home/ensonic/Music/1.mp3 audio-sink="fakesink sync=false"
-0:00:07.388375834
-
-GST_TRACE="rusage" /usr/bin/gst-launch-1.0 2>trace.log playbin uri=file:///home/ensonic/Music/1.mp3 audio-sink="fakesink sync=false"
-0:00:01.691596186
-
-/usr/bin/gst-launch-1.0 playbin uri=file:///home/ensonic/Music/1.mp3 audio-sink="fakesink sync=false"
-0:00:00.788497775
+run ./tests/benchmarks/tracing.sh <tracer(s)> <media>
 
 egrep -c "(proc|thread)-rusage" trace.log 
 658618
+grep -c "gst_tracer_log_trace" trace.log
+823351
 
-- we can optimize most with using quarks in structures or eventually avoid structures totally
+- we can optimize most of it by using quarks in structures or eventually avoid structures totally
+
