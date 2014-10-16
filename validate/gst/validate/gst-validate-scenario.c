@@ -1641,6 +1641,14 @@ _element_added_cb (GstBin * bin, GstElement * element,
   }
 }
 
+/**
+ * gst_validate_scenario_factory_create:
+ * @runner: The #GstValidateRunner to use to report issues
+ * @pipeline: The pipeline to run the scenario on
+ * @scenario_name: The name (or path) of the scenario to run
+ *
+ * Returns: (transfer full): A #GstValidateScenario or NULL
+ */
 GstValidateScenario *
 gst_validate_scenario_factory_create (GstValidateRunner *
     runner, GstElement * pipeline, const gchar * scenario_name)

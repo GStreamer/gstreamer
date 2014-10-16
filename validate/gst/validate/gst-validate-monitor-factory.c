@@ -43,11 +43,11 @@
  * gst_validate_monitor_factory_create:
  * @target: The #GstObject to create a #GstValidateMonitor for
  * @runner: The #GstValidateRunner to use for the new monitor
- * @parent: (optional): The parent of the new monitor
+ * @parent: (optional) (nullable): The parent of the new monitor
  *
  * Create a new monitor for @target and starts monitoring it.
  *
- * Returns: The newly created #GstValidateMonitor
+ * Returns: (transfer full): The newly created #GstValidateMonitor
  */
 GstValidateMonitor *
 gst_validate_monitor_factory_create (GstObject * target,
