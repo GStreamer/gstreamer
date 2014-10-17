@@ -72,15 +72,10 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
 
   factory = g_object_newv (GST_TYPE_TYPE_FIND_FACTORY, 0, NULL);
   GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);
-  g_assert (GST_IS_TYPE_FIND_FACTORY (factory));
 
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE_CAST (factory), name);
   gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE_CAST (factory), rank);
 
-  if (factory->extensions) {
-    g_strfreev (factory->extensions);
-    factory->extensions = NULL;
-  }
   if (extensions)
     factory->extensions = g_strsplit (extensions, ",", -1);
 
