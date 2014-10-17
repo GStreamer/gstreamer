@@ -203,10 +203,11 @@ on_read_bytes (GPollableInputStream * stream, Client * client)
     return FALSE;
   } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
     guint8 *tmp = client->current_message->data;
+    guint tmp_len = client->current_message->len;
 
     g_clear_error (&err);
 
-    while (client->current_message->len > 3) {
+    while (tmp_len > 3) {
       if (tmp[0] == 0x0d && tmp[1] == 0x0a && tmp[2] == 0x0d && tmp[3] == 0x0a) {
         guint len;
 
@@ -215,8 +216,10 @@ on_read_bytes (GPollableInputStream * stream, Client * client)
         client_message (client, (gchar *) client->current_message->data, len);
         g_byte_array_remove_range (client->current_message, 0, len);
         tmp = client->current_message->data;
+	tmp_len = client->current_message->len;
       } else {
         tmp++;
+	tmp_len--;
       }
     }
 
