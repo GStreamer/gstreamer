@@ -161,6 +161,10 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
       "seqnum-offset", G_TYPE_UINT, 56, "timestamp-offset", G_TYPE_UINT, 57,
       "ssrc", G_TYPE_UINT, 66, NULL);
   fail_unless (gst_pad_set_caps (src1, caps));
+  gst_caps_unref (caps);
+
+  caps = gst_pad_peer_query_caps (sink, NULL);
+  fail_if (gst_caps_is_empty (caps));
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
   segment.start = 100000;
