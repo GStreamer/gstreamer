@@ -352,14 +352,17 @@ main (gint argc, gchar ** argv)
 
   gst_init (&argc, &argv);
 
-  if (argc < 2) {
-    g_print ("usage: %s <launch line>\n"
-        "example: %s ( videotestsrc ! theoraenc ! oggmux name=stream )\n",
+  if (argc < 4) {
+    g_print ("usage: %s PORT <launch line>\n"
+        "example: %s 8080 ( videotestsrc ! theoraenc ! oggmux name=stream )\n",
         argv[0], argv[0]);
     return -1;
   }
 
-  bin = gst_parse_launchv ((const gchar **) argv + 1, &err);
+  const gchar *port_str = argv[1];
+  const int port = (int) g_ascii_strtoll(port_str, NULL, 10);
+
+  bin = gst_parse_launchv ((const gchar **) argv + 2, &err);
   if (!bin) {
     g_print ("invalid pipeline: %s\n", err->message);
     g_clear_error (&err);
@@ -422,14 +425,14 @@ main (gint argc, gchar ** argv)
   }
 
   service = g_socket_service_new ();
-  g_socket_listener_add_inet_port (G_SOCKET_LISTENER (service), 8080, NULL,
+  g_socket_listener_add_inet_port (G_SOCKET_LISTENER (service), port, NULL,
       NULL);
 
   g_signal_connect (service, "incoming", G_CALLBACK (on_new_connection), NULL);
 
   g_socket_service_start (service);
 
-  g_print ("Listening on http://127.0.0.1:8080/\n");
+  g_print ("Listening on http://127.0.0.1:%d/\n", port);
 
   g_main_loop_run (loop);
 
