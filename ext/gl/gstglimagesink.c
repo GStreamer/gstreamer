@@ -1090,7 +1090,8 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
-
+  if (glimage_sink->context->gl_vtable->FenceSync)
+    gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
 
   gl_apis =
       gst_gl_api_to_string (gst_gl_context_get_gl_api (glimage_sink->context));
