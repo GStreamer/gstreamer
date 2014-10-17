@@ -5,7 +5,7 @@ libgstrtpbad_la_SOURCES = \
 	gstrtph265depay.c \
 	gstrtph265pay.c
 
-libgstrtpbad_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_BASE_CFLAGS) \
+libgstrtpbad_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)
 
 libgstrtpbad_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
