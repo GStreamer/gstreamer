@@ -223,6 +223,8 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
+  if (mix->context->gl_vtable->FenceSync)
+    gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
 
   gl_apis = gst_gl_api_to_string (gst_gl_context_get_gl_api (mix->context));
   platform =
@@ -778,6 +780,7 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   guint out_width, out_height;
   GstGLContext *other_context = NULL;
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (mix);
+  gboolean same_downstream_gl_context = FALSE;
 
   if (!gst_gl_ensure_element_data (mix, &mix->display, &mix->other_context))
     return FALSE;
@@ -799,6 +802,7 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
         mix->context = context;
         if (old)
           gst_object_unref (old);
+        same_downstream_gl_context = TRUE;
       } else if (gst_structure_get (upload_meta_params, "gst.gl.context.handle",
               G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
               &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
@@ -882,13 +886,23 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
     update_pool = FALSE;
   }
 
-  if (!pool)
+  if (!pool || (!same_downstream_gl_context
+          && gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE,
+              NULL)
+          && !gst_buffer_pool_has_option (pool,
+              GST_BUFFER_POOL_OPTION_GL_SYNC_META))) {
+    /* can't use this pool */
+    if (pool)
+      gst_object_unref (pool);
     pool = gst_gl_buffer_pool_new (mix->context);
-
+  }
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL))
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_GL_SYNC_META);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 
@@ -1075,6 +1089,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       GstCapsFeatures *gl_features;
       GstVideoInfo gl_info;
       GstVideoFrame gl_frame;
+      GstGLSyncMeta *sync_meta;
 
       gst_video_info_set_format (&gl_info,
           GST_VIDEO_FORMAT_RGBA,
@@ -1095,6 +1110,10 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
         gst_caps_unref (in_caps);
       }
+
+      sync_meta = gst_buffer_get_gl_sync_meta (vaggpad->buffer);
+      if (sync_meta)
+        gst_gl_sync_meta_wait (sync_meta);
 
       if (!gst_gl_upload_perform_with_buffer (pad->upload,
               vaggpad->buffer, &gl_buf)) {
@@ -1207,11 +1226,16 @@ gst_gl_mixer_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   gboolean res = FALSE;
   GstGLMixer *mix = GST_GL_MIXER (vagg);
   GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (vagg);
+  GstGLSyncMeta *sync_meta;
 
   if (mix_class->process_buffers)
     res = gst_gl_mixer_process_buffers (mix, outbuf);
   else if (mix_class->process_textures)
     res = gst_gl_mixer_process_textures (mix, outbuf);
+
+  sync_meta = gst_buffer_get_gl_sync_meta (outbuf);
+  if (sync_meta)
+    gst_gl_sync_meta_set_sync_point (sync_meta, mix->context);
 
   return res ? GST_FLOW_OK : GST_FLOW_ERROR;
 }

@@ -591,6 +591,7 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   GstClockTime next_time;
   gint width, height;
   GstVideoFrame out_frame;
+  GstGLSyncMeta *sync_meta;
   guint out_tex;
   gboolean to_download =
       gst_caps_features_is_equal (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY,
@@ -661,6 +662,10 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     }
   }
   gst_video_frame_unmap (&out_frame);
+
+  sync_meta = gst_buffer_get_gl_sync_meta (buffer);
+  if (sync_meta)
+    gst_gl_sync_meta_set_sync_point (sync_meta, src->context);
 
   GST_BUFFER_TIMESTAMP (buffer) = src->timestamp_offset + src->running_time;
   GST_BUFFER_OFFSET (buffer) = src->n_frames;
@@ -756,6 +761,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   guint idx;
   guint out_width, out_height;
   GstGLContext *other_context = NULL;
+  gboolean same_downstream_gl_context;
 
   if (!gst_gl_ensure_element_data (src, &src->display, &src->other_context))
     return FALSE;
@@ -777,6 +783,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
         src->context = context;
         if (old)
           gst_object_unref (old);
+        same_downstream_gl_context = TRUE;
       } else if (gst_structure_get (upload_meta_params, "gst.gl.context.handle",
               G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
               &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
@@ -837,14 +844,26 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
     update_pool = FALSE;
   }
 
-  if (!pool)
+  if (!pool || (!same_downstream_gl_context
+          && gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE,
+              NULL)
+          && !gst_buffer_pool_has_option (pool,
+              GST_BUFFER_POOL_OPTION_GL_SYNC_META))) {
+    /* can't use this pool */
+    if (pool)
+      gst_object_unref (pool);
     pool = gst_gl_buffer_pool_new (src->context);
-
+  }
   config = gst_buffer_pool_get_config (pool);
+
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL))
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_GL_SYNC_META);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
+
   gst_buffer_pool_set_config (pool, config);
 
   if (update_pool)

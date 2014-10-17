@@ -1339,13 +1339,6 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
     return;
   }
 
-  gst_buffer_add_video_meta_full (convert->outbuf, 0,
-      GST_VIDEO_INFO_FORMAT (&convert->out_info),
-      GST_VIDEO_INFO_WIDTH (&convert->out_info),
-      GST_VIDEO_INFO_HEIGHT (&convert->out_info),
-      GST_VIDEO_INFO_N_PLANES (&convert->out_info),
-      convert->out_info.offset, convert->out_info.stride);
-
   for (i = 0; i < c_info->in_n_textures; i++) {
     convert->priv->in_tex[i] =
         (GstGLMemory *) gst_buffer_peek_memory (convert->inbuf, i);

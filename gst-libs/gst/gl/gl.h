@@ -44,5 +44,6 @@
 #include <gst/gl/gstglframebuffer.h>
 #include <gst/gl/gstglfilter.h>
 #include <gst/gl/gstglshadervariables.h>
+#include <gst/gl/gstglsyncmeta.h>
 
 #endif /* __GST_GL_H__ */

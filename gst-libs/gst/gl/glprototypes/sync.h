@@ -22,7 +22,6 @@ GST_GL_EXT_BEGIN (sync,
                   GST_GL_API_OPENGL3,
                   3, 2,
                   3, 0,
-/* FIXME: the extension depends on GL 3.1 */
                   "",
                   "")
 GST_GL_EXT_FUNCTION (GLsync, FenceSync,

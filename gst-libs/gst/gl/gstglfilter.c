@@ -944,6 +944,8 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
+  if (filter->context->gl_vtable->FenceSync)
+    gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
 
   gl_apis = gst_gl_api_to_string (gst_gl_context_get_gl_api (filter->context));
   platform =
@@ -1017,6 +1019,7 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   GError *error = NULL;
   guint in_width, in_height, out_width, out_height;
   GstGLContext *other_context = NULL;
+  gboolean same_downstream_gl_context = FALSE;
 
   if (!gst_gl_ensure_element_data (filter, &filter->display,
           &filter->other_context))
@@ -1039,6 +1042,7 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
         filter->context = context;
         if (old)
           gst_object_unref (old);
+        same_downstream_gl_context = TRUE;
       } else if (gst_structure_get (upload_meta_params, "gst.gl.context.handle",
               G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
               &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
@@ -1132,13 +1136,23 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     update_pool = FALSE;
   }
 
-  if (!pool)
+  if (!pool || (!same_downstream_gl_context
+          && gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE,
+              NULL)
+          && !gst_buffer_pool_has_option (pool,
+              GST_BUFFER_POOL_OPTION_GL_SYNC_META))) {
+    /* can't use this pool */
+    if (pool)
+      gst_object_unref (pool);
     pool = gst_gl_buffer_pool_new (filter->context);
-
+  }
   config = gst_buffer_pool_get_config (pool);
 
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL))
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_GL_SYNC_META);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 
@@ -1275,6 +1289,7 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 {
   GstGLFilter *filter;
   GstGLFilterClass *filter_class;
+  GstGLSyncMeta *out_sync_meta, *in_sync_meta;
 
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (bt);
@@ -1310,10 +1325,18 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
   g_assert (filter_class->filter || filter_class->filter_texture);
 
+  in_sync_meta = gst_buffer_get_gl_sync_meta (inbuf);
+  if (in_sync_meta)
+    gst_gl_sync_meta_wait (in_sync_meta);
+
   if (filter_class->filter)
     filter_class->filter (filter, inbuf, outbuf);
   else if (filter_class->filter_texture)
     gst_gl_filter_filter_texture (filter, inbuf, outbuf);
+
+  out_sync_meta = gst_buffer_get_gl_sync_meta (outbuf);
+  if (out_sync_meta)
+    gst_gl_sync_meta_set_sync_point (out_sync_meta, filter->context);
 
   return GST_FLOW_OK;
 }
