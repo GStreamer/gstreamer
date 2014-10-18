@@ -839,7 +839,7 @@ gst_value_transform_array_string (const GValue * src_value, GValue * dest_value)
 
 /* Do an unordered compare of the contents of a list */
 static gint
-gst_value_compare_list (const GValue * value1, const GValue * value2)
+gst_value_compare_value_list (const GValue * value1, const GValue * value2)
 {
   guint i, j;
   GArray *array1 = value1->data[0].v_pointer;
@@ -894,7 +894,7 @@ gst_value_compare_list (const GValue * value1, const GValue * value2)
 
 /* Perform an ordered comparison of the contents of an array */
 static gint
-gst_value_compare_array (const GValue * value1, const GValue * value2)
+gst_value_compare_value_array (const GValue * value1, const GValue * value2)
 {
   guint i;
   GArray *array1 = value1->data[0].v_pointer;
@@ -917,26 +917,26 @@ gst_value_compare_array (const GValue * value1, const GValue * value2)
 }
 
 static gchar *
-gst_value_serialize_list (const GValue * value)
+gst_value_serialize_value_list (const GValue * value)
 {
   return gst_value_serialize_any_list (value, "{ ", " }");
 }
 
 static gboolean
-gst_value_deserialize_list (GValue * dest, const gchar * s)
+gst_value_deserialize_value_list (GValue * dest, const gchar * s)
 {
   g_warning ("gst_value_deserialize_list: unimplemented");
   return FALSE;
 }
 
 static gchar *
-gst_value_serialize_array (const GValue * value)
+gst_value_serialize_value_array (const GValue * value)
 {
   return gst_value_serialize_any_list (value, "< ", " >");
 }
 
 static gboolean
-gst_value_deserialize_array (GValue * dest, const gchar * s)
+gst_value_deserialize_value_array (GValue * dest, const gchar * s)
 {
   g_warning ("gst_value_deserialize_array: unimplemented");
   return FALSE;
@@ -2688,18 +2688,6 @@ gst_value_deserialize_ ## _type (GValue * dest, const gchar *s)         \
   }                                                                     \
   return ret;                                                           \
 }
-
-#define REGISTER_SERIALIZATION(_gtype, _type)                           \
-G_STMT_START {                                                          \
-  static const GstValueTable gst_value = {                              \
-    _gtype,                                                             \
-    gst_value_compare_ ## _type,                                        \
-    gst_value_serialize_ ## _type,                                      \
-    gst_value_deserialize_ ## _type,                                    \
-  };                                                                    \
-                                                                        \
-  gst_value_register (&gst_value);                                      \
-} G_STMT_END
 
 CREATE_SERIALIZATION (int, INT);
 CREATE_SERIALIZATION (int64, INT64);
@@ -6129,268 +6117,105 @@ gst_g_thread_get_type (void)
 #endif
 }
 
+#define SERIAL_VTABLE(t,c,s,d) { t, c, s, d }
+
+#define REGISTER_SERIALIZATION_CONST(_gtype, _type)                     \
+G_STMT_START {                                                          \
+  static const GstValueTable gst_value =                                \
+    SERIAL_VTABLE (_gtype, gst_value_compare_ ## _type,                 \
+    gst_value_serialize_ ## _type, gst_value_deserialize_ ## _type);    \
+  gst_value_register (&gst_value);                                      \
+} G_STMT_END
+
+#define REGISTER_SERIALIZATION(_gtype, _type)                           \
+G_STMT_START {                                                          \
+  static GstValueTable gst_value =                                      \
+    SERIAL_VTABLE (0, gst_value_compare_ ## _type,                      \
+    gst_value_serialize_ ## _type, gst_value_deserialize_ ## _type);    \
+  gst_value.type = _gtype;                                              \
+  gst_value_register (&gst_value);                                      \
+} G_STMT_END
+
+#define REGISTER_SERIALIZATION_NO_COMPARE(_gtype, _type)                \
+G_STMT_START {                                                          \
+  static GstValueTable gst_value =                                      \
+    SERIAL_VTABLE (0, NULL,                                             \
+    gst_value_serialize_ ## _type, gst_value_deserialize_ ## _type);    \
+  gst_value.type = _gtype;                                              \
+  gst_value_register (&gst_value);                                      \
+} G_STMT_END
+
+#define REGISTER_SERIALIZATION_COMPARE_ONLY(_gtype, _type)              \
+G_STMT_START {                                                          \
+  static GstValueTable gst_value =                                      \
+    SERIAL_VTABLE (0, gst_value_compare_ ## _type,                      \
+        NULL, NULL);                                                    \
+  gst_value.type = _gtype;                                              \
+  gst_value_register (&gst_value);                                      \
+} G_STMT_END
+
+static const gint GST_VALUE_TABLE_DEFAULT_SIZE = 32;
+static const gint GST_VALUE_UNION_TABLE_DEFAULT_SIZE = 2;
+static const gint GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE = 9;
+static const gint GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE = 12;
+
 void
 _priv_gst_value_initialize (void)
 {
-  gst_value_table = g_array_new (FALSE, FALSE, sizeof (GstValueTable));
+  gst_value_table =
+      g_array_sized_new (FALSE, FALSE, sizeof (GstValueTable),
+      GST_VALUE_TABLE_DEFAULT_SIZE);
   gst_value_hash = g_hash_table_new (NULL, NULL);
-  gst_value_union_funcs = g_array_new (FALSE, FALSE,
-      sizeof (GstValueUnionInfo));
-  gst_value_intersect_funcs = g_array_new (FALSE, FALSE,
-      sizeof (GstValueIntersectInfo));
-  gst_value_subtract_funcs = g_array_new (FALSE, FALSE,
-      sizeof (GstValueSubtractInfo));
+  gst_value_union_funcs = g_array_sized_new (FALSE, FALSE,
+      sizeof (GstValueUnionInfo), GST_VALUE_UNION_TABLE_DEFAULT_SIZE);
+  gst_value_intersect_funcs = g_array_sized_new (FALSE, FALSE,
+      sizeof (GstValueIntersectInfo), GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE);
+  gst_value_subtract_funcs = g_array_sized_new (FALSE, FALSE,
+      sizeof (GstValueSubtractInfo), GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE);
 
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_int_range,
-      gst_value_serialize_int_range,
-      gst_value_deserialize_int_range,
-    };
+  REGISTER_SERIALIZATION (gst_int_range_get_type (), int_range);
+  REGISTER_SERIALIZATION (gst_int64_range_get_type (), int64_range);
+  REGISTER_SERIALIZATION (gst_double_range_get_type (), double_range);
+  REGISTER_SERIALIZATION (gst_fraction_range_get_type (), fraction_range);
+  REGISTER_SERIALIZATION (gst_value_list_get_type (), value_list);
+  REGISTER_SERIALIZATION (gst_value_array_get_type (), value_array);
+  REGISTER_SERIALIZATION (gst_buffer_get_type (), buffer);
+  REGISTER_SERIALIZATION (gst_sample_get_type (), sample);
+  REGISTER_SERIALIZATION (gst_fraction_get_type (), fraction);
+  REGISTER_SERIALIZATION (gst_caps_get_type (), caps);
+  REGISTER_SERIALIZATION (gst_tag_list_get_type (), tag_list);
+  REGISTER_SERIALIZATION (G_TYPE_DATE, date);
+  REGISTER_SERIALIZATION (gst_date_time_get_type (), date_time);
+  REGISTER_SERIALIZATION (gst_bitmask_get_type (), bitmask);
 
-    gst_value.type = gst_int_range_get_type ();
-    gst_value_register (&gst_value);
-  }
+  REGISTER_SERIALIZATION_NO_COMPARE (gst_segment_get_type (), segment);
+  REGISTER_SERIALIZATION_NO_COMPARE (gst_structure_get_type (), structure);
+  REGISTER_SERIALIZATION_NO_COMPARE (gst_caps_features_get_type (),
+      caps_features);
 
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_int64_range,
-      gst_value_serialize_int64_range,
-      gst_value_deserialize_int64_range,
-    };
+  REGISTER_SERIALIZATION_COMPARE_ONLY (gst_allocation_params_get_type (),
+      allocation_params);
+  REGISTER_SERIALIZATION_COMPARE_ONLY (G_TYPE_OBJECT, object);
 
-    gst_value.type = gst_int64_range_get_type ();
-    gst_value_register (&gst_value);
-  }
+  REGISTER_SERIALIZATION_CONST (G_TYPE_DOUBLE, double);
+  REGISTER_SERIALIZATION_CONST (G_TYPE_FLOAT, float);
 
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_double_range,
-      gst_value_serialize_double_range,
-      gst_value_deserialize_double_range,
-    };
+  REGISTER_SERIALIZATION_CONST (G_TYPE_STRING, string);
+  REGISTER_SERIALIZATION_CONST (G_TYPE_BOOLEAN, boolean);
+  REGISTER_SERIALIZATION_CONST (G_TYPE_ENUM, enum);
 
-    gst_value.type = gst_double_range_get_type ();
-    gst_value_register (&gst_value);
-  }
+  REGISTER_SERIALIZATION_CONST (G_TYPE_FLAGS, flags);
 
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_fraction_range,
-      gst_value_serialize_fraction_range,
-      gst_value_deserialize_fraction_range,
-    };
+  REGISTER_SERIALIZATION_CONST (G_TYPE_INT, int);
 
-    gst_value.type = gst_fraction_range_get_type ();
-    gst_value_register (&gst_value);
-  }
+  REGISTER_SERIALIZATION_CONST (G_TYPE_INT64, int64);
+  REGISTER_SERIALIZATION_CONST (G_TYPE_LONG, long);
 
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_list,
-      gst_value_serialize_list,
-      gst_value_deserialize_list,
-    };
+  REGISTER_SERIALIZATION_CONST (G_TYPE_UINT, uint);
+  REGISTER_SERIALIZATION_CONST (G_TYPE_UINT64, uint64);
+  REGISTER_SERIALIZATION_CONST (G_TYPE_ULONG, ulong);
 
-    gst_value.type = gst_value_list_get_type ();
-    gst_value_register (&gst_value);
-  }
-
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_array,
-      gst_value_serialize_array,
-      gst_value_deserialize_array,
-    };
-
-    gst_value.type = gst_value_array_get_type ();
-    gst_value_register (&gst_value);
-  }
-
-  {
-#if 0
-    static const GTypeValueTable value_table = {
-      gst_value_init_buffer,
-      NULL,
-      gst_value_copy_buffer,
-      NULL,
-      "i",
-      NULL,                     /*gst_value_collect_buffer, */
-      "p",
-      NULL                      /*gst_value_lcopy_buffer */
-    };
-#endif
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_buffer,
-      gst_value_serialize_buffer,
-      gst_value_deserialize_buffer,
-    };
-
-    gst_value.type = GST_TYPE_BUFFER;
-    gst_value_register (&gst_value);
-  }
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_sample,
-      gst_value_serialize_sample,
-      gst_value_deserialize_sample,
-    };
-
-    gst_value.type = GST_TYPE_SAMPLE;
-    gst_value_register (&gst_value);
-  }
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_fraction,
-      gst_value_serialize_fraction,
-      gst_value_deserialize_fraction,
-    };
-
-    gst_value.type = gst_fraction_get_type ();
-    gst_value_register (&gst_value);
-  }
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_caps,
-      gst_value_serialize_caps,
-      gst_value_deserialize_caps,
-    };
-
-    gst_value.type = GST_TYPE_CAPS;
-    gst_value_register (&gst_value);
-  }
-  {
-    static GstValueTable gst_value = {
-      0,
-      NULL,
-      gst_value_serialize_segment,
-      gst_value_deserialize_segment,
-    };
-
-    gst_value.type = GST_TYPE_SEGMENT;
-    gst_value_register (&gst_value);
-  }
-  {
-    static GstValueTable gst_value = {
-      0,
-      NULL,
-      gst_value_serialize_structure,
-      gst_value_deserialize_structure,
-    };
-
-    gst_value.type = GST_TYPE_STRUCTURE;
-    gst_value_register (&gst_value);
-  }
-  {
-    static GstValueTable gst_value = {
-      0,
-      NULL,
-      gst_value_serialize_caps_features,
-      gst_value_deserialize_caps_features,
-    };
-
-    gst_value.type = GST_TYPE_CAPS_FEATURES;
-    gst_value_register (&gst_value);
-  }
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_tag_list,
-      gst_value_serialize_tag_list,
-      gst_value_deserialize_tag_list,
-    };
-
-    gst_value.type = GST_TYPE_TAG_LIST;
-    gst_value_register (&gst_value);
-  }
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_date,
-      gst_value_serialize_date,
-      gst_value_deserialize_date,
-    };
-
-    gst_value.type = G_TYPE_DATE;
-    gst_value_register (&gst_value);
-  }
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_date_time,
-      gst_value_serialize_date_time,
-      gst_value_deserialize_date_time,
-    };
-
-    gst_value.type = gst_date_time_get_type ();
-    gst_value_register (&gst_value);
-  }
-
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_bitmask,
-      gst_value_serialize_bitmask,
-      gst_value_deserialize_bitmask,
-    };
-
-    gst_value.type = gst_bitmask_get_type ();
-    gst_value_register (&gst_value);
-  }
-
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_allocation_params,
-      NULL,
-      NULL,
-    };
-
-    gst_value.type = gst_allocation_params_get_type ();
-    gst_value_register (&gst_value);
-  }
-
-  {
-    static GstValueTable gst_value = {
-      0,
-      gst_value_compare_object,
-      NULL,
-      NULL,
-    };
-
-    gst_value.type = G_TYPE_OBJECT;
-    gst_value_register (&gst_value);
-  }
-
-  REGISTER_SERIALIZATION (G_TYPE_DOUBLE, double);
-  REGISTER_SERIALIZATION (G_TYPE_FLOAT, float);
-
-  REGISTER_SERIALIZATION (G_TYPE_STRING, string);
-  REGISTER_SERIALIZATION (G_TYPE_BOOLEAN, boolean);
-  REGISTER_SERIALIZATION (G_TYPE_ENUM, enum);
-
-  REGISTER_SERIALIZATION (G_TYPE_FLAGS, flags);
-
-  REGISTER_SERIALIZATION (G_TYPE_INT, int);
-
-  REGISTER_SERIALIZATION (G_TYPE_INT64, int64);
-  REGISTER_SERIALIZATION (G_TYPE_LONG, long);
-
-  REGISTER_SERIALIZATION (G_TYPE_UINT, uint);
-  REGISTER_SERIALIZATION (G_TYPE_UINT64, uint64);
-  REGISTER_SERIALIZATION (G_TYPE_ULONG, ulong);
-
-  REGISTER_SERIALIZATION (G_TYPE_UCHAR, uchar);
+  REGISTER_SERIALIZATION_CONST (G_TYPE_UCHAR, uchar);
 
   g_value_register_transform_func (GST_TYPE_INT_RANGE, G_TYPE_STRING,
       gst_value_transform_int_range_string);
@@ -6488,6 +6313,31 @@ _priv_gst_value_initialize (void)
       gst_value_union_int_int_range);
   gst_value_register_union_func (GST_TYPE_INT_RANGE, GST_TYPE_INT_RANGE,
       gst_value_union_int_range_int_range);
+
+#if GST_VERSION_NANO == 1
+  /* If building from git master, check starting array sizes matched actual size
+   * so we can keep the defines in sync and save a few reallocs on startup */
+  if (gst_value_table->len != GST_VALUE_TABLE_DEFAULT_SIZE) {
+    GST_ERROR ("Wrong initial gst_value_table size. "
+        "Please set GST_VALUE_TABLE_DEFAULT_SIZE to %u in gstvalue.c",
+        gst_value_table->len);
+  }
+  if (gst_value_union_funcs->len != GST_VALUE_UNION_TABLE_DEFAULT_SIZE) {
+    GST_ERROR ("Wrong initial gst_value_union_funcs table size. "
+        "Please set GST_VALUE_UNION_TABLE_DEFAULT_SIZE to %u in gstvalue.c",
+        gst_value_union_funcs->len);
+  }
+  if (gst_value_intersect_funcs->len != GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE) {
+    GST_ERROR ("Wrong initial gst_value_intersect_funcs table size. "
+        "Please set GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE to %u in gstvalue.c",
+        gst_value_intersect_funcs->len);
+  }
+  if (gst_value_subtract_funcs->len != GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE) {
+    GST_ERROR ("Wrong initial gst_value_subtract_funcs table size. "
+        "Please set GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE to %u in gstvalue.c",
+        gst_value_subtract_funcs->len);
+  }
+#endif
 
 #if 0
   /* Implement these if needed */
