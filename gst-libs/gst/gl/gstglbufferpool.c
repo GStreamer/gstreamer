@@ -51,6 +51,7 @@ struct _GstGLBufferPoolPrivate
   gint im_format;
   GstVideoInfo info;
   gboolean add_videometa;
+  gboolean add_uploadmeta;
   gboolean want_eglimage;
   GstBuffer *last_buffer;
 };
@@ -71,7 +72,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLBufferPool, gst_gl_buffer_pool,
 static const gchar **
 gst_gl_buffer_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
+    GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META, NULL
   };
 
   return options;
@@ -128,6 +130,8 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   priv->add_videometa = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
+  priv->add_uploadmeta = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 
 #if GST_GL_HAVE_PLATFORM_EGL
   g_assert (priv->allocator != NULL);
@@ -217,7 +221,8 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (!gst_gl_memory_setup_buffer (glpool->context, info, buf))
     goto mem_create_failed;
 
-  gst_gl_upload_meta_add_to_buffer (glpool->upload, buf);
+  if (priv->add_uploadmeta)
+    gst_gl_upload_meta_add_to_buffer (glpool->upload, buf);
 
   *buffer = buf;
 

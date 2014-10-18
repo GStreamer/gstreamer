@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include <gst/video/gstvideometa.h>
+
 #include "gstglfilter.h"
 
 #if GST_GL_HAVE_PLATFORM_EGL
@@ -1130,8 +1132,12 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     pool = gst_gl_buffer_pool_new (filter->context);
 
   config = gst_buffer_pool_get_config (pool);
+
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
+
   gst_buffer_pool_set_config (pool, config);
 
   if (filter->upload) {
