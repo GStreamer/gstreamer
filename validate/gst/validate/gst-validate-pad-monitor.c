@@ -1588,7 +1588,7 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
           pad_monitor->pending_newsegment_seqnum = 0;
         } else {
           GST_VALIDATE_REPORT (pad_monitor, EVENT_HAS_WRONG_SEQNUM,
-              "The expected EOS seqnum should be the same as the "
+              "The expected segment seqnum should be the same as the "
               "one from the seek that caused it. Got: %u."
               " Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
         }
@@ -1630,7 +1630,11 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
     }
     case GST_EVENT_EOS:
       pad_monitor->is_eos = TRUE;
-      if (pad_monitor->pending_eos_seqnum != seqnum) {
+      if (pad_monitor->pending_eos_seqnum == 0) {
+        GST_VALIDATE_REPORT (pad_monitor, EVENT_EOS_WITHOUT_SEGMENT,
+            "EOS %" GST_PTR_FORMAT " received before a segment was received",
+            event);
+      } else if (pad_monitor->pending_eos_seqnum != seqnum) {
         GST_VALIDATE_REPORT (pad_monitor, EVENT_HAS_WRONG_SEQNUM,
             "The expected EOS seqnum should be the same as the "
             "one from the seek that caused it. Got: %u."
