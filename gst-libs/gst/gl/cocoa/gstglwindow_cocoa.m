@@ -33,7 +33,7 @@
 /*                                                              */
 /* =============================================================*/
 
-@interface GstGLNSWindow: NSWindow {
+@interface GstGLNSWindow: NSWindow <NSApplicationDelegate> {
   BOOL m_isClosed;
   GstGLWindowCocoa *window_cocoa;
 }
@@ -138,7 +138,7 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa, NSRect rect)
 
       GST_DEBUG ("NSWindow id: %"G_GUINTPTR_FORMAT, (guintptr) priv->internal_win_id);
 
-      [NSApp setDelegate: priv->internal_win_id];
+      [[NSApplication sharedApplication] setDelegate: priv->internal_win_id];
 
   return TRUE;
 }
