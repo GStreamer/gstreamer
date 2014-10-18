@@ -23,6 +23,9 @@ case `$INDENT --version` in
       ;;
 esac
 
+# Run twice. GNU indent isn't idempotent
+# when run once
+for i in 1 2; do
 $INDENT \
   --braces-on-if-line \
   --case-brace-indentation0 \
@@ -37,4 +40,5 @@ $INDENT \
   --tab-size8 \
   --indent-level2 \
   --leave-preprocessor-space \
-  $*
+  $* || exit $?
+done
