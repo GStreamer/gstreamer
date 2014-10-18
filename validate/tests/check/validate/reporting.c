@@ -151,10 +151,10 @@ _create_issues (GstValidateRunner * runner)
 
   /* There's gonna be some clunkiness in here because of funnel */
   probe_id1 = gst_pad_add_probe (srcpad1,
-      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) drop_buffers, NULL, NULL);
   probe_id2 = gst_pad_add_probe (srcpad2,
-      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) drop_buffers, NULL, NULL);
 
   /* We want to handle the src behaviour ourselves */

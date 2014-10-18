@@ -1435,6 +1435,9 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
         }
       }
 
+      pad_monitor->pending_newsegment_seqnum = seqnum;
+      pad_monitor->pending_eos_seqnum = seqnum;
+
       if (!pad_monitor->pending_flush_stop) {
         gchar *event_str = _get_event_string (event);
 
@@ -1584,13 +1587,14 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
         if (pad_monitor->pending_newsegment_seqnum == seqnum) {
           pad_monitor->pending_newsegment_seqnum = 0;
         } else {
-          /* TODO is this an error? could be a segment from the start
-           * received just before the seek segment */
+          GST_VALIDATE_REPORT (pad_monitor, EVENT_HAS_WRONG_SEQNUM,
+              "The expected EOS seqnum should be the same as the "
+              "one from the seek that caused it. Got: %u."
+              " Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
         }
       }
 
-      /* got a segment, no need for EOS now */
-      pad_monitor->pending_eos_seqnum = 0;
+      pad_monitor->pending_eos_seqnum = seqnum;
 
       if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
         gst_validate_pad_monitor_add_expected_newsegment (pad_monitor, event);
@@ -1626,13 +1630,13 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
     }
     case GST_EVENT_EOS:
       pad_monitor->is_eos = TRUE;
-      if (pad_monitor->pending_eos_seqnum &&
-          pad_monitor->pending_eos_seqnum != seqnum) {
+      if (pad_monitor->pending_eos_seqnum != seqnum) {
         GST_VALIDATE_REPORT (pad_monitor, EVENT_HAS_WRONG_SEQNUM,
             "The expected EOS seqnum should be the same as the "
             "one from the seek that caused it. Got: %u."
             " Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
       }
+
       /*
        * TODO add end of stream checks for
        *  - events not pushed
@@ -1724,8 +1728,6 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
         pad_monitor->pending_flush_start_seqnum = seqnum;
         pad_monitor->pending_flush_stop_seqnum = seqnum;
       }
-      pad_monitor->pending_newsegment_seqnum = seqnum;
-      pad_monitor->pending_eos_seqnum = seqnum;
     }
       break;
       /* both flushes are handled by the common event handling function */

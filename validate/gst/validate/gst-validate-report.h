@@ -80,6 +80,7 @@ typedef enum {
 #define EVENT_CAPS_DUPLICATE                     _QUARK("event::caps-duplicate")
 #define EVENT_SEEK_NOT_HANDLED                   _QUARK("event::seek-not-handled")
 #define EVENT_SEEK_RESULT_POSITION_WRONG         _QUARK("event::seek-result-position-wrong")
+#define EVENT_EOS_WITHOUT_SEGMENT                _QUARK("event::eos-without-segment")
 
 #define STATE_CHANGE_FAILURE                     _QUARK("state::change-failure")
 

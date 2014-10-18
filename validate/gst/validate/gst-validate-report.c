@@ -225,6 +225,12 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (CRITICAL, EVENT_SEEK_RESULT_POSITION_WRONG,
       _("position after a seek is wrong"), NULL);
 
+  REGISTER_VALIDATE_ISSUE (WARNING, EVENT_EOS_WITHOUT_SEGMENT,
+      _("EOS received without segment event before"),
+      _("A segment event should always be sent before data flow"
+          " EOS being some kind of data flow, there is no exception"
+          " in that regard"));
+
   REGISTER_VALIDATE_ISSUE (CRITICAL, STATE_CHANGE_FAILURE,
       _("state change failed"), NULL);
 
