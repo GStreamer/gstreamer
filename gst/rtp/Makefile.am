@@ -24,8 +24,6 @@ noinst_HEADERS =			\
 	gstrtph265depay.h \
 	gstrtph265pay.h
 
-EXTRA_DIST = dboolhuff.LICENSE
-
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
 	-:PROJECT libgstrtpbad -:SHARED libgstrtpbad \
