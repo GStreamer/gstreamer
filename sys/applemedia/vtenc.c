@@ -30,8 +30,6 @@
 #define VTENC_DEFAULT_USAGE       6     /* Profile: Baseline  Level: 2.1 */
 #define VTENC_DEFAULT_BITRATE     768
 
-#define VTENC_MIN_RESET_INTERVAL  (GST_SECOND / 2)
-
 GST_DEBUG_CATEGORY (gst_vtenc_debug);
 #define GST_CAT_DEFAULT (gst_vtenc_debug)
 
