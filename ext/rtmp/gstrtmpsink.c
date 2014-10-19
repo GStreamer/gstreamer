@@ -139,6 +139,7 @@ gst_rtmp_sink_finalize (GObject * object)
 #ifdef G_OS_WIN32
   WSACleanup ();
 #endif
+  g_free (sink->uri);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
