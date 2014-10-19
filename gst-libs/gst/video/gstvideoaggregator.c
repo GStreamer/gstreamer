@@ -559,7 +559,7 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
   }
 
   if (best_width > 0 && best_height > 0 && best_fps > 0) {
-    GstCaps *caps, *peercaps;
+    GstCaps *caps, *peercaps, *info_caps;
     GstStructure *s;
     GstVideoInfo info;
 
@@ -578,25 +578,40 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
     info.par_n = GST_VIDEO_INFO_PAR_N (&vagg->info);
     info.par_d = GST_VIDEO_INFO_PAR_D (&vagg->info);
 
-    if (vagg_klass->update_info) {
-      if (!vagg_klass->update_info (vagg, &info)) {
+    info_caps = gst_video_info_to_caps (&info);
+
+    if (vagg_klass->update_caps) {
+      if (!(caps = vagg_klass->update_caps (vagg, info_caps))) {
+        gst_caps_unref (info_caps);
         ret = FALSE;
         goto done;
       }
+      gst_caps_unref (info_caps);
+    } else {
+      caps = info_caps;
     }
-
-    caps = gst_video_info_to_caps (&info);
 
     peercaps = gst_pad_peer_query_caps (agg->srcpad, NULL);
     if (peercaps) {
       GstCaps *tmp;
+      int i;
 
       s = gst_caps_get_structure (caps, 0);
-      gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT, "height",
-          GST_TYPE_INT_RANGE, 1, G_MAXINT, "framerate", GST_TYPE_FRACTION_RANGE,
-          0, 1, G_MAXINT, 1, NULL);
+      gst_structure_get (s, "width", G_TYPE_INT, &best_width, "height",
+          G_TYPE_INT, &best_height, NULL);
+
+      for (i = 0; i < gst_caps_get_size (caps); i++) {
+        s = gst_caps_get_structure (caps, i);
+        gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, "framerate",
+            GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+      }
 
       tmp = gst_caps_intersect (caps, peercaps);
+      GST_DEBUG_OBJECT (vagg, "intersecting %" GST_PTR_FORMAT
+          " with peer caps %" GST_PTR_FORMAT " result %" GST_PTR_FORMAT, caps,
+          peercaps, tmp);
+
       gst_caps_unref (caps);
       gst_caps_unref (peercaps);
       caps = tmp;
@@ -608,8 +623,8 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
 
       caps = gst_caps_truncate (caps);
       s = gst_caps_get_structure (caps, 0);
-      gst_structure_fixate_field_nearest_int (s, "width", info.width);
-      gst_structure_fixate_field_nearest_int (s, "height", info.height);
+      gst_structure_fixate_field_nearest_int (s, "width", best_width);
+      gst_structure_fixate_field_nearest_int (s, "height", best_height);
       gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
           best_fps_d);
 
@@ -617,9 +632,6 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
       gst_structure_get_int (s, "height", &info.height);
       gst_structure_get_fraction (s, "framerate", &info.fps_n, &info.fps_d);
     }
-
-    gst_caps_unref (caps);
-    caps = gst_video_info_to_caps (&info);
 
     if (gst_videoaggregator_src_setcaps (vagg, caps)) {
       if (vagg_klass->negotiated_caps)

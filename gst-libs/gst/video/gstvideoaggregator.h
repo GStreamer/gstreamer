@@ -73,9 +73,9 @@ struct _GstVideoAggregator
  * @disable_frame_conversion: Optional.
  *                            Allows subclasses to disable the frame colorspace
  *                            conversion feature
- * @update_info:              Optional.
- *                            Lets subclasses update the src #GstVideoInfo representing
- *                            the src pad caps before usage.
+ * @update_caps:              Optional.
+ *                            Lets subclasses update the #GstCaps representing
+ *                            the src pad caps before usage.  Return %NULL to indicate failure.
  * @aggregate_frames:         Lets subclasses aggregate frames that are ready. Subclasses
  *                            should iterate the GstElement.sinkpads and use the already
  *                            mapped #GstVideoFrame from GstVideoAggregatorPad.aggregated_frame
@@ -96,8 +96,8 @@ struct _GstVideoAggregatorClass
   /*< public >*/
   gboolean           disable_frame_conversion;
 
-  gboolean           (*update_info)               (GstVideoAggregator *  videoaggregator,
-                                                   GstVideoInfo       *  info);
+  GstCaps *          (*update_caps)               (GstVideoAggregator *  videoaggregator,
+                                                   GstCaps            *  caps);
   GstFlowReturn      (*aggregate_frames)          (GstVideoAggregator *  videoaggregator,
                                                    GstBuffer          *  outbuffer);
   GstFlowReturn      (*get_output_buffer)         (GstVideoAggregator *  videoaggregator,
