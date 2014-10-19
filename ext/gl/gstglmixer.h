@@ -92,6 +92,7 @@ struct _GstGLMixerFrameData
 GType gst_gl_mixer_get_type(void);
 
 gboolean gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf);
+GstCaps * gst_gl_mixer_update_caps (GstGLMixer * mix, GstCaps * caps);
 
 G_END_DECLS
 #endif /* __GST_GL_MIXER_H__ */

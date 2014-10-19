@@ -437,12 +437,15 @@ set_functions (GstCompositor * self, GstVideoInfo * info)
   return ret;
 }
 
-static gboolean
-_update_info (GstVideoAggregator * vagg, GstVideoInfo * info)
+static GstCaps *
+_update_caps (GstVideoAggregator * vagg, GstCaps * caps)
 {
   GList *l;
   gint best_width = -1, best_height = -1;
-  gboolean ret = FALSE;
+  GstVideoInfo info;
+  GstCaps *ret = NULL;
+
+  gst_video_info_from_caps (&info, caps);
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
@@ -468,9 +471,10 @@ _update_info (GstVideoAggregator * vagg, GstVideoInfo * info)
   GST_OBJECT_UNLOCK (vagg);
 
   if (best_width > 0 && best_height > 0) {
-    gst_video_info_set_format (info, GST_VIDEO_INFO_FORMAT (info),
-        best_width, best_height);
-    ret = set_functions (GST_COMPOSITOR (vagg), info);
+    info.width = best_width;
+    info.height = best_height;
+    if (set_functions (GST_COMPOSITOR (vagg), &info))
+      ret = gst_video_info_to_caps (&info);
   }
 
   return ret;
@@ -559,7 +563,7 @@ gst_compositor_class_init (GstCompositorClass * klass)
   gobject_class->set_property = gst_compositor_set_property;
 
   agg_class->sinkpads_type = GST_TYPE_COMPOSITOR_PAD;
-  videoaggregator_class->update_info = _update_info;
+  videoaggregator_class->update_caps = _update_caps;
   videoaggregator_class->aggregate_frames = gst_compositor_aggregate_frames;
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,

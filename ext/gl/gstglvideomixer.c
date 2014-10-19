@@ -65,7 +65,7 @@ static void gst_gl_video_mixer_set_property (GObject * object, guint prop_id,
 static void gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean _update_info (GstVideoAggregator * vagg, GstVideoInfo * info);
+static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps);
 static void gst_gl_video_mixer_reset (GstGLMixer * mixer);
 static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
@@ -335,7 +335,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   GST_GL_MIXER_CLASS (klass)->process_textures =
       gst_gl_video_mixer_process_textures;
 
-  vagg_class->update_info = _update_info;
+  vagg_class->update_caps = _update_caps;
 
   agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
 }
@@ -380,12 +380,17 @@ gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-_update_info (GstVideoAggregator * vagg, GstVideoInfo * info)
+static GstCaps *
+_update_caps (GstVideoAggregator * vagg, GstCaps * caps)
 {
   GList *l;
   gint best_width = -1, best_height = -1;
-  gboolean ret = FALSE;
+  GstVideoInfo info;
+  GstCaps *ret = NULL;
+  int i;
+
+  caps = gst_caps_make_writable (caps);
+  gst_video_info_from_caps (&info, caps);
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
@@ -417,10 +422,13 @@ _update_info (GstVideoAggregator * vagg, GstVideoInfo * info)
   }
   GST_OBJECT_UNLOCK (vagg);
 
-  if (best_width > 0 && best_height > 0) {
-    info->width = best_width;
-    info->height = best_height;
-    ret = TRUE;
+  ret = gst_gl_mixer_update_caps (GST_GL_MIXER (vagg), caps);
+
+  for (i = 0; i < gst_caps_get_size (ret); i++) {
+    GstStructure *s = gst_caps_get_structure (ret, i);
+
+    gst_structure_set (s, "width", G_TYPE_INT, best_width, "height", G_TYPE_INT,
+        best_height, NULL);
   }
 
   return ret;
