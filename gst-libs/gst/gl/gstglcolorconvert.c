@@ -1178,7 +1178,7 @@ _init_convert_fbo (GstGLColorConvert * convert)
   /* setup the render buffer for depth */
   gl->GenRenderbuffers (1, &convert->depth_buffer);
   gl->BindRenderbuffer (GL_RENDERBUFFER, convert->depth_buffer);
-  if (USING_OPENGL (convert->context)) {
+  if (USING_OPENGL (convert->context) || USING_OPENGL3 (convert->context)) {
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
         out_width, out_height);
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
