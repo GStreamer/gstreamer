@@ -189,7 +189,7 @@ gst_python_plugin_load (GstPlugin * plugin)
     gint i;
 
     /* 2.b. Scan GST_PLUGIN_SYSTEM_PATH */
-    GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH set to %s", plugin_path, plugin_path);
+    GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH set to %s", plugin_path);
     list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
     for (i = 0; list[i]; i++) {
       gchar *sysdir;
