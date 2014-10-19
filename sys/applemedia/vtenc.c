@@ -492,12 +492,16 @@ gst_vtenc_create_session (GstVTEnc * self)
   gst_vtenc_session_configure_bitrate (self, session,
       gst_vtenc_get_bitrate (self));
 
-  status = VTCompressionSessionPrepareToEncodeFrames (session);
-  if (status != noErr) {
-    GST_ERROR_OBJECT (self,
-        "VTCompressionSessionPrepareToEncodeFrames() returned: %d",
-        (int) status);
+#ifdef HAVE_VIDEOTOOLBOX_10_9_6
+  if (VTCompressionSessionPrepareToEncodeFrames) {
+    status = VTCompressionSessionPrepareToEncodeFrames (session);
+    if (status != noErr) {
+      GST_ERROR_OBJECT (self,
+          "VTCompressionSessionPrepareToEncodeFrames() returned: %d",
+          (int) status);
+    }
   }
+#endif
 
 beach:
   CFRelease (pb_attrs);

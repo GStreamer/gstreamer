@@ -503,6 +503,16 @@ AC_CHECK_HEADER(AVFoundation/AVFoundation.h, HAVE_AVFOUNDATION="yes", HAVE_AVFOU
 AC_CHECK_HEADER(MobileCoreServices/MobileCoreServices.h, HAVE_IOS="yes", HAVE_IOS="no", [-])
 AC_CHECK_HEADER(VideoToolbox/VideoToolbox.h, HAVE_VIDEOTOOLBOX="yes", HAVE_VIDEOTOOLBOX="no", [-])
 
+if test "x$HAVE_VIDEOTOOLBOX" = "xyes"; then
+  old_LIBS=$LIBS
+  LIBS="$LIBS -framework VideoToolbox"
+  AC_CHECK_FUNC(VTCompressionSessionPrepareToEncodeFrames, [
+    AC_DEFINE(HAVE_VIDEOTOOLBOX_10_9_6, 1, [Define if building with VideoToolbox >= 10.9.6])
+  ], [
+  ])
+  LIBS=$old_LIBS
+fi
+
 AM_CONDITIONAL(HAVE_AVFOUNDATION, test "x$HAVE_AVFOUNDATION" = "xyes")
 if test "x$HAVE_AVFOUNDATION" = "xyes"; then
   AC_DEFINE(HAVE_AVFOUNDATION, 1, [Define if building with AVFoundation])
