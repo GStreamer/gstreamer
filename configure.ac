@@ -845,7 +845,7 @@ else
 fi
 
 dnl check if we can include both GL and GLES2 at the same time
-if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
+if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLU" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
   GL_INCLUDES="
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
