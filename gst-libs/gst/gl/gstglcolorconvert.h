@@ -88,7 +88,7 @@ struct _GstGLColorConvertClass
 #define GST_GL_COLOR_CONVERT_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
                                "xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, " \
                                "Y41B, NV12, NV21, YUY2, UYVY, AYUV, " \
-                               "GRAY8, GRAY16_LE, GRAY16_BE }"
+                               "GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16 }"
 
 /**
  * GST_GL_COLOR_CONVERT_VIDEO_CAPS:
