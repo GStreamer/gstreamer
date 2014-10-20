@@ -1420,8 +1420,8 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
       g_param_spec_int64 ("timeout", "Buffer timeout",
           "Number of nanoseconds to wait for a buffer to arrive on a sink pad"
           "before the pad is deemed unresponsive (-1 unlimited)", -1,
-          G_MAXINT64, DEFAULT_TIMEOUT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
+          DEFAULT_TIMEOUT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
