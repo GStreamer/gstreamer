@@ -791,7 +791,7 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
       g_param_spec_uint ("blocksize", "Block Size",
-          "Output block size in number of samples", 0,
+          "Output block size in number of samples", 1,
           G_MAXUINT, DEFAULT_BLOCKSIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
