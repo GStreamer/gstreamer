@@ -1,9 +1,33 @@
-=== release 1.3.90 ===
+=== release 1.4.0 ===
 
-2014-09-24  Thibault Saunier <tsaunier@gnome.org>
+2014-10-20  Thibault Saunier <tsaunier@gnome.org>
 
 	* configure.ac:
-	  releasing 1.3.90
+	  releasing 1.4.0
+
+2014-10-16 14:18:16 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-validate.c:
+	  validate: Fix naming of add_action_type to register_action_type
+	  That function was just renamed in Validate
+
+2014-10-12 19:46:59 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	  validate: Rename --list-action-types to --inspect-action-type
+	  Making clearer the meaning of the parameter and closer to
+	  the usual naming in the GStreamer land.
+
+=== release 1.3.90 ===
+
+2014-09-24 11:07:40 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.3.90
 
 2014-09-13 16:16:15 +0100  Tim-Philipp Müller <tim@centricular.com>
 
