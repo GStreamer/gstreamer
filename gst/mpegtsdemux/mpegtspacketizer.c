@@ -121,6 +121,19 @@ flush_observations (MpegTSPacketizer2 * packetizer)
   packetizer->lastobsid = 0;
 }
 
+GstClockTime
+mpegts_packetizer_get_current_time (MpegTSPacketizer2 * packetizer,
+    guint16 pcr_pid)
+{
+  MpegTSPCR *pcrtable = get_pcr_table (packetizer, pcr_pid);
+
+  if (pcrtable == NULL)
+    return GST_CLOCK_TIME_NONE;
+
+  return mpegts_packetizer_pts_to_ts (packetizer, pcrtable->last_pcrtime,
+      pcr_pid);
+}
+
 static inline MpegTSPacketizerStreamSubtable *
 find_subtable (GSList * subtables, guint8 table_id, guint16 subtable_extension)
 {
@@ -1874,6 +1887,7 @@ record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
 
   packetizer->nb_seen_offsets += 1;
 
+  pcrtable->last_pcrtime = PCRTIME_TO_GSTTIME (pcr);
   /* FIXME : Invert logic later (probability is higher that we have a
    * current estimator) */
 
