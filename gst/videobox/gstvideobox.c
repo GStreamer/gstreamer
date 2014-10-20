@@ -2750,7 +2750,7 @@ gst_video_box_transform_dimension_value (const GValue * src_val,
 
     min = gst_video_box_transform_dimension (min, delta);
     max = gst_video_box_transform_dimension (max, delta);
-    if (min > max) {
+    if (min >= max) {
       ret = FALSE;
       g_value_unset (dest_val);
     } else {
