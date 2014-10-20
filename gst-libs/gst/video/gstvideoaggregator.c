@@ -628,6 +628,9 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
       gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
           best_fps_d);
 
+      /* fixate the the rest of the fields */
+      caps = gst_caps_fixate (caps);
+
       gst_structure_get_int (s, "width", &info.width);
       gst_structure_get_int (s, "height", &info.height);
       gst_structure_get_fraction (s, "framerate", &info.fps_n, &info.fps_d);
