@@ -1833,6 +1833,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* set in the session media transport */
   trans = gst_rtsp_session_media_set_transport (sessmedia, stream, ct);
 
+  ctx->trans = trans;
+
   /* configure the url used to set this transport, this we will use when
    * generating the response for the PLAY request */
   gst_rtsp_stream_transport_set_url (trans, uri);

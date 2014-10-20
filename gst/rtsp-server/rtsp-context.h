@@ -53,27 +53,29 @@ typedef struct _GstRTSPContext GstRTSPContext;
  * @media: the media for the url can be %NULL
  * @stream: the stream for the url can be %NULL
  * @response: the response
+ * @trans: the stream transport, can be %NULL
  *
  * Information passed around containing the context of a request.
  */
 struct _GstRTSPContext {
-  GstRTSPServer       *server;
-  GstRTSPConnection   *conn;
-  GstRTSPClient       *client;
-  GstRTSPMessage      *request;
-  GstRTSPUrl          *uri;
-  GstRTSPMethod        method;
-  GstRTSPAuth         *auth;
-  GstRTSPToken        *token;
-  GstRTSPSession      *session;
-  GstRTSPSessionMedia *sessmedia;
-  GstRTSPMediaFactory *factory;
-  GstRTSPMedia        *media;
-  GstRTSPStream       *stream;
-  GstRTSPMessage      *response;
+  GstRTSPServer          *server;
+  GstRTSPConnection      *conn;
+  GstRTSPClient          *client;
+  GstRTSPMessage         *request;
+  GstRTSPUrl             *uri;
+  GstRTSPMethod           method;
+  GstRTSPAuth            *auth;
+  GstRTSPToken           *token;
+  GstRTSPSession         *session;
+  GstRTSPSessionMedia    *sessmedia;
+  GstRTSPMediaFactory    *factory;
+  GstRTSPMedia           *media;
+  GstRTSPStream          *stream;
+  GstRTSPMessage         *response;
+  GstRTSPStreamTransport *trans;
 
   /*< private >*/
-  gpointer            _gst_reserved[GST_PADDING];
+  gpointer            _gst_reserved[GST_PADDING - 1];
 };
 
 GType gst_rtsp_context_get_type (void);
