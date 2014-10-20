@@ -2743,7 +2743,11 @@ get_rtx_retry_period (GstRtpJitterBufferPrivate * priv,
   if (priv->rtx_retry_period == -1) {
     /* we retry up to the configured jitterbuffer size but leaving some
      * room for the retransmission to arrive in time */
-    rtx_retry_period = priv->latency_ns - rtx_retry_timeout;
+    if (rtx_retry_timeout > priv->latency_ns) {
+      rtx_retry_period = 0;
+    } else {
+      rtx_retry_period = priv->latency_ns - rtx_retry_timeout;
+    }
   } else {
     rtx_retry_period = priv->rtx_retry_period * GST_MSECOND;
   }
