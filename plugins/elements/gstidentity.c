@@ -380,6 +380,7 @@ gst_identity_check_imperfect_timestamp (GstIdentity * identity, GstBuffer * buf)
         /*
          * "imperfect-timestamp" bus message:
          * @identity:        the identity instance
+         * @delta:           the GST_CLOCK_DIFF to the prev timestamp
          * @prev-timestamp:  the previous buffer timestamp
          * @prev-duration:   the previous buffer duration
          * @prev-offset:     the previous buffer offset
@@ -396,6 +397,7 @@ gst_identity_check_imperfect_timestamp (GstIdentity * identity, GstBuffer * buf)
         gst_element_post_message (GST_ELEMENT (identity),
             gst_message_new_element (GST_OBJECT (identity),
                 gst_structure_new ("imperfect-timestamp",
+                    "delta", G_TYPE_INT64, dt,
                     "prev-timestamp", G_TYPE_UINT64,
                     identity->prev_timestamp, "prev-duration", G_TYPE_UINT64,
                     identity->prev_duration, "prev-offset", G_TYPE_UINT64,
