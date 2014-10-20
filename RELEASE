@@ -1,26 +1,21 @@
 
-Release notes for GStreamer Python bindings 1.3.90
+Release notes for GStreamer Python bindings 1.4.0
 
 
-The GStreamer team is pleased to announce the first release candidate of
-the stable 1.4 release series. The 1.4 release series is adding new features
-on top of the 1.0 and 1.2 series and is part of the API and ABI-stable 1.x
-release series of the Gstreamer overrides for PyGobject.
+The GStreamer team is proud to announce a new feature release
+in the 1.0.x stable series of the GStreamer Python Bindings.
 
 
-This release candidate will hopefully shortly be followed by the stable 1.4.0
-release if no bigger regressions or bigger issues are detected, and enough
-testing of the release candidate happened.
 
+This new version introduces the possibility to write GStreamer
+elements in python and get them registered in the GstRegistry.
+This means those elements will then be usable by any application
+that uses GStreamer, whatever language their are built with.
 
   
 
-Bugs fixed in this release
-     
-      * 723767 : Port Python-element loader plugin to 1.0
-      * 729123 : sdp: GstSdp.SDPMessage.parse_buffer needs a guint8* + annotation corrections
-      * 730596 : gst-python overrides broke due to a recent change in pygobject
-      * 731008 : gst-python: Implement TIME_ARGS helper
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -59,9 +54,5 @@ Applications
   
 Contributors to this release
     
-      * Christoph Reiter
-      * Lubosz Sarnecki
-      * Rico Tzschichholz
       * Sebastian Dröge
-      * Thibault Saunier
  
