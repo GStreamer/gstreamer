@@ -37,7 +37,7 @@
 #include "gstglmixer.h"
 
 #if GST_GL_HAVE_PLATFORM_EGL
-#include <gst-libs/gst/gl/egl/gsteglimagememory.h>
+#include <gst/gl/egl/gsteglimagememory.h>
 #endif
 
 #define gst_gl_mixer_parent_class parent_class
