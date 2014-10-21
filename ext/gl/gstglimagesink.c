@@ -111,9 +111,8 @@ GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
 #define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
 
-#if GST_GL_HAVE_GLES2
 static void gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink);
-#endif
+static void gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink);
 static void gst_glimage_sink_on_close (GstGLImageSink * gl_sink);
 static void gst_glimage_sink_on_resize (GstGLImageSink * gl_sink,
     gint width, gint height);
@@ -594,21 +593,6 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
 
   return res;
 }
-
-static void
-gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
-{
-#if GST_GL_HAVE_GLES2
-  if (gl_sink->redisplay_shader) {
-    gst_object_unref (gl_sink->redisplay_shader);
-    gl_sink->redisplay_shader = NULL;
-  }
-#endif
-}
-
-/*
- * GstElement methods
- */
 
 static gboolean
 gst_glimage_sink_stop (GstBaseSink * bsink)
@@ -1162,19 +1146,63 @@ config_failed:
   }
 }
 
-#if GST_GL_HAVE_GLES2
+/* *INDENT-OFF* */
+static const GLfloat vertices[] = {
+     1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+    -1.0f,  1.0f, 0.0f, 0.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+     1.0f, -1.0f, 0.0f, 1.0f, 1.0f
+};
+/* *INDENT-ON* */
+
 /* Called in the gl thread */
 static void
 gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
 {
+  const GstGLFuncs *gl = gl_sink->context->gl_vtable;
+  int attr_position, attr_texture;
+
   gl_sink->redisplay_shader = gst_gl_shader_new (gl_sink->context);
 
   if (!gst_gl_shader_compile_with_default_vf_and_check
-      (gl_sink->redisplay_shader, &gl_sink->redisplay_attr_position_loc,
-          &gl_sink->redisplay_attr_texture_loc))
+      (gl_sink->redisplay_shader, &attr_position, &attr_texture))
     gst_glimage_sink_cleanup_glthread (gl_sink);
+
+  gl->GenVertexArrays (1, &gl_sink->vao);
+  gl->BindVertexArray (gl_sink->vao);
+
+  gl->GenBuffers (1, &gl_sink->vertex_buffer);
+  gl->BindBuffer (GL_ARRAY_BUFFER, gl_sink->vertex_buffer);
+  gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
+      GL_STATIC_DRAW);
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (attr_position, 3, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) 0);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (attr_texture, 2, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
+
+  gl->EnableVertexAttribArray (attr_position);
+  gl->EnableVertexAttribArray (attr_texture);
+
+  gl->BindVertexArray (0);
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 }
-#endif
+
+static void
+gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
+{
+  const GstGLFuncs *gl = gl_sink->context->gl_vtable;
+
+  if (gl_sink->redisplay_shader) {
+    gst_object_unref (gl_sink->redisplay_shader);
+    gl_sink->redisplay_shader = NULL;
+  }
+
+  gl->DeleteVertexArrays (1, &gl_sink->vao);
+}
 
 static void
 gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
@@ -1227,7 +1255,6 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
 #endif
   }
 }
-
 
 static void
 gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
@@ -1285,78 +1312,22 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
       GST_VIDEO_INFO_HEIGHT (&gl_sink->info), &do_redisplay);
 
   if (!do_redisplay) {
-#if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (gl_sink->context)) {
-      GLfloat verts[8] = { 1.0f, 1.0f,
-        -1.0f, 1.0f,
-        -1.0f, -1.0f,
-        1.0f, -1.0f
-      };
-      GLfloat texcoords[8] = { 1.0f, 0.0f,
-        0.0f, 0.0f,
-        0.0f, 1.0f,
-        1.0f, 1.0f
-      };
+    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-      gl->ClearColor (0.0, 0.0, 0.0, 0.0);
-      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+    gl->Clear (GL_COLOR_BUFFER_BIT);
 
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
+    gst_gl_shader_use (gl_sink->redisplay_shader);
 
-      gl->Enable (GL_TEXTURE_2D);
-      gl->BindTexture (GL_TEXTURE_2D, gl_sink->redisplay_texture);
+    gl->BindVertexArray (gl_sink->vao);
 
-      gl->EnableClientState (GL_VERTEX_ARRAY);
-      gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
-      gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-      gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
+    gl->ActiveTexture (GL_TEXTURE0);
+    gl->BindTexture (GL_TEXTURE_2D, gl_sink->redisplay_texture);
+    gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "tex", 0);
 
-      gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
-      gl->DisableClientState (GL_VERTEX_ARRAY);
-      gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
-
-      gl->Disable (GL_TEXTURE_2D);
-    }
-#endif
-#if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (gl_sink->context)) {
-      const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
-        1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f,
-        0.0f, 0.0f,
-        -1.0f, -1.0f, 0.0f,
-        0.0f, 1.0f,
-        1.0f, -1.0f, 0.0f,
-        1.0f, 1.0f
-      };
-
-      GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-
-      gl->ClearColor (0.0, 0.0, 0.0, 0.0);
-      gl->Clear (GL_COLOR_BUFFER_BIT);
-
-      gst_gl_shader_use (gl_sink->redisplay_shader);
-
-      /* Load the vertex position */
-      gl->VertexAttribPointer (gl_sink->redisplay_attr_position_loc, 3,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-
-      /* Load the texture coordinate */
-      gl->VertexAttribPointer (gl_sink->redisplay_attr_texture_loc, 2,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-      gl->EnableVertexAttribArray (gl_sink->redisplay_attr_position_loc);
-      gl->EnableVertexAttribArray (gl_sink->redisplay_attr_texture_loc);
-
-      gl->ActiveTexture (GL_TEXTURE0);
-      gl->BindTexture (GL_TEXTURE_2D, gl_sink->redisplay_texture);
-      gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "tex", 0);
-
-      gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-    }
-#endif
+    gl->BindVertexArray (0);
   }
   /* end default opengl scene */
   window->is_drawing = FALSE;
@@ -1393,21 +1364,16 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
     return FALSE;
 
   if (gst_gl_window_is_running (window)) {
+    if (G_UNLIKELY (!gl_sink->redisplay_shader)) {
+      gst_gl_window_send_message (window,
+          GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), gl_sink);
 
-#if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (gl_sink->context)) {
+      /* if the shader is still null it means it failed to be useable */
       if (G_UNLIKELY (!gl_sink->redisplay_shader)) {
-        gst_gl_window_send_message (window,
-            GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), gl_sink);
-
-        /* if the shader is still null it means it failed to be useable */
-        if (G_UNLIKELY (!gl_sink->redisplay_shader)) {
-          gst_object_unref (window);
-          return FALSE;
-        }
+        gst_object_unref (window);
+        return FALSE;
       }
     }
-#endif
 
     /* Drawing is asynchronous: gst_gl_window_draw is not blocking
      * It means that it does not wait for stuff to be executed in other threads
