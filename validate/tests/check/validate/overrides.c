@@ -36,7 +36,7 @@ _check_message_level (const gchar * factoryname, GstValidateReportLevel level,
   GstValidateMonitor *monitor;
 
   element = gst_element_factory_make (factoryname, NULL);
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (element), runner, NULL);

@@ -54,7 +54,7 @@ GST_START_TEST (buffer_before_segment)
 
   fail_unless (gst_element_link (src, sink));
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
@@ -132,7 +132,7 @@ GST_START_TEST (buffer_outside_segment)
   gst_element_class_add_metadata (GST_ELEMENT_GET_CLASS (src), "klass",
       "Decoder");
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
@@ -209,7 +209,7 @@ _first_buffer_running_time (gboolean failing)
   src = gst_element_factory_make ("fakesrc", "fakesrc");
   sink = gst_element_factory_make ("fakesink", "fakesink");
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
@@ -322,7 +322,7 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor = gst_validate_monitor_factory_create (GST_OBJECT (pipeline),
       runner, NULL);
@@ -415,7 +415,7 @@ GST_START_TEST (issue_concatenation)
   gint n_reports;
   gulong probe_id1, probe_id2;
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "subchain", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "subchain", TRUE));
   runner = gst_validate_runner_new ();
 
   src1 = create_and_monitor_element ("fakesrc", "fakesrc1", runner);
@@ -611,7 +611,7 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
   GError *err = NULL;
   gint i, num_issues = 0;
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
 
   mdesc = (GstMediaDescriptor *)
@@ -810,7 +810,7 @@ GST_START_TEST (eos_without_segment)
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (pipeline),

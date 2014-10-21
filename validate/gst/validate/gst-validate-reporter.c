@@ -113,10 +113,10 @@ gst_validate_reporter_intercept_report (GstValidateReporter * reporter,
   return ret;
 }
 
-GstValidateReportingLevel
+GstValidateReportingDetails
 gst_validate_reporter_get_reporting_level (GstValidateReporter * reporter)
 {
-  GstValidateInterceptionReturn ret = GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
+  GstValidateInterceptionReturn ret = GST_VALIDATE_SHOW_UNKNOWN;
   GstValidateReporterInterface *iface =
       GST_VALIDATE_REPORTER_GET_INTERFACE (reporter);
 
@@ -171,18 +171,18 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   prev_report = g_hash_table_lookup (priv->reports, (gconstpointer) issue_id);
 
   if (prev_report) {
-    GstValidateReportingLevel reporter_level =
+    GstValidateReportingDetails reporter_level =
         gst_validate_reporter_get_reporting_level (reporter);
-    GstValidateReportingLevel runner_level =
-        GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
+    GstValidateReportingDetails runner_level =
+        GST_VALIDATE_SHOW_UNKNOWN;
 
     if (priv->runner)
       runner_level =
           gst_validate_runner_get_default_reporting_level (priv->runner);
 
-    if (reporter_level == GST_VALIDATE_REPORTING_LEVEL_ALL ||
-        (runner_level == GST_VALIDATE_REPORTING_LEVEL_ALL &&
-            reporter_level == GST_VALIDATE_REPORTING_LEVEL_UNKNOWN))
+    if (reporter_level == GST_VALIDATE_SHOW_ALL ||
+        (runner_level == GST_VALIDATE_SHOW_ALL &&
+            reporter_level == GST_VALIDATE_SHOW_UNKNOWN))
       gst_validate_report_add_repeated_report (prev_report, report);
 
     gst_validate_report_unref (report);

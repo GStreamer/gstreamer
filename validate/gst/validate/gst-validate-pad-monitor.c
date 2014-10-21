@@ -260,7 +260,7 @@ gst_validate_pad_monitor_intercept_report (GstValidateReporter *
 {
   GstValidateReporterInterface *iface_class, *old_iface_class;
   GstValidatePadMonitor *pad_monitor = GST_VALIDATE_PAD_MONITOR (reporter);
-  GstValidateReportingLevel monitor_reporting_level;
+  GstValidateReportingDetails monitor_reporting_level;
   GstValidateInterceptionReturn ret;
 
   monitor_reporting_level =
@@ -274,10 +274,10 @@ gst_validate_pad_monitor_intercept_report (GstValidateReporter *
   old_iface_class->intercept_report (reporter, report);
 
   switch (monitor_reporting_level) {
-    case GST_VALIDATE_REPORTING_LEVEL_NONE:
+    case GST_VALIDATE_SHOW_NONE:
       ret = GST_VALIDATE_REPORTER_DROP;
       break;
-    case GST_VALIDATE_REPORTING_LEVEL_UNKNOWN:
+    case GST_VALIDATE_SHOW_UNKNOWN:
       ret = _concatenate_issues (pad_monitor, report);
       break;
     default:

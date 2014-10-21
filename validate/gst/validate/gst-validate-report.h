@@ -160,7 +160,7 @@ struct _GstValidateReport {
   /* Lists the reports that were repeated inside the same reporter */
   GList *repeated_reports;
 
-  GstValidateReportingLevel reporting_level;
+  GstValidateReportingDetails reporting_level;
 };
 
 void gst_validate_report_add_message (GstValidateReport *report,
@@ -213,7 +213,7 @@ void               gst_validate_printf_valist (gpointer source,
                                                va_list            args) G_GNUC_NO_INSTRUMENT;
 gboolean gst_validate_report_should_print (GstValidateReport * report);
 gboolean gst_validate_report_set_master_report(GstValidateReport *report, GstValidateReport *master_report);
-void gst_validate_report_set_reporting_level (GstValidateReport *report, GstValidateReportingLevel level);
+void gst_validate_report_set_reporting_level (GstValidateReport *report, GstValidateReportingDetails level);
 void gst_validate_report_add_repeated_report (GstValidateReport *report, GstValidateReport *repeated_report);
 GstValidateReportLevel gst_validate_report_level_from_name (const gchar *issue_name);
 

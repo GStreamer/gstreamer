@@ -81,7 +81,7 @@ struct _GstValidateReporterInterface
 
     GstValidateInterceptionReturn (*intercept_report) (GstValidateReporter *
       reporter, GstValidateReport * report);
-    GstValidateReportingLevel (*get_reporting_level) (GstValidateReporter *
+    GstValidateReportingDetails (*get_reporting_level) (GstValidateReporter *
       reporter);
 };
 
@@ -101,7 +101,7 @@ GstValidateReport * gst_validate_reporter_get_report (GstValidateReporter *repor
                                                       GstValidateIssueId issue_id);
 GList * gst_validate_reporter_get_reports (GstValidateReporter * reporter);
 gint gst_validate_reporter_get_reports_count (GstValidateReporter *reporter);
-GstValidateReportingLevel gst_validate_reporter_get_reporting_level (GstValidateReporter *reporter);
+GstValidateReportingDetails gst_validate_reporter_get_reporting_level (GstValidateReporter *reporter);
 
 G_END_DECLS
 #endif /* _GST_VALIDATE_REPORTER_ */

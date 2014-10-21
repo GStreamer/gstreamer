@@ -446,7 +446,7 @@ gst_validate_report_new (GstValidateIssue * issue,
   report->timestamp =
       gst_util_get_timestamp () - _gst_validate_report_start_time;
   report->level = issue->default_level;
-  report->reporting_level = GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
+  report->reporting_level = GST_VALIDATE_SHOW_UNKNOWN;
 
   return report;
 }
@@ -639,7 +639,7 @@ gst_validate_report_set_master_report (GstValidateReport * report,
   GList *tmp;
   gboolean add_shadow_report = TRUE;
 
-  if (master_report->reporting_level >= GST_VALIDATE_REPORTING_LEVEL_MONITOR)
+  if (master_report->reporting_level >= GST_VALIDATE_SHOW_MONITOR)
     return FALSE;
 
   report->master_report = master_report;
@@ -718,7 +718,7 @@ gst_validate_report_printf (GstValidateReport * report)
 
 void
 gst_validate_report_set_reporting_level (GstValidateReport * report,
-    GstValidateReportingLevel level)
+    GstValidateReportingDetails level)
 {
   report->reporting_level = level;
 }

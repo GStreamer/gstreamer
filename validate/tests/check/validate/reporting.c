@@ -37,36 +37,36 @@ GST_START_TEST (test_report_levels)
 
   /* Try to set the default reporting level to ALL, the code is supposed to
    * be case insensitive */
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "AlL", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "AlL", TRUE));
   runner = gst_validate_runner_new ();
   fail_unless (gst_validate_runner_get_default_reporting_level (runner) ==
-      GST_VALIDATE_REPORTING_LEVEL_ALL);
+      GST_VALIDATE_SHOW_ALL);
   g_object_unref (runner);
 
   /* Try to set the default reporting level to subchain, the code is supposed to
    * parse numbers as well */
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "2", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "2", TRUE));
   runner = gst_validate_runner_new ();
   fail_unless (gst_validate_runner_get_default_reporting_level (runner) ==
-      GST_VALIDATE_REPORTING_LEVEL_SYNTHETIC);
+      GST_VALIDATE_SHOW_SYNTHETIC);
   g_object_unref (runner);
 
   /* Try to set the reporting level for an object */
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL",
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
           "synthetic,test_object:monitor,other_*:all", TRUE));
   runner = gst_validate_runner_new ();
   fail_unless (gst_validate_runner_get_reporting_level_for_name (runner,
-          "test_object") == GST_VALIDATE_REPORTING_LEVEL_MONITOR);
+          "test_object") == GST_VALIDATE_SHOW_MONITOR);
   fail_unless (gst_validate_runner_get_reporting_level_for_name (runner,
-          "other_test_object") == GST_VALIDATE_REPORTING_LEVEL_ALL);
+          "other_test_object") == GST_VALIDATE_SHOW_ALL);
   fail_unless (gst_validate_runner_get_reporting_level_for_name (runner,
-          "dummy_test_object") == GST_VALIDATE_REPORTING_LEVEL_UNKNOWN);
+          "dummy_test_object") == GST_VALIDATE_SHOW_UNKNOWN);
 
   g_object_unref (runner);
 
   /* Now let's try to see if the created monitors actually understand the
    * situation they've put themselves into */
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL",
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
           "none,pipeline*:monitor,sofake1:all,sofake*::sink:subchain", TRUE));
   runner = gst_validate_runner_new ();
 
@@ -81,7 +81,7 @@ GST_START_TEST (test_report_levels)
       (GstValidateMonitor *) g_object_get_data (G_OBJECT (element),
       "validate-monitor");
   fail_unless (gst_validate_reporter_get_reporting_level (GST_VALIDATE_REPORTER
-          (monitor)) == GST_VALIDATE_REPORTING_LEVEL_ALL);
+          (monitor)) == GST_VALIDATE_SHOW_ALL);
 
   pad = gst_element_get_static_pad (element, "src");
   monitor =
@@ -89,7 +89,7 @@ GST_START_TEST (test_report_levels)
       "validate-monitor");
   /* The pad should have inherited the reporting level */
   fail_unless (gst_validate_reporter_get_reporting_level (GST_VALIDATE_REPORTER
-          (monitor)) == GST_VALIDATE_REPORTING_LEVEL_ALL);
+          (monitor)) == GST_VALIDATE_SHOW_ALL);
   gst_object_unref (pad);
 
   gst_object_unref (element);
@@ -100,7 +100,7 @@ GST_START_TEST (test_report_levels)
       "validate-monitor");
   /* The element should have inherited its reporting level from the pipeline */
   fail_unless (gst_validate_reporter_get_reporting_level (GST_VALIDATE_REPORTER
-          (monitor)) == GST_VALIDATE_REPORTING_LEVEL_MONITOR);
+          (monitor)) == GST_VALIDATE_SHOW_MONITOR);
 
   pad = gst_element_get_static_pad (element, "sink");
   monitor =
@@ -108,7 +108,7 @@ GST_START_TEST (test_report_levels)
       "validate-monitor");
   /* But its pad should not as it falls in the sofake*::sink pattern */
   fail_unless (gst_validate_reporter_get_reporting_level (GST_VALIDATE_REPORTER
-          (monitor)) == GST_VALIDATE_REPORTING_LEVEL_SUBCHAIN);
+          (monitor)) == GST_VALIDATE_SHOW_SUBCHAIN);
   gst_object_unref (pad);
 
   gst_object_unref (element);
@@ -212,28 +212,28 @@ GST_START_TEST (test_global_levels)
 {
   GstValidateRunner *runner;
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "none", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "none", TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
   /* None shall pass */
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 0);
   g_object_unref (runner);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "synthetic", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "synthetic", TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
   /* Two reports of the same type */
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
   g_object_unref (runner);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "monitor", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "monitor", TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
   /* One report for each pad monitor */
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 6);
   g_object_unref (runner);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
   /* One report for each pad monitor, plus one for funnel src and fakesink sink */
@@ -247,7 +247,7 @@ GST_START_TEST (test_specific_levels)
 {
   GstValidateRunner *runner;
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "none,fakesrc1:synthetic",
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "none,fakesrc1:synthetic",
           TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
@@ -255,7 +255,7 @@ GST_START_TEST (test_specific_levels)
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
   g_object_unref (runner);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "monitor,sink:none",
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "monitor,sink:none",
           TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
@@ -264,7 +264,7 @@ GST_START_TEST (test_specific_levels)
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 5);
   g_object_unref (runner);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "subchain,sink:monitor",
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "subchain,sink:monitor",
           TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
@@ -273,7 +273,7 @@ GST_START_TEST (test_specific_levels)
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 3);
   g_object_unref (runner);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL",
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS",
           "synthetic,fakesrc1:subchain,fakesrc2:subchain,funnel*::src*:monitor",
           TRUE));
   runner = gst_validate_runner_new ();
@@ -284,7 +284,7 @@ GST_START_TEST (test_specific_levels)
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 4);
   g_object_unref (runner);
 
-  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "none,fakesink*:all",
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "none,fakesink*:all",
           TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);

@@ -93,7 +93,7 @@ struct _GstValidateMonitor {
   GQueue        overrides;
   GstMediaDescriptor *media_descriptor;
 
-  GstValidateReportingLevel level;
+  GstValidateReportingDetails level;
 
   /*< private >*/
   GHashTable *reports;

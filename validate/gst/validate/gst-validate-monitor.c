@@ -63,7 +63,7 @@ gst_validate_monitor_intercept_report (GstValidateReporter * reporter,
 #define _do_init \
   G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init)
 
-static GstValidateReportingLevel
+static GstValidateReportingDetails
 _get_reporting_level (GstValidateReporter *monitor)
 {
   return GST_VALIDATE_MONITOR (monitor)->level;
@@ -204,12 +204,12 @@ gst_validate_monitor_do_setup (GstValidateMonitor * monitor)
   return TRUE;
 }
 
-static GstValidateReportingLevel
+static GstValidateReportingDetails
 _get_report_level_for_pad (GstValidateRunner *runner, GstObject *pad)
 {
   GstObject *parent;
   gchar *name;
-  GstValidateReportingLevel level = GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
+  GstValidateReportingDetails level = GST_VALIDATE_SHOW_UNKNOWN;
 
   parent = gst_object_get_parent (pad);
 
@@ -227,7 +227,7 @@ _determine_reporting_level (GstValidateMonitor *monitor)
   GstValidateRunner *runner;
   GstObject *object, *parent;
   gchar *object_name;
-  GstValidateReportingLevel level = GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
+  GstValidateReportingDetails level = GST_VALIDATE_SHOW_UNKNOWN;
 
   object = gst_object_ref(monitor->target);
   runner = gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
@@ -236,7 +236,7 @@ _determine_reporting_level (GstValidateMonitor *monitor)
     /* Let's allow for singling out pads */
     if (GST_IS_PAD (object)) {
       level = _get_report_level_for_pad (runner, object);
-      if (level != GST_VALIDATE_REPORTING_LEVEL_UNKNOWN)
+      if (level != GST_VALIDATE_SHOW_UNKNOWN)
         break;
     }
 
@@ -246,7 +246,7 @@ _determine_reporting_level (GstValidateMonitor *monitor)
     gst_object_unref (object);
     object = parent;
     g_free (object_name);
-  } while (object && level == GST_VALIDATE_REPORTING_LEVEL_UNKNOWN);
+  } while (object && level == GST_VALIDATE_SHOW_UNKNOWN);
 
   if (object)
     gst_object_unref (object);
