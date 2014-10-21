@@ -2544,8 +2544,8 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
       break;
     case ITEM_TYPE_LOST:
     case ITEM_TYPE_EVENT:
-      GST_DEBUG_OBJECT (jitterbuffer, "Pushing event %" GST_PTR_FORMAT
-          ", seqnum %d", outevent, seqnum);
+      GST_DEBUG_OBJECT (jitterbuffer, "%sPushing event %" GST_PTR_FORMAT
+          ", seqnum %d", do_push ? "" : "NOT ", outevent, seqnum);
 
       if (do_push)
         gst_pad_push_event (priv->srcpad, outevent);
