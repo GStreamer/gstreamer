@@ -87,12 +87,9 @@ struct _GstGLImageSink
     guint window_width;
     guint window_height;
 
-#if GST_GL_HAVE_GLES2
-  GstGLShader *redisplay_shader;
-  GLint redisplay_attr_position_loc;
-  GLint redisplay_attr_texture_loc;
-#endif
-
+    GstGLShader *redisplay_shader;
+    GLuint vao;
+    GLuint vertex_buffer;
 };
 
 struct _GstGLImageSinkClass
