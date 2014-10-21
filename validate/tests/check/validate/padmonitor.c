@@ -95,7 +95,7 @@ GST_START_TEST (buffer_outside_segment)
   GstBuffer *buffer;
   GstSegment segment;
   GstElement *src, *sink;
-  const gchar *fakesrc_klass;
+  gchar *fakesrc_klass;
   GstValidateReport *report;
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
@@ -106,7 +106,7 @@ GST_START_TEST (buffer_outside_segment)
   sink = gst_element_factory_make ("fakesink", "fakesink");
 
   fakesrc_klass =
-      gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (src), "klass");
+      g_strdup (gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (src), "klass"));
 
   /* Testing if a buffer is outside a segment is only done for buffer outputed
    * from decoders for the moment, fake a Decoder so that the test is properly
@@ -133,7 +133,6 @@ GST_START_TEST (buffer_outside_segment)
   fail_unless (gst_pad_push_event (srcpad,
           gst_event_new_stream_start ("the-stream")));
   fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&segment)));
-
 
   /*  Pushing a buffer that is outside the segment */
   {
@@ -166,6 +165,7 @@ GST_START_TEST (buffer_outside_segment)
 
   gst_element_class_add_metadata (GST_ELEMENT_GET_CLASS (src), "klass",
       fakesrc_klass);
+  g_free (fakesrc_klass);
   gst_object_unref (src);
   gst_object_unref (runner);
 
