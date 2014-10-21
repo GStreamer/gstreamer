@@ -64,6 +64,7 @@ struct _GstValidateRunnerPrivate
   GMutex mutex;
   GList *reports;
   GstValidateReportingLevel default_level;
+  GHashTable *reports_by_type;
 
   /* A list of PatternLevel */
   GList *report_pattern_levels;
@@ -223,6 +224,12 @@ _init_report_levels (GstValidateRunner * self)
 }
 
 static void
+_unref_report_list (gpointer unused, GList * reports, gpointer unused_too)
+{
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
+}
+
+static void
 gst_validate_runner_dispose (GObject * object)
 {
   GstValidateRunner *runner = GST_VALIDATE_RUNNER_CAST (object);
@@ -234,6 +241,9 @@ gst_validate_runner_dispose (GObject * object)
 
   g_mutex_clear (&runner->priv->mutex);
 
+  g_hash_table_foreach (runner->priv->reports_by_type, (GHFunc)
+      _unref_report_list, NULL);
+  g_hash_table_destroy (runner->priv->reports_by_type);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -260,6 +270,9 @@ gst_validate_runner_init (GstValidateRunner * runner)
   runner->priv = G_TYPE_INSTANCE_GET_PRIVATE (runner, GST_TYPE_VALIDATE_RUNNER,
       GstValidateRunnerPrivate);
   g_mutex_init (&runner->priv->mutex);
+
+  runner->priv->reports_by_type = g_hash_table_new (g_direct_hash,
+      g_direct_equal);
 
   runner->priv->default_level = GST_VALIDATE_REPORTING_LEVEL_DEFAULT;
   _init_report_levels (runner);
@@ -312,6 +325,24 @@ gst_validate_runner_get_reporting_level_for_name (GstValidateRunner * runner,
   return GST_VALIDATE_REPORTING_LEVEL_UNKNOWN;
 }
 
+static void
+synthesize_reports (GstValidateRunner * runner, GstValidateReport * report)
+{
+  GstValidateIssueId issue_id;
+  GList *reports;
+
+  issue_id = report->issue->issue_id;
+
+  GST_VALIDATE_RUNNER_LOCK (runner);
+  reports =
+      g_hash_table_lookup (runner->priv->reports_by_type,
+      (gconstpointer) issue_id);
+  reports = g_list_append (reports, gst_validate_report_ref (report));
+  g_hash_table_insert (runner->priv->reports_by_type, (gpointer) issue_id,
+      reports);
+  GST_VALIDATE_RUNNER_UNLOCK (runner);
+}
+
 void
 gst_validate_runner_add_report (GstValidateRunner * runner,
     GstValidateReport * report)
@@ -321,8 +352,15 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 
   /* Let's use our own reporting strategy */
   if (reporter_level == GST_VALIDATE_REPORTING_LEVEL_UNKNOWN) {
-    if (runner->priv->default_level == GST_VALIDATE_REPORTING_LEVEL_NONE)
-      return;
+    switch (runner->priv->default_level) {
+      case GST_VALIDATE_REPORTING_LEVEL_NONE:
+        return;
+      case GST_VALIDATE_REPORTING_LEVEL_SYNTHETIC:
+        synthesize_reports (runner, report);
+        return;
+      default:
+        break;
+    }
   }
 
   GST_VALIDATE_RUNNER_LOCK (runner);
@@ -350,6 +388,7 @@ gst_validate_runner_get_reports_count (GstValidateRunner * runner)
 
   GST_VALIDATE_RUNNER_LOCK (runner);
   l = g_list_length (runner->priv->reports);
+  l += g_hash_table_size (runner->priv->reports_by_type);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
   return l;
@@ -369,6 +408,44 @@ gst_validate_runner_get_reports (GstValidateRunner * runner)
   return ret;
 }
 
+static GList *
+_do_report_synthesis (GstValidateRunner * runner)
+{
+  GHashTableIter iter;
+  GList *reports, *tmp;
+  gpointer key, value;
+  GList *criticals = NULL;
+
+  g_hash_table_iter_init (&iter, runner->priv->reports_by_type);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    GstValidateReport *report;
+    reports = (GList *) value;
+
+    if (!reports)
+      continue;
+
+    report = (GstValidateReport *) (reports->data);
+    gst_validate_report_print_level (report);
+    gst_validate_report_print_detected_on (report);
+
+    if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+      criticals = g_list_append (criticals, report);
+
+    for (tmp = g_list_next (reports); tmp; tmp = tmp->next) {
+      report = (GstValidateReport *) (tmp->data);
+      gst_validate_report_print_detected_on (report);
+
+      if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+        criticals = g_list_append (criticals, report);
+    }
+    report = (GstValidateReport *) (reports->data);
+    gst_validate_report_print_description (report);
+    gst_validate_printf (NULL, "\n");
+  }
+
+  return criticals;
+}
+
 /**
  * gst_validate_runner_printf:
  * @runner: The #GstValidateRunner to print all the reports for
@@ -384,10 +461,10 @@ int
 gst_validate_runner_printf (GstValidateRunner * runner)
 {
   GList *reports, *tmp;
-  guint count = 0;
   int ret = 0;
   GList *criticals = NULL;
 
+  criticals = _do_report_synthesis (runner);
   reports = gst_validate_runner_get_reports (runner);
   for (tmp = reports; tmp; tmp = tmp->next) {
     GstValidateReport *report = tmp->data;
@@ -395,17 +472,16 @@ gst_validate_runner_printf (GstValidateRunner * runner)
     if (gst_validate_report_should_print (report))
       gst_validate_report_printf (report);
 
-    if (ret == 0 && report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
+    if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
       criticals = g_list_append (criticals, tmp->data);
-      ret = 18;
     }
-    count++;
   }
 
   if (criticals) {
     GList *iter;
 
     g_printerr ("\n\n==== Got criticals, Return value set to 18 ====\n");
+    ret = 18;
 
     for (iter = criticals; iter; iter = iter->next) {
       g_printerr ("     Critical error %s\n",
@@ -415,7 +491,8 @@ gst_validate_runner_printf (GstValidateRunner * runner)
   }
 
   g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
-  gst_validate_printf (NULL, "Issues found: %u\n", count);
   g_list_free (criticals);
+  gst_validate_printf (NULL, "Issues found: %u\n",
+      gst_validate_runner_get_reports_count (runner));
   return ret;
 }

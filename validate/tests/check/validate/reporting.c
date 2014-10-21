@@ -216,6 +216,14 @@ GST_START_TEST (test_global_levels)
           TRUE));
   runner = gst_validate_runner_new ();
   _create_issues (runner);
+  /* One issue should get through the none filter */
+  fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
+  g_object_unref (runner);
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "synthetic", TRUE));
+  runner = gst_validate_runner_new ();
+  _create_issues (runner);
+  /* Two reports of the same type */
   fail_unless_equals_int (gst_validate_runner_get_reports_count (runner), 1);
   g_object_unref (runner);
 }

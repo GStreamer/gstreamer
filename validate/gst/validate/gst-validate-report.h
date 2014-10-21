@@ -207,6 +207,10 @@ GstValidateIssueId gst_validate_report_get_issue_id (GstValidateReport * report)
 
 gboolean           gst_validate_report_check_abort (GstValidateReport * report);
 void               gst_validate_report_printf (GstValidateReport * report);
+void               gst_validate_report_print_level (GstValidateReport *report);
+void               gst_validate_report_print_detected_on (GstValidateReport *report);
+void               gst_validate_report_print_details (GstValidateReport *report);
+void               gst_validate_report_print_description (GstValidateReport *report);
 
 const gchar *      gst_validate_report_level_get_name (GstValidateReportLevel level);
 const gchar *      gst_validate_report_area_get_name (GstValidateReportArea area);

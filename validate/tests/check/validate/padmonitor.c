@@ -53,6 +53,7 @@ GST_START_TEST (buffer_before_segment)
 
   fail_unless (gst_element_link (src, sink));
 
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
@@ -131,6 +132,7 @@ GST_START_TEST (buffer_outside_segment)
   gst_element_class_add_metadata (GST_ELEMENT_GET_CLASS (src), "klass",
       "Decoder");
 
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
@@ -208,6 +210,7 @@ _first_buffer_running_time (gboolean failing)
   src = gst_element_factory_make ("fakesrc", "fakesrc");
   sink = gst_element_factory_make ("fakesink", "fakesink");
 
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
@@ -317,13 +320,14 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
   GstElement *demuxer = fake_demuxer_new ();
   GstBin *pipeline = GST_BIN (gst_pipeline_new ("validate-pipeline"));
   GList *reports;
+  GstValidateRunner *runner;
+  GstValidateMonitor *monitor;
 
-  GstValidateRunner *runner = gst_validate_runner_new ();
-  GstValidateMonitor *monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT (pipeline),
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "all", TRUE));
+  runner = gst_validate_runner_new ();
+  monitor = gst_validate_monitor_factory_create (GST_OBJECT (pipeline),
       runner, NULL);
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
-
 
   gst_bin_add (pipeline, demuxer);
   fake_demuxer_prepare_pads (pipeline, demuxer, runner);
@@ -413,6 +417,7 @@ GST_START_TEST (issue_concatenation)
   gint n_reports;
   gulong probe_id1, probe_id2;
 
+  fail_unless (g_setenv ("GST_VALIDATE_REPORT_LEVEL", "subchain", TRUE));
   runner = gst_validate_runner_new ();
 
   src1 = create_and_monitor_element ("fakesrc", "fakesrc1", runner);

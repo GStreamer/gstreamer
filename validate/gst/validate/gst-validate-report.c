@@ -447,7 +447,8 @@ gst_validate_report_unref (GstValidateReport * report)
 
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&report->refcount))) {
     g_free (report->message);
-    g_list_free_full (report->shadow_reports, (GDestroyNotify) gst_validate_report_unref);
+    g_list_free_full (report->shadow_reports,
+        (GDestroyNotify) gst_validate_report_unref);
     g_slice_free (GstValidateReport, report);
     g_mutex_clear (&report->shadow_reports_lock);
   }
@@ -637,34 +638,55 @@ gst_validate_report_set_master_report (GstValidateReport * report,
   }
   if (add_shadow_report)
     master_report->shadow_reports =
-        g_list_append (master_report->shadow_reports, gst_validate_report_ref (report));
+        g_list_append (master_report->shadow_reports,
+        gst_validate_report_ref (report));
   GST_VALIDATE_REPORT_SHADOW_REPORTS_UNLOCK (master_report);
 }
 
 void
-gst_validate_report_printf (GstValidateReport * report)
+gst_validate_report_print_level (GstValidateReport * report)
 {
-  GList *tmp;
-
   gst_validate_printf (NULL, "%10s : %s\n",
       gst_validate_report_level_get_name (report->level),
       report->issue->summary);
+}
+
+void
+gst_validate_report_print_detected_on (GstValidateReport * report)
+{
+  GList *tmp;
+
   gst_validate_printf (NULL, "%*s Detected on <%s",
       12, "", gst_validate_reporter_get_name (report->reporter));
-
   for (tmp = report->shadow_reports; tmp; tmp = tmp->next) {
     GstValidateReport *shadow_report = (GstValidateReport *) tmp->data;
     gst_validate_printf (NULL, ", %s",
         gst_validate_reporter_get_name (shadow_report->reporter));
   }
-
   gst_validate_printf (NULL, ">\n");
+}
 
+void
+gst_validate_report_print_details (GstValidateReport * report)
+{
   if (report->message)
     gst_validate_printf (NULL, "%*s Details : %s\n", 12, "", report->message);
+}
 
+void
+gst_validate_report_print_description (GstValidateReport * report)
+{
   if (report->issue->description)
     gst_validate_printf (NULL, "%*s Description : %s\n", 12, "",
         report->issue->description);
+}
+
+void
+gst_validate_report_printf (GstValidateReport * report)
+{
+  gst_validate_report_print_level (report);
+  gst_validate_report_print_detected_on (report);
+  gst_validate_report_print_details (report);
+  gst_validate_report_print_description (report);
   gst_validate_printf (NULL, "\n");
 }
