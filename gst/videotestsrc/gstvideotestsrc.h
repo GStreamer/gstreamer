@@ -135,6 +135,7 @@ struct _GstVideoTestSrc {
   gint y_invert;
 
   /* private */
+  /* FIXME 2.0: Change type to GstClockTime */
   gint64 timestamp_offset;              /* base offset */
 
   /* running time and frames for current caps */
