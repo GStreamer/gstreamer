@@ -486,6 +486,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         demux->discont = TRUE;
         demux->new_playlist = TRUE;
         demux->do_typefind = TRUE;
+        demux->end_of_playlist = FALSE;
 
         gst_hls_demux_change_playlist (demux,
             demux->current_download_rate * demux->bitrate_limit / ABS (rate));
@@ -513,6 +514,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         demux->discont = TRUE;
         demux->new_playlist = TRUE;
         demux->do_typefind = TRUE;
+        demux->end_of_playlist = FALSE;
 
         gst_hls_demux_change_playlist (demux,
             demux->current_download_rate * demux->bitrate_limit);
