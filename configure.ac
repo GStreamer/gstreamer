@@ -140,6 +140,9 @@ AC_SUBST(LIBM)
 
 AC_FUNC_MMAP
 
+dnl check for pthreads
+ACX_PTHREAD
+
 dnl *** checks for header files ***
 
 AC_CHECK_HEADERS([unistd.h], HAVE_UNISTD_H=yes)
@@ -541,7 +544,7 @@ if test "x$HAVE_WINSOCK2_H" = "xyes"; then
 fi
 
 if test "x$HAVE_PTHREAD_H" = "xyes"; then
-  DCCP_LIBS="$DCCP_LIBS -lpthread"
+  DCCP_LIBS="$DCCP_LIBS $PTHREAD_LIBS"
   AC_SUBST(DCCP_LIBS)
 else
   AG_GST_DISABLE_PLUGIN(dccp)
@@ -2290,7 +2293,7 @@ PKG_CHECK_EXISTS(mjpegtools >= 1.6.1.93 mjpegtools < 1.8.0, [
         OLD_CFLAGS="$CFLAGS"
         OLD_LIBS="$LIBS"
         CFLAGS="$MJPEG_CFLAGS"
-        LIBS="$LIBS $MJPEG_LIBS -lmjpegutils $LIBM -lpthread"
+        LIBS="$LIBS $MJPEG_LIBS -lmjpegutils $LIBM $PTHREAD_LIBS"
         AC_CHECK_FUNC(mjpeg_loglev_t, [
           mjpegtools_api=10903
           ], [
@@ -2328,7 +2331,7 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
       dnl check headers
       mpeg2enc_headers_ok=no
       AC_CHECK_HEADER([mpeg2encoder.hh], [
-        MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp $LIBM -lpthread"
+        MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp $LIBM $PTHREAD_LIBS"
         OLD_LIBS="$LIBS"
         LIBS="$LIBS $MPEG2ENC_LIBS"
         AC_MSG_CHECKING([for valid mpeg2enc objects])
@@ -2574,9 +2577,9 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_OPENH264, true)
 AG_GST_CHECK_FEATURE(OPENH264, [openh264 library], openh264, [
   HAVE_OPENH264="yes"
   saved_LIBS="$LIBS"
-  LIBS="-lpthread $LIBS"
+  LIBS="$PTHREAD_LIBS $LIBS"
   AG_GST_CHECK_LIBHEADER(OPENH264, openh264, WelsSnprintf, ,wels/codec_api.h,
-    OPENH264_LIBS="-lopenh264", HAVE_OPENH264="no")
+    OPENH264_LIBS="-lopenh264 $PTHREAD_LIBS", HAVE_OPENH264="no")
   LIBS=$saved_LIBS
   AC_SUBST(OPENH264_LIBS)
 ])
@@ -2849,7 +2852,7 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
   HAVE_XVID=no
   AC_CHECK_HEADER(xvid.h, [
     OLD_LIBS="$LIBS"
-    LIBS="-lpthread $LIBM"
+    LIBS="$PTHREAD_LIBS $LIBM"
     AC_CHECK_LIB(xvidcore, xvid_encore, [
       AC_CHECK_LIB(xvidcore, xvid_decore, [
         AC_CHECK_LIB(xvidcore, xvid_global, [
