@@ -12,5 +12,6 @@ prototype_HEADERS = \
 	shaders.h \
 	gstgl_compat.h \
 	gstgl_gles2compat.h \
-	debug.h
+	debug.h \
+	vao.h
 
