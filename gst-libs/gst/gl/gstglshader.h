@@ -79,6 +79,7 @@ gboolean gst_gl_shader_is_compiled       (GstGLShader *shader);
 gboolean gst_gl_shader_compile           (GstGLShader *shader, GError **error);
 gboolean gst_gl_shader_compile_and_check (GstGLShader *shader, const gchar *source, GstGLShaderSourceType type);
 gboolean gst_gl_shader_compile_all_with_attribs_and_check (GstGLShader *shader, const gchar *v_src, const gchar *f_src, const gint n_attribs, const gchar *attrib_names[], GLint attrib_locs[]);
+
 gboolean gst_gl_shader_compile_with_default_f_and_check   (GstGLShader *shader, const gchar *v_src, const gint n_attribs, const gchar *attrib_names[], GLint attrib_locs[]);
 gboolean gst_gl_shader_compile_with_default_v_and_check   (GstGLShader *shader, const gchar *f_src, GLint *pos_loc, GLint *tex_loc);
 gboolean gst_gl_shader_compile_with_default_vf_and_check  (GstGLShader *shader, GLint *pos_loc, GLint *tex_loc);
