@@ -2400,18 +2400,17 @@ _pad_probe_cb (GstPad * mixer_pad, GstPadProbeInfo * info,
 }
 
 static void
-pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
+_ghost_track_srcpad (TrackPrivate * tr_priv)
 {
+  GstPad *pad;
   gchar *padname;
   gboolean no_more;
   GList *tmp;
+  GESTrack *track = tr_priv->track;
+
+  pad = gst_element_get_static_pad (GST_ELEMENT (track), "src");
 
   GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
-
-  if (G_UNLIKELY (tr_priv->pad)) {
-    GST_WARNING ("We are already controlling a pad for this track");
-    return;
-  }
 
   /* Remember the pad */
   LOCK_DYN (tr_priv->timeline);
@@ -2447,28 +2446,6 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
       (GstPadProbeCallback) _pad_probe_cb, tr_priv->timeline, NULL);
 
   UNLOCK_DYN (tr_priv->timeline);
-}
-
-static void
-pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
-{
-  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
-
-  if (G_UNLIKELY (tr_priv->pad != pad)) {
-    GST_WARNING ("Not the pad we're controlling");
-    return;
-  }
-
-  if (G_UNLIKELY (tr_priv->ghostpad == NULL)) {
-    GST_WARNING ("We don't have a ghostpad for this pad !");
-    return;
-  }
-
-  GST_DEBUG ("Removing ghostpad");
-  gst_pad_set_active (tr_priv->ghostpad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
-  tr_priv->ghostpad = NULL;
-  tr_priv->pad = NULL;
 }
 
 gboolean
@@ -2809,10 +2786,6 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   UNLOCK_DYN (timeline);
   timeline->tracks = g_list_append (timeline->tracks, track);
 
-  /* Listen to pad-added/-removed */
-  g_signal_connect (track, "pad-added", (GCallback) pad_added_cb, tr_priv);
-  g_signal_connect (track, "pad-removed", (GCallback) pad_removed_cb, tr_priv);
-
   /* Inform the track that it's currently being used by ourself */
   ges_track_set_timeline (track, timeline);
 
@@ -2842,6 +2815,8 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     }
     g_list_free (objects);
   }
+
+  _ghost_track_srcpad (tr_priv);
 
   /* FIXME Check if we should rollback if we can't sync state */
   gst_element_sync_state_with_parent (GST_ELEMENT (track));
@@ -2904,8 +2879,6 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
   }
 
   /* Remove pad-added/-removed handlers */
-  g_signal_handlers_disconnect_by_func (track, pad_added_cb, tr_priv);
-  g_signal_handlers_disconnect_by_func (track, pad_removed_cb, tr_priv);
   g_signal_handlers_disconnect_by_func (track, track_element_added_cb,
       timeline);
   g_signal_handlers_disconnect_by_func (track, track_element_removed_cb,

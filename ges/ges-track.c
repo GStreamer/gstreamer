@@ -37,6 +37,12 @@
 G_DEFINE_TYPE_WITH_CODE (GESTrack, ges_track, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
 
+static GstStaticPadTemplate ges_track_src_pad_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 /* Structure that represents gaps and keep knowledge
  * of the gaps filled in the track */
 typedef struct
@@ -92,9 +98,6 @@ static guint ges_track_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *properties[ARG_LAST];
 
-static void pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track);
-static void
-pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track);
 static void composition_duration_cb (GstElement * composition, GParamSpec * arg
     G_GNUC_UNUSED, GESTrack * obj);
 
@@ -256,9 +259,10 @@ sort_track_elements_cb (GESTrackElement * child,
 static void
 _ghost_nlecomposition_srcpad (GESTrack * track)
 {
-  GESTrackPrivate *priv = track->priv;
   GstPad *capsfilter_sink;
   GstPad *capsfilter_src;
+  GESTrackPrivate *priv = track->priv;
+  GstPad *pad = gst_element_get_static_pad (priv->composition, "src");
 
   capsfilter_sink = gst_element_get_static_pad (priv->capsfilter, "sink");
 
@@ -273,22 +277,6 @@ _ghost_nlecomposition_srcpad (GESTrack * track)
   gst_object_unref (capsfilter_src);
   gst_pad_set_active (priv->srcpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (track), priv->srcpad);
-
-  GST_DEBUG ("done");
-}
-
-static void
-pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track)
-{
-  GESTrackPrivate *priv = track->priv;
-
-  GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
-
-  if (G_LIKELY (priv->srcpad)) {
-    gst_pad_set_active (priv->srcpad, FALSE);
-    gst_element_remove_pad (GST_ELEMENT (track), priv->srcpad);
-    priv->srcpad = NULL;
-  }
 
   GST_DEBUG ("done");
 }
@@ -423,6 +411,7 @@ ges_track_dispose (GObject * object)
 {
   GESTrack *track = (GESTrack *) object;
   GESTrackPrivate *priv = track->priv;
+  gboolean ret;
 
   /* Remove all TrackElements and drop our reference */
   g_hash_table_unref (priv->trackelements_iter);
@@ -430,11 +419,13 @@ ges_track_dispose (GObject * object)
       (GFunc) dispose_trackelements_foreach, track);
   g_sequence_free (priv->trackelements_by_start);
   g_list_free_full (priv->gaps, (GDestroyNotify) free_gap);
+  g_signal_emit_by_name (track->priv->composition, "commit", TRUE, &ret);
 
   if (priv->mixing_operation)
     gst_object_unref (priv->mixing_operation);
 
   if (priv->composition) {
+    gst_element_remove_pad (GST_ELEMENT (track), priv->srcpad);
     gst_bin_remove (GST_BIN (object), priv->composition);
     priv->composition = NULL;
   }
@@ -508,6 +499,7 @@ static void
 ges_track_class_init (GESTrackClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GESTrackPrivate));
 
@@ -586,6 +578,9 @@ ges_track_class_init (GESTrackClass * klass)
   g_object_class_install_property (object_class, ARG_MIXING,
       properties[ARG_MIXING]);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&ges_track_src_pad_template));
+
   /**
    * GESTrack::track-element-added:
    * @object: the #GESTrack
@@ -632,10 +627,6 @@ ges_track_init (GESTrack * self)
 
   g_signal_connect (G_OBJECT (self->priv->composition), "notify::duration",
       G_CALLBACK (composition_duration_cb), self);
-  g_signal_connect (self->priv->composition, "pad-added",
-      (GCallback) pad_added_cb, self);
-  g_signal_connect (self->priv->composition, "pad-removed",
-      (GCallback) pad_removed_cb, self);
 }
 
 /**
