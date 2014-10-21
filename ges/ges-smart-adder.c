@@ -83,7 +83,10 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   PadInfos *infos = g_slice_new0 (PadInfos);
   GESSmartAdder *self = GES_SMART_ADDER (element);
 
-  infos->adder_pad = gst_element_request_pad (self->adder, templ, NULL, caps);
+  infos->adder_pad = gst_element_request_pad (self->adder,
+      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (self->adder),
+          "sink_%u"), NULL, caps);
+
   if (infos->adder_pad == NULL) {
     GST_WARNING_OBJECT (element, "Could not get any pad from GstAdder");
     g_slice_free (PadInfos, infos);
@@ -202,7 +205,7 @@ ges_smart_adder_init (GESSmartAdder * self)
 
   g_mutex_init (&self->lock);
 
-  self->adder = gst_element_factory_make ("adder", "smart-adder-adder");
+  self->adder = gst_element_factory_make ("audiomixer", "smart-adder-adder");
   gst_bin_add (GST_BIN (self), self->adder);
 
   pad = gst_element_get_static_pad (self->adder, "src");

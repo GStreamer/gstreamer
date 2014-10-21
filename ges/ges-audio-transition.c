@@ -192,7 +192,7 @@ ges_audio_transition_create_element (GESTrackElement * track_element)
 
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
 
-  mixer = gst_element_factory_make ("adder", NULL);
+  mixer = gst_element_factory_make ("audiomixer", NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
   atarget = link_element_to_mixer_with_volume (GST_BIN (topbin), iconva, mixer);
