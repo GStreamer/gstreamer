@@ -552,10 +552,10 @@ resize_cb (gpointer data)
 }
 
 - (void)drawRect: (NSRect)dirtyRect {
-  [self reshape];
+  [self reshape:nil];
 }
 
-- (void)reshape {
+- (void)reshape: (NSNotification*)notification {
   GstGLWindow *window;
 
   window = GST_GL_WINDOW (window_cocoa);
