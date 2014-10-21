@@ -263,8 +263,8 @@ gst_vtenc_stop (GstVideoEncoder * enc)
   GstVTEnc *self = GST_VTENC_CAST (enc);
 
   GST_OBJECT_LOCK (self);
-
   gst_vtenc_destroy_session (self, &self->session);
+  GST_OBJECT_UNLOCK (self);
 
   if (self->options != NULL) {
     CFRelease (self->options);
@@ -280,8 +280,6 @@ gst_vtenc_stop (GstVideoEncoder * enc)
 
   gst_vtenc_clear_cached_caps_downstream (self);
 
-  GST_OBJECT_UNLOCK (self);
-
   g_async_queue_unref (self->cur_outframes);
   self->cur_outframes = NULL;
 
@@ -294,7 +292,6 @@ gst_vtenc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   GstVTEnc *self = GST_VTENC_CAST (enc);
   VTCompressionSessionRef session;
 
-  GST_OBJECT_LOCK (self);
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
@@ -305,20 +302,19 @@ gst_vtenc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   self->negotiated_fps_d = state->info.fps_d;
   self->video_info = state->info;
 
+  GST_OBJECT_LOCK (self);
   gst_vtenc_destroy_session (self, &self->session);
-
   GST_OBJECT_UNLOCK (self);
+
   session = gst_vtenc_create_session (self);
   GST_OBJECT_LOCK (self);
-
   self->session = session;
+  GST_OBJECT_UNLOCK (self);
 
   if (self->options != NULL)
     CFRelease (self->options);
   self->options = CFDictionaryCreateMutable (NULL, 0,
       &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-
-  GST_OBJECT_UNLOCK (self);
 
   return TRUE;
 }
@@ -664,7 +660,6 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   gboolean forced_keyframe = FALSE;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
-    GST_OBJECT_LOCK (self);
     if (self->options != NULL) {
       GST_INFO_OBJECT (self, "received force-keyframe-event, will force intra");
       CFDictionaryAddValue (self->options,
@@ -674,7 +669,6 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
       GST_INFO_OBJECT (self,
           "received force-keyframe-event but encode not yet started, ignoring");
     }
-    GST_OBJECT_UNLOCK (self);
   }
 
   ts = CMTimeMake (frame->pts, GST_SECOND);
@@ -802,11 +796,15 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   }
 #endif
 
-  GST_OBJECT_LOCK (self);
-
+  /* We need to unlock the stream lock here because
+   * it can wait for gst_vtenc_enqueue_buffer() to
+   * handle a buffer... which will take the stream
+   * lock from another thread and then deadlock */
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
   vt_status = VTCompressionSessionEncodeFrame (self->session,
       pbuf, ts, duration, self->options,
       GINT_TO_POINTER (frame->system_frame_number), NULL);
+  GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
   /* Only force one keyframe */
   if (forced_keyframe) {
@@ -819,7 +817,6 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
         (int) vt_status);
   }
 
-  GST_OBJECT_UNLOCK (self);
   gst_video_codec_frame_unref (frame);
 
   CVPixelBufferRelease (pbuf);
