@@ -118,11 +118,6 @@ _priv_gst_message_initialize (void)
 
   GST_CAT_INFO (GST_CAT_GST_INIT, "init messages");
 
-  /* the GstMiniObject types need to be class_ref'd once before it can be
-   * done from multiple threads;
-   * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
-  gst_message_get_type ();
-
   for (i = 0; message_quarks[i].name; i++) {
     message_quarks[i].quark =
         g_quark_from_static_string (message_quarks[i].name);
