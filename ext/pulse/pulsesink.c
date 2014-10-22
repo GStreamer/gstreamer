@@ -1185,6 +1185,7 @@ gst_pulseringbuffer_clear (GstAudioRingBuffer * buf)
   pa_threaded_mainloop_unlock (mainloop);
 }
 
+#if 0
 /* called from pulse thread with the mainloop lock */
 static void
 mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
@@ -1207,6 +1208,7 @@ mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
   pulsesink->defer_pending--;
   pa_threaded_mainloop_signal (mainloop, 0);
 }
+#endif
 
 /* start/resume playback ASAP, we don't uncork here but in the commit method */
 static gboolean
@@ -1220,11 +1222,6 @@ gst_pulseringbuffer_start (GstAudioRingBuffer * buf)
 
   pa_threaded_mainloop_lock (mainloop);
 
-  GST_DEBUG_OBJECT (psink, "scheduling stream status");
-  psink->defer_pending++;
-  pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
-      mainloop_enter_defer_cb, psink);
-
   GST_DEBUG_OBJECT (psink, "starting");
   pbuf->paused = FALSE;
 
@@ -1233,6 +1230,12 @@ gst_pulseringbuffer_start (GstAudioRingBuffer * buf)
       g_atomic_int_get (&GST_AUDIO_BASE_SINK (psink)->eos_rendering))
     gst_pulsering_set_corked (pbuf, FALSE, FALSE);
 
+#if 0
+  GST_DEBUG_OBJECT (psink, "scheduling stream status");
+  psink->defer_pending++;
+  pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
+      mainloop_enter_defer_cb, psink);
+
   /* Wait for the stream status message to be posted. This needs to be done
    * synchronously because the callback will take the mainloop lock
    * (implicitly) and then take the GST_OBJECT_LOCK. Everywhere else, we take
@@ -1240,6 +1243,7 @@ gst_pulseringbuffer_start (GstAudioRingBuffer * buf)
    * cause a deadlock. */
   GST_DEBUG_OBJECT (psink, "waiting for stream status (ENTER) to be posted");
   pa_threaded_mainloop_wait (mainloop);
+#endif
 
   pa_threaded_mainloop_unlock (mainloop);
 
@@ -1272,6 +1276,7 @@ gst_pulseringbuffer_pause (GstAudioRingBuffer * buf)
   return res;
 }
 
+#if 0
 /* called from pulse thread with the mainloop lock */
 static void
 mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
@@ -1294,6 +1299,7 @@ mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
   pulsesink->defer_pending--;
   pa_threaded_mainloop_signal (mainloop, 0);
 }
+#endif
 
 /* stop playback, we flush everything. */
 static gboolean
@@ -1341,7 +1347,7 @@ cleanup:
     pa_operation_cancel (o);
     pa_operation_unref (o);
   }
-
+#if 0
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
   psink->defer_pending++;
   pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
@@ -1354,6 +1360,7 @@ cleanup:
    * cause a deadlock. */
   GST_DEBUG_OBJECT (psink, "waiting for stream status (LEAVE) to be posted");
   pa_threaded_mainloop_wait (mainloop);
+#endif
 
   pa_threaded_mainloop_unlock (mainloop);
 
