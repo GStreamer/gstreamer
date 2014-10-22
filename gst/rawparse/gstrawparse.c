@@ -291,7 +291,7 @@ gst_raw_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstRawParse *rp = GST_RAW_PARSE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   GstRawParseClass *rp_class = GST_RAW_PARSE_GET_CLASS (rp);
-  guint buffersize;
+  guint buffersize, available;
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (rp, "received DISCONT buffer");
@@ -310,8 +310,12 @@ gst_raw_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   gst_adapter_push (rp->adapter, buffer);
 
-  if (rp_class->multiple_frames_per_buffer) {
-    buffersize = gst_adapter_available (rp->adapter);
+  available = gst_adapter_available (rp->adapter);
+  if (available == 0) {
+    ret = GST_FLOW_OK;
+    goto done;
+  } else if (rp_class->multiple_frames_per_buffer) {
+    buffersize = available;
     buffersize -= buffersize % rp->framesize;
   } else {
     buffersize = rp->framesize;
