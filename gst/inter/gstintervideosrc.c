@@ -48,8 +48,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_inter_video_src_debug_category);
 #define GST_CAT_DEFAULT gst_inter_video_src_debug_category
 
 /* prototypes */
-
-
 static void gst_inter_video_src_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_inter_video_src_get_property (GObject * object,
@@ -76,7 +74,6 @@ enum
 };
 
 /* pad templates */
-
 static GstStaticPadTemplate gst_inter_video_src_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -123,7 +120,6 @@ gst_inter_video_src_class_init (GstInterVideoSrcClass * klass)
       g_param_spec_string ("channel", "Channel",
           "Channel name to match inter src and sink elements",
           "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
 }
 
 static void
@@ -226,7 +222,6 @@ gst_inter_video_src_set_caps (GstBaseSrc * src, GstCaps * caps)
   return gst_pad_set_caps (src->srcpad, caps);
 }
 
-
 static gboolean
 gst_inter_video_src_start (GstBaseSrc * src)
 {
@@ -278,7 +273,6 @@ gst_inter_video_src_get_times (GstBaseSrc * src, GstBuffer * buffer,
     *end = -1;
   }
 }
-
 
 static GstFlowReturn
 gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,

@@ -28,7 +28,6 @@
 static GList *list;
 static GMutex mutex;
 
-
 GstInterSurface *
 gst_inter_surface_get (const char *name)
 {

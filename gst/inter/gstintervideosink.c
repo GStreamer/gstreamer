@@ -51,8 +51,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_inter_video_sink_debug_category);
 #define GST_CAT_DEFAULT gst_inter_video_sink_debug_category
 
 /* prototypes */
-
-
 static void gst_inter_video_sink_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_inter_video_sink_get_property (GObject * object,
@@ -75,7 +73,6 @@ enum
 };
 
 /* pad templates */
-
 static GstStaticPadTemplate gst_inter_video_sink_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -85,7 +82,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 
 /* class initialization */
-
 G_DEFINE_TYPE (GstInterVideoSink, gst_inter_video_sink, GST_TYPE_BASE_SINK);
 
 static void
@@ -192,8 +188,6 @@ gst_inter_video_sink_get_times (GstBaseSink * sink, GstBuffer * buffer,
       }
     }
   }
-
-
 }
 
 static gboolean

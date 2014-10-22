@@ -51,8 +51,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_inter_audio_src_debug_category);
 #define GST_CAT_DEFAULT gst_inter_audio_src_debug_category
 
 /* prototypes */
-
-
 static void gst_inter_audio_src_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_inter_audio_src_get_property (GObject * object,
@@ -78,7 +76,6 @@ enum
 };
 
 /* pad templates */
-
 static GstStaticPadTemplate gst_inter_audio_src_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -89,7 +86,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 
 /* class initialization */
-
 G_DEFINE_TYPE (GstInterAudioSrc, gst_inter_audio_src, GST_TYPE_BASE_SRC);
 
 static void
@@ -214,7 +210,6 @@ gst_inter_audio_src_set_caps (GstBaseSrc * src, GstCaps * caps)
   return ret;
 }
 
-
 static gboolean
 gst_inter_audio_src_start (GstBaseSrc * src)
 {
@@ -265,7 +260,6 @@ gst_inter_audio_src_get_times (GstBaseSrc * src, GstBuffer * buffer,
     *end = -1;
   }
 }
-
 
 #define SIZE 1600
 
@@ -335,7 +329,6 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   return GST_FLOW_OK;
 }
-
 
 static gboolean
 gst_inter_audio_src_query (GstBaseSrc * src, GstQuery * query)

@@ -48,8 +48,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_inter_sub_src_debug_category);
 #define GST_CAT_DEFAULT gst_inter_sub_src_debug_category
 
 /* prototypes */
-
-
 static void gst_inter_sub_src_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_inter_sub_src_get_property (GObject * object,
@@ -72,7 +70,6 @@ enum
 };
 
 /* pad templates */
-
 static GstStaticPadTemplate gst_inter_sub_src_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -219,7 +216,6 @@ gst_inter_sub_src_get_times (GstBaseSrc * src, GstBuffer * buffer,
     *end = -1;
   }
 }
-
 
 static GstFlowReturn
 gst_inter_sub_src_create (GstBaseSrc * src, guint64 offset, guint size,
