@@ -50,6 +50,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_inter_audio_src_debug_category);
 #define GST_CAT_DEFAULT gst_inter_audio_src_debug_category
 
+#define PERIOD    1600
+#define N_PERIODS 10
+
 /* prototypes */
 static void gst_inter_audio_src_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
@@ -281,8 +284,6 @@ gst_inter_audio_src_get_times (GstBaseSrc * src, GstBuffer * buffer,
   }
 }
 
-#define SIZE 1600
-
 static GstFlowReturn
 gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
     GstBuffer ** buf)
@@ -302,7 +303,7 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
     if (!gst_audio_info_is_equal (&interaudiosrc->surface->audio_info,
             &interaudiosrc->info)) {
       caps = gst_audio_info_to_caps (&interaudiosrc->surface->audio_info);
-      interaudiosrc->timestamp_offset =
+      interaudiosrc->timestamp_offset +=
           gst_util_uint64_scale_int (interaudiosrc->n_samples, GST_SECOND,
           interaudiosrc->info.rate);
       interaudiosrc->n_samples = 0;
@@ -311,16 +312,19 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   bpf = interaudiosrc->surface->audio_info.bpf;
 
-  n = bpf >
-      0 ? gst_adapter_available (interaudiosrc->surface->audio_adapter) /
-      bpf : 0;
-  if (n > SIZE * 3) {
-    GST_WARNING_OBJECT (interaudiosrc, "flushing %d samples", SIZE / 2);
-    gst_adapter_flush (interaudiosrc->surface->audio_adapter, (SIZE / 2) * bpf);
-    n -= (SIZE / 2);
+  if (bpf > 0)
+    n = gst_adapter_available (interaudiosrc->surface->audio_adapter) / bpf;
+  else
+    n = 0;
+
+  while (n > PERIOD * 10) {
+    GST_WARNING_OBJECT (interaudiosrc, "flushing %d samples", PERIOD / 2);
+    gst_adapter_flush (interaudiosrc->surface->audio_adapter,
+        (PERIOD / 2) * bpf);
+    n -= (PERIOD / 2);
   }
-  if (n > SIZE)
-    n = SIZE;
+  if (n > PERIOD)
+    n = PERIOD;
   if (n > 0) {
     buffer = gst_adapter_take_buffer (interaudiosrc->surface->audio_adapter,
         n * bpf);
@@ -341,13 +345,13 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
   }
 
   bpf = interaudiosrc->info.bpf;
-  if (n < SIZE) {
+  if (n < PERIOD) {
     GstMapInfo map;
     GstMemory *mem;
 
     GST_WARNING_OBJECT (interaudiosrc, "creating %d samples of silence",
-        SIZE - n);
-    mem = gst_allocator_alloc (NULL, (SIZE - n) * bpf, NULL);
+        PERIOD - n);
+    mem = gst_allocator_alloc (NULL, (PERIOD - n) * bpf, NULL);
     if (gst_memory_map (mem, &map, GST_MAP_WRITE)) {
       gst_audio_format_fill_silence (interaudiosrc->info.finfo, map.data,
           map.size);
@@ -356,20 +360,18 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
     buffer = gst_buffer_make_writable (buffer);
     gst_buffer_prepend_memory (buffer, mem);
   }
-  n = SIZE;
+  n = PERIOD;
 
   GST_BUFFER_OFFSET (buffer) = interaudiosrc->n_samples;
   GST_BUFFER_OFFSET_END (buffer) = interaudiosrc->n_samples + n;
-  GST_BUFFER_TIMESTAMP (buffer) =
+  GST_BUFFER_TIMESTAMP (buffer) = interaudiosrc->timestamp_offset +
       gst_util_uint64_scale_int (interaudiosrc->n_samples, GST_SECOND,
       interaudiosrc->info.rate);
   GST_DEBUG_OBJECT (interaudiosrc, "create ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
-  GST_BUFFER_DURATION (buffer) =
+  GST_BUFFER_DURATION (buffer) = interaudiosrc->timestamp_offset +
       gst_util_uint64_scale_int (interaudiosrc->n_samples + n, GST_SECOND,
       interaudiosrc->info.rate) - GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_OFFSET (buffer) = interaudiosrc->n_samples;
-  GST_BUFFER_OFFSET_END (buffer) = -1;
   GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
   if (interaudiosrc->n_samples == 0) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
@@ -394,10 +396,9 @@ gst_inter_audio_src_query (GstBaseSrc * src, GstQuery * query)
       GstClockTime min_latency, max_latency;
 
       if (interaudiosrc->info.rate > 0) {
-        /* FIXME: Where does the 30 come from? */
-
+        /* 1.5 just as a good measure */
         min_latency =
-            30 * gst_util_uint64_scale_int (GST_SECOND, SIZE,
+            1.5 * N_PERIODS * gst_util_uint64_scale_int (GST_SECOND, PERIOD,
             interaudiosrc->info.rate);
 
         max_latency = min_latency;

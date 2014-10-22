@@ -47,6 +47,9 @@
 #include "gstinteraudiosink.h"
 #include <string.h>
 
+#define PERIOD    1600
+#define N_PERIODS 10
+
 GST_DEBUG_CATEGORY_STATIC (gst_inter_audio_sink_debug_category);
 #define GST_CAT_DEFAULT gst_inter_audio_sink_debug_category
 
@@ -253,11 +256,11 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   g_mutex_lock (&interaudiosink->surface->mutex);
   n = gst_adapter_available (interaudiosink->surface->audio_adapter) / 4;
-#define SIZE 1600
-  if (n > SIZE * 3) {
-    GST_WARNING_OBJECT (interaudiosink, "flushing %d samples", SIZE / 2);
+  while (n > PERIOD * N_PERIODS) {
+    GST_WARNING_OBJECT (interaudiosink, "flushing %d samples", PERIOD / 2);
     gst_adapter_flush (interaudiosink->surface->audio_adapter,
-        (SIZE / 2) * bpf);
+        (PERIOD / 2) * bpf);
+    n -= (PERIOD / 2);
   }
   gst_adapter_push (interaudiosink->surface->audio_adapter,
       gst_buffer_ref (buffer));
