@@ -1781,6 +1781,24 @@ remove_all_timers (GstRtpJitterBuffer * jitterbuffer)
   unschedule_current_timer (jitterbuffer);
 }
 
+/* get the extra delay to wait before sending RTX */
+static GstClockTime
+get_rtx_delay (GstRtpJitterBufferPrivate * priv)
+{
+  GstClockTime delay;
+
+  if (priv->rtx_delay == -1) {
+    if (priv->avg_jitter == 0)
+      delay = DEFAULT_AUTO_RTX_DELAY;
+    else
+      /* jitter is in nanoseconds, 2x jitter is a good margin */
+      delay = priv->avg_jitter * 2;
+  } else {
+    delay = priv->rtx_delay * GST_MSECOND;
+  }
+  return delay;
+}
+
 /* we just received a packet with seqnum and dts.
  *
  * First check for old seqnum that we are still expecting. If the gap with the
@@ -1878,15 +1896,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     /* calculate expected arrival time of the next seqnum */
     expected = dts + priv->packet_spacing;
 
-    if (priv->rtx_delay == -1) {
-      if (priv->avg_jitter == 0)
-        delay = DEFAULT_AUTO_RTX_DELAY;
-      else
-        /* jitter is in nanoseconds, 2x jitter is a good margin */
-        delay = priv->avg_jitter * 2;
-    } else {
-      delay = priv->rtx_delay * GST_MSECOND;
-    }
+    delay = get_rtx_delay (priv);
 
     /* and update/install timer for next seqnum */
     if (timer)
@@ -2654,6 +2664,40 @@ wait:
   }
 }
 
+static GstClockTime
+get_rtx_retry_timeout (GstRtpJitterBufferPrivate * priv)
+{
+  GstClockTime rtx_retry_timeout;
+
+  if (priv->rtx_retry_timeout == -1) {
+    if (priv->avg_rtx_rtt == 0)
+      rtx_retry_timeout = DEFAULT_AUTO_RTX_TIMEOUT;
+    else
+      /* we want to ask for a retransmission after we waited for a
+       * complete RTT and the additional jitter */
+      rtx_retry_timeout = priv->avg_rtx_rtt + priv->avg_jitter * 2;
+  } else {
+    rtx_retry_timeout = priv->rtx_retry_timeout * GST_MSECOND;
+  }
+  return rtx_retry_timeout;
+}
+
+static GstClockTime
+get_rtx_retry_period (GstRtpJitterBufferPrivate * priv,
+    GstClockTime rtx_retry_timeout)
+{
+  GstClockTime rtx_retry_period;
+
+  if (priv->rtx_retry_period == -1) {
+    /* we retry up to the configured jitterbuffer size but leaving some
+     * room for the retransmission to arrive in time */
+    rtx_retry_period = priv->latency_ns - rtx_retry_timeout;
+  } else {
+    rtx_retry_period = priv->rtx_retry_period * GST_MSECOND;
+  }
+  return rtx_retry_period;
+}
+
 /* the timeout for when we expected a packet expired */
 static gboolean
 do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
@@ -2669,24 +2713,8 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   GST_DEBUG_OBJECT (jitterbuffer, "expected %d didn't arrive, now %"
       GST_TIME_FORMAT, timer->seqnum, GST_TIME_ARGS (now));
 
-  if (priv->rtx_retry_timeout == -1) {
-    if (priv->avg_rtx_rtt == 0)
-      rtx_retry_timeout = DEFAULT_AUTO_RTX_TIMEOUT;
-    else
-      /* we want to ask for a retransmission after we waited for a
-       * complete RTT and the additional jitter */
-      rtx_retry_timeout = priv->avg_rtx_rtt + priv->avg_jitter * 2;
-  } else {
-    rtx_retry_timeout = priv->rtx_retry_timeout * GST_MSECOND;
-  }
-
-  if (priv->rtx_retry_period == -1) {
-    /* we retry up to the configured jitterbuffer size but leaving some
-     * room for the retransmission to arrive in time */
-    rtx_retry_period = priv->latency_ns - rtx_retry_timeout;
-  } else {
-    rtx_retry_period = priv->rtx_retry_period * GST_MSECOND;
-  }
+  rtx_retry_timeout = get_rtx_retry_timeout (priv);
+  rtx_retry_period = get_rtx_retry_period (priv, rtx_retry_timeout);
 
   GST_DEBUG_OBJECT (jitterbuffer, "timeout %" GST_TIME_FORMAT ", period %"
       GST_TIME_FORMAT, GST_TIME_ARGS (rtx_retry_timeout),
