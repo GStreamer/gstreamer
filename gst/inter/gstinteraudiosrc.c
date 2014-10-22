@@ -433,6 +433,7 @@ gst_inter_audio_src_fixate (GstBaseSrc * src, GstCaps * caps)
   GST_DEBUG_OBJECT (src, "fixate");
 
   caps = gst_caps_make_writable (caps);
+  caps = gst_caps_truncate (caps);
 
   structure = gst_caps_get_structure (caps, 0);
 
