@@ -269,6 +269,7 @@ gst_speex_enc_stop (GstAudioEncoder * benc)
     enc->state = NULL;
   }
   speex_bits_destroy (&enc->bits);
+  speex_bits_set_bit_buffer (&enc->bits, NULL, 0);
   gst_tag_list_unref (enc->tags);
   enc->tags = NULL;
 
