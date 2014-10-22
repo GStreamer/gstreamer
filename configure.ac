@@ -2575,8 +2575,24 @@ AG_GST_CHECK_FEATURE(OPENEXR, [openexr library], openexr, [
 dnl *** openh264 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENH264, true)
 AG_GST_CHECK_FEATURE(OPENH264, [openh264 library], openh264, [
+  AC_LANG_PUSH([C++])
   AG_GST_CHECK_LIBHEADER(OPENH264, openh264, WelsSnprintf, $PTHREAD_LIBS,
-    wels/codec_api.h, OPENH264_LIBS="-lopenh264 $PTHREAD_LIBS")
+    wels/codec_api.h, [
+    AC_MSG_CHECKING([for right openh264 version/snapshot])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <wels/codec_app_def.h>
+#include <wels/codec_api.h>]], [[
+        SFrameBSInfo frame_info;
+        int *p = (int *) &frame_info.eFrameType;
+        *p = 0;
+    ]])], [
+      AC_MSG_RESULT(yes)
+      OPENH264_LIBS="-lopenh264 $PTHREAD_LIBS"
+    ], [
+      AC_MSG_RESULT(no)
+      HAVE_OPENH264="no"
+    ])
+  ])
+  AC_LANG_POP([C++])
   AC_SUBST(OPENH264_LIBS)
 ])
 
