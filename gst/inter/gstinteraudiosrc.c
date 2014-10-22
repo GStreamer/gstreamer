@@ -315,7 +315,7 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
       0 ? gst_adapter_available (interaudiosrc->surface->audio_adapter) /
       bpf : 0;
   if (n > SIZE * 3) {
-    GST_WARNING ("flushing %d samples", SIZE / 2);
+    GST_WARNING_OBJECT (interaudiosrc, "flushing %d samples", SIZE / 2);
     gst_adapter_flush (interaudiosrc->surface->audio_adapter, (SIZE / 2) * bpf);
     n -= (SIZE / 2);
   }
@@ -345,7 +345,8 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
     GstMapInfo map;
     GstMemory *mem;
 
-    GST_WARNING ("creating %d samples of silence", SIZE - n);
+    GST_WARNING_OBJECT (interaudiosrc, "creating %d samples of silence",
+        SIZE - n);
     mem = gst_allocator_alloc (NULL, (SIZE - n) * bpf, NULL);
     if (gst_memory_map (mem, &map, GST_MAP_WRITE)) {
       gst_audio_format_fill_silence (interaudiosrc->info.finfo, map.data,
@@ -401,7 +402,7 @@ gst_inter_audio_src_query (GstBaseSrc * src, GstQuery * query)
 
         max_latency = min_latency;
 
-        GST_ERROR_OBJECT (src,
+        GST_DEBUG_OBJECT (src,
             "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
             GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
 

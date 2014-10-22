@@ -194,7 +194,7 @@ gst_inter_audio_sink_start (GstBaseSink * sink)
 {
   GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (sink);
 
-  GST_DEBUG ("start");
+  GST_DEBUG_OBJECT (interaudiosink, "start");
 
   interaudiosink->surface = gst_inter_surface_get (interaudiosink->channel);
   g_mutex_lock (&interaudiosink->surface->mutex);
@@ -209,7 +209,7 @@ gst_inter_audio_sink_stop (GstBaseSink * sink)
 {
   GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (sink);
 
-  GST_DEBUG ("stop");
+  GST_DEBUG_OBJECT (interaudiosink, "stop");
 
   g_mutex_lock (&interaudiosink->surface->mutex);
   gst_adapter_clear (interaudiosink->surface->audio_adapter);
@@ -247,14 +247,15 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (sink);
   int n, bpf;
 
-  GST_DEBUG ("render %" G_GSIZE_FORMAT, gst_buffer_get_size (buffer));
+  GST_DEBUG_OBJECT (interaudiosink, "render %" G_GSIZE_FORMAT,
+      gst_buffer_get_size (buffer));
   bpf = interaudiosink->info.bpf;
 
   g_mutex_lock (&interaudiosink->surface->mutex);
   n = gst_adapter_available (interaudiosink->surface->audio_adapter) / 4;
 #define SIZE 1600
   if (n > SIZE * 3) {
-    GST_WARNING ("flushing %d samples", SIZE / 2);
+    GST_WARNING_OBJECT (interaudiosink, "flushing %d samples", SIZE / 2);
     gst_adapter_flush (interaudiosink->surface->audio_adapter,
         (SIZE / 2) * bpf);
   }
