@@ -262,6 +262,7 @@ struct _GstBaseParsePrivate
   gboolean discont;
   gboolean flushing;
   gboolean drain;
+  gboolean saw_gaps;
 
   gint64 offset;
   gint64 sync_offset;
@@ -794,6 +795,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->min_frame_size = 1;
   parse->priv->discont = TRUE;
   parse->priv->flushing = FALSE;
+  parse->priv->saw_gaps = FALSE;
   parse->priv->offset = 0;
   parse->priv->sync_offset = 0;
   parse->priv->update_interval = -1;
@@ -1172,14 +1174,15 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
         gst_base_parse_finish_fragment (parse, TRUE);
 
       /* If we STILL have zero frames processed, fire an error */
-      if (parse->priv->framecount == 0) {
+      if (parse->priv->framecount == 0 && !parse->priv->saw_gaps) {
         GST_ELEMENT_ERROR (parse, STREAM, WRONG_TYPE,
             ("No valid frames found before end of stream"), (NULL));
       }
       /* newsegment and other serialized events before eos */
       gst_base_parse_push_pending_events (parse);
 
-      if (parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE) {
+      if (!parse->priv->saw_gaps
+          && parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE) {
         /* We've not posted bitrate tags yet - do so now */
         gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
       }
@@ -1220,6 +1223,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       else
         gst_base_parse_finish_fragment (parse, TRUE);
       forward_immediate = TRUE;
+      parse->priv->saw_gaps = TRUE;
       break;
     }
     case GST_EVENT_TAG:
