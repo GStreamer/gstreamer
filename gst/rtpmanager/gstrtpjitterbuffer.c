@@ -129,6 +129,7 @@ enum
 #define DEFAULT_PERCENT             0
 #define DEFAULT_DO_RETRANSMISSION   FALSE
 #define DEFAULT_RTX_DELAY           -1
+#define DEFAULT_RTX_MIN_DELAY       0
 #define DEFAULT_RTX_DELAY_REORDER   3
 #define DEFAULT_RTX_RETRY_TIMEOUT   -1
 #define DEFAULT_RTX_RETRY_PERIOD    -1
@@ -147,6 +148,7 @@ enum
   PROP_PERCENT,
   PROP_DO_RETRANSMISSION,
   PROP_RTX_DELAY,
+  PROP_RTX_MIN_DELAY,
   PROP_RTX_DELAY_REORDER,
   PROP_RTX_RETRY_TIMEOUT,
   PROP_RTX_RETRY_PERIOD,
@@ -241,6 +243,7 @@ struct _GstRtpJitterBufferPrivate
   gboolean do_lost;
   gboolean do_retransmission;
   gint rtx_delay;
+  guint rtx_min_delay;
   gint rtx_delay_reorder;
   gint rtx_retry_timeout;
   gint rtx_retry_period;
@@ -537,6 +540,20 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "Extra time in ms to wait before sending retransmission "
           "event (-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_DELAY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpJitterBuffer:rtx-min-delay:
+   *
+   * When a packet did not arrive at the expected time, wait at least this extra amount
+   * of time before sending a retransmission event.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_RTX_MIN_DELAY,
+      g_param_spec_uint ("rtx-min-delay", "Minimum RTX Delay",
+          "Minimum time in ms to wait before sending retransmission "
+          "event", 0, G_MAXUINT, DEFAULT_RTX_MIN_DELAY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRtpJitterBuffer:rtx-delay-reorder:
    *
@@ -712,6 +729,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->do_lost = DEFAULT_DO_LOST;
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   priv->rtx_delay = DEFAULT_RTX_DELAY;
+  priv->rtx_min_delay = DEFAULT_RTX_MIN_DELAY;
   priv->rtx_delay_reorder = DEFAULT_RTX_DELAY_REORDER;
   priv->rtx_retry_timeout = DEFAULT_RTX_RETRY_TIMEOUT;
   priv->rtx_retry_period = DEFAULT_RTX_RETRY_PERIOD;
@@ -1796,6 +1814,9 @@ get_rtx_delay (GstRtpJitterBufferPrivate * priv)
   } else {
     delay = priv->rtx_delay * GST_MSECOND;
   }
+  if (priv->rtx_min_delay > 0)
+    delay = MAX (delay, priv->rtx_min_delay * GST_MSECOND);
+
   return delay;
 }
 
@@ -3458,6 +3479,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->rtx_delay = g_value_get_int (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_RTX_MIN_DELAY:
+      JBUF_LOCK (priv);
+      priv->rtx_min_delay = g_value_get_uint (value);
+      JBUF_UNLOCK (priv);
+      break;
     case PROP_RTX_DELAY_REORDER:
       JBUF_LOCK (priv);
       priv->rtx_delay_reorder = g_value_get_int (value);
@@ -3537,6 +3563,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_RTX_DELAY:
       JBUF_LOCK (priv);
       g_value_set_int (value, priv->rtx_delay);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_MIN_DELAY:
+      JBUF_LOCK (priv);
+      g_value_set_uint (value, priv->rtx_min_delay);
       JBUF_UNLOCK (priv);
       break;
     case PROP_RTX_DELAY_REORDER:
