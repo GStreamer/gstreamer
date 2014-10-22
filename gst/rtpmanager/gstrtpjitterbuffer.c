@@ -132,6 +132,7 @@ enum
 #define DEFAULT_RTX_MIN_DELAY       0
 #define DEFAULT_RTX_DELAY_REORDER   3
 #define DEFAULT_RTX_RETRY_TIMEOUT   -1
+#define DEFAULT_RTX_MIN_RETRY_TIMEOUT   -1
 #define DEFAULT_RTX_RETRY_PERIOD    -1
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
@@ -151,6 +152,7 @@ enum
   PROP_RTX_MIN_DELAY,
   PROP_RTX_DELAY_REORDER,
   PROP_RTX_RETRY_TIMEOUT,
+  PROP_RTX_MIN_RETRY_TIMEOUT,
   PROP_RTX_RETRY_PERIOD,
   PROP_STATS,
   PROP_LAST
@@ -246,6 +248,7 @@ struct _GstRtpJitterBufferPrivate
   guint rtx_min_delay;
   gint rtx_delay_reorder;
   gint rtx_retry_timeout;
+  gint rtx_min_retry_timeout;
   gint rtx_retry_period;
 
   /* the last seqnum we pushed out */
@@ -587,6 +590,23 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "ms (-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_RETRY_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
+   * GstRtpJitterBuffer::rtx-min-retry-timeout:
+   *
+   * The minimum amount of time between retry timeouts. When
+   * GstRtpJitterBuffer::rtx-retry-timeout is -1, this value ensures a
+   * minimum interval between retry timeouts.
+   *
+   * When -1 is used, the value will be estimated based on the
+   * packet spacing.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_RTX_MIN_RETRY_TIMEOUT,
+      g_param_spec_int ("rtx-min-retry-timeout", "RTX Min Retry Timeout",
+          "Minimum timeout between sending a transmission event in "
+          "ms (-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_MIN_RETRY_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
    * GstRtpJitterBuffer:rtx-retry-period:
    *
    * The amount of time to try to get a retransmission.
@@ -732,6 +752,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->rtx_min_delay = DEFAULT_RTX_MIN_DELAY;
   priv->rtx_delay_reorder = DEFAULT_RTX_DELAY_REORDER;
   priv->rtx_retry_timeout = DEFAULT_RTX_RETRY_TIMEOUT;
+  priv->rtx_min_retry_timeout = DEFAULT_RTX_MIN_RETRY_TIMEOUT;
   priv->rtx_retry_period = DEFAULT_RTX_RETRY_PERIOD;
 
   priv->last_dts = -1;
@@ -2689,6 +2710,7 @@ static GstClockTime
 get_rtx_retry_timeout (GstRtpJitterBufferPrivate * priv)
 {
   GstClockTime rtx_retry_timeout;
+  GstClockTime rtx_min_retry_timeout;
 
   if (priv->rtx_retry_timeout == -1) {
     if (priv->avg_rtx_rtt == 0)
@@ -2700,6 +2722,15 @@ get_rtx_retry_timeout (GstRtpJitterBufferPrivate * priv)
   } else {
     rtx_retry_timeout = priv->rtx_retry_timeout * GST_MSECOND;
   }
+  /* make sure we don't retry too often. On very low latency networks,
+   * the RTT and jitter can be very low. */
+  if (priv->rtx_min_retry_timeout == -1) {
+    rtx_min_retry_timeout = priv->packet_spacing;
+  } else {
+    rtx_min_retry_timeout = priv->rtx_min_retry_timeout * GST_MSECOND;
+  }
+  rtx_retry_timeout = MAX (rtx_retry_timeout, rtx_min_retry_timeout);
+
   return rtx_retry_timeout;
 }
 
