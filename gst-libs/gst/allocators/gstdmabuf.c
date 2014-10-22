@@ -294,7 +294,9 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
  *
  * Return the file descriptor associated with @mem.
  *
- * Returns: the file descriptor associated with the memory, or -1
+ * Returns: the file descriptor associated with the memory, or -1.  The file
+ *     descriptor is still owned by the GstMemory.  Use dup to take a copy
+ *     if you intend to use it beyond the lifetime of this GstMemory.
  *
  * Since: 1.2
  */
