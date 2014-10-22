@@ -80,8 +80,7 @@ static GstStaticPadTemplate gst_inter_audio_sink_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, format = (string) " GST_AUDIO_NE (S16) ", "
-        "rate = (int) 48000, channels = (int) 2")
+    GST_STATIC_CAPS ("audio/x-raw")
     );
 
 
