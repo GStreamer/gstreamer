@@ -311,17 +311,14 @@ gst_raw_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gst_adapter_push (rp->adapter, buffer);
 
   available = gst_adapter_available (rp->adapter);
-  if (available == 0) {
-    ret = GST_FLOW_OK;
-    goto done;
-  } else if (rp_class->multiple_frames_per_buffer) {
+  if (rp_class->multiple_frames_per_buffer) {
     buffersize = available;
     buffersize -= buffersize % rp->framesize;
   } else {
     buffersize = rp->framesize;
   }
 
-  while (gst_adapter_available (rp->adapter) >= buffersize) {
+  while (buffersize > 0 && gst_adapter_available (rp->adapter) >= buffersize) {
     buffer = gst_adapter_take_buffer (rp->adapter, buffersize);
 
     ret = gst_raw_parse_push_buffer (rp, buffer);
