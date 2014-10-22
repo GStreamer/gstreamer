@@ -22,6 +22,9 @@ libgstvalidate_@GST_API_VERSION@include_HEADERS = \
 	gst-validate-bin-monitor.h \
 	gst-validate-element-monitor.h \
 	gst-validate-enums.h \
+	media-descriptor.h \
+	media-descriptor-writer.h \
+	media-descriptor-parser.h \
 	gst-validate-monitor-factory.h \
 	gst-validate-monitor.h \
 	gst-validate-override.h \
@@ -37,10 +40,7 @@ libgstvalidate_@GST_API_VERSION@include_HEADERS = \
 noinst_HEADERS = 		\
 	gettext.h \
 	gst-validate-i18n-lib.h \
-	media-descriptor.h \
-	media-descriptor-writer.h \
-	gst-validate-internal.h \
-	media-descriptor-parser.h
+	gst-validate-internal.h
 
 
 lib_LTLIBRARIES = libgstvalidate-@GST_API_VERSION@.la
