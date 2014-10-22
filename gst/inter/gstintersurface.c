@@ -35,16 +35,17 @@ gst_inter_surface_get (const char *name)
   GstInterSurface *surface;
 
   g_mutex_lock (&mutex);
-
   for (g = list; g; g = g_list_next (g)) {
-    surface = (GstInterSurface *) g->data;
+    surface = g->data;
     if (strcmp (name, surface->name) == 0) {
+      surface->ref_count++;
       g_mutex_unlock (&mutex);
       return surface;
     }
   }
 
   surface = g_malloc0 (sizeof (GstInterSurface));
+  surface->ref_count = 1;
   surface->name = g_strdup (name);
   g_mutex_init (&surface->mutex);
   surface->audio_adapter = gst_adapter_new ();
@@ -58,5 +59,26 @@ gst_inter_surface_get (const char *name)
 void
 gst_inter_surface_unref (GstInterSurface * surface)
 {
+  /* Mutex needed here, otherwise refcount might become 0
+   * and someone else requests the same surface again before
+   * we remove it from the list */
+  g_mutex_lock (&mutex);
+  if ((--surface->ref_count) == 0) {
+    GList *g;
 
+    for (g = list; g; g = g_list_next (g)) {
+      GstInterSurface *tmp = g->data;
+      if (strcmp (tmp->name, surface->name) == 0) {
+        list = g_list_delete_link (list, g);
+        break;
+      }
+    }
+
+    g_mutex_clear (&surface->mutex);
+    gst_buffer_replace (&surface->video_buffer, NULL);
+    gst_buffer_replace (&surface->sub_buffer, NULL);
+    gst_object_unref (surface->audio_adapter);
+    g_free (surface);
+  }
+  g_mutex_unlock (&mutex);
 }

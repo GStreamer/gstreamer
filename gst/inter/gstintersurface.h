@@ -30,6 +30,8 @@ typedef struct _GstInterSurface GstInterSurface;
 struct _GstInterSurface
 {
   GMutex mutex;
+  gint ref_count;
+
   char *name;
 
   /* video */
