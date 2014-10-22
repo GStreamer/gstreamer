@@ -43,9 +43,11 @@
 enum
 {
   PROP_0,
-  PROP_FILTER_CAPS
+  PROP_FILTER_CAPS,
+  PROP_CAPS_CHANGE_MODE
 };
 
+#define DEFAULT_CAPS_CHANGE_MODE (GST_CAPS_FILTER_CAPS_CHANGE_MODE_IMMEDIATE)
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -60,6 +62,26 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 GST_DEBUG_CATEGORY_STATIC (gst_capsfilter_debug);
 #define GST_CAT_DEFAULT gst_capsfilter_debug
+
+/* TODO: Add a drop-buffers mode */
+#define GST_TYPE_CAPS_FILTER_CAPS_CHANGE_MODE (gst_caps_filter_caps_change_mode_get_type())
+static GType
+gst_caps_filter_caps_change_mode_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue data[] = {
+    {GST_CAPS_FILTER_CAPS_CHANGE_MODE_IMMEDIATE,
+        "Only accept the current filter caps", "immediate"},
+    {GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED,
+        "Temporarily accept previous filter caps", "delayed"},
+    {0, NULL, NULL},
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstCapsFilterCapsChangeMode", data);
+  }
+  return type;
+}
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_capsfilter_debug, "capsfilter", 0, \
@@ -107,6 +129,13 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_CAPS_CHANGE_MODE,
+      g_param_spec_enum ("caps-change-mode", _("Caps Change Mode"),
+          _("Filter caps change behaviour"),
+          GST_TYPE_CAPS_FILTER_CAPS_CHANGE_MODE, DEFAULT_CAPS_CHANGE_MODE,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+
   gstelement_class = GST_ELEMENT_CLASS (klass);
   gst_element_class_set_static_metadata (gstelement_class,
       "CapsFilter",
@@ -136,6 +165,7 @@ gst_capsfilter_init (GstCapsFilter * filter)
   gst_base_transform_set_gap_aware (trans, TRUE);
   gst_base_transform_set_prefer_passthrough (trans, FALSE);
   filter->filter_caps = gst_caps_new_any ();
+  filter->caps_change_mode = DEFAULT_CAPS_CHANGE_MODE;
 }
 
 static void
@@ -160,6 +190,17 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (capsfilter);
       old_caps = capsfilter->filter_caps;
       capsfilter->filter_caps = new_caps;
+      if (old_caps
+          && capsfilter->caps_change_mode ==
+          GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED) {
+        capsfilter->previous_caps =
+            g_list_prepend (capsfilter->previous_caps, gst_caps_ref (old_caps));
+      } else if (capsfilter->caps_change_mode !=
+          GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED) {
+        g_list_free_full (capsfilter->previous_caps,
+            (GDestroyNotify) gst_caps_unref);
+        capsfilter->previous_caps = NULL;
+      }
       GST_OBJECT_UNLOCK (capsfilter);
 
       gst_caps_unref (old_caps);
@@ -169,6 +210,9 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       gst_base_transform_reconfigure_sink (GST_BASE_TRANSFORM (object));
       break;
     }
+    case PROP_CAPS_CHANGE_MODE:
+      capsfilter->caps_change_mode = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -186,6 +230,9 @@ gst_capsfilter_get_property (GObject * object, guint prop_id, GValue * value,
       GST_OBJECT_LOCK (capsfilter);
       gst_value_set_caps (value, capsfilter->filter_caps);
       GST_OBJECT_UNLOCK (capsfilter);
+      break;
+    case PROP_CAPS_CHANGE_MODE:
+      g_value_set_enum (value, capsfilter->caps_change_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -211,11 +258,15 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
 {
   GstCapsFilter *capsfilter = GST_CAPSFILTER (base);
   GstCaps *ret, *filter_caps, *tmp;
+  gboolean retried = FALSE;
+  GstCapsFilterCapsChangeMode caps_change_mode;
 
   GST_OBJECT_LOCK (capsfilter);
   filter_caps = gst_caps_ref (capsfilter->filter_caps);
+  caps_change_mode = capsfilter->caps_change_mode;
   GST_OBJECT_UNLOCK (capsfilter);
 
+retry:
   if (filter) {
     tmp =
         gst_caps_intersect_full (filter, filter_caps, GST_CAPS_INTERSECT_FIRST);
@@ -230,6 +281,26 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
   GST_DEBUG_OBJECT (capsfilter, "caps filter:    %" GST_PTR_FORMAT,
       filter_caps);
   GST_DEBUG_OBJECT (capsfilter, "intersect: %" GST_PTR_FORMAT, ret);
+
+  if (gst_caps_is_empty (ret)
+      && caps_change_mode ==
+      GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED && capsfilter->previous_caps
+      && !retried) {
+    GList *l;
+
+    GST_DEBUG_OBJECT (capsfilter,
+        "Current filter caps are not compatible, retry with previous");
+    GST_OBJECT_LOCK (capsfilter);
+    gst_caps_unref (filter_caps);
+    gst_caps_unref (ret);
+    filter_caps = gst_caps_new_empty ();
+    for (l = capsfilter->previous_caps; l; l = l->next) {
+      filter_caps = gst_caps_merge (filter_caps, gst_caps_ref (l->data));
+    }
+    GST_OBJECT_UNLOCK (capsfilter);
+    retried = TRUE;
+    goto retry;
+  }
 
   gst_caps_unref (filter_caps);
 
@@ -250,6 +321,25 @@ gst_capsfilter_accept_caps (GstBaseTransform * base,
 
   ret = gst_caps_can_intersect (caps, filter_caps);
   GST_DEBUG_OBJECT (capsfilter, "can intersect: %d", ret);
+  if (!ret
+      && capsfilter->caps_change_mode ==
+      GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED) {
+    GList *l;
+
+    GST_OBJECT_LOCK (capsfilter);
+    for (l = capsfilter->previous_caps; l; l = l->next) {
+      ret = gst_caps_can_intersect (caps, l->data);
+      if (ret)
+        break;
+    }
+    GST_OBJECT_UNLOCK (capsfilter);
+
+    /* Tell upstream to reconfigure, it's still
+     * looking at old caps */
+    if (ret)
+      gst_base_transform_reconfigure_sink (base);
+  }
+
   if (ret) {
     /* if we can intersect, see if the other end also accepts */
     if (direction == GST_PAD_SRC)
@@ -381,6 +471,7 @@ static gboolean
 gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstCapsFilter *filter = GST_CAPSFILTER (trans);
+  gboolean ret;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
     GList *l;
@@ -422,7 +513,39 @@ gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
 done:
 
   GST_LOG_OBJECT (trans, "Forwarding %s event", GST_EVENT_TYPE_NAME (event));
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
+  ret =
+      GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans,
+      gst_event_ref (event));
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS
+      && filter->caps_change_mode == GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED) {
+    GList *l;
+    GstCaps *caps;
+
+    gst_event_parse_caps (event, &caps);
+
+    /* Remove all previous caps up to one that works.
+     * Note that this might keep some leftover caps if there
+     * are multiple compatible caps */
+    GST_OBJECT_LOCK (filter);
+    for (l = g_list_last (filter->previous_caps); l; l = l->prev) {
+      if (gst_caps_can_intersect (caps, l->data)) {
+        while (l->next) {
+          gst_caps_unref (l->next->data);
+          l = g_list_delete_link (l, l->next);
+        }
+        break;
+      }
+    }
+    if (!l && gst_caps_can_intersect (caps, filter->filter_caps)) {
+      g_list_free_full (filter->previous_caps, (GDestroyNotify) gst_caps_unref);
+      filter->previous_caps = NULL;
+    }
+    GST_OBJECT_UNLOCK (filter);
+  }
+  gst_event_unref (event);
+
+  return ret;
 }
 
 static gboolean
@@ -432,6 +555,11 @@ gst_capsfilter_stop (GstBaseTransform * trans)
 
   g_list_free_full (filter->pending_events, (GDestroyNotify) gst_event_unref);
   filter->pending_events = NULL;
+
+  GST_OBJECT_LOCK (filter);
+  g_list_free_full (filter->previous_caps, (GDestroyNotify) gst_caps_unref);
+  filter->previous_caps = NULL;
+  GST_OBJECT_UNLOCK (filter);
 
   return TRUE;
 }

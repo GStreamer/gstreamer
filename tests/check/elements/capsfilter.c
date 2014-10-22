@@ -36,6 +36,16 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS_TEMPLATE_STRING)
     );
 
+static GstStaticPadTemplate any_sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+static GstStaticPadTemplate any_srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 static GList *events = NULL;
 
 static gboolean
@@ -325,6 +335,141 @@ GST_START_TEST (test_push_pending_events)
 
 GST_END_TEST;
 
+GST_START_TEST (test_caps_change_mode_delayed)
+{
+  GstElement *filter;
+  GstPad *mysinkpad;
+  GstPad *mysrcpad;
+  GstSegment segment;
+  GstEvent *event;
+  GstCaps *caps;
+
+  filter = gst_check_setup_element ("capsfilter");
+  mysinkpad = gst_check_setup_sink_pad (filter, &any_sinktemplate);
+  gst_pad_set_event_function (mysinkpad, test_pad_eventfunc);
+  gst_pad_set_active (mysinkpad, TRUE);
+  mysrcpad = gst_check_setup_src_pad (filter, &any_srctemplate);
+  gst_pad_set_active (mysrcpad, TRUE);
+
+  g_object_set (filter, "caps-change-mode", 1, NULL);
+
+  fail_unless_equals_int (gst_element_set_state (filter, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* push the stream start */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_stream_start ("test-stream")));
+  fail_unless_equals_int (g_list_length (events), 1);
+  event = events->data;
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* push a caps */
+  caps = gst_caps_from_string ("audio/x-raw, "
+      "channels=(int)2, " "rate = (int)44100");
+  g_object_set (filter, "caps", caps, NULL);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+  fail_unless_equals_int (g_list_length (events), 1);
+  event = events->data;
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* push a segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  fail_unless_equals_int (g_list_length (events), 1);
+  event = events->data;
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* push a buffer */
+  fail_unless_equals_int (gst_pad_push (mysrcpad,
+          gst_buffer_new_wrapped (g_malloc0 (1024), 1024)), GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  /* Set new incompatible caps */
+  caps = gst_caps_from_string ("audio/x-raw, "
+      "channels=(int)2, " "rate = (int)48000");
+  g_object_set (filter, "caps", caps, NULL);
+
+  /* push a buffer without updating the caps */
+  fail_unless_equals_int (gst_pad_push (mysrcpad,
+          gst_buffer_new_wrapped (g_malloc0 (1024), 1024)), GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  /* No caps event here, we're still at the old caps */
+  fail_unless (g_list_length (events) == 0);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+  fail_unless_equals_int (g_list_length (events), 1);
+  event = events->data;
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  /* Push a new buffer, now we have the new caps */
+  fail_unless_equals_int (gst_pad_push (mysrcpad,
+          gst_buffer_new_wrapped (g_malloc0 (1024), 1024)), GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  /* Set back old caps */
+  caps = gst_caps_from_string ("audio/x-raw, "
+      "channels=(int)2, " "rate = (int)44100");
+  g_object_set (filter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  /* push a buffer without updating the caps */
+  fail_unless_equals_int (gst_pad_push (mysrcpad,
+          gst_buffer_new_wrapped (g_malloc0 (1024), 1024)), GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  /* Now set new caps again but the old caps are currently pushed */
+  caps = gst_caps_from_string ("audio/x-raw, "
+      "channels=(int)2, " "rate = (int)48000");
+  g_object_set (filter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+  /* Race condition simulation here! */
+  caps = gst_caps_from_string ("audio/x-raw, "
+      "channels=(int)2, " "rate = (int)44100");
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+  fail_unless_equals_int (g_list_length (events), 1);
+  event = events->data;
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
+  g_list_free_full (events, (GDestroyNotify) gst_event_unref);
+  events = NULL;
+
+  fail_unless_equals_int (gst_pad_push (mysrcpad,
+          gst_buffer_new_wrapped (g_malloc0 (1024), 1024)), GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  /* cleanup */
+  GST_DEBUG ("cleanup");
+
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
+  gst_check_teardown_src_pad (filter);
+  gst_check_teardown_sink_pad (filter);
+  gst_check_teardown_element (filter);
+}
+
+GST_END_TEST;
+
 static Suite *
 capsfilter_suite (void)
 {
@@ -337,6 +482,7 @@ capsfilter_suite (void)
   tcase_add_test (tc_chain, test_caps_query);
   tcase_add_test (tc_chain, test_accept_caps_query);
   tcase_add_test (tc_chain, test_push_pending_events);
+  tcase_add_test (tc_chain, test_caps_change_mode_delayed);
 
   return s;
 }

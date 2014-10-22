@@ -44,6 +44,11 @@ G_BEGIN_DECLS
 typedef struct _GstCapsFilter GstCapsFilter;
 typedef struct _GstCapsFilterClass GstCapsFilterClass;
 
+typedef enum {
+  GST_CAPS_FILTER_CAPS_CHANGE_MODE_IMMEDIATE,
+  GST_CAPS_FILTER_CAPS_CHANGE_MODE_DELAYED
+} GstCapsFilterCapsChangeMode;
+
 /**
  * GstCapsFilter:
  *
@@ -53,7 +58,10 @@ struct _GstCapsFilter {
   GstBaseTransform trans;
 
   GstCaps *filter_caps;
+  GstCapsFilterCapsChangeMode caps_change_mode;
+
   GList *pending_events;
+  GList *previous_caps;
 };
 
 struct _GstCapsFilterClass {
