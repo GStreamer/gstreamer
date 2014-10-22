@@ -41,8 +41,7 @@ struct _GstInterVideoSink
   GstInterSurface *surface;
   char *channel;
 
-  int fps_n;
-  int fps_d;
+  GstVideoInfo info;
 };
 
 struct _GstInterVideoSinkClass

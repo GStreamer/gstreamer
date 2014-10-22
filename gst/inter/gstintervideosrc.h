@@ -45,6 +45,7 @@ struct _GstInterVideoSrc
 
   GstVideoInfo info;
   int n_frames;
+  GstClockTime timestamp_offset;
 };
 
 struct _GstInterVideoSrcClass

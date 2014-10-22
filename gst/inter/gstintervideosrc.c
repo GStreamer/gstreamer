@@ -56,7 +56,10 @@ static void gst_inter_video_src_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
 static void gst_inter_video_src_finalize (GObject * object);
 
+static GstCaps *gst_inter_video_src_get_caps (GstBaseSrc * src,
+    GstCaps * filter);
 static gboolean gst_inter_video_src_set_caps (GstBaseSrc * src, GstCaps * caps);
+static GstCaps *gst_inter_video_src_fixate (GstBaseSrc * src, GstCaps * caps);
 static gboolean gst_inter_video_src_start (GstBaseSrc * src);
 static gboolean gst_inter_video_src_stop (GstBaseSrc * src);
 static void
@@ -65,7 +68,6 @@ gst_inter_video_src_get_times (GstBaseSrc * src, GstBuffer * buffer,
 static GstFlowReturn
 gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
     GstBuffer ** buf);
-static GstCaps *gst_inter_video_src_fixate (GstBaseSrc * src, GstCaps * caps);
 
 enum
 {
@@ -84,7 +86,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 
 /* class initialization */
-
+#define parent_class gst_inter_video_src_parent_class
 G_DEFINE_TYPE (GstInterVideoSrc, gst_inter_video_src, GST_TYPE_BASE_SRC);
 
 static void
@@ -109,12 +111,13 @@ gst_inter_video_src_class_init (GstInterVideoSrcClass * klass)
   gobject_class->set_property = gst_inter_video_src_set_property;
   gobject_class->get_property = gst_inter_video_src_get_property;
   gobject_class->finalize = gst_inter_video_src_finalize;
+  base_src_class->get_caps = GST_DEBUG_FUNCPTR (gst_inter_video_src_get_caps);
   base_src_class->set_caps = GST_DEBUG_FUNCPTR (gst_inter_video_src_set_caps);
+  base_src_class->fixate = GST_DEBUG_FUNCPTR (gst_inter_video_src_fixate);
   base_src_class->start = GST_DEBUG_FUNCPTR (gst_inter_video_src_start);
   base_src_class->stop = GST_DEBUG_FUNCPTR (gst_inter_video_src_stop);
   base_src_class->get_times = GST_DEBUG_FUNCPTR (gst_inter_video_src_get_times);
   base_src_class->create = GST_DEBUG_FUNCPTR (gst_inter_video_src_create);
-  base_src_class->fixate = GST_DEBUG_FUNCPTR (gst_inter_video_src_fixate);
 
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
@@ -176,7 +179,37 @@ gst_inter_video_src_finalize (GObject * object)
   G_OBJECT_CLASS (gst_inter_video_src_parent_class)->finalize (object);
 }
 
+static GstCaps *
+gst_inter_video_src_get_caps (GstBaseSrc * src, GstCaps * filter)
+{
+  GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (src);
+  GstCaps *caps;
 
+  GST_DEBUG_OBJECT (intervideosrc, "get_caps");
+
+  if (!intervideosrc->surface)
+    return GST_BASE_SRC_CLASS (parent_class)->get_caps (src, filter);
+
+  g_mutex_lock (&intervideosrc->surface->mutex);
+  if (intervideosrc->surface->video_info.finfo) {
+    caps = gst_video_info_to_caps (&intervideosrc->surface->video_info);
+    if (filter) {
+      GstCaps *tmp;
+
+      tmp = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = tmp;
+    }
+  } else {
+    caps = NULL;
+  }
+  g_mutex_unlock (&intervideosrc->surface->mutex);
+
+  if (caps)
+    return caps;
+  else
+    return GST_BASE_SRC_CLASS (parent_class)->get_caps (src, filter);
+}
 
 static gboolean
 gst_inter_video_src_set_caps (GstBaseSrc * src, GstCaps * caps)
@@ -185,8 +218,10 @@ gst_inter_video_src_set_caps (GstBaseSrc * src, GstCaps * caps)
 
   GST_DEBUG_OBJECT (intervideosrc, "set_caps");
 
-  if (!gst_video_info_from_caps (&intervideosrc->info, caps))
+  if (!gst_video_info_from_caps (&intervideosrc->info, caps)) {
+    GST_ERROR_OBJECT (src, "Failed to parse caps %" GST_PTR_FORMAT, caps);
     return FALSE;
+  }
 
   return gst_pad_set_caps (src->srcpad, caps);
 }
@@ -200,6 +235,8 @@ gst_inter_video_src_start (GstBaseSrc * src)
   GST_DEBUG_OBJECT (intervideosrc, "start");
 
   intervideosrc->surface = gst_inter_surface_get (intervideosrc->channel);
+  intervideosrc->timestamp_offset = 0;
+  intervideosrc->n_frames = 0;
 
   return TRUE;
 }
@@ -248,13 +285,26 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
     GstBuffer ** buf)
 {
   GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (src);
+  GstCaps *caps;
   GstBuffer *buffer;
 
   GST_DEBUG_OBJECT (intervideosrc, "create");
 
+  caps = NULL;
   buffer = NULL;
 
   g_mutex_lock (&intervideosrc->surface->mutex);
+  if (intervideosrc->surface->video_info.finfo) {
+    if (!gst_video_info_is_equal (&intervideosrc->surface->video_info,
+            &intervideosrc->info)) {
+      caps = gst_video_info_to_caps (&intervideosrc->surface->video_info);
+      intervideosrc->timestamp_offset +=
+          gst_util_uint64_scale_int (GST_SECOND * intervideosrc->n_frames,
+          GST_VIDEO_INFO_FPS_D (&intervideosrc->info),
+          GST_VIDEO_INFO_FPS_N (&intervideosrc->info));
+      intervideosrc->n_frames = 0;
+    }
+  }
   if (intervideosrc->surface->video_buffer) {
     buffer = gst_buffer_ref (intervideosrc->surface->video_buffer);
     intervideosrc->surface->video_buffer_count++;
@@ -264,6 +314,17 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
     }
   }
   g_mutex_unlock (&intervideosrc->surface->mutex);
+
+  if (caps) {
+    gboolean ret = gst_base_src_set_caps (src, caps);
+    gst_caps_unref (caps);
+    if (!ret) {
+      GST_ERROR_OBJECT (src, "Failed to set caps %" GST_PTR_FORMAT, caps);
+      if (buffer)
+        gst_buffer_unref (buffer);
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
 
   if (buffer == NULL) {
     GstMapInfo map;
@@ -284,14 +345,14 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   buffer = gst_buffer_make_writable (buffer);
 
-  GST_BUFFER_PTS (buffer) =
+  GST_BUFFER_PTS (buffer) = intervideosrc->timestamp_offset +
       gst_util_uint64_scale_int (GST_SECOND * intervideosrc->n_frames,
       GST_VIDEO_INFO_FPS_D (&intervideosrc->info),
       GST_VIDEO_INFO_FPS_N (&intervideosrc->info));
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
   GST_DEBUG_OBJECT (intervideosrc, "create ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
-  GST_BUFFER_DURATION (buffer) =
+  GST_BUFFER_DURATION (buffer) = intervideosrc->timestamp_offset +
       gst_util_uint64_scale_int (GST_SECOND * (intervideosrc->n_frames + 1),
       GST_VIDEO_INFO_FPS_D (&intervideosrc->info),
       GST_VIDEO_INFO_FPS_N (&intervideosrc->info)) - GST_BUFFER_PTS (buffer);
@@ -319,6 +380,7 @@ gst_inter_video_src_fixate (GstBaseSrc * src, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
+  gst_structure_fixate_field_string (structure, "format", "I420");
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);

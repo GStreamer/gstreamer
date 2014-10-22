@@ -33,12 +33,7 @@ struct _GstInterSurface
   char *name;
 
   /* video */
-  GstVideoFormat format;
-  int fps_n;
-  int fps_d;
-  int width;
-  int height;
-  int n_frames;
+  GstVideoInfo video_info;
   int video_buffer_count;
 
   /* audio */
