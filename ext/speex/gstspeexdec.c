@@ -136,6 +136,7 @@ gst_speex_dec_reset (GstSpeexDec * dec)
   free (dec->header);
   dec->header = NULL;
   speex_bits_destroy (&dec->bits);
+  speex_bits_set_bit_buffer (&dec->bits, NULL, 0);
 
   gst_buffer_replace (&dec->streamheader, NULL);
   gst_buffer_replace (&dec->vorbiscomment, NULL);
