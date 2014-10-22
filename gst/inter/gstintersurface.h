@@ -21,6 +21,7 @@
 #define _GST_INTER_SURFACE_H_
 
 #include <gst/base/gstadapter.h>
+#include <gst/audio/audio.h>
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS
@@ -39,8 +40,7 @@ struct _GstInterSurface
   int video_buffer_count;
 
   /* audio */
-  int sample_rate;
-  int n_channels;
+  GstAudioInfo audio_info;
 
   GstBuffer *video_buffer;
   GstBuffer *sub_buffer;
