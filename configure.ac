@@ -2575,12 +2575,8 @@ AG_GST_CHECK_FEATURE(OPENEXR, [openexr library], openexr, [
 dnl *** openh264 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENH264, true)
 AG_GST_CHECK_FEATURE(OPENH264, [openh264 library], openh264, [
-  HAVE_OPENH264="yes"
-  saved_LIBS="$LIBS"
-  LIBS="$PTHREAD_LIBS $LIBS"
-  AG_GST_CHECK_LIBHEADER(OPENH264, openh264, WelsSnprintf, ,wels/codec_api.h,
-    OPENH264_LIBS="-lopenh264 $PTHREAD_LIBS", HAVE_OPENH264="no")
-  LIBS=$saved_LIBS
+  AG_GST_CHECK_LIBHEADER(OPENH264, openh264, WelsSnprintf, $PTHREAD_LIBS,
+    wels/codec_api.h, OPENH264_LIBS="-lopenh264 $PTHREAD_LIBS")
   AC_SUBST(OPENH264_LIBS)
 ])
 
