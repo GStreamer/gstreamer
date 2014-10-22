@@ -44,9 +44,11 @@ check_PROGRAMS = \
 	ges/project\
 	nle/simple	\
 	nle/complex	\
-	nle/nlesource	\
 	nle/nleoperation	\
 	nle/nlecomposition
+
+# We do not support sources outside composition
+#	nle/nlesource
 
 noinst_LTLIBRARIES=$(testutils_noisnt_libraries)
 noinst_HEADERS=$(testutils_noinst_headers)

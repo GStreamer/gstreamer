@@ -166,5 +166,7 @@ nle_object_reset (NleObject *object);
 GstStateChangeReturn
 nle_object_cleanup (NleObject * object);
 
+void nle_object_seek_all_children (NleObject *object, GstEvent *seek_event);
+
 G_END_DECLS
 #endif /* __NLE_OBJECT_H__ */

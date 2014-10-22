@@ -406,7 +406,6 @@ nle_source_send_event (GstElement * element, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      GST_ERROR ("saving seek now");
       source->priv->seek_event = event;
       break;
       /* Fall through that shit nigga */

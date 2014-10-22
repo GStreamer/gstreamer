@@ -1433,7 +1433,7 @@ _seek_current_stack (NleComposition * comp, GstEvent * event,
 
   if (flush_downstream) {
     priv->flush_seqnum = gst_event_get_seqnum (event);
-    GST_ERROR_OBJECT (comp, "sending flushes downstream with seqnum %d",
+    GST_INFO_OBJECT (comp, "sending flushes downstream with seqnum %d",
         priv->flush_seqnum);
   }
 

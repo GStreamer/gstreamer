@@ -93,6 +93,24 @@ static void nle_operation_release_pad (GstElement * element, GstPad * pad);
 static void synchronize_sinks (NleOperation * operation);
 static gboolean remove_sink_pad (NleOperation * operation, GstPad * sinkpad);
 
+
+static gboolean
+nle_operation_send_event (GstElement * element, GstEvent * event)
+{
+  gboolean res = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      nle_object_seek_all_children (NLE_OBJECT (element), event);
+      break;
+    default:
+      res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+      break;
+  }
+
+  return res;
+}
+
 static void
 nle_operation_class_init (NleOperationClass * klass)
 {
@@ -141,6 +159,7 @@ nle_operation_class_init (NleOperationClass * klass)
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (nle_operation_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (nle_operation_release_pad);
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (nle_operation_send_event);
 
   gstbin_class->add_element = GST_DEBUG_FUNCPTR (nle_operation_add_element);
   gstbin_class->remove_element =

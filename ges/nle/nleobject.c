@@ -642,6 +642,27 @@ nle_object_commit (NleObject * object, gboolean recurse)
 
 }
 
+static void
+_send_seek_event (const GValue * item, gpointer seek_event)
+{
+  GstElement *child = g_value_get_object (item);
+
+  gst_element_send_event (child, gst_event_ref (seek_event));
+}
+
+void
+nle_object_seek_all_children (NleObject * object, GstEvent * seek_event)
+{
+  GstIterator *it = gst_bin_iterate_recurse (GST_BIN (object));
+
+  while (gst_iterator_foreach (it, _send_seek_event,
+          seek_event) == GST_ITERATOR_RESYNC)
+    gst_iterator_resync (it);
+
+  gst_iterator_free (it);
+  gst_event_unref (seek_event);
+}
+
 void
 nle_object_reset (NleObject * object)
 {
