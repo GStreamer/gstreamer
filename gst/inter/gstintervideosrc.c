@@ -78,7 +78,7 @@ static GstStaticPadTemplate gst_inter_video_src_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL))
     );
 
 
@@ -208,18 +208,41 @@ gst_inter_video_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 }
 
 static gboolean
-gst_inter_video_src_set_caps (GstBaseSrc * src, GstCaps * caps)
+gst_inter_video_src_set_caps (GstBaseSrc * base, GstCaps * caps)
 {
-  GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (src);
+  GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (base);
+  GstVideoConverter *converter;
+  GstVideoFrame src_frame, dest_frame;
+  GstBuffer *src, *dest;
+  GstVideoInfo black_info;
 
   GST_DEBUG_OBJECT (intervideosrc, "set_caps");
 
   if (!gst_video_info_from_caps (&intervideosrc->info, caps)) {
-    GST_ERROR_OBJECT (src, "Failed to parse caps %" GST_PTR_FORMAT, caps);
+    GST_ERROR_OBJECT (intervideosrc, "Failed to parse caps %" GST_PTR_FORMAT,
+        caps);
     return FALSE;
   }
 
-  return gst_pad_set_caps (src->srcpad, caps);
+  /* Create a black frame */
+  gst_buffer_replace (&intervideosrc->black_frame, NULL);
+  gst_video_info_set_format (&black_info, GST_VIDEO_FORMAT_ARGB,
+      intervideosrc->info.width, intervideosrc->info.height);
+  black_info.fps_n = intervideosrc->info.fps_n;
+  black_info.fps_d = intervideosrc->info.fps_d;
+  src = gst_buffer_new_and_alloc (black_info.size);
+  dest = gst_buffer_new_and_alloc (intervideosrc->info.size);
+  gst_buffer_memset (src, 0, 0, black_info.size);
+  gst_video_frame_map (&src_frame, &black_info, src, GST_MAP_READ);
+  gst_video_frame_map (&dest_frame, &intervideosrc->info, dest, GST_MAP_WRITE);
+  converter = gst_video_converter_new (&black_info, &intervideosrc->info, NULL);
+  gst_video_converter_frame (converter, &dest_frame, &src_frame);
+  gst_video_converter_free (converter);
+  gst_video_frame_unmap (&src_frame);
+  gst_video_frame_unmap (&dest_frame);
+  intervideosrc->black_frame = dest;
+
+  return gst_pad_set_caps (GST_BASE_SRC_PAD (intervideosrc), caps);
 }
 
 static gboolean
@@ -245,6 +268,7 @@ gst_inter_video_src_stop (GstBaseSrc * src)
 
   gst_inter_surface_unref (intervideosrc->surface);
   intervideosrc->surface = NULL;
+  gst_buffer_replace (&intervideosrc->black_frame, NULL);
 
   return TRUE;
 }
@@ -321,20 +345,7 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   }
 
   if (buffer == NULL) {
-    GstMapInfo map;
-
-    buffer =
-        gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&intervideosrc->info));
-
-    gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-    memset (map.data, 16, GST_VIDEO_INFO_COMP_STRIDE (&intervideosrc->info, 0) *
-        GST_VIDEO_INFO_COMP_HEIGHT (&intervideosrc->info, 0));
-
-    memset (map.data + GST_VIDEO_INFO_COMP_OFFSET (&intervideosrc->info, 1),
-        128,
-        2 * GST_VIDEO_INFO_COMP_STRIDE (&intervideosrc->info, 1) *
-        GST_VIDEO_INFO_COMP_HEIGHT (&intervideosrc->info, 1));
-    gst_buffer_unmap (buffer, &map);
+    buffer = gst_buffer_copy (intervideosrc->black_frame);
   }
 
   buffer = gst_buffer_make_writable (buffer);

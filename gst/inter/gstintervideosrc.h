@@ -44,6 +44,7 @@ struct _GstInterVideoSrc
   char *channel;
 
   GstVideoInfo info;
+  GstBuffer *black_frame;
   int n_frames;
   GstClockTime timestamp_offset;
 };
