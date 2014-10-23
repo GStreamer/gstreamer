@@ -104,6 +104,8 @@ gst_rtsp_session_media_finalize (GObject * obj)
 
   gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
 
+  gst_rtsp_media_unprepare (priv->media);
+
   g_ptr_array_unref (priv->transports);
 
   g_free (priv->path);

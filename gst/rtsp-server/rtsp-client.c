@@ -1827,6 +1827,14 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     /* if we stil have no media, error */
     if (sessmedia == NULL)
       goto sessmedia_unavailable;
+
+    /* don't cache media anymore */
+    if (priv->path)
+      g_free (priv->path);
+    priv->path = NULL;
+    if (priv->media)
+      g_object_unref (priv->media);
+    priv->media = NULL;
   } else {
     g_object_unref (media);
   }
