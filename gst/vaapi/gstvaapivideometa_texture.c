@@ -80,7 +80,9 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
   GstVaapiVideoMeta *const vmeta =
       gst_buffer_get_vaapi_video_meta (meta->buffer);
   GstVaapiVideoMetaTexture *const meta_texture = meta->user_data;
-  GstVaapiSurface *const surface = gst_vaapi_video_meta_get_surface (vmeta);
+  GstVaapiSurfaceProxy *const proxy =
+      gst_vaapi_video_meta_get_surface_proxy (vmeta);
+  GstVaapiSurface *const surface = gst_vaapi_surface_proxy_get_surface (proxy);
   GstVaapiDisplay *const dpy = GST_VAAPI_OBJECT_DISPLAY (surface);
 
   if (gst_vaapi_display_get_display_type (dpy) != GST_VAAPI_DISPLAY_TYPE_GLX)
@@ -101,6 +103,7 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
     gst_vaapi_texture_unref (texture);
   }
   return gst_vaapi_texture_put_surface (meta_texture->texture, surface,
+      gst_vaapi_surface_proxy_get_crop_rect (proxy),
       gst_vaapi_video_meta_get_render_flags (vmeta));
 }
 

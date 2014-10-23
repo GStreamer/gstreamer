@@ -468,7 +468,7 @@ gst_vaapi_texture_get_size (GstVaapiTexture * texture,
  */
 static gboolean
 _gst_vaapi_texture_put_surface (GstVaapiTexture * texture,
-    GstVaapiSurface * surface, guint flags)
+    GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect, guint flags)
 {
   VAStatus status;
 
@@ -482,17 +482,22 @@ _gst_vaapi_texture_put_surface (GstVaapiTexture * texture,
   if (!vaapi_check_status (status, "vaCopySurfaceGLX()"))
     return FALSE;
 #else
-  guint surface_width, surface_height;
+  GstVaapiRectangle rect;
   GLContextState old_cs;
   gboolean success = FALSE;
 
-  gst_vaapi_surface_get_size (surface, &surface_width, &surface_height);
+  if (!crop_rect) {
+    rect.x = 0;
+    rect.y = 0;
+    gst_vaapi_surface_get_size (surface, &rect.width, &rect.height);
+    crop_rect = &rect;
+  }
 
   GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
   status = vaPutSurface (GST_VAAPI_OBJECT_VADISPLAY (texture),
       GST_VAAPI_OBJECT_ID (surface),
       texture->pixo->pixmap,
-      0, 0, surface_width, surface_height,
+      crop_rect->x, crop_rect->y, crop_rect->width, crop_rect->height,
       0, 0, texture->width, texture->height,
       NULL, 0, from_GstVaapiSurfaceRenderFlags (flags)
       );
@@ -562,10 +567,10 @@ end:
 
 gboolean
 gst_vaapi_texture_put_surface (GstVaapiTexture * texture,
-    GstVaapiSurface * surface, guint flags)
+    GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect, guint flags)
 {
   g_return_val_if_fail (texture != NULL, FALSE);
   g_return_val_if_fail (surface != NULL, FALSE);
 
-  return _gst_vaapi_texture_put_surface (texture, surface, flags);
+  return _gst_vaapi_texture_put_surface (texture, surface, crop_rect, flags);
 }

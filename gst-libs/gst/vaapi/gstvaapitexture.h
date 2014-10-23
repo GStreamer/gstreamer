@@ -74,7 +74,8 @@ gst_vaapi_texture_get_size (GstVaapiTexture * texture, guint * width_ptr,
 
 gboolean
 gst_vaapi_texture_put_surface (GstVaapiTexture * texture,
-    GstVaapiSurface * surface, guint flags);
+    GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect,
+    guint flags);
 
 G_END_DECLS
 

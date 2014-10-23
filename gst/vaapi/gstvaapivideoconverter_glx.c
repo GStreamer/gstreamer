@@ -137,7 +137,9 @@ gst_vaapi_video_converter_glx_upload (GstSurfaceConverter * self,
   GstVaapiVideoConverterGLXPrivate *const priv =
       GST_VAAPI_VIDEO_CONVERTER_GLX (self)->priv;
   GstVaapiVideoMeta *const meta = gst_buffer_get_vaapi_video_meta (buffer);
-  GstVaapiSurface *const surface = gst_vaapi_video_meta_get_surface (meta);
+  GstVaapiSurfaceProxy *const proxy =
+      gst_vaapi_video_meta_get_surface_proxy (meta);
+  GstVaapiSurface *const surface = gst_vaapi_surface_proxy_get_surface (proxy);
   GstVaapiDisplay *new_dpy, *old_dpy;
 
   new_dpy = gst_vaapi_object_get_display (GST_VAAPI_OBJECT (surface));
@@ -155,5 +157,6 @@ gst_vaapi_video_converter_glx_upload (GstSurfaceConverter * self,
     GST_WARNING ("could not update subtitles");
 
   return gst_vaapi_texture_put_surface (priv->texture, surface,
+      gst_vaapi_surface_proxy_get_crop_rect (proxy),
       gst_vaapi_video_meta_get_render_flags (meta));
 }

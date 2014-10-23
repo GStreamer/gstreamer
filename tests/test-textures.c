@@ -105,7 +105,7 @@ main(int argc, char *argv[])
         textures[0] = texture;
         texture_id  = gst_vaapi_texture_get_id(texture);
 
-        if (!gst_vaapi_texture_put_surface(texture, surface, flags))
+        if (!gst_vaapi_texture_put_surface(texture, surface, NULL, flags))
             g_error("could not transfer VA surface to texture");
 
         if (!gst_vaapi_window_glx_put_texture(glx_window, texture, NULL, NULL))
@@ -156,7 +156,7 @@ main(int argc, char *argv[])
 
         textures[1] = texture;
 
-        if (!gst_vaapi_texture_put_surface(texture, surface, flags))
+        if (!gst_vaapi_texture_put_surface(texture, surface, NULL, flags))
             g_error("could not transfer VA surface to texture");
 
         if (gl_get_current_texture_2d() != texture_id)
