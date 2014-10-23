@@ -392,6 +392,12 @@ static const gchar text_vertex_shader[] =
     "   v_texcoord = a_texcoord;  \n"
     "}                            \n";
 
+static const GLfloat vertices[] = {
+     1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+    -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+     1.0f,  1.0f, 0.0f, 1.0f, 1.0f
+};
 /* *INDENT-ON* */
 
 struct ConvertInfo
@@ -415,6 +421,11 @@ struct _GstGLColorConvertPrivate
 
   GstGLMemory *in_tex[GST_VIDEO_MAX_PLANES];
   GstGLMemory *out_tex[GST_VIDEO_MAX_PLANES];
+
+  GLuint vao;
+  GLuint vertex_buffer;
+  GLuint attr_position;
+  GLuint attr_texture;
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_color_convert_debug);
@@ -487,6 +498,22 @@ gst_gl_color_convert_finalize (GObject * object)
 }
 
 static void
+_reset_gl (GstGLContext * context, GstGLColorConvert * convert)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  if (convert->priv->vao) {
+    gl->DeleteVertexArrays (1, &convert->priv->vao);
+    convert->priv->vao = 0;
+  }
+
+  if (convert->priv->vertex_buffer) {
+    gl->DeleteBuffers (1, &convert->priv->vertex_buffer);
+    convert->priv->vertex_buffer = 0;
+  }
+}
+
+static void
 gst_gl_color_convert_reset (GstGLColorConvert * convert)
 {
   guint i;
@@ -510,6 +537,11 @@ gst_gl_color_convert_reset (GstGLColorConvert * convert)
   if (convert->shader) {
     gst_object_unref (convert->shader);
     convert->shader = NULL;
+  }
+
+  if (convert->context) {
+    gst_gl_context_thread_add (convert->context,
+        (GstGLContextThreadFunc) _reset_gl, convert);
   }
 }
 
@@ -998,6 +1030,36 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
   g_free (pixel_order);
 }
 
+static void
+_bind_buffer (GstGLColorConvert * convert)
+{
+  const GstGLFuncs *gl = convert->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, convert->priv->vertex_buffer);
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (convert->priv->attr_position, 3, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) 0);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (convert->priv->attr_texture, 2, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
+
+  gl->EnableVertexAttribArray (convert->priv->attr_position);
+  gl->EnableVertexAttribArray (convert->priv->attr_texture);
+}
+
+static void
+_unbind_buffer (GstGLColorConvert * convert)
+{
+  const GstGLFuncs *gl = convert->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  gl->DisableVertexAttribArray (convert->priv->attr_position);
+  gl->DisableVertexAttribArray (convert->priv->attr_texture);
+}
+
 /* Called in the gl thread */
 static gboolean
 _init_convert (GstGLColorConvert * convert)
@@ -1080,9 +1142,9 @@ _init_convert (GstGLColorConvert * convert)
   if (!res)
     goto error;
 
-  convert->shader_attr_position_loc =
+  convert->priv->attr_position =
       gst_gl_shader_get_attribute_location (convert->shader, "a_position");
-  convert->shader_attr_texture_loc =
+  convert->priv->attr_texture =
       gst_gl_shader_get_attribute_location (convert->shader, "a_texcoord");
 
   gst_gl_shader_use (convert->shader);
@@ -1119,6 +1181,25 @@ _init_convert (GstGLColorConvert * convert)
 
   if (!_init_convert_fbo (convert)) {
     goto error;
+  }
+
+  if (!convert->priv->vertex_buffer) {
+    if (gl->GenVertexArrays) {
+      gl->GenVertexArrays (1, &convert->priv->vao);
+      gl->BindVertexArray (convert->priv->vao);
+    }
+
+    gl->GenBuffers (1, &convert->priv->vertex_buffer);
+    gl->BindBuffer (GL_ARRAY_BUFFER, convert->priv->vertex_buffer);
+    gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
+        GL_STATIC_DRAW);
+
+    if (gl->GenVertexArrays) {
+      _bind_buffer (convert);
+      gl->BindVertexArray (0);
+    }
+
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
   }
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
@@ -1405,16 +1486,6 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   GLint viewport_dim[4];
 
-  const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
-    1.0f, 0.0f,
-    -1.0f, -1.0f, 0.0f,
-    0.0f, 0.0f,
-    -1.0f, 1.0f, 0.0f,
-    0.0f, 1.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f
-  };
-
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
   GLenum multipleRT[] = {
@@ -1453,13 +1524,10 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   gst_gl_shader_use (convert->shader);
 
-  gl->VertexAttribPointer (convert->shader_attr_position_loc, 3,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-  gl->VertexAttribPointer (convert->shader_attr_texture_loc, 2,
-      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-  gl->EnableVertexAttribArray (convert->shader_attr_position_loc);
-  gl->EnableVertexAttribArray (convert->shader_attr_texture_loc);
+  if (gl->BindVertexArray)
+    gl->BindVertexArray (convert->priv->vao);
+  else
+    _bind_buffer (convert);
 
   for (i = c_info->in_n_textures - 1; i >= 0; i--) {
     gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
@@ -1480,8 +1548,10 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
-  gl->DisableVertexAttribArray (convert->shader_attr_position_loc);
-  gl->DisableVertexAttribArray (convert->shader_attr_texture_loc);
+  if (gl->BindVertexArray)
+    gl->BindVertexArray (0);
+  else
+    _unbind_buffer (convert);
 
   if (gl->DrawBuffer)
     gl->DrawBuffer (GL_NONE);
