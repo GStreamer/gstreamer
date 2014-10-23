@@ -286,9 +286,9 @@ pkgconfig/gst-validate-uninstalled.pc
 pkgconfig/gst-validate.pc
 po/Makefile.in
 tools/Makefile
-tools/launcher/Makefile
-tools/launcher/apps/Makefile
-tools/launcher/apps/validate/Makefile
+launcher/Makefile
+launcher/apps/Makefile
+launcher/apps/validate/Makefile
 docs/Makefile
 docs/version.entities
 docs/validate/Makefile

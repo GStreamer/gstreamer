@@ -32,10 +32,11 @@ def _in_devel():
 def _add_gst_launcher_path():
     if not _in_devel():
         root = os.path.join(LIBDIR, 'gst-validate-launcher', 'python')
-        sys.path.insert(0, root)
     else:
-        root = os.path.dirname(__file__)
+        dir_ = os.path.dirname(os.path.abspath(__file__))
+        root = os.path.split(dir_)[0]
 
+    sys.path.insert(0, root)
     return os.path.join(root, "launcher")
 
 

@@ -1,6 +1,3 @@
-SUBDIRS = \
-	launcher
-
 bin_PROGRAMS = \
 	gst-validate-@GST_API_VERSION@ \
 	gst-validate-transcoding-@GST_API_VERSION@ \

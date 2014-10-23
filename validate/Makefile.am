@@ -4,6 +4,7 @@ SUBDIRS = 	\
 	common 	\
 	data	\
 	gst 	\
+	launcher \
 	tools 	\
 	pkgconfig 	\
 	docs    \
