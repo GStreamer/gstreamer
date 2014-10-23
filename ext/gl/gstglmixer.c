@@ -268,6 +268,26 @@ context_error:
 }
 
 static gboolean
+gst_gl_mixer_pad_sink_acceptcaps (GstPad * pad, GstGLMixer * mix,
+    GstCaps * caps)
+{
+  gboolean ret;
+  GstCaps *template_caps;
+
+  GST_DEBUG_OBJECT (pad, "try accept caps of %" GST_PTR_FORMAT, caps);
+
+  template_caps = gst_pad_get_pad_template_caps (pad);
+  template_caps = gst_caps_make_writable (template_caps);
+
+  ret = gst_caps_can_intersect (caps, template_caps);
+  GST_DEBUG_OBJECT (pad, "%saccepted caps %" GST_PTR_FORMAT,
+      (ret ? "" : "not "), caps);
+  gst_caps_unref (template_caps);
+
+  return ret;
+}
+
+static gboolean
 gst_gl_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
     GstQuery * query)
 {
@@ -277,6 +297,16 @@ gst_gl_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
   GST_TRACE ("QUERY %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_query_parse_accept_caps (query, &caps);
+      ret = gst_gl_mixer_pad_sink_acceptcaps (GST_PAD (bpad), mix, caps);
+      gst_query_set_accept_caps_result (query, ret);
+      ret = TRUE;
+      break;
+    }
     case GST_QUERY_ALLOCATION:
     {
       GstQuery *decide_query = NULL;
