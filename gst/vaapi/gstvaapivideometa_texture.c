@@ -25,8 +25,13 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#include <GL/gl.h>
 #include "gstvaapivideometa.h"
 #include "gstvaapipluginutil.h"
+
+#if USE_GLX
+#include <gst/vaapi/gstvaapitexture_glx.h>
+#endif
 
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
 
@@ -95,7 +100,7 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
       gst_vaapi_texture_get_id (meta_texture->texture) != texture_id[0]) {
     /* FIXME: should we assume target? */
     GstVaapiTexture *const texture =
-        gst_vaapi_texture_new_with_texture (dpy, texture_id[0],
+        gst_vaapi_texture_glx_new_wrapped (dpy, texture_id[0],
         GL_TEXTURE_2D, GL_RGBA);
     gst_vaapi_texture_replace (&meta_texture->texture, texture);
     if (!texture)

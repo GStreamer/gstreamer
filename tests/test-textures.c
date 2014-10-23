@@ -23,9 +23,9 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapidisplay_glx.h>
 #include <gst/vaapi/gstvaapiwindow_glx.h>
+#include <gst/vaapi/gstvaapitexture_glx.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimage.h>
-#include <gst/vaapi/gstvaapitexture.h>
 #include "image.h"
 
 static inline void pause(void)
@@ -89,10 +89,10 @@ main(int argc, char *argv[])
         g_error("coult not bind GL context");
 
     g_print("#\n");
-    g_print("# Create texture with gst_vaapi_texture_new()\n");
+    g_print("# Create texture with gst_vaapi_texture_glx_new()\n");
     g_print("#\n");
     {
-        texture = gst_vaapi_texture_new(
+        texture = gst_vaapi_texture_glx_new(
             display,
             GL_TEXTURE_2D,
             GL_RGBA,
@@ -113,7 +113,7 @@ main(int argc, char *argv[])
     }
 
     g_print("#\n");
-    g_print("# Create texture with gst_vaapi_texture_new_with_texture()\n");
+    g_print("# Create texture with gst_vaapi_texture_glx_new_wrapped()\n");
     g_print("#\n");
     {
         const GLenum target = GL_TEXTURE_2D;
@@ -139,7 +139,7 @@ main(int argc, char *argv[])
         );
         glDisable(target);
 
-        texture = gst_vaapi_texture_new_with_texture(
+        texture = gst_vaapi_texture_glx_new_wrapped(
             display,
             texture_id,
             target,
@@ -152,7 +152,7 @@ main(int argc, char *argv[])
             g_error("invalid texture id");
 
         if (gl_get_current_texture_2d() != texture_id)
-            g_error("gst_vaapi_texture_new_with_texture() altered texture bindings");
+            g_error("gst_vaapi_texture_glx_new_wrapped() altered texture bindings");
 
         textures[1] = texture;
 

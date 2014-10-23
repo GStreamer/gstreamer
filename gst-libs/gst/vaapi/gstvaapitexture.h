@@ -25,23 +25,60 @@
 #ifndef GST_VAAPI_TEXTURE_H
 #define GST_VAAPI_TEXTURE_H
 
-#include <GL/gl.h>
 #include <gst/vaapi/gstvaapitypes.h>
-#include <gst/vaapi/gstvaapiobject.h>
-#include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_TEXTURE(obj) \
+  ((GstVaapiTexture *)(obj))
+
+/**
+ * GST_VAAPI_TEXTURE_ID:
+ * @texture: a #GstVaapiTexture
+ *
+ * Macro that evaluates to the GL texture id associated with the @texture
+ */
+#define GST_VAAPI_TEXTURE_ID(texture) \
+  gst_vaapi_texture_get_id (GST_VAAPI_TEXTURE (texture))
+
+/**
+ * GST_VAAPI_TEXTURE_TARGET:
+ * @texture: a #GstVaapiTexture
+ *
+ * Macro that evaluates to the GL texture target associated with the @texture
+ */
+#define GST_VAAPI_TEXTURE_TARGET(texture) \
+  gst_vaapi_texture_get_target (GST_VAAPI_TEXTURE (texture))
+
+/**
+ * GST_VAAPI_TEXTURE_FORMAT:
+ * @texture: a #GstVaapiTexture
+ *
+ * Macro that evaluates to the GL texture format associated with the @texture
+ */
+#define GST_VAAPI_TEXTURE_FORMAT(texture) \
+  gst_vaapi_texture_get_format (GST_VAAPI_TEXTURE (texture))
+
+/**
+ * GST_VAAPI_TEXTURE_WIDTH:
+ * @texture: a #GstVaapiTexture
+ *
+ * Macro that evaluates to the GL texture width associated with the @texture
+ */
+#define GST_VAAPI_TEXTURE_WIDTH(texture) \
+  gst_vaapi_texture_get_width (GST_VAAPI_TEXTURE (texture))
+
+/**
+ * GST_VAAPI_TEXTURE_HEIGHT:
+ * @texture: a #GstVaapiTexture
+ *
+ * Macro that evaluates to the GL texture height associated with the @texture
+ */
+#define GST_VAAPI_TEXTURE_HEIGHT(texture) \
+  gst_vaapi_texture_get_height (GST_VAAPI_TEXTURE (texture))
+
 typedef struct _GstVaapiTexture GstVaapiTexture;
-
-GstVaapiTexture *
-gst_vaapi_texture_new (GstVaapiDisplay * display, GLenum target, GLenum format,
-    guint width, guint height);
-
-GstVaapiTexture *
-gst_vaapi_texture_new_with_texture (GstVaapiDisplay * display, GLuint texture_id,
-    GLenum target, GLenum format);
 
 GstVaapiTexture *
 gst_vaapi_texture_ref (GstVaapiTexture * texture);
@@ -53,13 +90,13 @@ void
 gst_vaapi_texture_replace (GstVaapiTexture ** old_texture_ptr,
     GstVaapiTexture * new_texture);
 
-GLuint
+guint
 gst_vaapi_texture_get_id (GstVaapiTexture * texture);
 
-GLenum
+guint
 gst_vaapi_texture_get_target (GstVaapiTexture * texture);
 
-GLenum
+guint
 gst_vaapi_texture_get_format (GstVaapiTexture * texture);
 
 guint

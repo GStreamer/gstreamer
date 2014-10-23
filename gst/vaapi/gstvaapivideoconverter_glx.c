@@ -23,7 +23,7 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include <gst/vaapi/gstvaapitexture.h>
+#include <gst/vaapi/gstvaapitexture_glx.h>
 #include "gstvaapivideoconverter_glx.h"
 #include "gstvaapivideoconverter_x11.h"
 #include "gstvaapipluginutil.h"
@@ -120,7 +120,7 @@ gst_vaapi_video_converter_glx_new (GstBuffer * buffer, const gchar * type,
 
   /* FIXME Should we assume target and format ? */
   texture =
-      gst_vaapi_texture_new_with_texture (gst_vaapi_video_meta_get_display
+      gst_vaapi_texture_glx_new_wrapped (gst_vaapi_video_meta_get_display
       (meta), g_value_get_uint (dest), GL_TEXTURE_2D, GL_BGRA);
   if (!texture)
     return NULL;
@@ -149,7 +149,7 @@ gst_vaapi_video_converter_glx_upload (GstSurfaceConverter * self,
     const guint texture = gst_vaapi_texture_get_id (priv->texture);
 
     gst_vaapi_texture_replace (&priv->texture, NULL);
-    priv->texture = gst_vaapi_texture_new_with_texture (new_dpy,
+    priv->texture = gst_vaapi_texture_glx_new_wrapped (new_dpy,
         texture, GL_TEXTURE_2D, GL_BGRA);
   }
 
