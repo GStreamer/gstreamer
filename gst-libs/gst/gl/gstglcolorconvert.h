@@ -61,8 +61,6 @@ struct _GstGLColorConvert
   GLuint           fbo;
   GLuint           depth_buffer;
   GstGLShader     *shader;
-  GLint            shader_attr_position_loc;
-  GLint            shader_attr_texture_loc;
 
   /* <private> */
   GstGLColorConvertPrivate *priv;
