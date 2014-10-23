@@ -287,6 +287,37 @@ gst_gl_mixer_pad_sink_acceptcaps (GstPad * pad, GstGLMixer * mix,
   return ret;
 }
 
+static GstCaps *
+gst_gl_mixer_pad_sink_getcaps (GstPad * pad, GstGLMixer * mix, GstCaps * filter)
+{
+  GstCaps *srccaps;
+  GstCaps *template_caps;
+  GstCaps *filtered_caps;
+  GstCaps *returned_caps;
+  gboolean had_current_caps = TRUE;
+
+  template_caps = gst_pad_get_pad_template_caps (pad);
+
+  srccaps = gst_pad_get_current_caps (pad);
+  if (srccaps == NULL) {
+    had_current_caps = FALSE;
+    srccaps = template_caps;
+  }
+
+  filtered_caps = srccaps;
+  if (filter)
+    filtered_caps = gst_caps_intersect (srccaps, filter);
+  returned_caps = gst_caps_intersect (filtered_caps, template_caps);
+
+  gst_caps_unref (srccaps);
+  if (filter)
+    gst_caps_unref (filtered_caps);
+  if (had_current_caps)
+    gst_caps_unref (template_caps);
+
+  return returned_caps;
+}
+
 static gboolean
 gst_gl_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
     GstQuery * query)
@@ -297,6 +328,17 @@ gst_gl_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
   GST_TRACE ("QUERY %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_gl_mixer_pad_sink_getcaps (GST_PAD (bpad), mix, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
     case GST_QUERY_ACCEPT_CAPS:
     {
       GstCaps *caps;
