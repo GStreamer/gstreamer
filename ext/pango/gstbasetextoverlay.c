@@ -461,7 +461,7 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           "Pango font description of font to be used for rendering. "
           "See documentation of pango_font_description_from_string "
           "for syntax.", DEFAULT_PROP_FONT_DESC,
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstBaseTextOverlay:color:
    *
@@ -1050,6 +1050,20 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
     case PROP_SHADING_VALUE:
       g_value_set_uint (value, overlay->shading_value);
       break;
+    case PROP_FONT_DESC:
+    {
+      const PangoFontDescription *desc;
+
+      g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
+      desc = pango_layout_get_font_description (overlay->layout);
+      if (!desc)
+        g_value_set_string (value, "");
+      else {
+        g_value_take_string (value, pango_font_description_to_string (desc));
+      }
+      g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
