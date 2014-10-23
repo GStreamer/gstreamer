@@ -27,18 +27,6 @@
 
 #include <va/va.h>
 
-#ifdef HAVE_VA_VA_GLX_H
-# define USE_VAAPI_GLX 1
-#else
-# define USE_VAAPI_GLX 0
-#endif
-
-#if USE_VAAPI_GLX
-# include <va/va_glx.h>
-#else
-# define vaGetDisplayGLX(dpy) vaGetDisplay(dpy)
-#endif
-
 /* Compatibility glue with VA-API < 0.31 */
 #if !VA_CHECK_VERSION(0,31,0)
 #undef  vaSyncSurface

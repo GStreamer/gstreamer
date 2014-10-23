@@ -389,7 +389,7 @@ libgstvaapi_glx_@GST_API_VERSION@_la_CFLAGS =	\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_VIDEO_CFLAGS)			\
 	$(GL_CFLAGS)				\
-	$(LIBVA_GLX_CFLAGS)			\
+	$(LIBVA_X11_CFLAGS)			\
 	$(NULL)
 
 libgstvaapi_glx_@GST_API_VERSION@_la_LIBADD =	\
@@ -399,7 +399,7 @@ libgstvaapi_glx_@GST_API_VERSION@_la_LIBADD =	\
 	$(GST_VIDEO_LIBS)			\
 	$(X11_LIBS)				\
 	$(GL_LIBS)				\
-	$(LIBVA_GLX_LIBS)			\
+	$(LIBVA_X11_LIBS)			\
 	libgstvaapi-x11-$(GST_API_VERSION).la	\
 	libgstvaapi-$(GST_API_VERSION).la	\
 	$(DLOPEN_LIBS)				\

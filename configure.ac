@@ -48,14 +48,12 @@ m4_define([va_api_version],     [0.30.4])
 m4_define([va_api_enc_version], [0.34.0])
 m4_define([va_api_drm_version], [0.33.0])
 m4_define([va_api_x11_version], [0.31.0])
-m4_define([va_api_glx_version], [0.32.0])
 m4_define([va_api_wld_version], [0.33.0])
 
 # libva package version number
 m4_define([libva_enc_package_version], [1.2.0])
 m4_define([libva_drm_package_version], [1.1.0])
 m4_define([libva_x11_package_version], [1.0.3])
-m4_define([libva_glx_package_version], [1.0.9])
 m4_define([libva_wld_package_version], [1.1.0])
 
 # gtk-doc version number
@@ -692,22 +690,6 @@ if test $USE_X11 -eq 1; then
         [HAVE_VA_X11=1], [USE_X11=0])
 fi
 AC_SUBST(LIBVA_X11_PKGNAME)
-
-dnl VA/GLX API
-HAVE_VA_GLX=0
-LIBVA_GLX_PKGNAME="libva-glx"
-if test $USE_GLX -eq 1; then
-    PKG_CHECK_MODULES(LIBVA_GLX, [$LIBVA_GLX_PKGNAME >= va_api_glx_version],
-        [HAVE_VA_GLX=1], [LIBVA_GLX_PKGNAME="$LIBVA_X11_PKGNAME"])
-
-    if test $HAVE_VA_GLX -eq 1; then
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$LIBVA_GLX_CFLAGS"
-        AC_CHECK_HEADERS([va/va_glx.h], [:], [HAVE_VA_GLX=0])
-        CPPFLAGS="$saved_CPPFLAGS"
-    fi
-fi
-AC_SUBST(LIBVA_GLX_PKGNAME)
 
 dnl Check for va_dec_jpeg.h header
 saved_CPPFLAGS="$CPPFLAGS"

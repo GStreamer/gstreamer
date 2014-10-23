@@ -48,11 +48,10 @@ gst_vaapi_display_glx_get_display_info (GstVaapiDisplay * display,
   const GstVaapiDisplayGLXClass *const klass =
       GST_VAAPI_DISPLAY_GLX_GET_CLASS (display);
 
-  info->va_display = vaGetDisplayGLX (GST_VAAPI_DISPLAY_XDISPLAY (display));
-  if (!info->va_display)
+  if (!klass->parent_get_display (display, info))
     return FALSE;
   info->display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
-  return klass->parent_get_display (display, info);
+  return TRUE;
 }
 
 static void

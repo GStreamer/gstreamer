@@ -76,15 +76,6 @@ struct _GstVaapiTextureClass
 static void
 _gst_vaapi_texture_destroy_objects (GstVaapiTexture * texture)
 {
-#if USE_VAAPI_GLX
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
-  if (texture->gl_surface) {
-    vaDestroySurfaceGLX (GST_VAAPI_OBJECT_VADISPLAY (texture),
-        texture->gl_surface);
-    texture->gl_surface = NULL;
-  }
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
-#else
   GLContextState old_cs;
 
   GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
@@ -107,7 +98,6 @@ _gst_vaapi_texture_destroy_objects (GstVaapiTexture * texture)
     texture->gl_context = NULL;
   }
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
-#endif
 }
 
 static void
@@ -128,16 +118,6 @@ static gboolean
 _gst_vaapi_texture_create_objects (GstVaapiTexture * texture, GLuint texture_id)
 {
   gboolean success = FALSE;
-
-#if USE_VAAPI_GLX
-  VAStatus status;
-
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
-  status = vaCreateSurfaceGLX (GST_VAAPI_OBJECT_VADISPLAY (texture),
-      texture->target, texture_id, &texture->gl_surface);
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
-  success = vaapi_check_status (status, "vaCreateSurfaceGLX()");
-#else
   GLContextState old_cs;
 
   GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
@@ -160,7 +140,6 @@ _gst_vaapi_texture_create_objects (GstVaapiTexture * texture, GLuint texture_id)
 end:
   gl_set_current_context (&old_cs, NULL);
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
-#endif
   return success;
 }
 
@@ -471,17 +450,6 @@ _gst_vaapi_texture_put_surface (GstVaapiTexture * texture,
     GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect, guint flags)
 {
   VAStatus status;
-
-#if USE_VAAPI_GLX
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
-  status = vaCopySurfaceGLX (GST_VAAPI_OBJECT_VADISPLAY (texture),
-      texture->gl_surface,
-      GST_VAAPI_OBJECT_ID (surface), from_GstVaapiSurfaceRenderFlags (flags)
-      );
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
-  if (!vaapi_check_status (status, "vaCopySurfaceGLX()"))
-    return FALSE;
-#else
   GstVaapiRectangle rect;
   GLContextState old_cs;
   gboolean success = FALSE;
@@ -561,8 +529,6 @@ out_reset_context:
 end:
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
   return success;
-#endif
-  return TRUE;
 }
 
 gboolean
