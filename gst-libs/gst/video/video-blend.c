@@ -325,12 +325,10 @@ gst_video_blend (GstVideoFrame * dest,
 
   /* adjust width/height if the src is bigger than dest */
   if (x + src_width > dest_width)
-    if (dest_width > x)
-      src_width = dest_width - x;
+    src_width = dest_width - x;
 
   if (y + src_height > dest_height)
-    if (dest_height > y)
-      src_height = dest_height - y;
+    src_height = dest_height - y;
 
   /* Mainloop doing the needed conversions, and blending */
   for (i = y; i < y + src_height; i++) {
