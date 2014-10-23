@@ -698,8 +698,6 @@ gst_raw_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (segment.format != GST_FORMAT_TIME) {
         gst_event_unref (event);
 
-        segment.format = GST_FORMAT_TIME;
-
         ret =
             gst_raw_parse_convert (rp, segment.format, segment.start,
             GST_FORMAT_TIME, (gint64 *) & segment.start);
@@ -713,6 +711,8 @@ gst_raw_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
               segment.format);
           break;
         }
+
+        segment.format = GST_FORMAT_TIME;
 
         event = gst_event_new_segment (&segment);
       }
