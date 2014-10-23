@@ -33,63 +33,48 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstVaapiTexture                 GstVaapiTexture;
+typedef struct _GstVaapiTexture GstVaapiTexture;
 
 GstVaapiTexture *
-gst_vaapi_texture_new(
-    GstVaapiDisplay *display,
-    GLenum           target,
-    GLenum           format,
-    guint            width,
-    guint            height
-);
+gst_vaapi_texture_new (GstVaapiDisplay * display, GLenum target, GLenum format,
+    guint width, guint height);
 
 GstVaapiTexture *
-gst_vaapi_texture_new_with_texture(
-    GstVaapiDisplay *display,
-    GLuint           texture_id,
-    GLenum           target,
-    GLenum           format
-);
+gst_vaapi_texture_new_with_texture (GstVaapiDisplay * display, GLuint texture_id,
+    GLenum target, GLenum format);
 
 GstVaapiTexture *
-gst_vaapi_texture_ref(GstVaapiTexture *texture);
+gst_vaapi_texture_ref (GstVaapiTexture * texture);
 
 void
-gst_vaapi_texture_unref(GstVaapiTexture *texture);
+gst_vaapi_texture_unref (GstVaapiTexture * texture);
 
 void
-gst_vaapi_texture_replace(GstVaapiTexture **old_texture_ptr,
-    GstVaapiTexture *new_texture);
+gst_vaapi_texture_replace (GstVaapiTexture ** old_texture_ptr,
+    GstVaapiTexture * new_texture);
 
 GLuint
-gst_vaapi_texture_get_id(GstVaapiTexture *texture);
+gst_vaapi_texture_get_id (GstVaapiTexture * texture);
 
 GLenum
-gst_vaapi_texture_get_target(GstVaapiTexture *texture);
+gst_vaapi_texture_get_target (GstVaapiTexture * texture);
 
 GLenum
-gst_vaapi_texture_get_format(GstVaapiTexture *texture);
+gst_vaapi_texture_get_format (GstVaapiTexture * texture);
 
 guint
-gst_vaapi_texture_get_width(GstVaapiTexture *texture);
+gst_vaapi_texture_get_width (GstVaapiTexture * texture);
 
 guint
-gst_vaapi_texture_get_height(GstVaapiTexture *texture);
+gst_vaapi_texture_get_height (GstVaapiTexture * texture);
 
 void
-gst_vaapi_texture_get_size(
-    GstVaapiTexture *texture,
-    guint           *pwidth,
-    guint           *pheight
-);
+gst_vaapi_texture_get_size (GstVaapiTexture * texture, guint * width_ptr,
+    guint * height_ptr);
 
 gboolean
-gst_vaapi_texture_put_surface(
-    GstVaapiTexture *texture,
-    GstVaapiSurface *surface,
-    guint            flags
-);
+gst_vaapi_texture_put_surface (GstVaapiTexture * texture,
+    GstVaapiSurface * surface, guint flags);
 
 G_END_DECLS
 
