@@ -624,7 +624,7 @@ structs_parse_from_filename (const gchar * scenario_file)
   lines = _get_lines (scenario_file);
 
   if (lines == NULL) {
-    GST_ERROR ("Got no line for file: %s", scenario_file);
+    GST_DEBUG ("Got no line for file: %s", scenario_file);
     return NULL;
   }
 
