@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 Olivier Crete <olivier.crete@collabora.com>
  *
- * gstv4l2deviceprovider.c: V4l2 device probing and monitoring
+ * pulsedeviceprovider.c: pulseaudio device probing and monitoring
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

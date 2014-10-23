@@ -35,7 +35,6 @@
 G_BEGIN_DECLS
 
 typedef struct _GstPulseDeviceProvider GstPulseDeviceProvider;
-typedef struct _GstPulseDeviceProviderPrivate GstPulseDeviceProviderPrivate;
 typedef struct _GstPulseDeviceProviderClass GstPulseDeviceProviderClass;
 
 #define GST_TYPE_PULSE_DEVICE_PROVIDER                 (gst_pulse_device_provider_get_type())
@@ -69,7 +68,6 @@ GType        gst_pulse_device_provider_get_type (void);
 
 
 typedef struct _GstPulseDevice GstPulseDevice;
-typedef struct _GstPulseDevicePrivate GstPulseDevicePrivate;
 typedef struct _GstPulseDeviceClass GstPulseDeviceClass;
 
 #define GST_TYPE_PULSE_DEVICE                 (gst_pulse_device_get_type())
