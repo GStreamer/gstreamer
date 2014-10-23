@@ -70,9 +70,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<!-- Maybe some problems with the name -->
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm"/>
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/virtual_method[@cname='get_type']" name="hidden"/>
-	<!-- gapi cannot handle count parameters properly -->
-	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init']/parameters/parameter[@name='argc']" name="name">n_argc</attr>
-	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init_check']/parameters/parameter[@name='argc']" name="name">n_argc</attr>
+
 	<!-- calling oldobj.Handle should fix this -->
 	<remove-attr path="/api/namespace/object[@cname='GstObject']/method[@cname='gst_object_replace']/parameters/parameter[@name='oldobj']" name="pass_as"/>
 	<!-- Some glue problems -->
@@ -123,6 +121,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/boxed[@cname='GstMessage']/method[@cname='gst_message_parse_error']" name="hidden">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstMessage']/method[@cname='gst_message_get_stream_status_object']" name="hidden">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstMessage']/method[@cname='gst_message_set_stream_status_object']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init_check']" name="hidden">true</attr>
+
 
 	<!-- GstVideo -->
 	<attr path="/api/namespace/boxed[@cname='GstVideoCodecState']/field[@cname='padding']" name="type">gpointer</attr>

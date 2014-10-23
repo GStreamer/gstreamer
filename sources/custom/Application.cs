@@ -32,8 +32,47 @@ namespace Gst {
 
 		}
 
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_init(ref int argc, ref IntPtr[] argv);
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_init(IntPtr argc, IntPtr argv);
+
+
 		public static void Init() {
-			gst_init (0, null);
+			gst_init (IntPtr.Zero, IntPtr.Zero);
+		}
+			
+		public static void Init(ref string[] argv) {
+			int cnt_argv = argv == null ? 0 : argv.Length;
+			IntPtr[] native_argv = new IntPtr [cnt_argv];
+			for (int i = 0; i < cnt_argv; i++)
+				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup(argv[i]);
+			gst_init(ref cnt_argv, ref native_argv);
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_init_check(ref int argc, ref IntPtr[] argv, out IntPtr error);
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_init_check(IntPtr argc, IntPtr argv, out IntPtr error);
+
+		public static bool InitCheck() {
+			IntPtr error = IntPtr.Zero;
+			bool ret = gst_init_check (IntPtr.Zero, IntPtr.Zero, out error);
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		public static bool InitCheck(ref string[] argv) {
+			int cnt_argv = argv == null ? 0 : argv.Length;
+			IntPtr[] native_argv = new IntPtr [cnt_argv];
+			for (int i = 0; i < cnt_argv; i++)
+				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup(argv[i]);
+			IntPtr error = IntPtr.Zero;
+			bool ret = gst_init_check(ref cnt_argv, ref native_argv, out error);
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
 		}
 	}
 }
