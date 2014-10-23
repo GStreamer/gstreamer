@@ -775,12 +775,29 @@ class _TestsLauncher(Loggable):
         self._list_testers()
         self.wanted_tests_patterns = []
 
+    def _list_app_dirs (self):
+        app_dirs = []
+        app_dirs.append (os.path.join(self.libsdir, "apps"))
+        env_dirs = os.environ.get("GST_VALIDATE_APPS_DIR")
+        if env_dirs is not None:
+            for dir_ in env_dirs.split(":"):
+                app_dirs.append (dir_)
+
+        return app_dirs
+
+    def _exec_app (self, app_dir, env):
+        for f in os.listdir(app_dir):
+            if f.endswith(".py"):
+                execfile(os.path.join(app_dir, f), env)
+
+    def _exec_apps (self, env):
+        app_dirs = self._list_app_dirs()
+        for app_dir in app_dirs:
+            self._exec_app(app_dir, env)
+
     def _list_testers(self):
         env = globals().copy()
-        appsdir = os.path.join(self.libsdir, "apps")
-        for f in os.listdir(appsdir):
-            if f.endswith(".py"):
-                execfile(os.path.join(appsdir, f), env)
+        self._exec_apps(env)
 
         testers = [i() for i in utils.get_subclasses(TestsManager, env)]
         for tester in testers:
