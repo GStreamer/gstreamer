@@ -743,6 +743,78 @@ GST_START_TEST (test_setup_tcp)
 
 GST_END_TEST;
 
+GST_START_TEST (test_setup_twice)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  GstRTSPRange client_ports;
+  GstRTSPTransport *video_transport = NULL;
+  gchar *session1 = NULL;
+  gchar *session2 = NULL;
+
+  start_server ();
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  /* we wan't more than one session for this connection */
+  gst_rtsp_connection_set_remember_session_id (conn, FALSE);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get the control url */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports (&client_ports);
+
+  /* send SETUP request for one session */
+  fail_unless (do_setup (conn, video_control, &client_ports, &session1,
+          &video_transport) == GST_RTSP_STS_OK);
+  GST_DEBUG ("set up video %s, got session '%s'", video_control, session1);
+
+  /* check response from SETUP */
+  fail_unless (video_transport->trans == GST_RTSP_TRANS_RTP);
+  fail_unless (video_transport->profile == GST_RTSP_PROFILE_AVP);
+  fail_unless (video_transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (video_transport->mode_play);
+  gst_rtsp_transport_free (video_transport);
+
+  /* send SETUP request for another session */
+  fail_unless (do_setup (conn, video_control, &client_ports, &session2,
+          &video_transport) == GST_RTSP_STS_OK);
+  GST_DEBUG ("set up video %s, got session '%s'", video_control, session2);
+
+  /* check response from SETUP */
+  fail_unless (video_transport->trans == GST_RTSP_TRANS_RTP);
+  fail_unless (video_transport->profile == GST_RTSP_PROFILE_AVP);
+  fail_unless (video_transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (video_transport->mode_play);
+  gst_rtsp_transport_free (video_transport);
+
+  /* session can not be the same */
+  fail_unless (strcmp (session1, session2));
+
+  /* send TEARDOWN request for the first session*/
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session1) == GST_RTSP_STS_OK);
+
+  /* send TEARDOWN request for the second session */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session2) == GST_RTSP_STS_OK);
+
+  g_free (session1);
+  g_free (session2);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_setup_with_require_header)
 {
   GstRTSPConnection *conn;
@@ -1519,6 +1591,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_describe_non_existing_mount_point);
   tcase_add_test (tc, test_setup);
   tcase_add_test (tc, test_setup_tcp);
+  tcase_add_test (tc, test_setup_twice);
   tcase_add_test (tc, test_setup_with_require_header);
   tcase_add_test (tc, test_setup_non_existing_stream);
   tcase_add_test (tc, test_play);
