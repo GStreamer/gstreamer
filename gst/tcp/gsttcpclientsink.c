@@ -419,7 +419,8 @@ gst_tcp_client_sink_unlock_stop (GstBaseSink * bsink)
   GstTCPClientSink *sink = GST_TCP_CLIENT_SINK (bsink);
 
   GST_DEBUG_OBJECT (sink, "unset flushing");
-  g_cancellable_reset (sink->cancellable);
+  g_object_unref (sink->cancellable);
+  sink->cancellable = g_cancellable_new ();
 
   return TRUE;
 }
