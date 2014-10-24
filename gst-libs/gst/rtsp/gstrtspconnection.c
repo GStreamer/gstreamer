@@ -2474,10 +2474,12 @@ gst_rtsp_connection_flush (GstRTSPConnection * conn, gboolean flush)
 {
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
 
-  if (flush)
+  if (flush) {
     g_cancellable_cancel (conn->cancellable);
-  else
-    g_cancellable_reset (conn->cancellable);
+  } else {
+    g_object_unref (conn->cancellable);
+    conn->cancellable = g_cancellable_new ();
+  }
 
   return GST_RTSP_OK;
 }
@@ -2940,7 +2942,8 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
     conn2->stream1 = NULL;
     conn2->input_stream = NULL;
     conn2->control_stream = NULL;
-    g_cancellable_reset (conn2->cancellable);
+    g_object_unref (conn2->cancellable);
+    conn2->cancellable = NULL;
 
     /* We make socket0 the write socket and socket1 the read socket. */
     conn->write_socket = conn->socket0;
