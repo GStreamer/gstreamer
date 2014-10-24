@@ -1507,7 +1507,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
       /* state change function could have been executed and we could be
        * flushing now */
       if (G_UNLIKELY (basesink->flushing))
-        goto stopping;
+        goto stopping_unlocked;
     }
     GST_DEBUG_OBJECT (basesink, "posting PLAYING state change message");
     /* FIXME, we released the PREROLL lock above, it's possible that this
@@ -1546,6 +1546,11 @@ nothing_pending:
     basesink->priv->have_latency = TRUE;
     GST_OBJECT_UNLOCK (basesink);
     return TRUE;
+  }
+stopping_unlocked:
+  {
+    GST_OBJECT_LOCK (basesink);
+    goto stopping;
   }
 stopping:
   {
