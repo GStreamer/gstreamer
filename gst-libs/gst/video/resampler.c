@@ -290,9 +290,18 @@ gst_resampler_init (GstResampler * resampler,
     {
       gdouble resample_inc = in_size / (gdouble) out_size;
 
-      params.envelope = 2.0;
-      params.sharpness = 1.0;
-      params.sharpen = 0.0;
+      if (!options
+          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_ENVELOPE,
+              &params.envelope))
+        params.envelope = 2.0;
+      if (!options
+          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_SHARPNESS,
+              &params.sharpness))
+        params.sharpness = 1.0;
+      if (!options
+          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_SHARPEN,
+              &params.sharpen))
+        params.sharpen = 0.0;
 
       if (resample_inc > 1.0) {
         params.fx = (1.0 / resample_inc) * params.sharpness;

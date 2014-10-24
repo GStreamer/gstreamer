@@ -49,6 +49,33 @@ typedef enum {
 } GstResamplerMethod;
 
 /**
+ * GST_RESAMPLER_OPT_ENVELOPE:
+ *
+ * G_TYPE_DOUBLE, specifies the size of filter envelope for
+ * @GST_RESAMPLER_METHOD_LANCZOS. values are clamped between
+ * 1.0 and 5.0. 2.0 is the default.
+ */
+#define GST_RESAMPLER_OPT_ENVELOPE      "GstResampler.envelope"
+
+/**
+ * GST_RESAMPLER_OPT_SHARPNESS:
+ *
+ * G_TYPE_DOUBLE, specifies sharpness of the filter for
+ * @GST_RESAMPLER_METHOD_LANCZOS. values are clamped between
+ * 0.5 and 1.5. 1.0 is the default.
+ */
+#define GST_RESAMPLER_OPT_SHARPNESS     "GstResampler.sharpness"
+
+/**
+ * GST_RESAMPLER_OPT_SHARPEN:
+ *
+ * G_TYPE_DOUBLE, specifies sharpening of the filter for
+ * @GST_RESAMPLER_METHOD_LANCZOS. values are clamped between
+ * 0.0 and 1.0. 0.0 is the default.
+ */
+#define GST_RESAMPLER_OPT_SHARPEN      "GstResampler.sharpen"
+
+/**
  * GstResamplerFlags:
  * @GST_RESAMPLER_FLAG_NONE: no flags
  *
