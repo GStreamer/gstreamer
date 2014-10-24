@@ -26,7 +26,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstpushsrc.h>
 #include <gst/base/gstbasesink.h>
-#include <gst/audio/streamvolume.h>
+#include <gst/audio/audio.h>
 #include <gst/video/gstvideodecoder.h>
 
 #ifndef GST_DISABLE_REGISTRY
@@ -521,7 +521,7 @@ gst_codec_demuxer_setup_pad (GstCodecDemuxer * demux, GstPad ** pad,
       caps = gst_caps_new_empty_simple ("video/x-compressed");
     } else if (g_str_equal (streaminfo, "raw-audio")) {
       caps = gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, "S16LE",
+          "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
           "layout", G_TYPE_STRING, "interleaved",
           "rate", G_TYPE_INT, 48000, "channels", G_TYPE_INT, 2, NULL);
     } else {
@@ -1222,7 +1222,7 @@ GST_START_TEST (test_raw_single_audio_stream_manual_sink)
   playbin =
       create_playbin
       ("caps:audio/x-raw,"
-      " format=(string)S16LE, " "layout=(string)interleaved, "
+      " format=(string)" GST_AUDIO_NE (S16) ", " "layout=(string)interleaved, "
       " rate=(int)48000, " " channels=(int)2", TRUE);
 
   fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_READY),
