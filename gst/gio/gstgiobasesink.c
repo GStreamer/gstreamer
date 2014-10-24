@@ -191,7 +191,8 @@ gst_gio_base_sink_unlock_stop (GstBaseSink * base_sink)
 
   GST_LOG_OBJECT (sink, "resetting cancellable");
 
-  g_cancellable_reset (sink->cancel);
+  g_object_unref (sink->cancel);
+  sink->cancel = g_cancellable_new ();
 
   return TRUE;
 }

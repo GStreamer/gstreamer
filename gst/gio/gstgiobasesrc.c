@@ -286,7 +286,8 @@ gst_gio_base_src_unlock_stop (GstBaseSrc * base_src)
 
   GST_LOG_OBJECT (src, "resetting cancellable");
 
-  g_cancellable_reset (src->cancel);
+  g_object_unref (src->cancel);
+  src->cancel = g_cancellable_new ();
 
   return TRUE;
 }
