@@ -116,7 +116,7 @@ gst_validate_reporter_intercept_report (GstValidateReporter * reporter,
 GstValidateReportingDetails
 gst_validate_reporter_get_reporting_level (GstValidateReporter * reporter)
 {
-  GstValidateInterceptionReturn ret = GST_VALIDATE_SHOW_UNKNOWN;
+  GstValidateReportingDetails ret = GST_VALIDATE_SHOW_UNKNOWN;
   GstValidateReporterInterface *iface =
       GST_VALIDATE_REPORTER_GET_INTERFACE (reporter);
 
@@ -173,8 +173,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   if (prev_report) {
     GstValidateReportingDetails reporter_level =
         gst_validate_reporter_get_reporting_level (reporter);
-    GstValidateReportingDetails runner_level =
-        GST_VALIDATE_SHOW_UNKNOWN;
+    GstValidateReportingDetails runner_level = GST_VALIDATE_SHOW_UNKNOWN;
 
     if (priv->runner)
       runner_level =
