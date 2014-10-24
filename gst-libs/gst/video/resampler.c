@@ -257,7 +257,6 @@ gst_resampler_init (GstResampler * resampler,
 
   resampler->in_size = in_size;
   resampler->out_size = out_size;
-  resampler->max_taps = n_taps;
   resampler->n_phases = n_phases;
 
   params.method = method;
@@ -311,6 +310,12 @@ gst_resampler_init (GstResampler * resampler,
     default:
       break;
   }
+
+  if (n_taps > in_size)
+    n_taps = in_size;
+
+  resampler->max_taps = n_taps;
+
   resampler_calculate_taps (&params);
 
 #if 0
