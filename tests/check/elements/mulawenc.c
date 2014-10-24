@@ -20,6 +20,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 #include <string.h>
 
 static GstPad *mysrcpad, *mysinkpad;
@@ -35,7 +36,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw,"
-        "format = (string) S16LE, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
         "rate = (int) 8000, "
         "channels = (int) 1, " "layout = (string)interleaved")
     );
@@ -46,7 +47,7 @@ mulawenc_setup (void)
   GstCaps *src_caps;
 
   src_caps = gst_caps_from_string ("audio/x-raw,"
-      "format = (string) S16LE, "
+      "format = (string) " GST_AUDIO_NE (S16) ", "
       "rate = (int) 8000, "
       "channels = (int) 1, " "layout = (string)interleaved");
 

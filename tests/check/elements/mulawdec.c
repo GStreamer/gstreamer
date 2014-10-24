@@ -20,6 +20,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 #include <string.h>
 
 static GstPad *mysrcpad, *mysinkpad;
@@ -29,7 +30,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw,"
-        "format = (string) S16LE, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
         "rate = (int) 8000, "
         "channels = (int) 1, " "layout = (string)interleaved")
     );
