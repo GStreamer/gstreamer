@@ -2316,8 +2316,8 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
 
   /**
    * We are not dropping out but issuing a warning in case of wrong
-   * parameter combinations as this behavior should be mandated by the
-   * driver. Worst case scenario it will just fail at tuning.
+   * parameter combinations as failover behavior should be mandated
+   * by the driver. Worst case scenario it will just fail at tuning.
    */
 
   switch (object->delsys) {
@@ -2508,6 +2508,10 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
       set_prop (props->props, &n, DTV_GUARD_INTERVAL, object->guard_interval);
       set_prop (props->props, &n, DTV_INTERLEAVING, object->interleaving);
       /* FIXME: Make the LNA on/off switch a property and proxy on dvbbasebin */
+      /* FIXME: According to v4l advice (see libdvbv5 implementation) this
+       * property should be set separately as not all drivers will ignore it
+       * if unsupported. An alternative would be to get the dvb API contract
+       * revised on this regard */
       set_prop (props->props, &n, DTV_LNA, LNA_AUTO);
       GST_INFO_OBJECT (object, "Tuning DTMB to %d Hz", freq);
       break;
