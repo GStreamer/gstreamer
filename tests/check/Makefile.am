@@ -140,7 +140,7 @@ check_adder =
 endif
 
 if HAVE_ORC
-check_orc = orc/video orc/audio orc/adder orc/audioconvert orc/volume orc/videoscale orc/videotestsrc
+check_orc = orc/video orc/audio orc/adder orc/audioconvert orc/volume orc/videotestsrc
 else
 check_orc =
 endif
@@ -230,7 +230,6 @@ check_PROGRAMS = \
 	$(check_typefind) \
 	$(check_videoconvert) \
 	$(check_videorate) \
-	$(check_videoscale) \
 	$(check_videotestsrc) \
 	$(check_volume) \
 	$(check_vorbis) \
@@ -640,9 +639,6 @@ nodist_orc_audioconvert_SOURCES = orc/audioconvert.c
 orc_volume_CFLAGS = $(ORC_CFLAGS)
 orc_volume_LDADD = $(ORC_LIBS) -lorc-test-0.4
 nodist_orc_volume_SOURCES = orc/volume.c
-orc_videoscale_CFLAGS = $(ORC_CFLAGS)
-orc_videoscale_LDADD = $(ORC_LIBS) -lorc-test-0.4
-nodist_orc_videoscale_SOURCES = orc/videoscale.c
 orc_videotestsrc_CFLAGS = $(ORC_CFLAGS)
 orc_videotestsrc_LDADD = $(ORC_LIBS) -lorc-test-0.4
 nodist_orc_videotestsrc_SOURCES = orc/videotestsrc.c
@@ -664,10 +660,6 @@ orc/audioconvert.c: $(top_srcdir)/gst/audioconvert/gstaudioconvertorc.orc
 	$(ORCC) --test -o $@ $<
 
 orc/volume.c: $(top_srcdir)/gst/volume/gstvolumeorc.orc
-	$(MKDIR_P) orc/
-	$(ORCC) --test -o $@ $<
-
-orc/videoscale.c: $(top_srcdir)/gst/videoscale/gstvideoscaleorc.orc
 	$(MKDIR_P) orc/
 	$(ORCC) --test -o $@ $<
 

@@ -24,8 +24,6 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
-#include "vs_image.h"
-
 G_BEGIN_DECLS
 
 GST_DEBUG_CATEGORY_EXTERN (video_scale_debug);
@@ -80,11 +78,10 @@ struct _GstVideoScale {
   int submethod;
   double envelope;
 
+  GstVideoConverter *convert;
+
   gint borders_h;
   gint borders_w;
-
-  /*< private >*/
-  guint8 *tmp_buf;
 };
 
 struct _GstVideoScaleClass {
