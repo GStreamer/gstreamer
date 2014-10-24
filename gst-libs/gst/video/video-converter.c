@@ -302,12 +302,25 @@ chain_convert (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
 static GstLineCacheNeedLineFunc
 chain_hscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
 {
+  gint method;
+  guint taps;
+
   convert->hscale_lines = gst_line_cache_new ();
   gst_line_cache_set_need_line_func (convert->hscale_lines,
       need_line, convert, NULL);
+
+  if (!gst_structure_get_enum (convert->config,
+          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_RESAMPLER_METHOD,
+          &method))
+    method = GST_RESAMPLER_METHOD_LINEAR;
+  if (!gst_structure_get_uint (convert->config,
+          GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, &taps))
+    taps = 0;
+
   convert->h_scaler =
-      gst_video_scaler_new (GST_RESAMPLER_METHOD_BICUBIC,
-      GST_VIDEO_SCALER_FLAG_NONE, 4, convert->in_width, convert->out_width);
+      gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+      convert->in_width, convert->out_width, convert->config);
+
   return (GstLineCacheNeedLineFunc) do_hscale_lines;
 }
 
@@ -315,6 +328,8 @@ static GstLineCacheNeedLineFunc
 chain_vscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
 {
   GstVideoScalerFlags flags;
+  gint method;
+  guint taps;
 
   flags = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info) ?
       GST_VIDEO_SCALER_FLAG_INTERLACED : 0;
@@ -322,9 +337,19 @@ chain_vscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
   convert->vscale_lines = gst_line_cache_new ();
   gst_line_cache_set_need_line_func (convert->vscale_lines,
       need_line, convert, NULL);
+
+  if (!gst_structure_get_enum (convert->config,
+          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_RESAMPLER_METHOD,
+          &method))
+    method = GST_RESAMPLER_METHOD_LINEAR;
+  if (!gst_structure_get_uint (convert->config,
+          GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, &taps))
+    taps = 0;
+
   convert->v_scaler =
-      gst_video_scaler_new (GST_RESAMPLER_METHOD_BICUBIC, flags, 4,
-      convert->in_height, convert->out_height);
+      gst_video_scaler_new (method, flags, taps, convert->in_height,
+      convert->out_height, convert->config);
+
   return (GstLineCacheNeedLineFunc) do_vscale_lines;
 }
 

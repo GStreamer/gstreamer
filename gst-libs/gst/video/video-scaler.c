@@ -92,6 +92,7 @@ resampler_zip (GstResampler * resampler, const GstResampler * r1,
  * @n_taps: number of taps to use
  * @in_size: number of source elements
  * @out_size: number of destination elements
+ * @options: (allow none): extra options
  *
  * Make a new @method video scaler. @in_size source lines/pixels will
  * be scaled to @out_size destination lines/pixels.
@@ -104,7 +105,7 @@ resampler_zip (GstResampler * resampler, const GstResampler * r1,
  */
 GstVideoScaler *
 gst_video_scaler_new (GstResamplerMethod method, GstVideoScalerFlags flags,
-    guint n_taps, guint in_size, guint out_size)
+    guint n_taps, guint in_size, guint out_size, GstStructure * options)
 {
   GstVideoScaler *scale;
   gdouble shift;
@@ -125,18 +126,18 @@ gst_video_scaler_new (GstResamplerMethod method, GstVideoScalerFlags flags,
     GstResampler tresamp, bresamp;
 
     gst_resampler_init (&tresamp, method, 0, (out_size + 1) / 2, n_taps,
-        shift, (in_size + 1) / 2, (out_size + 1) / 2, NULL);
+        shift, (in_size + 1) / 2, (out_size + 1) / 2, options);
 
     gst_resampler_init (&bresamp, method, 0, out_size - tresamp.out_size,
         n_taps, shift - 1.0, in_size - tresamp.in_size,
-        out_size - tresamp.out_size, NULL);
+        out_size - tresamp.out_size, options);
 
     resampler_zip (&scale->resampler, &tresamp, &bresamp);
     gst_resampler_clear (&tresamp);
     gst_resampler_clear (&bresamp);
   } else {
     gst_resampler_init (&scale->resampler, method, flags, out_size, n_taps,
-        shift, in_size, out_size, NULL);
+        shift, in_size, out_size, options);
   }
   return scale;
 }

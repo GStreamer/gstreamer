@@ -41,13 +41,20 @@ typedef enum {
 } GstVideoDitherMethod;
 
 /**
- * GST_VIDEO_CONVERTER_OPT_RESAMPLE_METHOD:
+ * GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD:
  *
  * #GST_TYPE_RESAMPLER_METHOD, The resampler method to use for
  * resampling. Other options for the resampler can be used, see
- * the #GstResampler.
+ * the #GstResampler. Default is #GST_RESAMPLER_METHOD_LINEAR.
  */
-#define GST_VIDEO_CONVERTER_OPT_RESAMPLE_METHOD   "GstVideoConverter.resample-method"
+#define GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD   "GstVideoConverter.resampler-method"
+/**
+ * GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS:
+ *
+ * #G_TYPE_UINT, The number of taps for the resampler.
+ * Default is 0: let the resampler choose a good value.
+ */
+#define GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS   "GstVideoConverter.resampler-taps"
 
 /**
  * GST_VIDEO_CONVERTER_OPT_DITHER_METHOD:

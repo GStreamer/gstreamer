@@ -29,6 +29,14 @@
 G_BEGIN_DECLS
 
 /**
+ * GST_VIDEO_SCALER_OPT_DITHER_METHOD:
+ *
+ * #GST_TYPE_VIDEO_DITHER_METHOD, The dither method to use for propagating
+ * quatization errors.
+ */
+#define GST_VIDEO_SCALER_OPT_DITHER_METHOD   "GstVideoScaler.dither-method"
+
+/**
  * GstVideoScalerFlags:
  * @GST_VIDEO_SCALER_FLAG_NONE: no flags
  * @GST_VIDEO_SCALER_FLAG_INTERLACED: Set up a scaler for interlaced content
@@ -45,7 +53,8 @@ typedef struct _GstVideoScaler GstVideoScaler;
 GstVideoScaler *      gst_video_scaler_new            (GstResamplerMethod method,
                                                        GstVideoScalerFlags flags,
                                                        guint n_taps,
-                                                       guint in_size, guint out_size);
+                                                       guint in_size, guint out_size,
+                                                       GstStructure * options);
 void                  gst_video_scaler_free           (GstVideoScaler *scale);
 
 const gdouble *       gst_video_scaler_get_coeff      (GstVideoScaler *scale,
