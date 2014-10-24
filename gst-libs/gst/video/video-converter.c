@@ -62,8 +62,11 @@ struct _GstVideoConverter
   GstVideoInfo in_info;
   GstVideoInfo out_info;
 
-  gint width;
-  gint height;
+  gint in_width;
+  gint in_height;
+  gint out_width;
+  gint out_height;
+  gint v_scale_width;
 
   gint in_bits;
   gint out_bits;
@@ -95,9 +98,14 @@ struct _GstVideoConverter
   void (*dither16) (GstVideoConverter * convert, guint16 * pixels, int j);
 
   GstLineCache *upsample_lines;
+  GstLineCache *hscale_lines;
+  GstLineCache *vscale_lines;
   GstLineCache *convert_lines;
   GstLineCache *downsample_lines;
   GstLineCache *pack_lines;
+
+  GstVideoScaler *h_scaler;
+  GstVideoScaler *v_scaler;
 
   const GstVideoFrame *src;
   GstVideoFrame *dest;
@@ -238,6 +246,10 @@ static gboolean do_convert_lines (GstLineCache * cache, gint line,
     GstVideoConverter * convert);
 static gboolean do_upsample_lines (GstLineCache * cache, gint line,
     GstVideoConverter * convert);
+static gboolean do_vscale_lines (GstLineCache * cache, gint line,
+    GstVideoConverter * convert);
+static gboolean do_hscale_lines (GstLineCache * cache, gint line,
+    GstVideoConverter * convert);
 
 static void
 free_pack_line (GstLineCache * cache, gint idx,
@@ -288,6 +300,35 @@ chain_convert (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
 }
 
 static GstLineCacheNeedLineFunc
+chain_hscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
+{
+  convert->hscale_lines = gst_line_cache_new ();
+  gst_line_cache_set_need_line_func (convert->hscale_lines,
+      need_line, convert, NULL);
+  convert->h_scaler =
+      gst_video_scaler_new (GST_RESAMPLER_METHOD_BICUBIC,
+      GST_VIDEO_SCALER_FLAG_NONE, 4, convert->in_width, convert->out_width);
+  return (GstLineCacheNeedLineFunc) do_hscale_lines;
+}
+
+static GstLineCacheNeedLineFunc
+chain_vscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
+{
+  GstVideoScalerFlags flags;
+
+  flags = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info) ?
+      GST_VIDEO_SCALER_FLAG_INTERLACED : 0;
+
+  convert->vscale_lines = gst_line_cache_new ();
+  gst_line_cache_set_need_line_func (convert->vscale_lines,
+      need_line, convert, NULL);
+  convert->v_scaler =
+      gst_video_scaler_new (GST_RESAMPLER_METHOD_BICUBIC, flags, 4,
+      convert->in_height, convert->out_height);
+  return (GstLineCacheNeedLineFunc) do_vscale_lines;
+}
+
+static GstLineCacheNeedLineFunc
 chain_downsample (GstVideoConverter * convert,
     GstLineCacheNeedLineFunc need_line)
 {
@@ -328,14 +369,10 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   GstVideoConverter *convert;
   gint width;
   GstLineCacheNeedLineFunc need_line;
+  gint s2, s3;
 
   g_return_val_if_fail (in_info != NULL, NULL);
   g_return_val_if_fail (out_info != NULL, NULL);
-  /* FIXME can't do scaling yet */
-  g_return_val_if_fail (in_info->width == out_info->width, NULL);
-  g_return_val_if_fail (in_info->height == out_info->height, NULL);
-  g_return_val_if_fail (in_info->par_n == out_info->par_n, NULL);
-  g_return_val_if_fail (in_info->par_d == out_info->par_d, NULL);
   /* we won't ever do framerate conversion */
   g_return_val_if_fail (in_info->fps_n == out_info->fps_n, NULL);
   g_return_val_if_fail (in_info->fps_d == out_info->fps_d, NULL);
@@ -348,9 +385,10 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   convert->in_info = *in_info;
   convert->out_info = *out_info;
 
-  convert->width = GST_VIDEO_INFO_WIDTH (in_info);
-  convert->height = GST_VIDEO_INFO_HEIGHT (in_info);
-
+  convert->in_width = GST_VIDEO_INFO_WIDTH (in_info);
+  convert->in_height = GST_VIDEO_INFO_HEIGHT (in_info);
+  convert->out_width = GST_VIDEO_INFO_WIDTH (out_info);
+  convert->out_height = GST_VIDEO_INFO_HEIGHT (out_info);
 
   /* default config */
   convert->config = gst_structure_new ("GstVideoConverter",
@@ -369,6 +407,10 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
 
   convert->convert = video_converter_generic;
 
+  s2 = convert->in_width * convert->out_height;
+  s3 = convert->out_width * convert->in_height;
+  convert->v_scale_width = convert->in_width;
+
   video_converter_compute_matrix (convert);
   video_converter_compute_resample (convert);
 
@@ -378,8 +420,40 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   /* upsample chroma */
   if (convert->upsample)
     need_line = chain_upsample (convert, need_line);
-  /* convert */
-  need_line = chain_convert (convert, need_line);
+
+  if (s3 <= s2) {
+    /* horizontal scaling first produces less pixels */
+    if (convert->in_width <= convert->out_width) {
+      /* upscaling, first convert then */
+      need_line = chain_convert (convert, need_line);
+    }
+    if (convert->in_width != convert->out_width) {
+      need_line = chain_hscale (convert, need_line);
+      convert->v_scale_width = convert->out_width;
+    }
+    if (convert->in_width > convert->out_width) {
+      /* downscaling, convert after scaling then */
+      need_line = chain_convert (convert, need_line);
+    }
+  }
+  /* v-scale */
+  if (convert->in_height != convert->out_height) {
+    need_line = chain_vscale (convert, need_line);
+  }
+  if (s3 > s2) {
+    /* vertical scaling first produced less pixels */
+    if (convert->in_width <= convert->out_width) {
+      /* upscaling, first convert then */
+      need_line = chain_convert (convert, need_line);
+    }
+    if (convert->in_width != convert->out_width) {
+      need_line = chain_hscale (convert, need_line);
+    }
+    if (convert->in_width > convert->out_width) {
+      /* downscaling, convert after scaling then */
+      need_line = chain_convert (convert, need_line);
+    }
+  }
   /* downsample chroma */
   if (convert->downsample)
     need_line = chain_downsample (convert, need_line);
@@ -387,7 +461,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   need_line = chain_pack (convert, need_line);
 
   convert->lines = out_info->finfo->pack_lines;
-  width = convert->width;
+  width = MAX (convert->in_width, convert->out_width);
   convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
   /* FIXME */
   alloc_tmplines (convert, 64, width);
@@ -431,9 +505,17 @@ gst_video_converter_free (GstVideoConverter * convert)
     gst_video_chroma_resample_free (convert->upsample);
   if (convert->downsample)
     gst_video_chroma_resample_free (convert->downsample);
+  if (convert->v_scaler)
+    gst_video_scaler_free (convert->v_scaler);
+  if (convert->h_scaler)
+    gst_video_scaler_free (convert->h_scaler);
 
   if (convert->upsample_lines)
     gst_line_cache_free (convert->upsample_lines);
+  if (convert->hscale_lines)
+    gst_line_cache_free (convert->hscale_lines);
+  if (convert->vscale_lines)
+    gst_line_cache_free (convert->vscale_lines);
   if (convert->convert_lines)
     gst_line_cache_free (convert->convert_lines);
   if (convert->downsample_lines)
@@ -459,7 +541,7 @@ video_dither_verterr (GstVideoConverter * convert, guint16 * pixels, int j)
   guint16 *errline = convert->errline;
   unsigned int mask = 0xff;
 
-  for (i = 0; i < 4 * convert->width; i++) {
+  for (i = 0; i < 4 * convert->in_width; i++) {
     int x = pixels[i] + errline[i];
     if (x > 65535)
       x = 65535;
@@ -483,7 +565,7 @@ video_dither_halftone (GstVideoConverter * convert, guint16 * pixels, int j)
     {252, 142, 220, 92, 244, 116, 212, 84}
   };
 
-  for (i = 0; i < convert->width * 4; i++) {
+  for (i = 0; i < convert->in_width * 4; i++) {
     int x;
     x = pixels[i] + halftone[(i >> 2) & 7][j & 7];
     if (x > 65535)
@@ -597,7 +679,7 @@ video_converter_matrix8 (GstVideoConverter * convert, gpointer pixels)
 {
 #if 1
   video_orc_matrix8 (pixels, pixels, convert->orc_p1, convert->orc_p2,
-      convert->orc_p3, convert->width);
+      convert->orc_p3, convert->in_width);
 #elif 0
   /* FIXME we would like to set this as a backup function, it's faster than the
    * orc generated one */
@@ -606,7 +688,7 @@ video_converter_matrix8 (GstVideoConverter * convert, gpointer pixels)
   int y, u, v;
   guint8 *p = pixels;
 
-  for (i = 0; i < convert->width; i++) {
+  for (i = 0; i < convert->in_width; i++) {
     r = p[i * 4 + 1];
     g = p[i * 4 + 2];
     b = p[i * 4 + 3];
@@ -631,7 +713,7 @@ video_converter_matrix8_AYUV_ARGB (GstVideoConverter * convert, gpointer pixels)
   video_orc_convert_AYUV_ARGB (pixels, 0, pixels, 0,
       convert->cmatrix[0][0], convert->cmatrix[0][2],
       convert->cmatrix[2][1], convert->cmatrix[1][1], convert->cmatrix[1][2],
-      convert->width, 1);
+      convert->in_width, 1);
 }
 
 static void
@@ -642,7 +724,7 @@ video_converter_matrix16 (GstVideoConverter * convert, gpointer pixels)
   int y, u, v;
   guint16 *p = pixels;
 
-  for (i = 0; i < convert->width; i++) {
+  for (i = 0; i < convert->in_width; i++) {
     r = p[i * 4 + 1];
     g = p[i * 4 + 2];
     b = p[i * 4 + 3];
@@ -988,10 +1070,10 @@ do_unpack_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
   guint cline;;
 
   tmpline = get_temp_line (convert);
-  cline = CLAMP (line, 0, convert->height - 1);
+  cline = CLAMP (line, 0, convert->in_height - 1);
 
   GST_DEBUG ("unpack line %d (%u)", line, cline);
-  UNPACK_FRAME (convert->src, tmpline, cline, convert->width);
+  UNPACK_FRAME (convert->src, tmpline, cline, convert->in_width);
 
   gst_line_cache_add_line (cache, line, tmpline);
 
@@ -1014,7 +1096,7 @@ do_upsample_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
       gst_line_cache_get_lines (convert->upsample_lines, start_line, n_lines);
 
   GST_DEBUG ("doing upsample %d-%d", start_line, start_line + n_lines - 1);
-  gst_video_chroma_resample (convert->upsample, lines, convert->width);
+  gst_video_chroma_resample (convert->upsample, lines, convert->in_width);
 
   for (i = 0; i < n_lines; i++)
     gst_line_cache_add_line (cache, start_line + i, lines[i]);
@@ -1022,6 +1104,44 @@ do_upsample_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
   return TRUE;
 }
 
+static gboolean
+do_hscale_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
+{
+  gpointer *lines, destline;
+
+  lines = gst_line_cache_get_lines (convert->hscale_lines, line, 1);
+
+  destline = get_temp_line (convert);
+
+  GST_DEBUG ("hresample line %d", line);
+  gst_video_scaler_horizontal (convert->h_scaler, GST_VIDEO_FORMAT_AYUV,
+      GST_VIDEO_COLOR_RANGE_0_255, lines[0], destline, 0, convert->out_width);
+
+  gst_line_cache_add_line (cache, line, destline);
+
+  return TRUE;
+}
+
+static gboolean
+do_vscale_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
+{
+  gpointer *lines, destline;
+  guint sline, n_lines;
+
+  gst_video_scaler_get_coeff (convert->v_scaler, line, &sline, &n_lines);
+  lines = gst_line_cache_get_lines (convert->vscale_lines, sline, n_lines);
+
+  destline = get_temp_line (convert);
+
+  GST_DEBUG ("vresample line %d %d-%d", line, sline, sline + n_lines - 1);
+  gst_video_scaler_vertical (convert->v_scaler, GST_VIDEO_FORMAT_AYUV,
+      GST_VIDEO_COLOR_RANGE_0_255, lines, destline, line,
+      convert->v_scale_width);
+
+  gst_line_cache_add_line (cache, line, destline);
+
+  return TRUE;
+}
 
 static gboolean
 do_convert_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
@@ -1038,7 +1158,7 @@ do_convert_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
   if (out_bits == 16 || in_bits == 16) {
     /* FIXME, we can scale in the conversion matrix */
     if (in_bits == 8)
-      convert_to16 (lines[0], convert->width);
+      convert_to16 (lines[0], convert->out_width);
 
     if (convert->matrix)
       convert->matrix (convert, lines[0]);
@@ -1046,7 +1166,7 @@ do_convert_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
       convert->dither16 (convert, lines[0], line);
 
     if (out_bits == 8)
-      convert_to8 (lines[0], convert->width);
+      convert_to8 (lines[0], convert->out_width);
   } else {
     if (convert->matrix)
       convert->matrix (convert, lines[0]);
@@ -1074,7 +1194,7 @@ do_downsample_lines (GstLineCache * cache, gint line,
 
   GST_DEBUG ("downsample line %d %d-%d", line, start_line,
       start_line + n_lines - 1);
-  gst_video_chroma_resample (convert->downsample, lines, convert->width);
+  gst_video_chroma_resample (convert->downsample, lines, convert->out_width);
 
   for (i = 0; i < n_lines; i++)
     gst_line_cache_add_line (cache, start_line + i, lines[i]);
@@ -1087,18 +1207,18 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
   gint i;
-  gint width, height;
+  gint out_width, out_height;
   gint pack_lines;
 
-  width = convert->width;
-  height = convert->height;
+  out_width = convert->out_width;
+  out_height = convert->out_height;
 
   convert->src = src;
   convert->dest = dest;
 
   pack_lines = convert->lines;  /* only 1 for now */
 
-  for (i = 0; i < height; i += pack_lines) {
+  for (i = 0; i < out_height; i += pack_lines) {
     gpointer *lines;
 
     /* load the lines needed to pack */
@@ -1106,7 +1226,7 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
 
     /* and pack into destination */
     GST_DEBUG ("pack line %d", i);
-    PACK_FRAME (dest, lines[0], i, width);
+    PACK_FRAME (dest, lines[0], i, out_width);
   }
 }
 
@@ -1152,8 +1272,8 @@ convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
   int i;
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
 
@@ -1180,8 +1300,8 @@ convert_I420_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
   int i;
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
 
@@ -1208,8 +1328,8 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
   int i;
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
 
@@ -1234,8 +1354,8 @@ static void
 convert_I420_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1256,8 +1376,8 @@ static void
 convert_I420_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1285,8 +1405,8 @@ convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
   int i;
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
 
@@ -1311,8 +1431,8 @@ static void
 convert_YUY2_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_YUY2_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -1323,8 +1443,8 @@ static void
 convert_YUY2_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_YUY2_Y42B (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
@@ -1337,8 +1457,8 @@ static void
 convert_YUY2_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_YUY2_Y444 (FRAME_GET_COMP_LINE (dest, 0, 0),
       FRAME_GET_COMP_STRIDE (dest, 0), FRAME_GET_COMP_LINE (dest, 1, 0),
@@ -1353,8 +1473,8 @@ convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
   int i;
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
 
@@ -1379,8 +1499,8 @@ static void
 convert_UYVY_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_UYVY_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -1391,8 +1511,8 @@ static void
 convert_UYVY_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_UYVY_YUY2 (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -1403,8 +1523,8 @@ static void
 convert_UYVY_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_UYVY_Y42B (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
@@ -1417,8 +1537,8 @@ static void
 convert_UYVY_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_UYVY_Y444 (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
@@ -1431,8 +1551,8 @@ static void
 convert_AYUV_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   /* only for even width/height */
   video_orc_convert_AYUV_I420 (FRAME_GET_Y_LINE (dest, 0),
@@ -1448,8 +1568,8 @@ static void
 convert_AYUV_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   /* only for even width */
   video_orc_convert_AYUV_YUY2 (FRAME_GET_LINE (dest, 0),
@@ -1461,8 +1581,8 @@ static void
 convert_AYUV_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   /* only for even width */
   video_orc_convert_AYUV_UYVY (FRAME_GET_LINE (dest, 0),
@@ -1474,8 +1594,8 @@ static void
 convert_AYUV_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   /* only works for even width */
   video_orc_convert_AYUV_Y42B (FRAME_GET_Y_LINE (dest, 0),
@@ -1489,8 +1609,8 @@ static void
 convert_AYUV_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_AYUV_Y444 (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
@@ -1503,8 +1623,8 @@ static void
 convert_Y42B_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1531,8 +1651,8 @@ static void
 convert_Y42B_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1551,8 +1671,8 @@ static void
 convert_Y42B_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_Y42B_YUY2 (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1565,8 +1685,8 @@ static void
 convert_Y42B_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_Y42B_UYVY (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1579,8 +1699,8 @@ static void
 convert_Y42B_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   /* only for even width */
   video_orc_convert_Y42B_AYUV (FRAME_GET_LINE (dest, 0),
@@ -1594,8 +1714,8 @@ static void
 convert_Y444_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1622,8 +1742,8 @@ static void
 convert_Y444_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1642,8 +1762,8 @@ static void
 convert_Y444_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_Y444_YUY2 (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1656,8 +1776,8 @@ static void
 convert_Y444_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_Y444_UYVY (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1670,8 +1790,8 @@ static void
 convert_Y444_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_Y444_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
@@ -1685,8 +1805,8 @@ static void
 convert_AYUV_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_AYUV_ARGB (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -1699,8 +1819,8 @@ static void
 convert_AYUV_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_AYUV_BGRA (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -1713,8 +1833,8 @@ static void
 convert_AYUV_ABGR (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_AYUV_ABGR (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -1727,8 +1847,8 @@ static void
 convert_AYUV_RGBA (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   video_orc_convert_AYUV_RGBA (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -1742,8 +1862,8 @@ convert_I420_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
   int i;
-  gint width = convert->width;
-  gint height = convert->height;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
 
   for (i = 0; i < height; i++) {
     video_orc_convert_I420_BGRA (FRAME_GET_LINE (dest, i),
@@ -1947,11 +2067,14 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   gboolean interlaced;
   gint width, height;
 
-  in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
-  out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
-
   width = GST_VIDEO_INFO_WIDTH (&convert->in_info);
   height = GST_VIDEO_INFO_HEIGHT (&convert->in_info);
+
+  if (width != convert->out_width || height != convert->out_height)
+    return FALSE;
+
+  in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
+  out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
 
   in_matrix = convert->in_info.colorimetry.matrix;
   out_matrix = convert->out_info.colorimetry.matrix;
