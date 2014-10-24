@@ -1203,6 +1203,15 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
         case BANDWIDTH_6_MHZ:
           object->bandwidth = 6000000;
           break;
+        case BANDWIDTH_5_MHZ:
+          object->bandwidth = 5000000;
+          break;
+        case BANDWIDTH_10_MHZ:
+          object->bandwidth = 10000000;
+          break;
+        case BANDWIDTH_1_712_MHZ:
+          object->bandwidth = 1712000;
+          break;
         default:
           /* we don't know which bandwidth is set */
           object->bandwidth = 0;
@@ -1368,12 +1377,18 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
       int tmp;
       if (object->bandwidth == 0)
         tmp = BANDWIDTH_AUTO;
+      else if (object->bandwidth <= 1712000)
+        tmp = BANDWIDTH_1_712_MHZ;
+      else if (object->bandwidth <= 5000000)
+        tmp = BANDWIDTH_5_MHZ;
       else if (object->bandwidth <= 6000000)
         tmp = BANDWIDTH_6_MHZ;
       else if (object->bandwidth <= 7000000)
         tmp = BANDWIDTH_7_MHZ;
       else if (object->bandwidth <= 8000000)
         tmp = BANDWIDTH_8_MHZ;
+      else if (object->bandwidth <= 10000000)
+        tmp = BANDWIDTH_10_MHZ;
       else
         tmp = BANDWIDTH_AUTO;
 
