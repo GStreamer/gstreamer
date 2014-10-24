@@ -32,7 +32,6 @@ import ConfigParser
 import loggable
 import tempfile
 from loggable import Loggable
-from optparse import OptionGroup
 import xml.etree.ElementTree as ET
 
 from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
@@ -444,7 +443,7 @@ class GstValidateTest(Test):
 
         values = self.findlastseek_regex.findall(m)
         if len(values) != 1:
-            self.warning("Got a unparsable value: %s" % p)
+            self.warning("Got an unparsable seek value %s", m)
             return start, stop, rate
 
         v = values[0]
@@ -456,13 +455,9 @@ class GstValidateTest(Test):
         if self._sent_eos_pos is not None:
             return self._sent_eos_pos
 
-        m = None
-        rate = start = stop = None
-
         for l in reversed(open(self.validatelogs, 'r').readlines()):
             l = l.lower()
             if "sending eos" in l:
-                m = l
                 self._sent_eos_pos = time.time()
                 return self._sent_eos_pos
 
@@ -493,7 +488,7 @@ class GstValidateEncodingTestInterface(object):
     def get_current_size(self):
         try:
             size = os.stat(urlparse.urlparse(self.dest_file).path).st_size
-        except OSError as e:
+        except OSError:
             return None
 
         self.debug("Size: %s" % size)
@@ -588,7 +583,7 @@ class GstValidateEncodingTestInterface(object):
                 wanted_caps = self.combination.get_caps(track_type)
                 cwanted_caps = self._clean_caps(wanted_caps)
 
-                if wanted_caps == None:
+                if wanted_caps is None:
                     os.remove(result_descriptor.get_path())
                     return (Result.FAILED,
                             "Found a track of type %s in the encoded files"
@@ -634,11 +629,11 @@ class TestsManager(Loggable):
 
     def add_test(self, test):
         if self._is_test_wanted(test):
-            if not test in self.tests:
+            if test not in self.tests:
                 self.tests.append(test)
                 self.tests.sort(key=lambda test: test.classname)
         else:
-            if not test in self.tests:
+            if test not in self.tests:
                 self.unwanted_tests.append(test)
                 self.unwanted_tests.sort(key=lambda test: test.classname)
 
@@ -1129,9 +1124,9 @@ class MediaDescriptor(Loggable):
         if self.get_duration() / GST_SECOND < scenario.get_min_media_duration():
             self.debug(
                 "Do not run %s as %s is too short (%i < min media duation : %i",
-                       scenario, self.get_uri(
-                       ), self.get_duration() / GST_SECOND,
-                       scenario.get_min_media_duration())
+                scenario, self.get_uri(),
+                self.get_duration() / GST_SECOND,
+                scenario.get_min_media_duration())
             return False
 
         for track_type in ['audio', 'subtitle']:
@@ -1160,7 +1155,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         self._xml_path = xml_path
         self.media_xml = ET.parse(xml_path).getroot()
 
-       # Sanity checks
+        # Sanity checks
         self.media_xml.attrib["duration"]
         self.media_xml.attrib["seekable"]
 
@@ -1182,7 +1177,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
                    Colors.OKBLUE)
 
         try:
-            out = subprocess.check_output(args, stderr=open(os.devnull))
+            subprocess.check_output(args, stderr=open(os.devnull))
         except subprocess.CalledProcessError as e:
             if verbose:
                 printc("Result: Failed", Colors.FAIL)
