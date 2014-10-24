@@ -1810,10 +1810,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!parse_transport (transport, stream, ct))
     goto unsupported_transports;
 
-  /* update the client transport */
-  if (!klass->configure_client_transport (client, ctx, ct))
-    goto unsupported_client_transport;
-
   /* parse the keymgmt */
   if (gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_KEYMGMT,
           &keymgmt, 0) == GST_RTSP_OK) {
@@ -1840,6 +1836,10 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   }
 
   ctx->sessmedia = sessmedia;
+
+  /* update the client transport */
+  if (!klass->configure_client_transport (client, ctx, ct))
+    goto unsupported_client_transport;
 
   /* set in the session media transport */
   trans = gst_rtsp_session_media_set_transport (sessmedia, stream, ct);
