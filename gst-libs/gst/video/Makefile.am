@@ -39,6 +39,7 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	gstvideodecoder.c       \
 	gstvideoencoder.c       \
 	gstvideoutils.c		\
+	resampler.c		\
 	video-blend.c		\
 	video-overlay-composition.c
 
@@ -67,6 +68,7 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	gstvideodecoder.h       \
 	gstvideoencoder.h       \
 	gstvideoutils.h		\
+	resampler.h		\
 	video-blend.h		\
 	video-overlay-composition.h
 
