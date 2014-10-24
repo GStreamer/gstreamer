@@ -2384,6 +2384,11 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
         GST_WARNING_OBJECT (object, "Wrong DVB-T parameter combination: "
             "transmission mode should be either AUTO, 2K or 8K");
       }
+      if (object->bandwidth != 6000000 && object->bandwidth != 7000000 &&
+          object->bandwidth != 8000000) {
+        GST_WARNING_OBJECT (object, "Wrong DVB-T parameter value: bandwidth "
+            "is %d but only 6, 7 and 8 MHz are allowed", object->bandwidth);
+      }
     case SYS_DVBT2:
       if (object->delsys != SYS_DVBT &&
           object->transmission_mode != TRANSMISSION_MODE_AUTO &&
