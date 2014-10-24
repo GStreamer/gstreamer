@@ -35,7 +35,6 @@
 #include "config.h"
 #endif
 
-#include "gstrtsp-marshal.h"
 #include "gstrtsp-enumtypes.h"
 #include "gstrtspextension.h"
 
@@ -82,7 +81,7 @@ gst_rtsp_extension_iface_init (GstRTSPExtension * iface)
     gst_rtsp_extension_signals[SIGNAL_SEND] =
         g_signal_new ("send", G_TYPE_FROM_CLASS (iface),
         G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPExtensionInterface,
-            send), NULL, NULL, __gst_rtsp_marshal_ENUM__POINTER_POINTER,
+            send), NULL, NULL, g_cclosure_marshal_generic,
         GST_TYPE_RTSP_RESULT, 2, G_TYPE_POINTER, G_TYPE_POINTER);
     initialized = TRUE;
   }

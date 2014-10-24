@@ -16,8 +16,8 @@ libgstrtspinclude_HEADERS = \
 
 lib_LTLIBRARIES = libgstrtsp-@GST_API_VERSION@.la
 
-built_sources = gstrtsp-marshal.c gstrtsp-enumtypes.c
-built_headers = gstrtsp-marshal.h gstrtsp-enumtypes.h
+built_sources = gstrtsp-enumtypes.c
+built_headers = gstrtsp-enumtypes.h
 
 libgstrtsp_@GST_API_VERSION@_la_SOURCES = gstrtsptransport.c \
 					 gstrtspurl.c \
@@ -38,7 +38,6 @@ libgstrtsp_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(GIO_LIBS) $(LIBM)
 libgstrtsp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS) $(WIN32_LIBS)
 
 BUILT_SOURCES = $(built_headers) $(built_sources)
-EXTRA_DIST = gstrtsp-marshal.list
 CLEANFILES = $(BUILT_SOURCES)
 
 glib_gen_prefix = __gst_rtsp

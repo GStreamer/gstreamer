@@ -28,7 +28,6 @@ rtsp_LOCAL_SRC_FILES_BASE:= \
 	gst-libs/gst/rtsp/gstrtsprange.c \
 	gst-libs/gst/rtsp/gstrtsptransport.c \
 	gst-libs/gst/rtsp/gstrtspurl.c  \
-	gst-libs/gst/rtsp/gstrtsp-marshal.c \
 	gst-libs/gst/rtsp/gstrtsp-enumtypes.c
 
 LOCAL_SRC_FILES:= $(addprefix ../,$(rtsp_LOCAL_SRC_FILES_BASE))
