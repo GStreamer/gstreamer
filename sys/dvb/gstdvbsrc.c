@@ -2054,26 +2054,43 @@ gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
 {
   fe_status_t status;
   uint16_t snr, _signal;
-  uint32_t ber, uncorrected_blocks;
+  uint32_t ber, bad_blks;
   GstMessage *message;
   GstStructure *structure;
   int fe_fd = src->fd_frontend;
+  gint err;
 
-  if (ioctl (fe_fd, FE_READ_STATUS, &status) ||
-      ioctl (fe_fd, FE_READ_SIGNAL_STRENGTH, &_signal) ||
-      ioctl (fe_fd, FE_READ_SNR, &snr) ||
-      ioctl (fe_fd, FE_READ_BER, &ber) ||
-      ioctl (fe_fd, FE_READ_UNCORRECTED_BLOCKS, &uncorrected_blocks)) {
-    GST_WARNING_OBJECT (src, "Failed to get statistics from the device");
-    return;
-  }
+  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_STATUS, &status));
+  if (err)
+    goto error_out;
+
+  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SIGNAL_STRENGTH, &_signal));
+  if (err)
+    goto error_out;
+
+  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SNR, &snr));
+  if (err)
+    goto error_out;
+
+  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_BER, &ber));
+  if (err)
+    goto error_out;
+
+  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_UNCORRECTED_BLOCKS, &bad_blks));
+  if (err)
+    goto error_out;
 
   structure = gst_structure_new ("dvb-frontend-stats", "status", G_TYPE_INT,
       status, "signal", G_TYPE_INT, _signal, "snr", G_TYPE_INT, snr,
-      "ber", G_TYPE_INT, ber, "unc", G_TYPE_INT, uncorrected_blocks,
+      "ber", G_TYPE_INT, ber, "unc", G_TYPE_INT, bad_blks,
       "lock", G_TYPE_BOOLEAN, status & FE_HAS_LOCK, NULL);
   message = gst_message_new_element (GST_OBJECT (src), structure);
   gst_element_post_message (GST_ELEMENT (src), message);
+  return;
+
+error_out:
+  GST_WARNING_OBJECT (src, "Failed to get statistics from the device: %s",
+      g_strerror (errno));
 }
 
 struct diseqc_cmd
