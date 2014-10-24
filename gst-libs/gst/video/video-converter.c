@@ -604,8 +604,8 @@ gst_video_converter_set_config (GstVideoConverter * convert,
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (config != NULL, FALSE);
 
-  if (gst_structure_get_enum (config, "dither", GST_TYPE_VIDEO_DITHER_METHOD,
-          &dither)) {
+  if (gst_structure_get_enum (config, GST_VIDEO_CONVERTER_OPT_DITHER_METHOD,
+          GST_TYPE_VIDEO_DITHER_METHOD, &dither)) {
     gboolean update = TRUE;
 
     switch (dither) {
@@ -623,7 +623,7 @@ gst_video_converter_set_config (GstVideoConverter * convert,
         break;
     }
     if (update)
-      gst_structure_set (convert->config, "dither",
+      gst_structure_set (convert->config, GST_VIDEO_CONVERTER_OPT_DITHER_METHOD,
           GST_TYPE_VIDEO_DITHER_METHOD, dither, NULL);
     else
       res = FALSE;

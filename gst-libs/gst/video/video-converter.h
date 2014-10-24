@@ -24,11 +24,39 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstVideoDitherMethod:
+ * @GST_VIDEO_DITHER_NONE: no dithering
+ * @GST_VIDEO_DITHER_VERTERR: propagate rounding errors downwards
+ * @GST_VIDEO_DITHER_HALFTONE: Dither with halftone pattern
+ * @GST_VIDEO_DITHER_HORIZERR: propagate rounding errors right
+ *
+ * Different dithering methods to use.
+ */
 typedef enum {
   GST_VIDEO_DITHER_NONE,
   GST_VIDEO_DITHER_VERTERR,
-  GST_VIDEO_DITHER_HALFTONE
+  GST_VIDEO_DITHER_HALFTONE,
+  GST_VIDEO_DITHER_HORIZERR
 } GstVideoDitherMethod;
+
+/**
+ * GST_VIDEO_CONVERTER_OPT_RESAMPLE_METHOD:
+ *
+ * #GST_TYPE_RESAMPLER_METHOD, The resampler method to use for
+ * resampling. Other options for the resampler can be used, see
+ * the #GstResampler.
+ */
+#define GST_VIDEO_CONVERTER_OPT_RESAMPLE_METHOD   "GstVideoConverter.resample-method"
+
+/**
+ * GST_VIDEO_CONVERTER_OPT_DITHER_METHOD:
+ *
+ * #GST_TYPE_VIDEO_DITHER_METHOD, The dither method to use when
+ * changing bit depth.
+ */
+#define GST_VIDEO_CONVERTER_OPT_DITHER_METHOD   "GstVideoConverter.dither-method"
+
 
 typedef struct _GstVideoConverter GstVideoConverter;
 
