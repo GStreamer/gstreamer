@@ -40,6 +40,7 @@
 
 #define TEST_MOUNT_POINT  "/test"
 #define TEST_PROTO        "RTP/AVP"
+#define TEST_PROTO_TCP    "RTP/AVP/TCP"
 #define TEST_ENCODING     "X-GST"
 #define TEST_CLOCK_RATE   "90000"
 
@@ -432,8 +433,9 @@ do_describe (GstRTSPConnection * conn, const gchar * mount_point)
  * transport must be freed by the caller. */
 static GstRTSPStatusCode
 do_setup_full (GstRTSPConnection * conn, const gchar * control,
-    const GstRTSPRange * client_ports, const gchar * require, gchar ** session,
-    GstRTSPTransport ** transport, gchar ** unsupported)
+    gboolean use_tcp_transport, const GstRTSPRange * client_ports,
+    const gchar * require, gchar ** session, GstRTSPTransport ** transport,
+    gchar ** unsupported)
 {
   GstRTSPStatusCode code;
   gchar *session_in = NULL;
@@ -449,9 +451,15 @@ do_setup_full (GstRTSPConnection * conn, const gchar * control,
       session_out = session;
     }
   }
-  transport_string_in =
+
+  if (use_tcp_transport) {
+    transport_string_in =
+      g_strdup_printf (TEST_PROTO_TCP ";unicast");
+  } else {
+    transport_string_in =
       g_strdup_printf (TEST_PROTO ";unicast;client_port=%d-%d",
       client_ports->min, client_ports->max);
+  }
   code =
       do_request_full (conn, GST_RTSP_SETUP, control, session_in,
       transport_string_in, NULL, require, NULL, NULL, NULL, session_out,
@@ -478,7 +486,19 @@ do_setup (GstRTSPConnection * conn, const gchar * control,
     const GstRTSPRange * client_ports, gchar ** session,
     GstRTSPTransport ** transport)
 {
-  return do_setup_full (conn, control, client_ports, NULL, session, transport,
+  return do_setup_full (conn, control, FALSE, client_ports, NULL, session,
+      transport, NULL);
+}
+
+/* send a SETUP request and receive response. if *session is not NULL,
+ * it is used in the request. otherwise, *session is set to a returned
+ * session string that must be freed by the caller. the returned
+ * transport must be freed by the caller. */
+static GstRTSPStatusCode
+do_setup_tcp (GstRTSPConnection * conn, const gchar * control,
+    gchar ** session, GstRTSPTransport ** transport)
+{
+  return do_setup_full (conn, control, TRUE, NULL, NULL, session, transport,
       NULL);
 }
 
@@ -661,6 +681,68 @@ GST_START_TEST (test_setup)
 
 GST_END_TEST;
 
+GST_START_TEST (test_setup_tcp)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  const gchar *audio_control;
+  gchar *session = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GstRTSPTransport *audio_transport = NULL;
+
+  start_server ();
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+  sdp_media = gst_sdp_message_get_media (sdp_message, 1);
+  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  /* send SETUP request for video */
+  fail_unless (do_setup_tcp (conn, video_control, &session,
+          &video_transport) == GST_RTSP_STS_OK);
+  GST_DEBUG ("set up video %s, got session '%s'", video_control, session);
+
+  /* check response from SETUP */
+  fail_unless (video_transport->trans == GST_RTSP_TRANS_RTP);
+  fail_unless (video_transport->profile == GST_RTSP_PROFILE_AVP);
+  fail_unless (video_transport->lower_transport == GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (video_transport->mode_play);
+  gst_rtsp_transport_free (video_transport);
+
+  /* send SETUP request for audio */
+  fail_unless (do_setup_tcp (conn, audio_control, &session,
+          &audio_transport) == GST_RTSP_STS_OK);
+  GST_DEBUG ("set up audio %s with session '%s'", audio_control, session);
+
+  /* check response from SETUP */
+  fail_unless (audio_transport->trans == GST_RTSP_TRANS_RTP);
+  fail_unless (audio_transport->profile == GST_RTSP_PROFILE_AVP);
+  fail_unless (audio_transport->lower_transport == GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (audio_transport->mode_play);
+  gst_rtsp_transport_free (audio_transport);
+
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_free (session);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_setup_with_require_header)
 {
   GstRTSPConnection *conn;
@@ -686,17 +768,17 @@ GST_START_TEST (test_setup_with_require_header)
   get_client_ports (&client_ports);
 
   /* send SETUP request for video, with single Require header */
-  fail_unless_equals_int (do_setup_full (conn, video_control, &client_ports,
-          "funky-feature", &session, &video_transport, &unsupported),
-      GST_RTSP_STS_OPTION_NOT_SUPPORTED);
+  fail_unless_equals_int (do_setup_full (conn, video_control, FALSE,
+          &client_ports, "funky-feature", &session, &video_transport,
+          &unsupported), GST_RTSP_STS_OPTION_NOT_SUPPORTED);
   fail_unless_equals_string (unsupported, "funky-feature");
   g_free (unsupported);
   unsupported = NULL;
 
   /* send SETUP request for video, with multiple Require headers */
-  fail_unless_equals_int (do_setup_full (conn, video_control, &client_ports,
-          "funky-feature, foo-bar, superburst", &session, &video_transport,
-          &unsupported), GST_RTSP_STS_OPTION_NOT_SUPPORTED);
+  fail_unless_equals_int (do_setup_full (conn, video_control, FALSE,
+          &client_ports, "funky-feature, foo-bar, superburst", &session,
+          &video_transport, &unsupported), GST_RTSP_STS_OPTION_NOT_SUPPORTED);
   fail_unless_equals_string (unsupported, "funky-feature, foo-bar, superburst");
   g_free (unsupported);
   unsupported = NULL;
@@ -1436,6 +1518,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_describe);
   tcase_add_test (tc, test_describe_non_existing_mount_point);
   tcase_add_test (tc, test_setup);
+  tcase_add_test (tc, test_setup_tcp);
   tcase_add_test (tc, test_setup_with_require_header);
   tcase_add_test (tc, test_setup_non_existing_stream);
   tcase_add_test (tc, test_play);
