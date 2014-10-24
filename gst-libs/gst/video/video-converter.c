@@ -55,6 +55,8 @@
  * </refsect2>
  */
 
+typedef struct _GstLineCache GstLineCache;
+
 struct _GstVideoConverter
 {
   GstVideoInfo in_info;
@@ -78,6 +80,7 @@ struct _GstVideoConverter
   guint n_tmplines;
   gpointer *tmplines;
   guint16 *errline;
+  guint tmplines_idx;
 
   GstVideoChromaResample *upsample;
   guint up_n_lines;
@@ -90,8 +93,132 @@ struct _GstVideoConverter
       GstVideoFrame * dest);
   void (*matrix) (GstVideoConverter * convert, gpointer pixels);
   void (*dither16) (GstVideoConverter * convert, guint16 * pixels, int j);
+
+  GstLineCache *upsample_lines;
+  GstLineCache *convert_lines;
+  GstLineCache *downsample_lines;
+  GstLineCache *pack_lines;
+
+  const GstVideoFrame *src;
+  GstVideoFrame *dest;
 };
 
+typedef gboolean (*GstLineCacheNeedLineFunc) (GstLineCache * cache, gint idx,
+    gpointer user_data);
+typedef void (*GstLineCacheFreeLineFunc) (GstLineCache * cache, gint idx,
+    gpointer line, gpointer user_data);
+
+struct _GstLineCache
+{
+  gint first;
+  GPtrArray *lines;
+
+  GstLineCacheNeedLineFunc need_line;
+  gpointer need_line_data;
+  GDestroyNotify need_line_notify;
+  GstLineCacheFreeLineFunc free_line;
+  gpointer free_line_data;
+  GDestroyNotify free_line_notify;
+};
+
+static GstLineCache *
+gst_line_cache_new ()
+{
+  GstLineCache *result;
+
+  result = g_slice_new0 (GstLineCache);
+  result->lines = g_ptr_array_new ();
+
+  return result;
+}
+
+static void
+gst_line_cache_clear (GstLineCache * cache)
+{
+  g_return_if_fail (cache != NULL);
+
+  if (cache->free_line) {
+    gint i;
+    for (i = 0; i < cache->lines->len; i++)
+      cache->free_line (cache, cache->first + i,
+          *(cache->lines->pdata + i), cache->free_line_data);
+  }
+  g_ptr_array_set_size (cache->lines, 0);
+  cache->first = 0;
+}
+
+static void
+gst_line_cache_free (GstLineCache * cache)
+{
+  gst_line_cache_clear (cache);
+  g_ptr_array_unref (cache->lines);
+  g_slice_free (GstLineCache, cache);
+}
+
+static void
+gst_line_cache_set_need_line_func (GstLineCache * cache,
+    GstLineCacheNeedLineFunc need_line, gpointer user_data,
+    GDestroyNotify notify)
+{
+  cache->need_line = need_line;
+  cache->need_line_data = user_data;
+  cache->need_line_notify = notify;
+}
+
+static void
+gst_line_cache_set_free_line_func (GstLineCache * cache,
+    GstLineCacheFreeLineFunc free_line, gpointer user_data,
+    GDestroyNotify notify)
+{
+  cache->free_line = free_line;
+  cache->free_line_data = user_data;
+  cache->free_line_notify = notify;
+}
+
+static gpointer *
+gst_line_cache_get_lines (GstLineCache * cache, gint idx, gint n_lines)
+{
+  if (cache->first < idx) {
+    gint i, to_remove = MIN (idx - cache->first, cache->lines->len);
+    if (cache->free_line) {
+      for (i = 0; i < to_remove; i++)
+        cache->free_line (cache, cache->first + i,
+            *(cache->lines->pdata + i), cache->free_line_data);
+    }
+    if (to_remove > 0)
+      g_ptr_array_remove_range (cache->lines, 0, to_remove);
+    cache->first = idx;
+  } else if (idx < cache->first) {
+    gst_line_cache_clear (cache);
+    cache->first = idx;
+  }
+
+  while (TRUE) {
+    if (cache->first <= idx
+        && idx + n_lines <= cache->first + (gint) cache->lines->len) {
+      return cache->lines->pdata + (idx - cache->first);
+    }
+
+    if (cache->need_line == NULL)
+      break;
+
+    if (!cache->need_line (cache, cache->first + cache->lines->len,
+            cache->need_line_data))
+      break;
+  }
+  GST_DEBUG ("no lines");
+  return NULL;
+}
+
+static void
+gst_line_cache_add_line (GstLineCache * cache, gint idx, gpointer line)
+{
+  if (cache->first + cache->lines->len != idx) {
+    gst_line_cache_clear (cache);
+    cache->first = idx;
+  }
+  g_ptr_array_add (cache->lines, line);
+}
 
 static void video_converter_generic (GstVideoConverter * convert,
     const GstVideoFrame * src, GstVideoFrame * dest);
@@ -100,8 +227,86 @@ static void video_converter_matrix8 (GstVideoConverter * convert,
 static void video_converter_matrix16 (GstVideoConverter * convert,
     gpointer pixels);
 static gboolean video_converter_lookup_fastpath (GstVideoConverter * convert);
-static gboolean video_converter_compute_matrix (GstVideoConverter * convert);
-static gboolean video_converter_compute_resample (GstVideoConverter * convert);
+static void video_converter_compute_matrix (GstVideoConverter * convert);
+static void video_converter_compute_resample (GstVideoConverter * convert);
+
+static gboolean do_unpack_lines (GstLineCache * cache, gint line,
+    GstVideoConverter * convert);
+static gboolean do_downsample_lines (GstLineCache * cache, gint line,
+    GstVideoConverter * convert);
+static gboolean do_convert_lines (GstLineCache * cache, gint line,
+    GstVideoConverter * convert);
+static gboolean do_upsample_lines (GstLineCache * cache, gint line,
+    GstVideoConverter * convert);
+
+static void
+free_pack_line (GstLineCache * cache, gint idx,
+    gpointer line, gpointer user_data)
+{
+  GST_DEBUG ("line %d %p", idx, line);
+}
+
+static void
+alloc_tmplines (GstVideoConverter * convert, guint lines, gint width)
+{
+  gint i;
+
+  convert->n_tmplines = lines;
+  convert->tmplines = g_malloc (lines * sizeof (gpointer));
+  for (i = 0; i < lines; i++)
+    convert->tmplines[i] = g_malloc (sizeof (guint16) * (width + 8) * 4);
+  convert->tmplines_idx = 0;
+}
+
+static gpointer
+get_temp_line (GstVideoConverter * convert)
+{
+  gpointer tmpline;
+
+  tmpline = convert->tmplines[convert->tmplines_idx];
+  convert->tmplines_idx = (convert->tmplines_idx + 1) % convert->n_tmplines;
+
+  return tmpline;
+}
+
+static GstLineCacheNeedLineFunc
+chain_upsample (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
+{
+  convert->upsample_lines = gst_line_cache_new ();
+  gst_line_cache_set_need_line_func (convert->upsample_lines,
+      need_line, convert, NULL);
+  return (GstLineCacheNeedLineFunc) do_upsample_lines;
+}
+
+static GstLineCacheNeedLineFunc
+chain_convert (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
+{
+  convert->convert_lines = gst_line_cache_new ();
+  gst_line_cache_set_need_line_func (convert->convert_lines,
+      need_line, convert, NULL);
+  return (GstLineCacheNeedLineFunc) do_convert_lines;
+}
+
+static GstLineCacheNeedLineFunc
+chain_downsample (GstVideoConverter * convert,
+    GstLineCacheNeedLineFunc need_line)
+{
+  convert->downsample_lines = gst_line_cache_new ();
+  gst_line_cache_set_need_line_func (convert->downsample_lines,
+      need_line, convert, NULL);
+  return (GstLineCacheNeedLineFunc) do_downsample_lines;
+}
+
+static GstLineCacheNeedLineFunc
+chain_pack (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
+{
+  convert->pack_lines = gst_line_cache_new ();
+  gst_line_cache_set_need_line_func (convert->pack_lines,
+      need_line, convert, NULL);
+  gst_line_cache_set_free_line_func (convert->pack_lines,
+      (GstLineCacheFreeLineFunc) free_pack_line, convert, NULL);
+  return NULL;
+}
 
 /**
  * gst_video_converter_new:
@@ -122,6 +327,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
 {
   GstVideoConverter *convert;
   gint width;
+  GstLineCacheNeedLineFunc need_line;
 
   g_return_val_if_fail (in_info != NULL, NULL);
   g_return_val_if_fail (out_info != NULL, NULL);
@@ -137,7 +343,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   g_return_val_if_fail (in_info->interlace_mode == out_info->interlace_mode,
       NULL);
 
-  convert = g_malloc0 (sizeof (GstVideoConverter));
+  convert = g_slice_new0 (GstVideoConverter);
 
   convert->in_info = *in_info;
   convert->out_info = *out_info;
@@ -145,32 +351,62 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   convert->width = GST_VIDEO_INFO_WIDTH (in_info);
   convert->height = GST_VIDEO_INFO_HEIGHT (in_info);
 
-  if (!video_converter_lookup_fastpath (convert)) {
-    convert->convert = video_converter_generic;
-    if (!video_converter_compute_matrix (convert))
-      goto no_convert;
-
-    if (!video_converter_compute_resample (convert))
-      goto no_convert;
-  }
-
-  width = convert->width;
-
-  convert->lines = out_info->finfo->pack_lines;
-  convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
 
   /* default config */
   convert->config = gst_structure_new ("GstVideoConverter",
       "dither", GST_TYPE_VIDEO_DITHER_METHOD, GST_VIDEO_DITHER_NONE, NULL);
-
   if (config)
     gst_video_converter_set_config (convert, config);
 
+  if (video_converter_lookup_fastpath (convert))
+    goto done;
+
+  if (in_info->finfo->unpack_func == NULL)
+    goto no_unpack_func;
+
+  if (out_info->finfo->pack_func == NULL)
+    goto no_pack_func;
+
+  convert->convert = video_converter_generic;
+
+  video_converter_compute_matrix (convert);
+  video_converter_compute_resample (convert);
+
+  /* unpack */
+  need_line = (GstLineCacheNeedLineFunc) do_unpack_lines;
+
+  /* upsample chroma */
+  if (convert->upsample)
+    need_line = chain_upsample (convert, need_line);
+  /* convert */
+  need_line = chain_convert (convert, need_line);
+  /* downsample chroma */
+  if (convert->downsample)
+    need_line = chain_downsample (convert, need_line);
+  /* pack into final format */
+  need_line = chain_pack (convert, need_line);
+
+  convert->lines = out_info->finfo->pack_lines;
+  width = convert->width;
+  convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
+  /* FIXME */
+  alloc_tmplines (convert, 64, width);
+
+done:
   return convert;
 
   /* ERRORS */
-no_convert:
+no_unpack_func:
   {
+    GST_ERROR ("no unpack_func for format %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)));
+    gst_video_converter_free (convert);
+    return NULL;
+  }
+no_pack_func:
+  {
+    GST_ERROR ("no pack_func for format %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
     gst_video_converter_free (convert);
     return NULL;
   }
@@ -196,6 +432,15 @@ gst_video_converter_free (GstVideoConverter * convert)
   if (convert->downsample)
     gst_video_chroma_resample_free (convert->downsample);
 
+  if (convert->upsample_lines)
+    gst_line_cache_free (convert->upsample_lines);
+  if (convert->convert_lines)
+    gst_line_cache_free (convert->convert_lines);
+  if (convert->downsample_lines)
+    gst_line_cache_free (convert->downsample_lines);
+  if (convert->pack_lines)
+    gst_line_cache_free (convert->pack_lines);
+
   for (i = 0; i < convert->n_tmplines; i++)
     g_free (convert->tmplines[i]);
   g_free (convert->tmplines);
@@ -204,7 +449,7 @@ gst_video_converter_free (GstVideoConverter * convert)
   if (convert->config)
     gst_structure_free (convert->config);
 
-  g_free (convert);
+  g_slice_free (GstVideoConverter, convert);
 }
 
 static void
@@ -528,7 +773,7 @@ color_matrix_RGB_to_YCbCr (ColorMatrix * m, double Kr, double Kb)
   color_matrix_multiply (m, &k, m);
 }
 
-static gboolean
+static void
 video_converter_compute_matrix (GstVideoConverter * convert)
 {
   GstVideoInfo *in_info, *out_info;
@@ -545,12 +790,6 @@ video_converter_compute_matrix (GstVideoConverter * convert)
   sfinfo = in_info->finfo;
   dfinfo = out_info->finfo;
 
-  if (sfinfo->unpack_func == NULL)
-    goto no_unpack_func;
-
-  if (dfinfo->pack_func == NULL)
-    goto no_pack_func;
-
   suinfo = gst_video_format_get_info (sfinfo->unpack_format);
   duinfo = gst_video_format_get_info (dfinfo->unpack_format);
 
@@ -563,7 +802,7 @@ video_converter_compute_matrix (GstVideoConverter * convert)
       in_info->colorimetry.matrix == out_info->colorimetry.matrix) {
     GST_DEBUG ("using identity color transform");
     convert->matrix = NULL;
-    return TRUE;
+    return;
   }
 
   /* calculate intermediate format for the matrix. When unpacking, we expand
@@ -649,41 +888,13 @@ video_converter_compute_matrix (GstVideoConverter * convert)
   convert->orc_p3 = (((guint64) (guint16) convert->cmatrix[2][2]) << 48) |
       (((guint64) (guint16) convert->cmatrix[1][2]) << 32) |
       (((guint64) (guint16) convert->cmatrix[0][2]) << 16);
-
-  return TRUE;
-
-  /* ERRORS */
-no_unpack_func:
-  {
-    GST_ERROR ("no unpack_func for format %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)));
-    return FALSE;
-  }
-no_pack_func:
-  {
-    GST_ERROR ("no pack_func for format %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
-    return FALSE;
-  }
 }
 
 static void
-alloc_tmplines (GstVideoConverter * convert, guint lines, gint width)
-{
-  gint i;
-
-  convert->n_tmplines = lines;
-  convert->tmplines = g_malloc (lines * sizeof (gpointer));
-  for (i = 0; i < lines; i++)
-    convert->tmplines[i] = g_malloc (sizeof (guint16) * (width + 8) * 4);
-}
-
-static gboolean
 video_converter_compute_resample (GstVideoConverter * convert)
 {
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *sfinfo, *dfinfo;
-  gint width;
 
   in_info = &convert->in_info;
   out_info = &convert->out_info;
@@ -691,18 +902,18 @@ video_converter_compute_resample (GstVideoConverter * convert)
   sfinfo = in_info->finfo;
   dfinfo = out_info->finfo;
 
-  width = convert->width;
-
   if (sfinfo->w_sub[2] != dfinfo->w_sub[2] ||
       sfinfo->h_sub[2] != dfinfo->h_sub[2] ||
       in_info->chroma_site != out_info->chroma_site) {
+    GstVideoChromaFlags flags = (GST_VIDEO_INFO_IS_INTERLACED (in_info) ?
+        GST_VIDEO_CHROMA_FLAG_INTERLACED : 0);
+
     convert->upsample = gst_video_chroma_resample_new (0,
-        in_info->chroma_site, 0, sfinfo->unpack_format, sfinfo->w_sub[2],
+        in_info->chroma_site, flags, sfinfo->unpack_format, sfinfo->w_sub[2],
         sfinfo->h_sub[2]);
 
-
     convert->downsample = gst_video_chroma_resample_new (0,
-        out_info->chroma_site, 0, dfinfo->unpack_format, -dfinfo->w_sub[2],
+        out_info->chroma_site, flags, dfinfo->unpack_format, -dfinfo->w_sub[2],
         -dfinfo->h_sub[2]);
 
   } else {
@@ -729,10 +940,6 @@ video_converter_compute_resample (GstVideoConverter * convert)
   GST_DEBUG ("downsample: %p, site: %d, offset %d, n_lines %d",
       convert->downsample, out_info->chroma_site, convert->down_offset,
       convert->down_n_lines);
-
-  alloc_tmplines (convert, convert->down_n_lines + convert->up_n_lines, width);
-
-  return TRUE;
 }
 
 #define TO_16(x) (((x)<<8) | (x))
@@ -774,140 +981,132 @@ convert_to8 (gpointer line, gint width)
       dest, 0, frame->data, frame->info.stride,      \
       frame->info.chroma_site, line, width);
 
-static void
-video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
-    GstVideoFrame * dest)
+static gboolean
+do_unpack_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
 {
-  int j, k;
-  gint width, height, lines, max_lines;
-  guint in_bits, out_bits;
-  gconstpointer pal;
-  gsize palsize;
-  guint up_n_lines, down_n_lines;
-  gint up_offset, down_offset;
-  gint in_lines, out_lines;
-  gint up_line, down_line;
-  gint start_offset, stop_offset;
-  gpointer in_tmplines[8];
-  gpointer out_tmplines[8];
+  gpointer tmpline;
+  guint cline;;
 
-  height = convert->height;
-  width = convert->width;
+  tmpline = get_temp_line (convert);
+  cline = CLAMP (line, 0, convert->height - 1);
+
+  GST_DEBUG ("unpack line %d (%u)", line, cline);
+  UNPACK_FRAME (convert->src, tmpline, cline, convert->width);
+
+  gst_line_cache_add_line (cache, line, tmpline);
+
+  return TRUE;
+}
+
+static gboolean
+do_upsample_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
+{
+  gpointer *lines;
+  gint i, start_line, n_lines;
+
+  n_lines = convert->up_n_lines;
+  start_line = line;
+  if (start_line < n_lines + convert->up_offset)
+    start_line += convert->up_offset;
+
+  /* get the lines needed for chroma upsample */
+  lines =
+      gst_line_cache_get_lines (convert->upsample_lines, start_line, n_lines);
+
+  GST_DEBUG ("doing upsample %d-%d", start_line, start_line + n_lines - 1);
+  gst_video_chroma_resample (convert->upsample, lines, convert->width);
+
+  for (i = 0; i < n_lines; i++)
+    gst_line_cache_add_line (cache, start_line + i, lines[i]);
+
+  return TRUE;
+}
+
+
+static gboolean
+do_convert_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
+{
+  gpointer *lines;
+  guint in_bits, out_bits;
+
+  lines = gst_line_cache_get_lines (convert->convert_lines, line, 1);
 
   in_bits = convert->in_bits;
   out_bits = convert->out_bits;
 
-  lines = convert->lines;
-  up_n_lines = convert->up_n_lines;
-  up_offset = convert->up_offset;
-  down_n_lines = convert->down_n_lines;
-  down_offset = convert->down_offset;
-  max_lines = convert->n_tmplines;
+  GST_DEBUG ("convert line %d", line);
+  if (out_bits == 16 || in_bits == 16) {
+    /* FIXME, we can scale in the conversion matrix */
+    if (in_bits == 8)
+      convert_to16 (lines[0], convert->width);
 
-  in_lines = 0;
-  out_lines = 0;
+    if (convert->matrix)
+      convert->matrix (convert, lines[0]);
+    if (convert->dither16)
+      convert->dither16 (convert, lines[0], line);
 
-  GST_DEBUG ("up_offset %d, up_n_lines %u", up_offset, up_n_lines);
-
-  start_offset = MIN (up_offset, down_offset);
-  stop_offset = height + start_offset + MAX (up_n_lines, down_n_lines);
-
-  for (; start_offset < stop_offset; start_offset++) {
-    guint idx, start;
-
-    idx = CLAMP (start_offset, 0, height);
-    in_tmplines[in_lines] = convert->tmplines[idx % max_lines];
-    out_tmplines[out_lines] = in_tmplines[in_lines];
-    GST_DEBUG ("start_offset %d/%d, %d, idx %u, in %d, out %d", start_offset,
-        stop_offset, up_offset, idx, in_lines, out_lines);
-
-    up_line = up_offset + in_lines;
-
-    /* extract the next line */
-    if (up_line >= 0 && up_line < height) {
-      GST_DEBUG ("unpack line %d into %d", up_line, in_lines);
-      UNPACK_FRAME (src, in_tmplines[in_lines], up_line, width);
-    }
-
-    if (start_offset >= up_offset)
-      in_lines++;
-
-    if (start_offset >= down_offset)
-      out_lines++;
-
-    if (in_lines < up_n_lines)
-      continue;
-
-    in_lines = 0;
-
-    /* we have enough lines to upsample */
-    if (convert->upsample) {
-      GST_DEBUG ("doing upsample");
-      gst_video_chroma_resample (convert->upsample, in_tmplines, width);
-    }
-
-    /* convert upsampled lines */
-    for (k = 0; k < up_n_lines; k++) {
-      down_line = up_offset + k;
-
-      /* only takes lines with valid output */
-      if (down_line < 0 || down_line >= height)
-        continue;
-
-      GST_DEBUG ("handle line %d, %d/%d, down_line %d", k, out_lines,
-          down_n_lines, down_line);
-
-      if (out_bits == 16 || in_bits == 16) {
-        /* FIXME, we can scale in the conversion matrix */
-        if (in_bits == 8)
-          convert_to16 (in_tmplines[k], width);
-
-        if (convert->matrix)
-          convert->matrix (convert, in_tmplines[k]);
-        if (convert->dither16)
-          convert->dither16 (convert, in_tmplines[k], down_line);
-
-        if (out_bits == 8)
-          convert_to8 (in_tmplines[k], width);
-      } else {
-        if (convert->matrix)
-          convert->matrix (convert, in_tmplines[k]);
-      }
-    }
-
-    start = 0;
-    while (out_lines >= down_n_lines) {
-      if (convert->downsample) {
-        GST_DEBUG ("doing downsample %u", start);
-        gst_video_chroma_resample (convert->downsample,
-            &out_tmplines[start], width);
-      }
-
-      for (j = 0; j < down_n_lines; j += lines) {
-        idx = down_offset + j;
-
-        if (idx < height) {
-          GST_DEBUG ("packing line %d %d %d", j + start, down_offset, idx);
-          /* FIXME, not correct if lines > 1 */
-          PACK_FRAME (dest, out_tmplines[j + start], idx, width);
-        }
-      }
-      down_offset += down_n_lines;
-      start += down_n_lines;
-      out_lines -= down_n_lines;
-    }
-    /* we didn't process these lines, move them up for the next round */
-    for (j = 0; j < out_lines; j++) {
-      GST_DEBUG ("move line %d->%d", j + start, j);
-      out_tmplines[j] = out_tmplines[j + start];
-    }
-
-    up_offset += up_n_lines;
+    if (out_bits == 8)
+      convert_to8 (lines[0], convert->width);
+  } else {
+    if (convert->matrix)
+      convert->matrix (convert, lines[0]);
   }
-  if ((pal =
-          gst_video_format_get_palette (GST_VIDEO_FRAME_FORMAT (dest),
-              &palsize))) {
-    memcpy (GST_VIDEO_FRAME_PLANE_DATA (dest, 1), pal, palsize);
+  gst_line_cache_add_line (cache, line, lines[0]);
+
+  return TRUE;
+}
+
+static gboolean
+do_downsample_lines (GstLineCache * cache, gint line,
+    GstVideoConverter * convert)
+{
+  gpointer *lines;
+  gint i, start_line, n_lines;
+
+  n_lines = convert->down_n_lines;
+  start_line = line;
+  if (start_line < n_lines + convert->down_offset)
+    start_line += convert->down_offset;
+
+  /* get the lines needed for chroma downsample */
+  lines =
+      gst_line_cache_get_lines (convert->downsample_lines, start_line, n_lines);
+
+  GST_DEBUG ("downsample line %d %d-%d", line, start_line,
+      start_line + n_lines - 1);
+  gst_video_chroma_resample (convert->downsample, lines, convert->width);
+
+  for (i = 0; i < n_lines; i++)
+    gst_line_cache_add_line (cache, start_line + i, lines[i]);
+
+  return TRUE;
+}
+
+static void
+video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
+{
+  gint i;
+  gint width, height;
+  gint pack_lines;
+
+  width = convert->width;
+  height = convert->height;
+
+  convert->src = src;
+  convert->dest = dest;
+
+  pack_lines = convert->lines;  /* only 1 for now */
+
+  for (i = 0; i < height; i += pack_lines) {
+    gpointer *lines;
+
+    /* load the lines needed to pack */
+    lines = gst_line_cache_get_lines (convert->pack_lines, i, pack_lines);
+
+    /* and pack into destination */
+    GST_DEBUG ("pack line %d", i);
+    PACK_FRAME (dest, lines[0], i, width);
   }
 }
 
@@ -1771,8 +1970,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
         (transforms[i].height_align & height) == 0) {
       GST_DEBUG ("using fastpath");
       if (transforms[i].needs_color_matrix)
-        if (!video_converter_compute_matrix (convert))
-          goto no_convert;
+        video_converter_compute_matrix (convert);
       convert->convert = transforms[i].convert;
       alloc_tmplines (convert, 1, GST_VIDEO_INFO_WIDTH (&convert->in_info));
       return TRUE;
@@ -1780,10 +1978,4 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   }
   GST_DEBUG ("no fastpath found");
   return FALSE;
-
-no_convert:
-  {
-    GST_DEBUG ("can't create matrix");
-    return FALSE;
-  }
 }
