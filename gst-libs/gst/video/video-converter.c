@@ -86,15 +86,15 @@ struct _GstVideoConverter
   guint down_n_lines;
   gint down_offset;
 
-  void (*convert) (GstVideoConverter * convert, GstVideoFrame * dest,
-      const GstVideoFrame * src);
+  void (*convert) (GstVideoConverter * convert, const GstVideoFrame * src,
+      GstVideoFrame * dest);
   void (*matrix) (GstVideoConverter * convert, gpointer pixels);
   void (*dither16) (GstVideoConverter * convert, guint16 * pixels, int j);
 };
 
 
 static void video_converter_generic (GstVideoConverter * convert,
-    GstVideoFrame * dest, const GstVideoFrame * src);
+    const GstVideoFrame * src, GstVideoFrame * dest);
 static void video_converter_matrix8 (GstVideoConverter * convert,
     gpointer pixels);
 static void video_converter_matrix16 (GstVideoConverter * convert,
@@ -335,13 +335,13 @@ gst_video_converter_get_config (GstVideoConverter * convert)
  */
 void
 gst_video_converter_frame (GstVideoConverter * convert,
-    GstVideoFrame * dest, const GstVideoFrame * src)
+    const GstVideoFrame * src, GstVideoFrame * dest)
 {
   g_return_if_fail (convert != NULL);
-  g_return_if_fail (dest != NULL);
   g_return_if_fail (src != NULL);
+  g_return_if_fail (dest != NULL);
 
-  convert->convert (convert, dest, src);
+  convert->convert (convert, src, dest);
 }
 
 #define SCALE    (8)
@@ -775,8 +775,8 @@ convert_to8 (gpointer line, gint width)
       frame->info.chroma_site, line, width);
 
 static void
-video_converter_generic (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   int j, k;
   gint width, height, lines, max_lines;
@@ -949,8 +949,8 @@ video_converter_generic (GstVideoConverter * convert, GstVideoFrame * dest,
 
 
 static void
-convert_I420_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   int i;
   gint width = convert->width;
@@ -977,8 +977,8 @@ convert_I420_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_I420_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   int i;
   gint width = convert->width;
@@ -1005,8 +1005,8 @@ convert_I420_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   int i;
   gint width = convert->width;
@@ -1032,8 +1032,8 @@ convert_I420_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_I420_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1054,8 +1054,8 @@ convert_I420_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_I420_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1082,8 +1082,8 @@ convert_I420_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_YUY2_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   int i;
   gint width = convert->width;
@@ -1109,8 +1109,8 @@ convert_YUY2_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_YUY2_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_YUY2_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1121,8 +1121,8 @@ convert_YUY2_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_YUY2_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_YUY2_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1135,8 +1135,8 @@ convert_YUY2_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_YUY2_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_YUY2_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1150,8 +1150,8 @@ convert_YUY2_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
 
 
 static void
-convert_UYVY_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   int i;
   gint width = convert->width;
@@ -1177,8 +1177,8 @@ convert_UYVY_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_UYVY_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_UYVY_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1189,8 +1189,8 @@ convert_UYVY_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_UYVY_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_UYVY_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1201,8 +1201,8 @@ convert_UYVY_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_UYVY_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_UYVY_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1215,8 +1215,8 @@ convert_UYVY_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_UYVY_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_UYVY_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1229,8 +1229,8 @@ convert_UYVY_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_AYUV_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1246,8 +1246,8 @@ convert_AYUV_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_AYUV_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1259,8 +1259,8 @@ convert_AYUV_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_AYUV_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1272,8 +1272,8 @@ convert_AYUV_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_AYUV_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1287,8 +1287,8 @@ convert_AYUV_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_AYUV_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1301,8 +1301,8 @@ convert_AYUV_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y42B_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1329,8 +1329,8 @@ convert_Y42B_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y42B_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1349,8 +1349,8 @@ convert_Y42B_Y444 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y42B_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1363,8 +1363,8 @@ convert_Y42B_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y42B_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1377,8 +1377,8 @@ convert_Y42B_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y42B_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y42B_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1392,8 +1392,8 @@ convert_Y42B_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y444_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1420,8 +1420,8 @@ convert_Y444_I420 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y444_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1440,8 +1440,8 @@ convert_Y444_Y42B (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y444_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1454,8 +1454,8 @@ convert_Y444_YUY2 (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y444_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1468,8 +1468,8 @@ convert_Y444_UYVY (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_Y444_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_Y444_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1483,8 +1483,8 @@ convert_Y444_AYUV (GstVideoConverter * convert, GstVideoFrame * dest,
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 static void
-convert_AYUV_ARGB (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_AYUV_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1497,8 +1497,8 @@ convert_AYUV_ARGB (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_BGRA (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_AYUV_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1511,8 +1511,8 @@ convert_AYUV_BGRA (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_ABGR (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_AYUV_ABGR (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1525,8 +1525,8 @@ convert_AYUV_ABGR (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_AYUV_RGBA (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_AYUV_RGBA (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   gint width = convert->width;
   gint height = convert->height;
@@ -1539,8 +1539,8 @@ convert_AYUV_RGBA (GstVideoConverter * convert, GstVideoFrame * dest,
 }
 
 static void
-convert_I420_BGRA (GstVideoConverter * convert, GstVideoFrame * dest,
-    const GstVideoFrame * src)
+convert_I420_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
 {
   int i;
   gint width = convert->width;
@@ -1571,8 +1571,8 @@ typedef struct
   gboolean keeps_interlaced;
   gboolean needs_color_matrix;
   gint width_align, height_align;
-  void (*convert) (GstVideoConverter * convert, GstVideoFrame * dest,
-      const GstVideoFrame * src);
+  void (*convert) (GstVideoConverter * convert, const GstVideoFrame * src,
+      GstVideoFrame * dest);
 } VideoTransform;
 
 static const VideoTransform transforms[] = {

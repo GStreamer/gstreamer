@@ -554,7 +554,7 @@ gst_video_convert_transform_frame (GstVideoFilter * filter,
       GST_VIDEO_INFO_NAME (&filter->in_info),
       GST_VIDEO_INFO_NAME (&filter->out_info));
 
-  gst_video_converter_frame (space->convert, out_frame, in_frame);
+  gst_video_converter_frame (space->convert, in_frame, out_frame);
 
   return GST_FLOW_OK;
 }

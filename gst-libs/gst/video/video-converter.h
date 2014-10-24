@@ -41,7 +41,7 @@ gboolean             gst_video_converter_set_config     (GstVideoConverter * con
 const GstStructure * gst_video_converter_get_config     (GstVideoConverter * convert);
 
 void                 gst_video_converter_frame          (GstVideoConverter * convert,
-                                                         GstVideoFrame *dest, const GstVideoFrame *src);
+                                                         const GstVideoFrame *src, GstVideoFrame *dest);
 
 
 G_END_DECLS
