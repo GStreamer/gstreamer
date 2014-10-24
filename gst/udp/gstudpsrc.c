@@ -1139,7 +1139,8 @@ gst_udpsrc_unlock_stop (GstBaseSrc * bsrc)
   src = GST_UDPSRC (bsrc);
 
   GST_LOG_OBJECT (src, "No longer flushing");
-  g_cancellable_reset (src->cancellable);
+  g_object_unref (src->cancellable);
+  src->cancellable = g_cancellable_new ();
 
   return TRUE;
 }

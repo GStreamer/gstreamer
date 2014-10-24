@@ -1845,7 +1845,8 @@ gst_multiudpsink_unlock_stop (GstBaseSink * bsink)
 
   sink = GST_MULTIUDPSINK (bsink);
 
-  g_cancellable_reset (sink->cancellable);
+  g_object_unref (sink->cancellable);
+  sink->cancellable = g_cancellable_new ();
 
   return TRUE;
 }

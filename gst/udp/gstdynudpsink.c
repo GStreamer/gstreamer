@@ -574,7 +574,8 @@ gst_dynudpsink_unlock_stop (GstBaseSink * bsink)
 
   udpsink = GST_DYNUDPSINK (bsink);
 
-  g_cancellable_reset (udpsink->cancellable);
+  g_object_unref (udpsink->cancellable);
+  udpsink->cancellable = g_cancellable_new ();
 
   return TRUE;
 }
