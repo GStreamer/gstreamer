@@ -217,9 +217,10 @@ gst_data_queue_init (GstDataQueue * queue)
  * @checkdata: a #gpointer that will be passed to the @checkfull, @fullcallback,
  *   and @emptycallback callbacks.
  *
- * Creates a new #GstDataQueue. The difference with @gst_data_queue_new is that it will
- * not emit the 'full' and 'empty' signals, but instead calling directly @fullcallback
- * or @emptycallback.
+ * Creates a new #GstDataQueue. If @fullcallback or @emptycallback are supplied, then
+ * the #GstDataQueue will call the respective callback to signal full or empty condition.
+ * If the callbacks are NULL the #GstDataQueue will instead emit 'full' and 'empty'
+ * signals.
  *
  * Returns: a new #GstDataQueue.
  *
