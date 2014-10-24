@@ -69,6 +69,7 @@ _LEVEL_NAMES = ['ERROR', 'WARN', 'FIXME', 'INFO', 'DEBUG', 'LOG']
 
 
 class TerminalController(object):
+
     """
     A class that can be used to portably generate formatted output to
     a terminal.
@@ -197,7 +198,8 @@ class TerminalController(object):
         if set_bg_ansi:
             for i, color in zip(range(len(self._ANSICOLORS)),
                                 self._ANSICOLORS):
-                setattr(self, 'BG_' + color, curses.tparm(set_bg_ansi, i) or '')
+                setattr(
+                    self, 'BG_' + color, curses.tparm(set_bg_ansi, i) or '')
 
     def _tigetstr(self, cap_name):
         # String capabilities can include "delays" of the form "$<2>".
@@ -222,12 +224,13 @@ class TerminalController(object):
         else:
             return getattr(self, s[2:-1])
 
-#######################################################################
+#
 # Example use case: progress bar
-#######################################################################
+#
 
 
 class ProgressBar:
+
     """
     A 3-line progress bar, which looks like::
 
@@ -643,16 +646,18 @@ def stderrHandler(level, object, category, file, line, message):
     # show a bazillion of debug details that are not relevant to Pitivi.
     if not _enableCrackOutput:
         safeprintf(sys.stderr, '%s %-8s %-17s %-2s %s %s\n',
-               getFormattedLevelName(level), time.strftime("%H:%M:%S"),
-               category, "", message, where)
+                   getFormattedLevelName(level), time.strftime("%H:%M:%S"),
+                   category, "", message, where)
     else:
         o = ""
         if object:
             o = '"' + object + '"'
         # level   pid     object   cat      time
         # 5 + 1 + 7 + 1 + 32 + 1 + 17 + 1 + 15 == 80
-        safeprintf(sys.stderr, '%s [%5d] [0x%12x] %-32s %-17s %-15s %-4s %s %s\n',
-                   getFormattedLevelName(level), os.getpid(), thread.get_ident(),
+        safeprintf(
+            sys.stderr, '%s [%5d] [0x%12x] %-32s %-17s %-15s %-4s %s %s\n',
+                   getFormattedLevelName(
+                       level), os.getpid(), thread.get_ident(),
                    o[:32], category, time.strftime("%b %d %H:%M:%S"), "",
                    message, where)
     sys.stderr.flush()
@@ -667,14 +672,14 @@ def _preformatLevels(noColorEnvVarName):
 
         t = TerminalController()
         formatter = lambda level: ''.join((t.BOLD, getattr(t, COLORS[level]),
-                            format % (_LEVEL_NAMES[level - 1], ), t.NORMAL))
+                                           format % (_LEVEL_NAMES[level - 1], ), t.NORMAL))
     else:
         formatter = lambda level: format % (_LEVEL_NAMES[level - 1], )
 
     for level in ERROR, WARN, FIXME, INFO, DEBUG, LOG:
         _FORMATTED_LEVELS.append(formatter(level))
 
-### "public" useful API
+# "public" useful API
 
 # setup functions
 
@@ -934,6 +939,7 @@ def outputToFiles(stdout=None, stderr=None):
 
 
 class BaseLoggable(object):
+
     """
     Base class for objects that want to be able to log messages with
     different level of severity.  The levels are, in order from least
@@ -966,37 +972,43 @@ class BaseLoggable(object):
         """Log an error.  By default this will also raise an exception."""
         if _canShortcutLogging(self.logCategory, ERROR):
             return
-        errorObject(self.logObjectName(), self.logCategory, *self.logFunction(*args))
+        errorObject(self.logObjectName(),
+                    self.logCategory, *self.logFunction(*args))
 
     def warning(self, *args):
         """Log a warning.  Used for non-fatal problems."""
         if _canShortcutLogging(self.logCategory, WARN):
             return
-        warningObject(self.logObjectName(), self.logCategory, *self.logFunction(*args))
+        warningObject(
+            self.logObjectName(), self.logCategory, *self.logFunction(*args))
 
     def fixme(self, *args):
         """Log a fixme.  Used for FIXMEs ."""
         if _canShortcutLogging(self.logCategory, FIXME):
             return
-        fixmeObject(self.logObjectName(), self.logCategory, *self.logFunction(*args))
+        fixmeObject(self.logObjectName(),
+                    self.logCategory, *self.logFunction(*args))
 
     def info(self, *args):
         """Log an informational message.  Used for normal operation."""
         if _canShortcutLogging(self.logCategory, INFO):
             return
-        infoObject(self.logObjectName(), self.logCategory, *self.logFunction(*args))
+        infoObject(self.logObjectName(),
+                   self.logCategory, *self.logFunction(*args))
 
     def debug(self, *args):
         """Log a debug message.  Used for debugging."""
         if _canShortcutLogging(self.logCategory, DEBUG):
             return
-        debugObject(self.logObjectName(), self.logCategory, *self.logFunction(*args))
+        debugObject(self.logObjectName(),
+                    self.logCategory, *self.logFunction(*args))
 
     def log(self, *args):
         """Log a log message.  Used for debugging recurring events."""
         if _canShortcutLogging(self.logCategory, LOG):
             return
-        logObject(self.logObjectName(), self.logCategory, *self.logFunction(*args))
+        logObject(self.logObjectName(),
+                  self.logCategory, *self.logFunction(*args))
 
     def doLog(self, level, where, format, *args, **kwargs):
         """
@@ -1020,7 +1032,7 @@ class BaseLoggable(object):
             return {}
         args = self.logFunction(*args)
         return doLog(level, self.logObjectName(), self.logCategory,
-                  format, args, where=where, **kwargs)
+                     format, args, where=where, **kwargs)
 
     def warningFailure(self, failure, swallow=True):
         """
@@ -1035,7 +1047,7 @@ class BaseLoggable(object):
                 return
             return failure
         warningObject(self.logObjectName(), self.logCategory,
-            *self.logFunction(getFailureMessage(failure)))
+                      *self.logFunction(getFailureMessage(failure)))
         if not swallow:
             return failure
 
@@ -1141,6 +1153,7 @@ def logTwisted():
 
 
 class TwistedLogObserver(BaseLoggable):
+
     """
     Twisted log observer that integrates with our logging.
     """
@@ -1196,6 +1209,7 @@ class TwistedLogObserver(BaseLoggable):
 
 
 class Loggable(BaseLoggable):
+
     def __init__(self, logCategory=None):
         if logCategory:
             self.logCategory = logCategory
@@ -1212,4 +1226,4 @@ class Loggable(BaseLoggable):
         if _canShortcutLogging(self.logCategory, ERROR):
             return
         doLog(ERROR, self.logObjectName(), self.logCategory,
-            format, self.logFunction(*args), where=-2)
+              format, self.logFunction(*args), where=-2)

@@ -32,9 +32,9 @@ from baseclasses import GstValidateTest, TestsManager, Test, \
 from utils import path2url, DEFAULT_TIMEOUT, which, \
     GST_SECOND, Result, Protocols
 
-######################################
-#       Private global variables     #
-######################################
+#
+# Private global variables     #
+#
 
 # definitions of commands to use
 GST_VALIDATE_COMMAND = "gst-validate-1.0"
@@ -47,9 +47,9 @@ if "win32" in sys.platform:
 
 AUDIO_ONLY_FILE_TRANSCODING_RATIO = 5
 
-#################################################
-#       API to be used to create testsuites     #
-#################################################
+#
+# API to be used to create testsuites     #
+#
 
 """
 Some info about protocols and how to handle them
@@ -62,6 +62,7 @@ GST_VALIDATE_PROTOCOL_TIMEOUTS = {Protocols.HTTP: 120,
 
 
 class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
+
     def __init__(self, test_manager):
         GstValidateTestsGenerator.__init__(self, "media_check", test_manager)
 
@@ -85,6 +86,7 @@ class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
 
 
 class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
+
     def __init__(self, test_manager):
         GstValidateTestsGenerator.__init__(self, "transcode", test_manager)
 
@@ -95,7 +97,8 @@ class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
 
             for comb in self.test_manager.get_encoding_formats():
                 classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.media_descriptor.get_protocol(),
-                                                                str(comb).replace(' ', '_'),
+                                                                str(comb).replace(
+                                                                    ' ', '_'),
                                                                 mediainfo.media_descriptor.get_clean_name())
                 self.add_test(GstValidateTranscodingTest(classname,
                                                          self.test_manager.options,
@@ -106,7 +109,9 @@ class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
 
 
 class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
-    def __init__(self, name, test_manager, pipeline_template=None, pipelines_descriptions=None,
+
+    def __init__(
+        self, name, test_manager, pipeline_template=None, pipelines_descriptions=None,
                  valid_scenarios=[]):
         """
         @name: The name of the generator
@@ -138,10 +143,10 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
         if self._valid_scenarios:
             scenarios = [scenario for scenario in scenarios if
-                          scenario.name in self._valid_scenarios]
+                         scenario.name in self._valid_scenarios]
 
         return super(GstValidatePipelineTestsGenerator, self).generate_tests(
-              uri_minfo_special_scenarios, scenarios)
+            uri_minfo_special_scenarios, scenarios)
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for name, pipeline in self._pipelines_descriptions:
@@ -158,7 +163,8 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
     def __init__(self, test_manager):
-        GstValidatePipelineTestsGenerator.__init__(self, "playback", test_manager, "playbin")
+        GstValidatePipelineTestsGenerator.__init__(
+            self, "playback", test_manager, "playbin")
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for uri, minfo, special_scenarios in uri_minfo_special_scenarios:
@@ -177,7 +183,8 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                     else:
                         fakesink = "'fakesink'"
 
-                    cpipe += " audio-sink=%s video-sink=%s" %(fakesink, fakesink)
+                    cpipe += " audio-sink=%s video-sink=%s" % (
+                        fakesink, fakesink)
 
                 fname = "%s.%s" % (self.get_fname(scenario,
                                    protocol),
@@ -198,16 +205,20 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
 
 class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
-    def __init__(self, name, test_manager, mixer, media_type, converter="", num_sources=3,
+
+    def __init__(
+        self, name, test_manager, mixer, media_type, converter="", num_sources=3,
                  mixed_srcs={}, valid_scenarios=[]):
-        pipe_template = "%(mixer)s name=_mixer !  " + converter + " ! %(sink)s "
+        pipe_template = "%(mixer)s name=_mixer !  " + \
+            converter + " ! %(sink)s "
         self.converter = converter
         self.mixer = mixer
         self.media_type = media_type
         self.num_sources = num_sources
         self.mixed_srcs = mixed_srcs
-        super(GstValidateMixerTestsGenerator, self).__init__(name, test_manager, pipe_template,
-                                                             valid_scenarios=valid_scenarios)
+        super(
+            GstValidateMixerTestsGenerator, self).__init__(name, test_manager, pipe_template,
+                                                           valid_scenarios=valid_scenarios)
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         wanted_ressources = []
@@ -227,7 +238,8 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
                 name = ""
                 for nsource in range(self.num_sources):
                     uri, minfo = wanted_ressources[i + nsource]
-                    srcs.append("uridecodebin uri=%s ! %s" % (uri, self.converter))
+                    srcs.append(
+                        "uridecodebin uri=%s ! %s" % (uri, self.converter))
                     fname = os.path.basename(uri).replace(".", "_")
                     if not name:
                         name = fname
@@ -238,7 +250,8 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
 
         for name, srcs in self.mixed_srcs.iteritems():
             if isinstance(srcs, dict):
-                pipe_arguments = {"mixer": self.mixer + " %s" % srcs["mixer_props"]}
+                pipe_arguments = {
+                    "mixer": self.mixer + " %s" % srcs["mixer_props"]}
                 srcs = srcs["sources"]
             else:
                 pipe_arguments = {"mixer": self.mixer}
@@ -268,10 +281,12 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
 
 
 class GstValidateLaunchTest(GstValidateTest):
+
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None, media_descriptor=None):
         try:
-            timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[media_descriptor.get_protocol()]
+            timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[
+                media_descriptor.get_protocol()]
         except KeyError:
             pass
         except AttributeError:
@@ -282,11 +297,12 @@ class GstValidateLaunchTest(GstValidateTest):
             duration = scenario.get_duration()
         elif media_descriptor:
             duration = media_descriptor.get_duration() / GST_SECOND
-        super(GstValidateLaunchTest, self).__init__(GST_VALIDATE_COMMAND, classname,
-                                              options, reporter,
-                                              duration=duration,
-                                              scenario=scenario,
-                                              timeout=timeout)
+        super(
+            GstValidateLaunchTest, self).__init__(GST_VALIDATE_COMMAND, classname,
+                                                  options, reporter,
+                                                  duration=duration,
+                                                  scenario=scenario,
+                                                  timeout=timeout)
 
         self.pipeline_desc = pipeline_desc
         self.media_descriptor = media_descriptor
@@ -295,7 +311,8 @@ class GstValidateLaunchTest(GstValidateTest):
         GstValidateTest.build_arguments(self)
         self.add_arguments(self.pipeline_desc)
         if self.media_descriptor is not None:
-            self.add_arguments("--set-media-info", self.media_descriptor.get_path())
+            self.add_arguments(
+                "--set-media-info", self.media_descriptor.get_path())
 
     def get_current_value(self):
         if self.scenario:
@@ -310,7 +327,8 @@ class GstValidateLaunchTest(GstValidateTest):
                                         https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
                         return Result.KNOWN_ERROR
 
-                    self.set_result(Result.FAILED, "Pipeline did not stop 30 Seconds after sending EOS")
+                    self.set_result(
+                        Result.FAILED, "Pipeline did not stop 30 Seconds after sending EOS")
 
                     return Result.FAILED
 
@@ -318,11 +336,14 @@ class GstValidateLaunchTest(GstValidateTest):
 
 
 class GstValidateMediaCheckTest(Test):
-    def __init__(self, classname, options, reporter, media_descriptor, uri, minfo_path,
+
+    def __init__(
+        self, classname, options, reporter, media_descriptor, uri, minfo_path,
                  timeout=DEFAULT_TIMEOUT):
-        super(GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
-                                              options, reporter,
-                                              timeout=timeout)
+        super(
+            GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
+                                                      options, reporter,
+                                                      timeout=timeout)
         self._uri = uri
         self.media_descriptor = media_descriptor
         self._media_info_path = minfo_path
@@ -334,6 +355,7 @@ class GstValidateMediaCheckTest(Test):
 
 class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterface):
     scenarios_manager = ScenarioManager()
+
     def __init__(self, classname, options, reporter,
                  combination, uri, media_descriptor,
                  timeout=DEFAULT_TIMEOUT,
@@ -344,25 +366,28 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
         file_dur = long(media_descriptor.get_duration()) / GST_SECOND
         if not media_descriptor.get_num_tracks("video"):
             self.debug("%s audio only file applying transcoding ratio."
-                       "File 'duration' : %s" % (classname , file_dur))
+                       "File 'duration' : %s" % (classname, file_dur))
             duration = file_dur / AUDIO_ONLY_FILE_TRANSCODING_RATIO
         else:
             duration = file_dur
 
         try:
-            timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[media_descriptor.get_protocol()]
+            timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[
+                media_descriptor.get_protocol()]
         except KeyError:
             pass
 
-        super(GstValidateTranscodingTest, self).__init__(GST_VALIDATE_TRANSCODING_COMMAND,
-                                                         classname,
-                                                         options,
-                                                         reporter,
-                                                         duration=duration,
-                                                         timeout=timeout,
-                                                         scenario=scenario)
+        super(
+            GstValidateTranscodingTest, self).__init__(GST_VALIDATE_TRANSCODING_COMMAND,
+                                                       classname,
+                                                       options,
+                                                       reporter,
+                                                       duration=duration,
+                                                       timeout=timeout,
+                                                       scenario=scenario)
 
-        GstValidateEncodingTestInterface.__init__(self, combination, media_descriptor)
+        GstValidateEncodingTestInterface.__init__(
+            self, combination, media_descriptor)
 
         self.media_descriptor = media_descriptor
         self.uri = uri
@@ -396,7 +421,8 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
                                         https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
                         return Result.KNOWN_ERROR
 
-                    self.set_result(Result.FAILED, "Pipeline did not stop 30 Seconds after sending EOS")
+                    self.set_result(
+                        Result.FAILED, "Pipeline did not stop 30 Seconds after sending EOS")
 
                     return Result.FAILED
 
@@ -451,8 +477,8 @@ class GstValidateTestManager(GstValidateBaseTestManager):
 
     def add_options(self, parser):
         group = parser.add_argument_group("GstValidate tools specific options"
-                            " and behaviours",
-description="""When using --wanted-tests, all the scenarios can be used, even those which have
+                                          " and behaviours",
+                                          description="""When using --wanted-tests, all the scenarios can be used, even those which have
 not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
     def populate_testsuite(self):
@@ -506,7 +532,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                     break
 
             scenario_bname = media_descriptor.get_media_filepath()
-            special_scenarios = self.scenarios_manager.find_special_scenarios(scenario_bname)
+            special_scenarios = self.scenarios_manager.find_special_scenarios(
+                scenario_bname)
             self._uris.append((uri,
                                NamedDic({"path": media_info,
                                          "media_descriptor": media_descriptor}),
@@ -516,7 +543,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
     def _discover_file(self, uri, fpath):
         try:
-            media_info = "%s.%s" % (fpath, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
+            media_info = "%s.%s" % (
+                fpath, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
             args = G_V_DISCOVERER_COMMAND.split(" ")
             args.append(uri)
             if os.path.isfile(media_info):
@@ -528,7 +556,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             elif not self.options.generate_info:
                 return True
 
-            media_descriptor = GstValidateMediaDescriptor.new_from_uri(uri, True,
+            media_descriptor = GstValidateMediaDescriptor.new_from_uri(
+                uri, True,
                                                                        self.options.generate_info_full)
             if media_descriptor:
                 self._add_media(media_descriptor, uri)
@@ -574,7 +603,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 uri = test.media_descriptor.get_uri()
 
                 if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] and \
-                    "127.0.0.1:%s" % (self.options.http_server_port) in uri:
+                        "127.0.0.1:%s" % (self.options.http_server_port) in uri:
                     return True
         return False
 
@@ -583,13 +612,16 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             for i in range(len(options.wanted_tests)):
                 if "ALL" in options.wanted_tests[i]:
                     self._run_defaults = False
-                    options.wanted_tests[i] = options.wanted_tests[i].replace("ALL", "")
+                    options.wanted_tests[
+                        i] = options.wanted_tests[i].replace("ALL", "")
         try:
             options.wanted_tests.remove("")
         except ValueError:
             pass
 
-        super(GstValidateTestManager, self).set_settings(options, args, reporter)
+        super(GstValidateTestManager, self).set_settings(
+            options, args, reporter)
+
 
 def gst_validate_checkout_element_present(element_name):
     null = open(os.devnull)

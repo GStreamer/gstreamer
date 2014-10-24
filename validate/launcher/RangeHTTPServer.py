@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
-#Portions Copyright (C) 2009,2010  Xyne
-#Portions Copyright (C) 2011 Sean Goller
+# Portions Copyright (C) 2009,2010  Xyne
+# Portions Copyright (C) 2011 Sean Goller
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,7 +15,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
 
 
 """Range HTTP Server.
@@ -47,6 +48,7 @@ except ImportError:
 
 
 _bandwidth = 0
+
 
 class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -151,7 +153,8 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 ei = int(e)
                 if ei < size:
                     start_range = size - ei
-        self.send_header("Content-Range", 'bytes ' + str(start_range) + '-' + str(end_range - 1) + '/' + str(size))
+        self.send_header("Content-Range", 'bytes ' + str(
+            start_range) + '-' + str(end_range - 1) + '/' + str(size))
         self.send_header("Content-Length", end_range - start_range)
         self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
         self.end_headers()
@@ -174,7 +177,8 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         f = StringIO()
         displaypath = cgi.escape(urllib.unquote(self.path))
         f.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">')
-        f.write("<html>\n<title>Directory listing for %s</title>\n" % displaypath)
+        f.write("<html>\n<title>Directory listing for %s</title>\n" %
+                displaypath)
         f.write("<body>\n<h2>Directory listing for %s</h2>\n" % displaypath)
         f.write("<hr>\n<ul>\n")
         for name in list:
@@ -207,8 +211,8 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         """
         # abandon query parameters
-        path = path.split('?',1)[0]
-        path = path.split('#',1)[0]
+        path = path.split('?', 1)[0]
+        path = path.split('#', 1)[0]
         path = posixpath.normpath(urllib.unquote(path))
         words = path.split('/')
         words = filter(None, words)
@@ -216,7 +220,8 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         for word in words:
             drive, word = os.path.splitdrive(word)
             head, word = os.path.split(word)
-            if word in (os.curdir, os.pardir): continue
+            if word in (os.curdir, os.pardir):
+                continue
             path = os.path.join(path, word)
         return path
 
@@ -261,20 +266,20 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.extensions_map['']
 
     if not mimetypes.inited:
-        mimetypes.init() # try to read system mime.types
+        mimetypes.init()  # try to read system mime.types
     extensions_map = mimetypes.types_map.copy()
     extensions_map.update({
-        '': 'application/octet-stream', # Default
+        '': 'application/octet-stream',  # Default
         '.py': 'text/plain',
         '.c': 'text/plain',
         '.h': 'text/plain',
         '.mp4': 'video/mp4',
         '.ogg': 'video/ogg',
-        })
+    })
 
 
-def test(HandlerClass = RangeHTTPRequestHandler,
-         ServerClass = BaseHTTPServer.HTTPServer):
+def test(HandlerClass=RangeHTTPRequestHandler,
+         ServerClass=BaseHTTPServer.HTTPServer):
     BaseHTTPServer.test(HandlerClass, ServerClass)
 
 

@@ -32,10 +32,11 @@ from operator import itemgetter
 GST_SECOND = long(1000000000)
 DEFAULT_TIMEOUT = 30
 DEFAULT_MAIN_DIR = os.path.expanduser("~/gst-validate/")
-DEFAULT_GST_QA_ASSETS =  os.path.join(DEFAULT_MAIN_DIR, "gst-qa-assets")
+DEFAULT_GST_QA_ASSETS = os.path.join(DEFAULT_MAIN_DIR, "gst-qa-assets")
 DISCOVERER_COMMAND = "gst-discoverer-1.0"
 # Use to set the duration from which a test is concidered as being 'long'
 LONG_TEST = 40
+
 
 class Result(object):
     NOT_RUN = "Not run"
@@ -139,20 +140,22 @@ def url2path(url):
     path = urlparse.urlparse(url).path
     if "win32" in sys.platform:
         if path[0] == '/':
-            return path[1:] # We need to remove the first '/' on windows
+            return path[1:]  # We need to remove the first '/' on windows
     return path
 
 
 def isuri(string):
     url = urlparse.urlparse(string)
-    if url.scheme != "" and  url.scheme != "":
+    if url.scheme != "" and url.scheme != "":
         return True
 
     return False
 
+
 def touch(fname, times=None):
     with open(fname, 'a'):
         os.utime(fname, times)
+
 
 def get_subclasses(klass, env):
     subclasses = []
@@ -165,22 +168,29 @@ def get_subclasses(klass, env):
 
     return subclasses
 
+
 def TIME_ARGS(time):
     return "%u:%02u:%02u.%09u" % (time / (GST_SECOND * 60 * 60),
                                   (time / (GST_SECOND * 60)) % 60,
                                   (time / GST_SECOND) % 60,
                                   time % GST_SECOND)
 
-##################################################
-#  Some utilities to parse gst-validate output   #
-##################################################
+#
+# Some utilities to parse gst-validate output   #
+#
+
+
 def gsttime_from_tuple(stime):
-    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND +  int(stime[3]))
+    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND + int(stime[3]))
 
 timeregex = re.compile(r'(?P<_0>.+):(?P<_1>.+):(?P<_2>.+)\.(?P<_3>.+)')
+
+
 def parse_gsttimeargs(time):
-    stime = map(itemgetter(1), sorted(timeregex.match(time).groupdict().items()))
-    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND +  int(stime[3]))
+    stime = map(itemgetter(1), sorted(
+        timeregex.match(time).groupdict().items()))
+    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND + int(stime[3]))
+
 
 def get_duration(media_file):
 
@@ -189,7 +199,8 @@ def get_duration(media_file):
     try:
         res = subprocess.check_output([DISCOVERER_COMMAND, media_file])
     except subprocess.CalledProcessError:
-        # gst-media-check returns !0 if seeking is not possible, we do not care in that case.
+        # gst-media-check returns !0 if seeking is not possible, we do not care
+        # in that case.
         pass
 
     for l in res.split('\n'):

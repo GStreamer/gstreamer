@@ -125,13 +125,17 @@ class Reporter(Loggable):
 
         print "\n"
         lenstat = (len("Statistics") + 1)
-        printc("Statistics:\n%s" %(lenstat * "-"), Colors.OKBLUE)
+        printc("Statistics:\n%s" % (lenstat * "-"), Colors.OKBLUE)
         printc("\n%sTotal time spent: %s seconds\n" %
-               ((lenstat * " "), datetime.timedelta(seconds=(time.time() - self._start_time))),
+               ((lenstat * " "), datetime.timedelta(
+                   seconds=(time.time() - self._start_time))),
                Colors.OKBLUE)
-        printc("%sPassed: %d" % (lenstat * " ", self.stats["passed"]), Colors.OKGREEN)
-        printc("%sFailed: %d" % (lenstat * " ", self.stats["failures"]), Colors.FAIL)
-        printc("%s%s" %(lenstat * " ", (len("Failed: 0")) * "-"), Colors.OKBLUE)
+        printc("%sPassed: %d" %
+               (lenstat * " ", self.stats["passed"]), Colors.OKGREEN)
+        printc("%sFailed: %d" %
+               (lenstat * " ", self.stats["failures"]), Colors.FAIL)
+        printc("%s%s" %
+               (lenstat * " ", (len("Failed: 0")) * "-"), Colors.OKBLUE)
 
         total = self.stats["failures"] + self.stats["passed"]
         color = Colors.WARNING
@@ -144,6 +148,7 @@ class Reporter(Loggable):
 
 
 class XunitReporter(Reporter):
+
     """This reporter provides test results in the standard XUnit XML format."""
     name = 'xunit'
     encoding = 'UTF-8'
@@ -167,7 +172,8 @@ class XunitReporter(Reporter):
                     escape_cdata(value)
 
             for extralog in self._current_test.extra_logfiles:
-                captured += "\n\n===== %s =====\n\n" % escape_cdata(os.path.basename(extralog))
+                captured += "\n\n===== %s =====\n\n" % escape_cdata(
+                    os.path.basename(extralog))
                 value = self._current_test.get_extra_log_content(extralog)
                 captured += escape_cdata(value)
 
@@ -194,10 +200,10 @@ class XunitReporter(Reporter):
         self.stats['encoding'] = self.encoding
         self.stats['total'] = (self.stats['timeout'] + self.stats['failures']
                                + self.stats['passed'] + self.stats['skipped'])
-        self.xml_file.write( u'<?xml version="1.0" encoding="%(encoding)s"?>'
-            u'<testsuite name="gst-validate-launcher" tests="%(total)d" '
-            u'errors="%(timeout)d" failures="%(failures)d" '
-            u'skip="%(skipped)d">' % self.stats)
+        self.xml_file.write(u'<?xml version="1.0" encoding="%(encoding)s"?>'
+                            u'<testsuite name="gst-validate-launcher" tests="%(total)d" '
+                            u'errors="%(timeout)d" failures="%(failures)d" '
+                            u'skip="%(skipped)d">' % self.stats)
         self.xml_file.write(u''.join([self._forceUnicode(e)
                             for e in self.errorlist]))
         self.xml_file.write(u'</testsuite>')

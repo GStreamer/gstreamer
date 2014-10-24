@@ -20,12 +20,12 @@
 # Boston, MA 02110-1301, USA.
 
 
-valid_mixing_scenarios=["play_15s",
-                        "fast_forward",
-                        "seek_forward",
-                        "seek_backward",
-                        "seek_with_stop",
-                        "scrub_forward_seeking"]
+valid_mixing_scenarios = ["play_15s",
+                          "fast_forward",
+                          "seek_forward",
+                          "seek_backward",
+                          "seek_with_stop",
+                          "scrub_forward_seeking"]
 
 
 def register_compositing_tests(self):
@@ -35,11 +35,12 @@ def register_compositing_tests(self):
     """
     for compositor in ["compositor", "glmixer"]:
         if gst_validate_checkout_element_present(compositor):
-            self.add_generators(GstValidateMixerTestsGenerator(compositor, self,
-                                                compositor,
-                                                "video",
-                                                converter="deinterlace ! videoconvert ! videorate ! videoscale ! video/x-raw,framerate=25/1,pixel-aspect-ratio=1/1",
-                                                valid_scenarios=valid_mixing_scenarios))
+            self.add_generators(
+                GstValidateMixerTestsGenerator(compositor, self,
+                                               compositor,
+                                               "video",
+                                               converter="deinterlace ! videoconvert ! videorate ! videoscale ! video/x-raw,framerate=25/1,pixel-aspect-ratio=1/1",
+                                               valid_scenarios=valid_mixing_scenarios))
 
 
 def register_default_test_generators(self):
@@ -51,20 +52,21 @@ def register_default_test_generators(self):
                          GstValidateTranscodingTestsGenerator(self)])
 
     for compositor in ["compositor", "glvideomixer"]:
-            self.add_generators(GstValidateMixerTestsGenerator(compositor + ".simple", self,
-                                                compositor,
-                                                "video",
-                                                converter="deinterlace ! videoconvert",
-                                                mixed_srcs= {
-                                                "synchronized": {"mixer_props": "sink_1::alpha=0.5 sink_1::xpos=50 sink_1::ypos=50",
-                                                    "sources":
-                                                       ("videotestsrc pattern=snow timestamp-offset=3000000000 ! 'video/x-raw,format=AYUV,width=640,height=480,framerate=(fraction)30/1' !  timeoverlay",
-                                                        "videotestsrc pattern=smpte ! 'video/x-raw,format=AYUV,width=800,height=600,framerate=(fraction)10/1' ! timeoverlay")},
+            self.add_generators(
+                GstValidateMixerTestsGenerator(compositor + ".simple", self,
+                                               compositor,
+                                               "video",
+                                               converter="deinterlace ! videoconvert",
+                                               mixed_srcs={
+                                                   "synchronized": {"mixer_props": "sink_1::alpha=0.5 sink_1::xpos=50 sink_1::ypos=50",
+                                                                    "sources":
+                                                                    ("videotestsrc pattern=snow timestamp-offset=3000000000 ! 'video/x-raw,format=AYUV,width=640,height=480,framerate=(fraction)30/1' !  timeoverlay",
+                                                                     "videotestsrc pattern=smpte ! 'video/x-raw,format=AYUV,width=800,height=600,framerate=(fraction)10/1' ! timeoverlay")},
                                                 "bgra":
                                                     ("videotestsrc ! video/x-raw, framerate=\(fraction\)10/1, width=100, height=100",
                                                      "videotestsrc ! video/x-raw, framerate=\(fraction\)5/1, width=320, height=240")
-                                                    },
-                                                valid_scenarios=valid_mixing_scenarios))
+                                               },
+                                               valid_scenarios=valid_mixing_scenarios))
 
 
 def register_default_scenarios(self):
@@ -72,7 +74,7 @@ def register_default_scenarios(self):
     Registers default test scenarios
     """
     self.add_scenarios([
-                 "play_15s",
+        "play_15s",
                  "reverse_playback",
                  "fast_forward",
                  "seek_forward",
@@ -86,6 +88,7 @@ def register_default_scenarios(self):
                  "change_state_intensive",
                  "scrub_forward_seeking"])
 
+
 def register_default_encoding_formats(self):
     """
     Registers default encoding formats
@@ -96,6 +99,7 @@ def register_default_encoding_formats(self):
         MediaFormatCombination("mp4", "mp3", "h264"),
         MediaFormatCombination("mkv", "vorbis", "h264"),
     ])
+
 
 def register_default_blacklist(self):
     self.set_default_blacklist([
@@ -135,27 +139,33 @@ def register_default_blacklist(self):
          'mpegts_base_loop (): ...: stream stopped, reason not-negotiated'),
 
         # HTTP known issues:
-        ("validate.http.*scrub_forward_seeking.*", "This is not stable enough for now."),
+        ("validate.http.*scrub_forward_seeking.*",
+         "This is not stable enough for now."),
         ("validate.http.playback.change_state_intensive.raw_video_mov",
          "This is not stable enough for now. (flow return from pad push doesn't match expected value)"),
 
         # MXF known issues"
         (".*reverse_playback.*mxf", "Reverse playback is not handled in MXF"),
-        ("validate\.file\.transcode.*mxf", "FIXME: Transcoding and mixing tests need to be tested"),
+        ("validate\.file\.transcode.*mxf",
+         "FIXME: Transcoding and mixing tests need to be tested"),
 
         # Subtitles known issues
-        ("validate.file.playback.switch_subtitle_track.Sintel_2010_720p_mkv", "https://bugzilla.gnome.org/show_bug.cgi?id=734051"),
+        ("validate.file.playback.switch_subtitle_track.Sintel_2010_720p_mkv",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=734051"),
 
         # Videomixing known issues
-        ("validate.file.*.simple.scrub_forward_seeking.synchronized", "https://bugzilla.gnome.org/show_bug.cgi?id=734060"),
+        ("validate.file.*.simple.scrub_forward_seeking.synchronized",
+         "https://bugzilla.gnome.org/show_bug.cgi?id=734060"),
 
         # FLAC known issues"
-        (".*reverse_playback.*flac", "Reverse playback is not handled in flac"),
+        (".*reverse_playback.*flac",
+         "Reverse playback is not handled in flac"),
 
         # WMV known issues"
         (".*reverse_playback.*wmv", "Reverse playback is not handled in wmv"),
         (".*reverse_playback.*asf", "Reverse playback is not handled in asf"),
     ])
+
 
 def register_defaults(self):
     self.register_default_scenarios()

@@ -28,7 +28,9 @@ logcat = "httpserver"
 
 
 class HTTPServer(loggable.Loggable):
+
     """ Class to run a SimpleHttpServer in a process."""
+
     def __init__(self, options):
         loggable.Loggable.__init__(self)
         self.options = options
@@ -60,8 +62,8 @@ class HTTPServer(loggable.Loggable):
             self._logsfile = tempfile.TemporaryFile()
         else:
             self._logsfile = open(os.path.join(self.options.logsdir,
-                                           "httpserver.logs"),
-                              'w+')
+                                               "httpserver.logs"),
+                                  'w+')
         if self.options.http_server_dir is not None:
             if self._check_is_up(timeout=2):
                 return True
@@ -70,15 +72,16 @@ class HTTPServer(loggable.Loggable):
             try:
                 self.debug("Lunching http server")
                 cmd = "%s %s %d %s" % (sys.executable, os.path.join(os.path.dirname(__file__),
-                                                     "RangeHTTPServer.py"),
-                                        self.options.http_server_port,
-                                        self.options.http_bandwith,
-                                    )
+                                                                    "RangeHTTPServer.py"),
+                                       self.options.http_server_port,
+                                       self.options.http_bandwith,
+                                       )
                 curdir = os.path.abspath(os.curdir)
                 os.chdir(self.options.http_server_dir)
-                #cmd = "twistd -no web --path=%s -p %d" % (
-                #    self.options.http_server_dir, self.options.http_server_port)
-                self.debug("Lunching server: %s (logs in %s)", cmd, self._logsfile)
+                # cmd = "twistd -no web --path=%s -p %d" % (
+                # self.options.http_server_dir, self.options.http_server_port)
+                self.debug(
+                    "Lunching server: %s (logs in %s)", cmd, self._logsfile)
                 self._process = subprocess.Popen(cmd.split(" "),
                                                  stderr=self._logsfile,
                                                  stdout=self._logsfile)

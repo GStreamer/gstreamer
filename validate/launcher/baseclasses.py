@@ -113,7 +113,6 @@ class Test(Loggable):
 
         return value
 
-
     def get_classname(self):
         name = self.classname.split('.')[-1]
         classname = self.classname.replace('.%s' % name, '')
@@ -137,7 +136,7 @@ class Test(Loggable):
             pname = subprocess.check_output(("readlink -e /proc/%s/exe"
                                              % self.process.pid).split(' ')).replace('\n', '')
             raw_input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
-                      "Press enter to continue" %(Colors.FAIL, pname, self.process.pid,
+                      "Press enter to continue" % (Colors.FAIL, pname, self.process.pid,
                                                    Colors.ENDC))
 
         self.result = result
@@ -156,7 +155,7 @@ class Test(Loggable):
         else:
             self.set_result(Result.FAILED,
                             "Application returned %d" % (
-                            self.process.returncode))
+                                self.process.returncode))
 
     def get_current_value(self):
         """
@@ -184,7 +183,8 @@ class Test(Loggable):
 
             self.debug("Got value: %s" % val)
             if val is Result.NOT_RUN:
-                # The get_current_value logic is not implemented... dumb timeout
+                # The get_current_value logic is not implemented... dumb
+                # timeout
                 if time.time() - last_change_ts > self.timeout:
                     self.set_result(Result.TIMEOUT)
                     break
@@ -198,12 +198,14 @@ class Test(Loggable):
 
             if val == last_val:
                 delta = time.time() - last_change_ts
-                self.debug("%s: Same value for %d/%d seconds" % (self, delta, self.timeout))
+                self.debug("%s: Same value for %d/%d seconds" %
+                           (self, delta, self.timeout))
                 if delta > self.timeout:
                     self.set_result(Result.TIMEOUT)
                     break
             elif self.hard_timeout and time.time() - start_ts > self.hard_timeout:
-                self.set_result(Result.TIMEOUT, "Hard timeout reached: %d", self.hard_timeout)
+                self.set_result(
+                    Result.TIMEOUT, "Hard timeout reached: %d", self.hard_timeout)
                 break
             else:
                 last_change_ts = time.time()
@@ -221,8 +223,8 @@ class Test(Loggable):
         proc_env = self.get_subproc_env()
 
         message = "Launching: %s%s\n" \
-                  "    Command: '%s %s'\n" %(Colors.ENDC, self.classname,
-                                          self._env_variable, self.command)
+                  "    Command: '%s %s'\n" % (Colors.ENDC, self.classname,
+                                              self._env_variable, self.command)
         if not self.reporter.uses_standard_output():
             message += "    Logs:\n" \
                        "         - %s" % (self.logfile)
@@ -267,16 +269,19 @@ class Test(Loggable):
 class GstValidateTest(Test):
 
     """ A class representing a particular test. """
-    findpos_regex = re.compile('.*position.*(\d+):(\d+):(\d+).(\d+).*duration.*(\d+):(\d+):(\d+).(\d+)')
-    findlastseek_regex = re.compile('seeking to.*(\d+):(\d+):(\d+).(\d+).*stop.*(\d+):(\d+):(\d+).(\d+).*rate.*(\d+)\.(\d+)')
+    findpos_regex = re.compile(
+        '.*position.*(\d+):(\d+):(\d+).(\d+).*duration.*(\d+):(\d+):(\d+).(\d+)')
+    findlastseek_regex = re.compile(
+        'seeking to.*(\d+):(\d+):(\d+).(\d+).*stop.*(\d+):(\d+):(\d+).(\d+).*rate.*(\d+)\.(\d+)')
 
     def __init__(self, application_name, classname,
                  options, reporter, duration=0,
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None):
 
-        super(GstValidateTest, self).__init__(application_name, classname, options,
-                                              reporter, duration=duration,
-                                              timeout=timeout, hard_timeout=hard_timeout)
+        super(
+            GstValidateTest, self).__init__(application_name, classname, options,
+                                            reporter, duration=duration,
+                                            timeout=timeout, hard_timeout=hard_timeout)
 
         # defines how much the process can be outside of the configured
         # segment / seek
@@ -290,9 +295,11 @@ class GstValidateTest(Test):
 
     def get_subproc_env(self):
         if self.reporter.uses_standard_output():
-            self.validatelogs = os.path.join (tempfile.gettempdir(), 'tmp.validate.logs')
+            self.validatelogs = os.path.join(
+                tempfile.gettempdir(), 'tmp.validate.logs')
             logfiles = self.validatelogs
-            logfiles += os.pathsep + self.reporter.out.name.replace("<", '').replace(">", '')
+            logfiles += os.pathsep + \
+                self.reporter.out.name.replace("<", '').replace(">", '')
         else:
             self.validatelogs = self.logfile + '.validate.logs'
             logfiles = self.validatelogs
@@ -377,9 +384,10 @@ class GstValidateTest(Test):
             else:
                 self.set_result(Result.FAILED,
                                 "Application returned %s (issues: %s)" % (
-                                self.process.returncode,
-                                self.get_validate_criticals_errors()
+                                    self.process.returncode,
+                                    self.get_validate_criticals_errors()
                                 ))
+
     def _parse_position(self, p):
         self.log("Parsing %s" % p)
         times = self.findpos_regex.findall(p)
@@ -391,10 +399,8 @@ class GstValidateTest(Test):
         return (utils.gsttime_from_tuple(times[0][:4]),
                 utils.gsttime_from_tuple(times[0][4:]))
 
-
     def _parse_buffering(self, b):
         return b.split("buffering... ")[1].split("%")[0], 100
-
 
     def _get_position(self):
         position = duration = -1
@@ -435,7 +441,6 @@ class GstValidateTest(Test):
         if m is None:
             self.debug("Could not fine any seeking info")
             return start, stop, rate
-
 
         values = self.findlastseek_regex.findall(m)
         if len(values) != 1:
@@ -495,8 +500,8 @@ class GstValidateEncodingTestInterface(object):
         return size
 
     def _get_profile_full(self, muxer, venc, aenc, video_restriction=None,
-                         audio_restriction=None, audio_presence=0,
-                         video_presence=0):
+                          audio_restriction=None, audio_presence=0,
+                          video_presence=0):
         ret = "\""
         if muxer:
             ret += muxer
@@ -553,13 +558,15 @@ class GstValidateEncodingTestInterface(object):
             for tmptype in possible_mtypes:
                 possible_c_variant = c.replace(media_type, tmptype)
                 if possible_c_variant in ccaps:
-                    self.info("Found %s in %s, good enough!", possible_c_variant)
+                    self.info(
+                        "Found %s in %s, good enough!", possible_c_variant)
                     has_variant = True
 
         return has_variant
 
     def check_encoded_file(self):
-        result_descriptor = GstValidateMediaDescriptor.new_from_uri(self.dest_file)
+        result_descriptor = GstValidateMediaDescriptor.new_from_uri(
+            self.dest_file)
         duration = result_descriptor.get_duration()
         orig_duration = self.media_descriptor.get_duration()
         tolerance = self._duration_tolerance
@@ -568,8 +575,8 @@ class GstValidateEncodingTestInterface(object):
             os.remove(result_descriptor.get_path())
             return (Result.FAILED, "Duration of encoded file is "
                     " wrong (%s instead of %s)" %
-                    (utils.TIME_ARGS (duration),
-                     utils.TIME_ARGS (orig_duration)))
+                    (utils.TIME_ARGS(duration),
+                     utils.TIME_ARGS(orig_duration)))
         else:
             all_tracks_caps = result_descriptor.get_tracks_caps()
             container_caps = result_descriptor.get_caps()
@@ -590,12 +597,11 @@ class GstValidateEncodingTestInterface(object):
 
                 for c in cwanted_caps:
                     if c not in ccaps:
-                        if not self._has_caps_type_variant (c, ccaps):
+                        if not self._has_caps_type_variant(c, ccaps):
                             os.remove(result_descriptor.get_path())
                             return (Result.FAILED,
                                     "Field: %s  (from %s) not in caps of the outputed file %s"
                                     % (wanted_caps, c, ccaps))
-
 
             os.remove(result_descriptor.get_path())
             return (Result.PASSED, "")
@@ -662,7 +668,6 @@ class TestsManager(Loggable):
 
         printc(msg, Colors.FAIL, True)
 
-
     def add_options(self, parser):
         """ Add more arguments. """
         pass
@@ -701,7 +706,6 @@ class TestsManager(Loggable):
                                                      int(self.options.long_limit)))
             return False
 
-
         if not self.wanted_tests_patterns:
             return True
 
@@ -735,6 +739,7 @@ class TestsManager(Loggable):
 
 
 class TestsGenerator(Loggable):
+
     def __init__(self, name, test_manager, tests=[]):
         Loggable.__init__(self)
         self.name = name
@@ -754,6 +759,7 @@ class TestsGenerator(Loggable):
 
 
 class GstValidateTestsGenerator(TestsGenerator):
+
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         pass
 
@@ -763,6 +769,7 @@ class GstValidateTestsGenerator(TestsGenerator):
 
 
 class _TestsLauncher(Loggable):
+
     def __init__(self, libsdir):
 
         Loggable.__init__(self)
@@ -775,22 +782,22 @@ class _TestsLauncher(Loggable):
         self._list_testers()
         self.wanted_tests_patterns = []
 
-    def _list_app_dirs (self):
+    def _list_app_dirs(self):
         app_dirs = []
-        app_dirs.append (os.path.join(self.libsdir, "apps"))
+        app_dirs.append(os.path.join(self.libsdir, "apps"))
         env_dirs = os.environ.get("GST_VALIDATE_APPS_DIR")
         if env_dirs is not None:
             for dir_ in env_dirs.split(":"):
-                app_dirs.append (dir_)
+                app_dirs.append(dir_)
 
         return app_dirs
 
-    def _exec_app (self, app_dir, env):
+    def _exec_app(self, app_dir, env):
         for f in os.listdir(app_dir):
             if f.endswith(".py"):
                 execfile(os.path.join(app_dir, f), env)
 
-    def _exec_apps (self, env):
+    def _exec_apps(self, env):
         app_dirs = self._list_app_dirs()
         for app_dir in app_dirs:
             self._exec_app(app_dir, env)
@@ -842,7 +849,6 @@ class _TestsLauncher(Loggable):
         for tester in self.testers:
             tester.set_settings(options, args, self.reporter)
 
-
     def list_tests(self):
         for tester in self.testers:
             self.tests.extend(tester.list_tests())
@@ -858,7 +864,7 @@ class _TestsLauncher(Loggable):
             res = tester.run_tests(cur_test_num, total_num_tests)
             cur_test_num += len(tester.list_tests())
             if res != Result.PASSED and (self.options.forever or
-                    self.options.fatal_error):
+                                         self.options.fatal_error):
                 return False
 
         return True
@@ -892,7 +898,9 @@ class NamedDic(object):
             for name, value in props.iteritems():
                 setattr(self, name, value)
 
+
 class Scenario(object):
+
     def __init__(self, name, props, path=None):
         self.name = name
         self.path = path
@@ -955,7 +963,7 @@ class ScenarioManager(Loggable):
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(ScenarioManager, cls).__new__(
-                                cls, *args, **kwargs)
+                cls, *args, **kwargs)
             cls._instance.config = None
             cls._instance.discovered = False
             Loggable.__init__(cls._instance)
@@ -973,7 +981,6 @@ class ScenarioManager(Loggable):
         if scenarios:
             scenarios = self.discover_scenarios(scenarios, mfile)
 
-
         return scenarios
 
     def discover_scenarios(self, scenario_paths=[], mfile=None):
@@ -986,10 +993,12 @@ class ScenarioManager(Loggable):
         if self.config.logsdir in ["stdout", "stderr"]:
             logs = open(os.devnull)
         else:
-            logs = open(os.path.join(self.config.logsdir, "scenarios_discovery.log"), 'w')
+            logs = open(
+                os.path.join(self.config.logsdir, "scenarios_discovery.log"), 'w')
 
         try:
-            command = [self.GST_VALIDATE_COMMAND, "--scenarios-defs-output-file", scenario_defs]
+            command = [self.GST_VALIDATE_COMMAND,
+                       "--scenarios-defs-output-file", scenario_defs]
             command.extend(scenario_paths)
             subprocess.check_call(command, stdout=logs, stderr=logs)
         except subprocess.CalledProcessError:
@@ -1005,7 +1014,8 @@ class ScenarioManager(Loggable):
                     if section in scenario_path:
                         # The real name of the scenario is:
                         # filename.REALNAME.scenario
-                        name = scenario_path.replace(mfile + ".", "").replace("." + self.FILE_EXTENDION, "")
+                        name = scenario_path.replace(mfile + ".", "").replace(
+                            "." + self.FILE_EXTENDION, "")
                         path = scenario_path
             else:
                 name = section
@@ -1056,7 +1066,6 @@ class GstValidateBaseTestManager(TestsManager):
     def get_scenarios(self):
         return self._scenarios
 
-
     def add_encoding_formats(self, encoding_formats):
         """
         :param encoding_formats: A list or one single #MediaFormatCombinations describing wanted output
@@ -1075,6 +1084,7 @@ class GstValidateBaseTestManager(TestsManager):
 
 
 class MediaDescriptor(Loggable):
+
     def __init__(self):
         Loggable.__init__(self)
 
@@ -1117,8 +1127,10 @@ class MediaDescriptor(Loggable):
             return False
 
         if self.get_duration() / GST_SECOND < scenario.get_min_media_duration():
-            self.debug("Do not run %s as %s is too short (%i < min media duation : %i",
-                       scenario, self.get_uri(), self.get_duration() / GST_SECOND,
+            self.debug(
+                "Do not run %s as %s is too short (%i < min media duation : %i",
+                       scenario, self.get_uri(
+                       ), self.get_duration() / GST_SECOND,
                        scenario.get_min_media_duration())
             return False
 
@@ -1131,8 +1143,6 @@ class MediaDescriptor(Loggable):
                 return False
 
         return True
-
-
 
 
 class GstValidateMediaDescriptor(MediaDescriptor):
@@ -1157,7 +1167,8 @@ class GstValidateMediaDescriptor(MediaDescriptor):
     @staticmethod
     def new_from_uri(uri, verbose=False, full=False):
         media_path = utils.url2path(uri)
-        descriptor_path = "%s.%s" % (media_path, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
+        descriptor_path = "%s.%s" % (
+            media_path, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
         args = GstValidateMediaDescriptor.DISCOVERER_COMMAND.split(" ")
         args.append(uri)
 
@@ -1167,7 +1178,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
         if verbose:
             printc("Generating media info for %s\n"
-                   "    Command: '%s'"  % (media_path, ' '.join(args)),
+                   "    Command: '%s'" % (media_path, ' '.join(args)),
                    Colors.OKBLUE)
 
         try:
@@ -1243,6 +1254,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
         return name.replace('.', "_")
 
+
 class MediaFormatCombination(object):
     FORMATS = {"aac": "audio/mpeg,mpegversion=4",
                "ac3": "audio/x-ac3",
@@ -1255,7 +1267,6 @@ class MediaFormatCombination(object):
                "mkv": "video/x-matroska",
                "mp4": "video/quicktime,variant=iso;",
                "webm": "video/webm"}
-
 
     def __str__(self):
         return "%s and %s in %s" % (self.audio, self.video, self.container)
