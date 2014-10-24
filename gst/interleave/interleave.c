@@ -728,6 +728,16 @@ gst_interleave_sink_getcaps (GstPad * pad, GstInterleave * self,
 
   GST_OBJECT_UNLOCK (self);
 
+  if (filter != NULL) {
+    GstCaps *caps = result;
+
+    GST_LOG_OBJECT (pad, "intersecting filter caps %" GST_PTR_FORMAT " with "
+        "preliminary result %" GST_PTR_FORMAT, filter, caps);
+
+    result = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+  }
+
   GST_DEBUG_OBJECT (pad, "Returning caps %" GST_PTR_FORMAT, result);
 
   return result;
