@@ -28,6 +28,7 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	video-converter.c    	\
 	video-info.c         	\
 	video-frame.c         	\
+	video-scaler.c          \
 	video-tile.c         	\
 	gstvideosink.c   	\
 	gstvideofilter.c 	\
@@ -58,6 +59,7 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	video-converter.h      	\
 	video-info.h         	\
 	video-frame.h         	\
+	video-scaler.h          \
 	video-tile.h         	\
 	gstvideosink.h 		\
 	gstvideofilter.h	\

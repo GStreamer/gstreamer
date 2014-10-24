@@ -1693,6 +1693,18 @@ GST_START_TEST (test_overlay_composition_global_alpha)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_scaler)
+{
+  GstVideoScaler *scale;
+
+  scale = gst_video_scaler_new (GST_RESAMPLER_METHOD_LINEAR,
+      GST_VIDEO_SCALER_FLAG_NONE, 2, 100, 50);
+
+  gst_video_scaler_free (scale);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -1714,6 +1726,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_overlay_composition);
   tcase_add_test (tc_chain, test_overlay_composition_premultiplied_alpha);
   tcase_add_test (tc_chain, test_overlay_composition_global_alpha);
+  tcase_add_test (tc_chain, test_video_scaler);
 
   return s;
 }
