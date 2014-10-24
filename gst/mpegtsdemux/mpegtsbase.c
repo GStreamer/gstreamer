@@ -1016,15 +1016,6 @@ remove_each_program (gpointer key, MpegTSBaseProgram * program,
   return TRUE;
 }
 
-static gboolean
-gst_mpegts_base_handle_eos (MpegTSBase * base)
-{
-  g_hash_table_foreach_remove (base->programs, (GHRFunc) remove_each_program,
-      base);
-  /* finally remove  */
-  return TRUE;
-}
-
 static inline GstFlowReturn
 mpegts_base_drain (MpegTSBase * base)
 {
@@ -1074,10 +1065,6 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_STREAM_START:
       gst_event_unref (event);
-      break;
-    case GST_EVENT_EOS:
-      res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
-      res = gst_mpegts_base_handle_eos (base);
       break;
     case GST_EVENT_CAPS:
       /* FIXME, do something */
