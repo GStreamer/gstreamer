@@ -909,7 +909,7 @@ static const VertResampler v_resamplers[] = {
  * @v_factor: vertical resampling factor
  *
  * Create a new resampler object for the given parameters. When @h_factor or
- * @v_factoris > 0, upsampling will be used, otherwise subsampling is
+ * @v_factor is > 0, upsampling will be used, otherwise subsampling is
  * performed.
  *
  * Returns: a new #GstVideoChromaResample that should be freed with
