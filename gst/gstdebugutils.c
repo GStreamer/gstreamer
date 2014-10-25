@@ -106,7 +106,7 @@ debug_dump_get_element_params (GstElement * element)
     for (i = 0; i < number_of_properties; i++) {
       property = properties[i];
 
-      /* ski some properties */
+      /* skip some properties */
       if (!(property->flags & G_PARAM_READABLE))
         continue;
       if (!strcmp (property->name, "name"))
