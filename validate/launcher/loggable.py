@@ -43,6 +43,7 @@ _log_handlers = []
 _log_handlers_limited = []
 
 _initialized = False
+_enableCrackOutput = False
 
 _stdout = None
 _stderr = None
@@ -358,7 +359,7 @@ def getCategoryLevel(category):
     if it wasn't registered yet.
     """
     global _categories
-    if not category in _categories:
+    if category not in _categories:
         registerCategory(category)
     return _categories[category]
 
@@ -656,25 +657,32 @@ def stderrHandler(level, object, category, file, line, message):
         # 5 + 1 + 7 + 1 + 32 + 1 + 17 + 1 + 15 == 80
         safeprintf(
             sys.stderr, '%s [%5d] [0x%12x] %-32s %-17s %-15s %-4s %s %s\n',
-                   getFormattedLevelName(
-                       level), os.getpid(), thread.get_ident(),
-                   o[:32], category, time.strftime("%b %d %H:%M:%S"), "",
-                   message, where)
+            getFormattedLevelName(level), os.getpid(), thread.get_ident(),
+            o[:32], category, time.strftime("%b %d %H:%M:%S"), "",
+            message, where)
     sys.stderr.flush()
 
 
-def _preformatLevels(noColorEnvVarName):
+def _colored_formatter(level):
     format = '%-5s'
 
+    t = TerminalController()
+    return ''.join((t.BOLD, getattr(t, COLORS[level]),
+                    format % (_LEVEL_NAMES[level - 1], ), t.NORMAL))
+
+
+def _formatter(level):
+    format = '%-5s'
+    return format % (_LEVEL_NAMES[level - 1], )
+
+
+def _preformatLevels(noColorEnvVarName):
     if (noColorEnvVarName is not None
         and (noColorEnvVarName not in os.environ
              or not os.environ[noColorEnvVarName])):
-
-        t = TerminalController()
-        formatter = lambda level: ''.join((t.BOLD, getattr(t, COLORS[level]),
-                                           format % (_LEVEL_NAMES[level - 1], ), t.NORMAL))
+        formatter = _colored_formatter
     else:
-        formatter = lambda level: format % (_LEVEL_NAMES[level - 1], )
+        formatter = _formatter
 
     for level in ERROR, WARN, FIXME, INFO, DEBUG, LOG:
         _FORMATTED_LEVELS.append(formatter(level))
@@ -864,7 +872,7 @@ def getExceptionMessage(exception, frame=-1, filename=None):
     stack = traceback.extract_tb(sys.exc_info()[2])
     if filename:
         stack = [f for f in stack if f[0].find(filename) > -1]
-    #import code; code.interact(local=locals())
+    # import code; code.interact(local=locals())
     (filename, line, func, text) = stack[frame]
     filename = scrubFilename(filename)
     exc = exception.__class__.__name__
