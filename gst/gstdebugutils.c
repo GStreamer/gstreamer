@@ -90,13 +90,15 @@ debug_dump_get_element_state (GstElement * element)
 }
 
 static gchar *
-debug_dump_get_element_params (GstElement * element)
+debug_dump_get_element_params (GstElement * element,
+    GstDebugGraphDetails details)
 {
   gchar *param_name = NULL;
   GParamSpec **properties, *property;
   GValue value = { 0, };
   guint i, number_of_properties;
   gchar *tmp, *value_str;
+  const gchar *ellipses;
 
   /* get paramspecs and show non-default properties */
   properties =
@@ -118,14 +120,30 @@ debug_dump_get_element_params (GstElement * element)
         tmp = g_strdup_value_contents (&value);
         value_str = g_strescape (tmp, NULL);
         g_free (tmp);
-        if (param_name) {
+
+        /* too long, ellipsize */
+        if (!(details & GST_DEBUG_GRAPH_SHOW_FULL_PARAMS) &&
+            strlen (value_str) > 80)
+          ellipses = "...";
+        else
+          ellipses = "";
+
+        if (param_name)
           tmp = param_name;
-          param_name = g_strdup_printf ("%s\\n%s=%s",
-              tmp, property->name, value_str);
-          g_free (tmp);
+        else
+          tmp = (char *) "";
+
+        if (details & GST_DEBUG_GRAPH_SHOW_FULL_PARAMS) {
+          param_name = g_strdup_printf ("%s\\n%s=%s", tmp, property->name,
+              value_str);
         } else {
-          param_name = g_strdup_printf ("\\n%s=%s", property->name, value_str);
+          param_name = g_strdup_printf ("%s\\n%s=%.80s%s", tmp, property->name,
+              value_str, ellipses);
         }
+
+        if (tmp[0] != '\0')
+          g_free (tmp);
+
         g_free (value_str);
       }
       g_value_unset (&value);
@@ -514,7 +532,8 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details,
           state_name = debug_dump_get_element_state (GST_ELEMENT (element));
         }
         if (details & GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS) {
-          param_name = debug_dump_get_element_params (GST_ELEMENT (element));
+          param_name = debug_dump_get_element_params (GST_ELEMENT (element),
+              details);
         }
         /* elements */
         g_string_append_printf (str, "%ssubgraph cluster_%s {\n", spc,
@@ -627,7 +646,7 @@ debug_dump_header (GstBin * bin, GstDebugGraphDetails details, GString * str)
     state_name = debug_dump_get_element_state (GST_ELEMENT (bin));
   }
   if (details & GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS) {
-    param_name = debug_dump_get_element_params (GST_ELEMENT (bin));
+    param_name = debug_dump_get_element_params (GST_ELEMENT (bin), details);
   }
 
   /* write header */
