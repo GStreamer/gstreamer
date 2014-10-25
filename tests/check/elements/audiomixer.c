@@ -33,6 +33,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstconsistencychecker.h>
+#include <gst/audio/audio.h>
 #include <gst/base/gstbasesrc.h>
 
 static GMainLoop *main_loop;
@@ -86,7 +87,7 @@ GST_START_TEST (test_filter_caps)
   GstPad *pad;
 
   filter_caps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, "F32LE",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
       "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1, NULL);
 
@@ -955,11 +956,7 @@ GST_START_TEST (test_clip)
   gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
 
   caps = gst_caps_new_simple ("audio/x-raw",
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-      "format", G_TYPE_STRING, "S16BE",
-#else
-      "format", G_TYPE_STRING, "S16LE",
-#endif
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
       "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 2, NULL);
 
@@ -1405,11 +1402,7 @@ run_sync_test (SendBuffersFunction send_buffers,
   gst_pad_send_event (queue2_sinkpad, gst_event_new_stream_start ("test"));
 
   caps = gst_caps_new_simple ("audio/x-raw",
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-      "format", G_TYPE_STRING, "S16BE",
-#else
-      "format", G_TYPE_STRING, "S16LE",
-#endif
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
       "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, 1000, "channels", G_TYPE_INT, 1, NULL);
 
