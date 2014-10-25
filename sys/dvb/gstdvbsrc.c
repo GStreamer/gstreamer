@@ -2378,7 +2378,7 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
               g_strerror (errno));
         }
       } else {
-        GST_DEBUG_OBJECT (object, "Sending DISEqC");
+        GST_DEBUG_OBJECT (object, "Sending DiSEqC");
         diseqc (object->fd_frontend, object->diseqc_src, voltage, object->tone);
         /* Once DiSEqC source is set, do not set it again until
          * app decides to change it
