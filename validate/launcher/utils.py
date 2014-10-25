@@ -22,7 +22,6 @@ import os
 import re
 import sys
 import urllib
-import loggable
 import urlparse
 import subprocess
 
