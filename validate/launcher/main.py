@@ -17,19 +17,17 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import os
-import sys
 import utils
 import urlparse
 import loggable
 import argparse
-import textwrap
 import reporters
 import subprocess
 
 
 from httpserver import HTTPServer
 from baseclasses import _TestsLauncher, ScenarioManager
-from utils import printc, path2url, DEFAULT_MAIN_DIR, DEFAULT_GST_QA_ASSETS, launch_command, Colors, Protocols
+from utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors, Protocols
 
 
 HELP = '''
@@ -187,8 +185,8 @@ class PrintUsage(argparse.Action):
 
 def main(libsdir):
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawTextHelpFormatter, prog='gst-validate-launcher',
-                                     description=HELP)
+        formatter_class=argparse.RawTextHelpFormatter,
+        prog='gst-validate-launcher', description=HELP)
     parser.add_argument("-d", "--debug", dest="debug",
                         action="store_true",
                         default=False,
@@ -226,9 +224,9 @@ def main(libsdir):
                         help="Set it in order to generate the missing .media_infos files")
     parser.add_argument(
         "-G", "--generate-media-info-with-frame-detection", dest="generate_info_full",
-                     action="store_true", default=False,
-                     help="Set it in order to generate the missing .media_infos files"
-                        "It implies --generate-media-info but enabling frame detection")
+        action="store_true", default=False,
+        help="Set it in order to generate the missing .media_infos files"
+        "It implies --generate-media-info but enabling frame detection")
     parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
                         default=utils.LONG_TEST, action='store',
                         help="Defines the limite from which a test is concidered as long (in seconds)"),
@@ -277,8 +275,8 @@ user argument, you can thus overrides command line options using that.
                            help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
     dir_group.add_argument(
         "-p", "--medias-paths", dest="paths", action="append",
-                      default=None,
-                      help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets/media")
+        default=None,
+        help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets/media")
     dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
                            default=None,
                            help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets")
@@ -287,16 +285,16 @@ user argument, you can thus overrides command line options using that.
         "Handle the HTTP server to be created")
     http_server_group.add_argument(
         "--http-server-port", dest="http_server_port",
-                      default=8079,
-                      help="Port on which to run the http server on localhost")
+        default=8079,
+        help="Port on which to run the http server on localhost")
     http_server_group.add_argument(
         "--http-bandwith-limitation", dest="http_bandwith",
-                      default=1024 * 1024,
-                      help="The artificial bandwith limitation to introduce to the local server (in Bytes/sec) (default: 1 MBps)")
+        default=1024 * 1024,
+        help="The artificial bandwith limitation to introduce to the local server (in Bytes/sec) (default: 1 MBps)")
     http_server_group.add_argument(
         "-s", "--folder-for-http-server", dest="http_server_dir",
-                      default=None,
-                      help="Folder in which to create an http server on localhost. Default is PATHS")
+        default=None,
+        help="Folder in which to create an http server on localhost. Default is PATHS")
     http_server_group.add_argument("--http-only", dest="httponly",
                                    default=False, action='store_true',
                                    help="Start the http server and quit")
@@ -304,12 +302,12 @@ user argument, you can thus overrides command line options using that.
     assets_group = parser.add_argument_group("Handle remote assets")
     assets_group.add_argument(
         "-u", "--update-assets-command", dest="update_assets_command",
-                      default="git fetch origin && git checkout origin/master && git annex get .",
-                      help="Command to update assets")
+        default="git fetch origin && git checkout origin/master && git annex get .",
+        help="Command to update assets")
     assets_group.add_argument(
         "--get-assets-command", dest="get_assets_command",
-                      default="git clone",
-                      help="Command to get assets")
+        default="git clone",
+        help="Command to get assets")
     assets_group.add_argument("--remote-assets-url", dest="remote_assets_url",
                               default=DEFAULT_GST_QA_ASSETS_REPO,
                               help="Url to the remote assets (default:%s)" % DEFAULT_GST_QA_ASSETS_REPO)
