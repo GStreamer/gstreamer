@@ -24,13 +24,13 @@ import subprocess
 import ConfigParser
 from loggable import Loggable
 
-from baseclasses import GstValidateTest, TestsManager, Test, \
+from baseclasses import GstValidateTest, Test, \
     ScenarioManager, NamedDic, GstValidateTestsGenerator, \
     GstValidateMediaDescriptor, GstValidateEncodingTestInterface, \
     GstValidateBaseTestManager
 
 from utils import path2url, DEFAULT_TIMEOUT, which, \
-    GST_SECOND, Result, Protocols
+    GST_SECOND, Result, Protocols, mkdir, printc, Colors
 
 #
 # Private global variables     #
@@ -110,9 +110,8 @@ class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
 
 class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
-    def __init__(
-        self, name, test_manager, pipeline_template=None, pipelines_descriptions=None,
-                 valid_scenarios=[]):
+    def __init__(self, name, test_manager, pipeline_template=None,
+                 pipelines_descriptions=None, valid_scenarios=[]):
         """
         @name: The name of the generator
         @pipeline_template: A template pipeline to be used to generate actual pipelines
@@ -206,9 +205,8 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
 class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
 
-    def __init__(
-        self, name, test_manager, mixer, media_type, converter="", num_sources=3,
-                 mixed_srcs={}, valid_scenarios=[]):
+    def __init__(self, name, test_manager, mixer, media_type, converter="",
+                 num_sources=3, mixed_srcs={}, valid_scenarios=[]):
         pipe_template = "%(mixer)s name=_mixer !  " + \
             converter + " ! %(sink)s "
         self.converter = converter
@@ -233,7 +231,6 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
                 return
 
             for i in range(len(uri_minfo_special_scenarios) / self.num_sources):
-                can_run = True
                 srcs = []
                 name = ""
                 for nsource in range(self.num_sources):
@@ -337,9 +334,8 @@ class GstValidateLaunchTest(GstValidateTest):
 
 class GstValidateMediaCheckTest(Test):
 
-    def __init__(
-        self, classname, options, reporter, media_descriptor, uri, minfo_path,
-                 timeout=DEFAULT_TIMEOUT):
+    def __init__(self, classname, options, reporter, media_descriptor,
+                 uri, minfo_path, timeout=DEFAULT_TIMEOUT):
         super(
             GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
                                                       options, reporter,
@@ -393,10 +389,10 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
         self.uri = uri
 
     def set_rendering_info(self):
-        self.dest_file = path = os.path.join(self.options.dest,
-                                             self.classname.replace(".transcode.", os.sep).
-                                             replace(".", os.sep))
-        utils.mkdir(os.path.dirname(urlparse.urlsplit(self.dest_file).path))
+        self.dest_file = os.path.join(self.options.dest,
+                                      self.classname.replace(".transcode.", os.sep).
+                                      replace(".", os.sep))
+        mkdir(os.path.dirname(urlparse.urlsplit(self.dest_file).path))
         if urlparse.urlparse(self.dest_file).scheme == "":
             self.dest_file = path2url(self.dest_file)
 
@@ -438,12 +434,6 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
             GstValidateTest.check_results(self)
             return
 
-        if self.scenario:
-            orig_duration = min(long(self.scenario.get_duration()),
-                                long(self.media_descriptor.get_duration()))
-        else:
-            orig_duration = long(self.media_descriptor.get_duration())
-
         res, msg = self.check_encoded_file()
         self.set_result(res, msg)
 
@@ -476,9 +466,9 @@ class GstValidateTestManager(GstValidateBaseTestManager):
         return False
 
     def add_options(self, parser):
-        group = parser.add_argument_group("GstValidate tools specific options"
-                                          " and behaviours",
-                                          description="""When using --wanted-tests, all the scenarios can be used, even those which have
+        parser.add_argument_group("GstValidate tools specific options"
+                                  " and behaviours",
+                                  description="""When using --wanted-tests, all the scenarios can be used, even those which have
 not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
     def populate_testsuite(self):
@@ -558,7 +548,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
             media_descriptor = GstValidateMediaDescriptor.new_from_uri(
                 uri, True,
-                                                                       self.options.generate_info_full)
+                self.options.generate_info_full)
             if media_descriptor:
                 self._add_media(media_descriptor, uri)
             else:
