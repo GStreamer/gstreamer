@@ -2757,7 +2757,8 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstEvent *event;
-  guint delay;
+  guint delay, delay_ms, avg_rtx_rtt_ms;
+  guint rtx_retry_timeout_ms, rtx_retry_period_ms;
   GstClockTime rtx_retry_period;
   GstClockTime rtx_retry_timeout;
   GstClock *clock;
@@ -2773,18 +2774,23 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
       GST_TIME_ARGS (rtx_retry_period));
 
   delay = timer->rtx_delay + timer->rtx_retry;
+
+  delay_ms = GST_TIME_AS_MSECONDS (delay);
+  rtx_retry_timeout_ms = GST_TIME_AS_MSECONDS (rtx_retry_timeout);
+  rtx_retry_period_ms = GST_TIME_AS_MSECONDS (rtx_retry_period);
+  avg_rtx_rtt_ms = GST_TIME_AS_MSECONDS (priv->avg_rtx_rtt);
+
   event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
       gst_structure_new ("GstRTPRetransmissionRequest",
           "seqnum", G_TYPE_UINT, (guint) timer->seqnum,
           "running-time", G_TYPE_UINT64, timer->rtx_base,
-          "delay", G_TYPE_UINT, GST_TIME_AS_MSECONDS (delay),
+          "delay", G_TYPE_UINT, delay_ms,
           "retry", G_TYPE_UINT, timer->num_rtx_retry,
-          "frequency", G_TYPE_UINT, GST_TIME_AS_MSECONDS (rtx_retry_timeout),
-          "period", G_TYPE_UINT, GST_TIME_AS_MSECONDS (rtx_retry_period),
+          "frequency", G_TYPE_UINT, rtx_retry_timeout_ms,
+          "period", G_TYPE_UINT, rtx_retry_period_ms,
           "deadline", G_TYPE_UINT, priv->latency_ms,
           "packet-spacing", G_TYPE_UINT64, priv->packet_spacing,
-          "avg-rtt", G_TYPE_UINT, GST_TIME_AS_MSECONDS (priv->avg_rtx_rtt),
-          NULL));
+          "avg-rtt", G_TYPE_UINT, avg_rtx_rtt_ms, NULL));
 
   priv->num_rtx_requests++;
   timer->num_rtx_retry++;
