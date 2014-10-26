@@ -22,17 +22,17 @@ include $(top_srcdir)/common/po.mak
 include $(top_srcdir)/common/coverage/lcov.mak
 
 check-valgrind:
-	cd tests/check && make check-valgrind
+	$(MAKE) -C tests/check check-valgrind
 
 # Test actual high-level functionnality.
 check-integration:
-	cd tests/check && make check-integration
+	$(MAKE) -C tests/check check-integration
 
 if HAVE_GST_CHECK
 check-torture:
-	cd tests/check && make torture
+	$(MAKE) -C tests/check torture
 build-checks:
-	cd tests/check && make build-checks
+	$(MAKE) -C tests/check build-checks
 else
 check-torture:
 	true
