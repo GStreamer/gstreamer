@@ -61,6 +61,7 @@ ges_video_test_source_init (GESVideoTestSource * self)
 static GstElement *
 ges_video_test_source_create_source (GESTrackElement * self)
 {
+  GstCaps *caps;
   gint pattern;
   GstElement *testsrc, *capsfilter;
   const gchar *props[] = { "pattern", NULL };
@@ -70,8 +71,10 @@ ges_video_test_source_create_source (GESTrackElement * self)
   pattern = ((GESVideoTestSource *) self)->priv->pattern;
 
   g_object_set (testsrc, "pattern", pattern, NULL);
-  g_object_set (capsfilter, "caps", gst_caps_new_empty_simple ("video/x-raw"),
-      NULL);
+
+  caps = gst_caps_new_empty_simple ("video/x-raw");
+  g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
 
   ges_track_element_add_children_props (self, testsrc, NULL, NULL, props);
 
