@@ -1,0 +1,80 @@
+#!/usr/bin/env python2
+import os
+import subprocess
+import sys
+import tempfile
+
+NOT_PEP8_COMPLIANT_MESSAGE_PRE = \
+    "Your code is not fully pep8 compliant and contains"\
+    " the following coding style issues:\n\n"
+
+NOT_PEP8_COMPLIANT_MESSAGE_POST = \
+    "Please fix these errors and commit again, you can do so "\
+    "from the root directory automatically like this, assuming the whole "\
+    "file is to be commited:"
+
+NO_PEP8_MESSAGE = \
+    "You should install the pep8 style checker to be able"\
+    " to commit in this repo.\nIt allows us to garantee that "\
+    "anything that is commited respects the pep8 coding style "\
+    "standard.\nYou can install it:\n"\
+    "  * on ubuntu, debian: $sudo apt-get install pep8 \n"\
+    "  * on fedora: #yum install python-pep8 \n"\
+    "  * on arch: #pacman -S pep8-python3 \n"\
+    "  * or add the official pep8 from http://www.python.org/dev/peps/pep-0008/"\
+    " in your $PATH"
+
+
+def system(*args, **kwargs):
+    kwargs.setdefault('stdout', subprocess.PIPE)
+    proc = subprocess.Popen(args, **kwargs)
+    out, err = proc.communicate()
+    if type(out) == bytes:
+        out = out.decode()
+    return out
+
+
+def copy_files_to_tmp_dir(files):
+    tempdir = tempfile.mkdtemp()
+    for name in files:
+        filename = os.path.join(tempdir, name)
+        filepath = os.path.dirname(filename)
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+        with open(filename, 'w') as f:
+            system('git', 'show', ':' + name, stdout=f)
+
+    return tempdir
+
+
+def main():
+    modified_files = system('git', 'diff-index', '--cached',
+                            '--name-only', 'HEAD', '--diff-filter=ACMR').split("\n")[:-1]
+    non_compliant_files = []
+    output_message = None
+
+    for modified_file in modified_files:
+        try:
+            pep8_errors = system('pep8', '--repeat', '--ignore', 'E501,E128', modified_file)
+            if pep8_errors:
+                if output_message is None:
+                    output_message = NOT_PEP8_COMPLIANT_MESSAGE_PRE
+                output_message += pep8_errors
+                non_compliant_files.append(modified_file)
+        except OSError:
+            output_message = NO_PEP8_MESSAGE
+            break
+
+    if output_message:
+        print output_message
+        if non_compliant_files:
+            print NOT_PEP8_COMPLIANT_MESSAGE_POST
+            for non_compliant_file in non_compliant_files:
+                print "autopep8 -i ", non_compliant_file, "; git add ", \
+                    non_compliant_file
+            print "git commit"
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
