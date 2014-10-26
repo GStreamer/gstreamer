@@ -115,6 +115,7 @@ gst_frame_positionner_update_properties (GstFramePositionner * pos)
 
   g_object_notify (G_OBJECT (pos), "width");
   g_object_notify (G_OBJECT (pos), "height");
+  gst_caps_unref (caps);
 }
 
 static void
