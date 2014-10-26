@@ -164,8 +164,9 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   GstCaps *src_caps = NULL, *allowed;
   gboolean res = FALSE;
   const gchar *stream_format;
-  GstBuffer *codec_data;
+  guint8 codec_data[2];
   guint16 codec_data_data;
+  gint sample_rate_idx;
 
   GST_DEBUG_OBJECT (aacparse, "sink caps: %" GST_PTR_FORMAT, sink_caps);
   if (sink_caps)
@@ -194,6 +195,17 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
       stream_format = NULL;
   }
 
+  /* Generate codec data to be able to set profile/level on the caps */
+  sample_rate_idx =
+      gst_codec_utils_aac_get_index_from_sample_rate (aacparse->sample_rate);
+  if (sample_rate_idx < 0)
+    goto not_a_known_rate;
+  codec_data_data =
+      (aacparse->object_type << 11) |
+      (sample_rate_idx << 7) | (aacparse->channels << 3);
+  GST_WRITE_UINT16_BE (codec_data, codec_data_data);
+  gst_codec_utils_aac_caps_set_level_and_profile (src_caps, codec_data, 2);
+
   s = gst_caps_get_structure (src_caps, 0);
   if (aacparse->sample_rate > 0)
     gst_structure_set (s, "rate", G_TYPE_INT, aacparse->sample_rate, NULL);
@@ -212,14 +224,7 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
       gst_caps_set_simple (src_caps, "stream-format", G_TYPE_STRING, "raw",
           NULL);
       if (gst_caps_can_intersect (src_caps, allowed)) {
-        GstMapInfo map;
-        int idx;
-
-        idx =
-            gst_codec_utils_aac_get_index_from_sample_rate
-            (aacparse->sample_rate);
-        if (idx < 0)
-          goto not_a_known_rate;
+        GstBuffer *codec_data_buffer;
 
         GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
             "Caps can intersect, we will drop the ADTS layer");
@@ -227,15 +232,10 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
 
         /* The codec_data data is according to AudioSpecificConfig,
            ISO/IEC 14496-3, 1.6.2.1 */
-        codec_data = gst_buffer_new_and_alloc (2);
-        gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
-        codec_data_data =
-            (aacparse->object_type << 11) |
-            (idx << 7) | (aacparse->channels << 3);
-        GST_WRITE_UINT16_BE (map.data, codec_data_data);
-        gst_buffer_unmap (codec_data, &map);
+        codec_data_buffer = gst_buffer_new_and_alloc (2);
+        gst_buffer_fill (codec_data_buffer, 0, codec_data, 2);
         gst_caps_set_simple (src_caps, "codec_data", GST_TYPE_BUFFER,
-            codec_data, NULL);
+            codec_data_buffer, NULL);
       }
     } else if (aacparse->header_type == DSPAAC_HEADER_NONE) {
       GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
@@ -258,7 +258,8 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   return res;
 
 not_a_known_rate:
-  gst_caps_unref (allowed);
+  GST_ERROR_OBJECT (aacparse, "Not a known sample rate: %d",
+      aacparse->sample_rate);
   gst_caps_unref (src_caps);
   return FALSE;
 }
