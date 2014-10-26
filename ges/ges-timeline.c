@@ -1910,7 +1910,7 @@ static void
 add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
 {
   gint i;
-  GList *tmp;
+  GList *tmp, *list;
   GESTrackType types, visited_type = GES_TRACK_TYPE_UNKNOWN;
 
   GST_DEBUG_OBJECT (timeline, "Creating %" GST_PTR_FORMAT
@@ -1929,7 +1929,8 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
     if (((track->type & types) == 0 || (track->type & visited_type)))
       continue;
 
-    ges_clip_create_track_elements (clip, track->type);
+    list = ges_clip_create_track_elements (clip, track->type);
+    g_list_free (list);
   }
 }
 
