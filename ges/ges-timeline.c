@@ -351,12 +351,18 @@ ges_timeline_dispose (GObject * object)
 
   g_hash_table_unref (priv->auto_transitions);
 
+  g_hash_table_unref (priv->all_elements);
+
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
 
 static void
 ges_timeline_finalize (GObject * object)
 {
+  GESTimeline *tl = GES_TIMELINE (object);
+
+  g_rec_mutex_clear (&tl->priv->dyn_mutex);
+
   G_OBJECT_CLASS (ges_timeline_parent_class)->finalize (object);
 }
 
@@ -566,6 +572,8 @@ ges_timeline_init (GESTimeline * self)
 
   g_signal_connect_after (self, "select-tracks-for-object",
       G_CALLBACK (select_tracks_for_object_default), NULL);
+
+  g_rec_mutex_init (&priv->dyn_mutex);
 }
 
 /* Private methods */
