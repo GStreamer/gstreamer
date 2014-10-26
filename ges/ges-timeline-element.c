@@ -148,6 +148,10 @@ _set_property (GObject * object, guint property_id,
 static void
 ges_timeline_element_finalize (GObject * self)
 {
+  GESTimelineElement *tle = GES_TIMELINE_ELEMENT (self);
+
+  g_free (tle->name);
+
   G_OBJECT_CLASS (ges_timeline_element_parent_class)->finalize (self);
 }
 
