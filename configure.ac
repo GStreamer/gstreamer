@@ -2583,8 +2583,10 @@ AG_GST_CHECK_FEATURE(OPENH264, [openh264 library], openh264, [
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <wels/codec_app_def.h>
 #include <wels/codec_api.h>]], [[
         SFrameBSInfo frame_info;
+        SEncParamExt enc_params;
+        enc_params.iInputCsp = videoFormatI420;
         int *p = (int *) &frame_info.eFrameType;
-        *p = 0;
+        *p = RC_LOW_BW_MODE;
     ]])], [
       AC_MSG_RESULT(yes)
       OPENH264_LIBS="-lopenh264 $PTHREAD_LIBS"
