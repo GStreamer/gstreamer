@@ -261,6 +261,7 @@ ges_meta_container_set_ ## name (GESMetaContainer *container,      \
                            const gchar *meta_item, value_ctype value)   \
 {                                                                       \
   GValue gval = { 0 };                                                  \
+  gboolean ret;                                                         \
                                                                         \
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);      \
   g_return_val_if_fail (meta_item != NULL, FALSE);                      \
@@ -271,7 +272,9 @@ ges_meta_container_set_ ## name (GESMetaContainer *container,      \
   g_value_init (&gval, value_gtype);                                    \
   g_value_set_ ##setter_name (&gval, value);                            \
                                                                         \
-  return _set_value (container, meta_item, &gval);                      \
+  ret = _set_value (container, meta_item, &gval);                       \
+  g_value_unset (&gval);                                                \
+  return ret;                                                           \
 }
 
 /**
