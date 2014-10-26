@@ -177,6 +177,7 @@ ges_smart_mixer_finalize (GObject * object)
   GESSmartMixer *self = GES_SMART_MIXER (object);
 
   g_mutex_clear (&self->lock);
+  g_hash_table_unref (self->pads_infos);
 
   G_OBJECT_CLASS (ges_smart_mixer_parent_class)->finalize (object);
 }
