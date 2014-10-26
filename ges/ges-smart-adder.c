@@ -153,6 +153,7 @@ ges_smart_adder_finalize (GObject * object)
   GESSmartAdder *self = GES_SMART_ADDER (object);
 
   g_mutex_clear (&self->lock);
+  g_hash_table_unref (self->pads_infos);
 
   G_OBJECT_CLASS (ges_smart_adder_parent_class)->finalize (object);
 }
@@ -205,10 +206,17 @@ ges_smart_adder_init (GESSmartAdder * self)
 GstElement *
 ges_smart_adder_new (GESTrack * track)
 {
-  GESSmartAdder *self = g_object_new (GES_TYPE_SMART_ADDER, NULL);
+  GESSmartAdder *self;
+  GstCaps *caps;
+
+  self = g_object_new (GES_TYPE_SMART_ADDER, NULL);
+
   self->track = track;
 
   /* FIXME Make adder smart and let it properly negotiate caps! */
-  g_object_set (self->adder, "caps", gst_caps_from_string (DEFAULT_CAPS), NULL);
+  caps = gst_caps_from_string (DEFAULT_CAPS);
+  g_object_set (self->adder, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
   return GST_ELEMENT (self);
 }
