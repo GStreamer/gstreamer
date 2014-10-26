@@ -1997,6 +1997,7 @@ clip_track_element_added_cb (GESClip * clip,
       GST_WARNING_OBJECT (clip, "Failed to add track element to track");
       ges_container_remove (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (track_element));
+      g_ptr_array_unref (tracks);
       return;
     }
   } else {
@@ -2022,6 +2023,7 @@ clip_track_element_added_cb (GESClip * clip,
       ges_container_remove (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (track_element));
       gst_object_unref (track);
+      g_ptr_array_unref (tracks);
       continue;
     } else {
       GST_INFO_OBJECT (clip, "Already had a Source Element in %" GST_PTR_FORMAT
@@ -2043,6 +2045,7 @@ clip_track_element_added_cb (GESClip * clip,
             GES_TIMELINE_ELEMENT (track_element_copy))) {
       GST_WARNING_OBJECT (clip, "Failed to add track element to clip");
       gst_object_unref (track_element_copy);
+      g_ptr_array_unref (tracks);
       return;
     }
 
@@ -2051,12 +2054,14 @@ clip_track_element_added_cb (GESClip * clip,
       ges_container_remove (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (track_element_copy));
       gst_object_unref (track_element_copy);
+      g_ptr_array_unref (tracks);
       return;
     }
 
     gst_object_unref (track);
   }
   timeline->priv->ignore_track_element_added = NULL;
+  g_ptr_array_unref (tracks);
 }
 
 static void
