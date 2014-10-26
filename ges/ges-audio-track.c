@@ -106,5 +106,7 @@ ges_audio_track_new (void)
   ges_track_set_create_element_for_gap_func (GES_TRACK (ret),
       create_element_for_raw_audio_gap);
 
+  gst_caps_unref (caps);
+
   return ret;
 }
