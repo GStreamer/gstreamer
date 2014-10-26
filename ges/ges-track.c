@@ -201,7 +201,7 @@ update_gaps (GESTrack * track)
       g_sequence_iter_is_end (it) == FALSE; it = g_sequence_iter_next (it)) {
     trackelement = g_sequence_get (it);
 
-    if (!ges_track_element_is_active(trackelement))
+    if (!ges_track_element_is_active (trackelement))
       continue;
 
     start = _START (trackelement);
