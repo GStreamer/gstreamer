@@ -2122,16 +2122,12 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         if (pelem && gst_element_get_factory (pelem->element) == factory)
           skip = TRUE;
       }
+      CHAIN_MUTEX_UNLOCK (chain);
 
-      if (skip) {
-        GST_DEBUG_OBJECT (dbin,
-            "Skipping factory '%s' because it was already used in this chain",
-            gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory)));
-        CHAIN_MUTEX_UNLOCK (chain);
-        continue;
-      } else if (chain->elements) {
+      if (!skip && chain->elements) {
         GstElementFactory *chainelemfact;
 
+        CHAIN_MUTEX_LOCK (chain);
         delem = (GstDecodeElement *) chain->elements->data;
         chainelemfact = gst_element_get_factory (delem->element);
 
@@ -2146,9 +2142,15 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
           CHAIN_MUTEX_UNLOCK (chain);
           continue;
         }
+        CHAIN_MUTEX_UNLOCK (chain);
+      }
+      if (skip) {
+        GST_DEBUG_OBJECT (dbin,
+            "Skipping factory '%s' because it was already used in this chain",
+            gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory)));
+        continue;
       }
 
-      CHAIN_MUTEX_UNLOCK (chain);
     }
 
     /* emit autoplug-select to see what we should do with it. */
