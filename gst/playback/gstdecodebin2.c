@@ -2036,7 +2036,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
     /* take first factory */
     factory = g_value_get_object (g_value_array_get_nth (factories, 0));
-
     /* Remove selected factory from the list. */
     g_value_array_remove (factories, 0);
 
@@ -2093,9 +2092,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
      * to have other element classes after each other because a
      * parser is the only one that does not change the data. A
      * valid example for this would be multiple id3demux in a row.
-     * Also restrict the autoplugging of multiple parsers for same
-     * media format with in a chain if they are coming one after
-     * another in adjacent positions.
      */
     is_parser_converter = strstr (gst_element_factory_get_metadata (factory,
             GST_ELEMENT_METADATA_KLASS), "Parser") != NULL;
@@ -2123,27 +2119,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
           skip = TRUE;
       }
       CHAIN_MUTEX_UNLOCK (chain);
-
-      if (!skip && chain->elements) {
-        GstElementFactory *chainelemfact;
-
-        CHAIN_MUTEX_LOCK (chain);
-        delem = (GstDecodeElement *) chain->elements->data;
-        chainelemfact = gst_element_get_factory (delem->element);
-
-        if (strstr (gst_element_factory_get_metadata (chainelemfact,
-                    GST_ELEMENT_METADATA_KLASS), "Parser")) {
-          GST_DEBUG_OBJECT (dbin,
-              "Skipping factory '%s' because the last connected element"
-              " '%s' in the chain is exactly similiar",
-              gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory)),
-              gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST
-                  (chainelemfact)));
-          CHAIN_MUTEX_UNLOCK (chain);
-          continue;
-        }
-        CHAIN_MUTEX_UNLOCK (chain);
-      }
       if (skip) {
         GST_DEBUG_OBJECT (dbin,
             "Skipping factory '%s' because it was already used in this chain",
