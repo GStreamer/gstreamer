@@ -498,6 +498,8 @@ GST_START_TEST (test_ges_timeline_remove_track)
   ASSERT_OBJECT_REFCOUNT (timeline, "1 for the us", 1);
   tmp = ges_layer_get_clips (layer);
   assert_equals_int (g_list_length (tmp), 3);
+  g_list_foreach (tmp, (GFunc) gst_object_unref, NULL);
+  g_list_free (tmp);
 
   check_destroyed (G_OBJECT (timeline), G_OBJECT (layer), t1, t2, t3, NULL);
 }
