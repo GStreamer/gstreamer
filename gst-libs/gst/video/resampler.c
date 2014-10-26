@@ -38,6 +38,8 @@ struct _ResamplerParams
 
     gdouble (*get_tap) (ResamplerParams * params, gint l, gint xi, gdouble x);
 
+  /* for cubic */
+  gdouble b, c;
   /* used by lanczos */
   gdouble ex, fx, dx;
   /* extra params */
@@ -91,33 +93,43 @@ get_linear_tap (ResamplerParams * params, gint l, gint xi, gdouble x)
 }
 
 static gdouble
-bicubic (gdouble s)
+bicubic (gdouble s, gdouble b, gdouble c)
 {
+  gdouble s2, s3;
+
   s = fabs (s);
+  s2 = s * s;
+  s3 = s2 * s;
 
   if (s <= 1.0)
-    return 3.0 * (s * s * s) / 2.0 - 5.0 * (s * s) / 2.0 + 1.0;
+    return ((12.0 - 9.0 * b - 6.0 * c) * s3 +
+        (-18.0 + 12.0 * b + 6.0 * c) * s2 + (6.0 - 2.0 * b)) / 6.0;
   else if (s <= 2.0)
-    return -1.0 * (s * s * s) / 2.0 + 5.0 * (s * s) / 2.0 - 4.0 * s + 2.0;
+    return ((-b - 6.0 * c) * s3 +
+        (6.0 * b + 30.0 * c) * s2 +
+        (-12.0 * b - 48.0 * c) * s + (8.0 * b + 24.0 * c)) / 6.0;
   else
     return 0.0;
 }
 
 static gdouble
-get_bicubic_tap (ResamplerParams * params, gint l, gint xi, gdouble x)
+get_cubic_tap (ResamplerParams * params, gint l, gint xi, gdouble x)
 {
-  gdouble a, res;
+  gdouble a, b, c, res;
 
   a = x - (xi + 1);
 
+  b = params->b;
+  c = params->c;
+
   if (l == 0)
-    res = bicubic (1.0 + a);
+    res = bicubic (1.0 + a, b, c);
   else if (l == 1)
-    res = bicubic (a);
+    res = bicubic (a, b, c);
   else if (l == 2)
-    res = bicubic (1.0 - a);
+    res = bicubic (1.0 - a, b, c);
   else
-    res = bicubic (2.0 - a);
+    res = bicubic (2.0 - a, b, c);
 
   return res;
 }
@@ -277,9 +289,17 @@ gst_resampler_init (GstResampler * resampler,
       if (n_taps == 0)
         n_taps = 2;
       break;
-    case GST_RESAMPLER_METHOD_BICUBIC:
+    case GST_RESAMPLER_METHOD_CUBIC:
+      if (!options
+          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_CUBIC_B,
+              &params.b))
+        params.b = 1.0 / 3.0;
+      if (!options
+          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_CUBIC_C,
+              &params.c))
+        params.c = 1.0 / 3.0;
       n_taps = 4;
-      params.get_tap = get_bicubic_tap;
+      params.get_tap = get_cubic_tap;
       break;
     case GST_RESAMPLER_METHOD_SINC:
       params.get_tap = get_sinc_tap;

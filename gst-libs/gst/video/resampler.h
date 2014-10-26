@@ -32,7 +32,7 @@ typedef struct _GstResampler GstResampler;
  *    upsampling and drops when downsampling
  * @GST_RESAMPLER_METHOD_LINEAR: Uses linear interpolation to reconstruct
  *    missing samples and averaging to downsample
- * @GST_RESAMPLER_METHOD_BICUBIC: Uses bicubic interpolation
+ * @GST_RESAMPLER_METHOD_CUBIC: Uses cubic interpolation
  * @GST_RESAMPLER_METHOD_SINC: Uses sinc interpolation
  * @GST_RESAMPLER_METHOD_LANCZOS: Uses lanczos interpolation
  *
@@ -43,10 +43,41 @@ typedef struct _GstResampler GstResampler;
 typedef enum {
   GST_RESAMPLER_METHOD_NEAREST,
   GST_RESAMPLER_METHOD_LINEAR,
-  GST_RESAMPLER_METHOD_BICUBIC,
+  GST_RESAMPLER_METHOD_CUBIC,
   GST_RESAMPLER_METHOD_SINC,
   GST_RESAMPLER_METHOD_LANCZOS,
 } GstResamplerMethod;
+
+/**
+ * GST_RESAMPLER_OPT_CUBIC_B:
+ *
+ * G_TYPE_DOUBLE, B parameter of the cubic filter. The B
+ * parameter controls the bluriness. Values between 0.0 and
+ * 2.0 are accepted. 1/3 is the default.
+ *
+ * Below are some values of popular filters:
+ *                    B       C
+ * Hermite           0.0     0.0
+ * Spline            1.0     0.0
+ * Catmull-Rom       0.0     1/2
+ * Mitchell          1/3     1/3
+ * Robidoux          0.3782  0.3109
+ * Robidoux
+ *  Sharp            0.2620  0.3690
+ * Robidoux
+ *  Soft             0.6796  0.1602
+ */
+#define GST_RESAMPLER_OPT_CUBIC_B      "GstResampler.cubic-b"
+/**
+ * GST_RESAMPLER_OPT_CUBIC_C:
+ *
+ * G_TYPE_DOUBLE, C parameter of the cubic filter. The C
+ * parameter controls the Keys alpha value. Values between 0.0 and
+ * 2.0 are accepted. 1/3 is the default.
+ *
+ * See #GST_RESAMPLER_OPT_CUBIC_B for some more common values
+ */
+#define GST_RESAMPLER_OPT_CUBIC_C      "GstResampler.cubic-c"
 
 /**
  * GST_RESAMPLER_OPT_ENVELOPE:

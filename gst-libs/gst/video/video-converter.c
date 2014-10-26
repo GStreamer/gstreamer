@@ -312,7 +312,7 @@ chain_hscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
   if (!gst_structure_get_enum (convert->config,
           GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_RESAMPLER_METHOD,
           &method))
-    method = GST_RESAMPLER_METHOD_LINEAR;
+    method = GST_RESAMPLER_METHOD_CUBIC;
   if (!gst_structure_get_uint (convert->config,
           GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, &taps))
     taps = 0;
@@ -341,7 +341,7 @@ chain_vscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
   if (!gst_structure_get_enum (convert->config,
           GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_RESAMPLER_METHOD,
           &method))
-    method = GST_RESAMPLER_METHOD_LINEAR;
+    method = GST_RESAMPLER_METHOD_CUBIC;
   if (!gst_structure_get_uint (convert->config,
           GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, &taps))
     taps = 0;
