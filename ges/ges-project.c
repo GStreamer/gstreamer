@@ -819,6 +819,9 @@ ges_project_new (const gchar * uri)
   if (project && uri)
     ges_project_set_uri (project, uri);
 
+  if (uri == NULL)
+    g_free (id);
+
   return project;
 }
 
