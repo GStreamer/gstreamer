@@ -448,6 +448,11 @@ ges_track_dispose (GObject * object)
     priv->caps = NULL;
   }
 
+  if (priv->restriction_caps) {
+    gst_caps_unref (priv->restriction_caps);
+    priv->restriction_caps = NULL;
+  }
+
   G_OBJECT_CLASS (ges_track_parent_class)->dispose (object);
 }
 
