@@ -702,9 +702,10 @@ gst_video_converter_frame (GstVideoConverter * convert,
 static void
 video_converter_matrix8 (GstVideoConverter * convert, gpointer pixels)
 {
+  gint width = MIN (convert->in_width, convert->out_width);
 #if 1
   video_orc_matrix8 (pixels, pixels, convert->orc_p1, convert->orc_p2,
-      convert->orc_p3, convert->in_width);
+      convert->orc_p3, width);
 #elif 0
   /* FIXME we would like to set this as a backup function, it's faster than the
    * orc generated one */
@@ -1173,17 +1174,20 @@ do_convert_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
 {
   gpointer *lines;
   guint in_bits, out_bits;
+  gint width;
 
   lines = gst_line_cache_get_lines (convert->convert_lines, line, 1);
 
   in_bits = convert->in_bits;
   out_bits = convert->out_bits;
 
+  width = MIN (convert->in_width, convert->out_width);
+
   GST_DEBUG ("convert line %d", line);
   if (out_bits == 16 || in_bits == 16) {
     /* FIXME, we can scale in the conversion matrix */
     if (in_bits == 8)
-      convert_to16 (lines[0], convert->out_width);
+      convert_to16 (lines[0], width);
 
     if (convert->matrix)
       convert->matrix (convert, lines[0]);
@@ -1191,7 +1195,7 @@ do_convert_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
       convert->dither16 (convert, lines[0], line);
 
     if (out_bits == 8)
-      convert_to8 (lines[0], convert->out_width);
+      convert_to8 (lines[0], width);
   } else {
     if (convert->matrix)
       convert->matrix (convert, lines[0]);
