@@ -218,12 +218,15 @@ gst_scene_change_transform_frame_ip (GstVideoFilter * filter,
 
   threshold = 1.8 * score_max - 0.8 * score_min;
 
-  if (scenechange->n_diffs > 2) {
+  if (scenechange->n_diffs > (SC_N_DIFFS - 1)) {
     if (score < 5) {
       change = FALSE;
     } else if (score / threshold < 1.0) {
       change = FALSE;
-    } else if (score / threshold > 2.5) {
+    } else if ((score > 30)
+        && (score / scenechange->diffs[SC_N_DIFFS - 2] > 1.4)) {
+      change = TRUE;
+    } else if (score / threshold > 2.3) {
       change = TRUE;
     } else if (score > 50) {
       change = TRUE;
@@ -234,6 +237,10 @@ gst_scene_change_transform_frame_ip (GstVideoFilter * filter,
     change = FALSE;
   }
 
+  if (change == TRUE) {
+    memset (scenechange->diffs, 0, sizeof (double) * SC_N_DIFFS);
+    scenechange->n_diffs = 0;
+  }
 #ifdef TESTING
   if (change != is_shot_change (scenechange->n_diffs)) {
     g_print ("%d %g %g %g %d\n", scenechange->n_diffs, score / threshold,
