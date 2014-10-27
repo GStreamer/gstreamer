@@ -144,7 +144,9 @@ GST_END_TEST;
 GST_START_TEST (test_parse_adts_detect_mpeg_version)
 {
   gst_parser_test_output_caps (adts_frame_mpeg2, sizeof (adts_frame_mpeg2),
-      NULL, SINK_CAPS_MPEG2 ", stream-format=(string)adts");
+      NULL,
+      SINK_CAPS_MPEG2
+      ", stream-format=(string)adts, level=(string)2, profile=(string)lc");
 }
 
 GST_END_TEST;
