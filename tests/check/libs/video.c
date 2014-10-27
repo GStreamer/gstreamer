@@ -1698,9 +1698,13 @@ GST_START_TEST (test_video_scaler)
   GstVideoScaler *scale;
 
   scale = gst_video_scaler_new (GST_RESAMPLER_METHOD_LINEAR,
-      GST_VIDEO_SCALER_FLAG_NONE, 2, 100, 50, NULL);
-
+      GST_VIDEO_SCALER_FLAG_NONE, 2, 10, 5, NULL);
   gst_video_scaler_free (scale);
+
+  scale = gst_video_scaler_new (GST_RESAMPLER_METHOD_LINEAR,
+      GST_VIDEO_SCALER_FLAG_NONE, 2, 15, 5, NULL);
+  gst_video_scaler_free (scale);
+
 }
 
 GST_END_TEST;

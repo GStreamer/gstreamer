@@ -108,7 +108,6 @@ gst_video_scaler_new (GstResamplerMethod method, GstVideoScalerFlags flags,
     guint n_taps, guint in_size, guint out_size, GstStructure * options)
 {
   GstVideoScaler *scale;
-  gdouble shift;
 
   g_return_val_if_fail (in_size != 0, NULL);
   g_return_val_if_fail (out_size != 0, NULL);
@@ -120,16 +119,14 @@ gst_video_scaler_new (GstResamplerMethod method, GstVideoScalerFlags flags,
   scale->method = method;
   scale->flags = flags;
 
-  shift = (in_size / (gdouble) out_size) / 2 - 0.5;
-
   if (flags & GST_VIDEO_SCALER_FLAG_INTERLACED) {
     GstResampler tresamp, bresamp;
 
     gst_resampler_init (&tresamp, method, 0, (out_size + 1) / 2, n_taps,
-        shift, (in_size + 1) / 2, (out_size + 1) / 2, options);
+        0.0, (in_size + 1) / 2, (out_size + 1) / 2, options);
 
     gst_resampler_init (&bresamp, method, 0, out_size - tresamp.out_size,
-        n_taps, shift - 1.0, in_size - tresamp.in_size,
+        n_taps, -1.0, in_size - tresamp.in_size,
         out_size - tresamp.out_size, options);
 
     resampler_zip (&scale->resampler, &tresamp, &bresamp);
@@ -137,7 +134,7 @@ gst_video_scaler_new (GstResamplerMethod method, GstVideoScalerFlags flags,
     gst_resampler_clear (&bresamp);
   } else {
     gst_resampler_init (&scale->resampler, method, flags, out_size, n_taps,
-        shift, in_size, out_size, options);
+        0.0, in_size, out_size, options);
   }
   return scale;
 }

@@ -166,7 +166,7 @@ resampler_calculate_taps (ResamplerParams * params)
 
   max_taps = resampler->max_taps;
   tap_offs = (max_taps - 1) / 2;
-  corr = (max_taps == 1 ? 0.5 : 0.0);
+  corr = (max_taps == 1 ? 0.0 : 0.5);
 
   shift = params->shift;
 
@@ -176,17 +176,19 @@ resampler_calculate_taps (ResamplerParams * params)
   phase = resampler->phase = g_malloc (sizeof (guint) * out_size);
 
   for (j = 0; j < out_size; j++) {
-    gdouble x;
+    gdouble ox, x;
     gint xi;
     gint l;
     gdouble weight;
     gdouble *taps;
 
+    /* center of the output pixel */
+    ox = (0.5 + (gdouble) j - shift) / out_size;
     /* x is the source pixel to use, can be fractional */
-    x = shift + (in_size * j) / (gdouble) out_size;
+    x = ox * (gdouble) in_size - corr;
     x = CLAMP (x, 0, in_size - 1);
     /* this is the first source pixel to use */
-    xi = floor (x + corr) - tap_offs;
+    xi = floor (x - tap_offs);
 
     offset[j] = xi;
     phase[j] = j;
@@ -354,17 +356,18 @@ gst_resampler_init (GstResampler * resampler,
     max_taps = resampler->max_taps;
 
     for (i = 0; i < out_size; i++) {
-      gint j, o, n_taps;
+      gint j, o, phase, n_taps;
       gdouble sum;
 
-      o = resampler->offsets[i];
+      o = resampler->offset[i];
       n_taps = resampler->n_taps[i];
+      phase = resampler->phase[i];
 
       printf ("%u: \t%d  ", i, o);
       sum = 0;
       for (j = 0; j < n_taps; j++) {
         gdouble tap;
-        tap = resampler->taps[i * max_taps + j];
+        tap = resampler->taps[phase * max_taps + j];
         printf ("\t%f ", tap);
         sum += tap;
       }
