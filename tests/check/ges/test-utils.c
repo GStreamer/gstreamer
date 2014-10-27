@@ -277,3 +277,17 @@ play_timeline (GESTimeline * timeline)
 
   return TRUE;
 }
+
+gchar *
+ges_test_get_tmp_uri (const gchar * filename)
+{
+  gchar *location, *uri;
+
+  location = g_build_filename (g_get_tmp_dir (),
+      "test-keyframes-save.xges", NULL);
+
+  uri = g_strconcat ("file://", location, NULL);
+  g_free (location);
+
+  return uri;
+}

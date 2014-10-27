@@ -21,9 +21,6 @@
 #include "ges.h"
 #include "ges-internal.h"
 
-/* TODO:
- *  + Handle Groups
- **/
 #define parent_class ges_base_xml_formatter_parent_class
 G_DEFINE_ABSTRACT_TYPE (GESBaseXmlFormatter, ges_base_xml_formatter,
     GES_TYPE_FORMATTER);
@@ -56,6 +53,13 @@ typedef struct PendingChildProperties
   gchar *track_id;
   GstStructure *structure;
 } PendingChildProperties;
+
+typedef struct PendingGroup
+{
+  GESGroup *group;
+
+  GList *pending_children;
+} PendingGroup;
 
 typedef struct PendingClip
 {
@@ -106,7 +110,7 @@ struct _GESBaseXmlFormatterPrivate
   GHashTable *clipid_pendings;
 
   /* Clip.ID -> Clip */
-  GHashTable *clips;
+  GHashTable *containers;
 
   /* ID -> track */
   GHashTable *tracks;
@@ -124,6 +128,8 @@ struct _GESBaseXmlFormatterPrivate
   PendingClip *current_pending_clip;
 
   gboolean timeline_auto_transition;
+
+  GList *groups;
 };
 
 static void
@@ -333,7 +339,7 @@ _dispose (GObject * object)
 
   g_clear_pointer (&priv->assetid_pendingclips,
       (GDestroyNotify) g_hash_table_unref);
-  g_clear_pointer (&priv->clips, (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&priv->containers, (GDestroyNotify) g_hash_table_unref);
   g_clear_pointer (&priv->clipid_pendings, (GDestroyNotify) g_hash_table_unref);
   g_clear_pointer (&priv->tracks, (GDestroyNotify) g_hash_table_unref);
   g_clear_pointer (&priv->layers, (GDestroyNotify) g_hash_table_unref);
@@ -371,7 +377,7 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
       g_str_equal, g_free, NULL);
   priv->clipid_pendings = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, NULL);
-  priv->clips = g_hash_table_new_full (g_str_hash,
+  priv->containers = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, gst_object_unref);
   priv->tracks = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, gst_object_unref);
@@ -423,9 +429,35 @@ _set_auto_transition (gpointer prio, LayerEntry * entry, gpointer udata)
 }
 
 static void
+_add_all_groups (GESFormatter * self)
+{
+  GList *tmp;
+  GESTimelineElement *child;
+  GESBaseXmlFormatterPrivate *priv = GES_BASE_XML_FORMATTER (self)->priv;
+
+  for (tmp = priv->groups; tmp; tmp = tmp->next) {
+    GList *lchild;
+    PendingGroup *pgroup = tmp->data;
+
+    for (lchild = ((PendingGroup *) tmp->data)->pending_children; lchild;
+        lchild = lchild->next) {
+      child = g_hash_table_lookup (priv->containers, lchild->data);
+
+      GST_DEBUG_OBJECT (tmp->data, "Adding %s child %" GST_PTR_FORMAT " %s",
+          (const gchar *) lchild->data, child,
+          GES_TIMELINE_ELEMENT_NAME (child));
+      ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (pgroup->group), self->timeline);
+      ges_container_add (GES_CONTAINER (pgroup->group), child);
+    }
+  }
+}
+
+static void
 _loading_done (GESFormatter * self)
 {
   GESBaseXmlFormatterPrivate *priv = GES_BASE_XML_FORMATTER (self)->priv;
+
+  _add_all_groups (self);
 
   if (priv->parsecontext)
     g_markup_parse_context_free (priv->parsecontext);
@@ -494,7 +526,7 @@ _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
     gst_structure_foreach (properties,
         (GstStructureForeachFunc) set_property_foreach, clip);
 
-  g_hash_table_insert (priv->clips, g_strdup (id), gst_object_ref (clip));
+  g_hash_table_insert (priv->containers, g_strdup (id), gst_object_ref (clip));
   return clip;
 }
 
@@ -982,7 +1014,8 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
 
     gst_structure_get (properties, "restriction-caps", G_TYPE_STRING,
         &restriction, NULL);
-    gst_structure_remove_fields (properties, "restriction-caps", "caps", "message-forward", NULL);
+    gst_structure_remove_fields (properties, "restriction-caps", "caps",
+        "message-forward", NULL);
     if (g_strcmp0 (restriction, "NULL")) {
       caps = gst_caps_from_string (restriction);
       ges_track_set_restriction_caps (track, caps);
@@ -1069,10 +1102,9 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
     priv->current_pending_clip->children_props =
         g_list_append (priv->current_pending_clip->children_props, pchildprops);
     return;
-  }
-
-  else
+  } else {
     element = priv->current_track_element;
+  }
 
   if (element == NULL) {
     GST_WARNING
@@ -1127,7 +1159,7 @@ ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
       ges_meta_container_add_metas_from_string (GES_META_CONTAINER
           (trackelement), metadatas);
 
-    clip = g_hash_table_lookup (priv->clips, timeline_obj_id);
+    clip = g_hash_table_lookup (priv->containers, timeline_obj_id);
     if (clip) {
       _add_track_element (GES_FORMATTER (self), clip, trackelement, track_id,
           children_properties, properties);
@@ -1229,4 +1261,45 @@ done:
     gst_caps_unref (format);
   if (restriction)
     gst_caps_unref (restriction);
+}
+
+void
+ges_base_xml_formatter_add_group (GESBaseXmlFormatter * self,
+    const gchar * id, const gchar * properties)
+{
+  PendingGroup *pgroup;
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->check_only)
+    return;
+
+  pgroup = g_slice_new0 (PendingGroup);
+  pgroup->group = ges_group_new ();
+
+  g_hash_table_insert (priv->containers, g_strdup (id),
+      gst_object_ref (pgroup->group));
+  priv->groups = g_list_prepend (priv->groups, pgroup);
+
+  return;
+}
+
+void
+ges_base_xml_formatter_last_group_add_child (GESBaseXmlFormatter * self,
+    const gchar * child_id, const gchar * name)
+{
+  PendingGroup *pgroup;
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->check_only)
+    return;
+
+  g_return_if_fail (priv->groups);
+
+  pgroup = priv->groups->data;
+
+  pgroup->pending_children =
+      g_list_prepend (pgroup->pending_children, g_strdup (child_id));
+
+  GST_DEBUG_OBJECT (self, "Adding %s to %s", child_id,
+      GES_TIMELINE_ELEMENT_NAME (((PendingGroup *) priv->groups->data)->group));
 }

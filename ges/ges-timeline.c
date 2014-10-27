@@ -1958,6 +1958,12 @@ timeline_remove_group (GESTimeline * timeline, GESGroup * group)
   gst_object_unref (group);
 }
 
+GList *
+timeline_get_groups (GESTimeline * timeline)
+{
+  return timeline->priv->groups;
+}
+
 static GPtrArray *
 select_tracks_for_object_default (GESTimeline * timeline,
     GESClip * clip, GESTrackElement * tr_object, gpointer user_data)

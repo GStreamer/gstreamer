@@ -104,6 +104,9 @@ G_GNUC_INTERNAL
 void
 timeline_fill_gaps            (GESTimeline *timeline);
 
+G_GNUC_INTERNAL GList *
+timeline_get_groups           (GESTimeline * timeline);
+
 G_GNUC_INTERNAL
 void
 track_resort_and_fill_gaps    (GESTrack *track);
@@ -220,7 +223,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_track           (GESBaseXmlForma
                                                                  GstStructure *properties,
                                                                  const gchar *metadatas,
                                                                  GError **error);
-void ges_base_xml_formatter_add_encoding_profile               (GESBaseXmlFormatter * self,
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_encoding_profile(GESBaseXmlFormatter * self,
                                                                  const gchar *type,
                                                                  const gchar *parent,
                                                                  const gchar * name,
@@ -248,6 +251,14 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element   (GESBaseXmlForma
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_source          (GESBaseXmlFormatter *self,
                                                                  const gchar * track_id,
                                                                  GstStructure *children_properties);
+
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_group           (GESBaseXmlFormatter *self,
+                                                                 const gchar *name,
+                                                                 const gchar *properties);
+
+G_GNUC_INTERNAL void ges_base_xml_formatter_last_group_add_child(GESBaseXmlFormatter *self,
+                                                                 const gchar * id,
+                                                                 const gchar * name);
 
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
                                                                   const gchar * binding_type,

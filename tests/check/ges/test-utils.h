@@ -34,6 +34,7 @@ GESPipeline * ges_test_create_pipeline (GESTimeline *timeline);
 
 #define LAYER_HEIGHT 1000
 
+gchar * ges_test_get_tmp_uri (const gchar * filename);
 gchar * ges_test_get_audio_only_uri (void);
 gchar * ges_test_get_audio_video_uri (void);
 gchar * ges_test_get_image_uri (void);

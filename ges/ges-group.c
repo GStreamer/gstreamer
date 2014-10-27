@@ -56,10 +56,15 @@ struct _GESGroupPrivate
 enum
 {
   PROP_0,
+  PROP_START,
+  PROP_INPOINT,
+  PROP_DURATION,
+  PROP_MAX_DURATION,
+  PROP_PRIORITY,
   PROP_LAST
 };
 
-/* static GParamSpec *properties[PROP_LAST]; */
+static GParamSpec *properties[PROP_LAST] = { NULL, };
 
 /****************************************************
  *              Our listening of children           *
@@ -511,9 +516,26 @@ static void
 ges_group_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
+  GESTimelineElement *self = GES_TIMELINE_ELEMENT (object);
+
   switch (property_id) {
+    case PROP_START:
+      g_value_set_uint64 (value, self->start);
+      break;
+    case PROP_INPOINT:
+      g_value_set_uint64 (value, self->inpoint);
+      break;
+    case PROP_DURATION:
+      g_value_set_uint64 (value, self->duration);
+      break;
+    case PROP_MAX_DURATION:
+      g_value_set_uint64 (value, self->maxduration);
+      break;
+    case PROP_PRIORITY:
+      g_value_set_uint (value, self->priority);
+      break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (self, property_id, pspec);
   }
 }
 
@@ -521,9 +543,26 @@ static void
 ges_group_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GESTimelineElement *self = GES_TIMELINE_ELEMENT (object);
+
   switch (property_id) {
+    case PROP_START:
+      ges_timeline_element_set_start (self, g_value_get_uint64 (value));
+      break;
+    case PROP_INPOINT:
+      ges_timeline_element_set_inpoint (self, g_value_get_uint64 (value));
+      break;
+    case PROP_DURATION:
+      ges_timeline_element_set_duration (self, g_value_get_uint64 (value));
+      break;
+    case PROP_PRIORITY:
+      ges_timeline_element_set_priority (self, g_value_get_uint (value));
+      break;
+    case PROP_MAX_DURATION:
+      ges_timeline_element_set_max_duration (self, g_value_get_uint64 (value));
+      break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (self, property_id, pspec);
   }
 }
 
@@ -544,7 +583,62 @@ ges_group_class_init (GESGroupClass * klass)
   element_class->set_inpoint = _set_inpoint;
   element_class->set_start = _set_start;
   element_class->set_priority = _set_priority;
-  /* TODO implement the deep_copy Virtual method */
+
+  /* We override start, inpoint, duration and max-duration from GESTimelineElement
+   * in order to makes sure those fields are not serialized.
+   */
+  /**
+   * GESGroup:start:
+   *
+   * The position of the object in its container (in nanoseconds).
+   */
+  properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
+      "The position in the container", 0, G_MAXUINT64, 0,
+      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
+
+  /**
+   * GESGroup:in-point:
+   *
+   * The in-point at which this #GESGroup will start outputting data
+   * from its contents (in nanoseconds).
+   *
+   * Ex : an in-point of 5 seconds means that the first outputted buffer will
+   * be the one located 5 seconds in the controlled resource.
+   */
+  properties[PROP_INPOINT] =
+      g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
+      G_MAXUINT64, 0, G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
+
+  /**
+   * GESGroup:duration:
+   *
+   * The duration (in nanoseconds) which will be used in the container
+   */
+  properties[PROP_DURATION] =
+      g_param_spec_uint64 ("duration", "Duration", "The duration to use", 0,
+      G_MAXUINT64, GST_CLOCK_TIME_NONE,
+      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
+
+  /**
+   * GESGroup:max-duration:
+   *
+   * The maximum duration (in nanoseconds) of the #GESGroup.
+   */
+  properties[PROP_MAX_DURATION] =
+      g_param_spec_uint64 ("max-duration", "Maximum duration",
+      "The maximum duration of the object", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | GES_PARAM_NO_SERIALIZATION);
+
+  /**
+   * GESTGroup:priority:
+   *
+   * The priority of the object.
+   */
+  properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
+      "The priority of the object", 0, G_MAXUINT, 0,
+      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
+
+  g_object_class_install_properties (object_class, PROP_LAST, properties);
 
   container_class->add_child = _add_child;
   container_class->child_added = _child_added;

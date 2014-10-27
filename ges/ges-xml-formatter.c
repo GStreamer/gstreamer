@@ -45,6 +45,10 @@ struct _GESXmlFormatterPrivate
   gboolean project_opened;
 
   GString *str;
+
+  GHashTable *element_id;
+
+  guint nbelements;
 };
 
 static inline void
@@ -671,6 +675,44 @@ wrong_type:
       "element '%s', %s not a GESBaseEffect'", element_name, strtype);
 }
 
+
+static inline void
+_parse_group (GMarkupParseContext * context, const gchar * element_name,
+    const gchar ** attribute_names, const gchar ** attribute_values,
+    GESXmlFormatter * self, GError ** error)
+{
+  const gchar *id, *properties;
+
+  if (!g_markup_collect_attributes (element_name, attribute_names,
+          attribute_values, error,
+          G_MARKUP_COLLECT_STRING, "id", &id,
+          G_MARKUP_COLLECT_STRING, "properties", &properties,
+          G_MARKUP_COLLECT_INVALID)) {
+    return;
+  }
+
+  ges_base_xml_formatter_add_group (GES_BASE_XML_FORMATTER (self), id,
+      properties);
+}
+
+static inline void
+_parse_group_child (GMarkupParseContext * context, const gchar * element_name,
+    const gchar ** attribute_names, const gchar ** attribute_values,
+    GESXmlFormatter * self, GError ** error)
+{
+  const gchar *child_id, *name;
+
+  if (!g_markup_collect_attributes (element_name, attribute_names,
+          attribute_values, error,
+          G_MARKUP_COLLECT_STRING, "id", &child_id,
+          G_MARKUP_COLLECT_STRING, "name", &name, G_MARKUP_COLLECT_INVALID)) {
+    return;
+  }
+
+  ges_base_xml_formatter_last_group_add_child (GES_BASE_XML_FORMATTER (self),
+      child_id, name);
+}
+
 static void
 _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
@@ -713,6 +755,12 @@ _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
         attribute_values, self, error);
   else if (g_strcmp0 (element_name, "binding") == 0)
     _parse_binding (context, element_name, attribute_names,
+        attribute_values, self, error);
+  else if (g_strcmp0 (element_name, "group") == 0)
+    _parse_group (context, element_name, attribute_names,
+        attribute_values, self, error);
+  else if (g_strcmp0 (element_name, "child") == 0)
+    _parse_group_child (context, element_name, attribute_names,
         attribute_values, self, error);
   else
     GST_LOG_OBJECT (self, "Element %s not handled", element_name);
@@ -862,7 +910,7 @@ _save_assets (GString * str, GESProject * project)
 }
 
 static inline void
-_save_tracks (GString * str, GESTimeline * timeline)
+_save_tracks (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
 {
   gchar *strtmp, *metas;
   GESTrack *track;
@@ -1020,14 +1068,13 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
 }
 
 static inline void
-_save_layers (GString * str, GESTimeline * timeline)
+_save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
 {
   gchar *properties, *metas;
   GESLayer *layer;
   GESClip *clip;
   GList *tmplayer, *tmpclip, *clips;
-
-  guint nbclips = 0;
+  GESXmlFormatterPrivate *priv = self->priv;
 
   for (tmplayer = timeline->layers; tmplayer; tmplayer = tmplayer->next) {
     guint priority;
@@ -1061,16 +1108,19 @@ _save_layers (GString * str, GESTimeline * timeline)
           g_markup_printf_escaped ("        <clip id='%i' asset-id='%s'"
               " type-name='%s' layer-priority='%i' track-types='%i' start='%"
               G_GUINT64_FORMAT "' duration='%" G_GUINT64_FORMAT "' inpoint='%"
-              G_GUINT64_FORMAT "' rate='%d' properties='%s' >\n", nbclips,
-              ges_extractable_get_id (GES_EXTRACTABLE (clip)),
+              G_GUINT64_FORMAT "' rate='%d' properties='%s' >\n",
+              priv->nbelements, ges_extractable_get_id (GES_EXTRACTABLE (clip)),
               g_type_name (G_OBJECT_TYPE (clip)), priority,
               ges_clip_get_supported_formats (clip), _START (clip),
               _DURATION (clip), _INPOINT (clip), 0, properties));
       g_free (properties);
 
+      g_hash_table_insert (self->priv->element_id, clip,
+          GINT_TO_POINTER (priv->nbelements));
+
       for (tmpeffect = effects; tmpeffect; tmpeffect = tmpeffect->next)
-        _save_effect (str, nbclips, GES_TRACK_ELEMENT (tmpeffect->data),
-            timeline);
+        _save_effect (str, priv->nbelements,
+            GES_TRACK_ELEMENT (tmpeffect->data), timeline);
 
       tracks = ges_timeline_get_tracks (timeline);
 
@@ -1096,15 +1146,66 @@ _save_layers (GString * str, GESTimeline * timeline)
 
       g_string_append (str, "        </clip>\n");
 
-      nbclips++;
+      priv->nbelements++;
     }
     g_string_append (str, "      </layer>\n");
   }
 }
 
+static void
+_save_group (GESXmlFormatter * self, GString * str, GList ** seen_groups,
+    GESGroup * group)
+{
+  GList *tmp;
+  gchar *properties;
+
+  if (g_list_find (*seen_groups, group)) {
+    GST_DEBUG_OBJECT (group, "Already serialized");
+
+    return;
+  }
+
+  *seen_groups = g_list_prepend (*seen_groups, group);
+  for (tmp = GES_CONTAINER_CHILDREN (group); tmp; tmp = tmp->next) {
+    if (GES_IS_GROUP (tmp->data)) {
+      _save_group (self, str, seen_groups,
+          GES_GROUP (GES_TIMELINE_ELEMENT (tmp->data)));
+    }
+  }
+
+  properties = _serialize_properties (G_OBJECT (group), NULL);
+  g_string_append_printf (str, "        <group id='%d' properties='%s'>\n",
+      self->priv->nbelements, properties);
+  g_free (properties);
+  g_hash_table_insert (self->priv->element_id, group,
+      GINT_TO_POINTER (self->priv->nbelements));
+  self->priv->nbelements++;
+
+  for (tmp = GES_CONTAINER_CHILDREN (group); tmp; tmp = tmp->next) {
+    gint id = GPOINTER_TO_INT (g_hash_table_lookup (self->priv->element_id,
+            tmp->data));
+
+    g_string_append_printf (str, "          <child id='%d' name='%s'/>\n", id,
+        GES_TIMELINE_ELEMENT_NAME (tmp->data));
+  }
+  g_string_append (str, "        </group>\n");
+}
+
+static void
+_save_groups (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
+{
+  GList *tmp;
+  GList *seen_groups = NULL;
+
+  g_string_append (str, "      <groups>\n");
+  for (tmp = timeline_get_groups (timeline); tmp; tmp = tmp->next) {
+    _save_group (self, str, &seen_groups, tmp->data);
+  }
+  g_string_append (str, "      </groups>\n");
+}
 
 static inline void
-_save_timeline (GString * str, GESTimeline * timeline)
+_save_timeline (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
 {
   gchar *properties = NULL, *metas = NULL;
 
@@ -1118,8 +1219,9 @@ _save_timeline (GString * str, GESTimeline * timeline)
       g_markup_printf_escaped
       ("    <timeline properties='%s' metadatas='%s'>\n", properties, metas));
 
-  _save_tracks (str, timeline);
-  _save_layers (str, timeline);
+  _save_tracks (self, str, timeline);
+  _save_layers (self, str, timeline);
+  _save_groups (self, str, timeline);
 
   g_string_append (str, "    </timeline>\n");
 
@@ -1277,7 +1379,7 @@ _save (GESFormatter * formatter, GESTimeline * timeline, GError ** error)
   _save_assets (str, project);
   g_string_append (str, "    </ressources>\n");
 
-  _save_timeline (str, timeline);
+  _save_timeline (GES_XML_FORMATTER (formatter), str, timeline);
   g_string_append (str, "</project>\n</ges>");
 
   priv->str = NULL;
@@ -1309,6 +1411,16 @@ ges_xml_formatter_init (GESXmlFormatter * self)
   GESXmlFormatterPrivate *priv = _GET_PRIV (self);
 
   priv->project_opened = FALSE;
+  priv->element_id = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+  self->priv = priv;
+}
+
+static void
+_dispose (GObject * object)
+{
+  g_clear_pointer (&GES_XML_FORMATTER (object)->priv->element_id,
+      (GDestroyNotify) g_hash_table_unref);
 }
 
 static void
@@ -1322,6 +1434,7 @@ ges_xml_formatter_class_init (GESXmlFormatterClass * self_class)
   g_type_class_add_private (self_class, sizeof (GESXmlFormatterPrivate));
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
+  object_class->dispose = _dispose;
 
   basexmlformatter_class->content_parser.start_element = _parse_element_start;
   basexmlformatter_class->content_parser.end_element = _parse_element_end;

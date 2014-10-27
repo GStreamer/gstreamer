@@ -33,20 +33,6 @@ project_loaded_cb (GESProject * project, GESTimeline * timeline,
   g_main_loop_quit (mainloop);
 }
 
-static gchar *
-get_tmp_uri (const gchar * filename)
-{
-  gchar *location, *uri;
-
-  location = g_build_filename (g_get_tmp_dir (),
-      "test-keyframes-save.xges", NULL);
-
-  uri = g_strconcat ("file://", location, NULL);
-  g_free (location);
-
-  return uri;
-}
-
 GST_START_TEST (test_project_simple)
 {
   gchar *id;
@@ -459,7 +445,7 @@ GST_START_TEST (test_project_add_properties)
 
   _add_properties (timeline);
 
-  uri = get_tmp_uri ("test-properties-save.xges");
+  uri = ges_test_get_tmp_uri ("test-properties-save.xges");
   formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
   saved =
       ges_project_save (project, timeline, uri, formatter_asset, TRUE, NULL);
@@ -526,7 +512,7 @@ GST_START_TEST (test_project_load_xges)
   _test_project (project, timeline);
   g_free (uri);
 
-  uri = get_tmp_uri ("test-project_TMP.xges");
+  uri = ges_test_get_tmp_uri ("test-project_TMP.xges");
   formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
   saved =
       ges_project_save (project, timeline, uri, formatter_asset, TRUE, NULL);
@@ -597,7 +583,7 @@ GST_START_TEST (test_project_auto_transition)
   /* Set timeline and layers auto-transition to TRUE */
   ges_timeline_set_auto_transition (timeline, TRUE);
 
-  tmpuri = get_tmp_uri ("test-auto-transition-save.xges");
+  tmpuri = ges_test_get_tmp_uri ("test-auto-transition-save.xges");
   formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
   saved =
       ges_project_save (project, timeline, tmpuri, formatter_asset, TRUE, NULL);

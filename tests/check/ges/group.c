@@ -525,6 +525,93 @@ GST_START_TEST (test_group_in_self)
 
 GST_END_TEST;
 
+static void
+project_loaded_cb (GESProject * project, GESTimeline * timeline,
+    GMainLoop * mainloop)
+{
+  GST_ERROR ("LOADED!");
+  g_main_loop_quit (mainloop);
+}
+
+GST_START_TEST (test_group_serialization)
+{
+  gchar *tmpuri;
+  GESLayer *layer;
+  GESClip *c, *c1, *c2, *c3;
+  GESAsset *asset;
+  GESTimeline *timeline;
+  GESGroup *group;
+  GESProject *project;
+  GMainLoop *mainloop;
+
+  GError *err = NULL;
+  GList *tmp, *clips = NULL;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+
+  layer = ges_timeline_append_layer (timeline);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+
+  c = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+
+  c1 = ges_layer_add_asset (layer, asset, 10, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+
+  clips = g_list_prepend (clips, c);
+  clips = g_list_prepend (clips, c1);
+
+  c2 = ges_layer_add_asset (layer, asset, 20, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+
+  c3 = ges_layer_add_asset (layer, asset, 30, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+
+  group = GES_GROUP (ges_container_group (clips));
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (group) == timeline);
+  g_list_free (clips);
+
+
+  clips = g_list_append (NULL, group);
+  clips = g_list_append (clips, c2);
+  group = GES_GROUP (ges_container_group (clips));
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (group) == timeline);
+  g_list_free (clips);
+
+  clips = g_list_append (NULL, group);
+  clips = g_list_append (clips, c3);
+  group = GES_GROUP (ges_container_group (clips));
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (group) == timeline);
+  g_list_free (clips);
+
+  project =
+      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
+
+  tmpuri = ges_test_get_tmp_uri ("test-auto-transition-save.xges");
+  fail_unless (ges_project_save (project, timeline, tmpuri, NULL, TRUE, NULL));
+  gst_object_unref (timeline);
+  gst_object_unref (asset);
+
+  project = ges_project_new (tmpuri);
+  mainloop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &err));
+  g_main_loop_run (mainloop);
+
+  fail_unless (err == NULL, "%s", err ? err->message : "Nothing");
+  fail_unless (timeline != NULL);
+
+  layer = timeline->layers->data;
+  for (tmp = ges_layer_get_clips (layer); tmp; tmp = tmp->next) {
+    fail_unless (GES_IS_GROUP (GES_TIMELINE_ELEMENT_PARENT (tmp->data)),
+        "%s parent is %p, NOT a group", GES_TIMELINE_ELEMENT_NAME (tmp->data),
+        GES_TIMELINE_ELEMENT_PARENT (tmp->data));
+  }
+
+
+  g_free (tmpuri);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -536,6 +623,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_move_group);
   tcase_add_test (tc_chain, test_group_in_group);
   tcase_add_test (tc_chain, test_group_in_self);
+  tcase_add_test (tc_chain, test_group_serialization);
 
   return s;
 }
