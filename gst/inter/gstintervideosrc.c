@@ -317,7 +317,7 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
             &intervideosrc->info)) {
       caps = gst_video_info_to_caps (&intervideosrc->surface->video_info);
       intervideosrc->timestamp_offset +=
-          gst_util_uint64_scale_int (GST_SECOND * intervideosrc->n_frames,
+          gst_util_uint64_scale (GST_SECOND * intervideosrc->n_frames,
           GST_VIDEO_INFO_FPS_D (&intervideosrc->info),
           GST_VIDEO_INFO_FPS_N (&intervideosrc->info));
       intervideosrc->n_frames = 0;
@@ -351,14 +351,14 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   buffer = gst_buffer_make_writable (buffer);
 
   GST_BUFFER_PTS (buffer) = intervideosrc->timestamp_offset +
-      gst_util_uint64_scale_int (GST_SECOND * intervideosrc->n_frames,
+      gst_util_uint64_scale (GST_SECOND * intervideosrc->n_frames,
       GST_VIDEO_INFO_FPS_D (&intervideosrc->info),
       GST_VIDEO_INFO_FPS_N (&intervideosrc->info));
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
   GST_DEBUG_OBJECT (intervideosrc, "create ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
   GST_BUFFER_DURATION (buffer) = intervideosrc->timestamp_offset +
-      gst_util_uint64_scale_int (GST_SECOND * (intervideosrc->n_frames + 1),
+      gst_util_uint64_scale (GST_SECOND * (intervideosrc->n_frames + 1),
       GST_VIDEO_INFO_FPS_D (&intervideosrc->info),
       GST_VIDEO_INFO_FPS_N (&intervideosrc->info)) - GST_BUFFER_PTS (buffer);
   GST_BUFFER_OFFSET (buffer) = intervideosrc->n_frames;

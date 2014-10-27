@@ -303,7 +303,7 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
             &interaudiosrc->info)) {
       caps = gst_audio_info_to_caps (&interaudiosrc->surface->audio_info);
       interaudiosrc->timestamp_offset +=
-          gst_util_uint64_scale_int (interaudiosrc->n_samples, GST_SECOND,
+          gst_util_uint64_scale (interaudiosrc->n_samples, GST_SECOND,
           interaudiosrc->info.rate);
       interaudiosrc->n_samples = 0;
     }
@@ -364,12 +364,12 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
   GST_BUFFER_OFFSET (buffer) = interaudiosrc->n_samples;
   GST_BUFFER_OFFSET_END (buffer) = interaudiosrc->n_samples + n;
   GST_BUFFER_TIMESTAMP (buffer) = interaudiosrc->timestamp_offset +
-      gst_util_uint64_scale_int (interaudiosrc->n_samples, GST_SECOND,
+      gst_util_uint64_scale (interaudiosrc->n_samples, GST_SECOND,
       interaudiosrc->info.rate);
   GST_DEBUG_OBJECT (interaudiosrc, "create ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
   GST_BUFFER_DURATION (buffer) = interaudiosrc->timestamp_offset +
-      gst_util_uint64_scale_int (interaudiosrc->n_samples + n, GST_SECOND,
+      gst_util_uint64_scale (interaudiosrc->n_samples + n, GST_SECOND,
       interaudiosrc->info.rate) - GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
   if (interaudiosrc->n_samples == 0) {
