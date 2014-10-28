@@ -87,9 +87,18 @@ GST_START_TEST (test_num_buffers)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+#if defined (G_OS_UNIX) && defined (O_NONBLOCK)
+  {
+    int flags;
+
+    flags = fcntl (pipe_fd[1], F_GETFL, 0);
+    fcntl (pipe_fd[1], F_SETFL, flags | O_NONBLOCK);
+  }
+#endif
+
   memset (data, 0, 4096);
   while (!have_eos) {
-    fail_if (write (pipe_fd[1], data, 4096) < 0);
+    write (pipe_fd[1], data, 4096);
     g_usleep (100);
   }
 
