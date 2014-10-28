@@ -363,3 +363,9 @@ gst_gl_context_cocoa_get_gl_platform (GstGLContext * context)
 {
   return GST_GL_PLATFORM_CGL;
 }
+
+guintptr
+gst_gl_context_cocoa_get_current_context (void)
+{
+  return (guintptr) [NSOpenGLContext currentContext];
+}

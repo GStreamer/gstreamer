@@ -96,6 +96,8 @@ gst_gl_context_glx_class_init (GstGLContextGLXClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_gl_platform);
   context_class->get_proc_address =
       GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_proc_address);
+  context_class->get_current_context =
+      GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_current_context);
 }
 
 static void
@@ -197,7 +199,7 @@ gst_gl_context_glx_create_context (GstGLContext * context,
         context_attribs_3);
 
     x_error = gst_gl_window_x11_untrap_x_errors ();
-    context_glx->priv->context_api = GST_GL_API_OPENGL3 | GST_GL_API_OPENGL;
+    context_glx->priv->context_api = GST_GL_API_OPENGL;
 
     if (!context_glx->glx_context || x_error != 0) {
       GST_DEBUG ("Failed to create an Opengl 3 context. trying a legacy one");
@@ -423,10 +425,17 @@ static gpointer
 gst_gl_context_glx_get_proc_address (GstGLContext * context, const gchar * name)
 {
   gpointer result;
+  GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
 
-  if (!(result = gst_gl_context_default_get_proc_address (context, name))) {
+  if (!(result = gst_gl_context_default_get_proc_address (gl_api, name))) {
     result = glXGetProcAddressARB ((const GLubyte *) name);
   }
 
   return result;
+}
+
+guintptr
+gst_gl_context_glx_get_current_context (void)
+{
+  return (guintptr) glXGetCurrentContext ();
 }

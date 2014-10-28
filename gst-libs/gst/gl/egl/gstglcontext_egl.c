@@ -82,6 +82,8 @@ gst_gl_context_egl_class_init (GstGLContextEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_egl_get_proc_address);
   context_class->check_feature =
       GST_DEBUG_FUNCPTR (gst_gl_context_egl_check_feature);
+  context_class->get_current_context =
+      GST_DEBUG_FUNCPTR (gst_gl_context_egl_get_current_context);
 }
 
 static void
@@ -550,8 +552,9 @@ gst_gl_context_egl_get_proc_address (GstGLContext * context, const gchar * name)
 {
   gpointer result = NULL;
   static GOnce g_once = G_ONCE_INIT;
+  GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
 
-  result = gst_gl_context_default_get_proc_address (context, name);
+  result = gst_gl_context_default_get_proc_address (gl_api, name);
 
   g_once (&g_once, load_egl_module, NULL);
 
@@ -582,4 +585,10 @@ gst_gl_context_egl_check_feature (GstGLContext * context, const gchar * feature)
   }
 
   return FALSE;
+}
+
+guintptr
+gst_gl_context_egl_get_current_context (void)
+{
+  return (guintptr) eglGetCurrentContext ();
 }
