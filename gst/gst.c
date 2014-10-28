@@ -318,14 +318,18 @@ gst_init_get_option_group (void)
 gboolean
 gst_init_check (int *argc, char **argv[], GError ** err)
 {
+  static GMutex init_lock;
 #ifndef GST_DISABLE_OPTION_PARSING
   GOptionGroup *group;
   GOptionContext *ctx;
 #endif
   gboolean res;
 
+  g_mutex_lock (&init_lock);
+
   if (gst_initialized) {
     GST_DEBUG ("already initialized gst");
+    g_mutex_unlock (&init_lock);
     return TRUE;
   }
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -349,6 +353,8 @@ gst_init_check (int *argc, char **argv[], GError ** err)
   } else {
     GST_INFO ("failed to initialize GStreamer");
   }
+
+  g_mutex_unlock (&init_lock);
 
   return res;
 }
