@@ -360,21 +360,18 @@ gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps)
 wrong_length:
   {
     GST_DEBUG_OBJECT (faad, "codec_data less than 2 bytes long");
-    gst_object_unref (faad);
     gst_buffer_unmap (buf, &map);
     return FALSE;
   }
 open_failed:
   {
     GST_DEBUG_OBJECT (faad, "failed to create decoder");
-    gst_object_unref (faad);
     gst_buffer_unmap (buf, &map);
     return FALSE;
   }
 init_failed:
   {
     GST_DEBUG_OBJECT (faad, "faacDecInit2() failed");
-    gst_object_unref (faad);
     gst_buffer_unmap (buf, &map);
     return FALSE;
   }
