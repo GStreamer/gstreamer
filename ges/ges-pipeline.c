@@ -201,6 +201,18 @@ ges_pipeline_set_property (GObject * object, guint property_id,
 }
 
 static void
+_timeline_track_added_cb (GESTimeline *timeline, GESTrack *track, GESPipeline *pipeline)
+{
+  _link_track (pipeline, track);
+}
+
+static void
+_timeline_track_removed_cb (GESTimeline *timeline, GESTrack *track, GESPipeline *pipeline)
+{
+  _unlink_track (pipeline, track);
+}
+
+static void
 ges_pipeline_dispose (GObject * object)
 {
   GESPipeline *self = GES_PIPELINE (object);
@@ -225,6 +237,13 @@ ges_pipeline_dispose (GObject * object)
   if (self->priv->profile) {
     gst_encoding_profile_unref (self->priv->profile);
     self->priv->profile = NULL;
+  }
+
+  if (self->priv->timeline) {
+    g_signal_handlers_disconnect_by_func (self->priv->timeline,
+        _timeline_track_added_cb, self);
+    g_signal_handlers_disconnect_by_func (self->priv->timeline,
+        _timeline_track_removed_cb, self);
   }
 
   G_OBJECT_CLASS (ges_pipeline_parent_class)->dispose (object);
@@ -804,7 +823,6 @@ _unlink_track (GESPipeline * self, GESTrack * track)
     gst_object_unref (chain->playsinkpad);
   }
 
-  /* Unlike/remove tee */
   peer = gst_element_get_static_pad (chain->tee, "sink");
   gst_pad_unlink (pad, peer);
   gst_object_unref (peer);
@@ -846,6 +864,10 @@ ges_pipeline_set_timeline (GESPipeline * pipeline, GESTimeline * timeline)
   }
   pipeline->priv->timeline = timeline;
 
+  g_signal_connect (timeline, "track-added",
+      G_CALLBACK (_timeline_track_added_cb), pipeline);
+  g_signal_connect (timeline, "track-removed",
+      G_CALLBACK (_timeline_track_removed_cb), pipeline);
   /* FIXME Check if we should rollback if we can't sync state */
   gst_element_sync_state_with_parent (GST_ELEMENT (timeline));
 

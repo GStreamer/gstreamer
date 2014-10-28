@@ -2801,6 +2801,8 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 
   GST_DEBUG ("Done adding track, emitting 'track-added' signal");
 
+  _ghost_track_srcpad (tr_priv);
+
   /* emit 'track-added' */
   g_signal_emit (timeline, ges_timeline_signals[TRACK_ADDED], 0, track);
 
@@ -2825,8 +2827,6 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     }
     g_list_free (objects);
   }
-
-  _ghost_track_srcpad (tr_priv);
 
   /* FIXME Check if we should rollback if we can't sync state */
   gst_element_sync_state_with_parent (GST_ELEMENT (track));
