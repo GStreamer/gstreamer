@@ -899,6 +899,10 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
 
     if (decide_pool && GST_IS_GL_BUFFER_POOL (decide_pool)
         && gst_caps_is_equal_fixed (decide_caps, caps)) {
+      config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+      gst_structure_free (config);
+
       pool = decide_pool;
     } else {
       GST_DEBUG_OBJECT (filter, "create new pool");
