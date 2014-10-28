@@ -341,3 +341,8 @@ gst_gl_context_eagl_get_gl_platform (GstGLContext * context)
   return GST_GL_PLATFORM_EAGL;
 }
 
+guintptr
+gst_gl_context_eagl_get_current_context (void)
+{
+  return (guintptr) [EAGLContext currentContext];
+}

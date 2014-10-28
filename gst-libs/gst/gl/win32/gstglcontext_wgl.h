@@ -56,6 +56,7 @@ struct _GstGLContextWGLClass {
 GType gst_gl_context_wgl_get_type     (void);
 
 GstGLContextWGL * gst_gl_context_wgl_new  (void);
+guintptr gst_gl_context_wgl_get_current_context (void);
 
 G_END_DECLS
 

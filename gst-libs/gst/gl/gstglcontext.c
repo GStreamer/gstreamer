@@ -67,6 +67,7 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_performance);
 static GModule *module_self;
+static GOnce module_self_gonce = G_ONCE_INIT;
 
 #if GST_GL_HAVE_OPENGL
 static GOnce module_opengl_gonce = G_ONCE_INIT;
@@ -118,6 +119,14 @@ load_gles2_module (gpointer user_data)
 }
 #endif
 
+static gpointer
+load_self_module (gpointer user_data)
+{
+  module_self = g_module_open (NULL, G_MODULE_BIND_LAZY);
+
+  return NULL;
+}
+
 #if GST_GL_HAVE_GLES3
 #error "Add module loading support for GLES3"
 #endif
@@ -132,6 +141,8 @@ G_DEFINE_ABSTRACT_TYPE (GstGLContext, gst_gl_context, GST_TYPE_OBJECT);
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT, GstGLContextPrivate))
 
 static gpointer gst_gl_context_create_thread (GstGLContext * context);
+static gpointer _default_get_proc_address (GstGLContext * context,
+    const gchar * name);
 static void gst_gl_context_finalize (GObject * object);
 
 struct _GstGLContextPrivate
@@ -226,10 +237,7 @@ gst_gl_context_class_init (GstGLContextClass * klass)
 {
   g_type_class_add_private (klass, sizeof (GstGLContextPrivate));
 
-  module_self = g_module_open (NULL, G_MODULE_BIND_LAZY);
-
-  klass->get_proc_address =
-      GST_DEBUG_FUNCPTR (gst_gl_context_default_get_proc_address);
+  klass->get_proc_address = GST_DEBUG_FUNCPTR (_default_get_proc_address);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_context_finalize;
 }
@@ -337,6 +345,144 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   context_wrap->available_apis = available_apis;
 
   return context;
+}
+
+/**
+ * gst_gl_context_get_current_gl_context:
+ * @context_type: a #GstGLPlatform specifying the type of context to retreive
+ *
+ * Returns: The OpenGL context handle current in the calling thread or %NULL
+ */
+guintptr
+gst_gl_context_get_current_gl_context (GstGLPlatform context_type)
+{
+  guintptr handle = 0;
+
+  _init_debug ();
+
+#if GST_GL_HAVE_PLATFORM_GLX
+  if (!handle && (context_type & GST_GL_PLATFORM_GLX) != 0)
+    handle = gst_gl_context_glx_get_current_context ();
+#endif
+#if GST_GL_HAVE_PLATFORM_EGL
+  if (!handle && (context_type & GST_GL_PLATFORM_EGL) != 0)
+    handle = gst_gl_context_egl_get_current_context ();
+#endif
+#if GST_GL_HAVE_PLATFORM_CGL
+  if (!handle && (context_type & GST_GL_PLATFORM_CGL) != 0)
+    handle = gst_gl_context_cocoa_get_current_context ();
+#endif
+#if GST_GL_HAVE_PLATFORM_WGL
+  if (!handle && (context_type & GST_GL_PLATFORM_WGL) != 0)
+    handle = gst_gl_context_wgl_get_current_context ();
+#endif
+#if GST_GL_HAVE_PLATFORM_EAGL
+  if (!handle && (context_type & GST_GL_PLATFORM_EAGL) != 0)
+    handle = gst_gl_context_eagl_get_current_context ();
+#endif
+
+  if (!handle)
+    GST_WARNING ("Could not retreive current context");
+
+  return handle;
+}
+
+/**
+ * gst_gl_context_get_current_gl_api:
+ * @context_type: a #GstGLPlatform specifying the type of context to retreive
+ * @major: (out): (allow-none): the major version
+ * @minor: (out): (allow-none): the minor version
+ *
+ * If an error occurs, @major and @minor aren't modified and %GST_GL_API_NONE is
+ * returned.
+ *
+ * Returns: The version supported by the OpenGL context current in the calling
+ *          thread or %GST_GL_API_NONE
+ */
+GstGLAPI
+gst_gl_context_get_current_gl_api (guint * major, guint * minor)
+{
+  const GLubyte *(*GetString) (GLenum name);
+  void (*GetIntegerv) (GLenum name, GLuint * n);
+  const gchar *version;
+  gint maj, min, n;
+  GstGLAPI ret = (1 << 31);
+
+  _init_debug ();
+
+  while (ret != GST_GL_API_NONE) {
+    /* FIXME: attempt to delve into the platform specific GetProcAddress */
+    GetString = gst_gl_context_default_get_proc_address (ret, "glGetString");
+    GetIntegerv =
+        gst_gl_context_default_get_proc_address (ret, "glGetIntegerv");
+    if (!GetString) {
+      goto next;
+    }
+
+    version = (const gchar *) GetString (GL_VERSION);
+    if (!version)
+      goto next;
+
+    /* strlen (x.x) == 3 */
+    n = strlen (version);
+    if (n < 3)
+      goto next;
+
+    if (g_strstr_len (version, 9, "OpenGL ES")) {
+      /* strlen (OpenGL ES x.x) == 13 */
+      if (n < 13)
+        goto next;
+
+      sscanf (&version[10], "%d.%d", &maj, &min);
+
+      if (maj <= 0 || min < 0)
+        goto next;
+
+      if (maj == 1) {
+        ret = GST_GL_API_GLES1;
+        break;
+      } else if (maj == 2 || maj == 3) {
+        ret = GST_GL_API_GLES2;
+        break;
+      }
+
+      goto next;
+    } else {
+      GLuint context_flags = 0;
+      sscanf (version, "%d.%d", &maj, &min);
+
+      if (maj <= 0 || min < 0)
+        goto next;
+
+#if GST_GL_HAVE_OPENGL
+      if (GetIntegerv && (maj > 3 || (maj == 3 && min > 1))) {
+        ret = GST_GL_API_NONE;
+        GetIntegerv (GL_CONTEXT_PROFILE_MASK, &context_flags);
+        if (context_flags & GL_CONTEXT_CORE_PROFILE_BIT)
+          ret |= GST_GL_API_OPENGL3;
+        if (context_flags & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT)
+          ret |= GST_GL_API_OPENGL;
+        break;
+      }
+#endif
+      ret = GST_GL_API_OPENGL;
+      break;
+    }
+
+  next:
+    /* iterate through the apis */
+    ret >>= 1;
+  }
+
+  if (ret == GST_GL_API_NONE)
+    return GST_GL_API_NONE;
+
+  if (major)
+    *major = maj;
+  if (minor)
+    *minor = min;
+
+  return ret;
 }
 
 static void
@@ -466,6 +612,14 @@ gst_gl_context_get_gl_api (GstGLContext * context)
   return context_class->get_gl_api (context);
 }
 
+static gpointer
+_default_get_proc_address (GstGLContext * context, const gchar * name)
+{
+  GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
+
+  return gst_gl_context_default_get_proc_address (gl_api, name);
+}
+
 /**
  * gst_gl_context_get_proc_address:
  * @context: a #GstGLContext
@@ -496,11 +650,9 @@ gst_gl_context_get_proc_address (GstGLContext * context, const gchar * name)
 }
 
 gpointer
-gst_gl_context_default_get_proc_address (GstGLContext * context,
-    const gchar * name)
+gst_gl_context_default_get_proc_address (GstGLAPI gl_api, const gchar * name)
 {
   gpointer ret = NULL;
-  GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
 
   /* First try to load symbol from the selected GL API for this context */
 #if GST_GL_HAVE_GLES2
@@ -520,6 +672,7 @@ gst_gl_context_default_get_proc_address (GstGLContext * context,
 #endif
 
   /* Otherwise fall back to the current module */
+  g_once (&module_self_gonce, load_self_module, NULL);
   if (!ret)
     g_module_symbol (module_self, name, &ret);
 
@@ -1281,7 +1434,7 @@ void
 gst_gl_context_get_gl_version (GstGLContext * context, gint * maj, gint * min)
 {
   g_return_if_fail (GST_GL_IS_CONTEXT (context));
-  g_return_if_fail (maj == NULL && min == NULL);
+  g_return_if_fail (maj != NULL && min != NULL);
 
   if (maj)
     *maj = context->priv->gl_major;

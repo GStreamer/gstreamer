@@ -61,6 +61,7 @@ struct _GstGLContextCocoaClass {
 GType gst_gl_context_cocoa_get_type (void);
 
 GstGLContextCocoa * gst_gl_context_cocoa_new (void);
+guintptr gst_gl_context_cocoa_get_current_context (void);
 
 G_END_DECLS
 

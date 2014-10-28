@@ -60,6 +60,7 @@ struct _GstGLContextGLXClass {
 GType gst_gl_context_glx_get_type     (void);
 
 GstGLContextGLX * gst_gl_context_glx_new (void);
+guintptr          gst_gl_context_glx_get_current_context (void);
 
 G_END_DECLS
 

@@ -61,6 +61,7 @@ GstGLContextEagl * gst_gl_context_eagl_new (void);
 
 void gst_gl_context_eagl_prepare_draw (GstGLContextEagl * context);
 void gst_gl_context_eagl_finish_draw (GstGLContextEagl * context);
+guintptr gst_gl_context_eagl_get_current_context (void);
 
 G_END_DECLS
 

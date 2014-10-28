@@ -95,6 +95,7 @@ struct _GstGLContext {
 struct _GstGLContextClass {
   GstObjectClass parent_class;
 
+  guintptr      (*get_current_context) (void);
   guintptr      (*get_gl_context)     (GstGLContext *context);
   GstGLAPI      (*get_gl_api)         (GstGLContext *context);
   GstGLPlatform (*get_gl_platform)    (GstGLContext *context);
@@ -132,7 +133,7 @@ gboolean      gst_gl_context_can_share        (GstGLContext * context, GstGLCont
 gboolean      gst_gl_context_create           (GstGLContext *context, GstGLContext *other_context, GError ** error);
 void          gst_gl_context_destroy          (GstGLContext *context);
 
-gpointer      gst_gl_context_default_get_proc_address (GstGLContext *context, const gchar *name);
+gpointer      gst_gl_context_default_get_proc_address (GstGLAPI gl_api, const gchar *name);
 
 gboolean      gst_gl_context_set_window (GstGLContext *context, GstGLWindow *window);
 GstGLWindow * gst_gl_context_get_window (GstGLContext *context);
@@ -140,6 +141,9 @@ GstGLWindow * gst_gl_context_get_window (GstGLContext *context);
 void          gst_gl_context_get_gl_version (GstGLContext *context, gint *maj, gint *min);
 gboolean      gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI api, gint maj, gint min);
 gboolean      gst_gl_context_check_feature (GstGLContext *context, const gchar *feature);
+
+guintptr      gst_gl_context_get_current_gl_context     (GstGLPlatform platform);
+GstGLAPI      gst_gl_context_get_current_gl_api         (guint *major, guint *minor);
 
 /* FIXME: remove */
 void gst_gl_context_thread_add (GstGLContext * context,

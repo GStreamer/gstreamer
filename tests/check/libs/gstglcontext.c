@@ -341,6 +341,60 @@ GST_START_TEST (test_wrapped_context)
 
 GST_END_TEST;
 
+struct context_info
+{
+  GstGLAPI api;
+  guint major;
+  guint minor;
+  GstGLPlatform platform;
+  guintptr handle;
+};
+
+static void
+_fill_context_info (GstGLContext * context, struct context_info *info)
+{
+  info->handle = gst_gl_context_get_current_gl_context (info->platform);
+  info->api = gst_gl_context_get_current_gl_api (&info->major, &info->minor);
+}
+
+GST_START_TEST (test_current_context)
+{
+  GstGLContext *context;
+  GError *error = NULL;
+  guintptr handle;
+  GstGLPlatform platform;
+  GstGLAPI api;
+  gint major, minor;
+  struct context_info info;
+
+  context = gst_gl_context_new (display);
+
+  gst_gl_context_create (context, 0, &error);
+
+  fail_if (error != NULL, "Error creating master context %s\n",
+      error ? error->message : "Unknown Error");
+
+  handle = gst_gl_context_get_gl_context (context);
+  platform = gst_gl_context_get_gl_platform (context);
+  api = gst_gl_context_get_gl_api (context);
+  gst_gl_context_get_gl_version (context, &major, &minor);
+
+  info.platform = platform;
+
+  gst_gl_context_thread_add (context,
+      (GstGLContextThreadFunc) _fill_context_info, &info);
+
+  fail_if (info.platform != platform);
+  fail_if (info.api != api);
+  fail_if (info.major != major);
+  fail_if (info.minor != minor);
+  fail_if (info.handle != handle);
+
+  gst_object_unref (context);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_gl_context_suite (void)
@@ -352,6 +406,7 @@ gst_gl_context_suite (void)
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_share);
   tcase_add_test (tc_chain, test_wrapped_context);
+  tcase_add_test (tc_chain, test_current_context);
 
   return s;
 }

@@ -57,6 +57,7 @@ struct _GstGLContextEGLClass {
 
 GType gst_gl_context_egl_get_type     (void);
 GstGLContextEGL * gst_gl_context_egl_new (void);
+guintptr          gst_gl_context_egl_get_current_context (void);
 
 /* TODO:
  * add support for EGL_NO_CONTEXT
