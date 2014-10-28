@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include <gst/check/gstcheck.h>
 
@@ -98,7 +99,8 @@ GST_START_TEST (test_num_buffers)
 
   memset (data, 0, 4096);
   while (!have_eos) {
-    write (pipe_fd[1], data, 4096);
+    int ret = write (pipe_fd[1], data, 4096);
+    fail_if (ret < 0 && errno != EAGAIN);
     g_usleep (100);
   }
 
