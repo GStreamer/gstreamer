@@ -195,4 +195,6 @@ interface_as_function ## _tuner_interface_init (GstTunerInterface * iface)      
   iface->signal_strength = interface_as_function ## _tuner_signal_strength;           \
 }                                                                                     \
 
+G_END_DECLS
+
 #endif /* __GST_V4L2_TUNER_H__ */

@@ -98,4 +98,6 @@ struct _GstV4l2DeviceClass {
 
 GType        gst_v4l2_device_get_type (void);
 
+G_END_DECLS
+
 #endif /* __GST_V4L2_DEVICE_PROVIDER_H__ */

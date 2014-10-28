@@ -95,4 +95,6 @@ struct _GstPulseDeviceClass {
 
 GType        gst_pulse_device_get_type (void);
 
+G_END_DECLS
+
 #endif /* __GST_PULSE_DEVICE_PROVIDER_H__ */
