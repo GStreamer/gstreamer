@@ -294,7 +294,8 @@ gst_gl_filter_start (GstBaseTransform * bt)
   GstGLFilter *filter = GST_GL_FILTER (bt);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  if (!gst_gl_ensure_element_data (filter, &filter->display, &filter->other_context))
+  if (!gst_gl_ensure_element_data (filter, &filter->display,
+          &filter->other_context))
     return FALSE;
 
   if (filter_class->onStart)
@@ -874,7 +875,8 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     gst_structure_free (config);
   }
 
-  if (!gst_gl_ensure_element_data (filter, &filter->display, &filter->other_context))
+  if (!gst_gl_ensure_element_data (filter, &filter->display,
+          &filter->other_context))
     return FALSE;
 
   if (!filter->context) {
@@ -995,7 +997,8 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   guint in_width, in_height, out_width, out_height;
   GstGLContext *other_context = NULL;
 
-  if (!gst_gl_ensure_element_data (filter, &filter->display, &filter->other_context))
+  if (!gst_gl_ensure_element_data (filter, &filter->display,
+          &filter->other_context))
     return FALSE;
 
   if (gst_query_find_allocation_meta (query,
@@ -1242,7 +1245,8 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (bt);
 
-  if (!gst_gl_ensure_element_data (filter, &filter->display, &filter->other_context))
+  if (!gst_gl_ensure_element_data (filter, &filter->display,
+          &filter->other_context))
     return GST_FLOW_NOT_NEGOTIATED;
 
   if (!filter->upload) {
