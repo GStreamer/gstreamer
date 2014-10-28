@@ -35,6 +35,7 @@
 #include "uvc_h264.h"
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_UVC_H264_SRC                   \
   (gst_uvc_h264_src_get_type())
 #define GST_UVC_H264_SRC(obj)                                           \
@@ -158,5 +159,6 @@ struct _GstUvcH264SrcClass
   GstBaseCameraSrcClass parent;
 };
 
+G_END_DECLS
 
 #endif /* __GST_UVC_H264_SRC_H__ */

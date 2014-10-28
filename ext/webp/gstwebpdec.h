@@ -71,4 +71,6 @@ struct _GstWebPDecClass {
 GType gst_webp_dec_get_type (void);
 gboolean gst_webp_dec_register (GstPlugin * plugin);
 
+G_END_DECLS
+
 #endif /* __GST_WEBP_DEC_H__ */
