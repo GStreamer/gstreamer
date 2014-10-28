@@ -393,7 +393,7 @@ _start_task (NleComposition * comp)
     task = gst_task_new ((GstTaskFunction) _execute_actions, comp, NULL);
     gst_object_set_name (GST_OBJECT_CAST (task), taskname);
     gst_task_set_lock (task, GET_TASK_LOCK (comp));
-    GST_INFO_OBJECT (comp, "created task %p", task);
+    GST_DEBUG_OBJECT (comp, "created task %p", task);
     comp->task = task;
   }
 
