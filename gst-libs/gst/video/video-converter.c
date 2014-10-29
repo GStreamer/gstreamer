@@ -599,6 +599,16 @@ video_dither_halftone (GstVideoConverter * convert, guint16 * pixels, int j)
   }
 }
 
+static gboolean
+copy_config (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  GstVideoConverter *convert = user_data;
+
+  gst_structure_id_set_value (convert->config, field_id, value);
+
+  return TRUE;
+}
+
 /**
  * gst_video_converter_set_config:
  * @convert: a #GstVideoConverter
@@ -653,6 +663,9 @@ gst_video_converter_set_config (GstVideoConverter * convert,
     else
       res = FALSE;
   }
+  if (res)
+    gst_structure_foreach (config, copy_config, convert);
+
   gst_structure_free (config);
 
   return res;
