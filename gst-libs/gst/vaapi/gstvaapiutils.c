@@ -610,3 +610,46 @@ from_GstVaapiDeinterlaceFlags (guint flags)
 #endif
   return va_flags;
 }
+
+/* VPP: translate GstVaapiScaleMethod into VA scaling flags */
+guint
+from_GstVaapiScaleMethod (guint value)
+{
+  guint va_flags;
+
+  switch (value) {
+    case GST_VAAPI_SCALE_METHOD_DEFAULT:
+      va_flags = VA_FILTER_SCALING_DEFAULT;
+      break;
+    case GST_VAAPI_SCALE_METHOD_FAST:
+      va_flags = VA_FILTER_SCALING_FAST;
+      break;
+    case GST_VAAPI_SCALE_METHOD_HQ:
+      va_flags = VA_FILTER_SCALING_HQ;
+      break;
+    default:
+      va_flags = 0;
+      break;
+  }
+  return va_flags;
+}
+
+/* VPP: translate VA scaling flags into GstVaapiScale Method */
+guint
+to_GstVaapiScaleMethod (guint flags)
+{
+  GstVaapiScaleMethod method;
+
+  switch (flags) {
+    case VA_FILTER_SCALING_FAST:
+      method = GST_VAAPI_SCALE_METHOD_FAST;
+      break;
+    case VA_FILTER_SCALING_HQ:
+      method = GST_VAAPI_SCALE_METHOD_HQ;
+      break;
+    default:
+      method = GST_VAAPI_SCALE_METHOD_DEFAULT;
+      break;
+  }
+  return method;
+}

@@ -132,4 +132,12 @@ G_GNUC_INTERNAL
 guint
 from_GstVaapiDeinterlaceFlags (guint flags);
 
+G_GNUC_INTERNAL
+guint
+from_GstVaapiScaleMethod (guint value);
+
+G_GNUC_INTERNAL
+guint
+to_GstVaapiScaleMethod (guint flags);
+
 #endif /* GST_VAAPI_UTILS_H */

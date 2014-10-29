@@ -40,6 +40,7 @@ typedef struct _GstVaapiFilterOpInfo            GstVaapiFilterOpInfo;
  * @GST_VAAPI_FILTER_OP_SATURATION: Change saturation (float).
  * @GST_VAAPI_FILTER_OP_BRIGHTNESS: Change brightness (float).
  * @GST_VAAPI_FILTER_OP_CONTRAST: Change contrast (float).
+ * @GST_VAAPI_FILTER_OP_SCALING: Change scaling method (#GstVaapiScaleMethod).
  *
  * The set of operations that could be applied to the filter.
  */
@@ -53,6 +54,7 @@ typedef enum {
   GST_VAAPI_FILTER_OP_BRIGHTNESS,
   GST_VAAPI_FILTER_OP_CONTRAST,
   GST_VAAPI_FILTER_OP_DEINTERLACING,
+  GST_VAAPI_FILTER_OP_SCALING,
 } GstVaapiFilterOp;
 
 /**
@@ -87,6 +89,21 @@ typedef enum {
   GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_OPERATION,
   GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_FORMAT,
 } GstVaapiFilterStatus;
+
+/**
+ * GstVaapiScaleMethod:
+ * @GST_VAAPI_SCALE_METHOD_DEFAULT: Default scaling mode.
+ * @GST_VAAPI_SCALE_METHOD_FAST: Fast scaling mode, at the expense of quality.
+ * @GST_VAAPI_SCALE_METHOD_HQ: High quality scaling mode, at the
+ *   expense of speed.
+ *
+ * Scaling algorithms.
+ */
+typedef enum {
+  GST_VAAPI_SCALE_METHOD_DEFAULT,
+  GST_VAAPI_SCALE_METHOD_FAST,
+  GST_VAAPI_SCALE_METHOD_HQ,
+} GstVaapiScaleMethod;
 
 /**
  * GstVaapiDeinterlaceMethod:
@@ -130,11 +147,17 @@ typedef enum {
   GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD = 1 << 29,
 } GstVaapiDeinterlaceFlags;
 
+#define GST_VAAPI_TYPE_SCALE_METHOD \
+    gst_vaapi_scale_method_get_type()
+
 #define GST_VAAPI_TYPE_DEINTERLACE_METHOD \
     gst_vaapi_deinterlace_method_get_type()
 
 #define GST_VAAPI_TYPE_DEINTERLACE_FLAGS \
     gst_vaapi_deinterlace_flags_get_type()
+
+GType
+gst_vaapiscale_method_get_type (void) G_GNUC_CONST;
 
 GType
 gst_vaapi_deinterlace_method_get_type (void) G_GNUC_CONST;
@@ -212,5 +235,9 @@ gboolean
 gst_vaapi_filter_set_deinterlacing_references (GstVaapiFilter * filter,
     GstVaapiSurface ** forward_references, guint num_forward_references,
     GstVaapiSurface ** backward_references, guint num_backward_references);
+
+gboolean
+gst_vaapi_filter_set_scaling (GstVaapiFilter * filter,
+    GstVaapiScaleMethod method);
 
 #endif /* GST_VAAPI_FILTER_H */

@@ -65,6 +65,7 @@ struct _GstVaapiFilter
   VAContextID va_context;
   GPtrArray *operations;
   GstVideoFormat format;
+  GstVaapiScaleMethod scale_method;
   GArray *formats;
   GArray *forward_references;
   GArray *backward_references;
@@ -77,6 +78,29 @@ struct _GstVaapiFilter
 /* ------------------------------------------------------------------------- */
 /* --- VPP Types                                                         --- */
 /* ------------------------------------------------------------------------- */
+
+GType
+gst_vaapi_scale_method_get_type (void)
+{
+  static gsize g_type = 0;
+
+  static const GEnumValue enum_values[] = {
+    {GST_VAAPI_SCALE_METHOD_DEFAULT,
+        "Default scaling mode", "default"},
+    {GST_VAAPI_SCALE_METHOD_FAST,
+        "Fast scaling mode", "fast"},
+    {GST_VAAPI_SCALE_METHOD_HQ,
+        "High quality scaling mode", "hq"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&g_type)) {
+    const GType type =
+        g_enum_register_static ("GstVaapiScaleMethod", enum_values);
+    g_once_init_leave (&g_type, type);
+  }
+  return g_type;
+}
 
 GType
 gst_vaapi_deinterlace_method_get_type (void)
@@ -238,6 +262,7 @@ vpp_get_filter_caps (GstVaapiFilter * filter, VAProcFilterType type,
 
 #if USE_VA_VPP
 #define DEFAULT_FORMAT  GST_VIDEO_FORMAT_UNKNOWN
+#define DEFAULT_SCALING GST_VAAPI_SCALE_METHOD_DEFAULT
 
 enum
 {
@@ -252,6 +277,7 @@ enum
   PROP_BRIGHTNESS = GST_VAAPI_FILTER_OP_BRIGHTNESS,
   PROP_CONTRAST = GST_VAAPI_FILTER_OP_CONTRAST,
   PROP_DEINTERLACING = GST_VAAPI_FILTER_OP_DEINTERLACING,
+  PROP_SCALING = GST_VAAPI_FILTER_OP_SCALING,
 
   N_PROPERTIES
 };
@@ -361,6 +387,18 @@ init_properties (void)
       GST_VAAPI_TYPE_DEINTERLACE_METHOD,
       GST_VAAPI_DEINTERLACE_METHOD_NONE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiFilter:scale-method:
+   *
+   * The scaling method to use, expressed as an enum value. See
+   * #GstVaapiScaleMethod.
+   */
+  g_properties[PROP_SCALING] = g_param_spec_enum ("scale-method",
+      "Scaling Method",
+      "Scaling method to use",
+      GST_VAAPI_TYPE_SCALE_METHOD,
+      DEFAULT_SCALING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 }
 
 static void
@@ -396,6 +434,7 @@ op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
   switch (op) {
     case GST_VAAPI_FILTER_OP_FORMAT:
     case GST_VAAPI_FILTER_OP_CROP:
+    case GST_VAAPI_FILTER_OP_SCALING:
       op_data->va_type = VAProcFilterNone;
       break;
     case GST_VAAPI_FILTER_OP_DENOISE:
@@ -1258,6 +1297,9 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
           (value ? g_value_get_enum (value) :
               G_PARAM_SPEC_ENUM (op_data->pspec)->default_value), 0);
       break;
+    case GST_VAAPI_FILTER_OP_SCALING:
+      return gst_vaapi_filter_set_scaling (filter, value ?
+          g_value_get_enum (value) : DEFAULT_SCALING);
     default:
       break;
   }
@@ -1369,7 +1411,8 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   pipeline_param->output_region = &dst_rect;
   pipeline_param->output_color_standard = VAProcColorStandardNone;
   pipeline_param->output_background_color = 0xff000000;
-  pipeline_param->filter_flags = from_GstVaapiSurfaceRenderFlags (flags);
+  pipeline_param->filter_flags = from_GstVaapiSurfaceRenderFlags (flags) |
+      from_GstVaapiScaleMethod (filter->scale_method);
   pipeline_param->filters = filters;
   pipeline_param->num_filters = num_filters;
 
@@ -1725,5 +1768,24 @@ gst_vaapi_filter_set_deinterlacing_references (GstVaapiFilter * filter,
   if (!deint_refs_set (filter->backward_references, backward_references,
           num_backward_references))
     return FALSE;
+  return TRUE;
+}
+
+/**
+ * gst_vaapi_filter_set_scaling:
+ * @filter: a #GstVaapiFilter
+ * @method: the scaling algorithm (see #GstVaapiScaleMethod)
+ *
+ * Applies scaling algorithm to the video processing pipeline.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_scaling (GstVaapiFilter * filter,
+    GstVaapiScaleMethod method)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  filter->scale_method = method;
   return TRUE;
 }
