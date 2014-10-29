@@ -468,7 +468,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
 {
   GError *error = NULL;
 
-  if (!gst_gl_ensure_element_data (gl_sink, &gl_sink->display, &gl_sink->other_context))
+  if (!gst_gl_ensure_element_data (gl_sink, &gl_sink->display,
+          &gl_sink->other_context))
     return FALSE;
 
   if (!gl_sink->context) {
@@ -584,7 +585,8 @@ gst_glimage_sink_set_context (GstElement * element, GstContext * context)
 {
   GstGLImageSink *gl_sink = GST_GLIMAGE_SINK (element);
 
-  gst_gl_handle_set_context (element, context, &gl_sink->display, &gl_sink->other_context);
+  gst_gl_handle_set_context (element, context, &gl_sink->display,
+      &gl_sink->other_context);
 }
 
 static GstStateChangeReturn
@@ -605,7 +607,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_atomic_int_set (&glimage_sink->to_quit, 0);
       if (!glimage_sink->display) {
-        if (!gst_gl_ensure_element_data (glimage_sink, &glimage_sink->display, &glimage_sink->other_context))
+        if (!gst_gl_ensure_element_data (glimage_sink, &glimage_sink->display,
+                &glimage_sink->other_context))
           return GST_STATE_CHANGE_FAILURE;
       }
       break;
