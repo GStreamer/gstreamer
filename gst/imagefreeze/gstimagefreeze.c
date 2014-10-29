@@ -158,6 +158,7 @@ gst_image_freeze_reset (GstImageFreeze * self)
 
   self->fps_n = self->fps_d = 0;
   self->offset = 0;
+  self->seqnum = 0;
   g_mutex_unlock (&self->lock);
 
   g_atomic_int_set (&self->seeking, 0);
@@ -570,6 +571,7 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gint64 last_stop;
       gboolean start_task;
       gboolean flush;
+      guint32 seqnum;
 
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
@@ -598,11 +600,13 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
       }
 
+      seqnum = gst_event_get_seqnum (event);
       if (flush) {
         GstEvent *e;
 
         g_atomic_int_set (&self->seeking, 1);
         e = gst_event_new_flush_start ();
+        gst_event_set_seqnum (e, seqnum);
         gst_pad_push_event (self->srcpad, e);
       } else {
         gst_pad_pause_task (self->srcpad);
@@ -624,6 +628,7 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GstEvent *e;
 
         e = gst_event_new_flush_stop (TRUE);
+        gst_event_set_seqnum (e, seqnum);
         gst_pad_push_event (self->srcpad, e);
         g_atomic_int_set (&self->seeking, 0);
       }
@@ -636,6 +641,7 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_element_post_message (GST_ELEMENT (self), m);
       }
 
+      self->seqnum = seqnum;
       GST_PAD_STREAM_UNLOCK (self->srcpad);
 
       GST_DEBUG_OBJECT (pad, "Seek successful");
@@ -716,6 +722,9 @@ gst_image_freeze_src_loop (GstPad * pad)
     GST_DEBUG_OBJECT (pad, "Pushing SEGMENT event: %" GST_SEGMENT_FORMAT,
         &self->segment);
     e = gst_event_new_segment (&self->segment);
+
+    if (self->seqnum)
+      gst_event_set_seqnum (e, self->seqnum);
 
     g_mutex_lock (&self->lock);
     if (self->segment.rate >= 0) {
@@ -823,14 +832,25 @@ pause_task:
         gst_element_post_message (GST_ELEMENT_CAST (self), m);
         gst_pad_push_event (self->srcpad, e);
       } else {
+        GstEvent *e = gst_event_new_eos ();
+
         GST_DEBUG_OBJECT (pad, "Sending EOS at end of segment");
-        gst_pad_push_event (self->srcpad, gst_event_new_eos ());
+
+        if (self->seqnum)
+          gst_event_set_seqnum (e, self->seqnum);
+        gst_pad_push_event (self->srcpad, e);
       }
     } else if (flow_ret == GST_FLOW_NOT_LINKED || flow_ret < GST_FLOW_EOS) {
+      GstEvent *e = gst_event_new_eos ();
+
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
           ("Internal data stream error."),
           ("stream stopped, reason %s", reason));
-      gst_pad_push_event (self->srcpad, gst_event_new_eos ());
+
+      if (self->seqnum)
+        gst_event_set_seqnum (e, self->seqnum);
+
+      gst_pad_push_event (self->srcpad, e);
     }
     return;
   }
