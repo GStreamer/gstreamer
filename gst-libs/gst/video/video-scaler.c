@@ -494,8 +494,7 @@ video_scale_v_ntap_8888 (GstVideoScaler * scale,
  */
 void
 gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
-    GstVideoColorRange range, gpointer src, gpointer dest, guint dest_offset,
-    guint width)
+    gpointer src, gpointer dest, guint dest_offset, guint width)
 {
   GstVideoScalerHFunc func;
 
@@ -534,8 +533,7 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
  */
 void
 gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
-    GstVideoColorRange range, gpointer srcs[], gpointer dest, guint dest_offset,
-    guint width)
+    gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
   GstVideoScalerVFunc func;
 

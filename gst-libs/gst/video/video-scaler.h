@@ -64,12 +64,10 @@ const gdouble *       gst_video_scaler_get_coeff      (GstVideoScaler *scale,
 
 void                  gst_video_scaler_horizontal     (GstVideoScaler *scale,
                                                        GstVideoFormat format,
-                                                       GstVideoColorRange range,
                                                        gpointer src, gpointer dest,
                                                        guint dest_offset, guint width);
 void                  gst_video_scaler_vertical       (GstVideoScaler *scale,
                                                        GstVideoFormat format,
-                                                       GstVideoColorRange range,
                                                        gpointer src_lines[], gpointer dest,
                                                        guint out_offset, guint width);
 

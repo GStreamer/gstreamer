@@ -1154,7 +1154,7 @@ do_hscale_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
 
   GST_DEBUG ("hresample line %d", line);
   gst_video_scaler_horizontal (convert->h_scaler, GST_VIDEO_FORMAT_AYUV,
-      GST_VIDEO_COLOR_RANGE_0_255, lines[0], destline, 0, convert->out_width);
+      lines[0], destline, 0, convert->out_width);
 
   gst_line_cache_add_line (cache, line, destline);
 
@@ -1174,8 +1174,7 @@ do_vscale_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
 
   GST_DEBUG ("vresample line %d %d-%d", line, sline, sline + n_lines - 1);
   gst_video_scaler_vertical (convert->v_scaler, GST_VIDEO_FORMAT_AYUV,
-      GST_VIDEO_COLOR_RANGE_0_255, lines, destline, line,
-      convert->v_scale_width);
+      lines, destline, line, convert->v_scale_width);
 
   gst_line_cache_add_line (cache, line, destline);
 
