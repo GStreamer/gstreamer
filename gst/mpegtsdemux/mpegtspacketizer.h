@@ -282,6 +282,7 @@ struct _MpegTSPacketizer2 {
   guint8 pcrtablelut[0x2000];
   MpegTSPCR *observations[MAX_PCR_OBS_CHANNELS];
   guint8 lastobsid;
+  GstClockTime pcr_discont_threshold;
 };
 
 struct _MpegTSPacketizer2Class {
@@ -374,6 +375,9 @@ mpegts_packetizer_set_current_pcr_offset (MpegTSPacketizer2 * packetizer,
 G_GNUC_INTERNAL void
 mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
 					guint64 refoffset);
+G_GNUC_INTERNAL void
+mpegts_packetizer_set_pcr_discont_threshold (MpegTSPacketizer2 * packetizer,
+					GstClockTime threshold);
 G_END_DECLS
 
 #endif /* GST_MPEGTS_PACKETIZER_H */

@@ -250,6 +250,8 @@ mpegts_parse_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SMOOTHING_LATENCY:
       parse->smoothing_latency = GST_USECOND * g_value_get_uint (value);
+      mpegts_packetizer_set_pcr_discont_threshold (GST_MPEGTS_BASE
+          (parse)->packetizer, parse->smoothing_latency);
       break;
     case PROP_PCR_PID:
       parse->pcr_pid = parse->user_pcr_pid = g_value_get_int (value);
@@ -774,7 +776,7 @@ drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all)
     pcr_diff = get_pending_timestamp_diff (parse);
   } else {                      /* Case 4 */
     start_ts = parse->previous_pcr;
-    if (pcr > start_ts)
+    if (GST_CLOCK_TIME_IS_VALID (pcr) && pcr > start_ts)
       pcr_diff = GST_CLOCK_DIFF (start_ts, pcr);
 
     /* Make sure PCR observations are sufficiently far apart */
@@ -782,8 +784,8 @@ drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all)
       return GST_FLOW_OK;
   }
 
-  GST_LOG_OBJECT (parse, "Pushing buffers - startTS %" GST_TIME_FORMAT
-      " duration %" GST_TIME_FORMAT " %" G_GSIZE_FORMAT " bytes\n",
+  GST_INFO_OBJECT (parse, "Pushing buffers - startTS %" GST_TIME_FORMAT
+      " duration %" GST_TIME_FORMAT " %" G_GSIZE_FORMAT " bytes",
       GST_TIME_ARGS (start_ts), GST_TIME_ARGS (pcr_diff), pcr_bytes);
 
   /* Now, push buffers out pacing timestamps over pcr_diff time and pcr_bytes */
