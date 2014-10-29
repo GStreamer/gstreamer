@@ -321,6 +321,7 @@ _remove_clip (GstValidateScenario * scenario, GstValidateAction * action)
   clip = ges_timeline_get_element (timeline, name);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
+  gst_validate_printf (action, "removing clip with ID %s\n", name);
   layer = ges_clip_get_layer (GES_CLIP (clip));
 
   if (layer) {
