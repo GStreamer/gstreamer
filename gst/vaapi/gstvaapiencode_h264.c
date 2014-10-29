@@ -37,8 +37,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h264_encode_debug);
 #define GST_CAT_DEFAULT gst_vaapi_h264_encode_debug
 
-#define GST_CODEC_CAPS                          \
-  "video/x-h264, "                              \
+#define GST_CODEC_CAPS                              \
+  "video/x-h264, "                                  \
+  "stream-format = (string) { avc, byte-stream }, " \
   "alignment = (string) au"
 
 /* *INDENT-OFF* */
@@ -237,6 +238,8 @@ gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
   }
   gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING,
       encode->is_avc ? "avc" : "byte-stream", NULL);
+
+  base_encode->need_codec_data = encode->is_avc;
 
   /* XXX: update profile and level information */
   return caps;

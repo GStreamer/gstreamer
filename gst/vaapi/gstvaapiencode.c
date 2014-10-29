@@ -241,10 +241,12 @@ ensure_output_state (GstVaapiEncode * encode)
   encode->output_state = gst_video_encoder_set_output_state (venc, out_caps,
       encode->input_state);
 
-  status = gst_vaapi_encoder_get_codec_data (encode->encoder,
-      &encode->output_state->codec_data);
-  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-    return FALSE;
+  if (encode->need_codec_data) {
+    status = gst_vaapi_encoder_get_codec_data (encode->encoder,
+        &encode->output_state->codec_data);
+    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+      return FALSE;
+  }
 
 #if GST_CHECK_VERSION(1,0,0)
   if (!gst_video_encoder_negotiate (venc))

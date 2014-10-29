@@ -55,6 +55,8 @@ struct _GstVaapiEncode
   GstVaapiEncoder *encoder;
   GstVideoCodecState *input_state;
   gboolean input_state_changed;
+  /* needs to be set by the subclass implementation */
+  gboolean need_codec_data;
   GstVideoCodecState *output_state;
   GPtrArray *prop_values;
 };
