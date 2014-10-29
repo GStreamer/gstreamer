@@ -299,7 +299,7 @@ gst_h264_sps_mvc_copy (GstH264SPS * dst_sps, const GstH264SPS * src_sps)
 
     dst_view->view_id = src_view->view_id;
 
-    dst_view->num_anchor_refs_l0 = src_view->num_anchor_refs_l1;
+    dst_view->num_anchor_refs_l0 = src_view->num_anchor_refs_l0;
     for (j = 0; j < dst_view->num_anchor_refs_l0; j++)
       dst_view->anchor_ref_l0[j] = src_view->anchor_ref_l0[j];
 
@@ -307,7 +307,7 @@ gst_h264_sps_mvc_copy (GstH264SPS * dst_sps, const GstH264SPS * src_sps)
     for (j = 0; j < dst_view->num_anchor_refs_l1; j++)
       dst_view->anchor_ref_l1[j] = src_view->anchor_ref_l1[j];
 
-    dst_view->num_non_anchor_refs_l0 = src_view->num_non_anchor_refs_l1;
+    dst_view->num_non_anchor_refs_l0 = src_view->num_non_anchor_refs_l0;
     for (j = 0; j < dst_view->num_non_anchor_refs_l0; j++)
       dst_view->non_anchor_ref_l0[j] = src_view->non_anchor_ref_l0[j];
 
