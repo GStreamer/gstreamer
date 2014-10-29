@@ -44,15 +44,15 @@ typedef struct _GstVaapiFilterOpInfo            GstVaapiFilterOpInfo;
  * The set of operations that could be applied to the filter.
  */
 typedef enum {
-    GST_VAAPI_FILTER_OP_FORMAT = 1,
-    GST_VAAPI_FILTER_OP_CROP,
-    GST_VAAPI_FILTER_OP_DENOISE,
-    GST_VAAPI_FILTER_OP_SHARPEN,
-    GST_VAAPI_FILTER_OP_HUE,
-    GST_VAAPI_FILTER_OP_SATURATION,
-    GST_VAAPI_FILTER_OP_BRIGHTNESS,
-    GST_VAAPI_FILTER_OP_CONTRAST,
-    GST_VAAPI_FILTER_OP_DEINTERLACING,
+  GST_VAAPI_FILTER_OP_FORMAT = 1,
+  GST_VAAPI_FILTER_OP_CROP,
+  GST_VAAPI_FILTER_OP_DENOISE,
+  GST_VAAPI_FILTER_OP_SHARPEN,
+  GST_VAAPI_FILTER_OP_HUE,
+  GST_VAAPI_FILTER_OP_SATURATION,
+  GST_VAAPI_FILTER_OP_BRIGHTNESS,
+  GST_VAAPI_FILTER_OP_CONTRAST,
+  GST_VAAPI_FILTER_OP_DEINTERLACING,
 } GstVaapiFilterOp;
 
 /**
@@ -62,9 +62,10 @@ typedef enum {
  *
  * A #GstVaapiFilterOp descriptor.
  */
-struct _GstVaapiFilterOpInfo {
-    const GstVaapiFilterOp      op;
-    GParamSpec * const          pspec;
+struct _GstVaapiFilterOpInfo
+{
+  const GstVaapiFilterOp op;
+  GParamSpec *const pspec;
 };
 
 /**
@@ -79,12 +80,12 @@ struct _GstVaapiFilterOpInfo {
  * Video processing status for gst_vaapi_filter_process().
  */
 typedef enum {
-    GST_VAAPI_FILTER_STATUS_SUCCESS = 0,
-    GST_VAAPI_FILTER_STATUS_ERROR_ALLOCATION_FAILED,
-    GST_VAAPI_FILTER_STATUS_ERROR_OPERATION_FAILED,
-    GST_VAAPI_FILTER_STATUS_ERROR_INVALID_PARAMETER,
-    GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_OPERATION,
-    GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_FORMAT,
+  GST_VAAPI_FILTER_STATUS_SUCCESS = 0,
+  GST_VAAPI_FILTER_STATUS_ERROR_ALLOCATION_FAILED,
+  GST_VAAPI_FILTER_STATUS_ERROR_OPERATION_FAILED,
+  GST_VAAPI_FILTER_STATUS_ERROR_INVALID_PARAMETER,
+  GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_OPERATION,
+  GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_FORMAT,
 } GstVaapiFilterStatus;
 
 /**
@@ -100,11 +101,11 @@ typedef enum {
  * Deinterlacing algorithms.
  */
 typedef enum {
-    GST_VAAPI_DEINTERLACE_METHOD_NONE,
-    GST_VAAPI_DEINTERLACE_METHOD_BOB,
-    GST_VAAPI_DEINTERLACE_METHOD_WEAVE,
-    GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE,
-    GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED,
+  GST_VAAPI_DEINTERLACE_METHOD_NONE,
+  GST_VAAPI_DEINTERLACE_METHOD_BOB,
+  GST_VAAPI_DEINTERLACE_METHOD_WEAVE,
+  GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE,
+  GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED,
 } GstVaapiDeinterlaceMethod;
 
 /**
@@ -124,9 +125,9 @@ typedef enum {
  * The set of gst_vaapi_filter_set_deinterlacing() flags.
  */
 typedef enum {
-    GST_VAAPI_DEINTERLACE_FLAG_TFF      = 1 << 31,
-    GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD = 1 << 30,
-    GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD = 1 << 29,
+  GST_VAAPI_DEINTERLACE_FLAG_TFF = 1 << 31,
+  GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD = 1 << 30,
+  GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD = 1 << 29,
 } GstVaapiDeinterlaceFlags;
 
 #define GST_VAAPI_TYPE_DEINTERLACE_METHOD \
@@ -136,80 +137,80 @@ typedef enum {
     gst_vaapi_deinterlace_flags_get_type()
 
 GType
-gst_vaapi_deinterlace_method_get_type(void) G_GNUC_CONST;
+gst_vaapi_deinterlace_method_get_type (void) G_GNUC_CONST;
 
 GType
-gst_vaapi_deinterlace_flags_get_type(void) G_GNUC_CONST;
+gst_vaapi_deinterlace_flags_get_type (void) G_GNUC_CONST;
 
 GstVaapiFilter *
-gst_vaapi_filter_new(GstVaapiDisplay *display);
+gst_vaapi_filter_new (GstVaapiDisplay * display);
 
 GstVaapiFilter *
-gst_vaapi_filter_ref(GstVaapiFilter *filter);
+gst_vaapi_filter_ref (GstVaapiFilter * filter);
 
 void
-gst_vaapi_filter_unref(GstVaapiFilter *filter);
+gst_vaapi_filter_unref (GstVaapiFilter * filter);
 
 void
-gst_vaapi_filter_replace(GstVaapiFilter **old_filter_ptr,
-    GstVaapiFilter *new_filter);
+gst_vaapi_filter_replace (GstVaapiFilter ** old_filter_ptr,
+    GstVaapiFilter * new_filter);
 
 GPtrArray *
-gst_vaapi_filter_get_operations(GstVaapiFilter *filter);
+gst_vaapi_filter_get_operations (GstVaapiFilter * filter);
 
 gboolean
-gst_vaapi_filter_has_operation(GstVaapiFilter *filter, GstVaapiFilterOp op);
+gst_vaapi_filter_has_operation (GstVaapiFilter * filter, GstVaapiFilterOp op);
 
 gboolean
-gst_vaapi_filter_use_operation(GstVaapiFilter *filter, GstVaapiFilterOp op);
+gst_vaapi_filter_use_operation (GstVaapiFilter * filter, GstVaapiFilterOp op);
 
 gboolean
-gst_vaapi_filter_set_operation(GstVaapiFilter *filter, GstVaapiFilterOp op,
-    const GValue *value);
+gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
+    const GValue * value);
 
 GstVaapiFilterStatus
-gst_vaapi_filter_process(GstVaapiFilter *filter, GstVaapiSurface *src_surface,
-    GstVaapiSurface *dst_surface, guint flags);
+gst_vaapi_filter_process (GstVaapiFilter * filter,
+    GstVaapiSurface * src_surface, GstVaapiSurface * dst_surface, guint flags);
 
 GArray *
-gst_vaapi_filter_get_formats(GstVaapiFilter *filter);
+gst_vaapi_filter_get_formats (GstVaapiFilter * filter);
 
 gboolean
-gst_vaapi_filter_set_format(GstVaapiFilter *filter, GstVideoFormat format);
+gst_vaapi_filter_set_format (GstVaapiFilter * filter, GstVideoFormat format);
 
 gboolean
-gst_vaapi_filter_set_cropping_rectangle(GstVaapiFilter *filter,
-    const GstVaapiRectangle *rect);
+gst_vaapi_filter_set_cropping_rectangle (GstVaapiFilter * filter,
+    const GstVaapiRectangle * rect);
 
 gboolean
-gst_vaapi_filter_set_target_rectangle(GstVaapiFilter *filter,
-    const GstVaapiRectangle *rect);
+gst_vaapi_filter_set_target_rectangle (GstVaapiFilter * filter,
+    const GstVaapiRectangle * rect);
 
 gboolean
-gst_vaapi_filter_set_denoising_level(GstVaapiFilter *filter, gfloat level);
+gst_vaapi_filter_set_denoising_level (GstVaapiFilter * filter, gfloat level);
 
 gboolean
-gst_vaapi_filter_set_sharpening_level(GstVaapiFilter *filter, gfloat level);
+gst_vaapi_filter_set_sharpening_level (GstVaapiFilter * filter, gfloat level);
 
 gboolean
-gst_vaapi_filter_set_hue(GstVaapiFilter *filter, gfloat value);
+gst_vaapi_filter_set_hue (GstVaapiFilter * filter, gfloat value);
 
 gboolean
-gst_vaapi_filter_set_saturation(GstVaapiFilter *filter, gfloat value);
+gst_vaapi_filter_set_saturation (GstVaapiFilter * filter, gfloat value);
 
 gboolean
-gst_vaapi_filter_set_brightness(GstVaapiFilter *filter, gfloat value);
+gst_vaapi_filter_set_brightness (GstVaapiFilter * filter, gfloat value);
 
 gboolean
-gst_vaapi_filter_set_contrast(GstVaapiFilter *filter, gfloat value);
+gst_vaapi_filter_set_contrast (GstVaapiFilter * filter, gfloat value);
 
 gboolean
-gst_vaapi_filter_set_deinterlacing(GstVaapiFilter *filter,
+gst_vaapi_filter_set_deinterlacing (GstVaapiFilter * filter,
     GstVaapiDeinterlaceMethod method, guint flags);
 
 gboolean
-gst_vaapi_filter_set_deinterlacing_references(GstVaapiFilter *filter,
-    GstVaapiSurface **forward_references, guint num_forward_references,
-    GstVaapiSurface **backward_references, guint num_backward_references);
+gst_vaapi_filter_set_deinterlacing_references (GstVaapiFilter * filter,
+    GstVaapiSurface ** forward_references, guint num_forward_references,
+    GstVaapiSurface ** backward_references, guint num_backward_references);
 
 #endif /* GST_VAAPI_FILTER_H */

@@ -39,37 +39,39 @@
     ((GstVaapiFilter *)(obj))
 
 typedef struct _GstVaapiFilterOpData GstVaapiFilterOpData;
-struct _GstVaapiFilterOpData {
-    GstVaapiFilterOp    op;
-    GParamSpec         *pspec;
-    volatile gint       ref_count;
-    guint               va_type;
-    guint               va_subtype;
-    gpointer            va_caps;
-    guint               va_num_caps;
-    guint               va_cap_size;
-    VABufferID          va_buffer;
-    guint               va_buffer_size;
-    guint               is_enabled      : 1;
+struct _GstVaapiFilterOpData
+{
+  GstVaapiFilterOp op;
+  GParamSpec *pspec;
+  volatile gint ref_count;
+  guint va_type;
+  guint va_subtype;
+  gpointer va_caps;
+  guint va_num_caps;
+  guint va_cap_size;
+  VABufferID va_buffer;
+  guint va_buffer_size;
+  guint is_enabled:1;
 };
 
-struct _GstVaapiFilter {
-    /*< private >*/
-    GstVaapiMiniObject  parent_instance;
+struct _GstVaapiFilter
+{
+  /*< private > */
+  GstVaapiMiniObject parent_instance;
 
-    GstVaapiDisplay    *display;
-    VADisplay           va_display;
-    VAConfigID          va_config;
-    VAContextID         va_context;
-    GPtrArray          *operations;
-    GstVideoFormat      format;
-    GArray             *formats;
-    GArray             *forward_references;
-    GArray             *backward_references;
-    GstVaapiRectangle   crop_rect;
-    GstVaapiRectangle   target_rect;
-    guint               use_crop_rect   : 1;
-    guint               use_target_rect : 1;
+  GstVaapiDisplay *display;
+  VADisplay va_display;
+  VAConfigID va_config;
+  VAContextID va_context;
+  GPtrArray *operations;
+  GstVideoFormat format;
+  GArray *formats;
+  GArray *forward_references;
+  GArray *backward_references;
+  GstVaapiRectangle crop_rect;
+  GstVaapiRectangle target_rect;
+  guint use_crop_rect:1;
+  guint use_target_rect:1;
 };
 
 /* ------------------------------------------------------------------------- */
@@ -77,55 +79,55 @@ struct _GstVaapiFilter {
 /* ------------------------------------------------------------------------- */
 
 GType
-gst_vaapi_deinterlace_method_get_type(void)
+gst_vaapi_deinterlace_method_get_type (void)
 {
-    static gsize g_type = 0;
+  static gsize g_type = 0;
 
-    static const GEnumValue enum_values[] = {
-        { GST_VAAPI_DEINTERLACE_METHOD_NONE,
-          "Disable deinterlacing", "none" },
-        { GST_VAAPI_DEINTERLACE_METHOD_BOB,
-          "Bob deinterlacing", "bob" },
+  static const GEnumValue enum_values[] = {
+    {GST_VAAPI_DEINTERLACE_METHOD_NONE,
+        "Disable deinterlacing", "none"},
+    {GST_VAAPI_DEINTERLACE_METHOD_BOB,
+        "Bob deinterlacing", "bob"},
 #if USE_VA_VPP
-        { GST_VAAPI_DEINTERLACE_METHOD_WEAVE,
-          "Weave deinterlacing", "weave" },
-        { GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE,
-          "Motion adaptive deinterlacing", "motion-adaptive" },
-        { GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED,
-          "Motion compensated deinterlacing", "motion-compensated" },
+    {GST_VAAPI_DEINTERLACE_METHOD_WEAVE,
+        "Weave deinterlacing", "weave"},
+    {GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE,
+        "Motion adaptive deinterlacing", "motion-adaptive"},
+    {GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED,
+        "Motion compensated deinterlacing", "motion-compensated"},
 #endif
-        { 0, NULL, NULL },
-    };
+    {0, NULL, NULL},
+  };
 
-    if (g_once_init_enter(&g_type)) {
-        const GType type =
-            g_enum_register_static("GstVaapiDeinterlaceMethod", enum_values);
-        g_once_init_leave(&g_type, type);
-    }
-    return g_type;
+  if (g_once_init_enter (&g_type)) {
+    const GType type =
+        g_enum_register_static ("GstVaapiDeinterlaceMethod", enum_values);
+    g_once_init_leave (&g_type, type);
+  }
+  return g_type;
 }
 
 GType
-gst_vaapi_deinterlace_flags_get_type(void)
+gst_vaapi_deinterlace_flags_get_type (void)
 {
-    static gsize g_type = 0;
+  static gsize g_type = 0;
 
-    static const GEnumValue enum_values[] = {
-        { GST_VAAPI_DEINTERLACE_FLAG_TFF,
-          "Top-field first", "top-field-first" },
-        { GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD,
-          "One field", "one-field" },
-        { GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD,
-          "Top field", "top-field" },
-        { 0, NULL, NULL }
-    };
+  static const GEnumValue enum_values[] = {
+    {GST_VAAPI_DEINTERLACE_FLAG_TFF,
+        "Top-field first", "top-field-first"},
+    {GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD,
+        "One field", "one-field"},
+    {GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD,
+        "Top field", "top-field"},
+    {0, NULL, NULL}
+  };
 
-    if (g_once_init_enter(&g_type)) {
-        const GType type =
-            g_enum_register_static("GstVaapiDeinterlaceFlags", enum_values);
-        g_once_init_leave(&g_type, type);
-    }
-    return g_type;
+  if (g_once_init_enter (&g_type)) {
+    const GType type =
+        g_enum_register_static ("GstVaapiDeinterlaceFlags", enum_values);
+    g_once_init_leave (&g_type, type);
+  }
+  return g_type;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -134,100 +136,99 @@ gst_vaapi_deinterlace_flags_get_type(void)
 
 #if USE_VA_VPP
 static VAProcFilterType *
-vpp_get_filters_unlocked(GstVaapiFilter *filter, guint *num_filters_ptr)
+vpp_get_filters_unlocked (GstVaapiFilter * filter, guint * num_filters_ptr)
 {
-    VAProcFilterType *filters = NULL;
-    guint num_filters = 0;
-    VAStatus va_status;
+  VAProcFilterType *filters = NULL;
+  guint num_filters = 0;
+  VAStatus va_status;
 
-    num_filters = VAProcFilterCount;
-    filters = g_malloc_n(num_filters, sizeof(*filters));
-    if (!filters)
-        goto error;
+  num_filters = VAProcFilterCount;
+  filters = g_malloc_n (num_filters, sizeof (*filters));
+  if (!filters)
+    goto error;
 
-    va_status = vaQueryVideoProcFilters(filter->va_display, filter->va_context,
-        filters, &num_filters);
+  va_status = vaQueryVideoProcFilters (filter->va_display, filter->va_context,
+      filters, &num_filters);
 
-    // Try to reallocate to the expected number of filters
-    if (va_status == VA_STATUS_ERROR_MAX_NUM_EXCEEDED) {
-        VAProcFilterType * const new_filters =
-            g_try_realloc_n(filters, num_filters, sizeof(*new_filters));
-        if (!new_filters)
-            goto error;
-        filters = new_filters;
+  // Try to reallocate to the expected number of filters
+  if (va_status == VA_STATUS_ERROR_MAX_NUM_EXCEEDED) {
+    VAProcFilterType *const new_filters =
+        g_try_realloc_n (filters, num_filters, sizeof (*new_filters));
+    if (!new_filters)
+      goto error;
+    filters = new_filters;
 
-        va_status = vaQueryVideoProcFilters(filter->va_display,
-            filter->va_context, filters, &num_filters);
-    }
-    if (!vaapi_check_status(va_status, "vaQueryVideoProcFilters()"))
-        goto error;
+    va_status = vaQueryVideoProcFilters (filter->va_display,
+        filter->va_context, filters, &num_filters);
+  }
+  if (!vaapi_check_status (va_status, "vaQueryVideoProcFilters()"))
+    goto error;
 
-    *num_filters_ptr = num_filters;
-    return filters;
+  *num_filters_ptr = num_filters;
+  return filters;
 
 error:
-    g_free(filters);
-    return NULL;
+  g_free (filters);
+  return NULL;
 }
 
 static VAProcFilterType *
-vpp_get_filters(GstVaapiFilter *filter, guint *num_filters_ptr)
+vpp_get_filters (GstVaapiFilter * filter, guint * num_filters_ptr)
 {
-    VAProcFilterType *filters;
+  VAProcFilterType *filters;
 
-    GST_VAAPI_DISPLAY_LOCK(filter->display);
-    filters = vpp_get_filters_unlocked(filter, num_filters_ptr);
-    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
-    return filters;
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  filters = vpp_get_filters_unlocked (filter, num_filters_ptr);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+  return filters;
 }
 
 static gpointer
-vpp_get_filter_caps_unlocked(
-    GstVaapiFilter *filter, VAProcFilterType type,
-    guint cap_size, guint *num_caps_ptr)
+vpp_get_filter_caps_unlocked (GstVaapiFilter * filter, VAProcFilterType type,
+    guint cap_size, guint * num_caps_ptr)
 {
-    gpointer caps;
-    guint num_caps = 1;
-    VAStatus va_status;
+  gpointer caps;
+  guint num_caps = 1;
+  VAStatus va_status;
 
-    caps = g_malloc(cap_size);
-    if (!caps)
-        goto error;
+  caps = g_malloc (cap_size);
+  if (!caps)
+    goto error;
 
-    va_status = vaQueryVideoProcFilterCaps(filter->va_display,
+  va_status = vaQueryVideoProcFilterCaps (filter->va_display,
+      filter->va_context, type, caps, &num_caps);
+
+  // Try to reallocate to the expected number of filters
+  if (va_status == VA_STATUS_ERROR_MAX_NUM_EXCEEDED) {
+    gpointer const new_caps = g_try_realloc_n (caps, num_caps, cap_size);
+    if (!new_caps)
+      goto error;
+    caps = new_caps;
+
+    va_status = vaQueryVideoProcFilterCaps (filter->va_display,
         filter->va_context, type, caps, &num_caps);
+  }
+  if (!vaapi_check_status (va_status, "vaQueryVideoProcFilterCaps()"))
+    goto error;
 
-    // Try to reallocate to the expected number of filters
-    if (va_status == VA_STATUS_ERROR_MAX_NUM_EXCEEDED) {
-        gpointer const new_caps = g_try_realloc_n(caps, num_caps, cap_size);
-        if (!new_caps)
-            goto error;
-        caps = new_caps;
-
-        va_status = vaQueryVideoProcFilterCaps(filter->va_display,
-            filter->va_context, type, caps, &num_caps);
-    }
-    if (!vaapi_check_status(va_status, "vaQueryVideoProcFilterCaps()"))
-        goto error;
-
-    *num_caps_ptr = num_caps;
-    return caps;
+  *num_caps_ptr = num_caps;
+  return caps;
 
 error:
-    g_free(caps);
-    return NULL;
+  g_free (caps);
+  return NULL;
 }
 
 static gpointer
-vpp_get_filter_caps(GstVaapiFilter *filter, VAProcFilterType type,
-    guint cap_size, guint *num_caps_ptr)
+vpp_get_filter_caps (GstVaapiFilter * filter, VAProcFilterType type,
+    guint cap_size, guint * num_caps_ptr)
 {
-    gpointer caps;
+  gpointer caps;
 
-    GST_VAAPI_DISPLAY_LOCK(filter->display);
-    caps = vpp_get_filter_caps_unlocked(filter, type, cap_size, num_caps_ptr);
-    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
-    return caps;
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  caps = vpp_get_filter_caps_unlocked (filter, type, cap_size, num_caps_ptr);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+  return caps;
 }
 #endif
 
@@ -238,647 +239,631 @@ vpp_get_filter_caps(GstVaapiFilter *filter, VAProcFilterType type,
 #if USE_VA_VPP
 #define DEFAULT_FORMAT  GST_VIDEO_FORMAT_UNKNOWN
 
-enum {
-    PROP_0,
+enum
+{
+  PROP_0,
 
-    PROP_FORMAT         = GST_VAAPI_FILTER_OP_FORMAT,
-    PROP_CROP           = GST_VAAPI_FILTER_OP_CROP,
-    PROP_DENOISE        = GST_VAAPI_FILTER_OP_DENOISE,
-    PROP_SHARPEN        = GST_VAAPI_FILTER_OP_SHARPEN,
-    PROP_HUE            = GST_VAAPI_FILTER_OP_HUE,
-    PROP_SATURATION     = GST_VAAPI_FILTER_OP_SATURATION,
-    PROP_BRIGHTNESS     = GST_VAAPI_FILTER_OP_BRIGHTNESS,
-    PROP_CONTRAST       = GST_VAAPI_FILTER_OP_CONTRAST,
-    PROP_DEINTERLACING  = GST_VAAPI_FILTER_OP_DEINTERLACING,
+  PROP_FORMAT = GST_VAAPI_FILTER_OP_FORMAT,
+  PROP_CROP = GST_VAAPI_FILTER_OP_CROP,
+  PROP_DENOISE = GST_VAAPI_FILTER_OP_DENOISE,
+  PROP_SHARPEN = GST_VAAPI_FILTER_OP_SHARPEN,
+  PROP_HUE = GST_VAAPI_FILTER_OP_HUE,
+  PROP_SATURATION = GST_VAAPI_FILTER_OP_SATURATION,
+  PROP_BRIGHTNESS = GST_VAAPI_FILTER_OP_BRIGHTNESS,
+  PROP_CONTRAST = GST_VAAPI_FILTER_OP_CONTRAST,
+  PROP_DEINTERLACING = GST_VAAPI_FILTER_OP_DEINTERLACING,
 
-    N_PROPERTIES
+  N_PROPERTIES
 };
 
 static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
+
 static gsize g_properties_initialized = FALSE;
 
 static void
-init_properties(void)
+init_properties (void)
 {
-    /**
-     * GstVaapiFilter:format:
-     *
-     * The forced output pixel format, expressed as a #GstVideoFormat.
-     */
-    g_properties[PROP_FORMAT] =
-        g_param_spec_enum("format",
-                          "Format",
-                          "The forced output pixel format",
-                          GST_TYPE_VIDEO_FORMAT,
-                          DEFAULT_FORMAT,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstVaapiFilter:format:
+   *
+   * The forced output pixel format, expressed as a #GstVideoFormat.
+   */
+  g_properties[PROP_FORMAT] = g_param_spec_enum ("format",
+      "Format",
+      "The forced output pixel format",
+      GST_TYPE_VIDEO_FORMAT,
+      DEFAULT_FORMAT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    /**
-     * GstVaapiFilter:crop-rect:
-     *
-     * The cropping rectangle, expressed as a #GstVaapiRectangle.
-     */
-    g_properties[PROP_CROP] =
-        g_param_spec_boxed("crop-rect",
-                           "Cropping Rectangle",
-                           "The cropping rectangle",
-                           GST_VAAPI_TYPE_RECTANGLE,
-                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstVaapiFilter:crop-rect:
+   *
+   * The cropping rectangle, expressed as a #GstVaapiRectangle.
+   */
+  g_properties[PROP_CROP] = g_param_spec_boxed ("crop-rect",
+      "Cropping Rectangle",
+      "The cropping rectangle",
+      GST_VAAPI_TYPE_RECTANGLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    /**
-     * GstVaapiFilter:denoise:
-     *
-     * The level of noise reduction to apply.
-     */
-    g_properties[PROP_DENOISE] =
-        g_param_spec_float("denoise",
-                           "Denoising Level",
-                           "The level of denoising to apply",
-                           0.0, 1.0, 0.0,
-                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstVaapiFilter:denoise:
+   *
+   * The level of noise reduction to apply.
+   */
+  g_properties[PROP_DENOISE] = g_param_spec_float ("denoise",
+      "Denoising Level",
+      "The level of denoising to apply",
+      0.0, 1.0, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    /**
-     * GstVaapiFilter:sharpen:
-     *
-     * The level of sharpening to apply for positive values, or the
-     * level of blurring for negative values.
-     */
-    g_properties[PROP_SHARPEN] =
-        g_param_spec_float("sharpen",
-                           "Sharpening Level",
-                           "The level of sharpening/blurring to apply",
-                           -1.0, 1.0, 0.0,
-                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstVaapiFilter:sharpen:
+   *
+   * The level of sharpening to apply for positive values, or the
+   * level of blurring for negative values.
+   */
+  g_properties[PROP_SHARPEN] = g_param_spec_float ("sharpen",
+      "Sharpening Level",
+      "The level of sharpening/blurring to apply",
+      -1.0, 1.0, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    /**
-     * GstVaapiFilter:hue:
-     *
-     * The color hue, expressed as a float value. Range is -180.0 to
-     * 180.0. Default value is 0.0 and represents no modification.
-     */
-    g_properties[PROP_HUE] =
-        g_param_spec_float("hue",
-                           "Hue",
-                           "The color hue value",
-                           -180.0, 180.0, 0.0,
-                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstVaapiFilter:hue:
+   *
+   * The color hue, expressed as a float value. Range is -180.0 to
+   * 180.0. Default value is 0.0 and represents no modification.
+   */
+  g_properties[PROP_HUE] = g_param_spec_float ("hue",
+      "Hue",
+      "The color hue value",
+      -180.0, 180.0, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    /**
-     * GstVaapiFilter:saturation:
-     *
-     * The color saturation, expressed as a float value. Range is 0.0
-     * to 2.0. Default value is 1.0 and represents no modification.
-     */
-    g_properties[PROP_SATURATION] =
-        g_param_spec_float("saturation",
-                           "Saturation",
-                           "The color saturation value",
-                           0.0, 2.0, 1.0,
-                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstVaapiFilter:saturation:
+   *
+   * The color saturation, expressed as a float value. Range is 0.0 to
+   * 2.0. Default value is 1.0 and represents no modification.
+   */
+  g_properties[PROP_SATURATION] = g_param_spec_float ("saturation",
+      "Saturation",
+      "The color saturation value",
+      0.0, 2.0, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    /**
-     * GstVaapiFilter:brightness:
-     *
-     * The color brightness, expressed as a float value. Range is -1.0
-     * to 1.0. Default value is 0.0 and represents no modification.
-     */
-    g_properties[PROP_BRIGHTNESS] =
-        g_param_spec_float("brightness",
-                           "Brightness",
-                           "The color brightness value",
-                           -1.0, 1.0, 0.0,
-                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstVaapiFilter:brightness:
+   *
+   * The color brightness, expressed as a float value. Range is -1.0
+   * to 1.0. Default value is 0.0 and represents no modification.
+   */
+  g_properties[PROP_BRIGHTNESS] = g_param_spec_float ("brightness",
+      "Brightness",
+      "The color brightness value",
+      -1.0, 1.0, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    /**
-     * GstVaapiFilter:contrast:
-     *
-     * The color contrast, expressed as a float value. Range is 0.0 to
-     * 2.0. Default value is 1.0 and represents no modification.
-     */
-    g_properties[PROP_CONTRAST] =
-        g_param_spec_float("contrast",
-                           "Contrast",
-                           "The color contrast value",
-                           0.0, 2.0, 1.0,
-                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstVaapiFilter:contrast:
+   *
+   * The color contrast, expressed as a float value. Range is 0.0 to
+   * 2.0. Default value is 1.0 and represents no modification.
+   */
+  g_properties[PROP_CONTRAST] = g_param_spec_float ("contrast",
+      "Contrast",
+      "The color contrast value",
+      0.0, 2.0, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-    /**
-     * GstVaapiFilter:deinterlace-method:
-     *
-     * The deinterlacing algorithm to apply, expressed a an enum
-     * value. See #GstVaapiDeinterlaceMethod.
-     */
-    g_properties[PROP_DEINTERLACING] =
-        g_param_spec_enum("deinterlace",
-                          "Deinterlacing Method",
-                          "Deinterlacing method to apply",
-                          GST_VAAPI_TYPE_DEINTERLACE_METHOD,
-                          GST_VAAPI_DEINTERLACE_METHOD_NONE,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstVaapiFilter:deinterlace-method:
+   *
+   * The deinterlacing algorithm to apply, expressed a an enum
+   * value. See #GstVaapiDeinterlaceMethod.
+   */
+  g_properties[PROP_DEINTERLACING] = g_param_spec_enum ("deinterlace",
+      "Deinterlacing Method",
+      "Deinterlacing method to apply",
+      GST_VAAPI_TYPE_DEINTERLACE_METHOD,
+      GST_VAAPI_DEINTERLACE_METHOD_NONE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 }
 
 static void
-ensure_properties(void)
+ensure_properties (void)
 {
-    if (g_once_init_enter(&g_properties_initialized)) {
-        init_properties();
-        g_once_init_leave(&g_properties_initialized, TRUE);
-    }
+  if (g_once_init_enter (&g_properties_initialized)) {
+    init_properties ();
+    g_once_init_leave (&g_properties_initialized, TRUE);
+  }
 }
 
 static void
-op_data_free(GstVaapiFilterOpData *op_data)
+op_data_free (GstVaapiFilterOpData * op_data)
 {
-    g_free(op_data->va_caps);
-    g_slice_free(GstVaapiFilterOpData, op_data);
+  g_free (op_data->va_caps);
+  g_slice_free (GstVaapiFilterOpData, op_data);
 }
 
 static inline gpointer
-op_data_new(GstVaapiFilterOp op, GParamSpec *pspec)
+op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
 {
-    GstVaapiFilterOpData *op_data;
+  GstVaapiFilterOpData *op_data;
 
-    op_data = g_slice_new0(GstVaapiFilterOpData);
-    if (!op_data)
-        return NULL;
+  op_data = g_slice_new0 (GstVaapiFilterOpData);
+  if (!op_data)
+    return NULL;
 
-    op_data->op         = op;
-    op_data->pspec      = pspec;
-    op_data->ref_count  = 1;
-    op_data->va_buffer  = VA_INVALID_ID;
+  op_data->op = op;
+  op_data->pspec = pspec;
+  op_data->ref_count = 1;
+  op_data->va_buffer = VA_INVALID_ID;
 
-    switch (op) {
+  switch (op) {
     case GST_VAAPI_FILTER_OP_FORMAT:
     case GST_VAAPI_FILTER_OP_CROP:
-        op_data->va_type = VAProcFilterNone;
-        break;
+      op_data->va_type = VAProcFilterNone;
+      break;
     case GST_VAAPI_FILTER_OP_DENOISE:
-        op_data->va_type = VAProcFilterNoiseReduction;
-        op_data->va_cap_size = sizeof(VAProcFilterCap);
-        op_data->va_buffer_size = sizeof(VAProcFilterParameterBuffer);
-        break;
+      op_data->va_type = VAProcFilterNoiseReduction;
+      op_data->va_cap_size = sizeof (VAProcFilterCap);
+      op_data->va_buffer_size = sizeof (VAProcFilterParameterBuffer);
+      break;
     case GST_VAAPI_FILTER_OP_SHARPEN:
-        op_data->va_type = VAProcFilterSharpening;
-        op_data->va_cap_size = sizeof(VAProcFilterCap);
-        op_data->va_buffer_size = sizeof(VAProcFilterParameterBuffer);
-        break;
+      op_data->va_type = VAProcFilterSharpening;
+      op_data->va_cap_size = sizeof (VAProcFilterCap);
+      op_data->va_buffer_size = sizeof (VAProcFilterParameterBuffer);
+      break;
     case GST_VAAPI_FILTER_OP_HUE:
-        op_data->va_subtype = VAProcColorBalanceHue;
-        goto op_colorbalance;
+      op_data->va_subtype = VAProcColorBalanceHue;
+      goto op_colorbalance;
     case GST_VAAPI_FILTER_OP_SATURATION:
-        op_data->va_subtype = VAProcColorBalanceSaturation;
-        goto op_colorbalance;
+      op_data->va_subtype = VAProcColorBalanceSaturation;
+      goto op_colorbalance;
     case GST_VAAPI_FILTER_OP_BRIGHTNESS:
-        op_data->va_subtype = VAProcColorBalanceBrightness;
-        goto op_colorbalance;
+      op_data->va_subtype = VAProcColorBalanceBrightness;
+      goto op_colorbalance;
     case GST_VAAPI_FILTER_OP_CONTRAST:
-        op_data->va_subtype = VAProcColorBalanceContrast;
+      op_data->va_subtype = VAProcColorBalanceContrast;
     op_colorbalance:
-        op_data->va_type = VAProcFilterColorBalance;
-        op_data->va_cap_size = sizeof(VAProcFilterCapColorBalance);
-        op_data->va_buffer_size = sizeof(VAProcFilterParameterBufferColorBalance);
-        break;
+      op_data->va_type = VAProcFilterColorBalance;
+      op_data->va_cap_size = sizeof (VAProcFilterCapColorBalance);
+      op_data->va_buffer_size =
+          sizeof (VAProcFilterParameterBufferColorBalance);
+      break;
     case GST_VAAPI_FILTER_OP_DEINTERLACING:
-        op_data->va_type = VAProcFilterDeinterlacing;
-        op_data->va_cap_size = sizeof(VAProcFilterCapDeinterlacing);
-        op_data->va_buffer_size = sizeof(VAProcFilterParameterBufferDeinterlacing);
-        break;
+      op_data->va_type = VAProcFilterDeinterlacing;
+      op_data->va_cap_size = sizeof (VAProcFilterCapDeinterlacing);
+      op_data->va_buffer_size =
+          sizeof (VAProcFilterParameterBufferDeinterlacing);
+      break;
     default:
-        g_assert(0 && "unsupported operation");
-        goto error;
-    }
-    return op_data;
+      g_assert (0 && "unsupported operation");
+      goto error;
+  }
+  return op_data;
 
 error:
-    op_data_free(op_data);
-    return NULL;
+  op_data_free (op_data);
+  return NULL;
 }
 
 static inline gpointer
-op_data_ref(gpointer data)
+op_data_ref (gpointer data)
 {
-    GstVaapiFilterOpData * const op_data = data;
+  GstVaapiFilterOpData *const op_data = data;
 
-    g_return_val_if_fail(op_data != NULL, NULL);
+  g_return_val_if_fail (op_data != NULL, NULL);
 
-    g_atomic_int_inc(&op_data->ref_count);
-    return op_data;
+  g_atomic_int_inc (&op_data->ref_count);
+  return op_data;
 }
 
 static void
-op_data_unref(gpointer data)
+op_data_unref (gpointer data)
 {
-    GstVaapiFilterOpData * const op_data = data;
+  GstVaapiFilterOpData *const op_data = data;
 
-    g_return_if_fail(op_data != NULL);
-    g_return_if_fail(op_data->ref_count > 0);
+  g_return_if_fail (op_data != NULL);
+  g_return_if_fail (op_data->ref_count > 0);
 
-    if (g_atomic_int_dec_and_test(&op_data->ref_count))
-        op_data_free(op_data);
+  if (g_atomic_int_dec_and_test (&op_data->ref_count))
+    op_data_free (op_data);
 }
 
 /* Ensure capability info is set up for the VA filter we are interested in */
 static gboolean
-op_data_ensure_caps(GstVaapiFilterOpData *op_data, gpointer filter_caps,
+op_data_ensure_caps (GstVaapiFilterOpData * op_data, gpointer filter_caps,
     guint num_filter_caps)
 {
-    guchar *filter_cap = filter_caps;
-    guint i, va_num_caps = num_filter_caps;
+  guchar *filter_cap = filter_caps;
+  guint i, va_num_caps = num_filter_caps;
 
-    // Find the VA filter cap matching the op info sub-type
-    if (op_data->va_subtype) {
-        for (i = 0; i < num_filter_caps; i++) {
-            /* XXX: sub-type shall always be the first field */
-            if (op_data->va_subtype == *(guint *)filter_cap) {
-                va_num_caps= 1;
-                break;
-            }
-            filter_cap += op_data->va_cap_size;
-        }
-        if (i == num_filter_caps)
-            return FALSE;
+  // Find the VA filter cap matching the op info sub-type
+  if (op_data->va_subtype) {
+    for (i = 0; i < num_filter_caps; i++) {
+      /* XXX: sub-type shall always be the first field */
+      if (op_data->va_subtype == *(guint *) filter_cap) {
+        va_num_caps = 1;
+        break;
+      }
+      filter_cap += op_data->va_cap_size;
     }
+    if (i == num_filter_caps)
+      return FALSE;
+  }
 
-    op_data->va_caps = g_memdup(filter_cap,
-        op_data->va_cap_size * va_num_caps);
-    if (!op_data->va_caps)
-        return FALSE;
+  op_data->va_caps = g_memdup (filter_cap, op_data->va_cap_size * va_num_caps);
+  if (!op_data->va_caps)
+    return FALSE;
 
-    op_data->va_num_caps = va_num_caps;
-    return TRUE;
+  op_data->va_num_caps = va_num_caps;
+  return TRUE;
 }
 
 /* Scale the filter value wrt. library spec and VA driver spec */
 static gboolean
-op_data_get_value_float(GstVaapiFilterOpData *op_data,
-    const VAProcFilterValueRange *range, gfloat value, gfloat *out_value_ptr)
+op_data_get_value_float (GstVaapiFilterOpData * op_data,
+    const VAProcFilterValueRange * range, gfloat value, gfloat * out_value_ptr)
 {
-    GParamSpecFloat * const pspec = G_PARAM_SPEC_FLOAT(op_data->pspec);
-    gfloat out_value;
+  GParamSpecFloat *const pspec = G_PARAM_SPEC_FLOAT (op_data->pspec);
+  gfloat out_value;
 
-    g_return_val_if_fail(range != NULL, FALSE);
-    g_return_val_if_fail(out_value_ptr != NULL, FALSE);
+  g_return_val_if_fail (range != NULL, FALSE);
+  g_return_val_if_fail (out_value_ptr != NULL, FALSE);
 
-    if (value < pspec->minimum || value > pspec->maximum)
-        return FALSE;
+  if (value < pspec->minimum || value > pspec->maximum)
+    return FALSE;
 
-    // Scale wrt. the medium ("default") value
-    out_value = range->default_value;
-    if (value > pspec->default_value)
-        out_value += ((value - pspec->default_value) /
-             (pspec->maximum - pspec->default_value) *
-             (range->max_value - range->default_value));
-    else if (value < pspec->default_value)
-        out_value -= ((pspec->default_value - value) /
-             (pspec->default_value - pspec->minimum) *
-             (range->default_value - range->min_value));
+  // Scale wrt. the medium ("default") value
+  out_value = range->default_value;
+  if (value > pspec->default_value)
+    out_value += ((value - pspec->default_value) /
+        (pspec->maximum - pspec->default_value) *
+        (range->max_value - range->default_value));
+  else if (value < pspec->default_value)
+    out_value -= ((pspec->default_value - value) /
+        (pspec->default_value - pspec->minimum) *
+        (range->default_value - range->min_value));
 
-    *out_value_ptr = out_value;
-    return TRUE;
+  *out_value_ptr = out_value;
+  return TRUE;
 }
 
 /* Get default list of operations supported by the library */
 static GPtrArray *
-get_operations_default(void)
+get_operations_default (void)
 {
-    GPtrArray *ops;
-    guint i;
+  GPtrArray *ops;
+  guint i;
 
-    ops = g_ptr_array_new_full(N_PROPERTIES, op_data_unref);
-    if (!ops)
-        return NULL;
+  ops = g_ptr_array_new_full (N_PROPERTIES, op_data_unref);
+  if (!ops)
+    return NULL;
 
-    ensure_properties();
+  ensure_properties ();
 
-    for (i = 0; i < N_PROPERTIES; i++) {
-        GParamSpec * const pspec = g_properties[i];
-        if (!pspec)
-            continue;
+  for (i = 0; i < N_PROPERTIES; i++) {
+    GParamSpec *const pspec = g_properties[i];
+    if (!pspec)
+      continue;
 
-        GstVaapiFilterOpData * const op_data = op_data_new(i, pspec);
-        if (!op_data)
-            goto error;
-        g_ptr_array_add(ops, op_data);
-    }
-    return ops;
+    GstVaapiFilterOpData *const op_data = op_data_new (i, pspec);
+    if (!op_data)
+      goto error;
+    g_ptr_array_add (ops, op_data);
+  }
+  return ops;
 
 error:
-    g_ptr_array_unref(ops);
-    return NULL;
+  g_ptr_array_unref (ops);
+  return NULL;
 }
 
 /* Get the ordered list of operations, based on VA/VPP queries */
 static GPtrArray *
-get_operations_ordered(GstVaapiFilter *filter, GPtrArray *default_ops)
+get_operations_ordered (GstVaapiFilter * filter, GPtrArray * default_ops)
 {
-    GPtrArray *ops;
-    VAProcFilterType *filters;
-    gpointer filter_caps = NULL;
-    guint i, j, num_filters, num_filter_caps = 0;
+  GPtrArray *ops;
+  VAProcFilterType *filters;
+  gpointer filter_caps = NULL;
+  guint i, j, num_filters, num_filter_caps = 0;
 
-    ops = g_ptr_array_new_full(default_ops->len, op_data_unref);
-    if (!ops)
-        return NULL;
+  ops = g_ptr_array_new_full (default_ops->len, op_data_unref);
+  if (!ops)
+    return NULL;
 
-    filters = vpp_get_filters(filter, &num_filters);
-    if (!filters)
+  filters = vpp_get_filters (filter, &num_filters);
+  if (!filters)
+    goto error;
+
+  // Append virtual ops first, i.e. those without an associated VA filter
+  for (i = 0; i < default_ops->len; i++) {
+    GstVaapiFilterOpData *const op_data = g_ptr_array_index (default_ops, i);
+    if (op_data->va_type == VAProcFilterNone)
+      g_ptr_array_add (ops, op_data_ref (op_data));
+  }
+
+  // Append ops, while preserving the VA filters ordering
+  for (i = 0; i < num_filters; i++) {
+    const VAProcFilterType va_type = filters[i];
+    if (va_type == VAProcFilterNone)
+      continue;
+
+    for (j = 0; j < default_ops->len; j++) {
+      GstVaapiFilterOpData *const op_data = g_ptr_array_index (default_ops, j);
+      if (op_data->va_type != va_type)
+        continue;
+
+      if (!filter_caps) {
+        filter_caps = vpp_get_filter_caps (filter, va_type,
+            op_data->va_cap_size, &num_filter_caps);
+        if (!filter_caps)
+          goto error;
+      }
+      if (!op_data_ensure_caps (op_data, filter_caps, num_filter_caps))
         goto error;
-
-    // Append virtual ops first, i.e. those without an associated VA filter
-    for (i = 0; i < default_ops->len; i++) {
-        GstVaapiFilterOpData * const op_data =
-            g_ptr_array_index(default_ops, i);
-        if (op_data->va_type == VAProcFilterNone)
-            g_ptr_array_add(ops, op_data_ref(op_data));
+      g_ptr_array_add (ops, op_data_ref (op_data));
     }
+    free (filter_caps);
+    filter_caps = NULL;
+  }
 
-    // Append ops, while preserving the VA filters ordering
-    for (i = 0; i < num_filters; i++) {
-        const VAProcFilterType va_type = filters[i];
-        if (va_type == VAProcFilterNone)
-            continue;
+  if (filter->operations)
+    g_ptr_array_unref (filter->operations);
+  filter->operations = g_ptr_array_ref (ops);
 
-        for (j = 0; j < default_ops->len; j++) {
-            GstVaapiFilterOpData * const op_data =
-                g_ptr_array_index(default_ops, j);
-            if (op_data->va_type != va_type)
-                continue;
-
-            if (!filter_caps) {
-                filter_caps = vpp_get_filter_caps(filter, va_type,
-                    op_data->va_cap_size, &num_filter_caps);
-                if (!filter_caps)
-                    goto error;
-            }
-            if (!op_data_ensure_caps(op_data, filter_caps, num_filter_caps))
-                goto error;
-            g_ptr_array_add(ops, op_data_ref(op_data));
-        }
-        free(filter_caps);
-        filter_caps = NULL;
-    }
-
-    if (filter->operations)
-        g_ptr_array_unref(filter->operations);
-    filter->operations = g_ptr_array_ref(ops);
-
-    g_free(filters);
-    g_ptr_array_unref(default_ops);
-    return ops;
+  g_free (filters);
+  g_ptr_array_unref (default_ops);
+  return ops;
 
 error:
-    g_free(filter_caps);
-    g_free(filters);
-    g_ptr_array_unref(ops);
-    g_ptr_array_unref(default_ops);
-    return NULL;
+  g_free (filter_caps);
+  g_free (filters);
+  g_ptr_array_unref (ops);
+  g_ptr_array_unref (default_ops);
+  return NULL;
 }
 #endif
 
 /* Determine the set of supported VPP operations by the specific
    filter, or known to this library if filter is NULL */
 static GPtrArray *
-get_operations(GstVaapiFilter *filter)
+get_operations (GstVaapiFilter * filter)
 {
 #if USE_VA_VPP
-    GPtrArray *ops;
+  GPtrArray *ops;
 
-    if (filter && filter->operations)
-        return g_ptr_array_ref(filter->operations);
+  if (filter && filter->operations)
+    return g_ptr_array_ref (filter->operations);
 
-    ops = get_operations_default();
-    if (!ops)
-        return NULL;
-    return filter ? get_operations_ordered(filter, ops) : ops;
-#endif
+  ops = get_operations_default ();
+  if (!ops)
     return NULL;
+  return filter ? get_operations_ordered (filter, ops) : ops;
+#endif
+  return NULL;
 }
 
 /* Ensure the set of supported VPP operations is cached into the
    GstVaapiFilter::operations member */
 static inline gboolean
-ensure_operations(GstVaapiFilter *filter)
+ensure_operations (GstVaapiFilter * filter)
 {
-    GPtrArray *ops;
+  GPtrArray *ops;
 
-    if (!filter)
-        return FALSE;
+  if (!filter)
+    return FALSE;
 
-    if (filter->operations)
-        return TRUE;
-
-    ops = get_operations(filter);
-    if (!ops)
-        return FALSE;
-
-    g_ptr_array_unref(ops);
+  if (filter->operations)
     return TRUE;
+
+  ops = get_operations (filter);
+  if (!ops)
+    return FALSE;
+
+  g_ptr_array_unref (ops);
+  return TRUE;
 }
 
 /* Find whether the VPP operation is supported or not */
 GstVaapiFilterOpData *
-find_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
+find_operation (GstVaapiFilter * filter, GstVaapiFilterOp op)
 {
-    guint i;
+  guint i;
 
-    if (!ensure_operations(filter))
-        return NULL;
-
-    for (i = 0; i < filter->operations->len; i++) {
-        GstVaapiFilterOpData * const op_data =
-            g_ptr_array_index(filter->operations, i);
-        if (op_data->op == op)
-            return op_data;
-    }
+  if (!ensure_operations (filter))
     return NULL;
+
+  for (i = 0; i < filter->operations->len; i++) {
+    GstVaapiFilterOpData *const op_data =
+        g_ptr_array_index (filter->operations, i);
+    if (op_data->op == op)
+      return op_data;
+  }
+  return NULL;
 }
 
 /* Ensure the operation's VA buffer is allocated */
 #if USE_VA_VPP
 static inline gboolean
-op_ensure_buffer(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data)
+op_ensure_buffer (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data)
 {
-    if (G_LIKELY(op_data->va_buffer != VA_INVALID_ID))
-        return TRUE;
-    return vaapi_create_buffer(filter->va_display, filter->va_context,
-        VAProcFilterParameterBufferType, op_data->va_buffer_size, NULL,
-        &op_data->va_buffer, NULL);
+  if (G_LIKELY (op_data->va_buffer != VA_INVALID_ID))
+    return TRUE;
+  return vaapi_create_buffer (filter->va_display, filter->va_context,
+      VAProcFilterParameterBufferType, op_data->va_buffer_size, NULL,
+      &op_data->va_buffer, NULL);
 }
 #endif
 
 /* Update a generic filter (float value) */
 #if USE_VA_VPP
 static gboolean
-op_set_generic_unlocked(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
-    gfloat value)
+op_set_generic_unlocked (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data, gfloat value)
 {
-    VAProcFilterParameterBuffer *buf;
-    VAProcFilterCap *filter_cap;
-    gfloat va_value;
+  VAProcFilterParameterBuffer *buf;
+  VAProcFilterCap *filter_cap;
+  gfloat va_value;
 
-    if (!op_data || !op_ensure_buffer(filter, op_data))
-        return FALSE;
+  if (!op_data || !op_ensure_buffer (filter, op_data))
+    return FALSE;
 
-    op_data->is_enabled =
-        (value != G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value);
-    if (!op_data->is_enabled)
-        return TRUE;
-
-    filter_cap = op_data->va_caps;
-    if (!op_data_get_value_float(op_data, &filter_cap->range, value, &va_value))
-        return FALSE;
-
-    buf = vaapi_map_buffer(filter->va_display, op_data->va_buffer);
-    if (!buf)
-        return FALSE;
-
-    buf->type = op_data->va_type;
-    buf->value = va_value;
-    vaapi_unmap_buffer(filter->va_display, op_data->va_buffer, NULL);
+  op_data->is_enabled =
+      (value != G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value);
+  if (!op_data->is_enabled)
     return TRUE;
+
+  filter_cap = op_data->va_caps;
+  if (!op_data_get_value_float (op_data, &filter_cap->range, value, &va_value))
+    return FALSE;
+
+  buf = vaapi_map_buffer (filter->va_display, op_data->va_buffer);
+  if (!buf)
+    return FALSE;
+
+  buf->type = op_data->va_type;
+  buf->value = va_value;
+  vaapi_unmap_buffer (filter->va_display, op_data->va_buffer, NULL);
+  return TRUE;
 }
 #endif
 
 static inline gboolean
-op_set_generic(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
+op_set_generic (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
     gfloat value)
 {
-    gboolean success = FALSE;
+  gboolean success = FALSE;
 
 #if USE_VA_VPP
-    GST_VAAPI_DISPLAY_LOCK(filter->display);
-    success = op_set_generic_unlocked(filter, op_data, value);
-    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  success = op_set_generic_unlocked (filter, op_data, value);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
 #endif
-    return success;
+  return success;
 }
 
 /* Update the color balance filter */
 #if USE_VA_VPP
 static gboolean
-op_set_color_balance_unlocked(GstVaapiFilter *filter,
-    GstVaapiFilterOpData *op_data, gfloat value)
+op_set_color_balance_unlocked (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data, gfloat value)
 {
-    VAProcFilterParameterBufferColorBalance *buf;
-    VAProcFilterCapColorBalance *filter_cap;
-    gfloat va_value;
+  VAProcFilterParameterBufferColorBalance *buf;
+  VAProcFilterCapColorBalance *filter_cap;
+  gfloat va_value;
 
-    if (!op_data || !op_ensure_buffer(filter, op_data))
-        return FALSE;
+  if (!op_data || !op_ensure_buffer (filter, op_data))
+    return FALSE;
 
-    op_data->is_enabled =
-        (value != G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value);
-    if (!op_data->is_enabled)
-        return TRUE;
-
-    filter_cap = op_data->va_caps;
-    if (!op_data_get_value_float(op_data, &filter_cap->range, value, &va_value))
-        return FALSE;
-
-    buf = vaapi_map_buffer(filter->va_display, op_data->va_buffer);
-    if (!buf)
-        return FALSE;
-
-    buf->type = op_data->va_type;
-    buf->attrib = op_data->va_subtype;
-    buf->value = va_value;
-    vaapi_unmap_buffer(filter->va_display, op_data->va_buffer, NULL);
+  op_data->is_enabled =
+      (value != G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value);
+  if (!op_data->is_enabled)
     return TRUE;
+
+  filter_cap = op_data->va_caps;
+  if (!op_data_get_value_float (op_data, &filter_cap->range, value, &va_value))
+    return FALSE;
+
+  buf = vaapi_map_buffer (filter->va_display, op_data->va_buffer);
+  if (!buf)
+    return FALSE;
+
+  buf->type = op_data->va_type;
+  buf->attrib = op_data->va_subtype;
+  buf->value = va_value;
+  vaapi_unmap_buffer (filter->va_display, op_data->va_buffer, NULL);
+  return TRUE;
 }
 #endif
 
 static inline gboolean
-op_set_color_balance(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
+op_set_color_balance (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
     gfloat value)
 {
-    gboolean success = FALSE;
+  gboolean success = FALSE;
 
 #if USE_VA_VPP
-    GST_VAAPI_DISPLAY_LOCK(filter->display);
-    success = op_set_color_balance_unlocked(filter, op_data, value);
-    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  success = op_set_color_balance_unlocked (filter, op_data, value);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
 #endif
-    return success;
+  return success;
 }
 
 /* Update deinterlace filter */
 #if USE_VA_VPP
 static gboolean
-op_set_deinterlace_unlocked(GstVaapiFilter *filter,
-    GstVaapiFilterOpData *op_data, GstVaapiDeinterlaceMethod method,
+op_set_deinterlace_unlocked (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data, GstVaapiDeinterlaceMethod method,
     guint flags)
 {
-    VAProcFilterParameterBufferDeinterlacing *buf;
-    const VAProcFilterCapDeinterlacing *filter_caps;
-    VAProcDeinterlacingType algorithm;
-    guint i;
+  VAProcFilterParameterBufferDeinterlacing *buf;
+  const VAProcFilterCapDeinterlacing *filter_caps;
+  VAProcDeinterlacingType algorithm;
+  guint i;
 
-    if (!op_data || !op_ensure_buffer(filter, op_data))
-        return FALSE;
+  if (!op_data || !op_ensure_buffer (filter, op_data))
+    return FALSE;
 
-    op_data->is_enabled = (method != GST_VAAPI_DEINTERLACE_METHOD_NONE);
-    if (!op_data->is_enabled)
-        return TRUE;
-
-    algorithm = from_GstVaapiDeinterlaceMethod(method);
-    for (i = 0, filter_caps = op_data->va_caps; i < op_data->va_num_caps; i++) {
-        if (filter_caps[i].type == algorithm)
-            break;
-    }
-    if (i == op_data->va_num_caps)
-        return FALSE;
-
-    buf = vaapi_map_buffer(filter->va_display, op_data->va_buffer);
-    if (!buf)
-        return FALSE;
-
-    buf->type = op_data->va_type;
-    buf->algorithm = algorithm;
-    buf->flags = from_GstVaapiDeinterlaceFlags(flags);
-    vaapi_unmap_buffer(filter->va_display, op_data->va_buffer, NULL);
+  op_data->is_enabled = (method != GST_VAAPI_DEINTERLACE_METHOD_NONE);
+  if (!op_data->is_enabled)
     return TRUE;
+
+  algorithm = from_GstVaapiDeinterlaceMethod (method);
+  for (i = 0, filter_caps = op_data->va_caps; i < op_data->va_num_caps; i++) {
+    if (filter_caps[i].type == algorithm)
+      break;
+  }
+  if (i == op_data->va_num_caps)
+    return FALSE;
+
+  buf = vaapi_map_buffer (filter->va_display, op_data->va_buffer);
+  if (!buf)
+    return FALSE;
+
+  buf->type = op_data->va_type;
+  buf->algorithm = algorithm;
+  buf->flags = from_GstVaapiDeinterlaceFlags (flags);
+  vaapi_unmap_buffer (filter->va_display, op_data->va_buffer, NULL);
+  return TRUE;
 }
 #endif
 
 static inline gboolean
-op_set_deinterlace(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
+op_set_deinterlace (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
     GstVaapiDeinterlaceMethod method, guint flags)
 {
-    gboolean success = FALSE;
+  gboolean success = FALSE;
 
 #if USE_VA_VPP
-    GST_VAAPI_DISPLAY_LOCK(filter->display);
-    success = op_set_deinterlace_unlocked(filter, op_data, method, flags);
-    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  success = op_set_deinterlace_unlocked (filter, op_data, method, flags);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
 #endif
-    return success;
+  return success;
 }
 
 static gboolean
-deint_refs_set(GArray *refs, GstVaapiSurface **surfaces, guint num_surfaces)
+deint_refs_set (GArray * refs, GstVaapiSurface ** surfaces, guint num_surfaces)
 {
-    guint i;
+  guint i;
 
-    if (num_surfaces > 0 && !surfaces)
-        return FALSE;
+  if (num_surfaces > 0 && !surfaces)
+    return FALSE;
 
-    for (i = 0; i < num_surfaces; i++)
-        g_array_append_val(refs, GST_VAAPI_OBJECT_ID(surfaces[i]));
-    return TRUE;
+  for (i = 0; i < num_surfaces; i++)
+    g_array_append_val (refs, GST_VAAPI_OBJECT_ID (surfaces[i]));
+  return TRUE;
 }
 
 static void
-deint_refs_clear(GArray *refs)
+deint_refs_clear (GArray * refs)
 {
-    if (refs->len > 0)
-        g_array_remove_range(refs, 0, refs->len);
+  if (refs->len > 0)
+    g_array_remove_range (refs, 0, refs->len);
 }
 
 static inline void
-deint_refs_clear_all(GstVaapiFilter *filter)
+deint_refs_clear_all (GstVaapiFilter * filter)
 {
-    deint_refs_clear(filter->forward_references);
-    deint_refs_clear(filter->backward_references);
+  deint_refs_clear (filter->forward_references);
+  deint_refs_clear (filter->backward_references);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -886,84 +871,84 @@ deint_refs_clear_all(GstVaapiFilter *filter)
 /* ------------------------------------------------------------------------- */
 
 static gboolean
-ensure_formats(GstVaapiFilter *filter)
+ensure_formats (GstVaapiFilter * filter)
 {
 #if VA_CHECK_VERSION(0,34,0)
-    VASurfaceAttrib *surface_attribs = NULL;
-    guint i, num_surface_attribs = 0;
-    VAStatus va_status;
+  VASurfaceAttrib *surface_attribs = NULL;
+  guint i, num_surface_attribs = 0;
+  VAStatus va_status;
 
-    if (G_LIKELY(filter->formats))
-        return TRUE;
-
-    GST_VAAPI_DISPLAY_LOCK(filter->display);
-    va_status = vaQuerySurfaceAttributes(filter->va_display, filter->va_config,
-        NULL, &num_surface_attribs);
-    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
-    if (!vaapi_check_status(va_status, "vaQuerySurfaceAttributes()"))
-        return FALSE;
-
-    surface_attribs = g_malloc(num_surface_attribs * sizeof(*surface_attribs));
-    if (!surface_attribs)
-        return FALSE;
-
-    GST_VAAPI_DISPLAY_LOCK(filter->display);
-    va_status = vaQuerySurfaceAttributes(filter->va_display, filter->va_config,
-        surface_attribs, &num_surface_attribs);
-    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
-    if (!vaapi_check_status(va_status, "vaQuerySurfaceAttributes()"))
-        return FALSE;
-
-    filter->formats = g_array_sized_new(FALSE, FALSE, sizeof(GstVideoFormat),
-        num_surface_attribs);
-    if (!filter->formats)
-        goto error;
-
-    for (i = 0; i < num_surface_attribs; i++) {
-        const VASurfaceAttrib * const surface_attrib = &surface_attribs[i];
-        GstVideoFormat format;
-
-        if (surface_attrib->type != VASurfaceAttribPixelFormat)
-            continue;
-        if (!(surface_attrib->flags & VA_SURFACE_ATTRIB_SETTABLE))
-            continue;
-
-        format = gst_vaapi_video_format_from_va_fourcc(
-            surface_attrib->value.value.i);
-        if (format == GST_VIDEO_FORMAT_UNKNOWN)
-            continue;
-        g_array_append_val(filter->formats, format);
-    }
-
-    g_free(surface_attribs);
+  if (G_LIKELY (filter->formats))
     return TRUE;
 
-error:
-    g_free(surface_attribs);
-#endif
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  va_status = vaQuerySurfaceAttributes (filter->va_display, filter->va_config,
+      NULL, &num_surface_attribs);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
     return FALSE;
+
+  surface_attribs = g_malloc (num_surface_attribs * sizeof (*surface_attribs));
+  if (!surface_attribs)
+    return FALSE;
+
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  va_status = vaQuerySurfaceAttributes (filter->va_display, filter->va_config,
+      surface_attribs, &num_surface_attribs);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
+    return FALSE;
+
+  filter->formats = g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat),
+      num_surface_attribs);
+  if (!filter->formats)
+    goto error;
+
+  for (i = 0; i < num_surface_attribs; i++) {
+    const VASurfaceAttrib *const surface_attrib = &surface_attribs[i];
+    GstVideoFormat format;
+
+    if (surface_attrib->type != VASurfaceAttribPixelFormat)
+      continue;
+    if (!(surface_attrib->flags & VA_SURFACE_ATTRIB_SETTABLE))
+      continue;
+
+    format =
+        gst_vaapi_video_format_from_va_fourcc (surface_attrib->value.value.i);
+    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+    g_array_append_val (filter->formats, format);
+  }
+
+  g_free (surface_attribs);
+  return TRUE;
+
+error:
+  g_free (surface_attribs);
+#endif
+  return FALSE;
 }
 
 static inline gboolean
-is_special_format(GstVideoFormat format)
+is_special_format (GstVideoFormat format)
 {
-    return format == GST_VIDEO_FORMAT_UNKNOWN ||
-        format == GST_VIDEO_FORMAT_ENCODED;
+  return format == GST_VIDEO_FORMAT_UNKNOWN ||
+      format == GST_VIDEO_FORMAT_ENCODED;
 }
 
 static gboolean
-find_format(GstVaapiFilter *filter, GstVideoFormat format)
+find_format (GstVaapiFilter * filter, GstVideoFormat format)
 {
-    guint i;
+  guint i;
 
-    if (is_special_format(format) || !filter->formats)
-        return FALSE;
-
-    for (i = 0; i < filter->formats->len; i++) {
-        if (g_array_index(filter->formats, GstVideoFormat, i) == format)
-            return TRUE;
-    }
+  if (is_special_format (format) || !filter->formats)
     return FALSE;
+
+  for (i = 0; i < filter->formats->len; i++) {
+    if (g_array_index (filter->formats, GstVideoFormat, i) == format)
+      return TRUE;
+  }
+  return FALSE;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -972,93 +957,93 @@ find_format(GstVaapiFilter *filter, GstVideoFormat format)
 
 #if USE_VA_VPP
 static gboolean
-gst_vaapi_filter_init(GstVaapiFilter *filter, GstVaapiDisplay *display)
+gst_vaapi_filter_init (GstVaapiFilter * filter, GstVaapiDisplay * display)
 {
-    VAStatus va_status;
+  VAStatus va_status;
 
-    filter->display     = gst_vaapi_display_ref(display);
-    filter->va_display  = GST_VAAPI_DISPLAY_VADISPLAY(display);
-    filter->va_config   = VA_INVALID_ID;
-    filter->va_context  = VA_INVALID_ID;
-    filter->format      = DEFAULT_FORMAT;
+  filter->display = gst_vaapi_display_ref (display);
+  filter->va_display = GST_VAAPI_DISPLAY_VADISPLAY (display);
+  filter->va_config = VA_INVALID_ID;
+  filter->va_context = VA_INVALID_ID;
+  filter->format = DEFAULT_FORMAT;
 
-    filter->forward_references =
-        g_array_sized_new(FALSE, FALSE, sizeof(VASurfaceID), 4);
-    if (!filter->forward_references)
-        return FALSE;
+  filter->forward_references =
+      g_array_sized_new (FALSE, FALSE, sizeof (VASurfaceID), 4);
+  if (!filter->forward_references)
+    return FALSE;
 
-    filter->backward_references =
-        g_array_sized_new(FALSE, FALSE, sizeof(VASurfaceID), 4);
-    if (!filter->backward_references)
-        return FALSE;
+  filter->backward_references =
+      g_array_sized_new (FALSE, FALSE, sizeof (VASurfaceID), 4);
+  if (!filter->backward_references)
+    return FALSE;
 
-    if (!GST_VAAPI_DISPLAY_HAS_VPP(display))
-        return FALSE;
+  if (!GST_VAAPI_DISPLAY_HAS_VPP (display))
+    return FALSE;
 
-    va_status = vaCreateConfig(filter->va_display, VAProfileNone,
-        VAEntrypointVideoProc, NULL, 0, &filter->va_config);
-    if (!vaapi_check_status(va_status, "vaCreateConfig() [VPP]"))
-        return FALSE;
+  va_status = vaCreateConfig (filter->va_display, VAProfileNone,
+      VAEntrypointVideoProc, NULL, 0, &filter->va_config);
+  if (!vaapi_check_status (va_status, "vaCreateConfig() [VPP]"))
+    return FALSE;
 
-    va_status = vaCreateContext(filter->va_display, filter->va_config, 0, 0, 0,
-        NULL, 0, &filter->va_context);
-    if (!vaapi_check_status(va_status, "vaCreateContext() [VPP]"))
-        return FALSE;
-    return TRUE;
+  va_status = vaCreateContext (filter->va_display, filter->va_config, 0, 0, 0,
+      NULL, 0, &filter->va_context);
+  if (!vaapi_check_status (va_status, "vaCreateContext() [VPP]"))
+    return FALSE;
+  return TRUE;
 }
 
 static void
-gst_vaapi_filter_finalize(GstVaapiFilter *filter)
+gst_vaapi_filter_finalize (GstVaapiFilter * filter)
 {
-    guint i;
+  guint i;
 
-    GST_VAAPI_DISPLAY_LOCK(filter->display);
-    if (filter->operations) {
-        for (i = 0; i < filter->operations->len; i++) {
-            GstVaapiFilterOpData * const op_data =
-                g_ptr_array_index(filter->operations, i);
-            vaapi_destroy_buffer(filter->va_display, &op_data->va_buffer);
-        }
-        g_ptr_array_unref(filter->operations);
-        filter->operations = NULL;
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  if (filter->operations) {
+    for (i = 0; i < filter->operations->len; i++) {
+      GstVaapiFilterOpData *const op_data =
+          g_ptr_array_index (filter->operations, i);
+      vaapi_destroy_buffer (filter->va_display, &op_data->va_buffer);
     }
+    g_ptr_array_unref (filter->operations);
+    filter->operations = NULL;
+  }
 
-    if (filter->va_context != VA_INVALID_ID) {
-        vaDestroyContext(filter->va_display, filter->va_context);
-        filter->va_context = VA_INVALID_ID;
-    }
+  if (filter->va_context != VA_INVALID_ID) {
+    vaDestroyContext (filter->va_display, filter->va_context);
+    filter->va_context = VA_INVALID_ID;
+  }
 
-    if (filter->va_config != VA_INVALID_ID) {
-        vaDestroyConfig(filter->va_display, filter->va_config);
-        filter->va_config = VA_INVALID_ID;
-    }
-    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
-    gst_vaapi_display_replace(&filter->display, NULL);
+  if (filter->va_config != VA_INVALID_ID) {
+    vaDestroyConfig (filter->va_display, filter->va_config);
+    filter->va_config = VA_INVALID_ID;
+  }
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+  gst_vaapi_display_replace (&filter->display, NULL);
 
-    if (filter->forward_references) {
-        g_array_unref(filter->forward_references);
-        filter->forward_references = NULL;
-    }
+  if (filter->forward_references) {
+    g_array_unref (filter->forward_references);
+    filter->forward_references = NULL;
+  }
 
-    if (filter->backward_references) {
-        g_array_unref(filter->backward_references);
-        filter->backward_references = NULL;
-    }
+  if (filter->backward_references) {
+    g_array_unref (filter->backward_references);
+    filter->backward_references = NULL;
+  }
 
-    if (filter->formats) {
-        g_array_unref(filter->formats);
-        filter->formats = NULL;
-    }
+  if (filter->formats) {
+    g_array_unref (filter->formats);
+    filter->formats = NULL;
+  }
 }
 
 static inline const GstVaapiMiniObjectClass *
-gst_vaapi_filter_class(void)
+gst_vaapi_filter_class (void)
 {
-    static const GstVaapiMiniObjectClass GstVaapiFilterClass = {
-        sizeof(GstVaapiFilter),
-        (GDestroyNotify)gst_vaapi_filter_finalize
-    };
-    return &GstVaapiFilterClass;
+  static const GstVaapiMiniObjectClass GstVaapiFilterClass = {
+    sizeof (GstVaapiFilter),
+    (GDestroyNotify) gst_vaapi_filter_finalize
+  };
+  return &GstVaapiFilterClass;
 }
 #endif
 
@@ -1072,27 +1057,27 @@ gst_vaapi_filter_class(void)
  * Return value: the newly created #GstVaapiFilter object
  */
 GstVaapiFilter *
-gst_vaapi_filter_new(GstVaapiDisplay *display)
+gst_vaapi_filter_new (GstVaapiDisplay * display)
 {
 #if USE_VA_VPP
-    GstVaapiFilter *filter;
+  GstVaapiFilter *filter;
 
-    filter = (GstVaapiFilter *)
-        gst_vaapi_mini_object_new0(gst_vaapi_filter_class());
-    if (!filter)
-        return NULL;
+  filter = (GstVaapiFilter *)
+      gst_vaapi_mini_object_new0 (gst_vaapi_filter_class ());
+  if (!filter)
+    return NULL;
 
-    if (!gst_vaapi_filter_init(filter, display))
-        goto error;
-    return filter;
+  if (!gst_vaapi_filter_init (filter, display))
+    goto error;
+  return filter;
 
 error:
-    gst_vaapi_filter_unref(filter);
-    return NULL;
+  gst_vaapi_filter_unref (filter);
+  return NULL;
 #else
-    GST_WARNING("video processing is not supported, "
-                "please consider an upgrade to VA-API >= 0.34");
-    return NULL;
+  GST_WARNING ("video processing is not supported, "
+      "please consider an upgrade to VA-API >= 0.34");
+  return NULL;
 #endif
 }
 
@@ -1105,12 +1090,13 @@ error:
  * Returns: The same @filter argument
  */
 GstVaapiFilter *
-gst_vaapi_filter_ref(GstVaapiFilter *filter)
+gst_vaapi_filter_ref (GstVaapiFilter * filter)
 {
-    g_return_val_if_fail(filter != NULL, NULL);
+  g_return_val_if_fail (filter != NULL, NULL);
 
-    return GST_VAAPI_FILTER(gst_vaapi_mini_object_ref(
-                                GST_VAAPI_MINI_OBJECT(filter)));
+  return
+      GST_VAAPI_FILTER (gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT
+          (filter)));
 }
 
 /**
@@ -1121,11 +1107,11 @@ gst_vaapi_filter_ref(GstVaapiFilter *filter)
  * the reference count reaches zero, the filter will be free'd.
  */
 void
-gst_vaapi_filter_unref(GstVaapiFilter *filter)
+gst_vaapi_filter_unref (GstVaapiFilter * filter)
 {
-    g_return_if_fail(filter != NULL);
+  g_return_if_fail (filter != NULL);
 
-    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(filter));
+  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (filter));
 }
 
 /**
@@ -1138,13 +1124,13 @@ gst_vaapi_filter_unref(GstVaapiFilter *filter)
  * valid filter. However, @new_filter can be NULL.
  */
 void
-gst_vaapi_filter_replace(GstVaapiFilter **old_filter_ptr,
-    GstVaapiFilter *new_filter)
+gst_vaapi_filter_replace (GstVaapiFilter ** old_filter_ptr,
+    GstVaapiFilter * new_filter)
 {
-    g_return_if_fail(old_filter_ptr != NULL);
+  g_return_if_fail (old_filter_ptr != NULL);
 
-    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)old_filter_ptr,
-        GST_VAAPI_MINI_OBJECT(new_filter));
+  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) old_filter_ptr,
+      GST_VAAPI_MINI_OBJECT (new_filter));
 }
 
 /**
@@ -1163,9 +1149,9 @@ gst_vaapi_filter_replace(GstVaapiFilter **old_filter_ptr,
  *   occurred.
  */
 GPtrArray *
-gst_vaapi_filter_get_operations(GstVaapiFilter *filter)
+gst_vaapi_filter_get_operations (GstVaapiFilter * filter)
 {
-    return get_operations(filter);
+  return get_operations (filter);
 }
 
 /**
@@ -1180,11 +1166,11 @@ gst_vaapi_filter_get_operations(GstVaapiFilter *filter)
  *   the underlying hardware, %FALSE otherwise
  */
 gboolean
-gst_vaapi_filter_has_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
+gst_vaapi_filter_has_operation (GstVaapiFilter * filter, GstVaapiFilterOp op)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    return find_operation(filter, op) != NULL;
+  return find_operation (filter, op) != NULL;
 }
 
 /**
@@ -1203,16 +1189,16 @@ gst_vaapi_filter_has_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
  *   %FALSE otherwise
  */
 gboolean
-gst_vaapi_filter_use_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
+gst_vaapi_filter_use_operation (GstVaapiFilter * filter, GstVaapiFilterOp op)
 {
-    GstVaapiFilterOpData *op_data;
+  GstVaapiFilterOpData *op_data;
 
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    op_data = find_operation(filter, op);
-    if (!op_data)
-        return FALSE;
-    return op_data->is_enabled;
+  op_data = find_operation (filter, op);
+  if (!op_data)
+    return FALSE;
+  return op_data->is_enabled;
 }
 
 /**
@@ -1233,50 +1219,50 @@ gst_vaapi_filter_use_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
  *   %FALSE otherwise
  */
 gboolean
-gst_vaapi_filter_set_operation(GstVaapiFilter *filter, GstVaapiFilterOp op,
-    const GValue *value)
+gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
+    const GValue * value)
 {
 #if USE_VA_VPP
-    GstVaapiFilterOpData *op_data;
+  GstVaapiFilterOpData *op_data;
 
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    op_data = find_operation(filter, op);
-    if (!op_data)
-        return FALSE;
+  op_data = find_operation (filter, op);
+  if (!op_data)
+    return FALSE;
 
-    if (value && !G_VALUE_HOLDS(value, G_PARAM_SPEC_VALUE_TYPE(op_data->pspec)))
-        return FALSE;
+  if (value && !G_VALUE_HOLDS (value, G_PARAM_SPEC_VALUE_TYPE (op_data->pspec)))
+    return FALSE;
 
-    switch (op) {
+  switch (op) {
     case GST_VAAPI_FILTER_OP_FORMAT:
-        return gst_vaapi_filter_set_format(filter, value ?
-            g_value_get_enum(value) : DEFAULT_FORMAT);
+      return gst_vaapi_filter_set_format (filter, value ?
+          g_value_get_enum (value) : DEFAULT_FORMAT);
     case GST_VAAPI_FILTER_OP_CROP:
-        return gst_vaapi_filter_set_cropping_rectangle(filter, value ?
-            g_value_get_boxed(value) : NULL);
+      return gst_vaapi_filter_set_cropping_rectangle (filter, value ?
+          g_value_get_boxed (value) : NULL);
     case GST_VAAPI_FILTER_OP_DENOISE:
     case GST_VAAPI_FILTER_OP_SHARPEN:
-        return op_set_generic(filter, op_data,
-            (value ? g_value_get_float(value) :
-             G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value));
+      return op_set_generic (filter, op_data,
+          (value ? g_value_get_float (value) :
+              G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value));
     case GST_VAAPI_FILTER_OP_HUE:
     case GST_VAAPI_FILTER_OP_SATURATION:
     case GST_VAAPI_FILTER_OP_BRIGHTNESS:
     case GST_VAAPI_FILTER_OP_CONTRAST:
-        return op_set_color_balance(filter, op_data,
-            (value ? g_value_get_float(value) :
-             G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value));
+      return op_set_color_balance (filter, op_data,
+          (value ? g_value_get_float (value) :
+              G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value));
     case GST_VAAPI_FILTER_OP_DEINTERLACING:
-        return op_set_deinterlace(filter, op_data,
-            (value ? g_value_get_enum(value) :
-             G_PARAM_SPEC_ENUM(op_data->pspec)->default_value), 0);
-        break;
+      return op_set_deinterlace (filter, op_data,
+          (value ? g_value_get_enum (value) :
+              G_PARAM_SPEC_ENUM (op_data->pspec)->default_value), 0);
+      break;
     default:
-        break;
-    }
+      break;
+  }
 #endif
-    return FALSE;
+  return FALSE;
 }
 
 /**
@@ -1295,171 +1281,167 @@ gst_vaapi_filter_set_operation(GstVaapiFilter *filter, GstVaapiFilterOp op,
  * Return value: a #GstVaapiFilterStatus
  */
 static GstVaapiFilterStatus
-gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
-    GstVaapiSurface *src_surface, GstVaapiSurface *dst_surface, guint flags)
+gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
+    GstVaapiSurface * src_surface, GstVaapiSurface * dst_surface, guint flags)
 {
 #if USE_VA_VPP
-    VAProcPipelineParameterBuffer *pipeline_param = NULL;
-    VABufferID pipeline_param_buf_id = VA_INVALID_ID;
-    VABufferID filters[N_PROPERTIES];
-    VAProcPipelineCaps pipeline_caps;
-    guint i, num_filters = 0;
-    VAStatus va_status;
-    VARectangle src_rect, dst_rect;
+  VAProcPipelineParameterBuffer *pipeline_param = NULL;
+  VABufferID pipeline_param_buf_id = VA_INVALID_ID;
+  VABufferID filters[N_PROPERTIES];
+  VAProcPipelineCaps pipeline_caps;
+  guint i, num_filters = 0;
+  VAStatus va_status;
+  VARectangle src_rect, dst_rect;
 
-    if (!ensure_operations(filter))
-        return GST_VAAPI_FILTER_STATUS_ERROR_ALLOCATION_FAILED;
+  if (!ensure_operations (filter))
+    return GST_VAAPI_FILTER_STATUS_ERROR_ALLOCATION_FAILED;
 
-    /* Build surface region (source) */
-    if (filter->use_crop_rect) {
-        const GstVaapiRectangle * const crop_rect = &filter->crop_rect;
+  /* Build surface region (source) */
+  if (filter->use_crop_rect) {
+    const GstVaapiRectangle *const crop_rect = &filter->crop_rect;
 
-        if ((crop_rect->x + crop_rect->width >
-             GST_VAAPI_SURFACE_WIDTH(src_surface)) ||
-            (crop_rect->y + crop_rect->height >
-             GST_VAAPI_SURFACE_HEIGHT(src_surface)))
-            goto error;
+    if ((crop_rect->x + crop_rect->width >
+            GST_VAAPI_SURFACE_WIDTH (src_surface)) ||
+        (crop_rect->y + crop_rect->height >
+            GST_VAAPI_SURFACE_HEIGHT (src_surface)))
+      goto error;
 
-        src_rect.x      = crop_rect->x;
-        src_rect.y      = crop_rect->y;
-        src_rect.width  = crop_rect->width;
-        src_rect.height = crop_rect->height;
+    src_rect.x = crop_rect->x;
+    src_rect.y = crop_rect->y;
+    src_rect.width = crop_rect->width;
+    src_rect.height = crop_rect->height;
+  } else {
+    src_rect.x = 0;
+    src_rect.y = 0;
+    src_rect.width = GST_VAAPI_SURFACE_WIDTH (src_surface);
+    src_rect.height = GST_VAAPI_SURFACE_HEIGHT (src_surface);
+  }
+
+  /* Build output region (target) */
+  if (filter->use_target_rect) {
+    const GstVaapiRectangle *const target_rect = &filter->target_rect;
+
+    if ((target_rect->x + target_rect->width >
+            GST_VAAPI_SURFACE_WIDTH (dst_surface)) ||
+        (target_rect->y + target_rect->height >
+            GST_VAAPI_SURFACE_HEIGHT (dst_surface)))
+      goto error;
+
+    dst_rect.x = target_rect->x;
+    dst_rect.y = target_rect->y;
+    dst_rect.width = target_rect->width;
+    dst_rect.height = target_rect->height;
+  } else {
+    dst_rect.x = 0;
+    dst_rect.y = 0;
+    dst_rect.width = GST_VAAPI_SURFACE_WIDTH (dst_surface);
+    dst_rect.height = GST_VAAPI_SURFACE_HEIGHT (dst_surface);
+  }
+
+  for (i = 0, num_filters = 0; i < filter->operations->len; i++) {
+    GstVaapiFilterOpData *const op_data =
+        g_ptr_array_index (filter->operations, i);
+    if (!op_data->is_enabled)
+      continue;
+    if (op_data->va_buffer == VA_INVALID_ID) {
+      GST_ERROR ("invalid VA buffer for operation %s",
+          g_param_spec_get_name (op_data->pspec));
+      goto error;
     }
-    else {
-        src_rect.x      = 0;
-        src_rect.y      = 0;
-        src_rect.width  = GST_VAAPI_SURFACE_WIDTH(src_surface);
-        src_rect.height = GST_VAAPI_SURFACE_HEIGHT(src_surface);
-    }
+    filters[num_filters++] = op_data->va_buffer;
+  }
 
-    /* Build output region (target) */
-    if (filter->use_target_rect) {
-        const GstVaapiRectangle * const target_rect = &filter->target_rect;
+  /* Validate pipeline caps */
+  va_status = vaQueryVideoProcPipelineCaps (filter->va_display,
+      filter->va_context, filters, num_filters, &pipeline_caps);
+  if (!vaapi_check_status (va_status, "vaQueryVideoProcPipelineCaps()"))
+    goto error;
 
-        if ((target_rect->x + target_rect->width >
-             GST_VAAPI_SURFACE_WIDTH(dst_surface)) ||
-            (target_rect->y + target_rect->height >
-             GST_VAAPI_SURFACE_HEIGHT(dst_surface)))
-            goto error;
+  if (!vaapi_create_buffer (filter->va_display, filter->va_context,
+          VAProcPipelineParameterBufferType, sizeof (*pipeline_param),
+          NULL, &pipeline_param_buf_id, (gpointer *) & pipeline_param))
+    goto error;
 
-        dst_rect.x      = target_rect->x;
-        dst_rect.y      = target_rect->y;
-        dst_rect.width  = target_rect->width;
-        dst_rect.height = target_rect->height;
-    }
-    else {
-        dst_rect.x      = 0;
-        dst_rect.y      = 0;
-        dst_rect.width  = GST_VAAPI_SURFACE_WIDTH(dst_surface);
-        dst_rect.height = GST_VAAPI_SURFACE_HEIGHT(dst_surface);
-    }
+  memset (pipeline_param, 0, sizeof (*pipeline_param));
+  pipeline_param->surface = GST_VAAPI_OBJECT_ID (src_surface);
+  pipeline_param->surface_region = &src_rect;
+  pipeline_param->surface_color_standard = VAProcColorStandardNone;
+  pipeline_param->output_region = &dst_rect;
+  pipeline_param->output_color_standard = VAProcColorStandardNone;
+  pipeline_param->output_background_color = 0xff000000;
+  pipeline_param->filter_flags = from_GstVaapiSurfaceRenderFlags (flags);
+  pipeline_param->filters = filters;
+  pipeline_param->num_filters = num_filters;
 
-    for (i = 0, num_filters = 0; i < filter->operations->len; i++) {
-        GstVaapiFilterOpData * const op_data =
-            g_ptr_array_index(filter->operations, i);
-        if (!op_data->is_enabled)
-            continue;
-        if (op_data->va_buffer == VA_INVALID_ID) {
-            GST_ERROR("invalid VA buffer for operation %s",
-                      g_param_spec_get_name(op_data->pspec));
-            goto error;
-        }
-        filters[num_filters++] = op_data->va_buffer;
-    }
+  // Reference frames for advanced deinterlacing
+  if (filter->forward_references->len > 0) {
+    pipeline_param->forward_references = (VASurfaceID *)
+        filter->forward_references->data;
+    pipeline_param->num_forward_references =
+        MIN (filter->forward_references->len,
+        pipeline_caps.num_forward_references);
+  } else {
+    pipeline_param->forward_references = NULL;
+    pipeline_param->num_forward_references = 0;
+  }
 
-    /* Validate pipeline caps */
-    va_status = vaQueryVideoProcPipelineCaps(filter->va_display,
-        filter->va_context, filters, num_filters, &pipeline_caps);
-    if (!vaapi_check_status(va_status, "vaQueryVideoProcPipelineCaps()"))
-        goto error;
+  if (filter->backward_references->len > 0) {
+    pipeline_param->backward_references = (VASurfaceID *)
+        filter->backward_references->data;
+    pipeline_param->num_backward_references =
+        MIN (filter->backward_references->len,
+        pipeline_caps.num_backward_references);
+  } else {
+    pipeline_param->backward_references = NULL;
+    pipeline_param->num_backward_references = 0;
+  }
 
-    if (!vaapi_create_buffer(filter->va_display, filter->va_context,
-            VAProcPipelineParameterBufferType, sizeof(*pipeline_param),
-            NULL, &pipeline_param_buf_id, (gpointer *)&pipeline_param))
-        goto error;
+  vaapi_unmap_buffer (filter->va_display, pipeline_param_buf_id, NULL);
 
-    memset(pipeline_param, 0, sizeof(*pipeline_param));
-    pipeline_param->surface = GST_VAAPI_OBJECT_ID(src_surface);
-    pipeline_param->surface_region = &src_rect;
-    pipeline_param->surface_color_standard = VAProcColorStandardNone;
-    pipeline_param->output_region = &dst_rect;
-    pipeline_param->output_color_standard = VAProcColorStandardNone;
-    pipeline_param->output_background_color = 0xff000000;
-    pipeline_param->filter_flags = from_GstVaapiSurfaceRenderFlags(flags);
-    pipeline_param->filters = filters;
-    pipeline_param->num_filters = num_filters;
+  va_status = vaBeginPicture (filter->va_display, filter->va_context,
+      GST_VAAPI_OBJECT_ID (dst_surface));
+  if (!vaapi_check_status (va_status, "vaBeginPicture()"))
+    goto error;
 
-    // Reference frames for advanced deinterlacing
-    if (filter->forward_references->len > 0) {
-        pipeline_param->forward_references = (VASurfaceID *)
-            filter->forward_references->data;
-        pipeline_param->num_forward_references =
-            MIN(filter->forward_references->len,
-                pipeline_caps.num_forward_references);
-    }
-    else {
-        pipeline_param->forward_references = NULL;
-        pipeline_param->num_forward_references = 0;
-    }
+  va_status = vaRenderPicture (filter->va_display, filter->va_context,
+      &pipeline_param_buf_id, 1);
+  if (!vaapi_check_status (va_status, "vaRenderPicture()"))
+    goto error;
 
-    if (filter->backward_references->len > 0) {
-        pipeline_param->backward_references = (VASurfaceID *)
-            filter->backward_references->data;
-        pipeline_param->num_backward_references =
-            MIN(filter->backward_references->len,
-                pipeline_caps.num_backward_references);
-    }
-    else {
-        pipeline_param->backward_references = NULL;
-        pipeline_param->num_backward_references = 0;
-    }
+  va_status = vaEndPicture (filter->va_display, filter->va_context);
+  if (!vaapi_check_status (va_status, "vaEndPicture()"))
+    goto error;
 
-    vaapi_unmap_buffer(filter->va_display, pipeline_param_buf_id, NULL);
-
-    va_status = vaBeginPicture(filter->va_display, filter->va_context,
-        GST_VAAPI_OBJECT_ID(dst_surface));
-    if (!vaapi_check_status(va_status, "vaBeginPicture()"))
-        goto error;
-
-    va_status = vaRenderPicture(filter->va_display, filter->va_context,
-        &pipeline_param_buf_id, 1);
-    if (!vaapi_check_status(va_status, "vaRenderPicture()"))
-        goto error;
-
-    va_status = vaEndPicture(filter->va_display, filter->va_context);
-    if (!vaapi_check_status(va_status, "vaEndPicture()"))
-        goto error;
-
-    deint_refs_clear_all(filter);
-    vaapi_destroy_buffer(filter->va_display, &pipeline_param_buf_id);
-    return GST_VAAPI_FILTER_STATUS_SUCCESS;
+  deint_refs_clear_all (filter);
+  vaapi_destroy_buffer (filter->va_display, &pipeline_param_buf_id);
+  return GST_VAAPI_FILTER_STATUS_SUCCESS;
 
 error:
-    deint_refs_clear_all(filter);
-    vaapi_destroy_buffer(filter->va_display, &pipeline_param_buf_id);
-    return GST_VAAPI_FILTER_STATUS_ERROR_OPERATION_FAILED;
+  deint_refs_clear_all (filter);
+  vaapi_destroy_buffer (filter->va_display, &pipeline_param_buf_id);
+  return GST_VAAPI_FILTER_STATUS_ERROR_OPERATION_FAILED;
 #endif
-    return GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_OPERATION;
+  return GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_OPERATION;
 }
 
 GstVaapiFilterStatus
-gst_vaapi_filter_process(GstVaapiFilter *filter, GstVaapiSurface *src_surface,
-    GstVaapiSurface *dst_surface, guint flags)
+gst_vaapi_filter_process (GstVaapiFilter * filter,
+    GstVaapiSurface * src_surface, GstVaapiSurface * dst_surface, guint flags)
 {
-    GstVaapiFilterStatus status;
+  GstVaapiFilterStatus status;
 
-    g_return_val_if_fail(filter != NULL,
-        GST_VAAPI_FILTER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(src_surface != NULL,
-        GST_VAAPI_FILTER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(dst_surface != NULL,
-        GST_VAAPI_FILTER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (filter != NULL,
+      GST_VAAPI_FILTER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (src_surface != NULL,
+      GST_VAAPI_FILTER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (dst_surface != NULL,
+      GST_VAAPI_FILTER_STATUS_ERROR_INVALID_PARAMETER);
 
-    GST_VAAPI_DISPLAY_LOCK(filter->display);
-    status = gst_vaapi_filter_process_unlocked(filter,
-        src_surface, dst_surface, flags);
-    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
-    return status;
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  status = gst_vaapi_filter_process_unlocked (filter,
+      src_surface, dst_surface, flags);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+  return status;
 }
 
 /**
@@ -1474,13 +1456,13 @@ gst_vaapi_filter_process(GstVaapiFilter *filter, GstVaapiSurface *src_surface,
  * Return value: the set of supported target formats for video processing.
  */
 GArray *
-gst_vaapi_filter_get_formats(GstVaapiFilter *filter)
+gst_vaapi_filter_get_formats (GstVaapiFilter * filter)
 {
-    g_return_val_if_fail(filter != NULL, NULL);
+  g_return_val_if_fail (filter != NULL, NULL);
 
-    if (!ensure_formats(filter))
-        return NULL;
-    return g_array_ref(filter->formats);
+  if (!ensure_formats (filter))
+    return NULL;
+  return g_array_ref (filter->formats);
 }
 
 /**
@@ -1502,18 +1484,18 @@ gst_vaapi_filter_get_formats(GstVaapiFilter *filter)
  *   may be supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_format(GstVaapiFilter *filter, GstVideoFormat format)
+gst_vaapi_filter_set_format (GstVaapiFilter * filter, GstVideoFormat format)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    if (!ensure_formats(filter))
-        return FALSE;
+  if (!ensure_formats (filter))
+    return FALSE;
 
-    if (!is_special_format(format) && !find_format(filter, format))
-        return FALSE;
+  if (!is_special_format (format) && !find_format (filter, format))
+    return FALSE;
 
-    filter->format = format;
-    return TRUE;
+  filter->format = format;
+  return TRUE;
 }
 
 /**
@@ -1527,15 +1509,15 @@ gst_vaapi_filter_set_format(GstVaapiFilter *filter, GstVideoFormat format)
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_cropping_rectangle(GstVaapiFilter *filter,
-    const GstVaapiRectangle *rect)
+gst_vaapi_filter_set_cropping_rectangle (GstVaapiFilter * filter,
+    const GstVaapiRectangle * rect)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    filter->use_crop_rect = rect != NULL;
-    if (filter->use_crop_rect)
-        filter->crop_rect = *rect;
-    return TRUE;
+  filter->use_crop_rect = rect != NULL;
+  if (filter->use_crop_rect)
+    filter->crop_rect = *rect;
+  return TRUE;
 }
 
 /**
@@ -1551,15 +1533,15 @@ gst_vaapi_filter_set_cropping_rectangle(GstVaapiFilter *filter,
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_target_rectangle(GstVaapiFilter *filter,
-    const GstVaapiRectangle *rect)
+gst_vaapi_filter_set_target_rectangle (GstVaapiFilter * filter,
+    const GstVaapiRectangle * rect)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    filter->use_target_rect = rect != NULL;
-    if (filter->use_target_rect)
-        filter->target_rect = *rect;
-    return TRUE;
+  filter->use_target_rect = rect != NULL;
+  if (filter->use_target_rect)
+    filter->target_rect = *rect;
+  return TRUE;
 }
 
 /**
@@ -1573,12 +1555,12 @@ gst_vaapi_filter_set_target_rectangle(GstVaapiFilter *filter,
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_denoising_level(GstVaapiFilter *filter, gfloat level)
+gst_vaapi_filter_set_denoising_level (GstVaapiFilter * filter, gfloat level)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    return op_set_generic(filter,
-        find_operation(filter, GST_VAAPI_FILTER_OP_DENOISE), level);
+  return op_set_generic (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_DENOISE), level);
 }
 
 /**
@@ -1591,12 +1573,12 @@ gst_vaapi_filter_set_denoising_level(GstVaapiFilter *filter, gfloat level)
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_sharpening_level(GstVaapiFilter *filter, gfloat level)
+gst_vaapi_filter_set_sharpening_level (GstVaapiFilter * filter, gfloat level)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    return op_set_generic(filter,
-        find_operation(filter, GST_VAAPI_FILTER_OP_SHARPEN), level);
+  return op_set_generic (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_SHARPEN), level);
 }
 
 /**
@@ -1609,12 +1591,12 @@ gst_vaapi_filter_set_sharpening_level(GstVaapiFilter *filter, gfloat level)
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_hue(GstVaapiFilter *filter, gfloat value)
+gst_vaapi_filter_set_hue (GstVaapiFilter * filter, gfloat value)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    return op_set_color_balance(filter,
-        find_operation(filter, GST_VAAPI_FILTER_OP_HUE), value);
+  return op_set_color_balance (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_HUE), value);
 }
 
 /**
@@ -1627,12 +1609,12 @@ gst_vaapi_filter_set_hue(GstVaapiFilter *filter, gfloat value)
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_saturation(GstVaapiFilter *filter, gfloat value)
+gst_vaapi_filter_set_saturation (GstVaapiFilter * filter, gfloat value)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    return op_set_color_balance(filter,
-        find_operation(filter, GST_VAAPI_FILTER_OP_SATURATION), value);
+  return op_set_color_balance (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_SATURATION), value);
 }
 
 /**
@@ -1645,12 +1627,12 @@ gst_vaapi_filter_set_saturation(GstVaapiFilter *filter, gfloat value)
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_brightness(GstVaapiFilter *filter, gfloat value)
+gst_vaapi_filter_set_brightness (GstVaapiFilter * filter, gfloat value)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    return op_set_color_balance(filter,
-        find_operation(filter, GST_VAAPI_FILTER_OP_BRIGHTNESS), value);
+  return op_set_color_balance (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_BRIGHTNESS), value);
 }
 
 /**
@@ -1663,12 +1645,12 @@ gst_vaapi_filter_set_brightness(GstVaapiFilter *filter, gfloat value)
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_contrast(GstVaapiFilter *filter, gfloat value)
+gst_vaapi_filter_set_contrast (GstVaapiFilter * filter, gfloat value)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    return op_set_color_balance(filter,
-        find_operation(filter, GST_VAAPI_FILTER_OP_CONTRAST), value);
+  return op_set_color_balance (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_CONTRAST), value);
 }
 
 /**
@@ -1684,14 +1666,14 @@ gst_vaapi_filter_set_contrast(GstVaapiFilter *filter, gfloat value)
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_deinterlacing(GstVaapiFilter *filter,
+gst_vaapi_filter_set_deinterlacing (GstVaapiFilter * filter,
     GstVaapiDeinterlaceMethod method, guint flags)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    return op_set_deinterlace(filter,
-        find_operation(filter, GST_VAAPI_FILTER_OP_DEINTERLACING), method,
-        flags);
+  return op_set_deinterlace (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_DEINTERLACING), method,
+      flags);
 }
 
 /**
@@ -1728,20 +1710,20 @@ gst_vaapi_filter_set_deinterlacing(GstVaapiFilter *filter,
  * Return value: %TRUE if the operation is supported, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_filter_set_deinterlacing_references(GstVaapiFilter *filter,
-    GstVaapiSurface **forward_references, guint num_forward_references,
-    GstVaapiSurface **backward_references, guint num_backward_references)
+gst_vaapi_filter_set_deinterlacing_references (GstVaapiFilter * filter,
+    GstVaapiSurface ** forward_references, guint num_forward_references,
+    GstVaapiSurface ** backward_references, guint num_backward_references)
 {
-    g_return_val_if_fail(filter != NULL, FALSE);
+  g_return_val_if_fail (filter != NULL, FALSE);
 
-    deint_refs_clear_all(filter);
+  deint_refs_clear_all (filter);
 
-    if (!deint_refs_set(filter->forward_references, forward_references,
-            num_forward_references))
-        return FALSE;
+  if (!deint_refs_set (filter->forward_references, forward_references,
+          num_forward_references))
+    return FALSE;
 
-    if (!deint_refs_set(filter->backward_references, backward_references,
-            num_backward_references))
-        return FALSE;
-    return TRUE;
+  if (!deint_refs_set (filter->backward_references, backward_references,
+          num_backward_references))
+    return FALSE;
+  return TRUE;
 }
