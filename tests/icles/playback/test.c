@@ -139,11 +139,18 @@ link_failed:
   }
 }
 
+static void
+error_eos_cb (GstBus * bus, GstMessage * msg, GMainLoop * main_loop)
+{
+  g_main_loop_quit (main_loop);
+}
+
 gint
 main (gint argc, gchar * argv[])
 {
   GstElement *pipeline, *filesrc, *decodebin;
   GstStateChangeReturn res;
+  GstBus *bus;
 
   gst_init (&argc, &argv);
 
@@ -153,6 +160,13 @@ main (gint argc, gchar * argv[])
   g_assert (filesrc);
   decodebin = gst_element_factory_make ("decodebin", "decodebin");
   g_assert (decodebin);
+
+  loop = g_main_loop_new (NULL, TRUE);
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_signal_watch (bus);
+
+  g_signal_connect (bus, "message::eos", G_CALLBACK (error_eos_cb), loop);
+  g_signal_connect (bus, "message::error", G_CALLBACK (error_eos_cb), loop);
 
   g_signal_connect (G_OBJECT (decodebin), "pad-added",
       G_CALLBACK (pad_added_cb), pipeline);
@@ -193,7 +207,6 @@ main (gint argc, gchar * argv[])
   }
 
   /* go in the mainloop now */
-  loop = g_main_loop_new (NULL, TRUE);
   g_main_loop_run (loop);
 
   return 0;

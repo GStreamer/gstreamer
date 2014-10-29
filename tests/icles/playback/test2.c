@@ -18,11 +18,20 @@
  */
 #include <gst/gst.h>
 
+static GMainLoop *loop;
+
+static void
+error_eos_cb (GstBus * bus, GstMessage * msg, GMainLoop * main_loop)
+{
+  g_main_loop_quit (main_loop);
+}
+
 gint
 main (gint argc, gchar * argv[])
 {
   GstElement *player;
   GstStateChangeReturn res;
+  GstBus *bus;
 
   gst_init (&argc, &argv);
 
@@ -31,13 +40,20 @@ main (gint argc, gchar * argv[])
 
   g_object_set (G_OBJECT (player), "uri", argv[1], NULL);
 
+  loop = g_main_loop_new (NULL, TRUE);
+  bus = gst_pipeline_get_bus (GST_PIPELINE (player));
+  gst_bus_add_signal_watch (bus);
+
+  g_signal_connect (bus, "message::eos", G_CALLBACK (error_eos_cb), loop);
+  g_signal_connect (bus, "message::error", G_CALLBACK (error_eos_cb), loop);
+
   res = gst_element_set_state (player, GST_STATE_PLAYING);
   if (res == GST_STATE_CHANGE_FAILURE) {
     g_print ("could not play\n");
     return -1;
   }
 
-  g_main_loop_run (g_main_loop_new (NULL, TRUE));
+  g_main_loop_run (loop);
 
   return 0;
 }
