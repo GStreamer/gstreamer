@@ -121,6 +121,46 @@ static void
 _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
     GstClockTime duration);
 
+static gboolean
+_lookup_child (GESTrackElement * object,
+    const gchar * prop_name, GstElement ** element, GParamSpec ** pspec)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+  gchar **names, *name, *classename;
+  gboolean res;
+
+  classename = NULL;
+  res = FALSE;
+
+  names = g_strsplit (prop_name, "::", 2);
+  if (names[1] != NULL) {
+    classename = names[0];
+    name = names[1];
+  } else
+    name = names[0];
+
+  g_hash_table_iter_init (&iter, object->priv->children_props);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    if (g_strcmp0 (G_PARAM_SPEC (key)->name, name) == 0) {
+      if (classename == NULL ||
+          g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (value)), classename) == 0) {
+        GST_DEBUG ("The %s property from %s has been found", name, classename);
+        if (element)
+          *element = gst_object_ref (value);
+
+        *pspec = g_param_spec_ref (key);
+        res = TRUE;
+        break;
+      }
+    }
+  }
+  g_strfreev (names);
+
+  return res;
+}
+
+
 static void
 ges_track_element_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -273,6 +313,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
 
   klass->create_nle_object = ges_track_element_create_nle_object_func;
   klass->list_children_properties = default_list_children_properties;
+  klass->lookup_child = _lookup_child;
 }
 
 static void
@@ -1044,41 +1085,13 @@ gboolean
 ges_track_element_lookup_child (GESTrackElement * object,
     const gchar * prop_name, GstElement ** element, GParamSpec ** pspec)
 {
-  GHashTableIter iter;
-  gpointer key, value;
-  gchar **names, *name, *classename;
-  gboolean res;
+  GESTrackElementClass *class;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+  class = GES_TRACK_ELEMENT_GET_CLASS (object);
+  g_return_val_if_fail (class->lookup_child, FALSE);
 
-  classename = NULL;
-  res = FALSE;
-
-  names = g_strsplit (prop_name, "::", 2);
-  if (names[1] != NULL) {
-    classename = names[0];
-    name = names[1];
-  } else
-    name = names[0];
-
-  g_hash_table_iter_init (&iter, object->priv->children_props);
-  while (g_hash_table_iter_next (&iter, &key, &value)) {
-    if (g_strcmp0 (G_PARAM_SPEC (key)->name, name) == 0) {
-      if (classename == NULL ||
-          g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (value)), classename) == 0) {
-        GST_DEBUG ("The %s property from %s has been found", name, classename);
-        if (element)
-          *element = gst_object_ref (value);
-
-        *pspec = g_param_spec_ref (key);
-        res = TRUE;
-        break;
-      }
-    }
-  }
-  g_strfreev (names);
-
-  return res;
+  return class->lookup_child (object, prop_name, element, pspec);
 }
 
 /**
@@ -1096,9 +1109,7 @@ ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
   GstElement *element;
   g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
-
-  element = g_hash_table_lookup (object->priv->children_props, pspec);
-  if (!element)
+  if (!ges_track_element_lookup_child (object, pspec->name, &element, &pspec))
     goto not_found;
 
   g_object_set_property (G_OBJECT (element), pspec->name, value);

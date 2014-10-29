@@ -60,19 +60,41 @@ static void ges_title_source_set_property (GObject * object, guint
 
 static GstElement *ges_title_source_create_source (GESTrackElement * self);
 
+static gboolean
+_lookup_child (GESTrackElement * object,
+    const gchar * prop_name, GstElement ** element, GParamSpec ** pspec)
+{
+  gboolean res;
+  GESTitleSourceClass *c = GES_TITLE_SOURCE_GET_CLASS (object);
+  gchar *clean_name = g_regex_replace (c->cleanup_children_prop_names,
+      prop_name, -1, 0, "foreground-color", 0, NULL);
+
+  res =
+      GES_TRACK_ELEMENT_CLASS (ges_title_source_parent_class)->lookup_child
+      (object, clean_name, element, pspec);
+
+  g_free (clean_name);
+
+  return res;
+}
+
 static void
 ges_title_source_class_init (GESTitleSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
+  GESTrackElementClass *track_element_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTitleSourcePrivate));
 
   object_class->get_property = ges_title_source_get_property;
   object_class->set_property = ges_title_source_set_property;
   object_class->dispose = ges_title_source_dispose;
+  track_element_class->lookup_child = _lookup_child;
 
   source_class->create_source = ges_title_source_create_source;
+  klass->cleanup_children_prop_names = g_regex_new ("background",
+      G_REGEX_EXTENDED, 0, NULL);
 }
 
 static void

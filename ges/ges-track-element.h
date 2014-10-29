@@ -80,6 +80,16 @@ struct _GESTrackElement {
  *                            The default implementation will create an object
  *                            of type @nleobject_factorytype and call
  *                            @create_element.
+ * @lookup_child: method letting subclasses look for a child, overriding the
+ *                simple standard behaviour. This vmethod can be used for example
+ *                in the case where you want the name of a child property to be
+ *                'overriden'. A good example of where it is usefull is the
+ *                GESTitleSource where we have a videotestsrc which has a
+ *                'foreground-color' property that is used in the TitleSource to
+ *                set the background color of the title, in that case, this method
+ *                has been overriden so that we tweak the name passed has parametter
+ *                to rename "background" to "foreground-backend" making our API
+ *                understandable.
  *
  * Subclasses can override the @create_nle_object method to override what type
  * of GNonLin object will be created.
@@ -104,6 +114,12 @@ struct _GESTrackElementClass {
   /* virtual methods for subclasses */
   GParamSpec** (*list_children_properties) (GESTrackElement * object,
               guint *n_properties);
+
+
+  gboolean (*lookup_child)                 (GESTrackElement *object,
+                                            const gchar *prop_name,
+                                            GstElement **element,
+                                            GParamSpec **pspec);
   /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
