@@ -254,12 +254,12 @@ gst_gl_shadervariables_parse (GstGLShader * shader, char *variables,
       trimright (t, " \t");
 
       if (arraysize) {
-        char *s = g_malloc (strlen (vartype) + 32);
-        sprintf (s, "%s[%d]", vartype, arraysize);
+        gchar *s = g_strdup_printf ("%s[%d]", vartype, arraysize);
         if (strcmp (t, s)) {
           g_free (s);
           goto parse_error;
         }
+        g_free (s);
       } else {
         if (strcmp (t, vartype))
           goto parse_error;
