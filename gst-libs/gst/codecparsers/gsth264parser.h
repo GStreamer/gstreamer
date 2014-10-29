@@ -50,6 +50,14 @@ G_BEGIN_DECLS
 #define GST_H264_IS_SP_SLICE(slice) (((slice)->type % 5) == GST_H264_SP_SLICE)
 #define GST_H264_IS_SI_SLICE(slice) (((slice)->type % 5) == GST_H264_SI_SLICE)
 
+/**
+ * GST_H264_IS_MVC_NALU:
+ * @nalu: a #GstH264NalUnit
+ *
+ * Check if @nalu is a multiview extension NAL unit.
+ *
+ * Since: 1.6
+ */
 #define GST_H264_IS_MVC_NALU(nalu) \
   ((nalu)->extension_type == GST_H264_NAL_EXTENSION_MVC)
 
@@ -142,6 +150,8 @@ typedef enum
  * @GST_H264_NAL_EXTENSION_MVC: NAL unit header extension for MVC (Annex H)
  *
  * Indicates the type of H.264 NAL unit extension.
+ *
+ * Since: 1.6
  */
 typedef enum
 {
@@ -182,6 +192,8 @@ typedef enum
  * @GST_H264_FRAME_PACKING_TEMPORAL_INTERLEAVING: Temporal interleaving
  *
  * Frame packing arrangement types.
+ *
+ * Since: 1.6
  */
 typedef enum
 {
@@ -199,6 +211,9 @@ typedef enum
  * @GST_H264_SEI_BUF_PERIOD: Buffering Period SEI Message
  * @GST_H264_SEI_PIC_TIMING: Picture Timing SEI Message
  * @GST_H264_SEI_RECOVERY_POINT: Recovery Point SEI Message (D.2.7)
+ * @GST_H264_SEI_STEREO_VIDEO_INFO: stereo video info SEI message (Since: 1.6)
+ * @GST_H264_SEI_FRAME_PACKING: Frame Packing Arrangement (FPA) message that
+ *     contains the 3D arrangement for stereoscopic 3D video (Since: 1.6)
  * ...
  *
  * The type of SEI message.
@@ -303,6 +318,8 @@ typedef struct _GstH264SEIMessage             GstH264SEIMessage;
  * @inter_view_flag: If equal to 0, it specifies that the current view
  *   component is not used for inter-view prediction by any other view
  *   component in the current access unit
+ *
+ * Since: 1.6
  */
 struct _GstH264NalUnitExtensionMVC
 {
@@ -332,7 +349,8 @@ struct _GstH264NalUnitExtensionMVC
  * @valid: If the nal unit is valid, which means it has
  * already been parsed
  * @data: The data from which the Nalu has been parsed
- * @header_bytes: The size of the NALU header in bytes
+ * @header_bytes: The size of the NALU header in bytes (Since 1.6)
+ * @extension_type: the extension type (Since 1.6)
  *
  * Structure defining the Nal unit headers
  */
@@ -532,6 +550,8 @@ struct _GstH264VUIParams
  *
  * Represents inter-view dependency relationships for the coded video
  * sequence.
+ *
+ * Since: 1.6
  */
 struct _GstH264SPSExtMVCView
 {
@@ -550,6 +570,8 @@ struct _GstH264SPSExtMVCView
  * GstH264SPSExtMVCLevelValueOp:
  *
  * Represents an operation point for the coded video sequence.
+ *
+ * Since: 1.6
  */
 struct _GstH264SPSExtMVCLevelValueOp
 {
@@ -569,6 +591,8 @@ struct _GstH264SPSExtMVCLevelValueOp
  *
  * Represents level values for a subset of the operation points for
  * the coded video sequence.
+ *
+ * Since: 1.6
  */
 struct _GstH264SPSExtMVCLevelValue
 {
@@ -587,7 +611,9 @@ struct _GstH264SPSExtMVCLevelValue
  * @level_value: array of #GstH264SPSExtMVCLevelValue
  *
  * Represents the parsed seq_parameter_set_mvc_extension().
- */
+ *
+ * Since: 1.6
+	 */
 struct _GstH264SPSExtMVC
 {
   guint16 num_views_minus1;
@@ -870,6 +896,11 @@ struct _GstH264ClockTimestamp
   guint32 time_offset;
 };
 
+/**
+ * GstH264FramePacking:
+ *
+ * Since: 1.6
+ */
 struct _GstH264FramePacking
 {
   guint32 frame_packing_id;
@@ -890,6 +921,11 @@ struct _GstH264FramePacking
   guint16 frame_packing_repetition_period;
 };
 
+/**
+ * GstH264StereoVideoInfo:
+ *
+ * Since: 1.6
+ */
 struct _GstH264StereoVideoInfo
 {
   guint8 field_views_flag;

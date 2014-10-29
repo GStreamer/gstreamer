@@ -1829,6 +1829,8 @@ error:
  * syntax elements are not parsed and no extra memory is allocated.
  *
  * Returns: a #GstH264ParserResult
+ *
+ * Since: 1.6
  */
 GstH264ParserResult
 gst_h264_parser_parse_subset_sps (GstH264NalParser * nalparser,
@@ -1865,6 +1867,8 @@ gst_h264_parser_parse_subset_sps (GstH264NalParser * nalparser,
  * syntax elements are not parsed and no extra memory is allocated.
  *
  * Returns: a #GstH264ParserResult
+ *
+ * Since: 1.6
  */
 GstH264ParserResult
 gst_h264_parse_subset_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
@@ -2297,6 +2301,8 @@ gst_h264_sps_mvc_clear (GstH264SPS * sps)
  * @sps: The #GstH264SPS to free
  *
  * Clears all @sps internal resources.
+ *
+ * Since: 1.6
  */
 void
 gst_h264_sps_clear (GstH264SPS * sps)
