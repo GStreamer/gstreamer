@@ -157,7 +157,7 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
           0.0f, 1.0f, 0.0f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_GREEN,
-      g_param_spec_float ("green", "Green", "Background reen color",
+      g_param_spec_float ("green", "Green", "Background green color",
           0.0f, 1.0f, 0.0f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BLUE,
