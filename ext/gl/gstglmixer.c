@@ -552,7 +552,8 @@ gst_gl_mixer_set_context (GstElement * element, GstContext * context)
 {
   GstGLMixer *mix = GST_GL_MIXER (element);
 
-  gst_gl_handle_set_context (element, context, &mix->display, &mix->context);
+  gst_gl_handle_set_context (element, context, &mix->display,
+      &mix->other_context);
 }
 
 static gboolean
