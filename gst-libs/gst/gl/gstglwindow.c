@@ -972,3 +972,26 @@ gst_gl_window_send_mouse_event (GstGLWindow * window, const char *event_type,
   g_signal_emit (window, gst_gl_window_signals[EVENT_MOUSE_SIGNAL], 0,
       event_type, button, posx, posy);
 }
+
+/**
+ * gst_gl_window_handle_events:
+ * @window: a #GstGLWindow
+ * @handle_events: a #gboolean indicating if events should be handled or not.
+ *
++ * Tell a @window that it should handle events from the window system. These
++ * events are forwarded upstream as navigation events. In some window systems
++ * events are not propagated in the window hierarchy if a client is listening
++ * for them. This method allows you to disable events handling completely
++ * from the @window.
+ */
+void
+gst_gl_window_handle_events (GstGLWindow * window, gboolean handle_events)
+{
+  GstGLWindowClass *window_class;
+
+  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+  g_return_if_fail (window_class->handle_events != NULL);
+
+  window_class->handle_events (window, handle_events);
+}

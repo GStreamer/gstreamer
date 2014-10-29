@@ -79,6 +79,8 @@ gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
 void gst_gl_window_x11_close (GstGLWindow * window);
 static void gst_gl_window_x11_get_surface_dimensions (GstGLWindow * window,
     guint * width, guint * height);
+void gst_gl_window_x11_handle_events (GstGLWindow * window,
+    gboolean handle_events);
 
 static void
 gst_gl_window_x11_finalize (GObject * object)
@@ -113,6 +115,8 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_x11_close);
   window_class->get_surface_dimensions =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_surface_dimensions);
+  window_class->handle_events =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_handle_events);
 }
 
 static void
@@ -211,8 +215,7 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
       window_x11->visual_info->bits_per_rgb);
 
   win_attr.event_mask =
-      StructureNotifyMask | ExposureMask | VisibilityChangeMask | KeyPressMask |
-      KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
+      StructureNotifyMask | ExposureMask | VisibilityChangeMask;
   win_attr.do_not_propagate_mask = NoEventMask;
 
   win_attr.background_pixmap = None;
@@ -495,6 +498,25 @@ event_type_to_string (guint type)
       return "MotionNotify";
     default:
       return "unknown";
+  }
+}
+
+void
+gst_gl_window_x11_handle_events (GstGLWindow * window, gboolean handle_events)
+{
+  GstGLWindowX11 *window_x11;
+
+  g_return_if_fail (window != NULL);
+
+  window_x11 = GST_GL_WINDOW_X11 (window);
+
+  if (handle_events) {
+    XSelectInput (window_x11->device, window_x11->internal_win_id,
+        StructureNotifyMask | ExposureMask | VisibilityChangeMask |
+        PointerMotionMask | KeyPressMask | KeyReleaseMask);
+  } else {
+    XSelectInput (window_x11->device, window_x11->internal_win_id,
+        StructureNotifyMask | ExposureMask | VisibilityChangeMask);
   }
 }
 
