@@ -122,6 +122,7 @@ enum {
     PROP_SATURATION,
     PROP_BRIGHTNESS,
     PROP_CONTRAST,
+    PROP_SCALE_METHOD,
 };
 
 #define DEFAULT_FORMAT                  GST_VIDEO_FORMAT_ENCODED
@@ -557,6 +558,11 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_CONTRAST) &&
         !gst_vaapi_filter_set_contrast(postproc->filter,
             postproc->contrast))
+        return GST_FLOW_NOT_SUPPORTED;
+
+    if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SCALE) &&
+        !gst_vaapi_filter_set_scaling(postproc->filter,
+            postproc->scale_method))
         return GST_FLOW_NOT_SUPPORTED;
 
     inbuf_meta = gst_buffer_get_vaapi_video_meta(inbuf);
@@ -1439,6 +1445,10 @@ gst_vaapipostproc_set_property(
         postproc->contrast = g_value_get_float(value);
         postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CONTRAST;
         break;
+    case PROP_SCALE_METHOD:
+        postproc->scale_method = g_value_get_enum(value);
+        postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SCALE;
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -1491,6 +1501,9 @@ gst_vaapipostproc_get_property(
         break;
     case PROP_CONTRAST:
         g_value_set_float(value, postproc->contrast);
+        break;
+    case PROP_SCALE_METHOD:
+        g_value_set_enum(value, postproc->scale_method);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1704,6 +1717,17 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
     if (filter_op)
         g_object_class_install_property(object_class,
             PROP_CONTRAST, filter_op->pspec);
+
+    /**
+     * GstVaapiPostproc:scale-method:
+     *
+     * The scaling method to use, expressed as an enum value. See
+     * #GstVaapiScaleMethod.
+     */
+    filter_op = find_filter_op(filter_ops, GST_VAAPI_FILTER_OP_SCALING);
+    if (filter_op)
+        g_object_class_install_property(object_class,
+            PROP_SCALE_METHOD, filter_op->pspec);
 
     g_ptr_array_unref(filter_ops);
 }
