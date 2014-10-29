@@ -48,7 +48,7 @@ main (gint argc, gchar * argv[])
 
   g_print ("play...\n");
   res = gst_element_set_state (player, GST_STATE_PLAYING);
-  if (res != GST_STATE_CHANGE_SUCCESS) {
+  if (res == GST_STATE_CHANGE_FAILURE) {
     g_print ("could not play\n");
     return -1;
   }
@@ -58,8 +58,8 @@ main (gint argc, gchar * argv[])
 
   g_print ("pause...\n");
   res = gst_element_set_state (player, GST_STATE_PAUSED);
-  if (res != GST_STATE_CHANGE_SUCCESS) {
-    g_print ("could not play\n");
+  if (res == GST_STATE_CHANGE_FAILURE) {
+    g_print ("could not pause\n");
     return -1;
   }
 
@@ -68,7 +68,7 @@ main (gint argc, gchar * argv[])
 
   g_print ("play...\n");
   res = gst_element_set_state (player, GST_STATE_PLAYING);
-  if (res != GST_STATE_CHANGE_SUCCESS) {
+  if (res == GST_STATE_CHANGE_FAILURE) {
     g_print ("could not play\n");
     return -1;
   }
@@ -88,7 +88,7 @@ main (gint argc, gchar * argv[])
 
   g_print ("play...\n");
   res = gst_element_set_state (player, GST_STATE_PLAYING);
-  if (res != GST_STATE_CHANGE_SUCCESS) {
+  if (res == GST_STATE_CHANGE_FAILURE) {
     g_print ("could not play\n");
     return -1;
   }
