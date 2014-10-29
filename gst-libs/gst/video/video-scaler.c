@@ -245,7 +245,7 @@ resampler_convert_coeff (const gdouble * src,
 }
 
 static void
-make_s16_taps (GstVideoScaler * scale)
+make_s16_taps (GstVideoScaler * scale, gint precision)
 {
   gint i, max_taps, n_phases;
   gint16 *taps_s16;
@@ -258,7 +258,7 @@ make_s16_taps (GstVideoScaler * scale)
   taps_s16 = scale->taps_s16 = g_malloc (sizeof (gint16) * n_phases * max_taps);
 
   for (i = 0; i < n_phases; i++) {
-    resampler_convert_coeff (taps, taps_s16, max_taps, 16, S16_SCALE);
+    resampler_convert_coeff (taps, taps_s16, max_taps, 16, precision);
 
     taps += max_taps;
     taps_s16 += max_taps;
@@ -299,7 +299,7 @@ video_scale_h_ntap_8888 (GstVideoScaler * scale,
   guint32 *offset, *phase;
 
   if (scale->taps_s16 == NULL)
-    make_s16_taps (scale);
+    make_s16_taps (scale, S16_SCALE);
 
   max_taps = scale->resampler.max_taps;
   offset = scale->resampler.offset + dest_offset;
@@ -339,7 +339,7 @@ video_scale_v_ntap_8888 (GstVideoScaler * scale,
   guint8 *s, *d;
 
   if (scale->taps_s16 == NULL)
-    make_s16_taps (scale);
+    make_s16_taps (scale, S16_SCALE);
 
   max_taps = scale->resampler.max_taps;
   t = scale->taps_s16 + (scale->resampler.phase[dest_offset] * max_taps);
