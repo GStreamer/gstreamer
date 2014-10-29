@@ -880,7 +880,7 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
         AC_MSG_ERROR([Cannot seem to include both GL and GLES2 headers. Try disabling one API])
       fi
       AC_MSG_WARN([Disabling Desktop GL support])
-      HAVE_OPENGL=no
+      HAVE_GL=no
     else
       AC_MSG_WARN([Disabling GL|ES 2.0 support])
       HAVE_GLES2=no
