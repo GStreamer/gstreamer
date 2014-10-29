@@ -64,6 +64,7 @@
 #include "gstrpicamsrc.h"
 #include "gstrpicam_types.h"
 #include "gstrpicam-enum-types.h"
+#include "gstrpicamsrcdeviceprovider.h"
 #include "RaspiCapture.h"
 
 #include "bcm_host.h"
@@ -684,13 +685,24 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
 }
 
 static gboolean
-plugin_init (GstPlugin * rpicamsrc)
+plugin_init (GstPlugin * plugin)
 {
+  gboolean ret;
+
   GST_DEBUG_CATEGORY_INIT (gst_rpi_cam_src_debug, "rpicamsrc",
       0, "rpicamsrc debug");
 
-  return gst_element_register (rpicamsrc, "rpicamsrc", GST_RANK_NONE,
+  ret = gst_element_register (plugin, "rpicamsrc", GST_RANK_NONE,
       GST_TYPE_RPICAMSRC);
+
+#if GST_CHECK_VERSION (1,4,0)
+
+  ret &= gst_device_provider_register (plugin, "rpicamsrcdeviceprovider",
+      GST_RANK_PRIMARY, GST_TYPE_RPICAMSRC_DEVICE_PROVIDER);
+
+#endif
+
+  return ret;
 }
 
 #ifndef PACKAGE
