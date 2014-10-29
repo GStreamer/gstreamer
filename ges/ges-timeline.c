@@ -2670,9 +2670,9 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
   g_hash_table_insert (timeline->priv->by_layer, layer, g_sequence_new (NULL));
 
   /* Connect to 'clip-added'/'clip-removed' signal from the new layer */
-  g_signal_connect (layer, "clip-added", G_CALLBACK (layer_object_added_cb),
-      timeline);
-  g_signal_connect (layer, "clip-removed",
+  g_signal_connect_after (layer, "clip-added",
+      G_CALLBACK (layer_object_added_cb), timeline);
+  g_signal_connect_after (layer, "clip-removed",
       G_CALLBACK (layer_object_removed_cb), timeline);
   g_signal_connect (layer, "notify::priority",
       G_CALLBACK (layer_priority_changed_cb), timeline);
