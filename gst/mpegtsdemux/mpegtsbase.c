@@ -1077,7 +1077,7 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
-      res = gst_mpegts_base_handle_eos (base);
+      res &= gst_mpegts_base_handle_eos (base);
       break;
     case GST_EVENT_CAPS:
       /* FIXME, do something */
@@ -1164,6 +1164,9 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_DEBUG_OBJECT (base, "bad packet, skipping");
       goto next;
     }
+
+    if (klass->inspect_packet)
+      klass->inspect_packet (base, &packet);
 
     /* If it's a known PES, push it */
     if (MPEGTS_BIT_IS_SET (base->is_pes, packet.pid)) {

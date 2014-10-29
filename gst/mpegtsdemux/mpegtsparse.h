@@ -51,6 +51,11 @@ struct _MpegTSParse2 {
   gboolean have_group_id;
   guint group_id;
 
+  GstClockTime smoothing_latency;
+  GstClockTime current_pcr;
+  gint user_pcr_pid;
+  gint pcr_pid;
+
   /* Always present source pad */
   GstPad *srcpad;
 
@@ -58,7 +63,12 @@ struct _MpegTSParse2 {
 
   /* state */
   gboolean first;
+  gboolean set_timestamps;
+
+  /* Pending buffer state */
   GList *pending_buffers;
+  GstClockTime previous_pcr;
+  guint bytes_since_pcr;
 };
 
 struct _MpegTSParse2Class {
