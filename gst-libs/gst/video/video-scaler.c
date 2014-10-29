@@ -53,14 +53,14 @@ resampler_zip (GstResampler * resampler, const GstResampler * r1,
 {
   guint i, out_size, max_taps;
   gdouble *taps;
-  guint *offset, *phase;
+  guint32 *offset, *phase;
 
   g_return_if_fail (r1->max_taps == r2->max_taps);
 
   out_size = r1->out_size + r2->out_size;
   max_taps = r1->max_taps;
-  offset = g_malloc (sizeof (guint) * out_size);
-  phase = g_malloc (sizeof (guint) * out_size);
+  offset = g_malloc (sizeof (guint32) * out_size);
+  phase = g_malloc (sizeof (guint32) * out_size);
   taps = g_malloc (sizeof (gdouble) * max_taps * out_size);
 
   resampler->in_size = r1->in_size + r2->in_size;
@@ -68,7 +68,7 @@ resampler_zip (GstResampler * resampler, const GstResampler * r1,
   resampler->max_taps = max_taps;
   resampler->offset = offset;
   resampler->phase = phase;
-  resampler->n_taps = g_malloc (sizeof (guint) * out_size);
+  resampler->n_taps = g_malloc (sizeof (guint32) * out_size);
   resampler->taps = taps;
 
   for (i = 0; i < out_size; i++) {
@@ -271,7 +271,7 @@ video_scale_h_near_8888 (GstVideoScaler * scale,
 {
   gint i;
   guint32 *s, *d;
-  guint *offset;
+  guint32 *offset;
 
   offset = scale->resampler.offset + dest_offset;
 
@@ -296,7 +296,7 @@ video_scale_h_ntap_8888 (GstVideoScaler * scale,
   gint16 *taps, *t;
   gint i, j, max_taps, sum0, sum1, sum2, sum3;
   guint8 *s, *d;
-  guint *offset, *phase;
+  guint32 *offset, *phase;
 
   if (scale->taps_s16 == NULL)
     make_s16_taps (scale);

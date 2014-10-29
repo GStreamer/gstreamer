@@ -139,9 +139,9 @@ struct _GstResampler
   gint out_size;
   guint max_taps;
   guint n_phases;
-  guint *offset;
-  guint *phase;
-  guint *n_taps;
+  guint32 *offset;
+  guint32 *phase;
+  guint32 *n_taps;
   gdouble *taps;
 
   gpointer _gst_reserved[GST_PADDING];

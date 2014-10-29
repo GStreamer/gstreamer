@@ -154,7 +154,7 @@ resampler_calculate_taps (ResamplerParams * params)
 {
   GstResampler *resampler = params->resampler;
   gint j;
-  guint *offset, *n_taps, *phase;
+  guint32 *offset, *n_taps, *phase;
   gint tap_offs;
   gint max_taps;
   gint in_size, out_size;
@@ -171,9 +171,9 @@ resampler_calculate_taps (ResamplerParams * params)
   shift = params->shift;
 
   resampler->taps = g_malloc (sizeof (gdouble) * max_taps * out_size);
-  n_taps = resampler->n_taps = g_malloc (sizeof (guint) * out_size);
-  offset = resampler->offset = g_malloc (sizeof (guint) * out_size);
-  phase = resampler->phase = g_malloc (sizeof (guint) * out_size);
+  n_taps = resampler->n_taps = g_malloc (sizeof (guint32) * out_size);
+  offset = resampler->offset = g_malloc (sizeof (guint32) * out_size);
+  phase = resampler->phase = g_malloc (sizeof (guint32) * out_size);
 
   for (j = 0; j < out_size; j++) {
     gdouble ox, x;
