@@ -347,7 +347,7 @@ compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop,
     }
   }
 
-  return off++;                 /* Take the following 1 into account */
+  return off + 1;               /* Take the following 1 into account */
 }
 
 /**
@@ -1641,7 +1641,7 @@ gst_mpeg4_parse_video_packet_header (GstMpeg4VideoPacketHdr * videopackethdr,
 
   CHECK_REMAINING (&br, markersize);
 
-  if (gst_bit_reader_get_bits_uint32_unchecked (&br, markersize + 1) != 0x01)
+  if (gst_bit_reader_get_bits_uint32_unchecked (&br, markersize) != 0x01)
     goto failed;
 
   if (vol->shape != GST_MPEG4_RECTANGULAR) {
