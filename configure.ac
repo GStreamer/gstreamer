@@ -939,6 +939,7 @@ AS_IF([test $USE_WAYLAND -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS wayland"])
 echo
 echo $PACKAGE configuration summary:
 echo
+echo Installation Prefix .............. : ${prefix}
 echo GStreamer API version ............ : $GST_API_VERSION
 echo VA-API version ................... : $VA_VERSION_STR
 echo Video encoding ................... : $(yesno $USE_ENCODERS)
