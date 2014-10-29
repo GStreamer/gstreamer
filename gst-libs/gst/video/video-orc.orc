@@ -1284,3 +1284,156 @@ x4 addssw aq, aq, q1
 
 x4 convssswb ayuv2, aq
 x4 addb ayuv, ayuv2, c128
+
+#.function video_orc_resample_h_near_8888
+#.source 4 src guint32
+#.source 4 idx
+#.dest 4 dest guint32
+#.temp 4 t
+#
+#loadidxl t, src, idx
+#storel dest, t
+
+#.function video_orc_resample_h_2tap_8888_16
+#.source 4 src1 guint32
+#.source 4 src2 guint32
+#.source 8 coef1 guint64
+#.source 8 coef2 guint64
+#.source 4 idx
+#.dest 4 dest guint32
+#.temp 4 t1
+#.temp 4 t2
+#.temp 8 q1
+#.temp 8 q2
+#
+#loadidxl t1, src1, idx
+#x4 convubw q1, t1
+#x4 mulhuw q1, q1, coef1
+#
+#loadidxl t2, src2, idx
+#x4 convubw q2, t2
+#x4 mulhuw q2, q2, coef2
+#
+#x4 addw q2, q2, q1
+#x4 convuuswb dest, q2
+#
+#.function video_orc_resample_h_2tap_8888_lq
+#.source 4 src1 guint32
+#.source 4 src2 guint32
+#.source 8 coef1 guint64
+#.source 4 idx
+#.dest 4 dest guint32
+#.temp 4 t1
+#.temp 4 t2
+#.temp 8 q1
+#.temp 8 q2
+#
+#loadidxl t1, src1, idx
+#x4 convubw q1, t1
+#loadidxl t2, src2, idx
+#x4 convubw q2, t2
+#x4 subw q2, q2, q1
+#
+#x4 mullw q2, q2, coef1
+#x4 addw q2, q2, 128
+#x4 convhwb t2, q2
+#x4 addb dest, t2, t1
+
+.function video_orc_resample_v_2tap_8_lq
+.source 1 src1 guint32
+.source 1 src2 guint32
+.dest 1 dest guint32
+.param 2 p1
+.temp 1 t
+.temp 2 w1
+.temp 2 w2
+
+convubw w1, src1
+convubw w2, src2
+subw w2, w2, w1
+mullw w2, w2, p1
+addw w2, w2, 128
+convhwb t, w2
+addb dest, t, src1
+
+.function video_orc_resample_v_2tap_8
+.source 1 s1 guint32
+.source 1 s2 guint32
+.dest 1 d1 guint32
+.param 2 p1
+.temp 1 t
+.temp 2 w1
+.temp 2 w2
+.temp 4 t1
+.temp 4 t2
+
+convubw w1, s1
+convubw w2, s2
+subw w2, w2, w1
+mulswl t2, w2, p1
+addl t2, t2, 4095
+shrsl t2, t2, 12
+convlw w2, t2
+addw w2, w2, w1
+convsuswb d1, w2
+
+.function video_orc_resample_v_4tap_8_lq
+.source 1 s1 guint32
+.source 1 s2 guint32
+.source 1 s3 guint32
+.source 1 s4 guint32
+.dest 1 d1 guint32
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.temp 2 w1
+.temp 2 w2
+
+convubw w1, s1
+mullw w1, w1, p1
+convubw w2, s2
+mullw w2, w2, p2
+addw w1, w1, w2
+convubw w2, s3
+mullw w2, w2, p3
+addw w1, w1, w2
+convubw w2, s4
+mullw w2, w2, p4
+addw w1, w1, w2
+addw w1, w1, 32
+shrsw w1, w1, 6
+convsuswb d1, w1
+
+.function video_orc_resample_v_4tap_8
+.source 1 s1 guint32
+.source 1 s2 guint32
+.source 1 s3 guint32
+.source 1 s4 guint32
+.dest 1 d1 guint32
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.temp 2 w1
+.temp 2 w2
+.temp 4 t1
+.temp 4 t2
+
+convubw w1, s1
+mulswl t1, w1, p1
+convubw w2, s2
+mulswl t2, w2, p2
+addl t1, t1, t2
+convubw w2, s3
+mulswl t2, w2, p3
+addl t1, t1, t2
+convubw w2, s4
+mulswl t2, w2, p4
+addl t1, t1, t2
+addl t1, t1, 4095
+shrsl t1, t1, 12
+convlw w1, t1
+convsuswb d1, w1
+
+

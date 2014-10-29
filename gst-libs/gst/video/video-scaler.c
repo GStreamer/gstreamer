@@ -26,10 +26,14 @@
 #include <math.h>
 
 #include "resampler.h"
+#include <orc/orcfunctions.h>
+#include "video-orc.h"
 #include "video-scaler.h"
 
 #define S16_SCALE       12
 #define S16_SCALE_ROUND (1 << (S16_SCALE -1))
+
+#define LQ
 
 typedef void (*GstVideoScalerHFunc) (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width);
@@ -282,11 +286,42 @@ video_scale_h_near_8888 (GstVideoScaler * scale,
     d[i] = s[offset[i]];
 }
 
+#define BLEND_2TAP(a,b,p) (((((b)-(guint16)(a)) * p + S16_SCALE_ROUND) >> S16_SCALE) + (a))
+
 static void
-video_scale_v_near_8888 (GstVideoScaler * scale,
-    gpointer srcs[], gpointer dest, guint dest_offset, guint width)
+video_scale_h_2tap_8888 (GstVideoScaler * scale,
+    gpointer src, gpointer dest, guint dest_offset, guint width)
 {
-  memcpy (dest, srcs[0], 4 * width);
+  gint i, max_taps, sum0, sum1, sum2, sum3;
+  guint8 *s1, *s2, *d;
+  guint32 *offset, *phase;
+  gint16 *taps, *t;
+
+  if (scale->taps_s16 == NULL)
+    make_s16_taps (scale, S16_SCALE);
+
+  max_taps = scale->resampler.max_taps;
+  offset = scale->resampler.offset + dest_offset;
+  phase = scale->resampler.phase + dest_offset;
+  taps = scale->taps_s16;
+
+  d = (guint8 *) dest + 4 * dest_offset;
+
+  for (i = 0; i < width; i++) {
+    s1 = (guint8 *) src + 4 * offset[i];
+    s2 = s1 + 4;
+    t = taps + (phase[i] * max_taps);
+
+    sum0 = BLEND_2TAP (s1[0], s2[0], t[1]);
+    sum1 = BLEND_2TAP (s1[1], s2[1], t[1]);
+    sum2 = BLEND_2TAP (s1[2], s2[2], t[1]);
+    sum3 = BLEND_2TAP (s1[3], s2[3], t[1]);
+
+    d[i * 4 + 0] = CLAMP (sum0, 0, 255);
+    d[i * 4 + 1] = CLAMP (sum1, 0, 255);
+    d[i * 4 + 2] = CLAMP (sum2, 0, 255);
+    d[i * 4 + 3] = CLAMP (sum3, 0, 255);
+  }
 }
 
 static void
@@ -328,6 +363,79 @@ video_scale_h_ntap_8888 (GstVideoScaler * scale,
     d[i * 4 + 2] = CLAMP (sum2, 0, 255);
     d[i * 4 + 3] = CLAMP (sum3, 0, 255);
   }
+}
+
+
+static void
+video_scale_v_near_8888 (GstVideoScaler * scale,
+    gpointer srcs[], gpointer dest, guint dest_offset, guint width)
+{
+  orc_memcpy (dest, srcs[0], 4 * width);
+}
+
+static void
+video_scale_v_2tap_8888 (GstVideoScaler * scale,
+    gpointer srcs[], gpointer dest, guint dest_offset, guint width)
+{
+  gint max_taps;
+  guint32 *s1, *s2, *d;
+  guint64 p1;
+
+  if (scale->taps_s16 == NULL)
+#ifdef LQ
+    make_s16_taps (scale, 8);
+#else
+    make_s16_taps (scale, S16_SCALE);
+#endif
+
+  max_taps = scale->resampler.max_taps;
+
+  d = (guint32 *) dest;
+  s1 = (guint32 *) srcs[0];
+  s2 = (guint32 *) srcs[1];
+  p1 = scale->taps_s16[dest_offset * max_taps + 1];
+
+#ifdef LQ
+  video_orc_resample_v_2tap_8_lq (d, s1, s2, p1, width * 4);
+#else
+  video_orc_resample_v_2tap_8 (d, s1, s2, p1, width * 4);
+#endif
+}
+
+static void
+video_scale_v_4tap_8888 (GstVideoScaler * scale,
+    gpointer srcs[], gpointer dest, guint dest_offset, guint width)
+{
+  gint max_taps;
+  guint32 *s1, *s2, *s3, *s4, *d;
+  gint p1, p2, p3, p4;
+  gint16 *taps;
+
+  if (scale->taps_s16 == NULL)
+#ifdef LQ
+    make_s16_taps (scale, 6);
+#else
+    make_s16_taps (scale, S16_SCALE);
+#endif
+
+  max_taps = scale->resampler.max_taps;
+  taps = scale->taps_s16 + dest_offset * max_taps;
+
+  d = (guint32 *) dest;
+  s1 = (guint32 *) srcs[0];
+  s2 = (guint32 *) srcs[1];
+  s3 = (guint32 *) srcs[2];
+  s4 = (guint32 *) srcs[3];
+  p1 = taps[0];
+  p2 = taps[1];
+  p3 = taps[2];
+  p4 = taps[3];
+
+#ifdef LQ
+  video_orc_resample_v_4tap_8_lq (d, s1, s2, s3, s4, p1, p2, p3, p4, width * 4);
+#else
+  video_orc_resample_v_4tap_8 (d, s1, s2, s3, s4, p1, p2, p3, p4, width * 4);
+#endif
 }
 
 static void
@@ -400,6 +508,9 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
     case 1:
       func = video_scale_h_near_8888;
       break;
+    case 2:
+      func = video_scale_h_2tap_8888;
+      break;
     default:
       func = video_scale_h_ntap_8888;
       break;
@@ -436,6 +547,12 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
   switch (scale->resampler.max_taps) {
     case 1:
       func = video_scale_v_near_8888;
+      break;
+    case 2:
+      func = video_scale_v_2tap_8888;
+      break;
+    case 4:
+      func = video_scale_v_4tap_8888;
       break;
     default:
       func = video_scale_v_ntap_8888;
