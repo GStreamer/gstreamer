@@ -42,15 +42,7 @@ G_DEFINE_TYPE (GESTitleClip, ges_title_clip, GES_TYPE_SOURCE_CLIP);
 
 struct _GESTitleClipPrivate
 {
-  gchar *text;
-  gchar *font_desc;
-  GESTextHAlign halign;
-  GESTextVAlign valign;
   GSList *track_titles;
-  guint32 color;
-  guint32 background;
-  gdouble xpos;
-  gdouble ypos;
 };
 
 enum
@@ -82,28 +74,36 @@ ges_title_clip_get_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_TEXT:
-      g_value_set_string (value, priv->text);
+      ges_track_element_get_child_property (priv->track_titles->data, "text",
+          value);
       break;
     case PROP_FONT_DESC:
-      g_value_set_string (value, priv->font_desc);
+      ges_track_element_get_child_property (priv->track_titles->data,
+          "font-desc", value);
       break;
     case PROP_HALIGNMENT:
-      g_value_set_enum (value, priv->halign);
+      ges_track_element_get_child_property (priv->track_titles->data,
+          "halignment", value);
       break;
     case PROP_VALIGNMENT:
-      g_value_set_enum (value, priv->valign);
+      ges_track_element_get_child_property (priv->track_titles->data,
+          "valignment", value);
       break;
     case PROP_COLOR:
-      g_value_set_uint (value, priv->color);
+      ges_track_element_get_child_property (priv->track_titles->data, "color",
+          value);
       break;
     case PROP_BACKGROUND:
-      g_value_set_uint (value, priv->background);
+      ges_track_element_get_child_property (priv->track_titles->data,
+          "foreground-color", value);
       break;
     case PROP_XPOS:
-      g_value_set_double (value, priv->xpos);
+      ges_track_element_get_child_property (priv->track_titles->data, "xpos",
+          value);
       break;
     case PROP_YPOS:
-      g_value_set_double (value, priv->ypos);
+      ges_track_element_get_child_property (priv->track_titles->data, "ypos",
+          value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -149,13 +149,6 @@ ges_title_clip_set_property (GObject * object, guint property_id,
 static void
 ges_title_clip_dispose (GObject * object)
 {
-  GESTitleClip *self = GES_TITLE_CLIP (object);
-
-  if (self->priv->text)
-    g_free (self->priv->text);
-  if (self->priv->font_desc)
-    g_free (self->priv->font_desc);
-
   G_OBJECT_CLASS (ges_title_clip_parent_class)->dispose (object);
 }
 
@@ -176,6 +169,9 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
    * GESTitleClip:text:
    *
    * The text to diplay
+   *
+   * Deprecated: use ges_track_element_get/set_children_properties on the
+   * underlying GESTrackElement instead
    */
   g_object_class_install_property (object_class, PROP_TEXT,
       g_param_spec_string ("text", "Text", "The text to display",
@@ -186,6 +182,9 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
    * GESTitleClip:font-desc:
    *
    * Pango font description string
+   *
+   * Deprecated: use ges_track_element_get/set_children_properties on the
+   * underlying GESTrackElement instead
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",
@@ -199,6 +198,9 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
    * GESTitleClip:valignment:
    *
    * Vertical alignent of the text
+   *
+   * Deprecated: use ges_track_element_get/set_children_properties on the
+   * underlying GESTrackElement instead
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGNMENT,
       g_param_spec_enum ("valignment", "vertical alignment",
@@ -210,6 +212,9 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
    * GESTitleClip:halignment:
    *
    * Horizontal alignment of the text
+   *
+   * Deprecated: use ges_track_element_get/set_children_properties on the
+   * underlying GESTrackElement instead
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HALIGNMENT,
       g_param_spec_enum ("halignment", "horizontal alignment",
@@ -227,6 +232,9 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
    * GESTitleClip:color:
    *
    * The color of the text
+   *
+   * Deprecated: use ges_track_element_get/set_children_properties on the
+   * underlying GESTrackElement instead
    */
 
   g_object_class_install_property (object_class, PROP_COLOR,
@@ -238,6 +246,9 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
    * GESTitleClip:background:
    *
    * The background of the text
+   *
+   * Deprecated: use ges_track_element_get/set_children_properties on the
+   * underlying GESTrackElement instead
    */
 
   g_object_class_install_property (object_class, PROP_BACKGROUND,
@@ -249,6 +260,9 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
    * GESTitleClip:xpos:
    *
    * The horizontal position of the text
+   *
+   * Deprecated: use ges_track_element_get/set_children_properties on the
+   * underlying GESTrackElement instead
    */
 
   g_object_class_install_property (object_class, PROP_XPOS,
@@ -260,6 +274,9 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
    * GESTitleClip:ypos:
    *
    * The vertical position of the text
+   *
+   * Deprecated: use ges_track_element_get/set_children_properties on the
+   * underlying GESTrackElement instead
    */
 
   g_object_class_install_property (object_class, PROP_YPOS,
@@ -276,14 +293,6 @@ ges_title_clip_init (GESTitleClip * self)
 
   GES_TIMELINE_ELEMENT (self)->duration = 0;
   /* Not 100% required since a new gobject's content will always be memzero'd */
-  self->priv->text = NULL;
-  self->priv->font_desc = NULL;
-  self->priv->halign = DEFAULT_HALIGNMENT;
-  self->priv->valign = DEFAULT_VALIGNMENT;
-  self->priv->color = G_MAXUINT32;
-  self->priv->background = G_MAXUINT32;
-  self->priv->xpos = 0.5;
-  self->priv->ypos = 0.5;
 }
 
 /**
@@ -294,6 +303,8 @@ ges_title_clip_init (GESTitleClip * self)
  *
  * Sets the text this clip will render.
  *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 void
 ges_title_clip_set_text (GESTitleClip * self, const gchar * text)
@@ -302,13 +313,8 @@ ges_title_clip_set_text (GESTitleClip * self, const gchar * text)
 
   GST_DEBUG_OBJECT (self, "text:%s", text);
 
-  if (self->priv->text)
-    g_free (self->priv->text);
-
-  self->priv->text = g_strdup (text);
-
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_source_set_text (GES_TITLE_SOURCE (tmp->data), self->priv->text);
+    ges_track_element_set_child_properties (tmp->data, "text", text, NULL);
   }
 }
 
@@ -319,6 +325,8 @@ ges_title_clip_set_text (GESTitleClip * self, const gchar * text)
  *
  * Sets the pango font description of the text.
  *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 void
 ges_title_clip_set_font_desc (GESTitleClip * self, const gchar * font_desc)
@@ -327,14 +335,9 @@ ges_title_clip_set_font_desc (GESTitleClip * self, const gchar * font_desc)
 
   GST_DEBUG_OBJECT (self, "font_desc:%s", font_desc);
 
-  if (self->priv->font_desc)
-    g_free (self->priv->font_desc);
-
-  self->priv->font_desc = g_strdup (font_desc);
-
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_source_set_font_desc (GES_TITLE_SOURCE (tmp->data),
-        self->priv->font_desc);
+    ges_track_element_set_child_properties (tmp->data,
+        "font-desc", font_desc, NULL);
   }
 }
 
@@ -345,6 +348,8 @@ ges_title_clip_set_font_desc (GESTitleClip * self, const gchar * font_desc)
  *
  * Sets the horizontal aligment of the text.
  *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 void
 ges_title_clip_set_halignment (GESTitleClip * self, GESTextHAlign halign)
@@ -353,11 +358,9 @@ ges_title_clip_set_halignment (GESTitleClip * self, GESTextHAlign halign)
 
   GST_DEBUG_OBJECT (self, "halign:%d", halign);
 
-  self->priv->halign = halign;
-
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_source_set_halignment (GES_TITLE_SOURCE (tmp->data),
-        self->priv->halign);
+    ges_track_element_set_child_properties (tmp->data,
+        "halignment", halign, NULL);
   }
 }
 
@@ -368,6 +371,8 @@ ges_title_clip_set_halignment (GESTitleClip * self, GESTextHAlign halign)
  *
  * Sets the vertical aligment of the text.
  *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 void
 ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign)
@@ -376,11 +381,9 @@ ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign)
 
   GST_DEBUG_OBJECT (self, "valign:%d", valign);
 
-  self->priv->valign = valign;
-
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_source_set_valignment (GES_TITLE_SOURCE (tmp->data),
-        self->priv->valign);
+    ges_track_element_set_child_properties (tmp->data,
+        "valignment", valign, NULL);
   }
 }
 
@@ -390,6 +393,9 @@ ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign)
  * @color: The color @self is being set to
  *
  * Sets the color of the text.
+ *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 void
 ges_title_clip_set_color (GESTitleClip * self, guint32 color)
@@ -398,11 +404,8 @@ ges_title_clip_set_color (GESTitleClip * self, guint32 color)
 
   GST_DEBUG_OBJECT (self, "color:%d", color);
 
-  self->priv->color = color;
-
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_source_set_text_color (GES_TITLE_SOURCE (tmp->data),
-        self->priv->color);
+    ges_track_element_set_child_properties (tmp->data, "color", color, NULL);
   }
 }
 
@@ -412,6 +415,9 @@ ges_title_clip_set_color (GESTitleClip * self, guint32 color)
  * @background: The color @self is being set to
  *
  * Sets the background of the text.
+ *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 void
 ges_title_clip_set_background (GESTitleClip * self, guint32 background)
@@ -420,11 +426,9 @@ ges_title_clip_set_background (GESTitleClip * self, guint32 background)
 
   GST_DEBUG_OBJECT (self, "background:%d", background);
 
-  self->priv->background = background;
-
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_source_set_background_color (GES_TITLE_SOURCE (tmp->data),
-        self->priv->background);
+    ges_track_element_set_child_properties (tmp->data,
+        "foreground-color", background, NULL);
   }
 }
 
@@ -435,6 +439,9 @@ ges_title_clip_set_background (GESTitleClip * self, guint32 background)
  * @position: The horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
+ *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 void
 ges_title_clip_set_xpos (GESTitleClip * self, gdouble position)
@@ -443,10 +450,8 @@ ges_title_clip_set_xpos (GESTitleClip * self, gdouble position)
 
   GST_DEBUG_OBJECT (self, "xpos:%f", position);
 
-  self->priv->xpos = position;
-
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_source_set_xpos (GES_TITLE_SOURCE (tmp->data), self->priv->xpos);
+    ges_track_element_set_child_properties (tmp->data, "xpos", position, NULL);
   }
 }
 
@@ -456,6 +461,9 @@ ges_title_clip_set_xpos (GESTitleClip * self, gdouble position)
  * @position: The vertical position @self is being set to
  *
  * Sets the vertical position of the text.
+ *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 void
 ges_title_clip_set_ypos (GESTitleClip * self, gdouble position)
@@ -464,10 +472,8 @@ ges_title_clip_set_ypos (GESTitleClip * self, gdouble position)
 
   GST_DEBUG_OBJECT (self, "ypos:%f", position);
 
-  self->priv->ypos = position;
-
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_source_set_ypos (GES_TITLE_SOURCE (tmp->data), self->priv->ypos);
+    ges_track_element_set_child_properties (tmp->data, "ypos", position, NULL);
   }
 }
 
@@ -479,11 +485,18 @@ ges_title_clip_set_ypos (GESTitleClip * self, gdouble position)
  *
  * Returns: The text currently set on @self.
  *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 const gchar *
 ges_title_clip_get_text (GESTitleClip * self)
 {
-  return self->priv->text;
+  gchar *text;
+
+  ges_track_element_get_child_properties (self->priv->track_titles->data,
+      "text", &text, NULL);
+
+  return text;
 }
 
 /**
@@ -494,11 +507,18 @@ ges_title_clip_get_text (GESTitleClip * self)
  *
  * Returns: The pango font description used by @self.
  *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 const char *
 ges_title_clip_get_font_desc (GESTitleClip * self)
 {
-  return self->priv->font_desc;
+  gchar *font_desc;
+
+  ges_track_element_get_child_properties (self->priv->track_titles->data,
+      "font-desc", &font_desc, NULL);
+
+  return font_desc;
 }
 
 /**
@@ -509,11 +529,18 @@ ges_title_clip_get_font_desc (GESTitleClip * self)
  *
  * Returns: The horizontal aligment used by @self.
  *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 GESTextHAlign
 ges_title_clip_get_halignment (GESTitleClip * self)
 {
-  return self->priv->halign;
+  GESTextHAlign halign;
+
+  ges_track_element_get_child_properties (self->priv->track_titles->data,
+      "halignment", &halign, NULL);
+
+  return halign;
 }
 
 /**
@@ -524,11 +551,18 @@ ges_title_clip_get_halignment (GESTitleClip * self)
  *
  * Returns: The vertical aligment used by @self.
  *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 GESTextVAlign
 ges_title_clip_get_valignment (GESTitleClip * self)
 {
-  return self->priv->valign;
+  GESTextVAlign valign;
+
+  ges_track_element_get_child_properties (self->priv->track_titles->data,
+      "valignment", &valign, NULL);
+
+  return valign;
 }
 
 /**
@@ -538,11 +572,19 @@ ges_title_clip_get_valignment (GESTitleClip * self)
  * Get the color used by @self.
  *
  * Returns: The color used by @self.
+ *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 const guint32
 ges_title_clip_get_text_color (GESTitleClip * self)
 {
-  return self->priv->color;
+  guint32 color;
+
+  ges_track_element_get_child_properties (self->priv->track_titles->data,
+      "color", &color, NULL);
+
+  return color;
 }
 
 /**
@@ -552,11 +594,19 @@ ges_title_clip_get_text_color (GESTitleClip * self)
  * Get the background used by @self.
  *
  * Returns: The color used by @self.
+ *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 const guint32
 ges_title_clip_get_background_color (GESTitleClip * self)
 {
-  return self->priv->background;
+  guint32 color;
+
+  ges_track_element_get_child_properties (self->priv->track_titles->data,
+      "foreground-color", &color, NULL);
+
+  return color;
 }
 
 /**
@@ -566,11 +616,19 @@ ges_title_clip_get_background_color (GESTitleClip * self)
  * Get the horizontal position used by @self.
  *
  * Returns: The horizontal position used by @self.
+ *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 const gdouble
 ges_title_clip_get_xpos (GESTitleClip * self)
 {
-  return self->priv->xpos;
+  gdouble xpos;
+
+  ges_track_element_get_child_properties (self->priv->track_titles->data,
+      "xpos", &xpos, NULL);
+
+  return xpos;
 }
 
 /**
@@ -580,11 +638,19 @@ ges_title_clip_get_xpos (GESTitleClip * self)
  * Get the vertical position used by @self.
  *
  * Returns: The vertical position used by @self.
+ *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * underlying GESTrackElement instead
  */
 const gdouble
 ges_title_clip_get_ypos (GESTitleClip * self)
 {
-  return self->priv->ypos;
+  gdouble ypos;
+
+  ges_track_element_get_child_properties (self->priv->track_titles->data,
+      "ypos", &ypos, NULL);
+
+  return ypos;
 }
 
 static void
@@ -616,24 +682,12 @@ static GESTrackElement *
 ges_title_clip_create_track_element (GESClip * clip, GESTrackType type)
 {
 
-  GESTitleClipPrivate *priv = GES_TITLE_CLIP (clip)->priv;
   GESTrackElement *res = NULL;
 
   GST_DEBUG_OBJECT (clip, "a GESTitleSource");
 
-  if (type == GES_TRACK_TYPE_VIDEO) {
+  if (type == GES_TRACK_TYPE_VIDEO)
     res = (GESTrackElement *) ges_title_source_new ();
-    GST_DEBUG_OBJECT (clip, "text property");
-    ges_title_source_set_text ((GESTitleSource *) res, priv->text);
-    ges_title_source_set_font_desc ((GESTitleSource *) res, priv->font_desc);
-    ges_title_source_set_halignment ((GESTitleSource *) res, priv->halign);
-    ges_title_source_set_valignment ((GESTitleSource *) res, priv->valign);
-    ges_title_source_set_text_color ((GESTitleSource *) res, priv->color);
-    ges_title_source_set_background_color ((GESTitleSource *) res,
-        priv->background);
-    ges_title_source_set_xpos ((GESTitleSource *) res, priv->xpos);
-    ges_title_source_set_ypos ((GESTitleSource *) res, priv->ypos);
-  }
 
   return res;
 }

@@ -203,6 +203,9 @@ ges_title_source_create_source (GESTrackElement * object)
  * made.
  * 
  * Sets the text this track element will render.
+ *
+ * Deprecated: use ges_track_element_get/set_children_properties on the
+ * GESTrackElement instead
  */
 
 void
@@ -353,7 +356,12 @@ ges_title_source_set_ypos (GESTitleSource * self, gdouble position)
 const gchar *
 ges_title_source_get_text (GESTitleSource * source)
 {
-  return source->priv->text;
+  gchar *text;
+
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source), "text",
+      &text, NULL);
+
+  return text;
 }
 
 /**
@@ -368,7 +376,12 @@ ges_title_source_get_text (GESTitleSource * source)
 const gchar *
 ges_title_source_get_font_desc (GESTitleSource * source)
 {
-  return source->priv->font_desc;
+  gchar *font_desc;
+
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source),
+      "font-desc", &font_desc, NULL);
+
+  return font_desc;
 }
 
 /**
@@ -382,7 +395,12 @@ ges_title_source_get_font_desc (GESTitleSource * source)
 GESTextHAlign
 ges_title_source_get_halignment (GESTitleSource * source)
 {
-  return source->priv->halign;
+  GESTextHAlign halign;
+
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source),
+      "halignment", &halign, NULL);
+
+  return halign;
 }
 
 /**
@@ -396,7 +414,12 @@ ges_title_source_get_halignment (GESTitleSource * source)
 GESTextVAlign
 ges_title_source_get_valignment (GESTitleSource * source)
 {
-  return source->priv->valign;
+  GESTextVAlign valign;
+
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source),
+      "valignment", &valign, NULL);
+
+  return valign;
 }
 
 /**
@@ -410,7 +433,12 @@ ges_title_source_get_valignment (GESTitleSource * source)
 const guint32
 ges_title_source_get_text_color (GESTitleSource * source)
 {
-  return source->priv->color;
+  guint32 color;
+
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source), "color",
+      &color, NULL);
+
+  return color;
 }
 
 /**
@@ -424,7 +452,12 @@ ges_title_source_get_text_color (GESTitleSource * source)
 const guint32
 ges_title_source_get_background_color (GESTitleSource * source)
 {
-  return source->priv->background;
+  guint32 color;
+
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source),
+      "foreground-color", &color, NULL);
+
+  return color;
 }
 
 /**
@@ -438,7 +471,12 @@ ges_title_source_get_background_color (GESTitleSource * source)
 const gdouble
 ges_title_source_get_xpos (GESTitleSource * source)
 {
-  return source->priv->xpos;
+  gdouble xpos;
+
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source), "xpos",
+      &xpos, NULL);
+
+  return xpos;
 }
 
 /**
@@ -452,7 +490,12 @@ ges_title_source_get_xpos (GESTitleSource * source)
 const gdouble
 ges_title_source_get_ypos (GESTitleSource * source)
 {
-  return source->priv->ypos;
+  gdouble ypos;
+
+  ges_track_element_get_child_properties (GES_TRACK_ELEMENT (source), "ypos",
+      &ypos, NULL);
+
+  return ypos;
 }
 
 /**
