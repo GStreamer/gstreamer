@@ -215,6 +215,8 @@ gst_h264_parse_nalu_header (GstH264NalUnit * nalu)
   nalu->idr_pic_flag = (nalu->type == 5 ? 1 : 0);
   nalu->header_bytes = 1;
 
+  nalu->extension_type = GST_H264_NAL_EXTENSION_NONE;
+
   switch (nalu->type) {
     case GST_H264_NAL_PREFIX_UNIT:
     case GST_H264_NAL_SLICE_EXT:
@@ -241,7 +243,6 @@ gst_h264_parse_nalu_header (GstH264NalUnit * nalu)
       nalu->header_bytes += 3;
       break;
     default:
-      nalu->extension_type = GST_H264_NAL_EXTENSION_NONE;
       break;
   }
 
