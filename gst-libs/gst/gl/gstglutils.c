@@ -623,7 +623,7 @@ _gst_context_query (GstElement * element,
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "posting need context message");
     msg = gst_message_new_need_context (GST_OBJECT_CAST (element),
-        GST_GL_DISPLAY_CONTEXT_TYPE);
+        display_type);
     gst_element_post_message (element, msg);
   }
 
@@ -650,11 +650,12 @@ gst_gl_display_context_query (GstElement * element, GstGLDisplay ** display_ptr)
   query =
       _gst_context_query (element, display_ptr, GST_GL_DISPLAY_CONTEXT_TYPE);
   gst_query_parse_context (query, &ctxt);
-  if (ctxt && gst_context_has_context_type (ctxt, GST_GL_DISPLAY_CONTEXT_TYPE)) {
+  if (ctxt && gst_context_has_context_type (ctxt, GST_GL_DISPLAY_CONTEXT_TYPE))
     gst_context_get_gl_display (ctxt, display_ptr);
-    if (*display_ptr)
-      goto out;
-  }
+
+  if (*display_ptr)
+    goto out;
+
 #if GST_GL_HAVE_WINDOW_X11
   gst_query_unref (query);
   query = _gst_context_query (element, display_ptr, "gst.x11.display.handle");
@@ -668,9 +669,11 @@ gst_gl_display_context_query (GstElement * element, GstGLDisplay ** display_ptr)
         && display) {
       *display_ptr =
           (GstGLDisplay *) gst_gl_display_x11_new_with_display (display);
-      goto out;
     }
   }
+
+  if (*display_ptr)
+    goto out;
 #endif
 
 out:

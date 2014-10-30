@@ -74,16 +74,6 @@ Pipeline::configure ()
   g_signal_connect (m_bus, "sync-message", G_CALLBACK (sync_bus_call), this);
   gst_object_unref (m_bus);
 
-  /* Retrieve the last gl element */
-  GstElement *gl_element =
-      gst_bin_get_by_name (GST_BIN (m_pipeline), "gleffects0");
-  if (!gl_element) {
-    qDebug ("gl element could not be found");
-    return;
-  }
-  g_object_set (G_OBJECT (gl_element), "other-context", this->context, NULL);
-  gst_object_unref (gl_element);
-
   gst_element_set_state (GST_ELEMENT (this->m_pipeline), GST_STATE_PAUSED);
   GstState state = GST_STATE_PAUSED;
   if (gst_element_get_state (GST_ELEMENT (this->m_pipeline),
@@ -225,6 +215,11 @@ gboolean Pipeline::sync_bus_call (GstBus * bus, GstMessage * msg, Pipeline * p)
         GstContext *display_context = gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
         gst_context_set_gl_display (display_context, p->display);
         gst_element_set_context (GST_ELEMENT (msg->src), display_context);
+      } else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
+        GstContext *app_context = gst_context_new ("gst.gl.app_context", TRUE);
+        GstStructure *s = gst_context_writable_structure (app_context);
+        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, p->context, NULL);
+        gst_element_set_context (GST_ELEMENT (msg->src), app_context);
       }
       break;
     }
