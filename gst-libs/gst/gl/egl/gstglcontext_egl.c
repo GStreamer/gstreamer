@@ -51,8 +51,6 @@ static guintptr gst_gl_context_egl_get_gl_context (GstGLContext * context);
 static GstGLAPI gst_gl_context_egl_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_egl_get_gl_platform (GstGLContext *
     context);
-static gpointer gst_gl_context_egl_get_proc_address (GstGLContext * context,
-    const gchar * name);
 static gboolean gst_gl_context_egl_check_feature (GstGLContext * context,
     const gchar * feature);
 
@@ -547,7 +545,7 @@ load_egl_module (gpointer user_data)
   return NULL;
 }
 
-static gpointer
+gpointer
 gst_gl_context_egl_get_proc_address (GstGLContext * context, const gchar * name)
 {
   gpointer result = NULL;

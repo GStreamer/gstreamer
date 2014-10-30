@@ -59,8 +59,9 @@ struct _GstGLContextGLXClass {
 
 GType gst_gl_context_glx_get_type     (void);
 
-GstGLContextGLX * gst_gl_context_glx_new (void);
-guintptr          gst_gl_context_glx_get_current_context (void);
+GstGLContextGLX *   gst_gl_context_glx_new                  (void);
+guintptr            gst_gl_context_glx_get_current_context  (void);
+gpointer            gst_gl_context_glx_get_proc_address     (GstGLContext * context, const gchar * name);
 
 G_END_DECLS
 
