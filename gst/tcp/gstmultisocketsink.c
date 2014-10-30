@@ -103,6 +103,7 @@
 #endif
 
 #include <gst/gst-i18n-plugin.h>
+#include <gst/net/gstnetcontrolmessagemeta.h>
 
 #include <string.h>
 
@@ -672,6 +673,25 @@ unmap_n_memorys (GstMapInfo * mapinfo, int num_mappings)
     gst_memory_unmap (mapinfo[i].memory, &mapinfo[i]);
 }
 
+static gsize
+gst_buffer_get_cmsg_list (GstBuffer * buf, GSocketControlMessage ** msgs,
+    gsize msg_space)
+{
+  gpointer iter_state = NULL;
+  GstMeta *meta;
+  gsize msg_count = 0;
+
+  while ((meta = gst_buffer_iterate_meta (buf, &iter_state)) != NULL
+      && msg_count < msg_space) {
+    if (meta->info->api == GST_NET_CONTROL_MESSAGE_META_API_TYPE)
+      msgs[msg_count++] = ((GstNetControlMessageMeta *) meta)->message;
+  }
+
+  return msg_count;
+}
+
+#define CMSG_MAX 255
+
 static gssize
 gst_multi_socket_sink_write (GstMultiSocketSink * sink,
     GSocket * sock, GstBuffer * buffer, gsize bufoffset,
@@ -681,18 +701,19 @@ gst_multi_socket_sink_write (GstMultiSocketSink * sink,
   GOutputVector vec[8];
   guint mems_mapped;
   gssize wrote;
+  GSocketControlMessage *cmsgs[CMSG_MAX];
+  gsize msg_count;
 
   mems_mapped = map_n_memory_output_vector (buffer, bufoffset, vec, maps, 8);
 
+  msg_count = gst_buffer_get_cmsg_list (buffer, cmsgs, CMSG_MAX);
+
   wrote =
-      g_socket_send_message (sock, NULL, vec, mems_mapped, NULL, 0, 0,
+      g_socket_send_message (sock, NULL, vec, mems_mapped, cmsgs, msg_count, 0,
       cancellable, err);
-
   unmap_n_memorys (maps, mems_mapped);
-
   return wrote;
 }
-
 
 /* Handle a write on a client,
  * which indicates a read request from a client.
