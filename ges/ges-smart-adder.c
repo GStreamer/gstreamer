@@ -148,12 +148,24 @@ _release_pad (GstElement * element, GstPad * pad)
  *              GObject vmethods                    *
  ****************************************************/
 static void
+ges_smart_adder_dispose (GObject * object)
+{
+  GESSmartAdder *self = GES_SMART_ADDER (object);
+
+  if (self->pads_infos) {
+    g_hash_table_unref (self->pads_infos);
+    self->pads_infos = NULL;
+  }
+
+  G_OBJECT_CLASS (ges_smart_adder_parent_class)->dispose (object);
+}
+
+static void
 ges_smart_adder_finalize (GObject * object)
 {
   GESSmartAdder *self = GES_SMART_ADDER (object);
 
   g_mutex_clear (&self->lock);
-  g_hash_table_unref (self->pads_infos);
 
   G_OBJECT_CLASS (ges_smart_adder_parent_class)->finalize (object);
 }
@@ -179,6 +191,7 @@ ges_smart_adder_class_init (GESSmartAdderClass * klass)
   element_class->request_new_pad = GST_DEBUG_FUNCPTR (_request_new_pad);
   element_class->release_pad = GST_DEBUG_FUNCPTR (_release_pad);
 
+  object_class->dispose = ges_smart_adder_dispose;
   object_class->finalize = ges_smart_adder_finalize;
 }
 
