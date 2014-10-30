@@ -325,6 +325,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
 {
   GstGLContext *context;
   GstGLWrappedContext *context_wrap = NULL;
+  GstGLContextClass *context_class;
 
   _init_debug ();
 
@@ -343,6 +344,39 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   context_wrap->handle = handle;
   context_wrap->platform = context_type;
   context_wrap->available_apis = available_apis;
+
+  context_class = GST_GL_CONTEXT_GET_CLASS (context);
+
+#if GST_GL_HAVE_PLATFORM_GLX
+  if (context_type == GST_GL_PLATFORM_GLX) {
+    context_class->get_current_context = gst_gl_context_glx_get_current_context;
+    context_class->get_proc_address = gst_gl_context_glx_get_proc_address;
+  }
+#endif
+#if GST_GL_HAVE_PLATFORM_EGL
+  if (context_type == GST_GL_PLATFORM_EGL) {
+    context_class->get_current_context = gst_gl_context_egl_get_current_context;
+    context_class->get_proc_address = gst_gl_context_egl_get_proc_address;
+  }
+#endif
+#if GST_GL_HAVE_PLATFORM_CGL
+  if (context_type == GST_GL_PLATFORM_CGL) {
+    context_class->get_current_context =
+        gst_gl_context_cocoa_get_current_context;
+  }
+#endif
+#if GST_GL_HAVE_PLATFORM_WGL
+  if (context_type == GST_GL_PLATFORM_WGL) {
+    context_class->get_current_context = gst_gl_context_wgl_get_current_context;
+    context_class->get_proc_address = gst_gl_context_wgl_get_proc_address;
+  }
+#endif
+#if GST_GL_HAVE_PLATFORM_EAGL
+  if (context_type == GST_GL_PLATFORM_EAGL) {
+    context_class->get_current_context =
+        gst_gl_context_eagl_get_current_context;
+  }
+#endif
 
   return context;
 }

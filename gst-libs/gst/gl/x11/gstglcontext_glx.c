@@ -57,8 +57,6 @@ static gboolean gst_gl_context_glx_choose_format (GstGLContext *
 GstGLAPI gst_gl_context_glx_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_glx_get_gl_platform (GstGLContext *
     context);
-static gpointer gst_gl_context_glx_get_proc_address (GstGLContext * context,
-    const gchar * name);
 
 struct _GstGLContextGLXPrivate
 {
@@ -421,7 +419,7 @@ gst_gl_context_glx_get_gl_platform (GstGLContext * context)
   return GST_GL_PLATFORM_GLX;
 }
 
-static gpointer
+gpointer
 gst_gl_context_glx_get_proc_address (GstGLContext * context, const gchar * name)
 {
   gpointer result;

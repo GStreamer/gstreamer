@@ -46,8 +46,6 @@ static void gst_gl_context_wgl_destroy_context (GstGLContext * context);
 GstGLAPI gst_gl_context_wgl_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_wgl_get_gl_platform (GstGLContext *
     context);
-static gpointer gst_gl_context_wgl_get_proc_address (GstGLContext * context,
-    const gchar * name);
 
 static void
 gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
@@ -285,7 +283,7 @@ gst_gl_context_wgl_get_gl_platform (GstGLContext * context)
   return GST_GL_PLATFORM_WGL;
 }
 
-static gpointer
+gpointer
 gst_gl_context_wgl_get_proc_address (GstGLContext * context, const gchar * name)
 {
   gpointer result;
