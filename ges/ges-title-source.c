@@ -22,6 +22,70 @@
  * SECTION:gestitlesource
  * @short_description: render stand-alone text titles
  * 
+ * #GESTitleSource is a GESTimelineElement that implements the notion
+ * of titles in GES.
+ *
+ * <refsect1 id="GESTileSource.children_properties" role="properties">
+ * <title role="children_properties.title">Children Properties</title>
+ * <para>You can use the following children properties through the
+ * #ges_track_element_set_child_property and alike set of methods:</para>
+ * <informaltable frame="none">
+ * <tgroup cols="3">
+ * <colspec colname="properties_type" colwidth="150px"/>
+ * <colspec colname="properties_name" colwidth="200px"/>
+ * <colspec colname="properties_flags" colwidth="400px"/>
+ * <tbody>
+ * <row>
+ *  <entry role="property_type"><link linkend="guint"><type>guint</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESTileSource--background">background</link></entry>
+ *  <entry>The color of the background</entry>
+ * </row>
+ *
+ * <row>
+ *  <entry role="property_type"><link linkend="guint"><type>guint</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESTileSource--color">color</link></entry>
+ *  <entry>The color of the text</entry>
+ * </row>
+ *
+ * <row>
+ *   <entry role="property_type"><link linkend="gchar"><type>gchar</type></link></entry>
+ *   <entry role="property_name"><link linkend="GESTileSource--font-desc">font-desc</link></entry>
+ *   <entry>Pango font description string</entry>
+ * </row>
+ *
+ * <row>
+ *  <entry role="property_type"><link linkend="GESTextHAlign"><type>GESTextHAlign</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESTileSource--halignment">halignment</link></entry>
+ *  <entry>Horizontal alignment of the text</entry>
+ * </row>
+ *
+ * <row>
+ *  <entry role="property_type"><link linkend="gchar"><type>gchar</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESTileSource--text">text</link></entry>
+ *  <entry>The text to be rendered</entry>
+ * </row>
+ *
+ * <row>
+ *  <entry role="property_type"><link linkend="GESTextVAlign"><type>GESTextVAlign</type></link>
+ *  </entry><entry role="property_name"><link linkend="GESTileSource--valignment">valignment</link>
+ *  </entry><entry>Vertical alignent of the text</entry>
+ * </row>
+ *
+ * <row>
+ *  <entry role="property_type"><link linkend="gdouble"><type>gdouble</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESTileSource--xpos">xpos</link></entry>
+ *  <entry>The horizontal position of the text</entry>
+ * </row>
+ *
+ * <row><entry role="property_type"><link linkend="gdouble"><type>gdouble</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESTileSource--ypos">ypos</link></entry>
+ *  <entry>The vertical position of the text</entry>
+ * </row>
+ *
+ * </tbody>
+ * </tgroup>
+ * </informaltable>
+ * </refsect1>
  */
 
 #include "ges-internal.h"
@@ -95,6 +159,7 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
   source_class->create_source = ges_title_source_create_source;
   klass->cleanup_children_prop_names = g_regex_new ("background",
       G_REGEX_EXTENDED, 0, NULL);
+
 }
 
 static void
