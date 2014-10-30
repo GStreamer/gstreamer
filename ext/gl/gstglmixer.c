@@ -590,45 +590,6 @@ gst_gl_mixer_src_activate_mode (GstAggregator * aggregator, GstPadMode mode,
   return result;
 }
 
-static gboolean
-gst_gl_mixer_query_caps (GstPad * pad, GstAggregator * agg, GstQuery * query)
-{
-  GstCaps *filter, *caps;
-  GstStructure *s;
-  gint n;
-
-  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
-
-  gst_query_parse_caps (query, &filter);
-
-  if (GST_VIDEO_INFO_FORMAT (&vagg->info) != GST_VIDEO_FORMAT_UNKNOWN) {
-    caps = gst_video_info_to_caps (&vagg->info);
-  } else {
-    caps = gst_pad_get_pad_template_caps (agg->srcpad);
-  }
-
-  caps = gst_caps_make_writable (caps);
-
-  n = gst_caps_get_size (caps) - 1;
-  for (; n >= 0; n--) {
-    s = gst_caps_get_structure (caps, n);
-    gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-    if (GST_VIDEO_INFO_FPS_D (&vagg->info) != 0) {
-      gst_structure_set (s,
-          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-    }
-  }
-
-  if (filter)
-    caps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
-
-  gst_query_set_caps_result (query, caps);
-  gst_caps_unref (caps);
-
-  return TRUE;
-}
-
 static GstCaps *
 gst_gl_mixer_set_caps_features (const GstCaps * caps,
     const gchar * feature_name)
@@ -719,6 +680,30 @@ gst_gl_mixer_update_caps (GstGLMixer * mix, GstCaps * caps)
   GST_DEBUG_OBJECT (mix, "returning %" GST_PTR_FORMAT, result);
 
   return result;
+}
+
+static gboolean
+gst_gl_mixer_query_caps (GstPad * pad, GstAggregator * agg, GstQuery * query)
+{
+  GstCaps *filter, *current_caps, *retcaps;
+
+  gst_query_parse_caps (query, &filter);
+
+  current_caps = gst_pad_get_current_caps (pad);
+  if (current_caps == NULL)
+    current_caps = gst_pad_get_pad_template_caps (agg->srcpad);
+
+  retcaps = gst_gl_mixer_caps_remove_format_info (current_caps);
+  gst_caps_unref (current_caps);
+
+  if (filter)
+    retcaps =
+        gst_caps_intersect_full (filter, retcaps, GST_CAPS_INTERSECT_FIRST);
+
+  gst_query_set_caps_result (query, retcaps);
+  gst_caps_unref (retcaps);
+
+  return TRUE;
 }
 
 static gboolean
