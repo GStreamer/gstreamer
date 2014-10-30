@@ -48,10 +48,6 @@ EXPORTS
 	gst_navigation_send_event
 	gst_navigation_send_key_event
 	gst_navigation_send_mouse_event
-	gst_resampler_clear
-	gst_resampler_flags_get_type
-	gst_resampler_init
-	gst_resampler_method_get_type
 	gst_video_alignment_reset
 	gst_video_blend
 	gst_video_blend_scale_linear_RGBA
@@ -224,6 +220,10 @@ EXPORTS
 	gst_video_pack_flags_get_type
 	gst_video_region_of_interest_meta_api_get_type
 	gst_video_region_of_interest_meta_get_info
+	gst_video_resampler_clear
+	gst_video_resampler_flags_get_type
+	gst_video_resampler_init
+	gst_video_resampler_method_get_type
 	gst_video_scaler_free
 	gst_video_scaler_get_coeff
 	gst_video_scaler_horizontal
