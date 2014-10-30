@@ -1607,6 +1607,7 @@ handle_mikey_data (GstRTSPClient * client, GstRTSPContext * ctx,
     gst_caps_unref (caps);
   }
   gst_mikey_message_unref (msg);
+  gst_buffer_unref (key);
 
   return TRUE;
 
@@ -1694,7 +1695,9 @@ handle_keymgmt (GstRTSPClient * client, GstRTSPContext * ctx, gchar * keymgmt)
         handle_mikey_data (client, ctx, data, size);
       }
     }
+    g_strfreev (split);
   }
+  g_strfreev (specs);
   return TRUE;
 }
 
