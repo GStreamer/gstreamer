@@ -356,7 +356,6 @@ transform (guint32 * src, guint32 * dest, gint video_area, gint width,
         left_luminance = get_luminance (*left);
         if (left_luminance < out_luminance) {
           *dest = *left;
-          out_luminance = left_luminance;
         }
 
         src += 1;
