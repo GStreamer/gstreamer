@@ -1126,7 +1126,9 @@ video_converter_compute_resample (GstVideoConverter * convert)
 
   if (sfinfo->w_sub[2] != dfinfo->w_sub[2] ||
       sfinfo->h_sub[2] != dfinfo->h_sub[2] ||
-      in_info->chroma_site != out_info->chroma_site) {
+      in_info->chroma_site != out_info->chroma_site ||
+      in_info->width != out_info->width ||
+      in_info->height != out_info->height) {
     GstVideoChromaFlags flags = (GST_VIDEO_INFO_IS_INTERLACED (in_info) ?
         GST_VIDEO_CHROMA_FLAG_INTERLACED : 0);
 
