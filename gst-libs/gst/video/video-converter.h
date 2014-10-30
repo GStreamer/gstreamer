@@ -45,7 +45,7 @@ typedef enum {
  *
  * #GST_TYPE_RESAMPLER_METHOD, The resampler method to use for
  * resampling. Other options for the resampler can be used, see
- * the #GstResampler. Default is #GST_RESAMPLER_METHOD_LINEAR.
+ * the #GstResampler. Default is #GST_RESAMPLER_METHOD_CUBIC
  */
 #define GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD   "GstVideoConverter.resampler-method"
 /**
@@ -63,6 +63,73 @@ typedef enum {
  * changing bit depth.
  */
 #define GST_VIDEO_CONVERTER_OPT_DITHER_METHOD   "GstVideoConverter.dither-method"
+
+/**
+ * GST_VIDEO_CONVERTER_OPT_SRC_X:
+ *
+ * #G_TYPE_INT, source x position to start conversion, default 0
+ */
+#define GST_VIDEO_CONVERTER_OPT_SRC_X   "GstVideoConverter.src-x"
+/**
+ * GST_VIDEO_CONVERTER_OPT_SRC_Y:
+ *
+ * #G_TYPE_INT, source y position to start conversion, default 0
+ */
+#define GST_VIDEO_CONVERTER_OPT_SRC_Y   "GstVideoConverter.src-y"
+/**
+ * GST_VIDEO_CONVERTER_OPT_SRC_WIDTH:
+ *
+ * #G_TYPE_INT, source width to convert, default source width
+ */
+#define GST_VIDEO_CONVERTER_OPT_SRC_WIDTH   "GstVideoConverter.src-width"
+/**
+ * GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT:
+ *
+ * #G_TYPE_INT, source height to convert, default source height
+ */
+#define GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT   "GstVideoConverter.src-height"
+
+/**
+ * GST_VIDEO_CONVERTER_OPT_DEST_X:
+ *
+ * #G_TYPE_INT, x position in the destination frame, default 0
+ */
+#define GST_VIDEO_CONVERTER_OPT_DEST_X   "GstVideoConverter.dest-x"
+/**
+ * GST_VIDEO_CONVERTER_OPT_DEST_Y:
+ *
+ * #G_TYPE_INT, y position in the destination frame, default 0
+ */
+#define GST_VIDEO_CONVERTER_OPT_DEST_Y   "GstVideoConverter.dest-y"
+/**
+ * GST_VIDEO_CONVERTER_OPT_DEST_WIDTH:
+ *
+ * #G_TYPE_INT, width in the destination frame, default destination width
+ */
+#define GST_VIDEO_CONVERTER_OPT_DEST_WIDTH   "GstVideoConverter.dest-width"
+/**
+ * GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT:
+ *
+ * #G_TYPE_INT, height in the destination frame, default destination height
+ */
+#define GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT   "GstVideoConverter.dest-height"
+
+/**
+ * GST_VIDEO_CONVERTER_OPT_FILL_BORDER:
+ *
+ * #G_TYPE_BOOLEAN, if the destination rectangle does not fill the complete
+ * destination image, render a border with
+ * #GST_VIDEO_CONVERTER_OPT_BORDER_ARGB. Otherwise the unusded pixels in the
+ * destination are untouched. Default %TRUE.
+ */
+#define GST_VIDEO_CONVERTER_OPT_FILL_BORDER   "GstVideoConverter.fill-border"
+/**
+ * GST_VIDEO_CONVERTER_OPT_BORDER_ARGB:
+ *
+ * #G_TYPE_UINT, the border color to use if #GST_VIDEO_CONVERTER_OPT_FILL_BORDER
+ * is set to %TRUE. Default 0x00000000
+ */
+#define GST_VIDEO_CONVERTER_OPT_BORDER_ARGB   "GstVideoConverter.border-argb"
 
 
 typedef struct _GstVideoConverter GstVideoConverter;
