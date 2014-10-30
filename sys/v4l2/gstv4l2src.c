@@ -274,6 +274,9 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 
     if (gst_structure_has_field (structure, "format"))
       gst_structure_fixate_field (structure, "format");
+
+    if (gst_structure_has_field (structure, "interlace-mode"))
+      gst_structure_fixate_field (structure, "interlace-mode");
   }
 
   GST_DEBUG_OBJECT (basesrc, "fixated caps %" GST_PTR_FORMAT, caps);
