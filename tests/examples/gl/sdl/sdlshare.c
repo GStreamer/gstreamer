@@ -288,10 +288,7 @@ main (int argc, char **argv)
 #else
   SDL_VERSION (&info.version);
   SDL_GetWMInfo (&info);
-  /* FIXME: This display is different to the one that SDL uses to create the
-   * GL context inside SDL_SetVideoMode() above which fails on Intel hardware
-   */
-  sdl_display = info.info.x11.display;
+  sdl_display = info.info.x11.gfxdisplay;
   sdl_win = info.info.x11.window;
   sdl_gl_context = glXGetCurrentContext ();
   glXMakeCurrent (sdl_display, None, 0);
