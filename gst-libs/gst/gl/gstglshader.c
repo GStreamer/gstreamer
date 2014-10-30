@@ -26,7 +26,6 @@
 #include "gl.h"
 #include "gstglshader.h"
 
-#if GST_GL_HAVE_GLES2
 /* *INDENT-OFF* */
 static const gchar *simple_vertex_shader_str_gles2 =
       "attribute vec4 a_position;   \n"
@@ -39,7 +38,9 @@ static const gchar *simple_vertex_shader_str_gles2 =
       "}                            \n";
 
 static const gchar *simple_fragment_shader_str_gles2 =
+      "#ifdef GL_ES                                        \n"
       "precision mediump float;                            \n"
+      "#endif                                              \n"
       "varying vec2 v_texCoord;                            \n"
       "uniform sampler2D tex;                              \n"
       "void main()                                         \n"
@@ -47,7 +48,6 @@ static const gchar *simple_fragment_shader_str_gles2 =
       "  gl_FragColor = texture2D( tex, v_texCoord );      \n"
       "}                                                   \n";
 /* *INDENT-ON* */
-#endif
 
 #ifndef GL_COMPILE_STATUS
 #define GL_COMPILE_STATUS             0x8B81
@@ -634,7 +634,6 @@ gst_gl_shader_compile_all_with_attribs_and_check (GstGLShader * shader,
   return TRUE;
 }
 
-#if GST_GL_HAVE_GLES2
 gboolean
 gst_gl_shader_compile_with_default_f_and_check (GstGLShader * shader,
     const gchar * v_src, const gint n_attribs, const gchar * attrib_names[],
@@ -671,7 +670,6 @@ gst_gl_shader_compile_with_default_vf_and_check (GstGLShader * shader,
   return gst_gl_shader_compile_with_default_v_and_check (shader,
       simple_fragment_shader_str_gles2, pos_loc, tex_loc);
 }
-#endif
 
 void
 gst_gl_shader_set_uniform_1f (GstGLShader * shader, const gchar * name,
