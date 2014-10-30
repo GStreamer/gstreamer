@@ -25,7 +25,12 @@
 #include <stdio.h>
 #include <math.h>
 
+#ifndef DISABLE_ORC
 #include <orc/orcfunctions.h>
+#else
+#define orc_memcpy memcpy
+#endif
+
 #include "video-orc.h"
 #include "video-scaler.h"
 
