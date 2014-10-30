@@ -94,7 +94,7 @@ struct _GstVideoConverter
   guint tmplines_idx;
 
   gboolean fill_border;
-  guint16 *borderline;
+  gpointer borderline;
   guint32 border_argb;
 
   GstVideoChromaResample *upsample;
@@ -552,8 +552,38 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
 
   if (convert->fill_border && (convert->out_height < convert->out_maxheight ||
           convert->out_width < convert->out_maxwidth)) {
-    convert->borderline = g_malloc0 (sizeof (guint16) * width * 4);
-    memset (convert->borderline, convert->border_argb, width * 8);
+    gint i;
+    guint8 *b;
+    guint64 border_val, v;
+
+    b = convert->borderline = g_malloc0 (sizeof (guint16) * width * 4);
+
+    if (GST_VIDEO_INFO_IS_YUV (&convert->out_info)) {
+      /* FIXME, convert to AYUV, just black for now */
+      border_val = 0x00007f7f;
+    } else {
+      border_val = convert->border_argb;
+    }
+
+    if (convert->out_bits == 8)
+      v = (border_val << 32) | border_val;
+    else {
+      guint64 c;
+
+      c = (border_val >> 24) & 0xff;
+      v = (c << 56) | (c << 48);
+      c = (border_val >> 16) & 0xff;
+      v |= (c << 40) | (c << 32);
+      c = (border_val >> 8) & 0xff;
+      v |= (c << 24) | (c << 16);
+      c = (border_val) & 0xff;
+      v |= (c << 8) | c;
+    }
+    v = GINT64_TO_BE (v);
+    for (i = 0; i < width; i++) {
+      memcpy (b, &v, 8);
+      b += 8;
+    }
   } else {
     convert->borderline = NULL;
   }
