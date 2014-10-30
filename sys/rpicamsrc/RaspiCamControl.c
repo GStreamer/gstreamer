@@ -1094,7 +1094,7 @@ static int raspicamcontrol_get_mem_gpu(void)
  * @param supported None-zero if software supports the camera 
  * @param detected  None-zero if a camera has been detected
  */
-static void raspicamcontrol_get_camera(int *supported, int *detected)
+void raspicamcontrol_get_camera(int *supported, int *detected)
 {
    char response[80] = "";
    if (vc_gencmd(response, sizeof response, "get_camera") == 0)

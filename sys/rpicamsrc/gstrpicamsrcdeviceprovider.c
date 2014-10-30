@@ -27,6 +27,8 @@
 
 #if GST_CHECK_VERSION (1,4,0)
 
+#include "RaspiCapture.h"
+
 /* FIXME: translations */
 #define _(s) s
 
@@ -54,15 +56,27 @@ gst_rpi_cam_src_device_provider_class_init (GstRpiCamSrcDeviceProviderClass * kl
 static void
 gst_rpi_cam_src_device_provider_init (GstRpiCamSrcDeviceProvider * provider)
 {
-  /* nothing to do here yet */
+  raspicapture_init ();
 }
 
 static GList *
 gst_rpi_cam_src_device_provider_probe (GstDeviceProvider * provider)
 {
   GstRpiCamSrcDevice *device;
+  int supported = 0, detected = 0;
 
-  /* FIXME: check if camera module is usable and supported */
+  raspicamcontrol_get_camera (&supported, &detected);
+
+  if (!detected) {
+    GST_INFO ("No Raspberry Pi camera module detected.");
+    return NULL;
+  } else if (!supported) {
+    GST_WARNING ("Raspberry Pi camera module not supported, make sure to enable it.");
+    return NULL;
+  }
+
+  GST_INFO ("Raspberry Pi camera module detected and supported.");
+
   device = gst_rpi_cam_src_device_new ();
 
   return g_list_append (NULL, device);

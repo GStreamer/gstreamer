@@ -147,6 +147,7 @@ void raspicamcontrol_dump_parameters(const RASPICAM_CAMERA_PARAMETERS *params);
 void raspicamcontrol_set_defaults(RASPICAM_CAMERA_PARAMETERS *params);
 
 void raspicamcontrol_check_configuration(int min_gpu_mem);
+void raspicamcontrol_get_camera(int *supported, int *detected);
 
 // Individual setting functions
 int raspicamcontrol_set_saturation(MMAL_COMPONENT_T *camera, int saturation);
