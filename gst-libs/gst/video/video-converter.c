@@ -1209,7 +1209,7 @@ do_unpack_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
   gpointer tmpline;
   guint cline;
 
-  cline = CLAMP (line + convert->in_y, 0, convert->in_maxheight);
+  cline = CLAMP (line + convert->in_y, 0, convert->in_maxheight - 1);
 
   /* FIXME we should be able to use the input line without unpack if the
    * format is already suitable. When we do this, we should be careful not to
