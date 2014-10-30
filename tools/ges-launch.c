@@ -31,6 +31,10 @@
 
 #include <locale.h>             /* for LC_ALL */
 #include "ges-validate.h"
+#ifdef G_OS_UNIX
+#include <glib-unix.h>
+#endif
+
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
@@ -45,6 +49,22 @@ static GHashTable *tried_uris;
 static GESTrackType track_types = GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO;
 static GESTimeline *timeline;
 static gboolean needs_set_state;
+
+#ifdef G_OS_UNIX
+static gboolean
+intr_handler (gpointer user_data)
+{
+  g_print ("interrupt received.\n");
+
+  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+      GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.interupted");
+
+  g_main_loop_quit (mainloop);
+
+  /* remove signal handler */
+  return FALSE;
+}
+#endif /* G_OS_UNIX */
 
 static gchar *
 ensure_uri (gchar * location)
@@ -824,6 +844,10 @@ main (int argc, gchar ** argv)
   GOptionContext *ctx;
   GstBus *bus;
 
+#ifdef G_OS_UNIX
+  guint signal_watch_id;
+#endif
+
   setlocale (LC_ALL, "");
 
   new_paths = g_ptr_array_new_with_free_func (g_free);
@@ -997,6 +1021,11 @@ main (int argc, gchar ** argv)
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), mainloop);
 
+#ifdef G_OS_UNIX
+  signal_watch_id =
+      g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
+#endif
+
   if (!load_path) {
     if (needs_set_state && gst_element_set_state (GST_ELEMENT (pipeline),
             GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
@@ -1017,6 +1046,10 @@ main (int argc, gchar ** argv)
 
   g_hash_table_unref (tried_uris);
   g_ptr_array_unref (new_paths);
+
+#ifdef G_OS_UNIX
+  g_source_remove (signal_watch_id);
+#endif
 
   return (int) seenerrors;
 }
