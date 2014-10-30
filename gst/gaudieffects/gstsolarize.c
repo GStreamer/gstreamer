@@ -314,8 +314,8 @@ transform (guint32 * src, guint32 * dest, gint video_area,
   guint32 in;
   guint32 color[3];
   gint x, c;
-  gint floor = 0;
-  gint ceiling = 255;
+  static const guint floor = 0;
+  static const guint ceiling = 255;
 
   gint period, up_length, down_length, height_scale, param;
 
