@@ -48,6 +48,8 @@ struct _GstVideoScaler
 
   /* cached integer coefficients */
   gint16 *taps_s16;
+  /* for ORC */
+  gint inc;
 };
 
 static void
@@ -139,6 +141,12 @@ gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
     gst_video_resampler_init (&scale->resampler, method, flags, out_size,
         n_taps, 0.0, in_size, out_size, options);
   }
+
+  if (out_size == 1)
+    scale->inc = 0;
+  else
+    scale->inc = ((in_size - 1) << 16) / (out_size - 1) - 1;
+
   return scale;
 }
 
@@ -272,19 +280,27 @@ static void
 video_scale_h_near_8888 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width)
 {
-  gint i;
   guint32 *s, *d;
-  guint32 *offset;
-
-  offset = scale->resampler.offset + dest_offset;
 
   d = (guint32 *) dest + dest_offset;
   s = (guint32 *) src;
 
-  for (i = 0; i < width; i++)
-    d[i] = s[offset[i]];
+#if 0
+  /* ORC is slower on this */
+  video_orc_resample_h_near_8888_lq (d, s, 0, scale->inc, width);
+#else
+  {
+    gint i;
+    guint32 *offset;
+
+    offset = scale->resampler.offset + dest_offset;
+    for (i = 0; i < width; i++)
+      d[i] = s[offset[i]];
+  }
+#endif
 }
 
+#if 0
 #define BLEND_2TAP(a,b,p) (((((b)-(guint16)(a)) * p + S16_SCALE_ROUND) >> S16_SCALE) + (a))
 
 static void
@@ -321,6 +337,19 @@ video_scale_h_2tap_8888 (GstVideoScaler * scale,
     d[i * 4 + 2] = CLAMP (sum2, 0, 255);
     d[i * 4 + 3] = CLAMP (sum3, 0, 255);
   }
+}
+#endif
+
+static void
+video_scale_h_2tap_8888 (GstVideoScaler * scale,
+    gpointer src, gpointer dest, guint dest_offset, guint width)
+{
+  guint32 *s, *d;
+
+  d = (guint32 *) dest + dest_offset;
+  s = (guint32 *) src;
+
+  video_orc_resample_h_2tap_8888_lq (d, s, 0, scale->inc, width);
 }
 
 static void

@@ -1294,6 +1294,14 @@ x4 addb ayuv, ayuv2, c128
 #loadidxl t, src, idx
 #storel dest, t
 
+.function video_orc_resample_h_near_8888_lq
+.dest 4 d1 guint32
+.source 4 s1 guint32
+.param 4 p1
+.param 4 p2
+
+ldresnearl d1, s1, p1, p2
+
 #.function video_orc_resample_h_2tap_8888_16
 #.source 4 src1 guint32
 #.source 4 src2 guint32
@@ -1338,6 +1346,14 @@ x4 addb ayuv, ayuv2, c128
 #x4 addw q2, q2, 128
 #x4 convhwb t2, q2
 #x4 addb dest, t2, t1
+
+.function video_orc_resample_h_2tap_8888_lq
+.dest 4 d1 guint32
+.source 4 s1 guint32
+.param 4 p1
+.param 4 p2
+
+ldreslinl d1, s1, p1, p2
 
 .function video_orc_resample_v_2tap_8_lq
 .source 1 src1 guint32
