@@ -722,7 +722,8 @@ GST_START_TEST (test_sub_reader)
   fail_unless_equals_int (gst_byte_reader_get_remaining (&sub), 13);
   fail_unless (gst_byte_reader_peek_data (&reader, 13, &data));
   fail_unless (gst_byte_reader_peek_data (&sub, 13, &sub_data));
-  fail_unless (memcmp (data, sub_data, 16) == 0);
+  fail_unless (memcmp (data, sub_data, 13) == 0);
+  fail_unless (memcmp (memdata + 3, sub_data, 13) == 0);
 
   fail_unless_equals_int (gst_byte_reader_get_remaining (&reader), 13);
   fail_unless (gst_byte_reader_peek_sub_reader (&reader, &sub, 3));
