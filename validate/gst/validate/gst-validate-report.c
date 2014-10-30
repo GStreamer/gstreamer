@@ -198,8 +198,28 @@ gst_validate_report_load_issues (void)
           "received and serialized with buffers. If an event is received after"
           " a buffer with timestamp end 'X', it should be pushed right after "
           "buffers with timestamp end 'X'"));
-  REGISTER_VALIDATE_ISSUE (ISSUE, EVENT_HAS_WRONG_SEQNUM,
-      _("events that are part of the same pipeline 'operation' should "
+  REGISTER_VALIDATE_ISSUE (ISSUE, EOS_HAS_WRONG_SEQNUM,
+      _("EOS events that are part of the same pipeline 'operation' should "
+          "have the same seqnum"),
+      _("when events/messages are created from another event/message, "
+          "they should have their seqnums set to the original event/message "
+          "seqnum"));
+  REGISTER_VALIDATE_ISSUE (ISSUE, FLUSH_START_HAS_WRONG_SEQNUM,
+      _
+      ("FLUSH_START events that are part of the same pipeline 'operation' should "
+          "have the same seqnum"),
+      _("when events/messages are created from another event/message, "
+          "they should have their seqnums set to the original event/message "
+          "seqnum"));
+  REGISTER_VALIDATE_ISSUE (ISSUE, FLUSH_STOP_HAS_WRONG_SEQNUM,
+      _
+      ("FLUSH_STOP events that are part of the same pipeline 'operation' should "
+          "have the same seqnum"),
+      _("when events/messages are created from another event/message, "
+          "they should have their seqnums set to the original event/message "
+          "seqnum"));
+  REGISTER_VALIDATE_ISSUE (ISSUE, SEGMENT_HAS_WRONG_SEQNUM,
+      _("SEGMENT events that are part of the same pipeline 'operation' should "
           "have the same seqnum"),
       _("when events/messages are created from another event/message, "
           "they should have their seqnums set to the original event/message "

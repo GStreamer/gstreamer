@@ -72,7 +72,13 @@ typedef enum {
 
 #define EVENT_NEWSEGMENT_NOT_PUSHED              _QUARK("event::newsegment-not-pushed")
 #define SERIALIZED_EVENT_WASNT_PUSHED_IN_TIME    _QUARK("event::serialized-event-wasnt-pushed-in-time")
-#define EVENT_HAS_WRONG_SEQNUM                   _QUARK("event::has-wrong-seqnum")
+
+#define EOS_HAS_WRONG_SEQNUM                    _QUARK("event::eos-has-wrong-seqnum")
+#define FLUSH_START_HAS_WRONG_SEQNUM            _QUARK("event::flush-start-has-wrong-seqnum")
+#define FLUSH_STOP_HAS_WRONG_SEQNUM             _QUARK("event::flush-stop-has-wrong-seqnum")
+#define SEGMENT_HAS_WRONG_SEQNUM                _QUARK("event::segment-has-wrong-seqnum")
+
+
 #define EVENT_SERIALIZED_OUT_OF_ORDER            _QUARK("event::serialized-out-of-order")
 #define EVENT_NEW_SEGMENT_MISMATCH               _QUARK("event::segment-mismatch")
 #define EVENT_FLUSH_START_UNEXPECTED             _QUARK("event::flush-start-unexpected")

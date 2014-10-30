@@ -122,7 +122,7 @@ typedef struct
 } SerializedEventData;
 
 static GstPad *
-_get_actual_pad (GstPad *pad)
+_get_actual_pad (GstPad * pad)
 {
   GstPad *tmp_pad;
 
@@ -1408,10 +1408,9 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
         if (seqnum == pad_monitor->pending_flush_start_seqnum) {
           pad_monitor->pending_flush_start_seqnum = 0;
         } else {
-          GST_VALIDATE_REPORT (pad_monitor, EVENT_HAS_WRONG_SEQNUM,
-              "The expected flush-start seqnum should be the same as the "
-              "one from the event that caused it (probably a seek). Got: %u."
-              " Expected: %u", seqnum, pad_monitor->pending_flush_start_seqnum);
+          GST_VALIDATE_REPORT (pad_monitor, FLUSH_START_HAS_WRONG_SEQNUM,
+              "Got: %u Expected: %u", seqnum,
+              pad_monitor->pending_flush_start_seqnum);
         }
       }
 
@@ -1428,10 +1427,9 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
         if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
           pad_monitor->pending_flush_stop_seqnum = 0;
         } else {
-          GST_VALIDATE_REPORT (pad_monitor, EVENT_HAS_WRONG_SEQNUM,
-              "The expected flush-stop seqnum should be the same as the "
-              "one from the event that caused it (probably a seek). Got: %u."
-              " Expected: %u", seqnum, pad_monitor->pending_flush_stop_seqnum);
+          GST_VALIDATE_REPORT (pad_monitor, FLUSH_STOP_HAS_WRONG_SEQNUM,
+              "Got: %u Expected: %u", seqnum,
+              pad_monitor->pending_flush_stop_seqnum);
         }
       }
 
@@ -1457,7 +1455,7 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
 }
 
 static void
-mark_pads_eos (GstValidatePadMonitor *pad_monitor)
+mark_pads_eos (GstValidatePadMonitor * pad_monitor)
 {
   GstValidatePadMonitor *peer_monitor;
   GstPad *peer = gst_pad_get_peer (pad_monitor->pad);
@@ -1466,7 +1464,8 @@ mark_pads_eos (GstValidatePadMonitor *pad_monitor)
   pad_monitor->is_eos = TRUE;
   if (peer) {
     real_peer = _get_actual_pad (peer);
-    peer_monitor = g_object_get_data ((GObject *) real_peer, "validate-monitor");
+    peer_monitor =
+        g_object_get_data ((GObject *) real_peer, "validate-monitor");
     if (peer_monitor)
       peer_monitor->is_eos = TRUE;
     gst_object_unref (peer);
@@ -1587,10 +1586,8 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
         if (pad_monitor->pending_newsegment_seqnum == seqnum) {
           pad_monitor->pending_newsegment_seqnum = 0;
         } else {
-          GST_VALIDATE_REPORT (pad_monitor, EVENT_HAS_WRONG_SEQNUM,
-              "The expected segment seqnum should be the same as the "
-              "one from the seek that caused it. Got: %u."
-              " Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
+          GST_VALIDATE_REPORT (pad_monitor, SEGMENT_HAS_WRONG_SEQNUM,
+              "Got: %u Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
         }
       }
 
@@ -1635,10 +1632,8 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
             "EOS %" GST_PTR_FORMAT " received before a segment was received",
             event);
       } else if (pad_monitor->pending_eos_seqnum != seqnum) {
-        GST_VALIDATE_REPORT (pad_monitor, EVENT_HAS_WRONG_SEQNUM,
-            "The expected EOS seqnum should be the same as the "
-            "one from the seek that caused it. Got: %u."
-            " Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
+        GST_VALIDATE_REPORT (pad_monitor, EOS_HAS_WRONG_SEQNUM,
+            "Got: %u. Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
       }
 
       /*
