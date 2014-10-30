@@ -52,7 +52,7 @@
  * packets (encryption and authentication) and out RTP and RTCP. It
  * receives packet of type 'application/x-srtp' or 'application/x-srtcp'
  * on its sink pad, and outs packets of type 'application/x-rtp' or
- * 'application/x-rtcp' on its sink pad.
+ * 'application/x-rtcp' on its source pad.
  *
  * For each packet received, it checks if the internal SSRC is in the list
  * of streams already in use. If this is not the case, it sends a signal to
