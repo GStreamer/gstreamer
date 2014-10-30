@@ -25,14 +25,14 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "resampler.h"
+#include "video-resampler.h"
 
 typedef struct _ResamplerParams ResamplerParams;
 
 struct _ResamplerParams
 {
-  GstResamplerMethod method;
-  GstResamplerFlags flags;
+  GstVideoResamplerMethod method;
+  GstVideoResamplerFlags flags;
 
   gdouble shift;
 
@@ -47,7 +47,7 @@ struct _ResamplerParams
   gdouble sharpness;
   gdouble sharpen;
 
-  GstResampler *resampler;
+  GstVideoResampler *resampler;
 };
 
 static double
@@ -152,7 +152,7 @@ get_lanczos_tap (ResamplerParams * params, gint l, gint xi, gdouble x)
 static void
 resampler_calculate_taps (ResamplerParams * params)
 {
-  GstResampler *resampler = params->resampler;
+  GstVideoResampler *resampler = params->resampler;
   gint j;
   guint32 *offset, *n_taps, *phase;
   gint tap_offs;
@@ -236,10 +236,10 @@ resampler_calculate_taps (ResamplerParams * params)
 }
 
 /**
- * gst_resampler_new:
- * @resampler: a #GstResampler
- * @method: a #GstResamplerMethod
- * @flags: #GstResamplerFlags
+ * gst_video_resampler_new:
+ * @resampler: a #GstVideoResampler
+ * @method: a #GstVideoResamplerMethod
+ * @flags: #GstVideoResamplerFlags
  * @n_phases: number of phases to use
  * @n_taps: number of taps to use
  * @in_size: number of source elements
@@ -258,8 +258,8 @@ resampler_calculate_taps (ResamplerParams * params)
  * Since: 1.6
  */
 gboolean
-gst_resampler_init (GstResampler * resampler,
-    GstResamplerMethod method, GstResamplerFlags flags,
+gst_video_resampler_init (GstVideoResampler * resampler,
+    GstVideoResamplerMethod method, GstVideoResamplerFlags flags,
     guint n_phases, guint n_taps, gdouble shift, guint in_size, guint out_size,
     GstStructure * options)
 {
@@ -281,48 +281,48 @@ gst_resampler_init (GstResampler * resampler,
   GST_DEBUG ("%d %u  %u->%u", method, n_taps, in_size, out_size);
 
   switch (method) {
-    case GST_RESAMPLER_METHOD_NEAREST:
+    case GST_VIDEO_RESAMPLER_METHOD_NEAREST:
       params.get_tap = get_nearest_tap;
       if (n_taps == 0)
         n_taps = 1;
       break;
-    case GST_RESAMPLER_METHOD_LINEAR:
+    case GST_VIDEO_RESAMPLER_METHOD_LINEAR:
       params.get_tap = get_linear_tap;
       if (n_taps == 0)
         n_taps = 2;
       break;
-    case GST_RESAMPLER_METHOD_CUBIC:
+    case GST_VIDEO_RESAMPLER_METHOD_CUBIC:
       if (!options
-          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_CUBIC_B,
-              &params.b))
+          || !gst_structure_get_double (options,
+              GST_VIDEO_RESAMPLER_OPT_CUBIC_B, &params.b))
         params.b = 1.0 / 3.0;
       if (!options
-          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_CUBIC_C,
-              &params.c))
+          || !gst_structure_get_double (options,
+              GST_VIDEO_RESAMPLER_OPT_CUBIC_C, &params.c))
         params.c = 1.0 / 3.0;
       n_taps = 4;
       params.get_tap = get_cubic_tap;
       break;
-    case GST_RESAMPLER_METHOD_SINC:
+    case GST_VIDEO_RESAMPLER_METHOD_SINC:
       params.get_tap = get_sinc_tap;
       if (n_taps == 0)
         n_taps = 4;
       break;
-    case GST_RESAMPLER_METHOD_LANCZOS:
+    case GST_VIDEO_RESAMPLER_METHOD_LANCZOS:
     {
       gdouble resample_inc = in_size / (gdouble) out_size;
 
       if (!options
-          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_ENVELOPE,
-              &params.envelope))
+          || !gst_structure_get_double (options,
+              GST_VIDEO_RESAMPLER_OPT_ENVELOPE, &params.envelope))
         params.envelope = 2.0;
       if (!options
-          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_SHARPNESS,
-              &params.sharpness))
+          || !gst_structure_get_double (options,
+              GST_VIDEO_RESAMPLER_OPT_SHARPNESS, &params.sharpness))
         params.sharpness = 1.0;
       if (!options
-          || !gst_structure_get_double (options, GST_RESAMPLER_OPT_SHARPEN,
-              &params.sharpen))
+          || !gst_structure_get_double (options,
+              GST_VIDEO_RESAMPLER_OPT_SHARPEN, &params.sharpen))
         params.sharpen = 0.0;
 
       if (resample_inc > 1.0) {
@@ -379,15 +379,15 @@ gst_resampler_init (GstResampler * resampler,
 }
 
 /**
- * gst_resampler_clear:
- * @resampler: a #GstResampler
+ * gst_video_resampler_clear:
+ * @resampler: a #GstVideoResampler
  *
- * Clear a previously initialized #GstResampler @resampler.
+ * Clear a previously initialized #GstVideoResampler @resampler.
  *
  * Since: 1.6
  */
 void
-gst_resampler_clear (GstResampler * resampler)
+gst_video_resampler_clear (GstVideoResampler * resampler)
 {
   g_return_if_fail (resampler != NULL);
 

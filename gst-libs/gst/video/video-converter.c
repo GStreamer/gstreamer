@@ -310,9 +310,9 @@ chain_hscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
       need_line, convert, NULL);
 
   if (!gst_structure_get_enum (convert->config,
-          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_RESAMPLER_METHOD,
-          &method))
-    method = GST_RESAMPLER_METHOD_CUBIC;
+          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+          GST_TYPE_VIDEO_RESAMPLER_METHOD, &method))
+    method = GST_VIDEO_RESAMPLER_METHOD_CUBIC;
   if (!gst_structure_get_uint (convert->config,
           GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, &taps))
     taps = 0;
@@ -339,9 +339,9 @@ chain_vscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
       need_line, convert, NULL);
 
   if (!gst_structure_get_enum (convert->config,
-          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_RESAMPLER_METHOD,
-          &method))
-    method = GST_RESAMPLER_METHOD_CUBIC;
+          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+          GST_TYPE_VIDEO_RESAMPLER_METHOD, &method))
+    method = GST_VIDEO_RESAMPLER_METHOD_CUBIC;
   if (!gst_structure_get_uint (convert->config,
           GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, &taps))
     taps = 0;
@@ -1108,10 +1108,10 @@ do_unpack_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
   gpointer tmpline;
   guint cline;;
 
-  tmpline = get_temp_line (convert);
   cline = CLAMP (line, 0, convert->in_height - 1);
 
   GST_DEBUG ("unpack line %d (%u)", line, cline);
+  tmpline = get_temp_line (convert);
   UNPACK_FRAME (convert->src, tmpline, cline, convert->in_width);
 
   gst_line_cache_add_line (cache, line, tmpline);

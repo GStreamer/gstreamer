@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "resampler.h"
 #include <orc/orcfunctions.h>
 #include "video-orc.h"
 #include "video-scaler.h"
@@ -42,18 +41,18 @@ typedef void (*GstVideoScalerVFunc) (GstVideoScaler * scale,
 
 struct _GstVideoScaler
 {
-  GstResamplerMethod method;
+  GstVideoResamplerMethod method;
   GstVideoScalerFlags flags;
 
-  GstResampler resampler;
+  GstVideoResampler resampler;
 
   /* cached integer coefficients */
   gint16 *taps_s16;
 };
 
 static void
-resampler_zip (GstResampler * resampler, const GstResampler * r1,
-    const GstResampler * r2)
+resampler_zip (GstVideoResampler * resampler, const GstVideoResampler * r1,
+    const GstVideoResampler * r2)
 {
   guint i, out_size, max_taps;
   gdouble *taps;
@@ -77,7 +76,7 @@ resampler_zip (GstResampler * resampler, const GstResampler * r1,
 
   for (i = 0; i < out_size; i++) {
     guint idx = i / 2;
-    const GstResampler *r;
+    const GstVideoResampler *r;
 
     r = (i & 1) ? r2 : r1;
 
@@ -91,7 +90,7 @@ resampler_zip (GstResampler * resampler, const GstResampler * r1,
 
 /**
  * gst_video_scaler_new:
- * @method: a #GstResamplerMethod
+ * @method: a #GstVideoResamplerMethod
  * @flags: #GstVideoScalerFlags
  * @n_taps: number of taps to use
  * @in_size: number of source elements
@@ -108,7 +107,7 @@ resampler_zip (GstResampler * resampler, const GstResampler * r1,
  * Returns: a #GstVideoResample
  */
 GstVideoScaler *
-gst_video_scaler_new (GstResamplerMethod method, GstVideoScalerFlags flags,
+gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
     guint n_taps, guint in_size, guint out_size, GstStructure * options)
 {
   GstVideoScaler *scale;
@@ -124,21 +123,21 @@ gst_video_scaler_new (GstResamplerMethod method, GstVideoScalerFlags flags,
   scale->flags = flags;
 
   if (flags & GST_VIDEO_SCALER_FLAG_INTERLACED) {
-    GstResampler tresamp, bresamp;
+    GstVideoResampler tresamp, bresamp;
 
-    gst_resampler_init (&tresamp, method, 0, (out_size + 1) / 2, n_taps,
+    gst_video_resampler_init (&tresamp, method, 0, (out_size + 1) / 2, n_taps,
         0.0, (in_size + 1) / 2, (out_size + 1) / 2, options);
 
-    gst_resampler_init (&bresamp, method, 0, out_size - tresamp.out_size,
+    gst_video_resampler_init (&bresamp, method, 0, out_size - tresamp.out_size,
         n_taps, -1.0, in_size - tresamp.in_size,
         out_size - tresamp.out_size, options);
 
     resampler_zip (&scale->resampler, &tresamp, &bresamp);
-    gst_resampler_clear (&tresamp);
-    gst_resampler_clear (&bresamp);
+    gst_video_resampler_clear (&tresamp);
+    gst_video_resampler_clear (&bresamp);
   } else {
-    gst_resampler_init (&scale->resampler, method, flags, out_size, n_taps,
-        0.0, in_size, out_size, options);
+    gst_video_resampler_init (&scale->resampler, method, flags, out_size,
+        n_taps, 0.0, in_size, out_size, options);
   }
   return scale;
 }
@@ -154,7 +153,7 @@ gst_video_scaler_free (GstVideoScaler * scale)
 {
   g_return_if_fail (scale != NULL);
 
-  gst_resampler_clear (&scale->resampler);
+  gst_video_resampler_clear (&scale->resampler);
   g_free (scale->taps_s16);
   g_slice_free (GstVideoScaler, scale);
 }

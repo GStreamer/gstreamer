@@ -17,39 +17,39 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_RESAMPLER_H__
-#define __GST_RESAMPLER_H__
+#ifndef __GST_VIDEO_RESAMPLER_H__
+#define __GST_VIDEO_RESAMPLER_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstResampler GstResampler;
+typedef struct _GstVideoResampler GstVideoResampler;
 
 /**
- * GstResamplerMethod:
- * @GST_RESAMPLER_METHOD_NEAREST: Duplicates the samples when
+ * GstVideoResamplerMethod:
+ * @GST_VIDEO_RESAMPLER_METHOD_NEAREST: Duplicates the samples when
  *    upsampling and drops when downsampling
- * @GST_RESAMPLER_METHOD_LINEAR: Uses linear interpolation to reconstruct
+ * @GST_VIDEO_RESAMPLER_METHOD_LINEAR: Uses linear interpolation to reconstruct
  *    missing samples and averaging to downsample
- * @GST_RESAMPLER_METHOD_CUBIC: Uses cubic interpolation
- * @GST_RESAMPLER_METHOD_SINC: Uses sinc interpolation
- * @GST_RESAMPLER_METHOD_LANCZOS: Uses lanczos interpolation
+ * @GST_VIDEO_RESAMPLER_METHOD_CUBIC: Uses cubic interpolation
+ * @GST_VIDEO_RESAMPLER_METHOD_SINC: Uses sinc interpolation
+ * @GST_VIDEO_RESAMPLER_METHOD_LANCZOS: Uses lanczos interpolation
  *
  * Different subsampling and upsampling methods
  *
  * Since: 1.6
  */
 typedef enum {
-  GST_RESAMPLER_METHOD_NEAREST,
-  GST_RESAMPLER_METHOD_LINEAR,
-  GST_RESAMPLER_METHOD_CUBIC,
-  GST_RESAMPLER_METHOD_SINC,
-  GST_RESAMPLER_METHOD_LANCZOS,
-} GstResamplerMethod;
+  GST_VIDEO_RESAMPLER_METHOD_NEAREST,
+  GST_VIDEO_RESAMPLER_METHOD_LINEAR,
+  GST_VIDEO_RESAMPLER_METHOD_CUBIC,
+  GST_VIDEO_RESAMPLER_METHOD_SINC,
+  GST_VIDEO_RESAMPLER_METHOD_LANCZOS,
+} GstVideoResamplerMethod;
 
 /**
- * GST_RESAMPLER_OPT_CUBIC_B:
+ * GST_VIDEO_RESAMPLER_OPT_CUBIC_B:
  *
  * G_TYPE_DOUBLE, B parameter of the cubic filter. The B
  * parameter controls the bluriness. Values between 0.0 and
@@ -67,59 +67,59 @@ typedef enum {
  * Robidoux
  *  Soft             0.6796  0.1602
  */
-#define GST_RESAMPLER_OPT_CUBIC_B      "GstResampler.cubic-b"
+#define GST_VIDEO_RESAMPLER_OPT_CUBIC_B      "GstVideoResampler.cubic-b"
 /**
- * GST_RESAMPLER_OPT_CUBIC_C:
+ * GST_VIDEO_RESAMPLER_OPT_CUBIC_C:
  *
  * G_TYPE_DOUBLE, C parameter of the cubic filter. The C
  * parameter controls the Keys alpha value. Values between 0.0 and
  * 2.0 are accepted. 1/3 is the default.
  *
- * See #GST_RESAMPLER_OPT_CUBIC_B for some more common values
+ * See #GST_VIDEO_RESAMPLER_OPT_CUBIC_B for some more common values
  */
-#define GST_RESAMPLER_OPT_CUBIC_C      "GstResampler.cubic-c"
+#define GST_VIDEO_RESAMPLER_OPT_CUBIC_C      "GstVideoResampler.cubic-c"
 
 /**
- * GST_RESAMPLER_OPT_ENVELOPE:
+ * GST_VIDEO_RESAMPLER_OPT_ENVELOPE:
  *
  * G_TYPE_DOUBLE, specifies the size of filter envelope for
- * @GST_RESAMPLER_METHOD_LANCZOS. values are clamped between
+ * @GST_VIDEO_RESAMPLER_METHOD_LANCZOS. values are clamped between
  * 1.0 and 5.0. 2.0 is the default.
  */
-#define GST_RESAMPLER_OPT_ENVELOPE      "GstResampler.envelope"
+#define GST_VIDEO_RESAMPLER_OPT_ENVELOPE      "GstVideoResampler.envelope"
 
 /**
- * GST_RESAMPLER_OPT_SHARPNESS:
+ * GST_VIDEO_RESAMPLER_OPT_SHARPNESS:
  *
  * G_TYPE_DOUBLE, specifies sharpness of the filter for
- * @GST_RESAMPLER_METHOD_LANCZOS. values are clamped between
+ * @GST_VIDEO_RESAMPLER_METHOD_LANCZOS. values are clamped between
  * 0.5 and 1.5. 1.0 is the default.
  */
-#define GST_RESAMPLER_OPT_SHARPNESS     "GstResampler.sharpness"
+#define GST_VIDEO_RESAMPLER_OPT_SHARPNESS     "GstVideoResampler.sharpness"
 
 /**
- * GST_RESAMPLER_OPT_SHARPEN:
+ * GST_VIDEO_RESAMPLER_OPT_SHARPEN:
  *
  * G_TYPE_DOUBLE, specifies sharpening of the filter for
- * @GST_RESAMPLER_METHOD_LANCZOS. values are clamped between
+ * @GST_VIDEO_RESAMPLER_METHOD_LANCZOS. values are clamped between
  * 0.0 and 1.0. 0.0 is the default.
  */
-#define GST_RESAMPLER_OPT_SHARPEN      "GstResampler.sharpen"
+#define GST_VIDEO_RESAMPLER_OPT_SHARPEN      "GstVideoResampler.sharpen"
 
 /**
- * GstResamplerFlags:
- * @GST_RESAMPLER_FLAG_NONE: no flags
+ * GstVideoResamplerFlags:
+ * @GST_VIDEO_RESAMPLER_FLAG_NONE: no flags
  *
  * Different resampler flags.
  *
  * Since: 1.6
  */
 typedef enum {
-  GST_RESAMPLER_FLAG_NONE                 = (0),
-} GstResamplerFlags;
+  GST_VIDEO_RESAMPLER_FLAG_NONE                 = (0),
+} GstVideoResamplerFlags;
 
 /**
- * GstResampler:
+ * GstVideoResampler:
  * @in_size: the input size
  * @out_size: the output size
  * @max_taps: the maximum number of taps
@@ -133,7 +133,7 @@ typedef enum {
  *
  * Since: 1.6
  */
-struct _GstResampler
+struct _GstVideoResampler
 {
   gint in_size;
   gint out_size;
@@ -148,16 +148,16 @@ struct _GstResampler
 };
 
 
-gboolean    gst_resampler_init            (GstResampler *resampler,
-                                           GstResamplerMethod method,
-                                           GstResamplerFlags flags,
+gboolean    gst_video_resampler_init      (GstVideoResampler *resampler,
+                                           GstVideoResamplerMethod method,
+                                           GstVideoResamplerFlags flags,
                                            guint n_phases, guint n_taps,
                                            gdouble shift,
                                            guint in_size, guint out_size,
                                            GstStructure *options);
 
-void        gst_resampler_clear           (GstResampler *resampler);
+void        gst_video_resampler_clear     (GstVideoResampler *resampler);
 
 G_END_DECLS
 
-#endif /* __GST_RESAMPLER_H__ */
+#endif /* __GST_VIDEO_RESAMPLER_H__ */

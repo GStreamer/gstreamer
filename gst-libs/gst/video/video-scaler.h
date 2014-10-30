@@ -24,7 +24,7 @@
 
 #include <gst/video/video-format.h>
 #include <gst/video/video-color.h>
-#include <gst/video/resampler.h>
+#include <gst/video/video-resampler.h>
 
 G_BEGIN_DECLS
 
@@ -50,7 +50,7 @@ typedef enum {
 
 typedef struct _GstVideoScaler GstVideoScaler;
 
-GstVideoScaler *      gst_video_scaler_new            (GstResamplerMethod method,
+GstVideoScaler *      gst_video_scaler_new            (GstVideoResamplerMethod method,
                                                        GstVideoScalerFlags flags,
                                                        guint n_taps,
                                                        guint in_size, guint out_size,
