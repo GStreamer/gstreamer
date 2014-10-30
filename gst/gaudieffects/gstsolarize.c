@@ -317,7 +317,7 @@ transform (guint32 * src, guint32 * dest, gint video_area,
   static const guint floor = 0;
   static const guint ceiling = 255;
 
-  gint period, up_length, down_length, height_scale, param;
+  gint period, up_length, down_length, param;
 
   period = end - start;
   if (period == 0) {
@@ -334,8 +334,6 @@ transform (guint32 * src, guint32 * dest, gint video_area,
     down_length = 1;
   }
 
-  height_scale = ceiling - floor;
-
   /* Loop through pixels. */
   for (x = 0; x < video_area; x++) {
     in = *src++;
@@ -343,7 +341,6 @@ transform (guint32 * src, guint32 * dest, gint video_area,
     color[0] = (in >> 16) & 0xff;
     color[1] = (in >> 8) & 0xff;
     color[2] = (in) & 0xff;
-
 
     /* Loop through colors. */
     for (c = 0; c < 3; c++) {
@@ -353,20 +350,22 @@ transform (guint32 * src, guint32 * dest, gint video_area,
       param %= period;
 
       if (param < up_length) {
-        color[c] = param * height_scale;
+        color[c] = param * ceiling;
         color[c] /= up_length;
         color[c] += floor;
       } else {
         color[c] = down_length - (param - up_length);
-        color[c] *= height_scale;
+        color[c] *= ceiling;
         color[c] /= down_length;
         color[c] += floor;
       }
     }
 
-    color[0] = CLAMP (color[0], 0, 255);
-    color[1] = CLAMP (color[1], 0, 255);
-    color[2] = CLAMP (color[2], 0, 255);
+    /* Clamp colors */
+    for (c = 0; c < 3; c++) {
+      if (G_UNLIKELY (color[c] > 255))
+        color[c] = 255;
+    }
 
     *dest++ = (color[0] << 16) | (color[1] << 8) | color[2];
   }
