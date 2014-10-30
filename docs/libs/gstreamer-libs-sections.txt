@@ -868,6 +868,20 @@ GST_NET_ADDRESS_META_INFO
 gst_net_address_meta_api_get_type
 </SECTION>
 
+<SECTION>
+<FILE>gstnetcontrolmessagemeta</FILE>
+<TITLE>GstNetControlMessageMeta</TITLE>
+<INCLUDE>gst/net/gstnetcontrolmessagemeta.h</INCLUDE>
+GstNetControlMessageMeta
+gst_buffer_add_net_control_message_meta
+gst_buffer_get_net_control_message_meta
+gst_net_control_message_meta_get_info
+<SUBSECTION Standard>
+GST_NET_CONTROL_MESSAGE_META_API_TYPE
+GST_NET_CONTROL_MESSAGE_META_INFO
+<SUBSECTION Private>
+gst_net_control_message_meta_api_get_type
+</SECTION>
 
 <SECTION>
 <FILE>gstnetclientclock</FILE>

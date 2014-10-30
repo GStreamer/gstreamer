@@ -6,12 +6,14 @@ libgstnet_@GST_API_VERSION@_include_HEADERS = \
     gstnet.h \
     gstnetaddressmeta.h \
     gstnetclientclock.h \
+    gstnetcontrolmessagemeta.h \
     gstnettimepacket.h \
     gstnettimeprovider.h
 
 libgstnet_@GST_API_VERSION@_la_SOURCES = \
     gstnetaddressmeta.c \
     gstnetclientclock.c \
+    gstnetcontrolmessagemeta.c \
     gstnettimepacket.c \
     gstnettimeprovider.c
 
