@@ -3089,6 +3089,7 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
 
       g_value_unset (&rtcp_cipher);
       g_value_unset (&rtcp_auth);
+      gst_buffer_unref (buf);
     }
   }
   name = g_strdup_printf ("rtcp_sink_%d", session);
@@ -5956,6 +5957,8 @@ default_srtcp_params (void)
       "srtp-key", GST_TYPE_BUFFER, buf,
       "srtcp-cipher", G_TYPE_STRING, "aes-128-icm",
       "srtcp-auth", G_TYPE_STRING, "hmac-sha1-80", NULL);
+
+  gst_buffer_unref (buf);
 
   return caps;
 }
