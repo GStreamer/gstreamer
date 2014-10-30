@@ -172,12 +172,24 @@ _release_pad (GstElement * element, GstPad * pad)
  *              GObject vmethods                    *
  ****************************************************/
 static void
+ges_smart_mixer_dispose (GObject * object)
+{
+  GESSmartMixer *self = GES_SMART_MIXER (object);
+
+  if (self->pads_infos != NULL) {
+    g_hash_table_unref (self->pads_infos);
+    self->pads_infos = NULL;
+  }
+
+  G_OBJECT_CLASS (ges_smart_mixer_parent_class)->dispose (object);
+}
+
+static void
 ges_smart_mixer_finalize (GObject * object)
 {
   GESSmartMixer *self = GES_SMART_MIXER (object);
 
   g_mutex_clear (&self->lock);
-  g_hash_table_unref (self->pads_infos);
 
   G_OBJECT_CLASS (ges_smart_mixer_parent_class)->finalize (object);
 }
@@ -203,6 +215,7 @@ ges_smart_mixer_class_init (GESSmartMixerClass * klass)
   element_class->request_new_pad = GST_DEBUG_FUNCPTR (_request_new_pad);
   element_class->release_pad = GST_DEBUG_FUNCPTR (_release_pad);
 
+  object_class->dispose = ges_smart_mixer_dispose;
   object_class->finalize = ges_smart_mixer_finalize;
 }
 
