@@ -39,6 +39,9 @@
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
 
+static GstGLContext *sdl_context;
+static GstGLDisplay *sdl_gl_display;
+
 /* rotation angle for the triangle. */
 float rtri = 0.0f;
 
@@ -229,6 +232,39 @@ end_stream_cb (GstBus * bus, GstMessage * msg, GMainLoop * loop)
   g_main_loop_quit (loop);
 }
 
+static gboolean
+sync_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
+{
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_NEED_CONTEXT:
+    {
+      const gchar *context_type;
+
+      gst_message_parse_context_type (msg, &context_type);
+      g_print ("got need context %s\n", context_type);
+
+      if (g_strcmp0 (context_type, GST_GL_DISPLAY_CONTEXT_TYPE) == 0) {
+        GstContext *display_context =
+            gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
+        gst_context_set_gl_display (display_context, sdl_gl_display);
+        gst_element_set_context (GST_ELEMENT (msg->src), display_context);
+        return TRUE;
+      } else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
+        GstContext *app_context = gst_context_new ("gst.gl.app_context", TRUE);
+        GstStructure *s = gst_context_writable_structure (app_context);
+        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, sdl_context,
+            NULL);
+        gst_element_set_context (GST_ELEMENT (msg->src), app_context);
+        return TRUE;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  return FALSE;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -246,13 +282,10 @@ main (int argc, char **argv)
   GMainLoop *loop = NULL;
   GstPipeline *pipeline = NULL;
   GstBus *bus = NULL;
-  GstElement *glfilter = NULL;
   GstElement *fakesink = NULL;
   GstState state;
   GAsyncQueue *queue_input_buf = NULL;
   GAsyncQueue *queue_output_buf = NULL;
-  GstGLDisplay *display;
-  GstGLContext *sdl_context;
   const gchar *platform;
 
   /* Initialize SDL for video output */
@@ -284,22 +317,24 @@ main (int argc, char **argv)
   sdl_dc = wglGetCurrentDC ();
   wglMakeCurrent (0, 0);
   platform = "wgl";
-  display = gst_gl_display_new ();
+  sdl_gl_display = gst_gl_display_new ();
 #else
   SDL_VERSION (&info.version);
   SDL_GetWMInfo (&info);
   /* FIXME: This display is different to the one that SDL uses to create the
    * GL context inside SDL_SetVideoMode() above which fails on Intel hardware
    */
-  sdl_display = info.info.x11.display;
+  sdl_display = info.info.x11.gfxdisplay;
   sdl_win = info.info.x11.window;
   sdl_gl_context = glXGetCurrentContext ();
   glXMakeCurrent (sdl_display, None, 0);
   platform = "glx";
-  display = (GstGLDisplay *) gst_gl_display_x11_new_with_display (sdl_display);
+  sdl_gl_display =
+      (GstGLDisplay *) gst_gl_display_x11_new_with_display (sdl_display);
 #endif
 
-  sdl_context = gst_gl_context_new_wrapped (display, (guintptr) sdl_gl_context,
+  sdl_context =
+      gst_gl_context_new_wrapped (sdl_gl_display, (guintptr) sdl_gl_context,
       gst_gl_platform_from_string (platform), GST_GL_API_OPENGL);
 
   pipeline =
@@ -312,12 +347,9 @@ main (int argc, char **argv)
   g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), loop);
   g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
   g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop);
+  gst_bus_enable_sync_message_emission (bus);
+  g_signal_connect (bus, "sync-message", G_CALLBACK (sync_bus_call), NULL);
   gst_object_unref (bus);
-
-  /* sdl_gl_context is an external OpenGL context with which gst-plugins-gl want to share textures */
-  glfilter = gst_bin_get_by_name (GST_BIN (pipeline), "gleffects0");
-  g_object_set (G_OBJECT (glfilter), "other-context", sdl_context, NULL);
-  gst_object_unref (glfilter);
 
   /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
    * shared with the sdl one */
