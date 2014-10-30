@@ -1049,7 +1049,6 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
       g_slice_free (GstVideoFrame, frame);
     } else {
       converted_frame = frame;
-      converted_buf = pad->buffer;
     }
 
     pad->aggregated_frame = converted_frame;
@@ -1448,7 +1447,6 @@ gst_videoaggregator_sink_clip (GstAggregator * agg,
 
   /* Convert to the output segment rate */
   if (ABS (agg->segment.rate) != 1.0) {
-    start_time *= ABS (agg->segment.rate);
     end_time *= ABS (agg->segment.rate);
   }
 
