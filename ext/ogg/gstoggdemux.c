@@ -703,7 +703,9 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   /* Mark discont on the buffer */
   if (pad->discont) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-    pad->discont = FALSE;
+    if GST_BUFFER_TIMESTAMP_IS_VALID
+      (buf)
+          pad->discont = FALSE;
   }
 
   pad->position = ogg->segment.position;
@@ -1012,7 +1014,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
             (gint64) packet->granulepos, granule, pad->map.accumulated_granule);
       } else {
         packet->granulepos = gst_ogg_stream_granule_to_granulepos (&pad->map,
-            pad->map.accumulated_granule, pad->keyframe_granule);
+            pad->map.accumulated_granule + pad->current_granule,
+            pad->keyframe_granule);
       }
     }
   } else {
@@ -1072,8 +1075,10 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
                 GST_TIME_ARGS (start_time));
             segment.rate = ogg->push_seek_rate;
             segment.start = ogg->push_seek_time_original_target;
+            segment.position = ogg->push_seek_time_original_target;
             segment.stop = ogg->push_seek_time_original_stop;
             segment.time = ogg->push_seek_time_original_target;
+            segment.base = ogg->segment.base;
             event = gst_event_new_segment (&segment);
             gst_event_set_seqnum (event, ogg->push_seek_seqnum);
             ogg->push_state = PUSH_PLAYING;
@@ -1081,8 +1086,10 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
             segment.rate = ogg->segment.rate;
             segment.applied_rate = ogg->segment.applied_rate;
             segment.start = start_time;
+            segment.position = start_time;
             segment.stop = chain->segment_stop;
             segment.time = segment_time;
+            segment.base = ogg->segment.base;
             event = gst_event_new_segment (&segment);
           }
           GST_PUSH_UNLOCK (ogg);
@@ -1107,8 +1114,10 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
           segment.rate = ogg->segment.rate;
           segment.applied_rate = ogg->segment.applied_rate;
           segment.start = chain->segment_start;
+          segment.position = chain->segment_start;
           segment.stop = chain->segment_stop;
           segment.time = chain->begin_time;
+          segment.base = ogg->segment.base;
           event = gst_event_new_segment (&segment);
         }
       }
@@ -2194,11 +2203,13 @@ gst_ogg_demux_reset_streams (GstOggDemux * ogg)
 
     stream->start_time = -1;
     stream->map.accumulated_granule = 0;
+    stream->current_granule = -1;
   }
   ogg->building_chain = chain;
   GST_DEBUG_OBJECT (ogg, "Resetting current chain");
   ogg->current_chain = NULL;
   ogg->resync = TRUE;
+  gst_ogg_chain_mark_discont (chain);
 
   ogg->chunk_size = CHUNKSIZE;
 }
@@ -2249,6 +2260,28 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
                 ogg->push_seek_time_original_stop, &update);
           }
 
+          if (!ogg->pullmode && !(ogg->push_seek_flags & GST_SEEK_FLAG_FLUSH)) {
+            int i;
+            GstOggChain *chain = ogg->current_chain;
+
+            ogg->push_seek_flags = 0;
+            if (!chain) {
+              /* This will happen when we bisect, as we clear the chain when
+                 we do the first seek. On subsequent ones, we just reset the
+                 ogg sync object as we already reset the chain */
+              GST_DEBUG_OBJECT (ogg, "No chain, just resetting ogg sync");
+              ogg_sync_reset (&ogg->sync);
+            } else {
+              /* reset pad push mode seeking state */
+              for (i = 0; i < chain->streams->len; i++) {
+                GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+                pad->push_kf_time = GST_CLOCK_TIME_NONE;
+                pad->push_sync_time = GST_CLOCK_TIME_NONE;
+              }
+              ogg_sync_reset (&ogg->sync);
+              gst_ogg_demux_reset_streams (ogg);
+            }
+          }
           GST_PUSH_UNLOCK (ogg);
         } else {
           GST_WARNING_OBJECT (ogg, "unexpected segment format: %s",
@@ -3584,11 +3617,6 @@ gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
   if (stop_type == GST_SEEK_TYPE_NONE)
     stop = -1;
 
-  if (!(flags & GST_SEEK_FLAG_FLUSH)) {
-    GST_DEBUG_OBJECT (ogg, "can only do flushing seeks");
-    goto error;
-  }
-
   GST_DEBUG_OBJECT (ogg, "Push mode seek request: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (start));
 
@@ -3680,11 +3708,13 @@ gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
   ogg->seek_secant = FALSE;
   ogg->seek_undershot = FALSE;
 
-  /* reset pad push mode seeking state */
-  for (i = 0; i < chain->streams->len; i++) {
-    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
-    pad->push_kf_time = GST_CLOCK_TIME_NONE;
-    pad->push_sync_time = GST_CLOCK_TIME_NONE;
+  if (flags & GST_SEEK_FLAG_FLUSH) {
+    /* reset pad push mode seeking state */
+    for (i = 0; i < chain->streams->len; i++) {
+      GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+      pad->push_kf_time = GST_CLOCK_TIME_NONE;
+      pad->push_sync_time = GST_CLOCK_TIME_NONE;
+    }
   }
 
   GST_DEBUG_OBJECT (ogg,
