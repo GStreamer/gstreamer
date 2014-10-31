@@ -304,6 +304,8 @@ gst_mss_stream_get_type (GstMssStream * stream)
     ret = MSS_STREAM_TYPE_VIDEO;
   } else if (strcmp (prop, "audio") == 0) {
     ret = MSS_STREAM_TYPE_AUDIO;
+  } else {
+    GST_DEBUG ("Unsupported stream type: %s", prop);
   }
   xmlFree (prop);
   return ret;
