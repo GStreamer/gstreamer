@@ -806,6 +806,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   glimage_sink->upload = gst_gl_upload_new (glimage_sink->context);
 
   gst_gl_upload_set_format (glimage_sink->upload, &vinfo);
+  glimage_sink->caps_change = TRUE;
 
   return TRUE;
 }
@@ -1102,6 +1103,9 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
   g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_RESHAPE_SIGNAL], 0,
       gl_sink->context, width, height, &do_reshape);
 
+  gl_sink->window_width = width;
+  gl_sink->window_height = height;
+
   /* default reshape */
   if (!do_reshape) {
     if (gl_sink->keep_aspect_ratio) {
@@ -1164,6 +1168,14 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   /* opengl scene */
   GST_TRACE ("redrawing texture:%u", gl_sink->redisplay_texture);
+
+  if (gl_sink->caps_change) {
+    GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+    gst_glimage_sink_on_resize (gl_sink, gl_sink->window_width,
+        gl_sink->window_height);
+    GST_GLIMAGE_SINK_LOCK (gl_sink);
+    gl_sink->caps_change = FALSE;
+  }
 
   /* make sure that the environnement is clean */
   gst_gl_context_clear_shader (gl_sink->context);
