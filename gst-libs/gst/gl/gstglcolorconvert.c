@@ -110,7 +110,7 @@ static const gfloat from_rgb_bt709_ucoeff[] = { -0.100640, -0.338688, 0.439327 }
 static const gfloat from_rgb_bt709_vcoeff[] = { 0.440654, -0.400285, -0.040370 };
 
 
-/** GRAY16 to RGB conversion 
+/* GRAY16 to RGB conversion
  *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
  *  high byte weight as : 255*256/65535 
  *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
@@ -136,7 +136,7 @@ static const gchar frag_REORDER[] =
       " gl_FragColor = vec4(t.%c, t.%c, t.%c, t.%c);\n"
       "}";
 
-/** GRAY16 to RGB conversion 
+/* GRAY16 to RGB conversion
  *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
  *  high byte weight as : 255*256/65535 
  *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
@@ -206,7 +206,7 @@ static const gchar frag_RGB_to_AYUV[] =
     "  gl_FragColor = vec4(a,y,u,v);\n"
     "}\n";
 
-/** YUV to RGB conversion */
+/* YUV to RGB conversion */
 static const char frag_PLANAR_YUV_to_RGB[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
@@ -278,7 +278,7 @@ static const gchar frag_RGB_to_PLANAR_YUV[] =
     "  gl_FragData[2] = vec4(v, 0.0, 0.0, 1.0);\n"
     "}\n";
 
-/** NV12/NV21 to RGB conversion */
+/* NV12/NV21 to RGB conversion */
 static const char frag_NV12_NV21_to_RGB[] = {
       "#ifdef GL_ES\n"
       "precision mediump float;\n"
