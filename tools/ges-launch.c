@@ -186,7 +186,9 @@ ges_launch_get_new_uri_from_wrong_uri (const gchar * old_uri)
     res = g_build_filename (new_paths->pdata[i], basename, NULL);
     g_free (basename);
 
-    if (g_hash_table_lookup (tried_uris, res)) {
+    if (g_strcmp0 (old_uri, res) == 0) {
+      g_hash_table_add (tried_uris, res);
+    } else if (g_hash_table_lookup (tried_uris, res)) {
       GST_DEBUG ("File already tried: %s\n", res);
       g_free (res);
     } else {
