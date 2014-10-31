@@ -1452,4 +1452,97 @@ shrsl t1, t1, 12
 convlw w1, t1
 convsuswb d1, w1
 
+.function video_orc_resample_h_4tap_8
+.source 1 s1 guint32
+.source 1 s2 guint32
+.source 1 s3 guint32
+.source 1 s4 guint32
+.source 2 t1 gint16
+.source 2 t2 gint16
+.source 2 t3 gint16
+.source 2 t4 gint16
+.dest 1 d1 guint8
+.temp 2 w1
+.temp 2 w2
+.temp 4 l1
+.temp 4 l2
+
+convubw w1, s1
+mulswl l1, w1, t1
+convubw w2, s2
+mulswl l2, w2, t2
+addl l1, l1, l2
+convubw w2, s3
+mulswl l2, w2, t3
+addl l1, l1, l2
+convubw w2, s4
+mulswl l2, w2, t4
+addl l1, l1, l2
+addl l1, l1, 4095
+shrsl l1, l1, 12
+convlw w1, l1
+convsuswb d1, w1
+
+
+.function video_orc_resample_h_multaps_8
+.source 1 s guint32
+.source 2 t gint16
+.dest 4 d gint32
+.temp 2 w1
+
+convubw w1, s
+mulswl d, w1, t
+
+.function video_orc_resample_h_muladdtaps_8
+.flags 2d
+.source 1 s guint32
+.source 2 t gint16
+.dest 4 d gint32
+.temp 2 w1
+.temp 4 t1
+
+convubw w1, s
+mulswl t1, w1, t
+addl d, d, t1
+
+.function video_orc_resample_h_scaletaps_8
+.source 4 s gint32
+.dest 1 d guint8
+.temp 2 w1
+.temp 4 t1
+
+addl t1, s, 4095
+shrsl t1, t1, 12
+convlw w1, t1
+convsuswb d, w1
+
+.function video_orc_resample_h_multaps_8_lq
+.source 1 s guint32
+.source 2 t gint16
+.dest 2 d gint32
+.temp 2 w1
+
+convubw w1, s
+mullw d, w1, t
+
+.function video_orc_resample_h_muladdtaps_8_lq
+.flags 2d
+.source 1 s guint32
+.source 2 t gint16
+.dest 2 d gint32
+.temp 2 w1
+.temp 2 t1
+
+convubw w1, s
+mullw t1, w1, t
+addw d, d, t1
+
+.function video_orc_resample_h_scaletaps_8_lq
+.source 2 s gint32
+.dest 1 d guint8
+.temp 2 w1
+
+addw w1, s, 32
+shrsw w1, w1, 6
+convsuswb d, w1
 
