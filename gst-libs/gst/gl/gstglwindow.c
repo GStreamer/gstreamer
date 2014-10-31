@@ -138,6 +138,8 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
  * @display: a #GstGLDisplay
  *
  * Returns: (transfer full): a new #GstGLWindow using @display's connection
+ *
+ * Since: 1.4
  */
 GstGLWindow *
 gst_gl_window_new (GstGLDisplay * display)
@@ -218,6 +220,8 @@ gst_gl_window_finalize (GObject * object)
  *
  * Sets the window that this @window should render into.  Some implementations
  * require this to be called with a valid handle before drawing can commence.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
@@ -239,6 +243,8 @@ gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
  * @height: requested height of the window
  *
  * Redraw the window contents.  Implementations should invoke the draw callback.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_draw_unlocked (GstGLWindow * window, guint width, guint height)
@@ -259,6 +265,8 @@ gst_gl_window_draw_unlocked (GstGLWindow * window, guint width, guint height)
  * @height: requested height of the window
  *
  * Redraw the window contents.  Implementations should invoke the draw callback.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_draw (GstGLWindow * window, guint width, guint height)
@@ -282,6 +290,8 @@ gst_gl_window_draw (GstGLWindow * window, guint width, guint height)
  * @window: a #GstGLWindow
  *
  * Start the execution of the runloop.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_run (GstGLWindow * window)
@@ -301,6 +311,8 @@ gst_gl_window_run (GstGLWindow * window)
  * @window: a #GstGLWindow
  *
  * Quit the runloop's execution.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_quit (GstGLWindow * window)
@@ -379,6 +391,8 @@ gst_gl_window_default_send_message (GstGLWindow * window,
  *
  * Invoke @callback with data on the window thread.  @callback is guarenteed to
  * have executed when this function returns.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
@@ -403,6 +417,8 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
  *
  * Invoke @callback with @data on the window thread.  The callback may not
  * have been executed when this function returns.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_send_message_async (GstGLWindow * window, GstGLWindowCB callback,
@@ -426,6 +442,8 @@ gst_gl_window_send_message_async (GstGLWindow * window, GstGLWindowCB callback,
  * @destroy_notify: (destroy): called when @data is not needed any more
  *
  * Sets the draw callback called everytime gst_gl_window_draw() is called
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
@@ -453,6 +471,8 @@ gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
  * @destroy_notify: (destroy): called when @data is not needed any more
  *
  * Sets the resize callback called everytime a resize of the window occurs.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_set_resize_callback (GstGLWindow * window,
@@ -480,6 +500,8 @@ gst_gl_window_set_resize_callback (GstGLWindow * window,
  * @destroy_notify: (destroy): called when @data is not needed any more
  *
  * Sets the callback called when the window is about to close.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
@@ -504,6 +526,8 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
  * @window: a #GstGLWindow
  *
  * Whether the runloop is running
+ *
+ * Since: 1.4
  */
 gboolean
 gst_gl_window_is_running (GstGLWindow * window)
@@ -516,6 +540,8 @@ gst_gl_window_is_running (GstGLWindow * window)
  * @window: a #GstGLWindow
  *
  * Returns: the windowing system display handle for this @window
+ *
+ * Since: 1.4
  */
 guintptr
 gst_gl_window_get_display (GstGLWindow * window)
@@ -534,6 +560,8 @@ gst_gl_window_get_display (GstGLWindow * window)
  * @window: a #GstGLWindow
  *
  * Returns: the window handle we are currently rendering into
+ *
+ * Since: 1.4
  */
 guintptr
 gst_gl_window_get_window_handle (GstGLWindow * window)
@@ -552,6 +580,8 @@ gst_gl_window_get_window_handle (GstGLWindow * window)
  * @window: a #GstGLWindow
  *
  * Returns: (transfer full): the #GstGLContext associated with this @window
+ *
+ * Since: 1.4
  */
 GstGLContext *
 gst_gl_window_get_context (GstGLWindow * window)

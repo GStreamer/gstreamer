@@ -252,6 +252,8 @@ _init_debug (void)
  * Create a new #GstGLContext with the specified @display
  *
  * Returns: a new #GstGLContext
+ *
+ * Since: 1.4
  */
 GstGLContext *
 gst_gl_context_new (GstGLDisplay * display)
@@ -308,6 +310,8 @@ gst_gl_context_new (GstGLDisplay * display)
  * Wraps an existing OpenGL context into a #GstGLContext.  
  *
  * Returns: a #GstGLContext wrapping @handle
+ *
+ * Since: 1.4
  */
 GstGLContext *
 gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
@@ -398,6 +402,8 @@ gst_gl_context_finalize (GObject * object)
  * currently set window.  See gst_gl_context_set_window() for details.
  *
  * Returns: Whether the activation succeeded
+ *
+ * Since: 1.4
  */
 gboolean
 gst_gl_context_activate (GstGLContext * context, gboolean activate)
@@ -450,7 +456,9 @@ gst_gl_context_get_thread (GstGLContext * context)
  * The currently available API may be limited by the #GstGLDisplay in use and/or
  * the #GstGLWindow chosen.
  *
- * Returns: the currently available OpenGL api
+ * Returns: the available OpenGL api
+ *
+ * Since: 1.4
  */
 GstGLAPI
 gst_gl_context_get_gl_api (GstGLContext * context)
@@ -476,6 +484,8 @@ gst_gl_context_get_gl_api (GstGLContext * context)
  * be retreived using this method.
  *
  * Returns: a function pointer or NULL
+ *
+ * Since: 1.4
  */
 gpointer
 gst_gl_context_get_proc_address (GstGLContext * context, const gchar * name)
@@ -534,6 +544,8 @@ gst_gl_context_default_get_proc_address (GstGLContext * context,
  * already running.
  *
  * Returns: Whether the window was successfully updated
+ *
+ * Since: 1.4
  */
 gboolean
 gst_gl_context_set_window (GstGLContext * context, GstGLWindow * window)
@@ -564,6 +576,8 @@ gst_gl_context_set_window (GstGLContext * context, GstGLWindow * window)
  * @context: a #GstGLContext
  *
  * Returns: the currently set window
+ *
+ * Since: 1.4
  */
 GstGLWindow *
 gst_gl_context_get_window (GstGLContext * context)
@@ -661,6 +675,8 @@ gst_gl_context_can_share (GstGLContext * context, GstGLContext * other_context)
  * Should only be called once.
  *
  * Returns: whether the context could successfully be created
+ *
+ * Since: 1.4
  */
 gboolean
 gst_gl_context_create (GstGLContext * context,
@@ -985,6 +1001,8 @@ failure:
  * Gets the backing OpenGL context used by @context.
  *
  * Returns: The platform specific backing OpenGL context
+ *
+ * Since: 1.4
  */
 guintptr
 gst_gl_context_get_gl_context (GstGLContext * context)
@@ -1008,6 +1026,8 @@ gst_gl_context_get_gl_context (GstGLContext * context)
  * Gets the OpenGL platform that used by @context.
  *
  * Returns: The platform specific backing OpenGL context
+ *
+ * Since: 1.4
  */
 GstGLPlatform
 gst_gl_context_get_gl_platform (GstGLContext * context)
@@ -1026,6 +1046,8 @@ gst_gl_context_get_gl_platform (GstGLContext * context)
  * @context: a #GstGLContext:
  *
  * Returns: the #GstGLDisplay associated with this @context
+ *
+ * Since: 1.4
  */
 GstGLDisplay *
 gst_gl_context_get_display (GstGLContext * context)
@@ -1059,6 +1081,8 @@ _gst_gl_context_thread_run_generic (RunGenericData * data)
  * Execute @func in the OpenGL thread of @context with @data
  *
  * MT-safe
+ *
+ * Since: 1.4
  */
 void
 gst_gl_context_thread_add (GstGLContext * context,
@@ -1092,6 +1116,8 @@ gst_gl_context_thread_add (GstGLContext * context,
  * Returns the OpenGL version implemented by @context.  See
  * gst_gl_context_get_gl_api() for retreiving the OpenGL api implemented by
  * @context.
+ *
+ * Since: 1.4
  */
 void
 gst_gl_context_get_gl_version (GstGLContext * context, gint * maj, gint * min)
@@ -1115,6 +1141,8 @@ gst_gl_context_get_gl_version (GstGLContext * context, gint * maj, gint * min)
  *
  * Returns: whether OpenGL context implements the required api and specified
  * version.
+ *
+ * Since: 1.4
  */
 gboolean
 gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI api,
@@ -1146,6 +1174,8 @@ gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI api,
  * determine their existence and so will fail if that is not the case.
  *
  * Returns: Whether @feature is supported by @context
+ *
+ * Since: 1.4
  */
 gboolean
 gst_gl_context_check_feature (GstGLContext * context, const gchar * feature)
