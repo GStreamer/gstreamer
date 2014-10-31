@@ -1273,8 +1273,11 @@ do_vscale_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
 {
   gpointer *lines, destline;
   guint sline, n_lines;
+  guint cline;
 
-  gst_video_scaler_get_coeff (convert->v_scaler, line, &sline, &n_lines);
+  cline = CLAMP (line, 0, convert->out_height - 1);
+
+  gst_video_scaler_get_coeff (convert->v_scaler, cline, &sline, &n_lines);
   lines = gst_line_cache_get_lines (convert->vscale_lines, sline, n_lines);
 
   destline = get_temp_line (convert, convert->out_x);
@@ -1283,7 +1286,7 @@ do_vscale_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
    * to be careful to not do in-place modifications later */
   GST_DEBUG ("vresample line %d %d-%d", line, sline, sline + n_lines - 1);
   gst_video_scaler_vertical (convert->v_scaler, GST_VIDEO_FORMAT_AYUV,
-      lines, destline, line, convert->v_scale_width);
+      lines, destline, cline, convert->v_scale_width);
 
   gst_line_cache_add_line (cache, line, destline);
 
