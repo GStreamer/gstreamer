@@ -81,6 +81,10 @@ struct _GstGLImageSink
     GstBuffer *stored_buffer;
     GLuint redisplay_texture;
 
+    gboolean caps_change;
+    guint window_width;
+    guint window_height;
+
 #if GST_GL_HAVE_GLES2
   GstGLShader *redisplay_shader;
   GLint redisplay_attr_position_loc;
