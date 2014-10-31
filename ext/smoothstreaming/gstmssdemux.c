@@ -1409,7 +1409,6 @@ gst_mss_demux_stream_download_uri (GstMssDemux * demux,
             &stream->fragment_download_lock);
       }
       ret = stream->last_ret;
-      g_mutex_unlock (&stream->fragment_download_lock);
 
       GST_DEBUG_OBJECT (stream->pad, "Fragment download finished: %s", uri);
     }
