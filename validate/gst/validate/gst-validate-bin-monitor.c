@@ -210,8 +210,8 @@ static void
 _bus_handler (GstBus * bus, GstMessage * message,
     GstValidateBinMonitor * monitor)
 {
-  GError *err;
-  gchar *debug;
+  GError *err = NULL;
+  gchar *debug = NULL;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
