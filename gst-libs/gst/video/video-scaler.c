@@ -573,7 +573,7 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
   g_return_if_fail (scale != NULL);
   g_return_if_fail (srcs != NULL);
   g_return_if_fail (dest != NULL);
-  g_return_if_fail (dest_offset <= scale->resampler.out_size);
+  g_return_if_fail (dest_offset < scale->resampler.out_size);
 
   switch (scale->resampler.max_taps) {
     case 1:
