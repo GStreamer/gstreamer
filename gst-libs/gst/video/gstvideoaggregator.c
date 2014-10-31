@@ -1609,13 +1609,22 @@ gst_videoaggregator_release_pad (GstElement * element, GstPad * pad)
 {
   GstVideoAggregator *vagg = NULL;
   GstVideoAggregatorPad *vaggpad;
-  gboolean update_caps;
+  gboolean update_caps, last_pad;
 
   vagg = GST_VIDEO_AGGREGATOR (element);
   vaggpad = GST_VIDEO_AGGREGATOR_PAD (pad);
 
   GST_VIDEO_AGGREGATOR_LOCK (vagg);
-  gst_videoaggregator_update_converters (vagg);
+
+  GST_OBJECT_LOCK (vagg);
+  last_pad = (GST_ELEMENT (vagg)->numsinkpads - 1 == 0);
+  GST_OBJECT_UNLOCK (vagg);
+
+  if (!last_pad)
+    gst_videoaggregator_update_converters (vagg);
+  else
+    gst_videoaggregator_reset (vagg);
+
   gst_buffer_replace (&vaggpad->buffer, NULL);
   update_caps = GST_VIDEO_INFO_FORMAT (&vagg->info) != GST_VIDEO_FORMAT_UNKNOWN;
 
