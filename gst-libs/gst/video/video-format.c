@@ -65,6 +65,8 @@
    ((line & ~7) >> 2) + (line & 1) :            \
    line >> 2)
 
+#define IS_ALIGNED(x,n) ((((guintptr)(x)&((n)-1))) == 0)
+
 #define PACK_420 GST_VIDEO_FORMAT_AYUV, unpack_planar_420, 1, pack_planar_420
 static void
 unpack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
@@ -99,6 +101,8 @@ pack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *v_line = GET_V_LINE (uv);
   const guint8 *ayuv = src;
 
+  g_return_if_fail (IS_ALIGNED (src, 8));
+
   video_orc_pack_I420 (y_line, u_line, v_line, src, width / 2);
 
   if (width & 1) {
@@ -118,6 +122,8 @@ unpack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint8 *line = GET_LINE (y);
   guint8 *d = dest;
+
+  g_return_if_fail (IS_ALIGNED (dest, 8));
 
   video_orc_unpack_YUY2 (dest, line, width / 2);
 
@@ -140,6 +146,8 @@ pack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *line = GET_LINE (y);
   const guint8 *ayuv = src;
 
+  g_return_if_fail (IS_ALIGNED (src, 8));
+
   video_orc_pack_YUY2 (line, src, width / 2);
 
   if (width & 1) {
@@ -159,6 +167,8 @@ unpack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint8 *line = GET_LINE (y);
   guint8 *d = dest;
+
+  g_return_if_fail (IS_ALIGNED (dest, 8));
 
   video_orc_unpack_UYVY (dest, line, width / 2);
 
@@ -181,6 +191,8 @@ pack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *line = GET_LINE (y);
   const guint8 *ayuv = src;
 
+  g_return_if_fail (IS_ALIGNED (src, 8));
+
   video_orc_pack_UYVY (line, src, width / 2);
 
   if (width & 1) {
@@ -200,6 +212,8 @@ unpack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint8 *line = GET_LINE (y);
   guint8 *d = dest;
+
+  g_return_if_fail (IS_ALIGNED (dest, 8));
 
   video_orc_unpack_YVYU (dest, line, width / 2);
 
@@ -221,6 +235,8 @@ pack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint8 *line = GET_LINE (y);
   const guint8 *ayuv = src;
+
+  g_return_if_fail (IS_ALIGNED (src, 8));
 
   video_orc_pack_YVYU (line, src, width / 2);
 
@@ -514,6 +530,8 @@ unpack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *v_line = GET_V_LINE (y);
   guint8 *d = dest;
 
+  g_return_if_fail (IS_ALIGNED (dest, 8));
+
   video_orc_unpack_YUV9 (dest, y_line, u_line, v_line, width / 2);
 
   if (width & 1) {
@@ -569,6 +587,8 @@ unpack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *v_line = GET_V_LINE (y);
   guint8 *d = dest;
 
+  g_return_if_fail (IS_ALIGNED (dest, 8));
+
   video_orc_unpack_Y42B (dest, y_line, u_line, v_line, width / 2);
 
   if (width & 1) {
@@ -591,6 +611,8 @@ pack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *u_line = GET_U_LINE (y);
   guint8 *v_line = GET_V_LINE (y);
   const guint8 *ayuv = src;
+
+  g_return_if_fail (IS_ALIGNED (src, 8));
 
   video_orc_pack_Y42B (y_line, u_line, v_line, src, width / 2);
 
@@ -1038,6 +1060,8 @@ unpack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *uv_line = GET_PLANE_LINE (1, uv);
   guint8 *d = dest;
 
+  g_return_if_fail (IS_ALIGNED (dest, 8));
+
   video_orc_unpack_NV12 (dest, y_line, uv_line, width / 2);
 
   if (width & 1) {
@@ -1061,6 +1085,8 @@ pack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *uv_line = GET_PLANE_LINE (1, uv);
   const guint8 *ayuv = src;
 
+  g_return_if_fail (IS_ALIGNED (src, 8));
+
   video_orc_pack_NV12 (y_line, uv_line, src, width / 2);
 
   if (width & 1) {
@@ -1082,6 +1108,8 @@ unpack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *y_line = GET_PLANE_LINE (0, y);
   guint8 *uv_line = GET_PLANE_LINE (1, uv);
   guint8 *d = dest;
+
+  g_return_if_fail (IS_ALIGNED (dest, 8));
 
   video_orc_unpack_NV21 (dest, y_line, uv_line, width / 2);
 
@@ -1106,6 +1134,8 @@ pack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *uv_line = GET_PLANE_LINE (1, uv);
   const guint8 *ayuv = src;
 
+  g_return_if_fail (IS_ALIGNED (src, 8));
+
   video_orc_pack_NV21 (y_line, uv_line, src, width / 2);
 
   if (width & 1) {
@@ -1126,6 +1156,8 @@ unpack_NV16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *y_line = GET_PLANE_LINE (0, y);
   guint8 *uv_line = GET_PLANE_LINE (1, y);
   guint8 *d = dest;
+
+  g_return_if_fail (IS_ALIGNED (dest, 8));
 
   video_orc_unpack_NV12 (dest, y_line, uv_line, width / 2);
 
@@ -1148,6 +1180,8 @@ pack_NV16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *y_line = GET_PLANE_LINE (0, y);
   guint8 *uv_line = GET_PLANE_LINE (1, y);
   const guint8 *ayuv = src;
+
+  g_return_if_fail (IS_ALIGNED (src, 8));
 
   video_orc_pack_NV12 (y_line, uv_line, src, width / 2);
 
@@ -1278,6 +1312,8 @@ pack_A420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *a_line = GET_A_LINE (y);
   const guint8 *ayuv = src;
 
+  g_return_if_fail (IS_ALIGNED (src, 8));
+
   video_orc_pack_A420 (y_line, u_line, v_line, a_line, src, width / 2);
 
   if (width & 1) {
@@ -1389,6 +1425,8 @@ unpack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *u_line = GET_U_LINE (uv);
   guint8 *v_line = GET_V_LINE (uv);
   guint8 *d = dest;
+
+  g_return_if_fail (IS_ALIGNED (dest, 8));
 
   video_orc_unpack_YUV9 (dest, y_line, u_line, v_line, width / 2);
 
