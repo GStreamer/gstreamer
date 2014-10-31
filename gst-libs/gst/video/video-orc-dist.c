@@ -282,6 +282,10 @@ void video_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
 void video_orc_matrix8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, orc_int64 p1, orc_int64 p2, orc_int64 p3,
     int n);
+void video_orc_resample_h_near_8888_lq (guint32 * ORC_RESTRICT d1,
+    const guint32 * ORC_RESTRICT s1, int p1, int p2, int n);
+void video_orc_resample_h_2tap_8888_lq (guint32 * ORC_RESTRICT d1,
+    const guint32 * ORC_RESTRICT s1, int p1, int p2, int n);
 void video_orc_resample_v_2tap_8_lq (guint32 * ORC_RESTRICT d1,
     const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2, int p1,
     int n);
@@ -16238,6 +16242,252 @@ video_orc_matrix8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     ex->params[ORC_VAR_P3] = tmp.x2[0];
     ex->params[ORC_VAR_T3] = tmp.x2[1];
   }
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* video_orc_resample_h_near_8888_lq */
+#ifdef DISABLE_ORC
+void
+video_orc_resample_h_near_8888_lq (guint32 * ORC_RESTRICT d1,
+    const guint32 * ORC_RESTRICT s1, int p1, int p2, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var32;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union32 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldresnearl */
+    var32 = ptr4[(p1 + i * p2) >> 16];
+    /* 1: storel */
+    ptr0[i] = var32;
+  }
+
+}
+
+#else
+static void
+_backup_video_orc_resample_h_near_8888_lq (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var32;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldresnearl */
+    var32 = ptr4[(ex->params[24] + i * ex->params[25]) >> 16];
+    /* 1: storel */
+    ptr0[i] = var32;
+  }
+
+}
+
+void
+video_orc_resample_h_near_8888_lq (guint32 * ORC_RESTRICT d1,
+    const guint32 * ORC_RESTRICT s1, int p1, int p2, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 33, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
+        97, 109, 112, 108, 101, 95, 104, 95, 110, 101, 97, 114, 95, 56, 56, 56,
+        56, 95, 108, 113, 11, 4, 4, 12, 4, 4, 16, 4, 16, 4, 49, 0,
+        4, 24, 25, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_orc_resample_h_near_8888_lq);
+#else
+      p = orc_program_new ();
+      orc_program_set_name (p, "video_orc_resample_h_near_8888_lq");
+      orc_program_set_backup_function (p,
+          _backup_video_orc_resample_h_near_8888_lq);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_parameter (p, 4, "p1");
+      orc_program_add_parameter (p, 4, "p2");
+
+      orc_program_append_2 (p, "ldresnearl", 0, ORC_VAR_D1, ORC_VAR_S1,
+          ORC_VAR_P1, ORC_VAR_P2);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_P1] = p1;
+  ex->params[ORC_VAR_P2] = p2;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* video_orc_resample_h_2tap_8888_lq */
+#ifdef DISABLE_ORC
+void
+video_orc_resample_h_2tap_8888_lq (guint32 * ORC_RESTRICT d1,
+    const guint32 * ORC_RESTRICT s1, int p1, int p2, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var32;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union32 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldreslinl */
+    {
+      int tmp = p1 + i * p2;
+      orc_union32 a = ptr4[tmp >> 16];
+      orc_union32 b = ptr4[(tmp >> 16) + 1];
+      var32.x4[0] =
+          ((orc_uint8) a.x4[0] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) b.x4[0] * ((tmp >> 8) & 0xff)) >> 8;
+      var32.x4[1] =
+          ((orc_uint8) a.x4[1] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) b.x4[1] * ((tmp >> 8) & 0xff)) >> 8;
+      var32.x4[2] =
+          ((orc_uint8) a.x4[2] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) b.x4[2] * ((tmp >> 8) & 0xff)) >> 8;
+      var32.x4[3] =
+          ((orc_uint8) a.x4[3] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) b.x4[3] * ((tmp >> 8) & 0xff)) >> 8;
+    }
+    /* 1: storel */
+    ptr0[i] = var32;
+  }
+
+}
+
+#else
+static void
+_backup_video_orc_resample_h_2tap_8888_lq (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var32;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldreslinl */
+    {
+      int tmp = ex->params[24] + i * ex->params[25];
+      orc_union32 a = ptr4[tmp >> 16];
+      orc_union32 b = ptr4[(tmp >> 16) + 1];
+      var32.x4[0] =
+          ((orc_uint8) a.x4[0] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) b.x4[0] * ((tmp >> 8) & 0xff)) >> 8;
+      var32.x4[1] =
+          ((orc_uint8) a.x4[1] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) b.x4[1] * ((tmp >> 8) & 0xff)) >> 8;
+      var32.x4[2] =
+          ((orc_uint8) a.x4[2] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) b.x4[2] * ((tmp >> 8) & 0xff)) >> 8;
+      var32.x4[3] =
+          ((orc_uint8) a.x4[3] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) b.x4[3] * ((tmp >> 8) & 0xff)) >> 8;
+    }
+    /* 1: storel */
+    ptr0[i] = var32;
+  }
+
+}
+
+void
+video_orc_resample_h_2tap_8888_lq (guint32 * ORC_RESTRICT d1,
+    const guint32 * ORC_RESTRICT s1, int p1, int p2, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 33, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
+        97, 109, 112, 108, 101, 95, 104, 95, 50, 116, 97, 112, 95, 56, 56, 56,
+        56, 95, 108, 113, 11, 4, 4, 12, 4, 4, 16, 4, 16, 4, 51, 0,
+        4, 24, 25, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_orc_resample_h_2tap_8888_lq);
+#else
+      p = orc_program_new ();
+      orc_program_set_name (p, "video_orc_resample_h_2tap_8888_lq");
+      orc_program_set_backup_function (p,
+          _backup_video_orc_resample_h_2tap_8888_lq);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_parameter (p, 4, "p1");
+      orc_program_add_parameter (p, 4, "p2");
+
+      orc_program_append_2 (p, "ldreslinl", 0, ORC_VAR_D1, ORC_VAR_S1,
+          ORC_VAR_P1, ORC_VAR_P2);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_P1] = p1;
+  ex->params[ORC_VAR_P2] = p2;
 
   func = c->exec;
   func (ex);
