@@ -124,6 +124,8 @@ gst_gl_display_finalize (GObject * object)
  * gst_gl_display_new:
  *
  * Returns: (transfer full): a new #GstGLDisplay
+ *
+ * Since: 1.4
  */
 GstGLDisplay *
 gst_gl_display_new (void)
@@ -195,6 +197,8 @@ gst_gl_display_default_get_handle (GstGLDisplay * display)
  * @display: a #GstGLDisplay
  *
  * Returns: the #GstGLDisplayType of @display
+ *
+ * Since: 1.4
  */
 GstGLDisplayType
 gst_gl_display_get_handle_type (GstGLDisplay * display)
@@ -210,6 +214,8 @@ gst_gl_display_get_handle_type (GstGLDisplay * display)
  * @display: resulting #GstGLDisplay
  *
  * Sets @display on @context
+ *
+ * Since: 1.4
  */
 void
 gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
@@ -232,6 +238,8 @@ gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
  * @display: resulting #GstGLDisplay
  *
  * Returns: Whether @display was in @context
+ *
+ * Since: 1.4
  */
 gboolean
 gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display)
