@@ -32,56 +32,82 @@ static int gst_inspect_main (int argc, char **argv);
 
 GST_START_TEST (test_exists)
 {
-  gchar **argv;
+#define ARGV_LEN (G_N_ELEMENTS (argv) - 1)
 
-  argv = g_strsplit ("gst-inspect-1.0 --exists foo", " ", -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 1);
-  g_strfreev (argv);
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists", "foo", NULL };
 
-  argv = g_strsplit ("gst-inspect-1.0 --exists bin", " ", -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 0);
-  g_strfreev (argv);
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 1);
+  }
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists", "bin", NULL };
 
-  argv = g_strsplit ("gst-inspect-1.0 --exists --atleast-version=" VERSION " "
-      "bin", " ", -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 0);
-  g_strfreev (argv);
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 0);
+  }
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists",
+      "--atleast-version=" VERSION, "bin", NULL
+    };
 
-  argv = g_strsplit ("gst-inspect-1.0 --exists --atleast-version=1.0 bin", " ",
-      -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 0);
-  g_strfreev (argv);
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 0);
+  }
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists",
+      "--atleast-version=1.0", "bin", NULL
+    };
 
-  argv = g_strsplit ("gst-inspect-1.0 --exists --atleast-version=1.0.0 bin",
-      " ", -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 0);
-  g_strfreev (argv);
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 0);
+  }
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists",
+      "--atleast-version=1.0.0", "bin", NULL
+    };
 
-  argv = g_strsplit ("gst-inspect-1.0 --exists --atleast-version=2.0 bin",
-      " ", -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 1);
-  g_strfreev (argv);
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 0);
+  }
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists",
+      "--atleast-version=1.2.0", "bin", NULL
+    };
 
-  argv = g_strsplit ("gst-inspect-1.0 --exists --atleast-version=2.0.0 bin",
-      " ", -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 1);
-  g_strfreev (argv);
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 0);
+  }
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists",
+      "--atleast-version=2.0", "bin", NULL
+    };
 
-  argv = g_strsplit ("gst-inspect-1.0 --exists --atleast-version=1.44 bin",
-      " ", -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 1);
-  g_strfreev (argv);
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 1);
+  }
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists",
+      "--atleast-version=2.0.0", "bin", NULL
+    };
 
-  argv = g_strsplit ("gst-inspect-1.0 --exists --atleast-version=1.60.4 bin",
-      " ", -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 1);
-  g_strfreev (argv);
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 1);
+  }
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists",
+      "--atleast-version=1.44", "bin", NULL
+    };
 
-  /* check for plugin should fail like this */
-  argv = g_strsplit ("gst-inspect-1.0 --exists --atleast-version=1.0 "
-      "coreelements", " ", -1);
-  fail_unless_equals_int (gst_inspect_main (g_strv_length (argv), argv), 1);
-  g_strfreev (argv);
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 1);
+  }
+  {
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists",
+      "--atleast-version=1.60.4", "bin", NULL
+    };
+
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 1);
+  }
+  {
+    /* check for plugin should fail like this */
+    const gchar *argv[] = { "gst-inspect-1.0", "--exists",
+      "--atleast-version=1.0", "coreelements", NULL
+    };
+
+    fail_unless_equals_int (gst_inspect_main (ARGV_LEN, (gchar **) argv), 1);
+  }
 }
 
 GST_END_TEST;
