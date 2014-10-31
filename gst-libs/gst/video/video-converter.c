@@ -437,6 +437,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   gint width;
   GstLineCacheNeedLineFunc need_line;
   gint s2, s3;
+  const GstVideoFormatInfo *fin, *fout;
 
   g_return_val_if_fail (in_info != NULL, NULL);
   g_return_val_if_fail (out_info != NULL, NULL);
@@ -448,6 +449,9 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
       NULL);
 
   convert = g_slice_new0 (GstVideoConverter);
+
+  fin = in_info->finfo;
+  fout = out_info->finfo;
 
   convert->in_info = *in_info;
   convert->out_info = *out_info;
@@ -470,12 +474,18 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   convert->in_height = get_opt_int (convert,
       GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, convert->in_maxheight);
 
+  convert->in_x &= ~((1 << fin->w_sub[1]) - 1);
+  convert->in_y &= ~((1 << fin->h_sub[1]) - 1);
+
   convert->out_x = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_DEST_X, 0);
   convert->out_y = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_DEST_Y, 0);
   convert->out_width = get_opt_int (convert,
       GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, convert->out_maxwidth);
   convert->out_height = get_opt_int (convert,
       GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, convert->out_maxheight);
+
+  convert->out_x &= ~((1 << fout->w_sub[1]) - 1);
+  convert->out_y &= ~((1 << fout->h_sub[1]) - 1);
 
   convert->fill_border = get_opt_bool (convert,
       GST_VIDEO_CONVERTER_OPT_FILL_BORDER, TRUE);
