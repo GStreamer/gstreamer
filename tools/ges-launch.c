@@ -49,6 +49,7 @@ static GHashTable *tried_uris;
 static GESTrackType track_types = GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO;
 static GESTimeline *timeline;
 static gboolean needs_set_state;
+static const gchar *scenario = NULL;
 
 #ifdef G_OS_UNIX
 static gboolean
@@ -251,6 +252,13 @@ project_loaded_cb (GESProject * project, GESTimeline * timeline)
       seenerrors = TRUE;
       g_main_loop_quit (mainloop);
     }
+  }
+
+  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario,
+          &needs_set_state) == FALSE) {
+    g_error ("Could not activate scenario %s", scenario);
+    seenerrors = TRUE;
+    g_main_loop_quit (mainloop);
   }
 
   if (needs_set_state && gst_element_set_state (GST_ELEMENT (pipeline),
@@ -785,7 +793,6 @@ main (int argc, gchar ** argv)
   static gboolean verbose = FALSE;
   gchar *load_path = NULL;
   gchar *videosink = NULL, *audiosink = NULL;
-  const gchar *scenario = NULL;
   gboolean inspect_action_type = FALSE;
   gchar *encoding_profile = NULL;
 
@@ -1013,10 +1020,12 @@ main (int argc, gchar ** argv)
     g_timeout_add (1000 * thumbinterval, thumbnail_cb, pipeline);
   }
 
-  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario,
-          &needs_set_state) == FALSE) {
-    g_error ("Could not activate scenario %s", scenario);
-    return 29;
+  if (!load_path) {
+    if (ges_validate_activate (GST_PIPELINE (pipeline), scenario,
+            &needs_set_state) == FALSE) {
+      g_error ("Could not activate scenario %s", scenario);
+      return 29;
+    }
   }
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
