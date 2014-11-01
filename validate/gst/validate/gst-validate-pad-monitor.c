@@ -1605,13 +1605,26 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
                 &exp_segment);
             if (segment->format == exp_segment->format) {
               if ((exp_segment->rate * exp_segment->applied_rate !=
-                      segment->rate * segment->applied_rate)
-                  || exp_segment->start != segment->start
-                  || exp_segment->stop != segment->stop
-                  || exp_segment->position != segment->position) {
+                      segment->rate * segment->applied_rate))
                 GST_VALIDATE_REPORT (pad_monitor, EVENT_NEW_SEGMENT_MISMATCH,
-                    "Expected segment didn't match received segment event");
-              }
+                    "Rate * applied_rate %d != expected %d",
+                    segment->rate * segment->applied_rate,
+                    exp_segment->rate * exp_segment->applied_rate);
+              if (exp_segment->start != segment->start)
+                GST_VALIDATE_REPORT (pad_monitor, EVENT_NEW_SEGMENT_MISMATCH,
+                    "Start %" GST_TIME_FORMAT " != expected %" GST_TIME_FORMAT,
+                    GST_TIME_ARGS (segment->start),
+                    GST_TIME_ARGS (exp_segment->start));
+              if (exp_segment->stop != segment->stop)
+                GST_VALIDATE_REPORT (pad_monitor, EVENT_NEW_SEGMENT_MISMATCH,
+                    "Stop %" GST_TIME_FORMAT " != expected %" GST_TIME_FORMAT,
+                    GST_TIME_ARGS (segment->stop),
+                    GST_TIME_ARGS (exp_segment->stop));
+              if (exp_segment->position != segment->position)
+                GST_VALIDATE_REPORT (pad_monitor, EVENT_NEW_SEGMENT_MISMATCH,
+                    "Position %" GST_TIME_FORMAT " != expected %"
+                    GST_TIME_FORMAT, GST_TIME_ARGS (segment->position),
+                    GST_TIME_ARGS (exp_segment->position));
             }
           }
           gst_event_replace (&pad_monitor->expected_segment, NULL);
