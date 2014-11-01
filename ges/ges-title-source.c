@@ -82,6 +82,11 @@
  *  <entry>The vertical position of the text</entry>
  * </row>
  *
+ * <row><entry role="property_type"><link linkend="guint"><type>guint</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESTileSource--outline-color">outline-color</link></entry>
+ *  <entry>Color to use for outline the text (big-endian ARGB).</entry>
+ * </row>
+ *
  * </tbody>
  * </tgroup>
  * </informaltable>
@@ -235,7 +240,7 @@ ges_title_source_create_source (GESTrackElement * object)
   GESTitleSourcePrivate *priv = self->priv;
   const gchar *bg_props[] = { "pattern", "foreground-color", NULL };
   const gchar *text_props[] = { "text", "font-desc", "valignment", "halignment",
-    "color", "xpos", "ypos", NULL
+    "color", "xpos", "ypos", "outline-color", NULL
   };
 
   topbin = gst_bin_new ("titlesrc-bin");
