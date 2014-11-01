@@ -69,7 +69,6 @@ struct _GESTitleSourceClass {
   GESVideoSourceClass parent_class;
 
   /*< private >*/
-  GRegex * cleanup_children_prop_names;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING - 1];

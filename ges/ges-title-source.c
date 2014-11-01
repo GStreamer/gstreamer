@@ -82,6 +82,11 @@
  *  <entry>The vertical position of the text</entry>
  * </row>
  *
+ * <row><entry role="property_type"><link linkend="gboolean"><type>gboolean</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESTileSource--shaded-background">shaded-background</link></entry>
+ *  <entry>Whether to shade the background under the text area</entry>
+ * </row>
+ *
  * <row><entry role="property_type"><link linkend="guint"><type>guint</type></link></entry>
  *  <entry role="property_name"><link linkend="GESTileSource--outline-color">outline-color</link></entry>
  *  <entry>Color to use for outline the text (big-endian ARGB).</entry>
@@ -134,9 +139,15 @@ _lookup_child (GESTrackElement * object,
     const gchar * prop_name, GstElement ** element, GParamSpec ** pspec)
 {
   gboolean res;
-  GESTitleSourceClass *c = GES_TITLE_SOURCE_GET_CLASS (object);
-  gchar *clean_name = g_regex_replace (c->cleanup_children_prop_names,
-      prop_name, -1, 0, "foreground-color", 0, NULL);
+
+  gchar *clean_name;
+
+  if (!g_strcmp0 (prop_name, "background"))
+    clean_name = g_strdup ("foreground-color");
+  else if (!g_strcmp0 (prop_name, "GstTextOverlay:background"))
+    clean_name = g_strdup ("foreground-color");
+  else
+    clean_name = g_strdup (prop_name);
 
   res =
       GES_TRACK_ELEMENT_CLASS (ges_title_source_parent_class)->lookup_child
@@ -162,9 +173,6 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
   track_element_class->lookup_child = _lookup_child;
 
   source_class->create_source = ges_title_source_create_source;
-  klass->cleanup_children_prop_names = g_regex_new ("background",
-      G_REGEX_EXTENDED, 0, NULL);
-
 }
 
 static void
@@ -240,7 +248,7 @@ ges_title_source_create_source (GESTrackElement * object)
   GESTitleSourcePrivate *priv = self->priv;
   const gchar *bg_props[] = { "pattern", "foreground-color", NULL };
   const gchar *text_props[] = { "text", "font-desc", "valignment", "halignment",
-    "color", "xpos", "ypos", "outline-color", NULL
+    "color", "xpos", "ypos", "outline-color", "shaded-background", NULL
   };
 
   topbin = gst_bin_new ("titlesrc-bin");
