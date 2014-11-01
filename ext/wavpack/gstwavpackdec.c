@@ -325,11 +325,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
       (dec->sample_rate != WavpackGetSampleRate (dec->context)) ||
       (dec->channels != WavpackGetNumChannels (dec->context)) ||
       (dec->depth != WavpackGetBytesPerSample (dec->context) * 8) ||
-#ifdef WAVPACK_OLD_API
-      (dec->channel_mask != dec->context->config.channel_mask);
-#else
       (dec->channel_mask != WavpackGetChannelMask (dec->context));
-#endif
 
   if (!gst_pad_has_current_caps (GST_AUDIO_DECODER_SRC_PAD (dec)) ||
       format_changed) {
@@ -339,11 +335,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
     dec->channels = WavpackGetNumChannels (dec->context);
     dec->depth = WavpackGetBytesPerSample (dec->context) * 8;
 
-#ifdef WAVPACK_OLD_API
-    channel_mask = dec->context->config.channel_mask;
-#else
     channel_mask = WavpackGetChannelMask (dec->context);
-#endif
     if (channel_mask == 0)
       channel_mask = gst_wavpack_get_default_channel_mask (dec->channels);
 
@@ -454,11 +446,7 @@ decode_error:
     const gchar *reason = "unknown";
 
     if (dec->context) {
-#ifdef WAVPACK_OLD_API
-      reason = dec->context->error_message;
-#else
       reason = WavpackGetErrorMessage (dec->context);
-#endif
     } else {
       reason = "couldn't create decoder context";
     }

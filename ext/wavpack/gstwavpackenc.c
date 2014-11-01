@@ -136,9 +136,7 @@ gst_wavpack_enc_mode_get_type (void)
       {GST_WAVPACK_ENC_MODE_FAST, "Fast Compression", "fast"},
       {GST_WAVPACK_ENC_MODE_DEFAULT, "Normal Compression", "normal"},
       {GST_WAVPACK_ENC_MODE_HIGH, "High Compression", "high"},
-#ifndef WAVPACK_OLD_API
       {GST_WAVPACK_ENC_MODE_VERY_HIGH, "Very High Compression", "veryhigh"},
-#endif
       {0, NULL, NULL}
     };
 
@@ -466,12 +464,10 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
     case GST_WAVPACK_ENC_MODE_HIGH:
       enc->wp_config->flags |= CONFIG_HIGH_FLAG;
       break;
-#ifndef WAVPACK_OLD_API
     case GST_WAVPACK_ENC_MODE_VERY_HIGH:
       enc->wp_config->flags |= CONFIG_HIGH_FLAG;
       enc->wp_config->flags |= CONFIG_VERY_HIGH_FLAG;
       break;
-#endif
   }
 
   /* Bitrate, enables lossy mode */

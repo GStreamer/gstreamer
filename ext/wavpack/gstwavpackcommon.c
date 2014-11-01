@@ -38,11 +38,7 @@ gst_wavpack_read_header (WavpackHeader * header, guint8 * buf)
 {
   memmove (header, buf, sizeof (WavpackHeader));
 
-#ifndef WAVPACK_OLD_API
   WavpackLittleEndianToNative (header, (char *) WavpackHeaderFormat);
-#else
-  little_endian_to_native (header, WavpackHeaderFormat);
-#endif
 
   return (memcmp (header->ckID, "wvpk", 4) == 0);
 }
