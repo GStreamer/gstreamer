@@ -519,6 +519,10 @@ _add_track_element (GESFormatter * self, GESClip * clip,
   ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
   gst_structure_foreach (children_properties,
       (GstStructureForeachFunc) _set_child_property, trackelement);
+
+  if (properties)
+    gst_structure_foreach (properties,
+        (GstStructureForeachFunc) set_property_foreach, trackelement);
 }
 
 static void
