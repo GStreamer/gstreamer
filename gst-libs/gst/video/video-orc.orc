@@ -1505,7 +1505,7 @@ convubw w1, s
 mulswl t1, w1, t
 addl d, d, t1
 
-.function video_orc_resample_h_scaletaps_8
+.function video_orc_resample_scaletaps_8
 .source 4 s gint32
 .dest 1 d guint8
 .temp 2 w1
@@ -1537,7 +1537,7 @@ convubw w1, s
 mullw t1, w1, t
 addw d, d, t1
 
-.function video_orc_resample_h_scaletaps_8_lq
+.function video_orc_resample_scaletaps_8_lq
 .source 2 s gint32
 .dest 1 d guint8
 .temp 2 w1
@@ -1546,3 +1546,42 @@ addw w1, s, 32
 shrsw w1, w1, 6
 convsuswb d, w1
 
+.function video_orc_resample_v_multaps_8
+.source 1 s guint32
+.param 2 t gint16
+.dest 4 d gint32
+.temp 2 w1
+
+convubw w1, s
+mulswl d, w1, t
+
+.function video_orc_resample_v_muladdtaps_8
+.source 1 s guint32
+.param 2 t gint16
+.dest 4 d gint32
+.temp 2 w1
+.temp 4 t1
+
+convubw w1, s
+mulswl t1, w1, t
+addl d, d, t1
+
+.function video_orc_resample_v_multaps_8_lq
+.source 1 s guint32
+.param 2 t gint16
+.dest 2 d gint32
+.temp 2 w1
+
+convubw w1, s
+mullw d, w1, t
+
+.function video_orc_resample_v_muladdtaps_8_lq
+.source 1 s guint32
+.param 2 t gint16
+.dest 2 d gint32
+.temp 2 w1
+.temp 2 t1
+
+convubw w1, s
+mullw t1, w1, t
+addw d, d, t1

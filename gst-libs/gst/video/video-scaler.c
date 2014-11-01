@@ -343,46 +343,6 @@ video_scale_h_near_8888 (GstVideoScaler * scale,
 #endif
 }
 
-#if 0
-#define BLEND_2TAP(a,b,p) (((((b)-(guint16)(a)) * p + S16_SCALE_ROUND) >> S16_SCALE) + (a))
-
-static void
-video_scale_h_2tap_8888 (GstVideoScaler * scale,
-    gpointer src, gpointer dest, guint dest_offset, guint width)
-{
-  gint i, max_taps, sum0, sum1, sum2, sum3;
-  guint8 *s1, *s2, *d;
-  guint32 *offset, *phase;
-  gint16 *taps, *t;
-
-  if (scale->taps_s16 == NULL)
-    make_s16_taps (scale, S16_SCALE);
-
-  max_taps = scale->resampler.max_taps;
-  offset = scale->resampler.offset + dest_offset;
-  phase = scale->resampler.phase + dest_offset;
-  taps = scale->taps_s16;
-
-  d = (guint8 *) dest + 4 * dest_offset;
-
-  for (i = 0; i < width; i++) {
-    s1 = (guint8 *) src + 4 * offset[i];
-    s2 = s1 + 4;
-    t = taps + (phase[i] * max_taps);
-
-    sum0 = BLEND_2TAP (s1[0], s2[0], t[1]);
-    sum1 = BLEND_2TAP (s1[1], s2[1], t[1]);
-    sum2 = BLEND_2TAP (s1[2], s2[2], t[1]);
-    sum3 = BLEND_2TAP (s1[3], s2[3], t[1]);
-
-    d[i * 4 + 0] = CLAMP (sum0, 0, 255);
-    d[i * 4 + 1] = CLAMP (sum1, 0, 255);
-    d[i * 4 + 2] = CLAMP (sum2, 0, 255);
-    d[i * 4 + 3] = CLAMP (sum3, 0, 255);
-  }
-}
-#endif
-
 static void
 video_scale_h_2tap_8888 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width)
@@ -435,7 +395,7 @@ video_scale_h_ntap_8888 (GstVideoScaler * scale,
   video_orc_resample_h_muladdtaps_8_lq (temp, 0, pixels + width, count,
       taps + count, count * 2, count, max_taps - 1);
   /* scale and write final result */
-  video_orc_resample_h_scaletaps_8_lq (d, temp, count);
+  video_orc_resample_scaletaps_8_lq (d, temp, count);
 #else
   /* first pixels with first tap to t4 */
   video_orc_resample_h_multaps_8 (temp, pixels, taps, count);
@@ -443,7 +403,7 @@ video_scale_h_ntap_8888 (GstVideoScaler * scale,
   video_orc_resample_h_muladdtaps_8 (temp, 0, pixels + width, count,
       taps + count, count * 2, count, max_taps - 1);
   /* scale and write final result */
-  video_orc_resample_h_scaletaps_8 (d, temp, count);
+  video_orc_resample_scaletaps_8 (d, temp, count);
 #endif
 }
 
@@ -562,15 +522,21 @@ static void
 video_scale_v_ntap_8888 (GstVideoScaler * scale,
     gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
-  gint16 *t;
-  gint i, j, k, max_taps, sum0, sum1, sum2, sum3, src_inc;
-  guint8 *s, *d;
+  gint16 *taps;
+  gint i, max_taps, count, src_inc;
+  guint8 *d;
+  gint32 *temp;
 
   if (scale->taps_s16 == NULL)
+#ifdef LQ
+    make_s16_taps (scale, 6);
+#else
     make_s16_taps (scale, S16_SCALE);
+#endif
 
   max_taps = scale->resampler.max_taps;
-  t = scale->taps_s16 + (scale->resampler.phase[dest_offset] * max_taps);
+  taps = scale->taps_s16 + (scale->resampler.phase[dest_offset] * max_taps);
+
   d = (guint8 *) dest;
 
   if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
@@ -578,26 +544,23 @@ video_scale_v_ntap_8888 (GstVideoScaler * scale,
   else
     src_inc = 1;
 
-  for (i = 0; i < width; i++) {
-    sum0 = sum1 = sum2 = sum3 = 0;
-    for (j = 0, k = 0; j < max_taps; j++, k += src_inc) {
-      s = (guint8 *) (srcs[k]);
+  temp = (gint32 *) scale->tmpline2;
+  count = width * 4;
 
-      sum0 += t[j] * s[4 * i + 0];
-      sum1 += t[j] * s[4 * i + 1];
-      sum2 += t[j] * s[4 * i + 2];
-      sum3 += t[j] * s[4 * i + 3];
-    }
-    sum0 = (sum0 + S16_SCALE_ROUND) >> S16_SCALE;
-    sum1 = (sum1 + S16_SCALE_ROUND) >> S16_SCALE;
-    sum2 = (sum2 + S16_SCALE_ROUND) >> S16_SCALE;
-    sum3 = (sum3 + S16_SCALE_ROUND) >> S16_SCALE;
-
-    d[i * 4 + 0] = CLAMP (sum0, 0, 255);
-    d[i * 4 + 1] = CLAMP (sum1, 0, 255);
-    d[i * 4 + 2] = CLAMP (sum2, 0, 255);
-    d[i * 4 + 3] = CLAMP (sum3, 0, 255);
+#ifdef LQ
+  video_orc_resample_v_multaps_8_lq (temp, srcs[0], taps[0], count);
+  for (i = 1; i < max_taps - 1; i++) {
+    video_orc_resample_v_muladdtaps_8_lq (temp, srcs[i * src_inc], taps[i],
+        count);
   }
+  video_orc_resample_scaletaps_8_lq (d, temp, count);
+#else
+  video_orc_resample_v_multaps_8 (temp, srcs[0], taps[0], count);
+  for (i = 1; i < max_taps - 1; i++) {
+    video_orc_resample_v_muladdtaps_8 (temp, srcs[i * src_inc], taps[i], count);
+  }
+  video_orc_resample_scaletaps_8 (d, temp, count);
+#endif
 }
 
 /**
