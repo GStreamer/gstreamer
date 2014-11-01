@@ -48,7 +48,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp, "
         "clock-rate = (int) 90000,"
         "media = (string) \"video\","
-        "encoding-name = (string) \"VP8-DRAFT-IETF-01\""));
+        "encoding-name = (string) { \"VP8\", \"VP8-DRAFT-IETF-01\" }"));
 
 static void
 gst_rtp_vp8_depay_init (GstRtpVP8Depay * self)
