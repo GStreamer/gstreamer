@@ -703,7 +703,7 @@ gst_rtp_buffer_get_extension_data (GstRTPBuffer * rtp, guint16 * bits,
 }
 
 /**
- * gst_rtp_buffer_get_extension_bytes:
+ * gst_rtp_buffer_get_extension_bytes: (rename-to gst_rtp_buffer_get_extension_data)
  * @rtp: the RTP packet
  * @bits: (out): location for header bits
  *
@@ -718,8 +718,6 @@ gst_rtp_buffer_get_extension_data (GstRTPBuffer * rtp, guint16 * bits,
  *
  * Returns: (transfer full): A new #GBytes if an extension header was present
  * and %NULL otherwise.
- *
- * Rename to: gst_rtp_buffer_get_extension_data
  *
  * Since: 1.2
  */
@@ -1148,7 +1146,7 @@ gst_rtp_buffer_get_payload (GstRTPBuffer * rtp)
 }
 
 /**
- * gst_rtp_buffer_get_payload_bytes:
+ * gst_rtp_buffer_get_payload_bytes: (rename-to gst_rtp_buffer_get_payload)
  * @rtp: the RTP packet
  *
  * Similar to gst_rtp_buffer_get_payload, but more suitable for language
@@ -1156,8 +1154,6 @@ gst_rtp_buffer_get_payload (GstRTPBuffer * rtp)
  * containing the payload data in @rtp.
  *
  * Returns: (transfer full): A new #GBytes containing the payload data in @rtp.
- *
- * Rename to: gst_rtp_buffer_get_payload
  *
  * Since: 1.2
  */
