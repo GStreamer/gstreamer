@@ -245,9 +245,9 @@ flags_to_string (GFlagsValue * vals, guint flags)
 #define KNOWN_PARAM_FLAGS \
   (G_PARAM_CONSTRUCT | G_PARAM_CONSTRUCT_ONLY | \
   G_PARAM_LAX_VALIDATION |  G_PARAM_STATIC_STRINGS | \
-  G_PARAM_READABLE | G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE | \
-  GST_PARAM_MUTABLE_PLAYING | GST_PARAM_MUTABLE_PAUSED | \
-  GST_PARAM_MUTABLE_READY)
+  G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_DEPRECATED | \
+  GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | \
+  GST_PARAM_MUTABLE_PAUSED | GST_PARAM_MUTABLE_READY)
 
 static void
 print_element_properties_info (GstElement * element)
@@ -288,6 +288,10 @@ print_element_properties_info (GstElement * element)
     }
     if (param->flags & G_PARAM_WRITABLE) {
       g_print ("%s%s", (first_flag) ? "" : ", ", _("writable"));
+      first_flag = FALSE;
+    }
+    if (param->flags & G_PARAM_DEPRECATED) {
+      g_print ("%s%s", (first_flag) ? "" : ", ", _("deprecated"));
       first_flag = FALSE;
     }
     if (param->flags & GST_PARAM_CONTROLLABLE) {
