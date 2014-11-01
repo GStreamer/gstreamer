@@ -48,7 +48,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 48000, "
-        "encoding-name = (string) \"X-GST-OPUS-DRAFT-SPITTKA-00\"")
+        "encoding-name = (string) { \"OPUS\", \"X-GST-OPUS-DRAFT-SPITTKA-00\" }")
     );
 
 static gboolean gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload,
