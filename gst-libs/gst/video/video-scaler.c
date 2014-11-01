@@ -523,7 +523,7 @@ video_scale_v_4tap_8888 (GstVideoScaler * scale,
 {
   gint max_taps;
   guint32 *s1, *s2, *s3, *s4, *d;
-  gint p1, p2, p3, p4;
+  gint p1, p2, p3, p4, src_inc;
   gint16 *taps;
 
   if (scale->taps_s16 == NULL)
@@ -536,11 +536,16 @@ video_scale_v_4tap_8888 (GstVideoScaler * scale,
   max_taps = scale->resampler.max_taps;
   taps = scale->taps_s16 + dest_offset * max_taps;
 
+  if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
+    src_inc = 2;
+  else
+    src_inc = 1;
+
   d = (guint32 *) dest;
-  s1 = (guint32 *) srcs[0];
-  s2 = (guint32 *) srcs[1];
-  s3 = (guint32 *) srcs[2];
-  s4 = (guint32 *) srcs[3];
+  s1 = (guint32 *) srcs[0 * src_inc];
+  s2 = (guint32 *) srcs[1 * src_inc];
+  s3 = (guint32 *) srcs[2 * src_inc];
+  s4 = (guint32 *) srcs[3 * src_inc];
   p1 = taps[0];
   p2 = taps[1];
   p3 = taps[2];
