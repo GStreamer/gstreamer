@@ -2408,6 +2408,11 @@ GST_VIDEO_TILE_MAKE_STRIDE
 GST_VIDEO_TILE_X_TILES
 GST_VIDEO_TILE_Y_TILES
 
+#video-blend.h
+<SUBSECTION>
+gst_video_blend
+gst_video_blend_scale_linear_RGBA
+
 #video-converter.h
 <SUBSECTION>
 gst_video_converter_new

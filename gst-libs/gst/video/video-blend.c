@@ -146,6 +146,22 @@ G_STMT_START { \
   ret = v0 + (v1 * (255 - alpha)) / 255; \
 } G_STMT_END
 
+/**
+ * gst_video_blend_scale_linear_RGBA:
+ * @src: the #GstVideoInfo describing the video data in @src_buffer
+ * @src_buffer: the source buffer containing video pixels to scale
+ * @dest_height: the height in pixels to scale the video data in @src_buffer to
+ * @dest_width: the width in pixels to scale the video data in @src_buffer to
+ * @dest: (out): pointer to a #GstVideoInfo structure that will be filled in
+ *     with the details for @dest_buffer
+ * @dest_buffer: (out): a pointer to a #GstBuffer variable, which will be
+ *     set to a newly-allocated buffer containing the scaled pixels.
+ *
+ * Scales a buffer containing RGBA (or AYUV) video. This is an internal
+ * helper function which is used to scale subtitle overlays, and may be
+ * deprecated in the near future. Use #GstVideoScaler to scale video buffers
+ * instead.
+ */
 /* returns newly-allocated buffer, which caller must unref */
 void
 gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
@@ -232,7 +248,8 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
   g_free (tmpbuf);
 }
 
-/* video_blend:
+/**
+ * gst_video_blend:
  * @dest: The #GstVideoFrame where to blend @src in
  * @src: the #GstVideoFrame that we want to blend into
  * @x: The x offset in pixel where the @src image should be blended
