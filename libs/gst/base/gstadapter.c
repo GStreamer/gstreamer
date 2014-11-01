@@ -549,7 +549,7 @@ gst_adapter_copy (GstAdapter * adapter, gpointer dest, gsize offset, gsize size)
 }
 
 /**
- * gst_adapter_copy_bytes:
+ * gst_adapter_copy_bytes: (rename-to gst_adapter_copy)
  * @adapter: a #GstAdapter
  * @offset: the bytes offset in the adapter to start from
  * @size: the number of bytes to copy
@@ -560,8 +560,6 @@ gst_adapter_copy (GstAdapter * adapter, gpointer dest, gsize offset, gsize size)
  * the value of the @size argument an empty #GBytes structure may be returned.
  *
  * Returns: (transfer full): A new #GBytes structure containing the copied data.
- *
- * Rename to: gst_adapter_copy
  *
  * Since: 1.4
  */
