@@ -2027,6 +2027,8 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
 
   if (priv->srtpenc)
     gst_object_unref (priv->srtpenc);
+  if (priv->srtpdec)
+    gst_object_unref (priv->srtpdec);
 
   priv->is_joined = FALSE;
   g_mutex_unlock (&priv->lock);
