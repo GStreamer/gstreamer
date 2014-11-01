@@ -107,7 +107,7 @@ resampler_zip (GstVideoResampler * resampler, const GstVideoResampler * r1,
  * @n_taps: number of taps to use
  * @in_size: number of source elements
  * @out_size: number of destination elements
- * @options: (allow none): extra options
+ * @options: (allow-none): extra options
  *
  * Make a new @method video scaler. @in_size source lines/pixels will
  * be scaled to @out_size destination lines/pixels.
@@ -604,24 +604,24 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
  * gst_video_scaler_vertical:
  * @scale: a #GstVideoScaler
  * @format: a #GstVideoFormat for @srcs and @dest
- * @srcs: source pixels lines
+ * @src_lines: source pixels lines
  * @dest: destination pixels
  * @dest_offset: the vertical destination offset
  * @width: the number of pixels to scale
  *
- * Vertically combine @width pixels in the lines in @srcs to @dest.
+ * Vertically combine @width pixels in the lines in @src_lines to @dest.
  * @dest is the location of the target line at @dest_offset and
  * @srcs are the input lines for @dest_offset, as obtained with
  * gst_video_scaler_get_info().
  */
 void
 gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
-    gpointer srcs[], gpointer dest, guint dest_offset, guint width)
+    gpointer src_lines[], gpointer dest, guint dest_offset, guint width)
 {
   GstVideoScalerVFunc func;
 
   g_return_if_fail (scale != NULL);
-  g_return_if_fail (srcs != NULL);
+  g_return_if_fail (src_lines != NULL);
   g_return_if_fail (dest != NULL);
   g_return_if_fail (dest_offset < scale->resampler.out_size);
 
@@ -639,5 +639,5 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
       func = video_scale_v_ntap_8888;
       break;
   }
-  func (scale, srcs, dest, dest_offset, width);
+  func (scale, src_lines, dest, dest_offset, width);
 }

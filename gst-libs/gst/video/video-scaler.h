@@ -69,7 +69,7 @@ void                  gst_video_scaler_horizontal     (GstVideoScaler *scale,
 void                  gst_video_scaler_vertical       (GstVideoScaler *scale,
                                                        GstVideoFormat format,
                                                        gpointer src_lines[], gpointer dest,
-                                                       guint out_offset, guint width);
+                                                       guint dest_offset, guint width);
 
 G_END_DECLS
 
