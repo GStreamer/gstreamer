@@ -658,7 +658,8 @@ gst_vp9_enc_class_init (GstVP9EncClass * klass)
       g_param_spec_int ("arnr-type", "AltRef type",
           "AltRef type",
           1, 3, DEFAULT_ARNR_TYPE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_DEPRECATED)));
 
   g_object_class_install_property (gobject_class, PROP_TUNING,
       g_param_spec_enum ("tuning", "Tuning",
@@ -1104,15 +1105,8 @@ gst_vp9_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ARNR_TYPE:
       gst_vp9_enc->arnr_type = g_value_get_int (value);
-      if (gst_vp9_enc->inited) {
-        status = vpx_codec_control (&gst_vp9_enc->encoder, VP8E_SET_ARNR_TYPE,
-            gst_vp9_enc->arnr_type);
-        if (status != VPX_CODEC_OK) {
-          GST_WARNING_OBJECT (gst_vp9_enc,
-              "Failed to set VP8E_SET_ARNR_TYPE: %s",
-              gst_vpx_error_name (status));
-        }
-      }
+      g_warning ("arnr-type is a no-op since control has been deprecated "
+          "in libvpx");
       break;
     case PROP_TUNING:
       gst_vp9_enc->tuning = g_value_get_enum (value);
@@ -1644,12 +1638,6 @@ gst_vp9_enc_set_format (GstVideoEncoder * video_encoder,
     GST_WARNING_OBJECT (encoder,
         "Failed to set VP8E_SET_ARNR_STRENGTH: %s",
         gst_vpx_error_name (status));
-  }
-  status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_TYPE,
-      encoder->arnr_type);
-  if (status != VPX_CODEC_OK) {
-    GST_WARNING_OBJECT (encoder,
-        "Failed to set VP8E_SET_ARNR_TYPE: %s", gst_vpx_error_name (status));
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_TUNING,
       encoder->tuning);
