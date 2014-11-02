@@ -2664,7 +2664,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
         gst_guint64_to_gdouble (mux->time_scale));
   }
   gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_MUXINGAPP,
-      "GStreamer plugin version " PACKAGE_VERSION);
+      "GStreamer matroskamux version " PACKAGE_VERSION);
   if (mux->writing_app && mux->writing_app[0]) {
     gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_WRITINGAPP, mux->writing_app);
   }
