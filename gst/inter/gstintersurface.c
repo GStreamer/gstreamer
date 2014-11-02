@@ -78,6 +78,7 @@ gst_inter_surface_unref (GstInterSurface * surface)
     gst_buffer_replace (&surface->video_buffer, NULL);
     gst_buffer_replace (&surface->sub_buffer, NULL);
     gst_object_unref (surface->audio_adapter);
+    g_free (surface->name);
     g_free (surface);
   }
   g_mutex_unlock (&mutex);
