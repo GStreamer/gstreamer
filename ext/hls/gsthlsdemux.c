@@ -185,12 +185,14 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
   gobject_class->get_property = gst_hls_demux_get_property;
   gobject_class->dispose = gst_hls_demux_dispose;
 
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_FRAGMENTS_CACHE,
       g_param_spec_uint ("fragments-cache", "Fragments cache",
           "Number of fragments needed to be cached to start playing "
           "(DEPRECATED: Has no effect since 1.3.1)",
           1, G_MAXUINT, DEFAULT_FRAGMENTS_CACHE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
+#endif
 
   g_object_class_install_property (gobject_class, PROP_BITRATE_LIMIT,
       g_param_spec_float ("bitrate-limit",

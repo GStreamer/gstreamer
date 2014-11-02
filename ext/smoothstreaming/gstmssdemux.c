@@ -171,12 +171,14 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
           0, G_MAXUINT / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_MAX_QUEUE_SIZE_BUFFERS,
       g_param_spec_uint ("max-queue-size-buffers", "Max queue size in buffers",
           "Maximum buffers that can be stored in each internal stream queue "
           "(0 = infinite) (deprecated)", 0, G_MAXUINT,
           DEFAULT_MAX_QUEUE_SIZE_BUFFERS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
+#endif
 
   g_object_class_install_property (gobject_class, PROP_BITRATE_LIMIT,
       g_param_spec_float ("bitrate-limit",

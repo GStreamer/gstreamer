@@ -689,10 +689,13 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
           "(DVB-T) Bandwidth in Hz", 0, G_MAXUINT, DEFAULT_BANDWIDTH_HZ,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH,
       g_param_spec_enum ("bandwidth", "bandwidth",
           "(DVB-T) Bandwidth. Deprecated", GST_TYPE_DVBSRC_BANDWIDTH,
-          DEFAULT_BANDWIDTH, GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
+          DEFAULT_BANDWIDTH,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE | G_PARAM_DEPRECATED));
+#endif
 
   /* FIXME: DVB-C, DVB-S, DVB-S2 named it as innerFEC */
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_HP,

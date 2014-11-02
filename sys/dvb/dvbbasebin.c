@@ -284,7 +284,9 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
     {PROP_FREQUENCY, "frequency"},
     {PROP_POLARITY, "polarity"},
     {PROP_SYMBOL_RATE, "symbol-rate"},
+#ifndef GST_REMOVE_DEPRECATED
     {PROP_BANDWIDTH, "bandwidth"},
+#endif
     {PROP_CODE_RATE_HP, "code-rate-hp"},
     {PROP_CODE_RATE_LP, "code-rate-lp"},
     {PROP_GUARD, "guard"},
