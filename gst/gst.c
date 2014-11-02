@@ -348,12 +348,6 @@ gst_init_check (int *argc, char **argv[], GError ** err)
 
   gst_initialized = res;
 
-  if (res) {
-    GST_INFO ("initialized GStreamer successfully");
-  } else {
-    GST_INFO ("failed to initialize GStreamer");
-  }
-
   g_mutex_unlock (&init_lock);
 
   return res;
@@ -715,6 +709,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
       glib_minor_version, glib_micro_version);
   GST_INFO ("GLib headers version: %d.%d.%d", GLIB_MAJOR_VERSION,
       GLIB_MINOR_VERSION, GLIB_MICRO_VERSION);
+  GST_INFO ("initialized GStreamer successfully");
 
   return TRUE;
 }
