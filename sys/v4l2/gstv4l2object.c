@@ -1717,7 +1717,7 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
     GValue interlace_enum = { 0, };
     g_value_init (&interlace_enum, G_TYPE_STRING);
     g_value_set_string (&interlace_enum, mode_strings[interlace_mode]);
-    gst_value_list_append_value (&interlace_formats, &interlace_enum);
+    gst_value_list_append_and_take_value (&interlace_formats, &interlace_enum);
   }
 
   memset (&fmt, 0, sizeof (fmt));
@@ -1732,11 +1732,11 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
     GValue interlace_enum = { 0, };
     g_value_init (&interlace_enum, G_TYPE_STRING);
     g_value_set_string (&interlace_enum, mode_strings[interlace_mode]);
-    gst_value_list_append_value (&interlace_formats, &interlace_enum);
+    gst_value_list_append_and_take_value (&interlace_formats, &interlace_enum);
   }
 
   gst_v4l2src_value_simplify (&interlace_formats);
-  gst_structure_set_value (s, "interlace-mode", &interlace_formats);
+  gst_structure_take_value (s, "interlace-mode", &interlace_formats);
   return;
 }
 
