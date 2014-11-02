@@ -1778,12 +1778,15 @@ gst_subtitle_overlay_subtitle_sink_chain (GstPad * pad, GstObject * parent,
 static GstCaps *
 gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
-  GstCaps *ret;
+  GstCaps *ret, *subcaps;
 
-  if (filter)
-    ret = gst_caps_ref (filter);
-  else
-    ret = gst_caps_new_any ();
+  subcaps = gst_subtitle_overlay_create_factory_caps ();
+  if (filter) {
+    ret = gst_caps_intersect_full (filter, subcaps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (subcaps);
+  } else {
+    ret = subcaps;
+  }
 
   return ret;
 }
