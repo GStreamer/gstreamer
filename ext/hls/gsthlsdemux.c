@@ -1689,7 +1689,7 @@ retry:
     return FALSE;
   }
 
-  uri = gst_m3u8_client_get_current_uri(demux->client);
+  uri = gst_m3u8_client_get_current_uri (demux->client);
   main_uri = gst_m3u8_client_get_uri (demux->client);
   gst_element_post_message (GST_ELEMENT_CAST (demux),
       gst_message_new_element (GST_OBJECT_CAST (demux),
