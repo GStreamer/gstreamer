@@ -152,7 +152,8 @@ GST_START_TEST (test_ref_counts)
   GstMessage *message;
 
   level = setup_level (LEVEL_S16_CAPS_STRING);
-  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
+  g_object_set (level, "post-messages", TRUE,
+      "interval", (guint64) GST_SECOND / 10, NULL);
   fail_unless (gst_element_set_state (level,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -212,7 +213,8 @@ GST_START_TEST (test_message_is_valid)
   GstClockTime endtime, ts, duration;
 
   level = setup_level (LEVEL_S16_CAPS_STRING);
-  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
+  g_object_set (level, "post-messages", TRUE,
+      "interval", (guint64) GST_SECOND / 10, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
   bus = gst_bus_new ();
@@ -256,7 +258,8 @@ GST_START_TEST (test_int16)
   const gchar *fields[3] = { "rms", "peak", "decay" };
 
   level = setup_level (LEVEL_S16_CAPS_STRING);
-  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
+  g_object_set (level, "post-messages", TRUE,
+      "interval", (guint64) GST_SECOND / 10, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
   bus = gst_bus_new ();
@@ -314,7 +317,8 @@ GST_START_TEST (test_int16_panned)
   const gchar *fields[3] = { "rms", "peak", "decay" };
 
   level = setup_level (LEVEL_S16_CAPS_STRING);
-  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
+  g_object_set (level, "post-messages", TRUE,
+      "interval", (guint64) GST_SECOND / 10, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
   bus = gst_bus_new ();
@@ -385,7 +389,8 @@ GST_START_TEST (test_float)
   const gchar *fields[3] = { "rms", "peak", "decay" };
 
   level = setup_level (LEVEL_F32_CAPS_STRING);
-  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
+  g_object_set (level, "post-messages", TRUE,
+      "interval", (guint64) GST_SECOND / 10, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
   bus = gst_bus_new ();
@@ -443,7 +448,8 @@ GST_START_TEST (test_message_on_eos)
   gdouble dB;
 
   level = setup_level (LEVEL_S16_CAPS_STRING);
-  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 5, NULL);
+  g_object_set (level, "post-messages", TRUE,
+      "interval", (guint64) GST_SECOND / 5, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
   bus = gst_bus_new ();
@@ -504,7 +510,8 @@ GST_START_TEST (test_message_count)
   GstMessage *message;
 
   level = setup_level (LEVEL_S16_CAPS_STRING);
-  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 20, NULL);
+  g_object_set (level, "post-messages", TRUE,
+      "interval", (guint64) GST_SECOND / 20, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
   bus = gst_bus_new ();
@@ -545,7 +552,8 @@ GST_START_TEST (test_message_timestamps)
   GstClockTime ts1, dur1, ts2;
 
   level = setup_level (LEVEL_S16_CAPS_STRING);
-  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 20, NULL);
+  g_object_set (level, "post-messages", TRUE,
+      "interval", (guint64) GST_SECOND / 20, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
   bus = gst_bus_new ();
