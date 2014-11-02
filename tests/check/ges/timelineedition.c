@@ -1291,6 +1291,9 @@ check_frame_positionner_size (GESClip * clip, gint width, gint height)
   real_width = g_value_get_int (&val_width);
   real_height = g_value_get_int (&val_height);
 
+  assert_equals_int (real_width, width);
+  assert_equals_int (real_height, height);
+
   return (width == real_width && height == real_height);
 }
 
@@ -1458,6 +1461,33 @@ GST_START_TEST (test_scaling)
   /* Clip width was set to 0 so it has to use natural clip width */
   /* Clip height was set to 0 so it has to use natural clip height */
   fail_unless (check_frame_positionner_size (clip, 0, 0));
+
+
+  /**
+   * Our timeline : 320 * 240
+   *
+   * 0--------------0
+   * | width : 320  |
+   * | height: 240  |
+   * 0--------------2
+   */
+
+  /* We set the restriction caps video size to the same as the video source
+   * size. */
+  caps = gst_caps_from_string ("video/x-raw,height=240,width=320");
+  ges_track_set_restriction_caps (trackv, caps);
+  gst_caps_unref (caps);
+  _set_track_element_width_height (GES_CONTAINER_CHILDREN (clip)->data, 320,
+      240);
+
+  /* As the video source as the same size as the track restriction caps, changing
+   * the track size through restriction caps should also change the video source
+   * size */
+  caps = gst_caps_from_string ("video/x-raw,height=1080,width=1920");
+  ges_track_set_restriction_caps (trackv, caps);
+  fail_unless (check_frame_positionner_size (clip, 1920, 1080));
+
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
