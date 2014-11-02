@@ -225,11 +225,13 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
           UDP_DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* FIXME 2.0: Remove multicast-group property */
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_MULTICAST_GROUP,
       g_param_spec_string ("multicast-group", "Multicast Group",
-          "The Address of multicast group to join. DEPRECATED: "
-          "Use address property instead", UDP_DEFAULT_MULTICAST_GROUP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "The Address of multicast group to join. (DEPRECATED: "
+          "Use address property instead)", UDP_DEFAULT_MULTICAST_GROUP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
+#endif
   g_object_class_install_property (gobject_class, PROP_MULTICAST_IFACE,
       g_param_spec_string ("multicast-iface", "Multicast Interface",
           "The network interface on which to join the multicast group",

@@ -311,11 +311,13 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    *
    * Since: 1.0.2
    */
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_FORCE_IPV4,
       g_param_spec_boolean ("force-ipv4", "Force IPv4",
           "Forcing the use of an IPv4 socket (DEPRECATED, has no effect anymore)",
-          DEFAULT_FORCE_IPV4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+          DEFAULT_FORCE_IPV4,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
+#endif
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QOS_DSCP,
       g_param_spec_int ("qos-dscp", "QoS diff srv code point",
           "Quality of Service, differentiated services code point (-1 default)",

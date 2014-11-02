@@ -200,10 +200,13 @@ gst_level_class_init (GstLevelClass * klass)
    *
    * Deprecated: use the #GstLevel:post-messages property
    */
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_MESSAGE,
       g_param_spec_boolean ("message", "message",
-          "Post a 'level' message for each passed interval (deprecated)",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Post a 'level' message for each passed interval "
+          "(deprecated, use the post-messages property instead)", TRUE,
+          G_PARAM_READWRITE | G_PARAM_DEPRECATED | G_PARAM_STATIC_STRINGS));
+#endif
   g_object_class_install_property (gobject_class, PROP_INTERVAL,
       g_param_spec_uint64 ("interval", "Interval",
           "Interval of time between message posts (in nanoseconds)",

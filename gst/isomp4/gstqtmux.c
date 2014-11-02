@@ -281,6 +281,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GParamFlags streamable_flags;
   const gchar *streamable_desc;
   gboolean streamable;
 #define STREAMABLE_DESC "If set to true, the output should be as if it is to "\
@@ -295,12 +296,14 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   gobject_class->get_property = gst_qt_mux_get_property;
   gobject_class->set_property = gst_qt_mux_set_property;
 
+  streamable_flags = G_PARAM_READWRITE | G_PARAM_CONSTRUCT;
   if (klass->format == GST_QT_MUX_FORMAT_ISML) {
     streamable_desc = STREAMABLE_DESC;
     streamable = DEFAULT_STREAMABLE;
   } else {
     streamable_desc =
         STREAMABLE_DESC " (DEPRECATED, only valid for fragmented MP4)";
+    streamable_flags |= G_PARAM_DEPRECATED;
     streamable = FALSE;
   }
 
@@ -323,7 +326,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
 #ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_DTS_METHOD,
       g_param_spec_enum ("dts-method", "dts-method",
-          "(DEPRECATED) Method to determine DTS time",
+          "Method to determine DTS time (DEPRECATED)",
           GST_TYPE_QT_MUX_DTS_METHOD, DEFAULT_DTS_METHOD,
           G_PARAM_DEPRECATED | G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
           G_PARAM_STATIC_STRINGS));
@@ -354,8 +357,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_STREAMABLE,
       g_param_spec_boolean ("streamable", "Streamable", streamable_desc,
-          streamable,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+          streamable, streamable_flags | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_qt_mux_request_new_pad);
