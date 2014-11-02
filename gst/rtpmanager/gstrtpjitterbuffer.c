@@ -3531,6 +3531,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->rtx_retry_timeout = g_value_get_int (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_RTX_MIN_RETRY_TIMEOUT:
+      JBUF_LOCK (priv);
+      priv->rtx_min_retry_timeout = g_value_get_int (value);
+      JBUF_UNLOCK (priv);
+      break;
     case PROP_RTX_RETRY_PERIOD:
       JBUF_LOCK (priv);
       priv->rtx_retry_period = g_value_get_int (value);
@@ -3615,6 +3620,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_RTX_RETRY_TIMEOUT:
       JBUF_LOCK (priv);
       g_value_set_int (value, priv->rtx_retry_timeout);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_MIN_RETRY_TIMEOUT:
+      JBUF_LOCK (priv);
+      g_value_set_int (value, priv->rtx_min_retry_timeout);
       JBUF_UNLOCK (priv);
       break;
     case PROP_RTX_RETRY_PERIOD:
