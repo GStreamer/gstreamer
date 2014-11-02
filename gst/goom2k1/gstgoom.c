@@ -191,8 +191,11 @@ gst_goom_reset (GstGoom * goom)
 
   GST_OBJECT_LOCK (goom);
   goom->proportion = 1.0;
-  goom->earliest_time = -1;
+  goom->earliest_time = GST_CLOCK_TIME_NONE;
   GST_OBJECT_UNLOCK (goom);
+
+  goom->dropped = 0;
+  goom->processed = 0;
 }
 
 static gboolean
@@ -517,7 +520,6 @@ gst_goom_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   while (TRUE) {
     const guint16 *data;
-    gboolean need_skip;
     guchar *out_frame;
     gint i;
     guint avail, to_flush;
@@ -544,7 +546,10 @@ gst_goom_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       timestamp += gst_util_uint64_scale_int (dist, GST_SECOND, goom->rate);
     }
 
-    if (timestamp != -1) {
+    /* check for QoS, don't compute buffers that are known to be late */
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      GstClockTime earliest_time;
+      gdouble proportion;
       gint64 qostime;
 
       qostime = gst_segment_to_running_time (&goom->segment, GST_FORMAT_TIME,
@@ -552,17 +557,33 @@ gst_goom_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       qostime += goom->duration;
 
       GST_OBJECT_LOCK (goom);
-      /* check for QoS, don't compute buffers that are known to be late */
-      need_skip = goom->earliest_time != -1 && qostime <= goom->earliest_time;
+      earliest_time = goom->earliest_time;
+      proportion = goom->proportion;
       GST_OBJECT_UNLOCK (goom);
 
-      if (need_skip) {
-        GST_WARNING_OBJECT (goom,
+      if (GST_CLOCK_TIME_IS_VALID (earliest_time) && qostime <= earliest_time) {
+        GstClockTime stream_time, jitter;
+        GstMessage *qos_msg;
+
+        GST_DEBUG_OBJECT (goom,
             "QoS: skip ts: %" GST_TIME_FORMAT ", earliest: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (qostime), GST_TIME_ARGS (goom->earliest_time));
+            GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
+
+        ++goom->dropped;
+        stream_time = gst_segment_to_stream_time (&goom->segment,
+            GST_FORMAT_TIME, timestamp);
+        jitter = GST_CLOCK_DIFF (qostime, earliest_time);
+        qos_msg = gst_message_new_qos (GST_OBJECT (goom), FALSE, qostime,
+            stream_time, timestamp, GST_BUFFER_DURATION (buffer));
+        gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
+        gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
+            goom->processed, goom->dropped);
+        gst_element_post_message (GST_ELEMENT (goom), qos_msg);
         goto skip;
       }
     }
+
+    ++goom->processed;
 
     /* get next GOOM_SAMPLES, we have at least this amount of samples */
     data =

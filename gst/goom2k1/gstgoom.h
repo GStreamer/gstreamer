@@ -59,6 +59,9 @@ struct _GstGoom
   guint outsize;
   GstBufferPool *pool;
 
+  guint dropped;        /* frames dropped / not dropped */
+  guint processed;
+
   /* samples per frame */
   guint spf;
   /* bytes per frame */
