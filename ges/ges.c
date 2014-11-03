@@ -18,6 +18,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/* TODO
+ * Add a deinit function
+ *
+ * Do not forget to
+ *  + g_ptr_array_unref (new_paths);
+ *  + g_hash_table_unref (tried_uris);
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -155,6 +162,12 @@ ges_init_get_option_group (void)
           (gpointer) parse_goption_arg,
           "Print the GStreamer Editing Services version",
         NULL},
+    {"sample-paths", 'P', 0, G_OPTION_ARG_CALLBACK,
+          &ges_add_missing_uri_relocation_path,
+        "List of pathes to look assets in if they were moved"},
+    {"sample-path-recurse", 'R', 0, G_OPTION_ARG_CALLBACK,
+          &ges_add_missing_uri_relocation_path,
+        "Same as above, but recursing into the folder"},
     {NULL}
   };
 

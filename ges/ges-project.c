@@ -46,6 +46,9 @@
 #include "ges.h"
 #include "ges-internal.h"
 
+static GPtrArray *new_paths = NULL;
+static GHashTable *tried_uris = NULL;
+
 /* TODO We should rely on both extractable_type and @id to identify
  * a Asset, not only @id
  */
@@ -249,6 +252,105 @@ ges_project_extract (GESAsset * project, GError ** error)
   return NULL;
 }
 
+static void
+_add_media_new_paths_recursing (const gchar * value)
+{
+  GFileInfo *info;
+  GFileEnumerator *fenum;
+  GFile *file = g_file_new_for_uri (value);
+
+  if (!(fenum = g_file_enumerate_children (file,
+              "standard::*", G_FILE_QUERY_INFO_NONE, NULL, NULL))) {
+    GST_INFO ("%s is not a folder", value);
+
+    goto done;
+  }
+
+  GST_INFO ("Adding folder: %s", value);
+  g_ptr_array_add (new_paths, g_strdup (value));
+  for (info = g_file_enumerator_next_file (fenum, NULL, NULL);
+      info; info = g_file_enumerator_next_file (fenum, NULL, NULL)) {
+
+    if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY) {
+      GFile *f = g_file_enumerator_get_child (fenum, info);
+      gchar *uri = g_file_get_uri (f);
+
+      _add_media_new_paths_recursing (uri);
+      gst_object_unref (f);
+      g_free (uri);
+    }
+  }
+
+done:
+  gst_object_unref (file);
+  if (fenum)
+    gst_object_unref (fenum);
+}
+
+
+gboolean
+ges_add_missing_uri_relocation_path (const gchar * option_name,
+    const gchar * value, gpointer udata, GError ** error)
+{
+  g_return_val_if_fail (gst_uri_is_valid (value), FALSE);
+
+  if (new_paths == NULL)
+    new_paths = g_ptr_array_new_with_free_func (g_free);
+
+  g_print ("\n\nOption name %s\n\n", option_name);
+  if (g_strcmp0 (option_name, "--sample-path-recurse") == 0 ||
+      g_strcmp0 (option_name, "-R") == 0) {
+    _add_media_new_paths_recursing (value);
+  } else {
+    GST_INFO ("Adding folder: %s", value);
+    g_ptr_array_add (new_paths, g_strdup (value));
+  }
+
+  return TRUE;
+}
+
+static gchar *
+ges_missing_uri_default (GESProject * self, GError * error,
+    GESAsset * wrong_asset)
+{
+  guint i;
+  const gchar *old_uri = ges_asset_get_id (wrong_asset);
+
+  if (new_paths == NULL)
+    return NULL;
+
+  if (tried_uris == NULL)
+    tried_uris = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+
+  for (i = 0; i < new_paths->len; i++) {
+    gchar *basename, *res;
+
+    basename = g_path_get_basename (old_uri);
+    res = g_build_filename (new_paths->pdata[i], basename, NULL);
+    g_free (basename);
+
+    if (g_strcmp0 (old_uri, res) == 0) {
+      g_hash_table_add (tried_uris, res);
+    } else if (g_hash_table_lookup (tried_uris, res)) {
+      GST_DEBUG_OBJECT (self, "File already tried: %s", res);
+      g_free (res);
+    } else {
+      g_hash_table_add (tried_uris, g_strdup (res));
+      GST_DEBUG_OBJECT (self, "Trying: %s\n", res);
+      return res;
+    }
+  }
+
+  return NULL;
+}
+
+static void
+ges_uri_assets_validate_uri (const gchar * nid)
+{
+  if (tried_uris)
+    g_hash_table_remove (tried_uris, nid);
+}
+
 /* GObject vmethod implementation */
 static void
 _dispose (GObject * object)
@@ -318,7 +420,7 @@ ges_project_class_init (GESProjectClass * klass)
   g_type_class_add_private (klass, sizeof (GESProjectPrivate));
 
   klass->asset_added = NULL;
-  klass->missing_uri = NULL;
+  klass->missing_uri = ges_missing_uri_default;
   klass->loading_error = NULL;
   klass->asset_removed = NULL;
   object_class->get_property = (GObjectGetPropertyFunc) _get_property;

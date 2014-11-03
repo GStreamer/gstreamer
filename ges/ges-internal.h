@@ -183,6 +183,10 @@ G_GNUC_INTERNAL  gchar * ges_project_try_updating_id              (GESProject *s
 G_GNUC_INTERNAL  void ges_project_add_loading_asset               (GESProject *project,
                                                                    GType extractable_type,
                                                                    const gchar *id);
+G_GNUC_INTERNAL  gboolean ges_add_missing_uri_relocation_path     (const gchar * option_name,
+                                                                   const gchar * value,
+                                                                   gpointer udata,
+                                                                   GError ** error);
 
 /************************************************
  *                                              *

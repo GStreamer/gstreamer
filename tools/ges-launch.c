@@ -43,9 +43,7 @@ static gboolean disable_mixing = FALSE;
 static GESPipeline *pipeline = NULL;
 static gboolean seenerrors = FALSE;
 static gchar *save_path = NULL;
-static GPtrArray *new_paths = NULL;
 static GMainLoop *mainloop;
-static GHashTable *tried_uris;
 static GESTrackType track_types = GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO;
 static GESTimeline *timeline;
 static gboolean needs_set_state;
@@ -94,56 +92,6 @@ get_flags_from_string (GType type, const gchar * str_flags)
 }
 
 
-static void
-_add_media_new_paths_recursing (const gchar * value)
-{
-  GFileInfo *info;
-  GFileEnumerator *fenum;
-  GFile *file = g_file_new_for_uri (value);
-
-  if (!(fenum = g_file_enumerate_children (file,
-              "standard::*", G_FILE_QUERY_INFO_NONE, NULL, NULL))) {
-    GST_INFO ("%s is not a folder", value);
-
-    goto done;
-  }
-
-  GST_INFO ("Adding folder: %s", value);
-  g_ptr_array_add (new_paths, g_strdup (value));
-  for (info = g_file_enumerator_next_file (fenum, NULL, NULL);
-      info; info = g_file_enumerator_next_file (fenum, NULL, NULL)) {
-
-    if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY) {
-      GFile *f = g_file_enumerator_get_child (fenum, info);
-      gchar *uri = g_file_get_uri (f);
-
-      _add_media_new_paths_recursing (uri);
-      gst_object_unref (f);
-      g_free (uri);
-    }
-  }
-
-done:
-  gst_object_unref (file);
-  if (fenum)
-    gst_object_unref (fenum);
-}
-
-static gboolean
-_add_media_path (const gchar * option_name, const gchar * value,
-    gpointer udata, GError ** error)
-{
-  g_return_val_if_fail (gst_uri_is_valid (value), FALSE);
-
-  if (g_strcmp0 (option_name, "--sample-path-recurse") == 0) {
-    _add_media_new_paths_recursing (value);
-  } else {
-    GST_INFO ("Adding folder: %s", value);
-    g_ptr_array_add (new_paths, g_strdup (value));
-  }
-
-  return TRUE;
-}
 
 static gboolean
 parse_track_type (const gchar * option_name, const gchar * value,
@@ -173,46 +121,6 @@ thumbnail_cb (gpointer pipeline)
   g_free (filename);
 
   return res;
-}
-
-gchar *
-ges_launch_get_new_uri_from_wrong_uri (const gchar * old_uri)
-{
-  gint i;
-
-  for (i = 0; i < new_paths->len; i++) {
-    gchar *basename, *res;
-
-    basename = g_path_get_basename (old_uri);
-    res = g_build_filename (new_paths->pdata[i], basename, NULL);
-    g_free (basename);
-
-    if (g_strcmp0 (old_uri, res) == 0) {
-      g_hash_table_add (tried_uris, res);
-    } else if (g_hash_table_lookup (tried_uris, res)) {
-      GST_DEBUG ("File already tried: %s\n", res);
-      g_free (res);
-    } else {
-      g_hash_table_add (tried_uris, g_strdup (res));
-      return res;
-    }
-  }
-
-  return NULL;
-}
-
-void
-ges_launch_validate_uri (const gchar * nid)
-{
-  g_hash_table_remove (tried_uris, nid);
-}
-
-static gchar *
-source_moved_cb (GESProject * project, GError * error, GESAsset * asset)
-{
-  const gchar *old_uri = ges_asset_get_id (asset);
-
-  return ges_launch_get_new_uri_from_wrong_uri (old_uri);
 }
 
 static void
@@ -312,10 +220,6 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri,
   guint i, clip_added_sigid = 0;
   GstClockTime next_trans_dur = 0;
   GESProject *project = ges_project_new (proj_uri);
-
-  if (new_paths->len)
-    g_signal_connect (project, "missing-uri",
-        G_CALLBACK (source_moved_cb), NULL);
 
   g_signal_connect (project, "error-loading-asset",
       G_CALLBACK (error_loading_asset_cb), NULL);
@@ -822,11 +726,6 @@ main (int argc, gchar ** argv)
         "Output status information and property notifications", NULL},
     {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
         "Do not output status information of <type>", "<type1>,<type2>,..."},
-    {"sample-paths", 'P', 0, G_OPTION_ARG_CALLBACK, &_add_media_path,
-        "List of pathes to look assets in if they were moved"},
-    {"sample-path-recurse", 'R', 0, G_OPTION_ARG_CALLBACK,
-          &_add_media_path,
-        "Same as above, but recursing into the folder"},
     {"track-types", 'p', 0, G_OPTION_ARG_CALLBACK, &parse_track_type,
         "Defines the track types to be created"},
     {"mute", 0, 0, G_OPTION_ARG_NONE, &mute,
@@ -859,7 +758,6 @@ main (int argc, gchar ** argv)
 
   setlocale (LC_ALL, "");
 
-  new_paths = g_ptr_array_new_with_free_func (g_free);
   ctx = g_option_context_new ("- plays or renders a timeline.");
   g_option_context_set_summary (ctx,
       "ges-launch renders a timeline, which can be specified on the commandline,\n"
@@ -898,6 +796,7 @@ main (int argc, gchar ** argv)
       "             -f \"application/ogg:video/x-theora|<presence>:audio/x-vorbis\"");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
+  g_option_context_add_group (ctx, ges_init_get_option_group ());
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_printerr ("Error initializing: %s\n", err->message);
@@ -926,7 +825,6 @@ main (int argc, gchar ** argv)
     return ges_validate_print_action_types ((const gchar **) argv + 1,
         argc - 1);
 
-  tried_uris = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
   if (((!load_path && !scenario && (argc < 4)))) {
     g_printf ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
@@ -1054,9 +952,6 @@ main (int argc, gchar ** argv)
   validate_res = ges_validate_clean (GST_PIPELINE (pipeline));
   if (seenerrors == FALSE)
     seenerrors = validate_res;
-
-  g_hash_table_unref (tried_uris);
-  g_ptr_array_unref (new_paths);
 
 #ifdef G_OS_UNIX
   g_source_remove (signal_watch_id);

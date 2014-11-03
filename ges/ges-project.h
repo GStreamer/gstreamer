@@ -59,7 +59,7 @@ struct _GESProjectClass
                               GESAsset   * asset);
   void     (*asset_removed)  (GESProject * self,
                               GESAsset   * asset);
-  gboolean (*missing_uri)    (GESProject * self,
+  gchar *  (*missing_uri)    (GESProject * self,
                               GError     * error,
                               GESAsset   * wrong_asset);
   gboolean (*loading_error)  (GESProject * self,
