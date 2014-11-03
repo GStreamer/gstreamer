@@ -61,8 +61,9 @@ G_DEFINE_TYPE (GstV4l2BufferPool, gst_v4l2_buffer_pool, GST_TYPE_BUFFER_POOL);
 
 enum _GstV4l2BufferPoolAcquireFlags
 {
-  GST_V4L2_POOL_ACQUIRE_FLAG_RESURECT = GST_BUFFER_POOL_ACQUIRE_FLAG_LAST,
-  GST_V4L2_BUFFER_POOL_ACQUIRE_FAG_LAST
+  GST_V4L2_BUFFER_POOL_ACQUIRE_FLAG_RESURRECT =
+      GST_BUFFER_POOL_ACQUIRE_FLAG_LAST,
+  GST_V4L2_BUFFER_POOL_ACQUIRE_FLAG_LAST
 };
 
 static void gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool,
@@ -596,7 +597,7 @@ gst_v4l2_buffer_pool_group_released (GstV4l2BufferPool * pool)
   GST_DEBUG_OBJECT (pool, "A buffer was lost, reallocating it");
 
   params.flags =
-      (GstBufferPoolAcquireFlags) GST_V4L2_POOL_ACQUIRE_FLAG_RESURECT;
+      (GstBufferPoolAcquireFlags) GST_V4L2_BUFFER_POOL_ACQUIRE_FLAG_RESURRECT;
   ret =
       gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (pool), &buffer, &params);
 
@@ -1150,7 +1151,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   GST_DEBUG_OBJECT (pool, "acquire");
 
   /* If this is being called to resurect a lost buffer */
-  if (params && params->flags & GST_V4L2_POOL_ACQUIRE_FLAG_RESURECT) {
+  if (params && params->flags & GST_V4L2_BUFFER_POOL_ACQUIRE_FLAG_RESURRECT) {
     ret = pclass->acquire_buffer (bpool, buffer, params);
     goto done;
   }
