@@ -148,8 +148,9 @@ gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
     gst_video_resampler_clear (&tresamp);
     gst_video_resampler_clear (&bresamp);
   } else {
-    gst_video_resampler_init (&scale->resampler, method, flags, out_size,
-        n_taps, 0.0, in_size, out_size, options);
+    gst_video_resampler_init (&scale->resampler, method,
+        GST_VIDEO_RESAMPLER_FLAG_NONE, out_size, n_taps, 0.0, in_size, out_size,
+        options);
   }
 
   if (out_size == 1)
