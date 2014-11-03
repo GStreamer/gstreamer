@@ -3643,11 +3643,8 @@ probe_stopped:
       GST_PAD_STREAM_UNLOCK (pad);
 
     /* if a probe dropped, we don't sent it further but assume that the probe
-     * answered the query and return TRUE */
-    if (ret == GST_FLOW_CUSTOM_SUCCESS)
-      res = TRUE;
-    else
-      res = FALSE;
+     * did not answer the query and return FALSE */
+    res = FALSE;
 
     return res;
   }
@@ -3760,11 +3757,8 @@ probe_stopped:
     GST_OBJECT_UNLOCK (pad);
 
     /* if a probe dropped, we don't sent it further but assume that the probe
-     * answered the query and return TRUE */
-    if (ret == GST_FLOW_CUSTOM_SUCCESS)
-      res = TRUE;
-    else
-      res = FALSE;
+     * did not answer the query and return FALSE */
+    res = FALSE;
 
     return res;
   }
