@@ -74,7 +74,10 @@ struct _GstVideoConverter
   gint out_height;
   gint out_maxwidth;
   gint out_maxheight;
-  gint v_scale_width;
+
+  gint current_pstride;
+  gint current_width;
+  GstVideoFormat current_format;
 
   gint in_bits;
   gint out_bits;
@@ -117,7 +120,11 @@ struct _GstVideoConverter
   GstLineCache *pack_lines;
 
   GstVideoScaler *h_scaler;
+  gint h_scale_format;
   GstVideoScaler *v_scaler;
+  gint v_scale_width;
+  gint v_scale_format;
+  gint pack_pstride;
 
   const GstVideoFrame *src;
   GstVideoFrame *dest;
@@ -290,19 +297,33 @@ get_temp_line (GstVideoConverter * convert, gint offset)
 {
   gpointer tmpline;
 
-  tmpline = (guint32 *) convert->tmplines[convert->tmplines_idx] + offset;
+  tmpline = (guint8 *) convert->tmplines[convert->tmplines_idx] +
+      (offset * convert->pack_pstride);
   convert->tmplines_idx = (convert->tmplines_idx + 1) % convert->n_tmplines;
 
   return tmpline;
 }
 
 static GstLineCacheNeedLineFunc
+chain_unpack_line (GstVideoConverter * convert)
+{
+  convert->current_format = convert->in_info.finfo->format;
+  convert->current_pstride = convert->in_bits >> 1;
+  return (GstLineCacheNeedLineFunc) do_unpack_lines;
+}
+
+static GstLineCacheNeedLineFunc
 chain_upsample (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
 {
-  convert->upsample_lines = gst_line_cache_new ();
-  gst_line_cache_set_need_line_func (convert->upsample_lines,
-      need_line, convert, NULL);
-  return (GstLineCacheNeedLineFunc) do_upsample_lines;
+  video_converter_compute_resample (convert);
+
+  if (convert->upsample) {
+    convert->upsample_lines = gst_line_cache_new ();
+    gst_line_cache_set_need_line_func (convert->upsample_lines,
+        need_line, convert, NULL);
+    need_line = (GstLineCacheNeedLineFunc) do_upsample_lines;
+  }
+  return need_line;
 }
 
 static GstLineCacheNeedLineFunc
@@ -311,6 +332,8 @@ chain_convert (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
   convert->convert_lines = gst_line_cache_new ();
   gst_line_cache_set_need_line_func (convert->convert_lines,
       need_line, convert, NULL);
+  convert->current_format = convert->out_info.finfo->format;
+  convert->current_pstride = convert->out_bits >> 1;
   return (GstLineCacheNeedLineFunc) do_convert_lines;
 }
 
@@ -335,6 +358,9 @@ chain_hscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
   convert->h_scaler =
       gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
       convert->in_width, convert->out_width, convert->config);
+
+  convert->current_width = convert->out_width;
+  convert->h_scale_format = convert->current_format;
 
   return (GstLineCacheNeedLineFunc) do_hscale_lines;
 }
@@ -364,6 +390,8 @@ chain_vscale (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
   convert->v_scaler =
       gst_video_scaler_new (method, flags, taps, convert->in_height,
       convert->out_height, convert->config);
+  convert->v_scale_width = convert->current_width;
+  convert->v_scale_format = convert->current_format;
 
   return (GstLineCacheNeedLineFunc) do_vscale_lines;
 }
@@ -372,10 +400,13 @@ static GstLineCacheNeedLineFunc
 chain_downsample (GstVideoConverter * convert,
     GstLineCacheNeedLineFunc need_line)
 {
-  convert->downsample_lines = gst_line_cache_new ();
-  gst_line_cache_set_need_line_func (convert->downsample_lines,
-      need_line, convert, NULL);
-  return (GstLineCacheNeedLineFunc) do_downsample_lines;
+  if (convert->downsample) {
+    convert->downsample_lines = gst_line_cache_new ();
+    gst_line_cache_set_need_line_func (convert->downsample_lines,
+        need_line, convert, NULL);
+    need_line = (GstLineCacheNeedLineFunc) do_downsample_lines;
+  }
+  return need_line;
 }
 
 static GstLineCacheNeedLineFunc
@@ -386,6 +417,7 @@ chain_pack (GstVideoConverter * convert, GstLineCacheNeedLineFunc need_line)
       need_line, convert, NULL);
   gst_line_cache_set_free_line_func (convert->pack_lines,
       (GstLineCacheFreeLineFunc) free_pack_line, convert, NULL);
+  convert->pack_pstride = convert->current_pstride;
   return NULL;
 }
 
@@ -505,17 +537,16 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
 
   s2 = convert->in_width * convert->out_height;
   s3 = convert->out_width * convert->in_height;
-  convert->v_scale_width = convert->in_width;
 
   video_converter_compute_matrix (convert);
-  video_converter_compute_resample (convert);
+
+  convert->current_format = GST_VIDEO_INFO_FORMAT (in_info);
+  convert->current_width = convert->in_width;
 
   /* unpack */
-  need_line = (GstLineCacheNeedLineFunc) do_unpack_lines;
-
+  need_line = chain_unpack_line (convert);
   /* upsample chroma */
-  if (convert->upsample)
-    need_line = chain_upsample (convert, need_line);
+  need_line = chain_upsample (convert, need_line);
 
   if (s3 <= s2) {
     /* horizontal scaling first produces less pixels */
@@ -525,7 +556,6 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
     }
     if (convert->in_width != convert->out_width) {
       need_line = chain_hscale (convert, need_line);
-      convert->v_scale_width = convert->out_width;
     }
     if (convert->in_width > convert->out_width) {
       /* downscaling, convert after scaling then */
@@ -551,8 +581,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
     }
   }
   /* downsample chroma */
-  if (convert->downsample)
-    need_line = chain_downsample (convert, need_line);
+  need_line = chain_downsample (convert, need_line);
   /* pack into final format */
   need_line = chain_pack (convert, need_line);
 
@@ -1270,7 +1299,7 @@ do_hscale_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
   destline = get_temp_line (convert, convert->out_x);
 
   GST_DEBUG ("hresample line %d", line);
-  gst_video_scaler_horizontal (convert->h_scaler, GST_VIDEO_FORMAT_AYUV,
+  gst_video_scaler_horizontal (convert->h_scaler, convert->h_scale_format,
       lines[0], destline, 0, convert->out_width);
 
   gst_line_cache_add_line (cache, line, destline);
@@ -1295,7 +1324,7 @@ do_vscale_lines (GstLineCache * cache, gint line, GstVideoConverter * convert)
   /* FIXME with 1-tap (nearest), we can simply copy the input line. We need
    * to be careful to not do in-place modifications later */
   GST_DEBUG ("vresample line %d %d-%d", line, sline, sline + n_lines - 1);
-  gst_video_scaler_vertical (convert->v_scaler, GST_VIDEO_FORMAT_AYUV,
+  gst_video_scaler_vertical (convert->v_scaler, convert->v_scale_format,
       lines, destline, cline, convert->v_scale_width);
 
   gst_line_cache_add_line (cache, line, destline);
@@ -1372,8 +1401,8 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
   gint i;
   gint out_maxwidth, out_maxheight;
   gint out_x, out_y, out_height;
-  gint pack_lines;
-  gint r_border, out_width;
+  gint pack_lines, pstride;
+  gint r_border, out_width, lb_width, rb_width;
 
   out_width = convert->out_width;
   out_height = convert->out_height;
@@ -1383,12 +1412,15 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
   out_x = convert->out_x;
   out_y = convert->out_y;
 
-  r_border = out_x + out_width;
-
   convert->src = src;
   convert->dest = dest;
 
   pack_lines = convert->lines;  /* only 1 for now */
+  pstride = convert->pack_pstride;
+
+  r_border = (out_x + out_width) * pstride;
+  rb_width = out_maxwidth * pstride - r_border;
+  lb_width = out_x * pstride;
 
   if (convert->borderline) {
     /* FIXME we should try to avoid PACK_FRAME */
@@ -1398,19 +1430,19 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
 
   for (i = 0; i < out_height; i += pack_lines) {
     gpointer *lines;
-    guint32 *l;
+    guint8 *l;
 
     /* load the lines needed to pack */
     lines = gst_line_cache_get_lines (convert->pack_lines, i, pack_lines);
 
     /* take away the border */
-    l = ((guint32 *) lines[0]) - out_x;
+    l = ((guint8 *) lines[0]) - lb_width;
 
     if (convert->borderline) {
       /* FIXME this can be optimized if we make separate temp lines with
        * border for the output lines */
-      memcpy (l, convert->borderline, out_x * 4);
-      memcpy (l + r_border, convert->borderline, (out_maxwidth - r_border) * 4);
+      memcpy (l, convert->borderline, lb_width);
+      memcpy (l + r_border, convert->borderline, rb_width);
     }
     /* and pack into destination */
     /* FIXME, we should be able to convert directly into the destination line
