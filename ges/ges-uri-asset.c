@@ -33,6 +33,7 @@
 #include "ges-track-element-asset.h"
 
 static GHashTable *parent_newparent_table = NULL;
+
 static void
 initable_iface_init (GInitableIface * initable_iface)
 {
@@ -491,6 +492,10 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
     info = gst_discoverer_discover_uri (discoverer, uri, &lerror);
   }
 
+  ges_asset_cache_put (gst_object_ref (asset), NULL);
+  ges_uri_clip_asset_set_info (asset, info);
+  ges_asset_cache_set_loaded (GES_TYPE_URI_CLIP, uri, lerror);
+
   if (info == NULL || lerror != NULL) {
     gst_object_unref (asset);
     if (lerror)
@@ -498,10 +503,6 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
 
     return NULL;
   }
-
-  ges_asset_cache_put (gst_object_ref (asset), NULL);
-  ges_uri_clip_asset_set_info (asset, info);
-  ges_asset_cache_set_loaded (GES_TYPE_URI_CLIP, uri, lerror);
 
   return asset;
 }
