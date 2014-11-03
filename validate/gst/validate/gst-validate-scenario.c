@@ -186,6 +186,7 @@ gst_validate_action_new (void)
   GstValidateAction *action = g_slice_new0 (GstValidateAction);
 
   gst_validate_action_init (action);
+  action->playback_time = GST_CLOCK_TIME_NONE;
 
   return action;
 }
@@ -872,7 +873,8 @@ get_position (GstValidateScenario * scenario)
   _check_position (scenario, rate, position);
 
   if (act && (((rate > 0 && (GstClockTime) position >= act->playback_time) ||
-              (rate < 0 && (GstClockTime) position <= act->playback_time)) ||
+              (rate < 0 && (GstClockTime) position <= act->playback_time) ||
+              (act->playback_time == GST_CLOCK_TIME_NONE)) ||
           (GST_STATE (pipeline) < GST_STATE_PAUSED))) {
     GstValidateActionType *type;
 
@@ -1567,6 +1569,49 @@ gst_validate_scenario_finalize (GObject * object)
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->finalize (object);
 }
 
+static void
+_element_added_cb (GstBin * bin, GstElement * element,
+    GstValidateScenario * scenario)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+  GList *tmp;
+
+  /* Check if it's an element we track for a set-property action */
+  tmp = priv->actions;
+  while (tmp) {
+    GstValidateAction *action = (GstValidateAction *) tmp->data;
+    const gchar *name;
+
+    if (action->playback_time != GST_CLOCK_TIME_NONE)
+      break;
+    if (g_strcmp0 (action->type, "set-property"))
+      break;
+
+    GST_DEBUG_OBJECT (bin, "Checking action #%d %p (%s)", action->action_number,
+        action, action->type);
+    name = gst_structure_get_string (action->structure, "target-element-name");
+    if (!strcmp (name, GST_ELEMENT_NAME (element))) {
+      GstValidateActionType *action_type;
+      action_type = _find_action_type (action->type);
+      GST_DEBUG_OBJECT (element, "Executing set-property action");
+      if (action_type->execute (scenario, action)) {
+        priv->actions = g_list_remove_link (priv->actions, tmp);
+        gst_mini_object_unref (GST_MINI_OBJECT (action));
+        g_list_free (tmp);
+        tmp = priv->actions;
+      } else
+        tmp = tmp->next;
+    } else
+      tmp = tmp->next;
+  }
+
+  /* If it's a bin, listen to the child */
+  if (GST_IS_BIN (element)) {
+    g_signal_connect (element, "element-added", (GCallback) _element_added_cb,
+        scenario);
+  }
+}
+
 GstValidateScenario *
 gst_validate_scenario_factory_create (GstValidateRunner *
     runner, GstElement * pipeline, const gchar * scenario_name)
@@ -1588,6 +1633,9 @@ gst_validate_scenario_factory_create (GstValidateRunner *
       (GWeakNotify) _pipeline_freed_cb, scenario);
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (scenario),
       g_strdup (scenario_name));
+
+  g_signal_connect (pipeline, "element-added", (GCallback) _element_added_cb,
+      scenario);
 
   bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (bus);
