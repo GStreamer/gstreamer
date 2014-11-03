@@ -1143,7 +1143,7 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
 
         gst_video_frame_map (&converted_frame, &(pad->conversion_info),
             converted_buf, GST_MAP_READWRITE);
-        gst_video_converter_frame (pad->convert, &converted_frame, &frame);
+        gst_video_converter_frame (pad->convert, &frame, &converted_frame);
         gst_video_frame_unmap (&frame);
       } else {
         converted_frame = frame;
