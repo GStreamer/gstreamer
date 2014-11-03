@@ -236,7 +236,7 @@ gst_inter_video_src_set_caps (GstBaseSrc * base, GstCaps * caps)
   gst_video_frame_map (&src_frame, &black_info, src, GST_MAP_READ);
   gst_video_frame_map (&dest_frame, &intervideosrc->info, dest, GST_MAP_WRITE);
   converter = gst_video_converter_new (&black_info, &intervideosrc->info, NULL);
-  gst_video_converter_frame (converter, &dest_frame, &src_frame);
+  gst_video_converter_frame (converter, &src_frame, &dest_frame);
   gst_video_converter_free (converter);
   gst_video_frame_unmap (&src_frame);
   gst_video_frame_unmap (&dest_frame);
