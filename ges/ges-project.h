@@ -105,6 +105,8 @@ GList * ges_project_get_loading_assets          (GESProject * project);
 gboolean ges_project_add_encoding_profile       (GESProject *project,
                                                  GstEncodingProfile *profile);
 const GList *ges_project_list_encoding_profiles (GESProject *project);
+gboolean ges_add_missing_uri_relocation_uri    (const gchar * uri,
+                                                gboolean recurse);
 
 G_END_DECLS
 

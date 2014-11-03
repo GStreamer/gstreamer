@@ -287,24 +287,18 @@ done:
     gst_object_unref (fenum);
 }
 
-
 gboolean
-ges_add_missing_uri_relocation_path (const gchar * option_name,
-    const gchar * value, gpointer udata, GError ** error)
+ges_add_missing_uri_relocation_uri (const gchar * uri, gboolean recurse)
 {
-  g_return_val_if_fail (gst_uri_is_valid (value), FALSE);
+  g_return_val_if_fail (gst_uri_is_valid (uri), FALSE);
 
   if (new_paths == NULL)
     new_paths = g_ptr_array_new_with_free_func (g_free);
 
-  g_print ("\n\nOption name %s\n\n", option_name);
-  if (g_strcmp0 (option_name, "--sample-path-recurse") == 0 ||
-      g_strcmp0 (option_name, "-R") == 0) {
-    _add_media_new_paths_recursing (value);
-  } else {
-    GST_INFO ("Adding folder: %s", value);
-    g_ptr_array_add (new_paths, g_strdup (value));
-  }
+  if (recurse)
+    _add_media_new_paths_recursing (uri);
+  else
+    g_ptr_array_add (new_paths, g_strdup (uri));
 
   return TRUE;
 }

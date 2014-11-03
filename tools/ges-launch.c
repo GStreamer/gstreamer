@@ -682,6 +682,23 @@ _parse_encoding_profile (const gchar * format)
   return encoding_profile;
 }
 
+static gboolean
+_add_media_path (const gchar * option_name, const gchar * value,
+    gpointer udata, GError ** error)
+{
+  g_return_val_if_fail (gst_uri_is_valid (value), FALSE);
+
+  if (g_strcmp0 (option_name, "--sample-path-recurse") == 0 ||
+      g_strcmp0 (option_name, "-R") == 0) {
+    ges_add_missing_uri_relocation_uri (value, TRUE);
+  } else {
+    GST_INFO ("Adding folder: %s", value);
+    ges_add_missing_uri_relocation_uri (value, FALSE);
+  }
+
+  return TRUE;
+}
+
 int
 main (int argc, gchar ** argv)
 {
@@ -736,6 +753,11 @@ main (int argc, gchar ** argv)
         "The video sink used for playing back", "<videosink>"},
     {"audiosink", 'a', 0, G_OPTION_ARG_STRING, &audiosink,
         "The audio sink used for playing back", "<audiosink>"},
+    {"sample-paths", 'P', 0, G_OPTION_ARG_CALLBACK, &_add_media_path,
+        "List of pathes to look assets in if they were moved"},
+    {"sample-path-recurse", 'R', 0, G_OPTION_ARG_CALLBACK,
+          &_add_media_path,
+        "Same as above, but recursing into the folder"},
 #ifdef HAVE_GST_VALIDATE
     {"inspect-action-type", 'y', 0, G_OPTION_ARG_NONE, &inspect_action_type,
           "Inspect the avalaible action types with which to write scenarios"

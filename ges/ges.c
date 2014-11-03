@@ -129,6 +129,10 @@ parse_goption_arg (const gchar * s_opt,
   if (g_strcmp0 (s_opt, "--ges-version") == 0) {
     g_print ("GStreamer Editing Services version %s\n", PACKAGE_VERSION);
     exit (0);
+  } else if (g_strcmp0 (s_opt, "--ges-sample-paths") == 0) {
+    ges_add_missing_uri_relocation_uri (arg, FALSE);
+  } else if (g_strcmp0 (s_opt, "--ges-sample-path-recurse") == 0) {
+    ges_add_missing_uri_relocation_uri (arg, TRUE);
   }
 
   return TRUE;
@@ -162,11 +166,11 @@ ges_init_get_option_group (void)
           (gpointer) parse_goption_arg,
           "Print the GStreamer Editing Services version",
         NULL},
-    {"sample-paths", 'P', 0, G_OPTION_ARG_CALLBACK,
-          &ges_add_missing_uri_relocation_path,
+    {"ges-sample-paths", 0, 0, G_OPTION_ARG_CALLBACK,
+          (gpointer) parse_goption_arg,
         "List of pathes to look assets in if they were moved"},
-    {"sample-path-recurse", 'R', 0, G_OPTION_ARG_CALLBACK,
-          &ges_add_missing_uri_relocation_path,
+    {"ges-sample-path-recurse", 0, 0, G_OPTION_ARG_CALLBACK,
+          (gpointer) parse_goption_arg,
         "Same as above, but recursing into the folder"},
     {NULL}
   };

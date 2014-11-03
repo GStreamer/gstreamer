@@ -114,7 +114,7 @@ struct _GESUriSourceAssetClass
 };
 GstDiscovererStreamInfo * ges_uri_source_asset_get_stream_info     (GESUriSourceAsset *asset);
 const gchar * ges_uri_source_asset_get_stream_uri                  (GESUriSourceAsset *asset);
-const GESUriClipAsset *ges_uri_source_asset_get_filesource_asset (GESUriSourceAsset *asset);
+const GESUriClipAsset *ges_uri_source_asset_get_filesource_asset   (GESUriSourceAsset *asset);
 
 G_END_DECLS
 #endif /* _GES_URI_CLIP_ASSET */
