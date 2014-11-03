@@ -25,6 +25,15 @@
 #include <gst/check/gstcheck.h>
 #include <gst/app/gstappsink.h>
 #include <gst/app/gstappsrc.h>
+#include <gst/net/gstnetcontrolmessagemeta.h>
+
+#ifdef HAVE_GIO_UNIX_2_0
+#include <gio/gunixfdmessage.h>
+#endif /*  HAVE_GIO_UNIX_2_0 */
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 static gboolean
 g_socketpair (GSocketFamily family, GSocketType type, GSocketProtocol protocol,
@@ -139,29 +148,34 @@ g_socketpair (GSocketFamily family, GSocketType type, GSocketProtocol protocol,
   return TRUE;
 }
 
-GST_START_TEST (test_that_socketsrc_and_multisocketsink_are_symmetrical)
+static void
+setup_multisocketsink_and_socketsrc (SymmetryTest * st)
 {
-  SymmetryTest st = { 0 };
   GSocket *sockets[2] = { NULL, NULL };
   GError *err = NULL;
 
-  st.sink = gst_check_setup_element ("multisocketsink");
-  st.src = gst_check_setup_element ("socketsrc");
+  st->sink = gst_check_setup_element ("multisocketsink");
+  st->src = gst_check_setup_element ("socketsrc");
 
   fail_unless (g_socketpair (G_SOCKET_FAMILY_UNIX,
           G_SOCKET_TYPE_STREAM | SOCK_CLOEXEC, G_SOCKET_PROTOCOL_DEFAULT,
           sockets, &err));
 
-  g_object_set (st.src, "socket", sockets[0], NULL);
+  g_object_set (st->src, "socket", sockets[0], NULL);
   g_object_unref (sockets[0]);
   sockets[0] = NULL;
 
-  symmetry_test_setup (&st, st.sink, st.src);
+  symmetry_test_setup (st, st->sink, st->src);
 
-  g_signal_emit_by_name (st.sink, "add", sockets[1], NULL);
+  g_signal_emit_by_name (st->sink, "add", sockets[1], NULL);
   g_object_unref (sockets[1]);
   sockets[1] = NULL;
+}
 
+GST_START_TEST (test_that_socketsrc_and_multisocketsink_are_symmetrical)
+{
+  SymmetryTest st = { 0 };
+  setup_multisocketsink_and_socketsrc (&st);
   symmetry_test_assert_passthrough (&st,
       gst_buffer_new_wrapped (g_strdup ("hello"), 5));
   symmetry_test_teardown (&st);
@@ -265,7 +279,81 @@ GST_START_TEST (test_that_we_can_provide_new_socketsrc_sockets_during_signal)
   gst_object_unref (pipeline);
 }
 
-GST_END_TEST static Suite *
+GST_END_TEST
+
+#ifdef HAVE_GIO_UNIX_2_0
+static GSocketControlMessage *
+get_control_message_meta (GstBuffer * buf)
+{
+  GstMeta *meta;
+  gpointer iter_state = NULL;
+
+  while ((meta = gst_buffer_iterate_meta (buf, &iter_state)) != NULL) {
+    if (meta->info->api == GST_NET_CONTROL_MESSAGE_META_API_TYPE)
+      return ((GstNetControlMessageMeta *) meta)->message;
+  }
+  fail ("Expected GSocketControlMessage attached to buffer");
+  return NULL;
+}
+
+
+GST_START_TEST (test_that_multisocketsink_and_socketsrc_preserve_meta)
+{
+  GstBuffer *buf;
+  GSocketControlMessage *msg;
+  SymmetryTest st = { 0 };
+  char tmpfilename[] = "/tmp/tcp-test.XXXXXX";
+  GstSample *out;
+  int orig_fd, *new_fds, new_fds_len;
+  struct stat orig_stat, new_stat;
+
+  setup_multisocketsink_and_socketsrc (&st);
+
+  orig_fd = mkstemp (tmpfilename);
+  fail_unless (orig_fd > 0);
+  fail_unless (unlink (tmpfilename) == 0);
+  fstat (orig_fd, &orig_stat);
+
+  msg = g_unix_fd_message_new ();
+  fail_unless (g_unix_fd_message_append_fd ((GUnixFDMessage *) msg, orig_fd,
+          NULL));
+  close (orig_fd);
+  orig_fd = -1;
+
+  buf = gst_buffer_new_wrapped (g_strdup ("hello"), 5);
+  gst_buffer_add_net_control_message_meta (buf, msg);
+  g_clear_object (&msg);
+
+  fail_unless (gst_app_src_push_buffer (st.sink_src, buf) == GST_FLOW_OK);
+  buf = NULL;
+
+  out = gst_app_sink_pull_sample (st.src_sink);
+  fail_unless (out != NULL);
+
+  fail_unless (gst_buffer_get_size (gst_sample_get_buffer (out)) == 5);
+  fail_unless (gst_buffer_memcmp (gst_sample_get_buffer (out), 0, "hello",
+          5) == 0);
+
+  msg = get_control_message_meta (gst_sample_get_buffer (out));
+  fail_unless (g_socket_control_message_get_msg_type (msg) == SCM_RIGHTS);
+  new_fds = g_unix_fd_message_steal_fds ((GUnixFDMessage *) msg, &new_fds_len);
+  fail_unless (new_fds_len == 1);
+
+  fstat (new_fds[0], &new_stat);
+  fail_unless (orig_stat.st_ino, new_stat.st_ino);
+
+  close (new_fds[0]);
+  g_free (new_fds);
+
+  gst_sample_unref (out);
+
+  symmetry_test_teardown (&st);
+}
+
+GST_END_TEST;
+#endif /* HAVE_GIO_UNIX_2_0 */
+
+static Suite *
 socketintegrationtest_suite (void)
 {
   Suite *s = suite_create ("socketintegrationtest");
@@ -280,6 +368,10 @@ socketintegrationtest_suite (void)
       test_that_tcpserversink_and_tcpclientsrc_are_symmetrical);
   tcase_add_test (tc_chain,
       test_that_we_can_provide_new_socketsrc_sockets_during_signal);
+#ifdef HAVE_GIO_UNIX_2_0
+  tcase_add_test (tc_chain,
+      test_that_multisocketsink_and_socketsrc_preserve_meta);
+#endif /* HAVE_GIO_UNIX_2_0 */
 
   return s;
 }

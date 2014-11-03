@@ -593,9 +593,13 @@ libs_videoencoder_LDADD = \
 elements_multisocketsink_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 elements_multisocketsink_LDADD = $(GIO_LIBS) $(LDADD)
 
-pipelines_tcp_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GIO_CFLAGS) $(AM_CFLAGS)
-pipelines_tcp_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GIO_LIBS) $(LDADD) \
-    $(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la
+if USE_GIO_UNIX_2_0
+GIO_UNIX_2_0_DEFINED=-DHAVE_GIO_UNIX_2_0=1
+endif
+
+pipelines_tcp_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_NET_CFLAGS) $(GIO_CFLAGS) $(GIO_UNIX_2_0_CFLAGS) $(GIO_UNIX_2_0_DEFINED) $(AM_CFLAGS)
+pipelines_tcp_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_NET_LIBS) $(GIO_LIBS) $(LDADD) \
+    $(GIO_UNIX_2_0_LIBS) $(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la
 
 pipelines_gio_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_gio_LDADD = $(GIO_LIBS) $(LDADD)
