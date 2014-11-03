@@ -204,3 +204,45 @@ ges_version (guint * major, guint * minor, guint * micro, guint * nano)
   *micro = GES_VERSION_MICRO;
   *nano = GES_VERSION_NANO;
 }
+
+/**
+ * ges_init_check:
+ * @argc: (inout) (allow-none): pointer to application's argc
+ * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
+ * @err: pointer to a #GError to which a message will be posted on error
+ *
+ * Initializes the GStreamer Editing Services library, setting up internal path lists,
+ * and loading evrything needed.
+ *
+ * This function will return %FALSE if GES could not be initialized
+ * for some reason.
+ *
+ * Returns: %TRUE if GES could be initialized.
+ */
+gboolean
+ges_init_check (int *argc, char **argv[], GError ** err)
+{
+#ifndef GST_DISABLE_OPTION_PARSING
+  GOptionGroup *group;
+  GOptionContext *ctx;
+#endif
+  gboolean res;
+
+  if (ges_initialized) {
+    GST_DEBUG ("already initialized ges");
+    return TRUE;
+  }
+#ifndef GST_DISABLE_OPTION_PARSING
+  ctx = g_option_context_new ("- GStreamer Editing Services initialization");
+  g_option_context_set_ignore_unknown_options (ctx, TRUE);
+  g_option_context_set_help_enabled (ctx, FALSE);
+  group = ges_init_get_option_group ();
+  g_option_context_add_group (ctx, group);
+  res = g_option_context_parse (ctx, argc, argv, err);
+  g_option_context_free (ctx);
+#endif
+  if (!res)
+    return res;
+
+  return ges_init ();
+}
