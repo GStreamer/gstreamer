@@ -201,13 +201,15 @@ ges_pipeline_set_property (GObject * object, guint property_id,
 }
 
 static void
-_timeline_track_added_cb (GESTimeline *timeline, GESTrack *track, GESPipeline *pipeline)
+_timeline_track_added_cb (GESTimeline * timeline, GESTrack * track,
+    GESPipeline * pipeline)
 {
   _link_track (pipeline, track);
 }
 
 static void
-_timeline_track_removed_cb (GESTimeline *timeline, GESTrack *track, GESPipeline *pipeline)
+_timeline_track_removed_cb (GESTimeline * timeline, GESTrack * track,
+    GESPipeline * pipeline)
 {
   _unlink_track (pipeline, track);
 }
@@ -667,10 +669,15 @@ _link_track (GESPipeline * self, GESTrack * track)
   /* Get an existing chain or create it */
   if (!(chain = get_output_chain_for_track (self, track)))
     chain = new_output_chain_for_track (self, track);
+
+  if (chain->tee)
+    return;
+
   chain->srcpad = pad;
   gst_object_unref (pad);
 
   /* Adding tee */
+
   if (!chain->tee) {
     chain->tee = gst_element_factory_make ("tee", NULL);
     gst_bin_add (GST_BIN_CAST (self), chain->tee);
