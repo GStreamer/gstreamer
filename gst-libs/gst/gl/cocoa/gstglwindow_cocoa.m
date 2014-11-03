@@ -514,6 +514,7 @@ struct resize
 static void
 resize_cb (gpointer data)
 {
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   struct resize *resize_data = data;
   GstGLWindowCocoa *window_cocoa = resize_data->window;
   GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
@@ -540,6 +541,7 @@ resize_cb (gpointer data)
     [glContext flushBuffer];
   }
   gst_object_unref (context);
+  [pool release];
 }
 
 - (void)renewGState {
