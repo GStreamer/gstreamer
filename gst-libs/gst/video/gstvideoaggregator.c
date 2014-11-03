@@ -1043,7 +1043,7 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
         return FALSE;
       }
 
-      gst_video_converter_frame (pad->priv->convert, converted_frame, frame);
+      gst_video_converter_frame (pad->priv->convert, frame, converted_frame);
       pad->converted_buffer = converted_buf;
       gst_video_frame_unmap (frame);
       g_slice_free (GstVideoFrame, frame);
