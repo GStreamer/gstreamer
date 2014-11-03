@@ -164,7 +164,11 @@ check_audiorate =
 endif
 
 if USE_PLUGIN_TCP
+if USE_PLUGIN_APP
+check_tcp = elements/multifdsink elements/multisocketsink pipelines/tcp
+else
 check_tcp = elements/multifdsink elements/multisocketsink
+endif
 else
 check_tcp =
 endif
@@ -589,6 +593,10 @@ libs_videoencoder_LDADD = \
 
 elements_multisocketsink_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 elements_multisocketsink_LDADD = $(GIO_LIBS) $(LDADD)
+
+pipelines_tcp_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GIO_CFLAGS) $(AM_CFLAGS)
+pipelines_tcp_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GIO_LIBS) $(LDADD) \
+    $(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la
 
 pipelines_gio_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_gio_LDADD = $(GIO_LIBS) $(LDADD)
