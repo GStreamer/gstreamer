@@ -126,6 +126,9 @@
 				RelativePath="..\..\gst\tcp\gstmultifdsink.c">
 			</File>
 			<File
+				RelativePath="..\..\gst\tcp\gstsocketsrc.c">
+			</File>
+			<File
 				RelativePath="..\..\gst\tcp\gsttcp.c">
 			</File>
 			<File

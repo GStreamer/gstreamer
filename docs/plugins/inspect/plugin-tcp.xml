@@ -40,6 +40,21 @@
       </pads>
     </element>
     <element>
+      <name>socketsrc</name>
+      <longname>socket source</longname>
+      <class>Source/Network</class>
+      <description>Receive data from a socket</description>
+      <author>William Manley &lt;will@williammanley.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>tcpclientsink</name>
       <longname>TCP client sink</longname>
       <class>Sink/Network</class>

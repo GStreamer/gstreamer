@@ -18,10 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <unistd.h>
+#include <sys/socket.h>
+
 #include <gio/gio.h>
 #include <gst/check/gstcheck.h>
 #include <gst/app/gstappsink.h>
 #include <gst/app/gstappsrc.h>
+
+static gboolean
+g_socketpair (GSocketFamily family, GSocketType type, GSocketProtocol protocol,
+    GSocket * gsv[2], GError ** error);
 
 typedef struct
 {
@@ -102,6 +109,66 @@ symmetry_test_assert_passthrough (SymmetryTest * st, GstBuffer * in)
   gst_sample_unref (out);
 }
 
+static gboolean
+g_socketpair (GSocketFamily family, GSocketType type, GSocketProtocol protocol,
+    GSocket * gsv[2], GError ** error)
+{
+  int ret;
+  int sv[2];
+
+  ret = socketpair (family, type, protocol, sv);
+  if (ret != 0) {
+    g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "socketpair failed: %s",
+        g_strerror (errno));
+    return FALSE;
+  }
+
+  gsv[0] = g_socket_new_from_fd (sv[0], error);
+  if (gsv[0] == NULL) {
+    close (sv[0]);
+    close (sv[1]);
+    return FALSE;
+  }
+  gsv[1] = g_socket_new_from_fd (sv[1], error);
+  if (gsv[1] == NULL) {
+    g_object_unref (gsv[0]);
+    gsv[0] = NULL;
+    close (sv[1]);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+GST_START_TEST (test_that_socketsrc_and_multisocketsink_are_symmetrical)
+{
+  SymmetryTest st = { 0 };
+  GSocket *sockets[2] = { NULL, NULL };
+  GError *err = NULL;
+
+  st.sink = gst_check_setup_element ("multisocketsink");
+  st.src = gst_check_setup_element ("socketsrc");
+
+  fail_unless (g_socketpair (G_SOCKET_FAMILY_UNIX,
+          G_SOCKET_TYPE_STREAM | SOCK_CLOEXEC, G_SOCKET_PROTOCOL_DEFAULT,
+          sockets, &err));
+
+  g_object_set (st.src, "socket", sockets[0], NULL);
+  g_object_unref (sockets[0]);
+  sockets[0] = NULL;
+
+  symmetry_test_setup (&st, st.sink, st.src);
+
+  g_signal_emit_by_name (st.sink, "add", sockets[1], NULL);
+  g_object_unref (sockets[1]);
+  sockets[1] = NULL;
+
+  symmetry_test_assert_passthrough (&st,
+      gst_buffer_new_wrapped (g_strdup ("hello"), 5));
+  symmetry_test_teardown (&st);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_that_tcpclientsink_and_tcpserversrc_are_symmetrical)
 {
@@ -142,6 +209,8 @@ socketintegrationtest_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain,
+      test_that_socketsrc_and_multisocketsink_are_symmetrical);
   tcase_add_test (tc_chain,
       test_that_tcpclientsink_and_tcpserversrc_are_symmetrical);
   tcase_add_test (tc_chain,

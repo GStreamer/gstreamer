@@ -80,6 +80,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audiorate/gstaudiorate.h \
 	$(top_srcdir)/gst/audioresample/gstaudioresample.h \
 	$(top_srcdir)/gst/tcp/gstmultisocketsink.h \
+	$(top_srcdir)/gst/tcp/gstsocketsrc.h \
 	$(top_srcdir)/gst/tcp/gsttcpclientsrc.h \
 	$(top_srcdir)/gst/tcp/gsttcpclientsink.h \
 	$(top_srcdir)/gst/tcp/gsttcpserversrc.h \

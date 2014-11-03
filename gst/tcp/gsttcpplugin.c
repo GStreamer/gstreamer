@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "gstsocketsrc.h"
 #include "gsttcpclientsrc.h"
 #include "gsttcpclientsink.h"
 #include "gsttcpserversrc.h"
@@ -33,6 +34,9 @@ GST_DEBUG_CATEGORY (tcp_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_element_register (plugin, "socketsrc", GST_RANK_NONE,
+          GST_TYPE_SOCKET_SRC))
+    return FALSE;
   if (!gst_element_register (plugin, "tcpclientsink", GST_RANK_NONE,
           GST_TYPE_TCP_CLIENT_SINK))
     return FALSE;

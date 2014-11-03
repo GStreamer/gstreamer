@@ -486,6 +486,20 @@ gst_play_sink_plugin_init
 </SECTION>
 
 <SECTION>
+<FILE>element-socketsrc</FILE>
+<TITLE>socketsrc</TITLE>
+GstSocketSrc
+<SUBSECTION Standard>
+GstSocketSrcClass
+GST_SOCKET_SRC
+GST_SOCKET_SINK_CLASS
+GST_TYPE_SOCKET_SRC
+gst_socket_src_get_type
+GST_IS_SOCKET_SRC_CLASS
+GST_IS_SOCKET_SRC
+</SECTION>
+
+<SECTION>
 <FILE>element-streamsynchronizer</FILE>
 <TITLE>streamsynchronizer</TITLE>
 GstStreamSynchronizer
