@@ -34,8 +34,12 @@
 #include "video-orc.h"
 #include "video-scaler.h"
 
-#define S16_SCALE       12
-#define S16_SCALE_ROUND (1 << (S16_SCALE -1))
+#define SCALE_U8          12
+#define SCALE_U8_ROUND    (1 << (SCALE_U8 -1))
+#define SCALE_U8_LQ       6
+#define SCALE_U8_LQ_ROUND (1 << (SCALE_U8_LQ -1))
+#define SCALE_U16         12
+#define SCALE_U16_ROUND   (1 << (SCALE_U16 -1))
 
 #define LQ
 
@@ -321,7 +325,7 @@ make_s16_taps (GstVideoScaler * scale, gint precision)
 }
 
 static void
-video_scale_h_near_8888 (GstVideoScaler * scale,
+video_scale_h_near_u32 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width)
 {
   guint32 *s, *d;
@@ -331,7 +335,7 @@ video_scale_h_near_8888 (GstVideoScaler * scale,
 
 #if 0
   /* ORC is slower on this */
-  video_orc_resample_h_near_8888_lq (d, s, 0, scale->inc, width);
+  video_orc_resample_h_near_u32 (d, s, 0, scale->inc, width);
 #else
   {
     gint i;
@@ -345,7 +349,24 @@ video_scale_h_near_8888 (GstVideoScaler * scale,
 }
 
 static void
-video_scale_h_2tap_8888 (GstVideoScaler * scale,
+video_scale_h_near_u64 (GstVideoScaler * scale,
+    gpointer src, gpointer dest, guint dest_offset, guint width)
+{
+  guint64 *s, *d;
+  gint i;
+  guint32 *offset;
+
+  d = (guint64 *) dest + dest_offset;
+  s = (guint64 *) src;
+
+  offset = scale->resampler.offset + dest_offset;
+  for (i = 0; i < width; i++)
+    d[i] = s[offset[i]];
+}
+
+
+static void
+video_scale_h_2tap_4u8 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width)
 {
   guint32 *s, *d;
@@ -353,31 +374,31 @@ video_scale_h_2tap_8888 (GstVideoScaler * scale,
   d = (guint32 *) dest + dest_offset;
   s = (guint32 *) src;
 
-  video_orc_resample_h_2tap_8888_lq (d, s, 0, scale->inc, width);
+  video_orc_resample_h_2tap_4u8_lq (d, s, 0, scale->inc, width);
 }
 
 static void
-video_scale_h_ntap_8888 (GstVideoScaler * scale,
+video_scale_h_ntap_4u8 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width)
 {
   gint16 *taps;
   gint i, max_taps, count;
-  guint8 *d;
+  guint32 *d;
   guint32 *offset_n;
   guint32 *pixels;
   gint32 *temp;
 
   if (scale->taps_s16 == NULL)
 #ifdef LQ
-    make_s16_taps (scale, 6);
+    make_s16_taps (scale, SCALE_U8_LQ);
 #else
-    make_s16_taps (scale, S16_SCALE);
+    make_s16_taps (scale, SCALE_U8);
 #endif
 
   max_taps = scale->resampler.max_taps;
   offset_n = scale->offset_n;
 
-  d = (guint8 *) dest + 4 * dest_offset;
+  d = (guint32 *) dest + dest_offset;
 
   /* prepare the arrays FIXME, we can add this into ORC */
   count = width * max_taps;
@@ -391,43 +412,88 @@ video_scale_h_ntap_8888 (GstVideoScaler * scale,
 
 #ifdef LQ
   /* first pixels with first tap to t4 */
-  video_orc_resample_h_multaps_8_lq (temp, pixels, taps, count);
+  video_orc_resample_h_multaps_u8_lq (temp, pixels, taps, count);
   /* add other pixels with other taps to t4 */
-  video_orc_resample_h_muladdtaps_8_lq (temp, 0, pixels + width, count,
+  video_orc_resample_h_muladdtaps_u8_lq (temp, 0, pixels + width, count,
       taps + count, count * 2, count, max_taps - 1);
   /* scale and write final result */
-  video_orc_resample_scaletaps_8_lq (d, temp, count);
+  video_orc_resample_scaletaps_u8_lq (d, temp, count);
 #else
   /* first pixels with first tap to t4 */
-  video_orc_resample_h_multaps_8 (temp, pixels, taps, count);
+  video_orc_resample_h_multaps_u8 (temp, pixels, taps, count);
   /* add other pixels with other taps to t4 */
-  video_orc_resample_h_muladdtaps_8 (temp, 0, pixels + width, count,
+  video_orc_resample_h_muladdtaps_u8 (temp, 0, pixels + width, count,
       taps + count, count * 2, count, max_taps - 1);
   /* scale and write final result */
-  video_orc_resample_scaletaps_8 (d, temp, count);
+  video_orc_resample_scaletaps_u8 (d, temp, count);
 #endif
 }
 
 static void
-video_scale_v_near_8888 (GstVideoScaler * scale,
+video_scale_h_ntap_4u16 (GstVideoScaler * scale,
+    gpointer src, gpointer dest, guint dest_offset, guint width)
+{
+  gint16 *taps;
+  gint i, max_taps, count;
+  guint64 *d;
+  guint32 *offset_n;
+  guint64 *pixels;
+  gint32 *temp;
+
+  if (scale->taps_s16 == NULL)
+    make_s16_taps (scale, SCALE_U16);
+
+  max_taps = scale->resampler.max_taps;
+  offset_n = scale->offset_n;
+
+  d = (guint64 *) dest + dest_offset;
+
+  /* prepare the arrays FIXME, we can add this into ORC */
+  count = width * max_taps;
+  pixels = (guint64 *) scale->tmpline1;
+  for (i = 0; i < count; i++)
+    pixels[i] = ((guint64 *) src)[offset_n[i]];
+
+  temp = (gint32 *) scale->tmpline2;
+  taps = scale->taps_s16_4;
+  count = width * 4;
+
+  /* first pixels with first tap to t4 */
+  video_orc_resample_h_multaps_u16 (temp, pixels, taps, count);
+  /* add other pixels with other taps to t4 */
+  video_orc_resample_h_muladdtaps_u16 (temp, 0, pixels + width, count * 2,
+      taps + count, count * 2, count, max_taps - 1);
+  /* scale and write final result */
+  video_orc_resample_scaletaps_u16 (d, temp, count);
+}
+
+static void
+video_scale_v_near_u32 (GstVideoScaler * scale,
     gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
   orc_memcpy (dest, srcs[0], 4 * width);
 }
 
 static void
-video_scale_v_2tap_8888 (GstVideoScaler * scale,
+video_scale_v_near_u64 (GstVideoScaler * scale,
+    gpointer srcs[], gpointer dest, guint dest_offset, guint width)
+{
+  orc_memcpy (dest, srcs[0], 8 * width);
+}
+
+static void
+video_scale_v_2tap_4u8 (GstVideoScaler * scale,
     gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
   gint max_taps;
   guint32 *s1, *s2, *d;
-  guint64 p1;
+  gint16 p1;
 
   if (scale->taps_s16 == NULL)
 #ifdef LQ
-    make_s16_taps (scale, 8);
+    make_s16_taps (scale, SCALE_U8_LQ + 2);
 #else
-    make_s16_taps (scale, S16_SCALE);
+    make_s16_taps (scale, SCALE_U8);
 #endif
 
   max_taps = scale->resampler.max_taps;
@@ -438,10 +504,31 @@ video_scale_v_2tap_8888 (GstVideoScaler * scale,
   p1 = scale->taps_s16[dest_offset * max_taps + 1];
 
 #ifdef LQ
-  video_orc_resample_v_2tap_8_lq (d, s1, s2, p1, width * 4);
+  video_orc_resample_v_2tap_u8_lq (d, s1, s2, p1, width * 4);
 #else
-  video_orc_resample_v_2tap_8 (d, s1, s2, p1, width * 4);
+  video_orc_resample_v_2tap_u8 (d, s1, s2, p1, width * 4);
 #endif
+}
+
+static void
+video_scale_v_2tap_4u16 (GstVideoScaler * scale,
+    gpointer srcs[], gpointer dest, guint dest_offset, guint width)
+{
+  gint max_taps;
+  guint64 *s1, *s2, *d;
+  gint16 p1;
+
+  if (scale->taps_s16 == NULL)
+    make_s16_taps (scale, SCALE_U16);
+
+  max_taps = scale->resampler.max_taps;
+
+  d = (guint64 *) dest;
+  s1 = (guint64 *) srcs[0];
+  s2 = (guint64 *) srcs[1];
+  p1 = scale->taps_s16[dest_offset * max_taps + 1];
+
+  video_orc_resample_v_2tap_u16 (d, s1, s2, p1, width * 4);
 }
 
 #if 0
@@ -479,7 +566,7 @@ video_scale_h_4tap_8888 (GstVideoScaler * scale,
 #endif
 
 static void
-video_scale_v_4tap_8888 (GstVideoScaler * scale,
+video_scale_v_4tap_4u8 (GstVideoScaler * scale,
     gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
   gint max_taps;
@@ -489,9 +576,9 @@ video_scale_v_4tap_8888 (GstVideoScaler * scale,
 
   if (scale->taps_s16 == NULL)
 #ifdef LQ
-    make_s16_taps (scale, 6);
+    make_s16_taps (scale, SCALE_U8_LQ);
 #else
-    make_s16_taps (scale, S16_SCALE);
+    make_s16_taps (scale, SCALE_U8);
 #endif
 
   max_taps = scale->resampler.max_taps;
@@ -513,32 +600,33 @@ video_scale_v_4tap_8888 (GstVideoScaler * scale,
   p4 = taps[3];
 
 #ifdef LQ
-  video_orc_resample_v_4tap_8_lq (d, s1, s2, s3, s4, p1, p2, p3, p4, width * 4);
+  video_orc_resample_v_4tap_u8_lq (d, s1, s2, s3, s4, p1, p2, p3, p4,
+      width * 4);
 #else
-  video_orc_resample_v_4tap_8 (d, s1, s2, s3, s4, p1, p2, p3, p4, width * 4);
+  video_orc_resample_v_4tap_u8 (d, s1, s2, s3, s4, p1, p2, p3, p4, width * 4);
 #endif
 }
 
 static void
-video_scale_v_ntap_8888 (GstVideoScaler * scale,
+video_scale_v_ntap_4u8 (GstVideoScaler * scale,
     gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
   gint16 *taps;
   gint i, max_taps, count, src_inc;
-  guint8 *d;
+  guint32 *d;
   gint32 *temp;
 
   if (scale->taps_s16 == NULL)
 #ifdef LQ
-    make_s16_taps (scale, 6);
+    make_s16_taps (scale, SCALE_U8_LQ);
 #else
-    make_s16_taps (scale, S16_SCALE);
+    make_s16_taps (scale, SCALE_U8);
 #endif
 
   max_taps = scale->resampler.max_taps;
   taps = scale->taps_s16 + (scale->resampler.phase[dest_offset] * max_taps);
 
-  d = (guint8 *) dest;
+  d = (guint32 *) dest;
 
   if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
     src_inc = 2;
@@ -549,19 +637,53 @@ video_scale_v_ntap_8888 (GstVideoScaler * scale,
   count = width * 4;
 
 #ifdef LQ
-  video_orc_resample_v_multaps_8_lq (temp, srcs[0], taps[0], count);
-  for (i = 1; i < max_taps - 1; i++) {
-    video_orc_resample_v_muladdtaps_8_lq (temp, srcs[i * src_inc], taps[i],
+  video_orc_resample_v_multaps_u8_lq (temp, srcs[0], taps[0], count);
+  for (i = 1; i < max_taps; i++) {
+    video_orc_resample_v_muladdtaps_u8_lq (temp, srcs[i * src_inc], taps[i],
         count);
   }
-  video_orc_resample_scaletaps_8_lq (d, temp, count);
+  video_orc_resample_scaletaps_u8_lq (d, temp, count);
 #else
-  video_orc_resample_v_multaps_8 (temp, srcs[0], taps[0], count);
-  for (i = 1; i < max_taps - 1; i++) {
-    video_orc_resample_v_muladdtaps_8 (temp, srcs[i * src_inc], taps[i], count);
+  video_orc_resample_v_multaps_u8 (temp, srcs[0], taps[0], count);
+  for (i = 1; i < max_taps; i++) {
+    video_orc_resample_v_muladdtaps_u8 (temp, srcs[i * src_inc], taps[i],
+        count);
   }
-  video_orc_resample_scaletaps_8 (d, temp, count);
+  video_orc_resample_scaletaps_u8 (d, temp, count);
 #endif
+}
+
+static void
+video_scale_v_ntap_4u16 (GstVideoScaler * scale,
+    gpointer srcs[], gpointer dest, guint dest_offset, guint width)
+{
+  gint16 *taps;
+  gint i, max_taps, count, src_inc;
+  guint64 *d;
+  gint32 *temp;
+
+  if (scale->taps_s16 == NULL)
+    make_s16_taps (scale, SCALE_U16);
+
+  max_taps = scale->resampler.max_taps;
+  taps = scale->taps_s16 + (scale->resampler.phase[dest_offset] * max_taps);
+
+  d = (guint64 *) dest;
+
+  if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
+    src_inc = 2;
+  else
+    src_inc = 1;
+
+  temp = (gint32 *) scale->tmpline1;
+  count = width * 4;
+
+  video_orc_resample_v_multaps_u16 (temp, srcs[0], taps[0], count);
+  for (i = 1; i < max_taps; i++) {
+    video_orc_resample_v_muladdtaps_u16 (temp, srcs[i * src_inc], taps[i],
+        count);
+  }
+  video_orc_resample_scaletaps_u16 (d, temp, count);
 }
 
 /**
@@ -580,25 +702,56 @@ void
 gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
     gpointer src, gpointer dest, guint dest_offset, guint width)
 {
+  gint pstride;
   GstVideoScalerHFunc func;
+  const GstVideoFormatInfo *finfo;
 
   g_return_if_fail (scale != NULL);
   g_return_if_fail (src != NULL);
   g_return_if_fail (dest != NULL);
   g_return_if_fail (dest_offset + width <= scale->resampler.out_size);
 
-  switch (scale->resampler.max_taps) {
-    case 1:
-      func = video_scale_h_near_8888;
+  finfo = gst_video_format_get_info (format);
+  g_return_if_fail (finfo->n_planes == 1);
+
+  pstride = finfo->pixel_stride[0];
+  g_return_if_fail (pstride == 4 || pstride == 8);
+
+  switch (pstride) {
+    case 4:
+      switch (scale->resampler.max_taps) {
+        case 1:
+          func = video_scale_h_near_u32;
+          break;
+        case 2:
+          func = video_scale_h_2tap_4u8;
+          break;
+        default:
+          func = video_scale_h_ntap_4u8;
+          break;
+      }
       break;
-    case 2:
-      func = video_scale_h_2tap_8888;
+    case 8:
+      switch (scale->resampler.max_taps) {
+        case 1:
+          func = video_scale_h_near_u64;
+          break;
+        default:
+          func = video_scale_h_ntap_4u16;
+          break;
+      }
       break;
     default:
-      func = video_scale_h_ntap_8888;
-      break;
+      goto no_func;
   }
   func (scale, src, dest, dest_offset, width);
+  return;
+
+no_func:
+  {
+    GST_WARNING ("no scaler function for format");
+    func = NULL;
+  }
 }
 
 /**
@@ -619,26 +772,60 @@ void
 gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
     gpointer src_lines[], gpointer dest, guint dest_offset, guint width)
 {
+  gint pstride;
   GstVideoScalerVFunc func;
+  const GstVideoFormatInfo *finfo;
 
   g_return_if_fail (scale != NULL);
   g_return_if_fail (src_lines != NULL);
   g_return_if_fail (dest != NULL);
   g_return_if_fail (dest_offset < scale->resampler.out_size);
 
-  switch (scale->resampler.max_taps) {
-    case 1:
-      func = video_scale_v_near_8888;
-      break;
-    case 2:
-      func = video_scale_v_2tap_8888;
-      break;
+  finfo = gst_video_format_get_info (format);
+  g_return_if_fail (finfo->n_planes == 1);
+
+  pstride = finfo->pixel_stride[0];
+  g_return_if_fail (pstride == 4 || pstride == 8);
+
+  switch (pstride) {
     case 4:
-      func = video_scale_v_4tap_8888;
+      switch (scale->resampler.max_taps) {
+        case 1:
+          func = video_scale_v_near_u32;
+          break;
+        case 2:
+          func = video_scale_v_2tap_4u8;
+          break;
+        case 4:
+          func = video_scale_v_4tap_4u8;
+          break;
+        default:
+          func = video_scale_v_ntap_4u8;
+          break;
+      }
+      break;
+    case 8:
+      switch (scale->resampler.max_taps) {
+        case 1:
+          func = video_scale_v_near_u64;
+          break;
+        case 2:
+          func = video_scale_v_2tap_4u16;
+          break;
+        default:
+          func = video_scale_v_ntap_4u16;
+          break;
+      }
       break;
     default:
-      func = video_scale_v_ntap_8888;
-      break;
+      goto no_func;
   }
   func (scale, src_lines, dest, dest_offset, width);
+  return;
+
+no_func:
+  {
+    GST_WARNING ("no scaler function for format");
+    func = NULL;
+  }
 }
