@@ -493,6 +493,7 @@ close_window_cb (gpointer data)
 #endif
 
   /* Get notified about changes */
+  [self setPostsFrameChangedNotifications:YES];
   [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(reshape:) name: NSViewFrameDidChangeNotification object: self];
   [self setWantsBestResolutionOpenGLSurface:YES];
 
