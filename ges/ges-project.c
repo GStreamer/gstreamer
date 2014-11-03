@@ -710,6 +710,80 @@ ges_project_create_asset (GESProject * project, const gchar * id,
 }
 
 /**
+ * ges_project_create_asset_sync:
+ * @project: A #GESProject
+ * @id: (allow-none): The id of the asset to create and add to @project
+ * @extractable_type: The #GType of the asset to create
+ * @error: A #GError to be set in case of error
+ *
+ * Create and add a #GESAsset to @project. You should connect to the
+ * "asset-added" signal to get the asset when it finally gets added to
+ * @project
+ *
+ * Returns: The newly created #GESAsset
+ */
+GESAsset *
+ges_project_create_asset_sync (GESProject * project, const gchar * id,
+    GType extractable_type, GError ** error)
+{
+  GESAsset *asset;
+  gchar *possible_id = NULL;
+  gboolean retry = TRUE;
+
+  g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
+  g_return_val_if_fail (g_type_is_a (extractable_type, GES_TYPE_EXTRACTABLE),
+      FALSE);
+
+  if (id == NULL)
+    id = g_type_name (extractable_type);
+
+  if ((asset = g_hash_table_lookup (project->priv->assets, id)))
+    return asset;
+  else if (g_hash_table_lookup (project->priv->loading_assets, id) ||
+      g_hash_table_lookup (project->priv->loaded_with_error, id))
+    return NULL;
+
+  /* TODO Add a GCancellable somewhere in our API */
+  while (retry) {
+
+    if (g_type_is_a (extractable_type, GES_TYPE_URI_CLIP)) {
+      asset = GES_ASSET (ges_uri_clip_asset_request_sync (id, error));
+    } else {
+      asset = ges_asset_request (extractable_type, id, error);
+    }
+
+    if (asset) {
+      retry = FALSE;
+
+      if (possible_id) {
+        g_free (possible_id);
+        ges_uri_assets_validate_uri (id);
+      }
+
+      break;
+    } else {
+      GESAsset *tmpasset;
+
+      tmpasset = ges_asset_cache_lookup (extractable_type, id);
+      possible_id = ges_project_try_updating_id (project, tmpasset, *error);
+
+      if (possible_id == NULL)
+        return NULL;
+
+      g_clear_error (error);
+      if (error)
+        *error = NULL;
+
+      id = possible_id;
+    }
+  }
+
+  ges_project_add_asset (project, asset);
+
+  return asset;
+}
+
+/**
  * ges_project_add_asset:
  * @project: A #GESProject
  * @asset: (transfer none): A #GESAsset to add to @project

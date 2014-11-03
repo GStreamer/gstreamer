@@ -96,6 +96,10 @@ gboolean ges_project_create_asset  (GESProject * project,
                                     const gchar *id,
                                     GType extractable_type);
 
+GESAsset * ges_project_create_asset_sync        (GESProject * project,
+                                                 const gchar * id,
+                                                 GType extractable_type,
+                                                 GError **error);
 GList * ges_project_get_loading_assets          (GESProject * project);
 
 gboolean ges_project_add_encoding_profile       (GESProject *project,
