@@ -11,6 +11,7 @@
 *.page
 *.swp
 *~
+core.*
 
 Makefile
 Makefile.in
@@ -43,6 +44,7 @@ log
 
 /ges/gesmarshal.h
 /ges/gesmarshal.c
+/ges/ges-version.h
 
 /docs/version.entities
 
@@ -65,6 +67,12 @@ log
 /tests/check/integration
 /tests/benchmarks/timeline
 /tests/examples/materials
+
+/tests/check/nle/simple
+/tests/check/nle/complex
+/tests/check/nle/nlecomposition
+/tests/check/nle/nleoperation
+/tests/check/nle/nlesource
 
 /tools/ges-launch-1.0
 /tests/check/ges/project
