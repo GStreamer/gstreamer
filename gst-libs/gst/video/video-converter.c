@@ -587,6 +587,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
 
   convert->lines = out_info->finfo->pack_lines;
   width = MAX (convert->in_maxwidth, convert->out_maxwidth);
+  width += convert->out_x;
   convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
 
   if (convert->fill_border && (convert->out_height < convert->out_maxheight ||
