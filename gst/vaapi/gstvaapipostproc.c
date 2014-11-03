@@ -1127,7 +1127,28 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
     // Update size from user-specified parameters
     format = GST_VIDEO_INFO_FORMAT(&vi);
 #if GST_CHECK_VERSION(1,1,0)
-    out_format = postproc->format;
+    /* XXX: this is a workaround until auto-plugging is fixed when
+     * format=ENCODED + memory:VASurface caps feature are provided.
+     * use the downstream negotiated video format as the output format
+     * if the user didn't explicitly ask for colorspace conversion.
+     * Use a filter caps which contain all raw video formats, (excluding
+     * GST_VIDEO_FORMAT_ENCODED) */
+    if (postproc->format != DEFAULT_FORMAT)
+      out_format = postproc->format;
+    else {
+      GstCaps *peer_caps, *filter_caps;
+      GstVideoInfo peer_vi;
+      filter_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL));
+      peer_caps = gst_pad_peer_query_caps(
+          GST_BASE_TRANSFORM_SRC_PAD(trans), filter_caps);
+      if (!gst_caps_is_fixed(peer_caps))
+        peer_caps = gst_caps_fixate (peer_caps);
+      gst_video_info_from_caps(&peer_vi, peer_caps);
+      out_format = GST_VIDEO_INFO_FORMAT (&peer_vi);
+      gst_caps_unref (filter_caps);
+      if (peer_caps)
+        gst_caps_unref (peer_caps);
+    }
 #else
     out_format = GST_VIDEO_FORMAT_ENCODED;
 #endif
