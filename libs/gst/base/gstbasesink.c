@@ -4852,6 +4852,11 @@ gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
       res = TRUE;
       break;
     }
+    case GST_QUERY_POSITION:
+    {
+      res = default_element_query (GST_ELEMENT (basesink), query);
+      break;
+    }
     default:
       res =
           gst_pad_query_default (basesink->sinkpad, GST_OBJECT_CAST (basesink),
