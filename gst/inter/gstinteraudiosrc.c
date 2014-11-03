@@ -228,7 +228,7 @@ gst_inter_audio_src_set_caps (GstBaseSrc * src, GstCaps * caps)
     return FALSE;
   }
 
-  return gst_pad_set_caps (src->srcpad, caps);
+  return TRUE;
 }
 
 static gboolean

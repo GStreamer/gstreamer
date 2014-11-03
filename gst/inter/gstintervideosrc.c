@@ -242,7 +242,7 @@ gst_inter_video_src_set_caps (GstBaseSrc * base, GstCaps * caps)
   gst_video_frame_unmap (&dest_frame);
   intervideosrc->black_frame = dest;
 
-  return gst_pad_set_caps (GST_BASE_SRC_PAD (intervideosrc), caps);
+  return TRUE;
 }
 
 static gboolean
