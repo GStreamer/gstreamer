@@ -551,10 +551,6 @@ resize_cb (gpointer data)
   [super renewGState];
 }
 
-- (void)drawRect: (NSRect)dirtyRect {
-  [self reshape:nil];
-}
-
 - (void)reshape: (NSNotification*)notification {
   GstGLWindow *window;
 
@@ -581,6 +577,10 @@ resize_cb (gpointer data)
 
     gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) resize_cb, resize_data, (GDestroyNotify) g_free);
   }
+}
+
+- (void)drawRect: (NSRect)dirtyRect {
+  [self reshape:nil];
 }
 
 - (BOOL) isOpaque {
