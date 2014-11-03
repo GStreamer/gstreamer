@@ -84,10 +84,11 @@
 G_BEGIN_DECLS
 
 
-gboolean ges_init    (void);
-
-void     ges_version (guint * major, guint * minor, guint * micro,
-                      guint * nano);
+gboolean ges_init         (void);
+void     ges_version      (guint * major, guint * minor, guint * micro,
+                           guint * nano);
+GOptionGroup *
+ges_init_get_option_group (void);
 
 G_END_DECLS
 

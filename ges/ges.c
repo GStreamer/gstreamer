@@ -18,6 +18,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <stdlib.h>
 #include <ges/ges.h>
 #include "ges/gstframepositionner.h"
 #include "ges-internal.h"
@@ -108,6 +114,60 @@ ges_init (void)
   return TRUE;
 }
 
+#ifndef GST_DISABLE_OPTION_PARSING
+static gboolean
+parse_goption_arg (const gchar * s_opt,
+    const gchar * arg, gpointer data, GError ** err)
+{
+  if (g_strcmp0 (s_opt, "--ges-version") == 0) {
+    g_print ("GStreamer Editing Services version %s\n", PACKAGE_VERSION);
+    exit (0);
+  }
+
+  return TRUE;
+}
+#endif
+
+/**
+ * ges_init_get_option_group: (skip)
+ *
+ * Returns a #GOptionGroup with GES's argument specifications. The
+ * group is set up to use standard GOption callbacks, so when using this
+ * group in combination with GOption parsing methods, all argument parsing
+ * and initialization is automated.
+ *
+ * This function is useful if you want to integrate GES with other
+ * libraries that use GOption (see g_option_context_add_group() ).
+ *
+ * If you use this function, you should make sure you initialise the GStreamer
+ * as one of the very first things in your program.
+ *
+ * Returns: (transfer full): a pointer to GES's option group.
+ */
+GOptionGroup *
+ges_init_get_option_group (void)
+{
+#ifndef GST_DISABLE_OPTION_PARSING
+
+  GOptionGroup *group;
+  static const GOptionEntry ges_args[] = {
+    {"ges-version", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+          (gpointer) parse_goption_arg,
+          "Print the GStreamer Editing Services version",
+        NULL},
+    {NULL}
+  };
+
+  group = g_option_group_new ("GES", "GStreamer Editing Services Options",
+      "Show GStreamer Options", NULL, NULL);
+  g_option_group_add_entries (group, ges_args);
+
+  return group;
+
+#else
+  return NULL;
+#endif
+}
 
 /**
  * ges_version:
