@@ -189,6 +189,9 @@ gst_inter_video_src_get_caps (GstBaseSrc * src, GstCaps * filter)
   g_mutex_lock (&intervideosrc->surface->mutex);
   if (intervideosrc->surface->video_info.finfo) {
     caps = gst_video_info_to_caps (&intervideosrc->surface->video_info);
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION_RANGE, 1,
+        G_MAXINT, G_MAXINT, 1, NULL);
+
     if (filter) {
       GstCaps *tmp;
 
@@ -313,9 +316,18 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   g_mutex_lock (&intervideosrc->surface->mutex);
   if (intervideosrc->surface->video_info.finfo) {
-    if (!gst_video_info_is_equal (&intervideosrc->surface->video_info,
-            &intervideosrc->info)) {
-      caps = gst_video_info_to_caps (&intervideosrc->surface->video_info);
+    GstVideoInfo tmp_info = intervideosrc->surface->video_info;
+
+    /* We negotiate the framerate ourselves */
+    tmp_info.fps_n = intervideosrc->info.fps_n;
+    tmp_info.fps_d = intervideosrc->info.fps_d;
+    if (intervideosrc->info.flags & GST_VIDEO_FLAG_VARIABLE_FPS)
+      tmp_info.flags |= GST_VIDEO_FLAG_VARIABLE_FPS;
+    else
+      tmp_info.flags &= ~GST_VIDEO_FLAG_VARIABLE_FPS;
+
+    if (!gst_video_info_is_equal (&tmp_info, &intervideosrc->info)) {
+      caps = gst_video_info_to_caps (&tmp_info);
       intervideosrc->timestamp_offset +=
           gst_util_uint64_scale (GST_SECOND * intervideosrc->n_frames,
           GST_VIDEO_INFO_FPS_D (&intervideosrc->info),
@@ -334,14 +346,64 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   g_mutex_unlock (&intervideosrc->surface->mutex);
 
   if (caps) {
-    gboolean ret = gst_base_src_set_caps (src, caps);
-    gst_caps_unref (caps);
-    if (!ret) {
-      GST_ERROR_OBJECT (src, "Failed to set caps %" GST_PTR_FORMAT, caps);
+    gboolean ret;
+    GstStructure *s;
+    GstCaps *downstream_caps;
+    GstCaps *tmp, *negotiated_caps;
+    gint fps_n = 0, fps_d = 1;
+
+    /* Negotiate a framerate with downstream */
+    downstream_caps = gst_pad_get_allowed_caps (GST_BASE_SRC_PAD (src));
+
+    /* Remove all framerates */
+    tmp = gst_caps_copy (caps);
+    s = gst_caps_get_structure (tmp, 0);
+    gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
+    if (fps_n == 0)
+      gst_structure_get_fraction (s, "max-framerate", &fps_n, &fps_d);
+    gst_structure_remove_field (s, "framerate");
+    gst_structure_remove_field (s, "max-framerate");
+
+    negotiated_caps =
+        gst_caps_intersect_full (downstream_caps, tmp,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    gst_caps_unref (downstream_caps);
+
+    if (gst_caps_is_empty (negotiated_caps)) {
+      GST_ERROR_OBJECT (src, "Failed to negotiate caps %" GST_PTR_FORMAT, caps);
       if (buffer)
         gst_buffer_unref (buffer);
+      gst_caps_unref (caps);
       return GST_FLOW_NOT_NEGOTIATED;
     }
+    gst_caps_unref (caps);
+    caps = NULL;
+
+    /* Prefer what the source produces, otherwise 30 fps */
+    if (fps_n == 0) {
+      fps_n = 30;
+      fps_d = 1;
+    }
+
+    negotiated_caps = gst_caps_truncate (negotiated_caps);
+    s = gst_caps_get_structure (negotiated_caps, 0);
+    if (!gst_structure_has_field (s, "framerate"))
+      gst_structure_set (s, "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+    else
+      gst_structure_fixate_field_nearest_fraction (s, "framerate", fps_n,
+          fps_d);
+
+    ret = gst_base_src_set_caps (src, negotiated_caps);
+    if (!ret) {
+      GST_ERROR_OBJECT (src, "Failed to set caps %" GST_PTR_FORMAT,
+          negotiated_caps);
+      if (buffer)
+        gst_buffer_unref (buffer);
+      gst_caps_unref (negotiated_caps);
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+    gst_caps_unref (negotiated_caps);
   }
 
   if (buffer == NULL) {
