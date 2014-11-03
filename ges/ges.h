@@ -89,6 +89,7 @@ void     ges_version      (guint * major, guint * minor, guint * micro,
                            guint * nano);
 GOptionGroup *
 ges_init_get_option_group (void);
+gboolean ges_validate_register_action_types (void);
 
 G_END_DECLS
 

@@ -74,6 +74,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-smart-video-mixer.c \
 	ges-utils.c \
 	ges-group.c \
+	ges-validate.c \
 	gstframepositionner.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
@@ -156,12 +157,12 @@ noinst_HEADERS = \
 
 libges_@GST_API_VERSION@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \
 		$(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-		$(GST_CFLAGS) $(XML_CFLAGS) $(GIO_CFLAGS)
+		$(GST_CFLAGS) $(XML_CFLAGS) $(GIO_CFLAGS) $(GST_VALIDATE_CFLAGS)
 libges_@GST_API_VERSION@_la_LIBADD = $(GST_PBUTILS_LIBS) \
 		$(GST_VIDEO_LIBS) $(GST_CONTROLLER_LIBS) $(GST_PLUGINS_BASE_LIBS) \
-		$(GST_BASE_LIBS) $(GST_LIBS) $(XML_LIBS) $(GIO_LIBS)
+		$(GST_BASE_LIBS) $(GST_LIBS) $(XML_LIBS) $(GIO_LIBS) $(GST_VALIDATE_LIBS)
 libges_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
-		$(GST_LT_LDFLAGS) $(GIO_CFLAGS)
+		$(GST_LT_LDFLAGS) $(GIO_CFLAGS) $(GST_VALIDATE_CFLAGS)
 
 DISTCLEANFILE = $(CLEANFILES)
 
