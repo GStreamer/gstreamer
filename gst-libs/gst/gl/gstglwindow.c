@@ -389,7 +389,7 @@ gst_gl_window_run (GstGLWindow * window)
  *
  * Start the execution of the navigation runloop.
  *
- * Since: 1.4
+ * Since: 1.6
  */
 void
 gst_gl_window_run_navigation (GstGLWindow * window)
