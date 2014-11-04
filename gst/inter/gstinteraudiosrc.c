@@ -335,8 +335,8 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
   GstCaps *caps;
   GstBuffer *buffer;
   guint n, bpf;
-  guint64 period_time, buffer_time;
-  guint64 period_samples, buffer_samples;
+  guint64 period_time;
+  guint64 period_samples;
 
   GST_DEBUG_OBJECT (interaudiosrc, "create");
 
@@ -356,10 +356,7 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
   }
 
   bpf = interaudiosrc->surface->audio_info.bpf;
-  buffer_time = interaudiosrc->surface->audio_buffer_time;
   period_time = interaudiosrc->surface->audio_period_time;
-  buffer_samples =
-      gst_util_uint64_scale (buffer_time, interaudiosrc->info.rate, GST_SECOND);
   period_samples =
       gst_util_uint64_scale (period_time, interaudiosrc->info.rate, GST_SECOND);
 
