@@ -256,7 +256,7 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   bpf = interaudiosink->info.bpf;
 
   g_mutex_lock (&interaudiosink->surface->mutex);
-  n = gst_adapter_available (interaudiosink->surface->audio_adapter) / 4;
+  n = gst_adapter_available (interaudiosink->surface->audio_adapter) / bpf;
   while (n > PERIOD * N_PERIODS) {
     GST_WARNING_OBJECT (interaudiosink, "flushing %d samples", PERIOD / 2);
     gst_adapter_flush (interaudiosink->surface->audio_adapter,
