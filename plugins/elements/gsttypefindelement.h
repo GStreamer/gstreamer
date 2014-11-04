@@ -59,6 +59,8 @@ struct _GstTypeFindElement {
   GList *               cached_events;
   GstCaps *             force_caps;
 
+  guint64		initial_offs;
+  
   /* Only used when driving the pipeline */
   gboolean need_segment;
   gboolean need_stream_start;
