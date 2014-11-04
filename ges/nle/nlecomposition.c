@@ -68,6 +68,7 @@ enum
 {
   COMMIT_SIGNAL,
   COMMITED_SIGNAL,
+  QUERY_POSITION_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -907,6 +908,22 @@ nle_composition_class_init (NleCompositionClass * klass)
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       G_TYPE_BOOLEAN);
 
+  /**
+   * NleComposition::query-position
+   * @comp: a #NleComposition
+   *
+   * A signal that *has* to be connected and which should return the current
+   * position of the pipeline.
+   *
+   * This signal is used in order to know the current position of the whole
+   * pipeline so it is user's responsability to give that answer as there
+   * is no other way to precisely know the position in the whole pipeline.
+   */
+  _signals[QUERY_POSITION_SIGNAL] =
+      g_signal_new ("query-position", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE,
+      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_UINT64, 0, NULL);
+
   useless = GST_DEBUG_FUNCPTR (_seek_pipeline_func);
   useless = GST_DEBUG_FUNCPTR (_remove_object_func);
   useless = GST_DEBUG_FUNCPTR (_add_object_func);
@@ -1340,10 +1357,19 @@ get_current_position (NleComposition * comp)
   gboolean res;
   gint64 value = GST_CLOCK_TIME_NONE;
 
-  GstPad *peer = gst_pad_get_peer (NLE_OBJECT (comp)->srcpad);
+  GstPad *peer;
+
+  g_signal_emit (comp, _signals[QUERY_POSITION_SIGNAL], 0, &value);
+
+  if (value >= 0) {
+    GST_DEBUG_OBJECT (comp, "Got position %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (value));
+
+    return value;
+  }
 
   /* Try querying position downstream */
-
+  peer = gst_pad_get_peer (NLE_OBJECT (comp)->srcpad);
   if (peer) {
     res = gst_pad_query_position (peer, GST_FORMAT_TIME, &value);
     gst_object_unref (peer);

@@ -309,6 +309,13 @@ composition_duration_cb (GstElement * composition,
   }
 }
 
+/* Internal */
+GstElement *
+ges_track_get_composition (GESTrack * track)
+{
+  return track->priv->composition;
+}
+
 /* FIXME: Find out how to avoid doing this "hack" using the GDestroyNotify
  * function pointer in the trackelements_by_start GSequence
  *
