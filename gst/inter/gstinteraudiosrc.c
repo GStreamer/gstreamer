@@ -316,12 +316,6 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
   else
     n = 0;
 
-  while (n > PERIOD * 10) {
-    GST_WARNING_OBJECT (interaudiosrc, "flushing %d samples", PERIOD / 2);
-    gst_adapter_flush (interaudiosrc->surface->audio_adapter,
-        (PERIOD / 2) * bpf);
-    n -= (PERIOD / 2);
-  }
   if (n > PERIOD)
     n = PERIOD;
   if (n > 0) {
