@@ -418,7 +418,7 @@ GST_START_TEST (test_play_twice)
   /* cleanup */
   g_main_loop_unref (main_loop);
   gst_consistency_checker_free (consist);
-  gst_event_ref (play_seek_event);
+  gst_event_unref (play_seek_event);
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
@@ -524,7 +524,7 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
 
   /* cleanup */
   g_main_loop_unref (main_loop);
-  gst_event_ref (play_seek_event);
+  gst_event_unref (play_seek_event);
   gst_consistency_checker_free (consist);
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
@@ -691,6 +691,7 @@ GST_START_TEST (test_live_seeking)
     g_main_loop_unref (main_loop);
   if (play_seek_event)
     gst_event_unref (play_seek_event);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
