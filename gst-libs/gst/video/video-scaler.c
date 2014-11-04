@@ -62,6 +62,7 @@ struct _GstVideoScaler
   /* for ORC */
   gint inc;
 
+  gint tmpwidth;
   guint32 *tmpline1;
   guint32 *tmpline2;
 };
@@ -104,6 +105,16 @@ resampler_zip (GstVideoResampler * resampler, const GstVideoResampler * r1,
     memcpy (taps + i * max_taps, r->taps + phase[idx] * max_taps,
         max_taps * sizeof (gdouble));
   }
+}
+
+static void
+realloc_tmplines (GstVideoScaler * scale, gint width)
+{
+  scale->tmpline1 =
+      g_realloc (scale->tmpline1,
+      sizeof (gint32) * width * 4 * scale->resampler.max_taps);
+  scale->tmpline2 = g_realloc (scale->tmpline2, sizeof (gint32) * width * 4);
+  scale->tmpwidth = width;
 }
 
 /**
@@ -163,10 +174,6 @@ gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
     scale->inc = 0;
   else
     scale->inc = ((in_size - 1) << 16) / (out_size - 1) - 1;
-
-  scale->tmpline1 =
-      g_malloc (sizeof (gint32) * out_size * 4 * scale->resampler.max_taps);
-  scale->tmpline2 = g_malloc (sizeof (gint32) * out_size * 4);
 
   return scale;
 }
@@ -727,6 +734,9 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
   pstride = finfo->pixel_stride[0];
   g_return_if_fail (pstride == 4 || pstride == 8);
 
+  if (scale->tmpwidth < width)
+    realloc_tmplines (scale, width);
+
   switch (pstride) {
     case 4:
       switch (scale->resampler.max_taps) {
@@ -796,6 +806,9 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
 
   pstride = finfo->pixel_stride[0];
   g_return_if_fail (pstride == 4 || pstride == 8);
+
+  if (scale->tmpwidth < width)
+    realloc_tmplines (scale, width);
 
   switch (pstride) {
     case 4:
