@@ -238,6 +238,8 @@ gst_inter_audio_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   g_mutex_lock (&interaudiosink->surface->mutex);
   interaudiosink->surface->audio_info = info;
   interaudiosink->info = info;
+  /* TODO: Ideally we would drain the source here */
+  gst_adapter_clear (interaudiosink->surface->audio_adapter);
   g_mutex_unlock (&interaudiosink->surface->mutex);
 
   return TRUE;
