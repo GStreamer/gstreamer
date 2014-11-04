@@ -47,9 +47,6 @@
 #include "gstinteraudiosink.h"
 #include <string.h>
 
-#define PERIOD    1600
-#define N_PERIODS 10
-
 GST_DEBUG_CATEGORY_STATIC (gst_inter_audio_sink_debug_category);
 #define GST_CAT_DEFAULT gst_inter_audio_sink_debug_category
 
@@ -68,6 +65,8 @@ static gboolean gst_inter_audio_sink_set_caps (GstBaseSink * sink,
     GstCaps * caps);
 static GstFlowReturn gst_inter_audio_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
+static gboolean gst_inter_audio_sink_query (GstBaseSink * sink,
+    GstQuery * query);
 
 enum
 {
@@ -82,7 +81,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL))
     );
-
 
 /* class initialization */
 G_DEFINE_TYPE (GstInterAudioSink, gst_inter_audio_sink, GST_TYPE_BASE_SINK);
@@ -114,6 +112,7 @@ gst_inter_audio_sink_class_init (GstInterAudioSinkClass * klass)
   base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_stop);
   base_sink_class->set_caps = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_set_caps);
   base_sink_class->render = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_render);
+  base_sink_class->query = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_query);
 
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
@@ -201,6 +200,11 @@ gst_inter_audio_sink_start (GstBaseSink * sink)
   interaudiosink->surface = gst_inter_surface_get (interaudiosink->channel);
   g_mutex_lock (&interaudiosink->surface->mutex);
   memset (&interaudiosink->surface->audio_info, 0, sizeof (GstAudioInfo));
+
+  /* We want to write latency-time before syncing has happened */
+  /* FIXME: The other side can change this value when it starts */
+  gst_base_sink_set_render_delay (sink,
+      interaudiosink->surface->audio_latency_time);
   g_mutex_unlock (&interaudiosink->surface->mutex);
 
   return TRUE;
@@ -249,23 +253,95 @@ static GstFlowReturn
 gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (sink);
-  int n, bpf;
+  guint n, bpf;
+  guint64 period_time, buffer_time;
+  guint64 period_samples, buffer_samples;
 
   GST_DEBUG_OBJECT (interaudiosink, "render %" G_GSIZE_FORMAT,
       gst_buffer_get_size (buffer));
   bpf = interaudiosink->info.bpf;
 
   g_mutex_lock (&interaudiosink->surface->mutex);
+
+  buffer_time = interaudiosink->surface->audio_buffer_time;
+  period_time = interaudiosink->surface->audio_period_time;
+  buffer_samples =
+      gst_util_uint64_scale (buffer_time, interaudiosink->info.rate,
+      GST_SECOND);
+  period_samples =
+      gst_util_uint64_scale (period_time, interaudiosink->info.rate,
+      GST_SECOND);
+
   n = gst_adapter_available (interaudiosink->surface->audio_adapter) / bpf;
-  while (n > PERIOD * N_PERIODS) {
-    GST_WARNING_OBJECT (interaudiosink, "flushing %d samples", PERIOD / 2);
+  while (n > buffer_samples) {
+    GST_WARNING_OBJECT (interaudiosink, "flushing %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (period_time));
     gst_adapter_flush (interaudiosink->surface->audio_adapter,
-        (PERIOD / 2) * bpf);
-    n -= (PERIOD / 2);
+        period_samples * bpf);
+    n -= period_samples;
   }
   gst_adapter_push (interaudiosink->surface->audio_adapter,
       gst_buffer_ref (buffer));
   g_mutex_unlock (&interaudiosink->surface->mutex);
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_inter_audio_sink_query (GstBaseSink * sink, GstQuery * query)
+{
+  GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (sink);
+  gboolean ret;
+
+  GST_DEBUG_OBJECT (sink, "query");
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:{
+      gboolean live, us_live;
+      GstClockTime min_l, max_l;
+
+      GST_DEBUG_OBJECT (sink, "latency query");
+
+      if ((ret =
+              gst_base_sink_query_latency (GST_BASE_SINK_CAST (sink), &live,
+                  &us_live, &min_l, &max_l))) {
+        GstClockTime base_latency, min_latency, max_latency;
+
+        /* we and upstream are both live, adjust the min_latency */
+        if (live && us_live) {
+          /* FIXME: The other side can change this value when it starts */
+          base_latency = interaudiosink->surface->audio_latency_time;
+
+          /* we cannot go lower than the buffer size and the min peer latency */
+          min_latency = base_latency + min_l;
+          /* the max latency is the max of the peer, we can delay an infinite
+           * amount of time. */
+          max_latency = (max_l == -1) ? -1 : (base_latency + max_l);
+
+          GST_DEBUG_OBJECT (sink,
+              "peer min %" GST_TIME_FORMAT ", our min latency: %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (min_l),
+              GST_TIME_ARGS (min_latency));
+          GST_DEBUG_OBJECT (sink,
+              "peer max %" GST_TIME_FORMAT ", our max latency: %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (max_l),
+              GST_TIME_ARGS (max_latency));
+        } else {
+          GST_DEBUG_OBJECT (sink,
+              "peer or we are not live, don't care about latency");
+          min_latency = min_l;
+          max_latency = max_l;
+        }
+        gst_query_set_latency (query, live, min_latency, max_latency);
+      }
+      break;
+    }
+    default:
+      ret =
+          GST_BASE_SINK_CLASS (gst_inter_audio_sink_parent_class)->query (sink,
+          query);
+      break;
+  }
+
+  return ret;
 }

@@ -45,6 +45,7 @@ struct _GstInterAudioSrc
   guint64 n_samples;
   GstClockTime timestamp_offset;
   GstAudioInfo info;
+  guint64 buffer_time, latency_time, period_time;
 };
 
 struct _GstInterAudioSrcClass

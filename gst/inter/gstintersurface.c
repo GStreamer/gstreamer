@@ -49,6 +49,9 @@ gst_inter_surface_get (const char *name)
   surface->name = g_strdup (name);
   g_mutex_init (&surface->mutex);
   surface->audio_adapter = gst_adapter_new ();
+  surface->audio_buffer_time = DEFAULT_AUDIO_BUFFER_TIME;
+  surface->audio_latency_time = DEFAULT_AUDIO_LATENCY_TIME;
+  surface->audio_period_time = DEFAULT_AUDIO_PERIOD_TIME;
 
   list = g_list_append (list, surface);
   g_mutex_unlock (&mutex);

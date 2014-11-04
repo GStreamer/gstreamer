@@ -41,11 +41,18 @@ struct _GstInterSurface
 
   /* audio */
   GstAudioInfo audio_info;
+  guint64 audio_buffer_time;
+  guint64 audio_latency_time;
+  guint64 audio_period_time;
 
   GstBuffer *video_buffer;
   GstBuffer *sub_buffer;
   GstAdapter *audio_adapter;
 };
+
+#define DEFAULT_AUDIO_BUFFER_TIME  (GST_SECOND)
+#define DEFAULT_AUDIO_LATENCY_TIME (100 * GST_MSECOND)
+#define DEFAULT_AUDIO_PERIOD_TIME  (25 * GST_MSECOND)
 
 
 GstInterSurface * gst_inter_surface_get (const char *name);
