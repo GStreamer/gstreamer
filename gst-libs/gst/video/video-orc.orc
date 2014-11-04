@@ -1331,8 +1331,7 @@ addb dest, t, src1
 .source 2 src1 guint64
 .source 2 src2 guint64
 .dest 2 dest guint64
-.param 4 p1 gint16
-.temp 2 t
+.param 2 p1 gint16
 .temp 4 l1
 .temp 4 l2
 .temp 4 l3
@@ -1343,9 +1342,9 @@ subl l2, l2, l1
 convuwl l3, p1
 mulll l2, l2, l3
 addl l2, l2, 4096
-shrul l2, l2, 12
-convlw t, l2
-addw dest, t, src1
+shrsl l2, l2, 12
+addl l1, l1, l2
+convsuslw dest, l1
 
 .function video_orc_resample_v_2tap_u8
 .source 1 s1 guint32
