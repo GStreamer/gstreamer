@@ -70,7 +70,7 @@ static void
 resampler_zip (GstVideoResampler * resampler, const GstVideoResampler * r1,
     const GstVideoResampler * r2)
 {
-  guint i, out_size, max_taps;
+  guint i, out_size, max_taps, n_phases;
   gdouble *taps;
   guint32 *offset, *phase;
 
@@ -78,6 +78,7 @@ resampler_zip (GstVideoResampler * resampler, const GstVideoResampler * r1,
 
   out_size = r1->out_size + r2->out_size;
   max_taps = r1->max_taps;
+  n_phases = out_size;
   offset = g_malloc (sizeof (guint32) * out_size);
   phase = g_malloc (sizeof (guint32) * out_size);
   taps = g_malloc (sizeof (gdouble) * max_taps * out_size);
@@ -85,6 +86,7 @@ resampler_zip (GstVideoResampler * resampler, const GstVideoResampler * r1,
   resampler->in_size = r1->in_size + r2->in_size;
   resampler->out_size = out_size;
   resampler->max_taps = max_taps;
+  resampler->n_phases = n_phases;
   resampler->offset = offset;
   resampler->phase = phase;
   resampler->n_taps = g_malloc (sizeof (guint32) * out_size);
@@ -99,7 +101,7 @@ resampler_zip (GstVideoResampler * resampler, const GstVideoResampler * r1,
     offset[i] = r->offset[idx] * 2 + (i & 1);
     phase[i] = i;
 
-    memcpy (taps + i * max_taps, r->taps + idx * max_taps,
+    memcpy (taps + i * max_taps, r->taps + phase[idx] * max_taps,
         max_taps * sizeof (gdouble));
   }
 }
@@ -335,7 +337,7 @@ video_scale_h_near_u32 (GstVideoScaler * scale,
 
 #if 0
   /* ORC is slower on this */
-  video_orc_resample_h_near_u32 (d, s, 0, scale->inc, width);
+  video_orc_resample_h_near_u32_lq (d, s, 0, scale->inc, width);
 #else
   {
     gint i;
