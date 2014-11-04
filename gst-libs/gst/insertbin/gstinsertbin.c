@@ -149,6 +149,7 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * @callback: the callback to call when the element has been added or not, or
    *  %NULL
    * @user_data: The data to pass to the callback
+   * @user_data2: The user data of the signal (ignored)
    *
    * This action signal adds the filter like element before any other element
    * in the bin.
@@ -168,6 +169,7 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * @callback: the callback to call when the element has been added or not, or
    *  %NULL
    * @user_data: The data to pass to the callback
+   * @user_data2: The user data of the signal (ignored)
    *
    * This action signal adds the filter like element after any other element
    * in the bin.
@@ -188,6 +190,7 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * @callback: the callback to call when the element has been added or not, or
    *  %NULL
    * @user_data: The data to pass to the callback
+   * @user_data2: The user data of the signal (ignored)
    *
    * This action signal adds the filter like element before the @sibling
    * element in the bin.
@@ -209,6 +212,7 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * @callback: the callback to call when the element has been added or not, or
    *  %NULL
    * @user_data: The data to pass to the callback
+   * @user_data2: The user data of the signal (ignored)
    *
    * This action signal adds the filter like element after the @sibling
    * element in the bin.
@@ -231,6 +235,7 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * @callback: the callback to call when the element has been removed or not,
    * or %NULL
    * @user_data: The data to pass to the callback
+   * @user_data2: The user data of the signal (ignored)
    *
    * This action signal removed the filter like element from the bin.
    *
