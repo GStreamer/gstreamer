@@ -101,8 +101,6 @@ static GQuark preset_app_path_quark = 0;
 static GQuark preset_system_path_quark = 0;
 static GQuark preset_quark = 0;
 
-/*static GQuark property_list_quark = 0;*/
-
 /* the application can set a custom path that is checked in addition to standard
  * system and user dirs. This helps to develop new presets first local to the
  * application.
@@ -1186,8 +1184,6 @@ gst_preset_base_init (gpointer g_class)
         g_quark_from_static_string ("GstPreset::system_path");
 
 #if 0
-    property_list_quark = g_quark_from_static_string ("GstPreset::properties");
-
     /* create interface properties, each element would need to override this
      *   g_object_class_override_property(gobject_class, PROP_PRESET_NAME, "preset-name");
      * and in _set_property() do
