@@ -779,6 +779,34 @@ gst_object_unparent (GstObject * object)
 }
 
 /**
+ * gst_object_has_parent:
+ * @object: a #GstObject to check
+ * @parent: a #GstObject to check as parent
+ *
+ * Check if @parent is the parent of @object.
+ * E.g. a #GstElement can check if it owns a given #GstPad.
+ *
+ * Returns: %FALSE if either @object or @parent is %NULL. %TRUE if @parent is
+ *          the parent of @object. Otherwise %FALSE.
+ *
+ * MT safe. Grabs and releases @object's locks.
+ * Since: 1.6
+ */
+gboolean
+gst_object_has_parent (GstObject * object, GstObject * parent)
+{
+  gboolean result = FALSE;
+
+  if (G_LIKELY (GST_IS_OBJECT (object) && GST_IS_OBJECT (parent))) {
+    GST_OBJECT_LOCK (object);
+    result = GST_OBJECT_PARENT (object) == parent;
+    GST_OBJECT_UNLOCK (object);
+  }
+
+  return result;
+}
+
+/**
  * gst_object_has_ancestor:
  * @object: a #GstObject to check
  * @ancestor: a #GstObject to check as ancestor
