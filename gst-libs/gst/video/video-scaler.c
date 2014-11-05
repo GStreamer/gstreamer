@@ -488,14 +488,16 @@ static void
 video_scale_v_near_u32 (GstVideoScaler * scale,
     gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
-  orc_memcpy (dest, srcs[0], 4 * width);
+  if (dest != srcs[0])
+    orc_memcpy (dest, srcs[0], 4 * width);
 }
 
 static void
 video_scale_v_near_u64 (GstVideoScaler * scale,
     gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
-  orc_memcpy (dest, srcs[0], 8 * width);
+  if (dest != srcs[0])
+    orc_memcpy (dest, srcs[0], 8 * width);
 }
 
 static void
