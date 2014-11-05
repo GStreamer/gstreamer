@@ -96,6 +96,10 @@ struct _GstVideoConverter
   guint16 *errline;
   guint tmplines_idx;
 
+  guint n_btmplines;
+  gpointer *btmplines;
+  guint btmplines_idx;
+
   gboolean fill_border;
   gpointer borderline;
   guint32 border_argb;
@@ -289,18 +293,25 @@ static gboolean do_hscale_lines (GstLineCache * cache, gint out_line,
     gint in_line, gpointer user_data);
 
 static void
-alloc_tmplines (GstVideoConverter * convert, guint lines, gint width)
+alloc_tmplines (GstVideoConverter * convert, guint lines, guint blines,
+    gint width)
 {
   gint i;
 
   convert->n_tmplines = lines;
   convert->tmplines = g_malloc (lines * sizeof (gpointer));
-  for (i = 0; i < lines; i++) {
+  for (i = 0; i < lines; i++)
     convert->tmplines[i] = g_malloc (sizeof (guint16) * (width + 8) * 4);
-    if (convert->borderline)
-      memcpy (convert->tmplines[i], convert->borderline, width * 8);
-  }
   convert->tmplines_idx = 0;
+
+  convert->n_btmplines = blines;
+  convert->btmplines = g_malloc (blines * sizeof (gpointer));
+  for (i = 0; i < blines; i++) {
+    convert->btmplines[i] = g_malloc (sizeof (guint16) * (width + 8) * 4);
+    if (convert->borderline)
+      memcpy (convert->btmplines[i], convert->borderline, width * 8);
+  }
+  convert->btmplines_idx = 0;
 }
 
 static gpointer
@@ -313,6 +324,20 @@ get_temp_line (GstLineCache * cache, gint idx, gpointer user_data)
   tmpline = (guint8 *) convert->tmplines[convert->tmplines_idx] +
       (convert->out_x * convert->pack_pstride);
   convert->tmplines_idx = (convert->tmplines_idx + 1) % convert->n_tmplines;
+
+  return tmpline;
+}
+
+static gpointer
+get_border_temp_line (GstLineCache * cache, gint idx, gpointer user_data)
+{
+  GstVideoConverter *convert = user_data;
+  gpointer tmpline;
+
+  GST_DEBUG ("get border temp line %d", idx);
+  tmpline = (guint8 *) convert->btmplines[convert->btmplines_idx] +
+      (convert->out_x * convert->pack_pstride);
+  convert->btmplines_idx = (convert->btmplines_idx + 1) % convert->n_btmplines;
 
   return tmpline;
 }
@@ -495,7 +520,7 @@ setup_allocators (GstVideoConverter * convert)
   if (convert->identity_pack)
     alloc_line = get_dest_line;
   else
-    alloc_line = get_temp_line;
+    alloc_line = get_border_temp_line;
 
   /* now walk backwards, we try to write into the dest lines directly
    * and keep track if the source needs to be writable */
@@ -699,7 +724,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   }
 
   /* FIXME */
-  alloc_tmplines (convert, 64, width);
+  alloc_tmplines (convert, 64, 4, width);
 
 done:
   return convert;
@@ -761,6 +786,9 @@ gst_video_converter_free (GstVideoConverter * convert)
   for (i = 0; i < convert->n_tmplines; i++)
     g_free (convert->tmplines[i]);
   g_free (convert->tmplines);
+  for (i = 0; i < convert->n_btmplines; i++)
+    g_free (convert->btmplines[i]);
+  g_free (convert->btmplines);
   g_free (convert->errline);
   g_free (convert->borderline);
 
@@ -1347,10 +1375,22 @@ get_dest_line (GstLineCache * cache, gint idx, gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
   guint8 *line;
+  gint pstride = convert->pack_pstride;
+  gint out_x = convert->out_x;
 
   GST_DEBUG ("get dest line %d", idx);
   line = FRAME_GET_LINE (convert->dest, idx);
-  line += convert->out_x * convert->pack_pstride;
+
+  if (convert->borderline) {
+    gint r_border = (out_x + convert->out_width) * pstride;
+    gint rb_width = convert->out_maxwidth * pstride - r_border;
+    gint lb_width = out_x * pstride;
+
+    memcpy (line, convert->borderline, lb_width);
+    memcpy (line + r_border, convert->borderline, rb_width);
+  }
+  line += out_x * pstride;
+
   return line;
 }
 
@@ -1520,9 +1560,8 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
   gint out_maxwidth, out_maxheight;
   gint out_x, out_y, out_height;
   gint pack_lines, pstride;
-  gint r_border, out_width, lb_width, rb_width;
+  gint lb_width;
 
-  out_width = convert->out_width;
   out_height = convert->out_height;
   out_maxwidth = convert->out_maxwidth;
   out_maxheight = convert->out_maxheight;
@@ -1536,8 +1575,6 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
   pack_lines = convert->lines;  /* only 1 for now */
   pstride = convert->pack_pstride;
 
-  r_border = (out_x + out_width) * pstride;
-  rb_width = out_maxwidth * pstride - r_border;
   lb_width = out_x * pstride;
 
   if (convert->borderline) {
@@ -1548,23 +1585,14 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
 
   for (i = 0; i < out_height; i += pack_lines) {
     gpointer *lines;
-    guint8 *l;
 
     /* load the lines needed to pack */
-    lines =
-        gst_line_cache_get_lines (convert->pack_lines, i + out_y, i,
-        pack_lines);
+    lines = gst_line_cache_get_lines (convert->pack_lines, i + out_y,
+        i, pack_lines);
 
-    /* take away the border */
-    l = ((guint8 *) lines[0]) - lb_width;
-
-    if (convert->borderline) {
-      /* FIXME this can be optimized if we make separate temp lines with
-       * border for the output lines */
-      memcpy (l, convert->borderline, lb_width);
-      memcpy (l + r_border, convert->borderline, rb_width);
-    }
     if (!convert->identity_pack) {
+      /* take away the border */
+      guint8 *l = ((guint8 *) lines[0]) - lb_width;
       /* and pack into destination */
       GST_DEBUG ("pack line %d", i + out_y);
       PACK_FRAME (dest, l, i + out_y, out_maxwidth);
@@ -2417,7 +2445,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
       if (transforms[i].needs_color_matrix)
         video_converter_compute_matrix (convert);
       convert->convert = transforms[i].convert;
-      alloc_tmplines (convert, 1, GST_VIDEO_INFO_WIDTH (&convert->in_info));
+      alloc_tmplines (convert, 1, 0, GST_VIDEO_INFO_WIDTH (&convert->in_info));
       return TRUE;
     }
   }
