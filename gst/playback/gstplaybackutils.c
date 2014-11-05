@@ -91,12 +91,16 @@ gst_playback_utils_get_n_common_capsfeatures (GstElementFactory * fact1,
   for (i = 0; i < fact1_caps_size; i++) {
     fact1_features =
         gst_caps_get_features ((const GstCaps *) fact1_tmpl_caps, i);
+    if (gst_caps_features_is_any (fact1_features))
+      continue;
     fact1_struct =
         gst_caps_get_structure ((const GstCaps *) fact1_tmpl_caps, i);
     for (j = 0; j < fact2_caps_size; j++) {
 
       fact2_features =
           gst_caps_get_features ((const GstCaps *) fact2_tmpl_caps, j);
+      if (gst_caps_features_is_any (fact2_features))
+        continue;
       fact2_struct =
           gst_caps_get_structure ((const GstCaps *) fact2_tmpl_caps, j);
 
