@@ -219,6 +219,8 @@ gst_line_cache_get_lines (GstLineCache * cache, gint out_line, gint in_line,
   }
 
   while (TRUE) {
+    gint oline;
+
     if (cache->first <= in_line
         && in_line + n_lines <= cache->first + (gint) cache->lines->len) {
       return cache->lines->pdata + (in_line - cache->first);
@@ -227,7 +229,9 @@ gst_line_cache_get_lines (GstLineCache * cache, gint out_line, gint in_line,
     if (cache->need_line == NULL)
       break;
 
-    if (!cache->need_line (cache, out_line, cache->first + cache->lines->len,
+    oline = out_line + cache->first + cache->lines->len - in_line;
+
+    if (!cache->need_line (cache, oline, cache->first + cache->lines->len,
             cache->need_line_data))
       break;
   }
