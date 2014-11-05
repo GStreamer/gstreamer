@@ -237,6 +237,7 @@
 #include "gstplayback.h"
 #include "gstplaysink.h"
 #include "gstsubtitleoverlay.h"
+#include "gstplaybackutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_CAT_DEFAULT gst_play_bin_debug
@@ -3811,103 +3812,6 @@ avelement_compare (gconstpointer p1, gconstpointer p2)
   return strcmp (GST_OBJECT_NAME (fd1), GST_OBJECT_NAME (fd2));
 }
 
-/* unref the caps after usage */
-static GstCaps *
-get_template_caps (GstElementFactory * factory, GstPadDirection direction)
-{
-  const GList *templates;
-  GstStaticPadTemplate *templ = NULL;
-  GList *walk;
-
-  templates = gst_element_factory_get_static_pad_templates (factory);
-  for (walk = (GList *) templates; walk; walk = g_list_next (walk)) {
-    templ = walk->data;
-    if (templ->direction == direction)
-      break;
-  }
-  if (templ)
-    return gst_static_caps_get (&templ->static_caps);
-  else
-    return NULL;
-}
-
-static gboolean
-is_included (GList * list, GstCapsFeatures * cf)
-{
-  for (; list; list = list->next) {
-    if (gst_caps_features_is_equal ((GstCapsFeatures *) list->data, cf))
-      return TRUE;
-  }
-  return FALSE;
-}
-
-/* compute the number of common caps features */
-static guint
-get_n_common_capsfeatures (GstPlayBin * playbin, GstElementFactory * dec,
-    GstElementFactory * sink, gboolean isaudioelement)
-{
-  GstCaps *d_tmpl_caps, *s_tmpl_caps;
-  GstCapsFeatures *d_features, *s_features;
-  GstStructure *d_struct, *s_struct;
-  GList *cf_list = NULL;
-  guint d_caps_size, s_caps_size;
-  guint i, j, n_common_cf = 0;
-  GstCaps *raw_caps =
-      (isaudioelement) ? gst_static_caps_get (&raw_audio_caps) :
-      gst_static_caps_get (&raw_video_caps);
-  GstStructure *raw_struct = gst_caps_get_structure (raw_caps, 0);
-  GstPlayFlags flags = gst_play_bin_get_flags (playbin);
-  gboolean native_raw =
-      (isaudioelement ? ! !(flags & GST_PLAY_FLAG_NATIVE_AUDIO) : ! !(flags &
-          GST_PLAY_FLAG_NATIVE_VIDEO));
-
-  d_tmpl_caps = get_template_caps (dec, GST_PAD_SRC);
-  s_tmpl_caps = get_template_caps (sink, GST_PAD_SINK);
-
-  if (!d_tmpl_caps || !s_tmpl_caps) {
-    GST_ERROR ("Failed to get template caps from decoder or sink");
-    return 0;
-  }
-
-  d_caps_size = gst_caps_get_size (d_tmpl_caps);
-  s_caps_size = gst_caps_get_size (s_tmpl_caps);
-
-  for (i = 0; i < d_caps_size; i++) {
-    d_features = gst_caps_get_features ((const GstCaps *) d_tmpl_caps, i);
-    d_struct = gst_caps_get_structure ((const GstCaps *) d_tmpl_caps, i);
-    for (j = 0; j < s_caps_size; j++) {
-
-      s_features = gst_caps_get_features ((const GstCaps *) s_tmpl_caps, j);
-      s_struct = gst_caps_get_structure ((const GstCaps *) s_tmpl_caps, j);
-
-      /* A common caps feature is given if the caps features are equal
-       * and the structures can intersect. If the NATIVE_AUDIO/NATIVE_VIDEO
-       * flags are not set we also allow if both structures are raw caps with
-       * system memory caps features, because in that case we have converters in
-       * place.
-       */
-      if (gst_caps_features_is_equal (d_features, s_features) &&
-          (gst_structure_can_intersect (d_struct, s_struct) ||
-              (!native_raw
-                  && gst_caps_features_is_equal (d_features,
-                      GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
-                  && gst_structure_can_intersect (raw_struct, d_struct)
-                  && gst_structure_can_intersect (raw_struct, s_struct)))
-          && !is_included (cf_list, s_features)) {
-        cf_list = g_list_prepend (cf_list, s_features);
-        n_common_cf++;
-      }
-    }
-  }
-  if (cf_list)
-    g_list_free (cf_list);
-
-  gst_caps_unref (d_tmpl_caps);
-  gst_caps_unref (s_tmpl_caps);
-
-  return n_common_cf;
-}
-
 static GSequence *
 avelements_create (GstPlayBin * playbin, gboolean isaudioelement)
 {
@@ -3951,8 +3855,8 @@ avelements_create (GstPlayBin * playbin, gboolean isaudioelement)
       s_factory = (GstElementFactory *) sl->data;
 
       n_common_cf =
-          get_n_common_capsfeatures (playbin, d_factory, s_factory,
-          isaudioelement);
+          gst_playback_utils_get_n_common_capsfeatures (d_factory, s_factory,
+          gst_play_bin_get_flags (playbin), isaudioelement);
       if (n_common_cf < 1)
         continue;
 

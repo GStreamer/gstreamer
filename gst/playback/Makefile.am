@@ -13,7 +13,8 @@ libgstplayback_la_SOURCES = \
 	gstplaysinkvideoconvert.c \
 	gstplaysinkaudioconvert.c \
 	gstplaysinkconvertbin.c \
-	gststreamsynchronizer.c
+	gststreamsynchronizer.c \
+	gstplaybackutils.c
 
 nodist_libgstplayback_la_SOURCES = $(built_sources)
 libgstplayback_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(csp_cflags)
@@ -34,7 +35,8 @@ noinst_HEADERS = \
 	gstplaysinkvideoconvert.h \
 	gstplaysinkaudioconvert.h \
 	gstplaysinkconvertbin.h \
-	gststreamsynchronizer.h
+	gststreamsynchronizer.h \
+	gstplaybackutils.h
 
 BUILT_SOURCES = $(built_headers) $(built_sources)
 
