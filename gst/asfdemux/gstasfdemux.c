@@ -4286,7 +4286,7 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstObject * parent,
           GstFormat fmt;
           gboolean seekable;
 
-          /* try downstream first in TIME */
+          /* try upstream first in TIME */
           res = gst_pad_query_default (pad, parent, query);
 
           gst_query_parse_seeking (query, &fmt, &seekable, NULL, NULL);
