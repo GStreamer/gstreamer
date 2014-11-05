@@ -4166,21 +4166,24 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstObject * parent,
         break;
       }
 
-      GST_OBJECT_LOCK (demux);
+      res = gst_pad_query_default (pad, parent, query);
+      if (!res) {
+        GST_OBJECT_LOCK (demux);
 
-      if (demux->segment.duration != GST_CLOCK_TIME_NONE) {
-        GST_LOG ("returning duration: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (demux->segment.duration));
+        if (demux->segment.duration != GST_CLOCK_TIME_NONE) {
+          GST_LOG ("returning duration: %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (demux->segment.duration));
 
-        gst_query_set_duration (query, GST_FORMAT_TIME,
-            demux->segment.duration);
+          gst_query_set_duration (query, GST_FORMAT_TIME,
+              demux->segment.duration);
 
-        res = TRUE;
-      } else {
-        GST_LOG ("duration not known yet");
+          res = TRUE;
+        } else {
+          GST_LOG ("duration not known yet");
+        }
+
+        GST_OBJECT_UNLOCK (demux);
       }
-
-      GST_OBJECT_UNLOCK (demux);
       break;
     }
 
