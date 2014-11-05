@@ -1349,7 +1349,7 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
   gint width, height;
   GstBaseTextOverlayVAlign valign;
   GstBaseTextOverlayHAlign halign;
-  *ypos = 0;
+
   width = overlay->image_width;
   height = overlay->image_height;
 
@@ -1378,9 +1378,8 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
       *xpos = 0;
   }
   *xpos += overlay->deltax;
-  if (*xpos > overlay->width || *xpos < 0) {
+  if (*xpos > overlay->width) {
     /* Clip text if out of frame */
-    *xpos = 0;
     overlay->silent = TRUE;
   } else {
     if (overlay->use_vertical_render)
@@ -1410,9 +1409,8 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
         break;
     }
     *ypos += overlay->deltay;
-    if (*ypos > overlay->height || *ypos < 0) {
+    if (*ypos > overlay->height) {
       /* Clip text if out of frame */
-      *ypos = 0;
       overlay->silent = TRUE;
     }
   }
