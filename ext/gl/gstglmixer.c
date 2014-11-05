@@ -1064,23 +1064,55 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
     walk = g_list_next (walk);
 
     if (vaggpad->buffer != NULL) {
-      guint in_tex;
+      GstBuffer *gl_buf;
+      GstCaps *gl_caps;
+      GstCapsFeatures *gl_features;
+      GstVideoInfo gl_info;
+      GstVideoFrame gl_frame;
+
+      gst_video_info_set_format (&gl_info,
+          GST_VIDEO_FORMAT_RGBA,
+          GST_VIDEO_INFO_WIDTH (&vaggpad->info),
+          GST_VIDEO_INFO_HEIGHT (&vaggpad->info));
+      gl_features =
+          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+
+      gl_caps = gst_video_info_to_caps (&gl_info);
+      gst_caps_set_features (gl_caps, 0, gl_features);
 
       if (!pad->upload) {
+        GstCaps *in_caps = gst_pad_get_current_caps (GST_PAD (pad));
+
         pad->upload = gst_gl_upload_new (mix->context);
 
-        gst_gl_upload_set_format (pad->upload, &vaggpad->info);
+        gst_gl_upload_set_caps (pad->upload, in_caps, gl_caps);
+
+        gst_caps_unref (in_caps);
       }
 
       if (!gst_gl_upload_perform_with_buffer (pad->upload,
-              vaggpad->buffer, &in_tex, NULL)) {
+              vaggpad->buffer, &gl_buf)) {
         ++array_index;
         pad->mapped = FALSE;
+        gst_caps_unref (gl_caps);
+        continue;
+      }
+
+      if (!gst_video_frame_map (&gl_frame, &gl_info, gl_buf,
+              GST_MAP_READ | GST_MAP_GL)) {
+        ++array_index;
+        pad->mapped = FALSE;
+        gst_buffer_unref (gl_buf);
+        gst_caps_unref (gl_caps);
         continue;
       }
       pad->mapped = TRUE;
 
-      frame->texture = in_tex;
+      frame->texture = *(guint *) gl_frame.data[0];
+
+      gst_caps_unref (gl_caps);
+      gst_video_frame_unmap (&gl_frame);
+      gst_buffer_unref (gl_buf);
     }
     ++array_index;
   }

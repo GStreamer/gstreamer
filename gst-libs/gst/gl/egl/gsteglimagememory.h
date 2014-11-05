@@ -29,12 +29,31 @@
 #include <gst/video/video.h>
 
 #include <gst/gl/gl.h>
+#include "gstglcontext_egl.h"
 
 G_BEGIN_DECLS
+
+typedef void (*GstEGLImageDestroyNotify) (GstGLContextEGL * context,
+    gpointer data);
+
+typedef struct _GstEGLImageMemory GstEGLImageMemory;
 
 #define GST_EGL_IMAGE_MEMORY_TYPE "EGLImage"
 
 #define GST_CAPS_FEATURE_MEMORY_EGL_IMAGE "memory:EGLImage"
+
+struct _GstEGLImageMemory
+{
+  GstMemory parent;
+
+  GstGLContextEGL *context;
+  EGLImageKHR image;
+  GstVideoGLTextureType type;
+  GstVideoGLTextureOrientation orientation;
+
+  gpointer user_data;
+  GstEGLImageDestroyNotify user_data_destroy;
+};
 
 void gst_egl_image_memory_init (void);
 gboolean gst_egl_image_memory_setup_buffer (GstGLContext * context, GstVideoInfo * info, GstBuffer * buffer);

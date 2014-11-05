@@ -47,30 +47,522 @@
 #define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
 #define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
 
-static gboolean _upload_memory (GstGLUpload * upload);
-static gboolean _init_upload (GstGLUpload * upload);
-static gboolean _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
-    GLuint * texture_id, gpointer data[GST_VIDEO_MAX_PLANES],
-    GstBuffer ** outbuf);
-static void _do_upload_with_meta (GstGLContext * context, GstGLUpload * upload);
-static void gst_gl_upload_reset (GstGLUpload * upload);
+GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
+#define GST_CAT_DEFAULT gst_gl_upload_debug
+
+typedef struct _UploadMethod UploadMethod;
 
 struct _GstGLUploadPrivate
 {
-  gboolean result;
-  guint tex_id;
+  GstVideoInfo in_info;
+  GstVideoInfo out_info;
+  GstCaps *in_caps;
+  GstCaps *out_caps;
 
-  gboolean mapped;
-  GstVideoFrame frame;
-
-  GstVideoGLTextureUploadMeta *meta;
+  GstGLColorConvert *convert;
 
   GstBuffer *outbuf;
-  gboolean released;
+
+  UploadMethod *method;
+  gpointer method_impl;
+  int method_i;
 };
 
-GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
-#define GST_CAT_DEFAULT gst_gl_upload_debug
+typedef enum
+{
+  GST_GL_UPLOAD_DONE = 1,
+  GST_GL_UPLOAD_CONVERT_GL_MEMORY = 2,
+
+  GST_GL_UPLOAD_ERROR = -1,
+  GST_GL_UPLOAD_UNSUPPORTED = -2,
+  GST_GL_UPLOAD_UNSHARED_GL_CONTEXT = 3,
+} GstGLUploadReturn;
+
+typedef enum
+{
+  METHOD_FLAG_CAN_SHARE_CONTEXT = 1,
+} GstGLUploadMethodFlags;
+
+struct _UploadMethod
+{
+  const gchar *name;
+  GstGLUploadMethodFlags flags;
+
+    gpointer (*new) (GstGLUpload * upload);
+    gboolean (*accept) (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
+      GstCaps * out_caps);
+    GstGLUploadReturn (*perform) (gpointer impl, GstBuffer * buffer,
+      GstBuffer ** outbuf);
+  void (*release) (gpointer impl, GstBuffer * buffer);
+  void (*free) (gpointer impl);
+} _UploadMethod;
+
+struct GLMemoryUpload
+{
+  GstGLUpload *upload;
+};
+
+static gpointer
+_gl_memory_upload_new (GstGLUpload * upload)
+{
+  struct GLMemoryUpload *mem = g_new0 (struct GLMemoryUpload, 1);
+
+  mem->upload = upload;
+
+  return mem;
+}
+
+static gboolean
+_gl_memory_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
+    GstCaps * out_caps)
+{
+  struct GLMemoryUpload *upload = impl;
+  GstCapsFeatures *features, *gl_features;
+  gboolean ret = TRUE;
+  int i;
+
+  gl_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+
+  features = gst_caps_get_features (in_caps, 0);
+  if (!gst_caps_features_is_equal (features, gl_features))
+    ret = FALSE;
+
+  features = gst_caps_get_features (out_caps, 0);
+  if (!gst_caps_features_is_equal (features, gl_features))
+    ret = FALSE;
+
+  gst_caps_features_free (gl_features);
+
+  if (!ret)
+    return FALSE;
+
+  if (gst_buffer_n_memory (buffer) !=
+      GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info))
+    return FALSE;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+    if (!gst_is_gl_memory (mem))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static GstGLUploadReturn
+_gl_memory_upload_perform (gpointer impl, GstBuffer * buffer,
+    GstBuffer ** outbuf)
+{
+  struct GLMemoryUpload *upload = impl;
+  GstGLMemory *gl_mem;
+  int i;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+    gl_mem = (GstGLMemory *) mem;
+    if (!gst_gl_context_can_share (upload->upload->context, gl_mem->context))
+      return GST_GL_UPLOAD_UNSHARED_GL_CONTEXT;
+  }
+
+  *outbuf = gst_buffer_ref (buffer);
+
+  return GST_GL_UPLOAD_CONVERT_GL_MEMORY;
+}
+
+static void
+_gl_memory_upload_release (gpointer impl, GstBuffer * buffer)
+{
+}
+
+static void
+_gl_memory_upload_free (gpointer impl)
+{
+  g_free (impl);
+}
+
+static UploadMethod _gl_memory_upload = {
+  "GLMemory",
+  METHOD_FLAG_CAN_SHARE_CONTEXT,
+  &_gl_memory_upload_new,
+  &_gl_memory_upload_accept,
+  &_gl_memory_upload_perform,
+  &_gl_memory_upload_release,
+  &_gl_memory_upload_free
+};
+
+#if GST_GL_HAVE_PLATFORM_EGL
+struct EGLImageUpload
+{
+  GstGLUpload *upload;
+};
+
+static gpointer
+_egl_image_upload_new (GstGLUpload * upload)
+{
+  struct EGLImageUpload *image = g_new0 (struct EGLImageUpload, 1);
+
+  image->upload = upload;
+
+  return image;
+}
+
+static gboolean
+_egl_image_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
+    GstCaps * out_caps)
+{
+  struct EGLImageUpload *image = impl;
+  GstCapsFeatures *features, *gl_features;
+  gboolean ret = TRUE;
+  int i;
+
+  gl_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
+  features = gst_caps_get_features (in_caps, 0);
+  if (!gst_caps_features_is_equal (features, gl_features))
+    ret = FALSE;
+
+  gst_caps_features_free (gl_features);
+
+  gl_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  features = gst_caps_get_features (out_caps, 0);
+  if (!gst_caps_features_is_equal (features, gl_features))
+    ret = FALSE;
+
+  gst_caps_features_free (gl_features);
+
+  if (!ret)
+    return FALSE;
+
+  if (gst_buffer_n_memory (buffer) !=
+      GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info))
+    return FALSE;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+    if (!gst_is_egl_image_memory (mem))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static GstGLUploadReturn
+_egl_image_upload_perform (gpointer impl, GstBuffer * buffer,
+    GstBuffer ** outbuf)
+{
+  struct EGLImageUpload *image = impl;
+  guint i;
+
+  /* FIXME: buffer pool */
+  *outbuf = gst_buffer_new ();
+  gst_gl_memory_setup_buffer (image->upload->context,
+      &image->upload->priv->out_info, *outbuf);
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+    GstGLMemory *out_gl_mem =
+        (GstGLMemory *) gst_buffer_peek_memory (*outbuf, i);
+    const GstGLFuncs *gl = NULL;
+
+    gl = GST_GL_CONTEXT (((GstEGLImageMemory *) mem)->context)->gl_vtable;
+
+    gl->ActiveTexture (GL_TEXTURE0 + i);
+    gl->BindTexture (GL_TEXTURE_2D, out_gl_mem->tex_id);
+    gl->EGLImageTargetTexture2D (GL_TEXTURE_2D,
+        gst_egl_image_memory_get_image (mem));
+  }
+
+  if (GST_IS_GL_BUFFER_POOL (buffer->pool))
+    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (buffer->pool),
+        buffer);
+
+  return GST_GL_UPLOAD_CONVERT_GL_MEMORY;
+}
+
+static void
+_egl_image_upload_release (gpointer impl, GstBuffer * buffer)
+{
+}
+
+static void
+_egl_image_upload_free (gpointer impl)
+{
+}
+
+static UploadMethod _egl_image_upload = {
+  "EGLImage",
+  0,
+  &_egl_image_upload_new,
+  &_egl_image_upload_accept,
+  &_egl_image_upload_perform,
+  &_egl_image_upload_release,
+  &_egl_image_upload_free
+};
+#endif
+
+struct GLUploadMeta
+{
+  GstGLUpload *upload;
+
+  gboolean result;
+  GstVideoGLTextureUploadMeta *meta;
+  guint texture_ids[GST_VIDEO_MAX_PLANES];
+};
+
+static gpointer
+_upload_meta_upload_new (GstGLUpload * upload)
+{
+  struct GLUploadMeta *meta = g_new0 (struct GLUploadMeta, 1);
+
+  meta->upload = upload;
+
+  return meta;
+}
+
+static gboolean
+_upload_meta_upload_accept (gpointer impl, GstBuffer * buffer,
+    GstCaps * in_caps, GstCaps * out_caps)
+{
+  struct GLUploadMeta *upload = impl;
+  GstCapsFeatures *features, *gl_features;
+  GstVideoGLTextureUploadMeta *meta;
+  gboolean ret = TRUE;
+
+  features = gst_caps_get_features (in_caps, 0);
+  gl_features =
+      gst_caps_features_from_string
+      (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
+
+  if (!gst_caps_features_is_equal (features, gl_features))
+    ret = FALSE;
+
+  gst_caps_features_free (gl_features);
+
+  if ((meta = gst_buffer_get_video_gl_texture_upload_meta (buffer)) == NULL)
+    return FALSE;
+
+  gl_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  features = gst_caps_get_features (out_caps, 0);
+  if (!gst_caps_features_is_equal (features, gl_features))
+    ret = FALSE;
+
+  gst_caps_features_free (gl_features);
+
+  if (!ret)
+    return ret;
+
+  if (meta->texture_type[0] != GST_VIDEO_GL_TEXTURE_TYPE_RGBA) {
+    GST_FIXME_OBJECT (upload, "only single rgba texture supported");
+    return FALSE;
+  }
+
+  if (meta->texture_orientation !=
+      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL) {
+    GST_FIXME_OBJECT (upload, "only x-normal, y-normal textures supported");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/*
+ * Uploads using gst_video_gl_texture_upload_meta_upload().
+ * i.e. consumer of GstVideoGLTextureUploadMeta
+ */
+static void
+_do_upload_with_meta (GstGLContext * context, struct GLUploadMeta *upload)
+{
+  if (!gst_video_gl_texture_upload_meta_upload (upload->meta,
+          upload->texture_ids)) {
+    upload->result = FALSE;
+    return;
+  }
+
+  upload->result = TRUE;
+}
+
+static GstGLUploadReturn
+_upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
+    GstBuffer ** outbuf)
+{
+  struct GLUploadMeta *upload = impl;
+  int i;
+
+  GST_LOG_OBJECT (upload, "Attempting upload with GstVideoGLTextureUploadMeta");
+
+  upload->meta = gst_buffer_get_video_gl_texture_upload_meta (buffer);
+
+  /* FIXME: buffer pool */
+  *outbuf = gst_buffer_new ();
+  gst_gl_memory_setup_buffer (upload->upload->context,
+      &upload->upload->priv->in_info, *outbuf);
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    guint tex_id = 0;
+
+    if (i < GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info)) {
+      GstMemory *mem = gst_buffer_peek_memory (*outbuf, i);
+      tex_id = ((GstGLMemory *) mem)->tex_id;
+    }
+
+    upload->texture_ids[i] = tex_id;
+  }
+
+  GST_LOG ("Uploading with GLTextureUploadMeta with textures %i,%i,%i,%i",
+      upload->texture_ids[0], upload->texture_ids[1], upload->texture_ids[2],
+      upload->texture_ids[3]);
+
+  gst_gl_context_thread_add (upload->upload->context,
+      (GstGLContextThreadFunc) _do_upload_with_meta, upload);
+
+  if (!upload->result)
+    return GST_GL_UPLOAD_ERROR;
+
+  return GST_GL_UPLOAD_CONVERT_GL_MEMORY;
+}
+
+static void
+_upload_meta_upload_release (gpointer impl, GstBuffer * buffer)
+{
+}
+
+static void
+_upload_meta_upload_free (gpointer impl)
+{
+  struct GLUploadMeta *upload = impl;
+  gint i;
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (upload->texture_ids[i]);
+    gst_gl_context_del_texture (upload->upload->context,
+        &upload->texture_ids[i]);
+  }
+}
+
+static UploadMethod _upload_meta_upload = {
+  "UploadMeta",
+  METHOD_FLAG_CAN_SHARE_CONTEXT,
+  &_upload_meta_upload_new,
+  &_upload_meta_upload_accept,
+  &_upload_meta_upload_perform,
+  &_upload_meta_upload_release,
+  &_upload_meta_upload_free
+};
+
+struct RawUpload
+{
+  GstGLUpload *upload;
+  GstGLMemory *in_tex[GST_VIDEO_MAX_PLANES];
+  GstVideoFrame in_frame;
+};
+
+static gpointer
+_raw_data_upload_new (GstGLUpload * upload)
+{
+  struct RawUpload *raw = g_new0 (struct RawUpload, 1);
+
+  raw->upload = upload;
+
+  return raw;
+}
+
+static gboolean
+_raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
+    GstCaps * out_caps)
+{
+  struct RawUpload *raw = impl;
+  GstCapsFeatures *features, *gl_features;
+  gboolean ret = TRUE;
+
+  gl_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  features = gst_caps_get_features (out_caps, 0);
+  if (!gst_caps_features_is_equal (features, gl_features))
+    ret = FALSE;
+
+  gst_caps_features_free (gl_features);
+
+  if (!ret)
+    return ret;
+
+  if (!gst_video_frame_map (&raw->in_frame, &raw->upload->priv->in_info, buffer,
+          GST_MAP_READ))
+    return FALSE;
+
+  raw->upload->priv->in_info = raw->in_frame.info;
+
+  return TRUE;
+}
+
+static GstGLUploadReturn
+_raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
+    GstBuffer ** outbuf)
+{
+  struct RawUpload *raw = impl;
+  int i;
+
+  if (!raw->in_tex[0])
+    gst_gl_memory_setup_wrapped (raw->upload->context,
+        &raw->upload->priv->in_info, raw->in_frame.data, raw->in_tex);
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (raw->in_tex[i]) {
+      raw->in_tex[i]->data = raw->in_frame.data[i];
+      GST_GL_MEMORY_FLAG_SET (raw->in_tex[i], GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+    }
+  }
+
+  *outbuf = gst_buffer_new ();
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->upload->priv->in_info); i++) {
+    gst_buffer_append_memory (*outbuf,
+        gst_memory_ref ((GstMemory *) raw->in_tex[i]));
+  }
+
+  return GST_GL_UPLOAD_CONVERT_GL_MEMORY;
+}
+
+static void
+_raw_data_upload_release (gpointer impl, GstBuffer * buffer)
+{
+  struct RawUpload *raw = impl;
+
+  gst_video_frame_unmap (&raw->in_frame);
+}
+
+static void
+_raw_data_upload_free (gpointer impl)
+{
+  struct RawUpload *raw = impl;
+  int i;
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (raw->in_tex[i])
+      gst_memory_unref ((GstMemory *) raw->in_tex[i]);
+  }
+}
+
+static UploadMethod _raw_data_upload = {
+  "Raw Data",
+  0,
+  &_raw_data_upload_new,
+  &_raw_data_upload_accept,
+  &_raw_data_upload_perform,
+  &_raw_data_upload_release,
+  &_raw_data_upload_free
+};
+
+static UploadMethod *upload_methods[] = { &_gl_memory_upload,
+#if GST_GL_HAVE_PLATFORM_EGL
+  &_egl_image_upload,
+#endif
+  &_upload_meta_upload, &_raw_data_upload
+};
 
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "upload");
@@ -78,6 +570,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, GST_TYPE_OBJECT,
     DEBUG_INIT);
 static void gst_gl_upload_finalize (GObject * object);
+static void gst_gl_upload_release_buffer_unlocked (GstGLUpload * upload);
 
 #define GST_GL_UPLOAD_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
     GST_TYPE_GL_UPLOAD, GstGLUploadPrivate))
@@ -94,11 +587,6 @@ static void
 gst_gl_upload_init (GstGLUpload * upload)
 {
   upload->priv = GST_GL_UPLOAD_GET_PRIVATE (upload);
-
-  upload->context = NULL;
-  upload->priv->tex_id = 0;
-
-  gst_video_info_set_format (&upload->in_info, GST_VIDEO_FORMAT_ENCODED, 0, 0);
 }
 
 /**
@@ -110,12 +598,9 @@ gst_gl_upload_init (GstGLUpload * upload)
 GstGLUpload *
 gst_gl_upload_new (GstGLContext * context)
 {
-  GstGLUpload *upload;
-
-  upload = g_object_new (GST_TYPE_GL_UPLOAD, NULL);
+  GstGLUpload *upload = g_object_new (GST_TYPE_GL_UPLOAD, NULL);
 
   upload->context = gst_object_ref (context);
-  upload->convert = gst_gl_color_convert_new (context);
 
   return upload;
 }
@@ -127,104 +612,157 @@ gst_gl_upload_finalize (GObject * object)
 
   upload = GST_GL_UPLOAD (object);
 
-  gst_gl_upload_reset (upload);
+  gst_gl_upload_release_buffer_unlocked (upload);
+
+  if (upload->priv->method_impl)
+    upload->priv->method->free (upload->priv->method_impl);
+  upload->priv->method_i = 0;
 
   if (upload->context) {
     gst_object_unref (upload->context);
     upload->context = NULL;
   }
 
+  if (upload->priv->convert) {
+    gst_object_unref (upload->priv->convert);
+    upload->priv->convert = NULL;
+  }
+
+  if (upload->priv->in_caps) {
+    gst_caps_unref (upload->priv->in_caps);
+    upload->priv->in_caps = NULL;
+  }
+
+  if (upload->priv->out_caps) {
+    gst_caps_unref (upload->priv->out_caps);
+    upload->priv->out_caps = NULL;
+  }
+
   G_OBJECT_CLASS (gst_gl_upload_parent_class)->finalize (object);
 }
 
-static void
-gst_gl_upload_reset (GstGLUpload * upload)
+static gboolean
+_gst_gl_upload_set_caps_unlocked (GstGLUpload * upload, GstCaps * in_caps,
+    GstCaps * out_caps)
 {
-  guint i;
+  g_return_val_if_fail (upload != NULL, FALSE);
+  g_return_val_if_fail (gst_caps_is_fixed (in_caps), FALSE);
 
-  if (upload->priv->tex_id) {
-    gst_gl_context_del_texture (upload->context, &upload->priv->tex_id);
-    upload->priv->tex_id = 0;
-  }
+  if (upload->priv->in_caps && upload->priv->out_caps
+      && gst_caps_is_equal (upload->priv->in_caps, in_caps)
+      && gst_caps_is_equal (upload->priv->out_caps, out_caps))
+    return TRUE;
 
-  if (upload->convert) {
-    gst_object_unref (upload->convert);
-    upload->convert = NULL;
-  }
+  gst_caps_replace (&upload->priv->in_caps, in_caps);
+  gst_caps_replace (&upload->priv->out_caps, out_caps);
 
-  if (upload->out_tex) {
-    gst_memory_unref ((GstMemory *) upload->out_tex);
-    upload->out_tex = NULL;
-  }
+  gst_video_info_from_caps (&upload->priv->in_info, in_caps);
+  gst_video_info_from_caps (&upload->priv->out_info, out_caps);
 
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (upload->in_tex[i]) {
-      gst_memory_unref ((GstMemory *) upload->in_tex[i]);
-      upload->in_tex[i] = NULL;
-    }
-  }
+  if (upload->priv->method_impl)
+    upload->priv->method->free (upload->priv->method_impl);
+  upload->priv->method_impl = NULL;
+  upload->priv->method_i = 0;
 
-  gst_gl_upload_release_buffer (upload);
-}
-
-static void
-_gst_gl_upload_set_format_unlocked (GstGLUpload * upload,
-    GstVideoInfo * in_info)
-{
-  g_return_if_fail (upload != NULL);
-  g_return_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
-      GST_VIDEO_FORMAT_UNKNOWN);
-  g_return_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
-      GST_VIDEO_FORMAT_ENCODED);
-
-  if (gst_video_info_is_equal (&upload->in_info, in_info))
-    return;
-
-  gst_gl_upload_reset (upload);
-  upload->convert = gst_gl_color_convert_new (upload->context);
-  upload->in_info = *in_info;
-  upload->initted = FALSE;
+  return TRUE;
 }
 
 /**
- * gst_gl_upload_set_format:
+ * gst_gl_upload_set_caps:
  * @upload: a #GstGLUpload
- * @in_info: input #GstVideoInfo
+ * @in_caps: input #GstCaps
+ * @out_caps: output #GstCaps
  *
  * Initializes @upload with the information required for upload.
- */
-void
-gst_gl_upload_set_format (GstGLUpload * upload, GstVideoInfo * in_info)
-{
-  GST_OBJECT_LOCK (upload);
-  _gst_gl_upload_set_format_unlocked (upload, in_info);
-  GST_OBJECT_UNLOCK (upload);
-}
-
-/**
- * gst_gl_upload_get_format:
- * @upload: a #GstGLUpload
  *
- * Returns: (transfer none): The #GstVideoInfo set by gst_gl_upload_set_format()
+ * Returns: whether @in_caps and @out_caps could be set on @upload
  */
-GstVideoInfo *
-gst_gl_upload_get_format (GstGLUpload * upload)
+gboolean
+gst_gl_upload_set_caps (GstGLUpload * upload, GstCaps * in_caps,
+    GstCaps * out_caps)
 {
-  GstVideoInfo *ret;
+  gboolean ret;
 
   GST_OBJECT_LOCK (upload);
-  ret = &upload->in_info;
+  ret = _gst_gl_upload_set_caps_unlocked (upload, in_caps, out_caps);
   GST_OBJECT_UNLOCK (upload);
 
   return ret;
 }
 
 /**
+ * gst_gl_upload_get_caps:
+ * @upload: a #GstGLUpload
+ * @in_caps: (transfer full): (allow-none): (out): the input #GstCaps
+ * @ou_caps: (transfer full): (allow-none): (out): the output #GstCaps
+ *
+ * Returns: (transfer none): The #GstCaps set by gst_gl_upload_set_caps()
+ */
+void
+gst_gl_upload_get_caps (GstGLUpload * upload, GstCaps ** in_caps,
+    GstCaps ** out_caps)
+{
+  GST_OBJECT_LOCK (upload);
+  if (in_caps)
+    *in_caps =
+        upload->priv->in_caps ? gst_caps_ref (upload->priv->in_caps) : NULL;
+  if (out_caps)
+    *out_caps =
+        upload->priv->out_caps ? gst_caps_ref (upload->priv->out_caps) : NULL;
+  GST_OBJECT_UNLOCK (upload);
+}
+
+static void
+gst_gl_upload_release_buffer_unlocked (GstGLUpload * upload)
+{
+  if (upload->priv->outbuf && upload->priv->method_impl) {
+    upload->priv->method->release (upload->priv->method_impl,
+        upload->priv->outbuf);
+    gst_buffer_replace (&upload->priv->outbuf, NULL);
+  }
+}
+
+/**
+ * gst_gl_upload_release_buffer:
+ * @upload: a #GstGLUpload
+ *
+ * Releases any buffers currently referenced by @upload
+ */
+void
+gst_gl_upload_release_buffer (GstGLUpload * upload)
+{
+  g_return_if_fail (upload != NULL);
+
+  GST_OBJECT_LOCK (upload);
+  gst_gl_upload_release_buffer_unlocked (upload);
+  GST_OBJECT_UNLOCK (upload);
+}
+
+static gboolean
+_upload_find_method (GstGLUpload * upload)
+{
+  if (upload->priv->method_i >= G_N_ELEMENTS (upload_methods))
+    return FALSE;
+
+  if (upload->priv->method_impl)
+    upload->priv->method->free (upload->priv->method_impl);
+
+  upload->priv->method = upload_methods[upload->priv->method_i];
+  upload->priv->method_impl = upload->priv->method->new (upload);
+
+  GST_DEBUG_OBJECT (upload, "attempting upload with uploader %s",
+      upload->priv->method->name);
+
+  upload->priv->method_i++;
+
+  return TRUE;
+}
+
+/**
  * gst_gl_upload_perform_with_buffer:
  * @upload: a #GstGLUpload
  * @buffer: a #GstBuffer
- * @tex_id: resulting texture
- * @outbuf: (allow-none): resulting buffer
+ * @outbuf_ptr: (allow-none): resulting buffer
  *
  * Uploads @buffer to the texture given by @tex_id.  @tex_id is valid
  * until gst_gl_upload_release_buffer() is called.
@@ -233,347 +771,72 @@ gst_gl_upload_get_format (GstGLUpload * upload)
  */
 gboolean
 gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
-    guint * tex_id, GstBuffer ** outbuf)
+    GstBuffer ** outbuf_ptr)
 {
-  GstMemory *mem;
-  GstVideoGLTextureUploadMeta *gl_tex_upload_meta;
-  guint texture_ids[] = { 0, 0, 0, 0 };
-  gint i;
-  gboolean ret;
+  GstGLUploadReturn ret;
 
-  g_return_val_if_fail (upload != NULL, FALSE);
-  g_return_val_if_fail (buffer != NULL, FALSE);
-  g_return_val_if_fail (tex_id != NULL, FALSE);
-  g_return_val_if_fail (gst_buffer_n_memory (buffer) > 0, FALSE);
-
-  gst_gl_upload_release_buffer (upload);
-
-  /* GstGLMemory */
-  mem = gst_buffer_peek_memory (buffer, 0);
-
-  if (gst_is_gl_memory (mem)) {
-    GstGLMemory *gl_mem = (GstGLMemory *) gst_buffer_peek_memory (buffer, 0);
-
-    if (!gst_gl_context_can_share (upload->context, gl_mem->context))
-      goto raw_data_upload;
-
-    if (GST_VIDEO_INFO_FORMAT (&upload->in_info) == GST_VIDEO_FORMAT_RGBA) {
-      GstMapInfo map_info;
-
-      gst_memory_map (mem, &map_info, GST_MAP_READ | GST_MAP_GL);
-      gst_memory_unmap (mem, &map_info);
-
-      *tex_id = ((GstGLMemory *) mem)->tex_id;
-
-      if (outbuf)
-        *outbuf = gst_buffer_ref (buffer);
-
-      return TRUE;
-    }
-
-    GST_LOG_OBJECT (upload, "Attempting upload with GstGLMemory");
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
-      upload->in_tex[i] = (GstGLMemory *) gst_buffer_peek_memory (buffer, i);
-    }
-
-    ret = _upload_memory (upload);
-
-    *tex_id = upload->out_tex->tex_id;
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
-      upload->in_tex[i] = NULL;
-    }
-
-    if (ret && outbuf != NULL)
-      *outbuf = gst_buffer_ref (upload->priv->outbuf);
-
-    return ret;
-  }
-#if GST_GL_HAVE_PLATFORM_EGL
-  if (!upload->priv->tex_id && gst_is_egl_image_memory (mem))
-    gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
-        GST_VIDEO_FORMAT_RGBA, 0, 0);
-#endif
-
-  if (!upload->priv->tex_id)
-    gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
-        GST_VIDEO_FORMAT_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
-        GST_VIDEO_INFO_HEIGHT (&upload->in_info));
-
-  /* GstVideoGLTextureUploadMeta */
-  gl_tex_upload_meta = gst_buffer_get_video_gl_texture_upload_meta (buffer);
-  if (gl_tex_upload_meta) {
-    GST_LOG_OBJECT (upload, "Attempting upload with "
-        "GstVideoGLTextureUploadMeta");
-    texture_ids[0] = upload->priv->tex_id;
-
-    if (!gst_gl_upload_perform_with_gl_texture_upload_meta (upload,
-            gl_tex_upload_meta, texture_ids, outbuf)) {
-      GST_DEBUG_OBJECT (upload, "Upload with GstVideoGLTextureUploadMeta "
-          "failed");
-    } else {
-      upload->priv->mapped = FALSE;
-      *tex_id = upload->priv->tex_id;
-      return TRUE;
-    }
-  }
-
-raw_data_upload:
-  GST_LOG_OBJECT (upload, "Attempting upload with raw data");
-  /* GstVideoMeta map */
-  if (!gst_video_frame_map (&upload->priv->frame, &upload->in_info, buffer,
-          GST_MAP_READ)) {
-    GST_ERROR_OBJECT (upload, "Failed to map memory");
-    return FALSE;
-  }
-  upload->priv->mapped = TRUE;
-
-  /* update the video info from the one updated by frame_map using video meta */
-  gst_gl_upload_set_format (upload, &upload->priv->frame.info);
-
-  if (!gst_gl_upload_perform_with_data (upload, tex_id,
-          upload->priv->frame.data, outbuf)) {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-void
-gst_gl_upload_release_buffer (GstGLUpload * upload)
-{
-  g_return_if_fail (upload != NULL);
-
-  if (upload->priv->mapped)
-    gst_video_frame_unmap (&upload->priv->frame);
-  upload->priv->mapped = FALSE;
-
-  if (upload->priv->outbuf) {
-    gst_buffer_unref (upload->priv->outbuf);
-    upload->priv->outbuf = NULL;
-  }
-
-  upload->priv->released = TRUE;
-}
-
-/*
- * Uploads using gst_video_gl_texture_upload_meta_upload().
- * i.e. consumer of GstVideoGLTextureUploadMeta
- */
-static void
-_do_upload_with_meta (GstGLContext * context, GstGLUpload * upload)
-{
-  guint texture_ids[] = { upload->priv->tex_id, 0, 0, 0 };
-
-  if (!gst_video_gl_texture_upload_meta_upload (upload->priv->meta,
-          texture_ids))
-    goto error;
-
-  upload->priv->result = TRUE;
-  return;
-
-error:
-  upload->priv->result = FALSE;
-}
-
-/**
- * gst_gl_upload_perform_with_gl_texture_upload_meta:
- * @upload: a #GstGLUpload
- * @meta: a #GstVideoGLTextureUploadMeta
- * @texture_id: resulting GL textures to place the data into.
- * @outbuf: (allow-none): resulting buffer
- *
- * Uploads @meta into @texture_id.
- *
- * Returns: whether the upload was successful
- */
-gboolean
-gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload * upload,
-    GstVideoGLTextureUploadMeta * meta, guint texture_id[4],
-    GstBuffer ** outbuf)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (upload != NULL, FALSE);
-  g_return_val_if_fail (meta != NULL, FALSE);
-
-  if (meta->texture_orientation !=
-      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL)
-    GST_FIXME_OBJECT (upload, "only x-normal,y-normal textures supported, "
-        "the images will not appear the right way up");
-  if (meta->texture_type[0] != GST_VIDEO_GL_TEXTURE_TYPE_RGBA) {
-    GST_FIXME_OBJECT (upload, "only single rgba texture supported");
-    return FALSE;
-  }
+  g_return_val_if_fail (GST_IS_GL_UPLOAD (upload), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
   GST_OBJECT_LOCK (upload);
 
-  upload->priv->meta = meta;
-  if (!upload->priv->tex_id)
-    gst_gl_context_gen_texture (upload->context, &upload->priv->tex_id,
-        GST_VIDEO_FORMAT_RGBA, GST_VIDEO_INFO_WIDTH (&upload->in_info),
-        GST_VIDEO_INFO_HEIGHT (&upload->in_info));
+  gst_gl_upload_release_buffer_unlocked (upload);
 
-  GST_LOG ("Uploading with GLTextureUploadMeta with textures %i,%i,%i,%i",
-      texture_id[0], texture_id[1], texture_id[2], texture_id[3]);
+#define NEXT_METHOD \
+do { \
+  if (!_upload_find_method (upload)) { \
+    GST_OBJECT_UNLOCK (upload); \
+    return FALSE; \
+  } \
+  goto restart; \
+} while (0)
 
-  gst_gl_context_thread_add (upload->context,
-      (GstGLContextThreadFunc) _do_upload_with_meta, upload);
+  if (!upload->priv->method_impl)
+    _upload_find_method (upload);
 
-  ret = upload->priv->result;
+restart:
+  if (!upload->priv->method->accept (upload->priv->method_impl, buffer,
+          upload->priv->in_caps, upload->priv->out_caps))
+    NEXT_METHOD;
 
-  if (ret && outbuf != NULL)
-    *outbuf = gst_buffer_ref (upload->priv->outbuf);
-
-  GST_OBJECT_UNLOCK (upload);
-
-  return ret;
-}
-
-/**
- * gst_gl_upload_perform_with_data:
- * @upload: a #GstGLUpload
- * @texture_id: (out): the texture id to upload into
- * @data: where the downloaded data should go
- * @outbuf: (allow-none): resulting buffer
- *
- * Uploads @data into @texture_id. data size and format is specified by
- * the #GstVideoInfo<!--  -->s passed to gst_gl_upload_set_format() 
- *
- * Returns: whether the upload was successful
- */
-gboolean
-gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint * texture_id,
-    gpointer data[GST_VIDEO_MAX_PLANES], GstBuffer ** outbuf)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (upload != NULL, FALSE);
-
-  GST_OBJECT_LOCK (upload);
   ret =
-      _gst_gl_upload_perform_with_data_unlocked (upload, texture_id, data,
-      outbuf);
+      upload->priv->method->perform (upload->priv->method_impl, buffer,
+      &upload->priv->outbuf);
+  if (ret == GST_GL_UPLOAD_UNSHARED_GL_CONTEXT) {
+    upload->priv->method->free (upload->priv->method_impl);
+    upload->priv->method = &_raw_data_upload;
+    upload->priv->method_impl = upload->priv->method->new (upload);
+    goto restart;
+  } else if (ret == GST_GL_UPLOAD_CONVERT_GL_MEMORY) {
+    GstBuffer *outbuf;
+
+    if (!upload->priv->convert)
+      upload->priv->convert = gst_gl_color_convert_new (upload->context);
+    gst_gl_color_convert_set_format (upload->priv->convert,
+        &upload->priv->in_info, &upload->priv->out_info);
+
+    if (!(outbuf = gst_gl_color_convert_perform (upload->priv->convert,
+                upload->priv->outbuf))) {
+      gst_gl_upload_release_buffer_unlocked (upload);
+      NEXT_METHOD;
+    }
+
+    gst_buffer_unref (upload->priv->outbuf);
+    upload->priv->outbuf = outbuf;
+  } else if (ret == GST_GL_UPLOAD_DONE) {
+    /* we are done */
+  } else {
+    gst_gl_upload_release_buffer_unlocked (upload);
+    upload->priv->method->free (upload->priv->method_impl);
+    NEXT_METHOD;
+  }
+
+  if (outbuf_ptr)
+    *outbuf_ptr = gst_buffer_ref (upload->priv->outbuf);
+
   GST_OBJECT_UNLOCK (upload);
 
-  return ret;
-}
+  return upload->priv->outbuf != NULL;
 
-static gboolean
-_gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
-    GLuint * texture_id, gpointer data[GST_VIDEO_MAX_PLANES],
-    GstBuffer ** outbuf)
-{
-  gboolean ret;
-  guint i;
-
-  g_return_val_if_fail (upload != NULL, FALSE);
-  g_return_val_if_fail (texture_id != NULL, FALSE);
-
-  if (!upload->in_tex[0])
-    gst_gl_memory_setup_wrapped (upload->context, &upload->in_info, data,
-        upload->in_tex);
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (upload->in_tex[i]) {
-      upload->in_tex[i]->data = data[i];
-      GST_GL_MEMORY_FLAG_SET (upload->in_tex[i],
-          GST_GL_MEMORY_FLAG_NEED_UPLOAD);
-    }
-  }
-
-  ret = _upload_memory (upload);
-  *texture_id = upload->out_tex->tex_id;
-
-  if (ret && outbuf != NULL)
-    *outbuf = gst_buffer_ref (upload->priv->outbuf);
-
-  return ret;
-}
-
-/* Called in the gl thread */
-static gboolean
-_init_upload (GstGLUpload * upload)
-{
-  GstGLFuncs *gl;
-  GstVideoFormat v_format;
-  GstVideoInfo out_info;
-
-  gl = upload->context->gl_vtable;
-
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->in_info);
-
-  GST_INFO ("Initializing texture upload for format:%s",
-      gst_video_format_to_string (v_format));
-
-  if (!gl->CreateProgramObject && !gl->CreateProgram) {
-    gst_gl_context_set_error (upload->context,
-        "Cannot upload YUV formats without OpenGL shaders");
-    goto error;
-  }
-
-  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA,
-      GST_VIDEO_INFO_WIDTH (&upload->in_info),
-      GST_VIDEO_INFO_HEIGHT (&upload->in_info));
-
-  gst_gl_color_convert_set_format (upload->convert, &upload->in_info,
-      &out_info);
-
-  upload->out_tex = gst_gl_memory_wrapped_texture (upload->context, 0,
-      &out_info, 0, NULL, NULL);
-
-  upload->initted = TRUE;
-
-  return TRUE;
-
-error:
-  return FALSE;
-}
-
-static gboolean
-_upload_memory (GstGLUpload * upload)
-{
-  guint in_width, in_height;
-  guint in_texture[GST_VIDEO_MAX_PLANES];
-  GstBuffer *inbuf;
-  GstVideoFrame out_frame;
-  GstVideoInfo out_info;
-  gint i;
-
-  in_width = GST_VIDEO_INFO_WIDTH (&upload->in_info);
-  in_height = GST_VIDEO_INFO_HEIGHT (&upload->in_info);
-
-  if (!upload->initted) {
-    if (!_init_upload (upload)) {
-      return FALSE;
-    }
-  }
-
-  inbuf = gst_buffer_new ();
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->in_info); i++) {
-    in_texture[i] = upload->in_tex[i]->tex_id;
-    gst_buffer_append_memory (inbuf,
-        gst_memory_ref ((GstMemory *) upload->in_tex[i]));
-  }
-
-  GST_TRACE ("uploading with textures:%u,%u,%u dimensions:%ux%u",
-      in_texture[0], in_texture[1], in_texture[2], in_width, in_height);
-
-  upload->priv->outbuf = gst_gl_color_convert_perform (upload->convert, inbuf);
-  gst_buffer_unref (inbuf);
-
-  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA, in_width,
-      in_height);
-  if (!gst_video_frame_map (&out_frame, &out_info, upload->priv->outbuf,
-          GST_MAP_READ | GST_MAP_GL)) {
-    gst_buffer_unref (upload->priv->outbuf);
-    upload->priv->outbuf = NULL;
-    return FALSE;
-  }
-
-  upload->out_tex->tex_id = *(guint *) out_frame.data[0];
-
-  gst_video_frame_unmap (&out_frame);
-  upload->priv->released = FALSE;
-
-  return TRUE;
+#undef NEXT_METHOD
 }

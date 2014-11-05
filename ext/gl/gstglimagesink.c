@@ -620,6 +620,11 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
     glimage_sink->pool = NULL;
   }
 
+  if (glimage_sink->gl_caps) {
+    gst_caps_unref (glimage_sink->gl_caps);
+    glimage_sink->gl_caps = NULL;
+  }
+
   return TRUE;
 }
 
@@ -764,6 +769,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstVideoInfo vinfo;
   GstStructure *structure;
   GstBufferPool *newpool, *oldpool;
+  GstCapsFeatures *gl_features;
 
   GST_DEBUG ("set caps with %" GST_PTR_FORMAT, caps);
 
@@ -848,7 +854,16 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     gst_object_unref (glimage_sink->upload);
   glimage_sink->upload = gst_gl_upload_new (glimage_sink->context);
 
-  gst_gl_upload_set_format (glimage_sink->upload, &vinfo);
+  gl_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  if (glimage_sink->gl_caps)
+    gst_caps_unref (glimage_sink->gl_caps);
+  glimage_sink->gl_caps = gst_caps_copy (caps);
+  gst_caps_set_simple (glimage_sink->gl_caps, "format", G_TYPE_STRING, "RGBA",
+      NULL);
+  gst_caps_set_features (glimage_sink->gl_caps, 0, gl_features);
+
+  gst_gl_upload_set_caps (glimage_sink->upload, caps, glimage_sink->gl_caps);
   glimage_sink->caps_change = TRUE;
 
   return TRUE;
@@ -859,6 +874,8 @@ gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
   GstBuffer *next_buffer = NULL;
+  GstVideoFrame gl_frame;
+  GstVideoInfo gl_info;
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
@@ -873,11 +890,23 @@ gst_glimage_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
     return GST_FLOW_NOT_NEGOTIATED;
 
   if (!gst_gl_upload_perform_with_buffer (glimage_sink->upload, buf,
-          &glimage_sink->next_tex, &next_buffer))
+          &next_buffer))
     goto upload_failed;
+
+  gst_video_info_from_caps (&gl_info, glimage_sink->gl_caps);
+
+  if (!gst_video_frame_map (&gl_frame, &gl_info, next_buffer,
+          GST_MAP_READ | GST_MAP_GL)) {
+    gst_buffer_unref (next_buffer);
+    goto upload_failed;
+  }
+
+  glimage_sink->next_tex = *(guint *) gl_frame.data[0];
 
   gst_buffer_replace (&glimage_sink->next_buffer, next_buffer);
   gst_buffer_unref (next_buffer);
+
+  gst_video_frame_unmap (&gl_frame);
 
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
     GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
