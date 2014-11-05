@@ -25,26 +25,9 @@
 #endif
 
 #include "gsteglimagememory.h"
-#include "gstglcontext_egl.h"
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_EGL_IMAGE_MEMORY);
 #define GST_CAT_DEFAULT GST_CAT_EGL_IMAGE_MEMORY
-
-typedef void (*GstEGLImageDestroyNotify) (GstGLContextEGL * context,
-    gpointer data);
-
-typedef struct
-{
-  GstMemory parent;
-
-  GstGLContextEGL *context;
-  EGLImageKHR image;
-  GstVideoGLTextureType type;
-  GstVideoGLTextureOrientation orientation;
-
-  gpointer user_data;
-  GstEGLImageDestroyNotify user_data_destroy;
-} GstEGLImageMemory;
 
 #define GST_EGL_IMAGE_MEMORY(mem) ((GstEGLImageMemory*)(mem))
 
@@ -317,13 +300,7 @@ gst_eglimage_to_gl_texture_upload_meta (GstVideoGLTextureUploadMeta *
 
     gl = GST_GL_CONTEXT (GST_EGL_IMAGE_MEMORY (mem)->context)->gl_vtable;
 
-    if (i == 0)
-      gl->ActiveTexture (GL_TEXTURE0);
-    else if (i == 1)
-      gl->ActiveTexture (GL_TEXTURE1);
-    else if (i == 2)
-      gl->ActiveTexture (GL_TEXTURE2);
-
+    gl->ActiveTexture (GL_TEXTURE0 + i);
     gl->BindTexture (GL_TEXTURE_2D, texture_id[i]);
     gl->EGLImageTargetTexture2D (GL_TEXTURE_2D,
         gst_egl_image_memory_get_image (mem));

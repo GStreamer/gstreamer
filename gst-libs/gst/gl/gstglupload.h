@@ -22,7 +22,6 @@
 #define __GST_GL_UPLOAD_H__
 
 #include <gst/video/video.h>
-#include <gst/gstmemory.h>
 
 #include <gst/gl/gstgl_fwd.h>
 
@@ -47,17 +46,7 @@ struct _GstGLUpload
   GstObject        parent;
 
   GstGLContext    *context;
-  GstGLColorConvert *convert;
 
-  /* input data */
-  GstVideoInfo     in_info;
-
-  gboolean         initted;
-
-  GstGLMemory     *in_tex[GST_VIDEO_MAX_PLANES];
-  GstGLMemory     *out_tex;
-
-  /* <private> */
   GstGLUploadPrivate *priv;
 
   gpointer _reserved[GST_PADDING];
@@ -75,15 +64,11 @@ struct _GstGLUploadClass
 
 GstGLUpload * gst_gl_upload_new            (GstGLContext * context);
 
-void           gst_gl_upload_set_format    (GstGLUpload * upload, GstVideoInfo * in_info);
-GstVideoInfo * gst_gl_upload_get_format    (GstGLUpload * upload);
+gboolean      gst_gl_upload_set_caps      (GstGLUpload * upload, GstCaps * in_caps, GstCaps * out_caps);
+void          gst_gl_upload_get_caps      (GstGLUpload * upload, GstCaps ** in_caps, GstCaps ** out_caps);
 
-gboolean gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer, guint * tex_id, GstBuffer ** outbuf);
+gboolean gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer, GstBuffer ** outbuf);
 void gst_gl_upload_release_buffer (GstGLUpload * upload);
-gboolean gst_gl_upload_perform_with_data          (GstGLUpload * upload, GLuint * texture_id,
-                                                   gpointer data[GST_VIDEO_MAX_PLANES], GstBuffer ** outbuf);
-
-gboolean gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload *upload, GstVideoGLTextureUploadMeta *meta, guint texture_id[4], GstBuffer ** outbuf);
 
 G_END_DECLS
 

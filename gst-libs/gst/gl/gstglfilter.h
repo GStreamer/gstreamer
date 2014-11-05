@@ -88,6 +88,8 @@ struct _GstGLFilter
   GstGLContext      *context;
   GstGLContext      *other_context;
 
+  GstCaps           *in_gl_caps;
+
 #if GST_GL_HAVE_GLES2
   GLint draw_attr_position_loc;
   GLint draw_attr_texture_loc;
