@@ -174,6 +174,10 @@ void video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
     int p1, int n);
 void video_orc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+void video_orc_convert_u16_to_u8 (guint8 * ORC_RESTRICT d1,
+    const guint16 * ORC_RESTRICT s1, int n);
+void video_orc_convert_u8_to_u16 (guint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
 void video_orc_convert_I420_UYVY (guint8 * ORC_RESTRICT d1,
     guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3,
@@ -7644,6 +7648,234 @@ video_orc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->params[ORC_VAR_D1] = d1_stride;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* video_orc_convert_u16_to_u8 */
+#ifdef DISABLE_ORC
+void
+video_orc_convert_u16_to_u8 (guint8 * ORC_RESTRICT d1,
+    const guint16 * ORC_RESTRICT s1, int n)
+{
+  int i;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var32;
+  orc_int8 var33;
+
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_union16 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadw */
+    var32 = ptr4[i];
+    /* 1: convhwb */
+    var33 = ((orc_uint16) var32.i) >> 8;
+    /* 2: storeb */
+    ptr0[i] = var33;
+  }
+
+}
+
+#else
+static void
+_backup_video_orc_convert_u16_to_u8 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var32;
+  orc_int8 var33;
+
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_union16 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadw */
+    var32 = ptr4[i];
+    /* 1: convhwb */
+    var33 = ((orc_uint16) var32.i) >> 8;
+    /* 2: storeb */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+video_orc_convert_u16_to_u8 (guint8 * ORC_RESTRICT d1,
+    const guint16 * ORC_RESTRICT s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 99, 111, 110,
+        118, 101, 114, 116, 95, 117, 49, 54, 95, 116, 111, 95, 117, 56, 11, 1,
+        1, 12, 2, 2, 158, 0, 4, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_video_orc_convert_u16_to_u8);
+#else
+      p = orc_program_new ();
+      orc_program_set_name (p, "video_orc_convert_u16_to_u8");
+      orc_program_set_backup_function (p, _backup_video_orc_convert_u16_to_u8);
+      orc_program_add_destination (p, 1, "d1");
+      orc_program_add_source (p, 2, "s1");
+
+      orc_program_append_2 (p, "convhwb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* video_orc_convert_u8_to_u16 */
+#ifdef DISABLE_ORC
+void
+video_orc_convert_u8_to_u16 (guint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
+{
+  int i;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  orc_int8 var32;
+  orc_int8 var33;
+  orc_union16 var34;
+
+  ptr0 = (orc_union16 *) d1;
+  ptr4 = (orc_int8 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadb */
+    var32 = ptr4[i];
+    /* 1: loadb */
+    var33 = ptr4[i];
+    /* 2: mergebw */
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var32;
+      _dest.x2[1] = var33;
+      var34.i = _dest.i;
+    }
+    /* 3: storew */
+    ptr0[i] = var34;
+  }
+
+}
+
+#else
+static void
+_backup_video_orc_convert_u8_to_u16 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  orc_int8 var32;
+  orc_int8 var33;
+  orc_union16 var34;
+
+  ptr0 = (orc_union16 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadb */
+    var32 = ptr4[i];
+    /* 1: loadb */
+    var33 = ptr4[i];
+    /* 2: mergebw */
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var32;
+      _dest.x2[1] = var33;
+      var34.i = _dest.i;
+    }
+    /* 3: storew */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+video_orc_convert_u8_to_u16 (guint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 99, 111, 110,
+        118, 101, 114, 116, 95, 117, 56, 95, 116, 111, 95, 117, 49, 54, 11, 2,
+        2, 12, 1, 1, 196, 0, 4, 4, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_video_orc_convert_u8_to_u16);
+#else
+      p = orc_program_new ();
+      orc_program_set_name (p, "video_orc_convert_u8_to_u16");
+      orc_program_set_backup_function (p, _backup_video_orc_convert_u8_to_u16);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_source (p, 1, "s1");
+
+      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_S1,
+          ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
 
   func = c->exec;
   func (ex);
