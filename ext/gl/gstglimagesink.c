@@ -1026,6 +1026,9 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
   g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_RESHAPE_SIGNAL], 0,
       width, height, &do_reshape);
 
+  width = MAX (1, width);
+  height = MAX (1, height);
+
   gl_sink->window_width = width;
   gl_sink->window_height = height;
 
