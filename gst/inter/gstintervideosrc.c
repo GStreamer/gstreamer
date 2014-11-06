@@ -407,6 +407,7 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   }
 
   if (buffer == NULL) {
+    GST_WARNING_OBJECT (intervideosrc, "Creating black frame");
     buffer = gst_buffer_copy (intervideosrc->black_frame);
   }
 
