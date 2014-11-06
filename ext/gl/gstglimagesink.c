@@ -513,6 +513,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
       goto context_error;
     }
 
+    gst_gl_window_handle_events (window, gl_sink->handle_events);
+
     /* setup callbacks */
     gst_gl_window_set_resize_callback (window,
         GST_GL_WINDOW_RESIZE_CB (gst_glimage_sink_on_resize),
@@ -976,9 +978,6 @@ gst_glimage_sink_handle_events (GstVideoOverlay * overlay,
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
 
   glimage_sink->handle_events = handle_events;
-
-  _ensure_gl_setup (glimage_sink);
-
   if (G_LIKELY (glimage_sink->context)) {
     GstGLWindow *window;
     window = gst_gl_context_get_window (glimage_sink->context);
