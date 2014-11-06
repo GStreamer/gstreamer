@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.4.3
+Release notes for GStreamer Bad Plugins 1.4.4
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -22,6 +22,7 @@ The stable 1.4.x release series is API and ABI compatible with 1.0.x and
 any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
+
 
 
 "That an accusation?"
@@ -72,7 +73,29 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 736951 : vc1parse: initialize sent_codec_tag before using it
+      * 732239 : h264parse: expose parsed profiles to downstream
+      * 733510 : gltransformation produced black screen
+      * 734156 : androidmedia: doesn't calculate framesize for COLOR_FormatYUV420Planar correctly
+      * 736319 : dashdemux: mark first buffer as discont after restarting a download task
+      * 737186 : h264parse: Return flushing if we get chained while being set to READY
+      * 737569 : tsdemux: valid data is discarded if PES start packet is the first packet after discontinuity
+      * 737658 : fluiddec: segmentation fault when used with fakesrc
+      * 737724 : vc1parse: unref caps when it is empty in renegotiate()
+      * 738067 : gl: Downloading YUY2 is broken and creates blocky artefacts
+      * 738223 : fluiddec: leaks memory in gst_fluid_dec_change_state()
+      * 738230 : vc1parser: fix level value for simple/main profile
+      * 738243 : vc1parse: fix framesize when input is frame-layer
+      * 738291 : fluiddec: leaks incoming caps event
+      * 738449 : vc1parse: just assume none header-format when no codec_data is present
+      * 738519 : vc1parse: parse frame header when stream format is ASF/raw for simple/main profile
+      * 738532 : vc1parse: select caps according to wmv format at negotiation
+      * 738674 : rtmpsink: leaking URI string
+      * 738695 : mpegtsbase: do not remove programs on EOS
+      * 738696 : hlsdemux: send missing stream start
+      * 739277 : GstGLFilter propose allocation pass uninitialized size to gst_query_add_allocation_pool
+      * 739348 : configure.ac: auto decision to include GL library fails
+      * 739368 : gl: small memory leak in gl shader
+      * 739374 : h264parse: sets srccaps too often
 
 ==== Download ====
 
@@ -109,5 +132,23 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Antonio Ospite
       * Aurélien Zanelli
+      * Edward Hervey
+      * Havard Graff
+      * Jesper Larsen
+      * Julien Isorce
+      * Lubosz Sarnecki
+      * Luis de Bethencourt
+      * Matej Knopp
+      * Matthew Waters
+      * Matthieu Bouron
+      * Sebastian Dröge
+      * Sreerenj Balachandran
+      * Thiago Santos
+      * Thibault Saunier
+      * Tim-Philipp Müller
+      * Vincent Abriou
+      * Vivia Nikolaidou
+      * Vootele Vesterblom
  
