@@ -96,6 +96,14 @@ x2 splitwb vv, uu, uv
 select0wb u, uu
 select0wb v, vv
 
+.function video_orc_pack_Y
+.dest 1 y guint8
+.source 4 ayuv guint8
+.temp 2 ay
+
+select0lw ay, ayuv
+select1wb y, ay
+
 .function video_orc_unpack_YUY2
 .dest 8 ayuv guint8
 .source 4 yuy2 guint8
@@ -476,6 +484,16 @@ x2 select0wb a, ay
 x2 splitwb vv, uu, uv
 select0wb u, uu
 select0wb v, vv
+
+.function video_orc_pack_AY
+.dest 1 y guint8
+.dest 1 a guint8
+.source 4 ayuv guint8
+.temp 2 ay
+
+select0lw ay, ayuv
+select1wb y, ay
+select0wb a, ay
 
 .function video_orc_resample_bilinear_u32
 .dest 4 d1 guint8
