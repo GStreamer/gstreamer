@@ -1379,9 +1379,12 @@ get_dest_line (GstLineCache * cache, gint idx, gpointer user_data)
   guint8 *line;
   gint pstride = convert->pack_pstride;
   gint out_x = convert->out_x;
+  guint cline;
 
-  GST_DEBUG ("get dest line %d", idx);
-  line = FRAME_GET_LINE (convert->dest, idx);
+  cline = CLAMP (idx, 0, convert->out_maxheight - 1);
+
+  GST_DEBUG ("get dest line %d", cline);
+  line = FRAME_GET_LINE (convert->dest, cline);
 
   if (convert->borderline) {
     gint r_border = (out_x + convert->out_width) * pstride;
