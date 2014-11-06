@@ -739,7 +739,7 @@ gst_gl_ensure_element_data (gpointer element, GstGLDisplay ** display_ptr,
    */
   display = *display_ptr;
   if (gst_gl_display_found (element, display))
-    goto get_gl_context;
+    goto done;
 
   gst_gl_display_context_query (element, display_ptr);
 
