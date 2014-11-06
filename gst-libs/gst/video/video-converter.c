@@ -353,6 +353,10 @@ chain_unpack_line (GstVideoConverter * convert)
   convert->identity_unpack =
       (convert->current_format == convert->in_info.finfo->format);
 
+  GST_DEBUG ("chain unpack line format %s, pstride %d, identity_unpack %d",
+      gst_video_format_to_string (convert->current_format),
+      convert->current_pstride, convert->identity_unpack);
+
   prev = convert->unpack_lines = gst_line_cache_new (NULL);
   prev->write_input = FALSE;
   prev->pass_alloc = FALSE;
@@ -368,6 +372,7 @@ chain_upsample (GstVideoConverter * convert, GstLineCache * prev)
   video_converter_compute_resample (convert);
 
   if (convert->upsample) {
+    GST_DEBUG ("chain upsample");
     prev = convert->upsample_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
@@ -381,6 +386,7 @@ static GstLineCache *
 chain_convert (GstVideoConverter * convert, GstLineCache * prev)
 {
   if (convert->in_bits != convert->out_bits || convert->matrix) {
+    GST_DEBUG ("chain convert");
     prev = convert->convert_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
@@ -389,6 +395,9 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev)
   }
   convert->current_format = convert->out_info.finfo->unpack_format;
   convert->current_pstride = convert->out_bits >> 1;
+  GST_DEBUG ("chain after convert %s, pstride %d",
+      gst_video_format_to_string (convert->current_format),
+      convert->current_pstride);
 
   return prev;
 }
@@ -416,6 +425,9 @@ chain_hscale (GstVideoConverter * convert, GstLineCache * prev)
   convert->h_scaler =
       gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
       convert->in_width, convert->out_width, convert->config);
+
+  GST_DEBUG ("chain hscale %d->%d, taps %d, method %d",
+      convert->in_width, convert->out_width, taps, method);
 
   convert->current_width = convert->out_width;
   convert->h_scale_format = convert->current_format;
@@ -449,6 +461,9 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
 
   gst_video_scaler_get_coeff (convert->v_scaler, 0, NULL, &taps);
 
+  GST_DEBUG ("chain vscale %d->%d, taps %d, method %d",
+      convert->in_width, convert->out_height, taps, method);
+
   prev = convert->vscale_lines = gst_line_cache_new (prev);
   prev->pass_alloc = (taps == 1);
   prev->write_input = FALSE;
@@ -462,6 +477,7 @@ static GstLineCache *
 chain_downsample (GstVideoConverter * convert, GstLineCache * prev)
 {
   if (convert->downsample) {
+    GST_DEBUG ("chain downsample");
     prev = convert->downsample_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
@@ -478,6 +494,10 @@ chain_pack (GstVideoConverter * convert, GstLineCache * prev)
   convert->identity_pack =
       (convert->out_info.finfo->format ==
       convert->out_info.finfo->unpack_format);
+  GST_DEBUG ("chain pack line format %s, pstride %d, identity_pack %d (%d %d)",
+      gst_video_format_to_string (convert->current_format),
+      convert->current_pstride, convert->identity_pack,
+      convert->out_info.finfo->format, convert->out_info.finfo->unpack_format);
 
   return prev;
 }
