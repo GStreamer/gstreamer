@@ -4,7 +4,7 @@ ORC_SOURCE=gstaudiomixerorc
 include $(top_srcdir)/common/orc.mak
 
 
-libgstaudiomixer_la_SOURCES = gstaudiomixer.c
+libgstaudiomixer_la_SOURCES = gstaudiomixer.c gstaudioaggregator.c
 nodist_libgstaudiomixer_la_SOURCES = $(ORC_NODIST_SOURCES)
 libgstaudiomixer_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
@@ -18,5 +18,5 @@ libgstaudiomixer_la_LIBADD =  \
 		$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS)
 libgstaudiomixer_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
-noinst_HEADERS = gstaudiomixer.h
+noinst_HEADERS = gstaudiomixer.h gstaudioaggregator.h
 
