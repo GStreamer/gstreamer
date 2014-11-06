@@ -58,6 +58,8 @@ struct _GstVTEnc
   const GstVTEncoderDetails * details;
 
   guint bitrate;
+  gboolean allow_frame_reordering;
+  gboolean realtime;
 
   gboolean dump_properties;
   gboolean dump_attributes;
