@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.4.3
+Release notes for GStreamer Good Plugins 1.4.4
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -68,8 +68,19 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 736944 : videoscale: vs_image_scale_4tap_Y offset should use stride to calculate buffer offset
-      * 737219 : flacparse:  When generating headers, leave total_samples at 0 if upstream duration query returns GST_CLOCK_TIME_NONE.
+      * 726329 : vp8enc: Add support for caps renegotiation
+      * 736071 : audiobasesink: Don't hold object lock while calling into other objects like the clock
+      * 737735 : wavenc writes broken file if caps are set
+      * 737739 : souphttpclientsink: Restarting after error results in buffers being queued forever
+      * 737761 : aacparse: memory leak when converting to adts
+      * 737771 : souphttpclientsink: Stream header buffer lifetime assumptions are incorrect
+      * 737886 : equalizer: crash when changing equalizer settings during playback
+      * 738102 : v4l2bufferpool: cleanly handle streamon failure for output device
+      * 738152 : v4l2sink: leak with output device
+      * 738297 : DTMF telephone-event timestamps are bogus
+      * 738722 : rtpmux returns EMPTY caps when query'ing
+      * 738793 : speex: encoder/decoder segfault when resetting multiple times
+      * 739430 : rtspsrc: mikey related memory leaks
 
 ==== Download ====
 
@@ -106,6 +117,19 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
+      * Aleix Conchillo Flaqué
+      * Ananda
+      * Arun Raghavan
+      * Aurélien Zanelli
+      * David Sansome
+      * Jose Antonio Santos Cadenas
+      * Matej Knopp
+      * Nicolas Dufresne
+      * Nirbheek Chauhan
+      * Olivier Crête
       * Sebastian Dröge
+      * Sjoerd Simons
+      * Tim-Philipp Müller
+      * Vineeth T M
+      * Wim Taymans
  
