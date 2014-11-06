@@ -1903,7 +1903,7 @@ GST_END_TEST;
 
 #define WIDTH 1920
 #define HEIGHT 1080
-#define TIME 1.0
+#define TIME 0.1
 #define GET_LINE(l) (pixels + CLAMP (l, 0, HEIGHT-1) * WIDTH * 4)
 GST_START_TEST (test_video_chroma)
 {
@@ -1951,6 +1951,7 @@ GST_START_TEST (test_video_chroma)
 GST_END_TEST;
 #undef WIDTH
 #undef HEIGHT
+#undef TIME
 
 GST_START_TEST (test_video_scaler)
 {
@@ -1966,6 +1967,115 @@ GST_START_TEST (test_video_scaler)
 }
 
 GST_END_TEST;
+
+#define WIDTH 192
+#define HEIGHT 108
+#define TIME 0.0
+#define GET_LINE(l) (pixels + CLAMP (l, 0, HEIGHT-1) * WIDTH * 4)
+
+typedef struct
+{
+  GstVideoFormat infmt;
+  GstVideoFormat outfmt;
+  gdouble convert_sec;
+} ColorConvertResult;
+
+#define SIGN(a,b) ((a) < (b) ? -1 : (a) > (b) ? 1 : 0)
+
+static gint
+compare_result (gconstpointer a, gconstpointer b)
+{
+  const ColorConvertResult *ap = a;
+  const ColorConvertResult *bp = b;
+
+  return SIGN (ap->convert_sec, bp->convert_sec);
+}
+
+GST_START_TEST (test_video_color_convert)
+{
+  GstVideoFormat infmt, outfmt;
+  GTimer *timer;
+  gint num_formats, i;
+  GArray *array;
+
+  array = g_array_new (FALSE, FALSE, sizeof (ColorConvertResult));
+
+  timer = g_timer_new ();
+
+  num_formats = get_num_formats ();
+
+  for (infmt = GST_VIDEO_FORMAT_I420; infmt < num_formats; infmt++) {
+    GstVideoInfo ininfo;
+    GstVideoFrame inframe;
+    GstBuffer *inbuffer;
+
+    gst_video_info_set_format (&ininfo, infmt, WIDTH, HEIGHT);
+    inbuffer = gst_buffer_new_and_alloc (ininfo.size);
+    gst_video_frame_map (&inframe, &ininfo, inbuffer, GST_MAP_READ);
+
+    for (outfmt = GST_VIDEO_FORMAT_I420; outfmt < num_formats; outfmt++) {
+      GstVideoInfo outinfo;
+      GstVideoFrame outframe;
+      GstBuffer *outbuffer;
+      GstVideoConverter *convert;
+      gdouble elapsed;
+      gint count;
+      ColorConvertResult res;
+
+      gst_video_info_set_format (&outinfo, outfmt, WIDTH, HEIGHT);
+      outbuffer = gst_buffer_new_and_alloc (outinfo.size);
+      gst_video_frame_map (&outframe, &outinfo, outbuffer, GST_MAP_WRITE);
+
+      convert = gst_video_converter_new (&ininfo, &outinfo, NULL);
+
+      count = 0;
+      g_timer_start (timer);
+      while (TRUE) {
+        gst_video_converter_frame (convert, &inframe, &outframe);
+
+        count++;
+        elapsed = g_timer_elapsed (timer, NULL);
+        if (elapsed >= TIME)
+          break;
+      }
+
+      res.infmt = infmt;
+      res.outfmt = outfmt;
+      res.convert_sec = count / elapsed;
+
+      GST_DEBUG ("%f conversions/sec %s->%s", res.convert_sec,
+          gst_video_format_to_string (infmt),
+          gst_video_format_to_string (outfmt));
+
+      g_array_append_val (array, res);
+
+      gst_video_converter_free (convert);
+
+      gst_video_frame_unmap (&outframe);
+      gst_buffer_unref (outbuffer);
+    }
+    gst_video_frame_unmap (&inframe);
+    gst_buffer_unref (inbuffer);
+  }
+
+  g_array_sort (array, compare_result);
+
+  for (i = 0; i < array->len; i++) {
+    ColorConvertResult *res = &g_array_index (array, ColorConvertResult, i);;
+
+    GST_DEBUG ("%f conversions/sec %s->%s", res->convert_sec,
+        gst_video_format_to_string (res->infmt),
+        gst_video_format_to_string (res->outfmt));
+  }
+
+  g_array_free (array, TRUE);
+
+  g_timer_destroy (timer);
+}
+
+GST_END_TEST;
+#undef WIDTH
+#undef HEIGHT
 
 static Suite *
 video_suite (void)
@@ -1991,6 +2101,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_pack_unpack2);
   tcase_add_test (tc_chain, test_video_chroma);
   tcase_add_test (tc_chain, test_video_scaler);
+  tcase_add_test (tc_chain, test_video_color_convert);
 
   return s;
 }
