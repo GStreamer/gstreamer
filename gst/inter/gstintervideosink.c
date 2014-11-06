@@ -246,6 +246,9 @@ gst_inter_video_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (sink);
 
+  GST_DEBUG_OBJECT (intervideosink, "render ts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
+
   g_mutex_lock (&intervideosink->surface->mutex);
   if (intervideosink->surface->video_buffer) {
     gst_buffer_unref (intervideosink->surface->video_buffer);
