@@ -1,9 +1,21 @@
-=== release 1.4.3 ===
+=== release 1.4.4 ===
 
-2014-09-24  Sebastian Dröge <slomo@coaxion.net>
+2014-11-06  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.3
+	  releasing 1.4.4
+
+=== release 1.4.3 ===
+
+2014-09-24 12:50:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.4.3
 
 2014-09-22 14:00:07 -0700  Aleix Conchillo Flaqué <aconchillo@gmail.com>
 
