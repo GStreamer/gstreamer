@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.4.3
+Release notes for GStreamer Base Plugins 1.4.4
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -22,6 +22,7 @@ The stable 1.4.x release series is API and ABI compatible with 1.0.x and
 any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
+
 
 
 This module contains a set of reference plugins, base classes for other
@@ -71,7 +72,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 Bugs fixed in this release
      
       * 736969 : queue2: dead lock when buffering
-      * 709868 : Keep still meaningfull pending events on FLUSH_STOP
+      * 737055 : audiosink: Setting URI on playbin at about-to-finish when playing AAC and using an alsasink causes delayed playback
+      * 737706 : videoencoder: release frame in finish_frame when no output state is configured
+      * 737742 : vorbisdec: Crashes when handling more than 8 channels
+      * 737752 : rtsp-client: crash when cleaning up session
+      * 738064 : decodebin: The “drained” signal is emitted multiple times, first time too early (~1s)
 
 ==== Download ====
 
@@ -108,8 +113,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jan Schmidt
-      * Sanjay NM
+      * Aleix Conchillo Flaqué
+      * Andrei Sarakeev
+      * Aurélien Zanelli
+      * Heinrich Fink
       * Sebastian Dröge
+      * Thiago Santos
       * Tim-Philipp Müller
  
