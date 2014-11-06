@@ -677,6 +677,10 @@ gst_multi_handle_sink_add_full (GstMultiHandleSink * sink,
   if (clink != NULL)
     goto duplicate;
 
+  /* We do not take ownership of @handle in this function, but we can't take a
+   * reference directly as we don't know the concrete type of the handle.
+   * GstMultiHandleSink relies on the derived class to take a reference for us
+   * in new_client: */
   mhclient = mhsinkclass->new_client (mhsink, handle, sync_method);
 
   /* we can add the handle now */

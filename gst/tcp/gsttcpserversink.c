@@ -163,6 +163,7 @@ gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
     goto accept_failed;
 
   handle.socket = client_socket;
+  /* gst_multi_handle_sink_add does not take ownership of client_socket */
   gst_multi_handle_sink_add (GST_MULTI_HANDLE_SINK (sink), handle);
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -177,9 +178,11 @@ gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
         ip, g_inet_socket_address_get_port (addr), client_socket);
 
     g_free (ip);
+    g_object_unref (addr);
   }
 #endif
 
+  g_object_unref (client_socket);
   return TRUE;
 
   /* ERRORS */
