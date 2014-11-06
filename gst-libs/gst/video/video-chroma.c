@@ -293,11 +293,6 @@ video_chroma_down_v2_##type (GstVideoChromaResample *resample,          \
   type *l0 = lines[0];                                                  \
   type *l1 = lines[1];                                                  \
                                                                         \
-  if (resample->h_resample) {                                           \
-    resample->h_resample (resample, l0, width);                         \
-    if (l0 != l1)                                                       \
-      resample->h_resample (resample, l1, width);                       \
-  }                                                                     \
   if (l0 != l1) {                                                       \
     for (i = 0; i < width; i++) {                                       \
       type tr0 = PR0(i), tr1 = PR1(i);                                  \
@@ -307,6 +302,8 @@ video_chroma_down_v2_##type (GstVideoChromaResample *resample,          \
       PB0(i) = FILT_1_1 (tb0, tb1);                                     \
     }                                                                   \
   }                                                                     \
+  if (resample->h_resample)                                             \
+    resample->h_resample (resample, l0, width);                         \
 }
 /* 2x vertical downsampling interlaced without cositing
  *
@@ -496,15 +493,6 @@ video_chroma_down_v4_##type (GstVideoChromaResample *resample,          \
   type *l2 = lines[2];                                                  \
   type *l3 = lines[3];                                                  \
                                                                         \
-  if (resample->h_resample) {                                           \
-    resample->h_resample (resample, l0, width);                         \
-    if (l0 != l1)                                                       \
-      resample->h_resample (resample, l1, width);                       \
-    if (l1 != l2)                                                       \
-      resample->h_resample (resample, l2, width);                       \
-    if (l2 != l3)                                                       \
-      resample->h_resample (resample, l3, width);                       \
-  }                                                                     \
   for (i = 0; i < width; i++) {                                         \
     type tr0 = PR0(i), tr1 = PR1(i);                                    \
     type tr2 = PR2(i), tr3 = PR3(i);                                    \
@@ -514,6 +502,8 @@ video_chroma_down_v4_##type (GstVideoChromaResample *resample,          \
     PR0(i) = FILT_1_3_3_1 (tr0, tr1, tr2, tr3);                         \
     PB0(i) = FILT_1_3_3_1 (tb0, tb1, tb2, tb3);                         \
   }                                                                     \
+  if (resample->h_resample)                                             \
+    resample->h_resample (resample, l0, width);                         \
 }
 /* 4x vertical downsampling interlaced without cositing
  *
