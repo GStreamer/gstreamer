@@ -29,6 +29,8 @@
 
 #define VTENC_DEFAULT_USAGE       6     /* Profile: Baseline  Level: 2.1 */
 #define VTENC_DEFAULT_BITRATE     768
+#define VTENC_DEFAULT_FRAME_REORDERING TRUE
+#define VTENC_DEFAULT_REALTIME FALSE
 
 GST_DEBUG_CATEGORY (gst_vtenc_debug);
 #define GST_CAT_DEFAULT (gst_vtenc_debug)
@@ -40,7 +42,9 @@ enum
 {
   PROP_0,
   PROP_USAGE,
-  PROP_BITRATE
+  PROP_BITRATE,
+  PROP_ALLOW_FRAME_REORDERING,
+  PROP_REALTIME
 };
 
 typedef struct _GstVTEncFrame GstVTEncFrame;
@@ -85,6 +89,10 @@ static OSStatus gst_vtenc_session_configure_property_int (GstVTEnc * self,
     VTCompressionSessionRef session, CFStringRef name, gint value);
 static OSStatus gst_vtenc_session_configure_property_double (GstVTEnc * self,
     VTCompressionSessionRef session, CFStringRef name, gdouble value);
+static void gst_vtenc_session_configure_allow_frame_reordering (GstVTEnc * self,
+    VTCompressionSessionRef session, gboolean allow_frame_reordering);
+static void gst_vtenc_session_configure_realtime (GstVTEnc * self,
+    VTCompressionSessionRef session, gboolean realtime);
 
 static GstFlowReturn gst_vtenc_encode_frame (GstVTEnc * self,
     GstVideoCodecFrame * frame);
@@ -93,6 +101,7 @@ static void gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
     CMSampleBufferRef sampleBuffer);
 static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
     CMSampleBufferRef sbuf);
+
 
 #ifndef HAVE_IOS
 static GstVTEncFrame *gst_vtenc_frame_new (GstBuffer * buf,
@@ -174,6 +183,18 @@ gst_vtenc_class_init (GstVTEncClass * klass)
           "Target video bitrate in kbps",
           1, G_MAXUINT, VTENC_DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_ALLOW_FRAME_REORDERING,
+      g_param_spec_boolean ("allow-frame-reordering", "Allow frame reordering",
+          "Whether to allow frame reordering or not",
+          VTENC_DEFAULT_FRAME_REORDERING,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_REALTIME,
+      g_param_spec_boolean ("realtime", "Realtime",
+          "Configure the encoder for realtime output",
+          VTENC_DEFAULT_REALTIME,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -215,6 +236,53 @@ gst_vtenc_set_bitrate (GstVTEnc * self, guint bitrate)
   GST_OBJECT_UNLOCK (self);
 }
 
+static gboolean
+gst_vtenc_get_allow_frame_reordering (GstVTEnc * self)
+{
+  gboolean result;
+
+  GST_OBJECT_LOCK (self);
+  result = self->allow_frame_reordering;
+  GST_OBJECT_UNLOCK (self);
+
+  return result;
+}
+
+static void
+gst_vtenc_set_allow_frame_reordering (GstVTEnc * self,
+    gboolean allow_frame_reordering)
+{
+  GST_OBJECT_LOCK (self);
+  self->allow_frame_reordering = allow_frame_reordering;
+  if (self->session != NULL) {
+    gst_vtenc_session_configure_allow_frame_reordering (self,
+        self->session, allow_frame_reordering);
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
+static gboolean
+gst_vtenc_get_realtime (GstVTEnc * self)
+{
+  gboolean result;
+
+  GST_OBJECT_LOCK (self);
+  result = self->realtime;
+  GST_OBJECT_UNLOCK (self);
+
+  return result;
+}
+
+static void
+gst_vtenc_set_realtime (GstVTEnc * self, gboolean realtime)
+{
+  GST_OBJECT_LOCK (self);
+  self->realtime = realtime;
+  if (self->session != NULL)
+    gst_vtenc_session_configure_realtime (self, self->session, realtime);
+  GST_OBJECT_UNLOCK (self);
+}
+
 static void
 gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -224,6 +292,12 @@ gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_BITRATE:
       g_value_set_uint (value, gst_vtenc_get_bitrate (self) * 8 / 1000);
+      break;
+    case PROP_ALLOW_FRAME_REORDERING:
+      g_value_set_boolean (value, gst_vtenc_get_allow_frame_reordering (self));
+      break;
+    case PROP_REALTIME:
+      g_value_set_boolean (value, gst_vtenc_get_realtime (self));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -240,6 +314,12 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
   switch (prop_id) {
     case PROP_BITRATE:
       gst_vtenc_set_bitrate (self, g_value_get_uint (value) * 1000 / 8);
+      break;
+    case PROP_ALLOW_FRAME_REORDERING:
+      gst_vtenc_set_allow_frame_reordering (self, g_value_get_boolean (value));
+      break;
+    case PROP_REALTIME:
+      gst_vtenc_set_realtime (self, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -490,6 +570,10 @@ gst_vtenc_create_session (GstVTEnc * self)
 
   gst_vtenc_session_configure_bitrate (self, session,
       gst_vtenc_get_bitrate (self));
+  gst_vtenc_session_configure_realtime (self, session,
+      gst_vtenc_get_realtime (self));
+  gst_vtenc_session_configure_allow_frame_reordering (self, session,
+      gst_vtenc_get_allow_frame_reordering (self));
 
 #ifdef HAVE_VIDEOTOOLBOX_10_9_6
   if (VTCompressionSessionPrepareToEncodeFrames) {
@@ -610,6 +694,22 @@ gst_vtenc_session_configure_bitrate (GstVTEnc * self,
 {
   gst_vtenc_session_configure_property_int (self, session,
       kVTCompressionPropertyKey_AverageBitRate, bitrate);
+}
+
+static void
+gst_vtenc_session_configure_allow_frame_reordering (GstVTEnc * self,
+    VTCompressionSessionRef session, gboolean allow_frame_reordering)
+{
+  VTSessionSetProperty (session, kVTCompressionPropertyKey_AllowFrameReordering,
+      allow_frame_reordering ? kCFBooleanTrue : kCFBooleanFalse);
+}
+
+static void
+gst_vtenc_session_configure_realtime (GstVTEnc * self,
+    VTCompressionSessionRef session, gboolean realtime)
+{
+  VTSessionSetProperty (session, kVTCompressionPropertyKey_RealTime,
+      realtime ? kCFBooleanTrue : kCFBooleanFalse);
 }
 
 static OSStatus
