@@ -68,6 +68,19 @@ def register_default_test_generators(self):
                                                },
                                                valid_scenarios=valid_mixing_scenarios))
 
+    self.add_generators(
+        GstValidateMixerTestsGenerator("audiomixer.simple", self,
+                                       "audiomixer",
+                                       "audio",
+                                       converter="audioconvert ! audioresample",
+                                       mixed_srcs={
+                                           "basic": {"mixer_props": "",
+                                                     "sources":
+                                                            ("audiotestsrc wave=triangle",
+                                                             "audiotestsrc wave=ticks")},
+                                       },
+                                       valid_scenarios=valid_mixing_scenarios))
+
 
 def register_default_scenarios(self):
     """
