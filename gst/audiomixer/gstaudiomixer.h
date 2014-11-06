@@ -25,8 +25,8 @@
 #define __GST_AUDIO_MIXER_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstaggregator.h>
 #include <gst/audio/audio.h>
+#include "gstaudioaggregator.h"
 
 G_BEGIN_DECLS
 
@@ -49,32 +49,14 @@ typedef struct _GstAudioMixerPadClass GstAudioMixerPadClass;
  * The audiomixer object structure.
  */
 struct _GstAudioMixer {
-  GstAggregator   aggregator;
-
-  /* the next are valid for both int and float */
-  GstAudioInfo    info;
-
-  /* counters to keep track of timestamps */
-  gint64          offset;
-  /* Buffer starting at offset containing block_size samples */
-  GstBuffer      *current_buffer;
-
-  /* current caps */
-  GstCaps *current_caps;
-  gboolean send_caps;
+  GstAudioAggregator element;
 
   /* target caps (set via property) */
   GstCaps *filter_caps;
-
-  GstClockTime alignment_threshold;
-  GstClockTime discont_wait;
-
-  /* Duration of every output buffer */
-  GstClockTime output_buffer_duration;
 };
 
 struct _GstAudioMixerClass {
-  GstAggregatorClass parent_class;
+  GstAudioAggregatorClass parent_class;
 };
 
 GType    gst_audiomixer_get_type (void);
@@ -87,36 +69,17 @@ GType    gst_audiomixer_get_type (void);
 #define GST_AUDIO_MIXER_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_MIXER_PAD,GstAudioMixerPadClass))
 
 struct _GstAudioMixerPad {
-  GstAggregatorPad parent;
+  GstAudioAggregatorPad parent;
 
   gdouble volume;
   gint volume_i32;
   gint volume_i16;
   gint volume_i8;
   gboolean mute;
-
-  /* < private > */
-  GstBuffer *buffer;            /* current buffer we're mixing,
-                                   for comparison with collect.buffer
-                                   to see if we need to update our
-                                   cached values. */
-  guint position, size;
-
-  guint64 output_offset;        /* Offset in output segment that
-                                   collect.pos refers to in the
-                                   current buffer. */
-
-  guint64 next_offset;          /* Next expected offset in the input segment */
-
-  /* Last time we noticed a discont */
-  GstClockTime discont_time;
-
-  /* A new unhandled segment event has been received */
-  gboolean new_segment;
 };
 
 struct _GstAudioMixerPadClass {
-  GstAggregatorPadClass parent_class;
+  GstAudioAggregatorPadClass parent_class;
 };
 
 GType gst_audiomixer_pad_get_type (void);
