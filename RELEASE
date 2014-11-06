@@ -1,5 +1,5 @@
 
-Release notes for GStreamer RTSP Server Library 1.4.3
+Release notes for GStreamer RTSP Server Library 1.4.4
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -23,10 +23,12 @@ any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
 
+
   
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 739383 : rtsp-client: few mikey related memory leaks
 
 ==== Download ====
 
@@ -61,11 +63,7 @@ Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
         
-Applications
-  
 Contributors to this release
     
-      * Göran Jönsson
-      * Sebastian Dröge
-      * Srimanta Panda
+      * Aleix Conchillo Flaqué
  
