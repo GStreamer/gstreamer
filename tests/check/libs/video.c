@@ -365,6 +365,17 @@ video_format_is_packed (GstVideoFormat fmt)
   return FALSE;
 }
 
+static gint
+get_num_formats (void)
+{
+  gint num_formats = 100;
+  fail_unless (gst_video_format_to_string (num_formats) == NULL);
+  while (gst_video_format_to_string (num_formats) == NULL)
+    --num_formats;
+  GST_INFO ("number of known video formats: %d", num_formats);
+  return num_formats + 1;
+}
+
 GST_START_TEST (test_video_formats_all)
 {
   GstStructure *s;
@@ -372,11 +383,7 @@ GST_START_TEST (test_video_formats_all)
   GstCaps *caps;
   guint num, n, num_formats;
 
-  num_formats = 100;
-  fail_unless (gst_video_format_to_string (num_formats) == NULL);
-  while (gst_video_format_to_string (num_formats) == NULL)
-    --num_formats;
-  GST_INFO ("number of known video formats: %d", num_formats);
+  num_formats = get_num_formats ();
 
   caps = gst_caps_from_string ("video/x-raw, format=" GST_VIDEO_FORMATS_ALL);
   s = gst_caps_get_structure (caps, 0);
@@ -395,8 +402,8 @@ GST_START_TEST (test_video_formats_all)
     fail_if (gst_video_format_from_string (fmt_str) ==
         GST_VIDEO_FORMAT_UNKNOWN);
   }
-  /* Take into account GST_VIDEO_FORMAT_ENCODED */
-  fail_unless_equals_int (num, num_formats - 1);
+  /* Take into account GST_VIDEO_FORMAT_ENCODED and UNKNOWN */
+  fail_unless_equals_int (num, num_formats - 2);
 
   gst_caps_unref (caps);
 }
@@ -405,16 +412,11 @@ GST_END_TEST;
 
 #define WIDTH 77
 #define HEIGHT 20
-
 GST_START_TEST (test_video_formats_pack_unpack)
 {
   guint n, num_formats;
 
-  num_formats = 100;
-  fail_unless (gst_video_format_to_string (num_formats) == NULL);
-  while (gst_video_format_to_string (num_formats) == NULL)
-    --num_formats;
-  GST_INFO ("number of known video formats: %d", num_formats);
+  num_formats = get_num_formats ();
 
   for (n = GST_VIDEO_FORMAT_ENCODED + 1; n < num_formats; ++n) {
     const GstVideoFormatInfo *vfinfo, *unpackinfo;
@@ -476,6 +478,8 @@ GST_START_TEST (test_video_formats_pack_unpack)
 }
 
 GST_END_TEST;
+#undef WIDTH
+#undef HEIGHT
 
 GST_START_TEST (test_video_formats)
 {
