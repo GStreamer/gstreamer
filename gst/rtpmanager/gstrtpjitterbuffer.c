@@ -134,6 +134,7 @@ enum
 #define DEFAULT_RTX_RETRY_TIMEOUT   -1
 #define DEFAULT_RTX_MIN_RETRY_TIMEOUT   -1
 #define DEFAULT_RTX_RETRY_PERIOD    -1
+#define DEFAULT_RTX_MAX_RETRIES    -1
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
 #define DEFAULT_AUTO_RTX_TIMEOUT (40 * GST_MSECOND)
@@ -154,6 +155,7 @@ enum
   PROP_RTX_RETRY_TIMEOUT,
   PROP_RTX_MIN_RETRY_TIMEOUT,
   PROP_RTX_RETRY_PERIOD,
+  PROP_RTX_MAX_RETRIES,
   PROP_STATS,
   PROP_LAST
 };
@@ -250,6 +252,7 @@ struct _GstRtpJitterBufferPrivate
   gint rtx_retry_timeout;
   gint rtx_min_retry_timeout;
   gint rtx_retry_period;
+  gint rtx_max_retries;
 
   /* the last seqnum we pushed out */
   guint32 last_popped_seqnum;
@@ -624,6 +627,21 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "(-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_RETRY_PERIOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
+   * GstRtpJitterBuffer:rtx-max-retries:
+   *
+   * The maximum number of retries to request a retransmission.
+   *
+   * This implies that as maximum (rtx-max-retries + 1) retransmissions will be requested.
+   * When -1 is used, the number of retransmission request will not be limited.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_RTX_MAX_RETRIES,
+      g_param_spec_int ("rtx-max-retries", "RTX Max Retries",
+          "The maximum number of retries to request a retransmission. "
+          "(-1 not limited)", -1, G_MAXINT, DEFAULT_RTX_MAX_RETRIES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
    * GstRtpJitterBuffer:stats:
    *
    * Various jitterbuffer statistics. This property returns a GstStructure
@@ -756,6 +774,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->rtx_retry_timeout = DEFAULT_RTX_RETRY_TIMEOUT;
   priv->rtx_min_retry_timeout = DEFAULT_RTX_MIN_RETRY_TIMEOUT;
   priv->rtx_retry_period = DEFAULT_RTX_RETRY_PERIOD;
+  priv->rtx_max_retries = DEFAULT_RTX_MAX_RETRIES;
 
   priv->last_dts = -1;
   priv->last_rtptime = -1;
@@ -2887,8 +2906,9 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
       GST_TIME_FORMAT ", retry %" GST_TIME_FORMAT ", num_retry %u",
       GST_TIME_ARGS (timer->rtx_base), GST_TIME_ARGS (timer->rtx_delay),
       GST_TIME_ARGS (timer->rtx_retry), timer->num_rtx_retry);
-
-  if (timer->rtx_retry + timer->rtx_delay > rtx_retry_period) {
+  if ((priv->rtx_max_retries != -1
+          && timer->num_rtx_retry >= priv->rtx_max_retries)
+      || (timer->rtx_retry + timer->rtx_delay > rtx_retry_period)) {
     GST_DEBUG_OBJECT (jitterbuffer, "reschedule as LOST timer");
     /* too many retransmission request, we now convert the timer
      * to a lost timer, leave the num_rtx_retry as it is for stats */
@@ -3618,6 +3638,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->rtx_retry_period = g_value_get_int (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_RTX_MAX_RETRIES:
+      JBUF_LOCK (priv);
+      priv->rtx_max_retries = g_value_get_int (value);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3707,6 +3732,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_RTX_RETRY_PERIOD:
       JBUF_LOCK (priv);
       g_value_set_int (value, priv->rtx_retry_period);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_MAX_RETRIES:
+      JBUF_LOCK (priv);
+      g_value_set_int (value, priv->rtx_max_retries);
       JBUF_UNLOCK (priv);
       break;
     case PROP_STATS:
