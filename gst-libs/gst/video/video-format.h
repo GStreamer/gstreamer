@@ -272,14 +272,18 @@ typedef void (*GstVideoFormatUnpack)         (const GstVideoFormatInfo *info,
  * contain at least pack_lines lines with a stride of @sstride and @y
  * should be a multiple of pack_lines.
  *
- * Subsampled formats will use the horizontally cosited component in the
- * destination. Subsampling should be performed before packing.
+ * Subsampled formats will use the horizontally and vertically cosited
+ * component from the source. Subsampling should be performed before
+ * packing.
  *
- * Because tis function does not have a x coordinate, it is not possible to
+ * Because this function does not have a x coordinate, it is not possible to
  * pack pixels starting from an unaligned position. For tiled images this
  * means that packing should start from a tile coordinate. For subsampled
  * formats this means that a complete pixel need to be packed.
  */
+/* FIXME(2.0): remove the chroma_site, it is unused and is not relevant for
+ * packing, chroma subsampling based on chroma-site should be done in a separate
+ * step before packing*/
 typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
                                               GstVideoPackFlags flags,
                                               const gpointer src, gint sstride,
