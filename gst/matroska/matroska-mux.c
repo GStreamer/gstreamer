@@ -366,11 +366,12 @@ gst_matroskamux_pad_get_type (void)
 {
   static GType type = 0;
 
-  if (G_UNLIKELY (type == 0)) {
-    type = g_type_register_static_simple (GST_TYPE_PAD,
+  if (g_once_init_enter (&type)) {
+    GType tmp = g_type_register_static_simple (GST_TYPE_PAD,
         g_intern_static_string ("GstMatroskamuxPad"), sizeof (GstPadClass),
         (GClassInitFunc) gst_matroskamux_pad_class_init,
         sizeof (GstMatroskamuxPad), NULL, 0);
+    g_once_init_leave (&type, tmp);
   }
   return type;
 }
