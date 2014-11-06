@@ -530,6 +530,18 @@ addb d1, t, a
 
 copyb d1, s1
 
+.function video_orc_convert_u16_to_u8
+.source 2 s guint16
+.dest 1 d guint8
+
+convhwb d, s
+
+.function video_orc_convert_u8_to_u16
+.source 1 s guint8
+.dest 2 d guint16
+
+mergebw d, s, s
+
 .function video_orc_convert_I420_UYVY
 .dest 4 d1 guint8
 .dest 4 d2 guint8

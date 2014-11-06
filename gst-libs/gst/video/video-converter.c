@@ -389,7 +389,10 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev)
     GST_DEBUG ("chain convert");
     prev = convert->convert_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
-    prev->pass_alloc = TRUE;
+    if (convert->in_bits != convert->out_bits)
+      prev->pass_alloc = FALSE;
+    else
+      prev->pass_alloc = TRUE;
     gst_line_cache_set_need_line_func (convert->convert_lines,
         do_convert_lines, convert, NULL);
   }
@@ -1327,30 +1330,6 @@ video_converter_compute_resample (GstVideoConverter * convert)
       convert->down_n_lines);
 }
 
-#define TO_16(x) (((x)<<8) | (x))
-
-static void
-convert_to16 (gpointer line, gint width)
-{
-  guint8 *line8 = line;
-  guint16 *line16 = line;
-  gint i;
-
-  for (i = (width - 1) * 4; i >= 0; i--)
-    line16[i] = TO_16 (line8[i]);
-}
-
-static void
-convert_to8 (gpointer line, gint width)
-{
-  guint8 *line8 = line;
-  guint16 *line16 = line;
-  gint i;
-
-  for (i = 0; i < width * 4; i++)
-    line8[i] = line16[i] >> 8;
-}
-
 #define FRAME_GET_PLANE_STRIDE(frame, plane) \
   GST_VIDEO_FRAME_PLANE_STRIDE (frame, plane)
 #define FRAME_GET_PLANE_LINE(frame, plane, line) \
@@ -1516,35 +1495,47 @@ do_convert_lines (GstLineCache * cache, gint out_line, gint in_line,
     gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
-  gpointer *lines;
+  gpointer *lines, destline;
   guint in_bits, out_bits;
   gint width;
 
   lines = gst_line_cache_get_lines (cache->prev, out_line, in_line, 1);
+
+  destline = lines[0];
 
   in_bits = convert->in_bits;
   out_bits = convert->out_bits;
 
   width = MIN (convert->in_width, convert->out_width);
 
-  GST_DEBUG ("convert line %d", in_line);
   if (out_bits == 16 || in_bits == 16) {
+    gpointer srcline = lines[0];
+
+    if (out_bits != in_bits)
+      destline = gst_line_cache_alloc_line (cache, out_line);
+
     /* FIXME, we can scale in the conversion matrix */
-    if (in_bits == 8)
-      convert_to16 (lines[0], width);
+    if (in_bits == 8) {
+      GST_DEBUG ("8->16 line %d", in_line);
+      video_orc_convert_u8_to_u16 (destline, srcline, width * 4);
+      srcline = destline;
+    }
 
     if (convert->matrix)
-      convert->matrix (convert, lines[0]);
+      convert->matrix (convert, srcline);
     if (convert->dither16)
-      convert->dither16 (convert, lines[0], in_line);
+      convert->dither16 (convert, srcline, in_line);
 
-    if (out_bits == 8)
-      convert_to8 (lines[0], width);
+    if (out_bits == 8) {
+      GST_DEBUG ("16->8 line %d", in_line);
+      video_orc_convert_u16_to_u8 (destline, srcline, width * 4);
+    }
   } else {
+    GST_DEBUG ("convert line %d", in_line);
     if (convert->matrix)
-      convert->matrix (convert, lines[0]);
+      convert->matrix (convert, destline);
   }
-  gst_line_cache_add_line (cache, in_line, lines[0]);
+  gst_line_cache_add_line (cache, in_line, destline);
 
   return TRUE;
 }
