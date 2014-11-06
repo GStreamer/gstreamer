@@ -534,13 +534,16 @@ setup_allocators (GstVideoConverter * convert)
 {
   GstLineCache *cache;
   GstLineCacheAllocLineFunc alloc_line;
-  gboolean alloc_writable = FALSE;
+  gboolean alloc_writable;
 
   /* start with using dest lines if we can directly write into it */
-  if (convert->identity_pack)
+  if (convert->identity_pack) {
     alloc_line = get_dest_line;
-  else
+    alloc_writable = TRUE;
+  } else {
     alloc_line = get_border_temp_line;
+    alloc_writable = FALSE;
+  }
 
   /* now walk backwards, we try to write into the dest lines directly
    * and keep track if the source needs to be writable */
