@@ -1897,6 +1897,60 @@ GST_START_TEST (test_video_pack_unpack2)
 }
 
 GST_END_TEST;
+#undef WIDTH
+#undef HEIGHT
+#undef TIME
+
+#define WIDTH 1920
+#define HEIGHT 1080
+#define TIME 1.0
+#define GET_LINE(l) (pixels + CLAMP (l, 0, HEIGHT-1) * WIDTH * 4)
+GST_START_TEST (test_video_chroma)
+{
+  guint8 *pixels;
+  GstVideoChromaResample *resample;
+  guint n_lines;
+  gint i, j, offset, count;
+  gpointer lines[2];
+  GTimer *timer;
+  gdouble elapsed, subsample_sec;
+
+  timer = g_timer_new ();
+  pixels = make_pixels (8, WIDTH, HEIGHT);
+
+  resample = gst_video_chroma_resample_new (GST_VIDEO_CHROMA_METHOD_LINEAR,
+      GST_VIDEO_CHROMA_SITE_NONE, GST_VIDEO_CHROMA_FLAG_NONE,
+      GST_VIDEO_FORMAT_AYUV, -1, -1);
+
+  gst_video_chroma_resample_get_info (resample, &n_lines, &offset);
+  fail_unless (n_lines == 2);
+  fail_unless (offset == 0);
+
+  count = 0;
+  g_timer_start (timer);
+  while (TRUE) {
+    for (i = 0; i < HEIGHT; i += n_lines) {
+      for (j = 0; j < n_lines; j++)
+        lines[j] = GET_LINE (i + offset + j);
+
+      gst_video_chroma_resample (resample, lines, WIDTH);
+    }
+    count++;
+    elapsed = g_timer_elapsed (timer, NULL);
+    if (elapsed >= TIME)
+      break;
+  }
+  subsample_sec = count / elapsed;
+  GST_DEBUG ("%f subsamples/sec", subsample_sec);
+
+  gst_video_chroma_resample_free (resample);
+
+  g_timer_destroy (timer);
+}
+
+GST_END_TEST;
+#undef WIDTH
+#undef HEIGHT
 
 GST_START_TEST (test_video_scaler)
 {
@@ -1935,6 +1989,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_overlay_composition_premultiplied_alpha);
   tcase_add_test (tc_chain, test_overlay_composition_global_alpha);
   tcase_add_test (tc_chain, test_video_pack_unpack2);
+  tcase_add_test (tc_chain, test_video_chroma);
   tcase_add_test (tc_chain, test_video_scaler);
 
   return s;

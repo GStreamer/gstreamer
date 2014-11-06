@@ -1630,3 +1630,106 @@ mullw d, w1, t
 convubw w1, s
 mullw w1, w1, t
 addw d, d, w1
+
+.function video_orc_chroma_down_h2_u8
+.source 8 s guint8
+.dest 8 d guint8
+.temp 4 ayuv1
+.temp 4 ayuv2
+.temp 2 ay1
+.temp 2 uv1
+.temp 2 uv2
+
+splitql ayuv2, ayuv1, s
+splitlw uv1, ay1, ayuv1
+select1lw uv2, ayuv2
+x2 avgub uv1, uv1, uv2
+mergewl ayuv1, ay1, uv1
+mergelq d, ayuv1, ayuv2
+
+.function video_orc_chroma_down_v2_u8
+.source 4 s1 guint8
+.source 4 s2 guint8
+.dest 4 d guint8
+.temp 2 ay1
+.temp 2 uv1
+.temp 2 uv2
+
+splitlw uv1, ay1, s1
+select1lw uv2, s2
+x2 avgub uv1, uv1, uv2
+mergewl d, ay1, uv1
+
+.function video_orc_chroma_down_v2_u16
+.source 8 s1 guint16
+.source 8 s2 guint16
+.dest 8 d guint16
+.temp 4 ay1
+.temp 4 uv1
+.temp 4 uv2
+
+splitql uv1, ay1, s1
+select1ql uv2, s2
+x2 avguw uv1, uv1, uv2
+mergelq d, ay1, uv1
+
+
+.function video_orc_chroma_down_v4_u8
+.source 4 s1 guint8
+.source 4 s2 guint8
+.source 4 s3 guint8
+.source 4 s4 guint8
+.dest 4 d guint8
+.temp 2 ay1
+.temp 2 uv1
+.temp 4 uuvv1
+.temp 4 uuvv2
+.temp 4 uuvv3
+
+splitlw uv1, ay1, s1
+x2 convubw uuvv1, uv1
+select1lw uv1, s4
+x2 convubw uuvv2, uv1
+x2 addw uuvv3, uuvv1, uuvv2
+select1lw uv1, s2
+x2 convubw uuvv1, uv1
+select1lw uv1, s3
+x2 convubw uuvv2, uv1
+x2 addw uuvv1, uuvv1, uuvv2
+x2 shlw uuvv2, uuvv1, 1
+x2 addw uuvv1, uuvv1, uuvv2
+x2 addw uuvv3, uuvv3, uuvv1
+x2 addw uuvv3, uuvv3, 4
+x2 shruw uuvv3, uuvv3, 3
+x2 convwb uv1, uuvv3
+mergewl d, ay1, uv1
+
+.function video_orc_chroma_down_v4_u16
+.source 8 s1 guint16
+.source 8 s2 guint16
+.source 8 s3 guint16
+.source 8 s4 guint16
+.dest 8 d guint16
+.temp 4 ay1
+.temp 4 uv1
+.temp 8 uuvv1
+.temp 8 uuvv2
+.temp 8 uuvv3
+
+splitql uv1, ay1, s1
+x2 convuwl uuvv1, uv1
+select1ql uv1, s4
+x2 convuwl uuvv2, uv1
+x2 addl uuvv3, uuvv1, uuvv2
+select1ql uv1, s2
+x2 convuwl uuvv1, uv1
+select1ql uv1, s3
+x2 convuwl uuvv2, uv1
+x2 addl uuvv1, uuvv1, uuvv2
+x2 shll uuvv2, uuvv1, 1
+x2 addl uuvv1, uuvv1, uuvv2
+x2 addl uuvv3, uuvv3, uuvv1
+x2 addl uuvv3, uuvv3, 4
+x2 shrul uuvv3, uuvv3, 3
+x2 convlw uv1, uuvv3
+mergelq d, ay1, uv1
