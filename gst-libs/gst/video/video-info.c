@@ -102,10 +102,13 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   info->height = height;
 
   if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
-    if (height > 576)
+    if (height > 576) {
+      info->chroma_site = GST_VIDEO_CHROMA_SITE_H_COSITED;
       info->colorimetry = default_color[DEFAULT_YUV_HD];
-    else
+    } else {
+      info->chroma_site = GST_VIDEO_CHROMA_SITE_NONE;
       info->colorimetry = default_color[DEFAULT_YUV_SD];
+    }
   } else if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
     info->colorimetry = default_color[DEFAULT_GRAY];
   } else if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo)) {
