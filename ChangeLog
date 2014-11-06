@@ -1,9 +1,159 @@
-=== release 1.4.3 ===
+=== release 1.4.4 ===
 
-2014-09-24  Sebastian Dröge <slomo@coaxion.net>
+2014-11-06  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.3
+	  releasing 1.4.4
+
+2014-10-24 12:51:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: don't unlock mutex that is not locked
+	  Fixes 'Attempt to unlock mutex that was not locked'
+	  warning with newer GLibs when sink is shut down in
+	  certain situations. Triggered by the decodebin
+	  test_reuse_without_decoders unit test in -base
+	  sometimes, esp. on slower machines.
+
+2014-10-16 10:13:14 +0400  Andrei Sarakeev <sarakusha@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Wake up any waiting streams if the current one goes EOS
+	  Otherwise we might have unlinked streams waiting.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738198
+
+2014-10-08 15:37:37 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* docs/pwg/advanced-negotiation.xml:
+	  docs: pwg: fix typo in 'Dynamic negotiation' section
+	  The point of this example is to show how to set caps
+	  on the source pad once it has been set on the sink pad.
+	  So, in passthrough mode, the caps is just copied to the
+	  source pad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738153
+
+2014-10-06 13:38:21 +0200  Nicolas Huet <nicolas.huet@parrot.com>
+
+	* gst/gstsystemclock.c:
+	  systemclock: fix multi-thread entry status issue
+	  Running two threads, one executing the timer and one unscheduling it, the
+	  unscheduled status set by the second thread is sometimes overwritten by the
+	  first one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737999
+
+2014-09-25 16:21:51 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/baseparse.c:
+	  tests: fix caps leak in baseparse unit test
+
+2014-10-03 13:14:25 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* tests/check/libs/baseparse.c:
+	  tests: baseparse: set_sink_caps vfunc should't take ownership of the caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737762
+
+2014-10-08 09:37:41 -0700  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: don't lock multiqueue when pushing serialized queries
+	  If we are pushing a serialized query into a queue and the queue is
+	  filled, we will end in a deadlock. We need to release the lock before
+	  pushing and acquire it again afterward.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737794
+
+2014-10-02 14:55:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Add missing break in switch
+
+2014-09-27 20:10:34 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: update segment position on GAP events to calculate levels properly
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737498
+
+2014-10-02 11:00:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: update segment position on GAP events to calculate levels properly
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737498
+
+2014-10-02 10:57:43 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: update segment position on GAP events to calculate levels properly
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737498
+
+2014-10-02 10:13:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstcapsfilter.c:
+	  capsfilter: Push pending events before a buffer also if upstream never configured caps but we have srcpad caps already
+	  Otherwise we never send pending events downstream that arrive after we
+	  configured caps on the srcpad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737735
+
+2014-09-24 10:11:54 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* scripts/gst-uninstalled:
+	  scripts: Handle gst-python in gst-uninstalled
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709082
+
+=== release 1.4.3 ===
+
+2014-09-24 12:19:55 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.4.3
+
+2014-09-24 11:15:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-06-03 14:23:30 +0200  Thibault Saunier <tsaunier@gnome.org>
 

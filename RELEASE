@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.4.3
+Release notes for GStreamer 1.4.4
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -22,7 +22,6 @@ The stable 1.4.x release series is API and ABI compatible with 1.0.x and
 any other 1.x release series in the future. Compared to 1.0.x it contains
 some new features and more intrusive changes that were considered too
 risky as a bugfix.
-
 
 
 This module, gstreamer, only contains core functionality.
@@ -48,8 +47,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 737102 : queue: Do not hold GST_QUEUE_LOCK while posting ERROR messages
-      * 737133 : Missing gstconfig.h include
+      * 737498 : multiqueue: doesn't take GAP event into account when calculating current level
+      * 737794 : multiqueue: deadlock if queue overruns with serialized events
+      * 737999 : systemclock: multi-thread entry status issue
+      * 738198 : multiqueue: Does not wake up not-linked streams on EOS
 
 ==== Download ====
 
@@ -86,7 +87,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Marcin Kolny
-      * Thiago Santos
+      * Aleix Conchillo Flaqué
+      * Andrei Sarakeev
+      * Guillaume Desmottes
+      * Matej Knopp
+      * Nicolas Huet
+      * Sebastian Dröge
       * Thibault Saunier
+      * Tim-Philipp Müller
  
