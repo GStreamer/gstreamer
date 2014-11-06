@@ -1235,10 +1235,10 @@ unpack_UYVP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     y1 = (((s[(i / 2) * 5 + 3] & 0x03) << 8) | s[(i / 2) * 5 + 4]) << 6;
 
     if (!(flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)) {
-      y0 |= (y0 >> 4);
-      y1 |= (y1 >> 4);
-      u0 |= (u0 >> 4);
-      v0 |= (v0 >> 4);
+      y0 |= (y0 >> 10);
+      y1 |= (y1 >> 10);
+      u0 |= (u0 >> 10);
+      v0 |= (v0 >> 10);
     }
 
     d[i * 4 + 0] = 0xffff;
