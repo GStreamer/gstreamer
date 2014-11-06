@@ -364,10 +364,9 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->pool = NULL;
   glimage_sink->stored_buffer = NULL;
   glimage_sink->redisplay_texture = 0;
+  glimage_sink->handle_events = TRUE;
 
   g_mutex_init (&glimage_sink->drawing_lock);
-
-  gst_glimage_sink_handle_events (GST_VIDEO_OVERLAY (glimage_sink), TRUE);
 }
 
 static void
