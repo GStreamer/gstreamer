@@ -1667,6 +1667,12 @@ unpack_GBR_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     B = GST_READ_UINT16_LE (srcB + i) << 6;
     R = GST_READ_UINT16_LE (srcR + i) << 6;
 
+    if (!(flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)) {
+      R |= (R >> 10);
+      G |= (G >> 10);
+      B |= (B >> 10);
+    }
+
     d[i * 4 + 0] = 0xffff;
     d[i * 4 + 1] = R;
     d[i * 4 + 2] = G;
@@ -1714,6 +1720,12 @@ unpack_GBR_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     G = GST_READ_UINT16_BE (srcG + i) << 6;
     B = GST_READ_UINT16_BE (srcB + i) << 6;
     R = GST_READ_UINT16_BE (srcR + i) << 6;
+
+    if (!(flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)) {
+      R |= (R >> 10);
+      G |= (G >> 10);
+      B |= (B >> 10);
+    }
 
     d[i * 4 + 0] = 0xffff;
     d[i * 4 + 1] = R;
