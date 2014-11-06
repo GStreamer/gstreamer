@@ -1,21 +1,23 @@
-# Esperanto translation for gst-plugins-ugly.
-# Copyright (C) 2011 Free Software Foundation, Inc.
+# Esperanto translations for gst-plugins-ugly.
+# Copyright (C) 2014 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>, 2011.
 #
+# Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>, 2011.
+# Benno Schulenberg <benno@vertaalt.nl>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-ugly 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-09-24 11:47+0300\n"
-"PO-Revision-Date: 2011-06-04 22:24+0200\n"
-"Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
+"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"PO-Revision-Date: 2014-09-21 21:03+0200\n"
+"Last-Translator: Benno Schulenberg <benno@vertaalt.nl>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
 "Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"X-Generator: Lokalize 1.0\n"
 
 msgid "Could not read from CD."
 msgstr "Ne eblis legi de la KD."
@@ -31,31 +33,30 @@ msgstr "Ne eblis malfermi la DVD-n"
 
 #, c-format
 msgid "Could not open DVD title %d"
-msgstr "Ne eblis malfermi la titolon \"%d\" de la DVD"
+msgstr "Ne eblis malfermi titolon \"%d\" de la DVD"
 
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr "Fiaksi iri al la ĉapitro %d de la DVD-titolo %d"
+msgstr "Fiaskis iri al ĉapitro %d de la DVD-titolo %d"
 
 #, c-format
 msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
 "element"
 msgstr ""
-"Ne eblis malfermi la DVD-titolon \"%d\". Interagaj titoloj ne estas "
-"suptenata de tiu elemento"
+"Ne eblis malfermi DVD-titolon \"%d\"; ĉi tiu elemento ne subtenas interagajn "
+"titolojn"
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
 "Ne eblis legi la DVD-n. Eble la DVD estas ĉifrita sed biblioteko por DVD-"
-"malĉifrado ne estas instalite."
+"malĉifrado ne estas instalita."
 
 msgid "Could not read DVD."
 msgstr "Ne eblis legi la DVD-n."
 
-#, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr "Fiaskis agordi la LAME-kodilon. Kontrolu viajn kodad-parametrojn."
@@ -65,8 +66,8 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
-"La petita bitrapido je %d kBit/s ne estas permesata por la atributo \"%s\". "
-"La bitrapido estas ŝanĝite al %d kBit/s."
+"La petita bitrapido je %d kbit/s ne estas permesata por la atributo \"%s\". "
+"La bitrapido estas ŝanĝite al %d kbit/s."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr "Fiaskis agordi la TwoLAME-kodilon. Kontrolu viajn kodad-parametrojn."
