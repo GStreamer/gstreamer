@@ -1697,6 +1697,207 @@ GST_START_TEST (test_overlay_composition_global_alpha)
 
 GST_END_TEST;
 
+static guint8 *
+make_pixels (gint depth, gint width, gint height)
+{
+  guint32 color = 0xff000000;
+  gint i, j;
+
+  if (depth == 8) {
+    guint8 *pixels = g_malloc (width * height * 4);
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j++) {
+        pixels[(i * width + j) * 4 + 0] = ((color >> 24) & 0xff);
+        pixels[(i * width + j) * 4 + 1] = ((color >> 16) & 0xff);
+        pixels[(i * width + j) * 4 + 2] = ((color >> 8) & 0xff);
+        pixels[(i * width + j) * 4 + 3] = (color & 0xff);
+        color++;
+      }
+    }
+    return pixels;
+  } else {
+#define TO16(a) (((a)<<8)|(a))
+    guint16 *pixels = g_malloc (width * height * 8);
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j++) {
+        pixels[(i * width + j) * 4 + 0] = TO16 ((color >> 24) & 0xff);
+        pixels[(i * width + j) * 4 + 1] = TO16 ((color >> 16) & 0xff);
+        pixels[(i * width + j) * 4 + 2] = TO16 ((color >> 8) & 0xff);
+        pixels[(i * width + j) * 4 + 3] = TO16 (color & 0xff);
+        color++;
+      }
+    }
+#undef TO16
+    return (guint8 *) pixels;
+  }
+}
+
+#define HS(x,o) ((x)&hs[o])
+#define WS(x,o) ((x)&ws[o])
+#define IN(i,j,o) (in[(HS(i, o)*width + WS(j,o))*4+(o)] & mask[o])
+#define OUT(i,j,o) (out[((i)*width + (j))*4+o] & mask[o])
+static gint
+compare_frame (const GstVideoFormatInfo * finfo, gint depth, guint8 * outpixels,
+    guint8 * pixels, gint width, gint height)
+{
+  gint diff, i, j, k;
+  guint ws[4], hs[4], mask[4];
+
+  for (k = 0; k < 4; k++) {
+    hs[k] = G_MAXUINT << finfo->h_sub[(3 + k) % 4];
+    ws[k] = G_MAXUINT << finfo->w_sub[(3 + k) % 4];
+    mask[k] = G_MAXUINT << (depth - finfo->depth[(3 + k) % 4]);
+  }
+  diff = 0;
+  if (depth == 8) {
+    guint8 *in = pixels;
+    guint8 *out = outpixels;
+
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j++) {
+        for (k = 0; k < 4; k++) {
+          diff += IN (i, j, k) != OUT (i, j, k);
+        }
+      }
+    }
+  } else {
+    guint16 *in = (guint16 *) pixels;
+    guint16 *out = (guint16 *) outpixels;
+
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j++) {
+        for (k = 0; k < 4; k++) {
+          diff += IN (i, j, k) != OUT (i, j, k);
+        }
+      }
+    }
+  }
+  return diff;
+}
+
+#undef WS
+#undef HS
+#undef IN
+#undef OUT
+
+#define UNPACK_FRAME(frame,dest,line,x,width)            \
+  (frame)->info.finfo->unpack_func ((frame)->info.finfo, \
+      (GST_VIDEO_FRAME_IS_INTERLACED (frame) ?           \
+        GST_VIDEO_PACK_FLAG_INTERLACED :                 \
+        GST_VIDEO_PACK_FLAG_NONE),                       \
+      dest, (frame)->data, (frame)->info.stride, x,      \
+      line, width)
+#define PACK_FRAME(frame,src,line,width)               \
+  (frame)->info.finfo->pack_func ((frame)->info.finfo, \
+      (GST_VIDEO_FRAME_IS_INTERLACED (frame) ?         \
+        GST_VIDEO_PACK_FLAG_INTERLACED :               \
+        GST_VIDEO_PACK_FLAG_NONE),                     \
+      src, 0, (frame)->data, (frame)->info.stride,     \
+      (frame)->info.chroma_site, line, width);
+
+GST_START_TEST (test_video_pack_unpack2)
+{
+  GstVideoFormat format;
+  GTimer *timer;
+  gint num_formats;
+
+#define WIDTH 1920
+#define HEIGHT 1080
+/* set to something larger to do benchmarks */
+#define TIME 0.0
+
+  timer = g_timer_new ();
+
+  num_formats = get_num_formats ();
+
+  GST_DEBUG ("pack/sec\t unpack/sec \tpack GB/sec\tunpack GB/sec\tformat");
+
+  for (format = GST_VIDEO_FORMAT_I420; format < num_formats; format++) {
+    GstVideoInfo info;
+    const GstVideoFormatInfo *finfo, *fuinfo;
+    GstBuffer *buffer;
+    GstVideoFrame frame;
+    gint k, stride, count, diff, depth;
+    guint8 *pixels, *outpixels;
+    gdouble elapsed;
+    gdouble unpack_sec, pack_sec;
+
+    finfo = gst_video_format_get_info (format);
+    fail_unless (finfo != NULL);
+
+    if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (finfo))
+      continue;
+
+    fuinfo = gst_video_format_get_info (finfo->unpack_format);
+    fail_unless (fuinfo != NULL);
+
+    depth = GST_VIDEO_FORMAT_INFO_BITS (fuinfo);
+    fail_unless (depth == 8 || depth == 16);
+
+    pixels = make_pixels (depth, WIDTH, HEIGHT);
+    stride = WIDTH * (depth >> 1);
+
+    gst_video_info_set_format (&info, format, WIDTH, HEIGHT);
+    buffer = gst_buffer_new_and_alloc (info.size);
+    gst_video_frame_map (&frame, &info, buffer, GST_MAP_READWRITE);
+
+    /* pack the frame into the target format */
+    /* warmup */
+    PACK_FRAME (&frame, pixels, 0, WIDTH);
+
+    count = 0;
+    g_timer_start (timer);
+    while (TRUE) {
+      for (k = 0; k < HEIGHT; k += finfo->pack_lines) {
+        PACK_FRAME (&frame, pixels + k * stride, k, WIDTH);
+      }
+      count++;
+      elapsed = g_timer_elapsed (timer, NULL);
+      if (elapsed >= TIME)
+        break;
+    }
+    unpack_sec = count / elapsed;
+
+    outpixels = g_malloc0 (HEIGHT * stride);
+
+    /* unpack the frame */
+    /* warmup */
+    UNPACK_FRAME (&frame, outpixels, 0, 0, WIDTH);
+
+    count = 0;
+    g_timer_start (timer);
+    while (TRUE) {
+      for (k = 0; k < HEIGHT; k += finfo->pack_lines) {
+        UNPACK_FRAME (&frame, outpixels + k * stride, k, 0, WIDTH);
+      }
+      count++;
+      elapsed = g_timer_elapsed (timer, NULL);
+      if (elapsed >= TIME)
+        break;
+    }
+    pack_sec = count / elapsed;
+
+    /* compare the frame */
+    diff = compare_frame (finfo, depth, outpixels, pixels, WIDTH, HEIGHT);
+
+    GST_DEBUG ("%f \t %f \t %f \t %f \t %s", pack_sec, unpack_sec,
+        info.size * pack_sec, info.size * unpack_sec, finfo->name);
+
+    if (diff != 0) {
+      gst_util_dump_mem (outpixels, 128);
+      gst_util_dump_mem (pixels, 128);
+      fail_if (diff != 0);
+    }
+    gst_video_frame_unmap (&frame);
+    gst_buffer_unref (buffer);
+    g_free (pixels);
+    g_free (outpixels);
+  }
+  g_timer_destroy (timer);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_scaler)
 {
   GstVideoScaler *scale;
@@ -1708,7 +1909,6 @@ GST_START_TEST (test_video_scaler)
   scale = gst_video_scaler_new (GST_VIDEO_RESAMPLER_METHOD_LINEAR,
       GST_VIDEO_SCALER_FLAG_NONE, 2, 15, 5, NULL);
   gst_video_scaler_free (scale);
-
 }
 
 GST_END_TEST;
@@ -1734,6 +1934,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_overlay_composition);
   tcase_add_test (tc_chain, test_overlay_composition_premultiplied_alpha);
   tcase_add_test (tc_chain, test_overlay_composition_global_alpha);
+  tcase_add_test (tc_chain, test_video_pack_unpack2);
   tcase_add_test (tc_chain, test_video_scaler);
 
   return s;
