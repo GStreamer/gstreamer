@@ -1483,6 +1483,7 @@ dup_failed:
 allocator_failed:
   {
     GST_ERROR_OBJECT (pool, "Failed to create V4L2 allocator");
+    gst_object_unref (pool);
     return NULL;
   }
 }
