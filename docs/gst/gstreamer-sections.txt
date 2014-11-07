@@ -398,6 +398,9 @@ GST_CAPS_FLAG_IS_SET
 GST_CAPS_FLAG_SET
 GST_CAPS_FLAG_UNSET
 
+GstCapsForeachFunc
+GstCapsMapFunc
+
 gst_caps_new_empty
 gst_caps_new_empty_simple
 gst_caps_new_any
@@ -424,6 +427,8 @@ gst_caps_set_features
 gst_caps_set_value
 gst_caps_set_simple
 gst_caps_set_simple_valist
+gst_caps_foreach
+gst_caps_map_in_place
 gst_caps_is_any
 gst_caps_is_empty
 gst_caps_is_fixed

@@ -2358,3 +2358,92 @@ gst_caps_transform_to_string (const GValue * src_value, GValue * dest_value)
   g_value_take_string (dest_value,
       gst_caps_to_string (gst_value_get_caps (src_value)));
 }
+
+/**
+ * gst_caps_foreach:
+ * @caps: a #GstCaps
+ * @func: (scope call): a function to call for each field
+ * @user_data: (closure): private data
+ *
+ * Calls the provided function once for each structure and caps feature in the
+ * #GstCaps. The function must not modify the fields.
+ * Also see gst_caps_map_in_place().
+ *
+ * Returns: %TRUE if the supplied function returns %TRUE for each call,
+ * %FALSE otherwise.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_caps_foreach (const GstCaps * caps, GstCapsForeachFunc func,
+    gpointer user_data)
+{
+  guint i, n;
+  GstCapsFeatures *features;
+  GstStructure *structure;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (func != NULL, FALSE);
+
+  n = GST_CAPS_LEN (caps);
+
+  for (i = 0; i < n; i++) {
+    features = gst_caps_get_features_unchecked (caps, i);
+    structure = gst_caps_get_structure_unchecked (caps, i);
+
+    ret = func (features, structure, user_data);
+    if (G_UNLIKELY (!ret))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_caps_map_in_place:
+ * @caps: a #GstCaps
+ * @func: (scope call): a function to call for each field
+ * @user_data: (closure): private data
+ *
+ * Calls the provided function once for each structure and caps feature in the
+ * #GstCaps. In contrast to gst_caps_foreach(), the function may modify but not
+ * delete the structures and features. The caps must be mutable.
+ *
+ * Returns: %TRUE if the supplied function returns %TRUE for each call,
+ * %FALSE otherwise.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_caps_map_in_place (GstCaps * caps, GstCapsMapFunc func, gpointer user_data)
+{
+  guint i, n;
+  GstCapsFeatures *features;
+  GstStructure *structure;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (gst_caps_is_writable (caps), FALSE);
+  g_return_val_if_fail (func != NULL, FALSE);
+
+  n = GST_CAPS_LEN (caps);
+
+  for (i = 0; i < n; i++) {
+    features = gst_caps_get_features_unchecked (caps, i);
+    structure = gst_caps_get_structure_unchecked (caps, i);
+
+    /* Provide sysmem features if there are none yet */
+    if (!features) {
+      features =
+          gst_caps_features_copy (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
+      gst_caps_set_features (caps, i, features);
+    }
+
+    ret = func (features, structure, user_data);
+    if (G_UNLIKELY (!ret))
+      return FALSE;
+  }
+
+  return TRUE;
+}

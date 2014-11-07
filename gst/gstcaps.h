@@ -363,6 +363,41 @@ struct _GstStaticCaps {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstCapsForeachFunc:
+ * @features: the #GstCapsFeatures
+ * @structure: the #GstStructure
+ * @user_data: user data
+ *
+ * A function that will be called in gst_caps_foreach(). The function may
+ * not modify @features or @structure.
+ *
+ * Returns: %TRUE if the foreach operation should continue, %FALSE if
+ * the foreach operation should stop with %FALSE.
+ *
+ * Since: 1.6
+ */
+typedef gboolean (*GstCapsForeachFunc) (GstCapsFeatures *features,
+                                        GstStructure    *structure,
+                                        gpointer         user_data);
+
+/**
+ * GstCapsMapFunc:
+ * @features: the #GstCapsFeatures
+ * @structure: the #GstStructure
+ * @user_data: user data
+ *
+ * A function that will be called in gst_caps_map_in_place(). The function
+ * may modify @features and @structure.
+ *
+ * Returns: %TRUE if the map operation should continue, %FALSE if
+ * the map operation should stop with %FALSE.
+ */
+typedef gboolean (*GstCapsMapFunc)     (GstCapsFeatures *features,
+                                        GstStructure    *structure,
+                                        gpointer         user_data);
+
+
 GType             gst_caps_get_type                (void);
 
 GstCaps *         gst_caps_new_empty               (void);
@@ -416,6 +451,14 @@ void              gst_caps_set_simple              (GstCaps       *caps,
 void              gst_caps_set_simple_valist       (GstCaps       *caps,
                                                     const char    *field,
                                                     va_list        varargs);
+
+gboolean          gst_caps_foreach                 (const GstCaps       *caps,
+                                                    GstCapsForeachFunc   func,
+                                                    gpointer             user_data);
+
+gboolean          gst_caps_map_in_place            (GstCaps        *caps,
+                                                    GstCapsMapFunc  func,
+                                                    gpointer        user_data);
 
 /* tests */
 gboolean          gst_caps_is_any                  (const GstCaps *caps);

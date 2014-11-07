@@ -1161,6 +1161,85 @@ GST_START_TEST (test_special_caps)
 }
 
 GST_END_TEST;
+
+static gboolean
+foreach_append_function (GstCapsFeatures * features, GstStructure * structure,
+    gpointer user_data)
+{
+  GstCaps *caps = user_data;
+
+  gst_caps_append_structure_full (caps, gst_structure_copy (structure),
+      features ? gst_caps_features_copy (features) : NULL);
+
+  return TRUE;
+}
+
+GST_START_TEST (test_foreach)
+{
+  GstCaps *caps, *caps2;
+
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, format=I420; video/x-raw(foo:bar); video/x-h264");
+  caps2 = gst_caps_new_empty ();
+  fail_unless (gst_caps_foreach (caps, foreach_append_function, caps2));
+  fail_unless (gst_caps_is_strictly_equal (caps, caps2));
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
+
+  caps = gst_caps_new_empty ();
+  caps2 = gst_caps_new_empty ();
+  fail_unless (gst_caps_foreach (caps, foreach_append_function, caps2));
+  fail_unless (gst_caps_is_strictly_equal (caps, caps2));
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
+}
+
+GST_END_TEST;
+
+static gboolean
+map_function (GstCapsFeatures * features, GstStructure * structure,
+    gpointer user_data)
+{
+  /* Remove caps features if there are any, otherwise add some dummy */
+  if (gst_caps_features_contains (features, "foo:bar")) {
+    gst_caps_features_remove (features, "foo:bar");
+  } else {
+    gst_caps_features_add (features, "foo:bar");
+    gst_caps_features_remove (features, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+  }
+
+  /* Set some dummy integer in the structure */
+  gst_structure_set (structure, "foo", G_TYPE_INT, 123, NULL);
+
+  return TRUE;
+}
+
+GST_START_TEST (test_map_in_place)
+{
+  GstCaps *caps, *caps2;
+
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, format=I420; video/x-raw(foo:bar); video/x-h264");
+  caps2 =
+      gst_caps_from_string
+      ("video/x-raw(foo:bar), foo=(int)123, format=I420; video/x-raw, foo=(int)123; video/x-h264(foo:bar), foo=(int)123");
+  fail_unless (gst_caps_map_in_place (caps, map_function, NULL));
+  fail_unless (gst_caps_is_strictly_equal (caps, caps2));
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
+
+  caps = gst_caps_new_empty ();
+  caps2 = gst_caps_new_empty ();
+  fail_unless (gst_caps_map_in_place (caps, map_function, NULL));
+  fail_unless (gst_caps_is_strictly_equal (caps, caps2));
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_caps_suite (void)
 {
@@ -1190,6 +1269,8 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_broken);
   tcase_add_test (tc_chain, test_features);
   tcase_add_test (tc_chain, test_special_caps);
+  tcase_add_test (tc_chain, test_foreach);
+  tcase_add_test (tc_chain, test_map_in_place);
 
   return s;
 }
