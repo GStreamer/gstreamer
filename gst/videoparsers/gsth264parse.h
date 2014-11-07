@@ -109,6 +109,7 @@ struct _GstH264Parse
   gboolean update_caps;
   GstAdapter *frame_out;
   gboolean keyframe;
+  gboolean header;
   gboolean frame_start;
   /* AU state */
   gboolean picture_start;

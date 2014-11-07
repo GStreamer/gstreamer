@@ -189,6 +189,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->idr_pos = -1;
   h264parse->sei_pos = -1;
   h264parse->keyframe = FALSE;
+  h264parse->header = FALSE;
   h264parse->frame_start = FALSE;
   gst_adapter_clear (h264parse->frame_out);
 }
@@ -447,6 +448,10 @@ gst_h264_parser_store_nal (GstH264Parse * h264parse, guint id,
   buf = gst_buffer_new_allocate (NULL, size, NULL);
   gst_buffer_fill (buf, 0, nalu->data + nalu->offset, size);
 
+  /* Indicate that buffer contain a header needed for decoding */
+  if (naltype == GST_H264_NAL_SPS || naltype == GST_H264_NAL_PPS)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+
   if (store[id])
     gst_buffer_unref (store[id]);
 
@@ -591,6 +596,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
       gst_h264_parser_store_nal (h264parse, sps.id, nal_type, nalu);
       h264parse->state |= GST_H264_PARSE_STATE_GOT_SPS;
+      h264parse->header |= TRUE;
       break;
     case GST_H264_NAL_PPS:
       /* expected state: got-sps */
@@ -624,6 +630,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       gst_h264_parser_store_nal (h264parse, pps.id, nal_type, nalu);
       gst_h264_pps_clear (&pps);
       h264parse->state |= GST_H264_PARSE_STATE_GOT_PPS;
+      h264parse->header |= TRUE;
       break;
     case GST_H264_NAL_SEI:
       /* expected state: got-sps */
@@ -1555,6 +1562,11 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   else
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  if (h264parse->header)
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
+  else
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_HEADER);
 
   if (h264parse->discont) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
