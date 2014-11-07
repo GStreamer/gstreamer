@@ -1672,6 +1672,70 @@ select1lw uv2, s2
 x2 avgub uv1, uv1, uv2
 mergewl d, ay1, uv1
 
+.function video_orc_chroma_up_v2_u8
+.source 4 s1 guint8
+.source 4 s2 guint8
+.dest 4 d1 guint8
+.dest 4 d2 guint8
+.temp 2 ay1
+.temp 2 ay2
+.temp 2 uv1
+.temp 2 uv2
+.temp 4 uuvv1
+.temp 4 uuvv2
+.temp 4 uuvv3
+
+splitlw uv1, ay1, s1
+splitlw uv2, ay2, s2
+x2 convubw uuvv1, uv1
+x2 convubw uuvv2, uv2
+
+x2 mullw uuvv3, uuvv1, 3
+x2 addw uuvv3, uuvv3, uuvv2
+x2 addw uuvv3, uuvv3, 2
+x2 shruw uuvv3, uuvv3, 2
+x2 convwb uv1, uuvv3
+mergewl d1, ay1, uv1
+
+x2 mullw uuvv3, uuvv2, 3
+x2 addw uuvv3, uuvv3, uuvv1
+x2 addw uuvv3, uuvv3, 2
+x2 shruw uuvv3, uuvv3, 2
+x2 convwb uv2, uuvv3
+mergewl d2, ay2, uv2
+
+.function video_orc_chroma_up_v2_u16
+.source 8 s1 guint16
+.source 8 s2 guint16
+.dest 8 d1 guint16
+.dest 8 d2 guint16
+.temp 4 ay1
+.temp 4 ay2
+.temp 4 uv1
+.temp 4 uv2
+.temp 8 uuvv1
+.temp 8 uuvv2
+.temp 8 uuvv3
+
+splitql uv1, ay1, s1
+splitql uv2, ay2, s2
+x2 convuwl uuvv1, uv1
+x2 convuwl uuvv2, uv2
+
+x2 mulll uuvv3, uuvv1, 3
+x2 addl uuvv3, uuvv3, uuvv2
+x2 addl uuvv3, uuvv3, 2
+x2 shrul uuvv3, uuvv3, 2
+x2 convlw uv1, uuvv3
+mergelq d1, ay1, uv1
+
+x2 mulll uuvv3, uuvv2, 3
+x2 addl uuvv3, uuvv3, uuvv1
+x2 addl uuvv3, uuvv3, 2
+x2 shrul uuvv3, uuvv3, 2
+x2 convlw uv2, uuvv3
+mergelq d2, ay2, uv2
+
 .function video_orc_chroma_down_v2_u16
 .source 8 s1 guint16
 .source 8 s2 guint16

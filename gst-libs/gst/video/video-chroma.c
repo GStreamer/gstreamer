@@ -169,11 +169,8 @@ static void                                                             \
 video_chroma_up_v2_##name (GstVideoChromaResample *resample,            \
     gpointer lines[], gint width)                                       \
 {                                                                       \
-  gint i;                                                               \
   type *l0 = lines[0];                                                  \
   type *l1 = lines[1];                                                  \
-  type tr0, tr1;                                                        \
-  type tb0, tb1;                                                        \
                                                                         \
   if (resample->h_resample) {                                           \
     resample->h_resample (resample, l0, width);                         \
@@ -181,15 +178,7 @@ video_chroma_up_v2_##name (GstVideoChromaResample *resample,            \
       resample->h_resample (resample, l1, width);                       \
   }                                                                     \
   if (l0 != l1) {                                                       \
-    for (i = 0; i < width; i++) {                                       \
-      tr0 = PR0(i), tr1 = PR1(i);                                       \
-      tb0 = PB0(i), tb1 = PB1(i);                                       \
-                                                                        \
-      PR0(i) = FILT_3_1 (tr0, tr1);                                     \
-      PB0(i) = FILT_3_1 (tb0, tb1);                                     \
-      PR1(i) = FILT_1_3 (tr0, tr1);                                     \
-      PB1(i) = FILT_1_3 (tb0, tb1);                                     \
-    }                                                                   \
+    video_orc_chroma_up_v2_##name (l0, l1, l0, l1, width);              \
   }                                                                     \
 }
 /* 2x vertical upsampling interlaced without cositing

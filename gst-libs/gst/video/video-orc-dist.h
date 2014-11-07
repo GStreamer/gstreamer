@@ -177,6 +177,8 @@ void video_orc_resample_v_multaps_u8_lq (gint32 * ORC_RESTRICT d1, const guint32
 void video_orc_resample_v_muladdtaps_u8_lq (gint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int p1, int n);
 void video_orc_chroma_down_h2_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void video_orc_chroma_down_v2_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
+void video_orc_chroma_up_v2_u8 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
+void video_orc_chroma_up_v2_u16 (guint16 * ORC_RESTRICT d1, guint16 * ORC_RESTRICT d2, const guint16 * ORC_RESTRICT s1, const guint16 * ORC_RESTRICT s2, int n);
 void video_orc_chroma_down_v2_u16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, const guint16 * ORC_RESTRICT s2, int n);
 void video_orc_chroma_down_v4_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
 void video_orc_chroma_down_v4_u16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, const guint16 * ORC_RESTRICT s2, const guint16 * ORC_RESTRICT s3, const guint16 * ORC_RESTRICT s4, int n);

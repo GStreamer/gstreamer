@@ -1801,10 +1801,10 @@ GST_START_TEST (test_video_pack_unpack2)
   GTimer *timer;
   gint num_formats;
 
-#define WIDTH 1920
-#define HEIGHT 1080
+#define WIDTH 320
+#define HEIGHT 240
 /* set to something larger to do benchmarks */
-#define TIME 0.0
+#define TIME 0.01
 
   timer = g_timer_new ();
 
@@ -1880,8 +1880,9 @@ GST_START_TEST (test_video_pack_unpack2)
     /* compare the frame */
     diff = compare_frame (finfo, depth, outpixels, pixels, WIDTH, HEIGHT);
 
-    GST_DEBUG ("%f \t %f \t %f \t %f \t %s", pack_sec, unpack_sec,
-        info.size * pack_sec, info.size * unpack_sec, finfo->name);
+    GST_DEBUG ("%f \t %f \t %f \t %f \t %s %d/%f", pack_sec, unpack_sec,
+        info.size * pack_sec, info.size * unpack_sec, finfo->name, count,
+        elapsed);
 
     if (diff != 0) {
       gst_util_dump_mem (outpixels, 128);
@@ -1901,50 +1902,89 @@ GST_END_TEST;
 #undef HEIGHT
 #undef TIME
 
-#define WIDTH 1920
-#define HEIGHT 1080
+#define WIDTH 320
+#define HEIGHT 240
 #define TIME 0.1
 #define GET_LINE(l) (pixels + CLAMP (l, 0, HEIGHT-1) * WIDTH * 4)
 GST_START_TEST (test_video_chroma)
 {
   guint8 *pixels;
-  GstVideoChromaResample *resample;
   guint n_lines;
-  gint i, j, offset, count;
-  gpointer lines[2];
+  gint i, j, k, offset, count;
+  gpointer lines[10];
   GTimer *timer;
   gdouble elapsed, subsample_sec;
+  GstVideoChromaSite sites[] = {
+    GST_VIDEO_CHROMA_SITE_NONE,
+    GST_VIDEO_CHROMA_SITE_H_COSITED,
+  };
 
   timer = g_timer_new ();
   pixels = make_pixels (8, WIDTH, HEIGHT);
 
-  resample = gst_video_chroma_resample_new (GST_VIDEO_CHROMA_METHOD_LINEAR,
-      GST_VIDEO_CHROMA_SITE_NONE, GST_VIDEO_CHROMA_FLAG_NONE,
-      GST_VIDEO_FORMAT_AYUV, -1, -1);
+  for (k = 0; k < G_N_ELEMENTS (sites); k++) {
+    GstVideoChromaResample *resample;
 
-  gst_video_chroma_resample_get_info (resample, &n_lines, &offset);
-  fail_unless (n_lines == 2);
-  fail_unless (offset == 0);
+    resample = gst_video_chroma_resample_new (GST_VIDEO_CHROMA_METHOD_LINEAR,
+        sites[k], GST_VIDEO_CHROMA_FLAG_NONE, GST_VIDEO_FORMAT_AYUV, -1, -1);
 
-  count = 0;
-  g_timer_start (timer);
-  while (TRUE) {
-    for (i = 0; i < HEIGHT; i += n_lines) {
-      for (j = 0; j < n_lines; j++)
-        lines[j] = GET_LINE (i + offset + j);
+    gst_video_chroma_resample_get_info (resample, &n_lines, &offset);
+    fail_unless (n_lines < 10);
 
-      gst_video_chroma_resample (resample, lines, WIDTH);
+    /* warmup */
+    for (j = 0; j < n_lines; j++)
+      lines[j] = GET_LINE (offset + j);
+    gst_video_chroma_resample (resample, lines, WIDTH);
+
+    count = 0;
+    g_timer_start (timer);
+    while (TRUE) {
+      for (i = 0; i < HEIGHT; i += n_lines) {
+        for (j = 0; j < n_lines; j++)
+          lines[j] = GET_LINE (i + offset + j);
+
+        gst_video_chroma_resample (resample, lines, WIDTH);
+      }
+      count++;
+      elapsed = g_timer_elapsed (timer, NULL);
+      if (elapsed >= TIME)
+        break;
     }
-    count++;
-    elapsed = g_timer_elapsed (timer, NULL);
-    if (elapsed >= TIME)
-      break;
+    subsample_sec = count / elapsed;
+    GST_DEBUG ("%f downsamples/sec  %d/%f", subsample_sec, count, elapsed);
+    gst_video_chroma_resample_free (resample);
+
+    resample = gst_video_chroma_resample_new (GST_VIDEO_CHROMA_METHOD_LINEAR,
+        sites[k], GST_VIDEO_CHROMA_FLAG_NONE, GST_VIDEO_FORMAT_AYUV, 1, 1);
+
+    gst_video_chroma_resample_get_info (resample, &n_lines, &offset);
+    fail_unless (n_lines < 10);
+
+    /* warmup */
+    for (j = 0; j < n_lines; j++)
+      lines[j] = GET_LINE (offset + j);
+    gst_video_chroma_resample (resample, lines, WIDTH);
+
+    count = 0;
+    g_timer_start (timer);
+    while (TRUE) {
+      for (i = 0; i < HEIGHT; i += n_lines) {
+        for (j = 0; j < n_lines; j++)
+          lines[j] = GET_LINE (i + offset + j);
+
+        gst_video_chroma_resample (resample, lines, WIDTH);
+      }
+      count++;
+      elapsed = g_timer_elapsed (timer, NULL);
+      if (elapsed >= TIME)
+        break;
+    }
+    subsample_sec = count / elapsed;
+    GST_DEBUG ("%f upsamples/sec  %d/%f", subsample_sec, count, elapsed);
+    gst_video_chroma_resample_free (resample);
   }
-  subsample_sec = count / elapsed;
-  GST_DEBUG ("%f subsamples/sec", subsample_sec);
 
-  gst_video_chroma_resample_free (resample);
-
+  g_free (pixels);
   g_timer_destroy (timer);
 }
 
@@ -1968,9 +2008,9 @@ GST_START_TEST (test_video_scaler)
 
 GST_END_TEST;
 
-#define WIDTH 192
-#define HEIGHT 108
-#define TIME 0.0
+#define WIDTH 320
+#define HEIGHT 240
+#define TIME 0.01
 #define GET_LINE(l) (pixels + CLAMP (l, 0, HEIGHT-1) * WIDTH * 4)
 
 typedef struct
@@ -2011,6 +2051,7 @@ GST_START_TEST (test_video_color_convert)
 
     gst_video_info_set_format (&ininfo, infmt, WIDTH, HEIGHT);
     inbuffer = gst_buffer_new_and_alloc (ininfo.size);
+    gst_buffer_memset (inbuffer, 0, 0, -1);
     gst_video_frame_map (&inframe, &ininfo, inbuffer, GST_MAP_READ);
 
     for (outfmt = GST_VIDEO_FORMAT_I420; outfmt < num_formats; outfmt++) {
@@ -2027,6 +2068,8 @@ GST_START_TEST (test_video_color_convert)
       gst_video_frame_map (&outframe, &outinfo, outbuffer, GST_MAP_WRITE);
 
       convert = gst_video_converter_new (&ininfo, &outinfo, NULL);
+      /* warmup */
+      gst_video_converter_frame (convert, &inframe, &outframe);
 
       count = 0;
       g_timer_start (timer);
@@ -2043,9 +2086,9 @@ GST_START_TEST (test_video_color_convert)
       res.outfmt = outfmt;
       res.convert_sec = count / elapsed;
 
-      GST_DEBUG ("%f conversions/sec %s->%s", res.convert_sec,
+      GST_DEBUG ("%f conversions/sec %s->%s, %d/%f", res.convert_sec,
           gst_video_format_to_string (infmt),
-          gst_video_format_to_string (outfmt));
+          gst_video_format_to_string (outfmt), count, elapsed);
 
       g_array_append_val (array, res);
 
@@ -2082,6 +2125,8 @@ video_suite (void)
 {
   Suite *s = suite_create ("video support library");
   TCase *tc_chain = tcase_create ("general");
+
+  tcase_set_timeout (tc_chain, 60 * 60);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_video_formats);
