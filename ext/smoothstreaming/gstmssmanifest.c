@@ -423,7 +423,7 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
   GstBuffer *buffer;
   gchar *sps_str;
   gchar *pps_str;
-  GstH264NalUnit nalu;
+  GstH264NalUnit nalu = { 0, };
   GstH264SPS sps_struct;
   GstH264ParserResult parseres;
   GstMapInfo spsinfo;
@@ -457,6 +457,8 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
   nalu.offset = 0;
   nalu.sc_offset = 0;
   nalu.valid = TRUE;
+  nalu.header_bytes = 0;
+  nalu.extension_type = GST_H264_NAL_EXTENSION_NONE;
 
   parseres = gst_h264_parse_sps (&nalu, &sps_struct, TRUE);
   if (parseres == GST_H264_PARSER_OK) {
