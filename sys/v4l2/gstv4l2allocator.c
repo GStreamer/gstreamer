@@ -717,8 +717,7 @@ done:
 
 already_active:
   {
-    GST_ERROR_OBJECT (allocator,
-        "error requesting %d buffers: %s", count, g_strerror (errno));
+    GST_ERROR_OBJECT (allocator, "allocator already active");
     goto error;
   }
 reqbufs_failed:
