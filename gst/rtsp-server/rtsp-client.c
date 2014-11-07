@@ -361,6 +361,23 @@ cleanup_session (GstRTSPClient * client, GstRTSPSession * sess,
   return GST_RTSP_FILTER_REMOVE;
 }
 
+static void
+clean_cached_media (GstRTSPClient * client, gboolean unprepare)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+
+  if (priv->path) {
+    g_free (priv->path);
+    priv->path = NULL;
+  }
+  if (priv->media) {
+    if (unprepare)
+      gst_rtsp_media_unprepare (priv->media);
+    g_object_unref (priv->media);
+    priv->media = NULL;
+  }
+}
+
 /* A client is finalized when the connection is broken */
 static void
 gst_rtsp_client_finalize (GObject * obj)
@@ -400,12 +417,7 @@ gst_rtsp_client_finalize (GObject * obj)
   if (priv->thread_pool)
     g_object_unref (priv->thread_pool);
 
-  if (priv->path)
-    g_free (priv->path);
-  if (priv->media) {
-    gst_rtsp_media_unprepare (priv->media);
-    g_object_unref (priv->media);
-  }
+  clean_cached_media (client, TRUE);
 
   g_free (priv->server_ip);
   g_mutex_clear (&priv->lock);
@@ -595,14 +607,7 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gchar * path,
 
     /* remove any previously cached values before we try to construct a new
      * media for uri */
-    if (priv->path)
-      g_free (priv->path);
-    priv->path = NULL;
-    if (priv->media) {
-      gst_rtsp_media_unprepare (priv->media);
-      g_object_unref (priv->media);
-    }
-    priv->media = NULL;
+    clean_cached_media (client, TRUE);
 
     /* prepare the media and add it to the pipeline */
     if (!(media = gst_rtsp_media_factory_construct (factory, ctx->uri)))
@@ -1825,12 +1830,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
       goto sessmedia_unavailable;
 
     /* don't cache media anymore */
-    if (priv->path)
-      g_free (priv->path);
-    priv->path = NULL;
-    if (priv->media)
-      g_object_unref (priv->media);
-    priv->media = NULL;
+    clean_cached_media (client, FALSE);
   } else {
     g_object_unref (media);
   }
