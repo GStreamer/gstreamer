@@ -897,17 +897,14 @@ gst_mss_stream_type_name (GstMssStreamType streamtype)
  *
  * @time: time in nanoseconds
  */
-gboolean
+void
 gst_mss_manifest_seek (GstMssManifest * manifest, guint64 time)
 {
-  gboolean ret = TRUE;
   GSList *iter;
 
   for (iter = manifest->streams; iter; iter = g_slist_next (iter)) {
-    ret = gst_mss_stream_seek (iter->data, time) & ret;
+    gst_mss_stream_seek (iter->data, time);
   }
-
-  return ret;
 }
 
 /**
@@ -915,7 +912,7 @@ gst_mss_manifest_seek (GstMssManifest * manifest, guint64 time)
  *
  * @time: time in nanoseconds
  */
-gboolean
+void
 gst_mss_stream_seek (GstMssStream * stream, guint64 time)
 {
   GList *iter;
@@ -943,8 +940,6 @@ gst_mss_stream_seek (GstMssStream * stream, guint64 time)
       break;
     }
   }
-
-  return TRUE;
 }
 
 guint64

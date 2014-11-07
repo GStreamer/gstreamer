@@ -607,10 +607,7 @@ gst_mss_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_mss_demux_stop_tasks (mssdemux, TRUE);
 
-      if (!gst_mss_manifest_seek (mssdemux->manifest, start)) {;
-        GST_WARNING_OBJECT (mssdemux, "Could not find seeked fragment");
-        goto not_supported;
-      }
+      gst_mss_manifest_seek (mssdemux->manifest, start);
 
       for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
         GstMssDemuxStream *stream = iter->data;
