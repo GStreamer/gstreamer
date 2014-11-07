@@ -123,7 +123,7 @@ GstV4l2Allocator*    gst_v4l2_allocator_new            (GstObject *parent, gint 
 guint                gst_v4l2_allocator_start          (GstV4l2Allocator * allocator,
                                                         guint32 count, guint32 memory);
 
-gboolean             gst_v4l2_allocator_stop           (GstV4l2Allocator * allocator);
+GstV4l2Return        gst_v4l2_allocator_stop           (GstV4l2Allocator * allocator);
 
 GstV4l2MemoryGroup*  gst_v4l2_allocator_alloc_mmap     (GstV4l2Allocator * allocator);
 
