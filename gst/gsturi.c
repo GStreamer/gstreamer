@@ -1004,7 +1004,7 @@ static void _gst_uri_free (GstUri * uri);
 static GstUri *_gst_uri_new (void);
 static GList *_remove_dot_segments (GList * path);
 
-/** private GstUri functions **/
+/* private GstUri functions */
 
 static GstUri *
 _gst_uri_new (void)
@@ -1186,7 +1186,7 @@ _gst_uri_normalize_table_noop (GHashTable * table)
 #define _gst_uri_normalize_query _gst_uri_normalize_table_noop
 #define _gst_uri_normalize_fragment _gst_uri_normalize_str_noop
 
-/** RFC 3986 functions **/
+/* RFC 3986 functions */
 
 static GList *
 _merge (GList * base, GList * path)
