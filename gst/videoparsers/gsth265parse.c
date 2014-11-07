@@ -168,6 +168,7 @@ gst_h265_parse_reset_frame (GstH265Parse * h265parse)
   h265parse->idr_pos = -1;
   h265parse->sei_pos = -1;
   h265parse->keyframe = FALSE;
+  h265parse->header = FALSE;
   gst_adapter_clear (h265parse->frame_out);
 }
 
@@ -419,6 +420,10 @@ gst_h265_parser_store_nal (GstH265Parse * h265parse, guint id,
   buf = gst_buffer_new_allocate (NULL, size, NULL);
   gst_buffer_fill (buf, 0, nalu->data + nalu->offset, size);
 
+  /* Indicate that buffer contain a header needed for decoding */
+  if (naltype >= GST_H265_NAL_VPS && naltype <= GST_H265_NAL_PPS)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+
   if (store[id])
     gst_buffer_unref (store[id]);
 
@@ -524,6 +529,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       }
 
       gst_h265_parser_store_nal (h265parse, vps.id, nal_type, nalu);
+      h265parse->header |= TRUE;
       break;
     case GST_H265_NAL_SPS:
       pres = gst_h265_parser_parse_sps (nalparser, nalu, &sps, TRUE);
@@ -546,6 +552,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       }
 
       gst_h265_parser_store_nal (h265parse, sps.id, nal_type, nalu);
+      h265parse->header |= TRUE;
       break;
     case GST_H265_NAL_PPS:
       pres = gst_h265_parser_parse_pps (nalparser, nalu, &pps);
@@ -571,6 +578,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       }
 
       gst_h265_parser_store_nal (h265parse, pps.id, nal_type, nalu);
+      h265parse->header |= TRUE;
       break;
     case GST_H265_NAL_PREFIX_SEI:
     case GST_H265_NAL_SUFFIX_SEI:
@@ -1406,6 +1414,11 @@ gst_h265_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   else
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  if (h265parse->header)
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
+  else
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_HEADER);
 
   /* replace with transformed HEVC output if applicable */
   av = gst_adapter_available (h265parse->frame_out);

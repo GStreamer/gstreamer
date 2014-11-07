@@ -83,6 +83,7 @@ struct _GstH265Parse
   gboolean update_caps;
   GstAdapter *frame_out;
   gboolean keyframe;
+  gboolean header;
   /* AU state */
   gboolean picture_start;
 
