@@ -69,7 +69,7 @@ static void gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool,
     GstBuffer * buffer);
 
 static gboolean
-gst_v4l2_is_buffer_valid (GstBuffer * buffer, GstV4l2MemoryGroup ** group)
+gst_v4l2_is_buffer_valid (GstBuffer * buffer, GstV4l2MemoryGroup ** out_group)
 {
   GstMemory *mem = gst_buffer_peek_memory (buffer, 0);
   gboolean valid = FALSE;
@@ -83,9 +83,23 @@ gst_v4l2_is_buffer_valid (GstBuffer * buffer, GstV4l2MemoryGroup ** group)
 
   if (mem && gst_is_v4l2_memory (mem)) {
     GstV4l2Memory *vmem = (GstV4l2Memory *) mem;
+    GstV4l2MemoryGroup *group = vmem->group;
+    gint i;
+
+    if (group->n_mem != gst_buffer_n_memory (buffer))
+      goto done;
+
+    for (i = 0; i < group->n_mem; i++) {
+      if (group->mem[i] != gst_buffer_peek_memory (buffer, i))
+        goto done;
+
+      if (!gst_memory_is_writable (group->mem[i]))
+        goto done;
+    }
+
     valid = TRUE;
-    if (group)
-      *group = vmem->group;
+    if (out_group)
+      *out_group = group;
   }
 
 done:
