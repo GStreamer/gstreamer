@@ -477,6 +477,7 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GSList *iter;
       gboolean update;
       gboolean seek_to_eos = FALSE;
+      guint32 seqnum;
 
       GST_INFO_OBJECT (demux, "Received seek event");
 
@@ -490,6 +491,8 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       if (format != GST_FORMAT_TIME)
         return FALSE;
+
+      seqnum = gst_event_get_seqnum (event);
 
       GST_DEBUG_OBJECT (demux,
           "seek event, rate: %f type: %d start: %" GST_TIME_FORMAT " stop: %"
@@ -505,12 +508,17 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_DASH_DEMUX_CLIENT_LOCK (demux);
 
         if (flags & GST_SEEK_FLAG_FLUSH) {
+          GstEvent *fstart = gst_event_new_flush_start ();
+
+          gst_event_set_seqnum (fstart, seqnum);
           GST_DEBUG_OBJECT (demux, "sending flush start");
+
           for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
             GstDashDemuxStream *stream;
             stream = iter->data;
-            gst_pad_push_event (stream->pad, gst_event_new_flush_start ());
+            gst_pad_push_event (stream->pad, gst_event_ref (fstart));
           }
+          gst_event_unref (fstart);
         }
 
         gst_dash_demux_stop (demux);
@@ -576,6 +584,9 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
 
         if (flags & GST_SEEK_FLAG_FLUSH) {
+          GstEvent *fstop = gst_event_new_flush_stop (TRUE);
+
+          gst_event_set_seqnum (fstop, seqnum);
           GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
           for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
             GstDashDemuxStream *stream;
@@ -583,8 +594,9 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             stream = iter->data;
             stream->need_header = TRUE;
             stream->stream_eos = seek_to_eos;
-            gst_pad_push_event (stream->pad, gst_event_new_flush_stop (TRUE));
+            gst_pad_push_event (stream->pad, gst_event_ref (fstop));
           }
+          gst_event_unref (fstop);
         } else if (seek_to_eos) {
           for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
             GstDashDemuxStream *stream;
