@@ -665,15 +665,9 @@ gst_structure_id_set_valist_internal (GstStructure * structure,
     GstStructureField field = { 0 };
 
     field.name = fieldname;
-
     type = va_arg (varargs, GType);
 
-#ifndef G_VALUE_COLLECT_INIT
-    g_value_init (&field.value, type);
-    G_VALUE_COLLECT (&field.value, varargs, 0, &err);
-#else
     G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
-#endif
     if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
       return;
