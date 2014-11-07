@@ -526,7 +526,17 @@ MAKE_DOWNSAMPLE_VI4 (u8, guint8);
  * x   x
  * a   b
  */
-#define MAKE_UPSAMPLE_H2_CS(name,type)                                       \
+#define MAKE_UPSAMPLE_H2_CS_ORC(name,type)                              \
+static void                                                             \
+video_chroma_up_h2_cs_##name (GstVideoChromaResample *resample,         \
+    gpointer pixels, gint width)                                        \
+{                                                                       \
+  type *p = pixels;                                                     \
+  /* ORC version is slower */                                           \
+  video_orc_chroma_up_h2_cs_##name (p, p, p, width-1);                  \
+}
+
+#define MAKE_UPSAMPLE_H2_CS(name,type)                                  \
 static void                                                             \
 video_chroma_up_h2_cs_##name (GstVideoChromaResample *resample,         \
     gpointer pixels, gint width)                                        \

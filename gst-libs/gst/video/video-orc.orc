@@ -1659,6 +1659,25 @@ x2 avgub uv1, uv1, uv2
 mergewl ayuv1, ay1, uv1
 mergelq d, ayuv1, ayuv2
 
+.function video_orc_chroma_up_h2_cs_u8
+.source 8 s guint8
+.source 4 s1 guint8
+.dest 8 d guint8
+.temp 4 ayuv1
+.temp 4 ayuv2
+.temp 4 ayuv3
+.temp 2 ay2
+.temp 2 uv2
+.temp 2 uv3
+
+splitql ayuv2, ayuv1, s
+ldresnearl ayuv3, s1, 0x20000, 0x20000
+splitlw uv2, ay2, ayuv2
+select1lw uv3, ayuv3
+x2 avgub uv2, uv2, uv3
+mergewl ayuv2, ay2, uv2
+mergelq d, ayuv1, ayuv2
+
 .function video_orc_chroma_down_v2_u8
 .source 4 s1 guint8
 .source 4 s2 guint8
