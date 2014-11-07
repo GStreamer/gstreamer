@@ -476,6 +476,7 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstStreamPeriod *period;
       GSList *iter;
       gboolean update;
+      gboolean seek_to_eos = FALSE;
 
       GST_INFO_OBJECT (demux, "Received seek event");
 
@@ -539,47 +540,40 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (list == NULL) {
           GST_WARNING_OBJECT (demux, "Could not find seeked Period");
 
-          if (flags & GST_SEEK_FLAG_FLUSH) {
-            GST_DEBUG_OBJECT (demux, "Sending flush stop and eos on all pad");
-            for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-              GstDashDemuxStream *stream;
+          seek_to_eos = TRUE;
+        }
 
-              stream = iter->data;
-              stream->stream_eos = TRUE;
-              gst_pad_push_event (stream->pad, gst_event_new_flush_stop (TRUE));
-            }
+        if (!seek_to_eos) {
+          if (current_period != gst_mpd_client_get_period_index (demux->client)) {
+            GSList *streams = NULL;
+
+            GST_DEBUG_OBJECT (demux, "Seeking to Period %d", current_period);
+            streams = demux->streams;
+            demux->streams = NULL;
+            /* clean old active stream list, if any */
+            gst_active_streams_free (demux->client);
+
+            /* setup video, audio and subtitle streams, starting from the new Period */
+            if (!gst_mpd_client_set_period_index (demux->client, current_period)
+                || !gst_dash_demux_setup_all_streams (demux))
+              return FALSE;
+
+            gst_dash_demux_expose_streams (demux);
+            gst_dash_demux_remove_streams (demux, streams);
           }
-          goto restart;
+
+          /* Update the current sequence on all streams */
+          seg_evt = gst_event_new_segment (&demux->segment);
+          gst_event_set_seqnum (seg_evt, gst_event_get_seqnum (event));
+          for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+            GstDashDemuxStream *stream = iter->data;
+            gst_mpd_client_stream_seek (demux->client, stream->active_stream,
+                target_pos);
+
+            gst_event_replace (&stream->pending_segment, seg_evt);
+          }
+          gst_event_unref (seg_evt);
         }
-        if (current_period != gst_mpd_client_get_period_index (demux->client)) {
-          GSList *streams = NULL;
-
-          GST_DEBUG_OBJECT (demux, "Seeking to Period %d", current_period);
-          streams = demux->streams;
-          demux->streams = NULL;
-          /* clean old active stream list, if any */
-          gst_active_streams_free (demux->client);
-
-          /* setup video, audio and subtitle streams, starting from the new Period */
-          if (!gst_mpd_client_set_period_index (demux->client, current_period)
-              || !gst_dash_demux_setup_all_streams (demux))
-            return FALSE;
-
-          gst_dash_demux_expose_streams (demux);
-          gst_dash_demux_remove_streams (demux, streams);
-        }
-
-        /* Update the current sequence on all streams */
-        seg_evt = gst_event_new_segment (&demux->segment);
-        gst_event_set_seqnum (seg_evt, gst_event_get_seqnum (event));
-        for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-          GstDashDemuxStream *stream = iter->data;
-          gst_mpd_client_stream_seek (demux->client, stream->active_stream,
-              target_pos);
-
-          gst_event_replace (&stream->pending_segment, seg_evt);
-        }
-        gst_event_unref (seg_evt);
 
         if (flags & GST_SEEK_FLAG_FLUSH) {
           GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
@@ -588,13 +582,19 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
             stream = iter->data;
             stream->need_header = TRUE;
-            stream->stream_eos = FALSE;
+            stream->stream_eos = seek_to_eos;
             gst_pad_push_event (stream->pad, gst_event_new_flush_stop (TRUE));
+          }
+        } else if (seek_to_eos) {
+          for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+            GstDashDemuxStream *stream;
+
+            stream = iter->data;
+            stream->stream_eos = TRUE;
           }
         }
 
         /* Restart the demux */
-      restart:
         GST_DASH_DEMUX_CLIENT_LOCK (demux);
         demux->cancelled = FALSE;
         demux->end_of_manifest = FALSE;
