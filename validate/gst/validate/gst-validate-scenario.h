@@ -152,6 +152,17 @@ struct _GstValidateScenario
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstValidateActionTypeFlags:
+ * @GST_VALIDATE_ACTION_TYPE_NONE: No special flag
+ */
+typedef enum
+{
+    GST_VALIDATE_ACTION_TYPE_NONE = 0,
+    GST_VALIDATE_ACTION_TYPE_CONFIG = 1 << 1,
+    GST_VALIDATE_ACTION_TYPE_ASYNC = 1 << 2,
+} GstValidateActionTypeFlags;
+
 GType gst_validate_scenario_get_type (void);
 
 GstValidateScenario * gst_validate_scenario_factory_create (GstValidateRunner *runner,
@@ -166,7 +177,8 @@ void gst_validate_register_action_type (const gchar *type_name,
                                         const gchar *implementer_namespace,
                                         GstValidateExecuteAction function,
                                         GstValidateActionParameter * parameters,
-                                        const gchar *description, gboolean is_config);
+                                        const gchar *description,
+                                        GstValidateActionTypeFlags flags);
 
 
 gboolean gst_validate_action_get_clocktime (GstValidateScenario * scenario,

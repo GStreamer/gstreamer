@@ -33,6 +33,8 @@ extern GRegex *newline_regex;
 
 typedef struct _GstValidateActionType      GstValidateActionType;
 
+#define IS_CONFIG_ACTION_TYPE(type) (((type) & GST_VALIDATE_ACTION_TYPE_CONFIG) || ((type) == TRUE))
+
 struct _GstValidateActionType
 {
   GstMiniObject          mini_object;
@@ -45,7 +47,7 @@ struct _GstValidateActionType
   GstValidateActionParameter *parameters;
 
   gchar *description;
-  gboolean is_config;
+  GstValidateActionTypeFlags flags;
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };

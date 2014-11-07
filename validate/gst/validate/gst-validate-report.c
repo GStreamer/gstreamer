@@ -531,7 +531,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       g_string_append_printf (string, "\n  Implementer namespace: %s",
           type->implementer_namespace);
 
-      if (type->is_config)
+      if (IS_CONFIG_ACTION_TYPE (type->flags))
         g_string_append_printf (string,
             "\n    Is config action (meaning it will be executing right "
             "at the begining of the execution of the pipeline)");

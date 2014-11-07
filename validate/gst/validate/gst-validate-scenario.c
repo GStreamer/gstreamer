@@ -1358,7 +1358,7 @@ _load_scenario_file (GstValidateScenario * scenario,
 
     action->structure = structure;
 
-    if (action_type->is_config) {
+    if (IS_CONFIG_ACTION_TYPE (action_type->flags)) {
       ret = action_type->execute (scenario, action);
       gst_mini_object_unref (GST_MINI_OBJECT (action));
 
@@ -1894,10 +1894,11 @@ gst_validate_register_action_type (const gchar * type_name,
     const gchar * implementer_namespace,
     GstValidateExecuteAction function,
     GstValidateActionParameter * parameters,
-    const gchar * description, gboolean is_config)
+    const gchar * description, GstValidateActionTypeFlags flags)
 {
   GstValidateActionType *tmptype;
   GstValidateActionType *type = gst_validate_action_type_new ();
+  gboolean is_config = IS_CONFIG_ACTION_TYPE (flags);
   gint n_params = is_config ? 0 : 2;
 
   if (parameters) {
@@ -1932,7 +1933,7 @@ gst_validate_register_action_type (const gchar * type_name,
   type->name = g_strdup (type_name);
   type->implementer_namespace = g_strdup (implementer_namespace);
   type->description = g_strdup (description);
-  type->is_config = is_config;
+  type->flags = flags;
 
   if ((tmptype = _find_action_type (type_name))) {
     action_types = g_list_remove (action_types, tmptype);
@@ -2104,7 +2105,7 @@ init_scenarios (void)
       {NULL}
       }),
       "Allows to describe the scenario in various ways",
-      TRUE);
+      GST_VALIDATE_ACTION_TYPE_CONFIG);
 
   REGISTER_ACTION_TYPE ("seek", _execute_seek,
       ((GstValidateActionParameter [])  {
@@ -2160,7 +2161,7 @@ init_scenarios (void)
       "Seeks into the stream, example of a seek happening when the stream reaches 5 seconds\n"
       "or 1 eighth of its duration and seeks at 10sec or 2 eighth of its duration:\n"
       "  seek, playback-time=\"min(5.0, (duration/8))\", start=\"min(10, 2*(duration/8))\", flags=accurate+flush",
-      FALSE
+      GST_VALIDATE_ACTION_TYPE_NONE
   );
 
   REGISTER_ACTION_TYPE ("pause", _execute_pause,
@@ -2177,16 +2178,16 @@ init_scenarios (void)
       }),
       "Sets pipeline to PAUSED. You can add a 'duration'\n"
       "parametter so the pipeline goes back to playing after that duration\n"
-      "(in second)", FALSE);
+      "(in second)", GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("play", _execute_play, NULL,
-      "Sets the pipeline state to PLAYING", FALSE);
+      "Sets the pipeline state to PLAYING", GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("stop", _execute_stop, NULL,
-      "Sets the pipeline state to NULL", FALSE);
+      "Sets the pipeline state to NULL", GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("eos", _execute_eos, NULL,
-      "Sends an EOS event to the pipeline", FALSE);
+      "Sends an EOS event to the pipeline", GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("switch-track", _execute_switch_track,
       ((GstValidateActionParameter []) {
@@ -2214,7 +2215,7 @@ init_scenarios (void)
         {NULL}
       }),
       "The 'switch-track' command can be used to switch tracks.\n"
-      , FALSE);
+      , GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("wait", _execute_wait,
       ((GstValidateActionParameter []) {
@@ -2225,13 +2226,13 @@ init_scenarios (void)
           NULL},
         {NULL}
       }),
-      "Waits during 'duration' seconds", FALSE);
+      "Waits during 'duration' seconds", GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("dot-pipeline", _execute_dot_pipeline, NULL,
       "Dots the pipeline (the 'name' property will be used in the dot filename).\n"
       "For more information have a look at the GST_DEBUG_BIN_TO_DOT_FILE documentation.\n"
       "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set\n",
-      FALSE);
+      GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("set-feature-rank", _set_rank,
       ((GstValidateActionParameter []) {
@@ -2249,7 +2250,8 @@ init_scenarios (void)
           NULL},
         {NULL}
       }),
-      "Changes the ranking of a particular plugin feature", TRUE);
+      "Changes the ranking of a particular plugin feature",
+      GST_VALIDATE_ACTION_TYPE_CONFIG);
 
   REGISTER_ACTION_TYPE ("set-state", _execute_set_state,
       ((GstValidateActionParameter []) {
@@ -2262,7 +2264,8 @@ init_scenarios (void)
         },
         {NULL}
       }),
-      "Changes the state of the pipeline to any GstState", FALSE);
+      "Changes the state of the pipeline to any GstState",
+      GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("set-property", _execute_set_property,
       ((GstValidateActionParameter []) {
@@ -2288,7 +2291,8 @@ init_scenarios (void)
         },
         {NULL}
       }),
-      "Sets a property of any element in the pipeline", FALSE);
+      "Sets a property of any element in the pipeline",
+      GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("set-debug-threshold",
       _execute_set_debug_threshold,
@@ -2303,7 +2307,8 @@ init_scenarios (void)
           {NULL}
         }),
       "Sets the debug level to be used, same format as\n"
-      "setting the GST_DEBUG env variable", FALSE);
+      "setting the GST_DEBUG env variable",
+      GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("emit-signal", _execute_emit_signal,
       ((GstValidateActionParameter [])
@@ -2323,7 +2328,8 @@ init_scenarios (void)
         },
         {NULL}
       }),
-      "Emits a signal to an element in the pipeline", FALSE);
+      "Emits a signal to an element in the pipeline",
+      GST_VALIDATE_ACTION_TYPE_NONE);
   /*  *INDENT-ON* */
 
 }
