@@ -359,22 +359,10 @@ typedef struct
   gboolean frame_duration_user;
 } GstMatroskamuxPad;
 
-static void gst_matroskamux_pad_class_init (GstPadClass * klass);
+typedef GstPadClass GstMatroskamuxPadClass;
 
-static GType
-gst_matroskamux_pad_get_type (void)
-{
-  static GType type = 0;
-
-  if (g_once_init_enter (&type)) {
-    GType tmp = g_type_register_static_simple (GST_TYPE_PAD,
-        g_intern_static_string ("GstMatroskamuxPad"), sizeof (GstPadClass),
-        (GClassInitFunc) gst_matroskamux_pad_class_init,
-        sizeof (GstMatroskamuxPad), NULL, 0);
-    g_once_init_leave (&type, tmp);
-  }
-  return type;
-}
+GType gst_matroskamux_pad_get_type (void);
+G_DEFINE_TYPE (GstMatroskamuxPad, gst_matroskamux_pad, GST_TYPE_PAD);
 
 #define GST_TYPE_MATROSKAMUX_PAD (gst_matroskamux_pad_get_type())
 #define GST_MATROSKAMUX_PAD(pad) (G_TYPE_CHECK_INSTANCE_CAST((pad),GST_TYPE_MATROSKAMUX_PAD,GstMatroskamuxPad))
@@ -415,7 +403,7 @@ gst_matroskamux_pad_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_matroskamux_pad_class_init (GstPadClass * klass)
+gst_matroskamux_pad_class_init (GstMatroskamuxPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
