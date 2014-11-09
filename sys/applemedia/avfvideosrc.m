@@ -933,6 +933,7 @@ static gboolean gst_avf_video_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_avf_video_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_avf_video_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buf);
+static gboolean gst_avf_video_src_negotiate (GstBaseSrc * basesrc);
 
 
 static void
@@ -957,6 +958,7 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
   gstbasesrc_class->unlock = gst_avf_video_src_unlock;
   gstbasesrc_class->unlock_stop = gst_avf_video_src_unlock_stop;
   gstbasesrc_class->decide_allocation = gst_avf_video_src_decide_allocation;
+  gstbasesrc_class->negotiate = gst_avf_video_src_negotiate;
 
   gstpushsrc_class->create = gst_avf_video_src_create;
 
@@ -1210,3 +1212,14 @@ gst_avf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
 
   return ret;
 }
+
+static gboolean
+gst_avf_video_src_negotiate (GstBaseSrc * basesrc)
+{
+  /* FIXME: We don't support reconfiguration yet */
+  if (gst_pad_has_current_caps (GST_BASE_SRC_PAD (basesrc)))
+    return TRUE;
+
+  return GST_BASE_SRC_CLASS (parent_class)->negotiate (basesrc);
+}
+
