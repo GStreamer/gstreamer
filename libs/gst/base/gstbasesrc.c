@@ -906,16 +906,27 @@ gst_base_src_set_caps (GstBaseSrc * src, GstCaps * caps)
 {
   GstBaseSrcClass *bclass;
   gboolean res = TRUE;
+  GstCaps *current_caps;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
   gst_base_src_send_stream_start (src);
 
-  if (bclass->set_caps)
-    res = bclass->set_caps (src, caps);
+  current_caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (src));
+  if (current_caps && gst_caps_is_equal (current_caps, caps)) {
+    GST_DEBUG_OBJECT (src, "New caps equal to old ones: %" GST_PTR_FORMAT,
+        caps);
+    res = TRUE;
+  } else {
+    if (bclass->set_caps)
+      res = bclass->set_caps (src, caps);
 
-  if (res)
-    res = gst_pad_push_event (src->srcpad, gst_event_new_caps (caps));
+    if (res)
+      res = gst_pad_push_event (src->srcpad, gst_event_new_caps (caps));
+  }
+
+  if (current_caps)
+    gst_caps_unref (current_caps);
 
   return res;
 }
