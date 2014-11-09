@@ -44,17 +44,26 @@ typedef struct _GstValidateActionParameter GstValidateActionParameter;
 
 GST_EXPORT GType _gst_validate_action_type;
 
+enum
+{
+  GST_VALIDATE_EXECUTE_ACTION_ERROR,
+  GST_VALIDATE_EXECUTE_ACTION_OK,
+  GST_VALIDATE_EXECUTE_ACTION_ASYNC
+};
+
+/* TODO 2.0 -- Make it an actual enum type */
+#define GstValidateExecuteActionReturn gint
+
 /**
  * GstValidateExecuteAction:
  * @scenario: The #GstValidateScenario from which the @action is executed
  * @action: The #GstValidateAction being executed
  *
+ * A function that executes a #GstValidateAction
  *
- * This function that executes a #GstValidateAction
- *
- * Returns: %True if the action could be executed %FALSE otherwise
+ * Returns: a #GstValidateExecuteActionReturn
  */
-typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
+typedef GstValidateExecuteActionReturn (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
 
 /**
@@ -80,9 +89,12 @@ struct _GstValidateAction
   guint action_number;
   gint repeat;
   GstClockTime playback_time;
+  GstValidateExecuteActionReturn state; /* Actually ActionState */
 
-  gpointer _gst_reserved[GST_PADDING_LARGE];
+  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (gint)];
 };
+
+void gst_validate_action_set_done (GstValidateAction *action);
 
 #define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))

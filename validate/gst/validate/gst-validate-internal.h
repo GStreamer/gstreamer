@@ -33,6 +33,7 @@ extern GRegex *newline_regex;
 
 typedef struct _GstValidateActionType      GstValidateActionType;
 
+/* If an action type is 1 (TRUE) we also concider it is a config to keep backward compatibility */
 #define IS_CONFIG_ACTION_TYPE(type) (((type) & GST_VALIDATE_ACTION_TYPE_CONFIG) || ((type) == TRUE))
 
 struct _GstValidateActionType
