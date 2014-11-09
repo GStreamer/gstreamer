@@ -5644,6 +5644,8 @@ plugin_init (GstPlugin * plugin)
       wavpack_type_find, "wv,wvp", WAVPACK_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-wavpack-correction", GST_RANK_SECONDARY,
       wavpack_type_find, "wvc", WAVPACK_CORRECTION_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-caf", GST_RANK_SECONDARY,
+      "caf", "caff\000\001", 6, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "application/postscript", GST_RANK_SECONDARY,
       postscript_type_find, "ps", POSTSCRIPT_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/svg+xml", GST_RANK_SECONDARY,
