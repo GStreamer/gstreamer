@@ -3069,19 +3069,28 @@ gst_base_sink_default_event (GstBaseSink * basesink, GstEvent * event)
     }
     case GST_EVENT_CAPS:
     {
-      GstCaps *caps;
+      GstCaps *caps, *current_caps;
 
       GST_DEBUG_OBJECT (basesink, "caps %p", event);
 
       gst_event_parse_caps (event, &caps);
-      if (bclass->set_caps)
-        result = bclass->set_caps (basesink, caps);
+      current_caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (basesink));
 
-      if (result) {
-        GST_OBJECT_LOCK (basesink);
-        gst_caps_replace (&basesink->priv->caps, caps);
-        GST_OBJECT_UNLOCK (basesink);
+      if (current_caps && gst_caps_is_equal (current_caps, caps)) {
+        GST_DEBUG_OBJECT (basesink,
+            "New caps equal to old ones: %" GST_PTR_FORMAT, caps);
+      } else {
+        if (bclass->set_caps)
+          result = bclass->set_caps (basesink, caps);
+
+        if (result) {
+          GST_OBJECT_LOCK (basesink);
+          gst_caps_replace (&basesink->priv->caps, caps);
+          GST_OBJECT_UNLOCK (basesink);
+        }
       }
+      if (current_caps)
+        gst_caps_unref (current_caps);
       break;
     }
     case GST_EVENT_SEGMENT:
