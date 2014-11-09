@@ -191,6 +191,15 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
           TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
 
       break;
+    case TSMUX_ST_PS_KLV:
+      /* FIXME: assign sequential extended IDs? */
+      stream->id = 0xBD;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->is_meta = TRUE;
+      stream->pi.flags |=
+          TSMUX_PACKET_FLAG_PES_FULL_HEADER |
+          TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
+      break;
     default:
       g_critical ("Stream type 0x%0x not yet implemented", stream_type);
       break;
@@ -900,6 +909,11 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream,
 
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
         break;
+      }
+      if (stream->is_meta) {
+        descriptor = gst_mpegts_descriptor_from_registration ("KLVA", NULL, 0);
+        GST_ERROR ("adding KLVA registration descriptor!");
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }
     default:
       break;

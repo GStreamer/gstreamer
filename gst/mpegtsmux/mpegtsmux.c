@@ -140,7 +140,7 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "mute = (boolean) { FALSE, TRUE }; "
         "audio/x-ac3, framed = (boolean) TRUE;"
         "audio/x-dts, framed = (boolean) TRUE;"
-        "subpicture/x-dvb;" "application/x-teletext"));
+        "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true"));
 
 static GstStaticPadTemplate mpegtsmux_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -675,6 +675,8 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
     st = TSMUX_ST_PS_TELETEXT;
     /* needs a particularly sized layout */
     ts_data->prepare_func = mpegtsmux_prepare_teletext;
+  } else if (strcmp (mt, "meta/x-klv") == 0) {
+    st = TSMUX_ST_PS_KLV;
   }
 
   if (st != TSMUX_ST_RESERVED) {
@@ -1130,6 +1132,7 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
 
   if (G_UNLIKELY (best == NULL)) {
     /* EOS */
+    GST_INFO_OBJECT (mux, "EOS");
     /* drain some possibly cached data */
     new_packet_m2ts (mux, NULL, -1);
     mpegtsmux_push_packets (mux, TRUE);
@@ -1225,6 +1228,12 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
     GST_OBJECT_UNLOCK (mux);
 #endif
   }
+
+  if (best->stream->is_meta && gst_buffer_get_size (buf) > (G_MAXUINT16 - 3)) {
+    GST_WARNING_OBJECT (mux, "KLV meta unit too big, splitting not supported");
+    return GST_FLOW_OK;
+  }
+
   GST_DEBUG_OBJECT (mux, "delta: %d", delta);
 
   stream_data = stream_data_new (buf);
