@@ -263,8 +263,8 @@ gboolean
 gst_video_blend (GstVideoFrame * dest,
     GstVideoFrame * src, gint x, gint y, gfloat global_alpha)
 {
-  guint i, j, global_alpha_val, src_width, src_height, dest_width, dest_height;
-  gint xoff;
+  gint i, j, global_alpha_val, src_width, src_height, dest_width, dest_height;
+  gint src_xoff = 0, src_yoff = 0;
   guint8 *tmpdestline = NULL, *tmpsrcline = NULL;
   gboolean src_premultiplied_alpha, dest_premultiplied_alpha;
   void (*matrix) (guint8 * tmpline, guint width);
@@ -291,6 +291,12 @@ gst_video_blend (GstVideoFrame * dest,
   dest_height = GST_VIDEO_FRAME_HEIGHT (dest);
 
   ensure_debug_category ();
+
+  /* In case overlay is completely outside the video, dont render */
+  if (x + src_width <= 0 || y + src_height <= 0
+      || x >= dest_width || y >= dest_height) {
+    goto nothing_to_do;
+  }
 
   dinfo = gst_video_format_get_info (GST_VIDEO_FRAME_FORMAT (dest));
   sinfo = gst_video_format_get_info (GST_VIDEO_FRAME_FORMAT (src));
@@ -326,17 +332,18 @@ gst_video_blend (GstVideoFrame * dest,
     }
   }
 
-  xoff = 0;
-
-  /* adjust src pointers for negative sizes */
+  /* If we're here we know that the overlay image fully or
+   * partially overlaps with the video frame */
+  /* adjust src image for negative offsets */
   if (x < 0) {
-    src_width -= -x;
+    src_xoff = -x;
+    src_width -= src_xoff;
     x = 0;
-    xoff = -x;
   }
 
   if (y < 0) {
-    src_height -= -y;
+    src_yoff = -y;
+    src_height -= src_yoff;
     y = 0;
   }
 
@@ -348,12 +355,12 @@ gst_video_blend (GstVideoFrame * dest,
     src_height = dest_height - y;
 
   /* Mainloop doing the needed conversions, and blending */
-  for (i = y; i < y + src_height; i++) {
+  for (i = y; i < y + src_height; i++, src_yoff++) {
 
     dinfo->unpack_func (dinfo, 0, tmpdestline, dest->data, dest->info.stride,
         0, i, dest_width);
     sinfo->unpack_func (sinfo, 0, tmpsrcline, src->data, src->info.stride,
-        xoff, i - y, src_width - xoff);
+        src_xoff, src_yoff, src_width);
 
     matrix (tmpsrcline, src_width);
 
@@ -427,5 +434,11 @@ unpack_format_not_supported:
     GST_FIXME ("video format %s not supported yet for blending",
         gst_video_format_to_string (dinfo->unpack_format));
     return FALSE;
+  }
+nothing_to_do:
+  {
+    GST_LOG
+        ("Overlay completely outside the video surface, hence not rendering");
+    return TRUE;
   }
 }
