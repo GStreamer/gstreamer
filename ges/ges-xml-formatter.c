@@ -1030,6 +1030,15 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   GList *tmp, *tracks;
   gchar *properties, *metas;
   guint track_id = 0;
+  gboolean serialize;
+
+  g_object_get (trackelement, "serialize", &serialize, NULL);
+  if (!serialize) {
+
+    GST_DEBUG_OBJECT (trackelement, "Should not be serialized");
+
+    return;
+  }
 
   tck = ges_track_element_get_track (trackelement);
   if (tck == NULL) {
@@ -1095,8 +1104,16 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
       GList *effects, *tmpeffect;
       GList *tmptrackelement;
       GList *tracks;
+      gboolean serialize;
 
       clip = GES_CLIP (tmpclip->data);
+
+      g_object_get (clip, "serialize", &serialize, NULL);
+      if (!serialize) {
+        GST_DEBUG_OBJECT (clip, "Should not be serialized");
+        continue;
+      }
+
       effects = ges_clip_get_top_effects (clip);
 
       /* We escape all mandatrorry properties that are handled sparetely
@@ -1127,9 +1144,16 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
       for (tmptrackelement = GES_CONTAINER_CHILDREN (clip); tmptrackelement;
           tmptrackelement = tmptrackelement->next) {
         gint index;
+        gboolean serialize;
 
         if (!GES_IS_SOURCE (tmptrackelement->data))
           continue;
+
+        g_object_get (tmptrackelement->data, "serialize", &serialize, NULL);
+        if (!serialize) {
+          GST_DEBUG_OBJECT (tmptrackelement->data, "Should not be serialized");
+          continue;
+        }
 
         index =
             g_list_index (tracks,
@@ -1157,7 +1181,16 @@ _save_group (GESXmlFormatter * self, GString * str, GList ** seen_groups,
     GESGroup * group)
 {
   GList *tmp;
+  gboolean serialize;
   gchar *properties;
+
+  g_object_get (group, "serialize", &serialize, NULL);
+  if (!serialize) {
+
+    GST_DEBUG_OBJECT (group, "Should not be serialized");
+
+    return;
+  }
 
   if (g_list_find (*seen_groups, group)) {
     GST_DEBUG_OBJECT (group, "Already serialized");

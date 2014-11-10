@@ -63,6 +63,7 @@ enum
   PROP_MAX_DURATION,
   PROP_PRIORITY,
   PROP_NAME,
+  PROP_SERIALIZE,
   PROP_LAST
 };
 
@@ -70,7 +71,7 @@ static GParamSpec *properties[PROP_LAST] = { NULL, };
 
 struct _GESTimelineElementPrivate
 {
-  gpointer dummy;
+  gboolean serialize;
 };
 
 static void
@@ -103,6 +104,9 @@ _get_property (GObject * object, guint property_id,
       break;
     case PROP_NAME:
       g_value_take_string (value, ges_timeline_element_get_name (self));
+      break;
+    case PROP_SERIALIZE:
+      g_value_set_boolean (value, self->priv->serialize);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, property_id, pspec);
@@ -140,6 +144,9 @@ _set_property (GObject * object, guint property_id,
     case PROP_NAME:
       ges_timeline_element_set_name (self, g_value_get_string (value));
       break;
+    case PROP_SERIALIZE:
+      self->priv->serialize = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, property_id, pspec);
   }
@@ -156,14 +163,20 @@ ges_timeline_element_finalize (GObject * self)
 }
 
 static void
-ges_timeline_element_init (GESTimelineElement * ges_timeline_element)
+ges_timeline_element_init (GESTimelineElement * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE_ELEMENT, GESTimelineElementPrivate);
+
+  self->priv->serialize = TRUE;
 }
 
 static void
 ges_timeline_element_class_init (GESTimelineElementClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  g_type_class_add_private (klass, sizeof (GESTimelineElementPrivate));
 
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
@@ -243,6 +256,15 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   properties[PROP_NAME] =
       g_param_spec_string ("name", "Name", "The name of the timeline object",
       NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GESTimelineElement:serialize:
+   *
+   * Whether the element should be serialized.
+   */
+  properties[PROP_SERIALIZE] = g_param_spec_boolean ("serialize", "Serialize",
+      "Whether the element should be serialized", TRUE,
+      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
 
   g_object_class_install_properties (object_class, PROP_LAST, properties);
 
