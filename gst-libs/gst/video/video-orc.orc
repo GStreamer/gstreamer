@@ -1453,7 +1453,7 @@ mulswl t2, w2, p4
 addl t1, t1, t2
 addl t1, t1, 4095
 shrsl t1, t1, 12
-convlw w1, t1
+convsuslw w1, t1
 convsuswb d1, w1
 
 # crashes ORC for now but is potentially faster
@@ -1485,7 +1485,7 @@ convsuswb d1, w1
 #addl l1, l1, l2
 #addl l1, l1, 4095
 #shrsl l1, l1, 12
-#convlw w1, l1
+#convsuslw w1, l1
 #convsuswb d1, w1
 
 
@@ -1518,7 +1518,7 @@ addl d, d, t1
 
 addl t1, s, 4095
 shrsl t1, t1, 12
-convlw w1, t1
+convsuslw w1, t1
 convsuswb d, w1
 
 .function video_orc_resample_h_multaps_u8_lq
@@ -1713,14 +1713,14 @@ x2 mullw uuvv3, uuvv1, 3
 x2 addw uuvv3, uuvv3, uuvv2
 x2 addw uuvv3, uuvv3, 2
 x2 shruw uuvv3, uuvv3, 2
-x2 convwb uv1, uuvv3
+x2 convsuswb uv1, uuvv3
 mergewl d1, ay1, uv1
 
 x2 mullw uuvv3, uuvv2, 3
 x2 addw uuvv3, uuvv3, uuvv1
 x2 addw uuvv3, uuvv3, 2
 x2 shruw uuvv3, uuvv3, 2
-x2 convwb uv2, uuvv3
+x2 convsuswb uv2, uuvv3
 mergewl d2, ay2, uv2
 
 .function video_orc_chroma_up_v2_u16
@@ -1745,14 +1745,14 @@ x2 mulll uuvv3, uuvv1, 3
 x2 addl uuvv3, uuvv3, uuvv2
 x2 addl uuvv3, uuvv3, 2
 x2 shrul uuvv3, uuvv3, 2
-x2 convlw uv1, uuvv3
+x2 convsuslw uv1, uuvv3
 mergelq d1, ay1, uv1
 
 x2 mulll uuvv3, uuvv2, 3
 x2 addl uuvv3, uuvv3, uuvv1
 x2 addl uuvv3, uuvv3, 2
 x2 shrul uuvv3, uuvv3, 2
-x2 convlw uv2, uuvv3
+x2 convsuslw uv2, uuvv3
 mergelq d2, ay2, uv2
 
 .function video_orc_chroma_down_v2_u16
@@ -1796,7 +1796,7 @@ x2 addw uuvv1, uuvv1, uuvv2
 x2 addw uuvv3, uuvv3, uuvv1
 x2 addw uuvv3, uuvv3, 4
 x2 shruw uuvv3, uuvv3, 3
-x2 convwb uv1, uuvv3
+x2 convsuswb uv1, uuvv3
 mergewl d, ay1, uv1
 
 .function video_orc_chroma_down_v4_u16
@@ -1826,5 +1826,5 @@ x2 addl uuvv1, uuvv1, uuvv2
 x2 addl uuvv3, uuvv3, uuvv1
 x2 addl uuvv3, uuvv3, 4
 x2 shrul uuvv3, uuvv3, 3
-x2 convlw uv1, uuvv3
+x2 convsuslw uv1, uuvv3
 mergelq d, ay1, uv1
