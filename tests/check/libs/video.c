@@ -2277,6 +2277,168 @@ GST_START_TEST (test_video_transfer)
 
 GST_END_TEST;
 
+void test_overlay_blend_rect (gint x, gint y, gint width, gint height,
+    GstVideoFrame * video_frame);
+void test_overlay_blend_rect_verify (gint x, gint y, gint width,
+    gint height, GstVideoFrame * video_frame);
+#define VIDEO_WIDTH 320
+#define VIDEO_HEIGHT 240
+
+void
+test_overlay_blend_rect_verify (gint x, gint y, gint width, gint height,
+    GstVideoFrame * video_frame)
+{
+  guint8 *data;
+  gint i = 0, prev_i = 0;
+  gint size = 0;
+  gint temp_width = 0, temp_height = 0;
+
+  data = GST_VIDEO_FRAME_PLANE_DATA (video_frame, 0);
+  size = GST_VIDEO_FRAME_SIZE (video_frame);
+
+  if (x + width < 0 || y + height < 0 || x >= VIDEO_WIDTH || y >= VIDEO_HEIGHT)
+    return;
+  if (x <= 0)
+    temp_width = width + x;
+  else if (x > 0 && (x + width) <= VIDEO_WIDTH)
+    temp_width = width;
+  else
+    temp_width = VIDEO_WIDTH - x;
+  if (y <= 0)
+    temp_height = height + y;
+  else if (y > 0 && (y + height) <= VIDEO_HEIGHT)
+    temp_height = height;
+  else
+    temp_height = VIDEO_HEIGHT - y;
+
+  if (x <= 0 && y <= 0)
+    i = 0;
+  else
+    i = (((x <= 0) ? 0 : x) + (((y <= 0) ? 0 : y) * VIDEO_WIDTH)) * 4;
+  prev_i = i;
+
+  for (; i < size - 4; i += 4) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    /* B - G - R - A */
+    fail_unless_equals_int (data[i], 0x40);
+    fail_unless_equals_int (data[i + 1], 0x40);
+    fail_unless_equals_int (data[i + 2], 0x40);
+    fail_unless_equals_int (data[i + 3], 0x00);
+#else
+    /* A - R - G - B */
+    fail_unless_equals_int (data[i], 0x00);
+    fail_unless_equals_int (data[i + 1], 0x40);
+    fail_unless_equals_int (data[i + 2], 0x40);
+    fail_unless_equals_int (data[i + 3], 0x40);
+#endif
+    if ((i + 4) == (4 * (((((y > 0) ? (y + temp_height) : temp_height) -
+                        1) * VIDEO_WIDTH) + ((x >
+                        0) ? (x + temp_width) : temp_width))))
+      break;
+    if ((i + 4 - prev_i) == ((temp_width) * 4)) {
+      i += ((VIDEO_WIDTH - (temp_width)) * 4);
+      prev_i = i + 4;
+    }
+
+  }
+}
+
+void
+test_overlay_blend_rect (gint x, gint y, gint width, gint height,
+    GstVideoFrame * video_frame)
+{
+  GstVideoOverlayComposition *comp1;
+  GstVideoOverlayRectangle *rect1;
+  GstBuffer *pix, *pix1;
+  GstVideoInfo vinfo;
+
+  memset (video_frame, 0, sizeof (GstVideoFrame));
+  pix =
+      gst_buffer_new_and_alloc (VIDEO_WIDTH * VIDEO_HEIGHT * sizeof (guint32));
+  gst_buffer_memset (pix, 0, 0, gst_buffer_get_size (pix));
+  gst_video_info_init (&vinfo);
+  gst_video_info_set_format (&vinfo, GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
+      VIDEO_WIDTH, VIDEO_HEIGHT);
+  gst_video_frame_map (video_frame, &vinfo, pix, GST_MAP_READWRITE);
+  gst_buffer_unref (pix);
+  pix = NULL;
+
+  pix1 = gst_buffer_new_and_alloc (width * height * sizeof (guint32));
+  gst_buffer_memset (pix1, 0, 0x80, gst_buffer_get_size (pix1));
+  gst_buffer_add_video_meta (pix1, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, width, height);
+  rect1 = gst_video_overlay_rectangle_new_raw (pix1,
+      x, y, width, height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  gst_buffer_unref (pix1);
+  pix1 = NULL;
+
+  comp1 = gst_video_overlay_composition_new (rect1);
+  fail_unless (gst_video_overlay_composition_blend (comp1, video_frame));
+  gst_video_overlay_composition_unref (comp1);
+
+  test_overlay_blend_rect_verify (x, y, width, height, video_frame);
+  gst_video_frame_unmap (video_frame);
+}
+
+GST_START_TEST (test_overlay_blend)
+{
+  GstVideoFrame video_frame;
+
+  /* Overlay width & height smaller than video width & height */
+  /* Overlay rendered completely left of video surface
+   * x + overlay_width <= 0 */
+  test_overlay_blend_rect (-60, 50, 50, 50, &video_frame);
+  /* Overlay rendered completely right of video surface
+   * x >= video_width */
+  test_overlay_blend_rect (330, 50, 50, 50, &video_frame);
+  /* Overlay rendered completely top of video surface
+   * y + overlay_height <= 0 */
+  test_overlay_blend_rect (50, -60, 50, 50, &video_frame);
+  /* Overlay rendered completely bottom of video surface
+   * y >= video_height */
+  test_overlay_blend_rect (50, 250, 50, 50, &video_frame);
+  /* Overlay rendered partially left of video surface
+   * x < 0 && -x < overlay_width */
+  test_overlay_blend_rect (-40, 50, 50, 50, &video_frame);
+  /* Overlay rendered partially right of video surface
+   * x < video_width && (overlay_width + x) > video_width */
+  test_overlay_blend_rect (300, 50, 50, 50, &video_frame);
+  /* Overlay rendered partially top of video surface
+   * y < 0 && -y < overlay_height */
+  test_overlay_blend_rect (50, -40, 50, 50, &video_frame);
+  /* Overlay rendered partially bottom of video surface
+   * y < video_height && (overlay_height + y) > video_height */
+  test_overlay_blend_rect (50, 220, 50, 50, &video_frame);
+
+  /* Overlay width & height bigger than video width & height */
+  /* Overlay rendered completely left of video surface
+   * x + overlay_width <= 0 */
+  test_overlay_blend_rect (-360, 50, 350, 250, &video_frame);
+  /* Overlay rendered completely right of video surface
+   * x >= video_width */
+  test_overlay_blend_rect (330, 50, 350, 250, &video_frame);
+  /* Overlay rendered completely top of video surface
+   * y + overlay_height <= 0 */
+  test_overlay_blend_rect (50, -260, 350, 250, &video_frame);
+  /* Overlay rendered completely bottom of video surface
+   * y >= video_height */
+  test_overlay_blend_rect (50, 250, 350, 250, &video_frame);
+  /* Overlay rendered partially left of video surface
+   * x < 0 && -x < overlay_width */
+  test_overlay_blend_rect (-40, 50, 350, 250, &video_frame);
+  /* Overlay rendered partially right of video surface
+   * x < video_width && (overlay_width + x) > video_width */
+  test_overlay_blend_rect (300, 50, 350, 250, &video_frame);
+  /* Overlay rendered partially top of video surface
+   * y < 0 && -y < overlay_height */
+  test_overlay_blend_rect (50, -40, 350, 250, &video_frame);
+  /* Overlay rendered partially bottom of video surface
+   * y < video_height && (overlay_height + y) > video_height */
+  test_overlay_blend_rect (50, 220, 350, 250, &video_frame);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -2306,6 +2468,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_color_convert);
   tcase_add_test (tc_chain, test_video_size_convert);
   tcase_add_test (tc_chain, test_video_transfer);
+  tcase_add_test (tc_chain, test_overlay_blend);
 
   return s;
 }
