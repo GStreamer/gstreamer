@@ -1728,9 +1728,9 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
 
   /* calculate MaxPicNum */
   if (slice->field_pic_flag)
-    slice->max_pic_num = sps->max_frame_num;
-  else
     slice->max_pic_num = 2 * sps->max_frame_num;
+  else
+    slice->max_pic_num = sps->max_frame_num;
 
   if (nalu->idr_pic_flag)
     READ_UE_ALLOWED (&nr, slice->idr_pic_id, 0, G_MAXUINT16);
