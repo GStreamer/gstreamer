@@ -177,7 +177,7 @@ typedef enum
  * @GST_H264_PARSER_OK: The parsing succeded
  * @GST_H264_PARSER_BROKEN_DATA: The data to parse is broken
  * @GST_H264_PARSER_BROKEN_LINK: The link to structure needed for the parsing couldn't be found
- * @GST_H264_PARSER_ERROR: An error accured when parsing
+ * @GST_H264_PARSER_ERROR: An error occured when parsing
  * @GST_H264_PARSER_NO_NAL: No nal found during the parsing
  * @GST_H264_PARSER_NO_NAL_END: Start of the nal found, but not the end.
  *
