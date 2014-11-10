@@ -2515,16 +2515,16 @@ test_overlay_blend_rect_verify (gint x, gint y, gint width, gint height,
   for (; i < size - 4; i += 4) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
     /* B - G - R - A */
-    fail_unless_equals_int (data[i], 0x40);
-    fail_unless_equals_int (data[i + 1], 0x40);
-    fail_unless_equals_int (data[i + 2], 0x40);
-    fail_unless_equals_int (data[i + 3], 0x00);
+    fail_unless_equals_int (data[i], 0x80);
+    fail_unless_equals_int (data[i + 1], 0x80);
+    fail_unless_equals_int (data[i + 2], 0x80);
+    fail_unless_equals_int (data[i + 3], 0x80);
 #else
     /* A - R - G - B */
     fail_unless_equals_int (data[i], 0x00);
-    fail_unless_equals_int (data[i + 1], 0x40);
-    fail_unless_equals_int (data[i + 2], 0x40);
-    fail_unless_equals_int (data[i + 3], 0x40);
+    fail_unless_equals_int (data[i + 1], 0x80);
+    fail_unless_equals_int (data[i + 2], 0x80);
+    fail_unless_equals_int (data[i + 3], 0x80);
 #endif
     if ((i + 4) == (4 * (((((y > 0) ? (y + temp_height) : temp_height) -
                         1) * VIDEO_WIDTH) + ((x >
@@ -2635,6 +2635,58 @@ GST_START_TEST (test_overlay_blend)
 
 GST_END_TEST;
 
+GST_START_TEST (test_overlay_composition_over_transparency)
+{
+  GstVideoOverlayComposition *comp1;
+  GstVideoOverlayRectangle *rect1;
+  GstBuffer *pix1, *pix2;
+  GstVideoInfo vinfo;
+  guint8 *data;
+
+  GstVideoFrame video_frame;
+  guint fwidth = 200, height = 50, swidth = 100;
+
+  memset (&video_frame, 0, sizeof (GstVideoFrame));
+
+  pix1 = gst_buffer_new_and_alloc (fwidth * sizeof (guint32) * height);
+  gst_buffer_memset (pix1, 0, 0x00, gst_buffer_get_size (pix1));
+  gst_video_info_init (&vinfo);
+  gst_video_info_set_format (&vinfo, GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
+      fwidth, height);
+  gst_video_frame_map (&video_frame, &vinfo, pix1, GST_MAP_READWRITE);
+  gst_buffer_unref (pix1);
+
+  pix2 = gst_buffer_new_and_alloc (swidth * sizeof (guint32) * height);
+  gst_buffer_memset (pix2, 0, 0xFF, gst_buffer_get_size (pix2));
+  gst_buffer_add_video_meta (pix2, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, swidth, height);
+  rect1 = gst_video_overlay_rectangle_new_raw (pix2, swidth, 0,
+      swidth, height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+  comp1 = gst_video_overlay_composition_new (rect1);
+  fail_unless (gst_video_overlay_composition_blend (comp1, &video_frame));
+  gst_video_overlay_composition_unref (comp1);
+
+  data = GST_VIDEO_FRAME_PLANE_DATA (&video_frame, 0);
+
+  fail_unless_equals_int (data[0], 0x00);
+  fail_unless_equals_int (data[1], 0x00);
+  fail_unless_equals_int (data[2], 0x00);
+  fail_unless_equals_int (data[3], 0x00);
+
+  data += swidth * sizeof (guint32);
+
+  fail_unless_equals_int (data[0], 0xFF);
+  fail_unless_equals_int (data[1], 0xFF);
+  fail_unless_equals_int (data[2], 0xFF);
+  fail_unless_equals_int (data[3], 0xFF);
+
+  gst_video_frame_unmap (&video_frame);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 video_suite (void)
 {
@@ -2668,6 +2720,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_transfer);
   tcase_add_test (tc_chain, test_overlay_blend);
   tcase_add_test (tc_chain, test_video_center_rect);
+  tcase_add_test (tc_chain, test_overlay_composition_over_transparency);
 
   return s;
 }
