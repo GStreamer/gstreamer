@@ -18113,8 +18113,8 @@ video_orc_resample_v_4tap_u8 (guint32 * ORC_RESTRICT d1,
     var57.i = ((orc_uint32) var56.i) + ((orc_uint32) var44.i);
     /* 21: shrsl */
     var58.i = var57.i >> 12;
-    /* 22: convlw */
-    var59.i = var58.i;
+    /* 22: convsuslw */
+    var59.i = ORC_CLAMP_UW (var58.i);
     /* 23: convsuswb */
     var45 = ORC_CLAMP_UB (var59.i);
     /* 24: storeb */
@@ -18215,8 +18215,8 @@ _backup_video_orc_resample_v_4tap_u8 (OrcExecutor * ORC_RESTRICT ex)
     var57.i = ((orc_uint32) var56.i) + ((orc_uint32) var44.i);
     /* 21: shrsl */
     var58.i = var57.i >> 12;
-    /* 22: convlw */
-    var59.i = var58.i;
+    /* 22: convsuslw */
+    var59.i = ORC_CLAMP_UW (var58.i);
     /* 23: convsuswb */
     var45 = ORC_CLAMP_UB (var59.i);
     /* 24: storeb */
@@ -18250,7 +18250,7 @@ video_orc_resample_v_4tap_u8 (guint32 * ORC_RESTRICT d1,
         16, 2, 20, 2, 20, 2, 20, 4, 20, 4, 150, 32, 4, 176, 34, 32,
         24, 150, 33, 5, 176, 35, 33, 25, 103, 34, 34, 35, 150, 33, 6, 176,
         35, 33, 26, 103, 34, 34, 35, 150, 33, 7, 176, 35, 33, 27, 103, 34,
-        34, 35, 103, 34, 34, 16, 125, 34, 34, 17, 163, 32, 34, 160, 0, 32,
+        34, 35, 103, 34, 34, 16, 125, 34, 34, 17, 166, 32, 34, 160, 0, 32,
         2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
@@ -18301,8 +18301,8 @@ video_orc_resample_v_4tap_u8 (guint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "convlw", 0, ORC_VAR_T1, ORC_VAR_T3, ORC_VAR_D1,
-          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 0, ORC_VAR_T1, ORC_VAR_T3,
+          ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "convsuswb", 0, ORC_VAR_D1, ORC_VAR_T1,
           ORC_VAR_D1, ORC_VAR_D1);
 #endif
@@ -18659,8 +18659,8 @@ video_orc_resample_scaletaps_u8 (guint32 * ORC_RESTRICT d1,
     var37.i = ((orc_uint32) var34.i) + ((orc_uint32) var35.i);
     /* 3: shrsl */
     var38.i = var37.i >> 12;
-    /* 4: convlw */
-    var39.i = var38.i;
+    /* 4: convsuslw */
+    var39.i = ORC_CLAMP_UW (var38.i);
     /* 5: convsuswb */
     var36 = ORC_CLAMP_UB (var39.i);
     /* 6: storeb */
@@ -18701,8 +18701,8 @@ _backup_video_orc_resample_scaletaps_u8 (OrcExecutor * ORC_RESTRICT ex)
     var37.i = ((orc_uint32) var34.i) + ((orc_uint32) var35.i);
     /* 3: shrsl */
     var38.i = var37.i >> 12;
-    /* 4: convlw */
-    var39.i = var38.i;
+    /* 4: convsuslw */
+    var39.i = ORC_CLAMP_UW (var38.i);
     /* 5: convsuswb */
     var36 = ORC_CLAMP_UB (var39.i);
     /* 6: storeb */
@@ -18732,7 +18732,7 @@ video_orc_resample_scaletaps_u8 (guint32 * ORC_RESTRICT d1,
         95,
         117, 56, 11, 1, 1, 12, 4, 4, 14, 4, 255, 15, 0, 0, 14, 4,
         12, 0, 0, 0, 20, 2, 20, 4, 103, 33, 4, 16, 125, 33, 33, 17,
-        163, 32, 33, 160, 0, 32, 2, 0,
+        166, 32, 33, 160, 0, 32, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p,
@@ -18753,8 +18753,8 @@ video_orc_resample_scaletaps_u8 (guint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "convlw", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_D1,
-          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 0, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "convsuswb", 0, ORC_VAR_D1, ORC_VAR_T1,
           ORC_VAR_D1, ORC_VAR_D1);
 #endif
@@ -20959,9 +20959,9 @@ video_orc_chroma_up_v2_u8 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     /* 11: shruw */
     var54.x2[0] = ((orc_uint16) var53.x2[0]) >> 2;
     var54.x2[1] = ((orc_uint16) var53.x2[1]) >> 2;
-    /* 12: convwb */
-    var55.x2[0] = var54.x2[0];
-    var55.x2[1] = var54.x2[1];
+    /* 12: convsuswb */
+    var55.x2[0] = ORC_CLAMP_UB (var54.x2[0]);
+    var55.x2[1] = ORC_CLAMP_UB (var54.x2[1]);
     /* 13: mergewl */
     {
       orc_union32 _dest;
@@ -20983,9 +20983,9 @@ video_orc_chroma_up_v2_u8 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     /* 18: shruw */
     var59.x2[0] = ((orc_uint16) var58.x2[0]) >> 2;
     var59.x2[1] = ((orc_uint16) var58.x2[1]) >> 2;
-    /* 19: convwb */
-    var60.x2[0] = var59.x2[0];
-    var60.x2[1] = var59.x2[1];
+    /* 19: convsuswb */
+    var60.x2[0] = ORC_CLAMP_UB (var59.x2[0]);
+    var60.x2[1] = ORC_CLAMP_UB (var59.x2[1]);
     /* 20: mergewl */
     {
       orc_union32 _dest;
@@ -21089,9 +21089,9 @@ _backup_video_orc_chroma_up_v2_u8 (OrcExecutor * ORC_RESTRICT ex)
     /* 11: shruw */
     var54.x2[0] = ((orc_uint16) var53.x2[0]) >> 2;
     var54.x2[1] = ((orc_uint16) var53.x2[1]) >> 2;
-    /* 12: convwb */
-    var55.x2[0] = var54.x2[0];
-    var55.x2[1] = var54.x2[1];
+    /* 12: convsuswb */
+    var55.x2[0] = ORC_CLAMP_UB (var54.x2[0]);
+    var55.x2[1] = ORC_CLAMP_UB (var54.x2[1]);
     /* 13: mergewl */
     {
       orc_union32 _dest;
@@ -21113,9 +21113,9 @@ _backup_video_orc_chroma_up_v2_u8 (OrcExecutor * ORC_RESTRICT ex)
     /* 18: shruw */
     var59.x2[0] = ((orc_uint16) var58.x2[0]) >> 2;
     var59.x2[1] = ((orc_uint16) var58.x2[1]) >> 2;
-    /* 19: convwb */
-    var60.x2[0] = var59.x2[0];
-    var60.x2[1] = var59.x2[1];
+    /* 19: convsuswb */
+    var60.x2[0] = ORC_CLAMP_UB (var59.x2[0]);
+    var60.x2[1] = ORC_CLAMP_UB (var59.x2[1]);
     /* 20: mergewl */
     {
       orc_union32 _dest;
@@ -21151,9 +21151,9 @@ video_orc_chroma_up_v2_u8 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
         2, 0, 0, 0, 20, 2, 20, 2, 20, 2, 20, 2, 20, 4, 20, 4,
         20, 4, 198, 34, 32, 4, 198, 35, 33, 5, 21, 1, 150, 36, 34, 21,
         1, 150, 37, 35, 21, 1, 89, 38, 36, 16, 21, 1, 70, 38, 38, 37,
-        21, 1, 70, 38, 38, 17, 21, 1, 95, 38, 38, 17, 21, 1, 157, 34,
+        21, 1, 70, 38, 38, 17, 21, 1, 95, 38, 38, 17, 21, 1, 160, 34,
         38, 195, 0, 32, 34, 21, 1, 89, 38, 37, 16, 21, 1, 70, 38, 38,
-        36, 21, 1, 70, 38, 38, 17, 21, 1, 95, 38, 38, 17, 21, 1, 157,
+        36, 21, 1, 70, 38, 38, 17, 21, 1, 95, 38, 38, 17, 21, 1, 160,
         35, 38, 195, 1, 33, 35, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
@@ -21192,8 +21192,8 @@ video_orc_chroma_up_v2_u8 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
           ORC_VAR_D1);
       orc_program_append_2 (p, "shruw", 1, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "convwb", 1, ORC_VAR_T3, ORC_VAR_T7, ORC_VAR_D1,
-          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuswb", 1, ORC_VAR_T3, ORC_VAR_T7,
+          ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T3,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mullw", 1, ORC_VAR_T7, ORC_VAR_T6, ORC_VAR_C1,
@@ -21204,8 +21204,8 @@ video_orc_chroma_up_v2_u8 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
           ORC_VAR_D1);
       orc_program_append_2 (p, "shruw", 1, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "convwb", 1, ORC_VAR_T4, ORC_VAR_T7, ORC_VAR_D1,
-          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuswb", 1, ORC_VAR_T4, ORC_VAR_T7,
+          ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_D2, ORC_VAR_T2, ORC_VAR_T4,
           ORC_VAR_D1);
 #endif
@@ -21326,9 +21326,9 @@ video_orc_chroma_up_v2_u16 (guint16 * ORC_RESTRICT d1,
     /* 11: shrul */
     var54.x2[0] = ((orc_uint32) var53.x2[0]) >> 2;
     var54.x2[1] = ((orc_uint32) var53.x2[1]) >> 2;
-    /* 12: convlw */
-    var55.x2[0] = var54.x2[0];
-    var55.x2[1] = var54.x2[1];
+    /* 12: convsuslw */
+    var55.x2[0] = ORC_CLAMP_UW (var54.x2[0]);
+    var55.x2[1] = ORC_CLAMP_UW (var54.x2[1]);
     /* 13: mergelq */
     {
       orc_union64 _dest;
@@ -21352,9 +21352,9 @@ video_orc_chroma_up_v2_u16 (guint16 * ORC_RESTRICT d1,
     /* 18: shrul */
     var59.x2[0] = ((orc_uint32) var58.x2[0]) >> 2;
     var59.x2[1] = ((orc_uint32) var58.x2[1]) >> 2;
-    /* 19: convlw */
-    var60.x2[0] = var59.x2[0];
-    var60.x2[1] = var59.x2[1];
+    /* 19: convsuslw */
+    var60.x2[0] = ORC_CLAMP_UW (var59.x2[0]);
+    var60.x2[1] = ORC_CLAMP_UW (var59.x2[1]);
     /* 20: mergelq */
     {
       orc_union64 _dest;
@@ -21460,9 +21460,9 @@ _backup_video_orc_chroma_up_v2_u16 (OrcExecutor * ORC_RESTRICT ex)
     /* 11: shrul */
     var54.x2[0] = ((orc_uint32) var53.x2[0]) >> 2;
     var54.x2[1] = ((orc_uint32) var53.x2[1]) >> 2;
-    /* 12: convlw */
-    var55.x2[0] = var54.x2[0];
-    var55.x2[1] = var54.x2[1];
+    /* 12: convsuslw */
+    var55.x2[0] = ORC_CLAMP_UW (var54.x2[0]);
+    var55.x2[1] = ORC_CLAMP_UW (var54.x2[1]);
     /* 13: mergelq */
     {
       orc_union64 _dest;
@@ -21486,9 +21486,9 @@ _backup_video_orc_chroma_up_v2_u16 (OrcExecutor * ORC_RESTRICT ex)
     /* 18: shrul */
     var59.x2[0] = ((orc_uint32) var58.x2[0]) >> 2;
     var59.x2[1] = ((orc_uint32) var58.x2[1]) >> 2;
-    /* 19: convlw */
-    var60.x2[0] = var59.x2[0];
-    var60.x2[1] = var59.x2[1];
+    /* 19: convsuslw */
+    var60.x2[0] = ORC_CLAMP_UW (var59.x2[0]);
+    var60.x2[1] = ORC_CLAMP_UW (var59.x2[1]);
     /* 20: mergelq */
     {
       orc_union64 _dest;
@@ -21525,10 +21525,10 @@ video_orc_chroma_up_v2_u16 (guint16 * ORC_RESTRICT d1,
         4, 2, 0, 0, 0, 20, 4, 20, 4, 20, 4, 20, 4, 20, 8, 20,
         8, 20, 8, 197, 34, 32, 4, 197, 35, 33, 5, 21, 1, 154, 36, 34,
         21, 1, 154, 37, 35, 21, 1, 120, 38, 36, 16, 21, 1, 103, 38, 38,
-        37, 21, 1, 103, 38, 38, 17, 21, 1, 126, 38, 38, 17, 21, 1, 163,
+        37, 21, 1, 103, 38, 38, 17, 21, 1, 126, 38, 38, 17, 21, 1, 166,
         34, 38, 194, 0, 32, 34, 21, 1, 120, 38, 37, 16, 21, 1, 103, 38,
         38, 36, 21, 1, 103, 38, 38, 17, 21, 1, 126, 38, 38, 17, 21, 1,
-        163, 35, 38, 194, 1, 33, 35, 2, 0,
+        166, 35, 38, 194, 1, 33, 35, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p, _backup_video_orc_chroma_up_v2_u16);
@@ -21566,8 +21566,8 @@ video_orc_chroma_up_v2_u16 (guint16 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "shrul", 1, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "convlw", 1, ORC_VAR_T3, ORC_VAR_T7, ORC_VAR_D1,
-          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 1, ORC_VAR_T3, ORC_VAR_T7,
+          ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T3,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mulll", 1, ORC_VAR_T7, ORC_VAR_T6, ORC_VAR_C1,
@@ -21578,8 +21578,8 @@ video_orc_chroma_up_v2_u16 (guint16 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "shrul", 1, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "convlw", 1, ORC_VAR_T4, ORC_VAR_T7, ORC_VAR_D1,
-          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 1, ORC_VAR_T4, ORC_VAR_T7,
+          ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D2, ORC_VAR_T2, ORC_VAR_T4,
           ORC_VAR_D1);
 #endif
@@ -21907,9 +21907,9 @@ video_orc_chroma_down_v4_u8 (guint8 * ORC_RESTRICT d1,
     /* 19: shruw */
     var58.x2[0] = ((orc_uint16) var57.x2[0]) >> 3;
     var58.x2[1] = ((orc_uint16) var57.x2[1]) >> 3;
-    /* 20: convwb */
-    var59.x2[0] = var58.x2[0];
-    var59.x2[1] = var58.x2[1];
+    /* 20: convsuswb */
+    var59.x2[0] = ORC_CLAMP_UB (var58.x2[0]);
+    var59.x2[1] = ORC_CLAMP_UB (var58.x2[1]);
     /* 21: mergewl */
     {
       orc_union32 _dest;
@@ -22039,9 +22039,9 @@ _backup_video_orc_chroma_down_v4_u8 (OrcExecutor * ORC_RESTRICT ex)
     /* 19: shruw */
     var58.x2[0] = ((orc_uint16) var57.x2[0]) >> 3;
     var58.x2[1] = ((orc_uint16) var57.x2[1]) >> 3;
-    /* 20: convwb */
-    var59.x2[0] = var58.x2[0];
-    var59.x2[1] = var58.x2[1];
+    /* 20: convsuswb */
+    var59.x2[0] = ORC_CLAMP_UB (var58.x2[0]);
+    var59.x2[1] = ORC_CLAMP_UB (var58.x2[1]);
     /* 21: mergewl */
     {
       orc_union32 _dest;
@@ -22081,7 +22081,7 @@ video_orc_chroma_down_v4_u8 (guint8 * ORC_RESTRICT d1,
         191, 33, 5, 21, 1, 150, 34, 33, 191, 33, 6, 21, 1, 150, 35, 33,
         21, 1, 70, 34, 34, 35, 21, 1, 93, 35, 34, 16, 21, 1, 70, 34,
         34, 35, 21, 1, 70, 36, 36, 34, 21, 1, 70, 36, 36, 17, 21, 1,
-        95, 36, 36, 18, 21, 1, 157, 33, 36, 195, 0, 32, 33, 2, 0,
+        95, 36, 36, 18, 21, 1, 160, 33, 36, 195, 0, 32, 33, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p, _backup_video_orc_chroma_down_v4_u8);
@@ -22133,8 +22133,8 @@ video_orc_chroma_down_v4_u8 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "shruw", 1, ORC_VAR_T5, ORC_VAR_T5, ORC_VAR_C3,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "convwb", 1, ORC_VAR_T2, ORC_VAR_T5, ORC_VAR_D1,
-          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuswb", 1, ORC_VAR_T2, ORC_VAR_T5,
+          ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
           ORC_VAR_D1);
 #endif
@@ -22280,9 +22280,9 @@ video_orc_chroma_down_v4_u16 (guint16 * ORC_RESTRICT d1,
     /* 19: shrul */
     var58.x2[0] = ((orc_uint32) var57.x2[0]) >> 3;
     var58.x2[1] = ((orc_uint32) var57.x2[1]) >> 3;
-    /* 20: convlw */
-    var59.x2[0] = var58.x2[0];
-    var59.x2[1] = var58.x2[1];
+    /* 20: convsuslw */
+    var59.x2[0] = ORC_CLAMP_UW (var58.x2[0]);
+    var59.x2[1] = ORC_CLAMP_UW (var58.x2[1]);
     /* 21: mergelq */
     {
       orc_union64 _dest;
@@ -22412,9 +22412,9 @@ _backup_video_orc_chroma_down_v4_u16 (OrcExecutor * ORC_RESTRICT ex)
     /* 19: shrul */
     var58.x2[0] = ((orc_uint32) var57.x2[0]) >> 3;
     var58.x2[1] = ((orc_uint32) var57.x2[1]) >> 3;
-    /* 20: convlw */
-    var59.x2[0] = var58.x2[0];
-    var59.x2[1] = var58.x2[1];
+    /* 20: convsuslw */
+    var59.x2[0] = ORC_CLAMP_UW (var58.x2[0]);
+    var59.x2[1] = ORC_CLAMP_UW (var58.x2[1]);
     /* 21: mergelq */
     {
       orc_union64 _dest;
@@ -22454,7 +22454,7 @@ video_orc_chroma_down_v4_u16 (guint16 * ORC_RESTRICT d1,
         35, 193, 33, 5, 21, 1, 154, 34, 33, 193, 33, 6, 21, 1, 154, 35,
         33, 21, 1, 103, 34, 34, 35, 21, 1, 124, 35, 34, 16, 21, 1, 103,
         34, 34, 35, 21, 1, 103, 36, 36, 34, 21, 1, 103, 36, 36, 17, 21,
-        1, 126, 36, 36, 18, 21, 1, 163, 33, 36, 194, 0, 32, 33, 2, 0,
+        1, 126, 36, 36, 18, 21, 1, 166, 33, 36, 194, 0, 32, 33, 2, 0,
 
       };
       p = orc_program_new_from_static_bytecode (bc);
@@ -22507,8 +22507,8 @@ video_orc_chroma_down_v4_u16 (guint16 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "shrul", 1, ORC_VAR_T5, ORC_VAR_T5, ORC_VAR_C3,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "convlw", 1, ORC_VAR_T2, ORC_VAR_T5, ORC_VAR_D1,
-          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 1, ORC_VAR_T2, ORC_VAR_T5,
+          ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
           ORC_VAR_D1);
 #endif
