@@ -355,10 +355,10 @@ GST_START_TEST (test_fake_object_parentage)
   fail_if (parent != NULL, "GstFakeObject has parent");
   /* try to set a NULL parent, this should give a warning */
   ASSERT_CRITICAL (result = gst_object_set_parent (object1, NULL));
-  fail_if (result == TRUE, "GstFakeObject accepted NULL parent");
+  fail_if (result, "GstFakeObject accepted NULL parent");
   /* try to set itself as parent, we expect a warning here */
   ASSERT_CRITICAL (result = gst_object_set_parent (object1, object1));
-  fail_if (result == TRUE, "GstFakeObject accepted itself as parent");
+  fail_if (result, "GstFakeObject accepted itself as parent");
 
   /* _has_parent always returns FALSE if there is no parent */
   fail_if (gst_object_has_parent (object1, NULL));
@@ -379,12 +379,11 @@ GST_START_TEST (test_fake_object_parentage)
       "GstFakeObject instance is not floating");
 
   result = gst_object_has_parent (object1, object2);
-  fail_if (result == TRUE, "GstFakeObject has a parent");
+  fail_if (result, "GstFakeObject has a parent");
 
   /* try to set other object as parent */
   result = gst_object_set_parent (object1, object2);
-  fail_if (result == FALSE,
-      "GstFakeObject could not accept other object as parent");
+  fail_unless (result, "GstFakeObject could not accept other object as parent");
 
   /* should not be floating anymore */
   fail_if (g_object_is_floating (object1),
@@ -407,7 +406,7 @@ GST_START_TEST (test_fake_object_parentage)
 
   /* try to set other object as parent again */
   result = gst_object_set_parent (object1, object2);
-  fail_if (result == TRUE, "GstFakeObject could set parent twice");
+  fail_if (result, "GstFakeObject could set parent twice");
 
   /* ref before unparenting */
   gst_object_ref (object1);
@@ -446,8 +445,7 @@ GST_START_TEST (test_fake_object_parentage_dispose)
 
   /* try to set other object as parent */
   result = gst_object_set_parent (object1, object2);
-  fail_if (result == FALSE,
-      "GstFakeObject could not accept other object as parent");
+  fail_unless (result, "GstFakeObject could not accept other object as parent");
 
   /* clear parent of object */
   gst_object_unparent (object1);
@@ -477,14 +475,11 @@ GST_START_TEST (test_fake_object_has_ancestor)
 
   /* try to set other object as parent */
   result = gst_object_set_parent (object1, object3);
-  fail_if (result == FALSE,
-      "GstFakeObject could not accept other object as parent");
+  fail_unless (result, "GstFakeObject could not accept other object as parent");
   result = gst_object_set_parent (object2, object3);
-  fail_if (result == FALSE,
-      "GstFakeObject could not accept other object as parent");
+  fail_unless (result, "GstFakeObject could not accept other object as parent");
   result = gst_object_set_parent (object3, object4);
-  fail_if (result == FALSE,
-      "GstFakeObject could not accept other object as parent");
+  fail_unless (result, "GstFakeObject could not accept other object as parent");
 
   /* Hierarchy:
    *  object4
