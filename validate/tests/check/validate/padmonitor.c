@@ -24,19 +24,22 @@
 #include "test-utils.h"
 
 static void
-_check_reports_refcount (GstPad *pad, gint refcount)
+_check_reports_refcount (GstPad * pad, gint refcount)
 {
   GList *tmp, *reports;
-  GstValidateReporter *reporter = (GstValidateReporter *) g_object_get_data (G_OBJECT (pad), "validate-monitor");
+  GstValidateReporter *reporter =
+      (GstValidateReporter *) g_object_get_data (G_OBJECT (pad),
+      "validate-monitor");
 
   reports = gst_validate_reporter_get_reports (reporter);
   /* We take a ref here */
   refcount += 1;
 
   for (tmp = reports; tmp; tmp = tmp->next)
-    fail_unless_equals_int (((GstValidateReport *) tmp->data)->refcount, refcount);
+    fail_unless_equals_int (((GstValidateReport *) tmp->data)->refcount,
+        refcount);
 
-  g_list_free_full (reports, (GDestroyNotify )gst_validate_report_unref);
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
 }
 
 GST_START_TEST (buffer_before_segment)
@@ -124,7 +127,8 @@ GST_START_TEST (buffer_outside_segment)
   sink = gst_element_factory_make ("fakesink", "fakesink");
 
   fakesrc_klass =
-      g_strdup (gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (src), "klass"));
+      g_strdup (gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (src),
+          "klass"));
 
   /* Testing if a buffer is outside a segment is only done for buffer outputed
    * from decoders for the moment, fake a Decoder so that the test is properly
@@ -190,83 +194,6 @@ GST_START_TEST (buffer_outside_segment)
   fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (sink);
-}
-
-GST_END_TEST;
-
-static void
-_first_buffer_running_time (gboolean failing)
-{
-  GstPad *srcpad;
-  GstBuffer *buffer;
-  GstElement *src, *sink;
-  GstValidateReport *report;
-  GstValidateRunner *runner;
-  GstValidateMonitor *monitor;
-  GList *reports;
-
-  /* getting an existing element class is cheating, but easier */
-  src = gst_element_factory_make ("fakesrc", "fakesrc");
-  sink = gst_element_factory_make ("fakesink", "fakesink");
-
-  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
-  runner = gst_validate_runner_new ();
-  monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
-  gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
-
-  srcpad = gst_element_get_static_pad (src, "src");
-  fail_unless (GST_IS_VALIDATE_PAD_MONITOR (g_object_get_data ((GObject *)
-              srcpad, "validate-monitor")));
-
-  fail_unless (gst_pad_activate_mode (srcpad, GST_PAD_MODE_PUSH, TRUE));
-  fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_PLAYING),
-      GST_STATE_CHANGE_ASYNC);
-
-  gst_check_setup_events (srcpad, src, NULL, GST_FORMAT_TIME);
-
-  /*  Pushing a first buffer that as a wrong running time */
-  {
-    buffer = gst_buffer_new ();
-
-    if (failing)
-      GST_BUFFER_PTS (buffer) = 23;
-
-    GST_BUFFER_DURATION (buffer) = GST_SECOND;
-    fail_unless (gst_pad_push (srcpad, buffer));
-
-    reports = gst_validate_runner_get_reports (runner);
-    if (failing) {
-      assert_equals_int (g_list_length (reports), 1);
-      report = reports->data;
-      fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_WARNING);
-      fail_unless_equals_int (report->issue->issue_id,
-          FIRST_BUFFER_RUNNING_TIME_IS_NOT_ZERO);
-    } else {
-      assert_equals_int (g_list_length (reports), 0);
-    }
-    g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
-  }
-
-  /* clean up */
-  fail_unless (gst_pad_activate_mode (srcpad, GST_PAD_MODE_PUSH, FALSE));
-  fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_NULL),
-      GST_STATE_CHANGE_SUCCESS);
-
-  gst_object_unref (srcpad);
-  check_destroyed (src, srcpad, NULL);
-  check_destroyed (sink, NULL, NULL);
-  check_destroyed (runner, NULL, NULL);
-  check_destroyed (monitor, NULL, NULL);
-}
-
-GST_START_TEST (first_buffer_running_time)
-{
-  /*  First run the test with a first buffer timestamp != 0 */
-  _first_buffer_running_time (TRUE);
-
-  /*  First run the test with a first buffer timestamp == 0 */
-  _first_buffer_running_time (FALSE);
 }
 
 GST_END_TEST;
@@ -424,27 +351,32 @@ GST_START_TEST (issue_concatenation)
   sink = create_and_monitor_element ("fakesink", "fakesink", runner);
 
   srcpad1 = gst_element_get_static_pad (src1, "src");
-  srcpad_monitor1 = g_object_get_data (G_OBJECT(srcpad1), "validate-monitor");
+  srcpad_monitor1 = g_object_get_data (G_OBJECT (srcpad1), "validate-monitor");
   srcpad2 = gst_element_get_static_pad (src2, "src");
-  srcpad_monitor2 = g_object_get_data (G_OBJECT(srcpad2), "validate-monitor");
+  srcpad_monitor2 = g_object_get_data (G_OBJECT (srcpad2), "validate-monitor");
   funnel_sink1 = gst_element_get_request_pad (funnel, "sink_%u");
-  funnel_sink_monitor1 = g_object_get_data (G_OBJECT(funnel_sink1), "validate-monitor");
+  funnel_sink_monitor1 =
+      g_object_get_data (G_OBJECT (funnel_sink1), "validate-monitor");
   funnel_sink2 = gst_element_get_request_pad (funnel, "sink_%u");
-  funnel_sink_monitor2 = g_object_get_data (G_OBJECT(funnel_sink2), "validate-monitor");
+  funnel_sink_monitor2 =
+      g_object_get_data (G_OBJECT (funnel_sink2), "validate-monitor");
   sinkpad = gst_element_get_static_pad (sink, "sink");
-  sinkpad_monitor = g_object_get_data (G_OBJECT(sinkpad), "validate-monitor");
+  sinkpad_monitor = g_object_get_data (G_OBJECT (sinkpad), "validate-monitor");
 
   fail_unless (gst_element_link (funnel, sink));
   fail_unless (gst_pad_link (srcpad1, funnel_sink1) == GST_PAD_LINK_OK);
   fail_unless (gst_pad_link (srcpad2, funnel_sink2) == GST_PAD_LINK_OK);
 
-  /* There's gonna be some clunkiness in here because of funnel*/
+  /* There's gonna be some clunkiness in here because of funnel */
   probe_id1 = gst_pad_add_probe (srcpad1,
-        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-        (GstPadProbeCallback) drop_buffers, NULL, NULL);
-  probe_id2 = gst_pad_add_probe (srcpad2,
-        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-        (GstPadProbeCallback) drop_buffers, NULL, NULL);
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, (GstPadProbeCallback) drop_buffers,
+      NULL, NULL);
+  probe_id2 =
+      gst_pad_add_probe (srcpad2,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, (GstPadProbeCallback) drop_buffers,
+      NULL, NULL);
 
   /* We want to handle the src behaviour ourselves */
   fail_unless (gst_pad_activate_mode (srcpad1, GST_PAD_MODE_PUSH, TRUE));
@@ -456,11 +388,11 @@ GST_START_TEST (issue_concatenation)
   segment.stop = GST_SECOND;
 
   fail_unless (gst_pad_push_event (srcpad1,
-        gst_event_new_stream_start ("the-stream")));
+          gst_event_new_stream_start ("the-stream")));
   fail_unless (gst_pad_push_event (srcpad1, gst_event_new_segment (&segment)));
 
   fail_unless (gst_pad_push_event (srcpad2,
-        gst_event_new_stream_start ("the-stream")));
+          gst_event_new_stream_start ("the-stream")));
   fail_unless (gst_pad_push_event (srcpad2, gst_event_new_segment (&segment)));
 
   fail_unless_equals_int (gst_element_set_state (funnel, GST_STATE_PLAYING),
@@ -479,17 +411,22 @@ GST_START_TEST (issue_concatenation)
   g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
 
   /* Each pad monitor on the way actually holds a report */
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) srcpad_monitor1);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      srcpad_monitor1);
   fail_unless_equals_int (n_reports, 1);
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) sinkpad_monitor);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      sinkpad_monitor);
   fail_unless_equals_int (n_reports, 1);
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) funnel_sink_monitor1);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      funnel_sink_monitor1);
   fail_unless_equals_int (n_reports, 1);
 
   /* But not the pad monitor of the other funnel sink */
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) funnel_sink_monitor2);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      funnel_sink_monitor2);
   fail_unless_equals_int (n_reports, 0);
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) srcpad_monitor2);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      srcpad_monitor2);
   fail_unless_equals_int (n_reports, 0);
 
   /* Once again but on the other funnel sink */
@@ -501,16 +438,21 @@ GST_START_TEST (issue_concatenation)
   g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
 
   /* These monitors already saw that issue */
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) srcpad_monitor1);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      srcpad_monitor1);
   fail_unless_equals_int (n_reports, 1);
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) sinkpad_monitor);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      sinkpad_monitor);
   fail_unless_equals_int (n_reports, 1);
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) funnel_sink_monitor1);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      funnel_sink_monitor1);
   fail_unless_equals_int (n_reports, 1);
 
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) funnel_sink_monitor2);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      funnel_sink_monitor2);
   fail_unless_equals_int (n_reports, 1);
-  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *) srcpad_monitor2);
+  n_reports = gst_validate_reporter_get_reports_count ((GstValidateReporter *)
+      srcpad_monitor2);
   fail_unless_equals_int (n_reports, 1);
 
   /* clean up */
@@ -543,6 +485,7 @@ GST_START_TEST (issue_concatenation)
   check_destroyed (sink, sinkpad, NULL);
   check_destroyed (runner, NULL, NULL);
 }
+
 GST_END_TEST;
 
 /* *INDENT-OFF* */
@@ -813,8 +756,7 @@ GST_START_TEST (eos_without_segment)
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT (pipeline),
-      runner, NULL);
+      gst_validate_monitor_factory_create (GST_OBJECT (pipeline), runner, NULL);
 
   gst_bin_add_many (pipeline, decoder, sink, NULL);
   srcpad = gst_pad_new ("srcpad1", GST_PAD_SRC);
@@ -861,7 +803,6 @@ gst_validate_suite (void)
 
   tcase_add_test (tc_chain, buffer_before_segment);
   tcase_add_test (tc_chain, buffer_outside_segment);
-  tcase_add_test (tc_chain, first_buffer_running_time);
   tcase_add_test (tc_chain, flow_aggregation);
   tcase_add_test (tc_chain, issue_concatenation);
   tcase_add_test (tc_chain, check_media_info);

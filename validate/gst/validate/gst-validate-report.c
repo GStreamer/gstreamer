@@ -147,9 +147,6 @@ gst_validate_report_load_issues (void)
           "of the received buffers timestamps. i.e. If an element received "
           "buffers with timestamps from 0s to 10s, it can't push a buffer with "
           "with a 11s timestamp, because it doesn't have data for that"));
-  REGISTER_VALIDATE_ISSUE (WARNING, FIRST_BUFFER_RUNNING_TIME_IS_NOT_ZERO,
-      _("first buffer's running time isn't 0"),
-      _("the first buffer's received running time is expected to be 0"));
   REGISTER_VALIDATE_ISSUE (WARNING, WRONG_BUFFER,
       _("Received buffer does not correspond to wanted one."),
       _("When checking playback of a file against a MediaInfo file"

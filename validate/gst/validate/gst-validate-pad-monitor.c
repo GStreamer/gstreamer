@@ -1010,16 +1010,6 @@ gst_validate_pad_monitor_check_first_buffer (GstValidatePadMonitor *
         ")", GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
         GST_TIME_ARGS (GST_BUFFER_DTS (buffer)));
 
-    if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) {
-      gint64 running_time = gst_segment_to_running_time (&pad_monitor->segment,
-          pad_monitor->segment.format, GST_BUFFER_TIMESTAMP (buffer));
-      /* Only check for in-segment buffers */
-      if (GST_CLOCK_TIME_IS_VALID (running_time) && running_time != 0) {
-        GST_VALIDATE_REPORT (pad_monitor, FIRST_BUFFER_RUNNING_TIME_IS_NOT_ZERO,
-            "First buffer running time is not 0, it is: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (running_time));
-      }
-    }
   }
 }
 
