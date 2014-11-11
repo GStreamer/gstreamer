@@ -142,9 +142,10 @@ gst_element_print_properties (GstElement * element)
           gchar work_string[100];
 
           if (string_val == NULL)
-            sprintf (work_string, "\"%s\"", "null");
+            g_snprintf (work_string, sizeof (work_string), "\"%s\"", "null");
           else
-            sprintf (work_string, "\"%s\"", string_val);
+            g_snprintf (work_string, sizeof (work_string), "\"%s\"",
+                string_val);
           g_print ("%-*.*s", c3w, c3w, work_string);
         } else {
           g_print ("%-*s", c3w, "<not readable>");      /* alt current */
@@ -283,7 +284,8 @@ gst_element_print_properties (GstElement * element)
             g_print ("%-*s | %-*.*s |", c3w, "Caps (NULL)", c4w, c4w, " ");
           else {
             gchar prefix_string[100];
-            sprintf (prefix_string, "    | %-*.*s | ", c2w, c2w, " ");
+            g_snprintf (prefix_string, sizeof (prefix_string),
+                "    | %-*.*s | ", c2w, c2w, " ");
             print_caps (caps, prefix_string);
           }
         }
@@ -307,7 +309,8 @@ gst_element_print_properties (GstElement * element)
             j++;
           }
 
-          sprintf (work_string, "%d, \"%s\"", enum_value, cur_val_nick);
+          g_snprintf (work_string, sizeof (work_string), "%d, \"%s\"",
+              enum_value, cur_val_nick);
           g_print ("%-*.*s", c3w, c3w, work_string);
           g_print (" | Enum \"%s\" : %d, \"%s\"",
               g_type_name (G_VALUE_TYPE (&value)),
@@ -325,12 +328,12 @@ gst_element_print_properties (GstElement * element)
           def = flags_to_string (vals, pflags->default_value);  /* default */
 
           /* current */
-          sprintf (work_string, "0x%08x, \"%s\"",
+          g_snprintf (work_string, sizeof (work_string), "0x%08x, \"%s\"",
               g_value_get_flags (&value), cur);
           g_print ("%-*.*s", c3w, c3w, work_string);
 
           /* type */
-          sprintf (work_string, "Flags \"%s\"",
+          g_snprintf (work_string, sizeof (work_string), "Flags \"%s\"",
               g_type_name (G_VALUE_TYPE (&value)));
           g_print ("%-*.*s", c4w, c4w, work_string);
 
@@ -339,8 +342,8 @@ gst_element_print_properties (GstElement * element)
 
           /* values list */
           while (vals[0].value_name) {
-            sprintf (work_string, "\n    | %-*.*s |   (0x%08x): %-16s - %s",
-                c2w, c2w, "",
+            g_snprintf (work_string, sizeof (work_string),
+                "\n    | %-*.*s |   (0x%08x): %-16s - %s", c2w, c2w, "",
                 vals[0].value, vals[0].value_nick, vals[0].value_name);
             g_print ("%s", work_string);
             ++vals;
@@ -390,7 +393,7 @@ gst_element_print_properties (GstElement * element)
           gchar work_string[100];
 
           if (readable) {       /* current */
-            sprintf (work_string, "%d/%d",
+            g_snprintf (work_string, sizeof (work_string), "%d/%d",
                 gst_value_get_fraction_numerator (&value),
                 gst_value_get_fraction_denominator (&value));
             g_print ("%-*.*s", c3w, c3w, work_string);
@@ -450,7 +453,7 @@ print_column_titles (guint c2w, guint c3w, guint c4w)
   gint rlen = 0;
 
       /*--- column 1 - RWC ---*/
-  sprintf (work_string, "<-->|<");
+  g_snprintf (work_string, sizeof (work_string), "<-->|<");
 
       /*--- column 2 - property name ---*/
   llen = (c2w - 15) / 2;        /* width of " property name " = 15 */
@@ -497,13 +500,13 @@ print_element_info (GstElement * element, guint c2w, guint c3w, guint c4w)
   gchar work_string[100];
   GstElementFactory *factory = gst_element_get_factory (element);
 
-  sprintf (work_string, "ELEMENT CLASS NAME");
+  g_snprintf (work_string, sizeof (work_string), "ELEMENT CLASS NAME");
   g_print ("    | %-*s", c2w, work_string);
   g_print (" | %-*s", c3w, g_type_name (G_OBJECT_TYPE (element)));
   g_print (" | %-*s | \n", c4w, "");
 
 
-  sprintf (work_string, "ELEMENT FACTORY NAME");
+  g_snprintf (work_string, sizeof (work_string), "ELEMENT FACTORY NAME");
   g_print ("    | %-*s", c2w, work_string);
 
   g_print (" | %-*s", c3w,
