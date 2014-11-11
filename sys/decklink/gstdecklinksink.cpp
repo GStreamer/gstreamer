@@ -336,7 +336,7 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
 
   decklinksink->output =
       gst_decklink_get_nth_output (decklinksink->device_number);
-  if (!decklinksink->decklink) {
+  if (!decklinksink->output) {
     GST_WARNING ("no output for device %d", decklinksink->device_number);
     return FALSE;
   }
