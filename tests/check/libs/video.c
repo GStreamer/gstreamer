@@ -2251,6 +2251,32 @@ GST_END_TEST;
 #undef WIDTH
 #undef HEIGHT
 
+GST_START_TEST (test_video_transfer)
+{
+  gint i, j;
+
+  for (j = GST_VIDEO_TRANSFER_GAMMA10; j <= GST_VIDEO_TRANSFER_LOG316; j++) {
+    for (i = 0; i < 256; i++) {
+      gdouble val1, val2;
+
+      val1 = gst_video_color_transfer_encode (j, i / 255.0);
+      fail_if (val1 < 0.0 || val1 > 1.0);
+
+      val2 = gst_video_color_transfer_decode (j, val1);
+      fail_if (val2 < 0.0 || val2 > 1.0);
+
+      GST_DEBUG ("%d: %d %f->%f->%f %d", j, i, i / 255.0, val1, val2,
+          (int) lrint (val2 * 255.0));
+      if (val1 == 0.0)
+        fail_if (val2 != 0.0);
+      else
+        fail_if (lrint (val2 * 255.0) != i);
+    }
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -2279,6 +2305,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_scaler);
   tcase_add_test (tc_chain, test_video_color_convert);
   tcase_add_test (tc_chain, test_video_size_convert);
+  tcase_add_test (tc_chain, test_video_transfer);
 
   return s;
 }

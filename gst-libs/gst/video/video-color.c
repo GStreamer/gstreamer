@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "video-color.h"
 
@@ -312,5 +313,162 @@ gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr,
   }
   GST_DEBUG ("matrix: %d, Kr %f, Kb %f", matrix, *Kr, *Kb);
 
+  return res;
+}
+
+/**
+ * gst_video_color_transfer_encode:
+ * @func: a #GstVideoTransferFunction
+ * @val: a value
+ *
+ * Convert @val to its gamma encoded value.
+ *
+ * For a linear value L in the range [0..1], conversion to the non-linear
+ * (gamma encoded) L' is in general performed with a power function like:
+ *
+ * |[
+ *    L' = L ^ (1 / gamma)
+ * ]|
+ *
+ * Depending on @func, different formulas might be applied. Some formulas
+ * encode a linear segment in the lower range.
+ *
+ * Returns: the gamme encoded value of @val
+ *
+ * Since: 1.6
+ */
+gdouble
+gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val)
+{
+  gdouble res;
+
+  switch (func) {
+    case GST_VIDEO_TRANSFER_UNKNOWN:
+    case GST_VIDEO_TRANSFER_GAMMA10:
+    default:
+      res = val;
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA18:
+      res = pow (val, 1.0 / 1.8);
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA20:
+      res = pow (val, 1.0 / 2.0);
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA22:
+      res = pow (val, 1.0 / 2.2);
+      break;
+    case GST_VIDEO_TRANSFER_BT709:
+      if (val < 0.018)
+        res = 4.5 * val;
+      else
+        res = 1.099 * pow (val, 0.45) - 0.099;
+      break;
+    case GST_VIDEO_TRANSFER_SMPTE240M:
+      if (val < 0.0228)
+        res = val * 4.0;
+      else
+        res = 1.1115 * pow (val, 0.45) - 0.1115;
+      break;
+    case GST_VIDEO_TRANSFER_SRGB:
+      if (val <= 0.0031308)
+        res = 12.92 * val;
+      else
+        res = 1.055 * pow (val, 1.0 / 2.4) - 0.055;
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA28:
+      res = pow (val, 1 / 2.8);
+      break;
+    case GST_VIDEO_TRANSFER_LOG100:
+      if (val < 0.01)
+        res = 0.0;
+      else
+        res = 1.0 + log10 (val) / 2.0;
+      break;
+    case GST_VIDEO_TRANSFER_LOG316:
+      if (val < 0.0031622777)
+        res = 0.0;
+      else
+        res = 1.0 + log10 (val) / 2.5;
+      break;
+  }
+  return res;
+}
+
+/**
+ * gst_video_color_transfer_decode:
+ * @func: a #GstVideoTransferFunction
+ * @val: a value
+ *
+ * Convert @val to its gamma decoded value. This is the inverse operation of
+ * @gst_video_color_transfer_encode().
+ *
+ * For a non-linear value L' in the range [0..1], conversion to the linear
+ * L is in general performed with a power function like:
+ *
+ * |[
+ *    L = L' ^ gamma
+ * ]|
+ *
+ * Depending on @func, different formulas might be applied. Some formulas
+ * encode a linear segment in the lower range.
+ *
+ * Returns: the gamme decoded value of @val
+ *
+ * Since: 1.6
+ */
+gdouble
+gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val)
+{
+  gdouble res;
+
+  switch (func) {
+    case GST_VIDEO_TRANSFER_UNKNOWN:
+    case GST_VIDEO_TRANSFER_GAMMA10:
+    default:
+      res = val;
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA18:
+      res = pow (val, 1.8);
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA20:
+      res = pow (val, 2.0);
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA22:
+      res = pow (val, 2.2);
+      break;
+    case GST_VIDEO_TRANSFER_BT709:
+      if (val < 0.081)
+        res = val / 4.5;
+      else
+        res = pow ((val + 0.099) / 1.099, 1.0 / 0.45);
+      break;
+    case GST_VIDEO_TRANSFER_SMPTE240M:
+      if (val < 0.0913)
+        res = val / 4.0;
+      else
+        res = pow ((val + 0.1115) / 1.1115, 1.0 / 0.45);
+      break;
+    case GST_VIDEO_TRANSFER_SRGB:
+      if (val <= 0.04045)
+        res = val / 12.92;
+      else
+        res = pow ((val + 0.055) / 1.055, 2.4);
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA28:
+      res = pow (val, 2.8);
+      break;
+    case GST_VIDEO_TRANSFER_LOG100:
+      if (val == 0.0)
+        res = 0.0;
+      else
+        res = pow (10.0, 2.0 * (val - 1.0));
+      break;
+    case GST_VIDEO_TRANSFER_LOG316:
+      if (val == 0.0)
+        res = 0.0;
+      else
+        res = pow (10.0, 2.5 * (val - 1.0));
+      break;
+  }
   return res;
 }

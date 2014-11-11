@@ -101,6 +101,9 @@ typedef enum {
   GST_VIDEO_TRANSFER_LOG316
 } GstVideoTransferFunction;
 
+gdouble      gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val);
+gdouble      gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val);
+
 /**
  * GstVideoColorPrimaries:
  * @GST_VIDEO_COLOR_PRIMARIES_UNKNOWN: unknown color primaries
