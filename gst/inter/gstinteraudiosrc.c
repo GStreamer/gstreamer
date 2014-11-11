@@ -387,6 +387,8 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
     }
   }
 
+  buffer = gst_buffer_make_writable (buffer);
+
   bpf = interaudiosrc->info.bpf;
   if (n < period_samples) {
     GstMapInfo map;
@@ -401,7 +403,6 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
           map.size);
       gst_memory_unmap (mem, &map);
     }
-    buffer = gst_buffer_make_writable (buffer);
     gst_buffer_prepend_memory (buffer, mem);
   }
   n = period_samples;
