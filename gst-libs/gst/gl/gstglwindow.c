@@ -991,7 +991,7 @@ gst_gl_window_handle_events (GstGLWindow * window, gboolean handle_events)
 
   g_return_if_fail (GST_GL_IS_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_if_fail (window_class->handle_events != NULL);
 
-  window_class->handle_events (window, handle_events);
+  if (window_class->handle_events)
+    window_class->handle_events (window, handle_events);
 }
