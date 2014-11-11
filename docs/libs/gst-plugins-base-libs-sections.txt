@@ -2291,15 +2291,18 @@ GST_TYPE_VIDEO_PACK_FLAGS
 #video-color.h
 <SUBSECTION>
 GstVideoColorRange
+gst_video_color_range_offsets
 GstVideoColorMatrix
-GstVideoTransferFunction
+gst_video_color_matrix_get_Kr_Kb
 GstVideoColorPrimaries
+GstVideoTransferFunction
+gst_video_color_transfer_decode
+gst_video_color_transfer_encode
+
 GstVideoColorimetry
 gst_video_colorimetry_matches
 gst_video_colorimetry_from_string
 gst_video_colorimetry_to_string
-gst_video_color_range_offsets
-gst_video_color_matrix_get_Kr_Kb
 <SUBSECTION Standard>
 gst_video_color_range_get_type
 GST_TYPE_VIDEO_COLOR_RANGE

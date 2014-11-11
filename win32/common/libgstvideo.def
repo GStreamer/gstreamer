@@ -76,6 +76,8 @@ EXPORTS
 	gst_video_color_primaries_get_type
 	gst_video_color_range_get_type
 	gst_video_color_range_offsets
+	gst_video_color_transfer_decode
+	gst_video_color_transfer_encode
 	gst_video_colorimetry_from_string
 	gst_video_colorimetry_matches
 	gst_video_colorimetry_to_string
