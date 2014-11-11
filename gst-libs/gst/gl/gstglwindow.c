@@ -978,11 +978,11 @@ gst_gl_window_send_mouse_event (GstGLWindow * window, const char *event_type,
  * @window: a #GstGLWindow
  * @handle_events: a #gboolean indicating if events should be handled or not.
  *
-+ * Tell a @window that it should handle events from the window system. These
-+ * events are forwarded upstream as navigation events. In some window systems
-+ * events are not propagated in the window hierarchy if a client is listening
-+ * for them. This method allows you to disable events handling completely
-+ * from the @window.
+ * Tell a @window that it should handle events from the window system. These
+ * events are forwarded upstream as navigation events. In some window systems
+ * events are not propagated in the window hierarchy if a client is listening
+ * for them. This method allows you to disable events handling completely
+ * from the @window.
  */
 void
 gst_gl_window_handle_events (GstGLWindow * window, gboolean handle_events)
