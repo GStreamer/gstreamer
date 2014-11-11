@@ -372,6 +372,7 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
         n * bpf);
   } else {
     buffer = gst_buffer_new ();
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_GAP);
   }
   g_mutex_unlock (&interaudiosrc->surface->mutex);
 
