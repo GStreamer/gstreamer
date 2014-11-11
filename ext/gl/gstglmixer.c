@@ -340,7 +340,8 @@ gst_gl_mixer_caps_remove_format_info (GstCaps * caps)
         && gst_caps_features_is_equal (f,
             GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
       gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
-          "width", "height", NULL);
+          NULL);
+    gst_structure_remove_fields (st, "width", "height", NULL);
 
     gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
   }
