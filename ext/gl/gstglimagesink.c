@@ -564,6 +564,26 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
       return gst_gl_handle_context_query ((GstElement *) glimage_sink, query,
           &glimage_sink->display, &glimage_sink->other_context);
     }
+    case GST_QUERY_DRAIN:
+    {
+      GstBuffer *buf = NULL;
+
+      GST_GLIMAGE_SINK_LOCK (glimage_sink);
+      glimage_sink->redisplay_texture = 0;
+      buf = glimage_sink->stored_buffer;
+      glimage_sink->stored_buffer = NULL;
+      GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
+
+      if (buf)
+        gst_buffer_unref (buf);
+
+      gst_buffer_replace (&glimage_sink->next_buffer, NULL);
+      gst_gl_upload_release_buffer (glimage_sink->upload);
+      glimage_sink->upload = NULL;
+
+      res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
+      break;
+    }
     default:
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
