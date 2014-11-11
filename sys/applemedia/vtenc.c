@@ -520,8 +520,14 @@ static VTCompressionSessionRef
 gst_vtenc_create_session (GstVTEnc * self)
 {
   VTCompressionSessionRef session = NULL;
-  CFMutableDictionaryRef pb_attrs;
+  CFMutableDictionaryRef encoder_spec, pb_attrs;
   OSStatus status;
+
+  encoder_spec =
+      CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  gst_vtutil_dict_set_boolean (encoder_spec,
+      kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder, true);
 
   pb_attrs = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
@@ -532,8 +538,8 @@ gst_vtenc_create_session (GstVTEnc * self)
 
   status = VTCompressionSessionCreate (NULL,
       self->negotiated_width, self->negotiated_height,
-      self->details->format_id, NULL, pb_attrs, NULL, gst_vtenc_enqueue_buffer,
-      self, &session);
+      self->details->format_id, encoder_spec, pb_attrs, NULL,
+      gst_vtenc_enqueue_buffer, self, &session);
   GST_INFO_OBJECT (self, "VTCompressionSessionCreate for %d x %d => %d",
       self->negotiated_width, self->negotiated_height, (int) status);
   if (status != noErr) {
@@ -587,6 +593,7 @@ gst_vtenc_create_session (GstVTEnc * self)
 #endif
 
 beach:
+  CFRelease (encoder_spec);
   CFRelease (pb_attrs);
 
   return session;
