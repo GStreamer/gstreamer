@@ -198,7 +198,8 @@ if USE_GL
 check_gl=libs/gstglcontext \
     libs/gstglmemory \
     libs/gstglupload \
-    libs/gstglcolorconvert
+    libs/gstglcolorconvert \
+    elements/glimagesink
 else
 check_gl=
 endif
