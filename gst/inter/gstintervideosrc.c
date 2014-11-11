@@ -308,6 +308,7 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (src);
   GstCaps *caps;
   GstBuffer *buffer;
+  gboolean is_gap = FALSE;
 
   GST_DEBUG_OBJECT (intervideosrc, "create");
 
@@ -337,8 +338,18 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   }
   if (intervideosrc->surface->video_buffer) {
     buffer = gst_buffer_ref (intervideosrc->surface->video_buffer);
+
+    /* Repeated buffer? */
+    if (intervideosrc->surface->video_buffer_count > 0)
+      is_gap = TRUE;
+
     intervideosrc->surface->video_buffer_count++;
     if (intervideosrc->surface->video_buffer_count >= 30) {
+      /* The first black buffer is not a GAP anymore but
+       * the following are */
+      if (intervideosrc->surface->video_buffer_count == 30)
+        is_gap = FALSE;
+
       gst_buffer_unref (intervideosrc->surface->video_buffer);
       intervideosrc->surface->video_buffer = NULL;
     }
@@ -412,6 +423,9 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   }
 
   buffer = gst_buffer_make_writable (buffer);
+
+  if (is_gap)
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_GAP);
 
   GST_BUFFER_PTS (buffer) = intervideosrc->timestamp_offset +
       gst_util_uint64_scale (GST_SECOND * intervideosrc->n_frames,
