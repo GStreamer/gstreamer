@@ -55,6 +55,46 @@
  * </refsect2>
  */
 
+/*
+ * (a)  unpack
+ * (b)  chroma upsample
+ * (c)  (convert Y'CbCr to R'G'B')
+ * (d)  gamma decode
+ * (e)  downscale
+ * (f)  colorspace convert through XYZ
+ * (g)  upscale
+ * (h)  gamma encode
+ * (i)  (convert R'G'B' to Y'CbCr)
+ * (j)  chroma downsample
+ * (k)  pack
+ *
+ * quality options
+ *
+ *  (a) range truncate, range expand
+ *  (b) full upsample, 1-1 non-cosited upsample, no upsample
+ *  (c) 8 bits, 16 bits
+ *  (d)
+ *  (e) 8 bits, 16 bits
+ *  (f) 8 bits, 16 bits
+ *  (g) 8 bits, 16 bits
+ *  (h)
+ *  (i) 8 bits, 16 bits
+ *  (j) 1-1 cosited downsample, no downsample
+ *  (k)
+ *
+ *
+ *         1 : a ->   ->   ->   -> e  -> f  -> g  ->   ->   ->   -> k
+ *         2 : a ->   ->   ->   -> e  -> f* -> g  ->   ->   ->   -> k
+ *         3 : a ->   ->   ->   -> e* -> f* -> g* ->   ->   ->   -> k
+ *         4 : a -> b ->   ->   -> e  -> f  -> g  ->   ->   -> j -> k
+ *         5 : a -> b ->   ->   -> e* -> f* -> g* ->   ->   -> j -> k
+ *         6 : a -> b -> c -> d -> e  -> f  -> g  -> h -> i -> j -> k
+ *         7 : a -> b -> c -> d -> e* -> f* -> g* -> h -> i -> j -> k
+ *
+ *         8 : a -> b -> c -> d -> e* -> f* -> g* -> h -> i -> j -> k
+ *         9 : a -> b -> c -> d -> e* -> f* -> g* -> h -> i -> j -> k
+ *        10 : a -> b -> c -> d -> e* -> f* -> g* -> h -> i -> j -> k
+ */
 typedef struct _GstLineCache GstLineCache;
 
 struct _GstVideoConverter
