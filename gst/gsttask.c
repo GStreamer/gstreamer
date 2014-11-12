@@ -292,31 +292,30 @@ gst_task_func (GstTask * task)
   gst_task_configure_name (task);
 
   while (G_LIKELY (GET_TASK_STATE (task) != GST_TASK_STOPPED)) {
-    if (G_UNLIKELY (GET_TASK_STATE (task) == GST_TASK_PAUSED)) {
+    GST_OBJECT_LOCK (task);
+    while (G_UNLIKELY (GST_TASK_STATE (task) == GST_TASK_PAUSED)) {
+      g_rec_mutex_unlock (lock);
+
+      GST_TASK_SIGNAL (task);
+      GST_INFO_OBJECT (task, "Task going to paused");
+      GST_TASK_WAIT (task);
+      GST_INFO_OBJECT (task, "Task resume from paused");
+      GST_OBJECT_UNLOCK (task);
+      /* locking order.. */
+      g_rec_mutex_lock (lock);
       GST_OBJECT_LOCK (task);
-      while (G_UNLIKELY (GST_TASK_STATE (task) == GST_TASK_PAUSED)) {
-        g_rec_mutex_unlock (lock);
+    }
 
-        GST_TASK_SIGNAL (task);
-        GST_INFO_OBJECT (task, "Task going to paused");
-        GST_TASK_WAIT (task);
-        GST_INFO_OBJECT (task, "Task resume from paused");
-        GST_OBJECT_UNLOCK (task);
-        /* locking order.. */
-        g_rec_mutex_lock (lock);
-
-        GST_OBJECT_LOCK (task);
-        if (G_UNLIKELY (GET_TASK_STATE (task) == GST_TASK_STOPPED)) {
-          GST_OBJECT_UNLOCK (task);
-          goto done;
-        }
-      }
+    if (G_UNLIKELY (GET_TASK_STATE (task) == GST_TASK_STOPPED)) {
+      GST_OBJECT_UNLOCK (task);
+      break;
+    } else {
       GST_OBJECT_UNLOCK (task);
     }
 
     task->func (task->user_data);
   }
-done:
+
   g_rec_mutex_unlock (lock);
 
   GST_OBJECT_LOCK (task);
