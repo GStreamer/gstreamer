@@ -2617,7 +2617,7 @@ pause:
         demux->no_more_pads = TRUE;
       }
 
-      if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+      if (demux->segment.flags & GST_SEGMENT_FLAG_SEGMENT) {
         gint64 stop;
 
         /* for segment playback we need to post when (in stream time)
@@ -2668,7 +2668,8 @@ pause:
 }
 
 static guint64
-gst_flv_demux_find_offset (GstFlvDemux * demux, GstSegment * segment)
+gst_flv_demux_find_offset (GstFlvDemux * demux, GstSegment * segment,
+    GstSeekFlags seek_flags)
 {
   gint64 bytes = 0;
   gint64 time = 0;
@@ -2684,8 +2685,9 @@ gst_flv_demux_find_offset (GstFlvDemux * demux, GstSegment * segment)
   if (index) {
     /* Let's check if we have an index entry for that seek time */
     entry = gst_index_get_assoc_entry (index, demux->index_id,
-        GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT,
-        GST_FORMAT_TIME, time);
+        seek_flags & GST_SEEK_FLAG_SNAP_AFTER ?
+        GST_INDEX_LOOKUP_AFTER : GST_INDEX_LOOKUP_BEFORE,
+        GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME, time);
 
     if (entry) {
       gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &bytes);
@@ -2696,11 +2698,9 @@ gst_flv_demux_find_offset (GstFlvDemux * demux, GstSegment * segment)
           GST_TIME_ARGS (segment->position), GST_TIME_ARGS (time), bytes);
 
       /* Key frame seeking */
-      if (segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
+      if (seek_flags & GST_SEEK_FLAG_KEY_UNIT) {
         /* Adjust the segment so that the keyframe fits in */
-        if (time < segment->start) {
-          segment->start = segment->time = time;
-        }
+        segment->start = segment->time = time;
         segment->position = time;
       }
     } else {
@@ -2732,7 +2732,6 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
     goto wrong_format;
 
   flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  /* FIXME : the keyframe flag is never used ! */
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
@@ -2749,13 +2748,13 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
 
   if (flush || seeksegment.position != demux->segment.position) {
     /* Do the actual seeking */
-    guint64 offset = gst_flv_demux_find_offset (demux, &seeksegment);
+    guint64 offset = gst_flv_demux_find_offset (demux, &seeksegment, flags);
 
     GST_DEBUG_OBJECT (demux, "generating an upstream seek at position %"
         G_GUINT64_FORMAT, offset);
     ret = gst_pad_push_event (demux->sinkpad,
         gst_event_new_seek (seeksegment.rate, GST_FORMAT_BYTES,
-            seeksegment.flags | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET,
+            flags | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET,
             offset, GST_SEEK_TYPE_NONE, 0));
     if (G_UNLIKELY (!ret)) {
       GST_WARNING_OBJECT (demux, "upstream seek failed");
@@ -2782,6 +2781,11 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
       gst_event_unref (demux->new_seg_event);
       demux->new_seg_event = NULL;
     }
+    GST_DEBUG_OBJECT (demux, "preparing newsegment from %"
+        GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->segment.start),
+        GST_TIME_ARGS (demux->segment.stop));
+    demux->new_seg_event = gst_event_new_segment (&demux->segment);
     gst_event_unref (event);
   } else {
     ret = gst_pad_push_event (demux->sinkpad, event);
@@ -2894,7 +2898,6 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
   GST_OBJECT_UNLOCK (demux);
 
   flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  /* FIXME : the keyframe flag is never used */
 
   if (flush) {
     /* Flush start up and downstream to make sure data flow and loops are
@@ -2949,9 +2952,10 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
       ret = TRUE;
       goto exit;
     }
+
     /* now index should be as reliable as it can be for current purpose */
     gst_flv_demux_move_to_offset (demux,
-        gst_flv_demux_find_offset (demux, &seeksegment), TRUE);
+        gst_flv_demux_find_offset (demux, &seeksegment, flags), TRUE);
     ret = TRUE;
   } else {
     ret = TRUE;
@@ -2967,7 +2971,7 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
     memcpy (&demux->segment, &seeksegment, sizeof (GstSegment));
 
     /* Notify about the start of a new segment */
-    if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+    if (demux->segment.flags & GST_SEGMENT_FLAG_SEGMENT) {
       gst_element_post_message (GST_ELEMENT (demux),
           gst_message_new_segment_start (GST_OBJECT (demux),
               demux->segment.format, demux->segment.position));
@@ -2983,15 +2987,11 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
       gst_event_unref (demux->new_seg_event);
       demux->new_seg_event = NULL;
     }
-    if (demux->segment.rate < 0.0) {
-      /* we can't generate a segment by locking on
-       * to the first timestamp we see */
-      GST_DEBUG_OBJECT (demux, "preparing newsegment from %"
-          GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->segment.start),
-          GST_TIME_ARGS (demux->segment.stop));
-      demux->new_seg_event = gst_event_new_segment (&demux->segment);
-    }
+    GST_DEBUG_OBJECT (demux, "preparing newsegment from %"
+        GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->segment.start),
+        GST_TIME_ARGS (demux->segment.stop));
+    demux->new_seg_event = gst_event_new_segment (&demux->segment);
   }
 
 exit:
