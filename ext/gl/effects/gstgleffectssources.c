@@ -78,19 +78,19 @@ const gchar *mirror_fragment_source_opengl =
   "  gl_FragColor = color * gl_Color;"
   "}";
 #endif
-#if GST_GL_HAVE_GLES2
 const gchar *mirror_fragment_source_gles2 =
-  "precision mediump float;"
-  "varying vec2 v_texCoord;"
+  "#ifdef GL_ES\n"
+  "precision mediump float;\n"
+  "#endif\n"
+  "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
-  "  vec2 texturecoord = v_texCoord.xy;"
+  "  vec2 texturecoord = v_texcoord.xy;"
   "  float normcoord = texturecoord.x - 0.5;"
   "  normcoord *= sign (normcoord);"
   "  texturecoord.x = normcoord + 0.5;"
   "  gl_FragColor = texture2D (tex, texturecoord);"
   "}";
-#endif
 
 /* Squeeze effect */
 #if GST_GL_HAVE_OPENGL
@@ -106,13 +106,14 @@ const gchar *squeeze_fragment_source_opengl =
   "  gl_FragColor = texture2D (tex, texturecoord);"
   "}";
 #endif
-#if GST_GL_HAVE_GLES2
 const gchar *squeeze_fragment_source_gles2 =
-  "precision mediump float;"
-  "varying vec2 v_texCoord;"
+  "#ifdef GL_ES\n"
+  "precision mediump float;\n"
+  "#endif\n"
+  "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
-  "  vec2 texturecoord = v_texCoord.xy;"
+  "  vec2 texturecoord = v_texcoord.xy;"
   "  vec2 normcoord = texturecoord - 0.5;"
   "  float r = length (normcoord);"
   "  r = pow(r, 0.40)*1.3;"
@@ -120,7 +121,6 @@ const gchar *squeeze_fragment_source_gles2 =
   "  texturecoord = (normcoord + 0.5);"
   "  gl_FragColor = texture2D (tex, texturecoord);"
   "}";
-#endif
 
 /* Stretch Effect */
 const gchar *stretch_fragment_source =
