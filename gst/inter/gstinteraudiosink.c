@@ -63,6 +63,8 @@ static gboolean gst_inter_audio_sink_start (GstBaseSink * sink);
 static gboolean gst_inter_audio_sink_stop (GstBaseSink * sink);
 static gboolean gst_inter_audio_sink_set_caps (GstBaseSink * sink,
     GstCaps * caps);
+static gboolean gst_inter_audio_sink_event (GstBaseSink * sink,
+    GstEvent * event);
 static GstFlowReturn gst_inter_audio_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 static gboolean gst_inter_audio_sink_query (GstBaseSink * sink,
@@ -83,6 +85,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 /* class initialization */
+#define parent_class gst_inter_audio_sink_parent_class
 G_DEFINE_TYPE (GstInterAudioSink, gst_inter_audio_sink, GST_TYPE_BASE_SINK);
 
 static void
@@ -110,6 +113,7 @@ gst_inter_audio_sink_class_init (GstInterAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_inter_audio_sink_get_times);
   base_sink_class->start = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_start);
   base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_stop);
+  base_sink_class->event = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_event);
   base_sink_class->set_caps = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_set_caps);
   base_sink_class->render = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_render);
   base_sink_class->query = GST_DEBUG_FUNCPTR (gst_inter_audio_sink_query);
@@ -124,6 +128,7 @@ static void
 gst_inter_audio_sink_init (GstInterAudioSink * interaudiosink)
 {
   interaudiosink->channel = g_strdup ("default");
+  interaudiosink->input_adapter = gst_adapter_new ();
 }
 
 void
@@ -166,6 +171,7 @@ gst_inter_audio_sink_finalize (GObject * object)
 
   /* clean up object here */
   g_free (interaudiosink->channel);
+  gst_object_unref (interaudiosink->input_adapter);
 
   G_OBJECT_CLASS (gst_inter_audio_sink_parent_class)->finalize (object);
 }
@@ -225,6 +231,8 @@ gst_inter_audio_sink_stop (GstBaseSink * sink)
   gst_inter_surface_unref (interaudiosink->surface);
   interaudiosink->surface = NULL;
 
+  gst_adapter_clear (interaudiosink->input_adapter);
+
   return TRUE;
 }
 
@@ -247,6 +255,31 @@ gst_inter_audio_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   g_mutex_unlock (&interaudiosink->surface->mutex);
 
   return TRUE;
+}
+
+static gboolean
+gst_inter_audio_sink_event (GstBaseSink * sink, GstEvent * event)
+{
+  GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (sink);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:{
+      GstBuffer *tmp;
+      guint n;
+
+      if ((n = gst_adapter_available (interaudiosink->input_adapter)) > 0) {
+        g_mutex_lock (&interaudiosink->surface->mutex);
+        tmp = gst_adapter_take_buffer (interaudiosink->input_adapter, n);
+        gst_adapter_push (interaudiosink->surface->audio_adapter, tmp);
+        g_mutex_unlock (&interaudiosink->surface->mutex);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }
 
 static GstFlowReturn
@@ -280,8 +313,20 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
         period_samples * bpf);
     n -= period_samples;
   }
-  gst_adapter_push (interaudiosink->surface->audio_adapter,
-      gst_buffer_ref (buffer));
+
+  n = gst_adapter_available (interaudiosink->input_adapter);
+  if (period_samples * bpf > gst_buffer_get_size (buffer) + n) {
+    gst_adapter_push (interaudiosink->input_adapter, gst_buffer_ref (buffer));
+  } else {
+    GstBuffer *tmp;
+
+    if (n > 0) {
+      tmp = gst_adapter_take_buffer (interaudiosink->input_adapter, n);
+      gst_adapter_push (interaudiosink->surface->audio_adapter, tmp);
+    }
+    gst_adapter_push (interaudiosink->surface->audio_adapter,
+        gst_buffer_ref (buffer));
+  }
   g_mutex_unlock (&interaudiosink->surface->mutex);
 
   return GST_FLOW_OK;
