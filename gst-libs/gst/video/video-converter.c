@@ -171,6 +171,7 @@ struct _GstVideoConverter
   GstVideoScaler *v_scaler;
   gint v_scale_width;
   gint v_scale_format;
+  gint unpack_pstride;
   gint pack_pstride;
 
   const GstVideoFrame *src;
@@ -389,6 +390,7 @@ chain_unpack_line (GstVideoConverter * convert)
 
   convert->current_format = convert->in_info.finfo->unpack_format;
   convert->current_pstride = convert->in_bits >> 1;
+  convert->unpack_pstride = convert->current_pstride;
 
   convert->identity_unpack =
       (convert->current_format == convert->in_info.finfo->format);
@@ -1456,7 +1458,8 @@ do_unpack_lines (GstLineCache * cache, gint out_line, gint in_line,
         convert->in_width);
   } else {
     GST_DEBUG ("get src line %d (%u)", in_line, cline);
-    tmpline = FRAME_GET_LINE (convert->src, cline);
+    tmpline = ((guint8 *) FRAME_GET_LINE (convert->src, cline)) +
+        convert->in_x * convert->unpack_pstride;
   }
   gst_line_cache_add_line (cache, in_line, tmpline);
 
