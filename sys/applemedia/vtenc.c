@@ -36,6 +36,13 @@ GST_DEBUG_CATEGORY (gst_vtenc_debug);
 #define GST_VTENC_CODEC_DETAILS_QDATA \
     g_quark_from_static_string ("vtenc-codec-details")
 
+/* define EnableHardwareAcceleratedVideoEncoder in < 10.9 */
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+const CFStringRef
+    kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder =
+CFSTR ("EnableHardwareAcceleratedVideoEncoder");
+#endif
+
 enum
 {
   PROP_0,
