@@ -579,7 +579,6 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
 
       gst_buffer_replace (&glimage_sink->next_buffer, NULL);
       gst_gl_upload_release_buffer (glimage_sink->upload);
-      glimage_sink->upload = NULL;
 
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
