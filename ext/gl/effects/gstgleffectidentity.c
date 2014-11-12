@@ -44,8 +44,7 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
     gl->LoadIdentity ();
   }
 #endif
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (context)) {
+  if (USING_GLES2 (context) || USING_OPENGL3 (context)) {
     GstGLShader *shader =
         g_hash_table_lookup (effects->shaderstable, "identity0");
 
@@ -67,12 +66,10 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
     gst_gl_shader_use (shader);
 
     gl->ActiveTexture (GL_TEXTURE0);
-    gl->Enable (GL_TEXTURE_2D);
     gl->BindTexture (GL_TEXTURE_2D, texture);
 
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
   }
-#endif
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }

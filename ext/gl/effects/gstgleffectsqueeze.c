@@ -45,8 +45,7 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
     shader = gst_gl_shader_new (context);
     g_hash_table_insert (effects->shaderstable, (gchar *) "squeeze0", shader);
 
-#if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (context)) {
+    if (USING_GLES2 (context) || USING_OPENGL3 (context)) {
       if (!gst_gl_shader_compile_with_default_v_and_check (shader,
               squeeze_fragment_source_gles2, &filter->draw_attr_position_loc,
               &filter->draw_attr_texture_loc)) {
@@ -57,7 +56,6 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
         return;
       }
     }
-#endif
 #if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (context)) {
       if (!gst_gl_shader_compile_and_check (shader,
@@ -81,17 +79,11 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_2D);
+  if (USING_OPENGL (context))
+    gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (filter->context)) {
-    gst_gl_shader_set_uniform_1f (shader, "width", (gfloat) width / 2.0f);
-    gst_gl_shader_set_uniform_1f (shader, "height", (gfloat) height / 2.0f);
-  }
-#endif
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
