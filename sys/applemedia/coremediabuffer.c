@@ -238,13 +238,11 @@ gst_core_media_buffer_new (CMSampleBufferRef sample_buf,
     gboolean use_video_meta)
 {
   CVImageBufferRef image_buf;
-  CVPixelBufferRef pixel_buf;
   CMBlockBufferRef block_buf;
   GstCoreMediaMeta *meta;
   GstBuffer *buf;
 
   image_buf = CMSampleBufferGetImageBuffer (sample_buf);
-  pixel_buf = NULL;
   block_buf = CMSampleBufferGetDataBuffer (sample_buf);
 
   buf = gst_buffer_new ();
@@ -258,19 +256,19 @@ gst_core_media_buffer_new (CMSampleBufferRef sample_buf,
     CFRetain (block_buf);
   meta->sample_buf = sample_buf;
   meta->image_buf = image_buf;
-  meta->pixel_buf = pixel_buf;
+  meta->pixel_buf = NULL;
   meta->block_buf = block_buf;
 
   if (image_buf != NULL && CFGetTypeID (image_buf) == CVPixelBufferGetTypeID ()) {
     GstVideoInfo info;
     gboolean has_padding = FALSE;
 
-    pixel_buf = (CVPixelBufferRef) image_buf;
-    if (!gst_video_info_init_from_pixel_buffer (&info, pixel_buf)) {
+    meta->pixel_buf = (CVPixelBufferRef) image_buf;
+    if (!gst_video_info_init_from_pixel_buffer (&info, meta->pixel_buf)) {
       goto error;
     }
 
-    if (!gst_core_media_buffer_wrap_pixel_buffer (buf, &info, pixel_buf,
+    if (!gst_core_media_buffer_wrap_pixel_buffer (buf, &info, meta->pixel_buf,
             &has_padding)) {
       goto error;
     }
