@@ -107,15 +107,16 @@ static void gst_openh264enc_set_rate_control (GstOpenh264Enc * openh264enc,
     gint rc_mode);
 
 
-#define DEFAULT_BITRATE         (128000)
-#define DEFAULT_GOP_SIZE        (90)
-#define DEFAULT_MAX_SLICE_SIZE  (1500000)
-#define DROP_BITRATE            20000
-#define START_FRAMERATE         30
-#define DEFAULT_USAGE_TYPE      CAMERA_VIDEO_REAL_TIME
-#define DEFAULT_RATE_CONTROL    RC_QUALITY_MODE
-#define DEFAULT_MULTI_THREAD    0
-#define DEFAULT_ENABLE_DENOISE  FALSE
+#define DEFAULT_BITRATE            (128000)
+#define DEFAULT_GOP_SIZE           (90)
+#define DEFAULT_MAX_SLICE_SIZE     (1500000)
+#define DROP_BITRATE               20000
+#define START_FRAMERATE            30
+#define DEFAULT_USAGE_TYPE         CAMERA_VIDEO_REAL_TIME
+#define DEFAULT_RATE_CONTROL       RC_QUALITY_MODE
+#define DEFAULT_MULTI_THREAD       0
+#define DEFAULT_ENABLE_DENOISE     FALSE
+#define DEFAULT_ENABLE_FRAME_SKIP  FALSE
 
 enum
 {
@@ -127,6 +128,7 @@ enum
   PROP_RATE_CONTROL,
   PROP_MULTI_THREAD,
   PROP_ENABLE_DENOISE,
+  PROP_ENABLE_FRAME_SKIP,
   N_PROPERTIES
 };
 
@@ -141,6 +143,7 @@ struct _GstOpenh264EncPrivate
   guint framerate;
   guint multi_thread;
   gboolean enable_denoise;
+  gboolean enable_frame_skip;
   GstVideoCodecState *input_state;
   guint32 drop_bitrate;
   guint64 time_per_frame;
@@ -228,6 +231,11 @@ gst_openh264enc_class_init (GstOpenh264EncClass * klass)
           "Denoise control",
           FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_ENABLE_FRAME_SKIP,
+      g_param_spec_boolean ("enable-frame-skip", "Skip Frames",
+          "Skip frames to reach target bitrate",
+          FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
           "Bitrate (in bits per second)",
@@ -264,6 +272,7 @@ gst_openh264enc_init (GstOpenh264Enc * openh264enc)
   openh264enc->priv->previous_timestamp = 0;
   openh264enc->priv->drop_bitrate = DROP_BITRATE;
   openh264enc->priv->enable_denoise = DEFAULT_ENABLE_DENOISE;
+  openh264enc->priv->enable_frame_skip = DEFAULT_ENABLE_FRAME_SKIP;
   openh264enc->priv->encoder = NULL;
   gst_openh264enc_set_usage_type (openh264enc, CAMERA_VIDEO_REAL_TIME);
   gst_openh264enc_set_rate_control (openh264enc, RC_QUALITY_MODE);
@@ -330,6 +339,10 @@ gst_openh264enc_set_property (GObject * object, guint property_id,
       openh264enc->priv->enable_denoise = g_value_get_boolean (value);
       break;
 
+    case PROP_ENABLE_FRAME_SKIP:
+      openh264enc->priv->enable_frame_skip = g_value_get_boolean (value);
+      break;
+
     case PROP_RATE_CONTROL:
       gst_openh264enc_set_rate_control (openh264enc, g_value_get_enum (value));
       break;
@@ -371,6 +384,10 @@ gst_openh264enc_get_property (GObject * object, guint property_id,
 
     case PROP_ENABLE_DENOISE:
       g_value_set_boolean (value, openh264enc->priv->enable_denoise);
+      break;
+
+    case PROP_ENABLE_FRAME_SKIP:
+      g_value_set_boolean (value, openh264enc->priv->enable_frame_skip);
       break;
 
     case PROP_MULTI_THREAD:
@@ -503,7 +520,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.uiIntraPeriod = priv->gop_size;
   enc_params.bEnableBackgroundDetection = 1;
   enc_params.bEnableAdaptiveQuant = 1;
-  enc_params.bEnableFrameSkip = 1;
+  enc_params.bEnableFrameSkip = openh264enc->priv->enable_frame_skip;
   enc_params.bEnableLongTermReference = 0;
   enc_params.bEnableSpsPpsIdAddition = 1;
   enc_params.bPrefixNalAddingCtrl = 0;
