@@ -43,9 +43,7 @@ struct _GstGLColorscale
 {
     GstGLFilter filter;
 
-#if GST_GL_HAVE_GLES2
     GstGLShader *shader;
-#endif
 };
 
 struct _GstGLColorscaleClass
