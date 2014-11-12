@@ -337,6 +337,11 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
     }
   }
   if (intervideosrc->surface->video_buffer) {
+    gint fps =
+        0.5 +
+        ((gdouble) GST_VIDEO_INFO_FPS_N (&intervideosrc->info)) /
+        ((gdouble) GST_VIDEO_INFO_FPS_D (&intervideosrc->info));
+
     buffer = gst_buffer_ref (intervideosrc->surface->video_buffer);
 
     /* Repeated buffer? */
@@ -344,10 +349,10 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
       is_gap = TRUE;
 
     intervideosrc->surface->video_buffer_count++;
-    if (intervideosrc->surface->video_buffer_count >= 30) {
+    if (intervideosrc->surface->video_buffer_count >= fps) {
       /* The first black buffer is not a GAP anymore but
        * the following are */
-      if (intervideosrc->surface->video_buffer_count == 30)
+      if (intervideosrc->surface->video_buffer_count == fps)
         is_gap = FALSE;
 
       gst_buffer_unref (intervideosrc->surface->video_buffer);
