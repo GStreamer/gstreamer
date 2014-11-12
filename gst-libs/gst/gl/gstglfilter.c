@@ -347,10 +347,21 @@ gst_gl_filter_start_gl (GstGLContext * context, gpointer data)
 static void
 gst_gl_filter_stop_gl (GstGLContext * context, gpointer data)
 {
+  const GstGLFuncs *gl = context->gl_vtable;
   GstGLFilter *filter = GST_GL_FILTER (data);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
   filter_class->display_reset_cb (filter);
+
+  if (filter->vao) {
+    gl->DeleteVertexArrays (1, &filter->vao);
+    filter->vao = 0;
+  }
+
+  if (filter->vertex_buffer) {
+    gl->DeleteBuffers (1, &filter->vertex_buffer);
+    filter->vertex_buffer = 0;
+  }
 }
 
 static GstCaps *
@@ -1307,7 +1318,24 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   return GST_FLOW_OK;
 }
 
+struct glcb2
+{
+  GLCB func;
+  gpointer data;
+  guint texture;
+  guint width;
+  guint height;
+};
+
 /* convenience functions to simplify filter development */
+static void
+_glcb2 (gpointer data)
+{
+  struct glcb2 *cb = data;
+
+  cb->func (cb->width, cb->height, cb->texture, cb->data);
+}
+
 /**
  * gst_gl_filter_render_to_target:
  * @filter: a #GstGLFilter
@@ -1326,6 +1354,7 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
     GLuint input, GLuint target, GLCB func, gpointer data)
 {
   guint in_width, in_height, out_width, out_height;
+  struct glcb2 cb;
 
   out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
@@ -1340,11 +1369,14 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
   GST_LOG ("rendering to target. in %u, %ux%u out %u, %ux%u", input, in_width,
       in_height, target, out_width, out_height);
 
-  gst_gl_context_use_fbo (filter->context,
-      out_width, out_height,
-      filter->fbo, filter->depthbuffer, target,
-      func, in_width, in_height, input, 0,
-      in_width, 0, in_height, GST_GL_DISPLAY_PROJECTION_ORTHO2D, data);
+  cb.func = func;
+  cb.data = data;
+  cb.texture = input;
+  cb.width = in_width;
+  cb.height = in_height;
+
+  gst_gl_context_use_fbo_v2 (filter->context, out_width, out_height,
+      filter->fbo, filter->depthbuffer, target, _glcb2, &cb);
 }
 
 static void
@@ -1372,6 +1404,23 @@ _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
+static void
+_get_attributes (GstGLFilter * filter)
+{
+  if (!filter->default_shader)
+    return;
+
+  if (!filter->draw_attr_position_loc)
+    filter->draw_attr_position_loc =
+        gst_gl_shader_get_attribute_location (filter->default_shader,
+        "a_position");
+
+  if (!filter->draw_attr_texture_loc)
+    filter->draw_attr_texture_loc =
+        gst_gl_shader_get_attribute_location (filter->default_shader,
+        "a_texcoord");
+}
+
 /**
  * gst_gl_filter_render_to_target_with_shader:
  * @filter: a #GstGLFilter
@@ -1393,8 +1442,51 @@ gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter,
     gboolean resize, GLuint input, GLuint target, GstGLShader * shader)
 {
   filter->default_shader = shader;
+  _get_attributes (filter);
+
   gst_gl_filter_render_to_target (filter, resize, input, target,
       _draw_with_shader_cb, filter);
+}
+
+/* *INDENT-OFF* */
+static const GLfloat vertices[] = {
+  -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+   1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+   1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+  -1.0f,  1.0f, 0.0f, 0.0f, 1.0f
+};
+/* *INDENT-ON* */
+
+static void
+_bind_buffer (GstGLFilter * filter)
+{
+  const GstGLFuncs *gl = filter->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, filter->vertex_buffer);
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (filter->draw_attr_position_loc, 3, GL_FLOAT,
+      GL_FALSE, 5 * sizeof (GLfloat), (void *) 0);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (filter->draw_attr_texture_loc, 2, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
+
+  _get_attributes (filter);
+
+  gl->EnableVertexAttribArray (filter->draw_attr_position_loc);
+  gl->EnableVertexAttribArray (filter->draw_attr_texture_loc);
+}
+
+static void
+_unbind_buffer (GstGLFilter * filter)
+{
+  const GstGLFuncs *gl = filter->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  gl->DisableVertexAttribArray (filter->draw_attr_position_loc);
+  gl->DisableVertexAttribArray (filter->draw_attr_texture_loc);
 }
 
 /**
@@ -1447,35 +1539,36 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
     gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
   }
 #endif
-#if GST_GL_HAVE_GLES2
-  if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2) {
-    const GLfloat vVertices[] = {
-      -1.0f, -1.0f, 0.0f,
-      0.0f, 0.0f,
-      1.0, -1.0f, 0.0f,
-      1.0f, 0.0f,
-      1.0f, 1.0f, 0.0f, 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f
-    };
-
+  if (gst_gl_context_get_gl_api (context) & (GST_GL_API_GLES2 |
+          GST_GL_API_OPENGL3)) {
     GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-    /* glClear (GL_COLOR_BUFFER_BIT); */
+    if (!filter->vertex_buffer) {
+      if (gl->GenVertexArrays) {
+        gl->GenVertexArrays (1, &filter->vao);
+        gl->BindVertexArray (filter->vao);
+      }
 
-    /* Load the vertex position */
-    gl->VertexAttribPointer (filter->draw_attr_position_loc, 3, GL_FLOAT,
-        GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+      gl->GenBuffers (1, &filter->vertex_buffer);
+      gl->BindBuffer (GL_ARRAY_BUFFER, filter->vertex_buffer);
+      gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
+          GL_STATIC_DRAW);
 
-    /* Load the texture coordinate */
-    gl->VertexAttribPointer (filter->draw_attr_texture_loc, 2, GL_FLOAT,
-        GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+      if (gl->GenVertexArrays) {
+        _bind_buffer (filter);
+      }
+    }
 
-    gl->EnableVertexAttribArray (filter->draw_attr_position_loc);
-    gl->EnableVertexAttribArray (filter->draw_attr_texture_loc);
+    if (gl->GenVertexArrays)
+      gl->BindVertexArray (filter->vao);
+    else
+      _bind_buffer (filter);
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
-    gl->DisableVertexAttribArray (filter->draw_attr_position_loc);
-    gl->DisableVertexAttribArray (filter->draw_attr_texture_loc);
+    if (gl->GenVertexArrays)
+      gl->BindVertexArray (0);
+    else
+      _unbind_buffer (filter);
   }
-#endif
 }
