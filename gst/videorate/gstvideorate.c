@@ -805,10 +805,12 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
       gboolean live;
       guint64 latency;
       guint64 avg_period;
+      gboolean drop_only;
       GstPad *peer;
 
       GST_OBJECT_LOCK (videorate);
       avg_period = videorate->average_period_set;
+      drop_only = videorate->drop_only;
       GST_OBJECT_UNLOCK (videorate);
 
       if (avg_period == 0 && (peer = gst_pad_get_peer (otherpad))) {
@@ -819,7 +821,8 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
-          if (videorate->from_rate_numerator != 0) {
+          /* Drop only has no latency, other modes have one frame latency */
+          if (!drop_only && videorate->from_rate_numerator != 0) {
             /* add latency. We don't really know since we hold on to the frames
              * until we get a next frame, which can be anything. We assume
              * however that this will take from_rate time. */
@@ -983,7 +986,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   intime = in_ts + videorate->segment.base;
 
   /* we need to have two buffers to compare */
-  if (videorate->prevbuf == NULL) {
+  if (videorate->prevbuf == NULL || videorate->drop_only) {
     gst_video_rate_swap_prev (videorate, buffer, intime);
     videorate->in++;
     if (!GST_CLOCK_TIME_IS_VALID (videorate->next_ts)) {
@@ -996,6 +999,24 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       } else {
         videorate->next_ts = videorate->segment.start + videorate->segment.base;
       }
+    }
+
+    /* In drop-only mode we can already decide here if we should output the
+     * current frame or drop it because it's coming earlier than our minimum
+     * allowed frame period. This also keeps latency down to 0 frames
+     */
+    if (videorate->drop_only) {
+      if (intime >= videorate->next_ts) {
+        GstFlowReturn r;
+
+        /* on error the _flush function posted a warning already */
+        if ((r = gst_video_rate_flush_prev (videorate, FALSE)) != GST_FLOW_OK) {
+          res = r;
+          goto done;
+        }
+      }
+      /* No need to keep the buffer around for longer */
+      gst_buffer_replace (&videorate->prevbuf, NULL);
     }
   } else {
     GstClockTime prevtime;
@@ -1130,6 +1151,7 @@ gst_video_rate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
   GstVideoRate *videorate = GST_VIDEO_RATE (object);
+  gboolean latency_changed = FALSE;
 
   GST_OBJECT_LOCK (videorate);
   switch (prop_id) {
@@ -1142,10 +1164,15 @@ gst_video_rate_set_property (GObject * object,
     case PROP_SKIP_TO_FIRST:
       videorate->skip_to_first = g_value_get_boolean (value);
       break;
-    case PROP_DROP_ONLY:
+    case PROP_DROP_ONLY:{
+      gboolean new_value = g_value_get_boolean (value);
+
+      /* Latency changes if we switch drop-only mode */
+      latency_changed = new_value != videorate->drop_only;
       videorate->drop_only = g_value_get_boolean (value);
       goto reconfigure;
       break;
+    }
     case PROP_AVERAGE_PERIOD:
       videorate->average_period_set = g_value_get_uint64 (value);
       break;
@@ -1163,6 +1190,11 @@ gst_video_rate_set_property (GObject * object,
 reconfigure:
   GST_OBJECT_UNLOCK (videorate);
   gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (videorate));
+
+  if (latency_changed) {
+    gst_element_post_message (GST_ELEMENT (videorate),
+        gst_message_new_latency (GST_OBJECT (videorate)));
+  }
 }
 
 static void
