@@ -112,11 +112,12 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
   gl->GenRenderbuffers (1, depth);
   gl->BindRenderbuffer (GL_RENDERBUFFER, *depth);
 
-  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL) {
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-        width, height);
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-        width, height);
+  if (gst_gl_context_get_gl_api (frame->context) & (GST_GL_API_OPENGL |
+          GST_GL_API_OPENGL3)) {
+    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width,
+        height);
+    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
+        height);
   }
   if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_GLES2) {
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
@@ -141,7 +142,8 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
   gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
       GL_RENDERBUFFER, *depth);
 
-  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (frame->context) & (GST_GL_API_OPENGL |
+          GST_GL_API_OPENGL3)) {
     gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
         GL_RENDERBUFFER, *depth);
   }
@@ -299,7 +301,8 @@ gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
 
   gl->Viewport (0, 0, texture_fbo_width, texture_fbo_height);
 
-  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL)
+  if (gst_gl_context_get_gl_api (frame->context) & (GST_GL_API_OPENGL |
+          GST_GL_API_OPENGL3))
     gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
 
   gl->ClearColor (0.0, 0.0, 0.0, 0.0);
@@ -308,7 +311,8 @@ gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
   /* the opengl scene */
   cb (stuff);
 
-  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL)
+  if (gst_gl_context_get_gl_api (frame->context) & (GST_GL_API_OPENGL |
+          GST_GL_API_OPENGL3))
     gl->DrawBuffer (GL_NONE);
 
   gl->Viewport (viewport_dim[0], viewport_dim[1],
