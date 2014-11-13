@@ -63,6 +63,9 @@ struct _GstGLVideoMixer
     GstGLShader *shader;
     GstGLShader *checker;
     GPtrArray *input_frames;
+
+    GLuint vao;
+    GLuint checker_vbo;
 };
 
 struct _GstGLVideoMixerClass
