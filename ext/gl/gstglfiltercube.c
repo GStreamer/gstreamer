@@ -75,12 +75,11 @@ static void gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_gl_filter_cube_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
-#if GST_GL_HAVE_GLES2
 static void gst_gl_filter_cube_reset (GstGLFilter * filter);
+static void gst_gl_filter_cube_reset_gl (GstGLFilter * filter);
 static gboolean gst_gl_filter_cube_init_shader (GstGLFilter * filter);
 static void _callback_gles2 (gint width, gint height, guint texture,
     gpointer stuff);
-#endif
 #if GST_GL_HAVE_OPENGL
 static void _callback_opengl (gint width, gint height, guint texture,
     gpointer stuff);
@@ -88,14 +87,13 @@ static void _callback_opengl (gint width, gint height, guint texture,
 static gboolean gst_gl_filter_cube_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
 
-#if GST_GL_HAVE_GLES2
 /* vertex source */
 static const gchar *cube_v_src =
     "attribute vec4 a_position;                                   \n"
-    "attribute vec2 a_texCoord;                                   \n"
+    "attribute vec2 a_texcoord;                                   \n"
     "uniform mat4 u_matrix;                                       \n"
     "uniform float xrot_degree, yrot_degree, zrot_degree;         \n"
-    "varying vec2 v_texCoord;                                     \n"
+    "varying vec2 v_texcoord;                                     \n"
     "void main()                                                  \n"
     "{                                                            \n"
     "   float PI = 3.14159265;                                    \n"
@@ -118,19 +116,20 @@ static const gchar *cube_v_src =
     "            0.0,        0.0,        1.0, 0.0,                \n"
     "            0.0,        0.0,        0.0, 1.0 );              \n"
     "   gl_Position = u_matrix * matZ * matY * matX * a_position; \n"
-    "   v_texCoord = a_texCoord;                                  \n"
+    "   v_texcoord = a_texcoord;                                  \n"
     "}                                                            \n";
 
 /* fragment source */
 static const gchar *cube_f_src =
-    "precision mediump float;                            \n"
-    "varying vec2 v_texCoord;                            \n"
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "varying vec2 v_texcoord;                            \n"
     "uniform sampler2D s_texture;                        \n"
     "void main()                                         \n"
     "{                                                   \n"
-    "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
+    "  gl_FragColor = texture2D( s_texture, v_texcoord );\n"
     "}                                                   \n";
-#endif
 
 static void
 gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
@@ -144,10 +143,9 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
   gobject_class->set_property = gst_gl_filter_cube_set_property;
   gobject_class->get_property = gst_gl_filter_cube_get_property;
 
-#if GST_GL_HAVE_GLES2
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_cube_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_cube_reset;
-#endif
+  GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_filter_cube_reset_gl;
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_cube_set_caps;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_filter_cube_filter_texture;
@@ -279,7 +277,23 @@ gst_gl_filter_cube_set_caps (GstGLFilter * filter, GstCaps * incaps,
   return TRUE;
 }
 
-#if GST_GL_HAVE_GLES2
+static void
+gst_gl_filter_cube_reset_gl (GstGLFilter * filter)
+{
+  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
+  const GstGLFuncs *gl = filter->context->gl_vtable;
+
+  if (cube_filter->vao) {
+    gl->DeleteVertexArrays (1, &cube_filter->vao);
+    cube_filter->vao = 0;
+  }
+
+  if (cube_filter->vertex_buffer) {
+    gl->DeleteBuffers (1, &cube_filter->vertex_buffer);
+    cube_filter->vertex_buffer = 0;
+  }
+}
+
 static void
 gst_gl_filter_cube_reset (GstGLFilter * filter)
 {
@@ -296,14 +310,14 @@ gst_gl_filter_cube_init_shader (GstGLFilter * filter)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
 
-  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_GLES2) {
+  if (gst_gl_context_get_gl_api (filter->context) & (GST_GL_API_GLES2 |
+          GST_GL_API_OPENGL3)) {
     /* blocking call, wait the opengl thread has compiled the shader */
     return gst_gl_context_gen_shader (filter->context, cube_v_src, cube_f_src,
         &cube_filter->shader);
   }
   return TRUE;
 }
-#endif
 
 static gboolean
 gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
@@ -319,10 +333,8 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
   if (api & GST_GL_API_OPENGL)
     cb = _callback_opengl;
 #endif
-#if GST_GL_HAVE_GLES2
-  if (api & GST_GL_API_GLES2)
+  if (api & (GST_GL_API_GLES2 | GST_GL_API_OPENGL3))
     cb = _callback_gles2;
-#endif
 
   /* blocking call, use a FBO */
   gst_gl_context_use_fbo (filter->context,
@@ -339,6 +351,42 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
   return TRUE;
 }
 
+/* *INDENT-OFF* */
+static const GLfloat vertices[] = {
+ /*|     Vertex     | TexCoord |*/ 
+    /* front face */
+     1.0,  1.0, -1.0, 1.0, 0.0,
+     1.0, -1.0, -1.0, 1.0, 1.0,
+    -1.0, -1.0, -1.0, 0.0, 1.0,
+    -1.0,  1.0, -1.0, 0.0, 0.0,
+    /* back face */
+     1.0,  1.0,  1.0, 1.0, 0.0,
+    -1.0,  1.0,  1.0, 0.0, 0.0,
+    -1.0, -1.0,  1.0, 0.0, 1.0,
+     1.0, -1.0,  1.0, 1.0, 1.0,
+    /* right face */
+     1.0,  1.0,  1.0, 1.0, 0.0,
+     1.0, -1.0,  1.0, 0.0, 0.0,
+     1.0, -1.0, -1.0, 0.0, 1.0,
+     1.0,  1.0, -1.0, 1.0, 1.0,
+    /* left face */
+    -1.0,  1.0,  1.0, 1.0, 0.0,
+    -1.0,  1.0, -1.0, 1.0, 1.0,
+    -1.0, -1.0, -1.0, 0.0, 1.0,
+    -1.0, -1.0,  1.0, 0.0, 0.0,
+    /* top face */
+     1.0, -1.0,  1.0, 1.0, 0.0,
+    -1.0, -1.0,  1.0, 0.0, 0.0,
+    -1.0, -1.0, -1.0, 0.0, 1.0,
+     1.0, -1.0, -1.0, 1.0, 1.0,
+    /* bottom face */
+     1.0,  1.0,  1.0, 1.0, 0.0,
+     1.0,  1.0, -1.0, 1.0, 1.0,
+    -1.0,  1.0, -1.0, 0.0, 1.0,
+    -1.0,  1.0,  1.0, 0.0, 0.0
+};
+/* *INDENT-ON* */
+
 /* opengl scene, params: input texture (not the output filter->texture) */
 #if GST_GL_HAVE_OPENGL
 static void
@@ -351,42 +399,6 @@ _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
-
-/* *INDENT-OFF* */
-  const GLfloat v_vertices[] = {
- /*|     Vertex     | TexCoord |*/ 
-    /* front face */
-     1.0,  1.0, -1.0, 0.0, 0.0,
-     1.0, -1.0, -1.0, 1.0, 0.0,
-    -1.0, -1.0, -1.0, 1.0, 1.0,
-    -1.0,  1.0, -1.0, 0.0, 1.0,
-    /* back face */
-    -1.0,  1.0,  1.0, 0.0, 0.0,
-    -1.0, -1.0,  1.0, 1.0, 0.0,
-     1.0, -1.0,  1.0, 1.0, 1.0,
-     1.0,  1.0,  1.0, 0.0, 1.0,
-    /* right face */
-    -1.0,  1.0, -1.0, 0.0, 0.0,
-    -1.0, -1.0, -1.0, 1.0, 0.0,
-    -1.0, -1.0,  1.0, 1.0, 1.0,
-    -1.0,  1.0,  1.0, 0.0, 1.0,
-    /* left face */
-     1.0,  1.0,  1.0, 0.0, 0.0,
-     1.0, -1.0,  1.0, 1.0, 0.0,
-     1.0, -1.0, -1.0, 1.0, 1.0,
-     1.0,  1.0, -1.0, 0.0, 1.0,
-    /* top face */
-     1.0,  1.0,  1.0, 0.0, 0.0,
-     1.0,  1.0, -1.0, 1.0, 0.0,
-    -1.0,  1.0, -1.0, 1.0, 1.0,
-    -1.0,  1.0,  1.0, 0.0, 1.0,
-    /* bottom face */
-     1.0, -1.0,  1.0, 0.0, 0.0,
-     1.0, -1.0, -1.0, 1.0, 0.0,
-    -1.0, -1.0, -1.0, 1.0, 1.0,
-    -1.0, -1.0,  1.0, 0.0, 1.0,
-  };
-/* *INDENT-ON* */
 
   GLushort indices[] = {
     0, 1, 2,
@@ -426,8 +438,8 @@ _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
   gl->EnableClientState (GL_VERTEX_ARRAY);
 
-  gl->VertexPointer (3, GL_FLOAT, 5 * sizeof (float), v_vertices);
-  gl->TexCoordPointer (2, GL_FLOAT, 5 * sizeof (float), &v_vertices[3]);
+  gl->VertexPointer (3, GL_FLOAT, 5 * sizeof (float), vertices);
+  gl->TexCoordPointer (2, GL_FLOAT, 5 * sizeof (float), &vertices[3]);
 
   gl->DrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
 
@@ -442,7 +454,42 @@ _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
 }
 #endif
 
-#if GST_GL_HAVE_GLES2
+static void
+_bind_buffer (GstGLFilterCube * cube_filter)
+{
+  const GstGLFuncs *gl = GST_GL_FILTER (cube_filter)->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, cube_filter->vertex_buffer);
+
+  cube_filter->attr_position =
+      gst_gl_shader_get_attribute_location (cube_filter->shader, "a_position");
+
+  cube_filter->attr_texture =
+      gst_gl_shader_get_attribute_location (cube_filter->shader, "a_texcoord");
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (cube_filter->attr_position, 3, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) 0);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (cube_filter->attr_texture, 2, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
+
+  gl->EnableVertexAttribArray (cube_filter->attr_position);
+  gl->EnableVertexAttribArray (cube_filter->attr_texture);
+}
+
+static void
+_unbind_buffer (GstGLFilterCube * cube_filter)
+{
+  const GstGLFuncs *gl = GST_GL_FILTER (cube_filter)->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  gl->DisableVertexAttribArray (cube_filter->attr_position);
+  gl->DisableVertexAttribArray (cube_filter->attr_texture);
+}
+
 static void
 _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
 {
@@ -453,42 +500,6 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
-
-/* *INDENT-OFF* */
-  const GLfloat v_vertices[] = {
- /*|     Vertex     | TexCoord |*/ 
-    /* front face */
-     1.0,  1.0, -1.0, 1.0, 0.0,
-     1.0, -1.0, -1.0, 1.0, 1.0,
-    -1.0, -1.0, -1.0, 0.0, 1.0,
-    -1.0,  1.0, -1.0, 0.0, 0.0,
-    /* back face */
-     1.0,  1.0,  1.0, 1.0, 0.0,
-    -1.0,  1.0,  1.0, 0.0, 0.0,
-    -1.0, -1.0,  1.0, 0.0, 1.0,
-     1.0, -1.0,  1.0, 1.0, 1.0,
-    /* right face */
-     1.0,  1.0,  1.0, 1.0, 0.0,
-     1.0, -1.0,  1.0, 0.0, 0.0,
-     1.0, -1.0, -1.0, 0.0, 1.0,
-     1.0,  1.0, -1.0, 1.0, 1.0,
-    /* left face */
-    -1.0,  1.0,  1.0, 1.0, 0.0,
-    -1.0,  1.0, -1.0, 1.0, 1.0,
-    -1.0, -1.0, -1.0, 0.0, 1.0,
-    -1.0, -1.0,  1.0, 0.0, 0.0,
-    /* top face */
-     1.0, -1.0,  1.0, 1.0, 0.0,
-    -1.0, -1.0,  1.0, 0.0, 0.0,
-    -1.0, -1.0, -1.0, 0.0, 1.0,
-     1.0, -1.0, -1.0, 1.0, 1.0,
-    /* bottom face */
-     1.0,  1.0,  1.0, 1.0, 0.0,
-     1.0,  1.0, -1.0, 1.0, 1.0,
-    -1.0,  1.0, -1.0, 0.0, 1.0,
-    -1.0,  1.0,  1.0, 0.0, 0.0
-  };
-/* *INDENT-ON* */
 
   GLushort indices[] = {
     0, 1, 2,
@@ -505,9 +516,6 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
     20, 22, 23
   };
 
-  GLint attr_position_loc = 0;
-  GLint attr_texture_loc = 0;
-
   const GLfloat matrix[] = {
     0.5f, 0.0f, 0.0f, 0.0f,
     0.0f, 0.5f, 0.0f, 0.0f,
@@ -522,22 +530,6 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
 
   gst_gl_shader_use (cube_filter->shader);
 
-  attr_position_loc =
-      gst_gl_shader_get_attribute_location (cube_filter->shader, "a_position");
-  attr_texture_loc =
-      gst_gl_shader_get_attribute_location (cube_filter->shader, "a_texCoord");
-
-  /* Load the vertex position */
-  gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
-      GL_FALSE, 5 * sizeof (GLfloat), v_vertices);
-
-  /* Load the texture coordinate */
-  gl->VertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
-      GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[3]);
-
-  gl->EnableVertexAttribArray (attr_position_loc);
-  gl->EnableVertexAttribArray (attr_texture_loc);
-
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, texture);
   gst_gl_shader_set_uniform_1i (cube_filter->shader, "s_texture", 0);
@@ -547,10 +539,33 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_shader_set_uniform_matrix_4fv (cube_filter->shader, "u_matrix", 1,
       GL_FALSE, matrix);
 
+  if (!cube_filter->vertex_buffer) {
+    if (gl->GenVertexArrays) {
+      gl->GenVertexArrays (1, &cube_filter->vao);
+      gl->BindVertexArray (cube_filter->vao);
+    }
+
+    gl->GenBuffers (1, &cube_filter->vertex_buffer);
+    gl->BindBuffer (GL_ARRAY_BUFFER, cube_filter->vertex_buffer);
+    gl->BufferData (GL_ARRAY_BUFFER, 6 * 4 * 5 * sizeof (GLfloat), vertices,
+        GL_STATIC_DRAW);
+
+    if (gl->GenVertexArrays) {
+      _bind_buffer (cube_filter);
+    }
+  }
+
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (cube_filter->vao);
+  else
+    _bind_buffer (cube_filter);
+
   gl->DrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
 
-  gl->DisableVertexAttribArray (attr_position_loc);
-  gl->DisableVertexAttribArray (attr_texture_loc);
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (0);
+  else
+    _unbind_buffer (cube_filter);
 
   gl->Disable (GL_DEPTH_TEST);
 
@@ -558,4 +573,3 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
   yrot += 0.2f;
   zrot += 0.4f;
 }
-#endif
