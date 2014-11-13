@@ -1051,8 +1051,9 @@ video_converter_matrix16 (GstVideoConverter * convert, gpointer pixels)
   int r, g, b;
   int y, u, v;
   guint16 *p = pixels;
+  gint width = MIN (convert->in_width, convert->out_width);
 
-  for (i = 0; i < convert->in_width; i++) {
+  for (i = 0; i < width; i++) {
     r = p[i * 4 + 1];
     g = p[i * 4 + 2];
     b = p[i * 4 + 3];
