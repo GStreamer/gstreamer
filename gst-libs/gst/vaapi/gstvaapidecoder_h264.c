@@ -2932,9 +2932,14 @@ init_picture(
         base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
         break;
     case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM_TOP:
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_RFF);
+        // fall-through
     case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM:
         if (GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture))
             GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TFF);
+        break;
+    case GST_H264_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM:
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_RFF);
         break;
     }
     picture->structure = base_picture->structure;

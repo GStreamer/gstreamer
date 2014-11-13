@@ -114,7 +114,7 @@ gst_vaapi_picture_create (GstVaapiPicture * picture,
             GST_VAAPI_PICTURE_FLAG_REFERENCE |
             GST_VAAPI_PICTURE_FLAG_INTERLACED |
             GST_VAAPI_PICTURE_FLAG_FF | GST_VAAPI_PICTURE_FLAG_TFF |
-            GST_VAAPI_PICTURE_FLAG_MVC));
+            GST_VAAPI_PICTURE_FLAG_RFF | GST_VAAPI_PICTURE_FLAG_MVC));
 
     picture->structure = parent_picture->structure;
     if ((args->flags & GST_VAAPI_CREATE_PICTURE_FLAG_FIELD) &&
@@ -342,6 +342,8 @@ do_output (GstVaapiPicture * picture)
     flags |= GST_VAAPI_SURFACE_PROXY_FLAG_INTERLACED;
     if (GST_VAAPI_PICTURE_IS_TFF (picture))
       flags |= GST_VAAPI_SURFACE_PROXY_FLAG_TFF;
+    if (GST_VAAPI_PICTURE_IS_RFF (picture))
+      flags |= GST_VAAPI_SURFACE_PROXY_FLAG_RFF;
     if (GST_VAAPI_PICTURE_IS_ONEFIELD (picture))
       flags |= GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD;
   }

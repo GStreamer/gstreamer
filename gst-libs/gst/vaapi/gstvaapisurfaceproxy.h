@@ -34,7 +34,7 @@ G_BEGIN_DECLS
  * GstVaapiSurfaceProxyFlags:
  * @GST_VAAPI_SURFACE_PROXY_FLAG_INTERLACED: interlaced frame
  * @GST_VAAPI_SURFACE_PROXY_FLAG_TFF: top-field-first
- * @GST_VAAPI_SURFACE_PROXY_FLAG_RFF: repeat-field-first
+ * @GST_VAAPI_SURFACE_PROXY_FLAG_RFF: repeat-first-field
  * @GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD: only one field is available
  * @GST_VAAPI_SURFACE_PROXY_FLAG_FFB: first frame in bundle, e.g. the first
  *   view component of a MultiView Coded (MVC) frame
