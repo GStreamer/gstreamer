@@ -502,7 +502,7 @@ struct _GstVaapiDecoderH264Private {
     gint32                      frame_num;              // frame_num (from slice_header())
     gint32                      prev_frame_num;         // prevFrameNum
     gboolean                    prev_pic_has_mmco5;     // prevMmco5Pic
-    gboolean                    prev_pic_structure;     // previous picture structure
+    guint                       prev_pic_structure;     // previous picture structure
     guint                       is_opened               : 1;
     guint                       is_avcC                 : 1;
     guint                       has_context             : 1;
