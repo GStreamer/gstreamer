@@ -40,7 +40,6 @@ static GstGLPlatform gst_gl_context_cocoa_get_gl_platform (GstGLContext * contex
 
 G_DEFINE_TYPE (GstGLContextCocoa, gst_gl_context_cocoa, GST_GL_TYPE_CONTEXT);
 
-#ifndef GNUSTEP
 static GMutex nsapp_lock;
 static GCond nsapp_cond;
 
@@ -96,16 +95,12 @@ gst_gl_window_cocoa_nsapp_iteration (gpointer data)
 
   return TRUE;
 }
-#endif
 
 static void
 gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
 {
   GstGLContextClass *context_class = (GstGLContextClass *) klass;
-
-#ifndef GNUSTEP
   NSAutoreleasePool* pool = nil;
-#endif
 
   g_type_class_add_private (klass, sizeof (GstGLContextCocoaPrivate));
 
@@ -121,7 +116,6 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
   context_class->get_gl_platform =
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_platform);
 
-#ifndef GNUSTEP
   pool = [[NSAutoreleasePool alloc] init];
 
   /* [NSApplication sharedApplication] will usually be
@@ -191,7 +185,6 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
   }
 
   [pool release];
-#endif
 }
 
 static void
@@ -219,9 +212,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
   __block NSOpenGLContext *glContext = nil;
 
-#ifndef GNUSTEP
   priv->source_id = g_timeout_add (200, gst_gl_window_cocoa_nsapp_iteration, NULL);
-#endif
 
   priv->gl_context = nil;
   if (other_context)
@@ -243,9 +234,6 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 
     pool = [[NSAutoreleasePool alloc] init];
 
-#ifdef GNUSTEP
-    [NSApplication sharedApplication];
-#endif
     rect.origin.x = 0;
     rect.origin.y = 0;
     rect.size.width = 320;
@@ -265,7 +253,6 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 
     [window_handle setContentView:glView];
 
-#ifndef GNUSTEP
     glContext = [[NSOpenGLContext alloc] initWithFormat:fmt
       shareContext:context_cocoa->priv->external_gl_context];
 
@@ -275,10 +262,6 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 
     [glContext setView:glView];
 
-#else
-    /* FIXME try to make context sharing work in GNUstep */
-    context_cocoa->priv->gl_context = glContext;
-#endif
     [pool release];
   });
 
@@ -300,11 +283,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
    */
   NS_DURING {
     if (glContext) {
-#ifdef GNUSTEP
-      const long swapInterval = 1;
-#else
       const GLint swapInterval = 1;
-#endif
       [glContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
     }
   } NS_HANDLER {
