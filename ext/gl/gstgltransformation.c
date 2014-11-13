@@ -81,6 +81,7 @@ static void gst_gl_transformation_get_property (GObject * object, guint prop_id,
 static gboolean gst_gl_transformation_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
 
+static void gst_gl_transformation_reset_gl (GstGLFilter * filter);
 static void gst_gl_transformation_reset (GstGLFilter * filter);
 static gboolean gst_gl_transformation_init_shader (GstGLFilter * filter);
 static void gst_gl_transformation_callback (gpointer stuff);
@@ -127,6 +128,8 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
   gobject_class->get_property = gst_gl_transformation_get_property;
 
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_transformation_init_shader;
+  GST_GL_FILTER_CLASS (klass)->display_reset_cb =
+      gst_gl_transformation_reset_gl;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_transformation_reset;
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_transformation_set_caps;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
@@ -374,9 +377,28 @@ gst_gl_transformation_set_caps (GstGLFilter * filter, GstCaps * incaps,
       (gdouble) GST_VIDEO_INFO_WIDTH (&filter->out_info) /
       (gdouble) GST_VIDEO_INFO_HEIGHT (&filter->out_info);
 
+  transformation->caps_change = TRUE;
+
   gst_gl_transformation_build_mvp (transformation);
 
   return TRUE;
+}
+
+static void
+gst_gl_transformation_reset_gl (GstGLFilter * filter)
+{
+  GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
+  const GstGLFuncs *gl = filter->context->gl_vtable;
+
+  if (transformation->vao) {
+    gl->DeleteVertexArrays (1, &transformation->vao);
+    transformation->vao = 0;
+  }
+
+  if (transformation->vertex_buffer) {
+    gl->DeleteBuffers (1, &transformation->vertex_buffer);
+    transformation->vertex_buffer = 0;
+  }
 }
 
 static void
@@ -421,6 +443,59 @@ gst_gl_transformation_filter_texture (GstGLFilter * filter, guint in_tex,
   return TRUE;
 }
 
+
+static void
+_upload_vertices (GstGLTransformation * transformation)
+{
+  const GstGLFuncs *gl = GST_GL_FILTER (transformation)->context->gl_vtable;
+
+/* *INDENT-OFF* */
+  GLfloat vertices[] = {
+     -transformation->aspect,  1.0,  0.0, 1.0, 0.0, 1.0,
+      transformation->aspect,  1.0,  0.0, 1.0, 1.0, 1.0,
+      transformation->aspect, -1.0,  0.0, 1.0, 1.0, 0.0,
+     -transformation->aspect, -1.0,  0.0, 1.0, 0.0, 0.0
+  };
+  /* *INDENT-ON* */
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, transformation->vertex_buffer);
+
+  gl->BufferData (GL_ARRAY_BUFFER, 4 * 6 * sizeof (GLfloat), vertices,
+      GL_STATIC_DRAW);
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+}
+
+static void
+_bind_buffer (GstGLTransformation * transformation)
+{
+  const GstGLFuncs *gl = GST_GL_FILTER (transformation)->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, transformation->vertex_buffer);
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (transformation->attr_position, 4, GL_FLOAT,
+      GL_FALSE, 6 * sizeof (GLfloat), (void *) 0);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (transformation->attr_texture, 2, GL_FLOAT, GL_FALSE,
+      6 * sizeof (GLfloat), (void *) (4 * sizeof (GLfloat)));
+
+  gl->EnableVertexAttribArray (transformation->attr_position);
+  gl->EnableVertexAttribArray (transformation->attr_texture);
+}
+
+static void
+_unbind_buffer (GstGLTransformation * transformation)
+{
+  const GstGLFuncs *gl = GST_GL_FILTER (transformation)->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  gl->DisableVertexAttribArray (transformation->attr_position);
+  gl->DisableVertexAttribArray (transformation->attr_texture);
+}
+
 static void
 gst_gl_transformation_callback (gpointer stuff)
 {
@@ -428,30 +503,9 @@ gst_gl_transformation_callback (gpointer stuff)
   GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
   GstGLFuncs *gl = filter->context->gl_vtable;
 
-/* *INDENT-OFF* */
-
-  const GLfloat positions[] = {
-     -transformation->aspect,  1.0,  0.0, 1.0,
-      transformation->aspect,  1.0,  0.0, 1.0,
-      transformation->aspect, -1.0,  0.0, 1.0,
-     -transformation->aspect, -1.0,  0.0, 1.0,
-  };
-
-  const GLfloat texture_coordinates[] = {
-     0.0,  1.0,
-     1.0,  1.0,
-     1.0,  0.0,
-     0.0,  0.0,
-  };
-
-/* *INDENT-ON* */
-
   GLushort indices[] = { 0, 1, 2, 3, 0 };
 
   GLfloat temp_matrix[16];
-
-  GLint attr_position_loc = 0;
-  GLint attr_texture_loc = 0;
 
   gst_gl_context_clear_shader (filter->context);
   gl->BindTexture (GL_TEXTURE_2D, 0);
@@ -461,23 +515,6 @@ gst_gl_transformation_callback (gpointer stuff)
 
   gst_gl_shader_use (transformation->shader);
 
-  attr_position_loc =
-      gst_gl_shader_get_attribute_location (transformation->shader, "position");
-
-  attr_texture_loc =
-      gst_gl_shader_get_attribute_location (transformation->shader, "uv");
-
-  /* Load the vertex position */
-  gl->VertexAttribPointer (attr_position_loc, 4, GL_FLOAT,
-      GL_FALSE, 0, positions);
-
-  /* Load the texture coordinate */
-  gl->VertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
-      GL_FALSE, 0, texture_coordinates);
-
-  gl->EnableVertexAttribArray (attr_position_loc);
-  gl->EnableVertexAttribArray (attr_texture_loc);
-
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, transformation->in_tex);
   gst_gl_shader_set_uniform_1i (transformation->shader, "texture", 0);
@@ -486,10 +523,39 @@ gst_gl_transformation_callback (gpointer stuff)
   gst_gl_shader_set_uniform_matrix_4fv (transformation->shader, "mvp",
       1, GL_FALSE, temp_matrix);
 
+  if (!transformation->vertex_buffer) {
+    transformation->attr_position =
+        gst_gl_shader_get_attribute_location (transformation->shader,
+        "position");
+
+    transformation->attr_texture =
+        gst_gl_shader_get_attribute_location (transformation->shader, "uv");
+
+    if (gl->GenVertexArrays) {
+      gl->GenVertexArrays (1, &transformation->vao);
+      gl->BindVertexArray (transformation->vao);
+    }
+
+    gl->GenBuffers (1, &transformation->vertex_buffer);
+    transformation->caps_change = TRUE;
+  }
+
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (transformation->vao);
+
+  if (transformation->caps_change)
+    _upload_vertices (transformation);
+
+  if (!gl->GenVertexArrays || transformation->caps_change)
+    _bind_buffer (transformation);
+
   gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
 
-  gl->DisableVertexAttribArray (attr_position_loc);
-  gl->DisableVertexAttribArray (attr_texture_loc);
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (0);
+  else
+    _unbind_buffer (transformation);
 
   gst_gl_context_clear_shader (filter->context);
+  transformation->caps_change = FALSE;
 }
