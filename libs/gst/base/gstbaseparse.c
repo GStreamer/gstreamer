@@ -3237,6 +3237,12 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass)
     if (ret != GST_FLOW_OK)
       break;
 
+    /* If a large amount of data was requested to be skipped, _handle_buffer
+       might have set the priv->skip flag to an extra amount on top of skip.
+       In pull mode, we can just pull from the new offset directly. */
+    parse->priv->offset += parse->priv->skip;
+    parse->priv->skip = 0;
+
     /* something flushed means something happened,
      * and we should bail out of this loop so as not to occupy
      * the task thread indefinitely */
