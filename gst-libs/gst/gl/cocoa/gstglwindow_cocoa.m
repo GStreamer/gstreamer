@@ -257,11 +257,9 @@ draw_cb (gpointer data)
       x += 20;
       y += 20;
 
-#ifndef GNUSTEP
       [priv->internal_win_id setFrame:windowRect display:NO];
       GST_DEBUG ("make the window available\n");
       [priv->internal_win_id makeMainWindow];
-#endif
 
       [priv->internal_win_id orderFrontRegardless];
 
@@ -457,17 +455,6 @@ close_window_cb (gpointer data)
 }
 
 - (void) applicationWillTerminate:(NSNotification *)aNotification {
-#ifdef GNUSTEP
-  /* fixes segfault with gst-launch-1.0 -e ... and sending SIGINT (Ctrl-C)
-   * which causes GNUstep to run a signal handler in the main thread.
-   * However that thread has never been 'registered' with GNUstep so
-   * the autorelease magic of objective-c causes a segfault from accessing
-   * a null NSThread object somewhere deep in GNUstep.
-   *
-   * I put it here because this is the first time we can register the thread.
-   */
-  GSRegisterCurrentThread();
-#endif
 }
 
 @end
@@ -488,9 +475,7 @@ close_window_cb (gpointer data)
 
   window_cocoa = window;
 
-#ifndef GNUSTEP
   [self setWantsLayer:NO];
-#endif
 
   /* Get notified about changes */
   [self setPostsFrameChangedNotifications:YES];

@@ -136,15 +136,8 @@ static void end_stream_cb(GstBus* bus, GstMessage* message, MainWindow* window)
 
 static gpointer thread_func (MainWindow* window)
 {
-#ifdef GNUSTEP
-  GSRegisterCurrentThread();
-#endif
-
   g_main_loop_run ([window loop]);
 
-#ifdef GNUSTEP
-  GSUnregisterCurrentThread();
-#endif
   return NULL;
 }
 
@@ -172,10 +165,6 @@ int main(int argc, char **argv)
   NSAutoreleasePool *pool=nil;
   NSRect rect;
   MainWindow *window=nil;
-  
-#ifdef GNUSTEP
-  GstState state;
-#endif
 
   g_print("app created\n");
 
@@ -203,18 +192,8 @@ int main(int argc, char **argv)
   if (!ok)
     g_warning("could not link videosrc to videosink\n");
 
-#ifdef GNUSTEP
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  state = GST_STATE_PAUSED;
-  gst_element_get_state (pipeline, &state, &state, GST_CLOCK_TIME_NONE);
-  g_print("pipeline paused\n");
-  GSRegisterCurrentThread();
-#endif
-
   pool = [[NSAutoreleasePool alloc] init];
-#ifndef GNUSTEP
   [NSApplication sharedApplication];
-#endif
 
   rect.origin.x = 0; rect.origin.y = 0;
   rect.size.width = width; rect.size.height = height;
@@ -236,7 +215,6 @@ int main(int argc, char **argv)
 
   [window orderFront:window];
 
-#ifndef GNUSTEP
   while (![window isClosed]) {
     NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
       untilDate:[NSDate dateWithTimeIntervalSinceNow:1]
@@ -244,17 +222,12 @@ int main(int argc, char **argv)
     if (event)
       [NSApp sendEvent:event];
   }
-#endif
 
   g_thread_join (loop_thread);
 
   [window release];
 
   [pool release];
-
-#ifdef GNUSTEP
-  GSUnregisterCurrentThread();
-#endif
 
   return 0;
 }
