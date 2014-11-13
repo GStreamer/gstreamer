@@ -33,7 +33,7 @@
 /*                                                              */
 /* =============================================================*/
 
-@interface GstGLNSWindow: NSWindow <NSApplicationDelegate> {
+@interface GstGLNSWindow: NSWindow {
   BOOL m_isClosed;
   GstGLWindowCocoa *window_cocoa;
 }
@@ -137,8 +137,6 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa, NSRect rect)
       backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
 
       GST_DEBUG ("NSWindow id: %"G_GUINTPTR_FORMAT, (guintptr) priv->internal_win_id);
-
-      [[NSApplication sharedApplication] setDelegate: priv->internal_win_id];
 
   return TRUE;
 }
@@ -441,20 +439,6 @@ close_window_cb (gpointer data)
   [window_cocoa->priv->internal_win_id setClosed];
   gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) close_window_cb, gst_object_ref (window_cocoa), (GDestroyNotify) gst_object_unref);
   return YES;
-}
-
-- (void) applicationDidFinishLaunching: (NSNotification *) not {
-}
-
-- (void) applicationWillFinishLaunching: (NSNotification *) not {
-}
-
-- (BOOL) applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)app {
-  /* the application is manually stopped by calling stopApp on the AppThreadPerformer */
-  return NO;
-}
-
-- (void) applicationWillTerminate:(NSNotification *)aNotification {
 }
 
 @end
