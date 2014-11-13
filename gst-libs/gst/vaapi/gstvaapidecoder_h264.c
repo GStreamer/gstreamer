@@ -369,7 +369,9 @@ gst_vaapi_frame_store_split_fields(GstVaapiFrameStore *fs)
 
     g_return_val_if_fail(fs->num_buffers == 1, FALSE);
 
-    first_field->base.structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
+    first_field->base.structure = GST_VAAPI_PICTURE_IS_TFF(first_field) ?
+        GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD :
+        GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
     GST_VAAPI_PICTURE_FLAG_SET(first_field, GST_VAAPI_PICTURE_FLAG_INTERLACED);
 
     second_field = gst_vaapi_picture_h264_new_field(first_field);
@@ -490,6 +492,7 @@ struct _GstVaapiDecoderH264Private {
     guint                       nal_length_size;
     guint                       mb_width;
     guint                       mb_height;
+    guint                       pic_structure;          // pic_struct (from SEI pic_timing() or inferred)
     gint32                      field_poc[2];           // 0:TopFieldOrderCnt / 1:BottomFieldOrderCnt
     gint32                      poc_msb;                // PicOrderCntMsb
     gint32                      poc_lsb;                // pic_order_cnt_lsb (from slice_header())
@@ -1490,6 +1493,7 @@ decode_current_picture(GstVaapiDecoderH264 *decoder)
     if (!is_valid_state(priv->decoder_state, GST_H264_VIDEO_STATE_VALID_PICTURE))
         goto drop_frame;
     priv->decoder_state = 0;
+    priv->pic_structure = GST_H264_SEI_PIC_STRUCT_FRAME;
 
     if (!picture)
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -1510,6 +1514,7 @@ error:
 
 drop_frame:
     priv->decoder_state = 0;
+    priv->pic_structure = GST_H264_SEI_PIC_STRUCT_FRAME;
     return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
 }
 
@@ -1702,6 +1707,34 @@ decode_pps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     GST_DEBUG("decode PPS");
 
     gst_vaapi_parser_info_h264_replace(&priv->pps[pps->id], pi);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_sei(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
+    guint i;
+
+    GST_DEBUG("decode SEI messages");
+
+    for (i = 0; i < pi->data.sei->len; i++) {
+        const GstH264SEIMessage * const sei =
+            &g_array_index(pi->data.sei, GstH264SEIMessage, i);
+
+        switch (sei->payloadType) {
+        case GST_H264_SEI_PIC_TIMING: {
+            const GstH264PicTiming * const pic_timing =
+                &sei->payload.pic_timing;
+            if (pic_timing->pic_struct_present_flag)
+                priv->pic_structure = pic_timing->pic_struct;
+            break;
+        }
+        default:
+            break;
+        }
+    }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -2881,14 +2914,28 @@ init_picture(
     }
 
     /* Initialize picture structure */
-    if (!slice_hdr->field_pic_flag)
-        base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-    else {
+    if (slice_hdr->field_pic_flag) {
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_INTERLACED);
-        if (!slice_hdr->bottom_field_flag)
-            base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
-        else
-            base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+        priv->pic_structure = slice_hdr->bottom_field_flag ?
+            GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD :
+            GST_H264_SEI_PIC_STRUCT_TOP_FIELD;
+    }
+
+    base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+    switch (priv->pic_structure) {
+    case GST_H264_SEI_PIC_STRUCT_TOP_FIELD:
+        base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
+        if (GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture))
+            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TFF);
+        break;
+    case GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD:
+        base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+        break;
+    case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM_TOP:
+    case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM:
+        if (GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture))
+            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TFF);
+        break;
     }
     picture->structure = base_picture->structure;
 
@@ -3781,7 +3828,7 @@ decode_unit(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
         status = decode_sequence_end(decoder);
         break;
     case GST_H264_NAL_SEI:
-        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+        status = decode_sei(decoder, unit);
         break;
     default:
         GST_WARNING("unsupported NAL unit type %d", pi->nalu.type);
