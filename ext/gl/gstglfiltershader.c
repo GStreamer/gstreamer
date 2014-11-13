@@ -393,25 +393,10 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
   GstGLFuncs *gl = filter->context->gl_vtable;
-  const GLfloat vVertices[] = {
-    -1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
-    1.0, -1.0f, -1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, -1.0f, 1.0f, 1.0f,
-    -1.0f, 1.0f, -1.0f, 0.0f, 1.0f
-  };
-  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-
-#if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
-    gl->MatrixMode (GL_PROJECTION);
-    gl->LoadIdentity ();
-  }
-#endif
 
   gst_gl_shader_use (filtershader->shader0);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_2D);
   gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1i (filtershader->shader0, "tex", 0);
@@ -420,10 +405,10 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (filtershader->shader0, "time",
       filtershader->time);
 
-  filtershader->attr_position_loc =
+  filter->draw_attr_position_loc =
       gst_gl_shader_get_attribute_location (filtershader->shader0,
       "a_position");
-  filtershader->attr_texture_loc =
+  filter->draw_attr_texture_loc =
       gst_gl_shader_get_attribute_location (filtershader->shader0,
       "a_texcoord");
 
@@ -442,19 +427,5 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
 
   gl->Clear (GL_COLOR_BUFFER_BIT);
 
-  gl->EnableVertexAttribArray (filtershader->attr_position_loc);
-  gl->EnableVertexAttribArray (filtershader->attr_texture_loc);
-
-  /* Load the vertex position */
-  gl->VertexAttribPointer (filtershader->attr_position_loc, 3, GL_FLOAT,
-      GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-
-  /* Load the texture coordinate */
-  gl->VertexAttribPointer (filtershader->attr_texture_loc, 2, GL_FLOAT,
-      GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-
-  gl->DisableVertexAttribArray (filtershader->attr_position_loc);
-  gl->DisableVertexAttribArray (filtershader->attr_texture_loc);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
