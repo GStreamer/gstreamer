@@ -41,6 +41,10 @@ struct _GstGLTransformation
     GstGLFilter filter;
 
     GstGLShader *shader;
+    GLuint       vao;
+    GLuint       vertex_buffer;
+    GLint        attr_position;
+    GLint        attr_texture;
 
     guint in_tex;
 
@@ -63,6 +67,8 @@ struct _GstGLTransformation
     gboolean ortho;
 
     graphene_matrix_t mvp_matrix;
+
+    gboolean caps_change;
 };
 
 struct _GstGLTransformationClass
