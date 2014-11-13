@@ -542,6 +542,18 @@ convhwb d, s
 
 mergebw d, s, s
 
+.function video_orc_splat_u32
+.dest 4 d1 guint8
+.param 4 p1
+
+storel d1, p1
+
+.function video_orc_splat_u64
+.dest 8 d1 guint8
+.param 4 p1
+
+x4 mergebw d1, p1, p1
+
 .function video_orc_convert_I420_UYVY
 .dest 4 d1 guint8
 .dest 4 d2 guint8
