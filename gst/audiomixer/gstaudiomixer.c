@@ -60,6 +60,8 @@
 #include <string.h>             /* strcmp */
 #include "gstaudiomixerorc.h"
 
+#include "gstaudiointerleave.h"
+
 #define GST_CAT_DEFAULT gst_audiomixer_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -762,6 +764,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "audiomixer", GST_RANK_NONE,
           GST_TYPE_AUDIO_MIXER))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "audiointerleave", GST_RANK_NONE,
+          GST_TYPE_AUDIO_INTERLEAVE))
     return FALSE;
 
   return TRUE;
