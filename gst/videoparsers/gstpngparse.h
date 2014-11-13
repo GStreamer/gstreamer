@@ -49,6 +49,7 @@ struct _GstPngParse
 
   guint width;
   guint height;
+  guint32 skip_length;
   
   gboolean sent_codec_tag;
 };
