@@ -331,7 +331,8 @@ gst_decklink_src_finalize (GObject * object)
   if (decklinksrc->comInitialized) {
     g_mutex_lock (&decklinksrc->com_deinit_lock);
     g_cond_signal (&decklinksrc->com_uninitialize);
-    g_cond_wait (&decklinksrc->com_uninitialized, &decklinksrc->com_deinit_lock);
+    g_cond_wait (&decklinksrc->com_uninitialized,
+        &decklinksrc->com_deinit_lock);
     g_mutex_unlock (&decklinksrc->com_deinit_lock);
   }
 
@@ -418,7 +419,8 @@ gst_decklink_src_start (GstElement * element)
 
   GST_DEBUG_OBJECT (decklinksrc, "start");
 
-  decklinksrc->decklink = gst_decklink_get_nth_device (decklinksrc->device_number);
+  decklinksrc->decklink =
+      gst_decklink_get_nth_device (decklinksrc->device_number);
   if (decklinksrc->decklink == NULL) {
     return FALSE;
   }
@@ -437,7 +439,8 @@ gst_decklink_src_start (GstElement * element)
     return FALSE;
   }
 
-  decklinksrc->config = gst_decklink_get_nth_config (decklinksrc->device_number);
+  decklinksrc->config =
+      gst_decklink_get_nth_config (decklinksrc->device_number);
   config = decklinksrc->config;
   if (decklinksrc->config == NULL) {
     GST_ERROR ("no config for device %i", decklinksrc->device_number);
@@ -618,7 +621,7 @@ gst_decklink_src_audio_src_query (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (pad, "query: %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
-    /* FIXME: report live-ness and latency for audio too */
+      /* FIXME: report live-ness and latency for audio too */
     case GST_QUERY_LATENCY:
       GST_FIXME_OBJECT (parent, "should report live-ness and audio latency");
       res = gst_pad_query_default (pad, parent, query);
@@ -722,9 +725,9 @@ gst_decklink_src_send_initial_events (GstDecklinkSrc * src)
   /* caps */
   gst_pad_push_event (src->audiosrcpad,
       gst_event_new_caps (gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, "S16LE", "channels", G_TYPE_INT, 2,
-          "rate", G_TYPE_INT, 48000, "layout", G_TYPE_STRING, "interleaved",
-          NULL)));
+              "format", G_TYPE_STRING, "S16LE", "channels", G_TYPE_INT, 2,
+              "rate", G_TYPE_INT, 48000, "layout", G_TYPE_STRING, "interleaved",
+              NULL)));
 
   gst_pad_push_event (src->videosrcpad,
       gst_event_new_caps (gst_decklink_mode_get_caps (src->mode)));
@@ -774,7 +777,7 @@ gst_decklink_src_task (void *priv)
   }
 
   if (g_atomic_int_compare_and_exchange (&decklinksrc->pending_eos, TRUE,
-      FALSE)) {
+          FALSE)) {
     GST_INFO_OBJECT (decklinksrc, "EOS pending");
     flow = GST_FLOW_EOS;
     goto pause;
@@ -847,7 +850,7 @@ gst_decklink_src_task (void *priv)
       gst_util_uint64_scale_int ((decklinksrc->frame_num + 1) * GST_SECOND,
       mode->fps_d, mode->fps_n) - GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_OFFSET (buffer) = decklinksrc->frame_num;
-  GST_BUFFER_OFFSET_END (buffer) = decklinksrc->frame_num; /* FIXME: +1? */
+  GST_BUFFER_OFFSET_END (buffer) = decklinksrc->frame_num;      /* FIXME: +1? */
 
   /* FIXME: set video meta */
 
@@ -962,7 +965,7 @@ gst_decklinksrc_list_devices (void)
       n_devices++;
     }
   }
-  iterator->Release();
+  iterator->Release ();
 
   g_print ("%d devices\n", n_devices);
 }

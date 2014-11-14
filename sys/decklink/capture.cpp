@@ -119,9 +119,9 @@ HRESULT
   g_mutex_lock (&decklinksrc->mutex);
   if (decklinksrc->video_frame != NULL) {
     decklinksrc->dropped_frames++;
-    decklinksrc->video_frame->Release();
+    decklinksrc->video_frame->Release ();
     if (decklinksrc->audio_frame) {
-      decklinksrc->audio_frame->Release();
+      decklinksrc->audio_frame->Release ();
     }
   }
   videoFrame->AddRef ();
@@ -141,11 +141,11 @@ HRESULT
 }
 
 HRESULT
-DeckLinkCaptureDelegate::VideoInputFormatChanged (
-    BMDVideoInputFormatChangedEvents events, IDeckLinkDisplayMode * mode,
-    BMDDetectedVideoInputFormatFlags)
-{
-  GstDecklinkSrc *decklinksrc;
+    DeckLinkCaptureDelegate::VideoInputFormatChanged
+    (BMDVideoInputFormatChangedEvents events, IDeckLinkDisplayMode * mode,
+    BMDDetectedVideoInputFormatFlags) {
+  GstDecklinkSrc *
+      decklinksrc;
 
   g_return_val_if_fail (priv != NULL, S_OK);
   g_return_val_if_fail (GST_IS_DECKLINK_SRC (priv), S_OK);

@@ -157,10 +157,11 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e)
       "width", G_TYPE_INT, mode->width,
       "height", G_TYPE_INT, mode->height,
       "framerate", GST_TYPE_FRACTION, mode->fps_n, mode->fps_d,
-      "interlace-mode", G_TYPE_STRING, mode->interlaced ? "interleaved" : "progressive",
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, mode->par_n, mode->par_d,
-      "colorimetry", G_TYPE_STRING, mode->is_hdtv ? "bt709" : "bt601",
-      "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
+      "interlace-mode", G_TYPE_STRING,
+      mode->interlaced ? "interleaved" : "progressive", "pixel-aspect-ratio",
+      GST_TYPE_FRACTION, mode->par_n, mode->par_d, "colorimetry", G_TYPE_STRING,
+      mode->is_hdtv ? "bt709" : "bt601", "chroma-site", G_TYPE_STRING, "mpeg2",
+      NULL);
 }
 
 GstCaps *
@@ -191,7 +192,8 @@ gst_decklink_mode_get_template_caps (void)
 }
 
 typedef struct _Device Device;
-struct _Device {
+struct _Device
+{
   IDeckLink *decklink;
   IDeckLinkInput *input;
   IDeckLinkOutput *output;
@@ -210,7 +212,8 @@ init_devices (void)
   int i;
   static gboolean inited = FALSE;
 
-  if (inited) return;
+  if (inited)
+    return;
   inited = TRUE;
 
   iterator = CreateDeckLinkIteratorInstance ();
@@ -253,7 +256,7 @@ init_devices (void)
 
   n_devices = i;
 
-  iterator->Release();
+  iterator->Release ();
 }
 
 IDeckLink *
