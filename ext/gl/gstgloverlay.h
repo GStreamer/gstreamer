@@ -60,6 +60,15 @@ struct _GstGLOverlay
   gint          type_file;               // 0 = No; 1 = PNG and 2 = JPEG
   gint          window_width, window_height;
   gint          image_width, image_height;
+
+  gboolean      geometry_change;
+
+  GLuint        vao;
+  GLuint        overlay_vao;
+  GLuint        vbo;
+  GLuint        overlay_vbo;
+  GLuint        attr_position;
+  GLuint        attr_texture;
 };
 
 struct _GstGLOverlayClass
