@@ -778,8 +778,13 @@ retry:
   }
 
   /* set buffer metadata */
-  GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
-  GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
+
+  /* use generated offset values only if there are not already valid ones
+   * set by the v4l2 device */
+  if (!GST_BUFFER_OFFSET_IS_VALID (*buf) || !GST_BUFFER_OFFSET_END_IS_VALID (*buf)) {
+    GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
+    GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
+  }
 
   if (G_LIKELY (abs_time != GST_CLOCK_TIME_NONE)) {
     /* the time now is the time of the clock minus the base time */

@@ -1247,6 +1247,8 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_CORRUPTED);
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_OFFSET (outbuf) = group->buffer.sequence;
+  GST_BUFFER_OFFSET_END (outbuf) = group->buffer.sequence + 1;
 
 done:
   *buffer = outbuf;
