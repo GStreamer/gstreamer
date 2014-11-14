@@ -481,6 +481,10 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
   gst_buffer_unref (buffer);
 
   g_mutex_lock (&decklinksink->mutex);
+  /* FIXME: This is not correct as it assumes that the decklink clock
+   * has the exact same value as the pipeline clock at any time. Not
+   * only the same rate!
+   */
   while (decklinksink->queued_frames > 2 && !decklinksink->stop) {
     g_cond_wait (&decklinksink->cond, &decklinksink->mutex);
   }
@@ -628,6 +632,10 @@ gst_decklink_sink_audiosink_chain (GstPad * pad, GstObject * parent,
     return GST_FLOW_FLUSHING;
 
   g_mutex_lock (&decklinksink->audio_mutex);
+  /* FIXME: This is not correct as it assumes that the decklink clock
+   * has the exact same value as the pipeline clock at any time. Not
+   * only the same rate!
+   */
   while (!decklinksink->stop &&
       gst_adapter_available (decklinksink->audio_adapter) > 1600 * 4 * 2) {
     g_cond_wait (&decklinksink->audio_cond, &decklinksink->audio_mutex);
@@ -725,6 +733,10 @@ Output::RenderAudioSamples (bool preroll)
     if (n > 0) {
       data = gst_adapter_map (decklinksink->audio_adapter, n);
 
+      /* FIXME: This is not correct. We assume here that the decklink
+       * clock runs at the same rate as the pipeline clock and that
+       * the input stream has no discontinuities at all
+       */
       ret = decklinksink->output->ScheduleAudioSamples ((void *) data, n / 4,
           0, 0, &samplesWritten);
 
