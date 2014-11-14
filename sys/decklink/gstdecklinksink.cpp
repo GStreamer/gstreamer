@@ -454,6 +454,9 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
   GstClockTime timestamp, duration;
   GstClockTime running_time;
   GstClockTime running_time_duration;
+  GstClock *clock;
+  GstClockID clock_id;
+  GstClockTime base_time;
 
   decklinksink = GST_DECKLINK_SINK (parent);
 
@@ -492,6 +495,7 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
   running_time_duration = gst_segment_to_running_time (&decklinksink->video_segment, GST_FORMAT_TIME, timestamp + duration) - running_time;
   gst_buffer_unref (buffer);
 
+#if 0
   g_mutex_lock (&decklinksink->mutex);
   /* FIXME: This is not correct as it assumes that the decklink clock
    * has the exact same value as the pipeline clock at any time. Not
@@ -500,10 +504,27 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
   while (decklinksink->queued_frames > 2 && !decklinksink->stop) {
     g_cond_wait (&decklinksink->cond, &decklinksink->mutex);
   }
+#else
+  /* XXX: Wait until the pipeline clock reaches our running time to
+   * throttle filling the decklinksink internal queue */
+  clock = gst_element_get_clock (GST_ELEMENT (decklinksink));
+  base_time = gst_element_get_base_time (GST_ELEMENT (decklinksink));
+  if (clock) {
+    if (base_time != GST_CLOCK_TIME_NONE) {
+      clock_id = gst_clock_new_single_shot_id (clock, base_time + running_time);
+      gst_clock_id_wait (clock_id, NULL);
+      gst_clock_id_unref (clock_id);
+    }
+
+    gst_object_unref (clock);
+  }
+#endif
   if (!decklinksink->stop) {
     decklinksink->queued_frames++;
   }
+#if 0
   g_mutex_unlock (&decklinksink->mutex);
+#endif
 
   if (!decklinksink->stop) {
     ret = decklinksink->output->ScheduleVideoFrame (frame,
