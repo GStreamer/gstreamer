@@ -756,6 +756,7 @@ gst_decklink_src_task (void *priv)
   GstFlowReturn video_flow, audio_flow, flow;
   const GstDecklinkMode *mode;
   gboolean discont = FALSE;
+  GstClockTime capture_time;
 
   GST_DEBUG_OBJECT (decklinksrc, "task");
 
@@ -766,6 +767,7 @@ gst_decklink_src_task (void *priv)
   }
   video_frame = decklinksrc->video_frame;
   audio_frame = decklinksrc->audio_frame;
+  capture_time = decklinksrc->capture_time;
   decklinksrc->video_frame = NULL;
   decklinksrc->audio_frame = NULL;
   g_mutex_unlock (&decklinksrc->mutex);
@@ -846,12 +848,9 @@ gst_decklink_src_task (void *priv)
     vf->input->AddRef ();
   }
 
-  GST_BUFFER_TIMESTAMP (buffer) =
-      gst_util_uint64_scale_int (decklinksrc->frame_num * GST_SECOND,
+  GST_BUFFER_TIMESTAMP (buffer) = capture_time;
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale_int (GST_SECOND,
       mode->fps_d, mode->fps_n);
-  GST_BUFFER_DURATION (buffer) =
-      gst_util_uint64_scale_int ((decklinksrc->frame_num + 1) * GST_SECOND,
-      mode->fps_d, mode->fps_n) - GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_OFFSET (buffer) = decklinksrc->frame_num;
   GST_BUFFER_OFFSET_END (buffer) = decklinksrc->frame_num;      /* FIXME: +1? */
 
@@ -873,9 +872,7 @@ gst_decklink_src_task (void *priv)
     audio_buffer = gst_buffer_new_and_alloc (n_samples * 2 * 2);
     gst_buffer_fill (audio_buffer, 0, data, n_samples * 2 * 2);
 
-    GST_BUFFER_TIMESTAMP (audio_buffer) =
-        gst_util_uint64_scale_int (decklinksrc->num_audio_samples * GST_SECOND,
-        1, 48000);
+    GST_BUFFER_TIMESTAMP (audio_buffer) = capture_time;
     /* FIXME: should be next_timestamp - timestamp for perfect stream */
     GST_BUFFER_DURATION (audio_buffer) =
         gst_util_uint64_scale_int (n_samples * GST_SECOND, 1, 48000);

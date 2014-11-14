@@ -60,6 +60,7 @@ struct _GstDecklinkSrc
   int dropped_frames;
   int dropped_frames_old;
   gboolean stop;
+  GstClockTime capture_time;
   IDeckLinkVideoInputFrame *video_frame;
   IDeckLinkAudioInputPacket * audio_frame;
 

@@ -78,6 +78,8 @@ HRESULT
     videoFrame, IDeckLinkAudioInputPacket * audioFrame)
 {
   GstDecklinkSrc *decklinksrc;
+  GstClock *clock;
+  GstClockTime base_time, clock_time, capture_time;
   const char *timecodeString = NULL;
 
   g_return_val_if_fail (priv != NULL, S_OK);
@@ -109,9 +111,32 @@ HRESULT
     }
   }
 
-  GST_DEBUG_OBJECT (decklinksrc, "Frame received [%s] - %s - Size: %li bytes",
-      timecodeString != NULL ? timecodeString : "No timecode",
-      "Valid Frame", videoFrame->GetRowBytes () * videoFrame->GetHeight ());
+  GST_OBJECT_LOCK (decklinksrc);
+  if ((clock = GST_ELEMENT_CLOCK (decklinksrc))) {
+    base_time = GST_ELEMENT (decklinksrc)->base_time;
+    gst_object_ref (clock);
+  } else {
+    base_time = GST_CLOCK_TIME_NONE;
+  }
+  GST_OBJECT_UNLOCK (decklinksrc);
+  if (clock) {
+    clock_time = gst_clock_get_time (clock);
+    gst_object_unref (clock);
+  } else {
+    clock_time = GST_CLOCK_TIME_NONE;
+  }
+
+  if (base_time != GST_CLOCK_TIME_NONE) {
+    capture_time = clock_time - base_time;
+  } else {
+    capture_time = GST_CLOCK_TIME_NONE;
+  }
+
+  GST_DEBUG_OBJECT (decklinksrc,
+      "Frame received [%s] - %s - %" GST_TIME_FORMAT "Size: %li bytes",
+      timecodeString != NULL ? timecodeString : "No timecode", "Valid Frame",
+      GST_TIME_ARGS (capture_time),
+      videoFrame->GetRowBytes () * videoFrame->GetHeight ());
 
   if (timecodeString)
     FREE_COM_STRING (timecodeString);
@@ -130,6 +155,7 @@ HRESULT
     audioFrame->AddRef ();
     decklinksrc->audio_frame = audioFrame;
   }
+  decklinksrc->capture_time = capture_time;
 
   /* increment regardless whether frame was dropped or not */
   decklinksrc->frame_num++;
