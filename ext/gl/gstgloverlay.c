@@ -136,6 +136,7 @@ static void
 gst_gl_overlay_reset_gl_resources (GstGLFilter * filter)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
+  const GstGLFuncs *gl = filter->context->gl_vtable;
 
   if (overlay->shader) {
     gst_gl_context_del_shader (filter->context, overlay->shader);
@@ -145,6 +146,26 @@ gst_gl_overlay_reset_gl_resources (GstGLFilter * filter)
   if (overlay->image_memory) {
     gst_memory_unref ((GstMemory *) overlay->image_memory);
     overlay->image_memory = NULL;
+  }
+
+  if (overlay->vao) {
+    gl->DeleteVertexArrays (1, &overlay->vao);
+    overlay->vao = 0;
+  }
+
+  if (overlay->vbo) {
+    gl->DeleteBuffers (1, &overlay->vbo);
+    overlay->vbo = 0;
+  }
+
+  if (overlay->overlay_vao) {
+    gl->DeleteVertexArrays (1, &overlay->overlay_vao);
+    overlay->overlay_vao = 0;
+  }
+
+  if (overlay->overlay_vbo) {
+    gl->DeleteBuffers (1, &overlay->overlay_vbo);
+    overlay->overlay_vbo = 0;
   }
 }
 
@@ -225,107 +246,6 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
       "Matthew Waters <matthew@centricular.com>");
 }
 
-/* rectangle in NDC */
-static void
-gst_gl_overlay_draw (GstGLOverlay * o, gboolean overlay_image, gfloat x,
-    gfloat y, gfloat width, gfloat height)
-{
-  GstGLFilter *filter = GST_GL_FILTER (o);
-  const GstGLFuncs *gl = filter->context->gl_vtable;
-  GLint attr_position_loc = 0;
-  GLint attr_texture_loc = 0;
-  gdouble alpha;
-
-/* *INDENT-OFF* */
-  float v_vertices[] = {
- /*|          Vertex           | TexCoord |*/
-    x,         y,          0.0f, 0.0f, 0.0f,
-    x + width, y,          0.0f, 1.0f, 0.0f,
-    x + width, y + height, 0.0f, 1.0f, 1.0f,
-    x,         y + height, 0.0f, 0.0,  1.0f,
-  };
-
-  GLushort indices[] = {
-    0, 1, 2,
-    0, 2, 3,
-  };
-/* *INDENT-ON* */
-
-  gst_gl_shader_use (o->shader);
-  alpha = overlay_image ? o->alpha : 1.0f;
-  gst_gl_shader_set_uniform_1f (o->shader, "alpha", alpha);
-  gst_gl_shader_set_uniform_1i (o->shader, "texture", 0);
-
-  attr_position_loc =
-      gst_gl_shader_get_attribute_location (o->shader, "a_position");
-  attr_texture_loc =
-      gst_gl_shader_get_attribute_location (o->shader, "a_texcoord");
-
-  gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
-      GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[0]);
-
-  gl->VertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
-      GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[3]);
-
-  gl->EnableVertexAttribArray (attr_position_loc);
-  gl->EnableVertexAttribArray (attr_texture_loc);
-
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-
-  gl->DisableVertexAttribArray (attr_position_loc);
-  gl->DisableVertexAttribArray (attr_texture_loc);
-
-  gst_gl_context_clear_shader (filter->context);
-}
-
-static void
-gst_gl_overlay_load_texture (GstGLOverlay * o, GLuint tex,
-    gboolean overlay_image)
-{
-  GstGLFilter *filter = GST_GL_FILTER (o);
-  const GstGLFuncs *gl = filter->context->gl_vtable;
-  gfloat x, y, width, height;
-
-#if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
-    gl->MatrixMode (GL_MODELVIEW);
-    gl->LoadIdentity ();
-  }
-#endif
-
-  gl->Enable (GL_TEXTURE_2D);
-  gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, tex);
-
-  gl->Enable (GL_BLEND);
-  gl->BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  gl->BlendEquation (GL_FUNC_ADD);
-
-  if (overlay_image) {
-    gint render_width, render_height;
-    /* scale from [0, 1] -> [-1, 1] */
-    x = ((gfloat) o->offset_x / (gfloat) o->window_width +
-        o->relative_x) * 2.0f - 1.0;
-    y = ((gfloat) o->offset_y / (gfloat) o->window_height +
-        o->relative_y) * 2.0f - 1.0;
-    /* scale from [0, 1] -> [0, 2] */
-    render_width = o->overlay_width > 0 ? o->overlay_width : o->image_width;
-    render_height = o->overlay_height > 0 ? o->overlay_height : o->image_height;
-    width = ((gfloat) render_width / (gfloat) o->window_width) * 2.0f;
-    height = ((gfloat) render_height / (gfloat) o->window_height) * 2.0f;
-  } else {
-    /* scale from [0, 1] -> [-1, 1] */
-    x = -1.0f;
-    y = -1.0f;
-    /* scale from [0, 1] -> [0, 2] */
-    width = 2.0f;
-    height = 2.0f;
-  }
-
-  gst_gl_overlay_draw (o, overlay_image, x, y, width, height);
-  gl->Disable (GL_BLEND);
-}
-
 static void
 gst_gl_overlay_init (GstGLOverlay * overlay)
 {
@@ -361,21 +281,27 @@ gst_gl_overlay_set_property (GObject * object, guint prop_id,
       break;
     case PROP_OFFSET_X:
       overlay->offset_x = g_value_get_int (value);
+      overlay->geometry_change = TRUE;
       break;
     case PROP_OFFSET_Y:
       overlay->offset_y = g_value_get_int (value);
+      overlay->geometry_change = TRUE;
       break;
     case PROP_RELATIVE_X:
       overlay->relative_x = g_value_get_double (value);
+      overlay->geometry_change = TRUE;
       break;
     case PROP_RELATIVE_Y:
       overlay->relative_y = g_value_get_double (value);
+      overlay->geometry_change = TRUE;
       break;
     case PROP_OVERLAY_WIDTH:
       overlay->overlay_width = g_value_get_int (value);
+      overlay->geometry_change = TRUE;
       break;
     case PROP_OVERLAY_HEIGHT:
       overlay->overlay_height = g_value_get_int (value);
+      overlay->geometry_change = TRUE;
       break;
     case PROP_ALPHA:
       overlay->alpha = g_value_get_double (value);
@@ -442,36 +368,189 @@ gst_gl_overlay_set_caps (GstGLFilter * filter, GstCaps * incaps,
 }
 
 static void
+_unbind_buffer (GstGLOverlay * overlay)
+{
+  const GstGLFuncs *gl = GST_GL_FILTER (overlay)->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  gl->DisableVertexAttribArray (overlay->attr_position);
+  gl->DisableVertexAttribArray (overlay->attr_texture);
+}
+
+static void
+_bind_buffer (GstGLOverlay * overlay, GLuint vbo)
+{
+  const GstGLFuncs *gl = GST_GL_FILTER (overlay)->context->gl_vtable;
+
+  gl->BindBuffer (GL_ARRAY_BUFFER, vbo);
+
+  gl->EnableVertexAttribArray (overlay->attr_position);
+  gl->EnableVertexAttribArray (overlay->attr_texture);
+
+  gl->VertexAttribPointer (overlay->attr_position, 3, GL_FLOAT,
+      GL_FALSE, 5 * sizeof (GLfloat), (void *) 0);
+  gl->VertexAttribPointer (overlay->attr_texture, 2, GL_FLOAT,
+      GL_FALSE, 5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
+}
+
+/* *INDENT-OFF* */
+float v_vertices[] = {
+/*|      Vertex     | TexCoord  |*/
+  -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+   1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+   1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+  -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+};
+/* *INDENT-ON* */
+
+static void
 gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (overlay);
   GstMapInfo map_info;
   guint image_tex;
-#if GST_GL_HAVE_OPENGL
-  GstGLFilter *filter = GST_GL_FILTER (overlay);
+  gboolean memory_mapped = FALSE;
+  const GstGLFuncs *gl = filter->context->gl_vtable;
 
+  GLushort indices[] = {
+    0, 1, 2,
+    0, 2, 3,
+  };
+
+#if GST_GL_HAVE_OPENGL
   if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
-    const GstGLFuncs *gl = filter->context->gl_vtable;
 
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();
   }
 #endif
 
-  gst_gl_overlay_load_texture (overlay, texture, FALSE);
+  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL)
+    gl->Enable (GL_TEXTURE_2D);
 
-  if (overlay->image_memory == NULL || overlay->alpha == 0.0)
-    return;
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+
+  gst_gl_shader_use (overlay->shader);
+
+  gst_gl_shader_set_uniform_1f (overlay->shader, "alpha", 1.0f);
+  gst_gl_shader_set_uniform_1i (overlay->shader, "texture", 0);
+
+  overlay->attr_position =
+      gst_gl_shader_get_attribute_location (overlay->shader, "a_position");
+  overlay->attr_texture =
+      gst_gl_shader_get_attribute_location (overlay->shader, "a_texcoord");
+
+  if (!overlay->vbo) {
+    if (gl->GenVertexArrays) {
+      gl->GenVertexArrays (1, &overlay->vao);
+      gl->BindVertexArray (overlay->vao);
+    }
+
+    gl->GenBuffers (1, &overlay->vbo);
+    gl->BindBuffer (GL_ARRAY_BUFFER, overlay->vbo);
+    gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), v_vertices,
+        GL_STATIC_DRAW);
+
+    if (gl->GenVertexArrays)
+      _bind_buffer (overlay, overlay->vbo);
+  }
+
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (overlay->vao);
+  else
+    _bind_buffer (overlay, overlay->vbo);
+
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+
+  if (!overlay->image_memory)
+    goto out;
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
           GST_MAP_READ | GST_MAP_GL) || map_info.data == NULL)
-    return;
+    goto out;
 
+  memory_mapped = TRUE;
   image_tex = *(guint *) map_info.data;
 
-  gst_gl_overlay_load_texture (overlay, image_tex, TRUE);
+  if (!overlay->overlay_vbo) {
+    if (gl->GenVertexArrays) {
+      gl->GenVertexArrays (1, &overlay->overlay_vao);
+      gl->BindVertexArray (overlay->overlay_vao);
+    }
 
-  gst_memory_unmap ((GstMemory *) overlay->image_memory, &map_info);
+    gl->GenBuffers (1, &overlay->overlay_vbo);
+    gl->BindBuffer (GL_ARRAY_BUFFER, overlay->overlay_vbo);
+    overlay->geometry_change = TRUE;
+  }
+
+  if (overlay->geometry_change) {
+    gint render_width, render_height;
+    gfloat x, y, image_width, image_height;
+
+    /* *INDENT-OFF* */
+    float vertices[] = {
+     -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+      1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+      1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+     -1.0f,  1.0f, 0.0f, 0.0,  1.0f,
+    };
+    /* *INDENT-ON* */
+
+    /* scale from [0, 1] -> [-1, 1] */
+    x = ((gfloat) overlay->offset_x / (gfloat) overlay->window_width +
+        overlay->relative_x) * 2.0f - 1.0;
+    y = ((gfloat) overlay->offset_y / (gfloat) overlay->window_height +
+        overlay->relative_y) * 2.0f - 1.0;
+    /* scale from [0, 1] -> [0, 2] */
+    render_width =
+        overlay->overlay_width >
+        0 ? overlay->overlay_width : overlay->image_width;
+    render_height =
+        overlay->overlay_height >
+        0 ? overlay->overlay_height : overlay->image_height;
+    image_width =
+        ((gfloat) render_width / (gfloat) overlay->window_width) * 2.0f;
+    image_height =
+        ((gfloat) render_height / (gfloat) overlay->window_height) * 2.0f;
+
+    vertices[0] = vertices[15] = x;
+    vertices[5] = vertices[10] = x + image_width;
+    vertices[1] = vertices[6] = y;
+    vertices[11] = vertices[16] = y + image_height;
+
+    gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
+        GL_STATIC_DRAW);
+  }
+
+  if (gl->GenVertexArrays) {
+    if (overlay->geometry_change)
+      _bind_buffer (overlay, overlay->overlay_vbo);
+    gl->BindVertexArray (overlay->overlay_vao);
+  } else {
+    _bind_buffer (overlay, overlay->overlay_vbo);
+  }
+
+  gl->BindTexture (GL_TEXTURE_2D, image_tex);
+  gst_gl_shader_set_uniform_1f (overlay->shader, "alpha", overlay->alpha);
+
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+
+out:
+  if (gl->GenVertexArrays) {
+    gl->BindVertexArray (0);
+  } else {
+    _unbind_buffer (overlay);
+  }
+
+  gst_gl_context_clear_shader (filter->context);
+
+  if (memory_mapped)
+    gst_memory_unmap ((GstMemory *) overlay->image_memory, &map_info);
+
+  overlay->geometry_change = FALSE;
 }
 
 static gboolean
