@@ -70,6 +70,7 @@ struct _GstDecklinkSink
   gboolean audio_eos;
   int video_seqnum;
   int audio_seqnum;
+  GstSegment audio_segment, video_segment;
 
   IDeckLink *decklink;
   IDeckLinkOutput *output;

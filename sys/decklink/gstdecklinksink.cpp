@@ -413,6 +413,8 @@ gst_decklink_sink_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_segment_init (&decklinksink->audio_segment, GST_FORMAT_TIME);
+      gst_segment_init (&decklinksink->video_segment, GST_FORMAT_TIME);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -449,6 +451,9 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
   GstFlowReturn flow_ret;
   const GstDecklinkMode *mode;
   HRESULT ret;
+  GstClockTime timestamp, duration;
+  GstClockTime running_time;
+  GstClockTime running_time_duration;
 
   decklinksink = GST_DECKLINK_SINK (parent);
 
@@ -478,6 +483,13 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
 
   frame->GetBytes (&data);
   gst_buffer_extract (buffer, 0, data, gst_buffer_get_size (buffer));
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+  if (duration == GST_CLOCK_TIME_NONE) {
+    duration = gst_util_uint64_scale_int (GST_SECOND, mode->fps_d, mode->fps_n);
+  }
+  running_time = gst_segment_to_running_time (&decklinksink->video_segment, GST_FORMAT_TIME, timestamp);
+  running_time_duration = gst_segment_to_running_time (&decklinksink->video_segment, GST_FORMAT_TIME, timestamp + duration) - running_time;
   gst_buffer_unref (buffer);
 
   g_mutex_lock (&decklinksink->mutex);
@@ -495,7 +507,7 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
 
   if (!decklinksink->stop) {
     ret = decklinksink->output->ScheduleVideoFrame (frame,
-        decklinksink->num_frames * mode->fps_d, mode->fps_d, mode->fps_n);
+        running_time, running_time_duration, GST_SECOND);
     if (ret != S_OK) {
       GST_ELEMENT_ERROR (decklinksink, STREAM, FAILED,
           (NULL), ("Failed to schedule frame: 0x%08x", ret));
@@ -569,6 +581,14 @@ gst_decklink_sink_videosink_event (GstPad * pad, GstObject * parent,
         gst_message_set_seqnum (message, decklinksink->video_seqnum);
         gst_element_post_message (GST_ELEMENT_CAST (decklinksink), message);
       }
+      res = gst_pad_event_default (pad, parent, event);
+      break;
+    case GST_EVENT_SEGMENT:
+      gst_event_copy_segment (event, &decklinksink->video_segment);
+      res = gst_pad_event_default (pad, parent, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&decklinksink->video_segment, GST_FORMAT_TIME);
       res = gst_pad_event_default (pad, parent, event);
       break;
     default:
@@ -663,6 +683,14 @@ gst_decklink_sink_audiosink_event (GstPad * pad, GstObject * parent,
       /* FIXME: EOS aggregation with video pad looks wrong */
       decklinksink->audio_eos = TRUE;
       decklinksink->audio_seqnum = gst_event_get_seqnum (event);
+      res = gst_pad_event_default (pad, parent, event);
+      break;
+    case GST_EVENT_SEGMENT:
+      gst_event_copy_segment (event, &decklinksink->audio_segment);
+      res = gst_pad_event_default (pad, parent, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&decklinksink->audio_segment, GST_FORMAT_TIME);
       res = gst_pad_event_default (pad, parent, event);
       break;
     default:
