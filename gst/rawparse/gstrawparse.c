@@ -1011,6 +1011,11 @@ gst_raw_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstFormat fmt;
 
       ret = TRUE;
+
+      /* try upstream first */
+      if (gst_pad_peer_query (rp->sinkpad, query))
+        break;
+
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       if (fmt != GST_FORMAT_TIME && fmt != GST_FORMAT_DEFAULT
           && fmt != GST_FORMAT_BYTES) {
