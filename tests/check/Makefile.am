@@ -238,6 +238,7 @@ check_PROGRAMS = \
 	elements/aiffparse \
 	elements/autoconvert \
 	elements/autovideoconvert \
+	elements/audiointerleave \
 	elements/audiomixer \
 	elements/asfmux \
 	elements/baseaudiovisualizer \
@@ -245,7 +246,7 @@ check_PROGRAMS = \
 	elements/dataurisrc \
 	elements/gdppay \
 	elements/gdpdepay \
- 	elements/compositor \
+	elements/compositor \
 	$(check_jifmux) \
 	elements/jpegparse \
 	elements/h263parse \
@@ -288,6 +289,9 @@ LDADD = $(GST_CHECK_LIBS)
 
 elements_audiomixer_LDADD = $(GST_BASE_LIBS) -lgstbase-@GST_API_VERSION@ $(LDADD)
 elements_audiomixer_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
+elements_audiointerleave_LDADD = $(GST_BASE_LIBS) -lgstbase-@GST_API_VERSION@ -lgstaudio-@GST_API_VERSION@ $(LDADD)
+elements_audiointerleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 # parser unit test convenience lib
 noinst_LTLIBRARIES = libparser.la

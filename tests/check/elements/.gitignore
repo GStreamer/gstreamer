@@ -2,6 +2,7 @@
 aiffparse
 asfmux
 assrender
+audiointerleave
 audiomixer
 autoconvert
 autovideoconvert
@@ -14,7 +15,6 @@ curlftpsink
 curlsftpsink
 curlhttpsink
 curlsmtpsink
-deinterleave
 dataurisrc
 faac
 faad
@@ -26,7 +26,6 @@ h264parse
 hlsdemux_m3u8
 id3mux
 imagecapturebin
-interleave
 jifmux
 jpegparse
 kate
