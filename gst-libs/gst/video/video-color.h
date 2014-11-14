@@ -149,6 +149,7 @@ typedef struct {
 #define GST_VIDEO_COLORIMETRY_BT601       "bt601"
 #define GST_VIDEO_COLORIMETRY_BT709       "bt709"
 #define GST_VIDEO_COLORIMETRY_SMPTE240M   "smpte240m"
+#define GST_VIDEO_COLORIMETRY_SRGB        "sRGB"
 
 gboolean     gst_video_colorimetry_matches     (GstVideoColorimetry *cinfo, const gchar *color);
 gboolean     gst_video_colorimetry_from_string (GstVideoColorimetry *cinfo, const gchar *color);
