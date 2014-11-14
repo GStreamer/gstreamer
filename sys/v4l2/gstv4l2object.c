@@ -2801,12 +2801,20 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     if (v4l2_ioctl (fd, VIDIOC_S_PARM, &streamparm) < 0)
       goto set_parm_failed;
 
-    /* get new values */
-    fps_d = streamparm.parm.capture.timeperframe.numerator;
-    fps_n = streamparm.parm.capture.timeperframe.denominator;
+    if (streamparm.parm.capture.timeperframe.numerator > 0 &&
+      streamparm.parm.capture.timeperframe.denominator > 0) {
+      /* get new values */
+      fps_d = streamparm.parm.capture.timeperframe.numerator;
+      fps_n = streamparm.parm.capture.timeperframe.denominator;
 
-    GST_INFO_OBJECT (v4l2object->element, "Set framerate to %u/%u", fps_n,
-        fps_d);
+      GST_INFO_OBJECT (v4l2object->element, "Set framerate to %u/%u", fps_n,
+          fps_d);
+    } else {
+      /* fix v4l2 capture driver to provide framerate values */
+      GST_WARNING_OBJECT (v4l2object->element,
+          "Reuse caps framerate %u/%u - fix v4l2 capture driver",
+          fps_n, fps_d);
+    }
 
     GST_VIDEO_INFO_FPS_N (&info) = fps_n;
     GST_VIDEO_INFO_FPS_D (&info) = fps_d;
