@@ -792,7 +792,12 @@ class _TestsLauncher(Loggable):
         return app_dirs
 
     def _exec_app(self, app_dir, env):
-        for f in os.listdir(app_dir):
+        try:
+            files = os.listdir(app_dir)
+        except OSError as e:
+            self.debug("Could not list %s: %s" % (app_dir, e))
+            files = []
+        for f in files:
             if f.endswith(".py"):
                 execfile(os.path.join(app_dir, f), env)
 
