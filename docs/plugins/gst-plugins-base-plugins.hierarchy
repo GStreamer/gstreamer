@@ -15,7 +15,6 @@ GObject
       GstElement
         GstAdder
         GstAudioDecoder
-          GstIVorbisDec
           GstVorbisDec
         GstAudioEncoder
           GstVorbisEnc

@@ -850,12 +850,12 @@
 
 <ARG>
 <NAME>GstVideoConvert::dither</NAME>
-<TYPE>GstVideoConvertDitherMethod</TYPE>
+<TYPE>GstVideoDitherMethod</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Dither</NICK>
 <BLURB>Apply dithering while converting.</BLURB>
-<DEFAULT>No dithering (default)</DEFAULT>
+<DEFAULT>GST_VIDEO_DITHER_NONE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1411,7 +1411,7 @@
 <ARG>
 <NAME>GstVideoTestSrc::timestamp-offset</NAME>
 <TYPE>gint64</TYPE>
-<RANGE></RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp offset</NICK>
 <BLURB>An offset added to timestamps set on buffers (in ns).</BLURB>

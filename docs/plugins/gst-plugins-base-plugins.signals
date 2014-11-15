@@ -320,6 +320,14 @@ guint64  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstAppSrc::push-sample</NAME>
+<RETURNS>GstFlowReturn</RETURNS>
+<FLAGS>la</FLAGS>
+GstAppSrc *gstappsrc
+GstSample *arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstAppSink::eos</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
