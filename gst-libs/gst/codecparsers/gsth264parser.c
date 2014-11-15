@@ -80,16 +80,24 @@
 #include <gst/base/gstbitreader.h>
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (h264_parser_debug);
-#define GST_CAT_DEFAULT h264_parser_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT gst_h264_debug_category_get()
+static GstDebugCategory *
+gst_h264_debug_category_get (void)
+{
+  static gsize cat_gonce = 0;
 
-static gboolean initialized = FALSE;
-#define INITIALIZE_DEBUG_CATEGORY \
-  if (!initialized) { \
-    GST_DEBUG_CATEGORY_INIT (h264_parser_debug, "codecparsers_h264", 0, \
-        "h264 parser library"); \
-    initialized = TRUE; \
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "codecparsers_h264", 0, "h264 parse library");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
   }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
 
 /**** Default scaling_lists according to Table 7-2 *****/
 static const guint8 default_4x4_intra[16] = {
@@ -1267,7 +1275,6 @@ gst_h264_nal_parser_new (void)
   GstH264NalParser *nalparser;
 
   nalparser = g_slice_new0 (GstH264NalParser);
-  INITIALIZE_DEBUG_CATEGORY;
 
   return nalparser;
 }
@@ -1800,7 +1807,6 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
 {
   NalReader nr;
 
-  INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("parsing SPS");
 
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
@@ -1887,7 +1893,6 @@ gst_h264_parse_subset_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
 {
   NalReader nr;
 
-  INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("parsing Subset SPS");
 
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
@@ -1936,7 +1941,6 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   guint8 pic_scaling_matrix_present_flag;
   gint qp_bd_offset;
 
-  INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("parsing PPS");
 
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,

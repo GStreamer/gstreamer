@@ -39,23 +39,24 @@
 #include "gstvp8rangedecoder.h"
 #include "vp8utils.h"
 
-GST_DEBUG_CATEGORY_STATIC (vp8_parser_debug);
-#define GST_CAT_DEFAULT vp8_parser_debug
-
-#define INITIALIZE_DEBUG_CATEGORY ensure_debug_category ()
-static void
-ensure_debug_category (void)
-{
 #ifndef GST_DISABLE_GST_DEBUG
-  static gsize is_initialized;
+#define GST_CAT_DEFAULT gst_vp8_debug_category_get()
+static GstDebugCategory *
+gst_vp8_debug_category_get (void)
+{
+  static gsize cat_gonce = 0;
 
-  if (g_once_init_enter (&is_initialized)) {
-    GST_DEBUG_CATEGORY_INIT (vp8_parser_debug, "codecparsers_vp8", 0,
-        "vp8 parser library");
-    g_once_init_leave (&is_initialized, TRUE);
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "codecparsers_vp8", 0, "vp8 parser library");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
   }
-#endif
+
+  return (GstDebugCategory *) cat_gonce;
 }
+#endif /* GST_DISABLE_GST_DEBUG */
 
 static GstVp8MvProbs vp8_mv_update_probs;
 static GstVp8TokenProbs vp8_token_update_probs;
@@ -529,7 +530,6 @@ gst_vp8_parser_parse_frame_header (GstVp8Parser * parser,
   GstVp8RangeDecoderState rd_state;
   GstVp8ParserResult result;
 
-  ensure_debug_category ();
   ensure_prob_tables ();
 
   g_return_val_if_fail (frame_hdr != NULL, GST_VP8_PARSER_ERROR);

@@ -72,16 +72,24 @@
 #include <string.h>
 #include <math.h>
 
-GST_DEBUG_CATEGORY_STATIC (h265_parser_debug);
-#define GST_CAT_DEFAULT h265_parser_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT gst_h265_debug_category_get()
+static GstDebugCategory *
+gst_h265_debug_category_get (void)
+{
+  static gsize cat_gonce = 0;
 
-static gboolean initialized = FALSE;
-#define INITIALIZE_DEBUG_CATEGORY \
-  if (!initialized) { \
-    GST_DEBUG_CATEGORY_INIT (h265_parser_debug, "codecparsers_h265", 0, \
-        "h265 parser library"); \
-    initialized = TRUE; \
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "codecparsers_h265", 0, "h265 parse library");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
   }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
 
 /**** Default scaling_lists according to Table 7-5 and 7-6 *****/
 
@@ -1239,7 +1247,6 @@ gst_h265_parser_new (void)
   GstH265Parser *parser;
 
   parser = g_slice_new0 (GstH265Parser);
-  INITIALIZE_DEBUG_CATEGORY;
 
   return parser;
 }
@@ -1514,7 +1521,6 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
   NalReader nr;
   guint i, j;
 
-  INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("parsing VPS");
 
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
@@ -1693,7 +1699,6 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
   guint subhc[] = { 1, 2, 1, 1, 1 };
   GstH265VUIParams *vui = NULL;
 
-  INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("parsing SPS");
 
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
@@ -1916,7 +1921,6 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
   guint32 CtbSizeY, MinCbLog2SizeY, CtbLog2SizeY, MaxBitDepthY, MaxBitDepthC;
   guint8 i;
 
-  INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("parsing PPS");
 
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
