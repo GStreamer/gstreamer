@@ -417,7 +417,7 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin)
   dvbbasebin->tsparse = gst_element_factory_make ("tsparse", NULL);
 
   g_object_set (dvbbasebin->buffer_queue, "max-size-buffers", 0,
-      "max-size-bytes", 0, "max-size-time", 0, NULL);
+      "max-size-bytes", 0, "max-size-time", (guint64) 0, NULL);
 
   gst_bin_add_many (GST_BIN (dvbbasebin), dvbbasebin->dvbsrc,
       dvbbasebin->buffer_queue, dvbbasebin->tsparse, NULL);
