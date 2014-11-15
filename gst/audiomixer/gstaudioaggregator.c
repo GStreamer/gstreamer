@@ -635,11 +635,14 @@ gst_audio_aggregator_set_src_caps (GstAudioAggregator * aagg, GstCaps * caps)
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (aagg);
 
-  GST_INFO_OBJECT (aagg, "setting caps to %" GST_PTR_FORMAT, caps);
-  gst_caps_replace (&aagg->current_caps, caps);
+  if (!gst_audio_info_is_equal (&info, &aagg->info)) {
+    GST_INFO_OBJECT (aagg, "setting caps to %" GST_PTR_FORMAT, caps);
+    gst_caps_replace (&aagg->current_caps, caps);
 
-  memcpy (&aagg->info, &info, sizeof (info));
-  aagg->priv->send_caps = TRUE;
+    memcpy (&aagg->info, &info, sizeof (info));
+    aagg->priv->send_caps = TRUE;
+
+  }
 
   GST_OBJECT_UNLOCK (aagg);
   GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
