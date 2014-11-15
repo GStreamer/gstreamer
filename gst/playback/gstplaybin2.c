@@ -154,7 +154,7 @@
  * switch (GST_MESSAGE_TYPE (msg)) {
  *   case GST_MESSAGE_BUFFERING: {
  *     gint percent = 0;
- *     gst_message_parse_buffering (msg, &amp;percent);
+ *     gst_message_parse_buffering (msg, &percent);
  *     g_print ("Buffering (%%u percent done)", percent);
  *     break;
  *   }

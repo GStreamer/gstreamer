@@ -34,8 +34,8 @@
  * The following example reads data from a #GMemoryInputStream.
  * |[
 
-#include &lt;gst/gst.h&gt;
-#include &lt;gio/gio.h&gt;
+#include <gst/gst.h>
+#include <gio/gio.h>
 
 ...
 
