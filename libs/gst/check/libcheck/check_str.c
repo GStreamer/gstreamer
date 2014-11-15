@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "config.h"
+#include "../lib/libcompat.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -79,11 +79,12 @@ char *
 ck_strdup_printf (const char *fmt, ...)
 {
   /* Guess we need no more than 100 bytes. */
-  int n, size = 100;
+  int n;
+  size_t size = 100;
   char *p;
   va_list ap;
 
-  p = emalloc (size);
+  p = (char *) emalloc (size);
 
   while (1) {
     /* Try to print in the allocated space. */
@@ -91,16 +92,16 @@ ck_strdup_printf (const char *fmt, ...)
     n = vsnprintf (p, size, fmt, ap);
     va_end (ap);
     /* If that worked, return the string. */
-    if (n > -1 && n < size)
+    if (n > -1 && n < (int) size)
       return p;
 
     /* Else try again with more space. */
     if (n > -1)                 /* C99 conform vsnprintf() */
-      size = n + 1;             /* precisely what is needed */
+      size = (size_t) n + 1;    /* precisely what is needed */
     else                        /* glibc 2.0 */
       size *= 2;                /* twice the old size */
 
-    p = erealloc (p, size);
+    p = (char *) erealloc (p, size);
   }
 }
 
@@ -108,6 +109,7 @@ static const char *
 tr_type_str (TestResult * tr)
 {
   const char *str = NULL;
+
   if (tr->ctx == CK_CTX_TEST) {
     if (tr->rtype == CK_PASS)
       str = "P";

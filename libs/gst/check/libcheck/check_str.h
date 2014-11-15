@@ -23,19 +23,19 @@
 
 /* Return a string representation of the given TestResult.  Return
    value has been malloc'd, and must be freed by the caller */
-char *tr_str (TestResult *tr);
+char *tr_str (TestResult * tr);
 
 /* Return a string representation of the given TestResult message
    without the test id or result type. This is suitable for separate
    formatting of the test and the message. Return value has been 
    malloc'd, and must be freed by the caller */
-char *tr_short_str (TestResult *tr);
+char *tr_short_str (TestResult * tr);
 
 /* Return a string representation of the given SRunner's run
    statistics (% passed, num run, passed, errors, failures). Return
    value has been malloc'd, and must be freed by the caller
-*/ 
-char *sr_stat_str (SRunner *sr);
+*/
+char *sr_stat_str (SRunner * sr);
 
 char *ck_strdup_printf (const char *fmt, ...);
 
