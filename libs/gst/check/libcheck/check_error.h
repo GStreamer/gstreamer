@@ -21,7 +21,7 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include "../lib/libcompat.h"
+#include "libcompat.h"
 #include <setjmp.h>
 
 extern jmp_buf error_jmp_buffer;

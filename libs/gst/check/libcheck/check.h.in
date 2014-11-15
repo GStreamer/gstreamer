@@ -25,7 +25,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include <check_stdint.h>
+#include "_stdint.h"
 
 /*
    Macros and functions starting with _ (underscore) are internal and

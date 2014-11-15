@@ -84,21 +84,9 @@
 CK_DLL_EXP unsigned int alarm (unsigned int seconds);
 #endif /* !HAVE_DECL_ALARM */
 
-#if !HAVE_MALLOC
-CK_DLL_EXP void *rpl_malloc (size_t n);
-#endif /* !HAVE_MALLOC */
-
-#if !HAVE_REALLOC
-CK_DLL_EXP void *rpl_realloc (void *p, size_t n);
-#endif /* !HAVE_REALLOC */
-
 #if !HAVE_GETPID && HAVE__GETPID
 #define getpid _getpid
 #endif /* !HAVE_GETPID && HAVE__GETPID */
-
-#if !HAVE_GETTIMEOFDAY
-CK_DLL_EXP int gettimeofday (struct timeval *tv, void *tz);
-#endif /* !HAVE_GETTIMEOFDAY */
 
 #if !HAVE_DECL_LOCALTIME_R
 #if !defined(localtime_r)
@@ -170,40 +158,15 @@ struct itimerspec
  */
 struct sigevent;
 
+#ifndef HAVE_CLOCK_GETTIME
 CK_DLL_EXP int clock_gettime (clockid_t clk_id, struct timespec *ts);
+#endif
 CK_DLL_EXP int timer_create (clockid_t clockid, struct sigevent *sevp,
     timer_t * timerid);
 CK_DLL_EXP int timer_settime (timer_t timerid, int flags,
     const struct itimerspec *new_value, struct itimerspec *old_value);
 CK_DLL_EXP int timer_delete (timer_t timerid);
 #endif /* HAVE_LIBRT */
-
-/*
- * The following checks are to determine if the system's
- * snprintf (or its variants) should be replaced with
- * the C99 compliant version in libcompat.
- */
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif
-#if HAVE_STDARG_H
-#include <stdarg.h>
-
-#if !HAVE_VSNPRINTF
-CK_DLL_EXP int rpl_vsnprintf (char *, size_t, const char *, va_list);
-
-#define vsnprintf rpl_vsnprintf
-#endif
-#if !HAVE_SNPRINTF
-CK_DLL_EXP int rpl_snprintf (char *, size_t, const char *, ...);
-
-#define snprintf rpl_snprintf
-#endif
-#endif /* HAVE_STDARG_H */
-
-#if !HAVE_GETLINE
-CK_DLL_EXP ssize_t getline (char **lineptr, size_t * n, FILE * stream);
-#endif
 
 /* silence warnings about an empty library */
 CK_DLL_EXP void

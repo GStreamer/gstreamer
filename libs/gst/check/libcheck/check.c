@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "../lib/libcompat.h"
+#include "libcompat.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -31,6 +31,10 @@
 #include "check_list.h"
 #include "check_impl.h"
 #include "check_msg.h"
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>             /* for _POSIX_VERSION */
+#endif
 
 #ifndef DEFAULT_TIMEOUT
 #define DEFAULT_TIMEOUT 4
@@ -536,7 +540,7 @@ check_get_clockid ()
  * Worse, if librt and alarm() are unavailable, this check
  * will result in an assert(0).
  */
-#ifdef HAVE_LIBRT
+#if defined(HAVE_POSIX_TIMERS) && defined(HAVE_MONOTONIC_CLOCK)
     timer_t timerid;
 
     if (timer_create (CLOCK_MONOTONIC, NULL, &timerid) == 0) {

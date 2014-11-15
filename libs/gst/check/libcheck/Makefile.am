@@ -11,7 +11,27 @@ CFILES =\
 	check_pack.c	\
 	check_print.c	\
 	check_run.c	\
-	check_str.c
+	check_str.c	\
+	libcompat.c
+
+if !HAVE_ALARM
+CFILES += alarm.c
+endif
+
+if !HAVE_CLOCK_GETTIME
+CFILES += clock_gettime.c
+endif
+
+if !HAVE_STRSIGNAL
+CFILES += strsignal.c
+endif
+
+if !HAVE_TIMER_CREATE_SETTIME_DELETE
+CFILES +=\
+	timer_create.c	\
+	timer_settime.c	\
+	timer_delete.c
+endif
 
 HFILES =\
 	check.h		\
@@ -22,7 +42,8 @@ HFILES =\
 	check_msg.h	\
 	check_pack.h	\
 	check_print.h	\
-	check_str.h
+	check_str.h	\
+	libcompat.h
 
 noinst_HEADERS = $(HFILES)
 

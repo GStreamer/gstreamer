@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "../lib/libcompat.h"
+#include "libcompat.h"
 
 #include <stdlib.h>
 #include <stdio.h>
