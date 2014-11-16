@@ -292,6 +292,9 @@ gst_video_blend (GstVideoFrame * dest,
 
   ensure_debug_category ();
 
+  GST_LOG ("blend src %dx%d onto dest %dx%d @ %d,%d", src_width, src_height,
+      dest_width, dest_height, x, y);
+
   /* In case overlay is completely outside the video, dont render */
   if (x + src_width <= 0 || y + src_height <= 0
       || x >= dest_width || y >= dest_height) {
@@ -334,6 +337,7 @@ gst_video_blend (GstVideoFrame * dest,
 
   /* If we're here we know that the overlay image fully or
    * partially overlaps with the video frame */
+
   /* adjust src image for negative offsets */
   if (x < 0) {
     src_xoff = -x;
@@ -347,7 +351,8 @@ gst_video_blend (GstVideoFrame * dest,
     y = 0;
   }
 
-  /* adjust width/height if the src is bigger than dest */
+  /* adjust width/height to render (i.e. clip source image) if the source
+   * image extends beyond the right or bottom border of the video surface */
   if (x + src_width > dest_width)
     src_width = dest_width - x;
 
@@ -360,11 +365,13 @@ gst_video_blend (GstVideoFrame * dest,
     dinfo->unpack_func (dinfo, 0, tmpdestline, dest->data, dest->info.stride,
         0, i, dest_width);
     sinfo->unpack_func (sinfo, 0, tmpsrcline, src->data, src->info.stride,
-        src_xoff, src_yoff, src_width);
+        0, src_yoff, src_width + src_xoff);
 
     matrix (tmpsrcline, src_width);
 
+    /* FIXME: use the x parameter of the unpack func once implemented */
     tmpdestline += 4 * x;
+    tmpsrcline += 4 * src_xoff;
 
     /* Here dest and src are both either in AYUV or ARGB
      * TODO: Make the orc version working properly*/
@@ -405,7 +412,9 @@ gst_video_blend (GstVideoFrame * dest,
 
 #undef BLENDLOOP
 
+    /* undo previous pointer adjustments to pass right pointer to g_free */
     tmpdestline -= 4 * x;
+    tmpsrcline -= 4 * src_xoff;
 
     /* FIXME
      * #if G_BYTE_ORDER == LITTLE_ENDIAN
