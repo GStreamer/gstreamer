@@ -367,11 +367,11 @@ gst_video_blend (GstVideoFrame * dest,
     sinfo->unpack_func (sinfo, 0, tmpsrcline, src->data, src->info.stride,
         0, src_yoff, src_width + src_xoff);
 
-    matrix (tmpsrcline, src_width);
-
     /* FIXME: use the x parameter of the unpack func once implemented */
     tmpdestline += 4 * x;
     tmpsrcline += 4 * src_xoff;
+
+    matrix (tmpsrcline, src_width);
 
     /* Here dest and src are both either in AYUV or ARGB
      * TODO: Make the orc version working properly*/
