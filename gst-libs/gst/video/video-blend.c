@@ -316,7 +316,7 @@ gst_video_blend (GstVideoFrame * dest,
     goto unpack_format_not_supported;
 
   tmpdestline = g_malloc (sizeof (guint8) * (dest_width + 8) * 4);
-  tmpsrcline = g_malloc (sizeof (guint8) * (dest_width + 8) * 4);
+  tmpsrcline = g_malloc (sizeof (guint8) * (src_width + 8) * 4);
 
   matrix = matrix_identity;
   if (GST_VIDEO_INFO_IS_RGB (&src->info) != GST_VIDEO_INFO_IS_RGB (&dest->info)) {
