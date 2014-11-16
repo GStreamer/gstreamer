@@ -925,6 +925,8 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
                 GES_IS_VIDEO_TRACK (tmptrack->data))) {
           GST_DEBUG_OBJECT (pipeline, "Setting presence to 1!");
           gst_encoding_profile_set_presence (tmpprofiles->data, 1);
+          gst_encoding_profile_set_allow_dynamic_output (tmpprofiles->data,
+              FALSE);
         }
       }
     }
