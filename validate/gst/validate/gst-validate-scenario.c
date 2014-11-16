@@ -834,6 +834,41 @@ _check_position (GstValidateScenario * scenario, gdouble rate,
 }
 
 static gboolean
+_should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
+    GstClockTime position, gdouble rate)
+{
+
+  if (!act) {
+    GST_DEBUG_OBJECT (scenario, "No action to execute");
+
+    return FALSE;
+  } else if (GST_STATE (scenario->pipeline) < GST_STATE_PAUSED) {
+    GST_DEBUG_OBJECT (scenario, "Pipeline not even in paused, "
+        "just executing actions");
+
+    return TRUE;
+  } else if (act->playback_time == GST_CLOCK_TIME_NONE) {
+    GST_DEBUG_OBJECT (scenario, "No timing info, executing action");
+
+    return TRUE;
+  } else if ((rate > 0 && (GstClockTime) position < act->playback_time)) {
+    GST_DEBUG_OBJECT (scenario, "positive rate and position %" GST_TIME_FORMAT
+        " < playback_time %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
+        GST_TIME_ARGS (act->playback_time));
+
+    return FALSE;
+  } else if (rate < 0 && (GstClockTime) position > act->playback_time) {
+    GST_DEBUG_OBJECT (scenario, "negativ rate and position %" GST_TIME_FORMAT
+        " < playback_time %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
+        GST_TIME_ARGS (act->playback_time));
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 get_position (GstValidateScenario * scenario)
 {
   GList *tmp;
@@ -842,6 +877,7 @@ get_position (GstValidateScenario * scenario)
   GstValidateAction *act = NULL;
   gint64 position, duration;
   gboolean has_pos, has_dur;
+  GstValidateActionType *type;
 
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstElement *pipeline = scenario->pipeline;
@@ -900,8 +936,10 @@ get_position (GstValidateScenario * scenario)
   has_dur = gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration)
       && GST_CLOCK_TIME_IS_VALID (duration);
 
-  if (!has_pos && GST_STATE (pipeline) >= GST_STATE_PAUSED) {
-    GST_LOG ("Unknown position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
+  if (!has_pos && GST_STATE (pipeline) >= GST_STATE_PAUSED &&
+      act && GST_CLOCK_TIME_IS_VALID (act->playback_time)) {
+    GST_INFO_OBJECT (scenario, "Unknown position: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (position));
     return TRUE;
   }
 
@@ -916,53 +954,51 @@ get_position (GstValidateScenario * scenario)
     }
   }
 
-  GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
+  GST_DEBUG_OBJECT (scenario, "Current position: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (position));
 
   _check_position (scenario, rate, position);
 
-  if (act && (((rate > 0 && (GstClockTime) position >= act->playback_time) ||
-              (rate < 0 && (GstClockTime) position <= act->playback_time) ||
-              (act->playback_time == GST_CLOCK_TIME_NONE)) ||
-          (GST_STATE (pipeline) < GST_STATE_PAUSED))) {
-    GstValidateActionType *type;
+  if (!_should_execute_action (scenario, act, position, rate))
+    return TRUE;
 
-    type = _find_action_type (act->type);
+  type = _find_action_type (act->type);
 
-    if (act->repeat == -1 &&
-        !gst_structure_get_int (act->structure, "repeat", &act->repeat)) {
-      gchar *error = NULL;
-      const gchar *repeat_expr = gst_structure_get_string (act->structure,
-          "repeat");
+  if (act->repeat == -1 &&
+      !gst_structure_get_int (act->structure, "repeat", &act->repeat)) {
+    gchar *error = NULL;
+    const gchar *repeat_expr = gst_structure_get_string (act->structure,
+        "repeat");
 
-      if (repeat_expr) {
-        act->repeat =
-            gst_validate_utils_parse_expression (repeat_expr,
-            _set_variable_func, scenario, &error);
-      }
+    if (repeat_expr) {
+      act->repeat =
+          gst_validate_utils_parse_expression (repeat_expr,
+          _set_variable_func, scenario, &error);
     }
+  }
 
-    GST_DEBUG_OBJECT (scenario, "Executing %" GST_PTR_FORMAT
-        " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
+  GST_DEBUG_OBJECT (scenario, "Executing %" GST_PTR_FORMAT
+      " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
 
-    act->state = type->execute (scenario, act);
-    if (act->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
-      gchar *str = gst_structure_to_string (act->structure);
+  act->state = type->execute (scenario, act);
+  if (act->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
+    gchar *str = gst_structure_to_string (act->structure);
 
-      GST_VALIDATE_REPORT (scenario,
-          SCENARIO_ACTION_EXECUTION_ERROR, "Could not execute %s", str);
+    GST_VALIDATE_REPORT (scenario,
+        SCENARIO_ACTION_EXECUTION_ERROR, "Could not execute %s", str);
 
-      g_free (str);
-    }
+    g_free (str);
+  }
 
-    if (act->repeat > 0) {
-      act->repeat--;
-    } else if (act->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
-      tmp = priv->actions;
-      priv->actions = g_list_remove_link (priv->actions, tmp);
-      gst_mini_object_unref (GST_MINI_OBJECT (act));
+  if (act->repeat > 0) {
+    act->repeat--;
+  } else if (act->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+    tmp = priv->actions;
+    priv->actions = g_list_remove_link (priv->actions, tmp);
+    GST_ERROR ("NEXT! %p", priv->actions);
+    gst_mini_object_unref (GST_MINI_OBJECT (act));
 
-      g_list_free (tmp);
-    }
+    g_list_free (tmp);
   }
 
   return TRUE;
