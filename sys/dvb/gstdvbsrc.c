@@ -1378,7 +1378,7 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_BANDWIDTH:{
       int tmp;
-      if (object->bandwidth == 0)
+      if (!object->bandwidth)
         tmp = BANDWIDTH_AUTO;
       else if (object->bandwidth <= 1712000)
         tmp = BANDWIDTH_1_712_MHZ;
@@ -1842,7 +1842,7 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size, GstBuffer ** buffer)
         continue;
       else
         goto select_error;
-    } else if (G_UNLIKELY (ret_val == 0)) {
+    } else if (G_UNLIKELY (!ret_val)) {
       /* timeout, post element message */
       gst_element_post_message (GST_ELEMENT_CAST (object),
           gst_message_new_element (GST_OBJECT (object),
@@ -1907,7 +1907,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
     GST_DEBUG_OBJECT (object, "Reading from DVR device");
     retval = gst_dvbsrc_read_device (object, buffer_size, buf);
 
-    if (object->stats_interval != 0 &&
+    if (object->stats_interval &&
         ++object->stats_counter == object->stats_interval) {
       gst_dvbsrc_output_frontend_stats (object);
       object->stats_counter = 0;
