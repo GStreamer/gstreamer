@@ -833,7 +833,7 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLU" = "xyes" -a "x$HAVE_GLES2" = "xyes"
 # if __APPLE__
 #  include <OpenGL/OpenGL.h>
 #  include <OpenGL/gl.h>
-#  if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+#  if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 #   define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
 #   include <OpenGL/gl3.h>
 #  endif
