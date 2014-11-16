@@ -1036,6 +1036,7 @@ ges_timeline_element_get_name (GESTimelineElement * self)
 /**
  * ges_timeline_element_set_name:
  * @self: a #GESTimelineElement
+ * @name: (allow-none): The name @self should take (if avalaible<)
  *
  *
  * Sets the name of object, or gives @self a guaranteed unique name (if name is NULL).
@@ -1055,7 +1056,7 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
   }
 
   /* parented objects cannot be renamed */
-  if (self->timeline != NULL) {
+  if (self->timeline != NULL && name) {
     GESTimelineElement *tmp = ges_timeline_get_element (self->timeline, name);
 
     if (tmp) {
