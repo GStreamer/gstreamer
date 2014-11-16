@@ -1129,6 +1129,9 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
+  if (group->buffer.flags & V4L2_BUF_FLAG_ERROR)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_CORRUPTED);
+
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
   *buffer = outbuf;
@@ -1595,8 +1598,12 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
           GstBuffer *tmp;
 
           if ((*buf)->pool == bpool) {
-            if (gst_buffer_get_size (*buf) == 0)
-              goto eos;
+            if (gst_buffer_get_size (*buf) == 0) {
+              if (GST_BUFFER_FLAG_IS_SET (*buf, GST_BUFFER_FLAG_CORRUPTED))
+                goto buffer_corrupted;
+              else
+                goto eos;
+            }
 
             /* start copying buffers when we are running low on buffers */
             if (g_atomic_int_get (&pool->num_queued) < pool->copy_threshold) {
@@ -1632,7 +1639,11 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
           /* An empty buffer on capture indicates the end of stream */
           if (gst_buffer_get_size (tmp) == 0) {
             gst_v4l2_buffer_pool_release_buffer (bpool, tmp);
-            goto eos;
+
+            if (GST_BUFFER_FLAG_IS_SET (*buf, GST_BUFFER_FLAG_CORRUPTED))
+              goto buffer_corrupted;
+            else
+              goto eos;
           }
 
           ret = gst_v4l2_buffer_pool_copy_buffer (pool, *buf, tmp);
@@ -1787,10 +1798,19 @@ copy_failed:
     GST_ERROR_OBJECT (pool, "failed to copy buffer");
     return ret;
   }
+buffer_corrupted:
+  {
+    GST_WARNING_OBJECT (pool, "Dropping corrupted buffer without payload");
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    return GST_V4L2_FLOW_CORRUPTED_BUFFER;
+  }
 eos:
   {
     GST_DEBUG_OBJECT (pool, "end of stream reached");
-    return GST_FLOW_EOS;
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    return GST_V4L2_FLOW_LAST_BUFFER;
   }
 acquire_failed:
   {
