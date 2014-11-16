@@ -236,6 +236,8 @@ _add_layer (GstValidateScenario * scenario, GstValidateAction * action)
   layer = ges_layer_new ();
   g_object_set (layer, "priority", priority, "auto-transition", auto_transition,
       NULL);
+
+  gst_validate_printf (action, "Adding layer with priority %d\n", priority);
   res = ges_timeline_add_layer (timeline, layer);
 
 beach:
@@ -501,12 +503,18 @@ _set_track_restriction_caps (GstValidateScenario * scenario,
     GESTrack *track = tmp->data;
 
     if (track->type & track_types) {
+      gchar *str;
+
+      str = gst_caps_to_string (caps);
+      gst_validate_printf (action, "Setting restriction caps %s on track: %s\n",
+          str, GST_ELEMENT_NAME (track));
+      g_free (str);
+
       ges_track_set_restriction_caps (track, caps);
 
       res = TRUE;
     }
   }
-
   gst_caps_unref (caps);
   gst_object_unref (timeline);
 
@@ -688,6 +696,8 @@ _set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
     goto done;
   }
 
+  gst_validate_printf (action, "Setting control source on %s:%s\n",
+      element_name, property_name);
   ret = ges_track_element_set_control_source (element,
       source, property_name, binding_type);
 
