@@ -6,6 +6,7 @@ position-formats
 stress-playbin
 stress-videooverlay
 test-effect-switch
+test-overlay-blending
 test-textoverlay
 test-scale
 test-box

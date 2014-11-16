@@ -76,6 +76,14 @@ test_effect_switch_SOURCES = test-effect-switch.c
 test_effect_switch_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 test_effect_switch_LDADD = $(GST_LIBS)
 
+test_overlay_blending_SOURCES = test-overlay-blending.c
+test_overlay_blending_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CFLAGS) $(GIO_CFLAGS)
+test_overlay_blending_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
+	$(GST_LIBS) $(GIO_LIBS)
+
 test_scale_SOURCES = test-scale.c
 test_scale_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 test_scale_LDADD = $(GST_LIBS) $(LIBM)
@@ -86,4 +94,4 @@ test_box_LDADD = $(GST_LIBS) $(LIBM)
 
 noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) \
 	audio-trickplay playbin-text position-formats stress-playbin \
-	test-scale test-box test-effect-switch
+	test-scale test-box test-effect-switch test-overlay-blending
