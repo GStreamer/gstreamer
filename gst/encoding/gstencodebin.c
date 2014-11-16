@@ -220,6 +220,7 @@ struct _StreamGroup
   GstElement *parser;
   GstElement *smartencoder;
   GstElement *outfilter;        /* Output capsfilter (streamprofile.format) */
+  gulong outputfilter_caps_sid;
   GstElement *formatter;
   GstElement *outqueue;         /* Queue just before the muxer */
   gulong restriction_sid;
@@ -1079,6 +1080,34 @@ _profile_restriction_caps_cb (GstEncodingProfile * profile,
 }
 
 static void
+_outfilter_caps_set_cb (GstPad * outfilter_sinkpad,
+    GParamSpec * arg G_GNUC_UNUSED, StreamGroup * group)
+{
+  GstCaps *caps;
+
+  g_object_get (outfilter_sinkpad, "caps", &caps, NULL);
+  GST_INFO_OBJECT (group->ebin, "Forcing caps to %" GST_PTR_FORMAT, caps);
+  g_object_set (group->outfilter, "caps", caps, NULL);
+  g_signal_handler_disconnect (outfilter_sinkpad, group->outputfilter_caps_sid);
+  group->outputfilter_caps_sid = 0;
+}
+
+static void
+_set_group_caps_format (StreamGroup * sgroup, GstEncodingProfile * prof,
+    GstCaps * format)
+{
+  g_object_set (sgroup->outfilter, "caps", format, NULL);
+
+  if (!gst_encoding_profile_get_allow_dynamic_output (prof)) {
+    if (!sgroup->outputfilter_caps_sid) {
+      sgroup->outputfilter_caps_sid =
+          g_signal_connect (sgroup->outfilter->sinkpads->data,
+          "notify::caps", G_CALLBACK (_outfilter_caps_set_cb), sgroup);
+    }
+  }
+}
+
+static void
 _post_missing_plugin_message (GstEncodeBin * ebin, GstEncodingProfile * prof)
 {
   GstCaps *format;
@@ -1211,7 +1240,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
    * This will receive the format caps from the streamprofile */
   GST_DEBUG ("Adding output capsfilter for %" GST_PTR_FORMAT, format);
   sgroup->outfilter = gst_element_factory_make ("capsfilter", NULL);
-  g_object_set (sgroup->outfilter, "caps", format, NULL);
+  _set_group_caps_format (sgroup, sprof, format);
 
   gst_bin_add (GST_BIN (ebin), sgroup->outfilter);
   tosync = g_list_append (tosync, sgroup->outfilter);
@@ -1989,8 +2018,15 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
     gst_element_set_state (sgroup->encoder, GST_STATE_NULL);
   if (sgroup->fakesink)
     gst_element_set_state (sgroup->fakesink, GST_STATE_NULL);
-  if (sgroup->outfilter)
+  if (sgroup->outfilter) {
     gst_element_set_state (sgroup->outfilter, GST_STATE_NULL);
+
+    if (sgroup->outputfilter_caps_sid) {
+      g_signal_handler_disconnect (sgroup->outfilter->sinkpads->data,
+          sgroup->outputfilter_caps_sid);
+      sgroup->outputfilter_caps_sid = 0;
+    }
+  }
   if (sgroup->smartencoder)
     gst_element_set_state (sgroup->smartencoder, GST_STATE_NULL);
 
@@ -2148,6 +2184,18 @@ gst_encode_bin_activate (GstEncodeBin * ebin)
 static void
 gst_encode_bin_deactivate (GstEncodeBin * ebin)
 {
+  GList *tmp;
+
+  for (tmp = ebin->streams; tmp; tmp = tmp->next) {
+    StreamGroup *sgroup = tmp->data;
+    GstCaps *format = gst_encoding_profile_get_format (sgroup->profile);
+
+    _set_group_caps_format (sgroup, sgroup->profile, format);
+
+    if (format)
+      gst_caps_unref (format);
+  }
+
   ebin->active = FALSE;
 }
 

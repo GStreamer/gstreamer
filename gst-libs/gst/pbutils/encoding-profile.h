@@ -125,6 +125,9 @@ void            gst_encoding_profile_set_description    (GstEncodingProfile *pro
 GstCaps *       gst_encoding_profile_get_format         (GstEncodingProfile *profile);
 void            gst_encoding_profile_set_format         (GstEncodingProfile *profile,
                                                          GstCaps *format);
+gboolean  gst_encoding_profile_get_allow_dynamic_output (GstEncodingProfile *profile);
+void      gst_encoding_profile_set_allow_dynamic_output (GstEncodingProfile *profile,
+                                                         gboolean allow_dynamic_output);
 const gchar *   gst_encoding_profile_get_preset         (GstEncodingProfile *profile);
 const gchar *   gst_encoding_profile_get_preset_name    (GstEncodingProfile *profile);
 void            gst_encoding_profile_set_preset         (GstEncodingProfile *profile,
