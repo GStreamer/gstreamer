@@ -358,6 +358,7 @@ static void
 gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
+  GstV4l2BufferPool *v4l2_pool = GST_V4L2_BUFFER_POOL (self->v4l2capture->pool);
   GstBufferPool *pool;
   GstVideoCodecFrame *frame;
   GstBuffer *buffer = NULL;
@@ -365,28 +366,29 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 
   GST_LOG_OBJECT (decoder, "Allocate output buffer");
 
-  /* We cannot use the base class allotate helper since it taking the internal
-   * stream lock. we know that the acquire may need to poll until more frames
-   * comes in and holding this lock would prevent that.
-   */
-  pool = gst_video_decoder_get_buffer_pool (decoder);
+  do {
+    /* We cannot use the base class allotate helper since it taking the internal
+     * stream lock. we know that the acquire may need to poll until more frames
+     * comes in and holding this lock would prevent that.
+     */
+    pool = gst_video_decoder_get_buffer_pool (decoder);
 
-  /* Pool may be NULL if we started going to READY state */
-  if (pool == NULL) {
-    ret = GST_FLOW_FLUSHING;
-    goto beach;
-  }
+    /* Pool may be NULL if we started going to READY state */
+    if (pool == NULL) {
+      ret = GST_FLOW_FLUSHING;
+      goto beach;
+    }
 
-  ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
-  g_object_unref (pool);
+    ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
+    g_object_unref (pool);
 
-  if (ret != GST_FLOW_OK)
-    goto beach;
+    if (ret != GST_FLOW_OK)
+      goto beach;
 
-  GST_LOG_OBJECT (decoder, "Process output buffer");
-  ret =
-      gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
-          v4l2capture->pool), &buffer);
+    GST_LOG_OBJECT (decoder, "Process output buffer");
+    ret = gst_v4l2_buffer_pool_process (v4l2_pool, &buffer);
+
+  } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER);
 
   if (ret != GST_FLOW_OK)
     goto beach;

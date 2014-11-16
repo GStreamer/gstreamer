@@ -629,19 +629,22 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
   GstV4l2Object *obj = v4l2src->v4l2object;
+  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL_CAST (obj->pool);
   GstFlowReturn ret;
   GstClock *clock;
   GstClockTime abs_time, base_time, timestamp, duration;
   GstClockTime delay;
 
-  ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (src), 0,
-      obj->info.size, buf);
+  do {
+    ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (src), 0,
+        obj->info.size, buf);
 
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto alloc_failed;
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto alloc_failed;
 
-  ret =
-      gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL_CAST (obj->pool), buf);
+    ret = gst_v4l2_buffer_pool_process (pool, buf);
+
+  } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto error;
@@ -751,8 +754,15 @@ alloc_failed:
   }
 error:
   {
-    GST_DEBUG_OBJECT (src, "error processing buffer %d (%s)", ret,
-        gst_flow_get_name (ret));
+    if (ret == GST_V4L2_FLOW_LAST_BUFFER) {
+      GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
+          ("Driver returned a buffer with no payload, this most likely "
+              "indicate a bug in the driver."), (NULL));
+      ret = GST_FLOW_ERROR;
+    } else {
+      GST_DEBUG_OBJECT (src, "error processing buffer %d (%s)", ret,
+          gst_flow_get_name (ret));
+    }
     return ret;
   }
 }
