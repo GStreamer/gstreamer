@@ -25,14 +25,11 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#define X_START -230
-#define X_END (720 + 230)
+#include <math.h>
 
-#define Y_START -25
-#define Y_END (480 + 58)
-
-#define X_INC 1
-#define Y_INC 3
+#define VIDEO_WIDTH 720
+#define VIDEO_HEIGHT 480
+#define VIDEO_FPS 50
 
 /* GdkPixbuf RGBA C-Source image dump from gdk-pixbuf-csource --raw,
  * gzipped and then base64 encoded */
@@ -83,49 +80,59 @@ const gchar gzipped_pixdata_base64[] =
     "Usx7Z8Iz3ZuM0xXlFWT8s4CsDkmzJZPD0ThUUWaSye8THZ6RqOj/uf2L1f79T0XZCpn8vJJ0Pkb9"
     "n6IsCOVoBp/HvS+moe83+T4dRVEUZRmyn2F9swl9yAAA";
 
-static guint8 *pixdata;
-static gsize pixdata_size;
+static GstBuffer *logo_buf;
 
 static GMainLoop *main_loop;
-static gint x, y;
+static gint count;
 
-static GstVideoOverlayComposition *
-create_overlay_composition (guint x, guint y)
+static GstBuffer *
+create_overlay_buffer (void)
 {
-  GstVideoOverlayComposition *logo_comp;
-  GstVideoOverlayRectangle *logo_rect;
-  const guint8 *p = pixdata;
+  GZlibDecompressor *decompress;
+  GConverterResult decomp_res;
+  guchar *gzipped_pixdata, *pixdata;
+  gsize gzipped_size, bytes_read, pixdata_size;
   GstBuffer *logo_pixels;
-  //const header_size = 24;
   guint w, h, stride;
 
+  gzipped_pixdata = g_base64_decode (gzipped_pixdata_base64, &gzipped_size);
+  g_assert (gzipped_pixdata != NULL);
+
+  pixdata = g_malloc (64 * 1024);
+
+  decompress = g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP);
+  decomp_res = g_converter_convert (G_CONVERTER (decompress),
+      gzipped_pixdata, gzipped_size, pixdata, 64 * 1024,
+      G_CONVERTER_INPUT_AT_END, &bytes_read, &pixdata_size, NULL);
+  g_assert (decomp_res == G_CONVERTER_FINISHED);
+  g_assert (bytes_read == gzipped_size);
+  g_free (gzipped_pixdata);
+  g_object_unref (decompress);
+
   /* 0: Pixbuf magic (0x47646b50) */
-  g_assert (GST_READ_UINT32_BE (p) == 0x47646b50);
+  g_assert (GST_READ_UINT32_BE (pixdata) == 0x47646b50);
 
   /* 4: length incl. header */
   /* 8: pixdata_type */
   /* 12: rowstride (900) */
-  stride = GST_READ_UINT32_BE (p + 12);
+  stride = GST_READ_UINT32_BE (pixdata + 12);
   /* 16: width (225) */
-  w = GST_READ_UINT32_BE (p + 16);
+  w = GST_READ_UINT32_BE (pixdata + 16);
   /* 20: height (57) */
-  h = GST_READ_UINT32_BE (p + 20);
+  h = GST_READ_UINT32_BE (pixdata + 20);
   /* 24: pixel_data */
   GST_LOG ("%dx%d @ %d", w, h, stride);
   /* we assume that the last line also has padding at the end */
   g_assert (pixdata_size - 24 >= h * stride);
 
   logo_pixels = gst_buffer_new_and_alloc (h * stride);
-  gst_buffer_fill (logo_pixels, 0, p + 24, h * stride);
+  gst_buffer_fill (logo_pixels, 0, pixdata + 24, h * stride);
   gst_buffer_add_video_meta (logo_pixels, GST_VIDEO_FRAME_FLAG_NONE,
       GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, w, h);
-  logo_rect = gst_video_overlay_rectangle_new_raw (logo_pixels,
-      x, y, w, h, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
-  gst_buffer_unref (logo_pixels);
 
-  logo_comp = gst_video_overlay_composition_new (logo_rect);
-  gst_video_overlay_rectangle_unref (logo_rect);
-  return logo_comp;
+  g_free (pixdata);
+
+  return logo_pixels;
 }
 
 static gboolean
@@ -151,33 +158,36 @@ bus_cb (GstBus * bus, GstMessage * msg, gpointer user_data)
   return TRUE;
 }
 
-static gboolean
-update_position (void)
+#define SPEED_SCALE_FACTOR (VIDEO_FPS * 4)
+
+/* nicked from videotestsrc's ball pattern renderer */
+static void
+calculate_position (gint * x, gint * y, guint logo_w, guint logo_h, guint n)
 {
-  x += X_INC;
-  if (x < X_END)
-    return TRUE;
+  guint r_x = logo_w / 2;
+  guint r_y = logo_h / 2;
+  guint w = VIDEO_WIDTH + logo_w;
+  guint h = VIDEO_HEIGHT + logo_h;
 
-  x = X_START;
-  y += Y_INC;
-  if (y < Y_END)
-    return TRUE;
+  *x = r_x + (0.5 + 0.5 * sin (2 * G_PI * n / SPEED_SCALE_FACTOR))
+      * (w - 2 * r_x);
+  *y = r_y + (0.5 + 0.5 * sin (2 * G_PI * sqrt (2) * n / SPEED_SCALE_FACTOR))
+      * (h - 2 * r_y);
 
-  return FALSE;
+  *x -= logo_w;
+  *y -= logo_h;
 }
 
 static GstPadProbeReturn
 buffer_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
+  GstVideoOverlayRectangle *rect;
   GstVideoOverlayComposition *comp;
   GstVideoFrame frame;
+  GstVideoMeta *vmeta;
   GstVideoInfo vinfo;
   GstCaps *caps;
-
-  if (!update_position ()) {
-    g_main_loop_quit (main_loop);
-    goto out;
-  }
+  gint x, y;
 
   caps = gst_pad_get_current_caps (pad);
   gst_video_info_from_caps (&vinfo, caps);
@@ -185,8 +195,16 @@ buffer_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   info->data = gst_buffer_make_writable (info->data);
 
+  vmeta = gst_buffer_get_video_meta (logo_buf);
+
+  calculate_position (&x, &y, vmeta->width, vmeta->height, ++count);
+
   GST_LOG ("%3d, %3d", x, y);
-  comp = create_overlay_composition (x, y);
+
+  rect = gst_video_overlay_rectangle_new_raw (logo_buf, x, y,
+      vmeta->width, vmeta->height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  comp = gst_video_overlay_composition_new (rect);
+  gst_video_overlay_rectangle_unref (rect);
 
   gst_video_frame_map (&frame, &vinfo, info->data, GST_MAP_READWRITE);
 
@@ -196,8 +214,6 @@ buffer_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   gst_video_frame_unmap (&frame);
 
   gst_video_overlay_composition_unref (comp);
-
-out:
 
   return GST_PAD_PROBE_OK;
 }
@@ -213,23 +229,7 @@ main (int argc, char **argv)
   GstElement *src, *q, *capsfilter, *sink;
   GstElement *pipeline;
   GstPad *src_pad;
-  GZlibDecompressor *decompress;
-  GConverterResult decomp_res;
-  guchar *gzipped_pixdata;
-  gsize gzipped_size, bytes_read;
-
-  gzipped_pixdata = g_base64_decode (gzipped_pixdata_base64, &gzipped_size);
-  g_assert (gzipped_pixdata != NULL);
-
-  pixdata = g_malloc (64 * 1024);
-
-  decompress = g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP);
-  decomp_res = g_converter_convert (G_CONVERTER (decompress),
-      gzipped_pixdata, gzipped_size, pixdata, 64 * 1024,
-      G_CONVERTER_INPUT_AT_END, &bytes_read, &pixdata_size, NULL);
-  g_assert (decomp_res == G_CONVERTER_FINISHED);
-  g_assert (bytes_read == gzipped_size);
-  g_free (gzipped_pixdata);
+  GstCaps *filter_caps;
 
   ctx = g_option_context_new ("");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
@@ -239,6 +239,8 @@ main (int argc, char **argv)
     return 1;
   }
   g_option_context_free (ctx);
+
+  logo_buf = create_overlay_buffer ();
 
   main_loop = g_main_loop_new (NULL, FALSE);
 
@@ -255,11 +257,14 @@ main (int argc, char **argv)
   q = gst_element_factory_make ("queue", NULL);
 
   capsfilter = gst_element_factory_make ("capsfilter", NULL);
-  gst_util_set_object_arg (G_OBJECT (capsfilter), "caps",
-      "video/x-raw, width=720, height=480, framerate=250/1, "
-      "format={ I420, YV12, YUY2, UYVY, AYUV, Y41B, Y42B, "
-      "YVYU, Y444, v210, v216, NV12, NV21, UYVP, A420, YUV9, YVU9, IYU1, "
-      "RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR }");
+  filter_caps = gst_caps_from_string ("video/x-raw, format = "
+      GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS);
+  gst_caps_set_simple (filter_caps,
+      "width", G_TYPE_INT, VIDEO_WIDTH,
+      "height", G_TYPE_INT, VIDEO_HEIGHT,
+      "framerate", GST_TYPE_FRACTION, VIDEO_FPS, 1, NULL);
+  g_object_set (capsfilter, "caps", filter_caps, NULL);
+  gst_caps_unref (filter_caps);
 
   sink = gst_element_factory_make ("ximagesink", NULL);
 
@@ -267,19 +272,17 @@ main (int argc, char **argv)
 
   gst_element_link_many (src, q, capsfilter, sink, NULL);
 
-  x = X_START;
-  y = Y_START;
+  count = 0;
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   gst_bus_add_watch (GST_ELEMENT_BUS (pipeline), bus_cb, main_loop);
 
-  //g_timeout_add_seconds (1, timeout_cb, loop);
-
   g_main_loop_run (main_loop);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
+  gst_buffer_unref (logo_buf);
 
   return 0;
 }

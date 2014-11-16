@@ -82,7 +82,7 @@ test_overlay_blending_CFLAGS = \
 	$(GST_CFLAGS) $(GIO_CFLAGS)
 test_overlay_blending_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
-	$(GST_LIBS) $(GIO_LIBS)
+	$(GST_LIBS) $(GIO_LIBS) $(LIBM)
 
 test_scale_SOURCES = test-scale.c
 test_scale_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
