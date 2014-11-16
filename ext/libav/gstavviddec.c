@@ -1650,7 +1650,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstBufferPool *pool;
   guint size, min, max;
   GstStructure *config;
-  gboolean have_videometa, have_alignment, update_pool;
+  gboolean have_videometa, have_alignment, update_pool = FALSE;
   GstAllocator *allocator = NULL;
   GstAllocationParams params = { 0, 15, 0, 0, };
 
