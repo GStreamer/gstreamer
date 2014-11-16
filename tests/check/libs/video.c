@@ -2375,6 +2375,7 @@ test_overlay_blend_rect (gint x, gint y, gint width, gint height,
   comp1 = gst_video_overlay_composition_new (rect1);
   fail_unless (gst_video_overlay_composition_blend (comp1, video_frame));
   gst_video_overlay_composition_unref (comp1);
+  gst_video_overlay_rectangle_unref (rect1);
 
   test_overlay_blend_rect_verify (x, y, width, height, video_frame);
   gst_video_frame_unmap (video_frame);
