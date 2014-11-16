@@ -533,8 +533,10 @@ resize_cb (gpointer data)
     NSRect visibleRect = [self visibleRect];
     struct resize *resize_data = g_new (struct resize, 1);
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     bounds = [self convertRectToBacking:bounds];
     visibleRect = [self convertRectToBacking:visibleRect];
+#endif
 
     GST_DEBUG_OBJECT (window, "Window resized: bounds %lf %lf %lf %lf "
                       "visibleRect %lf %lf %lf %lf",
