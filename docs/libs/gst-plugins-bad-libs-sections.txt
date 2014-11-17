@@ -1303,6 +1303,7 @@ GstAggregatorClass
 gst_aggregator_finish_buffer
 gst_aggregator_set_src_caps
 gst_aggregator_iterate_sinkpads
+gst_aggregator_get_latency
 <SUBSECTION Standard>
 GST_IS_AGGREGATOR
 GST_IS_AGGREGATOR_CLASS

@@ -947,6 +947,44 @@ _latency_query (GstAggregator * self, GstPad * pad, gpointer user_data)
   return TRUE;
 }
 
+/**
+ * gst_aggregator_get_latency:
+ * @self: a #GstAggregator
+ * @live: (out) (allow-none): whether @self is live
+ * @min_latency: (out) (allow-none): the configured minimum latency of @self
+ * @max_latency: (out) (allow-none): the configured maximum latency of @self
+ *
+ * Retreives the latency values reported by @self in response to the latency
+ * query.
+ *
+ * Typically only called by subclasses.
+ */
+void
+gst_aggregator_get_latency (GstAggregator * self, gboolean * live,
+    GstClockTime * min_latency, GstClockTime * max_latency)
+{
+  GstClockTime min, max;
+
+  g_return_if_fail (GST_IS_AGGREGATOR (self));
+
+  min = self->priv->latency_min;
+  max = self->priv->latency_max;
+
+  if (GST_CLOCK_TIME_IS_VALID (self->timeout)) {
+    if (GST_CLOCK_TIME_IS_VALID (min))
+      min += self->timeout;
+    if (GST_CLOCK_TIME_IS_VALID (max))
+      max += self->timeout;
+  }
+
+  if (live)
+    *live = self->priv->latency_live;
+  if (min_latency)
+    *min_latency = min;
+  if (max_latency)
+    *max_latency = max;
+}
+
 static gboolean
 gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
 {
