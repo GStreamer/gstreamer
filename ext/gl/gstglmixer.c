@@ -501,7 +501,8 @@ enum
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_CONTEXT
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -596,6 +597,11 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   videoaggregator_class->get_output_buffer = gst_gl_mixer_get_output_buffer;
   videoaggregator_class->negotiated_caps = _negotiated_caps;
 
+  g_object_class_install_property (gobject_class, PROP_CONTEXT,
+      g_param_spec_object ("context",
+          "OpenGL context",
+          "Get OpenGL context",
+          GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_GL_MIXER_PAD);
@@ -1176,7 +1182,12 @@ static void
 gst_gl_mixer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
+  GstGLMixer *mixer = GST_GL_MIXER (object);
+
   switch (prop_id) {
+    case PROP_CONTEXT:
+      g_value_set_object (value, mixer->context);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
