@@ -749,15 +749,19 @@ static void
 gst_videoaggregator_update_qos (GstVideoAggregator * vagg, gdouble proportion,
     GstClockTimeDiff diff, GstClockTime timestamp)
 {
+  gboolean live;
+
   GST_DEBUG_OBJECT (vagg,
       "Updating QoS: proportion %lf, diff %s%" GST_TIME_FORMAT ", timestamp %"
       GST_TIME_FORMAT, proportion, (diff < 0) ? "-" : "",
       GST_TIME_ARGS (ABS (diff)), GST_TIME_ARGS (timestamp));
 
   GST_OBJECT_LOCK (vagg);
+  gst_aggregator_get_latency (GST_AGGREGATOR (vagg), &live, NULL, NULL);
+
   vagg->priv->proportion = proportion;
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
-    if (G_UNLIKELY (diff > 0))
+    if (!live && G_UNLIKELY (diff > 0))
       vagg->priv->earliest_time =
           timestamp + 2 * diff + gst_util_uint64_scale_int_round (GST_SECOND,
           GST_VIDEO_INFO_FPS_D (&vagg->info),
