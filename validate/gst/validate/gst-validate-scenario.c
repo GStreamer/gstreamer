@@ -1719,6 +1719,7 @@ _parse_scenario (GFile * f, GKeyFile * kf)
   gchar *fname = g_file_get_basename (f);
 
   if (g_str_has_suffix (fname, GST_VALIDATE_SCENARIO_SUFFIX)) {
+    gboolean needs_clock_sync = FALSE;
     GstStructure *desc = NULL;
 
     gchar **name = g_strsplit (fname, GST_VALIDATE_SCENARIO_SUFFIX, 0);
@@ -1726,9 +1727,21 @@ _parse_scenario (GFile * f, GKeyFile * kf)
 
     for (tmp = structures; tmp; tmp = tmp->next) {
       if (gst_structure_has_name (tmp->data, "description")) {
-        desc = tmp->data;
-        break;
+        desc = gst_structure_copy (tmp->data);
+      } else if (gst_structure_has_name (tmp->data, "pause") ||
+          (gst_structure_has_name (tmp->data, "set-state") &&
+              g_strcmp0 (gst_structure_get_string (tmp->data, "state"),
+                  "paused") == 0)) {
+        needs_clock_sync = TRUE;
       }
+    }
+
+    if (needs_clock_sync) {
+      if (desc)
+        gst_structure_set (desc, "need-clock-sync", G_TYPE_BOOLEAN, TRUE, NULL);
+      else
+        desc = gst_structure_from_string ("description, need-clock-sync=true;",
+            NULL);
     }
 
     if (desc) {
@@ -1739,6 +1752,7 @@ _parse_scenario (GFile * f, GKeyFile * kf)
 
       gst_structure_foreach (desc,
           (GstStructureForeachFunc) _add_description, &kfg);
+      gst_structure_free (desc);
     } else {
       g_key_file_set_string (kf, name[0], "noinfo", "nothing");
     }
