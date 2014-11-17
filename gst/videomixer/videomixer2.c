@@ -805,7 +805,7 @@ gst_videomixer2_update_qos (GstVideoMixer2 * mix, gdouble proportion,
   GST_OBJECT_LOCK (mix);
   mix->proportion = proportion;
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
-    if (G_UNLIKELY (diff > 0))
+    if (!mix->live && G_UNLIKELY (diff > 0))
       mix->earliest_time =
           timestamp + 2 * diff + gst_util_uint64_scale_int_round (GST_SECOND,
           GST_VIDEO_INFO_FPS_D (&mix->info), GST_VIDEO_INFO_FPS_N (&mix->info));
@@ -1500,6 +1500,8 @@ gst_videomixer2_query_latency (GstVideoMixer2 * mix, GstQuery * query)
   }
   g_value_unset (&item);
   gst_iterator_free (it);
+
+  mix->live = live;
 
   if (res) {
     /* store the results */
