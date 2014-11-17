@@ -116,6 +116,9 @@ struct _GstVideoMixer2
 
   gboolean send_stream_start;
 
+  /* latency */
+  gboolean live;
+
   GstTagList *pending_tags;
 };
 
