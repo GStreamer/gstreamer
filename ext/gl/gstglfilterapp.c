@@ -161,23 +161,42 @@ _emit_draw_signal (guint tex, gint width, gint height, gpointer data)
   app_filter->default_draw = !drawn;
 }
 
+struct glcb2
+{
+  GLCB func;
+  gpointer data;
+  guint texture;
+  guint width;
+  guint height;
+};
+
+/* convenience functions to simplify filter development */
+static void
+_glcb2 (gpointer data)
+{
+  struct glcb2 *cb = data;
+
+  cb->func (cb->width, cb->height, cb->texture, cb->data);
+}
+
 static gboolean
 gst_gl_filter_app_filter_texture (GstGLFilter * filter, guint in_tex,
     guint out_tex)
 {
   GstGLFilterApp *app_filter = GST_GL_FILTER_APP (filter);
+  struct glcb2 cb;
+
+  cb.func = (GLCB) _emit_draw_signal;
+  cb.data = filter;
+  cb.texture = in_tex;
+  cb.width = GST_VIDEO_INFO_WIDTH (&filter->in_info);
+  cb.height = GST_VIDEO_INFO_HEIGHT (&filter->in_info);
 
   //blocking call, use a FBO
-  gst_gl_context_use_fbo (filter->context,
+  gst_gl_context_use_fbo_v2 (filter->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
-      filter->fbo, filter->depthbuffer, out_tex, (GLCB) _emit_draw_signal,
-      GST_VIDEO_INFO_WIDTH (&filter->in_info),
-      GST_VIDEO_INFO_HEIGHT (&filter->in_info),
-      in_tex, 45,
-      (gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info) /
-      (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info),
-      0.1, 100, GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, filter);
+      filter->fbo, filter->depthbuffer, out_tex, _glcb2, &cb);
 
   if (app_filter->default_draw) {
     gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
@@ -195,8 +214,12 @@ gst_gl_filter_app_callback (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFuncs *gl = filter->context->gl_vtable;
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
