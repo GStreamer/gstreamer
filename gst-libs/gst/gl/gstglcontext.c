@@ -445,7 +445,9 @@ GstGLAPI
 gst_gl_context_get_current_gl_api (guint * major, guint * minor)
 {
   const GLubyte *(*GetString) (GLenum name);
+#if GST_GL_HAVE_OPENGL
   void (*GetIntegerv) (GLenum name, GLuint * n);
+#endif
   const gchar *version;
   gint maj, min, n;
   GstGLAPI ret = (1 << 31);
@@ -455,8 +457,10 @@ gst_gl_context_get_current_gl_api (guint * major, guint * minor)
   while (ret != GST_GL_API_NONE) {
     /* FIXME: attempt to delve into the platform specific GetProcAddress */
     GetString = gst_gl_context_default_get_proc_address (ret, "glGetString");
+#if GST_GL_HAVE_OPENGL
     GetIntegerv =
         gst_gl_context_default_get_proc_address (ret, "glGetIntegerv");
+#endif
     if (!GetString) {
       goto next;
     }
@@ -490,7 +494,9 @@ gst_gl_context_get_current_gl_api (guint * major, guint * minor)
 
       goto next;
     } else {
+#if GST_GL_HAVE_OPENGL
       GLuint context_flags = 0;
+#endif
       sscanf (version, "%d.%d", &maj, &min);
 
       if (maj <= 0 || min < 0)
