@@ -92,6 +92,10 @@ test_box_SOURCES = test-box.c
 test_box_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 test_box_LDADD = $(GST_LIBS) $(LIBM)
 
+test_reverseplay_SOURCES = test-reverseplay.c
+test_reverseplay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+test_reverseplay_LDADD = $(GST_LIBS) $(LIBM)
+
 noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) \
 	audio-trickplay playbin-text position-formats stress-playbin \
-	test-scale test-box test-effect-switch test-overlay-blending
+	test-scale test-box test-effect-switch test-overlay-blending test-reverseplay

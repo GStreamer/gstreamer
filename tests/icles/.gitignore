@@ -7,6 +7,7 @@ stress-playbin
 stress-videooverlay
 test-effect-switch
 test-overlay-blending
+test-reverseplay
 test-textoverlay
 test-scale
 test-box
