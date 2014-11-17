@@ -71,7 +71,8 @@ static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
 /* Properties */
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_CONTEXT
 };
 
 #define DEBUG_INIT \
@@ -144,6 +145,12 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_filter_sink_pad_template));
 
+  g_object_class_install_property (gobject_class, PROP_CONTEXT,
+      g_param_spec_object ("context",
+          "OpenGL context",
+          "Get OpenGL context",
+          GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   klass->set_caps = NULL;
   klass->filter = NULL;
   klass->display_init_cb = NULL;
@@ -176,7 +183,12 @@ static void
 gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstGLFilter *filter = GST_GL_FILTER (object);
+
   switch (prop_id) {
+    case PROP_CONTEXT:
+      g_value_set_object (value, filter->context);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
