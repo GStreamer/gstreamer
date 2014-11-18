@@ -217,20 +217,10 @@ gst_video_color_range_offsets (GstVideoColorRange range,
 }
 
 
-#if 0
-typedef struct
-{
-  GstVideoColorPrimaries primaries;
-  gdouble xW, yW;
-  gdouble xR, yR;
-  gdouble xG, yG;
-  gdouble xB, yB;
-} PrimariesInfo;
-
 #define WP_C    0.31006, 0.31616
 #define WP_D65  0.31271, 0.32902
 
-static const PrimariesInfo primaries[] = {
+static const GstVideoColorPrimariesInfo color_primaries[] = {
   {GST_VIDEO_COLOR_PRIMARIES_UNKNOWN, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
   {GST_VIDEO_COLOR_PRIMARIES_BT709, WP_D65, 0.64, 0.33, 0.30, 0.60, 0.15, 0.06},
   {GST_VIDEO_COLOR_PRIMARIES_BT470M, WP_C, 0.67, 0.33, 0.21, 0.71, 0.14, 0.08},
@@ -243,7 +233,24 @@ static const PrimariesInfo primaries[] = {
   {GST_VIDEO_COLOR_PRIMARIES_FILM, WP_C, 0.681, 0.319, 0.243, 0.692, 0.145,
       0.049}
 };
-#endif
+
+/**
+ * gst_video_color_primaries_get_info:
+ * @primaries: a #GstVideoColorPrimaries
+ *
+ * Get information about the chromaticity coordinates of @primaries.
+ *
+ * Returns: a #GstVideoColorPrimariesInfo for @primaries.
+ *
+ * Since: 1.6
+ */
+const GstVideoColorPrimariesInfo *
+gst_video_color_primaries_get_info (GstVideoColorPrimaries primaries)
+{
+  g_return_val_if_fail (primaries < G_N_ELEMENTS (color_primaries), NULL);
+
+  return &color_primaries[primaries];
+}
 
 /**
  * gst_video_color_matrix_get_Kr_Kb:

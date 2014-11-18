@@ -128,6 +128,35 @@ typedef enum {
 } GstVideoColorPrimaries;
 
 /**
+ * GstVideoColorPrimariesInfo:
+ * @primaries: a #GstVideoColorPrimaries
+ * @Wx: reference white x coordinate
+ * @Wy: reference white y coordinate
+ * @Rx: red x coordinate
+ * @Ry: red y coordinate
+ * @Gx: green x coordinate
+ * @Gy: green y coordinate
+ * @Bx: blue x coordinate
+ * @By: blue y coordinate
+ *
+ * Structure describing the chromaticity coordinates of an RGB system. These
+ * values can be used to construct a matrix to transform RGB to and from the
+ * XYZ colorspace.
+ *
+ * Since: 1.6
+ */
+typedef struct {
+  GstVideoColorPrimaries primaries;
+  gdouble Wx, Wy;
+  gdouble Rx, Ry;
+  gdouble Gx, Gy;
+  gdouble Bx, By;
+} GstVideoColorPrimariesInfo;
+
+const GstVideoColorPrimariesInfo *
+                gst_video_color_primaries_get_info     (GstVideoColorPrimaries primaries);
+
+/**
  * GstVideoColorimetry:
  * @range: the color range. This is the valid range for the samples.
  *         It is used to convert the samples to Y'PbPr values.
