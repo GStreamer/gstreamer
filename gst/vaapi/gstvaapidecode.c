@@ -129,25 +129,6 @@ gst_vaapidecode_update_sink_caps(GstVaapiDecode *decode, GstCaps *caps)
     return TRUE;
 }
 
-#if GST_CHECK_VERSION(1,1,0)
-static void
-gst_vaapidecode_video_info_change_format(GstVideoInfo *info,
-    GstVideoFormat format, guint width, guint height)
-{
-    GstVideoInfo vi = *info;
-
-    gst_video_info_set_format (info, format, width, height);
-
-    info->interlace_mode = vi.interlace_mode;
-    info->flags = vi.flags;
-    info->views = vi.views;
-    info->par_n = vi.par_n;
-    info->par_d = vi.par_d;
-    info->fps_n = vi.fps_n;
-    info->fps_d = vi.fps_d;
-}
-#endif
-
 static gboolean
 gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     const GstVideoCodecState *ref_state)
@@ -188,7 +169,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     vis = *vi;
     switch (feature) {
     case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
-        gst_vaapidecode_video_info_change_format(&vis, GST_VIDEO_FORMAT_RGBA,
+        gst_video_info_change_format(&vis, GST_VIDEO_FORMAT_RGBA,
             GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
         features = gst_caps_features_new(
             GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
@@ -199,7 +180,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
                format=ENCODED + memory:VASurface caps feature are provided.
                Meanwhile, providing a random format here works but this is
                a terribly wrong thing per se. */
-            gst_vaapidecode_video_info_change_format(&vis, out_format,
+            gst_video_info_change_format(&vis, out_format,
                 GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
 #if GST_CHECK_VERSION(1,5,0)
             if (feature == GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)
@@ -544,7 +525,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     state = gst_video_decoder_get_output_state(vdec);
     if (!gst_caps_is_always_compatible(caps, state->caps)) {
         if (decode->has_texture_upload_meta)
-            gst_video_info_set_format(&state->info, GST_VIDEO_FORMAT_RGBA,
+            gst_video_info_change_format(&state->info, GST_VIDEO_FORMAT_RGBA,
                 GST_VIDEO_INFO_WIDTH(&state->info),
                 GST_VIDEO_INFO_HEIGHT(&state->info));
         gst_vaapidecode_update_src_caps(decode, state);

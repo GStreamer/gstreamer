@@ -681,3 +681,20 @@ gst_caps_has_vaapi_surface (GstCaps * caps)
 #endif
   return found_caps;
 }
+
+void
+gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
+    guint width, guint height)
+{
+  GstVideoInfo vi = *vip;
+
+  gst_video_info_set_format (vip, format, width, height);
+
+  vip->interlace_mode = vi.interlace_mode;
+  vip->flags = vi.flags;
+  vip->views = vi.views;
+  vip->par_n = vi.par_n;
+  vip->par_d = vi.par_d;
+  vip->fps_n = vi.fps_n;
+  vip->fps_d = vi.fps_d;
+}

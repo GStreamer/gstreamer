@@ -1153,7 +1153,7 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
     out_format = GST_VIDEO_FORMAT_ENCODED;
 #endif
     find_best_size(postproc, &vi, &width, &height);
-    gst_video_info_set_format(&vi, out_format, width, height);
+    gst_video_info_change_format(&vi, out_format, width, height);
 
 #if GST_CHECK_VERSION(1,1,0)
     out_caps = gst_video_info_to_caps(&vi);
@@ -1177,7 +1177,7 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
             if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META)
                 format = GST_VIDEO_FORMAT_RGBA;
 
-            gst_video_info_set_format(&vi, format, width, height);
+            gst_video_info_change_format(&vi, format, width, height);
             sink_caps = gst_video_info_to_caps(&vi);
             if (sink_caps) {
                 if (feature_str)
@@ -1318,7 +1318,7 @@ ensure_srcpad_buffer_pool(GstVaapiPostproc *postproc, GstCaps *caps)
 
     gst_video_info_init(&vi);
     gst_video_info_from_caps(&vi, caps);
-    gst_video_info_set_format(&vi, postproc->format,
+    gst_video_info_change_format(&vi, postproc->format,
         GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
 
     if (postproc->filter_pool && !video_info_changed(&vi, &postproc->filter_pool_info))
