@@ -102,7 +102,7 @@ resampler_zip (GstVideoResampler * resampler, const GstVideoResampler * r1,
     offset[i] = r->offset[idx] * 2 + (i & 1);
     phase[i] = i;
 
-    memcpy (taps + i * max_taps, r->taps + phase[idx] * max_taps,
+    memcpy (taps + i * max_taps, r->taps + r->phase[idx] * max_taps,
         max_taps * sizeof (gdouble));
   }
 }
@@ -158,7 +158,7 @@ gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
         0.0, (in_size + 1) / 2, (out_size + 1) / 2, options);
 
     gst_video_resampler_init (&bresamp, method, 0, out_size - tresamp.out_size,
-        n_taps, -1.0, in_size - tresamp.in_size,
+        n_taps, -0.5, in_size - tresamp.in_size,
         out_size - tresamp.out_size, options);
 
     resampler_zip (&scale->resampler, &tresamp, &bresamp);
@@ -298,11 +298,6 @@ make_s16_taps (GstVideoScaler * scale, gint precision)
   n_phases = scale->resampler.n_phases;
   max_taps = scale->resampler.max_taps;
 
-  if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
-    src_inc = 2;
-  else
-    src_inc = 1;
-
   taps = scale->resampler.taps;
   taps_s16 = scale->taps_s16 = g_malloc (sizeof (gint16) * n_phases * max_taps);
 
@@ -324,7 +319,10 @@ make_s16_taps (GstVideoScaler * scale, gint precision)
   offset_n = scale->offset_n =
       g_malloc (sizeof (guint32) * out_size * max_taps);
 
-  max_taps /= src_inc;
+  if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
+    src_inc = 2;
+  else
+    src_inc = 1;
 
   for (j = 0; j < max_taps; j++) {
     for (i = 0; i < out_size; i++) {
@@ -503,7 +501,7 @@ static void
 video_scale_v_2tap_4u8 (GstVideoScaler * scale,
     gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
-  gint max_taps;
+  gint max_taps, src_inc;
   guint32 *s1, *s2, *d;
   gint16 p1;
 
@@ -516,9 +514,14 @@ video_scale_v_2tap_4u8 (GstVideoScaler * scale,
 
   max_taps = scale->resampler.max_taps;
 
+  if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
+    src_inc = 2;
+  else
+    src_inc = 1;
+
   d = (guint32 *) dest;
-  s1 = (guint32 *) srcs[0];
-  s2 = (guint32 *) srcs[1];
+  s1 = (guint32 *) srcs[0 * src_inc];
+  s2 = (guint32 *) srcs[1 * src_inc];
   p1 = scale->taps_s16[dest_offset * max_taps + 1];
 
 #ifdef LQ
@@ -532,7 +535,7 @@ static void
 video_scale_v_2tap_4u16 (GstVideoScaler * scale,
     gpointer srcs[], gpointer dest, guint dest_offset, guint width)
 {
-  gint max_taps;
+  gint max_taps, src_inc;
   guint64 *s1, *s2, *d;
   gint16 p1;
 
@@ -541,9 +544,14 @@ video_scale_v_2tap_4u16 (GstVideoScaler * scale,
 
   max_taps = scale->resampler.max_taps;
 
+  if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
+    src_inc = 2;
+  else
+    src_inc = 1;
+
   d = (guint64 *) dest;
-  s1 = (guint64 *) srcs[0];
-  s2 = (guint64 *) srcs[1];
+  s1 = (guint64 *) srcs[0 * src_inc];
+  s2 = (guint64 *) srcs[1 * src_inc];
   p1 = scale->taps_s16[dest_offset * max_taps + 1];
 
   video_orc_resample_v_2tap_u16 (d, s1, s2, p1, width * 4);
