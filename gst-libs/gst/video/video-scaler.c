@@ -303,8 +303,6 @@ make_s16_taps (GstVideoScaler * scale, gint precision)
   else
     src_inc = 1;
 
-  max_taps /= src_inc;
-
   taps = scale->resampler.taps;
   taps_s16 = scale->taps_s16 = g_malloc (sizeof (gint16) * n_phases * max_taps);
 
@@ -326,6 +324,7 @@ make_s16_taps (GstVideoScaler * scale, gint precision)
   offset_n = scale->offset_n =
       g_malloc (sizeof (guint32) * out_size * max_taps);
 
+  max_taps /= src_inc;
 
   for (j = 0; j < max_taps; j++) {
     for (i = 0; i < out_size; i++) {
