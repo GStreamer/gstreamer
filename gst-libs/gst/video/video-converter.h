@@ -130,6 +130,41 @@ typedef enum {
  * is set to %TRUE. Default 0x00000000
  */
 #define GST_VIDEO_CONVERTER_OPT_BORDER_ARGB   "GstVideoConverter.border-argb"
+/**
+ * GST_VIDEO_CONVERTER_OPT_MATRIX_MODE:
+ *
+ * #G_TYPE_STRING, set the color matrix conversion mode.
+ *
+ * "full": do conversion between color matrices
+ * "no-yuv": disable conversion between yuv color matrices
+ *
+ * Default "full"
+ */
+#define GST_VIDEO_CONVERTER_OPT_MATRIX_MODE   "GstVideoConverter.matrix-mode"
+/**
+ * GST_VIDEO_CONVERTER_OPT_GAMMA_MODE:
+ *
+ * #G_TYPE_STRING, set the gamma mode.
+ *
+ * "none": disable gamma handling
+ * "remap": convert between input and output gamma
+ *
+ * Default "none"
+ */
+#define GST_VIDEO_CONVERTER_OPT_GAMMA_MODE   "GstVideoConverter.gamma-mode"
+/**
+ * GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE:
+ *
+ * #G_TYPE_STRING, set the primaries conversion mode.
+ *
+ * "none": disable conversion between primaries
+ * "merge-only": do conversion between primaries only when it can be merged
+ *               with color matrix conversion.
+ * "fast": fast conversion between primaries
+ *
+ * Default "none"
+ */
+#define GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE   "GstVideoConverter.primaries-mode"
 
 
 typedef struct _GstVideoConverter GstVideoConverter;
