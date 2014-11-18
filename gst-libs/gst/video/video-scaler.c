@@ -117,6 +117,36 @@ realloc_tmplines (GstVideoScaler * scale, gint width)
   scale->tmpwidth = width;
 }
 
+static void
+scaler_dump (GstVideoScaler * scale)
+{
+#if 0
+  gint i, j, in_size, out_size, max_taps;
+  guint32 *offset, *phase;
+  gdouble *taps;
+  GstVideoResampler *r = &scale->resampler;
+
+  in_size = r->in_size;
+  out_size = r->out_size;
+  offset = r->offset;
+  phase = r->phase;
+  max_taps = r->max_taps;
+  taps = r->taps;
+
+  g_print ("in %d, out %d, max_taps %d, n_phases %d\n", in_size, out_size,
+      max_taps, r->n_phases);
+
+  for (i = 0; i < out_size; i++) {
+    g_print ("%d: \t%d \t%d:", i, offset[i], phase[i]);
+
+    for (j = 0; j < max_taps; j++) {
+      g_print ("\t%f", taps[i * max_taps + j]);
+    }
+    g_print ("\n");
+  }
+#endif
+}
+
 /**
  * gst_video_scaler_new:
  * @method: a #GstVideoResamplerMethod
@@ -174,6 +204,8 @@ gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
     scale->inc = 0;
   else
     scale->inc = ((in_size - 1) << 16) / (out_size - 1) - 1;
+
+  scaler_dump (scale);
 
   return scale;
 }

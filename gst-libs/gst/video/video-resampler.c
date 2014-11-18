@@ -235,6 +235,37 @@ resampler_calculate_taps (ResamplerParams * params)
   }
 }
 
+static void
+resampler_dump (GstVideoResampler * resampler)
+{
+#if 0
+  gint i, max_taps, out_size;
+
+  out_size = resampler->out_size;
+  max_taps = resampler->max_taps;
+
+  for (i = 0; i < out_size; i++) {
+    gint j, o, phase, n_taps;
+    gdouble sum;
+
+    o = resampler->offset[i];
+    n_taps = resampler->n_taps[i];
+    phase = resampler->phase[i];
+
+    printf ("%u: \t%d  ", i, o);
+    sum = 0;
+    for (j = 0; j < n_taps; j++) {
+      gdouble tap;
+      tap = resampler->taps[phase * max_taps + j];
+      printf ("\t%f ", tap);
+      sum += tap;
+    }
+    printf ("\t: sum %f\n", sum);
+  }
+#endif
+}
+
+
 /**
  * gst_video_resampler_new:
  * @resampler: a #GstVideoResampler
@@ -349,32 +380,8 @@ gst_video_resampler_init (GstVideoResampler * resampler,
 
   resampler_calculate_taps (&params);
 
-#if 0
-  {
-    gint i, max_taps;
+  resampler_dump (resampler);
 
-    max_taps = resampler->max_taps;
-
-    for (i = 0; i < out_size; i++) {
-      gint j, o, phase, n_taps;
-      gdouble sum;
-
-      o = resampler->offset[i];
-      n_taps = resampler->n_taps[i];
-      phase = resampler->phase[i];
-
-      printf ("%u: \t%d  ", i, o);
-      sum = 0;
-      for (j = 0; j < n_taps; j++) {
-        gdouble tap;
-        tap = resampler->taps[phase * max_taps + j];
-        printf ("\t%f ", tap);
-        sum += tap;
-      }
-      printf ("\t: sum %f\n", sum);
-    }
-  }
-#endif
   return TRUE;
 }
 
