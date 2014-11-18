@@ -5076,10 +5076,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
             fps_n, fps_d, NULL);
       } else {
-        /* sort of a hack to get most codecs to support,
-         * even if the default_duration is missing */
         gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
-            25, 1, NULL);
+            0, 1, NULL);
       }
 
       if (videocontext->parent.flags & GST_MATROSKA_VIDEOTRACK_INTERLACED)
