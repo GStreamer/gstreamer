@@ -51,7 +51,7 @@ plugin_init (GstPlugin *plugin)
                          GST_TYPE_VAAPIUPLOAD);
 #endif
     gst_element_register(plugin, "vaapidecode",
-                         GST_RANK_PRIMARY,
+                         GST_RANK_PRIMARY + 1,
                          GST_TYPE_VAAPIDECODE);
     gst_element_register(plugin, "vaapipostproc",
                          GST_RANK_PRIMARY,
