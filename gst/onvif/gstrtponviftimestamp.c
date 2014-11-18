@@ -30,7 +30,7 @@
 
 #include "gstrtponviftimestamp.h"
 
-#define DEFAULT_NTP_OFFSET 0
+#define DEFAULT_NTP_OFFSET GST_CLOCK_TIME_NONE
 #define DEFAULT_CSEQ 0
 #define DEFAULT_SET_E_BIT FALSE
 
@@ -117,6 +117,7 @@ gst_rtp_onvif_timestamp_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstRtpOnvifTimestamp *self = GST_RTP_ONVIF_TIMESTAMP (element);
+  GstStateChangeReturn ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -126,9 +127,33 @@ gst_rtp_onvif_timestamp_change_state (GstElement * element,
       break;
   }
 
-  return
-      GST_ELEMENT_CLASS (gst_rtp_onvif_timestamp_parent_class)->change_state
+  ret = GST_ELEMENT_CLASS (gst_rtp_onvif_timestamp_parent_class)->change_state
       (element, transition);
+
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (GST_CLOCK_TIME_IS_VALID (self->prop_ntp_offset))
+        self->ntp_offset = self->prop_ntp_offset;
+      else
+        self->ntp_offset = GST_CLOCK_TIME_NONE;
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      if (!GST_CLOCK_TIME_IS_VALID (self->prop_ntp_offset) &&
+          GST_ELEMENT_CLOCK (element) == NULL) {
+        GST_ELEMENT_ERROR (element, CORE, CLOCK, ("Missing NTP offset"),
+            ("Set the \"ntp-offset\" property to,"
+                " can't guess it without a clock on the pipeline."));
+        return GST_STATE_CHANGE_FAILURE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static void
@@ -160,7 +185,7 @@ gst_rtp_onvif_timestamp_class_init (GstRtpOnvifTimestampClass * klass)
   g_object_class_install_property (gobject_class, PROP_NTP_OFFSET,
       g_param_spec_uint64 ("ntp-offset", "NTP offset",
           "Offset between the pipeline running time and the absolute UTC time, "
-          "in seconds since 1900",
+          "in nano-seconds since 1900 (-1 for automatic computation)",
           0, G_MAXUINT64,
           DEFAULT_NTP_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -273,6 +298,32 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf,
   guint64 time;
   guint8 field = 0;
 
+  if (!GST_CLOCK_TIME_IS_VALID (self->ntp_offset)) {
+    GstClock *clock = gst_element_get_clock (GST_ELEMENT (self));
+
+    if (clock) {
+      GstClockTime clock_time = gst_clock_get_time (clock);
+      guint64 real_time = g_get_real_time ();
+      GstClockTime running_time = clock_time -
+          gst_element_get_base_time (GST_ELEMENT (self));
+
+      /* convert microseconds to nanoseconds */
+      real_time *= 1000;
+
+      /* add constant to convert from 1970 based time to 1900 based time */
+      real_time += (G_GUINT64_CONSTANT (2208988800) * GST_SECOND);
+
+      self->ntp_offset = real_time - running_time;
+
+      gst_object_unref (clock);
+    } else {
+      /* Received a buffer in PAUSED, so we can't guess the match
+       * between the running time and the NTP clock yet.
+       */
+      return TRUE;
+    }
+  }
+
   if (self->segment.format != GST_FORMAT_TIME) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
         ("did not receive a time segment yet"), (NULL));
@@ -319,7 +370,7 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf,
   }
 
   /* add the offset (in seconds) */
-  time += (self->prop_ntp_offset * GST_SECOND);
+  time += self->ntp_offset;
 
   /* convert to NTP time. upper 32 bits should contain the seconds
    * and the lower 32 bits, the fractions of a second. */

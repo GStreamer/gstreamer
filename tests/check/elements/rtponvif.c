@@ -175,8 +175,7 @@ create_extension_buffer (GstBuffer * buffer_in, gboolean clean_point,
       NULL);
 
   /* NTP timestamp */
-  GST_WRITE_UINT64_BE (data, convert_to_ntp (buffer_in->pts + NTP_OFFSET *
-          GST_SECOND));
+  GST_WRITE_UINT64_BE (data, convert_to_ntp (buffer_in->pts + NTP_OFFSET));
 
   /* C E D mbz */
   if (clean_point)

@@ -48,9 +48,11 @@ struct _GstRtpOnvifTimestamp {
   /* pads */
   GstPad *sinkpad,*srcpad;
 
-  guint64 prop_ntp_offset;
+  GstClockTime prop_ntp_offset;
   guint prop_cseq;
   gboolean prop_set_e_bit;
+
+  GstClockTime ntp_offset;
 
   GstSegment segment;
   gboolean received_segment;
