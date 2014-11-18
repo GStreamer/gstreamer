@@ -185,9 +185,7 @@ struct _GstVideoConverter
   /* to R'G'B */
   GstLineCache *to_RGB_lines;
   MatrixData to_RGB_matrix;
-
   /* gamma decode */
-  GstLineCache *gamma_decode_lines;
   GammaData gamma_dec;
 
   /* scaling */
@@ -206,7 +204,6 @@ struct _GstVideoConverter
   gint out_bits;
 
   /* gamma encode */
-  GstLineCache *gamma_encode_lines;
   GammaData gamma_enc;
   /* to Y'CbCr */
   GstLineCache *to_YUV_lines;
@@ -1577,14 +1574,21 @@ gst_video_converter_free (GstVideoConverter * convert)
     gst_line_cache_free (convert->unpack_lines);
   if (convert->upsample_lines)
     gst_line_cache_free (convert->upsample_lines);
+  if (convert->to_RGB_lines)
+    gst_line_cache_free (convert->to_RGB_lines);
   if (convert->hscale_lines)
     gst_line_cache_free (convert->hscale_lines);
   if (convert->vscale_lines)
     gst_line_cache_free (convert->vscale_lines);
   if (convert->convert_lines)
     gst_line_cache_free (convert->convert_lines);
+  if (convert->to_YUV_lines)
+    gst_line_cache_free (convert->to_YUV_lines);
   if (convert->downsample_lines)
     gst_line_cache_free (convert->downsample_lines);
+
+  g_free (convert->gamma_dec.gamma_table);
+  g_free (convert->gamma_enc.gamma_table);
 
   for (i = 0; i < convert->n_tmplines; i++)
     g_free (convert->tmplines[i]);
