@@ -1418,7 +1418,8 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
 
   /* default config */
   convert->config = gst_structure_new ("GstVideoConverter",
-      "dither", GST_TYPE_VIDEO_DITHER_METHOD, GST_VIDEO_DITHER_NONE, NULL);
+      GST_VIDEO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_VIDEO_DITHER_METHOD,
+      GST_VIDEO_DITHER_NONE, NULL);
   if (config)
     gst_video_converter_set_config (convert, config);
 
@@ -1666,10 +1667,8 @@ copy_config (GQuark field_id, const GValue * value, gpointer user_data)
  * %FALSE and will try to update as much state as possible. The new state can
  * then be retrieved and refined with gst_video_converter_get_config().
  *
- * The config is a GstStructure that can contain the the following fields:
- *
- *  "dither"    GST_TYPE_VIDEO_DITHER_METHOD   The dithering used when reducing
- *                                             colors
+ * Look at the #GST_VIDEO_CONVERTER_OPT_* fields to check valid configuration
+ * option and values.
  *
  * Returns: %TRUE when @config could be set.
  *

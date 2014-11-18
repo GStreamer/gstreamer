@@ -61,6 +61,7 @@ typedef enum {
  *
  * #GST_TYPE_VIDEO_DITHER_METHOD, The dither method to use when
  * changing bit depth.
+ * Default is #GST_VIDEO_DITHER_NONE.
  */
 #define GST_VIDEO_CONVERTER_OPT_DITHER_METHOD   "GstVideoConverter.dither-method"
 
