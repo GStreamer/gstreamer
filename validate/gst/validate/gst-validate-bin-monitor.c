@@ -193,15 +193,14 @@ print_position (GstValidateMonitor * monitor)
   }
 
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
-  if (gst_element_query (pipeline, query)) {
+  if (gst_element_query (pipeline, query))
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
-
-    gst_validate_printf (NULL,
-        "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-        " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
-        rate);
-  }
   gst_query_unref (query);
+
+  gst_validate_printf (NULL,
+      "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+      " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
+      rate);
 
   return TRUE;
 }
