@@ -155,7 +155,6 @@ struct _GstSelectorPad
 {
   GstPad parent;
 
-  gboolean active;              /* when buffer have passed the pad */
   gboolean pushed;              /* when buffer was pushed downstream since activation */
   gboolean eos;                 /* when EOS has been received */
   gboolean eos_sent;            /* when EOS was sent downstream */
@@ -341,7 +340,6 @@ static void
 gst_selector_pad_reset (GstSelectorPad * pad)
 {
   GST_OBJECT_LOCK (pad);
-  pad->active = FALSE;
   pad->pushed = FALSE;
   pad->eos = FALSE;
   pad->eos_sent = FALSE;
@@ -1536,11 +1534,7 @@ static GstPad *
 gst_input_selector_activate_sinkpad (GstInputSelector * sel, GstPad * pad)
 {
   GstPad *active_sinkpad;
-  GstSelectorPad *selpad;
 
-  selpad = GST_SELECTOR_PAD_CAST (pad);
-
-  selpad->active = TRUE;
   active_sinkpad = sel->active_sinkpad;
   if (active_sinkpad == NULL) {
     GValue item = G_VALUE_INIT;
