@@ -103,7 +103,9 @@ set_default_colorimetry (GstVideoInfo * info)
  *
  * Set the default info for a video frame of @format and @width and @height.
  *
- * Note: This initializes @info first, no values are preserved.
+ * Note: This initializes @info first, no values are preserved. This function
+ * does not set the offsets correctly for interlaced vertically
+ * subsampled formats.
  */
 void
 gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
