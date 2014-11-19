@@ -1118,10 +1118,14 @@ chain_scale (GstVideoConverter * convert, GstLineCache * prev, gboolean force)
   s0 = convert->current_width * convert->current_height;
   s3 = convert->out_width * convert->out_height;
 
-  if (s0 <= s3 || force) {
+  GST_DEBUG ("%d <> %d", s0, s3);
+
+  if (s3 <= s0 || force) {
     /* we are making the image smaller or are forced to resample */
     s1 = convert->out_width * convert->current_height;
     s2 = convert->current_width * convert->out_height;
+
+    GST_DEBUG ("%d <> %d", s1, s2);
 
     if (s1 <= s2) {
       /* h scaling first produces less pixels */
