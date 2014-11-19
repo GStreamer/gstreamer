@@ -894,7 +894,7 @@ gst_flv_demux_update_resync (GstFlvDemux * demux, guint32 dts, gboolean discont,
 {
   gboolean ret = FALSE;
   gint32 ddts = dts - *last;
-  if (!discont && ABS (ddts) >= RESYNC_THRESHOLD) {
+  if (!discont && ddts <= -RESYNC_THRESHOLD) {
     /* Theoretically, we should use substract the duration of the last buffer,
        but this demuxer sends no durations on buffers, not sure if it cannot
        know, or just does not care to calculate. */
