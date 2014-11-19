@@ -1563,7 +1563,7 @@ _chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 
   PAD_LOCK_EVENT (aggpad);
 
-  while (aggpad->buffer) {
+  while (aggpad->buffer && g_atomic_int_get (&aggpad->priv->flushing) == FALSE) {
     GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
     PAD_WAIT_EVENT (aggpad);
   }
@@ -1622,7 +1622,14 @@ pad_query_func (GstPad * pad, GstObject * parent, GstQuery * query)
 
   if (GST_QUERY_IS_SERIALIZED (query)) {
     PAD_LOCK_EVENT (aggpad);
-    while (aggpad->buffer) {
+
+    if (g_atomic_int_get (&aggpad->priv->flushing) == TRUE) {
+      PAD_UNLOCK_EVENT (aggpad);
+      goto flushing;
+    }
+
+    while (aggpad->buffer
+        && g_atomic_int_get (&aggpad->priv->flushing) == FALSE) {
       GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
       PAD_WAIT_EVENT (aggpad);
     }
@@ -1649,7 +1656,15 @@ pad_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
   if (GST_EVENT_IS_SERIALIZED (event) && GST_EVENT_TYPE (event) != GST_EVENT_EOS
       && GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT_DONE) {
     PAD_LOCK_EVENT (aggpad);
-    while (aggpad->buffer) {
+
+    if (g_atomic_int_get (&aggpad->priv->flushing) == TRUE
+        && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
+      PAD_UNLOCK_EVENT (aggpad);
+      goto flushing;
+    }
+
+    while (aggpad->buffer
+        && g_atomic_int_get (&aggpad->priv->flushing) == FALSE) {
       GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
       PAD_WAIT_EVENT (aggpad);
     }
