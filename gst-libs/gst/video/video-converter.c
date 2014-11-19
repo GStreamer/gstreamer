@@ -1099,7 +1099,7 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
   gst_video_scaler_get_coeff (convert->v_scaler, 0, NULL, &taps);
 
   GST_DEBUG ("chain vscale %d->%d, taps %d, method %d",
-      convert->in_width, convert->out_height, taps, method);
+      convert->in_height, convert->out_height, taps, method);
 
   prev = convert->vscale_lines = gst_line_cache_new (prev);
   prev->pass_alloc = (taps == 1);
