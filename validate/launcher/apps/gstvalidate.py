@@ -538,13 +538,15 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 fpath, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
             args = G_V_DISCOVERER_COMMAND.split(" ")
             args.append(uri)
-            if os.path.isfile(media_info):
+            if os.path.isfile(media_info) and not self.options.update_media_info:
                 self._add_media(media_info, uri)
                 return True
             elif fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT):
                 self._add_media(fpath)
                 return True
-            elif not self.options.generate_info:
+            elif not self.options.generate_info and not self.options.update_media_info:
+                return True
+            elif self.options.update_media_info and not os.path.isfile(media_info):
                 return True
 
             media_descriptor = GstValidateMediaDescriptor.new_from_uri(

@@ -223,6 +223,9 @@ def main(libsdir):
     parser.add_argument("-g", "--generate-media-info", dest="generate_info",
                         action="store_true", default=False,
                         help="Set it in order to generate the missing .media_infos files")
+    parser.add_argument("--update-media-info", dest="update_media_info",
+                        action="store_true", default=False,
+                        help="Set it in order to update exising .media_infos files")
     parser.add_argument(
         "-G", "--generate-media-info-with-frame-detection", dest="generate_info_full",
         action="store_true", default=False,
