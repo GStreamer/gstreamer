@@ -1147,20 +1147,26 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev)
   gboolean same_matrix, same_primaries, same_bits;
   MatrixData p1, p2;
 
-  color_matrix_set_identity (&convert->convert_matrix);
-
+  same_bits = convert->unpack_bits == convert->pack_bits;
   same_matrix =
       convert->in_info.colorimetry.matrix ==
       convert->out_info.colorimetry.matrix;
-  GST_DEBUG ("matrix %d -> %d", convert->in_info.colorimetry.matrix,
-      convert->out_info.colorimetry.matrix);
-  same_bits = convert->unpack_bits == convert->pack_bits;
-  GST_DEBUG ("bits %d -> %d", convert->unpack_bits, convert->pack_bits);
-  same_primaries =
-      convert->in_info.colorimetry.primaries ==
-      convert->out_info.colorimetry.primaries;
-  GST_DEBUG ("primaries %d -> %d", convert->in_info.colorimetry.primaries,
-      convert->out_info.colorimetry.primaries);
+  if (CHECK_PRIMARIES_NONE (convert)) {
+    same_primaries = TRUE;
+  } else {
+    same_primaries =
+        convert->in_info.colorimetry.primaries ==
+        convert->out_info.colorimetry.primaries;
+  }
+
+  GST_DEBUG ("matrix %d -> %d (%d)", convert->in_info.colorimetry.matrix,
+      convert->out_info.colorimetry.matrix, same_matrix);
+  GST_DEBUG ("bits %d -> %d (%d)", convert->unpack_bits, convert->pack_bits,
+      same_bits);
+  GST_DEBUG ("primaries %d -> %d (%d)", convert->in_info.colorimetry.primaries,
+      convert->out_info.colorimetry.primaries, same_primaries);
+
+  color_matrix_set_identity (&convert->convert_matrix);
 
   if (!same_primaries) {
     const GstVideoColorPrimariesInfo *pi;
@@ -1195,29 +1201,29 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev)
     convert->in_bits = convert->unpack_bits;
     convert->out_bits = convert->pack_bits;
 
-    /* no gamma, combine all conversions into 1 */
-    if (convert->in_bits < convert->out_bits) {
-      gint scale = 1 << (convert->out_bits - convert->in_bits);
-      color_matrix_scale_components (&convert->convert_matrix,
-          1 / (float) scale, 1 / (float) scale, 1 / (float) scale);
-    }
-    GST_DEBUG ("to RGB matrix");
-    compute_matrix_to_RGB (convert, &convert->convert_matrix);
-    GST_DEBUG ("current matrix");
-    color_matrix_debug (&convert->convert_matrix);
-
-    GST_DEBUG ("to YUV matrix");
-    compute_matrix_to_YUV (convert, &convert->convert_matrix);
-    GST_DEBUG ("current matrix");
-    color_matrix_debug (&convert->convert_matrix);
-    if (convert->in_bits > convert->out_bits) {
-      gint scale = 1 << (convert->in_bits - convert->out_bits);
-      color_matrix_scale_components (&convert->convert_matrix,
-          (float) scale, (float) scale, (float) scale);
-    }
-    convert->current_bits = MAX (convert->in_bits, convert->out_bits);
-
     if (!same_bits || !same_matrix || !same_primaries) {
+      /* no gamma, combine all conversions into 1 */
+      if (convert->in_bits < convert->out_bits) {
+        gint scale = 1 << (convert->out_bits - convert->in_bits);
+        color_matrix_scale_components (&convert->convert_matrix,
+            1 / (float) scale, 1 / (float) scale, 1 / (float) scale);
+      }
+      GST_DEBUG ("to RGB matrix");
+      compute_matrix_to_RGB (convert, &convert->convert_matrix);
+      GST_DEBUG ("current matrix");
+      color_matrix_debug (&convert->convert_matrix);
+
+      GST_DEBUG ("to YUV matrix");
+      compute_matrix_to_YUV (convert, &convert->convert_matrix);
+      GST_DEBUG ("current matrix");
+      color_matrix_debug (&convert->convert_matrix);
+      if (convert->in_bits > convert->out_bits) {
+        gint scale = 1 << (convert->in_bits - convert->out_bits);
+        color_matrix_scale_components (&convert->convert_matrix,
+            (float) scale, (float) scale, (float) scale);
+      }
+      convert->current_bits = MAX (convert->in_bits, convert->out_bits);
+
       do_conversion = TRUE;
       if (!same_matrix || !same_primaries)
         prepare_matrix (convert, &convert->convert_matrix);
