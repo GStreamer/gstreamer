@@ -299,15 +299,20 @@ gst_line_cache_set_alloc_line_func (GstLineCache * cache,
   cache->alloc_line_notify = notify;
 }
 
+/* keep this much backlog */
+#define BACKLOG 2
+
 static gpointer *
 gst_line_cache_get_lines (GstLineCache * cache, gint out_line, gint in_line,
     gint n_lines)
 {
-  if (cache->first < in_line) {
-    gint to_remove = MIN (in_line - cache->first, cache->lines->len);
-    if (to_remove > 0)
+  if (cache->first + BACKLOG < in_line) {
+    gint to_remove =
+        MIN (in_line - (cache->first + BACKLOG), cache->lines->len);
+    if (to_remove > 0) {
       g_ptr_array_remove_range (cache->lines, 0, to_remove);
-    cache->first = in_line;
+      cache->first += to_remove;
+    }
   } else if (in_line < cache->first) {
     gst_line_cache_clear (cache);
     cache->first = in_line;
@@ -2180,7 +2185,6 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
       l1 = line;                                \
       l2 = l1 + 1;                              \
     }
-
 
 static void
 convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
