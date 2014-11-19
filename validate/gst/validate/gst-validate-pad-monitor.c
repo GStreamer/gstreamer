@@ -530,8 +530,9 @@ gst_validate_pad_monitor_pad_should_proxy_othercaps (GstValidatePadMonitor *
     return FALSE;
 
   /* We only know how to handle othercaps checks for codecs so far */
-  return GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DECODER (parent) ||
-      GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_ENCODER (parent);
+  return (GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DECODER (parent) ||
+      GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_ENCODER (parent)) &&
+      !GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_CONVERTER (parent);
 }
 
 
