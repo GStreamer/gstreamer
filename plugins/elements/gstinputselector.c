@@ -129,8 +129,7 @@ static void gst_input_selector_active_pad_changed (GstInputSelector * sel,
     GParamSpec * pspec, gpointer user_data);
 static inline gboolean gst_input_selector_is_active_sinkpad (GstInputSelector *
     sel, GstPad * pad);
-static GstPad *gst_input_selector_activate_sinkpad (GstInputSelector * sel,
-    GstPad * pad);
+static GstPad *gst_input_selector_get_active_sinkpad (GstInputSelector * sel);
 static GstPad *gst_input_selector_get_linked_pad (GstInputSelector * sel,
     GstPad * pad, gboolean strict);
 
@@ -441,7 +440,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_INPUT_SELECTOR_LOCK (sel);
   prev_active_sinkpad =
       sel->active_sinkpad ? gst_object_ref (sel->active_sinkpad) : NULL;
-  active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+  active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
   gst_object_ref (active_sinkpad);
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
@@ -456,7 +455,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
   gst_object_unref (active_sinkpad);
 
   GST_INPUT_SELECTOR_LOCK (sel);
-  active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+  active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
 
   /* only forward if we are dealing with the active sinkpad */
   forward = (pad == active_sinkpad);
@@ -589,7 +588,7 @@ gst_selector_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
        */
       if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
         GST_INPUT_SELECTOR_LOCK (sel);
-        active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+        active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
         GST_INPUT_SELECTOR_UNLOCK (sel);
 
         if (pad != active_sinkpad) {
@@ -661,8 +660,7 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
     gint64 cur_running_time;
     GstClockTime running_time;
 
-    active_sinkpad =
-        gst_input_selector_activate_sinkpad (sel, GST_PAD_CAST (selpad));
+    active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
     active_selpad = GST_SELECTOR_PAD_CAST (active_sinkpad);
 
     if (seg->format != GST_FORMAT_TIME) {
@@ -828,7 +826,7 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
     GstSelectorPad *active_selpad;
     GstSegment *active_seg;
 
-    active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+    active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
     active_selpad = GST_SELECTOR_PAD_CAST (active_sinkpad);
     active_seg = &active_selpad->segment;
 
@@ -945,7 +943,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   prev_active_sinkpad =
       sel->active_sinkpad ? gst_object_ref (sel->active_sinkpad) : NULL;
-  active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+  active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
 
   /* In sync mode wait until the active pad has advanced
    * after the running time of the current buffer */
@@ -986,7 +984,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         selpad->events_pending = TRUE;
 
         /* Might have changed while calling chain for cached buffers */
-        active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+        active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
       }
     }
 
@@ -998,7 +996,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     }
 
     /* Might have changed while waiting */
-    active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+    active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
   }
 
   if (sel->eos) {
@@ -1073,7 +1071,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   if (sel->sync_streams && sel->cache_buffers) {
     /* Might have changed while pushing */
-    active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+    active_sinkpad = gst_input_selector_get_active_sinkpad (sel);
     /* only set pad to pushed if we are still the active pad */
     if (active_sinkpad == pad)
       selpad->pushed = TRUE;
@@ -1531,7 +1529,7 @@ gst_input_selector_is_active_sinkpad (GstInputSelector * sel, GstPad * pad)
 
 /* Get or create the active sinkpad, must be called with SELECTOR_LOCK */
 static GstPad *
-gst_input_selector_activate_sinkpad (GstInputSelector * sel, GstPad * pad)
+gst_input_selector_get_active_sinkpad (GstInputSelector * sel)
 {
   GstPad *active_sinkpad;
 
