@@ -1190,9 +1190,13 @@ gst_videoaggregator_aggregate (GstAggregator * agg)
   if (agg->segment.stop != -1)
     output_end_time = MIN (output_end_time, agg->segment.stop);
 
-  res =
-      gst_videoaggregator_fill_queues (vagg, output_start_time,
-      output_end_time);
+  if (output_end_time == output_start_time) {
+    res = GST_FLOW_EOS;
+  } else {
+    res =
+        gst_videoaggregator_fill_queues (vagg, output_start_time,
+        output_end_time);
+  }
 
   if (res == GST_FLOW_NEEDS_DATA) {
     GST_DEBUG_OBJECT (vagg, "Need more data for decisions");
