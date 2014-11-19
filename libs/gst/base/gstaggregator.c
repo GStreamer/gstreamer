@@ -1627,10 +1627,17 @@ pad_query_func (GstPad * pad, GstObject * parent, GstQuery * query)
       PAD_WAIT_EVENT (aggpad);
     }
     PAD_UNLOCK_EVENT (aggpad);
+
+    if (g_atomic_int_get (&aggpad->priv->flushing) == TRUE)
+      goto flushing;
   }
 
   return klass->sink_query (GST_AGGREGATOR (parent),
       GST_AGGREGATOR_PAD (pad), query);
+
+flushing:
+  GST_DEBUG_OBJECT (aggpad, "Pad is flushing, dropping query");
+  return FALSE;
 }
 
 static gboolean
@@ -1647,10 +1654,21 @@ pad_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
       PAD_WAIT_EVENT (aggpad);
     }
     PAD_UNLOCK_EVENT (aggpad);
+
+    if (g_atomic_int_get (&aggpad->priv->flushing) == TRUE
+        && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP)
+      goto flushing;
   }
 
   return klass->sink_event (GST_AGGREGATOR (parent),
       GST_AGGREGATOR_PAD (pad), event);
+
+flushing:
+  GST_DEBUG_OBJECT (aggpad, "Pad is flushing, dropping event");
+  if (GST_EVENT_IS_STICKY (event))
+    gst_pad_store_sticky_event (pad, event);
+  gst_event_unref (event);
+  return FALSE;
 }
 
 static gboolean
