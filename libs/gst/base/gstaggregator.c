@@ -1563,7 +1563,7 @@ _chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 
   PAD_LOCK_EVENT (aggpad);
 
-  if (aggpad->buffer) {
+  while (aggpad->buffer) {
     GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
     PAD_WAIT_EVENT (aggpad);
   }
@@ -1617,7 +1617,17 @@ eos:
 static gboolean
 pad_query_func (GstPad * pad, GstObject * parent, GstQuery * query)
 {
+  GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
   GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (parent);
+
+  if (GST_QUERY_IS_SERIALIZED (query)) {
+    PAD_LOCK_EVENT (aggpad);
+    while (aggpad->buffer) {
+      GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
+      PAD_WAIT_EVENT (aggpad);
+    }
+    PAD_UNLOCK_EVENT (aggpad);
+  }
 
   return klass->sink_query (GST_AGGREGATOR (parent),
       GST_AGGREGATOR_PAD (pad), query);
@@ -1626,7 +1636,18 @@ pad_query_func (GstPad * pad, GstObject * parent, GstQuery * query)
 static gboolean
 pad_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
+  GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
   GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (parent);
+
+  if (GST_EVENT_IS_SERIALIZED (event) && GST_EVENT_TYPE (event) != GST_EVENT_EOS
+      && GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT_DONE) {
+    PAD_LOCK_EVENT (aggpad);
+    while (aggpad->buffer) {
+      GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
+      PAD_WAIT_EVENT (aggpad);
+    }
+    PAD_UNLOCK_EVENT (aggpad);
+  }
 
   return klass->sink_event (GST_AGGREGATOR (parent),
       GST_AGGREGATOR_PAD (pad), event);
