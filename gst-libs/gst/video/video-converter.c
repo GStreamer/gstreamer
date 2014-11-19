@@ -170,7 +170,7 @@ struct _GstVideoConverter
 
   /* data for unpack */
   GstLineCache *unpack_lines;
-  GstFormat unpack_format;
+  GstVideoFormat unpack_format;
   guint unpack_bits;
   gboolean unpack_rgb;
   gboolean identity_unpack;
@@ -218,7 +218,7 @@ struct _GstVideoConverter
   /* pack */
   GstLineCache *pack_lines;
   guint pack_nlines;
-  GstFormat pack_format;
+  GstVideoFormat pack_format;
   guint pack_bits;
   gboolean pack_rgb;
   gboolean identity_pack;
