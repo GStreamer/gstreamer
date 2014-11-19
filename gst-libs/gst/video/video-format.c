@@ -65,6 +65,13 @@
    ((line & ~7) >> 2) + (line & 1) :            \
    line >> 2)
 
+#define IS_CHROMA_LINE_420(line, flags)         \
+  (flags & GST_VIDEO_PACK_FLAG_INTERLACED ?     \
+   !(line & 2) : !(line & 1))
+#define IS_CHROMA_LINE_410(line, flags)         \
+  (flags & GST_VIDEO_PACK_FLAG_INTERLACED ?     \
+   !(line & 6) : !(line & 3))
+
 #define IS_ALIGNED(x,n) ((((guintptr)(x)&((n)-1))) == 0)
 
 #define PACK_420 GST_VIDEO_FORMAT_AYUV, unpack_planar_420, 1, pack_planar_420
@@ -101,7 +108,7 @@ pack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *v_line = GET_V_LINE (uv);
   const guint8 *ayuv = src;
 
-  if (!(y & 1)) {
+  if (IS_CHROMA_LINE_420 (y, flags)) {
     g_return_if_fail (IS_ALIGNED (src, 8));
 
     video_orc_pack_I420 (y_line, u_line, v_line, src, width / 2);
@@ -1087,7 +1094,7 @@ pack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *uv_line = GET_PLANE_LINE (1, uv);
   const guint8 *ayuv = src;
 
-  if (!(y & 1)) {
+  if (IS_CHROMA_LINE_420 (y, flags)) {
     g_return_if_fail (IS_ALIGNED (src, 8));
 
     video_orc_pack_NV12 (y_line, uv_line, src, width / 2);
@@ -1139,7 +1146,7 @@ pack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *uv_line = GET_PLANE_LINE (1, uv);
   const guint8 *ayuv = src;
 
-  if (!(y & 1)) {
+  if (IS_CHROMA_LINE_420 (y, flags)) {
     g_return_if_fail (IS_ALIGNED (src, 8));
 
     video_orc_pack_NV21 (y_line, uv_line, src, width / 2);
@@ -1320,7 +1327,7 @@ pack_A420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *a_line = GET_A_LINE (y);
   const guint8 *ayuv = src;
 
-  if (!(y & 1)) {
+  if (IS_CHROMA_LINE_420 (y, flags)) {
     g_return_if_fail (IS_ALIGNED (src, 8));
 
     video_orc_pack_A420 (y_line, u_line, v_line, a_line, src, width / 2);
@@ -1469,14 +1476,14 @@ pack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     destY[i + 1] = s[i * 4 + 5];
     destY[i + 2] = s[i * 4 + 9];
     destY[i + 3] = s[i * 4 + 13];
-    if (y % 4 == 0) {
+    if (IS_CHROMA_LINE_410 (y, flags)) {
       destU[i >> 2] = s[i * 4 + 2];
       destV[i >> 2] = s[i * 4 + 3];
     }
   }
   if (i < width) {
     destY[i] = s[i * 4 + 1];
-    if (y % 4 == 0) {
+    if (IS_CHROMA_LINE_410 (y, flags)) {
       destU[i >> 2] = s[i * 4 + 2];
       destV[i >> 2] = s[i * 4 + 3];
     }
@@ -1911,7 +1918,7 @@ pack_I420_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint16 Y0, Y1, U, V;
   const guint16 *s = src;
 
-  if (!(y & 1)) {
+  if (IS_CHROMA_LINE_420 (y, flags)) {
     for (i = 0; i < width - 1; i += 2) {
       Y0 = s[i * 4 + 1] >> 6;
       Y1 = s[i * 4 + 5] >> 6;
@@ -1985,7 +1992,7 @@ pack_I420_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint16 Y0, Y1, U, V;
   const guint16 *s = src;
 
-  if (!(y & 1)) {
+  if (IS_CHROMA_LINE_420 (y, flags)) {
     for (i = 0; i < width - 1; i += 2) {
       Y0 = s[i * 4 + 1] >> 6;
       Y1 = s[i * 4 + 5] >> 6;
