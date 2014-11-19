@@ -1751,7 +1751,7 @@ gst_aggregator_pad_steal_buffer (GstAggregatorPad * pad)
       pad->eos = TRUE;
     }
     PAD_BROADCAST_EVENT (pad);
-    GST_DEBUG_OBJECT (pad, "Consummed: %" GST_PTR_FORMAT, buffer);
+    GST_DEBUG_OBJECT (pad, "Consumed: %" GST_PTR_FORMAT, buffer);
   }
   PAD_UNLOCK_EVENT (pad);
 
