@@ -1727,6 +1727,7 @@ parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
     return FALSE;
 
   msg = gst_mikey_message_new_from_data (data, size, NULL, NULL);
+  g_free (data);
   if (msg == NULL)
     return FALSE;
 
