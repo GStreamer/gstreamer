@@ -937,6 +937,9 @@ gst_video_chroma_resample_new (GstVideoChromaMethod method,
         ((ABS (v_factor) - 1) * 8) + (cosite ? 4 : 0) + (bits ==
         16 ? 2 : 0) + (v_factor < 0 ? 1 : 0) + 1;
 
+  if (flags & GST_VIDEO_CHROMA_FLAG_INTERLACED)
+    v_index += 16;
+
   GST_DEBUG ("v_resample %d, factor %d, cosite %d", v_index, v_factor, cosite);
 
   result = g_slice_new (GstVideoChromaResample);
