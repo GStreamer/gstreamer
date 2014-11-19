@@ -90,9 +90,11 @@ gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
     const gchar * color)
 {
   const ColorimetryInfo *ci;
+  gboolean res = FALSE;
 
   if ((ci = gst_video_get_colorimetry (color))) {
     *cinfo = ci->color;
+    res = TRUE;
   } else {
     gint r, m, t, p;
 
@@ -101,9 +103,10 @@ gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
       cinfo->matrix = m;
       cinfo->transfer = t;
       cinfo->primaries = p;
+      res = TRUE;
     }
   }
-  return TRUE;
+  return res;
 }
 
 /**
