@@ -174,6 +174,20 @@ GST_START_TEST (test_from_string)
   ASSERT_WARNING (structure = gst_structure_from_string (s, NULL));
   fail_if (structure == NULL, "Could not get structure from string %s", s);
   gst_structure_free (structure);
+
+  /* make sure we handle \ as last character in various things, run with valgrind */
+  s = "foo,test=\"foobar\\";
+  structure = gst_structure_from_string (s, NULL);
+  fail_unless (structure == NULL);
+  s = "\\";
+  structure = gst_structure_from_string (s, NULL);
+  fail_unless (structure == NULL);
+  s = "foobar,test\\";
+  structure = gst_structure_from_string (s, NULL);
+  fail_unless (structure == NULL);
+  s = "foobar,test=(string)foo\\";
+  structure = gst_structure_from_string (s, NULL);
+  fail_unless (structure == NULL);
 }
 
 GST_END_TEST;
