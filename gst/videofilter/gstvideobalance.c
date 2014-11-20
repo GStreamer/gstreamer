@@ -454,7 +454,8 @@ gst_video_balance_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
       videobalance->process = gst_video_balance_packed_rgb;
       break;
     default:
-      goto unknown_format;
+      if (!gst_video_balance_is_passthrough (videobalance))
+        goto unknown_format;
       break;
   }
 
