@@ -738,6 +738,12 @@ compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
   if (vtdec->video_info.width == 0 || vtdec->video_info.height == 0)
     return FALSE;
 
+  GST_INFO_OBJECT (vtdec, "parsed profile %d, level %d", profile, level);
+  if (profile == 66) {
+    /* baseline or constrained-baseline, we don't need to reorder */
+    return TRUE;
+  }
+
   max_dpb_mb_s = get_dpb_max_mb_s_from_level (vtdec, level);
   if (max_dpb_mb_s == -1) {
     GST_ELEMENT_ERROR (vtdec, STREAM, DECODE, (NULL),
