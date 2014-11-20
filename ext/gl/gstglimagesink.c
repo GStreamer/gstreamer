@@ -198,10 +198,14 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
   GstGLImageSink *sink = GST_GLIMAGE_SINK (navigation);
   GstEvent *event = NULL;
   GstPad *pad = NULL;
-  GstGLWindow *window = gst_gl_context_get_window (sink->context);
+  GstGLWindow *window;
   guint width, height;
   gdouble x, y, xscale, yscale;
 
+  if (!sink->context)
+    return;
+
+  window = gst_gl_context_get_window (sink->context);
   g_return_if_fail (GST_GL_IS_WINDOW (window));
 
   width = GST_VIDEO_SINK_WIDTH (sink);
