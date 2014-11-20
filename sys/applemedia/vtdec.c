@@ -726,13 +726,16 @@ compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
   int dpb_mb_size = 16;
   int max_dpb_size_frames = 16;
   int max_dpb_mb_s = -1;
-  int width_in_mb_s = vtdec->video_info.width / dpb_mb_size;
-  int height_in_mb_s = vtdec->video_info.height / dpb_mb_size;
+  int width_in_mb_s = GST_ROUND_UP_16 (vtdec->video_info.width) / dpb_mb_size;
+  int height_in_mb_s = GST_ROUND_UP_16 (vtdec->video_info.height) / dpb_mb_size;
 
   *length = 0;
 
   if (!parse_h264_profile_and_level_from_codec_data (vtdec, codec_data,
           &profile, &level))
+    return FALSE;
+
+  if (vtdec->video_info.width == 0 || vtdec->video_info.height == 0)
     return FALSE;
 
   max_dpb_mb_s = get_dpb_max_mb_s_from_level (vtdec, level);
