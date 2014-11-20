@@ -43,6 +43,10 @@ GST_DEBUG_CATEGORY (gst_vtenc_debug);
 const CFStringRef
     kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder =
 CFSTR ("EnableHardwareAcceleratedVideoEncoder");
+const CFStringRef kVTCompressionPropertyKey_ProfileLevel =
+CFSTR ("ProfileLevel");
+const CFStringRef kVTProfileLevel_H264_Baseline_AutoLevel =
+CFSTR ("H264_Baseline_AutoLevel");
 #endif
 
 enum
@@ -566,14 +570,11 @@ gst_vtenc_create_session (GstVTEnc * self)
   gst_vtenc_session_configure_expected_framerate (self, session,
       (gdouble) self->negotiated_fps_n / (gdouble) self->negotiated_fps_d);
 
-  /* FIXME: This is only available since OS X 10.9.6 */
-#if HAVE_IOS
   status = VTSessionSetProperty (session,
       kVTCompressionPropertyKey_ProfileLevel,
       kVTProfileLevel_H264_Baseline_AutoLevel);
   GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_ProfileLevel => %d",
       (int) status);
-#endif
 
   status = VTSessionSetProperty (session,
       kVTCompressionPropertyKey_AllowTemporalCompression, kCFBooleanTrue);
