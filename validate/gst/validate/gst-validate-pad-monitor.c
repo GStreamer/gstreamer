@@ -150,8 +150,14 @@ _find_master_report_on_pad (GstPad * pad, GstValidateReport * report)
   GstValidatePadMonitor *pad_monitor;
   GstValidateReport *prev_report;
   gboolean result = FALSE;
+  GstPad *tmppad = pad;
 
   pad = _get_actual_pad (pad);
+  if (pad == NULL) {
+    GST_ERROR_OBJECT (tmppad, "Does not have a target yet");
+
+    return FALSE;
+  }
 
   pad_monitor = g_object_get_data ((GObject *) pad, "validate-monitor");
 
