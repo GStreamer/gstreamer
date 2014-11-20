@@ -279,7 +279,12 @@ read_event (GstRtpGSTDepay * rtpgstdepay, guint type,
   if (!read_length (rtpgstdepay, map.data, map.size, &length, &offset))
     goto too_small;
 
-  if (length == 0 || map.data[offset + length - 1] != ';')
+  if (length == 0)
+    goto invalid_buffer;
+  if (map.data[offset + length - 1] != '\0')
+    goto invalid_buffer;
+  /* backward compat, old payloader did not put 0-byte at the end */
+  if (map.data[offset + length - 1] != ';')
     goto invalid_buffer;
 
   GST_DEBUG_OBJECT (rtpgstdepay, "parsing event %s", &map.data[offset]);
