@@ -1922,8 +1922,11 @@ gst_structure_parse_string (gchar * s, gchar ** end, gchar ** next,
     while (*s != '"') {
       if (G_UNLIKELY (*s == 0))
         return FALSE;
-      if (G_UNLIKELY (*s == '\\'))
+      if (G_UNLIKELY (*s == '\\')) {
         s++;
+        if (G_UNLIKELY (*s == 0))
+          return FALSE;
+      }
       *w = *s;
       w++;
       s++;
@@ -1935,8 +1938,11 @@ gst_structure_parse_string (gchar * s, gchar ** end, gchar ** next,
     while (*s != '"') {
       if (G_UNLIKELY (*s == 0))
         return FALSE;
-      if (G_UNLIKELY (*s == '\\'))
+      if (G_UNLIKELY (*s == '\\')) {
         s++;
+        if (G_UNLIKELY (*s == 0))
+          return FALSE;
+      }
       s++;
     }
     s++;
