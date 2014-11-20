@@ -2119,9 +2119,17 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "Send event downstream when a stream is synchronized to the sender",
           DEFAULT_DO_SYNC_EVENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpBin:do-retransmission:
+   *
+   * Enables RTP retransmission on all streams. To control retransmission on
+   * a per-SSRC basis, connect to the #GstRtpBin::new-jitterbuffer signal and
+   * set the #GstRtpJitterBuffer::do-retransmission property on the
+   * #GstRtpJitterBuffer object instead.
+   */
   g_object_class_install_property (gobject_class, PROP_DO_RETRANSMISSION,
       g_param_spec_boolean ("do-retransmission", "Do retransmission",
-          "Send an event downstream to request packet retransmission",
+          "Enable retransmission on all streams",
           DEFAULT_DO_RETRANSMISSION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
