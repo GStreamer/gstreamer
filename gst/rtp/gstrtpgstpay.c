@@ -483,6 +483,8 @@ gst_rtp_gst_pay_send_event (GstRtpGSTPay * rtpgstpay, guint etype,
 
   estr = gst_structure_to_string (s);
   elen = strlen (estr);
+  /* for 0 byte */
+  elen++;
   outbuf = make_data_buffer (rtpgstpay, estr, elen);
   GST_DEBUG_OBJECT (rtpgstpay, "sending event=%s", estr);
   g_free (estr);
