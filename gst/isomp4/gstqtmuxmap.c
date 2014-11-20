@@ -47,12 +47,12 @@
 /* static info related to various format */
 
 #define COMMON_VIDEO_CAPS \
-  "width = (int) [ 16, 4096 ], " \
-  "height = (int) [ 16, 4096 ]"
+  "width = (int) [ 16, MAX ], " \
+  "height = (int) [ 16, MAX ]"
 
 #define COMMON_VIDEO_CAPS_NO_FRAMERATE \
-  "width = (int) [ 16, 4096 ], " \
-  "height = (int) [ 16, 4096 ] "
+  "width = (int) [ 16, MAX ], " \
+  "height = (int) [ 16, MAX ] "
 
 #define H263_CAPS \
   "video/x-h263, " \
