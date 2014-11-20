@@ -232,6 +232,9 @@ read_caps (GstRtpGSTDepay * rtpgstdepay, GstBuffer * buf, guint * skip)
   if (!read_length (rtpgstdepay, map.data, map.size, &length, &offset))
     goto too_small;
 
+  if (length == 0 || map.data[offset + length - 1] != '\0')
+    goto invalid_buffer;
+
   GST_DEBUG_OBJECT (rtpgstdepay, "parsing caps %s", &map.data[offset]);
 
   /* parse and store in cache */
@@ -246,6 +249,13 @@ too_small:
   {
     GST_ELEMENT_WARNING (rtpgstdepay, STREAM, DECODE,
         ("Buffer too small."), (NULL));
+    gst_buffer_unmap (buf, &map);
+    return NULL;
+  }
+invalid_buffer:
+  {
+    GST_ELEMENT_WARNING (rtpgstdepay, STREAM, DECODE,
+        ("caps string not 0-terminated."), (NULL));
     gst_buffer_unmap (buf, &map);
     return NULL;
   }
@@ -268,6 +278,9 @@ read_event (GstRtpGSTDepay * rtpgstdepay, guint type,
 
   if (!read_length (rtpgstdepay, map.data, map.size, &length, &offset))
     goto too_small;
+
+  if (length == 0 || map.data[offset + length - 1] != ';')
+    goto invalid_buffer;
 
   GST_DEBUG_OBJECT (rtpgstdepay, "parsing event %s", &map.data[offset]);
 
@@ -304,6 +317,13 @@ too_small:
   {
     GST_ELEMENT_WARNING (rtpgstdepay, STREAM, DECODE,
         ("Buffer too small."), (NULL));
+    gst_buffer_unmap (buf, &map);
+    return NULL;
+  }
+invalid_buffer:
+  {
+    GST_ELEMENT_WARNING (rtpgstdepay, STREAM, DECODE,
+        ("event string not 0-terminated."), (NULL));
     gst_buffer_unmap (buf, &map);
     return NULL;
   }
