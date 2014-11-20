@@ -158,7 +158,7 @@ extend_times (StreamInfo * si, GstClockTime start, GstClockTime end)
         return;
       }
 
-      /* new start > ts->start, so this new entry goes after the first one */
+      /* new start > ts->end, so this new entry goes after the first one */
       GST_LOG ("%p inserting new entry %d %" GST_TIME_FORMAT
           " to %" GST_TIME_FORMAT, si, i + 1, GST_TIME_ARGS (start),
           GST_TIME_ARGS (end));
@@ -244,6 +244,9 @@ handle_output (GstPad * pad, GstPadProbeInfo * info, StreamInfo * si)
   start = gst_segment_to_stream_time (&si->seg, GST_FORMAT_TIME, start);
   end = gst_segment_to_stream_time (&si->seg, GST_FORMAT_TIME, end);
 
+  GST_DEBUG_OBJECT (pad, "new buffer %" GST_TIME_FORMAT
+      " to %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
+
   /* Now extend measured time range to include new times */
   extend_times (si, start, end);
 
@@ -287,8 +290,13 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, PlayState * state)
     g_printerr ("Failed to link %s:%s to %s:%s (ret = %d)\n",
         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (fakesink_pad), ret);
   } else {
-    g_printerr ("Linked %s:%s to %s:%s\n", GST_DEBUG_PAD_NAME (pad),
-        GST_DEBUG_PAD_NAME (fakesink_pad));
+    GstCaps *caps = gst_pad_get_current_caps (pad);
+    gchar *s = gst_caps_to_string (caps);
+
+    g_print ("Linked %s:%s to %s:%s caps %s\n", GST_DEBUG_PAD_NAME (pad),
+        GST_DEBUG_PAD_NAME (fakesink_pad), s);
+    gst_caps_unref (caps);
+    g_free (s);
   }
 
   gst_object_unref (fakesink_pad);
@@ -299,7 +307,6 @@ main (gint argc, gchar * argv[])
 {
   PlayState state;
   GstElement *decoder;
-  GstElement *source;
   GstStateChangeReturn res;
   GstBus *bus;
 
@@ -332,25 +339,20 @@ main (gint argc, gchar * argv[])
       G_CALLBACK (gst_object_default_deep_notify), NULL);
 #endif
 
-  source = gst_element_factory_make ("giosrc", "source");
-  g_assert (source);
-
-  if (argv[1] && strstr (argv[1], "://") != NULL) {
-    g_object_set (G_OBJECT (source), "location", argv[1], NULL);
-  } else if (argv[1]) {
-    gchar *uri = g_strdup_printf ("file://%s", argv[1]);
-
-    g_object_set (G_OBJECT (source), "location", uri, NULL);
-    g_free (uri);
-  }
-
-  decoder = gst_element_factory_make ("decodebin", "decoder");
+  decoder = gst_element_factory_make ("uridecodebin", "decoder");
   g_assert (decoder);
-
-  gst_bin_add (GST_BIN (state.pipe), source);
   gst_bin_add (GST_BIN (state.pipe), decoder);
 
-  gst_element_link_pads (source, "src", decoder, "sink");
+  if (argv[1] && strstr (argv[1], "://") != NULL) {
+    g_object_set (G_OBJECT (decoder), "uri", argv[1], NULL);
+  } else if (argv[1]) {
+    gchar *uri = g_strdup_printf ("file://%s", argv[1]);
+    g_object_set (G_OBJECT (decoder), "uri", uri, NULL);
+    g_free (uri);
+  } else {
+    g_print ("Usage: %s <filename|uri>\n", argv[0]);
+    return -1;
+  }
 
   g_signal_connect (decoder, "pad-added", G_CALLBACK (pad_added_cb), &state);
 
