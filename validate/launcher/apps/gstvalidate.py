@@ -177,7 +177,8 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                     continue
 
                 if self.test_manager.options.mute:
-                    if scenario.needs_clock_sync():
+                    if scenario.needs_clock_sync() or \
+                            minfo.media_descriptor.need_clock_sync():
                         fakesink = "'fakesink sync=true'"
                     else:
                         fakesink = "'fakesink'"

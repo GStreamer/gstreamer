@@ -125,7 +125,8 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
                      ),
        DEFAULT_MAIN_DIR,
        "\n  * ".join([getattr(Protocols, att) for att in
-                     dir(Protocols) if not att.startswith("_")]))
+                      dir(Protocols) if isinstance(getattr(Protocols, att), str)
+                      and not att.startswith("_")]))
 
 QA_ASSETS = "gst-qa-assets"
 MEDIAS_FOLDER = "medias"

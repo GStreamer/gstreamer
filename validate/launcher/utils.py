@@ -44,12 +44,18 @@ class Result(object):
     PASSED = "Passed"
     KNOWN_ERROR = "Known error"
 
-
 class Protocols(object):
     HTTP = "http"
     FILE = "file"
     HLS = "hls"
     DASH = "dash"
+
+    @staticmethod
+    def needs_clock_sync(protocol):
+        if protocol == Protocols.HLS:
+            return True
+
+        return False
 
 
 class Colors(object):

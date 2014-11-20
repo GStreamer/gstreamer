@@ -1202,6 +1202,9 @@ class GstValidateMediaDescriptor(MediaDescriptor):
     def get_path(self):
         return self._xml_path
 
+    def need_clock_sync(self):
+        return Protocols.needs_clock_sync(self.get_protocol())
+
     def get_media_filepath(self):
         if self.get_protocol() == Protocols.FILE:
             return self._xml_path.replace("." + self.MEDIA_INFO_EXT, "")
