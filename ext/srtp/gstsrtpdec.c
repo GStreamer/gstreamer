@@ -759,13 +759,16 @@ gst_srtp_dec_sink_setcaps (GstPad * pad, GstObject * parent,
 static gboolean
 gst_srtp_dec_sink_event_rtp (GstPad * pad, GstObject * parent, GstEvent * event)
 {
+  gboolean ret;
   GstCaps *caps;
   GstSrtpDec *filter = GST_SRTP_DEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
       gst_event_parse_caps (event, &caps);
-      return gst_srtp_dec_sink_setcaps (pad, parent, caps, FALSE);
+      ret = gst_srtp_dec_sink_setcaps (pad, parent, caps, FALSE);
+      gst_event_unref (event);
+      return ret;
     case GST_EVENT_SEGMENT:
       filter->rtp_has_segment = TRUE;
       break;
@@ -783,13 +786,16 @@ static gboolean
 gst_srtp_dec_sink_event_rtcp (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
+  gboolean ret;
   GstCaps *caps;
   GstSrtpDec *filter = GST_SRTP_DEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
       gst_event_parse_caps (event, &caps);
-      return gst_srtp_dec_sink_setcaps (pad, parent, caps, TRUE);
+      ret = gst_srtp_dec_sink_setcaps (pad, parent, caps, TRUE);
+      gst_event_unref (event);
+      return ret;
     case GST_EVENT_SEGMENT:
       filter->rtcp_has_segment = TRUE;
       break;
