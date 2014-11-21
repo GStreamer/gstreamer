@@ -27,6 +27,16 @@
 
 #include "video-resampler.h"
 
+
+#define DEFAULT_OPT_CUBIC_B (1.0 / 3.0)
+#define DEFAULT_OPT_CUBIC_C (1.0 / 3.0)
+
+#define DEFAULT_OPT_ENVELOPE 2.0
+#define DEFAULT_OPT_SHARPNESS 1.0
+#define DEFAULT_OPT_SHARPEN 0.0
+
+#define DEFAULT_OPT_MAX_TAPS 16
+
 typedef struct _ResamplerParams ResamplerParams;
 
 struct _ResamplerParams
@@ -49,6 +59,37 @@ struct _ResamplerParams
 
   GstVideoResampler *resampler;
 };
+
+static gdouble
+get_opt_double (GstStructure * options, const gchar * name, gdouble def)
+{
+  gdouble res;
+  if (!options || !gst_structure_get_double (options, name, &res))
+    res = def;
+  return res;
+}
+
+static gint
+get_opt_int (GstStructure * options, const gchar * name, gint def)
+{
+  gint res;
+  if (!options || !gst_structure_get_int (options, name, &res))
+    res = def;
+  return res;
+}
+
+#define GET_OPT_CUBIC_B(options) get_opt_double(options, \
+    GST_VIDEO_RESAMPLER_OPT_CUBIC_B, DEFAULT_OPT_CUBIC_B)
+#define GET_OPT_CUBIC_C(options) get_opt_double(options, \
+    GST_VIDEO_RESAMPLER_OPT_CUBIC_C, DEFAULT_OPT_CUBIC_C)
+#define GET_OPT_ENVELOPE(options) get_opt_double(options, \
+    GST_VIDEO_RESAMPLER_OPT_ENVELOPE, DEFAULT_OPT_ENVELOPE)
+#define GET_OPT_SHARPNESS(options) get_opt_double(options, \
+    GST_VIDEO_RESAMPLER_OPT_SHARPNESS, DEFAULT_OPT_SHARPNESS)
+#define GET_OPT_SHARPEN(options) get_opt_double(options, \
+    GST_VIDEO_RESAMPLER_OPT_SHARPEN, DEFAULT_OPT_SHARPEN)
+#define GET_OPT_MAX_TAPS(options) get_opt_int(options, \
+    GST_VIDEO_RESAMPLER_OPT_MAX_TAPS, DEFAULT_OPT_MAX_TAPS)
 
 static double
 sinc (double x)
@@ -295,6 +336,7 @@ gst_video_resampler_init (GstVideoResampler * resampler,
     GstStructure * options)
 {
   ResamplerParams params;
+  gint max_taps;
 
   g_return_val_if_fail (in_size != 0, FALSE);
   g_return_val_if_fail (out_size != 0, FALSE);
@@ -311,6 +353,8 @@ gst_video_resampler_init (GstVideoResampler * resampler,
 
   GST_DEBUG ("%d %u  %u->%u", method, n_taps, in_size, out_size);
 
+  max_taps = GET_OPT_MAX_TAPS (options);
+
   switch (method) {
     case GST_VIDEO_RESAMPLER_METHOD_NEAREST:
       params.get_tap = get_nearest_tap;
@@ -323,14 +367,8 @@ gst_video_resampler_init (GstVideoResampler * resampler,
         n_taps = 2;
       break;
     case GST_VIDEO_RESAMPLER_METHOD_CUBIC:
-      if (!options
-          || !gst_structure_get_double (options,
-              GST_VIDEO_RESAMPLER_OPT_CUBIC_B, &params.b))
-        params.b = 1.0 / 3.0;
-      if (!options
-          || !gst_structure_get_double (options,
-              GST_VIDEO_RESAMPLER_OPT_CUBIC_C, &params.c))
-        params.c = 1.0 / 3.0;
+      params.b = GET_OPT_CUBIC_B (options);
+      params.c = GET_OPT_CUBIC_C (options);
       n_taps = 4;
       params.get_tap = get_cubic_tap;
       break;
@@ -343,18 +381,9 @@ gst_video_resampler_init (GstVideoResampler * resampler,
     {
       gdouble resample_inc = in_size / (gdouble) out_size;
 
-      if (!options
-          || !gst_structure_get_double (options,
-              GST_VIDEO_RESAMPLER_OPT_ENVELOPE, &params.envelope))
-        params.envelope = 2.0;
-      if (!options
-          || !gst_structure_get_double (options,
-              GST_VIDEO_RESAMPLER_OPT_SHARPNESS, &params.sharpness))
-        params.sharpness = 1.0;
-      if (!options
-          || !gst_structure_get_double (options,
-              GST_VIDEO_RESAMPLER_OPT_SHARPEN, &params.sharpen))
-        params.sharpen = 0.0;
+      params.envelope = GET_OPT_ENVELOPE (options);
+      params.sharpness = GET_OPT_SHARPNESS (options);
+      params.sharpen = GET_OPT_SHARPEN (options);
 
       if (resample_inc > 1.0) {
         params.fx = (1.0 / resample_inc) * params.sharpness;
@@ -372,6 +401,8 @@ gst_video_resampler_init (GstVideoResampler * resampler,
     default:
       break;
   }
+
+  n_taps = CLAMP (n_taps, 0, max_taps);
 
   if (n_taps > in_size)
     n_taps = in_size;

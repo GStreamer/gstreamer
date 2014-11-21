@@ -105,6 +105,13 @@ typedef enum {
  * 0.0 and 1.0. 0.0 is the default.
  */
 #define GST_VIDEO_RESAMPLER_OPT_SHARPEN      "GstVideoResampler.sharpen"
+/**
+ * GST_VIDEO_RESAMPLER_OPT_MAX_TAPS:
+ *
+ * G_TYPE_INT, limits the maximum number of taps to use.
+ * 16 is the default.
+ */
+#define GST_VIDEO_RESAMPLER_OPT_MAX_TAPS     "GstVideoResampler.max-taps"
 
 /**
  * GstVideoResamplerFlags:
