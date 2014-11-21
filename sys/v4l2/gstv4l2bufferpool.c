@@ -517,6 +517,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
     gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
         max_buffers);
 
+  gst_buffer_pool_config_set_allocator (config, pool->allocator, &params);
+
   /* keep a GstVideoInfo with defaults for the when we need to copy */
   gst_video_info_from_caps (&pool->caps_info, caps);
 
