@@ -2138,6 +2138,8 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
   gboolean half;
   GstVideoInterlaceMode interlacing_mode;
 
+  gboolean filter_interlaced = FALSE;
+
   otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
   half = pad != self->srcpad;
 
@@ -2145,9 +2147,27 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
   peercaps = gst_pad_peer_query_caps (otherpad, NULL);
 
   interlacing_mode = GST_VIDEO_INFO_INTERLACE_MODE (&self->vinfo);
+  if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE && filter) {
+    guint i, caps_size;
+
+    filter_interlaced = TRUE;
+    caps_size = gst_caps_get_size (filter);
+    for (i = 0; i < caps_size; i++) {
+      const gchar *interlace_mode;
+      GstStructure *structure = gst_caps_get_structure (filter, i);
+
+      interlace_mode = gst_structure_get_string (structure, "interlace-mode");
+
+      if (!interlace_mode || g_strcmp0 (interlace_mode, "progressive") == 0) {
+        filter_interlaced = FALSE;
+      }
+    }
+  }
+
   if (self->mode == GST_DEINTERLACE_MODE_INTERLACED ||
       (self->mode == GST_DEINTERLACE_MODE_AUTO &&
-          interlacing_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)) {
+          (interlacing_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE ||
+              filter_interlaced))) {
     gst_caps_unref (ourcaps);
     ourcaps = gst_caps_from_string (DEINTERLACE_CAPS);
   }
