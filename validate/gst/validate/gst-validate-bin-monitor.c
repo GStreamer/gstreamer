@@ -128,11 +128,6 @@ gst_validate_bin_monitor_dispose (GObject * object)
   if (monitor->scenario)
     g_object_unref (monitor->scenario);
 
-  if (monitor->print_pos_srcid) {
-    if (g_source_remove (monitor->print_pos_srcid))
-      monitor->print_pos_srcid = 0;
-  }
-
   g_list_free_full (monitor->element_monitors, g_object_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -168,130 +163,6 @@ gst_validate_bin_monitor_init (GstValidateBinMonitor * bin_monitor)
 {
 }
 
-static gboolean
-print_position (GstValidateMonitor * monitor)
-{
-  GstQuery *query;
-  gint64 position, duration;
-  GstElement *pipeline =
-      GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
-
-  gdouble rate = 1.0;
-  GstFormat format = GST_FORMAT_TIME;
-
-  if (!gst_element_query_position (pipeline, format, &position)) {
-    GST_DEBUG_OBJECT (monitor, "Could not query position");
-
-    return TRUE;
-  }
-
-  format = GST_FORMAT_TIME;
-  if (!gst_element_query_duration (pipeline, format, &duration)) {
-    GST_DEBUG_OBJECT (monitor, "Could not query duration");
-
-    return TRUE;
-  }
-
-  query = gst_query_new_segment (GST_FORMAT_DEFAULT);
-  if (gst_element_query (pipeline, query))
-    gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
-  gst_query_unref (query);
-
-  gst_validate_printf (NULL,
-      "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-      " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
-      rate);
-
-  return TRUE;
-}
-
-static void
-_bus_handler (GstBus * bus, GstMessage * message,
-    GstValidateBinMonitor * monitor)
-{
-  GError *err = NULL;
-  gchar *debug = NULL;
-
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:
-      gst_message_parse_error (message, &err, &debug);
-      GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
-          "Got error: %s -- Debug message: %s", err->message, debug);
-      g_error_free (err);
-      g_free (debug);
-      break;
-    case GST_MESSAGE_WARNING:
-      gst_message_parse_warning (message, &err, &debug);
-      GST_VALIDATE_REPORT (monitor, WARNING_ON_BUS,
-          "Got warning: %s -- Debug message: %s", err->message, debug);
-      g_error_free (err);
-      g_free (debug);
-      break;
-    case GST_MESSAGE_BUFFERING:
-    {
-      GstBufferingMode mode;
-      gint percent;
-
-      gst_message_parse_buffering (message, &percent);
-      gst_message_parse_buffering_stats (message, &mode, NULL, NULL, NULL);
-
-      if (percent == 100) {
-        /* a 100% message means buffering is done */
-        if (monitor->buffering) {
-          monitor->print_pos_srcid =
-              g_timeout_add (PRINT_POSITION_TIMEOUT,
-              (GSourceFunc) print_position, monitor);
-          monitor->buffering = FALSE;
-        }
-      } else {
-        /* buffering... */
-        if (!monitor->buffering) {
-          monitor->buffering = TRUE;
-          if (monitor->print_pos_srcid
-              && g_source_remove (monitor->print_pos_srcid))
-            monitor->print_pos_srcid = 0;
-        }
-      }
-      break;
-    }
-    default:
-      break;
-  }
-}
-
-static void
-gst_validate_bin_monitor_create_scenarios (GstValidateBinMonitor * monitor)
-{
-  GstElement *bin = GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
-
-  /* scenarios currently only make sense for pipelines */
-  if (GST_IS_PIPELINE (bin)) {
-    const gchar *scenario_name;
-
-    if ((scenario_name = g_getenv ("GST_VALIDATE_SCENARIO"))) {
-      gchar **scenario_v = g_strsplit (scenario_name, "->", 2);
-
-      if (scenario_v[1] && GST_VALIDATE_MONITOR_GET_OBJECT (monitor)) {
-        if (!g_pattern_match_simple (scenario_v[1],
-                GST_OBJECT_NAME (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)))) {
-          GST_INFO_OBJECT (monitor, "Not attaching to bin %" GST_PTR_FORMAT
-              " as not matching pattern %s",
-              GST_VALIDATE_MONITOR_GET_OBJECT (monitor), scenario_v[1]);
-
-          g_strfreev (scenario_v);
-          return;
-        }
-      }
-      monitor->scenario =
-          gst_validate_scenario_factory_create (GST_VALIDATE_MONITOR_GET_RUNNER
-          (monitor),
-          GST_ELEMENT_CAST (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)),
-          scenario_v[0]);
-      g_strfreev (scenario_v);
-    }
-  }
-}
-
 /**
  * gst_validate_bin_monitor_new:
  * @bin: (transfer-none): a #GstBin to run Validate on
@@ -307,22 +178,6 @@ gst_validate_bin_monitor_new (GstBin * bin, GstValidateRunner * runner,
   if (GST_VALIDATE_MONITOR_GET_OBJECT (monitor) == NULL) {
     g_object_unref (monitor);
     return NULL;
-  }
-
-  gst_validate_bin_monitor_create_scenarios (monitor);
-
-  if (GST_IS_PIPELINE (bin)) {
-    GstBus *bus;
-
-    monitor->print_pos_srcid =
-        g_timeout_add (PRINT_POSITION_TIMEOUT, (GSourceFunc) print_position,
-        monitor);
-
-    bus = gst_element_get_bus (GST_ELEMENT (bin));
-    gst_bus_enable_sync_message_emission (bus);
-    g_signal_connect (bus, "sync-message", (GCallback) _bus_handler, monitor);
-
-    gst_object_unref (bus);
   }
 
   return monitor;

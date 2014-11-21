@@ -4,6 +4,7 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
 	gst-validate-monitor.c \
 	gst-validate-element-monitor.c \
 	gst-validate-bin-monitor.c \
+	gst-validate-pipeline-monitor.c \
 	gst-validate-pad-monitor.c \
 	gst-validate-monitor-factory.c \
 	gst-validate-report.c \
@@ -20,6 +21,7 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
 libgstvalidate_@GST_API_VERSION@include_HEADERS = \
 	validate.h \
 	gst-validate-bin-monitor.h \
+	gst-validate-pipeline-monitor.h \
 	gst-validate-element-monitor.h \
 	gst-validate-enums.h \
 	media-descriptor.h \

@@ -36,6 +36,7 @@
 
 #include "gst-validate-monitor-factory.h"
 #include "gst-validate-bin-monitor.h"
+#include "gst-validate-pipeline-monitor.h"
 #include "gst-validate-pad-monitor.h"
 #include "gst-validate-override-registry.h"
 
@@ -60,6 +61,10 @@ gst_validate_monitor_factory_create (GstObject * target,
     monitor =
         GST_VALIDATE_MONITOR_CAST (gst_validate_pad_monitor_new (GST_PAD_CAST
             (target), runner, GST_VALIDATE_ELEMENT_MONITOR_CAST (parent)));
+  } else if (GST_IS_PIPELINE (target)) {
+    monitor =
+        GST_VALIDATE_MONITOR_CAST (gst_validate_pipeline_monitor_new
+        (GST_PIPELINE_CAST (target), runner, parent));
   } else if (GST_IS_BIN (target)) {
     monitor =
         GST_VALIDATE_MONITOR_CAST (gst_validate_bin_monitor_new (GST_BIN_CAST
