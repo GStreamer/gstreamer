@@ -7426,8 +7426,6 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
   if (src->manager)
     g_signal_emit_by_name (src->manager, "reset-sync", NULL);
 
-  gst_rtspsrc_set_state (src, GST_STATE_PLAYING);
-
   /* construct a control url */
   control = get_aggregate_control (src);
 
@@ -7548,6 +7546,11 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
   /* configure the caps of the streams after we parsed all headers. Only reset
    * the manager object when we set a new Range header (we did a seek) */
   gst_rtspsrc_configure_caps (src, segment, src->need_range);
+
+  /* set to PLAYING after we have configured the caps, otherwise we
+   * might end up calling request_key (with SRTP) while caps are still
+   * being configured. */
+  gst_rtspsrc_set_state (src, GST_STATE_PLAYING);
 
   /* set again when needed */
   src->need_range = FALSE;
