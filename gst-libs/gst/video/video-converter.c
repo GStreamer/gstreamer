@@ -179,6 +179,8 @@ struct _GstVideoConverter
   /* chroma upsample */
   GstLineCache *upsample_lines;
   GstVideoChromaResample *upsample;
+  GstVideoChromaResample *upsample_p;
+  GstVideoChromaResample *upsample_i;
   guint up_n_lines;
   gint up_offset;
 
@@ -194,6 +196,8 @@ struct _GstVideoConverter
   gint h_scale_format;
   GstLineCache *vscale_lines;
   GstVideoScaler *v_scaler;
+  GstVideoScaler *v_scaler_p;
+  GstVideoScaler *v_scaler_i;
   gint v_scale_width;
   gint v_scale_format;
 
@@ -212,6 +216,8 @@ struct _GstVideoConverter
   /* chroma downsample */
   GstLineCache *downsample_lines;
   GstVideoChromaResample *downsample;
+  GstVideoChromaResample *downsample_p;
+  GstVideoChromaResample *downsample_i;
   guint down_n_lines;
   gint down_offset;
 
@@ -1129,24 +1135,25 @@ chain_hscale (GstVideoConverter * convert, GstLineCache * prev)
 static GstLineCache *
 chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
 {
-  GstVideoScalerFlags flags;
   gint method;
   guint taps;
-
-  flags = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info) ?
-      GST_VIDEO_SCALER_FLAG_INTERLACED : 0;
 
   method = GET_OPT_RESAMPLER_METHOD (convert);
   taps = GET_OPT_RESAMPLER_TAPS (convert);
 
-  convert->v_scaler =
-      gst_video_scaler_new (method, flags, taps, convert->in_height,
+  if (GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info)) {
+    convert->v_scaler_i =
+        gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_INTERLACED,
+        taps, convert->in_height, convert->out_height, convert->config);
+  }
+  convert->v_scaler_p =
+      gst_video_scaler_new (method, 0, taps, convert->in_height,
       convert->out_height, convert->config);
   convert->v_scale_width = convert->current_width;
   convert->v_scale_format = convert->current_format;
   convert->current_height = convert->out_height;
 
-  gst_video_scaler_get_coeff (convert->v_scaler, 0, NULL, &taps);
+  gst_video_scaler_get_coeff (convert->v_scaler_p, 0, NULL, &taps);
 
   GST_DEBUG ("chain vscale %d->%d, taps %d, method %d",
       convert->in_height, convert->out_height, taps, method);
@@ -1596,12 +1603,18 @@ gst_video_converter_free (GstVideoConverter * convert)
 
   g_return_if_fail (convert != NULL);
 
-  if (convert->upsample)
-    gst_video_chroma_resample_free (convert->upsample);
-  if (convert->downsample)
-    gst_video_chroma_resample_free (convert->downsample);
-  if (convert->v_scaler)
-    gst_video_scaler_free (convert->v_scaler);
+  if (convert->upsample_p)
+    gst_video_chroma_resample_free (convert->upsample_p);
+  if (convert->upsample_i)
+    gst_video_chroma_resample_free (convert->upsample_i);
+  if (convert->downsample_p)
+    gst_video_chroma_resample_free (convert->downsample_p);
+  if (convert->downsample_i)
+    gst_video_chroma_resample_free (convert->downsample_i);
+  if (convert->v_scaler_p)
+    gst_video_scaler_free (convert->v_scaler_p);
+  if (convert->v_scaler_i)
+    gst_video_scaler_free (convert->v_scaler_i);
   if (convert->h_scaler)
     gst_video_scaler_free (convert->h_scaler);
 
@@ -1813,46 +1826,31 @@ video_converter_compute_resample (GstVideoConverter * convert)
   sfinfo = in_info->finfo;
   dfinfo = out_info->finfo;
 
+  GST_DEBUG ("site: %d->%d, w_sub: %d->%d, h_sub: %d->%d", in_info->chroma_site,
+      out_info->chroma_site, sfinfo->w_sub[2], dfinfo->w_sub[2],
+      sfinfo->h_sub[2], dfinfo->h_sub[2]);
+
   if (sfinfo->w_sub[2] != dfinfo->w_sub[2] ||
       sfinfo->h_sub[2] != dfinfo->h_sub[2] ||
       in_info->chroma_site != out_info->chroma_site ||
       in_info->width != out_info->width ||
       in_info->height != out_info->height) {
-    GstVideoChromaFlags flags = (GST_VIDEO_INFO_IS_INTERLACED (in_info) ?
-        GST_VIDEO_CHROMA_FLAG_INTERLACED : 0);
-
-    convert->upsample = gst_video_chroma_resample_new (0,
-        in_info->chroma_site, flags, sfinfo->unpack_format, sfinfo->w_sub[2],
+    if (GST_VIDEO_INFO_IS_INTERLACED (in_info)) {
+      convert->upsample_i = gst_video_chroma_resample_new (0,
+          in_info->chroma_site, GST_VIDEO_CHROMA_FLAG_INTERLACED,
+          sfinfo->unpack_format, sfinfo->w_sub[2], sfinfo->h_sub[2]);
+      convert->downsample_i =
+          gst_video_chroma_resample_new (0, out_info->chroma_site,
+          GST_VIDEO_CHROMA_FLAG_INTERLACED, dfinfo->unpack_format,
+          -dfinfo->w_sub[2], -dfinfo->h_sub[2]);
+    }
+    convert->upsample_p = gst_video_chroma_resample_new (0,
+        in_info->chroma_site, 0, sfinfo->unpack_format, sfinfo->w_sub[2],
         sfinfo->h_sub[2]);
-
-    convert->downsample = gst_video_chroma_resample_new (0,
-        out_info->chroma_site, flags, dfinfo->unpack_format, -dfinfo->w_sub[2],
+    convert->downsample_p = gst_video_chroma_resample_new (0,
+        out_info->chroma_site, 0, dfinfo->unpack_format, -dfinfo->w_sub[2],
         -dfinfo->h_sub[2]);
-
-  } else {
-    convert->upsample = NULL;
-    convert->downsample = NULL;
   }
-
-  if (convert->upsample) {
-    gst_video_chroma_resample_get_info (convert->upsample,
-        &convert->up_n_lines, &convert->up_offset);
-  } else {
-    convert->up_n_lines = 1;
-    convert->up_offset = 0;
-  }
-  if (convert->downsample) {
-    gst_video_chroma_resample_get_info (convert->downsample,
-        &convert->down_n_lines, &convert->down_offset);
-  } else {
-    convert->down_n_lines = 1;
-    convert->down_offset = 0;
-  }
-  GST_DEBUG ("upsample: %p, site: %d, offset %d, n_lines %d", convert->upsample,
-      in_info->chroma_site, convert->up_offset, convert->up_n_lines);
-  GST_DEBUG ("downsample: %p, site: %d, offset %d, n_lines %d",
-      convert->downsample, out_info->chroma_site, convert->down_offset,
-      convert->down_n_lines);
 }
 
 #define FRAME_GET_PLANE_STRIDE(frame, plane) \
@@ -2172,6 +2170,32 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
 
   convert->src = src;
   convert->dest = dest;
+
+  if (GST_VIDEO_FRAME_IS_INTERLACED (src)) {
+    GST_DEBUG ("setup interlaced frame");
+    convert->upsample = convert->upsample_i;
+    convert->downsample = convert->downsample_i;
+    convert->v_scaler = convert->v_scaler_i;
+  } else {
+    GST_DEBUG ("setup progressive frame");
+    convert->upsample = convert->upsample_p;
+    convert->downsample = convert->downsample_p;
+    convert->v_scaler = convert->v_scaler_p;
+  }
+  if (convert->upsample) {
+    gst_video_chroma_resample_get_info (convert->upsample,
+        &convert->up_n_lines, &convert->up_offset);
+  } else {
+    convert->up_n_lines = 1;
+    convert->up_offset = 0;
+  }
+  if (convert->downsample) {
+    gst_video_chroma_resample_get_info (convert->downsample,
+        &convert->down_n_lines, &convert->down_offset);
+  } else {
+    convert->down_n_lines = 1;
+    convert->down_offset = 0;
+  }
 
   pack_lines = convert->pack_nlines;    /* only 1 for now */
   pstride = convert->pack_pstride;
