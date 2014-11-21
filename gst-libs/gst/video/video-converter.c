@@ -417,8 +417,7 @@ get_temp_line (GstLineCache * cache, gint idx, gpointer user_data)
   gpointer tmpline;
 
   GST_DEBUG ("get temp line %d", idx);
-  tmpline = (guint8 *) convert->tmplines[convert->tmplines_idx] +
-      (convert->out_x * convert->pack_pstride);
+  tmpline = (guint8 *) convert->tmplines[convert->tmplines_idx];
   convert->tmplines_idx = (convert->tmplines_idx + 1) % convert->n_tmplines;
 
   return tmpline;
