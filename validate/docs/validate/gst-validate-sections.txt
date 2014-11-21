@@ -66,3 +66,27 @@ gst_validate_action_get_type
 gst_validate_action_type_get_type
 gst_validate_scenario_get_type
 </SECTION>
+
+<SECTION>
+<FILE>gst-validate-report</FILE>
+<TITLE>GstValidate reporting system</TITLE>
+GstValidateIssue
+gst_validate_issue_new
+GstValidateReport
+</SECTION>
+
+<SECTION>
+<FILE>gst-validate-reporter</FILE>
+<TITLE>GstValidateReporter</TITLE>
+GstValidateReporter
+GST_VALIDATE_REPORT
+gst_validate_reporter_set_handle_g_logs
+gst_validate_report
+gst_validate_reporter_get_reports_count
+<SUBSECTION Standard>
+GST_TYPE_VALIDATE_REPORTER
+GST_VALIDATE_REPORTER
+GST_IS_VALIDATE_REPORTER
+GST_VALIDATE_REPORTER_GET_INTERFACE
+GST_VALIDATE_REPORTER_CAST
+</SECTION>

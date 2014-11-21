@@ -54,6 +54,7 @@ typedef struct _GstValidateRunnerPrivate GstValidateRunnerPrivate;
 struct _GstValidateRunner {
   GObject 	 object;
 
+  /* <private> */
   GstValidateRunnerPrivate *priv;
 };
 

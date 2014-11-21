@@ -55,6 +55,7 @@
     <xi:include href="xml/validate.xml"/>
     <xi:include href="xml/gst-validate-runner.xml"/>
     <xi:include href="xml/gst-validate-scenario.xml"/>
+    <xi:include href="xml/gst-validate-reporter.xml"/>
     <xi:include href="xml/gst-validate-monitor-factory.xml"/>
 
   </chapter>

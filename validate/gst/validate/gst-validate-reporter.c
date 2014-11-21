@@ -19,6 +19,11 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gst-validate-reporter
+ * @short_description: A #GInterface that allows #GObject to be used as originator of
+ * issues in the GstValidate reporting system
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -240,6 +245,18 @@ gst_validate_reporter_g_log_func (const gchar * log_domain,
     GST_VALIDATE_REPORT (reporter, G_LOG_ISSUE, message);
 }
 
+/**
+ * gst_validate_report:
+ * @report: The source of the new report
+ * @issue_id: The #GstValidateIssueId of the issue
+ * @format: The format of the message describing the issue in a printf
+ *       format followed by the parametters.
+ *
+ * Reports a new issue in the GstValidate reporting system with @m
+ * as the source of that issue.
+ *
+ * You can also use #GST_VALIDATE_REPORT instead.
+ */
 void
 gst_validate_report (GstValidateReporter * reporter,
     GstValidateIssueId issue_id, const gchar * format, ...)
@@ -287,6 +304,18 @@ gst_validate_reporter_set_runner (GstValidateReporter * reporter,
   priv->runner = runner;
 }
 
+/**
+ * gst_validate_reporter_set_handle_g_logs:
+ * @reporter: The #GstValidateReporter to set has the handler for g_log
+ *
+ * Set @reporter has the 'source' of any g_log happening during the
+ * execution. Usually the monitor of the first #GstPipeline is used
+ * to handle g_logs.
+ *
+ * Basically this function is used in order to start tracking any
+ * issue reported with g_log in the process into GstValidate report
+ * in the GstValidate reporting system.
+ */
 void
 gst_validate_reporter_set_handle_g_logs (GstValidateReporter * reporter)
 {

@@ -37,6 +37,16 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_REPORTER_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_VALIDATE_REPORTER, GstValidateReporterInterface))
 #define GST_VALIDATE_REPORTER_CAST(obj)           ((GstValidateReporter *) obj)
 
+/**
+ * GST_VALIDATE_REPORT:
+ * @m: The #GstValidateReporter where the issue happened
+ * @issue_id: The #GstValidateIssueId of the issue
+ * @...: The format of the message describing the issue in a printf
+ *       format, followed by the parametters.
+ *
+ * Reports a new issue in the GstValidate reporting system with @m
+ * as the source of that issue.
+ */
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_VALIDATE_REPORT(m, issue_id, ...)				\
   G_STMT_START {							\
@@ -58,7 +68,6 @@ GType gst_validate_reporter_get_type (void);
 
 /**
  * GstValidateInterceptionReturn:
- *
  * @GST_VALIDATE_REPORTER_DROP: The report will be completely ignored.
  * @GST_VALIDATE_REPORTER_KEEP: The report will be kept by the reporter,
  *                              but not reported to the runner.
