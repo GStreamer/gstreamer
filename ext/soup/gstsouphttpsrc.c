@@ -718,7 +718,7 @@ static void
 gst_soup_http_src_cancel_message (GstSoupHTTPSrc * src)
 {
   if (src->msg != NULL) {
-    GST_DEBUG_OBJECT (src, "Cancelling message");
+    GST_INFO_OBJECT (src, "Cancelling message");
     src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_CANCELLED;
     soup_session_cancel_message (src->session, src->msg, SOUP_STATUS_CANCELLED);
   }
@@ -1265,7 +1265,7 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     GST_DEBUG_OBJECT (src, "finished, but not for current message");
     return;
   }
-  GST_DEBUG_OBJECT (src, "finished");
+  GST_INFO_OBJECT (src, "finished, io status: %d", src->session_io_status);
   src->ret = GST_FLOW_EOS;
   if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_CANCELLED) {
     /* gst_soup_http_src_cancel_message() triggered this; probably a seek
@@ -1453,7 +1453,7 @@ gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
     /* Ignore redirections. */
     return;
   }
-  GST_DEBUG_OBJECT (src, "got response %d: %s", msg->status_code,
+  GST_INFO_OBJECT (src, "got response %d: %s", msg->status_code,
       msg->reason_phrase);
   if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING &&
       src->read_position > 0 && (src->have_size
@@ -1649,12 +1649,12 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
   src->outbuf = outbuf;
   do {
     if (src->interrupted) {
-      GST_DEBUG_OBJECT (src, "interrupted");
+      GST_INFO_OBJECT (src, "interrupted");
       src->ret = GST_FLOW_FLUSHING;
       break;
     }
     if (src->retry) {
-      GST_DEBUG_OBJECT (src, "Reconnecting");
+      GST_INFO_OBJECT (src, "Reconnecting");
       if (!gst_soup_http_src_build_message (src, method)) {
         return GST_FLOW_ERROR;
       }
@@ -1668,7 +1668,7 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
 
     switch (src->session_io_status) {
       case GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE:
-        GST_DEBUG_OBJECT (src, "Queueing connection request");
+        GST_INFO_OBJECT (src, "Queueing connection request");
         gst_soup_http_src_queue_message (src);
         break;
       case GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_QUEUED:
