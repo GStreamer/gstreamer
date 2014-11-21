@@ -460,17 +460,16 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   switch (obj->mode) {
     case GST_V4L2_IO_DMABUF:
       pool->allocator = gst_dmabuf_allocator_new ();
-      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP);
+      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (pool, MMAP);
       break;
     case GST_V4L2_IO_MMAP:
-      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP);
+      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (pool, MMAP);
       break;
     case GST_V4L2_IO_USERPTR:
-      can_allocate =
-          GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, USERPTR);
+      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (pool, USERPTR);
       break;
     case GST_V4L2_IO_DMABUF_IMPORT:
-      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, DMABUF);
+      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (pool, DMABUF);
       break;
     case GST_V4L2_IO_RW:
       pool->allocator = g_object_ref (allocator);
@@ -649,7 +648,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
     {
       guint count;
 
-      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP);
+      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (pool, MMAP);
 
       /* first, lets request buffers, and see how many we can get: */
       GST_DEBUG_OBJECT (pool, "requesting %d MMAP buffers", min_buffers);
@@ -684,8 +683,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
     {
       guint count;
 
-      can_allocate =
-          GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, USERPTR);
+      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (pool, USERPTR);
 
       GST_DEBUG_OBJECT (pool, "requesting %d USERPTR buffers", min_buffers);
 
@@ -705,7 +703,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
     {
       guint count;
 
-      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, DMABUF);
+      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (pool, DMABUF);
 
       GST_DEBUG_OBJECT (pool, "requesting %d DMABUF buffers", min_buffers);
 
@@ -1462,6 +1460,8 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   pool->obj = obj;
   pool->can_poll_device = TRUE;
 
+  GST_OBJECT_FLAG_SET (pool, GST_OBJECT_FLAGS (obj));
+
   pool->vallocator =
       gst_v4l2_allocator_new (GST_OBJECT (pool), obj->video_fd, &obj->format);
   if (pool->vallocator == NULL)
@@ -1600,7 +1600,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
             if (g_atomic_int_get (&pool->num_queued) < pool->copy_threshold) {
               GstBuffer *copy;
 
-              if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
+              if (GST_V4L2_OBJECT_CAN_ALLOCATE (pool, MMAP)) {
 
                 if (gst_buffer_pool_acquire_buffer (bpool, &copy,
                         NULL) == GST_FLOW_OK) {

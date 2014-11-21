@@ -77,6 +77,21 @@ typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 #define GST_V4L2_SET_ACTIVE(o)   ((o)->active = TRUE)
 #define GST_V4L2_SET_INACTIVE(o) ((o)->active = FALSE)
 
+#define GST_V4L2_OBJECT_CAN_REQUEST(obj,path) \
+        (GST_OBJECT_FLAG_IS_SET (obj, GST_V4L2_OBJECT_FLAG_ ## path ## _REQBUFS))
+#define GST_V4L2_OBJECT_CAN_ALLOCATE(obj,path) \
+        (GST_OBJECT_FLAG_IS_SET (obj, GST_V4L2_OBJECT_FLAG_ ## path ## _CREATE_BUFS))
+
+enum _GstV4l2ObjectFlags
+{
+  GST_V4L2_OBJECT_FLAG_MMAP_REQBUFS        = (GST_OBJECT_FLAG_LAST << 0),
+  GST_V4L2_OBJECT_FLAG_MMAP_CREATE_BUFS    = (GST_OBJECT_FLAG_LAST << 1),
+  GST_V4L2_OBJECT_FLAG_USERPTR_REQBUFS     = (GST_OBJECT_FLAG_LAST << 2),
+  GST_V4L2_OBJECT_FLAG_USERPTR_CREATE_BUFS = (GST_OBJECT_FLAG_LAST << 3),
+  GST_V4L2_OBJECT_FLAG_DMABUF_REQBUFS      = (GST_OBJECT_FLAG_LAST << 4),
+  GST_V4L2_OBJECT_FLAG_DMABUF_CREATE_BUFS  = (GST_OBJECT_FLAG_LAST << 5),
+};
+
 struct _GstV4l2Object {
   GstElement * element;
 
