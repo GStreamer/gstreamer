@@ -187,6 +187,8 @@ gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
     gst_video_resampler_init (&tresamp, method, 0, (out_size + 1) / 2, n_taps,
         -0.5, (in_size + 1) / 2, (out_size + 1) / 2, options);
 
+    n_taps = tresamp.max_taps;
+
     gst_video_resampler_init (&bresamp, method, 0, out_size - tresamp.out_size,
         n_taps, 0.5, in_size - tresamp.in_size,
         out_size - tresamp.out_size, options);
