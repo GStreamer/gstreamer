@@ -26,8 +26,8 @@
 
 #ifdef HAVE_GST_VALIDATE
 #include <gst/validate/gst-validate-scenario.h>
-#include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-utils.h>
+#include <gst/validate/validate.h>
 
 #define MONITOR_ON_PIPELINE "validate-monitor"
 #define RUNNER_ON_PIPELINE "runner-monitor"
@@ -661,12 +661,13 @@ _set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
 
   GESTimeline *timeline = get_timeline (scenario);
 
-  gst_structure_get (action->structure,
-      "element-name", G_TYPE_STRING, &element_name,
-      "property-name", G_TYPE_STRING, &property_name,
-      "binding-type", G_TYPE_STRING, &binding_type,
-      "source-type", G_TYPE_STRING, &source_type,
-      "interpolation-mode", G_TYPE_STRING, &interpolation_mode, NULL);
+  g_return_val_if_fail (gst_structure_get (action->structure,
+          "element-name", G_TYPE_STRING, &element_name,
+          "property-name", G_TYPE_STRING, &property_name,
+          "binding-type", G_TYPE_STRING, &binding_type,
+          "source-type", G_TYPE_STRING, &source_type,
+          "interpolation-mode", G_TYPE_STRING, &interpolation_mode, NULL),
+      FALSE);
 
   element =
       GES_TRACK_ELEMENT (ges_timeline_get_element (timeline, element_name));
@@ -727,10 +728,10 @@ _add_remove_keyframe (GstValidateScenario * scenario,
   gboolean ret = FALSE;
   GESTimeline *timeline = get_timeline (scenario);
 
-  gst_structure_get (action->structure,
-      "element-name", G_TYPE_STRING, &element_name,
-      "property-name", G_TYPE_STRING, &property_name,
-      "value", G_TYPE_DOUBLE, &value, NULL);
+  g_return_val_if_fail (gst_structure_get (action->structure,
+          "element-name", G_TYPE_STRING, &element_name,
+          "property-name", G_TYPE_STRING, &property_name,
+          "value", G_TYPE_DOUBLE, &value, NULL), FALSE);
 
   gst_validate_action_get_clocktime (scenario, action, "timestamp", &timestamp);
 
@@ -834,7 +835,7 @@ ges_validate_register_action_types (void)
        "Allows to edit a container (like a GESClip), for more details, have a look at:\n"
        "ges_container_edit documentation, Note that the timeline will\n"
        "be commited, and flushed so that the edition is taken into account",
-       FALSE);
+       GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("add-asset", "ges", _add_asset,
       (GstValidateActionParameter [])  {
@@ -852,7 +853,7 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       },
-      "Allows to add an asset to the current project", FALSE);
+      "Allows to add an asset to the current project", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("remove-asset", "ges", _remove_asset,
       (GstValidateActionParameter [])  {
@@ -870,7 +871,7 @@ ges_validate_register_action_types (void)
         },
         { NULL }
       },
-      "Allows to remove an asset from the current project", FALSE);
+      "Allows to remove an asset from the current project", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("add-layer", "ges", _add_layer,
       (GstValidateActionParameter [])  {
@@ -882,7 +883,7 @@ ges_validate_register_action_types (void)
         },
         { NULL }
       },
-      "Allows to add a layer to the current timeline", FALSE);
+      "Allows to add a layer to the current timeline", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("remove-layer", "ges", _remove_layer,
       (GstValidateActionParameter [])  {
@@ -901,7 +902,7 @@ ges_validate_register_action_types (void)
         },
         { NULL }
       },
-      "Allows to remove a layer from the current timeline", FALSE);
+      "Allows to remove a layer from the current timeline", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("add-clip", "ges", _add_clip,
       (GstValidateActionParameter []) {
@@ -948,7 +949,7 @@ ges_validate_register_action_types (void)
           .mandatory = FALSE,
         },
         {NULL}
-      }, "Allows to add a clip to a given layer", FALSE);
+      }, "Allows to add a clip to a given layer", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("remove-clip", "ges", _remove_clip,
       (GstValidateActionParameter []) {
@@ -959,7 +960,7 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
         },
         {NULL}
-      }, "Allows to remove a clip from a given layer", FALSE);
+      }, "Allows to remove a clip from a given layer", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("serialize-project", "ges", _serialize_project,
       (GstValidateActionParameter []) {
@@ -970,7 +971,7 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
         },
         {NULL}
-      }, "serializes a project", FALSE);
+      }, "serializes a project", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("set-child-property", "ges", _set_child_property,
       (GstValidateActionParameter []) {
@@ -993,7 +994,7 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
         },
         {NULL}
-      }, "Allows to change child property of an object", FALSE);
+      }, "Allows to change child property of an object", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("split-clip", "ges", _split_clip,
       (GstValidateActionParameter []) {
@@ -1010,7 +1011,7 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
         },
         {NULL}
-      }, "Split a clip at a specified position.", FALSE);
+      }, "Split a clip at a specified position.", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("set-track-restriction-caps", "ges", _set_track_restriction_caps,
       (GstValidateActionParameter []) {
@@ -1027,7 +1028,7 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
         },
         {NULL}
-      }, "Sets restriction caps on tracks of a specific type.", FALSE);
+      }, "Sets restriction caps on tracks of a specific type.", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("element-set-asset", "ges", _set_asset_on_element,
       (GstValidateActionParameter []) {
@@ -1044,7 +1045,7 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
         },
         {NULL}
-      }, "Sets restriction caps on tracks of a specific type.", FALSE);
+      }, "Sets restriction caps on tracks of a specific type.", GST_VALIDATE_ACTION_TYPE_NONE);
 
 
   gst_validate_register_action_type ("container-add-child", "ges", _container_add_child,
@@ -1079,7 +1080,7 @@ ges_validate_register_action_types (void)
         {NULL}
       }, "Add a child to @container-name. If asset-id and child-type are specified,"
        " the child will be created and added. Otherwize @child-name has to be specified"
-       " and will be added to the container.", FALSE);
+       " and will be added to the container.", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("container-remove-child", "ges", _container_remove_child,
       (GstValidateActionParameter []) {
@@ -1135,7 +1136,7 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Adds a GstControlSource on @element-name::@property-name"
-         " allowing you to then add keyframes on that property.", FALSE);
+         " allowing you to then add keyframes on that property.", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("add-keyframe", "ges", _add_remove_keyframe,
       (GstValidateActionParameter []) {
@@ -1164,7 +1165,7 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
         },
         {NULL}
-      }, "Remove a child from @container-name.", FALSE);
+      }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("remove-keyframe", "ges", _add_remove_keyframe,
       (GstValidateActionParameter []) {
@@ -1187,12 +1188,12 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
         },
         {NULL}
-      }, "Remove a child from @container-name.", FALSE);
+      }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
 
 
 
   gst_validate_register_action_type ("commit", "ges", _commit, NULL,
-       "Commit the timeline.", FALSE);
+       "Commit the timeline.", GST_VALIDATE_ACTION_TYPE_ASYNC);
   /*  *INDENT-ON* */
 
   return TRUE;
