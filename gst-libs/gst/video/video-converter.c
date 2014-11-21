@@ -464,6 +464,15 @@ get_opt_bool (GstVideoConverter * convert, const gchar * opt, gboolean def)
   return res;
 }
 
+static gint
+get_opt_enum (GstVideoConverter * convert, const gchar * opt, GType type,
+    gint def)
+{
+  gint res;
+  if (!gst_structure_get_enum (convert->config, opt, type, &res))
+    res = def;
+  return res;
+}
 
 static const gchar *
 get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
@@ -482,6 +491,8 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
 #define DEFAULT_OPT_GAMMA_MODE "none"
 /* none, merge-only, fast */
 #define DEFAULT_OPT_PRIMARIES_MODE "none"
+#define DEFAULT_OPT_RESAMPLER_METHOD GST_VIDEO_RESAMPLER_METHOD_CUBIC
+#define DEFAULT_OPT_RESAMPLER_TAPS 0
 
 #define GET_OPT_FILL_BORDER(c) get_opt_bool(c, \
     GST_VIDEO_CONVERTER_OPT_FILL_BORDER, DEFAULT_OPT_FILL_BORDER)
@@ -493,6 +504,11 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
     GST_VIDEO_CONVERTER_OPT_GAMMA_MODE, DEFAULT_OPT_GAMMA_MODE)
 #define GET_OPT_PRIMARIES_MODE(c) get_opt_str(c, \
     GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE, DEFAULT_OPT_PRIMARIES_MODE)
+#define GET_OPT_RESAMPLER_METHOD(c) get_opt_enum(c, \
+    GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_VIDEO_RESAMPLER_METHOD, \
+    DEFAULT_OPT_RESAMPLER_METHOD)
+#define GET_OPT_RESAMPLER_TAPS(c) get_opt_uint(c, \
+    GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, DEFAULT_OPT_RESAMPLER_TAPS)
 
 #define CHECK_MATRIX_FULL(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "full"))
 #define CHECK_MATRIX_NO_YUV(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "no-yuv"))
@@ -1094,13 +1110,8 @@ chain_hscale (GstVideoConverter * convert, GstLineCache * prev)
   gst_line_cache_set_need_line_func (convert->hscale_lines,
       do_hscale_lines, convert, NULL);
 
-  if (!gst_structure_get_enum (convert->config,
-          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
-          GST_TYPE_VIDEO_RESAMPLER_METHOD, &method))
-    method = GST_VIDEO_RESAMPLER_METHOD_CUBIC;
-  if (!gst_structure_get_uint (convert->config,
-          GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, &taps))
-    taps = 0;
+  method = GET_OPT_RESAMPLER_METHOD (convert);
+  taps = GET_OPT_RESAMPLER_TAPS (convert);
 
   convert->h_scaler =
       gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
@@ -1125,13 +1136,8 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
   flags = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info) ?
       GST_VIDEO_SCALER_FLAG_INTERLACED : 0;
 
-  if (!gst_structure_get_enum (convert->config,
-          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
-          GST_TYPE_VIDEO_RESAMPLER_METHOD, &method))
-    method = GST_VIDEO_RESAMPLER_METHOD_CUBIC;
-  if (!gst_structure_get_uint (convert->config,
-          GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, &taps))
-    taps = 0;
+  method = GET_OPT_RESAMPLER_METHOD (convert);
+  taps = GET_OPT_RESAMPLER_TAPS (convert);
 
   convert->v_scaler =
       gst_video_scaler_new (method, flags, taps, convert->in_height,
@@ -1312,11 +1318,11 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev)
   if (do_gamma) {
     gint scale;
 
+    GST_DEBUG ("chain gamma encode");
     setup_gamma_encode (convert, convert->pack_bits);
 
     convert->current_bits = convert->pack_bits;
     convert->current_pstride = convert->current_bits >> 1;
-    GST_DEBUG ("chain gamma encode");
 
     if (!convert->pack_rgb) {
       color_matrix_set_identity (&convert->to_YUV_matrix);
@@ -1329,15 +1335,13 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev)
           1 / (float) scale, 1 / (float) scale, 1 / (float) scale);
       prepare_matrix (convert, &convert->to_YUV_matrix);
     }
+    convert->current_format = convert->pack_format;
 
     prev = convert->to_YUV_lines = gst_line_cache_new (prev);
-    prev->write_input = TRUE;
-    prev->pass_alloc = (do_gamma == FALSE);
+    prev->write_input = FALSE;
+    prev->pass_alloc = FALSE;
     gst_line_cache_set_need_line_func (convert->to_YUV_lines,
         do_convert_to_YUV_lines, convert, NULL);
-
-    convert->current_format = convert->pack_format;
-    convert->current_pstride = convert->current_bits >> 1;
   }
 
   return prev;
@@ -1936,9 +1940,9 @@ do_unpack_lines (GstLineCache * cache, gint out_line, gint in_line,
     UNPACK_FRAME (convert->src, tmpline, cline, convert->in_x,
         convert->in_width);
   } else {
-    GST_DEBUG ("get src line %d (%u)", in_line, cline);
     tmpline = ((guint8 *) FRAME_GET_LINE (convert->src, cline)) +
         convert->in_x * convert->unpack_pstride;
+    GST_DEBUG ("get src line %d (%u) %p", in_line, cline, tmpline);
   }
   gst_line_cache_add_line (cache, in_line, tmpline);
 
@@ -1961,7 +1965,8 @@ do_upsample_lines (GstLineCache * cache, gint out_line, gint in_line,
   /* get the lines needed for chroma upsample */
   lines = gst_line_cache_get_lines (cache->prev, out_line, start_line, n_lines);
 
-  GST_DEBUG ("doing upsample %d-%d", start_line, start_line + n_lines - 1);
+  GST_DEBUG ("doing upsample %d-%d %p", start_line, start_line + n_lines - 1,
+      lines[0]);
   gst_video_chroma_resample (convert->upsample, lines, convert->in_width);
 
   for (i = 0; i < n_lines; i++)
@@ -1982,13 +1987,13 @@ do_convert_to_RGB_lines (GstLineCache * cache, gint out_line, gint in_line,
   destline = lines[0];
 
   if (data->matrix_func) {
-    GST_DEBUG ("to RGB line %d", in_line);
+    GST_DEBUG ("to RGB line %d %p", in_line, destline);
     data->matrix_func (data, destline);
   }
   if (convert->gamma_dec.gamma_func) {
     destline = gst_line_cache_alloc_line (cache, out_line);
 
-    GST_DEBUG ("gamma decode line %d", in_line);
+    GST_DEBUG ("gamma decode line %d %p->%p", in_line, lines[0], destline);
     convert->gamma_dec.gamma_func (&convert->gamma_dec, destline, lines[0]);
   }
   gst_line_cache_add_line (cache, in_line, destline);
@@ -2007,7 +2012,7 @@ do_hscale_lines (GstLineCache * cache, gint out_line, gint in_line,
 
   destline = gst_line_cache_alloc_line (cache, out_line);
 
-  GST_DEBUG ("hresample line %d", in_line);
+  GST_DEBUG ("hresample line %d %p->%p", in_line, lines[0], destline);
   gst_video_scaler_horizontal (convert->h_scaler, convert->h_scale_format,
       lines[0], destline, 0, convert->out_width);
 
@@ -2032,9 +2037,10 @@ do_vscale_lines (GstLineCache * cache, gint out_line, gint in_line,
 
   destline = gst_line_cache_alloc_line (cache, out_line);
 
-  GST_DEBUG ("vresample line %d %d-%d", in_line, sline, sline + n_lines - 1);
-  gst_video_scaler_vertical (convert->v_scaler, convert->v_scale_format,
-      lines, destline, cline, convert->v_scale_width);
+  GST_DEBUG ("vresample line %d %d-%d %p->%p", in_line, sline,
+      sline + n_lines - 1, lines[0], destline);
+  gst_video_scaler_vertical (convert->v_scaler, convert->v_scale_format, lines,
+      destline, cline, convert->v_scale_width);
 
   gst_line_cache_add_line (cache, in_line, destline);
 
@@ -2068,25 +2074,25 @@ do_convert_lines (GstLineCache * cache, gint out_line, gint in_line,
 
     /* FIXME, we can scale in the conversion matrix */
     if (in_bits == 8) {
-      GST_DEBUG ("8->16 line %d", in_line);
+      GST_DEBUG ("8->16 line %d %p->%p", in_line, srcline, destline);
       video_orc_convert_u8_to_u16 (destline, srcline, width * 4);
       srcline = destline;
     }
 
     if (data->matrix_func) {
-      GST_DEBUG ("matrix line %d", in_line);
+      GST_DEBUG ("matrix line %d %p", in_line, srcline);
       data->matrix_func (data, srcline);
     }
     if (convert->dither16)
       convert->dither16 (convert, srcline, in_line);
 
     if (out_bits == 8) {
-      GST_DEBUG ("16->8 line %d", in_line);
+      GST_DEBUG ("16->8 line %d %p->%p", in_line, srcline, destline);
       video_orc_convert_u16_to_u8 (destline, srcline, width * 4);
     }
   } else {
     if (data->matrix_func) {
-      GST_DEBUG ("matrix line %d", in_line);
+      GST_DEBUG ("matrix line %d %p", in_line, destline);
       data->matrix_func (data, destline);
     }
   }
@@ -2109,11 +2115,11 @@ do_convert_to_YUV_lines (GstLineCache * cache, gint out_line, gint in_line,
   if (convert->gamma_enc.gamma_func) {
     destline = gst_line_cache_alloc_line (cache, out_line);
 
-    GST_DEBUG ("gamma encode line %d", in_line);
+    GST_DEBUG ("gamma encode line %d %p->%p", in_line, lines[0], destline);
     convert->gamma_enc.gamma_func (&convert->gamma_enc, destline, lines[0]);
   }
   if (data->matrix_func) {
-    GST_DEBUG ("to YUV line %d", in_line);
+    GST_DEBUG ("to YUV line %d %p", in_line, destline);
     data->matrix_func (data, destline);
   }
   gst_line_cache_add_line (cache, in_line, destline);
@@ -2137,8 +2143,8 @@ do_downsample_lines (GstLineCache * cache, gint out_line, gint in_line,
   /* get the lines needed for chroma downsample */
   lines = gst_line_cache_get_lines (cache->prev, out_line, start_line, n_lines);
 
-  GST_DEBUG ("downsample line %d %d-%d", in_line, start_line,
-      start_line + n_lines - 1);
+  GST_DEBUG ("downsample line %d %d-%d %p", in_line, start_line,
+      start_line + n_lines - 1, lines[0]);
   gst_video_chroma_resample (convert->downsample, lines, convert->out_width);
 
   for (i = 0; i < n_lines; i++)
@@ -2189,7 +2195,7 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
       /* take away the border */
       guint8 *l = ((guint8 *) lines[0]) - lb_width;
       /* and pack into destination */
-      GST_DEBUG ("pack line %d", i + out_y);
+      GST_DEBUG ("pack line %d %p (%p)", i + out_y, lines[0], dest);
       PACK_FRAME (dest, l, i + out_y, out_maxwidth);
     }
   }
