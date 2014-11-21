@@ -91,6 +91,23 @@ ensure_image (GstVaapiVideoMemory * mem)
   return TRUE;
 }
 
+static gboolean
+ensure_image_is_current (GstVaapiVideoMemory * mem)
+{
+  if (mem->use_direct_rendering)
+    return TRUE;
+
+  if (!GST_VAAPI_VIDEO_MEMORY_FLAG_IS_SET (mem,
+          GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT)) {
+    if (!gst_vaapi_surface_get_image (mem->surface, mem->image))
+      return FALSE;
+
+    GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
+        GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT);
+  }
+  return TRUE;
+}
+
 static GstVaapiSurface *
 new_surface (GstVaapiDisplay * display, const GstVideoInfo * vip)
 {
@@ -145,6 +162,23 @@ ensure_surface (GstVaapiVideoMemory * mem)
   return mem->surface != NULL;
 }
 
+static gboolean
+ensure_surface_is_current (GstVaapiVideoMemory * mem)
+{
+  if (mem->use_direct_rendering)
+    return TRUE;
+
+  if (!GST_VAAPI_VIDEO_MEMORY_FLAG_IS_SET (mem,
+          GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT)) {
+    if (!gst_vaapi_surface_put_image (mem->surface, mem->image))
+      return FALSE;
+
+    GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
+        GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
+  }
+  return TRUE;
+}
+
 gboolean
 gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
     GstMapInfo * info, gpointer * data, gint * stride, GstMapFlags flags)
@@ -168,12 +202,17 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
       goto error_ensure_image;
 
     // Load VA image from surface
-    if ((flags & GST_MAP_READ) && !mem->use_direct_rendering)
-      gst_vaapi_surface_get_image (mem->surface, mem->image);
+    if ((flags & GST_MAP_READ) && !ensure_image_is_current (mem))
+      goto error_no_current_image;
 
     if (!gst_vaapi_image_map (mem->image))
       goto error_map_image;
     mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR;
+
+    // Mark surface as dirty and expect updates from image
+    if (flags & GST_MAP_WRITE)
+      GST_VAAPI_VIDEO_MEMORY_FLAG_UNSET (mem,
+          GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
   }
 
   *data = gst_vaapi_image_get_plane (mem->image, plane);
@@ -209,6 +248,11 @@ error_map_image:
         GST_VAAPI_ID_ARGS (gst_vaapi_image_get_id (mem->image)));
     return FALSE;
   }
+error_no_current_image:
+  {
+    GST_ERROR ("failed to make image current");
+    return FALSE;
+  }
 }
 
 gboolean
@@ -229,23 +273,16 @@ gst_video_meta_unmap_vaapi_memory (GstVideoMeta * meta, guint plane,
     mem->map_type = 0;
 
     /* Unmap VA image used for read/writes */
-    if (info->flags & GST_MAP_READWRITE)
+    if (info->flags & GST_MAP_READWRITE) {
       gst_vaapi_image_unmap (mem->image);
 
-    /* Commit VA image to surface */
-    if ((info->flags & GST_MAP_WRITE) && !mem->use_direct_rendering) {
-      if (!gst_vaapi_surface_put_image (mem->surface, mem->image))
-        goto error_upload_image;
+      if (info->flags & GST_MAP_WRITE) {
+        GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
+            GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT);
+      }
     }
   }
   return TRUE;
-
-  /* ERRORS */
-error_upload_image:
-  {
-    GST_ERROR ("failed to upload image");
-    return FALSE;
-  }
 }
 
 GstMemory *
@@ -275,6 +312,9 @@ gst_vaapi_video_memory_new (GstAllocator * base_allocator,
   mem->map_type = 0;
   mem->map_count = 0;
   mem->use_direct_rendering = allocator->has_direct_rendering;
+
+  GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
+      GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
   return GST_MEMORY_CAST (mem);
 }
 
@@ -313,6 +353,14 @@ gst_vaapi_video_memory_reset_surface (GstVaapiVideoMemory * mem)
     gst_vaapi_video_meta_set_surface_proxy (mem->meta, NULL);
 }
 
+gboolean
+gst_vaapi_video_memory_sync (GstVaapiVideoMemory * mem)
+{
+  g_return_val_if_fail (mem, NULL);
+
+  return ensure_surface_is_current (mem);
+}
+
 static gpointer
 gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
     guint flags)
@@ -330,6 +378,8 @@ gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
             gst_vaapi_video_meta_get_surface_proxy (mem->meta));
         if (!mem->proxy)
           goto error_no_surface_proxy;
+        if (!ensure_surface_is_current (mem))
+          goto error_no_current_surface;
         mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE;
         break;
       case GST_MAP_READ:
@@ -338,8 +388,8 @@ gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
           goto error_no_surface;
         if (!ensure_image (mem))
           goto error_no_image;
-        if (!mem->use_direct_rendering)
-          gst_vaapi_surface_get_image (mem->surface, mem->image);
+        if (!ensure_image_is_current (mem))
+          goto error_no_current_image;
         if (!gst_vaapi_image_map (mem->image))
           goto error_map_image;
         mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR;
@@ -379,8 +429,14 @@ error_no_surface_proxy:
 error_no_surface:
   GST_ERROR ("failed to extract VA surface from video buffer");
   return NULL;
+error_no_current_surface:
+  GST_ERROR ("failed to make surface current");
+  return NULL;
 error_no_image:
   GST_ERROR ("failed to extract VA image from video buffer");
+  return NULL;
+error_no_current_image:
+  GST_ERROR ("failed to make image current");
   return NULL;
 error_map_image:
   GST_ERROR ("failed to map VA image");
@@ -429,6 +485,9 @@ gst_vaapi_video_memory_copy (GstVaapiVideoMemory * mem,
   if (offset != 0 || (size != -1 && (gsize) size != maxsize))
     goto error_unsupported;
 
+  if (!ensure_surface_is_current (mem))
+    goto error_no_current_surface;
+
   meta = gst_vaapi_video_meta_copy (mem->meta);
   if (!meta)
     goto error_allocate_memory;
@@ -440,6 +499,9 @@ gst_vaapi_video_memory_copy (GstVaapiVideoMemory * mem,
   return GST_VAAPI_VIDEO_MEMORY_CAST (out_mem);
 
   /* ERRORS */
+error_no_current_surface:
+  GST_ERROR ("failed to make surface current");
+  return NULL;
 error_unsupported:
   GST_ERROR ("failed to copy partial memory (unsupported operation)");
   return NULL;

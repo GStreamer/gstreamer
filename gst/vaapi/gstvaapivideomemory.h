@@ -42,11 +42,21 @@ typedef struct _GstVaapiVideoAllocatorClass GstVaapiVideoAllocatorClass;
 #define GST_VAAPI_VIDEO_MEMORY_CAST(mem) \
   ((GstVaapiVideoMemory *) (mem))
 
+#define GST_VAAPI_IS_VIDEO_MEMORY(mem) \
+  ((mem) && (mem)->allocator && GST_VAAPI_IS_VIDEO_ALLOCATOR((mem)->allocator))
+
 #define GST_VAAPI_VIDEO_MEMORY_NAME             "GstVaapiVideoMemory"
 
 #if GST_CHECK_VERSION(1,1,0)
 #define GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE   "memory:VASurface"
 #endif
+
+#define GST_VAAPI_VIDEO_MEMORY_FLAG_IS_SET(mem, flag) \
+  GST_MEMORY_FLAG_IS_SET (mem, flag)
+#define GST_VAAPI_VIDEO_MEMORY_FLAG_SET(mem, flag) \
+  GST_MINI_OBJECT_FLAG_SET (mem, flag)
+#define GST_VAAPI_VIDEO_MEMORY_FLAG_UNSET(mem, flag) \
+  GST_MEMORY_FLAG_UNSET (mem, flag)
 
 /**
  * GstVaapiVideoMemoryMapType:
@@ -65,6 +75,21 @@ typedef enum
   GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR,
   GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR
 } GstVaapiVideoMemoryMapType;
+
+/**
+ * GstVaapiVideoMemoryFlags:
+ * @GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT: The embedded
+ *   #GstVaapiSurface has the up-to-date video frame contents.
+ * @GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT: The embedded
+ *   #GstVaapiImage has the up-to-date video frame contents.
+ *
+ * The set of extended #GstMemory flags.
+ */
+typedef enum
+{
+  GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT = GST_MEMORY_FLAG_LAST << 0,
+  GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT = GST_MEMORY_FLAG_LAST << 1,
+} GstVaapiVideoMemoryFlags;
 
 /**
  * GstVaapiVideoMemory:
@@ -105,6 +130,10 @@ gst_video_meta_unmap_vaapi_memory (GstVideoMeta * meta, guint plane,
 G_GNUC_INTERNAL
 void
 gst_vaapi_video_memory_reset_surface (GstVaapiVideoMemory * mem);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_video_memory_sync (GstVaapiVideoMemory * mem);
 
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoAllocator                                           --- */
