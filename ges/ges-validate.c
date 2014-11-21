@@ -25,9 +25,9 @@
 #include <ges/ges.h>
 
 #ifdef HAVE_GST_VALIDATE
+#include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-scenario.h>
 #include <gst/validate/gst-validate-utils.h>
-#include <gst/validate/validate.h>
 
 #define MONITOR_ON_PIPELINE "validate-monitor"
 #define RUNNER_ON_PIPELINE "runner-monitor"

@@ -47,7 +47,6 @@ gboolean
 ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
     gboolean * needs_setting_state)
 {
-  GstValidateOverride *o;
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
 
@@ -60,11 +59,6 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
       g_free (scenario_name);
     }
   }
-
-  o = gst_validate_override_new ();
-  gst_validate_override_change_severity (o,
-      EVENT_SEEK_RESULT_POSITION_WRONG, GST_VALIDATE_REPORT_LEVEL_WARNING);
-  gst_validate_override_register_by_name ("scenarios", o);
 
   runner = gst_validate_runner_new ();
   g_signal_connect (runner, "report-added",
