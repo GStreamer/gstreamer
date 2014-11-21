@@ -438,27 +438,72 @@ get_border_temp_line (GstLineCache * cache, gint idx, gpointer user_data)
   return tmpline;
 }
 
-static gboolean
-check_str_option (GstVideoConverter * convert, const gchar * option,
-    const gchar * value, gboolean def)
+static gint
+get_opt_int (GstVideoConverter * convert, const gchar * opt, gint def)
 {
-  const gchar *str;
-
-  if ((str = gst_structure_get_string (convert->config, option)))
-    return g_strcmp0 (str, value) == 0;
-
-  return def;
+  gint res;
+  if (!gst_structure_get_int (convert->config, opt, &res))
+    res = def;
+  return res;
 }
 
-#define CHECK_MATRIX_FULL(c) check_str_option ((c),GST_VIDEO_CONVERTER_OPT_MATRIX_MODE, "full", TRUE)
-#define CHECK_MATRIX_NO_YUV(c) check_str_option ((c),GST_VIDEO_CONVERTER_OPT_MATRIX_MODE, "no-yuv", FALSE)
+static guint
+get_opt_uint (GstVideoConverter * convert, const gchar * opt, guint def)
+{
+  guint res;
+  if (!gst_structure_get_uint (convert->config, opt, &res))
+    res = def;
+  return res;
+}
 
-#define CHECK_GAMMA_NONE(c) check_str_option ((c),GST_VIDEO_CONVERTER_OPT_GAMMA_MODE, "none", TRUE)
-#define CHECK_GAMMA_REMAP(c) check_str_option ((c),GST_VIDEO_CONVERTER_OPT_GAMMA_MODE, "remap", FALSE)
+static gboolean
+get_opt_bool (GstVideoConverter * convert, const gchar * opt, gboolean def)
+{
+  gboolean res;
+  if (!gst_structure_get_boolean (convert->config, opt, &res))
+    res = def;
+  return res;
+}
 
-#define CHECK_PRIMARIES_NONE(c) check_str_option ((c),GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE, "none", TRUE)
-#define CHECK_PRIMARIES_MERGE(c) check_str_option ((c),GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE, "merge-only", FALSE)
-#define CHECK_PRIMARIES_FAST(c) check_str_option ((c),GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE, "fast", FALSE)
+
+static const gchar *
+get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
+{
+  const gchar *res;
+  if (!(res = gst_structure_get_string (convert->config, opt)))
+    res = def;
+  return res;
+}
+
+#define DEFAULT_OPT_FILL_BORDER TRUE
+#define DEFAULT_OPT_BORDER_ARGB 0x00000000
+/* options full, no-yuv */
+#define DEFAULT_OPT_MATRIX_MODE "full"
+/* none, remap */
+#define DEFAULT_OPT_GAMMA_MODE "none"
+/* none, merge-only, fast */
+#define DEFAULT_OPT_PRIMARIES_MODE "none"
+
+#define GET_OPT_FILL_BORDER(c) get_opt_bool(c, \
+    GST_VIDEO_CONVERTER_OPT_FILL_BORDER, DEFAULT_OPT_FILL_BORDER)
+#define GET_OPT_BORDER_ARGB(c) get_opt_uint(c, \
+    GST_VIDEO_CONVERTER_OPT_BORDER_ARGB, DEFAULT_OPT_BORDER_ARGB)
+#define GET_OPT_MATRIX_MODE(c) get_opt_str(c, \
+    GST_VIDEO_CONVERTER_OPT_MATRIX_MODE, DEFAULT_OPT_MATRIX_MODE)
+#define GET_OPT_GAMMA_MODE(c) get_opt_str(c, \
+    GST_VIDEO_CONVERTER_OPT_GAMMA_MODE, DEFAULT_OPT_GAMMA_MODE)
+#define GET_OPT_PRIMARIES_MODE(c) get_opt_str(c, \
+    GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE, DEFAULT_OPT_PRIMARIES_MODE)
+
+#define CHECK_MATRIX_FULL(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "full"))
+#define CHECK_MATRIX_NO_YUV(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "no-yuv"))
+
+#define CHECK_GAMMA_NONE(c) (!g_strcmp0(GET_OPT_GAMMA_MODE(c), "none"))
+#define CHECK_GAMMA_REMAP(c) (!g_strcmp0(GET_OPT_GAMMA_MODE(c), "remap"))
+
+#define CHECK_PRIMARIES_NONE(c) (!g_strcmp0(GET_OPT_PRIMARIES_MODE(c), "none"))
+#define CHECK_PRIMARIES_MERGE(c) (!g_strcmp0(GET_OPT_PRIMARIES_MODE(c), "merge-only"))
+#define CHECK_PRIMARIES_FAST(c) (!g_strcmp0(GET_OPT_PRIMARIES_MODE(c), "fast"))
 
 static GstLineCache *
 chain_unpack_line (GstVideoConverter * convert)
@@ -1328,35 +1373,6 @@ chain_pack (GstVideoConverter * convert, GstLineCache * prev)
 
   return prev;
 }
-
-static gint
-get_opt_int (GstVideoConverter * convert, const gchar * opt, gint def)
-{
-  gint res;
-  if (!gst_structure_get_int (convert->config, opt, &res))
-    res = def;
-  return res;
-}
-
-static guint
-get_opt_uint (GstVideoConverter * convert, const gchar * opt, guint def)
-{
-  guint res;
-  if (!gst_structure_get_uint (convert->config, opt, &res))
-    res = def;
-  return res;
-}
-
-static gboolean
-get_opt_bool (GstVideoConverter * convert, const gchar * opt, gboolean def)
-{
-  gboolean res;
-  if (!gst_structure_get_boolean (convert->config, opt, &res))
-    res = def;
-  return res;
-}
-
-
 
 static void
 setup_allocators (GstVideoConverter * convert)
