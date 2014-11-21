@@ -28,7 +28,7 @@
 #include "vtutil.h"
 
 #define VTENC_DEFAULT_USAGE       6     /* Profile: Baseline  Level: 2.1 */
-#define VTENC_DEFAULT_BITRATE     768
+#define VTENC_DEFAULT_BITRATE     0
 #define VTENC_DEFAULT_FRAME_REORDERING TRUE
 #define VTENC_DEFAULT_REALTIME FALSE
 
@@ -191,8 +191,8 @@ gst_vtenc_class_init (GstVTEncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
-          "Target video bitrate in kbps",
-          1, G_MAXUINT, VTENC_DEFAULT_BITRATE,
+          "Target video bitrate in kbps (0 = auto)",
+          0, G_MAXUINT, VTENC_DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ALLOW_FRAME_REORDERING,
