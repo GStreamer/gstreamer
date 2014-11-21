@@ -197,6 +197,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_USE_PIPELINE_CLOCK       FALSE
 #define DEFAULT_TLS_VALIDATION_FLAGS     G_TLS_CERTIFICATE_VALIDATE_ALL
 #define DEFAULT_TLS_DATABASE     NULL
+#define DEFAULT_DO_RETRANSMISSION        TRUE
 
 enum
 {
@@ -231,6 +232,7 @@ enum
   PROP_SDES,
   PROP_TLS_VALIDATION_FLAGS,
   PROP_TLS_DATABASE,
+  PROP_DO_RETRANSMISSION,
   PROP_LAST
 };
 
@@ -614,6 +616,21 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_TYPE_TLS_DATABASE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRTSPSrc::do-retransmission:
+   *
+   * Attempt to ask the server to retransmit lost packets according to RFC4588.
+   *
+   * Note: currently only works with SSRC-multiplexed retransmission streams
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_DO_RETRANSMISSION,
+      g_param_spec_boolean ("do-retransmission", "Retransmission",
+          "Ask the server to retransmit lost packets",
+          DEFAULT_DO_RETRANSMISSION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
    * @request: a #GstRTSPMessage
@@ -756,6 +773,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->sdes = NULL;
   src->tls_validation_flags = DEFAULT_TLS_VALIDATION_FLAGS;
   src->tls_database = DEFAULT_TLS_DATABASE;
+  src->do_retransmission = DEFAULT_DO_RETRANSMISSION;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1020,6 +1038,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       g_clear_object (&rtspsrc->tls_database);
       rtspsrc->tls_database = g_value_dup_object (value);
       break;
+    case PROP_DO_RETRANSMISSION:
+      rtspsrc->do_retransmission = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1150,6 +1171,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TLS_DATABASE:
       g_value_set_object (value, rtspsrc->tls_database);
+      break;
+    case PROP_DO_RETRANSMISSION:
+      g_value_set_boolean (value, rtspsrc->do_retransmission);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1565,6 +1589,8 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
     gst_object_unref (stream->rtcppad);
   if (stream->session)
     g_object_unref (stream->session);
+  if (stream->rtx_pt_map)
+    gst_structure_free (stream->rtx_pt_map);
   g_free (stream);
 }
 
@@ -3101,6 +3127,96 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
   return gst_object_ref (stream->srtpenc);
 }
 
+static GstElement *
+request_aux_receiver (GstElement * rtpbin, guint sessid, GstRTSPSrc * src)
+{
+  GstElement *rtx, *bin;
+  GstPad *pad;
+  gchar *name;
+  GstRTSPStream *stream;
+
+  stream = find_stream (src, &sessid, (gpointer) find_stream_by_id);
+
+  GST_INFO_OBJECT (src, "creating retransmision receiver for session %u "
+      "with map %" GST_PTR_FORMAT, sessid, stream->rtx_pt_map);
+  bin = gst_bin_new (NULL);
+  rtx = gst_element_factory_make ("rtprtxreceive", NULL);
+  g_object_set (rtx, "payload-type-map", stream->rtx_pt_map, NULL);
+  gst_bin_add (GST_BIN (bin), rtx);
+
+  pad = gst_element_get_static_pad (rtx, "src");
+  name = g_strdup_printf ("src_%u", sessid);
+  gst_element_add_pad (bin, gst_ghost_pad_new (name, pad));
+  g_free (name);
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (rtx, "sink");
+  name = g_strdup_printf ("sink_%u", sessid);
+  gst_element_add_pad (bin, gst_ghost_pad_new (name, pad));
+  g_free (name);
+  gst_object_unref (pad);
+
+  return bin;
+}
+
+static void
+add_retransmission (GstRTSPSrc * src, GstRTSPTransport * transport)
+{
+  GList *walk;
+  guint signal_id;
+
+  if (transport->trans != GST_RTSP_TRANS_RTP)
+    return;
+
+  signal_id = g_signal_lookup ("request-aux-receiver",
+      G_OBJECT_TYPE (src->manager));
+  /* there's already something connected */
+  if (g_signal_handler_find (src->manager, G_SIGNAL_MATCH_ID, signal_id, 0,
+          NULL, NULL, NULL) != 0)
+    return;
+
+  /* build the retransmission payload type map */
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    int i;
+
+    if (stream->rtx_pt_map)
+      gst_structure_free (stream->rtx_pt_map);
+    stream->rtx_pt_map = gst_structure_new_empty ("application/x-rtp-pt-map");
+
+    for (i = 0; i < stream->ptmap->len; i++) {
+      PtMapItem *item = &g_array_index (stream->ptmap, PtMapItem, i);
+      GstStructure *s = gst_caps_get_structure (item->caps, 0);
+      const gchar *encoding;
+
+      /* we only care about RTX streams */
+      if ((encoding = gst_structure_get_string (s, "encoding-name"))
+          && g_strcmp0 (encoding, "RTX") == 0) {
+        const gchar *stream_pt_s;
+        gint rtx_pt;
+
+        if (gst_structure_get_int (s, "payload", &rtx_pt)
+            && (stream_pt_s = gst_structure_get_string (s, "apt"))) {
+
+          if (rtx_pt != 0) {
+            gst_structure_set (stream->rtx_pt_map, stream_pt_s, G_TYPE_UINT,
+                rtx_pt, NULL);
+          }
+        }
+      }
+    }
+
+    GST_DEBUG_OBJECT (src, "built retransmission payload map for stream "
+        "id %i: %" GST_PTR_FORMAT, stream->id, stream->rtx_pt_map);
+  }
+
+  g_object_set (src->manager, "do-retransmission", TRUE, NULL);
+
+  /* enable RFC4588 retransmission handling by setting rtprtxreceive
+   * as the "aux" element of rtpbin */
+  g_signal_connect (src->manager, "request-aux-receiver",
+      (GCallback) request_aux_receiver, src);
+}
 
 /* try to get and configure a manager */
 static gboolean
@@ -3196,6 +3312,9 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
       g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_NEW_MANAGER], 0,
           src->manager);
+
+      if (src->do_retransmission)
+        add_retransmission (src, transport);
     }
     g_signal_connect (src->manager, "request-rtp-decoder",
         (GCallback) request_rtp_decoder, stream);

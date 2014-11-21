@@ -157,6 +157,7 @@ struct _GstRTSPStream {
   gboolean      is_multicast;
   guint         ttl;
 
+  GstStructure     *rtx_pt_map;
 };
 
 /**
@@ -236,6 +237,7 @@ struct _GstRTSPSrc {
   GstStructure     *sdes;
   GTlsCertificateFlags tls_validation_flags;
   GTlsDatabase     *tls_database;
+  gboolean          do_retransmission;
 
   /* state */
   GstRTSPState       state;
