@@ -90,7 +90,6 @@ struct _GstGLMemory
   gfloat                tex_scaling[2];
 
   /* <private> */
-  GstMapFlags           map_flags;
   gpointer              data;
 
   gboolean              data_wrapped;
