@@ -743,47 +743,10 @@ AG_GST_CHECK_FEATURE(SOUP, [soup http client plugin (2.4)], souphttpsrc, [
   AC_SUBST(SOUP_LIBS)
 ])
 
-dnl *** speex >= 1.0.4 or >= 1.1.5 ***
-dnl   1.1.4 and earlier were not API/ABI compatible with 1.0
-dnl   1.1.6 is the first to use a .pc/pkg-config file ***
-dnl   speex_jitter.h is 1.1.x only
+dnl *** speex ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SPEEX, true)
 AG_GST_CHECK_FEATURE(SPEEX, [speex speech codec], speex, [
   AG_GST_PKG_CHECK_MODULES(SPEEX, speex >= 1.1.6)
-  if test $HAVE_SPEEX = no
-  then
-    AG_GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex/speex.h, [
-      AC_CHECK_HEADER(speex/speex_jitter.h, [
-        dnl speex 1.1.x :
-        AG_GST_CHECK_LIBHEADER(SPEEX, speex, speex_encode_int, , speex/speex.h, [
-          dnl speex 1.1.5 or + :
-          HAVE_SPEEX="yes"
-          SPEEX_LIBS="-lspeex"
-          AC_SUBST(SPEEX_CFLAGS)
-          AC_SUBST(SPEEX_LIBS)
-        ],[
-          HAVE_SPEEX="no"
-        ])
-      ],[
-        dnl speex 1.0.x :
-          AC_CHECK_DECL(SPEEX_GET_LOOKAHEAD, [
-            dnl speex 1.0.4
-            HAVE_SPEEX="yes"
-            SPEEX_LIBS="-lspeex"
-            AC_SUBST(SPEEX_CFLAGS)
-            AC_SUBST(SPEEX_LIBS)
-
-            AC_DEFINE_UNQUOTED(SPEEX_1_0, 1,
-              [defined if speex 1.0.x API detected])
-        ],[
-            HAVE_SPEEX="no"
-            AC_MSG_NOTICE(You need at least 1.0.4 to compile the speex plugin)
-        ], [
-#include <speex/speex.h>
-        ])
-      ])
-    ])
-  fi
 ])
 
 dnl *** taglib ***
