@@ -878,6 +878,20 @@ gst_mss_stream_advance_fragment (GstMssStream * stream)
   return GST_FLOW_OK;
 }
 
+GstFlowReturn
+gst_mss_stream_regress_fragment (GstMssStream * stream)
+{
+  g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
+
+  if (stream->current_fragment == NULL)
+    return GST_FLOW_EOS;
+
+  stream->current_fragment = g_list_previous (stream->current_fragment);
+  if (stream->current_fragment == NULL)
+    return GST_FLOW_EOS;
+  return GST_FLOW_OK;
+}
+
 const gchar *
 gst_mss_stream_type_name (GstMssStreamType streamtype)
 {

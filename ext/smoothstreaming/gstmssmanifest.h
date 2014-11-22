@@ -60,6 +60,7 @@ GstFlowReturn gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** u
 GstClockTime gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream);
 GstClockTime gst_mss_stream_get_fragment_gst_duration (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_advance_fragment (GstMssStream * stream);
+GstFlowReturn gst_mss_stream_regress_fragment (GstMssStream * stream);
 void gst_mss_stream_seek (GstMssStream * stream, guint64 time);
 const gchar * gst_mss_stream_get_lang (GstMssStream * stream);
 
