@@ -1372,7 +1372,8 @@ _adaptive_demux_pad_remove_eos_sticky (GstPad * pad, GstEvent ** event,
 }
 
 static void
-gst_adaptive_demux_stream_clear_eos_state (GstAdaptiveDemuxStream * stream)
+gst_adaptive_demux_stream_clear_eos_and_flush_state (GstAdaptiveDemuxStream *
+    stream)
 {
   GstPad *internal_pad;
 
@@ -1381,6 +1382,10 @@ gst_adaptive_demux_stream_clear_eos_state (GstAdaptiveDemuxStream * stream)
   gst_pad_sticky_events_foreach (internal_pad,
       _adaptive_demux_pad_remove_eos_sticky, NULL);
   GST_OBJECT_FLAG_UNSET (internal_pad, GST_PAD_FLAG_EOS);
+  /* In case the stream is recovering from a flushing seek it is also needed
+   * to remove the flushing state from this pad. The flushing state is set
+   * because of the flow return propagating until the source element */
+  GST_PAD_UNSET_FLUSHING (internal_pad);
 
   gst_object_unref (internal_pad);
 }
@@ -1561,7 +1566,7 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
   gst_pad_push_event (stream->src_srcpad, gst_event_new_flush_stop (TRUE));
 
   gst_element_set_state (stream->src, GST_STATE_READY);
-  gst_adaptive_demux_stream_clear_eos_state (stream);
+  gst_adaptive_demux_stream_clear_eos_and_flush_state (stream);
 
   return ret;
 }
