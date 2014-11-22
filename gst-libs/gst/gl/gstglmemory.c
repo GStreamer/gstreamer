@@ -653,9 +653,13 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
             (GstGLContextThreadFunc) _upload_memory, gl_mem);
         GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
       }
-    } else {
+    }
+
+    if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
       GST_CAT_TRACE (GST_CAT_GL_MEMORY, "mapping GL texture:%u for writing",
           gl_mem->tex_id);
+      GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
+      GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
     }
 
     data = &gl_mem->tex_id;
@@ -669,15 +673,17 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
             (GstGLContextThreadFunc) _download_memory, gl_mem);
         GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
       }
-    } else {
+    }
+
+    if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
       GST_CAT_TRACE (GST_CAT_GL_MEMORY,
           "mapping GL texture:%u for writing to system memory", gl_mem->tex_id);
+      GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+      GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
     }
 
     data = gl_mem->data;
   }
-
-  gl_mem->map_flags = flags;
 
   return data;
 }
@@ -685,17 +691,7 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
 static void
 _gl_mem_unmap (GstGLMemory * gl_mem)
 {
-  if ((gl_mem->map_flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
-    if ((gl_mem->map_flags & GST_MAP_GL) == GST_MAP_GL) {
-      GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
-      GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
-    } else {
-      GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
-      GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
-    }
-  }
-
-  gl_mem->map_flags = 0;
+  /* nothing to do here */
 }
 
 static void
