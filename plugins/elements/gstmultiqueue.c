@@ -939,7 +939,7 @@ update_buffering (GstMultiQueue * mq, GstSingleQueue * sq)
     for (iter = mq->queues; iter; iter = g_list_next (iter)) {
       GstSingleQueue *oq = (GstSingleQueue *) iter->data;
 
-      if (get_percentage (oq) >= 100) {
+      if (get_percentage (oq) >= mq->high_percent) {
         is_buffering = FALSE;
 
         break;
