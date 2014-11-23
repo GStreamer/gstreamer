@@ -741,7 +741,7 @@ parsevalue (char *value, char *_saveptr, struct gst_gl_shadervariable_desc *ret)
             return _saveptr + j;
         }
         ret->value = (void *) g_malloc (sizeof (float));
-        *((float *) ret->value) = (float) strtod (value, NULL);
+        *((float *) ret->value) = (float) g_ascii_strtod (value, NULL);
 
       } else {
         ret->value = g_malloc (sizeof (float) * ret->count);
@@ -762,7 +762,7 @@ parsevalue (char *value, char *_saveptr, struct gst_gl_shadervariable_desc *ret)
               return _saveptr + (saveptr - t) + j;
           }
 
-          ((float *) ret->value)[i] = (float) strtod (t, NULL);
+          ((float *) ret->value)[i] = (float) g_ascii_strtod (t, NULL);
           t = strtok_r (0, ",", &saveptr);
         }
       }
@@ -925,7 +925,7 @@ vec_parsevalue (int n, char *value, char *_saveptr,
           return _saveptr + (saveptr - t) + j;
       }
 
-      ((float *) ret->value)[i] = (float) strtod (t, NULL);
+      ((float *) ret->value)[i] = (float) g_ascii_strtod (t, NULL);
       t = strtok_r (0, ",", &saveptr);
     }
 
@@ -975,7 +975,7 @@ vec_parsevalue (int n, char *value, char *_saveptr,
             return _saveptr + (t - value) + j;
         }
 
-        ((float *) ret->value)[k * n + i] = (float) strtod (t, NULL);
+        ((float *) ret->value)[k * n + i] = (float) g_ascii_strtod (t, NULL);
         t = strtok_r (0, ",", &saveptr);
         if (i < (n - 1) && !t)
           return _saveptr + (saveptr - value);
@@ -1424,7 +1424,7 @@ mat_parsevalue (int n, int m, char *value, char *_saveptr,
           return _saveptr + (saveptr - t) + j;
       }
 
-      ((float *) ret->value)[i] = (float) strtod (t, NULL);
+      ((float *) ret->value)[i] = (float) g_ascii_strtod (t, NULL);
       t = strtok_r (0, ",", &saveptr);
     }
 
@@ -1474,7 +1474,8 @@ mat_parsevalue (int n, int m, char *value, char *_saveptr,
             return _saveptr + (t - value) + j;
         }
 
-        ((float *) ret->value)[k * n * m + i] = (float) strtod (t, NULL);
+        ((float *) ret->value)[k * n * m + i] =
+            (float) g_ascii_strtod (t, NULL);
         t = strtok_r (0, ",", &saveptr);
         if (i < (n * m - 1) && !t)
           return _saveptr + (saveptr - value);
