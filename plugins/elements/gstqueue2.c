@@ -949,7 +949,7 @@ update_buffering (GstQueue2 * queue)
 
   if (queue->is_buffering) {
     /* if we were buffering see if we reached the high watermark */
-    if (percent >= queue->high_percent)
+    if (percent >= 100)
       queue->is_buffering = FALSE;
 
     SET_PERCENT (queue, percent);
