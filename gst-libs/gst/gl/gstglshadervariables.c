@@ -184,7 +184,7 @@ gst_gl_shadervariables_parse (GstGLShader * shader, char *variables,
     return 0;
 
   p0 = variables;
-  trimright (p0, " \t\n");
+  trimright (p0, " \t\r\n");
   lim = variables + strlen (variables);
   e = strchr (p0, ';');
   while (p0 < lim) {
@@ -201,13 +201,13 @@ gst_gl_shadervariables_parse (GstGLShader * shader, char *variables,
     e[1] = e1;
 
     trimright (p, " \t");
-    trimleft (p, " \t\n");
+    trimleft (p, " \t\r\n");
 
     t = strtok_r (p, " \t", &saveptr);
     if (!t)
       goto parse_error;
     trimleft (t, " \t");
-    trimright (t, " \t\n");
+    trimright (t, " \t\r\n");
 
     if (t[0]) {
 
@@ -318,7 +318,7 @@ parse_error:
     t = p = p0;
   } else {
     e[1] = 0;
-    trimleft (p0, " \t\n");
+    trimleft (p0, " \t\r\n");
     GST_ERROR ("\n%s", p0);
     e[1] = e1;
   }
