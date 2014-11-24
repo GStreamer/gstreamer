@@ -656,13 +656,29 @@ gst_hls_demux_chunk_received (GstAdaptiveDemux * demux,
     tmp_buffer = hlsdemux->pending_buffer;
     hlsdemux->pending_buffer = buffer;
     *chunk = tmp_buffer;
+  } else if (hlsdemux->pending_buffer) {
+    *chunk = gst_buffer_append (hlsdemux->pending_buffer, buffer);
+    hlsdemux->pending_buffer = NULL;
   }
 
-  if (G_UNLIKELY (hlsdemux->do_typefind && *chunk != NULL)) {
+  buffer = *chunk;
+
+  if (G_UNLIKELY (hlsdemux->do_typefind && buffer != NULL)) {
     GstCaps *caps;
 
     caps = gst_type_find_helper_for_buffer (NULL, buffer, NULL);
     if (G_UNLIKELY (!caps)) {
+      /* Typefind could fail if buffer is too small. Retry later */
+      if (gst_buffer_get_size (buffer) < (2 * 1024 * 1024)) {
+        if (hlsdemux->pending_buffer)
+          hlsdemux->pending_buffer =
+              gst_buffer_append (buffer, hlsdemux->pending_buffer);
+        else
+          hlsdemux->pending_buffer = buffer;
+        *chunk = NULL;
+        return GST_FLOW_OK;
+      }
+
       GST_ELEMENT_ERROR (hlsdemux, STREAM, TYPE_NOT_FOUND,
           ("Could not determine type of stream"), (NULL));
       return GST_FLOW_NOT_NEGOTIATED;
