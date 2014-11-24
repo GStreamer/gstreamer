@@ -85,6 +85,53 @@ gst_openh264enc_rc_modes_get_type (void)
   return rc_modes_type;
 }
 
+typedef enum _GstOpenh264encDeblockingMode
+{
+  GST_OPENH264_DEBLOCKING_ON = 0,
+  GST_OPENH264_DEBLOCKING_OFF = 1,
+  GST_OPENH264_DEBLOCKING_NOT_SLICE_BOUNDARIES = 2
+} GstOpenh264encDeblockingMode;
+
+#define GST_TYPE_OPENH264ENC_DEBLOCKING_MODE (gst_openh264enc_deblocking_mode_get_type ())
+static GType
+gst_openh264enc_deblocking_mode_get_type (void)
+{
+  static const GEnumValue types[] = {
+    {GST_OPENH264_DEBLOCKING_ON, "Deblocking on", "on"},
+    {GST_OPENH264_DEBLOCKING_OFF, "Deblocking off", "off"},
+    {GST_OPENH264_DEBLOCKING_NOT_SLICE_BOUNDARIES,
+        "Deblocking on, except for slice boundaries", "not-slice-boundaries"},
+    {0, NULL, NULL},
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id = g_enum_register_static ("GstOpenh264encDeblockingModes", types);
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
+#define GST_TYPE_OPENH264ENC_SLICE_MODE (gst_openh264enc_slice_mode_get_type ())
+static GType
+gst_openh264enc_slice_mode_get_type (void)
+{
+  static const GEnumValue types[] = {
+    {SM_FIXEDSLCNUM_SLICE, "num-slices slices", "n-slices"},
+    {SM_AUTO_SLICE, "Number of slices equal to number of threads", "auto"},
+    {0, NULL, NULL},
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id = g_enum_register_static ("GstOpenh264encSliceModes", types);
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
 /* prototypes */
 
 static void gst_openh264enc_set_property (GObject * object,
@@ -117,6 +164,12 @@ static void gst_openh264enc_set_rate_control (GstOpenh264Enc * openh264enc,
 #define DEFAULT_MULTI_THREAD       0
 #define DEFAULT_ENABLE_DENOISE     FALSE
 #define DEFAULT_ENABLE_FRAME_SKIP  FALSE
+#define DEFAULT_DEBLOCKING_MODE GST_OPENH264_DEBLOCKING_ON
+#define DEFAULT_BACKGROUND_DETECTION TRUE
+#define DEFAULT_ADAPTIVE_QUANTIZATION TRUE
+#define DEFAULT_SCENE_CHANGE_DETECTION TRUE
+#define DEFAULT_SLICE_MODE      SM_AUTO_SLICE
+#define DEFAULT_NUM_SLICES      1
 
 enum
 {
@@ -129,6 +182,12 @@ enum
   PROP_MULTI_THREAD,
   PROP_ENABLE_DENOISE,
   PROP_ENABLE_FRAME_SKIP,
+  PROP_DEBLOCKING_MODE,
+  PROP_BACKGROUND_DETECTION,
+  PROP_ADAPTIVE_QUANTIZATION,
+  PROP_SCENE_CHANGE_DETECTION,
+  PROP_SLICE_MODE,
+  PROP_NUM_SLICES,
   N_PROPERTIES
 };
 
@@ -149,6 +208,12 @@ struct _GstOpenh264EncPrivate
   guint64 time_per_frame;
   guint64 frame_count;
   guint64 previous_timestamp;
+  GstOpenh264encDeblockingMode deblocking_mode;
+  gboolean background_detection;
+  gboolean adaptive_quantization;
+  gboolean scene_change_detection;
+  SliceModeEnum slice_mode;
+  guint num_slices;
 };
 
 /* pad templates */
@@ -253,6 +318,39 @@ gst_openh264enc_class_init (GstOpenh264EncClass * klass)
           "The maximum size of one slice (in bytes).",
           0, G_MAXUINT, DEFAULT_MAX_SLICE_SIZE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_DEBLOCKING_MODE, g_param_spec_enum ("deblocking",
+          "Deblocking mode", "Deblocking mode",
+          GST_TYPE_OPENH264ENC_DEBLOCKING_MODE, DEFAULT_DEBLOCKING_MODE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_BACKGROUND_DETECTION,
+      g_param_spec_boolean ("background-detection", "Background detection",
+          "Background detection", DEFAULT_BACKGROUND_DETECTION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_ADAPTIVE_QUANTIZATION,
+      g_param_spec_boolean ("adaptive-quantization", "Adaptive quantization",
+          "Adaptive quantization", DEFAULT_ADAPTIVE_QUANTIZATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_SCENE_CHANGE_DETECTION,
+      g_param_spec_boolean ("scene-change-detection",
+          "Scene change detection", "Scene change detection",
+          DEFAULT_SCENE_CHANGE_DETECTION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SLICE_MODE,
+      g_param_spec_enum ("slice-mode", "Slice mode", "Slice mode",
+          GST_TYPE_OPENH264ENC_SLICE_MODE, DEFAULT_SLICE_MODE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_NUM_SLICES,
+      g_param_spec_uint ("num-slices", "Number of slices",
+          "The number of slices (needs slice-mode=n-slices)",
+          0, G_MAXUINT, DEFAULT_NUM_SLICES,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void
@@ -273,6 +371,12 @@ gst_openh264enc_init (GstOpenh264Enc * openh264enc)
   openh264enc->priv->drop_bitrate = DROP_BITRATE;
   openh264enc->priv->enable_denoise = DEFAULT_ENABLE_DENOISE;
   openh264enc->priv->enable_frame_skip = DEFAULT_ENABLE_FRAME_SKIP;
+  openh264enc->priv->deblocking_mode = DEFAULT_DEBLOCKING_MODE;
+  openh264enc->priv->background_detection = DEFAULT_BACKGROUND_DETECTION;
+  openh264enc->priv->adaptive_quantization = DEFAULT_ADAPTIVE_QUANTIZATION;
+  openh264enc->priv->scene_change_detection = DEFAULT_SCENE_CHANGE_DETECTION;
+  openh264enc->priv->slice_mode = DEFAULT_SLICE_MODE;
+  openh264enc->priv->num_slices = DEFAULT_NUM_SLICES;
   openh264enc->priv->encoder = NULL;
   gst_openh264enc_set_usage_type (openh264enc, CAMERA_VIDEO_REAL_TIME);
   gst_openh264enc_set_rate_control (openh264enc, RC_QUALITY_MODE);
@@ -355,6 +459,31 @@ gst_openh264enc_set_property (GObject * object, guint property_id,
       openh264enc->priv->max_slice_size = g_value_get_uint (value);
       break;
 
+    case PROP_DEBLOCKING_MODE:
+      openh264enc->priv->deblocking_mode =
+          (GstOpenh264encDeblockingMode) g_value_get_enum (value);
+      break;
+
+    case PROP_BACKGROUND_DETECTION:
+      openh264enc->priv->background_detection = g_value_get_boolean (value);
+      break;
+
+    case PROP_ADAPTIVE_QUANTIZATION:
+      openh264enc->priv->adaptive_quantization = g_value_get_boolean (value);
+      break;
+
+    case PROP_SCENE_CHANGE_DETECTION:
+      openh264enc->priv->scene_change_detection = g_value_get_boolean (value);
+      break;
+
+    case PROP_SLICE_MODE:
+      openh264enc->priv->slice_mode = (SliceModeEnum) g_value_get_enum (value);
+      break;
+
+    case PROP_NUM_SLICES:
+      openh264enc->priv->num_slices = g_value_get_uint (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -400,6 +529,30 @@ gst_openh264enc_get_property (GObject * object, guint property_id,
 
     case PROP_MAX_SLICE_SIZE:
       g_value_set_uint (value, openh264enc->priv->max_slice_size);
+      break;
+
+    case PROP_DEBLOCKING_MODE:
+      g_value_set_enum (value, openh264enc->priv->deblocking_mode);
+      break;
+
+    case PROP_BACKGROUND_DETECTION:
+      g_value_set_boolean (value, openh264enc->priv->background_detection);
+      break;
+
+    case PROP_ADAPTIVE_QUANTIZATION:
+      g_value_set_boolean (value, openh264enc->priv->adaptive_quantization);
+      break;
+
+    case PROP_SCENE_CHANGE_DETECTION:
+      g_value_set_boolean (value, openh264enc->priv->scene_change_detection);
+      break;
+
+    case PROP_SLICE_MODE:
+      g_value_set_enum (value, openh264enc->priv->slice_mode);
+      break;
+
+    case PROP_NUM_SLICES:
+      g_value_set_uint (value, openh264enc->priv->num_slices);
       break;
 
     default:
@@ -518,19 +671,26 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.iMultipleThreadIdc = openh264enc->priv->multi_thread;
   enc_params.bEnableDenoise = openh264enc->priv->enable_denoise;
   enc_params.uiIntraPeriod = priv->gop_size;
-  enc_params.bEnableBackgroundDetection = 1;
-  enc_params.bEnableAdaptiveQuant = 1;
+  enc_params.bEnableBackgroundDetection =
+      openh264enc->priv->background_detection;
+  enc_params.bEnableAdaptiveQuant = openh264enc->priv->adaptive_quantization;
+  enc_params.bEnableSceneChangeDetect =
+      openh264enc->priv->scene_change_detection;
   enc_params.bEnableFrameSkip = openh264enc->priv->enable_frame_skip;
   enc_params.bEnableLongTermReference = 0;
   enc_params.bEnableSpsPpsIdAddition = 1;
   enc_params.bPrefixNalAddingCtrl = 0;
   enc_params.fMaxFrameRate = fps_n * 1.0 / fps_d;
+  enc_params.iLoopFilterDisableIdc = openh264enc->priv->deblocking_mode;
   enc_params.sSpatialLayers[0].uiProfileIdc = PRO_BASELINE;
   enc_params.sSpatialLayers[0].iVideoWidth = width;
   enc_params.sSpatialLayers[0].iVideoHeight = height;
   enc_params.sSpatialLayers[0].fFrameRate = fps_n * 1.0 / fps_d;
   enc_params.sSpatialLayers[0].iSpatialBitrate = openh264enc->priv->bitrate;
-  enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode = SM_SINGLE_SLICE;
+  enc_params.sSpatialLayers[0].sSliceCfg.uiSliceMode =
+      openh264enc->priv->slice_mode;
+  enc_params.sSpatialLayers[0].sSliceCfg.sSliceArgument.uiSliceNum =
+      openh264enc->priv->num_slices;
 
   priv->framerate = (1 + fps_n / fps_d);
 
@@ -604,8 +764,8 @@ gst_openh264enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
   return
-      GST_VIDEO_ENCODER_CLASS (gst_openh264enc_parent_class)->propose_allocation
-      (encoder, query);
+      GST_VIDEO_ENCODER_CLASS
+      (gst_openh264enc_parent_class)->propose_allocation (encoder, query);
 }
 
 static GstFlowReturn
@@ -719,8 +879,8 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
    * guess based on the input */
   frame = gst_video_encoder_get_oldest_frame (base_encoder);
   if (!frame) {
-    GST_ELEMENT_ERROR (openh264enc, STREAM, ENCODE, ("Could not encode frame"),
-        ("openh264enc returned %d", ret));
+    GST_ELEMENT_ERROR (openh264enc, STREAM, ENCODE,
+        ("Could not encode frame"), ("openh264enc returned %d", ret));
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
