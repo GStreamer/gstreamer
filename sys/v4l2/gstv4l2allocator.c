@@ -470,6 +470,36 @@ gst_v4l2_allocator_init (GstV4l2Allocator * allocator)
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
+#define GST_V4L2_ALLOCATOR_PROBE(obj,type) \
+    gst_v4l2_allocator_probe ((obj), V4L2_MEMORY_ ## type, \
+        GST_V4L2_ALLOCATOR_FLAG_ ## type ## _REQBUFS, \
+        GST_V4L2_ALLOCATOR_FLAG_ ## type ## _CREATE_BUFS)
+static guint32
+gst_v4l2_allocator_probe (GstV4l2Allocator * allocator, guint32 memory,
+    guint32 breq_flag, guint32 bcreate_flag)
+{
+  struct v4l2_requestbuffers breq = { 0 };
+  guint32 flags = 0;
+
+  breq.type = allocator->type;
+  breq.count = 0;
+  breq.memory = memory;
+
+  if (v4l2_ioctl (allocator->video_fd, VIDIOC_REQBUFS, &breq) == 0) {
+    struct v4l2_create_buffers bcreate = { 0 };
+
+    flags |= breq_flag;
+
+    bcreate.memory = V4L2_MEMORY_MMAP;
+    bcreate.format = allocator->format;
+
+    if ((v4l2_ioctl (allocator->video_fd, VIDIOC_CREATE_BUFS, &bcreate) == 0))
+      flags |= bcreate_flag;
+  }
+
+  return flags;
+}
+
 static GstV4l2MemoryGroup *
 gst_v4l2_allocator_create_buf (GstV4l2Allocator * allocator)
 {
@@ -585,6 +615,8 @@ _cleanup_failed_alloc (GstV4l2Allocator * allocator, GstV4l2MemoryGroup * group)
   }
 }
 
+
+
 GstV4l2Allocator *
 gst_v4l2_allocator_new (GstObject * parent, gint video_fd,
     struct v4l2_format *format)
@@ -604,7 +636,22 @@ gst_v4l2_allocator_new (GstObject * parent, gint video_fd,
   allocator->type = format->type;
   allocator->format = *format;
 
-  GST_OBJECT_FLAG_SET (allocator, GST_OBJECT_FLAGS (parent));
+  flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, MMAP);
+  flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, USERPTR);
+  flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, DMABUF);
+
+
+  if (flags == 0) {
+    /* Drivers not ported from videobuf to videbuf2 don't allow freeing buffers
+     * using REQBUFS(0). This is a workaround to still support these drivers,
+     * which are known to have MMAP support. */
+    GST_WARNING_OBJECT (allocator, "Could not probe supported memory type, "
+        "assuming MMAP is supported, this is expected for older drivers not "
+        " yet ported to videobuf2 framework");
+    flags = GST_V4L2_ALLOCATOR_FLAG_MMAP_REQBUFS;
+  }
+
+  GST_OBJECT_FLAG_SET (allocator, flags);
 
   return allocator;
 }
@@ -632,13 +679,13 @@ gst_v4l2_allocator_start (GstV4l2Allocator * allocator, guint32 count,
 
   switch (memory) {
     case V4L2_MEMORY_MMAP:
-      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (allocator, MMAP);
+      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (allocator, MMAP);
       break;
     case V4L2_MEMORY_USERPTR:
-      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (allocator, USERPTR);
+      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (allocator, USERPTR);
       break;
     case V4L2_MEMORY_DMABUF:
-      can_allocate = GST_V4L2_OBJECT_CAN_ALLOCATE (allocator, DMABUF);
+      can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (allocator, DMABUF);
       break;
     default:
       can_allocate = FALSE;

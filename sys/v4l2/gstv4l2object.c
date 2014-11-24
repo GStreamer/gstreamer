@@ -2293,64 +2293,16 @@ error:
   return ret;
 }
 
-#define GST_V4L2_OBJECT_CHECK_ALLOCATION_MODE(obj,type) \
-    gst_v4l2_object_check_allocation_mode ((obj), V4L2_MEMORY_ ## type, \
-        GST_V4L2_OBJECT_FLAG_ ## type ## _REQBUFS, \
-        GST_V4L2_OBJECT_FLAG_ ## type ## _CREATE_BUFS)
-
-static guint32
-gst_v4l2_object_check_allocation_mode(GstV4l2Object * v4l2object, guint32 memory,
-    guint32 breq_flag, guint32 bcreate_flag)
-{
-  struct v4l2_requestbuffers breq = { 0 };
-  guint32 flags = 0;
-
-  breq.type = v4l2object->type;
-  breq.count = 0;
-  breq.memory = memory;
-
-  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_REQBUFS, &breq) == 0) {
-    struct v4l2_create_buffers bcreate = { 0 };
-
-    flags |= breq_flag;
-
-    bcreate.memory = V4L2_MEMORY_MMAP;
-    bcreate.format = v4l2object->format;
-
-    if ((v4l2_ioctl (v4l2object->video_fd, VIDIOC_CREATE_BUFS, &bcreate) == 0))
-      flags |= bcreate_flag;
-  }
-
-  return flags;
-}
-
 static gboolean
 gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
 {
   GstV4l2IOMode mode;
-  guint32 flags = 0;
 
   GST_DEBUG_OBJECT (v4l2object->element, "initializing the %s system",
       V4L2_TYPE_IS_OUTPUT (v4l2object->type) ? "output" : "capture");
 
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
-
-  flags |= GST_V4L2_OBJECT_CHECK_ALLOCATION_MODE (v4l2object, MMAP);
-  flags |= GST_V4L2_OBJECT_CHECK_ALLOCATION_MODE (v4l2object, USERPTR);
-  flags |= GST_V4L2_OBJECT_CHECK_ALLOCATION_MODE (v4l2object, DMABUF);
-
-  if (flags == 0) {
-    /* Drivers not ported from videobuf to videbuf2 don't allow freeing buffers
-     * using REQBUFS(0). This is a workaround to still support these drivers,
-     * which are known to have MMAP support. */
-    GST_WARNING_OBJECT (v4l2object, "Could not probe supported memory type, "
-        "assuming MMAP is supported, this is expected for older drivers not "
-        " yet ported to videobuf2 framework");
-    flags = GST_V4L2_OBJECT_FLAG_MMAP_REQBUFS;
-  }
-
-  GST_OBJECT_FLAG_SET (v4l2object, flags);
 
   /* find transport */
   mode = v4l2object->req_mode;

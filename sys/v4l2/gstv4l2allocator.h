@@ -37,6 +37,11 @@ G_BEGIN_DECLS
 #define GST_V4L2_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_V4L2_ALLOCATOR, GstV4l2AllocatorClass))
 #define GST_V4L2_ALLOCATOR_CAST(obj)            ((GstV4l2Allocator *)(obj))
 
+#define GST_V4L2_ALLOCATOR_CAN_REQUEST(obj,type) \
+        (GST_OBJECT_FLAG_IS_SET (obj, GST_V4L2_ALLOCATOR_FLAG_ ## type ## _REQBUFS))
+#define GST_V4L2_ALLOCATOR_CAN_ALLOCATE(obj,type) \
+        (GST_OBJECT_FLAG_IS_SET (obj, GST_V4L2_ALLOCATOR_FLAG_ ## type ## _CREATE_BUFS))
+
 #define GST_V4L2_MEMORY_QUARK gst_v4l2_memory_quark ()
 
 typedef struct _GstV4l2Allocator GstV4l2Allocator;
@@ -45,6 +50,16 @@ typedef struct _GstV4l2MemoryGroup GstV4l2MemoryGroup;
 typedef struct _GstV4l2Memory GstV4l2Memory;
 typedef enum _GstV4l2Capabilities GstV4l2Capabilities;
 typedef enum _GstV4l2Return GstV4l2Return;
+
+enum _GstV4l2AllocatorFlags
+{
+  GST_V4L2_ALLOCATOR_FLAG_MMAP_REQBUFS        = (GST_ALLOCATOR_FLAG_LAST << 0),
+  GST_V4L2_ALLOCATOR_FLAG_MMAP_CREATE_BUFS    = (GST_ALLOCATOR_FLAG_LAST << 1),
+  GST_V4L2_ALLOCATOR_FLAG_USERPTR_REQBUFS     = (GST_ALLOCATOR_FLAG_LAST << 2),
+  GST_V4L2_ALLOCATOR_FLAG_USERPTR_CREATE_BUFS = (GST_ALLOCATOR_FLAG_LAST << 3),
+  GST_V4L2_ALLOCATOR_FLAG_DMABUF_REQBUFS      = (GST_ALLOCATOR_FLAG_LAST << 4),
+  GST_V4L2_ALLOCATOR_FLAG_DMABUF_CREATE_BUFS  = (GST_ALLOCATOR_FLAG_LAST << 5),
+};
 
 enum _GstV4l2Return
 {
