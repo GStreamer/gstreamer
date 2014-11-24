@@ -31,32 +31,23 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VAAPIPOSTPROC \
-    (gst_vaapipostproc_get_type())
-
-#define GST_VAAPIPOSTPROC(obj)                          \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_TYPE_VAAPIPOSTPROC, \
-                                GstVaapiPostproc))
-
-#define GST_VAAPIPOSTPROC_CLASS(klass)                  \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_TYPE_VAAPIPOSTPROC,    \
-                             GstVaapiPostprocClass))
-
+  (gst_vaapipostproc_get_type ())
+#define GST_VAAPIPOSTPROC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPIPOSTPROC, GstVaapiPostproc))
+#define GST_VAAPIPOSTPROC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPIPOSTPROC, \
+       GstVaapiPostprocClass))
 #define GST_IS_VAAPIPOSTPROC(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VAAPIPOSTPROC))
-
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VAAPIPOSTPROC))
 #define GST_IS_VAAPIPOSTPROC_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VAAPIPOSTPROC))
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VAAPIPOSTPROC))
+#define GST_VAAPIPOSTPROC_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VAAPIPOSTPROC, \
+       GstVaapiPostprocClass))
 
-#define GST_VAAPIPOSTPROC_GET_CLASS(obj)                \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_TYPE_VAAPIPOSTPROC,  \
-                               GstVaapiPostprocClass))
-
-typedef struct _GstVaapiPostproc                GstVaapiPostproc;
-typedef struct _GstVaapiPostprocClass           GstVaapiPostprocClass;
-typedef struct _GstVaapiDeinterlaceState        GstVaapiDeinterlaceState;
+typedef struct _GstVaapiPostproc GstVaapiPostproc;
+typedef struct _GstVaapiPostprocClass GstVaapiPostprocClass;
+typedef struct _GstVaapiDeinterlaceState GstVaapiDeinterlaceState;
 
 /**
  * GstVaapiDeinterlaceMode:
@@ -64,10 +55,11 @@ typedef struct _GstVaapiDeinterlaceState        GstVaapiDeinterlaceState;
  * @GST_VAAPI_DEINTERLACE_MODE_INTERLACED: Force deinterlacing.
  * @GST_VAAPI_DEINTERLACE_MODE_DISABLED: Never perform deinterlacing.
  */
-typedef enum {
-    GST_VAAPI_DEINTERLACE_MODE_AUTO = 0,
-    GST_VAAPI_DEINTERLACE_MODE_INTERLACED,
-    GST_VAAPI_DEINTERLACE_MODE_DISABLED,
+typedef enum
+{
+  GST_VAAPI_DEINTERLACE_MODE_AUTO = 0,
+  GST_VAAPI_DEINTERLACE_MODE_INTERLACED,
+  GST_VAAPI_DEINTERLACE_MODE_DISABLED,
 } GstVaapiDeinterlaceMode;
 
 /*
@@ -97,20 +89,21 @@ typedef enum {
  *
  * The set of operations that are to be performed for each frame.
  */
-typedef enum {
-    GST_VAAPI_POSTPROC_FLAG_FORMAT      = 1 << GST_VAAPI_FILTER_OP_FORMAT,
-    GST_VAAPI_POSTPROC_FLAG_DENOISE     = 1 << GST_VAAPI_FILTER_OP_DENOISE,
-    GST_VAAPI_POSTPROC_FLAG_SHARPEN     = 1 << GST_VAAPI_FILTER_OP_SHARPEN,
-    GST_VAAPI_POSTPROC_FLAG_HUE         = 1 << GST_VAAPI_FILTER_OP_HUE,
-    GST_VAAPI_POSTPROC_FLAG_SATURATION  = 1 << GST_VAAPI_FILTER_OP_SATURATION,
-    GST_VAAPI_POSTPROC_FLAG_BRIGHTNESS  = 1 << GST_VAAPI_FILTER_OP_BRIGHTNESS,
-    GST_VAAPI_POSTPROC_FLAG_CONTRAST    = 1 << GST_VAAPI_FILTER_OP_CONTRAST,
-    GST_VAAPI_POSTPROC_FLAG_DEINTERLACE = 1 << GST_VAAPI_FILTER_OP_DEINTERLACING,
-    GST_VAAPI_POSTPROC_FLAG_SCALE       = 1 << GST_VAAPI_FILTER_OP_SCALING,
+typedef enum
+{
+  GST_VAAPI_POSTPROC_FLAG_FORMAT      = 1 << GST_VAAPI_FILTER_OP_FORMAT,
+  GST_VAAPI_POSTPROC_FLAG_DENOISE     = 1 << GST_VAAPI_FILTER_OP_DENOISE,
+  GST_VAAPI_POSTPROC_FLAG_SHARPEN     = 1 << GST_VAAPI_FILTER_OP_SHARPEN,
+  GST_VAAPI_POSTPROC_FLAG_HUE         = 1 << GST_VAAPI_FILTER_OP_HUE,
+  GST_VAAPI_POSTPROC_FLAG_SATURATION  = 1 << GST_VAAPI_FILTER_OP_SATURATION,
+  GST_VAAPI_POSTPROC_FLAG_BRIGHTNESS  = 1 << GST_VAAPI_FILTER_OP_BRIGHTNESS,
+  GST_VAAPI_POSTPROC_FLAG_CONTRAST    = 1 << GST_VAAPI_FILTER_OP_CONTRAST,
+  GST_VAAPI_POSTPROC_FLAG_DEINTERLACE = 1 << GST_VAAPI_FILTER_OP_DEINTERLACING,
+  GST_VAAPI_POSTPROC_FLAG_SCALE       = 1 << GST_VAAPI_FILTER_OP_SCALING,
 
-    /* Additional custom flags */
-    GST_VAAPI_POSTPROC_FLAG_CUSTOM      = 1 << 20,
-    GST_VAAPI_POSTPROC_FLAG_SIZE        = GST_VAAPI_POSTPROC_FLAG_CUSTOM,
+  /* Additional custom flags */
+  GST_VAAPI_POSTPROC_FLAG_CUSTOM      = 1 << 20,
+  GST_VAAPI_POSTPROC_FLAG_SIZE        = GST_VAAPI_POSTPROC_FLAG_CUSTOM,
 } GstVaapiPostprocFlags;
 
 /*
@@ -124,65 +117,68 @@ typedef enum {
  *
  * Context used to maintain deinterlacing state.
  */
-struct _GstVaapiDeinterlaceState {
-    GstBuffer                  *buffers[GST_VAAPI_DEINTERLACE_MAX_REFERENCES];
-    guint                       buffers_index;
-    GstVaapiSurface            *surfaces[GST_VAAPI_DEINTERLACE_MAX_REFERENCES];
-    guint                       num_surfaces;
-    guint                       deint           : 1;
-    guint                       tff             : 1;
+struct _GstVaapiDeinterlaceState
+{
+  GstBuffer *buffers[GST_VAAPI_DEINTERLACE_MAX_REFERENCES];
+  guint buffers_index;
+  GstVaapiSurface *surfaces[GST_VAAPI_DEINTERLACE_MAX_REFERENCES];
+  guint num_surfaces;
+  guint deint:1;
+  guint tff:1;
 };
 
-struct _GstVaapiPostproc {
-    /*< private >*/
-    GstVaapiPluginBase          parent_instance;
+struct _GstVaapiPostproc
+{
+  /*< private >*/
+  GstVaapiPluginBase parent_instance;
 
-    GstVaapiFilter             *filter;
-    GPtrArray                  *filter_ops;
-    GstVaapiVideoPool          *filter_pool;
-    GstVideoInfo                filter_pool_info;
-    gboolean                    filter_pool_active;
-    GArray                     *filter_formats;
-    GstVideoFormat              format; /* output video format (encoded) */
-    guint                       width;
-    guint                       height;
-    guint                       flags;
+  GstVaapiFilter *filter;
+  GPtrArray *filter_ops;
+  GstVaapiVideoPool *filter_pool;
+  GstVideoInfo filter_pool_info;
+  gboolean filter_pool_active;
+  GArray *filter_formats;
+  GstVideoFormat format;        /* output video format (encoded) */
+  guint width;
+  guint height;
+  guint flags;
 
-    GstCaps                    *allowed_sinkpad_caps;
-    GstVideoInfo                sinkpad_info;
-    GstCaps                    *allowed_srcpad_caps;
-    GstVideoInfo                srcpad_info;
+  GstCaps *allowed_sinkpad_caps;
+  GstVideoInfo sinkpad_info;
+  GstCaps *allowed_srcpad_caps;
+  GstVideoInfo srcpad_info;
 
-    /* Deinterlacing */
-    GstVaapiDeinterlaceMode     deinterlace_mode;
-    GstVaapiDeinterlaceMethod   deinterlace_method;
-    GstVaapiDeinterlaceState    deinterlace_state;
-    GstClockTime                field_duration;
+  /* Deinterlacing */
+  GstVaapiDeinterlaceMode deinterlace_mode;
+  GstVaapiDeinterlaceMethod deinterlace_method;
+  GstVaapiDeinterlaceState deinterlace_state;
+  GstClockTime field_duration;
 
-    /* Basic filter values */
-    gfloat                      denoise_level;
-    gfloat                      sharpen_level;
+  /* Basic filter values */
+  gfloat denoise_level;
+  gfloat sharpen_level;
 
-    /* Color balance filter values */
-    GstVaapiScaleMethod         scale_method;
-    gfloat                      hue;
-    gfloat                      saturation;
-    gfloat                      brightness;
-    gfloat                      contrast;
+  /* Color balance filter values */
+  GstVaapiScaleMethod scale_method;
+  gfloat hue;
+  gfloat saturation;
+  gfloat brightness;
+  gfloat contrast;
 
-    guint                       get_va_surfaces : 1;
-    guint                       has_vpp         : 1;
-    guint                       use_vpp         : 1;
-    guint                       keep_aspect     : 1;
+  guint get_va_surfaces:1;
+  guint has_vpp:1;
+  guint use_vpp:1;
+  guint keep_aspect:1;
 };
 
-struct _GstVaapiPostprocClass {
-    /*< private >*/
-    GstVaapiPluginBaseClass     parent_class;
+struct _GstVaapiPostprocClass
+{
+  /*< private >*/
+  GstVaapiPluginBaseClass parent_class;
 };
 
 GType
-gst_vaapipostproc_get_type(void) G_GNUC_CONST;
+gst_vaapipostproc_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 

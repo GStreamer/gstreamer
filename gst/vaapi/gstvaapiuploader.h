@@ -30,87 +30,73 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_TYPE_UPLOADER \
-    (gst_vaapi_uploader_get_type())
-
-#define GST_VAAPI_UPLOADER(obj)                                 \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_UPLOADER,        \
-                                GstVaapiUploader))
-
-#define GST_VAAPI_UPLOADER_CLASS(klass)                         \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_UPLOADER,           \
-                             GstVaapiUploaderClass))
-
+  (gst_vaapi_uploader_get_type ())
+#define GST_VAAPI_UPLOADER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_VAAPI_TYPE_UPLOADER, \
+       GstVaapiUploader))
+#define GST_VAAPI_UPLOADER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_VAAPI_TYPE_UPLOADER, \
+       GstVaapiUploaderClass))
 #define GST_VAAPI_IS_UPLOADER(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_UPLOADER))
-
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_VAAPI_TYPE_UPLOADER))
 #define GST_VAAPI_IS_UPLOADER_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_UPLOADER))
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_VAAPI_TYPE_UPLOADER))
+#define GST_VAAPI_UPLOADER_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_VAAPI_TYPE_UPLOADER, \
+       GstVaapiUploaderClass))
 
-#define GST_VAAPI_UPLOADER_GET_CLASS(obj)                       \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_UPLOADER,         \
-                               GstVaapiUploaderClass))
+typedef struct _GstVaapiUploader GstVaapiUploader;
+typedef struct _GstVaapiUploaderPrivate GstVaapiUploaderPrivate;
+typedef struct _GstVaapiUploaderClass GstVaapiUploaderClass;
 
-typedef struct _GstVaapiUploader                GstVaapiUploader;
-typedef struct _GstVaapiUploaderPrivate         GstVaapiUploaderPrivate;
-typedef struct _GstVaapiUploaderClass           GstVaapiUploaderClass;
+struct _GstVaapiUploader
+{
+  /*< private >*/
+  GObject parent_instance;
 
-struct _GstVaapiUploader {
-    /*< private >*/
-    GObject             parent_instance;
-
-    GstVaapiUploaderPrivate *priv;
+  GstVaapiUploaderPrivate *priv;
 };
 
-struct _GstVaapiUploaderClass {
-    /*< private >*/
-    GObjectClass        parent_class;
+struct _GstVaapiUploaderClass
+{
+  /*< private >*/
+  GObjectClass parent_class;
 };
 
 G_GNUC_INTERNAL
 GType
-gst_vaapi_uploader_get_type(void) G_GNUC_CONST;
+gst_vaapi_uploader_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstVaapiUploader *
-gst_vaapi_uploader_new(GstVaapiDisplay *display);
+gst_vaapi_uploader_new (GstVaapiDisplay * display);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_uploader_ensure_display(
-    GstVaapiUploader *uploader,
-    GstVaapiDisplay  *display
-);
+gst_vaapi_uploader_ensure_display (GstVaapiUploader * uploader,
+    GstVaapiDisplay * display);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_uploader_ensure_caps(
-    GstVaapiUploader *uploader,
-    GstCaps          *src_caps,
-    GstCaps          *out_caps
-);
+gst_vaapi_uploader_ensure_caps (GstVaapiUploader * uploader,
+    GstCaps * src_caps, GstCaps * out_caps);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_uploader_process(
-    GstVaapiUploader *uploader,
-    GstBuffer        *src_buffer,
-    GstBuffer        *out_buffer
-);
+gst_vaapi_uploader_process (GstVaapiUploader * uploader,
+    GstBuffer * src_buffer, GstBuffer * out_buffer);
 
 G_GNUC_INTERNAL
 GstCaps *
-gst_vaapi_uploader_get_caps(GstVaapiUploader *uploader);
+gst_vaapi_uploader_get_caps (GstVaapiUploader * uploader);
 
 G_GNUC_INTERNAL
 GstBuffer *
-gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader);
+gst_vaapi_uploader_get_buffer (GstVaapiUploader * uploader);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_uploader_has_direct_rendering(GstVaapiUploader *uploader);
+gst_vaapi_uploader_has_direct_rendering (GstVaapiUploader * uploader);
 
 G_END_DECLS
 
