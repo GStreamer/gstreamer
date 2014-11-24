@@ -151,14 +151,7 @@ struct _GstVideoConverter
   GstStructure *config;
   GstVideoDitherMethod dither;
 
-  guint n_tmplines;
-  gpointer *tmplines;
   guint16 *errline;
-  guint tmplines_idx;
-
-  guint n_btmplines;
-  gpointer *btmplines;
-  guint btmplines_idx;
 
   gboolean fill_border;
   gpointer borderline;
@@ -248,9 +241,13 @@ struct _GstLineCache
   gboolean write_input;
   gboolean pass_alloc;
   gboolean alloc_writable;
+
   GstLineCacheNeedLineFunc need_line;
   gpointer need_line_data;
   GDestroyNotify need_line_notify;
+
+  gboolean n_lines;
+  guint stride;
   GstLineCacheAllocLineFunc alloc_line;
   gpointer alloc_line_data;
   GDestroyNotify alloc_line_notify;
@@ -280,6 +277,10 @@ gst_line_cache_clear (GstLineCache * cache)
 static void
 gst_line_cache_free (GstLineCache * cache)
 {
+  if (cache->need_line_notify)
+    cache->need_line_notify (cache->need_line_data);
+  if (cache->alloc_line_notify)
+    cache->alloc_line_notify (cache->alloc_line_data);
   gst_line_cache_clear (cache);
   g_ptr_array_unref (cache->lines);
   g_slice_free (GstLineCache, cache);
@@ -394,37 +395,64 @@ static gboolean do_vscale_lines (GstLineCache * cache, gint out_line,
 static gboolean do_hscale_lines (GstLineCache * cache, gint out_line,
     gint in_line, gpointer user_data);
 
+typedef struct
+{
+  guint8 *data;
+  guint stride;
+  guint n_lines;
+  guint idx;
+  gpointer user_data;
+  GDestroyNotify notify;
+} ConverterAlloc;
+
+static ConverterAlloc *
+converter_alloc_new (guint stride, guint n_lines, gpointer user_data,
+    GDestroyNotify notify)
+{
+  ConverterAlloc *alloc;
+
+  GST_DEBUG ("stride %d, n_lines %d", stride, n_lines);
+  alloc = g_slice_new0 (ConverterAlloc);
+  alloc->data = g_malloc (stride * n_lines);
+  alloc->stride = stride;
+  alloc->n_lines = n_lines;
+  alloc->idx = 0;
+  alloc->user_data = user_data;
+  alloc->notify = notify;
+
+  return alloc;
+}
+
 static void
-alloc_tmplines (GstVideoConverter * convert, guint lines, guint blines,
-    gint width)
+converter_alloc_free (ConverterAlloc * alloc)
+{
+  if (alloc->notify)
+    alloc->notify (alloc->user_data);
+  g_free (alloc->data);
+  g_slice_free (ConverterAlloc, alloc);
+}
+
+static void
+setup_border_alloc (GstVideoConverter * convert, ConverterAlloc * alloc)
 {
   gint i;
 
-  convert->n_tmplines = lines;
-  convert->tmplines = g_malloc (lines * sizeof (gpointer));
-  for (i = 0; i < lines; i++)
-    convert->tmplines[i] = g_malloc (sizeof (guint16) * (width + 8) * 4);
-  convert->tmplines_idx = 0;
-
-  convert->n_btmplines = blines;
-  convert->btmplines = g_malloc (blines * sizeof (gpointer));
-  for (i = 0; i < blines; i++) {
-    convert->btmplines[i] = g_malloc (sizeof (guint16) * (width + 8) * 4);
-    if (convert->borderline)
-      memcpy (convert->btmplines[i], convert->borderline, width * 8);
+  if (convert->borderline) {
+    for (i = 0; i < alloc->n_lines; i++)
+      memcpy (&alloc->data[i * alloc->stride], convert->borderline,
+          alloc->stride);
   }
-  convert->btmplines_idx = 0;
 }
 
 static gpointer
 get_temp_line (GstLineCache * cache, gint idx, gpointer user_data)
 {
-  GstVideoConverter *convert = user_data;
+  ConverterAlloc *alloc = user_data;
   gpointer tmpline;
 
-  GST_DEBUG ("get temp line %d", idx);
-  tmpline = (guint8 *) convert->tmplines[convert->tmplines_idx];
-  convert->tmplines_idx = (convert->tmplines_idx + 1) % convert->n_tmplines;
+  GST_DEBUG ("get temp line %d (%p %d)", idx, alloc, alloc->idx);
+  tmpline = &alloc->data[alloc->stride * alloc->idx];
+  alloc->idx = (alloc->idx + 1) % alloc->n_lines;
 
   return tmpline;
 }
@@ -432,13 +460,14 @@ get_temp_line (GstLineCache * cache, gint idx, gpointer user_data)
 static gpointer
 get_border_temp_line (GstLineCache * cache, gint idx, gpointer user_data)
 {
-  GstVideoConverter *convert = user_data;
+  ConverterAlloc *alloc = user_data;
+  GstVideoConverter *convert = alloc->user_data;
   gpointer tmpline;
 
-  GST_DEBUG ("get border temp line %d", idx);
-  tmpline = (guint8 *) convert->btmplines[convert->btmplines_idx] +
+  GST_DEBUG ("get temp line %d (%p %d)", idx, alloc, alloc->idx);
+  tmpline = &alloc->data[alloc->stride * alloc->idx] +
       (convert->out_x * convert->pack_pstride);
-  convert->btmplines_idx = (convert->btmplines_idx + 1) % convert->n_btmplines;
+  alloc->idx = (alloc->idx + 1) % alloc->n_lines;
 
   return tmpline;
 }
@@ -548,6 +577,8 @@ chain_unpack_line (GstVideoConverter * convert)
   prev = convert->unpack_lines = gst_line_cache_new (NULL);
   prev->write_input = FALSE;
   prev->pass_alloc = FALSE;
+  prev->n_lines = 1;
+  prev->stride = convert->current_pstride * convert->current_width;
   gst_line_cache_set_need_line_func (convert->unpack_lines,
       do_unpack_lines, convert, NULL);
 
@@ -564,6 +595,8 @@ chain_upsample (GstVideoConverter * convert, GstLineCache * prev)
     prev = convert->upsample_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
+    prev->n_lines = 4;
+    prev->stride = convert->current_pstride * convert->current_width;
     gst_line_cache_set_need_line_func (convert->upsample_lines,
         do_upsample_lines, convert, NULL);
   }
@@ -1095,6 +1128,8 @@ chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev)
     prev = convert->to_RGB_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = FALSE;
+    prev->n_lines = 1;
+    prev->stride = convert->current_pstride * convert->current_width;
     gst_line_cache_set_need_line_func (convert->to_RGB_lines,
         do_convert_to_RGB_lines, convert, NULL);
 
@@ -1110,12 +1145,6 @@ chain_hscale (GstVideoConverter * convert, GstLineCache * prev)
   gint method;
   guint taps;
 
-  prev = convert->hscale_lines = gst_line_cache_new (prev);
-  prev->write_input = FALSE;
-  prev->pass_alloc = FALSE;
-  gst_line_cache_set_need_line_func (convert->hscale_lines,
-      do_hscale_lines, convert, NULL);
-
   method = GET_OPT_RESAMPLER_METHOD (convert);
   taps = GET_OPT_RESAMPLER_TAPS (convert);
 
@@ -1123,11 +1152,21 @@ chain_hscale (GstVideoConverter * convert, GstLineCache * prev)
       gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
       convert->in_width, convert->out_width, convert->config);
 
+  gst_video_scaler_get_coeff (convert->h_scaler, 0, NULL, &taps);
+
   GST_DEBUG ("chain hscale %d->%d, taps %d, method %d",
       convert->in_width, convert->out_width, taps, method);
 
   convert->current_width = convert->out_width;
   convert->h_scale_format = convert->current_format;
+
+  prev = convert->hscale_lines = gst_line_cache_new (prev);
+  prev->write_input = FALSE;
+  prev->pass_alloc = FALSE;
+  prev->n_lines = 1;
+  prev->stride = convert->current_pstride * convert->current_width;
+  gst_line_cache_set_need_line_func (convert->hscale_lines,
+      do_hscale_lines, convert, NULL);
 
   return prev;
 }
@@ -1136,7 +1175,7 @@ static GstLineCache *
 chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
 {
   gint method;
-  guint taps;
+  guint taps, taps_i = 0;
 
   method = GET_OPT_RESAMPLER_METHOD (convert);
   taps = GET_OPT_RESAMPLER_TAPS (convert);
@@ -1145,6 +1184,8 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
     convert->v_scaler_i =
         gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_INTERLACED,
         taps, convert->in_height, convert->out_height, convert->config);
+
+    gst_video_scaler_get_coeff (convert->v_scaler_i, 0, NULL, &taps_i);
   }
   convert->v_scaler_p =
       gst_video_scaler_new (method, 0, taps, convert->in_height,
@@ -1161,6 +1202,8 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
   prev = convert->vscale_lines = gst_line_cache_new (prev);
   prev->pass_alloc = (taps == 1);
   prev->write_input = FALSE;
+  prev->n_lines = MAX (taps_i, taps);
+  prev->stride = convert->current_pstride * convert->current_width;
   gst_line_cache_set_need_line_func (convert->vscale_lines,
       do_vscale_lines, convert, NULL);
 
@@ -1309,6 +1352,8 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev)
     prev = convert->convert_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = pass_alloc;
+    prev->n_lines = 1;
+    prev->stride = convert->current_pstride * convert->current_width;
     gst_line_cache_set_need_line_func (convert->convert_lines,
         do_convert_lines, convert, NULL);
   }
@@ -1347,6 +1392,8 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev)
     prev = convert->to_YUV_lines = gst_line_cache_new (prev);
     prev->write_input = FALSE;
     prev->pass_alloc = FALSE;
+    prev->n_lines = 1;
+    prev->stride = convert->current_pstride * convert->current_width;
     gst_line_cache_set_need_line_func (convert->to_YUV_lines,
         do_convert_to_YUV_lines, convert, NULL);
   }
@@ -1362,6 +1409,8 @@ chain_downsample (GstVideoConverter * convert, GstLineCache * prev)
     prev = convert->downsample_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
+    prev->n_lines = 4;
+    prev->stride = convert->current_pstride * convert->current_width;
     gst_line_cache_set_need_line_func (convert->downsample_lines,
         do_downsample_lines, convert, NULL);
   }
@@ -1390,12 +1439,27 @@ setup_allocators (GstVideoConverter * convert)
   GstLineCache *cache;
   GstLineCacheAllocLineFunc alloc_line;
   gboolean alloc_writable;
+  gpointer user_data;
+  GDestroyNotify notify;
+  gint width, n_lines;
+
+  width = MAX (convert->in_maxwidth, convert->out_maxwidth);
+  width += convert->out_x;
+
+  n_lines = 1;
 
   /* start with using dest lines if we can directly write into it */
   if (convert->identity_pack) {
     alloc_line = get_dest_line;
     alloc_writable = TRUE;
+    user_data = convert;
+    notify = NULL;
   } else {
+    user_data =
+        converter_alloc_new (sizeof (guint16) * width * 4, 4 + BACKLOG, convert,
+        NULL);
+    setup_border_alloc (convert, user_data);
+    notify = (GDestroyNotify) converter_alloc_free;
     alloc_line = get_border_temp_line;
     alloc_writable = FALSE;
   }
@@ -1403,19 +1467,31 @@ setup_allocators (GstVideoConverter * convert)
   /* now walk backwards, we try to write into the dest lines directly
    * and keep track if the source needs to be writable */
   for (cache = convert->pack_lines; cache; cache = cache->prev) {
-    gst_line_cache_set_alloc_line_func (cache, alloc_line, convert, NULL);
+    gst_line_cache_set_alloc_line_func (cache, alloc_line, user_data, notify);
     cache->alloc_writable = alloc_writable;
+    n_lines = MAX (n_lines, cache->n_lines);
+
+    /* make sure only one cache frees the allocator */
+    notify = NULL;
 
     if (cache->pass_alloc == FALSE) {
-      /* can't pass allocator, use temp lines */
+      /* can't pass allocator, make new temp line allocator */
+      user_data =
+          converter_alloc_new (sizeof (guint16) * width * 4, n_lines + BACKLOG,
+          convert, NULL);
+      notify = (GDestroyNotify) converter_alloc_free;
       alloc_line = get_temp_line;
       alloc_writable = FALSE;
+      n_lines = cache->n_lines;
     }
     /* if someone writes to the input, we need a writable line from the
      * previous cache */
     if (cache->write_input)
       alloc_writable = TRUE;
   }
+  /* free leftover allocator */
+  if (notify)
+    notify (user_data);
 }
 
 /**
@@ -1538,9 +1614,6 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   /* pack into final format */
   convert->pack_lines = chain_pack (convert, prev);
 
-  /* now figure out allocators */
-  setup_allocators (convert);
-
   width = MAX (convert->in_maxwidth, convert->out_maxwidth);
   width += convert->out_x;
   convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
@@ -1565,8 +1638,8 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
     convert->borderline = NULL;
   }
 
-  /* FIXME */
-  alloc_tmplines (convert, 64, 4, width);
+  /* now figure out allocators */
+  setup_allocators (convert);
 
 done:
   return convert;
@@ -1599,8 +1672,6 @@ no_pack_func:
 void
 gst_video_converter_free (GstVideoConverter * convert)
 {
-  gint i;
-
   g_return_if_fail (convert != NULL);
 
   if (convert->upsample_p)
@@ -1638,12 +1709,6 @@ gst_video_converter_free (GstVideoConverter * convert)
   g_free (convert->gamma_dec.gamma_table);
   g_free (convert->gamma_enc.gamma_table);
 
-  for (i = 0; i < convert->n_tmplines; i++)
-    g_free (convert->tmplines[i]);
-  g_free (convert->tmplines);
-  for (i = 0; i < convert->n_btmplines; i++)
-    g_free (convert->btmplines[i]);
-  g_free (convert->btmplines);
   g_free (convert->errline);
   g_free (convert->borderline);
 
