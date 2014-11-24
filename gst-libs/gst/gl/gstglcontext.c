@@ -494,9 +494,6 @@ gst_gl_context_get_current_gl_api (guint * major, guint * minor)
 
       goto next;
     } else {
-#if GST_GL_HAVE_OPENGL
-      GLuint context_flags = 0;
-#endif
       sscanf (version, "%d.%d", &maj, &min);
 
       if (maj <= 0 || min < 0)
@@ -504,6 +501,8 @@ gst_gl_context_get_current_gl_api (guint * major, guint * minor)
 
 #if GST_GL_HAVE_OPENGL
       if (GetIntegerv && (maj > 3 || (maj == 3 && min > 1))) {
+        GLuint context_flags = 0;
+
         ret = GST_GL_API_NONE;
         GetIntegerv (GL_CONTEXT_PROFILE_MASK, &context_flags);
         if (context_flags & GL_CONTEXT_CORE_PROFILE_BIT)
