@@ -627,8 +627,7 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
     if (ks_object_get_property (pin_handle, KSPROPSETID_Stream,
             KSPROPERTY_STREAM_MASTERCLOCK, (gpointer *) & cur_clock_handle,
             &cur_clock_handle_size, NULL)) {
-      GST_DEBUG ("current master clock handle: 0x%08x",
-          (guint) * cur_clock_handle);
+      GST_DEBUG ("current master clock handle: %p", *cur_clock_handle);
       CloseHandle (*cur_clock_handle);
       g_free (cur_clock_handle);
     } else {
