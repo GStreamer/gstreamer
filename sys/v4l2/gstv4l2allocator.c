@@ -622,6 +622,7 @@ gst_v4l2_allocator_new (GstObject * parent, gint video_fd,
     struct v4l2_format *format)
 {
   GstV4l2Allocator *allocator;
+  guint32 flags = 0;
   gchar *name, *parent_name;
 
   parent_name = gst_object_get_name (parent);
