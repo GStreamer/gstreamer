@@ -650,7 +650,7 @@ AC_ARG_ENABLE([dispmanx],
        *) AC_MSG_ERROR([bad value ${enableval} for --enable-dispmanx]) ;;
      esac],[NEED_DISPMANX=auto])
 
-AG_GST_CHECK_X
+AG_GST_PKG_CHECK_MODULES(X, x11)
 save_CPPFLAGS="$CPPFLAGS"
 save_LIBS="$LIBS"
 
@@ -2441,7 +2441,6 @@ dnl *** nas ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NAS, true)
 AG_GST_CHECK_FEATURE(NAS, [nas plug-in], nassink, [
   HAVE_NAS="no"
-  AG_GST_CHECK_X
   if test "x$HAVE_X" = "xyes"; then
     save_cppflags=$CFLAGS
     CPPFLAGS="$CPPFLAGS $X_CFLAGS"
