@@ -1074,7 +1074,7 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
   GstVideoInfo vi;
-  GstVideoFormat format, out_format;
+  GstVideoFormat out_format;
   GstCaps *out_caps;
 #if GST_CHECK_VERSION(1,1,0)
   GstVaapiCapsFeature feature;
@@ -1116,7 +1116,9 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
   GST_VIDEO_INFO_INTERLACE_MODE (&vi) = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
   // Update size from user-specified parameters
-  format = GST_VIDEO_INFO_FORMAT (&vi);
+  find_best_size (postproc, &vi, &width, &height);
+
+  // Update format from user-specified parameters
 #if GST_CHECK_VERSION(1,1,0)
   /* XXX: this is a workaround until auto-plugging is fixed when
    * format=ENCODED + memory:VASurface caps feature are provided.
@@ -1141,10 +1143,20 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
     if (peer_caps)
       gst_caps_unref (peer_caps);
   }
+
+  feature =
+      gst_vaapi_find_preferred_caps_feature (GST_BASE_TRANSFORM_SRC_PAD (trans),
+      out_format);
+  switch (feature) {
+    case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
+      out_format = GST_VIDEO_FORMAT_RGBA;
+      break;
+    default:
+      break;
+  }
 #else
   out_format = GST_VIDEO_FORMAT_ENCODED;
 #endif
-  find_best_size (postproc, &vi, &width, &height);
   gst_video_info_change_format (&vi, out_format, width, height);
 
 #if GST_CHECK_VERSION(1,1,0)
@@ -1152,37 +1164,11 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
   if (!out_caps)
     return NULL;
 
-  feature =
-      gst_vaapi_find_preferred_caps_feature (GST_BASE_TRANSFORM_SRC_PAD (trans),
-      out_format);
   if (feature) {
     feature_str = gst_vaapi_caps_feature_to_string (feature);
     if (feature_str)
       gst_caps_set_features (out_caps, 0,
           gst_caps_features_new (feature_str, NULL));
-
-    if (out_format == GST_VIDEO_FORMAT_ENCODED &&
-        feature != GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE) {
-      GstCaps *sink_caps, *peer_caps =
-          gst_pad_peer_query_caps (GST_BASE_TRANSFORM_SRC_PAD (trans),
-          postproc->allowed_srcpad_caps);
-
-      if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META)
-        format = GST_VIDEO_FORMAT_RGBA;
-
-      gst_video_info_change_format (&vi, format, width, height);
-      sink_caps = gst_video_info_to_caps (&vi);
-      if (sink_caps) {
-        if (feature_str)
-          gst_caps_set_features (sink_caps, 0,
-              gst_caps_features_new (feature_str, NULL));
-        if (gst_caps_can_intersect (peer_caps, sink_caps))
-          gst_caps_set_simple (out_caps, "format", G_TYPE_STRING,
-              gst_video_format_to_string (format), NULL);
-        gst_caps_unref (sink_caps);
-      }
-      gst_caps_unref (peer_caps);
-    }
   }
 #else
   /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
