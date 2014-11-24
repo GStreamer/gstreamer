@@ -439,9 +439,9 @@ _upload_meta_upload_free (gpointer impl)
   gint i;
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (upload->texture_ids[i]);
-    gst_gl_context_del_texture (upload->upload->context,
-        &upload->texture_ids[i]);
+    if (upload->texture_ids[i])
+      gst_gl_context_del_texture (upload->upload->context,
+          &upload->texture_ids[i]);
   }
 }
 
