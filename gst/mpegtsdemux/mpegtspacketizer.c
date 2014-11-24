@@ -1053,7 +1053,7 @@ accumulate_data:
 
   /* We have more data to process ... */
   GST_DEBUG ("PID 0x%04x, More section present in packet (remaining bytes:%"
-      G_GSIZE_FORMAT ")", stream->pid, packet->data_end - data);
+      G_GSIZE_FORMAT ")", stream->pid, (gsize) (packet->data_end - data));
 
 section_start:
   GST_MEMDUMP ("section_start", data, packet->data_end - data);
