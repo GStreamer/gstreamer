@@ -775,7 +775,7 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
   }
 
   GST_DEBUG ("Saw %d descriptors, read %" G_GSIZE_FORMAT " bytes",
-      nb_desc, data - buffer);
+      nb_desc, (gsize) (data - buffer));
 
   if (data - buffer != buf_len) {
     GST_WARNING ("descriptors size %d expected %" G_GSIZE_FORMAT,
