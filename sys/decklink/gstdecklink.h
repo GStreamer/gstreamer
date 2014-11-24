@@ -64,7 +64,11 @@ typedef enum {
 
   GST_DECKLINK_MODE_720p50,
   GST_DECKLINK_MODE_720p5994,
-  GST_DECKLINK_MODE_720p60
+  GST_DECKLINK_MODE_720p60,
+
+  GST_DECKLINK_MODE_2048p2398,
+  GST_DECKLINK_MODE_2048p24,
+  GST_DECKLINK_MODE_2048p25
 } GstDecklinkModeEnum;
 #define GST_TYPE_DECKLINK_MODE (gst_decklink_mode_get_type ())
 GType gst_decklink_mode_get_type (void);

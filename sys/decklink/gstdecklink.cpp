@@ -55,6 +55,10 @@ gst_decklink_mode_get_type (void)
     {GST_DECKLINK_MODE_720p5994, "720p5994", "HD720 59.94p"},
     {GST_DECKLINK_MODE_720p60, "720p60", "HD720 60p"},
 
+    {GST_DECKLINK_MODE_2048p2398, "2048p2398", "2k 23.98p"},
+    {GST_DECKLINK_MODE_2048p24, "2048p24", "2k 24p"},
+    {GST_DECKLINK_MODE_2048p25, "2048p25", "2k 25p"},
+
     {0, NULL, NULL}
   };
 
@@ -137,7 +141,11 @@ static const GstDecklinkMode modes[] = {
 
   {bmdModeHD720p50, 1280, 720, 50, 1, false, HD},
   {bmdModeHD720p5994, 1280, 720, 60000, 1001, false, HD},
-  {bmdModeHD720p60, 1280, 720, 60, 1, false, HD}
+  {bmdModeHD720p60, 1280, 720, 60, 1, false, HD},
+
+  {bmdMode2k2398, 2048, 1556, 24000, 1001, false, HD},
+  {bmdMode2k24, 2048, 1556, 24, 1, false, HD},
+  {bmdMode2k25, 2048, 1556, 25, 1, false, HD}
 
 };
 
