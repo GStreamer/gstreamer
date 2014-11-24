@@ -86,11 +86,6 @@ ensure_image (GstVaapiVideoMemory * mem)
     mem->image = gst_vaapi_video_pool_get_object (allocator->image_pool);
     if (!mem->image)
       return FALSE;
-
-    GST_VAAPI_VIDEO_MEMORY_FLAG_UNSET (mem,
-        GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
-    GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
-        GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT);
   }
   gst_vaapi_video_meta_set_image (mem->meta, mem->image);
   return TRUE;
@@ -162,11 +157,6 @@ ensure_surface (GstVaapiVideoMemory * mem)
         return FALSE;
       gst_vaapi_video_meta_set_surface_proxy (mem->meta, mem->proxy);
     }
-
-    GST_VAAPI_VIDEO_MEMORY_FLAG_UNSET (mem,
-        GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT);
-    GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
-        GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
   }
   mem->surface = GST_VAAPI_SURFACE_PROXY_SURFACE (mem->proxy);
   return mem->surface != NULL;
@@ -180,7 +170,9 @@ ensure_surface_is_current (GstVaapiVideoMemory * mem)
 
   if (!GST_VAAPI_VIDEO_MEMORY_FLAG_IS_SET (mem,
           GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT)) {
-    if (!gst_vaapi_surface_put_image (mem->surface, mem->image))
+    if (GST_VAAPI_VIDEO_MEMORY_FLAG_IS_SET (mem,
+            GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT)
+        && !gst_vaapi_surface_put_image (mem->surface, mem->image))
       return FALSE;
 
     GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
@@ -352,6 +344,7 @@ gst_vaapi_video_memory_reset_image (GstVaapiVideoMemory * mem)
     mem->image = NULL;
   }
 
+  /* Don't synchronize to surface, this shall have happened during unmaps */
   GST_VAAPI_VIDEO_MEMORY_FLAG_UNSET (mem,
       GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT);
 }
