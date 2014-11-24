@@ -1127,18 +1127,17 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
   if (postproc->format != DEFAULT_FORMAT)
     out_format = postproc->format;
   else {
-    GstCaps *peer_caps, *filter_caps;
+    GstCaps *peer_caps;
     GstVideoInfo peer_vi;
-    filter_caps =
-        gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL));
     peer_caps =
         gst_pad_peer_query_caps (GST_BASE_TRANSFORM_SRC_PAD (trans),
-        filter_caps);
+        postproc->allowed_srcpad_caps);
+    if (gst_caps_is_empty (peer_caps))
+      return peer_caps;
     if (!gst_caps_is_fixed (peer_caps))
       peer_caps = gst_caps_fixate (peer_caps);
     gst_video_info_from_caps (&peer_vi, peer_caps);
     out_format = GST_VIDEO_INFO_FORMAT (&peer_vi);
-    gst_caps_unref (filter_caps);
     if (peer_caps)
       gst_caps_unref (peer_caps);
   }
