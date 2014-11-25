@@ -35,7 +35,7 @@
 #define DEFAULT_OPT_SHARPNESS 1.0
 #define DEFAULT_OPT_SHARPEN 0.0
 
-#define DEFAULT_OPT_MAX_TAPS 16
+#define DEFAULT_OPT_MAX_TAPS 128
 
 typedef struct _ResamplerParams ResamplerParams;
 
@@ -354,6 +354,7 @@ gst_video_resampler_init (GstVideoResampler * resampler,
   GST_DEBUG ("%d %u  %u->%u", method, n_taps, in_size, out_size);
 
   max_taps = GET_OPT_MAX_TAPS (options);
+  n_taps = CLAMP (n_taps, 0, max_taps);
 
   switch (method) {
     case GST_VIDEO_RESAMPLER_METHOD_NEAREST:
@@ -379,30 +380,33 @@ gst_video_resampler_init (GstVideoResampler * resampler,
       break;
     case GST_VIDEO_RESAMPLER_METHOD_LANCZOS:
     {
-      gdouble resample_inc = in_size / (gdouble) out_size;
 
       params.envelope = GET_OPT_ENVELOPE (options);
       params.sharpness = GET_OPT_SHARPNESS (options);
       params.sharpen = GET_OPT_SHARPEN (options);
 
-      if (resample_inc > 1.0) {
-        params.fx = (1.0 / resample_inc) * params.sharpness;
-      } else {
-        params.fx = (1.0) * params.sharpness;
-      }
-      params.ex = params.fx / params.envelope;
-      params.dx = ceil (params.envelope / params.fx);
+      if (n_taps == 0) {
+        gdouble resample_inc = in_size / (gdouble) out_size;
 
-      if (n_taps == 0)
-        n_taps = 2 * params.dx;
+        if (resample_inc > 1.0) {
+          params.fx = (1.0 / resample_inc) * params.sharpness;
+        } else {
+          params.fx = (1.0) * params.sharpness;
+        }
+        params.ex = params.fx / params.envelope;
+        params.dx = ceil (params.envelope / params.fx);
+
+        n_taps = CLAMP (2 * params.dx, 0, max_taps);
+      }
+      params.fx = 2.0 * params.envelope / n_taps;
+      params.ex = 2.0 / n_taps;
+
       params.get_tap = get_lanczos_tap;
       break;
     }
     default:
       break;
   }
-
-  n_taps = CLAMP (n_taps, 0, max_taps);
 
   if (n_taps > in_size)
     n_taps = in_size;
