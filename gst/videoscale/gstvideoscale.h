@@ -91,6 +91,7 @@ struct _GstVideoScale {
   gboolean dither;
   int submethod;
   double envelope;
+  gboolean gamma_decode;
 
   GstVideoConverter *convert;
 

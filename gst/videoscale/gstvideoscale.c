@@ -90,6 +90,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 #define DEFAULT_PROP_DITHER       FALSE
 #define DEFAULT_PROP_SUBMETHOD    1
 #define DEFAULT_PROP_ENVELOPE     2.0
+#define DEFAULT_PROP_GAMMA_DECODE FALSE
 
 enum
 {
@@ -100,7 +101,8 @@ enum
   PROP_SHARPEN,
   PROP_DITHER,
   PROP_SUBMETHOD,
-  PROP_ENVELOPE
+  PROP_ENVELOPE,
+  PROP_GAMMA_DECODE,
 };
 
 #undef GST_VIDEO_SIZE_RANGE
@@ -254,9 +256,15 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
           "Size of filter envelope", 1.0, 5.0, DEFAULT_PROP_ENVELOPE,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_GAMMA_DECODE,
+      g_param_spec_boolean ("gamma-decode", "Gamma Decode",
+          "Decode gamma before scaling", DEFAULT_PROP_GAMMA_DECODE,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
   gst_element_class_set_static_metadata (element_class,
       "Video scaler", "Filter/Converter/Video/Scaler",
-      "Resizes video", "Wim Taymans <wim.taymans@chello.be>");
+      "Resizes video", "Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_video_scale_sink_template_factory ());
@@ -283,6 +291,7 @@ gst_video_scale_init (GstVideoScale * videoscale)
   videoscale->sharpen = DEFAULT_PROP_SHARPEN;
   videoscale->dither = DEFAULT_PROP_DITHER;
   videoscale->envelope = DEFAULT_PROP_ENVELOPE;
+  videoscale->gamma_decode = DEFAULT_PROP_GAMMA_DECODE;
 }
 
 static void
@@ -337,6 +346,11 @@ gst_video_scale_set_property (GObject * object, guint prop_id,
       vscale->envelope = g_value_get_double (value);
       GST_OBJECT_UNLOCK (vscale);
       break;
+    case PROP_GAMMA_DECODE:
+      GST_OBJECT_LOCK (vscale);
+      vscale->gamma_decode = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -383,6 +397,11 @@ gst_video_scale_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_ENVELOPE:
       GST_OBJECT_LOCK (vscale);
       g_value_set_double (value, vscale->envelope);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_GAMMA_DECODE:
+      GST_OBJECT_LOCK (vscale);
+      g_value_set_boolean (value, vscale->gamma_decode);
       GST_OBJECT_UNLOCK (vscale);
       break;
     default:
@@ -584,6 +603,11 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
         out_info->width - videoscale->borders_w,
         GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT,
         out_info->height - videoscale->borders_h, NULL);
+
+    if (videoscale->gamma_decode) {
+      gst_structure_set (options,
+          GST_VIDEO_CONVERTER_OPT_GAMMA_MODE, G_TYPE_STRING, "remap", NULL);
+    }
 
     if (videoscale->convert)
       gst_video_converter_free (videoscale->convert);
