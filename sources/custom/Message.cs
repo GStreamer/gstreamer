@@ -22,7 +22,7 @@ namespace Gst {
 
 	partial class Message
 	{
-		[DllImport ("libgstreamer-1.0-0.dll") ]
+		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_message_parse_error (IntPtr msg, out IntPtr err, out IntPtr debug);
 
 		public void ParseError (out GLib.GException error, out string debug) {
