@@ -460,7 +460,7 @@ video_scale_h_ntap_4u8 (GstVideoScaler * scale,
 
 #ifdef LQ
   /* first pixels with first tap to temp */
-  if (max_taps > 3) {
+  if (max_taps >= 3) {
     video_orc_resample_h_multaps3_u8_lq (temp, pixels, pixels + width,
         pixels + width * 2, taps, taps + count, taps + count * 2, count);
     max_taps -= 3;
@@ -734,7 +734,7 @@ video_scale_v_ntap_4u8 (GstVideoScaler * scale,
   count = width * 4;
 
 #ifdef LQ
-  if (max_taps > 4) {
+  if (max_taps >= 4) {
     video_orc_resample_v_multaps4_u8_lq (temp, srcs[0], srcs[1 * src_inc],
         srcs[2 * src_inc], srcs[3 * src_inc], taps[0], taps[1], taps[2],
         taps[3], count);
