@@ -684,8 +684,11 @@ _link_track (GESPipeline * self, GESTrack * track)
   if (!(chain = get_output_chain_for_track (self, track)))
     chain = new_output_chain_for_track (self, track);
 
-  if (chain->tee)
+  if (chain->tee) {
+    GST_INFO_OBJECT (self, "Chain is already built");
+
     return;
+  }
 
   chain->query_position_id =
       g_signal_connect (ges_track_get_composition (track), "query-position",
@@ -695,12 +698,9 @@ _link_track (GESPipeline * self, GESTrack * track)
   gst_object_unref (pad);
 
   /* Adding tee */
-
-  if (!chain->tee) {
-    chain->tee = gst_element_factory_make ("tee", NULL);
-    gst_bin_add (GST_BIN_CAST (self), chain->tee);
-    gst_element_sync_state_with_parent (chain->tee);
-  }
+  chain->tee = gst_element_factory_make ("tee", NULL);
+  gst_bin_add (GST_BIN_CAST (self), chain->tee);
+  gst_element_sync_state_with_parent (chain->tee);
 
   /* Linking pad to tee */
   sinkpad = gst_element_get_static_pad (chain->tee, "sink");
