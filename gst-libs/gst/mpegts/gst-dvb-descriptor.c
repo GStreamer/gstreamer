@@ -178,7 +178,7 @@ gst_mpegts_descriptor_parse_dvb_stuffing (const GstMpegtsDescriptor *
   guint8 *data;
 
   g_return_val_if_fail (descriptor != NULL && stuffing_bytes != NULL, FALSE);
-  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_STUFFING, 0, FALSE);
+  __common_desc_check_base (descriptor, GST_MTS_DESC_DVB_STUFFING, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
 
@@ -872,7 +872,7 @@ gst_mpegts_descriptor_parse_dvb_teletext_idx (const GstMpegtsDescriptor *
   guint8 *data;
 
   g_return_val_if_fail (descriptor != NULL, FALSE);
-  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_TELETEXT, 0, FALSE);
+  __common_desc_check_base (descriptor, GST_MTS_DESC_DVB_TELETEXT, FALSE);
 
   if (descriptor->length / 5 <= idx)
     return FALSE;
@@ -907,7 +907,7 @@ gst_mpegts_descriptor_parse_dvb_teletext_nb (const GstMpegtsDescriptor *
     descriptor)
 {
   g_return_val_if_fail (descriptor != NULL, 0);
-  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_TELETEXT, 0, 0);
+  __common_desc_check_base (descriptor, GST_MTS_DESC_DVB_TELETEXT, FALSE);
 
   return descriptor->length / 5;
 }
@@ -938,7 +938,7 @@ gst_mpegts_descriptor_parse_dvb_subtitling_idx (const GstMpegtsDescriptor *
   guint8 *data;
 
   g_return_val_if_fail (descriptor != NULL && lang != NULL, FALSE);
-  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_SUBTITLING, 0, FALSE);
+  __common_desc_check_base (descriptor, GST_MTS_DESC_DVB_SUBTITLING, FALSE);
 
   /* If we went too far, return FALSE */
   if (descriptor->length / 8 <= idx)
@@ -973,7 +973,7 @@ gst_mpegts_descriptor_parse_dvb_subtitling_nb (const GstMpegtsDescriptor *
     descriptor)
 {
   g_return_val_if_fail (descriptor != NULL, FALSE);
-  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_SUBTITLING, 0, FALSE);
+  __common_desc_check_base (descriptor, GST_MTS_DESC_DVB_SUBTITLING, FALSE);
 
   return descriptor->length / 8;
 }
@@ -1281,7 +1281,7 @@ gst_mpegts_descriptor_parse_dvb_content (const GstMpegtsDescriptor
   guint8 i;
 
   g_return_val_if_fail (descriptor != NULL && content != NULL, FALSE);
-  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_CONTENT, 0, FALSE);
+  __common_desc_check_base (descriptor, GST_MTS_DESC_DVB_CONTENT, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
   len = descriptor->length;
@@ -1330,7 +1330,8 @@ gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegtsDescriptor
   guint i;
 
   g_return_val_if_fail (descriptor != NULL && rating != NULL, FALSE);
-  __common_desc_checks (descriptor, GST_MTS_DESC_DVB_PARENTAL_RATING, 0, FALSE);
+  __common_desc_check_base (descriptor, GST_MTS_DESC_DVB_PARENTAL_RATING,
+      FALSE);
 
   data = (guint8 *) descriptor->data + 2;
 
