@@ -5330,8 +5330,7 @@ pva_type_find (GstTypeFind * tf, gpointer private)
 /* derived from pyaudibletags
  * http://code.google.com/p/pyaudibletags/source/browse/trunk/pyaudibletags.py
  */
-
-static GstStaticCaps aa_caps = GST_STATIC_CAPS ("audio/audible");
+static GstStaticCaps aa_caps = GST_STATIC_CAPS ("audio/x-audible");
 
 #define AA_CAPS gst_static_caps_get(&aa_caps)
 
@@ -5340,12 +5339,19 @@ aa_type_find (GstTypeFind * tf, gpointer private)
 {
   const guint8 *data;
 
-  data = gst_type_find_peek (tf, 4, 4);
+  data = gst_type_find_peek (tf, 0, 12);
   if (data == NULL)
     return;
 
-  if (data[0] == 0x57 && data[1] == 0x90 && data[2] == 0x75 && data[3] == 0x36)
-    gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN, AA_CAPS);
+  if (GST_READ_UINT32_BE (data + 4) == 0x57907536) {
+    guint64 media_len;
+
+    media_len = gst_type_find_get_length (tf);
+    if (media_len > 0 && GST_READ_UINT32_BE (data) == media_len)
+      gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN, AA_CAPS);
+    else
+      gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, AA_CAPS);
+  }
 }
 
 /*** generic typefind for streams that have some data at a specific position***/
