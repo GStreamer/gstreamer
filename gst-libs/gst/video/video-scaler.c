@@ -459,13 +459,50 @@ video_scale_h_ntap_4u8 (GstVideoScaler * scale,
   count = width * 4;
 
 #ifdef LQ
-  /* first pixels with first tap to t4 */
-  video_orc_resample_h_multaps_u8_lq (temp, pixels, taps, count);
-  /* add other pixels with other taps to t4 */
-  video_orc_resample_h_muladdtaps_u8_lq (temp, 0, pixels + width, count,
-      taps + count, count * 2, count, max_taps - 1);
-  /* scale and write final result */
-  video_orc_resample_scaletaps_u8_lq (d, temp, count);
+  /* first pixels with first tap to temp */
+  if (max_taps > 3) {
+    video_orc_resample_h_multaps3_u8_lq (temp, pixels, pixels + width,
+        pixels + width * 2, taps, taps + count, taps + count * 2, count);
+    max_taps -= 3;
+    pixels += width * 3;
+    taps += count * 3;
+  } else {
+    gint first = max_taps % 3;
+
+    video_orc_resample_h_multaps_u8_lq (temp, pixels, taps, count);
+    video_orc_resample_h_muladdtaps_u8_lq (temp, 0, pixels + width, count,
+        taps + count, count * 2, count, first - 1);
+    max_taps -= first;
+    pixels += width * first;
+    taps += count * first;
+  }
+  while (max_taps > 3) {
+    if (max_taps >= 6) {
+      video_orc_resample_h_muladdtaps3_u8_lq (temp, pixels, pixels + width,
+          pixels + width * 2, taps, taps + count, taps + count * 2, count);
+      max_taps -= 3;
+      pixels += width * 3;
+      taps += count * 3;
+    } else {
+      video_orc_resample_h_muladdtaps_u8_lq (temp, 0, pixels, count,
+          taps, count * 2, count, max_taps - 3);
+      pixels += width * (max_taps - 3);
+      taps += count * (max_taps - 3);
+      max_taps = 3;
+    }
+  }
+  if (max_taps == 3) {
+    video_orc_resample_h_muladdscaletaps3_u8_lq (d, pixels, pixels + width,
+        pixels + width * 2, taps, taps + count, taps + count * 2, temp, count);
+  } else {
+    if (max_taps) {
+      /* add other pixels with other taps to t4 */
+      video_orc_resample_h_muladdtaps_u8_lq (temp, 0, pixels, count,
+          taps, count * 2, count, max_taps);
+    }
+    /* scale and write final result */
+    video_orc_resample_scaletaps_u8_lq (d, temp, count);
+  }
 #else
   /* first pixels with first tap to t4 */
   video_orc_resample_h_multaps_u8 (temp, pixels, taps, count);
@@ -697,12 +734,53 @@ video_scale_v_ntap_4u8 (GstVideoScaler * scale,
   count = width * 4;
 
 #ifdef LQ
-  video_orc_resample_v_multaps_u8_lq (temp, srcs[0], taps[0], count);
-  for (i = 1; i < max_taps; i++) {
-    video_orc_resample_v_muladdtaps_u8_lq (temp, srcs[i * src_inc], taps[i],
-        count);
+  if (max_taps > 4) {
+    video_orc_resample_v_multaps4_u8_lq (temp, srcs[0], srcs[1 * src_inc],
+        srcs[2 * src_inc], srcs[3 * src_inc], taps[0], taps[1], taps[2],
+        taps[3], count);
+    max_taps -= 4;
+    srcs += 4 * src_inc;
+    taps += 4;
+  } else {
+    gint first = (max_taps % 4);
+
+    video_orc_resample_v_multaps_u8_lq (temp, srcs[0], taps[0], count);
+    for (i = 1; i < first; i++) {
+      video_orc_resample_v_muladdtaps_u8_lq (temp, srcs[i * src_inc], taps[i],
+          count);
+    }
+    max_taps -= first;
+    srcs += first * src_inc;
+    taps += first;
   }
-  video_orc_resample_scaletaps_u8_lq (d, temp, count);
+  while (max_taps > 4) {
+    if (max_taps >= 8) {
+      video_orc_resample_v_muladdtaps4_u8_lq (temp, srcs[0], srcs[1 * src_inc],
+          srcs[2 * src_inc], srcs[3 * src_inc], taps[0], taps[1], taps[2],
+          taps[3], count);
+      max_taps -= 4;
+      srcs += 4 * src_inc;
+      taps += 4;
+    } else {
+      for (i = 0; i < max_taps - 4; i++)
+        video_orc_resample_v_muladdtaps_u8_lq (temp, srcs[i * src_inc], taps[i],
+            count);
+      srcs += (max_taps - 4) * src_inc;
+      taps += (max_taps - 4);
+      max_taps = 4;
+    }
+  }
+  if (max_taps == 4) {
+    video_orc_resample_v_muladdscaletaps4_u8_lq (d, srcs[0], srcs[1 * src_inc],
+        srcs[2 * src_inc], srcs[3 * src_inc], temp, taps[0], taps[1], taps[2],
+        taps[3], count);
+  } else {
+    for (i = 0; i < max_taps; i++)
+      video_orc_resample_v_muladdtaps_u8_lq (temp, srcs[i * src_inc], taps[i],
+          count);
+    video_orc_resample_scaletaps_u8_lq (d, temp, count);
+  }
+
 #else
   video_orc_resample_v_multaps_u8 (temp, srcs[0], taps[0], count);
   for (i = 1; i < max_taps; i++) {
@@ -780,6 +858,9 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
   if (scale->tmpwidth < width)
     realloc_tmplines (scale, width);
 
+  GST_DEBUG ("format %d, pstride %d max_taps %d", format, pstride,
+      scale->resampler.max_taps);
+
   switch (pstride) {
     case 4:
       switch (scale->resampler.max_taps) {
@@ -852,6 +933,9 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
 
   if (scale->tmpwidth < width)
     realloc_tmplines (scale, width);
+
+  GST_DEBUG ("format %d, pstride %d max_taps %d", format, pstride,
+      scale->resampler.max_taps);
 
   switch (pstride) {
     case 4:

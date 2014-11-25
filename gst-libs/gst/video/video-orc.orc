@@ -1500,7 +1500,6 @@ convsuswb d1, w1
 #convsuslw w1, l1
 #convsuswb d1, w1
 
-
 .function video_orc_resample_h_multaps_u8
 .source 1 s guint32
 .source 2 t gint16
@@ -1552,6 +1551,72 @@ mullw d, w1, t
 convubw w1, s
 mullw w1, w1, t
 addw d, d, w1
+
+.function video_orc_resample_h_multaps3_u8_lq
+.source 1 s1 guint32
+.source 1 s2 guint32
+.source 1 s3 guint32
+.source 2 t1 gint16
+.source 2 t2 gint16
+.source 2 t3 gint16
+.dest 2 d gint32
+.temp 2 w1
+.temp 2 w2
+
+convubw w1, s1
+mullw w1, w1, t1
+convubw w2, s2
+mullw w2, w2, t2
+addw w1, w1, w2
+convubw w2, s3
+mullw w2, w2, t3
+addw d, w1, w2
+
+.function video_orc_resample_h_muladdtaps3_u8_lq
+.source 1 s1 guint32
+.source 1 s2 guint32
+.source 1 s3 guint32
+.source 2 t1 gint16
+.source 2 t2 gint16
+.source 2 t3 gint16
+.dest 2 d gint32
+.temp 2 w1
+.temp 2 w2
+
+convubw w1, s1
+mullw w1, w1, t1
+convubw w2, s2
+mullw w2, w2, t2
+addw w1, w1, w2
+convubw w2, s3
+mullw w2, w2, t3
+addw w1, w1, w2
+addw d, d, w1
+
+.function video_orc_resample_h_muladdscaletaps3_u8_lq
+.source 1 s1 guint32
+.source 1 s2 guint32
+.source 1 s3 guint32
+.source 2 t1 gint16
+.source 2 t2 gint16
+.source 2 t3 gint16
+.source 2 temp gint32
+.dest 1 d guint32
+.temp 2 w1
+.temp 2 w2
+
+convubw w1, s1
+mullw w1, w1, t1
+convubw w2, s2
+mullw w2, w2, t2
+addw w1, w1, w2
+convubw w2, s3
+mullw w2, w2, t3
+addw w1, w1, w2
+addw w1, w1, temp
+addw w1, w1, 32
+shrsw w1, w1, 6
+convsuswb d, w1
 
 .function video_orc_resample_scaletaps_u8_lq
 .source 2 s gint32
@@ -1645,6 +1710,31 @@ addl d, d, t1
 convubw w1, s
 mullw d, w1, t
 
+.function video_orc_resample_v_multaps4_u8_lq
+.source 1 s1 guint32
+.source 1 s2 guint32
+.source 1 s3 guint32
+.source 1 s4 guint32
+.param 2 t1 gint16
+.param 2 t2 gint16
+.param 2 t3 gint16
+.param 2 t4 gint16
+.dest 2 d gint32
+.temp 2 w1
+.temp 2 w2
+
+convubw w1, s1
+mullw w1, w1, t1
+convubw w2, s2
+mullw w2, w2, t2
+addw w1, w1, w2
+convubw w2, s3
+mullw w2, w2, t3
+addw w1, w1, w2
+convubw w2, s4
+mullw w2, w2, t4
+addw d, w1, w2
+
 .function video_orc_resample_v_muladdtaps_u8_lq
 .source 1 s guint32
 .param 2 t gint16
@@ -1654,6 +1744,62 @@ mullw d, w1, t
 convubw w1, s
 mullw w1, w1, t
 addw d, d, w1
+
+.function video_orc_resample_v_muladdtaps4_u8_lq
+.source 1 s1 guint32
+.source 1 s2 guint32
+.source 1 s3 guint32
+.source 1 s4 guint32
+.param 2 t1 gint16
+.param 2 t2 gint16
+.param 2 t3 gint16
+.param 2 t4 gint16
+.dest 2 d gint32
+.temp 2 w1
+.temp 2 w2
+
+convubw w1, s1
+mullw w1, w1, t1
+convubw w2, s2
+mullw w2, w2, t2
+addw w1, w1, w2
+convubw w2, s3
+mullw w2, w2, t3
+addw w1, w1, w2
+convubw w2, s4
+mullw w2, w2, t4
+addw w1, w1, w2
+addw d, d, w1
+
+.function video_orc_resample_v_muladdscaletaps4_u8_lq
+.source 1 s1 guint32
+.source 1 s2 guint32
+.source 1 s3 guint32
+.source 1 s4 guint32
+.source 2 temp gint32
+.param 2 t1 gint16
+.param 2 t2 gint16
+.param 2 t3 gint16
+.param 2 t4 gint16
+.dest 1 d guint32
+.temp 2 w1
+.temp 2 w2
+
+convubw w1, s1
+mullw w1, w1, t1
+convubw w2, s2
+mullw w2, w2, t2
+addw w1, w1, w2
+convubw w2, s3
+mullw w2, w2, t3
+addw w1, w1, w2
+convubw w2, s4
+mullw w2, w2, t4
+addw w1, w1, w2
+addw w1, w1, temp
+addw w1, w1, 32
+shrsw w1, w1, 6
+convsuswb d, w1
 
 .function video_orc_chroma_down_h2_u8
 .source 8 s guint8
