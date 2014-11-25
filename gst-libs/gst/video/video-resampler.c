@@ -117,16 +117,13 @@ get_nearest_tap (ResamplerParams * params, gint l, gint xi, gdouble x)
 static gdouble
 get_linear_tap (ResamplerParams * params, gint l, gint xi, gdouble x)
 {
-  gdouble n_taps;
   gdouble res, a;
   gint xl = xi + l;
 
-  n_taps = (params->resampler->max_taps + 1) / 2;
+  a = fabs (x - xl) * params->fx;
 
-  a = fabs (x - xl);
-
-  if (a < n_taps)
-    res = (n_taps - a) / (gdouble) n_taps;
+  if (a < 1.0)
+    res = 1.0 - a;
   else
     res = 0.0;
 
@@ -134,52 +131,34 @@ get_linear_tap (ResamplerParams * params, gint l, gint xi, gdouble x)
 }
 
 static gdouble
-bicubic (gdouble s, gdouble b, gdouble c)
-{
-  gdouble s2, s3;
-
-  s = fabs (s);
-  s2 = s * s;
-  s3 = s2 * s;
-
-  if (s <= 1.0)
-    return ((12.0 - 9.0 * b - 6.0 * c) * s3 +
-        (-18.0 + 12.0 * b + 6.0 * c) * s2 + (6.0 - 2.0 * b)) / 6.0;
-  else if (s <= 2.0)
-    return ((-b - 6.0 * c) * s3 +
-        (6.0 * b + 30.0 * c) * s2 +
-        (-12.0 * b - 48.0 * c) * s + (8.0 * b + 24.0 * c)) / 6.0;
-  else
-    return 0.0;
-}
-
-static gdouble
 get_cubic_tap (ResamplerParams * params, gint l, gint xi, gdouble x)
 {
-  gdouble a, b, c, res;
+  gdouble a, a2, a3, b, c;
+  gint xl = xi + l;
 
-  a = x - (xi + 1);
+  a = fabs (x - xl) * params->fx;
+  a2 = a * a;
+  a3 = a2 * a;
 
   b = params->b;
   c = params->c;
 
-  if (l == 0)
-    res = bicubic (1.0 + a, b, c);
-  else if (l == 1)
-    res = bicubic (a, b, c);
-  else if (l == 2)
-    res = bicubic (1.0 - a, b, c);
+  if (a <= 1.0)
+    return ((12.0 - 9.0 * b - 6.0 * c) * a3 +
+        (-18.0 + 12.0 * b + 6.0 * c) * a2 + (6.0 - 2.0 * b)) / 6.0;
+  else if (a <= 2.0)
+    return ((-b - 6.0 * c) * a3 +
+        (6.0 * b + 30.0 * c) * a2 +
+        (-12.0 * b - 48.0 * c) * a + (8.0 * b + 24.0 * c)) / 6.0;
   else
-    res = bicubic (2.0 - a, b, c);
-
-  return res;
+    return 0.0;
 }
 
 static gdouble
 get_sinc_tap (ResamplerParams * params, gint l, gint xi, gdouble x)
 {
   gint xl = xi + l;
-  return sinc (x - xl);
+  return sinc ((x - xl) * params->fx);
 }
 
 static gdouble
@@ -337,6 +316,7 @@ gst_video_resampler_init (GstVideoResampler * resampler,
 {
   ResamplerParams params;
   gint max_taps;
+  gdouble scale_factor;
 
   g_return_val_if_fail (in_size != 0, FALSE);
   g_return_val_if_fail (out_size != 0, FALSE);
@@ -353,6 +333,16 @@ gst_video_resampler_init (GstVideoResampler * resampler,
 
   GST_DEBUG ("%d %u  %u->%u", method, n_taps, in_size, out_size);
 
+  params.sharpness = GET_OPT_SHARPNESS (options);
+  params.sharpen = GET_OPT_SHARPEN (options);
+
+  scale_factor = in_size / (gdouble) out_size;
+  if (scale_factor > 1.0) {
+    params.fx = (1.0 / scale_factor) * params.sharpness;
+  } else {
+    params.fx = (1.0) * params.sharpness;
+  }
+
   max_taps = GET_OPT_MAX_TAPS (options);
   n_taps = CLAMP (n_taps, 0, max_taps);
 
@@ -364,49 +354,34 @@ gst_video_resampler_init (GstVideoResampler * resampler,
       break;
     case GST_VIDEO_RESAMPLER_METHOD_LINEAR:
       params.get_tap = get_linear_tap;
-      if (n_taps == 0)
-        n_taps = 2;
+      params.envelope = 1.0;
       break;
     case GST_VIDEO_RESAMPLER_METHOD_CUBIC:
       params.b = GET_OPT_CUBIC_B (options);
       params.c = GET_OPT_CUBIC_C (options);
-      n_taps = 4;
+      params.envelope = 2.0;
       params.get_tap = get_cubic_tap;
       break;
     case GST_VIDEO_RESAMPLER_METHOD_SINC:
+      params.envelope = GET_OPT_ENVELOPE (options);
       params.get_tap = get_sinc_tap;
-      if (n_taps == 0)
-        n_taps = 4;
       break;
     case GST_VIDEO_RESAMPLER_METHOD_LANCZOS:
-    {
-
       params.envelope = GET_OPT_ENVELOPE (options);
-      params.sharpness = GET_OPT_SHARPNESS (options);
-      params.sharpen = GET_OPT_SHARPEN (options);
-
-      if (n_taps == 0) {
-        gdouble resample_inc = in_size / (gdouble) out_size;
-
-        if (resample_inc > 1.0) {
-          params.fx = (1.0 / resample_inc) * params.sharpness;
-        } else {
-          params.fx = (1.0) * params.sharpness;
-        }
-        params.ex = params.fx / params.envelope;
-        params.dx = ceil (params.envelope / params.fx);
-
-        n_taps = CLAMP (2 * params.dx, 0, max_taps);
-      }
-      params.fx = 2.0 * params.envelope / n_taps;
-      params.ex = 2.0 / n_taps;
-
       params.get_tap = get_lanczos_tap;
       break;
-    }
     default:
       break;
   }
+
+  if (n_taps == 0) {
+    params.dx = ceil (2.0 * params.envelope / params.fx);
+    n_taps = CLAMP (params.dx, 0, max_taps);
+  }
+  params.fx = 2.0 * params.envelope / n_taps;
+  params.ex = 2.0 / n_taps;
+
+  g_print ("%d\n", n_taps);
 
   if (n_taps > in_size)
     n_taps = in_size;
