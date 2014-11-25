@@ -207,8 +207,8 @@ gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
   element = GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor);
 
   if (g_object_get_data ((GObject *) element, "validate-monitor")) {
-        GST_WARNING_OBJECT (elem_monitor,
-                "Pad already has a validate-monitor associated");
+    GST_DEBUG_OBJECT (elem_monitor,
+        "Pad already has a validate-monitor associated");
     return FALSE;
   }
 
