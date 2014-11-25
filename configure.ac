@@ -861,6 +861,7 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLU" = "xyes" -a "x$HAVE_GLES2" = "xyes"
       fi
       AC_MSG_WARN([Disabling Desktop GL support])
       HAVE_GL=no
+      USE_OPENGL=no
     else
       AC_MSG_WARN([Disabling GL|ES 2.0 support])
       HAVE_GLES2=no
