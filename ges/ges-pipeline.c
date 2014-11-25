@@ -80,6 +80,8 @@ enum
   PROP_VIDEO_SINK,
   PROP_TIMELINE,
   PROP_MODE,
+  PROP_AUDIO_FILTER,
+  PROP_VIDEO_FILTER,
   PROP_LAST
 };
 
@@ -170,6 +172,14 @@ ges_pipeline_get_property (GObject * object, guint property_id,
     case PROP_MODE:
       g_value_set_flags (value, self->priv->mode);
       break;
+    case PROP_AUDIO_FILTER:
+      g_object_get_property (G_OBJECT (self->priv->playsink), "audio-filter",
+          value);
+      break;
+    case PROP_VIDEO_FILTER:
+      g_object_get_property (G_OBJECT (self->priv->playsink), "video-filter",
+          value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -196,6 +206,14 @@ ges_pipeline_set_property (GObject * object, guint property_id,
       break;
     case PROP_MODE:
       ges_pipeline_set_mode (GES_PIPELINE (object), g_value_get_flags (value));
+      break;
+    case PROP_AUDIO_FILTER:
+      g_object_set (self->priv->playsink, "audio-filter",
+          GST_ELEMENT (g_value_get_object (value)), NULL);
+      break;
+    case PROP_VIDEO_FILTER:
+      g_object_set (self->priv->playsink, "video-filter",
+          GST_ELEMENT (g_value_get_object (value)), NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -276,8 +294,6 @@ ges_pipeline_class_init (GESPipelineClass * klass)
   properties[PROP_AUDIO_SINK] = g_param_spec_object ("audio-sink", "Audio Sink",
       "Audio sink for the preview.",
       GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (object_class, PROP_AUDIO_SINK,
-      properties[PROP_AUDIO_SINK]);
 
   /**
    * GESPipeline:video-sink:
@@ -287,8 +303,6 @@ ges_pipeline_class_init (GESPipelineClass * klass)
   properties[PROP_VIDEO_SINK] = g_param_spec_object ("video-sink", "Video Sink",
       "Video sink for the preview.",
       GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (object_class, PROP_VIDEO_SINK,
-      properties[PROP_VIDEO_SINK]);
 
   /**
    * GESPipeline:timeline:
@@ -300,8 +314,6 @@ ges_pipeline_class_init (GESPipelineClass * klass)
       "Timeline to use in this pipeline. See also "
       "ges_pipeline_set_timeline() for more info.",
       GES_TYPE_TIMELINE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (object_class, PROP_TIMELINE,
-      properties[PROP_TIMELINE]);
 
   /**
    * GESPipeline:mode:
@@ -313,8 +325,32 @@ ges_pipeline_class_init (GESPipelineClass * klass)
       "Pipeline mode. See ges_pipeline_set_mode() for more info.",
       GES_TYPE_PIPELINE_FLAGS, DEFAULT_TIMELINE_MODE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (object_class, PROP_MODE,
-      properties[PROP_MODE]);
+
+  /**
+   * GESPipeline::audio-filter
+   *
+   * The audio filter(s) to apply during playback right before the audio sink
+   *
+   * Since: 1.6.0
+   */
+  properties[PROP_AUDIO_FILTER] =
+      g_param_spec_object ("audio-filter", "Audio filter",
+      "the audio filter(s) to apply, if possible", GST_TYPE_ELEMENT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GESPipeline::video-filter
+   *
+   * The video filter(s) to apply during playback right before the video sink
+   *
+   * Since: 1.6.0
+   */
+  properties[PROP_VIDEO_FILTER] =
+      g_param_spec_object ("video-filter", "Video filter",
+      "the Video filter(s) to apply, if possible", GST_TYPE_ELEMENT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, PROP_LAST, properties);
 
   element_class->change_state = GST_DEBUG_FUNCPTR (ges_pipeline_change_state);
 
