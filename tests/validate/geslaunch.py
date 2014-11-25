@@ -75,7 +75,6 @@ class XgesProjectDescriptor(MediaDescriptor):
 
     def get_duration(self):
         if self._duration:
-            print("RETURN %s" % self._duration)
             return self._duration
 
         for l in self._root.iter():
@@ -87,7 +86,6 @@ class XgesProjectDescriptor(MediaDescriptor):
             self.error("%s does not have duration! (setting 2mins)" % self._uri)
             self._duration = 2 * 60
 
-        print("RETURN %s" % self._duration)
         return self._duration
 
     def get_protocol(self):
@@ -191,7 +189,7 @@ class GESRenderTest(GESTest, GstValidateEncodingTestInterface):
 
                 if missing_eos is True:
                     self.set_result(utils.Result.TIMEOUT, "The rendered file add right duration, MISSING EOS?\n",
-                                    "failure", e)
+                                    "failure")
             else:
                 GstValidateTest.check_results(self)
 
@@ -272,12 +270,17 @@ Available options:""")
                 if os.path.exists(proj):
                     projects.append(proj)
 
-        SCENARIOS = ["play_15s",
-                     "scrub_forward_seeking",
-                     "scrub_backward_seeking"]
+        if self.options.long_limit != 0:
+            scenarios = ["none",
+                         "scrub_forward_seeking",
+                         "scrub_backward_seeking"]
+        else:
+            scenarios = ["play_15s",
+                         "scrub_forward_seeking_full",
+                         "scrub_backward_seeking_full"]
         for proj in projects:
             # First playback casses
-            for scenario_name in SCENARIOS:
+            for scenario_name in scenarios:
                 scenario = self._scenarios.get_scenario(scenario_name)
                 if scenario is None:
                     continue
