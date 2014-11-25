@@ -432,19 +432,19 @@ namespace Gst
 			return val;
 		}
 
-		[DllImport ("libglib-2.0-0.dll") ]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern byte g_date_get_day (IntPtr date);
 
-		[DllImport ("libglib-2.0-0.dll") ]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern int g_date_get_month (IntPtr date);
 
-		[DllImport ("libglib-2.0-0.dll") ]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern ushort g_date_get_year (IntPtr date);
 
-		[DllImport ("libglib-2.0-0.dll") ]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern IntPtr g_date_new_dmy (byte day, int month, ushort year);
 
-		[DllImport ("libglib-2.0-0.dll") ]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern void g_date_free (IntPtr date);
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
