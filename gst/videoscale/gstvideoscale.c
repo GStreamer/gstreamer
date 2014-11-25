@@ -130,9 +130,15 @@ gst_video_scale_method_get_type (void)
 
   static const GEnumValue video_scale_methods[] = {
     {GST_VIDEO_SCALE_NEAREST, "Nearest Neighbour", "nearest-neighbour"},
-    {GST_VIDEO_SCALE_BILINEAR, "Bilinear", "bilinear"},
-    {GST_VIDEO_SCALE_4TAP, "4-tap", "4-tap"},
-    {GST_VIDEO_SCALE_LANCZOS, "Lanczos (experimental/unstable)", "lanczos"},
+    {GST_VIDEO_SCALE_BILINEAR, "Bilinear (2-tap)", "bilinear"},
+    {GST_VIDEO_SCALE_4TAP, "4-tap Sinc", "4-tap-sinc"},
+    {GST_VIDEO_SCALE_LANCZOS, "Lanczos", "lanczos"},
+    {GST_VIDEO_SCALE_BILINEAR2, "Bilinear (multi-tap)", "bilinear2"},
+    {GST_VIDEO_SCALE_SINC, "Sinc (multi-tap)", "sinc"},
+    {GST_VIDEO_SCALE_HERMITE, "Hermite (multi-tap)", "hermite"},
+    {GST_VIDEO_SCALE_SPLINE, "Spline (multi-tap)", "spline"},
+    {GST_VIDEO_SCALE_CATROM, "Catmull-Rom (multi-tap)", "catrom"},
+    {GST_VIDEO_SCALE_MITCHELL, "Mitchell (multi-tap)", "mitchell"},
     {0, NULL, NULL},
   };
 
@@ -509,26 +515,69 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
         gst_structure_set (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_LINEAR,
-            NULL);
+            GST_VIDEO_RESAMPLER_OPT_MAX_TAPS, G_TYPE_INT, 2, NULL);
         break;
       case GST_VIDEO_SCALE_4TAP:
         gst_structure_set (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
-            GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_CUBIC,
-            NULL);
+            GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_SINC,
+            GST_VIDEO_RESAMPLER_OPT_MAX_TAPS, G_TYPE_INT, 4, NULL);
         break;
       case GST_VIDEO_SCALE_LANCZOS:
         gst_structure_set (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_LANCZOS,
-            GST_VIDEO_RESAMPLER_OPT_ENVELOPE, G_TYPE_DOUBLE,
-            videoscale->envelope, GST_VIDEO_RESAMPLER_OPT_SHARPNESS,
-            G_TYPE_DOUBLE, videoscale->sharpness,
-            GST_VIDEO_RESAMPLER_OPT_SHARPEN, G_TYPE_DOUBLE, videoscale->sharpen,
+            NULL);
+        break;
+      case GST_VIDEO_SCALE_BILINEAR2:
+        gst_structure_set (options,
+            GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+            GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_LINEAR,
+            NULL);
+        break;
+      case GST_VIDEO_SCALE_SINC:
+        gst_structure_set (options,
+            GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+            GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_SINC,
+            NULL);
+        break;
+      case GST_VIDEO_SCALE_HERMITE:
+        gst_structure_set (options,
+            GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+            GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_CUBIC,
+            GST_VIDEO_RESAMPLER_OPT_CUBIC_B, G_TYPE_DOUBLE, (gdouble) 0.0,
+            GST_VIDEO_RESAMPLER_OPT_CUBIC_C, G_TYPE_DOUBLE, (gdouble) 0.0,
+            NULL);
+        break;
+      case GST_VIDEO_SCALE_SPLINE:
+        gst_structure_set (options,
+            GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+            GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_CUBIC,
+            GST_VIDEO_RESAMPLER_OPT_CUBIC_B, G_TYPE_DOUBLE, (gdouble) 1.0,
+            GST_VIDEO_RESAMPLER_OPT_CUBIC_C, G_TYPE_DOUBLE, (gdouble) 0.0,
+            NULL);
+        break;
+      case GST_VIDEO_SCALE_CATROM:
+        gst_structure_set (options,
+            GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+            GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_CUBIC,
+            GST_VIDEO_RESAMPLER_OPT_CUBIC_B, G_TYPE_DOUBLE, (gdouble) 0.0,
+            GST_VIDEO_RESAMPLER_OPT_CUBIC_C, G_TYPE_DOUBLE, (gdouble) 0.5,
+            NULL);
+        break;
+      case GST_VIDEO_SCALE_MITCHELL:
+        gst_structure_set (options,
+            GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+            GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_CUBIC,
+            GST_VIDEO_RESAMPLER_OPT_CUBIC_B, G_TYPE_DOUBLE, (gdouble) 1.0 / 3.0,
+            GST_VIDEO_RESAMPLER_OPT_CUBIC_C, G_TYPE_DOUBLE, (gdouble) 1.0 / 3.0,
             NULL);
         break;
     }
     gst_structure_set (options,
+        GST_VIDEO_RESAMPLER_OPT_ENVELOPE, G_TYPE_DOUBLE, videoscale->envelope,
+        GST_VIDEO_RESAMPLER_OPT_SHARPNESS, G_TYPE_DOUBLE, videoscale->sharpness,
+        GST_VIDEO_RESAMPLER_OPT_SHARPEN, G_TYPE_DOUBLE, videoscale->sharpen,
         GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, videoscale->borders_w / 2,
         GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, videoscale->borders_h / 2,
         GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT,
