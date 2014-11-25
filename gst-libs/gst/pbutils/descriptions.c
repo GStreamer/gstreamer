@@ -133,6 +133,7 @@ static const FormatInfo formats[] = {
   {"audio/x-amr-wb-sh", "Adaptive Multi Rate WideBand (AMR-WB)",
       AUDIO_CONTAINER, "amr"},
   {"audio/x-au", "Sun .au", AUDIO_CONTAINER, "au"},
+  {"audio/x-audible", "Audible Audio", AUDIO_CONTAINER, "aa"},
   {"audio/x-caf", "Apple Core Audio Format", AUDIO_CONTAINER, "caf"},
   {"audio/x-celt", "Constrained Energy Lapped Transform (CELT)", FLAG_AUDIO,
       ""},
