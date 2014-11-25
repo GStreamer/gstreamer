@@ -2367,12 +2367,20 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     }
 
     /* Bring the element to the state of the parent */
+
+    /* First lock element's sinkpad stream lock so no data reaches
+     * the possible new element added when caps are sent by element
+     * while we're still sending sticky events */
+    GST_PAD_STREAM_LOCK (sinkpad);
+
     if ((gst_element_set_state (element,
                 GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE ||
         !send_sticky_events (dbin, pad)) {
       GstDecodeElement *dtmp = NULL;
       GstElement *tmp = NULL;
       GstMessage *error_msg;
+
+      GST_PAD_STREAM_UNLOCK (sinkpad);
 
       GST_WARNING_OBJECT (dbin, "Couldn't set %s to PAUSED",
           GST_ELEMENT_NAME (element));
@@ -2447,6 +2455,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       CHAIN_MUTEX_UNLOCK (chain);
 
       continue;
+    } else {
+      /* Everything went well, the spice must flow now */
+      GST_PAD_STREAM_UNLOCK (sinkpad);
     }
 
     /* Remove error filter now, from now on we can't gracefully
