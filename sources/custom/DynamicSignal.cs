@@ -233,7 +233,7 @@ namespace Gst
 			}
 		}
 
-		[DllImport ("libgstreamersharpglue-1.0.0.dll")]
+		[DllImport ("libgstreamersharpglue-1.0.0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gstsharp_g_closure_sizeof ();
 
 		public static void Disconnect (GLib.Object o, string name, Delegate handler)
@@ -281,14 +281,14 @@ namespace Gst
 		}
 
 
-		[DllImport ("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_closure_new_simple (int size, IntPtr data);
 
-		[DllImport ("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_signal_connect_closure (IntPtr instance,
 		                                               string name, IntPtr closure, bool after);
 
-		[DllImport ("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_closure_set_meta_marshal (IntPtr closure, IntPtr data, GClosureMarshal marshal);
 
 		class GTypeSignalKey
@@ -424,19 +424,19 @@ namespace Gst
 			return ret;
 		}
 
-		[DllImport ("libgstreamersharpglue-1.0.0.dll")]
+		[DllImport ("libgstreamersharpglue-1.0.0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gstsharp_g_type_from_instance (IntPtr o);
 
-		[DllImport ("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_signal_handler_disconnect (IntPtr o, uint handler_id);
 
-		[DllImport ("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_signal_lookup (IntPtr name, IntPtr itype);
 
-		[DllImport ("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_quark_from_string (IntPtr str);
 
-		[DllImport ("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_signal_emitv (GLib.Value[] parameters, uint signal_id, uint detail, ref GLib.Value return_value);
 
 		[StructLayout (LayoutKind.Sequential)]
@@ -451,7 +451,7 @@ namespace Gst
 			public IntPtr param_types;
 		}
 
-		[DllImport ("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_signal_query (uint signal_id, ref GSignalQuery query);
 	}
 }
