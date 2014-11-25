@@ -514,6 +514,31 @@ Try this character encoding first for ID3v1 tag-related strings where the
 encoding does not look like UTF-8.
   </para>
 </formalpara>
+
+<formalpara id="GST_GL_WINDOW">
+  <title><envar>GST_GL_WINDOW</envar></title>
+  <para>
+Influences the window system to use by the GStreamer OpenGL library.
+Common values are 'x11', 'wayland', 'win32' or 'cocoa'.
+  </para>
+</formalpara>
+
+<formalpara id="GST_GL_PLATFORM">
+  <title><envar>GST_GL_PLATFORM</envar></title>
+  <para>
+Influences the OpenGL platform to use by the GStreamer OpenGL library.
+Common values are 'egl', 'glx', 'wgl' or 'cgl'.
+  </para>
+</formalpara>
+
+<formalpara id="GST_GL_API">
+  <title><envar>GST_GL_API</envar></title>
+  <para>
+Influences the OpenGL API requested by the OpenGL platform.
+Common values are 'opengl' or 'gles2'.
+  </para>
+</formalpara>
+
 </refsect2>
 
 </refsect1>
