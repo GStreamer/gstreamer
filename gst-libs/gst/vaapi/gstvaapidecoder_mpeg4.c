@@ -957,7 +957,7 @@ gst_vaapi_decoder_mpeg4_decode_codec_data(GstVaapiDecoder *base_decoder,
 {
     GstVaapiDecoderMpeg4 * const decoder =
         GST_VAAPI_DECODER_MPEG4_CAST(base_decoder);
-    GstVaapiDecoderStatus status;
+    GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_SUCCESS;
     guchar *buf;
     guint pos, buf_size;
 
@@ -1033,6 +1033,7 @@ gst_vaapi_decoder_mpeg4_parse(GstVaapiDecoder *base_decoder,
     if (!buf)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
+    packet.type = GST_MPEG4_USER_DATA;
     if (priv->is_svh)
         result = gst_h263_parse(&packet, buf, 0, size);
     else
