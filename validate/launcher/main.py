@@ -233,7 +233,8 @@ def main(libsdir):
         "It implies --generate-media-info but enabling frame detection")
     parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
                         default=utils.LONG_TEST, action='store',
-                        help="Defines the limite from which a test is concidered as long (in seconds)"),
+                        help="Defines the limite from which a test is concidered as long (in seconds)",
+                        type=int),
     parser.add_argument("-c", "--config", dest="config",
                         default=None,
                         help="""Lets you specify a file where the testsuite to execute is defined.

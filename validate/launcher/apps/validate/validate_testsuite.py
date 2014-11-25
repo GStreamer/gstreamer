@@ -62,9 +62,8 @@ def register_default_test_generators(self):
                                                                     "sources":
                                                                     ("videotestsrc pattern=snow timestamp-offset=3000000000 ! 'video/x-raw,format=AYUV,width=640,height=480,framerate=(fraction)30/1' !  timeoverlay",
                                                                      "videotestsrc pattern=smpte ! 'video/x-raw,format=AYUV,width=800,height=600,framerate=(fraction)10/1' ! timeoverlay")},
-                                                "bgra":
-                                                    ("videotestsrc ! video/x-raw, framerate=\(fraction\)10/1, width=100, height=100",
-                                                     "videotestsrc ! video/x-raw, framerate=\(fraction\)5/1, width=320, height=240")
+                                                   "bgra": ("videotestsrc ! video/x-raw, framerate=\(fraction\)10/1, width=100, height=100",
+                                                            "videotestsrc ! video/x-raw, framerate=\(fraction\)5/1, width=320, height=240")
                                                },
                                                valid_scenarios=valid_mixing_scenarios))
 
@@ -76,8 +75,8 @@ def register_default_test_generators(self):
                                        mixed_srcs={
                                            "basic": {"mixer_props": "",
                                                      "sources":
-                                                            ("audiotestsrc wave=triangle",
-                                                             "audiotestsrc wave=ticks")},
+                                                     ("audiotestsrc wave=triangle",
+                                                      "audiotestsrc wave=ticks")},
                                        },
                                        valid_scenarios=valid_mixing_scenarios))
 
@@ -86,20 +85,36 @@ def register_default_scenarios(self):
     """
     Registers default test scenarios
     """
-    self.add_scenarios([
-        "play_15s",
-                 "reverse_playback",
-                 "fast_forward",
-                 "seek_forward",
-                 "seek_backward",
-                 "seek_with_stop",
-                 "switch_audio_track",
-                 "switch_audio_track_while_paused",
-                 "switch_subtitle_track",
-                 "switch_subtitle_track_while_paused",
-                 "disable_subtitle_track_while_paused",
-                 "change_state_intensive",
-                 "scrub_forward_seeking"])
+    if self.options.long_limit != 0:
+        self.add_scenarios([
+            "play_15s",
+            "reverse_playback",
+            "fast_forward",
+            "seek_forward",
+            "seek_backward",
+            "seek_with_stop",
+            "switch_audio_track",
+            "switch_audio_track_while_paused",
+            "switch_subtitle_track",
+            "switch_subtitle_track_while_paused",
+            "disable_subtitle_track_while_paused",
+            "change_state_intensive",
+            "scrub_forward_seeking"])
+    else:
+        self.add_scenarios([
+            "play_15s",
+            "reverse_playback",
+            "fast_forward",
+            "seek_forward",
+            "seek_backward",
+            "seek_with_stop",
+            "switch_audio_track",
+            "switch_audio_track_while_paused",
+            "switch_subtitle_track",
+            "switch_subtitle_track_while_paused",
+            "disable_subtitle_track_while_paused",
+            "change_state_intensive",
+            "scrub_forward_seeking"])
 
 
 def register_default_encoding_formats(self):
