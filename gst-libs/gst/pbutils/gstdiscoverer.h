@@ -191,7 +191,7 @@ typedef GObjectClass GstDiscovererInfoClass;
 GType gst_discoverer_info_get_type (void);
 
 #define gst_discoverer_info_unref(info) (g_object_unref((GObject*)info))
-#define gst_discoverer_info_ref(info) (g_object_ref((Gbject*)info))
+#define gst_discoverer_info_ref(info) (g_object_ref((GObject*)info))
 
 GstDiscovererInfo*        gst_discoverer_info_copy (GstDiscovererInfo * ptr);
 
