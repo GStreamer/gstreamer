@@ -2995,6 +2995,8 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
       GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
       chain->notify_mute_id = g_signal_connect (chain->mute, "notify::mute",
           G_CALLBACK (notify_mute_cb), playsink);
+      g_object_set (chain->mute, "mute", playsink->mute, NULL);
+      playsink->mute_changed = FALSE;
     }
 
     g_object_set (chain->conv, "use-volume", FALSE, NULL);
