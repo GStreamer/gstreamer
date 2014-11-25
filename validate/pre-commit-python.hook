@@ -55,6 +55,8 @@ def main():
 
     for modified_file in modified_files:
         try:
+            if not modified_file.endswith(".py"):
+                continue
             pep8_errors = system('pep8', '--repeat', '--ignore', 'E501,E128', modified_file)
             if pep8_errors:
                 if output_message is None:
