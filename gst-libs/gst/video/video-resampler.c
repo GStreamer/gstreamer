@@ -381,8 +381,6 @@ gst_video_resampler_init (GstVideoResampler * resampler,
   params.fx = 2.0 * params.envelope / n_taps;
   params.ex = 2.0 / n_taps;
 
-  g_print ("%d\n", n_taps);
-
   if (n_taps > in_size)
     n_taps = in_size;
 
