@@ -59,12 +59,6 @@ TESTS = $(check_PROGRAMS)
 AM_CFLAGS =  $(common_cflags) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(common_ldadd) libtestutils.la
 
-noinst_PROGRAMS = integration
-
-integration_SOURCES = ges/integration.c
-integration_LDADD = $(LDADD)
-integration_CFLAGS = $(AM_CFLAGS)
-
 EXTRA_DIST = \
 	ges/test-project.xges \
 	ges/test-auto-transition.xges \
@@ -120,18 +114,3 @@ coverage-report:
 	  perl $(top_srcdir)/common/coverage/coverage-report-entry.pl   \
 	    $(top_builddir)/$$file > coverage/$$file.html; 		\
 	done
-
-check-integration: integration
-	CK_DEFAULT_TIMEOUT=20 ./integration
-
-check-integration-forever:
-	@while true; do						\
-	make check-integration					\
-	CK_DEFAULT_TIMEOUT=20					\
-	$* || break; done
-
-check-integration-gdb:
-	@$(TESTS_ENVIRONMENT)					\
-	CK_FORK=no						\
-	$(LIBTOOL) --mode=execute				\
-	gdb ./integration
