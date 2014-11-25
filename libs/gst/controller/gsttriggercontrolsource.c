@@ -24,7 +24,7 @@
 
  /**
  * SECTION:gsttriggercontrolsource
- * @short_description: interpolation control source
+ * @short_description: trigger control source
  *
  * #GstTriggerControlSource is a #GstControlSource, that returns values from user-given
  * control points. It allows for a tolerance on the time-stamps.
