@@ -1127,8 +1127,10 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
   GstEvent *event;
 
   if (GST_IS_BUFFER (info->data)) {
-    if (priv->waiting_for_buffer)
+    if (priv->waiting_for_buffer) {
+      GST_INFO_OBJECT (comp, "update_pipeline DONE");
       _restart_task (comp);
+    }
 
     return GST_PAD_PROBE_OK;
   }
@@ -2152,8 +2154,10 @@ _is_ready_to_restart_task (NleComposition * comp, GstEvent * event)
         GST_DEBUG_GRAPH_SHOW_ALL, name);
     g_free (name);
 
-    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+      GST_INFO_OBJECT (comp, "update_pipeline DONE");
       return TRUE;
+    }
 
     priv->waiting_for_buffer = TRUE;
     return FALSE;
@@ -2601,6 +2605,8 @@ _deactivate_stack (NleComposition * comp, gboolean flush_downstream)
 {
   GstPad *ptarget;
 
+  GST_INFO_OBJECT (comp, "Deactivating current stack (flushing downstream: %d",
+      flush_downstream);
   _set_current_bin_to_ready (comp, flush_downstream);
 
   ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (NLE_OBJECT_SRC (comp)));
@@ -2615,6 +2621,8 @@ _deactivate_stack (NleComposition * comp, gboolean flush_downstream)
 
   if (ptarget)
     gst_object_unref (ptarget);
+
+  GST_INFO_OBJECT (comp, "Stack desctivated");
 
 /*   priv->current = NULL;
  */
