@@ -20,7 +20,25 @@
 /**
  * SECTION: gesvideotrack
  * @short_description: A standard GESTrack for raw video
+ *
+ * Sane default properties to specify and fixate the output stream are
+ * set as restriction-caps.
+ * It is advised, to modify these properties, to use
+ * #ges_track_update_restriction_caps, setting them directly is
+ * possible through #ges_track_set_restriction_caps, but not specifying
+ * one of them can lead to negotiation issues, only use that function
+ * if you actually know what you're doing :)
+ *
+ * The default properties are:
+ * - width: 1280
+ * - height: 720
+ * - framerate: 25/1
+ * - max-framerate: 25/1
+ * - views: 1 (related to stereoscopy)
  */
+
+#define DEFAULT_RESTRICTION_CAPS "video/x-raw, width=1280, height=720, " \
+  "framerate=25/1, max-framerate=25/1, views=1, interlace-mode=progressive"
 
 #include "ges-video-track.h"
 #include "ges-smart-video-mixer.h"
@@ -143,6 +161,8 @@ ges_video_track_new (void)
   ret = g_object_new (GES_TYPE_VIDEO_TRACK, "track-type", GES_TRACK_TYPE_VIDEO,
       "caps", caps, NULL);
 
+  ges_track_set_restriction_caps (GES_TRACK (ret),
+      gst_caps_from_string (DEFAULT_RESTRICTION_CAPS));
   ges_track_set_create_element_for_gap_func (GES_TRACK (ret),
       create_element_for_raw_video_gap);
 
