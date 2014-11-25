@@ -862,13 +862,13 @@ gst_alsasrc_close (GstAudioSrc * asrc)
 static gint
 xrun_recovery (GstAlsaSrc * alsa, snd_pcm_t * handle, gint err)
 {
-  GST_WARNING_OBJECT (alsa, "xrun recovery %d: %s", err, g_strerror (err));
+  GST_WARNING_OBJECT (alsa, "xrun recovery %d: %s", err, g_strerror (-err));
 
   if (err == -EPIPE) {          /* under-run */
     err = snd_pcm_prepare (handle);
     if (err < 0)
       GST_WARNING_OBJECT (alsa,
-          "Can't recovery from underrun, prepare failed: %s",
+          "Can't recover from underrun, prepare failed: %s",
           snd_strerror (err));
     return 0;
   } else if (err == -ESTRPIPE) {
@@ -879,7 +879,7 @@ xrun_recovery (GstAlsaSrc * alsa, snd_pcm_t * handle, gint err)
       err = snd_pcm_prepare (handle);
       if (err < 0)
         GST_WARNING_OBJECT (alsa,
-            "Can't recovery from suspend, prepare failed: %s",
+            "Can't recover from suspend, prepare failed: %s",
             snd_strerror (err));
     }
     return 0;
