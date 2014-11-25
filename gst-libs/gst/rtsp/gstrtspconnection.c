@@ -3129,7 +3129,8 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
   else if (G_UNLIKELY (res == GST_RTSP_EEOF)) {
     g_mutex_lock (&watch->mutex);
     if (watch->readsrc) {
-      g_source_remove_child_source ((GSource *) watch, watch->readsrc);
+      if (!g_source_is_destroyed ((GSource *) watch))
+        g_source_remove_child_source ((GSource *) watch, watch->readsrc);
       g_source_unref (watch->readsrc);
       watch->readsrc = NULL;
     }
@@ -3292,7 +3293,8 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
       rec = g_queue_pop_tail (watch->messages);
       if (rec == NULL) {
         if (watch->writesrc) {
-          g_source_remove_child_source ((GSource *) watch, watch->writesrc);
+          if (!g_source_is_destroyed ((GSource *) watch))
+            g_source_remove_child_source ((GSource *) watch, watch->writesrc);
           g_source_unref (watch->writesrc);
           watch->writesrc = NULL;
           /* we create and add the write source again when we actually have
