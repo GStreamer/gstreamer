@@ -1974,6 +1974,39 @@ error_message_to_string (GstMessage * msg)
   return full_message;
 }
 
+/* We consider elements as "simple demuxer" when they are a demuxer
+ * with one and only one ALWAYS source pad.
+ */
+static gboolean
+is_simple_demuxer_factory (GstElementFactory * factory)
+{
+  if (strstr (gst_element_factory_get_metadata (factory,
+              GST_ELEMENT_METADATA_KLASS), "Demuxer")) {
+    const GList *tmp;
+    gint num_alway_srcpads = 0;
+
+    for (tmp = gst_element_factory_get_static_pad_templates (factory);
+        tmp; tmp = tmp->next) {
+      GstStaticPadTemplate *template = tmp->data;
+
+      if (template->direction == GST_PAD_SRC) {
+        if (template->presence == GST_PAD_ALWAYS) {
+          if (num_alway_srcpads >= 0)
+            num_alway_srcpads++;
+        } else {
+          num_alway_srcpads = -1;
+        }
+      }
+
+    }
+
+    if (num_alway_srcpads == 1)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 /* connect_pad:
  *
  * Try to connect the given pad to an element created from one of the factories,
@@ -2027,7 +2060,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GParamSpec *pspec;
     gboolean subtitle;
     GList *to_connect = NULL;
-    gboolean is_parser_converter = FALSE;
+    gboolean is_parser_converter = FALSE, is_simple_demuxer = FALSE;
 
     /* Set dpad target to pad again, it might've been unset
      * below but we came back here because something failed
@@ -2095,6 +2128,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
      */
     is_parser_converter = strstr (gst_element_factory_get_metadata (factory,
             GST_ELEMENT_METADATA_KLASS), "Parser") != NULL;
+    is_simple_demuxer = is_simple_demuxer_factory (factory);
+
     if (is_parser_converter) {
       gboolean skip = FALSE;
       GList *l;
@@ -2349,7 +2384,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* link this element further */
     to_connect = connect_element (dbin, delem, chain);
 
-    if (is_parser_converter && to_connect) {
+    if ((is_simple_demuxer || is_parser_converter) && to_connect) {
       GList *l;
       for (l = to_connect; l; l = g_list_next (l)) {
         GstPad *opad = GST_PAD_CAST (l->data);
