@@ -549,6 +549,48 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   return GST_FLOW_OK;
 }
 
+static gboolean
+_sink_query (GstAggregator * agg, GstAggregatorPad * bpad, GstQuery * query)
+{
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:{
+      GstCaps *caps;
+      GstVideoInfo info;
+      GstBufferPool *pool;
+      guint size;
+      GstStructure *structure;
+
+      gst_query_parse_allocation (query, &caps, NULL);
+
+      if (caps == NULL)
+        return FALSE;
+
+      if (!gst_video_info_from_caps (&info, caps))
+        return FALSE;
+
+      size = GST_VIDEO_INFO_SIZE (&info);
+
+      pool = gst_video_buffer_pool_new ();
+
+      structure = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_set_params (structure, caps, size, 0, 0);
+
+      if (!gst_buffer_pool_set_config (pool, structure)) {
+        gst_object_unref (pool);
+        return FALSE;
+      }
+
+      gst_query_add_allocation_pool (query, pool, size, 0, 0);
+      gst_object_unref (pool);
+      gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+      return TRUE;
+    }
+    default:
+      return GST_AGGREGATOR_CLASS (parent_class)->sink_query (agg, bpad, query);
+  }
+}
+
 /* GObject boilerplate */
 static void
 gst_compositor_class_init (GstCompositorClass * klass)
@@ -563,6 +605,7 @@ gst_compositor_class_init (GstCompositorClass * klass)
   gobject_class->set_property = gst_compositor_set_property;
 
   agg_class->sinkpads_type = GST_TYPE_COMPOSITOR_PAD;
+  agg_class->sink_query = _sink_query;
   videoaggregator_class->update_caps = _update_caps;
   videoaggregator_class->aggregate_frames = gst_compositor_aggregate_frames;
 
