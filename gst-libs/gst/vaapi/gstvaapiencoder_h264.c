@@ -1005,6 +1005,8 @@ ensure_profile_limits (GstVaapiEncoderH264 * encoder)
 
   GST_WARNING ("lowering coding tools to meet target decoder constraints");
 
+  profile = GST_VAAPI_PROFILE_UNKNOWN;
+
   /* Try Main profile coding tools */
   if (encoder->max_profile_idc < 100) {
     encoder->use_dct8x8 = FALSE;
@@ -1018,8 +1020,10 @@ ensure_profile_limits (GstVaapiEncoderH264 * encoder)
     profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
   }
 
-  encoder->profile = profile;
-  encoder->profile_idc = encoder->max_profile_idc;
+  if (profile) {
+    encoder->profile = profile;
+    encoder->profile_idc = encoder->max_profile_idc;
+  }
   return TRUE;
 }
 
