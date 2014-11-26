@@ -112,14 +112,12 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (FORMATS))
     );
 
-#define DEFAULT_PAD_ZORDER 0
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
 #define DEFAULT_PAD_ALPHA  1.0
 enum
 {
   PROP_PAD_0,
-  PROP_PAD_ZORDER,
   PROP_PAD_XPOS,
   PROP_PAD_YPOS,
   PROP_PAD_ALPHA
@@ -135,9 +133,6 @@ gst_compositor_pad_get_property (GObject * object, guint prop_id,
   GstCompositorPad *pad = GST_COMPOSITOR_PAD (object);
 
   switch (prop_id) {
-    case PROP_PAD_ZORDER:
-      g_value_set_uint (value, pad->zorder);
-      break;
     case PROP_PAD_XPOS:
       g_value_set_int (value, pad->xpos);
       break;
