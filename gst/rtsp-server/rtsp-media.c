@@ -121,6 +121,9 @@ struct _GstRTSPMediaPrivate
   GstRTSPTimeRange range;       /* protected by lock */
   GstClockTime range_start;
   GstClockTime range_stop;
+
+  GList *payloads;              /* protected by lock */
+  GstClockTime rtx_time;        /* protected by lock */
 };
 
 #define DEFAULT_SHARED          FALSE
@@ -366,6 +369,8 @@ gst_rtsp_media_finalize (GObject * obj)
   gst_object_unref (priv->element);
   if (priv->pool)
     g_object_unref (priv->pool);
+  if (priv->payloads)
+    g_list_free (priv->payloads);
   g_mutex_clear (&priv->lock);
   g_cond_clear (&priv->cond);
   g_rec_mutex_clear (&priv->state_lock);
@@ -1091,6 +1096,63 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
 }
 
 /**
+ * gst_rtsp_media_set_retransmission_time:
+ * @media: a #GstRTSPMedia
+ * @time: the new value
+ *
+ * Set the amount of time to store retransmission packets.
+ */
+void
+gst_rtsp_media_set_retransmission_time (GstRTSPMedia * media, GstClockTime time)
+{
+  GstRTSPMediaPrivate *priv;
+  guint i;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  GST_LOG_OBJECT (media, "set retransmission time %" G_GUINT64_FORMAT, time);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->rtx_time = time;
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+
+    gst_rtsp_stream_set_retransmission_time (stream, time);
+  }
+
+  if (priv->rtpbin)
+    g_object_set (priv->rtpbin, "do-retransmission", time > 0, NULL);
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_retransmission_time:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the amount of time to store retransmission data.
+ *
+ * Returns: the amount of time to store retransmission data.
+ */
+GstClockTime
+gst_rtsp_media_get_retransmission_time (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  GstClockTime res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_unlock (&priv->lock);
+  res = priv->rtx_time;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
+/**
  * gst_rtsp_media_use_time_provider:
  * @media: a #GstRTSPMedia
  * @time_provider: if a #GstNetTimeProvider should be used
@@ -1198,6 +1260,37 @@ gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
   return result;
 }
 
+static GList *
+_find_payload_types (GstRTSPMedia * media)
+{
+  GList *ret = NULL;
+  gint i, n;
+
+  n = media->priv->streams->len;
+  for (i = 0; i < n; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (media->priv->streams, i);
+    guint pt = gst_rtsp_stream_get_pt (stream);
+
+    ret = g_list_append (ret, GUINT_TO_POINTER (pt));
+  }
+
+  return ret;
+}
+
+static guint
+_next_available_pt (GList * payloads)
+{
+  guint i;
+
+  for (i = 96; i <= 127; i++) {
+    GList *iter = g_list_find (payloads, GINT_TO_POINTER (i));
+    if (!iter)
+      return GPOINTER_TO_UINT (i);
+  }
+
+  return 0;
+}
+
 /**
  * gst_rtsp_media_collect_streams:
  * @media: a #GstRTSPMedia
@@ -1279,6 +1372,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   GstPad *srcpad;
   gchar *name;
   gint idx;
+  gint i, n;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (payloader), NULL);
@@ -1303,8 +1397,28 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
     gst_rtsp_stream_set_address_pool (stream, priv->pool);
   gst_rtsp_stream_set_profiles (stream, priv->profiles);
   gst_rtsp_stream_set_protocols (stream, priv->protocols);
+  gst_rtsp_stream_set_retransmission_time (stream, priv->rtx_time);
 
   g_ptr_array_add (priv->streams, stream);
+
+  if (priv->payloads)
+    g_list_free (priv->payloads);
+  priv->payloads = _find_payload_types (media);
+
+  n = priv->streams->len;
+  for (i = 0; i < n; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+    guint rtx_pt = _next_available_pt (priv->payloads);
+
+    if (rtx_pt == 0) {
+      /* FIXME: ran out of space of dynamic payload types */
+      break;
+    }
+
+    gst_rtsp_stream_set_retransmission_pt (stream, rtx_pt);
+
+    priv->payloads = g_list_append (priv->payloads, GUINT_TO_POINTER (rtx_pt));
+  }
   g_mutex_unlock (&priv->lock);
 
   g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STREAM], 0, stream,
@@ -2148,6 +2262,9 @@ start_prepare (GstRTSPMedia * media)
       goto join_bin_failed;
     }
   }
+
+  if (priv->rtpbin)
+    g_object_set (priv->rtpbin, "do-retransmission", priv->rtx_time > 0, NULL);
 
   for (walk = priv->dynamic; walk; walk = g_list_next (walk)) {
     GstElement *elem = walk->data;

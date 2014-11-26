@@ -111,6 +111,11 @@ struct _GstRTSPStreamPrivate
   GstElement *tee[2];
   GstElement *funnel[2];
 
+  /* retransmission */
+  GstElement *rtxsend;
+  guint rtx_pt;
+  GstClockTime rtx_time;
+
   /* server ports for sending/receiving over ipv4 */
   GstRTSPRange server_port_v4;
   GstRTSPAddress *server_addr_v4;
@@ -271,6 +276,9 @@ gst_rtsp_stream_finalize (GObject * obj)
     gst_rtsp_address_free (priv->server_addr_v6);
   if (priv->pool)
     g_object_unref (priv->pool);
+  if (priv->rtxsend)
+    g_object_unref (priv->rtxsend);
+
   gst_object_unref (priv->payloader);
   gst_object_unref (priv->srcpad);
   g_free (priv->control);
@@ -1306,6 +1314,82 @@ gst_rtsp_stream_get_ssrc (GstRTSPStream * stream, guint * ssrc)
   g_mutex_unlock (&priv->lock);
 }
 
+/**
+ * gst_rtsp_stream_set_retransmission_time:
+ * @stream: a #GstRTSPStream
+ * @time: a #GstClockTime
+ *
+ * Set the amount of time to store retransmission packets.
+ */
+void
+gst_rtsp_stream_set_retransmission_time (GstRTSPStream * stream,
+    GstClockTime time)
+{
+  GST_DEBUG_OBJECT (stream, "set retransmission time %" G_GUINT64_FORMAT, time);
+
+  g_mutex_lock (&stream->priv->lock);
+  stream->priv->rtx_time = time;
+  if (stream->priv->rtxsend)
+    g_object_set (stream->priv->rtxsend, "max-size-time",
+        GST_TIME_AS_MSECONDS (time), NULL);
+  g_mutex_unlock (&stream->priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_retransmission_time:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the amount of time to store retransmission data.
+ *
+ * Returns: the amount of time to store retransmission data.
+ */
+GstClockTime
+gst_rtsp_stream_get_retransmission_time (GstRTSPStream * stream)
+{
+  GstClockTime ret;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  g_mutex_lock (&stream->priv->lock);
+  ret = stream->priv->rtx_time;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return ret;
+}
+
+void
+gst_rtsp_stream_set_retransmission_pt (GstRTSPStream * stream, guint rtx_pt)
+{
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  GST_DEBUG_OBJECT (stream, "set retransmission pt %u", rtx_pt);
+
+  g_mutex_lock (&stream->priv->lock);
+  stream->priv->rtx_pt = rtx_pt;
+  if (stream->priv->rtxsend) {
+    guint pt = gst_rtsp_stream_get_pt (stream);
+    gchar *pt_s = g_strdup_printf ("%d", pt);
+    GstStructure *rtx_pt_map = gst_structure_new ("application/x-rtp-pt-map",
+        pt_s, G_TYPE_UINT, rtx_pt, NULL);
+    g_object_set (stream->priv->rtxsend, "payload-type-map", rtx_pt_map, NULL);
+  }
+  g_mutex_unlock (&stream->priv->lock);
+}
+
+guint
+gst_rtsp_stream_get_retransmission_pt (GstRTSPStream * stream)
+{
+  guint rtx_pt;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  g_mutex_lock (&stream->priv->lock);
+  rtx_pt = stream->priv->rtx_pt;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return rtx_pt;
+}
+
 /* executed from streaming thread */
 static void
 caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPStream * stream)
@@ -1657,6 +1741,46 @@ request_rtcp_decoder (GstElement * rtpbin, guint session,
   return gst_object_ref (priv->srtpdec);
 }
 
+static GstElement *
+request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPStream * stream)
+{
+  GstElement *bin;
+  GstPad *pad;
+  GstStructure *pt_map;
+  gchar *name;
+  guint pt, rtx_pt;
+  gchar *pt_s;
+
+  pt = gst_rtsp_stream_get_pt (stream);
+  pt_s = g_strdup_printf ("%u", pt);
+  rtx_pt = stream->priv->rtx_pt;
+
+  GST_INFO ("creating rtxsend with pt %u to %u", pt, rtx_pt);
+
+  bin = gst_bin_new (NULL);
+  stream->priv->rtxsend = gst_element_factory_make ("rtprtxsend", NULL);
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      pt_s, G_TYPE_UINT, rtx_pt, NULL);
+  g_object_set (stream->priv->rtxsend, "payload-type-map", pt_map,
+      "max-size-time", GST_TIME_AS_MSECONDS (stream->priv->rtx_time), NULL);
+  gst_structure_free (pt_map);
+  gst_bin_add (GST_BIN (bin), gst_object_ref (stream->priv->rtxsend));
+
+  pad = gst_element_get_static_pad (stream->priv->rtxsend, "src");
+  name = g_strdup_printf ("src_%u", sessid);
+  gst_element_add_pad (bin, gst_ghost_pad_new (name, pad));
+  g_free (name);
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (stream->priv->rtxsend, "sink");
+  name = g_strdup_printf ("sink_%u", sessid);
+  gst_element_add_pad (bin, gst_ghost_pad_new (name, pad));
+  g_free (name);
+  gst_object_unref (pad);
+
+  return bin;
+}
+
 /**
  * gst_rtsp_stream_join_bin:
  * @stream: a #GstRTSPStream
@@ -1712,6 +1836,12 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
         (GCallback) request_rtcp_encoder, stream);
     g_signal_connect (rtpbin, "request-rtcp-decoder",
         (GCallback) request_rtcp_decoder, stream);
+  }
+
+  if (priv->rtx_time > 0) {
+    /* enable retransmission by setting rtprtxsend as the "aux" element of rtpbin */
+    g_signal_connect (rtpbin, "request-aux-sender",
+        (GCallback) request_aux_sender, stream);
   }
 
   /* get a pad for sending RTP */

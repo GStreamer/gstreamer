@@ -120,6 +120,7 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
   const gchar *addrtype, *proto;
   gchar *address;
   guint ttl;
+  GstClockTime rtx_time;
 
   gst_sdp_media_new (&smedia);
 
@@ -340,6 +341,9 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
       continue;
     if (g_str_has_prefix (fname, "srtcp-"))
       continue;
+    /* handled later */
+    if (g_str_has_prefix (fname, "x-gst-rtsp-server-rtx-time"))
+      continue;
 
     if (g_str_has_prefix (fname, "a-")) {
       /* attribute */
@@ -359,6 +363,7 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
       first = FALSE;
     }
   }
+
   if (!first) {
     tmp = g_string_free (fmtp, FALSE);
     gst_sdp_media_add_attribute (smedia, "fmtp", tmp);
@@ -368,6 +373,32 @@ make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPMedia * media,
   }
 
   update_sdp_from_tags (stream, smedia);
+
+  if ((rtx_time = gst_rtsp_stream_get_retransmission_time (stream))) {
+    /* ssrc multiplexed retransmit functionality */
+    guint rtx_pt = gst_rtsp_stream_get_retransmission_pt (stream);
+
+    if (rtx_pt == 0) {
+      g_warning ("failed to find an available dynamic payload type. "
+          "Not adding retransmission");
+    } else {
+      gchar *tmp;
+
+      tmp = g_strdup_printf ("%d", rtx_pt);
+      gst_sdp_media_add_format (smedia, tmp);
+      g_free (tmp);
+
+      tmp = g_strdup_printf ("%d rtx/%d", rtx_pt, caps_rate);
+      gst_sdp_media_add_attribute (smedia, "rtpmap", tmp);
+      g_free (tmp);
+
+      tmp =
+          g_strdup_printf ("%d apt=%d;rtx-time=%" G_GINT64_FORMAT, rtx_pt,
+          caps_pt, GST_TIME_AS_MSECONDS (rtx_time));
+      gst_sdp_media_add_attribute (smedia, "fmtp", tmp);
+      g_free (tmp);
+    }
+  }
 
   gst_sdp_message_add_media (sdp, smedia);
   gst_sdp_media_free (smedia);

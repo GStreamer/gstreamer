@@ -188,6 +188,9 @@ GstRTSPAddressPool *  gst_rtsp_media_get_address_pool (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_buffer_size  (GstRTSPMedia *media, guint size);
 guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_set_retransmission_time  (GstRTSPMedia *media, GstClockTime time);
+GstClockTime          gst_rtsp_media_get_retransmission_time  (GstRTSPMedia *media);
+
 void                  gst_rtsp_media_use_time_provider (GstRTSPMedia *media, gboolean time_provider);
 gboolean              gst_rtsp_media_is_time_provider  (GstRTSPMedia *media);
 GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,

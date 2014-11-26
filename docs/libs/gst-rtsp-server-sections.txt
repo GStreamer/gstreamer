@@ -171,6 +171,9 @@ gst_rtsp_media_get_address_pool
 gst_rtsp_media_set_buffer_size
 gst_rtsp_media_get_buffer_size
 
+gst_rtsp_media_set_retransmission_time
+gst_rtsp_media_get_retransmission_time
+
 gst_rtsp_media_setup_sdp
 
 <SUBSECTION MediaPrepare>
@@ -256,6 +259,9 @@ gst_rtsp_media_factory_set_buffer_size
 
 gst_rtsp_media_factory_get_suspend_mode
 gst_rtsp_media_factory_set_suspend_mode
+
+gst_rtsp_media_factory_set_retransmission_time
+gst_rtsp_media_factory_get_retransmission_time
 
 gst_rtsp_media_factory_construct
 gst_rtsp_media_factory_create_element
@@ -540,6 +546,9 @@ gst_rtsp_stream_get_profiles
 
 gst_rtsp_stream_get_protocols
 gst_rtsp_stream_set_protocols
+
+gst_rtsp_stream_get_retransmission_time
+gst_rtsp_stream_set_retransmission_time
 
 gst_rtsp_stream_is_transport_supported
 

@@ -141,6 +141,9 @@ GstRTSPAddressPool *  gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFacto
 void                  gst_rtsp_media_factory_set_buffer_size  (GstRTSPMediaFactory * factory,
                                                                guint size);
 guint                 gst_rtsp_media_factory_get_buffer_size  (GstRTSPMediaFactory * factory);
+void                  gst_rtsp_media_factory_set_retransmission_time (GstRTSPMediaFactory * factory,
+                                                                      GstClockTime time);
+GstClockTime          gst_rtsp_media_factory_get_retransmission_time (GstRTSPMediaFactory * factory);
 
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct        (GstRTSPMediaFactory *factory,

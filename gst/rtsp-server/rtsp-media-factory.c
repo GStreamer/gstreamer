@@ -58,6 +58,8 @@ struct _GstRTSPMediaFactoryPrivate
   guint buffer_size;
   GstRTSPAddressPool *pool;
 
+  GstClockTime rtx_time;
+
   GMutex medias_lock;
   GHashTable *medias;           /* protected by medias_lock */
 };
@@ -822,6 +824,55 @@ gst_rtsp_media_factory_get_protocols (GstRTSPMediaFactory * factory)
   return res;
 }
 
+/**
+ * gst_rtsp_media_factory_set_retransmission_time:
+ * @factory: a #GstRTSPMediaFactory
+ * @time: a #GstClockTime
+ *
+ * Configure the time to store for possible retransmission
+ */
+void
+gst_rtsp_media_factory_set_retransmission_time (GstRTSPMediaFactory * factory,
+    GstClockTime time)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  priv = factory->priv;
+
+  GST_DEBUG_OBJECT (factory, "retransmission time %" G_GUINT64_FORMAT, time);
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv->rtx_time = time;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_retransmission_time:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get the time that is stored for retransmission purposes
+ *
+ * Returns: a #GstClockTime
+ */
+GstClockTime
+gst_rtsp_media_factory_get_retransmission_time (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  GstClockTime res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), 0);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  res = priv->rtx_time;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return res;
+}
+
 static gboolean
 compare_media (gpointer key, GstRTSPMedia * media1, GstRTSPMedia * media2)
 {
@@ -1084,6 +1135,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstRTSPLowerTrans protocols;
   GstRTSPAddressPool *pool;
   GstRTSPPermissions *perms;
+  GstClockTime rtx_time;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -1093,6 +1145,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   size = priv->buffer_size;
   profiles = priv->profiles;
   protocols = priv->protocols;
+  rtx_time = priv->rtx_time;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_suspend_mode (media, suspend_mode);
@@ -1101,6 +1154,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_buffer_size (media, size);
   gst_rtsp_media_set_profiles (media, profiles);
   gst_rtsp_media_set_protocols (media, protocols);
+  gst_rtsp_media_set_retransmission_time (media, rtx_time);
 
   if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {
     gst_rtsp_media_set_address_pool (media, pool);
