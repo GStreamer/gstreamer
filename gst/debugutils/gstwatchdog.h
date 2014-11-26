@@ -45,6 +45,8 @@ struct _GstWatchdog
   GMainLoop *main_loop;
   GThread *thread;
   GSource *source;
+
+  gboolean waiting_for_a_buffer;
 };
 
 struct _GstWatchdogClass
