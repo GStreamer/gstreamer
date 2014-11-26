@@ -141,7 +141,7 @@ AC_SUBST(LIBM)
 AC_FUNC_MMAP
 
 dnl check for pthreads
-ACX_PTHREAD
+AX_PTHREAD
 
 dnl *** checks for header files ***
 
