@@ -990,17 +990,12 @@ static gboolean
 prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
 {
   GstAggregatorPad *bpad = GST_AGGREGATOR_PAD (pad);
-
-  static GstAllocationParams params = { 0, 15, 0, 0, };
+  GstVideoAggregatorClass *vagg_klass = GST_VIDEO_AGGREGATOR_GET_CLASS (vagg);
 
   if (pad->buffer != NULL) {
-    guint outsize;
     GstClockTime timestamp;
     gint64 stream_time;
     GstSegment *seg;
-    GstVideoFrame *converted_frame;
-    GstBuffer *converted_buf = NULL;
-    GstVideoFrame *frame = g_slice_new0 (GstVideoFrame);
 
     seg = &bpad->segment;
 
@@ -1012,50 +1007,57 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
     if (GST_CLOCK_TIME_IS_VALID (stream_time))
       gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
+    if (!vagg_klass->disable_frame_conversion) {
+      guint outsize;
+      GstVideoFrame *converted_frame;
+      GstBuffer *converted_buf = NULL;
+      GstVideoFrame *frame = g_slice_new0 (GstVideoFrame);
+      static GstAllocationParams params = { 0, 15, 0, 0, };
 
-    if (!gst_video_frame_map (frame, &pad->buffer_vinfo, pad->buffer,
-            GST_MAP_READ)) {
-      GST_WARNING_OBJECT (vagg, "Could not map input buffer");
-    }
-
-    if (pad->priv->convert) {
-      gint converted_size;
-
-      converted_frame = g_slice_new0 (GstVideoFrame);
-
-      /* We wait until here to set the conversion infos, in case vagg->info changed */
-      if (pad->need_conversion_update) {
-        pad->conversion_info = vagg->info;
-        gst_video_info_set_format (&(pad->conversion_info),
-            GST_VIDEO_INFO_FORMAT (&vagg->info), pad->info.width,
-            pad->info.height);
-        pad->need_conversion_update = FALSE;
+      if (!gst_video_frame_map (frame, &pad->buffer_vinfo, pad->buffer,
+              GST_MAP_READ)) {
+        GST_WARNING_OBJECT (vagg, "Could not map input buffer");
       }
 
-      converted_size = pad->conversion_info.size;
-      outsize = GST_VIDEO_INFO_SIZE (&vagg->info);
-      converted_size = converted_size > outsize ? converted_size : outsize;
-      converted_buf = gst_buffer_new_allocate (NULL, converted_size, &params);
+      if (pad->priv->convert) {
+        gint converted_size;
 
-      if (!gst_video_frame_map (converted_frame, &(pad->conversion_info),
-              converted_buf, GST_MAP_READWRITE)) {
-        GST_WARNING_OBJECT (vagg, "Could not map converted frame");
+        converted_frame = g_slice_new0 (GstVideoFrame);
 
-        g_slice_free (GstVideoFrame, converted_frame);
+        /* We wait until here to set the conversion infos, in case vagg->info changed */
+        if (pad->need_conversion_update) {
+          pad->conversion_info = vagg->info;
+          gst_video_info_set_format (&(pad->conversion_info),
+              GST_VIDEO_INFO_FORMAT (&vagg->info), pad->info.width,
+              pad->info.height);
+          pad->need_conversion_update = FALSE;
+        }
+
+        converted_size = pad->conversion_info.size;
+        outsize = GST_VIDEO_INFO_SIZE (&vagg->info);
+        converted_size = converted_size > outsize ? converted_size : outsize;
+        converted_buf = gst_buffer_new_allocate (NULL, converted_size, &params);
+
+        if (!gst_video_frame_map (converted_frame, &(pad->conversion_info),
+                converted_buf, GST_MAP_READWRITE)) {
+          GST_WARNING_OBJECT (vagg, "Could not map converted frame");
+
+          g_slice_free (GstVideoFrame, converted_frame);
+          gst_video_frame_unmap (frame);
+          g_slice_free (GstVideoFrame, frame);
+          return FALSE;
+        }
+
+        gst_video_converter_frame (pad->priv->convert, frame, converted_frame);
+        pad->converted_buffer = converted_buf;
         gst_video_frame_unmap (frame);
         g_slice_free (GstVideoFrame, frame);
-        return FALSE;
+      } else {
+        converted_frame = frame;
       }
 
-      gst_video_converter_frame (pad->priv->convert, frame, converted_frame);
-      pad->converted_buffer = converted_buf;
-      gst_video_frame_unmap (frame);
-      g_slice_free (GstVideoFrame, frame);
-    } else {
-      converted_frame = frame;
+      pad->aggregated_frame = converted_frame;
     }
-
-    pad->aggregated_frame = converted_frame;
   }
 
   return TRUE;
@@ -1099,11 +1101,10 @@ gst_videoaggregator_do_aggregate (GstVideoAggregator * vagg,
   GST_BUFFER_TIMESTAMP (*outbuf) = output_start_time;
   GST_BUFFER_DURATION (*outbuf) = output_end_time - output_start_time;
 
-  if (vagg_klass->disable_frame_conversion == FALSE) {
-    /* Here we convert all the frames the subclass will have to aggregate */
-    gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (vagg),
-        (GstAggregatorPadForeachFunc) prepare_frames, NULL);
-  }
+  /* Here we convert all the frames the subclass will have to aggregate
+   * and also sync pad properties to the stream time */
+  gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (vagg),
+      (GstAggregatorPadForeachFunc) prepare_frames, NULL);
 
   ret = vagg_klass->aggregate_frames (vagg, *outbuf);
 
