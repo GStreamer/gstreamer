@@ -1164,6 +1164,10 @@ gst_x264_enc_start (GstVideoEncoder * encoder)
 
   x264enc->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY;
 
+  /* make sure that we have enough time for first DTS,
+     this is probably overkill for most streams */
+  gst_video_encoder_set_min_pts (encoder, GST_SECOND * 60 * 60 * 1000);
+
   return TRUE;
 }
 
@@ -1539,8 +1543,6 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       encoder->x264param.i_frame_packing);
 
   encoder->reconfig = FALSE;
-  /* good start, will be corrected if needed */
-  encoder->ts_offset = 0;
 
   GST_OBJECT_UNLOCK (encoder);
 
@@ -2186,15 +2188,8 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   /* we want to know if x264 is messing around with this */
   g_assert (frame->pts == pic_out.i_pts);
 
-  /* As upstream often starts with PTS set to zero, in presence of b-frames,
-   * x264 will have to use negative DTS. As this is not supported by
-   * GStreamer, we shift both DTS and PTS forward to make it positive. It's
-   * important to shift both in order to ensure PTS remains >= to DTS. */
-  if (pic_out.i_dts < encoder->ts_offset)
-    encoder->ts_offset = pic_out.i_dts;
-
-  frame->dts = pic_out.i_dts - encoder->ts_offset;
-  frame->pts = pic_out.i_pts - encoder->ts_offset;
+  frame->dts = pic_out.i_dts;
+  frame->pts = pic_out.i_pts;
 
   if (pic_out.b_keyframe) {
     GST_DEBUG_OBJECT (encoder, "Output keyframe");
