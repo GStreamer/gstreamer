@@ -50,7 +50,6 @@ struct _GstCompositorPad
 
   /* properties */
   gint xpos, ypos;
-  guint zorder;
   gdouble alpha;
 };
 
