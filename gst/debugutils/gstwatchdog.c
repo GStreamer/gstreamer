@@ -211,7 +211,23 @@ static void
 gst_watchdog_feed (GstWatchdog * watchdog, gpointer mini_object, gboolean force)
 {
   if (watchdog->source) {
-    if (watchdog->waiting_for_a_buffer) {
+    if (watchdog->waiting_for_flush_start) {
+      if (mini_object && GST_IS_EVENT (mini_object) &&
+          GST_EVENT_TYPE (mini_object) == GST_EVENT_FLUSH_START) {
+        watchdog->waiting_for_flush_start = FALSE;
+        watchdog->waiting_for_flush_stop = TRUE;
+      }
+
+      force = TRUE;
+    } else if (watchdog->waiting_for_flush_stop) {
+      if (mini_object && GST_IS_EVENT (mini_object) &&
+          GST_EVENT_TYPE (mini_object) == GST_EVENT_FLUSH_STOP) {
+        watchdog->waiting_for_flush_stop = FALSE;
+        watchdog->waiting_for_a_buffer = TRUE;
+      }
+
+      force = TRUE;
+    } else if (watchdog->waiting_for_a_buffer) {
       if (mini_object && GST_IS_BUFFER (mini_object)) {
         watchdog->waiting_for_a_buffer = FALSE;
         GST_DEBUG_OBJECT (watchdog, "Got a buffer \\o/");
@@ -330,7 +346,7 @@ gst_watchdog_src_event (GstBaseTransform * trans, GstEvent * event)
     if (flags & GST_SEEK_FLAG_FLUSH) {
       force = TRUE;
       GST_DEBUG_OBJECT (watchdog, "Got a FLUSHING seek, we need a buffer now!");
-      watchdog->waiting_for_a_buffer = TRUE;
+      watchdog->waiting_for_flush_start = TRUE;
     }
   }
 
