@@ -568,6 +568,7 @@ qtdemux_dump_mfro (GstQTDemux * qtdemux, GstByteReader * data, int depth)
   if (!qt_atom_parser_has_remaining (data, 4))
     return FALSE;
 
+  GST_LOG ("%*s  version/flags: %08x", depth, "", GET_UINT32 (data));
   GST_LOG ("%*s  size: %d", depth, "", GET_UINT32 (data));
   return TRUE;
 }
@@ -596,8 +597,8 @@ qtdemux_dump_tfra (GstQTDemux * qtdemux, GstByteReader * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
 
   if (!gst_byte_reader_get_uint32_be (data, &track_id) ||
-      gst_byte_reader_get_uint32_be (data, &len) ||
-      gst_byte_reader_get_uint32_be (data, &num_entries))
+      !gst_byte_reader_get_uint32_be (data, &len) ||
+      !gst_byte_reader_get_uint32_be (data, &num_entries))
     return FALSE;
 
   GST_LOG ("%*s  track ID:      %u", depth, "", track_id);
