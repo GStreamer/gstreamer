@@ -42,6 +42,7 @@ check_PROGRAMS = \
 	ges/mixers\
 	ges/group\
 	ges/project\
+	ges/track\
 	nle/simple	\
 	nle/complex	\
 	nle/nleoperation	\

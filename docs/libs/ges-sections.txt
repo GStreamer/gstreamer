@@ -71,6 +71,8 @@ GESTrack
 GESCreateElementForGapFunc
 ges_track_new
 ges_track_add_element
+ges_track_set_restriction_caps
+ges_track_update_restriction_caps
 ges_track_remove_element
 ges_track_set_caps
 ges_track_get_caps

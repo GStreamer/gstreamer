@@ -20,13 +20,35 @@
 /**
  * SECTION: gesaudiotrack
  * @short_description: A standard GESTrack for raw audio
+ *
+ * Sane default properties to specify and fixate the output stream are
+ * set as restriction-caps.
+ * It is advised, to modify these properties, to use
+ * #ges_track_update_restriction_caps, setting them directly is
+ * possible through #ges_track_set_restriction_caps, but not specifying
+ * one of them can lead to negotiation issues, only use that function
+ * if you actually know what you're doing :)
+ *
+ * The default properties are:
+ * - format: S32LE
+ * - channels: 2
+ * - rate: 44100
+ * - layout: interleaved
  */
-
-#define DEFAULT_CAPS "audio/x-raw"
 
 #include "ges-internal.h"
 #include "ges-smart-adder.h"
 #include "ges-audio-track.h"
+
+#define DEFAULT_CAPS "audio/x-raw"
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define DEFAULT_RESTRICTION_CAPS "audio/x-raw, format=S32LE, channels=2, "\
+  "rate=44100, layout=interleaved"
+#else
+#define DEFAULT_RESTRICTION_CAPS "audio/x-raw, format=S32BE, channels=2, "\
+  "rate=44100, layout=interleaved"
+#endif
 
 struct _GESAudioTrackPrivate
 {
@@ -106,6 +128,8 @@ ges_audio_track_new (void)
   ges_track_set_create_element_for_gap_func (GES_TRACK (ret),
       create_element_for_raw_audio_gap);
 
+  ges_track_set_restriction_caps (GES_TRACK (ret),
+      gst_caps_from_string (DEFAULT_RESTRICTION_CAPS));
   gst_caps_unref (caps);
 
   return ret;

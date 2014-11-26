@@ -248,6 +248,13 @@ track_resort_and_fill_gaps (GESTrack * track)
   }
 }
 
+static gboolean
+update_field (GQuark field_id, const GValue * value, GstStructure * original)
+{
+  gst_structure_id_set_value (original, field_id, value);
+  return TRUE;
+}
+
 /* callbacks */
 static void
 sort_track_elements_cb (GESTrackElement * child,
@@ -747,6 +754,40 @@ ges_track_set_restriction_caps (GESTrack * track, const GstCaps * caps)
   g_object_set (priv->capsfilter, "caps", caps, NULL);
 
   g_object_notify (G_OBJECT (track), "restriction-caps");
+}
+
+/**
+ * ges_track_update_restriction_caps:
+ * @track: a #GESTrack
+ * @caps: the #GstCaps to update with
+ *
+ * Updates the restriction caps by modifying all the fields present in @caps
+ * in the original restriction caps. If for example the current restriction caps
+ * are video/x-raw, format=I420, width=360 and @caps is video/x-raw, format=RGB,
+ * the restriction caps will be updated to video/x-raw, format=RGB, width=360.
+ *
+ * Modification happens for each structure in the new caps, and
+ * one can add new fields or structures through that function.
+ */
+void
+ges_track_update_restriction_caps (GESTrack * self, const GstCaps * caps)
+{
+  guint i;
+  GstCaps *new_restriction_caps = gst_caps_copy (self->priv->restriction_caps);
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *new = gst_caps_get_structure (caps, i);
+
+    if (gst_caps_get_size (new_restriction_caps) > i) {
+      GstStructure *original = gst_caps_get_structure (new_restriction_caps, i);
+      gst_structure_foreach (new, (GstStructureForeachFunc) update_field,
+          original);
+    } else
+      gst_caps_append_structure (new_restriction_caps,
+          gst_structure_copy (new));
+  }
+
+  ges_track_set_restriction_caps (self, new_restriction_caps);
 }
 
 /**

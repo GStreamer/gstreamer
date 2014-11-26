@@ -92,6 +92,7 @@ void               ges_track_set_create_element_for_gap_func (GESTrack *track, G
 void               ges_track_set_mixing                      (GESTrack *track, gboolean mixing);
 gboolean           ges_track_get_mixing                      (GESTrack *track);
 void               ges_track_set_restriction_caps            (GESTrack *track, const GstCaps *caps);
+void               ges_track_update_restriction_caps         (GESTrack *track, const GstCaps *caps);
 
 /* standard methods */
 GType              ges_track_get_type                        (void);
