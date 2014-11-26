@@ -3330,7 +3330,7 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
   /* Align them all on this */
   for (n = 0; n < qtdemux->n_streams; n++) {
     guint32 index = 0;
-    guint64 media_start = 0, seg_time = 0;
+    guint64 seg_time = 0;
     QtDemuxStream *str = qtdemux->streams[n];
 
     /* aligning reference stream again might lead to backing up to yet another
@@ -3340,11 +3340,13 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
       seg_idx = ref_seg_idx;
       seg = &str->segments[seg_idx];
       k_index = ref_k_index;
-      GST_DEBUG_OBJECT (qtdemux, "reference stream segment %d, "
-          "sample at index %d", ref_str->segment_index, k_index);
+      GST_DEBUG_OBJECT (qtdemux, "reference stream %d segment %d, "
+          "sample at index %d", n, ref_str->segment_index, k_index);
     } else {
       seg_idx = gst_qtdemux_find_segment (qtdemux, str, k_pos);
-      GST_DEBUG_OBJECT (qtdemux, "align segment %d", seg_idx);
+      GST_DEBUG_OBJECT (qtdemux,
+          "stream %d align segment %d for keyframe pos %" GST_TIME_FORMAT, n,
+          seg_idx, GST_TIME_ARGS (k_pos));
 
       /* segment not found, continue with normal flow */
       if (seg_idx == -1)
@@ -3354,13 +3356,16 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
       seg = &str->segments[seg_idx];
       seg_time = k_pos - seg->time;
 
-      /* get the media time in the segment */
-      media_start = seg->media_start + seg_time;
+      /* get the media time in the segment.
+       * No adjustment for empty "filler" segments */
+      if (seg->media_start != GST_CLOCK_TIME_NONE)
+        seg_time += seg->media_start;
 
       /* get the index of the sample with media time */
-      index = gst_qtdemux_find_index_linear (qtdemux, str, media_start);
-      GST_DEBUG_OBJECT (qtdemux, "sample for %" GST_TIME_FORMAT " at %u",
-          GST_TIME_ARGS (media_start), index);
+      index = gst_qtdemux_find_index_linear (qtdemux, str, seg_time);
+      GST_DEBUG_OBJECT (qtdemux,
+          "stream %d sample for %" GST_TIME_FORMAT " at %u", n,
+          GST_TIME_ARGS (seg_time), index);
 
       /* find previous keyframe */
       k_index = gst_qtdemux_find_keyframe (qtdemux, str, index);
@@ -3370,12 +3375,15 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
     str->to_sample = str->from_sample - 1;
     /* Define our time position */
     str->time_position =
-        (gst_util_uint64_scale (str->samples[k_index].timestamp, GST_SECOND,
-            str->timescale) - seg->media_start) + seg->time;
+        gst_util_uint64_scale (str->samples[k_index].timestamp, GST_SECOND,
+        str->timescale) + seg->time;
+    if (seg->media_start != GST_CLOCK_TIME_NONE)
+      str->time_position -= seg->media_start;
+
     /* Now seek back in time */
     gst_qtdemux_move_stream (qtdemux, str, k_index);
-    GST_DEBUG_OBJECT (qtdemux, "keyframe at %u, time position %"
-        GST_TIME_FORMAT " playing from sample %u to %u", k_index,
+    GST_DEBUG_OBJECT (qtdemux, "stream %d keyframe at %u, time position %"
+        GST_TIME_FORMAT " playing from sample %u to %u", n, k_index,
         GST_TIME_ARGS (str->time_position), str->from_sample, str->to_sample);
   }
 
