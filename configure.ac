@@ -422,7 +422,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  gsettings \
  musepack nas sdl timidity \
  directdraw acm wininet \
- xvid lv2 teletextdec sndio osx_video quicktime libvisual"
+ xvid lv2 teletextdec sndio osx_video libvisual"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
@@ -1709,13 +1709,6 @@ case "$host" in
     HAVE_AVC="no"
     ;;
 esac
-
-dnl check for QuickTime
-translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
-AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
-  AC_CHECK_TYPE([SampleReferenceRecord], HAVE_QUICKTIME="yes", HAVE_QUICKTIME="no",
-      [#include <Quicktime/Quicktime.h>])
-])
 
 dnl check for shm_open (for shm plugin)
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHM, true)
@@ -3291,7 +3284,6 @@ sys/fbdev/Makefile
 sys/linsys/Makefile
 sys/opensles/Makefile
 sys/osxvideo/Makefile
-sys/qtwrapper/Makefile
 sys/shm/Makefile
 sys/uvch264/Makefile
 sys/vcd/Makefile
