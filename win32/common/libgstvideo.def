@@ -148,6 +148,7 @@ EXPORTS
 	gst_video_encoder_proxy_getcaps
 	gst_video_encoder_set_headers
 	gst_video_encoder_set_latency
+	gst_video_encoder_set_min_pts
 	gst_video_encoder_set_output_state
 	gst_video_event_is_force_key_unit
 	gst_video_event_new_downstream_force_key_unit

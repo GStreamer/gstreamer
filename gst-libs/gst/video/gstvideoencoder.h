@@ -333,6 +333,8 @@ void                 gst_video_encoder_get_allocator (GstVideoEncoder *encoder,
                                                       GstAllocator **allocator,
                                                       GstAllocationParams *params);
 
+void                 gst_video_encoder_set_min_pts(GstVideoEncoder *encoder, GstClockTime min_pts);
+
 G_END_DECLS
 
 #endif
