@@ -30,8 +30,6 @@
 #include <gst/video/video.h>
 #include <gst/base/gstaggregator.h>
 
-#include "gstvideoaggregatorpad.h"
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_VIDEO_AGGREGATOR (gst_videoaggregator_get_type())
@@ -49,6 +47,8 @@ G_BEGIN_DECLS
 typedef struct _GstVideoAggregator GstVideoAggregator;
 typedef struct _GstVideoAggregatorClass GstVideoAggregatorClass;
 typedef struct _GstVideoAggregatorPrivate GstVideoAggregatorPrivate;
+
+#include "gstvideoaggregatorpad.h"
 
 /**
  * GstVideoAggregator:
@@ -70,9 +70,6 @@ struct _GstVideoAggregator
 
 /**
  * GstVideoAggregatorClass:
- * @disable_frame_conversion: Optional.
- *                            Allows subclasses to disable the frame colorspace
- *                            conversion feature
  * @update_caps:              Optional.
  *                            Lets subclasses update the #GstCaps representing
  *                            the src pad caps before usage.  Return %NULL to indicate failure.
@@ -87,6 +84,8 @@ struct _GstVideoAggregator
  *                            the #aggregate_frames vmethod.
  * @negotiated_caps:          Optional.
  *                            Notifies subclasses what caps format has been negotiated
+ * @find_best_format:         Optional.
+ *                            Lets subclasses decide of the best common format to use.
  **/
 struct _GstVideoAggregatorClass
 {
@@ -94,8 +93,6 @@ struct _GstVideoAggregatorClass
   GstAggregatorClass parent_class;
 
   /*< public >*/
-  gboolean           disable_frame_conversion;
-
   GstCaps *          (*update_caps)               (GstVideoAggregator *  videoaggregator,
                                                    GstCaps            *  caps);
   GstFlowReturn      (*aggregate_frames)          (GstVideoAggregator *  videoaggregator,
@@ -104,6 +101,10 @@ struct _GstVideoAggregatorClass
                                                    GstBuffer          ** outbuffer);
   gboolean           (*negotiated_caps)           (GstVideoAggregator *  videoaggregator,
                                                    GstCaps            *  caps);
+  void               (*find_best_format)          (GstVideoAggregator *  vagg,
+                                                   GstCaps            *  downstream_caps,
+                                                   GstVideoInfo       *  best_info,
+                                                   gboolean           *  at_least_one_alpha);
   /* < private > */
   gpointer            _gst_reserved[GST_PADDING];
 };

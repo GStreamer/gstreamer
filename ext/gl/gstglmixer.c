@@ -87,11 +87,17 @@ static void
 gst_gl_mixer_pad_class_init (GstGLMixerPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstVideoAggregatorPadClass *vaggpad_class =
+      (GstVideoAggregatorPadClass *) klass;
 
   gobject_class->set_property = gst_gl_mixer_pad_set_property;
   gobject_class->get_property = gst_gl_mixer_pad_get_property;
 
   gobject_class->finalize = gst_gl_mixer_pad_finalize;
+
+  vaggpad_class->set_info = NULL;
+  vaggpad_class->prepare_frame = NULL;
+  vaggpad_class->clean_frame = NULL;
 }
 
 static void
@@ -592,10 +598,10 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   agg_class->stop = gst_gl_mixer_stop;
   agg_class->start = gst_gl_mixer_start;
 
-  videoaggregator_class->disable_frame_conversion = TRUE;
   videoaggregator_class->aggregate_frames = gst_gl_mixer_aggregate_frames;
   videoaggregator_class->get_output_buffer = gst_gl_mixer_get_output_buffer;
   videoaggregator_class->negotiated_caps = _negotiated_caps;
+  videoaggregator_class->find_best_format = NULL;
 
   g_object_class_install_property (gobject_class, PROP_CONTEXT,
       g_param_spec_object ("context",
