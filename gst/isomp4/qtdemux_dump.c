@@ -573,6 +573,17 @@ qtdemux_dump_mfro (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 }
 
 gboolean
+qtdemux_dump_mfhd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  if (!qt_atom_parser_has_remaining (data, 4))
+    return FALSE;
+
+  GST_LOG ("%*s  version/flags: %08x", depth, "", GET_UINT32 (data));
+  GST_LOG ("%*s  sequence_number: %d", depth, "", GET_UINT32 (data));
+  return TRUE;
+}
+
+gboolean
 qtdemux_dump_tfra (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
   guint64 time = 0, moof_offset = 0;

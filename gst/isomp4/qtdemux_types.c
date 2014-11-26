@@ -157,7 +157,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_mfro, "movie fragment random access offset", 0,
       qtdemux_dump_mfro},
   {FOURCC_moof, "movie fragment", QT_FLAG_CONTAINER,},
-  {FOURCC_mfhd, "movie fragment header", 0,},
+  {FOURCC_mfhd, "movie fragment header", 0, qtdemux_dump_mfhd},
   {FOURCC_traf, "track fragment", QT_FLAG_CONTAINER,},
   {FOURCC_tfhd, "track fragment header", 0,
       qtdemux_dump_tfhd},

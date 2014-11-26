@@ -63,6 +63,8 @@ gboolean qtdemux_dump_ctts (GstQTDemux * qtdemux, GstByteReader * data,
     int depth);
 gboolean qtdemux_dump_mfro (GstQTDemux * qtdemux, GstByteReader * data,
     int depth);
+gboolean qtdemux_dump_mfhd (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
 gboolean qtdemux_dump_tfra (GstQTDemux * qtdemux, GstByteReader * data,
     int depth);
 gboolean qtdemux_dump_tfhd (GstQTDemux * qtdemux, GstByteReader * data,
