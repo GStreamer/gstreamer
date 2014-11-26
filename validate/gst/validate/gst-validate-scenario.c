@@ -1999,9 +1999,7 @@ gst_validate_register_action_type (const gchar * type_name,
 
   if (parameters) {
     for (n_params = 0; parameters[n_params].name != NULL; n_params++);
-
-    if (is_config)
-      n_params += 1;
+    n_params += 1;
   }
 
   if (n_params) {
@@ -2011,18 +2009,6 @@ gst_validate_register_action_type (const gchar * type_name,
   if (parameters) {
     memcpy (type->parameters, parameters,
         sizeof (GstValidateActionParameter) * (n_params));
-  }
-
-  if (!is_config) {
-    type->parameters[n_params - 1].name = "playback-time";
-    type->parameters[n_params - 1].description =
-        "The playback time at which the action " "will be executed";
-    type->parameters[n_params - 1].mandatory = FALSE;
-    type->parameters[n_params - 1].types = "double,string";
-    type->parameters[n_params - 1].possible_variables =
-        "position: The current position in the stream\n"
-        "duration: The duration of the stream";
-    type->parameters[n_params - 1].def = "0.0";
   }
 
   type->execute = function;

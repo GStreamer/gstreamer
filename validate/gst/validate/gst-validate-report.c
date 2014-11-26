@@ -504,6 +504,66 @@ gst_validate_printf (gpointer source, const gchar * format, ...)
   va_end (var_args);
 }
 
+static void
+print_action_parametter (GString * string, GstValidateActionType * type,
+    GstValidateActionParameter * param)
+{
+  gint nw = 0;
+
+  gchar *desc, *tmp;
+  gchar *param_head = g_strdup_printf ("    %s", param->name);
+  gchar *tmp_head = g_strdup_printf ("\n %-30s : %s",
+      param_head, "something");
+
+
+  while (tmp_head[nw] != ':')
+    nw++;
+
+  g_free (tmp_head);
+
+  tmp = g_strdup_printf ("\n%*s", nw + 1, " ");
+
+  if (g_strcmp0 (param->description, "")) {
+    desc =
+        g_regex_replace (newline_regex, param->description,
+        -1, 0, tmp, 0, NULL);
+  } else {
+    desc = g_strdup_printf ("No description");
+  }
+
+  g_string_append_printf (string, "\n %-30s : %s", param_head, desc);
+  g_free (desc);
+
+  if (param->possible_variables) {
+    gchar *tmp1 = g_strdup_printf ("\n%*s", nw + 4, " ");
+    desc =
+        g_regex_replace (newline_regex,
+        param->possible_variables, -1, 0, tmp1, 0, NULL);
+    g_string_append_printf (string, "%sPossible variables:%s%s", tmp,
+        tmp1, desc);
+
+    g_free (tmp1);
+  }
+
+  if (param->types) {
+    gchar *tmp1 = g_strdup_printf ("\n%*s", nw + 4, " ");
+    desc = g_regex_replace (newline_regex, param->types, -1, 0, tmp1, 0, NULL);
+    g_string_append_printf (string, "%sPossible types:%s%s", tmp, tmp1, desc);
+
+    g_free (tmp1);
+  }
+
+  if (!param->mandatory) {
+    g_string_append_printf (string, "%sDefault: %s", tmp, param->def);
+  }
+
+  g_string_append_printf (string, "%s%s", tmp,
+      param->mandatory ? "Mandatory." : "Optional.");
+
+  g_free (tmp);
+  g_free (param_head);
+}
+
 void
 gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 {
@@ -523,6 +583,18 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
       gchar *desc, *tmp;
+
+      GstValidateActionParameter playback_time_param = {
+        .name = "playback-time",
+        .description =
+            "The playback time at which the action " "will be executed",
+        .mandatory = FALSE,
+        .types = "double,string",
+        .possible_variables =
+            "position: The current position in the stream\n"
+            "duration: The duration of the stream",
+        .def = "0.0"
+      };
 
       GstValidateActionType *type = GST_VALIDATE_ACTION_TYPE (source);
 
@@ -544,69 +616,15 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       g_free (desc);
       g_free (tmp);
 
+      if (!IS_CONFIG_ACTION_TYPE (type->flags))
+        print_action_parametter (string, type, &playback_time_param);
+
       if (type->parameters) {
         g_string_append_printf (string, "\n\n  Parametters:");
-
         for (i = 0; type->parameters[i].name; i++) {
-          gint nw = 0;
-          gchar *param_head =
-              g_strdup_printf ("    %s", type->parameters[i].name);
-          gchar *tmp_head = g_strdup_printf ("\n %-30s : %s",
-              param_head, "something");
-
-
-          while (tmp_head[nw] != ':')
-            nw++;
-
-          g_free (tmp_head);
-
-          tmp = g_strdup_printf ("\n%*s", nw + 1, " ");
-
-          if (g_strcmp0 (type->parameters[i].description, "")) {
-            desc =
-                g_regex_replace (newline_regex, type->parameters[i].description,
-                -1, 0, tmp, 0, NULL);
-          } else {
-            desc = g_strdup_printf ("No description");
-          }
-
-          g_string_append_printf (string, "\n %-30s : %s", param_head, desc);
-          g_free (desc);
-
-          if (type->parameters[i].possible_variables) {
-            gchar *tmp1 = g_strdup_printf ("\n%*s", nw + 4, " ");
-            desc =
-                g_regex_replace (newline_regex,
-                type->parameters[i].possible_variables, -1, 0, tmp1, 0, NULL);
-            g_string_append_printf (string, "%sPossible variables:%s%s", tmp,
-                tmp1, desc);
-
-            g_free (tmp1);
-          }
-
-          if (type->parameters[i].types) {
-            gchar *tmp1 = g_strdup_printf ("\n%*s", nw + 4, " ");
-            desc =
-                g_regex_replace (newline_regex,
-                type->parameters[i].types, -1, 0, tmp1, 0, NULL);
-            g_string_append_printf (string, "%sPossible types:%s%s", tmp,
-                tmp1, desc);
-
-            g_free (tmp1);
-          }
-
-          if (!type->parameters[i].mandatory) {
-            g_string_append_printf (string, "%sDefault: %s", tmp,
-                type->parameters[i].def);
-          }
-
-          g_string_append_printf (string, "%s%s", tmp,
-              type->parameters[i].mandatory ? "Mandatory." : "Optional.");
-
-          g_free (tmp);
-          g_free (param_head);
-
+          print_action_parametter (string, type, &type->parameters[i]);
         }
+
       } else {
         g_string_append_printf (string, "\n\n  No Parameters");
 
