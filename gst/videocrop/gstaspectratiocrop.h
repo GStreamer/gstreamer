@@ -46,7 +46,6 @@ struct _GstAspectRatioCrop
   GstElement *videocrop;
 
   GstPad *sink;
-  GstPadEventFunction sinkpad_old_eventfunc;
 
   /* target aspect ratio */
   gint ar_num; /* if < 1 then don't change ar */
