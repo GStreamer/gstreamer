@@ -32,43 +32,36 @@
  * <colspec colname="properties_name" colwidth="200px"/>
  * <colspec colname="properties_flags" colwidth="400px"/>
  * <tbody>
- *
  * <row>
  *  <entry role="property_type"><link linkend="gdouble"><type>double</type></link></entry>
  *  <entry role="property_name"><link linkend="GESVideoSource--alpha">alpha</link></entry>
  *  <entry>The desired alpha for the stream.</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="gint"><type>gint</type></link></entry>
  *  <entry role="property_name"><link linkend="GESVideoSource--posx">posx</link></entry>
  *  <entry>The desired x position for the stream.</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="gint"><type>gint</type></link></entry>
  *  <entry role="property_name"><link linkend="GESVideoSource--posy">posy</link></entry>
  *  <entry>The desired y position for the stream</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="guint"><type>guint</type></link></entry>
  *  <entry role="property_name"><link linkend="GESVideoSource--zorder">zorder</link></entry>
  *  <entry>The desired z order for the stream</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="gint"><type>gint</type></link></entry>
  *  <entry role="property_name"><link linkend="GESVideoSource--width">width</link></entry>
  *  <entry>The desired width for that source. Set to 0 if size is not mandatory, will be set to width of the current track.</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="gint"><type>gint</type></link></entry>
  *  <entry role="property_name"><link linkend="GESVideoSource--height">height</link></entry>
  *  <entry>The desired height for that source. Set to 0 if size is not mandatory, will be set to height of the current track.</entry>
  * </row>
- *
  * </tbody>
  * </tgroup>
  * </informaltable>

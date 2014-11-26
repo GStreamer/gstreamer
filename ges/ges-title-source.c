@@ -40,58 +40,48 @@
  *  <entry role="property_name"><link linkend="GESTileSource--background">background</link></entry>
  *  <entry>The color of the background</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="guint"><type>guint</type></link></entry>
  *  <entry role="property_name"><link linkend="GESTileSource--color">color</link></entry>
  *  <entry>The color of the text</entry>
  * </row>
- *
  * <row>
  *   <entry role="property_type"><link linkend="gchar"><type>gchar</type></link></entry>
  *   <entry role="property_name"><link linkend="GESTileSource--font-desc">font-desc</link></entry>
  *   <entry>Pango font description string</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="GESTextHAlign"><type>GESTextHAlign</type></link></entry>
  *  <entry role="property_name"><link linkend="GESTileSource--halignment">halignment</link></entry>
  *  <entry>Horizontal alignment of the text</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="gchar"><type>gchar</type></link></entry>
  *  <entry role="property_name"><link linkend="GESTileSource--text">text</link></entry>
  *  <entry>The text to be rendered</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="GESTextVAlign"><type>GESTextVAlign</type></link>
  *  </entry><entry role="property_name"><link linkend="GESTileSource--valignment">valignment</link>
  *  </entry><entry>Vertical alignent of the text</entry>
  * </row>
- *
  * <row>
  *  <entry role="property_type"><link linkend="gdouble"><type>gdouble</type></link></entry>
  *  <entry role="property_name"><link linkend="GESTileSource--xpos">xpos</link></entry>
  *  <entry>The horizontal position of the text</entry>
  * </row>
- *
  * <row><entry role="property_type"><link linkend="gdouble"><type>gdouble</type></link></entry>
  *  <entry role="property_name"><link linkend="GESTileSource--ypos">ypos</link></entry>
  *  <entry>The vertical position of the text</entry>
  * </row>
- *
  * <row><entry role="property_type"><link linkend="gboolean"><type>gboolean</type></link></entry>
  *  <entry role="property_name"><link linkend="GESTileSource--shaded-background">shaded-background</link></entry>
  *  <entry>Whether to shade the background under the text area</entry>
  * </row>
- *
  * <row><entry role="property_type"><link linkend="guint"><type>guint</type></link></entry>
  *  <entry role="property_name"><link linkend="GESTileSource--outline-color">outline-color</link></entry>
  *  <entry>Color to use for outline the text (big-endian ARGB).</entry>
  * </row>
- *
  * </tbody>
  * </tgroup>
  * </informaltable>
