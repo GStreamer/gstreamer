@@ -2670,6 +2670,22 @@ qtdemux_find_stream (GstQTDemux * qtdemux, guint32 id)
 }
 
 static gboolean
+qtdemux_parse_mfhd (GstQTDemux * qtdemux, GstByteReader * mfhd,
+    guint32 * fragment_number)
+{
+  if (!gst_byte_reader_skip (mfhd, 4))
+    goto fail;
+  if (!gst_byte_reader_get_uint32_be (mfhd, fragment_number))
+    goto fail;
+  return TRUE;
+fail:
+  {
+    GST_WARNING_OBJECT (qtdemux, "Failed to parse mfhd atom");
+    return FALSE;
+  }
+}
+
+static gboolean
 qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
     QtDemuxStream ** stream, guint32 * default_sample_duration,
     guint32 * default_sample_size, guint32 * default_sample_flags,
@@ -2764,16 +2780,26 @@ static gboolean
 qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     guint64 moof_offset, QtDemuxStream * stream)
 {
-  GNode *moof_node, *traf_node, *tfhd_node, *trun_node, *tfdt_node;
-  GstByteReader trun_data, tfhd_data, tfdt_data;
+  GNode *moof_node, *traf_node, *tfhd_node, *trun_node, *tfdt_node, *mfhd_node;
+  GstByteReader mfhd_data, trun_data, tfhd_data, tfdt_data;
   guint32 ds_size = 0, ds_duration = 0, ds_flags = 0;
   gint64 base_offset, running_offset;
+  guint32 frag_num;
 
   /* NOTE @stream ignored */
 
   moof_node = g_node_new ((guint8 *) buffer);
   qtdemux_parse_node (qtdemux, moof_node, buffer, length);
   qtdemux_node_dump (qtdemux, moof_node);
+
+  /* Get fragment number from mfhd and check it's valid */
+  mfhd_node =
+      qtdemux_tree_get_child_by_type_full (moof_node, FOURCC_mfhd, &mfhd_data);
+  if (mfhd_node == NULL)
+    goto missing_mfhd;
+  if (!qtdemux_parse_mfhd (qtdemux, &mfhd_data, &frag_num))
+    goto fail;
+  GST_DEBUG_OBJECT (qtdemux, "Fragment #%d", frag_num);
 
   /* unknown base_offset to start with */
   base_offset = running_offset = -1;
@@ -2841,6 +2867,11 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
 missing_tfhd:
   {
     GST_DEBUG_OBJECT (qtdemux, "missing tfhd box");
+    goto fail;
+  }
+missing_mfhd:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "Missing mfhd box");
     goto fail;
   }
 lost_offset:
