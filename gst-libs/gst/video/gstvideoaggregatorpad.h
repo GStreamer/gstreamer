@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
- 
+
 #ifndef __GST_VIDEO_AGGREGATOR_PAD_H__
 #define __GST_VIDEO_AGGREGATOR_PAD_H__
 
@@ -25,6 +25,7 @@
 #include <gst/video/video.h>
 
 #include <gst/base/gstaggregator.h>
+#include "gstvideoaggregator.h"
 
 G_BEGIN_DECLS
 
@@ -37,6 +38,8 @@ G_BEGIN_DECLS
         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD))
 #define GST_IS_VIDEO_AGGREGATOR_PAD_CLASS(klass) \
         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_AGGREGATOR_PAD))
+#define GST_VIDEO_AGGREGATOR_PAD_GET_CLASS(obj) \
+        (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD,GstVideoAggregatorPadClass))
 
 typedef struct _GstVideoAggregatorPad GstVideoAggregatorPad;
 typedef struct _GstVideoAggregatorPadClass GstVideoAggregatorPadClass;
@@ -77,9 +80,28 @@ struct _GstVideoAggregatorPad
   gpointer          _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstVideoAggregatorPadClass:
+ *
+ * @set_info: Lets subclass set a converter on the pad,
+ *                 right after a new format has been negotiated.
+ * @prepare_frame: Prepare the frame from the pad buffer (if any)
+ *                 and sets it to @aggregated_frame
+ * @clean_frame:   clean the frame previously prepared in prepare_frame
+ */
 struct _GstVideoAggregatorPadClass
 {
   GstAggregatorPadClass parent_class;
+  gboolean           (*set_info)              (GstVideoAggregatorPad * pad,
+                                               GstVideoAggregator    * videoaggregator,
+                                               GstVideoInfo          * current_info,
+                                               GstVideoInfo          * wanted_info);
+
+  gboolean           (*prepare_frame)         (GstVideoAggregatorPad * pad,
+                                               GstVideoAggregator    * videoaggregator);
+
+  void               (*clean_frame)           (GstVideoAggregatorPad * pad,
+                                               GstVideoAggregator    * videoaggregator);
 
   gpointer          _gst_reserved[GST_PADDING];
 };
