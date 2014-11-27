@@ -1637,6 +1637,7 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
   seq_param->seq_parameter_set_id = encoder->view_idx;
   seq_param->level_idc = encoder->level_idc;
   seq_param->intra_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
+  seq_param->intra_idr_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
   seq_param->ip_period = 1 + encoder->num_bframes;
   seq_param->bits_per_second = encoder->bitrate_bits;
 
