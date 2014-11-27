@@ -55,6 +55,9 @@ struct display {
   struct wl_surface      *cursor_surface;
   struct window          *window;
   guint32                 serial;
+
+  gdouble pointer_x;
+  gdouble pointer_y;
 };
 
 struct window {
