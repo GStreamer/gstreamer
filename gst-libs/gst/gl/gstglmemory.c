@@ -852,7 +852,12 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
   if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
     dest = _gl_mem_new (src->mem.allocator, NULL, src->context, &src->info,
         src->plane, NULL, NULL);
-    dest->data = g_malloc (src->mem.maxsize);
+    dest->data = g_try_malloc (src->mem.maxsize);
+    if (dest->data == NULL) {
+      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
+      gst_memory_unref ((GstMemory *) dest);
+      return NULL;
+    }
     memcpy (dest->data, src->data, src->mem.maxsize);
     GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
   } else {
@@ -879,7 +884,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     }
 
     dest->tex_id = copy_params.tex_id;
-    dest->data = g_malloc (src->mem.maxsize);
+    dest->data = g_try_malloc (src->mem.maxsize);
     if (dest->data == NULL) {
       GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
       gst_memory_unref ((GstMemory *) dest);
@@ -1005,7 +1010,7 @@ gst_gl_memory_wrapped_texture (GstGLContext * context, guint texture_id,
 
   mem->tex_id = texture_id;
   mem->texture_wrapped = TRUE;
-  mem->data = g_malloc (mem->mem.maxsize);
+  mem->data = g_try_malloc (mem->mem.maxsize);
   if (mem->data == NULL) {
     gst_memory_unref ((GstMemory *) mem);
     return NULL;
@@ -1031,7 +1036,7 @@ gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo * info, guint plane)
 
   mem = _gl_mem_new (_gl_allocator, NULL, context, info, plane, NULL, NULL);
 
-  mem->data = g_malloc (mem->mem.maxsize);
+  mem->data = g_try_malloc (mem->mem.maxsize);
   if (mem->data == NULL) {
     gst_memory_unref ((GstMemory *) mem);
     return NULL;
