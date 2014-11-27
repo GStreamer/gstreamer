@@ -25,6 +25,8 @@
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gstegl.h>
 
+#include <gst/gl/egl/gstgldisplay_egl.h>
+
 G_BEGIN_DECLS
 
 typedef struct _GstGLContextEGL GstGLContextEGL;
@@ -51,6 +53,8 @@ struct _GstGLContextEGL
 {
   /* <private> */
   GstGLContext context;
+
+  GstGLDisplayEGL *display_egl;
 
   EGLContext egl_context;
   EGLDisplay egl_display;

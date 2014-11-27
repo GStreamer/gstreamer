@@ -313,7 +313,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   EGLint egl_minor;
   gboolean need_surface = TRUE;
   guintptr external_gl_context = 0;
-  GstGLDisplay *display;
+  guintptr egl_display;
 
   egl = GST_GL_CONTEXT_EGL (context);
   window = gst_gl_context_get_window (context);
@@ -337,31 +337,22 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     goto failure;
   }
 
-  display = gst_gl_context_get_display (context);
+  if (!egl->display_egl) {
+    GstGLDisplay *display = gst_gl_context_get_display (context);
 
-  if (display->type == GST_GL_DISPLAY_TYPE_EGL) {
-    egl->egl_display = (EGLDisplay) gst_gl_display_get_handle (display);
-  } else {
-    guintptr native_display = gst_gl_display_get_handle (display);
-
-    if (!native_display) {
-      GstGLWindow *window = NULL;
-      GST_WARNING ("Failed to get a global display handle, falling back to "
-          "per-window display handles.  Context sharing may not work");
-
-      if (other_context)
-        window = gst_gl_context_get_window (other_context);
-      if (!window)
-        window = gst_gl_context_get_window (context);
-      if (window) {
-        native_display = gst_gl_window_get_display (window);
-        gst_object_unref (window);
-      }
+    egl->display_egl = gst_gl_display_egl_from_gl_display (display);
+    if (!egl->display_egl) {
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE,
+          "Failed to create EGLDisplay from native display");
+      goto failure;
     }
 
-    egl->egl_display = eglGetDisplay ((EGLNativeDisplayType) native_display);
+    gst_object_unref (display);
   }
-  gst_object_unref (display);
+
+  egl_display = gst_gl_display_get_handle (GST_GL_DISPLAY (egl->display_egl));
+  egl->egl_display = (EGLDisplay) egl_display;
 
   if (eglInitialize (egl->egl_display, &egl_major, &egl_minor)) {
     GST_INFO ("egl initialized, version: %d.%d", egl_major, egl_minor);
@@ -531,6 +522,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 #endif
 
   if (other_context == NULL) {
+    /* FIXME: fails to show two outputs at all.  We need a property/option for
+     * glimagesink to say its a visible context */
 #if GST_GL_HAVE_WINDOW_WAYLAND
     if (GST_IS_GL_WINDOW_WAYLAND_EGL (context->window)) {
       gst_gl_window_wayland_egl_create_window ((GstGLWindowWaylandEGL *)
@@ -654,6 +647,11 @@ gst_gl_context_egl_destroy_context (GstGLContext * context)
   egl->window_handle = 0;
 
   eglReleaseThread ();
+
+  if (egl->display_egl) {
+    gst_object_unref (egl->display_egl);
+    egl->display_egl = NULL;
+  }
 }
 
 static gboolean
