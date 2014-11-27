@@ -40,7 +40,7 @@
  * During construct_pipeline() vmethod a subclass can add several elements into
  * the bin and expose 3 srcs pads as ghostpads implementing the 3 pad templates.
  *
- * However the subclass is responsable for adding the pad templates for the
+ * However the subclass is responsible for adding the pad templates for the
  * source pads and they must be named "vidsrc", "imgsrc" and "vfsrc". The pad
  * templates should be installed in the subclass' class_init function, like so:
  * |[
@@ -62,7 +62,7 @@
  * ]|
  *
  * It is also possible to add regular pads from the subclass and implement the
- * dataflow methods on these pads. This way all functionality can be implemneted
+ * dataflow methods on these pads. This way all functionality can be implemented
  * directly in the subclass without extra elements.
  *
  * The src will receive the capture mode from #GstCameraBin2 on the
