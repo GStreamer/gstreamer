@@ -62,12 +62,6 @@ struct _GstVideoAggregatorPad
   /* properties */
   guint zorder;
 
-  /* caps used for conversion if needed */
-  GstVideoInfo conversion_info;
-
-  gboolean need_conversion_update;
-  GstBuffer *converted_buffer;
-
   GstBuffer *buffer;
   GstVideoInfo buffer_vinfo;
 
