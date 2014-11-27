@@ -26,6 +26,7 @@
 #include "coremediabuffer.h"
 #include "corevideobuffer.h"
 #include "vtutil.h"
+#include <gst/pbutils/codec-utils.h>
 
 #define VTENC_DEFAULT_USAGE       6     /* Profile: Baseline  Level: 2.1 */
 #define VTENC_DEFAULT_BITRATE     0
@@ -445,9 +446,10 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     CFDictionaryRef atoms;
     CFStringRef avccKey;
     CFDataRef avcc;
-    gpointer codec_data;
+    guint8 *codec_data;
     gsize codec_data_size;
     GstBuffer *codec_data_buf;
+    guint8 sps[3];
 
     fmt = CMSampleBufferGetFormatDescription (sbuf);
     atoms = CMFormatDescriptionGetExtension (fmt,
@@ -461,6 +463,11 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     codec_data_buf = gst_buffer_new_wrapped (codec_data, codec_data_size);
 
     gst_structure_set (s, "codec_data", GST_TYPE_BUFFER, codec_data_buf, NULL);
+
+    sps[0] = codec_data[1];
+    sps[1] = codec_data[2];
+    sps[2] = codec_data[3];
+    gst_codec_utils_h264_caps_set_level_and_profile (caps, sps, 3);
 
     gst_buffer_unref (codec_data_buf);
   }
