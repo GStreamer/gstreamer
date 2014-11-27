@@ -69,6 +69,9 @@ struct _GstVideoAggregatorPadPrivate
   /* caps used for conversion if needed */
   GstVideoInfo conversion_info;
   GstBuffer *converted_buffer;
+
+  GstClockTime start_time;
+  GstClockTime end_time;
 };
 
 G_DEFINE_TYPE (GstVideoAggregatorPad, gst_videoaggregator_pad,
@@ -129,8 +132,8 @@ _flush_pad (GstAggregatorPad * aggpad, GstAggregator * aggregator)
 
   gst_videoaggregator_reset_qos (vagg);
   gst_buffer_replace (&pad->buffer, NULL);
-  pad->start_time = -1;
-  pad->end_time = -1;
+  pad->priv->start_time = -1;
+  pad->priv->end_time = -1;
 
   return TRUE;
 }
@@ -914,8 +917,8 @@ gst_videoaggregator_reset (GstVideoAggregator * vagg)
     GstVideoAggregatorPad *p = l->data;
 
     gst_buffer_replace (&p->buffer, NULL);
-    p->start_time = -1;
-    p->end_time = -1;
+    p->priv->start_time = -1;
+    p->priv->end_time = -1;
 
     gst_video_info_init (&p->info);
   }
@@ -1022,7 +1025,7 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         end_time *= ABS (agg->segment.rate);
       }
 
-      if (pad->end_time != -1 && pad->end_time > end_time
+      if (pad->priv->end_time != -1 && pad->priv->end_time > end_time
           && !bpad->unresponsive) {
         GST_DEBUG_OBJECT (pad, "Buffer from the past, dropping");
         gst_buffer_unref (buf);
@@ -1038,8 +1041,8 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
             GST_TIME_ARGS (start_time));
         gst_buffer_replace (&pad->buffer, buf);
         pad->buffer_vinfo = *vinfo;
-        pad->start_time = start_time;
-        pad->end_time = end_time;
+        pad->priv->start_time = start_time;
+        pad->priv->end_time = end_time;
 
         gst_buffer_unref (buf);
         buf = gst_aggregator_pad_steal_buffer (bpad);
@@ -1065,9 +1068,9 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         continue;
       }
     } else {
-      if (!bpad->unresponsive && pad->end_time != -1) {
-        if (pad->end_time <= output_start_time) {
-          pad->start_time = pad->end_time = -1;
+      if (!bpad->unresponsive && pad->priv->end_time != -1) {
+        if (pad->priv->end_time <= output_start_time) {
+          pad->priv->start_time = pad->priv->end_time = -1;
           if (is_eos) {
             GST_DEBUG ("I just need more data");
             need_more_data = TRUE;
@@ -1517,7 +1520,7 @@ gst_videoaggregator_sink_clip (GstAggregator * agg,
     end_time *= ABS (agg->segment.rate);
   }
 
-  if (bpad->buffer != NULL && end_time < pad->end_time) {
+  if (bpad->buffer != NULL && end_time < pad->priv->end_time) {
     gst_buffer_unref (buf);
     *outbuf = NULL;
     return GST_FLOW_OK;
@@ -1543,12 +1546,12 @@ gst_videoaggregator_flush (GstAggregator * agg)
     /* Convert to the output segment rate */
     if (ABS (agg->segment.rate) != abs_rate) {
       if (ABS (agg->segment.rate) != 1.0 && p->buffer) {
-        p->start_time /= ABS (agg->segment.rate);
-        p->end_time /= ABS (agg->segment.rate);
+        p->priv->start_time /= ABS (agg->segment.rate);
+        p->priv->end_time /= ABS (agg->segment.rate);
       }
       if (abs_rate != 1.0 && p->buffer) {
-        p->start_time *= abs_rate;
-        p->end_time *= abs_rate;
+        p->priv->start_time *= abs_rate;
+        p->priv->end_time *= abs_rate;
       }
     }
   }
@@ -1650,8 +1653,8 @@ gst_videoaggregator_request_new_pad (GstElement * element,
 
   GST_OBJECT_LOCK (vagg);
   vaggpad->zorder = GST_ELEMENT (vagg)->numsinkpads;
-  vaggpad->start_time = -1;
-  vaggpad->end_time = -1;
+  vaggpad->priv->start_time = -1;
+  vaggpad->priv->end_time = -1;
   element->sinkpads = g_list_sort (element->sinkpads,
       (GCompareFunc) pad_zorder_compare);
   GST_OBJECT_UNLOCK (vagg);
