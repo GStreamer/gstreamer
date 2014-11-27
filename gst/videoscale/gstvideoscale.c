@@ -133,7 +133,7 @@ gst_video_scale_method_get_type (void)
   static const GEnumValue video_scale_methods[] = {
     {GST_VIDEO_SCALE_NEAREST, "Nearest Neighbour", "nearest-neighbour"},
     {GST_VIDEO_SCALE_BILINEAR, "Bilinear (2-tap)", "bilinear"},
-    {GST_VIDEO_SCALE_4TAP, "4-tap Sinc", "4-tap-sinc"},
+    {GST_VIDEO_SCALE_4TAP, "4-tap Sinc", "4-tap"},
     {GST_VIDEO_SCALE_LANCZOS, "Lanczos", "lanczos"},
     {GST_VIDEO_SCALE_BILINEAR2, "Bilinear (multi-tap)", "bilinear2"},
     {GST_VIDEO_SCALE_SINC, "Sinc (multi-tap)", "sinc"},
