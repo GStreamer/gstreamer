@@ -25,10 +25,10 @@
 extern const gchar *mirror_fragment_source_opengl;
 extern const gchar *squeeze_fragment_source_opengl;
 #endif
-#if GST_GL_HAVE_GLES2
+
 extern const gchar *mirror_fragment_source_gles2;
 extern const gchar *squeeze_fragment_source_gles2;
-#endif
+
 extern const gchar *stretch_fragment_source;
 extern const gchar *tunnel_fragment_source;
 extern const gchar *fisheye_fragment_source;

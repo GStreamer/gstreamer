@@ -216,10 +216,10 @@ gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_glow;
       filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
-#endif
     default:
       g_assert_not_reached ();
   }
+#endif
   effects->current_effect = effect_type;
 }
 
