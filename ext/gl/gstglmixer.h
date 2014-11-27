@@ -76,6 +76,7 @@ struct _GstGLMixer
 struct _GstGLMixerClass
 {
   GstVideoAggregatorClass parent_class;
+  GstGLAPI supported_gl_api;
 
   GstGLMixerSetCaps set_caps;
   GstGLMixerReset reset;

@@ -345,6 +345,9 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   vagg_class->update_caps = _update_caps;
 
   agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
+
+  GST_GL_MIXER_CLASS (klass)->supported_gl_api =
+      GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
 }
 
 static void
