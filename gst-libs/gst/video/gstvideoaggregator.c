@@ -165,11 +165,23 @@ gst_video_aggregator_pad_set_info (GstVideoAggregatorPad * pad,
       GST_VIDEO_INFO_FORMAT (current_info)
       || g_strcmp0 (colorimetry, best_colorimetry)
       || g_strcmp0 (chroma, best_chroma)) {
-    GstVideoInfo tmp_info = *current_info;
+    GstVideoInfo tmp_info;
 
-    tmp_info.finfo = wanted_info->finfo;
+    /* Initialize with the wanted video format and our original width and
+     * height as we don't want to rescale. Then copy over the wanted
+     * colorimetry, and chroma-site and our current pixel-aspect-ratio
+     * and other relevant fields.
+     */
+    gst_video_info_set_format (&tmp_info, GST_VIDEO_INFO_FORMAT (wanted_info),
+        current_info->width, current_info->height);
     tmp_info.chroma_site = wanted_info->chroma_site;
     tmp_info.colorimetry = wanted_info->colorimetry;
+    tmp_info.par_n = current_info->par_n;
+    tmp_info.par_d = current_info->par_d;
+    tmp_info.fps_n = current_info->fps_n;
+    tmp_info.fps_d = current_info->fps_d;
+    tmp_info.flags = current_info->flags;
+    tmp_info.interlace_mode = current_info->interlace_mode;
 
     GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
         GST_VIDEO_INFO_FORMAT (current_info),
@@ -656,13 +668,21 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
         vagg->priv->nframes = 0;
       }
     }
-    gst_video_info_init (&info);
+
+    /* Initialize the video info with our target format and
+     * the best width and height and framerate. Then copy over
+     * all other fields as we negotiated them before
+     */
     gst_video_info_set_format (&info, GST_VIDEO_INFO_FORMAT (&vagg->info),
         best_width, best_height);
     info.fps_n = best_fps_n;
     info.fps_d = best_fps_d;
-    info.par_n = GST_VIDEO_INFO_PAR_N (&vagg->info);
-    info.par_d = GST_VIDEO_INFO_PAR_D (&vagg->info);
+    info.chroma_site = vagg->info.chroma_site;
+    info.par_n = vagg->info.par_n;
+    info.par_d = vagg->info.par_d;
+    info.colorimetry = vagg->info.colorimetry;
+    info.flags = vagg->info.flags;
+    info.interlace_mode = vagg->info.interlace_mode;
 
     info_caps = gst_video_info_to_caps (&info);
 
