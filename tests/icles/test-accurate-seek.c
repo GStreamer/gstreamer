@@ -41,7 +41,7 @@ sample_to_nanotime (guint sample)
 static guint
 nanotime_to_sample (GstClockTime nanotime)
 {
-  return nanotime * SAMPLE_FREQ / GST_SECOND;
+  return gst_util_uint64_scale_round (nanotime, SAMPLE_FREQ, GST_SECOND);
 }
 
 static GstBuffer *
