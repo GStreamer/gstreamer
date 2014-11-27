@@ -456,9 +456,11 @@ gst_vaapisink_x11_pre_start_event_thread (GstVaapiSink * sink)
       ExposureMask | StructureNotifyMask);
 
   if (sink->window) {
+    gst_vaapi_display_lock (GST_VAAPI_DISPLAY (display));
     XSelectInput (gst_vaapi_display_x11_get_display (display),
         gst_vaapi_window_x11_get_xid (GST_VAAPI_WINDOW_X11 (sink->window)),
         x11_event_mask);
+    gst_vaapi_display_unlock (GST_VAAPI_DISPLAY (display));
   }
   return TRUE;
 }
@@ -470,8 +472,10 @@ gst_vaapisink_x11_pre_stop_event_thread (GstVaapiSink * sink)
       GST_VAAPI_DISPLAY_X11 (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
 
   if (sink->window) {
+    gst_vaapi_display_lock (GST_VAAPI_DISPLAY (display));
     XSelectInput (gst_vaapi_display_x11_get_display (display),
         gst_vaapi_window_x11_get_xid (GST_VAAPI_WINDOW_X11 (sink->window)), 0);
+    gst_vaapi_display_unlock (GST_VAAPI_DISPLAY (display));
   }
   return TRUE;
 }
