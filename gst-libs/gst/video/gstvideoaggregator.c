@@ -185,14 +185,14 @@ gst_video_aggregator_pad_set_info (GstVideoAggregatorPad * pad,
 
     GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
         GST_VIDEO_INFO_FORMAT (current_info),
-        GST_VIDEO_INFO_FORMAT (wanted_info));
+        GST_VIDEO_INFO_FORMAT (&tmp_info));
     pad->priv->convert =
         gst_video_converter_new (current_info, &tmp_info, NULL);
     pad->priv->conversion_info = tmp_info;
     if (!pad->priv->convert) {
       g_free (colorimetry);
       g_free (best_colorimetry);
-      GST_WARNING ("No path found for conversion");
+      GST_WARNING_OBJECT (pad, "No path found for conversion");
       return FALSE;
     }
   } else {
