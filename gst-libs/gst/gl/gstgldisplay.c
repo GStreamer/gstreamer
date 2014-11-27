@@ -231,7 +231,7 @@ gst_gl_display_get_gl_api (GstGLDisplay * display)
 {
   GstGLAPI ret;
 
-  g_return_if_fail (GST_IS_GL_DISPLAY (display));
+  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), GST_GL_API_NONE);
 
   GST_OBJECT_LOCK (display);
   ret = display->priv->gl_api;
