@@ -19,7 +19,6 @@
  */
 
 #include <GL/gl.h>
-#include <GL/glu.h>
 #if __WIN32__ || _WIN32
 # include <GL/glext.h>
 #endif
@@ -92,7 +91,6 @@ static gboolean reshapeCallback (void * gl_sink, void *context, GLuint width, GL
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);
     glMatrixMode(GL_MODELVIEW);
 
     return TRUE;

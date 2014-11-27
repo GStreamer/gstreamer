@@ -65,13 +65,13 @@
 #include "gstglfilterlaplacian.h"
 #include "gstglfilterglass.h"
 #include "gstglfilterblur.h"
-#include "gstglfilterreflectedscreen.h"
+/* #include "gstglfilterreflectedscreen.h" */
 #include "gstglfiltersobel.h"
 #include "gstgldeinterlace.h"
 #include "gstglmosaic.h"
 #if HAVE_PNG
 #include "gstgldifferencematte.h"
-#include "gstglbumper.h"
+/* #include "gstglbumper.h" */
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
 
@@ -174,12 +174,12 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_FILTER_GLASS)) {
     return FALSE;
   }
-
+#if 0
   if (!gst_element_register (plugin, "glfilterreflectedscreen",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_REFLECTED_SCREEN)) {
     return FALSE;
   }
-
+#endif
   if (!gst_element_register (plugin, "gldeinterlace",
           GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE)) {
     return FALSE;
@@ -194,11 +194,12 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_differencematte_get_type ())) {
     return FALSE;
   }
-
+#if 0
   if (!gst_element_register (plugin, "glbumper",
           GST_RANK_NONE, gst_gl_bumper_get_type ())) {
     return FALSE;
   }
+#endif
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
 

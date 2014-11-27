@@ -74,10 +74,8 @@
 #   define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
 #   include <OpenGL/gl3.h>
 #  endif
-#  include <OpenGL/glu.h>
 # else
 #  include <GL/gl.h>
-#  include <GL/glu.h>
 #  if __WIN32__ || _WIN32
 #   include <GL/glext.h>
 #  endif

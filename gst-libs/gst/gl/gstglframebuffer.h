@@ -58,13 +58,6 @@ GstGLFramebuffer *gst_gl_framebuffer_new (GstGLContext *context);
 gboolean gst_gl_framebuffer_generate (GstGLFramebuffer *frame, gint width, gint height,
     guint * fbo, guint * depthbuffer);
 
-gboolean gst_gl_framebuffer_use (GstGLFramebuffer * frame, gint texture_fbo_width,
-    gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
-    GLuint texture_fbo, GLCB cb, gint input_tex_width,
-    gint input_tex_height, GLuint input_tex, gdouble proj_param1,
-    gdouble proj_param2, gdouble proj_param3, gdouble proj_param4,
-    GstGLDisplayProjection projection, gpointer stuff);
-
 gboolean gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
     gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
     GLuint texture_fbo, GLCB_V2 cb, gpointer stuff);

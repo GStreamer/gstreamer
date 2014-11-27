@@ -52,6 +52,7 @@ struct _GstGLFilterCube
     gdouble znear;
     gdouble zfar;
 
+    guint              in_tex;
     GLuint             vao;
     GLuint             vertex_buffer;
     GLint              attr_position;

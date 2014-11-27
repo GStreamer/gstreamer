@@ -17,8 +17,6 @@ OPENGL_SOURCES =  \
 	gstglfilterglass.h \
 	gstglfilterapp.c \
 	gstglfilterapp.h \
-	gstglfilterreflectedscreen.c \
-	gstglfilterreflectedscreen.h \
 	gstgldeinterlace.c \
 	gstgldeinterlace.h \
 	gltestsrc.c \
@@ -43,8 +41,6 @@ OPENGL_SOURCES =  \
 
 if HAVE_PNG
 OPENGL_SOURCES += \
-	gstglbumper.c \
-	gstglbumper.h \
 	gstgldifferencematte.c \
 	gstgldifferencematte.h
 endif

@@ -78,12 +78,7 @@ static gboolean gst_gl_filter_cube_set_caps (GstGLFilter * filter,
 static void gst_gl_filter_cube_reset (GstGLFilter * filter);
 static void gst_gl_filter_cube_reset_gl (GstGLFilter * filter);
 static gboolean gst_gl_filter_cube_init_shader (GstGLFilter * filter);
-static void _callback_gles2 (gint width, gint height, guint texture,
-    gpointer stuff);
-#if GST_GL_HAVE_OPENGL
-static void _callback_opengl (gint width, gint height, guint texture,
-    gpointer stuff);
-#endif
+static void _callback (gpointer stuff);
 static gboolean gst_gl_filter_cube_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
 
@@ -324,29 +319,14 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
     guint out_tex)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
-  GLCB cb = NULL;
-  GstGLAPI api;
 
-  api = gst_gl_context_get_gl_api (GST_GL_FILTER (cube_filter)->context);
-
-#if GST_GL_HAVE_OPENGL
-  if (api & GST_GL_API_OPENGL)
-    cb = _callback_opengl;
-#endif
-  if (api & (GST_GL_API_GLES2 | GST_GL_API_OPENGL3))
-    cb = _callback_gles2;
+  cube_filter->in_tex = in_tex;
 
   /* blocking call, use a FBO */
-  gst_gl_context_use_fbo (filter->context,
+  gst_gl_context_use_fbo_v2 (filter->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
-      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
-      filter->fbo, filter->depthbuffer, out_tex,
-      cb,
-      GST_VIDEO_INFO_WIDTH (&filter->in_info),
-      GST_VIDEO_INFO_HEIGHT (&filter->in_info),
-      in_tex, cube_filter->fovy, cube_filter->aspect,
-      cube_filter->znear, cube_filter->zfar,
-      GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, (gpointer) cube_filter);
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info), filter->fbo,
+      filter->depthbuffer, out_tex, _callback, (gpointer) cube_filter);
 
   return TRUE;
 }
@@ -387,73 +367,6 @@ static const GLfloat vertices[] = {
 };
 /* *INDENT-ON* */
 
-/* opengl scene, params: input texture (not the output filter->texture) */
-#if GST_GL_HAVE_OPENGL
-static void
-_callback_opengl (gint width, gint height, guint texture, gpointer stuff)
-{
-  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (stuff);
-  GstGLFilter *filter = GST_GL_FILTER (stuff);
-  GstGLFuncs *gl = filter->context->gl_vtable;
-
-  static GLfloat xrot = 0;
-  static GLfloat yrot = 0;
-  static GLfloat zrot = 0;
-
-  GLushort indices[] = {
-    0, 1, 2,
-    0, 2, 3,
-    4, 5, 6,
-    4, 6, 7,
-    8, 9, 10,
-    8, 10, 11,
-    12, 13, 14,
-    12, 14, 15,
-    16, 17, 18,
-    16, 18, 19,
-    20, 21, 22,
-    20, 22, 23
-  };
-
-  gl->Enable (GL_DEPTH_TEST);
-
-  gl->Enable (GL_TEXTURE_2D);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
-
-  gl->ClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  gl->MatrixMode (GL_PROJECTION);
-  gluLookAt (0.0, 0.0, -6.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-  gl->MatrixMode (GL_MODELVIEW);
-  gl->LoadIdentity ();
-
-//  gl->Translatef (0.0f, 0.0f, -5.0f);
-
-  gl->Rotatef (xrot, 1.0f, 0.0f, 0.0f);
-  gl->Rotatef (yrot, 0.0f, 1.0f, 0.0f);
-  gl->Rotatef (zrot, 0.0f, 0.0f, 1.0f);
-
-  gl->ClientActiveTexture (GL_TEXTURE0);
-  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
-  gl->EnableClientState (GL_VERTEX_ARRAY);
-
-  gl->VertexPointer (3, GL_FLOAT, 5 * sizeof (float), vertices);
-  gl->TexCoordPointer (2, GL_FLOAT, 5 * sizeof (float), &vertices[3]);
-
-  gl->DrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
-
-  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
-  gl->DisableClientState (GL_VERTEX_ARRAY);
-
-  gl->Disable (GL_DEPTH_TEST);
-
-  xrot += 0.3f;
-  yrot += 0.2f;
-  zrot += 0.4f;
-}
-#endif
-
 static void
 _bind_buffer (GstGLFilterCube * cube_filter)
 {
@@ -491,7 +404,7 @@ _unbind_buffer (GstGLFilterCube * cube_filter)
 }
 
 static void
-_callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
+_callback (gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
@@ -531,7 +444,7 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_shader_use (cube_filter->shader);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->BindTexture (GL_TEXTURE_2D, cube_filter->in_tex);
   gst_gl_shader_set_uniform_1i (cube_filter->shader, "s_texture", 0);
   gst_gl_shader_set_uniform_1f (cube_filter->shader, "xrot_degree", xrot);
   gst_gl_shader_set_uniform_1f (cube_filter->shader, "yrot_degree", yrot);
