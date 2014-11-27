@@ -1260,7 +1260,8 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   /* opengl scene */
   GST_TRACE ("redrawing texture:%u", gl_sink->redisplay_texture);
 
-  if (gl_sink->caps_change) {
+  if (gl_sink->caps_change && gl_sink->window_width > 0
+      && gl_sink->window_height > 0) {
     GST_GLIMAGE_SINK_UNLOCK (gl_sink);
     gst_glimage_sink_on_resize (gl_sink, gl_sink->window_width,
         gl_sink->window_height);
