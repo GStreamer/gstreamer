@@ -1701,9 +1701,10 @@ fill_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncSequence * sequence)
   /* VUI parameters are always set, at least for timing_info (framerate) */
   seq_param->vui_parameters_present_flag = TRUE;
   if (seq_param->vui_parameters_present_flag) {
-    seq_param->vui_fields.bits.aspect_ratio_info_present_flag = FALSE;
+    seq_param->vui_fields.bits.aspect_ratio_info_present_flag = TRUE;
     if (seq_param->vui_fields.bits.aspect_ratio_info_present_flag) {
       const GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
+      seq_param->aspect_ratio_idc = 0xff;
       seq_param->sar_width = GST_VIDEO_INFO_PAR_N (vip);
       seq_param->sar_height = GST_VIDEO_INFO_PAR_D (vip);
     }
