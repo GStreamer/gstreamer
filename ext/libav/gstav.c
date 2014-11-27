@@ -36,7 +36,7 @@
 
 GST_DEBUG_CATEGORY (ffmpeg_debug);
 
-static GStaticMutex gst_avcodec_mutex = G_STATIC_MUTEX_INIT;
+static GMutex gst_avcodec_mutex;
 
 
 int
@@ -44,9 +44,9 @@ gst_ffmpeg_avcodec_open (AVCodecContext * avctx, AVCodec * codec)
 {
   int ret;
 
-  g_static_mutex_lock (&gst_avcodec_mutex);
+  g_mutex_lock (&gst_avcodec_mutex);
   ret = avcodec_open2 (avctx, codec, NULL);
-  g_static_mutex_unlock (&gst_avcodec_mutex);
+  g_mutex_unlock (&gst_avcodec_mutex);
 
   return ret;
 }
@@ -56,9 +56,9 @@ gst_ffmpeg_avcodec_close (AVCodecContext * avctx)
 {
   int ret;
 
-  g_static_mutex_lock (&gst_avcodec_mutex);
+  g_mutex_lock (&gst_avcodec_mutex);
   ret = avcodec_close (avctx);
-  g_static_mutex_unlock (&gst_avcodec_mutex);
+  g_mutex_unlock (&gst_avcodec_mutex);
 
   return ret;
 }
@@ -68,9 +68,9 @@ gst_ffmpeg_av_find_stream_info (AVFormatContext * ic)
 {
   int ret;
 
-  g_static_mutex_lock (&gst_avcodec_mutex);
+  g_mutex_lock (&gst_avcodec_mutex);
   ret = avformat_find_stream_info (ic, NULL);
-  g_static_mutex_unlock (&gst_avcodec_mutex);
+  g_mutex_unlock (&gst_avcodec_mutex);
 
   return ret;
 }
