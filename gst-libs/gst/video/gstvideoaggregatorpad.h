@@ -47,27 +47,26 @@ typedef struct _GstVideoAggregatorPadPrivate GstVideoAggregatorPadPrivate;
 
 /**
  * GstVideoAggregatorPad:
- *
- * The opaque #GstVideoAggregatorPad structure.
+ * @info: The #GstVideoInfo currently set on the pad
+ * @buffer_vinfo: The #GstVideoInfo representing the type contained
+ *                in @buffer
+ * @aggregated_frame: The #GstVideoFrame ready to be used for aggregation
+ *                    inside the aggregate_frames vmethod.
+ * @zorder: The zorder of this pad
  */
 struct _GstVideoAggregatorPad
 {
   GstAggregatorPad parent;
 
-  /* < private > */
-
-  /* caps */
   GstVideoInfo info;
-
-  /* properties */
-  guint zorder;
 
   GstBuffer *buffer;
   GstVideoInfo buffer_vinfo;
 
-  GstClockTime start_time;
-  GstClockTime end_time;
   GstVideoFrame *aggregated_frame;
+
+  /* properties */
+  guint zorder;
 
   /* < private > */
   GstVideoAggregatorPadPrivate *priv;
