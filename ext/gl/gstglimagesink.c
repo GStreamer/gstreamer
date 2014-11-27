@@ -1246,14 +1246,6 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
     } else {
       gl->Viewport (0, 0, width, height);
     }
-#if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (gl_sink->context)) {
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
-      gluOrtho2D (0, width, 0, height);
-      gl->MatrixMode (GL_MODELVIEW);
-    }
-#endif
   }
 }
 

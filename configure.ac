@@ -656,7 +656,6 @@ save_LIBS="$LIBS"
 
 HAVE_GL=no
 HAVE_GLES2=no
-HAVE_GLU=no
 HAVE_WAYLAND_EGL=no
 
 HAVE_EGL_RPI=no
@@ -665,18 +664,15 @@ case $host in
   *-mingw32* )
     LIBS="$LIBS -lgdi32"
     AG_GST_CHECK_LIBHEADER(GL, opengl32, glTexImage2D,, GL/gl.h)
-    AG_GST_CHECK_LIBHEADER(GLU, glu32, gluSphere,, GL/glu.h)
     AC_CHECK_HEADER(GL/wglext.h, HAVE_WGLEXT="yes", HAVE_WGLEXT="no", [#include <GL/gl.h>])
     if test "x$HAVE_WGLEXT" = "xyes"; then
       HAVE_WGL=yes
       HAVE_GL=yes
-      HAVE_GLU=yes
     fi
   ;;
   *)
     if test "x$NEED_GL" != "xno"; then
       AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,, GL/gl.h)
-      AG_GST_CHECK_LIBHEADER(GLU, GLU, gluSphere,, GL/glu.h)
     fi
     if test "x$NEED_GLES2" != "xno"; then
       AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
@@ -801,24 +797,16 @@ else
         AC_MSG_ERROR([Building the GLX backend without the OpenGL backend is unsupported])
       fi
     else dnl HAVE_GL=yes
-      if test "x$HAVE_GLU" = "xno"; then
-        if test "x$NEED_GL" = "xyes"; then
-          AC_MSG_ERROR([GLU is required with OpenGL support])
-        else
-          AC_MSG_WARN([GLU is required with OpenGL support])
-        fi
-      else dnl HAVE_GLU=yes
-        USE_OPENGL=yes
-        if test "x$NEED_GLX" != "xno"; then
-          USE_GLX=yes
-        fi
+      USE_OPENGL=yes
+      if test "x$NEED_GLX" != "xno"; then
+        USE_GLX=yes
       fi
     fi
   fi
 fi
 
 dnl check if we can include both GL and GLES2 at the same time
-if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLU" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
+if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
   GL_INCLUDES="
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
@@ -837,10 +825,8 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLU" = "xyes" -a "x$HAVE_GLES2" = "xyes"
 #   define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
 #   include <OpenGL/gl3.h>
 #  endif
-#  include <OpenGL/glu.h>
 # else
 #  include <GL/gl.h>
-#  include <GL/glu.h>
 #  if __WIN32__ || _WIN32
 #   include <GL/glext.h>
 #  endif
@@ -870,7 +856,7 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLU" = "xyes" -a "x$HAVE_GLES2" = "xyes"
   CPPFLAGS="$save_CPPFLAGS"
 fi
 
-#dnl Check for OpenGL, GLU
+#dnl Check for OpenGL
 echo host is $host
 case $host in
   *-android*)
@@ -931,9 +917,6 @@ case $host in
     if test "x$HAVE_GL" = "xyes"; then
       if test "x$NEED_GL" != "xno"; then
         GL_LIBS="$GL_LIBS -lGL"
-      fi
-      if test "x$HAVE_GLU" = "xyes"; then
-        GL_LIBS="$GL_LIBS -lGLU"
       fi
     fi
 
@@ -1050,9 +1033,6 @@ case $host in
           if test "x$NEED_GL" != "xno"; then
             GL_LIBS="$GL_LIBS -lGL"
           fi
-          if test "x$HAVE_GLU" = "xyes"; then
-            GL_LIBS="$GL_LIBS -lGLU"
-          fi
           USE_OPENGL=yes
         fi
       fi
@@ -1070,7 +1050,7 @@ case $host in
       if test "$NEED_GL" != "xno"; then
         if test "x$HAVE_WGL" = "xyes"; then
           if test "$NEED_WGL" != "xno"; then
-            GL_LIBS="$GL_LIBS -lgdi32 -lopengl32 -lglu32"
+            GL_LIBS="$GL_LIBS -lgdi32 -lopengl32"
             HAVE_WINDOW_WIN32=yes
             USE_OPENGL=yes
             USE_WGL=yes
@@ -1278,10 +1258,8 @@ if test "x$USE_OPENGL" = "xyes"; then
 # if __APPLE__
 #  include <OpenGL/OpenGL.h>
 #  include <OpenGL/gl.h>
-#  include <OpenGL/glu.h>
 # else
 #  include <GL/gl.h>
-#  include <GL/glu.h>
 #  if __WIN32__ || _WIN32
 #   include <GL/glext.h>
 #  endif

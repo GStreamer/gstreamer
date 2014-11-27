@@ -20,7 +20,6 @@
 
 #include <gst/video/videooverlay.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
 #include "pipeline.h"
 
 Pipeline::Pipeline(const WId id, const QString videoLocation):
@@ -165,7 +164,6 @@ gboolean Pipeline::reshapeCallback (void *sink, void *context, guint width, guin
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, (gfloat)width/(gfloat)height, 0.1, 100);  
     glMatrixMode(GL_MODELVIEW);
 
     return TRUE;

@@ -341,68 +341,6 @@ gst_gl_context_gen_fbo (GstGLContext * context, gint width, gint height,
   return TRUE;
 }
 
-typedef struct _UseFBO
-{
-  GstGLFramebuffer *frame;
-  gint texture_fbo_width;
-  gint texture_fbo_height;
-  GLuint fbo;
-  GLuint depth_buffer;
-  GLuint texture_fbo;
-  GLCB cb;
-  gint input_tex_width;
-  gint input_tex_height;
-  GLuint input_tex;
-  gdouble proj_param1;
-  gdouble proj_param2;
-  gdouble proj_param3;
-  gdouble proj_param4;
-  GstGLDisplayProjection projection;
-  gpointer stuff;
-} UseFBO;
-
-static void
-_use_fbo (GstGLContext * context, UseFBO * data)
-{
-  gst_gl_framebuffer_use (data->frame, data->texture_fbo_width,
-      data->texture_fbo_height, data->fbo, data->depth_buffer,
-      data->texture_fbo, data->cb, data->input_tex_width,
-      data->input_tex_height, data->input_tex, data->proj_param1,
-      data->proj_param2, data->proj_param3, data->proj_param4, data->projection,
-      data->stuff);
-}
-
-/* Called by glfilter */
-/* this function really has to be simplified...  do we really need to
-   set projection this way? Wouldn't be better a set_projection
-   separate call? or just make glut functions available out of
-   gst-libs and call it if needed on drawcallback? -- Filippo */
-/* GLCB too.. I think that only needed parameters should be
- * GstGLDisplay *display and gpointer data, or just gpointer data */
-/* ..everything here has to be simplified! */
-gboolean
-gst_gl_context_use_fbo (GstGLContext * context, gint texture_fbo_width,
-    gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
-    GLuint texture_fbo, GLCB cb, gint input_tex_width,
-    gint input_tex_height, GLuint input_tex, gdouble proj_param1,
-    gdouble proj_param2, gdouble proj_param3, gdouble proj_param4,
-    GstGLDisplayProjection projection, gpointer stuff)
-{
-  GstGLFramebuffer *frame = gst_gl_framebuffer_new (context);
-
-  UseFBO data =
-      { frame, texture_fbo_width, texture_fbo_height, fbo, depth_buffer,
-    texture_fbo, cb, input_tex_width, input_tex_height, input_tex,
-    proj_param1, proj_param2, proj_param3, proj_param4, projection, stuff
-  };
-
-  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _use_fbo, &data);
-
-  gst_object_unref (frame);
-
-  return TRUE;
-}
-
 typedef struct _UseFBO2
 {
   GstGLFramebuffer *frame;
