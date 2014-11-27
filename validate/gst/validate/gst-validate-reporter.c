@@ -322,6 +322,16 @@ gst_validate_reporter_set_handle_g_logs (GstValidateReporter * reporter)
   g_log_set_default_handler ((GLogFunc) gst_validate_reporter_g_log_func,
       reporter);
 
+  g_log_set_handler ("GStreamer",
+      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, reporter);
+
+  g_log_set_handler ("GLib",
+      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, reporter);
+
+
+  g_log_set_handler ("GLib-GObject",
+      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, reporter);
+
   g_log_handler = gst_validate_reporter_get_priv (reporter);
 }
 
