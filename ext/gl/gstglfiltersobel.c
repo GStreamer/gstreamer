@@ -131,6 +131,8 @@ gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
   gst_element_class_set_metadata (element_class,
       "Gstreamer OpenGL Sobel", "Filter/Effect/Video", "Sobel edge detection",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
+
+  GST_GL_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
 
 static void

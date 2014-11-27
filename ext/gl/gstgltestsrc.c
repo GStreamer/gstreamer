@@ -52,6 +52,7 @@
 #endif
 
 #define USE_PEER_BUFFERALLOC
+#define SUPPORTED_GL_APIS GST_GL_API_OPENGL
 
 GST_DEBUG_CATEGORY_STATIC (gl_test_src_debug);
 #define GST_CAT_DEFAULT gl_test_src_debug
@@ -474,7 +475,11 @@ gst_gl_test_src_set_context (GstElement * element, GstContext * context)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (element);
 
-  gst_gl_handle_set_context (element, context, &src->display, &src->other_context);
+  gst_gl_handle_set_context (element, context, &src->display,
+      &src->other_context);
+
+  if (src->display)
+    gst_gl_display_filter_gl_api (src->display, SUPPORTED_GL_APIS);
 }
 
 static gboolean
@@ -490,6 +495,8 @@ gst_gl_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
     {
       res = gst_gl_handle_context_query ((GstElement *) src, query,
           &src->display, &src->other_context);
+      if (src->display)
+        gst_gl_display_filter_gl_api (src->display, SUPPORTED_GL_APIS);
       break;
     }
     case GST_QUERY_CONVERT:
@@ -706,6 +713,8 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
   if (!gst_gl_ensure_element_data (src, &src->display, &src->other_context))
     return FALSE;
 
+  gst_gl_display_filter_gl_api (src->display, SUPPORTED_GL_APIS);
+
   src->running_time = 0;
   src->n_frames = 0;
   src->negotiated = FALSE;
@@ -765,6 +774,8 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
 
   if (!gst_gl_ensure_element_data (src, &src->display, &src->other_context))
     return FALSE;
+
+  gst_gl_display_filter_gl_api (src->display, SUPPORTED_GL_APIS);
 
   if (gst_query_find_allocation_meta (query,
           GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {

@@ -134,6 +134,8 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
   GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_mosaic_init_shader;
   GST_GL_MIXER_CLASS (klass)->reset = gst_gl_mosaic_reset;
   GST_GL_MIXER_CLASS (klass)->process_textures = gst_gl_mosaic_process_textures;
+
+  GST_GL_MIXER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
 
 static void

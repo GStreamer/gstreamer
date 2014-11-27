@@ -138,6 +138,8 @@ gst_gl_filter_reflected_screen_class_init (GstGLFilterReflectedScreenClass *
   gst_element_class_set_metadata (element_class,
       "OpenGL Reflected Screen filter", "Filter/Effect/Video",
       "Reflected Screen Filter", "Pierre POUZOL <pierre.pouzol@hotmail.fr>");
+
+  GST_GL_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
 
 static void

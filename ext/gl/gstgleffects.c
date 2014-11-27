@@ -130,56 +130,91 @@ gst_gl_effects_effect_get_type (void)
 static void
 gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
 {
+  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (effects);
+  GstGLContext *context = GST_GL_FILTER (effects)->context;
 
   switch (effect_type) {
     case GST_GL_EFFECT_IDENTITY:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_identity;
+      filter_class->supported_gl_api =
+          GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
+      effects->current_effect = effect_type;
       break;
     case GST_GL_EFFECT_MIRROR:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_mirror;
+      filter_class->supported_gl_api =
+          GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
+      effects->current_effect = effect_type;
       break;
     case GST_GL_EFFECT_SQUEEZE:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_squeeze;
+      filter_class->supported_gl_api =
+          GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
+      effects->current_effect = effect_type;
       break;
+  }
+
+  if (context
+      && (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL) ==
+      GST_GL_API_NONE) {
+    GST_ELEMENT_WARNING (effects, RESOURCE, SETTINGS, ("%s",
+            "cannot change effect type"), ("%s",
+            "the current OpenGL context does not support the GL API required"));
+    return;
+  }
 #if GST_GL_HAVE_OPENGL
+  switch (effect_type) {
     case GST_GL_EFFECT_STRETCH:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_stretch;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_TUNNEL:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_tunnel;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_FISHEYE:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_fisheye;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_TWIRL:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_twirl;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_BULGE:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_bulge;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_SQUARE:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_square;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_HEAT:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_heat;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_SEPIA:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_sepia;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_XPRO:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_xpro;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_LUMA_XPRO:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_luma_xpro;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_XRAY:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_xray;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_SIN:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_sin;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
     case GST_GL_EFFECT_GLOW:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_glow;
+      filter_class->supported_gl_api = GST_GL_API_OPENGL;
       break;
 #endif
     default:
@@ -273,6 +308,9 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
       "Gstreamer OpenGL Effects", "Filter/Effect/Video",
       "GL Shading Language effects",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
+
+  GST_GL_FILTER_CLASS (klass)->supported_gl_api =
+      GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;
 }
 
 static void

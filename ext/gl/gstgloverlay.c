@@ -244,6 +244,9 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
       "Overlay GL video texture with a JPEG/PNG image",
       "Filippo Argiolas <filippo.argiolas@gmail.com>, "
       "Matthew Waters <matthew@centricular.com>");
+
+  GST_GL_FILTER_CLASS (klass)->supported_gl_api =
+      GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;
 }
 
 static void
