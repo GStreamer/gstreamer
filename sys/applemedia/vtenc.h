@@ -60,6 +60,7 @@ struct _GstVTEnc
   guint bitrate;
   gboolean allow_frame_reordering;
   gboolean realtime;
+  gdouble quality;
 
   gboolean dump_properties;
   gboolean dump_attributes;
