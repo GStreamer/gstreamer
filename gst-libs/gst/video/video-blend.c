@@ -365,11 +365,10 @@ gst_video_blend (GstVideoFrame * dest,
     dinfo->unpack_func (dinfo, 0, tmpdestline, dest->data, dest->info.stride,
         0, i, dest_width);
     sinfo->unpack_func (sinfo, 0, tmpsrcline, src->data, src->info.stride,
-        0, src_yoff, src_width + src_xoff);
+        src_xoff, src_yoff, src_width);
 
     /* FIXME: use the x parameter of the unpack func once implemented */
     tmpdestline += 4 * x;
-    tmpsrcline += 4 * src_xoff;
 
     matrix (tmpsrcline, src_width);
 
@@ -414,7 +413,6 @@ gst_video_blend (GstVideoFrame * dest,
 
     /* undo previous pointer adjustments to pass right pointer to g_free */
     tmpdestline -= 4 * x;
-    tmpsrcline -= 4 * src_xoff;
 
     /* FIXME
      * #if G_BYTE_ORDER == LITTLE_ENDIAN
