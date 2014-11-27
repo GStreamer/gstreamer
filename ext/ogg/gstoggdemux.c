@@ -2984,6 +2984,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   GstFlowReturn ret;
   gint i, pending;
   gint serialno = 0;
+  gboolean found_keyframe = FALSE;
 
   position = segment->position;
 
@@ -3114,6 +3115,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
       if (keyframe_time < keytarget) {
         serialno = pad->map.serialno;
         keytarget = keyframe_time;
+        found_keyframe = TRUE;
       }
     }
 
@@ -3126,6 +3128,10 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   /* for negative rates we will get to the keyframe backwards */
   if (segment->rate < 0.0)
     goto done;
+
+  /* No keyframe found, no need to bisect again, keytarget == target here */
+  if (!found_keyframe)
+    best = 0;
 
   if (keytarget != target) {
     GST_LOG_OBJECT (ogg, "final seek to target %" GST_TIME_FORMAT,
