@@ -597,7 +597,7 @@ _gst_gl_color_convert_perform_unlocked (GstGLColorConvert * convert,
 
   if (!convert->priv->result) {
     if (convert->outbuf)
-      gst_object_unref (convert->outbuf);
+      gst_buffer_unref (convert->outbuf);
     convert->outbuf = NULL;
     return NULL;
   }
