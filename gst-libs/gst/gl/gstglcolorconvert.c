@@ -656,6 +656,12 @@ _RGB_pixel_order (const gchar * expected, const gchar * wanted)
     g_free (temp);
   }
 
+  if (strcmp (want, "rgb16") == 0 || strcmp (want, "bgr16") == 0) {
+    gchar *temp = want;
+    want = g_strndup (temp, 3);
+    g_free (temp);
+  }
+
   /* pad want with 'a's */
   if ((len = strlen (want)) < 4) {
     gchar *new_want = g_strndup (want, 4);
