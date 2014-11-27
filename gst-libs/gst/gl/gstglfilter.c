@@ -151,6 +151,7 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
           "Get OpenGL context",
           GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  klass->supported_gl_api = GST_GL_API_ANY;
   klass->set_caps = NULL;
   klass->filter = NULL;
   klass->display_init_cb = NULL;
@@ -199,18 +200,21 @@ static void
 gst_gl_filter_set_context (GstElement * element, GstContext * context)
 {
   GstGLFilter *filter = GST_GL_FILTER (element);
+  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
   gst_gl_handle_set_context (element, context, &filter->display,
       &filter->other_context);
+  if (filter->display)
+    gst_gl_display_filter_gl_api (filter->display,
+        filter_class->supported_gl_api);
 }
 
 static gboolean
 gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     GstQuery * query)
 {
-  GstGLFilter *filter;
-
-  filter = GST_GL_FILTER (trans);
+  GstGLFilter *filter = GST_GL_FILTER (trans);
+  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
@@ -222,8 +226,12 @@ gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     }
     case GST_QUERY_CONTEXT:
     {
-      return gst_gl_handle_context_query ((GstElement *) filter, query,
+      gboolean ret = gst_gl_handle_context_query ((GstElement *) filter, query,
           &filter->display, &filter->other_context);
+      if (filter->display)
+        gst_gl_display_filter_gl_api (filter->display,
+            filter_class->supported_gl_api);
+      return ret;
     }
     default:
       break;
@@ -314,6 +322,9 @@ gst_gl_filter_start (GstBaseTransform * bt)
   if (!gst_gl_ensure_element_data (filter, &filter->display,
           &filter->other_context))
     return FALSE;
+
+  gst_gl_display_filter_gl_api (filter->display,
+      filter_class->supported_gl_api);
 
   if (filter_class->onStart)
     filter_class->onStart (filter);
@@ -855,6 +866,7 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   GstGLFilter *filter = GST_GL_FILTER (trans);
+  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
   GstBufferPool *pool;
   GstStructure *config;
   GstCaps *caps, *decide_caps;
@@ -895,6 +907,9 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
   if (!gst_gl_ensure_element_data (filter, &filter->display,
           &filter->other_context))
     return FALSE;
+
+  gst_gl_display_filter_gl_api (filter->display,
+      filter_class->supported_gl_api);
 
   if (!filter->context) {
     filter->context = gst_gl_context_new (filter->display);
@@ -1024,6 +1039,9 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   if (!gst_gl_ensure_element_data (filter, &filter->display,
           &filter->other_context))
     return FALSE;
+
+  gst_gl_display_filter_gl_api (filter->display,
+      filter_class->supported_gl_api);
 
   if (gst_query_find_allocation_meta (query,
           GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
@@ -1294,8 +1312,7 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (bt);
 
-  if (!gst_gl_ensure_element_data (filter, &filter->display,
-          &filter->other_context))
+  if (!filter->display)
     return GST_FLOW_NOT_NEGOTIATED;
 
   if (!filter->upload) {

@@ -152,6 +152,7 @@ static gboolean
 gst_gl_mixer_propose_allocation (GstGLMixer * mix,
     GstQuery * decide_query, GstQuery * query)
 {
+  GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
   GstBufferPool *pool;
   GstStructure *config;
   GstCaps *caps;
@@ -191,6 +192,8 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix,
 
   if (!gst_gl_ensure_element_data (mix, &mix->display, &mix->other_context))
     return FALSE;
+
+  gst_gl_display_filter_gl_api (mix->display, mix_class->supported_gl_api);
 
   if (!mix->context) {
     mix->context = gst_gl_context_new (mix->display);
@@ -428,6 +431,7 @@ gst_gl_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
 {
   gboolean ret = FALSE;
   GstGLMixer *mix = GST_GL_MIXER (agg);
+  GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
 
   GST_TRACE ("QUERY %" GST_PTR_FORMAT, query);
 
@@ -485,6 +489,9 @@ gst_gl_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
     {
       ret = gst_gl_handle_context_query ((GstElement *) mix, query,
           &mix->display, &mix->other_context);
+      if (mix->display)
+        gst_gl_display_filter_gl_api (mix->display,
+            mix_class->supported_gl_api);
       break;
     }
     default:
@@ -615,7 +622,7 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   g_type_class_ref (GST_TYPE_GL_MIXER_PAD);
 
   klass->set_caps = NULL;
-
+  klass->supported_gl_api = GST_GL_API_ANY;
 }
 
 static void
@@ -661,19 +668,26 @@ static void
 gst_gl_mixer_set_context (GstElement * element, GstContext * context)
 {
   GstGLMixer *mix = GST_GL_MIXER (element);
+  GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
 
   gst_gl_handle_set_context (element, context, &mix->display,
       &mix->other_context);
+
+  if (mix->display)
+    gst_gl_display_filter_gl_api (mix->display, mix_class->supported_gl_api);
 }
 
 static gboolean
 gst_gl_mixer_activate (GstGLMixer * mix, gboolean active)
 {
+  GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
   gboolean result = TRUE;
 
   if (active) {
     if (!gst_gl_ensure_element_data (mix, &mix->display, &mix->other_context))
-      result = FALSE;
+      return FALSE;
+
+    gst_gl_display_filter_gl_api (mix->display, mix_class->supported_gl_api);
   }
 
   return result;
@@ -729,12 +743,16 @@ gst_gl_mixer_src_query (GstAggregator * agg, GstQuery * query)
 {
   gboolean res = FALSE;
   GstGLMixer *mix = GST_GL_MIXER (agg);
+  GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
       res = gst_gl_handle_context_query ((GstElement *) mix, query,
           &mix->display, &mix->other_context);
+      if (mix->display)
+        gst_gl_display_filter_gl_api (mix->display,
+            mix_class->supported_gl_api);
       break;
     }
     case GST_QUERY_CAPS:
@@ -784,6 +802,8 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
 
   if (!gst_gl_ensure_element_data (mix, &mix->display, &mix->other_context))
     return FALSE;
+
+  gst_gl_display_filter_gl_api (mix->display, mixer_class->supported_gl_api);
 
   if (gst_query_find_allocation_meta (query,
           GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {

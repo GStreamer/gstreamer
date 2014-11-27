@@ -119,6 +119,8 @@ gst_gl_filter_laplacian_class_init (GstGLFilterLaplacianClass * klass)
       gst_gl_filter_laplacian_filter_texture;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_laplacian_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_laplacian_reset;
+
+  GST_GL_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
 
 static void

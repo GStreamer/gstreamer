@@ -111,6 +111,8 @@ GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
 #define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
 
+#define SUPPORTED_GL_APIS GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3
+
 static void gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink);
 static void gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink);
 static void gst_glimage_sink_on_close (GstGLImageSink * gl_sink);
@@ -493,6 +495,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
           &gl_sink->other_context))
     return FALSE;
 
+  gst_gl_display_filter_gl_api (gl_sink->display, SUPPORTED_GL_APIS);
+
   if (!gl_sink->context) {
     GstGLWindow *window;
 
@@ -564,8 +568,12 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      return gst_gl_handle_context_query ((GstElement *) glimage_sink, query,
+      gboolean ret =
+          gst_gl_handle_context_query ((GstElement *) glimage_sink, query,
           &glimage_sink->display, &glimage_sink->other_context);
+      if (glimage_sink->display)
+        gst_gl_display_filter_gl_api (glimage_sink->display, SUPPORTED_GL_APIS);
+      return ret;
     }
     case GST_QUERY_DRAIN:
     {
@@ -619,6 +627,9 @@ gst_glimage_sink_set_context (GstElement * element, GstContext * context)
 
   gst_gl_handle_set_context (element, context, &gl_sink->display,
       &gl_sink->other_context);
+
+  if (gl_sink->display)
+    gst_gl_display_filter_gl_api (gl_sink->display, SUPPORTED_GL_APIS);
 }
 
 static GstStateChangeReturn
@@ -638,11 +649,6 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_atomic_int_set (&glimage_sink->to_quit, 0);
-      if (!glimage_sink->display) {
-        if (!gst_gl_ensure_element_data (glimage_sink, &glimage_sink->display,
-                &glimage_sink->other_context))
-          return GST_STATE_CHANGE_FAILURE;
-      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;

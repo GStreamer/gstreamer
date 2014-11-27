@@ -104,6 +104,8 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
   filter_class->filter_texture = gst_gl_colorscale_filter_texture;
 
   basetransform_class->passthrough_on_same_caps = TRUE;
+  filter_class->supported_gl_api =
+      GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
 }
 
 static void

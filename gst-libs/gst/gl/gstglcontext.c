@@ -330,8 +330,13 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   GstGLContext *context;
   GstGLWrappedContext *context_wrap = NULL;
   GstGLContextClass *context_class;
+  GstGLAPI display_api;
 
   _init_debug ();
+
+  display_api = gst_gl_display_get_gl_api (display);
+  g_return_val_if_fail ((display_api & available_apis) != GST_GL_API_NONE,
+      NULL);
 
   context_wrap = g_object_new (GST_GL_TYPE_WRAPPED_CONTEXT, NULL);
 
@@ -1164,10 +1169,11 @@ gst_gl_context_create_thread (GstGLContext * context)
   GstGLWindowClass *window_class;
   GstGLFuncs *gl;
   gboolean ret = FALSE;
-  GstGLAPI compiled_api, user_api, gl_api;
+  GstGLAPI compiled_api, user_api, gl_api, display_api;
   gchar *api_string;
   gchar *compiled_api_s;
-  gchar *user_api_string;
+  gchar *user_api_s;
+  gchar *display_api_s;
   const gchar *user_choice;
   GError **error;
   GstGLContext *other_context;
@@ -1182,6 +1188,14 @@ gst_gl_context_create_thread (GstGLContext * context)
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   window_class = GST_GL_WINDOW_GET_CLASS (context->window);
 
+  display_api = gst_gl_display_get_gl_api (context->priv->display);
+  if (display_api == GST_GL_API_NONE) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_API,
+        "Cannot create context with satisfying requested apis "
+        "(display has no GL api!)");
+    goto failure;
+  }
+
   if (window_class->open) {
     if (!window_class->open (context->window, error)) {
       g_assert (error == NULL || *error != NULL);
@@ -1191,20 +1205,22 @@ gst_gl_context_create_thread (GstGLContext * context)
 
   gl = context->gl_vtable;
   compiled_api = _compiled_api ();
-
-  user_choice = g_getenv ("GST_GL_API");
-
-  user_api = gst_gl_api_from_string (user_choice);
-  user_api_string = gst_gl_api_to_string (user_api);
-
   compiled_api_s = gst_gl_api_to_string (compiled_api);
 
-  if ((user_api & compiled_api) == GST_GL_API_NONE) {
+  user_choice = g_getenv ("GST_GL_API");
+  user_api = gst_gl_api_from_string (user_choice);
+  user_api_s = gst_gl_api_to_string (user_api);
+
+  display_api_s = gst_gl_api_to_string (display_api);
+
+  if ((user_api & compiled_api & display_api) == GST_GL_API_NONE) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_API,
         "Cannot create context with the user requested api (%s).  "
-        "We have support for (%s)", user_api_string, compiled_api_s);
-    g_free (user_api_string);
+        "We have support for (%s), display api (%s)", user_api_s,
+        compiled_api_s, display_api_s);
+    g_free (user_api_s);
     g_free (compiled_api_s);
+    g_free (display_api_s);
     goto failure;
   }
 
@@ -1212,18 +1228,21 @@ gst_gl_context_create_thread (GstGLContext * context)
       !context_class->choose_format (context, error)) {
     g_assert (error == NULL || *error != NULL);
     g_free (compiled_api_s);
-    g_free (user_api_string);
+    g_free (user_api_s);
+    g_free (display_api_s);
     goto failure;
   }
 
   GST_INFO ("Attempting to create opengl context. user chosen api(s) (%s), "
-      "compiled api support (%s)", user_api_string, compiled_api_s);
+      "compiled api support (%s) display api (%s)", user_api_s,
+      compiled_api_s, display_api_s);
 
-  if (!context_class->create_context (context, compiled_api & user_api,
-          other_context, error)) {
+  if (!context_class->create_context (context,
+          compiled_api & user_api & display_api, other_context, error)) {
     g_assert (error == NULL || *error != NULL);
     g_free (compiled_api_s);
-    g_free (user_api_string);
+    g_free (user_api_s);
+    g_free (display_api_s);
     goto failure;
   }
   GST_INFO ("created context");
@@ -1233,7 +1252,8 @@ gst_gl_context_create_thread (GstGLContext * context)
         GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE,
         "Failed to activate the GL Context");
     g_free (compiled_api_s);
-    g_free (user_api_string);
+    g_free (user_api_s);
+    g_free (display_api_s);
     goto failure;
   }
 
@@ -1243,20 +1263,22 @@ gst_gl_context_create_thread (GstGLContext * context)
   api_string = gst_gl_api_to_string (gl_api);
   GST_INFO ("available GL APIs: %s", api_string);
 
-  if (((compiled_api & gl_api) & user_api) == GST_GL_API_NONE) {
+  if (((compiled_api & gl_api & display_api) & user_api) == GST_GL_API_NONE) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_API,
         "failed to create context, context "
         "could not provide correct api. user (%s), compiled (%s), context (%s)",
-        user_api_string, compiled_api_s, api_string);
+        user_api_s, compiled_api_s, api_string);
     g_free (api_string);
     g_free (compiled_api_s);
-    g_free (user_api_string);
+    g_free (user_api_s);
+    g_free (display_api_s);
     goto failure;
   }
 
   g_free (api_string);
   g_free (compiled_api_s);
-  g_free (user_api_string);
+  g_free (user_api_s);
+  g_free (display_api_s);
 
   gl->GetError = gst_gl_context_get_proc_address (context, "glGetError");
   gl->GetString = gst_gl_context_get_proc_address (context, "glGetString");

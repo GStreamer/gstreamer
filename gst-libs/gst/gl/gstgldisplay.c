@@ -83,7 +83,7 @@ static guintptr gst_gl_display_default_get_handle (GstGLDisplay * display);
 
 struct _GstGLDisplayPrivate
 {
-  gint dummy;
+  GstGLAPI gl_api;
 };
 
 static void
@@ -102,6 +102,7 @@ gst_gl_display_init (GstGLDisplay * display)
   display->priv = GST_GL_DISPLAY_GET_PRIVATE (display);
 
   display->type = GST_GL_DISPLAY_TYPE_ANY;
+  display->priv->gl_api = GST_GL_API_ANY;
 
   GST_TRACE ("init %p", display);
 
@@ -190,6 +191,53 @@ static guintptr
 gst_gl_display_default_get_handle (GstGLDisplay * display)
 {
   return 0;
+}
+
+/**
+ * gst_gl_display_filter_gl_api:
+ * @display: a #GstGLDisplay
+ *
+ * limit the use of OpenGL to the requested @gl_api.  This is intended to allow
+ * application and elements to request a specific set of OpenGL API's based on
+ * what they support.  See gst_gl_context_get_gl_api() for the retreiving the
+ * API supported by a #GstGLContext.
+ */
+void
+gst_gl_display_filter_gl_api (GstGLDisplay * display, GstGLAPI gl_api)
+{
+  gchar *gl_api_s;
+
+  g_return_if_fail (GST_IS_GL_DISPLAY (display));
+
+  gl_api_s = gst_gl_api_to_string (gl_api);
+  GST_TRACE_OBJECT (display, "filtering with api %s", gl_api_s);
+  g_free (gl_api_s);
+
+  GST_OBJECT_LOCK (display);
+  display->priv->gl_api &= gl_api;
+  GST_OBJECT_UNLOCK (display);
+}
+
+/**
+ * gst_gl_display_get_gl_api:
+ * @display: a #GstGLDisplay
+ *
+ * see gst_gl_display_filter_gl_api() for what the returned value represents
+ *
+ * Returns: the #GstGLAPI configured for @display
+ */
+GstGLAPI
+gst_gl_display_get_gl_api (GstGLDisplay * display)
+{
+  GstGLAPI ret;
+
+  g_return_if_fail (GST_IS_GL_DISPLAY (display));
+
+  GST_OBJECT_LOCK (display);
+  ret = display->priv->gl_api;
+  GST_OBJECT_UNLOCK (display);
+
+  return ret;
 }
 
 /**

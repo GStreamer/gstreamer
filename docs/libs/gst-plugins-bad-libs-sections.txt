@@ -899,6 +899,8 @@ GstGLDisplayType
 GstGLDisplay
 gst_gl_display_new
 gst_gl_display_get_handle_type
+gst_gl_display_filter_gl_api
+gst_gl_display_get_gl_api
 gst_context_get_gl_display
 gst_context_set_gl_display
 <SUBSECTION Standard>

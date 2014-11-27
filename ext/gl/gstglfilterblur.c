@@ -114,6 +114,8 @@ gst_gl_filterblur_class_init (GstGLFilterBlurClass * klass)
       gst_gl_filterblur_reset_resources;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filterblur_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_filterblur_reset;
+
+  GST_GL_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
 
 static void

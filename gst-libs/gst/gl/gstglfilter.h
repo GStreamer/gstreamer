@@ -116,6 +116,7 @@ struct _GstGLFilter
 struct _GstGLFilterClass
 {
   GstBaseTransformClass base_transform_class;
+  GstGLAPI supported_gl_api;
 
   gboolean (*set_caps)          (GstGLFilter* filter, GstCaps* incaps, GstCaps* outcaps);
   gboolean (*filter)            (GstGLFilter *filter, GstBuffer *inbuf, GstBuffer *outbuf);
