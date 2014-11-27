@@ -1840,8 +1840,9 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
           "Last buffer is incomplete: %" G_GUINT64_FORMAT " <= %"
           G_GUINT64_FORMAT, max_offset, next_offset);
       next_offset = max_offset;
+      if (next_offset > audiomixer->offset)
+        gst_buffer_resize (outbuf, 0, (next_offset - audiomixer->offset) * bpf);
 
-      gst_buffer_resize (outbuf, 0, (next_offset - audiomixer->offset) * bpf);
       next_timestamp = gst_util_uint64_scale (next_offset, GST_SECOND, rate);
     }
   }
