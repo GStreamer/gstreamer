@@ -29,6 +29,18 @@
 #include "video-format.h"
 #include "video-orc.h"
 
+#ifndef restrict
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+/* restrict should be available */
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define restrict __restrict__
+#elif defined(_MSC_VER) &&  _MSC_VER >= 1500
+#define restrict __restrict
+#else
+#define restrict                /* no op */
+#endif
+#endif
+
 /* Line conversion to AYUV */
 
 #define GET_PLANE_STRIDE(plane) (stride(plane))
@@ -81,10 +93,10 @@ unpack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
-  const guint8 *sy = GET_Y_LINE (y);
-  const guint8 *su = GET_U_LINE (uv);
-  const guint8 *sv = GET_V_LINE (uv);
-  guint8 *d = dest;
+  const guint8 *restrict sy = GET_Y_LINE (y);
+  const guint8 *restrict su = GET_U_LINE (uv);
+  const guint8 *restrict sv = GET_V_LINE (uv);
+  guint8 *restrict d = dest;
 
   sy += x;
   su += x >> 1;
@@ -134,8 +146,8 @@ unpack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *s = GET_LINE (y);
-  guint8 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest;
 
   s += (x & ~1) << 1;
   if (x & 1) {
@@ -168,8 +180,8 @@ pack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   g_return_if_fail (IS_ALIGNED (s, 8));
 
@@ -224,8 +236,8 @@ pack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   g_return_if_fail (IS_ALIGNED (s, 8));
 
@@ -246,8 +258,8 @@ unpack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *s = GET_LINE (y);
-  guint8 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest;
 
   s += (x & ~1) << 1;
   if (x & 1) {
@@ -280,8 +292,8 @@ pack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   g_return_if_fail (IS_ALIGNED (s, 8));
 
@@ -303,8 +315,8 @@ unpack_v308 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint8 *s = GET_LINE (y);
-  guint8 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest;
 
   s += x * 3;
 
@@ -323,8 +335,8 @@ pack_v308 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     d[i * 3 + 0] = s[i * 4 + 1];
@@ -340,7 +352,7 @@ unpack_copy4 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *s = GET_LINE (y);
+  const guint8 *restrict s = GET_LINE (y);
 
   s += x * 4;
 
@@ -353,7 +365,7 @@ pack_copy4 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *d = GET_LINE (y);
+  guint8 *restrict d = GET_LINE (y);
 
   memcpy (d, src, width * 4);
 }
@@ -365,8 +377,8 @@ unpack_v210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint8 *s = GET_LINE (y);
-  guint16 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  guint16 *restrict d = dest;
   guint32 a0, a1, a2, a3;
   guint16 y0, y1, y2, y3, y4, y5;
   guint16 u0, u2, u4;
@@ -458,8 +470,8 @@ pack_v210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *d = GET_LINE (y);
-  const guint16 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint16 *restrict s = src;
   guint32 a0, a1, a2, a3;
   guint16 y0, y1, y2, y3, y4, y5;
   guint16 u0, u1, u2;
@@ -542,8 +554,8 @@ unpack_v216 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint8 *s = GET_LINE (y);
-  guint16 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  guint16 *restrict d = dest;
 
   s += (x & ~1) << 2;
   if (x & 1) {
@@ -571,8 +583,8 @@ pack_v216 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *d = GET_LINE (y);
-  const guint16 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width - 1; i += 2) {
     GST_WRITE_UINT16_LE (d + i * 4 + 0, s[(i + 0) * 4 + 2]);
@@ -594,10 +606,10 @@ unpack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *sy = GET_Y_LINE (y);
-  const guint8 *su = GET_U_LINE (y);
-  const guint8 *sv = GET_V_LINE (y);
-  guint8 *d = dest;
+  const guint8 *restrict sy = GET_Y_LINE (y);
+  const guint8 *restrict su = GET_U_LINE (y);
+  const guint8 *restrict sv = GET_V_LINE (y);
+  guint8 *restrict d = dest;
 
   sy += x;
   su += x >> 2;
@@ -637,10 +649,10 @@ pack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *dy = GET_Y_LINE (y);
-  guint8 *du = GET_U_LINE (y);
-  guint8 *dv = GET_V_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict dy = GET_Y_LINE (y);
+  guint8 *restrict du = GET_U_LINE (y);
+  guint8 *restrict dv = GET_V_LINE (y);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width - 3; i += 4) {
     dy[i] = s[i * 4 + 1];
@@ -668,10 +680,10 @@ unpack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *sy = GET_Y_LINE (y);
-  const guint8 *su = GET_U_LINE (y);
-  const guint8 *sv = GET_V_LINE (y);
-  guint8 *d = dest;
+  const guint8 *restrict sy = GET_Y_LINE (y);
+  const guint8 *restrict su = GET_U_LINE (y);
+  const guint8 *restrict sv = GET_V_LINE (y);
+  guint8 *restrict d = dest;
 
   sy += x;
   su += x >> 1;
@@ -706,10 +718,10 @@ pack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *dy = GET_Y_LINE (y);
-  guint8 *du = GET_U_LINE (y);
-  guint8 *dv = GET_V_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict dy = GET_Y_LINE (y);
+  guint8 *restrict du = GET_U_LINE (y);
+  guint8 *restrict dv = GET_V_LINE (y);
+  const guint8 *restrict s = src;
 
   g_return_if_fail (IS_ALIGNED (s, 8));
 
@@ -730,9 +742,9 @@ unpack_Y444 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *sy = GET_Y_LINE (y);
-  const guint8 *su = GET_U_LINE (y);
-  const guint8 *sv = GET_V_LINE (y);
+  const guint8 *restrict sy = GET_Y_LINE (y);
+  const guint8 *restrict su = GET_U_LINE (y);
+  const guint8 *restrict sv = GET_V_LINE (y);
 
   sy += x;
   su += x;
@@ -747,9 +759,9 @@ pack_Y444 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *dy = GET_Y_LINE (y);
-  guint8 *du = GET_U_LINE (y);
-  guint8 *dv = GET_V_LINE (y);
+  guint8 *restrict dy = GET_Y_LINE (y);
+  guint8 *restrict du = GET_U_LINE (y);
+  guint8 *restrict dv = GET_V_LINE (y);
 
   video_orc_pack_Y444 (dy, du, dv, src, width);
 }
@@ -760,9 +772,9 @@ unpack_GBR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *sr = GET_R_LINE (y);
-  const guint8 *sg = GET_G_LINE (y);
-  const guint8 *sb = GET_B_LINE (y);
+  const guint8 *restrict sr = GET_R_LINE (y);
+  const guint8 *restrict sg = GET_G_LINE (y);
+  const guint8 *restrict sb = GET_B_LINE (y);
 
   sr += x * 4;
   sg += x * 4;
@@ -777,9 +789,9 @@ pack_GBR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *dr = GET_R_LINE (y);
-  guint8 *dg = GET_G_LINE (y);
-  guint8 *db = GET_B_LINE (y);
+  guint8 *restrict dr = GET_R_LINE (y);
+  guint8 *restrict dg = GET_G_LINE (y);
+  guint8 *restrict db = GET_B_LINE (y);
 
   video_orc_pack_Y444 (dr, dg, db, src, width);
 }
@@ -790,7 +802,7 @@ unpack_GRAY8 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *s = GET_LINE (y);
+  const guint8 *restrict s = GET_LINE (y);
 
   s += x;
 
@@ -803,7 +815,7 @@ pack_GRAY8 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *d = GET_LINE (y);
+  guint8 *restrict d = GET_LINE (y);
 
   video_orc_pack_GRAY8 (d, src, width);
 }
@@ -815,8 +827,8 @@ unpack_GRAY16_BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *s = GET_LINE (y);
-  guint16 *d = dest;
+  const guint16 *restrict s = GET_LINE (y);
+  guint16 *restrict d = dest;
 
   s += x;
 
@@ -835,8 +847,8 @@ pack_GRAY16_BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *d = GET_LINE (y);
-  const guint16 *s = src;
+  guint16 *restrict d = GET_LINE (y);
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     GST_WRITE_UINT16_BE (d + i, s[i * 4 + 1]);
@@ -850,8 +862,8 @@ unpack_GRAY16_LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *s = GET_LINE (y);
-  guint16 *d = dest;
+  const guint16 *restrict s = GET_LINE (y);
+  guint16 *restrict d = dest;
 
   s += x;
 
@@ -870,8 +882,8 @@ pack_GRAY16_LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *d = GET_LINE (y);
-  const guint16 *s = src;
+  guint16 *restrict d = GET_LINE (y);
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     GST_WRITE_UINT16_LE (d + i, s[i * 4 + 1]);
@@ -885,8 +897,8 @@ unpack_RGB16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *s = GET_LINE (y);
-  guint8 *d = dest, r, g, b;
+  const guint16 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest, r, g, b;
 
   s += x;
 
@@ -915,8 +927,8 @@ pack_RGB16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint16 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     d[i] = ((s[i * 4 + 1] >> 3) << 11) |
@@ -931,8 +943,8 @@ unpack_BGR16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *s = GET_LINE (y);
-  guint8 *d = dest, r, g, b;
+  const guint16 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest, r, g, b;
 
   s += x;
 
@@ -961,8 +973,8 @@ pack_BGR16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint16 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     d[i] = ((s[i * 4 + 3] >> 3) << 11) |
@@ -977,8 +989,8 @@ unpack_RGB15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *s = GET_LINE (y);
-  guint8 *d = dest, r, g, b;
+  const guint16 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest, r, g, b;
 
   s += x;
 
@@ -1007,8 +1019,8 @@ pack_RGB15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint16 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     d[i] = ((s[i * 4 + 1] >> 3) << 10) |
@@ -1023,8 +1035,8 @@ unpack_BGR15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *s = GET_LINE (y);
-  guint8 *d = dest, r, g, b;
+  const guint16 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest, r, g, b;
 
   s += x;
 
@@ -1053,8 +1065,8 @@ pack_BGR15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint16 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     d[i] = ((s[i * 4 + 3] >> 3) << 10) |
@@ -1068,7 +1080,7 @@ unpack_BGRA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *s = GET_LINE (y);
+  const guint8 *restrict s = GET_LINE (y);
 
   s += x * 4;
 
@@ -1081,7 +1093,7 @@ pack_BGRA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *d = GET_LINE (y);
+  guint8 *restrict d = GET_LINE (y);
 
   video_orc_pack_BGRA (d, src, width);
 }
@@ -1092,7 +1104,7 @@ unpack_ABGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *s = GET_LINE (y);
+  const guint8 *restrict s = GET_LINE (y);
 
   s += x * 4;
 
@@ -1105,7 +1117,7 @@ pack_ABGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *d = GET_LINE (y);
+  guint8 *restrict d = GET_LINE (y);
 
   video_orc_pack_ABGR (d, src, width);
 }
@@ -1116,7 +1128,7 @@ unpack_RGBA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *s = GET_LINE (y);
+  const guint8 *restrict s = GET_LINE (y);
 
   s += x * 4;
 
@@ -1129,7 +1141,7 @@ pack_RGBA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *d = GET_LINE (y);
+  guint8 *restrict d = GET_LINE (y);
 
   video_orc_pack_RGBA (d, src, width);
 }
@@ -1141,8 +1153,8 @@ unpack_RGB (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint8 *s = GET_LINE (y);
-  guint8 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest;
 
   s += x * 3;
 
@@ -1161,8 +1173,8 @@ pack_RGB (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     d[i * 3 + 0] = s[i * 4 + 1];
@@ -1178,8 +1190,8 @@ unpack_BGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint8 *s = GET_LINE (y);
-  guint8 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest;
 
   s += x * 3;
 
@@ -1198,8 +1210,8 @@ pack_BGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     d[i * 3 + 0] = s[i * 4 + 3];
@@ -1215,9 +1227,9 @@ unpack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
-  const guint8 *sy = GET_PLANE_LINE (0, y);
-  const guint8 *suv = GET_PLANE_LINE (1, uv);
-  guint8 *d = dest;
+  const guint8 *restrict sy = GET_PLANE_LINE (0, y);
+  const guint8 *restrict suv = GET_PLANE_LINE (1, uv);
+  guint8 *restrict d = dest;
 
   sy += x;
   suv += (x & ~1);
@@ -1253,9 +1265,9 @@ pack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
-  guint8 *dy = GET_PLANE_LINE (0, y);
-  guint8 *duv = GET_PLANE_LINE (1, uv);
-  const guint8 *s = src;
+  guint8 *restrict dy = GET_PLANE_LINE (0, y);
+  guint8 *restrict duv = GET_PLANE_LINE (1, uv);
+  const guint8 *restrict s = src;
 
   if (IS_CHROMA_LINE_420 (y, flags)) {
     g_return_if_fail (IS_ALIGNED (s, 8));
@@ -1280,9 +1292,9 @@ unpack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
-  const guint8 *sy = GET_PLANE_LINE (0, y);
-  const guint8 *suv = GET_PLANE_LINE (1, uv);
-  guint8 *d = dest;
+  const guint8 *restrict sy = GET_PLANE_LINE (0, y);
+  const guint8 *restrict suv = GET_PLANE_LINE (1, uv);
+  guint8 *restrict d = dest;
 
   sy += x;
   suv += (x & ~1);
@@ -1318,9 +1330,9 @@ pack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
-  guint8 *dy = GET_PLANE_LINE (0, y);
-  guint8 *duv = GET_PLANE_LINE (1, uv);
-  const guint8 *s = src;
+  guint8 *restrict dy = GET_PLANE_LINE (0, y);
+  guint8 *restrict duv = GET_PLANE_LINE (1, uv);
+  const guint8 *restrict s = src;
 
   if (IS_CHROMA_LINE_420 (y, flags)) {
     g_return_if_fail (IS_ALIGNED (s, 8));
@@ -1344,9 +1356,9 @@ unpack_NV16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *sy = GET_PLANE_LINE (0, y);
-  const guint8 *suv = GET_PLANE_LINE (1, y);
-  guint8 *d = dest;
+  const guint8 *restrict sy = GET_PLANE_LINE (0, y);
+  const guint8 *restrict suv = GET_PLANE_LINE (1, y);
+  guint8 *restrict d = dest;
 
   sy += x;
   suv += (x & ~1);
@@ -1381,9 +1393,9 @@ pack_NV16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *dy = GET_PLANE_LINE (0, y);
-  guint8 *duv = GET_PLANE_LINE (1, y);
-  const guint8 *s = src;
+  guint8 *restrict dy = GET_PLANE_LINE (0, y);
+  guint8 *restrict duv = GET_PLANE_LINE (1, y);
+  const guint8 *restrict s = src;
 
   g_return_if_fail (IS_ALIGNED (s, 8));
 
@@ -1404,8 +1416,8 @@ unpack_NV24 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  const guint8 *sy = GET_PLANE_LINE (0, y);
-  const guint8 *suv = GET_PLANE_LINE (1, y);
+  const guint8 *restrict sy = GET_PLANE_LINE (0, y);
+  const guint8 *restrict suv = GET_PLANE_LINE (1, y);
 
   sy += x;
   suv += x << 1;
@@ -1419,8 +1431,8 @@ pack_NV24 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *dy = GET_PLANE_LINE (0, y);
-  guint8 *duv = GET_PLANE_LINE (1, y);
+  guint8 *restrict dy = GET_PLANE_LINE (0, y);
+  guint8 *restrict duv = GET_PLANE_LINE (1, y);
 
   video_orc_pack_NV24 (dy, duv, src, width);
 }
@@ -1432,8 +1444,8 @@ unpack_UYVP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint8 *s = GET_LINE (y);
-  guint16 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  guint16 *restrict d = dest;
 
   /* FIXME */
   s += x << 1;
@@ -1476,8 +1488,8 @@ pack_UYVP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *d = GET_LINE (y);
-  const guint16 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width; i += 2) {
     guint16 y0, y1;
@@ -1508,11 +1520,11 @@ unpack_A420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
-  const guint8 *sy = GET_Y_LINE (y);
-  const guint8 *su = GET_U_LINE (uv);
-  const guint8 *sv = GET_V_LINE (uv);
-  const guint8 *sa = GET_A_LINE (y);
-  guint8 *d = dest;
+  const guint8 *restrict sy = GET_Y_LINE (y);
+  const guint8 *restrict su = GET_U_LINE (uv);
+  const guint8 *restrict sv = GET_V_LINE (uv);
+  const guint8 *restrict sa = GET_A_LINE (y);
+  guint8 *restrict d = dest;
 
   sy += x;
   su += x >> 1;
@@ -1537,11 +1549,11 @@ pack_A420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
-  guint8 *dy = GET_Y_LINE (y);
-  guint8 *du = GET_U_LINE (uv);
-  guint8 *dv = GET_V_LINE (uv);
-  guint8 *da = GET_A_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict dy = GET_Y_LINE (y);
+  guint8 *restrict du = GET_U_LINE (uv);
+  guint8 *restrict dv = GET_V_LINE (uv);
+  guint8 *restrict da = GET_A_LINE (y);
+  const guint8 *restrict s = src;
 
   if (IS_CHROMA_LINE_420 (y, flags)) {
     g_return_if_fail (IS_ALIGNED (s, 8));
@@ -1567,9 +1579,9 @@ unpack_RGB8P (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint8 *s = GET_LINE (y);
-  const guint32 *p = data[1];
-  guint8 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  const guint32 *restrict p = data[1];
+  guint8 *restrict d = dest;
 
   s += x;
 
@@ -1635,8 +1647,8 @@ pack_RGB8P (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   /* Use our poor man's palette, taken from ffmpegcolorspace too */
   for (i = 0; i < width; i++) {
@@ -1657,10 +1669,10 @@ unpack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   gint uv = GET_UV_410 (y, flags);
-  const guint8 *sy = GET_Y_LINE (y);
-  const guint8 *su = GET_U_LINE (uv);
-  const guint8 *sv = GET_V_LINE (uv);
-  guint8 *d = dest;
+  const guint8 *restrict sy = GET_Y_LINE (y);
+  const guint8 *restrict su = GET_U_LINE (uv);
+  const guint8 *restrict sv = GET_V_LINE (uv);
+  guint8 *restrict d = dest;
 
   sy += x;
   su += x >> 2;
@@ -1701,10 +1713,10 @@ pack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   int i;
   gint uv = GET_UV_410 (y, flags);
-  guint8 *dy = GET_Y_LINE (y);
-  guint8 *du = GET_U_LINE (uv);
-  guint8 *dv = GET_V_LINE (uv);
-  const guint8 *s = src;
+  guint8 *restrict dy = GET_Y_LINE (y);
+  guint8 *restrict du = GET_U_LINE (uv);
+  guint8 *restrict dv = GET_V_LINE (uv);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width - 3; i += 4) {
     dy[i] = s[i * 4 + 1];
@@ -1736,8 +1748,8 @@ unpack_IYU1 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint8 *s = GET_LINE (y);
-  guint8 *d = dest;
+  const guint8 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest;
   guint8 y0, y1, y2, y3;
   guint8 u0;
   guint8 v0;
@@ -1805,8 +1817,8 @@ pack_IYU1 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *d = GET_LINE (y);
-  const guint8 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint8 *restrict s = src;
 
   for (i = 0; i < width - 3; i += 4) {
     d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
@@ -1847,7 +1859,7 @@ pack_copy8 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  guint8 *d = GET_LINE (y);
+  guint8 *restrict d = GET_LINE (y);
 
   memcpy (d, src, width * 8);
 }
@@ -1859,8 +1871,8 @@ unpack_r210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint8 *s = GET_LINE (y);
-  guint16 *d = dest, R, G, B;
+  const guint8 *restrict s = GET_LINE (y);
+  guint16 *restrict d = dest, R, G, B;
 
   s += x * 4;
 
@@ -1891,8 +1903,8 @@ pack_r210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *d = GET_LINE (y);
-  const guint16 *s = src;
+  guint8 *restrict d = GET_LINE (y);
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     guint32 x = 0;
@@ -1944,11 +1956,11 @@ pack_GBR_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *dg = GET_G_LINE (y);
-  guint16 *db = GET_B_LINE (y);
-  guint16 *dr = GET_R_LINE (y);
+  guint16 *restrict dg = GET_G_LINE (y);
+  guint16 *restrict db = GET_B_LINE (y);
+  guint16 *restrict dr = GET_R_LINE (y);
   guint16 G, B, R;
-  const guint16 *s = src;
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     G = (s[i * 4 + 2]) >> 6;
@@ -1968,10 +1980,10 @@ unpack_GBR_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *sg = GET_G_LINE (y);
-  const guint16 *sb = GET_B_LINE (y);
-  const guint16 *sr = GET_R_LINE (y);
-  guint16 *d = dest, G, B, R;
+  const guint16 *restrict sg = GET_G_LINE (y);
+  const guint16 *restrict sb = GET_B_LINE (y);
+  const guint16 *restrict sr = GET_R_LINE (y);
+  guint16 *restrict d = dest, G, B, R;
 
   sg += x;
   sb += x;
@@ -2002,11 +2014,11 @@ pack_GBR_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *dg = GET_G_LINE (y);
-  guint16 *db = GET_B_LINE (y);
-  guint16 *dr = GET_R_LINE (y);
+  guint16 *restrict dg = GET_G_LINE (y);
+  guint16 *restrict db = GET_B_LINE (y);
+  guint16 *restrict dr = GET_R_LINE (y);
   guint16 G, B, R;
-  const guint16 *s = src;
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     G = s[i * 4 + 2] >> 6;
@@ -2026,10 +2038,10 @@ unpack_Y444_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  guint16 *sy = GET_Y_LINE (y);
-  guint16 *su = GET_U_LINE (y);
-  guint16 *sv = GET_V_LINE (y);
-  guint16 *d = dest, Y, U, V;
+  guint16 *restrict sy = GET_Y_LINE (y);
+  guint16 *restrict su = GET_U_LINE (y);
+  guint16 *restrict sv = GET_V_LINE (y);
+  guint16 *restrict d = dest, Y, U, V;
 
   sy += x;
   su += x;
@@ -2060,11 +2072,11 @@ pack_Y444_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *dy = GET_Y_LINE (y);
-  guint16 *du = GET_U_LINE (y);
-  guint16 *dv = GET_V_LINE (y);
+  guint16 *restrict dy = GET_Y_LINE (y);
+  guint16 *restrict du = GET_U_LINE (y);
+  guint16 *restrict dv = GET_V_LINE (y);
   guint16 Y, U, V;
-  const guint16 *s = src;
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     Y = (s[i * 4 + 1]) >> 6;
@@ -2084,10 +2096,10 @@ unpack_Y444_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *sy = GET_Y_LINE (y);
-  const guint16 *su = GET_U_LINE (y);
-  const guint16 *sv = GET_V_LINE (y);
-  guint16 *d = dest, Y, U, V;
+  const guint16 *restrict sy = GET_Y_LINE (y);
+  const guint16 *restrict su = GET_U_LINE (y);
+  const guint16 *restrict sv = GET_V_LINE (y);
+  guint16 *restrict d = dest, Y, U, V;
 
   sy += x;
   su += x;
@@ -2118,11 +2130,11 @@ pack_Y444_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *dy = GET_Y_LINE (y);
-  guint16 *du = GET_U_LINE (y);
-  guint16 *dv = GET_V_LINE (y);
+  guint16 *restrict dy = GET_Y_LINE (y);
+  guint16 *restrict du = GET_U_LINE (y);
+  guint16 *restrict dv = GET_V_LINE (y);
   guint16 Y, U, V;
-  const guint16 *s = src;
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width; i++) {
     Y = s[i * 4 + 1] >> 6;
@@ -2143,10 +2155,10 @@ unpack_I420_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   int i;
   gint uv = GET_UV_420 (y, flags);
-  const guint16 *sy = GET_Y_LINE (y);
-  const guint16 *su = GET_U_LINE (uv);
-  const guint16 *sv = GET_V_LINE (uv);
-  guint16 *d = dest, Y, U, V;
+  const guint16 *restrict sy = GET_Y_LINE (y);
+  const guint16 *restrict su = GET_U_LINE (uv);
+  const guint16 *restrict sv = GET_V_LINE (uv);
+  guint16 *restrict d = dest, Y, U, V;
 
   sy += x;
   su += x >> 1;
@@ -2184,11 +2196,11 @@ pack_I420_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   int i;
   gint uv = GET_UV_420 (y, flags);
-  guint16 *dy = GET_Y_LINE (y);
-  guint16 *du = GET_U_LINE (uv);
-  guint16 *dv = GET_V_LINE (uv);
+  guint16 *restrict dy = GET_Y_LINE (y);
+  guint16 *restrict du = GET_U_LINE (uv);
+  guint16 *restrict dv = GET_V_LINE (uv);
   guint16 Y0, Y1, U, V;
-  const guint16 *s = src;
+  const guint16 *restrict s = src;
 
   if (IS_CHROMA_LINE_420 (y, flags)) {
     for (i = 0; i < width - 1; i += 2) {
@@ -2227,10 +2239,10 @@ unpack_I420_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   int i;
   gint uv = GET_UV_420 (y, flags);
-  const guint16 *sy = GET_Y_LINE (y);
-  const guint16 *su = GET_U_LINE (uv);
-  const guint16 *sv = GET_V_LINE (uv);
-  guint16 *d = dest, Y, U, V;
+  const guint16 *restrict sy = GET_Y_LINE (y);
+  const guint16 *restrict su = GET_U_LINE (uv);
+  const guint16 *restrict sv = GET_V_LINE (uv);
+  guint16 *restrict d = dest, Y, U, V;
 
   sy += x;
   su += x >> 1;
@@ -2268,11 +2280,11 @@ pack_I420_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   int i;
   gint uv = GET_UV_420 (y, flags);
-  guint16 *dy = GET_Y_LINE (y);
-  guint16 *du = GET_U_LINE (uv);
-  guint16 *dv = GET_V_LINE (uv);
+  guint16 *restrict dy = GET_Y_LINE (y);
+  guint16 *restrict du = GET_U_LINE (uv);
+  guint16 *restrict dv = GET_V_LINE (uv);
   guint16 Y0, Y1, U, V;
-  const guint16 *s = src;
+  const guint16 *restrict s = src;
 
   if (IS_CHROMA_LINE_420 (y, flags)) {
     for (i = 0; i < width - 1; i += 2) {
@@ -2310,10 +2322,10 @@ unpack_I422_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *sy = GET_Y_LINE (y);
-  const guint16 *su = GET_U_LINE (y);
-  const guint16 *sv = GET_V_LINE (y);
-  guint16 *d = dest, Y, U, V;
+  const guint16 *restrict sy = GET_Y_LINE (y);
+  const guint16 *restrict su = GET_U_LINE (y);
+  const guint16 *restrict sv = GET_V_LINE (y);
+  guint16 *restrict d = dest, Y, U, V;
 
   sy += x;
   su += x >> 1;
@@ -2350,11 +2362,11 @@ pack_I422_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *dy = GET_Y_LINE (y);
-  guint16 *du = GET_U_LINE (y);
-  guint16 *dv = GET_V_LINE (y);
+  guint16 *restrict dy = GET_Y_LINE (y);
+  guint16 *restrict du = GET_U_LINE (y);
+  guint16 *restrict dv = GET_V_LINE (y);
   guint16 Y0, Y1, U, V;
-  const guint16 *s = src;
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width - 1; i += 2) {
     Y0 = s[i * 4 + 1] >> 6;
@@ -2385,10 +2397,10 @@ unpack_I422_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  const guint16 *sy = GET_Y_LINE (y);
-  const guint16 *su = GET_U_LINE (y);
-  const guint16 *sv = GET_V_LINE (y);
-  guint16 *d = dest, Y, U, V;
+  const guint16 *restrict sy = GET_Y_LINE (y);
+  const guint16 *restrict su = GET_U_LINE (y);
+  const guint16 *restrict sv = GET_V_LINE (y);
+  guint16 *restrict d = dest, Y, U, V;
 
   sy += x;
   su += x >> 1;
@@ -2425,11 +2437,11 @@ pack_I422_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *dy = GET_Y_LINE (y);
-  guint16 *du = GET_U_LINE (y);
-  guint16 *dv = GET_V_LINE (y);
+  guint16 *restrict dy = GET_Y_LINE (y);
+  guint16 *restrict du = GET_U_LINE (y);
+  guint16 *restrict dv = GET_V_LINE (y);
   guint16 Y0, Y1, U, V;
-  const guint16 *s = src;
+  const guint16 *restrict s = src;
 
   for (i = 0; i < width - 1; i += 2) {
     Y0 = s[i * 4 + 1] >> 6;
