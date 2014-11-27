@@ -770,11 +770,8 @@ gst_videoaggregator_pad_sink_setcaps (GstPad * pad, GstObject * parent,
   }
 
   vaggpad->info = info;
-
-  ret = gst_videoaggregator_update_converters (vagg);
-
-  if (ret)
-    ret = gst_videoaggregator_update_src_caps (vagg);
+  gst_pad_mark_reconfigure (vagg->aggregator.srcpad);
+  ret = TRUE;
 
   GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
 
@@ -1206,16 +1203,19 @@ gst_videoaggregator_aggregate (GstAggregator * agg)
   gint res;
   gint64 jitter;
 
-  /* If we're not negotiated_caps yet... */
-  if (GST_VIDEO_INFO_FORMAT (&vagg->info) == GST_VIDEO_FORMAT_UNKNOWN) {
-    GST_INFO_OBJECT (agg, "Not negotiated yet!");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
   GST_VIDEO_AGGREGATOR_LOCK (vagg);
 
-  if (gst_pad_check_reconfigure (agg->srcpad))
-    gst_videoaggregator_update_src_caps (vagg);
+  if (GST_VIDEO_INFO_FORMAT (&vagg->info) == GST_VIDEO_FORMAT_UNKNOWN
+      || gst_pad_check_reconfigure (agg->srcpad)) {
+    ret = gst_videoaggregator_update_converters (vagg);
+    if (ret)
+      ret = gst_videoaggregator_update_src_caps (vagg);
+
+    if (!ret) {
+      GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
 
   if (agg->segment.position == -1)
     output_start_time = agg->segment.start;
@@ -1648,7 +1648,7 @@ gst_videoaggregator_release_pad (GstElement * element, GstPad * pad)
 {
   GstVideoAggregator *vagg = NULL;
   GstVideoAggregatorPad *vaggpad;
-  gboolean update_caps, last_pad;
+  gboolean last_pad;
 
   vagg = GST_VIDEO_AGGREGATOR (element);
   vaggpad = GST_VIDEO_AGGREGATOR_PAD (pad);
@@ -1659,13 +1659,10 @@ gst_videoaggregator_release_pad (GstElement * element, GstPad * pad)
   last_pad = (GST_ELEMENT (vagg)->numsinkpads - 1 == 0);
   GST_OBJECT_UNLOCK (vagg);
 
-  if (!last_pad)
-    gst_videoaggregator_update_converters (vagg);
-  else
+  if (last_pad)
     gst_videoaggregator_reset (vagg);
 
   gst_buffer_replace (&vaggpad->buffer, NULL);
-  update_caps = GST_VIDEO_INFO_FORMAT (&vagg->info) != GST_VIDEO_FORMAT_UNKNOWN;
 
   gst_child_proxy_child_removed (GST_CHILD_PROXY (vagg), G_OBJECT (vaggpad),
       GST_OBJECT_NAME (vaggpad));
@@ -1673,8 +1670,7 @@ gst_videoaggregator_release_pad (GstElement * element, GstPad * pad)
   GST_ELEMENT_CLASS (gst_videoaggregator_parent_class)->release_pad (GST_ELEMENT
       (vagg), pad);
 
-  if (update_caps)
-    gst_videoaggregator_update_src_caps (vagg);
+  gst_pad_mark_reconfigure (vagg->aggregator.srcpad);
 
   GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
   return;
