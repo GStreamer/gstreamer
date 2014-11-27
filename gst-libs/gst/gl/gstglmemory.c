@@ -1172,6 +1172,8 @@ gst_gl_memory_setup_buffer (GstGLContext * context, GstVideoInfo * info,
 
   for (i = 0; i < n_mem; i++) {
     gl_mem[i] = (GstGLMemory *) gst_gl_memory_alloc (context, info, i);
+    if (gl_mem[i] == NULL)
+      return FALSE;
 
     gst_buffer_append_memory (buffer, (GstMemory *) gl_mem[i]);
   }
