@@ -86,14 +86,7 @@ unpack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *v_line = GET_V_LINE (uv);
   guint8 *ayuv = dest;
 
-  video_orc_unpack_I420 (dest, y_line, u_line, v_line, width);
-
-  if (width & 1) {
-    gint i = width - 1;
-
-    ayuv[i * 4 + 2] = u_line[i >> 1];
-    ayuv[i * 4 + 3] = v_line[i >> 1];
-  }
+  video_orc_unpack_I420 (ayuv, y_line, u_line, v_line, width);
 }
 
 static void
