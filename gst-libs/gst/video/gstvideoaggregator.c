@@ -176,9 +176,7 @@ gst_video_aggregator_pad_set_info (GstVideoAggregatorPad * pad,
         GST_VIDEO_INFO_FORMAT (wanted_info));
     pad->priv->convert =
         gst_video_converter_new (current_info, &tmp_info, NULL);
-    pad->priv->conversion_info = vagg->info;
-    gst_video_info_set_format (&(pad->priv->conversion_info),
-        GST_VIDEO_INFO_FORMAT (&vagg->info), pad->info.width, pad->info.height);
+    pad->priv->conversion_info = tmp_info;
     if (!pad->priv->convert) {
       g_free (colorimetry);
       g_free (best_colorimetry);
