@@ -33,6 +33,7 @@ libgstapplemedia_la_LIBADD =			\
 	$(GST_PLUGINS_BASE_LIBS)		\
 	-lgstvideo-$(GST_API_VERSION) 		\
 	-lgstaudio-$(GST_API_VERSION)		\
+	-lgstpbutils-$(GST_API_VERSION) 	\
 	$(GMODULE_NO_EXPORT_LIBS)
 
 libgstapplemedia_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
