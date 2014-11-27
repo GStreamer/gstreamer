@@ -246,7 +246,8 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
         }
         left -= read;
         readptr += read;
-      } while (left > 0);
+
+      } while (left > 0 && g_atomic_int_get (&abuf->running));
 
       /* Update timestamp on buffer if required */
       gst_audio_ring_buffer_set_timestamp (buf, readseg, timestamp);
