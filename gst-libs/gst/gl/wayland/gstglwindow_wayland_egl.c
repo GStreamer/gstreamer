@@ -91,6 +91,40 @@ static void
 pointer_handle_motion (void *data, struct wl_pointer *pointer, uint32_t time,
     wl_fixed_t sx_w, wl_fixed_t sy_w)
 {
+  GstGLWindowWaylandEGL *window_egl = data;
+
+  window_egl->display.pointer_x = wl_fixed_to_double (sx_w);
+  window_egl->display.pointer_y = wl_fixed_to_double (sy_w);
+}
+
+enum wl_edges
+{
+  WL_EDGE_NONE = 0,
+  WL_EDGE_TOP = 1,
+  WL_EDGE_BOTTOM = 2,
+  WL_EDGE_LEFT = 4,
+  WL_EDGE_RIGHT = 8,
+};
+
+static guint
+_get_closest_pointer_corner (GstGLWindowWaylandEGL * window_egl)
+{
+  guint edges = 0;
+  gdouble win_width, win_height;
+  gdouble p_x, p_y;
+
+  win_width = (gdouble) window_egl->window.window_width;
+  win_height = (gdouble) window_egl->window.window_height;
+  p_x = window_egl->display.pointer_x;
+  p_y = window_egl->display.pointer_y;
+
+  if (win_width == 0.0 || win_height == 0.0)
+    return WL_EDGE_NONE;
+
+  edges |= win_width / 2.0 - p_x < 0.0 ? WL_EDGE_RIGHT : WL_EDGE_LEFT;
+  edges |= win_height / 2.0 - p_y < 0.0 ? WL_EDGE_BOTTOM : WL_EDGE_TOP;
+
+  return edges;
 }
 
 static void
@@ -98,11 +132,16 @@ pointer_handle_button (void *data, struct wl_pointer *pointer, uint32_t serial,
     uint32_t time, uint32_t button, uint32_t state_w)
 {
   GstGLWindowWaylandEGL *window_egl = data;
+  guint edges = _get_closest_pointer_corner (window_egl);
   window_egl->display.serial = serial;
 
   if (button == BTN_LEFT && state_w == WL_POINTER_BUTTON_STATE_PRESSED)
     wl_shell_surface_move (window_egl->window.shell_surface,
         window_egl->display.seat, serial);
+
+  if (button == BTN_RIGHT && state_w == WL_POINTER_BUTTON_STATE_PRESSED)
+    wl_shell_surface_resize (window_egl->window.shell_surface,
+        window_egl->display.seat, serial, edges);
 }
 
 static void
@@ -154,6 +193,10 @@ static void
 handle_ping (void *data, struct wl_shell_surface *shell_surface,
     uint32_t serial)
 {
+  GstGLWindowWaylandEGL *window_egl = data;
+
+  GST_TRACE_OBJECT (window_egl, "ping received serial %u", serial);
+
   wl_shell_surface_pong (shell_surface, serial);
 }
 
@@ -166,7 +209,8 @@ handle_configure (void *data, struct wl_shell_surface *shell_surface,
 {
   GstGLWindowWaylandEGL *window_egl = data;
 
-  GST_DEBUG ("configure event %ix%i", width, height);
+  GST_DEBUG ("configure event on surface %p, %ix%i", shell_surface, width,
+      height);
 
   window_resize (window_egl, width, height);
 }
@@ -240,6 +284,9 @@ registry_handle_global (void *data, struct wl_registry *registry,
 {
   GstGLWindowWaylandEGL *window_egl = data;
   struct display *d = &window_egl->display;
+
+  GST_TRACE_OBJECT (window_egl, "registry_handle_global with registry %p, "
+      "interface %s, version %u", registry, interface, version);
 
   if (g_strcmp0 (interface, "wl_compositor") == 0) {
     d->compositor =
@@ -461,11 +508,6 @@ window_resize (GstGLWindowWaylandEGL * window_egl, guint width, guint height)
 
   window_egl->window.window_width = width;
   window_egl->window.window_height = height;
-
-#if 0
-  wl_shell_surface_resize (window_egl->window.shell_surface,
-      window_egl->display.seat, window_egl->display.serial, 0);
-#endif
 }
 
 struct draw
@@ -482,12 +524,6 @@ draw_cb (gpointer data)
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
-
-  if (window_egl->window.window_width != draw_data->width
-      || window_egl->window.window_height != draw_data->height) {
-    GST_DEBUG ("dimensions don't match, attempting resize");
-    window_resize (window_egl, draw_data->width, draw_data->height);
-  }
 
   if (window->draw)
     window->draw (window->draw_data);
