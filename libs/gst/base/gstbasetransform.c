@@ -1374,7 +1374,7 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
     if (!(ret = gst_base_transform_configure_caps (trans, incaps, outcaps)))
       goto failed_configure;
 
-    if (!prev_incaps || !gst_caps_is_equal (outcaps, prev_outcaps))
+    if (!prev_outcaps || !gst_caps_is_equal (outcaps, prev_outcaps))
       /* let downstream know about our caps */
       ret = gst_pad_set_caps (trans->srcpad, outcaps);
   }
