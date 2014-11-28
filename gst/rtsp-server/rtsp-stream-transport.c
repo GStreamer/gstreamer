@@ -118,6 +118,9 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
   gst_rtsp_stream_transport_set_callbacks (trans, NULL, NULL, NULL, NULL);
   gst_rtsp_stream_transport_set_keepalive (trans, NULL, NULL, NULL);
 
+  if (priv->stream)
+    g_object_unref (priv->stream);
+
   if (priv->transport)
     gst_rtsp_transport_free (priv->transport);
 
@@ -149,6 +152,7 @@ gst_rtsp_stream_transport_new (GstRTSPStream * stream, GstRTSPTransport * tr)
   trans = g_object_new (GST_TYPE_RTSP_STREAM_TRANSPORT, NULL);
   priv = trans->priv;
   priv->stream = stream;
+  priv->stream = g_object_ref (priv->stream);
   priv->transport = tr;
 
   return trans;

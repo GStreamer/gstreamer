@@ -284,7 +284,9 @@ gst_rtsp_client_init (GstRTSPClient * client)
   g_mutex_init (&priv->watch_lock);
   priv->close_seq = 0;
   priv->drop_backlog = DEFAULT_DROP_BACKLOG;
-  priv->transports = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->transports =
+      g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
+      g_object_unref);
 }
 
 static GstRTSPFilterResult
@@ -1861,8 +1863,10 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
     g_hash_table_insert (priv->transports,
         GINT_TO_POINTER (ct->interleaved.min), trans);
+    g_object_ref (trans);
     g_hash_table_insert (priv->transports,
         GINT_TO_POINTER (ct->interleaved.max), trans);
+    g_object_ref (trans);
   }
 
   /* create and serialize the server transport */

@@ -2249,8 +2249,11 @@ gst_rtsp_stream_recv_rtcp (GstRTSPStream * stream, GstBuffer * buffer)
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), GST_FLOW_ERROR);
   priv = stream->priv;
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
-  g_return_val_if_fail (priv->is_joined, FALSE);
 
+  if (!priv->is_joined) {
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_LINKED;
+  }
   g_mutex_lock (&priv->lock);
   if (priv->appsrc[1])
     element = gst_object_ref (priv->appsrc[1]);
