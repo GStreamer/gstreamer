@@ -72,13 +72,19 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
   frame->info = *info;
 
   if (meta) {
+    /* All these values must be consistent */
+    g_return_val_if_fail (info->finfo->format == meta->format, FALSE);
+    g_return_val_if_fail (info->width == meta->width, FALSE);
+    g_return_val_if_fail (info->height == meta->height, FALSE);
+    g_return_val_if_fail (info->finfo->n_planes == meta->n_planes, FALSE);
+
     frame->info.finfo = gst_video_format_get_info (meta->format);
     frame->info.width = meta->width;
     frame->info.height = meta->height;
     frame->id = meta->id;
     frame->flags = meta->flags;
 
-    for (i = 0; i < info->finfo->n_planes; i++) {
+    for (i = 0; i < meta->n_planes; i++) {
       frame->info.offset[i] = meta->offset[i];
       if (!gst_video_meta_map (meta, i, &frame->map[i], &frame->data[i],
               &frame->info.stride[i], flags))
