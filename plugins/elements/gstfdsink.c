@@ -279,107 +279,22 @@ no_data:
 }
 
 static GstFlowReturn
-gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
+gst_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
-  GstFdSink *fdsink;
-  GstMapInfo info;
-  guint8 *ptr;
-  gsize left;
-  gint written;
+  GstFlowReturn flow;
+  GstFdSink *sink;
+  guint8 n_mem;
 
-#ifndef HAVE_WIN32
-  gint retval;
-#endif
+  sink = GST_FD_SINK_CAST (bsink);
 
-  fdsink = GST_FD_SINK (sink);
+  n_mem = gst_buffer_n_memory (buffer);
 
-  g_return_val_if_fail (fdsink->fd >= 0, GST_FLOW_ERROR);
+  if (n_mem > 0)
+    flow = gst_fd_sink_render_buffers (sink, &buffer, 1, &n_mem, n_mem);
+  else
+    flow = GST_FLOW_OK;
 
-  gst_buffer_map (buffer, &info, GST_MAP_READ);
-
-  ptr = info.data;
-  left = info.size;
-
-again:
-#ifndef HAVE_WIN32
-  do {
-    GST_DEBUG_OBJECT (fdsink, "going into select, have %" G_GSIZE_FORMAT
-        " bytes to write", info.size);
-    retval = gst_poll_wait (fdsink->fdset, GST_CLOCK_TIME_NONE);
-  } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
-
-  if (retval == -1) {
-    if (errno == EBUSY)
-      goto stopped;
-    else
-      goto select_error;
-  }
-#endif
-
-  GST_DEBUG_OBJECT (fdsink, "writing %" G_GSIZE_FORMAT " bytes to"
-      " file descriptor %d", info.size, fdsink->fd);
-
-  written = write (fdsink->fd, ptr, left);
-
-  /* check for errors */
-  if (G_UNLIKELY (written < 0)) {
-    /* try to write again on non-fatal errors */
-    if (errno == EAGAIN || errno == EINTR)
-      goto again;
-
-    /* else go to our error handler */
-    goto write_error;
-  }
-
-  /* all is fine when we get here */
-  left -= written;
-  ptr += written;
-  fdsink->bytes_written += written;
-  fdsink->current_pos += written;
-
-  GST_DEBUG_OBJECT (fdsink, "wrote %d bytes, %" G_GSIZE_FORMAT " left", written,
-      left);
-
-  /* short write, select and try to write the remainder */
-  if (G_UNLIKELY (left > 0))
-    goto again;
-
-  gst_buffer_unmap (buffer, &info);
-
-  return GST_FLOW_OK;
-
-#ifndef HAVE_WIN32
-select_error:
-  {
-    GST_ELEMENT_ERROR (fdsink, RESOURCE, READ, (NULL),
-        ("select on file descriptor: %s.", g_strerror (errno)));
-    GST_DEBUG_OBJECT (fdsink, "Error during select");
-    gst_buffer_unmap (buffer, &info);
-    return GST_FLOW_ERROR;
-  }
-stopped:
-  {
-    GST_DEBUG_OBJECT (fdsink, "Select stopped");
-    gst_buffer_unmap (buffer, &info);
-    return GST_FLOW_FLUSHING;
-  }
-#endif
-
-write_error:
-  {
-    switch (errno) {
-      case ENOSPC:
-        GST_ELEMENT_ERROR (fdsink, RESOURCE, NO_SPACE_LEFT, (NULL), (NULL));
-        break;
-      default:{
-        GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE, (NULL),
-            ("Error while writing to file descriptor %d: %s",
-                fdsink->fd, g_strerror (errno)));
-      }
-    }
-    gst_buffer_unmap (buffer, &info);
-    return GST_FLOW_ERROR;
-  }
+  return flow;
 }
 
 static gboolean
