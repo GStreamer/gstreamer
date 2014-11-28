@@ -59,30 +59,30 @@ struct paintinfo_struct
 };
 #define PAINT_INFO_INIT {0, }
 
-void    gst_video_test_src_smpte        (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_smpte75      (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_snow         (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_black        (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_white        (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_red          (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_green        (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_blue         (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_solid        (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_blink        (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_checkers1    (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_checkers2    (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_checkers4    (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_checkers8    (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_circular     (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_zoneplate    (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_gamut        (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_ball         (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_smpte100     (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_bar          (GstVideoTestSrc * v, GstVideoFrame *frame);
-void    gst_video_test_src_pinwheel     (GstVideoTestSrc * v, GstVideoFrame * frame);
-void    gst_video_test_src_spokes       (GstVideoTestSrc * v, GstVideoFrame * frame);
-void    gst_video_test_src_gradient     (GstVideoTestSrc * v, GstVideoFrame * frame);
-void    gst_video_test_src_colors       (GstVideoTestSrc * v, GstVideoFrame * frame);
+void    gst_video_test_src_smpte        (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_smpte75      (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_snow         (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_black        (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_white        (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_red          (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_green        (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_blue         (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_solid        (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_blink        (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_checkers1    (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_checkers2    (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_checkers4    (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_checkers8    (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_circular     (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_zoneplate    (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_gamut        (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_ball         (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_smpte100     (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_bar          (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_pinwheel     (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame * frame);
+void    gst_video_test_src_spokes       (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame * frame);
+void    gst_video_test_src_gradient     (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame * frame);
+void    gst_video_test_src_colors       (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame * frame);
 
 #endif

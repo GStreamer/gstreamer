@@ -116,6 +116,19 @@ typedef enum {
   GST_VIDEO_TEST_SRC_COLORS
 } GstVideoTestSrcPattern;
 
+typedef enum {
+  GST_VIDEO_TEST_SRC_FRAMES,
+  GST_VIDEO_TEST_SRC_WALL_TIME,
+  GST_VIDEO_TEST_SRC_RUNNING_TIME
+} GstVideoTestSrcAnimationMode;
+
+
+typedef enum {
+  GST_VIDEO_TEST_SRC_WAVY,
+  GST_VIDEO_TEST_SRC_SWEEP,
+  GST_VIDEO_TEST_SRC_HSWEEP
+} GstVideoTestSrcMotionType;
+
 typedef struct _GstVideoTestSrc GstVideoTestSrc;
 typedef struct _GstVideoTestSrcClass GstVideoTestSrcClass;
 
@@ -177,7 +190,12 @@ struct _GstVideoTestSrc {
   /* smpte & snow */
   guint random_state;
 
-  void (*make_image) (GstVideoTestSrc *v, GstVideoFrame *frame);
+  /* Ball motion */
+  GstVideoTestSrcAnimationMode animation_mode;
+  GstVideoTestSrcMotionType motion_type;
+  gboolean flip;
+
+  void (*make_image) (GstVideoTestSrc *v, GstClockTime pts, GstVideoFrame *frame);
 
   /* temporary AYUV/ARGB scanline */
   guint8 *tmpline_u8;

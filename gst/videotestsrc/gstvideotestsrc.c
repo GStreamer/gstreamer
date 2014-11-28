@@ -47,6 +47,9 @@ GST_DEBUG_CATEGORY_STATIC (video_test_src_debug);
 #define GST_CAT_DEFAULT video_test_src_debug
 
 #define DEFAULT_PATTERN            GST_VIDEO_TEST_SRC_SMPTE
+#define DEFAULT_ANIMATION_MODE     GST_VIDEO_TEST_SRC_FRAMES
+#define DEFAULT_MOTION_TYPE        GST_VIDEO_TEST_SRC_WAVY
+#define DEFAULT_FLIP               FALSE
 #define DEFAULT_TIMESTAMP_OFFSET   0
 #define DEFAULT_IS_LIVE            FALSE
 #define DEFAULT_COLOR_SPEC         GST_VIDEO_TEST_SRC_BT601
@@ -74,7 +77,11 @@ enum
   PROP_YOFFSET,
   PROP_FOREGROUND_COLOR,
   PROP_BACKGROUND_COLOR,
-  PROP_HORIZONTAL_SPEED
+  PROP_HORIZONTAL_SPEED,
+  PROP_ANIMATION_MODE,
+  PROP_MOTION_TYPE,
+  PROP_FLIP,
+  PROP_LAST
 };
 
 
@@ -162,6 +169,56 @@ gst_video_test_src_pattern_get_type (void)
   return video_test_src_pattern_type;
 }
 
+
+/*"animation-mode", which can
+ * take the following values: frames (current behaviour that should stay the
+ * default), running time, wall clock time.
+ */
+
+#define GST_TYPE_VIDEO_TEST_SRC_ANIMATION_MODE (gst_video_test_src_animation_mode_get_type ())
+static GType
+gst_video_test_src_animation_mode_get_type (void)
+{
+  static GType video_test_src_animation_mode = 0;
+  static const GEnumValue animation_modes[] = {
+
+    {GST_VIDEO_TEST_SRC_FRAMES, "frame count", "frames"},
+    {GST_VIDEO_TEST_SRC_WALL_TIME, "wall clock time", "wall-time"},
+    {GST_VIDEO_TEST_SRC_RUNNING_TIME, "running time", "running-time"},
+    {0, NULL, NULL}
+  };
+
+  if (!video_test_src_animation_mode) {
+    video_test_src_animation_mode =
+        g_enum_register_static ("GstVideoTestSrcAnimationMode",
+        animation_modes);
+  }
+  return video_test_src_animation_mode;
+}
+
+
+#define GST_TYPE_VIDEO_TEST_SRC_MOTION_TYPE (gst_video_test_src_motion_type_get_type ())
+static GType
+gst_video_test_src_motion_type_get_type (void)
+{
+  static GType video_test_src_motion_type = 0;
+  static const GEnumValue motion_types[] = {
+    {GST_VIDEO_TEST_SRC_WAVY, "Ball waves back and forth, up and down",
+        "wavy"},
+    {GST_VIDEO_TEST_SRC_SWEEP, "1 revolution per second", "sweep"},
+    {GST_VIDEO_TEST_SRC_HSWEEP, "1/2 revolution per second, then reset to top",
+        "hsweep"},
+    {0, NULL, NULL}
+  };
+
+  if (!video_test_src_motion_type) {
+    video_test_src_motion_type =
+        g_enum_register_static ("GstVideoTestSrcMotionType", motion_types);
+  }
+  return video_test_src_motion_type;
+}
+
+
 static void
 gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 {
@@ -182,6 +239,24 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
       g_param_spec_enum ("pattern", "Pattern",
           "Type of test pattern to generate", GST_TYPE_VIDEO_TEST_SRC_PATTERN,
           DEFAULT_PATTERN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_ANIMATION_MODE,
+      g_param_spec_enum ("animation-mode", "Animation mode",
+          "For pattern=ball, which counter defines the position of the ball.",
+          GST_TYPE_VIDEO_TEST_SRC_ANIMATION_MODE, DEFAULT_ANIMATION_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MOTION_TYPE,
+      g_param_spec_enum ("motion", "Motion",
+          "For pattern=ball, what motion the ball does",
+          GST_TYPE_VIDEO_TEST_SRC_MOTION_TYPE, DEFAULT_MOTION_TYPE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_FLIP,
+      g_param_spec_boolean ("flip", "Flip",
+          "For pattern=ball, invert colors every second.",
+          DEFAULT_FLIP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_TIMESTAMP_OFFSET,
       g_param_spec_int64 ("timestamp-offset", "Timestamp offset",
           "An offset added to timestamps set on buffers (in ns)", 0,
@@ -309,6 +384,11 @@ gst_video_test_src_init (GstVideoTestSrc * src)
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), DEFAULT_IS_LIVE);
+
+  src->animation_mode = DEFAULT_ANIMATION_MODE;
+  src->motion_type = DEFAULT_MOTION_TYPE;
+  src->flip = DEFAULT_FLIP;
+
 }
 
 static GstCaps *
@@ -565,6 +645,15 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     case PROP_HORIZONTAL_SPEED:
       src->horizontal_speed = g_value_get_int (value);
       break;
+    case PROP_ANIMATION_MODE:
+      src->animation_mode = g_value_get_enum (value);
+      break;
+    case PROP_MOTION_TYPE:
+      src->motion_type = g_value_get_enum (value);
+      break;
+    case PROP_FLIP:
+      src->flip = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -630,6 +719,15 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HORIZONTAL_SPEED:
       g_value_set_int (value, src->horizontal_speed);
+      break;
+    case PROP_ANIMATION_MODE:
+      g_value_set_enum (value, src->animation_mode);
+      break;
+    case PROP_MOTION_TYPE:
+      g_value_set_enum (value, src->motion_type);
+      break;
+    case PROP_FLIP:
+      g_value_set_boolean (value, src->flip);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1020,7 +1118,7 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   gst_object_sync_values (GST_OBJECT (psrc), GST_BUFFER_PTS (buffer));
 
-  src->make_image (src, &frame);
+  src->make_image (src, GST_BUFFER_PTS (buffer), &frame);
 
   if ((pal = gst_video_format_get_palette (GST_VIDEO_FRAME_FORMAT (&frame),
               &palsize))) {

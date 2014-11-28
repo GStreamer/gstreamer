@@ -324,7 +324,8 @@ videotestsrc_blend_line (GstVideoTestSrc * v, guint8 * dest, guint8 * src,
 }
 
 void
-gst_video_test_src_smpte (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_smpte (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int y1, y2;
@@ -424,7 +425,8 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_smpte75 (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_smpte75 (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -453,7 +455,8 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_smpte100 (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_smpte100 (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -477,7 +480,8 @@ gst_video_test_src_smpte100 (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_bar (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_bar (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int j;
   paintinfo pi = PAINT_INFO_INIT;
@@ -499,7 +503,8 @@ gst_video_test_src_bar (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_snow (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_snow (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -550,37 +555,43 @@ gst_video_test_src_unicolor (GstVideoTestSrc * v, GstVideoFrame * frame,
 }
 
 void
-gst_video_test_src_black (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_black (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   gst_video_test_src_unicolor (v, frame, COLOR_BLACK);
 }
 
 void
-gst_video_test_src_white (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_white (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   gst_video_test_src_unicolor (v, frame, COLOR_WHITE);
 }
 
 void
-gst_video_test_src_red (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_red (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   gst_video_test_src_unicolor (v, frame, COLOR_RED);
 }
 
 void
-gst_video_test_src_green (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_green (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   gst_video_test_src_unicolor (v, frame, COLOR_GREEN);
 }
 
 void
-gst_video_test_src_blue (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_blue (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   gst_video_test_src_unicolor (v, frame, COLOR_BLUE);
 }
 
 void
-gst_video_test_src_blink (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_blink (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   paintinfo pi = PAINT_INFO_INIT;
@@ -602,7 +613,8 @@ gst_video_test_src_blink (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_solid (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_solid (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   paintinfo pi = PAINT_INFO_INIT;
@@ -620,7 +632,8 @@ gst_video_test_src_solid (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_checkers1 (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_checkers1 (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = PAINT_INFO_INIT;
@@ -643,7 +656,8 @@ gst_video_test_src_checkers1 (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_checkers2 (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_checkers2 (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = PAINT_INFO_INIT;
@@ -668,7 +682,8 @@ gst_video_test_src_checkers2 (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_checkers4 (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_checkers4 (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = PAINT_INFO_INIT;
@@ -693,7 +708,8 @@ gst_video_test_src_checkers4 (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_checkers8 (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_checkers8 (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = PAINT_INFO_INIT;
@@ -754,7 +770,8 @@ static const guint8 sine_table[256] = {
 
 
 void
-gst_video_test_src_zoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_zoneplate (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -869,7 +886,8 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -963,7 +981,8 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
 
 #undef SCALE_AMPLITUDE
 void
-gst_video_test_src_circular (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_circular (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -1003,7 +1022,8 @@ gst_video_test_src_circular (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_gamut (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_gamut (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int x, y;
   paintinfo pi = PAINT_INFO_INIT;
@@ -1055,27 +1075,79 @@ gst_video_test_src_gamut (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_ball (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_ball (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
-  paintinfo pi = PAINT_INFO_INIT;
-  paintinfo *p = &pi;
-  int t = v->n_frames;
-  double x, y;
   int radius = 20;
   int w = frame->info.width, h = frame->info.height;
+  GTimeVal rand_tv;
+  gdouble rad = 0;
+  double x, y;
+  int flipit = 0;
 
+  paintinfo pi = PAINT_INFO_INIT;
+  paintinfo *p = &pi;
+
+  struct vts_color_struct
+      *foreground_color = &p->foreground_color,
+      *background_color = &p->background_color;
+
+  switch (v->animation_mode) {
+    case GST_VIDEO_TEST_SRC_FRAMES:
+      rad = (gdouble) (v->n_frames) / 200;
+      flipit = (v->n_frames / 50) % 2;
+      break;
+    case GST_VIDEO_TEST_SRC_WALL_TIME:
+      g_get_current_time (&rand_tv);
+
+      rad = (gdouble) (rand_tv.tv_usec) / 1000000.0 + rand_tv.tv_sec;
+      flipit = rand_tv.tv_sec % 2;
+      break;
+    case GST_VIDEO_TEST_SRC_RUNNING_TIME:
+      rad = (gdouble) (pts) / GST_SECOND;
+      flipit = (pts / GST_SECOND) % 2;
+      break;
+  }
+  if (v->motion_type == GST_VIDEO_TEST_SRC_HSWEEP) {
+    /* Periodic reset for half sweep */
+    rad /= 2;
+    rad -= floor (2 * rad) / 2;
+  }
+
+  /* Scale for the animation calcs */
+  rad = 2 * G_PI * rad;
+
+  if (v->motion_type == GST_VIDEO_TEST_SRC_WAVY) {
+    x = radius + (0.5 + 0.5 * sin (rad)) * (w - 2 * radius);
+    y = radius + (0.5 + 0.5 * sin (rad * sqrt (2))) * (h - 2 * radius);
+  } else {
+    /* sweep and hsweep */
+    /* x,y is center of circle,
+     * radius is radius
+     * rad = angle .. of sweep.
+     */
+
+    radius = MIN (h, w) / 4 - 0;
+
+    /* 0 is the margin between edge of screen and top of ball */
+    x = w / 2 + sin (rad) * radius;
+    y = h / 2 - cos (rad) * radius;
+  }
+
+  if (v->flip && flipit) {
+    foreground_color = &p->background_color;
+    background_color = &p->foreground_color;
+  }
+
+  /* draw ball on frame */
   videotestsrc_setup_paintinfo (v, p, w, h);
-
-  x = radius + (0.5 + 0.5 * sin (2 * G_PI * t / 200)) * (w - 2 * radius);
-  y = radius + (0.5 + 0.5 * sin (2 * G_PI * sqrt (2) * t / 200)) * (h -
-      2 * radius);
-
   for (i = 0; i < h; i++) {
     if (i < y - radius || i > y + radius) {
       memset (p->tmpline_u8, 0, w);
     } else {
-      int r = rint (sqrt (radius * radius - (i - y) * (i - y)));
+      double o = MAX (0, (radius * radius - (i - y) * (i - y)));
+      int r = rint (sqrt (o));
       int x1, x2;
       int j;
 
@@ -1100,9 +1172,29 @@ gst_video_test_src_ball (GstVideoTestSrc * v, GstVideoFrame * frame)
         p->tmpline_u8[j] = 0;
       }
     }
+
+    if ((v->motion_type == GST_VIDEO_TEST_SRC_SWEEP) ||
+        (v->motion_type == GST_VIDEO_TEST_SRC_HSWEEP)) {
+      /* dot in the middle (to draw a line down the center) */
+      p->tmpline_u8[w / 2] = 255;
+      p->tmpline_u8[(int) x] = 255;
+    }
+
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
-        &p->foreground_color, &p->background_color, w);
+        foreground_color, background_color, w);
     videotestsrc_convert_tmpline (p, frame, i);
+  }
+
+  if ((v->motion_type == GST_VIDEO_TEST_SRC_SWEEP) ||
+      (v->motion_type == GST_VIDEO_TEST_SRC_HSWEEP)) {
+    /* draw a line across the middle of frame and ball. */
+    for (i = 0; i < w; i++) {
+      p->tmpline_u8[i] = 255;
+    }
+    videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
+        foreground_color, background_color, w);
+    videotestsrc_convert_tmpline (p, frame, h / 2);
+    videotestsrc_convert_tmpline (p, frame, y);
   }
 }
 
@@ -1232,7 +1324,8 @@ convert_hline_bayer (paintinfo * p, GstVideoFrame * frame, int y)
 }
 
 void
-gst_video_test_src_pinwheel (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_pinwheel (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -1282,7 +1375,8 @@ gst_video_test_src_pinwheel (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_spokes (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_spokes (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -1333,7 +1427,8 @@ gst_video_test_src_spokes (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_gradient (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_gradient (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
@@ -1359,7 +1454,8 @@ gst_video_test_src_gradient (GstVideoTestSrc * v, GstVideoFrame * frame)
 }
 
 void
-gst_video_test_src_colors (GstVideoTestSrc * v, GstVideoFrame * frame)
+gst_video_test_src_colors (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
 {
   int i;
   int j;
