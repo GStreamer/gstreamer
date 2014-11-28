@@ -1152,9 +1152,11 @@ gst_core_audio_select_device_impl (AudioDeviceID * device_id, gboolean output)
 {
   AudioDeviceID *devices = NULL;
   AudioDeviceID default_device_id = 0;
-  AudioChannelLayout *channel_layout;
   gint i, ndevices = 0;
   gboolean res = FALSE;
+#ifdef GST_CORE_AUDIO_DEBUG
+  AudioChannelLayout *channel_layout;
+#endif
 
   devices = _audio_system_get_devices (&ndevices);
 
@@ -1165,6 +1167,7 @@ gst_core_audio_select_device_impl (AudioDeviceID * device_id, gboolean output)
 
   GST_DEBUG ("found %d audio device(s)", ndevices);
 
+#ifdef GST_CORE_AUDIO_DEBUG
   for (i = 0; i < ndevices; i++) {
     gchar *device_name;
 
@@ -1187,6 +1190,7 @@ gst_core_audio_select_device_impl (AudioDeviceID * device_id, gboolean output)
       g_free (device_name);
     }
   }
+#endif
 
   /* Find the ID of the default output device */
   default_device_id = _audio_system_get_default_device (output);
