@@ -45,6 +45,10 @@ test_accurate_seek_CFLAGS  = $(GST_PLUGINS_BASE_CFLAGS) \
 test_accurate_seek_LDADD   = $(GST_PLUGINS_BASE_LIBS) -lgstapp-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 
+test_segment_seeks_SOURCES = test-segment-seeks.c
+test_segment_seeks_CFLAGS  = $(GST_CFLAGS)
+test_segment_seeks_LDADD   = $(GST_LIBS)
+
 videocrop_test_SOURCES = videocrop-test.c
 videocrop_test_CFLAGS  = $(GST_CFLAGS)
 videocrop_test_LDADD   = $(GST_LIBS)
@@ -60,6 +64,7 @@ videocrop2_test_LDADD   = $(GST_LIBS)
 noinst_PROGRAMS = $(GTK_TESTS) $(OSS4_TESTS) $(V4L2_TESTS) $(X_TESTS) \
 	equalizer-test \
 	test-accurate-seek \
+	test-segment-seeks \
 	videocrop-test \
 	videobox-test \
 	videocrop2-test
