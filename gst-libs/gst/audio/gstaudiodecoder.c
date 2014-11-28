@@ -2130,6 +2130,8 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
 
       /* Forward EOS because no buffer or serialized event will come after
        * EOS and nothing could trigger another _finish_frame() call. */
+      if (dec->priv->pending_events)
+        send_pending_events (dec);
       ret = gst_audio_decoder_push_event (dec, event);
       break;
 
