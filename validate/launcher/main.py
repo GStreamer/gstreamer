@@ -133,10 +133,7 @@ MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
 DEFAULT_SYNC_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get medias/default/"
 DEFAULT_SYNC_ALL_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get ."
-DEFAULT_VALIDATE_TESTSUITE = os.path.join(DEFAULT_MAIN_DIR,
-                                          QA_ASSETS,
-                                          "testsuites",
-                                          "gst-validate-default.testsuite")
+DEFAULT_TESTSUITES_DIR = os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")
 
 
 def update_assets(options):
@@ -194,6 +191,37 @@ def main(libsdir):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
         prog='gst-validate-launcher', description=HELP)
+    parser.add_argument('testsuites', metavar='N', nargs='*',
+                        help="""Lets you specify a file where the testsuite to execute is defined.
+
+In the module if you want to work with a specific test manager(s) (for example,
+'ges' or 'validate'), you should define the TEST_MANAGER variable in the
+testsuite file (it can be a list of test manager names)
+
+In this file you should implement a setup_tests function. That function takes
+a TestManager and the GstValidateLauncher option as parameters and return True
+if it succeeded loading the tests, False otherwise.
+You will be able to configure the TestManager with its various methods. This
+function will be called with each TestManager usable, for example you will be
+passed the 'validate' TestManager in case the GstValidateManager launcher is
+avalaible. You should configure it using:
+
+   * test_manager.add_scenarios: which allows you to register a list of scenario names to be run
+   * test_manager.set_default_blacklist: Lets you set a list of tuple of the form:
+         (@regex_defining_blacklister_test_names, @reason_for_the_blacklisting)
+   * test_manager.add_generators: which allows you to register a list of #GstValidateTestsGenerator
+     to be used to generate tests
+   * test_manager.add_encoding_formats:: which allows you to register a list #MediaFormatCombination to be used for transcoding tests
+
+You can also set default values with:
+    * test_manager.register_defaults: Sets default values for all parametters
+    * test_manager.register_default_test_generators: Sets default values for the TestsGenerators to be used
+    * test_manager.register_default_scenarios: Sets default values for the scenarios to be executed
+    * test_manager.register_default_encoding_formats: Sets default values for the encoding formats to be tested
+
+Note that all testsuite should be inside python modules, so the directory should contain a __init__.py file
+""",
+                        default=["validate", "ges"])
     parser.add_argument("-d", "--debug", dest="debug",
                         action="store_true",
                         default=False,
@@ -243,27 +271,9 @@ def main(libsdir):
                              " note that 0 will enable all tests",
                         type=int),
     parser.add_argument("-c", "--config", dest="config",
-                        default=DEFAULT_VALIDATE_TESTSUITE,
-                        help="""Lets you specify a file where the testsuite to execute is defined.
-In this file you will have acces to the TestManager objects that you can configure with
-its various methods. For example you can find the 'validate' variable, in case the GstValidateManager
-launcher is avalaible. You should configure it using:
-   * validate.add_scenarios: which allows you to register a list of scenario names to be run
-   * validate.set_default_blacklist: Lets you set a list of tuple of the form:
-         (@regex_defining_blacklister_test_names, @reason_for_the_blacklisting)
-   * validate.add_generators: which allows you to register a list of #GstValidateTestsGenerator
-     to be used to generate tests
-   * validate.add_encoding_formats:: which allows you to register a list #MediaFormatCombination to be used for transcoding tests
-
-You can also set default values with:
-    * validate.register_defaults: Sets default values for all parameters
-    * validate.register_default_test_generators: Sets default values for the TestsGenerators to be used
-    * gst_validate_register_default_scenarios: Sets default values for the scenarios to be executed
-    * gst_validate_register_default_encoding_formats: Sets default values for the encoding formats to be tested
-
-Note: In the config file, you have access to the options variable resulting from the parsing of the command line
-user argument, you can thus override command line options using that.
-""")
+                        default=None,
+                        help="This is DEPRECATED, prefer using the testsuite format"
+                        " to configure testsuites")
     dir_group = parser.add_argument_group(
         "Directories and files to be used by the launcher")
     parser.add_argument('--xunit-file', action='store',
@@ -274,6 +284,11 @@ user argument, you can thus override command line options using that.
     dir_group.add_argument("-M", "--main-dir", dest="main_dir",
                            default=DEFAULT_MAIN_DIR,
                            help="Main directory where to put files. Default is %s" % DEFAULT_MAIN_DIR)
+    dir_group.add_argument("--testsuites-dir", dest="testsuites_dir",
+                           default=DEFAULT_TESTSUITES_DIR,
+                           help="Directory where to look for testsuites. Default is %s"
+                           " Note that GstValidate expect testsuite file to have .testsuite"
+                           " as an extension in this folder." % DEFAULT_TESTSUITES_DIR)
     dir_group.add_argument("-o", "--output-dir", dest="output_dir",
                            default=None,
                            help="Directory where to store logs and rendered files. Default is MAIN_DIR")

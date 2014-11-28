@@ -458,6 +458,7 @@ class GstValidateTestManager(GstValidateBaseTestManager):
         self._uris = []
         self._run_defaults = True
         self._is_populated = False
+        self._default_generators_registered = False
 
     def init(self):
         if which(GST_VALIDATE_COMMAND) and which(GST_VALIDATE_TRANSCODING_COMMAND):
@@ -475,7 +476,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
         if self._is_populated is True:
             return
 
-        if not self.options.config:
+        if not self.options.config and not self.options.testsuites:
             if self._run_defaults:
                 self.register_defaults()
             else:
@@ -687,9 +688,6 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
              "https://bugzilla.gnome.org/show_bug.cgi?id=606382"),
             ("validate.hls.*seek_forward.*",
              "https://bugzilla.gnome.org/show_bug.cgi?id=606382"),
-            ("validate.hls.*",
-             "FIXME! The HLS tests are not stable enough "
-             "(at least on the server), try again later."),
 
             # Matroska/WEBM known issues:
             ("validate.*.reverse_playback.*webm$",
@@ -747,6 +745,10 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
         """
         Registers default test generators
         """
+        if self._default_generators_registered:
+            return
+
         self.add_generators([GstValidatePlaybinTestsGenerator(self),
                              GstValidateMediaCheckTestsGenerator(self),
                              GstValidateTranscodingTestsGenerator(self)])
+        self._default_generators_registered = True

@@ -21,6 +21,7 @@
 
 import os
 import sys
+import imp
 import re
 import time
 import utils
@@ -658,13 +659,23 @@ class TestsManager(Loggable):
         else:
             self._generators.append(generators)
 
+        self._generators = list(set(self._generators))
+
     def get_generators(self):
         return self._generators
+
+    def _add_blacklist(self, blacklisted_tests):
+        if not isinstance(blacklisted_tests, list):
+            blacklisted_tests = [blacklisted_tests]
+
+        for patterns in blacklisted_tests:
+            for pattern in patterns.split(","):
+                self.blacklisted_tests_patterns.append(re.compile(pattern))
 
     def set_default_blacklist(self, default_blacklist):
         msg = "\nCurrently 'hardcoded' %s blacklisted tests:\n\n" % self.name
         for name, bug in default_blacklist:
-            self.options.blacklisted_tests.append(name)
+            self._add_blacklist(name)
             msg += "  + %s \n   --> bug: %s\n" % (name, bug)
 
         printc(msg, Colors.FAIL, True)
@@ -687,8 +698,7 @@ class TestsManager(Loggable):
 
         if options.blacklisted_tests:
             for patterns in options.blacklisted_tests:
-                for pattern in patterns.split(","):
-                    self.blacklisted_tests_patterns.append(re.compile(pattern))
+                self._add_blacklist(patterns)
 
     def _check_blacklisted(self, test):
         for pattern in self.blacklisted_tests_patterns:
@@ -824,6 +834,65 @@ class _TestsLauncher(Loggable):
         for tester in self.testers:
             tester.add_options(parser)
 
+    def _load_testsuites(self):
+        testsuites = []
+        for testsuite in self.options.testsuites:
+            if not os.path.isabs(testsuite):
+                testsuite = os.path.join(self.options.testsuites_dir, testsuite + ".py")
+
+            try:
+                sys.path.insert(0, os.path.dirname(testsuite))
+                module = __import__(os.path.basename(testsuite).replace(".py", ""))
+            except Exception as e:
+                printc("Could not load testsuite: %s, reason: %s"
+                       % (testsuite, e), Colors.FAIL)
+                continue
+            finally:
+                sys.path.remove(os.path.dirname(testsuite))
+
+            testsuites.append(module)
+            if not hasattr(module, "TEST_MANAGER"):
+                module.TEST_MANAGER = [tester.name for tester in self.testers]
+            elif not isinstance(module.TEST_MANAGER, list):
+                module.TEST_MANAGER = [module.TEST_MANAGER]
+
+        self.options.testsuites = testsuites
+
+    def _setup_testsuites(self):
+        for testsuite in self.options.testsuites:
+            loaded = False
+            wanted_test_manager = None
+            if hasattr(testsuite, "TEST_MANAGER"):
+                wanted_test_manager = testsuite.TEST_MANAGER
+                if not isinstance(wanted_test_manager, list):
+                    wanted_test_manager = [wanted_test_manager]
+
+            for tester in self.testers:
+                if wanted_test_manager is not None and \
+                        tester.name not in wanted_test_manager:
+                    continue
+
+                if testsuite.setup_tests(tester, self.options):
+                    loaded = True
+
+            if not loaded:
+                printc("Could not load testsuite: %s"
+                       " maybe because of missing TestManager"
+                       % (testsuite), Colors.FAIL)
+
+    def _load_config(self):
+        printc("Loading config files is DEPRECATED"
+               " you should use the new testsuite format now",)
+
+        for tester in self.testers:
+            tester.options = options
+            globals()[tester.name] = tester
+        globals()["options"] = options
+        c__file__ = __file__
+        globals()["__file__"] = self.options.config
+        execfile(self.options.config, globals())
+        globals()["__file__"] = c__file__
+
     def set_settings(self, options, args):
         self.reporter = reporters.XunitReporter(options)
         if not options.logsdir in[sys.stderr, sys.stdout]:
@@ -834,6 +903,7 @@ class _TestsLauncher(Loggable):
         for tester in self.testers:
             if tester.name in args:
                 wanted_testers = tester.name
+
         if wanted_testers:
             testers = self.testers
             self.testers = []
@@ -843,17 +913,15 @@ class _TestsLauncher(Loggable):
                     args.remove(tester.name)
 
         if options.config:
-            for tester in self.testers:
-                tester.options = options
-                globals()[tester.name] = tester
-            globals()["options"] = options
-            c__file__ = __file__
-            globals()["__file__"] = self.options.config
-            execfile(self.options.config, globals())
-            globals()["__file__"] = c__file__
+            self._load_config()
+
+        self._load_testsuites()
 
         for tester in self.testers:
             tester.set_settings(options, args, self.reporter)
+
+        if not options.config and options.testsuites:
+            self._setup_testsuites()
 
     def list_tests(self):
         for tester in self.testers:
@@ -1069,6 +1137,8 @@ class GstValidateBaseTestManager(TestsManager):
         else:
             self._scenarios.append(scenarios)
 
+        self._scenarios = list(set(self._scenarios))
+
     def get_scenarios(self):
         return self._scenarios
 
@@ -1084,6 +1154,8 @@ class GstValidateBaseTestManager(TestsManager):
             self._encoding_formats.extend(encoding_formats)
         else:
             self._encoding_formats.append(encoding_formats)
+
+        self._encoding_formats = list(set(self._encoding_formats))
 
     def get_encoding_formats(self):
         return self._encoding_formats
