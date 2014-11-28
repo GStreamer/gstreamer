@@ -39,8 +39,8 @@ HELP = '''
 1. Introduction
 ----------------
 
-gst-validate-launcher is a test launcher tool, it has been designed to
-launch the various tools included in GstValidate running tests on real
+gst-validate-launcher is a test launcher tool. It has been designed to
+launch the various tools included in GstValidate, running tests on real
 media files. This means that with gst-validate-launcher, you can launch
 many tests automatically in one simple command. It then permits to
 aggregate results and print them in a human readable way on stdout
@@ -73,11 +73,11 @@ file present in that folder, you should run the first time:
 
 .    $gst-validate-launch --medias-paths /path/to/media/files --generate-media-info
 
-That will generate the .media_info files that contain informations about the media
-files present in that folder. Those media_info file are simple XML file describing
-the topology of the media files. You should not reuse the --generate-media-info
-next times. The generated media files will be used as a reference for following
-runs. You might want to check that they contain the right informations yourself
+That will generate the .media_info files that contains information about the media
+files present in that folder. Those media_info files are simple XML file describing
+the topology of the media files. You need not reuse --generate-media-info from
+next time. The generated media files will be used as a reference for following
+runs. You might want to check that they contain the right information yourself
 the first time.
 
 Those .media_info are the files that are used by gst-validate-launcher to know
@@ -87,7 +87,7 @@ file is not seekable, seeking scenarios will not be run on it etc...
 3.1 Scenarios specific to a media file/stream:
 ----------------------------------------------
 
-It is possible that some scenarios are very specific to one media file, in that case,
+It is possible that some scenarios are very specific to one media file. In that case,
 the .scenario file should be present in the same folder as the .media_info file and
 be called similarly. For example for a file called /some/media/file.mp4, the media_info
 file will be called /some/media/file.mp4 and a scenario that will seek to a position that
@@ -118,7 +118,7 @@ same way as if they were local files.
 ----------------------------------------
 
 You can activate debug logs setting the environment variable GST_VALIDATE_LAUNCHER_DEBUG.
-It uses the same synthax as PITIVI_DEBUG (more information at:
+It uses the same syntax as PITIVI_DEBUG (more information at:
 http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
 ''' % ("\n  * ".join([reporter.name for reporter in
                       utils.get_subclasses(reporters.Reporter, reporters.__dict__)]
@@ -201,8 +201,8 @@ def main(libsdir):
     parser.add_argument("-t", "--wanted-tests", dest="wanted_tests",
                         default=[],
                         action="append",
-                        help="Define the tests to execute, it can be a regex"
-                        " if it contains defaults_only, only default scenarios"
+                        help="Define the tests to execute, it can be a regex."
+                        " If it contains defaults_only, only default scenarios"
                         " will be executed")
     parser.add_argument("-b", "--blacklisted-tests", dest="blacklisted_tests",
                         default=[],
@@ -215,7 +215,7 @@ def main(libsdir):
                         help="List tests and exit")
     parser.add_argument("-m", "--mute", dest="mute",
                         action="store_true", default=False,
-                        help="Mute playback output, which mean that we use "
+                        help="Mute playback output, which means that we use "
                         "a fakesink")
     parser.add_argument("-n", "--no-color", dest="no_color",
                         action="store_true", default=False,
@@ -229,17 +229,17 @@ def main(libsdir):
     parser.add_argument(
         "-G", "--generate-media-info-with-frame-detection", dest="generate_info_full",
         action="store_true", default=False,
-        help="Set it in order to generate the missing .media_infos files"
+        help="Set it in order to generate the missing .media_infos files. "
         "It implies --generate-media-info but enabling frame detection")
     parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
                         default=utils.LONG_TEST, action='store',
-                        help="Defines the limite from which a test is concidered as long (in seconds)",
+                        help="Defines the limit from which a test is considered as long (in seconds)",
                         type=int),
     parser.add_argument("-c", "--config", dest="config",
                         default=None,
                         help="""Lets you specify a file where the testsuite to execute is defined.
 In this file you will have acces to the TestManager objects that you can configure with
-its various methods, for example you can find the 'validate' variable in case the GstValidateManager
+its various methods. For example you can find the 'validate' variable, in case the GstValidateManager
 launcher is avalaible. You should configure it using:
    * validate.add_scenarios: which allows you to register a list of scenario names to be run
    * validate.set_default_blacklist: Lets you set a list of tuple of the form:
@@ -249,13 +249,13 @@ launcher is avalaible. You should configure it using:
    * validate.add_encoding_formats:: which allows you to register a list #MediaFormatCombination to be used for transcoding tests
 
 You can also set default values with:
-    * validate.register_defaults: Sets default values for all parametters
+    * validate.register_defaults: Sets default values for all parameters
     * validate.register_default_test_generators: Sets default values for the TestsGenerators to be used
     * gst_validate_register_default_scenarios: Sets default values for the scenarios to be executed
     * gst_validate_register_default_encoding_formats: Sets default values for the encoding formats to be tested
 
-Note: In the config file, you have acces to the options variable resulting from the parsing of the command line
-user argument, you can thus overrides command line options using that.
+Note: In the config file, you have access to the options variable resulting from the parsing of the command line
+user argument, you can thus override command line options using that.
 """)
     dir_group = parser.add_argument_group(
         "Directories and files to be used by the launcher")
@@ -368,7 +368,7 @@ user argument, you can thus overrides command line options using that.
 
     if not options.sync and not os.path.exists(options.clone_dir) and \
             options.clone_dir == os.path.join(options.clone_dir, MEDIAS_FOLDER):
-        printc("Media path (%s) does not exists. Forgot to run --sync ?"
+        printc("Media path (%s) does not exist. Forgot to run --sync ?"
                % options.clone_dir, Colors.FAIL, True)
         return -1
 
