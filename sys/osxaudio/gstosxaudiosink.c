@@ -116,6 +116,10 @@ static void gst_osx_audio_sink_set_property (GObject * object, guint prop_id,
 static void gst_osx_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn
+gst_osx_audio_sink_change_state (GstElement * element,
+    GstStateChange transition);
+
 static gboolean gst_osx_audio_sink_query (GstBaseSink * base, GstQuery * query);
 
 static gboolean gst_osx_audio_sink_stop (GstBaseSink * base);
@@ -130,8 +134,6 @@ static GstAudioRingBuffer
     * gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink);
 static void gst_osx_audio_sink_osxelement_init (gpointer g_iface,
     gpointer iface_data);
-static gboolean gst_osx_audio_sink_select_device (GstElement * sink,
-    GstOsxAudioRingBuffer * ringbuffer);
 static void gst_osx_audio_sink_probe_caps (GstOsxAudioSink * sink);
 static void gst_osx_audio_sink_set_volume (GstOsxAudioSink * sink);
 
@@ -178,6 +180,9 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
 
   gobject_class->set_property = gst_osx_audio_sink_set_property;
   gobject_class->get_property = gst_osx_audio_sink_get_property;
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_osx_audio_sink_change_state);
 
 #ifndef HAVE_IOS
   g_object_class_install_property (gobject_class, ARG_DEVICE,
@@ -246,6 +251,44 @@ gst_osx_audio_sink_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstStateChangeReturn
+gst_osx_audio_sink_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstOsxAudioSink *osxsink = GST_OSX_AUDIO_SINK (element);
+  GstOsxAudioRingBuffer *ringbuffer;
+  GstStateChangeReturn ret;
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto out;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      /* Device has been selected, AudioUnit set up, so initialize volume */
+      gst_osx_audio_sink_set_volume (osxsink);
+      break;
+
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* The device is open now, so fix our device_id if it changed */
+      ringbuffer =
+          GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SINK (osxsink)->ringbuffer);
+      osxsink->device_id = ringbuffer->core_audio->device_id;
+      break;
+
+    default:
+      break;
+  }
+
+out:
+  return ret;
 }
 
 static void
@@ -452,12 +495,14 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink),
       (void *) gst_osx_audio_sink_io_proc);
 
-  ringbuffer->select_device =
-      GST_DEBUG_FUNCPTR (gst_osx_audio_sink_select_device);
-
   ringbuffer->core_audio->element =
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink);
   ringbuffer->core_audio->is_src = FALSE;
+
+  if (ringbuffer->core_audio->device_id != osxsink->device_id) {
+    ringbuffer->core_audio->device_id = osxsink->device_id;
+    g_object_notify (G_OBJECT (osxsink), "device");
+  }
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
@@ -647,20 +692,4 @@ gst_osx_audio_sink_probe_caps (GstOsxAudioSink * osxsink)
 
   osxsink->cached_caps = caps;
   osxsink->channels = channels;
-}
-
-static gboolean
-gst_osx_audio_sink_select_device (GstElement * sink,
-    GstOsxAudioRingBuffer * ringbuffer)
-{
-  GstOsxAudioSink *osxsink = GST_OSX_AUDIO_SINK (sink);
-
-  if (!gst_core_audio_select_device (&osxsink->device_id, TRUE))
-    return FALSE;
-
-  ringbuffer->core_audio->device_id = osxsink->device_id;
-
-  gst_osx_audio_sink_set_volume (osxsink);
-
-  return TRUE;
 }

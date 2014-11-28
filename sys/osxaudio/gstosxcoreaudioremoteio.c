@@ -106,7 +106,7 @@ gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id)
 }
 
 static gboolean
-gst_core_audio_select_device_impl (AudioDeviceID * device_id, gboolean output)
+gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
 {
   /* No device selection in iOS */
   return TRUE;

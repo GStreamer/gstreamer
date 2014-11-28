@@ -99,6 +99,10 @@ static void gst_osx_audio_src_set_property (GObject * object, guint prop_id,
 static void gst_osx_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn
+gst_osx_audio_src_change_state (GstElement * element,
+    GstStateChange transition);
+
 static GstCaps *gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter);
 
 static GstAudioRingBuffer *gst_osx_audio_src_create_ringbuffer (GstAudioBaseSrc
@@ -109,8 +113,6 @@ static OSStatus gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
     AudioUnitRenderActionFlags * ioActionFlags,
     const AudioTimeStamp * inTimeStamp, UInt32 inBusNumber,
     UInt32 inNumberFrames, AudioBufferList * bufferList);
-static gboolean gst_osx_audio_src_select_device (GstElement * src,
-    GstOsxAudioRingBuffer * ringbuffer);
 
 static void
 gst_osx_audio_src_do_init (GType type)
@@ -127,6 +129,7 @@ gst_osx_audio_src_do_init (GType type)
       &osxelement_info);
 }
 
+#define gst_osx_audio_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOsxAudioSrc, gst_osx_audio_src,
     GST_TYPE_AUDIO_BASE_SRC, gst_osx_audio_src_do_init (g_define_type_id));
 
@@ -145,6 +148,9 @@ gst_osx_audio_src_class_init (GstOsxAudioSrcClass * klass)
 
   gobject_class->set_property = gst_osx_audio_src_set_property;
   gobject_class->get_property = gst_osx_audio_src_get_property;
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_osx_audio_src_change_state);
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_osx_audio_src_get_caps);
 
@@ -205,6 +211,38 @@ gst_osx_audio_src_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstStateChangeReturn
+gst_osx_audio_src_change_state (GstElement * element, GstStateChange transition)
+{
+  GstOsxAudioSrc *osxsrc = GST_OSX_AUDIO_SRC (element);
+  GstOsxAudioRingBuffer *ringbuffer;
+  GstStateChangeReturn ret;
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto out;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* The device is open now, so fix our device_id if it changed */
+      ringbuffer =
+          GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SRC (osxsrc)->ringbuffer);
+      osxsrc->device_id = ringbuffer->core_audio->device_id;
+      break;
+
+    default:
+      break;
+  }
+
+out:
+  return ret;
+}
+
 static GstCaps *
 gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
@@ -258,12 +296,14 @@ gst_osx_audio_src_create_ringbuffer (GstAudioBaseSrc * src)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc),
       (void *) gst_osx_audio_src_io_proc);
 
-  ringbuffer->select_device =
-      GST_DEBUG_FUNCPTR (gst_osx_audio_src_select_device);
-
   ringbuffer->core_audio->element =
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc);
   ringbuffer->core_audio->is_src = TRUE;
+
+  if (ringbuffer->core_audio->device_id != osxsrc->device_id) {
+    ringbuffer->core_audio->device_id = osxsrc->device_id;
+    g_object_notify (G_OBJECT (osxsrc), "device");
+  }
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
@@ -325,17 +365,4 @@ gst_osx_audio_src_osxelement_init (gpointer g_iface, gpointer iface_data)
   GstOsxAudioElementInterface *iface = (GstOsxAudioElementInterface *) g_iface;
 
   iface->io_proc = (AURenderCallback) gst_osx_audio_src_io_proc;
-}
-
-static gboolean
-gst_osx_audio_src_select_device (GstOsxAudioSrc * osxsrc)
-{
-  GstOsxAudioSrc *osxsrc = GST_OSX_AUDIO_SRC (element);
-
-  if (!gst_core_audio_select_device (&osxsrc->device_id, FALSE))
-    return FALSE;
-
-  ringbuffer->core_audio->device_id = osxsrc->device_id;
-
-  return TRUE;
 }

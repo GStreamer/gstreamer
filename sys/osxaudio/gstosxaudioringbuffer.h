@@ -81,9 +81,6 @@ struct _GstOsxAudioRingBuffer
 
   GstCoreAudio *core_audio;
 
-  /* Set by the parent to select the required device */
-  gboolean (*select_device) (GstElement * element, GstOsxAudioRingBuffer * buf);
-
   guint buffer_len;
   guint segoffset;
 };

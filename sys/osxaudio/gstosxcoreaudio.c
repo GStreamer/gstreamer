@@ -196,9 +196,9 @@ gst_core_audio_set_volume (GstCoreAudio * core_audio, gfloat volume)
 }
 
 gboolean
-gst_core_audio_select_device (AudioDeviceID * device_id, gboolean output)
+gst_core_audio_select_device (GstCoreAudio * core_audio)
 {
-  return gst_core_audio_select_device_impl (device_id, output);
+  return gst_core_audio_select_device_impl (core_audio);
 }
 
 void

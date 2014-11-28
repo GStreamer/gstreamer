@@ -71,6 +71,8 @@ _audio_system_get_default_device (gboolean output)
     GST_ERROR ("failed getting default output device: %d", (int) status);
   }
 
+  GST_DEBUG ("Default device id: %u", (unsigned) device_id);
+
   return device_id;
 }
 
@@ -1148,11 +1150,13 @@ done:
 }
 
 static gboolean
-gst_core_audio_select_device_impl (AudioDeviceID * device_id, gboolean output)
+gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
 {
   AudioDeviceID *devices = NULL;
+  AudioDeviceID device_id = core_audio->device_id;
   AudioDeviceID default_device_id = 0;
   gint i, ndevices = 0;
+  gboolean output = !core_audio->is_src;
   gboolean res = FALSE;
 #ifdef GST_CORE_AUDIO_DEBUG
   AudioChannelLayout *channel_layout;
@@ -1197,9 +1201,9 @@ gst_core_audio_select_device_impl (AudioDeviceID * device_id, gboolean output)
 
   /* Here we decide if selected device is valid or autoselect
    * the default one when required */
-  if (*device_id == kAudioDeviceUnknown) {
+  if (device_id == kAudioDeviceUnknown) {
     if (default_device_id != kAudioDeviceUnknown) {
-      *device_id = default_device_id;
+      device_id = default_device_id;
       res = TRUE;
     } else {
       /* No device of required type available */
@@ -1207,17 +1211,20 @@ gst_core_audio_select_device_impl (AudioDeviceID * device_id, gboolean output)
     }
   } else {
     for (i = 0; i < ndevices; i++) {
-      if (*device_id == devices[i]) {
+      if (device_id == devices[i]) {
         res = TRUE;
       }
     }
 
-    if (res && !_audio_device_is_alive (*device_id, output)) {
+    if (res && !_audio_device_is_alive (device_id, output)) {
       GST_ERROR ("Requested device not usable");
       res = FALSE;
       goto done;
     }
   }
+
+  if (res)
+    core_audio->device_id = device_id;
 
 done:
   g_free (devices);

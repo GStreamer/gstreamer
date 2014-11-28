@@ -149,9 +149,8 @@ static gboolean
 gst_osx_audio_ring_buffer_open_device (GstAudioRingBuffer * buf)
 {
   GstOsxAudioRingBuffer *osxbuf = GST_OSX_AUDIO_RING_BUFFER (buf);;
-  GstElement *parent = GST_ELEMENT_CAST (GST_OBJECT_PARENT (buf));
 
-  if (!osxbuf->select_device (parent, osxbuf))
+  if (!gst_core_audio_select_device (osxbuf->core_audio))
     return FALSE;
 
   return gst_core_audio_open (osxbuf->core_audio);
