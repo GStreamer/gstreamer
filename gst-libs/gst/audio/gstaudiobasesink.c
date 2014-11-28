@@ -843,7 +843,7 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstAudioBaseSink *sink = GST_AUDIO_BASE_SINK (bsink);
   GstAudioRingBufferSpec *spec;
-  GstClockTime now;
+  GstClockTime now, internal_time;
   GstClockTime crate_num, crate_denom;
 
   if (!sink->ringbuffer)
@@ -864,6 +864,7 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
    * gst_audio_clock_reset() which will use this last_time to create an offset
    * so that time from the clock keeps on increasing monotonically. */
   now = gst_clock_get_time (sink->provided_clock);
+  internal_time = gst_clock_get_internal_time (sink->provided_clock);
 
   GST_DEBUG_OBJECT (sink, "time was %" GST_TIME_FORMAT, GST_TIME_ARGS (now));
 
@@ -899,8 +900,7 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   gst_clock_get_calibration (sink->provided_clock, NULL, NULL,
       &crate_num, &crate_denom);
   gst_clock_set_calibration (sink->provided_clock,
-      gst_clock_get_internal_time (sink->provided_clock), now, crate_num,
-      crate_denom);
+      internal_time, now, crate_num, crate_denom);
 
   /* calculate actual latency and buffer times.
    * FIXME: In 2.0, store the latency_time internally in ns */
