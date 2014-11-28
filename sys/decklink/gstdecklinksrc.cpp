@@ -408,7 +408,6 @@ static gboolean
 gst_decklink_src_start (GstElement * element)
 {
   GstDecklinkSrc *decklinksrc = GST_DECKLINK_SRC (element);
-  DeckLinkCaptureDelegate *delegate;
   BMDAudioSampleType sample_depth;
   int channels;
   HRESULT ret;
@@ -431,9 +430,9 @@ gst_decklink_src_start (GstElement * element)
     return FALSE;
   }
 
-  delegate = new DeckLinkCaptureDelegate ();
-  delegate->priv = decklinksrc;
-  ret = decklinksrc->input->SetCallback (delegate);
+  decklinksrc->delegate = new DeckLinkCaptureDelegate ();
+  decklinksrc->delegate->priv = decklinksrc;
+  ret = decklinksrc->input->SetCallback (decklinksrc->delegate);
   if (ret != S_OK) {
     GST_ERROR ("set callback failed (input source)");
     return FALSE;
@@ -558,6 +557,10 @@ gst_decklink_src_stop (GstElement * element)
   decklinksrc->input->StopStreams ();
   decklinksrc->input->DisableVideoInput ();
   decklinksrc->input->DisableAudioInput ();
+
+  decklinksrc->input->SetCallback (NULL);
+  delete decklinksrc->delegate;
+  decklinksrc->delegate = NULL;
 
   g_list_free_full (decklinksrc->pending_events,
       (GDestroyNotify) gst_mini_object_unref);

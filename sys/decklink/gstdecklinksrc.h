@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include "gstdecklink.h"
+#include "capture.h"
 
 G_BEGIN_DECLS
 
@@ -52,6 +53,7 @@ struct _GstDecklinkSrc
   IDeckLink *decklink;
   IDeckLinkInput *input;
   IDeckLinkConfiguration *config;
+  DeckLinkCaptureDelegate *delegate;
 
   GMutex mutex;
   GCond cond;
