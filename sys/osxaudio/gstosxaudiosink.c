@@ -132,6 +132,7 @@ static void gst_osx_audio_sink_osxelement_init (gpointer g_iface,
     gpointer iface_data);
 static gboolean gst_osx_audio_sink_select_device (GstElement * sink,
     GstOsxAudioRingBuffer * ringbuffer);
+static void gst_osx_audio_sink_probe_caps (GstOsxAudioSink * sink);
 static void gst_osx_audio_sink_set_volume (GstOsxAudioSink * sink);
 
 static OSStatus gst_osx_audio_sink_io_proc (GstOsxAudioRingBuffer * buf,
@@ -308,7 +309,17 @@ static GstCaps *
 gst_osx_audio_sink_getcaps (GstBaseSink * base, GstCaps * filter)
 {
   GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (base);
+  GstAudioRingBuffer *buf = GST_AUDIO_BASE_SINK (sink)->ringbuffer;
   gchar *caps_string = NULL;
+
+  if (buf) {
+    GST_OBJECT_LOCK (buf);
+    if (buf->open && !sink->cached_caps) {
+      /* Device is open, let's probe its caps */
+      gst_osx_audio_sink_probe_caps (sink);
+    }
+    GST_OBJECT_UNLOCK (buf);
+  }
 
   if (sink->cached_caps) {
     caps_string = gst_caps_to_string (sink->cached_caps);
@@ -448,8 +459,6 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink);
   ringbuffer->core_audio->is_src = FALSE;
 
-  gst_osx_audio_sink_set_volume (osxsink);
-
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
 
@@ -520,8 +529,8 @@ gst_osx_audio_sink_set_volume (GstOsxAudioSink * sink)
   gst_core_audio_set_volume (osxbuf->core_audio, sink->volume);
 }
 
-static gboolean
-gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
+static void
+gst_osx_audio_sink_probe_caps (GstOsxAudioSink * osxsink)
 {
   gint i, channels;
   gboolean spdif_allowed;
@@ -638,8 +647,6 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
 
   osxsink->cached_caps = caps;
   osxsink->channels = channels;
-
-  return TRUE;
 }
 
 static gboolean
@@ -647,14 +654,13 @@ gst_osx_audio_sink_select_device (GstElement * sink,
     GstOsxAudioRingBuffer * ringbuffer)
 {
   GstOsxAudioSink *osxsink = GST_OSX_AUDIO_SINK (sink);
-  gboolean res = FALSE;
 
   if (!gst_core_audio_select_device (&osxsink->device_id, TRUE))
     return FALSE;
 
-  res = gst_osx_audio_sink_allowed_caps (osxsink);
-
   ringbuffer->core_audio->device_id = osxsink->device_id;
 
-  return res;
+  gst_osx_audio_sink_set_volume (osxsink);
+
+  return TRUE;
 }
