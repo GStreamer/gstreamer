@@ -1506,8 +1506,8 @@ gst_element_default_send_event (GstElement * element, GstEvent * event)
   GstPad *pad;
 
   pad = GST_EVENT_IS_DOWNSTREAM (event) ?
-      gst_element_get_random_pad (element, TRUE, GST_PAD_SRC) :
-      gst_element_get_random_pad (element, TRUE, GST_PAD_SINK);
+      gst_element_get_random_pad (element, TRUE, GST_PAD_SINK) :
+      gst_element_get_random_pad (element, TRUE, GST_PAD_SRC);
 
   if (pad) {
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
