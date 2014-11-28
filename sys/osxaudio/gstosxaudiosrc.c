@@ -103,6 +103,7 @@ static GstStateChangeReturn
 gst_osx_audio_src_change_state (GstElement * element,
     GstStateChange transition);
 
+static void gst_osx_audio_src_probe_caps (GstOsxAudioSrc * src);
 static GstCaps *gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter);
 
 static GstAudioRingBuffer *gst_osx_audio_src_create_ringbuffer (GstAudioBaseSrc
@@ -243,17 +244,53 @@ out:
   return ret;
 }
 
+static void
+gst_osx_audio_src_probe_caps (GstOsxAudioSrc * osxsrc)
+{
+  GstOsxAudioRingBuffer *ringbuffer =
+      GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SRC (osxsrc)->ringbuffer);
+  GstCoreAudio *core_audio = ringbuffer->core_audio;
+  AudioStreamBasicDescription asbd_in;
+  UInt32 propertySize;
+  OSStatus status;
+
+  propertySize = sizeof (asbd_in);
+  status = AudioUnitGetProperty (core_audio->audiounit,
+      kAudioUnitProperty_StreamFormat,
+      kAudioUnitScope_Input, 1, &asbd_in, &propertySize);
+
+  if (status) {
+    AudioComponentInstanceDispose (core_audio->audiounit);
+    core_audio->audiounit = NULL;
+    GST_WARNING_OBJECT (core_audio,
+        "Unable to obtain device properties: %d", (int) status);
+  } else {
+    osxsrc->deviceChannels = asbd_in.mChannelsPerFrame;
+  }
+}
+
 static GstCaps *
 gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
   GstElementClass *gstelement_class;
   GstOsxAudioSrc *osxsrc;
+  GstAudioRingBuffer *buf;
   GstPadTemplate *pad_template;
   GstCaps *caps;
   gint min, max;
 
   gstelement_class = GST_ELEMENT_GET_CLASS (src);
   osxsrc = GST_OSX_AUDIO_SRC (src);
+  buf = GST_AUDIO_BASE_SRC (src)->ringbuffer;
+
+  if (buf) {
+    GST_OBJECT_LOCK (buf);
+    if (buf->open && osxsrc->deviceChannels == -1) {
+      /* Device is open, let's probe its caps */
+      gst_osx_audio_src_probe_caps (osxsrc);
+    }
+    GST_OBJECT_UNLOCK (buf);
+  }
 
   if (osxsrc->deviceChannels == -1) {
     /* -1 means we don't know the number of channels yet.  for now, return

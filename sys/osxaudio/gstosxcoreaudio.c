@@ -23,7 +23,6 @@
 
 #include "gstosxcoreaudio.h"
 #include "gstosxcoreaudiocommon.h"
-#include "gstosxaudiosrc.h"
 
 GST_DEBUG_CATEGORY_STATIC (osx_audio_debug);
 #define GST_CAT_DEFAULT osx_audio_debug
@@ -80,35 +79,7 @@ gst_core_audio_close (GstCoreAudio * core_audio)
 gboolean
 gst_core_audio_open (GstCoreAudio * core_audio)
 {
-
-  if (!gst_core_audio_open_impl (core_audio))
-    return FALSE;
-
-  if (core_audio->is_src) {
-    AudioStreamBasicDescription asbd_in;
-    UInt32 propertySize;
-    OSStatus status;
-
-    GstOsxAudioSrc *src =
-        GST_OSX_AUDIO_SRC (GST_OBJECT_PARENT (core_audio->osxbuf));
-
-    propertySize = sizeof (asbd_in);
-    status = AudioUnitGetProperty (core_audio->audiounit,
-        kAudioUnitProperty_StreamFormat,
-        kAudioUnitScope_Input, 1, &asbd_in, &propertySize);
-
-    if (status) {
-      AudioComponentInstanceDispose (core_audio->audiounit);
-      core_audio->audiounit = NULL;
-      GST_WARNING_OBJECT (core_audio,
-          "Unable to obtain device properties: %d", (int) status);
-      return FALSE;
-    } else {
-      src->deviceChannels = asbd_in.mChannelsPerFrame;
-    }
-  }
-
-  return TRUE;
+  return gst_core_audio_open_impl (core_audio);
 }
 
 gboolean
