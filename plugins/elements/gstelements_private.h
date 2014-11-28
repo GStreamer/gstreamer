@@ -30,6 +30,12 @@ G_BEGIN_DECLS
 G_GNUC_INTERNAL
 char *    gst_buffer_get_flags_string                   (GstBuffer *buffer);
 
+G_GNUC_INTERNAL
+GstFlowReturn  gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,
+                                   GstBuffer ** buffers, guint num_buffers,
+                                   guint8 * mem_nums, guint total_mem_num,
+                                   guint64 * total_written, guint64 * cur_pos);
+
 G_END_DECLS
 
 #endif /* __GST_ELEMENTS_PRIVATE_H__ */

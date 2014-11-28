@@ -344,6 +344,9 @@ AM_CONDITIONAL(HAVE_PTHREAD, test "x$HAVE_PTHREAD" = "xyes")
 dnl check for sys/prctl for setting thread name on Linux
 AC_CHECK_HEADERS([sys/prctl.h], [], [], [AC_INCLUDES_DEFAULT])
 
+dnl check for sys/uio.h for writev()
+AC_CHECK_HEADERS([sys/uio.h], [], [], [AC_INCLUDES_DEFAULT])
+
 dnl Check for valgrind.h
 dnl separate from HAVE_VALGRIND because you can have the program, but not
 dnl the dev package
