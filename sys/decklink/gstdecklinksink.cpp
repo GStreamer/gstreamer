@@ -351,7 +351,8 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   }
   //decklinksink->video_enabled = TRUE;
 
-  decklinksink->output->SetScheduledFrameCompletionCallback (decklinksink->callback);
+  decklinksink->output->
+      SetScheduledFrameCompletionCallback (decklinksink->callback);
 
   sample_depth = bmdAudioSampleType16bitInteger;
   ret = decklinksink->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
@@ -491,8 +492,12 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
   if (duration == GST_CLOCK_TIME_NONE) {
     duration = gst_util_uint64_scale_int (GST_SECOND, mode->fps_d, mode->fps_n);
   }
-  running_time = gst_segment_to_running_time (&decklinksink->video_segment, GST_FORMAT_TIME, timestamp);
-  running_time_duration = gst_segment_to_running_time (&decklinksink->video_segment, GST_FORMAT_TIME, timestamp + duration) - running_time;
+  running_time =
+      gst_segment_to_running_time (&decklinksink->video_segment,
+      GST_FORMAT_TIME, timestamp);
+  running_time_duration =
+      gst_segment_to_running_time (&decklinksink->video_segment,
+      GST_FORMAT_TIME, timestamp + duration) - running_time;
   gst_buffer_unref (buffer);
 
 #if 0
@@ -511,8 +516,25 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
   base_time = gst_element_get_base_time (GST_ELEMENT (decklinksink));
   if (clock) {
     if (base_time != GST_CLOCK_TIME_NONE) {
+      GstClockTime clock_time = gst_clock_get_time (clock);
+
+      if (base_time + running_time + running_time_duration <
+          gst_clock_get_time (clock)) {
+        GST_WARNING_OBJECT (decklinksink,
+            "Dropping too late frame: %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (running_time + running_time_duration),
+            GST_TIME_ARGS (clock_time - base_time));
+        gst_object_unref (clock);
+        flow_ret = GST_FLOW_OK;
+        goto out;
+      }
       clock_id = gst_clock_new_single_shot_id (clock, base_time + running_time);
+
+      GST_LOG_OBJECT (decklinksink,
+          "waiting for clock: %" GST_TIME_FORMAT " -> %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (clock_time), GST_TIME_ARGS (base_time + running_time));
       gst_clock_id_wait (clock_id, NULL);
+      GST_LOG_OBJECT (decklinksink, "finished waiting for clock");
       gst_clock_id_unref (clock_id);
     }
 
@@ -527,6 +549,9 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
 #endif
 
   if (!decklinksink->stop) {
+    GST_LOG_OBJECT (decklinksink, "Scheduling frame for %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (running_time));
+
     ret = decklinksink->output->ScheduleVideoFrame (frame,
         running_time, running_time_duration, GST_SECOND);
     if (ret != S_OK) {
@@ -539,7 +564,12 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstObject * parent,
     decklinksink->num_frames++;
 
     if (!decklinksink->sched_started) {
-      ret = decklinksink->output->StartScheduledPlayback (0, mode->fps_d, 1.0);
+      GST_DEBUG_OBJECT (decklinksink,
+          "Starting scheduled playback at %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (running_time));
+      ret =
+          decklinksink->output->StartScheduledPlayback (running_time,
+          GST_SECOND, 1.0);
       if (ret != S_OK) {
         GST_ELEMENT_ERROR (decklinksink, STREAM, FAILED,
             (NULL), ("Failed to start scheduled playback: 0x%08x", ret));
@@ -817,5 +847,6 @@ Output::RenderAudioSamples (bool preroll)
   return S_OK;
 }
 
-Output::~Output() {
+Output::~Output ()
+{
 }
