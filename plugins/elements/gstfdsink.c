@@ -58,6 +58,7 @@
 #include <string.h>
 
 #include "gstfdsink.h"
+#include "gstelements_private.h"
 
 #ifdef G_OS_WIN32
 #include <io.h>                 /* lseek, open, close, read */
@@ -107,6 +108,8 @@ static void gst_fd_sink_dispose (GObject * obj);
 static gboolean gst_fd_sink_query (GstBaseSink * bsink, GstQuery * query);
 static GstFlowReturn gst_fd_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
+static GstFlowReturn gst_fd_sink_render_list (GstBaseSink * bsink,
+    GstBufferList * buffer_list);
 static gboolean gst_fd_sink_start (GstBaseSink * basesink);
 static gboolean gst_fd_sink_stop (GstBaseSink * basesink);
 static gboolean gst_fd_sink_unlock (GstBaseSink * basesink);
@@ -138,6 +141,7 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
       gst_static_pad_template_get (&sinktemplate));
 
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_fd_sink_render);
+  gstbasesink_class->render_list = GST_DEBUG_FUNCPTR (gst_fd_sink_render_list);
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_fd_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_fd_sink_stop);
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_fd_sink_unlock);
@@ -225,6 +229,53 @@ gst_fd_sink_query (GstBaseSink * bsink, GstQuery * query)
 
   }
   return res;
+}
+
+static GstFlowReturn
+gst_fd_sink_render_buffers (GstFdSink * sink, GstBuffer ** buffers,
+    guint num_buffers, guint8 * mem_nums, guint total_mems)
+{
+  return gst_writev_buffers (GST_OBJECT_CAST (sink), sink->fd, sink->fdset,
+      buffers, num_buffers, mem_nums, total_mems, &sink->bytes_written,
+      &sink->current_pos);
+}
+
+static GstFlowReturn
+gst_fd_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
+{
+  GstFlowReturn flow;
+  GstBuffer **buffers;
+  GstFdSink *sink;
+  guint8 *mem_nums;
+  guint total_mems;
+  guint i, num_buffers;
+
+  sink = GST_FD_SINK_CAST (bsink);
+
+  num_buffers = gst_buffer_list_length (buffer_list);
+  if (num_buffers == 0)
+    goto no_data;
+
+  /* extract buffers from list and count memories */
+  buffers = g_newa (GstBuffer *, num_buffers);
+  mem_nums = g_newa (guint8, num_buffers);
+  for (i = 0, total_mems = 0; i < num_buffers; ++i) {
+    buffers[i] = gst_buffer_list_get (buffer_list, i);
+    mem_nums[i] = gst_buffer_n_memory (buffers[i]);
+    total_mems += mem_nums[i];
+  }
+
+  flow =
+      gst_fd_sink_render_buffers (sink, buffers, num_buffers, mem_nums,
+      total_mems);
+
+  return flow;
+
+no_data:
+  {
+    GST_LOG_OBJECT (sink, "empty buffer list");
+    return GST_FLOW_OK;
+  }
 }
 
 static GstFlowReturn

@@ -40,6 +40,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FD_SINK))
 #define GST_IS_FD_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FD_SINK))
+#define GST_FD_SINK_CAST(obj) ((GstFdSink *)(obj))
 
 typedef struct _GstFdSink GstFdSink;
 typedef struct _GstFdSinkClass GstFdSinkClass;
