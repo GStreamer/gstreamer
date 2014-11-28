@@ -656,6 +656,10 @@ static GstFlowReturn
 gst_file_sink_render_buffers (GstFileSink * sink, GstBuffer ** buffers,
     guint num_buffers, guint8 * mem_nums, guint total_mems)
 {
+  GST_DEBUG_OBJECT (sink,
+      "writing %u buffers (%u memories) at position %" G_GUINT64_FORMAT,
+      num_buffers, total_mems, sink->current_pos);
+
   return gst_writev_buffers (GST_OBJECT_CAST (sink), fileno (sink->file), NULL,
       buffers, num_buffers, mem_nums, total_mems, NULL, &sink->current_pos);
 }
@@ -702,42 +706,19 @@ static GstFlowReturn
 gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFileSink *filesink;
-  GstMapInfo info;
+  GstFlowReturn flow;
+  guint8 n_mem;
 
-  filesink = GST_FILE_SINK (sink);
+  filesink = GST_FILE_SINK_CAST (sink);
 
-  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  n_mem = gst_buffer_n_memory (buffer);
 
-  GST_DEBUG_OBJECT (filesink,
-      "writing %" G_GSIZE_FORMAT " bytes at %" G_GUINT64_FORMAT,
-      info.size, filesink->current_pos);
+  if (n_mem > 0)
+    flow = gst_file_sink_render_buffers (filesink, &buffer, 1, &n_mem, n_mem);
+  else
+    flow = GST_FLOW_OK;
 
-  if (info.size > 0 && info.data != NULL) {
-    if (fwrite (info.data, info.size, 1, filesink->file) != 1)
-      goto handle_error;
-
-    filesink->current_pos += info.size;
-  }
-  gst_buffer_unmap (buffer, &info);
-
-  return GST_FLOW_OK;
-
-handle_error:
-  {
-    switch (errno) {
-      case ENOSPC:{
-        GST_ELEMENT_ERROR (filesink, RESOURCE, NO_SPACE_LEFT, (NULL), (NULL));
-        break;
-      }
-      default:{
-        GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
-            (_("Error while writing to file \"%s\"."), filesink->filename),
-            ("%s", g_strerror (errno)));
-      }
-    }
-    gst_buffer_unmap (buffer, &info);
-    return GST_FLOW_ERROR;
-  }
+  return flow;
 }
 
 static gboolean
