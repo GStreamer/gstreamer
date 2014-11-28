@@ -131,6 +131,10 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
 QA_ASSETS = "gst-qa-assets"
 MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
+DEFAULT_VALIDATE_TESTSUITE = os.path.join(DEFAULT_MAIN_DIR,
+                                          QA_ASSETS,
+                                          "testsuites",
+                                          "gst-validate-default.testsuite")
 
 
 def update_assets(options):
@@ -233,10 +237,11 @@ def main(libsdir):
         "It implies --generate-media-info but enabling frame detection")
     parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
                         default=utils.LONG_TEST, action='store',
-                        help="Defines the limit from which a test is considered as long (in seconds)",
+                        help="Defines the limit from which a test is considered as long (in seconds)"
+                             " note that 0 will enable all tests",
                         type=int),
     parser.add_argument("-c", "--config", dest="config",
-                        default=None,
+                        default=DEFAULT_VALIDATE_TESTSUITE,
                         help="""Lets you specify a file where the testsuite to execute is defined.
 In this file you will have acces to the TestManager objects that you can configure with
 its various methods. For example you can find the 'validate' variable, in case the GstValidateManager

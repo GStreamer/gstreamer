@@ -458,8 +458,6 @@ class GstValidateTestManager(GstValidateBaseTestManager):
         self._uris = []
         self._run_defaults = True
         self._is_populated = False
-        execfile(os.path.join(os.path.dirname(__file__), "apps",
-                 "validate", "validate_testsuite.py"), globals())
 
     def init(self):
         if which(GST_VALIDATE_COMMAND) and which(GST_VALIDATE_TRANSCODING_COMMAND):
@@ -615,7 +613,140 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
         super(GstValidateTestManager, self).set_settings(
             options, args, reporter)
 
+    def register_defaults(self):
+        """
+        Registers the defaults:
+            * Scenarios to be used
+            * Encoding formats to be used
+            * Blacklisted tests
+            * Test generators
+        """
+        self.register_default_scenarios()
+        self.register_default_encoding_formats()
+        self.register_default_blacklist()
+        self.register_default_test_generators()
 
-def gst_validate_checkout_element_present(element_name):
-    null = open(os.devnull)
-    return subprocess.call("gst-inspect-1.0 videmixer", shell=True, stdout=null, stderr=null)
+    def register_default_scenarios(self):
+        """
+        Registers default test scenarios
+        """
+        if self.options.long_limit != 0:
+            self.add_scenarios([
+                "play_15s",
+                "reverse_playback",
+                "fast_forward",
+                "seek_forward",
+                "seek_backward",
+                "seek_with_stop",
+                "switch_audio_track",
+                "switch_audio_track_while_paused",
+                "switch_subtitle_track",
+                "switch_subtitle_track_while_paused",
+                "disable_subtitle_track_while_paused",
+                "change_state_intensive",
+                "scrub_forward_seeking"])
+        else:
+            self.add_scenarios([
+                "play_15s",
+                "reverse_playback",
+                "fast_forward",
+                "seek_forward",
+                "seek_backward",
+                "seek_with_stop",
+                "switch_audio_track",
+                "switch_audio_track_while_paused",
+                "switch_subtitle_track",
+                "switch_subtitle_track_while_paused",
+                "disable_subtitle_track_while_paused",
+                "change_state_intensive",
+                "scrub_forward_seeking"])
+
+    def register_default_encoding_formats(self):
+        """
+        Registers default encoding formats
+        """
+        self.add_encoding_formats([
+            MediaFormatCombination("ogg", "vorbis", "theora"),
+            MediaFormatCombination("webm", "vorbis", "vp8"),
+            MediaFormatCombination("mp4", "mp3", "h264"),
+            MediaFormatCombination("mkv", "vorbis", "h264"),
+        ])
+
+    def register_default_blacklist(self):
+        self.set_default_blacklist([
+            # hls known issues
+            ("validate.hls.playback.fast_forward.*",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=698155"),
+            ("validate.hls.playback.seek_with_stop.*",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=723268"),
+            ("validate.hls.playback.reverse_playback.*",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
+            ("validate.hls.*scrub_forward_seeking.*",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=606382"),
+            ("validate.hls.*seek_backward.*",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=606382"),
+            ("validate.hls.*seek_forward.*",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=606382"),
+            ("validate.hls.*",
+             "FIXME! The HLS tests are not stable enough "
+             "(at least on the server), try again later."),
+
+            # Matroska/WEBM known issues:
+            ("validate.*.reverse_playback.*webm$",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
+            ("validate.*.reverse_playback.*mkv$",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
+            ("validate.*reverse.*Sintel_2010_720p_mkv",
+             "TODO in matroskademux: FIXME: We should build an index during playback or "
+             "when scanning that can be used here. The reverse playback code requires "
+             " seek_index and seek_entry to be set!"),
+            ("validate.http.playback.seek_with_stop.*webm",
+             "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
+            ("validate.http.playback.seek_with_stop.*mkv",
+             "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
+
+            # MPEG TS known issues:
+            ('(?i)validate.*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
+             "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
+            ('validate.file.transcode.to_vorbis_and_vp8_in_webm.GH1_00094_1920x1280_MTS',
+             'Got error: Internal data stream error. -- Debug message: mpegtsbase.c(1371):'
+             'mpegts_base_loop (): ...: stream stopped, reason not-negotiated'),
+
+            # HTTP known issues:
+            ("validate.http.*scrub_forward_seeking.*",
+             "This is not stable enough for now."),
+            ("validate.http.playback.change_state_intensive.raw_video_mov",
+             "This is not stable enough for now. (flow return from pad push doesn't match expected value)"),
+
+            # MXF known issues"
+            (".*reverse_playback.*mxf",
+             "Reverse playback is not handled in MXF"),
+            ("validate\.file\.transcode.*mxf",
+             "FIXME: Transcoding and mixing tests need to be tested"),
+
+            # Subtitles known issues
+            ("validate.file.playback.switch_subtitle_track.Sintel_2010_720p_mkv",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=734051"),
+
+            # Videomixing known issues
+            ("validate.file.*.simple.scrub_forward_seeking.synchronized",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=734060"),
+
+            # FLAC known issues"
+            (".*reverse_playback.*flac",
+             "Reverse playback is not handled in flac"),
+
+            # WMV known issues"
+            (".*reverse_playback.*wmv",
+             "Reverse playback is not handled in wmv"),
+            (".*reverse_playback.*asf",
+             "Reverse playback is not handled in asf"),
+        ])
+
+    def register_default_test_generators(self):
+        """
+        Registers default test generators
+        """
+        self.add_generators([GstValidatePlaybinTestsGenerator(self),
+                             GstValidateMediaCheckTestsGenerator(self),
+                             GstValidateTranscodingTestsGenerator(self)])
