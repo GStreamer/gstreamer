@@ -229,6 +229,7 @@ gst_video_aggregator_pad_prepare_frame (GstVideoAggregatorPad * pad,
   if (!gst_video_frame_map (frame, &pad->buffer_vinfo, pad->buffer,
           GST_MAP_READ)) {
     GST_WARNING_OBJECT (vagg, "Could not map input buffer");
+    return FALSE;
   }
 
   if (pad->priv->convert) {
