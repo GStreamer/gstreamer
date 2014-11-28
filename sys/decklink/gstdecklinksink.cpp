@@ -179,9 +179,6 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink)
   decklinksink->mode = GST_DECKLINK_MODE_NTSC;
   decklinksink->device_number = 0;
 
-  decklinksink->callback = new Output;
-  decklinksink->callback->decklinksink = decklinksink;
-
 #ifdef _MSC_VER
   g_mutex_init (&decklinksink->com_init_lock);
   g_mutex_init (&decklinksink->com_deinit_lock);
@@ -297,8 +294,6 @@ gst_decklink_sink_finalize (GObject * object)
   g_cond_clear (&decklinksink->audio_cond);
   g_mutex_clear (&decklinksink->audio_mutex);
 
-  delete decklinksink->callback;
-
 #ifdef _MSC_VER
   /* signal the COM thread that it should uninitialize COM */
   if (decklinksink->comInitialized) {
@@ -341,6 +336,9 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
     return FALSE;
   }
 
+  decklinksink->callback = new Output;
+  decklinksink->callback->decklinksink = decklinksink;
+
   decklinksink->output->SetAudioCallback (decklinksink->callback);
 
   mode = gst_decklink_get_mode (decklinksink->mode);
@@ -353,8 +351,7 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   }
   //decklinksink->video_enabled = TRUE;
 
-  decklinksink->output->SetScheduledFrameCompletionCallback (decklinksink->
-      callback);
+  decklinksink->output->SetScheduledFrameCompletionCallback (decklinksink->callback);
 
   sample_depth = bmdAudioSampleType16bitInteger;
   ret = decklinksink->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
@@ -391,6 +388,11 @@ gst_decklink_sink_stop (GstDecklinkSink * decklinksink)
   decklinksink->output->StopScheduledPlayback (0, NULL, 0);
   decklinksink->output->DisableAudioOutput ();
   decklinksink->output->DisableVideoOutput ();
+
+  decklinksink->output->SetAudioCallback (NULL);
+  decklinksink->output->SetScheduledFrameCompletionCallback (NULL);
+  delete decklinksink->callback;
+  decklinksink->callback = NULL;
 
   return TRUE;
 }
@@ -752,4 +754,7 @@ Output::RenderAudioSamples (bool preroll)
   GST_DEBUG ("RenderAudioSamples");
 
   return S_OK;
+}
+
+Output::~Output() {
 }

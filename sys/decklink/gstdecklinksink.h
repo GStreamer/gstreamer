@@ -48,6 +48,8 @@ public IDeckLinkAudioOutputCallback
     virtual HRESULT STDMETHODCALLTYPE ScheduledFrameCompleted (IDeckLinkVideoFrame* completedFrame, BMDOutputFrameCompletionResult result);
     virtual HRESULT STDMETHODCALLTYPE ScheduledPlaybackHasStopped ();
     virtual HRESULT STDMETHODCALLTYPE RenderAudioSamples (bool preroll);
+
+    virtual ~Output();
 };
 
 struct _GstDecklinkSink
