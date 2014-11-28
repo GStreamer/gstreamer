@@ -109,7 +109,8 @@ static OSStatus gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
     AudioUnitRenderActionFlags * ioActionFlags,
     const AudioTimeStamp * inTimeStamp, UInt32 inBusNumber,
     UInt32 inNumberFrames, AudioBufferList * bufferList);
-static gboolean gst_osx_audio_src_select_device (GstOsxAudioSrc * osxsrc);
+static gboolean gst_osx_audio_src_select_device (GstElement * src,
+    GstOsxAudioRingBuffer * ringbuffer);
 
 static void
 gst_osx_audio_src_do_init (GType type)
@@ -251,21 +252,18 @@ gst_osx_audio_src_create_ringbuffer (GstAudioBaseSrc * src)
 
   osxsrc = GST_OSX_AUDIO_SRC (src);
 
-  if (!gst_osx_audio_src_select_device (osxsrc)) {
-    GST_ERROR_OBJECT (src, "Could not select device");
-    return NULL;
-  }
-
   GST_DEBUG_OBJECT (osxsrc, "Creating ringbuffer");
   ringbuffer = g_object_new (GST_TYPE_OSX_AUDIO_RING_BUFFER, NULL);
   GST_DEBUG_OBJECT (osxsrc, "osx src 0x%p element 0x%p  ioproc 0x%p", osxsrc,
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc),
       (void *) gst_osx_audio_src_io_proc);
 
+  ringbuffer->select_device =
+      GST_DEBUG_FUNCPTR (gst_osx_audio_src_select_device);
+
   ringbuffer->core_audio->element =
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc);
   ringbuffer->core_audio->is_src = TRUE;
-  ringbuffer->core_audio->device_id = osxsrc->device_id;
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
@@ -332,5 +330,12 @@ gst_osx_audio_src_osxelement_init (gpointer g_iface, gpointer iface_data)
 static gboolean
 gst_osx_audio_src_select_device (GstOsxAudioSrc * osxsrc)
 {
-  return gst_core_audio_select_device (&osxsrc->device_id, FALSE);
+  GstOsxAudioSrc *osxsrc = GST_OSX_AUDIO_SRC (element);
+
+  if (!gst_core_audio_select_device (&osxsrc->device_id, FALSE))
+    return FALSE;
+
+  ringbuffer->core_audio->device_id = osxsrc->device_id;
+
+  return TRUE;
 }

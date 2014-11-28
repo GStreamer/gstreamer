@@ -130,7 +130,8 @@ static GstAudioRingBuffer
     * gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink);
 static void gst_osx_audio_sink_osxelement_init (gpointer g_iface,
     gpointer iface_data);
-static gboolean gst_osx_audio_sink_select_device (GstOsxAudioSink * osxsink);
+static gboolean gst_osx_audio_sink_select_device (GstElement * sink,
+    GstOsxAudioRingBuffer * ringbuffer);
 static void gst_osx_audio_sink_set_volume (GstOsxAudioSink * sink);
 
 static OSStatus gst_osx_audio_sink_io_proc (GstOsxAudioRingBuffer * buf,
@@ -434,23 +435,20 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
 
   osxsink = GST_OSX_AUDIO_SINK (sink);
 
-  if (!gst_osx_audio_sink_select_device (osxsink)) {
-    GST_ERROR_OBJECT (sink, "Could not select device");
-    return NULL;
-  }
-
   GST_DEBUG_OBJECT (sink, "Creating ringbuffer");
   ringbuffer = g_object_new (GST_TYPE_OSX_AUDIO_RING_BUFFER, NULL);
   GST_DEBUG_OBJECT (sink, "osx sink %p element %p  ioproc %p", osxsink,
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink),
       (void *) gst_osx_audio_sink_io_proc);
 
-  gst_osx_audio_sink_set_volume (osxsink);
+  ringbuffer->select_device =
+      GST_DEBUG_FUNCPTR (gst_osx_audio_sink_select_device);
 
   ringbuffer->core_audio->element =
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink);
-  ringbuffer->core_audio->device_id = osxsink->device_id;
   ringbuffer->core_audio->is_src = FALSE;
+
+  gst_osx_audio_sink_set_volume (osxsink);
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
@@ -645,13 +643,18 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
 }
 
 static gboolean
-gst_osx_audio_sink_select_device (GstOsxAudioSink * osxsink)
+gst_osx_audio_sink_select_device (GstElement * sink,
+    GstOsxAudioRingBuffer * ringbuffer)
 {
+  GstOsxAudioSink *osxsink = GST_OSX_AUDIO_SINK (sink);
   gboolean res = FALSE;
 
   if (!gst_core_audio_select_device (&osxsink->device_id, TRUE))
     return FALSE;
+
   res = gst_osx_audio_sink_allowed_caps (osxsink);
+
+  ringbuffer->core_audio->device_id = osxsink->device_id;
 
   return res;
 }
