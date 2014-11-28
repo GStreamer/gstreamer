@@ -215,10 +215,11 @@ gst_gl_filter_app_callback (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
-  GstGLFuncs *gl = filter->context->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL
   if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
+    GstGLFuncs *gl = filter->context->gl_vtable;
+
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();
   }
