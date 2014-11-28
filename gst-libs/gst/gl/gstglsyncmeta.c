@@ -93,7 +93,7 @@ gst_gl_sync_meta_wait (GstGLSyncMeta * sync_meta)
 {
 #if GST_GL_HAVE_OPENGL
   if (sync_meta->glsync
-      && gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3) {
+      && gst_gl_context_get_gl_api (sync_meta->context) & GST_GL_API_OPENGL3) {
     gst_gl_context_thread_add (sync_meta->context,
         (GstGLContextThreadFunc) _wait, sync_meta);
   }
