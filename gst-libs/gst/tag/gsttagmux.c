@@ -222,6 +222,9 @@ gst_tag_mux_get_tags (GstTagMux * mux)
   mux->priv->final_tags =
       gst_tag_list_merge (tagsetter_tags, mux->priv->event_tags, merge_mode);
 
+  if (mux->priv->final_tags == NULL)
+    mux->priv->final_tags = gst_tag_list_new_empty ();
+
   GST_LOG_OBJECT (mux, "final tags: %" GST_PTR_FORMAT, mux->priv->final_tags);
 
   return mux->priv->final_tags;
