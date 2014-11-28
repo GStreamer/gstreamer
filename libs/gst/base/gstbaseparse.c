@@ -1532,16 +1532,18 @@ gst_base_parse_update_duration (GstBaseParse * baseparse)
         /* inform if duration changed, but try to avoid spamming */
         parse->priv->estimated_drift +=
             dest_value - parse->priv->estimated_duration;
+
+        parse->priv->estimated_duration = dest_value;
+        GST_LOG_OBJECT (parse,
+            "updated estimated duration to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (dest_value));
+
         if (parse->priv->estimated_drift > GST_SECOND ||
             parse->priv->estimated_drift < -GST_SECOND) {
           gst_element_post_message (GST_ELEMENT (parse),
               gst_message_new_duration_changed (GST_OBJECT (parse)));
           parse->priv->estimated_drift = 0;
         }
-        parse->priv->estimated_duration = dest_value;
-        GST_LOG_OBJECT (parse,
-            "updated estimated duration to %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (dest_value));
       }
     }
   }
