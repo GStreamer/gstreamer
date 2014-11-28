@@ -41,6 +41,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILE_SINK))
 #define GST_IS_FILE_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILE_SINK))
+#define GST_FILE_SINK_CAST(obj) ((GstFileSink *)(obj))
 
 typedef struct _GstFileSink GstFileSink;
 typedef struct _GstFileSinkClass GstFileSinkClass;
