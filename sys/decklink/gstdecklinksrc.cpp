@@ -558,8 +558,8 @@ gst_decklink_src_stop (GstElement * element)
   decklinksrc->input->DisableVideoInput ();
   decklinksrc->input->DisableAudioInput ();
 
+  /* This deletes the delegate for us already */
   decklinksrc->input->SetCallback (NULL);
-  delete decklinksrc->delegate;
   decklinksrc->delegate = NULL;
 
   g_list_free_full (decklinksrc->pending_events,
