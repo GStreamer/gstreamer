@@ -131,6 +131,8 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
 QA_ASSETS = "gst-qa-assets"
 MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
+DEFAULT_SYNC_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get medias/default/"
+DEFAULT_SYNC_ALL_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get ."
 DEFAULT_VALIDATE_TESTSUITE = os.path.join(DEFAULT_MAIN_DIR,
                                           QA_ASSETS,
                                           "testsuites",
@@ -312,7 +314,7 @@ user argument, you can thus override command line options using that.
     assets_group = parser.add_argument_group("Handle remote assets")
     assets_group.add_argument(
         "-u", "--update-assets-command", dest="update_assets_command",
-        default="git fetch origin && git checkout origin/master && git annex get .",
+        default=DEFAULT_SYNC_ASSET_COMMAND,
         help="Command to update assets")
     assets_group.add_argument(
         "--get-assets-command", dest="get_assets_command",
@@ -323,7 +325,10 @@ user argument, you can thus override command line options using that.
                               help="Url to the remote assets (default:%s)" % DEFAULT_GST_QA_ASSETS_REPO)
     assets_group.add_argument("-S", "--sync", dest="sync", action="store_true",
                               default=False, help="Synchronize asset repository")
-    assets_group.add_argument("--usage", dest="sync", action=PrintUsage,
+    assets_group.add_argument("--sync-all", dest="sync_all", action="store_true",
+                              default=False, help="Synchronize asset repository,"
+                              " including big media files")
+    assets_group.add_argument("--usage", action=PrintUsage,
                               help="Print usage documentation")
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
@@ -370,6 +375,11 @@ user argument, you can thus override command line options using that.
             options.http_server_dir = options.paths[0]
         else:
             options.http_server_dir = options.paths
+
+    if options.sync_all is True:
+        options.sync = True
+        if options.update_assets_command == DEFAULT_SYNC_ASSET_COMMAND:
+            options.update_assets_command = DEFAULT_SYNC_ALL_ASSET_COMMAND
 
     if not options.sync and not os.path.exists(options.clone_dir) and \
             options.clone_dir == os.path.join(options.clone_dir, MEDIAS_FOLDER):
