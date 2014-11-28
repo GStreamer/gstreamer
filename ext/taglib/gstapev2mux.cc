@@ -71,7 +71,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 G_DEFINE_TYPE (GstApev2Mux, gst_apev2_mux, GST_TYPE_TAG_MUX);
 
-static GstBuffer *gst_apev2_mux_render_tag (GstTagMux * mux,
+static GstBuffer *gst_apev2_mux_render_start_tag (GstTagMux * mux,
     const GstTagList * taglist);
 static GstBuffer *gst_apev2_mux_render_end_tag (GstTagMux * mux,
     const GstTagList * taglist);
@@ -82,7 +82,7 @@ gst_apev2_mux_class_init (GstApev2MuxClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   GST_TAG_MUX_CLASS (klass)->render_start_tag =
-      GST_DEBUG_FUNCPTR (gst_apev2_mux_render_tag);
+      GST_DEBUG_FUNCPTR (gst_apev2_mux_render_start_tag);
   GST_TAG_MUX_CLASS (klass)->render_end_tag =
       GST_DEBUG_FUNCPTR (gst_apev2_mux_render_end_tag);
 
@@ -104,6 +104,29 @@ static void
 gst_apev2_mux_init (GstApev2Mux * apev2mux)
 {
   /* nothing to do */
+}
+
+static gboolean
+gst_apev2_mux_have_wavpack (GstApev2Mux * apev2mux)
+{
+  const GstStructure *s;
+  gboolean ret;
+  GstCaps *caps;
+  GstPad *sink;
+
+  sink = gst_element_get_static_pad (GST_ELEMENT_CAST (apev2mux), "sink");
+  caps = gst_pad_get_current_caps (sink);
+  gst_object_unref (sink);
+
+  if (caps == NULL)
+    return FALSE;
+
+  s = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_has_name (s, "audio/x-wavpack");
+  gst_caps_unref (caps);
+
+  GST_LOG_OBJECT (apev2mux, "got wavpack input: %s", ret ? "yes" : "no");
+  return ret;
 }
 
 static void
@@ -369,7 +392,19 @@ gst_apev2_mux_render_tag (GstTagMux * mux, const GstTagList * taglist)
 }
 
 static GstBuffer *
+gst_apev2_mux_render_start_tag (GstTagMux * mux, const GstTagList * taglist)
+{
+  if (gst_apev2_mux_have_wavpack (GST_APEV2_MUX (mux)))
+    return NULL;
+
+  return gst_apev2_mux_render_tag (mux, taglist);
+}
+
+static GstBuffer *
 gst_apev2_mux_render_end_tag (GstTagMux * mux, const GstTagList * taglist)
 {
+  if (gst_apev2_mux_have_wavpack (GST_APEV2_MUX (mux)))
+    return gst_apev2_mux_render_tag (mux, taglist);
+
   return NULL;
 }
