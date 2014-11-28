@@ -15,8 +15,6 @@ OPENGL_SOURCES =  \
 	gstglfilterlaplacian.h \
 	gstglfilterglass.c \
 	gstglfilterglass.h \
-	gstglfilterapp.c \
-	gstglfilterapp.h \
 	gstgldeinterlace.c \
 	gstgldeinterlace.h \
 	gltestsrc.c \
@@ -68,6 +66,8 @@ libgstopengl_la_SOURCES = \
 	gstglvideomixer.h \
 	gstglfiltershader.c \
 	gstglfiltershader.h \
+	gstglfilterapp.c \
+	gstglfilterapp.h \
 	$(OPENGL_SOURCES)
 
 if HAVE_GRAPHENE
