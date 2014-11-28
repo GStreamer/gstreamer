@@ -283,6 +283,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
   if (!gst_video_frame_map (frame, &pad->buffer_vinfo, pad->buffer,
           GST_MAP_READ)) {
     GST_WARNING_OBJECT (vagg, "Could not map input buffer");
+    return FALSE;
   }
 
   if (cpad->width > 0)
@@ -762,7 +763,7 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   GstVideoFrame out_frame, *outframe;
 
   if (!gst_video_frame_map (&out_frame, &vagg->info, outbuf, GST_MAP_WRITE)) {
-
+    GST_WARNING_OBJECT (vagg, "Could not map output buffer");
     return GST_FLOW_ERROR;
   }
 
