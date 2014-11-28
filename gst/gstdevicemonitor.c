@@ -223,7 +223,7 @@ gst_device_monitor_dispose (GObject * object)
 {
   GstDeviceMonitor *self = GST_DEVICE_MONITOR (object);
 
-  g_return_if_fail (self->priv->started == FALSE);
+  g_return_if_fail (!self->priv->started);
 
   if (self->priv->providers) {
     while (self->priv->providers->len)

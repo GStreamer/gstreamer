@@ -1799,7 +1799,7 @@ gst_debug_set_threshold_from_string (const gchar * list, gboolean reset)
 
   g_assert (list);
 
-  if (reset == TRUE)
+  if (reset)
     gst_debug_set_default_threshold (0);
 
   split = g_strsplit (list, ",", 0);

@@ -1970,7 +1970,7 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
   s++;
 
   ret = gst_structure_parse_value (s, &s, &value1, type);
-  if (ret == FALSE)
+  if (!ret)
     return FALSE;
 
   while (g_ascii_isspace (*s))
@@ -1984,7 +1984,7 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
     s++;
 
   ret = gst_structure_parse_value (s, &s, &value2, type);
-  if (ret == FALSE)
+  if (!ret)
     return FALSE;
 
   while (g_ascii_isspace (*s))
@@ -2000,7 +2000,7 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
         s++;
 
       ret = gst_structure_parse_value (s, &s, &value3, type);
-      if (ret == FALSE)
+      if (!ret)
         return FALSE;
 
       while (g_ascii_isspace (*s))
@@ -2084,7 +2084,7 @@ gst_structure_parse_any_list (gchar * s, gchar ** after, GValue * value,
   }
 
   ret = gst_structure_parse_value (s, &s, &list_value, type);
-  if (ret == FALSE)
+  if (!ret)
     return FALSE;
 
   g_array_append_val (array, list_value);
@@ -2102,7 +2102,7 @@ gst_structure_parse_any_list (gchar * s, gchar ** after, GValue * value,
 
     memset (&list_value, 0, sizeof (list_value));
     ret = gst_structure_parse_value (s, &s, &list_value, type);
-    if (ret == FALSE)
+    if (!ret)
       return FALSE;
 
     g_array_append_val (array, list_value);

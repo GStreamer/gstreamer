@@ -505,7 +505,7 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
       if ((GST_MESSAGE_TYPE (message) & types) != 0) {
         /* Extra check to ensure extended types don't get matched unless
          * asked for */
-        if ((GST_MESSAGE_TYPE_IS_EXTENDED (message) == FALSE)
+        if ((!GST_MESSAGE_TYPE_IS_EXTENDED (message))
             || (types & GST_MESSAGE_EXTENDED)) {
           /* exit the loop, we have a message */
           goto beach;

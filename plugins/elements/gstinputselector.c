@@ -1591,7 +1591,7 @@ gst_input_selector_query (GstPad * pad, GstObject * parent, GstQuery * query)
               resmax = max;
             else if (max < resmax)
               resmax = max;
-            if (reslive == FALSE)
+            if (!reslive)
               reslive = live;
           }
         }

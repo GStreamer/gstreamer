@@ -954,7 +954,8 @@ weak_notify (DestroyedObjectStruct * destroyed, GObject ** object)
  * Since: 1.6
  */
 void
-gst_check_objects_destroyed_on_unref (gpointer object_to_unref, gpointer first_object, ...)
+gst_check_objects_destroyed_on_unref (gpointer object_to_unref,
+    gpointer first_object, ...)
 {
   GObject *object;
   GList *objs = NULL, *tmp;
@@ -984,12 +985,13 @@ gst_check_objects_destroyed_on_unref (gpointer object_to_unref, gpointer first_o
   for (tmp = objs; tmp; tmp = tmp->next) {
     DestroyedObjectStruct *destroyed = tmp->data;
 
-    if (destroyed->destroyed == FALSE) {
-      fail_unless (destroyed->destroyed == TRUE,
+    if (!destroyed->destroyed) {
+      fail_unless (destroyed->destroyed,
           "%s_%p is not destroyed, %d refcounts left!",
-          GST_IS_OBJECT (destroyed->object) ? GST_OBJECT_NAME (destroyed->object) :
-          G_OBJECT_TYPE_NAME (destroyed),
-          destroyed->object, destroyed->object->ref_count);
+          GST_IS_OBJECT (destroyed->
+              object) ? GST_OBJECT_NAME (destroyed->object) :
+          G_OBJECT_TYPE_NAME (destroyed), destroyed->object,
+          destroyed->object->ref_count);
     }
     g_slice_free (DestroyedObjectStruct, tmp->data);
   }

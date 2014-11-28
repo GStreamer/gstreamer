@@ -210,7 +210,7 @@ gst_funnel_all_sinkpads_eos_unlocked (GstFunnel * funnel, GstPad * pad)
   for (item = element->sinkpads; item != NULL; item = g_list_next (item)) {
     GstFunnelPad *sinkpad = GST_FUNNEL_PAD_CAST (item->data);
 
-    if (sinkpad->got_eos == FALSE) {
+    if (!sinkpad->got_eos) {
       return FALSE;
     }
   }

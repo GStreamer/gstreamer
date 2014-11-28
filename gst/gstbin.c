@@ -3888,7 +3888,7 @@ bin_query_latency_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
         fold->max = max;
       else if (max < fold->max)
         fold->max = max;
-      if (fold->live == FALSE)
+      if (!fold->live)
         fold->live = live;
     }
   } else {

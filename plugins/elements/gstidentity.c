@@ -299,7 +299,7 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
   }
 
   if (identity->single_segment && (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT)) {
-    if (trans->have_segment == FALSE) {
+    if (!trans->have_segment) {
       GstEvent *news;
       GstSegment segment;
 

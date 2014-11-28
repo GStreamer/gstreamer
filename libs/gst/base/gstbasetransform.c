@@ -2464,7 +2464,7 @@ gst_base_transform_set_passthrough (GstBaseTransform * trans,
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   GST_OBJECT_LOCK (trans);
-  if (passthrough == FALSE) {
+  if (!passthrough) {
     if (bclass->transform_ip || bclass->transform)
       trans->priv->passthrough = FALSE;
   } else {

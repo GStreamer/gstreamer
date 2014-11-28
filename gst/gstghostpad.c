@@ -533,8 +533,7 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
   GstPad *pad, *internal;
 
   g_return_val_if_fail (GST_IS_GHOST_PAD (gpad), FALSE);
-  g_return_val_if_fail (GST_GHOST_PAD_PRIVATE (gpad)->constructed == FALSE,
-      FALSE);
+  g_return_val_if_fail (!GST_GHOST_PAD_PRIVATE (gpad)->constructed, FALSE);
 
   g_object_get (gpad, "direction", &dir, "template", &templ, NULL);
 

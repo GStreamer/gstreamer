@@ -706,7 +706,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "attempt to load plugin \"%s\"",
       filename);
 
-  if (g_module_supported () == FALSE) {
+  if (!g_module_supported ()) {
     GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "module loading not supported");
     g_set_error (error,
         GST_PLUGIN_ERROR,

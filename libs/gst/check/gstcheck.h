@@ -500,7 +500,7 @@ G_STMT_START {                                                  \
   g_usleep (1);                                                 \
 } G_STMT_END;
 
-#define THREAD_TEST_RUNNING()   (_gst_check_threads_running == TRUE)
+#define THREAD_TEST_RUNNING()   (!!_gst_check_threads_running)
 
 /* additional assertions */
 #define ASSERT_CRITICAL(code)                                   \

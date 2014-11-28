@@ -339,7 +339,7 @@ gst_system_clock_obtain (void)
 
   if (clock == NULL) {
     GST_CAT_DEBUG (GST_CAT_CLOCK, "creating new static system clock");
-    g_assert (_external_default_clock == FALSE);
+    g_assert (!_external_default_clock);
     clock = g_object_new (GST_TYPE_SYSTEM_CLOCK,
         "name", "GstSystemClock", NULL);
 
@@ -738,8 +738,10 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
 
         if (diff <= 0) {
           /* timeout, this is fine, we can report success now */
-          if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, GST_CLOCK_DONE, GST_CLOCK_OK))) {
-            GST_CAT_DEBUG (GST_CAT_CLOCK, "unexpected status for entry %p", entry);
+          if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, GST_CLOCK_DONE,
+                      GST_CLOCK_OK))) {
+            GST_CAT_DEBUG (GST_CAT_CLOCK, "unexpected status for entry %p",
+                entry);
             status = GET_ENTRY_STATUS (entry);
             goto done;
           } else {

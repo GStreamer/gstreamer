@@ -468,5 +468,5 @@ gboolean
 gst_control_binding_is_disabled (GstControlBinding * binding)
 {
   g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), TRUE);
-  return (binding->disabled == TRUE);
+  return ! !binding->disabled;
 }

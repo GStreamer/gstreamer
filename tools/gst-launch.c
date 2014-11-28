@@ -492,7 +492,7 @@ intr_handler (gpointer user_data)
   return FALSE;
 }
 
-#if defined(G_OS_WIN32) /* G_OS_UNIX */
+#if defined(G_OS_WIN32)         /* G_OS_UNIX */
 static BOOL WINAPI
 w32_intr_handler (DWORD dwCtrlType)
 {
@@ -732,7 +732,7 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
             goto exit;
         } else {
           /* buffering busy */
-          if (buffering == FALSE && target_state == GST_STATE_PLAYING) {
+          if (!buffering && target_state == GST_STATE_PLAYING) {
             /* we were not buffering but PLAYING, PAUSE  the pipeline. */
             PRINT (_("Buffering, setting pipeline to PAUSED ...\n"));
             gst_element_set_state (pipeline, GST_STATE_PAUSED);

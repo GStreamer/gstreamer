@@ -4434,7 +4434,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 
   /* assume we will use the clock for getting the current position */
   with_clock = TRUE;
-  if (basesink->sync == FALSE)
+  if (!basesink->sync)
     with_clock = FALSE;
 
   /* and we need a clock */

@@ -1315,7 +1315,7 @@ gst_collect_pads_check_collected (GstCollectPads * pads)
         pads->priv->numpads, GST_DEBUG_FUNCPTR_NAME (func));
 
     if (G_UNLIKELY (g_atomic_int_compare_and_exchange (&pads->priv->seeking,
-                TRUE, FALSE) == TRUE)) {
+                TRUE, FALSE))) {
       GST_INFO_OBJECT (pads, "finished seeking");
     }
     do {
@@ -1333,7 +1333,7 @@ gst_collect_pads_check_collected (GstCollectPads * pads)
           GST_DEBUG_FUNCPTR_NAME (func));
 
       if (G_UNLIKELY (g_atomic_int_compare_and_exchange (&pads->priv->seeking,
-                  TRUE, FALSE) == TRUE)) {
+                  TRUE, FALSE))) {
         GST_INFO_OBJECT (pads, "finished seeking");
       }
       flow_ret = func (pads, user_data);
@@ -1664,8 +1664,8 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
     {
       if (g_atomic_int_get (&pads->priv->seeking)) {
         /* drop all but the first FLUSH_STARTs when seeking */
-        if (g_atomic_int_compare_and_exchange (&pads->priv->pending_flush_start,
-                TRUE, FALSE) == FALSE)
+        if (!g_atomic_int_compare_and_exchange (&pads->
+                priv->pending_flush_start, TRUE, FALSE))
           goto eat;
 
         /* unblock collect pads */
