@@ -1516,7 +1516,7 @@ gst_element_default_send_event (GstElement * element, GstEvent * event)
         (GST_PAD_DIRECTION (pad) == GST_PAD_SRC ? "src" : "sink"),
         GST_DEBUG_PAD_NAME (pad));
 
-    result = gst_pad_push_event (pad, event);
+    result = gst_pad_send_event (pad, event);
     gst_object_unref (pad);
   } else {
     GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "can't send %s event on element %s",
@@ -1533,7 +1533,7 @@ gst_element_default_send_event (GstElement * element, GstEvent * event)
  *
  * Sends an event to an element. If the element doesn't implement an
  * event handler, the event will be pushed on a random linked sink pad for
- * upstream events or a random linked source pad for downstream events.
+ * downstream events or a random linked source pad for upstream events.
  *
  * This function takes ownership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
