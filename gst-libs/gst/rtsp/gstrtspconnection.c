@@ -3868,7 +3868,7 @@ gst_rtsp_watch_set_flushing (GstRTSPWatch * watch, gboolean flushing)
   g_mutex_lock (&watch->mutex);
   watch->flushing = flushing;
   g_cond_signal (&watch->queue_not_full);
-  if (flushing == TRUE) {
+  if (flushing) {
     g_queue_foreach (watch->messages, (GFunc) gst_rtsp_rec_free, NULL);
     g_queue_clear (watch->messages);
   }

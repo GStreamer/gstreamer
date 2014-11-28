@@ -239,7 +239,7 @@ _is_video_pad (GstPad * pad, gboolean * hw_accelerated)
     caps = gst_pad_query_caps (pad, NULL);
   }
 
-  for (i = 0; i < gst_caps_get_size (caps) && ret == FALSE; i++) {
+  for (i = 0; i < gst_caps_get_size (caps) && !ret; i++) {
     name = gst_structure_get_name (gst_caps_get_structure (caps, i));
     if (g_str_equal (name, "video/x-raw")) {
       ret = TRUE;

@@ -2020,7 +2020,7 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   chain->chain.raw = raw;
 
   /* if the chain was active we don't do anything */
-  if (GST_PLAY_CHAIN (chain)->activated == TRUE)
+  if (GST_PLAY_CHAIN (chain)->activated)
     return TRUE;
 
   /* try to set the sink element to READY again */
@@ -2951,7 +2951,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
   chain->chain.raw = raw;
 
   /* if the chain was active we don't do anything */
-  if (GST_PLAY_CHAIN (chain)->activated == TRUE)
+  if (GST_PLAY_CHAIN (chain)->activated)
     return TRUE;
 
   /* try to set the sink element to READY again */

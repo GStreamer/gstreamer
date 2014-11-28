@@ -2392,7 +2392,7 @@ gst_multi_output_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* if we get IN_CAPS buffers, but the previous buffer was not IN_CAPS,
    * it means we're getting new streamheader buffers, and we should clear
    * the old ones */
-  if (in_caps && sink->previous_buffer_in_caps == FALSE) {
+  if (in_caps && !sink->previous_buffer_in_caps) {
     GST_DEBUG_OBJECT (sink,
         "receiving new IN_CAPS buffers, clearing old streamheader");
     g_slist_foreach (sink->streamheader, (GFunc) gst_mini_object_unref, NULL);

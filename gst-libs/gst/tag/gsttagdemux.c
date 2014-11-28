@@ -455,7 +455,7 @@ gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref,
     need_sub = TRUE;
   }
 
-  if (need_sub == TRUE) {
+  if (need_sub) {
     if (out_size != bsize || !gst_buffer_is_writable (buf)) {
       GstBuffer *sub;
 

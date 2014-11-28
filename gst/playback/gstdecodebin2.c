@@ -2325,7 +2325,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     CHAIN_MUTEX_UNLOCK (chain);
 
     /* Set connection-speed property if needed */
-    if (chain->demuxer == TRUE) {
+    if (chain->demuxer) {
       GParamSpec *pspec;
 
       if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element),
@@ -2357,7 +2357,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
           wrong_type = TRUE;
         }
 
-        if (wrong_type == FALSE) {
+        if (!wrong_type) {
           GST_DEBUG_OBJECT (dbin, "setting connection-speed=%" G_GUINT64_FORMAT
               " to demuxer element", speed);
 
@@ -4194,7 +4194,7 @@ retry:
 
   /* Don't expose if we're currently shutting down */
   DYN_LOCK (dbin);
-  if (G_UNLIKELY (dbin->shutdown == TRUE)) {
+  if (G_UNLIKELY (dbin->shutdown)) {
     GST_WARNING_OBJECT (dbin, "Currently, shutting down, aborting exposing");
     DYN_UNLOCK (dbin);
     return FALSE;

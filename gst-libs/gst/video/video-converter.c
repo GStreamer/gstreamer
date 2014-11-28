@@ -1474,7 +1474,7 @@ setup_allocators (GstVideoConverter * convert)
     /* make sure only one cache frees the allocator */
     notify = NULL;
 
-    if (cache->pass_alloc == FALSE) {
+    if (!cache->pass_alloc) {
       /* can't pass allocator, make new temp line allocator */
       user_data =
           converter_alloc_new (sizeof (guint16) * width * 4, n_lines + BACKLOG,

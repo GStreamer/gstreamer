@@ -1275,15 +1275,15 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
   subrip_grx = (GRegex *) subrip_rx_once.retval;
   dks_grx = (GRegex *) dks_rx_once.retval;
 
-  if (g_regex_match (mdvd_grx, match_str, 0, NULL) == TRUE) {
+  if (g_regex_match (mdvd_grx, match_str, 0, NULL)) {
     GST_LOG ("MicroDVD (frame based) format detected");
     return GST_SUB_PARSE_FORMAT_MDVDSUB;
   }
-  if (g_regex_match (subrip_grx, match_str, 0, NULL) == TRUE) {
+  if (g_regex_match (subrip_grx, match_str, 0, NULL)) {
     GST_LOG ("SubRip (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SUBRIP;
   }
-  if (g_regex_match (dks_grx, match_str, 0, NULL) == TRUE) {
+  if (g_regex_match (dks_grx, match_str, 0, NULL)) {
     GST_LOG ("DKS (time based) format detected");
     return GST_SUB_PARSE_FORMAT_DKS;
   }

@@ -270,7 +270,7 @@ vorbis_handle_type_packet (GstVorbisDec * vd)
 {
   gint res;
 
-  g_assert (vd->initialized == FALSE);
+  g_assert (!vd->initialized);
 
 #ifdef USE_TREMOLO
   if (G_UNLIKELY ((res = vorbis_dsp_init (&vd->vd, &vd->vi))))

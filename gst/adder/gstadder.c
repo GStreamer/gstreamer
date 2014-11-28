@@ -1182,7 +1182,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (G_UNLIKELY (adder->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN))
     goto not_negotiated;
 
-  if (adder->flush_stop_pending == TRUE) {
+  if (adder->flush_stop_pending) {
     GST_INFO_OBJECT (adder->srcpad, "send pending flush stop event");
     if (!gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop (TRUE))) {
       GST_WARNING_OBJECT (adder->srcpad, "Sending flush stop event failed");
@@ -1282,7 +1282,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     inbuf = gst_collect_pads_take_buffer (pads, collect_data, outsize);
 
     if (!GST_COLLECT_PADS_STATE_IS_SET (collect_data,
-                    GST_COLLECT_PADS_STATE_EOS))
+            GST_COLLECT_PADS_STATE_EOS))
       is_eos = FALSE;
 
     /* NULL means EOS or an empty buffer so we still need to flush in

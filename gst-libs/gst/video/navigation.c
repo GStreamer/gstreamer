@@ -546,7 +546,7 @@ gst_navigation_message_parse_mouse_over (GstMessage * message,
 
   if (active) {
     const GstStructure *s = gst_message_get_structure (message);
-    if (gst_structure_get_boolean (s, "active", active) == FALSE)
+    if (!gst_structure_get_boolean (s, "active", active))
       return FALSE;
   }
 

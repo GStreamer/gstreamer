@@ -675,7 +675,7 @@ gst_audio_ring_buffer_release (GstAudioRingBuffer * buf)
   buf->acquired = FALSE;
 
   /* if this fails, something is wrong in this file */
-  g_assert (buf->open == TRUE);
+  g_assert (buf->open);
 
   rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->release))
@@ -910,7 +910,7 @@ gst_audio_ring_buffer_start (GstAudioRingBuffer * buf)
   if (G_UNLIKELY (!buf->acquired))
     goto not_acquired;
 
-  if (G_UNLIKELY (g_atomic_int_get (&buf->may_start) == FALSE))
+  if (G_UNLIKELY (!g_atomic_int_get (&buf->may_start)))
     goto may_not_start;
 
   /* if stopped, set to started */
@@ -1277,7 +1277,7 @@ wait_segment (GstAudioRingBuffer * buf)
   if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
           GST_AUDIO_RING_BUFFER_STATE_STARTED)) {
     /* see if we are allowed to start it */
-    if (G_UNLIKELY (g_atomic_int_get (&buf->may_start) == FALSE))
+    if (G_UNLIKELY (!g_atomic_int_get (&buf->may_start)))
       goto no_start;
 
     GST_DEBUG_OBJECT (buf, "start!");

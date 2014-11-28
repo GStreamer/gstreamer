@@ -721,8 +721,7 @@ gst_alsasrc_open (GstAudioSrc * asrc)
   alsa = GST_ALSA_SRC (asrc);
 
   CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_CAPTURE,
-          (alsa->driver_timestamps == TRUE) ? 0 : SND_PCM_NONBLOCK),
-      open_error);
+          (alsa->driver_timestamps) ? 0 : SND_PCM_NONBLOCK), open_error);
 
   return TRUE;
 

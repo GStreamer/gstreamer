@@ -2147,7 +2147,7 @@ gst_encode_bin_setup_profile (GstEncodeBin * ebin, GstEncodingProfile * profile)
 
   /* Create elements */
   res = create_elements_and_pads (ebin);
-  if (res == FALSE)
+  if (!res)
     gst_encode_bin_tear_down_profile (ebin);
 
   return res;

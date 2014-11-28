@@ -1059,7 +1059,7 @@ parse_insert_string_field (guint8 encoding, gchar * data, gint data_size,
 
       field = g_convert (data, data_size, "UTF-8", in_encode, NULL, NULL, NULL);
 
-      if (field == NULL || g_utf8_validate (field, -1, NULL) == FALSE) {
+      if (field == NULL || !g_utf8_validate (field, -1, NULL)) {
         /* As a fallback, try interpreting UTF-16 in the other endianness */
         if (in_encode == utf16beenc)
           field = g_convert (data, data_size, "UTF-8", utf16leenc,

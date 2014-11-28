@@ -2352,7 +2352,7 @@ do_stream_buffering (gint percent)
     }
   } else {
     /* buffering busy */
-    if (buffering == FALSE && state == GST_STATE_PLAYING) {
+    if (!buffering && state == GST_STATE_PLAYING) {
       /* we were not buffering but PLAYING, PAUSE  the pipeline. */
       if (!is_live) {
         fprintf (stderr, "Buffering, setting pipeline to PAUSED ...\n");

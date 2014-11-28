@@ -1994,7 +1994,7 @@ all_pads_eos (GstCollectPads * pads)
     GST_DEBUG_OBJECT (oggpad->collect.pad,
         "oggpad %p eos %d", oggpad, oggpad->eos);
 
-    if (oggpad->eos == FALSE)
+    if (!oggpad->eos)
       return FALSE;
 
     walk = g_slist_next (walk);

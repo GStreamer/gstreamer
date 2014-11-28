@@ -487,7 +487,7 @@ process_file (GstDiscoverer * dc, const gchar * filename)
     uri = g_strdup (filename);
   }
 
-  if (async == FALSE) {
+  if (!async) {
     g_print ("Analyzing %s\n", uri);
     info = gst_discoverer_discover_uri (dc, uri, &err);
     print_info (info, err);
@@ -571,7 +571,7 @@ main (int argc, char **argv)
     exit (1);
   }
 
-  if (async == FALSE) {
+  if (!async) {
     gint i;
     for (i = 1; i < argc; i++)
       process_file (dc, argv[i]);

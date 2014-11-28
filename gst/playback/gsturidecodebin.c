@@ -1373,7 +1373,7 @@ gen_source_element (GstURIDecodeBin * decoder)
       wrong_type = TRUE;
     }
 
-    if (wrong_type == FALSE) {
+    if (!wrong_type) {
       g_object_set (source, "connection-speed", speed, NULL);
 
       GST_DEBUG_OBJECT (decoder,
@@ -2572,7 +2572,7 @@ decoder_query_latency_fold (const GValue * item, GValue * ret, QueryFold * fold)
       fold->max = max;
     else if (max < fold->max)
       fold->max = max;
-    if (fold->live == FALSE)
+    if (!fold->live)
       fold->live = live;
   }
 
@@ -2605,7 +2605,7 @@ decoder_query_seeking_fold (const GValue * item, GValue * ret, QueryFold * fold)
 
     GST_DEBUG_OBJECT (item, "got seekable %d", seekable);
 
-    if (fold->seekable == TRUE)
+    if (fold->seekable)
       fold->seekable = seekable;
   }
 

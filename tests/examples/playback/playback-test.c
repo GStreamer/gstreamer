@@ -1869,7 +1869,7 @@ do_stream_buffering (PlaybackApp * app, gint percent)
     }
   } else {
     /* buffering busy */
-    if (app->buffering == FALSE && app->state == GST_STATE_PLAYING) {
+    if (!app->buffering && app->state == GST_STATE_PLAYING) {
       /* we were not buffering but PLAYING, PAUSE  the pipeline. */
       if (!app->is_live) {
         fprintf (stderr, "Buffering, setting pipeline to PAUSED ...\n");
