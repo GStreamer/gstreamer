@@ -537,7 +537,8 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
   /* First collect info about the HW capabilites and preferences */
   spdif_allowed =
       gst_core_audio_audio_device_is_spdif_avail (osxsink->device_id);
-  layout = gst_core_audio_audio_device_get_channel_layout (osxsink->device_id);
+  layout = gst_core_audio_audio_device_get_channel_layout (osxsink->device_id,
+      TRUE);
 
   GST_DEBUG_OBJECT (osxsink, "Selected device ID: %u SPDIF allowed: %d",
       (unsigned) osxsink->device_id, spdif_allowed);
@@ -648,7 +649,7 @@ gst_osx_audio_sink_select_device (GstOsxAudioSink * osxsink)
 {
   gboolean res = FALSE;
 
-  if (!gst_core_audio_select_device (&osxsink->device_id))
+  if (!gst_core_audio_select_device (&osxsink->device_id, TRUE))
     return FALSE;
   res = gst_osx_audio_sink_allowed_caps (osxsink);
 

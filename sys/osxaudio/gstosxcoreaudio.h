@@ -139,11 +139,9 @@ void  gst_core_audio_set_volume                              (GstCoreAudio *core
 gboolean gst_core_audio_audio_device_is_spdif_avail          (AudioDeviceID device_id);
 
 
-gboolean gst_core_audio_select_device                        (AudioDeviceID *device_id);
+gboolean gst_core_audio_select_device                        (AudioDeviceID *device_id, gboolean output);
 
-gboolean gst_core_audio_select_source_device                        (AudioDeviceID *device_id);
-
-AudioChannelLayout * gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id);
+AudioChannelLayout * gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id, gboolean output);
 
 
 G_END_DECLS
