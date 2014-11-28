@@ -239,7 +239,8 @@ check_PROGRAMS = \
 # videoconvert takes too long, so disabled for now
 VALGRIND_TO_FIX = \
 	elements/videoconvert \
-	libs/video
+	libs/video \
+	$(check_orc)
 
 # these tests don't even pass
 noinst_PROGRAMS = $(check_libvisual)
