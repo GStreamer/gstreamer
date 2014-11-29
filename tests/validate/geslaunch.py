@@ -107,13 +107,13 @@ class XgesProjectDescriptor(MediaDescriptor):
 
 
 class GESTest(GstValidateTest):
-    def __init__(self, classname, options, reporter, project_uri, scenario=None,
+    def __init__(self, classname, options, reporter, project, scenario=None,
                  combination=None):
 
         super(GESTest, self).__init__(GES_LAUNCH_COMMAND, classname, options, reporter,
                                       scenario=scenario)
 
-        self.project = XgesProjectDescriptor(project_uri)
+        self.project = project
 
     def set_sample_paths(self):
         if not self.options.paths:
@@ -145,17 +145,17 @@ class GESTest(GstValidateTest):
 
 
 class GESPlaybackTest(GESTest):
-    def __init__(self, classname, options, reporter, project_uri, scenario):
+    def __init__(self, classname, options, reporter, project, scenario):
         super(GESPlaybackTest, self).__init__(classname, options, reporter,
-                                      project_uri, scenario=scenario)
+                                      project, scenario=scenario)
 
     def get_current_value(self):
         return self.get_current_position()
 
 
 class GESRenderTest(GESTest, GstValidateEncodingTestInterface):
-    def __init__(self, classname, options, reporter, project_uri, combination):
-        GESTest.__init__(self, classname, options, reporter, project_uri)
+    def __init__(self, classname, options, reporter, project, combination):
+        GESTest.__init__(self, classname, options, reporter, project)
 
         GstValidateEncodingTestInterface.__init__(self, combination, self.project)
 
@@ -236,6 +236,7 @@ and activated scenarios on project.xges:
 Available options:""")
         group.add_argument("-P", "--projects-paths", dest="projects_paths",
                          default=os.path.join(utils.DEFAULT_GST_QA_ASSETS,
+                                              "ges",
                                               "ges-projects"),
                          help="Paths in which to look for moved medias")
         group.add_argument("-r", "--disable-recurse-paths", dest="disable_recurse",
@@ -244,6 +245,7 @@ Available options:""")
 
     def set_settings(self, options, args, reporter):
         TestsManager.set_settings(self, options, args, reporter)
+        self._scenarios.config = self.options
 
         try:
             os.makedirs(utils.url2path(options.dest)[0])
@@ -251,24 +253,28 @@ Available options:""")
             pass
 
     def list_tests(self):
-        if self.tests:
-            return self.tests
+        return self.tests
 
+    def register_defaults(self, project_paths=None):
         projects = list()
         if not self.args:
-            path = self.options.projects_paths
+            if project_paths == None:
+                path = self.options.projects_paths
+            else:
+                path = project_paths
+
             for root, dirs, files in os.walk(path):
                 for f in files:
                     if not f.endswith(".xges"):
                         continue
                     projects.append(utils.path2url(os.path.join(path, root, f)))
         else:
-            for proj in self.args:
-                if not utils.isuri(proj):
-                    proj = utils.path2url(proj)
+            for proj_uri in self.args:
+                if not utils.isuri(proj_uri):
+                    proj_uri = utils.path2url(proj_uri)
 
-                if os.path.exists(proj):
-                    projects.append(proj)
+                if os.path.exists(proj_uri):
+                    projects.append(proj_uri)
 
         if self.options.long_limit != 0:
             scenarios = ["none",
@@ -278,28 +284,31 @@ Available options:""")
             scenarios = ["play_15s",
                          "scrub_forward_seeking_full",
                          "scrub_backward_seeking_full"]
-        for proj in projects:
+        for proj_uri in projects:
             # First playback casses
+            project = XgesProjectDescriptor(proj_uri)
             for scenario_name in scenarios:
                 scenario = self._scenarios.get_scenario(scenario_name)
                 if scenario is None:
                     continue
+
+                if scenario.get_min_media_duration() >= (project.get_duration() / utils.GST_SECOND):
+                    continue
+
                 classname = "ges.playback.%s.%s" % (scenario.name,
-                                                    os.path.basename(proj).replace(".xges", ""))
+                                                    os.path.basename(proj_uri).replace(".xges", ""))
                 self.add_test(GESPlaybackTest(classname,
                                               self.options,
                                               self.reporter,
-                                              proj,
+                                              project,
                                               scenario=scenario)
                                   )
 
             # And now rendering casses
             for comb in GES_ENCODING_TARGET_COMBINATIONS:
                 classname = "ges.render.%s.%s" % (str(comb).replace(' ', '_'),
-                                                  os.path.splitext(os.path.basename(proj))[0])
+                                                  os.path.splitext(os.path.basename(proj_uri))[0])
                 self.add_test(GESRenderTest(classname, self.options,
-                                            self.reporter, proj,
+                                            self.reporter, project,
                                             combination=comb)
                                   )
-
-        return self.tests
