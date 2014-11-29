@@ -90,6 +90,8 @@ struct _GstGLImageSink
     GstGLShader *redisplay_shader;
     GLuint vao;
     GLuint vertex_buffer;
+    GLint  attr_position;
+    GLint  attr_texture;
 };
 
 struct _GstGLImageSinkClass
