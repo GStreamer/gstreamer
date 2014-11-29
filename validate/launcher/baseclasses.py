@@ -923,9 +923,59 @@ class _TestsLauncher(Loggable):
         if not options.config and options.testsuites:
             self._setup_testsuites()
 
+    def _other_testsuite_for_tester(self, testsuite, tester):
+        if len(testsuite.TEST_MANAGER) > 1:
+            return True
+
+        if tester.name != testsuite.TEST_MANAGER[0]:
+            return True
+
+        for t in self.options.testsuites:
+            if t != testsuite:
+                for other_testmanager in testsuite.TEST_MANAGER:
+                    if other_testmanager == tester.name:
+                        return True
+
+        return False
+
+    def _check_defined_tests(self, tester, tests):
+        if self.options.blacklisted_tests or self.options.wanted_tests:
+            return
+
+        tests_names = [test.classname for test in tests]
+        for testsuite in self.options.testsuites:
+            if not self._other_testsuite_for_tester(testsuite, tester):
+                try:
+                    testlist_file = open(os.path.splitext(testsuite.__file__)[0] + ".testslist",
+                                    'rw')
+
+                    know_tests = testlist_file.read().split("\n")
+                    testlist_file.close()
+
+                    testlist_file = open(os.path.splitext(testsuite.__file__)[0] + ".testslist",
+                                    'w')
+                except IOError:
+                    return
+
+                for test in know_tests:
+                    if test and test not in tests_names:
+                        printc("Test %s Not in testsuite %s anymore"
+                               % (test, testsuite.__file__), Colors.FAIL)
+
+                for test in tests_names:
+                    testlist_file.write("%s\n" % test)
+                    if test and test not in know_tests:
+                        printc("Test %s is NEW in testsuite %s"
+                               % (test, testsuite.__file__), Colors.OKGREEN)
+
+                testlist_file.close()
+                return
+
     def list_tests(self):
         for tester in self.testers:
-            self.tests.extend(tester.list_tests())
+            tests = tester.list_tests()
+            self._check_defined_tests(tester, tests)
+            self.tests.extend(tests)
         return sorted(list(self.tests))
 
     def _run_tests(self):
