@@ -2445,8 +2445,9 @@ static gboolean
 qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     QtDemuxStream * stream, guint32 d_sample_duration, guint32 d_sample_size,
     guint32 d_sample_flags, gint64 moof_offset, gint64 moof_length,
-    gint64 * base_offset, gint64 * running_offset)
+    gint64 * base_offset, gint64 * running_offset, gint64 decode_ts)
 {
+  GstClockTime gst_ts;
   guint64 timestamp;
   gint32 data_offset = 0;
   guint32 flags = 0, first_flags = 0, samples_count = 0;
@@ -2457,9 +2458,9 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   gboolean ismv = FALSE;
 
   GST_LOG_OBJECT (qtdemux, "parsing trun stream %d; "
-      "default dur %d, size %d, flags 0x%x, base offset %" G_GINT64_FORMAT,
-      stream->track_id, d_sample_duration, d_sample_size, d_sample_flags,
-      *base_offset);
+      "default dur %d, size %d, flags 0x%x, base offset %" G_GINT64_FORMAT ", "
+      "decode ts %" G_GINT64_FORMAT, stream->track_id, d_sample_duration,
+      d_sample_size, d_sample_flags, *base_offset, decode_ts);
 
   /* presence of stss or not can't really tell us much,
    * and flags and so on tend to be marginally reliable in these files */
@@ -2572,12 +2573,24 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     if (G_UNLIKELY (stream->n_samples == 0)) {
       /* the timestamp of the first sample is also provided by the tfra entry
        * but we shouldn't rely on it as it is at the end of files */
-      timestamp = 0;
+      if (decode_ts >= 0) {
+        timestamp = decode_ts;
+      } else {
+        timestamp = 0;
+      }
+
+      gst_ts = gst_util_uint64_scale (timestamp, GST_SECOND, stream->timescale);
+      GST_INFO_OBJECT (stream->pad, "first sample ts %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (gst_ts));
     } else {
       /* subsequent fragments extend stream */
       timestamp =
           stream->samples[stream->n_samples - 1].timestamp +
           stream->samples[stream->n_samples - 1].duration;
+
+      gst_ts = gst_util_uint64_scale (timestamp, GST_SECOND, stream->timescale);
+      GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT
+          " (extends previous samples)", GST_TIME_ARGS (gst_ts));
     }
   }
   sample = stream->samples + stream->n_samples;
@@ -2822,6 +2835,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
   base_offset = running_offset = -1;
   traf_node = qtdemux_tree_get_child_by_type (moof_node, FOURCC_traf);
   while (traf_node) {
+    guint64 decode_time = 0;
+
     /* Fragment Header node */
     tfhd_node =
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_tfhd,
@@ -2835,17 +2850,16 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_tfdt,
         &tfdt_data);
     if (tfdt_node) {
-      guint64 decode_time = 0;
       GstClockTime decode_time_ts;
 
+      /* We'll use decode_time to interpolate timestamps
+       * in case the input timestamps are missing */
       qtdemux_parse_tfdt (qtdemux, &tfdt_data, &decode_time);
 
-      /* FIXME, we can use decode_time to interpolate timestamps
-       * in case the input timestamps are missing */
       decode_time_ts = gst_util_uint64_scale (decode_time, GST_SECOND,
           stream->timescale);
 
-      GST_DEBUG_OBJECT (qtdemux, "decode time %" G_GUINT64_FORMAT
+      GST_DEBUG_OBJECT (qtdemux, "decode time %" G_GINT64_FORMAT
           " (%" GST_TIME_FORMAT ")", decode_time,
           GST_TIME_ARGS (decode_time_ts));
     }
@@ -2865,7 +2879,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     while (trun_node) {
       qtdemux_parse_trun (qtdemux, &trun_data, stream,
           ds_duration, ds_size, ds_flags, moof_offset, length, &base_offset,
-          &running_offset);
+          &running_offset, decode_time);
       /* iterate all siblings */
       trun_node = qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
           &trun_data);
