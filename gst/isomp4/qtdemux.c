@@ -6,7 +6,9 @@
  * Copyright (C) <2009> Tim-Philipp Müller <tim centricular net>
  * Copyright (C) <2009> STEricsson <benjamin.gaignard@stericsson.com>
  * Copyright (C) <2013> Sreerenj Balachandran <sreerenj.balachandran@intel.com>
- * Copyright (C) <2013> Intel Coroporation
+ * Copyright (C) <2013> Intel Corporation
+ * Copyright (C) <2014> Centricular Ltd
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -199,6 +201,13 @@ struct _QtDemuxSegment
 
 #define QTSEGMENT_IS_EMPTY(s) ((s)->media_start == GST_CLOCK_TIME_NONE)
 
+/* Used with fragmented MP4 files (mfra atom) */
+typedef struct
+{
+  GstClockTime ts;
+  guint64 moof_offset;
+} QtDemuxRandomAccessEntry;
+
 struct _QtDemuxStream
 {
   GstPad *pad;
@@ -347,6 +356,9 @@ struct _QtDemuxStream
   gboolean stps_present;
   guint32 n_sample_partial_syncs;
   guint32 stps_index;
+  QtDemuxRandomAccessEntry *ra_entries;
+  guint n_ra_entries;
+
   /* ctts */
   gboolean ctts_present;
   guint32 n_composition_times;
@@ -470,6 +482,8 @@ static void gst_qtdemux_remove_stream (GstQTDemux * qtdemux, int index);
 static GstFlowReturn qtdemux_prepare_streams (GstQTDemux * qtdemux);
 static void qtdemux_do_allocation (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
+
+static gboolean qtdemux_pull_mfro_mfra (GstQTDemux * qtdemux);
 
 static void
 gst_qtdemux_class_init (GstQTDemuxClass * klass)
@@ -1844,7 +1858,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->fragment_start = -1;
     qtdemux->fragment_start_offset = -1;
     qtdemux->duration = 0;
-    qtdemux->mfra_offset = 0;
     qtdemux->moof_offset = 0;
     qtdemux->chapters_track_id = 0;
     qtdemux->have_group_id = FALSE;
@@ -2143,6 +2156,10 @@ gst_qtdemux_stream_clear (GstQTDemux * qtdemux, QtDemuxStream * stream)
   stream->redirect_uri = NULL;
   /* free stbl sub-atoms */
   gst_qtdemux_stbl_free (stream);
+  /* fragments */
+  g_free (stream->ra_entries);
+  stream->ra_entries = NULL;
+  stream->n_ra_entries = 0;
 
   stream->sent_eos = FALSE;
   stream->segment_index = -1;
@@ -2888,43 +2905,52 @@ fail:
   }
 }
 
+#if 0
 /* might be used if some day we actually use mfra & co
  * for random access to fragments,
  * but that will require quite some modifications and much less relying
  * on a sample array */
-#if 0
+#endif
+
 static gboolean
-qtdemux_parse_tfra (GstQTDemux * qtdemux, GNode * tfra_node,
-    QtDemuxStream * stream)
+qtdemux_parse_tfra (GstQTDemux * qtdemux, GNode * tfra_node)
 {
-  guint64 time = 0, moof_offset = 0;
+  QtDemuxStream *stream;
   guint32 ver_flags, track_id, len, num_entries, i;
   guint value_size, traf_size, trun_size, sample_size;
+  guint64 time = 0, moof_offset = 0;
+#if 0
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
+#endif
   GstByteReader tfra;
 
-  gst_byte_reader_init (&tfra, (guint8 *) tfra_node->data + (4 + 4),
-      QT_UINT32 ((guint8 *) tfra_node->data) - (4 + 4));
+  gst_byte_reader_init (&tfra, tfra_node->data, QT_UINT32 (tfra_node->data));
+
+  if (!gst_byte_reader_skip (&tfra, 8))
+    return FALSE;
 
   if (!gst_byte_reader_get_uint32_be (&tfra, &ver_flags))
     return FALSE;
 
-  if (!(gst_byte_reader_get_uint32_be (&tfra, &track_id) &&
-          gst_byte_reader_get_uint32_be (&tfra, &len) &&
-          gst_byte_reader_get_uint32_be (&tfra, &num_entries)))
+  if (!gst_byte_reader_get_uint32_be (&tfra, &track_id)
+      || !gst_byte_reader_get_uint32_be (&tfra, &len)
+      || !gst_byte_reader_get_uint32_be (&tfra, &num_entries))
     return FALSE;
 
-  GST_LOG_OBJECT (qtdemux, "id %d == stream id %d ?",
-      track_id, stream->track_id);
-  if (track_id != stream->track_id) {
-    return FALSE;
-  }
+  GST_DEBUG_OBJECT (qtdemux, "parsing tfra box for track id %u", track_id);
+
+  stream = qtdemux_find_stream (qtdemux, track_id);
+  if (stream == NULL)
+    goto unknown_trackid;
 
   value_size = ((ver_flags >> 24) == 1) ? sizeof (guint64) : sizeof (guint32);
   sample_size = (len & 3) + 1;
   trun_size = ((len & 12) >> 2) + 1;
   traf_size = ((len & 48) >> 4) + 1;
+
+  GST_DEBUG_OBJECT (qtdemux, "%u entries, sizes: value %u, traf %u, trun %u, "
+      "sample %u", num_entries, value_size, traf_size, trun_size, sample_size);
 
   if (num_entries == 0)
     goto no_samples;
@@ -2933,6 +2959,10 @@ qtdemux_parse_tfra (GstQTDemux * qtdemux, GNode * tfra_node,
           value_size + value_size + traf_size + trun_size + sample_size))
     goto corrupt_file;
 
+  g_free (stream->ra_entries);
+  stream->ra_entries = g_new (QtDemuxRandomAccessEntry, num_entries);
+  stream->n_ra_entries = num_entries;
+
   for (i = 0; i < num_entries; i++) {
     qt_atom_parser_get_offset (&tfra, value_size, &time);
     qt_atom_parser_get_offset (&tfra, value_size, &moof_offset);
@@ -2940,26 +2970,36 @@ qtdemux_parse_tfra (GstQTDemux * qtdemux, GNode * tfra_node,
     qt_atom_parser_get_uint_with_size_unchecked (&tfra, trun_size);
     qt_atom_parser_get_uint_with_size_unchecked (&tfra, sample_size);
 
-    GST_LOG_OBJECT (qtdemux,
-        "fragment time: %" GST_TIME_FORMAT " moof_offset: %u",
-        GST_TIME_ARGS (gst_util_uint64_scale (time, GST_SECOND,
-                stream->timescale)), moof_offset);
+    time = gst_util_uint64_scale (time, GST_SECOND, stream->timescale);
 
+    GST_LOG_OBJECT (qtdemux, "fragment time: %" GST_TIME_FORMAT ", "
+        " moof_offset: %" G_GUINT64_FORMAT, GST_TIME_ARGS (time), moof_offset);
+
+    stream->ra_entries[i].ts = time;
+    stream->ra_entries[i].moof_offset = moof_offset;
+
+    /* don't want to go through the entire file and read all moofs at startup */
+#if 0
     ret = gst_qtdemux_pull_atom (qtdemux, moof_offset, 0, &buf);
     if (ret != GST_FLOW_OK)
       goto corrupt_file;
     qtdemux_parse_moof (qtdemux, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
         moof_offset, stream);
     gst_buffer_unref (buf);
+#endif
   }
 
   return TRUE;
 
 /* ERRORS */
+unknown_trackid:
+  {
+    GST_WARNING_OBJECT (qtdemux, "Couldn't find stream for track %u", track_id);
+    return FALSE;
+  }
 corrupt_file:
   {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
-        (_("This file is corrupt and cannot be played.")), (NULL));
+    GST_WARNING_OBJECT (qtdemux, "broken traf box, ignoring");
     return FALSE;
   }
 no_samples:
@@ -2970,106 +3010,104 @@ no_samples:
 }
 
 static gboolean
-qtdemux_parse_mfra (GstQTDemux * qtdemux, QtDemuxStream * stream)
+qtdemux_pull_mfro_mfra (GstQTDemux * qtdemux)
 {
-  GstFlowReturn ret;
+  GstMapInfo mfro_map = GST_MAP_INFO_INIT;
+  GstMapInfo mfra_map = GST_MAP_INFO_INIT;
+  GstBuffer *mfro = NULL, *mfra = NULL;
+  GstFlowReturn flow;
+  gboolean ret = FALSE;
   GNode *mfra_node, *tfra_node;
-  GstBuffer *buffer;
+  guint64 mfra_offset = 0;
+  guint32 fourcc, mfra_size;
+  gint64 len;
 
-  if (!qtdemux->mfra_offset)
-    return FALSE;
+  /* query upstream size in bytes */
+  if (!gst_pad_peer_query_duration (qtdemux->sinkpad, GST_FORMAT_BYTES, &len))
+    goto size_query_failed;
 
-  ret = gst_qtdemux_pull_atom (qtdemux, qtdemux->mfra_offset, 0, &buffer);
-  if (ret != GST_FLOW_OK)
-    goto corrupt_file;
+  /* mfro box should be at the very end of the file */
+  flow = gst_qtdemux_pull_atom (qtdemux, len - 16, 16, &mfro);
+  if (flow != GST_FLOW_OK)
+    goto exit;
 
-  mfra_node = g_node_new ((guint8 *) GST_BUFFER_DATA (buffer));
-  qtdemux_parse_node (qtdemux, mfra_node, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
+  gst_buffer_map (mfro, &mfro_map, GST_MAP_READ);
+
+  fourcc = QT_FOURCC (mfro_map.data + 4);
+  if (fourcc != FOURCC_mfro)
+    goto exit;
+
+  GST_INFO_OBJECT (qtdemux, "Found mfro box");
+  if (mfro_map.size < 16)
+    goto invalid_mfro_size;
+
+  mfra_size = QT_UINT32 (mfro_map.data + 12);
+  if (mfra_size >= len)
+    goto invalid_mfra_size;
+
+  mfra_offset = len - mfra_size;
+
+  GST_INFO_OBJECT (qtdemux, "mfra offset: %" G_GUINT64_FORMAT ", size %u",
+      mfra_offset, mfra_size);
+
+  /* now get and parse mfra box */
+  flow = gst_qtdemux_pull_atom (qtdemux, mfra_offset, mfra_size, &mfra);
+  if (flow != GST_FLOW_OK)
+    goto broken_file;
+
+  gst_buffer_map (mfra, &mfra_map, GST_MAP_READ);
+
+  mfra_node = g_node_new ((guint8 *) mfra_map.data);
+  qtdemux_parse_node (qtdemux, mfra_node, mfra_map.data, mfra_map.size);
 
   tfra_node = qtdemux_tree_get_child_by_type (mfra_node, FOURCC_tfra);
 
   while (tfra_node) {
-    qtdemux_parse_tfra (qtdemux, tfra_node, stream);
+    qtdemux_parse_tfra (qtdemux, tfra_node);
     /* iterate all siblings */
     tfra_node = qtdemux_tree_get_sibling_by_type (tfra_node, FOURCC_tfra);
   }
   g_node_destroy (mfra_node);
-  gst_buffer_unref (buffer);
 
-  return TRUE;
-
-corrupt_file:
-  {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
-        (_("This file is corrupt and cannot be played.")), (NULL));
-    return FALSE;
-  }
-}
-
-static GstFlowReturn
-qtdemux_parse_mfro (GstQTDemux * qtdemux, guint64 * mfra_offset,
-    guint32 * mfro_size)
-{
-  GstFlowReturn ret = GST_FLOW_ERROR;
-  GstBuffer *mfro = NULL;
-  guint32 fourcc;
-  gint64 len;
-  GstFormat fmt = GST_FORMAT_BYTES;
-
-  if (!gst_pad_peer_query_duration (qtdemux->sinkpad, &fmt, &len)) {
-    GST_DEBUG_OBJECT (qtdemux, "upstream size not available; "
-        "can not locate mfro");
-    goto exit;
-  }
-
-  ret = gst_qtdemux_pull_atom (qtdemux, len - 16, 16, &mfro);
-  if (ret != GST_FLOW_OK)
-    goto exit;
-
-  fourcc = QT_FOURCC (GST_BUFFER_DATA (mfro) + 4);
-  if (fourcc != FOURCC_mfro)
-    goto exit;
-
-  GST_INFO_OBJECT (qtdemux, "Found mfro atom: fragmented mp4 container");
-  if (GST_BUFFER_SIZE (mfro) >= 16) {
-    GST_DEBUG_OBJECT (qtdemux, "parsing 'mfro' atom");
-    *mfro_size = QT_UINT32 (GST_BUFFER_DATA (mfro) + 12);
-    if (*mfro_size >= len) {
-      GST_WARNING_OBJECT (qtdemux, "mfro.size is invalid");
-      ret = GST_FLOW_ERROR;
-      goto exit;
-    }
-    *mfra_offset = len - *mfro_size;
-  }
+  GST_INFO_OBJECT (qtdemux, "parsed movie fragment random access box (mfra)");
+  ret = TRUE;
 
 exit:
-  if (mfro)
+
+  if (mfro) {
+    if (mfro_map.memory != NULL)
+      gst_buffer_unmap (mfro, &mfro_map);
     gst_buffer_unref (mfro);
-
+  }
+  if (mfra) {
+    if (mfra_map.memory != NULL)
+      gst_buffer_unmap (mfra, &mfra_map);
+    gst_buffer_unref (mfra);
+  }
   return ret;
-}
 
-static void
-qtdemux_parse_fragmented (GstQTDemux * qtdemux)
-{
-  GstFlowReturn ret;
-  guint32 mfra_size = 0;
-  guint64 mfra_offset = 0;
-
-  /* default */
-  qtdemux->fragmented = FALSE;
-
-  /* We check here if it is a fragmented mp4 container */
-  ret = qtdemux_parse_mfro (qtdemux, &mfra_offset, &mfra_size);
-  if (ret == GST_FLOW_OK && mfra_size != 0 && mfra_offset != 0) {
-    qtdemux->fragmented = TRUE;
-    GST_DEBUG_OBJECT (qtdemux,
-        "mfra atom expected at offset %" G_GUINT64_FORMAT, mfra_offset);
-    qtdemux->mfra_offset = mfra_offset;
+/* ERRORS */
+size_query_failed:
+  {
+    GST_WARNING_OBJECT (qtdemux, "could not query upstream size");
+    goto exit;
+  }
+invalid_mfro_size:
+  {
+    GST_WARNING_OBJECT (qtdemux, "mfro size is too small");
+    goto exit;
+  }
+invalid_mfra_size:
+  {
+    GST_WARNING_OBJECT (qtdemux, "mfra_size in mfro box is invalid");
+    goto exit;
+  }
+broken_file:
+  {
+    GST_WARNING_OBJECT (qtdemux, "bogus mfra offset or size, broken file");
+    goto exit;
   }
 }
-#endif
 
 static GstFlowReturn
 gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
@@ -3105,6 +3143,9 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       /* record for later parsing when needed */
       if (!qtdemux->moof_offset) {
         qtdemux->moof_offset = qtdemux->offset;
+      }
+      if (qtdemux_pull_mfro_mfra (qtdemux)) {
+        /* FIXME */
       }
       if (qtdemux->got_moov) {
         GST_INFO_OBJECT (qtdemux, "moof header, got moov, done with headers");
