@@ -1322,6 +1322,15 @@ gst_gl_context_create_thread (GstGLContext * context)
     context->priv->gl_exts = g_strdup (ext_const_c_str);
   }
 
+  if (gl_api & GST_GL_API_OPENGL3
+      && !gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 4, 1)
+      && !gst_gl_check_extension ("GL_ARB_ES2_compatibility",
+          context->priv->gl_exts)) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
+        "An opengl3 context created but the required ES2 compatibility was not found");
+    goto failure;
+  }
+
   context->priv->alive = TRUE;
 
   if (gl->DebugMessageCallback) {
