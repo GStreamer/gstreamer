@@ -209,7 +209,6 @@ static GstBuffer *
 gst_gdp_buffer_from_caps (GstGDPPay * this, GstCaps * caps)
 {
   GstBuffer *headerbuf;
-  GstBuffer *payloadbuf;
   guint8 *header, *payload;
   guint len, plen;
 
@@ -221,9 +220,11 @@ gst_gdp_buffer_from_caps (GstGDPPay * this, GstCaps * caps)
   headerbuf = gst_buffer_new_wrapped (header, len);
 
   plen = gst_dp_header_payload_length (header);
-  payloadbuf = gst_buffer_new_wrapped (payload, plen);
 
-  return gst_buffer_append (headerbuf, payloadbuf);
+  gst_buffer_append_memory (headerbuf,
+      gst_memory_new_wrapped (0, payload, plen, 0, plen, payload, g_free));
+
+  return headerbuf;
 
   /* ERRORS */
 packet_failed:
