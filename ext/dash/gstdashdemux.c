@@ -928,6 +928,8 @@ gst_dash_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer)
 
   /* parse the manifest file */
   new_client = gst_mpd_client_new ();
+  new_client->mpd_uri = g_strdup (demux->manifest_uri);
+  new_client->mpd_base_uri = g_strdup (demux->manifest_base_uri);
   gst_buffer_map (buffer, &mapinfo, GST_MAP_READ);
 
   if (gst_mpd_parse (new_client, (gchar *) mapinfo.data, mapinfo.size)) {
