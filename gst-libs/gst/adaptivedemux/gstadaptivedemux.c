@@ -2225,12 +2225,12 @@ gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
     if (ret == GST_FLOW_OK) {
       gst_buffer_unref (demux->priv->manifest_buffer);
       demux->priv->manifest_buffer = buffer;
-      GST_MANIFEST_UNLOCK (demux);
 
       /* Send an updated duration message */
       if (klass->get_duration) {
         GstClockTime duration = klass->get_duration (demux);
 
+        GST_MANIFEST_UNLOCK (demux);
         if (duration != GST_CLOCK_TIME_NONE) {
           GST_DEBUG_OBJECT (demux,
               "Sending duration message : %" GST_TIME_FORMAT,
@@ -2241,12 +2241,14 @@ gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
           GST_DEBUG_OBJECT (demux,
               "Duration unknown, can not send the duration message");
         }
+      } else {
+        GST_MANIFEST_UNLOCK (demux);
       }
     } else {
+      GST_MANIFEST_UNLOCK (demux);
       gst_buffer_unref (buffer);
       /* Should the manifest uri vars be reverted to original values? */
     }
-    GST_MANIFEST_UNLOCK (demux);
   } else {
     ret = GST_FLOW_NOT_LINKED;
   }
