@@ -297,14 +297,13 @@ no_event:
 }
 
 static void
-gdp_streamheader_array_append_buffer (GValue * array, GstBuffer * buf)
+gdp_streamheader_array_append_take_buffer (GValue * array, GstBuffer * buf)
 {
   GValue value = { 0, };
 
   g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf);
-  gst_value_array_append_value (array, &value);
-  g_value_unset (&value);
+  gst_value_take_buffer (&value, buf);
+  gst_value_array_append_and_take_value (array, &value);
 }
 
 typedef struct
@@ -334,7 +333,7 @@ gdp_streamheader_array_store_events (GstPad * pad, GstEvent ** event,
 
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
   gst_gdp_stamp_buffer (this, buf);
-  gdp_streamheader_array_append_buffer (array, buf);
+  gdp_streamheader_array_append_take_buffer (array, buf);
 
   return TRUE;
 }
@@ -391,9 +390,8 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       capsbuffer = gst_gdp_buffer_from_caps (this, caps);
 
       gst_gdp_stamp_buffer (this, capsbuffer);
-      gdp_streamheader_array_append_buffer (&array, capsbuffer);
+      gdp_streamheader_array_append_take_buffer (&array, capsbuffer);
 
-      gst_buffer_unref (capsbuffer);
       gst_event_unref (capsevent);
     }
   }
@@ -441,9 +439,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       GST_BUFFER_OFFSET_END (outbuffer) = GST_BUFFER_OFFSET_NONE;
       GST_BUFFER_TIMESTAMP (outbuffer) = GST_CLOCK_TIME_NONE;
 
-      gdp_streamheader_array_append_buffer (&array, outbuffer);
-
-      gst_buffer_unref (outbuffer);
+      gdp_streamheader_array_append_take_buffer (&array, outbuffer);
     }
   } else {
     GST_DEBUG_OBJECT (this, "no streamheader to serialize");
