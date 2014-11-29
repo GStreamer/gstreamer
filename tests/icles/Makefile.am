@@ -1,8 +1,15 @@
 if HAVE_GTK
-GTK_TESTS = gdkpixbufsink-test
+GTK_TESTS = gdkpixbufsink-test gdkpixbufoverlay-test
+
 gdkpixbufsink_test_SOURCES = gdkpixbufsink-test.c
 gdkpixbufsink_test_CFLAGS  = $(GST_CFLAGS) $(GTK_CFLAGS)
 gdkpixbufsink_test_LDADD   = $(GST_LIBS) $(GTK_LIBS)
+
+gdkpixbufoverlay_test_SOURCES = gdkpixbufoverlay-test.c
+gdkpixbufoverlay_test_CFLAGS  = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
+	$(GDK_PIXBUF_CFLAGS) $(GIO_CFLAGS)
+gdkpixbufoverlay_test_LDADD   = $(GST_LIBS) $(GDK_PIXBUF_LIBS) $(GIO_LIBS) \
+	$(LIBM)
 else
 GTK_TESTS =
 endif
