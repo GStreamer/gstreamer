@@ -604,7 +604,6 @@ gst_adaptive_demux_expose_stream (GstAdaptiveDemux * demux,
     stream->pending_caps = NULL;
   }
 
-  stream->pending_segment = gst_event_new_segment (&stream->segment);
   stream->download_finished = FALSE;
   stream->discont = FALSE;
 
@@ -618,6 +617,7 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
 {
   GList *iter;
   GList *old_streams;
+  GstClockTime min_pts = GST_CLOCK_TIME_NONE;
 
   g_return_val_if_fail (demux->next_streams != NULL, FALSE);
 
@@ -633,6 +633,23 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
             GST_ADAPTIVE_DEMUX_STREAM_CAST (stream))) {
       /* TODO act on error */
     }
+
+    /* TODO we only need the first timestamp, maybe create a simple function */
+    gst_adaptive_demux_stream_update_fragment_info (demux, stream);
+
+    if (GST_CLOCK_TIME_IS_VALID (min_pts)) {
+      min_pts = MIN (min_pts, stream->fragment.timestamp);
+    } else {
+      min_pts = stream->fragment.timestamp;
+    }
+  }
+
+  demux->segment.start = demux->segment.position = min_pts;
+  for (iter = demux->streams; iter; iter = g_list_next (iter)) {
+    GstAdaptiveDemuxStream *stream = iter->data;
+
+    stream->segment = demux->segment;
+    stream->pending_segment = gst_event_new_segment (&stream->segment);
   }
 
   gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
@@ -658,6 +675,7 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
         g_list_concat (demux->priv->old_streams, old_streams);
     GST_OBJECT_UNLOCK (demux);
   }
+
   return TRUE;
 }
 
