@@ -1162,40 +1162,61 @@ static const GLfloat vertices[] = {
 };
 /* *INDENT-ON* */
 
-/* Called in the gl thread */
 static void
-gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
+_bind_buffer (GstGLImageSink * gl_sink)
 {
   const GstGLFuncs *gl = gl_sink->context->gl_vtable;
-  int attr_position, attr_texture;
 
-  gl_sink->redisplay_shader = gst_gl_shader_new (gl_sink->context);
-
-  if (!gst_gl_shader_compile_with_default_vf_and_check
-      (gl_sink->redisplay_shader, &attr_position, &attr_texture))
-    gst_glimage_sink_cleanup_glthread (gl_sink);
-
-  gl->GenVertexArrays (1, &gl_sink->vao);
-  gl->BindVertexArray (gl_sink->vao);
-
-  gl->GenBuffers (1, &gl_sink->vertex_buffer);
   gl->BindBuffer (GL_ARRAY_BUFFER, gl_sink->vertex_buffer);
   gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
       GL_STATIC_DRAW);
 
   /* Load the vertex position */
-  gl->VertexAttribPointer (attr_position, 3, GL_FLOAT, GL_FALSE,
+  gl->VertexAttribPointer (gl_sink->attr_position, 3, GL_FLOAT, GL_FALSE,
       5 * sizeof (GLfloat), (void *) 0);
 
   /* Load the texture coordinate */
-  gl->VertexAttribPointer (attr_texture, 2, GL_FLOAT, GL_FALSE,
+  gl->VertexAttribPointer (gl_sink->attr_texture, 2, GL_FLOAT, GL_FALSE,
       5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
 
-  gl->EnableVertexAttribArray (attr_position);
-  gl->EnableVertexAttribArray (attr_texture);
+  gl->EnableVertexAttribArray (gl_sink->attr_position);
+  gl->EnableVertexAttribArray (gl_sink->attr_texture);
+}
 
-  gl->BindVertexArray (0);
+static void
+_unbind_buffer (GstGLImageSink * gl_sink)
+{
+  const GstGLFuncs *gl = gl_sink->context->gl_vtable;
+
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  gl->DisableVertexAttribArray (gl_sink->attr_position);
+  gl->DisableVertexAttribArray (gl_sink->attr_texture);
+}
+
+/* Called in the gl thread */
+static void
+gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
+{
+  const GstGLFuncs *gl = gl_sink->context->gl_vtable;
+
+  gl_sink->redisplay_shader = gst_gl_shader_new (gl_sink->context);
+
+  if (!gst_gl_shader_compile_with_default_vf_and_check
+      (gl_sink->redisplay_shader, &gl_sink->attr_position,
+          &gl_sink->attr_texture))
+    gst_glimage_sink_cleanup_glthread (gl_sink);
+
+  if (gl->GenVertexArrays) {
+    gl->GenVertexArrays (1, &gl_sink->vao);
+    gl->BindVertexArray (gl_sink->vao);
+  }
+
+  gl->GenBuffers (1, &gl_sink->vertex_buffer);
+  _bind_buffer (gl_sink);
+
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (0);
 }
 
 static void
@@ -1208,7 +1229,8 @@ gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
     gl_sink->redisplay_shader = NULL;
   }
 
-  gl->DeleteVertexArrays (1, &gl_sink->vao);
+  if (gl_sink->vao)
+    gl->DeleteVertexArrays (1, &gl_sink->vao);
 }
 
 static void
@@ -1318,7 +1340,10 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     gst_gl_shader_use (gl_sink->redisplay_shader);
 
-    gl->BindVertexArray (gl_sink->vao);
+    if (gl->GenVertexArrays)
+      gl->BindVertexArray (gl_sink->vao);
+    else
+      _bind_buffer (gl_sink);
 
     gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (GL_TEXTURE_2D, gl_sink->redisplay_texture);
@@ -1326,7 +1351,10 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
-    gl->BindVertexArray (0);
+    if (gl->GenVertexArrays)
+      gl->BindVertexArray (0);
+    else
+      _unbind_buffer (gl_sink);
   }
   /* end default opengl scene */
   window->is_drawing = FALSE;
