@@ -1,5 +1,5 @@
 /* GStreamer GdkPixbuf overlay
- * Copyright (C) 2012 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2012-2014 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -73,11 +73,14 @@ static gboolean gst_gdk_pixbuf_overlay_set_info (GstVideoFilter * filter,
 static gboolean
 gst_gdk_pixbuf_overlay_load_image (GstGdkPixbufOverlay * overlay,
     GError ** err);
+static void gst_gdk_pixbuf_overlay_set_pixbuf (GstGdkPixbufOverlay * overlay,
+    GdkPixbuf * pixbuf);
 
 enum
 {
   PROP_0,
   PROP_LOCATION,
+  PROP_PIXBUF,
   PROP_OFFSET_X,
   PROP_OFFSET_Y,
   PROP_RELATIVE_X,
@@ -179,6 +182,17 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
       g_param_spec_double ("alpha", "Alpha", "Global alpha of overlay image",
           0.0, 1.0, 1.0, GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING
           | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGdkPixbufOverlay:pixbuf:
+   *
+   * GdkPixbuf object to render.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_PIXBUF,
+      g_param_spec_object ("pixbuf", "Pixbuf", "GdkPixbuf object to render",
+          GDK_TYPE_PIXBUF, GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING
+          | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -206,6 +220,8 @@ gst_gdk_pixbuf_overlay_init (GstGdkPixbufOverlay * overlay)
   overlay->overlay_height = 0;
 
   overlay->alpha = 1.0;
+
+  overlay->pixbuf = NULL;
 }
 
 void
@@ -226,8 +242,17 @@ gst_gdk_pixbuf_overlay_set_property (GObject * object, guint property_id,
             err->message);
         g_error_free (err);
       }
-    }
       break;
+    }
+    case PROP_PIXBUF:{
+      GdkPixbuf *pixbuf = g_value_get_object (value);
+
+      if (overlay->pixbuf != NULL)
+        g_object_unref (overlay->pixbuf);
+      overlay->pixbuf = g_object_ref (pixbuf);
+      gst_gdk_pixbuf_overlay_set_pixbuf (overlay, g_object_ref (pixbuf));
+      break;
+    }
     case PROP_OFFSET_X:
       overlay->offset_x = g_value_get_int (value);
       overlay->update_composition = TRUE;
@@ -276,6 +301,9 @@ gst_gdk_pixbuf_overlay_get_property (GObject * object, guint property_id,
     case PROP_LOCATION:
       g_value_set_string (value, overlay->location);
       break;
+    case PROP_PIXBUF:
+      g_value_set_object (value, overlay->pixbuf);
+      break;
     case PROP_OFFSET_X:
       g_value_set_int (value, overlay->offset_x);
       break;
@@ -319,15 +347,25 @@ gst_gdk_pixbuf_overlay_finalize (GObject * object)
 static gboolean
 gst_gdk_pixbuf_overlay_load_image (GstGdkPixbufOverlay * overlay, GError ** err)
 {
-  GstVideoMeta *video_meta;
   GdkPixbuf *pixbuf;
-  guint8 *pixels, *p;
-  gint width, height, stride, w, h, plane;
 
   pixbuf = gdk_pixbuf_new_from_file (overlay->location, err);
 
   if (pixbuf == NULL)
     return FALSE;
+
+  gst_gdk_pixbuf_overlay_set_pixbuf (overlay, pixbuf);
+  return TRUE;
+}
+
+/* Takes ownership of pixbuf; call with OBJECT_LOCK */
+static void
+gst_gdk_pixbuf_overlay_set_pixbuf (GstGdkPixbufOverlay * overlay,
+    GdkPixbuf * pixbuf)
+{
+  GstVideoMeta *video_meta;
+  guint8 *pixels, *p;
+  gint width, height, stride, w, h, plane;
 
   if (!gdk_pixbuf_get_has_alpha (pixbuf)) {
     GdkPixbuf *alpha_pixbuf;
@@ -384,8 +422,7 @@ gst_gdk_pixbuf_overlay_load_image (GstGdkPixbufOverlay * overlay, GError ** err)
 
   overlay->update_composition = TRUE;
 
-  GST_INFO_OBJECT (overlay, "Loaded image, %d x %d", width, height);
-  return TRUE;
+  GST_INFO_OBJECT (overlay, "Updated pixbuf, %d x %d", width, height);
 }
 
 static gboolean

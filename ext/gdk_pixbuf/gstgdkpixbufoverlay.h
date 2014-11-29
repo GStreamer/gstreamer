@@ -1,5 +1,5 @@
 /* GStreamer GdkPixbuf overlay
- * Copyright (C) 2012 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2012-2014 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -49,6 +49,9 @@ struct _GstGdkPixbufOverlay
   /* properties */
   gchar                      * location;
 
+  /* pixbuf set via pixbuf property */
+  GdkPixbuf                  * pixbuf;
+
   gint                         offset_x;
   gint                         offset_y;
 
@@ -61,7 +64,7 @@ struct _GstGdkPixbufOverlay
   gdouble                      alpha;
 
   /* the loaded image, as BGRA/ARGB pixels, with GstVideoMeta */
-  GstBuffer                  * pixels;
+  GstBuffer                  * pixels;               /* OBJECT_LOCK */
 
   GstVideoOverlayComposition * comp;
 
