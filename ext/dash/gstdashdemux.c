@@ -936,6 +936,7 @@ gst_dash_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer)
     const gchar *period_id;
     guint period_idx;
     GList *iter;
+    GList *streams_iter;
 
     /* prepare the new manifest and try to transfer the stream position
      * status from the old manifest client  */
@@ -968,9 +969,11 @@ gst_dash_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer)
     }
 
     /* update the streams to play from the next segment */
-    for (iter = demux->streams; iter; iter = g_list_next (iter)) {
+    for (iter = demux->streams, streams_iter = new_client->active_streams;
+        iter && streams_iter;
+        iter = g_list_next (iter), streams_iter = g_list_next (streams_iter)) {
       GstDashDemuxStream *demux_stream = iter->data;
-      GstActiveStream *new_stream = demux_stream->active_stream;
+      GstActiveStream *new_stream = streams_iter->data;
       GstClockTime ts;
 
       if (!new_stream) {
@@ -989,6 +992,7 @@ gst_dash_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer)
         /* try to set to the old timestamp + 1 */
         gst_mpd_client_stream_seek (new_client, new_stream, ts + 1);
       }
+      demux_stream->active_stream = new_stream;
     }
 
     gst_mpd_client_free (dashdemux->client);
