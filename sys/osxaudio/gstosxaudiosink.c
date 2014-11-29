@@ -349,33 +349,47 @@ gst_osx_audio_sink_stop (GstBaseSink * base)
 }
 
 static GstCaps *
-gst_osx_audio_sink_getcaps (GstBaseSink * base, GstCaps * filter)
+gst_osx_audio_sink_getcaps (GstBaseSink * sink, GstCaps * filter)
 {
-  GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (base);
-  GstAudioRingBuffer *buf = GST_AUDIO_BASE_SINK (sink)->ringbuffer;
-  gchar *caps_string = NULL;
+  GstElementClass *gstelement_class;
+  GstOsxAudioSink *osxsink;
+  GstAudioRingBuffer *buf;
+  GstCaps *ret = NULL;
+
+  gstelement_class = GST_ELEMENT_GET_CLASS (sink);
+  osxsink = GST_OSX_AUDIO_SINK (sink);
+  buf = GST_AUDIO_BASE_SINK (sink)->ringbuffer;
 
   if (buf) {
     GST_OBJECT_LOCK (buf);
-    if (buf->open && !sink->cached_caps) {
+
+    if (buf->acquired) {
+      /* Caps are fixed, use what we have */
+      ret = gst_pad_get_current_caps (GST_BASE_SINK_PAD (sink));
+      if (!ret) {
+        GST_OBJECT_UNLOCK (buf);
+        g_return_val_if_reached (NULL);
+      }
+
+    } else if (buf->open && !osxsink->cached_caps) {
       /* Device is open, let's probe its caps */
-      gst_osx_audio_sink_probe_caps (sink);
+      gst_osx_audio_sink_probe_caps (osxsink);
     }
+
+    if (!ret && osxsink->cached_caps)
+      ret = gst_caps_ref (osxsink->cached_caps);
+
     GST_OBJECT_UNLOCK (buf);
   }
 
-  if (sink->cached_caps) {
-    caps_string = gst_caps_to_string (sink->cached_caps);
-    GST_DEBUG_OBJECT (sink, "using cached caps: %s", caps_string);
-    g_free (caps_string);
-    if (filter)
-      return gst_caps_intersect_full (sink->cached_caps, filter,
-          GST_CAPS_INTERSECT_FIRST);
-    return gst_caps_ref (sink->cached_caps);
+  if (ret && filter) {
+    GstCaps *tmp;
+    tmp = gst_caps_intersect_full (ret, filter, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = tmp;
   }
 
-  GST_DEBUG_OBJECT (sink, "using template caps");
-  return NULL;
+  return ret;
 }
 
 static gboolean
