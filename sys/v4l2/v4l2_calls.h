@@ -29,7 +29,7 @@
 #ifdef HAVE_LIBV4L2
 #  include <libv4l2.h>
 #else
-#  include <linux/videodev2.h>
+#  include "ext/videodev2.h"
 #  include <sys/ioctl.h>
 #  include <sys/mman.h>
 #  include <unistd.h>
