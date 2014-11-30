@@ -38,6 +38,15 @@
 #include "gst/gst.h"
 #include "gstelements_private.h"
 
+#ifdef G_OS_WIN32
+#  define WIN32_LEAN_AND_MEAN   /* prevents from including too many things */
+#  include <windows.h>
+#  undef WIN32_LEAN_AND_MEAN
+#  ifndef EWOULDBLOCK
+#  define EWOULDBLOCK EAGAIN
+#  endif
+#endif /* G_OS_WIN32 */
+
 #define BUFFER_FLAG_SHIFT 4
 
 G_STATIC_ASSERT ((1 << BUFFER_FLAG_SHIFT) == GST_MINI_OBJECT_FLAG_LAST);
