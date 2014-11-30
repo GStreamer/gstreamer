@@ -2697,6 +2697,8 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
   }
   g_list_free (objects);
 
+  timeline->priv->movecontext.needs_move_ctx = TRUE;
+
   return TRUE;
 }
 
@@ -2751,6 +2753,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
   g_signal_emit (timeline, ges_timeline_signals[LAYER_REMOVED], 0, layer);
 
   gst_object_unref (layer);
+  timeline->priv->movecontext.needs_move_ctx = TRUE;
 
   return TRUE;
 }

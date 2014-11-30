@@ -487,6 +487,144 @@ GST_START_TEST (test_group_in_group)
 
 GST_END_TEST;
 
+static guint32
+ges_clip_get_layer_priority (GESClip * clip)
+{
+  GESLayer *layer = ges_clip_get_layer (clip);
+  if (layer == NULL)
+    return -1;
+
+  return ges_layer_get_priority (layer);
+}
+
+GST_START_TEST (test_group_in_group_layer_moving)
+{
+  GESAsset *asset;
+  GESTimeline *timeline;
+  GESGroup *group;
+  GESLayer *layer, *layer1, *layer2, *layer3;
+  GESClip *c, *c1;
+
+  GList *clips = NULL;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+
+  /* Our timeline
+   *
+   *    --0------------10-Group-----20
+   *      | +-----------+           |
+   * L    | |    C      |           |
+   *      | +-----------+           |
+   *    --|--------------------------
+   *      |            +------------+
+   * L1   |            |     C1     |
+   *      |            +------------+
+   *    -----------------------------
+   */
+
+  layer = ges_timeline_append_layer (timeline);
+  layer1 = ges_timeline_append_layer (timeline);
+  layer2 = ges_timeline_append_layer (timeline);
+  layer3 = ges_timeline_append_layer (timeline);
+  fail_unless (layer2 && layer3);
+  assert_equals_int (ges_layer_get_priority (layer3), 3);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+
+  c = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  c1 = ges_layer_add_asset (layer1, asset, 10, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  clips = g_list_prepend (clips, c);
+  clips = g_list_prepend (clips, c1);
+  group = GES_GROUP (ges_container_group (clips));
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (group) == timeline);
+  g_list_free (clips);
+
+  fail_unless (GES_IS_GROUP (group));
+  CHECK_OBJECT_PROPS (c, 0, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 10, 0, 10);
+  CHECK_OBJECT_PROPS (group, 0, 0, 20);
+
+  /* Our timeline
+   *
+   *    --0--------10-----------20-Group----30
+   *      |         +-----------+           |
+   * L    |         |    C      |           |
+   *      |         +-----------+           |
+   *    --|-----------------------------------
+   *      |                    +------------+
+   * L1   |                    |     C1     |
+   *      |                    +------------+
+   *    -------------------------------------
+   */
+  fail_unless (ges_container_edit (GES_CONTAINER (c), NULL,
+          -1, GES_EDIT_MODE_NORMAL, GES_EDGE_NONE, 10));
+
+  CHECK_OBJECT_PROPS (c, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (group, 10, 0, 20);
+  assert_equals_int (ges_clip_get_layer_priority (c), 0);
+  assert_equals_int (ges_clip_get_layer_priority (c1), 1);
+
+  ges_layer_set_priority (layer2, 0);
+  ges_layer_set_priority (layer, 1);
+  ges_layer_set_priority (layer1, 2);
+
+  assert_equals_int (ges_clip_get_layer_priority (c), 1);
+  assert_equals_int (ges_clip_get_layer_priority (c1), 2);
+
+  /* Our timeline
+   *
+   *    --0--------10-----------20-Group----30
+   *      |         +-----------+           |
+   * L2   |         |    C      |           |
+   *      |         +-----------+           |
+   *    --|-----------------------------------
+   *      |                    +------------+
+   * L    |                    |     C1     |
+   *      |                    +------------+
+   *    -------------------------------------
+   *
+   * L1
+   *    -------------------------------------
+   */
+  fail_unless (ges_container_edit (GES_CONTAINER (c), NULL,
+          0, GES_EDIT_MODE_NORMAL, GES_EDGE_NONE, 10));
+  CHECK_OBJECT_PROPS (c, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (group, 10, 0, 20);
+  assert_equals_int (ges_clip_get_layer_priority (c), 0);
+  assert_equals_int (ges_clip_get_layer_priority (c1), 1);
+
+  /* Our timeline
+   *
+   *    --0--------10-----------20-Group----30
+   * L2   |                                 |
+   *   --------------------------------------
+   *      |         +-----------+           |
+   * L    |         |    C      |           |
+   *      |         +-----------+           |
+   *    --|-----------------------------------
+   *      |                    +------------+
+   * L1   |                    |     C1     |
+   *      |                    +------------+
+   *    -------------------------------------
+   */
+  fail_unless (ges_container_edit (GES_CONTAINER (c), NULL,
+          1, GES_EDIT_MODE_NORMAL, GES_EDGE_NONE, 10));
+  CHECK_OBJECT_PROPS (c, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (group, 10, 0, 20);
+  assert_equals_int (ges_clip_get_layer_priority (c), 1);
+  assert_equals_int (ges_clip_get_layer_priority (c1), 2);
+
+  gst_object_unref (timeline);
+  gst_object_unref (asset);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_group_in_self)
 {
   GESLayer *layer;
@@ -624,6 +762,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_group_in_group);
   tcase_add_test (tc_chain, test_group_in_self);
   tcase_add_test (tc_chain, test_group_serialization);
+  tcase_add_test (tc_chain, test_group_in_group_layer_moving);
 
   return s;
 }

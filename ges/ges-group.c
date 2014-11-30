@@ -113,11 +113,47 @@ _update_our_values (GESGroup * group)
 }
 
 static void
+_child_priority_changed_cb (GESLayer * layer,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineElement * clip)
+{
+  GESContainer *container = GES_CONTAINER (GES_TIMELINE_ELEMENT_PARENT (clip));
+
+  gint layer_prio = ges_layer_get_priority (layer);
+  gint offset = _ges_container_get_priority_offset (container, clip);
+
+  if (container->children_control_mode != GES_CHILDREN_UPDATE) {
+    GST_DEBUG_OBJECT (container, "Ignoring updated");
+    return;
+  }
+
+  if (layer_prio + offset == _PRIORITY (container))
+    return;
+
+  container->initiated_move = clip;
+  _set_priority0 (GES_TIMELINE_ELEMENT (container), layer_prio + offset);
+  container->initiated_move = NULL;
+}
+
+static void
 _child_clip_changed_layer_cb (GESTimelineElement * clip,
     GParamSpec * arg G_GNUC_UNUSED, GESGroup * group)
 {
+  GESLayer *old_layer, *new_layer;
   gint offset, layer_prio = ges_clip_get_layer_priority (GES_CLIP (clip));
   GESContainer *container = GES_CONTAINER (group);
+
+  offset = _ges_container_get_priority_offset (container, clip);
+  old_layer = g_list_nth_data (GES_TIMELINE_ELEMENT_TIMELINE (group)->layers,
+      _PRIORITY (group) - offset);
+
+  if (old_layer)
+    g_signal_handlers_disconnect_by_func (old_layer, _child_priority_changed_cb,
+        clip);
+
+  new_layer = ges_clip_get_layer (GES_CLIP (clip));
+  if (new_layer)
+    g_signal_connect (new_layer, "notify::priority",
+        (GCallback) _child_priority_changed_cb, clip);
 
   if (container->children_control_mode != GES_CHILDREN_UPDATE) {
     if (container->children_control_mode == GES_CHILDREN_INIBIT_SIGNAL_EMISSION) {
@@ -127,15 +163,10 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
     return;
   }
 
-  offset = _ges_container_get_priority_offset (container, clip);
-
   if (layer_prio + offset < 0 ||
       (GES_TIMELINE_ELEMENT_TIMELINE (group) &&
           layer_prio + offset + GES_CONTAINER_HEIGHT (group) - 1 >
           g_list_length (GES_TIMELINE_ELEMENT_TIMELINE (group)->layers))) {
-    GESLayer *old_layer =
-        g_list_nth_data (GES_TIMELINE_ELEMENT_TIMELINE (group)->layers,
-        _PRIORITY (group) - offset);
 
     GST_INFO_OBJECT (container, "Trying to move to a layer outside of"
         "the timeline layers, moving back to old layer (prio %i)",
@@ -418,6 +449,8 @@ _child_added (GESContainer * group, GESTimelineElement * child)
   if (GES_IS_CLIP (child)) {
     g_signal_connect (child, "notify::layer",
         (GCallback) _child_clip_changed_layer_cb, group);
+    g_signal_connect (ges_clip_get_layer (GES_CLIP (child)),
+        "notify::priority", (GCallback) _child_priority_changed_cb, child);
   } else if (GES_IS_GROUP (child), group) {
     g_signal_connect (child, "notify::priority",
         (GCallback) _child_group_priority_changed, group);
@@ -435,10 +468,12 @@ _child_removed (GESContainer * group, GESTimelineElement * child)
 
   children = GES_CONTAINER_CHILDREN (group);
 
-  if (GES_IS_CLIP (child))
+  if (GES_IS_CLIP (child)) {
+    g_signal_handlers_disconnect_by_func (ges_clip_get_layer (GES_CLIP (child)),
+        _child_priority_changed_cb, child);
     g_signal_handlers_disconnect_by_func (child, _child_clip_changed_layer_cb,
         group);
-  else if (GES_IS_GROUP (child), group)
+  } else if (GES_IS_GROUP (child), group)
     g_signal_handlers_disconnect_by_func (child, _child_group_priority_changed,
         group);
 
