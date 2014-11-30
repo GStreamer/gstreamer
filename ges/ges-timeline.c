@@ -3187,3 +3187,32 @@ ges_timeline_get_element (GESTimeline * timeline, const gchar * name)
 
   return NULL;
 }
+
+/**
+ * ges_timeline_is_empty:
+ * @timeline: a #GESTimeline
+ *
+ * Check whether a #GESTimelineElement is empty or not
+ *
+ * Returns: %TRUE if the timeline is empty %FALSE otherwize
+ */
+gboolean
+ges_timeline_is_empty (GESTimeline * timeline)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+
+  if (g_hash_table_size (timeline->priv->all_elements) == 0)
+    return TRUE;
+
+  g_hash_table_iter_init (&iter, timeline->priv->all_elements);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    if (GES_IS_SOURCE (value) &&
+        ges_track_element_is_active (GES_TRACK_ELEMENT (value)))
+      return FALSE;
+  }
+
+  return TRUE;
+}

@@ -376,6 +376,7 @@ ges_timeline_set_auto_transition
 ges_timeline_get_snapping_distance
 ges_timeline_set_snapping_distance
 ges_timeline_get_element
+ges_timeline_is_empty
 <SUBSECTION Standard>
 GESTimelinePrivate
 GESTimelineClass
