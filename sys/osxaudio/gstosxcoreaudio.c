@@ -184,3 +184,73 @@ gst_core_audio_audio_device_is_spdif_avail (AudioDeviceID device_id)
 {
   return gst_core_audio_audio_device_is_spdif_avail_impl (device_id);
 }
+
+GstCaps *
+gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd)
+{
+  GstAudioInfo info;
+  GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
+  int rate, channels, bps, endianness;
+  gboolean sign, interleaved;
+
+  if (asbd->mFormatID != kAudioFormatLinearPCM) {
+    GST_WARNING ("Only linear PCM is supported");
+    goto error;
+  }
+
+  if (!(asbd->mFormatFlags & kAudioFormatFlagIsPacked)) {
+    GST_WARNING ("Only packed formats supported");
+    goto error;
+  }
+
+  if (asbd->mFormatFlags & kLinearPCMFormatFlagsSampleFractionMask) {
+    GST_WARNING ("Fixed point audio is unsupported");
+    goto error;
+  }
+
+  rate = asbd->mSampleRate;
+  if (rate == kAudioStreamAnyRate)
+    rate = GST_AUDIO_DEF_RATE;
+
+  channels = asbd->mChannelsPerFrame;
+  if (channels == 0) {
+    /* The documentation says this should not happen! */
+    channels = 1;
+  }
+
+  bps = asbd->mBitsPerChannel;
+  endianness = asbd->mFormatFlags & kAudioFormatFlagIsBigEndian ?
+      G_BIG_ENDIAN : G_LITTLE_ENDIAN;
+  sign = asbd->mFormatID & kAudioFormatFlagIsSignedInteger ? TRUE : FALSE;
+  interleaved = asbd->mFormatFlags & kAudioFormatFlagIsNonInterleaved ?
+      TRUE : FALSE;
+
+  if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
+    if (bps == 32) {
+      if (endianness == G_LITTLE_ENDIAN)
+        format = GST_AUDIO_FORMAT_F32LE;
+      else
+        format = GST_AUDIO_FORMAT_F32BE;
+
+    } else if (bps == 64) {
+      if (endianness == G_LITTLE_ENDIAN)
+        format = GST_AUDIO_FORMAT_F64LE;
+      else
+        format = GST_AUDIO_FORMAT_F64BE;
+    }
+  } else {
+    format = gst_audio_format_build_integer (sign, endianness, bps, bps);
+  }
+
+  if (format == GST_AUDIO_FORMAT_UNKNOWN) {
+    GST_WARNING ("Unsupported sample format");
+    goto error;
+  }
+
+  gst_audio_info_set_format (&info, format, rate, channels, NULL);
+
+  return gst_audio_info_to_caps (&info);
+
+error:
+  return NULL;
+}

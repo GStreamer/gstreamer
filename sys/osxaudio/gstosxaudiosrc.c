@@ -177,7 +177,7 @@ gst_osx_audio_src_init (GstOsxAudioSrc * src)
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
 
   src->device_id = kAudioDeviceUnknown;
-  src->deviceChannels = -1;
+  src->cached_caps = NULL;
 }
 
 static void
@@ -250,6 +250,7 @@ gst_osx_audio_src_probe_caps (GstOsxAudioSrc * osxsrc)
   GstOsxAudioRingBuffer *ringbuffer =
       GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SRC (osxsrc)->ringbuffer);
   GstCoreAudio *core_audio = ringbuffer->core_audio;
+  GstCaps *caps;
   AudioStreamBasicDescription asbd_in;
   UInt32 propertySize;
   OSStatus status;
@@ -258,15 +259,27 @@ gst_osx_audio_src_probe_caps (GstOsxAudioSrc * osxsrc)
   status = AudioUnitGetProperty (core_audio->audiounit,
       kAudioUnitProperty_StreamFormat,
       kAudioUnitScope_Input, 1, &asbd_in, &propertySize);
+  if (status)
+    goto fail;
 
-  if (status) {
-    AudioComponentInstanceDispose (core_audio->audiounit);
-    core_audio->audiounit = NULL;
-    GST_WARNING_OBJECT (core_audio,
-        "Unable to obtain device properties: %d", (int) status);
-  } else {
-    osxsrc->deviceChannels = asbd_in.mChannelsPerFrame;
-  }
+  caps = gst_core_audio_asbd_to_caps (&asbd_in);
+  if (!caps)
+    GST_WARNING_OBJECT (osxsrc, "Could not get caps from stream description");
+  else
+    GST_DEBUG_OBJECT (osxsrc, "Got caps on device: %p", caps);
+
+  if (osxsrc->cached_caps)
+    gst_caps_unref (osxsrc->cached_caps);
+
+  osxsrc->cached_caps = caps;
+
+  return;
+
+fail:
+  AudioComponentInstanceDispose (core_audio->audiounit);
+  core_audio->audiounit = NULL;
+  GST_WARNING_OBJECT (osxsrc,
+      "Unable to obtain device properties: %d", (int) status);
 }
 
 static GstCaps *
@@ -275,9 +288,7 @@ gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
   GstElementClass *gstelement_class;
   GstOsxAudioSrc *osxsrc;
   GstAudioRingBuffer *buf;
-  GstPadTemplate *pad_template;
-  GstCaps *caps;
-  gint min, max;
+  GstCaps *ret = NULL;
 
   gstelement_class = GST_ELEMENT_GET_CLASS (src);
   osxsrc = GST_OSX_AUDIO_SRC (src);
@@ -285,38 +296,34 @@ gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 
   if (buf) {
     GST_OBJECT_LOCK (buf);
-    if (buf->open && osxsrc->deviceChannels == -1) {
+
+    if (buf->acquired) {
+      /* Caps are fixed, use what we have */
+      ret = gst_pad_get_current_caps (GST_BASE_SINK_PAD (src));
+      if (!ret) {
+        GST_OBJECT_UNLOCK (buf);
+        g_return_val_if_reached (NULL);
+      }
+
+    } else if (buf->open && !osxsrc->cached_caps) {
       /* Device is open, let's probe its caps */
       gst_osx_audio_src_probe_caps (osxsrc);
     }
+
     GST_OBJECT_UNLOCK (buf);
   }
 
-  if (osxsrc->deviceChannels == -1) {
-    /* -1 means we don't know the number of channels yet.  for now, return
-     * template caps.
-     */
-    return NULL;
+  if (!ret && osxsrc->cached_caps)
+    ret = gst_caps_ref (osxsrc->cached_caps);
+
+  if (filter) {
+    GstCaps *tmp;
+    tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = tmp;
   }
 
-  max = osxsrc->deviceChannels;
-  if (max < 1)
-    max = 1;                    /* 0 channels means 1 channel? */
-
-  min = MIN (1, max);
-
-  pad_template = gst_element_class_get_pad_template (gstelement_class, "src");
-  g_return_val_if_fail (pad_template != NULL, NULL);
-
-  caps = gst_caps_copy (gst_pad_template_get_caps (pad_template));
-
-  if (min == max) {
-    gst_caps_set_simple (caps, "channels", G_TYPE_INT, max, NULL);
-  } else {
-    gst_caps_set_simple (caps, "channels", GST_TYPE_INT_RANGE, min, max, NULL);
-  }
-
-  return caps;
+  return ret;
 }
 
 static GstAudioRingBuffer *

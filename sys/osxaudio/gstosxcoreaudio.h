@@ -143,6 +143,7 @@ gboolean gst_core_audio_select_device                        (GstCoreAudio * cor
 
 AudioChannelLayout * gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id, gboolean output);
 
+GstCaps * gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd);
 
 G_END_DECLS
 
