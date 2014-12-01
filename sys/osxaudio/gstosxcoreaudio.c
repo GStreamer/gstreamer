@@ -185,12 +185,80 @@ gst_core_audio_audio_device_is_spdif_avail (AudioDeviceID device_id)
   return gst_core_audio_audio_device_is_spdif_avail_impl (device_id);
 }
 
+gboolean
+gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
+    gint channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+{
+  gint i;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (channels <= GST_OSX_AUDIO_MAX_CHANNEL, FALSE);
+
+  switch (channels) {
+    case 0:
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_NONE;
+      break;
+    case 1:
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+      break;
+    case 2:
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      *channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT);
+      *channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
+      break;
+    default:
+      for (i = 0; i < channels; i++) {
+        switch (layout->mChannelDescriptions[i].mChannelLabel) {
+          case kAudioChannelLabel_Left:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+            break;
+          case kAudioChannelLabel_Right:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+            break;
+          case kAudioChannelLabel_Center:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+            break;
+          case kAudioChannelLabel_LFEScreen:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_LFE1;
+            break;
+          case kAudioChannelLabel_LeftSurround:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+            break;
+          case kAudioChannelLabel_RightSurround:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+            break;
+          case kAudioChannelLabel_RearSurroundLeft:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
+            break;
+          case kAudioChannelLabel_RearSurroundRight:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
+            break;
+          case kAudioChannelLabel_CenterSurround:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+            break;
+          default:
+            GST_WARNING ("unrecognized channel: %d",
+                (int) layout->mChannelDescriptions[i].mChannelLabel);
+            *channel_mask = 0;
+            ret = FALSE;
+            break;
+        }
+      }
+  }
+
+  return ret;
+}
+
 GstCaps *
-gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd)
+gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
+    AudioChannelLayout * layout)
 {
   GstAudioInfo info;
   GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
-  int rate, channels, bps, endianness;
+  GstAudioChannelPosition pos[64] = { GST_AUDIO_CHANNEL_POSITION_INVALID, };
+  gint rate, channels, bps, endianness;
+  guint64 channel_mask;
   gboolean sign, interleaved;
 
   if (asbd->mFormatID != kAudioFormatLinearPCM) {
@@ -247,7 +315,13 @@ gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd)
     goto error;
   }
 
-  gst_audio_info_set_format (&info, format, rate, channels, NULL);
+  if (!gst_core_audio_parse_channel_layout (layout, channels, &channel_mask,
+          pos)) {
+    GST_WARNING ("Failed to parse channel layout");
+    goto error;
+  }
+
+  gst_audio_info_set_format (&info, format, rate, channels, pos);
 
   return gst_audio_info_to_caps (&info);
 

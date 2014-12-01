@@ -251,6 +251,8 @@ gst_osx_audio_src_probe_caps (GstOsxAudioSrc * osxsrc)
       GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SRC (osxsrc)->ringbuffer);
   GstCoreAudio *core_audio = ringbuffer->core_audio;
   GstCaps *caps;
+  gint channels;
+  AudioChannelLayout *layout;
   AudioStreamBasicDescription asbd_in;
   UInt32 propertySize;
   OSStatus status;
@@ -262,11 +264,28 @@ gst_osx_audio_src_probe_caps (GstOsxAudioSrc * osxsrc)
   if (status)
     goto fail;
 
-  caps = gst_core_audio_asbd_to_caps (&asbd_in);
-  if (!caps)
+  layout = gst_core_audio_audio_device_get_channel_layout (osxsrc->device_id,
+      FALSE);
+
+  if (layout) {
+    channels = MIN (layout->mNumberChannelDescriptions,
+        GST_OSX_AUDIO_MAX_CHANNEL);
+  } else {
+    GST_WARNING_OBJECT (osxsrc, "This driver does not support "
+        "kAudioDevicePropertyPreferredChannelLayout.");
+    channels = 2;
+  }
+
+  caps = gst_core_audio_asbd_to_caps (&asbd_in, layout);
+  if (!caps) {
     GST_WARNING_OBJECT (osxsrc, "Could not get caps from stream description");
-  else
+    g_free (layout);
+    goto fail;
+  } else {
     GST_DEBUG_OBJECT (osxsrc, "Got caps on device: %p", caps);
+  }
+
+  g_free (layout);
 
   if (osxsrc->cached_caps)
     gst_caps_unref (osxsrc->cached_caps);

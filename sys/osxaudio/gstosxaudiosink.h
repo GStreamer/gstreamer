@@ -66,8 +66,6 @@ G_BEGIN_DECLS
 #define GST_IS_OSX_AUDIO_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSX_AUDIO_SINK))
 
-#define GST_OSX_AUDIO_MAX_CHANNEL (9)
-
 typedef struct _GstOsxAudioSink GstOsxAudioSink;
 typedef struct _GstOsxAudioSinkClass GstOsxAudioSinkClass;
 

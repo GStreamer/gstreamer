@@ -27,6 +27,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/audio/audio-channels.h>
 #ifdef HAVE_IOS
   #include <CoreAudio/CoreAudioTypes.h>
   #define AudioDeviceID gint
@@ -61,6 +62,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CORE_AUDIO))
 #define GST_IS_CORE_AUDIO_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CORE_AUDIO))
+
+#define GST_OSX_AUDIO_MAX_CHANNEL (9)
 
 #define CORE_AUDIO_FORMAT_IS_SPDIF(f) ((f).mFormat.mFormatID == 'IAC3' || (f).mFormat.mFormatID == 'iac3' || (f).mFormat.mFormatID == kAudioFormat60958AC3 || (f).mFormat.mFormatID == kAudioFormatAC3)
 
@@ -143,7 +146,10 @@ gboolean gst_core_audio_select_device                        (GstCoreAudio * cor
 
 AudioChannelLayout * gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id, gboolean output);
 
-GstCaps * gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd);
+gboolean gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
+    gint channels, guint64 * channel_mask, GstAudioChannelPosition * pos);
+GstCaps * gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
+    AudioChannelLayout * layout);
 
 G_END_DECLS
 

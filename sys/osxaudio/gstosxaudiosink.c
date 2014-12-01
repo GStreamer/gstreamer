@@ -618,60 +618,11 @@ gst_osx_audio_sink_probe_caps (GstOsxAudioSink * osxsink)
     channels = 2;
   }
 
-  switch (channels) {
-    case 0:
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_NONE;
-      break;
-    case 1:
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
-      break;
-    case 2:
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-      channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT);
-      channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
-      break;
-    default:
-      channels = MIN (layout->mNumberChannelDescriptions,
-          GST_OSX_AUDIO_MAX_CHANNEL);
-      for (i = 0; i < channels; i++) {
-        switch (layout->mChannelDescriptions[i].mChannelLabel) {
-          case kAudioChannelLabel_Left:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-            break;
-          case kAudioChannelLabel_Right:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-            break;
-          case kAudioChannelLabel_Center:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-            break;
-          case kAudioChannelLabel_LFEScreen:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_LFE1;
-            break;
-          case kAudioChannelLabel_LeftSurround:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-            break;
-          case kAudioChannelLabel_RightSurround:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
-            break;
-          case kAudioChannelLabel_RearSurroundLeft:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
-            break;
-          case kAudioChannelLabel_RearSurroundRight:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
-            break;
-          case kAudioChannelLabel_CenterSurround:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
-            break;
-          default:
-            GST_WARNING_OBJECT (osxsink, "unrecognized channel: %d",
-                (int) layout->mChannelDescriptions[i].mChannelLabel);
-            channel_mask = 0;
-            channels = 2;
-            break;
-        }
-      }
+  if (!gst_core_audio_parse_channel_layout (layout, channels, &channel_mask,
+          pos)) {
+    GST_WARNING_OBJECT (osxsink, "Failed to parse channel layout");
   }
+
   g_free (layout);
 
   /* Recover the template caps */
