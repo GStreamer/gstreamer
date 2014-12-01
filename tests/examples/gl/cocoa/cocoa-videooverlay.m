@@ -28,7 +28,7 @@
 /*                                                               */
 /* ============================================================= */
 
-@interface MainWindow: NSWindow {
+@interface MainWindow: NSWindow <NSApplicationDelegate> {
   GMainLoop *m_loop;
   GstElement *m_pipeline;
   gboolean m_isClosed;
@@ -52,7 +52,7 @@
     backing: NSBackingStoreBuffered defer: NO screen: nil];
 
   [self setReleasedWhenClosed:NO];
-  [NSApp setDelegate:self];
+  [[NSApplication sharedApplication] setDelegate:self];
 
   [self setTitle:@"gst-plugins-gl implements videooverlay interface"];
 
