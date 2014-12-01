@@ -417,7 +417,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  patchdetect real \
  sdi tta \
  videomeasure \
- linsys vcd \
+ linsys \
  apexsink dc1394 \
  gsettings \
  musepack nas sdl timidity \
