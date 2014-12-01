@@ -1495,9 +1495,9 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
       GST_DEBUG_OBJECT (stream->pad, "sparse stream, pushing GAP event");
       gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
     }
-  } else {
+  } else if (((MpegTSBaseStream *) stream)->stream_type != 0xff) {
     GST_WARNING_OBJECT (tsdemux,
-        "stream %p (pid 0x%04x, type:0x%03x) has no pad", stream,
+        "stream %p (pid 0x%04x, type:0x%02x) has no pad", stream,
         ((MpegTSBaseStream *) stream)->pid,
         ((MpegTSBaseStream *) stream)->stream_type);
   }
