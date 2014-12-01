@@ -48,6 +48,7 @@ enum
 {
   PROP_0,
   PROP_BITRATE,
+  PROP_QP,
   PROP_OPTION_STRING,
   PROP_X265_LOG_LEVEL,
   PROP_SPEED_PRESET,
@@ -57,6 +58,7 @@ enum
 static GString *x265enc_defaults;
 
 #define PROP_BITRATE_DEFAULT            (2 * 1024)
+#define PROP_QP_DEFAULT                 -1
 #define PROP_OPTION_STRING_DEFAULT      ""
 #define PROP_LOG_LEVEL_DEFAULT           -1     // None
 #define PROP_SPEED_PRESET_DEFAULT        6      // Medium
@@ -371,6 +373,11 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
 
+  g_object_class_install_property (gobject_class, PROP_QP,
+      g_param_spec_int ("qp", "Quantization parameter",
+          "QP for P slices in (implied) CQP mode (-1 = disabled)", -1,
+          51, PROP_QP_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_OPTION_STRING,
       g_param_spec_string ("option-string", "Option string",
           "String of x264 options (overridden by element properties)",
@@ -416,6 +423,7 @@ gst_x265_enc_init (GstX265Enc * encoder)
   encoder->push_header = TRUE;
 
   encoder->bitrate = PROP_BITRATE_DEFAULT;
+  encoder->qp = PROP_QP_DEFAULT;
   encoder->option_string_prop = g_string_new (PROP_OPTION_STRING_DEFAULT);
   encoder->log_level = PROP_LOG_LEVEL_DEFAULT;
   encoder->speed_preset = PROP_SPEED_PRESET_DEFAULT;
@@ -653,8 +661,16 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
     encoder->x265param.vui.sarWidth = info->par_n;
     encoder->x265param.vui.sarHeight = info->par_d;
   }
-  encoder->x265param.rc.bitrate = encoder->bitrate;
-  encoder->x265param.rc.rateControlMode = X265_RC_ABR;
+
+  if (encoder->qp != -1) {
+    /* CQP */
+    encoder->x265param.rc.qp = encoder->qp;
+    encoder->x265param.rc.rateControlMode = X265_RC_CQP;
+  } else {
+    /* ABR */
+    encoder->x265param.rc.bitrate = encoder->bitrate;
+    encoder->x265param.rc.rateControlMode = X265_RC_ABR;
+  }
 
   /* apply option-string property */
   if (encoder->option_string_prop && encoder->option_string_prop->len) {
@@ -1157,6 +1173,9 @@ gst_x265_enc_set_property (GObject * object, guint prop_id,
     case PROP_BITRATE:
       encoder->bitrate = g_value_get_uint (value);
       break;
+    case PROP_QP:
+      encoder->qp = g_value_get_int (value);
+      break;
     case PROP_OPTION_STRING:
       g_string_assign (encoder->option_string_prop, g_value_get_string (value));
       break;
@@ -1197,6 +1216,9 @@ gst_x265_enc_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_BITRATE:
       g_value_set_uint (value, encoder->bitrate);
+      break;
+    case PROP_QP:
+      g_value_set_int (value, encoder->qp);
       break;
     case PROP_OPTION_STRING:
       g_value_set_string (value, encoder->option_string_prop->str);

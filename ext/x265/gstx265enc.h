@@ -58,6 +58,7 @@ struct _GstX265Enc
 
   /* properties */
   guint bitrate;
+  gint qp;
   gint log_level;
   gint tune;
   gint speed_preset;
