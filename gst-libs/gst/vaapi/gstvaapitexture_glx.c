@@ -129,18 +129,18 @@ static gboolean
 create_objects (GstVaapiTextureGLX * texture, guint texture_id)
 {
   GstVaapiTexture *const base_texture = GST_VAAPI_TEXTURE (texture);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (texture);
   GLContextState old_cs;
   gboolean success = FALSE;
 
   gl_get_current_context (&old_cs);
 
-  texture->gl_context = gl_create_context (GST_VAAPI_OBJECT_XDISPLAY (texture),
-      GST_VAAPI_OBJECT_XSCREEN (texture), &old_cs);
+  texture->gl_context = gl_create_context (dpy, DefaultScreen (dpy), &old_cs);
   if (!texture->gl_context ||
       !gl_set_current_context (texture->gl_context, NULL))
     return FALSE;
 
-  texture->pixo = gl_create_pixmap_object (GST_VAAPI_OBJECT_XDISPLAY (texture),
+  texture->pixo = gl_create_pixmap_object (dpy,
       base_texture->width, base_texture->height);
   if (!texture->pixo) {
     GST_ERROR ("failed to create GLX pixmap");

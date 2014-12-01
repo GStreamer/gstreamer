@@ -128,7 +128,7 @@ _gst_vaapi_window_glx_create_context (GstVaapiWindow * window,
 {
   GstVaapiWindowGLXPrivate *const priv =
       GST_VAAPI_WINDOW_GLX_GET_PRIVATE (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   GLContextState parent_cs;
 
   parent_cs.display = dpy;
@@ -136,8 +136,7 @@ _gst_vaapi_window_glx_create_context (GstVaapiWindow * window,
   parent_cs.context = foreign_context;
 
   GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
-  priv->gl_context = gl_create_context (dpy,
-      GST_VAAPI_OBJECT_XSCREEN (window), &parent_cs);
+  priv->gl_context = gl_create_context (dpy, DefaultScreen (dpy), &parent_cs);
   if (!priv->gl_context) {
     GST_DEBUG ("could not create GLX context");
     goto end;
@@ -223,7 +222,7 @@ gst_vaapi_window_glx_destroy_colormap (GstVaapiWindow * window)
 {
   GstVaapiWindowGLXPrivate *const priv =
       GST_VAAPI_WINDOW_GLX_GET_PRIVATE (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
   if (priv->cmap) {
     if (!window->use_foreign_window) {
@@ -240,8 +239,7 @@ gst_vaapi_window_glx_create_colormap (GstVaapiWindow * window)
 {
   GstVaapiWindowGLXPrivate *const priv =
       GST_VAAPI_WINDOW_GLX_GET_PRIVATE (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
-  int screen;
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   XWindowAttributes wattr;
   gboolean success = FALSE;
 
@@ -252,9 +250,7 @@ gst_vaapi_window_glx_create_colormap (GstVaapiWindow * window)
       GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
       x11_trap_errors ();
       /* XXX: add a GstVaapiDisplayX11:x11-screen property? */
-      screen = GST_VAAPI_OBJECT_XSCREEN (window);
-      priv->cmap = XCreateColormap (dpy,
-          RootWindow (dpy, screen),
+      priv->cmap = XCreateColormap (dpy, RootWindow (dpy, DefaultScreen (dpy)),
           priv->gl_context->visual->visual, AllocNone);
       success = x11_untrap_errors () == 0;
       GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
@@ -285,7 +281,7 @@ gst_vaapi_window_glx_resize (GstVaapiWindow * window, guint width, guint height)
       GST_VAAPI_WINDOW_GLX_GET_PRIVATE (window);
   const GstVaapiWindowGLXClass *const klass =
       GST_VAAPI_WINDOW_GLX_GET_CLASS (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   GLContextState old_cs;
 
   if (!klass->parent_resize (window, width, height))

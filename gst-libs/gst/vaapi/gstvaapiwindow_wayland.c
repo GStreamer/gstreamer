@@ -163,7 +163,8 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
 
   if (priv->frame) {
-    struct wl_display *const wl_display = GST_VAAPI_OBJECT_WL_DISPLAY (window);
+    struct wl_display *const wl_display =
+        GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
     do {
       if (wl_display_dispatch_queue (wl_display, priv->event_queue) < 0)
@@ -409,7 +410,8 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (window);
-  struct wl_display *const wl_display = GST_VAAPI_OBJECT_WL_DISPLAY (window);
+  struct wl_display *const wl_display =
+      GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   struct wl_buffer *buffer;
   FrameState *frame;
   guint width, height, va_flags;

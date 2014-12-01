@@ -58,14 +58,14 @@ gst_vaapi_pixmap_x11_create_from_xid(GstVaapiPixmap *pixmap, Pixmap xid)
         return FALSE;
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(pixmap);
-    success = x11_get_geometry(GST_VAAPI_OBJECT_XDISPLAY(pixmap), xid,
+    success = x11_get_geometry(GST_VAAPI_OBJECT_NATIVE_DISPLAY(pixmap), xid,
         NULL, NULL, &pixmap->width, &pixmap->height, &depth);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(pixmap);
     if (!success)
         return FALSE;
 
     pixmap->format = gst_vaapi_display_x11_get_pixmap_format(
-        GST_VAAPI_DISPLAY_X11(GST_VAAPI_OBJECT_DISPLAY(pixmap)), depth);
+        GST_VAAPI_OBJECT_DISPLAY_X11(pixmap), depth);
     if (pixmap->format == GST_VIDEO_FORMAT_UNKNOWN)
         return FALSE;
     return TRUE;
@@ -76,7 +76,7 @@ gst_vaapi_pixmap_x11_create(GstVaapiPixmap *pixmap)
 {
     GstVaapiDisplayX11 * const display =
         GST_VAAPI_DISPLAY_X11(GST_VAAPI_OBJECT_DISPLAY(pixmap));
-    Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(display);
+    Display * const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY(display);
     Window rootwin;
     Pixmap xid;
     guint depth;
@@ -90,7 +90,7 @@ gst_vaapi_pixmap_x11_create(GstVaapiPixmap *pixmap)
         return FALSE;
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(pixmap);
-    rootwin = RootWindow(dpy, GST_VAAPI_DISPLAY_XSCREEN(display));
+    rootwin = RootWindow(dpy, DefaultScreen(dpy));
     xid = XCreatePixmap(dpy, rootwin, pixmap->width, pixmap->height, depth);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(pixmap);
 
@@ -102,13 +102,12 @@ gst_vaapi_pixmap_x11_create(GstVaapiPixmap *pixmap)
 static void
 gst_vaapi_pixmap_x11_destroy(GstVaapiPixmap *pixmap)
 {
-    Display * const dpy = GST_VAAPI_OBJECT_XDISPLAY(pixmap);
     const Pixmap xid = GST_VAAPI_OBJECT_ID(pixmap);
 
     if (xid) {
         if (!pixmap->use_foreign_pixmap) {
             GST_VAAPI_OBJECT_LOCK_DISPLAY(pixmap);
-            XFreePixmap(dpy, xid);
+            XFreePixmap(GST_VAAPI_OBJECT_NATIVE_DISPLAY(pixmap), xid);
             GST_VAAPI_OBJECT_UNLOCK_DISPLAY(pixmap);
         }
         GST_VAAPI_OBJECT_ID(pixmap) = None;

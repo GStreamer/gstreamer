@@ -131,37 +131,14 @@ G_PASTE(t_n,_class) (void)                                      \
   GST_VAAPI_DISPLAY_VADISPLAY (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
- * GST_VAAPI_OBJECT_XDISPLAY:
+ * GST_VAAPI_OBJECT_NATIVE_DISPLAY:
  * @object: a #GstVaapiObject
  *
- * Macro that evaluates to the underlying X11 #Display of @display.
- * This is an internal macro that does not do any run-time type check
- * and requires #include "gstvaapidisplay_x11_priv.h".
+ * Macro that evaluates to the underlying native @display object.
+ * This is an internal macro that does not do any run-time type check.
  */
-#define GST_VAAPI_OBJECT_XDISPLAY(object) \
-  GST_VAAPI_DISPLAY_XDISPLAY (GST_VAAPI_OBJECT_DISPLAY (object))
-
-/**
- * GST_VAAPI_OBJECT_XSCREEN:
- * @object: a #GstVaapiObject
- *
- * Macro that evaluates to the underlying X11 screen of @display.
- * This is an internal macro that does not do any run-time type check
- * and requires #include "gstvaapidisplay_x11_priv.h".
- */
-#define GST_VAAPI_OBJECT_XSCREEN(object) \
-  GST_VAAPI_DISPLAY_XSCREEN (GST_VAAPI_OBJECT_DISPLAY (object))
-
-/**
- * GST_VAAPI_OBJECT_WL_DISPLAY:
- * @object: a #GstVaapiObject
- *
- * Macro that evaluates to the underlying #wl_display of @display.
- * This is an internal macro that does not do any run-time type check
- * and requires #include "gstvaapidisplay_wayland_priv.h".
- */
-#define GST_VAAPI_OBJECT_WL_DISPLAY(object) \
-  GST_VAAPI_DISPLAY_WL_DISPLAY (GST_VAAPI_OBJECT_DISPLAY (object))
+#define GST_VAAPI_OBJECT_NATIVE_DISPLAY(object) \
+  GST_VAAPI_DISPLAY_NATIVE (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GST_VAAPI_OBJECT_LOCK_DISPLAY:

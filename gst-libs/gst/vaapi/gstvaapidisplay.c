@@ -906,6 +906,7 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
         return FALSE;
       priv->display = info.va_display;
       priv->display_type = info.display_type;
+      priv->native_display = info.native_display;
       if (klass->get_size)
         klass->get_size (display, &priv->width, &priv->height);
       if (klass->get_size_mm)

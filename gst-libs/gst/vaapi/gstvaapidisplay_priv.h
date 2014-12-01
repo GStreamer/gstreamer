@@ -72,6 +72,17 @@ typedef GstVaapiTexture *(*GstVaapiDisplayCreateTextureFunc) (
     guint width, guint height);
 
 /**
+ * GST_VAAPI_DISPLAY_NATIVE:
+ * @display_: a #GstVaapiDisplay
+ *
+ * Macro that evaluates to the native display of @display.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_DISPLAY_NATIVE
+#define GST_VAAPI_DISPLAY_NATIVE(display_) \
+  (GST_VAAPI_DISPLAY_GET_PRIVATE (display_)->native_display)
+
+/**
  * GST_VAAPI_DISPLAY_VADISPLAY:
  * @display_: a #GstVaapiDisplay
  *
@@ -150,6 +161,7 @@ struct _GstVaapiDisplayPrivate
   GstVaapiDisplayType display_type;
   gchar *display_name;
   VADisplay display;
+  gpointer native_display;
   guint width;
   guint height;
   guint width_mm;

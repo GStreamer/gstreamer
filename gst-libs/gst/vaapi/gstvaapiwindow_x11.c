@@ -52,7 +52,7 @@ send_wmspec_change_state (GstVaapiWindow * window, Atom state, gboolean add)
 {
   GstVaapiWindowX11Private *const priv =
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   XClientMessageEvent xclient;
 
   memset (&xclient, 0, sizeof (xclient));
@@ -77,7 +77,7 @@ send_wmspec_change_state (GstVaapiWindow * window, Atom state, gboolean add)
 static void
 wait_event (GstVaapiWindow * window, int type)
 {
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   const Window xid = GST_VAAPI_OBJECT_ID (window);
   XEvent e;
   Bool got_event;
@@ -96,7 +96,7 @@ static gboolean
 timed_wait_event (GstVaapiWindow * window, int type, guint64 end_time,
     XEvent * e)
 {
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   const Window xid = GST_VAAPI_OBJECT_ID (window);
   XEvent tmp_event;
   GTimeVal now;
@@ -130,7 +130,7 @@ gst_vaapi_window_x11_show (GstVaapiWindow * window)
 {
   GstVaapiWindowX11Private *const priv =
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   const Window xid = GST_VAAPI_OBJECT_ID (window);
   XWindowAttributes wattr;
   gboolean has_errors;
@@ -172,7 +172,7 @@ gst_vaapi_window_x11_hide (GstVaapiWindow * window)
 {
   GstVaapiWindowX11Private *const priv =
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   const Window xid = GST_VAAPI_OBJECT_ID (window);
   XWindowAttributes wattr;
   gboolean has_errors;
@@ -212,7 +212,7 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
 {
   GstVaapiWindowX11Private *const priv =
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   Window xid = GST_VAAPI_OBJECT_ID (window);
   Visual *vis = NULL;
   Colormap cmap = None;
@@ -265,7 +265,7 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
 static void
 gst_vaapi_window_x11_destroy (GstVaapiWindow * window)
 {
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   const Window xid = GST_VAAPI_OBJECT_ID (window);
 
 #ifdef HAVE_XRENDER
@@ -293,7 +293,7 @@ static gboolean
 gst_vaapi_window_x11_get_geometry (GstVaapiWindow * window,
     gint * px, gint * py, guint * pwidth, guint * pheight)
 {
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   const Window xid = GST_VAAPI_OBJECT_ID (window);
   gboolean success;
 
@@ -309,7 +309,7 @@ gst_vaapi_window_x11_set_fullscreen (GstVaapiWindow * window,
 {
   GstVaapiWindowX11Private *const priv =
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   const Window xid = GST_VAAPI_OBJECT_ID (window);
   XEvent e;
   guint width, height;
@@ -379,7 +379,7 @@ gst_vaapi_window_x11_resize (GstVaapiWindow * window, guint width, guint height)
 
   GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
   x11_trap_errors ();
-  XResizeWindow (GST_VAAPI_OBJECT_XDISPLAY (window),
+  XResizeWindow (GST_VAAPI_OBJECT_NATIVE_DISPLAY (window),
       GST_VAAPI_OBJECT_ID (window), width, height);
   has_errors = x11_untrap_errors () != 0;
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
@@ -427,7 +427,7 @@ gst_vaapi_window_x11_render_pixmap_xrender (GstVaapiWindow * window,
 #ifdef HAVE_XRENDER
   GstVaapiWindowX11Private *const priv =
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
-  Display *const dpy = GST_VAAPI_OBJECT_XDISPLAY (window);
+  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   const Window win = GST_VAAPI_OBJECT_ID (window);
   const Pixmap pix = GST_VAAPI_OBJECT_ID (pixmap);
   Picture picture;
