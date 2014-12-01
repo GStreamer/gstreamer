@@ -43,6 +43,14 @@ gst_vaapi_display_cache_new (void);
         GST_VAAPI_MINI_OBJECT (new_cache))
 
 G_GNUC_INTERNAL
+void
+gst_vaapi_display_cache_lock (GstVaapiDisplayCache * cache);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_display_cache_unlock (GstVaapiDisplayCache * cache);
+
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_display_cache_is_empty (GstVaapiDisplayCache * cache);
 

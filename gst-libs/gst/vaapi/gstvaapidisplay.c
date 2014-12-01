@@ -862,10 +862,11 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
 
   gst_vaapi_display_replace_internal (&priv->parent, NULL);
 
-  g_mutex_lock (&g_display_cache_lock);
-  if (priv->cache)
+  if (priv->cache) {
+    gst_vaapi_display_cache_lock (priv->cache);
     gst_vaapi_display_cache_remove (priv->cache, display);
-  g_mutex_unlock (&g_display_cache_lock);
+    gst_vaapi_display_cache_unlock (priv->cache);
+  }
   gst_vaapi_display_cache_replace (&priv->cache, NULL);
   free_display_cache ();
 }
@@ -953,9 +954,9 @@ gst_vaapi_display_create (GstVaapiDisplay * display,
   gst_vaapi_display_cache_replace (&priv->cache, cache);
   gst_vaapi_display_cache_unref (cache);
 
-  g_mutex_lock (&g_display_cache_lock);
+  gst_vaapi_display_cache_lock (cache);
   success = gst_vaapi_display_create_unlocked (display, init_type, init_value);
-  g_mutex_unlock (&g_display_cache_lock);
+  gst_vaapi_display_cache_unlock (cache);
   return success;
 }
 

@@ -37,6 +37,7 @@ struct _CacheEntry
 struct _GstVaapiDisplayCache
 {
   GstVaapiMiniObject parent_instance;
+  GRecMutex mutex;
   GList *list;
 };
 
@@ -164,13 +165,13 @@ gst_vaapi_display_cache_finalize (GstVaapiDisplayCache * cache)
 {
   GList *l;
 
-  if (!cache->list)
-    return;
-
-  for (l = cache->list; l != NULL; l = l->next)
-    cache_entry_free (l->data);
-  g_list_free (cache->list);
-  cache->list = NULL;
+  if (cache->list) {
+    for (l = cache->list; l != NULL; l = l->next)
+      cache_entry_free (l->data);
+    g_list_free (cache->list);
+    cache->list = NULL;
+  }
+  g_rec_mutex_clear (&cache->mutex);
 }
 
 static const GstVaapiMiniObjectClass *
@@ -193,8 +194,44 @@ gst_vaapi_display_cache_class (void)
 GstVaapiDisplayCache *
 gst_vaapi_display_cache_new (void)
 {
-  return (GstVaapiDisplayCache *)
-      gst_vaapi_mini_object_new0 (gst_vaapi_display_cache_class ());
+  GstVaapiDisplayCache *cache;
+
+  cache = (GstVaapiDisplayCache *)
+      gst_vaapi_mini_object_new (gst_vaapi_display_cache_class ());
+  if (!cache)
+    return NULL;
+
+  g_rec_mutex_init (&cache->mutex);
+  cache->list = NULL;
+  return cache;
+}
+
+/**
+ * gst_vaapi_display_cache_lock:
+ * @cache: the #GstVaapiDisplayCache
+ *
+ * Locks the display cache @cache.
+ */
+void
+gst_vaapi_display_cache_lock (GstVaapiDisplayCache * cache)
+{
+  g_return_if_fail (cache != NULL);
+
+  g_rec_mutex_lock (&cache->mutex);
+}
+
+/**
+ * gst_vaapi_display_cache_unlock:
+ * @cache: the #GstVaapiDisplayCache
+ *
+ * Unlocks the display cache @cache.
+ */
+void
+gst_vaapi_display_cache_unlock (GstVaapiDisplayCache * cache)
+{
+  g_return_if_fail (cache != NULL);
+
+  g_rec_mutex_unlock (&cache->mutex);
 }
 
 /**
