@@ -464,6 +464,22 @@ GST_START_TEST (rtp_mpa)
 }
 
 GST_END_TEST;
+
+static const guint8 rtp_h261_frame_data[] = {
+  0x00, 0x01, 0x00, 0x06, 0x00, 0x01, 0x11, 0x00, 0x00, 0x4c, 0x40, 0x00,
+  0x15, 0x10,
+};
+static int rtp_h261_frame_data_size = 14;
+static int rtp_h261_frame_count = 1;
+
+GST_START_TEST (rtp_h261)
+{
+  rtp_pipeline_test (rtp_h261_frame_data, rtp_h261_frame_data_size,
+      rtp_h261_frame_count, "video/x-h261", "rtph261pay", "rtph261depay",
+      0, 0, FALSE);
+}
+GST_END_TEST;
+
 static const guint8 rtp_h263_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -945,6 +961,7 @@ rtp_payloading_suite (void)
   tcase_add_test (tc_chain, rtp_pcma);
   tcase_add_test (tc_chain, rtp_pcmu);
   tcase_add_test (tc_chain, rtp_mpa);
+  tcase_add_test (tc_chain, rtp_h261);
   tcase_add_test (tc_chain, rtp_h263);
   tcase_add_test (tc_chain, rtp_h263p);
   tcase_add_test (tc_chain, rtp_h264);
