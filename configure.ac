@@ -1758,9 +1758,9 @@ AG_GST_CHECK_FEATURE(UVCH264, [UVC H264], uvch264, [
           AC_DEFINE([HAVE_LIBUSB], 1, [Define if libusb 1.x is installed])
           HAVE_LIBUSB="yes" ],
           [HAVE_LIBUSB="no"])
-  if test "x$HAVE_UVCVIDEO_H" == "xyes" && \
-     test "x$HAVE_GUDEV" == "xyes" && \
-     test "x$HAVE_LIBUSB" == "xyes"; then
+  if test "x$HAVE_UVCVIDEO_H" = "xyes" && \
+     test "x$HAVE_GUDEV" = "xyes" && \
+     test "x$HAVE_LIBUSB" = "xyes"; then
     HAVE_UVCH264=yes
   else
     HAVE_UVCH264=no
