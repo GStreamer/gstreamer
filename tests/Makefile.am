@@ -52,6 +52,14 @@ TEST_LIBS	+= \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_API_VERSION).la
 endif
 
+if USE_EGL
+TEST_CFLAGS	+= $(EGL_CFLAGS)
+TEST_LIBS	+= \
+	$(LIBVA_EGL_LIBS)		\
+	$(EGL_LIBS)			\
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-egl-$(GST_API_VERSION).la
+endif
+
 if USE_WAYLAND
 TEST_CFLAGS	+= $(WAYLAND_CFLAGS)
 TEST_LIBS	+= \

@@ -36,6 +36,10 @@
 # include <gst/vaapi/gstvaapidisplay_glx.h>
 # include <gst/vaapi/gstvaapiwindow_glx.h>
 #endif
+#if USE_EGL
+# include <gst/vaapi/gstvaapidisplay_egl.h>
+# include <gst/vaapi/gstvaapiwindow_egl.h>
+#endif
 #if USE_WAYLAND
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 # include <gst/vaapi/gstvaapiwindow_wayland.h>
@@ -78,6 +82,9 @@ static gchar *g_output_name;
 static gboolean g_list_outputs = FALSE;
 static gboolean g_fullscreen = FALSE;
 
+static gboolean g_egl_mode = FALSE;
+static guint g_gles_version;
+
 static GOptionEntry g_options[] = {
     { "list-outputs", 0,
       0,
@@ -91,6 +98,14 @@ static GOptionEntry g_options[] = {
       0,
       G_OPTION_ARG_NONE, &g_fullscreen,
       "fullscreen mode", NULL },
+    { "egl", 0,
+      0,
+      G_OPTION_ARG_NONE, &g_egl_mode,
+      "enable EGL rendering", NULL },
+    { "gles-version", 0,
+      0,
+      G_OPTION_ARG_INT, &g_gles_version,
+      "OpenGL|ES version (in --egl mode)", NULL },
     { NULL, }
 };
 
@@ -160,7 +175,7 @@ GstVaapiDisplay *
 video_output_create_display(const gchar *display_name)
 {
     const VideoOutputInfo *o = g_video_output;
-    GstVaapiDisplay *display = NULL;
+    GstVaapiDisplay *egl_display, *display = NULL;
 
     if (!o) {
         if (g_output_name)
@@ -184,6 +199,19 @@ video_output_create_display(const gchar *display_name)
 
     if (!display)
         display = o->create_display(display_name);
+
+    if (g_egl_mode) {
+#if USE_EGL
+        egl_display = gst_vaapi_display_egl_new (display, g_gles_version);
+#else
+        egl_display = NULL;
+        g_print("error: unsupported EGL renderering mode\n");
+#endif
+        gst_vaapi_display_unref (display);
+        if (!egl_display)
+            return NULL;
+        display = egl_display;
+    }
     return display;
 }
 
@@ -195,7 +223,12 @@ video_output_create_window(GstVaapiDisplay *display, guint width, guint height)
     if (!g_video_output)
         return NULL;
 
-    window = g_video_output->create_window(display, width, height);
+#if USE_EGL
+    if (g_egl_mode)
+        window = gst_vaapi_window_egl_new(display, width, height);
+    else
+#endif
+        window = g_video_output->create_window(display, width, height);
     if (!window)
         return NULL;
 
