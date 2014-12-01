@@ -691,13 +691,14 @@ gst_osx_audio_sink_probe_caps (GstOsxAudioSink * osxsink)
       if (spdif_allowed) {
         gst_caps_append_structure (caps, gst_structure_copy (in_s));
       }
+    } else {
+      gst_audio_channel_positions_to_mask (pos, channels, false, &channel_mask);
+      out_s = gst_structure_copy (in_s);
+      gst_structure_remove_fields (out_s, "channels", "channel-mask", NULL);
+      gst_structure_set (out_s, "channels", G_TYPE_INT, channels,
+          "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
+      gst_caps_append_structure (caps, out_s);
     }
-    gst_audio_channel_positions_to_mask (pos, channels, false, &channel_mask);
-    out_s = gst_structure_copy (in_s);
-    gst_structure_remove_fields (out_s, "channels", "channel-mask", NULL);
-    gst_structure_set (out_s, "channels", G_TYPE_INT, channels,
-        "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
-    gst_caps_append_structure (caps, out_s);
   }
 
   if (osxsink->cached_caps) {
