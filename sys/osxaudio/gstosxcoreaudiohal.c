@@ -1007,6 +1007,8 @@ _io_proc_spdif_stop (GstCoreAudio * core_audio)
 static gboolean
 gst_core_audio_open_impl (GstCoreAudio * core_audio)
 {
+  gboolean ret;
+
   /* The following is needed to instruct HAL to create their own
    * thread to handle the notifications. */
   _audio_system_set_runloop (NULL);
@@ -1021,8 +1023,21 @@ gst_core_audio_open_impl (GstCoreAudio * core_audio)
    * we will do input with it.
    * http://developer.apple.com/technotes/tn2002/tn2091.html
    */
-  return gst_core_audio_open_device (core_audio, kAudioUnitSubType_HALOutput,
+  ret = gst_core_audio_open_device (core_audio, kAudioUnitSubType_HALOutput,
       "HALOutput");
+  if (!ret) {
+    GST_DEBUG ("Could not open device");
+    goto done;
+  }
+
+  ret = gst_core_audio_bind_device (core_audio);
+  if (!ret) {
+    GST_DEBUG ("Could not bind device");
+    goto done;
+  }
+
+done:
+  return ret;
 }
 
 static gboolean
@@ -1122,9 +1137,6 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
 
     if (!gst_core_audio_set_channels_layout (core_audio,
             format.mChannelsPerFrame, caps))
-      goto done;
-
-    if (!gst_core_audio_bind_device (core_audio))
       goto done;
 
     if (core_audio->is_src) {
