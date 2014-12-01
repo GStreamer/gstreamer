@@ -6,5 +6,6 @@ test-ogg
 test-readme
 test-sdp
 test-video
+test-video-rtx
 test-uri
 test-auth
