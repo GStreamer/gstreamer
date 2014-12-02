@@ -23,7 +23,12 @@
 #include <string.h>
 #include "gstvaapiminiobject.h"
 
-static void
+/* Ensure those symbols are actually defined in the resulting libraries */
+#undef gst_vaapi_mini_object_ref
+#undef gst_vaapi_mini_object_unref
+#undef gst_vaapi_mini_object_replace
+
+void
 gst_vaapi_mini_object_free (GstVaapiMiniObject * object)
 {
   const GstVaapiMiniObjectClass *const klass = object->object_class;
@@ -116,8 +121,7 @@ gst_vaapi_mini_object_ref (GstVaapiMiniObject * object)
 {
   g_return_val_if_fail (object != NULL, NULL);
 
-  g_atomic_int_inc (&object->ref_count);
-  return object;
+  return gst_vaapi_mini_object_ref_internal (object);
 }
 
 /**
@@ -133,8 +137,7 @@ gst_vaapi_mini_object_unref (GstVaapiMiniObject * object)
   g_return_if_fail (object != NULL);
   g_return_if_fail (object->ref_count > 0);
 
-  if (g_atomic_int_dec_and_test (&object->ref_count))
-    gst_vaapi_mini_object_free (object);
+  gst_vaapi_mini_object_unref_internal (object);
 }
 
 /**
@@ -160,12 +163,12 @@ gst_vaapi_mini_object_replace (GstVaapiMiniObject ** old_object_ptr,
     return;
 
   if (new_object)
-    gst_vaapi_mini_object_ref (new_object);
+    gst_vaapi_mini_object_ref_internal (new_object);
 
   while (!g_atomic_pointer_compare_and_exchange ((gpointer *) old_object_ptr,
           old_object, new_object))
     old_object = g_atomic_pointer_get ((gpointer *) old_object_ptr);
 
   if (old_object)
-    gst_vaapi_mini_object_unref (old_object);
+    gst_vaapi_mini_object_unref_internal (old_object);
 }
