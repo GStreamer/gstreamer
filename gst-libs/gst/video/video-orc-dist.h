@@ -190,6 +190,13 @@ void video_orc_chroma_up_v2_u16 (guint16 * ORC_RESTRICT d1, guint16 * ORC_RESTRI
 void video_orc_chroma_down_v2_u16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, const guint16 * ORC_RESTRICT s2, int n);
 void video_orc_chroma_down_v4_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
 void video_orc_chroma_down_v4_u16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, const guint16 * ORC_RESTRICT s2, const guint16 * ORC_RESTRICT s3, const guint16 * ORC_RESTRICT s4, int n);
+void video_orc_dither_none_4u8_mask (guint8 * ORC_RESTRICT d1, int p1, int n);
+void video_orc_dither_none_4u16_mask (guint16 * ORC_RESTRICT d1, orc_int64 p1, int n);
+void video_orc_dither_verterr_4u8_mask (guint8 * ORC_RESTRICT d1, guint16 * ORC_RESTRICT d2, orc_int64 p1, int n);
+void video_orc_dither_fs_muladd_u8 (guint16 * ORC_RESTRICT d1, int n);
+void video_orc_dither_ordered_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void video_orc_dither_ordered_4u8_mask (guint8 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, orc_int64 p1, int n);
+void video_orc_dither_ordered_4u16_mask (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, orc_int64 p1, int n);
 
 #ifdef __cplusplus
 }

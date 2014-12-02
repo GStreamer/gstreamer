@@ -1986,3 +1986,97 @@ x2 addl uuvv3, uuvv3, 4
 x2 shrul uuvv3, uuvv3, 3
 x2 convsuslw uv1, uuvv3
 mergelq d, ay1, uv1
+
+.function video_orc_dither_none_4u8_mask
+.dest 4 p guint8
+.param 4 masks
+.temp 4 m
+
+loadpl m, masks
+x4 andnb p, m, p
+
+.function video_orc_dither_none_4u16_mask
+.dest 8 p guint16
+.longparam 8 masks
+.temp 8 m
+
+loadpq m, masks
+x4 andnw p, m, p
+
+.function video_orc_dither_verterr_4u8_mask
+.dest 4 p guint8
+.dest 8 e guint16
+.longparam 8 masks
+.temp 8 m
+.temp 8 t1
+
+loadpq m, masks
+x4 convubw t1, p
+x4 addw t1, e, t1
+x4 andw e, m, t1
+x4 andnw t1, m, t1
+x4 convsuswb p, t1
+
+.function video_orc_dither_fs_muladd_u8
+.dest 2 e guint16
+.temp 2 t1
+.temp 2 t2
+
+loadoffw t2, e, 4
+mullw t2, t2, 5
+addw t1, t2, e
+loadoffw t2, e, 8
+mullw t2, t2, 3
+addw e, t1, t2
+
+# due to error propagation we should disable
+# loop_shift for this function and only work on
+# 4 pixels at a time.
+#.function video_orc_dither_fs_add_4u8_mask
+#.flags no-unroll
+#.dest 4 d guint8
+#.dest 8 e1 guint16
+#.dest 8 e2 guint16
+#.longparam 8 masks
+#.temp 8 p
+#.temp 8 t1
+#.temp 8 t2
+#
+#x4 mullw t1, e1, 7
+#x4 addw t1, t1, e2
+#x4 shruw t1, t1, 4
+#x4 convubw p, d
+#x4 addw t1, t1, p
+#x4 andnw p, masks, t1
+#x4 convsuswb d, p
+#x4 andw e2, t1, masks
+
+.function video_orc_dither_ordered_u8
+.source 1 e guint8
+.dest 1 d guint8
+
+addusb d, d, e
+
+.function video_orc_dither_ordered_4u8_mask
+.source 8 e1 guint16
+.dest 4 d guint8
+.longparam 8 masks
+.temp 8 p
+.temp 8 m
+
+loadpq m, masks
+x4 convubw p, d
+x4 addw p, p, e1
+x4 andnw p, m, p
+x4 convsuswb d, p
+
+.function video_orc_dither_ordered_4u16_mask
+.source 8 e1 guint16
+.dest 8 d guint16
+.longparam 8 masks
+.temp 8 p
+.temp 8 m
+
+loadpq m, masks
+x4 addw p, d, e1
+x4 andnw d, m, p

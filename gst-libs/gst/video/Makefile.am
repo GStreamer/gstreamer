@@ -2,7 +2,7 @@
 ORC_SOURCE=video-orc
 include $(top_srcdir)/common/orc.mak
 
-glib_enum_headers = video.h video-format.h video-color.h video-info.h \
+glib_enum_headers = video.h video-format.h video-color.h video-info.h video-dither.h \
 			colorbalance.h navigation.h video-chroma.h video-tile.h video-converter.h \
 			video-resampler.h
 glib_enum_define = GST_VIDEO
@@ -27,6 +27,7 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	video-chroma.c         	\
 	video-color.c         	\
 	video-converter.c    	\
+	video-dither.c    	\
 	video-info.c         	\
 	video-frame.c         	\
 	video-scaler.c          \
@@ -58,6 +59,7 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	video-chroma.h         	\
 	video-color.h         	\
 	video-converter.h      	\
+	video-dither.h      	\
 	video-info.h         	\
 	video-frame.h         	\
 	video-scaler.h          \
