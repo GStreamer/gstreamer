@@ -129,10 +129,10 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
                       dir(Protocols) if isinstance(getattr(Protocols, att), str)
                       and not att.startswith("_")]))
 
-QA_ASSETS = "gst-qa-assets"
+QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
-DEFAULT_GST_QA_ASSETS_REPO = "git://people.freedesktop.org/~tsaunier/gst-qa-assets/"
-DEFAULT_SYNC_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get medias/default/"
+DEFAULT_GST_QA_ASSETS_REPO = "git@gitlab.com:thiblahute/gst-integration-testsuites.git"
+DEFAULT_SYNC_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get medias/defaults/"
 DEFAULT_SYNC_ALL_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get ."
 DEFAULT_TESTSUITES_DIR = os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")
 
@@ -260,7 +260,7 @@ class LauncherConfig(Loggable):
         if self.paths is None:
             self._using_default_paths = True
             self.paths = [os.path.join(self.clone_dir, MEDIAS_FOLDER,
-                                      "defaults")]
+                                       "defaults")]
 
         if not isinstance(self.paths, list):
             self.paths = [self.paths]
@@ -404,9 +404,9 @@ Note that all testsuite should be inside python modules, so the directory should
                            help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
     dir_group.add_argument(
         "-p", "--medias-paths", dest="paths", action="append",
-        help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets/media/defaults")
+        help="Paths in which to look for media files, default is MAIN_DIR/gst-integration-testsuites/media/defaults")
     dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
-                           help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets")
+                           help="Paths in which to look for media files, default is MAIN_DIR/gst-integration-testsuites")
 
     http_server_group = parser.add_argument_group(
         "Handle the HTTP server to be created")
