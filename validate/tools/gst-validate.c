@@ -226,6 +226,7 @@ _execute_set_subtitles (GstValidateScenario * scenario,
   gst_object_unref (folder);
 
   uri = g_file_get_uri (tmpfile);
+  gst_validate_printf (action, "Setting subtitle file to: %s", uri);
   g_object_set (scenario->pipeline, "suburi", uri, NULL);
   g_free (uri);
 
