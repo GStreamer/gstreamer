@@ -222,6 +222,8 @@ struct _GstVideoConverter
   gboolean pack_rgb;
   gboolean identity_pack;
   gint pack_pstride;
+  gconstpointer pack_pal;
+  gsize pack_palsize;
 
   const GstVideoFrame *src;
   GstVideoFrame *dest;
@@ -1579,6 +1581,9 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   finfo = gst_video_format_get_info (convert->pack_format);
   convert->pack_bits = GST_VIDEO_FORMAT_INFO_DEPTH (finfo, 0);
   convert->pack_rgb = GST_VIDEO_FORMAT_INFO_IS_RGB (finfo);
+  convert->pack_pal =
+      gst_video_format_get_palette (GST_VIDEO_INFO_FORMAT (out_info),
+      &convert->pack_palsize);
 
   if (video_converter_lookup_fastpath (convert))
     goto done;
@@ -2292,6 +2297,10 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
   if (convert->borderline) {
     for (i = out_y + out_height; i < out_maxheight; i++)
       PACK_FRAME (dest, convert->borderline, i, out_maxwidth);
+  }
+  if (convert->pack_pal) {
+    memcpy (GST_VIDEO_FRAME_PLANE_DATA (dest, 1), convert->pack_pal,
+        convert->pack_palsize);
   }
 }
 
