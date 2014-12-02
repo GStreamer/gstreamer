@@ -477,7 +477,7 @@ gst_video_dither_line (GstVideoDither * dither, gpointer line, guint x, guint y,
     guint width)
 {
   g_return_if_fail (dither != NULL);
-  g_return_if_fail (x + width < dither->width);
+  g_return_if_fail (x + width <= dither->width);
 
   if (dither->func)
     dither->func (dither, line, x, y, width);

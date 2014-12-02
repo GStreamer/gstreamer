@@ -25,22 +25,6 @@
 G_BEGIN_DECLS
 
 /**
- * GstVideoDitherMethod:
- * @GST_VIDEO_DITHER_NONE: no dithering
- * @GST_VIDEO_DITHER_VERTERR: propagate rounding errors downwards
- * @GST_VIDEO_DITHER_HALFTONE: Dither with halftone pattern
- * @GST_VIDEO_DITHER_HORIZERR: propagate rounding errors right
- *
- * Different dithering methods to use.
- */
-typedef enum {
-  GST_VIDEO_DITHER_NONE,
-  GST_VIDEO_DITHER_VERTERR,
-  GST_VIDEO_DITHER_HALFTONE,
-  GST_VIDEO_DITHER_HORIZERR
-} GstVideoDitherMethod;
-
-/**
  * GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD:
  *
  * #GST_TYPE_RESAMPLER_METHOD, The resampler method to use for
@@ -64,6 +48,15 @@ typedef enum {
  * Default is #GST_VIDEO_DITHER_NONE.
  */
 #define GST_VIDEO_CONVERTER_OPT_DITHER_METHOD   "GstVideoConverter.dither-method"
+
+/**
+ * GST_VIDEO_CONVERTER_OPT_DITHER_QUANTIZATION:
+ *
+ * #G_TYPE_UINT, The quantization amount to dither to. Components will be
+ * quantized to multiples of this value.
+ * Default is 1
+ */
+#define GST_VIDEO_CONVERTER_OPT_DITHER_QUANTIZATION   "GstVideoConverter.dither-quantization"
 
 /**
  * GST_VIDEO_CONVERTER_OPT_SRC_X:

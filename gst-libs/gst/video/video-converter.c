@@ -149,9 +149,8 @@ struct _GstVideoConverter
   gint current_bits;
 
   GstStructure *config;
-  GstVideoDitherMethod dither;
 
-  guint16 *errline;
+  guint16 *tmpline;
 
   gboolean fill_border;
   gpointer borderline;
@@ -159,7 +158,6 @@ struct _GstVideoConverter
 
   void (*convert) (GstVideoConverter * convert, const GstVideoFrame * src,
       GstVideoFrame * dest);
-  void (*dither16) (GstVideoConverter * convert, guint16 * pixels, int j);
 
   /* data for unpack */
   GstLineCache *unpack_lines;
@@ -213,6 +211,10 @@ struct _GstVideoConverter
   GstVideoChromaResample *downsample_i;
   guint down_n_lines;
   gint down_offset;
+
+  /* dither */
+  GstLineCache *dither_lines;
+  GstVideoDither *dither;
 
   /* pack */
   GstLineCache *pack_lines;
@@ -396,6 +398,8 @@ static gboolean do_vscale_lines (GstLineCache * cache, gint out_line,
     gint in_line, gpointer user_data);
 static gboolean do_hscale_lines (GstLineCache * cache, gint out_line,
     gint in_line, gpointer user_data);
+static gboolean do_dither_lines (GstLineCache * cache, gint out_line,
+    gint in_line, gpointer user_data);
 
 typedef struct
 {
@@ -530,6 +534,8 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
 #define DEFAULT_OPT_PRIMARIES_MODE "none"
 #define DEFAULT_OPT_RESAMPLER_METHOD GST_VIDEO_RESAMPLER_METHOD_CUBIC
 #define DEFAULT_OPT_RESAMPLER_TAPS 0
+#define DEFAULT_OPT_DITHER_METHOD GST_VIDEO_DITHER_BAYER
+#define DEFAULT_OPT_DITHER_QUANTIZATION 1
 
 #define GET_OPT_FILL_BORDER(c) get_opt_bool(c, \
     GST_VIDEO_CONVERTER_OPT_FILL_BORDER, DEFAULT_OPT_FILL_BORDER)
@@ -546,6 +552,11 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
     DEFAULT_OPT_RESAMPLER_METHOD)
 #define GET_OPT_RESAMPLER_TAPS(c) get_opt_uint(c, \
     GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, DEFAULT_OPT_RESAMPLER_TAPS)
+#define GET_OPT_DITHER_METHOD(c) get_opt_enum(c, \
+    GST_VIDEO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_VIDEO_DITHER_METHOD, \
+    DEFAULT_OPT_DITHER_METHOD)
+#define GET_OPT_DITHER_QUANTIZATION(c) get_opt_uint(c, \
+    GST_VIDEO_CONVERTER_OPT_DITHER_QUANTIZATION, DEFAULT_OPT_DITHER_QUANTIZATION)
 
 #define CHECK_MATRIX_FULL(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "full"))
 #define CHECK_MATRIX_NO_YUV(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "no-yuv"))
@@ -1420,6 +1431,65 @@ chain_downsample (GstVideoConverter * convert, GstLineCache * prev)
 }
 
 static GstLineCache *
+chain_dither (GstVideoConverter * convert, GstLineCache * prev)
+{
+  gint i;
+  gboolean do_dither = FALSE;
+  GstVideoDitherFlags flags = 0;
+  GstVideoDitherMethod method;
+  guint quant[4], target_quant;
+
+  method = GET_OPT_DITHER_METHOD (convert);
+  target_quant = GET_OPT_DITHER_QUANTIZATION (convert);
+  GST_DEBUG ("method %d, target-quantization %d", method, target_quant);
+
+  if (convert->pack_pal) {
+    quant[0] = 47;
+    quant[1] = 47;
+    quant[2] = 47;
+    quant[3] = 1;
+    do_dither = TRUE;
+  } else {
+    for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++) {
+      gint depth;
+
+      depth = convert->out_info.finfo->depth[i];
+
+      if (depth == 0) {
+        quant[i] = 0;
+        continue;
+      }
+
+      if (convert->current_bits >= depth) {
+        quant[i] = 1 << (convert->current_bits - depth);
+        if (target_quant > quant[i]) {
+          flags |= GST_VIDEO_DITHER_FLAG_QUANTIZE;
+          quant[i] = target_quant;
+        }
+        do_dither = TRUE;
+      } else {
+        quant[i] = 0;
+      }
+    }
+  }
+
+  if (do_dither) {
+    GST_DEBUG ("chain dither");
+
+    convert->dither = gst_video_dither_new (method,
+        flags, convert->pack_format, quant, convert->current_width);
+
+    prev = convert->dither_lines = gst_line_cache_new (prev);
+    prev->write_input = TRUE;
+    prev->pass_alloc = TRUE;
+    prev->n_lines = 1;
+    prev->stride = convert->current_pstride * convert->current_width;
+    gst_line_cache_set_need_line_func (prev, do_dither_lines, convert, NULL);
+  }
+  return prev;
+}
+
+static GstLineCache *
 chain_pack (GstVideoConverter * convert, GstLineCache * prev)
 {
   convert->pack_nlines = convert->out_info.finfo->pack_lines;
@@ -1536,9 +1606,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   convert->out_info = *out_info;
 
   /* default config */
-  convert->config = gst_structure_new ("GstVideoConverter",
-      GST_VIDEO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_VIDEO_DITHER_METHOD,
-      GST_VIDEO_DITHER_NONE, NULL);
+  convert->config = gst_structure_new_empty ("GstVideoConverter");
   if (config)
     gst_video_converter_set_config (convert, config);
 
@@ -1616,12 +1684,13 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   prev = chain_convert_to_YUV (convert, prev);
   /* downsample chroma */
   prev = chain_downsample (convert, prev);
+  /* dither */
+  prev = chain_dither (convert, prev);
   /* pack into final format */
   convert->pack_lines = chain_pack (convert, prev);
 
   width = MAX (convert->in_maxwidth, convert->out_maxwidth);
   width += convert->out_x;
-  convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
 
   if (convert->fill_border && (convert->out_height < convert->out_maxheight ||
           convert->out_width < convert->out_maxwidth)) {
@@ -1711,56 +1780,19 @@ gst_video_converter_free (GstVideoConverter * convert)
   if (convert->downsample_lines)
     gst_line_cache_free (convert->downsample_lines);
 
+  if (convert->dither)
+    gst_video_dither_free (convert->dither);
+
   g_free (convert->gamma_dec.gamma_table);
   g_free (convert->gamma_enc.gamma_table);
 
-  g_free (convert->errline);
+  g_free (convert->tmpline);
   g_free (convert->borderline);
 
   if (convert->config)
     gst_structure_free (convert->config);
 
   g_slice_free (GstVideoConverter, convert);
-}
-
-static void
-video_dither_verterr (GstVideoConverter * convert, guint16 * pixels, int j)
-{
-  int i;
-  guint16 *errline = convert->errline;
-  unsigned int mask = 0xff;
-
-  for (i = 0; i < 4 * convert->in_width; i++) {
-    int x = pixels[i] + errline[i];
-    if (x > 65535)
-      x = 65535;
-    pixels[i] = x;
-    errline[i] = x & mask;
-  }
-}
-
-static void
-video_dither_halftone (GstVideoConverter * convert, guint16 * pixels, int j)
-{
-  int i;
-  static guint16 halftone[8][8] = {
-    {0, 128, 32, 160, 8, 136, 40, 168},
-    {192, 64, 224, 96, 200, 72, 232, 104},
-    {48, 176, 16, 144, 56, 184, 24, 152},
-    {240, 112, 208, 80, 248, 120, 216, 88},
-    {12, 240, 44, 172, 4, 132, 36, 164},
-    {204, 76, 236, 108, 196, 68, 228, 100},
-    {60, 188, 28, 156, 52, 180, 20, 148},
-    {252, 142, 220, 92, 244, 116, 212, 84}
-  };
-
-  for (i = 0; i < convert->in_width * 4; i++) {
-    int x;
-    x = pixels[i] + halftone[(i >> 2) & 7][j & 7];
-    if (x > 65535)
-      x = 65535;
-    pixels[i] = x;
-  }
 }
 
 static gboolean
@@ -1795,42 +1827,13 @@ gboolean
 gst_video_converter_set_config (GstVideoConverter * convert,
     GstStructure * config)
 {
-  gint dither;
-  gboolean res = TRUE;
-
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (config != NULL, FALSE);
 
-  if (gst_structure_get_enum (config, GST_VIDEO_CONVERTER_OPT_DITHER_METHOD,
-          GST_TYPE_VIDEO_DITHER_METHOD, &dither)) {
-    gboolean update = TRUE;
-
-    switch (dither) {
-      case GST_VIDEO_DITHER_NONE:
-        convert->dither16 = NULL;
-        break;
-      case GST_VIDEO_DITHER_VERTERR:
-        convert->dither16 = video_dither_verterr;
-        break;
-      case GST_VIDEO_DITHER_HALFTONE:
-        convert->dither16 = video_dither_halftone;
-        break;
-      default:
-        update = FALSE;
-        break;
-    }
-    if (update)
-      gst_structure_set (convert->config, GST_VIDEO_CONVERTER_OPT_DITHER_METHOD,
-          GST_TYPE_VIDEO_DITHER_METHOD, dither, NULL);
-    else
-      res = FALSE;
-  }
-  if (res)
-    gst_structure_foreach (config, copy_config, convert);
-
+  gst_structure_foreach (config, copy_config, convert);
   gst_structure_free (config);
 
-  return res;
+  return TRUE;
 }
 
 /**
@@ -1963,7 +1966,6 @@ video_converter_compute_resample (GstVideoConverter * convert)
         GST_VIDEO_PACK_FLAG_NONE),                   \
       src, 0, frame->data, frame->info.stride,       \
       frame->info.chroma_site, line, width);
-
 
 static gpointer
 get_dest_line (GstLineCache * cache, gint idx, gpointer user_data)
@@ -2151,9 +2153,8 @@ do_convert_lines (GstLineCache * cache, gint out_line, gint in_line,
       GST_DEBUG ("matrix line %d %p", in_line, srcline);
       data->matrix_func (data, srcline);
     }
-    if (convert->dither16)
-      convert->dither16 (convert, srcline, in_line);
 
+    /* FIXME, dither here */
     if (out_bits == 8) {
       GST_DEBUG ("16->8 line %d %p->%p", in_line, srcline, destline);
       video_orc_convert_u16_to_u8 (destline, srcline, width * 4);
@@ -2217,6 +2218,26 @@ do_downsample_lines (GstLineCache * cache, gint out_line, gint in_line,
 
   for (i = 0; i < n_lines; i++)
     gst_line_cache_add_line (cache, start_line + i, lines[i]);
+
+  return TRUE;
+}
+
+static gboolean
+do_dither_lines (GstLineCache * cache, gint out_line, gint in_line,
+    gpointer user_data)
+{
+  GstVideoConverter *convert = user_data;
+  gpointer *lines, destline;
+
+  lines = gst_line_cache_get_lines (cache->prev, out_line, in_line, 1);
+  destline = lines[0];
+
+  if (convert->dither) {
+    GST_DEBUG ("Dither line %d %p", in_line, destline);
+    gst_video_dither_line (convert->dither, destline, 0, out_line,
+        convert->out_width);
+  }
+  gst_line_cache_add_line (cache, in_line, destline);
 
   return TRUE;
 }
@@ -2338,8 +2359,8 @@ convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->errline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->errline, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -2366,8 +2387,8 @@ convert_I420_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->errline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->errline, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -2393,8 +2414,8 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->errline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->errline, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -2443,8 +2464,8 @@ convert_I420_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->errline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->errline, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -2470,8 +2491,8 @@ convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->errline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->errline, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -2538,8 +2559,8 @@ convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->errline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->errline, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -2690,8 +2711,8 @@ convert_Y42B_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->errline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->errline, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -2781,8 +2802,8 @@ convert_Y444_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->errline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->errline, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -3070,6 +3091,9 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   if (width != convert->out_width || height != convert->out_height)
     return FALSE;
 
+  if (GET_OPT_DITHER_QUANTIZATION (convert) != 1)
+    return FALSE;
+
   /* we don't do gamma conversion in fastpath */
   in_transf = convert->in_info.colorimetry.transfer;
   out_transf = convert->out_info.colorimetry.transfer;
@@ -3113,6 +3137,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
       if (transforms[i].needs_color_matrix)
         video_converter_compute_matrix (convert);
       convert->convert = transforms[i].convert;
+      convert->tmpline = g_malloc0 (sizeof (guint16) * (width + 8) * 4);
       return TRUE;
     }
   }
