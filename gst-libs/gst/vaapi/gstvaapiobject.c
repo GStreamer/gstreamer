@@ -42,24 +42,23 @@
 #undef gst_vaapi_object_replace
 
 static void
-gst_vaapi_object_finalize(GstVaapiObject *object)
+gst_vaapi_object_finalize (GstVaapiObject * object)
 {
-    const GstVaapiObjectClass * const klass =
-        GST_VAAPI_OBJECT_GET_CLASS(object);
+  const GstVaapiObjectClass *const klass = GST_VAAPI_OBJECT_GET_CLASS (object);
 
-    if (klass->finalize)
-        klass->finalize(object);
-    gst_vaapi_display_replace(&object->display, NULL);
+  if (klass->finalize)
+    klass->finalize (object);
+  gst_vaapi_display_replace (&object->display, NULL);
 }
 
 void
-gst_vaapi_object_class_init(GstVaapiObjectClass *klass, guint size)
+gst_vaapi_object_class_init (GstVaapiObjectClass * klass, guint size)
 {
-    GstVaapiMiniObjectClass * const object_class =
-        GST_VAAPI_MINI_OBJECT_CLASS(klass);
+  GstVaapiMiniObjectClass *const object_class =
+      GST_VAAPI_MINI_OBJECT_CLASS (klass);
 
-    object_class->size = size;
-    object_class->finalize = (GDestroyNotify)gst_vaapi_object_finalize;
+  object_class->size = size;
+  object_class->finalize = (GDestroyNotify) gst_vaapi_object_finalize;
 }
 
 /**
@@ -77,30 +76,31 @@ gst_vaapi_object_class_init(GstVaapiObjectClass *klass, guint size)
  * Returns: The newly allocated #GstVaapiObject
  */
 gpointer
-gst_vaapi_object_new(const GstVaapiObjectClass *klass, GstVaapiDisplay *display)
+gst_vaapi_object_new (const GstVaapiObjectClass * klass,
+    GstVaapiDisplay * display)
 {
-    const GstVaapiMiniObjectClass * const object_class =
-        GST_VAAPI_MINI_OBJECT_CLASS(klass);
-    GstVaapiObject *object;
-    guint sub_size;
+  const GstVaapiMiniObjectClass *const object_class =
+      GST_VAAPI_MINI_OBJECT_CLASS (klass);
+  GstVaapiObject *object;
+  guint sub_size;
 
-    g_return_val_if_fail(klass != NULL, NULL);
-    g_return_val_if_fail(display != NULL, NULL);
+  g_return_val_if_fail (klass != NULL, NULL);
+  g_return_val_if_fail (display != NULL, NULL);
 
-    object = (GstVaapiObject *)gst_vaapi_mini_object_new(object_class);
-    if (!object)
-        return NULL;
+  object = (GstVaapiObject *) gst_vaapi_mini_object_new (object_class);
+  if (!object)
+    return NULL;
 
-    object->display     = gst_vaapi_display_ref(display);
-    object->object_id   = VA_INVALID_ID;
+  object->display = gst_vaapi_display_ref (display);
+  object->object_id = VA_INVALID_ID;
 
-    sub_size = object_class->size - sizeof(*object);
-    if (sub_size > 0)
-        memset(((guchar *)object) + sizeof(*object), 0, sub_size);
+  sub_size = object_class->size - sizeof (*object);
+  if (sub_size > 0)
+    memset (((guchar *) object) + sizeof (*object), 0, sub_size);
 
-    if (klass && klass->init)
-        klass->init (object);
-    return object;
+  if (klass && klass->init)
+    klass->init (object);
+  return object;
 }
 
 /**
@@ -112,9 +112,9 @@ gst_vaapi_object_new(const GstVaapiObjectClass *klass, GstVaapiDisplay *display)
  * Returns: The same @object argument
  */
 gpointer
-gst_vaapi_object_ref(gpointer object)
+gst_vaapi_object_ref (gpointer object)
 {
-    return gst_vaapi_object_ref_internal(object);
+  return gst_vaapi_object_ref_internal (object);
 }
 
 /**
@@ -125,9 +125,9 @@ gst_vaapi_object_ref(gpointer object)
  * the reference count reaches zero, the object will be free'd.
  */
 void
-gst_vaapi_object_unref(gpointer object)
+gst_vaapi_object_unref (gpointer object)
 {
-    gst_vaapi_object_unref_internal(object);
+  gst_vaapi_object_unref_internal (object);
 }
 
 /**
@@ -140,9 +140,9 @@ gst_vaapi_object_unref(gpointer object)
  * valid object. However, @new_object can be NULL.
  */
 void
-gst_vaapi_object_replace(gpointer old_object_ptr, gpointer new_object)
+gst_vaapi_object_replace (gpointer old_object_ptr, gpointer new_object)
 {
-    gst_vaapi_object_replace_internal(old_object_ptr, new_object);
+  gst_vaapi_object_replace_internal (old_object_ptr, new_object);
 }
 
 /**
@@ -154,11 +154,11 @@ gst_vaapi_object_replace(gpointer old_object_ptr, gpointer new_object)
  * Return value: the parent #GstVaapiDisplay object
  */
 GstVaapiDisplay *
-gst_vaapi_object_get_display(GstVaapiObject *object)
+gst_vaapi_object_get_display (GstVaapiObject * object)
 {
-    g_return_val_if_fail(object != NULL, NULL);
+  g_return_val_if_fail (object != NULL, NULL);
 
-    return GST_VAAPI_OBJECT_DISPLAY(object);
+  return GST_VAAPI_OBJECT_DISPLAY (object);
 }
 
 /**
@@ -170,11 +170,11 @@ gst_vaapi_object_get_display(GstVaapiObject *object)
  * unlocked by the other thread.
  */
 void
-gst_vaapi_object_lock_display(GstVaapiObject *object)
+gst_vaapi_object_lock_display (GstVaapiObject * object)
 {
-    g_return_if_fail(object != NULL);
+  g_return_if_fail (object != NULL);
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(object);
+  GST_VAAPI_OBJECT_LOCK_DISPLAY (object);
 }
 
 /**
@@ -186,11 +186,11 @@ gst_vaapi_object_lock_display(GstVaapiObject *object)
  * display itself.
  */
 void
-gst_vaapi_object_unlock_display(GstVaapiObject *object)
+gst_vaapi_object_unlock_display (GstVaapiObject * object)
 {
-    g_return_if_fail(object != NULL);
+  g_return_if_fail (object != NULL);
 
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(object);
+  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (object);
 }
 
 /**
@@ -202,9 +202,9 @@ gst_vaapi_object_unlock_display(GstVaapiObject *object)
  * Return value: the #GstVaapiID of the @object
  */
 GstVaapiID
-gst_vaapi_object_get_id(GstVaapiObject *object)
+gst_vaapi_object_get_id (GstVaapiObject * object)
 {
-    g_return_val_if_fail(object != NULL, 0);
+  g_return_val_if_fail (object != NULL, 0);
 
-    return GST_VAAPI_OBJECT_ID(object);
+  return GST_VAAPI_OBJECT_ID (object);
 }

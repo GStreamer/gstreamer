@@ -1,7 +1,7 @@
 /*
  *  gstvaapiminiobject.h - A lightweight reference counted object
  *
- *  Copyright (C) 2012-2013 Intel Corporation
+ *  Copyright (C) 2012-2014 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
@@ -28,8 +28,8 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstVaapiMiniObject      GstVaapiMiniObject;
-typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
+typedef struct _GstVaapiMiniObject              GstVaapiMiniObject;
+typedef struct _GstVaapiMiniObjectClass         GstVaapiMiniObjectClass;
 
 /**
  * GST_VAAPI_MINI_OBJECT:
@@ -38,7 +38,16 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
  * Casts the @object to a #GstVaapiMiniObject
  */
 #define GST_VAAPI_MINI_OBJECT(object) \
-    ((GstVaapiMiniObject *)(object))
+  ((GstVaapiMiniObject *) (object))
+
+/**
+ * GST_VAAPI_MINI_OBJECT_PTR:
+ * @object_ptr: a pointer #GstVaapiMiniObject
+ *
+ * Casts the @object_ptr to a pointer to #GstVaapiMiniObject
+ */
+#define GST_VAAPI_MINI_OBJECT_PTR(object_ptr) \
+  ((GstVaapiMiniObject **) (object_ptr))
 
 /**
  * GST_VAAPI_MINI_OBJECT_CLASS:
@@ -47,7 +56,7 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
  * Casts the @klass to a #GstVaapiMiniObjectClass
  */
 #define GST_VAAPI_MINI_OBJECT_CLASS(klass) \
-    ((GstVaapiMiniObjectClass *)(klass))
+  ((GstVaapiMiniObjectClass *) (klass))
 
 /**
  * GST_VAAPI_MINI_OBJECT_GET_CLASS:
@@ -56,7 +65,7 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
  * Retrieves the #GstVaapiMiniObjectClass associated with the @object
  */
 #define GST_VAAPI_MINI_OBJECT_GET_CLASS(object) \
-    (GST_VAAPI_MINI_OBJECT(object)->object_class)
+  (GST_VAAPI_MINI_OBJECT (object)->object_class)
 
 /**
  * GST_VAAPI_MINI_OBJECT_FLAGS:
@@ -65,7 +74,7 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
  * The entire set of flags for the @object
  */
 #define GST_VAAPI_MINI_OBJECT_FLAGS(object) \
-    (GST_VAAPI_MINI_OBJECT(object)->flags)
+  (GST_VAAPI_MINI_OBJECT (object)->flags)
 
 /**
  * GST_VAAPI_MINI_OBJECT_FLAG_IS_SET:
@@ -75,7 +84,7 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
  * Checks whether the given @flag is set
  */
 #define GST_VAAPI_MINI_OBJECT_FLAG_IS_SET(object, flag) \
-    ((GST_VAAPI_MINI_OBJECT_FLAGS(object) & (flag)) != 0)
+  ((GST_VAAPI_MINI_OBJECT_FLAGS (object) & (flag)) != 0)
 
 /**
  * GST_VAAPI_MINI_OBJECT_FLAG_SET:
@@ -85,7 +94,7 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
  * This macro sets the given bits
  */
 #define GST_VAAPI_MINI_OBJECT_FLAG_SET(object, flags) \
-    (GST_VAAPI_MINI_OBJECT_FLAGS(object) |= (flags))
+  (GST_VAAPI_MINI_OBJECT_FLAGS (object) |= (flags))
 
 /**
  * GST_VAAPI_MINI_OBJECT_FLAG_UNSET:
@@ -95,7 +104,7 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
  * This macro unsets the given bits.
  */
 #define GST_VAAPI_MINI_OBJECT_FLAG_UNSET(object, flags) \
-    (GST_VAAPI_MINI_OBJECT_FLAGS(object) &= ~(flags))
+  (GST_VAAPI_MINI_OBJECT_FLAGS (object) &= ~(flags))
 
 /**
  * GstVaapiMiniObject:
@@ -108,11 +117,12 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
  * A #GstVaapiMiniObject represents a minimal reference counted data
  * structure that can hold a set of flags and user-provided data.
  */
-struct _GstVaapiMiniObject {
-    /*< private >*/
-    gconstpointer       object_class;
-    volatile gint       ref_count;
-    guint               flags;
+struct _GstVaapiMiniObject
+{
+  /*< private >*/
+  gconstpointer object_class;
+  volatile gint ref_count;
+  guint flags;
 };
 
 /**
@@ -125,31 +135,33 @@ struct _GstVaapiMiniObject {
  * defines the size of the #GstVaapiMiniObject and utility function to
  * dispose child objects
  */
-struct _GstVaapiMiniObjectClass {
-    guint               size;
-    GDestroyNotify      finalize;
+struct _GstVaapiMiniObjectClass
+{
+  /*< protected >*/
+  guint size;
+  GDestroyNotify finalize;
 };
 
 G_GNUC_INTERNAL
 GstVaapiMiniObject *
-gst_vaapi_mini_object_new(const GstVaapiMiniObjectClass *object_class);
+gst_vaapi_mini_object_new (const GstVaapiMiniObjectClass * object_class);
 
 G_GNUC_INTERNAL
 GstVaapiMiniObject *
-gst_vaapi_mini_object_new0(const GstVaapiMiniObjectClass *object_class);
+gst_vaapi_mini_object_new0 (const GstVaapiMiniObjectClass * object_class);
 
 G_GNUC_INTERNAL
 GstVaapiMiniObject *
-gst_vaapi_mini_object_ref(GstVaapiMiniObject *object);
+gst_vaapi_mini_object_ref (GstVaapiMiniObject * object);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_mini_object_unref(GstVaapiMiniObject *object);
+gst_vaapi_mini_object_unref (GstVaapiMiniObject * object);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_mini_object_replace(GstVaapiMiniObject **old_object_ptr,
-    GstVaapiMiniObject *new_object);
+gst_vaapi_mini_object_replace (GstVaapiMiniObject ** old_object_ptr,
+    GstVaapiMiniObject * new_object);
 
 G_END_DECLS
 

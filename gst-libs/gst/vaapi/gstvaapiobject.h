@@ -31,9 +31,9 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_OBJECT(obj) \
-    ((GstVaapiObject *)(obj))
+  ((GstVaapiObject *) (obj))
 
-typedef struct _GstVaapiObject                  GstVaapiObject;
+typedef struct _GstVaapiObject GstVaapiObject;
 
 /**
  * GST_VAAPI_OBJECT_DISPLAY:
@@ -42,7 +42,7 @@ typedef struct _GstVaapiObject                  GstVaapiObject;
  * Macro that evaluates to the #GstVaapiDisplay the @object is bound to.
  */
 #define GST_VAAPI_OBJECT_DISPLAY(object) \
-    gst_vaapi_object_get_display(GST_VAAPI_OBJECT(object))
+  gst_vaapi_object_get_display (GST_VAAPI_OBJECT (object))
 
 /**
  * GST_VAAPI_OBJECT_ID:
@@ -51,28 +51,28 @@ typedef struct _GstVaapiObject                  GstVaapiObject;
  * Macro that evaluates to the #GstVaapiID contained in @object.
  */
 #define GST_VAAPI_OBJECT_ID(object) \
-    gst_vaapi_object_get_id(GST_VAAPI_OBJECT(object))
+  gst_vaapi_object_get_id (GST_VAAPI_OBJECT (object))
 
 gpointer
-gst_vaapi_object_ref(gpointer object);
+gst_vaapi_object_ref (gpointer object);
 
 void
-gst_vaapi_object_unref(gpointer object);
+gst_vaapi_object_unref (gpointer object);
 
 void
-gst_vaapi_object_replace(gpointer old_object_ptr, gpointer new_object);
+gst_vaapi_object_replace (gpointer old_object_ptr, gpointer new_object);
 
 GstVaapiDisplay *
-gst_vaapi_object_get_display(GstVaapiObject *object);
+gst_vaapi_object_get_display (GstVaapiObject * object);
 
 void
-gst_vaapi_object_lock_display(GstVaapiObject *object);
+gst_vaapi_object_lock_display (GstVaapiObject * object);
 
 void
-gst_vaapi_object_unlock_display(GstVaapiObject *object);
+gst_vaapi_object_unlock_display (GstVaapiObject * object);
 
 GstVaapiID
-gst_vaapi_object_get_id(GstVaapiObject *object);
+gst_vaapi_object_get_id (GstVaapiObject * object);
 
 G_END_DECLS
 

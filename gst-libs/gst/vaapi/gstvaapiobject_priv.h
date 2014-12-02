@@ -32,50 +32,37 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_OBJECT_CLASS(klass) \
-    ((GstVaapiObjectClass *)(klass))
-
+  ((GstVaapiObjectClass *) (klass))
 #define GST_VAAPI_IS_OBJECT_CLASS(klass) \
-    ((klass) != NULL)
-
+  ((klass) != NULL)
 #define GST_VAAPI_OBJECT_GET_CLASS(object) \
-    GST_VAAPI_OBJECT_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(object))
+  GST_VAAPI_OBJECT_CLASS (GST_VAAPI_MINI_OBJECT_GET_CLASS (object))
 
-typedef struct _GstVaapiObjectClass             GstVaapiObjectClass;
-typedef void (*GstVaapiObjectInitFunc)         (GstVaapiObject *object);
-typedef void (*GstVaapiObjectFinalizeFunc)     (GstVaapiObject *object);
+typedef struct _GstVaapiObjectClass GstVaapiObjectClass;
+typedef void (*GstVaapiObjectInitFunc) (GstVaapiObject * object);
+typedef void (*GstVaapiObjectFinalizeFunc) (GstVaapiObject * object);
 
 #define GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE(TN, t_n, code)  \
 static inline const GstVaapiObjectClass *                       \
-G_PASTE(t_n,_class)(void)                                       \
+G_PASTE(t_n,_class) (void)                                      \
 {                                                               \
     static G_PASTE(TN,Class) g_class;                           \
     static gsize g_class_init = FALSE;                          \
                                                                 \
-    if (g_once_init_enter(&g_class_init)) {                     \
+    if (g_once_init_enter (&g_class_init)) {                    \
         GstVaapiObjectClass * const klass =                     \
-            GST_VAAPI_OBJECT_CLASS(&g_class);                   \
-        gst_vaapi_object_class_init(klass, sizeof(TN));         \
+            GST_VAAPI_OBJECT_CLASS (&g_class);                  \
+        gst_vaapi_object_class_init (klass, sizeof(TN));        \
         code;                                                   \
         klass->finalize = (GstVaapiObjectFinalizeFunc)          \
             G_PASTE(t_n,_finalize);                             \
-        g_once_init_leave(&g_class_init, TRUE);                 \
+        g_once_init_leave (&g_class_init, TRUE);                \
     }                                                           \
-    return GST_VAAPI_OBJECT_CLASS(&g_class);                    \
+    return GST_VAAPI_OBJECT_CLASS (&g_class);                   \
 }
 
 #define GST_VAAPI_OBJECT_DEFINE_CLASS(TN, t_n) \
-    GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE(TN, t_n, /**/)
-
-/**
- * GST_VAAPI_OBJECT_DISPLAY:
- * @object: a #GstVaapiObject
- *
- * Macro that evaluates to the #GstVaapiDisplay the @object is bound to.
- * This is an internal macro that does not do any run-time type check.
- */
-#undef  GST_VAAPI_OBJECT_DISPLAY
-#define GST_VAAPI_OBJECT_DISPLAY(object) \
-    GST_VAAPI_OBJECT(object)->display
+  GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (TN, t_n, /**/)
 
 /**
  * GST_VAAPI_OBJECT_ID:
@@ -86,7 +73,18 @@ G_PASTE(t_n,_class)(void)                                       \
  */
 #undef  GST_VAAPI_OBJECT_ID
 #define GST_VAAPI_OBJECT_ID(object) \
-    GST_VAAPI_OBJECT(object)->object_id
+  (GST_VAAPI_OBJECT (object)->object_id)
+
+/**
+ * GST_VAAPI_OBJECT_DISPLAY:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that evaluates to the #GstVaapiDisplay the @object is bound to.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_OBJECT_DISPLAY
+#define GST_VAAPI_OBJECT_DISPLAY(object) \
+  (GST_VAAPI_OBJECT (object)->display)
 
 /**
  * GST_VAAPI_OBJECT_DISPLAY_X11:
@@ -97,7 +95,7 @@ G_PASTE(t_n,_class)(void)                                       \
  * and requires #include "gstvaapidisplay_x11_priv.h"
  */
 #define GST_VAAPI_OBJECT_DISPLAY_X11(object) \
-    GST_VAAPI_DISPLAY_X11_CAST(GST_VAAPI_OBJECT_DISPLAY(object))
+  GST_VAAPI_DISPLAY_X11_CAST (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GST_VAAPI_OBJECT_DISPLAY_GLX:
@@ -108,7 +106,7 @@ G_PASTE(t_n,_class)(void)                                       \
  * and requires #include "gstvaapidisplay_glx_priv.h".
  */
 #define GST_VAAPI_OBJECT_DISPLAY_GLX(object) \
-    GST_VAAPI_DISPLAY_GLX_CAST(GST_VAAPI_OBJECT_DISPLAY(object))
+  GST_VAAPI_DISPLAY_GLX_CAST (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GST_VAAPI_OBJECT_DISPLAY_WAYLAND:
@@ -119,7 +117,7 @@ G_PASTE(t_n,_class)(void)                                       \
  * type check and requires #include "gstvaapidisplay_wayland_priv.h"
  */
 #define GST_VAAPI_OBJECT_DISPLAY_WAYLAND(object) \
-    GST_VAAPI_DISPLAY_WAYLAND_CAST(GST_VAAPI_OBJECT_DISPLAY(object))
+  GST_VAAPI_DISPLAY_WAYLAND_CAST (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GST_VAAPI_OBJECT_VADISPLAY:
@@ -130,7 +128,7 @@ G_PASTE(t_n,_class)(void)                                       \
  * and requires #include "gstvaapidisplay_priv.h".
  */
 #define GST_VAAPI_OBJECT_VADISPLAY(object) \
-    GST_VAAPI_DISPLAY_VADISPLAY(GST_VAAPI_OBJECT_DISPLAY(object))
+  GST_VAAPI_DISPLAY_VADISPLAY (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GST_VAAPI_OBJECT_XDISPLAY:
@@ -141,7 +139,7 @@ G_PASTE(t_n,_class)(void)                                       \
  * and requires #include "gstvaapidisplay_x11_priv.h".
  */
 #define GST_VAAPI_OBJECT_XDISPLAY(object) \
-    GST_VAAPI_DISPLAY_XDISPLAY(GST_VAAPI_OBJECT_DISPLAY(object))
+  GST_VAAPI_DISPLAY_XDISPLAY (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GST_VAAPI_OBJECT_XSCREEN:
@@ -152,7 +150,7 @@ G_PASTE(t_n,_class)(void)                                       \
  * and requires #include "gstvaapidisplay_x11_priv.h".
  */
 #define GST_VAAPI_OBJECT_XSCREEN(object) \
-    GST_VAAPI_DISPLAY_XSCREEN(GST_VAAPI_OBJECT_DISPLAY(object))
+  GST_VAAPI_DISPLAY_XSCREEN (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GST_VAAPI_OBJECT_WL_DISPLAY:
@@ -163,7 +161,7 @@ G_PASTE(t_n,_class)(void)                                       \
  * and requires #include "gstvaapidisplay_wayland_priv.h".
  */
 #define GST_VAAPI_OBJECT_WL_DISPLAY(object) \
-    GST_VAAPI_DISPLAY_WL_DISPLAY(GST_VAAPI_OBJECT_DISPLAY(object))
+  GST_VAAPI_DISPLAY_WL_DISPLAY (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GST_VAAPI_OBJECT_LOCK_DISPLAY:
@@ -173,7 +171,7 @@ G_PASTE(t_n,_class)(void)                                       \
  * This is an internal macro that does not do any run-time type check.
  */
 #define GST_VAAPI_OBJECT_LOCK_DISPLAY(object) \
-    GST_VAAPI_DISPLAY_LOCK(GST_VAAPI_OBJECT_DISPLAY(object))
+  GST_VAAPI_DISPLAY_LOCK (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GST_VAAPI_OBJECT_UNLOCK_DISPLAY:
@@ -183,19 +181,20 @@ G_PASTE(t_n,_class)(void)                                       \
  * This is an internal macro that does not do any run-time type check.
  */
 #define GST_VAAPI_OBJECT_UNLOCK_DISPLAY(object) \
-    GST_VAAPI_DISPLAY_UNLOCK(GST_VAAPI_OBJECT_DISPLAY(object))
+  GST_VAAPI_DISPLAY_UNLOCK (GST_VAAPI_OBJECT_DISPLAY (object))
 
 /**
  * GstVaapiObject:
  *
  * VA object base.
  */
-struct _GstVaapiObject {
-    /*< private >*/
-    GstVaapiMiniObject  parent_instance;
+struct _GstVaapiObject
+{
+  /*< private >*/
+  GstVaapiMiniObject parent_instance;
 
-    GstVaapiDisplay    *display;
-    GstVaapiID          object_id;
+  GstVaapiDisplay *display;
+  GstVaapiID object_id;
 };
 
 /**
@@ -203,53 +202,54 @@ struct _GstVaapiObject {
  *
  * VA object base class.
  */
-struct _GstVaapiObjectClass {
-    /*< private >*/
-    GstVaapiMiniObjectClass     parent_class;
+struct _GstVaapiObjectClass
+{
+  /*< private >*/
+  GstVaapiMiniObjectClass parent_class;
 
-    GstVaapiObjectInitFunc      init;
-    GstVaapiObjectFinalizeFunc  finalize;
+  GstVaapiObjectInitFunc init;
+  GstVaapiObjectFinalizeFunc finalize;
 };
 
 void
-gst_vaapi_object_class_init(GstVaapiObjectClass *klass, guint size);
+gst_vaapi_object_class_init (GstVaapiObjectClass * klass, guint size);
 
 gpointer
-gst_vaapi_object_new(const GstVaapiObjectClass *klass,
-    GstVaapiDisplay *display);
+gst_vaapi_object_new (const GstVaapiObjectClass * klass,
+    GstVaapiDisplay * display);
 
 /* Inline reference counting for core libgstvaapi library */
 #ifdef IN_LIBGSTVAAPI_CORE
 static inline gpointer
-gst_vaapi_object_ref_internal(gpointer object)
+gst_vaapi_object_ref_internal (gpointer object)
 {
-    return gst_vaapi_mini_object_ref(object);
+  return gst_vaapi_mini_object_ref (object);
 }
 
 static inline void
-gst_vaapi_object_unref_internal(gpointer object)
+gst_vaapi_object_unref_internal (gpointer object)
 {
-    gst_vaapi_mini_object_unref(object);
+  gst_vaapi_mini_object_unref (object);
 }
 
 static inline void
-gst_vaapi_object_replace_internal(gpointer old_object_ptr, gpointer new_object)
+gst_vaapi_object_replace_internal (gpointer old_object_ptr, gpointer new_object)
 {
-    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)old_object_ptr,
-        new_object);
+  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) old_object_ptr,
+      new_object);
 }
 
 #undef  gst_vaapi_object_ref
 #define gst_vaapi_object_ref(object) \
-    gst_vaapi_object_ref_internal((object))
+  gst_vaapi_object_ref_internal ((object))
 
 #undef  gst_vaapi_object_unref
 #define gst_vaapi_object_unref(object) \
-    gst_vaapi_object_unref_internal((object))
+  gst_vaapi_object_unref_internal ((object))
 
 #undef  gst_vaapi_object_replace
 #define gst_vaapi_object_replace(old_object_ptr, new_object) \
-    gst_vaapi_object_replace_internal((old_object_ptr), (new_object))
+  gst_vaapi_object_replace_internal ((old_object_ptr), (new_object))
 #endif
 
 G_END_DECLS

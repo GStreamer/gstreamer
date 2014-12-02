@@ -1,7 +1,7 @@
 /*
  *  gstvaapiminiobject.c - A lightweight reference counted object
  *
- *  Copyright (C) 2012-2013 Intel Corporation
+ *  Copyright (C) 2012-2014 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
@@ -24,17 +24,17 @@
 #include "gstvaapiminiobject.h"
 
 static void
-gst_vaapi_mini_object_free(GstVaapiMiniObject *object)
+gst_vaapi_mini_object_free (GstVaapiMiniObject * object)
 {
-    const GstVaapiMiniObjectClass * const klass = object->object_class;
+  const GstVaapiMiniObjectClass *const klass = object->object_class;
 
-    g_atomic_int_inc(&object->ref_count);
+  g_atomic_int_inc (&object->ref_count);
 
-    if (klass->finalize)
-        klass->finalize(object);
+  if (klass->finalize)
+    klass->finalize (object);
 
-    if (G_LIKELY(g_atomic_int_dec_and_test(&object->ref_count)))
-        g_slice_free1(klass->size, object);
+  if (G_LIKELY (g_atomic_int_dec_and_test (&object->ref_count)))
+    g_slice_free1 (klass->size, object);
 }
 
 /**
@@ -52,27 +52,27 @@ gst_vaapi_mini_object_free(GstVaapiMiniObject *object)
  * Returns: The newly allocated #GstVaapiMiniObject
  */
 GstVaapiMiniObject *
-gst_vaapi_mini_object_new(const GstVaapiMiniObjectClass *object_class)
+gst_vaapi_mini_object_new (const GstVaapiMiniObjectClass * object_class)
 {
-    GstVaapiMiniObject *object;
+  GstVaapiMiniObject *object;
 
-    static const GstVaapiMiniObjectClass default_object_class = {
-        .size = sizeof(GstVaapiMiniObject),
-    };
+  static const GstVaapiMiniObjectClass default_object_class = {
+    .size = sizeof (GstVaapiMiniObject),
+  };
 
-    if (G_UNLIKELY(!object_class))
-        object_class = &default_object_class;
+  if (G_UNLIKELY (!object_class))
+    object_class = &default_object_class;
 
-    g_return_val_if_fail(object_class->size >= sizeof(*object), NULL);
+  g_return_val_if_fail (object_class->size >= sizeof (*object), NULL);
 
-    object = g_slice_alloc(object_class->size);
-    if (!object)
-        return NULL;
+  object = g_slice_alloc (object_class->size);
+  if (!object)
+    return NULL;
 
-    object->object_class = object_class;
-    object->ref_count = 1;
-    object->flags = 0;
-    return object;
+  object->object_class = object_class;
+  object->ref_count = 1;
+  object->flags = 0;
+  return object;
 }
 
 /**
@@ -86,21 +86,21 @@ gst_vaapi_mini_object_new(const GstVaapiMiniObjectClass *object_class)
  * Returns: The newly allocated #GstVaapiMiniObject
  */
 GstVaapiMiniObject *
-gst_vaapi_mini_object_new0(const GstVaapiMiniObjectClass *object_class)
+gst_vaapi_mini_object_new0 (const GstVaapiMiniObjectClass * object_class)
 {
-    GstVaapiMiniObject *object;
-    guint sub_size;
+  GstVaapiMiniObject *object;
+  guint sub_size;
 
-    object = gst_vaapi_mini_object_new(object_class);
-    if (!object)
-        return NULL;
+  object = gst_vaapi_mini_object_new (object_class);
+  if (!object)
+    return NULL;
 
-    object_class = object->object_class;
+  object_class = object->object_class;
 
-    sub_size = object_class->size - sizeof(*object);
-    if (sub_size > 0)
-        memset(((guchar *)object) + sizeof(*object), 0, sub_size);
-    return object;
+  sub_size = object_class->size - sizeof (*object);
+  if (sub_size > 0)
+    memset (((guchar *) object) + sizeof (*object), 0, sub_size);
+  return object;
 }
 
 /**
@@ -112,12 +112,12 @@ gst_vaapi_mini_object_new0(const GstVaapiMiniObjectClass *object_class)
  * Returns: The same @object argument
  */
 GstVaapiMiniObject *
-gst_vaapi_mini_object_ref(GstVaapiMiniObject *object)
+gst_vaapi_mini_object_ref (GstVaapiMiniObject * object)
 {
-    g_return_val_if_fail(object != NULL, NULL);
+  g_return_val_if_fail (object != NULL, NULL);
 
-    g_atomic_int_inc(&object->ref_count);
-    return object;
+  g_atomic_int_inc (&object->ref_count);
+  return object;
 }
 
 /**
@@ -128,13 +128,13 @@ gst_vaapi_mini_object_ref(GstVaapiMiniObject *object)
  * the reference count reaches zero, the object will be free'd.
  */
 void
-gst_vaapi_mini_object_unref(GstVaapiMiniObject *object)
+gst_vaapi_mini_object_unref (GstVaapiMiniObject * object)
 {
-    g_return_if_fail(object != NULL);
-    g_return_if_fail(object->ref_count > 0);
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (object->ref_count > 0);
 
-    if (g_atomic_int_dec_and_test(&object->ref_count))
-        gst_vaapi_mini_object_free(object);
+  if (g_atomic_int_dec_and_test (&object->ref_count))
+    gst_vaapi_mini_object_free (object);
 }
 
 /**
@@ -147,25 +147,25 @@ gst_vaapi_mini_object_unref(GstVaapiMiniObject *object)
  * valid object. However, @new_object can be NULL.
  */
 void
-gst_vaapi_mini_object_replace(GstVaapiMiniObject **old_object_ptr,
-    GstVaapiMiniObject *new_object)
+gst_vaapi_mini_object_replace (GstVaapiMiniObject ** old_object_ptr,
+    GstVaapiMiniObject * new_object)
 {
-    GstVaapiMiniObject *old_object;
+  GstVaapiMiniObject *old_object;
 
-    g_return_if_fail(old_object_ptr != NULL);
+  g_return_if_fail (old_object_ptr != NULL);
 
-    old_object = g_atomic_pointer_get((gpointer *)old_object_ptr);
+  old_object = g_atomic_pointer_get ((gpointer *) old_object_ptr);
 
-    if (old_object == new_object)
-        return;
+  if (old_object == new_object)
+    return;
 
-    if (new_object)
-        gst_vaapi_mini_object_ref(new_object);
+  if (new_object)
+    gst_vaapi_mini_object_ref (new_object);
 
-    while (!g_atomic_pointer_compare_and_exchange((gpointer *)old_object_ptr,
-               old_object, new_object))
-        old_object = g_atomic_pointer_get((gpointer *)old_object_ptr);
+  while (!g_atomic_pointer_compare_and_exchange ((gpointer *) old_object_ptr,
+          old_object, new_object))
+    old_object = g_atomic_pointer_get ((gpointer *) old_object_ptr);
 
-    if (old_object)
-        gst_vaapi_mini_object_unref(old_object);
+  if (old_object)
+    gst_vaapi_mini_object_unref (old_object);
 }
