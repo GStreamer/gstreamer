@@ -56,10 +56,14 @@ static GQuark _colorspace_quark;
 #define gst_video_convert_parent_class parent_class
 G_DEFINE_TYPE (GstVideoConvert, gst_video_convert, GST_TYPE_VIDEO_FILTER);
 
+#define DEFAULT_PROP_DITHER      GST_VIDEO_DITHER_BAYER
+#define DEFAULT_PROP_DITHER_QUANTIZATION 1
+
 enum
 {
   PROP_0,
-  PROP_DITHER
+  PROP_DITHER,
+  PROP_DITHER_QUANTIZATION
 };
 
 #define CSP_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";" \
@@ -421,7 +425,10 @@ gst_video_convert_set_info (GstVideoFilter * filter,
 
   space->convert = gst_video_converter_new (in_info, out_info,
       gst_structure_new ("GstVideoConvertConfig",
-          "dither", GST_TYPE_VIDEO_DITHER_METHOD, space->dither, NULL));
+          GST_VIDEO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_VIDEO_DITHER_METHOD,
+          space->dither,
+          GST_VIDEO_CONVERTER_OPT_DITHER_QUANTIZATION, G_TYPE_UINT,
+          space->dither_quantization, NULL));
   if (space->convert == NULL)
     goto no_convert;
 
@@ -496,13 +503,19 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DITHER,
       g_param_spec_enum ("dither", "Dither", "Apply dithering while converting",
-          gst_video_dither_method_get_type (), 0,
+          gst_video_dither_method_get_type (), DEFAULT_PROP_DITHER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DITHER_QUANTIZATION,
+      g_param_spec_uint ("dither-quantization", "Dither Quantize",
+          "Quantizer to use", 0, G_MAXUINT, DEFAULT_PROP_DITHER_QUANTIZATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_video_convert_init (GstVideoConvert * space)
 {
+  space->dither = DEFAULT_PROP_DITHER;
+  space->dither_quantization = DEFAULT_PROP_DITHER_QUANTIZATION;
 }
 
 void
@@ -516,6 +529,9 @@ gst_video_convert_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_DITHER:
       csp->dither = g_value_get_enum (value);
+      break;
+    case PROP_DITHER_QUANTIZATION:
+      csp->dither_quantization = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -534,6 +550,9 @@ gst_video_convert_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_DITHER:
       g_value_set_enum (value, csp->dither);
+      break;
+    case PROP_DITHER_QUANTIZATION:
+      g_value_set_uint (value, csp->dither_quantization);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

@@ -48,6 +48,7 @@ struct _GstVideoConvert {
 
   GstVideoConverter *convert;
   GstVideoDitherMethod dither;
+  guint dither_quantization;
 };
 
 struct _GstVideoConvertClass
