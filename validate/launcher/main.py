@@ -210,7 +210,7 @@ class LauncherConfig(Loggable):
         self.logsdir = None
         self.dest = None
         self._using_default_paths = False
-        self.paths = None
+        self.paths = []
         self.testsuites_dir = DEFAULT_TESTSUITES_DIR
 
         self.clone_dir = None
@@ -257,22 +257,11 @@ class LauncherConfig(Loggable):
         if self.clone_dir is None:
             self.clone_dir = os.path.join(self.main_dir, QA_ASSETS)
 
-        if self.paths is None:
-            self._using_default_paths = True
-            self.paths = [os.path.join(self.clone_dir, MEDIAS_FOLDER,
-                                       "defaults")]
-
         if not isinstance(self.paths, list):
             self.paths = [self.paths]
 
         if self.generate_info_full is True:
             self.generate_info = True
-
-        if self.http_server_dir is None:
-            if isinstance(self.paths, list):
-                self.http_server_dir = self.paths[0]
-            else:
-                self.http_server_dir = self.paths
 
         if self.sync_all is True:
             self.sync = True
@@ -286,6 +275,13 @@ class LauncherConfig(Loggable):
             return False
 
         return True
+
+    def set_http_server_dir(self, path):
+        if self.http_server_dir is not None:
+            princ("Server directory already set to %s" % self.http_server_dir)
+            return
+
+        self.http_server_dir = path
 
     def add_paths(self, paths):
         if not isinstance(paths, list):
@@ -402,11 +398,11 @@ Note that all testsuite should be inside python modules, so the directory should
                            " printed in the terminal")
     dir_group.add_argument("-R", "--render-path", dest="dest",
                            help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
-    dir_group.add_argument(
-        "-p", "--medias-paths", dest="paths", action="append",
-        help="Paths in which to look for media files, default is MAIN_DIR/gst-integration-testsuites/media/defaults")
+    dir_group.add_argument("-p", "--medias-paths", dest="paths", action="append",
+                           help="Paths in which to look for media files")
     dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
-                           help="Paths in which to look for media files, default is MAIN_DIR/gst-integration-testsuites")
+                           help="Paths where to clone the testuite to run "
+                           " default is MAIN_DIR/gst-integration-testsuites")
 
     http_server_group = parser.add_argument_group(
         "Handle the HTTP server to be created")
