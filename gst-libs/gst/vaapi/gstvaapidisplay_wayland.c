@@ -204,7 +204,7 @@ gst_vaapi_display_wayland_open_display (GstVaapiDisplay * display,
 {
   GstVaapiDisplayWaylandPrivate *const priv =
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
-  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_GET_CACHE (display);
+  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_CACHE (display);
   const GstVaapiDisplayInfo *info;
 
   if (!set_display_name (display, name))
@@ -263,7 +263,7 @@ gst_vaapi_display_wayland_get_display_info (GstVaapiDisplay * display,
 {
   GstVaapiDisplayWaylandPrivate *const priv =
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
-  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_GET_CACHE (display);
+  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_CACHE (display);
   const GstVaapiDisplayInfo *cached_info;
 
   /* Return any cached info even if child has its own VA display */

@@ -33,19 +33,19 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_DISPLAY_CAST(display) \
-    ((GstVaapiDisplay *)(display))
+  ((GstVaapiDisplay *) (display))
 
 #define GST_VAAPI_DISPLAY_GET_PRIVATE(display) \
-    (&GST_VAAPI_DISPLAY_CAST(display)->priv)
+  (&GST_VAAPI_DISPLAY_CAST (display)->priv)
 
 #define GST_VAAPI_DISPLAY_CLASS(klass) \
-    ((GstVaapiDisplayClass *)(klass))
+  ((GstVaapiDisplayClass *) (klass))
 
 #define GST_VAAPI_IS_DISPLAY_CLASS(klass) \
-    ((klass) != NULL)
+  ((klass) != NULL)
 
 #define GST_VAAPI_DISPLAY_GET_CLASS(obj) \
-    GST_VAAPI_DISPLAY_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
+  GST_VAAPI_DISPLAY_CLASS (GST_VAAPI_MINI_OBJECT_GET_CLASS (obj))
 
 typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
 typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
@@ -73,85 +73,69 @@ typedef GstVaapiTexture *(*GstVaapiDisplayCreateTextureFunc) (
 
 /**
  * GST_VAAPI_DISPLAY_NATIVE:
- * @display_: a #GstVaapiDisplay
+ * @display: a #GstVaapiDisplay
  *
  * Macro that evaluates to the native display of @display.
  * This is an internal macro that does not do any run-time type check.
  */
 #undef  GST_VAAPI_DISPLAY_NATIVE
-#define GST_VAAPI_DISPLAY_NATIVE(display_) \
-  (GST_VAAPI_DISPLAY_GET_PRIVATE (display_)->native_display)
+#define GST_VAAPI_DISPLAY_NATIVE(display) \
+  (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->native_display)
 
 /**
  * GST_VAAPI_DISPLAY_VADISPLAY:
  * @display_: a #GstVaapiDisplay
  *
- * Macro that evaluates to the #VADisplay of @display.
+ * Macro that evaluates to the #VADisplay of @display_.
  * This is an internal macro that does not do any run-time type check.
  */
 #undef  GST_VAAPI_DISPLAY_VADISPLAY
 #define GST_VAAPI_DISPLAY_VADISPLAY(display_) \
-    GST_VAAPI_DISPLAY_GET_PRIVATE(display_)->display
-
-/**
- * GST_VAAPI_DISPLAY_LOCK:
- * @display: a #GstVaapiDisplay
- *
- * Locks @display
- */
-#undef  GST_VAAPI_DISPLAY_LOCK
-#define GST_VAAPI_DISPLAY_LOCK(display) \
-    gst_vaapi_display_lock(GST_VAAPI_DISPLAY_CAST(display))
-
-/**
- * GST_VAAPI_DISPLAY_UNLOCK:
- * @display: a #GstVaapiDisplay
- *
- * Unlocks @display
- */
-#undef  GST_VAAPI_DISPLAY_UNLOCK
-#define GST_VAAPI_DISPLAY_UNLOCK(display) \
-    gst_vaapi_display_unlock(GST_VAAPI_DISPLAY_CAST(display))
+  (GST_VAAPI_DISPLAY_GET_PRIVATE (display_)->display)
 
 /**
  * GST_VAAPI_DISPLAY_TYPE:
  * @display: a #GstVaapiDisplay
  *
  * Returns the @display type
+ * This is an internal macro that does not do any run-time type check.
  */
 #undef  GST_VAAPI_DISPLAY_TYPE
 #define GST_VAAPI_DISPLAY_TYPE(display) \
-    GST_VAAPI_DISPLAY_GET_PRIVATE(display)->display_type
+  (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->display_type)
 
 /**
  * GST_VAAPI_DISPLAY_TYPES:
  * @display: a #GstVaapiDisplay
  *
  * Returns compatible @display types as a set of flags
+ * This is an internal macro that does not do any run-time type check.
  */
 #undef  GST_VAAPI_DISPLAY_TYPES
 #define GST_VAAPI_DISPLAY_TYPES(display) \
-    gst_vaapi_display_get_display_types(GST_VAAPI_DISPLAY_CAST(display))
+  gst_vaapi_display_get_display_types (GST_VAAPI_DISPLAY_CAST (display))
 
 /**
  * GST_VAAPI_DISPLAY_HAS_VPP:
  * @display: a @GstVaapiDisplay
  *
  * Returns whether the @display supports video processing (VA/VPP)
+ * This is an internal macro that does not do any run-time type check.
  */
 #undef  GST_VAAPI_DISPLAY_HAS_VPP
 #define GST_VAAPI_DISPLAY_HAS_VPP(display) \
-    gst_vaapi_display_has_video_processing(GST_VAAPI_DISPLAY_CAST(display))
+  gst_vaapi_display_has_video_processing (GST_VAAPI_DISPLAY_CAST (display))
 
 /**
  * GST_VAAPI_DISPLAY_CACHE:
  * @display: a @GstVaapiDisplay
  *
  * Returns the #GstVaapiDisplayCache attached to the supplied @display object.
+ * This is an internal macro that does not do any run-time type check.
  */
-#undef  GST_VAAPI_DISPLAY_GET_CACHE
-#define GST_VAAPI_DISPLAY_GET_CACHE(display) \
-    (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->cache)
+#undef  GST_VAAPI_DISPLAY_CACHE
+#define GST_VAAPI_DISPLAY_CACHE(display) \
+  (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->cache)
 
 struct _GstVaapiDisplayPrivate
 {

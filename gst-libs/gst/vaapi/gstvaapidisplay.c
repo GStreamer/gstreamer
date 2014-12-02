@@ -1281,7 +1281,7 @@ gst_vaapi_display_flush (GstVaapiDisplay * display)
 }
 
 /**
- * gst_vaapi_display_get_display:
+ * gst_vaapi_display_get_display_type:
  * @display: a #GstVaapiDisplay
  *
  * Returns the #GstVaapiDisplayType bound to @display.
