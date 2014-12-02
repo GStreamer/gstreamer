@@ -951,7 +951,7 @@ gst_dash_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer)
       /* TODO */
     }
 
-    if (period_idx) {
+    if (period_id) {
       if (!gst_mpd_client_set_period_id (new_client, period_id)) {
         GST_DEBUG_OBJECT (demux, "Error setting up the updated manifest file");
         return GST_FLOW_EOS;
@@ -1005,6 +1005,7 @@ gst_dash_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer)
      * the manifest */
     GST_WARNING_OBJECT (demux, "Error parsing the manifest.");
     gst_buffer_unmap (buffer, &mapinfo);
+    return GST_FLOW_ERROR;
   }
 
   gst_buffer_unmap (buffer, &mapinfo);
