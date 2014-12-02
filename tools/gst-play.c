@@ -131,7 +131,8 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
         G_CALLBACK (play_about_to_finish), play);
   }
 
-  play_set_relative_volume (play, initial_volume - 1.0);
+  if (initial_volume != -1)
+    play_set_relative_volume (play, initial_volume - 1.0);
 
   return play;
 }
@@ -650,7 +651,7 @@ main (int argc, char **argv)
   gboolean interactive = FALSE; /* FIXME: maybe enable by default? */
   gboolean gapless = FALSE;
   gboolean shuffle = FALSE;
-  gdouble volume = 1.0;
+  gdouble volume = -1;
   gchar **filenames = NULL;
   gchar *audio_sink = NULL;
   gchar *video_sink = NULL;
