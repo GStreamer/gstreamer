@@ -694,10 +694,6 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
              "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
             ("validate.*.reverse_playback.*mkv$",
              "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
-            ("validate.*reverse.*Sintel_2010_720p_mkv",
-             "TODO in matroskademux: FIXME: We should build an index during playback or "
-             "when scanning that can be used here. The reverse playback code requires "
-             " seek_index and seek_entry to be set!"),
             ("validate.http.playback.seek_with_stop.*webm",
              "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
             ("validate.http.playback.seek_with_stop.*mkv",
@@ -706,9 +702,6 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             # MPEG TS known issues:
             ('(?i)validate.*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
              "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
-            ('validate.file.transcode.to_vorbis_and_vp8_in_webm.GH1_00094_1920x1280_MTS',
-             'Got error: Internal data stream error. -- Debug message: mpegtsbase.c(1371):'
-             'mpegts_base_loop (): ...: stream stopped, reason not-negotiated'),
 
             # HTTP known issues:
             ("validate.http.*scrub_forward_seeking.*",
@@ -721,10 +714,6 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
              "Reverse playback is not handled in MXF"),
             ("validate\.file\.transcode.*mxf",
              "FIXME: Transcoding and mixing tests need to be tested"),
-
-            # Subtitles known issues
-            ("validate.file.playback.switch_subtitle_track.Sintel_2010_720p_mkv",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=734051"),
 
             # Videomixing known issues
             ("validate.file.*.simple.scrub_forward_seeking.synchronized",

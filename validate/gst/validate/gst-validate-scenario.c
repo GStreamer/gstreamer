@@ -995,7 +995,6 @@ get_position (GstValidateScenario * scenario)
   } else if (act->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
-    GST_ERROR ("NEXT! %p", priv->actions);
     gst_mini_object_unref (GST_MINI_OBJECT (act));
 
     g_list_free (tmp);
