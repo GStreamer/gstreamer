@@ -376,20 +376,20 @@ static void
 video_scale_h_near_u32 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width)
 {
-  guint32 *s, *d;
+  guint32 *s, *d, *offset;
 
   d = (guint32 *) dest + dest_offset;
   s = (guint32 *) src;
+  offset = scale->resampler.offset + dest_offset;
 
 #if 0
   /* ORC is slower on this */
   video_orc_resample_h_near_u32_lq (d, s, 0, scale->inc, width);
+#elif 0
+  video_orc_resample_h_near_u32 (d, s, offset, width);
 #else
   {
     gint i;
-    guint32 *offset;
-
-    offset = scale->resampler.offset + dest_offset;
     for (i = 0; i < width; i++)
       d[i] = s[offset[i]];
   }
@@ -430,8 +430,8 @@ video_scale_h_ntap_4u8 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width)
 {
   gint16 *taps;
-  gint i, max_taps, count;
-  guint32 *d;
+  gint max_taps, count;
+  guint32 *d, *s;
   guint32 *offset_n;
   guint32 *pixels;
   gint32 *temp;
@@ -447,12 +447,20 @@ video_scale_h_ntap_4u8 (GstVideoScaler * scale,
   offset_n = scale->offset_n;
 
   d = (guint32 *) dest + dest_offset;
+  s = (guint32 *) src;
 
-  /* prepare the arrays FIXME, we can add this into ORC */
+  /* prepare the arrays */
   count = width * max_taps;
   pixels = (guint32 *) scale->tmpline1;
-  for (i = 0; i < count; i++)
-    pixels[i] = ((guint32 *) src)[offset_n[i]];
+#if 0
+  video_orc_resample_h_near_u32 (pixels, s, offset_n, count);
+#else
+  {
+    gint i;
+    for (i = 0; i < count; i++)
+      pixels[i] = s[offset_n[i]];
+  }
+#endif
 
   temp = (gint32 *) scale->tmpline2;
   taps = scale->taps_s16_4;
