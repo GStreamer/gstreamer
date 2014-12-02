@@ -548,10 +548,10 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->offset = 0;
   qtdemux->first_mdat = -1;
   qtdemux->got_moov = FALSE;
-  qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
+  qtdemux->mdatoffset = -1;
   qtdemux->mdatbuffer = NULL;
   qtdemux->restoredata_buffer = NULL;
-  qtdemux->restoredata_offset = GST_CLOCK_TIME_NONE;
+  qtdemux->restoredata_offset = -1;
   qtdemux->fragment_start = -1;
   qtdemux->fragment_start_offset = -1;
   qtdemux->media_caps = NULL;
@@ -1829,8 +1829,8 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->posted_redirect = FALSE;
     qtdemux->first_mdat = -1;
     qtdemux->header_size = 0;
-    qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
-    qtdemux->restoredata_offset = GST_CLOCK_TIME_NONE;
+    qtdemux->mdatoffset = -1;
+    qtdemux->restoredata_offset = -1;
     if (qtdemux->mdatbuffer)
       gst_buffer_unref (qtdemux->mdatbuffer);
     if (qtdemux->restoredata_buffer)
