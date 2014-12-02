@@ -551,7 +551,6 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
       gst_mpd_client_set_segment_index (active_stream, seg_idx);
     }
 
-    gst_date_time_unref (now);
   } else {
     GST_DEBUG_OBJECT (demux, "Seeking to first segment for on-demand stream ");
 
