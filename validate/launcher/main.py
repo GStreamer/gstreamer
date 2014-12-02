@@ -25,6 +25,7 @@ import reporters
 import subprocess
 
 
+from loggable import Loggable
 from httpserver import HTTPServer
 from baseclasses import _TestsLauncher, ScenarioManager
 from utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors, Protocols
@@ -187,6 +188,119 @@ class PrintUsage(argparse.Action):
         parser.exit()
 
 
+class LauncherConfig(Loggable):
+    def __init__(self):
+        self.testsuites = []
+        self.debug = False
+        self.forever = False
+        self.fatal_error = False
+        self.wanted_tests = []
+        self.blacklisted_tests = []
+        self.list_tests = False
+        self.mute = False
+        self.no_color = False
+        self.generate_info = False
+        self.update_media_info = False
+        self.generate_info_full = False
+        self.long_limit = utils.LONG_TEST
+        self.config = None
+        self.xunit_file = None
+        self.main_dir = utils.DEFAULT_MAIN_DIR
+        self.output_dir = None
+        self.logsdir = None
+        self.dest = None
+        self._using_default_paths = False
+        self.paths = None
+        self.testsuites_dir = DEFAULT_TESTSUITES_DIR
+
+        self.clone_dir = None
+
+        self.http_server_port = 8079
+        self.http_bandwith = 1024 * 1024
+        self.http_server_dir = None
+        self.httponly = False
+        self.update_assets_command = DEFAULT_SYNC_ASSET_COMMAND
+        self.get_assets_command = "git clone"
+        self.remote_assets_url = DEFAULT_GST_QA_ASSETS_REPO
+        self.sync = False
+        self.sync_all = False
+
+    def cleanup(self):
+        """
+        Cleanup the options looking after user options have been parsed
+        """
+
+        # Get absolute path for main_dir and base everything on that
+        self.main_dir = os.path.abspath(self.main_dir)
+
+        # default for output_dir is MAINDIR
+        if not self.output_dir:
+            self.output_dir = self.main_dir
+        else:
+            self.output_dir = os.path.abspath(self.output_dir)
+
+        # other output directories
+        if self.logsdir is None:
+            self.logsdir = os.path.join(self.output_dir, "logs")
+        if self.xunit_file is None:
+            self.xunit_file = os.path.join(self.logsdir, "xunit.xml")
+        if self.dest is None:
+            self.dest = os.path.join(self.output_dir, "rendered")
+
+        if not os.path.exists(self.dest):
+            os.makedirs(self.dest)
+        if urlparse.urlparse(self.dest).scheme == "":
+            self.dest = path2url(self.dest)
+
+        if self.no_color:
+            utils.desactivate_colors()
+        if self.clone_dir is None:
+            self.clone_dir = os.path.join(self.main_dir, QA_ASSETS)
+
+        if self.paths is None:
+            self._using_default_paths = True
+            self.paths = [os.path.join(self.clone_dir, MEDIAS_FOLDER,
+                                      "defaults")]
+
+        if not isinstance(self.paths, list):
+            self.paths = [self.paths]
+
+        if self.generate_info_full is True:
+            self.generate_info = True
+
+        if self.http_server_dir is None:
+            if isinstance(self.paths, list):
+                self.http_server_dir = self.paths[0]
+            else:
+                self.http_server_dir = self.paths
+
+        if self.sync_all is True:
+            self.sync = True
+            if self.update_assets_command == DEFAULT_SYNC_ASSET_COMMAND:
+                self.update_assets_command = DEFAULT_SYNC_ALL_ASSET_COMMAND
+
+        if not self.sync and not os.path.exists(self.clone_dir) and \
+                self.clone_dir == os.path.join(self.clone_dir, MEDIAS_FOLDER):
+            printc("Media path (%s) does not exists. Forgot to run --sync ?"
+                   % self.clone_dir, Colors.FAIL, True)
+            return False
+
+        return True
+
+    def add_paths(self, paths):
+        if not isinstance(paths, list):
+            paths = [paths]
+
+        if self._using_default_paths:
+            self.paths = paths
+            self._using_default_paths = False
+        else:
+
+            for path in paths:
+                if path not in self.paths:
+                    self.paths.append(path)
+
+
 def main(libsdir):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
@@ -224,124 +338,104 @@ Note that all testsuite should be inside python modules, so the directory should
                         default=["validate", "ges"])
     parser.add_argument("-d", "--debug", dest="debug",
                         action="store_true",
-                        default=False,
                         help="Let user debug the process on timeout")
     parser.add_argument("-f", "--forever", dest="forever",
-                        action="store_true", default=False,
+                        action="store_true",
                         help="Keep running tests until one fails")
     parser.add_argument("-F", "--fatal-error", dest="fatal_error",
-                        action="store_true", default=False,
+                        action="store_true",
                         help="Stop on first fail")
     parser.add_argument("-t", "--wanted-tests", dest="wanted_tests",
-                        default=[],
                         action="append",
                         help="Define the tests to execute, it can be a regex."
                         " If it contains defaults_only, only default scenarios"
                         " will be executed")
     parser.add_argument("-b", "--blacklisted-tests", dest="blacklisted_tests",
-                        default=[],
                         action="append",
                         help="Define the tests not to execute, it can be a regex.")
     parser.add_argument("-L", "--list-tests",
                         dest="list_tests",
                         action="store_true",
-                        default=False,
                         help="List tests and exit")
     parser.add_argument("-m", "--mute", dest="mute",
-                        action="store_true", default=False,
+                        action="store_true",
                         help="Mute playback output, which means that we use "
                         "a fakesink")
     parser.add_argument("-n", "--no-color", dest="no_color",
-                        action="store_true", default=False,
+                        action="store_true",
                         help="Set it to output no colored text in the terminal")
     parser.add_argument("-g", "--generate-media-info", dest="generate_info",
-                        action="store_true", default=False,
+                        action="store_true",
                         help="Set it in order to generate the missing .media_infos files")
     parser.add_argument("--update-media-info", dest="update_media_info",
-                        action="store_true", default=False,
+                        action="store_true",
                         help="Set it in order to update exising .media_infos files")
     parser.add_argument(
         "-G", "--generate-media-info-with-frame-detection", dest="generate_info_full",
-        action="store_true", default=False,
+        action="store_true",
         help="Set it in order to generate the missing .media_infos files. "
         "It implies --generate-media-info but enabling frame detection")
     parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
-                        default=utils.LONG_TEST, action='store',
-                        help="Defines the limit from which a test is considered as long (in seconds)"
-                             " note that 0 will enable all tests",
-                        type=int),
+                        action='store',
+                        help="Defines the limite from which a test is concidered as long (in seconds)"
+                             " not that 0 will enable all tests", type=int),
     parser.add_argument("-c", "--config", dest="config",
-                        default=None,
                         help="This is DEPRECATED, prefer using the testsuite format"
                         " to configure testsuites")
     dir_group = parser.add_argument_group(
         "Directories and files to be used by the launcher")
     parser.add_argument('--xunit-file', action='store',
                         dest='xunit_file', metavar="FILE",
-                        default=None,
                         help=("Path to xml file to store the xunit report in. "
                               "Default is LOGSDIR/xunit.xml"))
     dir_group.add_argument("-M", "--main-dir", dest="main_dir",
-                           default=DEFAULT_MAIN_DIR,
                            help="Main directory where to put files. Default is %s" % DEFAULT_MAIN_DIR)
     dir_group.add_argument("--testsuites-dir", dest="testsuites_dir",
-                           default=DEFAULT_TESTSUITES_DIR,
                            help="Directory where to look for testsuites. Default is %s"
                            " Note that GstValidate expect testsuite file to have .testsuite"
                            " as an extension in this folder." % DEFAULT_TESTSUITES_DIR)
     dir_group.add_argument("-o", "--output-dir", dest="output_dir",
-                           default=None,
                            help="Directory where to store logs and rendered files. Default is MAIN_DIR")
     dir_group.add_argument("-l", "--logs-dir", dest="logsdir",
-                           default=None,
                            help="Directory where to store logs, default is OUTPUT_DIR/logs."
                            " Note that 'stdout' and 'sdterr' are valid values that lets you get all the logs"
                            " printed in the terminal")
     dir_group.add_argument("-R", "--render-path", dest="dest",
-                           default=None,
                            help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
     dir_group.add_argument(
         "-p", "--medias-paths", dest="paths", action="append",
-        default=None,
-        help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets/media")
+        help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets/media/defaults")
     dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
-                           default=None,
                            help="Paths in which to look for media files, default is MAIN_DIR/gst-qa-assets")
 
     http_server_group = parser.add_argument_group(
         "Handle the HTTP server to be created")
     http_server_group.add_argument(
         "--http-server-port", dest="http_server_port",
-        default=8079,
         help="Port on which to run the http server on localhost")
     http_server_group.add_argument(
         "--http-bandwith-limitation", dest="http_bandwith",
-        default=1024 * 1024,
         help="The artificial bandwith limitation to introduce to the local server (in Bytes/sec) (default: 1 MBps)")
     http_server_group.add_argument(
         "-s", "--folder-for-http-server", dest="http_server_dir",
-        default=None,
         help="Folder in which to create an http server on localhost. Default is PATHS")
     http_server_group.add_argument("--http-only", dest="httponly",
-                                   default=False, action='store_true',
+                                   action='store_true',
                                    help="Start the http server and quit")
 
     assets_group = parser.add_argument_group("Handle remote assets")
     assets_group.add_argument(
         "-u", "--update-assets-command", dest="update_assets_command",
-        default=DEFAULT_SYNC_ASSET_COMMAND,
         help="Command to update assets")
     assets_group.add_argument(
         "--get-assets-command", dest="get_assets_command",
-        default="git clone",
         help="Command to get assets")
     assets_group.add_argument("--remote-assets-url", dest="remote_assets_url",
-                              default=DEFAULT_GST_QA_ASSETS_REPO,
                               help="Url to the remote assets (default:%s)" % DEFAULT_GST_QA_ASSETS_REPO)
     assets_group.add_argument("-S", "--sync", dest="sync", action="store_true",
-                              default=False, help="Synchronize asset repository")
+                              help="Synchronize asset repository")
     assets_group.add_argument("--sync-all", dest="sync_all", action="store_true",
-                              default=False, help="Synchronize asset repository,"
+                              help="Synchronize asset repository,"
                               " including big media files")
     assets_group.add_argument("--usage", action=PrintUsage,
                               help="Print usage documentation")
@@ -351,58 +445,10 @@ Note that all testsuite should be inside python modules, so the directory should
     tests_launcher = _TestsLauncher(libsdir)
     tests_launcher.add_options(parser)
 
-    (options, args) = parser.parse_known_args()
-
-    # Get absolute path for main_dir and base everything on that
-    options.main_dir = os.path.abspath(options.main_dir)
-
-    # default for output_dir is MAINDIR
-    if not options.output_dir:
-        options.output_dir = options.main_dir
-    else:
-        options.output_dir = os.path.abspath(options.output_dir)
-
-    # other output directories
-    if options.logsdir is None:
-        options.logsdir = os.path.join(options.output_dir, "logs")
-    if options.xunit_file is None:
-        options.xunit_file = os.path.join(options.logsdir, "xunit.xml")
-    if options.dest is None:
-        options.dest = os.path.join(options.output_dir, "rendered")
-
-    if not os.path.exists(options.dest):
-        os.makedirs(options.dest)
-    if urlparse.urlparse(options.dest).scheme == "":
-        options.dest = path2url(options.dest)
-
-    if options.no_color:
-        utils.desactivate_colors()
-    if options.clone_dir is None:
-        options.clone_dir = os.path.join(options.main_dir, QA_ASSETS)
-    if options.paths is None:
-        options.paths = os.path.join(options.clone_dir, MEDIAS_FOLDER)
-
-    if options.generate_info_full is True:
-        options.generate_info = True
-
-    if options.http_server_dir is None:
-        if isinstance(options.paths, list):
-            options.http_server_dir = options.paths[0]
-        else:
-            options.http_server_dir = options.paths
-
-    if options.sync_all is True:
-        options.sync = True
-        if options.update_assets_command == DEFAULT_SYNC_ASSET_COMMAND:
-            options.update_assets_command = DEFAULT_SYNC_ALL_ASSET_COMMAND
-
-    if not options.sync and not os.path.exists(options.clone_dir) and \
-            options.clone_dir == os.path.join(options.clone_dir, MEDIAS_FOLDER):
-        printc("Media path (%s) does not exist. Forgot to run --sync ?"
-               % options.clone_dir, Colors.FAIL, True)
-        return -1
-
-    tests_launcher.set_settings(options, args)
+    options = LauncherConfig()
+    parser.parse_args(namespace=options)
+    if not options.cleanup():
+        exit(1)
 
     if options.remote_assets_url and options.sync:
         if os.path.exists(options.clone_dir):
@@ -414,6 +460,8 @@ Note that all testsuite should be inside python modules, so the directory should
 
             if not update_assets(options):
                 exit(1)
+
+    tests_launcher.set_settings(options, [])
 
     # Ensure that the scenario manager singleton is ready to be used
     ScenarioManager().config = options
