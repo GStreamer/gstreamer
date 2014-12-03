@@ -821,7 +821,7 @@ gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad, GstObject * parent)
 {
   GstRtpJitterBuffer *jitterbuffer;
   GstPad *otherpad = NULL;
-  GstIterator *it;
+  GstIterator *it = NULL;
   GValue val = { 0, };
 
   jitterbuffer = GST_RTP_JITTER_BUFFER_CAST (parent);
@@ -831,13 +831,15 @@ gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad, GstObject * parent)
   } else if (pad == jitterbuffer->priv->srcpad) {
     otherpad = jitterbuffer->priv->sinkpad;
   } else if (pad == jitterbuffer->priv->rtcpsinkpad) {
-    otherpad = NULL;
+    it = gst_iterator_new_single (GST_TYPE_PAD, NULL);
   }
 
-  g_value_init (&val, GST_TYPE_PAD);
-  g_value_set_object (&val, otherpad);
-  it = gst_iterator_new_single (GST_TYPE_PAD, &val);
-  g_value_unset (&val);
+  if (it == NULL) {
+    g_value_init (&val, GST_TYPE_PAD);
+    g_value_set_object (&val, otherpad);
+    it = gst_iterator_new_single (GST_TYPE_PAD, &val);
+    g_value_unset (&val);
+  }
 
   return it;
 }
