@@ -1885,17 +1885,13 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
         }
         gst_task_pause (stream->download_task);
       } else {
+        gst_task_pause (stream->download_task);
         if (gst_adaptive_demux_combine_flows (demux) == GST_FLOW_EOS) {
           if (gst_adaptive_demux_has_next_period (demux)) {
-            gst_task_pause (stream->download_task);
             gst_adaptive_demux_advance_period (demux);
             ret = GST_FLOW_OK;
             goto end;
-          } else {
-            gst_task_pause (stream->download_task);
           }
-        } else {
-          ret = GST_FLOW_OK;
         }
       }
       break;
