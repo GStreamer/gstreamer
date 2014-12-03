@@ -952,8 +952,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
 
       GST_MANIFEST_LOCK (demux);
       gst_query_parse_duration (query, &fmt, NULL);
-      if (fmt == GST_FORMAT_TIME && demux->priv->manifest_buffer != NULL
-          && demux_class->get_duration) {
+      if (fmt == GST_FORMAT_TIME && demux->priv->manifest_buffer != NULL) {
         duration = demux_class->get_duration (demux);
 
         if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0) {
@@ -2220,26 +2219,23 @@ gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
     g_object_unref (download);
     ret = klass->update_manifest (demux, buffer);
     if (ret == GST_FLOW_OK) {
+      GstClockTime duration;
       gst_buffer_unref (demux->priv->manifest_buffer);
       demux->priv->manifest_buffer = buffer;
 
       /* Send an updated duration message */
-      if (klass->get_duration) {
-        GstClockTime duration = klass->get_duration (demux);
+      duration = klass->get_duration (demux);
 
-        GST_MANIFEST_UNLOCK (demux);
-        if (duration != GST_CLOCK_TIME_NONE) {
-          GST_DEBUG_OBJECT (demux,
-              "Sending duration message : %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (duration));
-          gst_element_post_message (GST_ELEMENT (demux),
-              gst_message_new_duration_changed (GST_OBJECT (demux)));
-        } else {
-          GST_DEBUG_OBJECT (demux,
-              "Duration unknown, can not send the duration message");
-        }
+      GST_MANIFEST_UNLOCK (demux);
+      if (duration != GST_CLOCK_TIME_NONE) {
+        GST_DEBUG_OBJECT (demux,
+            "Sending duration message : %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (duration));
+        gst_element_post_message (GST_ELEMENT (demux),
+            gst_message_new_duration_changed (GST_OBJECT (demux)));
       } else {
-        GST_MANIFEST_UNLOCK (demux);
+        GST_DEBUG_OBJECT (demux,
+            "Duration unknown, can not send the duration message");
       }
     } else {
       GST_MANIFEST_UNLOCK (demux);
