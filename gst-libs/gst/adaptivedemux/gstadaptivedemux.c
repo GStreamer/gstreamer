@@ -990,7 +990,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       GST_INFO_OBJECT (demux, "Received GST_QUERY_SEEKING with format %d", fmt);
       if (fmt == GST_FORMAT_TIME) {
-        gboolean can_seek = demux_class->get_duration && demux_class->seek
+        gboolean can_seek = demux_class->seek
             && !gst_adaptive_demux_is_live (demux);
         GstClockTime duration;
         duration = demux_class->get_duration (demux);
