@@ -1104,7 +1104,9 @@ beach:
 
 /* find the segment for @time_position for @stream
  *
- * Returns -1 if the segment cannot be found.
+ * Returns the index of the segment containing @time_position.
+ * Returns the last segment and sets the @eos variable to TRUE
+ * if the time is beyond the end. @eos may be NULL
  */
 static guint32
 gst_qtdemux_find_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
@@ -1116,8 +1118,6 @@ gst_qtdemux_find_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   GST_LOG_OBJECT (qtdemux, "finding segment for %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time_position));
 
-  /* find segment corresponding to time_position if we are looking
-   * for a segment. */
   seg_idx = -1;
   for (i = 0; i < stream->n_segments; i++) {
     QtDemuxSegment *segment = &stream->segments[i];
@@ -1134,11 +1134,9 @@ gst_qtdemux_find_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
         break;
       }
     } else {
-      if (segment->time <= time_position && time_position <= segment->stop_time) {
-        GST_LOG_OBJECT (qtdemux, "segment %d matches", i);
-        seg_idx = i;
-        break;
-      }
+      /* Last segment always matches */
+      seg_idx = i;
+      break;
     }
   }
   return seg_idx;
@@ -1193,10 +1191,6 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
 
     seg_idx = gst_qtdemux_find_segment (qtdemux, str, desired_time);
     GST_DEBUG_OBJECT (qtdemux, "align segment %d", seg_idx);
-
-    /* segment not found, continue with normal flow */
-    if (seg_idx == -1)
-      continue;
 
     /* get segment and time in the segment */
     seg = &str->segments[seg_idx];
@@ -3357,10 +3351,6 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
     seg_idx = gst_qtdemux_find_segment (qtdemux, str,
         qtdemux->segment.position);
 
-    /* segment not found, continue with normal flow */
-    if (seg_idx == -1)
-      continue;
-
     /* No candidate yet, take that one */
     if (!ref_str) {
       ref_str = str;
@@ -3464,10 +3454,6 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
           "stream %d align segment %d for keyframe pos %" GST_TIME_FORMAT, n,
           seg_idx, GST_TIME_ARGS (k_pos));
 
-      /* segment not found, continue with normal flow */
-      if (seg_idx == -1)
-        continue;
-
       /* get segment and time in the segment */
       seg = &str->segments[seg_idx];
       seg_time = k_pos - seg->time;
@@ -3560,7 +3546,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (G_UNLIKELY (seg_time > segment->duration)) {
     GST_LOG_OBJECT (qtdemux, "seg_time > segment->duration %" GST_TIME_FORMAT,
         GST_TIME_ARGS (segment->duration));
-    return FALSE;
+    seg_time = segment->duration;
   }
 
   /* qtdemux->segment.stop is in outside-time-realm, whereas
@@ -3742,10 +3728,6 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
     /* find segment corresponding to time_position if we are looking
      * for a segment. */
     seg_idx = gst_qtdemux_find_segment (qtdemux, stream, time_position);
-
-    /* nothing found, we're really eos */
-    if (seg_idx == -1)
-      goto eos;
   }
 
   /* different segment, activate it, sample_index will be set. */
