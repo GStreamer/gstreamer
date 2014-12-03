@@ -39,6 +39,7 @@
 #include <glib-unix.h>
 #endif
 
+static gint ret = 0;
 static GMainLoop *mainloop;
 static GstElement *pipeline;
 static gboolean buffering = FALSE;
@@ -56,8 +57,10 @@ intr_handler (gpointer user_data)
 
   g_main_loop_quit (mainloop);
 
-  /* remove signal handler */
-  return FALSE;
+  ret = SIGINT;
+
+  /* Keep signal handler, it will be removed later anyway */
+  return TRUE;
 }
 #endif /* G_OS_UNIX */
 
@@ -372,7 +375,6 @@ main (int argc, gchar ** argv)
       inspect_action_type = FALSE;
   GstStateChangeReturn sret;
   gchar *output_file = NULL;
-  gint ret = 0;
 
 #ifdef G_OS_UNIX
   guint signal_watch_id;
