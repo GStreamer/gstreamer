@@ -197,6 +197,11 @@ void
 gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin);
 
 G_GNUC_INTERNAL
+gboolean
+gst_vaapi_plugin_base_has_display_type (GstVaapiPluginBase * plugin,
+    GstVaapiDisplayType display_type_req);
+
+G_GNUC_INTERNAL
 void
 gst_vaapi_plugin_base_set_display_type (GstVaapiPluginBase * plugin,
     GstVaapiDisplayType display_type);

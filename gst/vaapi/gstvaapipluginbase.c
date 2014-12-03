@@ -314,6 +314,35 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
 }
 
 /**
+ * gst_vaapi_plugin_base_has_display_type:
+ * @plugin: a #GstVaapiPluginBase
+ * @display_type_req: the desired #GstVaapiDisplayType
+ *
+ * Checks whether the @plugin elements already has a #GstVaapiDisplay
+ * instance compatible with type @display_type_req.
+ *
+ * Return value: %TRUE if @plugin has a compatible display, %FALSE otherwise
+ */
+gboolean
+gst_vaapi_plugin_base_has_display_type (GstVaapiPluginBase * plugin,
+    GstVaapiDisplayType display_type_req)
+{
+  GstVaapiDisplayType display_type;
+
+  if (!plugin->display)
+    return FALSE;
+
+  display_type = plugin->display_type;
+  if (gst_vaapi_display_type_is_compatible (display_type, display_type_req))
+    return TRUE;
+
+  display_type = gst_vaapi_display_get_class_type (plugin->display);
+  if (gst_vaapi_display_type_is_compatible (display_type, display_type_req))
+    return TRUE;
+  return FALSE;
+}
+
+/**
  * gst_vaapi_plugin_base_set_display_type:
  * @plugin: a #GstVaapiPluginBase
  * @display_type: the new request #GstVaapiDisplayType
@@ -357,9 +386,7 @@ gst_vaapi_plugin_base_set_display_name (GstVaapiPluginBase * plugin,
 gboolean
 gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin)
 {
-  if (plugin->display
-      && gst_vaapi_display_type_is_compatible (plugin->display_type,
-          plugin->display_type_req))
+  if (gst_vaapi_plugin_base_has_display_type (plugin, plugin->display_type_req))
     return TRUE;
   gst_vaapi_display_replace (&plugin->display, NULL);
 
@@ -673,6 +700,12 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 #endif
 #endif
 
+  /* Make sure the display we pass down to the buffer pool is actually
+     the expected one, especially when the downstream element requires
+     a GLX or EGL display */
+  if (!gst_vaapi_plugin_base_ensure_display (plugin))
+    goto error_ensure_display;
+
   gst_video_info_init (&vi);
   gst_video_info_from_caps (&vi, caps);
   if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED)
@@ -755,6 +788,12 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 error_no_caps:
   {
     GST_ERROR_OBJECT (plugin, "no caps specified");
+    return FALSE;
+  }
+error_ensure_display:
+  {
+    GST_ERROR_OBJECT (plugin, "failed to ensure display of type %d",
+        plugin->display_type_req);
     return FALSE;
   }
 error_create_pool:
@@ -974,6 +1013,21 @@ gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
     GstObject * object)
 {
 #if USE_GST_GL_HELPERS
+  GstGLContext *const gl_context = GST_GL_CONTEXT (object);
+  GstVaapiDisplayType display_type;
+
   gst_object_replace (&plugin->gl_context, object);
+
+  switch (gst_gl_context_get_gl_platform (gl_context)) {
+#if USE_GLX
+    case GST_GL_PLATFORM_GLX:
+      display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
+      break;
+#endif
+    default:
+      display_type = plugin->display_type;
+      break;
+  }
+  gst_vaapi_plugin_base_set_display_type (plugin, display_type);
 #endif
 }
