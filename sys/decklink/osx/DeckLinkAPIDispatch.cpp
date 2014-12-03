@@ -33,13 +33,15 @@
 	#error The DeckLink API version of DeckLinkAPIDispatch.cpp is not the same version as DeckLinkAPI.h
 #endif
 
-#define kDeckLinkAPI_BundlePath "/Library/Application Support/Blackmagic Design/Blackmagic DeckLink/DeckLinkAPI.bundle"
+#define kDeckLinkAPI_BundlePath "/Library/Frameworks/DeckLinkAPI.framework"
+
 
 typedef IDeckLinkIterator* (*CreateIteratorFunc)(void);
 typedef IDeckLinkAPIInformation* (*CreateAPIInformationFunc)(void);
 typedef IDeckLinkGLScreenPreviewHelper* (*CreateOpenGLScreenPreviewHelperFunc)(void);
 typedef IDeckLinkCocoaScreenPreviewCallback* (*CreateCocoaScreenPreviewFunc)(void*);
 typedef IDeckLinkVideoConversion* (*CreateVideoConversionInstanceFunc)(void);
+typedef IDeckLinkDiscovery* (*CreateDeckLinkDiscoveryInstanceFunc)(void);
 
 static pthread_once_t						gDeckLinkOnceControl		= PTHREAD_ONCE_INIT;
 static CFBundleRef							gDeckLinkAPIBundleRef		= NULL;
@@ -48,6 +50,7 @@ static CreateAPIInformationFunc				gCreateAPIInformationFunc	= NULL;
 static CreateOpenGLScreenPreviewHelperFunc	gCreateOpenGLPreviewFunc	= NULL;
 static CreateCocoaScreenPreviewFunc			gCreateCocoaPreviewFunc		= NULL;
 static CreateVideoConversionInstanceFunc	gCreateVideoConversionFunc	= NULL;
+static CreateDeckLinkDiscoveryInstanceFunc  gCreateDeckLinkDiscoveryFunc= NULL;
 
 
 void	InitDeckLinkAPI (void)
@@ -65,6 +68,7 @@ void	InitDeckLinkAPI (void)
 			gCreateOpenGLPreviewFunc = (CreateOpenGLScreenPreviewHelperFunc)CFBundleGetFunctionPointerForName(gDeckLinkAPIBundleRef, CFSTR("CreateOpenGLScreenPreviewHelper_0001"));
 			gCreateCocoaPreviewFunc = (CreateCocoaScreenPreviewFunc)CFBundleGetFunctionPointerForName(gDeckLinkAPIBundleRef, CFSTR("CreateCocoaScreenPreview_0001"));
 			gCreateVideoConversionFunc = (CreateVideoConversionInstanceFunc)CFBundleGetFunctionPointerForName(gDeckLinkAPIBundleRef, CFSTR("CreateVideoConversionInstance_0001"));
+            gCreateDeckLinkDiscoveryFunc = (CreateDeckLinkDiscoveryInstanceFunc)CFBundleGetFunctionPointerForName(gDeckLinkAPIBundleRef, CFSTR("CreateDeckLinkDiscoveryInstance_0001"));
 		}
 		CFRelease(bundleURL);
 	}
@@ -128,6 +132,17 @@ IDeckLinkVideoConversion* CreateVideoConversionInstance (void)
 	
 	return gCreateVideoConversionFunc();
 }
+
+IDeckLinkDiscovery* CreateDeckLinkDiscoveryInstance (void)
+{
+	pthread_once(&gDeckLinkOnceControl, InitDeckLinkAPI);
+	
+	if (gCreateDeckLinkDiscoveryFunc == NULL)
+		return NULL;
+	
+	return gCreateDeckLinkDiscoveryFunc();
+}
+
 
 #define kBMDStreamingAPI_BundlePath "/Library/Application Support/Blackmagic Design/Streaming/BMDStreamingAPI.bundle"
 

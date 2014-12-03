@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2011 Blackmagic Design
+** Copyright (c) 2014 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -28,12 +28,21 @@
 #ifndef BMD_DECKLINKAPIDISCOVERY_H
 #define BMD_DECKLINKAPIDISCOVERY_H
 
+
+#ifndef BMD_CONST
+    #if defined(_MSC_VER)
+        #define BMD_CONST __declspec(selectany) static const
+    #else
+        #define BMD_CONST static const
+    #endif
+#endif
+
 // Type Declarations
 
 
 // Interface ID Declarations
 
-#define IID_IDeckLink                                    /* C418FBDD-0587-48ED-8FE5-640F0A14AF91 */ (REFIID){0xC4,0x18,0xFB,0xDD,0x05,0x87,0x48,0xED,0x8F,0xE5,0x64,0x0F,0x0A,0x14,0xAF,0x91}
+BMD_CONST REFIID IID_IDeckLink                                    = /* C418FBDD-0587-48ED-8FE5-640F0A14AF91 */ {0xC4,0x18,0xFB,0xDD,0x05,0x87,0x48,0xED,0x8F,0xE5,0x64,0x0F,0x0A,0x14,0xAF,0x91};
 
 // Forward Declarations
 
@@ -48,7 +57,7 @@ public:
     virtual HRESULT GetDisplayName (/* out */ CFStringRef *displayName) = 0;
 
 protected:
-    virtual ~IDeckLink () {}; // call Release method to drop reference count
+    virtual ~IDeckLink () {} // call Release method to drop reference count
 };
 
 /* Functions */
@@ -56,7 +65,7 @@ protected:
 extern "C" {
 
 
-};
+}
 
 
 #endif /* defined(BMD_DECKLINKAPIDISCOVERY_H) */

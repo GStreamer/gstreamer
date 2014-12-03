@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2011 Blackmagic Design
+** Copyright (c) 2014 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -28,13 +28,22 @@
 #ifndef BMD_DECKLINKAPIMODES_H
 #define BMD_DECKLINKAPIMODES_H
 
+
+#ifndef BMD_CONST
+    #if defined(_MSC_VER)
+        #define BMD_CONST __declspec(selectany) static const
+    #else
+        #define BMD_CONST static const
+    #endif
+#endif
+
 // Type Declarations
 
 
 // Interface ID Declarations
 
-#define IID_IDeckLinkDisplayModeIterator                 /* 9C88499F-F601-4021-B80B-032E4EB41C35 */ (REFIID){0x9C,0x88,0x49,0x9F,0xF6,0x01,0x40,0x21,0xB8,0x0B,0x03,0x2E,0x4E,0xB4,0x1C,0x35}
-#define IID_IDeckLinkDisplayMode                         /* 3EB2C1AB-0A3D-4523-A3AD-F40D7FB14E78 */ (REFIID){0x3E,0xB2,0xC1,0xAB,0x0A,0x3D,0x45,0x23,0xA3,0xAD,0xF4,0x0D,0x7F,0xB1,0x4E,0x78}
+BMD_CONST REFIID IID_IDeckLinkDisplayModeIterator                 = /* 9C88499F-F601-4021-B80B-032E4EB41C35 */ {0x9C,0x88,0x49,0x9F,0xF6,0x01,0x40,0x21,0xB8,0x0B,0x03,0x2E,0x4E,0xB4,0x1C,0x35};
+BMD_CONST REFIID IID_IDeckLinkDisplayMode                         = /* 3EB2C1AB-0A3D-4523-A3AD-F40D7FB14E78 */ {0x3E,0xB2,0xC1,0xAB,0x0A,0x3D,0x45,0x23,0xA3,0xAD,0xF4,0x0D,0x7F,0xB1,0x4E,0x78};
 
 /* Enum BMDDisplayMode - Video display modes */
 
@@ -75,6 +84,29 @@ enum _BMDDisplayMode {
     bmdMode2k24                                                  = '2k24',
     bmdMode2k25                                                  = '2k25',
 
+    /* DCI Modes (output only) */
+
+    bmdMode2kDCI2398                                             = '2d23',
+    bmdMode2kDCI24                                               = '2d24',
+    bmdMode2kDCI25                                               = '2d25',
+
+    /* 4k Modes */
+
+    bmdMode4K2160p2398                                           = '4k23',
+    bmdMode4K2160p24                                             = '4k24',
+    bmdMode4K2160p25                                             = '4k25',
+    bmdMode4K2160p2997                                           = '4k29',
+    bmdMode4K2160p30                                             = '4k30',
+    bmdMode4K2160p50                                             = '4k50',
+    bmdMode4K2160p5994                                           = '4k59',
+    bmdMode4K2160p60                                             = '4k60',
+
+    /* DCI Modes (output only) */
+
+    bmdMode4kDCI2398                                             = '4d23',
+    bmdMode4kDCI24                                               = '4d24',
+    bmdMode4kDCI25                                               = '4d25',
+
     /* Special Modes */
 
     bmdModeUnknown                                               = 'iunk'
@@ -99,7 +131,11 @@ enum _BMDPixelFormat {
     bmdFormat10BitYUV                                            = 'v210',
     bmdFormat8BitARGB                                            = 32,
     bmdFormat8BitBGRA                                            = 'BGRA',
-    bmdFormat10BitRGB                                            = 'r210'	// Big-endian RGB 10-bit per component with SMPTE video levels (64-960). Packed as 2:10:10:10
+    bmdFormat10BitRGB                                            = 'r210',	// Big-endian RGB 10-bit per component with SMPTE video levels (64-960). Packed as 2:10:10:10
+    bmdFormat12BitRGB                                            = 'R12B',	// Big-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component
+    bmdFormat12BitRGBLE                                          = 'R12L',	// Little-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component
+    bmdFormat10BitRGBXLE                                         = 'R10l',	// Little-endian 10-bit RGB with SMPTE video levels (64-940)
+    bmdFormat10BitRGBX                                           = 'R10b'	// Big-endian 10-bit RGB with SMPTE video levels (64-940)
 };
 
 /* Enum BMDDisplayModeFlags - Flags to describe the characteristics of an IDeckLinkDisplayMode. */
@@ -124,7 +160,7 @@ public:
     virtual HRESULT Next (/* out */ IDeckLinkDisplayMode **deckLinkDisplayMode) = 0;
 
 protected:
-    virtual ~IDeckLinkDisplayModeIterator () {}; // call Release method to drop reference count
+    virtual ~IDeckLinkDisplayModeIterator () {} // call Release method to drop reference count
 };
 
 /* Interface IDeckLinkDisplayMode - represents a display mode */
@@ -141,7 +177,7 @@ public:
     virtual BMDDisplayModeFlags GetFlags (void) = 0;
 
 protected:
-    virtual ~IDeckLinkDisplayMode () {}; // call Release method to drop reference count
+    virtual ~IDeckLinkDisplayMode () {} // call Release method to drop reference count
 };
 
 /* Functions */
@@ -149,7 +185,7 @@ protected:
 extern "C" {
 
 
-};
+}
 
 
 #endif /* defined(BMD_DECKLINKAPIMODES_H) */

@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2011 Blackmagic Design
+** Copyright (c) 2014 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -28,13 +28,22 @@
 #ifndef BMD_DECKLINKAPIDECKCONTROL_H
 #define BMD_DECKLINKAPIDECKCONTROL_H
 
+
+#ifndef BMD_CONST
+    #if defined(_MSC_VER)
+        #define BMD_CONST __declspec(selectany) static const
+    #else
+        #define BMD_CONST static const
+    #endif
+#endif
+
 // Type Declarations
 
 
 // Interface ID Declarations
 
-#define IID_IDeckLinkDeckControlStatusCallback           /* 53436FFB-B434-4906-BADC-AE3060FFE8EF */ (REFIID){0x53,0x43,0x6F,0xFB,0xB4,0x34,0x49,0x06,0xBA,0xDC,0xAE,0x30,0x60,0xFF,0xE8,0xEF}
-#define IID_IDeckLinkDeckControl                         /* 8E1C3ACE-19C7-4E00-8B92-D80431D958BE */ (REFIID){0x8E,0x1C,0x3A,0xCE,0x19,0xC7,0x4E,0x00,0x8B,0x92,0xD8,0x04,0x31,0xD9,0x58,0xBE}
+BMD_CONST REFIID IID_IDeckLinkDeckControlStatusCallback           = /* 53436FFB-B434-4906-BADC-AE3060FFE8EF */ {0x53,0x43,0x6F,0xFB,0xB4,0x34,0x49,0x06,0xBA,0xDC,0xAE,0x30,0x60,0xFF,0xE8,0xEF};
+BMD_CONST REFIID IID_IDeckLinkDeckControl                         = /* 8E1C3ACE-19C7-4E00-8B92-D80431D958BE */ {0x8E,0x1C,0x3A,0xCE,0x19,0xC7,0x4E,0x00,0x8B,0x92,0xD8,0x04,0x31,0xD9,0x58,0xBE};
 
 /* Enum BMDDeckControlMode - DeckControl mode */
 
@@ -149,7 +158,7 @@ public:
     virtual HRESULT DeckControlStatusChanged (/* in */ BMDDeckControlStatusFlags flags, /* in */ uint32_t mask) = 0;
 
 protected:
-    virtual ~IDeckLinkDeckControlStatusCallback () {}; // call Release method to drop reference count
+    virtual ~IDeckLinkDeckControlStatusCallback () {} // call Release method to drop reference count
 };
 
 /* Interface IDeckLinkDeckControl - Deck Control main interface */
@@ -192,7 +201,7 @@ public:
     virtual HRESULT SetCallback (/* in */ IDeckLinkDeckControlStatusCallback *callback) = 0;
 
 protected:
-    virtual ~IDeckLinkDeckControl () {}; // call Release method to drop reference count
+    virtual ~IDeckLinkDeckControl () {} // call Release method to drop reference count
 };
 
 /* Functions */
@@ -200,7 +209,7 @@ protected:
 extern "C" {
 
 
-};
+}
 
 
 #endif /* defined(BMD_DECKLINKAPIDECKCONTROL_H) */

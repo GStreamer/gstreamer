@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2011 Blackmagic Design
+** Copyright (c) 2014 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -28,22 +28,31 @@
 #ifndef BMD_DECKLINKAPISTREAMING_H
 #define BMD_DECKLINKAPISTREAMING_H
 
+
+#ifndef BMD_CONST
+    #if defined(_MSC_VER)
+        #define BMD_CONST __declspec(selectany) static const
+    #else
+        #define BMD_CONST static const
+    #endif
+#endif
+
 // Type Declarations
 
 
 // Interface ID Declarations
 
-#define IID_IBMDStreamingDeviceNotificationCallback      /* F9531D64-3305-4B29-A387-7F74BB0D0E84 */ (REFIID){0xF9,0x53,0x1D,0x64,0x33,0x05,0x4B,0x29,0xA3,0x87,0x7F,0x74,0xBB,0x0D,0x0E,0x84}
-#define IID_IBMDStreamingH264InputCallback               /* 823C475F-55AE-46F9-890C-537CC5CEDCCA */ (REFIID){0x82,0x3C,0x47,0x5F,0x55,0xAE,0x46,0xF9,0x89,0x0C,0x53,0x7C,0xC5,0xCE,0xDC,0xCA}
-#define IID_IBMDStreamingDiscovery                       /* 2C837444-F989-4D87-901A-47C8A36D096D */ (REFIID){0x2C,0x83,0x74,0x44,0xF9,0x89,0x4D,0x87,0x90,0x1A,0x47,0xC8,0xA3,0x6D,0x09,0x6D}
-#define IID_IBMDStreamingVideoEncodingMode               /* 1AB8035B-CD13-458D-B6DF-5E8F7C2141D9 */ (REFIID){0x1A,0xB8,0x03,0x5B,0xCD,0x13,0x45,0x8D,0xB6,0xDF,0x5E,0x8F,0x7C,0x21,0x41,0xD9}
-#define IID_IBMDStreamingMutableVideoEncodingMode        /* 19BF7D90-1E0A-400D-B2C6-FFC4E78AD49D */ (REFIID){0x19,0xBF,0x7D,0x90,0x1E,0x0A,0x40,0x0D,0xB2,0xC6,0xFF,0xC4,0xE7,0x8A,0xD4,0x9D}
-#define IID_IBMDStreamingVideoEncodingModePresetIterator /* 7AC731A3-C950-4AD0-804A-8377AA51C6C4 */ (REFIID){0x7A,0xC7,0x31,0xA3,0xC9,0x50,0x4A,0xD0,0x80,0x4A,0x83,0x77,0xAA,0x51,0xC6,0xC4}
-#define IID_IBMDStreamingDeviceInput                     /* 24B6B6EC-1727-44BB-9818-34FF086ACF98 */ (REFIID){0x24,0xB6,0xB6,0xEC,0x17,0x27,0x44,0xBB,0x98,0x18,0x34,0xFF,0x08,0x6A,0xCF,0x98}
-#define IID_IBMDStreamingH264NALPacket                   /* E260E955-14BE-4395-9775-9F02CC0A9D89 */ (REFIID){0xE2,0x60,0xE9,0x55,0x14,0xBE,0x43,0x95,0x97,0x75,0x9F,0x02,0xCC,0x0A,0x9D,0x89}
-#define IID_IBMDStreamingAudioPacket                     /* D9EB5902-1AD2-43F4-9E2C-3CFA50B5EE19 */ (REFIID){0xD9,0xEB,0x59,0x02,0x1A,0xD2,0x43,0xF4,0x9E,0x2C,0x3C,0xFA,0x50,0xB5,0xEE,0x19}
-#define IID_IBMDStreamingMPEG2TSPacket                   /* 91810D1C-4FB3-4AAA-AE56-FA301D3DFA4C */ (REFIID){0x91,0x81,0x0D,0x1C,0x4F,0xB3,0x4A,0xAA,0xAE,0x56,0xFA,0x30,0x1D,0x3D,0xFA,0x4C}
-#define IID_IBMDStreamingH264NALParser                   /* 5867F18C-5BFA-4CCC-B2A7-9DFD140417D2 */ (REFIID){0x58,0x67,0xF1,0x8C,0x5B,0xFA,0x4C,0xCC,0xB2,0xA7,0x9D,0xFD,0x14,0x04,0x17,0xD2}
+BMD_CONST REFIID IID_IBMDStreamingDeviceNotificationCallback      = /* F9531D64-3305-4B29-A387-7F74BB0D0E84 */ {0xF9,0x53,0x1D,0x64,0x33,0x05,0x4B,0x29,0xA3,0x87,0x7F,0x74,0xBB,0x0D,0x0E,0x84};
+BMD_CONST REFIID IID_IBMDStreamingH264InputCallback               = /* 823C475F-55AE-46F9-890C-537CC5CEDCCA */ {0x82,0x3C,0x47,0x5F,0x55,0xAE,0x46,0xF9,0x89,0x0C,0x53,0x7C,0xC5,0xCE,0xDC,0xCA};
+BMD_CONST REFIID IID_IBMDStreamingDiscovery                       = /* 2C837444-F989-4D87-901A-47C8A36D096D */ {0x2C,0x83,0x74,0x44,0xF9,0x89,0x4D,0x87,0x90,0x1A,0x47,0xC8,0xA3,0x6D,0x09,0x6D};
+BMD_CONST REFIID IID_IBMDStreamingVideoEncodingMode               = /* 1AB8035B-CD13-458D-B6DF-5E8F7C2141D9 */ {0x1A,0xB8,0x03,0x5B,0xCD,0x13,0x45,0x8D,0xB6,0xDF,0x5E,0x8F,0x7C,0x21,0x41,0xD9};
+BMD_CONST REFIID IID_IBMDStreamingMutableVideoEncodingMode        = /* 19BF7D90-1E0A-400D-B2C6-FFC4E78AD49D */ {0x19,0xBF,0x7D,0x90,0x1E,0x0A,0x40,0x0D,0xB2,0xC6,0xFF,0xC4,0xE7,0x8A,0xD4,0x9D};
+BMD_CONST REFIID IID_IBMDStreamingVideoEncodingModePresetIterator = /* 7AC731A3-C950-4AD0-804A-8377AA51C6C4 */ {0x7A,0xC7,0x31,0xA3,0xC9,0x50,0x4A,0xD0,0x80,0x4A,0x83,0x77,0xAA,0x51,0xC6,0xC4};
+BMD_CONST REFIID IID_IBMDStreamingDeviceInput                     = /* 24B6B6EC-1727-44BB-9818-34FF086ACF98 */ {0x24,0xB6,0xB6,0xEC,0x17,0x27,0x44,0xBB,0x98,0x18,0x34,0xFF,0x08,0x6A,0xCF,0x98};
+BMD_CONST REFIID IID_IBMDStreamingH264NALPacket                   = /* E260E955-14BE-4395-9775-9F02CC0A9D89 */ {0xE2,0x60,0xE9,0x55,0x14,0xBE,0x43,0x95,0x97,0x75,0x9F,0x02,0xCC,0x0A,0x9D,0x89};
+BMD_CONST REFIID IID_IBMDStreamingAudioPacket                     = /* D9EB5902-1AD2-43F4-9E2C-3CFA50B5EE19 */ {0xD9,0xEB,0x59,0x02,0x1A,0xD2,0x43,0xF4,0x9E,0x2C,0x3C,0xFA,0x50,0xB5,0xEE,0x19};
+BMD_CONST REFIID IID_IBMDStreamingMPEG2TSPacket                   = /* 91810D1C-4FB3-4AAA-AE56-FA301D3DFA4C */ {0x91,0x81,0x0D,0x1C,0x4F,0xB3,0x4A,0xAA,0xAE,0x56,0xFA,0x30,0x1D,0x3D,0xFA,0x4C};
+BMD_CONST REFIID IID_IBMDStreamingH264NALParser                   = /* 5867F18C-5BFA-4CCC-B2A7-9DFD140417D2 */ {0x58,0x67,0xF1,0x8C,0x5B,0xFA,0x4C,0xCC,0xB2,0xA7,0x9D,0xFD,0x14,0x04,0x17,0xD2};
 
 /* Enum BMDStreamingDeviceMode - Device modes */
 
@@ -187,7 +196,7 @@ public:
     virtual HRESULT StreamingDeviceModeChanged (/* in */ IDeckLink* device, /* in */ BMDStreamingDeviceMode mode) = 0;
 
 protected:
-    virtual ~IBMDStreamingDeviceNotificationCallback () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingDeviceNotificationCallback () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingH264InputCallback - H264 input callbacks. */
@@ -203,7 +212,7 @@ public:
     virtual HRESULT H264VideoInputModeChanged (void) = 0;
 
 protected:
-    virtual ~IBMDStreamingH264InputCallback () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingH264InputCallback () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingDiscovery - Installs device notifications */
@@ -215,7 +224,7 @@ public:
     virtual HRESULT UninstallDeviceNotifications (void) = 0;
 
 protected:
-    virtual ~IBMDStreamingDiscovery () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingDiscovery () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingVideoEncodingMode - Represents an encoded video mode. */
@@ -238,7 +247,7 @@ public:
     virtual HRESULT CreateMutableVideoEncodingMode (/* out */ IBMDStreamingMutableVideoEncodingMode** newEncodingMode) = 0; // Creates a mutable copy of the encoding mode
 
 protected:
-    virtual ~IBMDStreamingVideoEncodingMode () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingVideoEncodingMode () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingMutableVideoEncodingMode - Represents a mutable encoded video mode. */
@@ -254,7 +263,7 @@ public:
     virtual HRESULT SetString (/* in */ BMDStreamingEncodingModePropertyID cfgID, /* in */ CFStringRef value) = 0;
 
 protected:
-    virtual ~IBMDStreamingMutableVideoEncodingMode () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingMutableVideoEncodingMode () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingVideoEncodingModePresetIterator - Enumerates encoding mode presets */
@@ -265,7 +274,7 @@ public:
     virtual HRESULT Next (/* out */ IBMDStreamingVideoEncodingMode** videoEncodingMode) = 0;
 
 protected:
-    virtual ~IBMDStreamingVideoEncodingModePresetIterator () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingVideoEncodingModePresetIterator () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingDeviceInput - Created by QueryInterface from IDeckLink */
@@ -295,7 +304,7 @@ public:
     virtual HRESULT SetCallback (/* in */ IUnknown* theCallback) = 0;
 
 protected:
-    virtual ~IBMDStreamingDeviceInput () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingDeviceInput () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingH264NALPacket - Represent an H.264 NAL packet */
@@ -307,10 +316,10 @@ public:
     virtual HRESULT GetBytes (/* out */ void** buffer) = 0;
     virtual HRESULT GetBytesWithSizePrefix (/* out */ void** buffer) = 0; // Contains a 32-bit unsigned big endian size prefix
     virtual HRESULT GetDisplayTime (/* in */ uint64_t requestedTimeScale, /* out */ uint64_t* displayTime) = 0;
-    virtual HRESULT GetPacketIndex (/* out */ uint32_t* packetIndex) = 0;
+    virtual HRESULT GetPacketIndex (/* out */ uint32_t* packetIndex) = 0; // Deprecated
 
 protected:
-    virtual ~IBMDStreamingH264NALPacket () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingH264NALPacket () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingAudioPacket - Represents a chunk of audio data */
@@ -322,10 +331,10 @@ public:
     virtual long GetPayloadSize (void) = 0;
     virtual HRESULT GetBytes (/* out */ void** buffer) = 0;
     virtual HRESULT GetPlayTime (/* in */ uint64_t requestedTimeScale, /* out */ uint64_t* playTime) = 0;
-    virtual HRESULT GetPacketIndex (/* out */ uint32_t* packetIndex) = 0;
+    virtual HRESULT GetPacketIndex (/* out */ uint32_t* packetIndex) = 0; // Deprecated
 
 protected:
-    virtual ~IBMDStreamingAudioPacket () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingAudioPacket () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingMPEG2TSPacket - Represent an MPEG2 Transport Stream packet */
@@ -337,7 +346,7 @@ public:
     virtual HRESULT GetBytes (/* out */ void** buffer) = 0;
 
 protected:
-    virtual ~IBMDStreamingMPEG2TSPacket () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingMPEG2TSPacket () {} // call Release method to drop reference count
 };
 
 /* Interface IBMDStreamingH264NALParser - For basic NAL parsing */
@@ -350,7 +359,7 @@ public:
     virtual HRESULT GetProfileAndLevelFromSPS (/* in */ IBMDStreamingH264NALPacket* nal, /* out */ uint32_t* profileIdc, /* out */ uint32_t* profileCompatability, /* out */ uint32_t* levelIdc) = 0;
 
 protected:
-    virtual ~IBMDStreamingH264NALParser () {}; // call Release method to drop reference count
+    virtual ~IBMDStreamingH264NALParser () {} // call Release method to drop reference count
 };
 
 /* Functions */
@@ -360,7 +369,7 @@ extern "C" {
     IBMDStreamingDiscovery* CreateBMDStreamingDiscoveryInstance (void);
     IBMDStreamingH264NALParser* CreateBMDStreamingH264NALParser (void);
 
-};
+}
 
 
 #endif /* defined(BMD_DECKLINKAPISTREAMING_H) */

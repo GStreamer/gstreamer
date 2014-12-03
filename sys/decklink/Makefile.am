@@ -30,7 +30,7 @@ libgstdecklink_la_SOURCES = \
 
 if DECKLINK_OSX
 libgstdecklink_la_SOURCES += \
-	osx/DeckLinkAPIDispatch-osx.cpp
+	osx/DeckLinkAPIDispatch.cpp
 else
 libgstdecklink_la_SOURCES += \
 	linux/DeckLinkAPIDispatch.cpp
