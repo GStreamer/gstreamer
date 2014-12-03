@@ -454,12 +454,13 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   GstDshowAudioSrc *src = GST_DSHOWAUDIOSRC (asrc);
   GstCaps *current_caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (asrc));
 
-  if (gst_caps_is_equal (spec->caps, current_caps)) {
+  if (current_caps) {
+    if (gst_caps_is_equal (spec->caps, current_caps)) {
+      gst_caps_unref (current_caps);
+      return TRUE;
+    }
     gst_caps_unref (current_caps);
-    return TRUE;
   }
-  gst_caps_unref (current_caps);
-
   /* In 1.0, prepare() seems to be called in the PLAYING state. Most
      of the time you can't do much on a running graph. */
 

@@ -578,11 +578,13 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   GstStructure *s = gst_caps_get_structure (caps, 0);
   GstCaps *current_caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc));
 
-  if (gst_caps_is_equal (caps, current_caps)) {
+  if (current_caps) {
+    if (gst_caps_is_equal (caps, current_caps)) {
+      gst_caps_unref (current_caps);
+      return TRUE;
+    }
     gst_caps_unref (current_caps);
-    return TRUE;
   }
-  gst_caps_unref (current_caps);
 
   /* Same remark as in gstdshowaudiosrc. */
   gboolean was_running = src->is_running;
