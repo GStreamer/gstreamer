@@ -44,6 +44,7 @@ GST_DEBUG_CATEGORY_EXTERN (mssdemux_debug);
 #define MSS_PROP_DURATION             "d"
 #define MSS_PROP_LANGUAGE             "Language"
 #define MSS_PROP_NUMBER               "n"
+#define MSS_PROP_REPETITIONS          "r"
 #define MSS_PROP_STREAM_DURATION      "Duration"
 #define MSS_PROP_TIME                 "t"
 #define MSS_PROP_TIMESCALE            "TimeScale"
@@ -54,6 +55,7 @@ typedef struct _GstMssStreamFragment
   guint number;
   guint64 time;
   guint64 duration;
+  guint repetitions;
 } GstMssStreamFragment;
 
 typedef struct _GstMssStreamQuality
@@ -77,6 +79,7 @@ struct _GstMssStream
   gchar *url;
   gchar *lang;
 
+  guint fragment_repetition_index;
   GList *current_fragment;
   GList *current_quality;
 
@@ -158,11 +161,14 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
       gchar *duration_str;
       gchar *time_str;
       gchar *seqnum_str;
+      gchar *repetition_str;
       GstMssStreamFragment *fragment = g_new (GstMssStreamFragment, 1);
 
       duration_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_DURATION);
       time_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_TIME);
       seqnum_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_NUMBER);
+      repetition_str =
+          (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_REPETITIONS);
 
       /* use the node's seq number or use the previous + 1 */
       if (seqnum_str) {
@@ -173,6 +179,13 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
         fragment->number = fragment_number;
       }
       fragment_number = fragment->number + 1;
+
+      if (repetition_str) {
+        fragment->repetitions = g_ascii_strtoull (repetition_str, NULL, 10);
+        xmlFree (repetition_str);
+      } else {
+        fragment->repetitions = 1;
+      }
 
       if (time_str) {
         fragment->time = g_ascii_strtoull (time_str, NULL, 10);
@@ -185,13 +198,15 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 
       /* if we have a previous fragment, means we need to set its duration */
       if (previous_fragment)
-        previous_fragment->duration = fragment->time - previous_fragment->time;
+        previous_fragment->duration =
+            (fragment->time -
+            previous_fragment->time) / previous_fragment->repetitions;
 
       if (duration_str) {
         fragment->duration = g_ascii_strtoull (duration_str, NULL, 10);
 
         previous_fragment = NULL;
-        fragment_time_accum += fragment->duration;
+        fragment_time_accum += fragment->duration * fragment->repetitions;
         xmlFree (duration_str);
       } else {
         /* store to set the duration at the next iteration */
@@ -200,6 +215,10 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 
       /* we reverse it later */
       stream->fragments = g_list_prepend (stream->fragments, fragment);
+      GST_LOG ("Adding fragment number: %u, time: %" G_GUINT64_FORMAT
+          ", duration: %" G_GUINT64_FORMAT ", repetitions: %u",
+          fragment->number, fragment->time, fragment->duration,
+          fragment->repetitions);
     } else if (node_has_type (iter, MSS_NODE_STREAM_QUALITY)) {
       GstMssStreamQuality *quality = gst_mss_stream_quality_new (iter);
       stream->qualities = g_list_prepend (stream->qualities, quality);
@@ -798,6 +817,7 @@ gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url)
 {
   gchar *tmp;
   gchar *start_time_str;
+  guint64 time;
   GstMssStreamFragment *fragment;
   GstMssStreamQuality *quality = stream->current_quality->data;
 
@@ -808,7 +828,9 @@ gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url)
 
   fragment = stream->current_fragment->data;
 
-  start_time_str = g_strdup_printf ("%" G_GUINT64_FORMAT, fragment->time);
+  time =
+      fragment->time + fragment->duration * stream->fragment_repetition_index;
+  start_time_str = g_strdup_printf ("%" G_GUINT64_FORMAT, time);
 
   tmp = g_regex_replace_literal (stream->regex_bitrate, stream->url,
       strlen (stream->url), 0, quality->bitrate_str, 0, NULL);
@@ -838,7 +860,8 @@ gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream)
 
   fragment = stream->current_fragment->data;
 
-  time = fragment->time;
+  time =
+      fragment->time + (fragment->duration * stream->fragment_repetition_index);
   timescale = gst_mss_stream_get_timescale (stream);
   return (GstClockTime) gst_util_uint64_scale_round (time, GST_SECOND,
       timescale);
@@ -867,11 +890,19 @@ gst_mss_stream_get_fragment_gst_duration (GstMssStream * stream)
 GstFlowReturn
 gst_mss_stream_advance_fragment (GstMssStream * stream)
 {
+  GstMssStreamFragment *fragment;
   g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
 
   if (stream->current_fragment == NULL)
     return GST_FLOW_EOS;
 
+  fragment = stream->current_fragment->data;
+  stream->fragment_repetition_index++;
+  if (stream->fragment_repetition_index < fragment->repetitions) {
+    return GST_FLOW_OK;
+  }
+
+  stream->fragment_repetition_index = 0;
   stream->current_fragment = g_list_next (stream->current_fragment);
   if (stream->current_fragment == NULL)
     return GST_FLOW_EOS;
@@ -881,14 +912,23 @@ gst_mss_stream_advance_fragment (GstMssStream * stream)
 GstFlowReturn
 gst_mss_stream_regress_fragment (GstMssStream * stream)
 {
+  GstMssStreamFragment *fragment;
   g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
 
   if (stream->current_fragment == NULL)
     return GST_FLOW_EOS;
 
+  fragment = stream->current_fragment->data;
+  stream->fragment_repetition_index--;
+  if (stream->fragment_repetition_index >= 0) {
+    return GST_FLOW_OK;
+  }
+
   stream->current_fragment = g_list_previous (stream->current_fragment);
+  fragment = stream->current_fragment->data;
   if (stream->current_fragment == NULL)
     return GST_FLOW_EOS;
+  stream->fragment_repetition_index = fragment->repetitions - 1;
   return GST_FLOW_OK;
 }
 
@@ -931,6 +971,7 @@ gst_mss_stream_seek (GstMssStream * stream, guint64 time)
 {
   GList *iter;
   guint64 timescale;
+  GstMssStreamFragment *fragment = NULL;
 
   timescale = gst_mss_stream_get_timescale (stream);
   time = gst_util_uint64_scale_round (time, timescale, GST_SECOND);
@@ -938,21 +979,28 @@ gst_mss_stream_seek (GstMssStream * stream, guint64 time)
   for (iter = stream->fragments; iter; iter = g_list_next (iter)) {
     GList *next = g_list_next (iter);
     if (next) {
-      GstMssStreamFragment *fragment = next->data;
+      fragment = next->data;
 
       if (fragment->time > time) {
         stream->current_fragment = iter;
         break;
       }
     } else {
-      GstMssStreamFragment *fragment = iter->data;
-      if (fragment->time + fragment->duration > time) {
+      fragment = iter->data;
+      if (fragment->time + fragment->repetitions * fragment->duration > time) {
         stream->current_fragment = iter;
       } else {
         stream->current_fragment = NULL;        /* EOS */
       }
       break;
     }
+  }
+
+  /* position inside the repetitions */
+  if (stream->current_fragment) {
+    fragment = stream->current_fragment->data;
+    stream->fragment_repetition_index =
+        (time - fragment->time) / fragment->duration;
   }
 }
 
