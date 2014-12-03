@@ -1466,10 +1466,11 @@ chain_dither (GstVideoConverter * convert, GstLineCache * prev)
           flags |= GST_VIDEO_DITHER_FLAG_QUANTIZE;
           quant[i] = target_quant;
         }
-        do_dither = TRUE;
       } else {
         quant[i] = 0;
       }
+      if (quant[i] > 1)
+        do_dither = TRUE;
     }
   }
 
