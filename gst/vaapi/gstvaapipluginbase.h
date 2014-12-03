@@ -32,6 +32,10 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 #include "gstvaapiuploader.h"
 
+#ifdef HAVE_GST_GL_GL_H
+# include <gst/gl/gstglcontext.h>
+#endif
+
 G_BEGIN_DECLS
 
 typedef struct _GstVaapiPluginBase GstVaapiPluginBase;
@@ -145,6 +149,8 @@ struct _GstVaapiPluginBase
   GstVaapiDisplayType display_type_req;
   gchar *display_name;
 
+  GstObject *gl_context;
+
   GstVaapiUploader *uploader;
   gboolean uploader_used;
 };
@@ -232,6 +238,11 @@ G_GNUC_INTERNAL
 GstFlowReturn
 gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
     GstBuffer * inbuf, GstBuffer ** outbuf_ptr);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
+    GstObject * object);
 
 G_END_DECLS
 

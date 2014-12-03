@@ -503,6 +503,38 @@ dnl ... video parsers
 AM_CONDITIONAL([USE_LOCAL_VIDEO_PARSERS],
     [test "$enable_builtin_videoparsers" = "yes"])
 
+dnl ... opengl helper libraries
+HAVE_GSTGL=0
+if test "$enable_glx" = "yes" -o "$enable_egl" = "yes"; then
+    PKG_CHECK_MODULES([GST_GL],
+        [gstreamer-gl-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED],
+        [HAVE_GSTGL=1], [HAVE_GSTGL=0])
+fi
+
+if test $HAVE_GSTGL -eq 1; then
+    AC_CACHE_CHECK([for GStreamer OpenGL helper libraries],
+        [ac_cv_have_gst_gl_helpers], [
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $GST_GL_CFLAGS"
+        saved_LIBS="$LIBS"
+        LIBS="$saved_LIBS"
+        AC_CHECK_HEADERS([gst/gl/gl.h], [:], [HAVE_GSTGL=0])
+        AC_COMPILE_IFELSE(
+            [AC_LANG_PROGRAM(
+                [[#include <gst/gl/gl.h>]],
+                [[GstGLContext gl_context;]])],
+            [ac_cv_have_gst_gl_helpers="yes"],
+            [ac_cv_have_gst_gl_helpers="no" HAVE_GSTGL=0]
+        )
+        CPPFLAGS="$saved_CPPFLAGS"
+        LIBS="$saved_LIBS"
+    ])
+fi
+AM_CONDITIONAL([USE_GST_GL_HELPERS], [test $HAVE_GSTGL -eq 1])
+
+AC_DEFINE_UNQUOTED([USE_GST_GL_HELPERS], [$HAVE_GSTGL],
+    [Defined to 1 if GStreamer OpenGL helper libraries are available])
+
 case $GST_API_VERSION in
 0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
 1.0)    lt_bias=gst1_vaapi_lt_current_bias;;

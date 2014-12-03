@@ -35,6 +35,11 @@ libgstvaapi_LIBS += \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-$(GST_API_VERSION).la
 endif
 
+if USE_GST_GL_HELPERS
+libgstvaapi_CFLAGS	+= $(GST_GL_CFLAGS)
+libgstvaapi_LIBS	+= $(GST_GL_LIBS)
+endif
+
 libgstvaapi_source_c = \
 	gstvaapi.c		\
 	gstvaapidecode.c	\

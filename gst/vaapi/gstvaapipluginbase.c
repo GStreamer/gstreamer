@@ -295,6 +295,7 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
 {
   g_clear_object (&plugin->uploader);
   gst_vaapi_display_replace (&plugin->display, NULL);
+  gst_object_replace (&plugin->gl_context, NULL);
 
   gst_caps_replace (&plugin->sinkpad_caps, NULL);
   plugin->sinkpad_caps_changed = FALSE;
@@ -629,11 +630,16 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   gboolean has_video_alignment = FALSE;
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
   gboolean has_texture_upload_meta = FALSE;
+  guint idx;
 #endif
 
   g_return_val_if_fail (plugin->display != NULL, FALSE);
 
   gst_query_parse_allocation (query, &caps, &need_pool);
+
+  /* We don't need any GL context beyond this point if not requested
+     so explicitly through GstVideoGLTextureUploadMeta */
+  gst_object_replace (&plugin->gl_context, NULL);
 
   if (!caps)
     goto error_no_caps;
@@ -648,7 +654,23 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
   has_texture_upload_meta = gst_query_find_allocation_meta (query,
-      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
+      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx);
+
+#if USE_GST_GL_HELPERS
+  if (has_texture_upload_meta) {
+    const GstStructure *params;
+    GstObject *gl_context;
+
+    gst_query_parse_nth_allocation_meta (query, idx, &params);
+    if (params) {
+      if (gst_structure_get (params, "gst.gl.GstGLContext", GST_GL_TYPE_CONTEXT,
+              &gl_context, NULL) && gl_context) {
+        gst_vaapi_plugin_base_set_gl_context (plugin, gl_context);
+        gst_object_unref (gl_context);
+      }
+    }
+  }
+#endif
 #endif
 
   gst_video_info_init (&vi);
@@ -935,4 +957,23 @@ error_copy_buffer:
     gst_buffer_unref (outbuf);
     return GST_FLOW_NOT_SUPPORTED;
   }
+}
+
+/**
+ * gst_vaapi_plugin_base_set_gl_context:
+ * @plugin: a #GstVaapiPluginBase
+ * @object: the new GL context from downstream
+ *
+ * Registers the new GL context. The change is effective at the next
+ * call to gst_vaapi_plugin_base_ensure_display(), where the
+ * underlying display object could be re-allocated to fit the GL
+ * context needs
+ */
+void
+gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
+    GstObject * object)
+{
+#if USE_GST_GL_HELPERS
+  gst_object_replace (&plugin->gl_context, object);
+#endif
 }
