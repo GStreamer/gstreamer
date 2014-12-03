@@ -106,6 +106,7 @@ gst_vaapi_texture_new (GstVaapiDisplay * display, guint target, guint format,
   GstVaapiDisplayClass *dpy_class;
 
   g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (gst_vaapi_display_has_opengl (display), NULL);
 
   dpy_class = GST_VAAPI_DISPLAY_GET_CLASS (display);
   if (G_UNLIKELY (!dpy_class->create_texture))
@@ -144,6 +145,7 @@ gst_vaapi_texture_new_wrapped (GstVaapiDisplay * display, guint id,
   GstVaapiDisplayClass *dpy_class;
 
   g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (gst_vaapi_display_has_opengl (display), NULL);
 
   dpy_class = GST_VAAPI_DISPLAY_GET_CLASS (display);
   if (G_UNLIKELY (!dpy_class->create_texture))

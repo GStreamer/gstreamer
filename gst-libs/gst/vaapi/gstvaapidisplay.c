@@ -2115,3 +2115,26 @@ gst_vaapi_display_get_vendor_string (GstVaapiDisplay * display)
     return NULL;
   return display->priv.vendor_string;
 }
+
+/**
+ * gst_vaapi_display_has_opengl:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns wether the @display that was created does support OpenGL
+ * context to be attached.
+ *
+ * This function is thread safe.
+ *
+ * Return value: %TRUE if the @display supports OpenGL context, %FALSE
+ *   otherwise
+ */
+gboolean
+gst_vaapi_display_has_opengl (GstVaapiDisplay * display)
+{
+  GstVaapiDisplayClass *klass;
+
+  g_return_val_if_fail (display != NULL, NULL);
+
+  klass = GST_VAAPI_DISPLAY_GET_CLASS (display);
+  return (klass->display_type == GST_VAAPI_DISPLAY_TYPE_GLX);
+}
