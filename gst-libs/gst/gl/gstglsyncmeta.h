@@ -49,4 +49,6 @@ GstGLSyncMeta *     gst_buffer_add_gl_sync_meta         (GstGLContext * context,
 void                gst_gl_sync_meta_set_sync_point     (GstGLSyncMeta * sync, GstGLContext * context);
 void                gst_gl_sync_meta_wait               (GstGLSyncMeta * sync);
 
+G_END_DECLS
+
 #endif /* __GST_GL_SYNC_META_H__ */
