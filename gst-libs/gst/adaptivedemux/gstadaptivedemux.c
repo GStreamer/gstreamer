@@ -2031,7 +2031,6 @@ gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux)
 
   /* Updating playlist only needed for live playlists */
   while (gst_adaptive_demux_is_live (demux)) {
-    GError *err = NULL;
     GstFlowReturn ret = GST_FLOW_OK;
 
     /* Wait here until we should do the next update or we're cancelled */
@@ -2063,7 +2062,7 @@ gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux)
             g_get_monotonic_time () +
             klass->get_manifest_update_interval (demux);
       } else {
-        GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not update playlist", err);
+        GST_ERROR_OBJECT (demux, "Could not update playlist");
         goto error;
       }
     } else {
