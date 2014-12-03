@@ -1684,7 +1684,7 @@ no_url_error:
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
         (_("Failed to get fragment URL.")),
         ("An error happened when getting fragment URL"));
-    gst_task_pause (stream->download_task);
+    gst_task_stop (stream->download_task);
     return GST_FLOW_ERROR;
   }
 }
@@ -1704,14 +1704,14 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop)
         && stream->segment.position >= demux->segment.stop) {
       ret = GST_FLOW_EOS;
-      gst_task_pause (stream->download_task);
+      gst_task_stop (stream->download_task);
       goto end_of_manifest;
     }
   } else {
     if (GST_CLOCK_TIME_IS_VALID (demux->segment.start)
         && stream->segment.position < demux->segment.start) {
       ret = GST_FLOW_EOS;
-      gst_task_pause (stream->download_task);
+      gst_task_stop (stream->download_task);
       goto end_of_manifest;
     }
   }
@@ -1861,7 +1861,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
 
     /* the subclass might want to switch pads */
     if (G_UNLIKELY (demux->next_streams)) {
-      gst_task_pause (stream->download_task);
+      gst_task_stop (stream->download_task);
       /* TODO only allow switching streams if other downloads are not ongoing */
       gst_adaptive_demux_expose_streams (demux);
       gst_adaptive_demux_start_tasks (demux);
@@ -1883,9 +1883,9 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
           GST_MANIFEST_UNLOCK (demux);
           return;
         }
-        gst_task_pause (stream->download_task);
+        gst_task_stop (stream->download_task);
       } else {
-        gst_task_pause (stream->download_task);
+        gst_task_stop (stream->download_task);
         if (gst_adaptive_demux_combine_flows (demux) == GST_FLOW_EOS) {
           if (gst_adaptive_demux_has_next_period (demux)) {
             gst_adaptive_demux_advance_period (demux);
@@ -1897,7 +1897,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
       break;
 
     case GST_FLOW_NOT_LINKED:
-      gst_task_pause (stream->download_task);
+      gst_task_stop (stream->download_task);
       if (gst_adaptive_demux_combine_flows (demux)
           == GST_FLOW_NOT_LINKED) {
         GST_ELEMENT_ERROR (demux, STREAM, FAILED,
@@ -1913,7 +1913,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
         GstAdaptiveDemuxStream *other;
 
         other = iter->data;
-        gst_task_pause (other->download_task);
+        gst_task_stop (other->download_task);
       }
     }
       break;
@@ -2080,7 +2080,7 @@ gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux)
 quit:
   {
     GST_DEBUG_OBJECT (demux, "Stopped updates task");
-    gst_task_pause (demux->priv->updates_task);
+    gst_task_stop (demux->priv->updates_task);
     return;
   }
 
