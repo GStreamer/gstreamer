@@ -603,7 +603,7 @@ chain_upsample (GstVideoConverter * convert, GstLineCache * prev)
 {
   video_converter_compute_resample (convert);
 
-  if (convert->upsample) {
+  if (convert->upsample_p || convert->upsample_i) {
     GST_DEBUG ("chain upsample");
     prev = convert->upsample_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
@@ -1417,7 +1417,7 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev)
 static GstLineCache *
 chain_downsample (GstVideoConverter * convert, GstLineCache * prev)
 {
-  if (convert->downsample) {
+  if (convert->downsample_p || convert->downsample_i) {
     GST_DEBUG ("chain downsample");
     prev = convert->downsample_lines = gst_line_cache_new (prev);
     prev->write_input = TRUE;
@@ -2036,9 +2036,11 @@ do_upsample_lines (GstLineCache * cache, gint out_line, gint in_line,
   /* get the lines needed for chroma upsample */
   lines = gst_line_cache_get_lines (cache->prev, out_line, start_line, n_lines);
 
-  GST_DEBUG ("doing upsample %d-%d %p", start_line, start_line + n_lines - 1,
-      lines[0]);
-  gst_video_chroma_resample (convert->upsample, lines, convert->in_width);
+  if (convert->upsample) {
+    GST_DEBUG ("doing upsample %d-%d %p", start_line, start_line + n_lines - 1,
+        lines[0]);
+    gst_video_chroma_resample (convert->upsample, lines, convert->in_width);
+  }
 
   for (i = 0; i < n_lines; i++)
     gst_line_cache_add_line (cache, start_line + i, lines[i]);
@@ -2213,9 +2215,11 @@ do_downsample_lines (GstLineCache * cache, gint out_line, gint in_line,
   /* get the lines needed for chroma downsample */
   lines = gst_line_cache_get_lines (cache->prev, out_line, start_line, n_lines);
 
-  GST_DEBUG ("downsample line %d %d-%d %p", in_line, start_line,
-      start_line + n_lines - 1, lines[0]);
-  gst_video_chroma_resample (convert->downsample, lines, convert->out_width);
+  if (convert->downsample) {
+    GST_DEBUG ("downsample line %d %d-%d %p", in_line, start_line,
+        start_line + n_lines - 1, lines[0]);
+    gst_video_chroma_resample (convert->downsample, lines, convert->out_width);
+  }
 
   for (i = 0; i < n_lines; i++)
     gst_line_cache_add_line (cache, start_line + i, lines[i]);
@@ -2311,7 +2315,7 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
       /* take away the border */
       guint8 *l = ((guint8 *) lines[0]) - lb_width;
       /* and pack into destination */
-      GST_DEBUG ("pack line %d %p (%p)", i + out_y, lines[0], dest);
+      GST_DEBUG ("pack line %d %p (%p)", i + out_y, lines[0], l);
       PACK_FRAME (dest, l, i + out_y, out_maxwidth);
     }
   }
