@@ -51,7 +51,7 @@ static CreateOpenGLScreenPreviewHelperFunc	gCreateOpenGLPreviewFunc = NULL;
 static CreateVideoConversionInstanceFunc	gCreateVideoConversionFunc	= NULL;
 static CreateDeckLinkDiscoveryInstanceFunc	gCreateDeckLinkDiscoveryFunc = NULL;
 
-void	InitDeckLinkAPI (void)
+static void	InitDeckLinkAPI (void)
 {
 	void *libraryHandle;
 	
@@ -78,7 +78,7 @@ void	InitDeckLinkAPI (void)
 		fprintf(stderr, "%s\n", dlerror());
 }
 
-void	InitDeckLinkPreviewAPI (void)
+static void	InitDeckLinkPreviewAPI (void)
 {
 	void *libraryHandle;
 	
@@ -93,11 +93,13 @@ void	InitDeckLinkPreviewAPI (void)
 		fprintf(stderr, "%s\n", dlerror());
 }
 
+#if 0
 bool		IsDeckLinkAPIPresent (void)
 {
 	// If the DeckLink API dynamic library was successfully loaded, return this knowledge to the caller
 	return gLoadedDeckLinkAPI;
 }
+#endif
 
 IDeckLinkIterator*		CreateDeckLinkIteratorInstance (void)
 {
