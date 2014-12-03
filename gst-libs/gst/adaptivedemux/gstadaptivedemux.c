@@ -1804,6 +1804,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
   GST_OBJECT_LOCK (demux);
   if (demux->cancelled) {
     stream->last_ret = GST_FLOW_FLUSHING;
+    GST_MANIFEST_UNLOCK (demux);
     goto cancelled;
   }
   GST_OBJECT_UNLOCK (demux);
@@ -1889,7 +1890,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
           if (gst_adaptive_demux_has_next_period (demux)) {
             gst_adaptive_demux_advance_period (demux);
             ret = GST_FLOW_OK;
-            goto end;
+            goto end_of_manifest;
           }
         }
       }
