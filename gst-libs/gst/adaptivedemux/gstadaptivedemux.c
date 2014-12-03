@@ -1050,6 +1050,10 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
   gst_task_stop (demux->priv->updates_task);
   g_cond_signal (&demux->priv->updates_timed_cond);
 
+  GST_MANIFEST_LOCK (demux);
+  g_cond_broadcast (&demux->manifest_cond);
+  GST_MANIFEST_UNLOCK (demux);
+
   gst_uri_downloader_cancel (demux->priv->downloader);
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
@@ -1361,11 +1365,15 @@ gst_adaptive_demux_stream_wait_manifest_update (GstAdaptiveDemux * demux,
 
     /* Got a new fragment or not live anymore? */
     if (gst_adaptive_demux_stream_has_next_fragment (demux, stream)) {
+      GST_DEBUG_OBJECT (demux, "new fragment available, "
+          "not waiting for manifest update");
       ret = TRUE;
       break;
     }
 
     if (!gst_adaptive_demux_is_live (demux)) {
+      GST_DEBUG_OBJECT (demux, "Not live anymore, "
+          "not waiting for manifest update");
       ret = FALSE;
       break;
     }
