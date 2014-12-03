@@ -1188,19 +1188,12 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         }
         case GST_V4L2_IO_DMABUF:
         case GST_V4L2_IO_MMAP:
+        case GST_V4L2_IO_USERPTR:
+        case GST_V4L2_IO_DMABUF_IMPORT:
         {
           /* just dequeue a buffer, we basically use the queue of v4l2 as the
            * storage for our buffers. This function does poll first so we can
            * interrupt it fine. */
-          ret = gst_v4l2_buffer_pool_dqbuf (pool, buffer);
-          if (G_UNLIKELY (ret != GST_FLOW_OK))
-            goto done;
-          break;
-        }
-        case GST_V4L2_IO_USERPTR:
-        case GST_V4L2_IO_DMABUF_IMPORT:
-        {
-          /* dequeue filled buffer */
           ret = gst_v4l2_buffer_pool_dqbuf (pool, buffer);
           break;
         }
