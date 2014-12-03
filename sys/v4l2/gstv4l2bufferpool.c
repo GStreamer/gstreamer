@@ -601,8 +601,8 @@ streamoff_failed:
   }
 }
 
-static void
-gst_v4l2_buffer_pool_group_released (GstV4l2BufferPool * pool)
+static GstFlowReturn
+gst_v4l2_buffer_pool_resurect_buffer (GstV4l2BufferPool * pool)
 {
   GstBufferPoolAcquireParams params = { 0 };
   GstBuffer *buffer = NULL;
@@ -617,6 +617,8 @@ gst_v4l2_buffer_pool_group_released (GstV4l2BufferPool * pool)
 
   if (ret == GST_FLOW_OK)
     gst_buffer_unref (buffer);
+
+  return ret;
 }
 
 static gboolean
@@ -758,7 +760,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   if (!V4L2_TYPE_IS_OUTPUT (obj->type))
     pool->group_released_handler =
         g_signal_connect_swapped (pool->vallocator, "group-released",
-        G_CALLBACK (gst_v4l2_buffer_pool_group_released), pool);
+        G_CALLBACK (gst_v4l2_buffer_pool_resurect_buffer), pool);
 
   return TRUE;
 
@@ -1597,6 +1599,8 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
           GstBuffer *tmp;
 
           if ((*buf)->pool == bpool) {
+            guint num_queued;
+
             if (gst_buffer_get_size (*buf) == 0) {
               if (GST_BUFFER_FLAG_IS_SET (*buf, GST_BUFFER_FLAG_CORRUPTED))
                 goto buffer_corrupted;
@@ -1604,17 +1608,27 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
                 goto eos;
             }
 
+            num_queued = g_atomic_int_get (&pool->num_queued);
+            GST_TRACE_OBJECT (pool, "Only %i buffer left in the capture queue.",
+                num_queued);
+
+            /* If we have no more buffer, and can allocate it time to do so */
+            if (num_queued == 0) {
+              if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
+                ret = gst_v4l2_buffer_pool_resurect_buffer (pool);
+                if (ret == GST_FLOW_OK)
+                  goto done;
+              }
+            }
+
             /* start copying buffers when we are running low on buffers */
-            if (g_atomic_int_get (&pool->num_queued) < pool->copy_threshold) {
+            if (num_queued < pool->copy_threshold) {
               GstBuffer *copy;
 
               if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
-
-                if (gst_buffer_pool_acquire_buffer (bpool, &copy,
-                        NULL) == GST_FLOW_OK) {
-                  gst_v4l2_buffer_pool_release_buffer (bpool, copy);
+                ret = gst_v4l2_buffer_pool_resurect_buffer (pool);
+                if (ret == GST_FLOW_OK)
                   goto done;
-                }
               }
 
               /* copy the buffer */
