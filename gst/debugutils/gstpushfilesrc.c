@@ -48,6 +48,30 @@
 GST_DEBUG_CATEGORY_STATIC (pushfilesrc_debug);
 #define GST_CAT_DEFAULT pushfilesrc_debug
 
+enum
+{
+  PROP_0,
+  PROP_LOCATION,
+  PROP_TIME_SEGMENT,
+  PROP_STREAM_TIME,
+  PROP_START_TIME,
+  PROP_INITIAL_TIMESTAMP,
+  PROP_RATE,
+  PROP_APPLIED_RATE
+};
+
+#define DEFAULT_TIME_SEGMENT FALSE
+#define DEFAULT_STREAM_TIME 0
+#define DEFAULT_START_TIME 0
+#define DEFAULT_INITIAL_TIMESTAMP GST_CLOCK_TIME_NONE
+#define DEFAULT_RATE 1.0
+#define DEFAULT_APPLIED_RATE 1.0
+
+static void gst_push_file_src_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_push_file_src_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -91,6 +115,42 @@ gst_push_file_src_class_init (GstPushFileSrcClass * g_class)
       "pushfilesrc element");
 
   gobject_class->dispose = gst_push_file_src_dispose;
+  gobject_class->set_property = gst_push_file_src_set_property;
+  gobject_class->get_property = gst_push_file_src_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
+      g_param_spec_string ("location", "File Location",
+          "Location of the file to read", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_TIME_SEGMENT,
+      g_param_spec_boolean ("time-segment", "Time Segment",
+          "Emit TIME SEGMENTS", DEFAULT_TIME_SEGMENT, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_STREAM_TIME,
+      g_param_spec_int64 ("stream-time", "Stream Time",
+          "Initial Stream Time (if time-segment TRUE)", 0, G_MAXINT64,
+          DEFAULT_STREAM_TIME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_START_TIME,
+      g_param_spec_int64 ("start-time", "Start Time",
+          "Initial Start Time (if time-segment TRUE)", 0, G_MAXINT64,
+          DEFAULT_START_TIME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_INITIAL_TIMESTAMP,
+      g_param_spec_uint64 ("initial-timestamp", "Initial Timestamp",
+          "Initial Buffer Timestamp (if time-segment TRUE)", 0, G_MAXUINT64,
+          DEFAULT_INITIAL_TIMESTAMP, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_RATE,
+      g_param_spec_double ("rate", "Rate", "Rate to use in TIME SEGMENT",
+          G_MINDOUBLE, G_MAXDOUBLE, DEFAULT_RATE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_APPLIED_RATE,
+      g_param_spec_double ("applied-rate", "Applied Rate",
+          "Applied rate to use in TIME SEGMENT", G_MINDOUBLE, G_MAXDOUBLE,
+          DEFAULT_APPLIED_RATE, G_PARAM_READWRITE));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
@@ -101,15 +161,157 @@ gst_push_file_src_class_init (GstPushFileSrcClass * g_class)
       "Tim-Philipp Müller <tim centricular net>");
 }
 
+static void
+gst_push_file_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstPushFileSrc *src = (GstPushFileSrc *) object;
+
+  switch (prop_id) {
+    case PROP_LOCATION:
+      g_object_set_property (G_OBJECT (src->filesrc), "location", value);
+      break;
+    case PROP_TIME_SEGMENT:
+      src->time_segment = g_value_get_boolean (value);
+      break;
+    case PROP_STREAM_TIME:
+      src->stream_time = g_value_get_int64 (value);
+      break;
+    case PROP_START_TIME:
+      src->start_time = g_value_get_int64 (value);
+      break;
+    case PROP_INITIAL_TIMESTAMP:
+      src->initial_timestamp = g_value_get_uint64 (value);
+      break;
+    case PROP_RATE:
+      src->rate = g_value_get_double (value);
+      break;
+    case PROP_APPLIED_RATE:
+      src->applied_rate = g_value_get_double (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_push_file_src_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstPushFileSrc *src = (GstPushFileSrc *) object;
+
+  switch (prop_id) {
+    case PROP_LOCATION:
+      g_object_get_property (G_OBJECT (src->filesrc), "location", value);
+      break;
+    case PROP_TIME_SEGMENT:
+      g_value_set_boolean (value, src->time_segment);
+      break;
+    case PROP_STREAM_TIME:
+      g_value_set_int64 (value, src->stream_time);
+      break;
+    case PROP_START_TIME:
+      g_value_set_int64 (value, src->start_time);
+      break;
+    case PROP_INITIAL_TIMESTAMP:
+      g_value_set_uint64 (value, src->initial_timestamp);
+      break;
+    case PROP_RATE:
+      g_value_set_double (value, src->rate);
+      break;
+    case PROP_APPLIED_RATE:
+      g_value_set_double (value, src->applied_rate);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static GstPadProbeReturn
+gst_push_file_src_ghostpad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
+    GstPushFileSrc * src)
+{
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+
+  if (src->time_segment && !src->seen_first_buffer) {
+    GST_BUFFER_TIMESTAMP (buffer) = src->initial_timestamp;
+    src->seen_first_buffer = TRUE;
+  }
+  return GST_PAD_PROBE_OK;
+}
+
+static GstPadProbeReturn
+gst_push_file_src_ghostpad_event_probe (GstPad * pad, GstPadProbeInfo * info,
+    GstPushFileSrc * src)
+{
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+    {
+      if (src->time_segment) {
+        GstSegment segment;
+        GstEvent *replacement;
+        GST_DEBUG_OBJECT (src, "Replacing outgoing segment with TIME SEGMENT");
+        gst_segment_init (&segment, GST_FORMAT_TIME);
+        segment.start = src->start_time;
+        segment.time = src->stream_time;
+        segment.rate = src->rate;
+        segment.applied_rate = src->applied_rate;
+        replacement = gst_event_new_segment (&segment);
+        gst_event_unref (event);
+        GST_PAD_PROBE_INFO_DATA (info) = replacement;
+      }
+    }
+    default:
+      break;
+  }
+  return GST_PAD_PROBE_OK;
+}
+
+static gboolean
+gst_push_file_src_ghostpad_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GstPushFileSrc *src = (GstPushFileSrc *) parent;
+  gboolean ret;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      if (src->time_segment) {
+        /* When working in time we don't allow seeks */
+        GST_DEBUG_OBJECT (src, "Refusing seek event in TIME mode");
+        gst_event_unref (event);
+        ret = FALSE;
+        break;
+      }
+      /* PASSTHROUGH */
+    default:
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
+  }
+
+  return ret;
+}
+
 static gboolean
 gst_push_file_src_ghostpad_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
+  GstPushFileSrc *src = (GstPushFileSrc *) parent;
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_SCHEDULING:
-      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEEKABLE, 1, -1, 0);
+      /* When working in time we don't allow seeks */
+      if (src->time_segment)
+        gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEQUENTIAL, 1, -1,
+            0);
+      else
+        gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEEKABLE, 1, -1,
+            0);
       gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
       res = TRUE;
       break;
@@ -123,6 +325,14 @@ gst_push_file_src_ghostpad_query (GstPad * pad, GstObject * parent,
 static void
 gst_push_file_src_init (GstPushFileSrc * src)
 {
+  src->time_segment = DEFAULT_TIME_SEGMENT;
+  src->stream_time = DEFAULT_STREAM_TIME;
+  src->start_time = DEFAULT_START_TIME;
+  src->initial_timestamp = DEFAULT_INITIAL_TIMESTAMP;
+  src->rate = DEFAULT_RATE;
+  src->applied_rate = DEFAULT_APPLIED_RATE;
+  src->seen_first_buffer = FALSE;
+
   src->filesrc = gst_element_factory_make ("filesrc", "real-filesrc");
   if (src->filesrc) {
     GstPad *pad;
@@ -135,6 +345,15 @@ gst_push_file_src_init (GstPushFileSrc * src)
      * this and watch core bugginess (some pad stays in flushing state) */
     gst_pad_set_query_function (src->srcpad,
         GST_DEBUG_FUNCPTR (gst_push_file_src_ghostpad_query));
+    gst_pad_set_event_function (src->srcpad,
+        GST_DEBUG_FUNCPTR (gst_push_file_src_ghostpad_event));
+    /* Add outgoing event probe to replace segment and buffer timestamp */
+    gst_pad_add_probe (src->srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        (GstPadProbeCallback) gst_push_file_src_ghostpad_event_probe,
+        src, NULL);
+    gst_pad_add_probe (src->srcpad, GST_PAD_PROBE_TYPE_BUFFER,
+        (GstPadProbeCallback) gst_push_file_src_ghostpad_buffer_probe,
+        src, NULL);
     gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
     gst_object_unref (pad);
   }

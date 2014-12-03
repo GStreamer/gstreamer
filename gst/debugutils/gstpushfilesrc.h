@@ -43,6 +43,14 @@ struct _GstPushFileSrc
   /*< private > */
   GstElement *filesrc;
   GstPad *srcpad;
+
+  gboolean time_segment;
+  gboolean seen_first_buffer;
+  gint64 stream_time;
+  gint64 start_time;
+  guint64 initial_timestamp;
+  gdouble rate;
+  gdouble applied_rate;
 };
 
 struct _GstPushFileSrcClass
