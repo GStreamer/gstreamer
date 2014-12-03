@@ -1676,6 +1676,8 @@ gst_rtp_session_iterate_internal_links (GstPad * pad, GstObject * parent)
     it = gst_iterator_new_single (GST_TYPE_PAD, &val);
     g_value_unset (&val);
     gst_object_unref (otherpad);
+  } else {
+    it = gst_iterator_new_single (GST_TYPE_PAD, NULL);
   }
 
   return it;
