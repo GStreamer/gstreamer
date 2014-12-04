@@ -855,8 +855,14 @@ gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream)
 
   g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
 
-  if (!stream->current_fragment)
-    return GST_CLOCK_TIME_NONE;
+  if (!stream->current_fragment) {
+    GList *last = g_list_last (stream->fragments);
+    if (last == NULL)
+      return GST_CLOCK_TIME_NONE;
+
+    fragment = last->data;
+    return fragment->time + (fragment->duration * fragment->repetitions);
+  }
 
   fragment = stream->current_fragment->data;
 
