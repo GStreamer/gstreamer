@@ -38,6 +38,21 @@ G_BEGIN_DECLS
 typedef gsize GstVaapiID;
 
 /**
+ * GST_VAAPI_ID:
+ * @id: an arbitrary integer value
+ *
+ * Macro that creates a #GstVaapiID from @id.
+ */
+#define GST_VAAPI_ID(id) ((GstVaapiID)(id))
+
+/**
+ * GST_VAAPI_ID_INVALID:
+ *
+ * Macro that evaluates to an invalid #GstVaapiID value.
+ */
+#define GST_VAAPI_ID_INVALID GST_VAAPI_ID((gssize)(gint32)-1)
+
+/**
  * GST_VAAPI_ID_FORMAT:
  *
  * Can be used together with #GST_VAAPI_ID_ARGS to properly output an
