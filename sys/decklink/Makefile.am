@@ -36,26 +36,31 @@ libgstdecklink_la_SOURCES += \
 	linux/DeckLinkAPIDispatch.cpp
 endif
 
-
 noinst_HEADERS = \
 	gstdecklink.h \
 	gstdecklinksrc.h \
 	gstdecklinksink.h \
 	capture.h \
+	linux/DeckLinkAPIConfiguration.h \
+	linux/DeckLinkAPIDeckControl.h \
+	linux/DeckLinkAPIDiscovery.h \
 	linux/DeckLinkAPI.h \
+	linux/DeckLinkAPIModes.h \
+	linux/DeckLinkAPITypes.h \
 	linux/LinuxCOM.h \
-	osx/DeckLinkAPI.h \
 	osx/DeckLinkAPIConfiguration.h \
 	osx/DeckLinkAPIDeckControl.h \
 	osx/DeckLinkAPIDiscovery.h \
+	osx/DeckLinkAPI.h \
 	osx/DeckLinkAPIModes.h \
 	osx/DeckLinkAPIStreaming.h \
 	osx/DeckLinkAPITypes.h \
-	osx/DeckLinkAPIVersion.h
+	osx/DeckLinkAPIVersion.h \
+	win/DeckLinkAPI.h
 
 EXTRA_DIST = \
-	win/DeckLinkAPI.h \
-	win/DeckLinkAPIDispatch.cpp \
-	win/DeckLinkAPI_i.c
+	linux/DeckLinkAPIDispatch.cpp \
+	osx/DeckLinkAPIDispatch.cpp \
+	win/DeckLinkAPIDispatch.cpp
 
 
