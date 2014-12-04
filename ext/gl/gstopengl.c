@@ -31,10 +31,10 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch-0.10 --gst-debug=gldisplay:3 videotestsrc ! glimagesink
+ * gst-launch-1.0 --gst-debug=gldisplay:3 videotestsrc ! glimagesink
  * ]| A debugging pipeline.
   |[
- * GST_GL_SHADER_DEBUG=1 gst-launch-0.10 videotestsrc ! glimagesink
+ * GST_DEBUG=gl*:6 gst-launch-1.0 videotestsrc ! glimagesink
  * ]| A debugging pipelines related to shaders.
  * </refsect2>
  */
