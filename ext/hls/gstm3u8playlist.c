@@ -49,7 +49,6 @@ gst_m3u8_entry_new (const gchar * url, GFile * file, const gchar * title,
   GstM3U8Entry *entry;
 
   g_return_val_if_fail (url != NULL, NULL);
-  g_return_val_if_fail (title != NULL, NULL);
 
   entry = g_new0 (GstM3U8Entry, 1);
   entry->url = g_strdup (url);
@@ -83,12 +82,12 @@ gst_m3u8_entry_render (GstM3U8Entry * entry, guint version)
     return g_strdup_printf ("%s" M3U8_INT_INF_TAG,
         entry->discontinuous ? M3U8_DISCONTINUITY_TAG : "",
         (gint) ((entry->duration + 500 * GST_MSECOND) / GST_SECOND),
-        entry->title, entry->url);
+        entry->title ? entry->title : "", entry->url);
 
   return g_strdup_printf ("%s" M3U8_FLOAT_INF_TAG,
       entry->discontinuous ? M3U8_DISCONTINUITY_TAG : "",
       g_ascii_dtostr (buf, sizeof (buf), (entry->duration / GST_SECOND)),
-      entry->title, entry->url);
+      entry->title ? entry->title : "", entry->url);
 }
 
 GstM3U8Playlist *
@@ -127,7 +126,6 @@ gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
 
   g_return_val_if_fail (playlist != NULL, FALSE);
   g_return_val_if_fail (url != NULL, FALSE);
-  g_return_val_if_fail (title != NULL, FALSE);
 
   if (playlist->type == GST_M3U8_PLAYLIST_TYPE_VOD)
     return FALSE;
