@@ -230,10 +230,9 @@ gst_vaapi_texture_glx_new (GstVaapiDisplay * display, guint target,
 {
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_GLX (display), NULL);
 
-  return
-      gst_vaapi_texture_new (GST_VAAPI_TEXTURE_CLASS
-      (gst_vaapi_texture_glx_class ()), display, GL_NONE, target, format, width,
-      height);
+  return gst_vaapi_texture_new_internal (GST_VAAPI_TEXTURE_CLASS
+      (gst_vaapi_texture_glx_class ()), display, GST_VAAPI_ID_INVALID, target,
+      format, width, height);
 }
 
 /**
@@ -264,6 +263,7 @@ gst_vaapi_texture_glx_new_wrapped (GstVaapiDisplay * display,
   gboolean success;
 
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_GLX (display), NULL);
+  g_return_val_if_fail (texture_id != GL_NONE, NULL);
   g_return_val_if_fail (target != GL_NONE, NULL);
   g_return_val_if_fail (format != GL_NONE, NULL);
 
@@ -286,8 +286,7 @@ gst_vaapi_texture_glx_new_wrapped (GstVaapiDisplay * display,
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
 
-  return
-      gst_vaapi_texture_new (GST_VAAPI_TEXTURE_CLASS
+  return gst_vaapi_texture_new_internal (GST_VAAPI_TEXTURE_CLASS
       (gst_vaapi_texture_glx_class ()), display, texture_id, target, format,
       width, height);
 }

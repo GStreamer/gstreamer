@@ -81,6 +81,14 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiTexture GstVaapiTexture;
 
 GstVaapiTexture *
+gst_vaapi_texture_new (GstVaapiDisplay * display, guint target, guint format,
+    guint width, guint height);
+
+GstVaapiTexture *
+gst_vaapi_texture_new_wrapped (GstVaapiDisplay * display, guint id,
+    guint target, guint format, guint width, guint height);
+
+GstVaapiTexture *
 gst_vaapi_texture_ref (GstVaapiTexture * texture);
 
 void

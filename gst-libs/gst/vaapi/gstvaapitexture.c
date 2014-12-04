@@ -40,11 +40,11 @@
 #undef gst_vaapi_texture_replace
 
 static void
-gst_vaapi_texture_init (GstVaapiTexture * texture, guint texture_id,
+gst_vaapi_texture_init (GstVaapiTexture * texture, GstVaapiID id,
     guint target, guint format, guint width, guint height)
 {
-  GST_VAAPI_OBJECT_ID (texture) = texture_id;
-  texture->is_wrapped = texture_id != 0;
+  texture->is_wrapped = id != GST_VAAPI_ID_INVALID;
+  GST_VAAPI_OBJECT_ID (texture) = texture->is_wrapped ? id : 0;
   texture->gl_target = target;
   texture->gl_format = format;
   texture->width = width;
@@ -58,8 +58,8 @@ gst_vaapi_texture_allocate (GstVaapiTexture * texture)
 }
 
 GstVaapiTexture *
-gst_vaapi_texture_new (const GstVaapiTextureClass * klass,
-    GstVaapiDisplay * display, guint texture_id, guint target, guint format,
+gst_vaapi_texture_new_internal (const GstVaapiTextureClass * klass,
+    GstVaapiDisplay * display, GstVaapiID id, guint target, guint format,
     guint width, guint height)
 {
   GstVaapiTexture *texture;
@@ -73,7 +73,7 @@ gst_vaapi_texture_new (const GstVaapiTextureClass * klass,
   if (!texture)
     return NULL;
 
-  gst_vaapi_texture_init (texture, texture_id, target, format, width, height);
+  gst_vaapi_texture_init (texture, id, target, format, width, height);
   if (!gst_vaapi_texture_allocate (texture))
     goto error;
   return texture;
@@ -81,6 +81,74 @@ gst_vaapi_texture_new (const GstVaapiTextureClass * klass,
 error:
   gst_vaapi_object_unref (texture);
   return NULL;
+}
+
+/**
+ * gst_vaapi_texture_new:
+ * @display: a #GstVaapiDisplay
+ * @target: the target to which the texture is bound
+ * @format: the format of the pixel data
+ * @width: the requested width, in pixels
+ * @height: the requested height, in pixels
+ *
+ * Creates a texture with the specified dimensions, @target and
+ * @format. Note that only GL_TEXTURE_2D @target and GL_RGBA or
+ * GL_BGRA formats are supported at this time.
+ *
+ * The application shall maintain the live GL context itself.
+ *
+ * Return value: the newly created #GstVaapiTexture object
+ */
+GstVaapiTexture *
+gst_vaapi_texture_new (GstVaapiDisplay * display, guint target, guint format,
+    guint width, guint height)
+{
+  GstVaapiDisplayClass *dpy_class;
+
+  g_return_val_if_fail (display != NULL, NULL);
+
+  dpy_class = GST_VAAPI_DISPLAY_GET_CLASS (display);
+  if (G_UNLIKELY (!dpy_class->create_texture))
+    return NULL;
+  return dpy_class->create_texture (display, GST_VAAPI_ID_INVALID, target,
+      format, width, height);
+}
+
+/**
+ * gst_vaapi_texture_new_wrapped:
+ * @display: a #GstVaapiDisplay
+ * @texture_id: the foreign GL texture name to use
+ * @target: the target to which the texture is bound
+ * @format: the format of the pixel data
+ * @width: the suggested width, in pixels
+ * @height: the suggested height, in pixels
+ *
+ * Creates a texture with the specified dimensions, @target and
+ * @format. Note that only GL_TEXTURE_2D @target and GL_RGBA or
+ * GL_BGRA formats are supported at this time.
+ *
+ * The size arguments @width and @height are only a suggestion. Should
+ * this be 0x0, then the actual size of the allocated texture storage
+ * would be either inherited from the original texture storage, if any
+ * and/or if possible, or derived from the VA surface in subsequent
+ * gst_vaapi_texture_put_surface() calls.
+ *
+ * The application shall maintain the live GL context itself.
+ *
+ * Return value: the newly created #GstVaapiTexture object
+ */
+GstVaapiTexture *
+gst_vaapi_texture_new_wrapped (GstVaapiDisplay * display, guint id,
+    guint target, guint format, guint width, guint height)
+{
+  GstVaapiDisplayClass *dpy_class;
+
+  g_return_val_if_fail (display != NULL, NULL);
+
+  dpy_class = GST_VAAPI_DISPLAY_GET_CLASS (display);
+  if (G_UNLIKELY (!dpy_class->create_texture))
+    return NULL;
+  return dpy_class->create_texture (display, id, target, format, width, height);
 }
 
 /**

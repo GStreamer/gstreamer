@@ -126,8 +126,8 @@ struct _GstVaapiTextureClass {
 };
 
 GstVaapiTexture *
-gst_vaapi_texture_new (const GstVaapiTextureClass * klass,
-    GstVaapiDisplay * display, guint texture_id, guint target, guint format,
+gst_vaapi_texture_new_internal (const GstVaapiTextureClass * klass,
+    GstVaapiDisplay * display, GstVaapiID id, guint target, guint format,
     guint width, guint height);
 
 /* Inline reference counting for core libgstvaapi library */

@@ -35,6 +35,7 @@
 #include "gstvaapidisplay_x11_priv.h"
 #include "gstvaapidisplay_glx.h"
 #include "gstvaapidisplay_glx_priv.h"
+#include "gstvaapitexture_glx.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -54,6 +55,15 @@ gst_vaapi_display_glx_get_display_info (GstVaapiDisplay * display,
   return TRUE;
 }
 
+static GstVaapiTexture *
+gst_vaapi_display_glx_create_texture (GstVaapiDisplay * display, GstVaapiID id,
+    guint target, guint format, guint width, guint height)
+{
+  return id != GST_VAAPI_ID_INVALID ?
+      gst_vaapi_texture_glx_new_wrapped (display, id, target, format) :
+      gst_vaapi_texture_glx_new (display, target, format, width, height);
+}
+
 static void
 gst_vaapi_display_glx_class_init (GstVaapiDisplayGLXClass * klass)
 {
@@ -67,6 +77,7 @@ gst_vaapi_display_glx_class_init (GstVaapiDisplayGLXClass * klass)
   klass->parent_get_display = dpy_class->get_display;
   dpy_class->display_types = g_display_types;
   dpy_class->get_display = gst_vaapi_display_glx_get_display_info;
+  dpy_class->create_texture = gst_vaapi_display_glx_create_texture;
 }
 
 static inline const GstVaapiDisplayClass *
