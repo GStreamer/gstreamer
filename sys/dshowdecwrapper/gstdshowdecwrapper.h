@@ -50,8 +50,7 @@
 #include <objbase.h>
 #include <dshow.h>
 #include <Rpc.h>
-
-#include <dshow/gstdshowinterface.h>
+#include <glib.h>
 
 #pragma warning( disable : 4090 4024)
 

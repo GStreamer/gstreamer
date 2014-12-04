@@ -113,11 +113,13 @@ struct _GstDshowVideoDec
   gboolean setup;
 
   gboolean comInitialized;
-  GMutex   *com_init_lock;
-  GMutex   *com_deinit_lock;
-  GCond    *com_initialized;
-  GCond    *com_uninitialize;
-  GCond    *com_uninitialized;
+  GMutex   com_init_lock;
+  GMutex   com_deinit_lock;
+  GCond    com_initialized;
+  GCond    com_uninitialize;
+  GCond    com_uninitialized;
+
+  GstBufferPool *buffer_pool;
 };
 
 struct _GstDshowVideoDecClass

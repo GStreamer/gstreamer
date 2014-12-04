@@ -113,11 +113,11 @@ struct _GstDshowAudioDec
   GstClockTime timestamp;
 
   gboolean comInitialized;
-  GMutex   *com_init_lock;
-  GMutex   *com_deinit_lock;
-  GCond    *com_initialized;
-  GCond    *com_uninitialize;
-  GCond    *com_uninitialized;
+  GMutex   com_init_lock;
+  GMutex   com_deinit_lock;
+  GCond    com_initialized;
+  GCond    com_uninitialize;
+  GCond    com_uninitialized;
 };
 
 struct _GstDshowAudioDecClass
@@ -149,6 +149,7 @@ public:
     m_MediaType.Set (*pmt);
     return S_OK;
   }
+  int GetBufferSize();
 
 protected:
   HRESULT m_hres;
