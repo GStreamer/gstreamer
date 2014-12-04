@@ -98,6 +98,93 @@ struct _GstMssManifest
   GSList *streams;
 };
 
+/* For parsing and building a fragments list */
+typedef struct _GstMssFragmentListBuilder
+{
+  GList *fragments;
+
+  GstMssStreamFragment *previous_fragment;
+  guint fragment_number;
+  guint64 fragment_time_accum;
+} GstMssFragmentListBuilder;
+
+static void
+gst_mss_fragment_list_builder_init (GstMssFragmentListBuilder * builder)
+{
+  builder->fragments = NULL;
+  builder->previous_fragment = NULL;
+  builder->fragment_time_accum = 0;
+  builder->fragment_number = 0;
+}
+
+static void
+gst_mss_fragment_list_builder_add (GstMssFragmentListBuilder * builder,
+    xmlNodePtr node)
+{
+  gchar *duration_str;
+  gchar *time_str;
+  gchar *seqnum_str;
+  gchar *repetition_str;
+  GstMssStreamFragment *fragment = g_new (GstMssStreamFragment, 1);
+
+  duration_str = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_DURATION);
+  time_str = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_TIME);
+  seqnum_str = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_NUMBER);
+  repetition_str =
+      (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_REPETITIONS);
+
+  /* use the node's seq number or use the previous + 1 */
+  if (seqnum_str) {
+    fragment->number = g_ascii_strtoull (seqnum_str, NULL, 10);
+    xmlFree (seqnum_str);
+    builder->fragment_number = fragment->number;
+  } else {
+    fragment->number = builder->fragment_number;
+  }
+  builder->fragment_number = fragment->number + 1;
+
+  if (repetition_str) {
+    fragment->repetitions = g_ascii_strtoull (repetition_str, NULL, 10);
+    xmlFree (repetition_str);
+  } else {
+    fragment->repetitions = 1;
+  }
+
+  if (time_str) {
+    fragment->time = g_ascii_strtoull (time_str, NULL, 10);
+
+    xmlFree (time_str);
+    builder->fragment_time_accum = fragment->time;
+  } else {
+    fragment->time = builder->fragment_time_accum;
+  }
+
+  /* if we have a previous fragment, means we need to set its duration */
+  if (builder->previous_fragment)
+    builder->previous_fragment->duration =
+        (fragment->time -
+        builder->previous_fragment->time) /
+        builder->previous_fragment->repetitions;
+
+  if (duration_str) {
+    fragment->duration = g_ascii_strtoull (duration_str, NULL, 10);
+
+    builder->previous_fragment = NULL;
+    builder->fragment_time_accum += fragment->duration * fragment->repetitions;
+    xmlFree (duration_str);
+  } else {
+    /* store to set the duration at the next iteration */
+    builder->previous_fragment = fragment;
+  }
+
+  /* we reverse it later */
+  builder->fragments = g_list_prepend (builder->fragments, fragment);
+  GST_LOG ("Adding fragment number: %u, time: %" G_GUINT64_FORMAT
+      ", duration: %" G_GUINT64_FORMAT ", repetitions: %u",
+      fragment->number, fragment->time, fragment->duration,
+      fragment->repetitions);
+}
+
 static GstBuffer *gst_buffer_from_hex_string (const gchar * s);
 
 static gboolean
@@ -146,9 +233,9 @@ static void
 _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 {
   xmlNodePtr iter;
-  GstMssStreamFragment *previous_fragment = NULL;
-  guint fragment_number = 0;
-  guint64 fragment_time_accum = 0;
+  GstMssFragmentListBuilder builder;
+
+  gst_mss_fragment_list_builder_init (&builder);
 
   stream->xmlnode = node;
 
@@ -158,67 +245,7 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 
   for (iter = node->children; iter; iter = iter->next) {
     if (node_has_type (iter, MSS_NODE_STREAM_FRAGMENT)) {
-      gchar *duration_str;
-      gchar *time_str;
-      gchar *seqnum_str;
-      gchar *repetition_str;
-      GstMssStreamFragment *fragment = g_new (GstMssStreamFragment, 1);
-
-      duration_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_DURATION);
-      time_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_TIME);
-      seqnum_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_NUMBER);
-      repetition_str =
-          (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_REPETITIONS);
-
-      /* use the node's seq number or use the previous + 1 */
-      if (seqnum_str) {
-        fragment->number = g_ascii_strtoull (seqnum_str, NULL, 10);
-        xmlFree (seqnum_str);
-        fragment_number = fragment->number;
-      } else {
-        fragment->number = fragment_number;
-      }
-      fragment_number = fragment->number + 1;
-
-      if (repetition_str) {
-        fragment->repetitions = g_ascii_strtoull (repetition_str, NULL, 10);
-        xmlFree (repetition_str);
-      } else {
-        fragment->repetitions = 1;
-      }
-
-      if (time_str) {
-        fragment->time = g_ascii_strtoull (time_str, NULL, 10);
-
-        xmlFree (time_str);
-        fragment_time_accum = fragment->time;
-      } else {
-        fragment->time = fragment_time_accum;
-      }
-
-      /* if we have a previous fragment, means we need to set its duration */
-      if (previous_fragment)
-        previous_fragment->duration =
-            (fragment->time -
-            previous_fragment->time) / previous_fragment->repetitions;
-
-      if (duration_str) {
-        fragment->duration = g_ascii_strtoull (duration_str, NULL, 10);
-
-        previous_fragment = NULL;
-        fragment_time_accum += fragment->duration * fragment->repetitions;
-        xmlFree (duration_str);
-      } else {
-        /* store to set the duration at the next iteration */
-        previous_fragment = fragment;
-      }
-
-      /* we reverse it later */
-      stream->fragments = g_list_prepend (stream->fragments, fragment);
-      GST_LOG ("Adding fragment number: %u, time: %" G_GUINT64_FORMAT
-          ", duration: %" G_GUINT64_FORMAT ", repetitions: %u",
-          fragment->number, fragment->time, fragment->duration,
-          fragment->repetitions);
+      gst_mss_fragment_list_builder_add (&builder, iter);
     } else if (node_has_type (iter, MSS_NODE_STREAM_QUALITY)) {
       GstMssStreamQuality *quality = gst_mss_stream_quality_new (iter);
       stream->qualities = g_list_prepend (stream->qualities, quality);
@@ -227,7 +254,7 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
     }
   }
 
-  stream->fragments = g_list_reverse (stream->fragments);
+  stream->fragments = g_list_reverse (builder.fragments);
 
   /* order them from smaller to bigger based on bitrates */
   stream->qualities =
@@ -797,6 +824,29 @@ gst_mss_manifest_get_gst_duration (GstMssManifest * manifest)
   return gstdur;
 }
 
+GstClockTime
+gst_mss_manifest_get_min_fragment_duration (GstMssManifest * manifest)
+{
+  GSList *iter;
+  GstClockTime dur = GST_CLOCK_TIME_NONE;
+  GstClockTime iter_dur;
+
+  for (iter = manifest->streams; iter; iter = g_slist_next (iter)) {
+    GstMssStream *stream = iter->data;
+
+    iter_dur = gst_mss_stream_get_fragment_gst_duration (stream);
+    if (iter_dur != GST_CLOCK_TIME_NONE && iter_dur != 0) {
+      if (GST_CLOCK_TIME_IS_VALID (dur)) {
+        dur = MIN (dur, iter_dur);
+      } else {
+        dur = iter_dur;
+      }
+    }
+  }
+
+  return dur;
+}
+
 GstCaps *
 gst_mss_stream_get_caps (GstMssStream * stream)
 {
@@ -893,6 +943,17 @@ gst_mss_stream_get_fragment_gst_duration (GstMssStream * stream)
       timescale);
 }
 
+gboolean
+gst_mss_stream_has_next_fragment (GstMssStream * stream)
+{
+  g_return_val_if_fail (stream->active, FALSE);
+
+  if (stream->current_fragment == NULL)
+    return FALSE;
+
+  return TRUE;
+}
+
 GstFlowReturn
 gst_mss_stream_advance_fragment (GstMssStream * stream)
 {
@@ -982,6 +1043,8 @@ gst_mss_stream_seek (GstMssStream * stream, guint64 time)
   timescale = gst_mss_stream_get_timescale (stream);
   time = gst_util_uint64_scale_round (time, timescale, GST_SECOND);
 
+  GST_DEBUG ("Stream %s seeking to %" G_GUINT64_FORMAT, stream->url, time);
+
   for (iter = stream->fragments; iter; iter = g_list_next (iter)) {
     GList *next = g_list_next (iter);
     if (next) {
@@ -1008,6 +1071,10 @@ gst_mss_stream_seek (GstMssStream * stream, guint64 time)
     stream->fragment_repetition_index =
         (time - fragment->time) / fragment->duration;
   }
+
+  GST_DEBUG ("Stream %s seeked to fragment time %" G_GUINT64_FORMAT
+      " repetition %u", stream->url, fragment->time,
+      stream->fragment_repetition_index);
 }
 
 guint64
@@ -1039,89 +1106,28 @@ static void
 gst_mss_stream_reload_fragments (GstMssStream * stream, xmlNodePtr streamIndex)
 {
   xmlNodePtr iter;
-  GList *new_fragments = NULL;
-  GstMssStreamFragment *previous_fragment = NULL;
-  GstMssStreamFragment *current_fragment =
-      stream->current_fragment ? stream->current_fragment->data : NULL;
-  guint64 current_time = gst_mss_stream_get_fragment_gst_timestamp (stream);
-  guint fragment_number = 0;
-  guint64 fragment_time_accum = 0;
+  guint64 current_gst_time = gst_mss_stream_get_fragment_gst_timestamp (stream);
+  GstMssFragmentListBuilder builder;
 
-  if (!current_fragment && stream->fragments) {
-    current_fragment = g_list_last (stream->fragments)->data;
-  } else if (g_list_previous (stream->current_fragment)) {
-    /* rewind one as this is the next to be pushed */
-    current_fragment = g_list_previous (stream->current_fragment)->data;
-  } else {
-    current_fragment = NULL;
-  }
+  gst_mss_fragment_list_builder_init (&builder);
 
-  if (current_fragment) {
-    current_time = current_fragment->time;
-    fragment_number = current_fragment->number;
-    fragment_time_accum = current_fragment->time;
-  }
+  GST_DEBUG ("Current position: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (current_gst_time));
 
   for (iter = streamIndex->children; iter; iter = iter->next) {
     if (node_has_type (iter, MSS_NODE_STREAM_FRAGMENT)) {
-      gchar *duration_str;
-      gchar *time_str;
-      gchar *seqnum_str;
-      GstMssStreamFragment *fragment = g_new (GstMssStreamFragment, 1);
-
-      duration_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_DURATION);
-      time_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_TIME);
-      seqnum_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_NUMBER);
-
-      /* use the node's seq number or use the previous + 1 */
-      if (seqnum_str) {
-        fragment->number = g_ascii_strtoull (seqnum_str, NULL, 10);
-        xmlFree (seqnum_str);
-      } else {
-        fragment->number = fragment_number;
-      }
-      fragment_number = fragment->number + 1;
-
-      if (time_str) {
-        fragment->time = g_ascii_strtoull (time_str, NULL, 10);
-        xmlFree (time_str);
-        fragment_time_accum = fragment->time;
-      } else {
-        fragment->time = fragment_time_accum;
-      }
-
-      /* if we have a previous fragment, means we need to set its duration */
-      if (previous_fragment)
-        previous_fragment->duration = fragment->time - previous_fragment->time;
-
-      if (duration_str) {
-        fragment->duration = g_ascii_strtoull (duration_str, NULL, 10);
-
-        previous_fragment = NULL;
-        fragment_time_accum += fragment->duration;
-        xmlFree (duration_str);
-      } else {
-        /* store to set the duration at the next iteration */
-        previous_fragment = fragment;
-      }
-
-      if (fragment->time > current_time) {
-        new_fragments = g_list_append (new_fragments, fragment);
-      } else {
-        previous_fragment = NULL;
-        g_free (fragment);
-      }
-
+      gst_mss_fragment_list_builder_add (&builder, iter);
     } else {
       /* TODO gst log this */
     }
   }
 
   /* store the new fragments list */
-  if (new_fragments) {
+  if (builder.fragments) {
     g_list_free_full (stream->fragments, g_free);
-    stream->fragments = new_fragments;
-    stream->current_fragment = new_fragments;
+    stream->fragments = g_list_reverse (builder.fragments);
+    stream->current_fragment = stream->fragments;
+    gst_mss_stream_seek (stream, current_gst_time);
   }
 }
 

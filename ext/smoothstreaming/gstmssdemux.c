@@ -126,6 +126,8 @@ static GstClockTime gst_mss_demux_get_duration (GstAdaptiveDemux * demux);
 static void gst_mss_demux_reset (GstAdaptiveDemux * demux);
 static GstFlowReturn gst_mss_demux_stream_seek (GstAdaptiveDemuxStream * stream,
     GstClockTime ts);
+static gboolean
+gst_mss_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream);
 static GstFlowReturn
 gst_mss_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream);
 static gboolean gst_mss_demux_stream_select_bitrate (GstAdaptiveDemuxStream *
@@ -133,6 +135,10 @@ static gboolean gst_mss_demux_stream_select_bitrate (GstAdaptiveDemuxStream *
 static GstFlowReturn
 gst_mss_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream);
 static gboolean gst_mss_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek);
+static gint64
+gst_mss_demux_get_manifest_update_interval (GstAdaptiveDemux * demux);
+static GstFlowReturn
+gst_mss_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer);
 
 static void
 gst_mss_demux_class_init (GstMssDemuxClass * klass)
@@ -185,15 +191,20 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
   gstadaptivedemux_class->process_manifest = gst_mss_demux_process_manifest;
   gstadaptivedemux_class->is_live = gst_mss_demux_is_live;
   gstadaptivedemux_class->get_duration = gst_mss_demux_get_duration;
+  gstadaptivedemux_class->get_manifest_update_interval =
+      gst_mss_demux_get_manifest_update_interval;
   gstadaptivedemux_class->reset = gst_mss_demux_reset;
   gstadaptivedemux_class->seek = gst_mss_demux_seek;
   gstadaptivedemux_class->stream_seek = gst_mss_demux_stream_seek;
   gstadaptivedemux_class->stream_advance_fragment =
       gst_mss_demux_stream_advance_fragment;
+  gstadaptivedemux_class->stream_has_next_fragment =
+      gst_mss_demux_stream_has_next_fragment;
   gstadaptivedemux_class->stream_select_bitrate =
       gst_mss_demux_stream_select_bitrate;
   gstadaptivedemux_class->stream_update_fragment_info =
       gst_mss_demux_stream_update_fragment_info;
+  gstadaptivedemux_class->update_manifest = gst_mss_demux_update_manifest;
 
   GST_DEBUG_CATEGORY_INIT (mssdemux_debug, "mssdemux", 0, "mssdemux plugin");
 }
@@ -447,20 +458,13 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
   return TRUE;
 }
 
-static gboolean
-gst_mss_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
+static void
+gst_mss_demux_update_base_url (GstMssDemux * mssdemux)
 {
-  GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
+  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (mssdemux);
   gchar *baseurl_end;
 
-#if 0
-  if (mssdemux->base_url == NULL) {
-    GST_ELEMENT_ERROR (mssdemux, RESOURCE, NOT_FOUND,
-        (_("Couldn't get the Manifest's URI")),
-        ("need to get the manifest's URI from upstream elements"));
-    return FALSE;
-  }
-#endif
+  g_free (mssdemux->base_url);
 
   mssdemux->base_url =
       g_strdup (demux->manifest_base_uri ? demux->manifest_base_uri : demux->
@@ -477,6 +481,15 @@ gst_mss_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
     GST_WARNING_OBJECT (mssdemux, "Stream's URI didn't end with /manifest");
   }
 
+}
+
+static gboolean
+gst_mss_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
+{
+  GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
+
+  gst_mss_demux_update_base_url (mssdemux);
+
   mssdemux->manifest = gst_mss_manifest_new (buf);
   if (!mssdemux->manifest) {
     GST_ELEMENT_ERROR (mssdemux, STREAM, FORMAT, ("Bad manifest file"),
@@ -485,57 +498,6 @@ gst_mss_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
   }
   return gst_mss_demux_setup_streams (demux);
 }
-
-#if 0
-static void
-gst_mss_demux_reload_manifest (GstMssDemux * mssdemux)
-{
-  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (mssdemux);
-  GstUriDownloader *downloader;
-  GstFragment *manifest_data;
-  GstBuffer *manifest_buffer;
-  gchar *baseurl_end;
-
-  downloader = gst_uri_downloader_new ();
-
-  manifest_data =
-      gst_uri_downloader_fetch_uri (downloader, demux->manifest_uri, NULL,
-      TRUE, TRUE, TRUE, NULL);
-
-  /* FIXME not really nice to unref parent's data */
-  g_free (demux->manifest_uri);
-  g_free (demux->manifest_base_uri);
-  demux->manifest_uri = g_strdup ((manifest_data->redirect_permanent
-          && manifest_data->redirect_uri) ? manifest_data->
-      redirect_uri : manifest_data->uri);
-  demux->manifest_base_uri =
-      g_strdup (manifest_data->redirect_uri ? manifest_data->
-      redirect_uri : manifest_data->uri);
-  baseurl_end = g_strrstr (demux->manifest_base_uri, "/Manifest");
-  if (baseurl_end == NULL) {
-    /* second try */
-    baseurl_end = g_strrstr (demux->manifest_base_uri, "/manifest");
-  }
-
-  if (baseurl_end) {
-    /* set the new end of the string */
-    baseurl_end[0] = '\0';
-  } else {
-    GST_WARNING_OBJECT (mssdemux, "Stream's URI didn't end with /manifest");
-  }
-
-  manifest_buffer = gst_fragment_get_buffer (manifest_data);
-  g_object_unref (manifest_data);
-
-  gst_mss_manifest_reload_fragments (mssdemux->manifest, manifest_buffer);
-#if 0
-  gst_buffer_replace (&mssdemux->manifest_buffer, manifest_buffer);
-#endif
-  gst_buffer_unref (manifest_buffer);
-
-  g_object_unref (downloader);
-}
-#endif
 
 static gboolean
 gst_mss_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
@@ -596,4 +558,44 @@ gst_mss_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   gst_mss_manifest_seek (mssdemux->manifest, start);
 
   return TRUE;
+}
+
+static gboolean
+gst_mss_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
+{
+  GstMssDemuxStream *mssstream = (GstMssDemuxStream *) stream;
+
+  return gst_mss_stream_has_next_fragment (mssstream->manifest_stream);
+}
+
+static gint64
+gst_mss_demux_get_manifest_update_interval (GstAdaptiveDemux * demux)
+{
+  GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
+  GstClockTime interval;
+
+  /* Not much information about this in the MSS spec. It seems that
+   * the fragments contain an UUID box that should tell the next
+   * fragments time and duration so one wouldn't need to fetch
+   * the Manifest again, but we need a fallback here. So use 2 times
+   * the current fragment duration */
+
+  interval = gst_mss_manifest_get_min_fragment_duration (mssdemux->manifest);
+  if (!GST_CLOCK_TIME_IS_VALID (interval))
+    interval = 2 * GST_SECOND;  /* default to 2 seconds */
+
+  interval = 2 * (interval / GST_USECOND);
+
+  return interval;
+}
+
+static GstFlowReturn
+gst_mss_demux_update_manifest (GstAdaptiveDemux * demux, GstBuffer * buffer)
+{
+  GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
+
+  gst_mss_demux_update_base_url (mssdemux);
+
+  gst_mss_manifest_reload_fragments (mssdemux->manifest, buffer);
+  return GST_FLOW_OK;
 }

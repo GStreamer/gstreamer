@@ -48,7 +48,10 @@ void gst_mss_manifest_seek (GstMssManifest * manifest, guint64 time);
 gboolean gst_mss_manifest_change_bitrate (GstMssManifest *manifest, guint64 bitrate);
 guint64 gst_mss_manifest_get_current_bitrate (GstMssManifest * manifest);
 gboolean gst_mss_manifest_is_live (GstMssManifest * manifest);
+gint64 gst_mss_manifest_get_dvr_window_length (GstMssManifest * manifest);
+gint gst_mss_manifest_get_look_ahead_fragments_count (GstMssManifest * manifest);
 void gst_mss_manifest_reload_fragments (GstMssManifest * manifest, GstBuffer * data);
+GstClockTime gst_mss_manifest_get_min_fragment_duration (GstMssManifest * manifest);
 
 GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
 GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);
@@ -59,6 +62,7 @@ guint64 gst_mss_stream_get_timescale (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url);
 GstClockTime gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream);
 GstClockTime gst_mss_stream_get_fragment_gst_duration (GstMssStream * stream);
+gboolean gst_mss_stream_has_next_fragment (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_advance_fragment (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_regress_fragment (GstMssStream * stream);
 void gst_mss_stream_seek (GstMssStream * stream, guint64 time);
