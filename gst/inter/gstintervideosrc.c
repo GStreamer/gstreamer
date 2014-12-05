@@ -243,6 +243,7 @@ gst_inter_video_src_set_caps (GstBaseSrc * base, GstCaps * caps)
   gst_video_converter_free (converter);
   gst_video_frame_unmap (&src_frame);
   gst_video_frame_unmap (&dest_frame);
+  gst_buffer_unref (src);
   intervideosrc->black_frame = dest;
 
   return TRUE;
