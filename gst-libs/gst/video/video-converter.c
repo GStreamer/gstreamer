@@ -834,7 +834,6 @@ color_matrix_RGB_to_XYZ (MatrixData * dst, double Rx, double Ry, double Gx,
   color_matrix_copy (dst, &m);
 }
 
-#if 0
 void
 _custom_video_orc_matrix8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, orc_int64 p1, orc_int64 p2, orc_int64 p3,
@@ -874,7 +873,6 @@ _custom_video_orc_matrix8 (guint8 * ORC_RESTRICT d1,
     d1[i * 4 + 3] = CLAMP (v, 0, 255);
   }
 }
-#endif
 
 static void
 video_converter_matrix8 (MatrixData * data, gpointer pixels)

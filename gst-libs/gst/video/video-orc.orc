@@ -1274,7 +1274,7 @@ mergewl x, wb, wr
 x4 addb argb, x, c128
 
 .function video_orc_matrix8
-#.backup _custom_video_orc_matrix8
+.backup _custom_video_orc_matrix8
 .source 4 argb guint8
 .dest 4 ayuv guint8
 .longparam 8 p1
