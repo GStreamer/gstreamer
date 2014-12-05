@@ -531,7 +531,7 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
     gint seg_idx;
 
     GST_DEBUG_OBJECT (demux, "Seeking to current time of day for live stream ");
-    for (iter = demux->streams; iter; iter = g_list_next (iter)) {
+    for (iter = demux->next_streams; iter; iter = g_list_next (iter)) {
       GstDashDemuxStream *stream = iter->data;
       GstActiveStream *active_stream = stream->active_stream;
 
