@@ -73,7 +73,6 @@ struct _GstAggregatorPad
   GstBuffer                 *  buffer;
   GstSegment                   segment;
   gboolean                     eos;
-  gboolean                     unresponsive;
 
   /* < Private > */
   GstAggregatorPadPrivate   *  priv;
@@ -141,7 +140,7 @@ struct _GstAggregator
   GstClock              *  clock;
 
   /* properties */
-  gint64                   timeout;
+  gint64                   latency;
 
   gpointer                 _gst_reserved[GST_PADDING];
 };
@@ -189,6 +188,12 @@ struct _GstAggregator
  *                  Should be linked up first. Called when the element goes from
  *                  READY to PAUSED. The subclass should get ready to process
  *                  aggregated buffers.
+ * @get_next_time:  Optional.
+ *                  Called when the element needs to know the time of the next
+ *                  rendered buffer for live pipelines. This causes deadline
+ *                  based aggregation to occur. Defaults to returning
+ *                  GST_CLOCK_TIME_NONE causing the element to wait for buffers
+ *                  on all sink pads before aggregating.
  *
  * The aggregator base class will handle in a thread-safe way all manners of
  * concurrent flushes, seeks, pad additions and removals, leaving to the
@@ -237,6 +242,8 @@ struct _GstAggregatorClass {
   gboolean          (*stop)           (GstAggregator    *  aggregator);
 
   gboolean          (*start)          (GstAggregator    *  aggregator);
+
+  GstClockTime      (*get_next_time)  (GstAggregator    *  aggregator);
 
   /*< private >*/
   gpointer          _gst_reserved[GST_PADDING];
