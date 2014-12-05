@@ -110,6 +110,7 @@ struct _MatrixData
   guint64 orc_p1;
   guint64 orc_p2;
   guint64 orc_p3;
+  guint64 orc_p4;
   void (*matrix_func) (MatrixData * data, gpointer pixels);
 };
 
@@ -833,38 +834,53 @@ color_matrix_RGB_to_XYZ (MatrixData * dst, double Rx, double Ry, double Gx,
   color_matrix_copy (dst, &m);
 }
 
+#if 0
+void
+_custom_video_orc_matrix8 (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, orc_int64 p1, orc_int64 p2, orc_int64 p3,
+    orc_int64 p4, int n)
+{
+  gint i;
+  gint r, g, b;
+  gint y, u, v;
+  gint a00, a01, a02, a03;
+  gint a10, a11, a12, a13;
+  gint a20, a21, a22, a23;
+
+  a00 = (gint16) (p1 >> 16);
+  a01 = (gint16) (p2 >> 16);
+  a02 = (gint16) (p3 >> 16);
+  a03 = (gint16) (p4 >> 16);
+  a10 = (gint16) (p1 >> 32);
+  a11 = (gint16) (p2 >> 32);
+  a12 = (gint16) (p3 >> 32);
+  a13 = (gint16) (p4 >> 32);
+  a20 = (gint16) (p1 >> 48);
+  a21 = (gint16) (p2 >> 48);
+  a22 = (gint16) (p3 >> 48);
+  a23 = (gint16) (p4 >> 48);
+
+  for (i = 0; i < n; i++) {
+    r = s1[i * 4 + 1];
+    g = s1[i * 4 + 2];
+    b = s1[i * 4 + 3];
+
+    y = ((a00 * r + a01 * g + a02 * b) >> SCALE) + a03;
+    u = ((a10 * r + a11 * g + a12 * b) >> SCALE) + a13;
+    v = ((a20 * r + a21 * g + a22 * b) >> SCALE) + a23;
+
+    d1[i * 4 + 1] = CLAMP (y, 0, 255);
+    d1[i * 4 + 2] = CLAMP (u, 0, 255);
+    d1[i * 4 + 3] = CLAMP (v, 0, 255);
+  }
+}
+#endif
+
 static void
 video_converter_matrix8 (MatrixData * data, gpointer pixels)
 {
-#if 1
   video_orc_matrix8 (pixels, pixels, data->orc_p1, data->orc_p2,
-      data->orc_p3, data->width);
-#elif 0
-  /* FIXME we would like to set this as a backup function, it's faster than the
-   * orc generated one */
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint8 *p = pixels;
-  gint width = data->width;
-
-  for (i = 0; i < width; i++) {
-    r = p[i * 4 + 1];
-    g = p[i * 4 + 2];
-    b = p[i * 4 + 3];
-
-    y = (data->im[0][0] * r + data->im[0][1] * g +
-        data->im[0][2] * b + data->im[0][3]) >> SCALE;
-    u = (data->im[1][0] * r + data->im[1][1] * g +
-        data->im[1][2] * b + data->im[1][3]) >> SCALE;
-    v = (data->im[2][0] * r + data->im[2][1] * g +
-        data->im[2][2] * b + data->im[2][3]) >> SCALE;
-
-    p[i * 4 + 1] = CLAMP (y, 0, 255);
-    p[i * 4 + 2] = CLAMP (u, 0, 255);
-    p[i * 4 + 3] = CLAMP (v, 0, 255);
-  }
-#endif
+      data->orc_p3, data->orc_p4, data->width);
 }
 
 static void
@@ -929,6 +945,8 @@ prepare_matrix (GstVideoConverter * convert, MatrixData * data)
       GST_DEBUG ("use fast AYUV -> RGB matrix");
       data->matrix_func = video_converter_matrix8_AYUV_ARGB;
     } else {
+      gint a03, a13, a23;
+
       GST_DEBUG ("use 8bit matrix");
       data->matrix_func = video_converter_matrix8;
 
@@ -941,6 +959,13 @@ prepare_matrix (GstVideoConverter * convert, MatrixData * data)
       data->orc_p3 = (((guint64) (guint16) data->im[2][2]) << 48) |
           (((guint64) (guint16) data->im[1][2]) << 32) |
           (((guint64) (guint16) data->im[0][2]) << 16);
+
+      a03 = data->im[0][3] >> SCALE;
+      a13 = data->im[1][3] >> SCALE;
+      a23 = data->im[2][3] >> SCALE;
+
+      data->orc_p4 = (((guint64) (guint16) a23) << 48) |
+          (((guint64) (guint16) a13) << 32) | (((guint64) (guint16) a03) << 16);
     }
   } else {
     GST_DEBUG ("use 16bit matrix");

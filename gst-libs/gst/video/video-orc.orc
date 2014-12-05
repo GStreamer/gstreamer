@@ -1274,11 +1274,13 @@ mergewl x, wb, wr
 x4 addb argb, x, c128
 
 .function video_orc_matrix8
+#.backup _custom_video_orc_matrix8
 .source 4 argb guint8
 .dest 4 ayuv guint8
 .longparam 8 p1
 .longparam 8 p2
 .longparam 8 p3
+.longparam 8 p4
 .const 1 c128 128
 .temp 2 w1
 .temp 2 w2
@@ -1303,26 +1305,26 @@ select1lw w2, l1
 select0wb b1, w1
 select1wb b2, w1
 
-splatbl l1, b1
-mergelq aq, l1, l1
-andq aq, aq, 0xff
+convubw w1, b1
+convuwl l1, w1
+x4 mergebw aq, l1, l1
 
 splatbl l1, b2
 mergelq q1, l1, l1
 x4 mulhsw q1, q1, pr1
-x4 addssw aq, aq, q1
+x4 addw aq, aq, q1
 
 select0wb b1, w2
 splatbl l1,b1
 mergelq q1, l1, l1
 x4 mulhsw q1, q1, pr2
-x4 addssw aq, aq, q1
+x4 addw aq, aq, q1
 
 select1wb b2, w2
 splatbl l1, b2
 mergelq q1, l1, l1
 x4 mulhsw q1, q1, pr3
-x4 addssw aq, aq, q1
+x4 addw aq, aq, q1
 
 x4 convssswb ayuv2, aq
 x4 addb ayuv, ayuv2, c128
