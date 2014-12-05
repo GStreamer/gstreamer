@@ -462,12 +462,16 @@ gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
     if (g_ascii_strncasecmp (name, "video/x-dv, systemstream=FALSE", 31) == 0) {
       video_caps = gst_caps_new_simple ("video/x-dv",
           "systemstream", G_TYPE_BOOLEAN, FALSE,
-		  "format", G_TYPE_STRING, "dvsd",
+          "format", G_TYPE_STRING, "dvsd",
           NULL);
     } else if (g_ascii_strncasecmp (name, "video/x-dv, systemstream=TRUE", 31) == 0) {
       video_caps = gst_caps_new_simple ("video/x-dv",
           "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
       return video_caps;
+    } else if (g_ascii_strncasecmp (name, "image/jpeg", 10) == 0) {
+      video_caps = gst_caps_new_simple ("image/jpeg", NULL);
+    } else if (g_ascii_strncasecmp (name, "video/x-h264", 12) == 0) {
+      video_caps = gst_caps_new_simple ("video/x-h264", NULL);
     }
   }
 

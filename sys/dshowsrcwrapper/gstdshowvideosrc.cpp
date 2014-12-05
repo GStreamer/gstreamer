@@ -48,7 +48,18 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "width = " GST_VIDEO_SIZE_RANGE ", "
         "height = " GST_VIDEO_SIZE_RANGE ", "
         "framerate = " GST_VIDEO_FPS_RANGE ", "
-        "systemstream = (boolean) { TRUE, FALSE }")
+        "systemstream = (boolean) { TRUE, FALSE }; "
+
+        "image/jpeg, "
+        "width = " GST_VIDEO_SIZE_RANGE ", "
+        "height = " GST_VIDEO_SIZE_RANGE ", "
+        "framerate = " GST_VIDEO_FPS_RANGE "; "
+
+        "video/x-h264, "
+        "width = " GST_VIDEO_SIZE_RANGE ", "
+        "height = " GST_VIDEO_SIZE_RANGE ", "
+        "framerate = " GST_VIDEO_FPS_RANGE
+        )
     );
 
 G_DEFINE_TYPE (GstDshowVideoSrc, gst_dshowvideosrc, GST_TYPE_PUSH_SRC)
@@ -898,6 +909,18 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin)
 
         pin_mediatype->granularityWidth = 0;
         pin_mediatype->granularityHeight = 0;
+
+      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype,
+              MEDIASUBTYPE_MJPG, FORMAT_VideoInfo)) {
+        mediacaps =
+            gst_dshow_new_video_caps (GST_VIDEO_FORMAT_ENCODED,
+            "image/jpeg", pin_mediatype);
+
+      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype,
+              MEDIASUBTYPE_H264, FORMAT_VideoInfo)) {
+        mediacaps =
+            gst_dshow_new_video_caps (GST_VIDEO_FORMAT_ENCODED,
+            "video/x-h264", pin_mediatype);
       }
 
       if (mediacaps) {
