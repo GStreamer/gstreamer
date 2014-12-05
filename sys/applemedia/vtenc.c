@@ -33,6 +33,8 @@
 #define VTENC_DEFAULT_FRAME_REORDERING TRUE
 #define VTENC_DEFAULT_REALTIME FALSE
 #define VTENC_DEFAULT_QUALITY 0.5
+#define VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL 0
+#define VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL_DURATION 0
 
 GST_DEBUG_CATEGORY (gst_vtenc_debug);
 #define GST_CAT_DEFAULT (gst_vtenc_debug)
@@ -62,7 +64,9 @@ enum
   PROP_BITRATE,
   PROP_ALLOW_FRAME_REORDERING,
   PROP_REALTIME,
-  PROP_QUALITY
+  PROP_QUALITY,
+  PROP_MAX_KEYFRAME_INTERVAL,
+  PROP_MAX_KEYFRAME_INTERVAL_DURATION
 };
 
 typedef struct _GstVTEncFrame GstVTEncFrame;
@@ -219,6 +223,20 @@ gst_vtenc_class_init (GstVTEncClass * klass)
           "The desired compression quality",
           0.0, 1.0, VTENC_DEFAULT_QUALITY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_KEYFRAME_INTERVAL,
+      g_param_spec_int ("max-keyframe-interval", "Max Keyframe Interval",
+          "Maximum number of frames between keyframes (0 = auto)",
+          0, G_MAXINT, VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_MAX_KEYFRAME_INTERVAL_DURATION,
+      g_param_spec_uint64 ("max-keyframe-interval-duration",
+          "Max Keyframe Interval Duration",
+          "Maximum number of nanoseconds between keyframes (0 = no limit)", 0,
+          G_MAXUINT64, VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL_DURATION,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -331,6 +349,55 @@ gst_vtenc_set_quality (GstVTEnc * self, gdouble quality)
   GST_OBJECT_UNLOCK (self);
 }
 
+static gint
+gst_vtenc_get_max_keyframe_interval (GstVTEnc * self)
+{
+  gint result;
+
+  GST_OBJECT_LOCK (self);
+  result = self->max_keyframe_interval;
+  GST_OBJECT_UNLOCK (self);
+
+  return result;
+}
+
+static void
+gst_vtenc_set_max_keyframe_interval (GstVTEnc * self, gint interval)
+{
+  GST_OBJECT_LOCK (self);
+  self->max_keyframe_interval = interval;
+  if (self->session != NULL) {
+    gst_vtenc_session_configure_max_keyframe_interval (self, self->session,
+        interval);
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
+static GstClockTime
+gst_vtenc_get_max_keyframe_interval_duration (GstVTEnc * self)
+{
+  GstClockTime result;
+
+  GST_OBJECT_LOCK (self);
+  result = self->max_keyframe_interval_duration;
+  GST_OBJECT_UNLOCK (self);
+
+  return result;
+}
+
+static void
+gst_vtenc_set_max_keyframe_interval_duration (GstVTEnc * self,
+    GstClockTime interval)
+{
+  GST_OBJECT_LOCK (self);
+  self->max_keyframe_interval_duration = interval;
+  if (self->session != NULL) {
+    gst_vtenc_session_configure_max_keyframe_interval_duration (self,
+        self->session, interval / ((gdouble) GST_SECOND));
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
 static void
 gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -349,6 +416,13 @@ gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
       break;
     case PROP_QUALITY:
       g_value_set_double (value, gst_vtenc_get_quality (self));
+      break;
+    case PROP_MAX_KEYFRAME_INTERVAL:
+      g_value_set_int (value, gst_vtenc_get_max_keyframe_interval (self));
+      break;
+    case PROP_MAX_KEYFRAME_INTERVAL_DURATION:
+      g_value_set_uint64 (value,
+          gst_vtenc_get_max_keyframe_interval_duration (self));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -374,6 +448,13 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
       break;
     case PROP_QUALITY:
       gst_vtenc_set_quality (self, g_value_get_double (value));
+      break;
+    case PROP_MAX_KEYFRAME_INTERVAL:
+      gst_vtenc_set_max_keyframe_interval (self, g_value_get_int (value));
+      break;
+    case PROP_MAX_KEYFRAME_INTERVAL_DURATION:
+      gst_vtenc_set_max_keyframe_interval_duration (self,
+          g_value_get_uint64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -624,8 +705,10 @@ gst_vtenc_create_session (GstVTEnc * self)
   GST_DEBUG_OBJECT (self,
       "kVTCompressionPropertyKey_AllowTemporalCompression => %d", (int) status);
 
-  gst_vtenc_session_configure_max_keyframe_interval (self, session, 0);
-  gst_vtenc_session_configure_max_keyframe_interval_duration (self, session, 0);
+  gst_vtenc_session_configure_max_keyframe_interval (self, session,
+      self->max_keyframe_interval);
+  gst_vtenc_session_configure_max_keyframe_interval_duration (self, session,
+      self->max_keyframe_interval_duration / ((gdouble) GST_SECOND));
 
   gst_vtenc_session_configure_bitrate (self, session,
       gst_vtenc_get_bitrate (self));

@@ -61,6 +61,8 @@ struct _GstVTEnc
   gboolean allow_frame_reordering;
   gboolean realtime;
   gdouble quality;
+  gint max_keyframe_interval;
+  GstClockTime max_keyframe_interval_duration;
 
   gboolean dump_properties;
   gboolean dump_attributes;
