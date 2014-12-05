@@ -302,7 +302,7 @@ gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_BITRATE:
-      g_value_set_uint (value, gst_vtenc_get_bitrate (self) * 8 / 1000);
+      g_value_set_uint (value, gst_vtenc_get_bitrate (self) / 1000);
       break;
     case PROP_ALLOW_FRAME_REORDERING:
       g_value_set_boolean (value, gst_vtenc_get_allow_frame_reordering (self));
@@ -324,7 +324,7 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case PROP_BITRATE:
-      gst_vtenc_set_bitrate (self, g_value_get_uint (value) * 1000 / 8);
+      gst_vtenc_set_bitrate (self, g_value_get_uint (value) * 1000);
       break;
     case PROP_ALLOW_FRAME_REORDERING:
       gst_vtenc_set_allow_frame_reordering (self, g_value_get_boolean (value));
