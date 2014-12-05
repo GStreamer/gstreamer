@@ -18,9 +18,12 @@
 # Boston, MA 02110-1301, USA.
 import argparse
 import os
+import copy
+import sys
 import time
 import urllib.parse
 import shlex
+import socket
 import subprocess
 import configparser
 from launcher.loggable import Loggable
@@ -31,7 +34,8 @@ from launcher.baseclasses import GstValidateTest, Test, \
     GstValidateBaseTestManager, MediaDescriptor, MediaFormatCombination
 
 from launcher.utils import path2url, url2path, DEFAULT_TIMEOUT, which, \
-    GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_data_file
+    GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_data_file, \
+    kill_subprocess
 
 #
 # Private global variables     #
@@ -40,14 +44,17 @@ from launcher.utils import path2url, url2path, DEFAULT_TIMEOUT, which, \
 # definitions of commands to use
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("--validate-tools-path", dest="validate_tools_path",
-                default="",
-                help="defines the paths to look for GstValidate tools.")
+                    default="",
+                    help="defines the paths to look for GstValidate tools.")
 options, args = parser.parse_known_args()
 
 GST_VALIDATE_COMMAND = which("gst-validate-1.0", options.validate_tools_path)
-GST_VALIDATE_TRANSCODING_COMMAND = which("gst-validate-transcoding-1.0", options.validate_tools_path)
-G_V_DISCOVERER_COMMAND = which("gst-validate-media-check-1.0", options.validate_tools_path)
+GST_VALIDATE_TRANSCODING_COMMAND = which(
+    "gst-validate-transcoding-1.0", options.validate_tools_path)
+G_V_DISCOVERER_COMMAND = which(
+    "gst-validate-media-check-1.0", options.validate_tools_path)
 ScenarioManager.GST_VALIDATE_COMMAND = GST_VALIDATE_COMMAND
+RTSP_SERVER_COMMAND = "gst-rtsp-server-example-uri-1.0"
 
 AUDIO_ONLY_FILE_TRANSCODING_RATIO = 5
 
@@ -62,6 +69,7 @@ GST_VALIDATE_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS),
                                  ("application/dash+xml", Protocols.DASH)]
 GST_VALIDATE_PROTOCOL_TIMEOUTS = {Protocols.HTTP: 120,
                                   Protocols.HLS: 240,
+                                  Protocols.RTSP: 240,
                                   Protocols.DASH: 240}
 
 
@@ -99,6 +107,10 @@ class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
             if mediainfo.media_descriptor.is_image():
                 continue
 
+            protocol = mediainfo.media_descriptor.get_protocol()
+            if protocol == Protocols.RTSP:
+                continue
+
             for comb in self.test_manager.get_encoding_formats():
                 classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.media_descriptor.get_protocol(),
                                                                 str(comb).replace(
@@ -113,6 +125,7 @@ class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
 
 
 class FakeMediaDescriptor(MediaDescriptor):
+
     def __init__(self, infos, pipeline_desc):
         MediaDescriptor.__init__(self)
         self._infos = infos
@@ -210,7 +223,8 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
             for scenario in extra_datas.get('scenarios', scenarios):
                 if isinstance(scenario, str):
-                    scenario = self.test_manager.scenarios_manager.get_scenario(scenario)
+                    scenario = self.test_manager.scenarios_manager.get_scenario(
+                        scenario)
 
                 mediainfo = FakeMediaDescriptor(extra_datas, pipeline)
                 if not mediainfo.is_compatible(scenario):
@@ -229,7 +243,8 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                 pipeline_desc = pipeline % {'videosink': videosink,
                                             'audiosink': audiosink}
 
-                fname = self.get_fname(scenario, protocol=mediainfo.get_protocol(), name=name)
+                fname = self.get_fname(
+                    scenario, protocol=mediainfo.get_protocol(), name=name)
 
                 expected_failures = extra_datas.get("expected-failures")
                 extra_env_vars = extra_datas.get("extra_env_vars")
@@ -254,10 +269,42 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
             GstValidatePipelineTestsGenerator.__init__(
                 self, "playback", test_manager, "playbin3")
 
+    def _set_sinks(self, minfo, pipe_str, scenario):
+        if self.test_manager.options.mute:
+            if scenario.needs_clock_sync() or \
+                    minfo.media_descriptor.need_clock_sync():
+                afakesink = "'fakesink sync=true'"
+                vfakesink = "'fakesink sync=true qos=true max-lateness=20000000'"
+            else:
+                vfakesink = afakesink = "'fakesink'"
+
+            pipe_str += " audio-sink=%s video-sink=%s" % (
+                afakesink, vfakesink)
+
+        return pipe_str
+
+    def _get_name(self, scenario, protocol, minfo):
+        return "%s.%s" % (self.get_fname(scenario,
+                                         protocol),
+                          os.path.basename(minfo.media_descriptor.get_clean_name()))
+
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
+        test_rtsp = which(RTSP_SERVER_COMMAND)
+        if not test_rtsp:
+            printc("\n\nRTSP server not available, you should make sure"
+                   " that %s is available in your $PATH." % RTSP_SERVER_COMMAND,
+                   Colors.FAIL)
+        elif self.test_manager.options.disable_rtsp:
+            printc("\n\nRTSP tests are disabled")
+            test_rtsp = False
+
         for uri, minfo, special_scenarios in uri_minfo_special_scenarios:
             pipe = self._pipeline_template
             protocol = minfo.media_descriptor.get_protocol()
+
+            if protocol == Protocols.RTSP:
+                self.debug("SKIPPING %s as it is a RTSP stream" % uri)
+                continue
 
             pipe += " uri=%s" % uri
 
@@ -266,20 +313,9 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                 if not minfo.media_descriptor.is_compatible(scenario):
                     continue
 
-                if self.test_manager.options.mute:
-                    if scenario.needs_clock_sync() or \
-                            minfo.media_descriptor.need_clock_sync():
-                        afakesink = "'fakesink sync=true'"
-                        vfakesink = "'fakesink sync=true qos=true max-lateness=20000000'"
-                    else:
-                        vfakesink = afakesink = "'fakesink'"
+                cpipe = self._set_sinks(minfo, cpipe, scenario)
+                fname = self._get_name(scenario, protocol, minfo)
 
-                    cpipe += " audio-sink=%s video-sink=%s" % (
-                        afakesink, vfakesink)
-
-                fname = "%s.%s" % (self.get_fname(scenario,
-                                   protocol),
-                                   os.path.basename(minfo.media_descriptor.get_clean_name()))
                 self.debug("Adding: %s", fname)
 
                 if scenario.does_reverse_playback() and protocol == Protocols.HTTP:
@@ -293,6 +329,21 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                                                     scenario=scenario,
                                                     media_descriptor=minfo.media_descriptor)
                               )
+
+                if test_rtsp and protocol == Protocols.FILE and not minfo.media_descriptor.is_image():
+                    rtspminfo = copy.deepcopy(minfo)
+                    rtspminfo.media_descriptor = GstValidateRTSPMediaDesciptor(minfo.media_descriptor.get_path())
+                    if not rtspminfo.media_descriptor.is_compatible(scenario):
+                        continue
+
+                    cpipe = self._set_sinks(rtspminfo, "%s uri=rtsp://127.0.0.1:<RTSPPORTNUMBER>/test"
+                                            % self._pipeline_template, scenario)
+                    fname = self._get_name(scenario, Protocols.RTSP, rtspminfo)
+
+                    self.add_test(GstValidateRTSPTest(
+                        fname, self.test_manager.options, self.test_manager.reporter,
+                        cpipe, uri, scenario=scenario,
+                        media_descriptor=rtspminfo.media_descriptor))
 
 
 class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
@@ -443,7 +494,8 @@ class GstValidateMediaCheckTest(GstValidateTest):
 
     def build_arguments(self):
         Test.build_arguments(self)
-        self.add_arguments(self._uri, "--expected-results", self._media_info_path)
+        self.add_arguments(self._uri, "--expected-results",
+                           self._media_info_path)
 
 
 class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterface):
@@ -541,6 +593,112 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
         self.set_result(res, msg)
 
 
+class GstValidateBaseRTSPTest:
+    """ Interface for RTSP tests, requires implementing Test"""
+    __used_ports = set()
+
+    def __init__(self, local_uri):
+        self._local_uri = local_uri
+        self.rtsp_server = None
+        self._unsetport_pipeline_desc = None
+        self.optional = True
+
+    @classmethod
+    def __get_open_port(cls):
+        while True:
+            # hackish trick from
+            # http://stackoverflow.com/questions/2838244/get-open-tcp-port-in-python?answertab=votes#tab-top
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(("", 0))
+            port = s.getsockname()[1]
+            if port not in cls.__used_ports:
+                cls.__used_ports.add(port)
+                s.close()
+                return port
+
+            s.close()
+
+    def launch_server(self):
+        if self.options.redirect_logs == 'stdout':
+            self.rtspserver_logs = sys.stdout
+        elif self.options.redirect_logs == 'stderr':
+            self.rtspserver_logs = sys.stderr
+
+        self.server_port = self.__get_open_port()
+        command = [RTSP_SERVER_COMMAND, self._local_uri, '--port', str(self.server_port)]
+
+        if self.options.validate_gdb_server:
+            command = self.use_gdb(command)
+            self.rtspserver_logs = sys.stdout
+        elif self.options.redirect_logs:
+            self.rtspserver_logs = sys.stdout
+        else:
+            self.rtspserver_logs = open(self.logfile + '_rtspserver.log', 'w+')
+            self.extra_logfiles.append(self.rtspserver_logs.name)
+
+        server_env = os.environ.copy()
+        server_env['GST_TRACERS'] = 'validate'
+
+        self.rtsp_server = subprocess.Popen(command,
+                                            stderr=self.rtspserver_logs,
+                                            stdout=self.rtspserver_logs,
+                                            env=server_env)
+        while True:
+            s = socket.socket()
+            try:
+                s.connect((("127.0.0.1", self.server_port)))
+                break
+            except ConnectionRefusedError:
+                time.sleep(0.5)
+                continue
+            finally:
+                s.close()
+
+        if not self._unsetport_pipeline_desc:
+            self._unsetport_pipeline_desc = self.pipeline_desc
+
+        self.pipeline_desc = self._unsetport_pipeline_desc.replace(
+            "<RTSPPORTNUMBER>", str(self.server_port))
+
+        return 'GST_TRACERS=validate ' + ' '.join(command)
+
+    def close_logfile(self):
+        super().close_logfile()
+        if not self.options.redirect_logs:
+            self.rtspserver_logs.close()
+
+    def process_update(self):
+        res = super().process_update()
+        if res:
+            kill_subprocess(self, self.rtsp_server, DEFAULT_TIMEOUT)
+            self.__used_ports.remove(self.server_port)
+
+        return res
+
+
+class GstValidateRTSPTest(GstValidateBaseRTSPTest, GstValidateLaunchTest):
+
+    def __init__(self, classname, options, reporter, pipeline_desc,
+                 local_uri, timeout=DEFAULT_TIMEOUT, scenario=None,
+                 media_descriptor=None):
+        GstValidateLaunchTest.__init__(self, classname, options, reporter,
+                                       pipeline_desc, timeout, scenario,
+                                       media_descriptor)
+        GstValidateBaseRTSPTest.__init__(self, local_uri)
+
+
+class GstValidateRTSPMediaDesciptor(GstValidateMediaDescriptor):
+
+    def __init__(self, xml_path):
+        GstValidateMediaDescriptor.__init__(self, xml_path)
+
+    def get_uri(self):
+        return "rtsp://127.0.0.1:8554/test"
+
+    def get_protocol(self):
+        return Protocols.RTSP
+
+
 class GstValidateTestManager(GstValidateBaseTestManager):
 
     name = "validate"
@@ -582,6 +740,10 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                            action="append", help="defines the uris to run default tests on")
         group.add_argument("--validate-tools-path", dest="validate_tools_path",
                            action="append", help="defines the paths to look for GstValidate tools.")
+        group.add_argument("--validate-gdb-server", dest="validate_gdb_server",
+                           help="Run the server in GDB.")
+        group.add_argument("--validate-disable-rtsp", dest="disable_rtsp",
+                           help="Disable RTSP tests.")
 
     def print_valgrind_bugs(self):
         # Look for all the 'pending' bugs in our supp file
@@ -629,7 +791,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 self.add_test(test)
 
         if not self.tests and not uris:
-            printc("No valid uris present in the path. Check if media files and info files exist", Colors.FAIL)
+            printc(
+                "No valid uris present in the path. Check if media files and info files exist", Colors.FAIL)
 
         return self.tests
 
@@ -681,10 +844,12 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 self._add_media(fpath)
                 return True
             elif not self.options.generate_info and not self.options.update_media_info and not self.options.validate_uris:
-                self.info("%s not present. Use --generate-media-info", media_info)
+                self.info(
+                    "%s not present. Use --generate-media-info", media_info)
                 return True
             elif self.options.update_media_info and not os.path.isfile(media_info):
-                self.info("%s not present. Use --generate-media-info", media_info)
+                self.info(
+                    "%s not present. Use --generate-media-info", media_info)
                 return True
 
             include_frames = 0
@@ -750,7 +915,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
                 if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] and \
                         ("127.0.0.1:%s" % (self.options.http_server_port) in uri or
-                        "127.0.0.1:8079" in uri):
+                         "127.0.0.1:8079" in uri):
                     return True
         return False
 
@@ -862,9 +1027,9 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
              "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
 
             # Fragmented MP4 disabled tests:
-            ('validate.file.playback..*seek.*.fragmented_nonseekable_sink_mp4',
+            ('validate.*.playback..*seek.*.fragmented_nonseekable_sink_mp4',
              "Seeking on fragmented files without indexes isn't implemented"),
-            ('validate.file.playback.reverse_playback.fragmented_nonseekable_sink_mp4',
+            ('validate.*.playback.reverse_playback.fragmented_nonseekable_sink_mp4',
              "Seeking on fragmented files without indexes isn't implemented"),
 
             # HTTP known issues:
@@ -889,7 +1054,12 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
             # ogg known issues
             ("validate.http.playback.seek.*vorbis_theora_1_ogg",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=769545")
+             "https://bugzilla.gnome.org/show_bug.cgi?id=769545"),
+            # RTSP known issues
+            ('validate.rtsp.playback.reverse.*',
+             'https://bugzilla.gnome.org/show_bug.cgi?id=626811'),
+            ('validate.rtsp.playback.fast_*',
+             'https://bugzilla.gnome.org/show_bug.cgi?id=754575'),
         ])
 
     def register_default_test_generators(self):

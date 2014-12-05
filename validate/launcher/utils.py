@@ -27,6 +27,7 @@ import os
 import platform
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -43,7 +44,8 @@ from xml.etree import ElementTree
 GST_SECOND = int(1000000000)
 DEFAULT_TIMEOUT = 30
 DEFAULT_MAIN_DIR = os.path.join(os.path.expanduser("~"), "gst-validate")
-DEFAULT_GST_QA_ASSETS = os.path.join(DEFAULT_MAIN_DIR, "gst-integration-testsuites")
+DEFAULT_GST_QA_ASSETS = os.path.join(
+    DEFAULT_MAIN_DIR, "gst-integration-testsuites")
 DISCOVERER_COMMAND = "gst-discoverer-1.0"
 # Use to set the duration from which a test is considered as being 'long'
 LONG_TEST = 40
@@ -63,6 +65,7 @@ class Protocols(object):
     FILE = "file"
     HLS = "hls"
     DASH = "dash"
+    RTSP = "rtsp"
 
     @staticmethod
     def needs_clock_sync(protocol):
@@ -208,7 +211,8 @@ def TIME_ARGS(time):
 
 
 def look_for_file_in_source_dir(subdir, name):
-    root_dir = os.path.abspath(os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)))))
+    root_dir = os.path.abspath(os.path.dirname(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)))))
     p = os.path.join(root_dir, subdir, name)
     if os.path.exists(p):
         return p
@@ -253,7 +257,8 @@ def get_duration(media_file):
     duration = 0
     res = ''
     try:
-        res = subprocess.check_output([DISCOVERER_COMMAND, media_file]).decode()
+        res = subprocess.check_output(
+            [DISCOVERER_COMMAND, media_file]).decode()
     except subprocess.CalledProcessError:
         # gst-media-check returns !0 if seeking is not possible, we do not care
         # in that case.
@@ -308,7 +313,7 @@ class BackTraceGenerator(Loggable):
                 "installed."
 
         gdb = ['gdb', '-ex', 't a a bt', '-batch',
-            '-p', str(test.process.pid)]
+               '-p', str(test.process.pid)]
 
         try:
             return subprocess.check_output(
@@ -320,7 +325,8 @@ class BackTraceGenerator(Loggable):
     def get_trace_from_systemd(self, test):
         for ntry in range(10):
             if ntry != 0:
-                # Loopping, it means we conceder the logs might not be ready yet.
+                # Loopping, it means we conceder the logs might not be ready
+                # yet.
                 time.sleep(1)
 
             try:
@@ -334,7 +340,8 @@ class BackTraceGenerator(Loggable):
 
             info = info.decode()
             try:
-                executable = BackTraceGenerator._executable_regex.findall(info)[0]
+                executable = BackTraceGenerator._executable_regex.findall(info)[
+                    0]
             except IndexError:
                 self.debug("Backtrace could not be found yet, trying harder.")
                 # The trace might not be ready yet
@@ -357,11 +364,11 @@ class BackTraceGenerator(Loggable):
                 try:
                     tf = tempfile.NamedTemporaryFile()
                     subprocess.check_output(['coredumpctl', 'dump',
-                                            str(test.process.pid), '--output=' +
-                                            tf.name], stderr=subprocess.STDOUT)
+                                             str(test.process.pid), '--output=' +
+                                             tf.name], stderr=subprocess.STDOUT)
 
                     gdb = ['gdb', '-ex', 't a a bt', '-ex', 'quit',
-                        test.application, tf.name]
+                           test.application, tf.name]
                     bt_all = subprocess.check_output(
                         gdb, stderr=subprocess.STDOUT).decode()
 
@@ -387,13 +394,14 @@ def check_bugs_resolution(bugs_definitions):
 
             if "bugzilla" not in url.netloc:
                 printc("  + %s \n   --> bug: %s\n   --> Status: Not a bugzilla report\n" % (regex, bug),
-                    Colors.WARNING)
+                       Colors.WARNING)
                 continue
 
             query = urllib.parse.parse_qs(url.query)
             _id = query.get('id')
             if not _id:
-                printc("  + '%s' -- Can't check bug '%s'\n" % (regex, bug), Colors.WARNING)
+                printc("  + '%s' -- Can't check bug '%s'\n" %
+                       (regex, bug), Colors.WARNING)
                 continue
 
             if isinstance(_id, list):
@@ -445,5 +453,31 @@ def check_bugs_resolution(bugs_definitions):
 
             printc("  + %s \n   --> bug: #%s: '%s'\n   --> Status: %s\n" % (
                    regex, bugid, desc, status), Colors.OKGREEN)
+
+    return res
+
+
+def kill_subprocess(owner, process, timeout):
+    if process is None:
+        return
+
+    stime = time.time()
+    res = process.poll()
+    while res is None:
+        try:
+            owner.debug("Subprocess is still alive, sending KILL signal")
+            if is_windows():
+                subprocess.call(
+                    ['taskkill', '/F', '/T', '/PID', str(process.pid)])
+            else:
+                process.send_signal(signal.SIGKILL)
+            time.sleep(1)
+        except OSError:
+            pass
+        if time.time() - stime > DEFAULT_TIMEOUT:
+            raise RuntimeError("Could not kill subprocess after %s second"
+                               " Something is really wrong, => EXITING"
+                               % DEFAULT_TIMEOUT)
+        res = process.poll()
 
     return res

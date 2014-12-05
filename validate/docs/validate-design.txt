@@ -1,4 +1,3 @@
-
 == Main components
 
 Gst-validate is composed of 4 parts: the issues, the reports, the runner and
@@ -58,4 +57,3 @@ The file checker is another reporter that is used to make sure a file has a
 few expected properties. It inspects the file and compares the results with
 expected values set by the user. Values such as file duration, file size, if
 it can be played back and also if its encoding and container types.
-

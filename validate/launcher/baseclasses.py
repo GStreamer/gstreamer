@@ -82,6 +82,7 @@ class Test(Loggable):
         self.options = options
         self.application = application_name
         self.command = []
+        self.server_command = None
         self.reporter = reporter
         self.process = None
         self.proc_env = None
@@ -98,6 +99,7 @@ class Test(Loggable):
 
         extra_env_variables = extra_env_variables or {}
         self.extra_env_variables = extra_env_variables
+        self.optional = False
 
         self.clean()
 
@@ -333,26 +335,7 @@ class Test(Loggable):
         return os.environ.copy()
 
     def kill_subprocess(self):
-        if self.process is None:
-            return
-
-        stime = time.time()
-        res = self.process.poll()
-        while res is None:
-            try:
-                self.debug("Subprocess is still alive, sending KILL signal")
-                if utils.is_windows():
-                    subprocess.call(['taskkill', '/F', '/T', '/PID', str(self.process.pid)])
-                else:
-                    self.process.send_signal(signal.SIGKILL)
-                time.sleep(1)
-            except OSError:
-                pass
-            if time.time() - stime > DEFAULT_TIMEOUT:
-                raise RuntimeError("Could not kill subprocess after %s second"
-                                   " Something is really wrong, => EXITING"
-                                   % DEFAULT_TIMEOUT)
-            res = self.process.poll()
+        utils.kill_subprocess(self, self.process, DEFAULT_TIMEOUT)
 
     def thread_wrapper(self):
         self.process = subprocess.Popen(self.command,
@@ -373,14 +356,15 @@ class Test(Loggable):
     def get_valgrind_suppressions(self):
         return [self.get_valgrind_suppression_file('data', 'gstvalidate.supp')]
 
-    def use_gdb(self):
+    def use_gdb(self, command):
         if self.hard_timeout is not None:
             self.hard_timeout *= GDB_TIMEOUT_FACTOR
         self.timeout *= GDB_TIMEOUT_FACTOR
-        self.command = ["gdb", "-ex", "run", "-ex", "quit",
-                        "--args"] + self.command
+        return ["gdb", "-ex", "run", "-ex", "backtrace", "-ex", "quit", "--args"] + command
 
-    def use_valgrind(self):
+    def use_valgrind(self, command, subenv):
+        vglogsfile = self.logfile + '.valgrind'
+        self.extra_logfiles.append(vglogsfile)
 
         vg_args = []
 
@@ -404,14 +388,11 @@ class Test(Loggable):
         for supp in self.get_valgrind_suppressions():
             vg_args.append("--suppressions=%s" % supp)
 
-        self.command = ["valgrind"] + vg_args + self.command
+        command = ["valgrind"] + vg_args + command
 
         # Tune GLib's memory allocator to be more valgrind friendly
-        self.proc_env['G_DEBUG'] = 'gc-friendly'
-        self.add_env_variable('G_DEBUG', 'gc-friendly')
-
-        self.proc_env['G_SLICE'] = 'always-malloc'
-        self.add_env_variable('G_SLICE', 'always-malloc')
+        subenv['G_DEBUG'] = 'gc-friendly'
+        subenv['G_SLICE'] = 'always-malloc'
 
         if self.hard_timeout is not None:
             self.hard_timeout *= VALGRIND_TIMEOUT_FACTOR
@@ -421,15 +402,24 @@ class Test(Loggable):
         vg_config = get_data_file('data', 'valgrind.config')
 
         if self.proc_env.get('GST_VALIDATE_CONFIG'):
-            self.proc_env['GST_VALIDATE_CONFIG'] = '%s%s%s' % (self.proc_env['GST_VALIDATE_CONFIG'], os.pathsep, vg_config)
+            subenv['GST_VALIDATE_CONFIG'] = '%s%s%s' % (self.proc_env['GST_VALIDATE_CONFIG'], os.pathsep, vg_config)
         else:
-            self.proc_env['GST_VALIDATE_CONFIG'] = vg_config
+            subenv['GST_VALIDATE_CONFIG'] = vg_config
 
-        self.add_env_variable('GST_VALIDATE_CONFIG', self.proc_env['GST_VALIDATE_CONFIG'])
+        if subenv == self.proc_env:
+            self.add_env_variable('G_DEBUG', 'gc-friendly')
+            self.add_env_variable('G_SLICE', 'always-malloc')
+            self.add_env_variable('GST_VALIDATE_CONFIG', self.proc_env['GST_VALIDATE_CONFIG'])
+
+        return command
+
+    def launch_server(self):
+        return None
 
     def test_start(self, queue):
         self.open_logfile()
 
+        server_command = self.launch_server()
         self.queue = queue
         self.command = [self.application]
         self._starting_time = time.time()
@@ -442,14 +432,17 @@ class Test(Loggable):
             self.add_env_variable(var, self.proc_env[var])
 
         if self.options.gdb:
-            self.use_gdb()
-
+            self.command = self.use_gdb(self.command)
         if self.options.valgrind:
-            self.use_valgrind()
+            self.command = self.use_valgrind(self.command, self.proc_env)
 
         message = "Launching: %s%s\n" \
-                  "    Command: '%s %s'\n" % (Colors.ENDC, self.classname,
-                                              self._env_variable, ' '.join(self.command))
+                  "    Command: '%s & %s %s'\n" % (
+                      Colors.ENDC, self.classname, server_command,
+                      self._env_variable, ' '.join(self.command))
+        if server_command:
+            message += "    Server command: %s\n" % server_command
+
         if not self.options.redirect_logs:
             message += "    Logs:\n" \
                        "         - %s" % (self.logfile)
@@ -1541,16 +1534,18 @@ class _TestsLauncher(Loggable):
                     testlist_file = open(os.path.splitext(testsuite.__file__)[0] + ".testslist",
                                          'w')
                 except IOError:
-                    return
+                    continue
 
                 for test in know_tests:
-                    if test and test not in tests_names:
-                        testlist_changed = True
-                        printc("Test %s Not in testsuite %s anymore"
-                               % (test, testsuite.__file__), Colors.FAIL)
+                    if test and test.strip('~') not in tests_names:
+                        if not test.startswith('~'):
+                            testlist_changed = True
+                            printc("Test %s Not in testsuite %s anymore"
+                                % (test, testsuite.__file__), Colors.FAIL)
 
-                for test in tests_names:
-                    testlist_file.write("%s\n" % test)
+                for test in tests:
+                    testlist_file.write("%s%s\n" % ('~' if test.optional else '',
+                                                    test.classname))
                     if test and test not in know_tests:
                         printc("Test %s is NEW in testsuite %s"
                                % (test, testsuite.__file__), Colors.OKGREEN)
@@ -1719,6 +1714,7 @@ class Scenario(object):
     def __repr__(self):
         return "<Scenario %s>" % self.name
 
+
 class ScenarioManager(Loggable):
     _instance = None
     all_scenarios = []
@@ -1844,7 +1840,7 @@ class GstValidateBaseTestManager(TestsManager):
         """
         self._scenarios = []
         self.add_scenarios(scenarios)
-        
+
     def get_scenarios(self):
         return self._scenarios
 

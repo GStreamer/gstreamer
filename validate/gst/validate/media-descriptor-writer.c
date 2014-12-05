@@ -137,9 +137,10 @@ serialize_filenode (GstValidateMediaDescriptorWriter * writer)
     caps_str = g_strdup ("");
 
   res = g_string_new (tmpstr);
-  g_string_append_printf (res, "  <streams caps=\"%s\">\n", caps_str);
-  g_free (caps_str);
   g_free (tmpstr);
+  tmpstr = g_markup_printf_escaped ("  <streams caps=\"%s\">\n", caps_str);
+  g_string_append (res, tmpstr);
+  g_free (caps_str);
   for (tmp = filenode->streams; tmp; tmp = tmp->next) {
     GList *tmp3;
     GstValidateMediaStreamNode
@@ -658,6 +659,7 @@ gst_validate_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   media_descriptor = (GstValidateMediaDescriptor *) writer;
   if (streams == NULL && media_descriptor->filenode->caps)
     writer->priv->raw_caps = gst_caps_copy (media_descriptor->filenode->caps);
+
   gst_discoverer_stream_info_list_free (streams);
 
 
