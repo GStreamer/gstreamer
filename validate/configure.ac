@@ -288,7 +288,6 @@ po/Makefile.in
 tools/Makefile
 launcher/Makefile
 launcher/apps/Makefile
-launcher/apps/validate/Makefile
 docs/Makefile
 docs/version.entities
 docs/validate/Makefile
