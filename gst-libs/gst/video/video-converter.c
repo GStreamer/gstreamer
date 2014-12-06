@@ -1803,6 +1803,8 @@ gst_video_converter_free (GstVideoConverter * convert)
     gst_line_cache_free (convert->to_YUV_lines);
   if (convert->downsample_lines)
     gst_line_cache_free (convert->downsample_lines);
+  if (convert->dither_lines)
+    gst_line_cache_free (convert->dither_lines);
 
   if (convert->dither)
     gst_video_dither_free (convert->dither);
