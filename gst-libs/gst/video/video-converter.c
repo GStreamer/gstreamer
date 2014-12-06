@@ -1371,6 +1371,10 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev)
         pass_alloc = TRUE;
     } else
       do_conversion = FALSE;
+
+    convert->current_bits = convert->pack_bits;
+    convert->current_format = convert->pack_format;
+    convert->current_pstride = convert->current_bits >> 1;
   } else {
     /* we did gamma, just do colorspace conversion if needed */
     if (same_primaries) {
