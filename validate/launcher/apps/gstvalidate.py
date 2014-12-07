@@ -22,14 +22,14 @@ import time
 import urlparse
 import subprocess
 import ConfigParser
-from loggable import Loggable
+from launcher.loggable import Loggable
 
-from baseclasses import GstValidateTest, Test, \
+from launcher.baseclasses import GstValidateTest, Test, \
     ScenarioManager, NamedDic, GstValidateTestsGenerator, \
     GstValidateMediaDescriptor, GstValidateEncodingTestInterface, \
     GstValidateBaseTestManager
 
-from utils import path2url, DEFAULT_TIMEOUT, which, \
+from launcher.utils import path2url, DEFAULT_TIMEOUT, which, \
     GST_SECOND, Result, Protocols, mkdir, printc, Colors
 
 #

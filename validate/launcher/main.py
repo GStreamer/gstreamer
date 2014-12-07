@@ -131,7 +131,7 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
 
 QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
-DEFAULT_GST_QA_ASSETS_REPO = "git@gitlab.com:thiblahute/gst-integration-testsuites.git"
+DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.com/thiblahute/gst-integration-testsuites.git"
 DEFAULT_SYNC_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get medias/defaults/"
 DEFAULT_SYNC_ALL_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get ."
 DEFAULT_TESTSUITES_DIR = os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")
