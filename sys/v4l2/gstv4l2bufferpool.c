@@ -473,7 +473,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
       can_allocate = GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, DMABUF);
       break;
     case GST_V4L2_IO_RW:
-      pool->allocator = g_object_ref (allocator);
+      if (allocator)
+        pool->allocator = g_object_ref (allocator);
       pool->params = params;
       /* No need to change the configuration */
       goto done;
@@ -741,7 +742,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   pool->min_latency = min_latency;
   pool->num_queued = 0;
 
-  if (max_buffers < min_buffers)
+  if (max_buffers != 0 && max_buffers < min_buffers)
     max_buffers = min_buffers;
 
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
@@ -957,10 +958,14 @@ gst_v4l2_buffer_pool_poll (GstV4l2BufferPool * pool)
 {
   gint ret;
 
-  GST_OBJECT_LOCK (pool);
-  while (pool->empty)
-    g_cond_wait (&pool->empty_cond, GST_OBJECT_GET_LOCK (pool));
-  GST_OBJECT_UNLOCK (pool);
+  /* In RW mode there is no queue, hence no need to wait while the queue is
+   * empty */
+  if (pool->obj->mode != GST_V4L2_IO_RW) {
+    GST_OBJECT_LOCK (pool);
+    while (pool->empty)
+      g_cond_wait (&pool->empty_cond, GST_OBJECT_GET_LOCK (pool));
+    GST_OBJECT_UNLOCK (pool);
+  }
 
   if (!pool->can_poll_device)
     goto done;
