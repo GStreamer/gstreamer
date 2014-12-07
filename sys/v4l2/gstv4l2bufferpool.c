@@ -646,6 +646,15 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
       can_allocate = TRUE;
+#ifdef HAVE_LIBV4L2
+      /* This workaround a unfixable bug in libv4l2 when RW is emulated on top
+       * of MMAP. In this case, the first read initialize the queues, but the
+       * poll before that will always fail. Doing an empty read, forces the
+       * queue to be initialized now. We only do this if we have a streaming
+       * driver. */
+      if (obj->vcap.capabilities & V4L2_CAP_STREAMING)
+        v4l2_read (obj->video_fd, NULL, 0);
+#endif
       break;
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_MMAP:
