@@ -25,8 +25,6 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "_stdint.h"
-
 /*
    Macros and functions starting with _ (underscore) are internal and
    may change without notice. You have been warned!.
@@ -461,9 +459,10 @@ CK_DLL_EXP void CK_EXPORT _ck_assert_failed (const char *file, int line,
 /* Signed and unsigned integer comparison macros with improved output compared to ck_assert(). */
 /* OP may be any comparison operator. */
 #define _ck_assert_int(X, OP, Y) do { \
-  intmax_t _ck_x = (X); \
-  intmax_t _ck_y = (Y); \
-  ck_assert_msg(_ck_x OP _ck_y, "Assertion '%s' failed: %s==%jd, %s==%jd", #X#OP#Y, #X, _ck_x, #Y, _ck_y); \
+  gint64 _ck_x = (X); \
+  gint64 _ck_y = (Y); \
+  ck_assert_msg(_ck_x OP _ck_y, "Assertion '%s' failed: " \
+      "%s==%" G_GINT64_FORMAT ", %s==%" G_GINT64_FORMAT, #X#OP#Y, #X, _ck_x, #Y, _ck_y); \
 } while (0)
 
 /**
@@ -546,9 +545,10 @@ CK_DLL_EXP void CK_EXPORT _ck_assert_failed (const char *file, int line,
 #define ck_assert_int_ge(X, Y) _ck_assert_int(X, >=, Y)
 
 #define _ck_assert_uint(X, OP, Y) do { \
-  uintmax_t _ck_x = (X); \
-  uintmax_t _ck_y = (Y); \
-  ck_assert_msg(_ck_x OP _ck_y, "Assertion '%s' failed: %s==%ju, %s==%ju", #X#OP#Y, #X, _ck_x, #Y, _ck_y); \
+  guint64 _ck_x = (X); \
+  guint64 _ck_y = (Y); \
+  ck_assert_msg(_ck_x OP _ck_y, "Assertion '%s' failed: " \
+      "%s==%" G_GUINT64_FORMAT ", %s==%" G_GUINT64_FORMAT, #X#OP#Y, #X, _ck_x, #Y, _ck_y); \
 } while (0)
 /**
  * Check two unsigned integers to determine if X==Y
