@@ -91,7 +91,7 @@ eos_cb (GstBus * bus, GstMessage * msg, PlayState * state)
     state->fwd_play = FALSE;
     gst_element_seek (state->pipe, -1.0, GST_FORMAT_TIME,
         GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
-        GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_NONE, -1);
+        GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_END, 0);
 
     return;
   }
