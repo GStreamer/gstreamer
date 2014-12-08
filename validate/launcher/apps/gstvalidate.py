@@ -295,6 +295,7 @@ class GstValidateLaunchTest(GstValidateTest):
             duration = scenario.get_duration()
         elif media_descriptor:
             duration = media_descriptor.get_duration() / GST_SECOND
+
         super(
             GstValidateLaunchTest, self).__init__(GST_VALIDATE_COMMAND, classname,
                                                   options, reporter,

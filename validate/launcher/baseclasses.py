@@ -130,8 +130,8 @@ class Test(Loggable):
         pass
 
     def set_result(self, result, message="", error=""):
-        self.debug("Setting result: %s (message: %s, error: %s", result,
-                   message, error)
+        self.debug("Setting result: %s (message: %s, error: %s)" % (result,
+                   message, error))
         if result is Result.TIMEOUT and self.options.debug is True:
             pname = subprocess.check_output(("readlink -e /proc/%s/exe"
                                              % self.process.pid).split(' ')).replace('\n', '')
@@ -205,7 +205,7 @@ class Test(Loggable):
                     break
             elif self.hard_timeout and time.time() - start_ts > self.hard_timeout:
                 self.set_result(
-                    Result.TIMEOUT, "Hard timeout reached: %d", self.hard_timeout)
+                    Result.TIMEOUT, "Hard timeout reached: %d secs" % self.hard_timeout)
                 break
             else:
                 last_change_ts = time.time()
@@ -289,9 +289,17 @@ class GstValidateTest(Test):
     findlastseek_regex = re.compile(
         'seeking to.*(\d+):(\d+):(\d+).(\d+).*stop.*(\d+):(\d+):(\d+).(\d+).*rate.*(\d+)\.(\d+)')
 
+    HARD_TIMEOUT_FACTOR = 5
+
     def __init__(self, application_name, classname,
                  options, reporter, duration=0,
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None):
+
+        if not hard_timeout and self.HARD_TIMEOUT_FACTOR:
+            if duration:
+                hard_timeout = duration * self.HARD_TIMEOUT_FACTOR
+            else:
+                hard_timeout = None
 
         super(
             GstValidateTest, self).__init__(application_name, classname, options,
