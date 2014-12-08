@@ -10,12 +10,12 @@ if USE_WAYLAND
 WAYLAND_DIR=wayland
 endif
 
-SUBDIRS = adaptivedemux interfaces basecamerabinsrc codecparsers \
-	 insertbin uridownloader mpegts base video $(GL_DIR) $(WAYLAND_DIR)
+SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc codecparsers \
+	 insertbin mpegts base video $(GL_DIR) $(WAYLAND_DIR)
 
 noinst_HEADERS = gst-i18n-plugin.h gettext.h glib-compat-private.h
-DIST_SUBDIRS = adaptivedemux interfaces gl basecamerabinsrc codecparsers \
-	insertbin uridownloader mpegts wayland base video
+DIST_SUBDIRS = uridownloader adaptivedemux interfaces gl basecamerabinsrc \
+	codecparsers insertbin mpegts wayland base video
 
 #dependencies
 video: base
