@@ -295,6 +295,7 @@
 
 #include "gstvideodecoder.h"
 #include "gstvideoutils.h"
+#include "gstvideoutilsprivate.h"
 
 #include <gst/video/video.h>
 #include <gst/video/video-event.h>
@@ -1611,6 +1612,19 @@ gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
 
       if (klass->propose_allocation)
         res = klass->propose_allocation (decoder, query);
+      break;
+    }
+    case GST_QUERY_CAPS:{
+      GstCaps *filter;
+      GstCaps *result;
+
+      gst_query_parse_caps (query, &filter);
+      result = __gst_video_element_proxy_getcaps (GST_ELEMENT_CAST (decoder),
+          GST_VIDEO_DECODER_SINK_PAD (decoder),
+          GST_VIDEO_DECODER_SRC_PAD (decoder), NULL, filter);
+      gst_query_set_caps_result (query, result);
+      gst_caps_unref (result);
+      res = TRUE;
       break;
     }
     default:

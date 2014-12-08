@@ -42,6 +42,7 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	gstvideodecoder.c       \
 	gstvideoencoder.c       \
 	gstvideoutils.c		\
+	gstvideoutilsprivate.c	\
 	video-resampler.c	\
 	video-blend.c		\
 	video-overlay-composition.c
@@ -78,6 +79,7 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	video-overlay-composition.h
 
 nodist_libgstvideo_@GST_API_VERSION@include_HEADERS = $(built_headers)
+noinst_HEADERS = gstvideoutilsprivate.h
 
 libgstvideo_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
 					$(ORC_CFLAGS)

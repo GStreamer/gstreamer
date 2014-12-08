@@ -27,6 +27,38 @@
 #include <gst/video/video.h>
 #include <gst/app/app.h>
 
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw")
+    );
+
+#define RESTRICTED_CAPS_WIDTH 800
+#define RESTRICTED_CAPS_HEIGHT 600
+#define RESTRICTED_CAPS_FPS_N 30
+#define RESTRICTED_CAPS_FPS_D 1
+static GstStaticPadTemplate sinktemplate_restricted =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw, width=(int)800, height=(int)600,"
+        " framerate=(fraction)30/1")
+    );
+
+static GstStaticPadTemplate sinktemplate_with_range =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw, width=(int)[1,800], height=(int)[1,600],"
+        " framerate=(fraction)[1/1, 30/1]")
+    );
+
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-test-custom")
+    );
+
 static GstPad *mysrcpad, *mysinkpad;
 static GstElement *dec;
 static GList *events = NULL;
@@ -181,22 +213,17 @@ _mysinkpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static void
-setup_videodecodertester (void)
+setup_videodecodertester (GstStaticPadTemplate * sinktmpl,
+    GstStaticPadTemplate * srctmpl)
 {
-  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("video/x-raw")
-      );
-  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("video/x-test-custom")
-      );
+  if (sinktmpl == NULL)
+    sinktmpl = &sinktemplate;
+  if (srctmpl == NULL)
+    srctmpl = &srctemplate;
 
   dec = g_object_new (GST_VIDEO_DECODER_TESTER_TYPE, NULL);
-  mysrcpad = gst_check_setup_src_pad (dec, &srctemplate);
-  mysinkpad = gst_check_setup_sink_pad (dec, &sinktemplate);
+  mysrcpad = gst_check_setup_src_pad (dec, srctmpl);
+  mysinkpad = gst_check_setup_sink_pad (dec, sinktmpl);
 
   gst_pad_set_event_function (mysinkpad, _mysinkpad_event);
 }
@@ -259,7 +286,7 @@ GST_START_TEST (videodecoder_playback)
   guint64 i;
   GList *iter;
 
-  setup_videodecodertester ();
+  setup_videodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -321,7 +348,7 @@ GST_START_TEST (videodecoder_playback_with_events)
   GList *iter;
   GList *events_iter;
 
-  setup_videodecodertester ();
+  setup_videodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -429,7 +456,7 @@ GST_START_TEST (videodecoder_flush_events)
   guint64 i;
   GList *events_iter;
 
-  setup_videodecodertester ();
+  setup_videodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -533,7 +560,7 @@ GST_START_TEST (videodecoder_playback_first_frames_not_decoded)
   GstBuffer *buffer;
   guint64 i = 0;
 
-  setup_videodecodertester ();
+  setup_videodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -592,7 +619,7 @@ GST_START_TEST (videodecoder_buffer_after_segment)
   GstClockTime pos;
   GList *iter;
 
-  setup_videodecodertester ();
+  setup_videodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -661,7 +688,7 @@ GST_START_TEST (videodecoder_backwards_playback)
   guint64 i;
   GList *iter;
 
-  setup_videodecodertester ();
+  setup_videodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -744,7 +771,7 @@ GST_START_TEST (videodecoder_backwards_buffer_after_segment)
   guint64 i;
   GstClockTime pos;
 
-  setup_videodecodertester ();
+  setup_videodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -817,6 +844,151 @@ GST_START_TEST (videodecoder_backwards_buffer_after_segment)
 GST_END_TEST;
 
 
+GST_START_TEST (videodecoder_query_caps_with_fixed_caps_peer)
+{
+  GstCaps *caps;
+  GstCaps *filter;
+  GstStructure *structure;
+  gint width, height, fps_n, fps_d;
+
+  setup_videodecodertester (&sinktemplate_restricted, NULL);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_pad_peer_query_caps (mysrcpad, NULL);
+  fail_unless (caps != NULL);
+
+  structure = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_get_int (structure, "width", &width));
+  fail_unless (gst_structure_get_int (structure, "height", &height));
+  fail_unless (gst_structure_get_fraction (structure, "framerate", &fps_n,
+          &fps_d));
+  /* match our restricted caps values */
+  fail_unless (width == RESTRICTED_CAPS_WIDTH);
+  fail_unless (height == RESTRICTED_CAPS_HEIGHT);
+  fail_unless (fps_n == RESTRICTED_CAPS_FPS_N);
+  fail_unless (fps_d == RESTRICTED_CAPS_FPS_D);
+  gst_caps_unref (caps);
+
+  filter = gst_caps_new_simple ("video/x-custom-test", "width", G_TYPE_INT,
+      1000, "height", G_TYPE_INT, 1000, "framerate", GST_TYPE_FRACTION,
+      1000, 1, NULL);
+  caps = gst_pad_peer_query_caps (mysrcpad, filter);
+  fail_unless (caps != NULL);
+  fail_unless (gst_caps_is_empty (caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (filter);
+
+  cleanup_videodecodertest ();
+}
+
+GST_END_TEST;
+
+static void
+_get_int_range (GstStructure * s, const gchar * field, gint * min_v,
+    gint * max_v)
+{
+  const GValue *value;
+
+  value = gst_structure_get_value (s, field);
+  fail_unless (value != NULL);
+  fail_unless (GST_VALUE_HOLDS_INT_RANGE (value));
+
+  *min_v = gst_value_get_int_range_min (value);
+  *max_v = gst_value_get_int_range_max (value);
+}
+
+static void
+_get_fraction_range (GstStructure * s, const gchar * field, gint * fps_n_min,
+    gint * fps_d_min, gint * fps_n_max, gint * fps_d_max)
+{
+  const GValue *value;
+  const GValue *min_v, *max_v;
+
+  value = gst_structure_get_value (s, field);
+  fail_unless (value != NULL);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (value));
+
+  min_v = gst_value_get_fraction_range_min (value);
+  fail_unless (GST_VALUE_HOLDS_FRACTION (min_v));
+  *fps_n_min = gst_value_get_fraction_numerator (min_v);
+  *fps_d_min = gst_value_get_fraction_denominator (min_v);
+
+  max_v = gst_value_get_fraction_range_max (value);
+  fail_unless (GST_VALUE_HOLDS_FRACTION (max_v));
+  *fps_n_max = gst_value_get_fraction_numerator (max_v);
+  *fps_d_max = gst_value_get_fraction_denominator (max_v);
+}
+
+GST_START_TEST (videodecoder_query_caps_with_range_caps_peer)
+{
+  GstCaps *caps;
+  GstCaps *filter;
+  GstStructure *structure;
+  gint width, height, fps_n, fps_d;
+  gint width_min, height_min, fps_n_min, fps_d_min;
+  gint width_max, height_max, fps_n_max, fps_d_max;
+
+  setup_videodecodertester (&sinktemplate_with_range, NULL);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_pad_peer_query_caps (mysrcpad, NULL);
+  fail_unless (caps != NULL);
+
+  structure = gst_caps_get_structure (caps, 0);
+  _get_int_range (structure, "width", &width_min, &width_max);
+  _get_int_range (structure, "height", &height_min, &height_max);
+  _get_fraction_range (structure, "framerate", &fps_n_min, &fps_d_min,
+      &fps_n_max, &fps_d_max);
+  fail_unless (width_min == 1);
+  fail_unless (width_max == RESTRICTED_CAPS_WIDTH);
+  fail_unless (height_min == 1);
+  fail_unless (height_max == RESTRICTED_CAPS_HEIGHT);
+  fail_unless (fps_n_min == 1);
+  fail_unless (fps_d_min == 1);
+  fail_unless (fps_n_max == RESTRICTED_CAPS_FPS_N);
+  fail_unless (fps_d_max == RESTRICTED_CAPS_FPS_D);
+  gst_caps_unref (caps);
+
+  /* query with a fixed filter */
+  filter = gst_caps_new_simple ("video/x-test-custom", "width", G_TYPE_INT,
+      RESTRICTED_CAPS_WIDTH, "height", G_TYPE_INT, RESTRICTED_CAPS_HEIGHT,
+      "framerate", GST_TYPE_FRACTION, RESTRICTED_CAPS_FPS_N,
+      RESTRICTED_CAPS_FPS_D, NULL);
+  caps = gst_pad_peer_query_caps (mysrcpad, filter);
+  fail_unless (caps != NULL);
+  structure = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_get_int (structure, "width", &width));
+  fail_unless (gst_structure_get_int (structure, "height", &height));
+  fail_unless (gst_structure_get_fraction (structure, "framerate", &fps_n,
+          &fps_d));
+  fail_unless (width == RESTRICTED_CAPS_WIDTH);
+  fail_unless (height == RESTRICTED_CAPS_HEIGHT);
+  fail_unless (fps_n == RESTRICTED_CAPS_FPS_N);
+  fail_unless (fps_d == RESTRICTED_CAPS_FPS_D);
+  gst_caps_unref (caps);
+  gst_caps_unref (filter);
+
+  /* query with a fixed filter that will lead to empty result */
+  filter = gst_caps_new_simple ("video/x-test-custom", "width", G_TYPE_INT,
+      1000, "height", G_TYPE_INT, 1000, "framerate", GST_TYPE_FRACTION,
+      1000, 1, NULL);
+  caps = gst_pad_peer_query_caps (mysrcpad, filter);
+  fail_unless (caps != NULL);
+  fail_unless (gst_caps_is_empty (caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (filter);
+
+  cleanup_videodecodertest ();
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videodecoder_suite (void)
 {
@@ -824,6 +996,10 @@ gst_videodecoder_suite (void)
   TCase *tc = tcase_create ("general");
 
   suite_add_tcase (s, tc);
+
+  tcase_add_test (tc, videodecoder_query_caps_with_fixed_caps_peer);
+  tcase_add_test (tc, videodecoder_query_caps_with_range_caps_peer);
+
   tcase_add_test (tc, videodecoder_playback);
   tcase_add_test (tc, videodecoder_playback_with_events);
   tcase_add_test (tc, videodecoder_playback_first_frames_not_decoded);
