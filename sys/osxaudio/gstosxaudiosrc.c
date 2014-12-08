@@ -311,7 +311,12 @@ gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 
   gstelement_class = GST_ELEMENT_GET_CLASS (src);
   osxsrc = GST_OSX_AUDIO_SRC (src);
+
+  GST_OBJECT_LOCK (osxsrc);
   buf = GST_AUDIO_BASE_SRC (src)->ringbuffer;
+  if (buf)
+    gst_object_ref (buf);
+  GST_OBJECT_UNLOCK (osxsrc);
 
   if (buf) {
     GST_OBJECT_LOCK (buf);
@@ -330,6 +335,7 @@ gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
     }
 
     GST_OBJECT_UNLOCK (buf);
+    gst_object_unref (buf);
   }
 
   if (!ret && osxsrc->cached_caps)

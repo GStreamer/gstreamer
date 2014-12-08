@@ -358,7 +358,12 @@ gst_osx_audio_sink_getcaps (GstBaseSink * sink, GstCaps * filter)
 
   gstelement_class = GST_ELEMENT_GET_CLASS (sink);
   osxsink = GST_OSX_AUDIO_SINK (sink);
+
+  GST_OBJECT_LOCK (osxsink);
   buf = GST_AUDIO_BASE_SINK (sink)->ringbuffer;
+  if (buf)
+    gst_object_ref (buf);
+  GST_OBJECT_UNLOCK (osxsink);
 
   if (buf) {
     GST_OBJECT_LOCK (buf);
@@ -380,6 +385,8 @@ gst_osx_audio_sink_getcaps (GstBaseSink * sink, GstCaps * filter)
       ret = gst_caps_ref (osxsink->cached_caps);
 
     GST_OBJECT_UNLOCK (buf);
+
+    gst_object_unref (buf);
   }
 
   if (ret && filter) {
