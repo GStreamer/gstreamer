@@ -216,6 +216,25 @@ class Test(Loggable):
     def get_subproc_env(self):
         return os.environ
 
+    def _kill_subprocess(self):
+        if self.process is None:
+            return
+
+        stime = time.time()
+        res = self.process.poll()
+        while res is None:
+            try:
+                self.debug("Subprocess is still alive, sending KILL signal")
+                self.process.send_signal(signal.SIGKILL)
+                time.sleep(1)
+            except OSError:
+                pass
+            if time.time() - stime > DEFAULT_TIMEOUT:
+                raise RuntimeError("Could not kill subprocess after %s second"
+                                   " Something is really wrong, => EXITING"
+                                   % DEFAULT_TIMEOUT)
+            res = self.process.poll()
+
     def run(self):
         self.command = "%s " % (self.application)
         self._starting_time = time.time()
@@ -241,14 +260,10 @@ class Test(Loggable):
                                             env=proc_env)
             self.wait_process()
         except KeyboardInterrupt:
-            self.process.send_signal(signal.SIGINT)
+            self._kill_subprocess()
             raise
 
-        try:
-            self.process.send_signal(signal.SIGINT)
-        except OSError:
-            pass
-
+        self._kill_subprocess()
         self.time_taken = time.time() - self._starting_time
 
         if not self.reporter.uses_standard_output():
