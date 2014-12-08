@@ -274,6 +274,11 @@ class LauncherConfig(Loggable):
                    % self.clone_dir, Colors.FAIL, True)
             return False
 
+        if (self.main_dir != DEFAULT_MAIN_DIR or
+                self.clone_dir != QA_ASSETS) and \
+                self.testsuites_dir == DEFAULT_TESTSUITES_DIR:
+            self.testsuites_dir = os.path.join(self.main_dir, self.clone_dir,
+                                               "testsuites")
         return True
 
     def set_http_server_dir(self, path):
