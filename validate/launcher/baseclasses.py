@@ -296,15 +296,18 @@ class GstValidateTest(Test):
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None):
 
         if not hard_timeout and self.HARD_TIMEOUT_FACTOR:
-            if duration:
+            if timeout:
+                hard_timeout = timeout * self.HARD_TIMEOUT_FACTOR
+            elif duration:
                 hard_timeout = duration * self.HARD_TIMEOUT_FACTOR
             else:
                 hard_timeout = None
 
-        super(
-            GstValidateTest, self).__init__(application_name, classname, options,
-                                            reporter, duration=duration,
-                                            timeout=timeout, hard_timeout=hard_timeout)
+        super(GstValidateTest, self).__init__(application_name, classname,
+                                              options, reporter,
+                                              duration=duration,
+                                              timeout=timeout,
+                                              hard_timeout=hard_timeout)
 
         # defines how much the process can be outside of the configured
         # segment / seek
