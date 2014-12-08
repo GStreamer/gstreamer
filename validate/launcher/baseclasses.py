@@ -880,7 +880,7 @@ class _TestsLauncher(Loggable):
                        " maybe because of missing TestManager"
                        % (testsuite), Colors.FAIL)
 
-    def _load_config(self):
+    def _load_config(self, options):
         printc("Loading config files is DEPRECATED"
                " you should use the new testsuite format now",)
 
@@ -913,7 +913,7 @@ class _TestsLauncher(Loggable):
                     args.remove(tester.name)
 
         if options.config:
-            self._load_config()
+            self._load_config(options)
 
         self._load_testsuites()
 
