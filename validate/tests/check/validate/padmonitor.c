@@ -61,7 +61,6 @@ GST_START_TEST (buffer_before_segment)
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
-  gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
   fail_unless (GST_IS_VALIDATE_ELEMENT_MONITOR (monitor));
 
   srcpad = gst_element_get_static_pad (src, "src");
