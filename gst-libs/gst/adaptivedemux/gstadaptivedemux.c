@@ -1898,7 +1898,6 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
           if (gst_adaptive_demux_has_next_period (demux)) {
             gst_adaptive_demux_advance_period (demux);
             ret = GST_FLOW_OK;
-            goto end_of_manifest;
           }
         }
       }
@@ -1977,8 +1976,8 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
       break;
   }
 
-end_of_manifest:
   GST_MANIFEST_UNLOCK (demux);
+end_of_manifest:
   if (G_UNLIKELY (ret == GST_FLOW_EOS)) {
     gst_adaptive_demux_stream_push_event (stream, gst_event_new_eos ());
   }
