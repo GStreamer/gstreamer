@@ -2302,8 +2302,12 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
       }
     }
 
-    if (gst_validate_pad_monitor_pad_should_proxy_othercaps (pad_monitor)) {
+    if (GST_PAD_IS_SINK (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor)) &&
+        gst_validate_pad_monitor_pad_should_proxy_othercaps (pad_monitor)) {
       if (_structure_is_video (structure)) {
+        GST_DEBUG_OBJECT (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor),
+            "Adding video common pending fields to other pad: %" GST_PTR_FORMAT,
+            structure);
         gst_validate_pad_monitor_otherpad_add_pending_field (pad_monitor,
             structure, "width");
         gst_validate_pad_monitor_otherpad_add_pending_field (pad_monitor,
@@ -2313,6 +2317,9 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
         gst_validate_pad_monitor_otherpad_add_pending_field (pad_monitor,
             structure, "pixel-aspect-ratio");
       } else if (_structure_is_audio (structure)) {
+        GST_DEBUG_OBJECT (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor),
+            "Adding audio common pending fields to other pad: %" GST_PTR_FORMAT,
+            structure);
         gst_validate_pad_monitor_otherpad_add_pending_field (pad_monitor,
             structure, "rate");
         gst_validate_pad_monitor_otherpad_add_pending_field (pad_monitor,
