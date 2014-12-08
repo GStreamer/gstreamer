@@ -299,6 +299,8 @@ gst_gl_filter_reset (GstGLFilter * filter)
   filter->fbo = 0;
   filter->depthbuffer = 0;
   filter->default_shader = NULL;
+  filter->draw_attr_position_loc = -1;
+  filter->draw_attr_texture_loc = -1;
   if (filter->other_context)
     gst_object_unref (filter->other_context);
   filter->other_context = NULL;
@@ -1450,12 +1452,12 @@ _get_attributes (GstGLFilter * filter)
   if (!filter->default_shader)
     return;
 
-  if (!filter->draw_attr_position_loc)
+  if (filter->draw_attr_position_loc == -1)
     filter->draw_attr_position_loc =
         gst_gl_shader_get_attribute_location (filter->default_shader,
         "a_position");
 
-  if (!filter->draw_attr_texture_loc)
+  if (filter->draw_attr_texture_loc == -1)
     filter->draw_attr_texture_loc =
         gst_gl_shader_get_attribute_location (filter->default_shader,
         "a_texcoord");
@@ -1504,6 +1506,7 @@ _bind_buffer (GstGLFilter * filter)
 
   gl->BindBuffer (GL_ARRAY_BUFFER, filter->vertex_buffer);
 
+  _get_attributes (filter);
   /* Load the vertex position */
   gl->VertexAttribPointer (filter->draw_attr_position_loc, 3, GL_FLOAT,
       GL_FALSE, 5 * sizeof (GLfloat), (void *) 0);
@@ -1512,7 +1515,6 @@ _bind_buffer (GstGLFilter * filter)
   gl->VertexAttribPointer (filter->draw_attr_texture_loc, 2, GL_FLOAT, GL_FALSE,
       5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
 
-  _get_attributes (filter);
 
   gl->EnableVertexAttribArray (filter->draw_attr_position_loc);
   gl->EnableVertexAttribArray (filter->draw_attr_texture_loc);
