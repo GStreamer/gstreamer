@@ -1055,9 +1055,10 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         gst_buffer_unref (buf);
         eos = FALSE;
       } else {
+        gst_buffer_replace (&pad->buffer, buf);
         GST_DEBUG_OBJECT (pad,
-            "Too old buffer -- dropping start %" GST_TIME_FORMAT " out end %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (start_time),
+            "replacing old buffer with a newer buffer, start %" GST_TIME_FORMAT
+            " out end %" GST_TIME_FORMAT, GST_TIME_ARGS (start_time),
             GST_TIME_ARGS (output_end_time));
         gst_buffer_unref (buf);
         buf = gst_aggregator_pad_steal_buffer (bpad);
