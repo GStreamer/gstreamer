@@ -2241,18 +2241,18 @@ gst_ps_demux_data_cb (GstPESFilter * filter, gboolean first,
     }
     if (filter->pts != -1) {
       demux->next_pts = filter->pts + demux->scr_adjust;
-      GST_LOG_OBJECT (demux, "PTS = %" G_GUINT64_FORMAT
-          "(%" G_GUINT64_FORMAT ")", filter->pts, demux->next_pts);
+      GST_LOG_OBJECT (demux, "stream 0x%02x PTS = orig %" G_GUINT64_FORMAT
+          " (%" G_GUINT64_FORMAT ")", id, filter->pts, demux->next_pts);
     } else
       demux->next_pts = G_MAXUINT64;
 
     if (filter->dts != -1) {
       demux->next_dts = filter->dts + demux->scr_adjust;
+      GST_LOG_OBJECT (demux, "stream 0x%02x DTS = orig %" G_GUINT64_FORMAT
+          " (%" G_GUINT64_FORMAT ")", id, filter->dts, demux->next_dts);
     } else {
       demux->next_dts = demux->next_pts;
     }
-    GST_LOG_OBJECT (demux, "DTS = orig %" G_GUINT64_FORMAT
-        " (%" G_GUINT64_FORMAT ")", filter->dts, demux->next_dts);
 
     demux->current_stream = gst_ps_demux_get_stream (demux, id, stream_type);
   }
