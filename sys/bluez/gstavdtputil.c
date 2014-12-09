@@ -49,7 +49,9 @@ gst_avdtp_connection_acquire (GstAvdtpConnection * conn)
 {
   DBusMessage *msg, *reply;
   DBusError err;
+#ifdef HAVE_BLUEZ4
   const char *access_type = "rw";
+#endif
   int fd;
   uint16_t imtu, omtu;
 
@@ -63,11 +65,16 @@ gst_avdtp_connection_acquire (GstAvdtpConnection * conn)
   if (conn->data.conn == NULL)
     conn->data.conn = dbus_bus_get (DBUS_BUS_SYSTEM, &err);
 
+#ifdef HAVE_BLUEZ4
   msg = dbus_message_new_method_call ("org.bluez", conn->transport,
       "org.bluez.MediaTransport", "Acquire");
 
   dbus_message_append_args (msg, DBUS_TYPE_STRING, &access_type,
       DBUS_TYPE_INVALID);
+#else
+  msg = dbus_message_new_method_call ("org.bluez", conn->transport,
+      "org.bluez.MediaTransport1", "Acquire");
+#endif
 
   reply = dbus_connection_send_with_reply_and_block (conn->data.conn,
       msg, -1, &err);
@@ -106,6 +113,7 @@ static void
 gst_avdtp_connection_transport_release (GstAvdtpConnection * conn)
 {
   DBusMessage *msg;
+#ifdef HAVE_BLUEZ4
   const char *access_type = "rw";
 
   msg = dbus_message_new_method_call ("org.bluez", conn->transport,
@@ -113,7 +121,10 @@ gst_avdtp_connection_transport_release (GstAvdtpConnection * conn)
 
   dbus_message_append_args (msg, DBUS_TYPE_STRING, &access_type,
       DBUS_TYPE_INVALID);
-
+#else
+  msg = dbus_message_new_method_call ("org.bluez", conn->transport,
+      "org.bluez.MediaTransport1", "Release");
+#endif
   dbus_connection_send (conn->data.conn, msg, NULL);
 
   dbus_message_unref (msg);
@@ -258,17 +269,28 @@ gst_avdtp_connection_get_properties (GstAvdtpConnection * conn)
   DBusMessage *msg, *reply;
   DBusMessageIter arg_i, ele_i;
   DBusError err;
+#ifndef HAVE_BLUEZ4
+  const char *interface;
+#endif
 
   dbus_error_init (&err);
 
+#ifdef HAVE_BLUEZ4
   msg = dbus_message_new_method_call ("org.bluez", conn->transport,
       "org.bluez.MediaTransport", "GetProperties");
-
+#else
+  msg = dbus_message_new_method_call ("org.bluez", conn->transport,
+      "org.freedesktop.DBus.Properties", "GetAll");
+#endif
   if (!msg) {
     GST_ERROR ("D-Bus Memory allocation failed");
     return FALSE;
   }
-
+#ifndef HAVE_BLUEZ4
+  interface = "org.bluez.MediaTransport1";
+  dbus_message_append_args (msg, DBUS_TYPE_STRING, &interface,
+        DBUS_TYPE_INVALID);
+#endif
   reply = dbus_connection_send_with_reply_and_block (conn->data.conn,
       msg, -1, &err);
 

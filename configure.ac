@@ -1655,11 +1655,20 @@ esac
 dnl *** bluez ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BLUEZ, true)
 AG_GST_CHECK_FEATURE(BLUEZ, [Bluez], bluez, [
-  PKG_CHECK_MODULES([BLUEZ], [bluez < 5.0], [
+  PKG_CHECK_MODULES([BLUEZ4], [bluez < 5.0], [
+    HAVE_BLUEZ=yes
+    AC_DEFINE(HAVE_BLUEZ4,[1],[Old bluez detected])
+  ], [
+    PKG_CHECK_MODULES([BLUEZ5], [bluez >= 5.0], [
+      HAVE_BLUEZ=yes
+      AC_DEFINE(HAVE_BLUEZ5,[1],[Current bluez detected])
+    ], [
+      HAVE_BLUEZ=no
+    ])
+  ])
+  AS_IF([ test x$HAVE_BLUEZ = xyes ],[
     dnl FIXME: we should be able to replace this with the GLib DBus stuff
     PKG_CHECK_MODULES([DBUS], [dbus-1], [HAVE_BLUEZ=yes], [HAVE_BLUEZ=no])
-  ], [
-    HAVE_BLUEZ=no
   ])
 ])
 
