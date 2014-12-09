@@ -2569,7 +2569,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   gint width, height, fps_n, fps_d;
   gint n_v4l_planes;
   gint i = 0;
-  gboolean is_mplane, format_changed;
+  gboolean is_mplane;
   enum v4l2_colorspace colorspace = 0;
 
   GST_V4L2_CHECK_OPEN (v4l2object);
@@ -2634,66 +2634,6 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 
   memset (&format, 0x00, sizeof (struct v4l2_format));
   format.type = v4l2object->type;
-
-  if (v4l2object->no_initial_format) {
-    format_changed = TRUE;
-  } else {
-    if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
-      goto get_fmt_failed;
-
-    /* Note that four first fields are the same between v4l2_pix_format and
-     * v4l2_pix_format_mplane, so we don't need to duplicate he checks */
-
-    /* If no size in caps, use configured size */
-    if (width == 0 && height == 0) {
-      width = format.fmt.pix_mp.width;
-      height = format.fmt.pix_mp.height;
-    }
-
-    format_changed = format.type != v4l2object->type ||
-        format.fmt.pix_mp.width != width ||
-        format.fmt.pix_mp.height != height ||
-        format.fmt.pix_mp.pixelformat != pixelformat ||
-        format.fmt.pix_mp.field != field;
-
-    if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
-      if (is_mplane) {
-        format_changed = format_changed ||
-            format.fmt.pix_mp.colorspace != colorspace;
-      } else {
-        format_changed = format_changed ||
-            format.fmt.pix.colorspace != colorspace;
-      }
-    }
-  }
-
-#ifndef GST_DISABLE_GST_DEBUG
-  if (is_mplane) {
-    GST_DEBUG_OBJECT (v4l2object->element, "Current size is %dx%d, format "
-        "%" GST_FOURCC_FORMAT " colorspace %d, nb planes %d",
-        format.fmt.pix_mp.width, format.fmt.pix_mp.height,
-        GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
-        format.fmt.pix_mp.colorspace, format.fmt.pix_mp.num_planes);
-
-    for (i = 0; i < format.fmt.pix_mp.num_planes; i++)
-      GST_DEBUG_OBJECT (v4l2object->element, "  stride %d",
-          format.fmt.pix_mp.plane_fmt[i].bytesperline);
-  } else {
-    GST_DEBUG_OBJECT (v4l2object->element, "Current size is %dx%d, format "
-        "%" GST_FOURCC_FORMAT " stride %d, colorspace %d",
-        format.fmt.pix.width, format.fmt.pix.height,
-        GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
-        format.fmt.pix.bytesperline, format.fmt.pix.colorspace);
-  }
-#endif
-
-  /* If nothing changed, we are done */
-  if (!format_changed)
-    goto done;
-
-  /* something different, set the format */
-  GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
-      "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
 
   if (is_mplane) {
     format.type = v4l2object->type;
@@ -2887,14 +2827,6 @@ invalid_caps:
   {
     GST_DEBUG_OBJECT (v4l2object->element, "can't parse caps %" GST_PTR_FORMAT,
         caps);
-    return FALSE;
-  }
-get_fmt_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Device '%s' does not support video capture"),
-            v4l2object->videodev),
-        ("Call to G_FMT failed: (%s)", g_strerror (errno)));
     return FALSE;
   }
 set_fmt_failed:
