@@ -2214,7 +2214,7 @@ static GstFlowReturn
 gst_qt_mux_register_and_push_sample (GstQTMux * qtmux, GstQTPad * pad,
     GstBuffer * buffer, gboolean is_last_buffer, guint nsamples,
     gint64 last_dts, gint64 scaled_duration, guint sample_size,
-    guint chunk_offset, gboolean sync, gboolean do_pts, gint64 pts_offset)
+    guint64 chunk_offset, gboolean sync, gboolean do_pts, gint64 pts_offset)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
