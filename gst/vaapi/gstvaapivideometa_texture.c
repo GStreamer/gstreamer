@@ -33,6 +33,8 @@
 #include <gst/vaapi/gstvaapitexture_glx.h>
 #endif
 
+#define DEFAULT_FORMAT GST_VIDEO_FORMAT_RGBA
+
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
 
 #include "gstvaapivideometa_texture.h"
@@ -40,7 +42,47 @@
 struct _GstVaapiVideoMetaTexture
 {
   GstVaapiTexture *texture;
+  GstVideoGLTextureType texture_type;
+  guint gl_format;
+  guint width;
+  guint height;
 };
+
+static gboolean
+meta_texture_ensure_format (GstVaapiVideoMetaTexture * meta,
+    GstVideoFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGBA:
+      meta->gl_format = GL_RGBA;
+      meta->texture_type = GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+      break;
+    default:
+      goto error_unsupported_format;
+  }
+  return TRUE;
+
+  /* ERRORS */
+error_unsupported_format:
+  GST_ERROR ("unsupported texture format %s",
+      gst_video_format_to_string (format));
+  return FALSE;
+}
+
+static void
+meta_texture_ensure_size_from_buffer (GstVaapiVideoMetaTexture * meta,
+    GstBuffer * buffer)
+{
+  GstVideoMeta *vmeta;
+
+  if (!buffer || !(vmeta = gst_buffer_get_video_meta (buffer))) {
+    meta->width = 0;
+    meta->height = 0;
+  } else {
+    meta->width = vmeta->width;
+    meta->height = vmeta->height;
+  }
+}
 
 static void
 meta_texture_free (GstVaapiVideoMetaTexture * meta)
@@ -62,6 +104,8 @@ meta_texture_new (void)
     return NULL;
 
   meta->texture = NULL;
+  meta_texture_ensure_format (meta, DEFAULT_FORMAT);
+  meta_texture_ensure_size_from_buffer (meta, NULL);
   return meta;
 }
 
@@ -74,6 +118,10 @@ meta_texture_copy (GstVaapiVideoMetaTexture * meta)
   if (!copy)
     return NULL;
 
+  copy->texture_type = meta->texture_type;
+  copy->gl_format = meta->gl_format;
+  copy->width = meta->width;
+  copy->height = meta->height;
   gst_vaapi_texture_replace (&copy->texture, meta->texture);
   return copy;
 }
@@ -101,7 +149,7 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
     /* FIXME: should we assume target? */
     GstVaapiTexture *const texture =
         gst_vaapi_texture_glx_new_wrapped (dpy, texture_id[0],
-        GL_TEXTURE_2D, GL_RGBA);
+        GL_TEXTURE_2D, meta_texture->gl_format);
     gst_vaapi_texture_replace (&meta_texture->texture, texture);
     if (!texture)
       return FALSE;
@@ -116,7 +164,6 @@ gboolean
 gst_buffer_add_texture_upload_meta (GstBuffer * buffer)
 {
   GstVideoGLTextureUploadMeta *meta = NULL;
-  GstVideoGLTextureType tex_type[] = { GST_VIDEO_GL_TEXTURE_TYPE_RGBA };
   GstVaapiVideoMetaTexture *meta_texture;
 
   if (!buffer)
@@ -126,9 +173,10 @@ gst_buffer_add_texture_upload_meta (GstBuffer * buffer)
   if (!meta_texture)
     return FALSE;
 
+  meta_texture_ensure_size_from_buffer (meta_texture, buffer);
   meta = gst_buffer_add_video_gl_texture_upload_meta (buffer,
       GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
-      1, tex_type, gst_vaapi_texture_upload,
+      1, &meta_texture->texture_type, gst_vaapi_texture_upload,
       meta_texture, (GBoxedCopyFunc) meta_texture_copy,
       (GBoxedFreeFunc) meta_texture_free);
   if (!meta)
@@ -143,7 +191,13 @@ error:
 gboolean
 gst_buffer_ensure_texture_upload_meta (GstBuffer * buffer)
 {
-  return gst_buffer_get_video_gl_texture_upload_meta (buffer) ||
-      gst_buffer_add_texture_upload_meta (buffer);
+  GstVideoGLTextureUploadMeta *const meta =
+      gst_buffer_get_video_gl_texture_upload_meta (buffer);
+
+  if (meta) {
+    meta_texture_ensure_size_from_buffer (meta->user_data, buffer);
+    return TRUE;
+  }
+  return gst_buffer_add_texture_upload_meta (buffer);
 }
 #endif
