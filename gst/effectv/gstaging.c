@@ -334,7 +334,7 @@ gst_agingtv_transform_frame (GstVideoFilter * filter, GstVideoFrame * in_frame,
   if (agingtv->color_aging)
     coloraging (src, dest, video_size, &agingtv->coloraging_state);
   else
-    memcpy (dest, src, video_size);
+    memcpy (dest, src, stride * height);
 
   scratching (agingtv->scratches, agingtv->scratch_lines, dest, width, height);
   if (agingtv->pits)
