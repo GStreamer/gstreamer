@@ -615,6 +615,8 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate)
         videorate->to_rate_denominator * GST_SECOND,
         videorate->to_rate_numerator);
     GST_BUFFER_DURATION (outbuf) = videorate->next_ts - push_ts;
+  } else if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (outbuf))) {
+    videorate->next_ts = GST_BUFFER_PTS (outbuf) + GST_BUFFER_DURATION (outbuf);
   }
 
   /* We do not need to update time in VFR (variable frame rate) mode */
@@ -1125,6 +1127,12 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           GST_TIME_FORMAT " outgoing ts %" GST_TIME_FORMAT,
           GST_TIME_ARGS (diff1), GST_TIME_ARGS (diff2),
           GST_TIME_ARGS (videorate->next_ts));
+
+      if (!GST_BUFFER_DURATION_IS_VALID (videorate->prevbuf) &&
+          intime > prevtime) {
+        /* Make sure that we have a duration for previous buffer */
+        GST_BUFFER_DURATION (videorate->prevbuf) = intime - prevtime;
+      }
 
       /* output first one when its the best */
       if (diff1 <= diff2) {
