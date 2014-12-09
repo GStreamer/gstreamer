@@ -26,6 +26,44 @@
 #include <gst/video/video.h>
 #include "gstvideoutilsprivate.h"
 
+/*
+ * Takes caps and copies its video fields to tmpl_caps
+ */
+static GstCaps *
+__gst_video_element_proxy_caps (GstElement * element, GstCaps * templ_caps,
+    GstCaps * caps)
+{
+  GstCaps *result = gst_caps_new_empty ();
+  gint i, j;
+  gint templ_caps_size = gst_caps_get_size (templ_caps);
+  gint caps_size = gst_caps_get_size (caps);
+
+  for (i = 0; i < templ_caps_size; i++) {
+    GQuark q_name =
+        gst_structure_get_name_id (gst_caps_get_structure (templ_caps, i));
+
+    for (j = 0; j < caps_size; j++) {
+      const GstStructure *caps_s = gst_caps_get_structure (caps, j);
+      const GValue *val;
+      GstStructure *s;
+
+      s = gst_structure_new_id_empty (q_name);
+      if ((val = gst_structure_get_value (caps_s, "width")))
+        gst_structure_set_value (s, "width", val);
+      if ((val = gst_structure_get_value (caps_s, "height")))
+        gst_structure_set_value (s, "height", val);
+      if ((val = gst_structure_get_value (caps_s, "framerate")))
+        gst_structure_set_value (s, "framerate", val);
+      if ((val = gst_structure_get_value (caps_s, "pixel-aspect-ratio")))
+        gst_structure_set_value (s, "pixel-aspect-ratio", val);
+
+      result = gst_caps_merge_structure (result, s);
+    }
+  }
+
+  return result;
+}
+
 /**
  * __gst_video_element_proxy_getcaps:
  * @element: a #GstElement
@@ -44,17 +82,32 @@ GstCaps *
 __gst_video_element_proxy_getcaps (GstElement * element, GstPad * sinkpad,
     GstPad * srcpad, GstCaps * initial_caps, GstCaps * filter)
 {
-  GstCaps *templ_caps;
+  GstCaps *templ_caps, *src_templ_caps;
+  GstCaps *peer_caps;
   GstCaps *allowed;
   GstCaps *fcaps, *filter_caps;
-  gint i, j;
 
   /* Allow downstream to specify width/height/framerate/PAR constraints
    * and forward them upstream for video converters to handle
    */
   templ_caps = initial_caps ? gst_caps_ref (initial_caps) :
       gst_pad_get_pad_template_caps (sinkpad);
-  allowed = gst_pad_get_allowed_caps (srcpad);
+  src_templ_caps = gst_pad_get_pad_template_caps (srcpad);
+  if (filter && !gst_caps_is_any (filter)) {
+    GstCaps *proxy_filter =
+        __gst_video_element_proxy_caps (element, src_templ_caps, filter);
+
+    peer_caps = gst_pad_peer_query_caps (srcpad, proxy_filter);
+    gst_caps_unref (proxy_filter);
+  } else {
+    peer_caps = gst_pad_peer_query_caps (srcpad, NULL);
+  }
+
+  allowed = gst_caps_intersect_full (peer_caps, src_templ_caps,
+      GST_CAPS_INTERSECT_FIRST);
+
+  gst_caps_unref (src_templ_caps);
+  gst_caps_unref (peer_caps);
 
   if (!allowed || gst_caps_is_any (allowed)) {
     fcaps = templ_caps;
@@ -67,30 +120,7 @@ __gst_video_element_proxy_getcaps (GstElement * element, GstPad * sinkpad,
   GST_LOG_OBJECT (element, "template caps %" GST_PTR_FORMAT, templ_caps);
   GST_LOG_OBJECT (element, "allowed caps %" GST_PTR_FORMAT, allowed);
 
-  filter_caps = gst_caps_new_empty ();
-
-  for (i = 0; i < gst_caps_get_size (templ_caps); i++) {
-    GQuark q_name =
-        gst_structure_get_name_id (gst_caps_get_structure (templ_caps, i));
-
-    for (j = 0; j < gst_caps_get_size (allowed); j++) {
-      const GstStructure *allowed_s = gst_caps_get_structure (allowed, j);
-      const GValue *val;
-      GstStructure *s;
-
-      s = gst_structure_new_id_empty (q_name);
-      if ((val = gst_structure_get_value (allowed_s, "width")))
-        gst_structure_set_value (s, "width", val);
-      if ((val = gst_structure_get_value (allowed_s, "height")))
-        gst_structure_set_value (s, "height", val);
-      if ((val = gst_structure_get_value (allowed_s, "framerate")))
-        gst_structure_set_value (s, "framerate", val);
-      if ((val = gst_structure_get_value (allowed_s, "pixel-aspect-ratio")))
-        gst_structure_set_value (s, "pixel-aspect-ratio", val);
-
-      filter_caps = gst_caps_merge_structure (filter_caps, s);
-    }
-  }
+  filter_caps = __gst_video_element_proxy_caps (element, templ_caps, allowed);
 
   fcaps = gst_caps_intersect (filter_caps, templ_caps);
   gst_caps_unref (filter_caps);
