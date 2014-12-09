@@ -632,6 +632,10 @@ gst_osx_audio_sink_probe_caps (GstOsxAudioSink * osxsink)
 
   g_free (layout);
 
+  if (!gst_audio_channel_positions_to_mask (pos, channels, TRUE, &channel_mask)) {
+    GST_WARNING_OBJECT (osxsink, "Probably unsupported channel order");
+  }
+
   /* Recover the template caps */
   element_class = GST_ELEMENT_GET_CLASS (osxsink);
   pad_template = gst_element_class_get_pad_template (element_class, "sink");
@@ -650,11 +654,17 @@ gst_osx_audio_sink_probe_caps (GstOsxAudioSink * osxsink)
         gst_caps_append_structure (caps, gst_structure_copy (in_s));
       }
     } else {
-      gst_audio_channel_positions_to_mask (pos, channels, false, &channel_mask);
       out_s = gst_structure_copy (in_s);
-      gst_structure_remove_fields (out_s, "channels", "channel-mask", NULL);
-      gst_structure_set (out_s, "channels", G_TYPE_INT, channels,
-          "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
+
+      gst_structure_remove_fields (out_s, "channels", NULL);
+      gst_structure_set (out_s, "channels", G_TYPE_INT, channels, NULL);
+
+      if (channel_mask) {
+        gst_structure_remove_fields (out_s, "channel-mask", NULL);
+        gst_structure_set (out_s, "channel-mask", GST_TYPE_BITMASK,
+            channel_mask, NULL);
+      }
+
       gst_caps_append_structure (caps, out_s);
     }
   }
