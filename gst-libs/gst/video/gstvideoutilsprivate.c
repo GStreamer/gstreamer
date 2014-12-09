@@ -56,8 +56,11 @@ __gst_video_element_proxy_getcaps (GstElement * element, GstPad * sinkpad,
       gst_pad_get_pad_template_caps (sinkpad);
   allowed = gst_pad_get_allowed_caps (srcpad);
 
-  if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
+  if (!allowed || gst_caps_is_any (allowed)) {
     fcaps = templ_caps;
+    goto done;
+  } else if (gst_caps_is_empty (allowed)) {
+    fcaps = gst_caps_ref (allowed);
     goto done;
   }
 
