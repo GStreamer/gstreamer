@@ -270,6 +270,14 @@ gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
   if (v4l2_ioctl (video_fd, VIDIOC_QUERYBUF, &group->buffer) < 0)
     goto querybuf_failed;
 
+  if (group->buffer.index != index) {
+    GST_ERROR_OBJECT (allocator, "Buffer index returned by VIDIOC_QUERYBUF "
+        "didn't match, this indicate the presence of a bug in your driver or "
+        "libv4l2");
+    g_slice_free (GstV4l2MemoryGroup, group);
+    return NULL;
+  }
+
   /* Check that provided size matches the format we have negotiation. Failing
    * there usually means a driver of libv4l bug. */
   if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
@@ -521,6 +529,9 @@ gst_v4l2_allocator_create_buf (GstV4l2Allocator * allocator)
   if (v4l2_ioctl (allocator->video_fd, VIDIOC_CREATE_BUFS, &bcreate) < 0)
     goto create_bufs_failed;
 
+  if (allocator->groups[bcreate.index] != NULL)
+    goto create_bufs_bug;
+
   group = gst_v4l2_memory_group_new (allocator, bcreate.index);
 
   if (group) {
@@ -536,6 +547,13 @@ create_bufs_failed:
   {
     GST_WARNING_OBJECT (allocator, "error creating a new buffer: %s",
         g_strerror (errno));
+    goto done;
+  }
+create_bufs_bug:
+  {
+    GST_ERROR_OBJECT (allocator, "created buffer has already used buffer "
+        "index %i, this means there is an bug in your driver or libv4l2",
+        bcreate.index);
     goto done;
   }
 }
