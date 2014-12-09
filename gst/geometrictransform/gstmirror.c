@@ -97,10 +97,23 @@ gst_mirror_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_MODE:
-      GST_OBJECT_LOCK (filter);
-      filter->mode = g_value_get_enum (value);
-      GST_OBJECT_UNLOCK (filter);
-      break;
+      {
+        gint mode;
+
+        GST_OBJECT_LOCK (filter);
+        mode = g_value_get_enum (value);
+
+        if (mode != filter->mode) {
+          GstGeometricTransform *gt;
+
+          gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
+          filter->mode = mode;
+          gst_geometric_transform_set_need_remap (gt);
+        }
+
+        GST_OBJECT_UNLOCK (filter);
+        break;
+      }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
