@@ -374,7 +374,17 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
     s2 = gst_structure_copy (s);
     s3 = NULL;
 
-    if (videorate->drop_only) {
+    if (videorate->updating_caps) {
+      GST_INFO_OBJECT (trans,
+          "Only updating caps %" GST_PTR_FORMAT " with framerate" " %d/%d",
+          caps, videorate->to_rate_numerator, videorate->to_rate_denominator);
+
+      gst_structure_set (s1, "framerate", GST_TYPE_FRACTION,
+          videorate->to_rate_numerator, videorate->to_rate_denominator, NULL);
+      ret = gst_caps_merge_structure (ret, s1);
+
+      continue;
+    } else if (videorate->drop_only) {
       gint min_num = 0, min_denom = 1;
       gint max_num = G_MAXINT, max_denom = 1;
 
@@ -550,6 +560,7 @@ gst_video_rate_reset (GstVideoRate * videorate)
   videorate->last_ts = GST_CLOCK_TIME_NONE;
   videorate->discont = TRUE;
   videorate->average = 0;
+  videorate->force_variable_rate = FALSE;
   gst_video_rate_swap_prev (videorate, NULL, 0);
 
   gst_segment_init (&videorate->segment, GST_FORMAT_TIME);
@@ -981,6 +992,54 @@ drop:
   return GST_BASE_TRANSFORM_FLOW_DROPPED;
 }
 
+/* Check if downstream forces variable framerate (0/1) and if
+ * it is the case, use variable framerate ourself
+ * Otherwise compute the framerate from the 2 buffers that we
+ * have already received and make use of it as wanted framerate
+ */
+static void
+gst_video_rate_check_variable_rate (GstVideoRate * videorate,
+    GstBuffer * buffer)
+{
+  GstStructure *st;
+  gint fps_d, fps_n;
+  GstCaps *srcpadcaps, *tmpcaps;
+
+  GstPad *pad = NULL;
+
+  srcpadcaps =
+      gst_pad_get_current_caps (GST_BASE_TRANSFORM_SRC_PAD (videorate));
+
+  gst_video_guess_framerate (GST_BUFFER_PTS (buffer) -
+      GST_BUFFER_PTS (videorate->prevbuf), &fps_n, &fps_d);
+  tmpcaps = gst_caps_copy (srcpadcaps);
+  st = gst_caps_get_structure (tmpcaps, 0);
+  gst_structure_set (st, "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+  gst_caps_unref (srcpadcaps);
+
+  pad = gst_pad_get_peer (GST_BASE_TRANSFORM_SRC_PAD (videorate));
+  if (pad && !gst_pad_query_accept_caps (pad, tmpcaps)) {
+    videorate->force_variable_rate = TRUE;
+    GST_DEBUG_OBJECT (videorate, "Downstream forces variable framerate"
+        " respecting it");
+
+    goto done;
+  }
+
+  videorate->to_rate_numerator = fps_n;
+  videorate->to_rate_denominator = fps_d;
+
+  GST_ERROR_OBJECT (videorate, "Computed framerate to %d/%d",
+      videorate->to_rate_numerator, videorate->to_rate_denominator);
+
+  videorate->updating_caps = TRUE;
+  gst_base_transform_update_src_caps (GST_BASE_TRANSFORM (videorate), tmpcaps);
+
+done:
+  if (pad)
+    gst_object_unref (pad);
+}
+
 static GstFlowReturn
 gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 {
@@ -996,6 +1055,11 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   if (videorate->from_rate_denominator == 0 ||
       videorate->to_rate_denominator == 0)
     goto not_negotiated;
+
+  if (videorate->to_rate_numerator == 0 && videorate->prevbuf &&
+      !videorate->force_variable_rate) {
+    gst_video_rate_check_variable_rate (videorate, buffer);
+  }
 
   GST_OBJECT_LOCK (videorate);
   avg_period = videorate->average_period_set;

@@ -40,6 +40,10 @@ static GstPad *mysrcpad, *mysinkpad;
     "framerate = (fraction) 25/1 , "    \
     "format = (string) I420"
 
+#define VIDEO_CAPS_FORCE_VARIABLE_FRAMERATE_STRING \
+    "video/x-raw, "                 \
+    "framerate = (fraction) 0/1"
+
 #define VIDEO_CAPS_NO_FRAMERATE_STRING  \
     "video/x-raw, "                 \
     "width = (int) 320, "               \
@@ -75,6 +79,13 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (VIDEO_CAPS_TEMPLATE_STRING)
+    );
+
+static GstStaticPadTemplate force_variable_rate_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (VIDEO_CAPS_FORCE_VARIABLE_FRAMERATE_STRING)
     );
 
 static void
@@ -1015,8 +1026,10 @@ GST_START_TEST (test_caps_negotiation)
   videorate = setup_videorate_full (&srctemplate, &sinktemplate);
 
   caps = gst_caps_from_string (test->caps);
+
   g_object_set_data_full (G_OBJECT (mysrcpad), "caps",
       gst_caps_ref (caps), (GDestroyNotify) gst_caps_unref);
+
   g_object_set_data_full (G_OBJECT (mysinkpad), "caps",
       gst_caps_ref (caps), (GDestroyNotify) gst_caps_unref);
   gst_caps_unref (caps);
@@ -1036,6 +1049,95 @@ GST_START_TEST (test_caps_negotiation)
 
 GST_END_TEST;
 
+static void
+videorate_send_buffers (GstElement * videorate,
+    const gchar * pre_push_caps, const gchar * post_push_caps)
+{
+  GstCaps *caps, *expected_caps;
+  GstBuffer *first;
+  GstBuffer *second;
+  GstBuffer *third;
+
+  caps = gst_pad_get_current_caps (mysinkpad);
+  expected_caps = gst_caps_from_string (pre_push_caps);
+  gst_check_caps_equal (caps, expected_caps);
+  gst_caps_unref (caps);
+  gst_caps_unref (expected_caps);
+
+  GST_DEBUG ("pushing first buffer");
+  first = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (first, 0, 0, 4);
+  GST_BUFFER_TIMESTAMP (first) = 0;
+  fail_unless (gst_pad_push (mysrcpad, first) == GST_FLOW_OK);
+
+  /* second buffer */
+  second = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (second) = GST_SECOND / 25;
+  gst_buffer_memset (second, 0, 0, 4);
+
+  fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
+
+  /* third buffer with new size */
+  third = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (third) = 2 * GST_SECOND / 25;
+  gst_buffer_memset (third, 0, 0, 4);
+
+  fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
+
+  caps = gst_pad_get_current_caps (mysinkpad);
+  expected_caps = gst_caps_from_string (post_push_caps);
+  gst_check_caps_equal (caps, expected_caps);
+  gst_caps_unref (caps);
+  gst_caps_unref (expected_caps);
+
+}
+
+GST_START_TEST (test_fixed_framerate)
+{
+  GstElement *videorate;
+  GstCaps *caps = gst_caps_from_string ("video/x-raw,framerate=0/1");
+
+  /* 1) if upstream caps contain a non-0/1 framerate, we should use that and pass
+   *    it on downstream (if possible; otherwise fixate_to_nearest)
+   */
+  videorate = setup_videorate_full (&srctemplate, &sinktemplate);
+
+  caps = gst_caps_from_string ("video/x-raw,framerate=25/1");
+  ASSERT_SET_STATE (videorate, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+  videorate_send_buffers (videorate, "video/x-raw,framerate=25/1",
+      "video/x-raw,framerate=25/1");
+  cleanup_videorate (videorate);
+
+  /* 2) if upstream framerate is 0/1 and downstream doesn't force a particular
+   *    framerate, we try to guess based on buffer intervals and use that as output
+   *    framerate */
+  videorate = setup_videorate_full (&srctemplate, &sinktemplate);
+  ASSERT_SET_STATE (videorate, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  caps = gst_caps_from_string ("video/x-raw,framerate=0/1");
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+  videorate_send_buffers (videorate, "video/x-raw,framerate=0/1",
+      "video/x-raw,framerate=25/1");
+  cleanup_videorate (videorate);
+
+  /* 3) if downstream force variable framerate, do that */
+  videorate =
+      setup_videorate_full (&srctemplate, &force_variable_rate_template);
+  ASSERT_SET_STATE (videorate, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  caps = gst_caps_from_string ("video/x-raw,framerate=0/1");
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+  videorate_send_buffers (videorate, "video/x-raw,framerate=0/1",
+      "video/x-raw,framerate=0/1");
+  cleanup_videorate (videorate);
+
+}
+
+GST_END_TEST;
+
+
 static Suite *
 videorate_suite (void)
 {
@@ -1054,6 +1156,7 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_selected_caps);
   tcase_add_loop_test (tc_chain, test_caps_negotiation,
       0, G_N_ELEMENTS (caps_negotiation_tests));
+  tcase_add_test (tc_chain, test_fixed_framerate);
 
   return s;
 }
