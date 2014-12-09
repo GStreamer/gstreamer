@@ -340,10 +340,14 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   segment->flags = GST_SEGMENT_FLAG_NONE;
   if ((flags & GST_SEEK_FLAG_FLUSH) != 0)
     segment->flags |= GST_SEGMENT_FLAG_RESET;
-  if ((flags & GST_SEEK_FLAG_SKIP) != 0)
-    segment->flags |= GST_SEGMENT_FLAG_SKIP;
+  if ((flags & GST_SEEK_FLAG_TRICKMODE) != 0)
+    segment->flags |= GST_SEGMENT_FLAG_TRICKMODE;
   if ((flags & GST_SEEK_FLAG_SEGMENT) != 0)
     segment->flags |= GST_SEGMENT_FLAG_SEGMENT;
+  if ((flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS) != 0)
+    segment->flags |= GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS;
+  if ((flags & GST_SEEK_FLAG_TRICKMODE_NO_AUDIO) != 0)
+    segment->flags |= GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO;
 
   segment->rate = rate;
   segment->applied_rate = 1.0;

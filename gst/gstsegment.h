@@ -56,9 +56,9 @@ typedef enum {
  * @GST_SEEK_FLAG_KEY_UNIT: seek to the nearest keyframe. This might be
  *                     faster but less accurate.
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek.
- * @GST_SEEK_FLAG_SKIP: when doing fast forward or fast reverse playback, allow
+ * @GST_SEEK_FLAG_TRICKMODE: when doing fast forward or fast reverse playback, allow
  *                     elements to skip frames instead of generating all
- *                     frames.
+ *                     frames. (Since: 1.6)
  * @GST_SEEK_FLAG_SNAP_BEFORE: go to a location before the requested position,
  *                     if KEY_UNIT this means the keyframe at or before the
  *                     requested position the one at or before the seek target.
@@ -69,6 +69,15 @@ typedef enum {
  *                     if KEY_UNIT this means the keyframe closest to the
  *                     requested position, if both keyframes are at an equal
  *                     distance, behaves like SNAP_BEFORE.
+ * @GST_SEEK_FLAG_TRICKMODE_KEY_UNITS: when doing fast forward or fast reverse
+ *                     playback, request that elements only decode keyframes
+ *                     and skip all other content, for formats that have
+ *                     keyframes. (Since: 1.6)
+ * @GST_SEEK_FLAG_TRICKMODE_NO_AUDIO: when doing fast forward or fast reverse
+ *                     playback, request that audio decoder elements skip
+ *                     decoding and output only gap events or silence. (Since: 1.6)
+ * @GST_SEEK_FLAG_SKIP: Deprecated backward compatibility flag, replaced
+ *                     by @GST_SEEK_FLAG_TRICKMODE
  *
  * Flags to be used with gst_element_seek() or gst_event_new_seek(). All flags
  * can be used together.
@@ -88,9 +97,14 @@ typedef enum {
  * looping or simple linear editing.
  *
  * When doing fast forward (rate > 1.0) or fast reverse (rate < -1.0) trickmode
- * playback, the @GST_SEEK_FLAG_SKIP flag can be used to instruct decoders
+ * playback, the @GST_SEEK_FLAG_TRICKMODE flag can be used to instruct decoders
  * and demuxers to adjust the playback rate by skipping frames. This can improve
  * performance and decrease CPU usage because not all frames need to be decoded.
+ *
+ * Beyond that, the @GST_SEEK_FLAG_TRICKMODE_KEY_UNITS flag can be used to
+ * request that decoders skip all frames except key units, and
+ * @GST_SEEK_FLAG_TRICKMODE_NO_AUDIO flags can be used to request that audio
+ * decoders do no decoding at all, and simple output silence.
  *
  * The @GST_SEEK_FLAG_SNAP_BEFORE flag can be used to snap to the previous
  * relevant location, and the @GST_SEEK_FLAG_SNAP_AFTER flag can be used to
@@ -112,11 +126,16 @@ typedef enum {
   GST_SEEK_FLAG_ACCURATE        = (1 << 1),
   GST_SEEK_FLAG_KEY_UNIT        = (1 << 2),
   GST_SEEK_FLAG_SEGMENT         = (1 << 3),
+  GST_SEEK_FLAG_TRICKMODE       = (1 << 4),
+  /* FIXME 2.0: Remove _SKIP flag,
+   * which was kept for backward compat when _TRICKMODE was added */
   GST_SEEK_FLAG_SKIP            = (1 << 4),
   GST_SEEK_FLAG_SNAP_BEFORE     = (1 << 5),
   GST_SEEK_FLAG_SNAP_AFTER      = (1 << 6),
   GST_SEEK_FLAG_SNAP_NEAREST    = GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_SNAP_AFTER,
   /* Careful to restart next flag with 1<<7 here */
+  GST_SEEK_FLAG_TRICKMODE_KEY_UNITS = (1 << 7),
+  GST_SEEK_FLAG_TRICKMODE_NO_AUDIO  = (1 << 8),
 } GstSeekFlags;
 
 /**
@@ -124,8 +143,14 @@ typedef enum {
  * @GST_SEGMENT_FLAG_NONE: no flags
  * @GST_SEGMENT_FLAG_RESET: reset the pipeline running_time to the segment
  *                          running_time
- * @GST_SEGMENT_FLAG_SKIP: perform skip playback
+ * @GST_SEGMENT_FLAG_TRICKMODE: perform skip playback (Since: 1.6)
  * @GST_SEGMENT_FLAG_SEGMENT: send SEGMENT_DONE instead of EOS
+ * @GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS: Decode only keyframes, where
+ *                                        possible (Since: 1.6)
+ * @GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO: Do not decode any audio, where
+ *                                        possible (Since: 1.6)
+ * @GST_SEGMENT_FLAG_SKIP: Deprecated backward compatibility flag, replaced
+ *                         by @GST_SEGMENT_FLAG_TRICKMODE
  *
  * Flags for the GstSegment structure. Currently mapped to the corresponding
  * values of the seek flags.
@@ -134,8 +159,13 @@ typedef enum {
 typedef enum { /*< flags >*/
   GST_SEGMENT_FLAG_NONE            = GST_SEEK_FLAG_NONE,
   GST_SEGMENT_FLAG_RESET           = GST_SEEK_FLAG_FLUSH,
-  GST_SEGMENT_FLAG_SKIP            = GST_SEEK_FLAG_SKIP,
-  GST_SEGMENT_FLAG_SEGMENT         = GST_SEEK_FLAG_SEGMENT
+  GST_SEGMENT_FLAG_TRICKMODE       = GST_SEEK_FLAG_TRICKMODE,
+  /* FIXME 2.0: Remove _SKIP flag,
+   * which was kept for backward compat when _TRICKMODE was added */
+  GST_SEGMENT_FLAG_SKIP            = GST_SEEK_FLAG_TRICKMODE,
+  GST_SEGMENT_FLAG_SEGMENT         = GST_SEEK_FLAG_SEGMENT,
+  GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS = GST_SEEK_FLAG_TRICKMODE_KEY_UNITS,
+  GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO      = GST_SEEK_FLAG_TRICKMODE_NO_AUDIO
 } GstSegmentFlags;
 
 /**
