@@ -337,10 +337,19 @@ gst_audio_rate_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       res = gst_pad_push_event (audiorate->srcpad, event);
       break;
     case GST_EVENT_GAP:
-      /* no gaps after audiorate, ignore the event */
+    {
+      /* Fill until end of gap */
+      GstClockTime timestamp, duration;
+      gst_event_parse_gap (event, &timestamp, &duration);
       gst_event_unref (event);
+      if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+        if (GST_CLOCK_TIME_IS_VALID (duration))
+          timestamp += duration;
+        gst_audio_rate_fill_to_time (audiorate, timestamp);
+      }
       res = TRUE;
       break;
+    }
     default:
       res = gst_pad_event_default (pad, parent, event);
       break;
