@@ -556,7 +556,6 @@ gst_video_decoder_init (GstVideoDecoder * decoder, GstVideoDecoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_decoder_src_event));
   gst_pad_set_query_function (pad,
       GST_DEBUG_FUNCPTR (gst_video_decoder_src_query));
-  gst_pad_use_fixed_caps (pad);
   gst_element_add_pad (GST_ELEMENT (decoder), decoder->srcpad);
 
   gst_segment_init (&decoder->input_segment, GST_FORMAT_TIME);
