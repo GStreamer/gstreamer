@@ -986,16 +986,15 @@ gst_mss_stream_regress_fragment (GstMssStream * stream)
     return GST_FLOW_EOS;
 
   fragment = stream->current_fragment->data;
-  stream->fragment_repetition_index--;
-  if (stream->fragment_repetition_index >= 0) {
-    return GST_FLOW_OK;
+  if (stream->fragment_repetition_index == 0) {
+    stream->current_fragment = g_list_previous (stream->current_fragment);
+    if (stream->current_fragment == NULL)
+      return GST_FLOW_EOS;
+    fragment = stream->current_fragment->data;
+    stream->fragment_repetition_index = fragment->repetitions - 1;
+  } else {
+    stream->fragment_repetition_index--;
   }
-
-  stream->current_fragment = g_list_previous (stream->current_fragment);
-  fragment = stream->current_fragment->data;
-  if (stream->current_fragment == NULL)
-    return GST_FLOW_EOS;
-  stream->fragment_repetition_index = fragment->repetitions - 1;
   return GST_FLOW_OK;
 }
 
