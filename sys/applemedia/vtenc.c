@@ -251,6 +251,7 @@ gst_vtenc_init (GstVTEnc * self)
   self->dump_attributes = FALSE;
   self->latency_frames = -1;
   self->session = NULL;
+  self->profile_level = NULL;
 }
 
 static guint
@@ -482,6 +483,9 @@ gst_vtenc_stop (GstVideoEncoder * enc)
   gst_vtenc_destroy_session (self, &self->session);
   GST_OBJECT_UNLOCK (self);
 
+  if (self->profile_level)
+    CFRelease (self->profile_level);
+
   if (self->options != NULL) {
     CFRelease (self->options);
     self->options = NULL;
@@ -500,6 +504,94 @@ gst_vtenc_stop (GstVideoEncoder * enc)
   self->cur_outframes = NULL;
 
   return TRUE;
+}
+
+static CFStringRef
+gst_vtenc_profile_level_key (GstVTEnc * self, const gchar * profile,
+    const gchar * level_arg)
+{
+  char level[64];
+  gchar *key = NULL;
+  CFStringRef ret = NULL;
+
+  if (profile == NULL)
+    profile = "main";
+  if (level_arg == NULL)
+    level_arg = "AutoLevel";
+  strncpy (level, level_arg, sizeof (level));
+
+  if (!strcmp (profile, "constrained-baseline") ||
+      !strcmp (profile, "baseline")) {
+    profile = "Baseline";
+  } else if (g_str_has_prefix (profile, "high")) {
+    profile = "High";
+  } else if (!strcmp (profile, "main")) {
+    profile = "Main";
+  } else {
+    g_assert_not_reached ();
+  }
+
+  if (strlen (level) == 1) {
+    level[1] = '_';
+    level[2] = '0';
+  } else if (strlen (level) == 3) {
+    level[1] = '_';
+  }
+
+  key = g_strdup_printf ("H264_%s_%s", profile, level);
+  ret = CFStringCreateWithBytes (NULL, (const guint8 *) key, strlen (key),
+      kCFStringEncodingASCII, 0);
+
+  GST_INFO_OBJECT (self, "negotiated profile and level %s", key);
+
+  g_free (key);
+
+  return ret;
+}
+
+static gboolean
+gst_vtenc_negotiate_profile_and_level (GstVideoEncoder * enc)
+{
+  GstVTEnc *self = GST_VTENC_CAST (enc);
+  GstCaps *allowed_caps = NULL;
+  gboolean ret = TRUE;
+  const gchar *profile = NULL;
+  const gchar *level = NULL;
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (enc));
+  if (allowed_caps) {
+    GstStructure *s;
+
+    if (gst_caps_is_empty (allowed_caps)) {
+      GST_ERROR_OBJECT (self, "no allowed downstream caps");
+      goto fail;
+    }
+
+    allowed_caps = gst_caps_make_writable (allowed_caps);
+    allowed_caps = gst_caps_fixate (allowed_caps);
+    s = gst_caps_get_structure (allowed_caps, 0);
+
+    profile = gst_structure_get_string (s, "profile");
+    level = gst_structure_get_string (s, "level");
+  }
+
+  if (self->profile_level)
+    CFRelease (self->profile_level);
+  self->profile_level = gst_vtenc_profile_level_key (self, profile, level);
+  if (self->profile_level == NULL) {
+    GST_ERROR_OBJECT (enc, "invalid profile and level");
+    goto fail;
+  }
+
+out:
+  if (allowed_caps)
+    gst_caps_unref (allowed_caps);
+
+  return ret;
+
+fail:
+  ret = FALSE;
+  goto out;
 }
 
 static gboolean
@@ -521,6 +613,8 @@ gst_vtenc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   GST_OBJECT_LOCK (self);
   gst_vtenc_destroy_session (self, &self->session);
   GST_OBJECT_UNLOCK (self);
+
+  gst_vtenc_negotiate_profile_and_level (enc);
 
   session = gst_vtenc_create_session (self);
   GST_OBJECT_LOCK (self);
@@ -589,8 +683,9 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     gst_structure_set (s, "codec_data", GST_TYPE_BUFFER, codec_data_buf, NULL);
 
     sps[0] = codec_data[1];
-    sps[1] = codec_data[2];
+    sps[1] = codec_data[2] & ~0xDF;
     sps[2] = codec_data[3];
+
     gst_codec_utils_h264_caps_set_level_and_profile (caps, sps, 3);
 
     gst_buffer_unref (codec_data_buf);
@@ -696,8 +791,7 @@ gst_vtenc_create_session (GstVTEnc * self)
       (gdouble) self->negotiated_fps_n / (gdouble) self->negotiated_fps_d);
 
   status = VTSessionSetProperty (session,
-      kVTCompressionPropertyKey_ProfileLevel,
-      kVTProfileLevel_H264_Baseline_AutoLevel);
+      kVTCompressionPropertyKey_ProfileLevel, self->profile_level);
   GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_ProfileLevel => %d",
       (int) status);
 
