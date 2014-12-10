@@ -68,18 +68,18 @@ static const int x11_event_mask =
  * @dpy: an X11 #Display
  * @w: the requested width, in pixels
  * @h: the requested height, in pixels
- * @vis: the request visual
- * @cmap: the request colormap
+ * @vid: the requested visual id
+ * @cmap: the requested colormap
  *
- * Creates a border-less window with the specified dimensions. If @vis
- * is %NULL, the default visual for @display will be used. If @cmap is
+ * Creates a border-less window with the specified dimensions. If @vid
+ * is zero, the default visual for @display will be used. If @cmap is
  * %None, no specific colormap will be bound to the window. Also note
  * the default background color is black.
  *
  * Return value: the newly created X #Window.
  */
 Window
-x11_create_window (Display * dpy, guint w, guint h, Visual * vis, Colormap cmap)
+x11_create_window (Display * dpy, guint w, guint h, guint vid, Colormap cmap)
 {
   Window rootwin, win;
   int screen, depth;
@@ -87,13 +87,12 @@ x11_create_window (Display * dpy, guint w, guint h, Visual * vis, Colormap cmap)
   unsigned long xswa_mask;
   XWindowAttributes wattr;
   unsigned long black_pixel;
+  XVisualInfo visualInfo, *vi;
+  int num_visuals;
 
   screen = DefaultScreen (dpy);
   rootwin = RootWindow (dpy, screen);
   black_pixel = BlackPixel (dpy, screen);
-
-  if (!vis)
-    vis = DefaultVisual (dpy, screen);
 
   XGetWindowAttributes (dpy, rootwin, &wattr);
   depth = wattr.depth;
@@ -109,13 +108,35 @@ x11_create_window (Display * dpy, guint w, guint h, Visual * vis, Colormap cmap)
     xswa.colormap = cmap;
   }
 
-  win = XCreateWindow (dpy, rootwin, 0, 0, w, h, 0, depth, InputOutput, vis,
-      xswa_mask, &xswa);
+  if (vid) {
+    visualInfo.visualid = vid;
+    vi = XGetVisualInfo (dpy, VisualIDMask, &visualInfo, &num_visuals);
+    if (!vi || num_visuals < 1)
+      goto error_create_visual;
+  } else {
+    vi = &visualInfo;
+    XMatchVisualInfo (dpy, screen, depth, TrueColor, vi);
+  }
+
+  win = XCreateWindow (dpy, rootwin, 0, 0, w, h, 0, depth, InputOutput,
+      vi->visual, xswa_mask, &xswa);
+  if (vi != &visualInfo)
+    XFree (vi);
   if (!win)
-    return None;
+    goto error_create_window;
 
   XSelectInput (dpy, win, x11_event_mask);
   return win;
+
+  /* ERRORS */
+error_create_visual:
+  GST_ERROR ("failed to create X visual (id:%zu)", (gsize) visualInfo.visualid);
+  if (vi)
+    XFree (vi);
+  return None;
+error_create_window:
+  GST_ERROR ("failed to create X window of size %ux%u", w, h);
+  return None;
 }
 
 gboolean

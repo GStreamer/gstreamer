@@ -214,8 +214,9 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
   Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   Window xid = GST_VAAPI_OBJECT_ID (window);
-  Visual *vis = NULL;
+  guint vid = 0;
   Colormap cmap = None;
+  const GstVaapiWindowClass *window_class;
   const GstVaapiWindowX11Class *klass;
   XWindowAttributes wattr;
   Atom atoms[2];
@@ -238,10 +239,14 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
     return ok;
   }
 
+  window_class = GST_VAAPI_WINDOW_GET_CLASS (window);
+  if (window_class) {
+    if (window_class->get_visual_id)
+      vid = window_class->get_visual_id (window);
+  }
+
   klass = GST_VAAPI_WINDOW_X11_GET_CLASS (window);
   if (klass) {
-    if (klass->get_visual)
-      vis = klass->get_visual (window);
     if (klass->get_colormap)
       cmap = klass->get_colormap (window);
   }
@@ -252,7 +257,7 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
   priv->atom_NET_WM_STATE = atoms[0];
   priv->atom_NET_WM_STATE_FULLSCREEN = atoms[1];
 
-  xid = x11_create_window (dpy, *width, *height, vis, cmap);
+  xid = x11_create_window (dpy, *width, *height, vid, cmap);
   if (xid)
     XRaiseWindow (dpy, xid);
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);

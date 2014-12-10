@@ -206,15 +206,15 @@ gst_vaapi_window_glx_ensure_context (GstVaapiWindow * window,
   return TRUE;
 }
 
-static Visual *
-gst_vaapi_window_glx_get_visual (GstVaapiWindow * window)
+static guintptr
+gst_vaapi_window_glx_get_visual_id (GstVaapiWindow * window)
 {
   GstVaapiWindowGLXPrivate *const priv =
       GST_VAAPI_WINDOW_GLX_GET_PRIVATE (window);
 
   if (!_gst_vaapi_window_glx_ensure_context (window, NULL))
-    return NULL;
-  return priv->gl_context->visual->visual;
+    return 0;
+  return priv->gl_context->visual->visualid;
 }
 
 static void
@@ -320,7 +320,7 @@ gst_vaapi_window_glx_class_init (GstVaapiWindowGLXClass * klass)
   klass->parent_resize = window_class->resize;
   klass->parent_finalize = GST_VAAPI_OBJECT_CLASS (klass)->finalize;
   window_class->resize = gst_vaapi_window_glx_resize;
-  xwindow_class->get_visual = gst_vaapi_window_glx_get_visual;
+  window_class->get_visual_id = gst_vaapi_window_glx_get_visual_id;
   xwindow_class->get_colormap = gst_vaapi_window_glx_get_colormap;
 }
 

@@ -52,6 +52,7 @@ typedef gboolean (*GstVaapiWindowRenderFunc) (GstVaapiWindow * window,
 typedef gboolean (*GstVaapiWindowRenderPixmapFunc) (GstVaapiWindow * window,
     GstVaapiPixmap * pixmap, const GstVaapiRectangle * src_rect,
     const GstVaapiRectangle * dst_rect);
+typedef guintptr (*GstVaapiWindowGetVisualIdFunc) (GstVaapiWindow * window);
 
 /**
  * GstVaapiWindow:
@@ -82,6 +83,8 @@ struct _GstVaapiWindow
  * @set_fullscreen: virtual function to change window fullscreen state
  * @resize: virtual function to resize a window
  * @render: virtual function to render a #GstVaapiSurface into a window
+ * @get_visual_id: virtual function to get the desired visual id used to
+ *   create the window
  *
  * Base class for system-dependent windows.
  */
@@ -99,6 +102,7 @@ struct _GstVaapiWindowClass
   GstVaapiWindowResizeFunc resize;
   GstVaapiWindowRenderFunc render;
   GstVaapiWindowRenderPixmapFunc render_pixmap;
+  GstVaapiWindowGetVisualIdFunc get_visual_id;
 };
 
 GstVaapiWindow *
