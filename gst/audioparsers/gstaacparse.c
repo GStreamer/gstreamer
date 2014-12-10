@@ -215,7 +215,7 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
     gst_structure_set (s, "stream-format", G_TYPE_STRING, stream_format, NULL);
 
   allowed = gst_pad_get_allowed_caps (GST_BASE_PARSE (aacparse)->srcpad);
-  if (!gst_caps_can_intersect (src_caps, allowed)) {
+  if (allowed && !gst_caps_can_intersect (src_caps, allowed)) {
     GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
         "Caps can not intersect");
     if (aacparse->header_type == DSPAAC_HEADER_ADTS) {
