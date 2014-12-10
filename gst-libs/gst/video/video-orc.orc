@@ -305,80 +305,46 @@ swapl bgra, argb
 .function video_orc_pack_RGBA
 .dest 4 rgba guint8
 .source 4 argb guint8
-.temp 1 a
-.temp 1 r
-.temp 1 g
-.temp 1 b
-.temp 2 rg
-.temp 2 ba
-.temp 2 ar
-.temp 2 gb
+.temp 4 a
+.temp 4 r
 
-splitlw gb, ar, argb
-splitwb b, g, gb
-splitwb r, a, ar
-mergebw ba, b, a
-mergebw rg, r, g
-mergewl rgba, rg, ba
+loadl r, argb
+shrul a, r, 8
+shll r, r, 24
+orl rgba, r, a
 
 .function video_orc_unpack_RGBA
 .dest 4 argb guint8
 .source 4 rgba guint8
-.temp 1 a
-.temp 1 r
-.temp 1 g
-.temp 1 b
-.temp 2 rg
-.temp 2 ba
-.temp 2 ar
-.temp 2 gb
+.temp 4 a
+.temp 4 r
 
-splitlw ba, rg, rgba
-splitwb g, r, rg
-splitwb a, b, ba
-mergebw ar, a, r
-mergebw gb, g, b
-mergewl argb, ar, gb
-
+loadl r, rgba
+shll a, r, 8
+shrul r, r, 24
+orl argb, r, a
 
 .function video_orc_unpack_ABGR
 .dest 4 argb guint8
 .source 4 abgr guint8
-.temp 1 a
-.temp 1 r
-.temp 1 g
-.temp 1 b
-.temp 2 gr
-.temp 2 ab
-.temp 2 ar
-.temp 2 gb
+.temp 4 a
+.temp 4 r
 
-splitlw gr, ab, abgr
-splitwb r, g, gr
-splitwb b, a, ab
-mergebw ar, a, r
-mergebw gb, g, b
-mergewl argb, ar, gb
-
+swapl r, abgr
+shll a, r, 8
+shrul r, r, 24
+orl argb, r, a
 
 .function video_orc_pack_ABGR
 .dest 4 abgr guint8
 .source 4 argb guint8
-.temp 1 a
-.temp 1 r
-.temp 1 g
-.temp 1 b
-.temp 2 gr
-.temp 2 ab
-.temp 2 ar
-.temp 2 gb
+.temp 4 a
+.temp 4 r
 
-splitlw gb, ar, argb
-splitwb b, g, gb
-splitwb r, a, ar
-mergebw ab, a, b
-mergebw gr, g, r
-mergewl abgr, ab, gr
+swapl r, argb
+shll a, r, 8
+shrul r, r, 24
+orl abgr, r, a
 
 .function video_orc_unpack_NV12
 .dest 8 d guint8
