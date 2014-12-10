@@ -2461,18 +2461,27 @@ check_update_duration (GstQTDemux * qtdemux, GstClockTime duration)
   movdur = gst_util_uint64_scale (duration, qtdemux->timescale, GST_SECOND);
 
   if (movdur > qtdemux->duration) {
-    GST_DEBUG_OBJECT (qtdemux, "Updating total duration to %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (duration));
     prevdur =
         gst_util_uint64_scale (qtdemux->duration, GST_SECOND,
         qtdemux->timescale);
+    GST_DEBUG_OBJECT (qtdemux,
+        "Updating total duration to %" GST_TIME_FORMAT " was %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (duration), GST_TIME_ARGS (prevdur));
     qtdemux->duration = movdur;
+    GST_DEBUG_OBJECT (qtdemux,
+        "qtdemux->segment.duration: %" GST_TIME_FORMAT " .stop: %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (qtdemux->segment.duration),
+        GST_TIME_ARGS (qtdemux->segment.stop));
     if (qtdemux->segment.duration == prevdur) {
       /* If the current segment has duration/stop identical to previous duration
        * update them also (because they were set at that point in time with
        * the wrong duration */
-      qtdemux->segment.duration = duration;
-      qtdemux->segment.stop = duration;
+      /* We convert the value *from* the timescale version to avoid rounding errors */
+      GstClockTime fixeddur =
+          gst_util_uint64_scale (movdur, GST_SECOND, qtdemux->timescale);
+      GST_DEBUG_OBJECT (qtdemux, "Updated segment.duration and segment.stop");
+      qtdemux->segment.duration = fixeddur;
+      qtdemux->segment.stop = fixeddur;
     }
   }
   for (i = 0; i < qtdemux->n_streams; i++) {
