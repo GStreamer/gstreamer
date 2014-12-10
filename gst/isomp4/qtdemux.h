@@ -76,7 +76,7 @@ struct _GstQTDemux {
   GNode *moov_node_compressed;
 
   guint32 timescale;
-  guint64 duration;
+  GstClockTime duration;
 
   gboolean fragmented;
   gboolean fragmented_seek_pending;
