@@ -1943,7 +1943,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
         if (stream->download_error_count == 1 && !is_live) {
           /* TODO hlsdemux had more options to this function (boolean and err) */
           GST_MANIFEST_UNLOCK (demux);
-          if (gst_adaptive_demux_update_manifest (demux)) {
+          if (gst_adaptive_demux_update_manifest (demux) == GST_FLOW_OK) {
             /* Retry immediately, the playlist actually has changed */
             GST_DEBUG_OBJECT (demux, "Updated the playlist");
             return;
@@ -1968,7 +1968,8 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
         GST_DEBUG_OBJECT (demux, "Retrying now");
 
         /* Refetch the playlist now after we waited */
-        if (!is_live && gst_adaptive_demux_update_manifest (demux)) {
+        if (!is_live
+            && gst_adaptive_demux_update_manifest (demux) == GST_FLOW_OK) {
           GST_DEBUG_OBJECT (demux, "Updated the playlist");
         }
         return;
