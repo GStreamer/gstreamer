@@ -1448,8 +1448,16 @@ gst_audio_decoder_drain (GstAudioDecoder * dec)
       gst_audio_decoder_chain_reverse (dec, NULL);
     /* have subclass give all it can */
     ret = gst_audio_decoder_push_buffers (dec, TRUE);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (dec, "audio decoder push buffers failed");
+      goto drain_failed;
+    }
     /* ensure all output sent */
     ret = gst_audio_decoder_output (dec, NULL);
+    if (ret != GST_FLOW_OK)
+      GST_WARNING_OBJECT (dec, "audio decoder output failed");
+
+  drain_failed:
     /* everything should be away now */
     if (dec->priv->frames.length) {
       /* not fatal/impossible though if subclass/codec eats stuff */
@@ -1458,9 +1466,9 @@ gst_audio_decoder_drain (GstAudioDecoder * dec)
       g_queue_foreach (&dec->priv->frames, (GFunc) gst_buffer_unref, NULL);
       g_queue_clear (&dec->priv->frames);
     }
+
     /* discard (unparsed) leftover */
     gst_adapter_clear (dec->priv->adapter);
-
     return ret;
   }
 }
