@@ -1349,7 +1349,7 @@ gst_vtenc_register (GstPlugin * plugin,
   g_type_set_qdata (type, GST_VTENC_CODEC_DETAILS_QDATA,
       (gpointer) codec_details);
 
-  result = gst_element_register (plugin, type_name, GST_RANK_NONE, type);
+  result = gst_element_register (plugin, type_name, GST_RANK_PRIMARY, type);
   if (!result) {
     GST_ERROR_OBJECT (plugin, "failed to register element %s", type_name);
   }
