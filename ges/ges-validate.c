@@ -780,6 +780,102 @@ done:
 
   return ret;
 }
+
+static void
+_project_loaded_cb (GESProject * project, GESTimeline * timeline,
+    GstValidateAction * action)
+{
+  gst_validate_action_set_done (action);
+}
+
+static gboolean
+_load_project (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GESProject *project;
+  GList *tmp, *tmp_full;
+
+  gchar *uri = NULL;
+  GError *error = NULL;
+  const gchar *content = NULL;
+
+  gchar *tmpfile = g_strdup_printf ("%s%s%s", g_get_tmp_dir (),
+      G_DIR_SEPARATOR_S, "tmpxgesload.xges");
+
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+  GESTimeline *timeline = get_timeline (scenario);
+
+  gst_validate_printf (action, "Loading project from serialized content\n");
+
+  if (!GES_IS_PIPELINE (scenario->pipeline)) {
+    GST_VALIDATE_REPORT (scenario,
+        g_quark_from_string ("scenario::execution-error"),
+        "Not a GES pipeline, can't work with it");
+
+    goto fail;
+  }
+
+  content = gst_structure_get_string (action->structure, "serialized-content");
+
+  g_file_set_contents (tmpfile, content, -1, &error);
+  if (error) {
+    GST_VALIDATE_REPORT (scenario,
+        g_quark_from_string ("scenario::execution-error"),
+        "Could not set XML content: %s", error->message);
+
+    goto fail;
+  }
+
+  uri = gst_filename_to_uri (tmpfile, &error);
+  if (error) {
+    GST_VALIDATE_REPORT (scenario,
+        g_quark_from_string ("scenario::execution-error"),
+        "Could not set filename to URI: %s", error->message);
+
+    goto fail;
+  }
+
+  tmp_full = ges_timeline_get_layers (timeline);
+  for (tmp = tmp_full; tmp; tmp = tmp->next)
+    ges_timeline_remove_layer (timeline, tmp->data);
+  g_list_free_full (tmp_full, gst_object_unref);
+
+  tmp_full = ges_timeline_get_tracks (timeline);
+  for (tmp = tmp_full; tmp; tmp = tmp->next)
+    ges_timeline_remove_track (timeline, tmp->data);
+  g_list_free_full (tmp_full, gst_object_unref);
+
+  project = ges_project_new (uri);
+  g_signal_connect (project, "loaded", G_CALLBACK (_project_loaded_cb), action);
+  ges_project_load (project, timeline, &error);
+  if (error) {
+    GST_VALIDATE_REPORT (scenario,
+        g_quark_from_string ("scenario::execution-error"),
+        "Could not load timeline: %s", error->message);
+
+    goto fail;
+  }
+
+done:
+  if (error)
+    g_error_free (error);
+
+  if (uri)
+    g_free (uri);
+
+  g_free (tmpfile);
+
+  return res;
+
+fail:
+
+  /* We reported the issue ourself, so do not ask GstValidate
+   * to do that for us */
+  res = GST_VALIDATE_EXECUTE_ACTION_OK;
+
+  goto done;
+
+}
+
 #endif
 
 gboolean
@@ -1190,6 +1286,19 @@ ges_validate_register_action_types (void)
         {NULL}
       }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
 
+  gst_validate_register_action_type ("load-project", "ges", _load_project,
+      (GstValidateActionParameter [])  {
+        {
+          .name = "serialized-content",
+          .description = "The full content of the XML describing project in XGES formet.",
+          .mandatory = TRUE,
+          NULL
+        },
+        {NULL}
+      },
+      "Loads a project either from its content passed in the serialized-content field.\n"
+      "Note that it will completely clean the previous timeline",
+      GST_VALIDATE_ACTION_TYPE_NONE);
 
 
   gst_validate_register_action_type ("commit", "ges", _commit, NULL,
