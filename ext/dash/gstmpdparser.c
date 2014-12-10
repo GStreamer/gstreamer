@@ -3845,17 +3845,20 @@ gst_mpd_client_set_period_id (GstMpdClient * client, const gchar * period_id)
   GstStreamPeriod *next_stream_period;
   gboolean ret = FALSE;
   GList *iter;
+  guint period_idx;
 
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->periods != NULL, FALSE);
   g_return_val_if_fail (period_id != NULL, FALSE);
 
-  for (iter = client->periods; iter; iter = g_list_next (iter)) {
+  for (period_idx = 0, iter = client->periods; iter;
+       period_idx++, iter = g_list_next (iter)) {
     next_stream_period = iter->data;
 
     if (next_stream_period->period->id
         && strcmp (next_stream_period->period->id, period_id) == 0) {
       ret = TRUE;
+      client->period_idx = period_idx;
       break;
     }
   }
