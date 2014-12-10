@@ -137,6 +137,7 @@ gst_vaapi_window_drm_new (GstVaapiDisplay * display, guint width, guint height)
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_DRM (display), NULL);
 
   return
-      gst_vaapi_window_new (GST_VAAPI_WINDOW_CLASS (gst_vaapi_window_drm_class
-          ()), display, width, height);
+      gst_vaapi_window_new_internal (GST_VAAPI_WINDOW_CLASS
+      (gst_vaapi_window_drm_class ()), display, GST_VAAPI_ID_INVALID, width,
+      height);
 }

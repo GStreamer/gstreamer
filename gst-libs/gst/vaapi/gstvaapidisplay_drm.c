@@ -36,6 +36,7 @@
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapidisplay_drm.h"
 #include "gstvaapidisplay_drm_priv.h"
+#include "gstvaapiwindow_drm.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -312,6 +313,14 @@ gst_vaapi_display_drm_get_display_info (GstVaapiDisplay * display,
   return TRUE;
 }
 
+static GstVaapiWindow *
+gst_vaapi_display_drm_create_window (GstVaapiDisplay * display, GstVaapiID id,
+    guint width, guint height)
+{
+  return id != GST_VAAPI_ID_INVALID ?
+      NULL : gst_vaapi_window_drm_new (display, width, height);
+}
+
 static void
 gst_vaapi_display_drm_init (GstVaapiDisplay * display)
 {
@@ -337,6 +346,7 @@ gst_vaapi_display_drm_class_init (GstVaapiDisplayDRMClass * klass)
   dpy_class->open_display = gst_vaapi_display_drm_open_display;
   dpy_class->close_display = gst_vaapi_display_drm_close_display;
   dpy_class->get_display = gst_vaapi_display_drm_get_display_info;
+  dpy_class->create_window = gst_vaapi_display_drm_create_window;
 }
 
 static inline const GstVaapiDisplayClass *

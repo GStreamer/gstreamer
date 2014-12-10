@@ -31,6 +31,7 @@
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapidisplay_wayland.h"
 #include "gstvaapidisplay_wayland_priv.h"
+#include "gstvaapiwindow_wayland.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -320,6 +321,15 @@ gst_vaapi_display_wayland_get_size_mm (GstVaapiDisplay * display,
     *pheight = priv->phys_height;
 }
 
+static GstVaapiWindow *
+gst_vaapi_display_wayland_create_window (GstVaapiDisplay * display,
+    GstVaapiID id, guint width, guint height)
+{
+  return id != GST_VAAPI_ID_INVALID ?
+      NULL :
+      gst_vaapi_window_wayland_new (display, width, height);
+}
+
 static void
 gst_vaapi_display_wayland_init (GstVaapiDisplay * display)
 {
@@ -347,6 +357,7 @@ gst_vaapi_display_wayland_class_init (GstVaapiDisplayWaylandClass * klass)
   dpy_class->get_display = gst_vaapi_display_wayland_get_display_info;
   dpy_class->get_size = gst_vaapi_display_wayland_get_size;
   dpy_class->get_size_mm = gst_vaapi_display_wayland_get_size_mm;
+  dpy_class->create_window = gst_vaapi_display_wayland_create_window;
 }
 
 static inline const GstVaapiDisplayClass *

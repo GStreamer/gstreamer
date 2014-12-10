@@ -41,6 +41,9 @@ typedef struct _GstVaapiWindow GstVaapiWindow;
 typedef struct _GstVaapiWindowClass GstVaapiWindowClass;
 
 GstVaapiWindow *
+gst_vaapi_window_new (GstVaapiDisplay * display, guint width, guint height);
+
+GstVaapiWindow *
 gst_vaapi_window_ref (GstVaapiWindow * window);
 
 void

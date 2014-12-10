@@ -27,6 +27,7 @@
 
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapidisplaycache.h>
+#include <gst/vaapi/gstvaapiwindow.h>
 #include <gst/vaapi/gstvaapitexture.h>
 #include "gstvaapiminiobject.h"
 
@@ -67,6 +68,8 @@ typedef void (*GstVaapiDisplayGetSizeFunc) (GstVaapiDisplay * display,
     guint * pwidth, guint * pheight);
 typedef void (*GstVaapiDisplayGetSizeMFunc) (GstVaapiDisplay * display,
     guint * pwidth, guint * pheight);
+typedef GstVaapiWindow *(*GstVaapiDisplayCreateWindowFunc) (
+    GstVaapiDisplay * display, GstVaapiID id, guint width, guint height);
 typedef GstVaapiTexture *(*GstVaapiDisplayCreateTextureFunc) (
     GstVaapiDisplay * display, GstVaapiID id, guint target, guint format,
     guint width, guint height);
@@ -187,6 +190,7 @@ struct _GstVaapiDisplay
  * @get_display: virtual function to retrieve the #GstVaapiDisplayInfo
  * @get_size: virtual function to retrieve the display dimensions, in pixels
  * @get_size_mm: virtual function to retrieve the display dimensions, in millimeters
+ * @create_window: (optional) virtual function to create a window
  * @create_texture: (optional) virtual function to create a texture
  *
  * Base class for VA displays.
@@ -212,6 +216,7 @@ struct _GstVaapiDisplayClass
   GstVaapiDisplayGetSizeFunc get_size;
   GstVaapiDisplayGetSizeMFunc get_size_mm;
 
+  GstVaapiDisplayCreateWindowFunc create_window;
   GstVaapiDisplayCreateTextureFunc create_texture;
 };
 

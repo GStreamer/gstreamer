@@ -102,12 +102,8 @@ struct _GstVaapiWindowClass
 };
 
 GstVaapiWindow *
-gst_vaapi_window_new (const GstVaapiWindowClass * window_class,
-    GstVaapiDisplay * display, guint width, guint height);
-
-GstVaapiWindow *
-gst_vaapi_window_new_from_native (const GstVaapiWindowClass *
-    window_class, GstVaapiDisplay * display, gpointer native_window);
+gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
+    GstVaapiDisplay * display, guintptr handle, guint width, guint height);
 
 /* Inline reference counting for core libgstvaapi library */
 #ifdef IN_LIBGSTVAAPI_CORE

@@ -30,6 +30,7 @@
 #include "sysdeps.h"
 #include "gstvaapiwindow.h"
 #include "gstvaapiwindow_priv.h"
+#include "gstvaapidisplay_priv.h"
 #include "gstvaapisurface_priv.h"
 
 #define DEBUG 1
@@ -74,20 +75,26 @@ gst_vaapi_window_create (GstVaapiWindow * window, guint width, guint height)
 }
 
 GstVaapiWindow *
-gst_vaapi_window_new (const GstVaapiWindowClass * window_class,
-    GstVaapiDisplay * display, guint width, guint height)
+gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
+    GstVaapiDisplay * display, GstVaapiID id, guint width, guint height)
 {
   GstVaapiWindow *window;
 
-  g_return_val_if_fail (width > 0, NULL);
-  g_return_val_if_fail (height > 0, NULL);
+  if (id != GST_VAAPI_ID_INVALID) {
+    g_return_val_if_fail (width == 0, NULL);
+    g_return_val_if_fail (height == 0, NULL);
+  } else {
+    g_return_val_if_fail (width > 0, NULL);
+    g_return_val_if_fail (height > 0, NULL);
+  }
 
   window = gst_vaapi_object_new (GST_VAAPI_OBJECT_CLASS (window_class),
       display);
   if (!window)
     return NULL;
 
-  GST_VAAPI_OBJECT_ID (window) = 0;
+  window->use_foreign_window = id != GST_VAAPI_ID_INVALID;
+  GST_VAAPI_OBJECT_ID (window) = window->use_foreign_window ? id : 0;
   if (!gst_vaapi_window_create (window, width, height))
     goto error;
   return window;
@@ -97,26 +104,29 @@ error:
   return NULL;
 }
 
+/**
+ * gst_vaapi_window_new:
+ * @display: a #GstVaapiDisplay
+ * @width: the requested window width, in pixels
+ * @height: the requested windo height, in pixels
+ *
+ * Creates a window with the specified @width and @height. The window
+ * will be attached to the @display and remains invisible to the user
+ * until gst_vaapi_window_show() is called.
+ *
+ * Return value: the newly allocated #GstVaapiWindow object
+ */
 GstVaapiWindow *
-gst_vaapi_window_new_from_native (const GstVaapiWindowClass * window_class,
-    GstVaapiDisplay * display, gpointer native_window)
+gst_vaapi_window_new (GstVaapiDisplay * display, guint width, guint height)
 {
-  GstVaapiWindow *window;
+  GstVaapiDisplayClass *dpy_class;
 
-  window = gst_vaapi_object_new (GST_VAAPI_OBJECT_CLASS (window_class),
-      display);
-  if (!window)
+  g_return_val_if_fail (display != NULL, NULL);
+
+  dpy_class = GST_VAAPI_DISPLAY_GET_CLASS (display);
+  if (G_UNLIKELY (!dpy_class->create_window))
     return NULL;
-
-  GST_VAAPI_OBJECT_ID (window) = GPOINTER_TO_SIZE (native_window);
-  window->use_foreign_window = TRUE;
-  if (!gst_vaapi_window_create (window, 0, 0))
-    goto error;
-  return window;
-
-error:
-  gst_vaapi_window_unref_internal (window);
-  return NULL;
+  return dpy_class->create_window (display, GST_VAAPI_ID_INVALID, width, height);
 }
 
 /**
