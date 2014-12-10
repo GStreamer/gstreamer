@@ -212,10 +212,12 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
 {
   GstVaapiWindowX11Private *const priv =
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
+  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (window);
   Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   Window xid = GST_VAAPI_OBJECT_ID (window);
   guint vid = 0;
   Colormap cmap = None;
+  const GstVaapiDisplayClass *display_class;
   const GstVaapiWindowClass *window_class;
   XWindowAttributes wattr;
   Atom atoms[2];
@@ -238,11 +240,19 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
     return ok;
   }
 
+  display_class = GST_VAAPI_DISPLAY_GET_CLASS (display);
+  if (display_class) {
+    if (display_class->get_visual_id)
+      vid = display_class->get_visual_id (display, window);
+    if (display_class->get_colormap)
+      cmap = display_class->get_colormap (display, window);
+  }
+
   window_class = GST_VAAPI_WINDOW_GET_CLASS (window);
   if (window_class) {
-    if (window_class->get_visual_id)
+    if (window_class->get_visual_id && !vid)
       vid = window_class->get_visual_id (window);
-    if (window_class->get_colormap)
+    if (window_class->get_colormap && !cmap)
       cmap = window_class->get_colormap (window);
   }
 

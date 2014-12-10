@@ -74,6 +74,11 @@ typedef GstVaapiTexture *(*GstVaapiDisplayCreateTextureFunc) (
     GstVaapiDisplay * display, GstVaapiID id, guint target, guint format,
     guint width, guint height);
 
+typedef guintptr (*GstVaapiDisplayGetVisualIdFunc) (GstVaapiDisplay * display,
+    GstVaapiWindow * window);
+typedef guintptr (*GstVaapiDisplayGetColormapFunc) (GstVaapiDisplay * display,
+    GstVaapiWindow * window);
+
 /**
  * GST_VAAPI_DISPLAY_GET_CLASS_TYPE:
  * @display: a #GstVaapiDisplay
@@ -190,6 +195,8 @@ struct _GstVaapiDisplay
  * @get_display: virtual function to retrieve the #GstVaapiDisplayInfo
  * @get_size: virtual function to retrieve the display dimensions, in pixels
  * @get_size_mm: virtual function to retrieve the display dimensions, in millimeters
+ * @get_visual_id: (optional) virtual function to retrieve the window visual id
+ * @get_colormap: (optional) virtual function to retrieve the window colormap
  * @create_window: (optional) virtual function to create a window
  * @create_texture: (optional) virtual function to create a texture
  *
@@ -215,7 +222,8 @@ struct _GstVaapiDisplayClass
   GstVaapiDisplayGetInfoFunc get_display;
   GstVaapiDisplayGetSizeFunc get_size;
   GstVaapiDisplayGetSizeMFunc get_size_mm;
-
+  GstVaapiDisplayGetVisualIdFunc get_visual_id;
+  GstVaapiDisplayGetColormapFunc get_colormap;
   GstVaapiDisplayCreateWindowFunc create_window;
   GstVaapiDisplayCreateTextureFunc create_texture;
 };
