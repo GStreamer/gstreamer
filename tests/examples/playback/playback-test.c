@@ -153,6 +153,8 @@ typedef struct
   gboolean scrub;
   gboolean play_scrub;
   gboolean skip_seek;
+  gboolean skip_seek_key_only;
+  gboolean skip_seek_no_audio;
   gdouble rate;
   gboolean snap_before;
   gboolean snap_after;
@@ -543,7 +545,11 @@ do_seek (PlaybackApp * app, GstFormat format, gint64 position)
   if (app->loop_seek)
     flags |= GST_SEEK_FLAG_SEGMENT;
   if (app->skip_seek)
-    flags |= GST_SEEK_FLAG_SKIP;
+    flags |= GST_SEEK_FLAG_TRICKMODE;
+  if (app->skip_seek_key_only)
+    flags |= GST_SEEK_FLAG_TRICKMODE_KEY_UNITS;
+  if (app->skip_seek_no_audio)
+    flags |= GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
   if (app->snap_before)
     flags |= GST_SEEK_FLAG_SNAP_BEFORE;
   if (app->snap_after)
@@ -922,9 +928,9 @@ play_scrub_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 }
 
 static void
-skip_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
+skip_toggle_common (gboolean * v, GtkToggleButton * button, PlaybackApp * app)
 {
-  app->skip_seek = gtk_toggle_button_get_active (button);
+  *v = gtk_toggle_button_get_active (button);
   if (app->state == GST_STATE_PLAYING) {
     gint64 real;
 
@@ -933,6 +939,24 @@ skip_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
         N_GRAD;
     do_seek (app, GST_FORMAT_TIME, real);
   }
+}
+
+static void
+skip_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
+{
+  skip_toggle_common (&app->skip_seek, button, app);
+}
+
+static void
+skip_key_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
+{
+  skip_toggle_common (&app->skip_seek_key_only, button, app);
+}
+
+static void
+skip_audio_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
+{
+  skip_toggle_common (&app->skip_seek_no_audio, button, app);
 }
 
 static void
@@ -956,7 +980,11 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, PlaybackApp * app)
   if (app->keyframe_seek)
     flags |= GST_SEEK_FLAG_KEY_UNIT;
   if (app->skip_seek)
-    flags |= GST_SEEK_FLAG_SKIP;
+    flags |= GST_SEEK_FLAG_TRICKMODE;
+  if (app->skip_seek_key_only)
+    flags |= GST_SEEK_FLAG_TRICKMODE_KEY_UNITS;
+  if (app->skip_seek_no_audio)
+    flags |= GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
 
   if (app->rate >= 0.0) {
     s_event = gst_event_new_seek (app->rate,
@@ -1871,7 +1899,11 @@ msg_segment_done (GstBus * bus, GstMessage * message, PlaybackApp * app)
   if (app->loop_seek)
     flags |= GST_SEEK_FLAG_SEGMENT;
   if (app->skip_seek)
-    flags |= GST_SEEK_FLAG_SKIP;
+    flags |= GST_SEEK_FLAG_TRICKMODE;
+  if (app->skip_seek_key_only)
+    flags |= GST_SEEK_FLAG_TRICKMODE_KEY_UNITS;
+  if (app->skip_seek_no_audio)
+    flags |= GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
 
   s_event = gst_event_new_seek (app->rate,
       GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
@@ -2619,7 +2651,8 @@ create_ui (PlaybackApp * app)
     GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox,
         *flush_checkbox, *snap_before_checkbox, *snap_after_checkbox;
     GtkWidget *scrub_checkbox, *play_scrub_checkbox, *rate_label;
-    GtkWidget *skip_checkbox, *rate_spinbutton;
+    GtkWidget *skip_checkbox, *skip_key_checkbox, *skip_audio_checkbox,
+        *rate_spinbutton;
     GtkWidget *flagtable, *advanced_seek, *advanced_seek_grid;
     GtkWidget *duration_label, *position_label, *seek_button;
     GtkWidget *start_label, *stop_label;
@@ -2637,7 +2670,11 @@ create_ui (PlaybackApp * app)
     flush_checkbox = gtk_check_button_new_with_label ("Flush");
     scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
     play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
-    skip_checkbox = gtk_check_button_new_with_label ("Play Skip");
+    skip_checkbox = gtk_check_button_new_with_label ("Trickmode Play");
+    skip_key_checkbox =
+        gtk_check_button_new_with_label ("Trickmode - Keyframes Only");
+    skip_audio_checkbox =
+        gtk_check_button_new_with_label ("Trickmode - No Audio");
     snap_before_checkbox = gtk_check_button_new_with_label ("Snap before");
     snap_after_checkbox = gtk_check_button_new_with_label ("Snap after");
     rate_spinbutton = gtk_spin_button_new_with_range (-100, 100, 0.1);
@@ -2658,6 +2695,10 @@ create_ui (PlaybackApp * app)
         "play video while seeking");
     gtk_widget_set_tooltip_text (skip_checkbox,
         "Skip frames while playing at high frame rates");
+    gtk_widget_set_tooltip_text (skip_key_checkbox,
+        "Skip everything except keyframes while playing at high frame rates");
+    gtk_widget_set_tooltip_text (skip_audio_checkbox,
+        "Do not decode audio during trick mode playback");
     gtk_widget_set_tooltip_text (snap_before_checkbox,
         "Favor snapping to the frame before the seek target");
     gtk_widget_set_tooltip_text (snap_after_checkbox,
@@ -2682,6 +2723,10 @@ create_ui (PlaybackApp * app)
         G_CALLBACK (play_scrub_toggle_cb), app);
     g_signal_connect (G_OBJECT (skip_checkbox), "toggled",
         G_CALLBACK (skip_toggle_cb), app);
+    g_signal_connect (G_OBJECT (skip_key_checkbox), "toggled",
+        G_CALLBACK (skip_key_toggle_cb), app);
+    g_signal_connect (G_OBJECT (skip_audio_checkbox), "toggled",
+        G_CALLBACK (skip_audio_toggle_cb), app);
     g_signal_connect (G_OBJECT (rate_spinbutton), "value-changed",
         G_CALLBACK (rate_spinbutton_changed_cb), app);
     g_signal_connect (G_OBJECT (snap_before_checkbox), "toggled",
@@ -2696,6 +2741,8 @@ create_ui (PlaybackApp * app)
     gtk_grid_attach (GTK_GRID (flagtable), scrub_checkbox, 1, 1, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), play_scrub_checkbox, 2, 1, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), skip_checkbox, 3, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), skip_key_checkbox, 3, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), skip_audio_checkbox, 3, 2, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), rate_label, 4, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), rate_spinbutton, 4, 1, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), snap_before_checkbox, 0, 2, 1, 1);
