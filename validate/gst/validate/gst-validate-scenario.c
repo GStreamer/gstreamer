@@ -72,6 +72,14 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  DONE,
+  LAST_SIGNAL
+};
+
+static guint scenario_signals[LAST_SIGNAL] = { 0 };
+
 static GList *action_types = NULL;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
@@ -914,10 +922,12 @@ get_position (GstValidateScenario * scenario)
       gst_mini_object_unref (GST_MINI_OBJECT (act));
       g_list_free (tmp);
 
-      if (scenario->priv->actions)
+      if (scenario->priv->actions) {
         act = scenario->priv->actions->data;
-      else
+      } else {
+        g_signal_emit (scenario, scenario_signals[DONE], 0);
         act = NULL;
+      }
     } else if (act->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
       GST_DEBUG_OBJECT (scenario, "Action %" GST_PTR_FORMAT " still running",
           act->structure);
@@ -997,6 +1007,9 @@ get_position (GstValidateScenario * scenario)
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
     gst_mini_object_unref (GST_MINI_OBJECT (act));
+
+    if (priv->actions == NULL)
+      g_signal_emit (scenario, scenario_signals[DONE], 0);
 
     g_list_free (tmp);
   }
@@ -1293,7 +1306,8 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         gst_message_parse_state_changed (message, &pstate, &nstate, NULL);
 
         if (scenario->priv->target_state == nstate) {
-          if (_action_sets_state (scenario->priv->actions->data))
+          if (scenario->priv->actions &&
+              _action_sets_state (scenario->priv->actions->data))
             gst_validate_action_set_done (priv->actions->data);
           scenario->priv->changing_state = FALSE;
         }
@@ -1654,6 +1668,16 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
           "True if the application should not set handle the first state change "
           " False if it is application responsibility",
           FALSE, G_PARAM_READABLE));
+
+  /**
+   * GstValidateScenario::done:
+   * @scenario: The scenario runing
+   *
+   * Emitted once all actions have been executed
+   */
+  scenario_signals[DONE] =
+      g_signal_new ("done", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 }
 
 static void
@@ -1723,6 +1747,9 @@ _element_added_cb (GstBin * bin, GstElement * element,
     } else
       tmp = tmp->next;
   }
+
+  if (priv->actions == NULL)
+    g_signal_emit (scenario, scenario_signals[DONE], 0);
 
   /* If it's a bin, listen to the child */
   if (GST_IS_BIN (element)) {
@@ -1977,7 +2004,7 @@ gst_validate_action_set_done (GstValidateAction * action)
  * @type_name: The name of the new action type to add
  * @implementer_namespace: The namespace of the implementer of the action type
  * @function: (scope notified): The function to be called to execute the action
- * @parameters: The #GstValidateActionParameter usable as parameter of the type
+ * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidate.ActionParameter): The #GstValidateActionParameter usable as parameter of the type
  * @description: A description of the new type
  * @is_config: Whether the action is a config action or not. A config action will
  * be executed even before the pipeline starts processing
