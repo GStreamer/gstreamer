@@ -249,7 +249,8 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
       }
     }
   }
-  gst_caps_unref (allowed);
+  if (allowed)
+    gst_caps_unref (allowed);
 
   GST_DEBUG_OBJECT (aacparse, "setting src caps: %" GST_PTR_FORMAT, src_caps);
 
