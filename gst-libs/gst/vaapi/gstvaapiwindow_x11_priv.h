@@ -72,8 +72,6 @@ struct _GstVaapiWindowX11
 
 /**
  * GstVaapiWindowX11Class:
- * @get_colormap: virtual function to get the desired colormap used to
- *   create the window
  *
  * An X11 #Window wrapper class.
  */
@@ -81,8 +79,6 @@ struct _GstVaapiWindowX11Class
 {
   /*< private >*/
   GstVaapiWindowClass parent_class;
-
-  Colormap (*get_colormap) (GstVaapiWindow * window);
 };
 
 void

@@ -53,6 +53,7 @@ typedef gboolean (*GstVaapiWindowRenderPixmapFunc) (GstVaapiWindow * window,
     GstVaapiPixmap * pixmap, const GstVaapiRectangle * src_rect,
     const GstVaapiRectangle * dst_rect);
 typedef guintptr (*GstVaapiWindowGetVisualIdFunc) (GstVaapiWindow * window);
+typedef guintptr (*GstVaapiWindowGetColormapFunc) (GstVaapiWindow * window);
 
 /**
  * GstVaapiWindow:
@@ -85,6 +86,8 @@ struct _GstVaapiWindow
  * @render: virtual function to render a #GstVaapiSurface into a window
  * @get_visual_id: virtual function to get the desired visual id used to
  *   create the window
+ * @get_colormap: virtual function to get the desired colormap used to
+ *   create the window, or the currently allocated one
  *
  * Base class for system-dependent windows.
  */
@@ -103,6 +106,7 @@ struct _GstVaapiWindowClass
   GstVaapiWindowRenderFunc render;
   GstVaapiWindowRenderPixmapFunc render_pixmap;
   GstVaapiWindowGetVisualIdFunc get_visual_id;
+  GstVaapiWindowGetColormapFunc get_colormap;
 };
 
 GstVaapiWindow *

@@ -268,10 +268,10 @@ gst_vaapi_window_glx_create_colormap (GstVaapiWindow * window)
   return priv->cmap;
 }
 
-static Colormap
+static guintptr
 gst_vaapi_window_glx_get_colormap (GstVaapiWindow * window)
 {
-  return gst_vaapi_window_glx_create_colormap (window);
+  return GPOINTER_TO_SIZE (gst_vaapi_window_glx_create_colormap (window));
 }
 
 static gboolean
@@ -321,7 +321,7 @@ gst_vaapi_window_glx_class_init (GstVaapiWindowGLXClass * klass)
   klass->parent_finalize = GST_VAAPI_OBJECT_CLASS (klass)->finalize;
   window_class->resize = gst_vaapi_window_glx_resize;
   window_class->get_visual_id = gst_vaapi_window_glx_get_visual_id;
-  xwindow_class->get_colormap = gst_vaapi_window_glx_get_colormap;
+  window_class->get_colormap = gst_vaapi_window_glx_get_colormap;
 }
 
 GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiWindowGLX,

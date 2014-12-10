@@ -217,7 +217,6 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
   guint vid = 0;
   Colormap cmap = None;
   const GstVaapiWindowClass *window_class;
-  const GstVaapiWindowX11Class *klass;
   XWindowAttributes wattr;
   Atom atoms[2];
   gboolean ok;
@@ -243,12 +242,8 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
   if (window_class) {
     if (window_class->get_visual_id)
       vid = window_class->get_visual_id (window);
-  }
-
-  klass = GST_VAAPI_WINDOW_X11_GET_CLASS (window);
-  if (klass) {
-    if (klass->get_colormap)
-      cmap = klass->get_colormap (window);
+    if (window_class->get_colormap)
+      cmap = window_class->get_colormap (window);
   }
 
   GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
