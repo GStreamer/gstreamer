@@ -500,7 +500,6 @@ gst_audio_decoder_init (GstAudioDecoder * dec, GstAudioDecoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_decoder_src_event));
   gst_pad_set_query_function (dec->srcpad,
       GST_DEBUG_FUNCPTR (gst_audio_decoder_src_query));
-  gst_pad_use_fixed_caps (dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
   GST_DEBUG_OBJECT (dec, "srcpad created");
 
