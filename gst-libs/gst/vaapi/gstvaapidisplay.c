@@ -1281,10 +1281,29 @@ gst_vaapi_display_flush (GstVaapiDisplay * display)
 }
 
 /**
+ * gst_vaapi_display_get_class_type:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns the #GstVaapiDisplayType of @display. This is the type of
+ * the object, thus the associated class, not the type of the VA
+ * display.
+ *
+ * Return value: the #GstVaapiDisplayType
+ */
+GstVaapiDisplayType
+gst_vaapi_display_get_class_type (GstVaapiDisplay * display)
+{
+  g_return_val_if_fail (display != NULL, GST_VAAPI_DISPLAY_TYPE_ANY);
+
+  return GST_VAAPI_DISPLAY_GET_CLASS_TYPE (display);
+}
+
+/**
  * gst_vaapi_display_get_display_type:
  * @display: a #GstVaapiDisplay
  *
- * Returns the #GstVaapiDisplayType bound to @display.
+ * Returns the #GstVaapiDisplayType of the VA display bound to
+ * @display. This is not the type of the @display object.
  *
  * Return value: the #GstVaapiDisplayType
  */
@@ -1293,7 +1312,7 @@ gst_vaapi_display_get_display_type (GstVaapiDisplay * display)
 {
   g_return_val_if_fail (display != NULL, GST_VAAPI_DISPLAY_TYPE_ANY);
 
-  return GST_VAAPI_DISPLAY_GET_PRIVATE (display)->display_type;
+  return GST_VAAPI_DISPLAY_VADISPLAY_TYPE (display);
 }
 
 /**

@@ -30,8 +30,8 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_IS_DISPLAY_GLX(display) \
-    ((display) != NULL && \
-     GST_VAAPI_DISPLAY_TYPE(display) == GST_VAAPI_DISPLAY_TYPE_GLX)
+  ((display) != NULL && \
+   GST_VAAPI_DISPLAY_GET_CLASS_TYPE (display) == GST_VAAPI_DISPLAY_TYPE_GLX)
 
 #define GST_VAAPI_DISPLAY_GLX_CAST(display) \
     ((GstVaapiDisplayGLX *)(display))
@@ -64,8 +64,6 @@ struct _GstVaapiDisplayGLXClass
 {
   /*< private >*/
   GstVaapiDisplayX11Class parent_class;
-
-  GstVaapiDisplayGetInfoFunc parent_get_display;
 };
 
 G_END_DECLS

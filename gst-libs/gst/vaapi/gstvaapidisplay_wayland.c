@@ -211,7 +211,7 @@ gst_vaapi_display_wayland_open_display (GstVaapiDisplay * display,
     return FALSE;
 
   info = gst_vaapi_display_cache_lookup_custom (cache, compare_display_name,
-      priv->display_name, GST_VAAPI_DISPLAY_TYPES (display));
+      priv->display_name, g_display_types);
   if (info) {
     priv->wl_display = info->native_display;
     priv->use_foreign_display = TRUE;
@@ -268,7 +268,7 @@ gst_vaapi_display_wayland_get_display_info (GstVaapiDisplay * display,
 
   /* Return any cached info even if child has its own VA display */
   cached_info = gst_vaapi_display_cache_lookup_by_native_display (cache,
-      priv->wl_display, GST_VAAPI_DISPLAY_TYPES (display));
+      priv->wl_display, g_display_types);
   if (cached_info) {
     *info = *cached_info;
     return TRUE;
@@ -339,7 +339,7 @@ gst_vaapi_display_wayland_class_init (GstVaapiDisplayWaylandClass * klass)
   gst_vaapi_display_class_init (&klass->parent_class);
 
   object_class->size = sizeof (GstVaapiDisplayWayland);
-  dpy_class->display_types = g_display_types;
+  dpy_class->display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
   dpy_class->init = gst_vaapi_display_wayland_init;
   dpy_class->bind_display = gst_vaapi_display_wayland_bind_display;
   dpy_class->open_display = gst_vaapi_display_wayland_open_display;

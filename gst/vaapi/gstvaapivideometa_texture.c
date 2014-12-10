@@ -90,7 +90,7 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
   GstVaapiSurface *const surface = gst_vaapi_surface_proxy_get_surface (proxy);
   GstVaapiDisplay *const dpy = GST_VAAPI_OBJECT_DISPLAY (surface);
 
-  if (gst_vaapi_display_get_display_type (dpy) != GST_VAAPI_DISPLAY_TYPE_GLX)
+  if (gst_vaapi_display_get_class_type (dpy) != GST_VAAPI_DISPLAY_TYPE_GLX)
     return FALSE;
 
   if (!meta_texture->texture ||

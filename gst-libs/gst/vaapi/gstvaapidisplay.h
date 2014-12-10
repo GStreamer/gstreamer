@@ -37,12 +37,21 @@ G_BEGIN_DECLS
     ((GstVaapiDisplay *)(obj))
 
 /**
- * GST_VAAPI_DISPLAY_TYPE:
+ * GST_VAAPI_DISPLAY_GET_CLASS_TYPE:
  * @display: a #GstVaapiDisplay
  *
- * Returns the @display type
+ * Returns the #display class type
  */
-#define GST_VAAPI_DISPLAY_TYPE(display) \
+#define GST_VAAPI_DISPLAY_GET_CLASS_TYPE(display) \
+    gst_vaapi_display_get_class_type (GST_VAAPI_DISPLAY (display))
+
+/**
+ * GST_VAAPI_DISPLAY_VADISPLAY_TYPE:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns the underlying VADisplay @display type.
+ */
+#define GST_VAAPI_DISPLAY_VADISPLAY_TYPE(display) \
   gst_vaapi_display_get_display_type (GST_VAAPI_DISPLAY (display))
 
 /**
@@ -156,6 +165,9 @@ gst_vaapi_display_sync (GstVaapiDisplay * display);
 
 void
 gst_vaapi_display_flush (GstVaapiDisplay * display);
+
+GstVaapiDisplayType
+gst_vaapi_display_get_class_type (GstVaapiDisplay * display);
 
 GstVaapiDisplayType
 gst_vaapi_display_get_display_type (GstVaapiDisplay * display);

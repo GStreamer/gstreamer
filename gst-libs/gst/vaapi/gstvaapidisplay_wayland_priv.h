@@ -30,8 +30,8 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_IS_DISPLAY_WAYLAND(display) \
-    ((display) != NULL && \
-     GST_VAAPI_DISPLAY_TYPE(display) == GST_VAAPI_DISPLAY_TYPE_WAYLAND)
+  ((display) != NULL && \
+   GST_VAAPI_DISPLAY_VADISPLAY_TYPE (display) == GST_VAAPI_DISPLAY_TYPE_WAYLAND)
 
 #define GST_VAAPI_DISPLAY_WAYLAND_CAST(display) \
     ((GstVaapiDisplayWayland *)(display))

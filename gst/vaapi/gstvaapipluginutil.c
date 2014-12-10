@@ -274,9 +274,6 @@ gst_vaapi_reply_to_query (GstQuery * query, GstVaapiDisplay * display)
         }
 #endif
 #if USE_X11
-#if USE_GLX
-        case GST_VAAPI_DISPLAY_TYPE_GLX:
-#endif
         case GST_VAAPI_DISPLAY_TYPE_X11:{
           GstVaapiDisplayX11 *const xvadpy = GST_VAAPI_DISPLAY_X11 (display);
           Display *const x11dpy = gst_vaapi_display_x11_get_display (xvadpy);

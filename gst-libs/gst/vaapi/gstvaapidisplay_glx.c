@@ -42,19 +42,6 @@
 
 static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_GLX;
 
-static gboolean
-gst_vaapi_display_glx_get_display_info (GstVaapiDisplay * display,
-    GstVaapiDisplayInfo * info)
-{
-  const GstVaapiDisplayGLXClass *const klass =
-      GST_VAAPI_DISPLAY_GLX_GET_CLASS (display);
-
-  if (!klass->parent_get_display (display, info))
-    return FALSE;
-  info->display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
-  return TRUE;
-}
-
 static GstVaapiTexture *
 gst_vaapi_display_glx_create_texture (GstVaapiDisplay * display, GstVaapiID id,
     guint target, guint format, guint width, guint height)
@@ -74,9 +61,7 @@ gst_vaapi_display_glx_class_init (GstVaapiDisplayGLXClass * klass)
   gst_vaapi_display_x11_class_init (&klass->parent_class);
 
   object_class->size = sizeof (GstVaapiDisplayGLX);
-  klass->parent_get_display = dpy_class->get_display;
-  dpy_class->display_types = g_display_types;
-  dpy_class->get_display = gst_vaapi_display_glx_get_display_info;
+  dpy_class->display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
   dpy_class->create_texture = gst_vaapi_display_glx_create_texture;
 }
 

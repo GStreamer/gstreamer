@@ -267,7 +267,7 @@ get_surface_converter (GstVaapiDisplay * display)
 {
   GFunc func;
 
-  switch (gst_vaapi_display_get_display_type (display)) {
+  switch (gst_vaapi_display_get_class_type (display)) {
 #if USE_X11 && !GST_CHECK_VERSION(1,1,0)
     case GST_VAAPI_DISPLAY_TYPE_X11:
       func = (GFunc) gst_vaapi_video_converter_x11_new;

@@ -45,8 +45,7 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-static const guint g_display_types =
-    (1U << GST_VAAPI_DISPLAY_TYPE_X11) | (1U << GST_VAAPI_DISPLAY_TYPE_GLX);
+static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_X11;
 
 static gboolean
 parse_display_name (const gchar * name, guint * len_ptr, guint * id_ptr,
@@ -204,7 +203,7 @@ gst_vaapi_display_x11_open_display (GstVaapiDisplay * base_display,
     return FALSE;
 
   info = gst_vaapi_display_cache_lookup_custom (cache, compare_display_name,
-      priv->display_name, GST_VAAPI_DISPLAY_TYPES (display));
+      priv->display_name, g_display_types);
   if (info) {
     priv->x11_display = info->native_display;
     priv->use_foreign_display = TRUE;
@@ -280,7 +279,7 @@ gst_vaapi_display_x11_get_display_info (GstVaapiDisplay * display,
 
   /* Return any cached info even if child has its own VA display */
   cached_info = gst_vaapi_display_cache_lookup_by_native_display (cache,
-      priv->x11_display, GST_VAAPI_DISPLAY_TYPES (display));
+      priv->x11_display, g_display_types);
   if (cached_info) {
     *info = *cached_info;
     return TRUE;
@@ -379,7 +378,7 @@ gst_vaapi_display_x11_class_init (GstVaapiDisplayX11Class * klass)
   gst_vaapi_display_class_init (&klass->parent_class);
 
   object_class->size = sizeof (GstVaapiDisplayX11);
-  dpy_class->display_types = g_display_types;
+  dpy_class->display_type = GST_VAAPI_DISPLAY_TYPE_X11;
   dpy_class->bind_display = gst_vaapi_display_x11_bind_display;
   dpy_class->open_display = gst_vaapi_display_x11_open_display;
   dpy_class->close_display = gst_vaapi_display_x11_close_display;

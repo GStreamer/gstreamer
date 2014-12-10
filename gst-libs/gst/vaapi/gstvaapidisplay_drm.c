@@ -247,7 +247,7 @@ gst_vaapi_display_drm_open_display (GstVaapiDisplay * display,
     return FALSE;
 
   info = gst_vaapi_display_cache_lookup_by_name (cache, priv->device_path,
-      GST_VAAPI_DISPLAY_TYPES (display));
+      g_display_types);
   if (info) {
     priv->drm_device = GPOINTER_TO_INT (info->native_display);
     priv->use_foreign_display = TRUE;
@@ -294,7 +294,7 @@ gst_vaapi_display_drm_get_display_info (GstVaapiDisplay * display,
 
   /* Return any cached info even if child has its own VA display */
   cached_info = gst_vaapi_display_cache_lookup_by_native_display (cache,
-      GINT_TO_POINTER (priv->drm_device), GST_VAAPI_DISPLAY_TYPES (display));
+      GINT_TO_POINTER (priv->drm_device), g_display_types);
   if (cached_info) {
     *info = *cached_info;
     return TRUE;
@@ -331,7 +331,7 @@ gst_vaapi_display_drm_class_init (GstVaapiDisplayDRMClass * klass)
   gst_vaapi_display_class_init (&klass->parent_class);
 
   object_class->size = sizeof (GstVaapiDisplayDRM);
-  dpy_class->display_types = g_display_types;
+  dpy_class->display_type = GST_VAAPI_DISPLAY_TYPE_DRM;
   dpy_class->init = gst_vaapi_display_drm_init;
   dpy_class->bind_display = gst_vaapi_display_drm_bind_display;
   dpy_class->open_display = gst_vaapi_display_drm_open_display;

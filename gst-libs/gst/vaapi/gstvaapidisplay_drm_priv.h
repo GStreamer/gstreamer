@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 
 #define GST_VAAPI_IS_DISPLAY_DRM(display) \
     ((display) != NULL && \
-     GST_VAAPI_DISPLAY_TYPE(display) == GST_VAAPI_DISPLAY_TYPE_DRM)
+     GST_VAAPI_DISPLAY_VADISPLAY_TYPE(display) == GST_VAAPI_DISPLAY_TYPE_DRM)
 
 #define GST_VAAPI_DISPLAY_DRM_CAST(display) \
     ((GstVaapiDisplayDRM *)(display))

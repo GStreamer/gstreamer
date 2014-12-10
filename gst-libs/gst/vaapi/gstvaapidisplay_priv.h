@@ -72,6 +72,17 @@ typedef GstVaapiTexture *(*GstVaapiDisplayCreateTextureFunc) (
     guint width, guint height);
 
 /**
+ * GST_VAAPI_DISPLAY_GET_CLASS_TYPE:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns the #display class type
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_DISPLAY_GET_CLASS_TYPE
+#define GST_VAAPI_DISPLAY_GET_CLASS_TYPE(display) \
+  (GST_VAAPI_DISPLAY_GET_CLASS (display)->display_type)
+
+/**
  * GST_VAAPI_DISPLAY_NATIVE:
  * @display: a #GstVaapiDisplay
  *
@@ -94,26 +105,15 @@ typedef GstVaapiTexture *(*GstVaapiDisplayCreateTextureFunc) (
   (GST_VAAPI_DISPLAY_GET_PRIVATE (display_)->display)
 
 /**
- * GST_VAAPI_DISPLAY_TYPE:
+ * GST_VAAPI_DISPLAY_VADISPLAY_TYPE:
  * @display: a #GstVaapiDisplay
  *
- * Returns the @display type
+ * Returns the underlying VADisplay @display type
  * This is an internal macro that does not do any run-time type check.
  */
-#undef  GST_VAAPI_DISPLAY_TYPE
-#define GST_VAAPI_DISPLAY_TYPE(display) \
+#undef  GST_VAAPI_DISPLAY_VADISPLAY_TYPE
+#define GST_VAAPI_DISPLAY_VADISPLAY_TYPE(display) \
   (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->display_type)
-
-/**
- * GST_VAAPI_DISPLAY_TYPES:
- * @display: a #GstVaapiDisplay
- *
- * Returns compatible @display types as a set of flags
- * This is an internal macro that does not do any run-time type check.
- */
-#undef  GST_VAAPI_DISPLAY_TYPES
-#define GST_VAAPI_DISPLAY_TYPES(display) \
-  gst_vaapi_display_get_display_types (GST_VAAPI_DISPLAY_CAST (display))
 
 /**
  * GST_VAAPI_DISPLAY_HAS_VPP:
@@ -197,7 +197,7 @@ struct _GstVaapiDisplayClass
   GstVaapiMiniObjectClass parent_class;
 
   /*< protected >*/
-  guint display_types;
+  guint display_type;
 
   /*< public >*/
   GstVaapiDisplayInitFunc init;
@@ -229,15 +229,6 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass);
 GstVaapiDisplay *
 gst_vaapi_display_new (const GstVaapiDisplayClass * klass,
     GstVaapiDisplayInitType init_type, gpointer init_value);
-
-static inline guint
-gst_vaapi_display_get_display_types (GstVaapiDisplay * display)
-{
-  const GstVaapiDisplayClass *const dpy_class =
-      GST_VAAPI_DISPLAY_GET_CLASS (display);
-
-  return dpy_class->display_types;
-}
 
 /* Inline reference counting for core libgstvaapi library */
 #ifdef IN_LIBGSTVAAPI_CORE
