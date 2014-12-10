@@ -57,6 +57,7 @@ struct _GstVTEnc
 
   const GstVTEncoderDetails * details;
 
+  CFStringRef profile_level;
   guint bitrate;
   gboolean allow_frame_reordering;
   gboolean realtime;
