@@ -524,7 +524,7 @@ start_typefinding (GstTypeFindElement * typefind)
   GST_OBJECT_LOCK (typefind);
   if (typefind->caps)
     gst_caps_replace (&typefind->caps, NULL);
-  typefind->initial_offs = GST_BUFFER_OFFSET_NONE;
+  typefind->initial_offset = GST_BUFFER_OFFSET_NONE;
   GST_OBJECT_UNLOCK (typefind);
 
   typefind->mode = MODE_TYPEFIND;
@@ -560,7 +560,7 @@ stop_typefinding (GstTypeFindElement * typefind)
   buffer = gst_adapter_take_buffer (typefind->adapter, avail);
   GST_BUFFER_PTS (buffer) = pts;
   GST_BUFFER_DTS (buffer) = dts;
-  GST_BUFFER_OFFSET (buffer) = typefind->initial_offs;
+  GST_BUFFER_OFFSET (buffer) = typefind->initial_offset;
   GST_OBJECT_UNLOCK (typefind);
 
   if (!push_cached_buffers) {
@@ -841,8 +841,8 @@ gst_type_find_element_chain (GstPad * pad, GstObject * parent,
     case MODE_TYPEFIND:
     {
       GST_OBJECT_LOCK (typefind);
-      if (typefind->initial_offs == GST_BUFFER_OFFSET_NONE)
-        typefind->initial_offs = GST_BUFFER_OFFSET (buffer);
+      if (typefind->initial_offset == GST_BUFFER_OFFSET_NONE)
+        typefind->initial_offset = GST_BUFFER_OFFSET (buffer);
       gst_adapter_push (typefind->adapter, buffer);
       GST_OBJECT_UNLOCK (typefind);
 
