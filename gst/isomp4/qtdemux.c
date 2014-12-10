@@ -308,6 +308,7 @@ struct _QtDemuxStream
   /* quicktime segments */
   guint32 n_segments;
   QtDemuxSegment *segments;
+  gboolean dummy_segment;
   guint32 from_sample;
   guint32 to_sample;
 
@@ -2447,13 +2448,60 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
   return TRUE;
 }
 
+/* This method should be called whenever a more accurate duration might
+ * have been found. It will update all relevant variables if/where needed
+ */
+static void
+check_update_duration (GstQTDemux * qtdemux, GstClockTime duration)
+{
+  guint i;
+  guint64 movdur;
+  GstClockTime prevdur;
+
+  movdur = gst_util_uint64_scale (duration, qtdemux->timescale, GST_SECOND);
+
+  if (movdur > qtdemux->duration) {
+    GST_DEBUG_OBJECT (qtdemux, "Updating total duration to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (duration));
+    prevdur =
+        gst_util_uint64_scale (qtdemux->duration, GST_SECOND,
+        qtdemux->timescale);
+    qtdemux->duration = movdur;
+    if (qtdemux->segment.duration == prevdur) {
+      /* If the current segment has duration/stop identical to previous duration
+       * update them also (because they were set at that point in time with
+       * the wrong duration */
+      qtdemux->segment.duration = duration;
+      qtdemux->segment.stop = duration;
+    }
+  }
+  for (i = 0; i < qtdemux->n_streams; i++) {
+    QtDemuxStream *stream = qtdemux->streams[i];
+    if (stream) {
+      movdur = gst_util_uint64_scale (duration, stream->timescale, GST_SECOND);
+      if (movdur > stream->duration) {
+        GST_DEBUG_OBJECT (qtdemux,
+            "Updating stream #%d duration to %" GST_TIME_FORMAT, i,
+            GST_TIME_ARGS (duration));
+        stream->duration = movdur;
+        if (stream->dummy_segment) {
+          /* Update all dummy values to new duration */
+          stream->segments[0].stop_time = duration;
+          stream->segments[0].duration = duration;
+          stream->segments[0].media_stop = duration;
+        }
+      }
+    }
+  }
+}
+
 static gboolean
 qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     QtDemuxStream * stream, guint32 d_sample_duration, guint32 d_sample_size,
     guint32 d_sample_flags, gint64 moof_offset, gint64 moof_length,
     gint64 * base_offset, gint64 * running_offset, gint64 decode_ts)
 {
-  GstClockTime gst_ts;
+  GstClockTime gst_ts = GST_CLOCK_TIME_NONE;
   guint64 timestamp;
   gint32 data_offset = 0;
   guint32 flags = 0, first_flags = 0, samples_count = 0;
@@ -2614,6 +2662,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
           " (extends previous samples)", GST_TIME_ARGS (gst_ts));
     }
   }
+
   sample = stream->samples + stream->n_samples;
   for (i = 0; i < samples_count; i++) {
     guint32 dur, size, sflags, ct;
@@ -2661,6 +2710,10 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     timestamp += dur;
     sample++;
   }
+
+  /* Update total duration if needed */
+  check_update_duration (qtdemux, gst_util_uint64_scale (timestamp, GST_SECOND,
+          stream->timescale));
 
   stream->n_samples += samples_count;
 
@@ -3026,6 +3079,8 @@ qtdemux_parse_tfra (GstQTDemux * qtdemux, GNode * tfra_node)
     gst_buffer_unref (buf);
 #endif
   }
+
+  check_update_duration (qtdemux, time);
 
   return TRUE;
 
@@ -7160,6 +7215,7 @@ done:
     GST_DEBUG_OBJECT (qtdemux, "created dummy segment %" GST_TIME_FORMAT,
         GST_TIME_ARGS (stream_duration));
     stream->n_segments = 1;
+    stream->dummy_segment = TRUE;
   }
   GST_DEBUG_OBJECT (qtdemux, "using %d segments", stream->n_segments);
 
