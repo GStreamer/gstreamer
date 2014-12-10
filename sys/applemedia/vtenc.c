@@ -249,7 +249,7 @@ gst_vtenc_init (GstVTEnc * self)
   /* These could be controlled by properties later */
   self->dump_properties = FALSE;
   self->dump_attributes = FALSE;
-
+  self->latency_frames = -1;
   self->session = NULL;
 }
 
@@ -342,6 +342,7 @@ gst_vtenc_set_quality (GstVTEnc * self, gdouble quality)
 {
   GST_OBJECT_LOCK (self);
   self->quality = quality;
+  GST_INFO_OBJECT (self, "setting quality %f", quality);
   if (self->session != NULL) {
     gst_vtenc_session_configure_property_double (self, self->session,
         kVTCompressionPropertyKey_Quality, quality);
@@ -897,6 +898,37 @@ gst_vtenc_session_configure_property_double (GstVTEnc * self,
   return status;
 }
 
+static void
+gst_vtenc_update_latency (GstVTEnc * self)
+{
+  OSStatus status;
+  CFNumberRef value;
+  int frames = 0;
+  GstClockTime frame_duration;
+  GstClockTime latency;
+
+  if (self->video_info.fps_d == 0) {
+    GST_INFO_OBJECT (self, "framerate not known, can't set latency");
+    return;
+  }
+
+  status = VTSessionCopyProperty (self->session,
+      kVTCompressionPropertyKey_NumberOfPendingFrames, NULL, &value);
+  CFNumberGetValue (value, kCFNumberSInt32Type, &frames);
+  if (self->latency_frames == -1 || self->latency_frames != frames) {
+    self->latency_frames = frames;
+    frame_duration = gst_util_uint64_scale (GST_SECOND,
+        self->video_info.fps_d, self->video_info.fps_n);
+    latency = frame_duration * frames;
+    GST_INFO_OBJECT (self,
+        "latency status %d frames %d fps %d/%d time %" GST_TIME_FORMAT, status,
+        frames, self->video_info.fps_n, self->video_info.fps_d,
+        GST_TIME_ARGS (latency));
+    gst_video_encoder_set_latency (GST_VIDEO_ENCODER (self), latency, latency);
+  }
+  CFRelease (value);
+}
+
 static GstFlowReturn
 gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
 {
@@ -1082,6 +1114,8 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
         gst_video_codec_frame_unref (outframe);
         break;
       }
+
+      gst_vtenc_update_latency (self);
     }
 
     ret =
