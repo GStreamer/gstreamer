@@ -2032,6 +2032,22 @@ gst_play_bin_suburidecodebin_seek_to_start (GstSourceGroup * group)
     gst_iterator_free (it);
 }
 
+static void
+source_combine_remove_pads (GstPlayBin * playbin, GstSourceCombine * combine)
+{
+  if (combine->sinkpad) {
+    GST_LOG_OBJECT (playbin, "unlinking from sink");
+    gst_pad_unlink (combine->srcpad, combine->sinkpad);
+
+    /* release back */
+    GST_LOG_OBJECT (playbin, "release sink pad");
+    gst_play_sink_release_pad (playbin->playsink, combine->sinkpad);
+    gst_object_unref (combine->sinkpad);
+    combine->sinkpad = NULL;
+  }
+  gst_object_unref (combine->srcpad);
+  combine->srcpad = NULL;
+}
 
 static GstPadProbeReturn
 block_serialized_data_cb (GstPad * pad, GstPadProbeInfo * info,
@@ -3353,8 +3369,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   if ((combine = g_object_get_data (G_OBJECT (pad), "playbin.combine"))) {
     g_assert (combine->combiner == NULL);
     g_assert (combine->srcpad == pad);
-    gst_object_unref (pad);
-    combine->srcpad = NULL;
+    source_combine_remove_pads (playbin, combine);
     goto exit;
   }
 
@@ -3405,8 +3420,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     if (!combine->channels->len && combine->combiner) {
       GST_DEBUG_OBJECT (playbin, "all combiner sinkpads removed");
       GST_DEBUG_OBJECT (playbin, "removing combiner %p", combine->combiner);
-      gst_object_unref (combine->srcpad);
-      combine->srcpad = NULL;
+      source_combine_remove_pads (playbin, combine);
       gst_element_set_state (combine->combiner, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (playbin), combine->combiner);
       combine->combiner = NULL;
@@ -5286,19 +5300,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     GST_DEBUG_OBJECT (playbin, "unlinking combiner %s", combine->media_list[0]);
 
     if (combine->srcpad) {
-      if (combine->sinkpad) {
-        GST_LOG_OBJECT (playbin, "unlinking from sink");
-        gst_pad_unlink (combine->srcpad, combine->sinkpad);
-
-        /* release back */
-        GST_LOG_OBJECT (playbin, "release sink pad");
-        gst_play_sink_release_pad (playbin->playsink, combine->sinkpad);
-        gst_object_unref (combine->sinkpad);
-        combine->sinkpad = NULL;
-      }
-
-      gst_object_unref (combine->srcpad);
-      combine->srcpad = NULL;
+      source_combine_remove_pads (playbin, combine);
     }
 
     if (combine->combiner) {
