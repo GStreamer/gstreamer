@@ -3589,10 +3589,8 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     time = offset;
   } else {
     if (segment->media_start >= qtdemux->segment.start) {
-      start = segment->media_start;
       time = segment->time;
     } else {
-      start = qtdemux->segment.start;
       time = segment->time + (qtdemux->segment.start - segment->media_start);
     }
 
@@ -3639,7 +3637,6 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
    * tfra entries tells us which trun/sample the key unit is in, but we don't
    * make use of this additional information at the moment) */
   if (qtdemux->fragmented) {
-    index = 0;
     stream->to_sample = G_MAXUINT32;
     return TRUE;
   }
@@ -9007,8 +9004,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->sampled = TRUE;
     stream->sparse = TRUE;
 
-    offset = 16;
-
     stream->caps =
         qtdemux_sub_caps (qtdemux, stream, fourcc, stsd_data, &codec);
     if (codec) {
@@ -11624,8 +11619,6 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
             "layout", G_TYPE_STRING, (flags & FLAG_IS_NON_INTERLEAVED) ?
             "non-interleaved" : "interleaved", NULL);
       } else {
-        if (depth == 0)
-          depth = 32;
         if (width == 0)
           width = 32;
         if (width == 64) {
