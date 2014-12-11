@@ -1072,11 +1072,21 @@ gst_ffmpegviddec_do_qos (GstFFMpegVidDec * ffmpegdec,
     GstVideoCodecFrame * frame, gboolean * mode_switch)
 {
   GstClockTimeDiff diff;
+  GstSegmentFlags skip_flags =
+      GST_VIDEO_DECODER_INPUT_SEGMENT (ffmpegdec).flags;
 
   *mode_switch = FALSE;
 
   if (frame == NULL)
     return;
+
+  if (skip_flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+    ffmpegdec->context->skip_frame = AVDISCARD_NONKEY;
+    *mode_switch = TRUE;
+  } else if (skip_flags & GST_SEGMENT_FLAG_TRICKMODE) {
+    ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
+    *mode_switch = TRUE;
+  }
 
   diff =
       gst_video_decoder_get_max_decode_time (GST_VIDEO_DECODER (ffmpegdec),
@@ -1088,17 +1098,19 @@ gst_ffmpegviddec_do_qos (GstFFMpegVidDec * ffmpegdec,
 
   GST_DEBUG_OBJECT (ffmpegdec, "decoding time %" G_GINT64_FORMAT, diff);
 
-  if (diff > 0 && ffmpegdec->context->skip_frame != AVDISCARD_DEFAULT) {
-    ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
-    *mode_switch = TRUE;
-    GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode");
-  }
+  if (*mode_switch == FALSE) {
+    if (diff > 0 && ffmpegdec->context->skip_frame != AVDISCARD_DEFAULT) {
+      ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
+      *mode_switch = TRUE;
+      GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode");
+    }
 
-  else if (diff <= 0 && ffmpegdec->context->skip_frame != AVDISCARD_NONREF) {
-    ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
-    *mode_switch = TRUE;
-    GST_DEBUG_OBJECT (ffmpegdec,
-        "QOS: hurry up, diff %" G_GINT64_FORMAT " >= 0", diff);
+    else if (diff <= 0 && ffmpegdec->context->skip_frame != AVDISCARD_NONREF) {
+      ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
+      *mode_switch = TRUE;
+      GST_DEBUG_OBJECT (ffmpegdec,
+          "QOS: hurry up, diff %" G_GINT64_FORMAT " >= 0", diff);
+    }
   }
 }
 
