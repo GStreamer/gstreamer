@@ -3669,6 +3669,9 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* combine global rate with that of the segment */
   rate = segment->rate * qtdemux->segment.rate;
 
+  /* Copy flags from main segment */
+  stream->segment.flags = qtdemux->segment.flags;
+
   /* update the segment values used for clipping */
   /* accumulate previous segments */
   if (GST_CLOCK_TIME_IS_VALID (stream->segment.stop))
