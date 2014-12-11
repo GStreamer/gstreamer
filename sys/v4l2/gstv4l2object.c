@@ -117,6 +117,9 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
 
   /* see http://www.siliconimaging.com/RGB%20Bayer.htm */
   {V4L2_PIX_FMT_SBGGR8, TRUE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_SGBRG8, TRUE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_SGRBG8, TRUE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_SRGGB8, TRUE, GST_V4L2_CODEC},
 
   /* compressed formats */
   {V4L2_PIX_FMT_MJPEG, FALSE, GST_V4L2_CODEC},
@@ -945,6 +948,9 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       break;
 
     case V4L2_PIX_FMT_SBGGR8:
+    case V4L2_PIX_FMT_SGBRG8:
+    case V4L2_PIX_FMT_SGRBG8:
+    case V4L2_PIX_FMT_SRGGB8:
       rank = BAYER_BASE_RANK;
       break;
 
@@ -1263,7 +1269,14 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       break;
     case V4L2_PIX_FMT_SBGGR8:
-      structure = gst_structure_new_empty ("video/x-bayer");
+    case V4L2_PIX_FMT_SGBRG8:
+    case V4L2_PIX_FMT_SGRBG8:
+    case V4L2_PIX_FMT_SRGGB8:
+      structure = gst_structure_new ("video/x-bayer", "format", G_TYPE_STRING,
+          fourcc == V4L2_PIX_FMT_SBGGR8 ? "bggr" :
+          fourcc == V4L2_PIX_FMT_SGBRG8 ? "gbrg" :
+          fourcc == V4L2_PIX_FMT_SGRBG8 ? "grbg" :
+          /* fourcc == V4L2_PIX_FMT_SRGGB8 ? */ "rggb", NULL);
       break;
     case V4L2_PIX_FMT_SN9C10X:
       structure = gst_structure_new_empty ("video/x-sonix");
