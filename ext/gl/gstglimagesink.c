@@ -1215,8 +1215,12 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
   gl->GenBuffers (1, &gl_sink->vertex_buffer);
   _bind_buffer (gl_sink);
 
-  if (gl->GenVertexArrays)
+  if (gl->GenVertexArrays) {
     gl->BindVertexArray (0);
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+  } else {
+    _unbind_buffer (gl_sink);
+  }
 }
 
 static void
@@ -1229,8 +1233,10 @@ gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
     gl_sink->redisplay_shader = NULL;
   }
 
-  if (gl_sink->vao)
+  if (gl_sink->vao) {
     gl->DeleteVertexArrays (1, &gl_sink->vao);
+    gl_sink->vao = 0;
+  }
 }
 
 static void

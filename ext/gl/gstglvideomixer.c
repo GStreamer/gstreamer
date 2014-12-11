@@ -747,9 +747,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  else
-    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
   gl->Disable (GL_BLEND);

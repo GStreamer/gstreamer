@@ -465,8 +465,6 @@ _upload_vertices (GstGLTransformation * transformation)
 
   gl->BufferData (GL_ARRAY_BUFFER, 4 * 6 * sizeof (GLfloat), vertices,
       GL_STATIC_DRAW);
-
-  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 }
 
 static void
@@ -546,11 +544,15 @@ gst_gl_transformation_callback (gpointer stuff)
   if (gl->GenVertexArrays)
     gl->BindVertexArray (transformation->vao);
 
-  if (transformation->caps_change)
+  if (transformation->caps_change) {
     _upload_vertices (transformation);
-
-  if (!gl->GenVertexArrays || transformation->caps_change)
     _bind_buffer (transformation);
+
+    if (gl->GenVertexArrays)
+      gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+  } else if (!gl->GenVertexArrays) {
+    _bind_buffer (transformation);
+  }
 
   gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
 
