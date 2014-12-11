@@ -702,6 +702,19 @@ find_sink_pad_index (GstElement * element, GstPad * pad)
   return index;
 }
 
+static GstPadProbeReturn
+_check_select_pad_done (GstPad * pad, GstPadProbeInfo * info,
+    GstValidateAction * action)
+{
+  if (GST_BUFFER_FLAG_IS_SET (info->data, GST_BUFFER_FLAG_DISCONT)) {
+    gst_validate_action_set_done (action);
+
+    return GST_PAD_PROBE_REMOVE;
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
 static gboolean
 _execute_switch_track (GstValidateScenario * scenario,
     GstValidateAction * action)
@@ -718,7 +731,10 @@ _execute_switch_track (GstValidateScenario * scenario,
   input_selector =
       find_input_selector_with_type (GST_BIN (scenario->pipeline), type);
   if (input_selector) {
-    GstPad *pad, *cpad;
+    GstState state, next;
+    GstPad *pad, *cpad, *srcpad;
+
+    GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
 
     if ((str_index = gst_structure_get_string (action->structure, "index"))) {
       if (!gst_structure_get_uint (action->structure, "index", &index)) {
@@ -748,16 +764,28 @@ _execute_switch_track (GstValidateScenario * scenario,
     gst_validate_printf (action, "Switching to track number: %i,"
         " (from %s:%s to %s:%s)\n",
         index, GST_DEBUG_PAD_NAME (cpad), GST_DEBUG_PAD_NAME (pad));
+
+    if (gst_element_get_state (scenario->pipeline, &state, &next, 0) &&
+        state == GST_STATE_PLAYING && next == GST_STATE_VOID_PENDING) {
+      srcpad = gst_element_get_static_pad (input_selector, "src");
+
+      gst_pad_add_probe (srcpad,
+          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+          (GstPadProbeCallback) _check_select_pad_done, action, NULL);
+      res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+      gst_object_unref (srcpad);
+    }
+
     g_object_set (input_selector, "active-pad", pad, NULL);
     gst_object_unref (pad);
     gst_object_unref (cpad);
     gst_object_unref (input_selector);
 
-    return TRUE;
+    return res;
   }
 
   /* No selector found -> Failed */
-  return FALSE;
+  return GST_VALIDATE_EXECUTE_ACTION_ERROR;
 }
 
 static gboolean

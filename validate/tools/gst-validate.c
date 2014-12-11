@@ -236,17 +236,34 @@ _execute_set_subtitles (GstValidateScenario * scenario,
   return TRUE;
 }
 
+static GstPadProbeReturn
+_check_pad_selection_done (GstPad * pad, GstPadProbeInfo * info,
+    GstValidateAction * action)
+{
+  if (GST_BUFFER_FLAG_IS_SET (info->data, GST_BUFFER_FLAG_DISCONT)) {
+    gst_validate_action_set_done (action);
+
+    return GST_PAD_PROBE_REMOVE;
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
 static gboolean
 _execute_switch_track (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
   gint index, n;
+  GstPad *srcpad;
+  GstElement *combiner;
   GstPad *oldpad, *newpad;
-  gboolean relative = FALSE, disabling = FALSE;
   const gchar *type, *str_index;
 
   gint flags, current, tflag;
   gchar *tmp, *current_txt;
+
+  gint res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gboolean relative = FALSE, disabling = FALSE;
 
   if (!(type = gst_structure_get_string (action->structure, "type")))
     type = "audio";
@@ -285,6 +302,7 @@ _execute_switch_track (GstValidateScenario * scenario,
   }
 
   if (!disabling) {
+    GstState state, next;
     tmp = g_strdup_printf ("get-%s-pad", type);
     g_signal_emit_by_name (G_OBJECT (scenario->pipeline), tmp, current,
         &oldpad);
@@ -295,6 +313,22 @@ _execute_switch_track (GstValidateScenario * scenario,
         GST_DEBUG_PAD_NAME (newpad));
     flags |= tflag;
     g_free (tmp);
+
+    if (gst_element_get_state (scenario->pipeline, &state, &next, 0) &&
+        state == GST_STATE_PLAYING && next == GST_STATE_VOID_PENDING) {
+
+      combiner = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (newpad)));
+      srcpad = gst_element_get_static_pad (combiner, "src");
+      gst_object_unref (combiner);
+
+      gst_pad_add_probe (srcpad,
+          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+          (GstPadProbeCallback) _check_pad_selection_done, action, NULL);
+      gst_object_unref (srcpad);
+
+      res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+    }
+
   } else {
     gst_validate_printf (action, "Disabling track type %s", type);
   }
@@ -302,7 +336,7 @@ _execute_switch_track (GstValidateScenario * scenario,
   g_object_set (scenario->pipeline, "flags", flags, current_txt, index, NULL);
   g_free (current_txt);
 
-  return TRUE;
+  return res;
 }
 
 static void
