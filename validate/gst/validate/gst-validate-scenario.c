@@ -84,6 +84,8 @@ static GList *action_types = NULL;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
 
+static GPrivate main_thread_priv;
+
 struct _GstValidateScenarioPrivate
 {
   GstValidateRunner *runner;
@@ -154,13 +156,14 @@ G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
 GType _gst_validate_action_type;
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
-static GstValidateAction *gst_validate_action_new (void);
+static GstValidateAction *gst_validate_action_new (GstValidateScenario *
+    scenario);
 static gboolean get_position (GstValidateScenario * scenario);
 
 static GstValidateAction *
 _action_copy (GstValidateAction * act)
 {
-  GstValidateAction *copy = gst_validate_action_new ();
+  GstValidateAction *copy = gst_validate_action_new (act->scenario);
 
   if (act->structure) {
     copy->structure = gst_structure_copy (act->structure);
@@ -191,12 +194,17 @@ gst_validate_action_init (GstValidateAction * action)
 }
 
 static GstValidateAction *
-gst_validate_action_new (void)
+gst_validate_action_new (GstValidateScenario * scenario)
 {
   GstValidateAction *action = g_slice_new0 (GstValidateAction);
 
   gst_validate_action_init (action);
   action->playback_time = GST_CLOCK_TIME_NONE;
+
+  action->scenario = scenario;
+  if (scenario)
+    g_object_add_weak_pointer (G_OBJECT (scenario),
+        ((gpointer *) & action->scenario));
 
   return action;
 }
@@ -1012,6 +1020,10 @@ get_position (GstValidateScenario * scenario)
       g_signal_emit (scenario, scenario_signals[DONE], 0);
 
     g_list_free (tmp);
+
+    /* Recurse to the next action if it is possible
+     * to execute right away */
+    return get_position (scenario);
   }
 
   return TRUE;
@@ -1442,7 +1454,7 @@ _load_scenario_file (GstValidateScenario * scenario,
       }
     }
 
-    action = gst_validate_action_new ();
+    action = gst_validate_action_new (scenario);
     action->type = type;
     action->repeat = -1;
     if (gst_structure_get_double (structure, "playback-time", &playback_time) ||
@@ -1997,6 +2009,17 @@ void
 gst_validate_action_set_done (GstValidateAction * action)
 {
   action->state = GST_VALIDATE_EXECUTE_ACTION_OK;
+
+  if (action->scenario) {
+    if (GPOINTER_TO_INT (g_private_get (&main_thread_priv))) {
+      GST_DEBUG_OBJECT (action->scenario, "Right thread, executing next?");
+      get_position (action->scenario);
+    } else {
+      GST_DEBUG_OBJECT (action->scenario, "Not doing anything until outside the"
+          " 'main' thread");
+
+    }
+  }
 }
 
 /**
@@ -2123,6 +2146,8 @@ init_scenarios (void)
 
   _gst_validate_action_type = gst_validate_action_get_type ();
   _gst_validate_action_type_type = gst_validate_action_type_get_type ();
+
+  g_private_set (&main_thread_priv, GUINT_TO_POINTER (TRUE));
 
   /*  *INDENT-OFF* */
   REGISTER_ACTION_TYPE ("description", NULL,
