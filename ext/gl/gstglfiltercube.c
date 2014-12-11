@@ -308,13 +308,9 @@ gst_gl_filter_cube_init_shader (GstGLFilter * filter)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
 
-  if (gst_gl_context_get_gl_api (filter->context) & (GST_GL_API_GLES2 |
-          GST_GL_API_OPENGL3)) {
-    /* blocking call, wait the opengl thread has compiled the shader */
-    return gst_gl_context_gen_shader (filter->context, cube_v_src, cube_f_src,
-        &cube_filter->shader);
-  }
-  return TRUE;
+  /* blocking call, wait the opengl thread has compiled the shader */
+  return gst_gl_context_gen_shader (filter->context, cube_v_src, cube_f_src,
+      &cube_filter->shader);
 }
 
 static gboolean
