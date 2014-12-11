@@ -532,6 +532,7 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
     if (overlay->geometry_change)
       _bind_buffer (overlay, overlay->overlay_vbo);
     gl->BindVertexArray (overlay->overlay_vao);
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
   } else {
     _bind_buffer (overlay, overlay->overlay_vbo);
   }

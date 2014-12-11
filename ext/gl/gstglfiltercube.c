@@ -468,6 +468,7 @@ _callback (gpointer stuff)
 
     if (gl->GenVertexArrays) {
       _bind_buffer (cube_filter);
+      gl->BindBuffer (GL_ARRAY_BUFFER, 0);
     }
   }
 

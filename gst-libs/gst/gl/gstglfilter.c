@@ -1596,6 +1596,7 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
 
       if (gl->GenVertexArrays) {
         _bind_buffer (filter);
+        gl->BindBuffer (GL_ARRAY_BUFFER, 0);
       }
     }
 
