@@ -636,6 +636,7 @@ gst_vaapidecode_reset_full (GstVaapiDecode * decode, GstCaps * caps,
 
   /* Reset timers if hard reset was requested (e.g. seek) */
   if (hard) {
+    GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
     GstVideoCodecFrame *out_frame = NULL;
 
     gst_vaapi_decoder_flush (decode->decoder);
@@ -643,6 +644,7 @@ gst_vaapidecode_reset_full (GstVaapiDecode * decode, GstCaps * caps,
     /* Purge all decoded frames as we don't need them (e.g. seek) */
     while (gst_vaapi_decoder_get_frame_with_timeout (decode->decoder,
             &out_frame, 0) == GST_VAAPI_DECODER_STATUS_SUCCESS) {
+      gst_video_decoder_drop_frame (vdec, out_frame);
       gst_video_codec_frame_unref (out_frame);
       out_frame = NULL;
     }
