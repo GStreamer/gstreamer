@@ -164,6 +164,10 @@ gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
   }
 #if GST_GL_HAVE_OPENGL
   switch (effect_type) {
+    case GST_GL_EFFECT_IDENTITY:
+    case GST_GL_EFFECT_MIRROR:
+    case GST_GL_EFFECT_SQUEEZE:
+      break;
     case GST_GL_EFFECT_STRETCH:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_stretch;
       filter_class->supported_gl_api = GST_GL_API_OPENGL;
