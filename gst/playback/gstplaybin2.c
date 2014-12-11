@@ -2599,12 +2599,12 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_AUDIO_STREAM_COMBINER:
       g_value_take_object (value,
           gst_play_bin_get_current_stream_combiner (playbin,
-              &playbin->audio_stream_combiner, "audio", PLAYBIN_STREAM_VIDEO));
+              &playbin->audio_stream_combiner, "audio", PLAYBIN_STREAM_AUDIO));
       break;
     case PROP_TEXT_STREAM_COMBINER:
       g_value_take_object (value,
           gst_play_bin_get_current_stream_combiner (playbin,
-              &playbin->text_stream_combiner, "text", PLAYBIN_STREAM_VIDEO));
+              &playbin->text_stream_combiner, "text", PLAYBIN_STREAM_TEXT));
       break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_play_sink_get_volume (playbin->playsink));
