@@ -785,12 +785,18 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       GstSeekFlags flags;
       GstSeekType start_type, stop_type;
       gint64 start, stop;
+      guint32 seqnum;
       GList *iter;
       gboolean update;
       gboolean ret = TRUE;
       GstSegment oldsegment;
 
       GST_INFO_OBJECT (demux, "Received seek event");
+
+      if (demux_class->seek == NULL) {
+        GST_DEBUG_OBJECT (demux, "Subclass doesn't implement seeking");
+        return FALSE;
+      }
 
       GST_MANIFEST_LOCK (demux);
       if (gst_adaptive_demux_is_live (demux)) {
@@ -810,6 +816,8 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
         return FALSE;
       }
 
+      seqnum = gst_event_get_seqnum (event);
+
       GST_DEBUG_OBJECT (demux,
           "seek event, rate: %f type: %d start: %" GST_TIME_FORMAT " stop: %"
           GST_TIME_FORMAT, rate, start_type, GST_TIME_ARGS (start),
@@ -821,64 +829,53 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
           start, stop_type, stop, &update);
 
-      if (update) {
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        GstEvent *fevent;
+
+        GST_DEBUG_OBJECT (demux, "sending flush start");
+        fevent = gst_event_new_flush_start ();
+        gst_event_set_seqnum (fevent, seqnum);
+        gst_adaptive_demux_push_src_event (demux, fevent);
+      }
+      gst_adaptive_demux_stop_tasks (demux);
+      GST_DEBUG_OBJECT (demux, "Seeking to segment %" GST_SEGMENT_FORMAT,
+          &demux->segment);
+
+      GST_MANIFEST_LOCK (demux);
+      ret = demux_class->seek (demux, event);
+
+      if (ret) {
         GstEvent *seg_evt;
 
-        if (demux_class->seek == NULL) {
-          GST_DEBUG_OBJECT (demux, "Subclass doesn't implement seeking");
-          return FALSE;
+        seg_evt = gst_event_new_segment (&demux->segment);
+        gst_event_set_seqnum (seg_evt, seqnum);
+        for (iter = demux->streams; iter; iter = g_list_next (iter)) {
+          GstAdaptiveDemuxStream *stream = iter->data;
+
+          gst_event_replace (&stream->pending_segment, seg_evt);
         }
-
-        if (flags & GST_SEEK_FLAG_FLUSH) {
-          GstEvent *fevent;
-
-          GST_DEBUG_OBJECT (demux, "sending flush start");
-          fevent = gst_event_new_flush_start ();
-          gst_event_set_seqnum (fevent, gst_event_get_seqnum (event));
-          gst_adaptive_demux_push_src_event (demux, fevent);
-        }
-
-        gst_adaptive_demux_stop_tasks (demux);
-
-        /* TODO flush and reset streams */
-
-        GST_DEBUG_OBJECT (demux, "Seeking to segment %" GST_SEGMENT_FORMAT,
-            &demux->segment);
-
-        GST_MANIFEST_LOCK (demux);
-        ret = demux_class->seek (demux, event);
-
-        if (ret) {
-          seg_evt = gst_event_new_segment (&demux->segment);
-          gst_event_set_seqnum (seg_evt, gst_event_get_seqnum (event));
-          for (iter = demux->streams; iter; iter = g_list_next (iter)) {
-            GstAdaptiveDemuxStream *stream = iter->data;
-
-            gst_event_replace (&stream->pending_segment, seg_evt);
-          }
-          gst_event_unref (seg_evt);
-        } else {
-          /* Is there anything else we can do if it fails? */
-          gst_segment_copy_into (&oldsegment, &demux->segment);
-        }
-
-        if (flags & GST_SEEK_FLAG_FLUSH) {
-          GstEvent *fevent;
-
-          GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
-          fevent = gst_event_new_flush_stop (TRUE);
-          gst_event_set_seqnum (fevent, gst_event_get_seqnum (event));
-          gst_adaptive_demux_push_src_event (demux, fevent);
-        }
-
-        if (demux->next_streams) {
-          gst_adaptive_demux_expose_streams (demux);
-        }
-
-        /* Restart the demux */
-        gst_adaptive_demux_start_tasks (demux);
-        GST_MANIFEST_UNLOCK (demux);
+        gst_event_unref (seg_evt);
+      } else {
+        /* Is there anything else we can do if it fails? */
+        gst_segment_copy_into (&oldsegment, &demux->segment);
       }
+
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        GstEvent *fevent;
+
+        GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
+        fevent = gst_event_new_flush_stop (TRUE);
+        gst_event_set_seqnum (fevent, seqnum);
+        gst_adaptive_demux_push_src_event (demux, fevent);
+      }
+      if (demux->next_streams) {
+        gst_adaptive_demux_expose_streams (demux);
+      }
+
+      /* Restart the demux */
+      gst_adaptive_demux_start_tasks (demux);
+      GST_MANIFEST_UNLOCK (demux);
+
       gst_event_unref (event);
       return ret;
     }
