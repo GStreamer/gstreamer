@@ -77,7 +77,6 @@ gst_audio_decoder_tester_set_format (GstAudioDecoder * dec, GstCaps * caps)
 {
   GstAudioDecoderTester *tester = (GstAudioDecoderTester *) dec;
   GstAudioInfo info;
-  gst_caps_unref (caps);
 
   if (!tester->setoutputformat_on_decoding) {
     caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "S32LE",
@@ -242,7 +241,7 @@ send_startup_events (void)
       gst_caps_new_simple ("audio/x-test-custom", "channels", G_TYPE_INT, 2,
       "rate", G_TYPE_INT, 44100, NULL);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
-
+  gst_caps_unref (caps);
 }
 
 #define NUM_BUFFERS 1000
