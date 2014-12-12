@@ -1058,14 +1058,15 @@ get_position (GstValidateScenario * scenario)
 }
 
 static gboolean
-stop_waiting (GstValidateScenario * scenario)
+stop_waiting (GstValidateAction * action)
 {
-  GstValidateScenarioPrivate *priv = scenario->priv;
+  GstValidateScenarioPrivate *priv = action->scenario->priv;
 
   priv->wait_id = 0;
-  _add_get_position_source (scenario);
+  gst_validate_action_set_done (action);
+  _add_get_position_source (action->scenario);
 
-  gst_validate_printf (scenario, "Stop waiting\n");
+  gst_validate_printf (action->scenario, "Stop waiting\n");
 
   return G_SOURCE_REMOVE;
 }
@@ -1092,14 +1093,15 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
 
     if (wait_multiplier == 0) {
       GST_INFO_OBJECT (scenario, "I have been told not to wait...");
-      return TRUE;
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
     }
   }
 
   if (!gst_validate_action_get_clocktime (scenario, action,
           "duration", &duration)) {
     GST_DEBUG_OBJECT (scenario, "Duration could not be parsed");
-    return FALSE;
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
   }
 
   duration *= wait_multiplier;
@@ -1113,9 +1115,9 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
   }
 
   priv->wait_id = g_timeout_add (duration / G_USEC_PER_SEC,
-      (GSourceFunc) stop_waiting, scenario);
+      (GSourceFunc) stop_waiting, action);
 
-  return TRUE;
+  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
 
 static gboolean
@@ -1197,6 +1199,8 @@ _execute_set_property (GstValidateScenario * scenario,
   property_value = gst_structure_get_value (action->structure,
       "property-value");
 
+  gst_validate_printf (action, "Setting property %s to %s\n",
+      property, gst_value_serialize (property_value));
   ret = _object_set_property (G_OBJECT (target), property, property_value);
 
   gst_object_unref (target);
