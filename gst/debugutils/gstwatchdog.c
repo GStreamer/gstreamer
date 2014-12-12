@@ -207,6 +207,7 @@ gst_watchdog_quit_mainloop (gpointer ptr)
   return FALSE;
 }
 
+/*  Call with OBJECT_LOCK taken */
 static void
 gst_watchdog_feed (GstWatchdog * watchdog, gpointer mini_object, gboolean force)
 {
@@ -243,8 +244,6 @@ gst_watchdog_feed (GstWatchdog * watchdog, gpointer mini_object, gboolean force)
 
   }
 
-  GST_STATE_LOCK (watchdog);
-
   if (watchdog->timeout == 0) {
     GST_LOG_OBJECT (watchdog, "Timeout is 0 => nothing to do");
   } else if (watchdog->main_context == NULL) {
@@ -258,7 +257,6 @@ gst_watchdog_feed (GstWatchdog * watchdog, gpointer mini_object, gboolean force)
         gst_object_ref (watchdog), gst_object_unref);
     g_source_attach (watchdog->source, watchdog->main_context);
   }
-  GST_STATE_UNLOCK (watchdog);
 }
 
 static gboolean
