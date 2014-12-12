@@ -116,7 +116,13 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         @name: The name of the generator
         @pipeline_template: A template pipeline to be used to generate actual pipelines
         @pipelines_descriptions: A list of tuple of the form:
-                                 (test_name, pipeline_description)
+                                 (test_name, pipeline_description, extra_data)
+                                 extra_data being a dictionnary with the follwing keys:
+                                    'scenarios': ["the", "valide", "scenarios", "names"]
+                                    'duration': the_duration # in seconds
+                                    'timeout': a_timeout # in seconds
+                                    'hard_timeout': a_hard_timeout # in seconds
+
         @valid_scenarios: A list of scenario name that can be used with that generator
         """
         GstValidateTestsGenerator.__init__(self, name, test_manager)
@@ -136,11 +142,12 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         if scenario is not None and scenario.name.lower() != "none":
             return "%s.%s%s.%s" % ("validate", protocol_str, name, scenario.name)
 
-        return "%s.%s%s" % ("validate", protocol_str, name)
+        return ("%s.%s.%s.%s" % ("validate", protocol_str, self.name, name)).replace("..", ".")
 
     def generate_tests(self, uri_minfo_special_scenarios, scenarios):
-
-        if self._valid_scenarios:
+        if self._valid_scenarios is None:
+            scenarios = [None]
+        elif self._valid_scenarios:
             scenarios = [scenario for scenario in scenarios if
                          scenario.name in self._valid_scenarios]
 
@@ -148,14 +155,43 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
             uri_minfo_special_scenarios, scenarios)
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
-        for name, pipeline in self._pipelines_descriptions:
-            for scenario in scenarios:
+        for description in self._pipelines_descriptions:
+            name = description[0]
+            pipeline = description[1]
+            if len(description) == 3:
+                extra_datas = description[2]
+            else:
+                extra_datas = {}
+
+            for scenario_name in extra_datas.get('scenarios', scenarios):
+                if self.test_manager.options.mute:
+                    if scenario and scenario.needs_clock_sync():
+                        fakesink = "'fakesink sync=true'"
+                    else:
+                        fakesink = "fakesink"
+
+                    audiosink = videosink = fakesink
+                else:
+                    audiosink = 'autoaudiosink'
+                    videosink = 'autovideosink'
+
+                pipeline = pipeline % {'videosink': videosink,
+                                       'audiosink': audiosink}
+
+                if scenario_name:
+                    scenario = self.test_manager.scenarios_manager.get_scenario(scenario_name)
+                else:
+                    scenario = None
+
                 fname = self.get_fname(scenario, name=name)
                 self.add_test(GstValidateLaunchTest(fname,
                                                     self.test_manager.options,
                                                     self.test_manager.reporter,
                                                     pipeline,
-                                                    scenario=scenario)
+                                                    scenario=scenario,
+                                                    duration=extra_datas.get('duration', 0),
+                                                    timeout=extra_datas.get('timeout', DEFAULT_TIMEOUT),
+                                                    hard_timeout=extra_datas.get('hard_timeout', None))
                               )
 
 
@@ -281,7 +317,8 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
 class GstValidateLaunchTest(GstValidateTest):
 
     def __init__(self, classname, options, reporter, pipeline_desc,
-                 timeout=DEFAULT_TIMEOUT, scenario=None, media_descriptor=None):
+                 timeout=DEFAULT_TIMEOUT, scenario=None,
+                 media_descriptor=None, duration=0, hard_timeout=None):
         try:
             timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[
                 media_descriptor.get_protocol()]
@@ -290,7 +327,6 @@ class GstValidateLaunchTest(GstValidateTest):
         except AttributeError:
             pass
 
-        duration = 0
         if scenario:
             duration = scenario.get_duration()
         elif media_descriptor:
@@ -301,7 +337,8 @@ class GstValidateLaunchTest(GstValidateTest):
                                                   options, reporter,
                                                   duration=duration,
                                                   scenario=scenario,
-                                                  timeout=timeout)
+                                                  timeout=timeout,
+                                                  hard_timeout=hard_timeout)
 
         self.pipeline_desc = pipeline_desc
         self.media_descriptor = media_descriptor
