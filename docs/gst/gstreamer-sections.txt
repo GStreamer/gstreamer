@@ -2285,6 +2285,7 @@ gst_preset_set_meta
 gst_preset_get_meta
 gst_preset_set_app_dir
 gst_preset_get_app_dir
+gst_preset_is_editable
 <SUBSECTION Standard>
 GST_PRESET
 GST_IS_PRESET
