@@ -374,6 +374,11 @@ gst_line_cache_alloc_line (GstLineCache * cache, gint idx)
   return res;
 }
 
+/* Custom backup functions for ORC */
+void _custom_video_orc_matrix8 (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, orc_int64 p1, orc_int64 p2, orc_int64 p3,
+    orc_int64 p4, int n);
+
 static void video_converter_generic (GstVideoConverter * convert,
     const GstVideoFrame * src, GstVideoFrame * dest);
 static gboolean video_converter_lookup_fastpath (GstVideoConverter * convert);
