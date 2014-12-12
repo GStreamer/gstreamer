@@ -465,7 +465,7 @@ _audiodecoder_flush_events (gboolean send_buffers)
       gst_message_new_element (GST_OBJECT (mysrcpad),
       gst_structure_new_empty ("test"));
   fail_unless (gst_pad_push_event (mysrcpad,
-      gst_event_new_sink_message ("test", msg)));
+          gst_event_new_sink_message ("test", msg)));
   gst_message_unref (msg);
 
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
@@ -488,15 +488,14 @@ _audiodecoder_flush_events (gboolean send_buffers)
       fail_unless (GST_EVENT_TYPE (segment_event) == GST_EVENT_SEGMENT);
       events_iter = g_list_next (events_iter);
     }
-    for (int i=0; i< NUM_BUFFERS / 10; i++)
-    {
+    for (int i = 0; i < NUM_BUFFERS / 10; i++) {
       GstEvent *tag_event = events_iter->data;
       fail_unless (GST_EVENT_TYPE (tag_event) == GST_EVENT_TAG);
       events_iter = g_list_next (events_iter);
     }
   }
   {
-    GstEvent *eos_event = g_list_last(events_iter)->data;
+    GstEvent *eos_event = g_list_last (events_iter)->data;
 
     fail_unless (GST_EVENT_TYPE (eos_event) == GST_EVENT_EOS);
     events_iter = g_list_next (events_iter);
