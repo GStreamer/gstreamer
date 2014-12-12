@@ -51,6 +51,7 @@ typedef enum {
 
 /********** pipeline graphs **********/
 
+gchar * gst_debug_bin_to_dot_data (GstBin *bin, GstDebugGraphDetails details);
 void gst_debug_bin_to_dot_file (GstBin *bin, GstDebugGraphDetails details, const gchar *file_name);
 void gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails details, const gchar *file_name);
 
