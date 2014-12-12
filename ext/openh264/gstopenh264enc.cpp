@@ -74,7 +74,7 @@ gst_openh264enc_rc_modes_get_type (void)
     static GEnumValue rc_modes_types[] = {
       {RC_QUALITY_MODE, "Quality mode", "quality"},
       {RC_BITRATE_MODE, "Bitrate mode", "bitrate"},
-      {RC_LOW_BW_MODE, "Low bandwidth mode", "bandwidth"},
+      {RC_BUFFERBASED_MODE, "No bitrate control, just using buffer status", "buffer"},
       {RC_OFF_MODE, "Rate control off mode", "off"},
       {0, NULL, NULL},
     };
@@ -407,8 +407,8 @@ gst_openh264enc_set_rate_control (GstOpenh264Enc * openh264enc, gint rc_mode)
     case RC_BITRATE_MODE:
       openh264enc->priv->rate_control = RC_BITRATE_MODE;
       break;
-    case RC_LOW_BW_MODE:
-      openh264enc->priv->rate_control = RC_LOW_BW_MODE;
+    case RC_BUFFERBASED_MODE:
+      openh264enc->priv->rate_control = RC_BUFFERBASED_MODE;
       break;
     case RC_OFF_MODE:
       openh264enc->priv->rate_control = RC_OFF_MODE;
@@ -633,6 +633,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   GstCaps *outcaps;
   GstVideoCodecState *output_state;
   openh264enc->priv->frame_count = 0;
+  int video_format = videoFormatI420;
 
   debug_caps = gst_caps_to_string (state->caps);
   GST_DEBUG_OBJECT (openh264enc, "gst_e26d4_enc_set_format called, caps: %s",
@@ -667,7 +668,6 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.iTemporalLayerNum = 1;
   enc_params.iSpatialLayerNum = 1;
   enc_params.iLtrMarkPeriod = 30;
-  enc_params.iInputCsp = videoFormatI420;
   enc_params.iMultipleThreadIdc = openh264enc->priv->multi_thread;
   enc_params.bEnableDenoise = openh264enc->priv->enable_denoise;
   enc_params.uiIntraPeriod = priv->gop_size;
@@ -700,6 +700,8 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
     GST_ERROR_OBJECT (openh264enc, "failed to initialize encoder");
     return FALSE;
   }
+
+  priv->encoder->SetOption(ENCODER_OPTION_DATAFORMAT, &video_format);
 
   memset (&bsInfo, 0, sizeof (SFrameBSInfo));
 
