@@ -97,6 +97,7 @@ gboolean     gst_preset_get_meta           (GstPreset *preset, const gchar *name
 gboolean     gst_preset_set_app_dir        (const gchar *app_dir);
 const gchar *gst_preset_get_app_dir        (void);
 
+gboolean     gst_preset_is_editable        (GstPreset *preset);
 G_END_DECLS
 
 #endif /* __GST_PRESET_H__ */

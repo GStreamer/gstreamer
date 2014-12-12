@@ -34,6 +34,9 @@
  * native preset format of those wrapped plugins.
  * One method that is useful to be overridden is gst_preset_get_property_names().
  * With that one can control which properties are saved and in which order.
+ * When implementing support for read-only presets, one should set the vmethods
+ * for gst_preset_save_preset() and gst_preset_delete_preset() to %NULL.
+ * Applications can use gst_preset_is_editable() to check for that.
  *
  * The default implementation supports presets located in a system directory, 
  * application specific directory and in the users home directory. When getting
@@ -1146,6 +1149,24 @@ const gchar *
 gst_preset_get_app_dir (void)
 {
   return preset_app_dir;
+}
+
+/**
+ * gst_preset_is_editable:
+ * @preset: a #GObject that implements #GstPreset
+ *
+ * Check if one can add new presets, change existing ones and remove presets.
+ *
+ * Returns: %TRUE if presets are editable or %FALSE if they are static
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_preset_is_editable (GstPreset * preset)
+{
+  GstPresetInterface *iface = GST_PRESET_GET_INTERFACE (preset);
+
+  return iface->save_preset && iface->delete_preset;
 }
 
 /* class internals */
