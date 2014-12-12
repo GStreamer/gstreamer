@@ -293,6 +293,37 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
 
+static gboolean
+gst_v4l2_decoder_cmd (GstV4l2Object * v4l2object, guint cmd, guint flags)
+{
+  struct v4l2_decoder_cmd dcmd = { 0, };
+
+  GST_DEBUG_OBJECT (v4l2object->element,
+      "sending v4l2 decoder command %u with flags %u", cmd, flags);
+
+  if (!GST_V4L2_IS_OPEN (v4l2object))
+    return FALSE;
+
+  dcmd.cmd = cmd;
+  dcmd.flags = flags;
+  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_DECODER_CMD, &dcmd) < 0)
+    goto dcmd_failed;
+
+  return TRUE;
+
+dcmd_failed:
+  if (errno == ENOTTY) {
+    GST_INFO_OBJECT (v4l2object->element,
+        "Failed to send decoder command %u with flags %u for '%s'. (%s)",
+        cmd, flags, v4l2object->videodev, g_strerror (errno));
+  } else {
+    GST_ERROR_OBJECT (v4l2object->element,
+        "Failed to send decoder command %u with flags %u for '%s'. (%s)",
+        cmd, flags, v4l2object->videodev, g_strerror (errno));
+  }
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
 {
