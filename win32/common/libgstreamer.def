@@ -973,6 +973,7 @@ EXPORTS
 	gst_preset_get_preset_names
 	gst_preset_get_property_names
 	gst_preset_get_type
+	gst_preset_is_editable
 	gst_preset_load_preset
 	gst_preset_rename_preset
 	gst_preset_save_preset
