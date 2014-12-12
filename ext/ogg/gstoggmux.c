@@ -857,7 +857,7 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
       gst_ogg_stream_granule_to_time (&pad->map, pad->next_granule + duration);
   if (end_time > pad->segment.stop
       && !GST_CLOCK_TIME_IS_VALID (gst_segment_to_running_time (&pad->segment,
-              GST_FORMAT_TIME, end_time))) {
+              GST_FORMAT_TIME, pad->segment.start + end_time))) {
     gint64 actual_duration =
         gst_util_uint64_scale_round (pad->segment.stop - time,
         pad->map.granulerate_n,
