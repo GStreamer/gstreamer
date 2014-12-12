@@ -680,7 +680,7 @@ gst_debug_bin_to_dot_data (GstBin * bin, GstDebugGraphDetails details)
 {
   GString *str;
 
-  g_return_if_fail (GST_IS_BIN (bin));
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
   str = g_string_new (NULL);
 
