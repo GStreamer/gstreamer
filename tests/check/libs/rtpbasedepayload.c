@@ -59,8 +59,8 @@ G_DEFINE_TYPE (GstRtpDummyDepay, gst_rtp_dummy_depay,
 
 static GstBuffer *gst_rtp_dummy_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_dummy_depay_set_caps (GstRTPBaseDepayload *filter,
-    GstCaps *caps);
+static gboolean gst_rtp_dummy_depay_set_caps (GstRTPBaseDepayload * filter,
+    GstCaps * caps);
 
 static GstStaticPadTemplate gst_rtp_dummy_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -113,8 +113,8 @@ gst_rtp_dummy_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint i;
 
   GST_LOG ("depayloading buffer pts=%" GST_TIME_FORMAT " offset=%"
-  G_GUINT64_FORMAT " memories=%d", GST_TIME_ARGS (GST_BUFFER_PTS(buf)),
-  GST_BUFFER_OFFSET(buf), gst_buffer_n_memory (buf));
+      G_GUINT64_FORMAT " memories=%d", GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
+      GST_BUFFER_OFFSET (buf), gst_buffer_n_memory (buf));
 
   for (i = 0; i < gst_buffer_n_memory (buf); i++) {
     GstMemory *mem = gst_buffer_get_memory (buf, 0);
@@ -134,8 +134,8 @@ gst_rtp_dummy_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   GST_LOG ("depayloaded buffer pts=%" GST_TIME_FORMAT " offset=%"
       G_GUINT64_FORMAT " rtptime=%" G_GUINT32_FORMAT " memories=%d",
-      GST_TIME_ARGS (GST_BUFFER_PTS(outbuf)),
-      GST_BUFFER_OFFSET(outbuf), rtptime, gst_buffer_n_memory (buf));
+      GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)),
+      GST_BUFFER_OFFSET (outbuf), rtptime, gst_buffer_n_memory (buf));
 
   for (i = 0; i < gst_buffer_n_memory (buf); i++) {
     GstMemory *mem = gst_buffer_get_memory (buf, 0);
@@ -149,7 +149,7 @@ gst_rtp_dummy_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 }
 
 static gboolean
-gst_rtp_dummy_depay_set_caps (GstRTPBaseDepayload *filter, GstCaps *caps)
+gst_rtp_dummy_depay_set_caps (GstRTPBaseDepayload * filter, GstCaps * caps)
 {
   GstEvent *event;
   event = gst_event_new_caps (caps);
@@ -171,7 +171,8 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 
 typedef struct State State;
 
-struct State {
+struct State
+{
   GstElement *element;
   GstPad *sinkpad;
   GstPad *srcpad;
@@ -186,7 +187,8 @@ event_func (GstPad * pad, GstObject * noparent, GstEvent * event)
   return gst_pad_event_default (pad, noparent, event);
 }
 
-static void drop_events (void)
+static void
+drop_events (void)
 {
   while (events != NULL) {
     gst_event_unref (GST_EVENT (events->data));
@@ -194,13 +196,14 @@ static void drop_events (void)
   }
 }
 
-static void validate_events_received (guint received)
+static void
+validate_events_received (guint received)
 {
   fail_unless_equals_int (g_list_length (events), received);
 }
 
-static void validate_event (guint index, const gchar *name,
-    const gchar *field, ...)
+static void
+validate_event (guint index, const gchar * name, const gchar * field, ...)
 {
   GstEvent *event;
   va_list var_args;
@@ -262,32 +265,32 @@ static void validate_event (guint index, const gchar *name,
       GstCaps *caps;
       GstClockTime start;
       gst_event_parse_caps (event, &caps);
-      fail_unless (gst_structure_get_clock_time (
-            gst_caps_get_structure (caps, 0), "npt-start", &start));
+      fail_unless (gst_structure_get_clock_time (gst_caps_get_structure (caps,
+                  0), "npt-start", &start));
       fail_unless_equals_uint64 (start, expected);
     } else if (!g_strcmp0 (field, "npt-stop")) {
       GstClockTime expected = va_arg (var_args, GstClockTime);
       GstCaps *caps;
       GstClockTime stop;
       gst_event_parse_caps (event, &caps);
-      fail_unless (gst_structure_get_clock_time (
-            gst_caps_get_structure (caps, 0), "npt-stop", &stop));
+      fail_unless (gst_structure_get_clock_time (gst_caps_get_structure (caps,
+                  0), "npt-stop", &stop));
       fail_unless_equals_uint64 (stop, expected);
     } else if (!g_strcmp0 (field, "play-speed")) {
       gdouble expected = va_arg (var_args, gdouble);
       GstCaps *caps;
       gdouble speed;
       gst_event_parse_caps (event, &caps);
-      fail_unless (gst_structure_get_double (
-            gst_caps_get_structure (caps, 0), "play-speed", &speed));
+      fail_unless (gst_structure_get_double (gst_caps_get_structure (caps, 0),
+              "play-speed", &speed));
       fail_unless (speed == expected);
     } else if (!g_strcmp0 (field, "play-scale")) {
       gdouble expected = va_arg (var_args, gdouble);
       GstCaps *caps;
       gdouble scale;
       gst_event_parse_caps (event, &caps);
-      fail_unless (gst_structure_get_double (
-            gst_caps_get_structure (caps, 0), "play-scale", &scale));
+      fail_unless (gst_structure_get_double (gst_caps_get_structure (caps, 0),
+              "play-scale", &scale));
       fail_unless (scale == expected);
     } else {
       fail ("test cannot validate unknown event field '%s'", field);
@@ -302,8 +305,9 @@ static void validate_event (guint index, const gchar *name,
 #define push_rtp_buffer_fails(state, error, field, ...) \
         push_rtp_buffer_full ((state), (error), (field), __VA_ARGS__)
 
-static void push_rtp_buffer_full (State *state, GstFlowReturn expected,
-    const gchar *field, ...)
+static void
+push_rtp_buffer_full (State * state, GstFlowReturn expected,
+    const gchar * field, ...)
 {
   GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
   GstRTPBuffer rtp = { NULL };
@@ -360,8 +364,9 @@ static void push_rtp_buffer_full (State *state, GstFlowReturn expected,
 #define push_buffer(state, field, ...) \
 	push_buffer_full ((state), GST_FLOW_OK, (field), __VA_ARGS__)
 
-static void push_buffer_full (State *state, GstFlowReturn expected,
-    const gchar *field, ...)
+static void
+push_buffer_full (State * state, GstFlowReturn expected,
+    const gchar * field, ...)
 {
   GstBuffer *buf = gst_buffer_new_allocate (0, 0, 0);
   va_list var_args;
@@ -391,12 +396,14 @@ static void push_buffer_full (State *state, GstFlowReturn expected,
   fail_unless_equals_int (gst_pad_push (state->srcpad, buf), expected);
 }
 
-static void validate_buffers_received (guint received)
+static void
+validate_buffers_received (guint received)
 {
   fail_unless_equals_int (g_list_length (buffers), received);
 }
 
-static void validate_buffer (guint index, const gchar *field, ...)
+static void
+validate_buffer (guint index, const gchar * field, ...)
 {
   GstBuffer *buf;
   va_list var_args;
@@ -414,7 +421,7 @@ static void validate_buffer (guint index, const gchar *field, ...)
       fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), pts);
     } else if (!g_strcmp0 (field, "offset")) {
       guint64 offset = va_arg (var_args, guint64);
-      fail_unless_equals_uint64 (GST_BUFFER_OFFSET(buf), offset);
+      fail_unless_equals_uint64 (GST_BUFFER_OFFSET (buf), offset);
     } else if (!g_strcmp0 (field, "discont")) {
       gboolean discont = va_arg (var_args, gboolean);
       if (discont) {
@@ -430,8 +437,8 @@ static void validate_buffer (guint index, const gchar *field, ...)
   va_end (var_args);
 }
 
-static State *create_depayloader (const gchar *caps_str,
-    const gchar *property, ...)
+static State *
+create_depayloader (const gchar * caps_str, const gchar * property, ...)
 {
   va_list var_args;
   GstCaps *caps;
@@ -468,14 +475,15 @@ static State *create_depayloader (const gchar *caps_str,
   return state;
 }
 
-static void set_state (State *state, GstState new_state)
+static void
+set_state (State * state, GstState new_state)
 {
   fail_unless_equals_int (gst_element_set_state (state->element, new_state),
       GST_STATE_CHANGE_SUCCESS);
 }
 
-static void packet_lost (State *state, GstClockTime timestamp,
-    GstClockTime duration)
+static void
+packet_lost (State * state, GstClockTime timestamp, GstClockTime duration)
 {
   GstEvent *event;
   guint seqnum = 0x4243;
@@ -483,18 +491,17 @@ static void packet_lost (State *state, GstClockTime timestamp,
   guint retries = 42;
 
   event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-    gst_structure_new ("GstRTPPacketLost",
-      "seqnum", G_TYPE_UINT, seqnum,
-      "timestamp", G_TYPE_UINT64, timestamp,
-      "duration", G_TYPE_UINT64, duration,
-      "late", G_TYPE_BOOLEAN, late,
-      "retry", G_TYPE_UINT, retries,
-      NULL));;
+      gst_structure_new ("GstRTPPacketLost",
+          "seqnum", G_TYPE_UINT, seqnum,
+          "timestamp", G_TYPE_UINT64, timestamp,
+          "duration", G_TYPE_UINT64, duration,
+          "late", G_TYPE_BOOLEAN, late, "retry", G_TYPE_UINT, retries, NULL));;
 
   fail_unless (gst_pad_push_event (state->srcpad, event));
 }
 
-static void reconfigure_caps (State *state, const gchar *caps_str)
+static void
+reconfigure_caps (State * state, const gchar * caps_str)
 {
   GstCaps *newcaps;
   GstEvent *event;
@@ -504,7 +511,8 @@ static void reconfigure_caps (State *state, const gchar *caps_str)
   fail_unless (gst_pad_push_event (state->srcpad, event));
 }
 
-static void flush_pipeline (State *state)
+static void
+flush_pipeline (State * state)
 {
   GstEvent *event;
   GstSegment segment;
@@ -517,7 +525,8 @@ static void flush_pipeline (State *state)
   fail_unless (gst_pad_push_event (state->srcpad, event));
 }
 
-static void destroy_depayloader (State *state)
+static void
+destroy_depayloader (State * state)
 {
   gst_check_teardown_sink_pad (state->element);
   gst_check_teardown_src_pad (state->element);
@@ -549,50 +558,35 @@ GST_START_TEST (rtp_base_depayload_buffer_test)
 
   push_rtp_buffer (state,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x1234),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
 
   push_rtp_buffer (state,
       "pts", 1 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x1234) + 1 * DEFAULT_CLOCK_RATE,
-      "seq", 0x4242 + 1,
-      NULL);
+      "seq", 0x4242 + 1, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "discont", FALSE, NULL);
 
   validate_events_received (3);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 
   destroy_depayloader (state);
 }
 
 GST_END_TEST
-
 /* the intent with this test is to provide the depayloader with a buffer that
  * does not contain an RTP header. this makes it impossible for the depayloader
  * to depayload the incoming RTP packet, yet the stream-start and caps events
@@ -607,9 +601,7 @@ GST_START_TEST (rtp_base_depayload_invalid_rtp_packet_test)
   set_state (state, GST_STATE_PLAYING);
 
   push_buffer (state,
-      "pts", 0 * GST_SECOND,
-      "offset", GST_BUFFER_OFFSET_NONE,
-      NULL);
+      "pts", 0 * GST_SECOND, "offset", GST_BUFFER_OFFSET_NONE, NULL);
 
   set_state (state, GST_STATE_NULL);
 
@@ -617,18 +609,14 @@ GST_START_TEST (rtp_base_depayload_invalid_rtp_packet_test)
 
   validate_events_received (2);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   destroy_depayloader (state);
 }
 
 GST_END_TEST
-
 /* validate what happens when a depayloader is provided with two RTP packets
  * sent after each other that do not have sequential sequence numbers. in this
  * case the depayloader should be able to depayload both first and the second
@@ -647,50 +635,35 @@ GST_START_TEST (rtp_base_depayload_with_gap_test)
 
   push_rtp_buffer (state,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x43214321),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x43214321), "seq", 0x4242, NULL);
 
   push_rtp_buffer (state,
       "pts", 1 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x43214321) + 1 * DEFAULT_CLOCK_RATE,
-      "seq", 0x4242 + 2,
-      NULL);
+      "seq", 0x4242 + 2, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "discont", TRUE,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "discont", TRUE, NULL);
 
   validate_events_received (3);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 
   destroy_depayloader (state);
 }
 
 GST_END_TEST
-
 /* two RTP packets are pushed in this test, and while the sequence numbers are
  * sequential they are reversed. the expectation is that the depayloader will be
  * able to depayload the first RTP packet, but once the second RTP packet
@@ -707,45 +680,33 @@ GST_START_TEST (rtp_base_depayload_reversed_test)
 
   push_rtp_buffer (state,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x43214321),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x43214321), "seq", 0x4242, NULL);
 
   push_rtp_buffer (state,
       "pts", 1 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x43214321) + 1 * DEFAULT_CLOCK_RATE,
-      "seq", 0x4242 - 1,
-      NULL);
+      "seq", 0x4242 - 1, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (1);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
   validate_events_received (3);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 
   destroy_depayloader (state);
 }
 
 GST_END_TEST
-
 /* the intent of this test is to push two RTP packets that have reverse sequence
  * numbers that differ significantly. the depayloader will consider RTP packets
  * where the sequence numbers differ by more than 1000 to indicate that the
@@ -764,50 +725,35 @@ GST_START_TEST (rtp_base_depayload_old_reversed_test)
 
   push_rtp_buffer (state,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x43214321),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x43214321), "seq", 0x4242, NULL);
 
   push_rtp_buffer (state,
       "pts", 1 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x43214321) + 1 * DEFAULT_CLOCK_RATE,
-      "seq", 0x4242 - 1000,
-      NULL);
+      "seq", 0x4242 - 1000, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "discont", TRUE,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "discont", TRUE, NULL);
 
   validate_events_received (3);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 
   destroy_depayloader (state);
 }
 
 GST_END_TEST
-
 /* a depayloader that has not received any caps event will not be able to
  * process any incoming RTP packet. instead pushing an RTP packet should result
  * in the expected error.
@@ -822,9 +768,7 @@ GST_START_TEST (rtp_base_depayload_without_negotiation_test)
 
   push_rtp_buffer_fails (state, GST_FLOW_NOT_NEGOTIATED,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x1234),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
 
   set_state (state, GST_STATE_NULL);
 
@@ -832,14 +776,12 @@ GST_START_TEST (rtp_base_depayload_without_negotiation_test)
 
   validate_events_received (1);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
   destroy_depayloader (state);
 }
 
 GST_END_TEST
-
 /* a depayloader that receives the downstream event GstRTPPacketLost should
  * respond by emitting a gap event with the corresponding timestamp and
  * duration. the initial events are unaffected, but are succeeded by the added
@@ -855,57 +797,40 @@ GST_START_TEST (rtp_base_depayload_packet_lost_test)
 
   push_rtp_buffer (state,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x1234),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
 
   packet_lost (state, 1 * GST_SECOND, GST_SECOND);
 
   push_rtp_buffer (state,
       "pts", 2 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x1234) + 2 * DEFAULT_CLOCK_RATE,
-      "seq", 0x4242 + 2,
-      NULL);
+      "seq", 0x4242 + 2, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
-  validate_buffer (1,
-      "pts", 2 * GST_SECOND,
-      "discont", TRUE,
-      NULL);
+  validate_buffer (1, "pts", 2 * GST_SECOND, "discont", TRUE, NULL);
 
   validate_events_received (4);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 
   validate_event (3, "gap",
-      "timestamp", 1 * GST_SECOND,
-      "duration", GST_SECOND,
-      NULL);
+      "timestamp", 1 * GST_SECOND, "duration", GST_SECOND, NULL);
 
   destroy_depayloader (state);
 }
 
 GST_END_TEST
-
 /* a depayloader that receives identical caps events simply ignores the latter
  * events without propagating them downstream.
  */
@@ -919,46 +844,32 @@ GST_START_TEST (rtp_base_depayload_repeated_caps_test)
 
   push_rtp_buffer (state,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x1234),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
 
   reconfigure_caps (state, "application/x-rtp");
 
   push_rtp_buffer (state,
       "pts", 1 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x1234) + 1 * DEFAULT_CLOCK_RATE,
-      "seq", 0x4242 + 1,
-      NULL);
+      "seq", 0x4242 + 1, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "discont", FALSE, NULL);
 
   validate_events_received (3);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 
   destroy_depayloader (state);
 }
@@ -981,9 +892,7 @@ GST_START_TEST (rtp_base_depayload_npt_test)
 
   push_rtp_buffer (state,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x1234),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
 
   reconfigure_caps (state,
       "application/x-rtp, npt-start=(guint64)1234, npt-stop=(guint64)4321");
@@ -993,61 +902,44 @@ GST_START_TEST (rtp_base_depayload_npt_test)
   push_rtp_buffer (state,
       "pts", 1 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x1234) + 1 * DEFAULT_CLOCK_RATE,
-      "seq", 0x4242 + 1,
-      NULL);
+      "seq", 0x4242 + 1, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "discont", FALSE, NULL);
 
   validate_events_received (7);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 
   validate_event (3, "caps",
       "media-type", "application/x-rtp",
       "npt-start", G_GUINT64_CONSTANT (1234),
-      "npt-stop", G_GUINT64_CONSTANT (4321),
-      NULL);
+      "npt-stop", G_GUINT64_CONSTANT (4321), NULL);
 
-  validate_event (4, "flush-start",
-      NULL);
+  validate_event (4, "flush-start", NULL);
 
-  validate_event (5, "flush-stop",
-      NULL);
+  validate_event (5, "flush-stop", NULL);
 
   validate_event (6, "segment",
       "time", G_GUINT64_CONSTANT (1234),
       "start", G_GUINT64_CONSTANT (0),
-      "stop", G_GUINT64_CONSTANT (4321 - 1234),
-      NULL);
+      "stop", G_GUINT64_CONSTANT (4321 - 1234), NULL);
 
   destroy_depayloader (state);
 }
 
 GST_END_TEST
-
 /* when a depayloader receives a new caps event with play-scale it should save
  * this rate as it should affect the next segment event being pushed by the
  * depayloader. a new segment event is not pushed by the depayloader until a
@@ -1064,74 +956,51 @@ GST_START_TEST (rtp_base_depayload_play_scale_test)
 
   push_rtp_buffer (state,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x1234),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
 
-  reconfigure_caps (state,
-      "application/x-rtp, play-scale=(double)2.0");
+  reconfigure_caps (state, "application/x-rtp, play-scale=(double)2.0");
 
   flush_pipeline (state);
 
   push_rtp_buffer (state,
       "pts", 1 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x1234) + 1 * DEFAULT_CLOCK_RATE,
-      "seq", 0x4242 + 1,
-      NULL);
+      "seq", 0x4242 + 1, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "discont", FALSE, NULL);
 
   validate_events_received (7);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 
   validate_event (3, "caps",
-      "media-type", "application/x-rtp",
-      "play-scale", 2.0,
-      NULL);
+      "media-type", "application/x-rtp", "play-scale", 2.0, NULL);
 
-  validate_event (4, "flush-start",
-      NULL);
+  validate_event (4, "flush-start", NULL);
 
-  validate_event (5, "flush-stop",
-      NULL);
+  validate_event (5, "flush-stop", NULL);
 
   validate_event (6, "segment",
       "time", G_GUINT64_CONSTANT (0),
       "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      "rate", 1.0,
-      "applied-rate", 2.0,
-      NULL);
+      "stop", G_MAXUINT64, "rate", 1.0, "applied-rate", 2.0, NULL);
 
   destroy_depayloader (state);
 }
 
 GST_END_TEST
-
 /* when a depayloader receives a new caps event with play-speed it should save
  * this rate as it should affect the next segment event being pushed by the
  * depayloader. a new segment event is not pushed by the depayloader until a
@@ -1148,75 +1017,51 @@ GST_START_TEST (rtp_base_depayload_play_speed_test)
 
   push_rtp_buffer (state,
       "pts", 0 * GST_SECOND,
-      "rtptime", G_GUINT64_CONSTANT (0x1234),
-      "seq", 0x4242,
-      NULL);
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
 
-  reconfigure_caps (state,
-      "application/x-rtp, play-speed=(double)2.0");
+  reconfigure_caps (state, "application/x-rtp, play-speed=(double)2.0");
 
   flush_pipeline (state);
 
   push_rtp_buffer (state,
       "pts", 1 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x1234) + 1 * DEFAULT_CLOCK_RATE,
-      "seq", 0x4242 + 1,
-      NULL);
+      "seq", 0x4242 + 1, NULL);
 
   set_state (state, GST_STATE_NULL);
 
   validate_buffers_received (2);
 
-  validate_buffer (0,
-      "pts", 0 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
-  validate_buffer (1,
-      "pts", 1 * GST_SECOND,
-      "discont", FALSE,
-      NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, "discont", FALSE, NULL);
 
   validate_events_received (7);
 
-  validate_event (0, "stream-start",
-      NULL);
+  validate_event (0, "stream-start", NULL);
 
-  validate_event (1, "caps",
-      "media-type", "application/x-rtp",
-      NULL);
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
 
   validate_event (2, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      NULL);
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
 
   validate_event (3, "caps",
-      "media-type", "application/x-rtp",
-      "play-speed", 2.0,
-      NULL);
+      "media-type", "application/x-rtp", "play-speed", 2.0, NULL);
 
-  validate_event (4, "flush-start",
-      NULL);
+  validate_event (4, "flush-start", NULL);
 
-  validate_event (5, "flush-stop",
-      NULL);
+  validate_event (5, "flush-stop", NULL);
 
   validate_event (6, "segment",
       "time", G_GUINT64_CONSTANT (0),
       "start", G_GUINT64_CONSTANT (0),
-      "stop", G_MAXUINT64,
-      "rate", 2.0,
-      "applied-rate", 1.0,
-      NULL);
+      "stop", G_MAXUINT64, "rate", 2.0, "applied-rate", 1.0, NULL);
 
   destroy_depayloader (state);
 }
 
-GST_END_TEST
-
-static Suite *
+GST_END_TEST static Suite *
 rtp_basepayloading_suite (void)
 {
   Suite *s = suite_create ("rtp_base_depayloading_test");
