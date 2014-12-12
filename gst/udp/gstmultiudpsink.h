@@ -93,8 +93,12 @@ struct _GstMultiUDPSink {
   GList         *clients_to_be_removed;
 
   /* pre-allocated scrap space for render function */
-  GOutputVector *vec;
-  GstMapInfo *map;
+  GOutputVector    *vecs;
+  guint             n_vecs;
+  GstMapInfo       *maps;
+  guint             n_maps;
+  GstOutputMessage *messages;
+  guint             n_messages;
 
   /* properties */
   guint64        bytes_to_serve;

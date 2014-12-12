@@ -374,7 +374,6 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
   GST_DEBUG_CATEGORY_INIT (multiudpsink_debug, "multiudpsink", 0, "UDP sink");
 }
 
-
 static void
 gst_multiudpsink_init (GstMultiUDPSink * sink)
 {
@@ -404,13 +403,18 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
 
   sink->cancellable = g_cancellable_new ();
 
-  /* allocate OutputVector and MapInfo for use in the render function, buffers can
-   * hold up to a maximum amount of memory so we can create a maximally sized
-   * array for them.  */
+  /* pre-allocate OutputVector, MapInfo and OutputMessage arrays
+   * for use in the render and render_list functions */
   max_mem = gst_buffer_get_max_memory ();
 
-  sink->vec = g_new (GOutputVector, max_mem);
-  sink->map = g_new (GstMapInfo, max_mem);
+  sink->n_vecs = max_mem;
+  sink->vecs = g_new (GOutputVector, sink->n_vecs);
+
+  sink->n_maps = max_mem;
+  sink->maps = g_new (GstMapInfo, sink->n_maps);
+
+  sink->n_messages = 1;
+  sink->messages = g_new (GstOutputMessage, sink->n_messages);
 
   /* we assume that the number of memories per buffer can fit into a guint8 */
   g_warn_if_fail (max_mem <= G_MAXUINT8);
@@ -526,10 +530,12 @@ gst_multiudpsink_finalize (GObject * object)
   g_free (sink->multi_iface);
   sink->multi_iface = NULL;
 
-  g_free (sink->vec);
-  sink->vec = NULL;
-  g_free (sink->map);
-  sink->map = NULL;
+  g_free (sink->vecs);
+  sink->vecs = NULL;
+  g_free (sink->maps);
+  sink->maps = NULL;
+  g_free (sink->messages);
+  sink->messages = NULL;
 
   g_free (sink->bind_address);
   sink->bind_address = NULL;
@@ -767,11 +773,28 @@ gst_multiudpsink_render_buffers (GstMultiUDPSink * sink, GstBuffer ** buffers,
   GST_LOG_OBJECT (sink, "%u buffers, %u memories -> to be sent to %u clients",
       num_buffers, total_mem_num, num_addr);
 
-  vecs = g_newa (GOutputVector, total_mem_num);
-  map_infos = g_newa (GstMapInfo, total_mem_num);
+  /* ensure our pre-allocated scratch space arrays are large enough */
+  if (sink->n_vecs < total_mem_num) {
+    sink->n_vecs = GST_ROUND_UP_16 (total_mem_num);
+    g_free (sink->vecs);
+    sink->vecs = g_new (GOutputVector, sink->n_vecs);
+  }
+  vecs = sink->vecs;
+
+  if (sink->n_maps < total_mem_num) {
+    sink->n_maps = GST_ROUND_UP_16 (total_mem_num);
+    g_free (sink->maps);
+    sink->maps = g_new (GstMapInfo, sink->n_maps);
+  }
+  map_infos = sink->maps;
 
   num_msgs = num_addr * num_buffers;
-  msgs = g_newa (GstOutputMessage, num_msgs);
+  if (sink->n_messages < num_msgs) {
+    sink->n_messages = GST_ROUND_UP_16 (num_msgs);
+    g_free (sink->messages);
+    sink->messages = g_new (GstOutputMessage, sink->n_messages);
+  }
+  msgs = sink->messages;
 
   /* populate first num_buffers messages with output vectors for the buffers */
   for (i = 0, mem = 0; i < num_buffers; ++i) {
