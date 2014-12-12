@@ -6831,7 +6831,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
         for (k = stream->stsc_sample_index; k < samples_per_chunk; k++) {
           GST_LOG_OBJECT (qtdemux, "creating entry %d with offset %"
               G_GUINT64_FORMAT " and size %d",
-              (guint) (cur - samples), stream->chunk_offset, cur->size);
+              (guint) (cur - samples), chunk_offset, cur->size);
 
           cur->offset = chunk_offset;
           chunk_offset += cur->size;
