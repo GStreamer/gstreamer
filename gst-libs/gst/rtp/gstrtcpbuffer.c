@@ -261,7 +261,7 @@ gst_rtcp_buffer_map (GstBuffer * buffer, GstMapFlags flags,
  * gst_rtcp_buffer_unmap:
  * @rtcp: a buffer with an RTCP packet
  *
- * Finish @rtcp after being constructured. This function is usually called
+ * Finish @rtcp after being constructed. This function is usually called
  * after gst_rtcp_buffer_map() and after adding the RTCP items to the new buffer.
  *
  * The function adjusts the size of @rtcp with the total length of all the
