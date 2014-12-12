@@ -391,7 +391,7 @@ gst_osx_audio_sink_getcaps (GstBaseSink * sink, GstCaps * filter)
 
   if (ret && filter) {
     GstCaps *tmp;
-    tmp = gst_caps_intersect_full (ret, filter, GST_CAPS_INTERSECT_FIRST);
+    tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (ret);
     ret = tmp;
   }
