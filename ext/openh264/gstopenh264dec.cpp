@@ -190,8 +190,8 @@ gst_openh264dec_start (GstVideoDecoder * decoder)
   WelsCreateDecoder (&(openh264dec->priv->decoder));
 
   dec_param.uiTargetDqLayer = 255;
-  dec_param.eEcActiveIdc = ERROR_CON_FRAME_COPY;
-  dec_param.eOutputColorFormat = videoFormatI420;
+  dec_param.uiEcActiveFlag = 1;
+  dec_param.iOutputColorFormat = videoFormatI420;
   dec_param.sVideoProperty.eVideoBsType = VIDEO_BITSTREAM_AVC;
 
   ret = openh264dec->priv->decoder->Initialize (&dec_param);
