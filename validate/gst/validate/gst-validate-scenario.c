@@ -1264,6 +1264,25 @@ _execute_emit_signal (GstValidateScenario * scenario,
   return TRUE;
 }
 
+static GstValidateExecuteActionReturn
+_execute_disable_plugin (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstPlugin *plugin;
+  const gchar *plugin_name;
+
+  plugin_name = gst_structure_get_string (action->structure, "plugin-name");
+
+  plugin = gst_registry_find_plugin (gst_registry_get (), plugin_name);
+
+  if (plugin == NULL)
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+
+  gst_registry_remove_plugin (gst_registry_get (), plugin);
+
+  return GST_VALIDATE_EXECUTE_ACTION_OK;
+}
+
 static void
 gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
     GstEvent * seek)
@@ -2496,6 +2515,21 @@ init_scenarios (void)
       }),
       "Emits a signal to an element in the pipeline",
       GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("disable-plugin", _execute_disable_plugin,
+      ((GstValidateActionParameter [])
+      {
+        {
+          .name = "plugin-name",
+          .description = "The name of the GstPlugin to disable",
+          .mandatory = TRUE,
+          .types = "string"
+        },
+        {NULL}
+      }),
+      "Disables a GstPlugin",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+  /*  *INDENT-ON* */
 
   socket_interposer_init ();
   /*  *INDENT-ON* */
