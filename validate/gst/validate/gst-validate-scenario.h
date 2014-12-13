@@ -84,13 +84,13 @@ struct _GstValidateAction
   const gchar *type;
   const gchar *name;
   GstStructure *structure;
+  GstValidateScenario *scenario;
 
   /* < private > */
   guint action_number;
   gint repeat;
   GstClockTime playback_time;
   GstValidateExecuteActionReturn state; /* Actually ActionState */
-  GstValidateScenario *scenario;
 
   gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (gint) - 1];
 };
