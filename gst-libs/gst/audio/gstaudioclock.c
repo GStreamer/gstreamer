@@ -59,8 +59,6 @@ gst_audio_clock_class_init (GstAudioClockClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstclock_class = (GstClockClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->dispose = gst_audio_clock_dispose;
   gstclock_class->get_internal_time = gst_audio_clock_get_internal_time;
 
