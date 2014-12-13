@@ -47,35 +47,8 @@ static void gst_audio_clock_dispose (GObject * object);
 
 static GstClockTime gst_audio_clock_get_internal_time (GstClock * clock);
 
-static GstSystemClockClass *parent_class = NULL;
-
-/* static guint gst_audio_clock_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_audio_clock_get_type (void)
-{
-  static volatile gsize clock_type = 0;
-  static const GTypeInfo clock_info = {
-    sizeof (GstAudioClockClass),
-    NULL,
-    NULL,
-    (GClassInitFunc) gst_audio_clock_class_init,
-    NULL,
-    NULL,
-    sizeof (GstAudioClock),
-    4,
-    (GInstanceInitFunc) gst_audio_clock_init,
-    NULL
-  };
-
-  if (g_once_init_enter (&clock_type)) {
-    GType tmp = g_type_register_static (GST_TYPE_SYSTEM_CLOCK, "GstAudioClock",
-        &clock_info, 0);
-    g_once_init_leave (&clock_type, tmp);
-  }
-
-  return (GType) clock_type;
-}
+#define parent_class gst_audio_clock_parent_class
+G_DEFINE_TYPE (GstAudioClock, gst_audio_clock, GST_TYPE_SYSTEM_CLOCK);
 
 static void
 gst_audio_clock_class_init (GstAudioClockClass * klass)
