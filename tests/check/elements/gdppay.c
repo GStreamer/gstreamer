@@ -147,6 +147,7 @@ GST_START_TEST (test_audio)
 
   GST_DEBUG ("first buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (inbuffer, 0, 0x00, 4);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   gst_check_setup_events (mysrcpad, gdppay, caps, GST_FORMAT_TIME);
 
@@ -178,6 +179,7 @@ GST_START_TEST (test_audio)
   /* second buffer */
   GST_DEBUG ("second buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (inbuffer, 0, 0x00, 4);
 
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -197,6 +199,7 @@ GST_START_TEST (test_audio)
   /* a third buffer without caps set explicitly; should work */
   GST_DEBUG ("Creating third buffer, no caps set");
   inbuffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (inbuffer, 0, 0x00, 4);
 
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -339,6 +342,7 @@ GST_START_TEST (test_streamheader)
   /* second buffer */
   GST_DEBUG ("second buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (inbuffer, 0, 0x02, 4);
 
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -358,6 +362,7 @@ GST_START_TEST (test_streamheader)
   /* a third buffer without caps set explicitly; should work */
   GST_DEBUG ("Creating third buffer, no caps set");
   inbuffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (inbuffer, 0, 0x03, 4);
 
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -405,6 +410,7 @@ GST_START_TEST (test_first_no_caps)
 
   GST_DEBUG ("first buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (inbuffer, 0, 0x01, 4);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* pushing should trigger an error */
@@ -440,6 +446,7 @@ GST_START_TEST (test_first_no_new_segment)
 
   GST_DEBUG ("first buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (inbuffer, 0, 0x01, 4);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   gst_check_setup_events (mysrcpad, gdppay, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
@@ -487,6 +494,7 @@ GST_START_TEST (test_crc)
 
   GST_DEBUG ("first buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (inbuffer, 0, g_random_int () & 0xff, 4);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   gst_check_setup_events (mysrcpad, gdppay, caps, GST_FORMAT_TIME);
 
