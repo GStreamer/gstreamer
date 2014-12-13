@@ -1937,14 +1937,13 @@ _parse_scenario (GFile * f, GKeyFile * kf)
     GList *tmp, *structures = structs_parse_from_gfile (f);
 
     for (tmp = structures; tmp; tmp = tmp->next) {
-      if (gst_structure_has_name (tmp->data, "description")) {
+      GstValidateActionType *type =
+          _find_action_type (gst_structure_get_name (tmp->data));
+
+      if (gst_structure_has_name (tmp->data, "description"))
         desc = gst_structure_copy (tmp->data);
-      } else if (gst_structure_has_name (tmp->data, "pause") ||
-          (gst_structure_has_name (tmp->data, "set-state") &&
-              g_strcmp0 (gst_structure_get_string (tmp->data, "state"),
-                  "paused") == 0)) {
+      else if (type && type->flags & GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK)
         needs_clock_sync = TRUE;
-      }
     }
 
     if (needs_clock_sync) {
@@ -2401,7 +2400,7 @@ init_scenarios (void)
       "Seeks into the stream, example of a seek happening when the stream reaches 5 seconds\n"
       "or 1 eighth of its duration and seeks at 10sec or 2 eighth of its duration:\n"
       "  seek, playback-time=\"min(5.0, (duration/8))\", start=\"min(10, 2*(duration/8))\", flags=accurate+flush",
-      GST_VALIDATE_ACTION_TYPE_NONE
+      GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK
   );
 
   REGISTER_ACTION_TYPE ("pause", _execute_pause,
@@ -2418,7 +2417,8 @@ init_scenarios (void)
       }),
       "Sets pipeline to PAUSED. You can add a 'duration'\n"
       "parametter so the pipeline goes back to playing after that duration\n"
-      "(in second)", GST_VALIDATE_ACTION_TYPE_NONE);
+      "(in second)",
+      GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK & GST_VALIDATE_ACTION_TYPE_ASYNC);
 
   REGISTER_ACTION_TYPE ("play", _execute_play, NULL,
       "Sets the pipeline state to PLAYING", GST_VALIDATE_ACTION_TYPE_NONE);
@@ -2505,7 +2505,7 @@ init_scenarios (void)
         {NULL}
       }),
       "Changes the state of the pipeline to any GstState",
-      GST_VALIDATE_ACTION_TYPE_ASYNC);
+      GST_VALIDATE_ACTION_TYPE_ASYNC & GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK);
 
   REGISTER_ACTION_TYPE ("set-property", _execute_set_property,
       ((GstValidateActionParameter []) {
