@@ -97,7 +97,7 @@ typedef enum {
   GST_DP_PAYLOAD_EVENT_NONE      = 64,
 } GstDPPayloadType;
 
-typedef gboolean (*GstDPHeaderFromBufferFunction) (const GstBuffer * buffer,
+typedef gboolean (*GstDPHeaderFromBufferFunction) (GstBuffer * buffer,
                                                    GstDPHeaderFlag flags,
                                                    guint * length,
                                                    guint8 ** header);

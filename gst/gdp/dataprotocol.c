@@ -128,7 +128,7 @@ G_STMT_START {							\
 /*** HELPER FUNCTIONS ***/
 
 static gboolean
-gst_dp_header_from_buffer_any (const GstBuffer * buffer, GstDPHeaderFlag flags,
+gst_dp_header_from_buffer_any (GstBuffer * buffer, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, GstDPVersion version)
 {
   guint8 *h;
@@ -351,7 +351,7 @@ gst_dp_header_payload_type (const guint8 * header)
 /*** PACKETIZER FUNCTIONS ***/
 
 static gboolean
-gst_dp_header_from_buffer_1_0 (const GstBuffer * buffer, GstDPHeaderFlag flags,
+gst_dp_header_from_buffer_1_0 (GstBuffer * buffer, GstDPHeaderFlag flags,
     guint * length, guint8 ** header)
 {
   return gst_dp_header_from_buffer_any (buffer, flags, length, header,
