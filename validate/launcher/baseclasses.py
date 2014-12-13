@@ -1349,7 +1349,13 @@ class MediaDescriptor(Loggable):
     def get_num_tracks(self, track_type):
         raise NotImplemented
 
+    def can_play_reverse(self):
+        raise NotImplemented
+
     def is_compatible(self, scenario):
+        if scenario is None:
+            return True
+
         if scenario.seeks() and (not self.is_seekable() or self.is_image()):
             self.debug("Do not run %s as %s does not support seeking",
                        scenario, self.get_uri())
@@ -1358,6 +1364,9 @@ class MediaDescriptor(Loggable):
         if self.is_image() and scenario.needs_clock_sync():
             self.debug("Do not run %s as %s is an image",
                        scenario, self.get_uri())
+            return False
+
+        if not self.can_play_reverse() and scenario.does_reverse_playback():
             return False
 
         if self.get_duration() / GST_SECOND < scenario.get_min_media_duration():
@@ -1470,6 +1479,9 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
     def is_seekable(self):
         return self.media_xml.attrib["seekable"]
+
+    def can_play_reverse(self):
+        return True
 
     def is_image(self):
         for stream in self.media_xml.findall("streams")[0].findall("stream"):
