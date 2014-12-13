@@ -61,7 +61,7 @@ intr_handler (gpointer user_data)
   g_main_loop_quit (mainloop);
 
   /* remove signal handler */
-  return FALSE;
+  return TRUE;
 }
 #endif /* G_OS_UNIX */
 
