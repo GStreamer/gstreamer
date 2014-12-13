@@ -40,9 +40,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_audio_clock_debug);
 #define GST_CAT_DEFAULT gst_audio_clock_debug
 
-static void gst_audio_clock_class_init (GstAudioClockClass * klass);
-static void gst_audio_clock_init (GstAudioClock * clock);
-
 static void gst_audio_clock_dispose (GObject * object);
 
 static GstClockTime gst_audio_clock_get_internal_time (GstClock * clock);
