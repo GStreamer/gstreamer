@@ -96,6 +96,8 @@ struct _GstValidateScenarioPrivate
 
   GList *actions;
   GList *interlaced_actions;
+  GList *on_addition_actions;
+
   /*  List of action that need parsing when reaching ASYNC_DONE
    *  most probably to be able to query duration */
   GList *needs_parsing;
@@ -304,6 +306,20 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
   }
 
   return FALSE;
+}
+
+static void
+_check_scenario_is_done (GstValidateScenario * scenario)
+{
+  SCENARIO_LOCK (scenario);
+  if (!scenario->priv->actions && !scenario->priv->interlaced_actions
+      && !scenario->priv->on_addition_actions) {
+    SCENARIO_UNLOCK (scenario);
+
+    g_signal_emit (scenario, scenario_signals[DONE], 0);
+  } else {
+    SCENARIO_UNLOCK (scenario);
+  }
 }
 
 /**
@@ -971,7 +987,7 @@ get_position (GstValidateScenario * scenario)
       if (scenario->priv->actions) {
         act = scenario->priv->actions->data;
       } else {
-        g_signal_emit (scenario, scenario_signals[DONE], 0);
+        _check_scenario_is_done (scenario);
         act = NULL;
       }
     } else if (act->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
@@ -1062,7 +1078,7 @@ get_position (GstValidateScenario * scenario)
     }
 
     if (priv->actions == NULL)
-      g_signal_emit (scenario, scenario_signals[DONE], 0);
+      _check_scenario_is_done (scenario);
 
     g_list_free (tmp);
 
@@ -1401,12 +1417,14 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
     case GST_MESSAGE_EOS:
     {
       SCENARIO_LOCK (scenario);
-      if (scenario->priv->actions || scenario->priv->interlaced_actions) {
-        GList *tmp;
+      if (scenario->priv->actions || scenario->priv->interlaced_actions ||
+          scenario->priv->on_addition_actions) {
         guint nb_actions = 0;
         gchar *actions = g_strdup (""), *tmpconcat;
-        GList *all_actions = g_list_concat (scenario->priv->actions,
+        GList *tmp = g_list_concat (scenario->priv->actions,
             scenario->priv->interlaced_actions);
+        GList *all_actions =
+            g_list_concat (tmp, scenario->priv->on_addition_actions);
 
         for (tmp = all_actions; tmp; tmp = tmp->next) {
           GstValidateAction *action = ((GstValidateAction *) tmp->data);
@@ -1561,8 +1579,20 @@ _load_scenario_file (GstValidateScenario * scenario,
     }
 
     action->action_number = priv->num_actions++;
-    if (str_playback_time == NULL)
-      priv->actions = g_list_append (priv->actions, action);
+    if (str_playback_time == NULL) {
+      GstValidateActionType *type = _find_action_type (action->type);
+
+      if (type->flags & GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION
+          && !GST_CLOCK_TIME_IS_VALID (action->playback_time)) {
+        SCENARIO_LOCK (scenario);
+        priv->on_addition_actions = g_list_append (priv->on_addition_actions,
+            action);
+        SCENARIO_UNLOCK (scenario);
+
+      } else {
+        priv->actions = g_list_append (priv->actions, action);
+      }
+    }
   }
 
 done:
@@ -1810,11 +1840,13 @@ static void
 _element_added_cb (GstBin * bin, GstElement * element,
     GstValidateScenario * scenario)
 {
-  GstValidateScenarioPrivate *priv = scenario->priv;
   GList *tmp;
 
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
   /* Check if it's an element we track for a set-property action */
-  tmp = priv->actions;
+  SCENARIO_LOCK (scenario);
+  tmp = priv->on_addition_actions;
   while (tmp) {
     GstValidateAction *action = (GstValidateAction *) tmp->data;
     const gchar *name;
@@ -1832,18 +1864,19 @@ _element_added_cb (GstBin * bin, GstElement * element,
       action_type = _find_action_type (action->type);
       GST_DEBUG_OBJECT (element, "Executing set-property action");
       if (action_type->execute (scenario, action)) {
-        priv->actions = g_list_remove_link (priv->actions, tmp);
+        priv->on_addition_actions =
+            g_list_remove_link (priv->on_addition_actions, tmp);
         gst_mini_object_unref (GST_MINI_OBJECT (action));
         g_list_free (tmp);
-        tmp = priv->actions;
+        tmp = priv->on_addition_actions;
       } else
         tmp = tmp->next;
     } else
       tmp = tmp->next;
   }
+  SCENARIO_UNLOCK (scenario);
 
-  if (priv->actions == NULL)
-    g_signal_emit (scenario, scenario_signals[DONE], 0);
+  _check_scenario_is_done (scenario);
 
   /* If it's a bin, listen to the child */
   if (GST_IS_BIN (element)) {
@@ -2532,7 +2565,7 @@ init_scenarios (void)
         {NULL}
       }),
       "Sets a property of any element in the pipeline",
-      GST_VALIDATE_ACTION_TYPE_NONE);
+      GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION);
 
   REGISTER_ACTION_TYPE ("set-debug-threshold",
       _execute_set_debug_threshold,

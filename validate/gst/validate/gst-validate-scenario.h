@@ -113,6 +113,9 @@ typedef struct _GstValidateActionType      GstValidateActionType;
  * @GST_VALIDATE_ACTION_TYPE_INTERLACED: The action will be executed async
  *                                       but without blocking further actions
  *                                       to be executed
+ * @GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION: The action will be executed on 'element-added'
+ *                                                 for a particular element type if no playback-time
+ *                                                 is specified
  * @GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK: The pipeline will need to be synchronized with the clock
  *                                        for that action type to be used.
  */
@@ -122,6 +125,7 @@ typedef enum
     GST_VALIDATE_ACTION_TYPE_CONFIG = 1 << 1,
     GST_VALIDATE_ACTION_TYPE_ASYNC = 1 << 2,
     GST_VALIDATE_ACTION_TYPE_INTERLACED = 1 << 3,
+    GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION = 1 << 4,
     GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK = 1 << 5,
 } GstValidateActionTypeFlags;
 
