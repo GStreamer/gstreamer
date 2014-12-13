@@ -2126,6 +2126,18 @@ gst_validate_register_action_type (const gchar * type_name,
   action_types = g_list_append (action_types, type);
 }
 
+GstValidateActionType *
+gst_validate_get_action_type (const gchar * type_name)
+{
+  GstValidateActionType *type = _find_action_type (type_name);
+
+  if (type)
+    return
+        GST_VALIDATE_ACTION_TYPE (gst_mini_object_ref (GST_MINI_OBJECT (type)));
+
+  return NULL;
+}
+
 static GList *
 gst_validate_list_action_types (void)
 {

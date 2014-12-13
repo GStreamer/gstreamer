@@ -101,6 +101,38 @@ void gst_validate_action_set_done (GstValidateAction *action);
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))
 GType gst_validate_action_get_type (void);
 
+typedef struct _GstValidateActionType      GstValidateActionType;
+
+/**
+ * GstValidateActionTypeFlags:
+ * @GST_VALIDATE_ACTION_TYPE_NONE: No special flag
+ * @GST_VALIDATE_ACTION_TYPE_CONFIG: The action is a config
+ * @GST_VALIDATE_ACTION_TYPE_ASYNC: The action can be executed ASYNC
+ */
+typedef enum
+{
+    GST_VALIDATE_ACTION_TYPE_NONE = 0,
+    GST_VALIDATE_ACTION_TYPE_CONFIG = 1 << 1,
+    GST_VALIDATE_ACTION_TYPE_ASYNC = 1 << 2,
+} GstValidateActionTypeFlags;
+
+struct _GstValidateActionType
+{
+  GstMiniObject          mini_object;
+
+  gchar *name;
+  gchar *implementer_namespace;
+
+  GstValidateExecuteAction execute;
+
+  GstValidateActionParameter *parameters;
+
+  gchar *description;
+  GstValidateActionTypeFlags flags;
+
+  gpointer _gst_reserved[GST_PADDING_LARGE];
+};
+
 #define GST_TYPE_VALIDATE_ACTION_TYPE       (gst_validate_action_type_get_type ())
 #define GST_IS_VALIDATE_ACTION_TYPE(obj)    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION_TYPE))
 #define GST_VALIDATE_ACTION_TYPE(obj)       ((GstValidateActionType*) obj)
@@ -165,17 +197,6 @@ struct _GstValidateScenario
   gpointer _gst_reserved[GST_PADDING];
 };
 
-/**
- * GstValidateActionTypeFlags:
- * @GST_VALIDATE_ACTION_TYPE_NONE: No special flag
- */
-typedef enum
-{
-    GST_VALIDATE_ACTION_TYPE_NONE = 0,
-    GST_VALIDATE_ACTION_TYPE_CONFIG = 1 << 1,
-    GST_VALIDATE_ACTION_TYPE_ASYNC = 1 << 2,
-} GstValidateActionTypeFlags;
-
 GType gst_validate_scenario_get_type (void);
 
 GstValidateScenario * gst_validate_scenario_factory_create (GstValidateRunner *runner,
@@ -186,6 +207,8 @@ gst_validate_list_scenarios       (gchar **scenarios,
                                    gint num_scenarios,
                                    gchar * output_file);
 
+GstValidateActionType *
+gst_validate_get_action_type           (const gchar *type_name);
 void gst_validate_register_action_type (const gchar *type_name,
                                         const gchar *implementer_namespace,
                                         GstValidateExecuteAction function,

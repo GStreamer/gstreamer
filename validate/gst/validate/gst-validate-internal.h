@@ -31,28 +31,8 @@ GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 extern GRegex *newline_regex;
 
 
-typedef struct _GstValidateActionType      GstValidateActionType;
-
 /* If an action type is 1 (TRUE) we also concider it is a config to keep backward compatibility */
 #define IS_CONFIG_ACTION_TYPE(type) (((type) & GST_VALIDATE_ACTION_TYPE_CONFIG) || ((type) == TRUE))
-
-struct _GstValidateActionType
-{
-  GstMiniObject          mini_object;
-
-  gchar *name;
-  gchar *implementer_namespace;
-
-  GstValidateExecuteAction execute;
-
-  GstValidateActionParameter *parameters;
-
-  gchar *description;
-  GstValidateActionTypeFlags flags;
-
-  gpointer _gst_reserved[GST_PADDING_LARGE];
-};
-
 
 GST_EXPORT GType _gst_validate_action_type_type;
 
