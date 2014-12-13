@@ -140,10 +140,6 @@ GstDPPacketizer *
                 gst_dp_packetizer_new           (GstDPVersion version);
 void            gst_dp_packetizer_free          (GstDPPacketizer *packetizer);
 
-/* crc checksum */
-guint16         gst_dp_crc                      (const guint8 * buffer,
-                                                 guint length);
-
 /* payload information from header */
 guint32         gst_dp_header_payload_length    (const guint8 * header);
 GstDPPayloadType

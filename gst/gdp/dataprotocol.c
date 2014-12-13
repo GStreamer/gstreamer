@@ -125,6 +125,10 @@ G_STMT_START {							\
 #define POLY       0x1021
 #define CRC_INIT   0xFFFF
 
+static guint16 gst_dp_crc (const guint8 * buffer, guint length);
+static guint16 gst_dp_crc_from_memory_maps (const GstMapInfo * maps,
+    guint n_maps);
+
 /*** HELPER FUNCTIONS ***/
 
 static gboolean
@@ -133,7 +137,8 @@ gst_dp_header_from_buffer_any (GstBuffer * buffer, GstDPHeaderFlag flags,
 {
   guint8 *h;
   guint16 flags_mask;
-  GstMapInfo map;
+  guint16 header_crc = 0, crc = 0;
+  gsize buffer_size;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (length, FALSE);
@@ -145,10 +150,35 @@ gst_dp_header_from_buffer_any (GstBuffer * buffer, GstDPHeaderFlag flags,
   /* version, flags, type */
   GST_DP_INIT_HEADER (h, version, flags, GST_DP_PAYLOAD_BUFFER);
 
-  gst_buffer_map ((GstBuffer *) buffer, &map, GST_MAP_READ);
+  if ((flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD)) {
+    GstMapInfo *maps;
+    guint n_maps, i;
+
+    buffer_size = 0;
+
+    n_maps = gst_buffer_n_memory (buffer);
+    if (n_maps > 0) {
+      maps = g_newa (GstMapInfo, n_maps);
+
+      for (i = 0; i < n_maps; ++i) {
+        GstMemory *mem;
+
+        mem = gst_buffer_peek_memory (buffer, i);
+        gst_memory_map (mem, &maps[i], GST_MAP_READ);
+        buffer_size += maps[i].size;
+      }
+
+      crc = gst_dp_crc_from_memory_maps (maps, n_maps);
+
+      for (i = 0; i < n_maps; ++i)
+        gst_memory_unmap (maps[i].memory, &maps[i]);
+    }
+  } else {
+    buffer_size = gst_buffer_get_size (buffer);
+  }
 
   /* buffer properties */
-  GST_WRITE_UINT32_BE (h + 6, map.size);
+  GST_WRITE_UINT32_BE (h + 6, buffer_size);
   GST_WRITE_UINT64_BE (h + 10, GST_BUFFER_TIMESTAMP (buffer));
   GST_WRITE_UINT64_BE (h + 18, GST_BUFFER_DURATION (buffer));
   GST_WRITE_UINT64_BE (h + 26, GST_BUFFER_OFFSET (buffer));
@@ -164,9 +194,17 @@ gst_dp_header_from_buffer_any (GstBuffer * buffer, GstDPHeaderFlag flags,
   /* from gstreamer 1.x, buffers also have the DTS */
   GST_WRITE_UINT64_BE (h + 44, GST_BUFFER_DTS (buffer));
 
-  GST_DP_SET_CRC (h, flags, map.data, map.size);
+  /* header CRC */
+  if ((flags & GST_DP_HEADER_FLAG_CRC_HEADER))
+    /* we don't crc the last four bytes since they are crc's */
+    header_crc = gst_dp_crc (h, 58);
+  else
+    header_crc = 0;
 
-  gst_buffer_unmap ((GstBuffer *) buffer, &map);
+  GST_WRITE_UINT16_BE (h + 58, header_crc);
+
+  /* payload CRC */
+  GST_WRITE_UINT16_BE (h + 60, crc);
 
   GST_MEMDUMP ("created header from buffer", h, GST_DP_HEADER_LENGTH);
   *header = h;
@@ -259,18 +297,53 @@ static const guint16 gst_dp_crc_table[256] = {
  *
  * Returns: a two-byte CRC checksum.
  */
-guint16
+static guint16
 gst_dp_crc (const guint8 * buffer, guint length)
 {
   guint16 crc_register = CRC_INIT;
 
-  g_return_val_if_fail (buffer != NULL || length == 0, 0);
+  if (length == 0)
+    return 0;
+
+  g_assert (buffer != NULL);
 
   /* calc CRC */
   for (; length--;) {
     crc_register = (guint16) ((crc_register << 8) ^
         gst_dp_crc_table[((crc_register >> 8) & 0x00ff) ^ *buffer++]);
   }
+  return (0xffff ^ crc_register);
+}
+
+static guint16
+gst_dp_crc_from_memory_maps (const GstMapInfo * maps, guint n_maps)
+{
+  guint16 crc_register = CRC_INIT;
+  gsize total_length = 0;
+
+  if (n_maps == 0)
+    return 0;
+
+  g_assert (maps != NULL);
+
+  /* calc CRC */
+  while (n_maps > 0) {
+    guint8 *buffer = maps->data;
+    gsize length = maps->size;
+
+    total_length += length;
+
+    while (length-- > 0) {
+      crc_register = (guint16) ((crc_register << 8) ^
+          gst_dp_crc_table[((crc_register >> 8) & 0x00ff) ^ *buffer++]);
+    }
+    --n_maps;
+    ++maps;
+  }
+
+  if (G_UNLIKELY (total_length == 0))
+    return 0;
+
   return (0xffff ^ crc_register);
 }
 
