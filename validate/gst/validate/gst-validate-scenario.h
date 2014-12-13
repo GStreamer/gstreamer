@@ -118,6 +118,8 @@ typedef struct _GstValidateActionType      GstValidateActionType;
  *                                                 is specified
  * @GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK: The pipeline will need to be synchronized with the clock
  *                                        for that action type to be used.
+ * @GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL: Do not concider the non execution of the action
+ *                                                   as a fatal error.
  */
 typedef enum
 {
@@ -127,6 +129,7 @@ typedef enum
     GST_VALIDATE_ACTION_TYPE_INTERLACED = 1 << 3,
     GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION = 1 << 4,
     GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK = 1 << 5,
+    GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL = 1 << 6,
 } GstValidateActionTypeFlags;
 
 struct _GstValidateActionType

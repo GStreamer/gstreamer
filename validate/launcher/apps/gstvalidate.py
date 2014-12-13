@@ -329,21 +329,24 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
             else:
                 pipe_arguments = {"mixer": self.mixer}
 
-            if self.test_manager.options.mute:
-                pipe_arguments["sink"] = "'fakesink'"
-            else:
-                pipe_arguments["sink"] = "auto%ssink" % self.media_type
-
-            pipe = self._pipeline_template % pipe_arguments
-
-            for src in srcs:
-                pipe += "%s ! _mixer. " % src
-
             for scenario in scenarios:
                 fname = self.get_fname(scenario, Protocols.FILE) + "."
                 fname += name
 
                 self.debug("Adding: %s", fname)
+
+                if self.test_manager.options.mute:
+                    if scenario.needs_clock_sync():
+                        pipe_arguments["sink"] = "fakesink sync=true"
+                    else:
+                        pipe_arguments["sink"] = "'fakesink'"
+                else:
+                    pipe_arguments["sink"] = "auto%ssink" % self.media_type
+
+                pipe = self._pipeline_template % pipe_arguments
+
+                for src in srcs:
+                    pipe += "%s ! _mixer. " % src
 
                 self.add_test(GstValidateLaunchTest(fname,
                                                     self.test_manager.options,

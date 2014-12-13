@@ -1421,24 +1421,28 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
           scenario->priv->on_addition_actions) {
         guint nb_actions = 0;
         gchar *actions = g_strdup (""), *tmpconcat;
-        GList *tmp = g_list_concat (scenario->priv->actions,
-            scenario->priv->interlaced_actions);
+        GList *tmp;
         GList *all_actions =
-            g_list_concat (tmp, scenario->priv->on_addition_actions);
+            g_list_concat (g_list_concat (scenario->priv->actions,
+                scenario->priv->interlaced_actions),
+            scenario->priv->on_addition_actions);
 
         for (tmp = all_actions; tmp; tmp = tmp->next) {
-          GstValidateAction *action = ((GstValidateAction *) tmp->data);
           gchar *action_string;
+          GstValidateAction *action = ((GstValidateAction *) tmp->data);
+          GstValidateActionType *type = _find_action_type (action->type);
+
           tmpconcat = actions;
 
-          action_string = gst_structure_to_string (action->structure);
-          if (g_regex_match_simple ("eos|stop", action_string, 0, 0)) {
+          if (type->flags & GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL) {
             gst_validate_action_unref (action);
-            g_free (action_string);
+
             continue;
           }
 
           nb_actions++;
+
+          action_string = gst_structure_to_string (action->structure);
           actions =
               g_strdup_printf ("%s\n%*s%s", actions, 20, "", action_string);
           gst_validate_action_unref (action);
@@ -2457,10 +2461,12 @@ init_scenarios (void)
       "Sets the pipeline state to PLAYING", GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("stop", _execute_stop, NULL,
-      "Sets the pipeline state to NULL", GST_VALIDATE_ACTION_TYPE_NONE);
+      "Sets the pipeline state to NULL",
+      GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL);
 
   REGISTER_ACTION_TYPE ("eos", _execute_eos, NULL,
-      "Sends an EOS event to the pipeline", GST_VALIDATE_ACTION_TYPE_NONE);
+      "Sends an EOS event to the pipeline",
+      GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL);
 
   REGISTER_ACTION_TYPE ("switch-track", _execute_switch_track,
       ((GstValidateActionParameter []) {
