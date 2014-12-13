@@ -48,7 +48,9 @@ enum
 {
   GST_VALIDATE_EXECUTE_ACTION_ERROR,
   GST_VALIDATE_EXECUTE_ACTION_OK,
-  GST_VALIDATE_EXECUTE_ACTION_ASYNC
+  GST_VALIDATE_EXECUTE_ACTION_ASYNC,
+  GST_VALIDATE_EXECUTE_ACTION_INTERLACED
+
 };
 
 /* TODO 2.0 -- Make it an actual enum type */
@@ -108,12 +110,16 @@ typedef struct _GstValidateActionType      GstValidateActionType;
  * @GST_VALIDATE_ACTION_TYPE_NONE: No special flag
  * @GST_VALIDATE_ACTION_TYPE_CONFIG: The action is a config
  * @GST_VALIDATE_ACTION_TYPE_ASYNC: The action can be executed ASYNC
+ * @GST_VALIDATE_ACTION_TYPE_INTERLACED: The action will be executed async
+ *                                       but without blocking further actions
+ *                                       to be executed
  */
 typedef enum
 {
     GST_VALIDATE_ACTION_TYPE_NONE = 0,
     GST_VALIDATE_ACTION_TYPE_CONFIG = 1 << 1,
     GST_VALIDATE_ACTION_TYPE_ASYNC = 1 << 2,
+    GST_VALIDATE_ACTION_TYPE_INTERLACED = 1 << 3,
 } GstValidateActionTypeFlags;
 
 struct _GstValidateActionType

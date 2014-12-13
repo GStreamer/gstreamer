@@ -64,6 +64,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
   gst_validate_register_action_type ((_tname), "core", (_function), (_params), (_desc), (_is_config)); \
 } G_STMT_END
 
+#define SCENARIO_LOCK(scenario) (g_mutex_lock(&scenario->priv->lock))
+#define SCENARIO_UNLOCK(scenario) (g_mutex_unlock(&scenario->priv->lock))
 enum
 {
   PROP_0,
@@ -90,7 +92,10 @@ struct _GstValidateScenarioPrivate
 {
   GstValidateRunner *runner;
 
+  GMutex lock;
+
   GList *actions;
+  GList *interlaced_actions;
   /*  List of action that need parsing when reaching ASYNC_DONE
    *  most probably to be able to query duration */
   GList *needs_parsing;
@@ -191,6 +196,12 @@ gst_validate_action_init (GstValidateAction * action)
   gst_mini_object_init (((GstMiniObject *) action), 0,
       _gst_validate_action_type, (GstMiniObjectCopyFunction) _action_copy, NULL,
       (GstMiniObjectFreeFunction) _action_free);
+}
+
+static void
+gst_validate_action_unref (GstValidateAction * action)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT (action));
 }
 
 static GstValidateAction *
@@ -512,7 +523,6 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
 
   GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration * GST_SECOND));
-
 
   ret = _execute_set_state (scenario, action);
 
@@ -955,7 +965,7 @@ get_position (GstValidateScenario * scenario)
       GST_INFO_OBJECT (scenario, "Action %" GST_PTR_FORMAT " is DONE now"
           " executing next", act->structure);
 
-      gst_mini_object_unref (GST_MINI_OBJECT (act));
+      gst_validate_action_unref (act);
       g_list_free (tmp);
 
       if (scenario->priv->actions) {
@@ -1042,7 +1052,14 @@ get_position (GstValidateScenario * scenario)
   } else if (act->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
-    gst_mini_object_unref (GST_MINI_OBJECT (act));
+
+    if (act->state != GST_VALIDATE_EXECUTE_ACTION_INTERLACED)
+      gst_validate_action_unref (act);
+    else {
+      SCENARIO_LOCK (scenario);
+      priv->interlaced_actions = g_list_append (priv->interlaced_actions, act);
+      SCENARIO_UNLOCK (scenario);
+    }
 
     if (priv->actions == NULL)
       g_signal_emit (scenario, scenario_signals[DONE], 0);
@@ -1383,18 +1400,22 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
     case GST_MESSAGE_ERROR:
     case GST_MESSAGE_EOS:
     {
-      if (scenario->priv->actions) {
+      SCENARIO_LOCK (scenario);
+      if (scenario->priv->actions || scenario->priv->interlaced_actions) {
         GList *tmp;
         guint nb_actions = 0;
         gchar *actions = g_strdup (""), *tmpconcat;
+        GList *all_actions = g_list_concat (scenario->priv->actions,
+            scenario->priv->interlaced_actions);
 
-        for (tmp = scenario->priv->actions; tmp; tmp = tmp->next) {
+        for (tmp = all_actions; tmp; tmp = tmp->next) {
           GstValidateAction *action = ((GstValidateAction *) tmp->data);
           gchar *action_string;
           tmpconcat = actions;
 
           action_string = gst_structure_to_string (action->structure);
           if (g_regex_match_simple ("eos|stop", action_string, 0, 0)) {
+            gst_validate_action_unref (action);
             g_free (action_string);
             continue;
           }
@@ -1402,16 +1423,20 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
           nb_actions++;
           actions =
               g_strdup_printf ("%s\n%*s%s", actions, 20, "", action_string);
+          gst_validate_action_unref (action);
           g_free (tmpconcat);
           g_free (action_string);
-
         }
+        g_list_free (all_actions);
+        scenario->priv->actions = NULL;
+        scenario->priv->interlaced_actions = NULL;
 
         if (nb_actions > 0)
           GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
               "%i actions were not executed: %s", nb_actions, actions);
         g_free (actions);
       }
+      SCENARIO_UNLOCK (scenario);
 
       break;
     }
@@ -1527,7 +1552,7 @@ _load_scenario_file (GstValidateScenario * scenario,
 
     if (IS_CONFIG_ACTION_TYPE (action_type->flags)) {
       ret = action_type->execute (scenario, action);
-      gst_mini_object_unref (GST_MINI_OBJECT (action));
+      gst_validate_action_unref (action);
 
       if (ret == FALSE)
         goto failed;
@@ -1752,6 +1777,8 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   priv->seek_pos_tol = DEFAULT_SEEK_TOLERANCE;
   priv->segment_start = 0;
   priv->segment_stop = GST_CLOCK_TIME_NONE;
+
+  g_mutex_init (&priv->lock);
 }
 
 static void
@@ -1764,7 +1791,7 @@ gst_validate_scenario_dispose (GObject * object)
   if (GST_VALIDATE_SCENARIO (object)->pipeline)
     g_object_weak_unref (G_OBJECT (GST_VALIDATE_SCENARIO (object)->pipeline),
         (GWeakNotify) _pipeline_freed_cb, object);
-  g_list_free_full (priv->actions, (GDestroyNotify) gst_mini_object_unref);
+  g_list_free_full (priv->actions, (GDestroyNotify) gst_validate_action_unref);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
 }
@@ -1772,6 +1799,10 @@ gst_validate_scenario_dispose (GObject * object)
 static void
 gst_validate_scenario_finalize (GObject * object)
 {
+  GstValidateScenarioPrivate *priv = GST_VALIDATE_SCENARIO (object)->priv;
+
+  g_mutex_clear (&priv->lock);
+
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->finalize (object);
 }
 
@@ -2059,6 +2090,18 @@ done:
 void
 gst_validate_action_set_done (GstValidateAction * action)
 {
+  if (action->state == GST_VALIDATE_EXECUTE_ACTION_INTERLACED) {
+
+    if (action->scenario) {
+      SCENARIO_LOCK (action->scenario);
+      action->scenario->priv->interlaced_actions =
+          g_list_remove (action->scenario->priv->interlaced_actions, action);
+      SCENARIO_UNLOCK (action->scenario);
+    }
+
+    gst_validate_action_unref (action);
+  }
+
   action->state = GST_VALIDATE_EXECUTE_ACTION_OK;
 
   if (action->scenario) {
