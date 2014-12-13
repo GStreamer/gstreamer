@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2011 David Schleef <ds@schleef.org>
+ * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -111,9 +112,45 @@ const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);
 GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e);
 GstCaps * gst_decklink_mode_get_template_caps (void);
 
-IDeckLink * gst_decklink_get_nth_device (int n);
-IDeckLinkInput * gst_decklink_get_nth_input (int n);
-IDeckLinkOutput * gst_decklink_get_nth_output (int n);
-IDeckLinkConfiguration * gst_decklink_get_nth_config (int n);
+typedef struct _GstDecklinkOutput GstDecklinkOutput;
+struct _GstDecklinkOutput {
+  IDeckLink *device;
+  IDeckLinkOutput *output;
+  GstClock *clock;
+
+  /* Everything below protected by mutex */
+  GMutex lock;
+
+  /* Set by the audio sink */
+  GstClock *audio_clock;
+
+  /* <private> */
+  GstElement *audiosink;
+  GstElement *videosink;
+};
+
+typedef struct _GstDecklinkInput GstDecklinkInput;
+struct _GstDecklinkInput {
+  IDeckLink *device;
+  IDeckLinkInput *input;
+  IDeckLinkConfiguration *config;
+  GstClock *clock;
+
+  /* Everything below protected by mutex */
+  GMutex lock;
+
+  /* Set by the audio source */
+  GstClock *audio_clock;
+
+  /* <private> */
+  GstElement *audiosrc;
+  GstElement *videosrc;
+};
+
+GstDecklinkOutput * gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio);
+void                gst_decklink_release_nth_output (gint n, GstElement * sink, gboolean is_audio);
+
+void                gst_decklink_output_set_audio_clock (GstDecklinkOutput * output, GstClock * clock);
+GstClock *          gst_decklink_output_get_audio_clock (GstDecklinkOutput * output);
 
 #endif

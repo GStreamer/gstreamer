@@ -8,6 +8,7 @@ libgstdecklink_la_CPPFLAGS = \
 	$(DECKLINK_CXXFLAGS)
 libgstdecklink_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
+	-lgstaudio-@GST_API_VERSION@ \
 	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
@@ -23,10 +24,9 @@ endif
 libgstdecklink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 libgstdecklink_la_SOURCES = \
-	gstdecklinksink.cpp \
-	gstdecklinksrc.cpp \
 	gstdecklink.cpp \
-	capture.cpp
+	gstdecklinkaudiosink.cpp \
+	gstdecklinkvideosink.cpp
 
 if DECKLINK_OSX
 libgstdecklink_la_SOURCES += \
@@ -38,9 +38,8 @@ endif
 
 noinst_HEADERS = \
 	gstdecklink.h \
-	gstdecklinksrc.h \
-	gstdecklinksink.h \
-	capture.h \
+	gstdecklinkaudiosink.h \
+	gstdecklinkvideosink.h \
 	linux/DeckLinkAPIConfiguration.h \
 	linux/DeckLinkAPIDeckControl.h \
 	linux/DeckLinkAPIDiscovery.h \

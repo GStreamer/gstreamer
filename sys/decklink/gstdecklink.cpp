@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2011 David Schleef <ds@schleef.org>
+ * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,8 +24,11 @@
 
 #include <gst/gst.h>
 #include "gstdecklink.h"
-#include "gstdecklinksrc.h"
-#include "gstdecklinksink.h"
+#include "gstdecklinkaudiosink.h"
+#include "gstdecklinkvideosink.h"
+
+GST_DEBUG_CATEGORY_STATIC (gst_decklink_debug);
+#define GST_CAT_DEFAULT gst_decklink_debug
 
 GType
 gst_decklink_mode_get_type (void)
@@ -199,56 +203,93 @@ gst_decklink_mode_get_template_caps (void)
   return caps;
 }
 
+#define GST_TYPE_DECKLINK_CLOCK \
+  (gst_decklink_clock_get_type())
+#define GST_DECKLINK_CLOCK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECKLINK_CLOCK,GstDecklinkClock))
+#define GST_DECKLINK_CLOCK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DECKLINK_CLOCK,GstDecklinkClockClass))
+#define GST_IS_Decklink_CLOCK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DECKLINK_CLOCK))
+#define GST_IS_Decklink_CLOCK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DECKLINK_CLOCK))
+#define GST_DECKLINK_CLOCK_CAST(obj) \
+  ((GstDecklinkClock*)(obj))
+
+typedef struct _GstDecklinkClock GstDecklinkClock;
+typedef struct _GstDecklinkClockClass GstDecklinkClockClass;
+
+struct _GstDecklinkClock
+{
+  GstSystemClock clock;
+
+  IDeckLinkInput *input;
+  IDeckLinkOutput *output;
+};
+
+struct _GstDecklinkClockClass
+{
+  GstSystemClockClass parent_class;
+};
+
+GType gst_decklink_clock_get_type (void);
+
 typedef struct _Device Device;
 struct _Device
 {
-  IDeckLink *decklink;
-  IDeckLinkInput *input;
-  IDeckLinkOutput *output;
-  IDeckLinkConfiguration *config;
+  GstDecklinkOutput output;
+  GstDecklinkInput input;
 };
 
+static GOnce devices_once = G_ONCE_INIT;
 static int n_devices;
 static Device devices[10];
 
-static void
-init_devices (void)
+static gpointer
+init_devices (gpointer data)
 {
   IDeckLinkIterator *iterator;
   IDeckLink *decklink = NULL;
   HRESULT ret;
   int i;
-  static gboolean inited = FALSE;
-
-  if (inited)
-    return;
-  inited = TRUE;
 
   iterator = CreateDeckLinkIteratorInstance ();
   if (iterator == NULL) {
     GST_ERROR ("no driver");
-    return;
+    return NULL;
   }
 
   i = 0;
   ret = iterator->Next (&decklink);
   while (ret == S_OK) {
-    devices[i].decklink = decklink;
-
     ret = decklink->QueryInterface (IID_IDeckLinkInput,
-        (void **) &devices[i].input);
+        (void **) &devices[i].input.input);
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have input interface");
+    } else {
+      devices[i].input.device = decklink;
+      devices[i].input.clock =
+          GST_CLOCK_CAST (g_object_new (GST_TYPE_DECKLINK_CLOCK, "name",
+              "GstDecklinkInputClock", NULL));
+      GST_DECKLINK_CLOCK_CAST (devices[i].input.clock)->input =
+          devices[i].input.input;
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkOutput,
-        (void **) &devices[i].output);
+        (void **) &devices[i].output.output);
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have output interface");
+    } else {
+      devices[i].output.device = decklink;
+      devices[i].output.clock =
+          GST_CLOCK_CAST (g_object_new (GST_TYPE_DECKLINK_CLOCK, "name",
+              "GstDecklinkOutputClock", NULL));
+      GST_DECKLINK_CLOCK_CAST (devices[i].output.clock)->output =
+          devices[i].output.output;
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkConfiguration,
-        (void **) &devices[i].config);
+        (void **) &devices[i].input.config);
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have config interface");
     }
@@ -265,46 +306,166 @@ init_devices (void)
   n_devices = i;
 
   iterator->Release ();
+
+  return NULL;
 }
 
-IDeckLink *
-gst_decklink_get_nth_device (int n)
+GstDecklinkOutput *
+gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio)
 {
-  init_devices ();
-  return devices[n].decklink;
+  GstDecklinkOutput *output;
+
+  g_once (&devices_once, init_devices, NULL);
+
+  if (n >= n_devices)
+    return NULL;
+
+  output = &devices[n].output;
+  if (!output->output) {
+    GST_ERROR ("Device %d has no output", n);
+    return NULL;
+  }
+
+  g_mutex_lock (&output->lock);
+  if (is_audio && !output->audiosink) {
+    output->audiosink = GST_ELEMENT_CAST (gst_object_ref (sink));
+    g_mutex_unlock (&output->lock);
+    return output;
+  } else if (!output->videosink) {
+    output->videosink = GST_ELEMENT_CAST (gst_object_ref (sink));
+    g_mutex_unlock (&output->lock);
+    return output;
+  }
+  g_mutex_unlock (&output->lock);
+
+  GST_ERROR ("Output device %d (audio: %d) in use already", n, is_audio);
+  return NULL;
 }
 
-IDeckLinkInput *
-gst_decklink_get_nth_input (int n)
+void
+gst_decklink_release_nth_output (gint n, GstElement * sink, gboolean is_audio)
 {
-  init_devices ();
-  return devices[n].input;
+  GstDecklinkOutput *output;
+
+  if (n >= n_devices)
+    return;
+
+  output = &devices[n].output;
+  g_assert (output->output);
+
+  g_mutex_lock (&output->lock);
+  if (is_audio) {
+    g_assert (output->audiosink == sink);
+    gst_object_unref (sink);
+    output->audiosink = NULL;
+  } else {
+    g_assert (output->videosink == sink);
+    gst_object_unref (sink);
+    output->videosink = NULL;
+  }
+  g_mutex_unlock (&output->lock);
 }
 
-IDeckLinkOutput *
-gst_decklink_get_nth_output (int n)
+void
+gst_decklink_output_set_audio_clock (GstDecklinkOutput * output,
+    GstClock * clock)
 {
-  init_devices ();
-  return devices[n].output;
+  g_mutex_lock (&output->lock);
+  if (output->audio_clock)
+    gst_object_unref (output->audio_clock);
+  output->audio_clock = clock;
+  if (clock)
+    gst_object_ref (clock);
+  g_mutex_unlock (&output->lock);
 }
 
-IDeckLinkConfiguration *
-gst_decklink_get_nth_config (int n)
+
+GstClock *
+gst_decklink_output_get_audio_clock (GstDecklinkOutput * output)
 {
-  init_devices ();
-  return devices[n].config;
+  GstClock *ret = NULL;
+
+  g_mutex_lock (&output->lock);
+  if (output->audio_clock)
+    ret = GST_CLOCK_CAST (gst_object_ref (output->audio_clock));
+  g_mutex_unlock (&output->lock);
+
+  return ret;
+}
+
+G_DEFINE_TYPE (GstDecklinkClock, gst_decklink_clock, GST_TYPE_SYSTEM_CLOCK);
+
+static void gst_decklink_clock_class_init (GstDecklinkClockClass * klass);
+static void gst_decklink_clock_init (GstDecklinkClock * clock);
+
+static GstClockTime gst_decklink_clock_get_internal_time (GstClock * clock);
+
+static void
+gst_decklink_clock_class_init (GstDecklinkClockClass * klass)
+{
+  GstClockClass *clock_class = (GstClockClass *) klass;
+
+  clock_class->get_internal_time = gst_decklink_clock_get_internal_time;
+}
+
+static void
+gst_decklink_clock_init (GstDecklinkClock * clock)
+{
+  GST_OBJECT_FLAG_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER);
+}
+
+GstDecklinkClock *
+gst_decklink_clock_new (const gchar * name)
+{
+  GstDecklinkClock *self =
+      GST_DECKLINK_CLOCK (g_object_new (GST_TYPE_DECKLINK_CLOCK, "name", name,
+          "clock-type", GST_CLOCK_TYPE_OTHER, NULL));
+
+  return self;
+}
+
+static GstClockTime
+gst_decklink_clock_get_internal_time (GstClock * clock)
+{
+  GstDecklinkClock *self = GST_DECKLINK_CLOCK (clock);
+  GstClockTime result;
+  BMDTimeValue time;
+  HRESULT ret;
+
+  GST_OBJECT_LOCK (clock);
+  if (self->input != NULL) {
+    ret =
+        self->input->GetHardwareReferenceClock (GST_SECOND, &time, NULL, NULL);
+    if (ret == S_OK && time >= 0)
+      result = time;
+    else
+      result = GST_CLOCK_TIME_NONE;
+  } else if (self->output != NULL) {
+    ret =
+        self->output->GetHardwareReferenceClock (GST_SECOND, &time, NULL, NULL);
+    if (ret == S_OK && time >= 0)
+      result = time;
+    else
+      result = GST_CLOCK_TIME_NONE;
+  } else {
+    result = GST_CLOCK_TIME_NONE;
+  }
+  GST_OBJECT_UNLOCK (clock);
+  GST_LOG_OBJECT (clock, "result %" GST_TIME_FORMAT, GST_TIME_ARGS (result));
+
+  return result;
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_decklink_debug, "decklink", 0,
+      "debug category for decklink plugin");
 
-  gst_element_register (plugin, "decklinksrc", GST_RANK_NONE,
-      gst_decklink_src_get_type ());
-
-  gst_element_register (plugin, "decklinksink", GST_RANK_NONE,
-      gst_decklink_sink_get_type ());
-
+  gst_element_register (plugin, "decklinkaudiosink", GST_RANK_NONE,
+      GST_TYPE_DECKLINK_AUDIO_SINK);
+  gst_element_register (plugin, "decklinkvideosink", GST_RANK_NONE,
+      GST_TYPE_DECKLINK_VIDEO_SINK);
   return TRUE;
 }
 
