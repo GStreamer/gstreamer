@@ -409,7 +409,8 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
 
   gl_format = _gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
 
-  if (USING_OPENGL (context) || USING_GLES3 (context)) {
+  if (USING_OPENGL (context) || USING_GLES3 (context)
+      || USING_OPENGL3 (context)) {
     gl->PixelStorei (GL_UNPACK_ROW_LENGTH, gl_mem->unpack_length);
   } else if (USING_GLES2 (context)) {
     gl->PixelStorei (GL_UNPACK_ALIGNMENT, gl_mem->unpack_length);
@@ -451,7 +452,8 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
     return;
   }
 
-  if (USING_OPENGL (gl_mem->context) || USING_GLES3 (gl_mem->context)) {
+  if (USING_OPENGL (gl_mem->context) || USING_GLES3 (gl_mem->context)
+      || USING_OPENGL3 (gl_mem->context)) {
     gl_mem->unpack_length = GL_MEM_STRIDE (gl_mem) / n_gl_bytes;
   } else if (USING_GLES2 (gl_mem->context)) {
     guint j = 8;
