@@ -781,7 +781,7 @@ libs/gst/Makefile
 libs/gst/base/Makefile
 libs/gst/check/Makefile
 libs/gst/check/libcheck/Makefile
-libs/gst/check/libcheck/check.h
+libs/gst/check/internal-check.h:libs/gst/check/libcheck/check.h.in
 libs/gst/controller/Makefile
 libs/gst/helpers/Makefile
 libs/gst/net/Makefile

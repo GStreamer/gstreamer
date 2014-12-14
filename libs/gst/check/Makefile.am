@@ -2,11 +2,8 @@ lib_LTLIBRARIES = libgstcheck-@GST_API_VERSION@.la
 
 SYMBOLS_FILE = exports.sym
 
-BUILT_SOURCES = internal-check.h
-
 libgstcheck_@GST_API_VERSION@_la_DEPENDENCIES = \
 	$(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la \
-	internal-check.h \
 	$(SYMBOLS_FILE)
 libgstcheck_@GST_API_VERSION@_la_SOURCES =	\
 	gstbufferstraw.c			\
@@ -35,12 +32,9 @@ libgstcheck_@GST_API_VERSION@include_HEADERS =	\
 	gsttestclock.h
 
 nodist_libgstcheck_@GST_API_VERSION@include_HEADERS =	\
-	internal-check.h	
+	internal-check.h
 
-CLEANFILES = *.gcno *.gcda *.gcov internal-check.h $(SYMBOLS_FILE)
-
-internal-check.h: $(top_builddir)/libs/gst/check/libcheck/check.h
-	$(AM_V_GEN)cp $(top_builddir)/libs/gst/check/libcheck/check.h internal-check.h
+CLEANFILES = *.gcno *.gcda *.gcov $(SYMBOLS_FILE)
 
 %.c.gcov: .libs/libgstcheck_@GST_API_VERSION@_la-%.gcda %.c
 	$(GCOV) -b -f -o $^ > $@.out
@@ -128,7 +122,7 @@ print-check-symbols:
 	  echo $$s; \
 	done;
 
-$(SYMBOLS_FILE): $(libgstcheck_@GST_API_VERSION@include_HEADERS) libcheck/check.h
+$(SYMBOLS_FILE): $(libgstcheck_@GST_API_VERSION@include_HEADERS) internal-check.h
 	$(AM_V_GEN)rm -f $(SYMBOLS_FILE) 2>/dev/null; \
 	for s in $(LIBGSTCHECK_EXPORTED_SYMBOLS) $(CHECK_SYMS); do \
 	  echo $$s >> $(SYMBOLS_FILE); \

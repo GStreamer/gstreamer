@@ -29,7 +29,7 @@
 #include <signal.h>
 #include <setjmp.h>
 
-#include "check.h"
+#include "internal-check.h"
 #include "check_error.h"
 #include "check_list.h"
 #include "check_impl.h"

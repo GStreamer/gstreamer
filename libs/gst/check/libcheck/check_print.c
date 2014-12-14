@@ -24,7 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "check.h"
+#include "internal-check.h"
 #include "check_list.h"
 #include "check_impl.h"
 #include "check_str.h"
