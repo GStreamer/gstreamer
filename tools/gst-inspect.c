@@ -885,6 +885,25 @@ print_children_info (GstElement * element)
 }
 
 static void
+print_preset_list (GstElement * element)
+{
+  gchar **presets, **preset;
+
+  if (!GST_IS_PRESET (element))
+    return;
+
+  presets = gst_preset_get_preset_names (GST_PRESET (element));
+  if (presets) {
+    n_print ("\n");
+    n_print ("Presets:\n");
+    for (preset = presets; *preset; preset++) {
+      n_print ("  \"%s\"\n", *preset);
+    }
+    g_strfreev (presets);
+  }
+}
+
+static void
 print_blacklist (void)
 {
   GList *plugins, *cur;
@@ -1263,6 +1282,7 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   print_element_properties_info (element);
   print_signal_info (element);
   print_children_info (element);
+  print_preset_list (element);
 
   gst_object_unref (element);
   gst_object_unref (factory);
