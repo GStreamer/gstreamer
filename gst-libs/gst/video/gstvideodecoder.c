@@ -1627,6 +1627,31 @@ gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
       res = TRUE;
       break;
     }
+    case GST_QUERY_ACCEPT_CAPS:{
+      GstCaps *caps;
+      GstCaps *allowed_caps;
+      GstCaps *template_caps;
+      gboolean accept;
+
+      gst_query_parse_accept_caps (query, &caps);
+
+      template_caps = gst_pad_get_pad_template_caps (pad);
+      accept = gst_caps_is_subset (caps, template_caps);
+      gst_caps_unref (template_caps);
+
+      if (accept) {
+        allowed_caps = gst_pad_query_caps (GST_VIDEO_DECODER_SINK_PAD (decoder),
+            caps);
+
+        accept = gst_caps_can_intersect (caps, allowed_caps);
+
+        gst_caps_unref (allowed_caps);
+      }
+
+      gst_query_set_accept_caps_result (query, accept);
+      res = TRUE;
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, GST_OBJECT (decoder), query);
       break;
