@@ -522,7 +522,6 @@ gst_video_crop_transform_dimension_value (const GValue * src_val,
   return ret;
 }
 
-/* TODO use filter_caps */
 static GstCaps *
 gst_video_crop_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
