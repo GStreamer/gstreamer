@@ -99,8 +99,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 #define gst_video_crop_parent_class parent_class
 G_DEFINE_TYPE (GstVideoCrop, gst_video_crop, GST_TYPE_VIDEO_FILTER);
 
-static void gst_video_crop_finalize (GObject * object);
-
 static void gst_video_crop_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_video_crop_get_property (GObject * object, guint prop_id,
@@ -176,7 +174,6 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
   basetransform_class = (GstBaseTransformClass *) klass;
   vfilter_class = (GstVideoFilterClass *) klass;
 
-  gobject_class->finalize = gst_video_crop_finalize;
   gobject_class->set_property = gst_video_crop_set_property;
   gobject_class->get_property = gst_video_crop_get_property;
 
@@ -222,20 +219,6 @@ gst_video_crop_init (GstVideoCrop * vcrop)
   vcrop->crop_left = 0;
   vcrop->crop_top = 0;
   vcrop->crop_bottom = 0;
-
-  g_mutex_init (&vcrop->lock);
-}
-
-static void
-gst_video_crop_finalize (GObject * object)
-{
-  GstVideoCrop *vcrop;
-
-  vcrop = GST_VIDEO_CROP (object);
-
-  g_mutex_clear (&vcrop->lock);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 #define ROUND_DOWN_2(n)  ((n)&(~1))
@@ -422,7 +405,13 @@ gst_video_crop_transform_frame (GstVideoFilter * vfilter,
 {
   GstVideoCrop *vcrop = GST_VIDEO_CROP (vfilter);
 
-  g_mutex_lock (&vcrop->lock);
+  if (G_UNLIKELY (vcrop->need_update)) {
+    if (!gst_video_crop_set_info (vfilter, NULL, &vcrop->in_info, NULL,
+            &vcrop->out_info)) {
+      return GST_FLOW_ERROR;
+    }
+  }
+
   switch (vcrop->packing) {
     case VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE:
       gst_video_crop_transform_packed_simple (vcrop, in_frame, out_frame);
@@ -439,7 +428,6 @@ gst_video_crop_transform_frame (GstVideoFilter * vfilter,
     default:
       g_assert_not_reached ();
   }
-  g_mutex_unlock (&vcrop->lock);
 
   return GST_FLOW_OK;
 }
@@ -559,6 +547,8 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
   bottom = (vcrop->prop_bottom == -1) ? 0 : vcrop->prop_bottom;
   top = (vcrop->prop_top == -1) ? 0 : vcrop->prop_top;
 
+  GST_OBJECT_UNLOCK (vcrop);
+
   if (direction == GST_PAD_SRC) {
     dx = left + right;
     dy = top + bottom;
@@ -566,7 +556,6 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
     dx = 0 - (left + right);
     dy = 0 - (top + bottom);
   }
-  GST_OBJECT_UNLOCK (vcrop);
 
   GST_LOG_OBJECT (vcrop, "transforming caps %" GST_PTR_FORMAT, caps);
 
@@ -624,38 +613,41 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
   GstVideoCrop *crop = GST_VIDEO_CROP (vfilter);
   int dx, dy;
 
+  GST_OBJECT_LOCK (crop);
+  crop->need_update = FALSE;
   crop->crop_left = crop->prop_left;
   crop->crop_right = crop->prop_right;
   crop->crop_top = crop->prop_top;
   crop->crop_bottom = crop->prop_bottom;
+  GST_OBJECT_UNLOCK (crop);
 
   dx = GST_VIDEO_INFO_WIDTH (in_info) - GST_VIDEO_INFO_WIDTH (out_info);
   dy = GST_VIDEO_INFO_HEIGHT (in_info) - GST_VIDEO_INFO_HEIGHT (out_info);
 
-  if (crop->prop_left == -1 && crop->prop_right == -1) {
+  if (crop->crop_left == -1 && crop->crop_right == -1) {
     crop->crop_left = dx / 2;
     crop->crop_right = dx / 2 + (dx & 1);
-  } else if (crop->prop_left == -1) {
-    if (G_UNLIKELY (crop->prop_right > dx))
+  } else if (crop->crop_left == -1) {
+    if (G_UNLIKELY (crop->crop_right > dx))
       goto cropping_too_much;
-    crop->crop_left = dx - crop->prop_right;
-  } else if (crop->prop_right == -1) {
-    if (G_UNLIKELY (crop->prop_left > dx))
+    crop->crop_left = dx - crop->crop_right;
+  } else if (crop->crop_right == -1) {
+    if (G_UNLIKELY (crop->crop_left > dx))
       goto cropping_too_much;
-    crop->crop_right = dx - crop->prop_left;
+    crop->crop_right = dx - crop->crop_left;
   }
 
-  if (crop->prop_top == -1 && crop->prop_bottom == -1) {
+  if (crop->crop_top == -1 && crop->crop_bottom == -1) {
     crop->crop_top = dy / 2;
     crop->crop_bottom = dy / 2 + (dy & 1);
-  } else if (crop->prop_top == -1) {
-    if (G_UNLIKELY (crop->prop_bottom > dy))
+  } else if (crop->crop_top == -1) {
+    if (G_UNLIKELY (crop->crop_bottom > dy))
       goto cropping_too_much;
-    crop->crop_top = dy - crop->prop_bottom;
-  } else if (crop->prop_bottom == -1) {
-    if (G_UNLIKELY (crop->prop_top > dy))
+    crop->crop_top = dy - crop->crop_bottom;
+  } else if (crop->crop_bottom == -1) {
+    if (G_UNLIKELY (crop->crop_top > dy))
       goto cropping_too_much;
-    crop->crop_bottom = dy - crop->prop_top;
+    crop->crop_bottom = dy - crop->crop_top;
   }
 
   if (G_UNLIKELY ((crop->crop_left + crop->crop_right) >=
@@ -664,8 +656,9 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
           GST_VIDEO_INFO_HEIGHT (in_info)))
     goto cropping_too_much;
 
-  GST_LOG_OBJECT (crop, "incaps = %" GST_PTR_FORMAT ", outcaps = %"
-      GST_PTR_FORMAT, in, out);
+  if (in && out)
+    GST_LOG_OBJECT (crop, "incaps = %" GST_PTR_FORMAT ", outcaps = %"
+        GST_PTR_FORMAT, in, out);
 
   if ((crop->crop_left | crop->crop_right | crop->crop_top | crop->
           crop_bottom) == 0) {
@@ -709,6 +702,9 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
     }
   }
 
+  crop->in_info = *in_info;
+  crop->out_info = *out_info;
+
   return TRUE;
 
   /* ERROR */
@@ -724,6 +720,16 @@ unknown_format:
   }
 }
 
+/* called with object lock */
+static inline void
+gst_video_crop_set_crop (GstVideoCrop * vcrop, gint new_value, gint * prop)
+{
+  if (*prop != new_value) {
+    *prop = new_value;
+    vcrop->need_update = TRUE;
+  }
+}
+
 static void
 gst_video_crop_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -732,23 +738,23 @@ gst_video_crop_set_property (GObject * object, guint prop_id,
 
   video_crop = GST_VIDEO_CROP (object);
 
-  /* don't modify while we are transforming */
-  g_mutex_lock (&video_crop->lock);
-
-  /* protect with the object lock so that we can read them */
   GST_OBJECT_LOCK (video_crop);
   switch (prop_id) {
     case ARG_LEFT:
-      video_crop->prop_left = g_value_get_int (value);
+      gst_video_crop_set_crop (video_crop, g_value_get_int (value),
+          &video_crop->prop_left);
       break;
     case ARG_RIGHT:
-      video_crop->prop_right = g_value_get_int (value);
+      gst_video_crop_set_crop (video_crop, g_value_get_int (value),
+          &video_crop->prop_right);
       break;
     case ARG_TOP:
-      video_crop->prop_top = g_value_get_int (value);
+      gst_video_crop_set_crop (video_crop, g_value_get_int (value),
+          &video_crop->prop_top);
       break;
     case ARG_BOTTOM:
-      video_crop->prop_bottom = g_value_get_int (value);
+      gst_video_crop_set_crop (video_crop, g_value_get_int (value),
+          &video_crop->prop_bottom);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -757,10 +763,10 @@ gst_video_crop_set_property (GObject * object, guint prop_id,
   GST_LOG_OBJECT (video_crop, "l=%d,r=%d,b=%d,t=%d",
       video_crop->crop_left, video_crop->crop_right, video_crop->crop_bottom,
       video_crop->crop_top);
+
   GST_OBJECT_UNLOCK (video_crop);
 
   gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (video_crop));
-  g_mutex_unlock (&video_crop->lock);
 }
 
 static void
