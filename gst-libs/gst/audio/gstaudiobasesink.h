@@ -59,6 +59,7 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_AUDIO_BASE_SINK                (gst_audio_base_sink_get_type())
 #define GST_AUDIO_BASE_SINK(obj)                (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_BASE_SINK,GstAudioBaseSink))
+#define GST_AUDIO_BASE_SINK_CAST(obj)           ((GstAudioBaseSink*)obj)
 #define GST_AUDIO_BASE_SINK_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_BASE_SINK,GstAudioBaseSinkClass))
 #define GST_AUDIO_BASE_SINK_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AUDIO_BASE_SINK, GstAudioBaseSinkClass))
 #define GST_IS_AUDIO_BASE_SINK(obj)             (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_BASE_SINK))
