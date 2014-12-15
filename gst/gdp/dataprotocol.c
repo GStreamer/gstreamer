@@ -56,10 +56,8 @@
  * the event as the payload.  In addition, GDP streams can now start with
  * events as well, as required by the new data stream model in GStreamer 0.10.
  *
- * Converting buffers, caps and events to GDP buffers is done using a
- * #GstDPPacketizer object and invoking its packetizer functions.
- * For backwards-compatibility reasons, the old 0.2 methods are still
- * available but deprecated.
+ * Converting buffers, caps and events to GDP buffers is done using the
+ * appropriate functions.
  *
  * For reference, this image shows the byte layout of the GDP header:
  *
@@ -81,6 +79,13 @@ GST_DEBUG_CATEGORY_STATIC (data_protocol_debug);
 #ifndef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT data_protocol_debug
 #endif
+
+/* The version of the GDP protocol being used */
+typedef enum
+{
+  GST_DP_VERSION_0_2 = 1,
+  GST_DP_VERSION_1_0,
+} GstDPVersion;
 
 /* helper macros */
 
@@ -347,24 +352,6 @@ gst_dp_crc_from_memory_maps (const GstMapInfo * maps, guint n_maps)
   return (0xffff ^ crc_register);
 }
 
-GType
-gst_dp_version_get_type (void)
-{
-  static gsize gst_dp_version_type = 0;
-  static const GEnumValue gst_dp_version[] = {
-    {GST_DP_VERSION_0_2, "GST_DP_VERSION_0_2", "0.2"},
-    {GST_DP_VERSION_1_0, "GST_DP_VERSION_1_0", "1.0"},
-    {0, NULL, NULL},
-  };
-
-  if (g_once_init_enter (&gst_dp_version_type)) {
-    GType tmp = g_enum_register_static ("GstDPVersion", gst_dp_version);
-    g_once_init_leave (&gst_dp_version_type, tmp);
-  }
-
-  return (GType) gst_dp_version_type;
-};
-
 /**
  * gst_dp_init:
  *
@@ -376,15 +363,6 @@ gst_dp_version_get_type (void)
 void
 gst_dp_init (void)
 {
-  static gboolean _gst_dp_initialized = FALSE;
-
-  if (_gst_dp_initialized)
-    return;
-
-  _gst_dp_initialized = TRUE;
-
-  g_type_class_ref (gst_dp_version_get_type ());
-
   GST_DEBUG_CATEGORY_INIT (data_protocol_debug, "gdp", 0,
       "GStreamer Data Protocol");
 }
@@ -421,26 +399,26 @@ gst_dp_header_payload_type (const guint8 * header)
   return GST_DP_HEADER_PAYLOAD_TYPE (header);
 }
 
-/*** PACKETIZER FUNCTIONS ***/
+/* payloading functions */
 
-static gboolean
-gst_dp_header_from_buffer_1_0 (GstBuffer * buffer, GstDPHeaderFlag flags,
+gboolean
+gst_dp_buffer_to_header (GstBuffer * buffer, GstDPHeaderFlag flags,
     guint * length, guint8 ** header)
 {
   return gst_dp_header_from_buffer_any (buffer, flags, length, header,
       GST_DP_VERSION_1_0);
 }
 
-static gboolean
-gst_dp_packet_from_caps_1_0 (const GstCaps * caps, GstDPHeaderFlag flags,
+gboolean
+gst_dp_caps_to_header (const GstCaps * caps, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
 {
   return gst_dp_packet_from_caps_any (caps, flags, length, header, payload,
       GST_DP_VERSION_1_0);
 }
 
-static gboolean
-gst_dp_packet_from_event_1_0 (const GstEvent * event, GstDPHeaderFlag flags,
+gboolean
+gst_dp_event_to_header (const GstEvent * event, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
 {
   guint8 *h;
@@ -782,47 +760,4 @@ gst_dp_validate_packet (guint header_length, const guint8 * header,
     return FALSE;
 
   return TRUE;
-}
-
-/**
- * gst_dp_packetizer_new:
- * @version: the #GstDPVersion of the protocol to packetize for.
- *
- * Creates a new packetizer.
- *
- * Returns: a newly allocated #GstDPPacketizer
- */
-GstDPPacketizer *
-gst_dp_packetizer_new (GstDPVersion version)
-{
-  GstDPPacketizer *ret;
-
-  ret = g_malloc0 (sizeof (GstDPPacketizer));
-  ret->version = version;
-
-  switch (version) {
-    case GST_DP_VERSION_1_0:
-      ret->header_from_buffer = gst_dp_header_from_buffer_1_0;
-      ret->packet_from_caps = gst_dp_packet_from_caps_1_0;
-      ret->packet_from_event = gst_dp_packet_from_event_1_0;
-      break;
-    default:
-      g_free (ret);
-      ret = NULL;
-      break;
-  }
-
-  return ret;
-}
-
-/**
- * gst_dp_packetizer_free:
- * @packetizer: the #GstDPPacketizer to free.
- *
- * Free the given packetizer.
- */
-void
-gst_dp_packetizer_free (GstDPPacketizer * packetizer)
-{
-  g_free (packetizer);
 }

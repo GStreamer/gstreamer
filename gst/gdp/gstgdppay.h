@@ -65,8 +65,6 @@ struct _GstGDPPay
   gboolean crc_header;
   gboolean crc_payload;
   GstDPHeaderFlag header_flag;
-  GstDPVersion version;
-  GstDPPacketizer *packetizer;
 };
 
 struct _GstGDPPayClass

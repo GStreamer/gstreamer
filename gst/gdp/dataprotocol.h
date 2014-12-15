@@ -30,34 +30,6 @@
 G_BEGIN_DECLS
 
 /**
- * GstDPVersion:
- * @GST_DP_VERSION_0_2: protocol version 0.2
- * @GST_DP_VERSION_1_0: protocol version 1.0
- *
- * The version of the GDP protocol being used.
- */
-typedef enum {
-  GST_DP_VERSION_0_2 = 1,
-  GST_DP_VERSION_1_0,
-} GstDPVersion;
-
-GType gst_dp_version_get_type (void);
-#define GST_TYPE_DP_VERSION (gst_dp_version_get_type ())
-
-/**
- * GST_DP_VERSION_MAJOR:
- *
- * The major version number of the GStreamer Data Protocol.
- */
-#define GST_DP_VERSION_MAJOR 0
-/**
- * GST_DP_VERSION_MINOR:
- *
- * The minor version number of the GStreamer Data Protocol.
- */
-#define GST_DP_VERSION_MINOR 2
-
-/**
  * GST_DP_HEADER_LENGTH:
  *
  * The header size in bytes.
@@ -97,48 +69,7 @@ typedef enum {
   GST_DP_PAYLOAD_EVENT_NONE      = 64,
 } GstDPPayloadType;
 
-typedef gboolean (*GstDPHeaderFromBufferFunction) (GstBuffer * buffer,
-                                                   GstDPHeaderFlag flags,
-                                                   guint * length,
-                                                   guint8 ** header);
-typedef gboolean (*GstDPPacketFromCapsFunction)   (const GstCaps * caps,
-                                                   GstDPHeaderFlag flags,
-                                                   guint * length,
-                                                   guint8 ** header,
-                                                   guint8 ** payload);
-typedef gboolean (*GstDPPacketFromEventFunction)  (const GstEvent * event,
-                                                   GstDPHeaderFlag flags,
-                                                   guint * length,
-                                                   guint8 ** header,
-                                                   guint8 ** payload);
-
-/**
- * GstDPPacketizer:
- * @version: the #GstDPVersion of the protocol to be used
- * @header_from_buffer: buffer serializer function
- * @packet_from_caps: caps serializer function
- * @packet_from_event: event serializer function
- *
- * Data protocol packetizer handle.
- */
-typedef struct {
-  GstDPVersion version;
-
-  GstDPHeaderFromBufferFunction header_from_buffer;
-  GstDPPacketFromCapsFunction packet_from_caps;
-  GstDPPacketFromEventFunction packet_from_event;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-} GstDPPacketizer;
-
-
 void            gst_dp_init                     (void);
-
-/* packetizer */
-GstDPPacketizer *
-                gst_dp_packetizer_new           (GstDPVersion version);
-void            gst_dp_packetizer_free          (GstDPPacketizer *packetizer);
 
 /* payload information from header */
 guint32         gst_dp_header_payload_length    (const guint8 * header);
@@ -154,6 +85,24 @@ GstCaps *       gst_dp_caps_from_packet         (guint header_length,
 GstEvent *      gst_dp_event_from_packet        (guint header_length,
                                                 const guint8 * header,
                                                 const guint8 * payload);
+
+/* payloading GstBuffer/GstEvent/GstCaps */
+gboolean        gst_dp_buffer_to_header         (GstBuffer * buffer,
+                                                 GstDPHeaderFlag flags,
+                                                 guint * length,
+                                                 guint8 ** header);
+
+gboolean        gst_dp_caps_to_header           (const GstCaps * caps,
+                                                 GstDPHeaderFlag flags,
+                                                 guint * length,
+                                                 guint8 ** header,
+                                                 guint8 ** payload);
+
+gboolean        gst_dp_event_to_header          (const GstEvent * event,
+                                                 GstDPHeaderFlag flags,
+                                                 guint * length,
+                                                 guint8 ** header,
+                                                 guint8 ** payload);
 
 /* validation */
 gboolean        gst_dp_validate_header          (guint header_length,

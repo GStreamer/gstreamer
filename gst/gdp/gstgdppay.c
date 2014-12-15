@@ -57,14 +57,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_gdp_pay_debug);
 
 #define DEFAULT_CRC_HEADER TRUE
 #define DEFAULT_CRC_PAYLOAD FALSE
-#define DEFAULT_VERSION GST_DP_VERSION_1_0
 
 enum
 {
   PROP_0,
   PROP_CRC_HEADER,
-  PROP_CRC_PAYLOAD,
-  PROP_VERSION,
+  PROP_CRC_PAYLOAD
 };
 
 #define _do_init \
@@ -113,12 +111,6 @@ gst_gdp_pay_class_init (GstGDPPayClass * klass)
       g_param_spec_boolean ("crc-payload", "CRC Payload",
           "Calculate and store a CRC checksum on the payload",
           DEFAULT_CRC_PAYLOAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_VERSION,
-      g_param_spec_enum ("version", "Version",
-          "Version of the GStreamer Data Protocol",
-          GST_TYPE_DP_VERSION, DEFAULT_VERSION,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gst_element_class_set_static_metadata (gstelement_class,
       "GDP Payloader", "GDP/Payloader",
       "Payloads GStreamer Data Protocol buffers",
@@ -152,10 +144,7 @@ gst_gdp_pay_init (GstGDPPay * gdppay)
   gdppay->crc_header = DEFAULT_CRC_HEADER;
   gdppay->crc_payload = DEFAULT_CRC_PAYLOAD;
   gdppay->header_flag = gdppay->crc_header | gdppay->crc_payload;
-  gdppay->version = DEFAULT_VERSION;
   gdppay->offset = 0;
-
-  gdppay->packetizer = gst_dp_packetizer_new (gdppay->version);
 }
 
 static void
@@ -164,7 +153,6 @@ gst_gdp_pay_finalize (GObject * gobject)
   GstGDPPay *this = GST_GDP_PAY (gobject);
 
   gst_gdp_pay_reset (this);
-  gst_dp_packetizer_free (this->packetizer);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (gobject));
 }
@@ -212,8 +200,7 @@ gst_gdp_buffer_from_caps (GstGDPPay * this, GstCaps * caps)
   guint8 *header, *payload;
   guint len, plen;
 
-  if (!this->packetizer->packet_from_caps (caps, this->header_flag, &len,
-          &header, &payload))
+  if (!gst_dp_caps_to_header (caps, this->header_flag, &len, &header, &payload))
     goto packet_failed;
 
   GST_LOG_OBJECT (this, "creating GDP header and payload buffer from caps");
@@ -241,8 +228,7 @@ gst_gdp_pay_buffer_from_buffer (GstGDPPay * this, GstBuffer * buffer)
   guint8 *header;
   guint len;
 
-  if (!this->packetizer->header_from_buffer (buffer, this->header_flag, &len,
-          &header))
+  if (!gst_dp_buffer_to_header (buffer, this->header_flag, &len, &header))
     goto no_buffer;
 
   GST_LOG_OBJECT (this, "creating GDP header and payload buffer from buffer");
@@ -271,8 +257,8 @@ gst_gdp_buffer_from_event (GstGDPPay * this, GstEvent * event)
   gboolean ret;
 
   ret =
-      this->packetizer->packet_from_event (event, this->header_flag, &len,
-      &header, &payload);
+      gst_dp_event_to_header (event, this->header_flag, &len, &header,
+      &payload);
   if (!ret)
     goto no_event;
 
@@ -347,7 +333,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
   GstCaps *caps;
   GstStructure *structure;
   GstFlowReturn r = GST_FLOW_OK;
-  gboolean version_one_zero = TRUE;
   GstGDPPayAndArray gdp_and_array;
 
   GValue array = { 0 };
@@ -356,46 +341,19 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
   gdp_and_array.array = &array;
 
   GST_DEBUG_OBJECT (this, "start");
-  /* In version 0.2, we didn't need or send new segment or tags */
-  if (this->version == GST_DP_VERSION_0_2)
-    version_one_zero = FALSE;
 
-  if (version_one_zero) {
-    if (!this->have_segment || !this->have_caps || !this->have_streamstartid) {
-      GST_DEBUG_OBJECT (this, "1.0, missing new_segment or caps or stream "
-          "start id, returning");
-      return GST_FLOW_OK;
-    }
-  } else {
-    if (!this->have_caps) {
-      GST_DEBUG_OBJECT (this, "0.2, missing caps, returning");
-      return GST_FLOW_OK;
-    }
+  if (!this->have_segment || !this->have_caps || !this->have_streamstartid) {
+    GST_DEBUG_OBJECT (this, "1.0, missing new_segment or caps or stream "
+        "start id, returning");
+    return GST_FLOW_OK;
   }
 
   /* put copies of the buffers in a fixed list
    * Stamp the buffers with offset and offset_end as well.
    * We do this here so the offsets match the order the buffers go out in */
   g_value_init (&array, GST_TYPE_ARRAY);
-  if (version_one_zero) {
-    gst_pad_sticky_events_foreach (this->sinkpad,
-        gdp_streamheader_array_store_events, &gdp_and_array);
-  } else {
-    GstEvent *capsevent =
-        gst_pad_get_sticky_event (this->sinkpad, GST_EVENT_CAPS, 0);
-    if (capsevent) {
-      GstCaps *caps;
-      GstBuffer *capsbuffer = NULL;
-
-      gst_event_parse_caps (capsevent, &caps);
-      capsbuffer = gst_gdp_buffer_from_caps (this, caps);
-
-      gst_gdp_stamp_buffer (this, capsbuffer);
-      gdp_streamheader_array_append_take_buffer (&array, capsbuffer);
-
-      gst_event_unref (capsevent);
-    }
-  }
+  gst_pad_sticky_events_foreach (this->sinkpad,
+      gdp_streamheader_array_store_events, &gdp_and_array);
 
   /* we also need to add GDP serializations of the streamheaders of the
    * incoming caps */
@@ -761,9 +719,6 @@ gst_gdp_pay_set_property (GObject * object, guint prop_id,
           g_value_get_boolean (value) ? GST_DP_HEADER_FLAG_CRC_PAYLOAD : 0;
       this->header_flag = this->crc_header | this->crc_payload;
       break;
-    case PROP_VERSION:
-      this->version = g_value_get_enum (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -785,9 +740,6 @@ gst_gdp_pay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CRC_PAYLOAD:
       g_value_set_boolean (value, this->crc_payload);
-      break;
-    case PROP_VERSION:
-      g_value_set_enum (value, this->version);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
