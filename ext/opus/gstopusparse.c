@@ -199,6 +199,11 @@ gst_opus_parse_handle_frame (GstBaseParse * base,
 
       /* for ad hoc framing, heed the framing, so we eat any padding */
       payload_offset = packet_size;
+    } else {
+      /* Add up all the frame sizes found */
+      int f;
+      for (f = 0; f < nframes; ++f)
+        payload_offset += frame_sizes[f];
     }
   }
 
