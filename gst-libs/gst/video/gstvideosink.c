@@ -87,8 +87,8 @@ gst_video_sink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
   if (!scaling) {
     result->w = MIN (src.w, dst.w);
     result->h = MIN (src.h, dst.h);
-    result->x = (dst.w - result->w) / 2;
-    result->y = (dst.h - result->h) / 2;
+    result->x = dst.x + (dst.w - result->w) / 2;
+    result->y = dst.y + (dst.h - result->h) / 2;
   } else {
     gdouble src_ratio, dst_ratio;
 
@@ -98,16 +98,16 @@ gst_video_sink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
     if (src_ratio > dst_ratio) {
       result->w = dst.w;
       result->h = dst.w / src_ratio;
-      result->x = 0;
-      result->y = (dst.h - result->h) / 2;
+      result->x = dst.x;
+      result->y = dst.y + (dst.h - result->h) / 2;
     } else if (src_ratio < dst_ratio) {
       result->w = dst.h * src_ratio;
       result->h = dst.h;
-      result->x = (dst.w - result->w) / 2;
-      result->y = 0;
+      result->x = dst.x + (dst.w - result->w) / 2;
+      result->y = dst.y;
     } else {
-      result->x = 0;
-      result->y = 0;
+      result->x = dst.x;
+      result->y = dst.y;
       result->w = dst.w;
       result->h = dst.h;
     }

@@ -1693,6 +1693,66 @@ GST_START_TEST (test_overlay_composition_global_alpha)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_video_center_rect)
+{
+  GstVideoRectangle src, dest, result, expected;
+
+#define NEW_RECT(x,y,w,h) ((GstVideoRectangle) {x,y,w,h})
+#define CHECK_RECT(res, exp)			\
+  fail_unless_equals_int(exp.x, res.x);\
+  fail_unless_equals_int(exp.y, res.y);\
+  fail_unless_equals_int(exp.w, res.w);\
+  fail_unless_equals_int(exp.h, res.h);
+
+  /* 1:1 Aspect Ratio */
+  src = NEW_RECT (0, 0, 100, 100);
+  dest = NEW_RECT (0, 0, 100, 100);
+  expected = NEW_RECT (0, 0, 100, 100);
+  gst_video_sink_center_rect (src, dest, &result, TRUE);
+  CHECK_RECT (result, expected);
+
+  src = NEW_RECT (0, 0, 100, 100);
+  dest = NEW_RECT (0, 0, 50, 50);
+  expected = NEW_RECT (0, 0, 50, 50);
+  gst_video_sink_center_rect (src, dest, &result, TRUE);
+  CHECK_RECT (result, expected);
+
+  src = NEW_RECT (0, 0, 100, 100);
+  dest = NEW_RECT (50, 50, 100, 100);
+  expected = NEW_RECT (50, 50, 100, 100);
+  gst_video_sink_center_rect (src, dest, &result, TRUE);
+  CHECK_RECT (result, expected);
+
+  /* Aspect ratio scaling (tall) */
+  src = NEW_RECT (0, 0, 50, 100);
+  dest = NEW_RECT (0, 0, 50, 50);
+  expected = NEW_RECT (12, 0, 25, 50);
+  gst_video_sink_center_rect (src, dest, &result, TRUE);
+  CHECK_RECT (result, expected);
+
+  src = NEW_RECT (0, 0, 50, 100);
+  dest = NEW_RECT (50, 50, 50, 50);
+  expected = NEW_RECT (62, 50, 25, 50);
+  gst_video_sink_center_rect (src, dest, &result, TRUE);
+  CHECK_RECT (result, expected);
+
+  /* Aspect ratio scaling (wide) */
+  src = NEW_RECT (0, 0, 100, 50);
+  dest = NEW_RECT (0, 0, 50, 50);
+  expected = NEW_RECT (0, 12, 50, 25);
+  gst_video_sink_center_rect (src, dest, &result, TRUE);
+  CHECK_RECT (result, expected);
+
+  src = NEW_RECT (0, 0, 100, 50);
+  dest = NEW_RECT (50, 50, 50, 50);
+  expected = NEW_RECT (50, 62, 50, 25);
+  gst_video_sink_center_rect (src, dest, &result, TRUE);
+  CHECK_RECT (result, expected);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -1714,6 +1774,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_overlay_composition);
   tcase_add_test (tc_chain, test_overlay_composition_premultiplied_alpha);
   tcase_add_test (tc_chain, test_overlay_composition_global_alpha);
+  tcase_add_test (tc_chain, test_video_center_rect);
 
   return s;
 }
