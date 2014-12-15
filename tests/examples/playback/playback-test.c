@@ -293,13 +293,14 @@ typedef struct
 {
   const gchar *name;
   void (*func) (PlaybackApp * app, const gchar * location);
+  const gchar *help;
 }
 Pipeline;
 
 static const Pipeline pipelines[] = {
-  {"playbin", make_playbin_pipeline},
+  {"playbin", make_playbin_pipeline, "[URLS|FILENAMES]"},
 #ifndef GST_DISABLE_PARSE
-  {"parse-launch", make_parselaunch_pipeline},
+  {"parse-launch", make_parselaunch_pipeline, "[PARSE-LAUNCH-LINE]"},
 #endif
 };
 
@@ -2519,11 +2520,11 @@ print_usage (int argc, char **argv)
 {
   gint i;
 
-  g_print ("usage: %s <type> <filename>\n", argv[0]);
+  g_print ("Usage: %s <type> <argument>\n", argv[0]);
   g_print ("   possible types:\n");
 
   for (i = 0; i < G_N_ELEMENTS (pipelines); i++) {
-    g_print ("     %d = %s\n", i, pipelines[i].name);
+    g_print ("     %d = %s %s\n", i, pipelines[i].name, pipelines[i].help);
   }
 }
 
@@ -3311,7 +3312,19 @@ main (int argc, char **argv)
     exit (-1);
   }
 
-  app.pipeline_type = atoi (argv[1]);
+  app.pipeline_type = -1;
+  if (g_ascii_isdigit (argv[1][0])) {
+    app.pipeline_type = atoi (argv[1]);
+  } else {
+    gint i;
+
+    for (i = 0; i < G_N_ELEMENTS (pipelines); ++i) {
+      if (strcmp (pipelines[i].name, argv[1]) == 0) {
+        app.pipeline_type = i;
+        break;
+      }
+    }
+  }
 
   if (app.pipeline_type < 0 || app.pipeline_type >= G_N_ELEMENTS (pipelines)) {
     print_usage (argc, argv);
