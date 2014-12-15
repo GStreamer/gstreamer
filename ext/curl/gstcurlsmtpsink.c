@@ -204,17 +204,17 @@ gst_curl_smtp_sink_event (GstBaseSink * bsink, GstEvent * event)
       sink->eos = TRUE;
       GST_OBJECT_UNLOCK (sink);
 
-      if (sink->base64_chunk != NULL)
+      if (sink->base64_chunk != NULL && !sink->final_boundary_added) {
         add_final_boundary_unlocked (sink);
 
-      gst_curl_base_sink_transfer_thread_notify_unlocked (bcsink);
+        gst_curl_base_sink_transfer_thread_notify_unlocked (bcsink);
 
-      GST_OBJECT_LOCK (sink);
-      if (sink->base64_chunk != NULL && bcsink->flow_ret == GST_FLOW_OK) {
-        gst_curl_smtp_sink_wait_for_transfer_end_unlocked (sink);
+        GST_OBJECT_LOCK (sink);
+        if (sink->base64_chunk != NULL && bcsink->flow_ret == GST_FLOW_OK) {
+          gst_curl_smtp_sink_wait_for_transfer_end_unlocked (sink);
+        }
+        GST_OBJECT_UNLOCK (sink);
       }
-      GST_OBJECT_UNLOCK (sink);
-
       gst_curl_base_sink_transfer_thread_close (bcsink);
 
       break;
@@ -433,7 +433,7 @@ gst_curl_smtp_sink_set_property (GObject * object, guint prop_id,
         break;
       case PROP_NBR_ATTACHMENTS:
         sink->nbr_attachments = g_value_get_int (value);
-        sink->nbr_attachments_left = sink->nbr_attachments;
+        sink->curr_attachment = 1;
         GST_DEBUG_OBJECT (sink, "nbr-attachments set to %d",
             sink->nbr_attachments);
         break;
@@ -773,18 +773,19 @@ gst_curl_smtp_sink_flush_data_unlocked (GstCurlBaseSink * bcsink,
   gchar *data_out;
 
   GST_DEBUG
-      ("live: %d, num attachments: %d, num attachments_left: %d, eos: %d, "
-      "close_transfer: %d, final boundary: %d, array_len: %d", bcsink->is_live,
-      sink->nbr_attachments, sink->nbr_attachments_left, sink->eos,
-      close_transfer, sink->final_boundary_added, array->len);
+      ("live: %d, num attachments: %d, curr_attachment: %d, "
+      "eos: %d, close_transfer: %d, final boundary: %d, array_len: %d",
+      bcsink->is_live, sink->nbr_attachments, sink->curr_attachment,
+      sink->eos, close_transfer, sink->final_boundary_added, array->len);
 
 
-  if ((bcsink->is_live && (sink->nbr_attachments_left == sink->nbr_attachments))
+  if ((bcsink->is_live && (sink->curr_attachment == sink->nbr_attachments))
       || (sink->nbr_attachments == 1) || sink->eos
       || sink->final_boundary_added) {
     bcsink->is_live = FALSE;
     sink->reset_transfer_options = TRUE;
     sink->final_boundary_added = FALSE;
+    sink->curr_attachment = 1;
 
     GST_DEBUG ("returning 0, no more data to send in this transfer");
 
@@ -806,12 +807,8 @@ gst_curl_smtp_sink_flush_data_unlocked (GstCurlBaseSink * bcsink,
   g_free (data_out);
 
   if (new_file) {
-    sink->nbr_attachments_left--;
-
+    sink->curr_attachment++;
     bcsink->is_live = TRUE;
-    if (sink->nbr_attachments_left <= 1) {
-      sink->nbr_attachments_left = sink->nbr_attachments;
-    }
 
     /* reset flag */
     bcsink->new_file = FALSE;
@@ -925,13 +922,19 @@ gst_curl_smtp_sink_transfer_data_buffer (GstCurlBaseSink * bcsink,
   }
 
   if (sink->base64_chunk != NULL) {
-    if (sink->nbr_attachments_left == sink->nbr_attachments
-        && bcsink->is_live && bcsink->transfer_buf->len == 0) {
-      add_final_boundary_unlocked (sink);
-    }
     bytes_to_send =
         transfer_chunk (curl_ptr, bcsink->transfer_buf, sink->base64_chunk,
         block_size, last_chunk);
+
+    /* if last chunk of current buffer and max attachments per mail is reached
+     * then add final boundary */
+    if (*last_chunk && sink->curr_attachment == sink->nbr_attachments &&
+        !sink->final_boundary_added) {
+      add_final_boundary_unlocked (sink);
+      /* now that we've added the final boundary to the array we have on more
+       * chunk to send */
+      *last_chunk = 0;
+    }
 
     GST_OBJECT_LOCK (sink);
     if (sink->eos) {
