@@ -3172,8 +3172,12 @@ add_retransmission (GstRTSPSrc * src, GstRTSPTransport * transport)
       G_OBJECT_TYPE (src->manager));
   /* there's already something connected */
   if (g_signal_handler_find (src->manager, G_SIGNAL_MATCH_ID, signal_id, 0,
-          NULL, NULL, NULL) != 0)
+          NULL, NULL, NULL) != 0) {
+    GST_DEBUG_OBJECT (src, "Not adding RTX AUX element as "
+        "\"request-aux-receiver\" signal is "
+        "already used by the application");
     return;
+  }
 
   /* build the retransmission payload type map */
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
