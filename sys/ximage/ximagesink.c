@@ -230,7 +230,9 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstBuffer * ximage)
 {
   GstXImageMemory *mem;
   GstVideoCropMeta *crop;
-  GstVideoRectangle src, dst, result;
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle dst = { 0, };
+  GstVideoRectangle result;
   gboolean draw_border = FALSE;
 
   /* We take the flow_lock. If expose is in there we don't want to run
