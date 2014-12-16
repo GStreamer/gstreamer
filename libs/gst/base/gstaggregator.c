@@ -158,7 +158,7 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
         g_thread_self());                                                  \
   } G_STMT_END
 
-#define SRC_STREAM_WAIT(self)   G_STMT_START {                             \
+#define SRC_STREAM_WAIT(self) G_STMT_START {                               \
   GST_LOG_OBJECT (self, "Waiting for src STREAM on thread %p",             \
         g_thread_self());                                                  \
   g_cond_wait(&(self->priv->src_cond), &(self->priv->src_lock));           \
@@ -166,23 +166,22 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
         g_thread_self());                                                  \
   } G_STMT_END
 
-#define SRC_STREAM_BROADCAST(self) {                                       \
+#define SRC_STREAM_BROADCAST(self) G_STMT_START {                          \
   GST_LOG_OBJECT (self, "Signaling src STREAM from thread %p",             \
         g_thread_self());                                                  \
   g_cond_broadcast(&(self->priv->src_cond));                               \
-  }
+  } G_STMT_END
 
-#define KICK_SRC_THREAD(self) \
-  do { \
-    SRC_STREAM_LOCK (self); \
-    GST_LOG_OBJECT (self, "kicking src STREAM from thread %p", \
-          g_thread_self ()); \
-    if (self->priv->aggregate_id) \
-      gst_clock_id_unschedule (self->priv->aggregate_id); \
-    self->priv->n_kicks++; \
-    SRC_STREAM_BROADCAST (self); \
-    SRC_STREAM_UNLOCK (self); \
-  } while (0)
+#define KICK_SRC_THREAD(self) G_STMT_START {                               \
+    SRC_STREAM_LOCK (self);                                                \
+    GST_LOG_OBJECT (self, "kicking src STREAM from thread %p",             \
+          g_thread_self ());                                               \
+    if (self->priv->aggregate_id)                                          \
+      gst_clock_id_unschedule (self->priv->aggregate_id);                  \
+    self->priv->n_kicks++;                                                 \
+    SRC_STREAM_BROADCAST (self);                                           \
+    SRC_STREAM_UNLOCK (self);                                              \
+  } G_STMT_END
 
 struct _GstAggregatorPadPrivate
 {
@@ -511,13 +510,21 @@ _wait_and_check (GstAggregator * self)
       SRC_STREAM_WAIT (self);
     self->priv->n_kicks--;
   } else {
-    GstClockTime time;
+    GstClockTime base_time, time;
+    GstClock *clock;
     GstClockReturn status;
 
     GST_DEBUG_OBJECT (self, "got subclass start time: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start));
 
-    time = GST_ELEMENT_CAST (self)->base_time + start;
+    GST_OBJECT_LOCK (self);
+    base_time = GST_ELEMENT_CAST (self)->base_time;
+    clock = GST_ELEMENT_CLOCK (self);
+    if (clock)
+      gst_object_ref (clock);
+    GST_OBJECT_UNLOCK (self);
+
+    time = base_time + start;
 
     if (GST_CLOCK_TIME_IS_VALID (latency_max)) {
       time += latency_max;
@@ -534,10 +541,10 @@ _wait_and_check (GstAggregator * self)
         GST_TIME_ARGS (GST_ELEMENT_CAST (self)->base_time),
         GST_TIME_ARGS (start), GST_TIME_ARGS (latency_max),
         GST_TIME_ARGS (latency_min),
-        GST_TIME_ARGS (gst_clock_get_time (GST_ELEMENT_CLOCK (self))));
+        GST_TIME_ARGS (gst_clock_get_time (clock)));
 
-    self->priv->aggregate_id =
-        gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (self), time);
+    self->priv->aggregate_id = gst_clock_new_single_shot_id (clock, time);
+    gst_object_unref (clock);
     SRC_STREAM_UNLOCK (self);
 
     status = gst_clock_id_wait (self->priv->aggregate_id, NULL);
@@ -1030,8 +1037,7 @@ gst_aggregator_get_latency (GstAggregator * self, gboolean * live,
   max = self->priv->latency_max;
 
   if (GST_CLOCK_TIME_IS_VALID (self->latency)) {
-    if (GST_CLOCK_TIME_IS_VALID (min))
-      min += self->latency;
+    min += self->latency;
     if (GST_CLOCK_TIME_IS_VALID (max))
       max += self->latency;
   }
@@ -1064,6 +1070,11 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
         ("The requested latency value is too big for the current pipeline.  "
             "Limiting to %" G_GINT64_FORMAT, data.max));
     self->latency = data.max;
+  }
+
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (data.min))) {
+    GST_WARNING_OBJECT (self, "Invalid minimum latency, using 0");
+    data.min = 0;
   }
 
   self->priv->latency_live = data.live;
