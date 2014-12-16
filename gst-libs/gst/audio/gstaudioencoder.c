@@ -152,6 +152,7 @@
 #endif
 
 #include "gstaudioencoder.h"
+#include "gstaudioutilsprivate.h"
 #include <gst/base/gstadapter.h>
 #include <gst/audio/audio.h>
 #include <gst/pbutils/descriptions.h>
@@ -1359,70 +1360,9 @@ GstCaps *
 gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps,
     GstCaps * filter)
 {
-  GstCaps *templ_caps = NULL;
-  GstCaps *allowed = NULL;
-  GstCaps *fcaps, *filter_caps;
-  gint i, j;
-
-  /* we want to be able to communicate to upstream elements like audioconvert
-   * and audioresample any rate/channel restrictions downstream (e.g. muxer
-   * only accepting certain sample rates) */
-  templ_caps =
-      caps ? gst_caps_ref (caps) : gst_pad_get_pad_template_caps (enc->sinkpad);
-  allowed = gst_pad_get_allowed_caps (enc->srcpad);
-  if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
-    fcaps = templ_caps;
-    goto done;
-  }
-
-  GST_LOG_OBJECT (enc, "template caps %" GST_PTR_FORMAT, templ_caps);
-  GST_LOG_OBJECT (enc, "allowed caps %" GST_PTR_FORMAT, allowed);
-
-  filter_caps = gst_caps_new_empty ();
-
-  for (i = 0; i < gst_caps_get_size (templ_caps); i++) {
-    GQuark q_name;
-
-    q_name = gst_structure_get_name_id (gst_caps_get_structure (templ_caps, i));
-
-    /* pick rate + channel fields from allowed caps */
-    for (j = 0; j < gst_caps_get_size (allowed); j++) {
-      const GstStructure *allowed_s = gst_caps_get_structure (allowed, j);
-      const GValue *val;
-      GstStructure *s;
-
-      s = gst_structure_new_id_empty (q_name);
-      if ((val = gst_structure_get_value (allowed_s, "rate")))
-        gst_structure_set_value (s, "rate", val);
-      if ((val = gst_structure_get_value (allowed_s, "channels")))
-        gst_structure_set_value (s, "channels", val);
-      /* following might also make sense for some encoded formats,
-       * e.g. wavpack */
-      if ((val = gst_structure_get_value (allowed_s, "channel-mask")))
-        gst_structure_set_value (s, "channel-mask", val);
-
-      filter_caps = gst_caps_merge_structure (filter_caps, s);
-    }
-  }
-
-  fcaps = gst_caps_intersect (filter_caps, templ_caps);
-  gst_caps_unref (filter_caps);
-  gst_caps_unref (templ_caps);
-
-  if (filter) {
-    GST_LOG_OBJECT (enc, "intersecting with %" GST_PTR_FORMAT, filter);
-    filter_caps = gst_caps_intersect_full (filter, fcaps,
-        GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (fcaps);
-    fcaps = filter_caps;
-  }
-
-done:
-  gst_caps_replace (&allowed, NULL);
-
-  GST_LOG_OBJECT (enc, "proxy caps %" GST_PTR_FORMAT, fcaps);
-
-  return fcaps;
+  return __gst_audio_element_proxy_getcaps (GST_ELEMENT_CAST (enc),
+      GST_AUDIO_ENCODER_SINK_PAD (enc), GST_AUDIO_ENCODER_SRC_PAD (enc),
+      caps, filter);
 }
 
 static GstCaps *
