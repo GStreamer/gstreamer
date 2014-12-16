@@ -308,6 +308,8 @@ gst_vaapi_decoder_mpeg2_close(GstVaapiDecoderMpeg2 *decoder)
     gst_vaapi_parser_info_mpeg2_replace(&priv->quant_matrix, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->slice_hdr, NULL);
 
+    priv->state = 0;
+
     gst_vaapi_dpb_replace(&priv->dpb, NULL);
 }
 
@@ -1104,6 +1106,9 @@ parse_slice(GstVaapiDecoderMpeg2 *decoder,
                     GST_MPEG_VIDEO_STATE_GOT_PIC_HDR|
                     GST_MPEG_VIDEO_STATE_GOT_PIC_EXT);
 
+    if (!is_valid_state(decoder, GST_MPEG_VIDEO_STATE_VALID_PIC_HEADERS))
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
     if (!gst_vaapi_parser_info_mpeg2_ensure(&priv->slice_hdr)) {
         GST_ERROR("failed to allocate parser info for slice header");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -1538,7 +1543,8 @@ gst_vaapi_decoder_mpeg2_flush(GstVaapiDecoder *base_decoder)
         GST_VAAPI_DECODER_MPEG2_CAST(base_decoder);
     GstVaapiDecoderMpeg2Private * const priv = &decoder->priv;
 
-    gst_vaapi_dpb_flush(priv->dpb);
+    if (priv->dpb)
+      gst_vaapi_dpb_flush(priv->dpb);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
