@@ -235,6 +235,15 @@ gst_audiomixer_do_clip (GstAggregator * agg,
     GstAggregatorPad * bpad, GstBuffer * buffer, GstBuffer ** outbuf);
 static GstFlowReturn gst_audiomixer_aggregate (GstAggregator * agg);
 
+static GstClockTime
+gst_audiomixer_get_next_time (GstAggregator * agg)
+{
+  if (agg->segment.position == -1)
+    return agg->segment.start;
+  else
+    return agg->segment.position;
+}
+
 /* we can only accept caps that we and downstream can handle.
  * if we have filtercaps set, use those to constrain the target caps.
  */
@@ -814,6 +823,8 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
   agg_class->sinkpads_type = GST_TYPE_AUDIO_MIXER_PAD;
   agg_class->start = gst_audiomixer_start;
   agg_class->stop = gst_audiomixer_stop;
+
+  agg_class->get_next_time = gst_audiomixer_get_next_time;
 
   agg_class->sink_query = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_query);
   agg_class->sink_event = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_event);
