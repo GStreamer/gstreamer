@@ -1263,18 +1263,18 @@ gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
 static GList *
 _find_payload_types (GstRTSPMedia * media)
 {
-  GList *ret = NULL;
   gint i, n;
+  GQueue queue = G_QUEUE_INIT;
 
   n = media->priv->streams->len;
   for (i = 0; i < n; i++) {
     GstRTSPStream *stream = g_ptr_array_index (media->priv->streams, i);
     guint pt = gst_rtsp_stream_get_pt (stream);
 
-    ret = g_list_append (ret, GUINT_TO_POINTER (pt));
+    g_queue_push_tail (&queue, GUINT_TO_POINTER (pt));
   }
 
-  return ret;
+  return queue.head;
 }
 
 static guint
@@ -1411,7 +1411,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
     guint rtx_pt = _next_available_pt (priv->payloads);
 
     if (rtx_pt == 0) {
-      /* FIXME: ran out of space of dynamic payload types */
+      GST_WARNING ("Ran out of space of dynamic payload types");
       break;
     }
 
