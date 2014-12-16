@@ -1348,7 +1348,7 @@ gst_rtsp_stream_get_retransmission_time (GstRTSPStream * stream)
 {
   GstClockTime ret;
 
-  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), 0);
 
   g_mutex_lock (&stream->priv->lock);
   ret = stream->priv->rtx_time;
@@ -1381,7 +1381,7 @@ gst_rtsp_stream_get_retransmission_pt (GstRTSPStream * stream)
 {
   guint rtx_pt;
 
-  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), 0);
 
   g_mutex_lock (&stream->priv->lock);
   rtx_pt = stream->priv->rtx_pt;
