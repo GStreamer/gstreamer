@@ -1228,17 +1228,17 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
       GST_MINI_OBJECT_FLAGS (buffer));
 
   /* memory should be untouched */
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY))
-    goto discard;
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY)))
+    goto memory_tagged;
 
   /* size should have been reset. This is not a catch all, pool with
    * size requirement per memory should do their own check. */
-  if (gst_buffer_get_size (buffer) != pool->priv->size)
-    goto discard;
+  if (G_UNLIKELY (gst_buffer_get_size (buffer) != pool->priv->size))
+    goto size_changed;
 
   /* all memory should be exclusive to this buffer (and thus be writable) */
-  if (!gst_buffer_is_all_memory_writable (buffer))
-    goto discard;
+  if (G_UNLIKELY (!gst_buffer_is_all_memory_writable (buffer)))
+    goto not_writable;
 
   /* keep it around in our queue */
   gst_atomic_queue_push (pool->priv->queue, buffer);
@@ -1246,6 +1246,25 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 
   return;
 
+memory_tagged:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pool,
+        "discarding buffer %p: memory tag set", buffer);
+    goto discard;
+  }
+size_changed:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pool,
+        "discarding buffer %p: size %" G_GSIZE_FORMAT " != %u",
+        buffer, gst_buffer_get_size (buffer), pool->priv->size);
+    goto discard;
+  }
+not_writable:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pool,
+        "discarding buffer %p: memory not writable", buffer);
+    goto discard;
+  }
 discard:
   {
     do_free_buffer (pool, buffer);
