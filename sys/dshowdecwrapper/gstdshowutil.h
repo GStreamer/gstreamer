@@ -24,6 +24,8 @@
 #define _GST_DSHOW_UTIL_H_
 
 #include <windows.h>
+#include <tchar.h>
+#include <comdef.h>
 #include <objbase.h>
 #include <dshow.h>
 #include <Rpc.h>
@@ -31,6 +33,16 @@
 #include <strmif.h>
 
 #include <glib.h>
+
+_COM_SMARTPTR_TYPEDEF(IBaseFilter, __uuidof(IBaseFilter));
+_COM_SMARTPTR_TYPEDEF(IFilterGraph, __uuidof(IFilterGraph));
+_COM_SMARTPTR_TYPEDEF(IFilterMapper2, __uuidof(IFilterMapper2));
+_COM_SMARTPTR_TYPEDEF(IEnumMediaTypes, __uuidof(IEnumMediaTypes));
+_COM_SMARTPTR_TYPEDEF(IEnumMoniker, __uuidof(IEnumMoniker));
+_COM_SMARTPTR_TYPEDEF(IEnumPins, __uuidof(IEnumPins));
+_COM_SMARTPTR_TYPEDEF(IMediaFilter, __uuidof(IMediaFilter));
+_COM_SMARTPTR_TYPEDEF(IMoniker, __uuidof(IMoniker));
+_COM_SMARTPTR_TYPEDEF(IPin, __uuidof(IPin));
 
 typedef struct {
   const GUID *filter_guid;  /* The filter GUID, or DMO GUID */

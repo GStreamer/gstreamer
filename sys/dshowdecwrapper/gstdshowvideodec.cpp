@@ -47,7 +47,6 @@
 #include "config.h"
 #endif
 
-#include <atlbase.h>
 #include <dmoreg.h>
 #include <wmcodecdsp.h>
 
@@ -593,8 +592,8 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstCaps *caps_out = NULL;
   AM_MEDIA_TYPE output_mediatype, input_mediatype;
   VIDEOINFOHEADER *input_vheader = NULL, *output_vheader = NULL;
-  CComPtr<IPin> output_pin;
-  CComPtr<IPin> input_pin;
+  IPinPtr output_pin;
+  IPinPtr input_pin;
   IBaseFilter *srcfilter = NULL;
   IBaseFilter *sinkfilter = NULL;
   const GValue *fps, *par;
@@ -968,8 +967,8 @@ gst_dshowvideodec_src_getcaps (GstPad * pad)
     vdec->srccaps = gst_caps_new_empty ();
 
   if (vdec->decfilter) {
-    CComPtr<IPin> output_pin;
-    CComPtr<IEnumMediaTypes> enum_mediatypes;
+    IPinPtr output_pin;
+    IEnumMediaTypesPtr enum_mediatypes;
     HRESULT hres;
     ULONG fetched;
 
@@ -1058,8 +1057,8 @@ static gboolean
 gst_dshowvideodec_get_filter_output_format (GstDshowVideoDec * vdec,
     const GUID subtype, VIDEOINFOHEADER ** format, guint * size)
 {
-  CComPtr<IPin> output_pin;
-  CComPtr<IEnumMediaTypes> enum_mediatypes;
+  IPinPtr output_pin;
+  IEnumMediaTypesPtr enum_mediatypes;
   HRESULT hres;
   ULONG fetched;
   BOOL ret = FALSE;
@@ -1304,7 +1303,7 @@ dshow_vdec_register (GstPlugin * plugin)
 
   for (i = 0; i < sizeof (video_dec_codecs) / sizeof (VideoCodecEntry); i++) {
     GType type;
-    CComPtr<IBaseFilter> filter;
+    IBaseFilterPtr filter;
     guint rank = GST_RANK_MARGINAL;
 
     filter = gst_dshow_find_filter (

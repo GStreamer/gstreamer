@@ -869,11 +869,11 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec, GstCaps *caps)
   GstCaps *outcaps = NULL;
   AM_MEDIA_TYPE *output_mediatype = NULL;
   AM_MEDIA_TYPE *input_mediatype = NULL;
-  CComPtr<IPin> output_pin = NULL;
-  CComPtr<IPin> input_pin = NULL;
+  IPinPtr output_pin = NULL;
+  IPinPtr input_pin = NULL;
   const AudioCodecEntry *codec_entry = klass->entry;
-  CComQIPtr<IBaseFilter> srcfilter;
-  CComQIPtr<IBaseFilter> sinkfilter;
+  IBaseFilterPtr srcfilter;
+  IBaseFilterPtr sinkfilter;
   GstAudioInfo audio_info;
 
   input_mediatype = dshowaudiodec_set_input_format (adec, caps);
@@ -972,8 +972,8 @@ end:
 static gboolean
 gst_dshowaudiodec_get_filter_settings (GstDshowAudioDec * adec)
 {
-  CComPtr<IPin> output_pin;
-  CComPtr<IEnumMediaTypes> enum_mediatypes;
+  IPinPtr output_pin;
+  IEnumMediaTypesPtr enum_mediatypes;
   HRESULT hres;
   ULONG fetched;
   BOOL ret = FALSE;
@@ -1018,13 +1018,13 @@ gst_dshowaudiodec_create_graph_and_filters (GstDshowAudioDec * adec)
   HRESULT hres;
   GstDshowAudioDecClass *klass =
       (GstDshowAudioDecClass *) G_OBJECT_GET_CLASS (adec);
-  CComQIPtr<IBaseFilter> srcfilter;
-  CComQIPtr<IBaseFilter> sinkfilter;
+  IBaseFilterPtr srcfilter;
+  IBaseFilterPtr sinkfilter;
   GUID insubtype = GUID_MEDIASUBTYPE_FROM_FOURCC (klass->entry->format);
   GUID outsubtype = GUID_MEDIASUBTYPE_FROM_FOURCC (WAVE_FORMAT_PCM);
 
   /* create the filter graph manager object */
-  hres = adec->filtergraph.CoCreateInstance (
+  hres = adec->filtergraph.CreateInstance (
       CLSID_FilterGraph, NULL, CLSCTX_INPROC);
   if (FAILED (hres)) {
     GST_ELEMENT_ERROR (adec, STREAM, FAILED,
@@ -1112,7 +1112,7 @@ gst_dshowaudiodec_destroy_graph_and_filters (GstDshowAudioDec * adec)
 
   if (adec->fakesrc) {
     if (adec->filtergraph) {
-      CComQIPtr<IBaseFilter> filter = adec->fakesrc;
+      IBaseFilterPtr filter = adec->fakesrc;
       adec->filtergraph->RemoveFilter(filter);
     }
     adec->fakesrc->Release();
@@ -1125,7 +1125,7 @@ gst_dshowaudiodec_destroy_graph_and_filters (GstDshowAudioDec * adec)
   }
   if (adec->fakesink) {
     if (adec->filtergraph) {
-      CComQIPtr<IBaseFilter> filter = adec->fakesink;
+      IBaseFilterPtr filter = adec->fakesink;
       adec->filtergraph->RemoveFilter(filter);
     }
 
@@ -1163,7 +1163,7 @@ dshow_adec_register (GstPlugin * plugin)
   hr = CoInitialize(0);
   for (i = 0; i < sizeof (audio_dec_codecs) / sizeof (AudioCodecEntry); i++) {
     GType type;
-    CComPtr<IBaseFilter> filter;
+    IBaseFilterPtr filter;
     GUID insubtype = GUID_MEDIASUBTYPE_FROM_FOURCC (audio_dec_codecs[i].format);
     GUID outsubtype = GUID_MEDIASUBTYPE_FROM_FOURCC (WAVE_FORMAT_PCM);
 

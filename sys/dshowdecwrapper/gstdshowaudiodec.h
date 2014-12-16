@@ -47,8 +47,6 @@
 #ifndef __GST_DSHOWAUDIODEC_H__
 #define __GST_DSHOWAUDIODEC_H__
 
-#include <atlbase.h>
-
 #include <gst/gst.h>
 #include "gstdshowutil.h"
 #include "gstdshowfakesrc.h"
@@ -88,11 +86,11 @@ struct _GstDshowAudioDec
   FakeSrc *fakesrc;
   AudioFakeSink *fakesink;
 
-  CComPtr<IBaseFilter> decfilter;
+  IBaseFilterPtr decfilter;
   
   /* graph manager interfaces */  
-  CComPtr<IMediaFilter> mediafilter;
-  CComPtr<IFilterGraph> filtergraph;
+  IMediaFilterPtr mediafilter;
+  IFilterGraphPtr filtergraph;
 
   /* true when dshow graph is setup */
   gboolean setup;
