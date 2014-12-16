@@ -484,6 +484,14 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
       break;
   }
 
+  /* libv4l2 conversion code does not handle CREATE_BUFS, and may lead to
+   * instability and crash, disable it for now */
+  if (can_allocate && obj->fmtdesc->flags & V4L2_FMT_FLAG_EMULATED) {
+    GST_WARNING_OBJECT (pool,
+        "libv4l2 converter detected, disabling CREATE_BUFS");
+    can_allocate = FALSE;
+  }
+
   if (min_buffers < GST_V4L2_MIN_BUFFERS) {
     updated = TRUE;
     min_buffers = GST_V4L2_MIN_BUFFERS;
