@@ -228,8 +228,8 @@ GST_START_TEST (test_pool_config_validate)
 
   fail_unless (gst_buffer_pool_config_validate_params (config, caps, 5, 4, 0));
   fail_unless (gst_buffer_pool_config_validate_params (config, caps, 5, 2, 0));
+  fail_unless (gst_buffer_pool_config_validate_params (config, caps, 4, 4, 0));
   fail_if (gst_buffer_pool_config_validate_params (config, caps, 5, 6, 0));
-  fail_if (gst_buffer_pool_config_validate_params (config, caps, 4, 4, 0));
 
   gst_caps_unref (caps);
   caps = gst_caps_new_empty_simple ("test/data2");

@@ -1049,9 +1049,11 @@ gst_buffer_pool_config_get_allocator (GstStructure * config,
  * Validate that changes made to @config are still valid in the context of the
  * expected parameters. This function is a helper that can be used to validate
  * changes made by a pool to a config when gst_buffer_pool_set_config()
- * returns %FALSE. This expects that @caps and @size haven't changed, and that
- * @min_buffers aren't lower then what we initially expected. This does not check
- * if options or allocator parameters.
+ * returns %FALSE. This expects that @caps haven't changed and that
+ * @min_buffers aren't lower then what we initially expected.
+ * This does not check if options or allocator parameters are still valid,
+ * won't check if size have changed, since changing the size is valid to adapt
+ * padding.
  *
  * Since: 1.4
  *
@@ -1069,7 +1071,7 @@ gst_buffer_pool_config_validate_params (GstStructure * config, GstCaps * caps,
 
   gst_buffer_pool_config_get_params (config, &newcaps, &newsize, &newmin, NULL);
 
-  if (gst_caps_is_equal (caps, newcaps) && (size == newsize)
+  if (gst_caps_is_equal (caps, newcaps) && (newsize >= size)
       && (newmin >= min_buffers))
     ret = TRUE;
 
