@@ -587,7 +587,9 @@ gst_osx_video_sink_navigation_send_event (GstNavigation * navigation,
   GstOSXVideoSink *osxvideosink = GST_OSX_VIDEO_SINK (navigation);
   GstPad *peer;
   GstEvent *event;
-  GstVideoRectangle src, dst, result;
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle dst = { 0, };
+  GstVideoRectangle result;
   NSRect bounds;
   gdouble x, y, xscale = 1.0, yscale = 1.0;
 
