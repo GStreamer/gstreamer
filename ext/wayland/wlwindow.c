@@ -237,7 +237,8 @@ gst_wl_window_is_toplevel (GstWlWindow * window)
 static void
 gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
 {
-  GstVideoRectangle src, res;
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle res;
 
   /* center the video_subsurface inside area_subsurface */
   src.w = window->video_width;
@@ -256,7 +257,8 @@ gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
     struct wl_region *region;
 
     region = wl_compositor_create_region (window->display->compositor);
-    wl_region_add(region, 0, 0, window->render_rectangle.w, window->render_rectangle.h);
+    wl_region_add (region, 0, 0, window->render_rectangle.w,
+        window->render_rectangle.h);
     wl_surface_set_input_region (window->area_surface, region);
     wl_region_destroy (region);
   }

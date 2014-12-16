@@ -92,7 +92,8 @@ static gboolean gst_ddrawvideosink_get_format_from_caps (GstDirectDrawSink *
 static void gst_directdraw_sink_center_rect (GstDirectDrawSink * ddrawsink,
     RECT src, RECT dst, RECT * result);
 static const char *DDErrorString (HRESULT hr);
-static long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+static long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam,
+    LPARAM lParam);
 
 /* surfaces management functions */
 static void gst_directdraw_sink_surface_destroy (GstDirectDrawSink * ddrawsink,
@@ -209,9 +210,11 @@ gst_directdraw_sink_navigation_send_event (GstNavigation * navigation,
 {
   GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (navigation);
   GstEvent *event;
-  GstVideoRectangle src, dst, result;
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle dst = { 0, };
+  GstVideoRectangle result;
   RECT rect;
-  gdouble x, y, old_x, old_y, xscale = 1.0, yscale=1.0;
+  gdouble x, y, old_x, old_y, xscale = 1.0, yscale = 1.0;
   GstPad *pad = NULL;
 
   src.w = GST_VIDEO_SINK_WIDTH (ddrawsink);
@@ -519,7 +522,7 @@ gst_directdraw_sink_init (GstDirectDrawSink * ddrawsink,
   ddrawsink->video_window = NULL;
   ddrawsink->our_video_window = TRUE;
   ddrawsink->previous_wndproc = NULL;
-  ddrawsink->previous_user_data = (LONG_PTR)NULL;
+  ddrawsink->previous_user_data = (LONG_PTR) NULL;
   ddrawsink->last_buffer = NULL;
   ddrawsink->caps = NULL;
   ddrawsink->window_thread = NULL;
@@ -1575,14 +1578,15 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     /* Temporarily restore the previous user_data */
     if (ddrawsink->previous_user_data)
-      SetWindowLongPtr ( hWnd, GWLP_USERDATA, ddrawsink->previous_user_data );
+      SetWindowLongPtr (hWnd, GWLP_USERDATA, ddrawsink->previous_user_data);
 
     /* Call previous WndProc */
-    ret = CallWindowProc (
-        ddrawsink->previous_wndproc, hWnd, message, wParam, lParam);
+    ret =
+        CallWindowProc (ddrawsink->previous_wndproc, hWnd, message, wParam,
+        lParam);
 
     /* Point the user_data back to our ddraw_sink */
-    SetWindowLongPtr ( hWnd, GWLP_USERDATA, (LONG_PTR)ddrawsink );
+    SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG_PTR) ddrawsink);
   } else {
     /* if there was no previous custom WndProc, call Window's default one */
     ret = DefWindowProc (hWnd, message, wParam, lParam);
