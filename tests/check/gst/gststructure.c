@@ -668,6 +668,60 @@ GST_START_TEST (test_vararg_getters)
 
 GST_END_TEST;
 
+static gboolean
+foreach_func (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  gint *sum = user_data;
+  gint v = 0;
+
+  if (G_VALUE_HOLDS_INT (value))
+    v = g_value_get_int (value);
+  *sum += v;
+
+  return TRUE;
+}
+
+GST_START_TEST (test_foreach)
+{
+  GstStructure *s;
+  gint sum = 0;
+
+  s = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 1, "bla", G_TYPE_INT, 3,
+      NULL);
+  fail_unless (gst_structure_foreach (s, foreach_func, &sum));
+  fail_unless_equals_int (sum, 4);
+  gst_structure_free (s);
+
+}
+
+GST_END_TEST;
+
+static gboolean
+map_func (GQuark field_id, GValue * value, gpointer user_data)
+{
+  if (G_VALUE_HOLDS_INT (value))
+    g_value_set_int (value, 123);
+
+  return TRUE;
+}
+
+GST_START_TEST (test_map_in_place)
+{
+  GstStructure *s, *s2;
+
+  s = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 1, "bla", G_TYPE_INT, 3,
+      NULL);
+  s2 = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 123, "bla", G_TYPE_INT,
+      123, NULL);
+  fail_unless (gst_structure_map_in_place (s, map_func, NULL));
+  fail_unless (gst_structure_is_equal (s, s2));
+  gst_structure_free (s);
+  gst_structure_free (s2);
+
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_structure_suite (void)
 {
@@ -690,6 +744,8 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_structure_nested);
   tcase_add_test (tc_chain, test_structure_nested_from_and_to_string);
   tcase_add_test (tc_chain, test_vararg_getters);
+  tcase_add_test (tc_chain, test_foreach);
+  tcase_add_test (tc_chain, test_map_in_place);
   return s;
 }
 
