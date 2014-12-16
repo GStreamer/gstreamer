@@ -542,8 +542,10 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstXImageBufferPool *xpool = GST_XIMAGE_BUFFER_POOL_CAST (pool);
   GstVideoInfo info;
   GstCaps *caps;
+  guint size, min_buffers, max_buffers;
 
-  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
+  if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
+          &max_buffers))
     goto wrong_config;
 
   if (caps == NULL)
@@ -595,6 +597,9 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       xpool->align.padding_bottom;
 
   xpool->info = info;
+
+  gst_buffer_pool_config_set_params (config, caps, info.size, min_buffers,
+      max_buffers);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
