@@ -187,7 +187,8 @@ gst_wl_window_is_toplevel (GstWlWindow * window)
 static void
 gst_wl_window_resize_internal (GstWlWindow * window, gboolean commit)
 {
-  GstVideoRectangle src, res;
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle res;
 
   src.w = window->video_width;
   src.h = window->video_height;

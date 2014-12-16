@@ -564,7 +564,8 @@ gst_pvrvideosink_blit (GstPVRVideoSink * pvrvideosink, GstBuffer * buffer)
   }
 
   if (pvrvideosink->keep_aspect) {
-    GstVideoRectangle src, dst;
+    GstVideoRectangle src = { 0, };
+    GstVideoRectangle dst = { 0, };
 
     src.w = GST_VIDEO_SINK_WIDTH (pvrvideosink);
     src.h = GST_VIDEO_SINK_HEIGHT (pvrvideosink);

@@ -1742,7 +1742,9 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstDfbVideoSink *dfbvideosink = NULL;
   DFBResult res;
-  GstVideoRectangle dst, src, result;
+  GstVideoRectangle dst = { 0, };
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle result;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean mem_cpy = TRUE;
   GstMetaDfbSurface *meta;
@@ -1973,7 +1975,9 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
 {
   GstDfbVideoSink *dfbvideosink = GST_DFBVIDEOSINK (navigation);
   GstEvent *event;
-  GstVideoRectangle src, dst, result;
+  GstVideoRectangle dst = { 0, };
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle result;
   double x, y, old_x, old_y;
   GstPad *pad = NULL;
 

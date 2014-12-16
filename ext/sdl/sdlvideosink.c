@@ -944,7 +944,9 @@ gst_sdlvideosink_navigation_send_event (GstNavigation * navigation,
 {
   GstSDLVideoSink *sdlvideosink = GST_SDLVIDEOSINK (navigation);
   GstEvent *event;
-  GstVideoRectangle src, dst, result;
+  GstVideoRectangle dst = { 0, };
+  GstVideoRectangle src = { 0, };
+  GstVideoRectangle result;
   double x, y, old_x, old_y;
   GstPad *pad = NULL;
 

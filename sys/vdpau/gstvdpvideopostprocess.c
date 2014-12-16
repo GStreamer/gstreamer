@@ -674,9 +674,8 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
     GstVdpOutputBuffer *outbuf;
 
     GstStructure *structure;
-    GstVideoRectangle src_r = { 0, }
-    , dest_r = {
-    0,};
+    GstVideoRectangle src_r = { 0, };
+    GstVideoRectangle dest_r = { 0, };
     VdpRect rect;
 
     GstVdpDevice *device;
@@ -705,7 +704,7 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
       goto invalid_caps;
 
     if (vpp->force_aspect_ratio) {
-      GstVideoRectangle res_r;
+      GstVideoRectangle res_r = { 0, };
 
       gst_video_sink_center_rect (src_r, dest_r, &res_r, TRUE);
       rect.x0 = res_r.x;
