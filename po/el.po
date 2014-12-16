@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -953,6 +953,12 @@ msgstr ""
 "ρύθμιση αυτής της ιδιότητας απαιτεί μια αναφορά στο παρεχόμενο αντικείμενο "
 "GstCaps."
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr "Δεν ορίσθηκε προσωρινός κατάλογος (Temp)."
 
@@ -1030,6 +1036,9 @@ msgstr "αναγνώσιμο"
 
 msgid "writable"
 msgstr "εγγράψιμο"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "ελεγχόμενο"

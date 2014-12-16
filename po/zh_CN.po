@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -914,6 +914,12 @@ msgstr ""
 "限制所允许的功能 (NULL 表示无限制)。此属性可以为所提供的 GstCaps 对象设置一个"
 "关联应用。"
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr "未指定临时目录。"
 
@@ -992,6 +998,9 @@ msgstr "可读"
 
 msgid "writable"
 msgstr "可写"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "可控制"

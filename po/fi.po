@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -939,6 +939,12 @@ msgstr ""
 "Rajoita mahdollisia sallittuja kykyjä (NULL tarkoittaa mitä tahansa). Tämän "
 "ominaisuuden asettaminen ottaa kahvan annettuun GstCaps-olioon."
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr "Tilapäishakemistoa ei ole määritetty."
 
@@ -1016,6 +1022,9 @@ msgstr "luettavissa"
 
 msgid "writable"
 msgstr "kirjoitettavissa"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "ohjattavissa"

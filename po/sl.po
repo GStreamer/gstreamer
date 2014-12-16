@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2014-04-09 22:38+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -929,6 +929,12 @@ msgstr ""
 "Omeji možne dovoljene zmožnosti (NULL pomeni ANY, vse). S tem naslavljate "
 "priloženi predmet GstCaps."
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr "Začasna mapa ni določena."
 
@@ -1006,6 +1012,9 @@ msgstr "berljivo"
 
 msgid "writable"
 msgstr "zapisljivo"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "nadzorljivo"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2014-03-09 11:07+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -930,6 +930,12 @@ msgstr ""
 "Omezit povolené schopnosti (NULL znamená VŠECHNY). Nastavení této vlastnosti "
 "přebírá odkaz na zadaný objekt GstCaps."
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr "Není určena složka pro dočasné soubory."
 
@@ -1007,6 +1013,9 @@ msgstr "lze číst"
 
 msgid "writable"
 msgstr "lze zapisovat"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "lze ovládat"

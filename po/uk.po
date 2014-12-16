@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2014-05-22 07:45+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -928,6 +928,12 @@ msgstr ""
 "Обмежити допустимі можливості (NULL означає ANY). Встановлення цієї "
 "властивості призводить до посилання на поставлений об'єкт GstCaps."
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr "Не вказано каталог тимчасових даних."
 
@@ -1005,6 +1011,9 @@ msgstr "читання"
 
 msgid "writable"
 msgstr "запис"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "контроль"

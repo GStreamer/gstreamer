@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2011-04-26 22:40+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -931,6 +931,12 @@ msgstr ""
 "Ограничаване на позволените възможности („NULL“ означава всякакви). "
 "Задаването на това свойство поема указател към подадения обект GstCaps."
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr "Не е указана временна папка"
 
@@ -1008,6 +1014,9 @@ msgstr "с права за четене"
 
 msgid "writable"
 msgstr "с права за запис"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "може да се контролира"

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -954,6 +954,12 @@ msgstr ""
 "Restricționează capacitățile permise (NULL înseamnă ORICE). Definirea "
 "acestei proprietăți preia o referință către obiectul GstCaps furnizat."
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr "Niciun director temporar specificat."
 
@@ -1031,6 +1037,9 @@ msgstr "se poate citi"
 
 msgid "writable"
 msgstr "se poate scrie"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "se poate controla"

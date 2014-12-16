@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -878,6 +878,12 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr ""
 
@@ -955,6 +961,9 @@ msgstr "legeble"
 
 msgid "writable"
 msgstr "skribeble"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "regeble"

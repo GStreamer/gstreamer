@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-07-19 16:11+0200\n"
+"POT-Creation-Date: 2014-12-16 15:36+0000\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -1091,6 +1091,12 @@ msgstr ""
 "Impostando questa proprietà si prende un riferimento all'oggetto GstCaps "
 "fornito."
 
+msgid "Caps Change Mode"
+msgstr ""
+
+msgid "Filter caps change behaviour"
+msgstr ""
+
 msgid "No Temp directory specified."
 msgstr "Nessuna directory temporanea specificata."
 
@@ -1168,6 +1174,9 @@ msgstr "leggibile"
 
 msgid "writable"
 msgstr "scrivibile"
+
+msgid "deprecated"
+msgstr ""
 
 msgid "controllable"
 msgstr "controllabile"
