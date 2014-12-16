@@ -484,8 +484,6 @@ gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
   return s;
 }
 
-
-
 /**
  * gst_caps_steal_structure:
  * @caps: the #GstCaps to retrieve from
@@ -2367,7 +2365,7 @@ gst_caps_transform_to_string (const GValue * src_value, GValue * dest_value)
  *
  * Calls the provided function once for each structure and caps feature in the
  * #GstCaps. The function must not modify the fields.
- * Also see gst_caps_map_in_place().
+ * Also see gst_caps_map_in_place() and gst_caps_filter_and_map_in_place().
  *
  * Returns: %TRUE if the supplied function returns %TRUE for each call,
  * %FALSE otherwise.
@@ -2446,4 +2444,63 @@ gst_caps_map_in_place (GstCaps * caps, GstCapsMapFunc func, gpointer user_data)
   }
 
   return TRUE;
+}
+
+/**
+ * gst_caps_filter_and_map_in_place:
+ * @caps: a #GstCaps
+ * @func: (scope call): a function to call for each field
+ * @user_data: (closure): private data
+ *
+ * Calls the provided function once for each structure and caps feature in the
+ * #GstCaps. In contrast to gst_caps_foreach(), the function may modify the
+ * structure and features. In contrast to gst_caps_filter_and_map_in_place(),
+ * the structure and features are removed from the caps if %FALSE is returned
+ * from the function.
+ * The caps must be mutable.
+ *
+ * Since: 1.6
+ */
+void
+gst_caps_filter_and_map_in_place (GstCaps * caps, GstCapsFilterMapFunc func,
+    gpointer user_data)
+{
+  guint i, n;
+  GstCapsFeatures *features;
+  GstStructure *structure;
+  gboolean ret;
+
+  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (gst_caps_is_writable (caps));
+  g_return_if_fail (func != NULL);
+
+  n = GST_CAPS_LEN (caps);
+
+  for (i = 0; i < n;) {
+    features = gst_caps_get_features_unchecked (caps, i);
+    structure = gst_caps_get_structure_unchecked (caps, i);
+
+    /* Provide sysmem features if there are none yet */
+    if (!features) {
+      features =
+          gst_caps_features_copy (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
+      gst_caps_set_features (caps, i, features);
+    }
+
+    ret = func (features, structure, user_data);
+    if (!ret) {
+      GST_CAPS_ARRAY (caps) = g_array_remove_index (GST_CAPS_ARRAY (caps), i);
+
+      gst_structure_set_parent_refcount (structure, NULL);
+      gst_structure_free (structure);
+      if (features) {
+        gst_caps_features_set_parent_refcount (features, NULL);
+        gst_caps_features_free (features);
+      }
+
+      n = GST_CAPS_LEN (caps);
+    } else {
+      i++;
+    }
+  }
 }

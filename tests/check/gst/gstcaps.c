@@ -1240,6 +1240,52 @@ GST_START_TEST (test_map_in_place)
 
 GST_END_TEST;
 
+static gboolean
+filter_map_function (GstCapsFeatures * features, GstStructure * structure,
+    gpointer user_data)
+{
+  if (!gst_structure_has_name (structure, "video/x-raw"))
+    return FALSE;
+
+  if (!gst_caps_features_contains (features, "foo:bar"))
+    return FALSE;
+
+  /* Set some dummy integer in the structure */
+  gst_structure_set (structure, "foo", G_TYPE_INT, 123, NULL);
+
+  return TRUE;
+}
+
+GST_START_TEST (test_filter_and_map_in_place)
+{
+  GstCaps *caps, *caps2;
+
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, format=I420; video/x-raw(foo:bar); video/x-h264");
+  caps2 = gst_caps_from_string ("video/x-raw(foo:bar), foo=(int)123");
+  gst_caps_filter_and_map_in_place (caps, filter_map_function, NULL);
+  fail_unless (gst_caps_is_strictly_equal (caps, caps2));
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
+
+  caps = gst_caps_from_string ("video/x-raw, format=I420; video/x-h264");
+  caps2 = gst_caps_new_empty ();
+  gst_caps_filter_and_map_in_place (caps, filter_map_function, NULL);
+  fail_unless (gst_caps_is_strictly_equal (caps, caps2));
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
+
+  caps = gst_caps_new_empty ();
+  caps2 = gst_caps_new_empty ();
+  gst_caps_filter_and_map_in_place (caps, filter_map_function, NULL);
+  fail_unless (gst_caps_is_strictly_equal (caps, caps2));
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_caps_suite (void)
 {
@@ -1271,6 +1317,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_special_caps);
   tcase_add_test (tc_chain, test_foreach);
   tcase_add_test (tc_chain, test_map_in_place);
+  tcase_add_test (tc_chain, test_filter_and_map_in_place);
 
   return s;
 }

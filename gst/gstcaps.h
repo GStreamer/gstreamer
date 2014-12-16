@@ -397,6 +397,23 @@ typedef gboolean (*GstCapsMapFunc)     (GstCapsFeatures *features,
                                         GstStructure    *structure,
                                         gpointer         user_data);
 
+/**
+ * GstCapsFilterMapFunc:
+ * @features: the #GstCapsFeatures
+ * @structure: the #GstStructure
+ * @user_data: user data
+ *
+ * A function that will be called in gst_caps_filter_and_map_in_place().
+ * The function may modify @features and @structure, and both will be
+ * removed from the caps if %FALSE is returned.
+ *
+ * Returns: %TRUE if the features and structure should be preserved,
+ * %FALSE if it should be removed.
+ */
+typedef gboolean (*GstCapsFilterMapFunc) (GstCapsFeatures *features,
+                                          GstStructure    *structure,
+                                          gpointer user_data);
+
 
 GType             gst_caps_get_type                (void);
 
@@ -459,6 +476,10 @@ gboolean          gst_caps_foreach                 (const GstCaps       *caps,
 gboolean          gst_caps_map_in_place            (GstCaps        *caps,
                                                     GstCapsMapFunc  func,
                                                     gpointer        user_data);
+
+void              gst_caps_filter_and_map_in_place (GstCaps              *caps,
+                                                    GstCapsFilterMapFunc  func,
+                                                    gpointer              user_data);
 
 /* tests */
 gboolean          gst_caps_is_any                  (const GstCaps *caps);

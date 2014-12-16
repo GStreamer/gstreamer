@@ -722,6 +722,33 @@ GST_START_TEST (test_map_in_place)
 
 GST_END_TEST;
 
+static gboolean
+filter_map_func (GQuark field_id, GValue * value, gpointer user_data)
+{
+  if (strcmp (g_quark_to_string (field_id), "bla") == 0)
+    return FALSE;
+
+  if (G_VALUE_HOLDS_INT (value))
+    g_value_set_int (value, 2);
+
+  return TRUE;
+}
+
+GST_START_TEST (test_filter_and_map_in_place)
+{
+  GstStructure *s, *s2;
+
+  s = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 1, "bla", G_TYPE_INT, 3,
+      NULL);
+  s2 = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 2, NULL);
+  gst_structure_filter_and_map_in_place (s, filter_map_func, NULL);
+  fail_unless (gst_structure_is_equal (s, s2));
+  gst_structure_free (s);
+  gst_structure_free (s2);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_structure_suite (void)
 {
@@ -746,6 +773,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_vararg_getters);
   tcase_add_test (tc_chain, test_foreach);
   tcase_add_test (tc_chain, test_map_in_place);
+  tcase_add_test (tc_chain, test_filter_and_map_in_place);
   return s;
 }
 

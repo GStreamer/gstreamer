@@ -1100,7 +1100,8 @@ gst_structure_nth_field_name (const GstStructure * structure, guint index)
  * @user_data: (closure): private data
  *
  * Calls the provided function once for each field in the #GstStructure. The
- * function must not modify the fields. Also see gst_structure_map_in_place().
+ * function must not modify the fields. Also see gst_structure_map_in_place()
+ * and gst_structure_filter_and_map_in_place().
  *
  * Returns: %TRUE if the supplied function returns %TRUE For each of the fields,
  * %FALSE otherwise.
@@ -1164,6 +1165,51 @@ gst_structure_map_in_place (GstStructure * structure,
   }
 
   return TRUE;
+}
+
+/**
+ * gst_structure_filter_and_map_in_place:
+ * @structure: a #GstStructure
+ * @func: (scope call): a function to call for each field
+ * @user_data: (closure): private data
+ *
+ * Calls the provided function once for each field in the #GstStructure. In
+ * contrast to gst_structure_foreach(), the function may modify the fields.
+ * In contrast to gst_structure_map_in_place(), the field is removed from
+ * the structure if %FALSE is returned from the function.
+ * The structure must be mutable.
+ *
+ * Since: 1.6
+ */
+void
+gst_structure_filter_and_map_in_place (GstStructure * structure,
+    GstStructureFilterMapFunc func, gpointer user_data)
+{
+  guint i, len;
+  GstStructureField *field;
+  gboolean ret;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
+  g_return_if_fail (func != NULL);
+  len = GST_STRUCTURE_FIELDS (structure)->len;
+
+  for (i = 0; i < len;) {
+    field = GST_STRUCTURE_FIELD (structure, i);
+
+    ret = func (field->name, &field->value, user_data);
+
+    if (!ret) {
+      if (G_IS_VALUE (&field->value)) {
+        g_value_unset (&field->value);
+      }
+      GST_STRUCTURE_FIELDS (structure) =
+          g_array_remove_index (GST_STRUCTURE_FIELDS (structure), i);
+      len = GST_STRUCTURE_FIELDS (structure)->len;
+    } else {
+      i++;
+    }
+  }
 }
 
 /**

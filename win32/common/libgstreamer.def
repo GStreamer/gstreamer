@@ -241,8 +241,10 @@ EXPORTS
 	gst_caps_features_remove_id
 	gst_caps_features_set_parent_refcount
 	gst_caps_features_to_string
+	gst_caps_filter_and_map_in_place
 	gst_caps_fixate
 	gst_caps_flags_get_type
+	gst_caps_foreach
 	gst_caps_from_string
 	gst_caps_get_features
 	gst_caps_get_size
@@ -261,6 +263,7 @@ EXPORTS
 	gst_caps_is_subset
 	gst_caps_is_subset_structure
 	gst_caps_is_subset_structure_full
+	gst_caps_map_in_place
 	gst_caps_merge
 	gst_caps_merge_structure
 	gst_caps_merge_structure_full
@@ -1139,6 +1142,7 @@ EXPORTS
 	gst_structure_can_intersect
 	gst_structure_change_type_get_type
 	gst_structure_copy
+	gst_structure_filter_and_map_in_place
 	gst_structure_fixate
 	gst_structure_fixate_field
 	gst_structure_fixate_field_boolean

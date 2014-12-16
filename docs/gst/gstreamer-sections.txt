@@ -400,6 +400,7 @@ GST_CAPS_FLAG_UNSET
 
 GstCapsForeachFunc
 GstCapsMapFunc
+GstCapsFilterMapFunc
 
 gst_caps_new_empty
 gst_caps_new_empty_simple
@@ -429,6 +430,7 @@ gst_caps_set_simple
 gst_caps_set_simple_valist
 gst_caps_foreach
 gst_caps_map_in_place
+gst_caps_filter_and_map_in_place
 gst_caps_is_any
 gst_caps_is_empty
 gst_caps_is_fixed
@@ -2525,6 +2527,7 @@ gst_segment_flags_get_type
 GstStructure
 GstStructureForeachFunc
 GstStructureMapFunc
+GstStructureFilterMapFunc
 gst_structure_new_empty
 gst_structure_new_id_empty
 gst_structure_new
@@ -2556,7 +2559,6 @@ gst_structure_remove_fields
 gst_structure_remove_fields_valist
 gst_structure_remove_all_fields
 gst_structure_get_field_type
-gst_structure_foreach
 gst_structure_n_fields
 gst_structure_has_field
 gst_structure_has_field_typed
@@ -2578,7 +2580,9 @@ gst_structure_get_date_time
 gst_structure_get_clock_time
 gst_structure_get_enum
 gst_structure_get_fraction
+gst_structure_foreach
 gst_structure_map_in_place
+gst_structure_filter_and_map_in_place
 gst_structure_nth_field_name
 gst_structure_set_parent_refcount
 gst_structure_to_string
