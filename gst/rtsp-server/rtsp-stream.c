@@ -1372,6 +1372,8 @@ gst_rtsp_stream_set_retransmission_pt (GstRTSPStream * stream, guint rtx_pt)
     GstStructure *rtx_pt_map = gst_structure_new ("application/x-rtp-pt-map",
         pt_s, G_TYPE_UINT, rtx_pt, NULL);
     g_object_set (stream->priv->rtxsend, "payload-type-map", rtx_pt_map, NULL);
+    g_free (pt_s);
+    gst_structure_free (rtx_pt_map);
   }
   g_mutex_unlock (&stream->priv->lock);
 }
@@ -1763,6 +1765,7 @@ request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPStream * stream)
       pt_s, G_TYPE_UINT, rtx_pt, NULL);
   g_object_set (stream->priv->rtxsend, "payload-type-map", pt_map,
       "max-size-time", GST_TIME_AS_MSECONDS (stream->priv->rtx_time), NULL);
+  g_free (pt_s);
   gst_structure_free (pt_map);
   gst_bin_add (GST_BIN (bin), gst_object_ref (stream->priv->rtxsend));
 
