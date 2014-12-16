@@ -299,6 +299,7 @@ EXPORTS
 	gst_child_proxy_set_valist
 	gst_clock_add_observation
 	gst_clock_adjust_unlocked
+	gst_clock_adjust_with_calibration
 	gst_clock_entry_type_get_type
 	gst_clock_flags_get_type
 	gst_clock_get_calibration

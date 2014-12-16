@@ -818,6 +818,60 @@ gst_clock_get_resolution (GstClock * clock)
 }
 
 /**
+ * gst_clock_adjust_with_calibration:
+ * @clock: a #GstClock to use
+ * @internal_target: a clock time
+ * @cinternal: a reference internal time
+ * @cexternal: a reference external time
+ * @cnum: the numerator of the rate of the clock relative to its
+ *        internal time
+ * @cdenom: the denominator of the rate of the clock
+ *
+ * Converts the given @internal_target clock time to the external time,
+ * using the passed calibration parameters. This function performs the
+ * same calculation as gst_clock_adjust_unlocked() when called using the
+ * current calibration parameters, but doesn't ensure a monotonically
+ * increasing result as gst_clock_adjust_unlocked() does.
+ *
+ * Returns: the converted time of the clock.
+ *
+ * Since: 1.6
+ */
+GstClockTime
+gst_clock_adjust_with_calibration (GstClock * clock,
+    GstClockTime internal_target, GstClockTime cinternal,
+    GstClockTime cexternal, GstClockTime cnum, GstClockTime cdenom)
+{
+  GstClockTime ret;
+
+  /* avoid divide by 0 */
+  if (G_UNLIKELY (cdenom == 0))
+    cnum = cdenom = 1;
+
+  /* The formula is (internal - cinternal) * cnum / cdenom + cexternal
+   *
+   * Since we do math on unsigned 64-bit ints we have to special case for
+   * internal < cinternal to get the sign right. this case is not very common,
+   * though.
+   */
+  if (G_LIKELY (internal_target >= cinternal)) {
+    ret = internal_target - cinternal;
+    ret = gst_util_uint64_scale (ret, cnum, cdenom);
+    ret += cexternal;
+  } else {
+    ret = cinternal - internal_target;
+    ret = gst_util_uint64_scale (ret, cnum, cdenom);
+    /* clamp to 0 */
+    if (G_LIKELY (cexternal > ret))
+      ret = cexternal - ret;
+    else
+      ret = 0;
+  }
+
+  return ret;
+}
+
+/**
  * gst_clock_adjust_unlocked:
  * @clock: a #GstClock to use
  * @internal: a clock time
@@ -843,29 +897,9 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
   cnum = priv->rate_numerator;
   cdenom = priv->rate_denominator;
 
-  /* avoid divide by 0 */
-  if (G_UNLIKELY (cdenom == 0))
-    cnum = cdenom = 1;
-
-  /* The formula is (internal - cinternal) * cnum / cdenom + cexternal
-   *
-   * Since we do math on unsigned 64-bit ints we have to special case for
-   * internal < cinternal to get the sign right. this case is not very common,
-   * though.
-   */
-  if (G_LIKELY (internal >= cinternal)) {
-    ret = internal - cinternal;
-    ret = gst_util_uint64_scale (ret, cnum, cdenom);
-    ret += cexternal;
-  } else {
-    ret = cinternal - internal;
-    ret = gst_util_uint64_scale (ret, cnum, cdenom);
-    /* clamp to 0 */
-    if (G_LIKELY (cexternal > ret))
-      ret = cexternal - ret;
-    else
-      ret = 0;
-  }
+  ret =
+      gst_clock_adjust_with_calibration (clock, internal, cinternal, cexternal,
+      cnum, cdenom);
 
   /* make sure the time is increasing */
   priv->last_time = MAX (ret, priv->last_time);
