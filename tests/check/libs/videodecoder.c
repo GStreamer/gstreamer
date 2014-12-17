@@ -989,6 +989,42 @@ GST_START_TEST (videodecoder_query_caps_with_range_caps_peer)
 
 GST_END_TEST;
 
+#define GETCAPS_CAPS_STR "video/x-test-custom, somefield=(string)getcaps"
+static GstCaps *
+_custom_video_decoder_getcaps (GstVideoDecoder * dec, GstCaps * filter)
+{
+  return gst_caps_from_string (GETCAPS_CAPS_STR);
+}
+
+GST_START_TEST (videodecoder_query_caps_with_custom_getcaps)
+{
+  GstCaps *caps;
+  GstVideoDecoderClass *klass;
+  GstCaps *expected_caps;
+
+  setup_videodecodertester (&sinktemplate_restricted, NULL);
+
+  klass = GST_VIDEO_DECODER_CLASS (GST_VIDEO_DECODER_GET_CLASS (dec));
+  klass->getcaps = _custom_video_decoder_getcaps;
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_pad_peer_query_caps (mysrcpad, NULL);
+  fail_unless (caps != NULL);
+
+  expected_caps = gst_caps_from_string (GETCAPS_CAPS_STR);
+  fail_unless (gst_caps_is_equal (expected_caps, caps));
+  gst_caps_unref (expected_caps);
+  gst_caps_unref (caps);
+
+  cleanup_videodecodertest ();
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_videodecoder_suite (void)
 {
@@ -999,6 +1035,7 @@ gst_videodecoder_suite (void)
 
   tcase_add_test (tc, videodecoder_query_caps_with_fixed_caps_peer);
   tcase_add_test (tc, videodecoder_query_caps_with_range_caps_peer);
+  tcase_add_test (tc, videodecoder_query_caps_with_custom_getcaps);
 
   tcase_add_test (tc, videodecoder_playback);
   tcase_add_test (tc, videodecoder_playback_with_events);

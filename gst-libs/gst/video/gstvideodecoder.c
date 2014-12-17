@@ -1578,6 +1578,47 @@ gst_video_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return ret;
 }
 
+/**
+ * gst_video_decoder_proxy_getcaps:
+ * @decoder: a #GstVideoDecoder
+ * @caps: (allow-none): initial caps
+ * @filter: (allow-none): filter caps
+ *
+ * Returns caps that express @caps (or sink template caps if @caps == NULL)
+ * restricted to resolution/format/... combinations supported by downstream
+ * elements.
+ *
+ * Returns: (transfer-full): a #GstCaps owned by caller
+ *
+ * @Since: 1.6
+ */
+GstCaps *
+gst_video_decoder_proxy_getcaps (GstVideoDecoder * decoder, GstCaps * caps,
+    GstCaps * filter)
+{
+  return __gst_video_element_proxy_getcaps (GST_ELEMENT_CAST (decoder),
+      GST_VIDEO_DECODER_SINK_PAD (decoder),
+      GST_VIDEO_DECODER_SRC_PAD (decoder), caps, filter);
+}
+
+static GstCaps *
+gst_video_decoder_sink_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
+{
+  GstVideoDecoderClass *klass;
+  GstCaps *caps;
+
+  klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
+
+  if (klass->getcaps)
+    caps = klass->getcaps (decoder, filter);
+  else
+    caps = gst_video_decoder_proxy_getcaps (decoder, NULL, filter);
+
+  GST_LOG_OBJECT (decoder, "Returning caps %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
 static gboolean
 gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
     GstQuery * query)
@@ -1615,15 +1656,12 @@ gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
       break;
     }
     case GST_QUERY_CAPS:{
-      GstCaps *filter;
-      GstCaps *result;
+      GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      result = __gst_video_element_proxy_getcaps (GST_ELEMENT_CAST (decoder),
-          GST_VIDEO_DECODER_SINK_PAD (decoder),
-          GST_VIDEO_DECODER_SRC_PAD (decoder), NULL, filter);
-      gst_query_set_caps_result (query, result);
-      gst_caps_unref (result);
+      caps = gst_video_decoder_sink_getcaps (decoder, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
       res = TRUE;
       break;
     }
