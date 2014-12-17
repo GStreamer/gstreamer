@@ -280,6 +280,9 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
   static GstAllocationParams params = { 0, 15, 0, 0, };
   gint width, height;
 
+  if (!pad->buffer)
+    return TRUE;
+
   if (!gst_video_frame_map (frame, &pad->buffer_vinfo, pad->buffer,
           GST_MAP_READ)) {
     GST_WARNING_OBJECT (vagg, "Could not map input buffer");
