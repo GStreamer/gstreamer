@@ -237,7 +237,8 @@ struct _GstAggregatorClass {
                                        GstPadMode          mode,
                                        gboolean            active);
 
-  GstFlowReturn     (*aggregate)      (GstAggregator    *  aggregator);
+  GstFlowReturn     (*aggregate)      (GstAggregator    *  aggregator,
+                                       gboolean            timeout);
 
   gboolean          (*stop)           (GstAggregator    *  aggregator);
 

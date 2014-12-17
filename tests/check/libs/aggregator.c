@@ -63,7 +63,7 @@ struct _GstTestAggregatorClass
 };
 
 static GstFlowReturn
-gst_test_aggregator_aggregate (GstAggregator * aggregator)
+gst_test_aggregator_aggregate (GstAggregator * aggregator, gboolean timeout)
 {
   GstIterator *iter;
   gboolean all_eos = TRUE;
