@@ -1447,12 +1447,39 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
 
     if (!pad->buffer && !dropped && GST_AGGREGATOR_PAD (pad)->eos) {
       GST_DEBUG_OBJECT (aggpad, "Pad is in EOS state");
+      continue;
     } else {
       is_eos = FALSE;
     }
 
-    /* At this point adata->output_offset >= audiomixer->offset or we have no buffer anymore */
-    g_assert (!pad->buffer || pad->output_offset >= audiomixer->offset);
+    g_assert (pad->buffer);
+
+    /* This pad is lacking behind, we need to update the offset
+     * and maybe drop the current buffer */
+    if (pad->output_offset < audiomixer->offset) {
+      gint64 diff = audiomixer->offset - pad->output_offset;
+      gint bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
+
+      pad->position += diff * bpf;
+      if (pad->position > pad->size) {
+        diff = (pad->position - pad->size) / bpf;
+        pad->position = pad->size;
+      }
+      pad->output_offset += diff;
+
+      if (pad->position == pad->size) {
+        GstBuffer *buf;
+
+        /* Buffer done, drop it */
+        gst_buffer_replace (&pad->buffer, NULL);
+        buf = gst_aggregator_pad_steal_buffer (aggpad);
+        if (buf)
+          gst_buffer_unref (buf);
+        dropped = TRUE;
+        continue;
+      }
+    }
+
     if (pad->output_offset >= audiomixer->offset
         && pad->output_offset <
         audiomixer->offset + audiomixer->blocksize && pad->buffer) {
