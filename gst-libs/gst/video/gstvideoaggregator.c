@@ -1230,7 +1230,7 @@ gst_videoaggregator_get_next_time (GstAggregator * agg)
 }
 
 static GstFlowReturn
-gst_videoaggregator_aggregate (GstAggregator * agg)
+gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
 {
   GstFlowReturn ret;
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
@@ -1275,7 +1275,7 @@ gst_videoaggregator_aggregate (GstAggregator * agg)
         output_end_time);
   }
 
-  if (res == GST_FLOW_NEEDS_DATA) {
+  if (res == GST_FLOW_NEEDS_DATA && !timeout) {
     GST_DEBUG_OBJECT (vagg, "Need more data for decisions");
     ret = GST_FLOW_OK;
     goto done;

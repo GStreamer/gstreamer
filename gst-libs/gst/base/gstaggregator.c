@@ -486,11 +486,13 @@ gst_aggregator_get_next_time (GstAggregator * self)
 
 /* called with the src STREAM lock */
 static gboolean
-_wait_and_check (GstAggregator * self)
+_wait_and_check (GstAggregator * self, gboolean * timeout)
 {
   GstClockTime latency_max, latency_min;
   GstClockTime start;
   gboolean live;
+
+  *timeout = FALSE;
 
   gst_aggregator_get_latency (self, &live, &latency_min, &latency_max);
 
@@ -561,6 +563,7 @@ _wait_and_check (GstAggregator * self)
     /* we timed out */
     if (status == GST_CLOCK_OK || status == GST_CLOCK_EARLY) {
       SRC_STREAM_UNLOCK (self);
+      *timeout = TRUE;
       return TRUE;
     }
   }
@@ -575,6 +578,7 @@ aggregate_func (GstAggregator * self)
 {
   GstAggregatorPrivate *priv = self->priv;
   GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (self);
+  gboolean timeout = FALSE;
 
   if (self->priv->running == FALSE) {
     GST_DEBUG_OBJECT (self, "Not running anymore");
@@ -583,12 +587,12 @@ aggregate_func (GstAggregator * self)
 
   GST_LOG_OBJECT (self, "Checking aggregate");
   while (priv->send_eos && priv->running) {
-    if (!_wait_and_check (self))
+    if (!_wait_and_check (self, &timeout))
       continue;
 
     GST_TRACE_OBJECT (self, "Actually aggregating!");
 
-    priv->flow_return = klass->aggregate (self);
+    priv->flow_return = klass->aggregate (self, timeout);
 
     if (priv->flow_return == GST_FLOW_EOS) {
       _push_eos (self);
