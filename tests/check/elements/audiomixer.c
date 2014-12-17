@@ -587,7 +587,8 @@ test_live_seeking_try_audiosrc (const gchar * factory_name)
 /* test failing seeks on live-sources */
 GST_START_TEST (test_live_seeking)
 {
-  GstElement *bin, *src1 = NULL, *src2, *ac1, *ac2, *audiomixer, *sink;
+  GstElement *bin, *src1 =
+      NULL, *src2, *ac1, *ac2, *q1, *q2, *audiomixer, *sink;
   GstBus *bus;
   gboolean res;
   GstPad *srcpad;
@@ -624,21 +625,27 @@ GST_START_TEST (test_live_seeking)
   }
 
   ac1 = gst_element_factory_make ("audioconvert", "ac1");
+  q1 = gst_element_factory_make ("queue", "q1");
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
   g_object_set (src2, "wave", 4, NULL); /* silence */
   ac2 = gst_element_factory_make ("audioconvert", "ac2");
+  q2 = gst_element_factory_make ("queue", "q2");
   audiomixer = gst_element_factory_make ("audiomixer", "audiomixer");
   sink = gst_element_factory_make ("fakesink", "sink");
-  gst_bin_add_many (GST_BIN (bin), src1, ac1, src2, ac2, audiomixer, sink,
-      NULL);
+  gst_bin_add_many (GST_BIN (bin), src1, ac1, q1, src2, ac2, q2, audiomixer,
+      sink, NULL);
 
   res = gst_element_link (src1, ac1);
   fail_unless (res == TRUE, NULL);
-  res = gst_element_link (ac1, audiomixer);
+  res = gst_element_link (ac1, q1);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (q1, audiomixer);
   fail_unless (res == TRUE, NULL);
   res = gst_element_link (src2, ac2);
   fail_unless (res == TRUE, NULL);
-  res = gst_element_link (ac2, audiomixer);
+  res = gst_element_link (ac2, q2);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (q2, audiomixer);
   fail_unless (res == TRUE, NULL);
   res = gst_element_link (audiomixer, sink);
   fail_unless (res == TRUE, NULL);
