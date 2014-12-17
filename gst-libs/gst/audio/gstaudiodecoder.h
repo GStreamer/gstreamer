@@ -231,6 +231,11 @@ struct _GstAudioDecoder
  *                      Propose buffer allocation parameters for upstream elements.
  *                      Subclasses should chain up to the parent implementation to
  *                      invoke the default handler.
+ * @getcaps:        Optional.
+ *                  Allows for a custom sink getcaps implementation.
+ *                  If not implemented,
+ *                  default returns gst_audio_decoder_proxy_getcaps
+ *                  applied to sink template caps.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame (and likely @set_format) needs to be
@@ -278,8 +283,11 @@ struct _GstAudioDecoderClass
   gboolean      (*propose_allocation) (GstAudioDecoder *dec,
                                        GstQuery * query);
 
+  GstCaps *     (*getcaps)            (GstAudioDecoder * dec,
+                                       GstCaps * filter);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 1];
 };
 
 GType             gst_audio_decoder_get_type (void);
@@ -287,6 +295,9 @@ GType             gst_audio_decoder_get_type (void);
 gboolean          gst_audio_decoder_set_output_format  (GstAudioDecoder    * dec,
                                                         const GstAudioInfo * info);
 
+GstCaps *         gst_audio_decoder_proxy_getcaps (GstAudioDecoder * dec,
+                                                   GstCaps         * caps,
+                                                   GstCaps         * filter);
 gboolean          gst_audio_decoder_negotiate (GstAudioDecoder * dec);
 
 GstFlowReturn     gst_audio_decoder_finish_frame (GstAudioDecoder * dec,

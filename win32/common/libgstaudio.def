@@ -54,6 +54,7 @@ EXPORTS
 	gst_audio_decoder_get_type
 	gst_audio_decoder_merge_tags
 	gst_audio_decoder_negotiate
+	gst_audio_decoder_proxy_getcaps
 	gst_audio_decoder_set_drainable
 	gst_audio_decoder_set_estimate_rate
 	gst_audio_decoder_set_latency

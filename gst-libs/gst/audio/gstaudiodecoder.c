@@ -2422,6 +2422,48 @@ exit:
   return res;
 }
 
+/**
+ * gst_audio_decoder_proxy_getcaps:
+ * @decoder: a #GstAudioDecoder
+ * @caps: (allow-none): initial caps
+ * @filter: (allow-none): filter caps
+ *
+ * Returns caps that express @caps (or sink template caps if @caps == NULL)
+ * restricted to rate/channels/... combinations supported by downstream
+ * elements.
+ *
+ * Returns: (transfer-full): a #GstCaps owned by caller
+ *
+ * @Since: 1.6
+ */
+GstCaps *
+gst_audio_decoder_proxy_getcaps (GstAudioDecoder * decoder, GstCaps * caps,
+    GstCaps * filter)
+{
+  return __gst_audio_element_proxy_getcaps (GST_ELEMENT_CAST (decoder),
+      GST_AUDIO_DECODER_SINK_PAD (decoder),
+      GST_AUDIO_DECODER_SRC_PAD (decoder), caps, filter);
+}
+
+static GstCaps *
+gst_audio_decoder_sink_getcaps (GstAudioDecoder * decoder, GstCaps * filter)
+{
+  GstAudioDecoderClass *klass;
+  GstCaps *caps;
+
+  klass = GST_AUDIO_DECODER_GET_CLASS (decoder);
+
+  if (klass->getcaps)
+    caps = klass->getcaps (decoder, filter);
+  else
+    caps = gst_audio_decoder_proxy_getcaps (decoder, NULL, filter);
+
+  GST_LOG_OBJECT (decoder, "Returning caps %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
+
 static gboolean
 gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
@@ -2462,15 +2504,12 @@ gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_QUERY_CAPS:{
-      GstCaps *filter;
-      GstCaps *result;
+      GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      result = __gst_audio_element_proxy_getcaps (GST_ELEMENT_CAST (dec),
-          GST_AUDIO_DECODER_SINK_PAD (dec),
-          GST_AUDIO_DECODER_SRC_PAD (dec), NULL, filter);
-      gst_query_set_caps_result (query, result);
-      gst_caps_unref (result);
+      caps = gst_audio_decoder_sink_getcaps (dec, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
       res = TRUE;
       break;
     }
