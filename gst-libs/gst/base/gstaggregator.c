@@ -243,6 +243,9 @@ struct _GstAggregatorPrivate
   GstClockTime latency_min;
   GstClockTime latency_max;
 
+  GstClockTime sub_latency_min;
+  GstClockTime sub_latency_max;
+
   /* aggregate */
   GstClockID aggregate_id;
   gint n_kicks;
@@ -1040,6 +1043,11 @@ gst_aggregator_get_latency (GstAggregator * self, gboolean * live,
   min = self->priv->latency_min;
   max = self->priv->latency_max;
 
+  min += self->priv->sub_latency_min;
+  if (GST_CLOCK_TIME_IS_VALID (max)
+      && GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
+    max += self->priv->sub_latency_max;
+
   if (GST_CLOCK_TIME_IS_VALID (self->latency)) {
     min += self->latency;
     if (GST_CLOCK_TIME_IS_VALID (max))
@@ -1553,8 +1561,8 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
   priv->tags_changed = FALSE;
 
   self->priv->latency_live = FALSE;
-  self->priv->latency_min = 0;
-  self->priv->latency_max = GST_CLOCK_TIME_NONE;
+  self->priv->latency_min = self->priv->sub_latency_min = 0;
+  self->priv->latency_max = self->priv->sub_latency_max = GST_CLOCK_TIME_NONE;
   _reset_flow_values (self);
 
   self->srcpad = gst_pad_new_from_template (pad_template, "src");
@@ -1922,4 +1930,30 @@ gst_aggregator_merge_tags (GstAggregator * self,
     gst_tag_list_unref (otags);
   self->priv->tags_changed = TRUE;
   GST_OBJECT_UNLOCK (self);
+}
+
+/**
+ * gst_aggregator_set_latency:
+ * @self: a #GstAggregator
+ * @min_latency: minimum latency
+ * @max_latency: maximum latency
+ *
+ * Lets #GstAggregator sub-classes tell the baseclass what their internal
+ * latency is. Will also post a LATENCY message on the bus so the pipeline
+ * can reconfigure its global latency.
+ */
+void
+gst_aggregator_set_latency (GstAggregator * self,
+    GstClockTime min_latency, GstClockTime max_latency)
+{
+  g_return_if_fail (GST_IS_AGGREGATOR (self));
+  g_return_if_fail (max_latency >= min_latency);
+
+  GST_OBJECT_LOCK (self);
+  self->priv->sub_latency_min = min_latency;
+  self->priv->sub_latency_max = max_latency;
+  GST_OBJECT_UNLOCK (self);
+
+  gst_element_post_message (GST_ELEMENT_CAST (self),
+      gst_message_new_latency (GST_OBJECT_CAST (self)));
 }

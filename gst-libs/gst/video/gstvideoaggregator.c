@@ -597,6 +597,9 @@ gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
     GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
 
     gst_aggregator_set_src_caps (agg, caps);
+    gst_aggregator_set_latency (agg, gst_util_uint64_scale (GST_SECOND,
+            GST_VIDEO_INFO_FPS_D (&info), GST_VIDEO_INFO_FPS_N (&info)),
+        GST_CLOCK_TIME_NONE);
 
     GST_VIDEO_AGGREGATOR_LOCK (vagg);
   }

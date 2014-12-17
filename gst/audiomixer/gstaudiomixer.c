@@ -1378,6 +1378,9 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
 
   if (audiomixer->send_caps) {
     gst_aggregator_set_src_caps (agg, audiomixer->current_caps);
+    gst_aggregator_set_latency (agg,
+        gst_util_uint64_scale (audiomixer->blocksize, GST_SECOND,
+            GST_AUDIO_INFO_RATE (&audiomixer->info)), GST_CLOCK_TIME_NONE);
 
     if (agg->segment.rate > 0.0)
       agg->segment.position = agg->segment.start;
