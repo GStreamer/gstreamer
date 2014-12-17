@@ -259,6 +259,10 @@ GstFlowReturn  gst_aggregator_finish_buffer         (GstAggregator              
 void           gst_aggregator_set_src_caps          (GstAggregator                *  agg,
                                                      GstCaps                      *  caps);
 
+void           gst_aggregator_set_latency           (GstAggregator                *  self,
+                                                     GstClockTime                    min_latency,
+                                                     GstClockTime                    max_latency);
+
 GType gst_aggregator_get_type(void);
 
 /* API that should eventually land in GstElement itself*/
