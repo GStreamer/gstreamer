@@ -1583,6 +1583,58 @@ speex_streamheader_to_codecdata (const GValue * streamheader,
   return TRUE;
 }
 
+static gboolean
+opus_streamheader_to_codecdata (const GValue * streamheader,
+    GstMatroskaTrackContext * context)
+{
+  GArray *bufarr;
+  GValue *bufval;
+  GstBuffer *buf;
+
+  if (G_VALUE_TYPE (streamheader) != GST_TYPE_ARRAY)
+    goto wrong_type;
+
+  bufarr = g_value_peek_pointer (streamheader);
+  if (bufarr->len <= 0 || bufarr->len > 255)    /* one header, and count stored in a byte */
+    goto wrong_count;
+  if (bufarr->len != 1 && bufarr->len != 2)
+    goto wrong_count;
+
+  context->xiph_headers_to_skip = bufarr->len;
+
+  bufval = &g_array_index (bufarr, GValue, 0);
+  if (G_VALUE_TYPE (bufval) != GST_TYPE_BUFFER) {
+    goto wrong_content_type;
+  }
+  buf = g_value_peek_pointer (bufval);
+
+  gst_matroska_mux_free_codec_priv (context);
+
+  context->codec_priv_size = gst_buffer_get_size (buf);
+  context->codec_priv = g_malloc0 (context->codec_priv_size);
+  gst_buffer_extract (buf, 0, context->codec_priv, -1);
+
+  return TRUE;
+
+/* ERRORS */
+wrong_type:
+  {
+    GST_WARNING ("streamheaders are not a GST_TYPE_ARRAY, but a %s",
+        G_VALUE_TYPE_NAME (streamheader));
+    return FALSE;
+  }
+wrong_count:
+  {
+    GST_WARNING ("got %u streamheaders, not 1 or 2 as expected", bufarr->len);
+    return FALSE;
+  }
+wrong_content_type:
+  {
+    GST_WARNING ("streamheaders array does not contain GstBuffers");
+    return FALSE;
+  }
+}
+
 static const gchar *
 aac_codec_data_to_codec_id (GstBuffer * buf)
 {
@@ -1834,7 +1886,19 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       goto refuse_caps;
     }
   } else if (!strcmp (mimetype, "audio/x-opus")) {
+    const GValue *streamheader;
+
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_OPUS);
+
+    streamheader = gst_structure_get_value (structure, "streamheader");
+    if (streamheader) {
+      gst_matroska_mux_free_codec_priv (context);
+      if (!opus_streamheader_to_codecdata (streamheader, context)) {
+        GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+            ("opus stream headers missing or malformed"));
+        goto refuse_caps;
+      }
+    }
   } else if (!strcmp (mimetype, "audio/x-ac3")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_AC3);
   } else if (!strcmp (mimetype, "audio/x-eac3")) {
