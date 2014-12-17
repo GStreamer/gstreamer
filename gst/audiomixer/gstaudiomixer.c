@@ -233,7 +233,8 @@ static void gst_audiomixer_release_pad (GstElement * element, GstPad * pad);
 static GstFlowReturn
 gst_audiomixer_do_clip (GstAggregator * agg,
     GstAggregatorPad * bpad, GstBuffer * buffer, GstBuffer ** outbuf);
-static GstFlowReturn gst_audiomixer_aggregate (GstAggregator * agg);
+static GstFlowReturn gst_audiomixer_aggregate (GstAggregator * agg,
+    gboolean timeout);
 
 static GstClockTime
 gst_audiomixer_get_next_time (GstAggregator * agg)
@@ -1327,7 +1328,7 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
 }
 
 static GstFlowReturn
-gst_audiomixer_aggregate (GstAggregator * agg)
+gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
 {
   /* Get all pads that have data for us and store them in a
    * new list.
@@ -1401,7 +1402,6 @@ gst_audiomixer_aggregate (GstAggregator * agg)
   } else {
     next_offset = audiomixer->offset - audiomixer->blocksize;
   }
-
   next_timestamp = gst_util_uint64_scale (next_offset, GST_SECOND, rate);
 
   if (audiomixer->current_buffer) {
@@ -1428,13 +1428,14 @@ gst_audiomixer_aggregate (GstAggregator * agg)
     GstAudioMixerPad *pad = GST_AUDIO_MIXER_PAD (iter->data);
     GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (iter->data);
 
-
     inbuf = gst_aggregator_pad_get_buffer (aggpad);
     if (!inbuf)
       continue;
 
+    g_assert (!pad->buffer || pad->buffer == inbuf);
+
     /* New buffer? */
-    if (!pad->buffer || pad->buffer != inbuf) {
+    if (!pad->buffer) {
       /* Takes ownership of buffer */
       if (!gst_audio_mixer_fill_buffer (audiomixer, pad, inbuf)) {
         dropped = TRUE;
@@ -1451,11 +1452,13 @@ gst_audiomixer_aggregate (GstAggregator * agg)
     }
 
     /* At this point adata->output_offset >= audiomixer->offset or we have no buffer anymore */
+    g_assert (!pad->buffer || pad->output_offset >= audiomixer->offset);
     if (pad->output_offset >= audiomixer->offset
         && pad->output_offset <
         audiomixer->offset + audiomixer->blocksize && pad->buffer) {
       GST_LOG_OBJECT (aggpad, "Mixing buffer for current offset");
       gst_audio_mixer_mix_buffer (audiomixer, pad, &outmap);
+
       if (pad->output_offset >= next_offset) {
         GST_DEBUG_OBJECT (pad,
             "Pad is after current offset: %" G_GUINT64_FORMAT " >= %"
@@ -1469,17 +1472,17 @@ gst_audiomixer_aggregate (GstAggregator * agg)
 
   gst_buffer_unmap (outbuf, &outmap);
 
-  if (dropped) {
+  if (dropped && !timeout) {
     /* We dropped a buffer, retry */
     GST_INFO_OBJECT (audiomixer,
         "A pad dropped a buffer, wait for the next one");
     return GST_FLOW_OK;
   }
 
-  if (!is_done && !is_eos) {
+  if (!is_done && !is_eos && !timeout) {
     /* Get more buffers */
     GST_INFO_OBJECT (audiomixer,
-        "We're not done yet for the current offset," " waiting for more data");
+        "We're not done yet for the current offset, waiting for more data");
     return GST_FLOW_OK;
   }
 
@@ -1488,7 +1491,6 @@ gst_audiomixer_aggregate (GstAggregator * agg)
     gboolean empty_buffer = TRUE;
 
     GST_DEBUG_OBJECT (audiomixer, "We're EOS");
-
 
     GST_OBJECT_LOCK (agg);
     for (iter = GST_ELEMENT (agg)->sinkpads; iter; iter = iter->next) {
