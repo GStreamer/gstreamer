@@ -667,14 +667,14 @@ parse_fail:
 /**
  * gst_video_encoder_proxy_getcaps:
  * @enc: a #GstVideoEncoder
- * @caps: initial caps
- * @filter: filter caps
+ * @caps: (allow-none): initial caps
+ * @filter: (allow-none): filter caps
  *
  * Returns caps that express @caps (or sink template caps if @caps == NULL)
  * restricted to resolution/format/... combinations supported by downstream
  * elements (e.g. muxers).
  *
- * Returns: a #GstCaps owned by caller
+ * Returns: (transfer-full): a #GstCaps owned by caller
  */
 GstCaps *
 gst_video_encoder_proxy_getcaps (GstVideoEncoder * encoder, GstCaps * caps,

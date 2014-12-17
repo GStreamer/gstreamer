@@ -1347,14 +1347,14 @@ refuse_caps:
 /**
  * gst_audio_encoder_proxy_getcaps:
  * @enc: a #GstAudioEncoder
- * @caps: initial caps
- * @filter: filter caps
+ * @caps: (allow-none): initial caps
+ * @filter: (allow-none): filter caps
  *
  * Returns caps that express @caps (or sink template caps if @caps == NULL)
  * restricted to channel/rate combinations supported by downstream elements
  * (e.g. muxers).
  *
- * Returns: a #GstCaps owned by caller
+ * Returns: (transfer-full): a #GstCaps owned by caller
  */
 GstCaps *
 gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps,
