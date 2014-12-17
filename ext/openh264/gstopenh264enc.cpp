@@ -657,6 +657,9 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
     priv->encoder = NULL;
   }
   WelsCreateSVCEncoder (&(priv->encoder));
+  unsigned int uiTraceLevel = WELS_LOG_ERROR;
+  priv->encoder->SetOption(ENCODER_OPTION_TRACE_LEVEL, &uiTraceLevel);
+
   priv->encoder->GetDefaultParams (&enc_params);
 
   enc_params.iUsageType = openh264enc->priv->usage_type;
