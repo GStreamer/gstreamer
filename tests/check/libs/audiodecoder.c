@@ -33,6 +33,37 @@ static GList *events = NULL;
 
 #define TEST_MSECS_PER_SAMPLE 44100
 
+#define RESTRICTED_CAPS_RATE 44100
+#define RESTRICTED_CAPS_CHANNELS 6
+static GstStaticPadTemplate sinktemplate_restricted =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, rate=(int)44100, channels=(int)6")
+    );
+
+static GstStaticPadTemplate sinktemplate_with_range =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, rate=(int)[1,44100], channels=(int)[1,6]")
+    );
+
+static GstStaticPadTemplate sinktemplate_default =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, format=(string)S32LE, "
+        "rate=(int)[1, 320000], channels=(int)[1, 32],"
+        "layout=(string)interleaved")
+    );
+static GstStaticPadTemplate srctemplate_default =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-test-custom")
+    );
+
 #define GST_AUDIO_DECODER_TESTER_TYPE gst_audio_decoder_tester_get_type()
 static GType gst_audio_decoder_tester_get_type (void);
 
@@ -178,24 +209,17 @@ _mysinkpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static void
-setup_audiodecodertester (void)
+setup_audiodecodertester (GstStaticPadTemplate * sinktemplate,
+    GstStaticPadTemplate * srctemplate)
 {
-  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("audio/x-raw, format=(string)S32LE, "
-          "rate=(int)[1, 320000], channels=(int)[1, 32],"
-          "layout=(string)interleaved")
-      );
-  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("audio/x-test-custom")
-      );
+  if (sinktemplate == NULL)
+    sinktemplate = &sinktemplate_default;
+  if (srctemplate == NULL)
+    srctemplate = &srctemplate_default;
 
   dec = g_object_new (GST_AUDIO_DECODER_TESTER_TYPE, NULL);
-  mysrcpad = gst_check_setup_src_pad (dec, &srctemplate);
-  mysinkpad = gst_check_setup_sink_pad (dec, &sinktemplate);
+  mysrcpad = gst_check_setup_src_pad (dec, srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (dec, sinktemplate);
 
   gst_pad_set_event_function (mysinkpad, _mysinkpad_event);
 }
@@ -251,7 +275,7 @@ GST_START_TEST (audiodecoder_playback)
   GstBuffer *buffer;
   guint64 i;
 
-  setup_audiodecodertester ();
+  setup_audiodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -335,7 +359,7 @@ GST_START_TEST (audiodecoder_negotiation_with_buffer)
   GstSegment segment;
   GstBuffer *buffer;
 
-  setup_audiodecodertester ();
+  setup_audiodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -364,7 +388,7 @@ GST_START_TEST (audiodecoder_negotiation_with_gap_event)
 {
   GstSegment segment;
 
-  setup_audiodecodertester ();
+  setup_audiodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -393,7 +417,7 @@ GST_START_TEST (audiodecoder_delayed_negotiation_with_gap_event)
 {
   GstSegment segment;
 
-  setup_audiodecodertester ();
+  setup_audiodecodertester (NULL, NULL);
 
   ((GstAudioDecoderTester *) dec)->setoutputformat_on_decoding = TRUE;
 
@@ -428,7 +452,7 @@ _audiodecoder_flush_events (gboolean send_buffers)
   GList *events_iter;
   GstMessage *msg;
 
-  setup_audiodecodertester ();
+  setup_audiodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -557,7 +581,7 @@ _audiodecoder_flush_events (gboolean send_buffers)
 GST_START_TEST (audiodecoder_eos_events_no_buffers)
 {
   GstSegment segment;
-  setup_audiodecodertester ();
+  setup_audiodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -605,7 +629,7 @@ GST_START_TEST (audiodecoder_buffer_after_segment)
   guint64 i;
   GstClockTime pos;
 
-  setup_audiodecodertester ();
+  setup_audiodecodertester (NULL, NULL);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -668,7 +692,7 @@ GST_START_TEST (audiodecoder_output_too_many_frames)
   GstBuffer *buffer;
   guint64 i;
 
-  setup_audiodecodertester ();
+  setup_audiodecodertester (NULL, NULL);
 
   ((GstAudioDecoderTester *) dec)->output_too_many_frames = TRUE;
 
@@ -718,6 +742,149 @@ GST_START_TEST (audiodecoder_output_too_many_frames)
 
 GST_END_TEST;
 
+GST_START_TEST (audiodecoder_query_caps_with_fixed_caps_peer)
+{
+  GstCaps *caps;
+  GstCaps *filter;
+  GstStructure *structure;
+  gint rate, channels;
+
+  setup_audiodecodertester (&sinktemplate_restricted, NULL);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_pad_peer_query_caps (mysrcpad, NULL);
+  fail_unless (caps != NULL);
+
+  structure = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_get_int (structure, "rate", &rate));
+  fail_unless (gst_structure_get_int (structure, "channels", &channels));
+
+  /* match our restricted caps values */
+  fail_unless (channels == RESTRICTED_CAPS_CHANNELS);
+  fail_unless (rate == RESTRICTED_CAPS_RATE);
+  gst_caps_unref (caps);
+
+  filter = gst_caps_new_simple ("audio/x-custom-test", "rate", G_TYPE_INT,
+      10000, "channels", G_TYPE_INT, 12, NULL);
+  caps = gst_pad_peer_query_caps (mysrcpad, filter);
+  fail_unless (caps != NULL);
+  fail_unless (gst_caps_is_empty (caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (filter);
+
+  cleanup_audiodecodertest ();
+}
+
+GST_END_TEST;
+
+static void
+_get_int_range (GstStructure * s, const gchar * field, gint * min_v,
+    gint * max_v)
+{
+  const GValue *value;
+
+  value = gst_structure_get_value (s, field);
+  fail_unless (value != NULL);
+  fail_unless (GST_VALUE_HOLDS_INT_RANGE (value));
+
+  *min_v = gst_value_get_int_range_min (value);
+  *max_v = gst_value_get_int_range_max (value);
+}
+
+GST_START_TEST (audiodecoder_query_caps_with_range_caps_peer)
+{
+  GstCaps *caps;
+  GstCaps *filter;
+  GstStructure *structure;
+  gint rate, channels;
+  gint rate_min, channels_min;
+  gint rate_max, channels_max;
+
+  setup_audiodecodertester (&sinktemplate_with_range, NULL);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_pad_peer_query_caps (mysrcpad, NULL);
+  fail_unless (caps != NULL);
+
+  structure = gst_caps_get_structure (caps, 0);
+  _get_int_range (structure, "rate", &rate_min, &rate_max);
+  _get_int_range (structure, "channels", &channels_min, &channels_max);
+  fail_unless (rate_min == 1);
+  fail_unless (rate_max == RESTRICTED_CAPS_RATE);
+  fail_unless (channels_min == 1);
+  fail_unless (channels_max == RESTRICTED_CAPS_CHANNELS);
+  gst_caps_unref (caps);
+
+  /* query with a fixed filter */
+  filter = gst_caps_new_simple ("audio/x-test-custom", "rate", G_TYPE_INT,
+      RESTRICTED_CAPS_RATE, "channels", G_TYPE_INT, RESTRICTED_CAPS_CHANNELS,
+      NULL);
+  caps = gst_pad_peer_query_caps (mysrcpad, filter);
+  fail_unless (caps != NULL);
+  structure = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_get_int (structure, "rate", &rate));
+  fail_unless (gst_structure_get_int (structure, "channels", &channels));
+  fail_unless (rate == RESTRICTED_CAPS_RATE);
+  fail_unless (channels == RESTRICTED_CAPS_CHANNELS);
+  gst_caps_unref (caps);
+  gst_caps_unref (filter);
+
+  /* query with a fixed filter that will lead to empty result */
+  filter = gst_caps_new_simple ("audio/x-test-custom", "rate", G_TYPE_INT,
+      10000, "channels", G_TYPE_INT, 12, NULL);
+  caps = gst_pad_peer_query_caps (mysrcpad, filter);
+  fail_unless (caps != NULL);
+  fail_unless (gst_caps_is_empty (caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (filter);
+
+  cleanup_audiodecodertest ();
+}
+
+GST_END_TEST;
+
+#define GETCAPS_CAPS_STR "audio/x-test-custom, somefield=(string)getcaps"
+static GstCaps *
+_custom_audio_decoder_getcaps (GstAudioDecoder * dec, GstCaps * filter)
+{
+  return gst_caps_from_string (GETCAPS_CAPS_STR);
+}
+
+GST_START_TEST (audiodecoder_query_caps_with_custom_getcaps)
+{
+  GstCaps *caps;
+  GstAudioDecoderClass *klass;
+  GstCaps *expected_caps;
+
+  setup_audiodecodertester (&sinktemplate_restricted, NULL);
+
+  klass = GST_AUDIO_DECODER_CLASS (GST_AUDIO_DECODER_GET_CLASS (dec));
+  klass->getcaps = _custom_audio_decoder_getcaps;
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_pad_peer_query_caps (mysrcpad, NULL);
+  fail_unless (caps != NULL);
+
+  expected_caps = gst_caps_from_string (GETCAPS_CAPS_STR);
+  fail_unless (gst_caps_is_equal (expected_caps, caps));
+  gst_caps_unref (expected_caps);
+  gst_caps_unref (caps);
+
+  cleanup_audiodecodertest ();
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_audiodecoder_suite (void)
 {
@@ -734,6 +901,10 @@ gst_audiodecoder_suite (void)
   tcase_add_test (tc, audiodecoder_delayed_negotiation_with_gap_event);
   tcase_add_test (tc, audiodecoder_buffer_after_segment);
   tcase_add_test (tc, audiodecoder_output_too_many_frames);
+
+  tcase_add_test (tc, audiodecoder_query_caps_with_fixed_caps_peer);
+  tcase_add_test (tc, audiodecoder_query_caps_with_range_caps_peer);
+  tcase_add_test (tc, audiodecoder_query_caps_with_custom_getcaps);
 
   return s;
 }
