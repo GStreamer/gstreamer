@@ -87,8 +87,10 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
   GstCaps *caps;
   GstVideoFormat format;
   gint width, height;
-  GstClockTime duration;
+  GstClockTime latency;
   guint64 offset;
+  GstClockTime startAVFTimestamp;
+  GstClockTime startTimestamp;
 
   GstClockTime lastSampling;
   guint count;
@@ -129,7 +131,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 - (BOOL)query:(GstQuery *)query;
 - (GstStateChangeReturn)changeState:(GstStateChange)transition;
 - (GstFlowReturn)create:(GstBuffer **)buf;
-- (void)timestampBuffer:(GstBuffer *)buf;
+- (void)timestampBuffer:(GstBuffer *)buf sampleBuffer:(CMSampleBufferRef)sampleBuffer;
 - (void)updateStatistics;
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
@@ -571,6 +573,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   width = info.width;
   height = info.height;
   format = info.finfo->format;
+  latency = gst_util_uint64_scale (GST_SECOND, info.fps_d, info.fps_n);
 
   dispatch_sync (mainQueue, ^{
     int newformat;
@@ -655,8 +658,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   bufQueue = [[NSMutableArray alloc] initWithCapacity:BUFFER_QUEUE_SIZE];
   stopRequest = NO;
 
-  duration = gst_util_uint64_scale (GST_SECOND, DEVICE_FPS_D, DEVICE_FPS_N);
   offset = 0;
+  latency = GST_CLOCK_TIME_NONE;
+  startAVFTimestamp = GST_CLOCK_TIME_NONE;
+  startTimestamp = GST_CLOCK_TIME_NONE;
 
   lastSampling = GST_CLOCK_TIME_NONE;
   count = 0;
@@ -686,7 +691,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if (device != nil) {
       GstClockTime min_latency, max_latency;
 
-      min_latency = max_latency = duration; /* for now */
+      min_latency = max_latency = latency;
       result = YES;
 
       GST_DEBUG_OBJECT (element, "reporting latency of min %" GST_TIME_FORMAT
@@ -807,7 +812,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   *buf = gst_core_media_buffer_new (sbuf, useVideoMeta);
   CFRelease (sbuf);
 
-  [self timestampBuffer:*buf];
+  [self timestampBuffer:*buf sampleBuffer:sbuf];
 
   if (doStats)
     [self updateStatistics];
@@ -816,29 +821,36 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 
 - (void)timestampBuffer:(GstBuffer *)buf
+           sampleBuffer:(CMSampleBufferRef)sbuf
 {
-  GstClock *clock;
-  GstClockTime timestamp;
+  CMSampleTimingInfo time_info;
+  GstClockTime timestamp, duration;
+  CMItemCount num_timings;
 
-  GST_OBJECT_LOCK (element);
-  clock = GST_ELEMENT_CLOCK (element);
-  if (clock != NULL) {
-    gst_object_ref (clock);
-    timestamp = element->base_time;
-  } else {
-    timestamp = GST_CLOCK_TIME_NONE;
-  }
-  GST_OBJECT_UNLOCK (element);
+  timestamp = GST_CLOCK_TIME_NONE;
+  duration = GST_CLOCK_TIME_NONE;
+  if (CMSampleBufferGetOutputSampleTimingInfoArray(sbuf, 1, &time_info, &num_timings) == noErr) {
+    timestamp = gst_util_uint64_scale (GST_SECOND,
+            time_info.presentationTimeStamp.value, time_info.presentationTimeStamp.timescale);
+    duration = gst_util_uint64_scale (GST_SECOND,
+            time_info.duration.value, time_info.duration.timescale);
 
-  if (clock != NULL) {
-    timestamp = gst_clock_get_time (clock) - timestamp;
-    if (timestamp > duration)
-      timestamp -= duration;
-    else
-      timestamp = 0;
+    if (offset == 0) {
+      GstClock *clock;
 
-    gst_object_unref (clock);
-    clock = NULL;
+      GST_OBJECT_LOCK (element);
+      clock = GST_ELEMENT_CLOCK (element);
+      if (clock != NULL) {
+        startTimestamp = gst_clock_get_time (clock) - element->base_time;
+      }
+      GST_OBJECT_UNLOCK (element);
+
+      startAVFTimestamp = timestamp;
+    }
+
+    if (GST_CLOCK_TIME_IS_VALID (startAVFTimestamp) &&
+        GST_CLOCK_TIME_IS_VALID (startTimestamp))
+      timestamp = startTimestamp + (timestamp - startAVFTimestamp);
   }
 
   GST_BUFFER_OFFSET (buf) = offset++;
