@@ -1663,7 +1663,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
     if (next_buf) {
       ogg_mux->pulling->eos = FALSE;
       gst_buffer_unref (next_buf);
-    } else {
+    } else if (!ogg_mux->pulling->map.is_sparse) {
       GST_DEBUG_OBJECT (ogg_mux->pulling->collect.pad, "setting eos to true");
       ogg_mux->pulling->eos = TRUE;
     }
@@ -1676,7 +1676,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
     if (next_buf) {
       best->eos = FALSE;
       gst_buffer_unref (next_buf);
-    } else {
+    } else if (!best->map.is_sparse) {
       GST_DEBUG_OBJECT (best->collect.pad, "setting eos to true");
       best->eos = TRUE;
     }
@@ -2043,6 +2043,14 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
   if (best->eos && all_pads_eos (pads))
     goto eos;
+
+  /* We might have used up a cached pad->buffer. If all streams
+   * have a buffer ready in collectpads, collectpads will block at
+   * next chain, and will never call collected again. So we make a
+   * last call to _queue_pads now, to ensure that collectpads can
+   * push to at least one pad (mostly for streams with a single
+   * logical stream). */
+  gst_ogg_mux_queue_pads (ogg_mux, &popped);
 
   return ret;
 
