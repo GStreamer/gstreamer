@@ -1,14 +1,20 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
+if BUILD_EXAMPLES
+SUBDIRS_EXAMPLES = examples
+else
+SUBDIRS_EXAMPLES =
+endif
+
 SUBDIRS = 		\
 	gst \
 	common \
 	pkgconfig \
 	docs \
-	examples \
+	$(SUBDIRS_EXAMPLES)
 	tests
 
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = gst common pkgconfig docs examples tests
 
 EXTRA_DIST = \
 	ChangeLog autogen.sh depcomp \
