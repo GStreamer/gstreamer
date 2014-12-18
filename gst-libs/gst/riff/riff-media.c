@@ -1233,6 +1233,10 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
         format =
             gst_audio_format_build_integer (wd != 8, G_LITTLE_ENDIAN, wd, ws);
+        if (format == GST_AUDIO_FORMAT_UNKNOWN) {
+          GST_WARNING ("Unsupported raw audio format with width %d", wd);
+          return NULL;
+        }
 
         caps = gst_caps_new_simple ("audio/x-raw",
             "format", G_TYPE_STRING, gst_audio_format_to_string (format),
