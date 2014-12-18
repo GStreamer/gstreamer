@@ -1114,10 +1114,9 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     if (start_running_time_offset < audiomixer->offset) {
       GstBuffer *buf;
       guint diff = (audiomixer->offset - start_running_time_offset) * bpf;
+
       pad->position += diff;
-      pad->size -= diff;
-      /* FIXME: This could only happen due to rounding errors */
-      if (pad->size == 0) {
+      if (pad->position >= pad->size) {
         /* Empty buffer, drop */
         gst_buffer_unref (inbuf);
         pad->buffer = NULL;
