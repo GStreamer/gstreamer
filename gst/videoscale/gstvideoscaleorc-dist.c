@@ -320,7 +320,7 @@ video_scale_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
         1, 9, 31, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
         114, 99, 95, 109, 101, 114, 103, 101, 95, 108, 105, 110, 101, 97, 114,
         95,
-        117, 56, 11, 1, 1, 12, 1, 1, 12, 1, 1, 14, 4, 128, 0, 0,
+        117, 56, 11, 1, 1, 12, 1, 1, 12, 1, 1, 14, 2, 128, 0, 0,
         0, 16, 1, 20, 2, 20, 2, 20, 1, 20, 1, 43, 34, 4, 150, 32,
         4, 150, 33, 5, 98, 33, 33, 32, 89, 33, 33, 24, 70, 33, 33, 16,
         158, 35, 33, 33, 0, 35, 34, 2, 0,
@@ -336,7 +336,7 @@ video_scale_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
-      orc_program_add_constant (p, 4, 0x00000080, "c1");
+      orc_program_add_constant (p, 2, 0x00000080, "c1");
       orc_program_add_parameter (p, 1, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
@@ -417,13 +417,17 @@ video_scale_orc_merge_linear_u16 (orc_uint16 * ORC_RESTRICT d1,
     /* 0: loadw */
     var34 = ptr4[i];
     /* 2: muluwl */
-    var39.i = ((orc_uint16) var34.i) * ((orc_uint16) var35.i);
+    var39.i =
+        ((orc_uint32) ((orc_uint16) var34.i)) *
+        ((orc_uint32) ((orc_uint16) var35.i));
     /* 3: loadw */
     var36 = ptr5[i];
     /* 5: muluwl */
-    var40.i = ((orc_uint16) var36.i) * ((orc_uint16) var37.i);
+    var40.i =
+        ((orc_uint32) ((orc_uint16) var36.i)) *
+        ((orc_uint32) ((orc_uint16) var37.i));
     /* 6: addl */
-    var41.i = var39.i + var40.i;
+    var41.i = ((orc_uint32) var39.i) + ((orc_uint32) var40.i);
     /* 7: shrul */
     var42.i = ((orc_uint32) var41.i) >> 16;
     /* 8: convlw */
@@ -466,13 +470,17 @@ _backup_video_scale_orc_merge_linear_u16 (OrcExecutor * ORC_RESTRICT ex)
     /* 0: loadw */
     var34 = ptr4[i];
     /* 2: muluwl */
-    var39.i = ((orc_uint16) var34.i) * ((orc_uint16) var35.i);
+    var39.i =
+        ((orc_uint32) ((orc_uint16) var34.i)) *
+        ((orc_uint32) ((orc_uint16) var35.i));
     /* 3: loadw */
     var36 = ptr5[i];
     /* 5: muluwl */
-    var40.i = ((orc_uint16) var36.i) * ((orc_uint16) var37.i);
+    var40.i =
+        ((orc_uint32) ((orc_uint16) var36.i)) *
+        ((orc_uint32) ((orc_uint16) var37.i));
     /* 6: addl */
-    var41.i = var39.i + var40.i;
+    var41.i = ((orc_uint32) var39.i) + ((orc_uint32) var40.i);
     /* 7: shrul */
     var42.i = ((orc_uint32) var41.i) >> 16;
     /* 8: convlw */
@@ -856,8 +864,8 @@ video_scale_orc_splat_u64 (orc_uint64 * ORC_RESTRICT d1, orc_int64 p1, int n)
   {
     orc_union64 tmp;
     tmp.i = p1;
-    ex->params[ORC_VAR_P1] = tmp.x2[0];
-    ex->params[ORC_VAR_T1] = tmp.x2[1];
+    ex->params[ORC_VAR_P1] = ((orc_uint64) tmp.i) & 0xffffffff;
+    ex->params[ORC_VAR_T1] = ((orc_uint64) tmp.i) >> 32;
   }
 
   func = c->exec;
@@ -2345,23 +2353,27 @@ video_scale_orc_merge_bicubic_u8 (guint8 * ORC_RESTRICT d1,
     /* 0: loadb */
     var34 = ptr5[i];
     /* 2: mulubw */
-    var44.i = ((orc_uint8) var34) * ((orc_uint8) var35);
+    var44.i =
+        ((orc_uint16) ((orc_uint8) var34)) * ((orc_uint16) ((orc_uint8) var35));
     /* 3: loadb */
     var36 = ptr6[i];
     /* 5: mulubw */
-    var45.i = ((orc_uint8) var36) * ((orc_uint8) var37);
+    var45.i =
+        ((orc_uint16) ((orc_uint8) var36)) * ((orc_uint16) ((orc_uint8) var37));
     /* 6: addw */
     var46.i = var44.i + var45.i;
     /* 7: loadb */
     var38 = ptr4[i];
     /* 9: mulubw */
-    var47.i = ((orc_uint8) var38) * ((orc_uint8) var39);
+    var47.i =
+        ((orc_uint16) ((orc_uint8) var38)) * ((orc_uint16) ((orc_uint8) var39));
     /* 10: subw */
     var48.i = var46.i - var47.i;
     /* 11: loadb */
     var40 = ptr7[i];
     /* 13: mulubw */
-    var49.i = ((orc_uint8) var40) * ((orc_uint8) var41);
+    var49.i =
+        ((orc_uint16) ((orc_uint8) var40)) * ((orc_uint16) ((orc_uint8) var41));
     /* 14: subw */
     var50.i = var48.i - var49.i;
     /* 16: addw */
@@ -2432,23 +2444,27 @@ _backup_video_scale_orc_merge_bicubic_u8 (OrcExecutor * ORC_RESTRICT ex)
     /* 0: loadb */
     var34 = ptr5[i];
     /* 2: mulubw */
-    var44.i = ((orc_uint8) var34) * ((orc_uint8) var35);
+    var44.i =
+        ((orc_uint16) ((orc_uint8) var34)) * ((orc_uint16) ((orc_uint8) var35));
     /* 3: loadb */
     var36 = ptr6[i];
     /* 5: mulubw */
-    var45.i = ((orc_uint8) var36) * ((orc_uint8) var37);
+    var45.i =
+        ((orc_uint16) ((orc_uint8) var36)) * ((orc_uint16) ((orc_uint8) var37));
     /* 6: addw */
     var46.i = var44.i + var45.i;
     /* 7: loadb */
     var38 = ptr4[i];
     /* 9: mulubw */
-    var47.i = ((orc_uint8) var38) * ((orc_uint8) var39);
+    var47.i =
+        ((orc_uint16) ((orc_uint8) var38)) * ((orc_uint16) ((orc_uint8) var39));
     /* 10: subw */
     var48.i = var46.i - var47.i;
     /* 11: loadb */
     var40 = ptr7[i];
     /* 13: mulubw */
-    var49.i = ((orc_uint8) var40) * ((orc_uint8) var41);
+    var49.i =
+        ((orc_uint16) ((orc_uint8) var40)) * ((orc_uint16) ((orc_uint8) var41));
     /* 14: subw */
     var50.i = var48.i - var49.i;
     /* 16: addw */
@@ -2484,7 +2500,7 @@ video_scale_orc_merge_bicubic_u8 (guint8 * ORC_RESTRICT d1,
         1, 9, 32, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
         114, 99, 95, 109, 101, 114, 103, 101, 95, 98, 105, 99, 117, 98, 105, 99,
         95, 117, 56, 11, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12,
-        1, 1, 14, 4, 32, 0, 0, 0, 14, 4, 6, 0, 0, 0, 16, 4,
+        1, 1, 14, 2, 32, 0, 0, 0, 14, 2, 6, 0, 0, 0, 16, 4,
         16, 4, 16, 4, 16, 4, 20, 2, 20, 2, 175, 32, 5, 25, 175, 33,
         6, 26, 70, 32, 32, 33, 175, 33, 4, 24, 98, 32, 32, 33, 175, 33,
         7, 27, 98, 32, 32, 33, 70, 32, 32, 16, 94, 32, 32, 17, 160, 0,
@@ -2503,8 +2519,8 @@ video_scale_orc_merge_bicubic_u8 (guint8 * ORC_RESTRICT d1,
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_source (p, 1, "s4");
-      orc_program_add_constant (p, 4, 0x00000020, "c1");
-      orc_program_add_constant (p, 4, 0x00000006, "c2");
+      orc_program_add_constant (p, 2, 0x00000020, "c1");
+      orc_program_add_constant (p, 2, 0x00000006, "c2");
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_parameter (p, 4, "p2");
       orc_program_add_parameter (p, 4, "p3");

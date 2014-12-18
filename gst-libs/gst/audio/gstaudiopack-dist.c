@@ -250,7 +250,7 @@ audio_orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     /* 2: convuwl */
     var38.i = (orc_uint16) var37.i;
     /* 3: shll */
-    var39.i = var38.i << 24;
+    var39.i = ((orc_uint32) var38.i) << 24;
     /* 5: xorl */
     var36.i = var39.i ^ var35.i;
     /* 6: storel */
@@ -292,7 +292,7 @@ _backup_audio_orc_unpack_u8 (OrcExecutor * ORC_RESTRICT ex)
     /* 2: convuwl */
     var38.i = (orc_uint16) var37.i;
     /* 3: shll */
-    var39.i = var38.i << 24;
+    var39.i = ((orc_uint32) var38.i) << 24;
     /* 5: xorl */
     var36.i = var39.i ^ var35.i;
     /* 6: storel */
@@ -391,7 +391,7 @@ audio_orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     /* 2: convuwl */
     var37.i = (orc_uint16) var36.i;
     /* 3: shll */
-    var35.i = var37.i << 24;
+    var35.i = ((orc_uint32) var37.i) << 24;
     /* 4: storel */
     ptr0[i] = var35;
   }
@@ -423,7 +423,7 @@ _backup_audio_orc_unpack_s8 (OrcExecutor * ORC_RESTRICT ex)
     /* 2: convuwl */
     var37.i = (orc_uint16) var36.i;
     /* 3: shll */
-    var35.i = var37.i << 24;
+    var35.i = ((orc_uint32) var37.i) << 24;
     /* 4: storel */
     ptr0[i] = var35;
   }
@@ -522,7 +522,7 @@ audio_orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     /* 1: convuwl */
     var36.i = (orc_uint16) var33.i;
     /* 2: shll */
-    var37.i = var36.i << 16;
+    var37.i = ((orc_uint32) var36.i) << 16;
     /* 4: xorl */
     var35.i = var37.i ^ var34.i;
     /* 5: storel */
@@ -561,7 +561,7 @@ _backup_audio_orc_unpack_u16 (OrcExecutor * ORC_RESTRICT ex)
     /* 1: convuwl */
     var36.i = (orc_uint16) var33.i;
     /* 2: shll */
-    var37.i = var36.i << 16;
+    var37.i = ((orc_uint32) var36.i) << 16;
     /* 4: xorl */
     var35.i = var37.i ^ var34.i;
     /* 5: storel */
@@ -654,7 +654,7 @@ audio_orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     /* 1: convuwl */
     var35.i = (orc_uint16) var33.i;
     /* 2: shll */
-    var34.i = var35.i << 16;
+    var34.i = ((orc_uint32) var35.i) << 16;
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -683,7 +683,7 @@ _backup_audio_orc_unpack_s16 (OrcExecutor * ORC_RESTRICT ex)
     /* 1: convuwl */
     var35.i = (orc_uint16) var33.i;
     /* 2: shll */
-    var34.i = var35.i << 16;
+    var34.i = ((orc_uint32) var35.i) << 16;
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -781,7 +781,7 @@ audio_orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1,
     /* 2: convuwl */
     var38.i = (orc_uint16) var37.i;
     /* 3: shll */
-    var39.i = var38.i << 16;
+    var39.i = ((orc_uint32) var38.i) << 16;
     /* 5: xorl */
     var36.i = var39.i ^ var35.i;
     /* 6: storel */
@@ -823,7 +823,7 @@ _backup_audio_orc_unpack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
     /* 2: convuwl */
     var38.i = (orc_uint16) var37.i;
     /* 3: shll */
-    var39.i = var38.i << 16;
+    var39.i = ((orc_uint32) var38.i) << 16;
     /* 5: xorl */
     var36.i = var39.i ^ var35.i;
     /* 6: storel */
@@ -923,7 +923,7 @@ audio_orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1,
     /* 2: convuwl */
     var37.i = (orc_uint16) var36.i;
     /* 3: shll */
-    var35.i = var37.i << 16;
+    var35.i = ((orc_uint32) var37.i) << 16;
     /* 4: storel */
     ptr0[i] = var35;
   }
@@ -955,7 +955,7 @@ _backup_audio_orc_unpack_s16_swap (OrcExecutor * ORC_RESTRICT ex)
     /* 2: convuwl */
     var37.i = (orc_uint16) var36.i;
     /* 3: shll */
-    var35.i = var37.i << 16;
+    var35.i = ((orc_uint32) var37.i) << 16;
     /* 4: storel */
     ptr0[i] = var35;
   }
@@ -1051,7 +1051,7 @@ audio_orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1,
     /* 0: loadl */
     var33 = ptr4[i];
     /* 1: shll */
-    var36.i = var33.i << 8;
+    var36.i = ((orc_uint32) var33.i) << 8;
     /* 3: xorl */
     var35.i = var36.i ^ var34.i;
     /* 4: storel */
@@ -1087,7 +1087,7 @@ _backup_audio_orc_unpack_u24_32 (OrcExecutor * ORC_RESTRICT ex)
     /* 0: loadl */
     var33 = ptr4[i];
     /* 1: shll */
-    var36.i = var33.i << 8;
+    var36.i = ((orc_uint32) var33.i) << 8;
     /* 3: xorl */
     var35.i = var36.i ^ var34.i;
     /* 4: storel */
@@ -1175,7 +1175,7 @@ audio_orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1,
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: shll */
-    var33.i = var32.i << 8;
+    var33.i = ((orc_uint32) var32.i) << 8;
     /* 2: storel */
     ptr0[i] = var33;
   }
@@ -1201,7 +1201,7 @@ _backup_audio_orc_unpack_s24_32 (OrcExecutor * ORC_RESTRICT ex)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: shll */
-    var33.i = var32.i << 8;
+    var33.i = ((orc_uint32) var32.i) << 8;
     /* 2: storel */
     ptr0[i] = var33;
   }
@@ -1293,7 +1293,7 @@ audio_orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
     /* 1: swapl */
     var36.i = ORC_SWAP_L (var33.i);
     /* 2: shll */
-    var37.i = var36.i << 8;
+    var37.i = ((orc_uint32) var36.i) << 8;
     /* 4: xorl */
     var35.i = var37.i ^ var34.i;
     /* 5: storel */
@@ -1332,7 +1332,7 @@ _backup_audio_orc_unpack_u24_32_swap (OrcExecutor * ORC_RESTRICT ex)
     /* 1: swapl */
     var36.i = ORC_SWAP_L (var33.i);
     /* 2: shll */
-    var37.i = var36.i << 8;
+    var37.i = ((orc_uint32) var36.i) << 8;
     /* 4: xorl */
     var35.i = var37.i ^ var34.i;
     /* 5: storel */
@@ -1426,7 +1426,7 @@ audio_orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
     /* 1: swapl */
     var35.i = ORC_SWAP_L (var33.i);
     /* 2: shll */
-    var34.i = var35.i << 8;
+    var34.i = ((orc_uint32) var35.i) << 8;
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -1455,7 +1455,7 @@ _backup_audio_orc_unpack_s24_32_swap (OrcExecutor * ORC_RESTRICT ex)
     /* 1: swapl */
     var35.i = ORC_SWAP_L (var33.i);
     /* 2: shll */
-    var34.i = var35.i << 8;
+    var34.i = ((orc_uint32) var35.i) << 8;
     /* 3: storel */
     ptr0[i] = var34;
   }

@@ -1,9 +1,297 @@
-=== release 1.4.4 ===
+=== release 1.4.5 ===
 
-2014-11-06  Sebastian Dröge <slomo@coaxion.net>
+2014-12-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.4
+	  releasing 1.4.5
+
+2014-12-09 22:47:31 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: do not use fixed caps on source pad
+	  decoders can change the caps on their source pads, so they don't
+	  use fixed caps. Having fixed caps can cause renegotiation issues.
+
+2014-12-09 22:46:42 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: do not use fixed caps on source pad
+	  decoders can change the caps on their source pads, so they don't
+	  use fixed caps. Having fixed caps can cause renegotiation issues.
+
+2014-12-16 15:03:55 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/gstvideosink.c:
+	* tests/check/libs/video.c:
+	  Revert "video: Fix non-default usage of gst_video_sink_center_rect"
+	  This reverts commit 899461d722e45f591eeddf33c405677170d63de4.
+	  There seems to be a lot of code out there that does not properly initialize
+	  the rectangles and then causes undefined behaviour. Including our video sinks.
+	  Let's keep this out of 1.4, fix everything everywhere and keep it in 1.6
+
+2014-12-16 12:57:55 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* sys/ximage/ximagesink.c:
+	* sys/xvimage/xvimagesink.c:
+	  ximagesink: clear src and dest rectangles
+	  Now that the center function also takes into account the x and y
+	  coordinates of the dest rectangle, better clear all the fields before
+	  using them.
+
+2014-12-16 12:10:53 +0100  Song Bing <b06498@freescale.com>
+
+	* gst-libs/gst/video/gstvideopool.c:
+	* sys/ximage/ximagepool.c:
+	* sys/xvimage/xvimagepool.c:
+	  videopool: update buffer size after video alignment
+	  Update the new buffer size after alignment in the pool configuration
+	  before calling the parent set_config. This ensures that the parent knows
+	  about the buffer size that we will allocate and makes the size check
+	  work in the release_buffer method.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=741420
+
+2014-12-15 14:10:17 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/video/gstvideosink.c:
+	* tests/check/libs/video.c:
+	  video: Fix non-default usage of gst_video_sink_center_rect
+	  Make sure we take into account non-0 x/y destination rectangles
+
+2014-12-15 09:45:43 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  Revert "decodebin: Only emit the drain signal for the main decode chain, not any subchains"
+	  This reverts commit a391dfe17f1a325f60e1d51a6d40c1a68eb196de.
+	  It breaks gapless playback: https://bugzilla.gnome.org/show_bug.cgi?id=740045
+
+2014-11-28 13:29:37 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/Makefile.am:
+	  tests: don't run orc/* tests under valgrind
+	  They just seem to blow up for some reason that needs investigating.
+
+2014-12-12 14:56:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/audiodecoder.c:
+	  tests: audiodecoder: fix broken refcounting in unit test
+	  The set_format vfunc does not pass ownership of the caps
+	  to the decoder, so we mustn't unref the caps there.
+	  gst_event_new_caps() does not take ownership of the caps
+	  passed, so we must unref the caps afterwards.
+	  Fixes leaks when running test in valgrind in 1.4 branch.
+
+2014-12-11 13:45:38 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Do not mix up stream type when getting stream combiner element
+	  We were always returning the video stream combiner whatever stream type
+	  combiner was wanted.
+
+2014-12-10 13:23:23 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: always unref the combiner sinkpad when removing the srcpad
+	  Create a function to do the pad cleanup of the GstSourceCombine struct
+	  and use it to not forget to also cleanup the sink pad and fix a memory
+	  leak.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741198
+
+2014-12-11 01:53:15 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/video/gstvideodecoder.h:
+	  videodecoder: Add GST_VIDEO_DECODER_CAST macro
+	  It's used in some macros already, so let's make it exist.
+
+2014-11-25 13:31:48 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: No remove child if destroyed.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=740730
+
+2014-11-28 15:06:27 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	* tests/check/libs/audiodecoder.c:
+	  audiodecoder: Push pending events before sending EOS.
+	  Segments are added to the pending events, and pushing a segment
+	  is mandatory before sending EOS.
+	  + Adds a test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740853
+
+2014-12-02 15:58:00 -0500  Chad <crh184@psu.edu>
+
+	* gst/audiorate/gstaudiorate.c:
+	  audiorate: Use gst_util_uint64_scale_int_round()
+	  Using gst_util_uint64_scale_int() causes slight drift
+	  which accumulates over time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741045
+
+2014-12-01 22:28:52 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* tools/gst-play.c:
+	  gst-play: do not set system's volume to 100% by default
+	  Only change the volume if requested
+
+2014-12-01 09:50:24 +0100  Thomas Klausner <wiz@danbala.tuwien.ac.at>
+
+	* ext/alsa/gstalsasink.c:
+	* ext/alsa/gstalsasrc.c:
+	  alsa: Use EPIPE instead of ESTRPIPE if the latter does not exist
+	  NetBSD does not have ESTRPIPE.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740952
+
+2014-11-25 11:38:34 +0300  Andrei Sarakeev <sarakusha@gmail.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Reset mute property of the sink to playsink's value when setting up the audio chain
+	  Otherwise the following can happen:
+	  1. set mute=true
+	  2. play media1 (Ok)
+	  3. play media without audio (audiochain removed)
+	  4. play media2 (audiochain created, mute=*false*)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740675
+
+2014-11-25 11:38:34 +0300  Andrei Sarakeev <sarakusha@gmail.com>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.h:
+	  discoverer: fix typo in header file
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740675
+
+2014-11-25 09:08:18 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: add description for audio/x-audible
+
+2014-11-25 01:02:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: improve 'audible' audio typefinder a little
+	  Don't return NEARLY_CERTAIN just based on 4 bytes.
+	  Also change media type to audio/x-audible.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=715050
+
+2013-11-23 11:36:43 +1000  Jonathan Matthew <jonathan@d14n.org>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefindfunctions: add audio/audible typefinder
+	  https://bugzilla.gnome.org/show_bug.cgi?id=715050
+
+2014-11-22 21:51:33 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: don't complain about PTS != DTS on keyframes
+	  It is valid for streams with b-frames
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740556
+
+2014-07-26 14:52:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: fix 'attempt to unlock mutex that was not locked' in error code path
+	  Fixes playbin unit test with latest GLib.
+
+2014-11-09 14:44:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: add description for Apple Core Audio Format
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739840
+
+2014-11-09 12:53:32 +0100  Peter G. Baum <peter@dr-baum.net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: recognize Apple Core Audio Format
+	  (CAF) Specification 1.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739840
+
+2014-11-06 14:14:22 +0000  William Manley <will@williammanley.net>
+
+	* gst/tcp/gstmultihandlesink.c:
+	* gst/tcp/gsttcpserversink.c:
+	  tcpserversink: Don't leak a `GSocket` and a `GInetSocketAddress`
+	  when accepting a connection.
+	  Discovered by `make check-valgrind` with the new `socketintegrationtest`.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739544
+
+=== release 1.4.4 ===
+
+2014-11-06 12:52:52 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.4.4
+
+2014-11-06 12:36:18 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2014-11-06 09:39:08 +0000  Tim-Philipp Müller <tim@centricular.com>
 

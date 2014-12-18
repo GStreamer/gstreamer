@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.4.4
+Release notes for GStreamer Base Plugins 1.4.5
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -71,12 +71,17 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 736969 : queue2: dead lock when buffering
-      * 737055 : audiosink: Setting URI on playbin at about-to-finish when playing AAC and using an alsasink causes delayed playback
-      * 737706 : videoencoder: release frame in finish_frame when no output state is configured
-      * 737742 : vorbisdec: Crashes when handling more than 8 channels
-      * 737752 : rtsp-client: crash when cleaning up session
-      * 738064 : decodebin: The “drained” signal is emitted multiple times, first time too early (~1s)
+      * 741420 : video pools: should update size in configuration after applying alignment
+      * 715050 : add typefinder for audio/x-audible
+      * 739544 : tcp: Add test and fix memory leak in tcp elements
+      * 739840 : typefind should recognize Apple Core Audio Format (CAF)
+      * 740556 : videodecoder: don't complain when DTS != PTS on keyframes
+      * 740675 : playsink: continues playback, reset mute property
+      * 740730 : rtspconnection: don't remove child source if parent source is already destroyed
+      * 740853 : audiodecoder: Push pending events before sending EOS.
+      * 740952 : alsa: NetBSD fixes
+      * 741045 : audiorate can can lose timestamp precision in some cases
+      * 741198 : playbin: leaks GstPads
 
 ==== Download ====
 
@@ -113,11 +118,21 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
       * Andrei Sarakeev
-      * Aurélien Zanelli
-      * Heinrich Fink
+      * Chad
+      * Edward Hervey
+      * Göran Jönsson
+      * Jan Schmidt
+      * Jonathan Matthew
+      * Matej Knopp
+      * Mathieu Duponchelle
+      * Peter G. Baum
       * Sebastian Dröge
+      * Song Bing
       * Thiago Santos
+      * Thibault Saunier
+      * Thomas Klausner
       * Tim-Philipp Müller
+      * William Manley
+      * Wim Taymans
  

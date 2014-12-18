@@ -259,8 +259,9 @@ video_orc_blend_little (guint8 * ORC_RESTRICT d1,
     var42 = var41.i;
     /* 3: splatbl */
     var43.i =
-        ((var42 & 0xff) << 24) | ((var42 & 0xff) << 16) | ((var42 & 0xff) << 8)
-        | (var42 & 0xff);
+        ((((orc_uint32) var42) & 0xff) << 24) | ((((orc_uint32) var42) & 0xff)
+        << 16) | ((((orc_uint32) var42) & 0xff) << 8) | (((orc_uint32) var42) &
+        0xff);
     /* 4: convubw */
     var44.x4[0] = (orc_uint8) var43.x4[0];
     var44.x4[1] = (orc_uint8) var43.x4[1];
@@ -368,8 +369,9 @@ _backup_video_orc_blend_little (OrcExecutor * ORC_RESTRICT ex)
     var42 = var41.i;
     /* 3: splatbl */
     var43.i =
-        ((var42 & 0xff) << 24) | ((var42 & 0xff) << 16) | ((var42 & 0xff) << 8)
-        | (var42 & 0xff);
+        ((((orc_uint32) var42) & 0xff) << 24) | ((((orc_uint32) var42) & 0xff)
+        << 16) | ((((orc_uint32) var42) & 0xff) << 8) | (((orc_uint32) var42) &
+        0xff);
     /* 4: convubw */
     var44.x4[0] = (orc_uint8) var43.x4[0];
     var44.x4[1] = (orc_uint8) var43.x4[1];
@@ -451,7 +453,7 @@ video_orc_blend_little (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 22, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 98, 108, 101,
         110, 100, 95, 108, 105, 116, 116, 108, 101, 11, 4, 4, 12, 4, 4, 14,
-        4, 255, 0, 0, 0, 14, 4, 8, 0, 0, 0, 20, 4, 20, 2, 20,
+        4, 255, 0, 0, 0, 14, 2, 8, 0, 0, 0, 20, 4, 20, 2, 20,
         1, 20, 4, 20, 8, 20, 8, 20, 8, 113, 32, 4, 163, 33, 32, 157,
         34, 33, 152, 35, 34, 21, 2, 150, 38, 35, 21, 2, 95, 38, 38, 17,
         21, 2, 150, 37, 32, 113, 32, 0, 21, 2, 150, 36, 32, 21, 2, 98,
@@ -468,7 +470,7 @@ video_orc_blend_little (guint8 * ORC_RESTRICT d1,
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x000000ff, "c1");
-      orc_program_add_constant (p, 4, 0x00000008, "c2");
+      orc_program_add_constant (p, 2, 0x00000008, "c2");
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -579,8 +581,9 @@ video_orc_blend_big (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     var44 = var43.i;
     /* 4: splatbl */
     var45.i =
-        ((var44 & 0xff) << 24) | ((var44 & 0xff) << 16) | ((var44 & 0xff) << 8)
-        | (var44 & 0xff);
+        ((((orc_uint32) var44) & 0xff) << 24) | ((((orc_uint32) var44) & 0xff)
+        << 16) | ((((orc_uint32) var44) & 0xff) << 8) | (((orc_uint32) var44) &
+        0xff);
     /* 5: convubw */
     var46.x4[0] = (orc_uint8) var45.x4[0];
     var46.x4[1] = (orc_uint8) var45.x4[1];
@@ -691,8 +694,9 @@ _backup_video_orc_blend_big (OrcExecutor * ORC_RESTRICT ex)
     var44 = var43.i;
     /* 4: splatbl */
     var45.i =
-        ((var44 & 0xff) << 24) | ((var44 & 0xff) << 16) | ((var44 & 0xff) << 8)
-        | (var44 & 0xff);
+        ((((orc_uint32) var44) & 0xff) << 24) | ((((orc_uint32) var44) & 0xff)
+        << 16) | ((((orc_uint32) var44) & 0xff) << 8) | (((orc_uint32) var44) &
+        0xff);
     /* 5: convubw */
     var46.x4[0] = (orc_uint8) var45.x4[0];
     var46.x4[1] = (orc_uint8) var45.x4[1];
@@ -774,7 +778,7 @@ video_orc_blend_big (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
       static const orc_uint8 bc[] = {
         1, 9, 19, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 98, 108, 101,
         110, 100, 95, 98, 105, 103, 11, 4, 4, 12, 4, 4, 14, 4, 0, 0,
-        0, 255, 14, 4, 24, 0, 0, 0, 14, 4, 8, 0, 0, 0, 20, 4,
+        0, 255, 14, 4, 24, 0, 0, 0, 14, 2, 8, 0, 0, 0, 20, 4,
         20, 4, 20, 2, 20, 1, 20, 4, 20, 8, 20, 8, 20, 8, 113, 32,
         4, 126, 33, 32, 17, 163, 34, 33, 157, 35, 34, 152, 36, 35, 21, 2,
         150, 39, 36, 21, 2, 95, 39, 39, 18, 21, 2, 150, 38, 32, 113, 32,
@@ -792,7 +796,7 @@ video_orc_blend_big (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0xff000000, "c1");
       orc_program_add_constant (p, 4, 0x00000018, "c2");
-      orc_program_add_constant (p, 4, 0x00000008, "c3");
+      orc_program_add_constant (p, 2, 0x00000008, "c3");
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 4, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -6997,7 +7001,7 @@ video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 25, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 109, 101, 114,
         103, 101, 95, 108, 105, 110, 101, 97, 114, 95, 117, 56, 11, 1, 1, 12,
-        1, 1, 12, 1, 1, 14, 4, 128, 0, 0, 0, 16, 1, 20, 2, 20,
+        1, 1, 12, 1, 1, 14, 2, 128, 0, 0, 0, 16, 1, 20, 2, 20,
         2, 20, 1, 20, 1, 43, 34, 4, 150, 32, 4, 150, 33, 5, 98, 33,
         33, 32, 89, 33, 33, 24, 70, 33, 33, 16, 158, 35, 33, 33, 0, 35,
         34, 2, 0,
@@ -7011,7 +7015,7 @@ video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
-      orc_program_add_constant (p, 4, 0x00000080, "c1");
+      orc_program_add_constant (p, 2, 0x00000080, "c1");
       orc_program_add_parameter (p, 1, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
