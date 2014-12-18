@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.4.4
+Release notes for GStreamer Ugly Plugins 1.4.5
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -106,5 +106,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Sebastian Dröge
+      * Edward Hervey
  
