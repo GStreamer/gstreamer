@@ -1,9 +1,160 @@
-=== release 1.4.4 ===
+=== release 1.4.5 ===
 
-2014-11-06  Sebastian Dröge <slomo@coaxion.net>
+2014-12-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.4
+	  releasing 1.4.5
+
+2014-12-16 12:21:59 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstbufferpool.c:
+	  bufferpool: log reason for discarded buffers
+	  PERFORMANCE log the reason why a buffer could not be recycled in the
+	  bufferpool.
+
+2014-10-07 16:44:45 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: clamp reported position based on direction
+	  When using a negative rate (rate being segment.rate * segment.applied_rate),
+	  we will end up reporting decreasing positions, therefore adjust the clamping
+	  against last reported value accordingly.
+	  Fixes positions getting properly reported with applied_rate < 0.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=738092
+
+2014-11-28 14:15:30 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: update the duration variable before emitting the bus
+	  Otherwise the application might still get the old value if it asks
+	  between the message and the real update.
+
+2014-11-28 16:25:02 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstelement.c:
+	  element: Fix doc and default implementation of send_event
+	  The documentation states that gst_element_send_event is to "send an event
+	  to an element".
+	  Therefore we *send* upstream events to a source pad and downstream events
+	  to a sink pad
+
+2014-11-28 11:16:00 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstelement.c:
+	  element: Figure default send_event direction handling
+	  If we get a downstream event we want to send it to a random SINK pad
+	  (and vice-versa).
+
+2014-11-23 05:45:24 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: percentage is relative to high-percent
+	  When comparing percentage values, compare with 0-100 scale as it
+	  has already been made relative to 0-high_percent, otherwise we mark
+	  the queue as not buffering and report a 50% to the user. This leads to
+	  a buffering stall as the user assumes the queue is still buffering but
+	  it thinks it isn't.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736969
+
+2014-11-23 05:42:51 -0300  Thiago Santos <thiagoss@osg.samsung.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: percentage is an absolute value
+	  multiqueue's queues stored percent value is the percentage from 0
+	  to 100 (max-size-*) and should be compared with the requested limit
+	  (high_percentage) set by the user and not with 100% to check if
+	  buffering should stop. Otherwise we are only stopping buffering when the
+	  queue gets completely full.
+
+2014-11-20 13:34:32 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gststructure.c:
+	* tests/check/gst/gststructure.c:
+	  structure: don't overread input when searching for "
+	  When searching for the string terminator don't read past the ending
+	  0-byte when escaping characters.
+	  Add unit test for various escaping cases.
+
+2014-11-03 17:46:57 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: fail dropped queries
+	  Previously, dropping a query from a pad probe would deem the
+	  query succeeded, and the caller might then assume the query's
+	  results are valid, and thus dereference an invalid object
+	  such as a GstCaps.
+	  We now assume dropped queries did not succeed. Dropped events
+	  and buffers are still deemed a success.
+
+2014-11-12 11:30:51 +0100  Haakon Sporsheim <haakon.sporsheim@gmail.com>
+
+	* gst/gsttask.c:
+	* tests/check/gst/gsttask.c:
+	  task: Fix pause/stop race condition
+	  If a task thread is calling pause on it self and the
+	  controlling/"main" thread stops the task, it could end in a race
+	  where gst_task_func loops and then checks for paused after the
+	  controlling thread just changed the task state to stopped.
+	  Hence the task would actually call func again even though it was
+	  both paused and stopped.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740001
+
+=== release 1.4.4 ===
+
+2014-11-06 12:51:42 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.4.4
+
+2014-11-06 12:25:58 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-10-24 12:51:07 +0100  Tim-Philipp Müller <tim@centricular.com>
 
