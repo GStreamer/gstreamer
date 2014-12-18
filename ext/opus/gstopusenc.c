@@ -734,9 +734,7 @@ gst_opus_enc_sink_getcaps (GstAudioEncoder * benc, GstCaps * filter)
   peercaps = gst_pad_peer_query_caps (GST_AUDIO_ENCODER_SRC_PAD (benc), NULL);
   if (!peercaps) {
     GST_DEBUG_OBJECT (benc, "No peercaps, returning template sink caps");
-    return
-        gst_caps_copy (gst_pad_get_pad_template_caps
-        (GST_AUDIO_ENCODER_SINK_PAD (benc)));
+    return gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SINK_PAD (benc));
   }
 
   tcaps = gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (benc));
