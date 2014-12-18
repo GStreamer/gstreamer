@@ -276,67 +276,14 @@ static GstCaps *
 gst_x265_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
 {
   GstCaps *supported_incaps;
-  GstCaps *allowed;
-  GstCaps *filter_caps, *fcaps;
-  gint i, j;
+  GstCaps *ret;
 
   supported_incaps = gst_x265_enc_get_supported_input_caps ();
 
-  if (!supported_incaps)
-    supported_incaps = gst_pad_get_pad_template_caps (enc->sinkpad);
-  allowed = gst_pad_get_allowed_caps (enc->srcpad);
-
-  if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
-    fcaps = supported_incaps;
-    goto done;
-  }
-
-  GST_LOG_OBJECT (enc, "template caps %" GST_PTR_FORMAT, supported_incaps);
-  GST_LOG_OBJECT (enc, "allowed caps %" GST_PTR_FORMAT, allowed);
-
-  filter_caps = gst_caps_new_empty ();
-
-  for (i = 0; i < gst_caps_get_size (supported_incaps); i++) {
-    GQuark q_name =
-        gst_structure_get_name_id (gst_caps_get_structure (supported_incaps,
-            i));
-
-    for (j = 0; j < gst_caps_get_size (allowed); j++) {
-      const GstStructure *allowed_s = gst_caps_get_structure (allowed, j);
-      const GValue *val;
-      GstStructure *s;
-
-      s = gst_structure_new_id_empty (q_name);
-      if ((val = gst_structure_get_value (allowed_s, "width")))
-        gst_structure_set_value (s, "width", val);
-      if ((val = gst_structure_get_value (allowed_s, "height")))
-        gst_structure_set_value (s, "height", val);
-      if ((val = gst_structure_get_value (allowed_s, "framerate")))
-        gst_structure_set_value (s, "framerate", val);
-      if ((val = gst_structure_get_value (allowed_s, "pixel-aspect-ratio")))
-        gst_structure_set_value (s, "pixel-aspect-ratio", val);
-
-      filter_caps = gst_caps_merge_structure (filter_caps, s);
-    }
-  }
-
-  fcaps = gst_caps_intersect (filter_caps, supported_incaps);
-  gst_caps_unref (filter_caps);
-  gst_caps_unref (supported_incaps);
-
-  if (filter) {
-    GST_LOG_OBJECT (enc, "intersecting with %" GST_PTR_FORMAT, filter);
-    filter_caps = gst_caps_intersect (fcaps, filter);
-    gst_caps_unref (fcaps);
-    fcaps = filter_caps;
-  }
-
-done:
-  gst_caps_replace (&allowed, NULL);
-
-  GST_LOG_OBJECT (enc, "proxy caps %" GST_PTR_FORMAT, fcaps);
-
-  return fcaps;
+  ret = gst_video_encoder_proxy_getcaps (enc, supported_incaps, filter);
+  if (supported_incaps)
+    gst_caps_unref (supported_incaps);
+  return ret;
 }
 
 static void
