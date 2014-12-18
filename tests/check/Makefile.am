@@ -19,7 +19,8 @@ AM_TESTS_ENVIRONMENT = \
 	    decklinksink dtlssrtpdec dtlssrtpenc dvbsrc dvbbasebin dfbvideosink festival fluidsynth gsettingsvideosrc \
 	    gsettingsvideosink gsettingsaudiosrc gsettingsaudiosink linsyssdisrc linsyssdisink nassink \
 	    rsndvdbin sdlaudiosink sdlvideosink vcdsrc rfbsrc vdpauyuvvideo vdpauvideoyuv \
-	    vdpaumpegdec vdpaumpeg4dec vdpauh264dec vdpauvideopostprocess vdpausink neonhttpsrc"
+	    vdpaumpegdec vdpaumpeg4dec vdpauh264dec vdpauvideopostprocess vdpausink neonhttpsrc \
+	    gtksink gtkglsink"
 
 plugindir = $(libdir)/gstreamer-@GST_API_VERSION@
 

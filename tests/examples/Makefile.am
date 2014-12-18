@@ -34,8 +34,14 @@ else
 AVSAMPLE_DIR=
 endif
 
+if USE_GTK3
+GTK3_DIR=gtk
+else
+GTK3_DIR=
+endif
+
 SUBDIRS= mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) $(GL_DIR) \
-	$(AVSAMPLE_DIR)
-DIST_SUBDIRS= mpegts camerabin2 directfb mxf opencv uvch264 gl avsamplesink
+	$(GTK3_DIR) $(AVSAMPLE_DIR)
+DIST_SUBDIRS= mpegts camerabin2 directfb mxf opencv uvch264 gl gtk avsamplesink
 
 include $(top_srcdir)/common/parallel-subdirs.mak
