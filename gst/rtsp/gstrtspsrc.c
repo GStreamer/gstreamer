@@ -3136,6 +3136,10 @@ request_aux_receiver (GstElement * rtpbin, guint sessid, GstRTSPSrc * src)
   GstRTSPStream *stream;
 
   stream = find_stream (src, &sessid, (gpointer) find_stream_by_id);
+  if (!stream) {
+    GST_WARNING_OBJECT (src, "Stream %u not found", sessid);
+    return NULL;
+  }
 
   GST_INFO_OBJECT (src, "creating retransmision receiver for session %u "
       "with map %" GST_PTR_FORMAT, sessid, stream->rtx_pt_map);
