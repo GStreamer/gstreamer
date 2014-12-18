@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.4.4
+Release notes for GStreamer libav Plugins 1.4.5
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -48,9 +48,6 @@ contains a set of less supported plugins that haven't passed the
 
   
 
-There were no bugs fixed in this release
-    
-
 ==== Download ====
 
 You can find source releases of gst-libav in the download
@@ -86,6 +83,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaqué
-      * Sebastian Dröge
+      * Nicolas Dufresne
  
