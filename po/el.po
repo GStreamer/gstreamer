@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2012-05-05 19:05+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -227,10 +227,6 @@ msgstr "Ο οδηγός της συσκευής '%s' δεν υποστηρίζε
 #, fuzzy, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Ο οδηγός της συσκευής '%s' δεν υποστηρίζει κάποια γνωστή μέθοδο λήψης."
-
-#, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Η συσκευή '%s' δεν είναι συσκευή εξόδου."
 
 #, c-format
 msgid "Device '%s' is busy"

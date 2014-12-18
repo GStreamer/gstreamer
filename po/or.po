@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -222,10 +222,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 
 #, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
-
-#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
 
@@ -413,6 +409,10 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
 
 #, fuzzy
 #~ msgid "Failed trying to get video frames from device '%s'."

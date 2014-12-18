@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2014-06-30 09:12+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -233,10 +233,6 @@ msgstr ""
 "Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR đã biết nào."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Thiết bị “%s” đang bận"
 
@@ -435,6 +431,9 @@ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi ch
 
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm thanh"

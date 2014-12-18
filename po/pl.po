@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2014-06-29 10:45+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -225,10 +225,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Sterownik urządzenia '%s' nie obsługuje żadnej znanej metody we/wy."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Urządzenie '%s' nie obsługuje przechwytywania obrazu"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Urządzenie '%s' jest zajęte"
 
@@ -424,3 +420,6 @@ msgstr "Zmiana rozdzielczości w czasie działania nie jest jeszcze obsługiwana
 
 msgid "Cannot operate without a clock"
 msgstr "Nie można pracować bez zegara"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Urządzenie '%s' nie obsługuje przechwytywania obrazu"

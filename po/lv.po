@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2014-04-20 16:38+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -227,10 +227,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Ierīces “%s” draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Ierīce “%s” neatbalsta video tveršanu"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Ierīce “%s” ir aizņemta"
 
@@ -430,6 +426,9 @@ msgstr "Izšķirtspējas mainīšana izpildlaikā pašlaik netiek atbalstīta."
 
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Ierīce “%s” neatbalsta video tveršanu"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nevar izveidot savienojumu ar skaņas serveri"

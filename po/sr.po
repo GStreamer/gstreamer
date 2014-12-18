@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2014-09-13 10:50+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -228,10 +228,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Управљачки програм уређаја „%s“ не подржава ниједан познати УИ начин."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Уређај „%s“ не подржава видео снимање"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Уређај „%s“ је заузет"
 
@@ -425,3 +421,6 @@ msgstr "Промена резолуције приликом извршавањ�
 
 msgid "Cannot operate without a clock"
 msgstr "Не могу да радим без сата"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Уређај „%s“ не подржава видео снимање"

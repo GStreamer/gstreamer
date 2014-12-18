@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -223,10 +223,6 @@ msgstr ""
 "Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
 
 #, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Device '%s' mhux capture device."
-
-#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "Device '%s' mhux capture device."
 
@@ -435,6 +431,10 @@ msgstr "Ma tistax tibdel ir-resolution waqt runtime."
 
 msgid "Cannot operate without a clock"
 msgstr "Ma nistax nħaddem mingħajr arloġġ"
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Device '%s' mhux capture device."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Irċivejt frame size ta' %u minflok kif kien mistenni ta' %u."

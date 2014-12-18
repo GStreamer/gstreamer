@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2012-12-15 03:46+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -234,10 +234,6 @@ msgstr ""
 "O controlador do dispositivo «%s» non admite calquera método IO coñecido."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "O dispositivo «%s» non admite a captura de vídeo."
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "O dispositivo «%s» está ocupado"
 
@@ -455,6 +451,9 @@ msgstr "Aínda non se admite o cambio de resolución durante a reprodución."
 
 msgid "Cannot operate without a clock"
 msgstr "Non é posíbel operar sen reloxo"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "O dispositivo «%s» non admite a captura de vídeo."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Non foi posíbel estabelecer a conexión co servidor de son"

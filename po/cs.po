@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2013-09-18 19:18+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -230,10 +230,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Ovladač zařízení „%s“ nepodporuje žádnou známou V/V metodu."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Zařízení „%s“ nepodporuje zachytávání videa"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Zařízení „%s“ je zaneprázdněno"
 
@@ -432,3 +428,6 @@ msgstr "Změna rozlišení za běhu zatím není podporována."
 
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Zařízení „%s“ nepodporuje zachytávání videa"

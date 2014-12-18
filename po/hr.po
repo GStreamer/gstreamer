@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2012-04-16 03:04+0200\n"
 "Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -225,10 +225,6 @@ msgstr "Upravljački program uređaja „%s” ne podržava poznate metode snima
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Upravljački program uređaja „%s” ne podržava poznate metode snimanja."
 
-#, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Uređaj „%s” nije izlazni uređaj."
-
 #, c-format
 msgid "Device '%s' is busy"
 msgstr ""
@@ -427,6 +423,10 @@ msgstr "Promjena rezolucije pri izvođenju još nije podržana."
 
 msgid "Cannot operate without a clock"
 msgstr "Ne mogu raditi bez takta"
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Uređaj „%s” nije izlazni uređaj."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Ne mogu ostvariti vezu prema poslužitelju zvuka"

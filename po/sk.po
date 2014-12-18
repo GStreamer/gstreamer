@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2014-01-30 11:08+0100\n"
 "Last-Translator: Peter Tuharsky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -228,10 +228,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Tento ovládač zariadenia '%s' nepodporuje žiadnu známu IO metódu."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Zariadenie '%s' nie je určené pre nahrávanie videa"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Zariadenie '%s' je zaneprázdnené"
 
@@ -432,6 +428,9 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Zariadenie '%s' nie je určené pre nahrávanie videa"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"

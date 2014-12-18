@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2011-02-12 18:30+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -237,10 +237,6 @@ msgstr ""
 "conocido."
 
 #, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "El dispositivo «%s» no es un dispositivo de salida."
-
-#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "El dispositivo «%s» no es un dispositivo de salida."
 
@@ -462,6 +458,10 @@ msgstr "El cambio de resolución durante la reproducción aún no está soportad
 
 msgid "Cannot operate without a clock"
 msgstr "No se puede operar sin reloj"
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "El dispositivo «%s» no es un dispositivo de salida."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Se obtuvo un tamaño de cuadro inesperado %u en lugar de %u."

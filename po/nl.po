@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2014-07-22 10:55+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -228,10 +228,6 @@ msgstr ""
 "Het stuurprogramma van apparaat '%s' ondersteunt geen bekende IO-methode."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Apparaat '%s' ondersteunt het opnemen van video niet"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Apparaat '%s' is bezet"
 
@@ -427,6 +423,9 @@ msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Apparaat '%s' ondersteunt het opnemen van video niet"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Kan geen verbinding maken met de geluidsserver"

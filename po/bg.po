@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2011-04-26 22:35+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -225,10 +225,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Драйверът за устройството „%s“ не поддържа познати методи за запис."
 
 #, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Устройството „%s“ не е изходно устройство."
-
-#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "Устройството „%s“ не е изходно устройство."
 
@@ -436,6 +432,10 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Работата без часовник е невъзможна."
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Устройството „%s“ не е изходно устройство."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Получена е рамка с размер %u вместо очаквания %u."

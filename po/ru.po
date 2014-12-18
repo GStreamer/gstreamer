@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2014-06-29 18:59+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -236,10 +236,6 @@ msgstr ""
 "вывода."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Устройство «%s» не поддерживает захват видео"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Устройство «%s» занято"
 
@@ -437,6 +433,9 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Операция невозможна без часов"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Устройство «%s» не поддерживает захват видео"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Не удалось установить соединение с сервером звука"

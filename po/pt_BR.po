@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2013-12-29 17:48-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -236,10 +236,6 @@ msgstr ""
 "E/S."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "O dispositivo \"%s\" não tem suporte a captura de vídeo"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "O dispositivo \"%s\" está ocupado"
 
@@ -440,6 +436,9 @@ msgstr "Ainda não há suporte a mudança de resolução enquanto está executan
 
 msgid "Cannot operate without a clock"
 msgstr "Não é possível operar sem um temporizador"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "O dispositivo \"%s\" não tem suporte a captura de vídeo"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Não foi possível estabelecer uma conexão com servidor de som"

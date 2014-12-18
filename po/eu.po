@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -235,10 +235,6 @@ msgstr ""
 "'%s' gailuaren kontrolatzaileak ez du onartzen kaptura-metodo ezagunik."
 
 #, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "'%s' gailua ez da irteerako gailu bat."
-
-#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "'%s' gailua ez da irteerako gailu bat."
 
@@ -457,6 +453,10 @@ msgstr "Oraindik ez dago onartua exekutatu bitartean bereizmena aldatzea."
 
 msgid "Cannot operate without a clock"
 msgstr "Ezin du funtzionatu erlojurik gabe"
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "'%s' gailua ez da irteerako gailu bat."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Ustekabeko fotograma-tamaina jaso da (%u), %u ordez."

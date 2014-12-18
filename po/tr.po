@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2013-03-10 13:05+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -222,10 +222,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "Bu aygıtın sürücüsü '%s' bilinen IO yöntemlerinden herhangi birisini "
 "desteklemiyor."
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Aygıt '%s' video yakalamayı desteklemiyor"
 
 #, c-format
 msgid "Device '%s' is busy"

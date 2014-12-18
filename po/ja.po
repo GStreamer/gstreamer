@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2012-12-22 20:13+0900\n"
 "Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -239,10 +239,6 @@ msgstr ""
 "ん。"
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "デバイス`%s'はビジー状態です"
 
@@ -446,6 +442,9 @@ msgstr "実行時の解像度変更はサポートされていません。"
 
 msgid "Cannot operate without a clock"
 msgstr "クロックなしでは動作できません。"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "サウンドサーバーへの接続に失敗しました"

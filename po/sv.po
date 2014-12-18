@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.3.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2014-11-06 12:30+0100\n"
+"POT-Creation-Date: 2014-12-18 12:05+0100\n"
 "PO-Revision-Date: 2014-07-11 02:52+0200\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -228,10 +228,6 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Drivrutinen för enheten \"%s\" stöder inte någon känd IO-metod."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Enheten \"%s\" stöder inte videoinfångning."
-
-#, c-format
 msgid "Device '%s' is busy"
 msgstr "Enheten \"%s\" är upptagen"
 
@@ -433,3 +429,6 @@ msgstr "Ändring av upplösning vid körtid stöds inte än."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan inte fungera utan en klocka"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Enheten \"%s\" stöder inte videoinfångning."
