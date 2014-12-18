@@ -1,9 +1,483 @@
-=== release 1.4.4 ===
+=== release 1.4.5 ===
 
-2014-11-06  Sebastian Dröge <slomo@coaxion.net>
+2014-12-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.4.4
+	  releasing 1.4.5
+
+2014-12-18 12:06:04 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  po: Update translations
+
+2014-12-08 21:26:18 +0100  Patrick Radizi <patrickr@axis.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: Fixes buffer leak when using SPS/PPS
+	  Fixes a buffer leak that would occurr if the pipeline was shutdown
+	  while a SPS/PPS header was being created.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741271
+
+2014-11-21 11:54:18 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  Deinterlace: in query_caps return only supported formats if filter is interlaced
+	  In some cases the currently set GstVideoInfo is not interlaced, but
+	  upstream caps are interlaced and the info is passed in the filter,
+	  we should take that info into account and make sure that we do not
+	  consider that case as a "pass through" case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741407
+
+2014-12-03 11:12:55 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: Use an empty iterator in iterate_internal_link when no links
+	  We used to setup an iterator with 1 GValue set with a NULL object
+	  pointer which is not the normal way to do that. Instead we should make
+	  sure that the first call to gst_iterator_next returns GST_ITERATOR_DONE.
+
+2014-12-03 17:26:56 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpsession: Use an empty iterator in iterate_internal_link when no links
+	  And not a NULL Iterator, so it is consistent with the way it usually
+	  works and avoid user to need a different code paths to handle that.
+
+2014-12-09 16:38:38 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* ext/vpx/gstvp8enc.c:
+	* ext/vpx/gstvp9enc.c:
+	  vpXenc: CLOCK_TIME_NONE is not a valid min_latency value
+	  We should just use 0 if we do not have the information
+
+2014-12-10 11:35:29 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: Also only unref caps if they're not NULL
+
+2014-12-10 11:34:42 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: gst_pad_get_allowed_caps() will return NULL if there is no peer
+
+2014-12-16 13:25:01 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: clear rectangle structures before use
+
+2014-12-09 15:09:56 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Always set format
+	  Right now we try to be clever by detecting if device format have
+	  changed or not, and skip setting format in this case. This is valid
+	  behaviour with V4L2, but it's also very error prone. The rational
+	  for not setting these all the time is for speed, though I can't
+	  measure any noticeable gain on any HW I own. Also, until recently,
+	  we where doing get/set on the format for each format we where
+	  probing, making it near to impossible that the format would match.
+	  This also fixes bug where we where skipping frame-rate setting if
+	  format didn't change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740636
+
+2014-11-02 23:33:23 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2src: fix a couple of minor leaks
+
+2014-09-29 11:49:45 +0200  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: set colorspace for output devices
+	  When the v4l2 device is an output device, the application shall set the
+	  colorspace. So map GStreamer colorimetry info to V4L2 colorspace and set
+	  on set_format. In case we have no colorimetry information, we try to
+	  guess it according to pixel format and video size.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737579
+
+2014-12-11 10:16:06 +0100  Patrick Radizi <patrickr@axis.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: fix potential crash when shutting down
+	  A race condition in the state change function may cause buffers
+	  to be unreffed while they are still used by the streaming thread
+	  in gst_rtp_h264_pay_send_sps_pps() resulting in a crash. Chain
+	  up to the parent class first in the state change function to
+	  make sure streaming has stopped and only then free those buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741381
+
+2014-11-29 18:35:42 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtpmanager/gstrtprtxreceive.c:
+	  rtprtxreceive: Use offset when copying header
+	  The header is not always at the start of the packet, so we need to compute
+	  the offset first.
+
+2014-11-28 13:12:46 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/taglib/gstapev2mux.cc:
+	  apev2mux: write APE tags at end for wavpack files
+	  http://www.wavpack.com/file_format.txt:
+	  "Both the APEv2 tags and/or ID3v1 tags must come at the end of the
+	  WavPack file, with the ID3v1 coming last if both are present."
+	  WavPack files that contain APEv2 tags at the beginning of the files
+	  are unplayable on players that use FFmpeg (like VLC) and most other
+	  software (except Banshee). Players that use libwavpack directly can
+	  play the files because it skips the tags, but does not recognize the
+	  tag data at that location.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711437
+
+2014-12-09 14:01:50 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: set buffer interlace flags when field is V4L2_FIELD_INTERLACED
+	  If v4l2_buffer.field is V4L2_FIELD_INTERLACED, we set corresponding
+	  GstVideoBuffer flags depending on the video standard.
+	  According to V4L2 specification, M/NTSC transmits the bottom field
+	  first, all other standards the top field first.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=737603
+
+2014-10-30 17:41:19 +0000  Simon Farnsworth <simon.farnsworth@onelan.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2src.c:
+	  v4l2: Clean up interlace support
+	  Rather than try and guess interlace support as part of checking supported
+	  sizes, look for interlace support specifically in its own function.
+	  As a cleanup, use V4L2_FIELD_ANY when probing sizes, which should result in
+	  the driver doing the right thing.
+	  With my capture setup, this gets me the following sample caps:
+	  For 1080i resolution:
+	  video/x-raw, format=(string)YUY2, width=(int)1920, height=(int)1080, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)interleaved, framerate=(fraction){ 25/1, 30/1 }
+	  For 720p resolution:
+	  video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive, framerate=(fraction){ 50/1, 60/1 }
+	  For 576i/p resolution (both possible at the point of query):
+	  video/x-raw, format=(string)YUY2, width=(int)720, height=(int)576, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string){ progressive, interleaved }, framerate=(fraction){ 25/1, 50/1 }
+	  This, in turn, makes 576i work correctly; with the old code,
+	  the caps would be interlace-mode=progressive for interlaced video.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=726194
+
+2014-12-07 17:33:51 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: Workaround libv4l2 RW emulation bug
+	  When libv4l2 emulates RW mode on top of MMAP devices, the queues are
+	  only initialized on first read. The problem is that poll() will fail
+	  if called before the queues are initialized and streaming. Workaround
+	  this by doing a zero size read when pool is started in that IO mode.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740633
+
+2014-12-07 17:27:37 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: Fix RW io mode
+	  In RW, allocator can be null, max_buffers can be zero, and we need not
+	  to wait while the queue is empty since there is no queue.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740633
+
+2014-11-07 16:41:52 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: unref pool when v4l2_allocator_new() fails
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739791
+
+2014-11-07 17:06:49 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* sys/v4l2/gstv4l2allocator.h:
+	  v4l2allocator: fix gst_v4l2_allocator_stop prototype
+	  gst_v4l2_allocator_stop returns a GstV4l2Return, not a gboolean.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739792
+
+2014-11-26 10:33:09 +0300  Andrei Sarakeev <sarakusha@gmail.com>
+
+	* gst/videocrop/gstaspectratiocrop.c:
+	* gst/videocrop/gstaspectratiocrop.h:
+	  aspectratiocrop: Handle resolution changes properly
+	  When an caps-event is received, we must immediately change the crop
+	  to videocrop correctly changed caps-event dimension, otherwise the
+	  videocrop will first use the previous value of the crop that when
+	  resizing video to a smaller resolution may cause an error.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740671
+
+2014-11-30 17:52:47 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/v4l2_calls.h:
+	  v4l2: Remove last include to linux/videodev2.h
+	  We now use and update our internal copy so we no longer have to ifdef
+	  the entire code for features and defines that where added over the
+	  years.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740905
+
+2014-11-19 16:12:38 +0100  Jan Alexander Steffens (heftig) <jsteffens@make.tv>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Restrict resyncing to TS regressions
+	  The behavior of resyncing video and audio indepen-
+	  dently can cause A/V desyncs. Lets restrict resyncs
+	  to jumps backward for now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=736397
+	  Conflicts:
+	  gst/flv/gstflvdemux.c
+
+2014-11-20 13:14:14 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtp/gstrtpgstdepay.c:
+	* gst/rtp/gstrtpgstpay.c:
+	  rtpgstpay: put 0-byte at the end of events
+	  Put a 0-byte at the end of the event string. Does not break ABI because
+	  old depayloaders will skip the 0 byte (which is included in the length).
+	  Expect a 0-byte at the end of the event string or a ; for old
+	  payloaders.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=737591
+
+2014-11-20 12:40:28 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/rtp/gstrtpgstdepay.c:
+	  rtpgstdepay: avoid buffer overread.
+	  Check that a caps event string is 0 terminated and the event string is
+	  terminated with a ; to avoid buffer overreads.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=737591
+
+2014-11-16 12:34:17 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2: Handle corrupted buffer with empty payload
+	  This allow skipping buffer flagged with ERROR that has no payload.
+	  This is typical behaviour when a recovererable error occured during
+	  capture in the driver, but that no valid data was ever written into that
+	  buffer. This patch also translate V4L2_BUF_FLAG_ERROR into
+	  GST_BUFFER_FLAG_CORRUPTED. Hence decoding error produce
+	  by decoder due to missing frames will now be correctly marked. Finally,
+	  this fixes a buffer leak when EOS is reached.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740040
+
+2014-11-20 10:45:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/isomp4/gstqtmuxmap.c:
+	  qtmux: don't limit max video resolution to 4096x4096
+	  MAX isn't entirely correct as upper limit either,
+	  it should really be MAXUINT32, but it's unlikely
+	  to be a problem in the near future.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740407
+
+2014-11-19 15:06:00 -0800  Aleix Conchillo Flaqué <aleix@oblong.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: fix leak for mikey base64 decoded key-mgmt
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740392
+
+2014-11-17 23:16:03 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst/videomixer/videomixer2.c:
+	* gst/videomixer/videomixer2.h:
+	  videomixer: fix up QoS handling for live sources
+	  Only attempt adaptive drop when we are not live
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739996
+
+2014-11-09 11:04:33 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: Use G_DEFINE_TYPE() to register the pad instead of manually registering it
+
+2014-11-06 15:37:28 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: make GstMatroskamuxPad get_type() function thread-safe
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739722
+
+2014-11-01 22:39:41 +0100  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
+
+	* ext/vpx/gstvp8enc.c:
+	* ext/vpx/gstvp9enc.c:
+	  vpx: mark arnr-type properties as deprecated and set them to no-op
+	  ARNR type control in libvpx has been deprecated so this commit mark the
+	  vp8enc and vp9enc associated properties as deprecated and change their
+	  behavior to just display a warning message.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739476
+
+2014-11-06 21:21:40 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Improve buffer validation
+	  Improve buffer validation by making sure each memory are the right
+	  one and that each memory is writable. This fixes tearing issues in
+	  case downstream uses gst_buffer_make_writable() or other type
+	  of GstBuffer copy where memory are only reffed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739754
+
+2014-11-07 16:11:24 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: fix error message if allocator is already active
+	  https://bugzilla.gnome.org/show_bug.cgi?id=739789
+
+=== release 1.4.4 ===
+
+2014-11-06 13:02:12 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.4.4
+
+2014-11-06 12:44:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2014-11-01 12:18:02 +0100  Aurélien Zanelli <aurelien.zanelli@darkosphere.fr>
 

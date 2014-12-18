@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.4.4
+Release notes for GStreamer Good Plugins 1.4.5
 
 The GStreamer team is pleased to announce a bugfix release of the stable
 1.4 release series. The 1.4 release series is adding new features on top
@@ -68,19 +68,28 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 726329 : vp8enc: Add support for caps renegotiation
-      * 736071 : audiobasesink: Don't hold object lock while calling into other objects like the clock
-      * 737735 : wavenc writes broken file if caps are set
-      * 737739 : souphttpclientsink: Restarting after error results in buffers being queued forever
-      * 737761 : aacparse: memory leak when converting to adts
-      * 737771 : souphttpclientsink: Stream header buffer lifetime assumptions are incorrect
-      * 737886 : equalizer: crash when changing equalizer settings during playback
-      * 738102 : v4l2bufferpool: cleanly handle streamon failure for output device
-      * 738152 : v4l2sink: leak with output device
-      * 738297 : DTMF telephone-event timestamps are bogus
-      * 738722 : rtpmux returns EMPTY caps when query'ing
-      * 738793 : speex: encoder/decoder segfault when resetting multiple times
-      * 739430 : rtspsrc: mikey related memory leaks
+      * 711437 : apev2mux: should not put APEv2 tags at beginning of WavPack files
+      * 726194 : v4l2src does not cope well when a capture card is sometimes interlaced, sometimes progressive at the same resolution
+      * 736397 : flvdemux: Per-stream resyncing behavior causes A/V-desyncs
+      * 737603 : v4l2bufferpool: set buffer interlace flags when field is V4L2_FIELD_INTERLACED
+      * 739476 : vpx: fails to build against libvpx from git
+      * 739722 : matroskamux: Thread safe register GstMatroskamuxPad
+      * 739789 : v4l2allocator: fix error message if allocator is already active
+      * 739791 : v4l2bufferpool: unref pool when v4l2_allocator_new() fails
+      * 739792 : v4l2allocator: fix gst_v4l2_allocator_stop prototype
+      * 739996 : videomixer: Drops a lot of frames, if one of the sources is live
+      * 740040 : v4l2src: Fails in presence of V4L2_BUF_FLAG_ERROR
+      * 740392 : rtspsrc: mikey base64 decoded key-mgmt leak
+      * 740407 : qtmux limits capture to 4096x4096
+      * 740633 : v4l2src: RW io-mode is broken
+      * 740636 : v4l2src: framerate is not always set on driver
+      * 740671 : aspectratiocrop: crop needs to be reset when video size changes
+      * 740905 : v4l2: still has 1 include to linux/videodev.h
+      * 741271 : rtph264pay: Buffer leak in H.264 payloader when using SPS/PPS
+      * 741381 : rtph264pay: Race condition may cause crash when going from PAUSED- > READY
+      * 741407 : deinterlace: in query_caps return only supported formats if filter is interlaced
+      * 737579 : v4l2object: set colorspace for output devices
+      * 739754 : v4l2bufferpool: Should validate that all memories are writeable before queueing back
 
 ==== Download ====
 
@@ -118,18 +127,17 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Aleix Conchillo Flaqué
-      * Ananda
-      * Arun Raghavan
+      * Andrei Sarakeev
       * Aurélien Zanelli
-      * David Sansome
-      * Jose Antonio Santos Cadenas
-      * Matej Knopp
+      * Göran Jönsson
+      * Jan Alexander Steffens (heftig)
+      * Matthew Waters
       * Nicolas Dufresne
-      * Nirbheek Chauhan
       * Olivier Crête
+      * Patrick Radizi
       * Sebastian Dröge
-      * Sjoerd Simons
+      * Simon Farnsworth
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vineeth T M
       * Wim Taymans
  
