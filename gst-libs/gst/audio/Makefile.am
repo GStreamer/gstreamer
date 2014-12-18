@@ -65,8 +65,9 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	gstaudioiec61937.h
 
 nodist_libgstaudio_@GST_API_VERSION@include_HEADERS = \
-	audio-enumtypes.h \
-	gstaudioutilsprivate.h
+	audio-enumtypes.h
+
+noinst_HEADERS = gstaudioutilsprivate.h
 
 libgstaudio_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
 		$(ORC_CFLAGS)
