@@ -1208,17 +1208,21 @@ gst_riff_create_audio_caps (guint16 codec_id,
         gint wd, ws;
         GstAudioFormat format;
 
-        /* If we have an empty blockalign, we take the width contained in 
-         * strf->bits_per_sample */
-        if (ba != 0)
+        if (ba > (32 / 8) * ch) {
+          GST_WARNING ("Invalid block align: %d > %d", ba, (32 / 8) * ch);
+          wd = GST_ROUND_UP_8 (strf->bits_per_sample);
+        } else if (ba != 0) {
+          /* If we have an empty blockalign, we take the width contained in 
+           * strf->bits_per_sample */
           wd = ba * 8 / ch;
-        else
-          wd = strf->bits_per_sample;
+        } else {
+          wd = GST_ROUND_UP_8 (strf->bits_per_sample);
+        }
 
         if (strf->bits_per_sample > 32) {
           GST_WARNING ("invalid depth (%d) of pcm audio, overwriting.",
               strf->bits_per_sample);
-          strf->bits_per_sample = 8 * ((wd + 7) / 8);
+          strf->bits_per_sample = wd;
         }
 
         /* in riff, the depth is stored in the size field but it just means that
