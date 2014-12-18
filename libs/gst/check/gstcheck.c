@@ -942,7 +942,7 @@ weak_notify (DestroyedObjectStruct * destroyed, GObject ** object)
 /**
  * gst_check_objects_destroyed_on_unref:
  * @object_to_unref: The #GObject to unref
- * @first_object: (allow-none) The first object that should be destroyed as a
+ * @first_object: (allow-none): The first object that should be destroyed as a
  * concequence of unrefing @object_to_unref.
  * @... : Additional object that should have been destroyed.
  *
