@@ -285,7 +285,6 @@ in_same_pipeline (GstElement * a, GstElement * b)
     gst_object_unref (root);
 
   return ret;
-
 }
 
 static gboolean
@@ -438,7 +437,6 @@ gst_decklink_audio_sink_ringbuffer_close_device (GstAudioRingBuffer * rb)
 enum
 {
   PROP_0,
-  PROP_MODE,
   PROP_DEVICE_NUMBER
 };
 

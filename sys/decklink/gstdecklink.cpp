@@ -26,6 +26,8 @@
 #include "gstdecklink.h"
 #include "gstdecklinkaudiosink.h"
 #include "gstdecklinkvideosink.h"
+#include "gstdecklinkaudiosrc.h"
+#include "gstdecklinkvideosrc.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_debug);
 #define GST_CAT_DEFAULT gst_decklink_debug
@@ -241,6 +243,91 @@ struct _Device
   GstDecklinkInput input;
 };
 
+class GStreamerDecklinkInputCallback:public IDeckLinkInputCallback
+{
+private:
+  GstDecklinkInput * m_input;
+  GMutex m_mutex;
+  gint m_refcount;
+public:
+    GStreamerDecklinkInputCallback (GstDecklinkInput * input)
+  : IDeckLinkInputCallback ()
+  {
+    m_input = input;
+    g_mutex_init (&m_mutex);
+  }
+
+  virtual ~ GStreamerDecklinkInputCallback ()
+  {
+    g_mutex_clear (&m_mutex);
+  }
+
+  virtual HRESULT STDMETHODCALLTYPE QueryInterface (REFIID, LPVOID *)
+  {
+    return E_NOINTERFACE;
+  }
+
+  virtual ULONG STDMETHODCALLTYPE AddRef (void)
+  {
+    ULONG ret;
+
+    g_mutex_lock (&m_mutex);
+    m_refcount++;
+    ret = m_refcount;
+    g_mutex_unlock (&m_mutex);
+
+    return ret;
+  }
+
+  virtual ULONG STDMETHODCALLTYPE Release (void)
+  {
+    ULONG ret;
+
+    g_mutex_lock (&m_mutex);
+    m_refcount--;
+    ret = m_refcount;
+    g_mutex_unlock (&m_mutex);
+
+
+    if (ret == 0) {
+      delete this;
+    }
+
+    return ret;
+  }
+
+  virtual HRESULT STDMETHODCALLTYPE
+      VideoInputFormatChanged (BMDVideoInputFormatChangedEvents,
+      IDeckLinkDisplayMode *, BMDDetectedVideoInputFormatFlags)
+  {
+    GST_FIXME ("Video input format change not supported yet");
+    return S_OK;
+  }
+
+  virtual HRESULT STDMETHODCALLTYPE
+      VideoInputFrameArrived (IDeckLinkVideoInputFrame * video_frame,
+      IDeckLinkAudioInputPacket * audio_packet)
+  {
+    GstClockTime clock_time = gst_clock_get_time (m_input->clock);
+
+    g_mutex_lock (&m_input->lock);
+    if (m_input->got_video_frame) {
+      GstClockTime capture_time = clock_time -
+          gst_element_get_base_time (m_input->videosrc);
+      m_input->got_video_frame (m_input->videosrc, video_frame, capture_time);
+    }
+
+    if (m_input->got_audio_packet) {
+      GstClockTime capture_time = clock_time -
+          gst_element_get_base_time (m_input->audiosrc);
+      m_input->got_audio_packet (m_input->audiosrc, audio_packet, capture_time);
+    }
+
+    g_mutex_unlock (&m_input->lock);
+    return S_OK;
+  }
+};
+
 static GOnce devices_once = G_ONCE_INIT;
 static int n_devices;
 static Device devices[10];
@@ -273,6 +360,9 @@ init_devices (gpointer data)
               "GstDecklinkInputClock", NULL));
       GST_DECKLINK_CLOCK_CAST (devices[i].input.clock)->input =
           devices[i].input.input;
+      devices[i].input.
+          input->SetCallback (new GStreamerDecklinkInputCallback (&devices[i].
+              input));
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkOutput,
@@ -393,6 +483,62 @@ gst_decklink_output_get_audio_clock (GstDecklinkOutput * output)
   return ret;
 }
 
+GstDecklinkInput *
+gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio)
+{
+  GstDecklinkInput *input;
+
+  g_once (&devices_once, init_devices, NULL);
+
+  if (n >= n_devices)
+    return NULL;
+
+  input = &devices[n].input;
+  if (!input->input) {
+    GST_ERROR ("Device %d has no input", n);
+    return NULL;
+  }
+
+  g_mutex_lock (&input->lock);
+  if (is_audio && !input->audiosrc) {
+    input->audiosrc = GST_ELEMENT_CAST (gst_object_ref (src));
+    g_mutex_unlock (&input->lock);
+    return input;
+  } else if (!input->videosrc) {
+    input->videosrc = GST_ELEMENT_CAST (gst_object_ref (src));
+    g_mutex_unlock (&input->lock);
+    return input;
+  }
+  g_mutex_unlock (&input->lock);
+
+  GST_ERROR ("Input device %d (audio: %d) in use already", n, is_audio);
+  return NULL;
+}
+
+void
+gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
+{
+  GstDecklinkInput *input;
+
+  if (n >= n_devices)
+    return;
+
+  input = &devices[n].input;
+  g_assert (input->input);
+
+  g_mutex_lock (&input->lock);
+  if (is_audio) {
+    g_assert (input->audiosrc == src);
+    gst_object_unref (src);
+    input->audiosrc = NULL;
+  } else {
+    g_assert (input->videosrc == src);
+    gst_object_unref (src);
+    input->videosrc = NULL;
+  }
+  g_mutex_unlock (&input->lock);
+}
+
 G_DEFINE_TYPE (GstDecklinkClock, gst_decklink_clock, GST_TYPE_SYSTEM_CLOCK);
 
 static void gst_decklink_clock_class_init (GstDecklinkClockClass * klass);
@@ -466,6 +612,10 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_DECKLINK_AUDIO_SINK);
   gst_element_register (plugin, "decklinkvideosink", GST_RANK_NONE,
       GST_TYPE_DECKLINK_VIDEO_SINK);
+  gst_element_register (plugin, "decklinkaudiosrc", GST_RANK_NONE,
+      GST_TYPE_DECKLINK_AUDIO_SRC);
+  gst_element_register (plugin, "decklinkvideosrc", GST_RANK_NONE,
+      GST_TYPE_DECKLINK_VIDEO_SRC);
   return TRUE;
 }
 
