@@ -226,8 +226,13 @@ gst_video_aggregator_pad_prepare_frame (GstVideoAggregatorPad * pad,
   guint outsize;
   GstVideoFrame *converted_frame;
   GstBuffer *converted_buf = NULL;
-  GstVideoFrame *frame = g_slice_new0 (GstVideoFrame);
+  GstVideoFrame *frame;
   static GstAllocationParams params = { 0, 15, 0, 0, };
+
+  if (!pad->buffer)
+    return TRUE;
+
+  frame = g_slice_new0 (GstVideoFrame);
 
   if (!gst_video_frame_map (frame, &pad->buffer_vinfo, pad->buffer,
           GST_MAP_READ)) {
