@@ -987,6 +987,8 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         gst_buffer_unref (buf);
         buf = gst_aggregator_pad_steal_buffer (bpad);
         gst_buffer_replace (&pad->buffer, buf);
+        pad->buffer_vinfo = *vinfo;
+        /* FIXME: Set start_time and end_time to something here? */
         gst_buffer_unref (buf);
         GST_DEBUG_OBJECT (pad, "buffer duration is -1");
         continue;
@@ -1063,6 +1065,9 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         eos = FALSE;
       } else {
         gst_buffer_replace (&pad->buffer, buf);
+        pad->buffer_vinfo = *vinfo;
+        pad->priv->start_time = start_time;
+        pad->priv->end_time = end_time;
         GST_DEBUG_OBJECT (pad,
             "replacing old buffer with a newer buffer, start %" GST_TIME_FORMAT
             " out end %" GST_TIME_FORMAT, GST_TIME_ARGS (start_time),
