@@ -235,6 +235,7 @@ struct _GstDecklinkClockClass
 };
 
 GType gst_decklink_clock_get_type (void);
+static GstClock * gst_decklink_clock_new (const gchar * name);
 
 typedef struct _Device Device;
 struct _Device
@@ -419,9 +420,7 @@ init_devices (gpointer data)
       GST_WARNING ("selected device does not have input interface");
     } else {
       devices[i].input.device = decklink;
-      devices[i].input.clock =
-          GST_CLOCK_CAST (g_object_new (GST_TYPE_DECKLINK_CLOCK, "name",
-              "GstDecklinkInputClock", NULL));
+      devices[i].input.clock = gst_decklink_clock_new ("GstDecklinkInputClock");
       GST_DECKLINK_CLOCK_CAST (devices[i].input.clock)->input =
           devices[i].input.input;
       devices[i].input.
@@ -435,9 +434,7 @@ init_devices (gpointer data)
       GST_WARNING ("selected device does not have output interface");
     } else {
       devices[i].output.device = decklink;
-      devices[i].output.clock =
-          GST_CLOCK_CAST (g_object_new (GST_TYPE_DECKLINK_CLOCK, "name",
-              "GstDecklinkOutputClock", NULL));
+      devices[i].output.clock = gst_decklink_clock_new ("GstDecklinkOutputClock");
       GST_DECKLINK_CLOCK_CAST (devices[i].output.clock)->output =
           devices[i].output.output;
     }
@@ -605,9 +602,6 @@ gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
 
 G_DEFINE_TYPE (GstDecklinkClock, gst_decklink_clock, GST_TYPE_SYSTEM_CLOCK);
 
-static void gst_decklink_clock_class_init (GstDecklinkClockClass * klass);
-static void gst_decklink_clock_init (GstDecklinkClock * clock);
-
 static GstClockTime gst_decklink_clock_get_internal_time (GstClock * clock);
 
 static void
@@ -624,14 +618,14 @@ gst_decklink_clock_init (GstDecklinkClock * clock)
   GST_OBJECT_FLAG_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER);
 }
 
-GstDecklinkClock *
+static GstClock *
 gst_decklink_clock_new (const gchar * name)
 {
   GstDecklinkClock *self =
       GST_DECKLINK_CLOCK (g_object_new (GST_TYPE_DECKLINK_CLOCK, "name", name,
           "clock-type", GST_CLOCK_TYPE_OTHER, NULL));
 
-  return self;
+  return GST_CLOCK_CAST (self);
 }
 
 static GstClockTime

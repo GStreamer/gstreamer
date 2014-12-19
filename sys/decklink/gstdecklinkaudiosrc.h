@@ -66,7 +66,7 @@ struct _GstDecklinkAudioSrc
   GstClockTime discont_wait;
 
   /* counter to keep track of timestamps */
-  gint64 next_offset;
+  guint64 next_offset;
 
   /* Last time we noticed a discont */
   GstClockTime discont_time;
