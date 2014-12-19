@@ -100,8 +100,6 @@ struct _GstGLMemory
   guint                 pbo;
   guint                 unpack_length;
   guint                 tex_width;
-
-  gpointer              _gst_reserved[GST_PADDING];
 };
 
 #define GST_CAPS_FEATURE_MEMORY_GL_MEMORY "memory:GLMemory"
