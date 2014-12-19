@@ -27,6 +27,7 @@
 #include <gst/video/video.h>
 
 #include "gstglmemory.h"
+#include "gstglutils.h"
 
 /**
  * SECTION:gstglmemory
@@ -348,15 +349,6 @@ _get_plane_height (GstVideoInfo * info, guint plane)
     return GST_VIDEO_INFO_HEIGHT (info);
 }
 
-static inline gsize
-_get_plane_data_size (GstVideoInfo * info, guint plane)
-{
-  if (GST_VIDEO_INFO_N_PLANES (info) == plane + 1)
-    return info->offset[0] + info->size - info->offset[plane];
-
-  return info->offset[plane + 1] - info->offset[plane];
-}
-
 typedef struct _GenTexture
 {
   guint width, height;
@@ -575,14 +567,14 @@ error:
 
 static void
 _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
-    GstGLContext * context, GstVideoInfo * info, guint plane,
-    gpointer user_data, GDestroyNotify notify)
+    GstGLContext * context, GstVideoInfo * info, GstVideoAlignment * valign,
+    guint plane, gpointer user_data, GDestroyNotify notify)
 {
   gsize maxsize;
 
   g_return_if_fail (plane < GST_VIDEO_INFO_N_PLANES (info));
 
-  maxsize = _get_plane_data_size (info, plane);
+  maxsize = gst_gl_get_plane_data_size (info, valign, plane);
 
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
       allocator, parent, maxsize, 0, 0, maxsize);
@@ -598,6 +590,11 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->data_wrapped = FALSE;
   mem->texture_wrapped = FALSE;
 
+  if (valign)
+    mem->valign = *valign;
+  else
+    gst_video_alignment_reset (&mem->valign);
+
   _calculate_unpack_length (mem);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "new GL texture memory:%p format:%u "
@@ -607,14 +604,14 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
 
 static GstGLMemory *
 _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
-    GstGLContext * context, GstVideoInfo * info, guint plane,
-    gpointer user_data, GDestroyNotify notify)
+    GstGLContext * context, GstVideoInfo * info, GstVideoAlignment * valign,
+    guint plane, gpointer user_data, GDestroyNotify notify)
 {
   GstGLMemory *mem;
   GenTexture data = { 0, };
   mem = g_slice_new0 (GstGLMemory);
-  _gl_mem_init (mem, allocator, parent, context, info, plane, user_data,
-      notify);
+  _gl_mem_init (mem, allocator, parent, context, info, valign, plane,
+      user_data, notify);
 
   data.width = mem->tex_width;
   data.height = GL_MEM_HEIGHT (mem);
@@ -849,7 +846,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 
   if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
     dest = _gl_mem_new (src->mem.allocator, NULL, src->context, &src->info,
-        src->plane, NULL, NULL);
+        &src->valign, src->plane, NULL, NULL);
     dest->data = g_try_malloc (src->mem.maxsize);
     if (dest->data == NULL) {
       GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
@@ -873,7 +870,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 
     dest = g_slice_new0 (GstGLMemory);
     _gl_mem_init (dest, src->mem.allocator, NULL, src->context, &src->info,
-        src->plane, NULL, NULL);
+        &src->valign, src->plane, NULL, NULL);
 
     if (!copy_params.result) {
       GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
@@ -997,14 +994,29 @@ gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id,
   return copy_params.result;
 }
 
+/**
+ * gst_gl_memory_wrapped_texture:
+ * @context: a #GstGLContext
+ * @texture_id: the GL texture handle
+ * @info: the #GstVideoInfo of the memory
+ * @plane: The plane this memory will represent
+ * @user_data: user data
+ * @notify: Destroy callback for the user data
+ *
+ * Wraps a texture handle into a #GstGLMemory.
+ *
+ * Returns: a newly allocated #GstGLMemory
+ */
 GstGLMemory *
 gst_gl_memory_wrapped_texture (GstGLContext * context, guint texture_id,
-    GstVideoInfo * info, guint plane, gpointer user_data, GDestroyNotify notify)
+    GstVideoInfo * info, guint plane, GstVideoAlignment * valign,
+    gpointer user_data, GDestroyNotify notify)
 {
   GstGLMemory *mem;
 
   mem = g_slice_new0 (GstGLMemory);
-  _gl_mem_init (mem, _gl_allocator, NULL, context, info, plane, NULL, NULL);
+  _gl_mem_init (mem, _gl_allocator, NULL, context, info, valign, plane, NULL,
+      NULL);
 
   mem->tex_id = texture_id;
   mem->texture_wrapped = TRUE;
@@ -1022,17 +1034,23 @@ gst_gl_memory_wrapped_texture (GstGLContext * context, guint texture_id,
 /**
  * gst_gl_memory_alloc:
  * @context:a #GstGLContext
- * @v_info: the #GstVideoInfo of the memory
+ * @info: the #GstVideoInfo of the memory
+ * @plane: the plane this memory will represent
+ * @valign: the #GstVideoAlignment applied to @info
  *
- * Returns: a #GstMemory object with a GL texture specified by @v_info
+ * Allocated a new #GstGlMemory.
+ *
+ * Returns: a #GstMemory object with a GL texture specified by @vinfo
  *          from @context
  */
 GstMemory *
-gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo * info, guint plane)
+gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo * info,
+    guint plane, GstVideoAlignment * valign)
 {
   GstGLMemory *mem;
 
-  mem = _gl_mem_new (_gl_allocator, NULL, context, info, plane, NULL, NULL);
+  mem = _gl_mem_new (_gl_allocator, NULL, context, info, valign, plane, NULL,
+      NULL);
 
   mem->data = g_try_malloc (mem->mem.maxsize);
   if (mem->data == NULL) {
@@ -1044,25 +1062,30 @@ gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo * info, guint plane)
 }
 
 /**
- * gst_gl_memory_wrapped
+ * gst_gl_memory_wrapped:
  * @context:a #GstGLContext
- * @v_info: the #GstVideoInfo of the memory and data
+ * @info: the #GstVideoInfo of the memory and data
+ * @plane: the plane this memory will represent
+ * @valign: the #GstVideoAlignment applied to @info
  * @data: the data to wrap
  * @user_data: data called with for @notify
  * @notify: function called with @user_data when @data needs to be freed
  * 
+ * Wrapped @data into a #GstGLMemory. This version will account for padding
+ * added to the allocation and expressed through @valign.
+ *
  * Returns: a #GstGLMemory object with a GL texture specified by @v_info
  *          from @context and contents specified by @data
  */
 GstGLMemory *
-gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo * info, guint plane,
-    gpointer data, gpointer user_data, GDestroyNotify notify)
+gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo * info,
+    guint plane, GstVideoAlignment * valign, gpointer data, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstGLMemory *mem;
 
-  mem =
-      _gl_mem_new (_gl_allocator, NULL, context, info, plane, user_data,
-      notify);
+  mem = _gl_mem_new (_gl_allocator, NULL, context, info, valign, plane,
+      user_data, notify);
 
   mem->data = data;
   mem->data_wrapped = TRUE;
@@ -1152,16 +1175,17 @@ gst_is_gl_memory (GstMemory * mem)
  * gst_gl_memory_setup_buffer:
  * @context: a #GstGLContext
  * @info: a #GstVideoInfo
+ * @valign: the #GstVideoAlignment applied to @info
  * @buffer: a #GstBuffer
  *
  * Adds the required #GstGLMemory<!--  -->s with the correct configuration to
- * @buffer based on @info.
+ * @buffer based on @info. This version handles padding through @valign.
  *
  * Returns: whether the memory's were sucessfully added.
  */
 gboolean
 gst_gl_memory_setup_buffer (GstGLContext * context, GstVideoInfo * info,
-    GstBuffer * buffer)
+    GstVideoAlignment * valign, GstBuffer * buffer)
 {
   GstGLMemory *gl_mem[GST_VIDEO_MAX_PLANES] = { NULL, };
   guint n_mem, i;
@@ -1169,7 +1193,7 @@ gst_gl_memory_setup_buffer (GstGLContext * context, GstVideoInfo * info,
   n_mem = GST_VIDEO_INFO_N_PLANES (info);
 
   for (i = 0; i < n_mem; i++) {
-    gl_mem[i] = (GstGLMemory *) gst_gl_memory_alloc (context, info, i);
+    gl_mem[i] = (GstGLMemory *) gst_gl_memory_alloc (context, info, i, valign);
     if (gl_mem[i] == NULL)
       return FALSE;
 
@@ -1187,24 +1211,25 @@ gst_gl_memory_setup_buffer (GstGLContext * context, GstVideoInfo * info,
  * gst_gl_memory_setup_wrapped:
  * @context: a #GstGLContext
  * @info: a #GstVideoInfo
+ * @valign: a #GstVideoInfo
  * @data: a list of per plane data pointers
  * @textures: (transfer out): a list of #GstGLMemory
  *
  * Wraps per plane data pointer in @data into the corresponding entry in
- * @textures based on @info.
+ * @textures based on @info and padding from @valign.
  *
  * Returns: whether the memory's were sucessfully created.
  */
 gboolean
 gst_gl_memory_setup_wrapped (GstGLContext * context, GstVideoInfo * info,
-    gpointer data[GST_VIDEO_MAX_PLANES],
+    GstVideoAlignment * valign, gpointer data[GST_VIDEO_MAX_PLANES],
     GstGLMemory * textures[GST_VIDEO_MAX_PLANES])
 {
   gint i;
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
     textures[i] = (GstGLMemory *) gst_gl_memory_wrapped (context, info, i,
-        data[i], NULL, NULL);
+        valign, data[i], NULL, NULL);
   }
 
   return TRUE;
