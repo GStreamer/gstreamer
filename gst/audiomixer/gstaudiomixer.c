@@ -130,6 +130,7 @@ gst_audiomixer_pad_flush_pad (GstAggregatorPad * aggpad,
   GST_OBJECT_LOCK (aggpad);
   pad->position = pad->size = 0;
   pad->output_offset = pad->next_offset = -1;
+  pad->discont_time = GST_CLOCK_TIME_NONE;
   gst_buffer_replace (&pad->buffer, NULL);
   GST_OBJECT_UNLOCK (aggpad);
 
@@ -168,7 +169,7 @@ gst_audiomixer_pad_init (GstAudioMixerPad * pad)
   pad->size = 0;
   pad->output_offset = -1;
   pad->next_offset = -1;
-
+  pad->discont_time = GST_CLOCK_TIME_NONE;
 }
 
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
@@ -714,7 +715,6 @@ gst_audiomixer_reset (GstAudioMixer * audiomixer)
 {
   audiomixer->offset = 0;
   gst_caps_replace (&audiomixer->current_caps, NULL);
-  audiomixer->discont_time = GST_CLOCK_TIME_NONE;
 }
 
 static gboolean
@@ -767,7 +767,6 @@ gst_audiomixer_send_event (GstElement * element, GstEvent * event)
 
   return res;
 }
-
 
 static void
 gst_audiomixer_class_init (GstAudioMixerClass * klass)
@@ -1046,19 +1045,18 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     /* Discont! */
     if (G_UNLIKELY (diff >= max_sample_diff)) {
       if (audiomixer->discont_wait > 0) {
-        if (audiomixer->discont_time == GST_CLOCK_TIME_NONE) {
-          audiomixer->discont_time = start_time;
-        } else if (start_time - audiomixer->discont_time >=
-            audiomixer->discont_wait) {
+        if (pad->discont_time == GST_CLOCK_TIME_NONE) {
+          pad->discont_time = start_time;
+        } else if (start_time - pad->discont_time >= audiomixer->discont_wait) {
           discont = TRUE;
-          audiomixer->discont_time = GST_CLOCK_TIME_NONE;
+          pad->discont_time = GST_CLOCK_TIME_NONE;
         }
       } else {
         discont = TRUE;
       }
-    } else if (G_UNLIKELY (audiomixer->discont_time != GST_CLOCK_TIME_NONE)) {
+    } else if (G_UNLIKELY (pad->discont_time != GST_CLOCK_TIME_NONE)) {
       /* we have had a discont, but are now back on track! */
-      audiomixer->discont_time = GST_CLOCK_TIME_NONE;
+      pad->discont_time = GST_CLOCK_TIME_NONE;
     }
   }
 
@@ -1070,7 +1068,7 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
           pad->next_offset, start_offset);
     pad->output_offset = -1;
   } else {
-    audiomixer->discont_time = GST_CLOCK_TIME_NONE;
+    pad->discont_time = GST_CLOCK_TIME_NONE;
   }
 
   pad->next_offset = end_offset;

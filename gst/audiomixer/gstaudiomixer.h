@@ -69,8 +69,6 @@ struct _GstAudioMixer {
   GstClockTime alignment_threshold;
   GstClockTime discont_wait;
 
-  /* Last time we noticed a discont */
-  GstClockTime discont_time;
   gint64          base_time;
 
   /* Size in samples that is output per buffer */
@@ -111,6 +109,9 @@ struct _GstAudioMixerPad {
                                    current buffer. */
 
   guint64 next_offset;          /* Next expected offset in the input segment */
+
+  /* Last time we noticed a discont */
+  GstClockTime discont_time;
 };
 
 struct _GstAudioMixerPadClass {
