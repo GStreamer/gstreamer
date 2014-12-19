@@ -1326,12 +1326,10 @@ retry:
    * arrives, an error happens, the port is flushing
    * or the port needs to be reconfigured.
    */
-  gst_omx_component_handle_messages (comp);
   if (g_queue_is_empty (&port->pending_buffers)) {
     GST_DEBUG_OBJECT (comp->parent, "Queue of %s port %u is empty",
         comp->name, port->index);
     gst_omx_component_wait_message (comp, GST_CLOCK_TIME_NONE);
-    gst_omx_component_handle_messages (comp);
 
     /* And now check everything again and maybe get a buffer */
     goto retry;
