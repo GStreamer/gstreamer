@@ -107,6 +107,9 @@ typedef struct _GstMatroskaDemux {
 
   /* for non-finalized files, with invalid segment duration */
   gboolean                 invalid_duration;
+
+  /* Cached upstream length (default G_MAXUINT64) */
+  guint64	           cached_length;
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {
