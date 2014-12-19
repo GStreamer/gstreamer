@@ -1731,14 +1731,16 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
   if (G_UNLIKELY (demux->priv->old_streams != NULL)) {
     GList *old_streams = demux->priv->old_streams;
     demux->priv->old_streams = NULL;
+    GST_OBJECT_UNLOCK (demux);
 
     /* Need to unlock as it might post messages to the bus */
     GST_DEBUG_OBJECT (stream->pad, "Cleaning up old streams");
     g_list_free_full (old_streams,
         (GDestroyNotify) gst_adaptive_demux_stream_free);
     GST_DEBUG_OBJECT (stream->pad, "Cleaning up old streams (done)");
+  } else {
+    GST_OBJECT_UNLOCK (demux);
   }
-  GST_OBJECT_UNLOCK (demux);
 
   GST_MANIFEST_LOCK (demux);
   if (G_UNLIKELY (stream->restart_download)) {
@@ -1868,10 +1870,13 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     if (G_UNLIKELY (demux->next_streams)) {
       gst_task_stop (stream->download_task);
       /* TODO only allow switching streams if other downloads are not ongoing */
+      GST_DEBUG_OBJECT (demux, "Subclass wants new pads "
+          "to do bitrate switching");
       gst_adaptive_demux_expose_streams (demux);
       gst_adaptive_demux_start_tasks (demux);
+      ret = GST_FLOW_EOS;
       GST_MANIFEST_UNLOCK (demux);
-      goto end;
+      goto end_of_manifest;
     }
   }
 
