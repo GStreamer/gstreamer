@@ -99,6 +99,9 @@ gboolean gst_gl_handle_set_context (GstElement * element, GstContext * context,
 gboolean gst_gl_handle_context_query (GstElement * element, GstQuery * query, 
     GstGLDisplay ** display, GstGLContext ** other_context);
 
+gsize gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
+    guint plane);
+
 G_END_DECLS
 
 #endif /* __GST_GL_UTILS_H__ */

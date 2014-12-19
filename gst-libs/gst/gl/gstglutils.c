@@ -852,3 +852,23 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
 
   return res;
 }
+
+gsize
+gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
+    guint plane)
+{
+  gint padded_height;
+  gsize plane_size;
+
+  padded_height = info->height;
+
+  if (align)
+    padded_height += align->padding_top + align->padding_bottom;
+
+  padded_height =
+      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, plane, padded_height);
+
+  plane_size = GST_VIDEO_INFO_PLANE_STRIDE (info, plane) * padded_height;
+
+  return plane_size;
+}

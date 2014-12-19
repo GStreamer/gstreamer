@@ -24,6 +24,7 @@
 
 #include "gl.h"
 #include "gstglbufferpool.h"
+#include "gstglutils.h"
 
 #if GST_GL_HAVE_PLATFORM_EGL
 #include <gst/gl/egl/gsteglimagememory.h>
@@ -50,6 +51,7 @@ struct _GstGLBufferPoolPrivate
   GstCaps *caps;
   gint im_format;
   GstVideoInfo info;
+  GstVideoAlignment valign;
   gboolean add_videometa;
   gboolean add_uploadmeta;
   gboolean add_glsyncmeta;
@@ -75,7 +77,9 @@ gst_gl_buffer_pool_get_options (GstBufferPool * pool)
 {
   static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
     GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META,
-    GST_BUFFER_POOL_OPTION_GL_SYNC_META, NULL
+    GST_BUFFER_POOL_OPTION_GL_SYNC_META,
+    GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT,
+    NULL
   };
 
   return options;
@@ -88,11 +92,13 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstGLBufferPoolPrivate *priv = glpool->priv;
   GstVideoInfo info;
   GstCaps *caps = NULL;
+  guint min_buffers, max_buffers;
   GstAllocator *allocator = NULL;
   GstAllocationParams alloc_params;
   gboolean reset = TRUE;
 
-  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
+  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
+          &max_buffers))
     goto wrong_config;
 
   if (caps == NULL)
@@ -145,12 +151,36 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->want_eglimage = FALSE;
 #endif
 
+  if (gst_buffer_pool_config_has_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+    gint p;
+
+    priv->add_videometa = TRUE;
+
+    gst_buffer_pool_config_get_video_alignment (config, &priv->valign);
+    gst_video_info_align (&priv->info, &priv->valign);
+
+    /* Recalulate the size as we don't add padding between planes. */
+    priv->info.size = 0;
+    for (p = 0; p < GST_VIDEO_INFO_N_PLANES (&priv->info); p++) {
+      priv->info.size +=
+          gst_gl_get_plane_data_size (&priv->info, &priv->valign, p);
+    }
+
+    gst_buffer_pool_config_set_video_alignment (config, &priv->valign);
+    gst_buffer_pool_config_set_params (config, caps, priv->info.size,
+        min_buffers, max_buffers);
+  } else {
+    gst_video_alignment_reset (&priv->valign);
+  }
+
   if (reset) {
     if (glpool->upload)
       gst_object_unref (glpool->upload);
 
     glpool->upload = gst_gl_upload_meta_new (glpool->context);
   }
+
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
@@ -202,9 +232,11 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
   GstGLBufferPoolPrivate *priv = glpool->priv;
   GstVideoInfo *info;
+  GstVideoAlignment *valign;
   GstBuffer *buf;
 
   info = &priv->info;
+  valign = &priv->valign;
 
   if (!(buf = gst_buffer_new ())) {
     goto no_buffer;
@@ -222,7 +254,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 #endif
 
-  if (!gst_gl_memory_setup_buffer (glpool->context, info, buf))
+  if (!gst_gl_memory_setup_buffer (glpool->context, info, valign, buf))
     goto mem_create_failed;
 
   if (priv->add_uploadmeta)

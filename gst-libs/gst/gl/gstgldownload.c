@@ -232,7 +232,7 @@ _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
 
     download->priv->in_tex[0] =
         gst_gl_memory_wrapped_texture (download->context, texture_id,
-        &temp_info, 0, NULL, NULL);
+        &temp_info, 0, NULL, NULL, NULL);
   }
 
   download->priv->in_tex[0]->tex_id = texture_id;

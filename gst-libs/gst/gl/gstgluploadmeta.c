@@ -223,7 +223,7 @@ _perform_with_gl_memory (GstGLUploadMeta * upload, GstVideoGLTextureUploadMeta *
 
       if (!upload->priv->out_tex[i])
         upload->priv->out_tex[i] = gst_gl_memory_wrapped_texture (upload->context,
-            texture_id[i], &upload->info, i, NULL, NULL);
+            texture_id[i], &upload->info, i, NULL, NULL, NULL);
 
       out_mem = upload->priv->out_tex[i];
 
@@ -256,7 +256,7 @@ _perform_with_data_unlocked (GstGLUploadMeta * upload,
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
     if (!upload->priv->in_tex[i])
       upload->priv->in_tex[i] = gst_gl_memory_wrapped (upload->context,
-          &upload->info, i, data[i], NULL, NULL);
+          &upload->info, i, NULL, data[i], NULL, NULL);
 
     upload->priv->in_tex[i]->data = data[i];
   }
