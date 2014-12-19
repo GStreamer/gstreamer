@@ -191,6 +191,72 @@ gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
+static void
+convert_to_internal_clock (GstDecklinkVideoSink * self,
+    GstClockTime * timestamp, GstClockTime * duration)
+{
+  GstClock *clock, *audio_clock;
+
+  g_assert (timestamp != NULL);
+
+  clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
+  audio_clock = gst_decklink_output_get_audio_clock (self->output);
+  if (clock && clock != self->output->clock && clock != audio_clock) {
+    GstClockTime internal, external, rate_n, rate_d;
+    gst_clock_get_calibration (self->output->clock, &internal, &external,
+        &rate_n, &rate_d);
+
+    if (rate_n != rate_d) {
+      GstClockTime external_timestamp = *timestamp;
+
+      // Convert to the running time corresponding to both clock times
+      internal -= self->internal_base_time;
+      external -= gst_element_get_base_time (GST_ELEMENT_CAST (self));
+
+      // Get the difference in the external time, note
+      // that the running time is external time.
+      // Then scale this difference and offset it to
+      // our internal time. Now we have the running time
+      // according to our internal clock.
+      //
+      // For the duration we just scale
+      if (external > external_timestamp) {
+        guint64 diff = external - external_timestamp;
+        diff = gst_util_uint64_scale (diff, rate_d, rate_n);
+        *timestamp = internal - diff;
+      } else {
+        guint64 diff = external_timestamp - external;
+        diff = gst_util_uint64_scale (diff, rate_d, rate_n);
+        *timestamp = internal + diff;
+      }
+
+      GST_LOG_OBJECT (self,
+          "Converted %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT " (internal: %"
+          GST_TIME_FORMAT " external %" GST_TIME_FORMAT " rate: %lf)",
+          GST_TIME_ARGS (external_timestamp), GST_TIME_ARGS (*timestamp),
+          GST_TIME_ARGS (internal), GST_TIME_ARGS (external),
+          ((gdouble) rate_n) / ((gdouble) rate_d));
+
+      if (duration) {
+        GstClockTime external_duration = *duration;
+
+        *duration = gst_util_uint64_scale (external_duration, rate_d, rate_n);
+
+        GST_LOG_OBJECT (self,
+            "Converted duration %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT
+            " (internal: %" GST_TIME_FORMAT " external %" GST_TIME_FORMAT
+            " rate: %lf)", GST_TIME_ARGS (external_duration),
+            GST_TIME_ARGS (*duration), GST_TIME_ARGS (internal),
+            GST_TIME_ARGS (external), ((gdouble) rate_n) / ((gdouble) rate_d));
+      }
+    } else {
+      GST_LOG_OBJECT (self, "No clock conversion needed, relative rate is 1.0");
+    }
+  } else {
+    GST_LOG_OBJECT (self, "No clock conversion needed, same clocks");
+  }
+}
+
 static GstFlowReturn
 gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 {
@@ -200,9 +266,9 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   guint8 *outdata, *indata;
   GstFlowReturn flow_ret;
   HRESULT ret;
-  GstClockTime timestamp, duration, running_time, running_time_duration;
+  GstClockTime timestamp, duration;
+  GstClockTime running_time, running_time_duration;
   gint i;
-  GstClock *clock = NULL, *audio_clock = NULL;
 
   GST_DEBUG_OBJECT (self, "Preparing buffer %p", buffer);
 
@@ -249,12 +315,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
       gst_segment_to_running_time (&GST_BASE_SINK_CAST (self)->segment,
       GST_FORMAT_TIME, timestamp + duration) - running_time;
 
-  clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
-  audio_clock = gst_decklink_output_get_audio_clock (self->output);
-  if (clock && clock != self->output->clock && clock != audio_clock) {
-    // TODO: Adjust time if pipeline clock is not our clock
-    //g_assert_not_reached ();
-  }
+  convert_to_internal_clock (self, &running_time, &running_time_duration);
 
   GST_LOG_OBJECT (self, "Scheduling video frame %p at %" GST_TIME_FORMAT
       " with duration %" GST_TIME_FORMAT, frame, GST_TIME_ARGS (running_time),
@@ -272,11 +333,6 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   flow_ret = GST_FLOW_OK;
 
 out:
-
-  if (clock)
-    gst_object_unref (clock);
-  if (audio_clock)
-    gst_object_unref (audio_clock);
 
   frame->Release ();
 
@@ -481,22 +537,12 @@ gst_decklink_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
       GstClockTime start_time = gst_element_get_start_time (element);
       HRESULT res;
-      GstClock *clock, *audio_clock;
 
       // FIXME: This will probably not work
       if (start_time == GST_CLOCK_TIME_NONE)
         start_time = 0;
 
-      clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
-      audio_clock = gst_decklink_output_get_audio_clock (self->output);
-      if (clock && clock != self->output->clock && clock != audio_clock) {
-        // TODO: Adjust time if pipeline clock is not our clock
-        //g_assert_not_reached ();
-      }
-      if (clock)
-        gst_object_unref (clock);
-      if (audio_clock)
-        gst_object_unref (audio_clock);
+      convert_to_internal_clock (self, &start_time, NULL);
 
       // The start time is now the running time when we stopped
       // playback
@@ -517,22 +563,15 @@ gst_decklink_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
       GstClockTime start_time = gst_element_get_start_time (element);
       HRESULT res;
-      GstClock *clock, *audio_clock;
 
       // FIXME: This will probably not work
       if (start_time == GST_CLOCK_TIME_NONE)
         start_time = 0;
 
-      clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
-      audio_clock = gst_decklink_output_get_audio_clock (self->output);
-      if (clock && clock != self->output->clock && clock != audio_clock) {
-        // TODO: Adjust time if pipeline clock is not our clock
-        //g_assert_not_reached ();
-      }
-      if (clock)
-        gst_object_unref (clock);
-      if (audio_clock)
-        gst_object_unref (audio_clock);
+      self->internal_base_time =
+          gst_clock_get_internal_time (self->output->clock);
+
+      convert_to_internal_clock (self, &start_time, NULL);
 
       GST_DEBUG_OBJECT (self,
           "Starting scheduled playback at %" GST_TIME_FORMAT,
