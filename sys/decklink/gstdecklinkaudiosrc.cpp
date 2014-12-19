@@ -60,6 +60,8 @@ static GstCaps *gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc,
     GstCaps * filter);
 static gboolean gst_decklink_audio_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_decklink_audio_src_unlock_stop (GstBaseSrc * bsrc);
+static gboolean gst_decklink_audio_src_query (GstBaseSrc * bsrc,
+    GstQuery * query);
 
 static GstFlowReturn gst_decklink_audio_src_create (GstPushSrc * psrc,
     GstBuffer ** buffer);
@@ -89,6 +91,7 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_get_caps);
   basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_set_caps);
+  basesrc_class->query = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_query);
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_unlock);
   basesrc_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_decklink_audio_src_unlock_stop);
@@ -331,6 +334,44 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
       gst_util_uint64_scale_int (sample_count, GST_SECOND, self->info.rate);
 
   return flow_ret;
+}
+
+static gboolean
+gst_decklink_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
+{
+  GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (bsrc);
+  gboolean ret = TRUE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:{
+      if (self->input) {
+        g_mutex_lock (&self->input->lock);
+        if (self->input->mode) {
+          GstClockTime min, max;
+
+          min =
+              gst_util_uint64_scale_ceil (GST_MSECOND, self->input->mode->fps_d,
+              self->input->mode->fps_n);
+          max = min;
+
+          gst_query_set_latency (query, TRUE, min, max);
+          ret = TRUE;
+        } else {
+          ret = FALSE;
+        }
+        g_mutex_unlock (&self->input->lock);
+      } else {
+        ret = FALSE;
+      }
+
+      break;
+    }
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean

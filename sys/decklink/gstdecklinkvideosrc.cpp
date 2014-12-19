@@ -48,6 +48,8 @@ static GstClock *gst_decklink_video_src_provide_clock (GstElement * element);
 
 static GstCaps *gst_decklink_video_src_get_caps (GstBaseSrc * bsrc,
     GstCaps * filter);
+static gboolean gst_decklink_video_src_query (GstBaseSrc * bsrc,
+    GstQuery * query);
 static gboolean gst_decklink_video_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_decklink_video_src_unlock_stop (GstBaseSrc * bsrc);
 
@@ -79,6 +81,7 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_decklink_video_src_provide_clock);
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_decklink_video_src_get_caps);
+  basesrc_class->query = GST_DEBUG_FUNCPTR (gst_decklink_video_src_query);
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_decklink_video_src_unlock);
   basesrc_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_decklink_video_src_unlock_stop);
@@ -197,7 +200,8 @@ gst_decklink_video_src_got_frame (GstElement * element,
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
 
-  GST_LOG_OBJECT (self, "Got video frame at %" GST_TIME_FORMAT, GST_TIME_ARGS (capture_time));
+  GST_LOG_OBJECT (self, "Got video frame at %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (capture_time));
 
   g_mutex_lock (&self->lock);
   if (!self->flushing) {
@@ -277,6 +281,40 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 }
 
 static gboolean
+gst_decklink_video_src_query (GstBaseSrc * bsrc, GstQuery * query)
+{
+  GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
+  gboolean ret = TRUE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:{
+      if (self->input) {
+        GstClockTime min, max;
+        const GstDecklinkMode *mode;
+
+        mode = gst_decklink_get_mode (self->mode);
+
+        min =
+            gst_util_uint64_scale_ceil (GST_MSECOND, mode->fps_d, mode->fps_n);
+        max = min;
+
+        gst_query_set_latency (query, TRUE, min, max);
+        ret = TRUE;
+      } else {
+        ret = FALSE;
+      }
+
+      break;
+    }
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
+      break;
+  }
+
+  return ret;
+}
+
+static gboolean
 gst_decklink_video_src_unlock (GstBaseSrc * bsrc)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
@@ -331,6 +369,7 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
   }
 
   g_mutex_lock (&self->input->lock);
+  self->input->mode = mode;
   self->input->got_video_frame = gst_decklink_video_src_got_frame;
   g_mutex_unlock (&self->input->lock);
 
@@ -350,6 +389,7 @@ gst_decklink_video_src_close (GstDecklinkVideoSrc * self)
   if (self->input) {
     g_mutex_lock (&self->input->lock);
     self->input->got_video_frame = NULL;
+    self->input->mode = NULL;
     g_mutex_unlock (&self->input->lock);
 
     self->input->input->DisableVideoInput ();

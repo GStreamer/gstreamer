@@ -498,8 +498,11 @@ gst_decklink_audio_sink_init (GstDecklinkAudioSink * self)
 {
   self->device_number = 0;
 
-  // 25ms latency time seems to be needed at least,
+  // 25.000ms latency time seems to be needed at least,
   // everything below can cause drop-outs
+  // TODO: This is probably related to the video mode that
+  // is selected, but not directly it seems. Choosing the
+  // duration of a frame does not work.
   GST_AUDIO_BASE_SINK_CAST (self)->latency_time = 25000;
 }
 

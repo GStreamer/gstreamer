@@ -121,6 +121,10 @@ struct _GstDecklinkOutput {
   /* Everything below protected by mutex */
   GMutex lock;
 
+  /* Set by the video source */
+  /* Configured mode or NULL */
+  const GstDecklinkMode *mode;
+
   /* Set by the audio sink */
   GstClock *audio_clock;
 
@@ -141,6 +145,8 @@ struct _GstDecklinkInput {
 
   /* Set by the video source */
   void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstClockTime capture_time);
+  /* Configured mode or NULL */
+  const GstDecklinkMode *mode;
 
   /* Set by the audio source */
   void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time);

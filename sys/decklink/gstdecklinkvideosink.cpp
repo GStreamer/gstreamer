@@ -313,6 +313,10 @@ gst_decklink_video_sink_open (GstBaseSink * bsink)
     return FALSE;
   }
 
+  g_mutex_lock (&self->output->lock);
+  self->output->mode = mode;
+  g_mutex_unlock (&self->output->lock);
+
   caps = gst_decklink_mode_get_caps (self->mode);
   gst_video_info_from_caps (&self->info, caps);
   gst_caps_unref (caps);
@@ -328,6 +332,10 @@ gst_decklink_video_sink_close (GstBaseSink * bsink)
   GST_DEBUG_OBJECT (self, "Stopping");
 
   if (self->output) {
+    g_mutex_lock (&self->output->lock);
+    self->output->mode = NULL;
+    g_mutex_unlock (&self->output->lock);
+
     self->output->output->DisableVideoOutput ();
     gst_decklink_release_nth_output (self->device_number,
         GST_ELEMENT_CAST (self), FALSE);
