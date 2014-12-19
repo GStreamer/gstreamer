@@ -328,6 +328,57 @@ public:
   }
 };
 
+#ifdef _MSC_VER
+/* FIXME: We currently never deinit this */
+
+static GMutex com_init_lock;
+static GMutex com_deinit_lock;
+static GCond com_init_cond;
+static GCond com_deinit_cond;
+static GCond com_deinited_cond;
+static gboolean com_initialized = FALSE;
+
+/* COM initialization/uninitialization thread */
+static gpointer
+gst_decklink_com_thread (gpointer data)
+{
+  HRESULT res;
+
+  g_mutex_lock (&com_init_lock);
+
+  /* Initialize COM with a MTA for this process. This thread will
+   * be the first one to enter the apartement and the last one to leave
+   * it, unitializing COM properly */
+
+  res = CoInitializeEx (0, COINIT_MULTITHREADED);
+  if (res == S_FALSE)
+    GST_WARNING ("COM has been already initialized in the same process");
+  else if (res == RPC_E_CHANGED_MODE)
+    GST_WARNING ("The concurrency model of COM has changed.");
+  else
+    GST_INFO ("COM intialized succesfully");
+
+  com_initialized = TRUE;
+
+  /* Signal other threads waiting on this condition that COM was initialized */
+  g_cond_signal (&com_init_cond);
+
+  g_mutex_unlock (&com_init_lock);
+
+  /* Wait until the unitialize condition is met to leave the COM apartement */
+  g_mutex_lock (&com_deinit_lock);
+  g_cond_wait (&com_deinit_cond, &com_deinit_lock);
+
+  CoUninitialize ();
+  GST_INFO ("COM unintialized succesfully");
+  com_initialized = FALSE;
+  g_cond_signal (&com_deinited_cond);
+  g_mutex_unlock (&com_deinit_lock);
+
+  return NULL;
+}
+#endif /* _MSC_VER */
+
 static GOnce devices_once = G_ONCE_INIT;
 static int n_devices;
 static Device devices[10];
@@ -339,6 +390,19 @@ init_devices (gpointer data)
   IDeckLink *decklink = NULL;
   HRESULT ret;
   int i;
+
+#ifdef _MSC_VER
+  // Start COM thread for Windows
+
+  g_mutex_lock (&com_init_lock);
+
+  /* create the COM initialization thread */
+  g_thread_create ((GThreadFunc) gst_decklink_com_thread, NULL, FALSE, NULL);
+
+  /* wait until the COM thread signals that COM has been initialized */
+  g_cond_wait (&com_init_cond, &com_init_lock);
+  g_mutex_unlock (&com_init_lock);
+#endif /* _MSC_VER */
 
   iterator = CreateDeckLinkIteratorInstance ();
   if (iterator == NULL) {
