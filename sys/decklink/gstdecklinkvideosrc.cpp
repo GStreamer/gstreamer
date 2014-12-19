@@ -28,13 +28,14 @@
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define GST_CAT_DEFAULT gst_decklink_video_src_debug
 
-#define MAX_QUEUE_LENGTH 5
+#define DEFAULT_BUFFER_SIZE (5)
 
 enum
 {
   PROP_0,
   PROP_MODE,
-  PROP_DEVICE_NUMBER
+  PROP_DEVICE_NUMBER,
+  PROP_BUFFER_SIZE
 };
 
 typedef struct
@@ -134,6 +135,12 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
+      g_param_spec_uint ("buffer-size", "Buffer Size",
+          "Size of internal buffer in number of video frames", 1,
+          G_MAXINT, DEFAULT_BUFFER_SIZE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   templ_caps = gst_decklink_mode_get_template_caps ();
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -152,6 +159,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
 {
   self->mode = GST_DECKLINK_MODE_NTSC;
   self->device_number = 0;
+  self->buffer_size = DEFAULT_BUFFER_SIZE;
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -175,6 +183,9 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
     case PROP_DEVICE_NUMBER:
       self->device_number = g_value_get_int (value);
       break;
+    case PROP_BUFFER_SIZE:
+      self->buffer_size = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -193,6 +204,9 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_DEVICE_NUMBER:
       g_value_set_int (value, self->device_number);
+      break;
+    case PROP_BUFFER_SIZE:
+      g_value_set_uint (value, self->buffer_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -242,7 +256,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
   if (!self->flushing) {
     CaptureFrame *f;
 
-    while (g_queue_get_length (&self->current_frames) >= MAX_QUEUE_LENGTH) {
+    while (g_queue_get_length (&self->current_frames) >= self->buffer_size) {
       f = (CaptureFrame *) g_queue_pop_head (&self->current_frames);
       GST_WARNING_OBJECT (self, "Dropping old frame at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (f->capture_time));
@@ -334,7 +348,7 @@ gst_decklink_video_src_query (GstBaseSrc * bsrc, GstQuery * query)
 
         min =
             gst_util_uint64_scale_ceil (GST_MSECOND, mode->fps_d, mode->fps_n);
-        max = MAX_QUEUE_LENGTH * min;
+        max = self->buffer_size * min;
 
         gst_query_set_latency (query, TRUE, min, max);
         ret = TRUE;

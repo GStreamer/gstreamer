@@ -70,6 +70,8 @@ struct _GstDecklinkAudioSrc
 
   /* Last time we noticed a discont */
   GstClockTime discont_time;
+
+  guint buffer_size;
 };
 
 struct _GstDecklinkAudioSrcClass

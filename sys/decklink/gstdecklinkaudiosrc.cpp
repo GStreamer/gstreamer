@@ -28,7 +28,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_audio_src_debug);
 #define GST_CAT_DEFAULT gst_decklink_audio_src_debug
 
-#define MAX_QUEUE_LENGTH 5
+#define DEFAULT_BUFFER_SIZE           (5)
 
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
 #define DEFAULT_DISCONT_WAIT          (1 * GST_SECOND)
@@ -38,7 +38,8 @@ enum
   PROP_0,
   PROP_DEVICE_NUMBER,
   PROP_ALIGNMENT_THRESHOLD,
-  PROP_DISCONT_WAIT
+  PROP_DISCONT_WAIT,
+  PROP_BUFFER_SIZE
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -154,6 +155,12 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
           G_MAXUINT64 - 1, DEFAULT_DISCONT_WAIT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
+      g_param_spec_uint ("buffer-size", "Buffer Size",
+          "Size of internal buffer in number of video frames", 1,
+          G_MAXINT, DEFAULT_BUFFER_SIZE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
@@ -171,6 +178,7 @@ gst_decklink_audio_src_init (GstDecklinkAudioSrc * self)
   self->device_number = 0;
   self->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
   self->discont_wait = DEFAULT_DISCONT_WAIT;
+  self->buffer_size = DEFAULT_BUFFER_SIZE;
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -197,6 +205,9 @@ gst_decklink_audio_src_set_property (GObject * object, guint property_id,
     case PROP_DISCONT_WAIT:
       self->discont_wait = g_value_get_uint64 (value);
       break;
+    case PROP_BUFFER_SIZE:
+      self->buffer_size = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -218,6 +229,9 @@ gst_decklink_audio_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_DISCONT_WAIT:
       g_value_set_uint64 (value, self->discont_wait);
+      break;
+    case PROP_BUFFER_SIZE:
+      g_value_set_uint (value, self->buffer_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -314,7 +328,7 @@ gst_decklink_audio_src_got_packet (GstElement * element,
   if (!self->flushing) {
     CapturePacket *p;
 
-    while (g_queue_get_length (&self->current_packets) >= MAX_QUEUE_LENGTH) {
+    while (g_queue_get_length (&self->current_packets) >= self->buffer_size) {
       p = (CapturePacket *) g_queue_pop_head (&self->current_packets);
       GST_WARNING_OBJECT (self, "Dropping old packet at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (p->capture_time));
@@ -440,9 +454,12 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   } else {
     // No discont, just keep counting
     self->discont_time = GST_CLOCK_TIME_NONE;
-    timestamp = gst_util_uint64_scale (self->next_offset, GST_SECOND, self->info.rate);
+    timestamp =
+        gst_util_uint64_scale (self->next_offset, GST_SECOND, self->info.rate);
     self->next_offset += sample_count;
-    duration = gst_util_uint64_scale (self->next_offset, GST_SECOND, self->info.rate) - timestamp;
+    duration =
+        gst_util_uint64_scale (self->next_offset, GST_SECOND,
+        self->info.rate) - timestamp;
   }
 
   GST_BUFFER_TIMESTAMP (*buffer) = timestamp;
@@ -469,7 +486,7 @@ gst_decklink_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
           min =
               gst_util_uint64_scale_ceil (GST_MSECOND, self->input->mode->fps_d,
               self->input->mode->fps_n);
-          max = MAX_QUEUE_LENGTH * min;
+          max = self->buffer_size * min;
 
           gst_query_set_latency (query, TRUE, min, max);
           ret = TRUE;

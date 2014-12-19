@@ -60,6 +60,8 @@ struct _GstDecklinkVideoSrc
   GMutex lock;
   gboolean flushing;
   GQueue current_frames;
+
+  guint buffer_size;
 };
 
 struct _GstDecklinkVideoSrcClass
