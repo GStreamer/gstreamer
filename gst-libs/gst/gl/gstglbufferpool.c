@@ -96,6 +96,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstAllocator *allocator = NULL;
   GstAllocationParams alloc_params;
   gboolean reset = TRUE;
+  gint p;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
           &max_buffers))
@@ -153,23 +154,13 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   if (gst_buffer_pool_config_has_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
-    gint p;
 
     priv->add_videometa = TRUE;
 
     gst_buffer_pool_config_get_video_alignment (config, &priv->valign);
     gst_video_info_align (&priv->info, &priv->valign);
 
-    /* Recalulate the size as we don't add padding between planes. */
-    priv->info.size = 0;
-    for (p = 0; p < GST_VIDEO_INFO_N_PLANES (&priv->info); p++) {
-      priv->info.size +=
-          gst_gl_get_plane_data_size (&priv->info, &priv->valign, p);
-    }
-
     gst_buffer_pool_config_set_video_alignment (config, &priv->valign);
-    gst_buffer_pool_config_set_params (config, caps, priv->info.size,
-        min_buffers, max_buffers);
   } else {
     gst_video_alignment_reset (&priv->valign);
   }
@@ -181,6 +172,15 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     glpool->upload = gst_gl_upload_meta_new (glpool->context);
   }
 
+  /* Recalulate the size as we don't add padding between planes. */
+  priv->info.size = 0;
+  for (p = 0; p < GST_VIDEO_INFO_N_PLANES (&priv->info); p++) {
+    priv->info.size +=
+        gst_gl_get_plane_data_size (&priv->info, &priv->valign, p);
+  }
+
+  gst_buffer_pool_config_set_params (config, caps, priv->info.size,
+      min_buffers, max_buffers);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
