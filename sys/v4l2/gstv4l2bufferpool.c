@@ -523,9 +523,9 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
 
-  if (updated)
-    gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
-        max_buffers);
+  /* Always update the config to ensure the configured size matches */
+  gst_buffer_pool_config_set_params (config, caps, obj->info.size, min_buffers,
+      max_buffers);
 
   /* keep a GstVideoInfo with defaults for the when we need to copy */
   gst_video_info_from_caps (&pool->caps_info, caps);
