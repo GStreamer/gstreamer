@@ -30,11 +30,15 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_audio_src_debug);
 
 #define MAX_QUEUE_LENGTH 5
 
+#define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
+#define DEFAULT_DISCONT_WAIT          (1 * GST_SECOND)
+
 enum
 {
   PROP_0,
-  PROP_MODE,
-  PROP_DEVICE_NUMBER
+  PROP_DEVICE_NUMBER,
+  PROP_ALIGNMENT_THRESHOLD,
+  PROP_DISCONT_WAIT
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -131,18 +135,24 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
 
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_create);
 
-  g_object_class_install_property (gobject_class, PROP_MODE,
-      g_param_spec_enum ("mode", "Playback Mode",
-          "Audio Mode to use for playback",
-          GST_TYPE_DECKLINK_MODE, GST_DECKLINK_MODE_NTSC,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-              G_PARAM_CONSTRUCT)));
-
   g_object_class_install_property (gobject_class, PROP_DEVICE_NUMBER,
       g_param_spec_int ("device-number", "Device number",
           "Output device instance to use", 0, G_MAXINT, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class, PROP_ALIGNMENT_THRESHOLD,
+      g_param_spec_uint64 ("alignment-threshold", "Alignment Threshold",
+          "Timestamp alignment threshold in nanoseconds", 0,
+          G_MAXUINT64 - 1, DEFAULT_ALIGNMENT_THRESHOLD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_DISCONT_WAIT,
+      g_param_spec_uint64 ("discont-wait", "Discont Wait",
+          "Window of time in nanoseconds to wait before "
+          "creating a discontinuity", 0,
+          G_MAXUINT64 - 1, DEFAULT_DISCONT_WAIT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -158,8 +168,9 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
 static void
 gst_decklink_audio_src_init (GstDecklinkAudioSrc * self)
 {
-  self->mode = GST_DECKLINK_MODE_NTSC;
   self->device_number = 0;
+  self->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
+  self->discont_wait = DEFAULT_DISCONT_WAIT;
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -177,11 +188,14 @@ gst_decklink_audio_src_set_property (GObject * object, guint property_id,
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (object);
 
   switch (property_id) {
-    case PROP_MODE:
-      self->mode = (GstDecklinkModeEnum) g_value_get_enum (value);
-      break;
     case PROP_DEVICE_NUMBER:
       self->device_number = g_value_get_int (value);
+      break;
+    case PROP_ALIGNMENT_THRESHOLD:
+      self->alignment_threshold = g_value_get_uint64 (value);
+      break;
+    case PROP_DISCONT_WAIT:
+      self->discont_wait = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -196,11 +210,14 @@ gst_decklink_audio_src_get_property (GObject * object, guint property_id,
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (object);
 
   switch (property_id) {
-    case PROP_MODE:
-      g_value_set_enum (value, self->mode);
-      break;
     case PROP_DEVICE_NUMBER:
       g_value_set_int (value, self->device_number);
+      break;
+    case PROP_ALIGNMENT_THRESHOLD:
+      g_value_set_uint64 (value, self->alignment_threshold);
+      break;
+    case PROP_DISCONT_WAIT:
+      g_value_set_uint64 (value, self->discont_wait);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -325,6 +342,9 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   CapturePacket *p;
   AudioPacket *ap;
   GstClockTime timestamp, duration;
+  GstClockTime start_time, end_time;
+  guint64 start_offset, end_offset;
+  gboolean discont = FALSE;
 
   g_mutex_lock (&self->lock);
   while (g_queue_is_empty (&self->current_packets) && !self->flushing) {
@@ -356,7 +376,6 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   ap->input = self->input->input;
   ap->input->AddRef ();
 
-  // TODO: Jitter/discont handling
   duration =
       gst_util_uint64_scale_int (sample_count, GST_SECOND, self->info.rate);
   // Our capture time is the end timestamp, subtract the
@@ -365,6 +384,66 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     timestamp = p->capture_time - duration;
   else
     timestamp = 0;
+
+  // Jitter and discontinuity handling, based on audiobasesrc
+  start_time = timestamp;
+  end_time = p->capture_time;
+
+  // Convert to the sample numbers
+  end_offset = gst_util_uint64_scale (end_time, self->info.rate, GST_SECOND);
+  if (end_offset >= sample_count)
+    start_offset = end_offset - sample_count;
+  else
+    start_offset = 0;
+
+  if (self->next_offset == -1) {
+    discont = TRUE;
+  } else {
+    guint64 diff, max_sample_diff;
+
+    // Check discont
+    if (start_offset <= self->next_offset)
+      diff = self->next_offset - start_offset;
+    else
+      diff = start_offset - self->next_offset;
+
+    max_sample_diff =
+        gst_util_uint64_scale_int (self->alignment_threshold, self->info.rate,
+        GST_SECOND);
+
+    // Discont!
+    if (G_UNLIKELY (diff >= max_sample_diff)) {
+      if (self->discont_wait > 0) {
+        if (self->discont_time == GST_CLOCK_TIME_NONE) {
+          self->discont_time = start_time;
+        } else if (start_time - self->discont_time >= self->discont_wait) {
+          discont = TRUE;
+          self->discont_time = GST_CLOCK_TIME_NONE;
+        }
+      } else {
+        discont = TRUE;
+      }
+    } else if (G_UNLIKELY (self->discont_time != GST_CLOCK_TIME_NONE)) {
+      // we have had a discont, but are now back on track!
+      self->discont_time = GST_CLOCK_TIME_NONE;
+    }
+  }
+
+  if (discont) {
+    // Have discont, need resync and use the capture timestamps
+    if (self->next_offset != -1)
+      GST_INFO_OBJECT (self, "Have discont. Expected %"
+          G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
+          self->next_offset, start_offset);
+    GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_DISCONT);
+    self->next_offset = end_offset;
+  } else {
+    // No discont, just keep counting
+    self->discont_time = GST_CLOCK_TIME_NONE;
+    timestamp = gst_util_uint64_scale (self->next_offset, GST_SECOND, self->info.rate);
+    self->next_offset += sample_count;
+    duration = gst_util_uint64_scale (self->next_offset, GST_SECOND, self->info.rate) - timestamp;
+  }
 
   GST_BUFFER_TIMESTAMP (*buffer) = timestamp;
   GST_BUFFER_DURATION (*buffer) = duration;
@@ -546,6 +625,7 @@ gst_decklink_audio_src_change_state (GstElement * element,
           gst_message_new_clock_provide (GST_OBJECT_CAST (element),
               self->input->clock, TRUE));
       self->flushing = FALSE;
+      self->next_offset = -1;
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{

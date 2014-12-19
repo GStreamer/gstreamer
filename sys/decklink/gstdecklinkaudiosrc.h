@@ -60,6 +60,16 @@ struct _GstDecklinkAudioSrc
   GMutex lock;
   gboolean flushing;
   GQueue current_packets;
+
+  /* properties for handling jittery timestamps */
+  GstClockTime alignment_threshold;
+  GstClockTime discont_wait;
+
+  /* counter to keep track of timestamps */
+  gint64 next_offset;
+
+  /* Last time we noticed a discont */
+  GstClockTime discont_time;
 };
 
 struct _GstDecklinkAudioSrcClass
