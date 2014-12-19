@@ -59,8 +59,7 @@ struct _GstDecklinkVideoSrc
   GCond cond;
   GMutex lock;
   gboolean flushing;
-  IDeckLinkVideoInputFrame *current_frame;
-  GstClockTime current_frame_capture_time;
+  GQueue current_frames;
 };
 
 struct _GstDecklinkVideoSrcClass

@@ -59,8 +59,7 @@ struct _GstDecklinkAudioSrc
   GCond cond;
   GMutex lock;
   gboolean flushing;
-  IDeckLinkAudioInputPacket *current_packet;
-  GstClockTime current_packet_capture_time;
+  GQueue current_packets;
 };
 
 struct _GstDecklinkAudioSrcClass

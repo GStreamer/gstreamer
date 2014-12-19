@@ -28,12 +28,45 @@
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define GST_CAT_DEFAULT gst_decklink_video_src_debug
 
+#define MAX_QUEUE_LENGTH 5
+
 enum
 {
   PROP_0,
   PROP_MODE,
   PROP_DEVICE_NUMBER
 };
+
+typedef struct
+{
+  IDeckLinkVideoInputFrame *frame;
+  GstClockTime capture_time;
+} CaptureFrame;
+
+static void
+capture_frame_free (void *data)
+{
+  CaptureFrame *frame = (CaptureFrame *) data;
+
+  frame->frame->Release ();
+  g_free (frame);
+}
+
+typedef struct
+{
+  IDeckLinkVideoInputFrame *frame;
+  IDeckLinkInput *input;
+} VideoFrame;
+
+static void
+video_frame_free (void *data)
+{
+  VideoFrame *frame = (VideoFrame *) data;
+
+  frame->frame->Release ();
+  frame->input->Release ();
+  g_free (frame);
+}
 
 static void gst_decklink_video_src_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
@@ -125,6 +158,8 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
 
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
+
+  g_queue_init (&self->current_frames);
 }
 
 void
@@ -205,30 +240,23 @@ gst_decklink_video_src_got_frame (GstElement * element,
 
   g_mutex_lock (&self->lock);
   if (!self->flushing) {
-    if (self->current_frame)
-      self->current_frame->Release ();
-    self->current_frame = frame;
+    CaptureFrame *f;
+
+    while (g_queue_get_length (&self->current_frames) >= MAX_QUEUE_LENGTH) {
+      f = (CaptureFrame *) g_queue_pop_head (&self->current_frames);
+      GST_WARNING_OBJECT (self, "Dropping old frame at %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (f->capture_time));
+      capture_frame_free (f);
+    }
+
+    f = (CaptureFrame *) g_malloc0 (sizeof (CaptureFrame));
+    f->frame = frame;
+    f->capture_time = capture_time;
     frame->AddRef ();
-    self->current_frame_capture_time = capture_time;
+    g_queue_push_tail (&self->current_frames, f);
     g_cond_signal (&self->cond);
   }
   g_mutex_unlock (&self->lock);
-}
-
-typedef struct
-{
-  IDeckLinkVideoInputFrame *frame;
-  IDeckLinkInput *input;
-} VideoFrame;
-
-static void
-video_frame_free (void *data)
-{
-  VideoFrame *video_frame = (VideoFrame *) data;
-
-  video_frame->frame->Release ();
-  video_frame->input->Release ();
-  g_free (video_frame);
 }
 
 static GstFlowReturn
@@ -236,29 +264,26 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
   GstFlowReturn flow_ret = GST_FLOW_OK;
-  IDeckLinkVideoInputFrame *frame = NULL;
-  GstClockTime capture_time = GST_CLOCK_TIME_NONE;
   const guint8 *data;
   gsize data_size;
   VideoFrame *vf;
+  CaptureFrame *f;
 
   g_mutex_lock (&self->lock);
-  while (!self->current_frame && !self->flushing) {
+  while (g_queue_is_empty (&self->current_frames) && !self->flushing) {
     g_cond_wait (&self->cond, &self->lock);
   }
-  frame = self->current_frame;
-  capture_time = self->current_frame_capture_time;
-  self->current_frame = NULL;
+
+  f = (CaptureFrame *) g_queue_pop_head (&self->current_frames);
   g_mutex_unlock (&self->lock);
 
   if (self->flushing) {
-    if (frame)
-      frame->Release ();
+    if (f)
+      capture_frame_free (f);
     return GST_FLOW_FLUSHING;
   }
 
-  frame->GetBytes ((gpointer *) & data);
-
+  f->frame->GetBytes ((gpointer *) & data);
   data_size = self->info.size;
 
 
@@ -269,13 +294,16 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
       (gpointer) data, data_size, 0, data_size, vf,
       (GDestroyNotify) video_frame_free);
 
-  vf->frame = frame;
+  vf->frame = f->frame;
+  f->frame->AddRef ();
   vf->input = self->input->input;
   vf->input->AddRef ();
 
-  GST_BUFFER_TIMESTAMP (*buffer) = capture_time;
+  GST_BUFFER_TIMESTAMP (*buffer) = f->capture_time;
   GST_BUFFER_DURATION (*buffer) = gst_util_uint64_scale_int (GST_SECOND,
       self->info.fps_d, self->info.fps_n);
+
+  capture_frame_free (f);
 
   return flow_ret;
 }
@@ -296,7 +324,7 @@ gst_decklink_video_src_query (GstBaseSrc * bsrc, GstQuery * query)
 
         min =
             gst_util_uint64_scale_ceil (GST_MSECOND, mode->fps_d, mode->fps_n);
-        max = min;
+        max = MAX_QUEUE_LENGTH * min;
 
         gst_query_set_latency (query, TRUE, min, max);
         ret = TRUE;
@@ -334,6 +362,8 @@ gst_decklink_video_src_unlock_stop (GstBaseSrc * bsrc)
 
   g_mutex_lock (&self->lock);
   self->flushing = FALSE;
+  g_queue_foreach (&self->current_frames, (GFunc) capture_frame_free, NULL);
+  g_queue_clear (&self->current_frames);
   g_mutex_unlock (&self->lock);
 
   return TRUE;
@@ -448,6 +478,9 @@ gst_decklink_video_src_change_state (GstElement * element,
           gst_message_new_clock_lost (GST_OBJECT_CAST (element),
               self->input->clock));
       gst_clock_set_master (self->input->clock, NULL);
+
+      g_queue_foreach (&self->current_frames, (GFunc) capture_frame_free, NULL);
+      g_queue_clear (&self->current_frames);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
       HRESULT res;
@@ -458,11 +491,6 @@ gst_decklink_video_src_change_state (GstElement * element,
         GST_ELEMENT_ERROR (self, STREAM, FAILED,
             (NULL), ("Failed to stop streams: 0x%08x", res));
         ret = GST_STATE_CHANGE_FAILURE;
-      }
-
-      if (self->current_frame) {
-        self->current_frame->Release ();
-        self->current_frame = NULL;
       }
       break;
     }
