@@ -575,6 +575,7 @@ gst_decklink_audio_src_close (GstDecklinkAudioSrc * self)
   return TRUE;
 }
 
+#if 0
 static gboolean
 in_same_pipeline (GstElement * a, GstElement * b)
 {
@@ -596,6 +597,7 @@ in_same_pipeline (GstElement * a, GstElement * b)
 
   return ret;
 }
+#endif
 
 static GstStateChangeReturn
 gst_decklink_audio_src_change_state (GstElement * element,
@@ -626,7 +628,10 @@ gst_decklink_audio_src_change_state (GstElement * element,
             (NULL), ("Audio src needs a video src for its operation"));
         ret = GST_STATE_CHANGE_FAILURE;
         goto out;
-      } else if (!in_same_pipeline (GST_ELEMENT_CAST (self), videosrc)) {
+      }
+      // FIXME: This causes deadlocks sometimes
+#if 0
+      else if (!in_same_pipeline (GST_ELEMENT_CAST (self), videosrc)) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED,
             (NULL),
             ("Audio src and video src need to be in the same pipeline"));
@@ -634,6 +639,7 @@ gst_decklink_audio_src_change_state (GstElement * element,
         gst_object_unref (videosrc);
         goto out;
       }
+#endif
 
       if (videosrc)
         gst_object_unref (videosrc);

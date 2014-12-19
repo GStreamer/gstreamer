@@ -265,6 +265,7 @@ gst_decklink_audio_sink_ringbuffer_delay (GstAudioRingBuffer * rb)
   return ret;
 }
 
+#if 0
 static gboolean
 in_same_pipeline (GstElement * a, GstElement * b)
 {
@@ -286,6 +287,7 @@ in_same_pipeline (GstElement * a, GstElement * b)
 
   return ret;
 }
+#endif
 
 static gboolean
 gst_decklink_audio_sink_ringbuffer_start (GstAudioRingBuffer * rb)
@@ -306,11 +308,15 @@ gst_decklink_audio_sink_ringbuffer_start (GstAudioRingBuffer * rb)
     GST_ELEMENT_ERROR (self->sink, STREAM, FAILED,
         (NULL), ("Audio sink needs a video sink for its operation"));
     ret = FALSE;
-  } else if (!in_same_pipeline (GST_ELEMENT_CAST (self->sink), videosink)) {
+  }
+  // FIXME: This causes deadlocks sometimes  
+#if 0
+  else if (!in_same_pipeline (GST_ELEMENT_CAST (self->sink), videosink)) {
     GST_ELEMENT_ERROR (self->sink, STREAM, FAILED,
         (NULL), ("Audio sink and video sink need to be in the same pipeline"));
     ret = FALSE;
   }
+#endif
 
   if (videosink)
     gst_object_unref (videosink);
