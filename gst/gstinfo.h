@@ -102,6 +102,22 @@ typedef enum {
 #define GST_LEVEL_DEFAULT GST_LEVEL_NONE
 #endif
 
+/**
+ * GST_LEVEL_MAX:
+ *
+ * Defines the maximum debugging level to be enabled at compilation time. By default
+ * it is set such that all debugging statements will be enabled.
+ *
+ * If you wish to compile GStreamer and plugins with only some debugging statements
+ * (Such as just warnings and errors), you can define it at compile time to the
+ * maximum debug level. Any debug statements above that level will be compiled out.
+ *
+ * Since: 1.6
+ * */
+#ifndef GST_LEVEL_MAX
+#define GST_LEVEL_MAX GST_LEVEL_COUNT
+#endif
+
 /* defines for format (colors etc)
  * don't change them around, it uses terminal layout
  * Terminal color strings:
@@ -520,7 +536,7 @@ GST_EXPORT GstDebugLevel            _gst_debug_min;
  */
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{		\
-  if (G_UNLIKELY (level <= _gst_debug_min)) {						\
+  if (G_UNLIKELY (level <= GST_LEVEL_MAX && level <= _gst_debug_min)) {						\
     gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
         (GObject *) (object), __VA_ARGS__);				\
   }									\
@@ -528,7 +544,7 @@ GST_EXPORT GstDebugLevel            _gst_debug_min;
 #else /* G_HAVE_GNUC_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,args...) G_STMT_START{	\
-  if (G_UNLIKELY (level <= _gst_debug_min)) {						\
+  if (G_UNLIKELY (level <= GST_LEVEL_MAX && level <= _gst_debug_min)) {						\
     gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
         (GObject *) (object), ##args );					\
   }									\
@@ -538,7 +554,7 @@ static inline void
 GST_CAT_LEVEL_LOG_valist (GstDebugCategory * cat,
     GstDebugLevel level, gpointer object, const char *format, va_list varargs)
 {
-  if (G_UNLIKELY (level <= _gst_debug_min)) {
+  if (G_UNLIKELY (level <= GST_LEVEL_MAX && level <= _gst_debug_min)) {
     gst_debug_log_valist (cat, level, "", "", 0, (GObject *) object, format,
         varargs);
   }
@@ -561,7 +577,8 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * other macros and hence in a separate block right here. Docs chunks are
  * with the other doc chunks below though. */
 #define __GST_CAT_MEMDUMP_LOG(cat,object,msg,data,length) G_STMT_START{       \
-  if (G_UNLIKELY (GST_LEVEL_MEMDUMP <= _gst_debug_min)) {                    \
+    if (G_UNLIKELY (GST_LEVEL_MEMDUMP <= GST_LEVEL_MAX &&		      \
+		    GST_LEVEL_MEMDUMP <= _gst_debug_min)) {		      \
     _gst_debug_dump_mem ((cat), __FILE__, GST_FUNCTION, __LINE__,             \
         (GObject *) (object), (msg), (data), (length));                       \
   }                                                                           \
