@@ -268,6 +268,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   gsize data_size;
   VideoFrame *vf;
   CaptureFrame *f;
+  GstClockTime timestamp, duration;
 
   g_mutex_lock (&self->lock);
   while (g_queue_is_empty (&self->current_frames) && !self->flushing) {
@@ -299,9 +300,18 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   vf->input = self->input->input;
   vf->input->AddRef ();
 
-  GST_BUFFER_TIMESTAMP (*buffer) = f->capture_time;
-  GST_BUFFER_DURATION (*buffer) = gst_util_uint64_scale_int (GST_SECOND,
-      self->info.fps_d, self->info.fps_n);
+  duration =
+      gst_util_uint64_scale_int (GST_SECOND, self->info.fps_d,
+      self->info.fps_n);
+  // Our capture time is the end timestamp, subtract the
+  // duration to get the start timestamp
+  if (f->capture_time >= duration)
+    timestamp = f->capture_time - duration;
+  else
+    timestamp = 0;
+
+  GST_BUFFER_TIMESTAMP (*buffer) = timestamp;
+  GST_BUFFER_DURATION (*buffer) = duration;
 
   capture_frame_free (f);
 

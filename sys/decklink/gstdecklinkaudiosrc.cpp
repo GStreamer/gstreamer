@@ -324,6 +324,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   gsize data_size;
   CapturePacket *p;
   AudioPacket *ap;
+  GstClockTime timestamp, duration;
 
   g_mutex_lock (&self->lock);
   while (g_queue_is_empty (&self->current_packets) && !self->flushing) {
@@ -356,9 +357,17 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   ap->input->AddRef ();
 
   // TODO: Jitter/discont handling
-  GST_BUFFER_TIMESTAMP (*buffer) = p->capture_time;
-  GST_BUFFER_DURATION (*buffer) =
+  duration =
       gst_util_uint64_scale_int (sample_count, GST_SECOND, self->info.rate);
+  // Our capture time is the end timestamp, subtract the
+  // duration to get the start timestamp
+  if (p->capture_time >= duration)
+    timestamp = p->capture_time - duration;
+  else
+    timestamp = 0;
+
+  GST_BUFFER_TIMESTAMP (*buffer) = timestamp;
+  GST_BUFFER_DURATION (*buffer) = duration;
 
   capture_packet_free (p);
 
