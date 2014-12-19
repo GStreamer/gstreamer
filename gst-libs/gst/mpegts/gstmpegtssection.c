@@ -1128,9 +1128,12 @@ _packetize_common_section (GstMpegtsSection * section, gsize length)
       GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x7000);
   }
 
-  if (!section->short_section)
-    *data |= 0x80;
+  /* short sections do not contain any further fields */
+  if (section->short_section)
+    return;
 
+  /* Set section_syntax_indicator bit since we do not have a short section */
+  *data |= 0x80;
   data += 2;
 
   /* subtable_extension               - 16 bit uimsbf */
