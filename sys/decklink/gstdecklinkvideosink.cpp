@@ -256,8 +256,8 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     //g_assert_not_reached ();
   }
 
-  GST_LOG_OBJECT (self, "Scheduling video frame at %" GST_TIME_FORMAT
-      " with duration %" GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
+  GST_LOG_OBJECT (self, "Scheduling video frame %p at %" GST_TIME_FORMAT
+      " with duration %" GST_TIME_FORMAT, frame, GST_TIME_ARGS (running_time),
       GST_TIME_ARGS (running_time_duration));
 
   ret = self->output->output->ScheduleVideoFrame (frame,
@@ -283,6 +283,91 @@ out:
   return flow_ret;
 }
 
+class GStreamerVideoOutputCallback:public IDeckLinkVideoOutputCallback
+{
+public:
+  GStreamerVideoOutputCallback (GstDecklinkVideoSink * sink)
+  {
+    m_sink = GST_DECKLINK_VIDEO_SINK_CAST (gst_object_ref (sink));
+    g_mutex_init (&m_mutex);
+  }
+
+  virtual HRESULT QueryInterface (REFIID, LPVOID *)
+  {
+    return E_NOINTERFACE;
+  }
+
+  virtual ULONG AddRef (void)
+  {
+    ULONG ret;
+
+    g_mutex_lock (&m_mutex);
+    m_refcount++;
+    ret = m_refcount;
+    g_mutex_unlock (&m_mutex);
+
+    return ret;
+  }
+
+  virtual ULONG Release (void)
+  {
+    ULONG ret;
+
+    g_mutex_lock (&m_mutex);
+    m_refcount--;
+    ret = m_refcount;
+    g_mutex_unlock (&m_mutex);
+
+    if (ret == 0) {
+      delete this;
+    }
+
+    return ret;
+  }
+
+  virtual HRESULT ScheduledFrameCompleted (IDeckLinkVideoFrame * completedFrame,
+      BMDOutputFrameCompletionResult result)
+  {
+    switch (result) {
+      case bmdOutputFrameCompleted:
+        GST_LOG_OBJECT (m_sink, "Completed frame %p", completedFrame);
+        break;
+      case bmdOutputFrameDisplayedLate:
+        GST_INFO_OBJECT (m_sink, "Late Frame %p", completedFrame);
+        break;
+      case bmdOutputFrameDropped:
+        GST_INFO_OBJECT (m_sink, "Dropped Frame %p", completedFrame);
+        break;
+      case bmdOutputFrameFlushed:
+        GST_DEBUG_OBJECT (m_sink, "Flushed Frame %p", completedFrame);
+        break;
+      default:
+        GST_INFO_OBJECT (m_sink, "Unknown Frame %p: %d", completedFrame,
+            (gint) result);
+        break;
+    }
+
+    return S_OK;
+  }
+
+  virtual HRESULT ScheduledPlaybackHasStopped (void)
+  {
+    GST_LOG_OBJECT (m_sink, "Scheduled playback stopped");
+
+    return S_OK;
+  }
+
+  virtual ~ GStreamerVideoOutputCallback () {
+    gst_object_unref (m_sink);
+    g_mutex_clear (&m_mutex);
+  }
+
+private:
+  GstDecklinkVideoSink * m_sink;
+  GMutex m_mutex;
+  gint m_refcount;
+};
+
 static gboolean
 gst_decklink_video_sink_open (GstBaseSink * bsink)
 {
@@ -300,6 +385,9 @@ gst_decklink_video_sink_open (GstBaseSink * bsink)
     GST_ERROR_OBJECT (self, "Failed to acquire output");
     return FALSE;
   }
+
+  self->output->output->SetScheduledFrameCompletionCallback (new
+      GStreamerVideoOutputCallback (self));
 
   mode = gst_decklink_get_mode (self->mode);
   g_assert (mode != NULL);
@@ -337,6 +425,7 @@ gst_decklink_video_sink_close (GstBaseSink * bsink)
     g_mutex_unlock (&self->output->lock);
 
     self->output->output->DisableVideoOutput ();
+    self->output->output->SetScheduledFrameCompletionCallback (NULL);
     gst_decklink_release_nth_output (self->device_number,
         GST_ELEMENT_CAST (self), FALSE);
     self->output = NULL;
