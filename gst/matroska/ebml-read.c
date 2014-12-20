@@ -221,7 +221,7 @@ gst_ebml_peek_id_full (GstEbmlRead * ebml, guint32 * id, guint64 * length,
       gst_ebml_read_get_pos (ebml), *length, *prefix);
 
 #ifndef GST_DISABLE_GST_DEBUG
-  {
+  if (ebmlread_debug->threshold >= GST_LEVEL_LOG) {
     const guint8 *data = NULL;
     GstByteReader *br = gst_ebml_read_br (ebml);
     guint size = gst_byte_reader_get_remaining (br);
