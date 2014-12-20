@@ -19,6 +19,11 @@ libgstfreeverb_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 # headers we need but don't want installed
 noinst_HEADERS = gstfreeverb.h
 
+presetdir = $(datadir)/gstreamer-$(GST_API_VERSION)/presets
+preset_DATA = GstFreeverb.prs
+
+EXTRA_DIST = $(preset_DATA)
+
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
 	-:PROJECT libgstfreeverb -:SHARED libgstfreeverb \
