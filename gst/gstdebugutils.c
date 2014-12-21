@@ -56,6 +56,8 @@
 
 extern const gchar *priv_gst_dump_dot_dir;      /* NULL *//* set from gst.c */
 
+#define PARAM_MAX_LENGTH 80
+
 const gchar spaces[] = {
   "                                "    /* 32 */
       "                                "        /* 64 */
@@ -123,8 +125,8 @@ debug_dump_get_element_params (GstElement * element,
 
         /* too long, ellipsize */
         if (!(details & GST_DEBUG_GRAPH_SHOW_FULL_PARAMS) &&
-            strlen (value_str) > 80)
-          ellipses = "...";
+            strlen (value_str) > PARAM_MAX_LENGTH)
+          ellipses = "…";
         else
           ellipses = "";
 
@@ -137,7 +139,8 @@ debug_dump_get_element_params (GstElement * element,
           param_name = g_strdup_printf ("%s\\n%s=%s", tmp, property->name,
               value_str);
         } else {
-          param_name = g_strdup_printf ("%s\\n%s=%.80s%s", tmp, property->name,
+          param_name = g_strdup_printf ("%s\\n%s=%."
+              G_STRINGIFY (PARAM_MAX_LENGTH) "s%s", tmp, property->name,
               value_str, ellipses);
         }
 
