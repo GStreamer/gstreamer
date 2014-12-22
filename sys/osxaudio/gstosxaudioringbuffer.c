@@ -207,10 +207,12 @@ gst_osx_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
       } else {
         format.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
       }
-      if (GST_AUDIO_INFO_IS_BIG_ENDIAN (&spec->info)) {
-        format.mFormatFlags |= kAudioFormatFlagIsBigEndian;
-      }
     }
+
+    if (GST_AUDIO_INFO_IS_BIG_ENDIAN (&spec->info)) {
+      format.mFormatFlags |= kAudioFormatFlagIsBigEndian;
+    }
+
     format.mBytesPerFrame = GST_AUDIO_INFO_BPF (&spec->info);
     format.mBitsPerChannel = depth;
     format.mBytesPerPacket = GST_AUDIO_INFO_BPF (&spec->info);
