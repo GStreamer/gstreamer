@@ -1411,12 +1411,13 @@ gst_video_encoder_change_state (GstElement * element, GstStateChange transition)
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      /* Initialize device/library if needed */
-      if (encoder_class->start && !encoder_class->start (encoder))
-        goto start_failed;
       GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
       gst_video_encoder_reset (encoder, TRUE);
       GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+
+      /* Initialize device/library if needed */
+      if (encoder_class->start && !encoder_class->start (encoder))
+        goto start_failed;
       break;
     default:
       break;
