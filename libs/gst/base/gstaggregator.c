@@ -1159,7 +1159,15 @@ _src_query (GstAggregator * self, GstQuery * query)
     }
     case GST_QUERY_LATENCY:
     {
-      return gst_aggregator_query_latency (self, query);
+      gboolean ret;
+
+      ret = gst_aggregator_query_latency (self, query);
+      /* Wake up the src thread again, due to changed latencies
+       * or changed live-ness we might have to adjust if we wait
+       * on a deadline at all and how long.
+       */
+      SRC_STREAM_BROADCAST (self);
+      return ret;
     }
     default:
       break;
