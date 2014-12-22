@@ -553,16 +553,10 @@ gst_audiomixer_src_query (GstAggregator * agg, GstQuery * query)
     case GST_QUERY_DURATION:
       res = gst_audiomixer_query_duration (audiomixer, query);
       break;
-    case GST_QUERY_LATENCY:
+    default:
       res =
           GST_AGGREGATOR_CLASS (gst_audiomixer_parent_class)->src_query
           (agg, query);
-      break;
-    default:
-      /* FIXME, needs a custom query handler because we have multiple
-       * sinkpads */
-      res = gst_pad_query_default (GST_PAD (agg->srcpad), GST_OBJECT (agg),
-          query);
       break;
   }
 
