@@ -1464,16 +1464,10 @@ gst_videoaggregator_src_query (GstAggregator * agg, GstQuery * query)
     case GST_QUERY_DURATION:
       res = gst_videoaggregator_query_duration (vagg, query);
       break;
-    case GST_QUERY_LATENCY:
-    case GST_QUERY_CAPS:
+    default:
       res =
           GST_AGGREGATOR_CLASS (gst_videoaggregator_parent_class)->src_query
           (agg, query);
-      break;
-    default:
-      /* FIXME, needs a custom query handler because we have multiple
-       * sinkpads */
-      res = FALSE;
       break;
   }
   return res;
