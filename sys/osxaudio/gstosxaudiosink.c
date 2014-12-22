@@ -93,17 +93,11 @@ enum
 
 #define DEFAULT_VOLUME 1.0
 
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-# define FORMATS "{ S32LE, S24LE, S16LE, U8 }"
-#else
-# define FORMATS "{ S32BE, S24BE, S16BE, U8 }"
-#endif
-
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " FORMATS ", "
+        "format = (string) " GST_AUDIO_FORMATS_ALL ", "
         "layout = (string) interleaved, "
         "rate = (int) [1, MAX], "
         "channels = (int) [1, 9];"
