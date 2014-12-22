@@ -318,15 +318,12 @@ gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
   if (buf) {
     GST_OBJECT_LOCK (buf);
 
-    if (buf->acquired) {
+    if (buf->acquired && buf->spec.caps) {
       /* Caps are fixed, use what we have */
-      ret = gst_pad_get_current_caps (GST_BASE_SINK_PAD (src));
-      if (!ret) {
-        GST_OBJECT_UNLOCK (buf);
-        g_return_val_if_reached (NULL);
-      }
+      ret = gst_caps_ref (buf->spec.caps);
+    }
 
-    } else if (buf->open && !osxsrc->cached_caps) {
+    if (!ret && buf->open && !osxsrc->cached_caps) {
       /* Device is open, let's probe its caps */
       gst_osx_audio_src_probe_caps (osxsrc);
     }
