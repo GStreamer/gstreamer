@@ -1425,13 +1425,20 @@ gst_video_encoder_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      gboolean stopped = TRUE;
+
+      if (encoder_class->stop)
+        stopped = encoder_class->stop (encoder);
+
       GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
       gst_video_encoder_reset (encoder, TRUE);
       GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
-      if (encoder_class->stop && !encoder_class->stop (encoder))
+
+      if (!stopped)
         goto stop_failed;
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* close device/library if needed */
       if (encoder_class->close && !encoder_class->close (encoder))
