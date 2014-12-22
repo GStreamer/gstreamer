@@ -1101,6 +1101,13 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
       data.max += self->latency;
   }
 
+  if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_min)
+      && GST_CLOCK_TIME_IS_VALID (data.min))
+    data.min += self->priv->sub_latency_min;
+  if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max)
+      && GST_CLOCK_TIME_IS_VALID (data.max))
+    data.max += self->priv->sub_latency_max;
+
   GST_DEBUG_OBJECT (self, "configured latency live:%s min:%" G_GINT64_FORMAT
       " max:%" G_GINT64_FORMAT, data.live ? "true" : "false", data.min,
       data.max);
