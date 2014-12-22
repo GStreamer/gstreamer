@@ -1941,11 +1941,8 @@ gst_audio_encoder_activate (GstAudioEncoder * enc, gboolean active)
   GST_DEBUG_OBJECT (enc, "activate %d", active);
 
   if (active) {
-
-    if (enc->priv->tags)
-      gst_tag_list_unref (enc->priv->tags);
-    enc->priv->tags = gst_tag_list_new_empty ();
-    enc->priv->tags_changed = FALSE;
+    /* arrange clean state */
+    gst_audio_encoder_reset (enc, TRUE);
 
     if (!enc->priv->active && klass->start)
       result = klass->start (enc);
