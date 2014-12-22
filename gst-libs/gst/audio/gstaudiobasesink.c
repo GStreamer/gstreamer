@@ -2187,14 +2187,22 @@ gst_audio_base_sink_change_state (GstElement * element,
   GstAudioBaseSink *sink = GST_AUDIO_BASE_SINK (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (sink->ringbuffer == NULL) {
-        gst_audio_clock_reset (GST_AUDIO_CLOCK (sink->provided_clock), 0);
-        sink->ringbuffer = gst_audio_base_sink_create_ringbuffer (sink);
-      }
+    case GST_STATE_CHANGE_NULL_TO_READY:{
+      GstAudioRingBuffer *rb;
+
+      gst_audio_clock_reset (GST_AUDIO_CLOCK (sink->provided_clock), 0);
+      rb = gst_audio_base_sink_create_ringbuffer (sink);
+      if (rb == NULL)
+        goto create_failed;
+
+      GST_OBJECT_LOCK (sink);
+      sink->ringbuffer = rb;
+      GST_OBJECT_UNLOCK (sink);
+
       if (!gst_audio_ring_buffer_open_device (sink->ringbuffer))
         goto open_failed;
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_audio_base_sink_reset_sync (sink);
       gst_audio_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
@@ -2289,6 +2297,12 @@ gst_audio_base_sink_change_state (GstElement * element,
   return ret;
 
   /* ERRORS */
+create_failed:
+  {
+    /* subclass must post a meaningful error message */
+    GST_DEBUG_OBJECT (sink, "create failed");
+    return GST_STATE_CHANGE_FAILURE;
+  }
 open_failed:
   {
     /* subclass must post a meaningful error message */
