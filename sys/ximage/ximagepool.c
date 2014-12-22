@@ -582,6 +582,8 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     /* do padding and alignment */
     gst_video_info_align (&info, &xpool->align);
 
+    gst_buffer_pool_config_set_video_alignment (config, &xpool->align);
+
     /* we need the video metadata too now */
     xpool->add_metavideo = TRUE;
   } else {

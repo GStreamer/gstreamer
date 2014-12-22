@@ -169,6 +169,7 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     /* get an apply the alignment to the info */
     gst_buffer_pool_config_get_video_alignment (config, &priv->video_align);
     gst_video_info_align (&info, &priv->video_align);
+    gst_buffer_pool_config_set_video_alignment (config, &priv->video_align);
   }
   priv->info = info;
 
