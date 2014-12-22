@@ -781,7 +781,7 @@ unsupported_caps:
 static gboolean
 gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
 {
-  gboolean res;
+  gboolean res = FALSE;
   GstVideoTestSrc *src;
 
   src = GST_VIDEO_TEST_SRC (bsrc);
@@ -797,6 +797,23 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
           gst_video_info_convert (&src->info, src_fmt, src_val, dest_fmt,
           &dest_val);
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    case GST_QUERY_LATENCY:
+    {
+      if (src->info.fps_n > 0) {
+        GstClockTime latency;
+
+        latency =
+            gst_util_uint64_scale (GST_SECOND, src->info.fps_d,
+            src->info.fps_n);
+        gst_query_set_latency (query,
+            gst_base_src_is_live (GST_BASE_SRC_CAST (src)), latency,
+            GST_CLOCK_TIME_NONE);
+        GST_DEBUG_OBJECT (src, "Reporting latency of %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (latency));
+        res = TRUE;
+      }
       break;
     }
     case GST_QUERY_DURATION:{
