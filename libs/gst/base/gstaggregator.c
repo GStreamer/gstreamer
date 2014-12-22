@@ -1431,6 +1431,8 @@ gst_aggregator_dispose (GObject * object)
 static void
 gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
 {
+  gboolean changed;
+
   g_return_if_fail (GST_IS_AGGREGATOR (self));
 
   GST_OBJECT_LOCK (self);
@@ -1445,8 +1447,13 @@ gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
     latency = self->priv->latency_max;
   }
 
+  changed = self->latency != latency;
   self->latency = latency;
   GST_OBJECT_UNLOCK (self);
+
+  if (changed)
+    gst_element_post_message (GST_ELEMENT_CAST (self),
+        gst_message_new_latency (GST_OBJECT_CAST (self)));
 }
 
 /*
