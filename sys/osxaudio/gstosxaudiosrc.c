@@ -229,11 +229,14 @@ gst_osx_audio_src_change_state (GstElement * element, GstStateChange transition)
     goto out;
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       /* The device is open now, so fix our device_id if it changed */
       ringbuffer =
           GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SRC (osxsrc)->ringbuffer);
-      osxsrc->device_id = ringbuffer->core_audio->device_id;
+      if (ringbuffer->core_audio->device_id != osxsrc->device_id) {
+        osxsrc->device_id = ringbuffer->core_audio->device_id;
+        g_object_notify (G_OBJECT (osxsrc), "device");
+      }
       break;
 
     default:
@@ -369,10 +372,12 @@ gst_osx_audio_src_create_ringbuffer (GstAudioBaseSrc * src)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc);
   ringbuffer->core_audio->is_src = TRUE;
 
-  if (ringbuffer->core_audio->device_id != osxsrc->device_id) {
+  /* By default the coreaudio instance created by the ringbuffer
+   * has device_id==kAudioDeviceUnknown. The user might have
+   * selected a different one here
+   */
+  if (ringbuffer->core_audio->device_id != osxsrc->device_id)
     ringbuffer->core_audio->device_id = osxsrc->device_id;
-    g_object_notify (G_OBJECT (osxsrc), "device");
-  }
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }

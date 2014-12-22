@@ -274,13 +274,14 @@ gst_osx_audio_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       /* Device has been selected, AudioUnit set up, so initialize volume */
       gst_osx_audio_sink_set_volume (osxsink);
-      break;
 
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* The device is open now, so fix our device_id if it changed */
       ringbuffer =
           GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SINK (osxsink)->ringbuffer);
-      osxsink->device_id = ringbuffer->core_audio->device_id;
+      if (ringbuffer->core_audio->device_id != osxsink->device_id) {
+        osxsink->device_id = ringbuffer->core_audio->device_id;
+        g_object_notify (G_OBJECT (osxsink), "device");
+      }
       break;
 
     default:
@@ -520,10 +521,12 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink);
   ringbuffer->core_audio->is_src = FALSE;
 
-  if (ringbuffer->core_audio->device_id != osxsink->device_id) {
+  /* By default the coreaudio instance created by the ringbuffer
+   * has device_id==kAudioDeviceUnknown. The user might have
+   * selected a different one here
+   */
+  if (ringbuffer->core_audio->device_id != osxsink->device_id)
     ringbuffer->core_audio->device_id = osxsink->device_id;
-    g_object_notify (G_OBJECT (osxsink), "device");
-  }
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
