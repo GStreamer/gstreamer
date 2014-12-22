@@ -1253,6 +1253,11 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
       gst_video_encoder_get_frame (GST_VIDEO_ENCODER_CAST (self),
       GPOINTER_TO_INT (sourceFrameRefCon));
 
+  if (!frame) {
+    GST_WARNING_OBJECT (self, "No corresponding frame found!");
+    goto beach;
+  }
+
   if (is_keyframe) {
     GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
     gst_vtenc_clear_cached_caps_downstream (self);
