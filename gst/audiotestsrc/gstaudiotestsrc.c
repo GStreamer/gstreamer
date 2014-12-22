@@ -341,6 +341,23 @@ gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery * query)
       res = TRUE;
       break;
     }
+    case GST_QUERY_LATENCY:
+    {
+      if (src->info.rate > 0) {
+        GstClockTime latency;
+
+        latency =
+            gst_util_uint64_scale (src->generate_samples_per_buffer, GST_SECOND,
+            src->info.rate);
+        gst_query_set_latency (query,
+            gst_base_src_is_live (GST_BASE_SRC_CAST (src)), latency,
+            GST_CLOCK_TIME_NONE);
+        GST_DEBUG_OBJECT (src, "Reporting latency of %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (latency));
+        res = TRUE;
+      }
+      break;
+    }
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
       break;
