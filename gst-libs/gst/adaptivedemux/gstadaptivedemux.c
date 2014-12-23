@@ -134,7 +134,8 @@ static void gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux);
 static void gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream *
     stream);
 static void gst_adaptive_demux_reset (GstAdaptiveDemux * demux);
-static gboolean gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux);
+static gboolean gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
+    gboolean first_segment);
 static gboolean gst_adaptive_demux_is_live (GstAdaptiveDemux * demux);
 static GstFlowReturn gst_adaptive_demux_stream_seek (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstClockTime ts);
@@ -403,7 +404,7 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
         }
 
         if (demux->next_streams) {
-          gst_adaptive_demux_expose_streams (demux);
+          gst_adaptive_demux_expose_streams (demux, TRUE);
           gst_adaptive_demux_start_tasks (demux);
           if (gst_adaptive_demux_is_live (demux)) {
             /* Task to periodically update the manifest */
@@ -613,7 +614,8 @@ gst_adaptive_demux_expose_stream (GstAdaptiveDemux * demux,
 }
 
 static gboolean
-gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
+gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
+    gboolean first_segment)
 {
   GList *iter;
   GList *old_streams;
@@ -634,17 +636,20 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
       /* TODO act on error */
     }
 
-    /* TODO we only need the first timestamp, maybe create a simple function */
-    gst_adaptive_demux_stream_update_fragment_info (demux, stream);
+    if (first_segment) {
+      /* TODO we only need the first timestamp, maybe create a simple function */
+      gst_adaptive_demux_stream_update_fragment_info (demux, stream);
 
-    if (GST_CLOCK_TIME_IS_VALID (min_pts)) {
-      min_pts = MIN (min_pts, stream->fragment.timestamp);
-    } else {
-      min_pts = stream->fragment.timestamp;
+      if (GST_CLOCK_TIME_IS_VALID (min_pts)) {
+        min_pts = MIN (min_pts, stream->fragment.timestamp);
+      } else {
+        min_pts = stream->fragment.timestamp;
+      }
     }
   }
 
-  demux->segment.start = demux->segment.position = min_pts;
+  if (first_segment)
+    demux->segment.start = demux->segment.position = min_pts;
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
 
@@ -869,7 +874,7 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
         gst_adaptive_demux_push_src_event (demux, fevent);
       }
       if (demux->next_streams) {
-        gst_adaptive_demux_expose_streams (demux);
+        gst_adaptive_demux_expose_streams (demux, TRUE);
       }
 
       /* Restart the demux */
@@ -1872,7 +1877,7 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
       /* TODO only allow switching streams if other downloads are not ongoing */
       GST_DEBUG_OBJECT (demux, "Subclass wants new pads "
           "to do bitrate switching");
-      gst_adaptive_demux_expose_streams (demux);
+      gst_adaptive_demux_expose_streams (demux, FALSE);
       gst_adaptive_demux_start_tasks (demux);
       ret = GST_FLOW_EOS;
       GST_MANIFEST_UNLOCK (demux);
@@ -2299,7 +2304,7 @@ gst_adaptive_demux_advance_period (GstAdaptiveDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "Advancing to next period");
   klass->advance_period (demux);
-  gst_adaptive_demux_expose_streams (demux);
+  gst_adaptive_demux_expose_streams (demux, TRUE);
   gst_adaptive_demux_start_tasks (demux);
 }
 
