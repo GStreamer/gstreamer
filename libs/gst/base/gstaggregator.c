@@ -254,7 +254,7 @@ typedef struct
   gboolean one_actually_seeked;
 } EventData;
 
-#define DEFAULT_LATENCY        -1
+#define DEFAULT_LATENCY        0
 
 enum
 {
