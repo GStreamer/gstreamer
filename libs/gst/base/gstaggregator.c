@@ -734,6 +734,8 @@ _flush_start (GstAggregator * self, GstAggregatorPad * aggpad, GstEvent * event)
       GST_PAD_STREAM_LOCK (self->srcpad);
       GST_LOG_OBJECT (self, "GOT STREAM_LOCK");
       event = NULL;
+    } else {
+      gst_event_unref (event);
     }
   } else {
     gst_event_unref (event);
