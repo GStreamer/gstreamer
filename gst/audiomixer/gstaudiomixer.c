@@ -709,6 +709,7 @@ gst_audiomixer_reset (GstAudioMixer * audiomixer)
 {
   audiomixer->offset = 0;
   gst_caps_replace (&audiomixer->current_caps, NULL);
+  gst_buffer_replace (&audiomixer->current_buffer, NULL);
 }
 
 static gboolean
