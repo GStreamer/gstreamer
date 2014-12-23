@@ -1373,7 +1373,7 @@ run_sync_test (SendBuffersFunction send_buffers,
   queue1 = gst_element_factory_make ("queue", "queue1");
   queue2 = gst_element_factory_make ("queue", "queue2");
   audiomixer = gst_element_factory_make ("audiomixer", "audiomixer");
-  g_object_set (audiomixer, "blocksize", 500, NULL);
+  g_object_set (audiomixer, "output-buffer-duration", 500 * GST_MSECOND, NULL);
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_collect_cb,

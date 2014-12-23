@@ -71,8 +71,8 @@ struct _GstAudioMixer {
 
   gint64          base_time;
 
-  /* Size in samples that is output per buffer */
-  guint blocksize;
+  /* Duration of every output buffer */
+  GstClockTime output_buffer_duration;
 };
 
 struct _GstAudioMixerClass {

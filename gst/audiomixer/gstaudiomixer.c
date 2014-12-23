@@ -174,7 +174,7 @@ gst_audiomixer_pad_init (GstAudioMixerPad * pad)
 
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
 #define DEFAULT_DISCONT_WAIT (1 * GST_SECOND)
-#define DEFAULT_BLOCKSIZE (1024)
+#define DEFAULT_OUTPUT_BUFFER_DURATION (10 * GST_MSECOND)
 
 enum
 {
@@ -182,7 +182,7 @@ enum
   PROP_FILTER_CAPS,
   PROP_ALIGNMENT_THRESHOLD,
   PROP_DISCONT_WAIT,
-  PROP_BLOCKSIZE
+  PROP_OUTPUT_BUFFER_DURATION
 };
 
 /* elementfactory information */
@@ -792,10 +792,10 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
           G_MAXUINT64 - 1, DEFAULT_DISCONT_WAIT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
-      g_param_spec_uint ("blocksize", "Block Size",
+  g_object_class_install_property (gobject_class, PROP_OUTPUT_BUFFER_DURATION,
+      g_param_spec_uint64 ("output-buffer-duration", "Output Buffer Duration",
           "Output block size in number of samples", 1,
-          G_MAXUINT, DEFAULT_BLOCKSIZE,
+          G_MAXUINT64, DEFAULT_OUTPUT_BUFFER_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -841,7 +841,9 @@ gst_audiomixer_init (GstAudioMixer * audiomixer)
   audiomixer->filter_caps = NULL;
   audiomixer->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
   audiomixer->discont_wait = DEFAULT_DISCONT_WAIT;
-  audiomixer->blocksize = DEFAULT_BLOCKSIZE;
+  audiomixer->output_buffer_duration = DEFAULT_OUTPUT_BUFFER_DURATION;
+  gst_aggregator_set_latency (GST_AGGREGATOR (audiomixer),
+      audiomixer->output_buffer_duration, GST_CLOCK_TIME_NONE);
 }
 
 static void
@@ -889,8 +891,10 @@ gst_audiomixer_set_property (GObject * object, guint prop_id,
     case PROP_DISCONT_WAIT:
       audiomixer->discont_wait = g_value_get_uint64 (value);
       break;
-    case PROP_BLOCKSIZE:
-      audiomixer->blocksize = g_value_get_uint (value);
+    case PROP_OUTPUT_BUFFER_DURATION:
+      audiomixer->output_buffer_duration = g_value_get_uint64 (value);
+      gst_aggregator_set_latency (GST_AGGREGATOR (audiomixer),
+          audiomixer->output_buffer_duration, GST_CLOCK_TIME_NONE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -916,8 +920,8 @@ gst_audiomixer_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_DISCONT_WAIT:
       g_value_set_uint64 (value, audiomixer->discont_wait);
       break;
-    case PROP_BLOCKSIZE:
-      g_value_set_uint (value, audiomixer->blocksize);
+    case PROP_OUTPUT_BUFFER_DURATION:
+      g_value_set_uint64 (value, audiomixer->output_buffer_duration);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1149,8 +1153,14 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
   GstBuffer *inbuf;
   GstMapInfo inmap;
   gint bpf;
+  guint blocksize;
 
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
+
+  blocksize =
+      gst_util_uint64_scale (audiomixer->output_buffer_duration,
+      GST_AUDIO_INFO_RATE (&audiomixer->info), GST_SECOND);
+  blocksize = MAX (1, blocksize);
 
   bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
 
@@ -1161,8 +1171,8 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     out_start = 0;
 
   overlap = pad->size / bpf - pad->position / bpf;
-  if (overlap > audiomixer->blocksize - out_start)
-    overlap = audiomixer->blocksize - out_start;
+  if (overlap > blocksize - out_start)
+    overlap = blocksize - out_start;
 
   inbuf = gst_aggregator_pad_get_buffer (aggpad);
   if (inbuf == NULL)
@@ -1360,6 +1370,7 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
   gboolean dropped = FALSE;
   gboolean is_eos = TRUE;
   gboolean is_done = TRUE;
+  guint blocksize;
 
   audiomixer = GST_AUDIO_MIXER (agg);
 
@@ -1367,11 +1378,13 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
   if (G_UNLIKELY (audiomixer->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN))
     goto not_negotiated;
 
+  blocksize =
+      gst_util_uint64_scale (audiomixer->output_buffer_duration,
+      GST_AUDIO_INFO_RATE (&audiomixer->info), GST_SECOND);
+  blocksize = MAX (1, blocksize);
+
   if (audiomixer->send_caps) {
     gst_aggregator_set_src_caps (agg, audiomixer->current_caps);
-    gst_aggregator_set_latency (agg,
-        gst_util_uint64_scale (audiomixer->blocksize, GST_SECOND,
-            GST_AUDIO_INFO_RATE (&audiomixer->info)), GST_CLOCK_TIME_NONE);
 
     if (agg->segment.rate > 0.0)
       agg->segment.position = agg->segment.start;
@@ -1392,16 +1405,16 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
 
   /* FIXME: Reverse mixing does not work at all yet */
   if (agg->segment.rate > 0.0) {
-    next_offset = audiomixer->offset + audiomixer->blocksize;
+    next_offset = audiomixer->offset + blocksize;
   } else {
-    next_offset = audiomixer->offset - audiomixer->blocksize;
+    next_offset = audiomixer->offset - blocksize;
   }
   next_timestamp = gst_util_uint64_scale (next_offset, GST_SECOND, rate);
 
   if (audiomixer->current_buffer) {
     outbuf = audiomixer->current_buffer;
   } else {
-    outbuf = gst_buffer_new_and_alloc (audiomixer->blocksize * bpf);
+    outbuf = gst_buffer_new_and_alloc (blocksize * bpf);
     gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
     gst_audio_format_fill_silence (audiomixer->info.finfo, outmap.data,
         outmap.size);
@@ -1411,7 +1424,7 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
 
   GST_LOG_OBJECT (agg,
       "Starting to mix %u samples for offset %" G_GUINT64_FORMAT
-      " with timestamp %" GST_TIME_FORMAT, audiomixer->blocksize,
+      " with timestamp %" GST_TIME_FORMAT, blocksize,
       audiomixer->offset, GST_TIME_ARGS (agg->segment.position));
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_READWRITE);
@@ -1476,8 +1489,7 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
     }
 
     if (pad->output_offset >= audiomixer->offset
-        && pad->output_offset <
-        audiomixer->offset + audiomixer->blocksize && pad->buffer) {
+        && pad->output_offset < audiomixer->offset + blocksize && pad->buffer) {
       GST_LOG_OBJECT (aggpad, "Mixing buffer for current offset");
       gst_audio_mixer_mix_buffer (audiomixer, pad, &outmap);
 
