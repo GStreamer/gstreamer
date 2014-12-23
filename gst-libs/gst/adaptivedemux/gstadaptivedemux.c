@@ -1061,7 +1061,8 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
     GstAdaptiveDemuxStream *stream = iter->data;
 
     gst_task_stop (stream->download_task);
-    gst_element_set_state (stream->src, GST_STATE_READY);
+    if (stream->src)
+      gst_element_set_state (stream->src, GST_STATE_READY);
     g_mutex_lock (&stream->fragment_download_lock);
     stream->download_finished = TRUE;
     g_cond_signal (&stream->fragment_download_cond);
