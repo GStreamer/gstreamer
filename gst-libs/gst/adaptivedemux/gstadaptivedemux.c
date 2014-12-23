@@ -733,10 +733,10 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
 
       g_cond_signal (&stream->fragment_download_cond);
       gst_task_stop (stream->download_task);
-      GST_LOG_OBJECT (demux, "Waiting for task to finish");
-      gst_task_join (stream->download_task);
-      GST_LOG_OBJECT (demux, "Finished");
     }
+    GST_LOG_OBJECT (demux, "Waiting for task to finish");
+    gst_task_join (stream->download_task);
+    GST_LOG_OBJECT (demux, "Finished");
     gst_object_unref (stream->download_task);
     g_rec_mutex_clear (&stream->download_lock);
     stream->download_task = NULL;
