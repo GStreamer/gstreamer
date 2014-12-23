@@ -1555,8 +1555,9 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_int64 ("latency", "Buffer latency",
-          "Number of nanoseconds to wait for a buffer to arrive on a sink pad"
-          "before the pad is deemed unresponsive (-1 unlimited)", -1,
+          "Additional latency in live mode to allow upstream "
+          "to take longer to produce buffers for the current "
+          "position", 0,
           (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
@@ -1599,7 +1600,7 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   self->clock = gst_system_clock_obtain ();
-  self->latency = -1;
+  self->latency = 0;
 
   g_mutex_init (&self->priv->setcaps_lock);
   g_mutex_init (&self->priv->src_lock);
