@@ -465,6 +465,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
     gst_object_unref (prev_active_sinkpad);
 
   GST_INPUT_SELECTOR_LOCK (sel);
+  active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
 
   /* only forward if we are dealing with the active sinkpad */
   forward = (pad == active_sinkpad);
