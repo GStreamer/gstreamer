@@ -707,7 +707,11 @@ gst_audiomixer_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
 static void
 gst_audiomixer_reset (GstAudioMixer * audiomixer)
 {
+  GstAggregator *agg = GST_AGGREGATOR (audiomixer);
+
   audiomixer->offset = 0;
+  agg->segment.position = -1;
+
   gst_caps_replace (&audiomixer->current_caps, NULL);
   gst_buffer_replace (&audiomixer->current_buffer, NULL);
 }
@@ -1375,9 +1379,32 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
 
   audiomixer = GST_AUDIO_MIXER (agg);
 
-  /* this is fatal */
-  if (G_UNLIKELY (audiomixer->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN))
-    goto not_negotiated;
+  /* Update position from the segment start/stop if needed */
+  if (agg->segment.position == -1) {
+    if (agg->segment.rate > 0.0)
+      agg->segment.position = agg->segment.start;
+    else
+      agg->segment.position = agg->segment.stop;
+  }
+
+  if (G_UNLIKELY (audiomixer->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN)) {
+    if (timeout) {
+      GST_DEBUG_OBJECT (audiomixer,
+          "Got timeout before receiving any caps, don't output anything");
+
+      /* Advance position */
+      if (agg->segment.rate > 0.0)
+        agg->segment.position += audiomixer->output_buffer_duration;
+      else if (agg->segment.position > audiomixer->output_buffer_duration)
+        agg->segment.position -= audiomixer->output_buffer_duration;
+      else
+        agg->segment.position = 0;
+
+      return GST_FLOW_OK;
+    } else {
+      goto not_negotiated;
+    }
+  }
 
   blocksize =
       gst_util_uint64_scale (audiomixer->output_buffer_duration,
@@ -1386,11 +1413,6 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
 
   if (audiomixer->send_caps) {
     gst_aggregator_set_src_caps (agg, audiomixer->current_caps);
-
-    if (agg->segment.rate > 0.0)
-      agg->segment.position = agg->segment.start;
-    else
-      agg->segment.position = agg->segment.stop;
 
     audiomixer->offset = gst_util_uint64_scale (agg->segment.position,
         GST_AUDIO_INFO_RATE (&audiomixer->info), GST_SECOND);
