@@ -434,10 +434,12 @@ gst_selector_pad_iterate_linked_pads (GstPad * pad, GstObject * parent)
   return it;
 }
 
+/* must be called with the SELECTOR_LOCK, will block while the pad is blocked 
+ * or return TRUE when flushing */
 static gboolean
-gst_input_selector_eos_wait (GstInputSelector * self, GstSelectorPad * pad)
+gst_input_selector_wait (GstInputSelector * self, GstSelectorPad * pad)
 {
-  while (!self->eos && !self->flushing && !pad->flushing) {
+  while (!self->eos && self->blocked && !self->flushing && !pad->flushing) {
     /* we can be unlocked here when we are shutting down (flushing) or when we
      * get unblocked */
     GST_INPUT_SELECTOR_WAIT (self);
@@ -534,7 +536,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       if (!forward) {
         /* blocked until active the sind pad or flush */
-        gst_input_selector_eos_wait (sel, selpad);
+        gst_input_selector_wait (sel, selpad);
         forward = TRUE;
       } else {
         /* Notify all waiting pads about going EOS now */
@@ -627,19 +629,6 @@ gst_selector_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
 done:
   return res;
-}
-
-/* must be called with the SELECTOR_LOCK, will block while the pad is blocked 
- * or return TRUE when flushing */
-static gboolean
-gst_input_selector_wait (GstInputSelector * self, GstSelectorPad * pad)
-{
-  while (self->blocked && !self->flushing && !pad->flushing) {
-    /* we can be unlocked here when we are shutting down (flushing) or when we
-     * get unblocked */
-    GST_INPUT_SELECTOR_WAIT (self);
-  }
-  return self->flushing;
 }
 
 static GstClockTime
