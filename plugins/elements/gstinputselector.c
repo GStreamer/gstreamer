@@ -536,7 +536,12 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
         /* blocked until active the sind pad or flush */
         gst_input_selector_eos_wait (sel, selpad);
         forward = TRUE;
+      } else {
+        /* Notify all waiting pads about going EOS now */
+        sel->eos = TRUE;
+        GST_INPUT_SELECTOR_BROADCAST (sel);
       }
+
       selpad->eos_sent = TRUE;
       GST_DEBUG_OBJECT (pad, "received EOS");
       break;
@@ -695,12 +700,6 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
         gst_input_selector_activate_sinkpad (sel, GST_PAD_CAST (selpad));
     active_selpad = GST_SELECTOR_PAD_CAST (active_sinkpad);
 
-    if (sel->eos) {
-      GST_DEBUG_OBJECT (sel, "Not waiting because inputselector reach EOS.");
-      GST_INPUT_SELECTOR_UNLOCK (sel);
-      return FALSE;
-    }
-
     if (seg->format != GST_FORMAT_TIME) {
       GST_DEBUG_OBJECT (selpad,
           "Not waiting because we don't have a TIME segment");
@@ -753,8 +752,9 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
             GST_FORMAT_TIME, active_seg->position);
     }
 
-    if (selpad != active_selpad && !sel->flushing && !selpad->flushing &&
-        (sel->blocked || cur_running_time == GST_CLOCK_TIME_NONE
+    if (selpad != active_selpad && !sel->eos && !sel->flushing
+        && !selpad->flushing && (sel->blocked
+            || cur_running_time == GST_CLOCK_TIME_NONE
             || running_time >= cur_running_time)) {
       if (!sel->blocked) {
         GST_DEBUG_OBJECT (selpad,
@@ -971,7 +971,6 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_INPUT_SELECTOR_LOCK (sel);
   if (sel->eos) {
-    GST_DEBUG_OBJECT (pad, "inputselector eos.");
     GST_INPUT_SELECTOR_UNLOCK (sel);
     goto eos;
   }
@@ -1003,7 +1002,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         saved_segment = selpad->segment;
 
         selpad->sending_cached_buffers = TRUE;
-        while (!sel->flushing && !selpad->flushing &&
+        while (!sel->eos && !sel->flushing && !selpad->flushing &&
             (cached_buffer = g_queue_pop_head (selpad->cached_buffers))) {
           GST_DEBUG_OBJECT (pad, "Cached buffers found, "
               "invoking chain for cached buffer %p", cached_buffer->buffer);
@@ -1040,6 +1039,11 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     /* Might have changed while waiting */
     active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+  }
+
+  if (sel->eos) {
+    GST_INPUT_SELECTOR_UNLOCK (sel);
+    goto eos;
   }
 
   /* update the segment on the srcpad */
