@@ -435,6 +435,17 @@ gst_selector_pad_iterate_linked_pads (GstPad * pad, GstObject * parent)
 }
 
 static gboolean
+gst_input_selector_eos_wait (GstInputSelector * self, GstSelectorPad * pad)
+{
+  while (!self->eos && !self->flushing && !pad->flushing) {
+    /* we can be unlocked here when we are shutting down (flushing) or when we
+     * get unblocked */
+    GST_INPUT_SELECTOR_WAIT (self);
+  }
+  return self->flushing;
+}
+
+static gboolean
 gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
@@ -483,6 +494,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       /* Unblock the pad if it's waiting */
       selpad->flushing = TRUE;
+      sel->eos = FALSE;
       GST_INPUT_SELECTOR_BROADCAST (sel);
       break;
     case GST_EVENT_FLUSH_STOP:
@@ -520,21 +532,12 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:
       selpad->eos = TRUE;
 
-      if (forward) {
-        selpad->eos_sent = TRUE;
-      } else {
-        GstSelectorPad *active_selpad;
-
-        /* If the active sinkpad is in EOS state but EOS
-         * was not sent downstream this means that the pad
-         * got EOS before it was set as active pad and that
-         * the previously active pad got EOS after it was
-         * active
-         */
-        active_selpad = GST_SELECTOR_PAD (active_sinkpad);
-        forward = (active_selpad->eos && !active_selpad->eos_sent);
-        active_selpad->eos_sent = TRUE;
+      if (!forward) {
+        /* blocked until active the sind pad or flush */
+        gst_input_selector_eos_wait (sel, selpad);
+        forward = TRUE;
       }
+      selpad->eos_sent = TRUE;
       GST_DEBUG_OBJECT (pad, "received EOS");
       break;
     case GST_EVENT_GAP:{
@@ -691,6 +694,12 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
     active_sinkpad =
         gst_input_selector_activate_sinkpad (sel, GST_PAD_CAST (selpad));
     active_selpad = GST_SELECTOR_PAD_CAST (active_sinkpad);
+
+    if (sel->eos) {
+      GST_DEBUG_OBJECT (sel, "Not waiting because inputselector reach EOS.");
+      GST_INPUT_SELECTOR_UNLOCK (sel);
+      return FALSE;
+    }
 
     if (seg->format != GST_FORMAT_TIME) {
       GST_DEBUG_OBJECT (selpad,
@@ -961,6 +970,12 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
 
   GST_INPUT_SELECTOR_LOCK (sel);
+  if (sel->eos) {
+    GST_DEBUG_OBJECT (pad, "inputselector eos.");
+    GST_INPUT_SELECTOR_UNLOCK (sel);
+    goto eos;
+  }
+
   /* wait or check for flushing */
   if (gst_input_selector_wait (sel, selpad)) {
     GST_INPUT_SELECTOR_UNLOCK (sel);
@@ -1143,6 +1158,13 @@ flushing:
     res = GST_FLOW_FLUSHING;
     goto done;
   }
+eos:
+  {
+    GST_DEBUG_OBJECT (pad, "We are eos, discard buffer %p", buf);
+    gst_buffer_unref (buf);
+    res = GST_FLOW_EOS;
+    goto done;
+  }
 }
 
 static void gst_input_selector_dispose (GObject * object);
@@ -1302,6 +1324,7 @@ gst_input_selector_init (GstInputSelector * sel)
   g_mutex_init (&sel->lock);
   g_cond_init (&sel->cond);
   sel->blocked = FALSE;
+  sel->eos = FALSE;
 
   /* lets give a change for downstream to do something on
    * active-pad change before we start pushing new buffers */
@@ -1369,6 +1392,11 @@ gst_input_selector_set_active_pad (GstInputSelector * self, GstPad * pad)
 
   GST_DEBUG_OBJECT (self, "New active pad is %" GST_PTR_FORMAT,
       self->active_sinkpad);
+
+  if (old != new && new->eos && !new->eos_sent) {
+    self->eos = TRUE;
+    GST_INPUT_SELECTOR_BROADCAST (self);
+  }
 
   return TRUE;
 }
@@ -1764,6 +1792,7 @@ gst_input_selector_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_INPUT_SELECTOR_LOCK (self);
+      self->eos = FALSE;
       self->blocked = FALSE;
       self->flushing = FALSE;
       GST_INPUT_SELECTOR_UNLOCK (self);
@@ -1772,6 +1801,7 @@ gst_input_selector_change_state (GstElement * element,
       /* first unlock before we call the parent state change function, which
        * tries to acquire the stream lock when going to ready. */
       GST_INPUT_SELECTOR_LOCK (self);
+      self->eos = TRUE;
       self->blocked = FALSE;
       self->flushing = TRUE;
       GST_INPUT_SELECTOR_BROADCAST (self);
