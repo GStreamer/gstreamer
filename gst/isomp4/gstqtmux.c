@@ -2870,7 +2870,8 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     if (GST_READ_UINT32_LE (map.data + 4) == FOURCC_alac) {
       len -= 8;
       codec_config =
-          gst_buffer_copy_region ((GstBuffer *) codec_data, 0, 8, len);
+          gst_buffer_copy_region ((GstBuffer *) codec_data,
+          GST_BUFFER_COPY_MEMORY, 8, len);
     } else {
       codec_config = gst_buffer_ref ((GstBuffer *) codec_data);
     }
