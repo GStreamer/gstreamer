@@ -676,8 +676,10 @@ _RGB_pixel_order (const gchar * expected, const gchar * wanted)
   gchar *expect, *want;
   int len;
 
-  if (g_ascii_strcasecmp (expected, wanted) == 0)
+  if (g_ascii_strcasecmp (expected, wanted) == 0) {
+    g_string_free (ret, TRUE);
     return g_ascii_strdown (expected, -1);
+  }
 
   expect = g_ascii_strdown (expected, -1);
   want = g_ascii_strdown (wanted, -1);
