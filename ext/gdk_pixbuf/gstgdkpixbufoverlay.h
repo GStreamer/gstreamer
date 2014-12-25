@@ -37,6 +37,11 @@ G_BEGIN_DECLS
 typedef struct _GstGdkPixbufOverlay GstGdkPixbufOverlay;
 typedef struct _GstGdkPixbufOverlayClass GstGdkPixbufOverlayClass;
 
+typedef enum {
+  GST_GDK_PIXBUF_POSITIONING_PIXELS_RELATIVE_TO_EDGES,
+  GST_GDK_PIXBUF_POSITIONING_PIXELS_ABSOLUTE
+} GstGdkPixbufPositioningMode;
+
 /**
  * GstGdkPixbufOverlay:
  *
@@ -57,6 +62,8 @@ struct _GstGdkPixbufOverlay
 
   gdouble                      relative_x;
   gdouble                      relative_y;
+
+  GstGdkPixbufPositioningMode  positioning_mode;
 
   gint                         overlay_width;
   gint                         overlay_height;
