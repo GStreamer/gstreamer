@@ -35,9 +35,9 @@
  * the RTP stream changes, the #GstRtpPtDemux::payload-type-change signal will be
  * emitted.
  * 
- * The element will try to set complete and unique application/x-rtp caps on the
- * outgoing buffers and pads based on the result of the
- * #GstRtpPtDemux::request-pt-map signal.
+ * The element will try to set complete and unique application/x-rtp caps
+ * on the output pads based on the result of the #GstRtpPtDemux::request-pt-map
+ * signal.
  * 
  * <refsect2>
  * <title>Example pipelines</title>
