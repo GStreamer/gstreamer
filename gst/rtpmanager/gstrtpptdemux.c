@@ -448,8 +448,8 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   /* ERRORS */
 invalid_buffer:
   {
-    /* this is fatal and should be filtered earlier */
-    GST_ELEMENT_ERROR (rtpdemux, STREAM, DECODE, (NULL),
+    /* this should not be fatal */
+    GST_ELEMENT_WARNING (rtpdemux, STREAM, DEMUX, (NULL),
         ("Dropping invalid RTP payload"));
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
