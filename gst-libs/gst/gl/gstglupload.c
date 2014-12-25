@@ -292,6 +292,7 @@ _egl_image_upload_release (gpointer impl, GstBuffer * buffer)
 static void
 _egl_image_upload_free (gpointer impl)
 {
+  g_free (impl);
 }
 
 static UploadMethod _egl_image_upload = {
@@ -443,6 +444,7 @@ _upload_meta_upload_free (gpointer impl)
       gst_gl_context_del_texture (upload->upload->context,
           &upload->texture_ids[i]);
   }
+  g_free (upload);
 }
 
 static UploadMethod _upload_meta_upload = {
@@ -545,6 +547,7 @@ _raw_data_upload_free (gpointer impl)
     if (raw->in_tex[i])
       gst_memory_unref ((GstMemory *) raw->in_tex[i]);
   }
+  g_free (raw);
 }
 
 static UploadMethod _raw_data_upload = {
