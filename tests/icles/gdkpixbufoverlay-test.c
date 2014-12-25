@@ -214,7 +214,9 @@ main (int argc, char **argv)
   gst_util_set_object_arg (G_OBJECT (src), "pattern", "white");
 
   overlay = gst_element_factory_make ("gdkpixbufoverlay", NULL);
-  g_object_set (overlay, "pixbuf", logo_pixbuf, NULL);
+
+  /* set positioning-mode to absolute so we can set negative positions */
+  g_object_set (overlay, "pixbuf", logo_pixbuf, "positioning-mode", 1, NULL);
 
   sink_pad = gst_element_get_static_pad (overlay, "sink");
   gst_pad_add_probe (sink_pad, GST_PAD_PROBE_TYPE_BUFFER, buffer_cb, NULL,
