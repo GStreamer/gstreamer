@@ -289,22 +289,24 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
   structure = gst_caps_get_structure (this->caps, 0);
   if (gst_structure_has_field (structure, "streamheader")) {
     const GValue *sh;
-    GArray *buffers;
     GstBuffer *buffer;
-    int i;
+    int i, num;
 
     sh = gst_structure_get_value (structure, "streamheader");
-    buffers = g_value_peek_pointer (sh);
+    num = gst_value_array_get_size (sh);
     GST_DEBUG_OBJECT (this,
-        "Need to serialize %d incoming streamheader buffers on ours",
-        buffers->len);
-    for (i = 0; i < buffers->len; ++i) {
-      GValue *bufval;
+        "Need to serialize %d incoming streamheader buffers on ours", num);
 
+    for (i = 0; i < num; ++i) {
+      const GValue *bufval;
       GstBuffer *outbuffer;
 
-      bufval = &g_array_index (buffers, GValue, i);
-      buffer = g_value_peek_pointer (bufval);
+      bufval = gst_value_array_get_value (sh, i);
+      buffer = gst_value_get_buffer (bufval);
+
+      /* Make copy before modifying buffer metadata */
+      buffer = gst_buffer_copy (buffer);
+
       /* this buffer is deserialized by gdpdepay as a regular buffer,
          it needs HEADER, because it's a streamheader - otherwise it
          is mixed with regular data buffers */
@@ -314,6 +316,9 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
 
       outbuffer = gst_gdp_pay_buffer_from_buffer (this, buffer);
+
+      gst_buffer_unref (buffer);
+
       if (!outbuffer) {
         g_value_unset (&array);
         goto no_buffer;
