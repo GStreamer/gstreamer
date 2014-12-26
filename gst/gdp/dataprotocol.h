@@ -87,22 +87,14 @@ GstEvent *      gst_dp_event_from_packet        (guint header_length,
                                                 const guint8 * payload);
 
 /* payloading GstBuffer/GstEvent/GstCaps */
-gboolean        gst_dp_buffer_to_header         (GstBuffer * buffer,
-                                                 GstDPHeaderFlag flags,
-                                                 guint * length,
-                                                 guint8 ** header);
+GstBuffer *     gst_dp_payload_buffer           (GstBuffer      * buffer,
+                                                 GstDPHeaderFlag  flags);
 
-gboolean        gst_dp_caps_to_header           (const GstCaps * caps,
-                                                 GstDPHeaderFlag flags,
-                                                 guint * length,
-                                                 guint8 ** header,
-                                                 guint8 ** payload);
+GstBuffer *     gst_dp_payload_caps             (const GstCaps  * caps,
+                                                 GstDPHeaderFlag  flags);
 
-gboolean        gst_dp_event_to_header          (const GstEvent * event,
-                                                 GstDPHeaderFlag flags,
-                                                 guint * length,
-                                                 guint8 ** header,
-                                                 guint8 ** payload);
+GstBuffer *     gst_dp_payload_event            (const GstEvent * event,
+                                                 GstDPHeaderFlag  flags);
 
 /* validation */
 gboolean        gst_dp_validate_header          (guint header_length,

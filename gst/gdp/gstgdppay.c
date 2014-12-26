@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2006 Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) 2014 Tim-Philipp Müller <tim centricular com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -196,91 +197,19 @@ gst_gdp_stamp_buffer (GstGDPPay * this, GstBuffer * buffer)
 static GstBuffer *
 gst_gdp_buffer_from_caps (GstGDPPay * this, GstCaps * caps)
 {
-  GstBuffer *headerbuf;
-  guint8 *header, *payload;
-  guint len, plen;
-
-  if (!gst_dp_caps_to_header (caps, this->header_flag, &len, &header, &payload))
-    goto packet_failed;
-
-  GST_LOG_OBJECT (this, "creating GDP header and payload buffer from caps");
-  headerbuf = gst_buffer_new_wrapped (header, len);
-
-  plen = gst_dp_header_payload_length (header);
-
-  gst_buffer_append_memory (headerbuf,
-      gst_memory_new_wrapped (0, payload, plen, 0, plen, payload, g_free));
-
-  return headerbuf;
-
-  /* ERRORS */
-packet_failed:
-  {
-    GST_WARNING_OBJECT (this, "could not create GDP header from caps");
-    return NULL;
-  }
+  return gst_dp_payload_caps (caps, this->header_flag);
 }
 
 static GstBuffer *
 gst_gdp_pay_buffer_from_buffer (GstGDPPay * this, GstBuffer * buffer)
 {
-  GstBuffer *headerbuf;
-  guint8 *header;
-  guint len;
-
-  if (!gst_dp_buffer_to_header (buffer, this->header_flag, &len, &header))
-    goto no_buffer;
-
-  GST_LOG_OBJECT (this, "creating GDP header and payload buffer from buffer");
-  headerbuf = gst_buffer_new_wrapped (header, len);
-
-  /* we do not want to lose the ref on the incoming buffer */
-  gst_buffer_ref (buffer);
-
-  return gst_buffer_append (headerbuf, buffer);
-
-  /* ERRORS */
-no_buffer:
-  {
-    GST_WARNING_OBJECT (this, "could not create GDP header from buffer");
-    return NULL;
-  }
+  return gst_dp_payload_buffer (buffer, this->header_flag);
 }
 
 static GstBuffer *
 gst_gdp_buffer_from_event (GstGDPPay * this, GstEvent * event)
 {
-  GstBuffer *headerbuf;
-  GstBuffer *payloadbuf;
-  guint8 *header, *payload;
-  guint len, plen;
-  gboolean ret;
-
-  ret =
-      gst_dp_event_to_header (event, this->header_flag, &len, &header,
-      &payload);
-  if (!ret)
-    goto no_event;
-
-  GST_LOG_OBJECT (this, "creating GDP header and payload buffer from event");
-  headerbuf = gst_buffer_new_wrapped (header, len);
-
-  payloadbuf = gst_buffer_new ();
-  plen = gst_dp_header_payload_length (header);
-  if (plen && payload != NULL) {
-    gst_buffer_append_memory (payloadbuf,
-        gst_memory_new_wrapped (0, payload, plen, 0, plen, payload, g_free));
-  }
-
-  return gst_buffer_append (headerbuf, payloadbuf);
-
-  /* ERRORS */
-no_event:
-  {
-    GST_WARNING_OBJECT (this, "could not create GDP header from event %s (%d)",
-        gst_event_type_get_name (event->type), event->type);
-    return NULL;
-  }
+  return gst_dp_payload_event (event, this->header_flag);
 }
 
 static void
