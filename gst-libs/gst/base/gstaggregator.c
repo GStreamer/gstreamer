@@ -1102,6 +1102,13 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
     data.min = 0;
   }
 
+  if (G_UNLIKELY (data.min > data.max)) {
+    GST_WARNING_OBJECT (self, "Minimum latency is greater than maximum latency "
+        "(%" G_GINT64_FORMAT " > %" G_GINT64_FORMAT "). "
+        "Clamping it at the maximum latency", data.min, data.max);
+    data.min = data.max;
+  }
+
   self->priv->latency_live = data.live;
   self->priv->latency_min = data.min;
   self->priv->latency_max = data.max;
