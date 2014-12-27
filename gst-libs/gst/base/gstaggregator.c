@@ -1013,7 +1013,7 @@ _latency_query (GstAggregator * self, GstPad * pad, gpointer user_data)
         " max:%" G_GINT64_FORMAT, GST_PAD_NAME (pad),
         live ? "true" : "false", min, max);
 
-    if (min > data->min)
+    if (min != GST_CLOCK_TIME_NONE && min > data->min)
       data->min = min;
 
     if (max != GST_CLOCK_TIME_NONE &&
@@ -1049,6 +1049,7 @@ gst_aggregator_get_latency (GstAggregator * self, gboolean * live,
 
   g_return_if_fail (GST_IS_AGGREGATOR (self));
 
+  /* latency_min is never GST_CLOCK_TIME_NONE by construction */
   min = self->priv->latency_min;
   max = self->priv->latency_max;
 
@@ -1990,6 +1991,7 @@ gst_aggregator_set_latency (GstAggregator * self,
     GstClockTime min_latency, GstClockTime max_latency)
 {
   g_return_if_fail (GST_IS_AGGREGATOR (self));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min_latency));
   g_return_if_fail (max_latency >= min_latency);
 
   GST_OBJECT_LOCK (self);
