@@ -539,9 +539,7 @@ _wait_and_check (GstAggregator * self, gboolean * timeout)
 
     time = base_time + start;
 
-    if (GST_CLOCK_TIME_IS_VALID (latency_max)) {
-      time += latency_max;
-    } else if (GST_CLOCK_TIME_IS_VALID (latency_min)) {
+    if (GST_CLOCK_TIME_IS_VALID (latency_min)) {
       time += latency_min;
     } else {
       time += self->latency;
