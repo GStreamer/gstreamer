@@ -32,18 +32,20 @@
  * Various GStreamer objects provide access to their internal structures using
  * an iterator.
  *
- * In general, whenever calling a GstIterator function results in your code
- * receiving a refcounted object, the refcount for that object will have been
- * increased.  Your code is responsible for unreffing that object after use.
+ * Note that if calling a GstIterator function results in your code receiving
+ * a refcounted object (with, say, g_value_get_object()), the refcount for that
+ * object will not be increased. Your code is responsible for taking a reference
+ * if it wants to continue using it later.
  *
  * The basic use pattern of an iterator is as follows:
  * |[
  *   GstIterator *it = _get_iterator(object);
+ *   GValue item = G_VALUE_INIT;
  *   done = FALSE;
  *   while (!done) {
  *     switch (gst_iterator_next (it, &amp;item)) {
  *       case GST_ITERATOR_OK:
- *         ... use/change item here...
+ *         ...get/use/change item here...
  *         g_value_reset (&amp;item);
  *         break;
  *       case GST_ITERATOR_RESYNC:
