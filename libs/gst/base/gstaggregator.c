@@ -1009,9 +1009,8 @@ _latency_query (GstAggregator * self, GstPad * pad, gpointer user_data)
   if (res) {
     gst_query_parse_latency (query, &live, &min, &max);
 
-    GST_LOG_OBJECT (self, "%s: got latency live:%s min:%" G_GINT64_FORMAT
-        " max:%" G_GINT64_FORMAT, GST_PAD_NAME (pad),
-        live ? "true" : "false", min, max);
+    GST_LOG_OBJECT (pad, "got latency live:%s min:%" G_GINT64_FORMAT
+        " max:%" G_GINT64_FORMAT, live ? "true" : "false", min, max);
 
     if (min != GST_CLOCK_TIME_NONE && min > data->min)
       data->min = min;
