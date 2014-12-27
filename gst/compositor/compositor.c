@@ -31,7 +31,31 @@
  * Compositor will do colorspace conversion.
  * 
  * Individual parameters for each input stream can be configured on the
- * #GstCompositorPad.
+ * #GstCompositorPad:
+ *
+ * <itemizedlist>
+ * <listitem>
+ * "xpos": The x-coordinate position of the top-left corner of the picture
+ * (#gint)
+ * </listitem>
+ * <listitem>
+ * "ypos": The y-coordinate position of the top-left corner of the picture
+ * (#gint)
+ * </listitem>
+ * <listitem>
+ * "width": The width of the picture; the input will be scaled if necessary
+ * (#gint)
+ * </listitem>
+ * <listitem>
+ * "height": The height of the picture; the input will be scaled if necessary
+ * (#gint)
+ * </listitem>
+ * <listitem>
+ * "alpha": The transparency of the picture; between 0.0 and 1.0. The blending
+ * is a simple copy when fully-transparent (0.0) and fully-opaque (1.0).
+ * (#gdouble)
+ * </listitem>
+ * </itemizedlist>
  *
  * <refsect2>
  * <title>Sample pipelines</title>
