@@ -22,7 +22,8 @@
  * SECTION:element-glvideomixer
  *
  * Composites a number of streams into a single output scene using OpenGL in
- * a similar fashion to compositor and videomixer.
+ * a similar fashion to compositor and videomixer. See the compositor plugin
+ * for documentation about the #GstGLVideoMixerPad properties.
  *
  * <refsect2>
  * <title>Examples</title>
