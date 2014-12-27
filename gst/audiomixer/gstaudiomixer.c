@@ -30,6 +30,18 @@
  * The audiomixer currently mixes all data received on the sinkpads as soon as
  * possible without trying to synchronize the streams.
  *
+ * The input pads are from a GstPad subclass and have additional
+ * properties to mute each pad individually and set the volume:
+ *
+ * <itemizedlist>
+ * <listitem>
+ * "mute": Whether to mute the pad or not (#gboolean)
+ * </listitem>
+ * <listitem>
+ * "volume": The volume of the pad, between 0.0 and 10.0 (#gdouble)
+ * </listitem>
+ * </itemizedlist>
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
