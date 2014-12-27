@@ -169,14 +169,17 @@ gst_audio_base_src_class_init (GstAudioBaseSrcClass * klass)
       g_param_spec_int64 ("buffer-time", "Buffer Time",
           "Size of audio buffer in microseconds. This is the maximum amount "
           "of data that is buffered in the device and the maximum latency that "
-          "the source reports", 1, G_MAXINT64, DEFAULT_BUFFER_TIME,
+          "the source reports. This value might be ignored by the element if "
+          "necessary; see \"actual-buffer-time\"",
+          1, G_MAXINT64, DEFAULT_BUFFER_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_LATENCY_TIME,
       g_param_spec_int64 ("latency-time", "Latency Time",
           "The minimum amount of data to read in each iteration in "
-          "microseconds. This is the minimum latency that the source reports",
-          1, G_MAXINT64, DEFAULT_LATENCY_TIME,
+          "microseconds. This is the minimum latency that the source reports. "
+          "This value might be ignored by the element if necessary; see "
+          "\"actual-latency-time\"", 1, G_MAXINT64, DEFAULT_LATENCY_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
