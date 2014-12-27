@@ -842,8 +842,12 @@ start_image_capture (GstWrapperCameraBinSrc * self)
     peer = gst_pad_get_peer (pad);
     gst_object_unref (pad);
     gst_pad_query (peer, gst_query_new_drain ());
-    gst_element_set_state (self->src_vid_src, GST_STATE_READY);
     gst_object_unref (peer);
+
+    self->image_renegotiate = FALSE;
+
+    g_mutex_unlock (&bcamsrc->capturing_mutex);
+    gst_element_set_state (self->src_vid_src, GST_STATE_READY);
 
     /* clean capsfilter caps so they don't interfere here */
     g_object_set (self->src_filter, "caps", NULL, NULL);
@@ -862,8 +866,7 @@ start_image_capture (GstWrapperCameraBinSrc * self)
     /* We caught this event in the src pad event handler and now we want to
      * actually push it upstream */
     gst_pad_send_event (self->outsel_imgpad, gst_event_new_reconfigure ());
-
-    self->image_renegotiate = FALSE;
+    g_mutex_lock (&bcamsrc->capturing_mutex);
   }
 
   if (photography) {
