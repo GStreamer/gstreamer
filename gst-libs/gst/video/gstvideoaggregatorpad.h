@@ -96,7 +96,7 @@ struct _GstVideoAggregatorPadClass
   void               (*clean_frame)           (GstVideoAggregatorPad * pad,
                                                GstVideoAggregator    * videoaggregator);
 
-  gpointer          _gst_reserved[GST_PADDING];
+  gpointer          _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType gst_videoaggregator_pad_get_type (void);

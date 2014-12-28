@@ -95,7 +95,7 @@ struct _GstAggregatorPadClass
   GstFlowReturn (*flush)     (GstAggregatorPad * aggpad, GstAggregator * aggregator);
 
   /*< private >*/
-  gpointer      _gst_reserved[GST_PADDING];
+  gpointer      _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType gst_aggregator_pad_get_type           (void);
@@ -142,7 +142,7 @@ struct _GstAggregator
   /* properties */
   gint64                   latency;
 
-  gpointer                 _gst_reserved[GST_PADDING];
+  gpointer                 _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
@@ -247,7 +247,7 @@ struct _GstAggregatorClass {
   GstClockTime      (*get_next_time)  (GstAggregator    *  aggregator);
 
   /*< private >*/
-  gpointer          _gst_reserved[GST_PADDING];
+  gpointer          _gst_reserved[GST_PADDING_LARGE];
 };
 
 /*************************
