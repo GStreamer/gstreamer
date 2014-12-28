@@ -1821,7 +1821,7 @@ pad_activate_mode_func (GstPad * pad,
 G_DEFINE_TYPE (GstAggregatorPad, gst_aggregator_pad, GST_TYPE_PAD);
 
 static void
-_pad_constructed (GObject * object)
+gst_aggregator_pad_constructed (GObject * object)
 {
   GstPad *pad = GST_PAD (object);
 
@@ -1867,9 +1867,9 @@ gst_aggregator_pad_class_init (GstAggregatorPadClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstAggregatorPadPrivate));
 
-  gobject_class->constructed = GST_DEBUG_FUNCPTR (_pad_constructed);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_aggregator_pad_finalize);
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_aggregator_pad_dispose);
+  gobject_class->constructed = gst_aggregator_pad_constructed;
+  gobject_class->finalize = gst_aggregator_pad_finalize;
+  gobject_class->dispose = gst_aggregator_pad_dispose;
 }
 
 static void
