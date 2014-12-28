@@ -29,7 +29,7 @@
 #include "siren7.h"
 
 G_BEGIN_DECLS
-/* #define's don't like whitespacey bits */
+
 #define GST_TYPE_SIREN_DEC \
   (gst_siren_dec_get_type())
 #define GST_SIREN_DEC(obj) \
@@ -42,9 +42,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SIREN_DEC))
 #define GST_IS_SIREN_DEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SIREN_DEC))
+
 typedef struct _GstSirenDec GstSirenDec;
 typedef struct _GstSirenDecClass GstSirenDecClass;
-typedef struct _GstSirenDecPrivate GstSirenDecPrivate;
 
 struct _GstSirenDec
 {
@@ -64,4 +64,5 @@ GType gst_siren_dec_get_type (void);
 gboolean gst_siren_dec_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
+
 #endif /* __GST_SIREN_DEC_H__ */
