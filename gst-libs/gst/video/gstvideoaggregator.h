@@ -65,7 +65,7 @@ struct _GstVideoAggregator
 
   /* < private > */
   GstVideoAggregatorPrivate *priv;
-  gpointer          _gst_reserved[GST_PADDING];
+  gpointer          _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
@@ -106,7 +106,7 @@ struct _GstVideoAggregatorClass
                                                    GstVideoInfo       *  best_info,
                                                    gboolean           *  at_least_one_alpha);
   /* < private > */
-  gpointer            _gst_reserved[GST_PADDING];
+  gpointer            _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType gst_videoaggregator_get_type       (void);
