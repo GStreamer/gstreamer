@@ -46,6 +46,7 @@ typedef struct _GstAggregatorClass GstAggregatorClass;
 
 #define GST_TYPE_AGGREGATOR_PAD            (gst_aggregator_pad_get_type())
 #define GST_AGGREGATOR_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AGGREGATOR_PAD, GstAggregatorPad))
+#define GST_AGGREGATOR_PAD_CAST(obj)       ((GstAggregatorPad *)(obj))
 #define GST_AGGREGATOR_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AGGREGATOR_PAD, GstAggregatorPadClass))
 #define GST_AGGREGATOR_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_AGGREGATOR_PAD, GstAggregatorPadClass))
 #define GST_IS_AGGREGATOR_PAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AGGREGATOR_PAD))
@@ -113,6 +114,7 @@ GstBuffer * gst_aggregator_pad_get_buffer   (GstAggregatorPad *  pad);
 
 #define GST_TYPE_AGGREGATOR            (gst_aggregator_get_type())
 #define GST_AGGREGATOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AGGREGATOR,GstAggregator))
+#define GST_AGGREGATOR_CAST(obj)       ((GstAggregator *)(obj))
 #define GST_AGGREGATOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AGGREGATOR,GstAggregatorClass))
 #define GST_AGGREGATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_AGGREGATOR,GstAggregatorClass))
 #define GST_IS_AGGREGATOR(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AGGREGATOR))
