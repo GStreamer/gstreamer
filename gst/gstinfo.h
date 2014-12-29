@@ -113,7 +113,7 @@ typedef enum {
  * maximum debug level. Any debug statements above that level will be compiled out.
  *
  * Since: 1.6
- * */
+ */
 #ifndef GST_LEVEL_MAX
 #define GST_LEVEL_MAX GST_LEVEL_COUNT
 #endif
@@ -354,7 +354,7 @@ void            gst_debug_log_default    (GstDebugCategory * category,
                                           gint               line,
                                           GObject          * object,
                                           GstDebugMessage  * message,
-                                          gpointer           unused) G_GNUC_NO_INSTRUMENT;
+                                          gpointer           user_data) G_GNUC_NO_INSTRUMENT;
 
 const gchar *   gst_debug_level_get_name (GstDebugLevel level);
 
