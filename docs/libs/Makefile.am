@@ -25,7 +25,7 @@ DOC_SOURCE_DIR=$(top_srcdir)/libs/gst
 SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode --output-format=xml
+MKDB_OPTIONS=--sgml-mode --output-format=xml --ignore-files="$(IGNORE_HFILES)"
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=--extra-dir=$(top_builddir)/docs/gst/html \
@@ -41,6 +41,7 @@ SCANOBJ_OPTIONS=--type-init-func="gst_init(&argc,&argv)"
 
 # Header files to ignore when scanning.
 IGNORE_HFILES = \
+	check/libcheck check/internal-check.h \
 	gstinterpolationcontrolsourceprivate.h \
 	gstlfocontrolsourceprivate.h \
 	gstgetbits_inl.h \
