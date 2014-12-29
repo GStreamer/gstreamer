@@ -3511,7 +3511,8 @@ gst_mpd_client_get_availability_start_time (GstMpdClient * client)
     return (GstDateTime *) NULL;
 
   start_time = client->mpd_node->availabilityStartTime;
-  gst_date_time_ref (start_time);
+  if (start_time)
+    gst_date_time_ref (start_time);
   return start_time;
 }
 
