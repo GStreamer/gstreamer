@@ -235,7 +235,7 @@ struct _GstDecklinkClockClass
 };
 
 GType gst_decklink_clock_get_type (void);
-static GstClock * gst_decklink_clock_new (const gchar * name);
+static GstClock *gst_decklink_clock_new (const gchar * name);
 
 typedef struct _Device Device;
 struct _Device
@@ -434,7 +434,8 @@ init_devices (gpointer data)
       GST_WARNING ("selected device does not have output interface");
     } else {
       devices[i].output.device = decklink;
-      devices[i].output.clock = gst_decklink_clock_new ("GstDecklinkOutputClock");
+      devices[i].output.clock =
+          gst_decklink_clock_new ("GstDecklinkOutputClock");
       GST_DECKLINK_CLOCK_CAST (devices[i].output.clock)->output =
           devices[i].output.output;
     }
