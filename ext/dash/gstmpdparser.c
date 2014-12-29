@@ -2600,7 +2600,7 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
 
 guint
 gst_mpd_client_get_period_index_at_time (GstMpdClient * client,
-      GstDateTime * time)
+    GstDateTime * time)
 {
   GList *iter;
   guint period_idx = G_MAXUINT;
@@ -2619,8 +2619,7 @@ gst_mpd_client_get_period_index_at_time (GstMpdClient * client,
   if (time_offset < 0)
     return 0;
 
-  for (idx = 0, iter = client->periods; iter;
-       idx++, iter = g_list_next (iter)) {
+  for (idx = 0, iter = client->periods; iter; idx++, iter = g_list_next (iter)) {
     stream_period = iter->data;
     if (stream_period->start <= time_offset
         && stream_period->start + stream_period->duration > time_offset) {
@@ -3852,7 +3851,7 @@ gst_mpd_client_set_period_id (GstMpdClient * client, const gchar * period_id)
   g_return_val_if_fail (period_id != NULL, FALSE);
 
   for (period_idx = 0, iter = client->periods; iter;
-       period_idx++, iter = g_list_next (iter)) {
+      period_idx++, iter = g_list_next (iter)) {
     next_stream_period = iter->data;
 
     if (next_stream_period->period->id
