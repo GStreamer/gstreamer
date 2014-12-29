@@ -1541,6 +1541,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
   guint64 length;
   guint32 id;
   guint needed;
+  gint64 oldpos, oldlength;
 
   orig_offset = demux->common.offset;
 
@@ -1569,6 +1570,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
   }
 
   /* read in at newpos and scan for ebml cluster id */
+  oldpos = oldlength = -1;
   while (1) {
     GstByteReader reader;
     gint cluster_pos;
@@ -1587,6 +1589,15 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     gst_buffer_map (buf, &map, GST_MAP_READ);
     data = map.data;
     size = map.size;
+    if (oldpos == newpos && oldlength == map.size) {
+      GST_ERROR_OBJECT (demux, "Stuck at same position");
+      ret = GST_FLOW_ERROR;
+      goto exit;
+    } else {
+      oldpos = newpos;
+      oldlength = map.size;
+    }
+
     gst_byte_reader_init (&reader, data, size);
   resume:
     cluster_pos = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
@@ -1609,11 +1620,6 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
       if (newpos == demux->first_cluster_offset) {
         GST_DEBUG_OBJECT (demux, "cluster is first cluster -> OK");
         break;
-      }
-      if (newpos == demux->common.offset) {
-        GST_ERROR_OBJECT (demux, "Stuck at the same offset");
-        ret = GST_FLOW_ERROR;
-        goto exit;
       }
       demux->common.offset = newpos;
       ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
