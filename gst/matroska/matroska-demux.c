@@ -1610,6 +1610,11 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
         GST_DEBUG_OBJECT (demux, "cluster is first cluster -> OK");
         break;
       }
+      if (newpos == demux->common.offset) {
+        GST_ERROR_OBJECT (demux, "Stuck at the same offset");
+        ret = GST_FLOW_ERROR;
+        goto exit;
+      }
       demux->common.offset = newpos;
       ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
           GST_ELEMENT_CAST (demux), &id, &length, &needed);
