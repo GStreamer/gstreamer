@@ -119,8 +119,10 @@ struct _GstRTSPClientClass {
 
   void     (*tunnel_http_response)    (GstRTSPClient * client, GstRTSPMessage * request,
                                        GstRTSPMessage * response);
+  void     (*send_message)            (GstRTSPClient * client, GstRTSPContext *ctx,
+                                       GstRTSPMessage * response);
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE-1];
+  gpointer _gst_reserved[GST_PADDING_LARGE-2];
 };
 
 GType                 gst_rtsp_client_get_type          (void);
