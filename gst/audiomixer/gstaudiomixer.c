@@ -733,9 +733,6 @@ gst_audiomixer_start (GstAggregator * agg)
 {
   GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
 
-  if (!GST_AGGREGATOR_CLASS (parent_class)->start (agg))
-    return FALSE;
-
   gst_audiomixer_reset (audiomixer);
 
   return TRUE;
@@ -745,9 +742,6 @@ static gboolean
 gst_audiomixer_stop (GstAggregator * agg)
 {
   GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
-
-  if (!GST_AGGREGATOR_CLASS (parent_class)->stop (agg))
-    return FALSE;
 
   gst_audiomixer_reset (audiomixer);
 
