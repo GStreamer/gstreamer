@@ -1458,7 +1458,6 @@ gst_aggregator_finalize (GObject * object)
 {
   GstAggregator *self = (GstAggregator *) object;
 
-  gst_object_unref (self->clock);
   g_mutex_clear (&self->priv->setcaps_lock);
   g_mutex_clear (&self->priv->src_lock);
   g_cond_clear (&self->priv->src_cond);
@@ -1643,7 +1642,6 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
 
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
-  self->clock = gst_system_clock_obtain ();
   self->latency = 0;
 
   g_mutex_init (&self->priv->setcaps_lock);
