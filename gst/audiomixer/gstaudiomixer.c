@@ -811,7 +811,7 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_OUTPUT_BUFFER_DURATION,
       g_param_spec_uint64 ("output-buffer-duration", "Output Buffer Duration",
-          "Output block size in number of samples", 1,
+          "Output block size in nanoseconds", 1,
           G_MAXUINT64, DEFAULT_OUTPUT_BUFFER_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
