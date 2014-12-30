@@ -1635,9 +1635,6 @@ gst_videoaggregator_start (GstAggregator * agg)
 {
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
 
-  if (!GST_AGGREGATOR_CLASS (gst_videoaggregator_parent_class)->start (agg))
-    return FALSE;
-
   gst_caps_replace (&vagg->priv->current_caps, NULL);
 
   return TRUE;
@@ -1647,9 +1644,6 @@ static gboolean
 gst_videoaggregator_stop (GstAggregator * agg)
 {
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
-
-  if (!GST_AGGREGATOR_CLASS (gst_videoaggregator_parent_class)->stop (agg))
-    return FALSE;
 
   gst_videoaggregator_reset (vagg);
 
