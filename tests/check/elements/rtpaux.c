@@ -218,8 +218,8 @@ GST_START_TEST (test_simple_rtpbin_aux)
   rtpbinsend = gst_element_factory_make ("rtpbin", "rtpbinsend");
   g_object_set (rtpbinsend, "latency", 200, "do-retransmission", TRUE, NULL);
   src = gst_element_factory_make ("audiotestsrc", "src");
-  encoder = gst_element_factory_make ("speexenc", "encoder");
-  rtppayloader = gst_element_factory_make ("rtpspeexpay", "rtppayloader");
+  encoder = gst_element_factory_make ("alawenc", "encoder");
+  rtppayloader = gst_element_factory_make ("rtppcmapay", "rtppayloader");
   rtprtxsend = gst_element_factory_make ("rtprtxsend", "rtprtxsend");
   sendrtp_udpsink = gst_element_factory_make ("udpsink", "sendrtp_udpsink");
   g_object_set (sendrtp_udpsink, "host", "127.0.0.1", NULL);
@@ -238,7 +238,7 @@ GST_START_TEST (test_simple_rtpbin_aux)
   g_object_set (recvrtp_udpsrc, "port", 5006, NULL);
   rtpcaps =
       gst_caps_from_string
-      ("application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)SPEEX,encoding-params=(string)1,octet-align=(string)1");
+      ("application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)PCMA,payload=(int)8");
   g_object_set (recvrtp_udpsrc, "caps", rtpcaps, NULL);
   gst_caps_unref (rtpcaps);
   recvrtcp_udpsrc = gst_element_factory_make ("udpsrc", "recvrtcp_udpsrc");
@@ -249,8 +249,8 @@ GST_START_TEST (test_simple_rtpbin_aux)
   g_object_set (recvrtcp_udpsink, "sync", FALSE, NULL);
   g_object_set (recvrtcp_udpsink, "async", FALSE, NULL);
   rtprtxreceive = gst_element_factory_make ("rtprtxreceive", "rtprtxreceive");
-  rtpdepayloader = gst_element_factory_make ("rtpspeexdepay", "rtpdepayloader");
-  decoder = gst_element_factory_make ("speexdec", "decoder");
+  rtpdepayloader = gst_element_factory_make ("rtppcmadepay", "rtpdepayloader");
+  decoder = gst_element_factory_make ("alawdec", "decoder");
   converter = gst_element_factory_make ("identity", "converter");
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (sink, "sync", TRUE, NULL);
