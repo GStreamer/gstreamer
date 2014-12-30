@@ -176,7 +176,6 @@ buffer_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   GST_LOG ("%3d, %3d", x, y);
 
-  /* FIXME: need absolute positioning where negative offsets are not flipped */
   g_object_set (overlay, "offset-x", x, "offset-y", y, NULL);
 
   return GST_PAD_PROBE_OK;
