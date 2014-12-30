@@ -156,7 +156,7 @@ fake_udp_sink_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-/* This test build the pipeline audiotestsrc ! speexenc ! rtpspeexpay ! \
+/* This test build the pipeline audiotestsrc ! alawenc ! rtppcmapay ! \
  * rtpsession ! fakesink
  * It manually pushs buffer into rtpsession with same ssrc but different
  * ip so that collision can be detected
@@ -186,9 +186,9 @@ GST_START_TEST (test_master_ssrc_collision)
 
   src = gst_element_factory_make ("audiotestsrc", "src");
   g_object_set (src, "num-buffers", 5, NULL);
-  encoder = gst_element_factory_make ("speexenc", NULL);
-  rtppayloader = gst_element_factory_make ("rtpspeexpay", NULL);
-  g_object_set (rtppayloader, "pt", 96, NULL);
+  encoder = gst_element_factory_make ("alawenc", NULL);
+  rtppayloader = gst_element_factory_make ("rtppcmapay", NULL);
+  g_object_set (rtppayloader, "pt", 8, NULL);
   rtpsession = gst_element_factory_make ("rtpsession", NULL);
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src, encoder, rtppayloader,
@@ -261,7 +261,7 @@ GST_START_TEST (test_master_ssrc_collision)
   gst_object_unref (bin);
 
   /* check results */
-  fail_unless_equals_int (nb_ssrc_changes, 7);
+  fail_unless_equals_int (nb_ssrc_changes, 4);
 }
 
 GST_END_TEST;
@@ -325,7 +325,7 @@ rtpsession_sinkpad_probe2 (GstPad * pad, GstPadProbeInfo * info,
   return ret;
 }
 
-/* This test build the pipeline audiotestsrc ! speexenc ! rtpspeexpay ! \
+/* This test build the pipeline audiotestsrc ! alawenc ! rtppcmapay ! \
  * rtprtxsend ! rtpsession ! fakesink
  * It manually pushs buffer into rtpsession with same ssrc than rtx stream
  * but different ip so that collision can be detected
@@ -355,12 +355,12 @@ GST_START_TEST (test_rtx_ssrc_collision)
 
   src = gst_element_factory_make ("audiotestsrc", "src");
   g_object_set (src, "num-buffers", 5, NULL);
-  encoder = gst_element_factory_make ("speexenc", NULL);
-  rtppayloader = gst_element_factory_make ("rtpspeexpay", NULL);
-  g_object_set (rtppayloader, "pt", 96, NULL);
+  encoder = gst_element_factory_make ("alawenc", NULL);
+  rtppayloader = gst_element_factory_make ("rtppcmapay", NULL);
+  g_object_set (rtppayloader, "pt", 8, NULL);
   rtprtxsend = gst_element_factory_make ("rtprtxsend", NULL);
   pt_map = gst_structure_new ("application/x-rtp-pt-map",
-      "96", G_TYPE_UINT, 99, NULL);
+      "8", G_TYPE_UINT, 99, NULL);
   g_object_set (rtprtxsend, "payload-type-map", pt_map, NULL);
   gst_structure_free (pt_map);
   rtpsession = gst_element_factory_make ("rtpsession", NULL);
