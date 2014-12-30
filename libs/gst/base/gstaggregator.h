@@ -139,8 +139,6 @@ struct _GstAggregator
   /*< private >*/
   GstAggregatorPrivate  *  priv;
 
-  GstClock              *  clock;
-
   /* properties */
   gint64                   latency;
 
