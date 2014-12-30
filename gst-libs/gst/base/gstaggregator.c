@@ -621,8 +621,11 @@ aggregate_func (GstAggregator * self)
 }
 
 static gboolean
-_start (GstAggregator * self)
+gst_aggregator_start (GstAggregator * self)
 {
+  GstAggregatorClass *klass;
+  gboolean result;
+
   self->priv->running = TRUE;
   self->priv->send_stream_start = TRUE;
   self->priv->send_segment = TRUE;
@@ -630,7 +633,14 @@ _start (GstAggregator * self)
   self->priv->srccaps = NULL;
   self->priv->flow_return = GST_FLOW_OK;
 
-  return TRUE;
+  klass = GST_AGGREGATOR_GET_CLASS (self);
+
+  if (klass->start)
+    result = klass->start (self);
+  else
+    result = TRUE;
+
+  return result;
 }
 
 static gboolean
@@ -867,8 +877,11 @@ _stop_pad (GstAggregator * self, GstAggregatorPad * pad, gpointer unused_udata)
 }
 
 static gboolean
-_stop (GstAggregator * agg)
+gst_aggregator_stop (GstAggregator * agg)
 {
+  GstAggregatorClass *klass;
+  gboolean result;
+
   _reset_flow_values (agg);
 
   gst_aggregator_iterate_sinkpads (agg,
@@ -878,7 +891,14 @@ _stop (GstAggregator * agg)
     gst_tag_list_unref (agg->priv->tags);
   agg->priv->tags = NULL;
 
-  return TRUE;
+  klass = GST_AGGREGATOR_GET_CLASS (agg);
+
+  if (klass->stop)
+    result = klass->stop (agg);
+  else
+    result = TRUE;
+
+  return result;
 }
 
 /* GstElement vmethods implementations */
@@ -887,12 +907,11 @@ _change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstAggregator *self = GST_AGGREGATOR (element);
-  GstAggregatorClass *agg_class = GST_AGGREGATOR_GET_CLASS (self);
-
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      agg_class->start (self);
+      if (!gst_aggregator_start (self))
+        goto error_start;
       break;
     default:
       break;
@@ -906,7 +925,10 @@ _change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      agg_class->stop (self);
+      if (!gst_aggregator_stop (self)) {
+        /* What to do in this case? Error out? */
+        GST_ERROR_OBJECT (self, "Subclass failed to stop.");
+      }
       break;
     default:
       break;
@@ -914,10 +936,16 @@ _change_state (GstElement * element, GstStateChange transition)
 
   return ret;
 
+/* ERRORS */
 failure:
   {
     GST_ERROR_OBJECT (element, "parent failed state change");
     return ret;
+  }
+error_start:
+  {
+    GST_ERROR_OBJECT (element, "Subclass failed to start");
+    return GST_STATE_CHANGE_FAILURE;
   }
 }
 
@@ -1552,8 +1580,6 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
       GST_DEBUG_FG_MAGENTA, "GstAggregator");
 
   klass->sinkpads_type = GST_TYPE_AGGREGATOR_PAD;
-  klass->start = _start;
-  klass->stop = _stop;
 
   klass->sink_event = _sink_event;
   klass->sink_query = _sink_query;
