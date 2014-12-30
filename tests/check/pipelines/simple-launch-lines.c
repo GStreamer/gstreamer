@@ -222,6 +222,15 @@ GST_START_TEST (test_rtp_payloaders)
 
 GST_END_TEST;
 
+static gboolean
+have_elements (const gchar * element1, const gchar * element2)
+{
+  return gst_registry_check_feature_version (gst_registry_get (), element1,
+      GST_VERSION_MAJOR, GST_VERSION_MINOR, 0) &&
+      gst_registry_check_feature_version (gst_registry_get (), element2,
+      GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+}
+
 GST_START_TEST (test_video_encoders_decoders)
 {
   const gchar *s;
@@ -232,21 +241,21 @@ GST_START_TEST (test_video_encoders_decoders)
 #define ENC_DEC_PIPELINE_STRING(bufcount, enc, dec) "videotestsrc num-buffers=" bufcount " ! " enc " ! " dec " ! fakesink"
 #define DEFAULT_BUFCOUNT "5"
 
-  s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "jpegenc", "jpegdec");
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN, target_state);
+  if (have_elements ("jpegenc", "jpegdec")) {
+    s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "jpegenc", "jpegdec");
+    run_pipeline (setup_pipeline (s), s,
+        GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+        GST_MESSAGE_UNKNOWN, target_state);
+  }
 
-  s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "pngenc", "pngdec");
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN, target_state);
+  if (have_elements ("pngenc", "pngdec")) {
+    s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "pngenc", "pngdec");
+    run_pipeline (setup_pipeline (s), s,
+        GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+        GST_MESSAGE_UNKNOWN, target_state);
+  }
 
-
-  if (gst_registry_check_feature_version (gst_registry_get (), "smokeenc",
-          GST_VERSION_MAJOR, GST_VERSION_MINOR, 0) &&
-      gst_registry_check_feature_version (gst_registry_get (), "smokedec",
-          GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
+  if (have_elements ("smokeenc", "smokedec")) {
     s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "smokeenc", "smokedec");
     run_pipeline (setup_pipeline (s), s,
         GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
