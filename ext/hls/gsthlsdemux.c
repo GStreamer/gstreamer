@@ -664,12 +664,31 @@ gst_hls_demux_chunk_received (GstAdaptiveDemux * demux,
   buffer = *chunk;
 
   if (G_UNLIKELY (hlsdemux->do_typefind && buffer != NULL)) {
-    GstCaps *caps;
+    GstCaps *caps = NULL;
+    GstMapInfo info;
+    guint buffer_size;
+    GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
 
-    caps = gst_type_find_helper_for_buffer (NULL, buffer, NULL);
+    gst_buffer_map (buffer, &info, GST_MAP_READ);
+    buffer_size = info.size;
+
+    /* Typefind could miss if buffer is too small. In this case we
+     * will retry later */
+    if (buffer_size >= (2 * 1024)) {
+      caps =
+          gst_type_find_helper_for_data (GST_OBJECT_CAST (hlsdemux), info.data,
+          info.size, &prob);
+    }
+    gst_buffer_unmap (buffer, &info);
+
     if (G_UNLIKELY (!caps)) {
-      /* Typefind could fail if buffer is too small. Retry later */
-      if (gst_buffer_get_size (buffer) < (2 * 1024 * 1024)) {
+      /* Only fail typefinding if we already a good amount of data
+       * and we still don't know the type */
+      if (buffer_size > (2 * 1024 * 1024)) {
+        GST_ELEMENT_ERROR (hlsdemux, STREAM, TYPE_NOT_FOUND,
+            ("Could not determine type of stream"), (NULL));
+        return GST_FLOW_NOT_NEGOTIATED;
+      } else {
         if (hlsdemux->pending_buffer)
           hlsdemux->pending_buffer =
               gst_buffer_append (buffer, hlsdemux->pending_buffer);
@@ -678,11 +697,11 @@ gst_hls_demux_chunk_received (GstAdaptiveDemux * demux,
         *chunk = NULL;
         return GST_FLOW_OK;
       }
-
-      GST_ELEMENT_ERROR (hlsdemux, STREAM, TYPE_NOT_FOUND,
-          ("Could not determine type of stream"), (NULL));
-      return GST_FLOW_NOT_NEGOTIATED;
     }
+
+    GST_DEBUG_OBJECT (hlsdemux, "Typefind result: %" GST_PTR_FORMAT " prob:%d",
+        caps, prob);
+
     if (!hlsdemux->input_caps
         || !gst_caps_is_equal (caps, hlsdemux->input_caps)) {
       gst_caps_replace (&hlsdemux->input_caps, caps);
