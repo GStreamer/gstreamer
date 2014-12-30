@@ -1288,7 +1288,7 @@ gst_gl_mixer_set_property (GObject * object,
 }
 
 static gboolean
-_clean_upload (GstAggregator * agg, GstPad * aggpad, gpointer udata)
+_clean_upload (GstAggregator * agg, GstAggregatorPad * aggpad, gpointer udata)
 {
   GstGLMixerPad *pad = GST_GL_MIXER_PAD (aggpad);
 
