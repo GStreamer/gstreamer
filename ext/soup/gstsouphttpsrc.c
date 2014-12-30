@@ -1709,6 +1709,18 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
     src->ret = GST_FLOW_EOS;
   g_cond_signal (&src->request_finished_cond);
 
+  /* basesrc assumes that we don't return a buffer if
+   * something else than OK is returned. It will just
+   * leak any buffer we might accidentially provide
+   * here.
+   *
+   * This can potentially happen during flushing.
+   */
+  if (src->ret != GST_FLOW_OK && outbuf && *outbuf) {
+    gst_buffer_unref (*outbuf);
+    *outbuf = NULL;
+  }
+
   return src->ret;
 }
 
