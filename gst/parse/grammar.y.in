@@ -456,6 +456,40 @@ error:
   goto out;
 }
 
+static void gst_parse_element_preset (gchar *value, GstElement *element, graph_t *graph)
+{
+  /* do nothing if preset is for missing element or its not a preset element */
+  if (element == NULL)
+    goto out;
+
+  if (!GST_IS_PRESET(element))
+    goto not_a_preset;
+
+  /* do nothing if no preset is given */
+  if (value == NULL || *value == '\0')
+    goto out;
+
+  gst_parse_unescape (value);
+  if (!gst_preset_load_preset (GST_PRESET (element), value))
+    goto error;
+
+out:
+  gst_parse_strfree (value);
+  return;
+
+not_a_preset:
+  SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+         _("Element \"%s\" is not a GstPreset"),
+	 GST_ELEMENT_NAME (element));
+  goto out;
+
+error:
+  SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+         _("could not set preset \"%s\" in element \"%s\""),
+	 value, GST_ELEMENT_NAME (element));
+  goto out;
+}
+
 static void gst_parse_free_reference (reference_t *rr)
 {
   if(rr->element) gst_object_unref(rr->element);
@@ -763,7 +797,7 @@ static int yyerror (void *scanner, graph_t *graph, const char *s);
 %token <ss> PARSE_URL
 %token <ss> IDENTIFIER
 %left  <ss> REF PADREF BINREF
-%token <ss> ASSIGNMENT
+%token <ss> ASSIGNMENT PRESET
 %token <ss> LINK
 %token <ss> LINK_ALL
 
@@ -817,6 +851,9 @@ element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL);
 						}
 						gst_parse_strfree ($1);
                                               }
+	|	element PRESET	          { gst_parse_element_preset ($2, $1, graph);
+						$$ = $1;
+	                                      }
 	|	element ASSIGNMENT	      { gst_parse_element_set ($2, $1, graph);
 						$$ = $1;
 	                                      }

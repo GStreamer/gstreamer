@@ -64,6 +64,8 @@ _url ({_protocol}"://"{_string}|["."{_identifier}]?"/"{_string})|({_protocol}":/
 /* we must do this here, because nearly everything matches a {_string} */ 
 _assignment {_identifier}{_assign}{_string}
 
+_preset @preset{_assign}{_string}
+
 /* get pad/element references and stuff with dots right */
 _padref "."{_identifier}
 _ref {_identifier}"."{_identifier}?
@@ -92,6 +94,16 @@ _link ([!:][[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*
     yylval->ss = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return ASSIGNMENT;
+}
+
+{_preset} {
+    gchar *pos = yytext;
+    while (*pos && (*pos != '=')) pos++;
+    while (*pos && g_ascii_isspace (*pos)) pos++;
+    PRINT ("PRESET: %s", &pos[1]);
+    yylval->ss = gst_parse_strdup (&pos[1]);
+    BEGIN (INITIAL);
+    return PRESET;
 }
 
 {_padref} {

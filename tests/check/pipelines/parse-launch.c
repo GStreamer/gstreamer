@@ -670,6 +670,24 @@ GST_START_TEST (test_missing_elements)
 
 GST_END_TEST;
 
+GST_START_TEST (test_preset)
+{
+  GstElement *element;
+  GError *err = NULL;
+
+  /* missing preset */
+  element =
+      gst_parse_launch
+      ("fakesrc ! identity @preset=\"Wrong preset\" ! fakesink", &err);
+  fail_unless (err != NULL, "expected error");
+  fail_unless_equals_int (err->code, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY);
+  fail_unless (element != NULL, "Doesn't NULL return without FATAL_ERRORS");
+  gst_clear_object (&element);
+  g_clear_error (&err);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_flags)
 {
   GstElement *element;
@@ -734,6 +752,7 @@ parse_suite (void)
   tcase_add_test (tc_chain, test_flags);
   tcase_add_test (tc_chain, test_missing_elements);
   tcase_add_test (tc_chain, test_parsing);
+  tcase_add_test (tc_chain, test_preset);
   return s;
 }
 

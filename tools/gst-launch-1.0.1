@@ -10,7 +10,8 @@ gst\-launch\-1.0 \- build and run a GStreamer pipeline
 
 In simple form, a PIPELINE\-DESCRIPTION is a list of
 elements separated by exclamation marks (!). Properties may be appended to
-elements, in the form \fIproperty=value\fR.
+elements, in the form \fIproperty=value\fR. A "preset" can also be set using
+the \fI@preset=<preset name>\fR synthax.
 
 For a complete description of possible PIPELINE-DESCRIPTIONS see the section
 \fIpipeline description\fR below or consult the GStreamer documentation.
@@ -158,6 +159,13 @@ Sets the property to the specified value. You can use \fBgst\-inspect\-1.0\fR(1)
 find out about properties and allowed values of different elements.
 .br
 Enumeration properties can be set by name, nick or value.
+
+.B Presets
+
+@preset=<preset name> ...
+
+Sets the preset on the element. you can use \fbgst\-inspect\-1.0\fr(1) to
+find out what presets are available for a specific element.
 
 .B Bins
 
