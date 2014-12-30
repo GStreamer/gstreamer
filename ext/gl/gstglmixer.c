@@ -1313,9 +1313,6 @@ gst_gl_mixer_start (GstAggregator * agg)
   GstGLMixer *mix = GST_GL_MIXER (agg);
   GstElement *element = GST_ELEMENT (agg);
 
-  if (!GST_AGGREGATOR_CLASS (parent_class)->start (agg))
-    return FALSE;
-
   GST_OBJECT_LOCK (mix);
   mix->array_buffers = g_ptr_array_new_full (element->numsinkpads,
       (GDestroyNotify) _free_glmixer_frame_data);
@@ -1337,9 +1334,6 @@ gst_gl_mixer_stop (GstAggregator * agg)
 {
   GstGLMixer *mix = GST_GL_MIXER (agg);
   GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
-
-  if (!GST_AGGREGATOR_CLASS (parent_class)->stop (agg))
-    return FALSE;
 
   GST_OBJECT_LOCK (agg);
   g_ptr_array_free (mix->frames, TRUE);
