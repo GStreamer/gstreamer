@@ -1,8 +1,6 @@
-/* GStreamer
+/* GStreamer aggregator base class
  * Copyright (C) 2014 Mathieu Duponchelle <mathieu.duponchelle@oencreed.com>
  * Copyright (C) 2014 Thibault Saunier <tsaunier@gnome.org>
- *
- * gstaggregator.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
