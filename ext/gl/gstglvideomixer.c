@@ -446,7 +446,7 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
 }
 
 static gboolean
-_reset_pad_gl (GstAggregator * agg, GstPad * aggpad, gpointer udata)
+_reset_pad_gl (GstAggregator * agg, GstAggregatorPad * aggpad, gpointer udata)
 {
   const GstGLFuncs *gl = GST_GL_MIXER (agg)->context->gl_vtable;
   GstGLVideoMixerPad *pad = GST_GL_VIDEO_MIXER_PAD (aggpad);
