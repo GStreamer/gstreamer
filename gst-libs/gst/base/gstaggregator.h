@@ -267,10 +267,11 @@ void           gst_aggregator_set_latency           (GstAggregator              
 
 GType gst_aggregator_get_type(void);
 
-/* API that should eventually land in GstElement itself*/
-typedef gboolean (*GstAggregatorPadForeachFunc)    (GstAggregator                 *  self,
-                                                    GstPad                        *  pad,
+/* API that should eventually land in GstElement itself (FIXME) */
+typedef gboolean (*GstAggregatorPadForeachFunc)    (GstAggregator                 *  aggregator,
+                                                    GstAggregatorPad              *  aggregator_pad,
                                                     gpointer                         user_data);
+
 gboolean gst_aggregator_iterate_sinkpads           (GstAggregator                 *  self,
                                                     GstAggregatorPadForeachFunc      func,
                                                     gpointer                         user_data);

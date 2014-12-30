@@ -297,7 +297,7 @@ gst_aggregator_iterate_sinkpads (GstAggregator * self,
     switch (gst_iterator_next (iter, &item)) {
       case GST_ITERATOR_OK:
       {
-        GstPad *pad;
+        GstAggregatorPad *pad;
 
         pad = g_value_get_object (&item);
 
@@ -307,8 +307,9 @@ gst_aggregator_iterate_sinkpads (GstAggregator * self,
           break;
         }
 
-        GST_LOG_OBJECT (self, "calling function on pad %s:%s",
-            GST_DEBUG_PAD_NAME (pad));
+        GST_LOG_OBJECT (pad, "calling function %s on pad",
+            GST_DEBUG_FUNCPTR_NAME (func));
+
         result = func (self, pad, user_data);
 
         done = !result;
@@ -346,7 +347,7 @@ no_iter:
 }
 
 static inline gboolean
-_check_all_pads_with_data_or_eos (GstAggregator * self,
+gst_aggregator_check_all_pads_with_data_or_eos (GstAggregator * self,
     GstAggregatorPad * aggpad, gpointer user_data)
 {
   if (aggpad->buffer || aggpad->eos) {
@@ -498,8 +499,7 @@ _wait_and_check (GstAggregator * self, gboolean * timeout)
   gst_aggregator_get_latency (self, &live, &latency_min, &latency_max);
 
   if (gst_aggregator_iterate_sinkpads (self,
-          (GstAggregatorPadForeachFunc) _check_all_pads_with_data_or_eos,
-          NULL)) {
+          gst_aggregator_check_all_pads_with_data_or_eos, NULL)) {
     GST_DEBUG_OBJECT (self, "all pads have data");
     SRC_STREAM_UNLOCK (self);
 
@@ -577,7 +577,7 @@ _wait_and_check (GstAggregator * self, gboolean * timeout)
   }
 
   res = gst_aggregator_iterate_sinkpads (self,
-      (GstAggregatorPadForeachFunc) _check_all_pads_with_data_or_eos, NULL);
+      gst_aggregator_check_all_pads_with_data_or_eos, NULL);
   SRC_STREAM_UNLOCK (self);
 
   return res;
@@ -868,8 +868,9 @@ eat:
   return res;
 }
 
-static gboolean
-_stop_pad (GstAggregator * self, GstAggregatorPad * pad, gpointer unused_udata)
+static inline gboolean
+gst_aggregator_stop_pad (GstAggregator * self, GstAggregatorPad * pad,
+    gpointer unused_udata)
 {
   _aggpad_flush (pad, self);
 
@@ -884,8 +885,7 @@ gst_aggregator_stop (GstAggregator * agg)
 
   _reset_flow_values (agg);
 
-  gst_aggregator_iterate_sinkpads (agg,
-      (GstAggregatorPadForeachFunc) _stop_pad, NULL);
+  gst_aggregator_iterate_sinkpads (agg, gst_aggregator_stop_pad, NULL);
 
   if (agg->priv->tags)
     gst_tag_list_unref (agg->priv->tags);
@@ -1722,7 +1722,7 @@ _chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 
   SRC_STREAM_LOCK (self);
   if (gst_aggregator_iterate_sinkpads (self,
-          (GstAggregatorPadForeachFunc) _check_all_pads_with_data_or_eos, NULL))
+          gst_aggregator_check_all_pads_with_data_or_eos, NULL))
     SRC_STREAM_BROADCAST_UNLOCKED (self);
   SRC_STREAM_UNLOCK (self);
 
