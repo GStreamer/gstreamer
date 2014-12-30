@@ -34,8 +34,6 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 
-#include <dbus/dbus.h>
-
 #include "a2dp-codecs.h"
 
 #include "gstavdtpsink.h"
@@ -263,7 +261,7 @@ gst_avdtp_sink_start (GstBaseSink * basesink)
   if (self->conn.transport == NULL)
     return FALSE;
 
-  if (!gst_avdtp_connection_acquire (&self->conn)) {
+  if (!gst_avdtp_connection_acquire (&self->conn, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to acquire connection");
     return FALSE;
   }

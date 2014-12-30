@@ -36,98 +36,131 @@
 #include <bluetooth/bluetooth.h>
 #include "a2dp-codecs.h"
 
+#include <gio/gunixfdlist.h>
 #include <gst/gst.h>
 #include "gstavdtputil.h"
+#include "bluez.h"
 
 #define TEMPLATE_MAX_BITPOOL 64
 
 GST_DEBUG_CATEGORY_EXTERN (avdtp_debug);
 #define GST_CAT_DEFAULT avdtp_debug
 
-gboolean
-gst_avdtp_connection_acquire (GstAvdtpConnection * conn)
+static void gst_avdtp_connection_transport_release (GstAvdtpConnection * conn);
+
+static gboolean
+on_state_change (BluezMediaTransport1 * proxy, GParamSpec * pspec,
+    GstAvdtpConnection * conn)
 {
-  DBusMessage *msg, *reply;
-  DBusError err;
-#ifdef HAVE_BLUEZ4
-  const char *access_type = "rw";
-#endif
+  const gchar *newstate;
+  gboolean is_idle;
+
+  newstate = bluez_media_transport1_get_state (proxy);
+  is_idle = g_str_equal (newstate, "idle");
+
+  if (!conn->data.is_acquired && !is_idle) {
+    GST_DEBUG ("Re-acquiring connection");
+    gst_avdtp_connection_acquire (conn, TRUE);
+
+  } else if (is_idle) {
+    /* We don't know if we need to release the transport -- that may have been
+     * done for us by bluez already! Or not ... so release it just in case, but
+     * mark its stale beforehand to suppress any errors. */
+    GST_DEBUG ("Marking connection stale");
+    conn->data.is_acquired = FALSE;
+    gst_avdtp_connection_transport_release (conn);
+
+  } else
+    GST_DEBUG ("State is %s, acquired is %s", newstate,
+        conn->data.is_acquired ? "true" : "false");
+
+  return TRUE;
+}
+
+gboolean
+gst_avdtp_connection_acquire (GstAvdtpConnection * conn, gboolean use_try)
+{
+  GVariant *handle = NULL;
+  GUnixFDList *fd_list = NULL;
+  GError *err = NULL;
   int fd;
   uint16_t imtu, omtu;
-
-  dbus_error_init (&err);
 
   if (conn->transport == NULL) {
     GST_ERROR ("No transport specified");
     return FALSE;
   }
 
-  if (conn->data.conn == NULL)
-    conn->data.conn = dbus_bus_get (DBUS_BUS_SYSTEM, &err);
+  if (conn->data.conn == NULL) {
+    conn->data.conn =
+        bluez_media_transport1_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+        G_DBUS_PROXY_FLAGS_NONE, "org.bluez", conn->transport, NULL, &err);
 
-#ifdef HAVE_BLUEZ4
-  msg = dbus_message_new_method_call ("org.bluez", conn->transport,
-      "org.bluez.MediaTransport", "Acquire");
+    if (conn->data.conn == NULL) {
+      GST_ERROR ("Failed to create proxy for media transport: %s",
+          err && err->message ? err->message : "Unknown error");
+      return FALSE;
+    }
 
-  dbus_message_append_args (msg, DBUS_TYPE_STRING, &access_type,
-      DBUS_TYPE_INVALID);
-#else
-  msg = dbus_message_new_method_call ("org.bluez", conn->transport,
-      "org.bluez.MediaTransport1", "Acquire");
-#endif
+    g_signal_connect (conn->data.conn, "notify::state",
+        G_CALLBACK (on_state_change), conn);
+  }
 
-  reply = dbus_connection_send_with_reply_and_block (conn->data.conn,
-      msg, -1, &err);
+  if (conn->data.is_acquired) {
+    GST_INFO ("Transport is already acquired");
+    return TRUE;
+  }
 
-  dbus_message_unref (msg);
+  if (use_try) {
+    if (!bluez_media_transport1_call_try_acquire_sync (conn->data.conn,
+            NULL, &handle, &imtu, &omtu, &fd_list, NULL, &err))
+      goto fail;
+  } else {
+    if (!bluez_media_transport1_call_acquire_sync (conn->data.conn,
+            NULL, &handle, &imtu, &omtu, &fd_list, NULL, &err))
+      goto fail;
+  }
 
-  if (dbus_error_is_set (&err))
+  fd = g_unix_fd_list_get (fd_list, g_variant_get_handle (handle), &err);
+  if (fd < 0)
     goto fail;
 
-  if (dbus_message_get_args (reply, &err, DBUS_TYPE_UNIX_FD, &fd,
-          DBUS_TYPE_UINT16, &imtu,
-          DBUS_TYPE_UINT16, &omtu, DBUS_TYPE_INVALID) == FALSE)
-    goto fail;
-
-  dbus_message_unref (reply);
-
+  g_variant_unref (handle);
+  g_object_unref (fd_list);
   conn->stream = g_io_channel_unix_new (fd);
   g_io_channel_set_encoding (conn->stream, NULL, NULL);
   g_io_channel_set_close_on_unref (conn->stream, TRUE);
   conn->data.link_mtu = omtu;
+  conn->data.is_acquired = TRUE;
 
   return TRUE;
 
 fail:
-  GST_ERROR ("Failed to acquire transport stream: %s", err.message);
+  GST_ERROR ("Failed to %s transport stream: %s", use_try ? "try_acquire" :
+      "acquire", err && err->message ? err->message : "unknown error");
 
-  dbus_error_free (&err);
+  g_clear_error (&err);
+  if (handle)
+    g_variant_unref (handle);
 
-  if (reply)
-    dbus_message_unref (reply);
-
+  conn->data.is_acquired = FALSE;
   return FALSE;
 }
 
 static void
 gst_avdtp_connection_transport_release (GstAvdtpConnection * conn)
 {
-  DBusMessage *msg;
-#ifdef HAVE_BLUEZ4
-  const char *access_type = "rw";
+  GError *err = NULL;
 
-  msg = dbus_message_new_method_call ("org.bluez", conn->transport,
-      "org.bluez.MediaTransport", "Release");
+  if (!bluez_media_transport1_call_release_sync (conn->data.conn, NULL, &err)) {
+    /* We don't care about errors if the transport was already marked stale */
+    if (!conn->data.is_acquired)
+      return;
 
-  dbus_message_append_args (msg, DBUS_TYPE_STRING, &access_type,
-      DBUS_TYPE_INVALID);
-#else
-  msg = dbus_message_new_method_call ("org.bluez", conn->transport,
-      "org.bluez.MediaTransport1", "Release");
-#endif
-  dbus_connection_send (conn->data.conn, msg, NULL);
-
-  dbus_message_unref (msg);
+    GST_ERROR ("Failed to release transport stream: %s", err->message ?
+        err->message : "unknown error");
+  }
+  conn->data.is_acquired = FALSE;
 }
 
 void
@@ -153,9 +186,7 @@ gst_avdtp_connection_release (GstAvdtpConnection * conn)
     if (conn->transport)
       gst_avdtp_connection_transport_release (conn);
 
-    dbus_connection_unref (conn->data.conn);
-
-    conn->data.conn = NULL;
+    g_clear_object (&conn->data.conn);
   }
 }
 
@@ -194,145 +225,22 @@ gst_avdtp_connection_set_transport (GstAvdtpConnection * conn,
   conn->transport = g_strdup (transport);
 }
 
-static gboolean
-gst_avdtp_connection_parse_property (GstAvdtpConnection * conn,
-    DBusMessageIter * i)
-{
-  const char *key;
-  DBusMessageIter variant_i;
-
-  if (dbus_message_iter_get_arg_type (i) != DBUS_TYPE_STRING) {
-    GST_ERROR ("Property name not a string.");
-    return FALSE;
-  }
-
-  dbus_message_iter_get_basic (i, &key);
-
-  if (!dbus_message_iter_next (i)) {
-    GST_ERROR ("Property value missing");
-    return FALSE;
-  }
-
-  if (dbus_message_iter_get_arg_type (i) != DBUS_TYPE_VARIANT) {
-    GST_ERROR ("Property value not a variant.");
-    return FALSE;
-  }
-
-  dbus_message_iter_recurse (i, &variant_i);
-
-  switch (dbus_message_iter_get_arg_type (&variant_i)) {
-    case DBUS_TYPE_BYTE:{
-      uint8_t value;
-      dbus_message_iter_get_basic (&variant_i, &value);
-
-      if (g_str_equal (key, "Codec") == TRUE)
-        conn->data.codec = value;
-
-      break;
-    }
-    case DBUS_TYPE_STRING:{
-      const char *value;
-      dbus_message_iter_get_basic (&variant_i, &value);
-
-      if (g_str_equal (key, "UUID") == TRUE) {
-        g_free (conn->data.uuid);
-        conn->data.uuid = g_strdup (value);
-      }
-
-      break;
-    }
-    case DBUS_TYPE_ARRAY:{
-      DBusMessageIter array_i;
-      char *value;
-      int size;
-
-      dbus_message_iter_recurse (&variant_i, &array_i);
-      dbus_message_iter_get_fixed_array (&array_i, &value, &size);
-
-      if (g_str_equal (key, "Configuration")) {
-        g_free (conn->data.config);
-        conn->data.config = g_new0 (guint8, size);
-        conn->data.config_size = size;
-        memcpy (conn->data.config, value, size);
-      }
-
-      break;
-    }
-  }
-
-  return TRUE;
-}
-
 gboolean
 gst_avdtp_connection_get_properties (GstAvdtpConnection * conn)
 {
-  DBusMessage *msg, *reply;
-  DBusMessageIter arg_i, ele_i;
-  DBusError err;
-#ifndef HAVE_BLUEZ4
-  const char *interface;
-#endif
+  GVariant *var;
 
-  dbus_error_init (&err);
+  conn->data.codec = bluez_media_transport1_get_codec (conn->data.conn);
 
-#ifdef HAVE_BLUEZ4
-  msg = dbus_message_new_method_call ("org.bluez", conn->transport,
-      "org.bluez.MediaTransport", "GetProperties");
-#else
-  msg = dbus_message_new_method_call ("org.bluez", conn->transport,
-      "org.freedesktop.DBus.Properties", "GetAll");
-#endif
-  if (!msg) {
-    GST_ERROR ("D-Bus Memory allocation failed");
-    return FALSE;
-  }
-#ifndef HAVE_BLUEZ4
-  interface = "org.bluez.MediaTransport1";
-  dbus_message_append_args (msg, DBUS_TYPE_STRING, &interface,
-        DBUS_TYPE_INVALID);
-#endif
-  reply = dbus_connection_send_with_reply_and_block (conn->data.conn,
-      msg, -1, &err);
+  conn->data.uuid = bluez_media_transport1_dup_uuid (conn->data.conn);
 
-  dbus_message_unref (msg);
-
-  if (dbus_error_is_set (&err)) {
-    GST_ERROR ("GetProperties failed: %s", err.message);
-    dbus_error_free (&err);
-    return FALSE;
-  }
-
-  if (!dbus_message_iter_init (reply, &arg_i)) {
-    GST_ERROR ("GetProperties reply has no arguments.");
-    goto fail;
-  }
-
-  if (dbus_message_iter_get_arg_type (&arg_i) != DBUS_TYPE_ARRAY) {
-    GST_ERROR ("GetProperties argument is not an array.");
-    goto fail;
-  }
-
-  dbus_message_iter_recurse (&arg_i, &ele_i);
-  while (dbus_message_iter_get_arg_type (&ele_i) != DBUS_TYPE_INVALID) {
-
-    if (dbus_message_iter_get_arg_type (&ele_i) == DBUS_TYPE_DICT_ENTRY) {
-      DBusMessageIter dict_i;
-
-      dbus_message_iter_recurse (&ele_i, &dict_i);
-
-      gst_avdtp_connection_parse_property (conn, &dict_i);
-    }
-
-    if (!dbus_message_iter_next (&ele_i))
-      break;
-  }
+  var = bluez_media_transport1_dup_configuration (conn->data.conn);
+  conn->data.config_size = g_variant_get_size (var);
+  conn->data.config = g_new0 (guint8, conn->data.config_size);
+  g_variant_store (var, conn->data.config);
+  g_variant_unref (var);
 
   return TRUE;
-
-fail:
-  dbus_message_unref (reply);
-  return FALSE;
-
 }
 
 static GstStructure *

@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (avdtpsrc_debug);
 enum
 {
   PROP_0,
-  PROP_TRANSPORT
+  PROP_TRANSPORT,
 };
 
 #define parent_class gst_avdtp_src_parent_class
@@ -262,7 +262,7 @@ gst_avdtp_src_start (GstBaseSrc * bsrc)
    * connection to figure out what format the device is going to send us.
    */
 
-  if (!gst_avdtp_connection_acquire (&avdtpsrc->conn)) {
+  if (!gst_avdtp_connection_acquire (&avdtpsrc->conn, FALSE)) {
     GST_ERROR_OBJECT (avdtpsrc, "Failed to acquire connection");
     return FALSE;
   }

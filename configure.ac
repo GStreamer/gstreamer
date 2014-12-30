@@ -1620,8 +1620,13 @@ AG_GST_CHECK_FEATURE(BLUEZ, [Bluez], bluez, [
     AC_DEFINE(HAVE_BLUEZ4,[1],[Old bluez detected])
   ], [
     PKG_CHECK_MODULES([BLUEZ5], [bluez >= 5.0], [
-      HAVE_BLUEZ=yes
-      AC_DEFINE(HAVE_BLUEZ5,[1],[Current bluez detected])
+      PKG_CHECK_MODULES([GIO_UNIX], gio-unix-2.0 > 2.24, [
+        AC_CHECK_PROG([GDBUS_CODEGEN],[gdbus-codegen],[gdbus-codegen])
+        HAVE_BLUEZ=yes
+        AC_DEFINE(HAVE_BLUEZ5,[1],[Current bluez detected])
+      ], [
+        HAVE_BLUEZ=no
+      ])
     ], [
       HAVE_BLUEZ=no
     ])

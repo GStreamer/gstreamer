@@ -27,20 +27,23 @@
 
 #include <glib.h>
 
-#include <dbus/dbus.h>
+#include "bluez.h"
 
 G_BEGIN_DECLS
+
 #define DEFAULT_CODEC_BUFFER_SIZE 2048
 #define TEMPLATE_MAX_BITPOOL_STR "64"
-    struct bluetooth_data
+
+struct bluetooth_data
 {
   guint link_mtu;
 
-  DBusConnection *conn;
+  BluezMediaTransport1 *conn;
   guint8 codec;                 /* Bluetooth transport configuration */
   gchar *uuid;
   guint8 *config;
   gint config_size;
+  gboolean is_acquired;
 
   gchar buffer[DEFAULT_CODEC_BUFFER_SIZE];      /* Codec transfer buffer */
 };
@@ -56,7 +59,8 @@ struct _GstAvdtpConnection
   struct bluetooth_data data;
 };
 
-gboolean gst_avdtp_connection_acquire (GstAvdtpConnection * conn);
+gboolean gst_avdtp_connection_acquire (GstAvdtpConnection * conn,
+    gboolean use_try);
 void gst_avdtp_connection_release (GstAvdtpConnection * conn);
 void gst_avdtp_connection_reset (GstAvdtpConnection * conn);
 gboolean gst_avdtp_connection_get_properties (GstAvdtpConnection * conn);
