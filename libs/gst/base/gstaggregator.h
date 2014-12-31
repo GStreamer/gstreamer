@@ -138,9 +138,6 @@ struct _GstAggregator
   /*< private >*/
   GstAggregatorPrivate  *  priv;
 
-  /* properties */
-  gint64                   latency;
-
   gpointer                 _gst_reserved[GST_PADDING_LARGE];
 };
 
