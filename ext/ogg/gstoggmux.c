@@ -642,14 +642,14 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
       }
     } else {
       /* We then need to check for a non-negative granulepos */
-      int i;
       gboolean valid = FALSE;
+      GList *l;
 
-      for (i = 0; i < pad->pagebuffers->length; i++) {
-        buf = g_queue_peek_nth (pad->pagebuffers, i);
+      for (l = pad->pagebuffers->head; l != NULL; l = l->next) {
+        buf = l->data;
         /* Here we check the OFFSET_END, which is actually temporarily the
          * granulepos value for this buffer */
-        if (GST_BUFFER_OFFSET_END (buf) != -1) {
+        if (GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
           valid = TRUE;
           break;
         }
