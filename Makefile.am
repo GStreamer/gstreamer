@@ -11,7 +11,7 @@ SUBDIRS = 		\
 	common \
 	pkgconfig \
 	docs \
-	$(SUBDIRS_EXAMPLES)
+	$(SUBDIRS_EXAMPLES) \
 	tests
 
 DIST_SUBDIRS = gst common pkgconfig docs examples tests
