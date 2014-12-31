@@ -1472,12 +1472,6 @@ gst_aggregator_finalize (GObject * object)
   G_OBJECT_CLASS (aggregator_parent_class)->finalize (object);
 }
 
-static void
-gst_aggregator_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (aggregator_parent_class)->dispose (object);
-}
-
 /*
  * gst_aggregator_set_latency_property:
  * @agg: a #GstAggregator
@@ -1604,7 +1598,6 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   gobject_class->set_property = gst_aggregator_set_property;
   gobject_class->get_property = gst_aggregator_get_property;
   gobject_class->finalize = gst_aggregator_finalize;
-  gobject_class->dispose = gst_aggregator_dispose;
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_int64 ("latency", "Buffer latency",
