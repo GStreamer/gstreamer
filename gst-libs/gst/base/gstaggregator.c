@@ -247,6 +247,9 @@ struct _GstAggregatorPrivate
   GstClockID aggregate_id;
   GMutex src_lock;
   GCond src_cond;
+
+  /* properties */
+  gint64 latency;
 };
 
 typedef struct
@@ -542,7 +545,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     if (GST_CLOCK_TIME_IS_VALID (latency_min)) {
       time += latency_min;
     } else {
-      time += self->latency;
+      time += self->priv->latency;
     }
 
     GST_DEBUG_OBJECT (self, "possibly waiting for clock to reach %"
@@ -1075,6 +1078,7 @@ void
 gst_aggregator_get_latency (GstAggregator * self, gboolean * live,
     GstClockTime * min_latency, GstClockTime * max_latency)
 {
+  GstClockTime our_latency;
   GstClockTime min, max;
 
   g_return_if_fail (GST_IS_AGGREGATOR (self));
@@ -1088,10 +1092,11 @@ gst_aggregator_get_latency (GstAggregator * self, gboolean * live,
       && GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
     max += self->priv->sub_latency_max;
 
-  if (GST_CLOCK_TIME_IS_VALID (self->latency)) {
-    min += self->latency;
+  our_latency = self->priv->latency;
+  if (GST_CLOCK_TIME_IS_VALID (our_latency)) {
+    min += our_latency;
     if (GST_CLOCK_TIME_IS_VALID (max))
-      max += self->latency;
+      max += our_latency;
   }
 
   if (live)
@@ -1105,6 +1110,7 @@ gst_aggregator_get_latency (GstAggregator * self, gboolean * live,
 static gboolean
 gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
 {
+  GstClockTime our_latency;
   LatencyData data;
 
   data.min = 0;
@@ -1117,13 +1123,16 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
       gst_aggregator_query_sink_latency_foreach, &data);
   SRC_STREAM_UNLOCK (self);
 
-  if (data.live && GST_CLOCK_TIME_IS_VALID (self->latency) &&
-      self->latency > data.max) {
+  our_latency = self->priv->latency;
+
+  if (data.live && GST_CLOCK_TIME_IS_VALID (our_latency) &&
+      our_latency > data.max) {
     GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
         ("%s", "Latency too big"),
         ("The requested latency value is too big for the current pipeline.  "
             "Limiting to %" G_GINT64_FORMAT, data.max));
-    self->latency = data.max;
+    self->priv->latency = data.max;
+    /* FIXME: shouldn't we g_object_notify() the change here? */
   }
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (data.min))) {
@@ -1143,11 +1152,11 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   self->priv->latency_max = data.max;
 
   /* add our own */
-  if (GST_CLOCK_TIME_IS_VALID (self->latency)) {
+  if (GST_CLOCK_TIME_IS_VALID (our_latency)) {
     if (GST_CLOCK_TIME_IS_VALID (data.min))
-      data.min += self->latency;
+      data.min += our_latency;
     if (GST_CLOCK_TIME_IS_VALID (data.max))
-      data.max += self->latency;
+      data.max += our_latency;
   }
 
   if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_min)
@@ -1500,8 +1509,8 @@ gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
     latency = self->priv->latency_max;
   }
 
-  changed = self->latency != latency;
-  self->latency = latency;
+  changed = (self->priv->latency != latency);
+  self->priv->latency = latency;
   GST_OBJECT_UNLOCK (self);
 
   if (changed)
@@ -1528,7 +1537,7 @@ gst_aggregator_get_latency_property (GstAggregator * agg)
   g_return_val_if_fail (GST_IS_AGGREGATOR (agg), -1);
 
   GST_OBJECT_LOCK (agg);
-  res = agg->latency;
+  res = agg->priv->latency;
   GST_OBJECT_UNLOCK (agg);
 
   return res;
@@ -1645,7 +1654,7 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
 
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
-  self->latency = 0;
+  self->priv->latency = DEFAULT_LATENCY;
 
   g_mutex_init (&self->priv->setcaps_lock);
   g_mutex_init (&self->priv->src_lock);
