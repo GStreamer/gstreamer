@@ -439,6 +439,7 @@ EXTRA_DIST = gst-plugins-bad.supp $(uvch264_dist_data)
 
 orc_bayer_CFLAGS = $(ORC_CFLAGS)
 orc_bayer_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_bayer_SOURCES = orc/bayer.c
 
 orc/bayer.c: $(top_srcdir)/gst/bayer/gstbayerorc.orc
 	$(MKDIR_P) orc
@@ -446,6 +447,7 @@ orc/bayer.c: $(top_srcdir)/gst/bayer/gstbayerorc.orc
 
 orc_audiomixer_CFLAGS = $(ORC_CFLAGS)
 orc_audiomixer_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_audiomixer_SOURCES = orc/audiomixer.c
 
 orc/audiomixer.c: $(top_srcdir)/gst/audiomixer/gstaudiomixerorc.orc
 	$(MKDIR_P) orc
