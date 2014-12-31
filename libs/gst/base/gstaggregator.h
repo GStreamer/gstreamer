@@ -124,9 +124,10 @@ GstBuffer * gst_aggregator_pad_get_buffer   (GstAggregatorPad *  pad);
 
 /**
  * GstAggregator:
- * @aggregator_pads: #GList of #GstAggregatorPad managed by this #GstAggregator.
+ * @srcpad: the aggregator's source pad
+ * @segment: the output segment
  *
- * Collectpads object.
+ * Aggregator base class object structure.
  */
 struct _GstAggregator
 {
@@ -181,12 +182,11 @@ struct _GstAggregator
  *                  of. Once / if a buffer has been constructed from the
  *                  aggregated buffers, the subclass should call _finish_buffer.
  * @stop:           Optional.
- *                  Should be linked up first. Called when the
- *                  element goes from PAUSED to READY. The subclass should free
- *                  all resources and reset its state.
+ *                  Called when the element goes from PAUSED to READY.
+ *                  The subclass should free all resources and reset its state.
  * @start:          Optional.
- *                  Should be linked up first. Called when the element goes from
- *                  READY to PAUSED. The subclass should get ready to process
+ *                  Called when the element goes from READY to PAUSED.
+ *                  The subclass should get ready to process
  *                  aggregated buffers.
  * @get_next_time:  Optional.
  *                  Called when the element needs to know the time of the next
