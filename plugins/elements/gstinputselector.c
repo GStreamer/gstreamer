@@ -801,11 +801,13 @@ gst_input_selector_debug_cached_buffers (GstInputSelector * sel)
 {
   GList *walk;
 
-  for (walk = GST_ELEMENT_CAST (sel)->sinkpads; walk; walk = g_list_next (walk)) {
+  if (gst_debug_category_get_threshold (input_selector_debug) < GST_LEVEL_DEBUG)
+    return;
+
+  for (walk = GST_ELEMENT_CAST (sel)->sinkpads; walk; walk = walk->next) {
     GstSelectorPad *selpad;
     GString *timestamps;
-    gchar *str;
-    int i;
+    GList *l;
 
     selpad = GST_SELECTOR_PAD_CAST (walk->data);
     if (!selpad->cached_buffers) {
@@ -814,16 +816,14 @@ gst_input_selector_debug_cached_buffers (GstInputSelector * sel)
     }
 
     timestamps = g_string_new ("Cached buffers timestamps:");
-    for (i = 0; i < selpad->cached_buffers->length; ++i) {
-      GstSelectorPadCachedBuffer *cached_buffer;
+    for (l = selpad->cached_buffers->head; l != NULL; l = l->next) {
+      GstSelectorPadCachedBuffer *cached_buffer = l->data;
 
-      cached_buffer = g_queue_peek_nth (selpad->cached_buffers, i);
       g_string_append_printf (timestamps, " %" GST_TIME_FORMAT,
           GST_TIME_ARGS (GST_BUFFER_PTS (cached_buffer->buffer)));
     }
-    str = g_string_free (timestamps, FALSE);
-    GST_DEBUG_OBJECT (selpad, "%s", str);
-    g_free (str);
+    GST_DEBUG_OBJECT (selpad, "%s", timestamps->str);
+    g_string_free (timestamps, TRUE);
   }
 }
 #endif
