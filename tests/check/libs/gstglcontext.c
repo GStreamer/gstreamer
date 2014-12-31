@@ -281,15 +281,49 @@ GST_START_TEST (test_share)
 
 GST_END_TEST;
 
+static void
+accum_true (GstGLContext * context, gpointer data)
+{
+  gint *i = data;
+  *i = 1;
+}
+
+static void
+check_wrapped (gpointer data)
+{
+  GstGLContext *wrapped_context = data;
+  GError *error = NULL;
+  gint i = 0;
+  gboolean ret;
+
+  /* check that scheduling on an unactivated wrapped context asserts */
+  ASSERT_CRITICAL (gst_gl_context_thread_add (wrapped_context,
+          (GstGLContextThreadFunc) accum_true, &i));
+  fail_if (i != 0);
+
+  /* check that scheduling on an activated context succeeds */
+  gst_gl_context_activate (wrapped_context, TRUE);
+  gst_gl_context_thread_add (wrapped_context,
+      (GstGLContextThreadFunc) accum_true, &i);
+  fail_if (i != 1);
+
+  /* check filling out the wrapped context's info */
+  fail_if (wrapped_context->gl_vtable->TexImage2D != NULL);
+  ret = gst_gl_context_fill_info (wrapped_context, &error);
+  fail_if (!ret, "error received %s\n",
+      error ? error->message : "Unknown error");
+  fail_if (wrapped_context->gl_vtable->TexImage2D == NULL);
+}
+
 GST_START_TEST (test_wrapped_context)
 {
   GstGLContext *context, *other_context, *wrapped_context;
   GstGLWindow *window, *other_window;
   GError *error = NULL;
   gint i = 0;
-  guintptr handle;
-  GstGLPlatform platform;
-  GstGLAPI apis;
+  guintptr handle, handle2;
+  GstGLPlatform platform, platform2;
+  GstGLAPI apis, apis2;
 
   context = gst_gl_context_new (display);
 
@@ -307,6 +341,14 @@ GST_START_TEST (test_wrapped_context)
 
   wrapped_context =
       gst_gl_context_new_wrapped (display, handle, platform, apis);
+
+  handle2 = gst_gl_context_get_gl_context (wrapped_context);
+  platform2 = gst_gl_context_get_gl_platform (wrapped_context);
+  apis2 = gst_gl_context_get_gl_api (wrapped_context);
+
+  fail_if (handle != handle2);
+  fail_if (platform != platform2);
+  fail_if (apis != apis2);
 
   other_context = gst_gl_context_new (display);
   other_window = gst_gl_window_new (display);
@@ -330,11 +372,15 @@ GST_START_TEST (test_wrapped_context)
     i++;
   }
 
+  gst_object_unref (other_context);
+
+  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (check_wrapped),
+      wrapped_context);
+
   gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit), context);
 
-  gst_object_unref (window);
   gst_object_unref (other_window);
-  gst_object_unref (other_context);
+  gst_object_unref (window);
   gst_object_unref (context);
   gst_object_unref (wrapped_context);
 }

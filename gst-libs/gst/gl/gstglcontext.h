@@ -145,6 +145,8 @@ gboolean      gst_gl_context_check_feature (GstGLContext *context, const gchar *
 guintptr      gst_gl_context_get_current_gl_context     (GstGLPlatform platform);
 GstGLAPI      gst_gl_context_get_current_gl_api         (guint *major, guint *minor);
 
+gboolean gst_gl_context_fill_info (GstGLContext * context, GError ** error);
+
 /* FIXME: remove */
 void gst_gl_context_thread_add (GstGLContext * context,
     GstGLContextThreadFunc func, gpointer data);

@@ -372,6 +372,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   if (context_type == GST_GL_PLATFORM_CGL) {
     context_class->get_current_context =
         gst_gl_context_cocoa_get_current_context;
+    context_class->get_proc_address = _default_get_proc_address;
   }
 #endif
 #if GST_GL_HAVE_PLATFORM_WGL
@@ -384,8 +385,15 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   if (context_type == GST_GL_PLATFORM_EAGL) {
     context_class->get_current_context =
         gst_gl_context_eagl_get_current_context;
+    context_class->get_proc_address = _default_get_proc_address;
   }
 #endif
+
+  if (!context_class->get_current_context) {
+    /* we don't have API support */
+    gst_object_unref (context);
+    return NULL;
+  }
 
   return context;
 }
@@ -698,7 +706,6 @@ gst_gl_context_get_proc_address (GstGLContext * context, const gchar * name)
   GstGLContextClass *context_class;
 
   g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
-  g_return_val_if_fail (!GST_GL_IS_WRAPPED_CONTEXT (context), NULL);
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   g_return_val_if_fail (context_class->get_proc_address != NULL, NULL);
 
@@ -1168,7 +1175,6 @@ gst_gl_context_create_thread (GstGLContext * context)
   GstGLContextClass *context_class;
   GstGLWindowClass *window_class;
   GstGLFuncs *gl;
-  gboolean ret = FALSE;
   GstGLAPI compiled_api, user_api, gl_api, display_api;
   gchar *api_string;
   gchar *compiled_api_s;
@@ -1177,8 +1183,6 @@ gst_gl_context_create_thread (GstGLContext * context)
   const gchar *user_choice;
   GError **error;
   GstGLContext *other_context;
-  GString *ext_g_str = NULL;
-  const gchar *ext_const_c_str = NULL;
 
   g_mutex_lock (&context->priv->render_lock);
 
@@ -1247,7 +1251,7 @@ gst_gl_context_create_thread (GstGLContext * context)
   }
   GST_INFO ("created context");
 
-  if (!context_class->activate (context, TRUE)) {
+  if (!gst_gl_context_activate (context, TRUE)) {
     g_set_error (error, GST_GL_CONTEXT_ERROR,
         GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE,
         "Failed to activate the GL Context");
@@ -1279,6 +1283,116 @@ gst_gl_context_create_thread (GstGLContext * context)
   g_free (compiled_api_s);
   g_free (user_api_s);
   g_free (display_api_s);
+
+  gst_gl_context_fill_info (context, error);
+
+  context->priv->alive = TRUE;
+
+  if (gl->DebugMessageCallback) {
+#if !defined(GST_DISABLE_GST_DEBUG)
+    GST_INFO ("Enabling GL context debugging");
+    /* enable them all */
+    gl->DebugMessageControl (GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0,
+        GL_TRUE);
+    gl->DebugMessageCallback (_gst_gl_debug_callback, context);
+#endif
+  }
+
+  if (other_context)
+    gst_object_unref (other_context);
+
+  g_cond_signal (&context->priv->create_cond);
+
+//  g_mutex_unlock (&context->priv->render_lock);
+  gst_gl_window_send_message_async (context->window,
+      (GstGLWindowCB) _unlock_create_thread, context, NULL);
+
+  gst_gl_window_run (context->window);
+
+  GST_INFO ("loop exited\n");
+
+  g_mutex_lock (&context->priv->render_lock);
+
+  context->priv->alive = FALSE;
+
+  gst_gl_context_activate (context, FALSE);
+
+  context_class->destroy_context (context);
+
+  /* User supplied callback */
+  if (context->window->close)
+    context->window->close (context->window->close_data);
+
+  /* window specific shutdown */
+  if (window_class->close) {
+    window_class->close (context->window);
+  }
+
+  g_cond_signal (&context->priv->destroy_cond);
+
+  g_mutex_unlock (&context->priv->render_lock);
+
+  return NULL;
+
+failure:
+  {
+    if (other_context)
+      gst_object_unref (other_context);
+
+    g_cond_signal (&context->priv->create_cond);
+    g_mutex_unlock (&context->priv->render_lock);
+    return NULL;
+  }
+}
+
+/**
+ * gst_gl_context_destroy:
+ * @context: a #GstGLContext:
+ *
+ * Destroys an OpenGL context.
+ *
+ * Should only be called after gst_gl_context_create() has been successfully
+ * called for this context.
+ *
+ * Since: 1.6
+ */
+void
+gst_gl_context_destroy (GstGLContext * context)
+{
+  GstGLContextClass *context_class;
+
+  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+  context_class = GST_GL_CONTEXT_GET_CLASS (context);
+  g_return_if_fail (context_class->destroy_context != NULL);
+
+  context_class->destroy_context (context);
+}
+
+/**
+ * gst_gl_context_fill_info:
+ * @context: a #GstGLContext:
+ *
+ * Fills @context's info (version, extensions, vtable, etc) from the GL
+ * context in the current thread.  Typically used with wrapped contexts to
+ * allow wrapped contexts to be used as regular #GstGLContext's.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_gl_context_fill_info (GstGLContext * context, GError ** error)
+{
+  GstGLFuncs *gl;
+  GString *ext_g_str = NULL;
+  const gchar *ext_const_c_str = NULL;
+  GstGLAPI gl_api;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (context->priv->active_thread == g_thread_self (),
+      FALSE);
+
+  gl = context->gl_vtable;
+  gl_api = gst_gl_context_get_gl_api (context);
 
   gl->GetError = gst_gl_context_get_proc_address (context, "glGetError");
   gl->GetString = gst_gl_context_get_proc_address (context, "glGetString");
@@ -1331,86 +1445,10 @@ gst_gl_context_create_thread (GstGLContext * context)
     goto failure;
   }
 
-  context->priv->alive = TRUE;
-
-  if (gl->DebugMessageCallback) {
-#if !defined(GST_DISABLE_GST_DEBUG)
-    GST_INFO ("Enabling GL context debugging");
-    /* enable them all */
-    gl->DebugMessageControl (GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0,
-        GL_TRUE);
-    gl->DebugMessageCallback (_gst_gl_debug_callback, context);
-#endif
-  }
-
-  if (other_context)
-    gst_object_unref (other_context);
-
-  g_cond_signal (&context->priv->create_cond);
-
-//  g_mutex_unlock (&context->priv->render_lock);
-  gst_gl_window_send_message_async (context->window,
-      (GstGLWindowCB) _unlock_create_thread, context, NULL);
-
-  gst_gl_window_run (context->window);
-
-  GST_INFO ("loop exited\n");
-
-  g_mutex_lock (&context->priv->render_lock);
-
-  context->priv->alive = FALSE;
-
-  context_class->activate (context, FALSE);
-
-  context_class->destroy_context (context);
-
-  /* User supplied callback */
-  if (context->window->close)
-    context->window->close (context->window->close_data);
-
-  /* window specific shutdown */
-  if (window_class->close) {
-    window_class->close (context->window);
-  }
-
-  g_cond_signal (&context->priv->destroy_cond);
-
-  g_mutex_unlock (&context->priv->render_lock);
-
-  return NULL;
+  return TRUE;
 
 failure:
-  {
-    if (other_context)
-      gst_object_unref (other_context);
-
-    g_cond_signal (&context->priv->create_cond);
-    g_mutex_unlock (&context->priv->render_lock);
-    return NULL;
-  }
-}
-
-/**
- * gst_gl_context_destroy:
- * @context: a #GstGLContext:
- *
- * Destroys an OpenGL context.
- *
- * Should only be called after gst_gl_context_create() has been successfully
- * called for this context.
- *
- * Since: 1.6
- */
-void
-gst_gl_context_destroy (GstGLContext * context)
-{
-  GstGLContextClass *context_class;
-
-  g_return_if_fail (GST_GL_IS_CONTEXT (context));
-  context_class = GST_GL_CONTEXT_GET_CLASS (context);
-  g_return_if_fail (context_class->destroy_context != NULL);
-
-  context_class->destroy_context (context);
+  return FALSE;
 }
 
 /**
@@ -1512,7 +1550,12 @@ gst_gl_context_thread_add (GstGLContext * context,
 
   g_return_if_fail (GST_GL_IS_CONTEXT (context));
   g_return_if_fail (func != NULL);
-  g_return_if_fail (!GST_GL_IS_WRAPPED_CONTEXT (context));
+
+  if (GST_GL_IS_WRAPPED_CONTEXT (context)) {
+    g_return_if_fail (context->priv->active_thread == g_thread_self ());
+    func (context, data);
+    return;
+  }
 
   rdata.context = context;
   rdata.data = data;
@@ -1642,9 +1685,12 @@ gst_gl_wrapped_context_get_gl_platform (GstGLContext * context)
 static gboolean
 gst_gl_wrapped_context_activate (GstGLContext * context, gboolean activate)
 {
-  g_assert_not_reached ();
+  if (activate)
+    context->priv->gl_thread = g_thread_self ();
+  else
+    context->priv->gl_thread = NULL;
 
-  return FALSE;
+  return TRUE;
 }
 
 static void
