@@ -79,82 +79,82 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
 
 /* GstAggregatorPad definitions */
 #define PAD_LOCK_EVENT(pad)   G_STMT_START {                            \
-  GST_LOG_OBJECT (pad, "Taking EVENT lock from thread %p",              \
+  GST_TRACE_OBJECT (pad, "Taking EVENT lock from thread %p",            \
         g_thread_self());                                               \
   g_mutex_lock(&pad->priv->event_lock);                                 \
-  GST_LOG_OBJECT (pad, "Took EVENT lock from thread %p",              \
+  GST_TRACE_OBJECT (pad, "Took EVENT lock from thread %p",              \
         g_thread_self());                                               \
   } G_STMT_END
 
 #define PAD_UNLOCK_EVENT(pad)  G_STMT_START {                           \
-  GST_LOG_OBJECT (pad, "Releasing EVENT lock from thread %p",          \
+  GST_TRACE_OBJECT (pad, "Releasing EVENT lock from thread %p",         \
         g_thread_self());                                               \
   g_mutex_unlock(&pad->priv->event_lock);                               \
-  GST_LOG_OBJECT (pad, "Release EVENT lock from thread %p",          \
+  GST_TRACE_OBJECT (pad, "Release EVENT lock from thread %p",           \
         g_thread_self());                                               \
   } G_STMT_END
 
 
 #define PAD_WAIT_EVENT(pad)   G_STMT_START {                            \
-  GST_LOG_OBJECT (pad, "Waiting for EVENT on thread %p",               \
+  GST_LOG_OBJECT (pad, "Waiting for EVENT on thread %p",                \
         g_thread_self());                                               \
-  g_cond_wait(&(((GstAggregatorPad* )pad)->priv->event_cond),       \
+  g_cond_wait(&(((GstAggregatorPad* )pad)->priv->event_cond),           \
       &(pad->priv->event_lock));                                        \
-  GST_LOG_OBJECT (pad, "DONE Waiting for EVENT on thread %p",               \
+  GST_LOG_OBJECT (pad, "DONE Waiting for EVENT on thread %p",           \
         g_thread_self());                                               \
   } G_STMT_END
 
-#define PAD_BROADCAST_EVENT(pad) {                                          \
+#define PAD_BROADCAST_EVENT(pad) G_STMT_START {                        \
   GST_LOG_OBJECT (pad, "Signaling EVENT from thread %p",               \
-        g_thread_self());                                                   \
-  g_cond_broadcast(&(((GstAggregatorPad* )pad)->priv->event_cond)); \
-  }
+        g_thread_self());                                              \
+  g_cond_broadcast(&(((GstAggregatorPad* )pad)->priv->event_cond));    \
+  } G_STMT_END
 
 #define GST_AGGREGATOR_SETCAPS_LOCK(self)   G_STMT_START {        \
-  GST_LOG_OBJECT (self, "Taking SETCAPS lock from thread %p",   \
+  GST_TRACE_OBJECT (self, "Taking SETCAPS lock from thread %p",   \
         g_thread_self());                                         \
-  g_mutex_lock(&self->priv->setcaps_lock);                         \
-  GST_LOG_OBJECT (self, "Took SETCAPS lock from thread %p",     \
+  g_mutex_lock(&self->priv->setcaps_lock);                        \
+  GST_TRACE_OBJECT (self, "Took SETCAPS lock from thread %p",     \
         g_thread_self());                                         \
   } G_STMT_END
 
 #define GST_AGGREGATOR_SETCAPS_UNLOCK(self)   G_STMT_START {        \
-  GST_LOG_OBJECT (self, "Releasing SETCAPS lock from thread %p",  \
+  GST_TRACE_OBJECT (self, "Releasing SETCAPS lock from thread %p",  \
         g_thread_self());                                           \
-  g_mutex_unlock(&self->priv->setcaps_lock);                         \
-  GST_LOG_OBJECT (self, "Took SETCAPS lock from thread %p",       \
+  g_mutex_unlock(&self->priv->setcaps_lock);                        \
+  GST_TRACE_OBJECT (self, "Took SETCAPS lock from thread %p",       \
         g_thread_self());                                           \
   } G_STMT_END
 
-#define PAD_STREAM_LOCK(pad)   G_STMT_START {                            \
-  GST_LOG_OBJECT (pad, "Taking lock from thread %p",              \
+#define PAD_STREAM_LOCK(pad)   G_STMT_START {                           \
+  GST_TRACE_OBJECT (pad, "Taking lock from thread %p",                  \
         g_thread_self());                                               \
-  g_mutex_lock(&pad->priv->stream_lock);                                 \
-  GST_LOG_OBJECT (pad, "Took lock from thread %p",              \
+  g_mutex_lock(&pad->priv->stream_lock);                                \
+  GST_TRACE_OBJECT (pad, "Took lock from thread %p",                    \
         g_thread_self());                                               \
   } G_STMT_END
 
-#define PAD_STREAM_UNLOCK(pad)  G_STMT_START {                           \
-  GST_LOG_OBJECT (pad, "Releasing lock from thread %p",          \
+#define PAD_STREAM_UNLOCK(pad)  G_STMT_START {                          \
+  GST_TRACE_OBJECT (pad, "Releasing lock from thread %p",               \
         g_thread_self());                                               \
-  g_mutex_unlock(&pad->priv->stream_lock);                               \
-  GST_LOG_OBJECT (pad, "Release lock from thread %p",          \
+  g_mutex_unlock(&pad->priv->stream_lock);                              \
+  GST_TRACE_OBJECT (pad, "Release lock from thread %p",                 \
         g_thread_self());                                               \
   } G_STMT_END
 
 #define SRC_STREAM_LOCK(self)   G_STMT_START {                             \
-  GST_LOG_OBJECT (self, "Taking src STREAM lock from thread %p",           \
+  GST_TRACE_OBJECT (self, "Taking src STREAM lock from thread %p",         \
         g_thread_self());                                                  \
   g_mutex_lock(&self->priv->src_lock);                                     \
-  GST_LOG_OBJECT (self, "Took src STREAM lock from thread %p",             \
+  GST_TRACE_OBJECT (self, "Took src STREAM lock from thread %p",           \
         g_thread_self());                                                  \
   } G_STMT_END
 
 #define SRC_STREAM_UNLOCK(self)  G_STMT_START {                            \
-  GST_LOG_OBJECT (self, "Releasing src STREAM lock from thread %p",        \
+  GST_TRACE_OBJECT (self, "Releasing src STREAM lock from thread %p",      \
         g_thread_self());                                                  \
   g_mutex_unlock(&self->priv->src_lock);                                   \
-  GST_LOG_OBJECT (self, "Release src STREAM lock from thread %p",          \
+  GST_TRACE_OBJECT (self, "Released src STREAM lock from thread %p",       \
         g_thread_self());                                                  \
   } G_STMT_END
 
