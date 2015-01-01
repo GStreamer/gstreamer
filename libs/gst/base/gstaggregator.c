@@ -1615,6 +1615,11 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           "position", 0,
           (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_check_all_pads_with_data_or_eos);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_stop_pad);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_query_sink_latency_foreach);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_set_flush_pending);
 }
 
 static void
