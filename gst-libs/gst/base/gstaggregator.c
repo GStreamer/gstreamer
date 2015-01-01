@@ -29,8 +29,8 @@
  * Control is given to the subclass when all pads have data.
  * <itemizedlist>
  *  <listitem><para>
- *    Base class for mixers and muxers. Implementers should at least implement
- *    the aggregate () vmethod.
+ *    Base class for mixers and muxers. Subclasses should at least implement
+ *    the #GstAggregatorClass.aggregate() virtual method.
  *  </para></listitem>
  *  <listitem><para>
  *    When data is queued on all pads, tha aggregate vmethod is called.
@@ -273,8 +273,8 @@ enum
 /**
  * gst_aggregator_iterate_sinkpads:
  * @self: The #GstAggregator
- * @func: The function to call.
- * @user_data: The data to pass to @func.
+ * @func: (scope call): The function to call.
+ * @user_data: (closure): The data to pass to @func.
  *
  * Iterate the sinkpads of aggregator to call a function on them.
  *
@@ -441,10 +441,11 @@ gst_aggregator_set_src_caps (GstAggregator * self, GstCaps * caps)
 /**
  * gst_aggregator_finish_buffer:
  * @self: The #GstAggregator
- * @buffer: the #GstBuffer to push.
+ * @buffer: (transfer full): the #GstBuffer to push.
  *
- * This method will take care of sending mandatory events before pushing
- * the provided buffer.
+ * This method will push the provided output buffer downstream. If needed,
+ * mandatory events such as stream-start, caps, and segment events will be
+ * sent before pushing the buffer.
  */
 GstFlowReturn
 gst_aggregator_finish_buffer (GstAggregator * self, GstBuffer * buffer)
