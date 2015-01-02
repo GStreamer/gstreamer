@@ -63,20 +63,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogg_mux_debug);
 #define GST_GP_FORMAT "[gp %8" G_GINT64_FORMAT "]"
 #define GST_GP_CAST(_gp) ((gint64) _gp)
 
-typedef enum
-{
-  GST_OGG_FLAG_BOS = GST_ELEMENT_FLAG_LAST,
-  GST_OGG_FLAG_EOS
-}
-GstOggFlag;
-
-/* OggMux signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 /* set to 0.5 seconds by default */
 #define DEFAULT_MAX_DELAY       G_GINT64_CONSTANT(500000000)
 #define DEFAULT_MAX_PAGE_DELAY  G_GINT64_CONSTANT(500000000)
@@ -227,8 +213,6 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
           "src"), "src");
   gst_pad_set_event_function (ogg_mux->srcpad, gst_ogg_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (ogg_mux), ogg_mux->srcpad);
-
-  GST_OBJECT_FLAG_SET (GST_ELEMENT (ogg_mux), GST_OGG_FLAG_BOS);
 
   /* seed random number generator for creation of serial numbers */
   srand (time (NULL));
