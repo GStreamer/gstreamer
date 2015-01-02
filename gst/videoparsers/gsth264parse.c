@@ -1747,10 +1747,12 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (h264parse->interval > 0 || h264parse->push_codec) {
     GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
     guint64 diff;
+    gboolean initial_frame = FALSE;
 
     /* init */
     if (!GST_CLOCK_TIME_IS_VALID (h264parse->last_report)) {
       h264parse->last_report = timestamp;
+      initial_frame = TRUE;
     }
 
     if (h264parse->idr_pos >= 0) {
@@ -1770,7 +1772,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           GST_TIME_ARGS (diff));
 
       if (GST_TIME_AS_SECONDS (diff) >= h264parse->interval ||
-          h264parse->push_codec) {
+          initial_frame || h264parse->push_codec) {
         GstBuffer *codec_nal;
         gint i;
         GstClockTime new_ts;
@@ -2217,6 +2219,8 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
           (segment->start != 0 || segment->rate != 1.0
               || segment->applied_rate != 1.0))
         h264parse->do_ts = FALSE;
+
+      h264parse->last_report = GST_CLOCK_TIME_NONE;
 
       res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       break;
