@@ -1906,7 +1906,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
     priv->distance_from_sync = 0;
     GST_BUFFER_FLAG_UNSET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-    /* For keyframes, DTS = PTS, if decoder doesn't decide otherwise */
+    /* For keyframes, DTS = PTS, if encoder doesn't decide otherwise */
     if (!GST_CLOCK_TIME_IS_VALID (frame->dts)) {
       frame->dts = frame->pts;
     }
