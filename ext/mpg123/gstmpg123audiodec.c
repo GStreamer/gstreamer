@@ -438,44 +438,12 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
 static gboolean
 gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
 {
-/* Using the parsed information upstream, and the list of allowed caps
- * downstream, this code tries to find a suitable audio info. It is important
- * to keep in mind that the rate and number of channels should never deviate
- * from the one the bitstream has, otherwise mpg123 has to mix channels and/or
- * resample (and as its docs say, its internal resampler is very crude). The
- * sample format, however, can be chosen freely, because the MPEG specs do not
- * mandate any special format. Therefore, rate and number of channels are taken
- * from upstream (which parsed the MPEG frames, so the input_caps contain
- * exactly the rate and number of channels the bitstream actually has), while
- * the sample format is chosen by trying out all caps that are allowed by
- * downstream. This way, the output is adjusted to what the downstream prefers.
- *
- * Also, the new output audio info is not set immediately. Instead, it is
- * considered the "next audioinfo". The code waits for mpg123 to notice the new
- * format (= when mpg123_decode_frame() returns MPG123_AUDIO_DEC_NEW_FORMAT),
- * and then sets the next audioinfo. Otherwise, the next audioinfo is set too
- * soon, which may cause problems with mp3s containing several format headers.
- * One example would be an mp3 with the first 30 seconds using 44.1 kHz, then
- * the next 30 seconds using 32 kHz. Rare, but possible.
- *
- * STEPS:
- *
- * 1. get rate and channels from input_caps
- * 2. get allowed caps from src pad
- * 3. for each structure in allowed caps:
- * 3.1. take format
- * 3.2. if the combination of format with rate and channels is unsupported by
- *      mpg123, go to (3), or exit with error if there are no more structures
- *      to try
- * 3.3. create next audioinfo out of rate,channels,format, and exit
- */
-
-
-  int rate, channels;
+  /* "encoding" is the sample format specifier for mpg123 */
+  int encoding;
+  int sample_rate, num_channels;
+  GstAudioFormat format;
   GstMpg123AudioDec *mpg123_decoder;
-  GstCaps *allowed_srccaps;
-  guint structure_nr;
-  gboolean match_found = FALSE;
+  gboolean retval = FALSE;
 
   mpg123_decoder = GST_MPG123_AUDIO_DEC (dec);
 
@@ -483,7 +451,7 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
 
   mpg123_decoder->has_next_audioinfo = FALSE;
 
-  /* Get rate and channels from input_caps */
+  /* Get sample rate and number of channels from input_caps */
   {
     GstStructure *structure;
     gboolean err = FALSE;
@@ -492,110 +460,131 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
      * input caps structures don't make sense */
     structure = gst_caps_get_structure (input_caps, 0);
 
-    if (!gst_structure_get_int (structure, "rate", &rate)) {
+    if (!gst_structure_get_int (structure, "rate", &sample_rate)) {
       err = TRUE;
       GST_ERROR_OBJECT (dec, "Input caps do not have a rate value");
     }
-    if (!gst_structure_get_int (structure, "channels", &channels)) {
+    if (!gst_structure_get_int (structure, "channels", &num_channels)) {
       err = TRUE;
       GST_ERROR_OBJECT (dec, "Input caps do not have a channel value");
     }
 
-    if (err)
-      return FALSE;
+    if (G_UNLIKELY (err))
+      goto done;
   }
 
-  /* Get the caps that are allowed by downstream */
+  /* Get sample format from the allowed src caps */
   {
-    GstCaps *allowed_srccaps_unnorm =
+    GstCaps *allowed_srccaps =
         gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
-    if (!allowed_srccaps_unnorm) {
-      GST_ERROR_OBJECT (dec, "Allowed src caps are NULL");
-      return FALSE;
-    }
-    allowed_srccaps = gst_caps_normalize (allowed_srccaps_unnorm);
-  }
 
-  /* Go through all allowed caps, pick the first one that matches */
-  for (structure_nr = 0; structure_nr < gst_caps_get_size (allowed_srccaps);
-      ++structure_nr) {
-    GstStructure *structure;
-    gchar const *format_str;
-    GstAudioFormat format;
-    int encoding;
+    if (allowed_srccaps == NULL) {
+      /* srcpad is not linked (yet), so no peer information is available;
+       * just use the default sample format (16 bit signed integer) */
+      GST_DEBUG_OBJECT (mpg123_decoder,
+          "srcpad is not linked (yet) -> using S16 sample format");
+      format = GST_AUDIO_FORMAT_S16;
+      encoding = MPG123_ENC_SIGNED_16;
+    } else {
+      gchar const *format_str;
+      GValue const *format_value;
 
-    structure = gst_caps_get_structure (allowed_srccaps, structure_nr);
+      /* Look at the sample format values from the first structure */
+      GstStructure *structure = gst_caps_get_structure (allowed_srccaps, 0);
+      format_value = gst_structure_get_value (structure, "format");
 
-    format_str = gst_structure_get_string (structure, "format");
-    if (format_str == NULL) {
-      GST_DEBUG_OBJECT (dec, "Could not get format from src caps");
-      continue;
-    }
-
-    format = gst_audio_format_from_string (format_str);
-    if (format == GST_AUDIO_FORMAT_UNKNOWN) {
-      GST_DEBUG_OBJECT (dec, "Unknown format %s", format_str);
-      continue;
-    }
-
-    switch (format) {
-      case GST_AUDIO_FORMAT_S16:
-        encoding = MPG123_ENC_SIGNED_16;
-        break;
-      case GST_AUDIO_FORMAT_S24:
-        encoding = MPG123_ENC_SIGNED_24;
-        break;
-      case GST_AUDIO_FORMAT_S32:
-        encoding = MPG123_ENC_SIGNED_32;
-        break;
-      case GST_AUDIO_FORMAT_U16:
-        encoding = MPG123_ENC_UNSIGNED_16;
-        break;
-      case GST_AUDIO_FORMAT_U24:
-        encoding = MPG123_ENC_UNSIGNED_24;
-        break;
-      case GST_AUDIO_FORMAT_U32:
-        encoding = MPG123_ENC_UNSIGNED_32;
-        break;
-      case GST_AUDIO_FORMAT_F32:
-        encoding = MPG123_ENC_FLOAT_32;
-        break;
-      default:
-        GST_DEBUG_OBJECT (dec,
-            "Format %s in srccaps is not supported", format_str);
-        continue;
-    }
-
-    {
-      int err;
-
-      /* Cleanup old formats & set new one */
-      mpg123_format_none (mpg123_decoder->handle);
-      err = mpg123_format (mpg123_decoder->handle, rate, channels, encoding);
-      if (err != MPG123_OK) {
-        GST_DEBUG_OBJECT (dec,
-            "mpg123 cannot use caps %" GST_PTR_FORMAT
-            " because mpg123_format() failed: %s", structure,
-            mpg123_strerror (mpg123_decoder->handle));
-        continue;
+      if (GST_VALUE_HOLDS_LIST (format_value)) {
+        /* if value is a format list, pick the first entry */
+        GValue const *fmt_list_value =
+            gst_value_list_get_value (format_value, 0);
+        format_str = g_value_get_string (fmt_list_value);
+      } else if (G_VALUE_HOLDS_STRING (format_value)) {
+        /* if value is a string, use it directly */
+        format_str = g_value_get_string (format_value);
+      } else {
+        GST_ERROR_OBJECT (mpg123_decoder,
+            "format value in caps structure %" GST_PTR_FORMAT
+            " is of invalid type (must be plain string or string list)",
+            structure);
+        format_str = NULL;
       }
+
+      format = GST_AUDIO_FORMAT_UNKNOWN;
+
+      /* get the format value from the string */
+      if (G_LIKELY (format_str != NULL)) {
+        format = gst_audio_format_from_string (format_str);
+        if (G_UNLIKELY (format == GST_AUDIO_FORMAT_UNKNOWN)) {
+          GST_ERROR_OBJECT (mpg123_decoder, "format \"%s\" is invalid",
+              format_str);
+        }
+      }
+
+      /* convert format to mpg123 encoding */
+      if (G_LIKELY (format != GST_AUDIO_FORMAT_UNKNOWN)) {
+        switch (format) {
+          case GST_AUDIO_FORMAT_S16:
+            encoding = MPG123_ENC_SIGNED_16;
+            break;
+          case GST_AUDIO_FORMAT_S24:
+            encoding = MPG123_ENC_SIGNED_24;
+            break;
+          case GST_AUDIO_FORMAT_S32:
+            encoding = MPG123_ENC_SIGNED_32;
+            break;
+          case GST_AUDIO_FORMAT_U16:
+            encoding = MPG123_ENC_UNSIGNED_16;
+            break;
+          case GST_AUDIO_FORMAT_U24:
+            encoding = MPG123_ENC_UNSIGNED_24;
+            break;
+          case GST_AUDIO_FORMAT_U32:
+            encoding = MPG123_ENC_UNSIGNED_32;
+            break;
+          case GST_AUDIO_FORMAT_F32:
+            encoding = MPG123_ENC_FLOAT_32;
+            break;
+          default:
+            GST_DEBUG_OBJECT (dec,
+                "Format %s in srccaps is not supported", format_str);
+            goto done;
+        }
+      }
+
+      gst_caps_unref (allowed_srccaps);
     }
-
-    gst_audio_info_init (&(mpg123_decoder->next_audioinfo));
-    gst_audio_info_set_format (&(mpg123_decoder->next_audioinfo), format, rate,
-        channels, NULL);
-    GST_LOG_OBJECT (dec, "The next audio format is: %s, %u Hz, %u channels",
-        format_str, rate, channels);
-    mpg123_decoder->has_next_audioinfo = TRUE;
-
-    match_found = TRUE;
-
-    break;
   }
 
-  gst_caps_unref (allowed_srccaps);
+  /* Sample rate, number of channels, and sample format are known at this point.
+   * Set the audioinfo structure's values and the mpg123 format. */
+  {
+    int err;
 
-  return match_found;
+    /* clear all existing format settings from the mpg123 instance */
+    mpg123_format_none (mpg123_decoder->handle);
+    /* set the chosen format */
+    err =
+        mpg123_format (mpg123_decoder->handle, sample_rate, num_channels,
+        encoding);
+
+    if (err != MPG123_OK) {
+      GST_WARNING_OBJECT (dec,
+          "mpg123_format() failed: %s",
+          mpg123_strerror (mpg123_decoder->handle));
+    } else {
+      gst_audio_info_init (&(mpg123_decoder->next_audioinfo));
+      gst_audio_info_set_format (&(mpg123_decoder->next_audioinfo), format,
+          sample_rate, num_channels, NULL);
+      GST_LOG_OBJECT (dec, "The next audio format is: %s, %u Hz, %u channels",
+          gst_audio_format_to_string (format), sample_rate, num_channels);
+      mpg123_decoder->has_next_audioinfo = TRUE;
+
+      retval = TRUE;
+    }
+  }
+
+done:
+  return retval;
 }
 
 
