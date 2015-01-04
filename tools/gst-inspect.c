@@ -709,15 +709,13 @@ print_pad_info (GstElement * element)
 
     name = gst_pad_get_name (pad);
     if (gst_pad_get_direction (pad) == GST_PAD_SRC)
-      g_print ("  SRC: '%s'", name);
+      n_print ("  SRC: '%s'\n", name);
     else if (gst_pad_get_direction (pad) == GST_PAD_SINK)
-      g_print ("  SINK: '%s'", name);
+      n_print ("  SINK: '%s'\n", name);
     else
-      g_print ("  UNKNOWN!!!: '%s'", name);
+      n_print ("  UNKNOWN!!!: '%s'\n", name);
 
     g_free (name);
-
-    g_print ("\n");
 
     if (pad->padtemplate)
       n_print ("    Pad Template: '%s'\n", pad->padtemplate->name_template);
