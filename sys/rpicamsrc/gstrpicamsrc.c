@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2013 Jan Schmidt <jan@centricular.com>
+ * Copyright (C) 2013-2014 Jan Schmidt <jan@centricular.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -91,6 +91,7 @@ enum
 {
   PROP_0,
   PROP_BITRATE,
+  PROP_KEYFRAME_INTERVAL,
   PROP_PREVIEW,
   PROP_PREVIEW_ENCODED,
   PROP_PREVIEW_OPACITY,
@@ -127,6 +128,7 @@ enum
 #define ISO_DEFAULT 0
 #define VIDEO_STABILISATION_DEFAULT FALSE
 #define EXPOSURE_COMPENSATION_DEFAULT 0
+#define KEYFRAME_INTERVAL_DEFAULT 25
 
 #define EXPOSURE_MODE_DEFAULT GST_RPI_CAM_SRC_EXPOSURE_MODE_AUTO
 #define EXPOSURE_METERING_MODE_DEFAULT GST_RPI_CAM_SRC_EXPOSURE_METERING_MODE_AVERAGE
@@ -204,6 +206,11 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Bitrate for encoding",
           1, BITRATE_HIGHEST, BITRATE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KEYFRAME_INTERVAL,
+      g_param_spec_int ("keyframe-interval", "Keyframe Interface",
+          "Interval (in frames) between I frames. 0 = single-keyframe",
+          0, G_MAXINT, KEYFRAME_INTERVAL_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PREVIEW,
       g_param_spec_boolean ("preview",
@@ -329,7 +336,9 @@ gst_rpi_cam_src_init (GstRpiCamSrc * src)
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
   raspicapture_default_config (&src->capture_config);
 
+  src->capture_config.intraperiod = KEYFRAME_INTERVAL_DEFAULT;
   src->capture_config.verbose = 1;
+
   /* do-timestamping by default for now. FIXME: Implement proper timestamping */
   gst_base_src_set_do_timestamp (GST_BASE_SRC (src), TRUE);
 }
@@ -343,6 +352,9 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_BITRATE:
       src->capture_config.bitrate = g_value_get_int (value);
+      break;
+    case PROP_KEYFRAME_INTERVAL:
+      src->capture_config.intraperiod = g_value_get_int (value);
       break;
     case PROP_PREVIEW:
       src->capture_config.preview_parameters.wantPreview =
@@ -433,6 +445,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_BITRATE:
       g_value_set_int (value, src->capture_config.bitrate);
+      break;
+    case PROP_KEYFRAME_INTERVAL:
+      g_value_set_int (value, src->capture_config.intraperiod);
       break;
     case PROP_PREVIEW:
       g_value_set_boolean (value,
