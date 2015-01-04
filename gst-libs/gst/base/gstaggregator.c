@@ -1320,16 +1320,6 @@ gst_aggregator_event_forward_func (GstPad * pad, gpointer user_data)
   return FALSE;
 }
 
-static gboolean
-gst_aggregator_set_flush_pending (GstAggregator * self, GstAggregatorPad * pad,
-    gpointer udata)
-{
-  pad->priv->pending_flush_start = TRUE;
-  pad->priv->pending_flush_stop = FALSE;
-
-  return TRUE;
-}
-
 static EventData
 gst_aggregator_forward_event_to_all_sinkpads (GstAggregator * self,
     GstEvent * event, gboolean flush)
@@ -1344,9 +1334,18 @@ gst_aggregator_forward_event_to_all_sinkpads (GstAggregator * self,
   /* We first need to set all pads as flushing in a first pass
    * as flush_start flush_stop is sometimes sent synchronously
    * while we send the seek event */
-  if (flush)
-    gst_aggregator_iterate_sinkpads (self,
-        gst_aggregator_set_flush_pending, NULL);
+  if (flush) {
+    GList *l;
+
+    GST_OBJECT_LOCK (self);
+    for (l = GST_ELEMENT_CAST (self)->sinkpads; l != NULL; l = l->next) {
+      GstAggregatorPad *pad = l->data;
+
+      pad->priv->pending_flush_start = TRUE;
+      pad->priv->pending_flush_stop = FALSE;
+    }
+    GST_OBJECT_UNLOCK (self);
+  }
 
   gst_pad_forward (self->srcpad, gst_aggregator_event_forward_func, &evdata);
 
@@ -1643,7 +1642,6 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_stop_pad);
   GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_query_sink_latency_foreach);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_set_flush_pending);
 }
 
 static void
