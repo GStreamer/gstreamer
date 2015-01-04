@@ -456,6 +456,12 @@ gst_preset_default_get_preset_names (GstPreset * preset)
       groups[num_groups] = NULL;
     }
   }
+  if (!num_groups) {
+    GST_INFO_OBJECT (preset, "Empty preset file");
+    g_strfreev (groups);
+    return NULL;
+  }
+
   /* sort the array now */
   g_qsort_with_data (groups, num_groups, sizeof (gchar *),
       (GCompareDataFunc) strcmp, NULL);
