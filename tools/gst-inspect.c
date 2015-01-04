@@ -891,7 +891,7 @@ print_preset_list (GstElement * element)
     return;
 
   presets = gst_preset_get_preset_names (GST_PRESET (element));
-  if (presets) {
+  if (presets && *presets) {
     n_print ("\n");
     n_print ("Presets:\n");
     for (preset = presets; *preset; preset++) {
