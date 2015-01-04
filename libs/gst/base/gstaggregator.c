@@ -349,17 +349,43 @@ no_iter:
   return result;
 }
 
-static inline gboolean
-gst_aggregator_check_all_pads_with_data_or_eos (GstAggregator * self,
-    GstAggregatorPad * aggpad, gpointer user_data)
+static gboolean
+gst_aggregator_check_pads_ready (GstAggregator * self)
 {
-  if (aggpad->buffer || aggpad->eos) {
-    return TRUE;
+  GstAggregatorPad *pad;
+  GList *l, *sinkpads;
+
+  GST_LOG_OBJECT (self, "checking pads");
+
+  GST_OBJECT_LOCK (self);
+
+  sinkpads = GST_ELEMENT_CAST (self)->sinkpads;
+  if (sinkpads == NULL)
+    goto no_sinkpads;
+
+  for (l = sinkpads; l != NULL; l = l->next) {
+    pad = l->data;
+
+    if (pad->buffer == NULL && !pad->eos)
+      goto pad_not_ready;
   }
 
-  GST_LOG_OBJECT (aggpad, "Not ready to be aggregated");
+  GST_OBJECT_UNLOCK (self);
+  GST_LOG_OBJECT (self, "pads are ready");
+  return TRUE;
 
-  return FALSE;
+no_sinkpads:
+  {
+    GST_LOG_OBJECT (self, "pads not ready: no sink pads");
+    GST_OBJECT_UNLOCK (self);
+    return FALSE;
+  }
+pad_not_ready:
+  {
+    GST_LOG_OBJECT (pad, "pad not ready to be aggregated yet");
+    GST_OBJECT_UNLOCK (self);
+    return FALSE;
+  }
 }
 
 static void
@@ -502,8 +528,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 
   gst_aggregator_get_latency (self, &live, &latency_min, &latency_max);
 
-  if (gst_aggregator_iterate_sinkpads (self,
-          gst_aggregator_check_all_pads_with_data_or_eos, NULL)) {
+  if (gst_aggregator_check_pads_ready (self)) {
     GST_DEBUG_OBJECT (self, "all pads have data");
     SRC_STREAM_UNLOCK (self);
 
@@ -580,8 +605,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     }
   }
 
-  res = gst_aggregator_iterate_sinkpads (self,
-      gst_aggregator_check_all_pads_with_data_or_eos, NULL);
+  res = gst_aggregator_check_pads_ready (self);
   SRC_STREAM_UNLOCK (self);
 
   return res;
@@ -1617,7 +1641,6 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_check_all_pads_with_data_or_eos);
   GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_stop_pad);
   GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_query_sink_latency_foreach);
   GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_set_flush_pending);
@@ -1737,8 +1760,7 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
   PAD_STREAM_UNLOCK (aggpad);
 
   SRC_STREAM_LOCK (self);
-  if (gst_aggregator_iterate_sinkpads (self,
-          gst_aggregator_check_all_pads_with_data_or_eos, NULL))
+  if (gst_aggregator_check_pads_ready (self))
     SRC_STREAM_BROADCAST_UNLOCKED (self);
   SRC_STREAM_UNLOCK (self);
 
