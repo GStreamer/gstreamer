@@ -219,7 +219,7 @@ gst_ac3_parse_reset (GstAc3Parse * ac3parse)
 static void
 gst_ac3_parse_init (GstAc3Parse * ac3parse)
 {
-  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (ac3parse), 6);
+  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (ac3parse), 8);
   gst_ac3_parse_reset (ac3parse);
   ac3parse->baseparse_chainfunc =
       GST_BASE_PARSE_SINK_PAD (GST_BASE_PARSE (ac3parse))->chainfunc;
@@ -509,7 +509,7 @@ gst_ac3_parse_handle_frame (GstBaseParse * parse,
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (G_UNLIKELY (map.size < 6)) {
+  if (G_UNLIKELY (map.size < 8)) {
     *skipsize = 1;
     goto cleanup;
   }
@@ -601,7 +601,7 @@ gst_ac3_parse_handle_frame (GstBaseParse * parse,
     if (more || !gst_byte_reader_skip (&reader, frmsiz) ||
         !gst_byte_reader_get_uint16_be (&reader, &word)) {
       GST_DEBUG_OBJECT (ac3parse, "... but not sufficient data");
-      gst_base_parse_set_min_frame_size (parse, framesize + 6);
+      gst_base_parse_set_min_frame_size (parse, framesize + 8);
       *skipsize = 0;
       goto cleanup;
     } else {
