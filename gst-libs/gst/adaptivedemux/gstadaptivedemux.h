@@ -350,6 +350,18 @@ struct _GstAdaptiveDemuxClass
    * Returns: #GST_FLOW_OK if successful, #GST_FLOW_ERROR in case of error.
    */
   GstFlowReturn (*chunk_received) (GstAdaptiveDemux * demux, GstAdaptiveDemuxStream * stream, GstBuffer ** buffer);
+
+  /**
+   * get_live_seek_range:
+   * @demux: #GstAdaptiveDemux
+   * @start: pointer to put the start position allowed to seek to
+   * @stop: pointer to put the stop position allowed to seek to
+   *
+   * Gets the allowed seek start and stop positions for the current live stream
+   *
+   * Return: %TRUE if successful
+   */
+  gboolean (*get_live_seek_range) (GstAdaptiveDemux * demux, gint64 * start, gint64 * stop);
 };
 
 GType    gst_adaptive_demux_get_type (void);

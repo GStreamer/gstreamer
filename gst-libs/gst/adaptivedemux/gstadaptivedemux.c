@@ -773,6 +773,32 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
 }
 
 static gboolean
+gst_adaptive_demux_get_live_seek_range (GstAdaptiveDemux * demux,
+    gint64 * range_start, gint64 * range_stop)
+{
+  GstAdaptiveDemuxClass *klass;
+
+  klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+
+  g_return_val_if_fail (klass->get_live_seek_range, FALSE);
+
+  return klass->get_live_seek_range (demux, range_start, range_stop);
+}
+
+static gboolean
+gst_adaptive_demux_can_seek (GstAdaptiveDemux * demux)
+{
+  GstAdaptiveDemuxClass *klass;
+
+  klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+  if (gst_adaptive_demux_is_live (demux)) {
+    return klass->get_live_seek_range != NULL;
+  }
+
+  return klass->seek != NULL;
+}
+
+static gboolean
 gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
@@ -798,15 +824,8 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
 
       GST_INFO_OBJECT (demux, "Received seek event");
 
-      if (demux_class->seek == NULL) {
-        GST_DEBUG_OBJECT (demux, "Subclass doesn't implement seeking");
-        return FALSE;
-      }
-
       GST_MANIFEST_LOCK (demux);
-      if (gst_adaptive_demux_is_live (demux)) {
-        /* TODO not supported yet */
-        GST_WARNING_OBJECT (demux, "Received seek event for live stream");
+      if (!gst_adaptive_demux_can_seek (demux)) {
         GST_MANIFEST_UNLOCK (demux);
         gst_event_unref (event);
         return FALSE;
@@ -819,6 +838,20 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       if (format != GST_FORMAT_TIME) {
         gst_event_unref (event);
         return FALSE;
+      }
+
+      if (gst_adaptive_demux_is_live (demux)) {
+        gint64 range_start, range_stop;
+        if (!gst_adaptive_demux_get_live_seek_range (demux, &range_start,
+                &range_stop)) {
+          gst_event_unref (event);
+          return FALSE;
+        }
+        if (start < range_start || start >= range_stop) {
+          GST_WARNING_OBJECT (demux, "Seek to invalid position");
+          gst_event_unref (event);
+          return FALSE;
+        }
       }
 
       seqnum = gst_event_get_seqnum (event);
@@ -981,6 +1014,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
       gint64 stop = -1;
+      gint64 start = 0;
 
       GST_MANIFEST_LOCK (demux);
       if (demux->priv->manifest_buffer == NULL) {
@@ -991,16 +1025,23 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       GST_INFO_OBJECT (demux, "Received GST_QUERY_SEEKING with format %d", fmt);
       if (fmt == GST_FORMAT_TIME) {
-        gboolean can_seek = demux_class->seek
-            && !gst_adaptive_demux_is_live (demux);
         GstClockTime duration;
-        duration = demux_class->get_duration (demux);
-        if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0)
-          stop = duration;
-        gst_query_set_seeking (query, fmt, can_seek, 0, stop);
+        gboolean can_seek = gst_adaptive_demux_can_seek (demux);
+
         ret = TRUE;
-        GST_INFO_OBJECT (demux, "GST_QUERY_SEEKING returning with stop : %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (stop));
+        if (can_seek) {
+          if (gst_adaptive_demux_is_live (demux)) {
+            ret = gst_adaptive_demux_get_live_seek_range (demux, &start, &stop);
+          } else {
+            duration = demux_class->get_duration (demux);
+            if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0)
+              stop = duration;
+          }
+        }
+        gst_query_set_seeking (query, fmt, can_seek, start, stop);
+        GST_INFO_OBJECT (demux, "GST_QUERY_SEEKING returning with start : %"
+            GST_TIME_FORMAT ", stop : %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
       }
       GST_MANIFEST_UNLOCK (demux);
       break;
