@@ -1229,7 +1229,8 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_LOG_OBJECT (stream->pad, "set fragment pts=%" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
 
-    stream->segment.position = GST_BUFFER_PTS (buffer);
+    if (GST_BUFFER_PTS_IS_VALID (buffer))
+      stream->segment.position = GST_BUFFER_PTS (buffer);
 
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
@@ -1261,7 +1262,8 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       discont = TRUE;
 
     GST_BUFFER_PTS (buffer) = stream->fragment.timestamp;
-    stream->segment.position = GST_BUFFER_PTS (buffer);
+    if (GST_BUFFER_PTS_IS_VALID (buffer))
+      stream->segment.position = GST_BUFFER_PTS (buffer);
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
   }
