@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2011 David Schleef <ds@entropywave.com>
  * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
+ * Copyright (C) 2015 Florian Langlois <florian.langlois@fr.thalesgroup.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,6 +35,7 @@ enum
 {
   PROP_0,
   PROP_MODE,
+  PROP_CONNECTION,
   PROP_DEVICE_NUMBER,
   PROP_BUFFER_SIZE
 };
@@ -129,6 +131,13 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_CONNECTION,
+      g_param_spec_enum ("connection", "Connection",
+          "Video input connection to use",
+          GST_TYPE_DECKLINK_CONNECTION, GST_DECKLINK_CONNECTION_SDI,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   g_object_class_install_property (gobject_class, PROP_DEVICE_NUMBER,
       g_param_spec_int ("device-number", "Device number",
           "Output device instance to use", 0, G_MAXINT, 0,
@@ -158,6 +167,7 @@ static void
 gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
 {
   self->mode = GST_DECKLINK_MODE_NTSC;
+  self->connection = GST_DECKLINK_CONNECTION_SDI;
   self->device_number = 0;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
 
@@ -180,6 +190,9 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
     case PROP_MODE:
       self->mode = (GstDecklinkModeEnum) g_value_get_enum (value);
       break;
+    case PROP_CONNECTION:
+      self->connection = (GstDecklinkConnectionEnum) g_value_get_enum (value);
+      break;
     case PROP_DEVICE_NUMBER:
       self->device_number = g_value_get_int (value);
       break;
@@ -201,6 +214,9 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_MODE:
       g_value_set_enum (value, self->mode);
+      break;
+    case PROP_CONNECTION:
+      g_value_set_enum (value, self->connection);
       break;
     case PROP_DEVICE_NUMBER:
       g_value_set_int (value, self->device_number);
@@ -408,6 +424,24 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
   if (!self->input) {
     GST_ERROR_OBJECT (self, "Failed to acquire input");
     return FALSE;
+  }
+
+  if (self->input->config) {
+    ret = self->input->config->SetInt (bmdDeckLinkConfigVideoInputConnection,
+        gst_decklink_get_connection(self->connection));
+    if (ret != S_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set configuration (input source)");
+      return FALSE;
+    }
+
+    if (self->connection == GST_DECKLINK_CONNECTION_COMPOSITE) {
+      ret = self->input->config->SetInt (bmdDeckLinkConfigAnalogVideoInputFlags,
+          bmdAnalogVideoFlagCompositeSetup75);
+      if (ret != S_OK) {
+        GST_ERROR_OBJECT (self, "Failed to set configuration (composite setup)");
+        return FALSE;
+      }
+    }
   }
 
   mode = gst_decklink_get_mode (self->mode);

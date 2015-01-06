@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2011 David Schleef <ds@schleef.org>
  * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
+ * Copyright (C) 2015 Florian Langlois <florian.langlois@fr.thalesgroup.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -50,6 +51,7 @@ struct _GstDecklinkVideoSrc
   GstPushSrc parent;
 
   GstDecklinkModeEnum mode;
+  GstDecklinkConnectionEnum connection;
   gint device_number;
 
   GstVideoInfo info;
