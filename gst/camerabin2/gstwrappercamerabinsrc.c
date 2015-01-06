@@ -838,6 +838,7 @@ start_image_capture (GstWrapperCameraBinSrc * self)
   pad = gst_element_get_static_pad (self->src_vid_src, "src");
   if (self->image_renegotiate) {
 
+    g_mutex_unlock (&bcamsrc->capturing_mutex);
     peer = gst_pad_get_peer (pad);
     gst_object_unref (pad);
     gst_pad_query (peer, gst_query_new_drain ());
@@ -845,7 +846,6 @@ start_image_capture (GstWrapperCameraBinSrc * self)
 
     self->image_renegotiate = FALSE;
 
-    g_mutex_unlock (&bcamsrc->capturing_mutex);
     gst_element_set_state (self->src_vid_src, GST_STATE_READY);
 
     /* clean capsfilter caps so they don't interfere here */
