@@ -269,7 +269,7 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
     gst_v4l2_object_unlock (self->v4l2output);
     gst_v4l2_object_unlock (self->v4l2capture);
     gst_pad_stop_task (decoder->srcpad);
-    GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+    GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   }
 
   self->output_flow = GST_FLOW_OK;
