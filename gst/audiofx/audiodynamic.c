@@ -193,12 +193,8 @@ gst_audio_dynamic_set_process_function (GstAudioDynamic * filter,
   func_index += (filter->characteristics == CHARACTERISTICS_HARD_KNEE) ? 0 : 2;
   func_index += (GST_AUDIO_INFO_FORMAT (info) == GST_AUDIO_FORMAT_F32) ? 1 : 0;
 
-  if (func_index >= 0 && func_index < 8) {
-    filter->process = process_functions[func_index];
-    return TRUE;
-  }
-
-  return FALSE;
+  filter->process = process_functions[func_index];
+  return TRUE;
 }
 
 /* GObject vmethod implementations */
