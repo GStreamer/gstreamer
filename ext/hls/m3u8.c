@@ -573,8 +573,6 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
             uri = unquote_string (uri);
             if (uri) {
               uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
-
-              uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
               if (uri == NULL) {
                 g_free (urip);
                 continue;
