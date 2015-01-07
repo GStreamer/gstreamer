@@ -347,7 +347,7 @@ gst_decklink_video_src_query (GstBaseSrc * bsrc, GstQuery * query)
         mode = gst_decklink_get_mode (self->mode);
 
         min =
-            gst_util_uint64_scale_ceil (GST_MSECOND, mode->fps_d, mode->fps_n);
+            gst_util_uint64_scale_ceil (GST_SECOND, mode->fps_d, mode->fps_n);
         max = self->buffer_size * min;
 
         gst_query_set_latency (query, TRUE, min, max);

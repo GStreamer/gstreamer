@@ -484,7 +484,7 @@ gst_decklink_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
           GstClockTime min, max;
 
           min =
-              gst_util_uint64_scale_ceil (GST_MSECOND, self->input->mode->fps_d,
+              gst_util_uint64_scale_ceil (GST_SECOND, self->input->mode->fps_d,
               self->input->mode->fps_n);
           max = self->buffer_size * min;
 
