@@ -487,8 +487,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
           if (offset != -1) {
             file->offset = offset;
           } else {
-            GstM3U8MediaFile *prev =
-                self->files ? g_list_last (self->files)->data : NULL;
+            GstM3U8MediaFile *prev = self->files ? self->files->data : NULL;
 
             if (!prev) {
               offset = 0;
@@ -508,7 +507,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
         title = NULL;
         discontinuity = FALSE;
         size = offset = -1;
-        self->files = g_list_append (self->files, file);
+        self->files = g_list_prepend (self->files, file);
       }
 
     } else if (g_str_has_prefix (data, "#EXT-X-ENDLIST")) {
@@ -695,6 +694,8 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
 
   g_free (current_key);
   current_key = NULL;
+
+  self->files = g_list_reverse (self->files);
 
   /* reorder playlists by bitrate */
   if (self->lists) {
@@ -1116,7 +1117,7 @@ gst_m3u8_client_get_current_uri (GstM3U8Client * client)
 }
 
 gboolean
-gst_m3u8_client_has_main(GstM3U8Client * client)
+gst_m3u8_client_has_main (GstM3U8Client * client)
 {
   gboolean ret;
 
