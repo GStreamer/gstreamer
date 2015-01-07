@@ -1352,12 +1352,6 @@ static void
 gst_v4l2_buffer_pool_dispose (GObject * object)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (object);
-  gint i;
-
-  for (i = 0; i < VIDEO_MAX_FRAME; i++) {
-    if (pool->buffers[i])
-      gst_buffer_replace (&(pool->buffers[i]), NULL);
-  }
 
   if (pool->vallocator)
     gst_object_unref (pool->vallocator);
