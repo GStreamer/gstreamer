@@ -130,7 +130,7 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
   GstByteReader reader;
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 signature;
-  static guint width = 0, height = 0;
+  guint width = 0, height = 0;
 
   gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
   gst_byte_reader_init (&reader, map.data, map.size);
@@ -165,8 +165,6 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
   }
 
   gst_byte_reader_skip (&reader, 8);
-  /* Skipping the data read in previous iterations */
-  gst_byte_reader_skip (&reader, pngparse->skip_length);
 
   for (;;) {
     guint32 length;
@@ -193,8 +191,6 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
 
     if (!gst_byte_reader_skip (&reader, length + 4))
       goto beach;
-    /* We have already read the data till now. Hence skip the read data next time we enter handle_frame() */
-    pngparse->skip_length = gst_byte_reader_get_pos (&reader) + length + 4;
 
     if (code == GST_MAKE_FOURCC ('I', 'E', 'N', 'D')) {
       /* the start code and at least 2 empty frames (IHDR and IEND) */
@@ -238,9 +234,6 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
 
 
       gst_buffer_unmap (frame->buffer, &map);
-      pngparse->skip_length = 0;
-      width = 0;
-      height = 0;
       return gst_base_parse_finish_frame (parse, frame,
           gst_byte_reader_get_pos (&reader));
     }
