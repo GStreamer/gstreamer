@@ -835,8 +835,8 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
       pool->buffers[i] = NULL;
 
       if (V4L2_TYPE_IS_OUTPUT (pool->obj->type))
-        gst_buffer_unref (buffer);
-      else
+        gst_v4l2_buffer_pool_release_buffer (bpool, buffer);
+      else                      /* Don't re-enqueue capture buffer on stop */
         pclass->release_buffer (bpool, buffer);
 
       g_atomic_int_add (&pool->num_queued, -1);
@@ -921,9 +921,7 @@ gst_v4l2_buffer_pool_flush_stop (GstBufferPool * bpool)
           gst_mini_object_set_qdata (GST_MINI_OBJECT (buffer),
               GST_V4L2_IMPORT_QUARK, NULL, NULL);
 
-          if (V4L2_TYPE_IS_OUTPUT (obj->type))
-            gst_buffer_unref (buffer);
-          else
+          if (buffer->pool == NULL)
             gst_v4l2_buffer_pool_release_buffer (bpool, buffer);
 
           g_atomic_int_add (&pool->num_queued, -1);
@@ -1330,8 +1328,10 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
             /* playback, put the buffer back in the queue to refill later. */
             pclass->release_buffer (bpool, buffer);
           } else {
-            /* We keep a ref on queued buffer, so this should never happen */
-            g_assert_not_reached ();
+            /* the buffer is queued in the device but maybe not played yet. We just
+             * leave it there and not make it available for future calls to acquire
+             * for now. The buffer will be dequeued and reused later. */
+            GST_LOG_OBJECT (pool, "buffer %u is queued", index);
           }
           break;
         }
@@ -1766,7 +1766,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
             /* don't check return value because qbuf would have failed */
             gst_v4l2_is_buffer_valid (to_queue, &group);
 
-            /* qbuf has taken the ref of the to_queue buffer but we are no in
+            /* qbuf has stored to_queue buffer but we are not in
              * streaming state, so the flush logic won't be performed.
              * To avoid leaks, flush the allocator and restore the queued
              * buffer as non-queued */
@@ -1781,15 +1781,19 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
             goto start_failed;
           }
 
+          /* Remove our ref, we will still hold this buffer in acquire as needed,
+           * otherwise the pool will think it is outstanding and will refuse to stop. */
+          gst_buffer_unref (to_queue);
+
           if (g_atomic_int_get (&pool->num_queued) >= pool->min_latency) {
             GstBuffer *out;
             /* all buffers are queued, try to dequeue one and release it back
              * into the pool so that _acquire can get to it again. */
             ret = gst_v4l2_buffer_pool_dqbuf (pool, &out);
-            if (ret == GST_FLOW_OK)
+            if (ret == GST_FLOW_OK && out->pool == NULL)
               /* release the rendered buffer back into the pool. This wakes up any
                * thread waiting for a buffer in _acquire(). */
-              gst_buffer_unref (out);
+              gst_v4l2_buffer_pool_release_buffer (bpool, out);
           }
           break;
         }
