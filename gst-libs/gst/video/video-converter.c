@@ -527,12 +527,14 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
 
 #define DEFAULT_OPT_FILL_BORDER TRUE
 #define DEFAULT_OPT_BORDER_ARGB 0x00000000
-/* options full, no-yuv */
+/* options full, input-only, output-only, none */
 #define DEFAULT_OPT_MATRIX_MODE "full"
 /* none, remap */
 #define DEFAULT_OPT_GAMMA_MODE "none"
 /* none, merge-only, fast */
 #define DEFAULT_OPT_PRIMARIES_MODE "none"
+/* options full, upsample-only, downsample-only, none */
+#define DEFAULT_OPT_CHROMA_MODE "full"
 #define DEFAULT_OPT_RESAMPLER_METHOD GST_VIDEO_RESAMPLER_METHOD_CUBIC
 #define DEFAULT_OPT_RESAMPLER_TAPS 0
 #define DEFAULT_OPT_DITHER_METHOD GST_VIDEO_DITHER_BAYER
@@ -548,6 +550,8 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
     GST_VIDEO_CONVERTER_OPT_GAMMA_MODE, DEFAULT_OPT_GAMMA_MODE)
 #define GET_OPT_PRIMARIES_MODE(c) get_opt_str(c, \
     GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE, DEFAULT_OPT_PRIMARIES_MODE)
+#define GET_OPT_CHROMA_MODE(c) get_opt_str(c, \
+    GST_VIDEO_CONVERTER_OPT_CHROMA_MODE, DEFAULT_OPT_CHROMA_MODE)
 #define GET_OPT_RESAMPLER_METHOD(c) get_opt_enum(c, \
     GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_VIDEO_RESAMPLER_METHOD, \
     DEFAULT_OPT_RESAMPLER_METHOD)
@@ -560,7 +564,9 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
     GST_VIDEO_CONVERTER_OPT_DITHER_QUANTIZATION, DEFAULT_OPT_DITHER_QUANTIZATION)
 
 #define CHECK_MATRIX_FULL(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "full"))
-#define CHECK_MATRIX_NO_YUV(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "no-yuv"))
+#define CHECK_MATRIX_INPUT(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "input-only"))
+#define CHECK_MATRIX_OUTPUT(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "output-only"))
+#define CHECK_MATRIX_NONE(c) (!g_strcmp0(GET_OPT_MATRIX_MODE(c), "none"))
 
 #define CHECK_GAMMA_NONE(c) (!g_strcmp0(GET_OPT_GAMMA_MODE(c), "none"))
 #define CHECK_GAMMA_REMAP(c) (!g_strcmp0(GET_OPT_GAMMA_MODE(c), "remap"))
@@ -568,6 +574,11 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
 #define CHECK_PRIMARIES_NONE(c) (!g_strcmp0(GET_OPT_PRIMARIES_MODE(c), "none"))
 #define CHECK_PRIMARIES_MERGE(c) (!g_strcmp0(GET_OPT_PRIMARIES_MODE(c), "merge-only"))
 #define CHECK_PRIMARIES_FAST(c) (!g_strcmp0(GET_OPT_PRIMARIES_MODE(c), "fast"))
+
+#define CHECK_CHROMA_FULL(c) (!g_strcmp0(GET_OPT_CHROMA_MODE(c), "full"))
+#define CHECK_CHROMA_UPSAMPLE(c) (!g_strcmp0(GET_OPT_CHROMA_MODE(c), "upsample-only"))
+#define CHECK_CHROMA_DOWNSAMPLE(c) (!g_strcmp0(GET_OPT_CHROMA_MODE(c), "downsample-only"))
+#define CHECK_CHROMA_NONE(c) (!g_strcmp0(GET_OPT_CHROMA_MODE(c), "none"))
 
 static GstLineCache *
 chain_unpack_line (GstVideoConverter * convert)
@@ -994,9 +1005,14 @@ compute_matrix_to_RGB (GstVideoConverter * convert, MatrixData * data)
         1 / ((float) scale[1]), 1 / ((float) scale[2]));
   }
 
-  /* bring components to R'G'B' space */
-  if (gst_video_color_matrix_get_Kr_Kb (info->colorimetry.matrix, &Kr, &Kb))
-    color_matrix_YCbCr_to_RGB (data, Kr, Kb);
+  if (!CHECK_MATRIX_NONE (convert)) {
+    if (CHECK_MATRIX_OUTPUT (convert))
+      info = &convert->out_info;
+
+    /* bring components to R'G'B' space */
+    if (gst_video_color_matrix_get_Kr_Kb (info->colorimetry.matrix, &Kr, &Kb))
+      color_matrix_YCbCr_to_RGB (data, Kr, Kb);
+  }
 
   color_matrix_debug (data);
 }
@@ -1007,11 +1023,18 @@ compute_matrix_to_YUV (GstVideoConverter * convert, MatrixData * data)
   GstVideoInfo *info;
   gdouble Kr = 0, Kb = 0;
 
-  info = &convert->out_info;
+  if (!CHECK_MATRIX_NONE (convert)) {
+    if (CHECK_MATRIX_INPUT (convert))
+      info = &convert->in_info;
+    else
+      info = &convert->out_info;
 
-  /* bring components to YCbCr space */
-  if (gst_video_color_matrix_get_Kr_Kb (info->colorimetry.matrix, &Kr, &Kb))
-    color_matrix_RGB_to_YCbCr (data, Kr, Kb);
+    /* bring components to YCbCr space */
+    if (gst_video_color_matrix_get_Kr_Kb (info->colorimetry.matrix, &Kr, &Kb))
+      color_matrix_RGB_to_YCbCr (data, Kr, Kb);
+  }
+
+  info = &convert->out_info;
 
   {
     const GstVideoFormatInfo *uinfo;
@@ -1288,9 +1311,14 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev)
   MatrixData p1, p2;
 
   same_bits = convert->unpack_bits == convert->pack_bits;
-  same_matrix =
-      convert->in_info.colorimetry.matrix ==
-      convert->out_info.colorimetry.matrix;
+  if (CHECK_MATRIX_NONE (convert)) {
+    same_matrix = TRUE;
+  } else {
+    same_matrix =
+        convert->in_info.colorimetry.matrix ==
+        convert->out_info.colorimetry.matrix;
+  }
+
   if (CHECK_PRIMARIES_NONE (convert)) {
     same_primaries = TRUE;
   } else {
@@ -1923,6 +1951,9 @@ video_converter_compute_resample (GstVideoConverter * convert)
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *sfinfo, *dfinfo;
 
+  if (CHECK_CHROMA_NONE (convert))
+    return;
+
   in_info = &convert->in_info;
   out_info = &convert->out_info;
 
@@ -1939,20 +1970,24 @@ video_converter_compute_resample (GstVideoConverter * convert)
       in_info->width != out_info->width ||
       in_info->height != out_info->height) {
     if (GST_VIDEO_INFO_IS_INTERLACED (in_info)) {
-      convert->upsample_i = gst_video_chroma_resample_new (0,
-          in_info->chroma_site, GST_VIDEO_CHROMA_FLAG_INTERLACED,
-          sfinfo->unpack_format, sfinfo->w_sub[2], sfinfo->h_sub[2]);
-      convert->downsample_i =
-          gst_video_chroma_resample_new (0, out_info->chroma_site,
-          GST_VIDEO_CHROMA_FLAG_INTERLACED, dfinfo->unpack_format,
-          -dfinfo->w_sub[2], -dfinfo->h_sub[2]);
+      if (!CHECK_CHROMA_DOWNSAMPLE (convert))
+        convert->upsample_i = gst_video_chroma_resample_new (0,
+            in_info->chroma_site, GST_VIDEO_CHROMA_FLAG_INTERLACED,
+            sfinfo->unpack_format, sfinfo->w_sub[2], sfinfo->h_sub[2]);
+      if (!CHECK_CHROMA_UPSAMPLE (convert))
+        convert->downsample_i =
+            gst_video_chroma_resample_new (0, out_info->chroma_site,
+            GST_VIDEO_CHROMA_FLAG_INTERLACED, dfinfo->unpack_format,
+            -dfinfo->w_sub[2], -dfinfo->h_sub[2]);
     }
-    convert->upsample_p = gst_video_chroma_resample_new (0,
-        in_info->chroma_site, 0, sfinfo->unpack_format, sfinfo->w_sub[2],
-        sfinfo->h_sub[2]);
-    convert->downsample_p = gst_video_chroma_resample_new (0,
-        out_info->chroma_site, 0, dfinfo->unpack_format, -dfinfo->w_sub[2],
-        -dfinfo->h_sub[2]);
+    if (!CHECK_CHROMA_DOWNSAMPLE (convert))
+      convert->upsample_p = gst_video_chroma_resample_new (0,
+          in_info->chroma_site, 0, sfinfo->unpack_format, sfinfo->w_sub[2],
+          sfinfo->h_sub[2]);
+    if (!CHECK_CHROMA_UPSAMPLE (convert))
+      convert->downsample_p = gst_video_chroma_resample_new (0,
+          out_info->chroma_site, 0, dfinfo->unpack_format, -dfinfo->w_sub[2],
+          -dfinfo->h_sub[2]);
   }
 }
 
@@ -3137,7 +3172,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
   out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
 
-  if (CHECK_MATRIX_NO_YUV (convert)) {
+  if (CHECK_MATRIX_NONE (convert)) {
     same_matrix = TRUE;
   } else {
     GstVideoColorMatrix in_matrix, out_matrix;

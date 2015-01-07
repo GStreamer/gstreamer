@@ -125,12 +125,28 @@ G_BEGIN_DECLS
  */
 #define GST_VIDEO_CONVERTER_OPT_BORDER_ARGB   "GstVideoConverter.border-argb"
 /**
+ * GST_VIDEO_CONVERTER_OPT_CHROMA_MODE:
+ *
+ * #G_TYPE_STRING, set the chroma resample mode subsampled formats.
+ *
+ * "full": do full chroma up and down sampling
+ * "upsample-only": only perform chroma upsampling
+ * "downsample-only": only perform chroma downsampling
+ * "none": disable chroma resampling
+ *
+ * Default "full"
+ */
+#define GST_VIDEO_CONVERTER_OPT_CHROMA_MODE   "GstVideoConverter.chroma-mode"
+/**
  * GST_VIDEO_CONVERTER_OPT_MATRIX_MODE:
  *
- * #G_TYPE_STRING, set the color matrix conversion mode.
+ * #G_TYPE_STRING, set the color matrix conversion mode for converting
+ *     between Y'PbPr and non-linear RGB (R'G'B').
  *
  * "full": do conversion between color matrices
- * "no-yuv": disable conversion between yuv color matrices
+ * "input-only": use the input color matrix to convert to and from R'G'B
+ * "output-only": use the output color matrix to convert to and from R'G'B
+ * "none": disable color matrix conversion.
  *
  * Default "full"
  */
@@ -159,7 +175,6 @@ G_BEGIN_DECLS
  * Default "none"
  */
 #define GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE   "GstVideoConverter.primaries-mode"
-
 
 typedef struct _GstVideoConverter GstVideoConverter;
 
