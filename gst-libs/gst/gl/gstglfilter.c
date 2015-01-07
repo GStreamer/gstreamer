@@ -451,18 +451,13 @@ gst_gl_filter_fixate_caps (GstBaseTransform * bt,
     /* if both width and height are already fixed, we can't do anything
      * about it anymore */
     if (w && h) {
-      gint n = 1, d = 1;
-
       GST_DEBUG_OBJECT (bt, "dimensions already set to %dx%d, not fixating",
           w, h);
       if (!gst_value_is_fixed (to_par)) {
-        GST_DEBUG_OBJECT (bt, "fixating to_par to %dx%d", n, d);
+        GST_DEBUG_OBJECT (bt, "fixating to_par to %dx%d", 1, 1);
         if (gst_structure_has_field (outs, "pixel-aspect-ratio"))
           gst_structure_fixate_field_nearest_fraction (outs,
               "pixel-aspect-ratio", 1, 1);
-        else if (n != d)
-          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-              1, 1, NULL);
       }
       goto done;
     }
