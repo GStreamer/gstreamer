@@ -522,7 +522,7 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
       if (filter->prev_r == NULL)
         filter->prev_r = &temp_r;
       /* Get the best PALM gesture */
-      for (i = 0; i < (hands ? hands->total : 0); i++) {
+      for (i = 0; i < hands->total; i++) {
         r = (CvRect *) cvGetSeqElem (hands, i);
         distance = (int) sqrt (pow ((r->x - filter->prev_r->x),
                 2) + pow ((r->y - filter->prev_r->y), 2));
