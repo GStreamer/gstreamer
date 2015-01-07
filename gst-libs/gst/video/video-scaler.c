@@ -866,9 +866,6 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
   if (scale->tmpwidth < width)
     realloc_tmplines (scale, width);
 
-  GST_DEBUG ("format %d, pstride %d max_taps %d", format, pstride,
-      scale->resampler.max_taps);
-
   switch (pstride) {
     case 4:
       switch (scale->resampler.max_taps) {
@@ -941,9 +938,6 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
 
   if (scale->tmpwidth < width)
     realloc_tmplines (scale, width);
-
-  GST_DEBUG ("format %d, pstride %d max_taps %d", format, pstride,
-      scale->resampler.max_taps);
 
   switch (pstride) {
     case 4:
