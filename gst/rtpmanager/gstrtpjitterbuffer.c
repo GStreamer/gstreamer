@@ -2222,7 +2222,12 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     } else {
       gboolean reset = FALSE;
 
-      if (gap < 0) {
+      if (!GST_CLOCK_TIME_IS_VALID (dts)) {
+        /* We would run into calculations with GST_CLOCK_TIME_NONE below
+         * and can't compensate for anything without DTS on RTP packets
+         */
+        goto gap_but_no_dts;
+      } else if (gap < 0) {
         /* we received an old packet */
         if (G_UNLIKELY (gap < -RTP_MAX_MISORDER)) {
           /* too old packet, reset */
@@ -2404,6 +2409,14 @@ duplicate:
     priv->num_duplicates++;
     free_item (item);
     goto finished;
+  }
+gap_but_no_dts:
+  {
+    /* this is fatal as we can't compensate for gaps without DTS */
+    GST_ELEMENT_ERROR (jitterbuffer, STREAM, DECODE, (NULL),
+        ("Received packet without DTS after a gap"));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
   }
 }
 
