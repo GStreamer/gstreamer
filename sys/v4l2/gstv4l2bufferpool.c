@@ -904,11 +904,7 @@ gst_v4l2_buffer_pool_flush_stop (GstBufferPool * bpool)
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_DMABUF_IMPORT:
     {
-      gsize num_allocated;
-
-      num_allocated = gst_v4l2_allocator_num_allocated (pool->vallocator);
-
-      for (i = 0; i < num_allocated; i++) {
+      for (i = 0; i < VIDEO_MAX_FRAME; i++) {
         /* Re-enqueue buffers */
         if (pool->buffers[i]) {
           GstBufferPool *bpool = (GstBufferPool *) pool;
