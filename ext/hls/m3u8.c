@@ -510,153 +510,6 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
         self->files = g_list_prepend (self->files, file);
       }
 
-    } else if (g_str_has_prefix (data, "#EXT-X-ENDLIST")) {
-      self->endlist = TRUE;
-    } else if (g_str_has_prefix (data, "#EXT-X-VERSION:")) {
-      if (int_from_string (data + 15, &data, &val))
-        self->version = val;
-    } else if (g_str_has_prefix (data, "#EXT-X-STREAM-INF:") ||
-        g_str_has_prefix (data, "#EXT-X-I-FRAME-STREAM-INF:")) {
-      gchar *v, *a;
-      gboolean iframe = g_str_has_prefix (data, "#EXT-X-I-FRAME-STREAM-INF:");
-      GstM3U8 *new_list;
-
-      new_list = gst_m3u8_new ();
-      new_list->parent = self;
-      new_list->iframe = iframe;
-      data = data + (iframe ? 26 : 18);
-      while (data && parse_attributes (&data, &a, &v)) {
-        if (g_str_equal (a, "BANDWIDTH")) {
-          if (!int_from_string (v, NULL, &new_list->bandwidth))
-            GST_WARNING ("Error while reading BANDWIDTH");
-        } else if (g_str_equal (a, "PROGRAM-ID")) {
-          if (!int_from_string (v, NULL, &new_list->program_id))
-            GST_WARNING ("Error while reading PROGRAM-ID");
-        } else if (g_str_equal (a, "CODECS")) {
-          g_free (new_list->codecs);
-          new_list->codecs = g_strdup (v);
-        } else if (g_str_equal (a, "RESOLUTION")) {
-          if (!int_from_string (v, &v, &new_list->width))
-            GST_WARNING ("Error while reading RESOLUTION width");
-          if (!v || *v != 'x') {
-            GST_WARNING ("Missing height");
-          } else {
-            v = g_utf8_next_char (v);
-            if (!int_from_string (v, NULL, &new_list->height))
-              GST_WARNING ("Error while reading RESOLUTION height");
-          }
-        } else if (iframe && g_str_equal (a, "URI")) {
-          gchar *name;
-          gchar *uri = g_strdup (v);
-          gchar *urip = uri;
-
-          uri = unquote_string (uri);
-          if (uri) {
-            uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
-
-            uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
-            if (uri == NULL) {
-              g_free (urip);
-              continue;
-            }
-            name = g_strdup (uri);
-
-            gst_m3u8_set_uri (new_list, uri, NULL, name);
-          } else {
-            GST_WARNING
-                ("Cannot remove quotation marks from i-frame-stream URI");
-          }
-          g_free (urip);
-        }
-      }
-
-      if (iframe) {
-        if (g_list_find_custom (self->iframe_lists, new_list->uri,
-                (GCompareFunc) _m3u8_compare_uri)) {
-          GST_DEBUG ("Already have a list with this URI");
-          gst_m3u8_free (new_list);
-        } else {
-          self->iframe_lists = g_list_append (self->iframe_lists, new_list);
-        }
-      } else if (list != NULL) {
-        GST_WARNING ("Found a list without a uri..., dropping");
-        gst_m3u8_free (list);
-      } else {
-        list = new_list;
-      }
-    } else if (g_str_has_prefix (data, "#EXT-X-TARGETDURATION:")) {
-      if (int_from_string (data + 22, &data, &val))
-        self->targetduration = val * GST_SECOND;
-    } else if (g_str_has_prefix (data, "#EXT-X-MEDIA-SEQUENCE:")) {
-      if (int_from_string (data + 22, &data, &val))
-        self->mediasequence = val;
-    } else if (g_str_has_prefix (data, "#EXT-X-DISCONTINUITY")) {
-      discontinuity = TRUE;
-    } else if (g_str_has_prefix (data, "#EXT-X-PROGRAM-DATE-TIME:")) {
-      /* <YYYY-MM-DDThh:mm:ssZ> */
-      GST_DEBUG ("FIXME parse date");
-    } else if (g_str_has_prefix (data, "#EXT-X-ALLOW-CACHE:")) {
-      self->allowcache = g_ascii_strcasecmp (data + 19, "YES") == 0;
-    } else if (g_str_has_prefix (data, "#EXT-X-KEY:")) {
-      gchar *v, *a;
-
-      data = data + 11;
-
-      /* IV and KEY are only valid until the next #EXT-X-KEY */
-      have_iv = FALSE;
-      g_free (current_key);
-      current_key = NULL;
-      while (data && parse_attributes (&data, &a, &v)) {
-        if (g_str_equal (a, "URI")) {
-          gchar *key = g_strdup (v);
-          gchar *keyp = key;
-
-          key = unquote_string (key);
-          if (key) {
-            current_key =
-                uri_join (self->base_uri ? self->base_uri : self->uri, key);
-          } else {
-            GST_WARNING
-                ("Cannot remove quotation marks from decryption key URI");
-          }
-          g_free (keyp);
-        } else if (g_str_equal (a, "IV")) {
-          gchar *ivp = v;
-          gint i;
-
-          if (strlen (ivp) < 32 + 2 || (!g_str_has_prefix (ivp, "0x")
-                  && !g_str_has_prefix (ivp, "0X"))) {
-            GST_WARNING ("Can't read IV");
-            continue;
-          }
-
-          ivp += 2;
-          for (i = 0; i < 16; i++) {
-            gint h, l;
-
-            h = g_ascii_xdigit_value (*ivp);
-            ivp++;
-            l = g_ascii_xdigit_value (*ivp);
-            ivp++;
-            if (h == -1 || l == -1) {
-              i = -1;
-              break;
-            }
-            iv[i] = (h << 4) | l;
-          }
-
-          if (i == -1) {
-            GST_WARNING ("Can't read IV");
-            continue;
-          }
-          have_iv = TRUE;
-        } else if (g_str_equal (a, "METHOD")) {
-          if (!g_str_equal (v, "AES-128")) {
-            GST_WARNING ("Encryption method %s not supported", v);
-            continue;
-          }
-        }
-      }
     } else if (g_str_has_prefix (data, "#EXTINF:")) {
       gdouble fval;
       if (!double_from_string (data + 8, &data, &fval)) {
@@ -673,14 +526,168 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
         g_free (title);
         title = g_strdup (data);
       }
-    } else if (g_str_has_prefix (data, "#EXT-X-BYTERANGE:")) {
-      gchar *v = data + 17;
+    } else if (g_str_has_prefix (data, "#EXT-X-")) {
+      gchar *data_ext_x = data + 7;
 
-      if (int64_from_string (v, &v, &size)) {
-        if (*v == '@' && !int64_from_string (v + 1, &v, &offset))
+      /* All these entries start with #EXT-X- */
+      if (g_str_has_prefix (data_ext_x, "ENDLIST")) {
+        self->endlist = TRUE;
+      } else if (g_str_has_prefix (data_ext_x, "VERSION:")) {
+        if (int_from_string (data + 15, &data, &val))
+          self->version = val;
+      } else if (g_str_has_prefix (data_ext_x, "STREAM-INF:") ||
+          g_str_has_prefix (data_ext_x, "I-FRAME-STREAM-INF:")) {
+        gchar *v, *a;
+        gboolean iframe = g_str_has_prefix (data_ext_x, "I-FRAME-STREAM-INF:");
+        GstM3U8 *new_list;
+
+        new_list = gst_m3u8_new ();
+        new_list->parent = self;
+        new_list->iframe = iframe;
+        data = data + (iframe ? 26 : 18);
+        while (data && parse_attributes (&data, &a, &v)) {
+          if (g_str_equal (a, "BANDWIDTH")) {
+            if (!int_from_string (v, NULL, &new_list->bandwidth))
+              GST_WARNING ("Error while reading BANDWIDTH");
+          } else if (g_str_equal (a, "PROGRAM-ID")) {
+            if (!int_from_string (v, NULL, &new_list->program_id))
+              GST_WARNING ("Error while reading PROGRAM-ID");
+          } else if (g_str_equal (a, "CODECS")) {
+            g_free (new_list->codecs);
+            new_list->codecs = g_strdup (v);
+          } else if (g_str_equal (a, "RESOLUTION")) {
+            if (!int_from_string (v, &v, &new_list->width))
+              GST_WARNING ("Error while reading RESOLUTION width");
+            if (!v || *v != 'x') {
+              GST_WARNING ("Missing height");
+            } else {
+              v = g_utf8_next_char (v);
+              if (!int_from_string (v, NULL, &new_list->height))
+                GST_WARNING ("Error while reading RESOLUTION height");
+            }
+          } else if (iframe && g_str_equal (a, "URI")) {
+            gchar *name;
+            gchar *uri = g_strdup (v);
+            gchar *urip = uri;
+
+            uri = unquote_string (uri);
+            if (uri) {
+              uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
+
+              uri = uri_join (self->base_uri ? self->base_uri : self->uri, uri);
+              if (uri == NULL) {
+                g_free (urip);
+                continue;
+              }
+              name = g_strdup (uri);
+
+              gst_m3u8_set_uri (new_list, uri, NULL, name);
+            } else {
+              GST_WARNING
+                  ("Cannot remove quotation marks from i-frame-stream URI");
+            }
+            g_free (urip);
+          }
+        }
+
+        if (iframe) {
+          if (g_list_find_custom (self->iframe_lists, new_list->uri,
+                  (GCompareFunc) _m3u8_compare_uri)) {
+            GST_DEBUG ("Already have a list with this URI");
+            gst_m3u8_free (new_list);
+          } else {
+            self->iframe_lists = g_list_append (self->iframe_lists, new_list);
+          }
+        } else if (list != NULL) {
+          GST_WARNING ("Found a list without a uri..., dropping");
+          gst_m3u8_free (list);
+        } else {
+          list = new_list;
+        }
+      } else if (g_str_has_prefix (data_ext_x, "TARGETDURATION:")) {
+        if (int_from_string (data + 22, &data, &val))
+          self->targetduration = val * GST_SECOND;
+      } else if (g_str_has_prefix (data_ext_x, "MEDIA-SEQUENCE:")) {
+        if (int_from_string (data + 22, &data, &val))
+          self->mediasequence = val;
+      } else if (g_str_has_prefix (data_ext_x, "DISCONTINUITY")) {
+        discontinuity = TRUE;
+      } else if (g_str_has_prefix (data_ext_x, "PROGRAM-DATE-TIME:")) {
+        /* <YYYY-MM-DDThh:mm:ssZ> */
+        GST_DEBUG ("FIXME parse date");
+      } else if (g_str_has_prefix (data_ext_x, "ALLOW-CACHE:")) {
+        self->allowcache = g_ascii_strcasecmp (data + 19, "YES") == 0;
+      } else if (g_str_has_prefix (data_ext_x, "KEY:")) {
+        gchar *v, *a;
+
+        data = data + 11;
+
+        /* IV and KEY are only valid until the next #EXT-X-KEY */
+        have_iv = FALSE;
+        g_free (current_key);
+        current_key = NULL;
+        while (data && parse_attributes (&data, &a, &v)) {
+          if (g_str_equal (a, "URI")) {
+            gchar *key = g_strdup (v);
+            gchar *keyp = key;
+
+            key = unquote_string (key);
+            if (key) {
+              current_key =
+                  uri_join (self->base_uri ? self->base_uri : self->uri, key);
+            } else {
+              GST_WARNING
+                  ("Cannot remove quotation marks from decryption key URI");
+            }
+            g_free (keyp);
+          } else if (g_str_equal (a, "IV")) {
+            gchar *ivp = v;
+            gint i;
+
+            if (strlen (ivp) < 32 + 2 || (!g_str_has_prefix (ivp, "0x")
+                    && !g_str_has_prefix (ivp, "0X"))) {
+              GST_WARNING ("Can't read IV");
+              continue;
+            }
+
+            ivp += 2;
+            for (i = 0; i < 16; i++) {
+              gint h, l;
+
+              h = g_ascii_xdigit_value (*ivp);
+              ivp++;
+              l = g_ascii_xdigit_value (*ivp);
+              ivp++;
+              if (h == -1 || l == -1) {
+                i = -1;
+                break;
+              }
+              iv[i] = (h << 4) | l;
+            }
+
+            if (i == -1) {
+              GST_WARNING ("Can't read IV");
+              continue;
+            }
+            have_iv = TRUE;
+          } else if (g_str_equal (a, "METHOD")) {
+            if (!g_str_equal (v, "AES-128")) {
+              GST_WARNING ("Encryption method %s not supported", v);
+              continue;
+            }
+          }
+        }
+      } else if (g_str_has_prefix (data_ext_x, "BYTERANGE:")) {
+        gchar *v = data + 17;
+
+        if (int64_from_string (v, &v, &size)) {
+          if (*v == '@' && !int64_from_string (v + 1, &v, &offset))
+            goto next_line;
+        } else {
           goto next_line;
+        }
       } else {
-        goto next_line;
+        GST_LOG ("Ignored line: %s", data);
       }
     } else {
       GST_LOG ("Ignored line: %s", data);
