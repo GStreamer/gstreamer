@@ -180,21 +180,19 @@ gst_audio_dynamic_mode_get_type (void)
   return gtype;
 }
 
-static gboolean
+static void
 gst_audio_dynamic_set_process_function (GstAudioDynamic * filter,
     const GstAudioInfo * info)
 {
   gint func_index;
 
-  if (GST_AUDIO_INFO_FORMAT (info) == GST_AUDIO_FORMAT_UNKNOWN)
-    return FALSE;
-
   func_index = (filter->mode == MODE_COMPRESSOR) ? 0 : 4;
   func_index += (filter->characteristics == CHARACTERISTICS_HARD_KNEE) ? 0 : 2;
   func_index += (GST_AUDIO_INFO_FORMAT (info) == GST_AUDIO_FORMAT_F32) ? 1 : 0;
 
+  g_assert (func_index >= 0 && func_index < G_N_ELEMENTS (process_functions));
+
   filter->process = process_functions[func_index];
-  return TRUE;
 }
 
 /* GObject vmethod implementations */
@@ -330,7 +328,8 @@ gst_audio_dynamic_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioDynamic *filter = GST_AUDIO_DYNAMIC (base);
 
-  return gst_audio_dynamic_set_process_function (filter, info);
+  gst_audio_dynamic_set_process_function (filter, info);
+  return TRUE;
 }
 
 static void
