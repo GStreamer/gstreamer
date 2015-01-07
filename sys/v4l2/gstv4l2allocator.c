@@ -1305,6 +1305,13 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator)
     goto error;
 
   group = allocator->groups[buffer.index];
+
+  if (!IS_QUEUED (group->buffer)) {
+    GST_ERROR_OBJECT (allocator,
+        "buffer %i was not queued, this indicate a driver bug.", buffer.index);
+    return NULL;
+  }
+
   group->buffer = buffer;
 
   GST_LOG_OBJECT (allocator, "dequeued buffer %i (flags 0x%X)", buffer.index,
