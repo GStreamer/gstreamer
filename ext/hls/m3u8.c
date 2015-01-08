@@ -951,48 +951,46 @@ _find_current (GstM3U8MediaFile * file, GstM3U8Client * client)
   return file->sequence != client->sequence;
 }
 
-static gboolean
-has_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
-{
-  GstM3U8MediaFile *file;
-
-  if (!forward)
-    l = g_list_last (l);
-
-  while (l) {
-    file = l->data;
-
-    if (forward && file->sequence > client->sequence)
-      break;
-    else if (!forward && file->sequence < client->sequence)
-      break;
-
-    l = (forward ? l->next : l->prev);
-  }
-
-  return l != NULL;
-}
-
 static GList *
 find_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
 {
   GstM3U8MediaFile *file;
 
-  if (!forward)
+  if (forward) {
+    while (l) {
+      file = l->data;
+
+      if (file->sequence >= client->sequence)
+        break;
+
+      l = l->next;
+    }
+  } else {
     l = g_list_last (l);
 
-  while (l) {
-    file = l->data;
+    while (l) {
+      file = l->data;
 
-    if (forward && file->sequence >= client->sequence)
-      break;
-    else if (!forward && file->sequence <= client->sequence)
-      break;
+      if (file->sequence <= client->sequence)
+        break;
 
-    l = (forward ? l->next : l->prev);
+      l = l->prev;
+    }
   }
 
   return l;
+}
+
+static gboolean
+has_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
+{
+  l = find_next_fragment (client, l, forward);
+
+  if (l) {
+    return (forward && l->next) || (!forward && l->prev);
+  }
+
+  return FALSE;
 }
 
 gboolean
