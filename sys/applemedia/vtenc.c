@@ -734,9 +734,15 @@ gst_vtenc_finish (GstVideoEncoder * enc)
   GstFlowReturn ret = GST_FLOW_OK;
   OSStatus vt_status;
 
+  /* We need to unlock the stream lock here because
+   * it can wait for gst_vtenc_enqueue_buffer() to
+   * handle a buffer... which will take the stream
+   * lock from another thread and then deadlock */
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
   vt_status =
       VTCompressionSessionCompleteFrames (self->session,
       kCMTimePositiveInfinity);
+  GST_VIDEO_ENCODER_STREAM_LOCK (self);
   if (vt_status != noErr) {
     GST_WARNING_OBJECT (self, "VTCompressionSessionCompleteFrames returned %d",
         (int) vt_status);
