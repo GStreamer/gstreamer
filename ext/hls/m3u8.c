@@ -1050,8 +1050,8 @@ gst_m3u8_client_has_next_fragment (GstM3U8Client * client, gboolean forward)
 {
   gboolean ret;
 
-  g_return_if_fail (client != NULL);
-  g_return_if_fail (client->current != NULL);
+  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (client->current != NULL, FALSE);
 
   GST_M3U8_CLIENT_LOCK (client);
   GST_DEBUG ("Checking if has next fragment %" G_GINT64_FORMAT,
