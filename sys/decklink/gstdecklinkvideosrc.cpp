@@ -326,12 +326,13 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     caps = gst_decklink_mode_get_caps (self->caps_mode);
     gst_video_info_from_caps (&self->info, caps);
     gst_base_src_set_caps (GST_BASE_SRC_CAST (bsrc), caps);
+    gst_element_post_message (GST_ELEMENT_CAST (self),
+        gst_message_new_latency (GST_OBJECT_CAST (self)));
     gst_caps_unref (caps);
   }
 
   f->frame->GetBytes ((gpointer *) & data);
   data_size = self->info.size;
-
 
   vf = (VideoFrame *) g_malloc0 (sizeof (VideoFrame));
 
