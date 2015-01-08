@@ -166,9 +166,6 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
     } else {
       /* Main loop running on the default main context but it
        * is not running in this thread */
-      g_mutex_init (&nsapp_lock);
-      g_cond_init (&nsapp_cond);
-
       g_mutex_lock (&nsapp_lock);
       g_idle_add_full (G_PRIORITY_HIGH, gst_gl_window_cocoa_init_nsapp, NULL, NULL);
       end_time = g_get_monotonic_time () + 500 * 1000;
@@ -178,9 +175,6 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
       if (!is_loop_running) {
         GST_WARNING ("no mainloop running");
       }
-
-      g_cond_clear (&nsapp_cond);
-      g_mutex_clear (&nsapp_lock);
     }
   }
 
