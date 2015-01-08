@@ -50,6 +50,7 @@ struct _GstDecklinkAudioSrc
   GstPushSrc parent;
 
   GstDecklinkModeEnum mode;
+  GstDecklinkAudioConnectionEnum connection;
   gint device_number;
 
   GstAudioInfo info;

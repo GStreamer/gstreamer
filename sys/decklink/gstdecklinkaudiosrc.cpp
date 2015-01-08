@@ -28,6 +28,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_audio_src_debug);
 #define GST_CAT_DEFAULT gst_decklink_audio_src_debug
 
+#define DEFAULT_CONNECTION            (GST_DECKLINK_AUDIO_CONNECTION_AUTO)
 #define DEFAULT_BUFFER_SIZE           (5)
 
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
@@ -36,6 +37,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_audio_src_debug);
 enum
 {
   PROP_0,
+  PROP_CONNECTION,
   PROP_DEVICE_NUMBER,
   PROP_ALIGNMENT_THRESHOLD,
   PROP_DISCONT_WAIT,
@@ -136,6 +138,13 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
 
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_create);
 
+  g_object_class_install_property (gobject_class, PROP_CONNECTION,
+      g_param_spec_enum ("connection", "Connection",
+          "Audio input connection to use",
+          GST_TYPE_DECKLINK_AUDIO_CONNECTION, DEFAULT_CONNECTION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   g_object_class_install_property (gobject_class, PROP_DEVICE_NUMBER,
       g_param_spec_int ("device-number", "Device number",
           "Output device instance to use", 0, G_MAXINT, 0,
@@ -196,6 +205,10 @@ gst_decklink_audio_src_set_property (GObject * object, guint property_id,
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (object);
 
   switch (property_id) {
+    case PROP_CONNECTION:
+      self->connection =
+          (GstDecklinkAudioConnectionEnum) g_value_get_enum (value);
+      break;
     case PROP_DEVICE_NUMBER:
       self->device_number = g_value_get_int (value);
       break;
@@ -221,6 +234,9 @@ gst_decklink_audio_src_get_property (GObject * object, guint property_id,
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (object);
 
   switch (property_id) {
+    case PROP_CONNECTION:
+      g_value_set_enum (value, self->connection);
+      break;
     case PROP_DEVICE_NUMBER:
       g_value_set_int (value, self->device_number);
       break;
@@ -257,6 +273,7 @@ gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   BMDAudioSampleType sample_depth;
   GstCaps *current_caps;
   HRESULT ret;
+  BMDAudioConnection conn = (BMDAudioConnection) - 1;
 
   GST_DEBUG_OBJECT (self, "Setting caps %" GST_PTR_FORMAT, caps);
 
@@ -280,6 +297,79 @@ gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     sample_depth = bmdAudioSampleType16bitInteger;
   } else {
     sample_depth = bmdAudioSampleType32bitInteger;
+  }
+
+  switch (self->connection) {
+    case GST_DECKLINK_AUDIO_CONNECTION_AUTO:{
+      GstElement *videosrc = NULL;
+      GstDecklinkConnectionEnum vconn;
+
+      // Try to get the connection from the videosrc and try
+      // to select a sensible audio connection based on that
+      g_mutex_lock (&self->input->lock);
+      if (self->input->videosrc)
+        videosrc = GST_ELEMENT_CAST (gst_object_ref (self->input->videosrc));
+      g_mutex_unlock (&self->input->lock);
+
+      if (videosrc) {
+        g_object_get (videosrc, "connection", &vconn, NULL);
+        gst_object_unref (videosrc);
+
+        switch (vconn) {
+          case GST_DECKLINK_CONNECTION_SDI:
+            conn = bmdAudioConnectionEmbedded;
+            break;
+          case GST_DECKLINK_CONNECTION_HDMI:
+            conn = bmdAudioConnectionEmbedded;
+            break;
+          case GST_DECKLINK_CONNECTION_OPTICAL_SDI:
+            conn = bmdAudioConnectionEmbedded;
+            break;
+          case GST_DECKLINK_CONNECTION_COMPONENT:
+            conn = bmdAudioConnectionAnalog;
+            break;
+          case GST_DECKLINK_CONNECTION_COMPOSITE:
+            conn = bmdAudioConnectionAnalog;
+            break;
+          case GST_DECKLINK_CONNECTION_SVIDEO:
+            conn = bmdAudioConnectionAnalog;
+            break;
+          default:
+            // Use default
+            break;
+        }
+      }
+
+      break;
+    }
+    case GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED:
+      conn = bmdAudioConnectionEmbedded;
+      break;
+    case GST_DECKLINK_AUDIO_CONNECTION_AES_EBU:
+      conn = bmdAudioConnectionAESEBU;
+      break;
+    case GST_DECKLINK_AUDIO_CONNECTION_ANALOG:
+      conn = bmdAudioConnectionAnalog;
+      break;
+    case GST_DECKLINK_AUDIO_CONNECTION_ANALOG_XLR:
+      conn = bmdAudioConnectionAnalogXLR;
+      break;
+    case GST_DECKLINK_AUDIO_CONNECTION_ANALOG_RCA:
+      conn = bmdAudioConnectionAnalogRCA;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  if (conn != (BMDAudioConnection) - 1) {
+    ret =
+        self->input->config->SetInt (bmdDeckLinkConfigAudioInputConnection,
+        conn);
+    if (ret != S_OK) {
+      GST_ERROR ("set configuration (audio input connection)");
+      return FALSE;
+    }
   }
 
   ret = self->input->input->EnableAudioInput (bmdAudioSampleRate48kHz,
