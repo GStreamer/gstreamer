@@ -410,7 +410,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   else
     start_offset = 0;
 
-  if (self->next_offset == (guint64) -1) {
+  if (self->next_offset == (guint64) - 1) {
     discont = TRUE;
   } else {
     guint64 diff, max_sample_diff;
@@ -445,7 +445,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   if (discont) {
     // Have discont, need resync and use the capture timestamps
-    if (self->next_offset != (guint64) -1)
+    if (self->next_offset != (guint64) - 1)
       GST_INFO_OBJECT (self, "Have discont. Expected %"
           G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
           self->next_offset, start_offset);

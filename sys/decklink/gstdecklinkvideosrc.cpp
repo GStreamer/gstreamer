@@ -362,8 +362,7 @@ gst_decklink_video_src_query (GstBaseSrc * bsrc, GstQuery * query)
 
         mode = gst_decklink_get_mode (self->mode);
 
-        min =
-            gst_util_uint64_scale_ceil (GST_SECOND, mode->fps_d, mode->fps_n);
+        min = gst_util_uint64_scale_ceil (GST_SECOND, mode->fps_d, mode->fps_n);
         max = self->buffer_size * min;
 
         gst_query_set_latency (query, TRUE, min, max);
@@ -428,7 +427,7 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
 
   if (self->input->config) {
     ret = self->input->config->SetInt (bmdDeckLinkConfigVideoInputConnection,
-        gst_decklink_get_connection(self->connection));
+        gst_decklink_get_connection (self->connection));
     if (ret != S_OK) {
       GST_ERROR_OBJECT (self, "Failed to set configuration (input source)");
       return FALSE;
@@ -438,7 +437,8 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
       ret = self->input->config->SetInt (bmdDeckLinkConfigAnalogVideoInputFlags,
           bmdAnalogVideoFlagCompositeSetup75);
       if (ret != S_OK) {
-        GST_ERROR_OBJECT (self, "Failed to set configuration (composite setup)");
+        GST_ERROR_OBJECT (self,
+            "Failed to set configuration (composite setup)");
         return FALSE;
       }
     }
