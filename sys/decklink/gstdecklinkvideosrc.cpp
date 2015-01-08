@@ -428,7 +428,6 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
 {
   const GstDecklinkMode *mode;
   BMDVideoInputFlags flags;
-  bool autoDetection;
   GstCaps *caps;
   HRESULT ret;
 
@@ -463,6 +462,8 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
 
   flags = bmdVideoInputFlagDefault;
   if (self->mode == GST_DECKLINK_MODE_AUTO) {
+    bool autoDetection = false;
+
     if (self->input->attributes) {
       ret =
           self->input->
