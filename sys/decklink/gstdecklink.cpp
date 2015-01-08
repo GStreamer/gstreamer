@@ -187,6 +187,7 @@ gst_decklink_get_mode (GstDecklinkModeEnum e)
 }
 
 static const BMDVideoConnection connections[] = {
+  0,                            /* auto */
   bmdVideoConnectionSDI,
   bmdVideoConnectionHDMI,
   bmdVideoConnectionOpticalSDI,
