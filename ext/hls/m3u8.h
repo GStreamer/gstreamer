@@ -107,6 +107,7 @@ gboolean gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     gboolean * discontinuity, gchar ** uri, GstClockTime * duration,
     GstClockTime * timestamp, gint64 * range_start, gint64 * range_end,
     gchar ** key, guint8 ** iv, gboolean forward);
+gboolean gst_m3u8_client_has_next_fragment (GstM3U8Client * client, gboolean forward);
 void gst_m3u8_client_advance_fragment (GstM3U8Client * client, gboolean forward);
 GstClockTime gst_m3u8_client_get_duration (GstM3U8Client * client);
 GstClockTime gst_m3u8_client_get_target_duration (GstM3U8Client * client);

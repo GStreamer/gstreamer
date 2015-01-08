@@ -947,6 +947,28 @@ _find_current (GstM3U8MediaFile * file, GstM3U8Client * client)
   return file->sequence != client->sequence;
 }
 
+static gboolean
+has_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
+{
+  GstM3U8MediaFile *file;
+
+  if (!forward)
+    l = g_list_last (l);
+
+  while (l) {
+    file = l->data;
+
+    if (forward && file->sequence > client->sequence)
+      break;
+    else if (!forward && file->sequence < client->sequence)
+      break;
+
+    l = (forward ? l->next : l->prev);
+  }
+
+  return l != NULL;
+}
+
 static GList *
 find_next_fragment (GstM3U8Client * client, GList * l, gboolean forward)
 {
@@ -1021,6 +1043,22 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
 
   GST_M3U8_CLIENT_UNLOCK (client);
   return TRUE;
+}
+
+gboolean
+gst_m3u8_client_has_next_fragment (GstM3U8Client * client, gboolean forward)
+{
+  gboolean ret;
+
+  g_return_if_fail (client != NULL);
+  g_return_if_fail (client->current != NULL);
+
+  GST_M3U8_CLIENT_LOCK (client);
+  GST_DEBUG ("Checking if has next fragment %" G_GINT64_FORMAT,
+      client->sequence + 1);
+  ret = has_next_fragment (client, client->current->files, forward);
+  GST_M3U8_CLIENT_UNLOCK (client);
+  return ret;
 }
 
 void

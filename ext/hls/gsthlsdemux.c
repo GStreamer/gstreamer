@@ -115,6 +115,8 @@ static void gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstBuffer ** buffer);
 static GstFlowReturn gst_hls_demux_chunk_received (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstBuffer ** chunk);
+static gboolean gst_hls_demux_stream_has_next_fragment (GstAdaptiveDemuxStream *
+    stream);
 static GstFlowReturn gst_hls_demux_advance_fragment (GstAdaptiveDemuxStream *
     stream);
 static GstFlowReturn gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream
@@ -205,6 +207,8 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
   adaptivedemux_class->update_manifest = gst_hls_demux_update_manifest;
   adaptivedemux_class->reset = gst_hls_demux_reset;
   adaptivedemux_class->seek = gst_hls_demux_seek;
+  adaptivedemux_class->stream_has_next_fragment =
+      gst_hls_demux_stream_has_next_fragment;
   adaptivedemux_class->stream_advance_fragment = gst_hls_demux_advance_fragment;
   adaptivedemux_class->stream_update_fragment_info =
       gst_hls_demux_update_fragment_info;
@@ -719,6 +723,15 @@ gst_hls_demux_chunk_received (GstAdaptiveDemux * demux,
   }
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_hls_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
+{
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
+
+  return gst_m3u8_client_has_next_fragment (hlsdemux->client,
+      stream->demux->segment.rate > 0);
 }
 
 static GstFlowReturn
