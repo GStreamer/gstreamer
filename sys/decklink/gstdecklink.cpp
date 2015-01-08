@@ -119,6 +119,10 @@ gst_decklink_audio_connection_get_type (void)
         "SDI/HDMI embedded audio"},
     {GST_DECKLINK_AUDIO_CONNECTION_AES_EBU, "aes", "AES/EBU input"},
     {GST_DECKLINK_AUDIO_CONNECTION_ANALOG, "analog", "Analog input"},
+    {GST_DECKLINK_AUDIO_CONNECTION_ANALOG_XLR, "analog-xlr",
+        "Analog input (XLR)"},
+    {GST_DECKLINK_AUDIO_CONNECTION_ANALOG_RCA, "analog-rca",
+        "Analog input (RCA)"},
     {0, NULL, NULL}
   };
 
