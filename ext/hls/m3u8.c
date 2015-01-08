@@ -419,6 +419,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
   g_free (self->last_data);
   self->last_data = data;
 
+  client->current_file = NULL;
   if (self->files) {
     g_list_foreach (self->files, (GFunc) gst_m3u8_media_file_free, NULL);
     g_list_free (self->files);
@@ -777,6 +778,7 @@ gst_m3u8_client_new (const gchar * uri, const gchar * base_uri)
   client = g_new0 (GstM3U8Client, 1);
   client->main = gst_m3u8_new ();
   client->current = NULL;
+  client->current_file = NULL;
   client->sequence = -1;
   client->sequence_position = 0;
   client->update_failed_count = 0;
@@ -808,6 +810,7 @@ gst_m3u8_client_set_current (GstM3U8Client * self, GstM3U8 * m3u8)
     self->current = m3u8;
     self->update_failed_count = 0;
     self->duration = GST_CLOCK_TIME_NONE;
+    self->current_file = NULL;
   }
   GST_M3U8_CLIENT_UNLOCK (self);
 }
@@ -847,8 +850,8 @@ gst_m3u8_client_update (GstM3U8Client * self, gchar * data)
   }
 
   if (m3u8->files && self->sequence == -1) {
-    self->sequence =
-        GST_M3U8_MEDIA_FILE (g_list_first (m3u8->files)->data)->sequence;
+    self->current_file = g_list_first (m3u8->files);
+    self->sequence = GST_M3U8_MEDIA_FILE (self->current_file->data)->sequence;
     self->sequence_position = 0;
     GST_DEBUG ("Setting first sequence at %u", (guint) self->sequence);
   }
@@ -999,7 +1002,6 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     GstClockTime * timestamp, gint64 * range_start, gint64 * range_end,
     gchar ** key, guint8 ** iv, gboolean forward)
 {
-  GList *l;
   GstM3U8MediaFile *file;
 
   g_return_val_if_fail (client != NULL, FALSE);
@@ -1011,13 +1013,17 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     GST_M3U8_CLIENT_UNLOCK (client);
     return FALSE;
   }
-  l = find_next_fragment (client, client->current->files, forward);
-  if (!l) {
+  if (!client->current_file) {
+    client->current_file =
+        find_next_fragment (client, client->current->files, forward);
+  }
+
+  if (!client->current_file) {
     GST_M3U8_CLIENT_UNLOCK (client);
     return FALSE;
   }
 
-  file = GST_M3U8_MEDIA_FILE (l->data);
+  file = GST_M3U8_MEDIA_FILE (client->current_file->data);
   GST_DEBUG ("Got fragment with sequence %u (client sequence %u)",
       (guint) file->sequence, (guint) client->sequence);
 
@@ -1057,8 +1063,14 @@ gst_m3u8_client_has_next_fragment (GstM3U8Client * client, gboolean forward)
 
   GST_M3U8_CLIENT_LOCK (client);
   GST_DEBUG ("Checking if has next fragment %" G_GINT64_FORMAT,
-      client->sequence + 1);
-  ret = has_next_fragment (client, client->current->files, forward);
+      client->sequence + (forward ? 1 : -1));
+  if (client->current_file) {
+    ret =
+        (forward ? client->current_file->next : client->current_file->prev) !=
+        NULL;
+  } else {
+    ret = has_next_fragment (client, client->current->files, forward);
+  }
   GST_M3U8_CLIENT_UNLOCK (client);
   return ret;
 }
@@ -1066,29 +1078,47 @@ gst_m3u8_client_has_next_fragment (GstM3U8Client * client, gboolean forward)
 void
 gst_m3u8_client_advance_fragment (GstM3U8Client * client, gboolean forward)
 {
-  GList *l;
   GstM3U8MediaFile *file;
 
   g_return_if_fail (client != NULL);
   g_return_if_fail (client->current != NULL);
 
   GST_M3U8_CLIENT_LOCK (client);
-  GST_DEBUG ("Looking for fragment %" G_GINT64_FORMAT, client->sequence);
-  l = g_list_find_custom (client->current->files, client,
-      (GCompareFunc) _find_current);
-  if (l == NULL) {
-    GST_ERROR ("Could not find current fragment");
-    GST_M3U8_CLIENT_UNLOCK (client);
-    return;
+  if (!client->current_file) {
+    GList *l;
+
+    GST_DEBUG ("Looking for fragment %" G_GINT64_FORMAT, client->sequence);
+    l = g_list_find_custom (client->current->files, client,
+        (GCompareFunc) _find_current);
+    if (l == NULL) {
+      GST_ERROR ("Could not find current fragment");
+      GST_M3U8_CLIENT_UNLOCK (client);
+      return;
+    }
+    client->current_file = l;
   }
 
-  file = GST_M3U8_MEDIA_FILE (l->data);
+  file = GST_M3U8_MEDIA_FILE (client->current_file->data);
   GST_DEBUG ("Advancing from sequence %u", (guint) file->sequence);
   if (forward) {
-    client->sequence = file->sequence + 1;
+    client->current_file = client->current_file->next;
+    if (client->current_file) {
+      client->sequence =
+          GST_M3U8_MEDIA_FILE (client->current_file->data)->sequence;
+    } else {
+      client->sequence = file->sequence + 1;
+    }
+
     client->sequence_position += file->duration;
   } else {
-    client->sequence = file->sequence - 1;
+    client->current_file = client->current_file->prev;
+    if (client->current_file) {
+      client->sequence =
+          GST_M3U8_MEDIA_FILE (client->current_file->data)->sequence;
+    } else {
+      client->sequence = file->sequence - 1;
+    }
+
     if (client->sequence_position > file->duration)
       client->sequence_position -= file->duration;
     else
