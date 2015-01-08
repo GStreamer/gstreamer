@@ -46,6 +46,7 @@ typedef struct
 #define DEFAULT_RGB     3
 #define DEFAULT_GRAY    4
 #define DEFAULT_UNKNOWN 5
+#define DEFAULT_YUV_UHD 6
 
 static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (BT601, _16_235, BT601, BT709, SMPTE170M),
@@ -54,6 +55,7 @@ static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (SRGB, _0_255, RGB, SRGB, BT709),
   MAKE_COLORIMETRY (NONAME, _0_255, BT601, UNKNOWN, UNKNOWN),
   MAKE_COLORIMETRY (NONAME, _UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN),
+  MAKE_COLORIMETRY (BT2020, _16_235, BT2020, BT2020_12, BT2020),
 };
 
 static const ColorimetryInfo *
@@ -234,7 +236,9 @@ static const GstVideoColorPrimariesInfo color_primaries[] = {
   {GST_VIDEO_COLOR_PRIMARIES_SMPTE240M, WP_D65, 0.63, 0.34, 0.31, 0.595, 0.155,
       0.07},
   {GST_VIDEO_COLOR_PRIMARIES_FILM, WP_C, 0.681, 0.319, 0.243, 0.692, 0.145,
-      0.049}
+      0.049},
+  {GST_VIDEO_COLOR_PRIMARIES_BT2020, WP_D65, 0.708, 0.292, 0.170, 0.797, 0.131,
+      0.046}
 };
 
 /**
@@ -250,7 +254,8 @@ static const GstVideoColorPrimariesInfo color_primaries[] = {
 const GstVideoColorPrimariesInfo *
 gst_video_color_primaries_get_info (GstVideoColorPrimaries primaries)
 {
-  g_return_val_if_fail (primaries < G_N_ELEMENTS (color_primaries), NULL);
+  g_return_val_if_fail (primaries <
+      (GstVideoColorPrimaries) G_N_ELEMENTS (color_primaries), NULL);
 
   return &color_primaries[primaries];
 }
@@ -319,6 +324,10 @@ gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr,
     case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
       *Kr = 0.212;
       *Kb = 0.087;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT2020:
+      *Kr = 0.2627;
+      *Kb = 0.0593;
       break;
   }
   GST_DEBUG ("matrix: %d, Kr %f, Kb %f", matrix, *Kr, *Kb);
@@ -400,6 +409,12 @@ gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val)
       else
         res = 1.0 + log10 (val) / 2.5;
       break;
+    case GST_VIDEO_TRANSFER_BT2020_12:
+      if (val < 0.0181)
+        res = 4.5 * val;
+      else
+        res = 1.0993 * pow (val, 0.45) - 0.0993;
+      break;
   }
   return res;
 }
@@ -478,6 +493,12 @@ gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val)
         res = 0.0;
       else
         res = pow (10.0, 2.5 * (val - 1.0));
+      break;
+    case GST_VIDEO_TRANSFER_BT2020_12:
+      if (val < 0.08145)
+        res = val / 4.5;
+      else
+        res = pow ((val + 0.0993) / 1.0993, 1.0 / 0.45);
       break;
   }
   return res;

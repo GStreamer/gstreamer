@@ -50,6 +50,7 @@ typedef enum {
  * @GST_VIDEO_COLOR_MATRIX_BT709: ITU-R BT.709 color matrix
  * @GST_VIDEO_COLOR_MATRIX_BT601: ITU-R BT.601 color matrix
  * @GST_VIDEO_COLOR_MATRIX_SMPTE240M: SMPTE 240M color matrix
+ * @GST_VIDEO_COLOR_MATRIX_BT2020: ITU-R BT.2020 color matrix. Since: 1.6.
  *
  * The color matrix is used to convert between Y'PbPr and
  * non-linear RGB (R'G'B')
@@ -60,7 +61,8 @@ typedef enum {
   GST_VIDEO_COLOR_MATRIX_FCC,
   GST_VIDEO_COLOR_MATRIX_BT709,
   GST_VIDEO_COLOR_MATRIX_BT601,
-  GST_VIDEO_COLOR_MATRIX_SMPTE240M
+  GST_VIDEO_COLOR_MATRIX_SMPTE240M,
+  GST_VIDEO_COLOR_MATRIX_BT2020
 } GstVideoColorMatrix;
 
 gboolean gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr, gdouble * Kb);
@@ -83,6 +85,9 @@ gboolean gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble *
  *                             100:1 range
  * @GST_VIDEO_TRANSFER_LOG316: Logarithmic transfer characteristic
  *                             316.22777:1 range
+ * @GST_VIDEO_TRANSFER_BT2020_12: Gamma 2.2 curve with a linear segment in the lower
+ *                                range. Used for BT.2020 with 12 bits per
+ *                                component. Since: 1.6.
  *
  * The video transfer function defines the formula for converting between
  * non-linear RGB (R'G'B') and linear RGB
@@ -98,7 +103,8 @@ typedef enum {
   GST_VIDEO_TRANSFER_SRGB,
   GST_VIDEO_TRANSFER_GAMMA28,
   GST_VIDEO_TRANSFER_LOG100,
-  GST_VIDEO_TRANSFER_LOG316
+  GST_VIDEO_TRANSFER_LOG316,
+  GST_VIDEO_TRANSFER_BT2020_12
 } GstVideoTransferFunction;
 
 gdouble      gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val);
@@ -113,6 +119,7 @@ gdouble      gst_video_color_transfer_decode (GstVideoTransferFunction func, gdo
  * @GST_VIDEO_COLOR_PRIMARIES_SMPTE170M: SMPTE170M primaries
  * @GST_VIDEO_COLOR_PRIMARIES_SMPTE240M: SMPTE240M primaries
  * @GST_VIDEO_COLOR_PRIMARIES_FILM: Generic film
+ * @GST_VIDEO_COLOR_PRIMARIES_BT2020: BT2020 primaries. Since: 1.6.
  *
  * The color primaries define the how to transform linear RGB values to and from
  * the CIE XYZ colorspace.
@@ -124,7 +131,8 @@ typedef enum {
   GST_VIDEO_COLOR_PRIMARIES_BT470BG,
   GST_VIDEO_COLOR_PRIMARIES_SMPTE170M,
   GST_VIDEO_COLOR_PRIMARIES_SMPTE240M,
-  GST_VIDEO_COLOR_PRIMARIES_FILM
+  GST_VIDEO_COLOR_PRIMARIES_FILM,
+  GST_VIDEO_COLOR_PRIMARIES_BT2020
 } GstVideoColorPrimaries;
 
 /**
@@ -179,6 +187,7 @@ typedef struct {
 #define GST_VIDEO_COLORIMETRY_BT709       "bt709"
 #define GST_VIDEO_COLORIMETRY_SMPTE240M   "smpte240m"
 #define GST_VIDEO_COLORIMETRY_SRGB        "sRGB"
+#define GST_VIDEO_COLORIMETRY_BT2020      "bt2020"
 
 gboolean     gst_video_colorimetry_matches     (GstVideoColorimetry *cinfo, const gchar *color);
 gboolean     gst_video_colorimetry_from_string (GstVideoColorimetry *cinfo, const gchar *color);
