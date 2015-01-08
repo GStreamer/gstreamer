@@ -914,7 +914,8 @@ gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
         }
         complete = TRUE;
       } else if ((nal_type >= 32 && nal_type <= 35)
-          || nal_type >= 39) {
+          || nal_type == 39 || (nal_type >= 41 && nal_type <= 44)
+          || (nal_type >= 48 && nal_type <= 55)) {
         /* VPS, SPS, PPS, SEI, ... terminate an access unit */
         complete = TRUE;
       }
