@@ -44,6 +44,8 @@
 #endif /* _MSC_VER */
 
 typedef enum {
+  GST_DECKLINK_MODE_AUTO,
+
   GST_DECKLINK_MODE_NTSC,
   GST_DECKLINK_MODE_NTSC2398,
   GST_DECKLINK_MODE_PAL,
@@ -122,6 +124,7 @@ struct _GstDecklinkMode {
 };
 
 const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);
+const GstDecklinkModeEnum gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode);
 const BMDVideoConnection gst_decklink_get_connection (GstDecklinkConnectionEnum e);
 GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e);
 GstCaps * gst_decklink_mode_get_template_caps (void);
@@ -152,13 +155,14 @@ struct _GstDecklinkInput {
   IDeckLink *device;
   IDeckLinkInput *input;
   IDeckLinkConfiguration *config;
+  IDeckLinkAttributes *attributes;
   GstClock *clock;
 
   /* Everything below protected by mutex */
   GMutex lock;
 
   /* Set by the video source */
-  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstClockTime capture_time);
+  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time);
   /* Configured mode or NULL */
   const GstDecklinkMode *mode;
 

@@ -29,7 +29,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define GST_CAT_DEFAULT gst_decklink_video_src_debug
 
-#define DEFAULT_MODE (GST_DECKLINK_MODE_NTSC)
+#define DEFAULT_MODE (GST_DECKLINK_MODE_AUTO)
 #define DEFAULT_CONNECTION (GST_DECKLINK_CONNECTION_AUTO)
 #define DEFAULT_BUFFER_SIZE (5)
 
@@ -46,6 +46,7 @@ typedef struct
 {
   IDeckLinkVideoInputFrame *frame;
   GstClockTime capture_time;
+  GstDecklinkModeEnum mode;
 } CaptureFrame;
 
 static void
@@ -169,6 +170,7 @@ static void
 gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
 {
   self->mode = DEFAULT_MODE;
+  self->caps_mode = DEFAULT_MODE;
   self->connection = DEFAULT_CONNECTION;
   self->device_number = 0;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
@@ -249,7 +251,7 @@ gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
   GstCaps *mode_caps, *caps;
 
-  mode_caps = gst_decklink_mode_get_caps (self->mode);
+  mode_caps = gst_decklink_mode_get_caps (self->caps_mode);
   if (filter) {
     caps =
         gst_caps_intersect_full (filter, mode_caps, GST_CAPS_INTERSECT_FIRST);
@@ -263,7 +265,8 @@ gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
 static void
 gst_decklink_video_src_got_frame (GstElement * element,
-    IDeckLinkVideoInputFrame * frame, GstClockTime capture_time)
+    IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
+    GstClockTime capture_time)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
 
@@ -284,6 +287,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     f = (CaptureFrame *) g_malloc0 (sizeof (CaptureFrame));
     f->frame = frame;
     f->capture_time = capture_time;
+    f->mode = mode;
     frame->AddRef ();
     g_queue_push_tail (&self->current_frames, f);
     g_cond_signal (&self->cond);
@@ -301,6 +305,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   VideoFrame *vf;
   CaptureFrame *f;
   GstClockTime timestamp, duration;
+  GstCaps *caps;
 
   g_mutex_lock (&self->lock);
   while (g_queue_is_empty (&self->current_frames) && !self->flushing) {
@@ -314,6 +319,14 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     if (f)
       capture_frame_free (f);
     return GST_FLOW_FLUSHING;
+  }
+
+  if (self->caps_mode != f->mode) {
+    self->caps_mode = f->mode;
+    caps = gst_decklink_mode_get_caps (self->caps_mode);
+    gst_video_info_from_caps (&self->info, caps);
+    gst_base_src_set_caps (GST_BASE_SRC_CAST (bsrc), caps);
+    gst_caps_unref (caps);
   }
 
   f->frame->GetBytes ((gpointer *) & data);
@@ -362,7 +375,7 @@ gst_decklink_video_src_query (GstBaseSrc * bsrc, GstQuery * query)
         GstClockTime min, max;
         const GstDecklinkMode *mode;
 
-        mode = gst_decklink_get_mode (self->mode);
+        mode = gst_decklink_get_mode (self->caps_mode);
 
         min = gst_util_uint64_scale_ceil (GST_SECOND, mode->fps_d, mode->fps_n);
         max = self->buffer_size * min;
@@ -414,6 +427,8 @@ static gboolean
 gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
 {
   const GstDecklinkMode *mode;
+  BMDVideoInputFlags flags;
+  bool autoDetection;
   GstCaps *caps;
   HRESULT ret;
 
@@ -446,11 +461,31 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
     }
   }
 
+  flags = bmdVideoInputFlagDefault;
+  if (self->mode == GST_DECKLINK_MODE_AUTO) {
+    if (self->input->attributes) {
+      ret =
+          self->input->
+          attributes->GetFlag (BMDDeckLinkSupportsInputFormatDetection,
+          &autoDetection);
+      if (ret != S_OK) {
+        GST_ERROR_OBJECT (self, "Failed to get attribute (autodetection)");
+        return FALSE;
+      }
+      if (autoDetection)
+        flags |= bmdVideoInputEnableFormatDetection;
+    }
+    if (!autoDetection) {
+      GST_ERROR_OBJECT (self, "Failed to activate auto-detection");
+      return FALSE;
+    }
+  }
+
   mode = gst_decklink_get_mode (self->mode);
   g_assert (mode != NULL);
 
   ret = self->input->input->EnableVideoInput (mode->mode,
-      bmdFormat8BitYUV, bmdVideoOutputFlagDefault);
+      bmdFormat8BitYUV, flags);
   if (ret != S_OK) {
     GST_WARNING_OBJECT (self, "Failed to enable video input");
     gst_decklink_release_nth_input (self->device_number,
@@ -463,7 +498,8 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
   self->input->got_video_frame = gst_decklink_video_src_got_frame;
   g_mutex_unlock (&self->input->lock);
 
-  caps = gst_decklink_mode_get_caps (self->mode);
+  self->caps_mode = gst_decklink_get_mode_enum_from_bmd (mode->mode);
+  caps = gst_decklink_mode_get_caps (self->caps_mode);
   gst_video_info_from_caps (&self->info, caps);
   gst_caps_unref (caps);
 

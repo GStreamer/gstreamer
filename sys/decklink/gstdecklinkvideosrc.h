@@ -51,6 +51,7 @@ struct _GstDecklinkVideoSrc
   GstPushSrc parent;
 
   GstDecklinkModeEnum mode;
+  GstDecklinkModeEnum caps_mode;
   GstDecklinkConnectionEnum connection;
   gint device_number;
 

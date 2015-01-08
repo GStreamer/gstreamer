@@ -38,6 +38,8 @@ gst_decklink_mode_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue modes[] = {
+    {GST_DECKLINK_MODE_AUTO, "auto", "Automatic detection"},
+
     {GST_DECKLINK_MODE_NTSC, "ntsc", "NTSC SD 60i"},
     {GST_DECKLINK_MODE_NTSC2398, "ntsc2398", "NTSC SD 60i (24 fps)"},
     {GST_DECKLINK_MODE_PAL, "pal", "PAL SD 50i"},
@@ -140,6 +142,8 @@ gst_decklink_audio_connection_get_type (void)
 #define HD 1, 1, false, true
 
 static const GstDecklinkMode modes[] = {
+  {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC},     // default is ntsc
+
   {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC},
   {bmdModeNTSC2398, 720, 486, 24000, 1001, true, NTSC},
   {bmdModePAL, 720, 576, 25, 1, true, PAL},
@@ -181,9 +185,111 @@ static const GstDecklinkMode modes[] = {
 const GstDecklinkMode *
 gst_decklink_get_mode (GstDecklinkModeEnum e)
 {
-  if (e < GST_DECKLINK_MODE_NTSC || e > GST_DECKLINK_MODE_3184p60)
+  if (e < GST_DECKLINK_MODE_AUTO || e > GST_DECKLINK_MODE_3184p60)
     return NULL;
   return &modes[e];
+}
+
+const GstDecklinkModeEnum
+gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode)
+{
+  GstDecklinkModeEnum displayMode = GST_DECKLINK_MODE_NTSC;
+  switch (mode) {
+    case bmdModeNTSC:
+      displayMode = GST_DECKLINK_MODE_NTSC;
+      break;
+    case bmdModeNTSC2398:
+      displayMode = GST_DECKLINK_MODE_NTSC2398;
+      break;
+    case bmdModePAL:
+      displayMode = GST_DECKLINK_MODE_PAL;
+      break;
+    case bmdModeNTSCp:
+      displayMode = GST_DECKLINK_MODE_NTSC_P;
+      break;
+    case bmdModePALp:
+      displayMode = GST_DECKLINK_MODE_PAL_P;
+      break;
+    case bmdModeHD1080p2398:
+      displayMode = GST_DECKLINK_MODE_1080p2398;
+      break;
+    case bmdModeHD1080p24:
+      displayMode = GST_DECKLINK_MODE_1080p24;
+      break;
+    case bmdModeHD1080p25:
+      displayMode = GST_DECKLINK_MODE_1080p25;
+      break;
+    case bmdModeHD1080p2997:
+      displayMode = GST_DECKLINK_MODE_1080p2997;
+      break;
+    case bmdModeHD1080p30:
+      displayMode = GST_DECKLINK_MODE_1080p30;
+      break;
+    case bmdModeHD1080i50:
+      displayMode = GST_DECKLINK_MODE_1080i50;
+      break;
+    case bmdModeHD1080i5994:
+      displayMode = GST_DECKLINK_MODE_1080i5994;
+      break;
+    case bmdModeHD1080i6000:
+      displayMode = GST_DECKLINK_MODE_1080i60;
+      break;
+    case bmdModeHD1080p50:
+      displayMode = GST_DECKLINK_MODE_1080p50;
+      break;
+    case bmdModeHD1080p5994:
+      displayMode = GST_DECKLINK_MODE_1080p5994;
+      break;
+    case bmdModeHD1080p6000:
+      displayMode = GST_DECKLINK_MODE_1080p60;
+      break;
+    case bmdModeHD720p50:
+      displayMode = GST_DECKLINK_MODE_720p50;
+      break;
+    case bmdModeHD720p5994:
+      displayMode = GST_DECKLINK_MODE_720p5994;
+      break;
+    case bmdModeHD720p60:
+      displayMode = GST_DECKLINK_MODE_720p60;
+      break;
+    case bmdMode2k2398:
+      displayMode = GST_DECKLINK_MODE_2048p2398;
+      break;
+    case bmdMode2k24:
+      displayMode = GST_DECKLINK_MODE_2048p24;
+      break;
+    case bmdMode2k25:
+      displayMode = GST_DECKLINK_MODE_2048p25;
+      break;
+    case bmdMode4K2160p2398:
+      displayMode = GST_DECKLINK_MODE_3184p2398;
+      break;
+    case bmdMode4K2160p24:
+      displayMode = GST_DECKLINK_MODE_3184p24;
+      break;
+    case bmdMode4K2160p25:
+      displayMode = GST_DECKLINK_MODE_3184p25;
+      break;
+    case bmdMode4K2160p2997:
+      displayMode = GST_DECKLINK_MODE_3184p2997;
+      break;
+    case bmdMode4K2160p30:
+      displayMode = GST_DECKLINK_MODE_3184p30;
+      break;
+    case bmdMode4K2160p50:
+      displayMode = GST_DECKLINK_MODE_3184p50;
+      break;
+    case bmdMode4K2160p5994:
+      displayMode = GST_DECKLINK_MODE_3184p5994;
+      break;
+    case bmdMode4K2160p60:
+      displayMode = GST_DECKLINK_MODE_3184p60;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+  return displayMode;
 }
 
 static const BMDVideoConnection connections[] = {
@@ -346,9 +452,21 @@ public:
 
   virtual HRESULT STDMETHODCALLTYPE
       VideoInputFormatChanged (BMDVideoInputFormatChangedEvents,
-      IDeckLinkDisplayMode *, BMDDetectedVideoInputFormatFlags)
+      IDeckLinkDisplayMode * mode, BMDDetectedVideoInputFormatFlags)
   {
-    GST_FIXME ("Video input format change not supported yet");
+    GST_INFO ("Video input format changed");
+
+    g_mutex_lock (&m_input->lock);
+    m_input->input->PauseStreams ();
+    m_input->input->EnableVideoInput (mode->GetDisplayMode (),
+        bmdFormat8BitYUV, bmdVideoInputEnableFormatDetection);
+    m_input->input->FlushStreams ();
+    m_input->input->StartStreams ();
+    m_input->mode =
+        gst_decklink_get_mode (gst_decklink_get_mode_enum_from_bmd
+        (mode->GetDisplayMode ()));
+    g_mutex_unlock (&m_input->lock);
+
     return S_OK;
   }
 
@@ -362,7 +480,9 @@ public:
     if (m_input->got_video_frame) {
       GstClockTime capture_time = clock_time -
           gst_element_get_base_time (m_input->videosrc);
-      m_input->got_video_frame (m_input->videosrc, video_frame, capture_time);
+      m_input->got_video_frame (m_input->videosrc, video_frame,
+          gst_decklink_get_mode_enum_from_bmd (m_input->mode->mode),
+          capture_time);
     }
 
     if (m_input->got_audio_packet) {
@@ -491,6 +611,12 @@ init_devices (gpointer data)
         (void **) &devices[i].input.config);
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have config interface");
+    }
+
+    ret = decklink->QueryInterface (IID_IDeckLinkAttributes,
+        (void **) &devices[i].input.attributes);
+    if (ret != S_OK) {
+      GST_WARNING ("selected device does not have attributes interface");
     }
 
     ret = iterator->Next (&decklink);
