@@ -29,6 +29,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define GST_CAT_DEFAULT gst_decklink_video_src_debug
 
+#define DEFAULT_MODE (GST_DECKLINK_MODE_NTSC)
+#define DEFAULT_CONNECTION (GST_DECKLINK_CONNECTION_AUTO)
 #define DEFAULT_BUFFER_SIZE (5)
 
 enum
@@ -127,14 +129,14 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Playback Mode",
           "Video Mode to use for playback",
-          GST_TYPE_DECKLINK_MODE, GST_DECKLINK_MODE_NTSC,
+          GST_TYPE_DECKLINK_MODE, DEFAULT_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION,
       g_param_spec_enum ("connection", "Connection",
           "Video input connection to use",
-          GST_TYPE_DECKLINK_CONNECTION, GST_DECKLINK_CONNECTION_SDI,
+          GST_TYPE_DECKLINK_CONNECTION, DEFAULT_CONNECTION,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
@@ -166,8 +168,8 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
 static void
 gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
 {
-  self->mode = GST_DECKLINK_MODE_NTSC;
-  self->connection = GST_DECKLINK_CONNECTION_SDI;
+  self->mode = DEFAULT_MODE;
+  self->connection = DEFAULT_CONNECTION;
   self->device_number = 0;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
 
@@ -425,7 +427,7 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
     return FALSE;
   }
 
-  if (self->input->config) {
+  if (self->input->config && self->connection != GST_DECKLINK_CONNECTION_AUTO) {
     ret = self->input->config->SetInt (bmdDeckLinkConfigVideoInputConnection,
         gst_decklink_get_connection (self->connection));
     if (ret != S_OK) {

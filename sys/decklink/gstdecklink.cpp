@@ -91,6 +91,7 @@ gst_decklink_connection_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue connections[] = {
+    {GST_DECKLINK_CONNECTION_AUTO, "auto", "Auto"},
     {GST_DECKLINK_CONNECTION_SDI, "sdi", "SDI"},
     {GST_DECKLINK_CONNECTION_HDMI, "hdmi", "HDMI"},
     {GST_DECKLINK_CONNECTION_OPTICAL_SDI, "optical-sdi", "Optical SDI"},
@@ -193,8 +194,12 @@ static const BMDVideoConnection connections[] = {
 const BMDVideoConnection
 gst_decklink_get_connection (GstDecklinkConnectionEnum e)
 {
-  if (e < GST_DECKLINK_CONNECTION_SDI || e > GST_DECKLINK_CONNECTION_SVIDEO)
+  g_return_val_if_fail (e != GST_DECKLINK_CONNECTION_AUTO,
+      bmdVideoConnectionSDI);
+
+  if (e <= GST_DECKLINK_CONNECTION_AUTO || e > GST_DECKLINK_CONNECTION_SVIDEO)
     e = GST_DECKLINK_CONNECTION_SDI;
+
   return connections[e];
 }
 
