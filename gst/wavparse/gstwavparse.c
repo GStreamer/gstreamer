@@ -59,6 +59,8 @@
 GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
 #define GST_CAT_DEFAULT (wavparse_debug)
 
+#define GST_RIFF_TAG_Fake GST_MAKE_FOURCC ('F','a','k','e')
+
 #define GST_BWF_TAG_iXML GST_MAKE_FOURCC ('i','X','M','L')
 #define GST_BWF_TAG_qlty GST_MAKE_FOURCC ('q','l','t','y')
 #define GST_BWF_TAG_mext GST_MAKE_FOURCC ('m','e','x','t')
@@ -1104,7 +1106,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         tag == GST_RIFF_TAG_id3 || tag == GST_RIFF_TAG_IDVX ||
         tag == GST_BWF_TAG_iXML || tag == GST_BWF_TAG_qlty ||
         tag == GST_BWF_TAG_mext || tag == GST_BWF_TAG_levl ||
-        tag == GST_BWF_TAG_link || tag == GST_BWF_TAG_axml) {
+        tag == GST_BWF_TAG_link || tag == GST_BWF_TAG_axml ||
+        tag == GST_RIFF_TAG_Fake) {
       GST_DEBUG_OBJECT (wav, "skipping %" GST_FOURCC_FORMAT " chunk",
           GST_FOURCC_ARGS (tag));
       gst_buffer_unref (buf);
