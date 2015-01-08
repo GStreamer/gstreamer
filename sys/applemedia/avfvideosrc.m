@@ -25,7 +25,9 @@
 
 #import <AVFoundation/AVFoundation.h>
 #include <gst/video/video.h>
+#include <gst/gl/gstglcontext.h>
 #include "coremediabuffer.h"
+#include "corevideotexturecache.h"
 
 #define DEFAULT_DEVICE_INDEX  -1
 #define DEFAULT_DO_STATS      FALSE
@@ -52,6 +54,10 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "framerate = " GST_VIDEO_FPS_RANGE ", "
         "width = " GST_VIDEO_SIZE_RANGE ", "
         "height = " GST_VIDEO_SIZE_RANGE "; "
+
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+            "RGBA") "; "
 ));
 
 typedef enum _QueueState {
@@ -101,6 +107,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
   BOOL captureScreenMouseClicks;
 
   BOOL useVideoMeta;
+  GstCoreVideoTextureCache *textureCache;
 }
 
 - (id)init;
@@ -161,6 +168,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     captureScreenCursor = NO;
     captureScreenMouseClicks = NO;
     useVideoMeta = NO;
+    textureCache = NULL;
 #if !HAVE_IOS
     displayId = kCGDirectMainDisplay;
 #endif
@@ -321,6 +329,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   });
 }
 
+
 #define GST_AVF_CAPS_NEW(format, w, h, fps_n, fps_d)                  \
     (gst_caps_new_simple ("video/x-raw",                              \
         "width", G_TYPE_INT, w,                                       \
@@ -342,6 +351,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     break;
   case kCVPixelFormatType_32BGRA: /* BGRA */
     gst_format = GST_VIDEO_FORMAT_BGRA;
+    break;
+  case kCVPixelFormatType_32RGBA: /* RGBA */
+    gst_format = GST_VIDEO_FORMAT_RGBA;
     break;
   case kCVPixelFormatType_422YpCbCr8_yuvs: /* yuvs */
     gst_format = GST_VIDEO_FORMAT_YUY2;
@@ -383,6 +395,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
         if (gst_format != GST_VIDEO_FORMAT_UNKNOWN)
           gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, dimensions.width, dimensions.height, fps_n, fps_d));
+
+        if (gst_format == GST_VIDEO_FORMAT_BGRA) {
+          GstCaps *rgba_caps = GST_AVF_CAPS_NEW (GST_VIDEO_FORMAT_RGBA, dimensions.width, dimensions.height, fps_n, fps_d);
+          gst_caps_set_features (rgba_caps, 0, gst_caps_features_new (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL));
+          gst_caps_append (result, rgba_caps);
+        }
       }
     }
   }
@@ -622,6 +640,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       case GST_VIDEO_FORMAT_YUY2:
          newformat = kCVPixelFormatType_422YpCbCr8_yuvs;
         break;
+      case GST_VIDEO_FORMAT_RGBA:
+        /* In order to do RGBA, we negotiate BGRA (since RGBA is not supported
+         * if not in textures) and then we get RGBA textures via
+         * CVOpenGL*TextureCacheCreateTextureFromImage. Computers. */
       case GST_VIDEO_FORMAT_BGRA:
          newformat = kCVPixelFormatType_32BGRA;
         break;
@@ -682,6 +704,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   bufQueue = nil;
   inputClock = nil;
 
+  if (textureCache)
+      gst_core_video_texture_cache_free (textureCache);
+  textureCache = NULL;
+
   return YES;
 }
 
@@ -712,6 +738,20 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
   useVideoMeta = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
+
+  guint idx;
+  if (gst_query_find_allocation_meta (query,
+        GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
+    GstGLContext *context;
+    const GstStructure *upload_meta_params;
+
+    gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
+    if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
+          GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
+      textureCache = gst_core_video_texture_cache_new (context);
+      gst_object_unref (context);
+    }
+  }
 
   return YES;
 }
@@ -824,7 +864,24 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
 
   *buf = gst_core_media_buffer_new (sbuf, useVideoMeta);
+  if (format == GST_VIDEO_FORMAT_RGBA) {
+    /* So now buf contains BGRA data (!) . Since downstream is actually going to
+     * use the GL upload meta to get RGBA textures (??), we need to override the
+     * VideoMeta format (!!!). Yes this is confusing, see setCaps:  */
+    GstVideoMeta *video_meta = gst_buffer_get_video_meta (*buf);
+    if (video_meta) {
+      video_meta->format = format;
+    }
+  }
   CFRelease (sbuf);
+
+  if (textureCache != NULL) {
+    GstVideoGLTextureType texture_types[4] = {GST_VIDEO_GL_TEXTURE_TYPE_RGBA, 0};
+    gst_buffer_add_video_gl_texture_upload_meta (*buf, 
+        GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
+        1, texture_types,
+        gst_core_video_texture_cache_upload, textureCache, NULL, NULL);
+  }
 
   GST_BUFFER_OFFSET (*buf) = offset++;
   GST_BUFFER_OFFSET_END (*buf) = GST_BUFFER_OFFSET (buf) + 1;

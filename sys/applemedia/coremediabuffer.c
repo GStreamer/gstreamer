@@ -76,6 +76,8 @@ gst_core_media_buffer_get_video_format (OSType format)
       return GST_VIDEO_FORMAT_UYVY;
     case kCVPixelFormatType_32BGRA:
       return GST_VIDEO_FORMAT_BGRA;
+    case kCVPixelFormatType_32RGBA:
+      return GST_VIDEO_FORMAT_RGBA;
     default:
       GST_WARNING ("Unknown OSType format: %d", (gint) format);
       return GST_VIDEO_FORMAT_UNKNOWN;

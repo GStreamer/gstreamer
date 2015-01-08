@@ -5,6 +5,7 @@ libgstapplemedia_la_SOURCES =			\
 	vtutil.c				\
 	corevideobuffer.c			\
 	coremediabuffer.c			\
+	corevideotexturecache.m 		\
 	atdec.c
 
 libgstapplemedia_la_CPPFLAGS =			\
@@ -15,11 +16,15 @@ libgstapplemedia_la_CPPFLAGS =			\
 	-Dgst_core_video_buffer_get_type=gst_core_video_buffer_priv_get_type
 
 libgstapplemedia_la_CFLAGS =			\
+	-I$(top_srcdir)/gst-libs                \
+	-I$(top_builddir)/gst-libs              \
 	$(GST_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_PLUGINS_BASE_CFLAGS)
 
 libgstapplemedia_la_OBJCFLAGS =			\
+	-I$(top_srcdir)/gst-libs                \
+	-I$(top_builddir)/gst-libs              \
 	$(GST_OBJCFLAGS)			\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_PLUGINS_BASE_CFLAGS)
@@ -28,12 +33,13 @@ if HAVE_IOS
 libgstapplemedia_la_OBJCFLAGS += -fobjc-abi-version=2 -fobjc-legacy-dispatch
 endif
 
-libgstapplemedia_la_LIBADD =			\
-	$(GST_BASE_LIBS)			\
-	$(GST_PLUGINS_BASE_LIBS)		\
-	-lgstvideo-$(GST_API_VERSION) 		\
-	-lgstaudio-$(GST_API_VERSION)		\
-	-lgstpbutils-$(GST_API_VERSION) 	\
+libgstapplemedia_la_LIBADD =						\
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la 	\
+	$(GST_BASE_LIBS)						\
+	$(GST_PLUGINS_BASE_LIBS)					\
+	-lgstvideo-$(GST_API_VERSION) 					\
+	-lgstaudio-$(GST_API_VERSION)					\
+	-lgstpbutils-$(GST_API_VERSION) 				\
 	$(GMODULE_NO_EXPORT_LIBS)
 
 libgstapplemedia_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
