@@ -424,6 +424,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
     g_list_free (self->files);
     self->files = NULL;
   }
+  client->duration = GST_CLOCK_TIME_NONE;
 
   /* By default, allow caching */
   self->allowcache = TRUE;
@@ -760,6 +761,7 @@ gst_m3u8_update (GstM3U8Client * client, GstM3U8 * self, gchar * data,
           GST_TIME_FORMAT, GST_TIME_ARGS (client->first_file_start),
           GST_TIME_ARGS (client->last_file_end));
     }
+    client->duration = duration;
   }
 
   return TRUE;
@@ -779,6 +781,7 @@ gst_m3u8_client_new (const gchar * uri, const gchar * base_uri)
   client->sequence_position = 0;
   client->update_failed_count = 0;
   client->highest_sequence_number = -1;
+  client->duration = GST_CLOCK_TIME_NONE;
   g_mutex_init (&client->lock);
   gst_m3u8_set_uri (client->main, g_strdup (uri), g_strdup (base_uri), NULL);
 
@@ -804,6 +807,7 @@ gst_m3u8_client_set_current (GstM3U8Client * self, GstM3U8 * m3u8)
   if (m3u8 != self->current) {
     self->current = m3u8;
     self->update_failed_count = 0;
+    self->duration = GST_CLOCK_TIME_NONE;
   }
   GST_M3U8_CLIENT_UNLOCK (self);
 }
@@ -1104,7 +1108,7 @@ _sum_duration (GstM3U8MediaFile * self, GstClockTime * duration)
 GstClockTime
 gst_m3u8_client_get_duration (GstM3U8Client * client)
 {
-  GstClockTime duration = 0;
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
 
   g_return_val_if_fail (client != NULL, GST_CLOCK_TIME_NONE);
 
@@ -1114,9 +1118,15 @@ gst_m3u8_client_get_duration (GstM3U8Client * client)
     GST_M3U8_CLIENT_UNLOCK (client);
     return GST_CLOCK_TIME_NONE;
   }
-  if (client->current->files)
-    g_list_foreach (client->current->files, (GFunc) _sum_duration, &duration);
+
+  if (!GST_CLOCK_TIME_IS_VALID (client->duration) && client->current->files) {
+    client->duration = 0;
+    g_list_foreach (client->current->files, (GFunc) _sum_duration,
+        &client->duration);
+  }
+  duration = client->duration;
   GST_M3U8_CLIENT_UNLOCK (client);
+
   return duration;
 }
 

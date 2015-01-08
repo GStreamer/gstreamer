@@ -94,6 +94,7 @@ struct _GstM3U8Client
   gint64 highest_sequence_number; /* largest seen sequence number */
   GstClockTime first_file_start; /* timecode of the start of the first fragment in the current media playlist */
   GstClockTime last_file_end; /* timecode of the end of the last fragment in the current media playlist */
+  GstClockTime duration; /* cached total duration */
   GMutex lock;
 };
 
