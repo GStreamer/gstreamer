@@ -457,7 +457,8 @@ gst_validate_pad_monitor_check_caps_complete (GstValidatePadMonitor * monitor,
 }
 
 static GstCaps *
-gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor)
+gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor,
+    GstCaps * filter)
 {
   GstCaps *caps = gst_caps_new_empty ();
   GstIterator *iter;
@@ -477,7 +478,7 @@ gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor)
 
         /* TODO What would be the correct caps operation to merge the caps in
          * case one sink is internally linked to multiple srcs? */
-        peercaps = gst_pad_peer_query_caps (otherpad, NULL);
+        peercaps = gst_pad_peer_query_caps (otherpad, filter);
         if (peercaps)
           caps = gst_caps_merge (caps, peercaps);
 
@@ -617,18 +618,126 @@ _structures_field_is_contained (GstStructure * s1, GstStructure * s2,
 }
 
 static void
+_check_and_copy_structure_field (GstStructure * from, GstStructure * to,
+    const gchar * name)
+{
+  if (gst_structure_has_field (from, name)) {
+    gst_structure_set_value (to, name, gst_structure_get_value (from, name));
+  }
+}
+
+static GstCaps *
+gst_validate_pad_monitor_copy_caps_fields_into_caps (GstValidatePadMonitor *
+    monitor, GstCaps * from_caps, GstCaps * into_caps)
+{
+  gint i, j, into_size, from_size;
+  GstStructure *structure;
+  GstCaps *res = gst_caps_new_empty ();
+
+  into_size = gst_caps_get_size (into_caps);
+  from_size = gst_caps_get_size (from_caps);
+
+  for (i = 0; i < into_size; i++) {
+    GstStructure *s = gst_caps_get_structure (into_caps, i);
+
+    for (j = 0; j < from_size; j++) {
+      GstStructure *new_structure = gst_structure_copy (s);
+
+      structure = gst_caps_get_structure (from_caps, j);
+      if (_structure_is_video (structure)) {
+        _check_and_copy_structure_field (structure, new_structure, "width");
+        _check_and_copy_structure_field (structure, new_structure, "height");
+        _check_and_copy_structure_field (structure, new_structure, "framerate");
+        _check_and_copy_structure_field (structure, new_structure,
+            "pixel-aspect-ratio");
+      } else if (_structure_is_audio (s)) {
+        _check_and_copy_structure_field (structure, new_structure, "rate");
+        _check_and_copy_structure_field (structure, new_structure, "channels");
+      }
+
+      gst_caps_append_structure (res, new_structure);
+    }
+  }
+  return res;
+}
+
+static GstCaps *
+gst_validate_pad_monitor_transform_caps (GstValidatePadMonitor * monitor,
+    GstCaps * caps)
+{
+  GstCaps *othercaps = gst_caps_new_empty ();
+  GstCaps *new_caps;
+  GstIterator *iter;
+  gboolean done;
+  GstPad *otherpad;
+  GstCaps *template_caps;
+
+  GST_DEBUG_OBJECT (monitor->pad, "Transform caps %" GST_PTR_FORMAT, caps);
+
+  if (caps == NULL)
+    return NULL;
+
+  iter =
+      gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
+      (monitor));
+  done = FALSE;
+  while (!done) {
+    GValue value = { 0, };
+    switch (gst_iterator_next (iter, &value)) {
+      case GST_ITERATOR_OK:
+        otherpad = g_value_get_object (&value);
+        template_caps = gst_pad_get_pad_template_caps (otherpad);
+
+        new_caps =
+            gst_validate_pad_monitor_copy_caps_fields_into_caps (monitor, caps,
+            template_caps);
+        if (!gst_caps_is_empty (new_caps))
+          gst_caps_append (othercaps, new_caps);
+        else
+          gst_caps_unref (new_caps);
+
+        gst_caps_unref (template_caps);
+        g_value_reset (&value);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        gst_caps_unref (othercaps);
+        othercaps = gst_caps_new_empty ();
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
+
+  GST_DEBUG_OBJECT (monitor->pad, "Transformed caps: %" GST_PTR_FORMAT,
+      othercaps);
+
+  return othercaps;
+}
+
+static void
 gst_validate_pad_monitor_check_caps_fields_proxied (GstValidatePadMonitor *
-    monitor, GstCaps * caps)
+    monitor, GstCaps * caps, GstCaps * filter)
 {
   GstStructure *structure;
   GstStructure *otherstructure;
   GstCaps *othercaps;
+  GstCaps *otherfilter;
   gint i, j;
 
   if (!gst_validate_pad_monitor_pad_should_proxy_othercaps (monitor))
     return;
 
-  othercaps = gst_validate_pad_monitor_get_othercaps (monitor);
+  otherfilter = gst_validate_pad_monitor_transform_caps (monitor, filter);
+  othercaps = gst_validate_pad_monitor_get_othercaps (monitor, otherfilter);
+  if (otherfilter)
+    gst_caps_unref (otherfilter);
 
   for (i = 0; i < gst_caps_get_size (othercaps); i++) {
     gboolean found = FALSE;
@@ -1992,13 +2101,17 @@ gst_validate_pad_monitor_query_func (GstPad * pad, GstObject * parent,
     switch (GST_QUERY_TYPE (query)) {
       case GST_QUERY_CAPS:{
         GstCaps *res;
+        GstCaps *filter;
+
         /* We shouldn't need to lock the parent as this doesn't modify
          * other monitors, just does some peer_pad_caps */
         GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
+        gst_query_parse_caps (query, &filter);
         gst_query_parse_caps_result (query, &res);
         if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-          gst_validate_pad_monitor_check_caps_fields_proxied (pad_monitor, res);
+          gst_validate_pad_monitor_check_caps_fields_proxied (pad_monitor, res,
+              filter);
         }
         GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
         break;
