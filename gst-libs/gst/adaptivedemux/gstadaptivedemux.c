@@ -1654,9 +1654,11 @@ gst_adaptive_demux_stream_download_header_fragment (GstAdaptiveDemuxStream *
         G_GINT64_FORMAT, stream->fragment.header_uri,
         stream->fragment.header_range_start, stream->fragment.header_range_end);
 
+    stream->downloading_header = TRUE;
     ret = gst_adaptive_demux_stream_download_uri (demux, stream,
         stream->fragment.header_uri, stream->fragment.header_range_start,
         stream->fragment.header_range_end);
+    stream->downloading_header = FALSE;
   }
 
   /* check if we have an index */
@@ -1667,9 +1669,11 @@ gst_adaptive_demux_stream_download_header_fragment (GstAdaptiveDemuxStream *
           "Fetching index %s %" G_GINT64_FORMAT "-%" G_GINT64_FORMAT,
           stream->fragment.index_uri,
           stream->fragment.index_range_start, stream->fragment.index_range_end);
+      stream->downloading_index = TRUE;
       ret = gst_adaptive_demux_stream_download_uri (demux, stream,
           stream->fragment.index_uri, stream->fragment.index_range_start,
           stream->fragment.index_range_end);
+      stream->downloading_index = FALSE;
     }
   }
 

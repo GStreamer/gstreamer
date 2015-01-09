@@ -125,6 +125,9 @@ struct _GstAdaptiveDemuxStream
   gboolean restart_download;
   gboolean discont;
 
+  gboolean downloading_header;
+  gboolean downloading_index;
+
   /* download tooling */
   GstElement *src;
   GstPad *src_srcpad;
