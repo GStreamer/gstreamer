@@ -325,18 +325,15 @@ render_color_dots (GstAudioVisualizer * base, guint32 * vdata,
       filter ((gfloat) adata[s]);
 
       y = (guint) (oy + flt[0] * dy);
-      if (y > h1)
-        y = h1;
+      y = MIN (y, h1);
       draw_dot_c (vdata, x, y, w, 0x00FF0000);
 
       y = (guint) (oy + flt[3] * dy);
-      if (y > h1)
-        y = h1;
+      y = MIN (y, h1);
       draw_dot_c (vdata, x, y, w, 0x0000FF00);
 
       y = (guint) (oy + (flt[4] + flt[5]) * dy);
-      if (y > h1)
-        y = h1;
+      y = MIN (y, h1);
       draw_dot_c (vdata, x, y, w, 0x000000FF);
 
       s += channels;
@@ -370,30 +367,30 @@ render_color_lines (GstAudioVisualizer * base, guint32 * vdata,
     filter ((gfloat) adata[s]);
 
     y = (guint) (oy + flt[0] * dy);
-    y2 = CLAMP (y, 0, h1);
+    y2 = MIN (y, h1);
 
     y = (guint) (oy + flt[3] * dy);
-    y3 = CLAMP (y, 0, h1);
+    y3 = MIN (y, h1);
 
     y = (guint) (oy + (flt[4] + flt[5]) * dy);
-    y4 = CLAMP (y, 0, h1);
+    y4 = MIN (y, h1);
 
     for (i = 1; i < num_samples; i++) {
       x = (guint) ((gfloat) i * dx);
       filter ((gfloat) adata[s]);
 
       y = (guint) (oy + flt[0] * dy);
-      y = CLAMP (y, 0, h1);
+      y = MIN (y, h1);
       draw_line_aa (vdata, x2, x, y2, y, w, 0x00FF0000);
       y2 = y;
 
       y = (guint) (oy + flt[3] * dy);
-      y = CLAMP (y, 0, h1);
+      y = MIN (y, h1);
       draw_line_aa (vdata, x2, x, y3, y, w, 0x0000FF00);
       y3 = y;
 
       y = (guint) (oy + (flt[4] + flt[5]) * dy);
-      y = CLAMP (y, 0, h1);
+      y = MIN (y, h1);
       draw_line_aa (vdata, x2, x, y4, y, w, 0x000000FF);
       y4 = y;
 
