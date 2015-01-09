@@ -325,15 +325,18 @@ render_color_dots (GstAudioVisualizer * base, guint32 * vdata,
       filter ((gfloat) adata[s]);
 
       y = (guint) (oy + flt[0] * dy);
-      y = CLAMP (y, 0, h1);
+      if (y > h1)
+        y = h1;
       draw_dot_c (vdata, x, y, w, 0x00FF0000);
 
       y = (guint) (oy + flt[3] * dy);
-      y = CLAMP (y, 0, h1);
+      if (y > h1)
+        y = h1;
       draw_dot_c (vdata, x, y, w, 0x0000FF00);
 
       y = (guint) (oy + (flt[4] + flt[5]) * dy);
-      y = CLAMP (y, 0, h1);
+      if (y > h1)
+        y = h1;
       draw_dot_c (vdata, x, y, w, 0x000000FF);
 
       s += channels;
