@@ -97,7 +97,7 @@ dither_verterr_u16 (GstVideoDither * dither, gpointer pixels, guint x, guint y,
       e[i] = v & mp;
       /* quantize and store */
       v &= ~mp;
-      p[i] = CLAMP (v, 0, 65535);
+      p[i] = MIN (v, 65535);
     }
   }
 }
@@ -129,7 +129,7 @@ dither_floyd_steinberg_u8 (GstVideoDither * dither, gpointer pixels, guint x,
       e[i + 4] = v & mp;
       /* quantize and store */
       v &= ~mp;
-      p[i] = CLAMP (v, 0, 255);
+      p[i] = MIN (v, 255);
     }
   }
 #else
@@ -162,7 +162,7 @@ dither_floyd_steinberg_u16 (GstVideoDither * dither, gpointer pixels, guint x,
       e[i + 4] = v & mp;
       /* quantize and store */
       v &= ~mp;
-      p[i] = CLAMP (v, 0, 65535);
+      p[i] = MIN (v, 65535);
     }
   }
 }
@@ -189,7 +189,7 @@ dither_sierra_lite_u8 (GstVideoDither * dither, gpointer pixels, guint x,
     e[i + 4] = v & mp;
     /* quantize and store */
     v &= ~mp;
-    p[i] = CLAMP (v, 0, 255);
+    p[i] = MIN (v, 255);
   }
 }
 
@@ -215,7 +215,7 @@ dither_sierra_lite_u16 (GstVideoDither * dither, gpointer pixels, guint x,
     e[i + 4] = v & mp;
     /* quantize and store */
     v &= ~mp;
-    p[i] = CLAMP (v & ~mp, 0, 65535);
+    p[i] = MIN (v & ~mp, 65535);
   }
 }
 
