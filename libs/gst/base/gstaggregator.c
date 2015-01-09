@@ -555,6 +555,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     GstClockTime base_time, time;
     GstClock *clock;
     GstClockReturn status;
+    GstClockTimeDiff jitter;
 
     GST_DEBUG_OBJECT (self, "got subclass start time: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start));
@@ -587,7 +588,8 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     gst_object_unref (clock);
     SRC_STREAM_UNLOCK (self);
 
-    status = gst_clock_id_wait (self->priv->aggregate_id, NULL);
+    jitter = 0;
+    status = gst_clock_id_wait (self->priv->aggregate_id, &jitter);
 
     SRC_STREAM_LOCK (self);
     if (self->priv->aggregate_id) {
@@ -595,7 +597,9 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
       self->priv->aggregate_id = NULL;
     }
 
-    GST_DEBUG_OBJECT (self, "clock returned %d", status);
+    GST_DEBUG_OBJECT (self, "clock returned %d (jitter: %s%" GST_TIME_FORMAT,
+        status, (jitter < 0 ? "-" : ""),
+        GST_TIME_ARGS ((jitter < 0 ? -jitter : jitter)));
 
     /* we timed out */
     if (status == GST_CLOCK_OK || status == GST_CLOCK_EARLY) {
