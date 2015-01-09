@@ -149,8 +149,10 @@ struct _GstRTSPMediaClass {
   void            (*target_state)    (GstRTSPMedia *media, GstState state);
   void            (*new_state)       (GstRTSPMedia *media, GstState state);
 
+  gboolean        (*handle_sdp)      (GstRTSPMedia *media, GstSDPMessage *sdp);
+
   /*< private >*/
-  gpointer         _gst_reserved[GST_PADDING_LARGE];
+  gpointer         _gst_reserved[GST_PADDING_LARGE-1];
 };
 
 GType                 gst_rtsp_media_get_type         (void);
@@ -169,6 +171,9 @@ GstRTSPPermissions *  gst_rtsp_media_get_permissions  (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_shared       (GstRTSPMedia *media, gboolean shared);
 gboolean              gst_rtsp_media_is_shared        (GstRTSPMedia *media);
+
+void                  gst_rtsp_media_set_record       (GstRTSPMedia *media, gboolean record);
+gboolean              gst_rtsp_media_is_record        (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_reusable     (GstRTSPMedia *media, gboolean reusable);
 gboolean              gst_rtsp_media_is_reusable      (GstRTSPMedia *media);
@@ -208,6 +213,9 @@ gboolean              gst_rtsp_media_unsuspend        (GstRTSPMedia *media);
 
 gboolean              gst_rtsp_media_setup_sdp        (GstRTSPMedia * media, GstSDPMessage * sdp,
                                                        GstSDPInfo * info);
+
+gboolean              gst_rtsp_media_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp);
+
 
 /* creating streams */
 void                  gst_rtsp_media_collect_streams  (GstRTSPMedia *media);

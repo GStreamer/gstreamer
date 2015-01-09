@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) 2008 Wim Taymans <wim.taymans at gmail.com>
+ * Copyright (C) 2015 Centricular Ltd
+ *     Author: Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -144,6 +146,7 @@ gst_rtsp_session_media_new (const gchar * path, GstRTSPMedia * media)
 
   g_return_val_if_fail (path != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
   status = gst_rtsp_media_get_status (media);
   g_return_val_if_fail (status == GST_RTSP_MEDIA_STATUS_PREPARED || status ==
       GST_RTSP_MEDIA_STATUS_SUSPENDED, NULL);

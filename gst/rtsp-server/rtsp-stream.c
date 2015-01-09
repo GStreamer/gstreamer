@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) 2008 Wim Taymans <wim.taymans at gmail.com>
+ * Copyright (C) 2015 Centricular Ltd
+ *     Author: Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -71,7 +73,8 @@ struct _GstRTSPStreamPrivate
 {
   GMutex lock;
   guint idx;
-  GstPad *srcpad;
+  /* Only one pad is ever set */
+  GstPad *srcpad, *sinkpad;
   GstElement *payloader;
   guint buffer_size;
   gboolean is_joined;
@@ -82,6 +85,7 @@ struct _GstRTSPStreamPrivate
 
   /* pads on the rtpbin */
   GstPad *send_rtp_sink;
+  GstPad *recv_rtp_src;
   GstPad *recv_sink[2];
   GstPad *send_src[2];
 
@@ -153,6 +157,9 @@ struct _GstRTSPStreamPrivate
   /* stream blocking */
   gulong blocked_id;
   gboolean blocking;
+
+  /* pt->caps map for RECORD streams */
+  GHashTable *ptmap;
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -253,6 +260,8 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
 
   priv->keys = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) gst_caps_unref);
+  priv->ptmap = g_hash_table_new_full (NULL, NULL, NULL,
+      (GDestroyNotify) gst_caps_unref);
 }
 
 static void
@@ -283,11 +292,15 @@ gst_rtsp_stream_finalize (GObject * obj)
     g_object_unref (priv->rtxsend);
 
   gst_object_unref (priv->payloader);
-  gst_object_unref (priv->srcpad);
+  if (priv->srcpad)
+    gst_object_unref (priv->srcpad);
+  if (priv->sinkpad)
+    gst_object_unref (priv->sinkpad);
   g_free (priv->control);
   g_mutex_clear (&priv->lock);
 
   g_hash_table_unref (priv->keys);
+  g_hash_table_destroy (priv->ptmap);
 
   G_OBJECT_CLASS (gst_rtsp_stream_parent_class)->finalize (obj);
 }
@@ -337,29 +350,32 @@ gst_rtsp_stream_set_property (GObject * object, guint propid,
 /**
  * gst_rtsp_stream_new:
  * @idx: an index
- * @srcpad: a #GstPad
+ * @pad: a #GstPad
  * @payloader: a #GstElement
  *
  * Create a new media stream with index @idx that handles RTP data on
- * @srcpad and has a payloader element @payloader.
+ * @pad and has a payloader element @payloader if @pad is a source pad
+ * or a depayloader element @payloader if @pad is a sink pad.
  *
  * Returns: (transfer full): a new #GstRTSPStream
  */
 GstRTSPStream *
-gst_rtsp_stream_new (guint idx, GstElement * payloader, GstPad * srcpad)
+gst_rtsp_stream_new (guint idx, GstElement * payloader, GstPad * pad)
 {
   GstRTSPStreamPrivate *priv;
   GstRTSPStream *stream;
 
   g_return_val_if_fail (GST_IS_ELEMENT (payloader), NULL);
-  g_return_val_if_fail (GST_IS_PAD (srcpad), NULL);
-  g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   stream = g_object_new (GST_TYPE_RTSP_STREAM, NULL);
   priv = stream->priv;
   priv->idx = idx;
   priv->payloader = gst_object_ref (payloader);
-  priv->srcpad = gst_object_ref (srcpad);
+  if (GST_PAD_IS_SRC (pad))
+    priv->srcpad = gst_object_ref (pad);
+  else
+    priv->sinkpad = gst_object_ref (pad);
 
   return stream;
 }
@@ -416,7 +432,29 @@ gst_rtsp_stream_get_srcpad (GstRTSPStream * stream)
 {
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
 
+  if (!stream->priv->srcpad)
+    return NULL;
+
   return gst_object_ref (stream->priv->srcpad);
+}
+
+/**
+ * gst_rtsp_stream_get_sinkpad:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the sinkpad associated with @stream.
+ *
+ * Returns: (transfer full): the sinkpad. Unref after usage.
+ */
+GstPad *
+gst_rtsp_stream_get_sinkpad (GstRTSPStream * stream)
+{
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  if (!stream->priv->sinkpad)
+    return NULL;
+
+  return gst_object_ref (stream->priv->sinkpad);
 }
 
 /**
@@ -975,11 +1013,12 @@ different_address:
 }
 
 static gboolean
-alloc_ports_one_family (GstRTSPAddressPool * pool, gint buffer_size,
-    GSocketFamily family, GstElement * udpsrc_out[2],
+alloc_ports_one_family (GstRTSPStream * stream, GstRTSPAddressPool * pool,
+    gint buffer_size, GSocketFamily family, GstElement * udpsrc_out[2],
     GstElement * udpsink_out[2], GstRTSPRange * server_port_out,
     GstRTSPAddress ** server_addr_out)
 {
+  GstRTSPStreamPrivate *priv = stream->priv;
   GstStateChangeReturn ret;
   GstElement *udpsrc0, *udpsrc1;
   GstElement *udpsink0, *udpsink1;
@@ -1148,6 +1187,11 @@ again:
   g_object_set (G_OBJECT (udpsink1), "close-socket", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), multisink_socket, rtcp_socket, NULL);
   g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
+  /* Needs to be async for RECORD streams, otherwise we will never go to
+   * PLAYING because the sinks will wait for data while the udpsrc can't
+   * provide data with timestamps in PAUSED. */
+  if (priv->sinkpad)
+    g_object_set (G_OBJECT (udpsink0), "async", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "async", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink0), "auto-multicast", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink0), "loop", FALSE, NULL);
@@ -1227,11 +1271,13 @@ alloc_ports (GstRTSPStream * stream)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
 
-  priv->have_ipv4 = alloc_ports_one_family (priv->pool, priv->buffer_size,
+  priv->have_ipv4 =
+      alloc_ports_one_family (stream, priv->pool, priv->buffer_size,
       G_SOCKET_FAMILY_IPV4, priv->udpsrc_v4, priv->udpsink,
       &priv->server_port_v4, &priv->server_addr_v4);
 
-  priv->have_ipv6 = alloc_ports_one_family (priv->pool, priv->buffer_size,
+  priv->have_ipv6 =
+      alloc_ports_one_family (stream, priv->pool, priv->buffer_size,
       G_SOCKET_FAMILY_IPV6, priv->udpsrc_v6, priv->udpsink,
       &priv->server_port_v6, &priv->server_addr_v6);
 
@@ -1746,7 +1792,7 @@ request_key (GstElement * srtpdec, guint ssrc, GstRTSPStream * stream)
 }
 
 static GstElement *
-request_rtcp_decoder (GstElement * rtpbin, guint session,
+request_rtp_rtcp_decoder (GstElement * rtpbin, guint session,
     GstRTSPStream * stream)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
@@ -1809,6 +1855,101 @@ request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPStream * stream)
 }
 
 /**
+ * gst_rtsp_stream_set_pt_map:
+ * @stream: a #GstRTSPStream
+ * @pt: the pt
+ * @caps: a #GstCaps
+ *
+ * Configure a pt map between @pt and @caps.
+ */
+void
+gst_rtsp_stream_set_pt_map (GstRTSPStream * stream, guint pt, GstCaps * caps)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  g_hash_table_insert (priv->ptmap, GINT_TO_POINTER (pt), gst_caps_ref (caps));
+  g_mutex_unlock (&priv->lock);
+}
+
+static GstCaps *
+request_pt_map (GstElement * rtpbin, guint session, guint pt,
+    GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstCaps *caps = NULL;
+
+  g_mutex_lock (&priv->lock);
+
+  if (priv->idx == session) {
+    caps = g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (pt));
+    if (caps) {
+      GST_DEBUG ("Stream %p, pt %u: caps %" GST_PTR_FORMAT, stream, pt, caps);
+      gst_caps_ref (caps);
+    } else {
+      GST_DEBUG ("Stream %p, pt %u: no caps", stream, pt);
+    }
+  }
+
+  g_mutex_unlock (&priv->lock);
+
+  return caps;
+}
+
+static void
+pad_added (GstElement * rtpbin, GstPad * pad, GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  gchar *name;
+  GstPadLinkReturn ret;
+  guint sessid;
+
+  GST_DEBUG ("Stream %p added pad %s:%s for pad %s:%s", stream,
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (priv->sinkpad));
+
+  name = gst_pad_get_name (pad);
+  if (sscanf (name, "recv_rtp_src_%u", &sessid) != 1) {
+    g_free (name);
+    return;
+  }
+  g_free (name);
+
+  if (priv->idx != sessid)
+    return;
+
+  if (gst_pad_is_linked (priv->sinkpad)) {
+    GST_WARNING ("Stream %p: Pad %s:%s is linked already", stream,
+        GST_DEBUG_PAD_NAME (priv->sinkpad));
+    return;
+  }
+
+  /* link the RTP pad to the session manager, it should not really fail unless
+   * this is not really an RTP pad */
+  ret = gst_pad_link (pad, priv->sinkpad);
+  if (ret != GST_PAD_LINK_OK)
+    goto link_failed;
+  priv->recv_rtp_src = gst_object_ref (pad);
+
+  return;
+
+/* ERRORS */
+link_failed:
+  {
+    GST_ERROR ("Stream %p: Failed to link pads %s:%s and %s:%s", stream,
+        GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (priv->sinkpad));
+  }
+}
+
+static void
+on_npt_stop (GstElement * rtpbin, guint session, guint ssrc,
+    GstRTSPStream * stream)
+{
+  /* TODO: What to do here other than this? */
+  GST_DEBUG ("Stream %p: Got EOS", stream);
+  gst_pad_send_event (stream->priv->sinkpad, gst_event_new_eos ());
+}
+
+/**
  * gst_rtsp_stream_join_bin:
  * @stream: a #GstRTSPStream
  * @bin: (transfer none): a #GstBin to join
@@ -1861,36 +2002,51 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
         (GCallback) request_rtp_encoder, stream);
     g_signal_connect (rtpbin, "request-rtcp-encoder",
         (GCallback) request_rtcp_encoder, stream);
+    g_signal_connect (rtpbin, "request-rtp-decoder",
+        (GCallback) request_rtp_rtcp_decoder, stream);
     g_signal_connect (rtpbin, "request-rtcp-decoder",
-        (GCallback) request_rtcp_decoder, stream);
+        (GCallback) request_rtp_rtcp_decoder, stream);
   }
 
-  if (priv->rtx_time > 0) {
+  if (priv->rtx_time > 0 && priv->srcpad) {
     /* enable retransmission by setting rtprtxsend as the "aux" element of rtpbin */
     g_signal_connect (rtpbin, "request-aux-sender",
         (GCallback) request_aux_sender, stream);
+  }
+  if (priv->sinkpad) {
+    g_signal_connect (rtpbin, "request-pt-map",
+        (GCallback) request_pt_map, stream);
   }
 
   /* get a pad for sending RTP */
   name = g_strdup_printf ("send_rtp_sink_%u", idx);
   priv->send_rtp_sink = gst_element_get_request_pad (rtpbin, name);
   g_free (name);
-  /* link the RTP pad to the session manager, it should not really fail unless
-   * this is not really an RTP pad */
-  ret = gst_pad_link (priv->srcpad, priv->send_rtp_sink);
-  if (ret != GST_PAD_LINK_OK)
-    goto link_failed;
+
+  if (priv->srcpad) {
+    /* link the RTP pad to the session manager, it should not really fail unless
+     * this is not really an RTP pad */
+    ret = gst_pad_link (priv->srcpad, priv->send_rtp_sink);
+    if (ret != GST_PAD_LINK_OK)
+      goto link_failed;
+  } else {
+    /* Need to connect our sinkpad from here */
+    g_signal_connect (rtpbin, "pad-added", (GCallback) pad_added, stream);
+    /* EOS */
+    g_signal_connect (rtpbin, "on-npt-stop", (GCallback) on_npt_stop, stream);
+  }
 
   /* get pads from the RTP session element for sending and receiving
    * RTP/RTCP*/
   name = g_strdup_printf ("send_rtp_src_%u", idx);
   priv->send_src[0] = gst_element_get_static_pad (rtpbin, name);
   g_free (name);
-  name = g_strdup_printf ("send_rtcp_src_%u", idx);
-  priv->send_src[1] = gst_element_get_request_pad (rtpbin, name);
-  g_free (name);
   name = g_strdup_printf ("recv_rtp_sink_%u", idx);
   priv->recv_sink[0] = gst_element_get_request_pad (rtpbin, name);
+  g_free (name);
+
+  name = g_strdup_printf ("send_rtcp_src_%u", idx);
+  priv->send_src[1] = gst_element_get_request_pad (rtpbin, name);
   g_free (name);
   name = g_strdup_printf ("recv_rtcp_sink_%u", idx);
   priv->recv_sink[1] = gst_element_get_request_pad (rtpbin, name);
@@ -2002,10 +2158,12 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     gst_object_unref (pad);
 
     if (priv->udpsrc_v4[i]) {
-      /* we set and keep these to playing so that they don't cause NO_PREROLL return
-       * values */
-      gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_PLAYING);
-      gst_element_set_locked_state (priv->udpsrc_v4[i], TRUE);
+      if (priv->srcpad) {
+        /* we set and keep these to playing so that they don't cause NO_PREROLL return
+         * values. This is only relevant for PLAY pipelines */
+        gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_PLAYING);
+        gst_element_set_locked_state (priv->udpsrc_v4[i], TRUE);
+      }
       /* add udpsrc */
       gst_bin_add (bin, priv->udpsrc_v4[i]);
 
@@ -2018,8 +2176,10 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     }
 
     if (priv->udpsrc_v6[i]) {
-      gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_PLAYING);
-      gst_element_set_locked_state (priv->udpsrc_v6[i], TRUE);
+      if (priv->srcpad) {
+        gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_PLAYING);
+        gst_element_set_locked_state (priv->udpsrc_v6[i], TRUE);
+      }
       gst_bin_add (bin, priv->udpsrc_v6[i]);
 
       /* and link to the funnel v6 */
@@ -2128,7 +2288,13 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
 
   GST_INFO ("stream %p leaving bin", stream);
 
-  gst_pad_unlink (priv->srcpad, priv->send_rtp_sink);
+  if (priv->srcpad) {
+    gst_pad_unlink (priv->srcpad, priv->send_rtp_sink);
+  } else if (priv->recv_rtp_src) {
+    gst_pad_unlink (priv->recv_rtp_src, priv->sinkpad);
+    gst_object_unref (priv->recv_rtp_src);
+    priv->recv_rtp_src = NULL;
+  }
   g_signal_handler_disconnect (priv->send_src[0], priv->caps_sig);
   gst_element_release_request_pad (rtpbin, priv->send_rtp_sink);
   gst_object_unref (priv->send_rtp_sink);
@@ -2464,10 +2630,12 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
               gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
           g_free (host);
 
-          /* we set and keep these to playing so that they don't cause NO_PREROLL return
-           * values */
-          gst_element_set_state (source->udpsrc[i], GST_STATE_PLAYING);
-          gst_element_set_locked_state (source->udpsrc[i], TRUE);
+          if (priv->srcpad) {
+            /* we set and keep these to playing so that they don't cause NO_PREROLL return
+             * values. This is only relevant for PLAY pipelines */
+            gst_element_set_state (source->udpsrc[i], GST_STATE_PLAYING);
+            gst_element_set_locked_state (source->udpsrc[i], TRUE);
+          }
           /* add udpsrc */
           gst_bin_add (bin, source->udpsrc[i]);
 

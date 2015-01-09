@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) 2008 Wim Taymans <wim.taymans at gmail.com>
+ * Copyright (C) 2015 Centricular Ltd
+ *     Author: Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -61,11 +63,21 @@
  * Last reviewed on 2013-07-11 (1.0.0)
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
+
+#include <gst/sdp/gstmikey.h>
+#include <gst/rtp/gstrtppayloads.h>
+
+#define AES_128_KEY_LEN 16
+#define AES_256_KEY_LEN 32
+
+#define HMAC_32_KEY_LEN 4
+#define HMAC_80_KEY_LEN 10
 
 #include "rtsp-media.h"
 
@@ -89,6 +101,7 @@ struct _GstRTSPMediaPrivate
   guint buffer_size;
   GstRTSPAddressPool *pool;
   gboolean blocked;
+  gboolean record;
 
   GstElement *element;
   GRecMutex state_lock;         /* locking order: state lock, lock */
@@ -135,6 +148,7 @@ struct _GstRTSPMediaPrivate
 #define DEFAULT_EOS_SHUTDOWN    FALSE
 #define DEFAULT_BUFFER_SIZE     0x80000
 #define DEFAULT_TIME_PROVIDER   FALSE
+#define DEFAULT_RECORD          FALSE
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -151,6 +165,7 @@ enum
   PROP_BUFFER_SIZE,
   PROP_ELEMENT,
   PROP_TIME_PROVIDER,
+  PROP_RECORD,
   PROP_LAST
 };
 
@@ -189,6 +204,7 @@ static gboolean default_query_stop (GstRTSPMedia * media, gint64 * stop);
 static GstElement *default_create_rtpbin (GstRTSPMedia * media);
 static gboolean default_setup_sdp (GstRTSPMedia * media, GstSDPMessage * sdp,
     GstSDPInfo * info);
+static gboolean default_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp);
 
 static gboolean wait_preroll (GstRTSPMedia * media);
 
@@ -277,6 +293,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "Use a NetTimeProvider for clients",
           DEFAULT_TIME_PROVIDER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RECORD,
+      g_param_spec_boolean ("record", "Record",
+          "If this media pipeline can be used for PLAY or RECORD",
+          DEFAULT_RECORD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_stream), NULL, NULL,
@@ -320,6 +341,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   klass->query_stop = default_query_stop;
   klass->create_rtpbin = default_create_rtpbin;
   klass->setup_sdp = default_setup_sdp;
+  klass->handle_sdp = default_handle_sdp;
 }
 
 static void
@@ -342,6 +364,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
   priv->time_provider = DEFAULT_TIME_PROVIDER;
+  priv->record = DEFAULT_RECORD;
 }
 
 static void
@@ -412,6 +435,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_TIME_PROVIDER:
       g_value_set_boolean (value, gst_rtsp_media_is_time_provider (media));
       break;
+    case PROP_RECORD:
+      g_value_set_boolean (value, gst_rtsp_media_is_record (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -451,6 +477,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_TIME_PROVIDER:
       gst_rtsp_media_use_time_provider (media, g_value_get_boolean (value));
+      break;
+    case PROP_RECORD:
+      gst_rtsp_media_set_record (media, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1300,6 +1329,9 @@ _next_available_pt (GList * payloads)
  *
  * Collect all dynamic elements, named dynpay\%d, and add them to
  * the list of dynamic elements.
+ *
+ * Find all depayloader elements, they should be named depay\%d in the
+ * element of @media, and create #GstRTSPStreams for them.
  */
 void
 gst_rtsp_media_collect_streams (GstRTSPMedia * media)
@@ -1348,6 +1380,21 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       have_elem = TRUE;
     }
     g_free (name);
+
+    name = g_strdup_printf ("depay%d", i);
+    if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
+      GST_INFO ("found stream %d with depayloader %p", i, elem);
+
+      /* take the pad of the payloader */
+      pad = gst_element_get_static_pad (elem, "sink");
+      /* create the stream */
+      gst_rtsp_media_create_stream (media, elem, pad);
+      gst_object_unref (pad);
+      gst_object_unref (elem);
+
+      have_elem = TRUE;
+    }
+    g_free (name);
   }
 }
 
@@ -1355,10 +1402,10 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
  * gst_rtsp_media_create_stream:
  * @media: a #GstRTSPMedia
  * @payloader: a #GstElement
- * @srcpad: a source #GstPad
+ * @pad: a #GstPad
  *
- * Create a new stream in @media that provides RTP data on @srcpad.
- * @srcpad should be a pad of an element inside @media->element.
+ * Create a new stream in @media that provides RTP data on @pad.
+ * @pad should be a pad of an element inside @media->element.
  *
  * Returns: (transfer none): a new #GstRTSPStream that remains valid for as long
  * as @media exists.
@@ -1369,15 +1416,13 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
 {
   GstRTSPMediaPrivate *priv;
   GstRTSPStream *stream;
-  GstPad *srcpad;
+  GstPad *ghostpad;
   gchar *name;
   gint idx;
-  gint i, n;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (payloader), NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-  g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
 
   priv = media->priv;
 
@@ -1386,13 +1431,17 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
 
   GST_DEBUG ("media %p: creating stream with index %d", media, idx);
 
-  name = g_strdup_printf ("src_%u", idx);
-  srcpad = gst_ghost_pad_new (name, pad);
-  gst_pad_set_active (srcpad, TRUE);
-  gst_element_add_pad (priv->element, srcpad);
+  if (GST_PAD_IS_SRC (pad))
+    name = g_strdup_printf ("src_%u", idx);
+  else
+    name = g_strdup_printf ("sink_%u", idx);
+
+  ghostpad = gst_ghost_pad_new (name, pad);
+  gst_pad_set_active (ghostpad, TRUE);
+  gst_element_add_pad (priv->element, ghostpad);
   g_free (name);
 
-  stream = gst_rtsp_stream_new (idx, payloader, srcpad);
+  stream = gst_rtsp_stream_new (idx, payloader, ghostpad);
   if (priv->pool)
     gst_rtsp_stream_set_address_pool (stream, priv->pool);
   gst_rtsp_stream_set_profiles (stream, priv->profiles);
@@ -1401,23 +1450,28 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
 
   g_ptr_array_add (priv->streams, stream);
 
-  if (priv->payloads)
-    g_list_free (priv->payloads);
-  priv->payloads = _find_payload_types (media);
+  if (GST_PAD_IS_SRC (pad)) {
+    gint i, n;
 
-  n = priv->streams->len;
-  for (i = 0; i < n; i++) {
-    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
-    guint rtx_pt = _next_available_pt (priv->payloads);
+    if (priv->payloads)
+      g_list_free (priv->payloads);
+    priv->payloads = _find_payload_types (media);
 
-    if (rtx_pt == 0) {
-      GST_WARNING ("Ran out of space of dynamic payload types");
-      break;
+    n = priv->streams->len;
+    for (i = 0; i < n; i++) {
+      GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+      guint rtx_pt = _next_available_pt (priv->payloads);
+
+      if (rtx_pt == 0) {
+        GST_WARNING ("Ran out of space of dynamic payload types");
+        break;
+      }
+
+      gst_rtsp_stream_set_retransmission_pt (stream, rtx_pt);
+
+      priv->payloads =
+          g_list_append (priv->payloads, GUINT_TO_POINTER (rtx_pt));
     }
-
-    gst_rtsp_stream_set_retransmission_pt (stream, rtx_pt);
-
-    priv->payloads = g_list_append (priv->payloads, GUINT_TO_POINTER (rtx_pt));
   }
   g_mutex_unlock (&priv->lock);
 
@@ -1716,16 +1770,21 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     goto not_prepared;
 
   /* Update the seekable state of the pipeline in case it changed */
-  query = gst_query_new_seeking (GST_FORMAT_TIME);
-  if (gst_element_query (priv->pipeline, query)) {
-    GstFormat format;
-    gboolean seekable;
-    gint64 start, end;
+  if (gst_rtsp_media_is_record (media)) {
+    /* TODO: Seeking for RECORD? */
+    priv->seekable = FALSE;
+  } else {
+    query = gst_query_new_seeking (GST_FORMAT_TIME);
+    if (gst_element_query (priv->pipeline, query)) {
+      GstFormat format;
+      gboolean seekable;
+      gint64 start, end;
 
-    gst_query_parse_seeking (query, &format, &seekable, &start, &end);
-    priv->seekable = seekable;
+      gst_query_parse_seeking (query, &format, &seekable, &start, &end);
+      priv->seekable = seekable;
+    }
+    gst_query_unref (query);
   }
-  gst_query_unref (query);
 
   if (!priv->seekable)
     goto not_seekable;
@@ -1898,7 +1957,28 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
 
   switch (type) {
     case GST_MESSAGE_STATE_CHANGED:
+    {
+      GstState old, new, pending;
+
+      if (GST_MESSAGE_SRC (message) != GST_OBJECT (priv->pipeline))
+        break;
+
+      gst_message_parse_state_changed (message, &old, &new, &pending);
+
+      GST_DEBUG ("%p: went from %s to %s (pending %s)", media,
+          gst_element_state_get_name (old), gst_element_state_get_name (new),
+          gst_element_state_get_name (pending));
+      if (gst_rtsp_media_is_record (media)
+          && old == GST_STATE_READY && new == GST_STATE_PAUSED) {
+        GST_INFO ("%p: went to PAUSED, prepared now", media);
+        collect_media_stats (media);
+
+        if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
+          gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
+      }
+
       break;
+    }
     case GST_MESSAGE_BUFFERING:
     {
       gint percent;
@@ -2203,8 +2283,10 @@ start_preroll (GstRTSPMedia * media)
        * seeking query in preroll instead */
       priv->seekable = FALSE;
       priv->is_live = TRUE;
-      /* start blocked  to make sure nothing goes to the sink */
-      media_streams_set_blocked (media, TRUE);
+      if (!gst_rtsp_media_is_record (media)) {
+        /* start blocked  to make sure nothing goes to the sink */
+        media_streams_set_blocked (media, TRUE);
+      }
       ret = set_state (media, GST_STATE_PLAYING);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
@@ -2830,6 +2912,583 @@ no_setup_sdp:
   }
 }
 
+static const gchar *
+rtsp_get_attribute_for_pt (const GstSDPMedia * media, const gchar * name,
+    gint pt)
+{
+  guint i;
+
+  for (i = 0;; i++) {
+    const gchar *attr;
+    gint val;
+
+    if ((attr = gst_sdp_media_get_attribute_val_n (media, name, i)) == NULL)
+      break;
+
+    if (sscanf (attr, "%d ", &val) != 1)
+      continue;
+
+    if (val == pt)
+      return attr;
+  }
+  return NULL;
+}
+
+#define PARSE_INT(p, del, res)          \
+G_STMT_START {                          \
+  gchar *t = p;                         \
+  p = strstr (p, del);                  \
+  if (p == NULL)                        \
+    res = -1;                           \
+  else {                                \
+    *p = '\0';                          \
+    p++;                                \
+    res = atoi (t);                     \
+  }                                     \
+} G_STMT_END
+
+#define PARSE_STRING(p, del, res)       \
+G_STMT_START {                          \
+  gchar *t = p;                         \
+  p = strstr (p, del);                  \
+  if (p == NULL) {                      \
+    res = NULL;                         \
+    p = t;                              \
+  }                                     \
+  else {                                \
+    *p = '\0';                          \
+    p++;                                \
+    res = t;                            \
+  }                                     \
+} G_STMT_END
+
+#define SKIP_SPACES(p)                  \
+  while (*p && g_ascii_isspace (*p))    \
+    p++;
+
+/* rtpmap contains:
+ *
+ *  <payload> <encoding_name>/<clock_rate>[/<encoding_params>]
+ */
+static gboolean
+parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
+    gint * rate, gchar ** params)
+{
+  gchar *p, *t;
+
+  p = (gchar *) rtpmap;
+
+  PARSE_INT (p, " ", *payload);
+  if (*payload == -1)
+    return FALSE;
+
+  SKIP_SPACES (p);
+  if (*p == '\0')
+    return FALSE;
+
+  PARSE_STRING (p, "/", *name);
+  if (*name == NULL) {
+    GST_DEBUG ("no rate, name %s", p);
+    /* no rate, assume -1 then, this is not supposed to happen but RealMedia
+     * streams seem to omit the rate. */
+    *name = p;
+    *rate = -1;
+    return TRUE;
+  }
+
+  t = p;
+  p = strstr (p, "/");
+  if (p == NULL) {
+    *rate = atoi (t);
+    return TRUE;
+  }
+  *p = '\0';
+  p++;
+  *rate = atoi (t);
+
+  t = p;
+  if (*p == '\0')
+    return TRUE;
+  *params = t;
+
+  return TRUE;
+}
+
+/*
+ *  Mapping of caps to and from SDP fields:
+ *
+ *   a=rtpmap:<payload> <encoding_name>/<clock_rate>[/<encoding_params>]
+ *   a=fmtp:<payload> <param>[=<value>];...
+ */
+static GstCaps *
+media_to_caps (gint pt, const GstSDPMedia * media)
+{
+  GstCaps *caps;
+  const gchar *rtpmap;
+  const gchar *fmtp;
+  gchar *name = NULL;
+  gint rate = -1;
+  gchar *params = NULL;
+  gchar *tmp;
+  GstStructure *s;
+  gint payload = 0;
+  gboolean ret;
+
+  /* get and parse rtpmap */
+  rtpmap = rtsp_get_attribute_for_pt (media, "rtpmap", pt);
+
+  if (rtpmap) {
+    ret = parse_rtpmap (rtpmap, &payload, &name, &rate, &params);
+    if (!ret) {
+      g_warning ("error parsing rtpmap, ignoring");
+      rtpmap = NULL;
+    }
+  }
+  /* dynamic payloads need rtpmap or we fail */
+  if (rtpmap == NULL && pt >= 96)
+    goto no_rtpmap;
+
+  /* check if we have a rate, if not, we need to look up the rate from the
+   * default rates based on the payload types. */
+  if (rate == -1) {
+    const GstRTPPayloadInfo *info;
+
+    if (GST_RTP_PAYLOAD_IS_DYNAMIC (pt)) {
+      /* dynamic types, use media and encoding_name */
+      tmp = g_ascii_strdown (media->media, -1);
+      info = gst_rtp_payload_info_for_name (tmp, name);
+      g_free (tmp);
+    } else {
+      /* static types, use payload type */
+      info = gst_rtp_payload_info_for_pt (pt);
+    }
+
+    if (info) {
+      if ((rate = info->clock_rate) == 0)
+        rate = -1;
+    }
+    /* we fail if we cannot find one */
+    if (rate == -1)
+      goto no_rate;
+  }
+
+  tmp = g_ascii_strdown (media->media, -1);
+  caps = gst_caps_new_simple ("application/x-unknown",
+      "media", G_TYPE_STRING, tmp, "payload", G_TYPE_INT, pt, NULL);
+  g_free (tmp);
+  s = gst_caps_get_structure (caps, 0);
+
+  gst_structure_set (s, "clock-rate", G_TYPE_INT, rate, NULL);
+
+  /* encoding name must be upper case */
+  if (name != NULL) {
+    tmp = g_ascii_strup (name, -1);
+    gst_structure_set (s, "encoding-name", G_TYPE_STRING, tmp, NULL);
+    g_free (tmp);
+  }
+
+  /* params must be lower case */
+  if (params != NULL) {
+    tmp = g_ascii_strdown (params, -1);
+    gst_structure_set (s, "encoding-params", G_TYPE_STRING, tmp, NULL);
+    g_free (tmp);
+  }
+
+  /* parse optional fmtp: field */
+  if ((fmtp = rtsp_get_attribute_for_pt (media, "fmtp", pt))) {
+    gchar *p;
+    gint payload = 0;
+
+    p = (gchar *) fmtp;
+
+    /* p is now of the format <payload> <param>[=<value>];... */
+    PARSE_INT (p, " ", payload);
+    if (payload != -1 && payload == pt) {
+      gchar **pairs;
+      gint i;
+
+      /* <param>[=<value>] are separated with ';' */
+      pairs = g_strsplit (p, ";", 0);
+      for (i = 0; pairs[i]; i++) {
+        gchar *valpos;
+        const gchar *val, *key;
+
+        /* the key may not have a '=', the value can have other '='s */
+        valpos = strstr (pairs[i], "=");
+        if (valpos) {
+          /* we have a '=' and thus a value, remove the '=' with \0 */
+          *valpos = '\0';
+          /* value is everything between '=' and ';'. We split the pairs at ;
+           * boundaries so we can take the remainder of the value. Some servers
+           * put spaces around the value which we strip off here. Alternatively
+           * we could strip those spaces in the depayloaders should these spaces
+           * actually carry any meaning in the future. */
+          val = g_strstrip (valpos + 1);
+        } else {
+          /* simple <param>;.. is translated into <param>=1;... */
+          val = "1";
+        }
+        /* strip the key of spaces, convert key to lowercase but not the value. */
+        key = g_strstrip (pairs[i]);
+        if (strlen (key) > 1) {
+          tmp = g_ascii_strdown (key, -1);
+          gst_structure_set (s, tmp, G_TYPE_STRING, val, NULL);
+          g_free (tmp);
+        }
+      }
+      g_strfreev (pairs);
+    }
+  }
+  return caps;
+
+  /* ERRORS */
+no_rtpmap:
+  {
+    g_warning ("rtpmap type not given for dynamic payload %d", pt);
+    return NULL;
+  }
+no_rate:
+  {
+    g_warning ("rate unknown for payload type %d", pt);
+    return NULL;
+  }
+}
+
+static gboolean
+parse_keymgmt (const gchar * keymgmt, GstCaps * caps)
+{
+  gboolean res = FALSE;
+  gchar *p, *kmpid;
+  gsize size;
+  guchar *data;
+  GstMIKEYMessage *msg;
+  const GstMIKEYPayload *payload;
+  const gchar *srtp_cipher;
+  const gchar *srtp_auth;
+
+  p = (gchar *) keymgmt;
+
+  SKIP_SPACES (p);
+  if (*p == '\0')
+    return FALSE;
+
+  PARSE_STRING (p, " ", kmpid);
+  if (!g_str_equal (kmpid, "mikey"))
+    return FALSE;
+
+  data = g_base64_decode (p, &size);
+  if (data == NULL)
+    return FALSE;
+
+  msg = gst_mikey_message_new_from_data (data, size, NULL, NULL);
+  g_free (data);
+  if (msg == NULL)
+    return FALSE;
+
+  srtp_cipher = "aes-128-icm";
+  srtp_auth = "hmac-sha1-80";
+
+  /* check the Security policy if any */
+  if ((payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_SP, 0))) {
+    GstMIKEYPayloadSP *p = (GstMIKEYPayloadSP *) payload;
+    guint len, i;
+
+    if (p->proto != GST_MIKEY_SEC_PROTO_SRTP)
+      goto done;
+
+    len = gst_mikey_payload_sp_get_n_params (payload);
+    for (i = 0; i < len; i++) {
+      const GstMIKEYPayloadSPParam *param =
+          gst_mikey_payload_sp_get_param (payload, i);
+
+      switch (param->type) {
+        case GST_MIKEY_SP_SRTP_ENC_ALG:
+          switch (param->val[0]) {
+            case 0:
+              srtp_cipher = "null";
+              break;
+            case 2:
+            case 1:
+              srtp_cipher = "aes-128-icm";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_ENC_KEY_LEN:
+          switch (param->val[0]) {
+            case AES_128_KEY_LEN:
+              srtp_cipher = "aes-128-icm";
+              break;
+            case AES_256_KEY_LEN:
+              srtp_cipher = "aes-256-icm";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_AUTH_ALG:
+          switch (param->val[0]) {
+            case 0:
+              srtp_auth = "null";
+              break;
+            case 2:
+            case 1:
+              srtp_auth = "hmac-sha1-80";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_AUTH_KEY_LEN:
+          switch (param->val[0]) {
+            case HMAC_32_KEY_LEN:
+              srtp_auth = "hmac-sha1-32";
+              break;
+            case HMAC_80_KEY_LEN:
+              srtp_auth = "hmac-sha1-80";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_SRTP_ENC:
+          break;
+        case GST_MIKEY_SP_SRTP_SRTCP_ENC:
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  if (!(payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_KEMAC, 0)))
+    goto done;
+  else {
+    GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
+    const GstMIKEYPayload *sub;
+    GstMIKEYPayloadKeyData *pkd;
+    GstBuffer *buf;
+
+    if (p->enc_alg != GST_MIKEY_ENC_NULL || p->mac_alg != GST_MIKEY_MAC_NULL)
+      goto done;
+
+    if (!(sub = gst_mikey_payload_kemac_get_sub (payload, 0)))
+      goto done;
+
+    if (sub->type != GST_MIKEY_PT_KEY_DATA)
+      goto done;
+
+    pkd = (GstMIKEYPayloadKeyData *) sub;
+    buf =
+        gst_buffer_new_wrapped (g_memdup (pkd->key_data, pkd->key_len),
+        pkd->key_len);
+    gst_caps_set_simple (caps, "srtp-key", GST_TYPE_BUFFER, buf, NULL);
+  }
+
+  gst_caps_set_simple (caps,
+      "srtp-cipher", G_TYPE_STRING, srtp_cipher,
+      "srtp-auth", G_TYPE_STRING, srtp_auth,
+      "srtcp-cipher", G_TYPE_STRING, srtp_cipher,
+      "srtcp-auth", G_TYPE_STRING, srtp_auth, NULL);
+
+  res = TRUE;
+done:
+  gst_mikey_message_unref (msg);
+
+  return res;
+}
+
+/*
+ * Mapping SDP attributes to caps
+ *
+ * prepend 'a-' to IANA registered sdp attributes names
+ * (ie: not prefixed with 'x-') in order to avoid
+ * collision with gstreamer standard caps properties names
+ */
+static void
+sdp_attributes_to_caps (GArray * attributes, GstCaps * caps)
+{
+  if (attributes->len > 0) {
+    GstStructure *s;
+    guint i;
+
+    s = gst_caps_get_structure (caps, 0);
+
+    for (i = 0; i < attributes->len; i++) {
+      GstSDPAttribute *attr = &g_array_index (attributes, GstSDPAttribute, i);
+      gchar *tofree, *key;
+
+      key = attr->key;
+
+      /* skip some of the attribute we already handle */
+      if (!strcmp (key, "fmtp"))
+        continue;
+      if (!strcmp (key, "rtpmap"))
+        continue;
+      if (!strcmp (key, "control"))
+        continue;
+      if (!strcmp (key, "range"))
+        continue;
+      if (g_str_equal (key, "key-mgmt")) {
+        parse_keymgmt (attr->value, caps);
+        continue;
+      }
+
+      /* string must be valid UTF8 */
+      if (!g_utf8_validate (attr->value, -1, NULL))
+        continue;
+
+      if (!g_str_has_prefix (key, "x-"))
+        tofree = key = g_strdup_printf ("a-%s", key);
+      else
+        tofree = NULL;
+
+      GST_DEBUG ("adding caps: %s=%s", key, attr->value);
+      gst_structure_set (s, key, G_TYPE_STRING, attr->value, NULL);
+      g_free (tofree);
+    }
+  }
+}
+
+static gboolean
+default_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  gint i, medias_len;
+
+  medias_len = gst_sdp_message_medias_len (sdp);
+  if (medias_len != priv->streams->len) {
+    GST_ERROR ("%p: Media has more or less streams than SDP (%d /= %d)", media,
+        priv->streams->len, medias_len);
+    return FALSE;
+  }
+
+  for (i = 0; i < medias_len; i++) {
+    const gchar *proto, *media_type;
+    const GstSDPMedia *sdp_media = gst_sdp_message_get_media (sdp, i);
+    GstRTSPStream *stream;
+    gint j, formats_len;
+    const gchar *control;
+    GstRTSPProfile profile, profiles;
+
+    stream = g_ptr_array_index (priv->streams, i);
+
+    /* TODO: Should we do something with the other SDP information? */
+
+    /* get proto */
+    proto = gst_sdp_media_get_proto (sdp_media);
+    if (proto == NULL) {
+      GST_ERROR ("%p: SDP media %d has no proto", media, i);
+      return FALSE;
+    }
+
+    if (g_str_equal (proto, "RTP/AVP")) {
+      media_type = "application/x-rtp";
+      profile = GST_RTSP_PROFILE_AVP;
+    } else if (g_str_equal (proto, "RTP/SAVP")) {
+      media_type = "application/x-srtp";
+      profile = GST_RTSP_PROFILE_SAVP;
+    } else if (g_str_equal (proto, "RTP/AVPF")) {
+      media_type = "application/x-rtp";
+      profile = GST_RTSP_PROFILE_AVPF;
+    } else if (g_str_equal (proto, "RTP/SAVPF")) {
+      media_type = "application/x-srtp";
+      profile = GST_RTSP_PROFILE_SAVPF;
+    } else {
+      GST_ERROR ("%p: unsupported profile '%s' for stream %d", media, proto, i);
+      return FALSE;
+    }
+
+    profiles = gst_rtsp_stream_get_profiles (stream);
+    if ((profiles & profile) == 0) {
+      GST_ERROR ("%p: unsupported profile '%s' for stream %d", media, proto, i);
+      return FALSE;
+    }
+
+    formats_len = gst_sdp_media_formats_len (sdp_media);
+    for (j = 0; j < formats_len; j++) {
+      gint pt;
+      GstCaps *caps;
+      GstStructure *s;
+
+      pt = atoi (gst_sdp_media_get_format (sdp_media, j));
+
+      GST_DEBUG (" looking at %d pt: %d", j, pt);
+
+      /* convert caps */
+      caps = media_to_caps (pt, sdp_media);
+      if (caps == NULL) {
+        GST_WARNING (" skipping pt %d without caps", pt);
+        continue;
+      }
+
+      /* do some tweaks */
+      GST_DEBUG ("mapping sdp session level attributes to caps");
+      sdp_attributes_to_caps (sdp->attributes, caps);
+      GST_DEBUG ("mapping sdp media level attributes to caps");
+      sdp_attributes_to_caps (sdp_media->attributes, caps);
+
+      s = gst_caps_get_structure (caps, 0);
+      gst_structure_set_name (s, media_type);
+
+      gst_rtsp_stream_set_pt_map (stream, pt, caps);
+      gst_caps_unref (caps);
+    }
+
+    control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+    if (control)
+      gst_rtsp_stream_set_control (stream, control);
+
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_rtsp_media_handle_sdp:
+ * @media: a #GstRTSPMedia
+ * @sdp: (transfer none): a #GstSDPMessage
+ *
+ * Configure an SDP on @media for receiving streams
+ *
+ * Returns: TRUE on success.
+ */
+gboolean
+gst_rtsp_media_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp)
+{
+  GstRTSPMediaPrivate *priv;
+  GstRTSPMediaClass *klass;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+  g_return_val_if_fail (sdp != NULL, FALSE);
+
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+
+  if (!klass->handle_sdp)
+    goto no_handle_sdp;
+
+  res = klass->handle_sdp (media, sdp);
+
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return res;
+
+  /* ERRORS */
+no_handle_sdp:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_ERROR ("no handle_sdp function");
+    g_critical ("no handle_sdp vmethod function set");
+    return FALSE;
+  }
+}
+
 static void
 do_set_seqnum (GstRTSPStream * stream)
 {
@@ -3213,4 +3872,51 @@ error_status:
     g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
+}
+
+/**
+ * gst_rtsp_media_set_record:
+ * @media: a #GstRTSPMedia
+ * @record: the new value
+ *
+ * Set or unset if the pipeline for @media can be used for PLAY or RECORD
+ * methods.
+ */
+void
+gst_rtsp_media_set_record (GstRTSPMedia * media, gboolean record)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->record = record;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_is_record:
+ * @media: a #GstRTSPMedia
+ *
+ * Check if the pipeline for @media can be used for PLAY or RECORD methods.
+ *
+ * Returns: %TRUE if the media can be record between clients.
+ */
+gboolean
+gst_rtsp_media_is_record (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->record;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
 }

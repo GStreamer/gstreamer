@@ -145,6 +145,10 @@ void                  gst_rtsp_media_factory_set_retransmission_time (GstRTSPMed
                                                                       GstClockTime time);
 GstClockTime          gst_rtsp_media_factory_get_retransmission_time (GstRTSPMediaFactory * factory);
 
+void                  gst_rtsp_media_factory_set_record       (GstRTSPMediaFactory *factory,
+                                                               gboolean record);
+gboolean              gst_rtsp_media_factory_is_record        (GstRTSPMediaFactory *factory);
+
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct        (GstRTSPMediaFactory *factory,
                                                                const GstRTSPUrl *url);

@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) 2008 Wim Taymans <wim.taymans at gmail.com>
+ * Copyright (C) 2015 Centricular Ltd
+ *     Author: Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -123,6 +125,8 @@ enum
   SIGNAL_GET_PARAMETER_REQUEST,
   SIGNAL_HANDLE_RESPONSE,
   SIGNAL_SEND_MESSAGE,
+  SIGNAL_ANNOUNCE_REQUEST,
+  SIGNAL_RECORD_REQUEST,
   SIGNAL_LAST
 };
 
@@ -138,6 +142,8 @@ static void gst_rtsp_client_set_property (GObject * object, guint propid,
 static void gst_rtsp_client_finalize (GObject * obj);
 
 static GstSDPMessage *create_sdp (GstRTSPClient * client, GstRTSPMedia * media);
+static gboolean handle_sdp (GstRTSPClient * client, GstRTSPContext * ctx,
+    GstRTSPMedia * media, GstSDPMessage * sdp);
 static gboolean default_configure_client_media (GstRTSPClient * client,
     GstRTSPMedia * media, GstRTSPStream * stream, GstRTSPContext * ctx);
 static gboolean default_configure_client_transport (GstRTSPClient * client,
@@ -167,6 +173,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gobject_class->finalize = gst_rtsp_client_finalize;
 
   klass->create_sdp = create_sdp;
+  klass->handle_sdp = handle_sdp;
   klass->configure_client_media = default_configure_client_media;
   klass->configure_client_transport = default_configure_client_transport;
   klass->params_set = default_params_set;
@@ -265,6 +272,18 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
           send_message), NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, GST_TYPE_RTSP_CONTEXT, G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_ANNOUNCE_REQUEST] =
+      g_signal_new ("announce-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, announce_request),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
+
+  gst_rtsp_client_signals[SIGNAL_RECORD_REQUEST] =
+      g_signal_new ("record-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, record_request),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_CONTEXT);
 
   tunnels =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
@@ -606,8 +625,6 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gchar * path,
     path_len = strlen (path);
 
   if (!paths_are_equal (priv->path, path, path_len)) {
-    GstRTSPThread *thread;
-
     /* remove any previously cached values before we try to construct a new
      * media for uri */
     clean_cached_media (client, TRUE);
@@ -618,14 +635,18 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gchar * path,
 
     ctx->media = media;
 
-    thread = gst_rtsp_thread_pool_get_thread (priv->thread_pool,
-        GST_RTSP_THREAD_TYPE_MEDIA, ctx);
-    if (thread == NULL)
-      goto no_thread;
+    if (!gst_rtsp_media_is_record (media)) {
+      GstRTSPThread *thread;
 
-    /* prepare the media */
-    if (!(gst_rtsp_media_prepare (media, thread)))
-      goto no_prepare;
+      thread = gst_rtsp_thread_pool_get_thread (priv->thread_pool,
+          GST_RTSP_THREAD_TYPE_MEDIA, ctx);
+      if (thread == NULL)
+        goto no_thread;
+
+      /* prepare the media */
+      if (!gst_rtsp_media_prepare (media, thread))
+        goto no_prepare;
+    }
 
     /* now keep track of the uri and the media */
     priv->path = g_strndup (path, path_len);
@@ -1124,6 +1145,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   ctx->sessmedia = sessmedia;
   ctx->media = media = gst_rtsp_session_media_get_media (sessmedia);
 
+  if (gst_rtsp_media_is_record (media))
+    goto record_media;
+
   /* the session state must be playing or ready */
   rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
   if (rtspstate != GST_RTSP_STATE_PLAYING && rtspstate != GST_RTSP_STATE_READY)
@@ -1211,6 +1235,12 @@ unsuspend_failed:
   {
     GST_ERROR ("client %p: unsuspend failed", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    return FALSE;
+  }
+record_media:
+  {
+    GST_ERROR ("client %p: RECORD media does not support PLAY", client);
+    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     return FALSE;
   }
 }
@@ -1400,8 +1430,8 @@ no_address:
 }
 
 static GstRTSPTransport *
-make_server_transport (GstRTSPClient * client, GstRTSPContext * ctx,
-    GstRTSPTransport * ct)
+make_server_transport (GstRTSPClient * client, GstRTSPMedia * media,
+    GstRTSPContext * ctx, GstRTSPTransport * ct)
 {
   GstRTSPTransport *st;
   GInetAddress *addr;
@@ -1413,6 +1443,8 @@ make_server_transport (GstRTSPClient * client, GstRTSPContext * ctx,
   st->trans = ct->trans;
   st->profile = ct->profile;
   st->lower_transport = ct->lower_transport;
+  st->mode_play = ct->mode_play;
+  st->mode_record = ct->mode_record;
 
   addr = g_inet_address_new_from_string (ct->destination);
 
@@ -1443,7 +1475,8 @@ make_server_transport (GstRTSPClient * client, GstRTSPContext * ctx,
       break;
   }
 
-  gst_rtsp_stream_get_ssrc (ctx->stream, &st->ssrc);
+  if (!gst_rtsp_media_is_record (media))
+    gst_rtsp_stream_get_ssrc (ctx->stream, &st->ssrc);
 
   return st;
 }
@@ -1824,6 +1857,11 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!parse_transport (transport, stream, ct))
     goto unsupported_transports;
 
+  /* TODO: Add support for PLAY,RECORD media */
+  if ((ct->mode_play && gst_rtsp_media_is_record (media)) ||
+      (ct->mode_record && !gst_rtsp_media_is_record (media)))
+    goto unsupported_mode;
+
   /* parse the keymgmt */
   if (gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_KEYMGMT,
           &keymgmt, 0) == GST_RTSP_OK) {
@@ -1877,7 +1915,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   }
 
   /* create and serialize the server transport */
-  st = make_server_transport (client, ctx, ct);
+  st = make_server_transport (client, media, ctx, ct);
   trans_str = gst_rtsp_transport_as_text (st);
   gst_rtsp_transport_free (st);
 
@@ -1986,6 +2024,14 @@ unsupported_transports:
 unsupported_client_transport:
   {
     GST_ERROR ("client %p: unsupported client transport", client);
+    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
+    goto cleanup_transport;
+  }
+unsupported_mode:
+  {
+    GST_ERROR ("client %p: unsupported mode (media record: %d, mode play: %d"
+        ", mode record: %d)", client, gst_rtsp_media_is_record (media),
+        ct->mode_play, ct->mode_record);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
     goto cleanup_transport;
   }
@@ -2102,6 +2148,9 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!(media = find_media (client, ctx, path, NULL)))
     goto no_media;
 
+  if (gst_rtsp_media_is_record (media))
+    goto record_media;
+
   /* create an SDP for the media object on this client */
   if (!(sdp = klass->create_sdp (client, media)))
     goto no_sdp;
@@ -2161,12 +2210,305 @@ no_media:
     /* error reply is already sent */
     return FALSE;
   }
+record_media:
+  {
+    GST_ERROR ("client %p: RECORD media does not support DESCRIBE", client);
+    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
+    g_free (path);
+    g_object_unref (media);
+    return FALSE;
+  }
 no_sdp:
   {
     GST_ERROR ("client %p: can't create SDP", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_free (path);
     g_object_unref (media);
+    return FALSE;
+  }
+}
+
+static gboolean
+handle_sdp (GstRTSPClient * client, GstRTSPContext * ctx, GstRTSPMedia * media,
+    GstSDPMessage * sdp)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+  GstRTSPThread *thread;
+
+  /* create an SDP for the media object */
+  if (!gst_rtsp_media_handle_sdp (media, sdp))
+    goto unhandled_sdp;
+
+  thread = gst_rtsp_thread_pool_get_thread (priv->thread_pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, ctx);
+  if (thread == NULL)
+    goto no_thread;
+
+  /* prepare the media */
+  if (!gst_rtsp_media_prepare (media, thread))
+    goto no_prepare;
+
+  return TRUE;
+
+  /* ERRORS */
+unhandled_sdp:
+  {
+    GST_ERROR ("client %p: could not handle SDP", client);
+    return FALSE;
+  }
+no_thread:
+  {
+    GST_ERROR ("client %p: can't create thread", client);
+    return FALSE;
+  }
+no_prepare:
+  {
+    GST_ERROR ("client %p: can't prepare media", client);
+    return FALSE;
+  }
+}
+
+static gboolean
+handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+  GstRTSPClientClass *klass;
+  GstSDPResult sres;
+  GstSDPMessage *sdp;
+  GstRTSPMedia *media;
+  gchar *path, *cont = NULL;
+  guint8 *data;
+  guint size;
+
+  klass = GST_RTSP_CLIENT_GET_CLASS (client);
+
+  if (!ctx->uri)
+    goto no_uri;
+
+  if (!priv->mount_points)
+    goto no_mount_points;
+
+  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, ctx->uri)))
+    goto no_path;
+
+  /* check if reply is SDP */
+  gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_CONTENT_TYPE, &cont,
+      0);
+  /* could not be set but since the request returned OK, we assume it
+   * was SDP, else check it. */
+  if (cont) {
+    if (!g_ascii_strcasecmp (cont, "application/sdp") == 0)
+      goto wrong_content_type;
+  }
+
+  /* get message body and parse as SDP */
+  gst_rtsp_message_get_body (ctx->request, &data, &size);
+  if (data == NULL || size == 0)
+    goto no_message;
+
+  GST_DEBUG ("client %p: parse SDP...", client);
+  gst_sdp_message_new (&sdp);
+  sres = gst_sdp_message_parse_buffer (data, size, sdp);
+  if (sres != GST_SDP_OK)
+    goto sdp_parse_failed;
+
+  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, ctx->uri)))
+    goto no_path;
+
+  /* find the media object for the uri */
+  if (!(media = find_media (client, ctx, path, NULL)))
+    goto no_media;
+
+  if (!gst_rtsp_media_is_record (media))
+    goto play_media;
+
+  /* Tell client subclass about the media */
+  if (!klass->handle_sdp (client, ctx, media, sdp))
+    goto unhandled_sdp;
+
+  /* we suspend after the announce */
+  gst_rtsp_media_suspend (media);
+  g_object_unref (media);
+
+  gst_rtsp_message_init_response (ctx->response, GST_RTSP_STS_OK,
+      gst_rtsp_status_as_text (GST_RTSP_STS_OK), ctx->request);
+
+  send_message (client, ctx, ctx->response, FALSE);
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_ANNOUNCE_REQUEST],
+      0, ctx);
+
+  return TRUE;
+
+no_uri:
+  {
+    GST_ERROR ("client %p: no uri", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    return FALSE;
+  }
+no_mount_points:
+  {
+    GST_ERROR ("client %p: no mount points configured", client);
+    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    return FALSE;
+  }
+no_path:
+  {
+    GST_ERROR ("client %p: can't find path for url", client);
+    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    return FALSE;
+  }
+wrong_content_type:
+  {
+    GST_ERROR ("client %p: unknown content type", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    g_free (path);
+    return FALSE;
+  }
+no_message:
+  {
+    GST_ERROR ("client %p: can't find SDP message", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    g_free (path);
+    return FALSE;
+  }
+sdp_parse_failed:
+  {
+    GST_ERROR ("client %p: failed to parse SDP message", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    g_free (path);
+    return FALSE;
+  }
+no_media:
+  {
+    GST_ERROR ("client %p: no media", client);
+    g_free (path);
+    /* error reply is already sent */
+    return FALSE;
+  }
+play_media:
+  {
+    GST_ERROR ("client %p: PLAY media does not support ANNOUNCE", client);
+    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
+    g_free (path);
+    g_object_unref (media);
+    return FALSE;
+  }
+unhandled_sdp:
+  {
+    GST_ERROR ("client %p: can't handle SDP", client);
+    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE, ctx);
+    g_free (path);
+    g_object_unref (media);
+    return FALSE;
+  }
+}
+
+static gboolean
+handle_record_request (GstRTSPClient * client, GstRTSPContext * ctx)
+{
+  GstRTSPSession *session;
+  GstRTSPClientClass *klass;
+  GstRTSPSessionMedia *sessmedia;
+  GstRTSPMedia *media;
+  GstRTSPUrl *uri;
+  GstRTSPState rtspstate;
+  gchar *path;
+  gint matched;
+
+  if (!(session = ctx->session))
+    goto no_session;
+
+  if (!(uri = ctx->uri))
+    goto no_uri;
+
+  klass = GST_RTSP_CLIENT_GET_CLASS (client);
+  path = klass->make_path_from_uri (client, uri);
+
+  /* get a handle to the configuration of the media in the session */
+  sessmedia = gst_rtsp_session_get_media (session, path, &matched);
+  if (!sessmedia)
+    goto not_found;
+
+  if (path[matched] != '\0')
+    goto no_aggregate;
+
+  g_free (path);
+
+  ctx->sessmedia = sessmedia;
+  ctx->media = media = gst_rtsp_session_media_get_media (sessmedia);
+
+  if (!gst_rtsp_media_is_record (media))
+    goto play_media;
+
+  /* the session state must be playing or ready */
+  rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
+  if (rtspstate != GST_RTSP_STATE_PLAYING && rtspstate != GST_RTSP_STATE_READY)
+    goto invalid_state;
+
+  /* in play we first unsuspend, media could be suspended from SDP or PAUSED */
+  if (!gst_rtsp_media_unsuspend (media))
+    goto unsuspend_failed;
+
+  gst_rtsp_message_init_response (ctx->response, GST_RTSP_STS_OK,
+      gst_rtsp_status_as_text (GST_RTSP_STS_OK), ctx->request);
+
+  send_message (client, ctx, ctx->response, FALSE);
+
+  /* start playing after sending the response */
+  gst_rtsp_session_media_set_state (sessmedia, GST_STATE_PLAYING);
+
+  gst_rtsp_session_media_set_rtsp_state (sessmedia, GST_RTSP_STATE_PLAYING);
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_RECORD_REQUEST], 0,
+      ctx);
+
+  return TRUE;
+
+  /* ERRORS */
+no_session:
+  {
+    GST_ERROR ("client %p: no session", client);
+    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    return FALSE;
+  }
+no_uri:
+  {
+    GST_ERROR ("client %p: no uri supplied", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    return FALSE;
+  }
+not_found:
+  {
+    GST_ERROR ("client %p: media not found", client);
+    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    return FALSE;
+  }
+no_aggregate:
+  {
+    GST_ERROR ("client %p: no aggregate path %s", client, path);
+    send_generic_response (client,
+        GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
+    g_free (path);
+    return FALSE;
+  }
+play_media:
+  {
+    GST_ERROR ("client %p: PLAY media does not support RECORD", client);
+    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
+    return FALSE;
+  }
+invalid_state:
+  {
+    GST_ERROR ("client %p: not PLAYING or READY", client);
+    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
+        ctx);
+    return FALSE;
+  }
+unsuspend_failed:
+  {
+    GST_ERROR ("client %p: unsuspend failed", client);
+    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     return FALSE;
   }
 }
@@ -2456,7 +2798,11 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
       handle_get_param_request (client, ctx);
       break;
     case GST_RTSP_ANNOUNCE:
+      handle_announce_request (client, ctx);
+      break;
     case GST_RTSP_RECORD:
+      handle_record_request (client, ctx);
+      break;
     case GST_RTSP_REDIRECT:
       if (priv->watch != NULL)
         gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);

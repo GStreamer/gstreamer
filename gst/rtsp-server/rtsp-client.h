@@ -121,8 +121,14 @@ struct _GstRTSPClientClass {
                                        GstRTSPMessage * response);
   void     (*send_message)            (GstRTSPClient * client, GstRTSPContext *ctx,
                                        GstRTSPMessage * response);
+
+  gboolean (*handle_sdp)              (GstRTSPClient *client, GstRTSPContext *ctx, GstRTSPMedia *media, GstSDPMessage *sdp);
+
+  void     (*announce_request)        (GstRTSPClient *client, GstRTSPContext *ctx);
+  void     (*record_request)          (GstRTSPClient *client, GstRTSPContext *ctx);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE-2];
+  gpointer _gst_reserved[GST_PADDING_LARGE-5];
 };
 
 GType                 gst_rtsp_client_get_type          (void);

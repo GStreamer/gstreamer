@@ -67,10 +67,11 @@ struct _GstRTSPStreamClass {
 GType             gst_rtsp_stream_get_type         (void);
 
 GstRTSPStream *   gst_rtsp_stream_new              (guint idx, GstElement *payloader,
-                                                    GstPad *srcpad);
+                                                    GstPad *pad);
 guint             gst_rtsp_stream_get_index        (GstRTSPStream *stream);
 guint             gst_rtsp_stream_get_pt           (GstRTSPStream *stream);
 GstPad *          gst_rtsp_stream_get_srcpad       (GstRTSPStream *stream);
+GstPad *          gst_rtsp_stream_get_sinkpad      (GstRTSPStream *stream);
 
 void              gst_rtsp_stream_set_control      (GstRTSPStream *stream, const gchar *control);
 gchar *           gst_rtsp_stream_get_control      (GstRTSPStream *stream);
@@ -159,6 +160,8 @@ GstClockTime      gst_rtsp_stream_get_retransmission_time     (GstRTSPStream *st
 guint             gst_rtsp_stream_get_retransmission_pt       (GstRTSPStream * stream);
 void              gst_rtsp_stream_set_retransmission_pt       (GstRTSPStream * stream,
                                                                guint rtx_pt);
+
+void              gst_rtsp_stream_set_pt_map                 (GstRTSPStream * stream, guint pt, GstCaps * caps);
 
 /**
  * GstRTSPStreamTransportFilterFunc:
