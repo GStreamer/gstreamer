@@ -2842,6 +2842,18 @@ gst_mpd_client_free (GstMpdClient * client)
   g_free (client);
 }
 
+static void
+gst_mpd_client_check_profiles (GstMpdClient * client)
+{
+  GST_DEBUG ("Profiles: %s", client->mpd_node->profiles);
+
+  if (g_strstr_len (client->mpd_node->profiles, -1,
+          "urn:mpeg:dash:profile:isoff-on-demand:2011")) {
+    client->profile_isoff_ondemand = TRUE;
+    GST_DEBUG ("Found ISOFF on demand profile (2011)");
+  }
+}
+
 gboolean
 gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
 {
@@ -2878,6 +2890,8 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
       /* free the document */
       xmlFreeDoc (doc);
     }
+
+    gst_mpd_client_check_profiles (client);
 
     return TRUE;
   }
@@ -4292,4 +4306,10 @@ gst_media_fragment_info_clear (GstMediaFragmentInfo * fragment)
 {
   g_free (fragment->uri);
   g_free (fragment->index_uri);
+}
+
+gboolean
+gst_mpd_client_has_isoff_ondemand_profile (GstMpdClient * client)
+{
+  return client->profile_isoff_ondemand;
 }

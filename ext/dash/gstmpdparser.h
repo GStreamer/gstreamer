@@ -471,6 +471,9 @@ struct _GstMpdClient
   gchar *mpd_uri;                             /* manifest file URI */
   gchar *mpd_base_uri;                        /* base URI for resolving relative URIs.
                                                * this will be different for redirects */
+
+  /* profiles */
+  gboolean profile_isoff_ondemand;
 };
 
 /* Basic initialization/deinitialization functions */
@@ -544,6 +547,9 @@ guint gst_mpd_client_get_audio_stream_num_channels (GstActiveStream * stream);
 guint gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient *client, GList **lang);
 
 gint64 gst_mpd_client_calculate_time_difference (const GstDateTime * t1, const GstDateTime * t2);
+
+/* profiles */
+gboolean gst_mpd_client_has_isoff_ondemand_profile (GstMpdClient *client);
 
 G_END_DECLS
 
