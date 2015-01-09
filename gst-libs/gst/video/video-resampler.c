@@ -344,7 +344,7 @@ gst_video_resampler_init (GstVideoResampler * resampler,
   }
 
   max_taps = GET_OPT_MAX_TAPS (options);
-  n_taps = CLAMP (n_taps, 0, max_taps);
+  n_taps = MIN (n_taps, max_taps);
 
   switch (method) {
     case GST_VIDEO_RESAMPLER_METHOD_NEAREST:
