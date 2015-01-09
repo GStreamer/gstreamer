@@ -486,7 +486,8 @@ gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor,
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
-        gst_caps_replace (&caps, gst_caps_new_empty ());
+        gst_caps_unref (caps);
+        caps = gst_caps_new_empty ();
         break;
       case GST_ITERATOR_ERROR:
         GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
