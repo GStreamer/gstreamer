@@ -2485,7 +2485,7 @@ check_update_duration (GstQTDemux * qtdemux, GstClockTime duration)
   for (i = 0; i < qtdemux->n_streams; i++) {
     QtDemuxStream *stream = qtdemux->streams[i];
     if (stream) {
-      movdur = QTSTREAMTIME_TO_GSTTIME (stream, duration);
+      movdur = GSTTIME_TO_QTSTREAMTIME (stream, duration);
       if (movdur > stream->duration) {
         GST_DEBUG_OBJECT (qtdemux,
             "Updating stream #%d duration to %" GST_TIME_FORMAT, i,
