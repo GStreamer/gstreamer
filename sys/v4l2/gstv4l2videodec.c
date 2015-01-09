@@ -283,6 +283,13 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
 static gboolean
 gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
 {
+  GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
+
+  /* We don't allow renegotiation without carefull disabling the pool */
+  if (self->v4l2capture->pool &&
+      gst_buffer_pool_is_active (GST_BUFFER_POOL (self->v4l2capture->pool)))
+    return TRUE;
+
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
 
