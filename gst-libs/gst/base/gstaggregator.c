@@ -402,7 +402,7 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
 {
   GstAggregatorPrivate *priv = self->priv;
 
-  if (g_atomic_int_get (&self->priv->send_stream_start)) {
+  if (self->priv->send_stream_start) {
     gchar s_id[32];
 
     GST_INFO_OBJECT (self, "pushing stream start");
@@ -411,7 +411,7 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
     if (!gst_pad_push_event (self->srcpad, gst_event_new_stream_start (s_id))) {
       GST_WARNING_OBJECT (self->srcpad, "Sending stream start event failed");
     }
-    g_atomic_int_set (&self->priv->send_stream_start, FALSE);
+    self->priv->send_stream_start = FALSE;
   }
 
   if (self->priv->srccaps) {
