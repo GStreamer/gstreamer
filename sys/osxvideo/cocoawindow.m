@@ -648,9 +648,11 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
   [self reshape];
 }
 
+#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
 - (void) setMainThread: (NSThread *) thread {
   mainThread = thread;
 }
+#endif
 
 - (void) haveSuperviewReal:(NSMutableArray *)closure {
 	BOOL haveSuperview = [self superview] != nil;
