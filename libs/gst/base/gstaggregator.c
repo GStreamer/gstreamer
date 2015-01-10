@@ -1308,6 +1308,8 @@ gst_aggregator_event_forward_func (GstPad * pad, gpointer user_data)
       } else {
         GST_ERROR_OBJECT (pad, "Query seeking FAILED");
       }
+
+      gst_query_unref (seeking);
     }
 
     if (evdata->flush) {
