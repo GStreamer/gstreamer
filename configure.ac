@@ -801,6 +801,7 @@ tests/examples/launch/Makefile
 tests/examples/manual/Makefile
 tests/examples/memory/Makefile
 tests/examples/metadata/Makefile
+tests/examples/netclock/Makefile
 tests/examples/queue/Makefile
 tests/examples/streams/Makefile
 tests/examples/typefind/Makefile
