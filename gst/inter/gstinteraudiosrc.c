@@ -85,7 +85,8 @@ static GstStaticPadTemplate gst_inter_audio_src_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL))
+    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL)
+        ", layout = (string) interleaved")
     );
 
 
@@ -477,6 +478,7 @@ gst_inter_audio_src_fixate (GstBaseSrc * src, GstCaps * caps)
   gst_structure_fixate_field_string (structure, "format", GST_AUDIO_NE (S16));
   gst_structure_fixate_field_nearest_int (structure, "channels", 2);
   gst_structure_fixate_field_nearest_int (structure, "rate", 48000);
+  gst_structure_fixate_field_string (structure, "layout", "interleaved");
 
   return caps;
 }
