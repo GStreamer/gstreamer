@@ -22,6 +22,12 @@ endif
 AUDIOFILE_DIR=
 # endif
 
+if USE_BS2B
+BS2B_DIR=bs2b
+else
+BS2B_DIR=
+endif
+
 if USE_BZ2
 BZ2_DIR=bz2
 else
@@ -418,6 +424,7 @@ SUBDIRS=\
 	$(VOAMRWBENC_DIR) \
 	$(APEXSINK_DIR) \
 	$(AUDIOFILE_DIR) \
+	$(BS2B_DIR) \
 	$(BZ2_DIR) \
 	$(CHROMAPRINT_DIR) \
 	$(CURL_DIR) \
@@ -485,6 +492,7 @@ SUBDIRS=\
 DIST_SUBDIRS = \
 	assrender \
 	apexsink \
+	bs2b \
 	bz2 \
 	chromaprint \
 	curl \

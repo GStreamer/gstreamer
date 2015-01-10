@@ -1820,6 +1820,16 @@ AG_GST_CHECK_FEATURE(APEXSINK, [AirPort Express Wireless sink], apexsink, [
   ])
 ])
 
+dnl *** bs2b ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_BS2B, true)
+AG_GST_CHECK_FEATURE(BS2B, [bs2b], bs2b, [
+  PKG_CHECK_MODULES(BS2B, libbs2b >= 3.1.0, HAVE_BS2B="yes", [
+    HAVE_BS2B="no"
+  ])
+  AC_SUBST(BS2B_CFLAGS)
+  AC_SUBST(BS2B_LIBS)
+])
+
 dnl *** BZ2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BZ2, true)
 AG_GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
@@ -2998,6 +3008,7 @@ AM_CONDITIONAL(USE_ASSRENDER, false)
 AM_CONDITIONAL(USE_VOAMRWBENC, false)
 AM_CONDITIONAL(USE_VOAACENC, false)
 AM_CONDITIONAL(USE_APEXSINK, false)
+AM_CONDITIONAL(USE_BS2B, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CHROMAPRINT, false)
 AM_CONDITIONAL(USE_CURL, false)
@@ -3308,6 +3319,7 @@ ext/voamrwbenc/Makefile
 ext/voaacenc/Makefile
 ext/assrender/Makefile
 ext/apexsink/Makefile
+ext/bs2b/Makefile
 ext/bz2/Makefile
 ext/chromaprint/Makefile
 ext/curl/Makefile
