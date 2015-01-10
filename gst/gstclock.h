@@ -478,6 +478,12 @@ GstClockTime            gst_clock_get_timeout           (GstClock *clock);
 gboolean                gst_clock_add_observation       (GstClock *clock, GstClockTime slave,
                                                          GstClockTime master, gdouble *r_squared);
 
+gboolean                gst_clock_add_observation_unapplied (GstClock *clock, GstClockTime slave,
+                                                         GstClockTime master, gdouble *r_squared,
+                                                         GstClockTime *internal,
+                                                         GstClockTime *external,
+                                                         GstClockTime *rate_num,
+                                                         GstClockTime *rate_denom);
 
 /* getting and adjusting internal/external time */
 GstClockTime            gst_clock_get_internal_time     (GstClock *clock);

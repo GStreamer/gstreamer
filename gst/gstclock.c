@@ -1416,6 +1416,44 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
     GstClockTime master, gdouble * r_squared)
 {
   GstClockTime m_num, m_denom, b, xbase;
+
+  if (!gst_clock_add_observation_unapplied (clock, slave, master, r_squared,
+          &xbase, &b, &m_num, &m_denom))
+    return FALSE;
+
+  /* if we have a valid regression, adjust the clock */
+  gst_clock_set_calibration (clock, xbase, b, m_num, m_denom);
+
+  return TRUE;
+}
+
+/**
+ * gst_clock_add_observation_unapplied:
+ * @clock: a #GstClock
+ * @slave: a time on the slave
+ * @master: a time on the master
+ * @r_squared: (out): a pointer to hold the result
+ * @internal: (out) (allow-none): a location to store the internal time
+ * @external: (out) (allow-none): a location to store the external time
+ * @rate_num: (out) (allow-none): a location to store the rate numerator
+ * @rate_denom: (out) (allow-none): a location to store the rate denominator
+ *
+ * Add a clock observation to the internal slaving algorithm the same as
+ * gst_clock_add_observation(), and return the result of the master clock
+ * estimation, without updating the internal calibration.
+ *
+ * The caller can then take the results and call gst_clock_set_calibration()
+ * with the values, or some modified version of them.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_clock_add_observation_unapplied (GstClock * clock, GstClockTime slave,
+    GstClockTime master, gdouble * r_squared,
+    GstClockTime * internal, GstClockTime * external,
+    GstClockTime * rate_num, GstClockTime * rate_denom)
+{
+  GstClockTime m_num, m_denom, b, xbase;
   GstClockPrivate *priv;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
@@ -1450,8 +1488,14 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
       "adjusting clock to m=%" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT ", b=%"
       G_GUINT64_FORMAT " (rsquared=%g)", m_num, m_denom, b, *r_squared);
 
-  /* if we have a valid regression, adjust the clock */
-  gst_clock_set_calibration (clock, xbase, b, m_num, m_denom);
+  if (internal)
+    *internal = xbase;
+  if (external)
+    *external = b;
+  if (rate_num)
+    *rate_num = m_num;
+  if (rate_denom)
+    *rate_denom = m_denom;
 
   return TRUE;
 
