@@ -40,6 +40,12 @@ static GstGLPlatform gst_gl_context_cocoa_get_gl_platform (GstGLContext * contex
 
 G_DEFINE_TYPE (GstGLContextCocoa, gst_gl_context_cocoa, GST_GL_TYPE_CONTEXT);
 
+/* Define this if the GLib patch from
+ * https://bugzilla.gnome.org/show_bug.cgi?id=741450
+ * is used
+ */
+#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
+
 static GMutex nsapp_lock;
 static GCond nsapp_cond;
 
@@ -95,12 +101,15 @@ gst_gl_window_cocoa_nsapp_iteration (gpointer data)
 
   return TRUE;
 }
+#endif
 
 static void
 gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
 {
   GstGLContextClass *context_class = (GstGLContextClass *) klass;
+#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
   NSAutoreleasePool* pool = nil;
+#endif
 
   g_type_class_add_private (klass, sizeof (GstGLContextCocoaPrivate));
 
@@ -116,6 +125,7 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
   context_class->get_gl_platform =
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_platform);
 
+#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
   pool = [[NSAutoreleasePool alloc] init];
 
   /* [NSApplication sharedApplication] will usually be
@@ -179,6 +189,7 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
   }
 
   [pool release];
+#endif
 }
 
 static void
@@ -206,7 +217,9 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
   __block NSOpenGLContext *glContext = nil;
 
+#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
   priv->source_id = g_timeout_add (200, gst_gl_window_cocoa_nsapp_iteration, NULL);
+#endif
 
   priv->gl_context = nil;
   if (other_context)
