@@ -485,6 +485,9 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
           "srcpad is not linked (yet) -> using S16 sample format");
       format = GST_AUDIO_FORMAT_S16;
       encoding = MPG123_ENC_SIGNED_16;
+    } else if (gst_caps_is_empty (allowed_srccaps)) {
+      gst_caps_unref (allowed_srccaps);
+      goto done;
     } else {
       gchar const *format_str;
       GValue const *format_value;
@@ -493,7 +496,10 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
       GstStructure *structure = gst_caps_get_structure (allowed_srccaps, 0);
       format_value = gst_structure_get_value (structure, "format");
 
-      if (GST_VALUE_HOLDS_LIST (format_value)) {
+      if (format_value == NULL) {
+        gst_caps_unref (allowed_srccaps);
+        goto done;
+      } else if (GST_VALUE_HOLDS_LIST (format_value)) {
         /* if value is a format list, pick the first entry */
         GValue const *fmt_list_value =
             gst_value_list_get_value (format_value, 0);
@@ -502,56 +508,45 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
         /* if value is a string, use it directly */
         format_str = g_value_get_string (format_value);
       } else {
-        GST_ERROR_OBJECT (mpg123_decoder,
-            "format value in caps structure %" GST_PTR_FORMAT
-            " is of invalid type (must be plain string or string list)",
-            structure);
-        format_str = NULL;
+        GST_ERROR_OBJECT (mpg123_decoder, "unexpected type for 'format' field "
+            "in caps structure %" GST_PTR_FORMAT, structure);
+        gst_caps_unref (allowed_srccaps);
+        goto done;
       }
-
-      format = GST_AUDIO_FORMAT_UNKNOWN;
 
       /* get the format value from the string */
-      if (G_LIKELY (format_str != NULL)) {
-        format = gst_audio_format_from_string (format_str);
-        if (G_UNLIKELY (format == GST_AUDIO_FORMAT_UNKNOWN)) {
-          GST_ERROR_OBJECT (mpg123_decoder, "format \"%s\" is invalid",
-              format_str);
-        }
-      }
+      format = gst_audio_format_from_string (format_str);
+      gst_caps_unref (allowed_srccaps);
+
+      g_assert (format != GST_AUDIO_FORMAT_UNKNOWN);
 
       /* convert format to mpg123 encoding */
-      if (G_LIKELY (format != GST_AUDIO_FORMAT_UNKNOWN)) {
-        switch (format) {
-          case GST_AUDIO_FORMAT_S16:
-            encoding = MPG123_ENC_SIGNED_16;
-            break;
-          case GST_AUDIO_FORMAT_S24:
-            encoding = MPG123_ENC_SIGNED_24;
-            break;
-          case GST_AUDIO_FORMAT_S32:
-            encoding = MPG123_ENC_SIGNED_32;
-            break;
-          case GST_AUDIO_FORMAT_U16:
-            encoding = MPG123_ENC_UNSIGNED_16;
-            break;
-          case GST_AUDIO_FORMAT_U24:
-            encoding = MPG123_ENC_UNSIGNED_24;
-            break;
-          case GST_AUDIO_FORMAT_U32:
-            encoding = MPG123_ENC_UNSIGNED_32;
-            break;
-          case GST_AUDIO_FORMAT_F32:
-            encoding = MPG123_ENC_FLOAT_32;
-            break;
-          default:
-            GST_DEBUG_OBJECT (dec,
-                "Format %s in srccaps is not supported", format_str);
-            goto done;
-        }
+      switch (format) {
+        case GST_AUDIO_FORMAT_S16:
+          encoding = MPG123_ENC_SIGNED_16;
+          break;
+        case GST_AUDIO_FORMAT_S24:
+          encoding = MPG123_ENC_SIGNED_24;
+          break;
+        case GST_AUDIO_FORMAT_S32:
+          encoding = MPG123_ENC_SIGNED_32;
+          break;
+        case GST_AUDIO_FORMAT_U16:
+          encoding = MPG123_ENC_UNSIGNED_16;
+          break;
+        case GST_AUDIO_FORMAT_U24:
+          encoding = MPG123_ENC_UNSIGNED_24;
+          break;
+        case GST_AUDIO_FORMAT_U32:
+          encoding = MPG123_ENC_UNSIGNED_32;
+          break;
+        case GST_AUDIO_FORMAT_F32:
+          encoding = MPG123_ENC_FLOAT_32;
+          break;
+        default:
+          g_assert_not_reached ();
+          goto done;
       }
-
-      gst_caps_unref (allowed_srccaps);
     }
   }
 
