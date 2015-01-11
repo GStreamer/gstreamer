@@ -428,6 +428,12 @@ preset_get_keyfile (GstPreset * preset)
   return presets;
 }
 
+static gint
+compare_strings (gchar ** a, gchar ** b, gpointer user_data)
+{
+  return g_strcmp0 (*a, *b);
+}
+
 /* get a list of all supported preset names for an element */
 static gchar **
 gst_preset_default_get_preset_names (GstPreset * preset)
@@ -464,7 +470,7 @@ gst_preset_default_get_preset_names (GstPreset * preset)
 
   /* sort the array now */
   g_qsort_with_data (groups, num_groups, sizeof (gchar *),
-      (GCompareDataFunc) strcmp, NULL);
+      (GCompareDataFunc) compare_strings, NULL);
 
   return groups;
 
