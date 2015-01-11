@@ -2467,6 +2467,7 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
   if (mode == SCAN_SCR) {
     *rts = scr;
     ret = TRUE;
+    goto beach;
   }
 
   /* read the 4 bytes for the PES sync code */
