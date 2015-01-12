@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-
 /**
  * SECTION:element-bs2b
  *
@@ -71,23 +70,37 @@ enum
 {
   PROP_FCUT = 1,
   PROP_FEED,
-  PROP_PRESET,
   PROP_LAST,
 };
 
 static GParamSpec *properties[PROP_LAST];
 
-enum
+typedef struct
 {
-  PRESET_DEFAULT,
-  PRESET_CMOY,
-  PRESET_JMEIER,
-  PRESET_NONE
+  const gchar *name;
+  const gchar *desc;
+  gint preset;
+} GstBs2bPreset;
+
+static GstBs2bPreset presets[3] = {
+  {
+        "default",
+        "Closest to virtual speaker placement (30°, 3 meter) [700Hz, 4.5dB]",
+      BS2B_DEFAULT_CLEVEL},
+  {
+        "cmoy",
+        "Close to Chu Moy's crossfeeder (popular) [700Hz, 6.0dB]",
+      BS2B_CMOY_CLEVEL},
+  {
+        "jmeier",
+        "Close to Jan Meier's CORDA amplifiers (little change) [650Hz, 9.0dB]",
+      BS2B_JMEIER_CLEVEL}
 };
 
-G_DEFINE_TYPE (GstBs2b, gst_bs2b, GST_TYPE_AUDIO_FILTER);
+static void gst_preset_interface_init (gpointer g_iface, gpointer iface_data);
 
-static GType gst_bs2b_preset_get_type (void);
+G_DEFINE_TYPE_WITH_CODE (GstBs2b, gst_bs2b, GST_TYPE_AUDIO_FILTER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, gst_preset_interface_init));
 
 static void gst_bs2b_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -100,6 +113,83 @@ static GstFlowReturn gst_bs2b_transform_inplace (GstBaseTransform *
 static gboolean gst_bs2b_setup (GstAudioFilter * self,
     const GstAudioInfo * audio_info);
 
+static gchar **
+gst_bs2b_get_preset_names (GstPreset * preset)
+{
+  gchar **names;
+  gint i;
+
+  names = g_new (gchar *, 1 + G_N_ELEMENTS (presets));
+  for (i = 0; i < G_N_ELEMENTS (presets); i++) {
+    names[i] = g_strdup (presets[i].name);
+  }
+  names[i] = NULL;
+  return names;
+}
+
+static gchar **
+gst_bs2b_get_property_names (GstPreset * preset)
+{
+  gchar **names = g_new (gchar *, 3);
+
+  names[0] = g_strdup ("fcut");
+  names[1] = g_strdup ("feed");
+  names[2] = NULL;
+  return names;
+}
+
+static gboolean
+gst_bs2b_load_preset (GstPreset * preset, const gchar * name)
+{
+  GstBs2b *element = GST_BS2B (preset);
+  GObject *object = (GObject *) preset;
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (presets); i++) {
+    if (!g_strcmp0 (presets[i].name, name)) {
+      bs2b_set_level (element->bs2bdp, presets[i].preset);
+      g_object_notify_by_pspec (object, properties[PROP_FCUT]);
+      g_object_notify_by_pspec (object, properties[PROP_FEED]);
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+static gboolean
+gst_bs2b_get_meta (GstPreset * preset, const gchar * name,
+    const gchar * tag, gchar ** value)
+{
+  if (!g_strcmp0 (tag, "comment")) {
+    gint i;
+
+    for (i = 0; i < G_N_ELEMENTS (presets); i++) {
+      if (!g_strcmp0 (presets[i].name, name)) {
+        *value = g_strdup (presets[i].desc);
+        return TRUE;
+      }
+    }
+  }
+  *value = NULL;
+  return FALSE;
+}
+
+static void
+gst_preset_interface_init (gpointer g_iface, gpointer iface_data)
+{
+  GstPresetInterface *iface = g_iface;
+
+  iface->get_preset_names = gst_bs2b_get_preset_names;
+  iface->get_property_names = gst_bs2b_get_property_names;
+
+  iface->load_preset = gst_bs2b_load_preset;
+  iface->save_preset = NULL;
+  iface->rename_preset = NULL;
+  iface->delete_preset = NULL;
+
+  iface->get_meta = gst_bs2b_get_meta;
+  iface->set_meta = NULL;
+}
 
 static void
 gst_bs2b_class_init (GstBs2bClass * klass)
@@ -127,11 +217,6 @@ gst_bs2b_class_init (GstBs2bClass * klass)
   properties[PROP_FEED] =
       g_param_spec_int ("feed", "Feed level", "Feed Level (dB/10)",
       BS2B_MINFEED, BS2B_MAXFEED, BS2B_DEFAULT_CLEVEL >> 16,
-      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS);
-
-  properties[PROP_PRESET] =
-      g_param_spec_enum ("preset", "Preset", "Bs2b filter preset",
-      gst_bs2b_preset_get_type (), PRESET_DEFAULT,
       G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
@@ -274,38 +359,6 @@ gst_bs2b_transform_inplace (GstBaseTransform * base_transform,
   return GST_FLOW_OK;
 }
 
-static GType
-gst_bs2b_preset_get_type (void)
-{
-  static GType bs2b_preset_type = 0;
-
-  if (!bs2b_preset_type) {
-    static GEnumValue types[] = {
-      {
-            PRESET_DEFAULT,
-            "Closest to virtual speaker placement (30°, 3 meter)   [700Hz, 4.5dB]",
-          "default"},
-      {
-            PRESET_CMOY,
-            "Close to Chu Moy's crossfeeder (popular)              [700Hz, 6.0dB]",
-          "cmoy"},
-      {
-            PRESET_JMEIER,
-            "Close to Jan Meier's CORDA amplifiers (little change) [650Hz, 9.0dB]",
-          "jmeier"},
-      {
-            PRESET_NONE,
-            "No preset",
-          "none"},
-      {0, NULL, NULL},
-    };
-
-    bs2b_preset_type = g_enum_register_static ("GstBs2bPreset", types);
-  }
-
-  return bs2b_preset_type;
-}
-
 static void
 gst_bs2b_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -318,41 +371,12 @@ gst_bs2b_set_property (GObject * object, guint prop_id,
       bs2b_set_level_fcut (element->bs2bdp, g_value_get_int (value));
       bs2b_clear (element->bs2bdp);
       GST_BS2B_DP_UNLOCK (element);
-      g_object_notify_by_pspec (object, properties[PROP_PRESET]);
       break;
     case PROP_FEED:
       GST_BS2B_DP_LOCK (element);
       bs2b_set_level_feed (element->bs2bdp, g_value_get_int (value));
       bs2b_clear (element->bs2bdp);
       GST_BS2B_DP_UNLOCK (element);
-      g_object_notify_by_pspec (object, properties[PROP_PRESET]);
-      break;
-    case PROP_PRESET:
-      switch (g_value_get_enum (value)) {
-        case PRESET_DEFAULT:
-          GST_BS2B_DP_LOCK (element);
-          bs2b_set_level (element->bs2bdp, BS2B_DEFAULT_CLEVEL);
-          bs2b_clear (element->bs2bdp);
-          GST_BS2B_DP_UNLOCK (element);
-          break;
-        case PRESET_CMOY:
-          GST_BS2B_DP_LOCK (element);
-          bs2b_set_level (element->bs2bdp, BS2B_CMOY_CLEVEL);
-          bs2b_clear (element->bs2bdp);
-          GST_BS2B_DP_UNLOCK (element);
-          break;
-        case PRESET_JMEIER:
-          GST_BS2B_DP_LOCK (element);
-          bs2b_set_level (element->bs2bdp, BS2B_JMEIER_CLEVEL);
-          bs2b_clear (element->bs2bdp);
-          GST_BS2B_DP_UNLOCK (element);
-          break;
-        default:
-          G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-          return;
-      }
-      g_object_notify_by_pspec (object, properties[PROP_FCUT]);
-      g_object_notify_by_pspec (object, properties[PROP_FEED]);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -375,24 +399,6 @@ gst_bs2b_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_FEED:
       GST_BS2B_DP_LOCK (element);
       g_value_set_int (value, bs2b_get_level_feed (element->bs2bdp));
-      GST_BS2B_DP_UNLOCK (element);
-      break;
-    case PROP_PRESET:
-      GST_BS2B_DP_LOCK (element);
-      switch (bs2b_get_level (element->bs2bdp)) {
-        case BS2B_DEFAULT_CLEVEL:
-          g_value_set_enum (value, PRESET_DEFAULT);
-          break;
-        case BS2B_CMOY_CLEVEL:
-          g_value_set_enum (value, PRESET_CMOY);
-          break;
-        case BS2B_JMEIER_CLEVEL:
-          g_value_set_enum (value, PRESET_JMEIER);
-          break;
-        default:
-          g_value_set_enum (value, PRESET_NONE);
-          break;
-      }
       GST_BS2B_DP_UNLOCK (element);
       break;
     default:
