@@ -696,6 +696,14 @@ _add_object_func (NleComposition * comp, ChildIOData * childio)
   in_pending_io = g_hash_table_lookup (priv->pending_io, object);
 
   if (g_hash_table_contains (priv->objects_hash, object)) {
+
+    if (in_pending_io) {
+      GST_INFO_OBJECT (comp, "Object already in but marked in pendings"
+          " removing from pendings");
+      g_hash_table_remove (priv->pending_io, object);
+
+      return;
+    }
     GST_ERROR_OBJECT (comp, "Object %" GST_PTR_FORMAT " is "
         " already in the composition", object);
 
