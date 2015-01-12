@@ -28,6 +28,7 @@ import utils
 import signal
 import urlparse
 import subprocess
+import threading
 import reporters
 import ConfigParser
 import loggable
@@ -59,6 +60,8 @@ class Test(Loggable):
         self.command = ""
         self.reporter = reporter
         self.process = None
+        self.proc_env = None
+        self.thread = None
         self.duration = duration
 
         self.clean()
@@ -167,13 +170,12 @@ class Test(Loggable):
         last_change_ts = time.time()
         start_ts = time.time()
         while True:
+            # Check process every second for timeout
+            self.thread.join(1.0)
+
             self.process.poll()
             if self.process.returncode is not None:
                 break
-
-            # Dirty way to avoid eating to much CPU...
-            # good enough for us anyway.
-            time.sleep(1)
 
             val = self.get_current_value()
 
@@ -231,11 +233,19 @@ class Test(Loggable):
                                    % DEFAULT_TIMEOUT)
             res = self.process.poll()
 
+    def thread_wrapper(self):
+        self.process = subprocess.Popen("exec " + self.command,
+                                        stderr=self.reporter.out,
+                                        stdout=self.reporter.out,
+                                        shell=True,
+                                        env=self.proc_env)
+        self.process.wait()
+
     def run(self):
         self.command = "%s " % (self.application)
         self._starting_time = time.time()
         self.build_arguments()
-        proc_env = self.get_subproc_env()
+        self.proc_env = self.get_subproc_env()
 
         message = "Launching: %s%s\n" \
                   "    Command: '%s %s'\n" % (Colors.ENDC, self.classname,
@@ -255,18 +265,17 @@ class Test(Loggable):
 
         printc(message, Colors.OKBLUE)
 
+        self.thread = threading.Thread(target=self.thread_wrapper)
+        self.thread.start()
+
         try:
-            self.process = subprocess.Popen("exec " + self.command,
-                                            stderr=self.reporter.out,
-                                            stdout=self.reporter.out,
-                                            shell=True,
-                                            env=proc_env)
             self.wait_process()
         except KeyboardInterrupt:
             self._kill_subprocess()
             raise
 
         self._kill_subprocess()
+        self.thread.join()
         self.time_taken = time.time() - self._starting_time
 
         printc("Result: %s%s\n" % (self.result,
