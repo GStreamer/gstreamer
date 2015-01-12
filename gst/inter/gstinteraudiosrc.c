@@ -395,7 +395,7 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
     GstMapInfo map;
     GstMemory *mem;
 
-    GST_WARNING_OBJECT (interaudiosrc,
+    GST_DEBUG_OBJECT (interaudiosrc,
         "creating %" G_GUINT64_FORMAT " samples of silence",
         period_samples - n);
     mem = gst_allocator_alloc (NULL, (period_samples - n) * bpf, NULL);

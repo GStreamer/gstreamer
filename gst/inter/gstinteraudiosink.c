@@ -307,7 +307,7 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   n = gst_adapter_available (interaudiosink->surface->audio_adapter) / bpf;
   while (n > buffer_samples) {
-    GST_WARNING_OBJECT (interaudiosink, "flushing %" GST_TIME_FORMAT,
+    GST_DEBUG_OBJECT (interaudiosink, "flushing %" GST_TIME_FORMAT,
         GST_TIME_ARGS (period_time));
     gst_adapter_flush (interaudiosink->surface->audio_adapter,
         period_samples * bpf);
