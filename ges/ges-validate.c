@@ -438,19 +438,41 @@ beach:
   return res;
 }
 
+
+static void
+_commit_done_cb (GstBus * bus, GstMessage * message, GstValidateAction * action)
+{
+  gst_validate_action_set_done (action);
+
+  g_signal_handlers_disconnect_by_func (bus, _commit_done_cb, action);
+}
+
 static gboolean
 _commit (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GESTimeline *timeline = get_timeline (scenario);
+  GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (scenario->pipeline));
+  GstState state;
 
   gst_validate_printf (action, "Commiting timeline %s\n",
       GST_OBJECT_NAME (timeline));
 
-  ges_timeline_commit (timeline);
+  g_signal_connect (bus, "message::async-done", G_CALLBACK (_commit_done_cb),
+      action);
 
+  gst_element_get_state (scenario->pipeline, &state, NULL, 0);
+  if (!ges_timeline_commit (timeline) || state < GST_STATE_PAUSED) {
+    g_signal_handlers_disconnect_by_func (bus, G_CALLBACK (_commit_done_cb),
+        action);
+    gst_object_unref (timeline);
+    gst_object_unref (bus);
+
+    return TRUE;
+  }
+  gst_object_unref (bus);
   gst_object_unref (timeline);
 
-  return TRUE;
+  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
 
 static gboolean
