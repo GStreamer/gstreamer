@@ -1,0 +1,34 @@
+<plugin>
+  <name>bs2b</name>
+  <description>Improve headphone listening of stereo audio recordsusing the bs2b library.</description>
+  <filename>../../ext/bs2b/.libs/libgstbs2b.so</filename>
+  <basename>libgstbs2b.so</basename>
+  <version>1.5.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>bs2b</name>
+      <longname>Crossfeed effect</longname>
+      <class>Effect/Audio</class>
+      <description>Improve headphone listening of stereo audio records using the bs2b library.</description>
+      <author>Christoph Reiter &lt;reiter.christoph@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, F32LE, F32BE, F64LE, F64BE }, rate=(int)[ 2000, 384000 ], channels=(int)2, channel-mask=(bitmask)0x0000000000000003, layout=(string)interleaved; audio/x-raw, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, F32LE, F32BE, F64LE, F64BE }, rate=(int)[ 2000, 384000 ], channels=(int)2, channel-mask=(bitmask)0x0000000000000003, layout=(string)interleaved; audio/x-raw, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

@@ -97,6 +97,22 @@ GST_IS_AUTO_CONVERT_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-bs2b</FILE>
+<TITLE>bs2b</TITLE>
+GstBs2b
+<SUBSECTION Standard>
+GstBs2bClass
+GST_BS2B
+GST_BS2B_CAST
+GST_BS2B_CLASS
+GST_IS_BS2B
+GST_IS_BS2B_CLASS
+GST_TYPE_BS2B
+gst_bs2b_get_type
+gst_bs2b_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-bulge</FILE>
 <TITLE>bulge</TITLE>
 GstBulge
