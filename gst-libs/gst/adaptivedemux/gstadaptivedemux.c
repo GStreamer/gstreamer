@@ -168,6 +168,9 @@ static void gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux);
 static void gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux);
 static GstFlowReturn gst_adaptive_demux_combine_flows (GstAdaptiveDemux *
     demux);
+static void
+gst_adaptive_demux_stream_fragment_download_finish (GstAdaptiveDemuxStream *
+    stream, GstFlowReturn ret, GError * err);
 
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
@@ -524,17 +527,8 @@ gst_adaptive_demux_handle_message (GstBin * bin, GstMessage * msg)
           }
 
           /* error, but ask to retry */
-          g_mutex_lock (&stream->fragment_download_lock);
-          if (!stream->download_finished) {
-            if (stream->last_ret == GST_FLOW_OK) {
-              stream->last_ret = GST_FLOW_CUSTOM_ERROR;
-              g_clear_error (&stream->last_error);
-              stream->last_error = g_error_copy (err);
-            }
-            stream->download_finished = TRUE;
-          }
-          g_cond_signal (&stream->fragment_download_cond);
-          g_mutex_unlock (&stream->fragment_download_lock);
+          gst_adaptive_demux_stream_fragment_download_finish (stream,
+              GST_FLOW_CUSTOM_ERROR, err);
 
           g_error_free (err);
           g_free (debug);
@@ -1243,11 +1237,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (ret != GST_FLOW_OK) {
       if (buffer)
         gst_buffer_unref (buffer);
-      g_mutex_lock (&stream->fragment_download_lock);
-      stream->download_finished = TRUE;
-      stream->last_ret = ret;
-      g_cond_signal (&stream->fragment_download_cond);
-      g_mutex_unlock (&stream->fragment_download_lock);
+      gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
       return ret;
     }
   }
@@ -1330,14 +1320,53 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           gst_flow_get_name (ret));
     }
 
-    g_mutex_lock (&stream->fragment_download_lock);
-    stream->download_finished = TRUE;
-    stream->last_ret = ret;
-    g_cond_signal (&stream->fragment_download_cond);
-    g_mutex_unlock (&stream->fragment_download_lock);
+    gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
   }
 
   return ret;
+}
+
+static GstFlowReturn
+gst_adaptive_demux_stream_fragment_eos (GstAdaptiveDemuxStream * stream)
+{
+  GstAdaptiveDemux *demux = stream->demux;
+  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (stream->demux);
+  GstBuffer *buffer = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (klass->finish_fragment) {
+    klass->finish_fragment (demux, stream, &buffer);
+    if (buffer) {
+      stream->download_total_time +=
+          g_get_monotonic_time () - stream->download_start_time;
+      stream->download_total_bytes += gst_buffer_get_size (buffer);
+      ret = gst_pad_push (stream->pad, buffer);
+    }
+  }
+  return ret;
+}
+
+static void
+gst_adaptive_demux_stream_fragment_download_finish (GstAdaptiveDemuxStream *
+    stream, GstFlowReturn ret, GError * err)
+{
+  g_mutex_lock (&stream->fragment_download_lock);
+  stream->download_finished = TRUE;
+  stream->last_ret = ret;
+
+  /* if we have an error, only replace last_ret if it was OK before to avoid
+   * overwriting the first error we got */
+  if (err) {
+    if (stream->last_ret == GST_FLOW_OK) {
+      stream->last_ret = ret;
+      g_clear_error (&stream->last_error);
+      stream->last_error = g_error_copy (err);
+    }
+  } else {
+    stream->last_ret = ret;
+  }
+  g_cond_signal (&stream->fragment_download_cond);
+  g_mutex_unlock (&stream->fragment_download_lock);
 }
 
 static gboolean
@@ -1345,30 +1374,13 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstPad *srcpad = GST_PAD_CAST (parent);
   GstAdaptiveDemuxStream *stream = gst_pad_get_element_private (srcpad);
-  GstAdaptiveDemux *demux = stream->demux;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:{
-      GstAdaptiveDemuxClass *klass =
-          GST_ADAPTIVE_DEMUX_GET_CLASS (stream->demux);
-      GstBuffer *buffer = NULL;
-      GstFlowReturn ret = GST_FLOW_OK;
+      GstFlowReturn ret;
 
-      if (klass->finish_fragment) {
-        klass->finish_fragment (demux, stream, &buffer);
-        if (buffer) {
-          stream->download_total_time +=
-              g_get_monotonic_time () - stream->download_start_time;
-          stream->download_total_bytes += gst_buffer_get_size (buffer);
-          ret = gst_pad_push (stream->pad, buffer);
-        }
-      }
-
-      g_mutex_lock (&stream->fragment_download_lock);
-      stream->download_finished = TRUE;
-      stream->last_ret = ret;
-      g_cond_signal (&stream->fragment_download_cond);
-      g_mutex_unlock (&stream->fragment_download_lock);
+      ret = gst_adaptive_demux_stream_fragment_eos (stream);
+      gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
       break;
     }
     default:
