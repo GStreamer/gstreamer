@@ -70,6 +70,7 @@ typedef struct
   gboolean eos_sent;            /* when EOS was sent downstream */
   gboolean flushing;            /* set after flush-start and before flush-stop */
   gboolean seen_data;
+  GstClockTime gap_duration;
 
   GCond stream_finish_cond;
 
@@ -231,8 +232,13 @@ gst_stream_synchronizer_wait (GstStreamSynchronizer * self, GstPad * pad)
         continue;
       }
 
-      event = gst_event_new_gap (stream->segment.position, GST_CLOCK_TIME_NONE);
-      GST_DEBUG_OBJECT (pad, "Send GAP event");
+      event =
+          gst_event_new_gap (stream->segment.position, stream->gap_duration);
+      GST_DEBUG_OBJECT (pad,
+          "Send GAP event, position: %" GST_TIME_FORMAT " duration: %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (stream->segment.position),
+          GST_TIME_ARGS (stream->gap_duration));
+
       /* drop lock when sending GAP event, which may block in e.g. preroll */
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       ret = gst_pad_push_event (pad, event);
@@ -545,6 +551,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       } else {
         if (seen_data) {
           self->send_gap_event = TRUE;
+          stream->gap_duration = GST_CLOCK_TIME_NONE;
           ret = gst_stream_synchronizer_wait (self, srcpad);
         }
       }
@@ -689,8 +696,9 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
 
         ostream->segment.position = new_start;
 
-        gst_pad_push_event (ostream->srcpad,
-            gst_event_new_gap (position, new_start - position));
+        self->send_gap_event = TRUE;
+        ostream->gap_duration = new_start - position;
+        g_cond_broadcast (&ostream->stream_finish_cond);
       }
     }
     GST_STREAM_SYNCHRONIZER_UNLOCK (self);
@@ -912,6 +920,7 @@ gst_stream_synchronizer_change_state (GstElement * element,
          * which reach EOS to send GAP event. */
         if (stream->is_eos && !stream->eos_sent) {
           self->send_gap_event = TRUE;
+          stream->gap_duration = GST_CLOCK_TIME_NONE;
           g_cond_broadcast (&stream->stream_finish_cond);
         }
       }
@@ -930,6 +939,7 @@ gst_stream_synchronizer_change_state (GstElement * element,
         GstStream *stream = l->data;
 
         gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
+        stream->gap_duration = GST_CLOCK_TIME_NONE;
         stream->wait = FALSE;
         stream->new_stream = FALSE;
         stream->is_eos = FALSE;
