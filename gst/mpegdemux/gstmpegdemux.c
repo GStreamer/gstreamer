@@ -1148,7 +1148,7 @@ find_offset (GstPsDemux * demux, guint64 scr,
 static inline gboolean
 gst_ps_demux_do_seek (GstPsDemux * demux, GstSegment * seeksegment)
 {
-  gboolean found = FALSE;
+  gboolean found;
   guint64 fscr, offset;
   guint64 scr = GSTTIME_TO_MPEGTIME (seeksegment->position + demux->base_time);
 
@@ -1172,6 +1172,10 @@ gst_ps_demux_do_seek (GstPsDemux * demux, GstSegment * seeksegment)
   if (offset == (guint64) - 1) {
     return FALSE;
   }
+
+  found = gst_ps_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr, 0);
+  if (!found)
+    found = gst_ps_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &fscr, 0);
 
   while (found && fscr < scr) {
     offset++;
