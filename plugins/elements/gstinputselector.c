@@ -1386,7 +1386,7 @@ gst_input_selector_set_active_pad (GstInputSelector * self, GstPad * pad)
   GST_DEBUG_OBJECT (self, "New active pad is %" GST_PTR_FORMAT,
       self->active_sinkpad);
 
-  if (old != new && new->eos && !new->eos_sent) {
+  if (old != new && new && new->eos && !new->eos_sent) {
     self->eos = TRUE;
     GST_INPUT_SELECTOR_BROADCAST (self);
   }
