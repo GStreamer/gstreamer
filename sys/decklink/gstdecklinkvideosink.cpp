@@ -343,6 +343,8 @@ class GStreamerVideoOutputCallback:public IDeckLinkVideoOutputCallback
 {
 public:
   GStreamerVideoOutputCallback (GstDecklinkVideoSink * sink)
+  : IDeckLinkVideoOutputCallback (),
+    m_refcount (1)
   {
     m_sink = GST_DECKLINK_VIDEO_SINK_CAST (gst_object_ref (sink));
     g_mutex_init (&m_mutex);

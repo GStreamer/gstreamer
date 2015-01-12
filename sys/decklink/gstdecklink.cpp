@@ -405,7 +405,8 @@ private:
   gint m_refcount;
 public:
     GStreamerDecklinkInputCallback (GstDecklinkInput * input)
-  : IDeckLinkInputCallback ()
+  : IDeckLinkInputCallback (),
+    m_refcount (1)
   {
     m_input = input;
     g_mutex_init (&m_mutex);

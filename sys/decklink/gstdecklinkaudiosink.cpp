@@ -140,6 +140,8 @@ class GStreamerAudioOutputCallback:public IDeckLinkAudioOutputCallback
 {
 public:
   GStreamerAudioOutputCallback (GstDecklinkAudioSinkRingBuffer * ringbuffer)
+  : IDeckLinkAudioOutputCallback (),
+    m_refcount (1)
   {
     m_ringbuffer =
         GST_DECKLINK_AUDIO_SINK_RING_BUFFER_CAST (gst_object_ref (ringbuffer));
