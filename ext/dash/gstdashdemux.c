@@ -211,9 +211,12 @@ gst_dash_demux_stream_get_fragment_waiting_time (GstAdaptiveDemuxStream *
     stream);
 static void gst_dash_demux_advance_period (GstAdaptiveDemux * demux);
 static gboolean gst_dash_demux_has_next_period (GstAdaptiveDemux * demux);
+static GstFlowReturn gst_dash_demux_chunk_received (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream, GstBuffer ** chunk);
 
 /* GstDashDemux */
 static gboolean gst_dash_demux_setup_all_streams (GstDashDemux * demux);
+static void gst_dash_demux_stream_free (GstAdaptiveDemuxStream * stream);
 
 static GstCaps *gst_dash_demux_get_input_caps (GstDashDemux * demux,
     GstActiveStream * stream);
@@ -315,6 +318,7 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
       gst_dash_demux_stream_select_bitrate;
   gstadaptivedemux_class->stream_update_fragment_info =
       gst_dash_demux_stream_update_fragment_info;
+  gstadaptivedemux_class->stream_free = gst_dash_demux_stream_free;
 }
 
 static void
@@ -458,6 +462,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
       gst_adaptive_demux_stream_set_tags (GST_ADAPTIVE_DEMUX_STREAM_CAST
           (stream), tags);
     stream->index = i;
+    gst_isoff_sidx_parser_init (&stream->sidx_parser);
   }
 
   return TRUE;
@@ -567,6 +572,7 @@ done:
 static gboolean
 gst_dash_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
 {
+  GstAdaptiveDemuxClass *klass;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   gboolean ret = FALSE;
   gchar *manifest;
@@ -586,6 +592,12 @@ gst_dash_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
   if (gst_buffer_map (buf, &mapinfo, GST_MAP_READ)) {
     manifest = (gchar *) mapinfo.data;
     if (gst_mpd_parse (dashdemux->client, manifest, mapinfo.size)) {
+      if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+        klass = GST_ADAPTIVE_DEMUX_GET_CLASS (dashdemux);
+
+        klass->chunk_received = gst_dash_demux_chunk_received;
+      }
+
       if (gst_mpd_client_setup_media_presentation (dashdemux->client)) {
         ret = TRUE;
       } else {
@@ -1095,4 +1107,23 @@ gst_dash_demux_advance_period (GstAdaptiveDemux * demux)
 
   gst_dash_demux_setup_all_streams (dashdemux);
   gst_mpd_client_set_segment_index_for_all_streams (dashdemux->client, 0);
+}
+
+static GstFlowReturn
+gst_dash_demux_chunk_received (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream, GstBuffer ** chunk)
+{
+  GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
+  if (stream->downloading_index) {
+    gst_isoff_sidx_parser_add_buffer (&dash_stream->sidx_parser, *chunk);
+  }
+  return GST_FLOW_OK;
+}
+
+static void
+gst_dash_demux_stream_free (GstAdaptiveDemuxStream * stream)
+{
+  GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
+
+  gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
 }

@@ -35,6 +35,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstdataqueue.h>
 #include "gstmpdparser.h"
+#include "gstisoff.h"
 #include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
@@ -63,6 +64,9 @@ struct _GstDashDemuxStream
   GstActiveStream *active_stream;
 
   GstMediaFragmentInfo current_fragment;
+
+  /* index parsing */
+  GstSidxParser sidx_parser;
 };
 
 /**
