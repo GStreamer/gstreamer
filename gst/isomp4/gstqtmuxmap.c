@@ -149,7 +149,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS ("video/quicktime, variant = (string) apple; "
             "video/quicktime"),
         GST_STATIC_CAPS ("video/x-raw, "
-            "format = (string) { RGB, UYVY }, "
+            "format = (string) { RGB, UYVY, v210 }, "
             COMMON_VIDEO_CAPS "; "
             MPEG4V_CAPS "; "
             H263_CAPS "; "

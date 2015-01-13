@@ -216,6 +216,7 @@ G_BEGIN_DECLS
 #define FOURCC_ulaw     GST_MAKE_FOURCC('u','l','a','w')
 #define FOURCC_url_     GST_MAKE_FOURCC('u','r','l',' ')
 #define FOURCC_uuid     GST_MAKE_FOURCC('u','u','i','d')
+#define FOURCC_v210     GST_MAKE_FOURCC('v','2','1','0')
 #define FOURCC_vide     GST_MAKE_FOURCC('v','i','d','e')
 #define FOURCC_vmhd     GST_MAKE_FOURCC('v','m','h','d')
 #define FOURCC_wave     GST_MAKE_FOURCC('w','a','v','e')

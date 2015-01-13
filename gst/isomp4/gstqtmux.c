@@ -3049,6 +3049,13 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
         entry.depth = depth;
         sync = FALSE;
         break;
+      case GST_VIDEO_FORMAT_v210:
+        if (depth == -1)
+          depth = 24;
+        entry.fourcc = FOURCC_v210;
+        entry.depth = depth;
+        sync = FALSE;
+        break;
       default:
         if (GST_VIDEO_FORMAT_INFO_FLAGS (vinfo) & GST_VIDEO_FORMAT_FLAG_RGB) {
           entry.fourcc = FOURCC_raw_;
