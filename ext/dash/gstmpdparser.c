@@ -2955,7 +2955,7 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
     segment->duration = duration;
     segment->SegmentURL = NULL;
 
-    if (segment->start_time > stream_period->start + stream_period->duration) {
+    if (segment->start_time > stream_period->duration) {
       return FALSE;
     }
   }
