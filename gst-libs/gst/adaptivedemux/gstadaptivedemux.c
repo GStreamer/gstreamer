@@ -1211,6 +1211,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean discont = FALSE;
+  gboolean subsegment_end = FALSE;
 
   if (stream->starting_fragment) {
     stream->starting_fragment = FALSE;
@@ -1235,10 +1236,15 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (klass->chunk_received) {
     ret = klass->chunk_received (demux, stream, &buffer);
     if (ret != GST_FLOW_OK) {
-      if (buffer)
-        gst_buffer_unref (buffer);
-      gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
-      return ret;
+      if (ret == (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SUBSEGMENT_END) {
+        ret = GST_FLOW_OK;
+        subsegment_end = TRUE;
+      } else {
+        if (buffer)
+          gst_buffer_unref (buffer);
+        gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
+        return ret;
+      }
     }
   }
 
@@ -1321,6 +1327,9 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
 
     gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
+  } else if (subsegment_end) {
+    /* tell upstream that we are done here */
+    ret = GST_FLOW_EOS;
   }
 
   return ret;

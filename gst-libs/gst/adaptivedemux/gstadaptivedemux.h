@@ -77,6 +77,10 @@ G_BEGIN_DECLS
   g_clear_error (&err); \
 } G_STMT_END
 
+enum _GstAdaptiveDemuxFlowReturn {
+  GST_ADAPTIVE_DEMUX_FLOW_SUBSEGMENT_END = GST_FLOW_CUSTOM_SUCCESS + 100
+};
+
 typedef struct _GstAdaptiveDemuxStreamFragment GstAdaptiveDemuxStreamFragment;
 typedef struct _GstAdaptiveDemuxStream GstAdaptiveDemuxStream;
 typedef struct _GstAdaptiveDemux GstAdaptiveDemux;
