@@ -11127,12 +11127,31 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):
     case GST_MAKE_FOURCC ('2', 'V', 'u', 'y'):
-    case GST_MAKE_FOURCC ('v', '2', '1', '0'):
       format = GST_VIDEO_FORMAT_UYVY;
+      break;
+    case GST_MAKE_FOURCC ('v', '3', '0', '8'):
+      format = GST_VIDEO_FORMAT_v308;
+      break;
+    case GST_MAKE_FOURCC ('v', '2', '1', '6'):
+      format = GST_VIDEO_FORMAT_v216;
+      break;
+    case GST_MAKE_FOURCC ('v', '2', '1', '0'):
+      format = GST_VIDEO_FORMAT_v210;
       break;
     case GST_MAKE_FOURCC ('r', '2', '1', '0'):
       format = GST_VIDEO_FORMAT_r210;
       break;
+      /* Packed YUV 4:4:4 10 bit in 32 bits, complex
+         case GST_MAKE_FOURCC ('v', '4', '1', '0'):
+         format = GST_VIDEO_FORMAT_v410;
+         break;
+       */
+      /* Packed YUV 4:4:4:4 8 bit in 32 bits
+       * but different order than AYUV
+       case GST_MAKE_FOURCC ('v', '4', '0', '8'):
+       format = GST_VIDEO_FORMAT_v408;
+       break;
+       */
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
       _codec ("MPEG-1 video");
