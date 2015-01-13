@@ -388,6 +388,7 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
 {
   const GstGLFuncs *gl;
   GLenum gl_format, gl_type;
+  gpointer data;
 
   if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
     return;
@@ -408,12 +409,23 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
     gl->PixelStorei (GL_UNPACK_ALIGNMENT, gl_mem->unpack_length);
   }
 
-  GST_CAT_LOG (GST_CAT_GL_MEMORY, "upload for texture id:%u, %ux%u",
-      gl_mem->tex_id, gl_mem->tex_width, GL_MEM_HEIGHT (gl_mem));
+  GST_CAT_LOG (GST_CAT_GL_MEMORY, "upload for texture id:%u, with pbo %u %ux%u",
+      gl_mem->tex_id, gl_mem->transfer_pbo, gl_mem->tex_width,
+      GL_MEM_HEIGHT (gl_mem));
+
+  if (gl_mem->transfer_pbo) {
+    gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, gl_mem->transfer_pbo);
+    data = NULL;
+  } else {
+    data = gl_mem->data;
+  }
 
   gl->BindTexture (GL_TEXTURE_2D, gl_mem->tex_id);
   gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, gl_mem->tex_width,
-      GL_MEM_HEIGHT (gl_mem), gl_format, gl_type, gl_mem->data);
+      GL_MEM_HEIGHT (gl_mem), gl_format, gl_type, data);
+
+  if (gl_mem->transfer_pbo)
+    gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
 
   /* Reset to default values */
   if (USING_OPENGL (context) || USING_GLES3 (context)) {
@@ -425,6 +437,49 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
   GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+}
+
+static void
+_transfer_upload (GstGLContext * context, GstGLMemory * gl_mem)
+{
+  const GstGLFuncs *gl;
+  gsize size;
+
+  if (!gst_gl_context_check_gl_version (context,
+          GST_GL_API_OPENGL | GST_GL_API_OPENGL3, 2, 1)
+      && !gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
+    /* not supported */
+    return;
+
+  gl = context->gl_vtable;
+
+  if (!gl_mem->transfer_pbo)
+    gl->GenBuffers (1, &gl_mem->transfer_pbo);
+
+  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "uploading texture %u using pbo %u",
+      gl_mem->tex_id, gl_mem->transfer_pbo);
+
+  size =
+      GL_MEM_HEIGHT (gl_mem) * GL_MEM_WIDTH (gl_mem) *
+      _gl_texture_type_n_bytes (gl_mem->tex_type);
+
+  if (USING_OPENGL (context) || USING_GLES3 (context)
+      || USING_OPENGL3 (context)) {
+    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, gl_mem->unpack_length);
+  } else if (USING_GLES2 (context)) {
+    gl->PixelStorei (GL_UNPACK_ALIGNMENT, gl_mem->unpack_length);
+  }
+
+  gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, gl_mem->transfer_pbo);
+  gl->BufferData (GL_PIXEL_UNPACK_BUFFER, size, gl_mem->data, GL_STREAM_DRAW);
+  gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
+
+  /* Reset to default values */
+  if (USING_OPENGL (context) || USING_GLES3 (context)) {
+    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+  } else if (USING_GLES2 (context)) {
+    gl->PixelStorei (GL_UNPACK_ALIGNMENT, 4);
+  }
 }
 
 static inline void
@@ -598,8 +653,8 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   _calculate_unpack_length (mem);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "new GL texture memory:%p format:%u "
-      "dimensions:%ux%u size:%" G_GSIZE_FORMAT, mem, mem->tex_type,
-      mem->tex_width, GL_MEM_HEIGHT (mem), maxsize);
+      "dimensions:%ux%u stride:%u size:%" G_GSIZE_FORMAT, mem, mem->tex_type,
+      mem->tex_width, GL_MEM_HEIGHT (mem), GL_MEM_STRIDE (mem), maxsize);
 }
 
 static GstGLMemory *
@@ -682,13 +737,21 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
     data = gl_mem->data;
   }
 
+  gl_mem->map_flags = flags;
+
   return data;
 }
 
 static void
 _gl_mem_unmap (GstGLMemory * gl_mem)
 {
-  /* nothing to do here */
+  if (gl_mem->map_flags & GST_MAP_WRITE) {
+    if (!(gl_mem->map_flags & GST_MAP_GL))
+      gst_gl_context_thread_add (gl_mem->context,
+          (GstGLContextThreadFunc) _transfer_upload, gl_mem);
+  }
+
+  gl_mem->map_flags = 0;
 }
 
 static void

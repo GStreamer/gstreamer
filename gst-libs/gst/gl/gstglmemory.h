@@ -100,6 +100,8 @@ struct _GstGLMemory
   guint                 pbo;
   guint                 unpack_length;
   guint                 tex_width;
+  guint                 transfer_pbo;
+  GstMapFlags           map_flags;
 };
 
 #define GST_CAPS_FEATURE_MEMORY_GL_MEMORY "memory:GLMemory"
