@@ -670,43 +670,18 @@ gst_v4l2_video_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   return ret;
 }
 
-static gboolean
-gst_v4l2_video_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
+static GstCaps *
+gst_v4l2_video_dec_sink_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
 {
-  gboolean ret = TRUE;
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
+  GstCaps *result;
 
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CAPS:{
-      GstCaps *filter, *result = NULL;
-      GstPad *pad = GST_VIDEO_DECODER_SINK_PAD (decoder);
-      gst_query_parse_caps (query, &filter);
+  result = gst_video_decoder_proxy_getcaps (decoder, self->probed_sinkcaps,
+      filter);
 
-      if (self->probed_sinkcaps)
-        result = gst_caps_ref (self->probed_sinkcaps);
-      else
-        result = gst_pad_get_pad_template_caps (pad);
+  GST_DEBUG_OBJECT (self, "Returning sink caps %" GST_PTR_FORMAT, result);
 
-      if (filter) {
-        GstCaps *tmp = result;
-        result =
-            gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (tmp);
-      }
-
-      GST_DEBUG_OBJECT (self, "Returning sink caps %" GST_PTR_FORMAT, result);
-
-      gst_query_set_caps_result (query, result);
-      gst_caps_unref (result);
-      break;
-    }
-
-    default:
-      ret = GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);
-      break;
-  }
-
-  return ret;
+  return result;
 }
 
 static gboolean
@@ -851,8 +826,8 @@ gst_v4l2_video_dec_class_init (GstV4l2VideoDecClass * klass)
   /* FIXME propose_allocation or not ? */
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_handle_frame);
-  video_decoder_class->sink_query =
-      GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_sink_query);
+  video_decoder_class->getcaps =
+      GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_sink_getcaps);
   video_decoder_class->src_query =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_src_query);
   video_decoder_class->sink_event =
