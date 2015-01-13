@@ -42,6 +42,7 @@ struct _GstInterVideoSrc
   GstInterSurface *surface;
 
   char *channel;
+  guint64 timeout;
 
   GstVideoInfo info;
   GstBuffer *black_frame;

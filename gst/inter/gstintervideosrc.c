@@ -70,8 +70,12 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
 enum
 {
   PROP_0,
-  PROP_CHANNEL
+  PROP_CHANNEL,
+  PROP_TIMEOUT
 };
+
+#define DEFAULT_CHANNEL ("default")
+#define DEFAULT_TIMEOUT (GST_SECOND)
 
 /* pad templates */
 static GstStaticPadTemplate gst_inter_video_src_src_template =
@@ -119,7 +123,13 @@ gst_inter_video_src_class_init (GstInterVideoSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
           "Channel name to match inter src and sink elements",
-          "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_CHANNEL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TIMEOUT,
+      g_param_spec_uint64 ("timeout", "Timeout",
+          "Timeout after which to start outputting black frames",
+          0, G_MAXUINT, DEFAULT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -128,7 +138,8 @@ gst_inter_video_src_init (GstInterVideoSrc * intervideosrc)
   gst_base_src_set_format (GST_BASE_SRC (intervideosrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (intervideosrc), TRUE);
 
-  intervideosrc->channel = g_strdup ("default");
+  intervideosrc->channel = g_strdup (DEFAULT_CHANNEL);
+  intervideosrc->timeout = DEFAULT_TIMEOUT;
 }
 
 void
@@ -141,6 +152,9 @@ gst_inter_video_src_set_property (GObject * object, guint property_id,
     case PROP_CHANNEL:
       g_free (intervideosrc->channel);
       intervideosrc->channel = g_value_dup_string (value);
+      break;
+    case PROP_TIMEOUT:
+      intervideosrc->timeout = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -157,6 +171,9 @@ gst_inter_video_src_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_CHANNEL:
       g_value_set_string (value, intervideosrc->channel);
+      break;
+    case PROP_TIMEOUT:
+      g_value_set_uint64 (value, intervideosrc->timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -338,10 +355,9 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
     }
   }
   if (intervideosrc->surface->video_buffer) {
-    gint fps =
-        0.5 +
-        ((gdouble) GST_VIDEO_INFO_FPS_N (&intervideosrc->info)) /
-        ((gdouble) GST_VIDEO_INFO_FPS_D (&intervideosrc->info));
+    guint64 frames = gst_util_uint64_scale_ceil (intervideosrc->timeout,
+        GST_VIDEO_INFO_FPS_N (&intervideosrc->info),
+        GST_VIDEO_INFO_FPS_D (&intervideosrc->info) * GST_SECOND);
 
     buffer = gst_buffer_ref (intervideosrc->surface->video_buffer);
 
@@ -350,10 +366,11 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
       is_gap = TRUE;
 
     intervideosrc->surface->video_buffer_count++;
-    if (intervideosrc->surface->video_buffer_count >= fps) {
+    if (intervideosrc->timeout > 0
+        && intervideosrc->surface->video_buffer_count >= frames) {
       /* The first black buffer is not a GAP anymore but
        * the following are */
-      if (intervideosrc->surface->video_buffer_count == fps)
+      if (intervideosrc->surface->video_buffer_count == frames)
         is_gap = FALSE;
 
       gst_buffer_unref (intervideosrc->surface->video_buffer);
