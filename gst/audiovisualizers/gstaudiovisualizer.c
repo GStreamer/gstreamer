@@ -759,7 +759,7 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
       GST_MAP_READWRITE);
 
   if (klass->setup)
-    res = klass->setup (scope);
+    klass->setup (scope);
 
   GST_DEBUG_OBJECT (scope, "video: dimension %dx%d, framerate %d/%d",
       GST_VIDEO_INFO_WIDTH (&info), GST_VIDEO_INFO_HEIGHT (&info),
