@@ -66,6 +66,8 @@ enum
   PROP_CHANNEL
 };
 
+#define DEFAULT_CHANNEL ("default")
+
 /* pad templates */
 static GstStaticPadTemplate gst_inter_sub_sink_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -109,13 +111,13 @@ gst_inter_sub_sink_class_init (GstInterSubSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
           "Channel name to match inter src and sink elements",
-          "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_CHANNEL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_inter_sub_sink_init (GstInterSubSink * intersubsink)
 {
-  intersubsink->channel = g_strdup ("default");
+  intersubsink->channel = g_strdup (DEFAULT_CHANNEL);
 
   intersubsink->fps_n = 1;
   intersubsink->fps_d = 1;

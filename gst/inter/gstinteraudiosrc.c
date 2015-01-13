@@ -80,6 +80,8 @@ enum
   PROP_PERIOD_TIME
 };
 
+#define DEFAULT_CHANNEL ("default")
+
 /* pad templates */
 static GstStaticPadTemplate gst_inter_audio_src_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -128,7 +130,7 @@ gst_inter_audio_src_class_init (GstInterAudioSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
           "Channel name to match inter src and sink elements",
-          "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_CHANNEL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_TIME,
       g_param_spec_uint64 ("buffer-time", "Buffer Time",
@@ -155,7 +157,7 @@ gst_inter_audio_src_init (GstInterAudioSrc * interaudiosrc)
   gst_base_src_set_live (GST_BASE_SRC (interaudiosrc), TRUE);
   gst_base_src_set_blocksize (GST_BASE_SRC (interaudiosrc), -1);
 
-  interaudiosrc->channel = g_strdup ("default");
+  interaudiosrc->channel = g_strdup (DEFAULT_CHANNEL);
   interaudiosrc->buffer_time = DEFAULT_AUDIO_BUFFER_TIME;
   interaudiosrc->latency_time = DEFAULT_AUDIO_LATENCY_TIME;
   interaudiosrc->period_time = DEFAULT_AUDIO_PERIOD_TIME;
