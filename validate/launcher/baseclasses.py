@@ -246,6 +246,13 @@ class Test(Loggable):
             for log in self.extra_logfiles:
                 message += "\n         - %s" % log
 
+            self.reporter.out.write("=================\n"
+                                    "Test name: %s\n"
+                                    "Command: '%s'\n"
+                                    "=================\n\n"
+                                    % (self.classname, self.command))
+            self.reporter.out.flush()
+
         printc(message, Colors.OKBLUE)
 
         try:
@@ -261,14 +268,6 @@ class Test(Loggable):
 
         self._kill_subprocess()
         self.time_taken = time.time() - self._starting_time
-
-        if not self.options.redirect_logs:
-            self.reporter.out.seek(0)
-            self.reporter.out.write("=================\n"
-                                    "Test name: %s\n"
-                                    "Command: '%s'\n"
-                                    "=================\n\n"
-                                    % (self.classname, self.command))
 
         printc("Result: %s%s\n" % (self.result,
                " (" + self.message + ")" if self.message else ""),
