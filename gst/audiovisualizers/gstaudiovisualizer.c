@@ -758,8 +758,8 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
   gst_video_frame_map (&scope->tempframe, &scope->vinfo, scope->tempbuf,
       GST_MAP_READWRITE);
 
-  if (klass->setup)
-    res = klass->setup (scope);
+  if (klass->setup && !klass->setup (scope))
+    goto setup_failed;
 
   GST_DEBUG_OBJECT (scope, "video: dimension %dx%d, framerate %d/%d",
       GST_VIDEO_INFO_WIDTH (&info), GST_VIDEO_INFO_HEIGHT (&info),
@@ -780,6 +780,12 @@ wrong_caps:
   {
     gst_caps_unref (caps);
     GST_DEBUG_OBJECT (scope, "error parsing caps");
+    return FALSE;
+  }
+
+setup_failed:
+  {
+    GST_WARNING_OBJECT (scope, "failed to set up");
     return FALSE;
   }
 }
