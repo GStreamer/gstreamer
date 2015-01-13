@@ -395,7 +395,7 @@ preset_get_keyfile (GstPreset * preset)
         if (presets)
           g_key_file_free (presets);
         presets = in_app;
-        version = version_system;
+        version = version_app;
       }
     }
     if (in_user) {
