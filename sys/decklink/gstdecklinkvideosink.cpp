@@ -537,8 +537,14 @@ gst_decklink_video_sink_change_state (GstElement * element,
       gst_clock_set_master (self->output->clock, NULL);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
-      GstClockTime start_time = gst_element_get_start_time (element);
+      GstClockTime start_time;
       HRESULT res;
+
+      // FIXME: start time is the same for the complete pipeline,
+      // but what we need here is the start time of this element!
+      start_time = gst_element_get_base_time (element);
+      if (start_time != GST_CLOCK_TIME_NONE)
+        start_time = gst_clock_get_time (GST_ELEMENT_CLOCK (self)) - start_time;
 
       // FIXME: This will probably not work
       if (start_time == GST_CLOCK_TIME_NONE)
@@ -563,8 +569,14 @@ gst_decklink_video_sink_change_state (GstElement * element,
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
-      GstClockTime start_time = gst_element_get_start_time (element);
+      GstClockTime start_time;
       HRESULT res;
+
+      // FIXME: start time is the same for the complete pipeline,
+      // but what we need here is the start time of this element!
+      start_time = gst_element_get_base_time (element);
+      if (start_time != GST_CLOCK_TIME_NONE)
+        start_time = gst_clock_get_time (GST_ELEMENT_CLOCK (self)) - start_time;
 
       // FIXME: This will probably not work
       if (start_time == GST_CLOCK_TIME_NONE)
