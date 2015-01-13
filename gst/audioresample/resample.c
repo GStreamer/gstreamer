@@ -1200,6 +1200,8 @@ speex_resampler_process_float (SpeexResamplerState * st,
       out += ochunk * st->out_stride;
       if (in)
         in += ichunk * istride;
+      if (olen == 0 && ichunk == 0)
+        break;
     }
   }
   *in_len -= ilen;
@@ -1280,6 +1282,8 @@ speex_resampler_process_int (SpeexResamplerState * st,
     out += (ochunk + omagic) * ostride_save;
     if (in)
       in += ichunk * istride_save;
+    if (olen == 0 && ichunk == 0)
+      break;
   }
   st->out_stride = ostride_save;
   *in_len -= ilen;
