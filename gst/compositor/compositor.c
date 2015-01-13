@@ -390,7 +390,12 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     g_free (wanted_colorimetry);
   }
 
-  if (cpad->convert) {
+  if (cpad->alpha == 0.0) {
+    GST_DEBUG_OBJECT (vagg, "Pad has alpha 0.0, not converting frame");
+    converted_frame = NULL;
+    gst_video_frame_unmap (frame);
+    g_slice_free (GstVideoFrame, frame);
+  } else if (cpad->convert) {
     gint converted_size;
 
     converted_frame = g_slice_new0 (GstVideoFrame);
