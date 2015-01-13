@@ -17,6 +17,7 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import os
+import re
 import utils
 import urlparse
 import loggable
@@ -131,7 +132,8 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
 
 QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
-DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.com/thiblahute/gst-integration-testsuites.git"
+DEFAULT_GST_QA_ASSETS_REPO = "git://anongit.freedesktop.org/gstreamer/gst-integration-testsuites"
+OLD_DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.com/thiblahute/gst-integration-testsuites.git"
 DEFAULT_SYNC_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get medias/defaults/"
 DEFAULT_SYNC_ALL_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get ."
 DEFAULT_TESTSUITES_DIR = os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")
@@ -139,9 +141,16 @@ DEFAULT_TESTSUITES_DIR = os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")
 
 def update_assets(options):
     try:
+        if options.remote_assets_url == DEFAULT_GST_QA_ASSETS_REPO:
+            if re.findall("origin.*%s" % OLD_DEFAULT_GST_QA_ASSETS_REPO,
+                          subprocess.check_output("cd %s && git remote -v" % options.clone_dir, shell=True)):
+                launch_command("cd %s && git remote set-url origin %s" % (options.clone_dir,
+                                                                          DEFAULT_GST_QA_ASSETS_REPO))
+
         launch_command("cd %s && %s" % (options.clone_dir,
                                         options.update_assets_command),
                        fails=True)
+
     except subprocess.CalledProcessError as e:
         if "annex" in options.update_assets_command:
             m = "\n\nMAKE SURE YOU HAVE git-annex INSTALLED!"
