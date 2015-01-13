@@ -1720,7 +1720,9 @@ gst_adaptive_demux_stream_download_fragment (GstAdaptiveDemuxStream * stream)
   url = stream->fragment.uri;
   GST_DEBUG_OBJECT (stream->pad, "Got url '%s' for stream %p", url, stream);
   if (url) {
-    ret = gst_adaptive_demux_stream_download_uri (demux, stream, url, 0, -1);
+    ret =
+        gst_adaptive_demux_stream_download_uri (demux, stream, url,
+        stream->fragment.range_start, stream->fragment.range_end);
     GST_DEBUG_OBJECT (stream->pad, "Fragment download result: %d %s",
         stream->last_ret, gst_flow_get_name (stream->last_ret));
     if (ret == GST_FLOW_OK) {
