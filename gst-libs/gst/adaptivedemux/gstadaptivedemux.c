@@ -1705,6 +1705,10 @@ gst_adaptive_demux_stream_download_fragment (GstAdaptiveDemuxStream * stream)
   stream->first_fragment_buffer = TRUE;
   g_mutex_unlock (&stream->fragment_download_lock);
 
+  if (stream->fragment.uri == NULL && stream->fragment.header_uri == NULL &&
+      stream->fragment.index_uri == NULL)
+    goto no_url_error;
+
   if (stream->need_header) {
     ret = gst_adaptive_demux_stream_download_header_fragment (stream);
     stream->need_header = FALSE;
@@ -1715,37 +1719,35 @@ gst_adaptive_demux_stream_download_fragment (GstAdaptiveDemuxStream * stream)
 
   url = stream->fragment.uri;
   GST_DEBUG_OBJECT (stream->pad, "Got url '%s' for stream %p", url, stream);
-  if (!url) {
-    goto no_url_error;
-  }
-
-  ret = gst_adaptive_demux_stream_download_uri (demux, stream, url, 0, -1);
-
-  GST_DEBUG_OBJECT (stream->pad, "Fragment download result: %d %s",
-      stream->last_ret, gst_flow_get_name (stream->last_ret));
-
-  if (ret == GST_FLOW_OK) {
-    gst_element_post_message (GST_ELEMENT_CAST (demux),
-        gst_message_new_element (GST_OBJECT_CAST (demux),
-            gst_structure_new (STATISTICS_MESSAGE_NAME,
-                "manifest-uri", G_TYPE_STRING,
-                demux->manifest_uri, "uri", G_TYPE_STRING,
-                url, "fragment-start-time",
-                GST_TYPE_CLOCK_TIME, stream->download_start_time,
-                "fragment-stop-time", GST_TYPE_CLOCK_TIME,
-                gst_util_get_timestamp (), "fragment-size", G_TYPE_UINT64,
-                stream->download_total_bytes, "fragment-download-time",
-                GST_TYPE_CLOCK_TIME, stream->download_total_time * GST_USECOND,
-                NULL)));
-  } else {
-    GST_INFO_OBJECT (demux, "No fragment downloaded");
-    /* TODO check if we are truly stoping */
-    if (ret != GST_FLOW_ERROR && gst_adaptive_demux_is_live (demux)) {
-      /* looks like there is no way of knowing when a live stream has ended
-       * Have to assume we are falling behind and cause a manifest reload */
-      return GST_FLOW_EOS;
+  if (url) {
+    ret = gst_adaptive_demux_stream_download_uri (demux, stream, url, 0, -1);
+    GST_DEBUG_OBJECT (stream->pad, "Fragment download result: %d %s",
+        stream->last_ret, gst_flow_get_name (stream->last_ret));
+    if (ret == GST_FLOW_OK) {
+      gst_element_post_message (GST_ELEMENT_CAST (demux),
+          gst_message_new_element (GST_OBJECT_CAST (demux),
+              gst_structure_new (STATISTICS_MESSAGE_NAME,
+                  "manifest-uri", G_TYPE_STRING,
+                  demux->manifest_uri, "uri", G_TYPE_STRING,
+                  url, "fragment-start-time",
+                  GST_TYPE_CLOCK_TIME, stream->download_start_time,
+                  "fragment-stop-time", GST_TYPE_CLOCK_TIME,
+                  gst_util_get_timestamp (), "fragment-size", G_TYPE_UINT64,
+                  stream->download_total_bytes, "fragment-download-time",
+                  GST_TYPE_CLOCK_TIME,
+                  stream->download_total_time * GST_USECOND, NULL)));
+    } else {
+      GST_INFO_OBJECT (demux, "No fragment downloaded");
+      /* TODO check if we are truly stoping */
+      if (ret != GST_FLOW_ERROR && gst_adaptive_demux_is_live (demux)) {
+        /* looks like there is no way of knowing when a live stream has ended
+         * Have to assume we are falling behind and cause a manifest reload */
+        return GST_FLOW_EOS;
+      }
     }
   }
+
+
 
   return ret;
 
