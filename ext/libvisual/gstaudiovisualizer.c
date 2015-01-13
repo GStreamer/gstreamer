@@ -726,7 +726,6 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
 {
   GstVideoInfo info;
   GstAudioVisualizerClass *klass;
-  gboolean res;
 
   if (!gst_video_info_from_caps (&info, caps))
     goto wrong_caps;
@@ -751,7 +750,7 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
       GST_MAP_READWRITE);
 
   if (klass->setup)
-    res = klass->setup (scope);
+    klass->setup (scope);
 
   GST_DEBUG_OBJECT (scope, "video: dimension %dx%d, framerate %d/%d",
       GST_VIDEO_INFO_WIDTH (&info), GST_VIDEO_INFO_HEIGHT (&info),
@@ -762,9 +761,7 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
   gst_pad_set_caps (scope->srcpad, caps);
 
   /* find a pool for the negotiated caps now */
-  res = gst_audio_visualizer_do_bufferpool (scope, caps);
-
-  return res;
+  return gst_audio_visualizer_do_bufferpool (scope, caps);
 
   /* ERRORS */
 wrong_caps:
