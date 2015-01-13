@@ -2229,7 +2229,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     }
 
     /* ... and try to link */
-    if ((gst_pad_link (pad, sinkpad)) != GST_PAD_LINK_OK) {
+    if ((gst_pad_link_full (pad, sinkpad,
+                GST_PAD_LINK_CHECK_NOTHING)) != GST_PAD_LINK_OK) {
       GST_WARNING_OBJECT (dbin, "Link failed on pad %s:%s",
           GST_DEBUG_PAD_NAME (sinkpad));
       remove_error_filter (dbin, element, NULL);
@@ -3554,7 +3555,8 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
     return NULL;
   }
 
-  if ((gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK)) {
+  if ((gst_pad_link_full (pad, sinkpad,
+              GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
     GST_ERROR_OBJECT (dbin, "Couldn't link demuxer and multiqueue");
     goto error;
   }
