@@ -120,7 +120,7 @@ struct _GstDecklinkMode {
   int par_n;
   int par_d;
   gboolean tff;
-  gboolean is_hdtv;
+  const gchar *colorimetry;
 };
 
 const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);

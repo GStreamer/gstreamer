@@ -137,9 +137,10 @@ gst_decklink_audio_connection_get_type (void)
   return (GType) id;
 }
 
-#define NTSC 10, 11, false, false
-#define PAL 12, 11, true, false
-#define HD 1, 1, false, true
+#define NTSC 10, 11, false, "bt601"
+#define PAL 12, 11, true, "bt601"
+#define HD 1, 1, false, "bt709"
+#define UHD 1, 1, false, "bt2020"
 
 static const GstDecklinkMode modes[] = {
   {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC},     // default is ntsc
@@ -172,14 +173,14 @@ static const GstDecklinkMode modes[] = {
   {bmdMode2k24, 2048, 1556, 24, 1, false, HD},
   {bmdMode2k25, 2048, 1556, 25, 1, false, HD},
 
-  {bmdMode4K2160p2398, 3840, 2160, 24000, 1001, false, HD},
-  {bmdMode4K2160p24, 3840, 2160, 24, 1, false, HD},
-  {bmdMode4K2160p25, 3840, 2160, 25, 1, false, HD},
-  {bmdMode4K2160p2997, 3840, 2160, 30000, 1001, false, HD},
-  {bmdMode4K2160p30, 3840, 2160, 30, 1, false, HD},
-  {bmdMode4K2160p50, 3840, 2160, 55, 1, false, HD},
-  {bmdMode4K2160p5994, 3840, 2160, 60000, 1001, false, HD},
-  {bmdMode4K2160p60, 3840, 2160, 60, 1, false, HD}
+  {bmdMode4K2160p2398, 3840, 2160, 24000, 1001, false, UHD},
+  {bmdMode4K2160p24, 3840, 2160, 24, 1, false, UHD},
+  {bmdMode4K2160p25, 3840, 2160, 25, 1, false, UHD},
+  {bmdMode4K2160p2997, 3840, 2160, 30000, 1001, false, UHD},
+  {bmdMode4K2160p30, 3840, 2160, 30, 1, false, UHD},
+  {bmdMode4K2160p50, 3840, 2160, 55, 1, false, UHD},
+  {bmdMode4K2160p5994, 3840, 2160, 60000, 1001, false, UHD},
+  {bmdMode4K2160p60, 3840, 2160, 60, 1, false, UHD}
 };
 
 const GstDecklinkMode *
@@ -327,8 +328,7 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e)
       "interlace-mode", G_TYPE_STRING,
       mode->interlaced ? "interleaved" : "progressive", "pixel-aspect-ratio",
       GST_TYPE_FRACTION, mode->par_n, mode->par_d, "colorimetry", G_TYPE_STRING,
-      mode->is_hdtv ? "bt709" : "bt601", "chroma-site", G_TYPE_STRING, "mpeg2",
-      NULL);
+      mode->colorimetry, "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
 }
 
 GstCaps *
