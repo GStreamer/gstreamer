@@ -124,10 +124,6 @@ _gl_memory_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   gl_features =
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
 
-  features = gst_caps_get_features (in_caps, 0);
-  if (!gst_caps_features_is_equal (features, gl_features))
-    ret = FALSE;
-
   features = gst_caps_get_features (out_caps, 0);
   if (!gst_caps_features_is_equal (features, gl_features))
     ret = FALSE;
