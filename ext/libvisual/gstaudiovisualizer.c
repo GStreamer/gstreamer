@@ -750,7 +750,7 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
   gst_video_frame_map (&scope->tempframe, &scope->vinfo, scope->tempbuf,
       GST_MAP_READWRITE);
 
-  if (klass->setup && !klass->setup)
+  if (klass->setup && !klass->setup (scope))
     goto setup_failed;
 
   GST_DEBUG_OBJECT (scope, "video: dimension %dx%d, framerate %d/%d",
