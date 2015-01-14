@@ -67,6 +67,7 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gstcapsfeatures.c	\
 	gstchildproxy.c		\
 	gstclock.c		\
+	gstclock-linreg.c	\
 	gstcontext.c \
 	gstcontrolbinding.c \
 	gstcontrolsource.c \

@@ -100,7 +100,6 @@
  * defines the minimum number of samples before the calibration is performed.
  */
 
-
 #include "gst_private.h"
 #include <time.h>
 
@@ -1262,132 +1261,6 @@ gst_clock_get_master (GstClock * clock)
   return result;
 }
 
-/* http://mathworld.wolfram.com/LeastSquaresFitting.html
- * with SLAVE_LOCK
- */
-static gboolean
-do_linear_regression (GstClock * clock, GstClockTime * m_num,
-    GstClockTime * m_denom, GstClockTime * b, GstClockTime * xbase,
-    gdouble * r_squared)
-{
-  GstClockTime *newx, *newy;
-  GstClockTime xmin, ymin, xbar, ybar, xbar4, ybar4;
-  GstClockTimeDiff sxx, sxy, syy;
-  GstClockTime *x, *y;
-  gint i, j;
-  guint n;
-  GstClockPrivate *priv;
-
-  xbar = ybar = sxx = syy = sxy = 0;
-
-  priv = clock->priv;
-
-  x = priv->times;
-  y = priv->times + 2;
-  n = priv->filling ? priv->time_index : priv->window_size;
-
-#ifdef DEBUGGING_ENABLED
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "doing regression on:");
-  for (i = j = 0; i < n; i++, j += 4)
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
-        "  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, x[j], y[j]);
-#endif
-
-  xmin = ymin = G_MAXUINT64;
-  for (i = j = 0; i < n; i++, j += 4) {
-    xmin = MIN (xmin, x[j]);
-    ymin = MIN (ymin, y[j]);
-  }
-
-#ifdef DEBUGGING_ENABLED
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "min x: %" G_GUINT64_FORMAT,
-      xmin);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "min y: %" G_GUINT64_FORMAT,
-      ymin);
-#endif
-
-  newx = priv->times + 1;
-  newy = priv->times + 3;
-
-  /* strip off unnecessary bits of precision */
-  for (i = j = 0; i < n; i++, j += 4) {
-    newx[j] = x[j] - xmin;
-    newy[j] = y[j] - ymin;
-  }
-
-#ifdef DEBUGGING_ENABLED
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "reduced numbers:");
-  for (i = j = 0; i < n; i++, j += 4)
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
-        "  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, newx[j], newy[j]);
-#endif
-
-  /* have to do this precisely otherwise the results are pretty much useless.
-   * should guarantee that none of these accumulators can overflow */
-
-  /* quantities on the order of 1e10 -> 30 bits; window size a max of 2^10, so
-     this addition could end up around 2^40 or so -- ample headroom */
-  for (i = j = 0; i < n; i++, j += 4) {
-    xbar += newx[j];
-    ybar += newy[j];
-  }
-  xbar /= n;
-  ybar /= n;
-
-#ifdef DEBUGGING_ENABLED
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  xbar  = %" G_GUINT64_FORMAT,
-      xbar);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  ybar  = %" G_GUINT64_FORMAT,
-      ybar);
-#endif
-
-  /* multiplying directly would give quantities on the order of 1e20 -> 60 bits;
-     times the window size that's 70 which is too much. Instead we (1) subtract
-     off the xbar*ybar in the loop instead of after, to avoid accumulation; (2)
-     shift off 4 bits from each multiplicand, giving an expected ceiling of 52
-     bits, which should be enough. Need to check the incoming range and domain
-     to ensure this is an appropriate loss of precision though. */
-  xbar4 = xbar >> 4;
-  ybar4 = ybar >> 4;
-  for (i = j = 0; i < n; i++, j += 4) {
-    GstClockTime newx4, newy4;
-
-    newx4 = newx[j] >> 4;
-    newy4 = newy[j] >> 4;
-
-    sxx += newx4 * newx4 - xbar4 * xbar4;
-    syy += newy4 * newy4 - ybar4 * ybar4;
-    sxy += newx4 * newy4 - xbar4 * ybar4;
-  }
-
-  if (G_UNLIKELY (sxx == 0))
-    goto invalid;
-
-  *m_num = sxy;
-  *m_denom = sxx;
-  *xbase = xmin;
-  *b = (ybar + ymin) - gst_util_uint64_scale (xbar, *m_num, *m_denom);
-  *r_squared = ((double) sxy * (double) sxy) / ((double) sxx * (double) syy);
-
-#ifdef DEBUGGING_ENABLED
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  m      = %g",
-      ((double) *m_num) / *m_denom);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  b      = %" G_GUINT64_FORMAT,
-      *b);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  xbase  = %" G_GUINT64_FORMAT,
-      *xbase);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  r2     = %g", *r_squared);
-#endif
-
-  return TRUE;
-
-invalid:
-  {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "sxx == 0, regression failed");
-    return FALSE;
-  }
-}
-
 /**
  * gst_clock_add_observation:
  * @clock: a #GstClock 
@@ -1455,6 +1328,7 @@ gst_clock_add_observation_unapplied (GstClock * clock, GstClockTime slave,
 {
   GstClockTime m_num, m_denom, b, xbase;
   GstClockPrivate *priv;
+  guint n;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
   g_return_val_if_fail (r_squared != NULL, FALSE);
@@ -1479,7 +1353,9 @@ gst_clock_add_observation_unapplied (GstClock * clock, GstClockTime slave,
   if (G_UNLIKELY (priv->filling && priv->time_index < priv->window_threshold))
     goto filling;
 
-  if (!do_linear_regression (clock, &m_num, &m_denom, &b, &xbase, r_squared))
+  n = priv->filling ? priv->time_index : priv->window_size;
+  if (!_priv_gst_do_linear_regression (priv->times, n, &m_num, &m_denom, &b,
+          &xbase, r_squared))
     goto invalid;
 
   GST_CLOCK_SLAVE_UNLOCK (clock);

@@ -180,6 +180,12 @@ gint __gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2);
 G_GNUC_INTERNAL
 gchar * __gst_date_time_serialize (GstDateTime * datetime, gboolean with_usecs);
 
+/* Non-static, for access from the testsuite, but not for external use */
+gboolean
+_priv_gst_do_linear_regression (GstClockTime *times, guint n,
+    GstClockTime * m_num, GstClockTime * m_denom, GstClockTime * b,
+    GstClockTime * xbase, gdouble * r_squared);
+
 #ifndef GST_DISABLE_REGISTRY
 /* Secret variable to initialise gst without registry cache */
 GST_EXPORT gboolean _gst_disable_registry_cache;
