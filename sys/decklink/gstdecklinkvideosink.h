@@ -55,6 +55,7 @@ struct _GstDecklinkVideoSink
   GstVideoInfo info;
 
   GstClockTime internal_base_time;
+  GstClockTime external_base_time;
 
   GstDecklinkOutput *output;
 };

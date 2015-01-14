@@ -209,12 +209,12 @@ convert_to_internal_clock (GstDecklinkVideoSink * self,
     gst_clock_get_calibration (self->output->clock, &internal, &external,
         &rate_n, &rate_d);
 
-    if (rate_n != rate_d) {
+    if (rate_n != rate_d && self->internal_base_time != GST_CLOCK_TIME_NONE) {
       GstClockTime external_timestamp = *timestamp;
 
       // Convert to the running time corresponding to both clock times
       internal -= self->internal_base_time;
-      external -= gst_element_get_base_time (GST_ELEMENT_CAST (self));
+      external -= self->external_base_time;
 
       // Get the difference in the external time, note
       // that the running time is external time.
@@ -568,6 +568,8 @@ gst_decklink_video_sink_change_state (GstElement * element,
             (NULL), ("Failed to stop scheduled playback: 0x%08x", res));
         ret = GST_STATE_CHANGE_FAILURE;
       }
+      self->internal_base_time = GST_CLOCK_TIME_NONE;
+      self->external_base_time = GST_CLOCK_TIME_NONE;
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
@@ -584,8 +586,16 @@ gst_decklink_video_sink_change_state (GstElement * element,
       if (start_time == GST_CLOCK_TIME_NONE)
         start_time = 0;
 
+      // Current times of internal and external clock when we go to
+      // playing. We need this to convert the pipeline running time
+      // to the running time of the hardware
+      //
+      // We can't use the normal base time for the external clock
+      // because we might go to PLAYING later than the pipeline
       self->internal_base_time =
           gst_clock_get_internal_time (self->output->clock);
+      self->external_base_time =
+          gst_clock_get_internal_time (GST_ELEMENT_CLOCK (self));
 
       convert_to_internal_clock (self, &start_time, NULL);
 
