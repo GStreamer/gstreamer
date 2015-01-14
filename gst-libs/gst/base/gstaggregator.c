@@ -191,8 +191,10 @@ gst_aggregator_pad_flush (GstAggregatorPad * aggpad, GstAggregator * agg)
 {
   GstAggregatorPadClass *klass = GST_AGGREGATOR_PAD_GET_CLASS (aggpad);
 
+  PAD_LOCK (aggpad);
   aggpad->eos = FALSE;
   aggpad->priv->flushing = FALSE;
+  PAD_UNLOCK (aggpad);
 
   if (klass->flush)
     return klass->flush (aggpad, agg);
@@ -359,8 +361,13 @@ gst_aggregator_check_pads_ready (GstAggregator * self)
   for (l = sinkpads; l != NULL; l = l->next) {
     pad = l->data;
 
-    if (pad->buffer == NULL && !pad->eos)
+    PAD_LOCK (pad);
+    if (pad->buffer == NULL && !pad->eos) {
+      GST_OBJECT_UNLOCK (pad);
       goto pad_not_ready;
+    }
+    PAD_UNLOCK (pad);
+
   }
 
   GST_OBJECT_UNLOCK (self);

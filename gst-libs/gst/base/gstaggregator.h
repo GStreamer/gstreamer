@@ -69,6 +69,7 @@ struct _GstAggregatorPad
 {
   GstPad                       parent;
 
+  /* Protected by the pad's object lock */
   GstBuffer                 *  buffer;
   GstSegment                   segment;
   gboolean                     eos;
