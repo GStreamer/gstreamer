@@ -77,6 +77,7 @@ typedef enum
 //#define UPDATE_INTERVAL 500
 //#define UPDATE_INTERVAL 100
 #define UPDATE_INTERVAL 40
+#define SLOW_UPDATE_INTERVAL 500
 
 /* number of milliseconds to play for after a seek */
 #define SCRUB_TIME 100
@@ -118,6 +119,7 @@ typedef struct
   GtkWidget *subtitle_fontdesc_button;
 
   GtkWidget *seek_format_combo, *seek_position_label, *seek_duration_label;
+  GtkWidget *seek_start_label, *seek_stop_label;
   GtkWidget *seek_entry;
 
   GtkWidget *seek_scale, *statusbar;
@@ -174,6 +176,7 @@ typedef struct
   gint64 buffering_left;
   GstState state;
   guint update_id;
+  guint slow_update_id;
   guint seek_timeout_id;        /* Used for scrubbing in paused */
   gulong changed_id;
   guint fill_id;
@@ -428,6 +431,37 @@ update_fill (PlaybackApp * app)
 }
 
 static gboolean
+update_seek_range (PlaybackApp * app)
+{
+  GstFormat format = GST_FORMAT_TIME;
+  gint64 seek_start, seek_stop;
+  gboolean seekable;
+  GstQuery *query;
+
+  query = gst_query_new_seeking (format);
+  if (gst_element_query (app->pipeline, query)) {
+    gchar *str;
+
+    gst_query_parse_seeking (query, &format, &seekable, &seek_start,
+        &seek_stop);
+    if (!seekable) {
+      seek_start = seek_stop = -1;
+    }
+
+    str = g_strdup_printf ("%" G_GINT64_FORMAT, seek_start);
+    gtk_label_set_text (GTK_LABEL (app->seek_start_label), str);
+    g_free (str);
+
+    str = g_strdup_printf ("%" G_GINT64_FORMAT, seek_stop);
+    gtk_label_set_text (GTK_LABEL (app->seek_stop_label), str);
+    g_free (str);
+  }
+  gst_query_unref (query);
+
+  return TRUE;
+}
+
+static gboolean
 update_scale (PlaybackApp * app)
 {
   GstFormat format = GST_FORMAT_TIME;
@@ -620,10 +654,19 @@ set_update_scale (PlaybackApp * app, gboolean active)
       app->update_id =
           g_timeout_add (UPDATE_INTERVAL, (GSourceFunc) update_scale, app);
     }
+    if (app->slow_update_id == 0) {
+      app->slow_update_id =
+          g_timeout_add (SLOW_UPDATE_INTERVAL, (GSourceFunc) update_seek_range,
+          app);
+    }
   } else {
     if (app->update_id) {
       g_source_remove (app->update_id);
       app->update_id = 0;
+    }
+    if (app->slow_update_id) {
+      g_source_remove (app->slow_update_id);
+      app->slow_update_id = 0;
     }
   }
 }
@@ -2579,6 +2622,7 @@ create_ui (PlaybackApp * app)
     GtkWidget *skip_checkbox, *rate_spinbutton;
     GtkWidget *flagtable, *advanced_seek, *advanced_seek_grid;
     GtkWidget *duration_label, *position_label, *seek_button;
+    GtkWidget *start_label, *stop_label;
 
     seek = gtk_expander_new ("seek options");
     flagtable = gtk_grid_new ();
@@ -2690,6 +2734,18 @@ create_ui (PlaybackApp * app)
         0, 1, 1);
     app->seek_duration_label = gtk_label_new ("-1");
     gtk_grid_attach (GTK_GRID (advanced_seek_grid), app->seek_duration_label, 3,
+        1, 1, 1);
+
+    start_label = gtk_label_new ("Seek start:");
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), start_label, 4, 0, 1, 1);
+    stop_label = gtk_label_new ("Seek stop:");
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), stop_label, 4, 1, 1, 1);
+
+    app->seek_start_label = gtk_label_new ("-1");
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), app->seek_start_label, 5,
+        0, 1, 1);
+    app->seek_stop_label = gtk_label_new ("-1");
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), app->seek_stop_label, 5,
         1, 1, 1);
 
     gtk_container_add (GTK_CONTAINER (advanced_seek), advanced_seek_grid);
