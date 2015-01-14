@@ -389,6 +389,8 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
   const GstGLFuncs *gl;
   GLenum gl_format, gl_type;
   gpointer data;
+  gsize plane_start;
+  gint i;
 
   if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
     return;
@@ -413,11 +415,22 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
       gl_mem->tex_id, gl_mem->transfer_pbo, gl_mem->tex_width,
       GL_MEM_HEIGHT (gl_mem));
 
+  /* find the start of the plane data including padding */
+  plane_start = 0;
+  for (i = 0; i < gl_mem->plane; i++) {
+    plane_start +=
+        gst_gl_get_plane_data_size (&gl_mem->info, &gl_mem->valign, i);
+  }
+
+  /* offset between the plane data start and where the video frame starts */
+  data =
+      (void *) ((GST_VIDEO_INFO_PLANE_OFFSET (&gl_mem->info,
+              gl_mem->plane)) - plane_start);
+
   if (gl_mem->transfer_pbo) {
     gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, gl_mem->transfer_pbo);
-    data = NULL;
   } else {
-    data = gl_mem->data;
+    data = (gpointer) ((gintptr) data + (gintptr) gl_mem->data);
   }
 
   gl->BindTexture (GL_TEXTURE_2D, gl_mem->tex_id);
@@ -629,6 +642,14 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
 
   g_return_if_fail (plane < GST_VIDEO_INFO_N_PLANES (info));
 
+  mem->info = *info;
+  if (valign)
+    mem->valign = *valign;
+  else
+    gst_video_alignment_reset (&mem->valign);
+
+  gst_video_info_align (&mem->info, &mem->valign);
+
   maxsize = gst_gl_get_plane_data_size (info, valign, plane);
 
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
@@ -638,17 +659,11 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->tex_type =
       gst_gl_texture_type_from_format (context, GST_VIDEO_INFO_FORMAT (info),
       plane);
-  mem->info = *info;
   mem->plane = plane;
   mem->notify = notify;
   mem->user_data = user_data;
   mem->data_wrapped = FALSE;
   mem->texture_wrapped = FALSE;
-
-  if (valign)
-    mem->valign = *valign;
-  else
-    gst_video_alignment_reset (&mem->valign);
 
   _calculate_unpack_length (mem);
 
