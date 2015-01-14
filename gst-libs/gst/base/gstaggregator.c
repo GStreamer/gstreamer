@@ -597,8 +597,9 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
       self->priv->aggregate_id = NULL;
     }
 
-    GST_DEBUG_OBJECT (self, "clock returned %d (jitter: %s%" GST_TIME_FORMAT,
-        status, (jitter < 0 ? "-" : ""),
+    GST_DEBUG_OBJECT (self,
+        "clock returned %d (jitter: %s%" GST_TIME_FORMAT ")",
+        status, (jitter < 0 ? "-" : " "),
         GST_TIME_ARGS ((jitter < 0 ? -jitter : jitter)));
 
     /* we timed out */
