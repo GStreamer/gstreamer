@@ -55,6 +55,10 @@
  * is a simple copy when fully-transparent (0.0) and fully-opaque (1.0).
  * (#gdouble)
  * </listitem>
+ * <listitem>
+ * "zorder": The z-order position of the picture in the composition; between
+ * 0 and 10000. (#guint)
+ * </listitem>
  * </itemizedlist>
  *
  * <refsect2>
