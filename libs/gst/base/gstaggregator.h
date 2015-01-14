@@ -104,6 +104,7 @@ GType gst_aggregator_pad_get_type           (void);
  ***************************/
 
 GstBuffer * gst_aggregator_pad_steal_buffer (GstAggregatorPad *  pad);
+GstBuffer * gst_aggregator_pad_steal_buffer_unlocked (GstAggregatorPad *  pad);
 GstBuffer * gst_aggregator_pad_get_buffer   (GstAggregatorPad *  pad);
 
 /*********************
