@@ -29,15 +29,20 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstGLMixer GstGLMixer;
+typedef struct _GstGLMixerFrameData GstGLMixerFrameData;
+
 #define GST_TYPE_GL_MIXER_PAD (gst_gl_mixer_pad_get_type())
 #define GST_GL_MIXER_PAD(obj) \
         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_MIXER_PAD, GstGLMixerPad))
 #define GST_GL_MIXER_PAD_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GL_MIXER_PAD, GstGLMixerPadiClass))
+        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GL_MIXER_PAD, GstGLMixerPadClass))
 #define GST_IS_GL_MIXER_PAD(obj) \
         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_MIXER_PAD))
 #define GST_IS_GL_MIXER_PAD_CLASS(klass) \
         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_MIXER_PAD))
+#define GST_GL_MIXER_PAD_GET_CLASS(obj) \
+        (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_GL_MIXER_PAD,GstGLMixerPadClass))
 
 typedef struct _GstGLMixerPad GstGLMixerPad;
 typedef struct _GstGLMixerPadClass GstGLMixerPadClass;
@@ -51,12 +56,13 @@ struct _GstGLMixerPad
   GstGLUpload *upload;
   GstGLColorConvert *convert;
   GstBuffer *gl_buffer;
-  gboolean mapped;
 };
 
 struct _GstGLMixerPadClass
 {
   GstVideoAggregatorPadClass parent_class;
+
+  GstBuffer * (*upload_buffer) (GstGLMixer * mix, GstGLMixerFrameData * frame, GstBuffer * buffer);
 };
 
 GType gst_gl_mixer_pad_get_type (void);
