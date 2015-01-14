@@ -648,8 +648,6 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   else
     gst_video_alignment_reset (&mem->valign);
 
-  gst_video_info_align (&mem->info, &mem->valign);
-
   maxsize = gst_gl_get_plane_data_size (info, valign, plane);
 
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
