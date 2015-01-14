@@ -119,6 +119,9 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
 {
   self->mode = GST_DECKLINK_MODE_NTSC;
   self->device_number = 0;
+
+  gst_base_sink_set_max_lateness (GST_BASE_SINK_CAST (self), 20 * GST_MSECOND);
+  gst_base_sink_set_qos_enabled (GST_BASE_SINK_CAST (self), TRUE);
 }
 
 void
