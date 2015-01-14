@@ -246,6 +246,9 @@ _init_download (GstGLDownload * download)
   GstVideoFormat v_format;
   guint out_width, out_height;
   GstVideoInfo in_info;
+  GstCaps *in_caps, *out_caps;
+  GstCapsFeatures *in_gl_features, *out_gl_features;
+  gboolean res;
 
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
@@ -266,13 +269,24 @@ _init_download (GstGLDownload * download)
     }
   }
 
+  in_gl_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_RGBA, out_width,
       out_height);
+  in_caps = gst_video_info_to_caps (&in_info);
+  gst_caps_set_features (in_caps, 0, in_gl_features);
 
-  gst_gl_color_convert_set_format (download->convert, &in_info,
-      &download->info);
+  out_gl_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  out_caps = gst_video_info_to_caps (&download->info);
+  gst_caps_set_features (out_caps, 0, out_gl_features);
 
-  return TRUE;
+  res = gst_gl_color_convert_set_caps (download->convert, in_caps, out_caps);
+
+  gst_caps_unref (in_caps);
+  gst_caps_unref (out_caps);
+
+  return res;
 }
 
 static gboolean
