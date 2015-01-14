@@ -76,7 +76,6 @@ struct _GstHLSDemux
   gboolean new_playlist;        /* Whether a new playlist is about to start and pads should be switched */
 
   /* Properties */
-  guint fragments_cache;        /* number of fragments needed to be cached to start playing */
   gfloat bitrate_limit;         /* limit of the available bitrate to use */
   guint connection_speed;       /* Network connection speed in kbps (0 = unknown) */
 
