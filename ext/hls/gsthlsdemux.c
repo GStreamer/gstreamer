@@ -932,11 +932,13 @@ retry:
 
         buf = gst_fragment_get_buffer (download);
         playlist = gst_hls_src_buf_to_utf8_playlist (buf);
+        gst_buffer_unref (buf);
 
         if (playlist == NULL) {
           GST_WARNING_OBJECT (demux,
               "Failed to validate variant playlist encoding");
           g_free (uri);
+          g_object_unref (download);
           return FALSE;
         }
 
@@ -952,6 +954,7 @@ retry:
         if (!gst_m3u8_client_update_variant_playlist (demux->client, playlist,
                 uri, base_uri)) {
           GST_WARNING_OBJECT (demux, "Failed to update the variant playlist");
+          g_object_unref (download);
           return FALSE;
         }
 
@@ -986,6 +989,7 @@ retry:
 
   buf = gst_fragment_get_buffer (download);
   playlist = gst_hls_src_buf_to_utf8_playlist (buf);
+  gst_buffer_unref (buf);
   g_object_unref (download);
 
   if (playlist == NULL) {
