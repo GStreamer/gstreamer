@@ -178,6 +178,8 @@ static void gst_gl_video_mixer_pad_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_gl_video_mixer_pad_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
+static GstBuffer *gst_gl_video_mixer_pad_upload_buffer (GstGLMixer * mix,
+    GstGLMixerFrameData * frame, GstBuffer * buffer);
 
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
@@ -204,6 +206,7 @@ static void
 gst_gl_video_mixer_pad_class_init (GstGLVideoMixerPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstGLMixerPadClass *mix_pad_class = (GstGLMixerPadClass *) klass;
 
   gobject_class->set_property = gst_gl_video_mixer_pad_set_property;
   gobject_class->get_property = gst_gl_video_mixer_pad_get_property;
@@ -228,6 +231,8 @@ gst_gl_video_mixer_pad_class_init (GstGLVideoMixerPadClass * klass)
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
           DEFAULT_PAD_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  mix_pad_class->upload_buffer = gst_gl_video_mixer_pad_upload_buffer;
 }
 
 static void
@@ -291,6 +296,22 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
   }
 
   gst_object_unref (mix);
+}
+
+static GstBuffer *
+gst_gl_video_mixer_pad_upload_buffer (GstGLMixer * mix,
+    GstGLMixerFrameData * frame, GstBuffer * buffer)
+{
+  GstGLVideoMixerPad *pad = GST_GL_VIDEO_MIXER_PAD (frame->pad);
+
+  if (pad->alpha > 0.0) {
+    return
+        GST_GL_MIXER_PAD_CLASS
+        (gst_gl_video_mixer_pad_parent_class)->upload_buffer (mix, frame,
+        buffer);
+  }
+
+  return NULL;
 }
 
 #define GST_GL_TYPE_VIDEO_MIXER_BACKGROUND (gst_gl_video_mixer_background_get_type())
