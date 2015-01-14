@@ -956,15 +956,17 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
     GstVideoAggregatorPad *pad = l->data;
-    GstSegment *segment;
+    GstSegment segment;
     GstAggregatorPad *bpad;
     GstBuffer *buf;
     GstVideoInfo *vinfo;
     gboolean is_eos;
 
     bpad = GST_AGGREGATOR_PAD (pad);
-    segment = &bpad->segment;
+    GST_OBJECT_LOCK (bpad);
+    segment = bpad->segment;
     is_eos = bpad->eos;
+    GST_OBJECT_UNLOCK (bpad);
     if (!is_eos)
       eos = FALSE;
     buf = gst_aggregator_pad_get_buffer (bpad);
@@ -1010,12 +1012,12 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
       end_time += start_time;   /* convert from duration to position */
 
       /* Check if it's inside the segment */
-      if (start_time >= segment->stop || end_time < segment->start) {
+      if (start_time >= segment.stop || end_time < segment.start) {
         GST_DEBUG_OBJECT (pad,
             "Buffer outside the segment : segment: [%" GST_TIME_FORMAT " -- %"
             GST_TIME_FORMAT "]" " Buffer [%" GST_TIME_FORMAT " -- %"
-            GST_TIME_FORMAT "]", GST_TIME_ARGS (segment->stop),
-            GST_TIME_ARGS (segment->start), GST_TIME_ARGS (start_time),
+            GST_TIME_FORMAT "]", GST_TIME_ARGS (segment.stop),
+            GST_TIME_ARGS (segment.start), GST_TIME_ARGS (start_time),
             GST_TIME_ARGS (end_time));
 
         gst_buffer_unref (buf);
@@ -1027,13 +1029,13 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
       }
 
       /* Clip to segment and convert to running time */
-      start_time = MAX (start_time, segment->start);
-      if (segment->stop != -1)
-        end_time = MIN (end_time, segment->stop);
+      start_time = MAX (start_time, segment.start);
+      if (segment.stop != -1)
+        end_time = MIN (end_time, segment.stop);
       start_time =
-          gst_segment_to_running_time (segment, GST_FORMAT_TIME, start_time);
+          gst_segment_to_running_time (&segment, GST_FORMAT_TIME, start_time);
       end_time =
-          gst_segment_to_running_time (segment, GST_FORMAT_TIME, end_time);
+          gst_segment_to_running_time (&segment, GST_FORMAT_TIME, end_time);
       g_assert (start_time != -1 && end_time != -1);
 
       /* Convert to the output segment rate */
@@ -1128,13 +1130,13 @@ prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
   if (pad->buffer != NULL) {
     GstClockTime timestamp;
     gint64 stream_time;
-    GstSegment *seg;
-
-    seg = &bpad->segment;
 
     timestamp = GST_BUFFER_TIMESTAMP (pad->buffer);
 
-    stream_time = gst_segment_to_stream_time (seg, GST_FORMAT_TIME, timestamp);
+    GST_OBJECT_LOCK (bpad);
+    stream_time = gst_segment_to_stream_time (&bpad->segment, GST_FORMAT_TIME,
+        timestamp);
+    GST_OBJECT_UNLOCK (bpad);
 
     /* sync object properties on stream time */
     if (GST_CLOCK_TIME_IS_VALID (stream_time))
@@ -1566,6 +1568,8 @@ gst_videoaggregator_sink_clip (GstAggregator * agg,
     return GST_FLOW_OK;
   }
 
+  GST_OBJECT_LOCK (bpad);
+
   start_time = MAX (start_time, bpad->segment.start);
   start_time =
       gst_segment_to_running_time (&bpad->segment, GST_FORMAT_TIME, start_time);
@@ -1584,10 +1588,14 @@ gst_videoaggregator_sink_clip (GstAggregator * agg,
   if (bpad->buffer != NULL && end_time < pad->priv->end_time) {
     gst_buffer_unref (buf);
     *outbuf = NULL;
-    return GST_FLOW_OK;
+    goto done;
   }
 
   *outbuf = buf;
+
+done:
+
+  GST_OBJECT_UNLOCK (bpad);
   return GST_FLOW_OK;
 }
 
