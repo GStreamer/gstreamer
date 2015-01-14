@@ -272,6 +272,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   GstClockTime timestamp, duration;
   GstClockTime running_time, running_time_duration;
   gint i;
+  GstClock *clock;
 
   GST_DEBUG_OBJECT (self, "Preparing buffer %p", buffer);
 
@@ -279,6 +280,57 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
     return GST_FLOW_ERROR;
   }
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+  if (duration == GST_CLOCK_TIME_NONE) {
+    duration =
+        gst_util_uint64_scale_int (GST_SECOND, self->info.fps_d,
+        self->info.fps_n);
+  }
+  running_time =
+      gst_segment_to_running_time (&GST_BASE_SINK_CAST (self)->segment,
+      GST_FORMAT_TIME, timestamp);
+  running_time_duration =
+      gst_segment_to_running_time (&GST_BASE_SINK_CAST (self)->segment,
+      GST_FORMAT_TIME, timestamp + duration) - running_time;
+
+  // FIXME: https://bugzilla.gnome.org/show_bug.cgi?id=742916
+  // We need to drop late buffers here immediately instead of
+  // potentially overflowing the internal queue of the hardware
+  clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
+  if (clock) {
+    GstClockTime clock_running_time, latency;
+
+    clock_running_time = gst_element_get_base_time (GST_ELEMENT_CAST (self));
+    if (clock_running_time != GST_CLOCK_TIME_NONE) {
+      clock_running_time = gst_clock_get_time (clock) - clock_running_time;
+      latency = gst_base_sink_get_latency (GST_BASE_SINK_CAST (self));
+
+      if (clock_running_time > running_time + running_time_duration + latency) {
+        GST_DEBUG_OBJECT (self,
+            "Late buffer: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (clock_running_time),
+            GST_TIME_ARGS (running_time + running_time_duration));
+
+        if (self->last_render_time == GST_CLOCK_TIME_NONE
+            || (self->last_render_time < clock_running_time
+                && clock_running_time - self->last_render_time >= GST_SECOND)) {
+          GST_DEBUG_OBJECT (self,
+              "Rendering frame nonetheless because we had none for more than 1s");
+          running_time = clock_running_time;
+          running_time_duration = 0;
+        } else {
+          GST_WARNING_OBJECT (self, "Dropping frame");
+          gst_object_unref (clock);
+          return GST_FLOW_OK;
+        }
+      }
+    }
+
+    gst_object_unref (clock);
+  }
+  self->last_render_time = running_time;
 
   ret = self->output->output->CreateVideoFrame (self->info.width,
       self->info.height, self->info.stride[0], bmdFormat8BitYUV,
@@ -303,20 +355,6 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     outdata += frame->GetRowBytes ();
   }
   gst_video_frame_unmap (&vframe);
-
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  duration = GST_BUFFER_DURATION (buffer);
-  if (duration == GST_CLOCK_TIME_NONE) {
-    duration =
-        gst_util_uint64_scale_int (GST_SECOND, self->info.fps_d,
-        self->info.fps_n);
-  }
-  running_time =
-      gst_segment_to_running_time (&GST_BASE_SINK_CAST (self)->segment,
-      GST_FORMAT_TIME, timestamp);
-  running_time_duration =
-      gst_segment_to_running_time (&GST_BASE_SINK_CAST (self)->segment,
-      GST_FORMAT_TIME, timestamp + duration) - running_time;
 
   convert_to_internal_clock (self, &running_time, &running_time_duration);
 
@@ -507,6 +545,7 @@ gst_decklink_video_sink_change_state (GstElement * element,
       gst_element_post_message (element,
           gst_message_new_clock_provide (GST_OBJECT_CAST (element),
               self->output->clock, TRUE));
+      self->last_render_time = GST_CLOCK_TIME_NONE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
       GstClock *clock, *audio_clock;
