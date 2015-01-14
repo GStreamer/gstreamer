@@ -503,6 +503,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstIdentity *identity = GST_IDENTITY (trans);
   GstClockTime runtimestamp = G_GINT64_CONSTANT (0);
+  GstClockTime ts, duration;
   gsize size;
 
   size = gst_buffer_get_size (buf);
@@ -610,6 +611,14 @@ dropped:
       gst_identity_update_last_message_for_buffer (identity, "dropping", buf,
           size);
     }
+
+    ts = GST_BUFFER_TIMESTAMP (buf);
+    if (GST_CLOCK_TIME_IS_VALID (ts)) {
+      duration = GST_BUFFER_DURATION (buf);
+      gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (identity),
+          gst_event_new_gap (ts, duration));
+    }
+
     /* return DROPPED to basetransform. */
     return GST_BASE_TRANSFORM_FLOW_DROPPED;
   }
