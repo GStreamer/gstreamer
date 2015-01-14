@@ -539,7 +539,6 @@ gst_decklink_video_sink_change_state (GstElement * element,
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (element);
   GstStateChangeReturn ret;
 
-
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_element_post_message (element,
@@ -614,6 +613,7 @@ gst_decklink_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
       GstClockTime start_time;
       HRESULT res;
+      bool active;
 
       // FIXME: start time is the same for the complete pipeline,
       // but what we need here is the start time of this element!
@@ -637,6 +637,20 @@ gst_decklink_video_sink_change_state (GstElement * element,
           gst_clock_get_internal_time (GST_ELEMENT_CLOCK (self));
 
       convert_to_internal_clock (self, &start_time, NULL);
+
+      active = false;
+      self->output->output->IsScheduledPlaybackRunning (&active);
+      if (active) {
+        GST_DEBUG_OBJECT (self, "Stopping scheduled playback");
+
+        res = self->output->output->StopScheduledPlayback (0, 0, 0);
+        if (res != S_OK) {
+          GST_ELEMENT_ERROR (self, STREAM, FAILED,
+              (NULL), ("Failed to stop scheduled playback: 0x%08x", res));
+          ret = GST_STATE_CHANGE_FAILURE;
+          break;
+        }
+      }
 
       GST_DEBUG_OBJECT (self,
           "Starting scheduled playback at %" GST_TIME_FORMAT,
