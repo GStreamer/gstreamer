@@ -545,47 +545,76 @@ gst_gl_color_convert_reset (GstGLColorConvert * convert)
   }
 }
 
-static void
-_gst_gl_color_convert_set_format_unlocked (GstGLColorConvert * convert,
-    GstVideoInfo * in_info, GstVideoInfo * out_info)
+static gboolean
+_gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
+    GstCaps * in_caps, GstCaps * out_caps)
 {
-  g_return_if_fail (convert != NULL);
-  g_return_if_fail (in_info);
-  g_return_if_fail (out_info);
-  g_return_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
-      GST_VIDEO_FORMAT_UNKNOWN);
-  g_return_if_fail (GST_VIDEO_INFO_FORMAT (in_info) !=
-      GST_VIDEO_FORMAT_ENCODED);
-  g_return_if_fail (GST_VIDEO_INFO_FORMAT (out_info) !=
-      GST_VIDEO_FORMAT_UNKNOWN);
-  g_return_if_fail (GST_VIDEO_INFO_FORMAT (out_info) !=
-      GST_VIDEO_FORMAT_ENCODED);
+  GstVideoInfo in_info, out_info;
+  GstCapsFeatures *in_features, *out_features, *gl_features;
 
-  if (gst_video_info_is_equal (&convert->in_info, in_info) &&
-      gst_video_info_is_equal (&convert->out_info, out_info))
-    return;
+  g_return_val_if_fail (convert != NULL, FALSE);
+  g_return_val_if_fail (in_caps, FALSE);
+  g_return_val_if_fail (out_caps, FALSE);
+
+  if (!gst_video_info_from_caps (&in_info, in_caps))
+    g_assert_not_reached ();
+
+  if (!gst_video_info_from_caps (&out_info, out_caps))
+    g_assert_not_reached ();
+
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&in_info) !=
+      GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&in_info) !=
+      GST_VIDEO_FORMAT_ENCODED, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&out_info) !=
+      GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&out_info) !=
+      GST_VIDEO_FORMAT_ENCODED, FALSE);
+
+  gl_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  in_features = gst_caps_get_features (in_caps, 0);
+  out_features = gst_caps_get_features (out_caps, 0);
+
+  if (!gst_caps_features_is_equal (in_features, gl_features)
+      || !gst_caps_features_is_equal (out_features, gl_features)) {
+    gst_caps_features_free (gl_features);
+    return FALSE;
+  }
+
+  gst_caps_features_free (gl_features);
+
+  if (gst_video_info_is_equal (&convert->in_info, &in_info) &&
+      gst_video_info_is_equal (&convert->out_info, &out_info))
+    return TRUE;
 
   gst_gl_color_convert_reset (convert);
-  convert->in_info = *in_info;
-  convert->out_info = *out_info;
+  convert->in_info = in_info;
+  convert->out_info = out_info;
   convert->initted = FALSE;
+
+  return TRUE;
 }
 
 /**
- * gst_gl_color_convert_set_format:
+ * gst_gl_color_convert_set_caps:
  * @convert: a #GstGLColorConvert
  * @in_info: input #GstVideoInfo
  * @out_info: output #GstVideoInfo
  *
  * Initializes @convert with the information required for conversion.
  */
-void
-gst_gl_color_convert_set_format (GstGLColorConvert * convert,
-    GstVideoInfo * in_info, GstVideoInfo * out_info)
+gboolean
+gst_gl_color_convert_set_caps (GstGLColorConvert * convert,
+    GstCaps * in_caps, GstCaps * out_caps)
 {
+  gboolean ret;
+
   GST_OBJECT_LOCK (convert);
-  _gst_gl_color_convert_set_format_unlocked (convert, in_info, out_info);
+  ret = _gst_gl_color_convert_set_caps_unlocked (convert, in_caps, out_caps);
   GST_OBJECT_UNLOCK (convert);
+
+  return ret;
 }
 
 /**
@@ -594,7 +623,7 @@ gst_gl_color_convert_set_format (GstGLColorConvert * convert,
  * @inbuf: the texture ids for input formatted according to in_info
  *
  * Converts the data contained by @inbuf using the formats specified by the
- * #GstVideoInfo<!--  -->s passed to gst_gl_color_convert_set_format() 
+ * #GstVideoInfo<!--  -->s passed to gst_gl_color_convert_set_caps() 
  *
  * Returns: a converted #GstBuffer or %NULL%
  */

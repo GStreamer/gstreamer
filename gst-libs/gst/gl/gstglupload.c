@@ -70,16 +70,6 @@ struct _GstGLUploadPrivate
 
 typedef enum
 {
-  GST_GL_UPLOAD_DONE = 1,
-  GST_GL_UPLOAD_CONVERT_GL_MEMORY = 2,
-
-  GST_GL_UPLOAD_ERROR = -1,
-  GST_GL_UPLOAD_UNSUPPORTED = -2,
-  GST_GL_UPLOAD_UNSHARED_GL_CONTEXT = 3,
-} GstGLUploadReturn;
-
-typedef enum
-{
   METHOD_FLAG_CAN_SHARE_CONTEXT = 1,
 } GstGLUploadMethodFlags;
 
@@ -165,7 +155,7 @@ _gl_memory_upload_perform (gpointer impl, GstBuffer * buffer,
 
   *outbuf = gst_buffer_ref (buffer);
 
-  return GST_GL_UPLOAD_CONVERT_GL_MEMORY;
+  return GST_GL_UPLOAD_DONE;
 }
 
 static void
@@ -277,7 +267,7 @@ _egl_image_upload_perform (gpointer impl, GstBuffer * buffer,
     gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (buffer->pool),
         buffer);
 
-  return GST_GL_UPLOAD_CONVERT_GL_MEMORY;
+  return GST_GL_UPLOAD_DONE;
 }
 
 static void
@@ -421,7 +411,7 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
   if (!upload->result)
     return GST_GL_UPLOAD_ERROR;
 
-  return GST_GL_UPLOAD_CONVERT_GL_MEMORY;
+  return GST_GL_UPLOAD_DONE;
 }
 
 static void
@@ -522,7 +512,7 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
         gst_memory_ref ((GstMemory *) raw->in_tex[i]));
   }
 
-  return GST_GL_UPLOAD_CONVERT_GL_MEMORY;
+  return GST_GL_UPLOAD_DONE;
 }
 
 static void
@@ -768,11 +758,11 @@ _upload_find_method (GstGLUpload * upload)
  *
  * Returns: whether the upload was successful
  */
-gboolean
+GstGLUploadReturn
 gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     GstBuffer ** outbuf_ptr)
 {
-  GstGLUploadReturn ret;
+  GstGLUploadReturn ret = GST_GL_UPLOAD_ERROR;
 
   g_return_val_if_fail (GST_IS_GL_UPLOAD (upload), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
@@ -806,22 +796,6 @@ restart:
     upload->priv->method = &_raw_data_upload;
     upload->priv->method_impl = upload->priv->method->new (upload);
     goto restart;
-  } else if (ret == GST_GL_UPLOAD_CONVERT_GL_MEMORY) {
-    GstBuffer *outbuf;
-
-    if (!upload->priv->convert)
-      upload->priv->convert = gst_gl_color_convert_new (upload->context);
-    gst_gl_color_convert_set_format (upload->priv->convert,
-        &upload->priv->in_info, &upload->priv->out_info);
-
-    if (!(outbuf = gst_gl_color_convert_perform (upload->priv->convert,
-                upload->priv->outbuf))) {
-      gst_gl_upload_release_buffer_unlocked (upload);
-      NEXT_METHOD;
-    }
-
-    gst_buffer_unref (upload->priv->outbuf);
-    upload->priv->outbuf = outbuf;
   } else if (ret == GST_GL_UPLOAD_DONE) {
     /* we are done */
   } else {
@@ -835,7 +809,7 @@ restart:
 
   GST_OBJECT_UNLOCK (upload);
 
-  return upload->priv->outbuf != NULL;
+  return ret;
 
 #undef NEXT_METHOD
 }

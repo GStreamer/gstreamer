@@ -120,8 +120,12 @@ check_conversion (TestFrame * frames, guint size)
     gchar *in_data[GST_VIDEO_MAX_PLANES] = { 0 };
     GstGLMemory *in_mem[GST_VIDEO_MAX_PLANES] = { 0 };
     GstVideoFrame in_frame;
+    GstCaps *in_caps;
 
     gst_video_info_set_format (&in_info, in_v_format, in_width, in_height);
+    in_caps = gst_video_info_to_caps (&in_info);
+    gst_caps_set_features (in_caps, 0,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
       in_data[j] = frames[i].data[j];
@@ -155,15 +159,19 @@ check_conversion (TestFrame * frames, guint size)
       GstVideoFormat out_v_format = frames[j].v_format;
       gchar *out_data[GST_VIDEO_MAX_PLANES] = { 0 };
       GstVideoFrame out_frame;
+      GstCaps *out_caps;
 
       gst_video_info_set_format (&out_info, out_v_format, out_width,
           out_height);
+      out_caps = gst_video_info_to_caps (&out_info);
+      gst_caps_set_features (out_caps, 0,
+          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
       for (k = 0; k < GST_VIDEO_INFO_N_PLANES (&out_info); k++) {
         out_data[k] = frames[j].data[k];
       }
 
-      gst_gl_color_convert_set_format (convert, &in_info, &out_info);
+      gst_gl_color_convert_set_caps (convert, in_caps, out_caps);
 
       /* convert the data */
       outbuf = gst_gl_color_convert_perform (convert, inbuf);
@@ -190,6 +198,7 @@ check_conversion (TestFrame * frames, guint size)
       gst_buffer_unref (outbuf);
     }
 
+    gst_caps_unref (in_caps);
     gst_video_frame_unmap (&in_frame);
     gst_buffer_unref (inbuf);
   }

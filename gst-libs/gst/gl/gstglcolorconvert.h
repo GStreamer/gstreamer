@@ -97,9 +97,9 @@ struct _GstGLColorConvertClass
 
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
 
-void     gst_gl_color_convert_set_format    (GstGLColorConvert * convert,
-                                             GstVideoInfo * in_info,
-                                             GstVideoInfo * out_info);
+gboolean    gst_gl_color_convert_set_caps    (GstGLColorConvert * convert,
+                                              GstCaps           * in_caps,
+                                              GstCaps           * out_caps);
 
 GstBuffer * gst_gl_color_convert_perform    (GstGLColorConvert * convert, GstBuffer * inbuf);
 

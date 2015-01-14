@@ -75,6 +75,9 @@ struct _GstGLFilter
   GLuint             depthbuffer;
 
   GstGLUpload       *upload;
+  GstGLColorConvert *in_convert;
+  GstCaps           *in_converted_caps;
+
   GstGLDownload     *download;
 
   GstBuffer         *uploaded_buffer;
@@ -87,8 +90,6 @@ struct _GstGLFilter
 
   GstGLContext      *context;
   GstGLContext      *other_context;
-
-  GstCaps           *in_gl_caps;
 
   GLuint             vao;
   GLuint             vertex_buffer;

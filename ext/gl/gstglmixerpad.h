@@ -49,7 +49,8 @@ struct _GstGLMixerPad
 
   /* <private> */
   GstGLUpload *upload;
-  guint in_tex_id;
+  GstGLColorConvert *convert;
+  GstBuffer *gl_buffer;
   gboolean mapped;
 };
 
