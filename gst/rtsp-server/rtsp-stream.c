@@ -2009,6 +2009,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     if (priv->protocols & GST_RTSP_LOWER_TRANS_TCP) {
       /* make and add appsrc */
       priv->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
+      g_object_set (priv->appsrc[i], "format", GST_FORMAT_TIME, NULL);
       gst_bin_add (bin, priv->appsrc[i]);
       /* and link to the funnel */
       selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
