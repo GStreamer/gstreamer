@@ -330,8 +330,6 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
 static void
 gst_dash_demux_init (GstDashDemux * demux)
 {
-  gst_segment_init (&demux->segment, GST_FORMAT_TIME);
-
   /* Properties */
   demux->max_buffering_time = DEFAULT_MAX_BUFFERING_TIME * GST_SECOND;
   demux->bandwidth_usage = DEFAULT_BANDWIDTH_USAGE;
@@ -655,8 +653,6 @@ gst_dash_demux_reset (GstAdaptiveDemux * ademux)
     demux->client = NULL;
   }
   demux->client = gst_mpd_client_new ();
-
-  gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 }
 
 static GstCaps *

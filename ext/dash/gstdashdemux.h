@@ -86,8 +86,6 @@ struct _GstDashDemux
 
   GSList *next_periods;
 
-  GstSegment segment;
-
   GstMpdClient *client;         /* MPD client */
   GMutex client_lock;
 
