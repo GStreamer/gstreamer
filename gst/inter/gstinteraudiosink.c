@@ -300,6 +300,16 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   buffer_time = interaudiosink->surface->audio_buffer_time;
   period_time = interaudiosink->surface->audio_period_time;
+
+  if (buffer_time < period_time) {
+    GST_ERROR_OBJECT (interaudiosink,
+        "Buffer time smaller than period time (%" GST_TIME_FORMAT " < %"
+        GST_TIME_FORMAT ")", GST_TIME_ARGS (buffer_time),
+        GST_TIME_ARGS (period_time));
+    g_mutex_unlock (&interaudiosink->surface->mutex);
+    return GST_FLOW_ERROR;
+  }
+
   buffer_samples =
       gst_util_uint64_scale (buffer_time, interaudiosink->info.rate,
       GST_SECOND);
