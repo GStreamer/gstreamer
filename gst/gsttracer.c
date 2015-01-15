@@ -57,11 +57,18 @@ static void gst_tracer_get_property (GObject * object, guint prop_id,
 
 struct _GstTracerPrivate
 {
-  const gchar *params;
+  gchar *params;
 };
 
 #define gst_tracer_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstTracer, gst_tracer, GST_TYPE_OBJECT);
+
+static void
+gst_tracer_dispose (GObject * object)
+{
+  GstTracer *tracer = GST_TRACER (object);
+  g_free (tracer->priv->params);
+}
 
 static void
 gst_tracer_class_init (GstTracerClass * klass)
@@ -70,6 +77,7 @@ gst_tracer_class_init (GstTracerClass * klass)
 
   gobject_class->set_property = gst_tracer_set_property;
   gobject_class->get_property = gst_tracer_get_property;
+  gobject_class->dispose = gst_tracer_dispose;
 
   properties[PROP_PARAMS] =
       g_param_spec_string ("params", "Params", "Extra configuration parameters",
@@ -94,7 +102,7 @@ gst_tracer_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PARAMS:
-      self->priv->params = g_value_get_string (value);
+      self->priv->params = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
