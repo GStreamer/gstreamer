@@ -1003,6 +1003,7 @@ static GstFlowReturn
 gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 {
   GstV4l2MemoryGroup *group = NULL;
+  const GstV4l2Object *obj = pool->obj;
   gint index;
 
   if (!gst_v4l2_is_buffer_valid (buf, &group)) {
@@ -1020,6 +1021,28 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 
   g_atomic_int_inc (&pool->num_queued);
   pool->buffers[index] = buf;
+
+  if (V4L2_TYPE_IS_OUTPUT (obj->type)) {
+    enum v4l2_field field;
+
+    /* Except when field is set to alternate, buffer field is the same as
+     * the one defined in format */
+    if (V4L2_TYPE_IS_MULTIPLANAR (obj->type))
+      field = obj->format.fmt.pix_mp.field;
+    else
+      field = obj->format.fmt.pix.field;
+
+    /* NB: At this moment, we can't have alternate mode because it not handled
+     * yet */
+    if (field == V4L2_FIELD_ALTERNATE) {
+      if (GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_FRAME_FLAG_TFF))
+        field = V4L2_FIELD_TOP;
+      else
+        field = V4L2_FIELD_BOTTOM;
+    }
+
+    group->buffer.field = field;
+  }
 
   if (!gst_v4l2_allocator_qbuf (pool->vallocator, group))
     goto queue_failed;
