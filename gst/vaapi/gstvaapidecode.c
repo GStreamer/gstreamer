@@ -115,11 +115,16 @@ gst_vaapi_decoder_state_changed(GstVaapiDecoder *decoder,
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(user_data);
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(vdec);
 
     g_assert(decode->decoder == decoder);
 
-    gst_vaapidecode_update_src_caps(decode, codec_state);
-    gst_video_decoder_negotiate(vdec);
+    if (gst_vaapidecode_update_src_caps(decode, codec_state)) {
+        if (!gst_video_decoder_negotiate(vdec))
+            return;
+        if (!gst_vaapi_plugin_base_set_caps(plugin, NULL, decode->srcpad_caps))
+            return;
+   }
 }
 
 static inline gboolean
