@@ -208,6 +208,7 @@ class LauncherConfig(Loggable):
         self.main_dir = utils.DEFAULT_MAIN_DIR
         self.output_dir = None
         self.logsdir = None
+        self.redirect_logs = False
         self.dest = None
         self._using_default_paths = False
         self.paths = []
@@ -240,6 +241,10 @@ class LauncherConfig(Loggable):
             self.output_dir = os.path.abspath(self.output_dir)
 
         # other output directories
+        if self.logsdir in ['stdout', 'stderr']:
+            # Allow -l stdout/stderr to work like -rl stdout/stderr
+            self.redirect_logs = self.logsdir
+            self.logsdir = None
         if self.logsdir is None:
             self.logsdir = os.path.join(self.output_dir, "logs")
         if self.xunit_file is None:
@@ -249,6 +254,14 @@ class LauncherConfig(Loggable):
 
         if not os.path.exists(self.dest):
             os.makedirs(self.dest)
+        if not os.path.exists(self.logsdir):
+            os.makedirs(self.logsdir)
+
+        if not self.redirect_logs in ['stdout', 'stderr', False]:
+            printc("Log redirection (%s) must be either 'stdout' or 'stderr'."
+                   % self.redirect_logs, Colors.FAIL, True)
+            return False
+
         if urlparse.urlparse(self.dest).scheme == "":
             self.dest = path2url(self.dest)
 
@@ -398,9 +411,7 @@ Note that all testsuite should be inside python modules, so the directory should
     dir_group.add_argument("-o", "--output-dir", dest="output_dir",
                            help="Directory where to store logs and rendered files. Default is MAIN_DIR")
     dir_group.add_argument("-l", "--logs-dir", dest="logsdir",
-                           help="Directory where to store logs, default is OUTPUT_DIR/logs."
-                           " Note that 'stdout' and 'sdterr' are valid values that lets you get all the logs"
-                           " printed in the terminal")
+                           help="Directory where to store logs, default is OUTPUT_DIR/logs.")
     dir_group.add_argument("-R", "--render-path", dest="dest",
                            help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
     dir_group.add_argument("-p", "--medias-paths", dest="paths", action="append",
@@ -408,6 +419,8 @@ Note that all testsuite should be inside python modules, so the directory should
     dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
                            help="Paths where to clone the testuite to run "
                            " default is MAIN_DIR/gst-integration-testsuites")
+    dir_group.add_argument("-rl", "--redirect-logs", dest="redirect_logs",
+                           help="Redirect logs to 'stdout' or 'sdterr'.")
 
     http_server_group = parser.add_argument_group(
         "Handle the HTTP server to be created")

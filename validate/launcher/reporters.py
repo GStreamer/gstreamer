@@ -66,15 +66,12 @@ class Reporter(Loggable):
                       }
         self.results = []
 
-    def uses_standard_output(self):
-        return self.out in [sys.stdout, sys.stderr]
-
     def before_test(self, test):
         """Initialize a timer before starting a test."""
-        if self.options.logsdir == 'stdout':
+        if self.options.redirect_logs == 'stdout':
             self.out = sys.stdout
             test.logfile = 'stdout'
-        elif self.options.logsdir == 'stderr':
+        elif self.options.redirect_logs == 'stderr':
             self.out = sys.stderr
             test.logfile = 'stderr'
         else:
@@ -109,7 +106,7 @@ class Reporter(Loggable):
             self.results.append(self._current_test)
 
         self.add_results(self._current_test)
-        if not self.uses_standard_output():
+        if not self.options.redirect_logs:
             self.out.close()
 
         self.out = None
@@ -164,7 +161,7 @@ class XunitReporter(Reporter):
 
     def _get_captured(self):
         captured = ""
-        if self.out and not self.uses_standard_output():
+        if self.out and not self.options.redirect_logs:
             self.out.seek(0)
             value = self.out.read()
             if value:

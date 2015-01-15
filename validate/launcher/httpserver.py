@@ -57,7 +57,7 @@ class HTTPServer(loggable.Loggable):
 
     def start(self):
         """ Start the server in a subprocess """
-        if self.options.logsdir in ["stdout", "stderr"]:
+        if self.options.redirect_logs:
             self.info("Using devnull as HTTP server log file")
             self._logsfile = tempfile.TemporaryFile()
         else:

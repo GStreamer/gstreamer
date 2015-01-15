@@ -86,7 +86,7 @@ class Test(Loggable):
                           "       You can reproduce with: %s %s\n" \
                     % (self.message, self._env_variable, self.command)
 
-                if not self.reporter.uses_standard_output():
+                if not self.options.redirect_logs:
                     string += "       You can find logs in:\n" \
                               "             - %s" % (self.logfile)
                 for log in self.extra_logfiles:
@@ -244,7 +244,7 @@ class Test(Loggable):
         message = "Launching: %s%s\n" \
                   "    Command: '%s %s'\n" % (Colors.ENDC, self.classname,
                                               self._env_variable, self.command)
-        if not self.reporter.uses_standard_output():
+        if not self.options.redirect_logs:
             message += "    Logs:\n" \
                        "         - %s" % (self.logfile)
             for log in self.extra_logfiles:
@@ -266,7 +266,7 @@ class Test(Loggable):
         self._kill_subprocess()
         self.time_taken = time.time() - self._starting_time
 
-        if not self.reporter.uses_standard_output():
+        if not self.options.redirect_logs:
             self.reporter.out.seek(0)
             self.reporter.out.write("=================\n"
                                     "Test name: %s\n"
@@ -320,7 +320,7 @@ class GstValidateTest(Test):
             self.scenario = scenario
 
     def get_subproc_env(self):
-        if self.reporter.uses_standard_output():
+        if self.options.redirect_logs:
             self.validatelogs = os.path.join(
                 tempfile.gettempdir(), 'tmp.validate.logs')
             logfiles = self.validatelogs
@@ -337,7 +337,7 @@ class GstValidateTest(Test):
         self.extra_logfiles.append(self.validatelogs)
 
         if 'GST_DEBUG' in os.environ and \
-                not self.reporter.uses_standard_output():
+                not self.options.redirect_logs:
             gstlogsfile = self.logfile + '.gstdebug'
             self.extra_logfiles.append(gstlogsfile)
             subproc_env["GST_DEBUG_FILE"] = gstlogsfile
@@ -348,7 +348,7 @@ class GstValidateTest(Test):
 
     def clean(self, full=True):
         Test.clean(self, full=full)
-        if self.reporter.uses_standard_output():
+        if hasattr(self, 'validatelogs') and not self.options.redirect_logs:
             try:
                 os.remove(self.validatelogs)
             except OSError:
@@ -921,8 +921,6 @@ class _TestsLauncher(Loggable):
 
     def set_settings(self, options, args):
         self.reporter = reporters.XunitReporter(options)
-        if not options.logsdir in[sys.stderr, sys.stdout]:
-            mkdir(options.logsdir)
 
         self.options = options
         wanted_testers = None
@@ -1140,7 +1138,7 @@ class ScenarioManager(Loggable):
         """
         scenarios = []
         scenario_defs = os.path.join(self.config.main_dir, "scenarios.def")
-        if self.config.logsdir in ["stdout", "stderr"]:
+        if self.config.redirect_logs:
             logs = open(os.devnull)
         else:
             logs = open(
