@@ -41,11 +41,13 @@ __gst_audio_element_proxy_caps (GstElement * element, GstCaps * templ_caps,
   for (i = 0; i < templ_caps_size; i++) {
     GQuark q_name =
         gst_structure_get_name_id (gst_caps_get_structure (templ_caps, i));
+    GstCapsFeatures *features = gst_caps_get_features (templ_caps, i);
 
     for (j = 0; j < caps_size; j++) {
       const GstStructure *caps_s = gst_caps_get_structure (caps, j);
       const GValue *val;
       GstStructure *s;
+      GstCaps *tmp = gst_caps_new_empty ();
 
       s = gst_structure_new_id_empty (q_name);
       if ((val = gst_structure_get_value (caps_s, "rate")))
@@ -55,7 +57,9 @@ __gst_audio_element_proxy_caps (GstElement * element, GstCaps * templ_caps,
       if ((val = gst_structure_get_value (caps_s, "channels-mask")))
         gst_structure_set_value (s, "channels-mask", val);
 
-      result = gst_caps_merge_structure (result, s);
+      gst_caps_append_structure_full (tmp, s,
+          gst_caps_features_copy (features));
+      result = gst_caps_merge (result, tmp);
     }
   }
 
