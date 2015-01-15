@@ -472,9 +472,7 @@ _transfer_upload (GstGLContext * context, GstGLMemory * gl_mem)
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "uploading texture %u using pbo %u",
       gl_mem->tex_id, gl_mem->transfer_pbo);
 
-  size =
-      GL_MEM_HEIGHT (gl_mem) * GL_MEM_WIDTH (gl_mem) *
-      _gl_texture_type_n_bytes (gl_mem->tex_type);
+  size = ((GstMemory *) gl_mem)->maxsize;
 
   if (USING_OPENGL (context) || USING_GLES3 (context)
       || USING_OPENGL3 (context)) {
