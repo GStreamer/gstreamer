@@ -300,14 +300,16 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   // potentially overflowing the internal queue of the hardware
   clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
   if (clock) {
-    GstClockTime clock_running_time, latency;
+    GstClockTime clock_running_time, latency, max_lateness;
 
     clock_running_time = gst_element_get_base_time (GST_ELEMENT_CAST (self));
     if (clock_running_time != GST_CLOCK_TIME_NONE) {
       clock_running_time = gst_clock_get_time (clock) - clock_running_time;
       latency = gst_base_sink_get_latency (GST_BASE_SINK_CAST (self));
+      max_lateness = gst_base_sink_get_max_lateness (GST_BASE_SINK_CAST (self));
 
-      if (clock_running_time > running_time + running_time_duration + latency) {
+      if (clock_running_time >
+          running_time + running_time_duration + latency + max_lateness) {
         GST_DEBUG_OBJECT (self,
             "Late buffer: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
             GST_TIME_ARGS (clock_running_time),
