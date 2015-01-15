@@ -60,6 +60,8 @@ get_image_data (GstVaapiImage * image)
 static GstVaapiImage *
 new_image (GstVaapiDisplay * display, const GstVideoInfo * vip)
 {
+  if (!GST_VIDEO_INFO_WIDTH (vip) || !GST_VIDEO_INFO_HEIGHT (vip))
+    return NULL;
   return gst_vaapi_image_new (display, GST_VIDEO_INFO_FORMAT (vip),
       GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
 }
