@@ -68,18 +68,17 @@ class Reporter(Loggable):
 
     def before_test(self, test):
         """Initialize a timer before starting a test."""
+        path = os.path.join(self.options.logsdir,
+                            test.classname.replace(".", os.sep))
+        mkdir(os.path.dirname(path))
+        test.logfile = path
+
         if self.options.redirect_logs == 'stdout':
             self.out = sys.stdout
-            test.logfile = 'stdout'
         elif self.options.redirect_logs == 'stderr':
             self.out = sys.stderr
-            test.logfile = 'stderr'
         else:
-            path = os.path.join(self.options.logsdir,
-                                test.classname.replace(".", os.sep))
-            mkdir(os.path.dirname(path))
             self.out = open(path, 'w+')
-            test.logfile = path
         self._current_test = test
 
         if self._start_time == 0:

@@ -31,7 +31,6 @@ import subprocess
 import reporters
 import ConfigParser
 import loggable
-import tempfile
 from loggable import Loggable
 import xml.etree.ElementTree as ET
 
@@ -62,12 +61,9 @@ class Test(Loggable):
         self.process = None
         self.duration = duration
 
-        self.clean(True)
+        self.clean()
 
-    def clean(self, full=True):
-        if not full:
-            return
-
+    def clean(self):
         self.message = ""
         self.error_str = ""
         self.time_taken = 0.0
@@ -320,15 +316,11 @@ class GstValidateTest(Test):
             self.scenario = scenario
 
     def get_subproc_env(self):
+        self.validatelogs = self.logfile + '.validate.logs'
+        logfiles = self.validatelogs
         if self.options.redirect_logs:
-            self.validatelogs = os.path.join(
-                tempfile.gettempdir(), 'tmp.validate.logs')
-            logfiles = self.validatelogs
             logfiles += os.pathsep + \
-                self.reporter.out.name.replace("<", '').replace(">", '')
-        else:
-            self.validatelogs = self.logfile + '.validate.logs'
-            logfiles = self.validatelogs
+                self.options.redirect_logs.replace("<", '').replace(">", '')
 
         subproc_env = os.environ.copy()
 
@@ -336,8 +328,7 @@ class GstValidateTest(Test):
         subproc_env["GST_VALIDATE_FILE"] = logfiles
         self.extra_logfiles.append(self.validatelogs)
 
-        if 'GST_DEBUG' in os.environ and \
-                not self.options.redirect_logs:
+        if 'GST_DEBUG' in os.environ:
             gstlogsfile = self.logfile + '.gstdebug'
             self.extra_logfiles.append(gstlogsfile)
             subproc_env["GST_DEBUG_FILE"] = gstlogsfile
@@ -346,16 +337,9 @@ class GstValidateTest(Test):
 
         return subproc_env
 
-    def clean(self, full=True):
-        Test.clean(self, full=full)
-        if hasattr(self, 'validatelogs') and not self.options.redirect_logs:
-            try:
-                os.remove(self.validatelogs)
-            except OSError:
-                pass
-
-        if full:
-            self._sent_eos_pos = None
+    def clean(self):
+        Test.clean(self)
+        self._sent_eos_pos = None
 
     def build_arguments(self):
         if "GST_VALIDATE" in os.environ:
@@ -762,7 +746,6 @@ class TestsManager(Loggable):
             self.reporter.after_test()
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
-                test.clean(full=False)
                 return test.result
 
         return Result.PASSED
@@ -1138,11 +1121,8 @@ class ScenarioManager(Loggable):
         """
         scenarios = []
         scenario_defs = os.path.join(self.config.main_dir, "scenarios.def")
-        if self.config.redirect_logs:
-            logs = open(os.devnull)
-        else:
-            logs = open(
-                os.path.join(self.config.logsdir, "scenarios_discovery.log"), 'w')
+        logs = open(os.path.join(self.config.logsdir,
+                                 "scenarios_discovery.log"), 'w')
 
         try:
             command = [self.GST_VALIDATE_COMMAND,

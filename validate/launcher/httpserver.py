@@ -22,7 +22,6 @@ import time
 import loggable
 import subprocess
 import sys
-import tempfile
 
 logcat = "httpserver"
 
@@ -57,13 +56,8 @@ class HTTPServer(loggable.Loggable):
 
     def start(self):
         """ Start the server in a subprocess """
-        if self.options.redirect_logs:
-            self.info("Using devnull as HTTP server log file")
-            self._logsfile = tempfile.TemporaryFile()
-        else:
-            self._logsfile = open(os.path.join(self.options.logsdir,
-                                               "httpserver.logs"),
-                                  'w+')
+        self._logsfile = open(os.path.join(self.options.logsdir,
+                                           "httpserver.logs"), 'w+')
         if self.options.http_server_dir is not None:
             if self._check_is_up(timeout=2):
                 return True
