@@ -95,11 +95,11 @@ gst_fragment_get_property (GObject * object,
       break;
 
     case PROP_BUFFER:
-      g_value_set_boxed (value, gst_fragment_get_buffer (fragment));
+      g_value_take_boxed (value, gst_fragment_get_buffer (fragment));
       break;
 
     case PROP_CAPS:
-      g_value_set_boxed (value, gst_fragment_get_caps (fragment));
+      g_value_take_boxed (value, gst_fragment_get_caps (fragment));
       break;
 
     default:
