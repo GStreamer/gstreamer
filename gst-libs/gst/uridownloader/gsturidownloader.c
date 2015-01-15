@@ -261,6 +261,7 @@ gst_uri_downloader_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_OBJECT_LOCK (downloader);
   if (downloader->priv->download == NULL) {
     /* Download cancelled, quit */
+    gst_buffer_unref (buf);
     GST_OBJECT_UNLOCK (downloader);
     goto done;
   }
@@ -268,8 +269,10 @@ gst_uri_downloader_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_LOG_OBJECT (downloader, "The uri fetcher received a new buffer "
       "of size %" G_GSIZE_FORMAT, gst_buffer_get_size (buf));
   downloader->priv->got_buffer = TRUE;
-  if (!gst_fragment_add_buffer (downloader->priv->download, buf))
+  if (!gst_fragment_add_buffer (downloader->priv->download, buf)) {
     GST_WARNING_OBJECT (downloader, "Could not add buffer to fragment");
+    gst_buffer_unref (buf);
+  }
   GST_OBJECT_UNLOCK (downloader);
 
 done:
@@ -471,6 +474,8 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader *
   }
 
   gst_bus_set_flushing (downloader->priv->bus, FALSE);
+  if (downloader->priv->download)
+    g_object_unref (downloader->priv->download);
   downloader->priv->download = gst_fragment_new ();
   GST_OBJECT_UNLOCK (downloader);
   ret = gst_element_set_state (downloader->priv->urisrc, GST_STATE_READY);
