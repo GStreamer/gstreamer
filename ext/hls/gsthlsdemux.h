@@ -25,7 +25,6 @@
 #define __GST_HLS_DEMUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
 #include "m3u8.h"
 #include "gstfragmented.h"
 #include <gst/uridownloader/gsturidownloader.h>
@@ -96,7 +95,6 @@ struct _GstHLSDemux
 #endif
   gchar *current_key;
   guint8 *current_iv;
-  GstAdapter *adapter; /* used to accumulate 16 bytes multiple chunks */
   GstBuffer *pending_buffer; /* decryption scenario:
                               * the last buffer can only be pushed when
                               * resized, so need to store and wait for

@@ -77,10 +77,6 @@ G_BEGIN_DECLS
   g_clear_error (&err); \
 } G_STMT_END
 
-enum _GstAdaptiveDemuxFlowReturn {
-  GST_ADAPTIVE_DEMUX_FLOW_SUBSEGMENT_END = GST_FLOW_CUSTOM_SUCCESS + 100
-};
-
 typedef struct _GstAdaptiveDemuxStreamFragment GstAdaptiveDemuxStreamFragment;
 typedef struct _GstAdaptiveDemuxStream GstAdaptiveDemuxStream;
 typedef struct _GstAdaptiveDemux GstAdaptiveDemux;
@@ -115,6 +111,8 @@ struct _GstAdaptiveDemuxStream
 
   GstSegment segment;
 
+  GstAdapter *adapter;
+
   GstCaps *pending_caps;
   GstEvent *pending_segment;
   GstTagList *pending_tags;
@@ -141,6 +139,7 @@ struct _GstAdaptiveDemuxStream
   gboolean starting_fragment;
   gboolean first_fragment_buffer;
   gint64 download_start_time;
+  gint64 download_chunk_start_time;
   gint64 download_total_time;
   gint64 download_total_bytes;
   gint current_download_rate;
@@ -335,28 +334,23 @@ struct _GstAdaptiveDemuxClass
    * finish_fragment:
    * @demux: #GstAdaptiveDemux
    * @stream: #GstAdaptiveDemuxStream
-   * @buffer: Pointer to store and pending data that should be pushed.
    *
    * Notifies the subclass that a fragment download was finished.
-   * It can be used to cleanup internal state after a fragment and also
-   * provides a pointer for the subclass to return some pending data
-   * that should be pushed before starting the next fragment. This
-   * covers the use case of finishing the decryption of the last chunk
-   * of an encrypted fragment.
+   * It can be used to cleanup internal state after a fragment and
+   * also push any pending data before moving to the next fragment.
    */
-  void          (*finish_fragment) (GstAdaptiveDemux * demux, GstAdaptiveDemuxStream * stream, GstBuffer ** buffer);
+  GstFlowReturn (*finish_fragment) (GstAdaptiveDemux * demux, GstAdaptiveDemuxStream * stream);
   /**
-   * chunk_received:
+   * data_received:
    * @demux: #GstAdaptiveDemux
    * @stream: #GstAdaptiveDemuxStream
-   * @buffer: Pointer containing the received chunk, also used to return modified data
    *
-   * Notifies the subclass that a fragment chunk was downloaded. The subclass can
-   * modify the buffer and return a new one if needed. Used for decryption.
+   * Notifies the subclass that a fragment chunk was downloaded. The subclass
+   * can look at the data at the adapter and modify/push data as desired.
    *
    * Returns: #GST_FLOW_OK if successful, #GST_FLOW_ERROR in case of error.
    */
-  GstFlowReturn (*chunk_received) (GstAdaptiveDemux * demux, GstAdaptiveDemuxStream * stream, GstBuffer ** buffer);
+  GstFlowReturn (*data_received) (GstAdaptiveDemux * demux, GstAdaptiveDemuxStream * stream);
 
   /**
    * get_live_seek_range:
@@ -384,6 +378,14 @@ void gst_adaptive_demux_stream_set_caps (GstAdaptiveDemuxStream * stream,
 void gst_adaptive_demux_stream_set_tags (GstAdaptiveDemuxStream * stream,
                                          GstTagList * tags);
 void gst_adaptive_demux_stream_fragment_clear (GstAdaptiveDemuxStreamFragment * f);
+
+GstFlowReturn gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream, GstBuffer * buffer);
+GstFlowReturn
+gst_adaptive_demux_stream_advance_fragment (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream, GstClockTime duration);
+GstFlowReturn
+gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream, GstClockTime duration);
 
 G_END_DECLS
 

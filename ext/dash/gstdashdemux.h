@@ -65,8 +65,6 @@ struct _GstDashDemuxStream
 
   GstMediaFragmentInfo current_fragment;
 
-  GstBuffer *pending_buffer;
-
   /* index parsing */
   GstSidxParser sidx_parser;
   gsize sidx_current_remaining;
