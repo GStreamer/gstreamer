@@ -676,6 +676,8 @@ class TestsManager(Loggable):
         self.blacklisted_tests_patterns = []
         self._generators = []
         self.queue = Queue.Queue()
+        self.total_num_tests = 0
+        self.starting_test_num = 0
 
     def init(self):
         return False
@@ -792,20 +794,25 @@ class TestsManager(Loggable):
             test.kill_subprocess()
             raise
 
-    def run_tests(self, cur_test_num, total_num_tests):
-        i = cur_test_num
+    def run_tests(self, starting_test_num, total_num_tests):
+        self.total_num_tests = total_num_tests
+        self.starting_test_num = starting_test_num
+
         for test in self.tests:
-            sys.stdout.write("[%d / %d] " % (i + 1, total_num_tests))
+            self.print_test_num(test)
             test.test_start(self.queue)
             self.test_wait(test)
             res = test.test_end()
-            i += 1
             self.reporter.after_test(test)
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
                 return test.result
 
         return Result.PASSED
+
+    def print_test_num(self, test):
+        cur_test_num = self.starting_test_num + self.tests.index(test) + 1
+        sys.stdout.write("[%d / %d] " % (cur_test_num, self.total_num_tests))
 
     def clean_tests(self):
         for test in self.tests:
