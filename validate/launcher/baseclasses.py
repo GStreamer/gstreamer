@@ -192,9 +192,6 @@ class Test(Loggable):
         return Result.NOT_RUN
 
     def wait_process(self):
-        self.last_val = 0
-        self.last_change_ts = time.time()
-        self.start_ts = time.time()
         while True:
             # Check process every second for timeout
             self.thread.join(1.0)
@@ -304,6 +301,10 @@ class Test(Loggable):
 
         self.thread = threading.Thread(target=self.thread_wrapper)
         self.thread.start()
+
+        self.last_val = 0
+        self.last_change_ts = time.time()
+        self.start_ts = time.time()
 
         try:
             self.wait_process()
