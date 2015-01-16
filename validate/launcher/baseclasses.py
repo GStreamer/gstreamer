@@ -751,7 +751,7 @@ class TestsManager(Loggable):
             self.reporter.before_test(test)
             res = test.run()
             i += 1
-            self.reporter.after_test()
+            self.reporter.after_test(test)
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
                 return test.result

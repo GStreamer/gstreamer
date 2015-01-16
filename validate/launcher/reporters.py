@@ -55,7 +55,6 @@ class Reporter(Loggable):
     def __init__(self, options):
         Loggable.__init__(self)
 
-        self._current_test = None
         self.out = None
         self.options = options
         self._start_time = 0
@@ -82,7 +81,6 @@ class Reporter(Loggable):
             self.out = sys.stderr
         else:
             self.out = open(path, 'w+')
-        self._current_test = test
 
     def set_failed(self, test):
         self.stats["failure"] += 1
@@ -100,16 +98,15 @@ class Reporter(Loggable):
         else:
             raise UnknownResult("%s" % test.result)
 
-    def after_test(self):
-        if self._current_test not in self.results:
-            self.results.append(self._current_test)
+    def after_test(self, test):
+        if test not in self.results:
+            self.results.append(test)
 
-        self.add_results(self._current_test)
+        self.add_results(test)
         if not self.options.redirect_logs:
             self.out.close()
 
         self.out = None
-        self._current_test = None
 
     def final_report(self):
         print "\n"
@@ -158,7 +155,7 @@ class XunitReporter(Reporter):
         self.report()
         super(XunitReporter, self).final_report()
 
-    def _get_captured(self):
+    def _get_captured(self, test):
         captured = ""
         if self.out and not self.options.redirect_logs:
             self.out.seek(0)
@@ -166,11 +163,10 @@ class XunitReporter(Reporter):
             if value:
                 captured += '<system-out><![CDATA[%s' % \
                     escape_cdata(value)
-
-            for extralog in self._current_test.extra_logfiles:
+            for extralog in test.extra_logfiles:
                 captured += "\n\n===== %s =====\n\n" % escape_cdata(
                     os.path.basename(extralog))
-                value = self._current_test.get_extra_log_content(extralog)
+                value = test.get_extra_log_content(extralog)
                 captured += escape_cdata(value)
 
             captured += "]]></system-out>"
@@ -218,7 +214,7 @@ class XunitReporter(Reporter):
              'taken': test.time_taken,
              'errtype': self._quoteattr(test.result),
              'message': self._quoteattr(test.message),
-             'systemout': self._get_captured(),
+             'systemout': self._get_captured(test),
              })
 
     def set_passed(self, test):
@@ -231,7 +227,7 @@ class XunitReporter(Reporter):
             {'cls': self._quoteattr(test.get_classname()),
              'name': self._quoteattr(test.get_name()),
              'taken': test.time_taken,
-             'systemout': self._get_captured(),
+             'systemout': self._get_captured(test),
              })
 
     def _forceUnicode(self, s):
