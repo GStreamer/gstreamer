@@ -69,7 +69,7 @@ class Reporter(Loggable):
         """Initialize a timer before starting tests."""
         self._start_time = time.time()
 
-    def before_test(self, test):
+    def open_logfile(self, test):
         path = os.path.join(self.options.logsdir,
                             test.classname.replace(".", os.sep))
         mkdir(os.path.dirname(path))
@@ -103,6 +103,8 @@ class Reporter(Loggable):
             self.results.append(test)
 
         self.add_results(test)
+
+    def close_logfile(self):
         if not self.options.redirect_logs:
             self.out.close()
 

@@ -748,10 +748,11 @@ class TestsManager(Loggable):
         i = cur_test_num
         for test in self.tests:
             sys.stdout.write("[%d / %d] " % (i + 1, total_num_tests))
-            self.reporter.before_test(test)
+            self.reporter.open_logfile(test)
             res = test.run()
             i += 1
             self.reporter.after_test(test)
+            self.reporter.close_logfile()
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
                 return test.result
