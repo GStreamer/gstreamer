@@ -29,6 +29,7 @@ import signal
 import urlparse
 import subprocess
 import threading
+import Queue
 import reporters
 import ConfigParser
 import loggable
@@ -62,6 +63,7 @@ class Test(Loggable):
         self.process = None
         self.proc_env = None
         self.thread = None
+        self.queue = Queue.Queue()
         self.duration = duration
 
         self.clean()
@@ -194,7 +196,10 @@ class Test(Loggable):
     def wait_process(self):
         while True:
             # Check process every second for timeout
-            self.thread.join(1.0)
+            try:
+                self.queue.get(timeout=1)
+            except Queue.Empty:
+                pass
 
             if self.process_update():
                 break
@@ -272,6 +277,8 @@ class Test(Loggable):
                                         shell=True,
                                         env=self.proc_env)
         self.process.wait()
+        if self.result is not Result.TIMEOUT:
+            self.queue.put(None)
 
     def run(self):
         self.open_logfile()
