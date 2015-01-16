@@ -109,6 +109,7 @@ struct _GstRTSPStreamPrivate
 
   /* for TCP transport */
   GstElement *appsrc[2];
+  GstClockTime appsrc_base_time[2];
   GstElement *appqueue[2];
   GstElement *appsink[2];
 
@@ -2193,6 +2194,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     if (priv->protocols & GST_RTSP_LOWER_TRANS_TCP) {
       /* make and add appsrc */
       priv->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
+      priv->appsrc_base_time[i] = -1;
       g_object_set (priv->appsrc[i], "format", GST_FORMAT_TIME, NULL);
       gst_bin_add (bin, priv->appsrc[i]);
       /* and link to the funnel */
@@ -2544,6 +2546,31 @@ gst_rtsp_stream_recv_rtp (GstRTSPStream * stream, GstBuffer * buffer)
   g_mutex_unlock (&priv->lock);
 
   if (element) {
+    if (priv->appsrc_base_time[0] == -1) {
+      /* Take current running_time. This timestamp will be put on
+       * the first buffer of each stream because we are a live source and so we
+       * timestamp with the running_time. When we are dealing with TCP, we also
+       * only timestamp the first buffer (using the DISCONT flag) because a server
+       * typically bursts data, for which we don't want to compensate by speeding
+       * up the media. The other timestamps will be interpollated from this one
+       * using the RTP timestamps. */
+      GST_OBJECT_LOCK (element);
+      if (GST_ELEMENT_CLOCK (element)) {
+        GstClockTime now;
+        GstClockTime base_time;
+
+        now = gst_clock_get_time (GST_ELEMENT_CLOCK (element));
+        base_time = GST_ELEMENT_CAST (element)->base_time;
+
+        priv->appsrc_base_time[0] = now - base_time;
+        GST_BUFFER_TIMESTAMP (buffer) = priv->appsrc_base_time[0];
+        GST_DEBUG ("stream %p: first buffer at time %" GST_TIME_FORMAT
+            ", base %" GST_TIME_FORMAT, stream, GST_TIME_ARGS (now),
+            GST_TIME_ARGS (base_time));
+      }
+      GST_OBJECT_UNLOCK (element);
+    }
+
     ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (element), buffer);
     gst_object_unref (element);
   } else {
@@ -2587,6 +2614,31 @@ gst_rtsp_stream_recv_rtcp (GstRTSPStream * stream, GstBuffer * buffer)
   g_mutex_unlock (&priv->lock);
 
   if (element) {
+    if (priv->appsrc_base_time[1] == -1) {
+      /* Take current running_time. This timestamp will be put on
+       * the first buffer of each stream because we are a live source and so we
+       * timestamp with the running_time. When we are dealing with TCP, we also
+       * only timestamp the first buffer (using the DISCONT flag) because a server
+       * typically bursts data, for which we don't want to compensate by speeding
+       * up the media. The other timestamps will be interpollated from this one
+       * using the RTP timestamps. */
+      GST_OBJECT_LOCK (element);
+      if (GST_ELEMENT_CLOCK (element)) {
+        GstClockTime now;
+        GstClockTime base_time;
+
+        now = gst_clock_get_time (GST_ELEMENT_CLOCK (element));
+        base_time = GST_ELEMENT_CAST (element)->base_time;
+
+        priv->appsrc_base_time[1] = now - base_time;
+        GST_BUFFER_TIMESTAMP (buffer) = priv->appsrc_base_time[1];
+        GST_DEBUG ("stream %p: first buffer at time %" GST_TIME_FORMAT
+            ", base %" GST_TIME_FORMAT, stream, GST_TIME_ARGS (now),
+            GST_TIME_ARGS (base_time));
+      }
+      GST_OBJECT_UNLOCK (element);
+    }
+
     ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (element), buffer);
     gst_object_unref (element);
   } else {
