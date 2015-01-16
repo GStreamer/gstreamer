@@ -1937,27 +1937,37 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     g_clear_error (&stream->last_error);
     if (GST_CLOCK_TIME_IS_VALID (stream->fragment.duration))
       stream->segment.position += stream->fragment.duration;
-    ret = gst_adaptive_demux_stream_advance_fragment (demux, stream);
 
-    if (gst_adaptive_demux_stream_select_bitrate (demux, stream,
-            gst_adaptive_demux_stream_update_current_bitrate (stream))) {
-      stream->need_header = TRUE;
-    }
+    GST_DEBUG_OBJECT (stream->pad, "Advancing to next fragment");
+    if (gst_adaptive_demux_stream_has_next_fragment (demux, stream)) {
+      ret = gst_adaptive_demux_stream_advance_fragment (demux, stream);
+      GST_DEBUG_OBJECT (stream->pad, "Advanced. Result: %d %s", ret,
+          gst_flow_get_name (ret));
 
-    /* the subclass might want to switch pads */
-    if (G_UNLIKELY (demux->next_streams)) {
-      gst_task_stop (stream->download_task);
-      /* TODO only allow switching streams if other downloads are not ongoing */
-      GST_DEBUG_OBJECT (demux, "Subclass wants new pads "
-          "to do bitrate switching");
-      gst_adaptive_demux_expose_streams (demux, FALSE);
-      gst_adaptive_demux_start_tasks (demux);
+      if (ret == GST_FLOW_OK) {
+        if (gst_adaptive_demux_stream_select_bitrate (demux, stream,
+                gst_adaptive_demux_stream_update_current_bitrate (stream))) {
+          stream->need_header = TRUE;
+        }
+
+        /* the subclass might want to switch pads */
+        if (G_UNLIKELY (demux->next_streams)) {
+          gst_task_stop (stream->download_task);
+          /* TODO only allow switching streams if other downloads are not ongoing */
+          GST_DEBUG_OBJECT (demux, "Subclass wants new pads "
+              "to do bitrate switching");
+          gst_adaptive_demux_expose_streams (demux, FALSE);
+          gst_adaptive_demux_start_tasks (demux);
+          ret = GST_FLOW_EOS;
+          GST_MANIFEST_UNLOCK (demux);
+          goto end_of_manifest;
+        }
+      }
+    } else {
+      GST_DEBUG_OBJECT (stream->pad, "No next fragment -> EOS");
       ret = GST_FLOW_EOS;
-      GST_MANIFEST_UNLOCK (demux);
-      goto end_of_manifest;
     }
   }
-
 
   stream->last_ret = ret;
   switch (ret) {
