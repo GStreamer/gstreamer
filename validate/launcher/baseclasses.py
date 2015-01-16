@@ -63,7 +63,7 @@ class Test(Loggable):
         self.process = None
         self.proc_env = None
         self.thread = None
-        self.queue = Queue.Queue()
+        self.queue = None
         self.duration = duration
 
         self.clean()
@@ -193,19 +193,6 @@ class Test(Loggable):
         """
         return Result.NOT_RUN
 
-    def wait_process(self):
-        while True:
-            # Check process every second for timeout
-            try:
-                self.queue.get(timeout=1)
-            except Queue.Empty:
-                pass
-
-            if self.process_update():
-                break
-
-        self.check_results()
-
     def process_update(self):
         """
         Returns True when process has finished running or has timed out.
@@ -251,7 +238,7 @@ class Test(Loggable):
     def get_subproc_env(self):
         return os.environ
 
-    def _kill_subprocess(self):
+    def kill_subprocess(self):
         if self.process is None:
             return
 
@@ -280,9 +267,10 @@ class Test(Loggable):
         if self.result is not Result.TIMEOUT:
             self.queue.put(None)
 
-    def run(self):
+    def test_start(self, queue):
         self.open_logfile()
 
+        self.queue = queue
         self.command = "%s " % (self.application)
         self._starting_time = time.time()
         self.build_arguments()
@@ -313,13 +301,8 @@ class Test(Loggable):
         self.last_change_ts = time.time()
         self.start_ts = time.time()
 
-        try:
-            self.wait_process()
-        except KeyboardInterrupt:
-            self._kill_subprocess()
-            raise
-
-        self._kill_subprocess()
+    def test_end(self):
+        self.kill_subprocess()
         self.thread.join()
         self.time_taken = time.time() - self._starting_time
 
@@ -692,6 +675,7 @@ class TestsManager(Loggable):
         self.wanted_tests_patterns = []
         self.blacklisted_tests_patterns = []
         self._generators = []
+        self.queue = Queue.Queue()
 
     def init(self):
         return False
@@ -791,11 +775,30 @@ class TestsManager(Loggable):
 
         return False
 
+    def test_wait(self, test):
+        try:
+            while True:
+                # Check process every second for timeout
+                try:
+                    self.queue.get(timeout=1)
+                except Queue.Empty:
+                    pass
+
+                if test.process_update():
+                    break
+
+            test.check_results()
+        except KeyboardInterrupt:
+            test.kill_subprocess()
+            raise
+
     def run_tests(self, cur_test_num, total_num_tests):
         i = cur_test_num
         for test in self.tests:
             sys.stdout.write("[%d / %d] " % (i + 1, total_num_tests))
-            res = test.run()
+            test.test_start(self.queue)
+            self.test_wait(test)
+            res = test.test_end()
             i += 1
             self.reporter.after_test(test)
             if res != Result.PASSED and (self.options.forever or
