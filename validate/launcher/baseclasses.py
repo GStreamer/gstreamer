@@ -192,50 +192,59 @@ class Test(Loggable):
         return Result.NOT_RUN
 
     def wait_process(self):
-        last_val = 0
-        last_change_ts = time.time()
-        start_ts = time.time()
+        self.last_val = 0
+        self.last_change_ts = time.time()
+        self.start_ts = time.time()
         while True:
             # Check process every second for timeout
             self.thread.join(1.0)
 
-            self.process.poll()
-            if self.process.returncode is not None:
+            if self.process_update():
                 break
-
-            val = self.get_current_value()
-
-            self.debug("Got value: %s" % val)
-            if val is Result.NOT_RUN:
-                # The get_current_value logic is not implemented... dumb
-                # timeout
-                if time.time() - last_change_ts > self.timeout:
-                    self.set_result(Result.TIMEOUT)
-                    break
-                continue
-            elif val is Result.FAILED:
-                break
-            elif val is Result.KNOWN_ERROR:
-                break
-
-            self.log("New val %s" % val)
-
-            if val == last_val:
-                delta = time.time() - last_change_ts
-                self.debug("%s: Same value for %d/%d seconds" %
-                           (self, delta, self.timeout))
-                if delta > self.timeout:
-                    self.set_result(Result.TIMEOUT)
-                    break
-            elif self.hard_timeout and time.time() - start_ts > self.hard_timeout:
-                self.set_result(
-                    Result.TIMEOUT, "Hard timeout reached: %d secs" % self.hard_timeout)
-                break
-            else:
-                last_change_ts = time.time()
-                last_val = val
 
         self.check_results()
+
+    def process_update(self):
+        """
+        Returns True when process has finished running or has timed out.
+        """
+        self.process.poll()
+        if self.process.returncode is not None:
+            return True
+
+        val = self.get_current_value()
+
+        self.debug("Got value: %s" % val)
+        if val is Result.NOT_RUN:
+            # The get_current_value logic is not implemented... dumb
+            # timeout
+            if time.time() - self.last_change_ts > self.timeout:
+                self.set_result(Result.TIMEOUT)
+                return True
+            return False
+        elif val is Result.FAILED:
+            return True
+        elif val is Result.KNOWN_ERROR:
+            return True
+
+        self.log("New val %s" % val)
+
+        if val == self.last_val:
+            delta = time.time() - self.last_change_ts
+            self.debug("%s: Same value for %d/%d seconds" %
+                       (self, delta, self.timeout))
+            if delta > self.timeout:
+                self.set_result(Result.TIMEOUT)
+                return True
+        elif self.hard_timeout and time.time() - self.start_ts > self.hard_timeout:
+            self.set_result(
+                Result.TIMEOUT, "Hard timeout reached: %d secs" % self.hard_timeout)
+            return True
+        else:
+            self.last_change_ts = time.time()
+            self.last_val = val
+
+        return False
 
     def get_subproc_env(self):
         return os.environ
