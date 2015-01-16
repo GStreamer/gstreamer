@@ -55,7 +55,6 @@ class Reporter(Loggable):
     def __init__(self, options):
         Loggable.__init__(self)
 
-        self.out = None
         self.options = options
         self._start_time = 0
         self.stats = {'timeout': 0,
@@ -68,19 +67,6 @@ class Reporter(Loggable):
     def init_timer(self):
         """Initialize a timer before starting tests."""
         self._start_time = time.time()
-
-    def open_logfile(self, test):
-        path = os.path.join(self.options.logsdir,
-                            test.classname.replace(".", os.sep))
-        mkdir(os.path.dirname(path))
-        test.logfile = path
-
-        if self.options.redirect_logs == 'stdout':
-            self.out = sys.stdout
-        elif self.options.redirect_logs == 'stderr':
-            self.out = sys.stderr
-        else:
-            self.out = open(path, 'w+')
 
     def set_failed(self, test):
         self.stats["failure"] += 1
@@ -103,12 +89,6 @@ class Reporter(Loggable):
             self.results.append(test)
 
         self.add_results(test)
-
-    def close_logfile(self):
-        if not self.options.redirect_logs:
-            self.out.close()
-
-        self.out = None
 
     def final_report(self):
         print "\n"
@@ -160,8 +140,7 @@ class XunitReporter(Reporter):
     def _get_captured(self, test):
         captured = ""
         if not self.options.redirect_logs:
-            self.out.seek(0)
-            value = self.out.read()
+            value = test.get_log_content()
             if value:
                 captured += '<system-out><![CDATA[%s' % \
                     escape_cdata(value)

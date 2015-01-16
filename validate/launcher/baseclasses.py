@@ -73,6 +73,7 @@ class Test(Loggable):
         self._starting_time = None
         self.result = Result.NOT_RUN
         self.logfile = None
+        self.out = None
         self.extra_logfiles = []
         self._env_variable = ''
 
@@ -102,15 +103,40 @@ class Test(Loggable):
             self._env_variable += " "
         self._env_variable += "%s=%s" % (variable, value)
 
-    def get_extra_log_content(self, extralog):
-        if extralog not in self.extra_logfiles:
-            return ""
+    def open_logfile(self):
+        path = os.path.join(self.options.logsdir,
+                            self.classname.replace(".", os.sep))
+        mkdir(os.path.dirname(path))
+        self.logfile = path
 
-        f = open(extralog, 'r+')
+        if self.options.redirect_logs == 'stdout':
+            self.out = sys.stdout
+        elif self.options.redirect_logs == 'stderr':
+            self.out = sys.stderr
+        else:
+            self.out = open(path, 'w+')
+
+    def close_logfile(self):
+        if not self.options.redirect_logs:
+            self.out.close()
+
+        self.out = None
+
+    def _get_file_content(self, file_name):
+        f = open(file_name, 'r+')
         value = f.read()
         f.close()
 
         return value
+
+    def get_log_content(self):
+        return self._get_file_content(self.logfile)
+
+    def get_extra_log_content(self, extralog):
+        if extralog not in self.extra_logfiles:
+            return ""
+
+        return self._get_file_content(extralog)
 
     def get_classname(self):
         name = self.classname.split('.')[-1]
@@ -235,13 +261,15 @@ class Test(Loggable):
 
     def thread_wrapper(self):
         self.process = subprocess.Popen("exec " + self.command,
-                                        stderr=self.reporter.out,
-                                        stdout=self.reporter.out,
+                                        stderr=self.out,
+                                        stdout=self.out,
                                         shell=True,
                                         env=self.proc_env)
         self.process.wait()
 
     def run(self):
+        self.open_logfile()
+
         self.command = "%s " % (self.application)
         self._starting_time = time.time()
         self.build_arguments()
@@ -256,12 +284,12 @@ class Test(Loggable):
             for log in self.extra_logfiles:
                 message += "\n         - %s" % log
 
-            self.reporter.out.write("=================\n"
-                                    "Test name: %s\n"
-                                    "Command: '%s'\n"
-                                    "=================\n\n"
-                                    % (self.classname, self.command))
-            self.reporter.out.flush()
+            self.out.write("=================\n"
+                           "Test name: %s\n"
+                           "Command: '%s'\n"
+                           "=================\n\n"
+                           % (self.classname, self.command))
+            self.out.flush()
 
         printc(message, Colors.OKBLUE)
 
@@ -281,6 +309,8 @@ class Test(Loggable):
         printc("Result: %s%s\n" % (self.result,
                " (" + self.message + ")" if self.message else ""),
                color=utils.get_color_for_result(self.result))
+
+        self.close_logfile()
 
         return self.result
 
@@ -748,11 +778,9 @@ class TestsManager(Loggable):
         i = cur_test_num
         for test in self.tests:
             sys.stdout.write("[%d / %d] " % (i + 1, total_num_tests))
-            self.reporter.open_logfile(test)
             res = test.run()
             i += 1
             self.reporter.after_test(test)
-            self.reporter.close_logfile()
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
                 return test.result
