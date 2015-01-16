@@ -3417,6 +3417,57 @@ gst_decode_group_hide (GstDecodeGroup * group)
   gst_decode_group_free_internal (group, TRUE);
 }
 
+/* gst_decode_chain_free_hidden_groups:
+ *
+ * Frees any decode groups that were hidden previously.
+ * This allows keeping memory use from ballooning when
+ * switching chains repeatedly.
+ *
+ * A new throwaway thread will be created to free the
+ * groups, so any delay does not block the setup of a
+ * new group.
+ *
+ * Not MT-safe, call with parent's chain lock!
+ */
+static void
+gst_decode_chain_free_hidden_groups (GList * old_groups)
+{
+  GList *l;
+
+  for (l = old_groups; l; l = l->next) {
+    GstDecodeGroup *group = l->data;
+
+    gst_decode_group_free (group);
+  }
+  g_list_free (old_groups);
+}
+
+static void
+gst_decode_chain_start_free_hidden_groups_thread (GstDecodeChain * chain)
+{
+  GThread *thread;
+  GError *error = NULL;
+  GList *old_groups;
+
+  old_groups = chain->old_groups;
+  if (!old_groups)
+    return;
+
+  chain->old_groups = NULL;
+  thread = g_thread_try_new ("free-hidden-groups",
+      (GThreadFunc) gst_decode_chain_free_hidden_groups, old_groups, &error);
+  if (!thread || error) {
+    GST_ERROR ("Failed to start free-hidden-groups thread: %s",
+        error ? error->message : "unknown reason");
+    g_clear_error (&error);
+    chain->old_groups = old_groups;
+    return;
+  }
+  GST_DEBUG_OBJECT (chain->dbin, "Started free-hidden-groups thread");
+  /* We do not need to wait for it or get any results from it */
+  g_thread_unref (thread);
+}
+
 /* configure queue sizes, this depends on the buffering method and if we are
  * playing or prerolling. */
 static void
@@ -3760,6 +3811,7 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
       if (chain->next_groups) {
         /* Switch to next group */
         GST_DEBUG_OBJECT (dbin, "Hiding current group %p", chain->active_group);
+        gst_decode_chain_start_free_hidden_groups_thread (chain);
         gst_decode_group_hide (chain->active_group);
         chain->old_groups =
             g_list_prepend (chain->old_groups, chain->active_group);
