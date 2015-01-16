@@ -1315,8 +1315,15 @@ get_compatible_profile_caps (GstH264SPS * sps)
       }
       break;
     case GST_H264_PROFILE_MULTIVIEW_HIGH:
-      /* Fix: should add GST_H264_PROFILE_STEREO_HIGH as compatible
-       * profile if number of views == 2. */
+      if (sps->extension_type == GST_H264_NAL_EXTENSION_MVC
+          && sps->extension.mvc.num_views_minus1 == 1) {
+        static const gchar *profile_array[] =
+            { "stereo-high", "multiview-high", NULL };
+        profiles = profile_array;
+      } else {
+        static const gchar *profile_array[] = { "multiview-high", NULL };
+        profiles = profile_array;
+      }
       break;
     default:
       break;
