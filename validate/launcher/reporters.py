@@ -66,8 +66,11 @@ class Reporter(Loggable):
                       }
         self.results = []
 
+    def init_timer(self):
+        """Initialize a timer before starting tests."""
+        self._start_time = time.time()
+
     def before_test(self, test):
-        """Initialize a timer before starting a test."""
         path = os.path.join(self.options.logsdir,
                             test.classname.replace(".", os.sep))
         mkdir(os.path.dirname(path))
@@ -80,9 +83,6 @@ class Reporter(Loggable):
         else:
             self.out = open(path, 'w+')
         self._current_test = test
-
-        if self._start_time == 0:
-            self._start_time = time.time()
 
     def set_failed(self, test):
         self.stats["failure"] += 1
