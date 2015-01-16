@@ -676,6 +676,7 @@ class TestsManager(Loggable):
         self.blacklisted_tests_patterns = []
         self._generators = []
         self.queue = Queue.Queue()
+        self.jobs = []
         self.total_num_tests = 0
         self.starting_test_num = 0
 
@@ -777,31 +778,54 @@ class TestsManager(Loggable):
 
         return False
 
-    def test_wait(self, test):
-        try:
-            while True:
-                # Check process every second for timeout
-                try:
-                    self.queue.get(timeout=1)
-                except Queue.Empty:
-                    pass
+    def test_wait(self):
+        while True:
+            # Check process every second for timeout
+            try:
+                self.queue.get(timeout=1)
+            except Queue.Empty:
+                pass
 
+            for test in self.jobs:
                 if test.process_update():
-                    break
+                    self.jobs.remove(test)
+                    return test
 
+    def tests_wait(self):
+        try:
+            test = self.test_wait()
             test.check_results()
         except KeyboardInterrupt:
-            test.kill_subprocess()
+            for test in self.jobs:
+                test.kill_subprocess()
             raise
+
+        return test
+
+    def start_new_job(self, tests_left):
+        try:
+            test = tests_left.pop(0)
+        except IndexError:
+            return False
+
+        self.print_test_num(test)
+        test.test_start(self.queue)
+
+        self.jobs.append(test)
+
+        return True
 
     def run_tests(self, starting_test_num, total_num_tests):
         self.total_num_tests = total_num_tests
         self.starting_test_num = starting_test_num
 
-        for test in self.tests:
-            self.print_test_num(test)
-            test.test_start(self.queue)
-            self.test_wait(test)
+        tests_left = list(self.tests)
+
+        while True:
+            if not self.start_new_job(tests_left):
+                break
+
+            test = self.tests_wait()
             res = test.test_end()
             self.reporter.after_test(test)
             if res != Result.PASSED and (self.options.forever or
