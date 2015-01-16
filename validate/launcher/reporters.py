@@ -159,7 +159,7 @@ class XunitReporter(Reporter):
 
     def _get_captured(self, test):
         captured = ""
-        if self.out and not self.options.redirect_logs:
+        if not self.options.redirect_logs:
             self.out.seek(0)
             value = self.out.read()
             if value:
