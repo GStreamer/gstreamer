@@ -826,6 +826,7 @@ class TestsManager(Loggable):
                 break
 
             test = self.tests_wait()
+            self.print_test_num(test)
             res = test.test_end()
             self.reporter.after_test(test)
             if res != Result.PASSED and (self.options.forever or
