@@ -197,6 +197,11 @@ class Test(Loggable):
         """
         Returns True when process has finished running or has timed out.
         """
+
+        if self.process is None:
+            # Process has not started running yet
+            return False
+
         self.process.poll()
         if self.process.returncode is not None:
             return True
@@ -819,19 +824,26 @@ class TestsManager(Loggable):
         self.total_num_tests = total_num_tests
         self.starting_test_num = starting_test_num
 
+        num_jobs = min(self.options.num_jobs, len(self.tests))
         tests_left = list(self.tests)
+        jobs_running = 0
 
-        while True:
+        for i in range(num_jobs):
             if not self.start_new_job(tests_left):
                 break
+            jobs_running += 1
 
+        while jobs_running != 0:
             test = self.tests_wait()
+            jobs_running -= 1
             self.print_test_num(test)
             res = test.test_end()
             self.reporter.after_test(test)
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
                 return test.result
+            if self.start_new_job(tests_left):
+                jobs_running += 1
 
         return Result.PASSED
 

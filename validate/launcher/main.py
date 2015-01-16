@@ -209,6 +209,7 @@ class LauncherConfig(Loggable):
         self.output_dir = None
         self.logsdir = None
         self.redirect_logs = False
+        self.num_jobs = 1
         self.dest = None
         self._using_default_paths = False
         self.paths = []
@@ -421,6 +422,9 @@ Note that all testsuite should be inside python modules, so the directory should
                            " default is MAIN_DIR/gst-integration-testsuites")
     dir_group.add_argument("-rl", "--redirect-logs", dest="redirect_logs",
                            help="Redirect logs to 'stdout' or 'sdterr'.")
+    dir_group.add_argument("-j", "--jobs", dest="num_jobs",
+                           help="Number of tests to execute simultaneously",
+                           type=int)
 
     http_server_group = parser.add_argument_group(
         "Handle the HTTP server to be created")
