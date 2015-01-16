@@ -3936,7 +3936,7 @@ bin_query_generic_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 static gboolean
 bin_iterate_fold (GstBin * bin, GstIterator * iter, QueryInitFunction fold_init,
     QueryDoneFunction fold_done, GstIteratorFoldFunction fold_func,
-    QueryFold fold_data, gboolean default_return)
+    QueryFold * fold_data, gboolean default_return)
 {
   gboolean res = default_return;
   GValue ret = { 0 };
@@ -3947,20 +3947,20 @@ bin_iterate_fold (GstBin * bin, GstIterator * iter, QueryInitFunction fold_init,
   while (TRUE) {
     GstIteratorResult ires;
 
-    ires = gst_iterator_fold (iter, fold_func, &ret, &fold_data);
+    ires = gst_iterator_fold (iter, fold_func, &ret, fold_data);
 
     switch (ires) {
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
         if (fold_init)
-          fold_init (bin, &fold_data);
+          fold_init (bin, fold_data);
         g_value_set_boolean (&ret, res);
         break;
       case GST_ITERATOR_OK:
       case GST_ITERATOR_DONE:
         res = g_value_get_boolean (&ret);
         if (fold_done != NULL && res)
-          fold_done (bin, &fold_data);
+          fold_done (bin, fold_data);
         goto done;
       default:
         res = FALSE;
@@ -4058,7 +4058,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
     fold_init (bin, &fold_data);
 
   res =
-      bin_iterate_fold (bin, iter, fold_init, fold_done, fold_func, fold_data,
+      bin_iterate_fold (bin, iter, fold_init, fold_done, fold_func, &fold_data,
       default_return);
   gst_iterator_free (iter);
 
@@ -4067,7 +4067,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
     iter = gst_element_iterate_src_pads (element);
     src_pads_query_result =
         bin_iterate_fold (bin, iter, fold_init, fold_done, fold_func,
-        fold_data, default_return);
+        &fold_data, default_return);
     gst_iterator_free (iter);
 
     if (src_pads_query_result)
