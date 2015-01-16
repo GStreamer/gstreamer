@@ -139,7 +139,8 @@ struct _GstRTSPStreamPrivate
   guint n_active;
   GList *transports;
   guint transports_cookie;
-  GList *tr_cache;
+  GList *tr_cache_rtp;
+  GList *tr_cache_rtcp;
   guint tr_cache_cookie;
 
   /* UDP sources for UDP multicast transports */
@@ -1575,11 +1576,17 @@ on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
 }
 
 static void
-clear_tr_cache (GstRTSPStreamPrivate * priv)
+clear_tr_cache (GstRTSPStreamPrivate * priv, gboolean is_rtp)
 {
-  g_list_foreach (priv->tr_cache, (GFunc) g_object_unref, NULL);
-  g_list_free (priv->tr_cache);
-  priv->tr_cache = NULL;
+  if (is_rtp) {
+    g_list_foreach (priv->tr_cache_rtp, (GFunc) g_object_unref, NULL);
+    g_list_free (priv->tr_cache_rtp);
+    priv->tr_cache_rtp = NULL;
+  } else {
+    g_list_foreach (priv->tr_cache_rtcp, (GFunc) g_object_unref, NULL);
+    g_list_free (priv->tr_cache_rtcp);
+    priv->tr_cache_rtcp = NULL;
+  }
 }
 
 static GstFlowReturn
@@ -1604,21 +1611,29 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
 
   g_mutex_lock (&priv->lock);
   if (priv->tr_cache_cookie != priv->transports_cookie) {
-    clear_tr_cache (priv);
+    clear_tr_cache (priv, is_rtp);
     for (walk = priv->transports; walk; walk = g_list_next (walk)) {
       GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
-      priv->tr_cache = g_list_prepend (priv->tr_cache, g_object_ref (tr));
+      if (is_rtp) {
+        priv->tr_cache_rtp =
+            g_list_prepend (priv->tr_cache_rtp, g_object_ref (tr));
+      } else {
+        priv->tr_cache_rtcp =
+            g_list_prepend (priv->tr_cache_rtcp, g_object_ref (tr));
+      }
     }
     priv->tr_cache_cookie = priv->transports_cookie;
   }
   g_mutex_unlock (&priv->lock);
 
-  for (walk = priv->tr_cache; walk; walk = g_list_next (walk)) {
-    GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
-
-    if (is_rtp) {
+  if (is_rtp) {
+    for (walk = priv->tr_cache_rtp; walk; walk = g_list_next (walk)) {
+      GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
       gst_rtsp_stream_transport_send_rtp (tr, buffer);
-    } else {
+    }
+  } else {
+    for (walk = priv->tr_cache_rtcp; walk; walk = g_list_next (walk)) {
+      GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
       gst_rtsp_stream_transport_send_rtcp (tr, buffer);
     }
   }
@@ -2099,7 +2114,8 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   if (priv->transports != NULL)
     goto transports_not_removed;
 
-  clear_tr_cache (priv);
+  clear_tr_cache (priv, TRUE);
+  clear_tr_cache (priv, FALSE);
 
   GST_INFO ("stream %p leaving bin", stream);
 
