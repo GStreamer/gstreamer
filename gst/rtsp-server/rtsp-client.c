@@ -2601,9 +2601,14 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
   if (res != GST_RTSP_OK)
     return;
 
+  gst_rtsp_message_get_body (message, &data, &size);
+  if (size < 2)
+    goto invalid_length;
+
   gst_rtsp_message_steal_body (message, &data, &size);
 
-  buffer = gst_buffer_new_wrapped (data, size);
+  /* Strip trailing \0 */
+  buffer = gst_buffer_new_wrapped (data, size - 1);
 
   trans =
       g_hash_table_lookup (priv->transports, GINT_TO_POINTER ((gint) channel));
@@ -2612,6 +2617,11 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
     gst_rtsp_stream_transport_recv_data (trans, channel, buffer);
   } else {
     gst_buffer_unref (buffer);
+  }
+invalid_length:
+  {
+    GST_DEBUG ("client %p: Short message received, ignoring", client);
+    return;
   }
 }
 
