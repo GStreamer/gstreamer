@@ -41,8 +41,6 @@ main (int argc, char *argv[])
   GOptionContext *optctx;
   GError *error = NULL;
 
-  gst_init (&argc, &argv);
-
   optctx = g_option_context_new ("<launch line> - Test RTSP Server, Launch\n\n"
       "Example: \"( videotestsrc ! x264enc ! rtph264pay name=pay0 pt=96 )\"");
   g_option_context_add_main_entries (optctx, entries, NULL);

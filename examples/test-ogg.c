@@ -42,8 +42,6 @@ main (int argc, char *argv[])
   GError *error = NULL;
   gchar *str;
 
-  gst_init (&argc, &argv);
-
   optctx = g_option_context_new ("<filename.ogg> - Test RTSP Server, OGG");
   g_option_context_add_main_entries (optctx, entries, NULL);
   g_option_context_add_group (optctx, gst_init_get_option_group ());

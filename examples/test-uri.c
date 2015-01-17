@@ -68,8 +68,6 @@ main (int argc, char *argv[])
   GOptionContext *optctx;
   GError *error = NULL;
 
-  gst_init (&argc, &argv);
-
   optctx = g_option_context_new ("<uri> - Test RTSP Server, URI");
   g_option_context_add_main_entries (optctx, entries, NULL);
   g_option_context_add_group (optctx, gst_init_get_option_group ());
