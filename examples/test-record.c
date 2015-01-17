@@ -23,6 +23,16 @@
 
 #include <gst/rtsp-server/rtsp-server.h>
 
+#define DEFAULT_RTSP_PORT "8554"
+
+static char *port = (char *) DEFAULT_RTSP_PORT;
+
+static GOptionEntry entries[] = {
+  {"port", 'p', 0, G_OPTION_ARG_STRING, &port,
+      "Port to listen on (default: " DEFAULT_RTSP_PORT ")", "PORT"},
+  {NULL}
+};
+
 int
 main (int argc, char *argv[])
 {
@@ -30,8 +40,18 @@ main (int argc, char *argv[])
   GstRTSPServer *server;
   GstRTSPMountPoints *mounts;
   GstRTSPMediaFactory *factory;
+  GOptionContext *optctx;
+  GError *error = NULL;
 
-  gst_init (&argc, &argv);
+  optctx = g_option_context_new ("<launch line> - Test RTSP Server, Launch\n\n"
+      "Example: \"( decodebin name=depay0 ! autovideosink )\"");
+  g_option_context_add_main_entries (optctx, entries, NULL);
+  g_option_context_add_group (optctx, gst_init_get_option_group ());
+  if (!g_option_context_parse (optctx, &argc, &argv, &error)) {
+    g_printerr ("Error parsing options: %s\n", error->message);
+    return -1;
+  }
+  g_option_context_free (optctx);
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -48,8 +68,7 @@ main (int argc, char *argv[])
    * element with depay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_record (factory, TRUE);
-  gst_rtsp_media_factory_set_launch (factory,
-      "( decodebin name=depay0 ! autovideosink   decodebin name=depay1 ! autoaudiosink )");
+  gst_rtsp_media_factory_set_launch (factory, argv[1]);
 
   /* attach the test factory to the /test url */
   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
@@ -61,7 +80,7 @@ main (int argc, char *argv[])
   gst_rtsp_server_attach (server, NULL);
 
   /* start serving */
-  g_print ("stream ready at rtsp://127.0.0.1:8554/test\n");
+  g_print ("stream ready at rtsp://127.0.0.1:%s/test\n", port);
   g_main_loop_run (loop);
 
   return 0;
