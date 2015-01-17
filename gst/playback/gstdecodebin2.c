@@ -2906,8 +2906,7 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
   GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
       "'playing' buffering mode", group);
   decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
-      (group->parent ? group->parent->seekable : TRUE),
-      (group->parent ? group->parent->adaptive_demuxer : FALSE));
+      (group->parent ? group->parent->seekable : TRUE));
   CHAIN_MUTEX_UNLOCK (chain);
 
   EXPOSE_LOCK (chain->dbin);
@@ -3328,8 +3327,7 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
   GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
       "'playing' buffering mode", group);
   decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
-      (group->parent ? group->parent->seekable : TRUE),
-      (group->parent ? group->parent->adaptive_demuxer : FALSE));
+      (group->parent ? group->parent->seekable : TRUE));
 
   /* FIXME: We should make sure that everything gets exposed now
    * even if child chains are not complete because the will never
