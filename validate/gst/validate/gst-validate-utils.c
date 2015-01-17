@@ -633,7 +633,7 @@ failed:
 }
 
 GList *
-structs_parse_from_filename (const gchar * scenario_file)
+gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file)
 {
   gchar **lines;
 

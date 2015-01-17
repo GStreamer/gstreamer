@@ -1830,7 +1830,7 @@ _load_scenario_file (GstValidateScenario * scenario,
 
   *is_config = FALSE;
 
-  structures = structs_parse_from_filename (scenario_file);
+  structures = gst_validate_utils_structs_parse_from_filename (scenario_file);
   if (structures == NULL)
     goto failed;
 

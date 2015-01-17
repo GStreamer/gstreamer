@@ -307,7 +307,7 @@ static gboolean
 _load_text_override_file (const gchar * filename)
 {
   gint ret = OK;
-  GList *structs = structs_parse_from_filename (filename);
+  GList *structs = gst_validate_utils_structs_parse_from_filename (filename);
 
   if (structs) {
     GList *tmp;

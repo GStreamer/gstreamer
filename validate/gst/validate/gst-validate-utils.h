@@ -41,7 +41,7 @@ gboolean gst_validate_utils_enum_from_str   (GType type,
                                              const gchar * str_enum,
                                              guint * enum_value);
 
-GList * structs_parse_from_filename         (const gchar * scenario_file);
+GList * gst_validate_utils_structs_parse_from_filename         (const gchar * scenario_file);
 GList * structs_parse_from_gfile            (GFile * scenario_file);
 
 #endif
