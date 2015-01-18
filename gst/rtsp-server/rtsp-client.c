@@ -2008,6 +2008,8 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   GstSDPMessage *sdp;
   GstSDPInfo info;
   const gchar *proto;
+  guint64 session_id_tmp;
+  gchar session_id[21];
 
   gst_sdp_message_new (&sdp);
 
@@ -2019,7 +2021,11 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   else
     proto = "IP4";
 
-  gst_sdp_message_set_origin (sdp, "-", "1188340656180883", "1", "IN", proto,
+  session_id_tmp = (((guint64) g_random_int ()) << 32) | g_random_int ();
+  g_snprintf (session_id, sizeof (session_id), "%" G_GUINT64_FORMAT,
+      session_id_tmp);
+
+  gst_sdp_message_set_origin (sdp, "-", session_id, "1", "IN", proto,
       priv->server_ip);
 
   gst_sdp_message_set_session_name (sdp, "Session streamed with GStreamer");
