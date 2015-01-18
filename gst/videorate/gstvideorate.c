@@ -70,6 +70,7 @@
 #endif
 
 #include "gstvideorate.h"
+#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (video_rate_debug);
 #define GST_CAT_DEFAULT video_rate_debug
@@ -136,6 +137,9 @@ static GstCaps *gst_video_rate_fixate_caps (GstBaseTransform * trans,
 static GstFlowReturn gst_video_rate_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
 
+static gboolean gst_video_rate_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query);
+
 static gboolean gst_video_rate_start (GstBaseTransform * trans);
 static gboolean gst_video_rate_stop (GstBaseTransform * trans);
 
@@ -170,6 +174,8 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
   base_class->stop = GST_DEBUG_FUNCPTR (gst_video_rate_stop);
   base_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_rate_fixate_caps);
   base_class->query = GST_DEBUG_FUNCPTR (gst_video_rate_query);
+  base_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_rate_propose_allocation);
 
   g_object_class_install_property (object_class, PROP_IN,
       g_param_spec_uint64 ("in", "In",
@@ -858,6 +864,58 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
           GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
           query);
       break;
+  }
+
+  return res;
+}
+
+static gboolean
+gst_video_rate_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query)
+{
+  GstBaseTransformClass *klass = GST_BASE_TRANSFORM_CLASS (parent_class);
+  gboolean res;
+
+  /* We should always be passthrough */
+  g_return_val_if_fail (decide_query == NULL, FALSE);
+
+  res = klass->propose_allocation (trans, NULL, query);
+
+  if (res) {
+    guint i = 0;
+    guint n_allocation;
+    guint down_min = 0;
+
+    n_allocation = gst_query_get_n_allocation_pools (query);
+
+    while (i < n_allocation) {
+      GstBufferPool *pool;
+      guint size, min, max;
+
+      gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
+
+      if (min == max) {
+        if (pool)
+          gst_object_unref (pool);
+        gst_query_remove_nth_allocation_pool (query, i);
+        n_allocation--;
+        down_min = MAX (min, down_min);
+        continue;
+      }
+
+      gst_query_set_nth_allocation_pool (query, i, pool, size, min + 1, max);
+      i++;
+    }
+
+    if (n_allocation == 0) {
+      GstCaps *caps;
+      GstVideoInfo info;
+
+      gst_query_parse_allocation (query, &caps, NULL);
+      gst_video_info_from_caps (&info, caps);
+
+      gst_query_add_allocation_pool (query, NULL, info.size, down_min + 1, 0);
+    }
   }
 
   return res;
