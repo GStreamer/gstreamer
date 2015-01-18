@@ -1932,8 +1932,7 @@ gst_x264_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   info = &self->input_state->info;
   num_buffers = x264_encoder_maximum_delayed_frames (self->x264enc) + 1;
 
-  gst_query_add_allocation_pool (query, NULL, info->size, num_buffers,
-      num_buffers);
+  gst_query_add_allocation_pool (query, NULL, info->size, num_buffers, 0);
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
       query);
