@@ -421,7 +421,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  apexsink dc1394 \
  gsettings \
  musepack nas sdl timidity \
- directdraw acm wininet \
+ acm wininet \
  xvid lv2 teletextdec sndio osx_video libvisual"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
@@ -1501,41 +1501,6 @@ AG_GST_CHECK_FEATURE(DIRECT3D, [Direct3D plug-in], direct3dsink, [
     AC_SUBST(DIRECT3D_LIBS)
   fi
   AC_SUBST(HAVE_DIRECT3D)
-])
-
-dnl DirectDraw
-translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTDRAW, true)
-AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
-  HAVE_DIRECTDRAW="no"
-  save_CFLAGS="$CFLAGS"
-  save_LDFLAGS="$LDFLAGS"
-  save_LIBS="$LIBS"
-  CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
-  LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
-  LIBS="$LIBS -lddraw -lgdi32"
-  AC_MSG_CHECKING(for DirectDraw LDFLAGS)
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <windows.h>
-#include <ddraw.h>
-]], [[
-  GetStockObject(0);
-  DirectDrawCreate(NULL, NULL, NULL);
-]])],
-    [HAVE_DIRECTDRAW="yes"],
-    [HAVE_DIRECTDRAW="no"])
-  AC_MSG_RESULT($HAVE_DIRECTDRAW)
-  CFLAGS=$save_CFLAGS
-  LDFLAGS=$save_LDFLAGS
-  LIBS=$save_LIBS
-
-  if test "x$HAVE_DIRECTDRAW" = "xyes";  then
-    dnl this is much more than we want
-    DIRECTDRAW_LIBS="-lddraw -ldxguid -lgdi32"
-    AC_SUBST(DIRECTX_CFLAGS)
-    AC_SUBST(DIRECTX_LDFLAGS)
-    AC_SUBST(DIRECTDRAW_LIBS)
-  fi
-  AC_SUBST(HAVE_DIRECTDRAW)
 ])
 
 dnl winscreencap
@@ -3251,7 +3216,6 @@ sys/avc/Makefile
 sys/bluez/Makefile
 sys/d3dvideosink/Makefile
 sys/decklink/Makefile
-sys/directdraw/Makefile
 sys/directsound/Makefile
 sys/dshowsrcwrapper/Makefile
 sys/dshowvideosink/Makefile
