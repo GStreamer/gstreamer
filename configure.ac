@@ -413,7 +413,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" cdxaparse \
  dccp faceoverlay \
  hdvparse \
- mve mythtv nuvdemux \
+ mve nuvdemux \
  patchdetect real \
  sdi tta \
  videomeasure \
@@ -2433,16 +2433,6 @@ AG_GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
     ], [HAVE_MUSEPACK="no"])])
 ])
 
-dnl *** MythTV ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MYTHTV, true)
-AG_GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
-  PKG_CHECK_MODULES(GMYTH, gmyth >= 0.4 gmyth <= 0.7.99, HAVE_MYTHTV="yes", [
-    HAVE_MYTHTV="no"
-  ])
-  AC_SUBST(GMYTH_CFLAGS)
-  AC_SUBST(GMYTH_LIBS)
-])
-
 dnl *** nas ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NAS, true)
 AG_GST_CHECK_FEATURE(NAS, [nas plug-in], nassink, [
@@ -3044,7 +3034,6 @@ AM_CONDITIONAL(USE_MPEG2ENC, false)
 AM_CONDITIONAL(USE_MPG123, false)
 AM_CONDITIONAL(USE_MPLEX, false)
 AM_CONDITIONAL(USE_MUSEPACK, false)
-AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
@@ -3349,7 +3338,6 @@ ext/mpg123/Makefile
 ext/mimic/Makefile
 ext/mplex/Makefile
 ext/musepack/Makefile
-ext/mythtv/Makefile
 ext/nas/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile

@@ -85,7 +85,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/modplug/gstmodplug.h \
 	$(top_srcdir)/ext/mpeg2enc/gstmpeg2enc.hh \
 	$(top_srcdir)/ext/mplex/gstmplex.hh \
-	$(top_srcdir)/ext/mythtv/gstmythtvsrc.h \
 	$(top_srcdir)/ext/opencv/gstcvdilate.h \
 	$(top_srcdir)/ext/opencv/gstcverode.h \
 	$(top_srcdir)/ext/opencv/gstcvequalizehist.h \

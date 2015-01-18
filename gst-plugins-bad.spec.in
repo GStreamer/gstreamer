@@ -103,7 +103,7 @@ gstreamer-plugins-bad contains plug-ins that aren't
 tested well enough, or the code is not of good enough quality.
 
 This package (gstreamer-plugins-bad-extras) contains extra "bad" plugins for
-sources (mythtv), sinks (jack) and effects (pitch) which are not used
+sources, sinks (jack) and effects (pitch) which are not used
 very much and require additional libraries to be installed.
 
 
@@ -303,7 +303,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %defattr(-,root,root,-)
 # Plugins with external dependencies
 # %{_libdir}/gstreamer-%{majorminor}/libgstjack.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstmythtvsrc.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsdl.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsoundtouch.so
 # %{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so

@@ -1016,21 +1016,6 @@ gst_mpg123_audio_dec_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-mythtvsrc</FILE>
-<TITLE>mythtvsrc</TITLE>
-GstMythtvSrc
-<SUBSECTION Standard>
-GstMythtvSrcClass
-GstMythtvState
-GST_MYTHTV_SRC
-GST_MYTHTV_SRC_CLASS
-GST_IS_MYTHTV_SRC
-GST_IS_MYTHTV_SRC_CLASS
-GST_TYPE_MYTHTV_SRC
-gst_mythtv_src_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-mxfdemux</FILE>
 <TITLE>mxfdemux</TITLE>
 GstMXFDemux
