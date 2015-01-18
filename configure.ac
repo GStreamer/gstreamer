@@ -414,7 +414,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  dccp faceoverlay \
  hdvparse \
  mve nuvdemux \
- patchdetect real \
+ patchdetect \
  sdi tta \
  videomeasure \
  linsys \
@@ -476,7 +476,6 @@ AG_GST_CHECK_PLUGIN(patchdetect)
 AG_GST_CHECK_PLUGIN(pcapparse)
 AG_GST_CHECK_PLUGIN(pnm)
 AG_GST_CHECK_PLUGIN(rawparse)
-AG_GST_CHECK_PLUGIN(real)
 AG_GST_CHECK_PLUGIN(removesilence)
 AG_GST_CHECK_PLUGIN(rtp)
 AG_GST_CHECK_PLUGIN(sdi)
@@ -497,12 +496,6 @@ AG_GST_CHECK_PLUGIN(y4m)
 AG_GST_CHECK_PLUGIN(yadif)
 
 dnl *** plug-ins to exclude ***
-
-dnl real plugin only works on i386 and x86_64 for the time being.
-if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
-  AC_MSG_WARN([Not building real plugin, only works on 32bit and 64bit x86 platforms])
-  AG_GST_DISABLE_PLUGIN(real)
-fi
 
 AC_CHECK_HEADER(AVFoundation/AVFoundation.h, HAVE_AVFOUNDATION="yes", HAVE_AVFOUNDATION="no", [-])
 AC_CHECK_HEADER(MobileCoreServices/MobileCoreServices.h, HAVE_IOS="yes", HAVE_IOS="no", [-])
@@ -3206,7 +3199,6 @@ gst/patchdetect/Makefile
 gst/pcapparse/Makefile
 gst/pnm/Makefile
 gst/rawparse/Makefile
-gst/real/Makefile
 gst/removesilence/Makefile
 gst/rtp/Makefile
 gst/sdi/Makefile
