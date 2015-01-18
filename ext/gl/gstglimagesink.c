@@ -871,9 +871,11 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   glimage_sink->convert = gst_gl_color_convert_new (glimage_sink->context);
   if (!gst_gl_color_convert_set_caps (glimage_sink->convert, uploaded_caps,
           glimage_sink->gl_caps)) {
+    gst_caps_unref (uploaded_caps);
     gst_caps_features_free (gl_features);
     return FALSE;
   }
+  gst_caps_unref (uploaded_caps);
   gst_caps_features_free (gl_features);
 
   glimage_sink->caps_change = TRUE;
