@@ -70,7 +70,6 @@
 #endif
 
 #include "gstvideorate.h"
-#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (video_rate_debug);
 #define GST_CAT_DEFAULT video_rate_debug
@@ -849,47 +848,17 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
           gst_query_set_latency (query, live, min, max);
         }
         gst_object_unref (peer);
+        break;
       }
-      break;
-    }
-    case GST_QUERY_ALLOCATION:
-    {
-      guint i, n_allocation;
-
-      n_allocation = gst_query_get_n_allocation_pools (query);
-
-      for (i = 0; i < n_allocation; i++) {
-        GstBufferPool *pool;
-        guint size, min, max;
-
-        gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min,
-            &max);
-
-        min += 1;
-
-        if (max != 0)
-          max = MAX (min, max);
-
-        gst_query_set_nth_allocation_pool (query, i, pool, size, min, max);
-      }
-
-      if (n_allocation == 0) {
-        GstCaps *caps;
-        GstVideoInfo info;
-
-        gst_query_parse_allocation (query, &caps, NULL);
-        gst_video_info_from_caps (&info, caps);
-
-        gst_query_add_allocation_pool (query, NULL, info.size, 1, 0);
-      }
-      break;
+      /* Simple fallthrough if we don't have a latency or not a peer that we
+       * can't ask about its latency yet.. */
     }
     default:
+      res =
+          GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+          query);
       break;
   }
-
-  res =
-      GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction, query);
 
   return res;
 }
