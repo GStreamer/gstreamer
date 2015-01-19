@@ -472,13 +472,16 @@ static const gchar *nal_names[] = {
   "AU delimiter",
   "Sequence End",
   "Stream End",
-  "Filler Data"
+  "Filler Data",
+  "SPS extension",
+  "Prefix",
+  "SPS Subset"
 };
 
 static const gchar *
 _nal_name (GstH264NalUnitType nal_type)
 {
-  if (nal_type <= GST_H264_NAL_FILLER_DATA)
+  if (nal_type <= GST_H264_NAL_SUBSET_SPS)
     return nal_names[nal_type];
   return "Invalid";
 }
@@ -574,14 +577,15 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
     case GST_H264_NAL_SUBSET_SPS:
       if (!GST_H264_PARSE_STATE_VALID (h264parse, GST_H264_PARSE_STATE_GOT_SPS))
         return FALSE;
+      pres = gst_h264_parser_parse_subset_sps (nalparser, nalu, &sps, TRUE);
       goto process_sps;
 
     case GST_H264_NAL_SPS:
       /* reset state, everything else is obsolete */
       h264parse->state = 0;
+      pres = gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
 
     process_sps:
-      pres = gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
       /* arranged for a fallback sps.id, so use that one and only warn */
       if (pres != GST_H264_PARSER_OK) {
         GST_WARNING_OBJECT (h264parse, "failed to parse SPS:");
