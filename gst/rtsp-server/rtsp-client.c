@@ -1726,7 +1726,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPStream *stream;
   GstRTSPState rtspstate;
   GstRTSPClientClass *klass;
-  gchar *path, *control;
+  gchar *path, *control = NULL;
   gint matched;
   gboolean new_session = FALSE;
 
@@ -1775,16 +1775,22 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (media == NULL)
     goto media_not_found_no_reply;
 
-  if (path[matched] == '\0')
-    goto control_not_found;
+  if (path[matched] == '\0') {
+    if (gst_rtsp_media_n_streams (media) == 1) {
+      stream = gst_rtsp_media_get_stream (media, 0);
+    } else {
+      goto control_not_found;
+    }
+  } else {
+    /* path is what matched. */
+    path[matched] = '\0';
+    /* control is remainder */
+    control = &path[matched + 1];
 
-  /* path is what matched. */
-  path[matched] = '\0';
-  /* control is remainder */
-  control = &path[matched + 1];
+    /* find the stream now using the control part */
+    stream = gst_rtsp_media_find_stream (media, control);
+  }
 
-  /* find the stream now using the control part */
-  stream = gst_rtsp_media_find_stream (media, control);
   if (stream == NULL)
     goto stream_not_found;
 
@@ -1945,7 +1951,8 @@ control_not_found:
   }
 stream_not_found:
   {
-    GST_ERROR ("client %p: stream '%s' not found", client, control);
+    GST_ERROR ("client %p: stream '%s' not found", client,
+        GST_STR_NULL (control));
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_object_unref (media);
     goto cleanup_path;
