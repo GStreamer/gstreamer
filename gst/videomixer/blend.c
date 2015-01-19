@@ -86,9 +86,11 @@ method##_ ##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
     src_height = dest_height - ypos; \
   } \
   \
-  dest = dest + 4 * xpos + (ypos * dest_stride); \
+  if (src_height > 0 && src_width > 0) { \
+    dest = dest + 4 * xpos + (ypos * dest_stride); \
   \
-  LOOP (dest, src, src_height, src_width, src_stride, dest_stride, s_alpha); \
+    LOOP (dest, src, src_height, src_width, src_stride, dest_stride, s_alpha); \
+  } \
 }
 
 #define BLEND_A32_LOOP(name, method)			\
@@ -268,23 +270,23 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
     xpos = 0; \
   } \
   if (ypos < 0) { \
-    yoffset += -ypos; \
+    yoffset = -ypos; \
     b_src_height -= -ypos; \
     ypos = 0; \
   } \
   /* If x or y offset are larger then the source it's outside of the picture */ \
-  if (xoffset > src_width || yoffset > src_height) { \
+  if (xoffset >= src_width || yoffset >= src_height) { \
     return; \
   } \
   \
   /* adjust width/height if the src is bigger than dest */ \
-  if (xpos + src_width > dest_width) { \
+  if (xpos + b_src_width > dest_width) { \
     b_src_width = dest_width - xpos; \
   } \
-  if (ypos + src_height > dest_height) { \
+  if (ypos + b_src_height > dest_height) { \
     b_src_height = dest_height - ypos; \
   } \
-  if (b_src_width < 0 || b_src_height < 0) { \
+  if (b_src_width <= 0 || b_src_height <= 0) { \
     return; \
   } \
   \
