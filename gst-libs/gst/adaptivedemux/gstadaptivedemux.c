@@ -2387,7 +2387,7 @@ gst_adaptive_demux_advance_period (GstAdaptiveDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "Advancing to next period");
   klass->advance_period (demux);
-  gst_adaptive_demux_expose_streams (demux, TRUE);
+  gst_adaptive_demux_expose_streams (demux, FALSE);
   gst_adaptive_demux_start_tasks (demux);
 }
 
