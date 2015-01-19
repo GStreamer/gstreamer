@@ -36,6 +36,7 @@ import os
 import sys
 import posixpath
 import BaseHTTPServer
+from SocketServer import ThreadingMixIn
 import urllib
 import cgi
 import shutil
@@ -278,8 +279,12 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     })
 
 
+class ThreadedHTTPServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
+    """Handle requests in a separate thread."""
+
+
 def test(HandlerClass=RangeHTTPRequestHandler,
-         ServerClass=BaseHTTPServer.HTTPServer):
+         ServerClass=ThreadedHTTPServer):
     BaseHTTPServer.test(HandlerClass, ServerClass)
 
 
