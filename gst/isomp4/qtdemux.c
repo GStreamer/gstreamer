@@ -4422,8 +4422,10 @@ gst_qtdemux_do_fragmented_seek (GstQTDemux * qtdemux)
       best_entry = entry;
   }
 
-  if (best_entry == NULL)
+  if (best_entry == NULL) {
+    GST_OBJECT_UNLOCK (qtdemux);
     return FALSE;
+  }
 
   GST_INFO_OBJECT (qtdemux, "seek to %" GST_TIME_FORMAT ", best fragment "
       "moof offset: %" G_GUINT64_FORMAT ", ts %" GST_TIME_FORMAT,
