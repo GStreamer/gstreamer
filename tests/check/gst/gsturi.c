@@ -164,57 +164,203 @@ GST_START_TEST (test_element_make_from_uri)
 
 GST_END_TEST;
 
+/* Taken from the GNet unit test and extended with other URIs:
+ * https://git.gnome.org/browse/archive/gnet/plain/tests/check/gnet/gneturi.c
+ */
+struct QueryValue
+{
+  const gchar *key;
+  const gchar *value;
+};
+
+struct URITest
+{
+  const gchar *str;
+  struct
+  {
+    const gchar *scheme;
+    const gchar *userinfo;
+    const gchar *host;
+    gint port;
+    const gchar *path;
+    /* needs to be updated if more than 10 */
+    struct QueryValue query[10];
+    const gchar *fragment;
+  } uri;
+};
+
+static const struct URITest tests[] = {
+  /* VALID URIS.  PARSING AND PRINTING OF THESE SHOULD NOT CHANGE */
+
+  /* scheme/path */
+  {"scheme:",
+      {"scheme", NULL, NULL, GST_URI_NO_PORT, NULL, {{NULL, NULL}}, NULL}},
+
+  {"scheme:path",
+      {"scheme", NULL, NULL, GST_URI_NO_PORT, "path", {{NULL, NULL}}, NULL}},
+
+  {"path",
+      {NULL, NULL, NULL, GST_URI_NO_PORT, "path", {{NULL, NULL}}, NULL}},
+
+  {"/path",
+      {NULL, NULL, NULL, GST_URI_NO_PORT, "/path", {{NULL, NULL}}, NULL}},
+
+  /* hostname/port */
+  {"scheme://hostname/path",
+        {"scheme", NULL, "hostname", GST_URI_NO_PORT, "/path", {{NULL, NULL}},
+          NULL}},
+
+  {"scheme://hostname:123/path",
+      {"scheme", NULL, "hostname", 123, "/path", {{NULL, NULL}}, NULL}},
+
+  /* ipv6 hostname/port */
+  {"scheme://[01:23:45:67:89:ab:cd:ef]/path",
+        {"scheme", NULL, "01:23:45:67:89:ab:cd:ef", GST_URI_NO_PORT, "/path",
+          {{NULL, NULL}}, NULL}},
+
+  {"scheme://[01:23:45:67:89:ab:cd:ef]:123/path",
+        {"scheme", NULL, "01:23:45:67:89:ab:cd:ef", 123, "/path", {{NULL,
+                  NULL}}, NULL}},
+
+  /* query/fragment */
+  {"path?query",
+        {NULL, NULL, NULL, GST_URI_NO_PORT, "path", {{"query", NULL}, {NULL,
+                  NULL}}, NULL}},
+  {"path?query=value",
+        {NULL, NULL, NULL, GST_URI_NO_PORT, "path", {{"query", "value"}, {NULL,
+                  NULL}}, NULL}},
+
+  {"path?query#fragment",
+        {NULL, NULL, NULL, GST_URI_NO_PORT, "path", {{"query", NULL}, {NULL,
+                  NULL}}, "fragment"}},
+
+  {"path?query=value#fragment",
+        {NULL, NULL, NULL, GST_URI_NO_PORT, "path", {{"query", "value"}, {NULL,
+                  NULL}}, "fragment"}},
+
+  {"scheme:path?query#fragment",
+        {"scheme", NULL, NULL, GST_URI_NO_PORT, "path", {{"query", NULL}, {NULL,
+                  NULL}}, "fragment"}},
+
+  /* full */
+  {"scheme://hostname:123/path?query#fragment",
+        {"scheme", NULL, "hostname", 123, "/path", {{"query", NULL}, {NULL,
+                  NULL}}, "fragment"}},
+
+  {"scheme://hostname:123/path?query=value#fragment",
+        {"scheme", NULL, "hostname", 123, "/path", {{"query", "value"}, {NULL,
+                  NULL}}, "fragment"}},
+
+  {"scheme://hostname:123?query",
+        {NULL, NULL, "hostname", 123, NULL, {{"query", NULL}, {NULL,
+                  NULL}}, NULL}},
+
+  {"scheme://hostname:123?query=value",
+        {NULL, NULL, "hostname", 123, NULL, {{"query", "value"}, {NULL,
+                  NULL}}, NULL}},
+
+  {"scheme://hostname:123?query#fragment",
+        {NULL, NULL, "hostname", 123, NULL, {{"query", NULL}, {NULL,
+                  NULL}}, "fragment"}},
+
+  {"scheme://hostname:123?query=value#fragment",
+        {NULL, NULL, "hostname", 123, NULL, {{"query", "value"}, {NULL,
+                  NULL}}, "fragment"}},
+
+  /* user/pass */
+  {"scheme://userinfo@hostname",
+        {"scheme", "userinfo", "hostname", GST_URI_NO_PORT, NULL, {{NULL,
+                  NULL}}, NULL}},
+
+  {"scheme://userinfo@hostname:123/path?query#fragment",
+        {"scheme", "userinfo", "hostname", 123, "/path", {{"query", NULL},
+              {NULL, NULL}}, "fragment"}},
+
+  {"scheme://user:pass@hostname",
+        {"scheme", "user:pass", "hostname", GST_URI_NO_PORT, NULL, {{NULL,
+                  NULL}}, NULL}},
+
+  {"scheme://user:pass@hostname:123/path?query#fragment",
+        {"scheme", "user:pass", "hostname", 123, "/path", {{"query", NULL},
+              {NULL, NULL}}, "fragment"}},
+
+  /* FUNNY URIS.  PARSING AND PRINTING OF THESE MAY CHANGE */
+
+  {"scheme://hostname:123path?query#fragment",  /* PRETTY */
+        {"scheme", NULL, "hostname", 123, "path", {{"query", NULL}, {NULL,
+                  NULL}}, "fragment"}},
+
+  {"scheme:hostname:123/path?query#fragment",
+        {"scheme", NULL, NULL, GST_URI_NO_PORT, "hostname:123/path", {{"query",
+                  NULL}, {NULL, NULL}}, "fragment"}},
+
+  {"scheme://:pass@hostname:123/path?query#fragment",
+        {"scheme", ":pass", "hostname", 123, "/path", {{"query", NULL}, {NULL,
+                  NULL}}, "fragment"}},
+
+  /* IPv6 hostname without brackets */
+  {"scheme://01:23:45:67:89:ab:cd:ef:123/path",
+        {"scheme", NULL, "01", GST_URI_NO_PORT, ":45:67:89:ab:cd:ef:123/path",
+          {{NULL, NULL}}, NULL}},
+
+  /* Brackets that don't close - hostname will be everything */
+  {"scheme://[01:23:45:67:89:ab:cd:ef:123/path",
+        {"scheme", NULL, "01:23:45:67:89:ab:cd:ef:123/path", GST_URI_NO_PORT,
+          NULL, {{NULL, NULL}}, NULL}},
+
+  /* Skip initial white space */
+  {" \f\n\r\t\vscheme:",
+      {"scheme", NULL, NULL, GST_URI_NO_PORT, NULL, {{NULL, NULL}}, NULL}},
+
+  {" \f\n\r\t\vpath",
+      {NULL, NULL, NULL, GST_URI_NO_PORT, "path", {{NULL, NULL}}, NULL}},
+
+  /* file URI */
+  {"file://host/home/joe/foo.txt",
+        {"file", NULL, "host", GST_URI_NO_PORT, "/home/joe/foo.txt", {{NULL,
+                  NULL}}, NULL}},
+  {"file:///home/joe/foo.txt",
+        {"file", NULL, NULL, GST_URI_NO_PORT, "/home/joe/foo.txt", {{NULL,
+                  NULL}}, NULL}},
+};
+
 GST_START_TEST (test_url_parsing)
 {
-  GstUri *url;
+  GstUri *uri;
   GList *list;
   gchar *tmp_str;
+  guint i, j;
 
-  url =
-      gst_uri_from_string
-      ("scheme://user:pass@host.com:1234/path/to/item-obj?query=something#fragment");
+  for (i = 0; i < G_N_ELEMENTS (tests); i++) {
+    GST_DEBUG ("Testing URI '%s'", tests[i].str);
 
-  fail_unless_equals_string (gst_uri_get_scheme (url), "scheme");
-  fail_unless_equals_string (gst_uri_get_userinfo (url), "user:pass");
-  fail_unless_equals_string (gst_uri_get_host (url), "host.com");
-  fail_unless (gst_uri_get_port (url) == 1234);
-  tmp_str = gst_uri_get_path (url);
-  fail_unless_equals_string (tmp_str, "/path/to/item-obj");
-  g_free (tmp_str);
-  list = gst_uri_get_query_keys (url);
-  fail_unless (g_list_length (list) == 1);
-  g_list_free (list);
-  fail_unless (gst_uri_query_has_key (url, "query"));
-  fail_unless_equals_string (gst_uri_get_query_value (url, "query"),
-      "something");
-  fail_unless_equals_string (gst_uri_get_fragment (url), "fragment");
-  gst_uri_unref (url);
+    uri = gst_uri_from_string (tests[i].str);
+    fail_unless (uri != NULL);
+    fail_unless_equals_string (gst_uri_get_scheme (uri), tests[i].uri.scheme);
+    fail_unless_equals_string (gst_uri_get_userinfo (uri),
+        tests[i].uri.userinfo);
+    fail_unless_equals_string (gst_uri_get_host (uri), tests[i].uri.host);
+    fail_unless_equals_int (gst_uri_get_port (uri), tests[i].uri.port);
+    tmp_str = gst_uri_get_path (uri);
+    fail_unless_equals_string (tmp_str, tests[i].uri.path);
+    g_free (tmp_str);
 
-  url = gst_uri_from_string ("scheme://host/path/to/dir/");
-  fail_unless_equals_string (gst_uri_get_scheme (url), "scheme");
-  fail_unless (gst_uri_get_userinfo (url) == NULL);
-  fail_unless_equals_string (gst_uri_get_host (url), "host");
-  fail_unless (gst_uri_get_port (url) == GST_URI_NO_PORT);
-  tmp_str = gst_uri_get_path (url);
-  fail_unless_equals_string (tmp_str, "/path/to/dir/");
-  g_free (tmp_str);
-  fail_unless (gst_uri_get_query_table (url) == NULL);
-  fail_unless (gst_uri_get_fragment (url) == NULL);
-  gst_uri_unref (url);
+    for (j = 0; j < 10; j++) {
+      if (!tests[i].uri.query[j].key)
+        break;
 
-  url = gst_uri_from_string ("urn:name:path");
-  fail_unless_equals_string (gst_uri_get_scheme (url), "urn");
-  fail_unless (gst_uri_get_userinfo (url) == NULL);
-  fail_unless (gst_uri_get_host (url) == NULL);
-  fail_unless (gst_uri_get_port (url) == GST_URI_NO_PORT);
-  tmp_str = gst_uri_get_path (url);
-  fail_unless_equals_string (tmp_str, "name:path");
-  g_free (tmp_str);
-  list = gst_uri_get_query_keys (url);
-  fail_unless (g_list_length (list) == 0);
-  g_list_free (list);
-  fail_unless (gst_uri_get_fragment (url) == NULL);
-  gst_uri_unref (url);
+      if (tests[i].uri.query[j].value) {
+        fail_unless_equals_string (gst_uri_get_query_value (uri,
+                tests[i].uri.query[j].key), tests[i].uri.query[j].value);
+      } else {
+        fail_unless (gst_uri_query_has_key (uri, tests[i].uri.query[j].key));
+      }
+    }
+    list = gst_uri_get_query_keys (uri);
+    fail_unless_equals_int (j, g_list_length (list));
+    g_list_free (list);
+    gst_uri_unref (uri);
+  }
 }
 
 GST_END_TEST;
