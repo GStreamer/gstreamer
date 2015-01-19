@@ -1327,7 +1327,7 @@ gst_dash_demux_chunk_received (GstAdaptiveDemux * demux,
       }
 
       gst_dash_demux_stream_advance_subfragment (stream);
-      ret = GST_ADAPTIVE_DEMUX_FLOW_SUBSEGMENT_END;
+      ret = (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SUBSEGMENT_END;
     }
   }
 
