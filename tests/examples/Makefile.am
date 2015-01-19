@@ -24,7 +24,18 @@ else
 GL_DIR=
 endif
 
-SUBDIRS= mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) $(GL_DIR)
-DIST_SUBDIRS= mpegts camerabin2 directfb mxf opencv uvch264 gl
+if HAVE_AVFOUNDATION
+if HAVE_IOS
+AVSAMPLE_DIR=
+else
+AVSAMPLE_DIR=avsamplesink
+endif
+else
+AVSAMPLE_DIR=
+endif
+
+SUBDIRS= mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) $(GL_DIR) \
+	$(AVSAMPLE_DIR)
+DIST_SUBDIRS= mpegts camerabin2 directfb mxf opencv uvch264 gl avsamplesink
 
 include $(top_srcdir)/common/parallel-subdirs.mak

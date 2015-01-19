@@ -3237,6 +3237,7 @@ tests/Makefile
 tests/check/Makefile
 tests/files/Makefile
 tests/examples/Makefile
+tests/examples/avsamplesink/Makefile
 tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
 tests/examples/gl/Makefile

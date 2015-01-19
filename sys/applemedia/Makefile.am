@@ -89,7 +89,8 @@ if HAVE_AVFOUNDATION
 
 libgstapplemedia_la_SOURCES +=			\
 	avfvideosrc.m				\
-	avfassetsrc.m
+	avfassetsrc.m				\
+	avsamplevideosink.m
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,AVFoundation
