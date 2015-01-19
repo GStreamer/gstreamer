@@ -2631,6 +2631,10 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
   } else {
     gst_buffer_unref (buffer);
   }
+
+  return;
+
+/* ERRORS */
 invalid_length:
   {
     GST_DEBUG ("client %p: Short message received, ignoring", client);
