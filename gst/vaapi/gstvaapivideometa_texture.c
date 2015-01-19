@@ -26,10 +26,12 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include "gstvaapivideometa.h"
-#include "gstvaapivideometa_texture.h"
 #include "gstvaapipluginutil.h"
 
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
+
+#include "gstvaapivideometa_texture.h"
+
 struct _GstVaapiVideoMetaTexture
 {
   GstVaapiTexture *texture;
