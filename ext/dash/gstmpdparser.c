@@ -2984,6 +2984,10 @@ gst_mpd_client_add_media_segment (GstActiveStream * stream,
   media_segment->duration = duration;
 
   g_ptr_array_add (stream->segments, media_segment);
+  GST_LOG ("Added new segment: number %d, ts: %" GST_TIME_FORMAT ", dur: %"
+      GST_TIME_FORMAT " start time %" GST_TIME_FORMAT, number,
+      GST_TIME_ARGS (start), GST_TIME_ARGS (duration),
+      GST_TIME_ARGS (start_time));
 
   return TRUE;
 }
