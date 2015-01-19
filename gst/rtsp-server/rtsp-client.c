@@ -2620,15 +2620,20 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
 
   gst_rtsp_message_steal_body (message, &data, &size);
 
-  /* Strip trailing \0 */
-  buffer = gst_buffer_new_wrapped (data, size - 1);
+  /* Strip trailing \0 (which GstRTSPConnection adds) */
+  --size;
+
+  buffer = gst_buffer_new_wrapped (data, size);
 
   trans =
       g_hash_table_lookup (priv->transports, GINT_TO_POINTER ((gint) channel));
   if (trans) {
     /* dispatch to the stream based on the channel number */
+    GST_LOG_OBJECT (client, "%u bytes of data on channel %u", size, channel);
     gst_rtsp_stream_transport_recv_data (trans, channel, buffer);
   } else {
+    GST_DEBUG_OBJECT (client, "received %u bytes of data for "
+        "unknown channel %u", size, channel);
     gst_buffer_unref (buffer);
   }
 
