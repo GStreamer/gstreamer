@@ -196,6 +196,9 @@ guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_retransmission_time  (GstRTSPMedia *media, GstClockTime time);
 GstClockTime          gst_rtsp_media_get_retransmission_time  (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_set_latency      (GstRTSPMedia *media, guint latency);
+guint                 gst_rtsp_media_get_latency      (GstRTSPMedia *media);
+
 void                  gst_rtsp_media_use_time_provider (GstRTSPMedia *media, gboolean time_provider);
 gboolean              gst_rtsp_media_is_time_provider  (GstRTSPMedia *media);
 GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,

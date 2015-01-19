@@ -62,6 +62,7 @@ struct _GstRTSPMediaFactoryPrivate
   GstRTSPAddressPool *pool;
 
   GstClockTime rtx_time;
+  guint latency;
 
   GMutex medias_lock;
   GHashTable *medias;           /* protected by medias_lock */
@@ -75,6 +76,7 @@ struct _GstRTSPMediaFactoryPrivate
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
                                         GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_BUFFER_SIZE     0x80000
+#define DEFAULT_LATENCY         200
 #define DEFAULT_RECORD          FALSE
 
 enum
@@ -87,6 +89,7 @@ enum
   PROP_PROFILES,
   PROP_PROTOCOLS,
   PROP_BUFFER_SIZE,
+  PROP_LATENCY,
   PROP_RECORD,
   PROP_LAST
 };
@@ -186,6 +189,11 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_LATENCY,
+      g_param_spec_uint ("latency", "Latency",
+          "Latency used for receiving media in milliseconds", 0, G_MAXUINT,
+          DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* FIXME: Should this be a flag property to allow RECORD and PLAY?
    *        Or just another boolean PLAY property that default to TRUE?
    */
@@ -230,6 +238,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->profiles = DEFAULT_PROFILES;
   priv->protocols = DEFAULT_PROTOCOLS;
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
+  priv->latency = DEFAULT_LATENCY;
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->medias_lock);
@@ -286,6 +295,9 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
       g_value_set_uint (value,
           gst_rtsp_media_factory_get_buffer_size (factory));
       break;
+    case PROP_LATENCY:
+      g_value_set_uint (value, gst_rtsp_media_factory_get_latency (factory));
+      break;
     case PROP_RECORD:
       g_value_set_boolean (value, gst_rtsp_media_factory_is_record (factory));
       break;
@@ -324,6 +336,9 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_BUFFER_SIZE:
       gst_rtsp_media_factory_set_buffer_size (factory,
           g_value_get_uint (value));
+      break;
+    case PROP_LATENCY:
+      gst_rtsp_media_factory_set_latency (factory, g_value_get_uint (value));
       break;
     case PROP_RECORD:
       gst_rtsp_media_factory_set_record (factory, g_value_get_boolean (value));
@@ -892,6 +907,55 @@ gst_rtsp_media_factory_get_retransmission_time (GstRTSPMediaFactory * factory)
   return res;
 }
 
+/**
+ * gst_rtsp_media_factory_set_latency:
+ * @factory: a #GstRTSPMediaFactory
+ * @latency: latency in milliseconds
+ *
+ * Configure the latency used for receiving media
+ */
+void
+gst_rtsp_media_factory_set_latency (GstRTSPMediaFactory * factory,
+    guint latency)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  priv = factory->priv;
+
+  GST_DEBUG_OBJECT (factory, "latency %ums", latency);
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv->latency = latency;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_latency:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get the latency that is used for receiving media
+ *
+ * Returns: latency in milliseconds
+ */
+guint
+gst_rtsp_media_factory_get_latency (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  guint res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), 0);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  res = priv->latency;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return res;
+}
+
 static gboolean
 compare_media (gpointer key, GstRTSPMedia * media1, GstRTSPMedia * media2)
 {
@@ -1155,6 +1219,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstRTSPAddressPool *pool;
   GstRTSPPermissions *perms;
   GstClockTime rtx_time;
+  guint latency;
   gboolean record;
 
   /* configure the sharedness */
@@ -1166,6 +1231,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   profiles = priv->profiles;
   protocols = priv->protocols;
   rtx_time = priv->rtx_time;
+  latency = priv->latency;
   record = priv->record;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
@@ -1176,6 +1242,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_profiles (media, profiles);
   gst_rtsp_media_set_protocols (media, protocols);
   gst_rtsp_media_set_retransmission_time (media, rtx_time);
+  gst_rtsp_media_set_latency (media, latency);
   gst_rtsp_media_set_record (media, record);
 
   if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {

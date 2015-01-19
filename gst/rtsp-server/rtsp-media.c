@@ -137,6 +137,7 @@ struct _GstRTSPMediaPrivate
 
   GList *payloads;              /* protected by lock */
   GstClockTime rtx_time;        /* protected by lock */
+  guint latency;                /* protected by lock */
 };
 
 #define DEFAULT_SHARED          FALSE
@@ -148,6 +149,7 @@ struct _GstRTSPMediaPrivate
 #define DEFAULT_EOS_SHUTDOWN    FALSE
 #define DEFAULT_BUFFER_SIZE     0x80000
 #define DEFAULT_TIME_PROVIDER   FALSE
+#define DEFAULT_LATENCY         200
 #define DEFAULT_RECORD          FALSE
 
 /* define to dump received RTCP packets */
@@ -165,6 +167,7 @@ enum
   PROP_BUFFER_SIZE,
   PROP_ELEMENT,
   PROP_TIME_PROVIDER,
+  PROP_LATENCY,
   PROP_RECORD,
   PROP_LAST
 };
@@ -292,6 +295,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_param_spec_boolean ("time-provider", "Time Provider",
           "Use a NetTimeProvider for clients",
           DEFAULT_TIME_PROVIDER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_LATENCY,
+      g_param_spec_uint ("latency", "Latency",
+          "Latency used for receiving media in milliseconds", 0, G_MAXUINT,
+          DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RECORD,
       g_param_spec_boolean ("record", "Record",
@@ -435,6 +443,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_TIME_PROVIDER:
       g_value_set_boolean (value, gst_rtsp_media_is_time_provider (media));
       break;
+    case PROP_LATENCY:
+      g_value_set_uint (value, gst_rtsp_media_get_latency (media));
+      break;
     case PROP_RECORD:
       g_value_set_boolean (value, gst_rtsp_media_is_record (media));
       break;
@@ -477,6 +488,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_TIME_PROVIDER:
       gst_rtsp_media_use_time_provider (media, g_value_get_boolean (value));
+      break;
+    case PROP_LATENCY:
+      gst_rtsp_media_set_latency (media, g_value_get_uint (value));
       break;
     case PROP_RECORD:
       gst_rtsp_media_set_record (media, g_value_get_boolean (value));
@@ -1176,6 +1190,56 @@ gst_rtsp_media_get_retransmission_time (GstRTSPMedia * media)
 
   g_mutex_unlock (&priv->lock);
   res = priv->rtx_time;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
+/**
+ * gst_rtsp_media_set_latncy:
+ * @media: a #GstRTSPMedia
+ * @latency: latency in milliseconds
+ *
+ * Configure the latency used for receiving media.
+ */
+void
+gst_rtsp_media_set_latency (GstRTSPMedia * media, guint latency)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  GST_LOG_OBJECT (media, "set latency %ums", latency);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->latency = latency;
+  if (priv->rtpbin)
+    g_object_set (priv->rtpbin, "latency", latency, NULL);
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_latency:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the latency that is used for receiving media.
+ *
+ * Returns: latency in milliseconds
+ */
+guint
+gst_rtsp_media_get_latency (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  guint res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_unlock (&priv->lock);
+  res = priv->latency;
   g_mutex_unlock (&priv->lock);
 
   return res;
@@ -2407,6 +2471,8 @@ default_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   priv->rtpbin = klass->create_rtpbin (media);
   if (priv->rtpbin != NULL) {
     gboolean success = TRUE;
+
+    g_object_set (priv->rtpbin, "latency", priv->latency, NULL);
 
     if (klass->setup_rtpbin)
       success = klass->setup_rtpbin (media, priv->rtpbin);
