@@ -1663,6 +1663,37 @@ gst_v4l2_object_get_interlace_mode (enum v4l2_field field,
   }
 }
 
+static gboolean
+gst_v4l2_object_get_colorspace (enum v4l2_colorspace colorspace,
+    GstVideoColorimetry * cinfo)
+{
+  gboolean ret = FALSE;
+
+  switch (colorspace) {
+    case V4L2_COLORSPACE_SMPTE170M:
+      ret = gst_video_colorimetry_from_string (cinfo,
+          GST_VIDEO_COLORIMETRY_BT601);
+      break;
+    case V4L2_COLORSPACE_REC709:
+      ret = gst_video_colorimetry_from_string (cinfo,
+          GST_VIDEO_COLORIMETRY_BT709);
+      break;
+    case V4L2_COLORSPACE_SMPTE240M:
+      ret = gst_video_colorimetry_from_string (cinfo,
+          GST_VIDEO_COLORIMETRY_SMPTE240M);
+      break;
+    case V4L2_COLORSPACE_SRGB:
+      ret = gst_video_colorimetry_from_string (cinfo,
+          GST_VIDEO_COLORIMETRY_SRGB);
+      break;
+    default:
+      GST_DEBUG ("Unknown enum v4l2_colorspace %d", colorspace);
+      ret = FALSE;
+      break;
+  }
+  return ret;
+}
+
 static int
 gst_v4l2_object_try_fmt (GstV4l2Object * v4l2object,
     struct v4l2_format *try_fmt)
@@ -1750,6 +1781,39 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
 
   gst_v4l2src_value_simplify (&interlace_formats);
   gst_structure_take_value (s, "interlace-mode", &interlace_formats);
+  return;
+}
+
+static void
+gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
+    guint32 width, guint32 height, guint32 pixelformat)
+{
+  struct v4l2_format fmt;
+  GValue colorimetry = G_VALUE_INIT;
+  GstVideoColorimetry cinfo;
+
+  memset (&fmt, 0, sizeof (fmt));
+  fmt.type = v4l2object->type;
+  fmt.fmt.pix.width = width;
+  fmt.fmt.pix.height = height;
+  fmt.fmt.pix.pixelformat = pixelformat;
+
+  if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0) {
+    enum v4l2_colorspace colorspace;
+
+    if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type))
+      colorspace = fmt.fmt.pix_mp.colorspace;
+    else
+      colorspace = fmt.fmt.pix.colorspace;
+
+    if (gst_v4l2_object_get_colorspace (colorspace, &cinfo)) {
+      g_value_init (&colorimetry, G_TYPE_STRING);
+      g_value_take_string (&colorimetry,
+          gst_video_colorimetry_to_string (&cinfo));
+      gst_structure_take_value (s, "colorimetry", &colorimetry);
+    }
+  }
+
   return;
 }
 
@@ -1925,6 +1989,7 @@ return_data:
   gst_v4l2_object_add_aspect_ratio (v4l2object, s);
   gst_v4l2_object_add_interlace_mode (v4l2object, s, width, height,
       pixelformat);
+  gst_v4l2_object_add_colorspace (v4l2object, s, width, height, pixelformat);
 
   if (G_IS_VALUE (&rates)) {
     gst_v4l2src_value_simplify (&rates);
@@ -2248,6 +2313,9 @@ default_frame_sizes:
     gst_v4l2_object_add_interlace_mode (v4l2object, tmp, max_w, max_h,
         pixelformat);
     gst_v4l2_object_add_aspect_ratio (v4l2object, tmp);
+    /* We could consider to check colorspace for min too, in case it depends on
+     * the size. But in this case, min and max could not be enough */
+    gst_v4l2_object_add_colorspace (v4l2object, tmp, max_w, max_h, pixelformat);
 
     gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp);
     return ret;
