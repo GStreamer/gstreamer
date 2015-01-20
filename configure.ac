@@ -1007,7 +1007,7 @@ case $host in
       fi
 
       if test "x$NEED_COCOA" != "xno"; then
-        GL_LIBS="$LIBS -framework OpenGL -framework Cocoa"
+        GL_LIBS="$LIBS -framework OpenGL -framework Cocoa -framework QuartzCore -framework CoreFoundation"
         GL_CFLAGS="$GL_CFLAGS"
         USE_COCOA=yes
         HAVE_WINDOW_COCOA=yes

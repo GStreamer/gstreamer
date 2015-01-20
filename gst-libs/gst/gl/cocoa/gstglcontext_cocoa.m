@@ -211,6 +211,76 @@ gst_gl_context_cocoa_new (void)
   return context;
 }
 
+struct pixel_attr
+{
+  CGLPixelFormatAttribute attr;
+  const gchar *attr_name;
+};
+
+static struct pixel_attr pixel_attrs[] = {
+  {kCGLPFAAllRenderers, "All Renderers"},
+  {kCGLPFADoubleBuffer, "Double Buffered"},
+  {kCGLPFAStereo, "Stereo"},
+  {kCGLPFAAuxBuffers, "Aux Buffers"},
+  {kCGLPFAColorSize, "Color Size"},
+  {kCGLPFAAlphaSize, "Alpha Size"},
+  {kCGLPFADepthSize, "Depth Size"},
+  {kCGLPFAStencilSize, "Stencil Size"},
+  {kCGLPFAAccumSize, "Accum Size"},
+  {kCGLPFAMinimumPolicy, "Minimum Policy"},
+  {kCGLPFAMaximumPolicy, "Maximum Policy"},
+//  {kCGLPFAOffScreen, "Off Screen"},
+//  {kCGLPFAFullScreen, "Full Screen"},
+  {kCGLPFASampleBuffers, "Sample Buffers"},
+  {kCGLPFASamples, "Samples"},
+  {kCGLPFAAuxDepthStencil, "Aux Depth Stencil"},
+  {kCGLPFAColorFloat, "Color Float"},
+  {kCGLPFAMultisample, "Multisample"},
+  {kCGLPFASupersample, "Supersample"},
+  {kCGLPFARendererID, "Renderer ID"},
+  {kCGLPFASingleRenderer, "Single Renderer"},
+  {kCGLPFANoRecovery, "No Recovery"},
+  {kCGLPFAAccelerated, "Accelerated"},
+  {kCGLPFAClosestPolicy, "Closest Policy"},
+//  {kCGLPFARobust, "Robust"},
+  {kCGLPFABackingStore, "Backing Store"},
+//  {kCGLPFAMPSafe, "MP Safe"},
+  {kCGLPFAWindow, "Window"},
+//  {kCGLPFAMultiScreen, "Multi Screen"},
+  {kCGLPFACompliant, "Compliant"},
+  {kCGLPFADisplayMask, "Display Mask"},
+//  {kCGLPFAPBuffer, "PBuffer"},
+  {kCGLPFARemotePBuffer, "Remote PBuffer"},
+  {kCGLPFAAllowOfflineRenderers, "Allow Offline Renderers"},
+  {kCGLPFAAcceleratedCompute, "Accelerated Compute"},
+  {kCGLPFAOpenGLProfile, "OpenGL Profile"},
+  {kCGLPFAVirtualScreenCount, "Virtual Screen Count"},
+};
+
+void
+gst_gl_context_cocoa_dump_pixel_format (CGLPixelFormatObj fmt)
+{
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (pixel_attrs); i++) {
+    gint val;
+    CGLError ret = CGLDescribePixelFormat (fmt, 0, pixel_attrs[i].attr, &val);
+
+    if (ret != kCGLNoError) {
+      GST_WARNING ("failed to get pixel format %p attribute %s", fmt, pixel_attrs[i].attr_name);
+    } else {
+      GST_DEBUG ("Pixel format %p attr %s = %i", fmt, pixel_attrs[i].attr_name,
+          val);
+    }
+  }
+}
+
+CGLPixelFormatObj
+gst_gl_context_cocoa_get_pixel_format (GstGLContextCocoa *context)
+{
+  return context->priv->pixel_format;
+}
+
 static gboolean
 gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
     GstGLContext *other_context, GError **error)
@@ -219,7 +289,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   GstGLContextCocoaPrivate *priv = context_cocoa->priv;
   GstGLWindow *window = gst_gl_context_get_window (context);
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
-  __block NSOpenGLContext *glContext = nil;
+  const GLint swapInterval = 1;
 
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
   priv->source_id = g_timeout_add (200, gst_gl_window_cocoa_nsapp_iteration, NULL);
@@ -227,21 +297,25 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 
   priv->gl_context = nil;
   if (other_context)
-    priv->external_gl_context = (NSOpenGLContext *) gst_gl_context_get_gl_context (other_context);
+    priv->external_gl_context = (CGLContextObj) gst_gl_context_get_gl_context (other_context);
   else
     priv->external_gl_context = NULL;
 
   dispatch_sync (dispatch_get_main_queue (), ^{
     NSAutoreleasePool *pool;
-    NSOpenGLPixelFormat *fmt = nil;
-    GstGLNSView *glView = nil;
-    NSOpenGLPixelFormatAttribute attribs[] = {
-      NSOpenGLPFADoubleBuffer,
-      NSOpenGLPFAAccumSize, 32,
+    CGLPixelFormatObj fmt = NULL;
+    GstGLNSView *glView = NULL;
+    GstGLCAOpenGLLayer *layer;
+    CGLContextObj glContext;
+    CGLPixelFormatAttribute attribs[] = {
+      kCGLPFADoubleBuffer,
+      kCGLPFAAccumSize, 32,
       0
     };
+    CGLError ret;
     NSRect rect;
     NSWindow *window_handle;
+    gint npix;
 
     pool = [[NSAutoreleasePool alloc] init];
 
@@ -253,56 +327,55 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
     gst_gl_window_cocoa_create_window (window_cocoa, rect);
     window_handle = (NSWindow *) gst_gl_window_get_window_handle (window);
 
-    fmt = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
+    if (priv->external_gl_context) {
+      fmt = CGLGetPixelFormat (priv->external_gl_context);
+    }
+
     if (!fmt) {
+      ret = CGLChoosePixelFormat (attribs, &fmt, &npix);
+      if (ret != kCGLNoError) {
+        gst_object_unref (window);
+        g_set_error (error, GST_GL_CONTEXT_ERROR,
+            GST_GL_CONTEXT_ERROR_WRONG_CONFIG, "cannot choose a pixel format: %s", CGLErrorString (ret));
+        return;
+      }
+    }
+
+    gst_gl_context_cocoa_dump_pixel_format (fmt);
+
+    ret = CGLCreateContext (fmt, priv->external_gl_context, &glContext);
+    if (ret != kCGLNoError) {
+      g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+          "failed to create context: %s", CGLErrorString (ret));
       gst_object_unref (window);
-      GST_WARNING ("cannot create NSOpenGLPixelFormat");
       return;
     }
 
-    glView = [[GstGLNSView alloc] initWithFrame:window_cocoa rect:rect];
-
-    [window_handle setContentView:glView];
-
-    glContext = [[NSOpenGLContext alloc] initWithFormat:fmt
-      shareContext:context_cocoa->priv->external_gl_context];
-
-    GST_DEBUG ("NSOpenGL context created: %"G_GUINTPTR_FORMAT, (guintptr) glContext);
-
+    context_cocoa->priv->pixel_format = fmt;
     context_cocoa->priv->gl_context = glContext;
 
-    [glContext setView:glView];
+    layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLContext:context_cocoa];
+    glView = [[GstGLNSView alloc] initWithFrameLayer:window_cocoa rect:rect layer:layer];
+
+    [window_handle setContentView:glView];
 
     [pool release];
   });
 
-  if (!glContext) {
+  if (!context_cocoa->priv->gl_context) {
     g_source_remove (priv->source_id);
     priv->source_id = 0;
     return FALSE;
   }
 
-  /* OpenGL context is made current only one time threre.
-   * Indeed, all OpenGL calls are made in only one thread,
-   * the Application thread */
-  [glContext makeCurrentContext];
+  GST_INFO_OBJECT (context, "GL context created: %p", context_cocoa->priv->gl_context);
 
-  [glContext update];
+  CGLSetCurrentContext (context_cocoa->priv->gl_context);
 
   /* Back and front buffers are swapped only during the vertical retrace of the monitor.
    * Discarded if you configured your driver to Never-use-V-Sync.
    */
-  NS_DURING {
-    if (glContext) {
-      const GLint swapInterval = 1;
-      [glContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
-    }
-  } NS_HANDLER {
-     GST_DEBUG ("your back-end does not implement NSOpenglContext::setValues\n");
-  }
-  NS_ENDHANDLER
-
-  GST_DEBUG ("opengl GstGLNSWindow initialized");
+  CGLSetParameter (context_cocoa->priv->gl_context, kCGLCPSwapInterval, &swapInterval);
 
   gst_object_unref (window);
 
@@ -331,15 +404,10 @@ gst_gl_context_cocoa_get_gl_context (GstGLContext * context)
 static gboolean
 gst_gl_context_cocoa_activate (GstGLContext * context, gboolean activate)
 {
-  GstGLContextCocoa *context_cocoa;
+  GstGLContextCocoa *context_cocoa = GST_GL_CONTEXT_COCOA (context);
+  gpointer context_handle = activate ? context_cocoa->priv->gl_context : NULL;
 
-  context_cocoa = GST_GL_CONTEXT_COCOA (context);
-
-  if (activate)
-    [context_cocoa->priv->gl_context makeCurrentContext];
-  else
-    [NSOpenGLContext clearCurrentContext];
-  return TRUE;
+  return kCGLNoError == CGLSetCurrentContext (context_handle);
 }
 
 static GstGLAPI
@@ -357,5 +425,5 @@ gst_gl_context_cocoa_get_gl_platform (GstGLContext * context)
 guintptr
 gst_gl_context_cocoa_get_current_context (void)
 {
-  return (guintptr) [NSOpenGLContext currentContext];
+  return (guintptr) CGLGetCurrentContext ();
 }

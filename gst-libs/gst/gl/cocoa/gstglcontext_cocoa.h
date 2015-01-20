@@ -62,6 +62,9 @@ GType gst_gl_context_cocoa_get_type (void);
 
 GstGLContextCocoa * gst_gl_context_cocoa_new (void);
 guintptr gst_gl_context_cocoa_get_current_context (void);
+CGLPixelFormatObj gst_gl_context_cocoa_get_pixel_format (GstGLContextCocoa *context);
+void gst_gl_context_cocoa_dump_pixel_format (CGLPixelFormatObj fmt);
+
 
 G_END_DECLS
 

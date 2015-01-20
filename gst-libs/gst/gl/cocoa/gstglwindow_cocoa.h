@@ -60,6 +60,10 @@ GType gst_gl_window_cocoa_get_type     (void);
 
 GstGLWindowCocoa * gst_gl_window_cocoa_new (void);
 
+void gst_gl_window_cocoa_draw_thread (GstGLWindowCocoa *window_cocoa,
+                                      guint width, guint height);
+
+
 G_END_DECLS
 
 #endif /* __GST_GL_WINDOW_COCOA_H__ */
