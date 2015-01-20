@@ -1136,33 +1136,38 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
 }
 
 static gboolean
-prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
+sync_pad_values (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
 {
   GstAggregatorPad *bpad = GST_AGGREGATOR_PAD (pad);
+  GstClockTime timestamp;
+  gint64 stream_time;
+
+  if (pad->buffer == NULL)
+    return TRUE;
+
+  timestamp = GST_BUFFER_TIMESTAMP (pad->buffer);
+  GST_OBJECT_LOCK (bpad);
+  stream_time = gst_segment_to_stream_time (&bpad->segment, GST_FORMAT_TIME,
+      timestamp);
+  GST_OBJECT_UNLOCK (bpad);
+
+  /* sync object properties on stream time */
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (GST_OBJECT (pad), stream_time);
+
+  return TRUE;
+}
+
+static gboolean
+prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
+{
   GstVideoAggregatorPadClass *vaggpad_class =
       GST_VIDEO_AGGREGATOR_PAD_GET_CLASS (pad);
 
-  if (pad->buffer != NULL) {
-    GstClockTime timestamp;
-    gint64 stream_time;
+  if (pad->buffer == NULL || !vaggpad_class->prepare_frame)
+    return TRUE;
 
-    timestamp = GST_BUFFER_TIMESTAMP (pad->buffer);
-
-    GST_OBJECT_LOCK (bpad);
-    stream_time = gst_segment_to_stream_time (&bpad->segment, GST_FORMAT_TIME,
-        timestamp);
-    GST_OBJECT_UNLOCK (bpad);
-
-    /* sync object properties on stream time */
-    if (GST_CLOCK_TIME_IS_VALID (stream_time))
-      gst_object_sync_values (GST_OBJECT (pad), stream_time);
-
-    if (vaggpad_class->prepare_frame) {
-      return vaggpad_class->prepare_frame (pad, vagg);
-    }
-  }
-
-  return TRUE;
+  return vaggpad_class->prepare_frame (pad, vagg);
 }
 
 static gboolean
@@ -1199,8 +1204,11 @@ gst_videoaggregator_do_aggregate (GstVideoAggregator * vagg,
   GST_BUFFER_TIMESTAMP (*outbuf) = output_start_time;
   GST_BUFFER_DURATION (*outbuf) = output_end_time - output_start_time;
 
-  /* Here we convert all the frames the subclass will have to aggregate
-   * and also sync pad properties to the stream time */
+  /* Sync pad properties to the stream time */
+  gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (vagg),
+      (GstAggregatorPadForeachFunc) sync_pad_values, NULL);
+
+  /* Convert all the frames the subclass has before aggregating */
   gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (vagg),
       (GstAggregatorPadForeachFunc) prepare_frames, NULL);
 
