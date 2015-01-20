@@ -2164,12 +2164,13 @@ gst_pulsesink_query_getcaps (GstPulseSink * psink, GstCaps * filter)
 
     pbuf->probe_stream = gst_pulsesink_create_probe_stream (psink, pbuf,
         format);
+
+    pa_format_info_free (format);
+
     if (!pbuf->probe_stream) {
       GST_WARNING_OBJECT (psink, "Could not create probe stream");
       goto unlock;
     }
-
-    pa_format_info_free (format);
 
     stream = pbuf->probe_stream;
   }
