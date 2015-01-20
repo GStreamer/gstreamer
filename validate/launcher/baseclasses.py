@@ -311,7 +311,7 @@ class Test(Loggable):
         self.thread.join()
         self.time_taken = time.time() - self._starting_time
 
-        printc("Result: %s%s\n" % (self.result,
+        printc("%s: %s%s\n" % (self.classname, self.result,
                " (" + self.message + ")" if self.message else ""),
                color=utils.get_color_for_result(self.result))
 
