@@ -2252,7 +2252,7 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
             gst_adaptive_demux_stream_update_current_bitrate (stream))) {
       stream->need_header = TRUE;
       gst_adapter_clear (stream->adapter);
-      ret = GST_ADAPTIVE_DEMUX_FLOW_SWITCH;
+      ret = (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SWITCH;
     }
 
     /* the subclass might want to switch pads */
