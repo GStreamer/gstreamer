@@ -4,7 +4,8 @@ noinst_LTLIBRARIES = libgstgl-cocoa.la
 
 libgstgl_cocoa_la_SOURCES = \
 	gstglwindow_cocoa.m \
-	gstglcontext_cocoa.m
+	gstglcontext_cocoa.m \
+	gstglcaopengllayer.m
 
 noinst_HEADERS = \
 	gstglwindow_cocoa.h \
