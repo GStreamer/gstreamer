@@ -1287,6 +1287,10 @@ static GstFlowReturn
 gst_adaptive_demux_stream_finish_fragment_default (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
 {
+  /* No need to advance, this isn't a real fragment */
+  if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
+    return GST_FLOW_OK;
+
   return gst_adaptive_demux_stream_advance_fragment (demux, stream,
       stream->fragment.duration);
 }
