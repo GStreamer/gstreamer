@@ -1326,7 +1326,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   if (demux->no_more_pads && !demux->video_pad) {
     GST_WARNING_OBJECT (demux,
-        "Signaled no-more-pads already but had no audio pad -- ignoring");
+        "Signaled no-more-pads already but had no video pad -- ignoring");
     return GST_FLOW_OK;
   }
 
