@@ -3340,7 +3340,7 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
     if (!gst_decode_bin_expose (dbin))
       GST_WARNING_OBJECT (dbin, "Couldn't expose group");
   }
-  EXPOSE_UNLOCK (group->dbin);
+  EXPOSE_UNLOCK (dbin);
 }
 
 static void
