@@ -16,8 +16,7 @@ MODULES="\
 EXTRA_MODULES="\
     gst-editing-services \
     gst-rtsp-server \
-    gst-python \
-    gnonlin"
+    gst-python"
 
 tmp=${TMPDIR-/tmp}
 tmp=$tmp/git-update.$(date +%Y%m%d-%H%M-).$RANDOM.$RANDOM.$RANDOM.$$

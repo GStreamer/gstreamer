@@ -157,7 +157,6 @@ $GST/gstreamer/plugins\
 :$GST/gst-plugins-bad/sys\
 :$GST/gst-libav/ext/\
 :$GST/gst-ffmpeg/ext/\
-:$GST/gnonlin/gnl/.libs\
 :$GST/gst-omx/omx/.libs\
 :$GST/clutter-gst/clutter-gst/.libs\
 :$GST/gstreamer-vaapi/gst/vaapi/.libs\
