@@ -927,9 +927,14 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   GST_LOG_OBJECT (demux, "parsing an audio tag");
 
-  if (demux->no_more_pads && !demux->audio_pad) {
-    GST_WARNING_OBJECT (demux,
-        "Signaled no-more-pads already but had no audio pad -- ignoring");
+  if G_UNLIKELY (!demux->audio_pad && demux->no_more_pads) {
+#ifndef GST_DISABLE_DEBUG
+    if G_UNLIKELY (!demux->no_audio_warned) {
+      GST_WARNING_OBJECT (demux,
+          "Signaled no-more-pads already but had no audio pad -- ignoring");
+      demux->no_audio_warned = TRUE;
+    }
+#endif
     return GST_FLOW_OK;
   }
 
@@ -1327,9 +1332,14 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   GST_LOG_OBJECT (demux, "parsing a video tag");
 
-  if (demux->no_more_pads && !demux->video_pad) {
-    GST_WARNING_OBJECT (demux,
-        "Signaled no-more-pads already but had no video pad -- ignoring");
+  if G_UNLIKELY (!demux->video_pad && demux->no_more_pads) {
+#ifndef GST_DISABLE_DEBUG
+    if G_UNLIKELY (!demux->no_video_warned) {
+      GST_WARNING_OBJECT (demux,
+          "Signaled no-more-pads already but had no video pad -- ignoring");
+      demux->no_video_warned = TRUE;
+    }
+#endif
     return GST_FLOW_OK;
   }
 
@@ -1829,6 +1839,11 @@ gst_flv_demux_cleanup (GstFlvDemux * demux)
   demux->audio_time_offset = demux->video_time_offset = 0;
 
   demux->no_more_pads = FALSE;
+
+#ifndef GST_DISABLE_DEBUG
+  demux->no_audio_warned = FALSE;
+  demux->no_video_warned = FALSE;
+#endif
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 

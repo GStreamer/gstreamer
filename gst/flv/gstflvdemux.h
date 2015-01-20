@@ -132,6 +132,11 @@ struct _GstFlvDemux
 
   gboolean no_more_pads;
 
+#ifndef GST_DISABLE_DEBUG
+  gboolean no_audio_warned;
+  gboolean no_video_warned;
+#endif
+
   gboolean seeking;
   gboolean building_index;
   gboolean indexed; /* TRUE if index is completely built */
