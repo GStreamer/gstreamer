@@ -1,9 +1,12 @@
 ext/dash/gstdashdemux.c
 ext/gl/gstgltestsrc.c
 ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in
+ext/opencv/gsttemplatematch.c
 ext/resindvd/resindvdsrc.c
 ext/smoothstreaming/gstmssdemux.c
 ext/sndfile/gstsfdec.c
+ext/sndfile/gstsfsink.c
+ext/sndfile/gstsfsrc.c
 ext/sndio/sndiosink.c
 ext/sndio/sndiosrc.c
 gst/aiff/aiffparse.c
@@ -12,6 +15,7 @@ gst/camerabin2/camerabingeneral.c
 gst/camerabin2/gstcamerabin2.c
 gst/camerabin2/gstviewfinderbin.c
 gst/dvdspu/gstdvdspu.c
+gst-libs/gst/adaptivedemux/gstadaptivedemux.c
 gst/mpegtsdemux/mpegtsbase.c
 gst/nuvdemux/gstnuvdemux.c
 gst/videomeasure/gstvideomeasure_collector.c
