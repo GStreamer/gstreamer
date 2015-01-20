@@ -21,7 +21,6 @@
 
 import os
 import sys
-import imp
 import re
 import time
 import utils
@@ -1056,13 +1055,13 @@ class _TestsLauncher(Loggable):
             if not self._other_testsuite_for_tester(testsuite, tester):
                 try:
                     testlist_file = open(os.path.splitext(testsuite.__file__)[0] + ".testslist",
-                                    'rw')
+                                         'rw')
 
                     know_tests = testlist_file.read().split("\n")
                     testlist_file.close()
 
                     testlist_file = open(os.path.splitext(testsuite.__file__)[0] + ".testslist",
-                                    'w')
+                                         'w')
                 except IOError:
                     return
 
@@ -1264,7 +1263,7 @@ class ScenarioManager(Loggable):
         return scenarios
 
     def get_scenario(self, name):
-        if os.path.isabs(name) and name.endswith(self.FILE_EXTENDION):
+        if name is not None and os.path.isabs(name) and name.endswith(self.FILE_EXTENDION):
             scenarios = self.discover_scenarios([name])
 
             if scenarios:
