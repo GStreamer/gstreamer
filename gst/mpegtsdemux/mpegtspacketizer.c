@@ -2283,8 +2283,12 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
         GST_DEBUG ("Using group !");
         refpcr = group->first_pcr;
         refpcroffset = group->pcr_offset;
-        if (pts < refpcr)
-          refpcr -= PCR_MAX_VALUE;
+        if (pts < PCRTIME_TO_GSTTIME (refpcr)) {
+          if (PCRTIME_TO_GSTTIME (refpcr) - pts > GST_SECOND)
+            pts += PCR_GST_MAX_VALUE;
+          else
+            refpcr = G_MAXINT64;
+        }
       }
     }
     if (refpcr != G_MAXINT64)
