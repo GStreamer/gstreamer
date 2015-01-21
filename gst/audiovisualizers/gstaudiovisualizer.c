@@ -81,8 +81,6 @@ static gboolean gst_audio_visualizer_sink_event (GstPad * pad,
 
 static gboolean gst_audio_visualizer_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
-static gboolean gst_audio_visualizer_sink_query (GstPad * pad,
-    GstObject * parent, GstQuery * query);
 
 static GstStateChangeReturn gst_audio_visualizer_change_state (GstElement *
     element, GstStateChange transition);
@@ -586,8 +584,6 @@ gst_audio_visualizer_init (GstAudioVisualizer * scope,
       GST_DEBUG_FUNCPTR (gst_audio_visualizer_chain));
   gst_pad_set_event_function (scope->sinkpad,
       GST_DEBUG_FUNCPTR (gst_audio_visualizer_sink_event));
-  gst_pad_set_query_function (scope->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_audio_visualizer_sink_query));
   gst_element_add_pad (GST_ELEMENT (scope), scope->sinkpad);
 
   pad_template =
@@ -1265,7 +1261,7 @@ gst_audio_visualizer_src_event (GstPad * pad, GstObject * parent,
         scope->earliest_time = timestamp + diff;
       GST_OBJECT_UNLOCK (scope);
 
-      res = gst_pad_push_event (scope->sinkpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
     }
     case GST_EVENT_RECONFIGURE:
@@ -1300,9 +1296,6 @@ gst_audio_visualizer_sink_event (GstPad * pad, GstObject * parent,
       gst_event_unref (event);
       break;
     }
-    case GST_EVENT_FLUSH_START:
-      res = gst_pad_push_event (scope->srcpad, event);
-      break;
     case GST_EVENT_FLUSH_STOP:
       gst_audio_visualizer_reset (scope);
       res = gst_pad_push_event (scope->srcpad, event);
@@ -1318,7 +1311,7 @@ gst_audio_visualizer_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     default:
-      res = gst_pad_push_event (scope->srcpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -1381,20 +1374,6 @@ gst_audio_visualizer_src_query (GstPad * pad, GstObject * parent,
       break;
   }
 
-  return res;
-}
-
-static gboolean
-gst_audio_visualizer_sink_query (GstPad * pad, GstObject * parent,
-    GstQuery * query)
-{
-  gboolean res = FALSE;
-
-  switch (GST_QUERY_TYPE (query)) {
-    default:
-      res = gst_pad_query_default (pad, parent, query);
-      break;
-  }
   return res;
 }
 
