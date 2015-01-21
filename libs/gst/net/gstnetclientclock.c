@@ -47,7 +47,7 @@
  * gst_pipeline_use_clock().
  *
  * If you set a #GstBus on the clock via the "bus" object property, it will
- * send @GST_MESSAGE_INFO messages with an attached #GstStructure containing
+ * send @GST_MESSAGE_ELEMENT messages with an attached #GstStructure containing
  * statistics about clock accuracy and network traffic.
  */
 
