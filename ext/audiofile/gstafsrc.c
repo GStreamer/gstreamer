@@ -70,7 +70,7 @@ static GType
 gst_afsrc_types_get_type (void) 
 {
   static GType afsrc_types_type = 0;
-  static GEnumValue afsrc_types[] = {
+  static const GEnumValue afsrc_types[] = {
     {AF_FILE_RAWDATA, "0", "raw PCM"},
     {AF_FILE_AIFFC,   "1", "AIFFC"},
     {AF_FILE_AIFF,    "2", "AIFF"},

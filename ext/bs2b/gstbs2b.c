@@ -82,7 +82,7 @@ typedef struct
   gint preset;
 } GstBs2bPreset;
 
-static GstBs2bPreset presets[3] = {
+static const GstBs2bPreset presets[3] = {
   {
         "default",
         "Closest to virtual speaker placement (30°, 3 meter) [700Hz, 4.5dB]",

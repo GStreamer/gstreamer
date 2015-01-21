@@ -257,7 +257,7 @@ static GType
 gst_dvbsrc_code_rate_get_type (void)
 {
   static GType dvbsrc_code_rate_type = 0;
-  static GEnumValue code_rate_types[] = {
+  static const GEnumValue code_rate_types[] = {
     {FEC_NONE, "NONE", "none"},
     {FEC_1_2, "1/2", "1/2"},
     {FEC_2_3, "2/3", "2/3"},
@@ -286,7 +286,7 @@ static GType
 gst_dvbsrc_modulation_get_type (void)
 {
   static GType dvbsrc_modulation_type = 0;
-  static GEnumValue modulation_types[] = {
+  static const GEnumValue modulation_types[] = {
     {QPSK, "QPSK", "qpsk"},
     {QAM_16, "QAM 16", "qam-16"},
     {QAM_32, "QAM 32", "qam-32"},
@@ -316,7 +316,7 @@ static GType
 gst_dvbsrc_transmission_mode_get_type (void)
 {
   static GType dvbsrc_transmission_mode_type = 0;
-  static GEnumValue transmission_mode_types[] = {
+  static const GEnumValue transmission_mode_types[] = {
     {TRANSMISSION_MODE_2K, "2K", "2k"},
     {TRANSMISSION_MODE_8K, "8K", "8k"},
     {TRANSMISSION_MODE_AUTO, "AUTO", "auto"},
@@ -344,7 +344,7 @@ static GType
 gst_dvbsrc_bandwidth_get_type (void)
 {
   static GType dvbsrc_bandwidth_type = 0;
-  static GEnumValue bandwidth_types[] = {
+  static const GEnumValue bandwidth_types[] = {
     {BANDWIDTH_8_MHZ, "8", "8"},
     {BANDWIDTH_7_MHZ, "7", "7"},
     {BANDWIDTH_6_MHZ, "6", "6"},
@@ -367,7 +367,7 @@ static GType
 gst_dvbsrc_guard_get_type (void)
 {
   static GType dvbsrc_guard_type = 0;
-  static GEnumValue guard_types[] = {
+  static const GEnumValue guard_types[] = {
     {GUARD_INTERVAL_1_32, "32", "32"},
     {GUARD_INTERVAL_1_16, "16", "16"},
     {GUARD_INTERVAL_1_8, "8", "8"},
@@ -395,7 +395,7 @@ static GType
 gst_dvbsrc_hierarchy_get_type (void)
 {
   static GType dvbsrc_hierarchy_type = 0;
-  static GEnumValue hierarchy_types[] = {
+  static const GEnumValue hierarchy_types[] = {
     {HIERARCHY_NONE, "NONE", "none"},
     {HIERARCHY_1, "1", "1"},
     {HIERARCHY_2, "2", "2"},
@@ -416,7 +416,7 @@ static GType
 gst_dvbsrc_inversion_get_type (void)
 {
   static GType dvbsrc_inversion_type = 0;
-  static GEnumValue inversion_types[] = {
+  static const GEnumValue inversion_types[] = {
     {INVERSION_OFF, "OFF", "off"},
     {INVERSION_ON, "ON", "on"},
     {INVERSION_AUTO, "AUTO", "auto"},
@@ -435,7 +435,7 @@ static GType
 gst_dvbsrc_delsys_get_type (void)
 {
   static GType dvbsrc_delsys_type = 0;
-  static GEnumValue delsys_types[] = {
+  static const GEnumValue delsys_types[] = {
     {SYS_UNDEFINED, "UNDEFINED", "undefined"},
     {SYS_DVBC_ANNEX_A, "DVB-C-A", "dvb-c-a"},
     {SYS_DVBC_ANNEX_B, "DVB-C-B", "dvb-c-b"},
@@ -474,7 +474,7 @@ static GType
 gst_dvbsrc_pilot_get_type (void)
 {
   static GType dvbsrc_pilot_type = 0;
-  static GEnumValue pilot_types[] = {
+  static const GEnumValue pilot_types[] = {
     {PILOT_ON, "ON", "on"},
     {PILOT_OFF, "OFF", "off"},
     {PILOT_AUTO, "AUTO", "auto"},
@@ -492,7 +492,7 @@ static GType
 gst_dvbsrc_rolloff_get_type (void)
 {
   static GType dvbsrc_rolloff_type = 0;
-  static GEnumValue rolloff_types[] = {
+  static const GEnumValue rolloff_types[] = {
     {ROLLOFF_35, "35", "35"},
     {ROLLOFF_20, "20", "20"},
     {ROLLOFF_25, "25", "25"},
@@ -512,7 +512,7 @@ static GType
 gst_dvbsrc_interleaving_get_type (void)
 {
   static GType dvbsrc_interleaving_type = 0;
-  static GEnumValue interleaving_types[] = {
+  static const GEnumValue interleaving_types[] = {
 #if HAVE_V5_MINOR(7)
     {INTERLEAVING_NONE, "NONE", "none"},
     {INTERLEAVING_AUTO, "AUTO", "auto"},

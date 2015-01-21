@@ -299,7 +299,7 @@ typedef struct
   gboolean valid;
 } Patch;
 
-static Color patch_colors[24] = {
+static const Color patch_colors[24] = {
   {115, 82, 68, 92, 119, 143},
   {194, 150, 130, 152, 115, 148},
   {98, 122, 157, 119, 146, 116},

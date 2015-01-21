@@ -242,7 +242,7 @@ typedef struct
   gint par_n, par_d;
 } PAR;
 
-static PAR aspect_ratios[] = {
+static const PAR aspect_ratios[] = {
   {0, 0},
   {1, 1},
   {12, 11},

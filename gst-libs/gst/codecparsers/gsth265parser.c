@@ -137,7 +137,7 @@ typedef struct
 } PAR;
 
 /* Table E-1 - Meaning of sample aspect ratio indicator (1..16) */
-static PAR aspect_ratios[17] = {
+static const PAR aspect_ratios[17] = {
   {0, 0},
   {1, 1},
   {12, 11},

@@ -57,7 +57,7 @@ static GType
 gst_voamrwbenc_bandmode_get_type (void)
 {
   static GType gst_voamrwbenc_bandmode_type = 0;
-  static GEnumValue gst_voamrwbenc_bandmode[] = {
+  static const GEnumValue gst_voamrwbenc_bandmode[] = {
     {MR660, "MR660", "MR660"},
     {MR885, "MR885", "MR885"},
     {MR1265, "MR1265", "MR1265"},

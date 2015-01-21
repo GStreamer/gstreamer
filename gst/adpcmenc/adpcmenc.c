@@ -100,7 +100,7 @@ adpcmenc_layout_get_type (void)
   static GType adpcmenc_layout_type = 0;
 
   if (!adpcmenc_layout_type) {
-    static GEnumValue layout_types[] = {
+    static const GEnumValue layout_types[] = {
       {LAYOUT_ADPCM_DVI, "DVI/IMA APDCM", "dvi"},
       {0, NULL, NULL},
     };

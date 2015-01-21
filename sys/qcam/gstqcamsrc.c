@@ -59,7 +59,7 @@ static GType
 gst_autoexp_mode_get_type (void)
 {
   static GType autoexp_mode_type = 0;
-  static GEnumValue autoexp_modes[] = {
+  static const GEnumValue autoexp_modes[] = {
     {AE_ALL_AVG, "0", "Average Picture"},
     {AE_CTR_AVG, "1", "Average Center"},
     {AE_STD_AVG, "2", "Standard Deviation"},

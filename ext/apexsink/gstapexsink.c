@@ -76,7 +76,7 @@ GType
 gst_apexsink_jackstatus_get_type (void)
 {
   static GType jackstatus_type = 0;
-  static GEnumValue jackstatus[] = {
+  static const GEnumValue jackstatus[] = {
     {GST_APEX_JACK_STATUS_UNDEFINED, "GST_APEX_JACK_STATUS_UNDEFINED",
         "Jack status undefined"},
     {GST_APEX_JACK_STATUS_DISCONNECTED, "GST_APEX_JACK_STATUS_DISCONNECTED",
@@ -97,7 +97,7 @@ GType
 gst_apexsink_jacktype_get_type (void)
 {
   static GType jacktype_type = 0;
-  static GEnumValue jacktype[] = {
+  static const GEnumValue jacktype[] = {
     {GST_APEX_JACK_TYPE_UNDEFINED, "GST_APEX_JACK_TYPE_UNDEFINED",
         "Undefined jack type"},
     {GST_APEX_JACK_TYPE_ANALOG, "GST_APEX_JACK_TYPE_ANALOG", "Analog jack"},
@@ -116,7 +116,7 @@ GType
 gst_apexsink_generation_get_type (void)
 {
   static GType generation_type = 0;
-  static GEnumValue generation[] = {
+  static const GEnumValue generation[] = {
     {GST_APEX_GENERATION_ONE, "generation-one",
         "First generation (e.g., original AirPort Express)"},
     {GST_APEX_GENERATION_TWO, "generation-two",
@@ -135,7 +135,7 @@ GType
 gst_apexsink_transport_protocol_get_type (void)
 {
   static GType transport_protocol_type = 0;
-  static GEnumValue transport_protocol[] = {
+  static const GEnumValue transport_protocol[] = {
     {GST_APEX_TCP, "tcp", "TCP"},
     {GST_APEX_UDP, "udp", "UDP"},
     {0, NULL, NULL},

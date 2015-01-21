@@ -96,7 +96,7 @@ static GType
 gst_vbidec_caption_type_get_type (void)
 {
   static GType vbidec_caption_type_type = 0;
-  static GEnumValue vbidec_caption_type[] = {
+  static const GEnumValue vbidec_caption_type[] = {
     {CAPTURE_OFF, "0", "Closed Captions off"},
     {CAPTURE_CC1, "1", "Closed Caption CC1"},
     {CAPTURE_CC2, "2", "Closed Caption CC2"},

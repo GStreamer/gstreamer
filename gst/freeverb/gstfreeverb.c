@@ -120,7 +120,7 @@ static gboolean gst_freeverb_transform_s2s_float (GstFreeverb * filter,
 
 
 /* Table with processing functions: [channels][format] */
-static GstFreeverbProcessFunc process_functions[2][2] = {
+static const GstFreeverbProcessFunc process_functions[2][2] = {
   {
         (GstFreeverbProcessFunc) gst_freeverb_transform_m2s_int,
         (GstFreeverbProcessFunc) gst_freeverb_transform_m2s_float,

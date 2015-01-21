@@ -71,7 +71,7 @@ static GType
 gst_afsink_types_get_type (void)
 {
   static GType afsink_types_type = 0;
-  static GEnumValue afsink_types[] = {
+  static const GEnumValue afsink_types[] = {
     {AF_FILE_RAWDATA, "0", "raw PCM"},
     {AF_FILE_AIFFC, "1", "AIFFC"},
     {AF_FILE_AIFF, "2", "AIFF"},

@@ -475,7 +475,7 @@ dvb_base_bin_reset (DvbBaseBin * dvbbasebin)
   dvbbasebin->trycam = TRUE;
 }
 
-static gint16 initial_pids[] = { 0, 1, 0x10, 0x11, 0x12, 0x14, -1 };
+static const gint16 initial_pids[] = { 0, 1, 0x10, 0x11, 0x12, 0x14, -1 };
 
 static void
 dvb_base_bin_init (DvbBaseBin * dvbbasebin)

@@ -2536,7 +2536,7 @@ static gchar *
 gst_mpdparser_build_URL_from_template (const gchar * url_template,
     const gchar * id, guint number, guint bandwidth, guint64 time)
 {
-  static gchar default_format[] = "%01d";
+  static const gchar default_format[] = "%01d";
   gchar **tokens, *token, *ret;
   const gchar *format;
   gint i, num_tokens;
@@ -2719,14 +2719,14 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
     gchar ** query)
 {
   GstStreamPeriod *stream_period;
-  static gchar empty[] = "";
+  static const gchar empty[] = "";
   gchar *ret = NULL;
   GstUri *abs_url;
 
-  g_return_val_if_fail (stream != NULL, empty);
+  g_return_val_if_fail (stream != NULL, g_strdup (empty));
   stream_period = gst_mpdparser_get_stream_period (client);
-  g_return_val_if_fail (stream_period != NULL, empty);
-  g_return_val_if_fail (stream_period->period != NULL, empty);
+  g_return_val_if_fail (stream_period != NULL, g_strdup (empty));
+  g_return_val_if_fail (stream_period->period != NULL, g_strdup (empty));
 
   /* NULLify query return before we start */
   if (query)

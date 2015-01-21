@@ -318,7 +318,7 @@ gst_linsys_sdi_sink_preroll (GstBaseSink * sink, GstBuffer * buffer)
 static int
 get_av (int f, int v, int h)
 {
-  static int table[] = {
+  static const int table[] = {
     0x80, 0x9d, 0xab, 0xb6, 0xc7, 0xda, 0xec, 0xf1
   };
 

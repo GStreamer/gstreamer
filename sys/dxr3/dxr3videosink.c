@@ -540,7 +540,7 @@ dxr3videosink_handle_event (GstPad * pad, GstEvent * event)
       /* Write an MPEG2 sequence end code, to ensure that the card
          actually displays the last picture.  Apparently some DVDs are
          encoded without proper sequence end codes. */
-      static guint8 sec[4] = { 0x00, 0x00, 0x01, 0xb7 };
+      static const guint8 sec[4] = { 0x00, 0x00, 0x01, 0xb7 };
 
       if (sink->cur_buf != NULL) {
         dxr3videosink_write_data (sink, 0);

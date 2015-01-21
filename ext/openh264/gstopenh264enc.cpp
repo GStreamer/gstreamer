@@ -52,7 +52,7 @@ gst_openh264enc_usage_type_get_type (void)
   static GType usage_type = 0;
 
   if (!usage_type) {
-    static GEnumValue usage_types[] = {
+    static const GEnumValue usage_types[] = {
       {CAMERA_VIDEO_REAL_TIME, "video from camera", "camera"},
       {SCREEN_CONTENT_REAL_TIME, "screen content", "screen"},
       {0, NULL, NULL},
@@ -71,7 +71,7 @@ gst_openh264enc_rc_modes_get_type (void)
   static GType rc_modes_type = 0;
 
   if (!rc_modes_type) {
-    static GEnumValue rc_modes_types[] = {
+    static const GEnumValue rc_modes_types[] = {
       {RC_QUALITY_MODE, "Quality mode", "quality"},
       {RC_BITRATE_MODE, "Bitrate mode", "bitrate"},
       {RC_BUFFERBASED_MODE, "No bitrate control, just using buffer status", "buffer"},

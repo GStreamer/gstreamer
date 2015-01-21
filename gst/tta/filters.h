@@ -32,7 +32,7 @@
 #define FILTERS_H
 
 ///////// Filter Settings //////////
-static long flt_set[3] = {10, 9, 10};
+static const long flt_set[3] = {10, 9, 10};
 
 static void
 memshl (register long *pA, register long *pB) {
