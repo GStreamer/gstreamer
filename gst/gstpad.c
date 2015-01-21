@@ -606,38 +606,45 @@ restart:
 
 /* should be called with LOCK */
 static GstEvent *
-apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
+_apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
 {
-  /* check if we need to adjust the segment */
-  if (pad->offset != 0) {
-    gint64 offset;
+  gint64 offset;
 
-    GST_DEBUG_OBJECT (pad, "apply pad offset %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (pad->offset));
+  GST_DEBUG_OBJECT (pad, "apply pad offset %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (pad->offset));
 
-    if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-      GstSegment segment;
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+    GstSegment segment;
 
-      g_assert (!upstream);
+    g_assert (!upstream);
 
-      /* copy segment values */
-      gst_event_copy_segment (event, &segment);
-      gst_event_unref (event);
+    /* copy segment values */
+    gst_event_copy_segment (event, &segment);
+    gst_event_unref (event);
 
-      gst_segment_offset_running_time (&segment, segment.format, pad->offset);
-      event = gst_event_new_segment (&segment);
-    }
-
-    event = gst_event_make_writable (event);
-    offset = gst_event_get_running_time_offset (event);
-    if (upstream)
-      offset -= pad->offset;
-    else
-      offset += pad->offset;
-    gst_event_set_running_time_offset (event, offset);
+    gst_segment_offset_running_time (&segment, segment.format, pad->offset);
+    event = gst_event_new_segment (&segment);
   }
+
+  event = gst_event_make_writable (event);
+  offset = gst_event_get_running_time_offset (event);
+  if (upstream)
+    offset -= pad->offset;
+  else
+    offset += pad->offset;
+  gst_event_set_running_time_offset (event, offset);
+
   return event;
 }
+
+static inline GstEvent *
+apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
+{
+  if (G_UNLIKELY (pad->offset != 0))
+    return _apply_pad_offset (pad, event, upstream);
+  return event;
+}
+
 
 /* should be called with the OBJECT_LOCK */
 static GstCaps *
