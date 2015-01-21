@@ -1261,7 +1261,7 @@ gst_audio_visualizer_src_event (GstPad * pad, GstObject * parent,
         scope->earliest_time = timestamp + diff;
       GST_OBJECT_UNLOCK (scope);
 
-      res = gst_pad_event_default (pad, parent, event);
+      res = gst_pad_push_event (scope->sinkpad, event);
       break;
     }
     case GST_EVENT_RECONFIGURE:
@@ -1270,7 +1270,7 @@ gst_audio_visualizer_src_event (GstPad * pad, GstObject * parent,
       res = TRUE;
       break;
     default:
-      res = gst_pad_push_event (scope->sinkpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
