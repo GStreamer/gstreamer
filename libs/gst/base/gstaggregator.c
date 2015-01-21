@@ -214,7 +214,6 @@ struct _GstAggregatorPrivate
   /* Our state is >= PAUSED */
   gboolean running;             /* protected by SRC_STREAM_LOCK */
 
-
   gint seqnum;
   gboolean send_stream_start;
   gboolean send_segment;
@@ -222,6 +221,13 @@ struct _GstAggregatorPrivate
   gboolean pending_flush_start;
   gboolean send_eos;
   GstFlowReturn flow_return;
+
+  gboolean send_stream_start;   /* protected by srcpad stream lock */
+  gboolean send_segment;        /* protected by object lock */
+  gboolean flush_seeking;       /* protected by object lock */
+  gboolean pending_flush_start; /* protected by object lock */
+  gboolean send_eos;            /* protected by srcpad stream lock */
+  GstFlowReturn flow_return;    /* protected by object lock */
 
   GstCaps *srccaps;
 
@@ -635,26 +641,29 @@ gst_aggregator_aggregate_func (GstAggregator * self)
 
   GST_LOG_OBJECT (self, "Checking aggregate");
   while (priv->send_eos && priv->running) {
+    GstFlowReturn flow_return;
+
     if (!gst_aggregator_wait_and_check (self, &timeout))
       continue;
 
     GST_TRACE_OBJECT (self, "Actually aggregating!");
 
-    priv->flow_return = klass->aggregate (self, timeout);
+    flow_return = klass->aggregate (self, timeout);
 
-    if (priv->flow_return == GST_FLOW_EOS) {
+    GST_OBJECT_LOCK (self);
+    if (flow_return == GST_FLOW_FLUSHING && priv->flush_seeking)
+      priv->flow_return = GST_FLOW_OK;
+    else
+      priv->flow_return = flow_return;
+    GST_OBJECT_UNLOCK (self);
+
+    if (flow_return == GST_FLOW_EOS) {
       gst_aggregator_push_eos (self);
     }
 
-    GST_OBJECT_LOCK (self);
-    if (priv->flow_return == GST_FLOW_FLUSHING && priv->flush_seeking)
-      priv->flow_return = GST_FLOW_OK;
-    GST_OBJECT_UNLOCK (self);
+    GST_LOG_OBJECT (self, "flow return is %s", gst_flow_get_name (flow_return));
 
-    GST_LOG_OBJECT (self, "flow return is %s",
-        gst_flow_get_name (priv->flow_return));
-
-    if (priv->flow_return != GST_FLOW_OK)
+    if (flow_return != GST_FLOW_OK)
       break;
   }
 }
@@ -1761,6 +1770,7 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
   GstAggregatorPrivate *priv = self->priv;
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
   GstAggregatorClass *aggclass = GST_AGGREGATOR_GET_CLASS (object);
+  GstFlowReturn flow_return;
 
   GST_DEBUG_OBJECT (aggpad, "Start chaining a buffer %" GST_PTR_FORMAT, buffer);
 
@@ -1801,7 +1811,11 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (aggpad, "Done chaining");
 
-  return priv->flow_return;
+  GST_OBJECT_LOCK (self);
+  flow_return = priv->flow_return;
+  GST_OBJECT_UNLOCK (self);
+
+  return flow_return;
 
 flushing:
   PAD_STREAM_UNLOCK (aggpad);
