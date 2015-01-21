@@ -889,11 +889,13 @@ qtdemux_node_dump_foreach (GNode * node, gpointer qtdemux)
 gboolean
 qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   /* Only traverse/dump if we know it will be outputted in the end */
   if (qtdemux_debug->threshold < GST_LEVEL_LOG)
     return TRUE;
 
   g_node_traverse (node, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
       qtdemux_node_dump_foreach, qtdemux);
+#endif
   return TRUE;
 }
