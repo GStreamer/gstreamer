@@ -237,6 +237,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 G_DEFINE_TYPE_WITH_CODE (GstOpenh264Enc, gst_openh264enc,
     GST_TYPE_VIDEO_ENCODER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL);
     GST_DEBUG_CATEGORY_INIT (gst_openh264enc_debug_category, "openh264enc", 0,
         "debug category for openh264enc element"));
 
