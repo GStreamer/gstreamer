@@ -33,7 +33,7 @@ import reporters
 import ConfigParser
 import loggable
 from loggable import Loggable
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 
 from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
     Protocols
