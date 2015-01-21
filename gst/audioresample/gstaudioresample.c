@@ -1388,7 +1388,7 @@ speex_resampler_sinc_filter_mode_get_type (void)
   static GType speex_resampler_sinc_filter_mode_type = 0;
 
   if (!speex_resampler_sinc_filter_mode_type) {
-    static GEnumValue sinc_filter_modes[] = {
+    static const GEnumValue sinc_filter_modes[] = {
       {SPEEX_RESAMPLER_SINC_FILTER_INTERPOLATED, "Use interpolated sinc table",
           "interpolated"},
       {SPEEX_RESAMPLER_SINC_FILTER_FULL, "Use full sinc table", "full"},

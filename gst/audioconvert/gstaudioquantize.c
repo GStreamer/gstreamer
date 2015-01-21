@@ -362,7 +362,7 @@ MAKE_QUANTIZE_FUNC_F (float_tpdf_hf_medium, INIT_DITHER_TPDF_HF_F,
 MAKE_QUANTIZE_FUNC_F (float_tpdf_hf_high, INIT_DITHER_TPDF_HF_F, INIT_NS_HIGH,
     ADD_NS_HIGH, ADD_DITHER_TPDF_HF_F, UPDATE_ERROR_HIGH);
 
-static AudioConvertQuantize quantize_funcs[] = {
+static const AudioConvertQuantize quantize_funcs[] = {
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (signed_none_none),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (signed_rpdf_none),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (signed_tpdf_none),

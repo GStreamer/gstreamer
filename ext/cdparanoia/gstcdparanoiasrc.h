@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 /* on OSX the cdparanoia headers include IOKit framework headers (in particular
  * SCSICmds_INQUIRY_Definitions.h) which define a structure that has a member
  * named VERSION, so we must #undef VERSION here for things to compile on OSX */
-static char GST_PLUGINS_BASE_VERSION[] = VERSION;
+static const char GST_PLUGINS_BASE_VERSION[] = VERSION;
 #undef VERSION
 
 #ifdef CDPARANOIA_HEADERS_IN_DIR

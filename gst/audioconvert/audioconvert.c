@@ -469,7 +469,7 @@ MAKE_PACK_FUNC_ORC_FI_S (s32_be_float, 4, WRITE32_TO_BE);
 #define audio_convert_pack_double_hq_le MAKE_UNPACK_FUNC_NAME (double_hq_le)
 #define audio_convert_pack_double_hq_be MAKE_UNPACK_FUNC_NAME (double_hq_be)
 
-static AudioConvertUnpack unpack_funcs[] = {
+static const AudioConvertUnpack unpack_funcs[] = {
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u8),
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s8),
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u8),
@@ -512,7 +512,7 @@ static AudioConvertUnpack unpack_funcs[] = {
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s32_be_float),
 };
 
-static AudioConvertPack pack_funcs[] = {
+static const AudioConvertPack pack_funcs[] = {
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (u8),
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (s8),
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (u8),
