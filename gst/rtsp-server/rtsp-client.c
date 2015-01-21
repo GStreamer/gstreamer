@@ -2288,9 +2288,6 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!priv->mount_points)
     goto no_mount_points;
 
-  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, ctx->uri)))
-    goto no_path;
-
   /* check if reply is SDP */
   gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_CONTENT_TYPE, &cont,
       0);
@@ -2338,6 +2335,8 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_ANNOUNCE_REQUEST],
       0, ctx);
 
+  gst_sdp_message_free (sdp);
+  g_free (path);
   return TRUE;
 
 no_uri:
@@ -2356,27 +2355,26 @@ no_path:
   {
     GST_ERROR ("client %p: can't find path for url", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    gst_sdp_message_free (sdp);
     return FALSE;
   }
 wrong_content_type:
   {
     GST_ERROR ("client %p: unknown content type", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
-    g_free (path);
     return FALSE;
   }
 no_message:
   {
     GST_ERROR ("client %p: can't find SDP message", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
-    g_free (path);
     return FALSE;
   }
 sdp_parse_failed:
   {
     GST_ERROR ("client %p: failed to parse SDP message", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
-    g_free (path);
+    gst_sdp_message_free (sdp);
     return FALSE;
   }
 no_media:
@@ -2384,6 +2382,7 @@ no_media:
     GST_ERROR ("client %p: no media", client);
     g_free (path);
     /* error reply is already sent */
+    gst_sdp_message_free (sdp);
     return FALSE;
   }
 play_media:
@@ -2392,6 +2391,7 @@ play_media:
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     g_free (path);
     g_object_unref (media);
+    gst_sdp_message_free (sdp);
     return FALSE;
   }
 unhandled_sdp:
@@ -2400,6 +2400,7 @@ unhandled_sdp:
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE, ctx);
     g_free (path);
     g_object_unref (media);
+    gst_sdp_message_free (sdp);
     return FALSE;
   }
 }
