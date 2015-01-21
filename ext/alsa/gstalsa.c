@@ -149,7 +149,8 @@ format_supported (const GValue * format_val, snd_pcm_format_mask_t * mask,
 
   finfo = gst_audio_format_get_info (format);
 
-  if (GST_AUDIO_FORMAT_INFO_ENDIANNESS (finfo) != endianness)
+  if (GST_AUDIO_FORMAT_INFO_ENDIANNESS (finfo) != endianness
+      && GST_AUDIO_FORMAT_INFO_ENDIANNESS (finfo) != 0)
     return FALSE;
 
   pcm_format = gst_alsa_get_pcm_format (format);
