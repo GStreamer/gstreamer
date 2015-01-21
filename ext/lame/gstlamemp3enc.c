@@ -119,7 +119,7 @@ static GType
 gst_lamemp3enc_target_get_type (void)
 {
   static GType lame_target_type = 0;
-  static GEnumValue lame_targets[] = {
+  static const GEnumValue lame_targets[] = {
     {LAMEMP3ENC_TARGET_QUALITY, "Quality", "quality"},
     {LAMEMP3ENC_TARGET_BITRATE, "Bitrate", "bitrate"},
     {0, NULL, NULL}
@@ -144,7 +144,7 @@ static GType
 gst_lamemp3enc_encoding_engine_quality_get_type (void)
 {
   static GType lame_encoding_engine_quality_type = 0;
-  static GEnumValue lame_encoding_engine_quality[] = {
+  static const GEnumValue lame_encoding_engine_quality[] = {
     {0, "Fast", "fast"},
     {1, "Standard", "standard"},
     {2, "High", "high"},

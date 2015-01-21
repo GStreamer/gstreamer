@@ -113,7 +113,7 @@ static GType
 gst_two_lame_mode_get_type (void)
 {
   static GType two_lame_mode_type = 0;
-  static GEnumValue two_lame_modes[] = {
+  static const GEnumValue two_lame_modes[] = {
     {TWOLAME_AUTO_MODE, "Auto", "auto"},
     {TWOLAME_STEREO, "Stereo", "stereo"},
     {TWOLAME_JOINT_STEREO, "Joint Stereo", "joint"},
@@ -134,7 +134,7 @@ static GType
 gst_two_lame_padding_get_type (void)
 {
   static GType two_lame_padding_type = 0;
-  static GEnumValue two_lame_padding[] = {
+  static const GEnumValue two_lame_padding[] = {
     {TWOLAME_PAD_NO, "No Padding", "never"},
     {TWOLAME_PAD_ALL, "Always Pad", "always"},
     {0, NULL, NULL}
@@ -152,7 +152,7 @@ static GType
 gst_two_lame_emphasis_get_type (void)
 {
   static GType two_lame_emphasis_type = 0;
-  static GEnumValue two_lame_emphasis[] = {
+  static const GEnumValue two_lame_emphasis[] = {
     {TWOLAME_EMPHASIS_N, "No emphasis", "none"},
     {TWOLAME_EMPHASIS_5, "50/15 ms", "5"},
     {TWOLAME_EMPHASIS_C, "CCIT J.17", "ccit"},
