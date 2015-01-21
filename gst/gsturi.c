@@ -1257,6 +1257,13 @@ _gst_uri_escape_host (const gchar * host)
 }
 
 static gchar *
+_gst_uri_escape_host_colon (const gchar * host)
+{
+  return g_uri_escape_string (host,
+      G_URI_RESERVED_CHARS_SUBCOMPONENT_DELIMITERS ":", FALSE);
+}
+
+static gchar *
 _gst_uri_escape_path_segment (const gchar * segment)
 {
   return g_uri_escape_string (segment,
@@ -1504,21 +1511,27 @@ gst_uri_new_with_base (GstUri * base, const gchar * scheme,
  * gst_uri_from_string:
  * @uri: The URI string to parse.
  *
- * Parses a URI string into a new #GstUri object.
+ * Parses a URI string into a new #GstUri object. Will return NULL if the URI
+ * cannot be parsed.
  *
- * Returns: (transfer full): A new #GstUri object.
+ * Returns: (transfer full)(nullable): A new #GstUri object, or NULL.
  *
  * Since: 1.6
  */
 GstUri *
 gst_uri_from_string (const gchar * uri)
 {
+  const gchar *orig_uri = uri;
   GstUri *uri_obj;
 
   uri_obj = _gst_uri_new ();
 
   if (uri_obj && uri != NULL) {
     int i = 0;
+
+    /* be helpful and skip initial white space */
+    while (*uri == '\v' || g_ascii_isspace (*uri)) uri++;
+
     if (g_ascii_isalpha (uri[i])) {
       /* find end of scheme name */
       i++;
@@ -1532,13 +1545,12 @@ gst_uri_from_string (const gchar * uri)
       uri += i + 1;
     }
     if (uri[0] == '/' && uri[1] == '/') {
-      const gchar *eoa, *eoui, *eoh;
+      const gchar *eoa, *eoui, *eoh, *reoh;
       /* get authority [userinfo@]host[:port] */
       uri += 2;
       /* find end of authority */
-      eoa = strchr (uri, '/');
-      if (eoa == NULL)
-        eoa = uri + strlen (uri);
+      eoa = uri + strcspn (uri, "/?#");
+
       /* find end of userinfo */
       eoui = strchr (uri, '@');
       if (eoui != NULL && eoui < eoa) {
@@ -1548,31 +1560,37 @@ gst_uri_from_string (const gchar * uri)
       /* find end of host */
       if (uri[0] == '[') {
         eoh = strchr (uri, ']');
-        if (eoh == NULL || eoh >= eoa)
-          eoh = eoa - 1;
+        if (eoh == NULL || eoh > eoa) {
+          GST_DEBUG ("Unable to parse the host part of the URI '%s'.",
+                  orig_uri);
+	  _gst_uri_free (uri_obj);
+          return NULL;
+        }
+        reoh = eoh + 1;
+        uri++;
       } else {
-        eoh = strchr (uri, ':');
-        if (eoh == NULL || eoh >= eoa)
-          eoh = eoa - 1;
-        else
-          eoh--;
+        reoh = eoh = strchr (uri, ':');
+        if (eoh == NULL || eoh > eoa)
+          reoh = eoh = eoa;
       }
-      uri_obj->host = g_uri_unescape_segment (uri, eoh + 1, NULL);
-      uri = eoh + 1;
+      /* don't capture empty host strings */
+      if (eoh != uri)
+        uri_obj->host = g_uri_unescape_segment (uri, eoh, NULL);
+
+      uri = reoh;
       if (uri < eoa) {
-        /* if port number is malformed, do best effort and concat string */
+        /* if port number is malformed then we can't parse this */
         if (uri[0] != ':' || strspn (uri + 1, "0123456789") != eoa - uri - 1) {
-          gchar *tmp = uri_obj->host;
-          uri_obj->host = g_malloc (strlen (uri_obj->host) + eoa - uri + 1);
-          g_strlcpy (g_stpcpy (uri_obj->host, tmp), uri, eoa - uri + 1);
-          g_free (tmp);
-        } else {
-          /* otherwise treat port as unsigned decimal number */
+          GST_DEBUG ("Unable to parse host/port part of the URI '%s'.",
+                  orig_uri);
+          _gst_uri_free (uri_obj);
+          return NULL;
+        }
+        /* otherwise treat port as unsigned decimal number */
+        uri++;
+        while (uri < eoa) {
+          uri_obj->port = uri_obj->port * 10 + g_ascii_digit_value (*uri);
           uri++;
-          while (uri < eoa) {
-            uri_obj->port = uri_obj->port * 10 + g_ascii_digit_value (*uri);
-            uri++;
-          }
         }
       }
       uri = eoa;
@@ -1956,9 +1974,15 @@ gst_uri_to_string (const GstUri * uri)
   }
 
   if (uri->host != NULL) {
-    escaped = _gst_uri_escape_host (uri->host);
-    g_string_append (uri_str, escaped);
-    g_free (escaped);
+    if (strchr (uri->host, ':') != NULL) {
+      escaped = _gst_uri_escape_host_colon (uri->host);
+      g_string_append_printf (uri_str, "[%s]", escaped);
+      g_free (escaped);
+    } else {
+      escaped = _gst_uri_escape_host (uri->host);
+      g_string_append (uri_str, escaped);
+      g_free (escaped);
+    }
   }
 
   if (uri->port != GST_URI_NO_PORT)
