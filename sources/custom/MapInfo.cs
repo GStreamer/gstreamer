@@ -34,7 +34,7 @@ namespace Gst {
 				return data;
 			}
 			set {
-				Marshal.Copy (value, 0, _data, Data.Length);
+				Marshal.Copy (value, 0, _data, value.Length);
 			}
 		}
 
