@@ -225,7 +225,7 @@ static void pack_ ##name (const GstAudioFormatInfo *info,               \
 #define SILENT_U20BE     { 0x08, 0x00, 0x00, 0x08, 0x00, 0x00 }
 #define SILENT_U18LE     { 0x00, 0x00, 0x02, 0x00, 0x00, 0x02 }
 #define SILENT_U18BE     { 0x02, 0x00, 0x00, 0x02, 0x00, 0x00 }
-     static GstAudioFormatInfo formats[] = {
+     static const GstAudioFormatInfo formats[] = {
        {GST_AUDIO_FORMAT_UNKNOWN, "UNKNOWN", "Unknown audio", 0, 0, 0, 0},
        {GST_AUDIO_FORMAT_ENCODED, "ENCODED", "Encoded audio",
            GST_AUDIO_FORMAT_FLAG_COMPLEX, 0, 0, 0},
@@ -363,7 +363,7 @@ gst_audio_format_build_integer (gboolean sign, gint endianness,
   gint i, e;
 
   for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    GstAudioFormatInfo *finfo = &formats[i];
+    const GstAudioFormatInfo *finfo = &formats[i];
 
     /* must be int */
     if (!GST_AUDIO_FORMAT_INFO_IS_INTEGER (finfo))
