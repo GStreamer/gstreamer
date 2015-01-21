@@ -63,7 +63,7 @@ struct _GstGLUploadPrivate
 
   GstBuffer *outbuf;
 
-  UploadMethod *method;
+  const UploadMethod *method;
   gpointer method_impl;
   int method_i;
 };
@@ -169,7 +169,7 @@ _gl_memory_upload_free (gpointer impl)
   g_free (impl);
 }
 
-static UploadMethod _gl_memory_upload = {
+static const UploadMethod _gl_memory_upload = {
   "GLMemory",
   METHOD_FLAG_CAN_SHARE_CONTEXT,
   &_gl_memory_upload_new,
@@ -281,7 +281,7 @@ _egl_image_upload_free (gpointer impl)
   g_free (impl);
 }
 
-static UploadMethod _egl_image_upload = {
+static const UploadMethod _egl_image_upload = {
   "EGLImage",
   0,
   &_egl_image_upload_new,
@@ -433,7 +433,7 @@ _upload_meta_upload_free (gpointer impl)
   g_free (upload);
 }
 
-static UploadMethod _upload_meta_upload = {
+static const UploadMethod _upload_meta_upload = {
   "UploadMeta",
   METHOD_FLAG_CAN_SHARE_CONTEXT,
   &_upload_meta_upload_new,
@@ -536,7 +536,7 @@ _raw_data_upload_free (gpointer impl)
   g_free (raw);
 }
 
-static UploadMethod _raw_data_upload = {
+static const UploadMethod _raw_data_upload = {
   "Raw Data",
   0,
   &_raw_data_upload_new,
@@ -546,7 +546,7 @@ static UploadMethod _raw_data_upload = {
   &_raw_data_upload_free
 };
 
-static UploadMethod *upload_methods[] = { &_gl_memory_upload,
+static const UploadMethod *upload_methods[] = { &_gl_memory_upload,
 #if GST_GL_HAVE_PLATFORM_EGL
   &_egl_image_upload,
 #endif
