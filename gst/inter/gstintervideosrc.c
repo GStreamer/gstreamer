@@ -128,7 +128,7 @@ gst_inter_video_src_class_init (GstInterVideoSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
           "Timeout after which to start outputting black frames",
-          0, G_MAXUINT, DEFAULT_TIMEOUT,
+          0, G_MAXUINT64, DEFAULT_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
