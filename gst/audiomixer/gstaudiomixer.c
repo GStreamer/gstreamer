@@ -751,7 +751,11 @@ gst_audiomixer_stop (GstAggregator * agg)
 static GstFlowReturn
 gst_audiomixer_flush (GstAggregator * agg)
 {
-  gst_audiomixer_reset (GST_AUDIO_MIXER (agg));
+  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
+
+  audiomixer->offset = 0;
+  agg->segment.position = -1;
+  gst_buffer_replace (&audiomixer->current_buffer, NULL);
 
   return GST_FLOW_OK;
 }
