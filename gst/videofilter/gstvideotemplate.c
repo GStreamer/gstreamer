@@ -110,7 +110,7 @@ gst_videotemplate_get_type (void)
   return videotemplate_type;
 }
 
-static GstVideofilterFormat gst_videotemplate_formats[] = {
+static const GstVideofilterFormat gst_videotemplate_formats[] = {
   {"I420", 12, gst_videotemplate_planar411,},
 };
 

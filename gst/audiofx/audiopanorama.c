@@ -139,7 +139,7 @@ static GstFlowReturn gst_audio_panorama_transform (GstBaseTransform * base,
 
 
 /* Table with processing functions: [channels][format][method] */
-static GstAudioPanoramaProcessFunc panorama_process_functions[2][2][2] = {
+static const GstAudioPanoramaProcessFunc panorama_process_functions[2][2][2] = {
   {
         {
               (GstAudioPanoramaProcessFunc) gst_audio_panorama_m2s_int,

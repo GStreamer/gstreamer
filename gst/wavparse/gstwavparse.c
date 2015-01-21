@@ -2447,7 +2447,7 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static const GstFormat *
 gst_wavparse_get_formats (GstPad * pad)
 {
-  static GstFormat formats[] = {
+  static const GstFormat formats[] = {
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
     GST_FORMAT_DEFAULT,         /* a "frame", ie a set of samples per Hz */

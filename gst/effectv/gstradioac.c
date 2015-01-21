@@ -131,7 +131,7 @@ enum
 #define RATIO 0.95
 
 static guint32 palettes[COLORS * PATTERN];
-static gint swap_tab[] = { 2, 1, 0, 3 };
+static const gint swap_tab[] = { 2, 1, 0, 3 };
 
 #define gst_radioactv_parent_class parent_class
 G_DEFINE_TYPE (GstRadioacTV, gst_radioactv, GST_TYPE_VIDEO_FILTER);

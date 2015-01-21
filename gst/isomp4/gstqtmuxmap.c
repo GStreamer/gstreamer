@@ -284,14 +284,15 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
     guint32 * _major, guint32 * _version, GList ** _compatible, AtomMOOV * moov,
     GstClockTime longest_chunk, gboolean faststart)
 {
-  static guint32 qt_brands[] = { 0 };
-  static guint32 mp4_brands[] = { FOURCC_mp41, FOURCC_isom, FOURCC_iso2, 0 };
-  static guint32 isml_brands[] = { FOURCC_iso2, 0 };
-  static guint32 gpp_brands[] = { FOURCC_isom, FOURCC_iso2, 0 };
-  static guint32 mjp2_brands[] = { FOURCC_isom, FOURCC_iso2, 0 };
-  static guint8 mjp2_prefix[] =
+  static const guint32 qt_brands[] = { 0 };
+  static const guint32 mp4_brands[] =
+      { FOURCC_mp41, FOURCC_isom, FOURCC_iso2, 0 };
+  static const guint32 isml_brands[] = { FOURCC_iso2, 0 };
+  static const guint32 gpp_brands[] = { FOURCC_isom, FOURCC_iso2, 0 };
+  static const guint32 mjp2_brands[] = { FOURCC_isom, FOURCC_iso2, 0 };
+  static const guint8 mjp2_prefix[] =
       { 0, 0, 0, 12, 'j', 'P', ' ', ' ', 0x0D, 0x0A, 0x87, 0x0A };
-  guint32 *comp = NULL;
+  const guint32 *comp = NULL;
   guint32 major = 0, version = 0;
   GstBuffer *prefix = NULL;
   GList *result = NULL;

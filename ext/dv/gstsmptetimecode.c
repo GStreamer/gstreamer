@@ -229,8 +229,8 @@ gst_smpte_time_code_get_timestamp (GstSMPTETimeCodeSystem system,
   g_return_val_if_fail (time_code != NULL, GST_CLOCK_TIME_NONE);
 
   if (gst_smpte_time_code_get_frame_number (system, &frame_number, time_code)) {
-    static int framerate_n[3] = { 3000, 25, 24 };
-    static int framerate_d[3] = { 1001, 1, 1 };
+    static const int framerate_n[3] = { 3000, 25, 24 };
+    static const int framerate_d[3] = { 1001, 1, 1 };
 
     return gst_util_uint64_scale (frame_number,
         GST_SECOND * framerate_d[system], framerate_n[system]);

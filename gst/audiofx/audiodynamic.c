@@ -110,7 +110,7 @@ static void
 gst_audio_dynamic_transform_soft_knee_expander_float (GstAudioDynamic * filter,
     gfloat * data, guint num_samples);
 
-static GstAudioDynamicProcessFunc process_functions[] = {
+static const GstAudioDynamicProcessFunc process_functions[] = {
   (GstAudioDynamicProcessFunc)
       gst_audio_dynamic_transform_hard_knee_compressor_int,
   (GstAudioDynamicProcessFunc)

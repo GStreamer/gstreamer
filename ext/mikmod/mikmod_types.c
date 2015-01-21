@@ -113,7 +113,8 @@ gboolean
 Fam_CheckType (GstBuffer * buf)
 {
   gchar *data;
-  static unsigned char FARSIG[4 + 3] = { 'F', 'A', 'R', 0xfe, 13, 10, 26 };
+  static const unsigned char FARSIG[4 + 3] =
+      { 'F', 'A', 'R', 0xfe, 13, 10, 26 };
 
   data = GST_BUFFER_DATA (buf);
 
