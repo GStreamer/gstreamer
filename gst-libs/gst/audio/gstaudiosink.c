@@ -417,7 +417,17 @@ gst_audio_sink_ring_buffer_acquire (GstAudioRingBuffer * buf,
   spec->seglatency = spec->segtotal + 1;
 
   buf->size = spec->segtotal * spec->segsize;
-  buf->memory = g_malloc0 (buf->size);
+
+  buf->memory = g_malloc (buf->size);
+
+  if (buf->spec.type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW) {
+    gst_audio_format_fill_silence (buf->spec.info.finfo, buf->memory,
+        buf->size);
+  } else {
+    /* FIXME, non-raw formats get 0 as the empty sample */
+    memset (buf->memory, 0, buf->size);
+  }
+
 
   return TRUE;
 
