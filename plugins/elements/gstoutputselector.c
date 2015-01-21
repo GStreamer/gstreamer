@@ -52,7 +52,7 @@ static GType
 gst_output_selector_pad_negotiation_mode_get_type (void)
 {
   static GType pad_negotiation_mode_type = 0;
-  static GEnumValue pad_negotiation_modes[] = {
+  static const GEnumValue pad_negotiation_modes[] = {
     {GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE, "None", "none"},
     {GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL, "All", "all"},
     {GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ACTIVE, "Active", "active"},
