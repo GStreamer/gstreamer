@@ -257,6 +257,11 @@ gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstAllocator *allocator;
   GstAllocationParams params;
   gboolean update_allocator;
+  GstBuffer *test_buffer;
+  GstVideoFrame vframe;
+  gint chroma_stride;
+  gboolean chroma_stride_acceptable;
+  gboolean pool_was_active;
 
   /* Set allocation parameters to guarantee 16-byte aligned output buffers */
   if (gst_query_get_n_allocation_params (query) > 0) {
@@ -310,6 +315,41 @@ gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gst_buffer_pool_set_config (pool, config);
 
   gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+
+  /* Confirm that stride is acceptable to libmpeg2 */
+  chroma_stride_acceptable = FALSE;
+  pool_was_active = gst_buffer_pool_is_active (pool);
+
+  if (!gst_buffer_pool_set_active (pool, TRUE))
+    goto pool_not_activated;
+
+  if (gst_buffer_pool_acquire_buffer (pool, &test_buffer, NULL) != GST_FLOW_OK)
+    goto buffer_not_acquired;
+
+  if (!gst_video_frame_map (&vframe, &dec->decoded_info, test_buffer,
+          GST_MAP_READ | GST_MAP_WRITE))
+    goto buffer_not_mapped;
+
+  if (GST_VIDEO_FRAME_N_PLANES (&vframe) != 3)
+    goto too_few_planes;
+
+  chroma_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0) >> 1;
+  chroma_stride_acceptable =
+      GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1) == chroma_stride &&
+      GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 2) == chroma_stride;
+
+too_few_planes:
+  gst_video_frame_unmap (&vframe);
+
+buffer_not_mapped:
+  g_object_unref (test_buffer);
+
+buffer_not_acquired:
+  gst_buffer_pool_set_active (pool, pool_was_active);
+
+pool_not_activated:
+  if (!chroma_stride_acceptable)
+    gst_query_set_nth_allocation_pool (query, 0, NULL, size, min, max);
 
   gst_object_unref (pool);
   gst_video_codec_state_unref (state);
@@ -553,6 +593,7 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, GstVideoCodecFrame * frame,
    * ones we did */
   mpeg2_set_buf (mpeg2dec->decoder, buf,
       GINT_TO_POINTER (frame->system_frame_number + 1));
+  mpeg2_stride (mpeg2dec->decoder, GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0));
   gst_mpeg2dec_save_buffer (mpeg2dec, frame->system_frame_number, &vframe);
 
 beach:
