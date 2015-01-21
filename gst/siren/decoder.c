@@ -82,10 +82,10 @@ Siren7_DecodeFrame (SirenDecoder decoder, unsigned char *DataIn,
       scale_factor, number_of_regions, sample_rate_code, bits_per_frame;
   int decoded_sample_rate_code;
 
-  static int absolute_region_power_index[28] = { 0 };
-  static float decoder_standard_deviation[28] = { 0 };
-  static int power_categories[28] = { 0 };
-  static int category_balance[28] = { 0 };
+  int absolute_region_power_index[28] = { 0 };
+  float decoder_standard_deviation[28] = { 0 };
+  int power_categories[28] = { 0 };
+  int category_balance[28] = { 0 };
   int ChecksumTable[4] = { 0x7F80, 0x7878, 0x6666, 0x5555 };
   int i, j;
 

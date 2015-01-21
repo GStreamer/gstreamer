@@ -82,13 +82,13 @@ Siren7_EncodeFrame (SirenEncoder encoder, unsigned char *DataIn,
       scale_factor, number_of_regions, sample_rate_code, bits_per_frame;
   int sample_rate = encoder->sample_rate;
 
-  static int absolute_region_power_index[28] = { 0 };
-  static int power_categories[28] = { 0 };
-  static int category_balance[28] = { 0 };
-  static int drp_num_bits[30] = { 0 };
-  static int drp_code_bits[30] = { 0 };
-  static int region_mlt_bit_counts[28] = { 0 };
-  static int region_mlt_bits[112] = { 0 };
+  int absolute_region_power_index[28] = { 0 };
+  int power_categories[28] = { 0 };
+  int category_balance[28] = { 0 };
+  int drp_num_bits[30] = { 0 };
+  int drp_code_bits[30] = { 0 };
+  int region_mlt_bit_counts[28] = { 0 };
+  int region_mlt_bits[112] = { 0 };
   int ChecksumTable[4] = { 0x7F80, 0x7878, 0x6666, 0x5555 };
   int i, j;
 
