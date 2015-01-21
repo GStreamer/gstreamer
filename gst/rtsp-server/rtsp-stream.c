@@ -2811,7 +2811,7 @@ gst_rtsp_stream_transport_filter (GstRTSPStream * stream,
 {
   GstRTSPStreamPrivate *priv;
   GList *result, *walk, *next;
-  GHashTable *visited;
+  GHashTable *visited = NULL;
   guint cookie;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
