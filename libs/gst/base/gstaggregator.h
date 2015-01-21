@@ -135,6 +135,7 @@ struct _GstAggregator
 
   GstPad                *  srcpad;
 
+  /* Only access with the object lock held */
   GstSegment               segment;
 
   /*< private >*/
