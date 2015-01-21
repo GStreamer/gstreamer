@@ -3215,10 +3215,11 @@ no_match:
 #define PROBE_NO_DATA(pad,mask,label,defaultval)                \
   G_STMT_START {						\
     if (G_UNLIKELY (pad->num_probes)) {				\
+      GstFlowReturn pval = defaultval;				\
       /* pass NULL as the data item */                          \
       GstPadProbeInfo info = { mask, 0, NULL, 0, 0 };           \
       ret = do_probe_callbacks (pad, &info, defaultval);	\
-      if (G_UNLIKELY (ret != defaultval && ret != GST_FLOW_OK))	\
+      if (G_UNLIKELY (ret != pval && ret != GST_FLOW_OK))	\
         goto label;						\
     }								\
   } G_STMT_END
