@@ -1,9 +1,8 @@
-/* GStreamer
- *
- * unit test for GstRTSPServer
- *
+/* GStreamer unit test for GstRTSPServer
  * Copyright (C) 2012 Axis Communications <dev-gstreamer at axis dot com>
- * @author David Svensson Fors <davidsf at axis dot com>
+ *   @author David Svensson Fors <davidsf at axis dot com>
+ * Copyright (C) 2015 Centricular Ltd
+ *   @author Tim-Philipp Müller <tim@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -180,6 +179,40 @@ start_server (void)
   g_free (service);
 
   GST_DEBUG ("rtsp server listening on port %d", test_port);
+}
+
+/* start the testing rtsp server for RECORD mode */
+static GstRTSPMediaFactory *
+start_record_server (const gchar * launch_line)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMountPoints *mounts;
+  gchar *service;
+
+  mounts = gst_rtsp_server_get_mount_points (server);
+
+  factory = gst_rtsp_media_factory_new ();
+
+  gst_rtsp_media_factory_set_record (factory, TRUE);
+  gst_rtsp_media_factory_set_launch (factory, launch_line);
+  gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
+  g_object_unref (mounts);
+
+  /* set port to any */
+  gst_rtsp_server_set_service (server, "0");
+
+  /* attach to default main context */
+  source_id = gst_rtsp_server_attach (server, NULL);
+  fail_if (source_id == 0);
+
+  /* get port */
+  service = gst_rtsp_server_get_service (server);
+  test_port = atoi (service);
+  fail_unless (test_port != 0);
+  g_free (service);
+
+  GST_DEBUG ("rtsp server listening on port %d", test_port);
+  return factory;
 }
 
 /* stop the tested rtsp server */
@@ -453,12 +486,11 @@ do_setup_full (GstRTSPConnection * conn, const gchar * control,
   }
 
   if (use_tcp_transport) {
-    transport_string_in =
-      g_strdup_printf (TEST_PROTO_TCP ";unicast");
+    transport_string_in = g_strdup_printf (TEST_PROTO_TCP ";unicast");
   } else {
     transport_string_in =
-      g_strdup_printf (TEST_PROTO ";unicast;client_port=%d-%d",
-      client_ports->min, client_ports->max);
+        g_strdup_printf (TEST_PROTO ";unicast;client_port=%d-%d",
+        client_ports->min, client_ports->max);
   }
   code =
       do_request_full (conn, GST_RTSP_SETUP, control, session_in,
@@ -589,6 +621,27 @@ GST_START_TEST (test_describe)
 
   /* clean up and iterate so the clean-up can finish */
   gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_describe_record_media)
+{
+  GstRTSPConnection *conn;
+
+  start_record_server ("( fakesink name=depay0 )");
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  /* send DESCRIBE request */
+  fail_unless_equals_int (do_request (conn, GST_RTSP_DESCRIBE, NULL, NULL, NULL,
+          NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+      GST_RTSP_STS_METHOD_NOT_ALLOWED);
+
+  /* clean up and iterate so the clean-up can finish */
   gst_rtsp_connection_free (conn);
   stop_server ();
   iterate ();
@@ -797,7 +850,7 @@ GST_START_TEST (test_setup_twice)
   /* session can not be the same */
   fail_unless (strcmp (session1, session2));
 
-  /* send TEARDOWN request for the first session*/
+  /* send TEARDOWN request for the first session */
   fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
           session1) == GST_RTSP_STS_OK);
 
@@ -1576,6 +1629,285 @@ GST_START_TEST (test_play_smpte_range)
 
 GST_END_TEST;
 
+GST_START_TEST (test_announce_without_sdp)
+{
+  GstRTSPConnection *conn;
+  GstRTSPStatusCode status;
+  GstRTSPMessage *request;
+  GstRTSPMessage *response;
+
+  start_record_server ("( fakesink name=depay0 )");
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  /* create and send ANNOUNCE request */
+  request = create_request (conn, GST_RTSP_ANNOUNCE, NULL);
+
+  fail_unless (send_request (conn, request));
+
+  iterate ();
+
+  response = read_response (conn);
+
+  /* check response */
+  gst_rtsp_message_parse_response (response, &status, NULL, NULL);
+  fail_unless_equals_int (status, GST_RTSP_STS_BAD_REQUEST);
+  gst_rtsp_message_free (response);
+
+  /* try again, this type with content-type, but still no SDP */
+  gst_rtsp_message_add_header (request, GST_RTSP_HDR_CONTENT_TYPE,
+      "application/sdp");
+
+  fail_unless (send_request (conn, request));
+
+  iterate ();
+
+  response = read_response (conn);
+
+  /* check response */
+  gst_rtsp_message_parse_response (response, &status, NULL, NULL);
+  fail_unless_equals_int (status, GST_RTSP_STS_BAD_REQUEST);
+  gst_rtsp_message_free (response);
+
+  /* try again, this type with an unknown content-type */
+  gst_rtsp_message_remove_header (request, GST_RTSP_HDR_CONTENT_TYPE, -1);
+  gst_rtsp_message_add_header (request, GST_RTSP_HDR_CONTENT_TYPE,
+      "application/x-something");
+
+  fail_unless (send_request (conn, request));
+
+  iterate ();
+
+  response = read_response (conn);
+
+  /* check response */
+  gst_rtsp_message_parse_response (response, &status, NULL, NULL);
+  fail_unless_equals_int (status, GST_RTSP_STS_BAD_REQUEST);
+  gst_rtsp_message_free (response);
+
+  /* clean up and iterate so the clean-up can finish */
+  gst_rtsp_message_free (request);
+  gst_rtsp_connection_free (conn);
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+static GstRTSPStatusCode
+do_announce (GstRTSPConnection * conn, GstSDPMessage * sdp)
+{
+  GstRTSPMessage *request;
+  GstRTSPMessage *response;
+  GstRTSPStatusCode code;
+  gchar *str;
+
+  /* create request */
+  request = create_request (conn, GST_RTSP_ANNOUNCE, NULL);
+
+  gst_rtsp_message_add_header (request, GST_RTSP_HDR_CONTENT_TYPE,
+      "application/sdp");
+
+  /* add SDP to the response body */
+  str = gst_sdp_message_as_text (sdp);
+  gst_rtsp_message_take_body (request, (guint8 *) str, strlen (str));
+  gst_sdp_message_free (sdp);
+
+  /* send request */
+  fail_unless (send_request (conn, request));
+  gst_rtsp_message_free (request);
+
+  iterate ();
+
+  /* read response */
+  response = read_response (conn);
+
+  /* check status line */
+  gst_rtsp_message_parse_response (response, &code, NULL, NULL);
+
+  gst_rtsp_message_free (response);
+  return code;
+}
+
+static void
+media_constructed_cb (GstRTSPMediaFactory * mfactory, GstRTSPMedia * media,
+    gpointer user_data)
+{
+  GstElement **p_sink = user_data;
+  GstElement *bin;
+
+  bin = gst_rtsp_media_get_element (media);
+  *p_sink = gst_bin_get_by_name (GST_BIN (bin), "sink");
+  GST_INFO ("media constructed!: %" GST_PTR_FORMAT, *p_sink);
+}
+
+#define RECORD_N_BUFS 10
+
+GST_START_TEST (test_record_tcp)
+{
+  GstRTSPMediaFactory *mfactory;
+  GstRTSPConnection *conn;
+  GstRTSPStatusCode status;
+  GstRTSPMessage *response;
+  GstRTSPMessage *request;
+  GstSDPMessage *sdp;
+  GstRTSPResult rres;
+  GSocketAddress *sa;
+  GInetAddress *ia;
+  GstElement *sink = NULL;
+  GSocket *conn_socket;
+  const gchar *proto;
+  gchar *client_ip, *sess_id, *session = NULL;
+  gint i;
+
+  mfactory =
+      start_record_server ("( rtppcmadepay name=depay0 ! appsink name=sink )");
+
+  g_signal_connect (mfactory, "media-constructed",
+      G_CALLBACK (media_constructed_cb), &sink);
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  conn_socket = gst_rtsp_connection_get_read_socket (conn);
+
+  sa = g_socket_get_local_address (conn_socket, NULL);
+  ia = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (sa));
+  client_ip = g_inet_address_to_string (ia);
+  if (g_socket_address_get_family (sa) == G_SOCKET_FAMILY_IPV6)
+    proto = "IP6";
+  else if (g_socket_address_get_family (sa) == G_SOCKET_FAMILY_IPV4)
+    proto = "IP4";
+  else
+    g_assert_not_reached ();
+  g_object_unref (sa);
+
+  gst_sdp_message_new (&sdp);
+
+  /* some standard things first */
+  gst_sdp_message_set_version (sdp, "0");
+
+  /* session ID doesn't have to be super-unique in this case */
+  sess_id = g_strdup_printf ("%u", g_random_int ());
+  gst_sdp_message_set_origin (sdp, "-", sess_id, "1", "IN", proto, client_ip);
+  g_free (sess_id);
+  g_free (client_ip);
+
+  gst_sdp_message_set_session_name (sdp, "Session streamed with GStreamer");
+  gst_sdp_message_set_information (sdp, "rtsp-server-test");
+  gst_sdp_message_add_time (sdp, "0", "0", NULL);
+  gst_sdp_message_add_attribute (sdp, "tool", "GStreamer");
+
+  /* add stream 0 */
+  {
+    GstSDPMedia *smedia;
+
+    gst_sdp_media_new (&smedia);
+    gst_sdp_media_set_media (smedia, "audio");
+    gst_sdp_media_add_format (smedia, "8");     /* pcma/alaw */
+    gst_sdp_media_set_port_info (smedia, 0, 1);
+    gst_sdp_media_set_proto (smedia, "RTP/AVP");
+    gst_sdp_media_add_attribute (smedia, "rtpmap", "8 PCMA/8000");
+    gst_sdp_message_add_media (sdp, smedia);
+    gst_sdp_media_free (smedia);
+  }
+
+  /* send ANNOUNCE request */
+  status = do_announce (conn, sdp);
+  fail_unless_equals_int (status, GST_RTSP_STS_OK);
+
+  /* create and send SETUP request */
+  request = create_request (conn, GST_RTSP_SETUP, NULL);
+  gst_rtsp_message_add_header (request, GST_RTSP_HDR_TRANSPORT,
+      "RTP/AVP/TCP;interleaved=0;mode=record");
+  fail_unless (send_request (conn, request));
+  gst_rtsp_message_free (request);
+  iterate ();
+  response = read_response (conn);
+  gst_rtsp_message_parse_response (response, &status, NULL, NULL);
+  fail_unless_equals_int (status, GST_RTSP_STS_OK);
+
+  rres =
+      gst_rtsp_message_get_header (response, GST_RTSP_HDR_SESSION, &session, 0);
+  session = g_strdup (session);
+  fail_unless_equals_int (rres, GST_RTSP_OK);
+  gst_rtsp_message_free (response);
+
+  /* send RECORD */
+  request = create_request (conn, GST_RTSP_RECORD, NULL);
+  gst_rtsp_message_add_header (request, GST_RTSP_HDR_SESSION, session);
+  fail_unless (send_request (conn, request));
+  gst_rtsp_message_free (request);
+  iterate ();
+  response = read_response (conn);
+  gst_rtsp_message_parse_response (response, &status, NULL, NULL);
+  fail_unless_equals_int (status, GST_RTSP_STS_OK);
+  gst_rtsp_message_free (response);
+
+  /* send some data */
+  {
+    GstElement *pipeline, *src, *enc, *pay, *sink;
+
+    pipeline = gst_pipeline_new ("send-pipeline");
+    src = gst_element_factory_make ("audiotestsrc", NULL);
+    g_object_set (src, "num-buffers", RECORD_N_BUFS,
+        "samplesperbuffer", 1000, NULL);
+    enc = gst_element_factory_make ("alawenc", NULL);
+    pay = gst_element_factory_make ("rtppcmapay", NULL);
+    sink = gst_element_factory_make ("appsink", NULL);
+    fail_unless (pipeline && src && enc && pay && sink);
+    gst_bin_add_many (GST_BIN (pipeline), src, enc, pay, sink, NULL);
+    gst_element_link_many (src, enc, pay, sink, NULL);
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+    do {
+      GstRTSPMessage *data_msg;
+      GstMapInfo map = GST_MAP_INFO_INIT;
+      GstRTSPResult rres;
+      GstSample *sample = NULL;
+      GstBuffer *buf;
+
+      g_signal_emit_by_name (G_OBJECT (sink), "pull-sample", &sample);
+      if (sample == NULL)
+        break;
+      buf = gst_sample_get_buffer (sample);
+      rres = gst_rtsp_message_new_data (&data_msg, 0);
+      fail_unless_equals_int (rres, GST_RTSP_OK);
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+      GST_INFO ("sending %u bytes of data on channel 0", (guint) map.size);
+      GST_MEMDUMP ("data on channel 0", map.data, map.size);
+      rres = gst_rtsp_message_set_body (data_msg, map.data, map.size);
+      fail_unless_equals_int (rres, GST_RTSP_OK);
+      gst_buffer_unmap (buf, &map);
+      rres = gst_rtsp_connection_send (conn, data_msg, NULL);
+      fail_unless_equals_int (rres, GST_RTSP_OK);
+      gst_rtsp_message_free (data_msg);
+      gst_sample_unref (sample);
+    } while (TRUE);
+
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_object_unref (pipeline);
+  }
+
+  /* check received data (we assume every buffer created by audiotestsrc and
+   * subsequently encoded by mulawenc results in exactly one RTP packet) */
+  for (i = 0; i < RECORD_N_BUFS; ++i) {
+    GstSample *sample = NULL;
+
+    g_signal_emit_by_name (G_OBJECT (sink), "pull-sample", &sample);
+    GST_INFO ("%2d recv sample: %p", i, sample);
+    gst_sample_unref (sample);
+  }
+
+  fail_unless_equals_int (GST_STATE (sink), GST_STATE_PLAYING);
+
+  /* clean up and iterate so the clean-up can finish */
+  gst_rtsp_connection_free (conn);
+  stop_server ();
+  iterate ();
+  g_free (session);
+}
+
+GST_END_TEST;
 
 static Suite *
 rtspserver_suite (void)
@@ -1589,6 +1921,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_connect);
   tcase_add_test (tc, test_describe);
   tcase_add_test (tc, test_describe_non_existing_mount_point);
+  tcase_add_test (tc, test_describe_record_media);
   tcase_add_test (tc, test_setup);
   tcase_add_test (tc, test_setup_tcp);
   tcase_add_test (tc, test_setup_twice);
@@ -1604,6 +1937,8 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_disconnect);
   tcase_add_test (tc, test_play_specific_server_port);
   tcase_add_test (tc, test_play_smpte_range);
+  tcase_add_test (tc, test_announce_without_sdp);
+  tcase_add_test (tc, test_record_tcp);
   return s;
 }
 
