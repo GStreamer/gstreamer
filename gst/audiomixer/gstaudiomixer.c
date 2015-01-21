@@ -724,6 +724,7 @@ gst_audiomixer_reset (GstAudioMixer * audiomixer)
   audiomixer->offset = 0;
   agg->segment.position = -1;
 
+  gst_audio_info_init (&audiomixer->info);
   gst_caps_replace (&audiomixer->current_caps, NULL);
   gst_buffer_replace (&audiomixer->current_buffer, NULL);
 }
