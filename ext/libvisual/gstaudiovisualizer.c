@@ -500,6 +500,9 @@ struct _GstAudioVisualizerPrivate
   GstAllocator *allocator;
   GstAllocationParams params;
   GstQuery *query;
+
+  guint dropped;                /* frames dropped / not dropped */
+  guint processed;
 };
 
 GType
@@ -686,6 +689,8 @@ gst_audio_visualizer_reset (GstAudioVisualizer * scope)
   GST_OBJECT_LOCK (scope);
   scope->proportion = 1.0;
   scope->earliest_time = -1;
+  scope->priv->dropped = 0;
+  scope->priv->processed = 0;
   GST_OBJECT_UNLOCK (scope);
 }
 
@@ -1093,26 +1098,45 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
       ts += gst_util_uint64_scale_int (dist, GST_SECOND, rate);
     }
 
+    /* check for QoS, don't compute buffers that are known to be late */
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
+      GstClockTime earliest_time;
+      gdouble proportion;
       gint64 qostime;
-      gboolean need_skip;
 
       qostime =
           gst_segment_to_running_time (&scope->segment, GST_FORMAT_TIME, ts) +
           scope->frame_duration;
 
       GST_OBJECT_LOCK (scope);
-      /* check for QoS, don't compute buffers that are known to be late */
-      need_skip = scope->earliest_time != -1 && qostime <= scope->earliest_time;
+      earliest_time = scope->earliest_time;
+      proportion = scope->proportion;
       GST_OBJECT_UNLOCK (scope);
 
-      if (need_skip) {
-        GST_WARNING_OBJECT (scope,
+      if (GST_CLOCK_TIME_IS_VALID (earliest_time) && qostime <= earliest_time) {
+        GstClockTime stream_time, jitter;
+        GstMessage *qos_msg;
+
+        GST_DEBUG_OBJECT (scope,
             "QoS: skip ts: %" GST_TIME_FORMAT ", earliest: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (qostime), GST_TIME_ARGS (scope->earliest_time));
+            GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
+
+        ++scope->priv->dropped;
+        stream_time = gst_segment_to_stream_time (&scope->segment,
+            GST_FORMAT_TIME, ts);
+        jitter = GST_CLOCK_DIFF (qostime, earliest_time);
+        qos_msg = gst_message_new_qos (GST_OBJECT (scope), FALSE, qostime,
+            stream_time, ts, GST_BUFFER_DURATION (buffer));
+        gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
+        gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
+            scope->priv->processed, scope->priv->dropped);
+        gst_element_post_message (GST_ELEMENT (scope), qos_msg);
+
         goto skip;
       }
     }
+
+    ++scope->priv->processed;
 
     g_mutex_unlock (&scope->config_lock);
     ret = default_prepare_output_buffer (scope, &outbuf);
