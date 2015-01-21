@@ -714,7 +714,7 @@ const GstAudioChannelPosition alsa_position[][8] = {
 #define ITEM(x, y) \
   [SND_CHMAP_ ## x] = GST_AUDIO_CHANNEL_POSITION_ ## y + 1
 
-static GstAudioChannelPosition gst_pos[SND_CHMAP_LAST + 1] = {
+static const GstAudioChannelPosition gst_pos[SND_CHMAP_LAST + 1] = {
   ITEM (MONO, MONO),
   ITEM (FL, FRONT_LEFT),
   ITEM (FR, FRONT_RIGHT),
