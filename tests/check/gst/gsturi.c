@@ -252,19 +252,19 @@ static const struct URITest tests[] = {
                   NULL}}, "fragment"}},
 
   {"scheme://hostname:123?query",
-        {NULL, NULL, "hostname", 123, NULL, {{"query", NULL}, {NULL,
+        {"scheme", NULL, "hostname", 123, NULL, {{"query", NULL}, {NULL,
                   NULL}}, NULL}},
 
   {"scheme://hostname:123?query=value",
-        {NULL, NULL, "hostname", 123, NULL, {{"query", "value"}, {NULL,
+        {"scheme", NULL, "hostname", 123, NULL, {{"query", "value"}, {NULL,
                   NULL}}, NULL}},
 
   {"scheme://hostname:123?query#fragment",
-        {NULL, NULL, "hostname", 123, NULL, {{"query", NULL}, {NULL,
+        {"scheme", NULL, "hostname", 123, NULL, {{"query", NULL}, {NULL,
                   NULL}}, "fragment"}},
 
   {"scheme://hostname:123?query=value#fragment",
-        {NULL, NULL, "hostname", 123, NULL, {{"query", "value"}, {NULL,
+        {"scheme", NULL, "hostname", 123, NULL, {{"query", "value"}, {NULL,
                   NULL}}, "fragment"}},
 
   /* user/pass */
@@ -286,10 +286,6 @@ static const struct URITest tests[] = {
 
   /* FUNNY URIS.  PARSING AND PRINTING OF THESE MAY CHANGE */
 
-  {"scheme://hostname:123path?query#fragment",  /* PRETTY */
-        {"scheme", NULL, "hostname", 123, "path", {{"query", NULL}, {NULL,
-                  NULL}}, "fragment"}},
-
   {"scheme:hostname:123/path?query#fragment",
         {"scheme", NULL, NULL, GST_URI_NO_PORT, "hostname:123/path", {{"query",
                   NULL}, {NULL, NULL}}, "fragment"}},
@@ -297,16 +293,6 @@ static const struct URITest tests[] = {
   {"scheme://:pass@hostname:123/path?query#fragment",
         {"scheme", ":pass", "hostname", 123, "/path", {{"query", NULL}, {NULL,
                   NULL}}, "fragment"}},
-
-  /* IPv6 hostname without brackets */
-  {"scheme://01:23:45:67:89:ab:cd:ef:123/path",
-        {"scheme", NULL, "01", GST_URI_NO_PORT, ":45:67:89:ab:cd:ef:123/path",
-          {{NULL, NULL}}, NULL}},
-
-  /* Brackets that don't close - hostname will be everything */
-  {"scheme://[01:23:45:67:89:ab:cd:ef:123/path",
-        {"scheme", NULL, "01:23:45:67:89:ab:cd:ef:123/path", GST_URI_NO_PORT,
-          NULL, {{NULL, NULL}}, NULL}},
 
   /* Skip initial white space */
   {" \f\n\r\t\vscheme:",
@@ -322,6 +308,17 @@ static const struct URITest tests[] = {
   {"file:///home/joe/foo.txt",
         {"file", NULL, NULL, GST_URI_NO_PORT, "/home/joe/foo.txt", {{NULL,
                   NULL}}, NULL}},
+};
+
+static const gchar *unparsable_uri_tests[] = {
+  /* Path not started correctly */
+  "scheme://hostname:123path?query#fragment",
+
+  /* Brackets that don't close */
+  "scheme://[01:23:45:67:89:ab:cd:ef:123/path",
+
+  /* IPv6 hostname without brackets */
+  "scheme://01:23:45:67:89:ab:cd:ef:123/path",
 };
 
 GST_START_TEST (test_url_parsing)
@@ -359,6 +356,58 @@ GST_START_TEST (test_url_parsing)
     list = gst_uri_get_query_keys (uri);
     fail_unless_equals_int (j, g_list_length (list));
     g_list_free (list);
+    gst_uri_unref (uri);
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (unparsable_uri_tests); i++) {
+    GST_DEBUG ("Testing unparsable URI '%s'", unparsable_uri_tests[i]);
+
+    uri = gst_uri_from_string (unparsable_uri_tests[i]);
+    fail_unless (uri == NULL);
+  }
+}
+
+GST_END_TEST;
+
+static const struct URITest url_presenting_tests[] = {
+  /* check all URI elements present */
+  { .uri = { "scheme", "user:pass", "host", 1234, "/path/to/dir",
+            {{"query", NULL}, {"key", "value"}}, "fragment"},
+    .str = "scheme://user:pass@host:1234/path/to/dir?query&key=value#fragment"
+  },
+
+  /* IPv6 literal should render in square brackets */
+  { .uri = { "scheme", "user:pass", "12:34:56:78:9a:bc:de:f0", 1234,
+            "/path/to/dir", {{"query", "value"}}, "fragment"},
+    .str = "scheme://user:pass@[12:34:56:78:9a:bc:de:f0]:1234/path/to/dir?query=value#fragment" },
+};
+
+GST_START_TEST (test_url_presenting)
+{
+  GstUri *uri;
+  gchar *result;
+  guint i, j;
+
+  for (i = 0; i < G_N_ELEMENTS (url_presenting_tests); i++) {
+    uri = gst_uri_new (url_presenting_tests[i].uri.scheme,
+            url_presenting_tests[i].uri.userinfo,
+            url_presenting_tests[i].uri.host,
+            url_presenting_tests[i].uri.port,
+            url_presenting_tests[i].uri.path,
+            NULL, url_presenting_tests[i].uri.fragment);
+    fail_unless (uri != NULL);
+    for (j = 0; j < 10; j++) {
+      if (!url_presenting_tests[i].uri.query[j].key)
+        break;
+
+      fail_unless (gst_uri_set_query_value (uri,
+              url_presenting_tests[i].uri.query[j].key,
+              url_presenting_tests[i].uri.query[j].value));
+    }
+
+    result = gst_uri_to_string (uri);
+    fail_unless_equals_string (result, url_presenting_tests[i].str);
+    g_free (result);
     gst_uri_unref (uri);
   }
 }
@@ -915,6 +964,7 @@ gst_uri_suite (void)
   tcase_add_test (tc_chain, test_win32_uri);
 #endif
   tcase_add_test (tc_chain, test_url_parsing);
+  tcase_add_test (tc_chain, test_url_presenting);
   tcase_add_test (tc_chain, test_url_normalization);
   tcase_add_test (tc_chain, test_url_joining);
   tcase_add_test (tc_chain, test_url_equality);
