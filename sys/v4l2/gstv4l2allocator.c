@@ -1269,8 +1269,9 @@ done:
   return ret;
 }
 
-GstV4l2MemoryGroup *
-gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator)
+GstFlowReturn
+gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator,
+    GstV4l2MemoryGroup ** group_out)
 {
   struct v4l2_buffer buffer = { 0 };
   struct v4l2_plane planes[VIDEO_MAX_PLANES] = { {0} };
@@ -1278,7 +1279,7 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator)
 
   GstV4l2MemoryGroup *group = NULL;
 
-  g_return_val_if_fail (g_atomic_int_get (&allocator->active), FALSE);
+  g_return_val_if_fail (g_atomic_int_get (&allocator->active), GST_FLOW_ERROR);
 
   buffer.type = allocator->type;
   buffer.memory = allocator->memory;
@@ -1296,7 +1297,7 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator)
   if (!IS_QUEUED (group->buffer)) {
     GST_ERROR_OBJECT (allocator,
         "buffer %i was not queued, this indicate a driver bug.", buffer.index);
-    return NULL;
+    return GST_FLOW_ERROR;
   }
 
   group->buffer = buffer;
@@ -1334,9 +1335,15 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator)
   for (i = 0; i < group->n_mem; i++)
     gst_memory_unref (group->mem[i]);
 
-  return group;
+  *group_out = group;
+  return GST_FLOW_OK;
 
 error:
+  if (errno == EPIPE) {
+    GST_DEBUG_OBJECT (allocator, "broken pipe signals last buffer");
+    return GST_FLOW_EOS;
+  }
+
   GST_ERROR_OBJECT (allocator, "failed dequeuing a %s buffer: %s",
       memory_type_to_str (allocator->memory), g_strerror (errno));
 
@@ -1378,7 +1385,7 @@ error:
       break;
   }
 
-  return NULL;
+  return GST_FLOW_ERROR;
 }
 
 void

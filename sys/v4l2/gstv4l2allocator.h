@@ -148,7 +148,8 @@ void                 gst_v4l2_allocator_flush          (GstV4l2Allocator * alloc
 gboolean             gst_v4l2_allocator_qbuf           (GstV4l2Allocator * allocator,
                                                         GstV4l2MemoryGroup * group);
 
-GstV4l2MemoryGroup*  gst_v4l2_allocator_dqbuf          (GstV4l2Allocator * allocator);
+GstFlowReturn        gst_v4l2_allocator_dqbuf          (GstV4l2Allocator * allocator,
+                                                        GstV4l2MemoryGroup ** group);
 
 void                 gst_v4l2_allocator_reset_group    (GstV4l2Allocator * allocator,
                                                         GstV4l2MemoryGroup * group);

@@ -1139,8 +1139,10 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
 
   GST_LOG_OBJECT (pool, "dequeueing a buffer");
 
-  group = gst_v4l2_allocator_dqbuf (pool->vallocator);
-  if (group == NULL)
+  res = gst_v4l2_allocator_dqbuf (pool->vallocator, &group);
+  if (res == GST_FLOW_EOS)
+    goto eos;
+  if (res != GST_FLOW_OK)
     goto dqbuf_failed;
 
   /* get our GstBuffer with that index from the pool, if the buffer was
@@ -1260,6 +1262,10 @@ poll_failed:
   {
     GST_DEBUG_OBJECT (pool, "poll error %s", gst_flow_get_name (res));
     return res;
+  }
+eos:
+  {
+    return GST_FLOW_EOS;
   }
 dqbuf_failed:
   {
