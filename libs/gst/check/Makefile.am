@@ -109,10 +109,14 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_test_clock_process_id_list \
 	gst_test_clock_id_list_get_latest_time
 
+# For backwards compatibility with GStreamer < 1.5
+LIBGSTCHECK_EXPORTED_COMPAT_FUNCS = \
+	_fail_unless
 
 LIBGSTCHECK_EXPORTED_SYMBOLS = \
 	$(LIBGSTCHECK_EXPORTED_VARS) \
-	$(LIBGSTCHECK_EXPORTED_FUNCS)
+	$(LIBGSTCHECK_EXPORTED_FUNCS) \
+	$(LIBGSTCHECK_EXPORTED_COMPAT_FUNCS)
 
 # Please do not even think about changing the alphabet below into A-Za-z.
 # It is there for purpose. (Bug #602093)
