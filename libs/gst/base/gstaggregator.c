@@ -192,6 +192,8 @@ gst_aggregator_pad_flush (GstAggregatorPad * aggpad, GstAggregator * agg)
  *************************************/
 static GstElementClass *aggregator_parent_class = NULL;
 
+/* All members are protected by the object lock unless otherwise noted */
+
 struct _GstAggregatorPrivate
 {
   gint padcount;
@@ -200,23 +202,15 @@ struct _GstAggregatorPrivate
   gboolean running;             /* protected by SRC_STREAM_LOCK */
 
   gint seqnum;
-  gboolean send_stream_start;
+  gboolean send_stream_start;   /* protected by srcpad stream lock */
   gboolean send_segment;
   gboolean flush_seeking;
   gboolean pending_flush_start;
-  gboolean send_eos;
-  GstFlowReturn flow_return;
-
-  gboolean send_stream_start;   /* protected by srcpad stream lock */
-  gboolean send_segment;        /* protected by object lock */
-  gboolean flush_seeking;       /* protected by object lock */
-  gboolean pending_flush_start; /* protected by object lock */
   gboolean send_eos;            /* protected by srcpad stream lock */
-  GstFlowReturn flow_return;    /* protected by object lock */
+  GstFlowReturn flow_return;
 
   GstCaps *srccaps;             /* protected by the srcpad stream lock */
 
-  /* protected by object lock */
   GstTagList *tags;
   gboolean tags_changed;
 
@@ -228,7 +222,7 @@ struct _GstAggregatorPrivate
   GstClockTime sub_latency_max;
 
   /* aggregate */
-  GstClockID aggregate_id;
+  GstClockID aggregate_id;      /* protected by src_lock */
   GMutex src_lock;
   GCond src_cond;
 
