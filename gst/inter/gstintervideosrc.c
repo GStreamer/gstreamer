@@ -326,12 +326,17 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (src);
   GstCaps *caps;
   GstBuffer *buffer;
+  guint64 frames;
   gboolean is_gap = FALSE;
 
   GST_DEBUG_OBJECT (intervideosrc, "create");
 
   caps = NULL;
   buffer = NULL;
+
+  frames = gst_util_uint64_scale_ceil (intervideosrc->timeout,
+      GST_VIDEO_INFO_FPS_N (&intervideosrc->info),
+      GST_VIDEO_INFO_FPS_D (&intervideosrc->info) * GST_SECOND);
 
   g_mutex_lock (&intervideosrc->surface->mutex);
   if (intervideosrc->surface->video_info.finfo) {
@@ -354,29 +359,25 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
       intervideosrc->n_frames = 0;
     }
   }
+
   if (intervideosrc->surface->video_buffer) {
-    guint64 frames = gst_util_uint64_scale_ceil (intervideosrc->timeout,
-        GST_VIDEO_INFO_FPS_N (&intervideosrc->info),
-        GST_VIDEO_INFO_FPS_D (&intervideosrc->info) * GST_SECOND);
-
+    /* We have a buffer to push */
     buffer = gst_buffer_ref (intervideosrc->surface->video_buffer);
-
-    /* Repeated buffer? */
-    if (intervideosrc->surface->video_buffer_count > 0)
-      is_gap = TRUE;
-
     intervideosrc->surface->video_buffer_count++;
-    if (intervideosrc->timeout > 0
-        && intervideosrc->surface->video_buffer_count >= frames) {
-      /* The first black buffer is not a GAP anymore but
-       * the following are */
-      if (intervideosrc->surface->video_buffer_count == frames)
-        is_gap = FALSE;
 
+    /* Can only be true if timeout > 0 */
+    if (intervideosrc->surface->video_buffer_count >= frames) {
       gst_buffer_unref (intervideosrc->surface->video_buffer);
       intervideosrc->surface->video_buffer = NULL;
     }
+  } else if (intervideosrc->surface->video_buffer_count == frames) {
+    /* This will be our first black frame */
+    intervideosrc->surface->video_buffer_count++;
+  } else if (intervideosrc->surface->video_buffer_count > frames) {
+    /* The first black buffer is not a GAP, but the following ones are */
+    is_gap = TRUE;
   }
+
   g_mutex_unlock (&intervideosrc->surface->mutex);
 
   if (caps) {
