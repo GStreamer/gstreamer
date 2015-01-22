@@ -165,6 +165,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   GstGLContextCocoaPrivate *priv = context_cocoa->priv;
   GstGLWindow *window = gst_gl_context_get_window (context);
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
+  GstGLAPI context_api = GST_GL_API_NONE;
   const GLint swapInterval = 1;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   CGLPixelFormatObj fmt = NULL;
@@ -175,7 +176,15 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
     0
   };
   CGLError ret;
+  gint pix_fmt_i = 0;
   gint npix;
+
+  if ((gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) == GST_GL_API_NONE) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+        "The CGL backend only supports GL and GL3");
+    goto error;
+  }
 
   priv->gl_context = nil;
   if (other_context)
@@ -184,10 +193,40 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
     priv->external_gl_context = NULL;
 
   if (priv->external_gl_context) {
+    gint profile;
+
     fmt = CGLGetPixelFormat (priv->external_gl_context);
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+    /* core profile is only available in >= 10.7 */
+    if (kCGLNoError == CGLDescribePixelFormat (fmt, 0, kCGLPFAOpenGLProfile,
+          &profile)) {
+      if (profile == kCGLOGLPVersion_3_2_Core) {
+        context_api = GST_GL_API_OPENGL3;
+      } else {
+        context_api =GST_GL_API_OPENGL;
+      }
+    }
+#else
+    context_api = GST_GL_API_OPENGL;
+#endif
   }
 
   if (!fmt) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+    if (gl_api & GST_GL_API_OPENGL3) {
+      attribs[pix_fmt_i++] = kCGLPFAOpenGLProfile;
+      attribs[pix_fmt_i++] = (int) kCGLOGLPVersion_3_2_Core;
+      context_api = GST_GL_API_OPENGL3;
+    } else {
+      context_api = GST_GL_API_OPENGL;
+    }
+#else
+    context_api = GST_GL_API_OPENGL;
+#endif
+
+    attribs[pix_fmt_i++] = 0;
+
     ret = CGLChoosePixelFormat (attribs, &fmt, &npix);
     if (ret != kCGLNoError) {
       g_set_error (error, GST_GL_CONTEXT_ERROR,
@@ -224,15 +263,21 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
    */
   CGLSetParameter (context_cocoa->priv->gl_context, kCGLCPSwapInterval, &swapInterval);
 
-  gst_object_unref (window);
+  context_cocoa->priv->context_api = context_api;
+
+  if (window)
+    gst_object_unref (window);
   [pool release];
 
   return TRUE;
 
 error:
-  gst_object_unref (window);
-  [pool release];
-  return FALSE;
+  {
+    if (window)
+      gst_object_unref (window);
+    [pool release];
+    return FALSE;
+  }
 }
 
 static void
@@ -259,7 +304,12 @@ gst_gl_context_cocoa_activate (GstGLContext * context, gboolean activate)
 static GstGLAPI
 gst_gl_context_cocoa_get_gl_api (GstGLContext * context)
 {
-  return GST_GL_API_OPENGL;
+  GstGLContextCocoa *context_cocoa = GST_GL_CONTEXT_COCOA (context);
+
+  if (context_cocoa->priv->gl_context)
+    return context_cocoa->priv->context_api;
+
+  return GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
 }
 
 static GstGLPlatform
