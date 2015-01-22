@@ -231,6 +231,7 @@ struct _GstAggregatorPrivate
 
   GstCaps *srccaps;
 
+  /* protected by object lock */
   GstTagList *tags;
   gboolean tags_changed;
 
@@ -409,6 +410,8 @@ static inline void
 gst_aggregator_push_mandatory_events (GstAggregator * self)
 {
   GstAggregatorPrivate *priv = self->priv;
+  GstEvent *segment = NULL;
+  GstEvent *tags = NULL;
 
   if (self->priv->send_stream_start) {
     gchar s_id[32];
@@ -436,26 +439,28 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
 
   GST_OBJECT_LOCK (self);
   if (self->priv->send_segment && !self->priv->flush_seeking) {
-    GstEvent *segev = gst_event_new_segment (&self->segment);
+    segment = gst_event_new_segment (&self->segment);
 
     if (!self->priv->seqnum)
-      self->priv->seqnum = gst_event_get_seqnum (segev);
+      self->priv->seqnum = gst_event_get_seqnum (segment);
     else
-      gst_event_set_seqnum (segev, self->priv->seqnum);
+      gst_event_set_seqnum (segment, self->priv->seqnum);
     self->priv->send_segment = FALSE;
-    GST_OBJECT_UNLOCK (self);
 
-    GST_DEBUG_OBJECT (self, "pushing segment %" GST_PTR_FORMAT, segev);
-    gst_pad_push_event (self->srcpad, segev);
-  } else {
-    GST_OBJECT_UNLOCK (self);
+    GST_DEBUG_OBJECT (self, "pushing segment %" GST_PTR_FORMAT, segment);
   }
 
   if (priv->tags && priv->tags_changed) {
-    gst_pad_push_event (self->srcpad,
-        gst_event_new_tag (gst_tag_list_ref (priv->tags)));
+    tags = gst_event_new_tag (gst_tag_list_ref (priv->tags));
     priv->tags_changed = FALSE;
   }
+  GST_OBJECT_UNLOCK (self);
+
+  if (segment)
+    gst_pad_push_event (self->srcpad, segment);
+  if (tags)
+    gst_pad_push_event (self->srcpad, tags);
+
 }
 
 /**
@@ -740,7 +745,7 @@ gst_aggregator_flush (GstAggregator * self)
   GST_OBJECT_LOCK (self);
   priv->send_segment = TRUE;
   priv->flush_seeking = FALSE;
-  g_atomic_int_set (&priv->tags_changed, FALSE);
+  priv->tags_changed = FALSE;
   GST_OBJECT_UNLOCK (self);
   if (klass->flush)
     ret = klass->flush (self);
@@ -951,16 +956,16 @@ gst_aggregator_stop (GstAggregator * agg)
 
   gst_aggregator_iterate_sinkpads (agg, gst_aggregator_stop_pad, NULL);
 
-  if (agg->priv->tags)
-    gst_tag_list_unref (agg->priv->tags);
-  agg->priv->tags = NULL;
-
   klass = GST_AGGREGATOR_GET_CLASS (agg);
 
   if (klass->stop)
     result = klass->stop (agg);
   else
     result = TRUE;
+
+  if (agg->priv->tags)
+    gst_tag_list_unref (agg->priv->tags);
+  agg->priv->tags = NULL;
 
   return result;
 }
