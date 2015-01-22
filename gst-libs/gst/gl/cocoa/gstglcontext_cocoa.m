@@ -38,7 +38,11 @@ static GstGLPlatform gst_gl_context_cocoa_get_gl_platform (GstGLContext * contex
 #define GST_GL_CONTEXT_COCOA_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT_COCOA, GstGLContextCocoaPrivate))
 
-G_DEFINE_TYPE (GstGLContextCocoa, gst_gl_context_cocoa, GST_GL_TYPE_CONTEXT);
+GST_DEBUG_CATEGORY_STATIC (gst_gl_context_cocoa_debug);
+#define GST_CAT_DEFAULT gst_gl_context_cocoa_debug
+
+G_DEFINE_TYPE_WITH_CODE (GstGLContextCocoa, gst_gl_context_cocoa,
+    GST_GL_TYPE_CONTEXT, GST_DEBUG_CATEGORY_INIT (gst_gl_context_cocoa_debug, "glcontext_cocoa", 0, "Cocoa GL Context"); );
 
 /* Define this if the GLib patch from
  * https://bugzilla.gnome.org/show_bug.cgi?id=741450
