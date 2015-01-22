@@ -23,6 +23,47 @@
 #include <gst/check/gstcheck.h>
 #include "test-utils.h"
 
+static GstValidateRunner *
+_start_monitoring_bin (GstBin * bin)
+{
+  GstValidateRunner *runner;
+  GstValidateMonitor *monitor;
+
+  runner = gst_validate_runner_new ();
+  monitor =
+      gst_validate_monitor_factory_create (GST_OBJECT (bin), runner, NULL);
+
+  gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
+  return runner;
+}
+
+static void
+_stop_monitoring_bin (GstBin * bin, GstValidateRunner * runner)
+{
+  GstValidateMonitor *monitor;
+
+  monitor =
+      (GstValidateMonitor *) g_object_get_data (G_OBJECT (bin),
+      "validate-monitor");
+  ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
+  gst_object_unref (bin);
+  ASSERT_OBJECT_REFCOUNT (monitor, "monitor", 1);
+  gst_object_unref (monitor);
+  ASSERT_OBJECT_REFCOUNT (runner, "runner", 1);
+  gst_object_unref (runner);
+}
+
+static GstValidateMonitor *
+_start_monitoring_element (GstElement * element, GstValidateRunner * runner)
+{
+  GstValidateMonitor *monitor;
+
+  monitor = gst_validate_monitor_factory_create (GST_OBJECT (element),
+      runner, NULL);
+
+  return monitor;
+}
+
 static void
 _check_reports_refcount (GstPad * pad, gint refcount)
 {
@@ -246,13 +287,9 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
   GstBin *pipeline = GST_BIN (gst_pipeline_new ("validate-pipeline"));
   GList *reports;
   GstValidateRunner *runner;
-  GstValidateMonitor *monitor;
 
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
-  runner = gst_validate_runner_new ();
-  monitor = gst_validate_monitor_factory_create (GST_OBJECT (pipeline),
-      runner, NULL);
-  gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
+  runner = _start_monitoring_bin (pipeline);
 
   gst_bin_add (pipeline, demuxer);
   fake_demuxer_prepare_pads (pipeline, demuxer, runner);
@@ -292,8 +329,14 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   ASSERT_OBJECT_REFCOUNT (pipeline, "ours", 1);
-  check_destroyed (pipeline, demuxer, NULL);
-  check_destroyed (monitor, pmonitor, NULL);
+  gst_object_ref (demuxer);
+  gst_object_ref (pmonitor);
+  _stop_monitoring_bin (pipeline, runner);
+
+  ASSERT_OBJECT_REFCOUNT (demuxer, "plop", 1);
+  gst_object_unref (demuxer);
+  ASSERT_OBJECT_REFCOUNT (pmonitor, "plop", 1);
+  gst_object_unref (pmonitor);
 }
 
 GST_START_TEST (flow_aggregation)
@@ -560,8 +603,7 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
       gst_media_descriptor_parser_new_from_xml (runner, media_info, &err);
 
   decoder = fake_decoder_new ();
-  monitor = gst_validate_monitor_factory_create (GST_OBJECT (decoder),
-      runner, NULL);
+  monitor = _start_monitoring_element (decoder, runner);
   gst_validate_monitor_set_media_descriptor (monitor, mdesc);
 
   srcpad = gst_pad_new ("src", GST_PAD_SRC);
@@ -750,12 +792,9 @@ GST_START_TEST (eos_without_segment)
   GstBin *pipeline = GST_BIN (gst_pipeline_new ("validate-pipeline"));
   GList *reports;
   GstValidateRunner *runner;
-  GstValidateMonitor *monitor;
 
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
-  runner = gst_validate_runner_new ();
-  monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT (pipeline), runner, NULL);
+  runner = _start_monitoring_bin (pipeline);
 
   gst_bin_add_many (pipeline, decoder, sink, NULL);
   srcpad = gst_pad_new ("srcpad1", GST_PAD_SRC);
@@ -784,9 +823,7 @@ GST_START_TEST (eos_without_segment)
   g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  check_destroyed (pipeline, NULL, NULL);
-  check_destroyed (monitor, NULL, NULL);
-  check_destroyed (runner, NULL, NULL);
+  _stop_monitoring_bin (pipeline, runner);
 }
 
 GST_END_TEST;
