@@ -550,7 +550,7 @@ _gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
     GstCaps * in_caps, GstCaps * out_caps)
 {
   GstVideoInfo in_info, out_info;
-  GstCapsFeatures *in_features, *out_features, *gl_features;
+  GstCapsFeatures *in_features, *out_features;
 
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (in_caps, FALSE);
@@ -571,18 +571,15 @@ _gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
   g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&out_info) !=
       GST_VIDEO_FORMAT_ENCODED, FALSE);
 
-  gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   in_features = gst_caps_get_features (in_caps, 0);
   out_features = gst_caps_get_features (out_caps, 0);
 
-  if (!gst_caps_features_is_equal (in_features, gl_features)
-      || !gst_caps_features_is_equal (out_features, gl_features)) {
-    gst_caps_features_free (gl_features);
+  if (!gst_caps_features_contains (in_features,
+          GST_CAPS_FEATURE_MEMORY_GL_MEMORY)
+      || !gst_caps_features_contains (out_features,
+          GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     return FALSE;
   }
-
-  gst_caps_features_free (gl_features);
 
   if (gst_video_info_is_equal (&convert->in_info, &in_info) &&
       gst_video_info_is_equal (&convert->out_info, &out_info))
