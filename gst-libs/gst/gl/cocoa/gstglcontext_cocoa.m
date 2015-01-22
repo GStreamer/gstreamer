@@ -363,8 +363,10 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   });
 
   if (!context_cocoa->priv->gl_context) {
+#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
     g_source_remove (priv->source_id);
     priv->source_id = 0;
+#endif
     return FALSE;
   }
 
