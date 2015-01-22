@@ -11,7 +11,9 @@ gst/aiff/aiffparse.c
 gst/asfmux/gstasfmux.c
 gst/camerabin2/camerabingeneral.c
 gst/camerabin2/gstcamerabin2.c
+gst/camerabin2/gstdigitalzoom.c
 gst/camerabin2/gstviewfinderbin.c
+gst/camerabin2/gstwrappercamerabinsrc.c
 gst/dvdspu/gstdvdspu.c
 gst-libs/gst/adaptivedemux/gstadaptivedemux.c
 gst/mpegtsdemux/mpegtsbase.c

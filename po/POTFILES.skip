@@ -1,5 +1,7 @@
 ext/audiofile/gstafsink.c
 ext/audiofile/gstafsrc.c
+ext/sndfile/gstsfsink.c
+ext/sndfile/gstsfsrc.c
 sys/dxr3/dxr3audiosink.c
 sys/dxr3/dxr3spusink.c
 sys/dxr3/dxr3videosink.c
