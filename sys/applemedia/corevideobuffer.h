@@ -41,7 +41,8 @@ typedef struct _GstCoreVideoMeta
 } GstCoreVideoMeta;
 
 GstBuffer * gst_core_video_buffer_new      (CVBufferRef cvbuf,
-                                            GstVideoInfo *info);
+                                            GstVideoInfo *info,
+                                            gboolean map);
 GType gst_core_video_meta_api_get_type (void);
 
 G_END_DECLS

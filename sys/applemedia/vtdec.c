@@ -640,7 +640,9 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
      * segment.format being undefined */
     goto release;
   }
-  buf = gst_core_video_buffer_new (image_buffer, &state->info);
+  buf =
+      gst_core_video_buffer_new (image_buffer, &state->info,
+      vtdec->texture_cache == NULL);
   gst_video_codec_state_unref (state);
 
   gst_buffer_copy_into (buf, frame->input_buffer,

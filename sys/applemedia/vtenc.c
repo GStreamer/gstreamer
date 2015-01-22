@@ -1098,7 +1098,8 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
       goto cv_error;
     }
 
-    outbuf = gst_core_video_buffer_new ((CVBufferRef) pbuf, &self->video_info);
+    outbuf =
+        gst_core_video_buffer_new ((CVBufferRef) pbuf, &self->video_info, TRUE);
     if (!gst_video_frame_map (&outframe, &self->video_info, outbuf,
             GST_MAP_WRITE)) {
       gst_video_frame_unmap (&inframe);

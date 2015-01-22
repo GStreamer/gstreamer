@@ -434,7 +434,7 @@ openFailed:
   [queueLock unlockWithCondition:
       ([queue count] == 0) ? NO_FRAMES : HAS_FRAME_OR_STOP_REQUEST];
 
-  *buf = gst_core_video_buffer_new ((CVBufferRef)frame, NULL);
+  *buf = gst_core_video_buffer_new ((CVBufferRef)frame, NULL, TRUE);
   CVBufferRelease (frame);
 
   [self timestampBuffer:*buf];
