@@ -371,15 +371,16 @@ GST_END_TEST;
 
 static const struct URITest url_presenting_tests[] = {
   /* check all URI elements present */
-  { .uri = { "scheme", "user:pass", "host", 1234, "/path/to/dir",
-            {{"query", NULL}, {"key", "value"}}, "fragment"},
-    .str = "scheme://user:pass@host:1234/path/to/dir?query&key=value#fragment"
-  },
+  {.uri = {"scheme", "user:pass", "host", 1234, "/path/to/dir",
+          {{"query", NULL}, {"key", "value"}}, "fragment"},
+      .str =
+      "scheme://user:pass@host:1234/path/to/dir?query&key=value#fragment"},
 
   /* IPv6 literal should render in square brackets */
-  { .uri = { "scheme", "user:pass", "12:34:56:78:9a:bc:de:f0", 1234,
-            "/path/to/dir", {{"query", "value"}}, "fragment"},
-    .str = "scheme://user:pass@[12:34:56:78:9a:bc:de:f0]:1234/path/to/dir?query=value#fragment" },
+  {.uri = {"scheme", "user:pass", "12:34:56:78:9a:bc:de:f0", 1234,
+          "/path/to/dir", {{"query", "value"}}, "fragment"},
+      .str =
+      "scheme://user:pass@[12:34:56:78:9a:bc:de:f0]:1234/path/to/dir?query=value#fragment"},
 };
 
 GST_START_TEST (test_url_presenting)
@@ -390,11 +391,11 @@ GST_START_TEST (test_url_presenting)
 
   for (i = 0; i < G_N_ELEMENTS (url_presenting_tests); i++) {
     uri = gst_uri_new (url_presenting_tests[i].uri.scheme,
-            url_presenting_tests[i].uri.userinfo,
-            url_presenting_tests[i].uri.host,
-            url_presenting_tests[i].uri.port,
-            url_presenting_tests[i].uri.path,
-            NULL, url_presenting_tests[i].uri.fragment);
+        url_presenting_tests[i].uri.userinfo,
+        url_presenting_tests[i].uri.host,
+        url_presenting_tests[i].uri.port,
+        url_presenting_tests[i].uri.path,
+        NULL, url_presenting_tests[i].uri.fragment);
     fail_unless (uri != NULL);
     for (j = 0; j < 10; j++) {
       if (!url_presenting_tests[i].uri.query[j].key)

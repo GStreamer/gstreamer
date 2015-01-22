@@ -1530,7 +1530,8 @@ gst_uri_from_string (const gchar * uri)
     int i = 0;
 
     /* be helpful and skip initial white space */
-    while (*uri == '\v' || g_ascii_isspace (*uri)) uri++;
+    while (*uri == '\v' || g_ascii_isspace (*uri))
+      uri++;
 
     if (g_ascii_isalpha (uri[i])) {
       /* find end of scheme name */
@@ -1562,8 +1563,8 @@ gst_uri_from_string (const gchar * uri)
         eoh = strchr (uri, ']');
         if (eoh == NULL || eoh > eoa) {
           GST_DEBUG ("Unable to parse the host part of the URI '%s'.",
-                  orig_uri);
-	  _gst_uri_free (uri_obj);
+              orig_uri);
+          _gst_uri_free (uri_obj);
           return NULL;
         }
         reoh = eoh + 1;
@@ -1582,7 +1583,7 @@ gst_uri_from_string (const gchar * uri)
         /* if port number is malformed then we can't parse this */
         if (uri[0] != ':' || strspn (uri + 1, "0123456789") != eoa - uri - 1) {
           GST_DEBUG ("Unable to parse host/port part of the URI '%s'.",
-                  orig_uri);
+              orig_uri);
           _gst_uri_free (uri_obj);
           return NULL;
         }
