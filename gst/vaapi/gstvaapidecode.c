@@ -755,8 +755,6 @@ gst_vaapidecode_set_format(GstVideoDecoder *vdec, GstVideoCodecState *state)
         return FALSE;
     if (!gst_vaapi_plugin_base_set_caps(plugin, decode->sinkpad_caps, NULL))
         return FALSE;
-    if (!gst_vaapidecode_reset_full(decode, decode->sinkpad_caps, FALSE))
-        return FALSE;
 
     if (gst_vaapidecode_update_src_caps(decode, state)) {
         if (!gst_video_decoder_negotiate(vdec))
@@ -764,6 +762,9 @@ gst_vaapidecode_set_format(GstVideoDecoder *vdec, GstVideoCodecState *state)
         if (!gst_vaapi_plugin_base_set_caps(plugin, NULL, decode->srcpad_caps))
             return FALSE;
     }
+
+    if (!gst_vaapidecode_reset_full(decode, decode->sinkpad_caps, FALSE))
+        return FALSE;
     return TRUE;
 }
 
