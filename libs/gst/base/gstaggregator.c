@@ -110,21 +110,6 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
   g_cond_broadcast(&(((GstAggregatorPad* )pad)->priv->event_cond));    \
   } G_STMT_END
 
-#define GST_AGGREGATOR_SETCAPS_LOCK(self)   G_STMT_START {        \
-  GST_TRACE_OBJECT (self, "Taking SETCAPS lock from thread %p",   \
-        g_thread_self());                                         \
-  g_mutex_lock(&self->priv->setcaps_lock);                        \
-  GST_TRACE_OBJECT (self, "Took SETCAPS lock from thread %p",     \
-        g_thread_self());                                         \
-  } G_STMT_END
-
-#define GST_AGGREGATOR_SETCAPS_UNLOCK(self)   G_STMT_START {        \
-  GST_TRACE_OBJECT (self, "Releasing SETCAPS lock from thread %p",  \
-        g_thread_self());                                           \
-  g_mutex_unlock(&self->priv->setcaps_lock);                        \
-  GST_TRACE_OBJECT (self, "Took SETCAPS lock from thread %p",       \
-        g_thread_self());                                           \
-  } G_STMT_END
 
 #define PAD_STREAM_LOCK(pad)   G_STMT_START {                           \
   GST_TRACE_OBJECT (pad, "Taking lock from thread %p",                  \
@@ -229,14 +214,11 @@ struct _GstAggregatorPrivate
   gboolean send_eos;            /* protected by srcpad stream lock */
   GstFlowReturn flow_return;    /* protected by object lock */
 
-  GstCaps *srccaps;
+  GstCaps *srccaps;             /* protected by the srcpad stream lock */
 
   /* protected by object lock */
   GstTagList *tags;
   gboolean tags_changed;
-
-  /* Lock to prevent two src setcaps from happening at the same time  */
-  GMutex setcaps_lock;
 
   gboolean latency_live;
   GstClockTime latency_min;
@@ -473,10 +455,10 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
 void
 gst_aggregator_set_src_caps (GstAggregator * self, GstCaps * caps)
 {
-  GST_AGGREGATOR_SETCAPS_LOCK (self);
+  GST_PAD_STREAM_LOCK (self->srcpad);
   gst_caps_replace (&self->priv->srccaps, caps);
   gst_aggregator_push_mandatory_events (self);
-  GST_AGGREGATOR_SETCAPS_UNLOCK (self);
+  GST_PAD_STREAM_UNLOCK (self->srcpad);
 }
 
 /**
@@ -1549,7 +1531,6 @@ gst_aggregator_finalize (GObject * object)
 {
   GstAggregator *self = (GstAggregator *) object;
 
-  g_mutex_clear (&self->priv->setcaps_lock);
   g_mutex_clear (&self->priv->src_lock);
   g_cond_clear (&self->priv->src_cond);
 
@@ -1734,7 +1715,6 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
 
   self->priv->latency = DEFAULT_LATENCY;
 
-  g_mutex_init (&self->priv->setcaps_lock);
   g_mutex_init (&self->priv->src_lock);
   g_cond_init (&self->priv->src_cond);
 }
