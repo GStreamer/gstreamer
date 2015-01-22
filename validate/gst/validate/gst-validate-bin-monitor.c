@@ -201,6 +201,14 @@ gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
   GST_DEBUG_OBJECT (bin_monitor, "Setting up monitor for bin %" GST_PTR_FORMAT,
       bin);
 
+  if (g_object_get_data ((GObject *) bin, "validate-monitor")) {
+    GST_DEBUG_OBJECT (bin_monitor,
+        "Bin already has a validate-monitor associated");
+    return FALSE;
+  }
+
+  g_object_set_data ((GObject *) bin, "validate-monitor", bin_monitor);
+
   bin_monitor->element_added_id =
       g_signal_connect (bin, "element-added",
       G_CALLBACK (_validate_bin_element_added), monitor);
