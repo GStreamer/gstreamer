@@ -1254,7 +1254,7 @@ GST_END_TEST;
 GST_START_TEST (test_flush_start_flush_stop)
 {
   GstPadTemplate *sink_template;
-  GstPad *tmppad, *sinkpad1, *sinkpad2, *audiomixer_src;
+  GstPad *tmppad, *srcpad1, *sinkpad1, *sinkpad2, *audiomixer_src;
   GstElement *pipeline, *src1, *src2, *audiomixer, *sink;
 
   GST_INFO ("preparing test");
@@ -1274,9 +1274,8 @@ GST_START_TEST (test_flush_start_flush_stop)
       "sink_%u");
   fail_unless (GST_IS_PAD_TEMPLATE (sink_template));
   sinkpad1 = gst_element_request_pad (audiomixer, sink_template, NULL, NULL);
-  tmppad = gst_element_get_static_pad (src1, "src");
-  gst_pad_link (tmppad, sinkpad1);
-  gst_object_unref (tmppad);
+  srcpad1 = gst_element_get_static_pad (src1, "src");
+  gst_pad_link (srcpad1, sinkpad1);
 
   sinkpad2 = gst_element_request_pad (audiomixer, sink_template, NULL, NULL);
   tmppad = gst_element_get_static_pad (src2, "src");
@@ -1294,7 +1293,11 @@ GST_START_TEST (test_flush_start_flush_stop)
   gst_pad_send_event (sinkpad1, gst_event_new_flush_start ());
   fail_if (GST_PAD_IS_FLUSHING (audiomixer_src));
   fail_unless (GST_PAD_IS_FLUSHING (sinkpad1));
+  /* Hold the streamlock to make sure the flush stop is not between
+     the attempted push of a segment event and of the following buffer. */
+  GST_PAD_STREAM_LOCK (srcpad1);
   gst_pad_send_event (sinkpad1, gst_event_new_flush_stop (TRUE));
+  GST_PAD_STREAM_UNLOCK (srcpad1);
   fail_if (GST_PAD_IS_FLUSHING (audiomixer_src));
   fail_if (GST_PAD_IS_FLUSHING (sinkpad1));
   gst_object_unref (audiomixer_src);
@@ -1303,6 +1306,7 @@ GST_START_TEST (test_flush_start_flush_stop)
   gst_object_unref (sinkpad1);
   gst_element_release_request_pad (audiomixer, sinkpad2);
   gst_object_unref (sinkpad2);
+  gst_object_unref (srcpad1);
 
   /* cleanup */
   gst_element_set_state (pipeline, GST_STATE_NULL);
