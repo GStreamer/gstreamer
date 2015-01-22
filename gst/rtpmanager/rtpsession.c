@@ -107,7 +107,8 @@ static void rtp_session_set_property (GObject * object, guint prop_id,
 static void rtp_session_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean rtp_session_send_rtcp (RTPSession * sess, GstClockTime max_delay);
+static gboolean rtp_session_send_rtcp (RTPSession * sess,
+    GstClockTime max_delay);
 
 static guint rtp_session_signals[LAST_SIGNAL] = { 0 };
 
@@ -3814,10 +3815,11 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
   if (sess->allow_early == FALSE) {
     /* Ignore the request a scheduled packet will be in time anyway */
     if (current_time + max_delay > sess->next_rtcp_check_time) {
-      GST_LOG_OBJECT (sess, "next scheduled time is soon %" GST_TIME_FORMAT " + %"
-          GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (current_time),
-          GST_TIME_ARGS (max_delay), GST_TIME_ARGS (sess->next_rtcp_check_time));
+      GST_LOG_OBJECT (sess,
+          "next scheduled time is soon %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT
+          " > %" GST_TIME_FORMAT, GST_TIME_ARGS (current_time),
+          GST_TIME_ARGS (max_delay),
+          GST_TIME_ARGS (sess->next_rtcp_check_time));
       ret = TRUE;
     } else {
       GST_LOG_OBJECT (sess, "can't allow early feedback");
