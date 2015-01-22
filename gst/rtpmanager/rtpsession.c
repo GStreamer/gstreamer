@@ -3791,7 +3791,7 @@ gboolean
 rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
     GstClockTime max_delay)
 {
-  GstClockTime T_dither_max;
+  GstClockTime T_dither_max, T_rr;
   gboolean ret;
 
   /* Implements the algorithm described in RFC 4585 section 3.5.2 */
@@ -3812,6 +3812,8 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
     goto end;
   }
 
+  T_rr = sess->next_rtcp_check_time - sess->last_rtcp_send_time;
+
   /*  RFC 4585 section 3.5.2 step 2b */
   /* If the total sources is <=2, then there is only us and one peer */
   /* When there is one auxiliary stream the session can still do point
@@ -3821,7 +3823,7 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
     T_dither_max = 0;
   } else {
     /* Divide by 2 because l = 0.5 */
-    T_dither_max = sess->next_rtcp_check_time - sess->last_rtcp_send_time;
+    T_dither_max = T_rr;
     T_dither_max /= 2;
   }
 
@@ -3861,8 +3863,11 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
 
   /*  RFC 4585 section 3.5.2 step 6 */
   sess->allow_early = FALSE;
-  /* TODO(mparis): "R MUST recalculate tn = tp + 2*T_rr,
-   * and MUST set tp to the previous tn" */
+  /* Delay next regular RTCP packet to not exceed the short-term
+   * RTCP bandwidth when using early feedback as compared to
+   * without */
+  sess->next_rtcp_check_time = sess->last_rtcp_send_time + 2 * T_rr;
+  sess->last_rtcp_send_time += T_rr;
 
   GST_LOG_OBJECT (sess, "next early RTCP time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (sess->next_early_rtcp_time));
