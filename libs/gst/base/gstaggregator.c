@@ -524,7 +524,9 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 
   SRC_STREAM_LOCK (self);
 
-  gst_aggregator_get_latency (self, &live, &latency_min, &latency_max);
+  GST_OBJECT_LOCK (self);
+  gst_aggregator_get_latency_unlocked (self, &live, &latency_min, &latency_max);
+  GST_OBJECT_UNLOCK (self);
 
   if (gst_aggregator_check_pads_ready (self)) {
     GST_DEBUG_OBJECT (self, "all pads have data");
@@ -1111,7 +1113,7 @@ gst_aggregator_query_sink_latency_foreach (GstAggregator * self,
 }
 
 /**
- * gst_aggregator_get_latency:
+ * gst_aggregator_get_latency_unlocked:
  * @self: a #GstAggregator
  * @live: (out) (allow-none): whether @self is live
  * @min_latency: (out) (allow-none): the configured minimum latency of @self
@@ -1121,9 +1123,11 @@ gst_aggregator_query_sink_latency_foreach (GstAggregator * self,
  * query.
  *
  * Typically only called by subclasses.
+ *
+ * MUST be called with the object lock held.
  */
 void
-gst_aggregator_get_latency (GstAggregator * self, gboolean * live,
+gst_aggregator_get_latency_unlocked (GstAggregator * self, gboolean * live,
     GstClockTime * min_latency, GstClockTime * max_latency)
 {
   GstClockTime our_latency;
