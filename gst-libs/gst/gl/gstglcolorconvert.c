@@ -1540,9 +1540,6 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   gl->Viewport (0, 0, out_width, out_height);
 
-  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
   gst_gl_shader_use (convert->shader);
 
   if (gl->BindVertexArray)
