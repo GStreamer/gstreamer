@@ -565,7 +565,6 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     clock = GST_ELEMENT_CLOCK (self);
     if (clock)
       gst_object_ref (clock);
-    GST_OBJECT_UNLOCK (self);
 
     time = base_time + start;
 
@@ -583,6 +582,8 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
         GST_TIME_ARGS (start), GST_TIME_ARGS (latency_max),
         GST_TIME_ARGS (latency_min),
         GST_TIME_ARGS (gst_clock_get_time (clock)));
+
+    GST_OBJECT_UNLOCK (self);
 
     self->priv->aggregate_id = gst_clock_new_single_shot_id (clock, time);
     gst_object_unref (clock);
@@ -1175,6 +1176,7 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
       gst_aggregator_query_sink_latency_foreach, &data);
   SRC_STREAM_UNLOCK (self);
 
+  GST_OBJECT_LOCK (self);
   our_latency = self->priv->latency;
 
   if (data.live && GST_CLOCK_TIME_IS_VALID (our_latency) &&
@@ -1217,6 +1219,8 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max)
       && GST_CLOCK_TIME_IS_VALID (data.max))
     data.max += self->priv->sub_latency_max;
+
+  GST_OBJECT_UNLOCK (self);
 
   GST_DEBUG_OBJECT (self, "configured latency live:%s min:%" G_GINT64_FORMAT
       " max:%" G_GINT64_FORMAT, data.live ? "true" : "false", data.min,
