@@ -49,6 +49,7 @@ enum
   SIGNAL_ON_SENDING_RTCP,
   SIGNAL_ON_FEEDBACK_RTCP,
   SIGNAL_SEND_RTCP,
+  SIGNAL_SEND_RTCP_FULL,
   LAST_SIGNAL
 };
 
@@ -318,6 +319,26 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (RTPSessionClass, send_rtcp), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_UINT64);
+
+  /**
+   * RTPSession::send-rtcp-full:
+   * @session: the object which received the signal
+   * @max_delay: The maximum delay after which the feedback will not be useful
+   *  anymore
+   *
+   * Requests that the #RTPSession initiate a new RTCP packet as soon as
+   * possible within the requested delay.
+   *
+   * Returns: TRUE if the new RTCP packet could be scheduled within the
+   * requested delay, FALSE otherwise.
+   *
+   * Since: 1.6
+   */
+  rtp_session_signals[SIGNAL_SEND_RTCP_FULL] =
+      g_signal_new ("send-rtcp-full", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (RTPSessionClass, send_rtcp), NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, G_TYPE_UINT64);
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",
