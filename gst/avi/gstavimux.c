@@ -997,14 +997,14 @@ gst_avi_mux_request_new_pad (GstElement * element,
 
   newpad = gst_pad_new_from_template (templ, pad_name);
 
-  g_free (name);
-
   avipad->collect = gst_collect_pads_add_pad (avimux->collect,
       newpad, sizeof (GstAviCollectData), NULL, TRUE);
   ((GstAviCollectData *) (avipad->collect))->avipad = avipad;
 
   if (!gst_element_add_pad (element, newpad))
     goto pad_add_failed;
+
+  g_free (name);
 
   GST_DEBUG_OBJECT (newpad, "Added new request pad");
 
@@ -1034,6 +1034,7 @@ too_many_video_pads:
 pad_add_failed:
   {
     GST_WARNING_OBJECT (avimux, "Adding the new pad '%s' failed", pad_name);
+    g_free (name);
     gst_object_unref (newpad);
     return NULL;
   }
