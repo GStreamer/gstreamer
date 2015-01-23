@@ -1503,10 +1503,8 @@ gst_matroska_read_common_parse_index_pointentry (GstMatroskaReadCommon *
         /* position in the file + track to which it belongs */
       case GST_MATROSKA_ID_CUETRACKPOSITIONS:
       {
-        if ((ret =
-                gst_matroska_read_common_parse_index_cuetrack (common, ebml,
-                    &nentries)) != GST_FLOW_OK)
-          break;
+        ret = gst_matroska_read_common_parse_index_cuetrack (common, ebml,
+            &nentries);
         break;
       }
 
