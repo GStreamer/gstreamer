@@ -1135,7 +1135,7 @@ dup_failed:
 gboolean
 gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group, gsize img_size, int n_planes,
-    gpointer * data, gsize * offset)
+    gpointer * data, gsize * size)
 {
   GstV4l2Memory *mem;
   gint i;
@@ -1147,7 +1147,7 @@ gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
     goto n_mem_missmatch;
 
   for (i = 0; i < group->n_mem; i++) {
-    gsize size, maxsize;
+    gsize maxsize;
 
     if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
       struct v4l2_pix_format_mplane *pix = &allocator->format.fmt.pix_mp;
@@ -1156,25 +1156,19 @@ gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
       maxsize = allocator->format.fmt.pix.sizeimage;
     }
 
-    if ((i + 1) == n_planes) {
-      size = img_size - offset[i];
-    } else {
-      size = offset[i + 1] - offset[i];
-    }
-
-    g_assert (size <= img_size);
+    g_assert (size[i] <= img_size);
 
     GST_LOG_OBJECT (allocator, "imported USERPTR %p plane %d size %"
-        G_GSIZE_FORMAT, data[i], i, size);
+        G_GSIZE_FORMAT, data[i], i, size[i]);
 
     mem = (GstV4l2Memory *) group->mem[i];
 
     mem->mem.maxsize = maxsize;
-    mem->mem.size = size;
+    mem->mem.size = size[i];
     mem->data = data[i];
 
     group->planes[i].length = maxsize;
-    group->planes[i].bytesused = size;
+    group->planes[i].bytesused = size[i];
     group->planes[i].m.userptr = (unsigned long) data[i];
     group->planes[i].data_offset = 0;
   }

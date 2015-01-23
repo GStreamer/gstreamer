@@ -219,18 +219,39 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
 
   if (finfo && (finfo->format != GST_VIDEO_FORMAT_UNKNOWN &&
           finfo->format != GST_VIDEO_FORMAT_ENCODED)) {
+    gsize size[GST_VIDEO_MAX_PLANES] = { 0, };
+    gint i;
+
     data->is_frame = TRUE;
 
     if (!gst_video_frame_map (&data->frame, &pool->caps_info, src, flags))
       goto invalid_buffer;
 
+    for (i = 0; i < GST_VIDEO_FORMAT_INFO_N_PLANES (finfo); i++) {
+      if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
+        gint tinfo = GST_VIDEO_FRAME_PLANE_STRIDE (&data->frame, i);
+        gint pstride;
+        guint pheight;
+
+        pstride = GST_VIDEO_TILE_X_TILES (tinfo) <<
+            GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
+
+        pheight = GST_VIDEO_TILE_Y_TILES (tinfo) <<
+            GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
+
+        size[i] = pstride * pheight;
+      } else {
+        size[i] = GST_VIDEO_FRAME_PLANE_STRIDE (&data->frame, i) *
+            GST_VIDEO_FRAME_COMP_HEIGHT (&data->frame, i);
+      }
+    }
+
     if (!gst_v4l2_allocator_import_userptr (pool->vallocator, group,
-            data->frame.info.size, finfo->n_planes, data->frame.data,
-            data->frame.info.offset))
+            data->frame.info.size, finfo->n_planes, data->frame.data, size))
       goto import_failed;
   } else {
-    gsize offset[1] = { 0 };
     gpointer ptr[1];
+    gsize size[1];
 
     data->is_frame = FALSE;
 
@@ -238,9 +259,10 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
       goto invalid_buffer;
 
     ptr[0] = data->map.data;
+    size[0] = data->map.size;
 
     if (!gst_v4l2_allocator_import_userptr (pool->vallocator, group,
-            data->map.size, 1, ptr, offset))
+            data->map.size, 1, ptr, size))
       goto import_failed;
   }
 
