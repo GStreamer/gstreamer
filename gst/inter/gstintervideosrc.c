@@ -363,21 +363,21 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   if (intervideosrc->surface->video_buffer) {
     /* We have a buffer to push */
     buffer = gst_buffer_ref (intervideosrc->surface->video_buffer);
-    intervideosrc->surface->video_buffer_count++;
 
     /* Can only be true if timeout > 0 */
-    if (intervideosrc->surface->video_buffer_count >= frames) {
+    if (intervideosrc->surface->video_buffer_count == frames) {
       gst_buffer_unref (intervideosrc->surface->video_buffer);
       intervideosrc->surface->video_buffer = NULL;
     }
-  } else if (intervideosrc->surface->video_buffer_count == frames) {
-    /* This will be our first black frame */
-    intervideosrc->surface->video_buffer_count++;
-  } else if (intervideosrc->surface->video_buffer_count > frames) {
-    /* The first black buffer is not a GAP, but the following ones are */
+  }
+
+  if (intervideosrc->surface->video_buffer_count != 0 &&
+      intervideosrc->surface->video_buffer_count != (frames + 1)) {
+    /* This is a repeat of the stored buffer or of a black frame */
     is_gap = TRUE;
   }
 
+  intervideosrc->surface->video_buffer_count++;
   g_mutex_unlock (&intervideosrc->surface->mutex);
 
   if (caps) {
