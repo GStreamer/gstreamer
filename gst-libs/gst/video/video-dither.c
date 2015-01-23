@@ -386,6 +386,7 @@ gst_video_dither_new (GstVideoDitherMethod method, GstVideoDitherFlags flags,
       dither->depth = 16;
       break;
     default:
+      g_slice_free (GstVideoDither, dither);
       g_return_val_if_reached (NULL);
       break;
   }
