@@ -29,7 +29,7 @@
  *
  * One notable feature is that one can use the environment variables GST_CHECKS
  * and GST_CHECKS_IGNORE to select which tests to run or skip. Both variables
- * can contain a comman separated list of test name globs (e.g. test_*).
+ * can contain a comma separated list of test name globs (e.g. test_*).
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
