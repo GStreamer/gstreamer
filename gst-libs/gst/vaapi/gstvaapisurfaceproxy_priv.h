@@ -31,22 +31,23 @@
 #include "gstvaapisurface_priv.h"
 
 #define GST_VAAPI_SURFACE_PROXY(obj) \
-    ((GstVaapiSurfaceProxy *)(obj))
+  ((GstVaapiSurfaceProxy *) (obj))
 
-struct _GstVaapiSurfaceProxy {
-    /*< private >*/
-    GstVaapiMiniObject  parent_instance;
-    GstVaapiSurfaceProxy *parent;
+struct _GstVaapiSurfaceProxy
+{
+  /*< private >*/
+  GstVaapiMiniObject parent_instance;
+  GstVaapiSurfaceProxy *parent;
 
-    GstVaapiVideoPool  *pool;
-    GstVaapiSurface    *surface;
-    guintptr            view_id;
-    GstClockTime        timestamp;
-    GstClockTime        duration;
-    GDestroyNotify      destroy_func;
-    gpointer            destroy_data;
-    GstVaapiRectangle   crop_rect;
-    guint               has_crop_rect   : 1;
+  GstVaapiVideoPool *pool;
+  GstVaapiSurface *surface;
+  guintptr view_id;
+  GstClockTime timestamp;
+  GstClockTime duration;
+  GDestroyNotify destroy_func;
+  gpointer destroy_data;
+  GstVaapiRectangle crop_rect;
+  guint has_crop_rect:1;
 };
 
 #define GST_VAAPI_SURFACE_PROXY_FLAGS       GST_VAAPI_MINI_OBJECT_FLAGS
@@ -63,7 +64,7 @@ struct _GstVaapiSurfaceProxy {
  */
 #undef  GST_VAAPI_SURFACE_PROXY_SURFACE
 #define GST_VAAPI_SURFACE_PROXY_SURFACE(proxy) \
-    GST_VAAPI_SURFACE_PROXY(proxy)->surface
+  (GST_VAAPI_SURFACE_PROXY (proxy)->surface)
 
 /**
  * GST_VAAPI_SURFACE_PROXY_SURFACE_ID:
@@ -76,7 +77,7 @@ struct _GstVaapiSurfaceProxy {
  */
 #undef  GST_VAAPI_SURFACE_PROXY_SURFACE_ID
 #define GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy) \
-    GST_VAAPI_OBJECT_ID(GST_VAAPI_SURFACE_PROXY(proxy)->surface)
+  (GST_VAAPI_OBJECT_ID (GST_VAAPI_SURFACE_PROXY (proxy)->surface))
 
 /**
  * GST_VAAPI_SURFACE_PROXY_VIEW_ID:
@@ -89,7 +90,7 @@ struct _GstVaapiSurfaceProxy {
  */
 #undef  GST_VAAPI_SURFACE_PROXY_VIEW_ID
 #define GST_VAAPI_SURFACE_PROXY_VIEW_ID(proxy) \
-    GST_VAAPI_SURFACE_PROXY(proxy)->view_id
+  (GST_VAAPI_SURFACE_PROXY (proxy)->view_id)
 
 /**
  * GST_VAAPI_SURFACE_PROXY_TIMESTAMP:
@@ -102,7 +103,7 @@ struct _GstVaapiSurfaceProxy {
  */
 #undef  GST_VAAPI_SURFACE_PROXY_TIMESTAMP
 #define GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy) \
-    GST_VAAPI_SURFACE_PROXY(proxy)->timestamp
+  (GST_VAAPI_SURFACE_PROXY (proxy)->timestamp)
 
 /**
  * GST_VAAPI_SURFACE_PROXY_DURATION:
@@ -115,7 +116,7 @@ struct _GstVaapiSurfaceProxy {
  */
 #undef  GST_VAAPI_SURFACE_PROXY_DURATION
 #define GST_VAAPI_SURFACE_PROXY_DURATION(proxy) \
-    GST_VAAPI_SURFACE_PROXY(proxy)->duration
+  (GST_VAAPI_SURFACE_PROXY (proxy)->duration)
 
 /**
  * GST_VAAPI_SURFACE_PROXY_CROP_RECT:
@@ -127,7 +128,7 @@ struct _GstVaapiSurfaceProxy {
  */
 #undef  GST_VAAPI_SURFACE_PROXY_CROP_RECT
 #define GST_VAAPI_SURFACE_PROXY_CROP_RECT(proxy) \
-    (GST_VAAPI_SURFACE_PROXY(proxy)->has_crop_rect ? \
-     &GST_VAAPI_SURFACE_PROXY(proxy)->crop_rect : NULL)
+  (GST_VAAPI_SURFACE_PROXY (proxy)->has_crop_rect ? \
+     &GST_VAAPI_SURFACE_PROXY (proxy)->crop_rect : NULL)
 
 #endif /* GST_VAAPI_SURFACE_PROXY_PRIV_H */
