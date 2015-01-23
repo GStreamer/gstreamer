@@ -48,6 +48,9 @@ struct _GstGLWindowDispmanxEGL {
   uint32_t dp_width;
   EGL_DISPMANX_WINDOW_T native;
 
+  gint preferred_width;
+  gint preferred_height;
+
   GMainContext *main_context;
   GMainLoop *loop;
 

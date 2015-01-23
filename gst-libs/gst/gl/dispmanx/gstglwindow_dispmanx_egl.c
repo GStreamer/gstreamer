@@ -39,8 +39,9 @@ static guintptr gst_gl_window_dispmanx_egl_get_window_handle (GstGLWindow *
     window);
 static void gst_gl_window_dispmanx_egl_set_window_handle (GstGLWindow * window,
     guintptr handle);
-static void gst_gl_window_dispmanx_egl_draw (GstGLWindow * window, guint width,
-    guint height);
+static void gst_gl_window_dispmanx_set_preferred_size (GstGLWindow * window,
+    gint width, gint height);
+static void gst_gl_window_dispmanx_egl_draw (GstGLWindow * window);
 static void gst_gl_window_dispmanx_egl_run (GstGLWindow * window);
 static void gst_gl_window_dispmanx_egl_quit (GstGLWindow * window);
 static void gst_gl_window_dispmanx_egl_send_message_async (GstGLWindow * window,
@@ -74,6 +75,8 @@ gst_gl_window_dispmanx_egl_class_init (GstGLWindowDispmanxEGLClass * klass)
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_open);
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_get_display);
+  window_class->set_preferred_size =
+      GST_DEBUG_FUNCPTR (gst_gl_window_dispmanx_egl_set_preferred_size);
 }
 
 static void
@@ -228,6 +231,15 @@ gst_gl_window_dispmanx_egl_set_window_handle (GstGLWindow * window,
 }
 
 static void
+gst_gl_window_dispmanx_set_preferred_size (GstGLWindow * window)
+{
+  GstGLWindowDispmanxEGL *window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
+
+  window_egl->preferred_width = width;
+  window_egl->preferred_height = height;
+}
+
+static void
 window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height)
 {
   GST_DEBUG ("resizing window from %ux%u to %ux%u",
@@ -275,33 +287,27 @@ window_resize (GstGLWindowDispmanxEGL * window_egl, guint width, guint height)
     vc_dispmanx_update_submit_sync (dispman_update);
 
     if (GST_GL_WINDOW (window_egl)->resize)
-      GST_GL_WINDOW (window_egl)->resize (GST_GL_WINDOW (window_egl)->
-          resize_data, width, height);
+      GST_GL_WINDOW (window_egl)->
+          resize (GST_GL_WINDOW (window_egl)->resize_data, width, height);
   }
 
   window_egl->native.width = width;
   window_egl->native.height = height;
 }
 
-struct draw
-{
-  GstGLWindowDispmanxEGL *window;
-  guint width, height;
-};
-
 static void
 draw_cb (gpointer data)
 {
-  struct draw *draw_data = data;
-  GstGLWindowDispmanxEGL *window_egl = draw_data->window;
+  GstGLWindowDispmanxEGL *window_egl = data;
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
-  if (window_egl->native.width != draw_data->width
-      || window_egl->native.height != draw_data->height) {
+  if (window_egl->native.width != window_egl->preferred_width
+      || window_egl->native.height != window_egl->preferred_height) {
     GST_DEBUG ("dimensions don't match, attempting resize");
-    window_resize (window_egl, draw_data->width, draw_data->height);
+    window_resize (window_egl, window_egl->preferred_width,
+        window_egl->preferred_height);
   }
 
   if (window->draw)
@@ -313,16 +319,9 @@ draw_cb (gpointer data)
 }
 
 static void
-gst_gl_window_dispmanx_egl_draw (GstGLWindow * window, guint width,
-    guint height)
+gst_gl_window_dispmanx_egl_draw (GstGLWindow * window)
 {
-  struct draw draw_data;
-
-  draw_data.window = GST_GL_WINDOW_DISPMANX_EGL (window);
-  draw_data.width = width;
-  draw_data.height = height;
-
-  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
+  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
 }
 
 static guintptr

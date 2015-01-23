@@ -46,8 +46,7 @@ static guintptr gst_gl_window_wayland_egl_get_window_handle (GstGLWindow *
     window);
 static void gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
     guintptr handle);
-static void gst_gl_window_wayland_egl_draw (GstGLWindow * window, guint width,
-    guint height);
+static void gst_gl_window_wayland_egl_draw (GstGLWindow * window);
 static void gst_gl_window_wayland_egl_run (GstGLWindow * window);
 static void gst_gl_window_wayland_egl_quit (GstGLWindow * window);
 static void gst_gl_window_wayland_egl_send_message_async (GstGLWindow * window,
@@ -510,17 +509,10 @@ window_resize (GstGLWindowWaylandEGL * window_egl, guint width, guint height)
   window_egl->window.window_height = height;
 }
 
-struct draw
-{
-  GstGLWindowWaylandEGL *window;
-  guint width, height;
-};
-
 static void
 draw_cb (gpointer data)
 {
-  struct draw *draw_data = data;
-  GstGLWindowWaylandEGL *window_egl = draw_data->window;
+  GstGLWindowWaylandEGL *window_egl = data;
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
@@ -534,15 +526,9 @@ draw_cb (gpointer data)
 }
 
 static void
-gst_gl_window_wayland_egl_draw (GstGLWindow * window, guint width, guint height)
+gst_gl_window_wayland_egl_draw (GstGLWindow * window)
 {
-  struct draw draw_data;
-
-  draw_data.window = GST_GL_WINDOW_WAYLAND_EGL (window);
-  draw_data.width = width;
-  draw_data.height = height;
-
-  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
+  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
 }
 
 static guintptr

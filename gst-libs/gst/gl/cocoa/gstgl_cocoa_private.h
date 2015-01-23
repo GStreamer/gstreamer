@@ -32,9 +32,12 @@ G_BEGIN_DECLS
 
 struct _GstGLContextCocoaPrivate
 {
-  CGLContextObj gl_context;
   CGLPixelFormatObj pixel_format;
+  CGLContextObj gl_context;
   CGLContextObj external_gl_context;
+
+  GstGLAPI context_api;
+
   gint source_id;
 };
 
@@ -46,8 +49,11 @@ struct _GstGLContextCocoaPrivate
 /* =============================================================*/
 
 @interface GstGLCAOpenGLLayer : CAOpenGLLayer {
+@public
   GstGLContextCocoa *gst_gl_context;
   CGLContextObj gl_context;
+
+@private
   gint expected_dims[4];
 }
 - (id)initWithGstGLContext:(GstGLContextCocoa *)context;
@@ -55,6 +61,7 @@ struct _GstGLContextCocoaPrivate
 @end
 
 @interface GstGLNSView: NSView {
+@public
   GstGLWindowCocoa *window_cocoa;
   GstGLCAOpenGLLayer *layer;
 }
