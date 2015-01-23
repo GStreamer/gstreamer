@@ -770,7 +770,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   guint idx;
   guint out_width, out_height;
   GstGLContext *other_context = NULL;
-  gboolean same_downstream_gl_context;
+  gboolean same_downstream_gl_context = FALSE;
 
   if (!gst_gl_ensure_element_data (src, &src->display, &src->other_context))
     return FALSE;
