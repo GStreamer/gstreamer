@@ -91,11 +91,12 @@ struct _GstGLWindow {
   GDestroyNotify        resize_notify;
 
   /*< private >*/
-  gpointer _reserved[GST_PADDING];
   GMainContext *navigation_context;
   GMainLoop *navigation_loop;
 
   GstGLWindowPrivate *priv;
+
+  gpointer _reserved[GST_PADDING];
 };
 
 /**
@@ -114,6 +115,13 @@ struct _GstGLWindow {
  *                      not have been called.  Required to be reentrant.
  * @open: open the connection to the display
  * @close: close the connection to the display
+ * @get_surface_dimensions: get the width and height of the surface we are
+ *                          rendering into.
+ * @handle_events: whether to handle 'extra' events from the windowing system.
+ *                 Basic events like surface moves and resizes are still valid
+ *                 things to listen for.
+ * @set_preferred_size: request that the window change surface size.  The
+ *                      implementation is free to ignore this information.
  */
 struct _GstGLWindowClass {
   GstObjectClass parent_class;
@@ -153,45 +161,67 @@ struct mouse_event
   double posx;
   double posy;
 };
-/* methods */
 
 GQuark gst_gl_window_error_quark (void);
 GType gst_gl_window_get_type     (void);
 
 GstGLWindow * gst_gl_window_new  (GstGLDisplay *display);
 
-void     gst_gl_window_set_draw_callback    (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy_notify);
-void     gst_gl_window_set_resize_callback  (GstGLWindow *window, GstGLWindowResizeCB callback, gpointer data, GDestroyNotify destroy_notify);
-void     gst_gl_window_set_close_callback   (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy_notify);
+/* callbacks */
+void     gst_gl_window_set_draw_callback    (GstGLWindow *window,
+                                             GstGLWindowCB callback,
+                                             gpointer data,
+                                             GDestroyNotify destroy_notify);
+void     gst_gl_window_set_resize_callback  (GstGLWindow *window,
+                                             GstGLWindowResizeCB callback,
+                                             gpointer data,
+                                             GDestroyNotify destroy_notify);
+void     gst_gl_window_set_close_callback   (GstGLWindow *window,
+                                             GstGLWindowCB callback,
+                                             gpointer data,
+                                             GDestroyNotify destroy_notify);
 
 void     gst_gl_window_set_window_handle    (GstGLWindow *window, guintptr handle);
 guintptr gst_gl_window_get_window_handle    (GstGLWindow *window);
-void     gst_gl_window_draw_unlocked        (GstGLWindow *window);
-void     gst_gl_window_draw                 (GstGLWindow *window);
+
+/* loop/events */
 void     gst_gl_window_run                  (GstGLWindow *window);
 void     gst_gl_window_quit                 (GstGLWindow *window);
-void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
-void     gst_gl_window_send_message_async   (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
-guintptr gst_gl_window_get_display          (GstGLWindow *window);
-void     gst_gl_window_get_surface_dimensions (GstGLWindow * window, guint * width,
-   guint * height);
-void     gst_gl_window_handle_events        (GstGLWindow * window, gboolean handle_events);
-void     gst_gl_window_set_preferred_size   (GstGLWindow * window, gint width, gint height);
+gboolean gst_gl_window_is_running           (GstGLWindow *window);
+void     gst_gl_window_send_message         (GstGLWindow *window,
+                                             GstGLWindowCB callback,
+                                             gpointer data);
+void     gst_gl_window_send_message_async   (GstGLWindow *window,
+                                             GstGLWindowCB callback,
+                                             gpointer data,
+                                             GDestroyNotify destroy);
 
-GstGLContext * gst_gl_window_get_context (GstGLWindow *window);
+/* navigation */
+void     gst_gl_window_handle_events        (GstGLWindow * window,
+                                             gboolean handle_events);
+gboolean gst_gl_window_key_event_cb         (gpointer data);
+gboolean gst_gl_window_mouse_event_cb       (gpointer data);
+void     gst_gl_window_send_key_event       (GstGLWindow * window,
+                                             const char * event_type,
+                                             const char * key_str);
+void     gst_gl_window_send_mouse_event     (GstGLWindow * window,
+                                             const char * event_type,
+                                             int button,
+                                             double posx,
+                                             double posy);
 
-gboolean gst_gl_window_is_running (GstGLWindow *window);
+/* surfaces/rendering */
+void     gst_gl_window_draw_unlocked        (GstGLWindow *window);
+void     gst_gl_window_draw                 (GstGLWindow *window);
+void     gst_gl_window_set_preferred_size   (GstGLWindow * window,
+                                             gint width,
+                                             gint height);
+void     gst_gl_window_get_surface_dimensions (GstGLWindow * window,
+                                               guint * width,
+                                               guint * height);
 
-gboolean
-gst_gl_window_key_event_cb (gpointer data);
-
-gboolean
-gst_gl_window_mouse_event_cb (gpointer data);
-
-void gst_gl_window_send_key_event(GstGLWindow * window, const char * event_type,
-    const char * key_str);
-void gst_gl_window_send_mouse_event(GstGLWindow * window, const char *
-    event_type, int button, double posx, double posy);
+GstGLContext * gst_gl_window_get_context    (GstGLWindow *window);
+guintptr       gst_gl_window_get_display    (GstGLWindow *window);
 
 GST_DEBUG_CATEGORY_EXTERN (gst_gl_window_debug);
 
