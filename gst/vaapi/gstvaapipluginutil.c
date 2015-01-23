@@ -148,6 +148,8 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
 #if USE_GST_GL_HELPERS
   GstGLContext *const gl_context = GST_GL_CONTEXT (gl_context_object);
   GstGLDisplay *const gl_display = gst_gl_context_get_display (gl_context);
+  gpointer native_display =
+      GSIZE_TO_POINTER (gst_gl_display_get_handle (gl_display));
   GstVaapiDisplay *display, *out_display;
   GstVaapiDisplayType display_type;
 
@@ -162,6 +164,37 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
       display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
       break;
 #endif
+    case GST_GL_DISPLAY_TYPE_ANY:{
+      /* Derive from the active window */
+      GstGLWindow *const gl_window = gst_gl_context_get_window (gl_context);
+      const gchar *const gl_window_type = g_getenv ("GST_GL_WINDOW");
+
+      display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
+      if (!gl_window)
+        break;
+      native_display = GSIZE_TO_POINTER (gst_gl_window_get_display (gl_window));
+
+      if (gl_window_type) {
+#if USE_X11
+        if (!display_type && g_strcmp0 (gl_window_type, "x11") == 0)
+          display_type = GST_VAAPI_DISPLAY_TYPE_X11;
+#endif
+#if USE_WAYLAND
+        if (!display_type && g_strcmp0 (gl_window_type, "wayland") == 0)
+          display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
+#endif
+      } else {
+#if USE_X11
+        if (!display_type && GST_GL_HAVE_WINDOW_X11)
+          display_type = GST_VAAPI_DISPLAY_TYPE_X11;
+#endif
+#if USE_WAYLAND
+        if (!display_type && GST_GL_HAVE_WINDOW_WAYLAND)
+          display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
+#endif
+      }
+      break;
+    }
     default:
       display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
       break;
@@ -169,8 +202,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
   if (!display_type)
     return NULL;
 
-  display = gst_vaapi_create_display_from_handle (display_type,
-      GSIZE_TO_POINTER (gst_gl_display_get_handle (gl_display)));
+  display = gst_vaapi_create_display_from_handle (display_type, native_display);
   if (!display)
     return NULL;
 
