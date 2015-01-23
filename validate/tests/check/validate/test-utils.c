@@ -216,14 +216,14 @@ static GstStaticPadTemplate fake_decoder_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("video/x-fake")
+    GST_STATIC_CAPS ("video/x-raw")
     );
 
 static GstStaticPadTemplate fake_decoder_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-fake")
+    GST_STATIC_CAPS ("video/x-raw")
     );
 
 static GstFlowReturn

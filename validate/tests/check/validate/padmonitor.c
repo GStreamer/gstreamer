@@ -534,7 +534,7 @@ GST_END_TEST;
 static const gchar * media_info =
 "<file duration='10031000000' frame-detection='1' uri='file:///I/am/so/fake.fakery' seekable='true'>"
 "  <streams caps='video/quicktime'>"
-"    <stream type='video' caps='video/x-fake'>"
+"    <stream type='video' caps='video/x-raw'>"
 "       <frame duration='1' id='0' is-keyframe='true'  offset='18446744073709551615' offset-end='18446744073709551615' pts='0'  dts='0' checksum='cfeb9b47da2bb540cd3fa84cffea4df9'/>"  /* buffer1 */
 "       <frame duration='1' id='1' is-keyframe='false' offset='18446744073709551615' offset-end='18446744073709551615' pts='1'  dts='1' checksum='e40d7cd997bd14462468d201f1e1a3d4'/>" /* buffer2 */
 "       <frame duration='1' id='2' is-keyframe='false' offset='18446744073709551615' offset-end='18446744073709551615' pts='2'  dts='2' checksum='4136320f0da0738a06c787dce827f034'/>" /* buffer3 */
@@ -617,7 +617,9 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
       gst_pad_link_get_name (GST_PAD_LINK_OK));
 
   gst_check_setup_events_with_stream_id (srcpad, decoder,
-      gst_caps_from_string ("video/x-fake"), GST_FORMAT_TIME, "the-stream");
+      gst_caps_from_string
+      ("video/x-raw, width=360, height=42, framerate=24/1, pixel-aspect-ratio =1/1, format=AYUV"),
+      GST_FORMAT_TIME, "the-stream");
 
 
   if (segment) {
@@ -783,6 +785,55 @@ GST_START_TEST (check_media_info)
 
 GST_END_TEST;
 
+GST_START_TEST (caps_missing_field)
+{
+  GstPad *srcpad, *sinkpad;
+  GstElement *decoder = fake_decoder_new ();
+  GstElement *sink = gst_element_factory_make ("fakesink", NULL);
+  GstBin *pipeline = GST_BIN (gst_pipeline_new ("validate-pipeline"));
+  GList *reports;
+  GstValidateReport *report;
+  GstValidateRunner *runner;
+
+  fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
+  runner = _start_monitoring_bin (pipeline);
+
+  gst_bin_add_many (pipeline, decoder, sink, NULL);
+  srcpad = gst_pad_new ("srcpad1", GST_PAD_SRC);
+  sinkpad = decoder->sinkpads->data;
+  gst_pad_link (srcpad, sinkpad);
+
+  gst_element_link (decoder, sink);
+  fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
+          GST_STATE_PLAYING), GST_STATE_CHANGE_ASYNC);
+  fail_unless (gst_pad_activate_mode (srcpad, GST_PAD_MODE_PUSH, TRUE));
+
+  reports = gst_validate_runner_get_reports (runner);
+  assert_equals_int (g_list_length (reports), 0);
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
+
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_caps (gst_caps_from_string
+              ("video/x-raw, format=AYUV, width=320, height=240, pixel-aspect-ratio=1/1"))));
+  reports = gst_validate_runner_get_reports (runner);
+
+  /* Our caps didn't have a framerate, the decoder sink should complain about
+   * that */
+  assert_equals_int (g_list_length (reports), 1);
+  report = reports->data;
+  fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_ISSUE);
+  fail_unless_equals_int (report->issue->issue_id, CAPS_IS_MISSING_FIELD);
+
+  clean_bus (GST_ELEMENT (pipeline));
+
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  _stop_monitoring_bin (pipeline, runner);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (eos_without_segment)
 {
   GstPad *srcpad, *sinkpad;
@@ -843,6 +894,7 @@ gst_validate_suite (void)
   tcase_add_test (tc_chain, issue_concatenation);
   tcase_add_test (tc_chain, check_media_info);
   tcase_add_test (tc_chain, eos_without_segment);
+  tcase_add_test (tc_chain, caps_missing_field);
 
   return s;
 }
