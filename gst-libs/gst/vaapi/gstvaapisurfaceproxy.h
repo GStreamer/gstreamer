@@ -102,6 +102,9 @@ typedef enum
   gst_vaapi_surface_proxy_get_duration (proxy)
 
 GstVaapiSurfaceProxy *
+gst_vaapi_surface_proxy_new (GstVaapiSurface * surface);
+
+GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new_from_pool (GstVaapiSurfacePool * pool);
 
 GstVaapiSurfaceProxy *

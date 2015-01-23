@@ -62,6 +62,51 @@ gst_vaapi_surface_proxy_class (void)
   return &GstVaapiSurfaceProxyClass;
 }
 
+static void
+gst_vaapi_surface_proxy_init_properties (GstVaapiSurfaceProxy * proxy)
+{
+  proxy->view_id = 0;
+  proxy->timestamp = GST_CLOCK_TIME_NONE;
+  proxy->duration = GST_CLOCK_TIME_NONE;
+  proxy->has_crop_rect = FALSE;
+}
+
+/**
+ * gst_vaapi_surface_proxy_new:
+ * @surface: a #GstVaapiSurface
+ *
+ * Creates a new #GstVaapiSurfaceProxy with the specified
+ * surface. This allows for transporting additional information that
+ * are not to be attached to the @surface directly.
+ *
+ * Return value: the newly allocated #GstVaapiSurfaceProxy object
+ */
+GstVaapiSurfaceProxy *
+gst_vaapi_surface_proxy_new (GstVaapiSurface * surface)
+{
+  GstVaapiSurfaceProxy *proxy;
+
+  g_return_val_if_fail (surface != NULL, NULL);
+
+  proxy = (GstVaapiSurfaceProxy *)
+      gst_vaapi_mini_object_new (gst_vaapi_surface_proxy_class ());
+  if (!proxy)
+    return NULL;
+
+  proxy->parent = NULL;
+  proxy->destroy_func = NULL;
+  proxy->pool = NULL;
+  proxy->surface = gst_vaapi_object_ref (surface);
+  if (!proxy->surface)
+    goto error;
+  gst_vaapi_surface_proxy_init_properties (proxy);
+  return proxy;
+
+error:
+  gst_vaapi_surface_proxy_unref (proxy);
+  return NULL;
+}
+
 /**
  * gst_vaapi_surface_proxy_new_from_pool:
  * @pool: a #GstVaapiSurfacePool
@@ -91,11 +136,8 @@ gst_vaapi_surface_proxy_new_from_pool (GstVaapiSurfacePool * pool)
   proxy->surface = gst_vaapi_video_pool_get_object (proxy->pool);
   if (!proxy->surface)
     goto error;
-  proxy->view_id = 0;
-  proxy->timestamp = GST_CLOCK_TIME_NONE;
-  proxy->duration = GST_CLOCK_TIME_NONE;
-  proxy->has_crop_rect = FALSE;
   gst_vaapi_object_ref (proxy->surface);
+  gst_vaapi_surface_proxy_init_properties (proxy);
   return proxy;
 
 error:
@@ -132,7 +174,7 @@ gst_vaapi_surface_proxy_copy (GstVaapiSurfaceProxy * proxy)
 
   copy->parent = gst_vaapi_surface_proxy_ref (proxy->parent ?
       proxy->parent : proxy);
-  copy->pool = gst_vaapi_video_pool_ref (proxy->pool);
+  copy->pool = proxy->pool ? gst_vaapi_video_pool_ref (proxy->pool) : NULL;
   copy->surface = gst_vaapi_object_ref (proxy->surface);
   copy->view_id = proxy->view_id;
   copy->timestamp = proxy->timestamp;
