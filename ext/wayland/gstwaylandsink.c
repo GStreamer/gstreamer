@@ -524,6 +524,8 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_add_allocation_pool (query, sink->pool, size, min_bufs, max_bufs);
   gst_query_add_allocation_param (query, gst_wl_shm_allocator_get (), NULL);
 
+  gst_structure_free (config);
+
   return TRUE;
 }
 
