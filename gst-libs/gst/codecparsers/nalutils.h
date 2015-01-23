@@ -138,6 +138,13 @@ gboolean nal_reader_get_se (NalReader * nr, gint32 * val);
   val = tmp; \
 }
 
+#define READ_UE_MAX(nr, val, max) { \
+  guint32 tmp; \
+  READ_UE (nr, tmp); \
+  CHECK_ALLOWED_MAX (tmp, max); \
+  val = tmp; \
+}
+
 #define READ_SE(nr, val) { \
   if (!nal_reader_get_se (nr, &val)) { \
     GST_WARNING ("failed to read SE"); \
