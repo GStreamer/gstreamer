@@ -121,8 +121,8 @@ struct _GstGLWindowClass {
   guintptr (*get_display)        (GstGLWindow *window);
   void     (*set_window_handle)  (GstGLWindow *window, guintptr id);
   guintptr (*get_window_handle)  (GstGLWindow *window);
-  void     (*draw_unlocked)      (GstGLWindow *window, guint width, guint height);
-  void     (*draw)               (GstGLWindow *window, guint width, guint height);
+  void     (*draw_unlocked)      (GstGLWindow *window);
+  void     (*draw)               (GstGLWindow *window);
   void     (*run)                (GstGLWindow *window);
   void     (*quit)               (GstGLWindow *window);
   void     (*send_message)       (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
@@ -132,6 +132,7 @@ struct _GstGLWindowClass {
   void     (*close)              (GstGLWindow *window);
   void     (*get_surface_dimensions)  (GstGLWindow *window, guint *width, guint *height);
   void     (*handle_events)      (GstGLWindow *window, gboolean handle_events);
+  void     (*set_preferred_size) (GstGLWindow *window, gint width, gint height);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -165,8 +166,8 @@ void     gst_gl_window_set_close_callback   (GstGLWindow *window, GstGLWindowCB 
 
 void     gst_gl_window_set_window_handle    (GstGLWindow *window, guintptr handle);
 guintptr gst_gl_window_get_window_handle    (GstGLWindow *window);
-void     gst_gl_window_draw_unlocked        (GstGLWindow *window, guint width, guint height);
-void     gst_gl_window_draw                 (GstGLWindow *window, guint width, guint height);
+void     gst_gl_window_draw_unlocked        (GstGLWindow *window);
+void     gst_gl_window_draw                 (GstGLWindow *window);
 void     gst_gl_window_run                  (GstGLWindow *window);
 void     gst_gl_window_quit                 (GstGLWindow *window);
 void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
@@ -175,6 +176,7 @@ guintptr gst_gl_window_get_display          (GstGLWindow *window);
 void     gst_gl_window_get_surface_dimensions (GstGLWindow * window, guint * width,
    guint * height);
 void     gst_gl_window_handle_events        (GstGLWindow * window, gboolean handle_events);
+void     gst_gl_window_set_preferred_size   (GstGLWindow * window, gint width, gint height);
 
 GstGLContext * gst_gl_window_get_context (GstGLWindow *window);
 

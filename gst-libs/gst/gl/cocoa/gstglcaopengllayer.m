@@ -129,7 +129,7 @@
   gl->Viewport (result.x, result.y, result.w, result.h);
 
   if (window) {
-    gst_gl_window_cocoa_draw_thread (GST_GL_WINDOW_COCOA (window), 320, 240);
+    gst_gl_window_cocoa_draw_thread (GST_GL_WINDOW_COCOA (window));
 
     gst_object_unref (window);
   }

@@ -58,6 +58,9 @@ struct _GstGLWindowX11Private
 {
   gboolean activate;
   gboolean activate_result;
+
+  gint preferred_width;
+  gint preferred_height;
 };
 
 guintptr gst_gl_window_x11_get_display (GstGLWindow * window);
@@ -66,9 +69,10 @@ gboolean gst_gl_window_x11_activate (GstGLWindow * window, gboolean activate);
 void gst_gl_window_x11_set_window_handle (GstGLWindow * window,
     guintptr handle);
 guintptr gst_gl_window_x11_get_window_handle (GstGLWindow * window);
-void gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
-    guint height);
-void gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height);
+static void gst_gl_window_x11_set_preferred_size (GstGLWindow * window,
+    gint width, gint height);
+void gst_gl_window_x11_draw_unlocked (GstGLWindow * window);
+void gst_gl_window_x11_draw (GstGLWindow * window);
 void gst_gl_window_x11_run (GstGLWindow * window);
 void gst_gl_window_x11_quit (GstGLWindow * window);
 void gst_gl_window_x11_send_message_async (GstGLWindow * window,
@@ -117,6 +121,8 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_surface_dimensions);
   window_class->handle_events =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_handle_events);
+  window_class->set_preferred_size =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_set_preferred_size);
 }
 
 static void
@@ -355,10 +361,19 @@ gst_gl_window_x11_get_window_handle (GstGLWindow * window)
   return window_x11->internal_win_id;
 }
 
+static void
+gst_gl_window_x11_set_preferred_size (GstGLWindow * window, gint width,
+    gint height)
+{
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
+
+  window_x11->priv->preferred_width = width;
+  window_x11->priv->preferred_height = height;
+}
+
 /* Called in the gl thread */
 void
-gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
-    guint height)
+gst_gl_window_x11_draw_unlocked (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11;
 
@@ -378,19 +393,12 @@ gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
   }
 }
 
-struct draw
-{
-  GstGLWindowX11 *window;
-  guint width, height;
-};
-
 static void
 draw_cb (gpointer data)
 {
-  struct draw *draw_data = data;
-  GstGLWindowX11 *window_x11 = draw_data->window;
-  guint width = draw_data->width;
-  guint height = draw_data->height;
+  GstGLWindowX11 *window_x11 = data;
+  guint width = window_x11->priv->preferred_width;
+  guint height = window_x11->priv->preferred_height;
 
   if (g_main_loop_is_running (window_x11->loop)) {
     XWindowAttributes attr;
@@ -430,22 +438,15 @@ draw_cb (gpointer data)
       }
     }
 
-    gst_gl_window_x11_draw_unlocked (GST_GL_WINDOW (window_x11), width, height);
+    gst_gl_window_x11_draw_unlocked (GST_GL_WINDOW (window_x11));
   }
 }
 
 /* Not called by the gl thread */
 void
-gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height)
+gst_gl_window_x11_draw (GstGLWindow * window)
 {
-  struct draw draw_data;
-
-  draw_data.window = GST_GL_WINDOW_X11 (window);
-  draw_data.width = width;
-  draw_data.height = height;
-
-  /* Call from the GL thread */
-  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
+  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
 }
 
 void

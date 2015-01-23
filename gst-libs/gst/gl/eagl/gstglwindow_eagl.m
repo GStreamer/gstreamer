@@ -45,8 +45,9 @@ static guintptr gst_gl_window_eagl_get_display (GstGLWindow * window);
 static guintptr gst_gl_window_eagl_get_window_handle (GstGLWindow * window);
 static void gst_gl_window_eagl_set_window_handle (GstGLWindow * window,
     guintptr handle);
-static void gst_gl_window_eagl_draw (GstGLWindow * window, guint width,
-    guint height);
+static void gst_gl_window_eagl_set_preferred_size (GstGLWindow * window,
+    gint width gint height);
+static void gst_gl_window_eagl_draw (GstGLWindow * window);
 static void gst_gl_window_eagl_run (GstGLWindow * window);
 static void gst_gl_window_eagl_quit (GstGLWindow * window);
 static void gst_gl_window_eagl_send_message_async (GstGLWindow * window,
@@ -58,6 +59,7 @@ struct _GstGLWindowEaglPrivate
 {
   UIView *view;
   gint window_width, window_height;
+  gint preferred_width, preferred_height;
 
   GMainContext *main_context;
   GMainLoop *loop;
@@ -86,6 +88,8 @@ gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_send_message_async);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_eagl_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_eagl_close);
+  window_class->set_preferred_size =
+      GST_DEBUG_FUNCPTR (gst_gl_window_eagl_set_preferred_size);
 }
 
 static void
@@ -215,17 +219,19 @@ gst_gl_window_eagl_send_message_async (GstGLWindow * window,
       (GSourceFunc) _run_message, message);
 }
 
-struct draw
+static void
+gst_gl_window_eagl_set_preferred_size (GstGLWindow * window, gint width, gint height)
 {
-  GstGLWindowEagl *window;
-  guint width, height;
-};
+  GstGLWdindowEagl *window_eagl = GST_GL_WINDOW_EAGL (window);
+
+  window_eagl->priv->preferred_width = width;
+  window_eagl->priv->preferred_height = height;
+}
 
 static void
 draw_cb (gpointer data)
 {
-  struct draw *draw_data = data;
-  GstGLWindowEagl *window_eagl = draw_data->window;
+  GstGLWindowEagl *window_eagl = data;
   GstGLWindow *window = GST_GL_WINDOW (window_eagl);
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextEagl *eagl_context = GST_GL_CONTEXT_EAGL (context);
@@ -238,12 +244,14 @@ draw_cb (gpointer data)
     eagl_layer = (CAEAGLLayer *)[window_eagl->priv->view layer];
     size = eagl_layer.frame.size;
 
-    if (window_eagl->priv->window_width != size.width || window_eagl->priv->window_height != size.height) {
-      window_eagl->priv->window_width = size.width;
-      window_eagl->priv->window_height = size.height;
+    if (window_eagl->priv->window_width != window_eagl->priv->preferred_width ||
+        window_eagl->priv->window_height != window_eagl->priv->preferred_height) {
+      window_eagl->priv->window_width = window_eagl->priv->preferred_width;
+      window_eagl->priv->window_height = window_eagl->priv->preferred_height;
 
       if (window->resize)
-        window->resize (window->resize_data, size.width, size.height);
+        window->resize (window->resize_data, window_eagl->priv->preferred_width,
+            window_eagl->priv->preferred_height);
     }
   }
 
@@ -260,13 +268,7 @@ draw_cb (gpointer data)
 }
 
 static void
-gst_gl_window_eagl_draw (GstGLWindow * window, guint width, guint height)
+gst_gl_window_eagl_draw (GstGLWindow * window)
 {
-  struct draw draw_data;
-
-  draw_data.window = GST_GL_WINDOW_EAGL (window);
-  draw_data.width = width;
-  draw_data.height = height;
-
-  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
+  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
 }

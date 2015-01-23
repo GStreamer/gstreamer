@@ -44,8 +44,7 @@ static guintptr gst_gl_window_android_egl_get_window_handle (GstGLWindow *
     window);
 static void gst_gl_window_android_egl_set_window_handle (GstGLWindow * window,
     guintptr handle);
-static void gst_gl_window_android_egl_draw (GstGLWindow * window, guint width,
-    guint height);
+static void gst_gl_window_android_egl_draw (GstGLWindow * window);
 static void gst_gl_window_android_egl_run (GstGLWindow * window);
 static void gst_gl_window_android_egl_quit (GstGLWindow * window);
 static void gst_gl_window_android_egl_send_message_async (GstGLWindow * window,
@@ -200,17 +199,10 @@ gst_gl_window_android_egl_get_window_handle (GstGLWindow * window)
   return (guintptr) window_egl->native_window;
 }
 
-struct draw
-{
-  GstGLWindowAndroidEGL *window;
-  guint width, height;
-};
-
 static void
 draw_cb (gpointer data)
 {
-  struct draw *draw_data = data;
-  GstGLWindowAndroidEGL *window_egl = draw_data->window;
+  GstGLWindowAndroidEGL *window_egl = data;
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
@@ -242,16 +234,9 @@ draw_cb (gpointer data)
 }
 
 static void
-gst_gl_window_android_egl_draw (GstGLWindow * window, guint width, guint height)
+gst_gl_window_android_egl_draw (GstGLWindow * window)
 {
-  struct draw draw_data;
-  GstGLWindowAndroidEGL *window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  draw_data.window = window_egl;
-  draw_data.width = width;
-  draw_data.height = height;
-
-  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
+  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
 }
 
 static guintptr

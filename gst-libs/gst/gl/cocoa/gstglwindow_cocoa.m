@@ -70,11 +70,13 @@ static void gst_gl_window_cocoa_close (GstGLWindow *window);
 static guintptr gst_gl_window_cocoa_get_window_handle (GstGLWindow * window);
 static void gst_gl_window_cocoa_set_window_handle (GstGLWindow * window,
     guintptr handle);
-static void gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height);
+static void gst_gl_window_cocoa_draw (GstGLWindow * window);
 static void gst_gl_window_cocoa_run (GstGLWindow * window);
 static void gst_gl_window_cocoa_quit (GstGLWindow * window);
 static void gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
+static void gst_gl_window_cocoa_set_preferred_size (GstGLWindow * window,
+    gint width, gint height);
 
 struct _GstGLWindowCocoaPrivate
 {
@@ -83,6 +85,8 @@ struct _GstGLWindowCocoaPrivate
   gboolean visible;
   GMainContext *main_context;
   GMainLoop *loop;
+  gint preferred_width;
+  gint preferred_height;
 
   GLint viewport_dim[4];
 };
@@ -108,12 +112,17 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_quit);
   window_class->send_message_async =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message_async);
+  window_class->set_preferred_size =
+      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_preferred_size);
 }
 
 static void
 gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 {
   window->priv = GST_GL_WINDOW_COCOA_GET_PRIVATE (window);
+
+  window->priv->preferred_width = 320;
+  window->priv->preferred_height = 240;
 }
 
 /* Must be called in the gl thread */
@@ -212,7 +221,7 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
 }
 
 void
-gst_gl_window_cocoa_draw_thread (GstGLWindowCocoa *window_cocoa, guint width, guint height)
+gst_gl_window_cocoa_draw_thread (GstGLWindowCocoa *window_cocoa)
 {
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
 
@@ -235,8 +244,8 @@ gst_gl_window_cocoa_draw_thread (GstGLWindowCocoa *window_cocoa, guint width, gu
 
     windowRect.origin.x += x;
     windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
-    windowRect.size.width = width;
-    windowRect.size.height = height;
+    windowRect.size.width = window_cocoa->priv->preferred_width;
+    windowRect.size.height = window_cocoa->priv->preferred_height;
 
     GST_DEBUG ("window rect: %d %d %d %d\n", (int) windowRect.origin.x,
         (int) windowRect.origin.y, (int) windowRect.size.width,
@@ -264,7 +273,7 @@ gst_gl_window_cocoa_draw_thread (GstGLWindowCocoa *window_cocoa, guint width, gu
 }
 
 static void
-gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height)
+gst_gl_window_cocoa_draw (GstGLWindow * window)
 {
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
   GstGLNSView *view = (GstGLNSView *)[window_cocoa->priv->internal_win_id contentView];
@@ -275,6 +284,16 @@ gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height)
   dispatch_sync (dispatch_get_main_queue(), ^{
     [view setNeedsDisplay:YES];
   });
+}
+
+static void
+gst_gl_window_cocoa_set_preferred_size (GstGLWindow * window, gint width,
+    gint height)
+{
+  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
+
+  window_cocoa->priv->preferred_width = width;
+  window_cocoa->priv->preferred_height = height;
 }
 
 static void
@@ -501,7 +520,7 @@ resize_cb (gpointer data)
     gl_layer = ((GstGLNSView *)[window_cocoa->priv->internal_win_id contentView])->layer;
     [gl_layer resize:resize_data->bounds];
 
-    gst_gl_window_draw (window, resize_data->bounds.size.width, resize_data->bounds.size.height);
+    gst_gl_window_draw (window);
   }
   gst_object_unref (context);
   [pool release];

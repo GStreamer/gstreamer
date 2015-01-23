@@ -316,15 +316,13 @@ gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
 /**
  * gst_gl_window_draw_unlocked:
  * @window: a #GstGLWindow
- * @width: requested width of the window
- * @height: requested height of the window
  *
  * Redraw the window contents.  Implementations should invoke the draw callback.
  *
  * Since: 1.4
  */
 void
-gst_gl_window_draw_unlocked (GstGLWindow * window, guint width, guint height)
+gst_gl_window_draw_unlocked (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
@@ -332,21 +330,19 @@ gst_gl_window_draw_unlocked (GstGLWindow * window, guint width, guint height)
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->draw_unlocked != NULL);
 
-  window_class->draw_unlocked (window, width, height);
+  window_class->draw_unlocked (window);
 }
 
 /**
  * gst_gl_window_draw:
  * @window: a #GstGLWindow
- * @width: requested width of the window
- * @height: requested height of the window
  *
  * Redraw the window contents.  Implementations should invoke the draw callback.
  *
  * Since: 1.4
  */
 void
-gst_gl_window_draw (GstGLWindow * window, guint width, guint height)
+gst_gl_window_draw (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
@@ -359,7 +355,30 @@ gst_gl_window_draw (GstGLWindow * window, guint width, guint height)
     return;
   }
 
-  window_class->draw (window, width, height);
+  window_class->draw (window);
+}
+
+/**
+ * gst_gl_window_set_preferred_size:
+ * @window: a #GstGLWindow
+ * @width: new preferred width
+ * @height: new preferred height
+ *
+ * Set the preferred width and height of the window.  Implementations are free
+ * to ignore this information.
+ *
+ * Since: 1.6
+ */
+void
+gst_gl_window_set_preferred_size (GstGLWindow * window, gint width, gint height)
+{
+  GstGLWindowClass *window_class;
+
+  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+
+  if (window_class->set_preferred_size)
+    window_class->set_preferred_size (window, width, height);
 }
 
 /**
@@ -847,17 +866,10 @@ gst_gl_dummy_window_get_window_handle (GstGLWindow * window)
   return (guintptr) dummy->handle;
 }
 
-struct draw
-{
-  GstGLDummyWindow *window;
-  guint width, height;
-};
-
 static void
 draw_cb (gpointer data)
 {
-  struct draw *draw_data = data;
-  GstGLDummyWindow *dummy = draw_data->window;
+  GstGLDummyWindow *dummy = data;
   GstGLWindow *window = GST_GL_WINDOW (dummy);
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
@@ -871,15 +883,9 @@ draw_cb (gpointer data)
 }
 
 static void
-gst_gl_dummy_window_draw (GstGLWindow * window, guint width, guint height)
+gst_gl_dummy_window_draw (GstGLWindow * window)
 {
-  struct draw draw_data;
-
-  draw_data.window = (GstGLDummyWindow *) window;
-  draw_data.width = width;
-  draw_data.height = height;
-
-  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
+  gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
 }
 
 static guintptr
