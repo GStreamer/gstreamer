@@ -46,7 +46,7 @@ static guintptr gst_gl_window_eagl_get_window_handle (GstGLWindow * window);
 static void gst_gl_window_eagl_set_window_handle (GstGLWindow * window,
     guintptr handle);
 static void gst_gl_window_eagl_set_preferred_size (GstGLWindow * window,
-    gint width gint height);
+    gint width, gint height);
 static void gst_gl_window_eagl_draw (GstGLWindow * window);
 static void gst_gl_window_eagl_run (GstGLWindow * window);
 static void gst_gl_window_eagl_quit (GstGLWindow * window);
@@ -222,7 +222,7 @@ gst_gl_window_eagl_send_message_async (GstGLWindow * window,
 static void
 gst_gl_window_eagl_set_preferred_size (GstGLWindow * window, gint width, gint height)
 {
-  GstGLWdindowEagl *window_eagl = GST_GL_WINDOW_EAGL (window);
+  GstGLWindowEagl *window_eagl = GST_GL_WINDOW_EAGL (window);
 
   window_eagl->priv->preferred_width = width;
   window_eagl->priv->preferred_height = height;
