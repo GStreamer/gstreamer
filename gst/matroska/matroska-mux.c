@@ -2274,7 +2274,6 @@ gst_matroska_mux_request_new_pad (GstElement * element,
 
   newpad = g_object_new (GST_TYPE_MATROSKAMUX_PAD,
       "name", pad_name, "direction", templ->direction, "template", templ, NULL);
-  g_free (name);
 
   gst_matroskamux_pad_init (newpad);
   collect_pad = (GstMatroskaPad *)
@@ -2291,6 +2290,8 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   if (!gst_element_add_pad (element, GST_PAD (newpad)))
     goto pad_add_failed;
 
+  g_free (name);
+
   mux->num_streams++;
 
   GST_DEBUG_OBJECT (newpad, "Added new request pad");
@@ -2301,6 +2302,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
 pad_add_failed:
   {
     GST_WARNING_OBJECT (mux, "Adding the new pad '%s' failed", pad_name);
+    g_free (name);
     gst_object_unref (newpad);
     return NULL;
   }
