@@ -23,6 +23,7 @@
 
 #if !HAVE_IOS
 #import <AppKit/AppKit.h>
+#include <gst/gl/cocoa/gstglcontext_cocoa.h>
 #endif
 #include "corevideotexturecache.h"
 #include "coremediabuffer.h"
@@ -37,14 +38,12 @@ gst_core_video_texture_cache_new (GstGLContext * ctx)
   cache->ctx = gst_object_ref (ctx);
 
 #if !HAVE_IOS
-  CGLPixelFormatAttribute attribs[1] = { 0 };
-  int numPixelFormats;
-  CGLPixelFormatObj pixelFormat;
-  CGLChoosePixelFormat (attribs, &pixelFormat, &numPixelFormats);       // 5
-  NSOpenGLContext *platform_ctx =
-      (NSOpenGLContext *) gst_gl_context_get_gl_context (ctx);
-  CVOpenGLTextureCacheCreate (kCFAllocatorDefault, NULL,
-      [platform_ctx CGLContextObj], pixelFormat, NULL, &cache->cache);
+  CGLPixelFormatObj pixelFormat =
+      gst_gl_context_cocoa_get_pixel_format (GST_GL_CONTEXT_COCOA (ctx));
+  CGLContextObj platform_ctx =
+      (CGLContextObj) gst_gl_context_get_gl_context (ctx);
+  CVOpenGLTextureCacheCreate (kCFAllocatorDefault, NULL, platform_ctx,
+      pixelFormat, NULL, &cache->cache);
 #else
   CVOpenGLESTextureCacheCreate (kCFAllocatorDefault, NULL,
       (CVEAGLContext) gst_gl_context_get_gl_context (ctx), NULL, &cache->cache);
