@@ -785,7 +785,7 @@ GST_START_TEST (check_media_info)
 
 GST_END_TEST;
 
-GST_START_TEST (caps_missing_field)
+GST_START_TEST (caps_events)
 {
   GstPad *srcpad, *sinkpad;
   GstElement *decoder = fake_decoder_new ();
@@ -823,6 +823,34 @@ GST_START_TEST (caps_missing_field)
   report = reports->data;
   fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_ISSUE);
   fail_unless_equals_int (report->issue->issue_id, CAPS_IS_MISSING_FIELD);
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
+
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_caps (gst_caps_from_string
+              ("video/x-raw, format=AYUV, framerate=24/1, width=(fraction)320, height=240, pixel-aspect-ratio=1/1"))));
+
+  reports = gst_validate_runner_get_reports (runner);
+  assert_equals_int (g_list_length (reports), 2);
+  report = reports->next->data;
+  /* A width isn't supposed to be a fraction */
+  fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_WARNING);
+  fail_unless_equals_int (report->issue->issue_id, CAPS_FIELD_HAS_BAD_TYPE);
+
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_caps (gst_caps_from_string
+              ("video/x-raw, format=AYUV, framerate=24/1, width=320, height=240, pixel-aspect-ratio=1/1"))));
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_caps (gst_caps_from_string
+              ("video/x-raw, format=AYUV, framerate=24/1, width=320, height=240, pixel-aspect-ratio=1/1"))));
+
+  reports = gst_validate_runner_get_reports (runner);
+  assert_equals_int (g_list_length (reports), 3);
+  report = reports->next->next->data;
+  /* A width isn't supposed to be a fraction */
+  fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_WARNING);
+  /* Pushing the same twice isn't very useful */
+  fail_unless_equals_int (report->issue->issue_id, EVENT_CAPS_DUPLICATE);
+
 
   clean_bus (GST_ELEMENT (pipeline));
 
@@ -894,7 +922,7 @@ gst_validate_suite (void)
   tcase_add_test (tc_chain, issue_concatenation);
   tcase_add_test (tc_chain, check_media_info);
   tcase_add_test (tc_chain, eos_without_segment);
-  tcase_add_test (tc_chain, caps_missing_field);
+  tcase_add_test (tc_chain, caps_events);
 
   return s;
 }
