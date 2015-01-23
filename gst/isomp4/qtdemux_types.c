@@ -182,6 +182,8 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_chap, "Chapter Reference"},
   {FOURCC_btrt, "Bitrate information", 0},
   {FOURCC_frma, "Audio codec format", 0},
+  {FOURCC_name, "name", 0},
+  {FOURCC_mean, "mean", 0},
   {0, "unknown", 0,},
 };
 
