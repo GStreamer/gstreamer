@@ -259,7 +259,8 @@ GST_START_TEST (test_share)
       error ? error->message : "Unknown Error");
 
   /* make the window visible */
-  gst_gl_window_draw (window, 320, 240);
+  gst_gl_window_set_preferred_size (window, 320, 240);
+  gst_gl_window_draw (window);
 
   gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init), context);
 
@@ -360,7 +361,8 @@ GST_START_TEST (test_wrapped_context)
       error ? error->message : "Unknown Error");
 
   /* make the window visible */
-  gst_gl_window_draw (window, 320, 240);
+  gst_gl_window_set_preferred_size (window, 320, 240);
+  gst_gl_window_draw (window);
 
   gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (init), context);
 

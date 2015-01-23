@@ -254,7 +254,8 @@ GST_START_TEST (test_upload_data)
 
   gst_buffer_unmap (outbuf, &map_info);
 
-  gst_gl_window_draw (window, WIDTH, HEIGHT);
+  gst_gl_window_set_preferred_size (window, WIDTH, HEIGHT);
+  gst_gl_window_draw (window);
 
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init), context);
 
@@ -307,7 +308,8 @@ GST_START_TEST (test_upload_buffer)
       gst_gl_context_get_error ());
   fail_unless (GST_IS_BUFFER (outbuf));
 
-  gst_gl_window_draw (window, WIDTH, HEIGHT);
+  gst_gl_window_set_preferred_size (window, WIDTH, HEIGHT);
+  gst_gl_window_draw (window);
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init), context);
 
   while (i < 2) {
@@ -360,7 +362,9 @@ GST_START_TEST (test_upload_meta_producer)
   fail_if (res == FALSE, "Failed to upload GstVideoGLTextureUploadMeta\n");
 
   tex_id = tex_ids[0];
-  gst_gl_window_draw (window, WIDTH, HEIGHT);
+
+  gst_gl_window_set_preferred_size (window, WIDTH, HEIGHT);
+  gst_gl_window_draw (window);
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init), context);
 
   while (i < 2) {
