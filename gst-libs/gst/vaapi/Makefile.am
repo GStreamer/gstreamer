@@ -278,12 +278,14 @@ libgstvaapi_glx_source_priv_h =			\
 libgstvaapi_egl_source_c =			\
 	gstvaapidisplay_egl.c			\
 	gstvaapisurface_egl.c			\
+	gstvaapitexture_egl.c			\
 	gstvaapiutils_egl.c			\
 	$(NULL)
 
 libgstvaapi_egl_source_h =			\
 	gstvaapidisplay_egl.h			\
 	gstvaapisurface_egl.h			\
+	gstvaapitexture_egl.h			\
 	$(NULL)
 
 libgstvaapi_egl_source_priv_h =			\
