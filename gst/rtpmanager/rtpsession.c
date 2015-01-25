@@ -450,9 +450,9 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_param_spec_uint ("rtcp-immediate-feedback-threshold",
           "RTCP Immediate Feedback threshold",
           "The maximum number of members of a RTP session for which immediate"
-          " feedback is used",
+          " feedback is used (DEPRECATED: has no effect and is not needed)",
           0, G_MAXUINT, DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 
   g_object_class_install_property (gobject_class, PROP_PROBATION,
       g_param_spec_uint ("probation", "Number of probations",
