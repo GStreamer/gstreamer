@@ -84,7 +84,7 @@ gst_test_aggregator_aggregate (GstAggregator * aggregator, gboolean timeout)
       case GST_ITERATOR_OK:
         pad = g_value_get_object (&value);
 
-        if (pad->eos == FALSE)
+        if (gst_aggregator_pad_is_eos (pad) == FALSE)
           all_eos = FALSE;
         buffer = gst_aggregator_pad_steal_buffer (pad);
         gst_buffer_replace (&buffer, NULL);
