@@ -1818,8 +1818,8 @@ gst_aiff_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
         if (stop > 0) {
           end_offset = stop;
-          segment.stop -= aiff->datastart;
-          segment.stop = MAX (stop, 0);
+          stop -= aiff->datastart;
+          stop = MAX (stop, 0);
         }
         if (aiff->state == AIFF_PARSE_DATA &&
             aiff->segment.format == GST_FORMAT_TIME) {
