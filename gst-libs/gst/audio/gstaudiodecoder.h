@@ -295,7 +295,7 @@ GType             gst_audio_decoder_get_type (void);
 gboolean          gst_audio_decoder_set_output_format  (GstAudioDecoder    * dec,
                                                         const GstAudioInfo * info);
 
-GstCaps *         gst_audio_decoder_proxy_getcaps (GstAudioDecoder * dec,
+GstCaps *         gst_audio_decoder_proxy_getcaps (GstAudioDecoder * decoder,
                                                    GstCaps         * caps,
                                                    GstCaps         * filter);
 gboolean          gst_audio_decoder_negotiate (GstAudioDecoder * dec);

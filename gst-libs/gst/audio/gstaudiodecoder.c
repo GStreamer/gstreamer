@@ -2434,7 +2434,7 @@ exit:
  *
  * Returns: (transfer-full): a #GstCaps owned by caller
  *
- * @Since: 1.6
+ * Since: 1.6
  */
 GstCaps *
 gst_audio_decoder_proxy_getcaps (GstAudioDecoder * decoder, GstCaps * caps,
