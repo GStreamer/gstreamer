@@ -81,7 +81,7 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
 #define PAD_LOCK(pad)   G_STMT_START {                            \
   GST_TRACE_OBJECT (pad, "Taking PAD lock from thread %p",            \
         g_thread_self());                                               \
-  GST_OBJECT_LOCK (pad);                                                \
+  g_mutex_lock(&pad->priv->lock);                                \
   GST_TRACE_OBJECT (pad, "Took PAD lock from thread %p",              \
         g_thread_self());                                               \
   } G_STMT_END
@@ -89,7 +89,7 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
 #define PAD_UNLOCK(pad)  G_STMT_START {                           \
   GST_TRACE_OBJECT (pad, "Releasing PAD lock from thread %p",         \
         g_thread_self());                                               \
-  GST_OBJECT_UNLOCK (pad);                                              \
+  g_mutex_unlock(&pad->priv->lock);                                \
   GST_TRACE_OBJECT (pad, "Release PAD lock from thread %p",           \
         g_thread_self());                                               \
   } G_STMT_END
@@ -99,7 +99,7 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
   GST_LOG_OBJECT (pad, "Waiting for EVENT on thread %p",                \
         g_thread_self());                                               \
   g_cond_wait(&(((GstAggregatorPad* )pad)->priv->event_cond),           \
-      GST_OBJECT_GET_LOCK (pad));                                       \
+      (&((GstAggregatorPad*)pad)->priv->lock));                            \
   GST_LOG_OBJECT (pad, "DONE Waiting for EVENT on thread %p",           \
         g_thread_self());                                               \
   } G_STMT_END
@@ -170,6 +170,7 @@ struct _GstAggregatorPadPrivate
   GstBuffer *buffer;
   gboolean eos;
 
+  GMutex lock;
   GCond event_cond;
 
   GMutex stream_lock;
@@ -879,10 +880,10 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     }
     case GST_EVENT_SEGMENT:
     {
-      PAD_LOCK (aggpad);
+      GST_OBJECT_LOCK (aggpad);
       gst_event_copy_segment (event, &aggpad->segment);
+      GST_OBJECT_UNLOCK (aggpad);
       self->priv->seqnum = gst_event_get_seqnum (event);
-      PAD_UNLOCK (aggpad);
       goto eat;
     }
     case GST_EVENT_STREAM_START:
@@ -1948,6 +1949,7 @@ gst_aggregator_pad_finalize (GObject * object)
 
   g_cond_clear (&pad->priv->event_cond);
   g_mutex_clear (&pad->priv->stream_lock);
+  g_mutex_clear (&pad->priv->lock);
 
   G_OBJECT_CLASS (gst_aggregator_pad_parent_class)->finalize (object);
 }
@@ -1988,37 +1990,7 @@ gst_aggregator_pad_init (GstAggregatorPad * pad)
   g_cond_init (&pad->priv->event_cond);
 
   g_mutex_init (&pad->priv->stream_lock);
-}
-
-/**
- * gst_aggregator_pad_steal_buffer_unlocked:
- * @pad: the pad to get buffer from
- *
- * Steal the ref to the buffer currently queued in @pad.
- *
- * MUST be called with the pad's object lock held.
- *
- * Returns: (transfer full): The buffer in @pad or NULL if no buffer was
- *   queued. You should unref the buffer after usage.
- */
-GstBuffer *
-gst_aggregator_pad_steal_buffer_unlocked (GstAggregatorPad * pad)
-{
-  GstBuffer *buffer = NULL;
-
-  if (pad->priv->buffer) {
-    GST_TRACE_OBJECT (pad, "Consuming buffer");
-    buffer = pad->priv->buffer;
-    pad->priv->buffer = NULL;
-    if (pad->priv->pending_eos) {
-      pad->priv->pending_eos = FALSE;
-      pad->priv->eos = TRUE;
-    }
-    PAD_BROADCAST_EVENT (pad);
-    GST_DEBUG_OBJECT (pad, "Consumed: %" GST_PTR_FORMAT, buffer);
-  }
-
-  return buffer;
+  g_mutex_init (&pad->priv->lock);
 }
 
 /**
@@ -2036,7 +2008,17 @@ gst_aggregator_pad_steal_buffer (GstAggregatorPad * pad)
   GstBuffer *buffer = NULL;
 
   PAD_LOCK (pad);
-  buffer = gst_aggregator_pad_steal_buffer_unlocked (pad);
+  if (pad->priv->buffer) {
+    GST_TRACE_OBJECT (pad, "Consuming buffer");
+    buffer = pad->priv->buffer;
+    pad->priv->buffer = NULL;
+    if (pad->priv->pending_eos) {
+      pad->priv->pending_eos = FALSE;
+      pad->priv->eos = TRUE;
+    }
+    PAD_BROADCAST_EVENT (pad);
+    GST_DEBUG_OBJECT (pad, "Consumed: %" GST_PTR_FORMAT, buffer);
+  }
   PAD_UNLOCK (pad);
 
   return buffer;
