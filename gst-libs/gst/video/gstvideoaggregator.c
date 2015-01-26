@@ -966,8 +966,9 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
     bpad = GST_AGGREGATOR_PAD (pad);
     GST_OBJECT_LOCK (bpad);
     segment = bpad->segment;
-    is_eos = bpad->eos;
     GST_OBJECT_UNLOCK (bpad);
+    is_eos = gst_aggregator_pad_is_eos (bpad);
+
     if (!is_eos)
       eos = FALSE;
     buf = gst_aggregator_pad_get_buffer (bpad);
@@ -1550,6 +1551,7 @@ gst_videoaggregator_sink_clip (GstAggregator * agg,
 {
   GstVideoAggregatorPad *pad = GST_VIDEO_AGGREGATOR_PAD (bpad);
   GstClockTime start_time, end_time;
+  GstBuffer *pbuf;
 
   start_time = GST_BUFFER_TIMESTAMP (buf);
   if (start_time == -1) {
@@ -1586,10 +1588,15 @@ gst_videoaggregator_sink_clip (GstAggregator * agg,
     end_time *= ABS (agg->segment.rate);
   }
 
-  if (bpad->buffer != NULL && end_time < pad->priv->end_time) {
-    gst_buffer_unref (buf);
-    *outbuf = NULL;
-    goto done;
+  pbuf = gst_aggregator_pad_get_buffer (bpad);
+  if (pbuf != NULL) {
+    gst_buffer_unref (pbuf);
+
+    if (end_time < pad->priv->end_time) {
+      gst_buffer_unref (buf);
+      *outbuf = NULL;
+      goto done;
+    }
   }
 
   *outbuf = buf;
