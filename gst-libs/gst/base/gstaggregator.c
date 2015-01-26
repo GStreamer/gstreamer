@@ -1807,8 +1807,7 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
   PAD_UNLOCK (aggpad);
   PAD_STREAM_UNLOCK (aggpad);
 
-  if (gst_aggregator_check_pads_ready (self))
-    SRC_STREAM_BROADCAST (self);
+  SRC_STREAM_BROADCAST (self);
   SRC_STREAM_UNLOCK (self);
 
   GST_DEBUG_OBJECT (aggpad, "Done chaining");
