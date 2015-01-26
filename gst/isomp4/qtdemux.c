@@ -4910,6 +4910,18 @@ done:
   demux->upstream_size = seekable ? stop : -1;
 }
 
+static void
+gst_qtdemux_drop_data (GstQTDemux * demux, gint bytes)
+{
+  g_return_if_fail (bytes <= demux->todrop);
+
+  GST_LOG_OBJECT (demux, "Dropping %d bytes", bytes);
+  gst_adapter_flush (demux->adapter, bytes);
+  demux->neededbytes -= bytes;
+  demux->offset += bytes;
+  demux->todrop -= bytes;
+}
+
 /* FIXME, unverified after edit list updates */
 static GstFlowReturn
 gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
@@ -5285,9 +5297,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
           } else {
             GST_DEBUG_OBJECT (demux, "data atom emptied; resuming atom scan");
             /* so we are dropping more than left in this atom */
-            demux->todrop -= demux->mdatleft;
-            demux->neededbytes -= demux->mdatleft;
+            gst_qtdemux_drop_data (demux, demux->mdatleft);
             demux->mdatleft = 0;
+
             /* need to resume atom parsing so we do not miss any other pieces */
             demux->state = QTDEMUX_STATE_INITIAL;
             demux->neededbytes = 16;
@@ -5306,10 +5318,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         }
 
         if (demux->todrop) {
-          GST_LOG_OBJECT (demux, "Dropping %d bytes", demux->todrop);
-          gst_adapter_flush (demux->adapter, demux->todrop);
-          demux->neededbytes -= demux->todrop;
-          demux->offset += demux->todrop;
+          gst_qtdemux_drop_data (demux, demux->todrop);
         }
 
         /* first buffer? */
