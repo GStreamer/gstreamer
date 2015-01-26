@@ -842,7 +842,6 @@ nle_composition_handle_message (GstBin * bin, GstMessage * message)
 static void
 nle_composition_class_init (NleCompositionClass * klass)
 {
-  gpointer useless;
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBinClass *gstbin_class;
@@ -924,17 +923,16 @@ nle_composition_class_init (NleCompositionClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE,
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_UINT64, 0, NULL);
 
-  useless = GST_DEBUG_FUNCPTR (_seek_pipeline_func);
-  useless = GST_DEBUG_FUNCPTR (_remove_object_func);
-  useless = GST_DEBUG_FUNCPTR (_add_object_func);
-  useless = GST_DEBUG_FUNCPTR (_update_pipeline_func);
-  useless = GST_DEBUG_FUNCPTR (_commit_func);
-  useless = GST_DEBUG_FUNCPTR (_emit_commited_signal_func);
-  useless = GST_DEBUG_FUNCPTR (_initialize_stack_func);
+  GST_DEBUG_REGISTER_FUNCPTR (_seek_pipeline_func);
+  GST_DEBUG_REGISTER_FUNCPTR (_remove_object_func);
+  GST_DEBUG_REGISTER_FUNCPTR (_add_object_func);
+  GST_DEBUG_REGISTER_FUNCPTR (_update_pipeline_func);
+  GST_DEBUG_REGISTER_FUNCPTR (_commit_func);
+  GST_DEBUG_REGISTER_FUNCPTR (_emit_commited_signal_func);
+  GST_DEBUG_REGISTER_FUNCPTR (_initialize_stack_func);
 
   /* Just be useless, so the compiler does not warn us
    * about our uselessness */
-  nleobject_class->commit = useless;
   nleobject_class->commit = nle_composition_commit_func;
 
 }
