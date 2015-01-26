@@ -166,6 +166,10 @@ struct _GstAggregatorPadPrivate
   gboolean pending_eos;
   gboolean flushing;
 
+  /* Protected by the pad lock */
+  GstBuffer *buffer;
+  gboolean eos;
+
   GCond event_cond;
 
   GMutex stream_lock;
@@ -177,7 +181,7 @@ gst_aggregator_pad_flush (GstAggregatorPad * aggpad, GstAggregator * agg)
   GstAggregatorPadClass *klass = GST_AGGREGATOR_PAD_GET_CLASS (aggpad);
 
   PAD_LOCK (aggpad);
-  aggpad->eos = FALSE;
+  aggpad->priv->eos = FALSE;
   aggpad->priv->flushing = FALSE;
   PAD_UNLOCK (aggpad);
 
@@ -345,8 +349,8 @@ gst_aggregator_check_pads_ready (GstAggregator * self)
     pad = l->data;
 
     PAD_LOCK (pad);
-    if (pad->buffer == NULL && !pad->eos) {
-      GST_OBJECT_UNLOCK (pad);
+    if (pad->priv->buffer == NULL && !pad->priv->eos) {
+      PAD_UNLOCK (pad);
       goto pad_not_ready;
     }
     PAD_UNLOCK (pad);
@@ -862,8 +866,8 @@ gst_aggregator_default_sink_event (GstAggregator * self,
        */
       SRC_STREAM_LOCK (self);
       PAD_LOCK (aggpad);
-      if (!aggpad->buffer) {
-        aggpad->eos = TRUE;
+      if (!aggpad->priv->buffer) {
+        aggpad->priv->eos = TRUE;
       } else {
         aggpad->priv->pending_eos = TRUE;
       }
@@ -1770,8 +1774,8 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
     goto eos;
 
   PAD_LOCK (aggpad);
-
-  while (aggpad->buffer && g_atomic_int_get (&aggpad->priv->flushing) == FALSE) {
+  while (aggpad->priv->buffer
+      && g_atomic_int_get (&aggpad->priv->flushing) == FALSE) {
     GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
     PAD_WAIT_EVENT (aggpad);
   }
@@ -1786,9 +1790,9 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 
   SRC_STREAM_LOCK (self);
   PAD_LOCK (aggpad);
-  if (aggpad->buffer)
-    gst_buffer_unref (aggpad->buffer);
-  aggpad->buffer = actual_buf;
+  if (aggpad->priv->buffer)
+    gst_buffer_unref (aggpad->priv->buffer);
+  aggpad->priv->buffer = actual_buf;
   PAD_UNLOCK (aggpad);
   PAD_STREAM_UNLOCK (aggpad);
 
@@ -1836,7 +1840,7 @@ gst_aggregator_pad_query_func (GstPad * pad, GstObject * parent,
       goto flushing;
     }
 
-    while (aggpad->buffer
+    while (aggpad->priv->buffer
         && g_atomic_int_get (&aggpad->priv->flushing) == FALSE) {
       GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
       PAD_WAIT_EVENT (aggpad);
@@ -1872,7 +1876,7 @@ gst_aggregator_pad_event_func (GstPad * pad, GstObject * parent,
       goto flushing;
     }
 
-    while (aggpad->buffer
+    while (aggpad->priv->buffer
         && g_atomic_int_get (&aggpad->priv->flushing) == FALSE) {
       GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
       PAD_WAIT_EVENT (aggpad);
@@ -1904,7 +1908,7 @@ gst_aggregator_pad_activate_mode_func (GstPad * pad,
   if (active == FALSE) {
     PAD_LOCK (aggpad);
     g_atomic_int_set (&aggpad->priv->flushing, TRUE);
-    gst_buffer_replace (&aggpad->buffer, NULL);
+    gst_buffer_replace (&aggpad->priv->buffer, NULL);
     PAD_BROADCAST_EVENT (aggpad);
     PAD_UNLOCK (aggpad);
   } else {
@@ -1980,7 +1984,7 @@ gst_aggregator_pad_init (GstAggregatorPad * pad)
       G_TYPE_INSTANCE_GET_PRIVATE (pad, GST_TYPE_AGGREGATOR_PAD,
       GstAggregatorPadPrivate);
 
-  pad->buffer = NULL;
+  pad->priv->buffer = NULL;
   g_cond_init (&pad->priv->event_cond);
 
   g_mutex_init (&pad->priv->stream_lock);
@@ -2002,13 +2006,13 @@ gst_aggregator_pad_steal_buffer_unlocked (GstAggregatorPad * pad)
 {
   GstBuffer *buffer = NULL;
 
-  if (pad->buffer) {
+  if (pad->priv->buffer) {
     GST_TRACE_OBJECT (pad, "Consuming buffer");
-    buffer = pad->buffer;
-    pad->buffer = NULL;
+    buffer = pad->priv->buffer;
+    pad->priv->buffer = NULL;
     if (pad->priv->pending_eos) {
       pad->priv->pending_eos = FALSE;
-      pad->eos = TRUE;
+      pad->priv->eos = TRUE;
     }
     PAD_BROADCAST_EVENT (pad);
     GST_DEBUG_OBJECT (pad, "Consumed: %" GST_PTR_FORMAT, buffer);
@@ -2052,11 +2056,23 @@ gst_aggregator_pad_get_buffer (GstAggregatorPad * pad)
   GstBuffer *buffer = NULL;
 
   PAD_LOCK (pad);
-  if (pad->buffer)
-    buffer = gst_buffer_ref (pad->buffer);
+  if (pad->priv->buffer)
+    buffer = gst_buffer_ref (pad->priv->buffer);
   PAD_UNLOCK (pad);
 
   return buffer;
+}
+
+gboolean
+gst_aggregator_pad_is_eos (GstAggregatorPad * pad)
+{
+  gboolean is_eos;
+
+  PAD_LOCK (pad);
+  is_eos = pad->priv->eos;
+  PAD_UNLOCK (pad);
+
+  return is_eos;
 }
 
 /**
