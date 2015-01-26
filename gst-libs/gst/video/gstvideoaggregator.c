@@ -1615,8 +1615,8 @@ gst_videoaggregator_flush (GstAggregator * agg)
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
 
   GST_INFO_OBJECT (agg, "Flushing");
-  abs_rate = ABS (agg->segment.rate);
   GST_OBJECT_LOCK (vagg);
+  abs_rate = ABS (agg->segment.rate);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
     GstVideoAggregatorPad *p = l->data;
 
