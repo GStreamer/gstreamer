@@ -31,9 +31,9 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_VIDEO_POOL(obj) \
-    ((GstVaapiVideoPool *)(obj))
+  ((GstVaapiVideoPool *)(obj))
 
-typedef struct _GstVaapiVideoPool               GstVaapiVideoPool;
+typedef struct _GstVaapiVideoPool GstVaapiVideoPool;
 
 /**
  * GstVaapiVideoPoolObjectType:
@@ -43,51 +43,53 @@ typedef struct _GstVaapiVideoPool               GstVaapiVideoPool;
  *
  * The set of all supported #GstVaapiVideoPool object types.
  */
-typedef enum {
-    GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE = 1,
-    GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE,
-    GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER
+typedef enum
+{
+  GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE = 1,
+  GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE,
+  GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER
 } GstVaapiVideoPoolObjectType;
 
 GstVaapiVideoPool *
-gst_vaapi_video_pool_ref(GstVaapiVideoPool *pool);
+gst_vaapi_video_pool_ref (GstVaapiVideoPool * pool);
 
 void
-gst_vaapi_video_pool_unref(GstVaapiVideoPool *pool);
+gst_vaapi_video_pool_unref (GstVaapiVideoPool * pool);
 
 void
-gst_vaapi_video_pool_replace(GstVaapiVideoPool **old_pool_ptr,
-    GstVaapiVideoPool *new_pool);
+gst_vaapi_video_pool_replace (GstVaapiVideoPool ** old_pool_ptr,
+    GstVaapiVideoPool * new_pool);
 
 GstVaapiDisplay *
-gst_vaapi_video_pool_get_display(GstVaapiVideoPool *pool);
+gst_vaapi_video_pool_get_display (GstVaapiVideoPool * pool);
 
 GstVaapiVideoPoolObjectType
-gst_vaapi_video_pool_get_object_type(GstVaapiVideoPool *pool);
+gst_vaapi_video_pool_get_object_type (GstVaapiVideoPool * pool);
 
 gpointer
-gst_vaapi_video_pool_get_object(GstVaapiVideoPool *pool);
+gst_vaapi_video_pool_get_object (GstVaapiVideoPool * pool);
 
 void
-gst_vaapi_video_pool_put_object(GstVaapiVideoPool *pool, gpointer object);
+gst_vaapi_video_pool_put_object (GstVaapiVideoPool * pool, gpointer object);
 
 gboolean
-gst_vaapi_video_pool_add_object(GstVaapiVideoPool *pool, gpointer object);
+gst_vaapi_video_pool_add_object (GstVaapiVideoPool * pool, gpointer object);
 
 gboolean
-gst_vaapi_video_pool_add_objects(GstVaapiVideoPool *pool, GPtrArray *objects);
+gst_vaapi_video_pool_add_objects (GstVaapiVideoPool * pool,
+    GPtrArray * objects);
 
 guint
-gst_vaapi_video_pool_get_size(GstVaapiVideoPool *pool);
+gst_vaapi_video_pool_get_size (GstVaapiVideoPool * pool);
 
 gboolean
-gst_vaapi_video_pool_reserve(GstVaapiVideoPool *pool, guint n);
+gst_vaapi_video_pool_reserve (GstVaapiVideoPool * pool, guint n);
 
 guint
-gst_vaapi_video_pool_get_capacity(GstVaapiVideoPool *pool);
+gst_vaapi_video_pool_get_capacity (GstVaapiVideoPool * pool);
 
 void
-gst_vaapi_video_pool_set_capacity(GstVaapiVideoPool *pool, guint capacity);
+gst_vaapi_video_pool_set_capacity (GstVaapiVideoPool * pool, guint capacity);
 
 G_END_DECLS
 

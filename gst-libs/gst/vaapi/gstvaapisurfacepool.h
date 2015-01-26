@@ -32,12 +32,13 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_SURFACE_POOL(obj) \
-    ((GstVaapiSurfacePool *)(obj))
+  ((GstVaapiSurfacePool *)(obj))
 
-typedef struct _GstVaapiSurfacePool             GstVaapiSurfacePool;
+typedef struct _GstVaapiSurfacePool GstVaapiSurfacePool;
 
 GstVaapiVideoPool *
-gst_vaapi_surface_pool_new(GstVaapiDisplay *display, const GstVideoInfo *vip);
+gst_vaapi_surface_pool_new (GstVaapiDisplay * display,
+    const GstVideoInfo * vip);
 
 G_END_DECLS
 

@@ -39,45 +39,45 @@
  *
  * A pool of lazily allocated #GstVaapiImage objects.
  */
-struct _GstVaapiImagePool {
-    /*< private >*/
-    GstVaapiVideoPool   parent_instance;
+struct _GstVaapiImagePool
+{
+  /*< private >*/
+  GstVaapiVideoPool parent_instance;
 
-    GstVideoFormat      format;
-    guint               width;
-    guint               height;
+  GstVideoFormat format;
+  guint width;
+  guint height;
 };
 
 static gboolean
-image_pool_init(GstVaapiVideoPool *base_pool, const GstVideoInfo *vip)
+image_pool_init (GstVaapiVideoPool * base_pool, const GstVideoInfo * vip)
 {
-    GstVaapiImagePool * const pool = GST_VAAPI_IMAGE_POOL(base_pool);
+  GstVaapiImagePool *const pool = GST_VAAPI_IMAGE_POOL (base_pool);
 
-    pool->format = GST_VIDEO_INFO_FORMAT(vip);
-    pool->width  = GST_VIDEO_INFO_WIDTH(vip);
-    pool->height = GST_VIDEO_INFO_HEIGHT(vip);
-    return gst_vaapi_display_has_image_format(base_pool->display, pool->format);
+  pool->format = GST_VIDEO_INFO_FORMAT (vip);
+  pool->width = GST_VIDEO_INFO_WIDTH (vip);
+  pool->height = GST_VIDEO_INFO_HEIGHT (vip);
+  return gst_vaapi_display_has_image_format (base_pool->display, pool->format);
 }
 
 static gpointer
-gst_vaapi_image_pool_alloc_object(GstVaapiVideoPool *base_pool)
+gst_vaapi_image_pool_alloc_object (GstVaapiVideoPool * base_pool)
 {
-    GstVaapiImagePool * const pool = GST_VAAPI_IMAGE_POOL(base_pool);
+  GstVaapiImagePool *const pool = GST_VAAPI_IMAGE_POOL (base_pool);
 
-    return gst_vaapi_image_new(base_pool->display, pool->format,
-        pool->width, pool->height);
+  return gst_vaapi_image_new (base_pool->display, pool->format,
+      pool->width, pool->height);
 }
 
 static inline const GstVaapiMiniObjectClass *
-gst_vaapi_image_pool_class(void)
+gst_vaapi_image_pool_class (void)
 {
-    static const GstVaapiVideoPoolClass GstVaapiImagePoolClass = {
-        { sizeof(GstVaapiImagePool),
-          (GDestroyNotify)gst_vaapi_video_pool_finalize },
-
-        .alloc_object   = gst_vaapi_image_pool_alloc_object
-    };
-    return GST_VAAPI_MINI_OBJECT_CLASS(&GstVaapiImagePoolClass);
+  static const GstVaapiVideoPoolClass GstVaapiImagePoolClass = {
+    {sizeof (GstVaapiImagePool),
+     (GDestroyNotify) gst_vaapi_video_pool_finalize},
+    .alloc_object = gst_vaapi_image_pool_alloc_object
+  };
+  return GST_VAAPI_MINI_OBJECT_CLASS (&GstVaapiImagePoolClass);
 }
 
 /**
@@ -91,26 +91,26 @@ gst_vaapi_image_pool_class(void)
  * Return value: the newly allocated #GstVaapiVideoPool
  */
 GstVaapiVideoPool *
-gst_vaapi_image_pool_new(GstVaapiDisplay *display, const GstVideoInfo *vip)
+gst_vaapi_image_pool_new (GstVaapiDisplay * display, const GstVideoInfo * vip)
 {
-    GstVaapiVideoPool *pool;
+  GstVaapiVideoPool *pool;
 
-    g_return_val_if_fail(display != NULL, NULL);
-    g_return_val_if_fail(vip != NULL, NULL);
+  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (vip != NULL, NULL);
 
-    pool = (GstVaapiVideoPool *)
-        gst_vaapi_mini_object_new(gst_vaapi_image_pool_class());
-    if (!pool)
-        return NULL;
+  pool = (GstVaapiVideoPool *)
+      gst_vaapi_mini_object_new (gst_vaapi_image_pool_class ());
+  if (!pool)
+    return NULL;
 
-    gst_vaapi_video_pool_init(pool, display,
-        GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE);
+  gst_vaapi_video_pool_init (pool, display,
+      GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE);
 
-    if (!image_pool_init(pool, vip))
-        goto error;
-    return pool;
+  if (!image_pool_init (pool, vip))
+    goto error;
+  return pool;
 
 error:
-    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(pool));
-    return NULL;
+  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (pool));
+  return NULL;
 }

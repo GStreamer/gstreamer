@@ -32,12 +32,12 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_IMAGE_POOL(obj) \
-    ((GstVaapiImagePool *)(obj))
+  ((GstVaapiImagePool *)(obj))
 
-typedef struct _GstVaapiImagePool               GstVaapiImagePool;
+typedef struct _GstVaapiImagePool GstVaapiImagePool;
 
 GstVaapiVideoPool *
-gst_vaapi_image_pool_new(GstVaapiDisplay *display, const GstVideoInfo *vip);
+gst_vaapi_image_pool_new (GstVaapiDisplay * display, const GstVideoInfo * vip);
 
 G_END_DECLS
 
