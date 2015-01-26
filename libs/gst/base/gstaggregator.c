@@ -494,9 +494,13 @@ gst_aggregator_push_eos (GstAggregator * self)
   GstEvent *event;
   gst_aggregator_push_mandatory_events (self);
 
-  self->priv->send_eos = FALSE;
   event = gst_event_new_eos ();
+
+  GST_OBJECT_LOCK (self);
+  self->priv->send_eos = FALSE;
   gst_event_set_seqnum (event, self->priv->seqnum);
+  GST_OBJECT_UNLOCK (self);
+
   gst_pad_push_event (self->srcpad, event);
 }
 
@@ -883,7 +887,10 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       GST_OBJECT_LOCK (aggpad);
       gst_event_copy_segment (event, &aggpad->segment);
       GST_OBJECT_UNLOCK (aggpad);
+
+      GST_OBJECT_LOCK (self);
       self->priv->seqnum = gst_event_get_seqnum (event);
+      GST_OBJECT_UNLOCK (self);
       goto eat;
     }
     case GST_EVENT_STREAM_START:
@@ -1246,10 +1253,13 @@ gst_aggregator_send_event (GstElement * element, GstEvent * event)
 
     gst_event_parse_seek (event, &rate, &fmt, &flags, &start_type,
         &start, &stop_type, &stop);
+
+    GST_OBJECT_LOCK (self);
     gst_segment_do_seek (&self->segment, rate, fmt, flags, start_type, start,
         stop_type, stop, NULL);
-
     self->priv->seqnum = gst_event_get_seqnum (event);
+    GST_OBJECT_UNLOCK (self);
+
     GST_DEBUG_OBJECT (element, "Storing segment %" GST_PTR_FORMAT, event);
   }
   GST_STATE_UNLOCK (element);
