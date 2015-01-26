@@ -1512,8 +1512,9 @@ gst_videoaggregator_sink_clip (GstAggregator * agg,
 
   start_time = GST_BUFFER_TIMESTAMP (buf);
   if (start_time == -1) {
-    GST_DEBUG_OBJECT (pad, "Timestamped buffers required!");
+    GST_WARNING_OBJECT (pad, "Timestamped buffers required!");
     gst_buffer_unref (buf);
+    *outbuf = NULL;
     return GST_FLOW_ERROR;
   }
 
