@@ -1469,7 +1469,7 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
     GstAudioMixerPad *pad = GST_AUDIO_MIXER_PAD (iter->data);
     GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (iter->data);
 
-    if (!GST_AGGREGATOR_PAD (pad)->eos)
+    if (!gst_aggregator_pad_is_eos (aggpad))
       is_eos = FALSE;
 
     inbuf = gst_aggregator_pad_get_buffer (aggpad);
@@ -1489,7 +1489,7 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
       gst_buffer_unref (inbuf);
     }
 
-    if (!pad->buffer && !dropped && GST_AGGREGATOR_PAD (pad)->eos) {
+    if (!pad->buffer && !dropped && gst_aggregator_pad_is_eos (aggpad)) {
       GST_DEBUG_OBJECT (aggpad, "Pad is in EOS state");
       continue;
     }
