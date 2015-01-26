@@ -170,7 +170,7 @@ static void
 gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
 {
   self->mode = DEFAULT_MODE;
-  self->caps_mode = DEFAULT_MODE;
+  self->caps_mode = GST_DECKLINK_MODE_AUTO;
   self->connection = DEFAULT_CONNECTION;
   self->device_number = 0;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
@@ -251,7 +251,13 @@ gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
   GstCaps *mode_caps, *caps;
 
-  mode_caps = gst_decklink_mode_get_caps (self->caps_mode);
+  g_mutex_lock (&self->lock);
+  if (self->caps_mode != GST_DECKLINK_MODE_AUTO)
+    mode_caps = gst_decklink_mode_get_caps (self->caps_mode);
+  else
+    mode_caps = gst_decklink_mode_get_caps (self->mode);
+  g_mutex_unlock (&self->lock);
+
   if (filter) {
     caps =
         gst_caps_intersect_full (filter, mode_caps, GST_CAPS_INTERSECT_FIRST);
@@ -321,14 +327,21 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     return GST_FLOW_FLUSHING;
   }
 
-  if (self->caps_mode != f->mode) {
+  g_mutex_lock (&self->lock);
+  if (self->mode == GST_DECKLINK_MODE_AUTO && self->caps_mode != f->mode) {
     self->caps_mode = f->mode;
-    caps = gst_decklink_mode_get_caps (self->caps_mode);
+    g_mutex_unlock (&self->lock);
+    g_mutex_lock (&self->input->lock);
+    self->input->mode = gst_decklink_get_mode (f->mode);
+    g_mutex_unlock (&self->input->lock);
+    caps = gst_decklink_mode_get_caps (f->mode);
     gst_video_info_from_caps (&self->info, caps);
     gst_base_src_set_caps (GST_BASE_SRC_CAST (bsrc), caps);
     gst_element_post_message (GST_ELEMENT_CAST (self),
         gst_message_new_latency (GST_OBJECT_CAST (self)));
     gst_caps_unref (caps);
+  } else {
+    g_mutex_unlock (&self->lock);
   }
 
   f->frame->GetBytes ((gpointer *) & data);
@@ -376,7 +389,12 @@ gst_decklink_video_src_query (GstBaseSrc * bsrc, GstQuery * query)
         GstClockTime min, max;
         const GstDecklinkMode *mode;
 
-        mode = gst_decklink_get_mode (self->caps_mode);
+        g_mutex_lock (&self->lock);
+        if (self->caps_mode != GST_DECKLINK_MODE_AUTO)
+          mode = gst_decklink_get_mode (self->caps_mode);
+        else
+          mode = gst_decklink_get_mode (self->mode);
+        g_mutex_unlock (&self->lock);
 
         min = gst_util_uint64_scale_ceil (GST_SECOND, mode->fps_d, mode->fps_n);
         max = self->buffer_size * min;
@@ -579,6 +597,7 @@ gst_decklink_video_src_change_state (GstElement * element,
 
       g_queue_foreach (&self->current_frames, (GFunc) capture_frame_free, NULL);
       g_queue_clear (&self->current_frames);
+      self->caps_mode = GST_DECKLINK_MODE_AUTO;
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
       HRESULT res;
