@@ -213,6 +213,7 @@ check_PROGRAMS = \
 	pipelines/simple-launch-lines \
 	pipelines/basetime \
 	pipelines/capsfilter-renegotiation \
+	pipelines/streamsynchronizer \
 	$(check_adder) \
 	$(check_app) \
 	$(check_audioconvert) \
