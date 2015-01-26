@@ -69,8 +69,8 @@ struct _GstAggregatorPad
 {
   GstPad                       parent;
 
-  /* Protected by the pad's object lock */
-  GstSegment                   segment;
+  /* Protected by the OBJECT_LOCK */
+  GstSegment segment;
 
   /* < Private > */
   GstAggregatorPadPrivate   *  priv;
@@ -103,7 +103,6 @@ GType gst_aggregator_pad_get_type           (void);
  ***************************/
 
 GstBuffer * gst_aggregator_pad_steal_buffer (GstAggregatorPad *  pad);
-GstBuffer * gst_aggregator_pad_steal_buffer_unlocked (GstAggregatorPad *  pad);
 GstBuffer * gst_aggregator_pad_get_buffer   (GstAggregatorPad *  pad);
 gboolean    gst_aggregator_pad_is_eos       (GstAggregatorPad *  pad);
 

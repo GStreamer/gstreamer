@@ -1204,7 +1204,7 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
       GstBuffer *buf;
       /* Buffer done, drop it */
       gst_buffer_replace (&pad->buffer, NULL);
-      buf = gst_aggregator_pad_steal_buffer_unlocked (aggpad);
+      buf = gst_aggregator_pad_steal_buffer (aggpad);
       if (buf)
         gst_buffer_unref (buf);
     }
@@ -1213,7 +1213,7 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
   }
 
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
-    GstBuffer *aggpadbuf = gst_aggregator_pad_steal_buffer_unlocked (aggpad);
+    GstBuffer *aggpadbuf = gst_aggregator_pad_steal_buffer (aggpad);
 
     /* skip gap buffer */
     GST_LOG_OBJECT (pad, "skipping GAP buffer");
@@ -1335,7 +1335,7 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
 
     /* Buffer done, drop it */
     gst_buffer_replace (&pad->buffer, NULL);
-    buf = gst_aggregator_pad_steal_buffer_unlocked (aggpad);
+    buf = gst_aggregator_pad_steal_buffer (aggpad);
     if (buf)
       gst_buffer_unref (buf);
     GST_DEBUG_OBJECT (pad, "Finished mixing buffer, waiting for next");
