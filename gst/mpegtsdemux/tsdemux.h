@@ -73,11 +73,6 @@ struct _GstTSDemux
   /* global taglist */
   GstTagList *global_tags;
 
-  /* Set when program change */
-  gboolean calculate_update_segment;
-  /* update segment is */
-  GstEvent *update_segment;
-
   /* Full stream duration */
   GstClockTime duration;
 

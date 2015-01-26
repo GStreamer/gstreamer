@@ -64,16 +64,6 @@
  */
 #define SEEK_TIMESTAMP_OFFSET (2500 * GST_MSECOND)
 
-#define SEGMENT_FORMAT "[format:%s, rate:%f, start:%"			\
-  GST_TIME_FORMAT", stop:%"GST_TIME_FORMAT", time:%"GST_TIME_FORMAT	\
-  ", base:%"GST_TIME_FORMAT", position:%"GST_TIME_FORMAT		\
-  ", duration:%"GST_TIME_FORMAT"]"
-
-#define SEGMENT_ARGS(a) gst_format_get_name((a).format), (a).rate,	\
-    GST_TIME_ARGS((a).start), GST_TIME_ARGS((a).stop),			\
-    GST_TIME_ARGS((a).time), GST_TIME_ARGS((a).base),			\
-    GST_TIME_ARGS((a).position), GST_TIME_ARGS((a).duration)
-
 #define GST_FLOW_REWINDING GST_FLOW_CUSTOM_ERROR
 
 GST_DEBUG_CATEGORY_STATIC (ts_demux_debug);
@@ -391,18 +381,11 @@ gst_ts_demux_reset (MpegTSBase * base)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
 
-  demux->calculate_update_segment = FALSE;
-
   demux->rate = 1.0;
   gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
   if (demux->segment_event) {
     gst_event_unref (demux->segment_event);
     demux->segment_event = NULL;
-  }
-
-  if (demux->update_segment) {
-    gst_event_unref (demux->update_segment);
-    demux->update_segment = NULL;
   }
 
   if (demux->global_tags) {
@@ -1561,8 +1544,11 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
     demux->program = program;
 
     /* If this is not the initial program, we need to calculate
-     * an update newsegment */
-    demux->calculate_update_segment = !program->initial_program;
+     * a new segment */
+    if (demux->segment_event) {
+      gst_event_unref (demux->segment_event);
+      demux->segment_event = NULL;
+    }
 
     /* Add all streams, then fire no-more-pads */
     for (tmp = program->stream_list; tmp; tmp = tmp->next) {
@@ -1946,16 +1932,11 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
 
   GST_DEBUG ("Creating new newsegment for stream %p", stream);
 
-  /* 1) If we need to calculate an update newsegment, do it
-   * 2) If we need to calculate a new newsegment, do it
-   * 3) If an update_segment is valid, push it
-   * 4) If a newsegment is valid, push it */
-
   /* Speedup : if we don't need to calculate anything, go straight to pushing */
-  if (!demux->calculate_update_segment && demux->segment_event)
+  if (demux->segment_event)
     goto push_new_segment;
 
-  /* Calculate the 'new_start' value, used for both updates and newsegment */
+  /* Calculate the 'new_start' value, used for newsegment */
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
     TSDemuxStream *pstream = (TSDemuxStream *) tmp->data;
 
@@ -1969,20 +1950,6 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
     firstts = lowest_pts;
   GST_DEBUG ("lowest_pts %" G_GUINT64_FORMAT " => clocktime %" GST_TIME_FORMAT,
       lowest_pts, GST_TIME_ARGS (firstts));
-
-  if (demux->calculate_update_segment) {
-    GST_DEBUG ("Calculating update segment");
-    /* If we have a valid segment, create an update of that */
-    if (demux->segment.format == GST_FORMAT_TIME) {
-      GstSegment update_segment;
-      GST_DEBUG ("Re-using segment " SEGMENT_FORMAT,
-          SEGMENT_ARGS (demux->segment));
-      gst_segment_copy_into (&demux->segment, &update_segment);
-      update_segment.stop = firstts;
-      demux->update_segment = gst_event_new_segment (&update_segment);
-    }
-    demux->calculate_update_segment = FALSE;
-  }
 
   if (demux->segment.format != GST_FORMAT_TIME) {
     /* It will happen only if it's first program or after flushes. */
@@ -2020,11 +1987,6 @@ push_new_segment:
     stream = (TSDemuxStream *) tmp->data;
     if (stream->pad == NULL)
       continue;
-    if (demux->update_segment) {
-      GST_DEBUG_OBJECT (stream->pad, "Pushing update segment");
-      gst_event_ref (demux->update_segment);
-      gst_pad_push_event (stream->pad, demux->update_segment);
-    }
 
     if (demux->segment_event) {
       GST_DEBUG_OBJECT (stream->pad, "Pushing newsegment event");
@@ -2324,7 +2286,6 @@ gst_ts_demux_flush (MpegTSBase * base, gboolean hard)
     gst_event_unref (demux->segment_event);
     demux->segment_event = NULL;
   }
-  demux->calculate_update_segment = FALSE;
   if (demux->global_tags) {
     gst_tag_list_unref (demux->global_tags);
     demux->global_tags = NULL;
