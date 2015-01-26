@@ -152,7 +152,14 @@
 #include "gstdashdemux.h"
 #include "gstdash_debug.h"
 
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
+static GstStaticPadTemplate gst_dash_demux_videosrc_template =
+GST_STATIC_PAD_TEMPLATE ("video_%02u",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS_ANY);
+
+static GstStaticPadTemplate gst_dash_demux_audiosrc_template =
+GST_STATIC_PAD_TEMPLATE ("audio_%02u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -225,7 +232,8 @@ static void gst_dash_demux_stream_free (GstAdaptiveDemuxStream * stream);
 
 static GstCaps *gst_dash_demux_get_input_caps (GstDashDemux * demux,
     GstActiveStream * stream);
-static GstPad *gst_dash_demux_create_pad (GstDashDemux * demux);
+static GstPad *gst_dash_demux_create_pad (GstDashDemux * demux,
+    GstActiveStream * stream);
 
 #define SIDX(s) (&(s)->sidx_parser.sidx)
 #define SIDX_ENTRY(s,i) (&(SIDX(s)->entries[(i)]))
@@ -292,7 +300,9 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
+      gst_static_pad_template_get (&gst_dash_demux_audiosrc_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_dash_demux_videosrc_template));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
@@ -438,7 +448,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     if (active_stream == NULL)
       continue;
 
-    srcpad = gst_dash_demux_create_pad (demux);
+    srcpad = gst_dash_demux_create_pad (demux, active_stream);
     caps = gst_dash_demux_get_input_caps (demux, active_stream);
     GST_LOG_OBJECT (demux, "Creating stream %d %" GST_PTR_FORMAT, i, caps);
 
@@ -626,15 +636,29 @@ gst_dash_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
 }
 
 static GstPad *
-gst_dash_demux_create_pad (GstDashDemux * demux)
+gst_dash_demux_create_pad (GstDashDemux * demux, GstActiveStream * stream)
 {
   GstPad *pad;
   GstPadTemplate *tmpl;
+  gchar *name;
 
-  tmpl = gst_static_pad_template_get (&srctemplate);
+  switch (stream->mimeType) {
+    case GST_STREAM_AUDIO:
+      name = g_strdup_printf ("audio_%02u", demux->n_audio_streams++);
+      tmpl = gst_static_pad_template_get (&gst_dash_demux_audiosrc_template);
+      break;
+    case GST_STREAM_VIDEO:
+      name = g_strdup_printf ("video_%02u", demux->n_video_streams++);
+      tmpl = gst_static_pad_template_get (&gst_dash_demux_videosrc_template);
+      break;
+    default:
+      g_assert_not_reached ();
+      return NULL;
+  }
 
   /* Create and activate new pads */
-  pad = gst_ghost_pad_new_no_target_from_template (NULL, tmpl);
+  pad = gst_ghost_pad_new_no_target_from_template (name, tmpl);
+  g_free (name);
   gst_object_unref (tmpl);
 
   gst_pad_set_active (pad, TRUE);
@@ -657,6 +681,9 @@ gst_dash_demux_reset (GstAdaptiveDemux * ademux)
     demux->client = NULL;
   }
   demux->client = gst_mpd_client_new ();
+
+  demux->n_audio_streams = 0;
+  demux->n_video_streams = 0;
 }
 
 static GstCaps *
