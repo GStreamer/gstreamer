@@ -776,9 +776,9 @@ unpack_GBR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint8 *restrict sg = GET_G_LINE (y);
   const guint8 *restrict sb = GET_B_LINE (y);
 
-  sr += x * 4;
-  sg += x * 4;
-  sb += x * 4;
+  sr += x;
+  sg += x;
+  sb += x;
 
   video_orc_unpack_Y444 (dest, sr, sg, sb, width);
 }
