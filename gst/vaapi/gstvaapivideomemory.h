@@ -28,6 +28,9 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapivideopool.h>
 #include "gstvaapivideometa.h"
+#if GST_CHECK_VERSION(1,1,0)
+#include <gst/allocators/allocators.h>
+#endif
 
 G_BEGIN_DECLS
 
@@ -114,6 +117,10 @@ struct _GstVaapiVideoMemory
 };
 
 G_GNUC_INTERNAL
+GQuark
+gst_vaapi_video_memory_quark_get (void);
+
+G_GNUC_INTERNAL
 GstMemory *
 gst_vaapi_video_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta);
 
@@ -187,6 +194,32 @@ gst_vaapi_video_allocator_get_type (void) G_GNUC_CONST;
 G_GNUC_INTERNAL
 GstAllocator *
 gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
+    const GstVideoInfo * vip, guint flags);
+
+/* ------------------------------------------------------------------------ */
+/* --- GstVaapiDmaBufMemory                                             --- */
+/* ------------------------------------------------------------------------ */
+
+G_GNUC_INTERNAL
+GstMemory *
+gst_vaapi_dmabuf_memory_new (GstAllocator * allocator,
+    GstVaapiVideoMeta * meta);
+
+/* ------------------------------------------------------------------------ */
+/* --- GstVaapiDmaBufAllocator                                          --- */
+/* ------------------------------------------------------------------------ */
+
+G_GNUC_INTERNAL
+GstAllocator *
+gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
+    const GstVideoInfo * vip, guint flags);
+
+const GstVideoInfo *
+gst_allocator_get_vaapi_video_info (GstAllocator * allocator,
+    guint * out_flags_ptr);
+
+gboolean
+gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
     const GstVideoInfo * vip, guint flags);
 
 G_END_DECLS

@@ -21,6 +21,7 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#include <gst/vaapi/gstvaapisurface_drm.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
 #include <gst/vaapi/gstvaapiimagepool.h>
 #include "gstvaapivideomemory.h"
@@ -297,6 +298,8 @@ gst_vaapi_video_memory_new (GstAllocator * base_allocator,
       GST_VAAPI_VIDEO_ALLOCATOR_CAST (base_allocator);
   const GstVideoInfo *vip;
   GstVaapiVideoMemory *mem;
+
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_ALLOCATOR (allocator), NULL);
 
   mem = g_slice_new (GstVaapiVideoMemory);
   if (!mem)
@@ -725,6 +728,9 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
       &allocator->image_info);
   if (!allocator->image_pool)
     goto error_create_image_pool;
+
+  gst_allocator_set_vaapi_video_info (GST_ALLOCATOR_CAST (allocator),
+      &allocator->image_info, 0);
   return GST_ALLOCATOR_CAST (allocator);
 
   /* ERRORS */
@@ -740,4 +746,261 @@ error_create_image_pool:
     gst_object_unref (allocator);
     return NULL;
   }
+}
+
+/* ------------------------------------------------------------------------ */
+/* --- GstVaapiDmaBufMemory                                             --- */
+/* ------------------------------------------------------------------------ */
+
+#define GST_VAAPI_BUFFER_PROXY_QUARK gst_vaapi_buffer_proxy_quark_get ()
+static GQuark
+gst_vaapi_buffer_proxy_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("GstVaapiBufferProxy");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
+GstMemory *
+gst_vaapi_dmabuf_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta)
+{
+  GstMemory *mem;
+  GstVaapiDisplay *display;
+  GstVaapiSurface *surface;
+  GstVaapiSurfaceProxy *proxy;
+  GstVaapiBufferProxy *dmabuf_proxy;
+  const GstVideoInfo *vip;
+  guint flags;
+
+  g_return_val_if_fail (allocator != NULL, NULL);
+  g_return_val_if_fail (meta != NULL, NULL);
+
+  vip = gst_allocator_get_vaapi_video_info (allocator, &flags);
+  if (!vip)
+    return NULL;
+
+  display = gst_vaapi_video_meta_get_display (meta);
+  if (!meta)
+    return NULL;
+
+  surface = gst_vaapi_surface_new_full (display, vip, flags);
+  if (!surface)
+    goto error_create_surface;
+
+  proxy = gst_vaapi_surface_proxy_new (surface);
+  if (!proxy)
+    goto error_create_surface_proxy;
+
+  dmabuf_proxy = gst_vaapi_surface_get_dma_buf_handle (surface);
+  gst_vaapi_object_unref (surface);
+  if (!dmabuf_proxy)
+    goto error_create_dmabuf_proxy;
+
+  gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
+  gst_vaapi_surface_proxy_unref (proxy);
+
+  mem = gst_dmabuf_allocator_alloc (allocator,
+      gst_vaapi_buffer_proxy_get_handle (dmabuf_proxy),
+      gst_vaapi_buffer_proxy_get_size (dmabuf_proxy));
+  if (!mem)
+    goto error_create_dmabuf_memory;
+
+  gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (mem),
+      GST_VAAPI_BUFFER_PROXY_QUARK, dmabuf_proxy,
+      (GDestroyNotify) gst_vaapi_buffer_proxy_unref);
+  return mem;
+
+  /* ERRORS */
+error_create_surface:
+  {
+    GST_ERROR ("failed to create VA surface (format:%s size:%ux%u)",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (vip)),
+        GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
+    return NULL;
+  }
+error_create_surface_proxy:
+  {
+    GST_ERROR ("failed to create VA surface proxy");
+    gst_vaapi_object_unref (surface);
+    return NULL;
+  }
+error_create_dmabuf_proxy:
+  {
+    GST_ERROR ("failed to export VA surface to DMABUF");
+    gst_vaapi_surface_proxy_unref (proxy);
+    return NULL;
+  }
+error_create_dmabuf_memory:
+  {
+    GST_ERROR ("failed to create DMABUF memory");
+    gst_vaapi_buffer_proxy_unref (dmabuf_proxy);
+    return NULL;
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* --- GstVaapiDmaBufAllocator                                          --- */
+/* ------------------------------------------------------------------------ */
+
+GstAllocator *
+gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
+    const GstVideoInfo * vip, guint flags)
+{
+  GstAllocator *allocator = NULL;
+  GstVaapiSurface *surface = NULL;
+  GstVaapiImage *image = NULL;
+  GstVideoInfo alloc_info;
+
+  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (vip != NULL, NULL);
+
+  do {
+    surface = gst_vaapi_surface_new_full (display, vip, flags);
+    if (!surface)
+      break;
+
+    image = gst_vaapi_surface_derive_image (surface);
+    if (!image || !gst_vaapi_image_map (image))
+      break;
+
+    gst_video_info_set_format (&alloc_info, GST_VIDEO_INFO_FORMAT (vip),
+        GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
+    gst_video_info_update_from_image (&alloc_info, image);
+    gst_vaapi_image_unmap (image);
+
+    allocator = gst_dmabuf_allocator_new ();
+    if (!allocator)
+      break;
+    gst_allocator_set_vaapi_video_info (allocator, &alloc_info, flags);
+  } while (0);
+
+  gst_vaapi_object_replace (&image, NULL);
+  gst_vaapi_object_replace (&surface, NULL);
+  return allocator;
+}
+
+/* ------------------------------------------------------------------------ */
+/* --- GstVaapiVideoInfo = { GstVideoInfo, flags }                      --- */
+/* ------------------------------------------------------------------------ */
+
+static GstVideoInfo *
+gst_vaapi_video_info_copy (const GstVideoInfo * vip)
+{
+  GstVideoInfo *out_vip;
+
+  out_vip = g_slice_new (GstVideoInfo);
+  if (!out_vip)
+    return NULL;
+
+  gst_video_info_init (out_vip);
+  *out_vip = *vip;
+  return out_vip;
+}
+
+static void
+gst_vaapi_video_info_free (GstVideoInfo * vip)
+{
+  g_slice_free (GstVideoInfo, vip);
+}
+
+#define GST_VAAPI_TYPE_VIDEO_INFO gst_vaapi_video_info_get_type ()
+static GType
+gst_vaapi_video_info_get_type (void)
+{
+  static gsize g_type;
+
+  if (g_once_init_enter (&g_type)) {
+    GType type;
+    type = g_boxed_type_register_static ("GstVaapiVideoInfo",
+        (GBoxedCopyFunc) gst_vaapi_video_info_copy,
+        (GBoxedFreeFunc) gst_vaapi_video_info_free);
+    g_once_init_leave (&g_type, type);
+  }
+  return (GType) g_type;
+}
+
+#define GST_VAAPI_VIDEO_INFO_QUARK gst_vaapi_video_info_quark_get ()
+static GQuark
+gst_vaapi_video_info_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("GstVaapiVideoInfo");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
+#define INFO_QUARK info_quark_get ()
+static GQuark
+info_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("info");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
+#define FLAGS_QUARK flags_quark_get ()
+static GQuark
+flags_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("flags");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
+const GstVideoInfo *
+gst_allocator_get_vaapi_video_info (GstAllocator * allocator,
+    guint * out_flags_ptr)
+{
+  const GstStructure *structure;
+  const GValue *value;
+
+  g_return_val_if_fail (GST_IS_ALLOCATOR (allocator), NULL);
+
+  structure =
+      g_object_get_qdata (G_OBJECT (allocator), GST_VAAPI_VIDEO_INFO_QUARK);
+  if (!structure)
+    return NULL;
+
+  if (out_flags_ptr) {
+    value = gst_structure_id_get_value (structure, FLAGS_QUARK);
+    if (!value)
+      return NULL;
+    *out_flags_ptr = g_value_get_uint (value);
+  }
+
+  value = gst_structure_id_get_value (structure, INFO_QUARK);
+  if (!value)
+    return NULL;
+  return g_value_get_boxed (value);
+}
+
+gboolean
+gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
+    const GstVideoInfo * vip, guint flags)
+{
+  g_return_val_if_fail (GST_IS_ALLOCATOR (allocator), FALSE);
+  g_return_val_if_fail (vip != NULL, FALSE);
+
+  g_object_set_qdata_full (G_OBJECT (allocator), GST_VAAPI_VIDEO_INFO_QUARK,
+      gst_structure_new_id (GST_VAAPI_VIDEO_INFO_QUARK,
+          INFO_QUARK, GST_VAAPI_TYPE_VIDEO_INFO, vip,
+          FLAGS_QUARK, G_TYPE_UINT, flags, NULL),
+      (GDestroyNotify) gst_structure_free);
+
+  return TRUE;
 }
