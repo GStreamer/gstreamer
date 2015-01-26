@@ -377,7 +377,7 @@ gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   if (ret != S_OK) {
     GST_WARNING_OBJECT (self, "Failed to enable audio input");
     gst_decklink_release_nth_input (self->device_number,
-        GST_ELEMENT_CAST (self), FALSE);
+        GST_ELEMENT_CAST (self), TRUE);
     return FALSE;
   }
 
