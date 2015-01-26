@@ -1823,10 +1823,8 @@ gst_aiff_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
         if (aiff->state == AIFF_PARSE_DATA &&
             aiff->segment.format == GST_FORMAT_TIME) {
-          guint64 bps = aiff->bps;
-
           /* operating in format TIME, so we can convert */
-          if (bps) {
+          if (aiff->bps) {
             if (start >= 0)
               start =
                   gst_util_uint64_scale_ceil (start, GST_SECOND,
