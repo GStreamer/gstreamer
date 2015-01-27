@@ -37,8 +37,12 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiSurfacePool GstVaapiSurfacePool;
 
 GstVaapiVideoPool *
-gst_vaapi_surface_pool_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip);
+gst_vaapi_surface_pool_new (GstVaapiDisplay * display, GstVideoFormat format,
+    guint width, guint height);
+
+GstVaapiVideoPool *
+gst_vaapi_surface_pool_new_full (GstVaapiDisplay * display,
+    const GstVideoInfo * vip, guint flags);
 
 G_END_DECLS
 

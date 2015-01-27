@@ -153,7 +153,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
       GST_VIDEO_INFO_HEIGHT (cur_vip) != GST_VIDEO_INFO_HEIGHT (new_vip);
 
   if (changed_caps) {
-    allocator = gst_vaapi_video_allocator_new (priv->display, new_vip);
+    allocator = gst_vaapi_video_allocator_new (priv->display, new_vip, 0);
     if (!allocator)
       goto error_create_allocator;
     gst_object_replace ((GstObject **) & priv->allocator,

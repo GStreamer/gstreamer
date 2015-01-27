@@ -36,7 +36,6 @@ main(int argc, char *argv[])
     GstVaapiID          surface_id;
     GstVaapiSurface    *surfaces[MAX_SURFACES];
     GstVaapiVideoPool  *pool;
-    GstVideoInfo        vi;
     gint                i;
 
     static const GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
@@ -60,9 +59,8 @@ main(int argc, char *argv[])
 
     gst_vaapi_object_unref(surface);
 
-    gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_ENCODED, width, height);
-
-    pool = gst_vaapi_surface_pool_new(display, &vi);
+    pool = gst_vaapi_surface_pool_new(display, GST_VIDEO_FORMAT_ENCODED,
+        width, height);
     if (!pool)
         g_error("could not create Gst/VA surface pool");
 

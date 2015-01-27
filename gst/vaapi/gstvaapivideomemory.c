@@ -650,7 +650,7 @@ gst_video_info_update_from_image (GstVideoInfo * vip, GstVaapiImage * image)
 
 GstAllocator *
 gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip)
+    const GstVideoInfo * vip, guint flags)
 {
   GstVaapiVideoAllocator *allocator;
   GstVaapiSurface *surface;
@@ -695,8 +695,8 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
       gst_vaapi_object_unref (image);
   }
 
-  allocator->surface_pool = gst_vaapi_surface_pool_new (display,
-      &allocator->surface_info);
+  allocator->surface_pool = gst_vaapi_surface_pool_new_full (display,
+      &allocator->surface_info, flags);
   if (!allocator->surface_pool)
     goto error_create_surface_pool;
 

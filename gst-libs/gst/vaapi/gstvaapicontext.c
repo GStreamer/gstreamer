@@ -134,7 +134,6 @@ static gboolean
 context_create_surfaces (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
-  GstVideoInfo vi;
   guint num_surfaces;
 
   if (!gst_vaapi_context_overlay_reset (context))
@@ -149,10 +148,9 @@ context_create_surfaces (GstVaapiContext * context)
   }
 
   if (!context->surfaces_pool) {
-    gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_ENCODED,
-        cip->width, cip->height);
     context->surfaces_pool =
-        gst_vaapi_surface_pool_new (GST_VAAPI_OBJECT_DISPLAY (context), &vi);
+        gst_vaapi_surface_pool_new (GST_VAAPI_OBJECT_DISPLAY (context),
+        GST_VIDEO_FORMAT_ENCODED, cip->width, cip->height);
     if (!context->surfaces_pool)
       return FALSE;
   }

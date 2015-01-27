@@ -1310,8 +1310,9 @@ ensure_srcpad_buffer_pool (GstVaapiPostproc * postproc, GstCaps * caps)
     return TRUE;
   postproc->filter_pool_info = vi;
 
-  pool = gst_vaapi_surface_pool_new (GST_VAAPI_PLUGIN_BASE_DISPLAY (postproc),
-      &postproc->filter_pool_info);
+  pool =
+      gst_vaapi_surface_pool_new_full (GST_VAAPI_PLUGIN_BASE_DISPLAY (postproc),
+      &postproc->filter_pool_info, 0);
   if (!pool)
     return FALSE;
 

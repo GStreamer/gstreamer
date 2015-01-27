@@ -348,14 +348,12 @@ vpp_convert (GstVaapiWindow * window,
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (window);
   GstVaapiSurface *vpp_surface = NULL;
   GstVaapiFilterStatus status;
-  GstVideoInfo vi;
 
   /* Ensure VA surface pool is created */
   /* XXX: optimize the surface format to use. e.g. YUY2 */
   if (!priv->surface_pool) {
-    gst_video_info_set_format (&vi, priv->surface_format,
-        window->width, window->height);
-    priv->surface_pool = gst_vaapi_surface_pool_new (display, &vi);
+    priv->surface_pool = gst_vaapi_surface_pool_new (display,
+        priv->surface_format, window->width, window->height);
     if (!priv->surface_pool)
       return NULL;
     gst_vaapi_filter_replace (&priv->filter, NULL);

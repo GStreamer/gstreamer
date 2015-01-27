@@ -243,7 +243,7 @@ ensure_surface_pool (GstVaapiUploader * uploader, GstCaps * caps,
     }
   }
 
-  pool = gst_vaapi_surface_pool_new (priv->display, &vi);
+  pool = gst_vaapi_surface_pool_new_full (priv->display, &vi, 0);
   if (!pool)
     return FALSE;
 

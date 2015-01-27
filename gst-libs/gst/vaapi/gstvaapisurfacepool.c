@@ -45,25 +45,26 @@ struct _GstVaapiSurfacePool
   GstVaapiVideoPool parent_instance;
 
   GstVaapiChromaType chroma_type;
-  GstVideoFormat format;
-  guint width;
-  guint height;
+  GstVideoInfo video_info;
+  guint alloc_flags;
 };
 
 static gboolean
-surface_pool_init (GstVaapiSurfacePool * pool, const GstVideoInfo * vip)
+surface_pool_init (GstVaapiSurfacePool * pool, const GstVideoInfo * vip,
+    guint flags)
 {
-  pool->format = GST_VIDEO_INFO_FORMAT (vip);
-  pool->width = GST_VIDEO_INFO_WIDTH (vip);
-  pool->height = GST_VIDEO_INFO_HEIGHT (vip);
+  const GstVideoFormat format = GST_VIDEO_INFO_FORMAT (vip);
 
-  if (pool->format == GST_VIDEO_FORMAT_UNKNOWN)
+  pool->video_info = *vip;
+  pool->alloc_flags = flags;
+
+  if (format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
 
-  if (pool->format == GST_VIDEO_FORMAT_ENCODED)
+  if (format == GST_VIDEO_FORMAT_ENCODED)
     pool->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
   else
-    pool->chroma_type = gst_vaapi_video_format_get_chroma_type (pool->format);
+    pool->chroma_type = gst_vaapi_video_format_get_chroma_type (format);
   if (!pool->chroma_type)
     return FALSE;
   return TRUE;
@@ -75,17 +76,18 @@ gst_vaapi_surface_pool_alloc_object (GstVaapiVideoPool * base_pool)
   GstVaapiSurfacePool *const pool = GST_VAAPI_SURFACE_POOL (base_pool);
 
   /* Try to allocate a surface with an explicit pixel format first */
-  if (pool->format != GST_VIDEO_FORMAT_ENCODED) {
+  if (GST_VIDEO_INFO_FORMAT (&pool->video_info) != GST_VIDEO_FORMAT_ENCODED) {
     GstVaapiSurface *const surface =
-        gst_vaapi_surface_new_with_format (base_pool->display, pool->format,
-        pool->width, pool->height);
+        gst_vaapi_surface_new_full (base_pool->display, &pool->video_info,
+        pool->alloc_flags);
     if (surface)
       return surface;
   }
 
   /* Otherwise, fallback to the original interface, based on chroma format */
   return gst_vaapi_surface_new (base_pool->display,
-      pool->chroma_type, pool->width, pool->height);
+      pool->chroma_type, GST_VIDEO_INFO_WIDTH (&pool->video_info),
+      GST_VIDEO_INFO_HEIGHT (&pool->video_info));
 }
 
 static inline const GstVaapiMiniObjectClass *
@@ -102,7 +104,36 @@ gst_vaapi_surface_pool_class (void)
 /**
  * gst_vaapi_surface_pool_new:
  * @display: a #GstVaapiDisplay
+ * @format: a #GstVideoFormat
+ * @width: the desired width, in pixels
+ * @height: the desired height, in pixels
+ *
+ * Creates a new #GstVaapiVideoPool of #GstVaapiSurface with the specified
+ * format and dimensions. If @format is GST_VIDEO_FORMAT_ENCODED, then
+ * surfaces with best "native" format would be created. Typically, this is
+ * NV12 format, but this is implementation (driver) defined.
+ *
+ * Return value: the newly allocated #GstVaapiVideoPool
+ */
+GstVaapiVideoPool *
+gst_vaapi_surface_pool_new (GstVaapiDisplay * display, GstVideoFormat format,
+    guint width, guint height)
+{
+  GstVideoInfo vi;
+
+  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
+
+  gst_video_info_set_format (&vi, format, width, height);
+  return gst_vaapi_surface_pool_new_full (display, &vi, 0);
+}
+
+/**
+ * gst_vaapi_surface_pool_new_full:
+ * @display: a #GstVaapiDisplay
  * @vip: a #GstVideoInfo
+ * @flags: (optional) allocation flags
  *
  * Creates a new #GstVaapiVideoPool of #GstVaapiSurface with the
  * specified format and dimensions in @vip.
@@ -110,7 +141,8 @@ gst_vaapi_surface_pool_class (void)
  * Return value: the newly allocated #GstVaapiVideoPool
  */
 GstVaapiVideoPool *
-gst_vaapi_surface_pool_new (GstVaapiDisplay * display, const GstVideoInfo * vip)
+gst_vaapi_surface_pool_new_full (GstVaapiDisplay * display,
+    const GstVideoInfo * vip, guint flags)
 {
   GstVaapiVideoPool *pool;
 
@@ -124,7 +156,7 @@ gst_vaapi_surface_pool_new (GstVaapiDisplay * display, const GstVideoInfo * vip)
 
   gst_vaapi_video_pool_init (pool, display,
       GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE);
-  if (!surface_pool_init (GST_VAAPI_SURFACE_POOL (pool), vip))
+  if (!surface_pool_init (GST_VAAPI_SURFACE_POOL (pool), vip, flags))
     goto error;
   return pool;
 
