@@ -342,6 +342,9 @@ ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
   }
   gst_object_unref (current_layer);
 
+  /* Remove it from our list of controlled objects */
+  layer->priv->clips_start = g_list_remove (layer->priv->clips_start, clip);
+
   /* emit 'clip-removed' */
   g_signal_emit (layer, ges_layer_signals[OBJECT_REMOVED], 0, clip);
 
@@ -349,9 +352,6 @@ ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
   ges_clip_set_layer (clip, NULL);
   /* so neither in a timeline */
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), NULL);
-
-  /* Remove it from our list of controlled objects */
-  layer->priv->clips_start = g_list_remove (layer->priv->clips_start, clip);
 
   /* Remove our reference to the clip */
   gst_object_unref (clip);
