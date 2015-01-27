@@ -1033,6 +1033,8 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
   GstAudioBaseSink *sink = GST_AUDIO_BASE_SINK (bsink);
   GstFlowReturn ret;
 
+  /* For both gap and EOS events, make sure the ringbuffer is running
+   * before trying to wait on the event! */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     case GST_EVENT_GAP:
@@ -1055,41 +1057,9 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_GAP:{
-      GstClockTime timestamp, duration;
-      GstAudioRingBufferSpec *spec;
-      GstBuffer *buffer;
-      gint n_samples = 0;
-      GstMapInfo minfo;
-
-      spec = &sink->ringbuffer->spec;
-
-      gst_event_parse_gap (event, &timestamp, &duration);
-
-      /* If the GAP event has a duration, handle it like a
-       * silence buffer of that duration. Otherwise at least
-       * start the ringbuffer to make sure the clock is running.
-       */
-      if (duration != GST_CLOCK_TIME_NONE) {
-        n_samples =
-            gst_util_uint64_scale_ceil (duration, spec->info.rate, GST_SECOND);
-        buffer = gst_buffer_new_and_alloc (n_samples * spec->info.bpf);
-
-        if (n_samples != 0) {
-          if (!gst_buffer_map (buffer, &minfo, GST_MAP_WRITE))
-            return FALSE;
-          gst_audio_format_fill_silence (spec->info.finfo, minfo.data,
-              minfo.size);
-          gst_buffer_unmap (buffer, &minfo);
-        }
-        GST_BUFFER_PTS (buffer) = timestamp;
-        GST_BUFFER_DURATION (buffer) = duration;
-        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_GAP);
-
-        ret = gst_audio_base_sink_render (bsink, buffer);
-        gst_buffer_unref (buffer);
-      } else {
-        gst_audio_base_sink_drain (sink);
-      }
+      GstClockTime ts, dur;
+      gst_event_parse_gap (event, &ts, &dur);
+      gst_audio_base_sink_render_samples (bsink, NULL, ts, dur);
       break;
     }
     case GST_EVENT_EOS:
