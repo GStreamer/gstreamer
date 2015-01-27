@@ -42,6 +42,7 @@ typedef struct egl_context_state_s              EglContextState;
 typedef struct egl_context_s                    EglContext;
 typedef struct egl_surface_s                    EglSurface;
 typedef struct egl_program_s                    EglProgram;
+typedef struct egl_window_s                     EglWindow;
 
 #define EGL_PROTO_BEGIN(NAME, TYPE, EXTENSION) \
   typedef TYPE (*GL_PROTO_GEN_CONCAT3(Egl,NAME,Proc))
@@ -171,6 +172,14 @@ struct egl_program_s
   gint uniforms[EGL_MAX_UNIFORMS];
 };
 
+struct egl_window_s
+{
+  EglObject base;
+
+  EglContext *context;
+  EglSurface *surface;
+};
+
 #define egl_object_ref(obj) \
   ((gpointer)gst_vaapi_mini_object_ref ((GstVaapiMiniObject *)(obj)))
 #define egl_object_unref(obj) \
@@ -221,6 +230,10 @@ G_GNUC_INTERNAL
 EglProgram *
 egl_program_new (EglContext * ctx, const gchar * frag_shader_text,
     const gchar * vert_shader_text);
+
+G_GNUC_INTERNAL
+EglWindow *
+egl_window_new (EglContext * ctx, gpointer native_window);
 
 G_GNUC_INTERNAL
 guint

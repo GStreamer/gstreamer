@@ -280,12 +280,14 @@ libgstvaapi_egl_source_c =			\
 	gstvaapisurface_egl.c			\
 	gstvaapitexture_egl.c			\
 	gstvaapiutils_egl.c			\
+	gstvaapiwindow_egl.c			\
 	$(NULL)
 
 libgstvaapi_egl_source_h =			\
 	gstvaapidisplay_egl.h			\
 	gstvaapisurface_egl.h			\
 	gstvaapitexture_egl.h			\
+	gstvaapiwindow_egl.h			\
 	$(NULL)
 
 libgstvaapi_egl_source_priv_h =			\

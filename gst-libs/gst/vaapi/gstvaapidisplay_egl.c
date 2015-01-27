@@ -25,6 +25,8 @@
 #include "gstvaapidisplay_egl.h"
 #include "gstvaapidisplay_egl_priv.h"
 #include "gstvaapiwindow.h"
+#include "gstvaapiwindow_egl.h"
+#include "gstvaapiwindow_priv.h"
 #include "gstvaapitexture_egl.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vaapidisplay_egl);
@@ -442,6 +444,24 @@ gst_vaapi_display_egl_get_size_mm (GstVaapiDisplayEGL * display,
     klass->get_size_mm (display->display, width_ptr, height_ptr);
 }
 
+static guintptr
+gst_vaapi_display_egl_get_visual_id (GstVaapiDisplayEGL * display,
+    GstVaapiWindow * window)
+{
+  if (!ensure_context (display))
+    return 0;
+  return display->egl_context->config->visual_id;
+}
+
+static GstVaapiWindow *
+gst_vaapi_display_egl_create_window (GstVaapiDisplay * display, GstVaapiID id,
+    guint width, guint height)
+{
+  if (id != GST_VAAPI_ID_INVALID)
+    return NULL;
+  return gst_vaapi_window_egl_new (display, width, height);
+}
+
 static GstVaapiTexture *
 gst_vaapi_display_egl_create_texture (GstVaapiDisplay * display, GstVaapiID id,
     guint target, guint format, guint width, guint height)
@@ -484,6 +504,10 @@ gst_vaapi_display_egl_class_init (GstVaapiDisplayEGLClass * klass)
       gst_vaapi_display_egl_get_size;
   dpy_class->get_size_mm = (GstVaapiDisplayGetSizeMFunc)
       gst_vaapi_display_egl_get_size_mm;
+  dpy_class->get_visual_id = (GstVaapiDisplayGetVisualIdFunc)
+      gst_vaapi_display_egl_get_visual_id;
+  dpy_class->create_window = (GstVaapiDisplayCreateWindowFunc)
+      gst_vaapi_display_egl_create_window;
   dpy_class->create_texture = (GstVaapiDisplayCreateTextureFunc)
       gst_vaapi_display_egl_create_texture;
 }

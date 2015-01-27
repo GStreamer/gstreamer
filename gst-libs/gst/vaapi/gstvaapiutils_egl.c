@@ -168,6 +168,7 @@ typedef struct egl_object_class_s EglConfigClass;
 typedef struct egl_object_class_s EglContextClass;
 typedef struct egl_object_class_s EglSurfaceClass;
 typedef struct egl_object_class_s EglProgramClass;
+typedef struct egl_object_class_s EglWindowClass;
 
 EGL_OBJECT_DEFINE_CLASS (EglMessage, egl_message);
 EGL_OBJECT_DEFINE_CLASS (EglVTable, egl_vtable);
@@ -176,6 +177,7 @@ EGL_OBJECT_DEFINE_CLASS (EglConfig, egl_config);
 EGL_OBJECT_DEFINE_CLASS (EglContext, egl_context);
 EGL_OBJECT_DEFINE_CLASS (EglSurface, egl_surface);
 EGL_OBJECT_DEFINE_CLASS (EglProgram, egl_program);
+EGL_OBJECT_DEFINE_CLASS (EglWindow, egl_window);
 
 /* ------------------------------------------------------------------------- */
 // Desktop OpenGL and OpenGL|ES dispatcher (vtable)
@@ -818,7 +820,7 @@ egl_surface_finalize (EglSurface * surface)
   egl_object_replace (&surface->display, NULL);
 }
 
-EglSurface *
+static EglSurface *
 egl_surface_new_wrapped (EglDisplay * display, EGLSurface gl_surface)
 {
   EglSurface *surface;
@@ -1088,7 +1090,7 @@ egl_context_get_vtable (EglContext * ctx, gboolean need_gl_symbols)
   return ctx->vtable;
 }
 
-void
+static void
 egl_context_set_surface (EglContext * ctx, EglSurface * surface)
 {
   g_return_if_fail (ctx != NULL);
@@ -1254,6 +1256,69 @@ egl_program_new (EglContext * ctx, const gchar * frag_shader_text,
 
 error:
   egl_object_replace (&program, NULL);
+  return NULL;
+}
+
+/* ------------------------------------------------------------------------- */
+// EGL Window
+
+static gboolean
+egl_window_init (EglWindow * window, EglContext * ctx, gpointer native_window)
+{
+  EGLSurface gl_surface;
+
+  window->context = egl_context_new (ctx->display, ctx->config, ctx);
+  if (!window->context)
+    return FALSE;
+  ctx = window->context;
+
+  gl_surface = eglCreateWindowSurface (ctx->display->base.handle.p,
+      ctx->config->base.handle.p, (EGLNativeWindowType) native_window, NULL);
+  if (!gl_surface)
+    return FALSE;
+
+  window->surface = egl_surface_new_wrapped (ctx->display, gl_surface);
+  if (!window->surface)
+    goto error_create_surface;
+  window->base.handle.p = gl_surface;
+  window->base.is_wrapped = FALSE;
+
+  egl_context_set_surface (ctx, window->surface);
+  return TRUE;
+
+  /* ERRORS */
+error_create_surface:
+  GST_ERROR ("failed to create EGL wrapper surface");
+  eglDestroySurface (ctx->display->base.handle.p, gl_surface);
+  return FALSE;
+}
+
+static void
+egl_window_finalize (EglWindow * window)
+{
+  if (window->context && window->base.handle.p)
+    eglDestroySurface (window->context->display->base.handle.p,
+        window->base.handle.p);
+
+  egl_object_replace (&window->surface, NULL);
+  egl_object_replace (&window->context, NULL);
+}
+
+EglWindow *
+egl_window_new (EglContext * ctx, gpointer native_window)
+{
+  EglWindow *window;
+
+  g_return_val_if_fail (ctx != NULL, NULL);
+  g_return_val_if_fail (native_window != NULL, NULL);
+
+  window = egl_object_new0 (egl_window_class ());
+  if (!window || !egl_window_init (window, ctx, native_window))
+    goto error;
+  return window;
+
+error:
+  egl_object_replace (&window, NULL);
   return NULL;
 }
 
