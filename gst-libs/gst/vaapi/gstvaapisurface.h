@@ -141,6 +141,25 @@ typedef enum
   GST_VAAPI_COLOR_STANDARD_MASK                 = 0x0000003c, /* 4 bits */
 } GstVaapiSurfaceRenderFlags;
 
+/**
+ * GstVaapiSurfaceAllocFlags:
+ * @GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE: forces allocation
+ *   with linear storage. Default behaviour matches native
+ *   requirements, and thus could be tiled.
+ * @GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES: force allocation with
+ *   the supplied strides information from #GstVideoInfo
+ * @GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS: force allocation with
+ *   the supplied offsets information from #GstVideoInfo
+ *
+ * The set of optional allocation flags for gst_vaapi_surface_new_full().
+ */
+typedef enum
+{
+  GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE   = 1 << 0,
+  GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES    = 1 << 1,
+  GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS    = 1 << 2,
+} GstVaapiSurfaceAllocFlags;
+
 #define GST_VAAPI_SURFACE(obj) \
     ((GstVaapiSurface *)(obj))
 
@@ -150,6 +169,10 @@ typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
 GstVaapiSurface *
 gst_vaapi_surface_new (GstVaapiDisplay * display,
     GstVaapiChromaType chroma_type, guint width, guint height);
+
+GstVaapiSurface *
+gst_vaapi_surface_new_full (GstVaapiDisplay * display,
+    const GstVideoInfo * vip, guint flags);
 
 GstVaapiSurface *
 gst_vaapi_surface_new_with_format (GstVaapiDisplay * display,

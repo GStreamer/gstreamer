@@ -127,16 +127,19 @@ error_unsupported_chroma_type:
 }
 
 static gboolean
-gst_vaapi_surface_create_with_format (GstVaapiSurface * surface,
-    GstVideoFormat format, guint width, guint height)
+gst_vaapi_surface_create_full (GstVaapiSurface * surface,
+    const GstVideoInfo * vip, guint flags)
 {
 #if VA_CHECK_VERSION(0,34,0)
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (surface);
+  const GstVideoFormat format = GST_VIDEO_INFO_FORMAT (vip);
   VASurfaceID surface_id;
   VAStatus status;
-  guint chroma_type, va_chroma_format;
+  guint chroma_type, va_chroma_format, i;
   const VAImageFormat *va_format;
-  VASurfaceAttrib attrib;
+  VASurfaceAttrib attribs[3], *attrib;
+  VASurfaceAttribExternalBuffers extbuf;
+  gboolean extbuf_needed = FALSE;
 
   va_format = gst_vaapi_video_format_to_va_format (format);
   if (!va_format)
@@ -150,22 +153,57 @@ gst_vaapi_surface_create_with_format (GstVaapiSurface * surface,
   if (!va_chroma_format)
     goto error_unsupported_format;
 
-  attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
-  attrib.type = VASurfaceAttribPixelFormat;
-  attrib.value.type = VAGenericValueTypeInteger;
-  attrib.value.value.i = va_format->fourcc;
+  memset (&extbuf, 0, sizeof (extbuf));
+  extbuf.pixel_format = va_format->fourcc;
+  extbuf.width = GST_VIDEO_INFO_WIDTH (vip);
+  extbuf.height = GST_VIDEO_INFO_HEIGHT (vip);
+  extbuf_needed = !!(flags & GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
+
+  extbuf.num_planes = GST_VIDEO_INFO_N_PLANES (vip);
+  if (flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES) {
+    for (i = 0; i < extbuf.num_planes; i++)
+      extbuf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vip, i);
+    extbuf_needed = TRUE;
+  }
+  if (flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS) {
+    for (i = 0; i < extbuf.num_planes; i++)
+      extbuf.offsets[i] = GST_VIDEO_INFO_PLANE_OFFSET (vip, i);
+    extbuf_needed = TRUE;
+  }
+
+  attrib = attribs;
+  attrib->flags = VA_SURFACE_ATTRIB_SETTABLE;
+  attrib->type = VASurfaceAttribPixelFormat;
+  attrib->value.type = VAGenericValueTypeInteger;
+  attrib->value.value.i = va_format->fourcc;
+  attrib++;
+
+  if (extbuf_needed) {
+    attrib->flags = VA_SURFACE_ATTRIB_SETTABLE;
+    attrib->type = VASurfaceAttribMemoryType;
+    attrib->value.type = VAGenericValueTypeInteger;
+    attrib->value.value.i = VA_SURFACE_ATTRIB_MEM_TYPE_VA;
+    attrib++;
+
+    attrib->flags = VA_SURFACE_ATTRIB_SETTABLE;
+    attrib->type = VASurfaceAttribExternalBufferDescriptor;
+    attrib->value.type = VAGenericValueTypePointer;
+    attrib->value.value.p = &extbuf;
+    attrib++;
+  }
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaCreateSurfaces (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      va_chroma_format, width, height, &surface_id, 1, &attrib, 1);
+      va_chroma_format, extbuf.width, extbuf.height, &surface_id, 1,
+      attribs, attrib - attribs);
   GST_VAAPI_DISPLAY_UNLOCK (display);
   if (!vaapi_check_status (status, "vaCreateSurfaces()"))
     return FALSE;
 
   surface->format = format;
   surface->chroma_type = chroma_type;
-  surface->width = width;
-  surface->height = height;
+  surface->width = extbuf.width;
+  surface->height = extbuf.height;
 
   GST_DEBUG ("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (surface_id));
   GST_VAAPI_OBJECT_ID (surface) = surface_id;
@@ -218,6 +256,42 @@ error:
 }
 
 /**
+ * gst_vaapi_surface_new_full:
+ * @display: a #GstVaapiDisplay
+ * @vip: the pointer to a #GstVideoInfo
+ * @flags: (optional) allocation flags
+ *
+ * Creates a new #GstVaapiSurface with the specified video information
+ * and optional #GstVaapiSurfaceAllocFlags
+ *
+ * Return value: the newly allocated #GstVaapiSurface object, or %NULL
+ *   if creation of VA surface with explicit pixel format is not
+ *   supported or failed.
+ */
+GstVaapiSurface *
+gst_vaapi_surface_new_full (GstVaapiDisplay * display,
+    const GstVideoInfo * vip, guint flags)
+{
+  GstVaapiSurface *surface;
+
+  GST_DEBUG ("size %ux%u, format %s, flags 0x%08x", GST_VIDEO_INFO_WIDTH (vip),
+      GST_VIDEO_INFO_HEIGHT (vip),
+      gst_vaapi_video_format_to_string (GST_VIDEO_INFO_FORMAT (vip)), flags);
+
+  surface = gst_vaapi_object_new (gst_vaapi_surface_class (), display);
+  if (!surface)
+    return NULL;
+
+  if (!gst_vaapi_surface_create_full (surface, vip, flags))
+    goto error;
+  return surface;
+
+error:
+  gst_vaapi_object_unref (surface);
+  return NULL;
+}
+
+/**
  * gst_vaapi_surface_new_with_format:
  * @display: a #GstVaapiDisplay
  * @format: the surface format
@@ -235,22 +309,10 @@ GstVaapiSurface *
 gst_vaapi_surface_new_with_format (GstVaapiDisplay * display,
     GstVideoFormat format, guint width, guint height)
 {
-  GstVaapiSurface *surface;
+  GstVideoInfo vi;
 
-  GST_DEBUG ("size %ux%u, format %s", width, height,
-      gst_vaapi_video_format_to_string (format));
-
-  surface = gst_vaapi_object_new (gst_vaapi_surface_class (), display);
-  if (!surface)
-    return NULL;
-
-  if (!gst_vaapi_surface_create_with_format (surface, format, width, height))
-    goto error;
-  return surface;
-
-error:
-  gst_vaapi_object_unref (surface);
-  return NULL;
+  gst_video_info_set_format (&vi, format, width, height);
+  return gst_vaapi_surface_new_full (display, &vi, 0);
 }
 
 /**
