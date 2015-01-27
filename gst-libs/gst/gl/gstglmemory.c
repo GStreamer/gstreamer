@@ -753,6 +753,8 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->data_wrapped = FALSE;
   mem->texture_wrapped = FALSE;
 
+  g_mutex_init (&mem->lock);
+
   _calculate_unpack_length (mem);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "new GL texture memory:%p format:%u "
@@ -799,6 +801,8 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
 
   g_return_val_if_fail (maxsize == gl_mem->mem.maxsize, NULL);
 
+  g_mutex_lock (&gl_mem->lock);
+
   if ((flags & GST_MAP_GL) == GST_MAP_GL) {
     if ((flags & GST_MAP_READ) == GST_MAP_READ) {
       GST_CAT_TRACE (GST_CAT_GL_MEMORY, "mapping GL texture:%u for reading",
@@ -842,19 +846,27 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
 
   gl_mem->map_flags = flags;
 
+  g_mutex_unlock (&gl_mem->lock);
+
   return data;
 }
 
 void
 gst_gl_memory_download_transfer (GstGLMemory * gl_mem)
 {
+  g_mutex_lock (&gl_mem->lock);
+
   gst_gl_context_thread_add (gl_mem->context,
       (GstGLContextThreadFunc) _transfer_download, gl_mem);
+
+  g_mutex_unlock (&gl_mem->lock);
 }
 
 static void
 _gl_mem_unmap (GstGLMemory * gl_mem)
 {
+  g_mutex_lock (&gl_mem->lock);
+
   if (gl_mem->map_flags & GST_MAP_WRITE) {
     if (!(gl_mem->map_flags & GST_MAP_GL))
       gst_gl_context_thread_add (gl_mem->context,
@@ -862,6 +874,8 @@ _gl_mem_unmap (GstGLMemory * gl_mem)
   }
 
   gl_mem->map_flags = 0;
+
+  g_mutex_unlock (&gl_mem->lock);
 }
 
 static void
@@ -1017,6 +1031,8 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 {
   GstGLMemory *dest;
 
+  g_mutex_lock (&((GstGLMemory *) src)->lock);
+
   if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
     dest = _gl_mem_new (src->mem.allocator, NULL, src->context, &src->info,
         &src->valign, src->plane, NULL, NULL);
@@ -1060,6 +1076,8 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     }
     GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
   }
+
+  g_mutex_unlock (&((GstGLMemory *) src)->lock);
 
   return (GstMemory *) dest;
 }
@@ -1115,6 +1133,8 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
     g_free (gl_mem->data);
     gl_mem->data = NULL;
   }
+
+  g_mutex_clear (&gl_mem->lock);
 
   gst_object_unref (gl_mem->context);
   g_slice_free (GstGLMemory, gl_mem);
