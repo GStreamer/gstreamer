@@ -39,7 +39,7 @@ static guintptr gst_gl_window_dispmanx_egl_get_window_handle (GstGLWindow *
     window);
 static void gst_gl_window_dispmanx_egl_set_window_handle (GstGLWindow * window,
     guintptr handle);
-static void gst_gl_window_dispmanx_set_preferred_size (GstGLWindow * window,
+static void gst_gl_window_dispmanx_egl_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_dispmanx_egl_draw (GstGLWindow * window);
 static void gst_gl_window_dispmanx_egl_run (GstGLWindow * window);
@@ -231,7 +231,7 @@ gst_gl_window_dispmanx_egl_set_window_handle (GstGLWindow * window,
 }
 
 static void
-gst_gl_window_dispmanx_set_preferred_size (GstGLWindow * window)
+gst_gl_window_dispmanx_egl_set_preferred_size (GstGLWindow * window, gint width, gint height)
 {
   GstGLWindowDispmanxEGL *window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
 
