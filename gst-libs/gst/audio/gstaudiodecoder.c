@@ -378,6 +378,8 @@ static gboolean gst_audio_decoder_propose_allocation_default (GstAudioDecoder *
     dec, GstQuery * query);
 static gboolean gst_audio_decoder_negotiate_default (GstAudioDecoder * dec);
 static gboolean gst_audio_decoder_negotiate_unlocked (GstAudioDecoder * dec);
+static gboolean gst_audio_decoder_handle_gap (GstAudioDecoder * dec,
+    GstEvent * event);
 
 static GstElementClass *parent_class = NULL;
 
@@ -1302,6 +1304,27 @@ static GstFlowReturn
 gst_audio_decoder_handle_frame (GstAudioDecoder * dec,
     GstAudioDecoderClass * klass, GstBuffer * buffer)
 {
+  /* Skip decoding and send a GAP instead if
+   * GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO is set and we have timestamps
+   * FIXME: We only do this for forward playback atm, because reverse
+   * playback would require accumulating GAP events and pushing them
+   * out in reverse order as for normal audio samples
+   */
+  if (G_UNLIKELY (dec->input_segment.rate > 0.0
+          && dec->input_segment.flags & GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO)) {
+    if (buffer) {
+      GstClockTime ts = GST_BUFFER_PTS (buffer);
+      if (GST_CLOCK_TIME_IS_VALID (ts)) {
+        GstEvent *event = gst_event_new_gap (ts, GST_BUFFER_DURATION (buffer));
+
+        gst_buffer_unref (buffer);
+        GST_LOG_OBJECT (dec, "Skipping decode in trickmode and sending gap");
+        gst_audio_decoder_handle_gap (dec, event);
+        return GST_FLOW_OK;
+      }
+    }
+  }
+
   if (G_LIKELY (buffer)) {
     gsize size = gst_buffer_get_size (buffer);
     /* keep around for admin */
