@@ -562,6 +562,7 @@ cm_sample_buffer_from_gst_buffer (GstVtdec * vtdec, GstBuffer * buf)
   status =
       CMSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, vtdec->format_description,
       1, 1, time_array, 0, NULL, &sbuf);
+  CFRelease (bbuf);
   if (status != noErr)
     goto sample_error;
 
