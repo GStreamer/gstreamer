@@ -261,7 +261,8 @@ gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     /* ERRORS */
 error_decode_loop:
     {
-        GST_ERROR("decode loop error %d", decode->decoder_loop_status);
+        if (decode->decoder_loop_status != GST_FLOW_FLUSHING)
+            GST_ERROR("decode loop error %d", decode->decoder_loop_status);
         gst_video_decoder_drop_frame(vdec, frame);
         return decode->decoder_loop_status;
     }
