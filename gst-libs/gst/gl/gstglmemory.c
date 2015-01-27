@@ -53,6 +53,14 @@
 #define GL_MEM_HEIGHT(gl_mem) _get_plane_height (&gl_mem->info, gl_mem->plane)
 #define GL_MEM_STRIDE(gl_mem) GST_VIDEO_INFO_PLANE_STRIDE (&gl_mem->info, gl_mem->plane)
 
+#define CONTEXT_SUPPORTS_PBO_UPLOAD(context) \
+    (gst_gl_context_check_gl_version (context, \
+        GST_GL_API_OPENGL | GST_GL_API_OPENGL3, 2, 1) \
+        || gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
+#define CONTEXT_SUPPORTS_PBO_DOWNLOAD(context) \
+    (gst_gl_context_check_gl_version (context, \
+        GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2, 3, 0))
+
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GST_CAT_DEFUALT GST_CAT_GL_MEMORY
 
@@ -383,6 +391,26 @@ _generate_texture (GstGLContext * context, GenTexture * data)
   GST_CAT_LOG (GST_CAT_GL_MEMORY, "generated texture id:%d", data->result);
 }
 
+/* find the difference between the start of the plane and where the video
+ * data starts in the plane */
+static gsize
+_find_plane_frame_start (GstGLMemory * gl_mem)
+{
+  gsize plane_start;
+  gint i;
+
+  /* find the start of the plane data including padding */
+  plane_start = 0;
+  for (i = 0; i < gl_mem->plane; i++) {
+    plane_start +=
+        gst_gl_get_plane_data_size (&gl_mem->info, &gl_mem->valign, i);
+  }
+
+  /* offset between the plane data start and where the video frame starts */
+  return (GST_VIDEO_INFO_PLANE_OFFSET (&gl_mem->info,
+          gl_mem->plane)) - plane_start;
+}
+
 static void
 _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
 {
@@ -390,7 +418,6 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
   GLenum gl_format, gl_type;
   gpointer data;
   gsize plane_start;
-  gint i;
 
   if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
     return;
@@ -416,28 +443,20 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
       GL_MEM_HEIGHT (gl_mem));
 
   /* find the start of the plane data including padding */
-  plane_start = 0;
-  for (i = 0; i < gl_mem->plane; i++) {
-    plane_start +=
-        gst_gl_get_plane_data_size (&gl_mem->info, &gl_mem->valign, i);
-  }
+  plane_start = _find_plane_frame_start (gl_mem);
 
-  /* offset between the plane data start and where the video frame starts */
-  data =
-      (void *) ((GST_VIDEO_INFO_PLANE_OFFSET (&gl_mem->info,
-              gl_mem->plane)) - plane_start);
-
-  if (gl_mem->transfer_pbo) {
+  if (gl_mem->transfer_pbo && CONTEXT_SUPPORTS_PBO_UPLOAD (context)) {
     gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, gl_mem->transfer_pbo);
+    data = (void *) plane_start;
   } else {
-    data = (gpointer) ((gintptr) data + (gintptr) gl_mem->data);
+    data = (gpointer) ((gintptr) plane_start + (gintptr) gl_mem->data);
   }
 
   gl->BindTexture (GL_TEXTURE_2D, gl_mem->tex_id);
   gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, gl_mem->tex_width,
       GL_MEM_HEIGHT (gl_mem), gl_format, gl_type, data);
 
-  if (gl_mem->transfer_pbo)
+  if (gl_mem->transfer_pbo && CONTEXT_SUPPORTS_PBO_UPLOAD (context))
     gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
 
   /* Reset to default values */
@@ -458,9 +477,7 @@ _transfer_upload (GstGLContext * context, GstGLMemory * gl_mem)
   const GstGLFuncs *gl;
   gsize size;
 
-  if (!gst_gl_context_check_gl_version (context,
-          GST_GL_API_OPENGL | GST_GL_API_OPENGL3, 2, 1)
-      && !gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
+  if (!CONTEXT_SUPPORTS_PBO_UPLOAD (context))
     /* not supported */
     return;
 
@@ -572,6 +589,62 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
 }
 
 static void
+_transfer_download (GstGLContext * context, GstGLMemory * gl_mem)
+{
+  const GstGLFuncs *gl;
+  gsize plane_start;
+  gsize size;
+  guint format, type;
+  guint fboId;
+
+  if (!CONTEXT_SUPPORTS_PBO_DOWNLOAD (context)
+      || gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
+      || gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA)
+    /* not supported */
+    return;
+
+  gl = context->gl_vtable;
+
+  if (!gl_mem->transfer_pbo)
+    gl->GenBuffers (1, &gl_mem->transfer_pbo);
+
+  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "downloading texture %u using pbo %u",
+      gl_mem->tex_id, gl_mem->transfer_pbo);
+
+  size = ((GstMemory *) gl_mem)->maxsize;
+  plane_start = _find_plane_frame_start (gl_mem);
+  format = _gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
+  type = GL_UNSIGNED_BYTE;
+  if (gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
+    type = GL_UNSIGNED_SHORT_5_6_5;
+
+  gl->BindBuffer (GL_PIXEL_PACK_BUFFER, gl_mem->transfer_pbo);
+  gl->BufferData (GL_PIXEL_PACK_BUFFER, size, NULL, GL_STREAM_READ);
+
+  /* FIXME: try and avoid creating and destroying fbo's every download... */
+  /* create a framebuffer object */
+  gl->GenFramebuffers (1, &fboId);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, fboId);
+
+  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+      GL_TEXTURE_2D, gl_mem->tex_id, 0);
+
+  if (!gst_gl_context_check_framebuffer_status (context)) {
+    GST_CAT_ERROR (GST_CAT_GL_MEMORY, "failed to download texture");
+    goto fbo_error;
+  }
+
+  gl->ReadPixels (0, 0, gl_mem->tex_width, GL_MEM_HEIGHT (gl_mem), format,
+      type, (void *) plane_start);
+
+fbo_error:
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+  gl->DeleteFramebuffers (1, &fboId);
+
+  gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
+}
+
+static void
 _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
 {
   const GstGLFuncs *gl;
@@ -606,7 +679,26 @@ _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
     gl->BindTexture (GL_TEXTURE_2D, gl_mem->tex_id);
     gl->GetTexImage (GL_TEXTURE_2D, 0, format, type, gl_mem->data);
     gl->BindTexture (GL_TEXTURE_2D, 0);
+  } else if (gl_mem->transfer_pbo && CONTEXT_SUPPORTS_PBO_DOWNLOAD (context)) {
+    gsize size = ((GstMemory *) gl_mem)->maxsize;
+    gpointer map_data = NULL;
+
+    gl->BindBuffer (GL_PIXEL_PACK_BUFFER, gl_mem->transfer_pbo);
+    map_data =
+        gl->MapBufferRange (GL_PIXEL_PACK_BUFFER, 0, size, GL_MAP_READ_BIT);
+    if (!map_data) {
+      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "error mapping buffer for download");
+      gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
+      goto read_pixels;
+    }
+
+    /* FIXME: COPY! use glMapBuffer + glSync everywhere to remove this */
+    memcpy (gl_mem->data, map_data, size);
+
+    gl->UnmapBuffer (GL_PIXEL_PACK_BUFFER);
+    gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
   } else {
+  read_pixels:
     /* FIXME: try and avoid creating and destroying fbo's every download... */
     /* create a framebuffer object */
     gl->GenFramebuffers (1, &fboId);
@@ -751,6 +843,13 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
   gl_mem->map_flags = flags;
 
   return data;
+}
+
+void
+gst_gl_memory_download_transfer (GstGLMemory * gl_mem)
+{
+  gst_gl_context_thread_add (gl_mem->context,
+      (GstGLContextThreadFunc) _transfer_download, gl_mem);
 }
 
 static void
