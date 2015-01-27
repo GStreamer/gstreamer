@@ -306,7 +306,7 @@ on_message (GstBus * bus, GstMessage * message, gpointer user_data)
       gchar *debug;
       GError *err;
 
-      gst_message_parse_error (message, &err, &debug);
+      gst_message_parse_warning (message, &err, &debug);
       g_print ("Warning %s\n", err->message);
       g_error_free (err);
       g_free (debug);
