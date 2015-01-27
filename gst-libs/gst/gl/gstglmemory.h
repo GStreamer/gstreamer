@@ -102,6 +102,8 @@ struct _GstGLMemory
   guint                 tex_width;
   guint                 transfer_pbo;
   GstMapFlags           map_flags;
+
+  GMutex                lock;
 };
 
 #define GST_CAPS_FEATURE_MEMORY_GL_MEMORY "memory:GLMemory"
