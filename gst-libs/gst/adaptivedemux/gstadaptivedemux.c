@@ -86,6 +86,14 @@ GST_DEBUG_CATEGORY (adaptivedemux_debug);
 
 #define MAX_DOWNLOAD_ERROR_COUNT 3
 #define DEFAULT_FAILED_COUNT 3
+#define DEFAULT_LOOKBACK_FRAGMENTS 3
+
+enum
+{
+  PROP_0,
+  PROP_LOOKBACK_FRAGMENTS,
+  PROP_LAST
+};
 
 enum GstAdaptiveDemuxFlowReturn
 {
@@ -210,6 +218,38 @@ gst_adaptive_demux_get_type (void)
 }
 
 static void
+gst_adaptive_demux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_LOOKBACK_FRAGMENTS:
+      demux->num_lookback_fragments = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_adaptive_demux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_LOOKBACK_FRAGMENTS:
+      g_value_set_uint (value, demux->num_lookback_fragments);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
 {
   GObjectClass *gobject_class;
@@ -226,7 +266,16 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
   parent_class = g_type_class_peek_parent (klass);
   g_type_class_add_private (klass, sizeof (GstAdaptiveDemuxPrivate));
 
+  gobject_class->set_property = gst_adaptive_demux_set_property;
+  gobject_class->get_property = gst_adaptive_demux_get_property;
   gobject_class->finalize = gst_adaptive_demux_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_LOOKBACK_FRAGMENTS,
+      g_param_spec_uint ("num-lookback-fragments",
+          "Number of fragments to look back",
+          "The number of fragments the demuxer will look back to calculate an average bitrate",
+          1, G_MAXUINT, DEFAULT_LOOKBACK_FRAGMENTS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
 
   gstelement_class->change_state = gst_adaptive_demux_change_state;
 
@@ -273,6 +322,8 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
       GST_DEBUG_FUNCPTR (gst_adaptive_demux_sink_event));
   gst_pad_set_chain_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_adaptive_demux_sink_chain));
+
+  demux->num_lookback_fragments = DEFAULT_LOOKBACK_FRAGMENTS;
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 }
@@ -702,6 +753,8 @@ gst_adaptive_demux_stream_new (GstAdaptiveDemux * demux, GstPad * pad)
 
   stream->pad = pad;
   stream->demux = demux;
+  stream->fragment_bitrates =
+      g_malloc0 (sizeof (guint64) * demux->num_lookback_fragments);
   gst_pad_set_element_private (pad, stream);
 
   gst_pad_set_query_function (pad,
@@ -765,6 +818,8 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
 
   g_cond_clear (&stream->fragment_download_cond);
   g_mutex_clear (&stream->fragment_download_lock);
+
+  g_free (stream->fragment_bitrates);
 
   if (stream->pad) {
     gst_object_unref (stream->pad);
@@ -1165,26 +1220,47 @@ gst_adaptive_demux_stream_set_tags (GstAdaptiveDemuxStream * stream,
 }
 
 static guint64
-gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemuxStream *
-    stream)
+_update_average_bitrate (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream, guint64 new_bitrate)
 {
-  guint64 bitrate = 0;
+  gint index = stream->moving_index % demux->num_lookback_fragments;
 
-  if (stream->download_total_time)
-    bitrate =
-        (stream->download_total_bytes * 8) /
-        ((double) stream->download_total_time / G_GUINT64_CONSTANT (1000000));
+  stream->moving_bitrate -= stream->fragment_bitrates[index];
+  stream->fragment_bitrates[index] = new_bitrate;
+  stream->moving_bitrate += new_bitrate;
 
-  if (stream->current_download_rate != -1)
-    bitrate = (stream->current_download_rate + bitrate * 3) / 4;
-  if (bitrate > G_MAXINT)
-    bitrate = G_MAXINT;
-  stream->current_download_rate = bitrate;
-  GST_DEBUG_OBJECT (stream->pad, "Bitrate: %" G_GUINT64_FORMAT
-      " (bytes: %" G_GINT64_FORMAT " / %" G_GINT64_FORMAT " microsecs",
-      bitrate, stream->download_total_bytes, stream->download_total_time);
+  stream->moving_index += 1;
 
-  return bitrate;
+  if (stream->moving_index > demux->num_lookback_fragments)
+    return stream->moving_bitrate / demux->num_lookback_fragments;
+  return stream->moving_bitrate / stream->moving_index;
+}
+
+static guint64
+gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream)
+{
+  guint64 average_bitrate;
+  guint64 fragment_bitrate;
+
+  fragment_bitrate =
+      (stream->fragment_total_size * 8) /
+      ((double) stream->fragment_total_time / G_GUINT64_CONSTANT (1000000));
+  stream->fragment_total_size = 0;
+  stream->fragment_total_time = 0;
+
+  average_bitrate = _update_average_bitrate (demux, stream, fragment_bitrate);
+
+  GST_INFO_OBJECT (stream, "last fragment bitrate was %" G_GUINT64_FORMAT,
+      fragment_bitrate);
+  GST_INFO_OBJECT (stream,
+      "Last %u fragments average bitrate is %" G_GUINT64_FORMAT,
+      demux->num_lookback_fragments, average_bitrate);
+
+  /* Conservative approach, make sure we don't upgrade too fast */
+  stream->current_download_rate = MIN (average_bitrate, fragment_bitrate);
+
+  return stream->current_download_rate;
 }
 
 static GstFlowReturn
@@ -1336,6 +1412,10 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   stream->download_total_time +=
       g_get_monotonic_time () - stream->download_chunk_start_time;
   stream->download_total_bytes += gst_buffer_get_size (buffer);
+
+  stream->fragment_total_size += gst_buffer_get_size (buffer);
+  stream->fragment_total_time +=
+      g_get_monotonic_time () - stream->download_chunk_start_time;
 
   gst_adapter_push (stream->adapter, buffer);
   GST_DEBUG_OBJECT (stream->pad, "Received buffer of size %" G_GSIZE_FORMAT
@@ -2229,6 +2309,8 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
   g_clear_error (&stream->last_error);
   stream->download_total_time +=
       g_get_monotonic_time () - stream->download_chunk_start_time;
+  stream->fragment_total_time +=
+      g_get_monotonic_time () - stream->download_chunk_start_time;
 
   /* FIXME - url has no indication of byte ranges for subsegments */
   gst_element_post_message (GST_ELEMENT_CAST (demux),
@@ -2253,7 +2335,7 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
 
   if (ret == GST_FLOW_OK) {
     if (gst_adaptive_demux_stream_select_bitrate (demux, stream,
-            gst_adaptive_demux_stream_update_current_bitrate (stream))) {
+            gst_adaptive_demux_stream_update_current_bitrate (demux, stream))) {
       stream->need_header = TRUE;
       gst_adapter_clear (stream->adapter);
       ret = (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SWITCH;

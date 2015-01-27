@@ -144,6 +144,15 @@ struct _GstAdaptiveDemuxStream
   gint64 download_total_bytes;
   gint current_download_rate;
 
+  /* Per fragment download information */
+  guint64 fragment_total_time;
+  guint64 fragment_total_size;
+
+  /* Average for the last fragments */
+  guint64 moving_bitrate;
+  guint moving_index;
+  guint64 *fragment_bitrates;
+
   GstAdaptiveDemuxStreamFragment fragment;
 
   guint download_error_count;
@@ -181,6 +190,8 @@ struct _GstAdaptiveDemux
 
   gchar *manifest_uri;
   gchar *manifest_base_uri;
+
+  guint num_lookback_fragments;
 
   gboolean have_group_id;
   guint group_id;
