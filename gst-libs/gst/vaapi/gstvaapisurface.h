@@ -29,6 +29,7 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapisubpicture.h>
+#include <gst/vaapi/gstvaapibufferproxy.h>
 #include <gst/video/video.h>
 #include <gst/video/video-overlay-composition.h>
 
@@ -177,6 +178,10 @@ gst_vaapi_surface_new_full (GstVaapiDisplay * display,
 GstVaapiSurface *
 gst_vaapi_surface_new_with_format (GstVaapiDisplay * display,
     GstVideoFormat format, guint width, guint height);
+
+GstVaapiSurface *
+gst_vaapi_surface_new_from_buffer_proxy (GstVaapiDisplay * display,
+    GstVaapiBufferProxy * proxy, const GstVideoInfo * vip);
 
 GstVaapiID
 gst_vaapi_surface_get_id (GstVaapiSurface * surface);

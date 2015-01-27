@@ -41,6 +41,7 @@ struct _GstVaapiSurface
   /*< private >*/
   GstVaapiObject parent_instance;
 
+  GstVaapiBufferProxy *extbuf_proxy;
   GstVideoFormat format;
   guint width;
   guint height;

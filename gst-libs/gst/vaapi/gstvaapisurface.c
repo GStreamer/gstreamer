@@ -36,6 +36,7 @@
 #include "gstvaapiimage.h"
 #include "gstvaapiimage_priv.h"
 #include "gstvaapicontext_overlay.h"
+#include "gstvaapibufferproxy_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -89,6 +90,7 @@ gst_vaapi_surface_destroy (GstVaapiSurface * surface)
           GST_VAAPI_ID_ARGS (surface_id));
     GST_VAAPI_OBJECT_ID (surface) = VA_INVALID_SURFACE;
   }
+  gst_vaapi_buffer_proxy_replace (&surface->extbuf_proxy, NULL);
 }
 
 static gboolean
@@ -219,6 +221,95 @@ error_unsupported_format:
 #endif
 }
 
+static gboolean
+gst_vaapi_surface_create_from_buffer_proxy (GstVaapiSurface * surface,
+    GstVaapiBufferProxy * proxy, const GstVideoInfo * vip)
+{
+#if VA_CHECK_VERSION (0,34,0)
+  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (surface);
+  GstVideoFormat format;
+  VASurfaceID surface_id;
+  VAStatus status;
+  guint chroma_type, va_chroma_format;
+  const VAImageFormat *va_format;
+  VASurfaceAttrib attribs[2], *attrib;
+  VASurfaceAttribExternalBuffers extbuf;
+  unsigned long extbuf_handle;
+  guint i, width, height;
+
+  format = GST_VIDEO_INFO_FORMAT (vip);
+  width = GST_VIDEO_INFO_WIDTH (vip);
+  height = GST_VIDEO_INFO_HEIGHT (vip);
+
+  gst_vaapi_buffer_proxy_replace (&surface->extbuf_proxy, proxy);
+
+  va_format = gst_vaapi_video_format_to_va_format (format);
+  if (!va_format)
+    goto error_unsupported_format;
+
+  chroma_type = gst_vaapi_video_format_get_chroma_type (format);
+  if (!chroma_type)
+    goto error_unsupported_format;
+
+  va_chroma_format = from_GstVaapiChromaType (chroma_type);
+  if (!va_chroma_format)
+    goto error_unsupported_format;
+
+  extbuf_handle = GST_VAAPI_BUFFER_PROXY_HANDLE (proxy);
+  extbuf.pixel_format = va_format->fourcc;
+  extbuf.width = width;
+  extbuf.height = height;
+  extbuf.data_size = GST_VAAPI_BUFFER_PROXY_SIZE (proxy);
+  extbuf.num_planes = GST_VIDEO_INFO_N_PLANES (vip);
+  for (i = 0; i < extbuf.num_planes; i++) {
+    extbuf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vip, i);
+    extbuf.offsets[i] = GST_VIDEO_INFO_PLANE_OFFSET (vip, i);
+  }
+  extbuf.buffers = &extbuf_handle;
+  extbuf.num_buffers = 1;
+  extbuf.flags = 0;
+  extbuf.private_data = NULL;
+
+  attrib = attribs;
+  attrib->type = VASurfaceAttribExternalBufferDescriptor;
+  attrib->flags = VA_SURFACE_ATTRIB_SETTABLE;
+  attrib->value.type = VAGenericValueTypePointer;
+  attrib->value.value.p = &extbuf;
+  attrib++;
+  attrib->type = VASurfaceAttribMemoryType;
+  attrib->flags = VA_SURFACE_ATTRIB_SETTABLE;
+  attrib->value.type = VAGenericValueTypeInteger;
+  attrib->value.value.i =
+      from_GstVaapiBufferMemoryType (GST_VAAPI_BUFFER_PROXY_TYPE (proxy));
+  attrib++;
+
+  GST_VAAPI_DISPLAY_LOCK (display);
+  status = vaCreateSurfaces (GST_VAAPI_DISPLAY_VADISPLAY (display),
+      va_chroma_format, width, height, &surface_id, 1, attribs,
+      attrib - attribs);
+  GST_VAAPI_DISPLAY_UNLOCK (display);
+  if (!vaapi_check_status (status, "vaCreateSurfaces()"))
+    return FALSE;
+
+  surface->format = format;
+  surface->chroma_type = chroma_type;
+  surface->width = width;
+  surface->height = height;
+
+  GST_DEBUG ("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (surface_id));
+  GST_VAAPI_OBJECT_ID (surface) = surface_id;
+  return TRUE;
+
+  /* ERRORS */
+error_unsupported_format:
+  GST_ERROR ("unsupported format %s",
+      gst_vaapi_video_format_to_string (format));
+  return FALSE;
+#else
+  return FALSE;
+#endif
+}
+
 #define gst_vaapi_surface_finalize gst_vaapi_surface_destroy
 GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiSurface, gst_vaapi_surface);
 
@@ -313,6 +404,45 @@ gst_vaapi_surface_new_with_format (GstVaapiDisplay * display,
 
   gst_video_info_set_format (&vi, format, width, height);
   return gst_vaapi_surface_new_full (display, &vi, 0);
+}
+
+/**
+ * gst_vaapi_surface_new_from_buffer_proxy:
+ * @display: a #GstVaapiDisplay
+ * @proxy: a #GstVaapiBufferProxy
+ * @info: the #GstVideoInfo structure defining the layout of the buffer
+ *
+ * Creates a new #GstVaapiSurface with the supplied VA buffer proxy
+ * abstraction. The underlying VA buffer memory type could be anything
+ * that is supported by the VA driver.
+ *
+ * The resulting #GstVaapiSurface object owns an extra reference to
+ * the buffer @proxy, so the caller can safely release that handle as
+ * early as on return of this call.
+ *
+ * Return value: the newly allocated #GstVaapiSurface object, or %NULL
+ *   if creation of VA surface failed or is not supported
+ */
+GstVaapiSurface *
+gst_vaapi_surface_new_from_buffer_proxy (GstVaapiDisplay * display,
+    GstVaapiBufferProxy * proxy, const GstVideoInfo * info)
+{
+  GstVaapiSurface *surface;
+
+  g_return_val_if_fail (proxy != NULL, NULL);
+  g_return_val_if_fail (info != NULL, NULL);
+
+  surface = gst_vaapi_object_new (gst_vaapi_surface_class (), display);
+  if (!surface)
+    return NULL;
+
+  if (!gst_vaapi_surface_create_from_buffer_proxy (surface, proxy, info))
+    goto error;
+  return surface;
+
+error:
+  gst_vaapi_object_unref (surface);
+  return NULL;
 }
 
 /**
