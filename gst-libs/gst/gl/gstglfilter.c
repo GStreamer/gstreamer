@@ -1222,7 +1222,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstGLFilterClass *filter_class;
-  guint in_tex, out_tex;
+  guint in_tex, out_tex, out_tex_target;
   GstVideoFrame gl_frame, out_frame;
   GstVideoInfo gl_info;
   gboolean ret;
@@ -1261,7 +1261,6 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
   }
 
   in_tex = *(guint *) gl_frame.data[0];
-
   to_download |= !gst_is_gl_memory (gst_buffer_peek_memory (outbuf, 0));
 
   if (!to_download)
@@ -1275,6 +1274,8 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
 
   if (!to_download) {
     out_tex = *(guint *) out_frame.data[0];
+    out_tex_target =
+        ((GstGLMemory *) gst_buffer_peek_memory (outbuf, 0))->tex_target;
   } else {
     GST_LOG ("Output Buffer does not contain correct memory, "
         "attempting to wrap for download");
@@ -1285,6 +1286,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     gst_gl_download_set_format (filter->download, &out_frame.info);
 
     out_tex = filter->out_tex_id;
+    out_tex_target = GL_TEXTURE_2D;
   }
 
   GST_DEBUG ("calling filter_texture with textures in:%i out:%i", in_tex,
@@ -1294,8 +1296,8 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
   ret = filter_class->filter_texture (filter, in_tex, out_tex);
 
   if (to_download) {
-    if (!gst_gl_download_perform_with_data (filter->download, out_tex,
-            out_frame.data)) {
+    if (!gst_gl_download_perform_with_data (filter->download,
+            out_tex, out_tex_target, out_frame.data)) {
       GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
           ("%s", "Failed to download video frame"), (NULL));
       ret = FALSE;

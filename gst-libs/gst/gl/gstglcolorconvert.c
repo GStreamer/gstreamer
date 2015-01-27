@@ -1549,14 +1549,15 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   for (i = c_info->in_n_textures - 1; i >= 0; i--) {
     gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
+    GstGLMemory *m = convert->priv->in_tex[i];
+    guint tex_target = m->tex_target;
 
     gl->ActiveTexture (GL_TEXTURE0 + i);
-    gl->BindTexture (GL_TEXTURE_2D, convert->priv->in_tex[i]->tex_id);
-
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    gl->BindTexture (tex_target, convert->priv->in_tex[i]->tex_id);
+    gl->TexParameteri (tex_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->TexParameteri (tex_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->TexParameteri (tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     gst_gl_shader_set_uniform_2fv (convert->shader, scale_name, 1,
         convert->priv->in_tex[i]->tex_scaling);

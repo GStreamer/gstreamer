@@ -112,6 +112,7 @@ typedef struct
   guint out_width, out_height;
   guint out_stride;
   gboolean respecify;
+  guint tex_target;
   /* inout */
   guint tex_id;
   /* out */
@@ -372,6 +373,7 @@ _get_plane_height (GstVideoInfo * info, guint plane)
 typedef struct _GenTexture
 {
   guint width, height;
+  GLenum gl_target;
   GLenum gl_format;
   GLenum gl_type;
   guint result;
@@ -391,14 +393,14 @@ _generate_texture (GstGLContext * context, GenTexture * data)
       _sized_gl_format_from_gl_format_type (data->gl_format, data->gl_type);
 
   gl->GenTextures (1, &data->result);
-  gl->BindTexture (GL_TEXTURE_2D, data->result);
-  gl->TexImage2D (GL_TEXTURE_2D, 0, internal_format, data->width,
+  gl->BindTexture (data->gl_target, data->result);
+  gl->TexImage2D (data->gl_target, 0, internal_format, data->width,
       data->height, 0, data->gl_format, data->gl_type, NULL);
 
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (data->gl_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl->TexParameteri (data->gl_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl->TexParameteri (data->gl_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (data->gl_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   GST_CAT_LOG (GST_CAT_GL_MEMORY, "generated texture id:%d", data->result);
 }
@@ -427,7 +429,7 @@ static void
 _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
 {
   const GstGLFuncs *gl;
-  GLenum gl_format, gl_type;
+  GLenum gl_format, gl_type, gl_target;
   gpointer data;
   gsize plane_start;
 
@@ -442,6 +444,7 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
     gl_type = GL_UNSIGNED_SHORT_5_6_5;
 
   gl_format = _gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
+  gl_target = gl_mem->tex_target;
 
   if (USING_OPENGL (context) || USING_GLES3 (context)
       || USING_OPENGL3 (context)) {
@@ -464,8 +467,8 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
     data = (gpointer) ((gintptr) plane_start + (gintptr) gl_mem->data);
   }
 
-  gl->BindTexture (GL_TEXTURE_2D, gl_mem->tex_id);
-  gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, gl_mem->tex_width,
+  gl->BindTexture (gl_target, gl_mem->tex_id);
+  gl->TexSubImage2D (gl_target, 0, 0, 0, gl_mem->tex_width,
       GL_MEM_HEIGHT (gl_mem), gl_format, gl_type, data);
 
   if (gl_mem->transfer_pbo && CONTEXT_SUPPORTS_PBO_UPLOAD (context))
@@ -478,7 +481,7 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
     gl->PixelStorei (GL_UNPACK_ALIGNMENT, 4);
   }
 
-  gl->BindTexture (GL_TEXTURE_2D, 0);
+  gl->BindTexture (gl_target, 0);
 
   GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
 }
@@ -688,9 +691,9 @@ _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
 
   if (gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
       || gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA) {
-    gl->BindTexture (GL_TEXTURE_2D, gl_mem->tex_id);
-    gl->GetTexImage (GL_TEXTURE_2D, 0, format, type, gl_mem->data);
-    gl->BindTexture (GL_TEXTURE_2D, 0);
+    gl->BindTexture (gl_mem->tex_target, gl_mem->tex_id);
+    gl->GetTexImage (gl_mem->tex_target, 0, format, type, gl_mem->data);
+    gl->BindTexture (gl_mem->tex_target, 0);
   } else if (gl_mem->transfer_pbo && CONTEXT_SUPPORTS_PBO_DOWNLOAD (context)) {
     gsize size = ((GstMemory *) gl_mem)->maxsize;
     gpointer map_data = NULL;
@@ -717,7 +720,7 @@ _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
     gl->BindFramebuffer (GL_FRAMEBUFFER, fboId);
 
     gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D, gl_mem->tex_id, 0);
+        gl_mem->tex_target, gl_mem->tex_id, 0);
 
     if (!gst_gl_context_check_framebuffer_status (context))
       goto fbo_error;
@@ -759,6 +762,8 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->tex_type =
       gst_gl_texture_type_from_format (context, GST_VIDEO_INFO_FORMAT (info),
       plane);
+  /* we always operate on 2D textures unless we're dealing with wrapped textures */
+  mem->tex_target = GL_TEXTURE_2D;
   mem->plane = plane;
   mem->notify = notify;
   mem->user_data = user_data;
@@ -789,6 +794,7 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
   data.height = GL_MEM_HEIGHT (mem);
   data.gl_format = _gst_gl_format_from_gl_texture_type (mem->tex_type);
   data.gl_type = GL_UNSIGNED_BYTE;
+  data.gl_target = mem->tex_target;
   if (mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
     data.gl_type = GL_UNSIGNED_SHORT_5_6_5;
 
@@ -802,6 +808,7 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
   GST_CAT_TRACE (GST_CAT_GL_MEMORY, "created texture %u", data.result);
 
   mem->tex_id = data.result;
+  mem->tex_target = data.gl_target;
 
   return mem;
 }
@@ -897,6 +904,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   GstGLMemoryCopyParams *copy_params;
   GstGLMemory *src;
   guint tex_id;
+  GLuint out_tex_target;
   GLuint fboId;
   gsize out_width, out_height, out_stride;
   GLuint out_gl_format, out_gl_type;
@@ -906,6 +914,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   copy_params = (GstGLMemoryCopyParams *) data;
   src = copy_params->src;
   tex_id = copy_params->tex_id;
+  out_tex_target = copy_params->tex_target;
   out_width = copy_params->out_width;
   out_height = copy_params->out_height;
   out_stride = copy_params->out_stride;
@@ -942,6 +951,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
     GenTexture data = { 0, };
     data.width = copy_params->out_width;
     data.height = copy_params->out_height;
+    data.gl_target = out_tex_target;
     data.gl_format = out_gl_format;
     data.gl_type = GL_UNSIGNED_BYTE;
     if (copy_params->out_format == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
@@ -965,17 +975,17 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   gl->BindFramebuffer (GL_FRAMEBUFFER, fboId);
 
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_2D, src->tex_id, 0);
+      src->tex_target, src->tex_id, 0);
 
 //  if (!gst_gl_context_check_framebuffer_status (src->context))
 //    goto fbo_error;
 
-  gl->BindTexture (GL_TEXTURE_2D, tex_id);
+  gl->BindTexture (out_tex_target, tex_id);
   if (copy_params->respecify) {
     if (!gl->GenBuffers) {
       gst_gl_context_set_error (context, "Cannot reinterpret texture contents "
           "without buffer objects");
-      gl->BindTexture (GL_TEXTURE_2D, 0);
+      gl->BindTexture (out_tex_target, 0);
       goto fbo_error;
     }
 
@@ -983,7 +993,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
         && (in_gl_format != GL_RGBA || in_gl_type != GL_UNSIGNED_BYTE)) {
       gst_gl_context_set_error (context, "Cannot copy non RGBA/UNSIGNED_BYTE "
           "textures on GLES2");
-      gl->BindTexture (GL_TEXTURE_2D, 0);
+      gl->BindTexture (out_tex_target, 0);
       goto fbo_error;
     }
 
@@ -1002,16 +1012,16 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
     gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
 
     gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, src->pbo);
-    gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, out_width, out_height,
+    gl->TexSubImage2D (out_tex_target, 0, 0, 0, out_width, out_height,
         out_gl_format, out_gl_type, 0);
 
     gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
   } else {                      /* different sizes */
-    gl->CopyTexImage2D (GL_TEXTURE_2D, 0, out_gl_format, 0, 0, out_width,
+    gl->CopyTexImage2D (out_tex_target, 0, out_gl_format, 0, 0, out_width,
         out_height, 0);
   }
 
-  gl->BindTexture (GL_TEXTURE_2D, 0);
+  gl->BindTexture (out_tex_target, 0);
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 
   gl->DeleteFramebuffers (1, &fboId);
@@ -1203,6 +1213,7 @@ gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id,
  * gst_gl_memory_wrapped_texture:
  * @context: a #GstGLContext
  * @texture_id: the GL texture handle
+ * @texture_target: the GL texture target
  * @info: the #GstVideoInfo of the memory
  * @plane: The plane this memory will represent
  * @user_data: user data
@@ -1213,7 +1224,8 @@ gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id,
  * Returns: a newly allocated #GstGLMemory
  */
 GstGLMemory *
-gst_gl_memory_wrapped_texture (GstGLContext * context, guint texture_id,
+gst_gl_memory_wrapped_texture (GstGLContext * context,
+    guint texture_id, guint texture_target,
     GstVideoInfo * info, guint plane, GstVideoAlignment * valign,
     gpointer user_data, GDestroyNotify notify)
 {
@@ -1224,6 +1236,7 @@ gst_gl_memory_wrapped_texture (GstGLContext * context, guint texture_id,
       NULL);
 
   mem->tex_id = texture_id;
+  mem->tex_target = texture_target;
   mem->texture_wrapped = TRUE;
   mem->data = g_try_malloc (mem->mem.maxsize);
   if (mem->data == NULL) {
