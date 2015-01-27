@@ -39,6 +39,7 @@ typedef struct _GstOpenSLESSrcClass GstOpenSLESSrcClass;
 struct _GstOpenSLESSrc
 {
   GstAudioBaseSrc src;
+  GstOpenSLESRecordingPreset preset;
 };
 
 struct _GstOpenSLESSrcClass

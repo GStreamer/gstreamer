@@ -1,7 +1,8 @@
 
 plugin_LTLIBRARIES = libgstopensles.la
 
-libgstopensles_la_SOURCES = openslesringbuffer.c \
+libgstopensles_la_SOURCES = openslescommon.c     \
+                            openslesringbuffer.c \
                             openslessink.c       \
                             openslessrc.c        \
                             opensles.c
@@ -16,7 +17,8 @@ libgstopensles_la_LIBADD =            \
 libgstopensles_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -lOpenSLES
 libgstopensles_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
-noinst_HEADERS = openslesringbuffer.h \
+noinst_HEADERS = openslescommon.h     \
+                 openslesringbuffer.h \
                  openslessink.h       \
                  openslessrc.h
 

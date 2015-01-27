@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include "openslescommon.h"
 
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
@@ -84,6 +85,7 @@ struct _GstOpenSLESRingBuffer
   /* recorder interfaces */
   SLObjectItf recorderObject;
   SLRecordItf recorderRecord;
+  GstOpenSLESRecordingPreset preset;
 
   /* buffer queue */
   SLAndroidSimpleBufferQueueItf bufferQueue;

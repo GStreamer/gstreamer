@@ -114,6 +114,7 @@ _opensles_recorder_acquire (GstAudioRingBuffer * rb,
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
   SLDataFormat_PCM format;
+  SLAndroidConfigurationItf config;
 
   /* Configure audio source */
   SLDataLocator_IODevice loc_dev = {
@@ -129,19 +130,42 @@ _opensles_recorder_acquire (GstAudioRingBuffer * rb,
   SLDataSink audioSink = { &loc_bq, &format };
 
   /* Required optional interfaces */
-  const SLInterfaceID id[1] = { SL_IID_ANDROIDSIMPLEBUFFERQUEUE };
-  const SLboolean req[1] = { SL_BOOLEAN_TRUE };
+  const SLInterfaceID ids[2] = { SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
+    SL_IID_ANDROIDCONFIGURATION
+  };
+  const SLboolean req[2] = { SL_BOOLEAN_TRUE, SL_BOOLEAN_FALSE };
 
   /* Define the audio format in OpenSL ES terminology */
   _opensles_format (spec, &format);
 
   /* Create the audio recorder object (requires the RECORD_AUDIO permission) */
   result = (*thiz->engineEngine)->CreateAudioRecorder (thiz->engineEngine,
-      &thiz->recorderObject, &audioSrc, &audioSink, 1, id, req);
+      &thiz->recorderObject, &audioSrc, &audioSink, 2, ids, req);
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "engine.CreateAudioRecorder failed(0x%08x)",
         (guint32) result);
     goto failed;
+  }
+
+  /* Set the recording preset if we have one */
+  if (thiz->preset != GST_OPENSLES_RECORDING_PRESET_NONE) {
+    SLint32 preset = gst_to_opensles_recording_preset (thiz->preset);
+
+    result = (*thiz->recorderObject)->GetInterface (thiz->recorderObject,
+        SL_IID_ANDROIDCONFIGURATION, &config);
+
+    if (result == SL_RESULT_SUCCESS) {
+      result = (*config)->SetConfiguration (config,
+          SL_ANDROID_KEY_RECORDING_PRESET, &preset, sizeof (preset));
+
+      if (result != SL_RESULT_SUCCESS) {
+        GST_WARNING_OBJECT (thiz, "Failed to set playback stream type (0x%08x)",
+            (guint32) result);
+      }
+    } else {
+      GST_WARNING_OBJECT (thiz,
+          "Could not get configuration interface 0x%08x", (guint32) result);
+    }
   }
 
   /* Realize the audio recorder object */
