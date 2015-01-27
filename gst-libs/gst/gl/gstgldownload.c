@@ -323,6 +323,8 @@ _do_download (GstGLDownload * download, guint texture_id,
     gpointer temp_data = ((GstGLMemory *) out_mem)->data;
     ((GstGLMemory *) out_mem)->data = data[i];
 
+    gst_gl_memory_download_transfer ((GstGLMemory *) out_mem);
+
     if (!gst_memory_map (out_mem, &map_info, GST_MAP_READ)) {
       GST_ERROR_OBJECT (download, "Failed to map memory");
       ret = FALSE;

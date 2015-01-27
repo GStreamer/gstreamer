@@ -176,6 +176,8 @@ gint          gst_gl_memory_get_texture_height (GstGLMemory * gl_mem);
 
 GstVideoGLTextureType gst_gl_texture_type_from_format (GstGLContext *context, GstVideoFormat v_format, guint plane);
 
+void gst_gl_memory_download_transfer (GstGLMemory * gl_mem);
+
 /**
  * GstGLAllocator
  *
