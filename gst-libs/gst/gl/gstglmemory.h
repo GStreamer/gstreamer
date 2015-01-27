@@ -84,6 +84,7 @@ struct _GstGLMemory
 
   GstGLContext         *context;
   guint                 tex_id;
+  guint                 tex_target;
   GstVideoGLTextureType tex_type;
   GstVideoInfo          info;
   GstVideoAlignment     valign;
@@ -158,7 +159,7 @@ GstMemory *   gst_gl_memory_alloc   (GstGLContext * context, GstVideoInfo * info
 GstGLMemory * gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo * info, guint plane,
                                      GstVideoAlignment *valign, gpointer data,
                                      gpointer user_data, GDestroyNotify notify);
-GstGLMemory * gst_gl_memory_wrapped_texture (GstGLContext * context, guint texture_id,
+GstGLMemory * gst_gl_memory_wrapped_texture (GstGLContext * context, guint texture_id, guint texture_target,
                                              GstVideoInfo * info, guint plane, GstVideoAlignment *valign,
                                              gpointer user_data, GDestroyNotify notify);
 

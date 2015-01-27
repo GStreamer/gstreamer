@@ -1127,7 +1127,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 {
   guint i;
   GList *walk;
-  guint out_tex;
+  guint out_tex, out_tex_target;
   gboolean res = TRUE;
   guint array_index = 0;
   GstVideoFrame out_frame;
@@ -1153,6 +1153,8 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
   if (!to_download) {
     out_tex = *(guint *) out_frame.data[0];
+    out_tex_target =
+        ((GstGLMemory *) gst_buffer_peek_memory (outbuf, 0))->tex_target;
   } else {
     GST_INFO ("Output Buffer does not contain correct memory, "
         "attempting to wrap for download");
@@ -1162,6 +1164,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
     gst_gl_download_set_format (mix->download, &out_frame.info);
     out_tex = mix->out_tex_id;
+    out_tex_target = GL_TEXTURE_2D;
   }
 
   GST_OBJECT_LOCK (mix);
@@ -1215,8 +1218,8 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   g_mutex_unlock (&priv->gl_resource_lock);
 
   if (to_download) {
-    if (!gst_gl_download_perform_with_data (mix->download, out_tex,
-            out_frame.data)) {
+    if (!gst_gl_download_perform_with_data (mix->download,
+            out_tex, out_tex_target, out_frame.data)) {
       GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s",
               "Failed to download video frame"), (NULL));
       res = FALSE;

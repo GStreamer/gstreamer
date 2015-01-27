@@ -599,7 +599,7 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   gint width, height;
   GstVideoFrame out_frame;
   GstGLSyncMeta *sync_meta;
-  guint out_tex;
+  guint out_tex, out_tex_target;
   gboolean to_download =
       gst_caps_features_is_equal (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY,
       gst_caps_get_features (src->out_caps, 0));
@@ -634,6 +634,8 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   if (!to_download) {
     out_tex = *(guint *) out_frame.data[0];
+    out_tex_target =
+        ((GstGLMemory *) gst_buffer_peek_memory (buffer, 0))->tex_target;
   } else {
     GST_INFO ("Output Buffer does not contain correct meta, "
         "attempting to wrap for download");
@@ -649,6 +651,7 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
           GST_VIDEO_FRAME_HEIGHT (&out_frame));
     }
     out_tex = src->out_tex_id;
+    out_tex_target = GL_TEXTURE_2D;
   }
 
   gst_buffer_replace (&src->buffer, buffer);
@@ -661,8 +664,8 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   }
 
   if (to_download) {
-    if (!gst_gl_download_perform_with_data (src->download, out_tex,
-            out_frame.data)) {
+    if (!gst_gl_download_perform_with_data (src->download,
+            out_tex, out_tex_target, out_frame.data)) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s",
               "Failed to init upload format"), (NULL));
       return FALSE;

@@ -47,7 +47,8 @@ static gboolean _do_download (GstGLDownload * download, guint texture_id,
     gpointer data[GST_VIDEO_MAX_PLANES]);
 static gboolean _init_download (GstGLDownload * download);
 static gboolean _gst_gl_download_perform_with_data_unlocked (GstGLDownload *
-    download, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
+    download, GLuint texture_id, GLuint texture_target,
+    gpointer data[GST_VIDEO_MAX_PLANES]);
 static void gst_gl_download_reset (GstGLDownload * download);
 
 /* *INDENT-ON* */
@@ -183,6 +184,7 @@ gst_gl_download_set_format (GstGLDownload * download, GstVideoInfo * out_info)
  * gst_gl_download_perform_with_data:
  * @download: a #GstGLDownload
  * @texture_id: the texture id to download
+ * @texture_target: the GL texture target
  * @data: (out): where the downloaded data should go
  *
  * Downloads @texture_id into @data. @data size and format is specified by
@@ -191,7 +193,8 @@ gst_gl_download_set_format (GstGLDownload * download, GstVideoInfo * out_info)
  * Returns: whether the download was successful
  */
 gboolean
-gst_gl_download_perform_with_data (GstGLDownload * download, GLuint texture_id,
+gst_gl_download_perform_with_data (GstGLDownload * download,
+    GLuint texture_id, GLuint texture_target,
     gpointer data[GST_VIDEO_MAX_PLANES])
 {
   gboolean ret;
@@ -200,7 +203,8 @@ gst_gl_download_perform_with_data (GstGLDownload * download, GLuint texture_id,
 
   GST_OBJECT_LOCK (download);
   ret =
-      _gst_gl_download_perform_with_data_unlocked (download, texture_id, data);
+      _gst_gl_download_perform_with_data_unlocked (download,
+      texture_id, texture_target, data);
   GST_OBJECT_UNLOCK (download);
 
   return ret;
@@ -208,7 +212,8 @@ gst_gl_download_perform_with_data (GstGLDownload * download, GLuint texture_id,
 
 static gboolean
 _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
-    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
+    GLuint texture_id, GLuint texture_target,
+    gpointer data[GST_VIDEO_MAX_PLANES])
 {
   guint i;
 
@@ -231,8 +236,8 @@ _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
         GST_VIDEO_INFO_HEIGHT (&download->info));
 
     download->priv->in_tex[0] =
-        gst_gl_memory_wrapped_texture (download->context, texture_id,
-        &temp_info, 0, NULL, NULL, NULL);
+        gst_gl_memory_wrapped_texture (download->context,
+        texture_id, texture_target, &temp_info, 0, NULL, NULL, NULL);
   }
 
   download->priv->in_tex[0]->tex_id = texture_id;

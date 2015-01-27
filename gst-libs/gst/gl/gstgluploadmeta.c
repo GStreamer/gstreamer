@@ -221,9 +221,11 @@ _perform_with_gl_memory (GstGLUploadMeta * upload, GstVideoGLTextureUploadMeta *
       GstGLMemory *out_mem;
       gint mem_width, mem_height;
 
-      if (!upload->priv->out_tex[i])
+      if (!upload->priv->out_tex[i]) {
+        /* the GL upload meta creates GL_TEXTURE_2D textures */
         upload->priv->out_tex[i] = gst_gl_memory_wrapped_texture (upload->context,
-            texture_id[i], &upload->info, i, NULL, NULL, NULL);
+            texture_id[i], GL_TEXTURE_2D, &upload->info, i, NULL, NULL, NULL);
+      }
 
       out_mem = upload->priv->out_tex[i];
 
