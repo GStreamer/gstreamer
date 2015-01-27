@@ -1083,7 +1083,7 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
     return NULL;
   }
 
-  buf = gst_core_media_buffer_new (cmbuf, FALSE);
+  buf = gst_core_media_buffer_new (cmbuf, FALSE, TRUE);
   dur = CMSampleBufferGetDuration (cmbuf);
   ts = CMSampleBufferGetPresentationTimeStamp (cmbuf);
   if (dur.value != 0) {

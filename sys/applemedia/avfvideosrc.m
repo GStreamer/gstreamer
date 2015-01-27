@@ -863,7 +863,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
   }
 
-  *buf = gst_core_media_buffer_new (sbuf, useVideoMeta);
+  *buf = gst_core_media_buffer_new (sbuf, useVideoMeta, textureCache == NULL);
   if (format == GST_VIDEO_FORMAT_RGBA) {
     /* So now buf contains BGRA data (!) . Since downstream is actually going to
      * use the GL upload meta to get RGBA textures (??), we need to override the

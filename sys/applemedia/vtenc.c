@@ -1272,7 +1272,7 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
 
   /* We are dealing with block buffers here, so we don't need
    * to enable the use of the video meta API on the core media buffer */
-  frame->output_buffer = gst_core_media_buffer_new (sampleBuffer, FALSE);
+  frame->output_buffer = gst_core_media_buffer_new (sampleBuffer, FALSE, TRUE);
 
   g_async_queue_push (self->cur_outframes, frame);
 
