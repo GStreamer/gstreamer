@@ -602,7 +602,9 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
         GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT,
         out_info->width - videoscale->borders_w,
         GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT,
-        out_info->height - videoscale->borders_h, NULL);
+        out_info->height - videoscale->borders_h,
+        GST_VIDEO_CONVERTER_OPT_MATRIX_MODE, G_TYPE_STRING, "none",
+        GST_VIDEO_CONVERTER_OPT_CHROMA_MODE, G_TYPE_STRING, "none", NULL);
 
     if (videoscale->gamma_decode) {
       gst_structure_set (options,
