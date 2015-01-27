@@ -297,83 +297,85 @@ void _custom_video_orc_matrix8 (guint8 * ORC_RESTRICT d1,
     orc_int64 p4, int n);
 void video_orc_resample_h_near_u32_lq (guint32 * ORC_RESTRICT d1,
     const guint32 * ORC_RESTRICT s1, int p1, int p2, int n);
+void video_orc_resample_h_2tap_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int p1, int p2, int n);
 void video_orc_resample_h_2tap_4u8_lq (guint32 * ORC_RESTRICT d1,
     const guint32 * ORC_RESTRICT s1, int p1, int p2, int n);
-void video_orc_resample_v_2tap_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2, int p1,
+void video_orc_resample_v_2tap_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1,
     int n);
-void video_orc_resample_v_2tap_u16 (guint64 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, const guint64 * ORC_RESTRICT s2, int p1,
+void video_orc_resample_v_2tap_u16 (guint16 * ORC_RESTRICT d1,
+    const guint16 * ORC_RESTRICT s1, const guint16 * ORC_RESTRICT s2, int p1,
     int n);
-void video_orc_resample_v_2tap_u8 (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2, int p1,
+void video_orc_resample_v_2tap_u8 (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1,
     int n);
-void video_orc_resample_v_4tap_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+void video_orc_resample_v_4tap_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n);
-void video_orc_resample_v_4tap_u8 (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+void video_orc_resample_v_4tap_u8 (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n);
 void video_orc_resample_h_multaps_u8 (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n);
+    const guint8 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n);
 void video_orc_resample_h_muladdtaps_u8 (gint32 * ORC_RESTRICT d1,
-    int d1_stride, const guint32 * ORC_RESTRICT s1, int s1_stride,
+    int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride,
     const gint16 * ORC_RESTRICT s2, int s2_stride, int n, int m);
-void video_orc_resample_scaletaps_u8 (guint32 * ORC_RESTRICT d1,
+void video_orc_resample_scaletaps_u8 (guint8 * ORC_RESTRICT d1,
     const gint32 * ORC_RESTRICT s1, int n);
-void video_orc_resample_h_multaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n);
-void video_orc_resample_h_muladdtaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    int d1_stride, const guint32 * ORC_RESTRICT s1, int s1_stride,
+void video_orc_resample_h_multaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n);
+void video_orc_resample_h_muladdtaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride,
     const gint16 * ORC_RESTRICT s2, int s2_stride, int n, int m);
-void video_orc_resample_h_multaps3_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
+void video_orc_resample_h_multaps3_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
     const gint16 * ORC_RESTRICT s5, const gint16 * ORC_RESTRICT s6, int n);
-void video_orc_resample_h_muladdtaps3_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
+void video_orc_resample_h_muladdtaps3_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
     const gint16 * ORC_RESTRICT s5, const gint16 * ORC_RESTRICT s6, int n);
-void video_orc_resample_h_muladdscaletaps3_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
+void video_orc_resample_h_muladdscaletaps3_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
     const gint16 * ORC_RESTRICT s5, const gint16 * ORC_RESTRICT s6,
-    const gint32 * ORC_RESTRICT s7, int n);
-void video_orc_resample_scaletaps_u8_lq (guint32 * ORC_RESTRICT d1,
-    const gint32 * ORC_RESTRICT s1, int n);
+    const gint16 * ORC_RESTRICT s7, int n);
+void video_orc_resample_scaletaps_u8_lq (guint8 * ORC_RESTRICT d1,
+    const gint16 * ORC_RESTRICT s1, int n);
 void video_orc_resample_h_multaps_u16 (gint32 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n);
+    const guint16 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n);
 void video_orc_resample_h_muladdtaps_u16 (gint32 * ORC_RESTRICT d1,
-    int d1_stride, const guint64 * ORC_RESTRICT s1, int s1_stride,
+    int d1_stride, const guint16 * ORC_RESTRICT s1, int s1_stride,
     const gint16 * ORC_RESTRICT s2, int s2_stride, int n, int m);
-void video_orc_resample_scaletaps_u16 (guint64 * ORC_RESTRICT d1,
+void video_orc_resample_scaletaps_u16 (guint16 * ORC_RESTRICT d1,
     const gint32 * ORC_RESTRICT s1, int n);
 void video_orc_resample_v_multaps_u8 (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n);
+    const guint8 * ORC_RESTRICT s1, int p1, int n);
 void video_orc_resample_v_muladdtaps_u8 (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n);
+    const guint8 * ORC_RESTRICT s1, int p1, int n);
 void video_orc_resample_v_multaps_u16 (gint32 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, int p1, int n);
+    const guint16 * ORC_RESTRICT s1, int p1, int n);
 void video_orc_resample_v_muladdtaps_u16 (gint32 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, int p1, int n);
-void video_orc_resample_v_multaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n);
-void video_orc_resample_v_multaps4_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+    const guint16 * ORC_RESTRICT s1, int p1, int n);
+void video_orc_resample_v_multaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int p1, int n);
+void video_orc_resample_v_multaps4_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n);
-void video_orc_resample_v_muladdtaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n);
-void video_orc_resample_v_muladdtaps4_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+void video_orc_resample_v_muladdtaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int p1, int n);
+void video_orc_resample_v_muladdtaps4_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n);
-void video_orc_resample_v_muladdscaletaps4_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4,
-    const gint32 * ORC_RESTRICT s5, int p1, int p2, int p3, int p4, int n);
+void video_orc_resample_v_muladdscaletaps4_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
+    const gint16 * ORC_RESTRICT s5, int p1, int p2, int p3, int p4, int n);
 void video_orc_chroma_down_h2_u8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
 void video_orc_chroma_down_v2_u8 (guint8 * ORC_RESTRICT d1,
@@ -16477,6 +16479,123 @@ video_orc_resample_h_near_u32_lq (guint32 * ORC_RESTRICT d1,
 #endif
 
 
+/* video_orc_resample_h_2tap_u8_lq */
+#ifdef DISABLE_ORC
+void
+video_orc_resample_h_2tap_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int p1, int p2, int n)
+{
+  int i;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  orc_int8 var32;
+
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldreslinb */
+    {
+      int tmp = p1 + i * p2;
+      var32 =
+          ((orc_uint8) ptr4[tmp >> 16] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) ptr4[(tmp >> 16) + 1] * ((tmp >> 8) & 0xff)) >> 8;
+    }
+    /* 1: storeb */
+    ptr0[i] = var32;
+  }
+
+}
+
+#else
+static void
+_backup_video_orc_resample_h_2tap_u8_lq (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  orc_int8 var32;
+
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldreslinb */
+    {
+      int tmp = ex->params[24] + i * ex->params[25];
+      var32 =
+          ((orc_uint8) ptr4[tmp >> 16] * (256 - ((tmp >> 8) & 0xff)) +
+          (orc_uint8) ptr4[(tmp >> 16) + 1] * ((tmp >> 8) & 0xff)) >> 8;
+    }
+    /* 1: storeb */
+    ptr0[i] = var32;
+  }
+
+}
+
+void
+video_orc_resample_h_2tap_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int p1, int p2, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 31, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
+        97, 109, 112, 108, 101, 95, 104, 95, 50, 116, 97, 112, 95, 117, 56, 95,
+        108, 113, 11, 1, 1, 12, 1, 1, 16, 4, 16, 4, 50, 0, 4, 24,
+        25, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_orc_resample_h_2tap_u8_lq);
+#else
+      p = orc_program_new ();
+      orc_program_set_name (p, "video_orc_resample_h_2tap_u8_lq");
+      orc_program_set_backup_function (p,
+          _backup_video_orc_resample_h_2tap_u8_lq);
+      orc_program_add_destination (p, 1, "d1");
+      orc_program_add_source (p, 1, "s1");
+      orc_program_add_parameter (p, 4, "p1");
+      orc_program_add_parameter (p, 4, "p2");
+
+      orc_program_append_2 (p, "ldreslinb", 0, ORC_VAR_D1, ORC_VAR_S1,
+          ORC_VAR_P1, ORC_VAR_P2);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_P1] = p1;
+  ex->params[ORC_VAR_P2] = p2;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
 /* video_orc_resample_h_2tap_4u8_lq */
 #ifdef DISABLE_ORC
 void
@@ -16619,8 +16738,8 @@ video_orc_resample_h_2tap_4u8_lq (guint32 * ORC_RESTRICT d1,
 /* video_orc_resample_v_2tap_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_2tap_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2, int p1,
+video_orc_resample_v_2tap_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1,
     int n)
 {
   int i;
@@ -16743,8 +16862,8 @@ _backup_video_orc_resample_v_2tap_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_v_2tap_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2, int p1,
+video_orc_resample_v_2tap_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -16824,8 +16943,8 @@ video_orc_resample_v_2tap_u8_lq (guint32 * ORC_RESTRICT d1,
 /* video_orc_resample_v_2tap_u16 */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_2tap_u16 (guint64 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, const guint64 * ORC_RESTRICT s2, int p1,
+video_orc_resample_v_2tap_u16 (guint16 * ORC_RESTRICT d1,
+    const guint16 * ORC_RESTRICT s1, const guint16 * ORC_RESTRICT s2, int p1,
     int n)
 {
   int i;
@@ -16954,8 +17073,8 @@ _backup_video_orc_resample_v_2tap_u16 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_v_2tap_u16 (guint64 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, const guint64 * ORC_RESTRICT s2, int p1,
+video_orc_resample_v_2tap_u16 (guint16 * ORC_RESTRICT d1,
+    const guint16 * ORC_RESTRICT s1, const guint16 * ORC_RESTRICT s2, int p1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -17040,8 +17159,8 @@ video_orc_resample_v_2tap_u16 (guint64 * ORC_RESTRICT d1,
 /* video_orc_resample_v_2tap_u8 */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_2tap_u8 (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2, int p1,
+video_orc_resample_v_2tap_u8 (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1,
     int n)
 {
   int i;
@@ -17170,8 +17289,8 @@ _backup_video_orc_resample_v_2tap_u8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_v_2tap_u8 (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2, int p1,
+video_orc_resample_v_2tap_u8 (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -17257,9 +17376,9 @@ video_orc_resample_v_2tap_u8 (guint32 * ORC_RESTRICT d1,
 /* video_orc_resample_v_4tap_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_4tap_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+video_orc_resample_v_4tap_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n)
 {
   int i;
@@ -17456,9 +17575,9 @@ _backup_video_orc_resample_v_4tap_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_v_4tap_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+video_orc_resample_v_4tap_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -17564,9 +17683,9 @@ video_orc_resample_v_4tap_u8_lq (guint32 * ORC_RESTRICT d1,
 /* video_orc_resample_v_4tap_u8 */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_4tap_u8 (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+video_orc_resample_v_4tap_u8 (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n)
 {
   int i;
@@ -17769,9 +17888,9 @@ _backup_video_orc_resample_v_4tap_u8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_v_4tap_u8 (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+video_orc_resample_v_4tap_u8 (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -17881,7 +18000,7 @@ video_orc_resample_v_4tap_u8 (guint32 * ORC_RESTRICT d1,
 #ifdef DISABLE_ORC
 void
 video_orc_resample_h_multaps_u8 (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
+    const guint8 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -17948,7 +18067,7 @@ _backup_video_orc_resample_h_multaps_u8 (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_resample_h_multaps_u8 (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
+    const guint8 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -18012,7 +18131,7 @@ video_orc_resample_h_multaps_u8 (gint32 * ORC_RESTRICT d1,
 #ifdef DISABLE_ORC
 void
 video_orc_resample_h_muladdtaps_u8 (gint32 * ORC_RESTRICT d1, int d1_stride,
-    const guint32 * ORC_RESTRICT s1, int s1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride,
     const gint16 * ORC_RESTRICT s2, int s2_stride, int n, int m)
 {
   int i;
@@ -18099,7 +18218,7 @@ _backup_video_orc_resample_h_muladdtaps_u8 (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_resample_h_muladdtaps_u8 (gint32 * ORC_RESTRICT d1, int d1_stride,
-    const guint32 * ORC_RESTRICT s1, int s1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride,
     const gint16 * ORC_RESTRICT s2, int s2_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -18172,7 +18291,7 @@ video_orc_resample_h_muladdtaps_u8 (gint32 * ORC_RESTRICT d1, int d1_stride,
 /* video_orc_resample_scaletaps_u8 */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_scaletaps_u8 (guint32 * ORC_RESTRICT d1,
+video_orc_resample_scaletaps_u8 (guint8 * ORC_RESTRICT d1,
     const gint32 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -18255,7 +18374,7 @@ _backup_video_orc_resample_scaletaps_u8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_scaletaps_u8 (guint32 * ORC_RESTRICT d1,
+video_orc_resample_scaletaps_u8 (guint8 * ORC_RESTRICT d1,
     const gint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -18325,8 +18444,8 @@ video_orc_resample_scaletaps_u8 (guint32 * ORC_RESTRICT d1,
 /* video_orc_resample_h_multaps_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_h_multaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
+video_orc_resample_h_multaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -18392,8 +18511,8 @@ _backup_video_orc_resample_h_multaps_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_h_multaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
+video_orc_resample_h_multaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -18456,8 +18575,8 @@ video_orc_resample_h_multaps_u8_lq (gint32 * ORC_RESTRICT d1,
 /* video_orc_resample_h_muladdtaps_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_h_muladdtaps_u8_lq (gint32 * ORC_RESTRICT d1, int d1_stride,
-    const guint32 * ORC_RESTRICT s1, int s1_stride,
+video_orc_resample_h_muladdtaps_u8_lq (gint16 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride,
     const gint16 * ORC_RESTRICT s2, int s2_stride, int n, int m)
 {
   int i;
@@ -18543,8 +18662,8 @@ _backup_video_orc_resample_h_muladdtaps_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_h_muladdtaps_u8_lq (gint32 * ORC_RESTRICT d1, int d1_stride,
-    const guint32 * ORC_RESTRICT s1, int s1_stride,
+video_orc_resample_h_muladdtaps_u8_lq (gint16 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride,
     const gint16 * ORC_RESTRICT s2, int s2_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -18616,9 +18735,9 @@ video_orc_resample_h_muladdtaps_u8_lq (gint32 * ORC_RESTRICT d1, int d1_stride,
 /* video_orc_resample_h_multaps3_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_h_multaps3_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
+video_orc_resample_h_multaps3_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
     const gint16 * ORC_RESTRICT s5, const gint16 * ORC_RESTRICT s6, int n)
 {
   int i;
@@ -18761,9 +18880,9 @@ _backup_video_orc_resample_h_multaps3_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_h_multaps3_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
+video_orc_resample_h_multaps3_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
     const gint16 * ORC_RESTRICT s5, const gint16 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -18850,9 +18969,9 @@ video_orc_resample_h_multaps3_u8_lq (gint32 * ORC_RESTRICT d1,
 /* video_orc_resample_h_muladdtaps3_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_h_muladdtaps3_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
+video_orc_resample_h_muladdtaps3_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
     const gint16 * ORC_RESTRICT s5, const gint16 * ORC_RESTRICT s6, int n)
 {
   int i;
@@ -19007,9 +19126,9 @@ _backup_video_orc_resample_h_muladdtaps3_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_h_muladdtaps3_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
+video_orc_resample_h_muladdtaps3_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
     const gint16 * ORC_RESTRICT s5, const gint16 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -19099,11 +19218,11 @@ video_orc_resample_h_muladdtaps3_u8_lq (gint32 * ORC_RESTRICT d1,
 /* video_orc_resample_h_muladdscaletaps3_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_h_muladdscaletaps3_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
+video_orc_resample_h_muladdscaletaps3_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
     const gint16 * ORC_RESTRICT s5, const gint16 * ORC_RESTRICT s6,
-    const gint32 * ORC_RESTRICT s7, int n)
+    const gint16 * ORC_RESTRICT s7, int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -19294,11 +19413,11 @@ _backup_video_orc_resample_h_muladdscaletaps3_u8_lq (OrcExecutor *
 }
 
 void
-video_orc_resample_h_muladdscaletaps3_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
+video_orc_resample_h_muladdscaletaps3_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4,
     const gint16 * ORC_RESTRICT s5, const gint16 * ORC_RESTRICT s6,
-    const gint32 * ORC_RESTRICT s7, int n)
+    const gint16 * ORC_RESTRICT s7, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -19399,8 +19518,8 @@ video_orc_resample_h_muladdscaletaps3_u8_lq (guint32 * ORC_RESTRICT d1,
 /* video_orc_resample_scaletaps_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_scaletaps_u8_lq (guint32 * ORC_RESTRICT d1,
-    const gint32 * ORC_RESTRICT s1, int n)
+video_orc_resample_scaletaps_u8_lq (guint8 * ORC_RESTRICT d1,
+    const gint16 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -19476,8 +19595,8 @@ _backup_video_orc_resample_scaletaps_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_scaletaps_u8_lq (guint32 * ORC_RESTRICT d1,
-    const gint32 * ORC_RESTRICT s1, int n)
+video_orc_resample_scaletaps_u8_lq (guint8 * ORC_RESTRICT d1,
+    const gint16 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -19544,7 +19663,7 @@ video_orc_resample_scaletaps_u8_lq (guint32 * ORC_RESTRICT d1,
 #ifdef DISABLE_ORC
 void
 video_orc_resample_h_multaps_u16 (gint32 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
+    const guint16 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -19617,7 +19736,7 @@ _backup_video_orc_resample_h_multaps_u16 (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_resample_h_multaps_u16 (gint32 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
+    const guint16 * ORC_RESTRICT s1, const gint16 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -19684,7 +19803,7 @@ video_orc_resample_h_multaps_u16 (gint32 * ORC_RESTRICT d1,
 #ifdef DISABLE_ORC
 void
 video_orc_resample_h_muladdtaps_u16 (gint32 * ORC_RESTRICT d1, int d1_stride,
-    const guint64 * ORC_RESTRICT s1, int s1_stride,
+    const guint16 * ORC_RESTRICT s1, int s1_stride,
     const gint16 * ORC_RESTRICT s2, int s2_stride, int n, int m)
 {
   int i;
@@ -19777,7 +19896,7 @@ _backup_video_orc_resample_h_muladdtaps_u16 (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_resample_h_muladdtaps_u16 (gint32 * ORC_RESTRICT d1, int d1_stride,
-    const guint64 * ORC_RESTRICT s1, int s1_stride,
+    const guint16 * ORC_RESTRICT s1, int s1_stride,
     const gint16 * ORC_RESTRICT s2, int s2_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -19852,7 +19971,7 @@ video_orc_resample_h_muladdtaps_u16 (gint32 * ORC_RESTRICT d1, int d1_stride,
 /* video_orc_resample_scaletaps_u16 */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_scaletaps_u16 (guint64 * ORC_RESTRICT d1,
+video_orc_resample_scaletaps_u16 (guint16 * ORC_RESTRICT d1,
     const gint32 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -19929,7 +20048,7 @@ _backup_video_orc_resample_scaletaps_u16 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_scaletaps_u16 (guint64 * ORC_RESTRICT d1,
+video_orc_resample_scaletaps_u16 (guint16 * ORC_RESTRICT d1,
     const gint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -19997,7 +20116,7 @@ video_orc_resample_scaletaps_u16 (guint64 * ORC_RESTRICT d1,
 #ifdef DISABLE_ORC
 void
 video_orc_resample_v_multaps_u8 (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n)
+    const guint8 * ORC_RESTRICT s1, int p1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -20060,7 +20179,7 @@ _backup_video_orc_resample_v_multaps_u8 (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_resample_v_multaps_u8 (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n)
+    const guint8 * ORC_RESTRICT s1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -20124,7 +20243,7 @@ video_orc_resample_v_multaps_u8 (gint32 * ORC_RESTRICT d1,
 #ifdef DISABLE_ORC
 void
 video_orc_resample_v_muladdtaps_u8 (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n)
+    const guint8 * ORC_RESTRICT s1, int p1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -20199,7 +20318,7 @@ _backup_video_orc_resample_v_muladdtaps_u8 (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_resample_v_muladdtaps_u8 (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n)
+    const guint8 * ORC_RESTRICT s1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -20266,7 +20385,7 @@ video_orc_resample_v_muladdtaps_u8 (gint32 * ORC_RESTRICT d1,
 #ifdef DISABLE_ORC
 void
 video_orc_resample_v_multaps_u16 (gint32 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, int p1, int n)
+    const guint16 * ORC_RESTRICT s1, int p1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -20329,7 +20448,7 @@ _backup_video_orc_resample_v_multaps_u16 (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_resample_v_multaps_u16 (gint32 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, int p1, int n)
+    const guint16 * ORC_RESTRICT s1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -20393,7 +20512,7 @@ video_orc_resample_v_multaps_u16 (gint32 * ORC_RESTRICT d1,
 #ifdef DISABLE_ORC
 void
 video_orc_resample_v_muladdtaps_u16 (gint32 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, int p1, int n)
+    const guint16 * ORC_RESTRICT s1, int p1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -20474,7 +20593,7 @@ _backup_video_orc_resample_v_muladdtaps_u16 (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_resample_v_muladdtaps_u16 (gint32 * ORC_RESTRICT d1,
-    const guint64 * ORC_RESTRICT s1, int p1, int n)
+    const guint16 * ORC_RESTRICT s1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -20543,8 +20662,8 @@ video_orc_resample_v_muladdtaps_u16 (gint32 * ORC_RESTRICT d1,
 /* video_orc_resample_v_multaps_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_multaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n)
+video_orc_resample_v_multaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int p1, int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -20606,8 +20725,8 @@ _backup_video_orc_resample_v_multaps_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_v_multaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n)
+video_orc_resample_v_multaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -20670,9 +20789,9 @@ video_orc_resample_v_multaps_u8_lq (gint32 * ORC_RESTRICT d1,
 /* video_orc_resample_v_multaps4_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_multaps4_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+video_orc_resample_v_multaps4_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n)
 {
   int i;
@@ -20837,9 +20956,9 @@ _backup_video_orc_resample_v_multaps4_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_v_multaps4_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+video_orc_resample_v_multaps4_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -20937,8 +21056,8 @@ video_orc_resample_v_multaps4_u8_lq (gint32 * ORC_RESTRICT d1,
 /* video_orc_resample_v_muladdtaps_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_muladdtaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n)
+video_orc_resample_v_muladdtaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int p1, int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -21012,8 +21131,8 @@ _backup_video_orc_resample_v_muladdtaps_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_v_muladdtaps_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, int p1, int n)
+video_orc_resample_v_muladdtaps_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -21078,9 +21197,9 @@ video_orc_resample_v_muladdtaps_u8_lq (gint32 * ORC_RESTRICT d1,
 /* video_orc_resample_v_muladdtaps4_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_muladdtaps4_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+video_orc_resample_v_muladdtaps4_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n)
 {
   int i;
@@ -21257,9 +21376,9 @@ _backup_video_orc_resample_v_muladdtaps4_u8_lq (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-video_orc_resample_v_muladdtaps4_u8_lq (gint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4, int p1,
+video_orc_resample_v_muladdtaps4_u8_lq (gint16 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
     int p2, int p3, int p4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -21360,10 +21479,10 @@ video_orc_resample_v_muladdtaps4_u8_lq (gint32 * ORC_RESTRICT d1,
 /* video_orc_resample_v_muladdscaletaps4_u8_lq */
 #ifdef DISABLE_ORC
 void
-video_orc_resample_v_muladdscaletaps4_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4,
-    const gint32 * ORC_RESTRICT s5, int p1, int p2, int p3, int p4, int n)
+video_orc_resample_v_muladdscaletaps4_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
+    const gint16 * ORC_RESTRICT s5, int p1, int p2, int p3, int p4, int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -21576,10 +21695,10 @@ _backup_video_orc_resample_v_muladdscaletaps4_u8_lq (OrcExecutor *
 }
 
 void
-video_orc_resample_v_muladdscaletaps4_u8_lq (guint32 * ORC_RESTRICT d1,
-    const guint32 * ORC_RESTRICT s1, const guint32 * ORC_RESTRICT s2,
-    const guint32 * ORC_RESTRICT s3, const guint32 * ORC_RESTRICT s4,
-    const gint32 * ORC_RESTRICT s5, int p1, int p2, int p3, int p4, int n)
+video_orc_resample_v_muladdscaletaps4_u8_lq (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
+    const gint16 * ORC_RESTRICT s5, int p1, int p2, int p3, int p4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
