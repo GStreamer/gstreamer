@@ -1312,6 +1312,14 @@ x4 addb ayuv, ayuv2, c128
 
 ldresnearl d1, s1, p1, p2
 
+.function video_orc_resample_h_2tap_u8_lq
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.param 4 p1
+.param 4 p2
+
+ldreslinb d1, s1, p1, p2
+
 .function video_orc_resample_h_2tap_4u8_lq
 .dest 4 d1 guint32
 .source 4 s1 guint32
@@ -1321,9 +1329,9 @@ ldresnearl d1, s1, p1, p2
 ldreslinl d1, s1, p1, p2
 
 .function video_orc_resample_v_2tap_u8_lq
-.source 1 src1 guint32
-.source 1 src2 guint32
-.dest 1 dest guint32
+.source 1 src1 guint8
+.source 1 src2 guint8
+.dest 1 dest guint8
 .param 2 p1 gint16
 .temp 1 t
 .temp 2 w1
@@ -1338,9 +1346,9 @@ convhwb t, w2
 addb dest, t, src1
 
 .function video_orc_resample_v_2tap_u16
-.source 2 src1 guint64
-.source 2 src2 guint64
-.dest 2 dest guint64
+.source 2 src1 guint16
+.source 2 src2 guint16
+.dest 2 dest guint16
 .param 2 p1 gint16
 .temp 4 l1
 .temp 4 l2
@@ -1357,9 +1365,9 @@ addl l1, l1, l2
 convsuslw dest, l1
 
 .function video_orc_resample_v_2tap_u8
-.source 1 s1 guint32
-.source 1 s2 guint32
-.dest 1 d1 guint32
+.source 1 s1 guint8
+.source 1 s2 guint8
+.dest 1 d1 guint8
 .param 2 p1 gint16
 .temp 1 t
 .temp 2 w1
@@ -1378,11 +1386,11 @@ addw w2, w2, w1
 convsuswb d1, w2
 
 .function video_orc_resample_v_4tap_u8_lq
-.source 1 s1 guint32
-.source 1 s2 guint32
-.source 1 s3 guint32
-.source 1 s4 guint32
-.dest 1 d1 guint32
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
+.source 1 s4 guint8
+.dest 1 d1 guint8
 .param 2 p1 gint16
 .param 2 p2 gint16
 .param 2 p3 gint16
@@ -1406,11 +1414,11 @@ shrsw w1, w1, 6
 convsuswb d1, w1
 
 .function video_orc_resample_v_4tap_u8
-.source 1 s1 guint32
-.source 1 s2 guint32
-.source 1 s3 guint32
-.source 1 s4 guint32
-.dest 1 d1 guint32
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
+.source 1 s4 guint8
+.dest 1 d1 guint8
 .param 2 p1 gint16
 .param 2 p2 gint16
 .param 2 p3 gint16
@@ -1438,10 +1446,10 @@ convsuswb d1, w1
 
 # crashes ORC for now but is potentially faster
 #.function video_orc_resample_h_4tap_u8
-#.source 1 s1 guint32
-#.source 1 s2 guint32
-#.source 1 s3 guint32
-#.source 1 s4 guint32
+#.source 1 s1 guint8
+#.source 1 s2 guint8
+#.source 1 s3 guint8
+#.source 1 s4 guint8
 #.source 2 t1 gint16
 #.source 2 t2 gint16
 #.source 2 t3 gint16
@@ -1469,7 +1477,7 @@ convsuswb d1, w1
 #convsuswb d1, w1
 
 .function video_orc_resample_h_multaps_u8
-.source 1 s guint32
+.source 1 s guint8
 .source 2 t gint16
 .dest 4 d gint32
 .temp 2 w1
@@ -1479,7 +1487,7 @@ mulswl d, w1, t
 
 .function video_orc_resample_h_muladdtaps_u8
 .flags 2d
-.source 1 s guint32
+.source 1 s guint8
 .source 2 t gint16
 .dest 4 d gint32
 .temp 2 w1
@@ -1491,7 +1499,7 @@ addl d, d, t1
 
 .function video_orc_resample_scaletaps_u8
 .source 4 s gint32
-.dest 1 d guint32
+.dest 1 d guint8
 .temp 2 w1
 .temp 4 t1
 
@@ -1501,9 +1509,9 @@ convsuslw w1, t1
 convsuswb d, w1
 
 .function video_orc_resample_h_multaps_u8_lq
-.source 1 s guint32
+.source 1 s guint8
 .source 2 t gint16
-.dest 2 d gint32
+.dest 2 d gint16
 .temp 2 w1
 
 convubw w1, s
@@ -1511,9 +1519,9 @@ mullw d, w1, t
 
 .function video_orc_resample_h_muladdtaps_u8_lq
 .flags 2d
-.source 1 s guint32
+.source 1 s guint8
 .source 2 t gint16
-.dest 2 d gint32
+.dest 2 d gint16
 .temp 2 w1
 
 convubw w1, s
@@ -1521,13 +1529,13 @@ mullw w1, w1, t
 addw d, d, w1
 
 .function video_orc_resample_h_multaps3_u8_lq
-.source 1 s1 guint32
-.source 1 s2 guint32
-.source 1 s3 guint32
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .source 2 t1 gint16
 .source 2 t2 gint16
 .source 2 t3 gint16
-.dest 2 d gint32
+.dest 2 d gint16
 .temp 2 w1
 .temp 2 w2
 
@@ -1541,13 +1549,13 @@ mullw w2, w2, t3
 addw d, w1, w2
 
 .function video_orc_resample_h_muladdtaps3_u8_lq
-.source 1 s1 guint32
-.source 1 s2 guint32
-.source 1 s3 guint32
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .source 2 t1 gint16
 .source 2 t2 gint16
 .source 2 t3 gint16
-.dest 2 d gint32
+.dest 2 d gint16
 .temp 2 w1
 .temp 2 w2
 
@@ -1562,14 +1570,14 @@ addw w1, w1, w2
 addw d, d, w1
 
 .function video_orc_resample_h_muladdscaletaps3_u8_lq
-.source 1 s1 guint32
-.source 1 s2 guint32
-.source 1 s3 guint32
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .source 2 t1 gint16
 .source 2 t2 gint16
 .source 2 t3 gint16
-.source 2 temp gint32
-.dest 1 d guint32
+.source 2 temp gint16
+.dest 1 d guint8
 .temp 2 w1
 .temp 2 w2
 
@@ -1587,8 +1595,8 @@ shrsw w1, w1, 6
 convsuswb d, w1
 
 .function video_orc_resample_scaletaps_u8_lq
-.source 2 s gint32
-.dest 1 d guint32
+.source 2 s gint16
+.dest 1 d guint8
 .temp 2 w1
 
 addw w1, s, 32
@@ -1596,7 +1604,7 @@ shrsw w1, w1, 6
 convsuswb d, w1
 
 .function video_orc_resample_h_multaps_u16
-.source 2 s guint64
+.source 2 s guint16
 .source 2 t gint16
 .dest 4 d gint32
 .temp 4 l1
@@ -1608,7 +1616,7 @@ mulll d, l1, l2
 
 .function video_orc_resample_h_muladdtaps_u16
 .flags 2d
-.source 2 s guint64
+.source 2 s guint16
 .source 2 t gint16
 .dest 4 d gint32
 .temp 4 l1
@@ -1621,7 +1629,7 @@ addl d, d, l1
 
 .function video_orc_resample_scaletaps_u16
 .source 4 s gint32
-.dest 2 d guint64
+.dest 2 d guint16
 .temp 4 t1
 
 addl t1, s, 4095
@@ -1629,7 +1637,7 @@ shrsl t1, t1, 12
 convsuslw d, t1
 
 .function video_orc_resample_v_multaps_u8
-.source 1 s guint32
+.source 1 s guint8
 .param 2 t gint16
 .dest 4 d gint32
 .temp 2 w1
@@ -1638,7 +1646,7 @@ convubw w1, s
 mulswl d, w1, t
 
 .function video_orc_resample_v_muladdtaps_u8
-.source 1 s guint32
+.source 1 s guint8
 .param 2 t gint16
 .dest 4 d gint32
 .temp 2 w1
@@ -1649,7 +1657,7 @@ mulswl t1, w1, t
 addl d, d, t1
 
 .function video_orc_resample_v_multaps_u16
-.source 2 s guint64
+.source 2 s guint16
 .param 2 t gint16
 .dest 4 d gint32
 .temp 4 l1
@@ -1658,7 +1666,7 @@ convuwl l1, s
 mulll d, l1, t
 
 .function video_orc_resample_v_muladdtaps_u16
-.source 2 s guint64
+.source 2 s guint16
 .param 2 t gint16
 .dest 4 d gint32
 .temp 4 t1
@@ -1670,24 +1678,24 @@ mulll t1, t1, t2
 addl d, d, t1
 
 .function video_orc_resample_v_multaps_u8_lq
-.source 1 s guint32
+.source 1 s guint8
 .param 2 t gint16
-.dest 2 d gint32
+.dest 2 d gint16
 .temp 2 w1
 
 convubw w1, s
 mullw d, w1, t
 
 .function video_orc_resample_v_multaps4_u8_lq
-.source 1 s1 guint32
-.source 1 s2 guint32
-.source 1 s3 guint32
-.source 1 s4 guint32
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
+.source 1 s4 guint8
 .param 2 t1 gint16
 .param 2 t2 gint16
 .param 2 t3 gint16
 .param 2 t4 gint16
-.dest 2 d gint32
+.dest 2 d gint16
 .temp 2 w1
 .temp 2 w2
 
@@ -1704,9 +1712,9 @@ mullw w2, w2, t4
 addw d, w1, w2
 
 .function video_orc_resample_v_muladdtaps_u8_lq
-.source 1 s guint32
+.source 1 s guint8
 .param 2 t gint16
-.dest 2 d gint32
+.dest 2 d gint16
 .temp 2 w1
 
 convubw w1, s
@@ -1714,15 +1722,15 @@ mullw w1, w1, t
 addw d, d, w1
 
 .function video_orc_resample_v_muladdtaps4_u8_lq
-.source 1 s1 guint32
-.source 1 s2 guint32
-.source 1 s3 guint32
-.source 1 s4 guint32
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
+.source 1 s4 guint8
 .param 2 t1 gint16
 .param 2 t2 gint16
 .param 2 t3 gint16
 .param 2 t4 gint16
-.dest 2 d gint32
+.dest 2 d gint16
 .temp 2 w1
 .temp 2 w2
 
@@ -1740,16 +1748,16 @@ addw w1, w1, w2
 addw d, d, w1
 
 .function video_orc_resample_v_muladdscaletaps4_u8_lq
-.source 1 s1 guint32
-.source 1 s2 guint32
-.source 1 s3 guint32
-.source 1 s4 guint32
-.source 2 temp gint32
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
+.source 1 s4 guint8
+.source 2 temp gint16
 .param 2 t1 gint16
 .param 2 t2 gint16
 .param 2 t3 gint16
 .param 2 t4 gint16
-.dest 1 d guint32
+.dest 1 d guint8
 .temp 2 w1
 .temp 2 w2
 
