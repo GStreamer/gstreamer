@@ -334,6 +334,12 @@ gst_vaapipostproc_stop (GstBaseTransform * trans)
   ds_reset (&postproc->deinterlace_state);
   gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (postproc));
   postproc->filter_pool_active = FALSE;
+
+  postproc->field_duration = GST_CLOCK_TIME_NONE;
+  gst_video_info_init(&postproc->sinkpad_info);
+  gst_video_info_init(&postproc->srcpad_info);
+  gst_video_info_init(&postproc->filter_pool_info);
+
   return TRUE;
 }
 
