@@ -980,6 +980,16 @@ gst_audio_base_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
   *end = GST_CLOCK_TIME_NONE;
 }
 
+static void
+gst_audio_base_sink_force_start (GstAudioBaseSink * sink)
+{
+  /* Set the eos_rendering flag so sub-classes definitely start the clock.
+   * FIXME 2.0: Pass this as a flag to gst_audio_ring_buffer_start() */
+  g_atomic_int_set (&sink->eos_rendering, 1);
+  gst_audio_ring_buffer_start (sink->ringbuffer);
+  g_atomic_int_set (&sink->eos_rendering, 0);
+}
+
 /* This waits for the drain to happen and can be canceled */
 static gboolean
 gst_audio_base_sink_drain (GstAudioBaseSink * sink)
@@ -1485,7 +1495,7 @@ gst_audio_base_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
   }
 
   /* start ringbuffer so we can start slaving right away when we need to */
-  gst_audio_ring_buffer_start (sink->ringbuffer);
+  gst_audio_base_sink_force_start (sink);
 
   GST_DEBUG_OBJECT (sink,
       "internal time: %" GST_TIME_FORMAT " external time: %" GST_TIME_FORMAT,
@@ -1973,7 +1983,7 @@ no_align:
           && stop >= bsink->segment.stop)) {
     GST_DEBUG_OBJECT (sink,
         "start playback because we are at the end of segment");
-    gst_audio_ring_buffer_start (ringbuf);
+    gst_audio_base_sink_force_start (sink);
   }
 
   ret = GST_FLOW_OK;
