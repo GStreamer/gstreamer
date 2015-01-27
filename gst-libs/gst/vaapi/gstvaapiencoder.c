@@ -559,7 +559,7 @@ set_context_info (GstVaapiEncoder * encoder)
   cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
   cip->ref_frames = encoder->num_ref_frames;
 
-  if (!cip->chroma_type)
+  if (!cip->chroma_type  && (format != GST_VIDEO_FORMAT_ENCODED))
     goto error_unsupported_format;
 
   memset (config, 0, sizeof (*config));
