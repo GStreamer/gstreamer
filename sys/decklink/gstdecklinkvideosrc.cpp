@@ -100,6 +100,8 @@ static GstFlowReturn gst_decklink_video_src_create (GstPushSrc * psrc,
 static gboolean gst_decklink_video_src_open (GstDecklinkVideoSrc * self);
 static gboolean gst_decklink_video_src_close (GstDecklinkVideoSrc * self);
 
+static void gst_decklink_video_src_start_streams (GstElement * element);
+
 #define parent_class gst_decklink_video_src_parent_class
 G_DEFINE_TYPE (GstDecklinkVideoSrc, gst_decklink_video_src, GST_TYPE_PUSH_SRC);
 
@@ -329,6 +331,8 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   g_mutex_lock (&self->input->lock);
   self->input->mode = mode;
   self->input->video_enabled = TRUE;
+  if (self->input->start_streams)
+    self->input->start_streams (self->input->videosrc);
   g_mutex_unlock (&self->input->lock);
 
   return TRUE;
@@ -551,6 +555,7 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
   g_mutex_lock (&self->input->lock);
   self->input->mode = mode;
   self->input->got_video_frame = gst_decklink_video_src_got_frame;
+  self->input->start_streams = gst_decklink_video_src_start_streams;
   self->input->clock_start_time = GST_CLOCK_TIME_NONE;
   self->input->clock_last_time = 0;
   self->input->clock_offset = 0;
@@ -570,6 +575,8 @@ gst_decklink_video_src_close (GstDecklinkVideoSrc * self)
     self->input->got_video_frame = NULL;
     self->input->mode = NULL;
     self->input->video_enabled = FALSE;
+    if (self->input->start_streams)
+      self->input->start_streams (self->input->videosrc);
     g_mutex_unlock (&self->input->lock);
 
     self->input->input->DisableVideoInput ();
@@ -581,13 +588,35 @@ gst_decklink_video_src_close (GstDecklinkVideoSrc * self)
   return TRUE;
 }
 
+static void
+gst_decklink_video_src_start_streams (GstElement * element)
+{
+  GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
+  HRESULT res;
+
+  if (self->input->video_enabled && (!self->input->audiosrc
+          || self->input->audio_enabled)
+      && GST_STATE (self) == GST_STATE_PLAYING) {
+    GST_DEBUG_OBJECT (self, "Starting streams");
+    res = self->input->input->StartStreams ();
+    if (res != S_OK) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED,
+          (NULL), ("Failed to start streams: 0x%08x", res));
+      return;
+    }
+    self->input->started = TRUE;
+    self->input->clock_restart = TRUE;
+  } else {
+    GST_DEBUG_OBJECT (self, "Not starting streams yet");
+  }
+}
+
 static GstStateChangeReturn
 gst_decklink_video_src_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
   GstStateChangeReturn ret;
-
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -660,19 +689,11 @@ gst_decklink_video_src_change_state (GstElement * element,
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
-      HRESULT res;
-
-      GST_DEBUG_OBJECT (self, "Starting streams");
-      res = self->input->input->StartStreams ();
-      if (res != S_OK) {
-        GST_ELEMENT_ERROR (self, STREAM, FAILED,
-            (NULL), ("Failed to start streams: 0x%08x", res));
-        ret = GST_STATE_CHANGE_FAILURE;
-      }
       g_mutex_lock (&self->input->lock);
-      self->input->started = TRUE;
-      self->input->clock_restart = TRUE;
+      if (self->input->start_streams)
+        self->input->start_streams (self->input->videosrc);
       g_mutex_unlock (&self->input->lock);
+
       break;
     }
     case GST_STATE_CHANGE_READY_TO_NULL:

@@ -148,7 +148,6 @@ struct _GstDecklinkOutput {
   /* Set by the audio sink */
   GstClock *audio_clock;
 
-  /* <private> */
   GstElement *audiosink;
   gboolean audio_enabled;
   GstElement *videosink;
@@ -176,11 +175,11 @@ struct _GstDecklinkInput {
   /* Set by the audio source */
   void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time);
 
-  /* <private> */
   GstElement *audiosrc;
   gboolean audio_enabled;
   GstElement *videosrc;
   gboolean video_enabled;
+  void (*start_streams) (GstElement *videosrc);
 };
 
 GstDecklinkOutput * gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio);
