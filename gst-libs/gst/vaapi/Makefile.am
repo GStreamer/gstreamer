@@ -240,6 +240,7 @@ libgstvaapi_glx_source_c =			\
 libgstvaapi_glx_source_h =			\
 	gstvaapidisplay_glx.h			\
 	gstvaapitexture.h			\
+	gstvaapitexture_glx.h			\
 	gstvaapiwindow_glx.h			\
 	$(NULL)
 
