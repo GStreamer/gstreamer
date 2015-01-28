@@ -760,6 +760,13 @@ gst_videoaggregator_update_src_caps (GstVideoAggregator * vagg)
             GST_VIDEO_AGGREGATOR_GET_CLASS (vagg)->negotiated_caps (vagg, caps);
     }
     gst_caps_unref (caps);
+  } else {
+    /* We couldn't decide the output video info because the sinkpads don't have
+     * all the caps yet, so we mark the pad as needing a reconfigure. This
+     * allows aggregate() to skip ahead a bit and try again later. */
+    GST_DEBUG_OBJECT (vagg, "Couldn't decide output video info");
+    gst_pad_mark_reconfigure (agg->srcpad);
+    ret = FALSE;
   }
 
 done:
@@ -1261,8 +1268,39 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
       ret = gst_videoaggregator_update_src_caps (vagg);
 
     if (!ret) {
-      GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
-      return GST_FLOW_NOT_NEGOTIATED;
+      if (timeout && gst_pad_needs_reconfigure (agg->srcpad)) {
+        guint64 frame_duration;
+        gint fps_d, fps_n;
+
+        GST_DEBUG_OBJECT (vagg,
+            "Got timeout before receiving any caps, don't output anything");
+
+        if (agg->segment.position == -1) {
+          if (agg->segment.rate > 0.0)
+            agg->segment.position = agg->segment.start;
+          else
+            agg->segment.position = agg->segment.stop;
+        }
+
+        /* Advance position */
+        fps_d = GST_VIDEO_INFO_FPS_D (&vagg->info) ?
+            GST_VIDEO_INFO_FPS_D (&vagg->info) : 1;
+        fps_n = GST_VIDEO_INFO_FPS_N (&vagg->info) ?
+            GST_VIDEO_INFO_FPS_N (&vagg->info) : 25;
+        /* Default to 25/1 if no "best fps" is known */
+        frame_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
+        if (agg->segment.rate > 0.0)
+          agg->segment.position += frame_duration;
+        else if (agg->segment.position > frame_duration)
+          agg->segment.position -= frame_duration;
+        else
+          agg->segment.position = 0;
+        GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
+        return GST_FLOW_OK;
+      } else {
+        GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
+        return GST_FLOW_NOT_NEGOTIATED;
+      }
     }
   }
 
