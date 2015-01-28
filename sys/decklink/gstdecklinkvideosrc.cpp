@@ -85,6 +85,8 @@ gst_decklink_video_src_change_state (GstElement * element,
     GstStateChange transition);
 static GstClock *gst_decklink_video_src_provide_clock (GstElement * element);
 
+static gboolean gst_decklink_video_src_set_caps (GstBaseSrc * bsrc,
+    GstCaps * caps);
 static GstCaps *gst_decklink_video_src_get_caps (GstBaseSrc * bsrc,
     GstCaps * filter);
 static gboolean gst_decklink_video_src_query (GstBaseSrc * bsrc,
@@ -120,6 +122,7 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_decklink_video_src_provide_clock);
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_decklink_video_src_get_caps);
+  basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_decklink_video_src_set_caps);
   basesrc_class->query = GST_DEBUG_FUNCPTR (gst_decklink_video_src_query);
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_decklink_video_src_unlock);
   basesrc_class->unlock_stop =
@@ -243,6 +246,91 @@ gst_decklink_video_src_finalize (GObject * object)
   g_cond_clear (&self->cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static gboolean
+gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
+{
+  GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
+  GstCaps *current_caps;
+  const GstDecklinkMode *mode;
+  BMDVideoInputFlags flags;
+  HRESULT ret;
+
+  GST_DEBUG_OBJECT (self, "Setting caps %" GST_PTR_FORMAT, caps);
+
+  if ((current_caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc)))) {
+    GST_DEBUG_OBJECT (self, "Pad already has caps %" GST_PTR_FORMAT, caps);
+
+    if (!gst_caps_is_equal (caps, current_caps)) {
+      GST_ERROR_OBJECT (self, "New caps are not equal to old caps");
+      gst_caps_unref (current_caps);
+      return FALSE;
+    } else {
+      gst_caps_unref (current_caps);
+      return TRUE;
+    }
+  }
+
+  if (!gst_video_info_from_caps (&self->info, caps))
+    return FALSE;
+
+  if (self->input->config && self->connection != GST_DECKLINK_CONNECTION_AUTO) {
+    ret = self->input->config->SetInt (bmdDeckLinkConfigVideoInputConnection,
+        gst_decklink_get_connection (self->connection));
+    if (ret != S_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set configuration (input source)");
+      return FALSE;
+    }
+
+    if (self->connection == GST_DECKLINK_CONNECTION_COMPOSITE) {
+      ret = self->input->config->SetInt (bmdDeckLinkConfigAnalogVideoInputFlags,
+          bmdAnalogVideoFlagCompositeSetup75);
+      if (ret != S_OK) {
+        GST_ERROR_OBJECT (self,
+            "Failed to set configuration (composite setup)");
+        return FALSE;
+      }
+    }
+  }
+
+  flags = bmdVideoInputFlagDefault;
+  if (self->mode == GST_DECKLINK_MODE_AUTO) {
+    bool autoDetection = false;
+
+    if (self->input->attributes) {
+      ret =
+          self->input->
+          attributes->GetFlag (BMDDeckLinkSupportsInputFormatDetection,
+          &autoDetection);
+      if (ret != S_OK) {
+        GST_ERROR_OBJECT (self, "Failed to get attribute (autodetection)");
+        return FALSE;
+      }
+      if (autoDetection)
+        flags |= bmdVideoInputEnableFormatDetection;
+    }
+    if (!autoDetection) {
+      GST_ERROR_OBJECT (self, "Failed to activate auto-detection");
+      return FALSE;
+    }
+  }
+
+  mode = gst_decklink_get_mode (self->mode);
+  g_assert (mode != NULL);
+
+  ret = self->input->input->EnableVideoInput (mode->mode,
+      bmdFormat8BitYUV, flags);
+  if (ret != S_OK) {
+    GST_WARNING_OBJECT (self, "Failed to enable video input");
+    return FALSE;
+  }
+
+  g_mutex_lock (&self->input->lock);
+  self->input->mode = mode;
+  g_mutex_unlock (&self->input->lock);
+
+  return TRUE;
 }
 
 static GstCaps *
@@ -446,9 +534,6 @@ static gboolean
 gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
 {
   const GstDecklinkMode *mode;
-  BMDVideoInputFlags flags;
-  GstCaps *caps;
-  HRESULT ret;
 
   GST_DEBUG_OBJECT (self, "Starting");
 
@@ -460,68 +545,12 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
     return FALSE;
   }
 
-  if (self->input->config && self->connection != GST_DECKLINK_CONNECTION_AUTO) {
-    ret = self->input->config->SetInt (bmdDeckLinkConfigVideoInputConnection,
-        gst_decklink_get_connection (self->connection));
-    if (ret != S_OK) {
-      GST_ERROR_OBJECT (self, "Failed to set configuration (input source)");
-      return FALSE;
-    }
-
-    if (self->connection == GST_DECKLINK_CONNECTION_COMPOSITE) {
-      ret = self->input->config->SetInt (bmdDeckLinkConfigAnalogVideoInputFlags,
-          bmdAnalogVideoFlagCompositeSetup75);
-      if (ret != S_OK) {
-        GST_ERROR_OBJECT (self,
-            "Failed to set configuration (composite setup)");
-        return FALSE;
-      }
-    }
-  }
-
-  flags = bmdVideoInputFlagDefault;
-  if (self->mode == GST_DECKLINK_MODE_AUTO) {
-    bool autoDetection = false;
-
-    if (self->input->attributes) {
-      ret =
-          self->input->
-          attributes->GetFlag (BMDDeckLinkSupportsInputFormatDetection,
-          &autoDetection);
-      if (ret != S_OK) {
-        GST_ERROR_OBJECT (self, "Failed to get attribute (autodetection)");
-        return FALSE;
-      }
-      if (autoDetection)
-        flags |= bmdVideoInputEnableFormatDetection;
-    }
-    if (!autoDetection) {
-      GST_ERROR_OBJECT (self, "Failed to activate auto-detection");
-      return FALSE;
-    }
-  }
-
   mode = gst_decklink_get_mode (self->mode);
   g_assert (mode != NULL);
-
-  ret = self->input->input->EnableVideoInput (mode->mode,
-      bmdFormat8BitYUV, flags);
-  if (ret != S_OK) {
-    GST_WARNING_OBJECT (self, "Failed to enable video input");
-    gst_decklink_release_nth_input (self->device_number,
-        GST_ELEMENT_CAST (self), FALSE);
-    return FALSE;
-  }
-
   g_mutex_lock (&self->input->lock);
   self->input->mode = mode;
   self->input->got_video_frame = gst_decklink_video_src_got_frame;
   g_mutex_unlock (&self->input->lock);
-
-  self->caps_mode = gst_decklink_get_mode_enum_from_bmd (mode->mode);
-  caps = gst_decklink_mode_get_caps (self->caps_mode);
-  gst_video_info_from_caps (&self->info, caps);
-  gst_caps_unref (caps);
 
   return TRUE;
 }
