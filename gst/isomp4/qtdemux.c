@@ -1425,7 +1425,6 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
   }
   segment->position = desired_offset;
   segment->time = desired_offset;
-  qtdemux->segment_base = desired_offset;
 
   /* we stop at the end */
   if (segment->stop == -1)
@@ -1874,7 +1873,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   qtdemux->offset = 0;
   gst_adapter_clear (qtdemux->adapter);
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
-  qtdemux->segment_base = 0;
 
   if (hard) {
     for (n = 0; n < qtdemux->n_streams; n++) {
@@ -3640,6 +3638,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (G_UNLIKELY (QTSEGMENT_IS_EMPTY (segment))) {
     start = segment->time + seg_time;
     time = offset;
+    stop = start - seg_time + segment->duration;
   } else if (qtdemux->segment.rate >= 0) {
     start = MIN (segment->media_start + seg_time, stop);
     time = offset;
@@ -3674,9 +3673,6 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   stream->segment.stop = stop;
   stream->segment.time = time;
   stream->segment.position = start;
-  stream->segment.base =
-      segment->time >
-      qtdemux->segment_base ? segment->time - qtdemux->segment_base : 0;
 
   /* now prepare and send the segment */
   if (stream->pad) {
