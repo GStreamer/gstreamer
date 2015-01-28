@@ -428,6 +428,17 @@ gst_v4l2_transform_fixate_caps (GstBaseTransform * trans,
   ins = gst_caps_get_structure (caps, 0);
   outs = gst_caps_get_structure (othercaps, 0);
 
+  {
+    const gchar *in_format;
+
+    in_format = gst_structure_get_string (ins, "format");
+    if (in_format) {
+      /* Try to set output format for pass through */
+      gst_structure_fixate_field_string (outs, "format", in_format);
+    }
+
+  }
+
   from_par = gst_structure_get_value (ins, "pixel-aspect-ratio");
   to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
 
@@ -846,6 +857,9 @@ done:
     g_value_unset (&fpar);
   if (to_par == &tpar)
     g_value_unset (&tpar);
+
+  /* fixate remaining fields */
+  othercaps = gst_caps_fixate (othercaps);
 
   return othercaps;
 }
