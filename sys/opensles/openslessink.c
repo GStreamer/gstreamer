@@ -47,11 +47,14 @@ enum
   PROP_0,
   PROP_VOLUME,
   PROP_MUTE,
+  PROP_STREAM_TYPE,
   PROP_LAST
 };
 
 #define DEFAULT_VOLUME 1.0
 #define DEFAULT_MUTE   FALSE
+
+#define DEFAULT_STREAM_TYPE GST_OPENSLES_STREAM_TYPE_NONE
 
 
 /* According to Android's NDK doc the following are the supported rates */
@@ -85,6 +88,9 @@ gst_opensles_sink_create_ringbuffer (GstAudioBaseSink * base)
   rb = gst_opensles_ringbuffer_new (RB_MODE_SINK_PCM);
   gst_opensles_ringbuffer_set_volume (rb, sink->volume);
   gst_opensles_ringbuffer_set_mute (rb, sink->mute);
+
+  GST_OPENSLES_RING_BUFFER (rb)->stream_type = sink->stream_type;
+
   return rb;
 }
 
@@ -208,6 +214,9 @@ gst_opensles_sink_set_property (GObject * object, guint prop_id,
         gst_opensles_ringbuffer_set_mute (rb, sink->mute);
       }
       break;
+    case PROP_STREAM_TYPE:
+      sink->stream_type = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -225,6 +234,9 @@ gst_opensles_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MUTE:
       g_value_set_boolean (value, sink->mute);
+      break;
+    case PROP_STREAM_TYPE:
+      g_value_set_enum (value, sink->stream_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -254,6 +266,12 @@ gst_opensles_sink_class_init (GstOpenSLESSinkClass * klass)
       g_param_spec_boolean ("mute", "Mute", "Mute state of this stream",
           DEFAULT_MUTE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_STREAM_TYPE,
+      g_param_spec_enum ("stream-type", "Stream type",
+          "Stream type that this stream should be tagged with",
+          GST_TYPE_OPENSLES_STREAM_TYPE, DEFAULT_STREAM_TYPE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
@@ -269,6 +287,7 @@ gst_opensles_sink_class_init (GstOpenSLESSinkClass * klass)
 static void
 gst_opensles_sink_init (GstOpenSLESSink * sink)
 {
+  sink->stream_type = DEFAULT_STREAM_TYPE;
   sink->volume = DEFAULT_VOLUME;
   sink->mute = DEFAULT_MUTE;
 

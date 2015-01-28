@@ -40,6 +40,8 @@ struct _GstOpenSLESSink
 {
   GstAudioBaseSink sink;
 
+  GstOpenSLESStreamType stream_type;
+
   gfloat volume;
   gboolean mute;
 };

@@ -43,6 +43,23 @@ GType gst_opensles_recording_preset_get_type (void);
 
 SLint32 gst_to_opensles_recording_preset (GstOpenSLESRecordingPreset preset);
 
+typedef enum {
+  GST_OPENSLES_STREAM_TYPE_VOICE,
+  GST_OPENSLES_STREAM_TYPE_SYSTEM,
+  GST_OPENSLES_STREAM_TYPE_RING,
+  GST_OPENSLES_STREAM_TYPE_MEDIA,
+  GST_OPENSLES_STREAM_TYPE_ALARM,
+  GST_OPENSLES_STREAM_TYPE_NOTIFICATION,
+  GST_OPENSLES_STREAM_TYPE_NONE = -1, /* If we don't want to set a type */
+} GstOpenSLESStreamType;
+
+#define GST_TYPE_OPENSLES_STREAM_TYPE \
+  (gst_opensles_stream_type_get_type())
+
+GType gst_opensles_stream_type_get_type (void);
+
+SLint32 gst_to_opensles_stream_type (GstOpenSLESStreamType stream_type);
+
 G_END_DECLS
 
 #endif /* __OPENSLESCOMMON_H__ */

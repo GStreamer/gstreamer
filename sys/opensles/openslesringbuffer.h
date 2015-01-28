@@ -81,6 +81,7 @@ struct _GstOpenSLESRingBuffer
   gfloat volume;
   gboolean mute;
   gint is_prerolled; /* ATOMIC */
+  GstOpenSLESStreamType stream_type;
 
   /* recorder interfaces */
   SLObjectItf recorderObject;

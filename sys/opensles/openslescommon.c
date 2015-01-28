@@ -74,3 +74,65 @@ gst_to_opensles_recording_preset (GstOpenSLESRecordingPreset preset)
       return SL_ANDROID_RECORDING_PRESET_NONE;
   }
 }
+
+GType
+gst_opensles_stream_type_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {GST_OPENSLES_STREAM_TYPE_VOICE,
+        "GST_OPENSLES_STREAM_TYPE_VOICE", "voice"},
+    {GST_OPENSLES_STREAM_TYPE_SYSTEM,
+        "GST_OPENSLES_STREAM_TYPE_SYSTEM", "system"},
+    {GST_OPENSLES_STREAM_TYPE_RING,
+        "GST_OPENSLES_STREAM_TYPE_RING", "ring"},
+    {GST_OPENSLES_STREAM_TYPE_MEDIA,
+        "GST_OPENSLES_STREAM_TYPE_MEDIA", "media"},
+    {GST_OPENSLES_STREAM_TYPE_ALARM,
+        "GST_OPENSLES_STREAM_TYPE_ALARM", "alarm"},
+    {GST_OPENSLES_STREAM_TYPE_NOTIFICATION,
+        "GST_OPENSLES_STREAM_TYPE_NOTIFICATION", "notification"},
+    {GST_OPENSLES_STREAM_TYPE_NONE,
+        "GST_OPENSLES_STREAM_TYPE_NONE", "none"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstOpenSLESStreamType", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
+
+SLint32
+gst_to_opensles_stream_type (GstOpenSLESStreamType stream_type)
+{
+  switch (stream_type) {
+    case GST_OPENSLES_STREAM_TYPE_VOICE:
+      return SL_ANDROID_STREAM_VOICE;
+
+    case GST_OPENSLES_STREAM_TYPE_SYSTEM:
+      return SL_ANDROID_STREAM_SYSTEM;
+
+    case GST_OPENSLES_STREAM_TYPE_RING:
+      return SL_ANDROID_STREAM_RING;
+
+    case GST_OPENSLES_STREAM_TYPE_MEDIA:
+      return SL_ANDROID_STREAM_MEDIA;
+
+    case GST_OPENSLES_STREAM_TYPE_ALARM:
+      return SL_ANDROID_STREAM_ALARM;
+
+    case GST_OPENSLES_STREAM_TYPE_NOTIFICATION:
+      return SL_ANDROID_STREAM_NOTIFICATION;
+
+    default:
+      GST_ERROR ("Unsupported stream type: %d", (int) stream_type);
+      return SL_ANDROID_STREAM_MEDIA;
+  }
+}
