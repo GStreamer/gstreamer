@@ -24,6 +24,7 @@
 
 #include <Cocoa/Cocoa.h>
 
+#include "gstglcaopengllayer.h"
 #include "gstgl_cocoa_private.h"
 
 @implementation GstGLCAOpenGLLayer
