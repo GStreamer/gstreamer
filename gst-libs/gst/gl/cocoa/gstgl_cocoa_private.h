@@ -27,6 +27,7 @@
 
 #include "gstglwindow_cocoa.h"
 #include "gstglcontext_cocoa.h"
+#include "gstglcaopengllayer.h"
 
 G_BEGIN_DECLS
 
@@ -47,18 +48,6 @@ struct _GstGLContextCocoaPrivate
 /*                  GstGLNSView declaration               */
 /*                                                              */
 /* =============================================================*/
-
-@interface GstGLCAOpenGLLayer : CAOpenGLLayer {
-@public
-  GstGLContextCocoa *gst_gl_context;
-  CGLContextObj gl_context;
-
-@private
-  gint expected_dims[4];
-}
-- (id)initWithGstGLContext:(GstGLContextCocoa *)context;
-- (void)resize:(NSRect)bounds;
-@end
 
 @interface GstGLNSView: NSView {
 @public
