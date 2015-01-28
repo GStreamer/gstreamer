@@ -266,8 +266,11 @@ gst_gl_window_cocoa_draw_thread (GstGLWindowCocoa *window_cocoa)
 
   if (g_main_loop_is_running (priv->loop)) {
     if (![priv->internal_win_id isClosed]) {
+     GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
+
       /* draw opengl scene in the back buffer */
-      GST_GL_WINDOW (window_cocoa)->draw (GST_GL_WINDOW (window_cocoa)->draw_data);
+      if (window->draw)
+        window->draw (window->draw_data);
     }
   }
 }
@@ -439,7 +442,9 @@ close_window_cb (gpointer data)
 
   GST_DEBUG ("user clicked the close button\n");
   [window_cocoa->priv->internal_win_id setClosed];
-  gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) close_window_cb, gst_object_ref (window_cocoa), (GDestroyNotify) gst_object_unref);
+  gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa),
+      (GstGLWindowCB) close_window_cb, gst_object_ref (window_cocoa),
+      (GDestroyNotify) gst_object_unref);
   return YES;
 }
 
@@ -563,7 +568,8 @@ resize_cb (gpointer data)
     resize_data->bounds = bounds;
     resize_data->visibleRect = visibleRect;
 
-    gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa), (GstGLWindowCB) resize_cb, resize_data, (GDestroyNotify) g_free);
+    gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa),
+        (GstGLWindowCB) resize_cb, resize_data, (GDestroyNotify) g_free);
   }
 }
 
