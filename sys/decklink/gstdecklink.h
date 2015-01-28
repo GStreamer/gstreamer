@@ -152,6 +152,7 @@ struct _GstDecklinkOutput {
   gboolean audio_enabled;
   GstElement *videosink;
   gboolean video_enabled;
+  void (*start_scheduled_playback) (GstElement *videosink);
 };
 
 typedef struct _GstDecklinkInput GstDecklinkInput;

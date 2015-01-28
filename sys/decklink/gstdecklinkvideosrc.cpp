@@ -596,7 +596,8 @@ gst_decklink_video_src_start_streams (GstElement * element)
 
   if (self->input->video_enabled && (!self->input->audiosrc
           || self->input->audio_enabled)
-      && GST_STATE (self) == GST_STATE_PLAYING) {
+      && (GST_STATE (self) == GST_STATE_PLAYING
+          || GST_STATE_PENDING (self) == GST_STATE_PLAYING)) {
     GST_DEBUG_OBJECT (self, "Starting streams");
     res = self->input->input->StartStreams ();
     if (res != S_OK) {

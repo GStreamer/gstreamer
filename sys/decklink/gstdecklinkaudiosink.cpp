@@ -363,6 +363,8 @@ gst_decklink_audio_sink_ringbuffer_acquire (GstAudioRingBuffer * rb,
 
   g_mutex_lock (&self->output->lock);
   self->output->audio_enabled = TRUE;
+  if (self->output->start_scheduled_playback)
+    self->output->start_scheduled_playback (self->output->videosink);
   g_mutex_unlock (&self->output->lock);
 
   ret =
@@ -398,6 +400,8 @@ gst_decklink_audio_sink_ringbuffer_release (GstAudioRingBuffer * rb)
   if (self->output) {
     g_mutex_lock (&self->output->lock);
     self->output->audio_enabled = FALSE;
+    if (self->output->start_scheduled_playback)
+      self->output->start_scheduled_playback (self->output->videosink);
     g_mutex_unlock (&self->output->lock);
 
     self->output->output->DisableAudioOutput ();
