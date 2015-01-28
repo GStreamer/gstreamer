@@ -232,6 +232,7 @@ EXPORTS
 	gst_video_resampler_flags_get_type
 	gst_video_resampler_init
 	gst_video_resampler_method_get_type
+	gst_video_scaler_combine_packed_YUV
 	gst_video_scaler_free
 	gst_video_scaler_get_coeff
 	gst_video_scaler_horizontal
