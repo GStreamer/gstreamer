@@ -157,8 +157,9 @@ void video_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_R
 void video_orc_matrix8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, orc_int64 p1, orc_int64 p2, orc_int64 p3, orc_int64 p4, int n);
 void _custom_video_orc_matrix8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, orc_int64 p1, orc_int64 p2, orc_int64 p3, orc_int64 p4, int n);
 void video_orc_resample_h_near_u32_lq (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int p1, int p2, int n);
-void video_orc_resample_h_2tap_u8_lq (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int n);
+void video_orc_resample_h_2tap_1u8_lq (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int n);
 void video_orc_resample_h_2tap_4u8_lq (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int p1, int p2, int n);
+void video_orc_resample_h_2tap_u8_lq (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const gint16 * ORC_RESTRICT s3, const gint16 * ORC_RESTRICT s4, int n);
 void video_orc_resample_v_2tap_u8_lq (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1, int n);
 void video_orc_resample_v_2tap_u16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, const guint16 * ORC_RESTRICT s2, int p1, int n);
 void video_orc_resample_v_2tap_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1, int n);
