@@ -469,6 +469,7 @@ close_window_cb (gpointer data)
   [self setLayer:layerContent];
   [self setWantsLayer:YES];
   self->layer = (GstGLCAOpenGLLayer *)layerContent;
+  [self->layer setDrawCallback:(GstGLWindowCB)gst_gl_window_cocoa_draw_thread data:window notify:NULL];
 
   [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
 
