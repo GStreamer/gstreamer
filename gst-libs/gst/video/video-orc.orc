@@ -1312,7 +1312,7 @@ x4 addb ayuv, ayuv2, c128
 
 ldresnearl d1, s1, p1, p2
 
-.function video_orc_resample_h_2tap_u8_lq
+.function video_orc_resample_h_2tap_1u8_lq
 .dest 1 d1 guint8
 .source 1 s1 guint8
 .param 4 p1
@@ -1327,6 +1327,24 @@ ldreslinb d1, s1, p1, p2
 .param 4 p2
 
 ldreslinl d1, s1, p1, p2
+
+.function video_orc_resample_h_2tap_u8_lq
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 2 t1 gint16
+.source 2 t2 gint16
+.dest 1 d guint8
+.temp 2 w1
+.temp 2 w2
+
+convubw w1, s1
+mullw w1, w1, t1
+convubw w2, s2
+mullw w2, w2, t2
+addw w1, w1, w2
+addw w1, w1, 32
+shrsw w1, w1, 6
+convsuswb d, w1
 
 .function video_orc_resample_v_2tap_u8_lq
 .source 1 src1 guint8
