@@ -1033,6 +1033,22 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
   GstAudioBaseSink *sink = GST_AUDIO_BASE_SINK (bsink);
   GstFlowReturn ret;
 
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    case GST_EVENT_GAP:
+      /* We must have a negotiated format before starting the ringbuffer */
+      if (G_UNLIKELY (!gst_audio_ring_buffer_is_acquired (sink->ringbuffer))) {
+        GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL),
+            ("Sink not negotiated before GAP event."));
+        return GST_FLOW_ERROR;
+      }
+
+      gst_audio_base_sink_force_start (sink);
+      break;
+    default:
+      break;
+  }
+
   ret = GST_BASE_SINK_CLASS (parent_class)->wait_event (bsink, event);
   if (ret != GST_FLOW_OK)
     return ret;
@@ -1046,12 +1062,6 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
       GstMapInfo minfo;
 
       spec = &sink->ringbuffer->spec;
-      if (G_UNLIKELY (spec->info.rate == 0)) {
-        GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL),
-            ("Sink not negotiated before GAP event."));
-        ret = GST_FLOW_ERROR;
-        break;
-      }
 
       gst_event_parse_gap (event, &timestamp, &duration);
 
