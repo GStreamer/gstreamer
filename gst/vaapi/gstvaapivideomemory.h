@@ -117,10 +117,6 @@ struct _GstVaapiVideoMemory
 };
 
 G_GNUC_INTERNAL
-GQuark
-gst_vaapi_video_memory_quark_get (void);
-
-G_GNUC_INTERNAL
 GstMemory *
 gst_vaapi_video_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta);
 
