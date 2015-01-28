@@ -635,7 +635,8 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gchar * path,
 
     ctx->media = media;
 
-    if (!gst_rtsp_media_is_record (media)) {
+    if (!(gst_rtsp_media_get_transport_mode (media) &
+            GST_RTSP_TRANSPORT_MODE_RECORD)) {
       GstRTSPThread *thread;
 
       thread = gst_rtsp_thread_pool_get_thread (priv->thread_pool,
@@ -1145,8 +1146,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   ctx->sessmedia = sessmedia;
   ctx->media = media = gst_rtsp_session_media_get_media (sessmedia);
 
-  if (gst_rtsp_media_is_record (media))
-    goto record_media;
+  if (!(gst_rtsp_media_get_transport_mode (media) &
+          GST_RTSP_TRANSPORT_MODE_PLAY))
+    goto unsupported_mode;
 
   /* the session state must be playing or ready */
   rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
@@ -1237,9 +1239,9 @@ unsuspend_failed:
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     return FALSE;
   }
-record_media:
+unsupported_mode:
   {
-    GST_ERROR ("client %p: RECORD media does not support PLAY", client);
+    GST_ERROR ("client %p: media does not support PLAY", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     return FALSE;
   }
@@ -1475,7 +1477,8 @@ make_server_transport (GstRTSPClient * client, GstRTSPMedia * media,
       break;
   }
 
-  if (!gst_rtsp_media_is_record (media))
+  if ((gst_rtsp_media_get_transport_mode (media) &
+          GST_RTSP_TRANSPORT_MODE_PLAY))
     gst_rtsp_stream_get_ssrc (ctx->stream, &st->ssrc);
 
   return st;
@@ -1857,9 +1860,11 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!parse_transport (transport, stream, ct))
     goto unsupported_transports;
 
-  /* TODO: Add support for PLAY,RECORD media */
-  if ((ct->mode_play && gst_rtsp_media_is_record (media)) ||
-      (ct->mode_record && !gst_rtsp_media_is_record (media)))
+  if ((ct->mode_play
+          && !(gst_rtsp_media_get_transport_mode (media) &
+              GST_RTSP_TRANSPORT_MODE_PLAY)) || (ct->mode_record
+          && !(gst_rtsp_media_get_transport_mode (media) &
+              GST_RTSP_TRANSPORT_MODE_RECORD)))
     goto unsupported_mode;
 
   /* parse the keymgmt */
@@ -2029,9 +2034,12 @@ unsupported_client_transport:
   }
 unsupported_mode:
   {
-    GST_ERROR ("client %p: unsupported mode (media record: %d, mode play: %d"
-        ", mode record: %d)", client, gst_rtsp_media_is_record (media),
-        ct->mode_play, ct->mode_record);
+    GST_ERROR ("client %p: unsupported mode (media play: %d, media record: %d, "
+        "mode play: %d, mode record: %d)", client,
+        ! !(gst_rtsp_media_get_transport_mode (media) &
+            GST_RTSP_TRANSPORT_MODE_PLAY),
+        ! !(gst_rtsp_media_get_transport_mode (media) &
+            GST_RTSP_TRANSPORT_MODE_RECORD), ct->mode_play, ct->mode_record);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
     goto cleanup_transport;
   }
@@ -2148,8 +2156,9 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!(media = find_media (client, ctx, path, NULL)))
     goto no_media;
 
-  if (gst_rtsp_media_is_record (media))
-    goto record_media;
+  if (!(gst_rtsp_media_get_transport_mode (media) &
+          GST_RTSP_TRANSPORT_MODE_PLAY))
+    goto unsupported_mode;
 
   /* create an SDP for the media object on this client */
   if (!(sdp = klass->create_sdp (client, media)))
@@ -2210,9 +2219,9 @@ no_media:
     /* error reply is already sent */
     return FALSE;
   }
-record_media:
+unsupported_mode:
   {
-    GST_ERROR ("client %p: RECORD media does not support DESCRIBE", client);
+    GST_ERROR ("client %p: media does not support DESCRIBE", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     g_free (path);
     g_object_unref (media);
@@ -2316,8 +2325,9 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!(media = find_media (client, ctx, path, NULL)))
     goto no_media;
 
-  if (!gst_rtsp_media_is_record (media))
-    goto play_media;
+  if (!(gst_rtsp_media_get_transport_mode (media) &
+          GST_RTSP_TRANSPORT_MODE_RECORD))
+    goto unsupported_mode;
 
   /* Tell client subclass about the media */
   if (!klass->handle_sdp (client, ctx, media, sdp))
@@ -2385,9 +2395,9 @@ no_media:
     gst_sdp_message_free (sdp);
     return FALSE;
   }
-play_media:
+unsupported_mode:
   {
-    GST_ERROR ("client %p: PLAY media does not support ANNOUNCE", client);
+    GST_ERROR ("client %p: media does not support ANNOUNCE", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     g_free (path);
     g_object_unref (media);
@@ -2439,8 +2449,9 @@ handle_record_request (GstRTSPClient * client, GstRTSPContext * ctx)
   ctx->sessmedia = sessmedia;
   ctx->media = media = gst_rtsp_session_media_get_media (sessmedia);
 
-  if (!gst_rtsp_media_is_record (media))
-    goto play_media;
+  if (!(gst_rtsp_media_get_transport_mode (media) &
+          GST_RTSP_TRANSPORT_MODE_RECORD))
+    goto unsupported_mode;
 
   /* the session state must be playing or ready */
   rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
@@ -2493,9 +2504,9 @@ no_aggregate:
     g_free (path);
     return FALSE;
   }
-play_media:
+unsupported_mode:
   {
-    GST_ERROR ("client %p: PLAY media does not support RECORD", client);
+    GST_ERROR ("client %p: media does not support RECORD", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     return FALSE;
   }

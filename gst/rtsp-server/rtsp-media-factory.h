@@ -149,9 +149,9 @@ void                  gst_rtsp_media_factory_set_latency      (GstRTSPMediaFacto
                                                                guint                 latency);
 guint                 gst_rtsp_media_factory_get_latency      (GstRTSPMediaFactory * factory);
 
-void                  gst_rtsp_media_factory_set_record       (GstRTSPMediaFactory *factory,
-                                                               gboolean record);
-gboolean              gst_rtsp_media_factory_is_record        (GstRTSPMediaFactory *factory);
+void                  gst_rtsp_media_factory_set_transport_mode (GstRTSPMediaFactory *factory,
+                                                                 GstRTSPTransportMode mode);
+GstRTSPTransportMode  gst_rtsp_media_factory_get_transport_mode (GstRTSPMediaFactory *factory);
 
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct        (GstRTSPMediaFactory *factory,

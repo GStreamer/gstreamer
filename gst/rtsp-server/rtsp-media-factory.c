@@ -53,13 +53,13 @@ struct _GstRTSPMediaFactoryPrivate
   GstRTSPPermissions *permissions;
   gchar *launch;
   gboolean shared;
-  gboolean record;
   GstRTSPSuspendMode suspend_mode;
   gboolean eos_shutdown;
   GstRTSPProfile profiles;
   GstRTSPLowerTrans protocols;
   guint buffer_size;
   GstRTSPAddressPool *pool;
+  GstRTSPTransportMode transport_mode;
 
   GstClockTime rtx_time;
   guint latency;
@@ -77,7 +77,7 @@ struct _GstRTSPMediaFactoryPrivate
                                         GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_BUFFER_SIZE     0x80000
 #define DEFAULT_LATENCY         200
-#define DEFAULT_RECORD          FALSE
+#define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
 
 enum
 {
@@ -90,7 +90,7 @@ enum
   PROP_PROTOCOLS,
   PROP_BUFFER_SIZE,
   PROP_LATENCY,
-  PROP_RECORD,
+  PROP_TRANSPORT_MODE,
   PROP_LAST
 };
 
@@ -194,12 +194,10 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           "Latency used for receiving media in milliseconds", 0, G_MAXUINT,
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* FIXME: Should this be a flag property to allow RECORD and PLAY?
-   *        Or just another boolean PLAY property that default to TRUE?
-   */
-  g_object_class_install_property (gobject_class, PROP_RECORD,
-      g_param_spec_boolean ("record", "Record",
-          "If media from this factory is for PLAY or RECORD", DEFAULT_RECORD,
+  g_object_class_install_property (gobject_class, PROP_TRANSPORT_MODE,
+      g_param_spec_flags ("transport-mode", "Transport Mode",
+          "If media from this factory is for PLAY or RECORD",
+          GST_TYPE_RTSP_TRANSPORT_MODE, DEFAULT_TRANSPORT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
@@ -239,6 +237,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->protocols = DEFAULT_PROTOCOLS;
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
   priv->latency = DEFAULT_LATENCY;
+  priv->transport_mode = DEFAULT_TRANSPORT_MODE;
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->medias_lock);
@@ -298,8 +297,9 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
     case PROP_LATENCY:
       g_value_set_uint (value, gst_rtsp_media_factory_get_latency (factory));
       break;
-    case PROP_RECORD:
-      g_value_set_boolean (value, gst_rtsp_media_factory_is_record (factory));
+    case PROP_TRANSPORT_MODE:
+      g_value_set_flags (value,
+          gst_rtsp_media_factory_get_transport_mode (factory));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -340,8 +340,9 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_LATENCY:
       gst_rtsp_media_factory_set_latency (factory, g_value_get_uint (value));
       break;
-    case PROP_RECORD:
-      gst_rtsp_media_factory_set_record (factory, g_value_get_boolean (value));
+    case PROP_TRANSPORT_MODE:
+      gst_rtsp_media_factory_set_transport_mode (factory,
+          g_value_get_flags (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1220,7 +1221,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstRTSPPermissions *perms;
   GstClockTime rtx_time;
   guint latency;
-  gboolean record;
+  GstRTSPTransportMode transport_mode;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -1232,7 +1233,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   protocols = priv->protocols;
   rtx_time = priv->rtx_time;
   latency = priv->latency;
-  record = priv->record;
+  transport_mode = priv->transport_mode;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_suspend_mode (media, suspend_mode);
@@ -1243,7 +1244,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_protocols (media, protocols);
   gst_rtsp_media_set_retransmission_time (media, rtx_time);
   gst_rtsp_media_set_latency (media, latency);
-  gst_rtsp_media_set_record (media, record);
+  gst_rtsp_media_set_transport_mode (media, transport_mode);
 
   if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {
     gst_rtsp_media_set_address_pool (media, pool);
@@ -1290,15 +1291,15 @@ gst_rtsp_media_factory_create_element (GstRTSPMediaFactory * factory,
 }
 
 /**
- * gst_rtsp_media_factory_set_record:
+ * gst_rtsp_media_factory_set_transport_mode:
  * @factory: a #GstRTSPMediaFactory
- * @record: the new value
+ * @mode: the new value
  *
- * Configure if this factory creates media for PLAY or RECORD methods.
+ * Configure if this factory creates media for PLAY or RECORD modes.
  */
 void
-gst_rtsp_media_factory_set_record (GstRTSPMediaFactory * factory,
-    gboolean record)
+gst_rtsp_media_factory_set_transport_mode (GstRTSPMediaFactory * factory,
+    GstRTSPTransportMode mode)
 {
   GstRTSPMediaFactoryPrivate *priv;
 
@@ -1307,31 +1308,31 @@ gst_rtsp_media_factory_set_record (GstRTSPMediaFactory * factory,
   priv = factory->priv;
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
-  priv->record = record;
+  priv->transport_mode = mode;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 }
 
 /**
- * gst_rtsp_media_factory_is_record:
+ * gst_rtsp_media_factory_get_transport_mode:
  * @factory: a #GstRTSPMediaFactory
  *
  * Get if media created from this factory can be used for PLAY or RECORD
  * methods.
  *
- * Returns: %TRUE if the media will be record between clients.
+ * Returns: The supported transport modes.
  */
-gboolean
-gst_rtsp_media_factory_is_record (GstRTSPMediaFactory * factory)
+GstRTSPTransportMode
+gst_rtsp_media_factory_get_transport_mode (GstRTSPMediaFactory * factory)
 {
   GstRTSPMediaFactoryPrivate *priv;
-  gboolean result;
+  GstRTSPTransportMode result;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
 
   priv = factory->priv;
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
-  result = priv->record;
+  result = priv->transport_mode;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;

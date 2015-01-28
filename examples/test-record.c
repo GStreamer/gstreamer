@@ -67,7 +67,8 @@ main (int argc, char *argv[])
    * any launch line works as long as it contains elements named depay%d. Each
    * element with depay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
-  gst_rtsp_media_factory_set_record (factory, TRUE);
+  gst_rtsp_media_factory_set_transport_mode (factory,
+      GST_RTSP_TRANSPORT_MODE_RECORD);
   gst_rtsp_media_factory_set_launch (factory, argv[1]);
   gst_rtsp_media_factory_set_latency (factory, 2000);
 

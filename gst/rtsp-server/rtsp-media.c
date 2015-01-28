@@ -101,7 +101,7 @@ struct _GstRTSPMediaPrivate
   guint buffer_size;
   GstRTSPAddressPool *pool;
   gboolean blocked;
-  gboolean record;
+  GstRTSPTransportMode transport_mode;
 
   GstElement *element;
   GRecMutex state_lock;         /* locking order: state lock, lock */
@@ -150,7 +150,7 @@ struct _GstRTSPMediaPrivate
 #define DEFAULT_BUFFER_SIZE     0x80000
 #define DEFAULT_TIME_PROVIDER   FALSE
 #define DEFAULT_LATENCY         200
-#define DEFAULT_RECORD          FALSE
+#define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -168,7 +168,7 @@ enum
   PROP_ELEMENT,
   PROP_TIME_PROVIDER,
   PROP_LATENCY,
-  PROP_RECORD,
+  PROP_TRANSPORT_MODE,
   PROP_LAST
 };
 
@@ -215,7 +215,6 @@ static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
 #define C_ENUM(v) ((gint) v)
 
-#define GST_TYPE_RTSP_SUSPEND_MODE (gst_rtsp_suspend_mode_get_type())
 GType
 gst_rtsp_suspend_mode_get_type (void)
 {
@@ -231,6 +230,27 @@ gst_rtsp_suspend_mode_get_type (void)
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_enum_register_static ("GstRTSPSuspendMode", values);
+    g_once_init_leave (&id, tmp);
+  }
+  return (GType) id;
+}
+
+#define C_FLAGS(v) ((guint) v)
+
+GType
+gst_rtsp_transport_mode_get_type (void)
+{
+  static gsize id = 0;
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_RTSP_TRANSPORT_MODE_PLAY), "GST_RTSP_TRANSPORT_MODE_PLAY",
+        "play"},
+    {C_FLAGS (GST_RTSP_TRANSPORT_MODE_RECORD), "GST_RTSP_TRANSPORT_MODE_RECORD",
+        "record"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_flags_register_static ("GstRTSPTransportMode", values);
     g_once_init_leave (&id, tmp);
   }
   return (GType) id;
@@ -301,10 +321,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "Latency used for receiving media in milliseconds", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_RECORD,
-      g_param_spec_boolean ("record", "Record",
+  g_object_class_install_property (gobject_class, PROP_TRANSPORT_MODE,
+      g_param_spec_flags ("transport-mode", "Transport Mode",
           "If this media pipeline can be used for PLAY or RECORD",
-          DEFAULT_RECORD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_RTSP_TRANSPORT_MODE, DEFAULT_TRANSPORT_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -372,7 +393,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
   priv->time_provider = DEFAULT_TIME_PROVIDER;
-  priv->record = DEFAULT_RECORD;
+  priv->transport_mode = DEFAULT_TRANSPORT_MODE;
 }
 
 static void
@@ -446,8 +467,8 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_LATENCY:
       g_value_set_uint (value, gst_rtsp_media_get_latency (media));
       break;
-    case PROP_RECORD:
-      g_value_set_boolean (value, gst_rtsp_media_is_record (media));
+    case PROP_TRANSPORT_MODE:
+      g_value_set_flags (value, gst_rtsp_media_get_transport_mode (media));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -492,8 +513,8 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
     case PROP_LATENCY:
       gst_rtsp_media_set_latency (media, g_value_get_uint (value));
       break;
-    case PROP_RECORD:
-      gst_rtsp_media_set_record (media, g_value_get_boolean (value));
+    case PROP_TRANSPORT_MODE:
+      gst_rtsp_media_set_transport_mode (media, g_value_get_flags (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1405,6 +1426,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
   GstPad *pad;
   gint i;
   gboolean have_elem;
+  GstRTSPTransportMode mode = 0;
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
@@ -1429,6 +1451,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       gst_object_unref (elem);
 
       have_elem = TRUE;
+      mode |= GST_RTSP_TRANSPORT_MODE_PLAY;
     }
     g_free (name);
 
@@ -1442,6 +1465,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       g_mutex_unlock (&priv->lock);
 
       have_elem = TRUE;
+      mode |= GST_RTSP_TRANSPORT_MODE_PLAY;
     }
     g_free (name);
 
@@ -1457,8 +1481,16 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       gst_object_unref (elem);
 
       have_elem = TRUE;
+      mode |= GST_RTSP_TRANSPORT_MODE_RECORD;
     }
     g_free (name);
+  }
+
+  if (have_elem) {
+    if (priv->transport_mode != mode)
+      GST_WARNING ("found different mode than expected (0x%02x != 0x%02d)",
+          priv->transport_mode, mode);
+    gst_rtsp_media_set_transport_mode (media, mode);
   }
 }
 
@@ -1834,7 +1866,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     goto not_prepared;
 
   /* Update the seekable state of the pipeline in case it changed */
-  if (gst_rtsp_media_is_record (media)) {
+  if ((priv->transport_mode & GST_RTSP_TRANSPORT_MODE_RECORD)) {
     /* TODO: Seeking for RECORD? */
     priv->seekable = FALSE;
   } else {
@@ -2032,7 +2064,7 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       GST_DEBUG ("%p: went from %s to %s (pending %s)", media,
           gst_element_state_get_name (old), gst_element_state_get_name (new),
           gst_element_state_get_name (pending));
-      if (gst_rtsp_media_is_record (media)
+      if ((priv->transport_mode & GST_RTSP_TRANSPORT_MODE_RECORD)
           && old == GST_STATE_READY && new == GST_STATE_PAUSED) {
         GST_INFO ("%p: went to PAUSED, prepared now", media);
         collect_media_stats (media);
@@ -2347,7 +2379,7 @@ start_preroll (GstRTSPMedia * media)
        * seeking query in preroll instead */
       priv->seekable = FALSE;
       priv->is_live = TRUE;
-      if (!gst_rtsp_media_is_record (media)) {
+      if (!(priv->transport_mode & GST_RTSP_TRANSPORT_MODE_RECORD)) {
         /* start blocked  to make sure nothing goes to the sink */
         media_streams_set_blocked (media, TRUE);
       }
@@ -3941,15 +3973,15 @@ error_status:
 }
 
 /**
- * gst_rtsp_media_set_record:
+ * gst_rtsp_media_set_transport_mode:
  * @media: a #GstRTSPMedia
- * @record: the new value
+ * @mode: the new value
  *
- * Set or unset if the pipeline for @media can be used for PLAY or RECORD
- * methods.
+ * Sets if the media pipeline can work in PLAY or RECORD mode
  */
 void
-gst_rtsp_media_set_record (GstRTSPMedia * media, gboolean record)
+gst_rtsp_media_set_transport_mode (GstRTSPMedia * media,
+    GstRTSPTransportMode mode)
 {
   GstRTSPMediaPrivate *priv;
 
@@ -3958,30 +3990,30 @@ gst_rtsp_media_set_record (GstRTSPMedia * media, gboolean record)
   priv = media->priv;
 
   g_mutex_lock (&priv->lock);
-  priv->record = record;
+  priv->transport_mode = mode;
   g_mutex_unlock (&priv->lock);
 }
 
 /**
- * gst_rtsp_media_is_record:
+ * gst_rtsp_media_get_transport_mode:
  * @media: a #GstRTSPMedia
  *
  * Check if the pipeline for @media can be used for PLAY or RECORD methods.
  *
- * Returns: %TRUE if the media can be record between clients.
+ * Returns: The transport mode.
  */
-gboolean
-gst_rtsp_media_is_record (GstRTSPMedia * media)
+GstRTSPTransportMode
+gst_rtsp_media_get_transport_mode (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv;
-  gboolean res;
+  GstRTSPTransportMode res;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
   priv = media->priv;
 
   g_mutex_lock (&priv->lock);
-  res = priv->record;
+  res = priv->transport_mode;
   g_mutex_unlock (&priv->lock);
 
   return res;

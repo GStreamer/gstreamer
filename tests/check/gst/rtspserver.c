@@ -193,7 +193,8 @@ start_record_server (const gchar * launch_line)
 
   factory = gst_rtsp_media_factory_new ();
 
-  gst_rtsp_media_factory_set_record (factory, TRUE);
+  gst_rtsp_media_factory_set_transport_mode (factory,
+      GST_RTSP_TRANSPORT_MODE_RECORD);
   gst_rtsp_media_factory_set_launch (factory, launch_line);
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
   g_object_unref (mounts);

@@ -77,6 +77,21 @@ typedef enum {
   GST_RTSP_SUSPEND_MODE_RESET  = 2
 } GstRTSPSuspendMode;
 
+/**
+ * GstRTSPTransportMode:
+ * @GST_RTSP_TRANSPORT_MODE_PLAY: Transport supports PLAY mode
+ * @GST_RTSP_TRANSPORT_MODE_RECORD: Transport supports RECORD mode
+ *
+ * The supported modes of the media.
+ */
+typedef enum {
+  GST_RTSP_TRANSPORT_MODE_PLAY    = 1,
+  GST_RTSP_TRANSPORT_MODE_RECORD  = 2,
+} GstRTSPTransportMode;
+
+#define GST_TYPE_RTSP_TRANSPORT_MODE (gst_rtsp_transport_mode_get_type())
+GType gst_rtsp_transport_mode_get_type (void);
+
 #define GST_TYPE_RTSP_SUSPEND_MODE (gst_rtsp_suspend_mode_get_type())
 GType gst_rtsp_suspend_mode_get_type (void);
 
@@ -172,8 +187,8 @@ GstRTSPPermissions *  gst_rtsp_media_get_permissions  (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_shared       (GstRTSPMedia *media, gboolean shared);
 gboolean              gst_rtsp_media_is_shared        (GstRTSPMedia *media);
 
-void                  gst_rtsp_media_set_record       (GstRTSPMedia *media, gboolean record);
-gboolean              gst_rtsp_media_is_record        (GstRTSPMedia *media);
+void                  gst_rtsp_media_set_transport_mode  (GstRTSPMedia *media, GstRTSPTransportMode mode);
+GstRTSPTransportMode  gst_rtsp_media_get_transport_mode  (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_reusable     (GstRTSPMedia *media, gboolean reusable);
 gboolean              gst_rtsp_media_is_reusable      (GstRTSPMedia *media);
