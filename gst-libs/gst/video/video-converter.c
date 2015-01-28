@@ -1500,6 +1500,9 @@ chain_dither (GstVideoConverter * convert, GstLineCache * prev)
   guint quant[4], target_quant;
 
   method = GET_OPT_DITHER_METHOD (convert);
+  if (method == GST_VIDEO_DITHER_NONE)
+    return prev;
+
   target_quant = GET_OPT_DITHER_QUANTIZATION (convert);
   GST_DEBUG ("method %d, target-quantization %d", method, target_quant);
 
