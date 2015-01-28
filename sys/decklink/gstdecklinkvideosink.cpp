@@ -738,8 +738,10 @@ gst_decklink_video_sink_change_state (GstElement * element,
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
+      g_mutex_lock (&self->output->lock);
       if (self->output->start_scheduled_playback)
         self->output->start_scheduled_playback (self->output->videosink);
+      g_mutex_unlock (&self->output->lock);
       break;
     }
     default:
