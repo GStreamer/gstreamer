@@ -242,7 +242,7 @@ struct _GstVideoConverter
   GstVideoFrame *dest;
 
   /* fastpath */
-  GstFormat fformat;
+  GstVideoFormat fformat;
   GstVideoScaler *fh_scaler[4];
   GstVideoScaler *fv_scaler[4];
   ConverterAlloc *flines;
@@ -3041,7 +3041,7 @@ convert_scale_planes (GstVideoConverter * convert,
     const GstVideoFrame * src, GstVideoFrame * dest)
 {
   int k, n_planes;
-  GstFormat format = convert->fformat;
+  GstVideoFormat format = convert->fformat;
 
   n_planes = GST_VIDEO_FRAME_N_PLANES (src);
 
