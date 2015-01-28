@@ -114,6 +114,28 @@ gst_opus_enc_frame_size_get_type (void)
   return id;
 }
 
+#define GST_OPUS_ENC_TYPE_AUDIO_TYPE (gst_opus_enc_audio_type_get_type())
+static GType
+gst_opus_enc_audio_type_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {OPUS_APPLICATION_AUDIO, "Generic audio", "generic"},
+    {OPUS_APPLICATION_VOIP, "Voice", "voice"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstOpusEncAudioType", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
 #define FORMAT_STR GST_AUDIO_NE(S16)
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -132,6 +154,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define DEFAULT_AUDIO           TRUE
+#define DEFAULT_AUDIO_TYPE      OPUS_APPLICATION_AUDIO
 #define DEFAULT_BITRATE         64000
 #define DEFAULT_BANDWIDTH       OPUS_BANDWIDTH_FULLBAND
 #define DEFAULT_FRAMESIZE       20
@@ -147,6 +170,7 @@ enum
 {
   PROP_0,
   PROP_AUDIO,
+  PROP_AUDIO_TYPE,
   PROP_BITRATE,
   PROP_BANDWIDTH,
   PROP_FRAME_SIZE,
@@ -218,13 +242,18 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_opus_enc_sink_getcaps);
 
   g_object_class_install_property (gobject_class, PROP_AUDIO,
-      g_param_spec_boolean ("audio", "Audio or voice",
-          "Audio or voice", DEFAULT_AUDIO,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("audio",
+          "Audio or voice (obsolete, use audio-type)",
+          "Audio or voice (obsolete, use audio-type)", DEFAULT_AUDIO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
+  g_object_class_install_property (gobject_class, PROP_AUDIO_TYPE,
+      g_param_spec_enum ("audio-type", "What type of audio to optimize for",
+          "What type of audio to optimize for", GST_OPUS_ENC_TYPE_AUDIO_TYPE,
+          DEFAULT_AUDIO_TYPE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
-          "Specify an encoding bit-rate (in bps).",
-          LOWEST_BITRATE, HIGHEST_BITRATE, DEFAULT_BITRATE,
+          "Specify an encoding bit-rate (in bps).", LOWEST_BITRATE,
+          HIGHEST_BITRATE, DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
@@ -315,6 +344,7 @@ gst_opus_enc_init (GstOpusEnc * enc)
   enc->dtx = DEFAULT_DTX;
   enc->packet_loss_percentage = DEFAULT_PACKET_LOSS_PERCENT;
   enc->max_payload_size = DEFAULT_MAX_PAYLOAD_SIZE;
+  enc->audio_type = DEFAULT_AUDIO_TYPE;
 
   /* arrange granulepos marking (and required perfect ts) */
   gst_audio_encoder_set_mark_granule (benc, TRUE);
@@ -658,8 +688,7 @@ gst_opus_enc_setup (GstOpusEnc * enc)
   enc->state = opus_multistream_encoder_create (enc->sample_rate,
       enc->n_channels, enc->n_channels - enc->n_stereo_streams,
       enc->n_stereo_streams, enc->encoding_channel_mapping,
-      enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
-      &error);
+      enc->audio_type, &error);
   if (!enc->state || error != OPUS_OK)
     goto encoder_creation_failed;
 
@@ -952,7 +981,13 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_AUDIO:
-      g_value_set_boolean (value, enc->audio_or_voip);
+      g_warning
+          ("opusenc's audio property is obsolete, use audio-type instead");
+      g_value_set_boolean (value,
+          enc->audio_type == OPUS_APPLICATION_AUDIO ? TRUE : FALSE);
+      break;
+    case PROP_AUDIO_TYPE:
+      g_value_set_enum (value, enc->audio_type);
       break;
     case PROP_BITRATE:
       g_value_set_int (value, enc->bitrate);
@@ -1011,7 +1046,14 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_AUDIO:
-      enc->audio_or_voip = g_value_get_boolean (value);
+      g_warning
+          ("opusenc's audio property is obsolete, use audio-type instead");
+      enc->audio_type =
+          g_value_get_boolean (value) ? OPUS_APPLICATION_AUDIO :
+          OPUS_APPLICATION_VOIP;
+      break;
+    case PROP_AUDIO_TYPE:
+      enc->audio_type = g_value_get_enum (value);
       break;
     case PROP_BITRATE:
       GST_OPUS_UPDATE_PROPERTY (bitrate, int, BITRATE);
