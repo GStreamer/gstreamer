@@ -40,6 +40,7 @@ G_BEGIN_DECLS
   gpointer draw_data;
   GDestroyNotify draw_notify;
 }
+- (void) setDrawCallback:(GstGLWindowCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
 - (id) initWithGstGLContext: (GstGLContextCocoa *)context;
 - (void) resize: (NSRect)bounds;
 @end

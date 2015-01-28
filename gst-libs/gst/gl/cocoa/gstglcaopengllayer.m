@@ -29,6 +29,9 @@
 
 @implementation GstGLCAOpenGLLayer
 - (void)dealloc {
+  if (self->draw_notify)
+    self->draw_notify (self->draw_data);
+
   GST_TRACE ("dealloc GstGLCAOpenGLLayer %p context %p", self, self->gst_gl_context);
 
   [super dealloc];
@@ -88,25 +91,35 @@
   return self->gl_context;
 }
 
+- (void)releaseCGLContext:(CGLContextObj)glContext {
+  CGLReleaseContext (glContext);
+}
+
+- (void)setDrawCallback:(GstGLWindowCB)cb data:(gpointer)data notify:(GDestroyNotify)notify {
+  g_return_if_fail (cb);
+
+  if (self->draw_notify)
+    self->draw_notify (self->draw_data);
+
+  self->draw_cb = cb;
+  self->draw_data = data;
+  self->draw_notify = notify;
+}
+
 - (void)resize:(NSRect)bounds {
   const GstGLFuncs *gl = ((GstGLContext *)self->gst_gl_context)->gl_vtable;
 
   gl->GetIntegerv (GL_VIEWPORT, self->expected_dims);
 }
 
-- (void)releaseCGLContext:(CGLContextObj)glContext {
-  CGLReleaseContext (glContext);
-}
-
 - (void)drawInCGLContext:(CGLContextObj)glContext
                pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)interval
              displayTime:(const CVTimeStamp *)timeStamp {
-  GstGLWindow *window = gst_gl_context_get_window (GST_GL_CONTEXT (self->gst_gl_context));
   const GstGLFuncs *gl = ((GstGLContext *)self->gst_gl_context)->gl_vtable;
   gint ca_viewport[4];
 
-  GST_LOG ("CAOpenGLLayer drawing with window %p cgl context %p", window, glContext);
+  GST_LOG ("CAOpenGLLayer drawing with cgl context %p", glContext);
 
   /* attempt to get the correct viewport back due to CA being too smart
    * and messing around with it so center the expected viewport into
@@ -129,11 +142,8 @@
 
   gl->Viewport (result.x, result.y, result.w, result.h);
 
-  if (window) {
-    gst_gl_window_cocoa_draw_thread (GST_GL_WINDOW_COCOA (window));
-
-    gst_object_unref (window);
-  }
+  if (self->draw_cb)
+    self->draw_cb (self->draw_data);
 
   /* flushes the buffer */
   [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:interval displayTime:timeStamp];
