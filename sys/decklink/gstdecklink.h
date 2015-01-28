@@ -134,6 +134,9 @@ struct _GstDecklinkOutput {
   IDeckLink *device;
   IDeckLinkOutput *output;
   GstClock *clock;
+  GstClockTime clock_start_time, clock_last_time;
+  GstClockTimeDiff clock_offset;
+  gboolean started, clock_restart;
 
   /* Everything below protected by mutex */
   GMutex lock;
@@ -147,7 +150,9 @@ struct _GstDecklinkOutput {
 
   /* <private> */
   GstElement *audiosink;
+  gboolean audio_enabled;
   GstElement *videosink;
+  gboolean video_enabled;
 };
 
 typedef struct _GstDecklinkInput GstDecklinkInput;
@@ -157,6 +162,8 @@ struct _GstDecklinkInput {
   IDeckLinkConfiguration *config;
   IDeckLinkAttributes *attributes;
   GstClock *clock;
+  GstClockTime clock_start_time, clock_offset, clock_last_time;
+  gboolean started, clock_restart;
 
   /* Everything below protected by mutex */
   GMutex lock;
@@ -171,7 +178,9 @@ struct _GstDecklinkInput {
 
   /* <private> */
   GstElement *audiosrc;
+  gboolean audio_enabled;
   GstElement *videosrc;
+  gboolean video_enabled;
 };
 
 GstDecklinkOutput * gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio);

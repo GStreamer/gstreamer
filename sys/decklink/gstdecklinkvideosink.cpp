@@ -287,6 +287,7 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   g_mutex_lock (&self->output->lock);
   self->output->mode = mode;
+  self->output->video_enabled = TRUE;
   g_mutex_unlock (&self->output->lock);
 
   return TRUE;
@@ -527,6 +528,9 @@ gst_decklink_video_sink_open (GstBaseSink * bsink)
 
   g_mutex_lock (&self->output->lock);
   self->output->mode = mode;
+  self->output->clock_start_time = GST_CLOCK_TIME_NONE;
+  self->output->clock_last_time = 0;
+  self->output->clock_offset = 0;
   g_mutex_unlock (&self->output->lock);
 
   return TRUE;
@@ -542,6 +546,7 @@ gst_decklink_video_sink_close (GstBaseSink * bsink)
   if (self->output) {
     g_mutex_lock (&self->output->lock);
     self->output->mode = NULL;
+    self->output->video_enabled = FALSE;
     g_mutex_unlock (&self->output->lock);
 
     self->output->output->DisableVideoOutput ();
@@ -563,6 +568,11 @@ gst_decklink_video_sink_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      g_mutex_lock (&self->output->lock);
+      self->output->clock_start_time = GST_CLOCK_TIME_NONE;
+      self->output->clock_last_time = 0;
+      self->output->clock_offset = 0;
+      g_mutex_unlock (&self->output->lock);
       gst_element_post_message (element,
           gst_message_new_clock_provide (GST_OBJECT_CAST (element),
               self->output->clock, TRUE));
@@ -597,6 +607,11 @@ gst_decklink_video_sink_change_state (GstElement * element,
           gst_message_new_clock_lost (GST_OBJECT_CAST (element),
               self->output->clock));
       gst_clock_set_master (self->output->clock, NULL);
+      g_mutex_lock (&self->output->lock);
+      self->output->clock_start_time = GST_CLOCK_TIME_NONE;
+      self->output->clock_last_time = 0;
+      self->output->clock_offset = 0;
+      g_mutex_unlock (&self->output->lock);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
       GstClockTime start_time;
@@ -620,6 +635,10 @@ gst_decklink_video_sink_change_state (GstElement * element,
       GST_DEBUG_OBJECT (self,
           "Stopping scheduled playback at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (start_time));
+
+      g_mutex_lock (&self->output->lock);
+      self->output->started = FALSE;
+      g_mutex_unlock (&self->output->lock);
       res =
           self->output->output->StopScheduledPlayback (start_time, 0,
           GST_SECOND);
@@ -665,6 +684,10 @@ gst_decklink_video_sink_change_state (GstElement * element,
       if (active) {
         GST_DEBUG_OBJECT (self, "Stopping scheduled playback");
 
+        g_mutex_lock (&self->output->lock);
+        self->output->started = FALSE;
+        g_mutex_unlock (&self->output->lock);
+
         res = self->output->output->StopScheduledPlayback (0, 0, 0);
         if (res != S_OK) {
           GST_ELEMENT_ERROR (self, STREAM, FAILED,
@@ -686,6 +709,10 @@ gst_decklink_video_sink_change_state (GstElement * element,
             (NULL), ("Failed to start scheduled playback: 0x%08x", res));
         ret = GST_STATE_CHANGE_FAILURE;
       }
+      g_mutex_lock (&self->output->lock);
+      self->output->started = TRUE;
+      self->output->clock_restart = TRUE;
+      g_mutex_unlock (&self->output->lock);
       break;
     }
     default:

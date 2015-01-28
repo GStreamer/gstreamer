@@ -379,6 +379,10 @@ gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     return FALSE;
   }
 
+  g_mutex_lock (&self->input->lock);
+  self->input->audio_enabled = TRUE;
+  g_mutex_unlock (&self->input->lock);
+
   return TRUE;
 }
 
@@ -652,6 +656,7 @@ gst_decklink_audio_src_close (GstDecklinkAudioSrc * self)
   if (self->input) {
     g_mutex_lock (&self->input->lock);
     self->input->got_audio_packet = NULL;
+    self->input->audio_enabled = FALSE;
     g_mutex_unlock (&self->input->lock);
 
     self->input->input->DisableAudioInput ();

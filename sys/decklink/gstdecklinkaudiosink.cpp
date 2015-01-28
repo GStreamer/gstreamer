@@ -361,6 +361,10 @@ gst_decklink_audio_sink_ringbuffer_acquire (GstAudioRingBuffer * rb,
     return FALSE;
   }
 
+  g_mutex_lock (&self->output->lock);
+  self->output->audio_enabled = TRUE;
+  g_mutex_unlock (&self->output->lock);
+
   ret =
       self->output->
       output->SetAudioCallback (new GStreamerAudioOutputCallback (self));
@@ -391,9 +395,13 @@ gst_decklink_audio_sink_ringbuffer_release (GstAudioRingBuffer * rb)
 
   GST_DEBUG_OBJECT (self->sink, "Release");
 
-  if (self->output)
-    self->output->output->DisableAudioOutput ();
+  if (self->output) {
+    g_mutex_lock (&self->output->lock);
+    self->output->audio_enabled = FALSE;
+    g_mutex_unlock (&self->output->lock);
 
+    self->output->output->DisableAudioOutput ();
+  }
   // free the buffer
   g_free (rb->memory);
   rb->memory = NULL;

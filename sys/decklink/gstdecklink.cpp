@@ -378,8 +378,8 @@ struct _GstDecklinkClock
 {
   GstSystemClock clock;
 
-  IDeckLinkInput *input;
-  IDeckLinkOutput *output;
+  GstDecklinkInput *input;
+  GstDecklinkOutput *output;
 };
 
 struct _GstDecklinkClockClass
@@ -589,7 +589,7 @@ init_devices (gpointer data)
       devices[i].input.device = decklink;
       devices[i].input.clock = gst_decklink_clock_new ("GstDecklinkInputClock");
       GST_DECKLINK_CLOCK_CAST (devices[i].input.clock)->input =
-          devices[i].input.input;
+          &devices[i].input;
       devices[i].input.
           input->SetCallback (new GStreamerDecklinkInputCallback (&devices[i].
               input));
@@ -604,7 +604,7 @@ init_devices (gpointer data)
       devices[i].output.clock =
           gst_decklink_clock_new ("GstDecklinkOutputClock");
       GST_DECKLINK_CLOCK_CAST (devices[i].output.clock)->output =
-          devices[i].output.output;
+          &devices[i].output;
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkConfiguration,
@@ -806,30 +806,97 @@ static GstClockTime
 gst_decklink_clock_get_internal_time (GstClock * clock)
 {
   GstDecklinkClock *self = GST_DECKLINK_CLOCK (clock);
-  GstClockTime result;
+  GstClockTime result, start_time, last_time;
+  GstClockTimeDiff offset;
   BMDTimeValue time;
   HRESULT ret;
 
-  GST_OBJECT_LOCK (clock);
   if (self->input != NULL) {
-    ret =
-        self->input->GetHardwareReferenceClock (GST_SECOND, &time, NULL, NULL);
-    if (ret == S_OK && time >= 0)
-      result = time;
-    else
-      result = GST_CLOCK_TIME_NONE;
+    g_mutex_lock (&self->input->lock);
+    start_time = self->input->clock_start_time;
+    offset = self->input->clock_offset;
+    last_time = self->input->clock_last_time;
+    time = -1;
+    if (!self->input->started) {
+      result = last_time;
+      ret = -1;
+    } else {
+      ret =
+          self->input->input->GetHardwareReferenceClock (GST_SECOND, &time,
+          NULL, NULL);
+      if (ret == S_OK && time >= 0) {
+        result = time;
+        if (start_time == GST_CLOCK_TIME_NONE)
+          start_time = self->input->clock_start_time = result;
+
+        if (result > start_time)
+          result -= start_time;
+        else
+          result = 0;
+
+        if (self->input->clock_restart) {
+          self->input->clock_offset = result - last_time;
+          offset = self->input->clock_offset;
+          self->input->clock_restart = FALSE;
+        }
+        result = MAX (last_time, result);
+        result -= offset;
+        result = MAX (last_time, result);
+      } else {
+        result = last_time;
+      }
+
+      self->input->clock_last_time = result;
+    }
+    g_mutex_unlock (&self->input->lock);
   } else if (self->output != NULL) {
-    ret =
-        self->output->GetHardwareReferenceClock (GST_SECOND, &time, NULL, NULL);
-    if (ret == S_OK && time >= 0)
-      result = time;
-    else
-      result = GST_CLOCK_TIME_NONE;
+    g_mutex_lock (&self->output->lock);
+    start_time = self->output->clock_start_time;
+    offset = self->output->clock_offset;
+    last_time = self->output->clock_last_time;
+    time = -1;
+    if (!self->output->started) {
+      result = last_time;
+      ret = -1;
+    } else {
+      ret =
+          self->output->output->GetHardwareReferenceClock (GST_SECOND, &time,
+          NULL, NULL);
+      if (ret == S_OK && time >= 0) {
+        result = time;
+
+        if (start_time == GST_CLOCK_TIME_NONE)
+          start_time = self->output->clock_start_time = result;
+
+        if (result > start_time)
+          result -= start_time;
+        else
+          result = 0;
+
+        if (self->output->clock_restart) {
+          self->output->clock_offset = result - last_time;
+          offset = self->output->clock_offset;
+          self->output->clock_restart = FALSE;
+        }
+        result = MAX (last_time, result);
+        result -= offset;
+        result = MAX (last_time, result);
+      } else {
+        result = last_time;
+      }
+
+      self->output->clock_last_time = result;
+    }
+    g_mutex_unlock (&self->output->lock);
   } else {
-    result = GST_CLOCK_TIME_NONE;
+    g_assert_not_reached ();
   }
-  GST_OBJECT_UNLOCK (clock);
-  GST_LOG_OBJECT (clock, "result %" GST_TIME_FORMAT, GST_TIME_ARGS (result));
+  GST_LOG_OBJECT (clock,
+      "result %" GST_TIME_FORMAT " time %" GST_TIME_FORMAT " last time %"
+      GST_TIME_FORMAT " offset %" GST_TIME_FORMAT " start time %"
+      GST_TIME_FORMAT " (ret: 0x%08x)", GST_TIME_ARGS (result),
+      GST_TIME_ARGS (time), GST_TIME_ARGS (last_time), GST_TIME_ARGS (offset),
+      GST_TIME_ARGS (start_time), ret);
 
   return result;
 }
