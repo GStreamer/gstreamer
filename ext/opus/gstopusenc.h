@@ -57,7 +57,7 @@ struct _GstOpusEnc {
   GMutex                property_lock;
 
   /* properties */
-  gboolean              audio_or_voip;
+  gint                  audio_type;
   gint                  bitrate;
   gint                  bandwidth;
   gint                  frame_size;
