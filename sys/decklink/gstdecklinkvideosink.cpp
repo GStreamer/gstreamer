@@ -580,6 +580,9 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
           || self->output->audio_enabled)
       && (GST_STATE (self) == GST_STATE_PLAYING
           || GST_STATE_PENDING (self) == GST_STATE_PLAYING)) {
+    // Need to unlock to get the clock time
+    g_mutex_unlock (&self->output->lock);
+
     // FIXME: start time is the same for the complete pipeline,
     // but what we need here is the start time of this element!
     start_time = gst_element_get_base_time (element);
@@ -603,14 +606,17 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
 
     convert_to_internal_clock (self, &start_time, NULL);
 
+    g_mutex_lock (&self->output->lock);
+    // Check if someone else started in the meantime
+    if (self->output->started)
+      return;
+
     active = false;
     self->output->output->IsScheduledPlaybackRunning (&active);
     if (active) {
       GST_DEBUG_OBJECT (self, "Stopping scheduled playback");
 
-      g_mutex_lock (&self->output->lock);
       self->output->started = FALSE;
-      g_mutex_unlock (&self->output->lock);
 
       res = self->output->output->StopScheduledPlayback (0, 0, 0);
       if (res != S_OK) {
