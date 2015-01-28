@@ -69,8 +69,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define _do_init \
-  GST_DEBUG_CATEGORY_INIT (opensles_sink_debug, "opensles_sink", 0, \
-      "OpenSL ES Sink");
+  GST_DEBUG_CATEGORY_INIT (opensles_sink_debug, "openslessink", 0, \
+      "OpenSLES Sink");
 #define parent_class gst_opensles_sink_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOpenSLESSink, gst_opensles_sink,
     GST_TYPE_AUDIO_BASE_SINK, _do_init);

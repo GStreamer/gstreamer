@@ -53,8 +53,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 /* *INDENT-ON* */
 
 #define _do_init \
-  GST_DEBUG_CATEGORY_INIT (opensles_src_debug, "opensles_src", 0, \
-      "OpenSL ES Src");
+  GST_DEBUG_CATEGORY_INIT (opensles_src_debug, "openslessrc", 0, \
+      "OpenSLES Source");
 #define parent_class gst_opensles_src_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOpenSLESSrc, gst_opensles_src,
     GST_TYPE_AUDIO_BASE_SRC, _do_init);
