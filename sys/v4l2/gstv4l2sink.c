@@ -497,7 +497,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstV4l2Object *obj = v4l2sink->v4l2object;
 
-  LOG_CAPS (v4l2sink, caps);
+  GST_DEBUG_OBJECT (v4l2sink, "caps: %" GST_PTR_FORMAT, caps);
 
   if (!GST_V4L2_IS_OPEN (obj)) {
     GST_DEBUG_OBJECT (v4l2sink, "device is not open");

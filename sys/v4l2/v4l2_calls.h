@@ -135,6 +135,4 @@ gboolean	gst_v4l2_set_controls		(GstV4l2Object * v4l2object,
 gboolean        gst_v4l2_get_capabilities       (GstV4l2Object * v4l2object);
 
 
-#define LOG_CAPS(obj, caps) GST_DEBUG_OBJECT (obj, "%s: %" GST_PTR_FORMAT, #caps, caps)
-
 #endif /* __V4L2_CALLS_H__ */
