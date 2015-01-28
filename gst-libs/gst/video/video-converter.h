@@ -45,7 +45,7 @@ G_BEGIN_DECLS
  *
  * #GST_TYPE_VIDEO_DITHER_METHOD, The dither method to use when
  * changing bit depth.
- * Default is #GST_VIDEO_DITHER_NONE.
+ * Default is #GST_VIDEO_DITHER_BAYER.
  */
 #define GST_VIDEO_CONVERTER_OPT_DITHER_METHOD   "GstVideoConverter.dither-method"
 
