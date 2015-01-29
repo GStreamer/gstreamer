@@ -1833,7 +1833,8 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
  * @flags: the #GstBufferCopyFlags
  * @offset: the offset into parent #GstBuffer at which the new sub-buffer 
  *          begins.
- * @size: the size of the new #GstBuffer sub-buffer, in bytes.
+ * @size: the size of the new #GstBuffer sub-buffer, in bytes. If -1, all
+ *        data is copied.
  *
  * Creates a sub-buffer from @parent at @offset and @size.
  * This sub-buffer uses the actual memory space of the parent buffer.
