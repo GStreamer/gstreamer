@@ -2560,7 +2560,7 @@ decoder_query_latency_fold (const GValue * item, GValue * ret, QueryFold * fold)
 
     gst_query_parse_latency (fold->query, &live, &min, &max);
 
-    GST_DEBUG_OBJECT (item,
+    GST_DEBUG_OBJECT (pad,
         "got latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
         ", live %d", GST_TIME_ARGS (min), GST_TIME_ARGS (max), live);
 
