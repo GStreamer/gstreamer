@@ -149,8 +149,6 @@ gst_wave_scope_class_init (GstWaveScopeClass * g_class)
       gst_static_pad_template_get (&gst_wave_scope_src_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_wave_scope_sink_template));
-
-  scope_class->render = GST_DEBUG_FUNCPTR (gst_wave_scope_render);
 }
 
 static void
