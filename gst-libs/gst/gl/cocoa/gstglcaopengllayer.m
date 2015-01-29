@@ -40,9 +40,11 @@
 - (id)initWithGstGLContext:(GstGLContextCocoa *)parent_gl_context {
   [super init];
 
-  GST_TRACE ("init CAOpenGLLayer");
+  GST_LOG ("init CAOpenGLLayer");
 
   self->gst_gl_context = parent_gl_context;
+  self.asynchronous = YES;
+  self.needsDisplayOnBoundsChange = YES;
 
   return self;
 }
@@ -108,6 +110,8 @@
 
 - (void)resize:(NSRect)bounds {
   const GstGLFuncs *gl = ((GstGLContext *)self->gst_gl_context)->gl_vtable;
+
+  GST_LOG ("resizing");
 
   gl->GetIntegerv (GL_VIEWPORT, self->expected_dims);
 }
