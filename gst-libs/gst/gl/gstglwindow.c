@@ -382,6 +382,27 @@ gst_gl_window_set_preferred_size (GstGLWindow * window, gint width, gint height)
 }
 
 /**
+ * gst_gl_window_show:
+ * @window: a #GstGLWindow
+ *
+ * Present the window to the screen.
+ *
+ * Since: 1.6
+ */
+void
+gst_gl_window_show (GstGLWindow * window)
+{
+  GstGLWindowClass *window_class;
+
+  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+  g_return_if_fail (window_class->show != NULL);
+
+  if (window_class->show)
+    window_class->show (window);
+}
+
+/**
  * gst_gl_window_run:
  * @window: a #GstGLWindow
  *

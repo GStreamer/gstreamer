@@ -77,6 +77,7 @@ static void gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 static void gst_gl_window_cocoa_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
+static void gst_gl_window_cocoa_show (GstGLWindow * window);
 
 struct _GstGLWindowCocoaPrivate
 {
@@ -114,6 +115,7 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message_async);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_preferred_size);
+  window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_show);
 }
 
 static void
@@ -220,6 +222,56 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
   }
 }
 
+static void
+gst_gl_window_cocoa_show (GstGLWindow * window)
+{
+  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
+  GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
+
+  if (!priv->visible) {
+    /* useful when set_window_handle is called before
+     * the internal NSWindow */
+    if (priv->external_view) {
+      gst_gl_window_cocoa_set_window_handle (window, (guintptr) priv->external_view);
+      priv->visible = TRUE;
+      return;
+    }
+
+    dispatch_sync (dispatch_get_main_queue(), ^{
+      if (!priv->external_view && !priv->visible) {
+        NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
+        NSRect windowRect = [priv->internal_win_id frame];
+        gint x = 0;
+        gint y = 0;
+
+        GST_DEBUG_OBJECT (window_cocoa, "main screen rect: %d %d %d %d\n", (int) mainRect.origin.x,
+            (int) mainRect.origin.y, (int) mainRect.size.width,
+            (int) mainRect.size.height);
+
+        windowRect.origin.x += x;
+        windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
+        windowRect.size.width = window_cocoa->priv->preferred_width;
+        windowRect.size.height = window_cocoa->priv->preferred_height;
+
+        GST_DEBUG_OBJECT (window_cocoa, "window rect: %d %d %d %d\n", (int) windowRect.origin.x,
+            (int) windowRect.origin.y, (int) windowRect.size.width,
+            (int) windowRect.size.height);
+
+        x += 20;
+        y += 20;
+
+        [priv->internal_win_id setFrame:windowRect display:NO];
+        GST_DEBUG_OBJECT (window_cocoa, "make the window available\n");
+
+        [priv->internal_win_id makeMainWindow];
+        [priv->internal_win_id orderFrontRegardless];
+        [priv->internal_win_id setViewsNeedDisplay:YES];
+
+        priv->visible = TRUE;
+      }
+    });
+  }
+}
 
 static void
 gst_gl_window_cocoa_draw (GstGLWindow * window)
@@ -312,45 +364,6 @@ static void
 gst_gl_cocoa_draw_cb (GstGLWindowCocoa *window_cocoa)
 {
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
-
-  /* useful when set_window_handle is called before
-   * the internal NSWindow */
-  if (priv->external_view && !priv->visible) {
-    gst_gl_window_cocoa_set_window_handle (GST_GL_WINDOW (window_cocoa), (guintptr) priv->external_view);
-    priv->visible = TRUE;
-  }
-
-  if (!priv->external_view && !priv->visible) {
-    NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
-    NSRect windowRect = [priv->internal_win_id frame];
-    gint x = 0;
-    gint y = 0;
-
-    GST_DEBUG ("main screen rect: %d %d %d %d\n", (int) mainRect.origin.x,
-        (int) mainRect.origin.y, (int) mainRect.size.width,
-        (int) mainRect.size.height);
-
-    windowRect.origin.x += x;
-    windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
-    windowRect.size.width = window_cocoa->priv->preferred_width;
-    windowRect.size.height = window_cocoa->priv->preferred_height;
-
-    GST_DEBUG ("window rect: %d %d %d %d\n", (int) windowRect.origin.x,
-        (int) windowRect.origin.y, (int) windowRect.size.width,
-        (int) windowRect.size.height);
-
-    x += 20;
-    y += 20;
-
-    [priv->internal_win_id setFrame:windowRect display:NO];
-    GST_DEBUG ("make the window available\n");
-
-    [priv->internal_win_id makeMainWindow];
-    [priv->internal_win_id orderFrontRegardless];
-    [priv->internal_win_id setViewsNeedDisplay:YES];
-
-    priv->visible = TRUE;
-  }
 
   if (g_main_loop_is_running (priv->loop)) {
     if (![priv->internal_win_id isClosed]) {

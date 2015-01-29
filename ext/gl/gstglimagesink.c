@@ -1439,13 +1439,15 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
         gst_object_unref (window);
         return FALSE;
       }
+
+      gst_gl_window_set_preferred_size (window, GST_VIDEO_SINK_WIDTH (gl_sink),
+          GST_VIDEO_SINK_HEIGHT (gl_sink));
+      gst_gl_window_show (window);
     }
 
     /* Drawing is asynchronous: gst_gl_window_draw is not blocking
      * It means that it does not wait for stuff to be executed in other threads
      */
-    gst_gl_window_set_preferred_size (window, GST_VIDEO_SINK_WIDTH (gl_sink),
-        GST_VIDEO_SINK_HEIGHT (gl_sink));
     gst_gl_window_draw (window);
   }
   alive = gst_gl_window_is_running (window);

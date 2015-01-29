@@ -141,6 +141,7 @@ struct _GstGLWindowClass {
   void     (*get_surface_dimensions)  (GstGLWindow *window, guint *width, guint *height);
   void     (*handle_events)      (GstGLWindow *window, gboolean handle_events);
   void     (*set_preferred_size) (GstGLWindow *window, gint width, gint height);
+  void     (*show)               (GstGLWindow *window);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -213,6 +214,7 @@ void     gst_gl_window_send_mouse_event     (GstGLWindow * window,
 /* surfaces/rendering */
 void     gst_gl_window_draw_unlocked        (GstGLWindow *window);
 void     gst_gl_window_draw                 (GstGLWindow *window);
+void     gst_gl_window_show                 (GstGLWindow *window);
 void     gst_gl_window_set_preferred_size   (GstGLWindow * window,
                                              gint width,
                                              gint height);

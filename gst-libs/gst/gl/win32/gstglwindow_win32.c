@@ -63,6 +63,7 @@ static void gst_gl_window_win32_set_window_handle (GstGLWindow * window,
 static guintptr gst_gl_window_win32_get_display (GstGLWindow * window);
 static void gst_gl_window_win32_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
+static void gst_gl_window_win32_show (GstGLWindow * window);
 static void gst_gl_window_win32_draw (GstGLWindow * window);
 static void gst_gl_window_win32_run (GstGLWindow * window);
 static void gst_gl_window_win32_quit (GstGLWindow * window);
@@ -88,6 +89,7 @@ gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_get_display);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_set_preferred_size);
+  window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_win32_show);
 }
 
 static void
@@ -263,22 +265,9 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
 }
 
 static void
-gst_gl_window_win32_set_preferred_size (GstGLWindow * window, gint width,
-    gint height)
+gst_gl_window_win32_show (GstGLWindow * window)
 {
   GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
-
-  window_win32->priv->preferred_width = width;
-  window_win32->priv->preferred_height = height;
-}
-
-/* Thread safe */
-static void
-gst_gl_window_win32_draw (GstGLWindow * window)
-{
-  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
-  gint width = window_win32->priv->preferred_width;
-  gint height = window_win32->priv->preferred_height;
 
   if (!window_win32->visible) {
     HWND parent_id = window_win32->parent_win_id;
@@ -295,10 +284,29 @@ gst_gl_window_win32_draw (GstGLWindow * window)
       MoveWindow (window_win32->internal_win_id, rect.left, rect.top, width,
           height, FALSE);
     }
-    ShowWindowAsync (window_win32->internal_win_id, SW_SHOW);
 
+    ShowWindowAsync (window_win32->internal_win_id, SW_SHOW);
     window_win32->visible = TRUE;
   }
+}
+
+static void
+gst_gl_window_win32_set_preferred_size (GstGLWindow * window, gint width,
+    gint height)
+{
+  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
+
+  window_win32->priv->preferred_width = width;
+  window_win32->priv->preferred_height = height;
+}
+
+/* Thread safe */
+static void
+gst_gl_window_win32_draw (GstGLWindow * window)
+{
+  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
+  gint width = window_win32->priv->preferred_width;
+  gint height = window_win32->priv->preferred_height;
 
   RedrawWindow (window_win32->internal_win_id, NULL, NULL,
       RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
