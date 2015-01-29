@@ -837,11 +837,14 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       "GL_APPLE_ycbcr_422");
   gboolean in_tex_rectangular = FALSE;
 
+#if GST_GL_HAVE_OPENGL
   GstMemory *memory = gst_buffer_peek_memory (convert->inbuf, 0);
-  if (gst_is_gl_memory (memory)) {
+  if (gst_is_gl_memory (memory) && (USING_OPENGL (convert->context)
+          || USING_OPENGL3 (convert->context))) {
     in_tex_rectangular =
         ((GstGLMemory *) memory)->tex_target == GL_TEXTURE_RECTANGLE;
   }
+#endif
 
   info->out_n_textures = 1;
 
