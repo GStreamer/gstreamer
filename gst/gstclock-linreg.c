@@ -92,9 +92,9 @@ _priv_gst_do_linear_regression (GstClockTime * times, guint n,
   }
 
 #ifdef DEBUGGING_ENABLED
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "reduced numbers:");
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "reduced numbers:");
   for (i = j = 0; i < n; i++, j += 4)
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+    GST_CAT_DEBUG (GST_CAT_CLOCK,
         "  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, newx[j], newy[j]);
 #endif
 
@@ -108,7 +108,7 @@ _priv_gst_do_linear_regression (GstClockTime * times, guint n,
     /* Just in case assumptions about headroom prove false, let's check */
     if ((newx[j] > 0 && G_MAXUINT64 - xbar <= newx[j]) ||
         (newy[j] > 0 && G_MAXUINT64 - ybar <= newy[j])) {
-      GST_CAT_WARNING_OBJECT (GST_CAT_CLOCK, clock,
+      GST_CAT_WARNING (GST_CAT_CLOCK,
           "Regression overflowed in clock slaving! xbar %"
           G_GUINT64_FORMAT " newx[j] %" G_GUINT64_FORMAT " ybar %"
           G_GUINT64_FORMAT " newy[j] %" G_GUINT64_FORMAT, xbar, newx[j], ybar,
@@ -140,7 +140,7 @@ _priv_gst_do_linear_regression (GstClockTime * times, guint n,
   i = 0;
   do {
 #ifdef DEBUGGING_ENABLED
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+    GST_CAT_DEBUG (GST_CAT_CLOCK,
         "Restarting regression with precision shift %u", pshift);
 #endif
 
@@ -222,20 +222,17 @@ _priv_gst_do_linear_regression (GstClockTime * times, guint n,
   *r_squared = ((double) sxy * (double) sxy) / ((double) sxx * (double) syy);
 
 #ifdef DEBUGGING_ENABLED
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  m      = %g",
-      ((double) *m_num) / *m_denom);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  b      = %" G_GUINT64_FORMAT,
-      *b);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  xbase  = %" G_GUINT64_FORMAT,
-      *xbase);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  r2     = %g", *r_squared);
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "  m      = %g", ((double) *m_num) / *m_denom);
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "  b      = %" G_GUINT64_FORMAT, *b);
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "  xbase  = %" G_GUINT64_FORMAT, *xbase);
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "  r2     = %g", *r_squared);
 #endif
 
   return TRUE;
 
 invalid:
   {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "sxx == 0, regression failed");
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "sxx == 0, regression failed");
     return FALSE;
   }
 }
