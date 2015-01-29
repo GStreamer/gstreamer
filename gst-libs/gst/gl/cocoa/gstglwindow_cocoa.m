@@ -220,60 +220,6 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
   }
 }
 
-void
-gst_gl_window_cocoa_draw_thread (GstGLWindowCocoa *window_cocoa)
-{
-  GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
-
-  /* useful when set_window_handle is called before
-   * the internal NSWindow */
-  if (priv->external_view && !priv->visible) {
-    gst_gl_window_cocoa_set_window_handle (GST_GL_WINDOW (window_cocoa), (guintptr) priv->external_view);
-    priv->visible = TRUE;
-  }
-
-  if (!priv->external_view && !priv->visible) {
-    NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
-    NSRect windowRect = [priv->internal_win_id frame];
-    gint x = 0;
-    gint y = 0;
-
-    GST_DEBUG ("main screen rect: %d %d %d %d\n", (int) mainRect.origin.x,
-        (int) mainRect.origin.y, (int) mainRect.size.width,
-        (int) mainRect.size.height);
-
-    windowRect.origin.x += x;
-    windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
-    windowRect.size.width = window_cocoa->priv->preferred_width;
-    windowRect.size.height = window_cocoa->priv->preferred_height;
-
-    GST_DEBUG ("window rect: %d %d %d %d\n", (int) windowRect.origin.x,
-        (int) windowRect.origin.y, (int) windowRect.size.width,
-        (int) windowRect.size.height);
-
-    x += 20;
-    y += 20;
-
-    [priv->internal_win_id setFrame:windowRect display:NO];
-    GST_DEBUG ("make the window available\n");
-
-    [priv->internal_win_id makeMainWindow];
-    [priv->internal_win_id orderFrontRegardless];
-    [priv->internal_win_id setViewsNeedDisplay:YES];
-
-    priv->visible = TRUE;
-  }
-
-  if (g_main_loop_is_running (priv->loop)) {
-    if (![priv->internal_win_id isClosed]) {
-     GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
-
-      /* draw opengl scene in the back buffer */
-      if (window->draw)
-        window->draw (window->draw_data);
-    }
-  }
-}
 
 static void
 gst_gl_window_cocoa_draw (GstGLWindow * window)
@@ -360,6 +306,103 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 
   g_main_context_invoke (window_cocoa->priv->main_context,
       (GSourceFunc) _run_message, message);
+}
+
+static void
+gst_gl_cocoa_draw_cb (GstGLWindowCocoa *window_cocoa)
+{
+  GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
+
+  /* useful when set_window_handle is called before
+   * the internal NSWindow */
+  if (priv->external_view && !priv->visible) {
+    gst_gl_window_cocoa_set_window_handle (GST_GL_WINDOW (window_cocoa), (guintptr) priv->external_view);
+    priv->visible = TRUE;
+  }
+
+  if (!priv->external_view && !priv->visible) {
+    NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
+    NSRect windowRect = [priv->internal_win_id frame];
+    gint x = 0;
+    gint y = 0;
+
+    GST_DEBUG ("main screen rect: %d %d %d %d\n", (int) mainRect.origin.x,
+        (int) mainRect.origin.y, (int) mainRect.size.width,
+        (int) mainRect.size.height);
+
+    windowRect.origin.x += x;
+    windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
+    windowRect.size.width = window_cocoa->priv->preferred_width;
+    windowRect.size.height = window_cocoa->priv->preferred_height;
+
+    GST_DEBUG ("window rect: %d %d %d %d\n", (int) windowRect.origin.x,
+        (int) windowRect.origin.y, (int) windowRect.size.width,
+        (int) windowRect.size.height);
+
+    x += 20;
+    y += 20;
+
+    [priv->internal_win_id setFrame:windowRect display:NO];
+    GST_DEBUG ("make the window available\n");
+
+    [priv->internal_win_id makeMainWindow];
+    [priv->internal_win_id orderFrontRegardless];
+    [priv->internal_win_id setViewsNeedDisplay:YES];
+
+    priv->visible = TRUE;
+  }
+
+  if (g_main_loop_is_running (priv->loop)) {
+    if (![priv->internal_win_id isClosed]) {
+     GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
+
+      /* draw opengl scene in the back buffer */
+      if (window->draw)
+        window->draw (window->draw_data);
+    }
+  }
+}
+
+static void
+gst_gl_cocoa_resize_cb (GstGLNSView * view, guint width, guint height)
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  GstGLWindowCocoa *window_cocoa = view->window_cocoa;
+  GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
+  GstGLContext *context = gst_gl_window_get_context (window);
+
+  if (g_main_loop_is_running (window_cocoa->priv->loop) && ![window_cocoa->priv->internal_win_id isClosed]) {
+    const GstGLFuncs *gl;
+    NSRect bounds = [view bounds];
+    NSRect visibleRect = [view visibleRect];
+    gint viewport_dim[4];
+
+    gl = context->gl_vtable;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
+    bounds = [view convertRectToBacking:bounds];
+    visibleRect = [view convertRectToBacking:visibleRect];
+#endif
+
+    GST_DEBUG_OBJECT (window, "Window resized: bounds %lf %lf %lf %lf "
+                      "visibleRect %lf %lf %lf %lf",
+                      bounds.origin.x, bounds.origin.y,
+                      bounds.size.width, bounds.size.height,
+                      visibleRect.origin.x, visibleRect.origin.y,
+                      visibleRect.size.width, visibleRect.size.height);
+
+    if (window->resize) {
+      window->resize (window->resize_data, width, height);
+      gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
+    }
+
+    gl->Viewport (viewport_dim[0] - visibleRect.origin.x,
+                  viewport_dim[1] - visibleRect.origin.y,
+                  viewport_dim[2], viewport_dim[3]);
+  }
+
+  gst_object_unref (context);
+  [pool release];
 }
 
 /* =============================================================*/
@@ -450,7 +493,6 @@ close_window_cb (gpointer data)
 
 @end
 
-
 /* =============================================================*/
 /*                                                              */
 /*                GstGLNSView implementation              */
@@ -474,62 +516,22 @@ close_window_cb (gpointer data)
   [self setLayer:layerContent];
   [self setWantsLayer:YES];
   self->layer = (GstGLCAOpenGLLayer *)layerContent;
-  [self->layer setDrawCallback:(GstGLWindowCB)gst_gl_window_cocoa_draw_thread data:window notify:NULL];
+  [self->layer setDrawCallback:(GstGLWindowCB)gst_gl_cocoa_draw_cb
+      data:window notify:NULL];
+  [self->layer setResizeCallback:(GstGLWindowResizeCB)gst_gl_cocoa_resize_cb
+      data:self notify:NULL];
 
   [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
 
-  /* Get notified about changes */
-  [self setPostsFrameChangedNotifications:YES];
-  [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(reshape:) name: NSViewFrameDidChangeNotification object: self];
   [self setWantsBestResolutionOpenGLSurface:YES];
 
   return self;
 }
 
 - (void) dealloc {
-  [[NSNotificationCenter defaultCenter] removeObserver: self];
   [self->layer release];
 
   [super dealloc];
-}
-
-struct resize
-{
-  GstGLWindowCocoa * window;
-  NSRect bounds, visibleRect;
-};
-
-static void
-resize_cb (gpointer data)
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  struct resize *resize_data = data;
-  GstGLWindowCocoa *window_cocoa = resize_data->window;
-  GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
-  GstGLContext *context = gst_gl_window_get_context (window);
-
-  if (g_main_loop_is_running (window_cocoa->priv->loop) && ![window_cocoa->priv->internal_win_id isClosed]) {
-    const GstGLFuncs *gl;
-    GstGLCAOpenGLLayer *gl_layer;
-
-    gl = context->gl_vtable;
-
-    if (window->resize) {
-      window->resize (window->resize_data, resize_data->bounds.size.width, resize_data->bounds.size.height);
-      gl->GetIntegerv (GL_VIEWPORT, window_cocoa->priv->viewport_dim);
-    }
-
-    gl->Viewport (window_cocoa->priv->viewport_dim[0] - resize_data->visibleRect.origin.x,
-                  window_cocoa->priv->viewport_dim[1] - resize_data->visibleRect.origin.y,
-                  window_cocoa->priv->viewport_dim[2], window_cocoa->priv->viewport_dim[3]);
-
-    gl_layer = ((GstGLNSView *)[window_cocoa->priv->internal_win_id contentView])->layer;
-    [gl_layer resize:resize_data->bounds];
-
-    gst_gl_window_draw (window);
-  }
-  gst_object_unref (context);
-  [pool release];
 }
 
 - (void)renewGState {
@@ -540,41 +542,6 @@ resize_cb (gpointer data)
   [[self window] disableScreenUpdatesUntilFlush];
 
   [super renewGState];
-}
-
-- (void)reshape: (NSNotification*)notification {
-  GstGLWindow *window;
-
-  window = GST_GL_WINDOW (window_cocoa);
-
-  if (window->resize) {
-    NSRect bounds = [self bounds];
-    NSRect visibleRect = [self visibleRect];
-    struct resize *resize_data = g_new (struct resize, 1);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
-    bounds = [self convertRectToBacking:bounds];
-    visibleRect = [self convertRectToBacking:visibleRect];
-#endif
-
-    GST_DEBUG_OBJECT (window, "Window resized: bounds %lf %lf %lf %lf "
-                      "visibleRect %lf %lf %lf %lf",
-                      bounds.origin.x, bounds.origin.y,
-                      bounds.size.width, bounds.size.height,
-                      visibleRect.origin.x, visibleRect.origin.y,
-                      visibleRect.size.width, visibleRect.size.height);
-
-    resize_data->window = window_cocoa;
-    resize_data->bounds = bounds;
-    resize_data->visibleRect = visibleRect;
-
-    gst_gl_window_send_message_async (GST_GL_WINDOW (window_cocoa),
-        (GstGLWindowCB) resize_cb, resize_data, (GDestroyNotify) g_free);
-  }
-}
-
-- (void)drawRect: (NSRect)dirtyRect {
-  [self reshape:nil];
 }
 
 - (BOOL) isOpaque {

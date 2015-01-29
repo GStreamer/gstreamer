@@ -97,7 +97,8 @@
   CGLReleaseContext (glContext);
 }
 
-- (void)setDrawCallback:(GstGLWindowCB)cb data:(gpointer)data notify:(GDestroyNotify)notify {
+- (void)setDrawCallback:(GstGLWindowCB)cb data:(gpointer)data
+      notify:(GDestroyNotify)notify {
   g_return_if_fail (cb);
 
   if (self->draw_notify)
@@ -108,12 +109,14 @@
   self->draw_notify = notify;
 }
 
-- (void)resize:(NSRect)bounds {
-  const GstGLFuncs *gl = ((GstGLContext *)self->gst_gl_context)->gl_vtable;
+- (void)setResizeCallback:(GstGLWindowResizeCB)cb data:(gpointer)data
+      notify:(GDestroyNotify)notify {
+  if (self->resize_notify)
+    self->resize_notify (self->resize_notify);
 
-  GST_LOG ("resizing");
-
-  gl->GetIntegerv (GL_VIEWPORT, self->expected_dims);
+  self->resize_cb = cb;
+  self->resize_data = data;
+  self->resize_notify = notify;
 }
 
 - (void)drawInCGLContext:(CGLContextObj)glContext
@@ -121,6 +124,7 @@
             forLayerTime:(CFTimeInterval)interval
              displayTime:(const CVTimeStamp *)timeStamp {
   const GstGLFuncs *gl = ((GstGLContext *)self->gst_gl_context)->gl_vtable;
+  GstVideoRectangle src, dst, result;
   gint ca_viewport[4];
 
   GST_LOG ("CAOpenGLLayer drawing with cgl context %p", glContext);
@@ -130,7 +134,23 @@
    * the CA viewport set up on entry to this function */
   gl->GetIntegerv (GL_VIEWPORT, ca_viewport);
 
-  GstVideoRectangle src, dst, result;
+  if (self->last_bounds.size.width != self.bounds.size.width
+      || self->last_bounds.size.height != self.bounds.size.height) {
+    if (self->resize_cb) {
+      self->resize_cb (self->resize_data, self.bounds.size.width,
+          self.bounds.size.height);
+
+      gl->GetIntegerv (GL_VIEWPORT, self->expected_dims);
+    } else {
+      /* default to whatever ca gives us */
+      self->expected_dims[0] = ca_viewport[0];
+      self->expected_dims[1] = ca_viewport[1];
+      self->expected_dims[2] = ca_viewport[2];
+      self->expected_dims[3] = ca_viewport[3];
+    }
+
+    self->last_bounds = self.bounds;
+  }
 
   src.x = self->expected_dims[0];
   src.y = self->expected_dims[1];
