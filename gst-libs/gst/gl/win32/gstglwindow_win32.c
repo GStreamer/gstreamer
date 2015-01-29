@@ -268,6 +268,8 @@ static void
 gst_gl_window_win32_show (GstGLWindow * window)
 {
   GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
+  gint width = window_win32->priv->preferred_width;
+  gint height = window_win32->priv->preferred_height;
 
   if (!window_win32->visible) {
     HWND parent_id = window_win32->parent_win_id;
@@ -305,8 +307,6 @@ static void
 gst_gl_window_win32_draw (GstGLWindow * window)
 {
   GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
-  gint width = window_win32->priv->preferred_width;
-  gint height = window_win32->priv->preferred_height;
 
   RedrawWindow (window_win32->internal_win_id, NULL, NULL,
       RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
