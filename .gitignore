@@ -58,6 +58,7 @@ gst*orc.h
 /tests/examples/uvch264/test-uvch264
 /tests/examples/mpegts/tsparser
 /tests/examples/opencv/gsthanddetect_test
+/tests/examples/playout
 
 Build
 *.user
