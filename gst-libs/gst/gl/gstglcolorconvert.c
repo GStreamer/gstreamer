@@ -850,6 +850,10 @@ _YUV_to_RGB (GstGLColorConvert * convert)
 
   if (in_tex_rectangular && apple_ycbcr
       && gst_buffer_n_memory (convert->inbuf) == 1) {
+    /* FIXME: We should probably also check if tex_target actually is using
+     * the Apple YCbCr422 extension. It could also be a normal UYVY texture
+     * with RB or Lum/Alpha
+     */
     info->frag_prog =
         g_strdup_printf (frag_APPLE_YUV_TO_RGB, pixel_order[0], pixel_order[1],
         pixel_order[2], pixel_order[3]);
