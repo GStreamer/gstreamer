@@ -4094,8 +4094,12 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
    * ogg file. */
   gst_ogg_demux_seek (ogg, 0);
   ret = gst_ogg_demux_read_chain (ogg, &chain);
-  if (ret != GST_FLOW_OK)
-    goto no_first_chain;
+  if (ret != GST_FLOW_OK) {
+    if (ret == GST_FLOW_FLUSHING)
+      goto flushing;
+    else
+      goto no_first_chain;
+  }
 
   /* read page from end offset, we use this page to check if its serial
    * number is contained in the first chain. If this is the case then
@@ -4154,6 +4158,11 @@ no_last_page:
     if (chain)
       gst_ogg_chain_free (chain);
     return ret;
+  }
+flushing:
+  {
+    GST_DEBUG_OBJECT (ogg, "Flushing, can't read chain");
+    return GST_FLOW_FLUSHING;
   }
 }
 
