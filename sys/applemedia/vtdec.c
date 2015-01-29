@@ -107,7 +107,7 @@ CFSTR ("EnableHardwareAcceleratedVideoDecoder");
 #define VIDEO_SRC_CAPS \
     GST_VIDEO_CAPS_MAKE(GST_VTDEC_VIDEO_FORMAT_STR) ";" \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
-    (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, \
+    (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, \
         "RGBA") ";"
 
 G_DEFINE_TYPE_WITH_CODE (GstVtdec, gst_vtdec, GST_TYPE_VIDEO_DECODER,
@@ -301,8 +301,7 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   output_state->caps = gst_video_info_to_caps (&output_state->info);
   if (output_state->info.finfo->format == GST_VIDEO_FORMAT_RGBA) {
     gst_caps_set_features (output_state->caps, 0,
-        gst_caps_features_new
-        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL));
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
   }
 
   return TRUE;
@@ -397,7 +396,11 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format)
       cv_format = kCVPixelFormatType_422YpCbCr8;
       break;
     case GST_VIDEO_FORMAT_RGBA:
-      cv_format = kCVPixelFormatType_32BGRA;
+#ifdef HAVE_IOS
+      cv_format = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+#else
+      cv_format = kCVPixelFormatType_422YpCbCr8;
+#endif
       break;
     default:
       g_warn_if_reached ();
@@ -679,8 +682,16 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
 
   /* negotiate now so that we know whether we need to use the GL upload meta or
    * not */
-  if (gst_pad_check_reconfigure (decoder->srcpad))
+  if (gst_pad_check_reconfigure (decoder->srcpad)) {
     gst_video_decoder_negotiate (decoder);
+    if (vtdec->texture_cache) {
+      GstVideoCodecState *output_state =
+          gst_video_decoder_get_output_state (decoder);
+      gst_core_video_texture_cache_set_format (vtdec->texture_cache,
+          GST_VTDEC_VIDEO_FORMAT_STR, output_state->caps);
+      gst_video_codec_state_unref (output_state);
+    }
+  }
 
   if (drain)
     VTDecompressionSessionWaitForAsynchronousFrames (vtdec->session);
@@ -691,14 +702,10 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
   while ((g_async_queue_length (vtdec->reorder_queue) >=
           vtdec->reorder_queue_length) || drain || flush) {
     frame = (GstVideoCodecFrame *) g_async_queue_try_pop (vtdec->reorder_queue);
-    if (vtdec->texture_cache != NULL) {
-      GstVideoGLTextureType texture_types[4] =
-          { GST_VIDEO_GL_TEXTURE_TYPE_RGBA, 0 };
-      gst_buffer_add_video_gl_texture_upload_meta (frame->output_buffer,
-          GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL, 1, texture_types,
-          gst_core_video_texture_cache_upload, vtdec->texture_cache, NULL,
-          NULL);
-    }
+    if (vtdec->texture_cache != NULL)
+      frame->output_buffer =
+          gst_core_video_texture_cache_get_gl_buffer (vtdec->texture_cache,
+          frame->output_buffer);
 
     /* we need to check this in case reorder_queue_length=0 (jpeg for
      * example) or we're draining/flushing

@@ -36,6 +36,8 @@ gst_core_video_texture_cache_new (GstGLContext * ctx)
 
   GstCoreVideoTextureCache *cache = g_new0 (GstCoreVideoTextureCache, 1);
   cache->ctx = gst_object_ref (ctx);
+  gst_video_info_init (&cache->input_info);
+  cache->convert = gst_gl_color_convert_new (cache->ctx);
 
 #if !HAVE_IOS
   CGLPixelFormatObj pixelFormat =
@@ -62,30 +64,51 @@ gst_core_video_texture_cache_free (GstCoreVideoTextureCache * cache)
 #else
   /* FIXME: how do we release ->cache ? */
 #endif
+  gst_object_unref (cache->convert);
   gst_object_unref (cache->ctx);
   g_free (cache);
 }
 
-gboolean
-gst_core_video_texture_cache_upload (GstVideoGLTextureUploadMeta * meta,
-    guint texture_id[4])
+void
+gst_core_video_texture_cache_set_format (GstCoreVideoTextureCache * cache,
+    const gchar * input_format, GstCaps * out_caps)
 {
-  g_return_val_if_fail (meta != NULL, FALSE);
+  GstCaps *in_caps;
+  GstCapsFeatures *features;
 
-  GstCoreVideoTextureCache *cache =
-      (GstCoreVideoTextureCache *) meta->user_data;
-  const GstGLFuncs *gl = cache->ctx->gl_vtable;
+  g_return_if_fail (gst_caps_is_fixed (out_caps));
+
+  out_caps = gst_caps_copy (out_caps);
+  features = gst_caps_get_features (out_caps, 0);
+  gst_caps_features_add (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  gst_video_info_from_caps (&cache->output_info, out_caps); 
+  
+  in_caps = gst_caps_copy (out_caps);
+  gst_caps_set_simple (in_caps, "format", G_TYPE_STRING, input_format, NULL);
+  features = gst_caps_get_features (in_caps, 0);
+  gst_caps_features_add (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  gst_video_info_from_caps (&cache->input_info, in_caps);
+
+  gst_gl_color_convert_set_caps (cache->convert, in_caps, out_caps);
+
+  gst_caps_unref (out_caps);
+  gst_caps_unref (in_caps);
+}
+
+CFTypeRef
+texture_from_buffer (GstCoreVideoTextureCache * cache,
+    GstBuffer * buffer, GLuint * texture_id, GLuint * texture_target)
+{
 #if !HAVE_IOS
   CVOpenGLTextureRef texture = NULL;
 #else
   CVOpenGLESTextureRef texture = NULL;
 #endif
-  GstVideoMeta *video_meta = gst_buffer_get_video_meta (meta->buffer);
   GstCoreMediaMeta *cm_meta =
-      (GstCoreMediaMeta *) gst_buffer_get_meta (meta->buffer,
+      (GstCoreMediaMeta *) gst_buffer_get_meta (buffer,
       gst_core_media_meta_api_get_type ());
   GstCoreVideoMeta *cv_meta =
-      (GstCoreVideoMeta *) gst_buffer_get_meta (meta->buffer,
+      (GstCoreVideoMeta *) gst_buffer_get_meta (buffer,
       gst_core_video_meta_api_get_type ());
   CVPixelBufferRef pixel_buf;
   if (cm_meta)
@@ -95,29 +118,41 @@ gst_core_video_texture_cache_upload (GstVideoGLTextureUploadMeta * meta,
 #if !HAVE_IOS
   CVOpenGLTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
       cache->cache, pixel_buf, NULL, &texture);
+  *texture_id = CVOpenGLTextureGetName (texture);
+  *texture_target = CVOpenGLTextureGetTarget (texture);
+  CVOpenGLTextureCacheFlush (cache->cache, 0);
 #else
   CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
-      cache->cache, cm_meta->image_buf, NULL, GL_TEXTURE_2D,
-      GL_RGBA, video_meta->width, video_meta->height, GL_RGBA, GL_UNSIGNED_BYTE,
-      0, &texture);
+      cache->cache, cm_meta->image_buf, NULL, GL_TEXTURE_2D, GL_RGBA,
+      GST_VIDEO_INFO_WIDTH (&cache->input_info),
+      GST_VIDEO_INFO_HEIGHT (&cache->input_info),
+      GL_RGBA, GL_UNSIGNED_BYTE, 0, &texture);
+  *texture_id = CVOpenGLESTextureGetName (texture);
+  *texture_target = CVOpenGLESTextureGetTarget (texture);
+  CVOpenGLESTextureCacheFlush (cache->cache, 0);
 #endif
-  GLuint fboId;
-  gl->GenFramebuffers (1, &fboId);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, fboId);
 
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-#if !HAVE_IOS
-      CVOpenGLTextureGetTarget (texture), CVOpenGLTextureGetName (texture),
-#else
-      CVOpenGLESTextureGetTarget (texture), CVOpenGLESTextureGetName (texture),
-#endif
-      0);
-  gl->BindTexture (GL_TEXTURE_2D, texture_id[0]);
-  gl->CopyTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, 0, 0, video_meta->width,
-      video_meta->height, 0);
-  gl->BindTexture (GL_TEXTURE_2D, 0);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-  gl->DeleteFramebuffers (1, &fboId);
+  return (CFTypeRef) texture;
+}
 
-  return TRUE;
+GstBuffer *
+gst_core_video_texture_cache_get_gl_buffer (GstCoreVideoTextureCache * cache,
+        GstBuffer * cv_buffer)
+{
+  const GstGLFuncs *gl;
+  GstBuffer *rgb_buffer;
+  CFTypeRef texture;
+  GLuint texture_id, texture_target;
+  GstMemory *memory;
+
+  gl = cache->ctx->gl_vtable;
+  texture = texture_from_buffer (cache, cv_buffer, &texture_id, &texture_target);
+  memory = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx, texture_id, texture_target,
+      &cache->input_info, 0, NULL, NULL, NULL);
+  gst_buffer_append_memory (cv_buffer, memory);
+  rgb_buffer = gst_gl_color_convert_perform (cache->convert, cv_buffer);
+  gst_buffer_unref (cv_buffer);
+  CFRelease (texture);
+
+  return rgb_buffer;
 }
