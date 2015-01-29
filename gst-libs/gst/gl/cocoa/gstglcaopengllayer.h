@@ -35,14 +35,21 @@ G_BEGIN_DECLS
   CGLContextObj gl_context;
 
 @private
+  NSRect last_bounds;
   gint expected_dims[4];
+
   GstGLWindowCB draw_cb;
   gpointer draw_data;
   GDestroyNotify draw_notify;
+
+  GstGLWindowResizeCB resize_cb;
+  gpointer resize_data;
+  GDestroyNotify resize_notify;
+
 }
 - (void) setDrawCallback:(GstGLWindowCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
+- (void) setResizeCallback:(GstGLWindowResizeCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
 - (id) initWithGstGLContext: (GstGLContextCocoa *)context;
-- (void) resize: (NSRect)bounds;
 @end
 
 G_END_DECLS
