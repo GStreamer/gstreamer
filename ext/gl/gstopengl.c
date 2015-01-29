@@ -75,6 +75,11 @@
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
 
+#if GST_GL_HAVE_WINDOW_COCOA
+/* avoid including Cocoa/CoreFoundation from a C file... */
+extern GType gst_ca_opengl_layer_sink_get_type (void);
+#endif
+
 #ifdef USE_EGL_RPI
 #include <bcm_host.h>
 #endif
@@ -202,6 +207,12 @@ plugin_init (GstPlugin * plugin)
 #endif
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
+#if GST_GL_HAVE_WINDOW_COCOA
+  if (!gst_element_register (plugin, "caopengllayersink",
+          GST_RANK_NONE, gst_ca_opengl_layer_sink_get_type ())) {
+    return FALSE;
+  }
+#endif
 
   return TRUE;
 }

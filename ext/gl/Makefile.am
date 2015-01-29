@@ -4,6 +4,8 @@ plugin_LTLIBRARIES = libgstopengl.la
 AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 AM_LIBS = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
 
+libgstopengl_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+
 # full opengl required
 if USE_OPENGL
 OPENGL_SOURCES =  \
@@ -84,6 +86,23 @@ libgstopengl_la_SOURCES += \
 endif
 endif
 
+if HAVE_WINDOW_COCOA
+libgstopengl_la_SOURCES += \
+	caopengllayersink.m \
+	caopengllayersink.h
+
+libgstopengl_la_OBJCFLAGS = \
+	-I$(top_srcdir)/gst-libs \
+	-I$(top_builddir)/gst-libs \
+	$(GL_OBJCFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(GST_OBJCFLAGS)
+
+
+libgstopengl_la_LIBTOOLFLAGS += --tag=CC
+endif
+
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?
 libgstopengl_la_CFLAGS = \
@@ -110,5 +129,4 @@ libgstopengl_la_LIBADD = \
 	$(GRAPHENE_LIBS)
 
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstopengl_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
