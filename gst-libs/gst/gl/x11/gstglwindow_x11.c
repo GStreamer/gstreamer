@@ -71,6 +71,7 @@ void gst_gl_window_x11_set_window_handle (GstGLWindow * window,
 guintptr gst_gl_window_x11_get_window_handle (GstGLWindow * window);
 static void gst_gl_window_x11_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
+void gst_gl_window_x11_show (GstGLWindow * window);
 void gst_gl_window_x11_draw_unlocked (GstGLWindow * window);
 void gst_gl_window_x11_draw (GstGLWindow * window);
 void gst_gl_window_x11_run (GstGLWindow * window);
@@ -123,6 +124,7 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_handle_events);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_set_preferred_size);
+  window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_x11_show);
 }
 
 static void
@@ -371,6 +373,37 @@ gst_gl_window_x11_set_preferred_size (GstGLWindow * window, gint width,
   window_x11->priv->preferred_height = height;
 }
 
+static void
+_show_window (GstGLWindow * window)
+{
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
+  guint width = window_x11->priv->preferred_width;
+  guint height = window_x11->priv->preferred_height;
+  XWindowAttributes attr;
+
+  XGetWindowAttributes (window_x11->device, window_x11->internal_win_id, &attr);
+
+  if (!window_x11->visible) {
+
+    if (!window_x11->parent_win) {
+      attr.width = width;
+      attr.height = height;
+      XResizeWindow (window_x11->device, window_x11->internal_win_id,
+          attr.width, attr.height);
+      XSync (window_x11->device, FALSE);
+    }
+
+    XMapWindow (window_x11->device, window_x11->internal_win_id);
+    window_x11->visible = TRUE;
+  }
+}
+
+void
+gst_gl_window_x11_show (GstGLWindow * window)
+{
+  gst_gl_window_send_message (window, (GstGLWindowCB) _show_window, window);
+}
+
 /* Called in the gl thread */
 void
 gst_gl_window_x11_draw_unlocked (GstGLWindow * window)
@@ -397,28 +430,12 @@ static void
 draw_cb (gpointer data)
 {
   GstGLWindowX11 *window_x11 = data;
-  guint width = window_x11->priv->preferred_width;
-  guint height = window_x11->priv->preferred_height;
 
   if (g_main_loop_is_running (window_x11->loop)) {
     XWindowAttributes attr;
 
     XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
         &attr);
-
-    if (!window_x11->visible) {
-
-      if (!window_x11->parent_win) {
-        attr.width = width;
-        attr.height = height;
-        XResizeWindow (window_x11->device, window_x11->internal_win_id,
-            attr.width, attr.height);
-        XSync (window_x11->device, FALSE);
-      }
-
-      XMapWindow (window_x11->device, window_x11->internal_win_id);
-      window_x11->visible = TRUE;
-    }
 
     if (window_x11->parent_win) {
       XWindowAttributes attr_parent;
