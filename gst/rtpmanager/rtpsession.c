@@ -50,6 +50,7 @@ enum
   SIGNAL_ON_FEEDBACK_RTCP,
   SIGNAL_SEND_RTCP,
   SIGNAL_SEND_RTCP_FULL,
+  SIGNAL_ON_RECEIVING_RTCP,
   LAST_SIGNAL
 };
 
@@ -339,6 +340,22 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (RTPSessionClass, send_rtcp), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, G_TYPE_UINT64);
+
+  /**
+   * RTPSession::on-receiving-rtcp
+   * @session: the object which received the signal
+   * @buffer: the #GstBuffer containing the RTCP packet that was received
+   *
+   * This signal is emitted when receiving an RTCP packet before it is handled
+   * by the session. It can be used to extract custom information from RTCP packets.
+   *
+   * Since: 1.6
+   */
+  rtp_session_signals[SIGNAL_ON_RECEIVING_RTCP] =
+      g_signal_new ("on-sending-rtcp", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_receiving_rtcp),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",
@@ -2559,6 +2576,9 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
     goto invalid_packet;
 
   GST_DEBUG ("received RTCP packet");
+
+  g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_RECEIVING_RTCP], 0,
+      buffer);
 
   RTP_SESSION_LOCK (sess);
   /* update pinfo stats */
