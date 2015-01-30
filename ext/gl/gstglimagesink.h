@@ -67,6 +67,7 @@ struct _GstGLImageSink
     GstGLContext *context;
     GstGLContext *other_context;
     gboolean handle_events;
+    gboolean ignore_alpha;
 
     GstGLUpload *upload;
     GstGLColorConvert *convert;
