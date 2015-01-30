@@ -1221,6 +1221,7 @@ gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
   GstMatroskaTrackContext *track = NULL;
   GstSegment seeksegment = { 0, };
   gboolean update;
+  GstSearchMode snap_dir;
 
   if (pad)
     track = gst_pad_get_element_private (pad);
@@ -1248,11 +1249,16 @@ gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
 
   GST_DEBUG_OBJECT (parse, "New segment %" GST_SEGMENT_FORMAT, &seeksegment);
 
+  if (seeksegment.rate < 0)
+    snap_dir = GST_SEARCH_MODE_AFTER;
+  else
+    snap_dir = GST_SEARCH_MODE_BEFORE;
+
   /* check sanity before we start flushing and all that */
   GST_OBJECT_LOCK (parse);
   if ((entry = gst_matroska_read_common_do_index_seek (&parse->common, track,
               seeksegment.position, &parse->seek_index, &parse->seek_entry,
-              FALSE)) == NULL) {
+              snap_dir)) == NULL) {
     /* pull mode without index can scan later on */
     GST_DEBUG_OBJECT (parse, "No matching seek entry in index");
     GST_OBJECT_UNLOCK (parse);

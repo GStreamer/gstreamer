@@ -375,13 +375,10 @@ gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
 GstMatroskaIndex *
 gst_matroska_read_common_do_index_seek (GstMatroskaReadCommon * common,
     GstMatroskaTrackContext * track, gint64 seek_pos, GArray ** _index,
-    gint * _entry_index, gboolean next)
+    gint * _entry_index, GstSearchMode snap_dir)
 {
   GstMatroskaIndex *entry = NULL;
   GArray *index;
-
-  if (!common->index || !common->index->len)
-    return NULL;
 
   /* find entry just before or at the requested position */
   if (track && track->index_table)
@@ -389,16 +386,21 @@ gst_matroska_read_common_do_index_seek (GstMatroskaReadCommon * common,
   else
     index = common->index;
 
+  if (!index || !index->len)
+    return NULL;
+
   entry =
       gst_util_array_binary_search (index->data, index->len,
       sizeof (GstMatroskaIndex),
-      (GCompareDataFunc) gst_matroska_index_seek_find,
-      next ? GST_SEARCH_MODE_AFTER : GST_SEARCH_MODE_BEFORE, &seek_pos, NULL);
+      (GCompareDataFunc) gst_matroska_index_seek_find, snap_dir, &seek_pos,
+      NULL);
 
   if (entry == NULL) {
-    if (next) {
-      return NULL;
+    if (snap_dir == GST_SEARCH_MODE_AFTER) {
+      /* Can only happen with a reverse seek past the end */
+      entry = &g_array_index (index, GstMatroskaIndex, index->len - 1);
     } else {
+      /* Can only happen with a forward seek before the start */
       entry = &g_array_index (index, GstMatroskaIndex, 0);
     }
   }

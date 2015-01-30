@@ -1873,9 +1873,14 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   gboolean update = TRUE;
   gboolean pad_locked = FALSE;
   guint32 seqnum;
+  GstSearchMode snap_dir;
+
+  g_return_val_if_fail (event != NULL, FALSE);
 
   if (pad)
     track = gst_pad_get_element_private (pad);
+
+  GST_DEBUG_OBJECT (demux, "Have seek %" GST_PTR_FORMAT, event);
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
@@ -1899,25 +1904,29 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     seeksegment.duration = GST_CLOCK_TIME_NONE;
   }
 
-  if (event) {
-    GST_DEBUG_OBJECT (demux, "configuring seek");
-    gst_segment_do_seek (&seeksegment, rate, format, flags,
-        cur_type, cur, stop_type, stop, &update);
-    /* compensate for clip start time, but only for SET seeks,
-     * otherwise it is already part of the segments */
-    if (GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
-      if (cur_type == GST_SEEK_TYPE_SET) {
-        if (rate > 0.0)
-          seeksegment.position += demux->stream_start_time;
-        seeksegment.start += demux->stream_start_time;
-      }
-      if (stop_type == GST_SEEK_TYPE_SET
-          && GST_CLOCK_TIME_IS_VALID (seeksegment.stop)) {
-        if (rate < 0.0)
-          seeksegment.position += demux->stream_start_time;
-        seeksegment.stop += demux->stream_start_time;
-      }
-    }
+  GST_DEBUG_OBJECT (demux, "configuring seek");
+  /* Subtract stream_start_time so we always seek on a segment
+   * in stream time */
+  if (GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
+    seeksegment.start -= demux->stream_start_time;
+    seeksegment.position -= demux->stream_start_time;
+    if (GST_CLOCK_TIME_IS_VALID (seeksegment.stop))
+      seeksegment.stop -= demux->stream_start_time;
+    else
+      seeksegment.stop = seeksegment.duration;
+  }
+
+  gst_segment_do_seek (&seeksegment, rate, format, flags,
+      cur_type, cur, stop_type, stop, &update);
+
+  /* Restore the clip timestamp offset */
+  if (GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
+    seeksegment.position += demux->stream_start_time;
+    seeksegment.start += demux->stream_start_time;
+    if (!GST_CLOCK_TIME_IS_VALID (seeksegment.stop))
+      seeksegment.stop = seeksegment.duration;
+    if (GST_CLOCK_TIME_IS_VALID (seeksegment.stop))
+      seeksegment.stop += demux->stream_start_time;
   }
 
   /* restore segment duration (if any effect),
@@ -1938,12 +1947,15 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   /* check sanity before we start flushing and all that */
   snap_next = after && !before;
   if (seeksegment.rate < 0)
-    snap_next = !snap_next;
+    snap_dir = snap_next ? GST_SEARCH_MODE_BEFORE : GST_SEARCH_MODE_AFTER;
+  else
+    snap_dir = snap_next ? GST_SEARCH_MODE_AFTER : GST_SEARCH_MODE_BEFORE;
+
   GST_OBJECT_LOCK (demux);
   track = gst_matroska_read_common_get_seek_track (&demux->common, track);
   if ((entry = gst_matroska_read_common_do_index_seek (&demux->common, track,
               seeksegment.position, &demux->seek_index, &demux->seek_entry,
-              snap_next)) == NULL) {
+              snap_dir)) == NULL) {
     /* pull mode without index can scan later on */
     if (demux->streaming) {
       GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
