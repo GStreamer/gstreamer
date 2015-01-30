@@ -352,7 +352,7 @@ rtp_session_class_init (RTPSessionClass * klass)
    * Since: 1.6
    */
   rtp_session_signals[SIGNAL_ON_RECEIVING_RTCP] =
-      g_signal_new ("on-sending-rtcp", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("on-receiving-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_receiving_rtcp),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
