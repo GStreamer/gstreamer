@@ -45,6 +45,7 @@
 #include "gst-validate-utils.h"
 #include <gst/validate/gst-validate-override.h>
 #include <gst/validate/gst-validate-override-registry.h>
+#include <socket_interposer.h>
 
 #define GST_VALIDATE_SCENARIO_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioPrivate))
@@ -2411,6 +2412,7 @@ init_scenarios (void)
       }),
       "Emits a signal to an element in the pipeline",
       GST_VALIDATE_ACTION_TYPE_NONE);
-  /*  *INDENT-ON* */
 
+  socket_interposer_init ();
+  /*  *INDENT-ON* */
 }

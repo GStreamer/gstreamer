@@ -235,6 +235,10 @@ GST_CFLAGS="$GST_CFLAGS \$(GST_OPTION_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
+dnl Tiny library overriding calls such as socket recv / send
+FAULTINJECTION_LIBS="-L\$(top_srcdir)/fault_injection/ -lfaultinjection-$GST_API_VERSION"
+AC_SUBST([FAULTINJECTION_LIBS])
+
 dnl GST_ALL_*
 dnl vars common to for all internal objects (core libs, elements, applications)
 dnl CFLAGS:
@@ -275,6 +279,7 @@ Makefile
 common/Makefile
 common/m4/Makefile
 data/Makefile
+fault_injection/Makefile
 gst/Makefile
 gst/validate/Makefile
 gst/preload/Makefile

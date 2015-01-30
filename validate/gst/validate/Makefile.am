@@ -44,15 +44,16 @@ noinst_HEADERS = 		\
 	gst-validate-i18n-lib.h \
 	gst-validate-internal.h
 
-
 lib_LTLIBRARIES = libgstvalidate-@GST_API_VERSION@.la
-libgstvalidate_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS) $(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS)
+libgstvalidate_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS)\
+	$(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS) -I$(top_srcdir)/fault_injection
 libgstvalidate_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
 	$(GST_LT_LDFLAGS) $(GIO_LDFLAGS) $(GST_PBUTILS_LDFAGS)
 libgstvalidate_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
 	$(GST_ALL_LIBS) $(GIO_LIBS) $(GST_PBUTILS_LIBS) \
-	$(GLIB_LIBS) $(LIBM)
+	$(GLIB_LIBS) $(LIBM)\
+	$(FAULTINJECTION_LIBS)
 
 libgstvalidate_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/validate
 
@@ -82,6 +83,7 @@ GstValidate-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstvalidate-@GST_
 		--include=GModule-2.0 \
 		--include=GLib-2.0 \
 		--libtool="${LIBTOOL}" \
+		$(FAULTINJECTION_LIBS) \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-pbutils-@GST_API_VERSION@ \
 		--pkg gstreamer-controller-@GST_API_VERSION@ \
@@ -114,6 +116,7 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-controller-@GST_API_VERSION@` \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gio-2.0` \
+		--shared-library=faultinjection-@GST_API_VERSION@ \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 endif
 
