@@ -1444,6 +1444,9 @@ gst_audio_decoder_drain (GstAudioDecoder * dec)
   if (dec->priv->drained && !dec->priv->gather)
     return GST_FLOW_OK;
   else {
+    /* Send any pending events before draining, as that
+     * may update the pending segment info */
+    send_pending_events (dec);
     /* dispatch reverse pending buffers */
     /* chain eventually calls upon drain as well, but by that time
      * gather list should be clear, so ok ... */
@@ -2052,7 +2055,7 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       }
 
       /* prepare for next segment */
-      /* Use the segment start as a base timstamp
+      /* Use the segment start as a base timestamp
        * in case upstream does not come up with anything better
        * (e.g. upstream BYTE) */
       if (format != GST_FORMAT_TIME) {
