@@ -179,7 +179,8 @@ enum
   PROP_FORCE_ASPECT_RATIO,
   PROP_PIXEL_ASPECT_RATIO,
   PROP_CONTEXT,
-  PROP_HANDLE_EVENTS
+  PROP_HANDLE_EVENTS,
+  PROP_IGNORE_ALPHA,
 };
 
 enum
@@ -297,6 +298,11 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
           "When enabled, XEvents will be selected and handled", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_HANDLE_EVENTS,
+      g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
+          "When enabled, alpha will be ignored and converted to black", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_metadata (element_class, "OpenGL video sink",
       "Sink/Video", "A videosink based on OpenGL",
       "Julien Isorce <julien.isorce@gmail.com>");
@@ -370,6 +376,7 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->stored_buffer = NULL;
   glimage_sink->redisplay_texture = 0;
   glimage_sink->handle_events = TRUE;
+  glimage_sink->ignore_alpha = TRUE;
 
   g_mutex_init (&glimage_sink->drawing_lock);
 }
@@ -405,6 +412,9 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
     case PROP_HANDLE_EVENTS:
       gst_glimage_sink_handle_events (GST_VIDEO_OVERLAY (glimage_sink),
           g_value_get_boolean (value));
+      break;
+    case PROP_IGNORE_ALPHA:
+      glimage_sink->ignore_alpha = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -459,6 +469,9 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HANDLE_EVENTS:
       g_value_set_boolean (value, glimage_sink->handle_events);
+      break;
+    case PROP_IGNORE_ALPHA:
+      g_value_set_boolean (value, glimage_sink->ignore_alpha);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1372,10 +1385,21 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
       GST_VIDEO_INFO_HEIGHT (&gl_sink->info), &do_redisplay);
 
   if (!do_redisplay) {
+    gfloat alpha = gl_sink->ignore_alpha ? 1.0f : 0.0f;
     GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-    gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+    gl->ClearColor (0.0, 0.0, 0.0, alpha);
     gl->Clear (GL_COLOR_BUFFER_BIT);
+
+    if (gl_sink->ignore_alpha) {
+      GLenum dst_func =
+          gl_sink->ignore_alpha ? GL_CONSTANT_COLOR : GL_ONE_MINUS_SRC_ALPHA;
+
+      gl->BlendColor (0.0, 0.0, 0.0, alpha);
+      gl->BlendFunc (GL_SRC_ALPHA, dst_func);
+      gl->BlendEquation (GL_FUNC_ADD);
+      gl->Enable (GL_BLEND);
+    }
 
     gst_gl_shader_use (gl_sink->redisplay_shader);
 
@@ -1394,6 +1418,9 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
       gl->BindVertexArray (0);
     else
       _unbind_buffer (gl_sink);
+
+    if (gl_sink->ignore_alpha)
+      gl->Disable (GL_BLEND);
   }
   /* end default opengl scene */
   window->is_drawing = FALSE;
