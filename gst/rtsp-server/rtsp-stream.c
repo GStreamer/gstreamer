@@ -141,7 +141,9 @@ struct _GstRTSPStreamPrivate
   guint transports_cookie;
   GList *tr_cache_rtp;
   GList *tr_cache_rtcp;
-  guint tr_cache_cookie;
+  guint tr_cache_cookie_rtp;
+  guint tr_cache_cookie_rtcp;
+
 
   /* UDP sources for UDP multicast transports */
   GList *transport_sources;
@@ -1610,19 +1612,26 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
   is_rtp = GST_ELEMENT_CAST (sink) == priv->appsink[0];
 
   g_mutex_lock (&priv->lock);
-  if (priv->tr_cache_cookie != priv->transports_cookie) {
-    clear_tr_cache (priv, is_rtp);
-    for (walk = priv->transports; walk; walk = g_list_next (walk)) {
-      GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
-      if (is_rtp) {
+  if (is_rtp) {
+    if (priv->tr_cache_cookie_rtp != priv->transports_cookie) {
+      clear_tr_cache (priv, is_rtp);
+      for (walk = priv->transports; walk; walk = g_list_next (walk)) {
+        GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
         priv->tr_cache_rtp =
             g_list_prepend (priv->tr_cache_rtp, g_object_ref (tr));
-      } else {
+      }
+      priv->tr_cache_cookie_rtp = priv->transports_cookie;
+    }
+  } else {
+    if (priv->tr_cache_cookie_rtcp != priv->transports_cookie) {
+      clear_tr_cache (priv, is_rtp);
+      for (walk = priv->transports; walk; walk = g_list_next (walk)) {
+        GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
         priv->tr_cache_rtcp =
             g_list_prepend (priv->tr_cache_rtcp, g_object_ref (tr));
       }
+      priv->tr_cache_cookie_rtcp = priv->transports_cookie;
     }
-    priv->tr_cache_cookie = priv->transports_cookie;
   }
   g_mutex_unlock (&priv->lock);
 
