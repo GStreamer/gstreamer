@@ -44,7 +44,6 @@
 
   self->gst_gl_context = parent_gl_context;
   self.asynchronous = YES;
-  self.opaque = YES;
   self.needsDisplayOnBoundsChange = YES;
 
   return self;
