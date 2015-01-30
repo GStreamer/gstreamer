@@ -177,12 +177,12 @@ typedef struct {
 #define RTP_STATS_BYE_TIMEOUT           (2 * GST_SECOND)
 
 /*
- * The maximum number of missing packets we tollerate. These are packets with a
+ * The maximum number of missing packets we tolerate. These are packets with a
  * sequence number bigger than the last seen packet.
  */
 #define RTP_MAX_DROPOUT      3000
 /*
- * The maximum number of misordered packets we tollerate. These are packets with
+ * The maximum number of misordered packets we tolerate. These are packets with
  * a sequence number smaller than the last seen packet.
  */
 #define RTP_MAX_MISORDER     100
