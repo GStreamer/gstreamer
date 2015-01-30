@@ -80,7 +80,7 @@ gst_vaapi_rectangle_get_type (void)
 GType
 gst_vaapi_render_mode_get_type (void)
 {
-  static GType render_mode_type = 0;
+  static volatile gsize g_type = 0;
 
   static const GEnumValue render_modes[] = {
     {GST_VAAPI_RENDER_MODE_OVERLAY,
@@ -90,11 +90,11 @@ gst_vaapi_render_mode_get_type (void)
     {0, NULL, NULL}
   };
 
-  if (!render_mode_type) {
-    render_mode_type =
-        g_enum_register_static ("GstVaapiRenderMode", render_modes);
+  if (g_once_init_enter (&g_type)) {
+    GType type = g_enum_register_static ("GstVaapiRenderMode", render_modes);
+    g_once_init_leave (&g_type, type);
   }
-  return render_mode_type;
+  return g_type;
 }
 
 /* --- GstVaapiRotation --- */
@@ -102,7 +102,7 @@ gst_vaapi_render_mode_get_type (void)
 GType
 gst_vaapi_rotation_get_type (void)
 {
-  static GType g_type = 0;
+  static volatile gsize g_type = 0;
 
   static const GEnumValue rotation_values[] = {
     {GST_VAAPI_ROTATION_0,
@@ -116,8 +116,10 @@ gst_vaapi_rotation_get_type (void)
     {0, NULL, NULL},
   };
 
-  if (!g_type)
-    g_type = g_enum_register_static ("GstVaapiRotation", rotation_values);
+  if (g_once_init_enter (&g_type)) {
+    GType type = g_enum_register_static ("GstVaapiRotation", rotation_values);
+    g_once_init_leave (&g_type, type);
+  }
   return g_type;
 }
 
