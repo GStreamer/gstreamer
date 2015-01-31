@@ -388,6 +388,11 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   if (qtpad->last_buf)
     gst_buffer_replace (&qtpad->last_buf, NULL);
 
+  if (qtpad->tags) {
+    gst_tag_list_unref (qtpad->tags);
+    qtpad->tags = NULL;
+  }
+
   /* reference owned elsewhere */
   qtpad->trak = NULL;
 
@@ -1212,6 +1217,7 @@ static void
 gst_qt_mux_setup_metadata (GstQTMux * qtmux)
 {
   const GstTagList *tags;
+  GSList *walk;
 
   GST_OBJECT_LOCK (qtmux);
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (qtmux));
@@ -1235,6 +1241,20 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
     GST_DEBUG_OBJECT (qtmux, "No tags received");
   }
 
+  for (walk = qtmux->sinkpads; walk; walk = g_slist_next (walk)) {
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstQTPad *qpad = (GstQTPad *) cdata;
+    GstPad *pad = qpad->collect.pad;
+
+    if (qpad->tags) {
+      GST_DEBUG_OBJECT (pad, "Adding tags");
+      gst_tag_list_remove_tag (qpad->tags, GST_TAG_CONTAINER_FORMAT);
+      gst_qt_mux_add_metadata_tags (qtmux, qpad->tags, &qpad->trak->udta);
+      GST_DEBUG_OBJECT (pad, "Tags added");
+    } else {
+      GST_DEBUG_OBJECT (pad, "No tags received");
+    }
+  }
 }
 
 static inline GstBuffer *
@@ -3397,15 +3417,23 @@ gst_qt_mux_sink_event (GstCollectPads * pads, GstCollectData * data,
       GstTagSetter *setter = GST_TAG_SETTER (qtmux);
       GstTagMergeMode mode;
       gchar *code;
+      GstQTPad *collect_pad;
 
       GST_OBJECT_LOCK (qtmux);
       mode = gst_tag_setter_get_tag_merge_mode (setter);
+      collect_pad = (GstQTPad *) gst_pad_get_element_private (pad);
 
       gst_event_parse_tag (event, &list);
       GST_DEBUG_OBJECT (qtmux, "received tag event on pad %s:%s : %"
           GST_PTR_FORMAT, GST_DEBUG_PAD_NAME (pad), list);
 
-      gst_tag_setter_merge_tags (setter, list, mode);
+      if (gst_tag_list_get_scope (list) == GST_TAG_SCOPE_GLOBAL) {
+        gst_tag_setter_merge_tags (setter, list, mode);
+      } else {
+        if (!collect_pad->tags)
+          collect_pad->tags = gst_tag_list_new_empty ();
+        gst_tag_list_insert (collect_pad->tags, list, mode);
+      }
       GST_OBJECT_UNLOCK (qtmux);
 
       if (gst_tag_list_get_uint (list, GST_TAG_BITRATE, &avg_bitrate) |

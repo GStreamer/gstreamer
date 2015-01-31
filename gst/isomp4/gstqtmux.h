@@ -128,6 +128,8 @@ struct _GstQTPad
   /* optional fragment index book-keeping */
   AtomTFRA *tfra;
 
+  GstTagList *tags;
+
   /* if nothing is set, it won't be called */
   GstQTPadPrepareBufferFunc prepare_buf_func;
   GstQTPadSetCapsFunc set_caps;
