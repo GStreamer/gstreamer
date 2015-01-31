@@ -507,6 +507,8 @@ theora_handle_type_packet (GstTheoraDec * dec)
       break;
   }
 
+  dec->uncropped_info = state->info;
+
   gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
 
   dec->have_header = TRUE;
@@ -694,7 +696,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
   GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, dec,
       "doing unavoidable video frame copy");
 
-  if (G_UNLIKELY (!gst_video_frame_map (&vframe, &dec->output_state->info,
+  if (G_UNLIKELY (!gst_video_frame_map (&vframe, &dec->uncropped_info,
               frame->output_buffer, GST_MAP_WRITE)))
     goto invalid_frame;
 
@@ -912,14 +914,18 @@ theora_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   if (dec->can_crop) {
-    GstVideoInfo info = state->info;
+    GstVideoInfo *info = &dec->uncropped_info;
     GstCaps *caps;
 
-    /* Calculate uncropped size */
-    gst_video_info_set_format (&info, info.finfo->format, dec->info.frame_width,
+    GST_LOG_OBJECT (decoder, "Using GstVideoCropMeta, uncropped wxh = %dx%d",
+        info->width, info->height);
+
+    gst_video_info_set_format (info, info->finfo->format, dec->info.frame_width,
         dec->info.frame_height);
-    size = MAX (size, info.size);
-    caps = gst_video_info_to_caps (&info);
+
+    /* Calculate uncropped size */
+    size = MAX (size, info->size);
+    caps = gst_video_info_to_caps (info);
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
     gst_caps_unref (caps);
   }
