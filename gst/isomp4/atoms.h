@@ -597,6 +597,8 @@ typedef struct _AtomUDTA
   GList* entries;
   /* or list is further down */
   AtomMETA *meta;
+
+  AtomsContext *context;
 } AtomUDTA;
 
 enum TrFlags
@@ -626,10 +628,13 @@ typedef struct _AtomTRAK
   AtomTKHD tkhd;
   AtomEDTS *edts;
   AtomMDIA mdia;
+  AtomUDTA udta;
 
   /* some helper info for structural conformity checks */
   gboolean is_video;
   gboolean is_h264;
+
+  AtomsContext *context;
 } AtomTRAK;
 
 typedef struct _AtomTREX
@@ -746,7 +751,7 @@ typedef struct _AtomMOOV
 
   /* list of AtomTRAK */
   GList *traks;
-  AtomUDTA *udta;
+  AtomUDTA udta;
 
   gboolean fragmented;
 } AtomMOOV;
@@ -969,21 +974,21 @@ AtomInfo *   build_uuid_xmp_atom         (GstBuffer * xmp);
 /*
  * Meta tags functions
  */
-void atom_moov_add_str_tag    (AtomMOOV *moov, guint32 fourcc, const gchar *value);
-void atom_moov_add_uint_tag   (AtomMOOV *moov, guint32 fourcc, guint32 flags,
+void atom_udta_add_str_tag    (AtomUDTA *udta, guint32 fourcc, const gchar *value);
+void atom_udta_add_uint_tag   (AtomUDTA *udta, guint32 fourcc, guint32 flags,
                                guint32 value);
-void atom_moov_add_tag        (AtomMOOV *moov, guint32 fourcc, guint32 flags,
+void atom_udta_add_tag        (AtomUDTA *udta, guint32 fourcc, guint32 flags,
                                const guint8 * data, guint size);
-void atom_moov_add_blob_tag   (AtomMOOV *moov, guint8 *data, guint size);
+void atom_udta_add_blob_tag   (AtomUDTA *udta, guint8 *data, guint size);
 
-void atom_moov_add_3gp_str_tag       (AtomMOOV * moov, guint32 fourcc, const gchar * value);
-void atom_moov_add_3gp_uint_tag      (AtomMOOV * moov, guint32 fourcc, guint16 value);
-void atom_moov_add_3gp_str_int_tag   (AtomMOOV * moov, guint32 fourcc, const gchar * value,
+void atom_udta_add_3gp_str_tag       (AtomUDTA *udta, guint32 fourcc, const gchar * value);
+void atom_udta_add_3gp_uint_tag      (AtomUDTA *udta, guint32 fourcc, guint16 value);
+void atom_udta_add_3gp_str_int_tag   (AtomUDTA *udta, guint32 fourcc, const gchar * value,
                                       gint16 ivalue);
-void atom_moov_add_3gp_tag           (AtomMOOV * moov, guint32 fourcc, guint8 * data,
+void atom_udta_add_3gp_tag           (AtomUDTA *udta, guint32 fourcc, guint8 * data,
                                       guint size);
 
-void atom_moov_add_xmp_tags          (AtomMOOV * moov, GstBuffer * xmp);
+void atom_udta_add_xmp_tags          (AtomUDTA *udta, GstBuffer * xmp);
 
 #define GST_QT_MUX_DEFAULT_TAG_LANGUAGE   "und" /* undefined/unknown */
 guint16  language_code               (const char * lang);

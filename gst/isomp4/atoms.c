@@ -1041,42 +1041,6 @@ atom_tkhd_clear (AtomTKHD * tkhd)
 }
 
 static void
-atom_trak_init (AtomTRAK * trak, AtomsContext * context)
-{
-  atom_header_set (&trak->header, FOURCC_trak, 0, 0);
-
-  atom_tkhd_init (&trak->tkhd, context);
-  trak->edts = NULL;
-  atom_mdia_init (&trak->mdia, context);
-}
-
-AtomTRAK *
-atom_trak_new (AtomsContext * context)
-{
-  AtomTRAK *trak = g_new0 (AtomTRAK, 1);
-
-  atom_trak_init (trak, context);
-  return trak;
-}
-
-static void
-atom_trak_clear (AtomTRAK * trak)
-{
-  atom_clear (&trak->header);
-  atom_tkhd_clear (&trak->tkhd);
-  if (trak->edts)
-    atom_edts_free (trak->edts);
-  atom_mdia_clear (&trak->mdia);
-}
-
-static void
-atom_trak_free (AtomTRAK * trak)
-{
-  atom_trak_clear (trak);
-  g_free (trak);
-}
-
-static void
 atom_ilst_init (AtomILST * ilst)
 {
   atom_header_set (&ilst->header, FOURCC_ilst, 0, 0);
@@ -1135,23 +1099,30 @@ atom_meta_free (AtomMETA * meta)
 }
 
 static void
-atom_udta_init (AtomUDTA * udta)
+atom_udta_init_metatags (AtomUDTA * udta, AtomsContext * context)
 {
-  atom_header_set (&udta->header, FOURCC_udta, 0, 0);
-  udta->meta = NULL;
-}
-
-static AtomUDTA *
-atom_udta_new (void)
-{
-  AtomUDTA *udta = g_new0 (AtomUDTA, 1);
-
-  atom_udta_init (udta);
-  return udta;
+  if (context->flavor != ATOMS_TREE_FLAVOR_3GP) {
+    if (!udta->meta) {
+      udta->meta = atom_meta_new (context);
+    }
+    if (!udta->meta->ilst) {
+      udta->meta->ilst = atom_ilst_new ();
+    }
+  }
 }
 
 static void
-atom_udta_free (AtomUDTA * udta)
+atom_udta_init (AtomUDTA * udta, AtomsContext * context)
+{
+  atom_header_set (&udta->header, FOURCC_udta, 0, 0);
+  udta->meta = NULL;
+  udta->context = context;
+
+  atom_udta_init_metatags (udta, context);
+}
+
+static void
+atom_udta_clear (AtomUDTA * udta)
 {
   atom_clear (&udta->header);
   if (udta->meta)
@@ -1159,7 +1130,6 @@ atom_udta_free (AtomUDTA * udta)
   udta->meta = NULL;
   if (udta->entries)
     atom_info_list_free (udta->entries);
-  g_free (udta);
 }
 
 static void
@@ -1254,12 +1224,52 @@ atom_mvex_init (AtomMVEX * mvex)
 }
 
 static void
+atom_trak_init (AtomTRAK * trak, AtomsContext * context)
+{
+  atom_header_set (&trak->header, FOURCC_trak, 0, 0);
+
+  atom_tkhd_init (&trak->tkhd, context);
+  trak->context = context;
+  atom_udta_init (&trak->udta, context);
+  trak->edts = NULL;
+  atom_mdia_init (&trak->mdia, context);
+}
+
+AtomTRAK *
+atom_trak_new (AtomsContext * context)
+{
+  AtomTRAK *trak = g_new0 (AtomTRAK, 1);
+
+  atom_trak_init (trak, context);
+  return trak;
+}
+
+static void
+atom_trak_clear (AtomTRAK * trak)
+{
+  atom_clear (&trak->header);
+  atom_tkhd_clear (&trak->tkhd);
+  if (trak->edts)
+    atom_edts_free (trak->edts);
+  atom_udta_clear (&trak->udta);
+  atom_mdia_clear (&trak->mdia);
+}
+
+static void
+atom_trak_free (AtomTRAK * trak)
+{
+  atom_trak_clear (trak);
+  g_free (trak);
+}
+
+
+static void
 atom_moov_init (AtomMOOV * moov, AtomsContext * context)
 {
   atom_header_set (&(moov->header), FOURCC_moov, 0, 0);
   atom_mvhd_init (&(moov->mvhd));
   atom_mvex_init (&(moov->mvex));
-  moov->udta = NULL;
+  atom_udta_init (&moov->udta, context);
   moov->traks = NULL;
   moov->context = *context;
 }
@@ -1311,11 +1321,7 @@ atom_moov_free (AtomMOOV * moov)
   g_list_free (moov->traks);
   moov->traks = NULL;
 
-  if (moov->udta) {
-    atom_udta_free (moov->udta);
-    moov->udta = NULL;
-  }
-
+  atom_udta_clear (&moov->udta);
   atom_mvex_clear (&moov->mvex);
 
   g_free (moov);
@@ -2303,32 +2309,6 @@ atom_edts_copy_data (AtomEDTS * edts, guint8 ** buffer, guint64 * size,
   return *offset - original_offset;
 }
 
-guint64
-atom_trak_copy_data (AtomTRAK * trak, guint8 ** buffer, guint64 * size,
-    guint64 * offset)
-{
-  guint64 original_offset = *offset;
-
-  if (!atom_copy_data (&trak->header, buffer, size, offset)) {
-    return 0;
-  }
-  if (!atom_tkhd_copy_data (&trak->tkhd, buffer, size, offset)) {
-    return 0;
-  }
-  if (trak->edts) {
-    if (!atom_edts_copy_data (trak->edts, buffer, size, offset)) {
-      return 0;
-    }
-  }
-
-  if (!atom_mdia_copy_data (&trak->mdia, buffer, size, offset)) {
-    return 0;
-  }
-
-  atom_write_size (buffer, size, offset, original_offset);
-  return *offset - original_offset;
-}
-
 static guint64
 atom_tag_data_copy_data (AtomTagData * data, guint8 ** buffer, guint64 * size,
     guint64 * offset)
@@ -2493,6 +2473,37 @@ atom_mvex_copy_data (AtomMVEX * mvex, guint8 ** buffer, guint64 * size,
 }
 
 guint64
+atom_trak_copy_data (AtomTRAK * trak, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  if (!atom_copy_data (&trak->header, buffer, size, offset)) {
+    return 0;
+  }
+  if (!atom_tkhd_copy_data (&trak->tkhd, buffer, size, offset)) {
+    return 0;
+  }
+  if (trak->edts) {
+    if (!atom_edts_copy_data (trak->edts, buffer, size, offset)) {
+      return 0;
+    }
+  }
+
+  if (!atom_mdia_copy_data (&trak->mdia, buffer, size, offset)) {
+    return 0;
+  }
+
+  if (!atom_udta_copy_data (&trak->udta, buffer, size, offset)) {
+    return 0;
+  }
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
+
+guint64
 atom_moov_copy_data (AtomMOOV * atom, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -2513,10 +2524,8 @@ atom_moov_copy_data (AtomMOOV * atom, guint8 ** buffer, guint64 * size,
     walker = g_list_next (walker);
   }
 
-  if (atom->udta) {
-    if (!atom_udta_copy_data (atom->udta, buffer, size, offset)) {
-      return 0;
-    }
+  if (!atom_udta_copy_data (&atom->udta, buffer, size, offset)) {
+    return 0;
   }
 
   if (atom->fragmented) {
@@ -2949,22 +2958,6 @@ atom_trak_tx3g_update_dimension (AtomTRAK * trak, guint32 width, guint32 height)
  * Meta tags functions
  */
 static void
-atom_moov_init_metatags (AtomMOOV * moov, AtomsContext * context)
-{
-  if (!moov->udta) {
-    moov->udta = atom_udta_new ();
-  }
-  if (context->flavor != ATOMS_TREE_FLAVOR_3GP) {
-    if (!moov->udta->meta) {
-      moov->udta->meta = atom_meta_new (context);
-    }
-    if (!moov->udta->meta->ilst) {
-      moov->udta->meta->ilst = atom_ilst_new ();
-    }
-  }
-}
-
-static void
 atom_tag_data_alloc_data (AtomTagData * data, guint size)
 {
   if (data->data != NULL) {
@@ -2975,20 +2968,19 @@ atom_tag_data_alloc_data (AtomTagData * data, guint size)
 }
 
 static void
-atom_moov_append_tag (AtomMOOV * moov, AtomInfo * tag)
+atom_udta_append_tag (AtomUDTA * udta, AtomInfo * tag)
 {
   GList **entries;
 
-  atom_moov_init_metatags (moov, &moov->context);
-  if (moov->udta->meta)
-    entries = &moov->udta->meta->ilst->entries;
+  if (udta->meta)
+    entries = &udta->meta->ilst->entries;
   else
-    entries = &moov->udta->entries;
+    entries = &udta->entries;
   *entries = g_list_append (*entries, tag);
 }
 
 void
-atom_moov_add_tag (AtomMOOV * moov, guint32 fourcc, guint32 flags,
+atom_udta_add_tag (AtomUDTA * udta, guint32 fourcc, guint32 flags,
     const guint8 * data, guint size)
 {
   AtomTag *tag;
@@ -2999,32 +2991,32 @@ atom_moov_add_tag (AtomMOOV * moov, guint32 fourcc, guint32 flags,
   atom_tag_data_alloc_data (tdata, size);
   memmove (tdata->data, data, size);
 
-  atom_moov_append_tag (moov,
+  atom_udta_append_tag (udta,
       build_atom_info_wrapper ((Atom *) tag, atom_tag_copy_data,
           atom_tag_free));
 }
 
 void
-atom_moov_add_str_tag (AtomMOOV * moov, guint32 fourcc, const gchar * value)
+atom_udta_add_str_tag (AtomUDTA * udta, guint32 fourcc, const gchar * value)
 {
   gint len = strlen (value);
 
   if (len > 0)
-    atom_moov_add_tag (moov, fourcc, METADATA_TEXT_FLAG, (guint8 *) value, len);
+    atom_udta_add_tag (udta, fourcc, METADATA_TEXT_FLAG, (guint8 *) value, len);
 }
 
 void
-atom_moov_add_uint_tag (AtomMOOV * moov, guint32 fourcc, guint32 flags,
+atom_udta_add_uint_tag (AtomUDTA * udta, guint32 fourcc, guint32 flags,
     guint32 value)
 {
   guint8 data[8] = { 0, };
 
   if (flags) {
     GST_WRITE_UINT16_BE (data, value);
-    atom_moov_add_tag (moov, fourcc, flags, data, 2);
+    atom_udta_add_tag (udta, fourcc, flags, data, 2);
   } else {
     GST_WRITE_UINT32_BE (data + 2, value);
-    atom_moov_add_tag (moov, fourcc, flags, data, 8);
+    atom_udta_add_tag (udta, fourcc, flags, data, 8);
   }
 }
 
@@ -3042,7 +3034,7 @@ _gst_buffer_new_wrapped (gpointer mem, gsize size, GFreeFunc free_func)
 }
 
 void
-atom_moov_add_blob_tag (AtomMOOV * moov, guint8 * data, guint size)
+atom_udta_add_blob_tag (AtomUDTA * udta, guint8 * data, guint size)
 {
   AtomData *data_atom;
   GstBuffer *buf;
@@ -3063,13 +3055,13 @@ atom_moov_add_blob_tag (AtomMOOV * moov, guint8 * data, guint size)
   data_atom = atom_data_new_from_gst_buffer (fourcc, buf);
   gst_buffer_unref (buf);
 
-  atom_moov_append_tag (moov,
+  atom_udta_append_tag (udta,
       build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
           atom_data_free));
 }
 
 void
-atom_moov_add_3gp_tag (AtomMOOV * moov, guint32 fourcc, guint8 * data,
+atom_udta_add_3gp_tag (AtomUDTA * udta, guint32 fourcc, guint8 * data,
     guint size)
 {
   AtomData *data_atom;
@@ -3086,7 +3078,7 @@ atom_moov_add_3gp_tag (AtomMOOV * moov, guint32 fourcc, guint8 * data,
   data_atom = atom_data_new_from_gst_buffer (fourcc, buf);
   gst_buffer_unref (buf);
 
-  atom_moov_append_tag (moov,
+  atom_udta_append_tag (udta,
       build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
           atom_data_free));
 }
@@ -3102,7 +3094,7 @@ language_code (const char *lang)
 }
 
 void
-atom_moov_add_3gp_str_int_tag (AtomMOOV * moov, guint32 fourcc,
+atom_udta_add_3gp_str_int_tag (AtomUDTA * udta, guint32 fourcc,
     const gchar * value, gint16 ivalue)
 {
   gint len = 0, size = 0;
@@ -3133,39 +3125,37 @@ atom_moov_add_3gp_str_int_tag (AtomMOOV * moov, guint32 fourcc,
     }
   }
 
-  atom_moov_add_3gp_tag (moov, fourcc, data, size);
+  atom_udta_add_3gp_tag (udta, fourcc, data, size);
   g_free (data);
 }
 
 void
-atom_moov_add_3gp_str_tag (AtomMOOV * moov, guint32 fourcc, const gchar * value)
+atom_udta_add_3gp_str_tag (AtomUDTA * udta, guint32 fourcc, const gchar * value)
 {
-  atom_moov_add_3gp_str_int_tag (moov, fourcc, value, -1);
+  atom_udta_add_3gp_str_int_tag (udta, fourcc, value, -1);
 }
 
 void
-atom_moov_add_3gp_uint_tag (AtomMOOV * moov, guint32 fourcc, guint16 value)
+atom_udta_add_3gp_uint_tag (AtomUDTA * udta, guint32 fourcc, guint16 value)
 {
-  atom_moov_add_3gp_str_int_tag (moov, fourcc, NULL, value);
+  atom_udta_add_3gp_str_int_tag (udta, fourcc, NULL, value);
 }
 
 void
-atom_moov_add_xmp_tags (AtomMOOV * moov, GstBuffer * xmpbuffer)
+atom_udta_add_xmp_tags (AtomUDTA * udta, GstBuffer * xmpbuffer)
 {
   AtomData *data_atom = NULL;
 
-  if (moov->context.flavor == ATOMS_TREE_FLAVOR_MOV) {
+  if (udta->context->flavor == ATOMS_TREE_FLAVOR_MOV) {
     if (xmpbuffer) {
       data_atom = atom_data_new_from_gst_buffer (FOURCC_XMP_, xmpbuffer);
-      atom_moov_init_metatags (moov, &moov->context);
-      moov->udta->entries = g_list_append (moov->udta->entries,
+      udta->entries = g_list_append (udta->entries,
           build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
               atom_data_free));
     }
   } else {
     GST_DEBUG ("Not adding xmp to moov atom, it is only used in 'mov' format");
   }
-
 }
 
 /*
