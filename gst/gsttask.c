@@ -78,6 +78,10 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID
+#include <pthread.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (task_debug);
 #define GST_CAT_DEFAULT (task_debug)
 
@@ -246,8 +250,19 @@ gst_task_configure_name (GstTask * task)
       GST_DEBUG_OBJECT (task, "Failed to set thread name");
   }
   GST_OBJECT_UNLOCK (task);
-#endif
-#ifdef _MSC_VER
+#elif defined(HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID)
+  const gchar *name;
+
+  GST_OBJECT_LOCK (task);
+  name = GST_OBJECT_NAME (task);
+
+  /* set the thread name to something easily identifiable */
+  GST_DEBUG_OBJECT (task, "Setting thread name to '%s'", name);
+  if (pthread_setname_np (name))
+    GST_DEBUG_OBJECT (task, "Failed to set thread name");
+
+  GST_OBJECT_UNLOCK (task);
+#elif _MSC_VER
   const gchar *name;
   name = GST_OBJECT_NAME (task);
 

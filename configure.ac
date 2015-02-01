@@ -346,6 +346,18 @@ AM_CONDITIONAL(HAVE_PTHREAD, test "x$ax_pthread_ok" = "xyes")
 dnl check for sys/prctl for setting thread name on Linux
 AC_CHECK_HEADERS([sys/prctl.h], [], [], [AC_INCLUDES_DEFAULT])
 
+dnl check for pthread_setname_np(const char*)
+dnl which is present on OS X 10.6, iOS 3.2 and above
+AC_MSG_CHECKING(for pthread_setname_np(const char*))
+AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM(
+        [#include <pthread.h>],
+        [pthread_setname_np("example")])],
+    [AC_MSG_RESULT(yes)
+     AC_DEFINE(HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID,1,
+        [Have function pthread_setname_np(const char*)])],
+    [AC_MSG_RESULT(no)])
+
 dnl check for sys/uio.h for writev()
 AC_CHECK_HEADERS([sys/uio.h], [], [], [AC_INCLUDES_DEFAULT])
 
