@@ -262,7 +262,7 @@ gst_task_configure_name (GstTask * task)
     GST_DEBUG_OBJECT (task, "Failed to set thread name");
 
   GST_OBJECT_UNLOCK (task);
-#elif _MSC_VER
+#elif defined (_MSC_VER)
   const gchar *name;
   name = GST_OBJECT_NAME (task);
 
