@@ -351,10 +351,6 @@ _add_clip (GstValidateScenario * scenario, GstValidateAction * action)
     goto beach;
   }
 
-  if (type == GES_TYPE_URI_CLIP) {
-    duration = GST_CLOCK_TIME_NONE;
-  }
-
   clip = ges_layer_add_asset (layer, asset, start, inpoint, duration,
       GES_TRACK_TYPE_UNKNOWN);
 
