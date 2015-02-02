@@ -381,8 +381,69 @@ static gboolean install_in_progress;    /* FALSE */
 /* private struct */
 struct _GstInstallPluginsContext
 {
+  gchar *desktop_id;
+  gchar *startup_notification_id;
   guint xid;
 };
+
+/**
+ * gst_install_plugins_context_set_desktop_id:
+ * @ctx: a #GstInstallPluginsContext
+ * @desktop_id: the desktop file ID of the calling application
+ *
+ * This function is used to pass the calling application's desktop file ID to
+ * the external installer process.
+ *
+ * A desktop file ID is the basename of the desktop file, including the
+ * .desktop extension.
+ *
+ * If set, the desktop file ID will be passed to the installer via a
+ * --desktop-id= command line option.
+ *
+ * Since: 1.6
+ */
+void
+gst_install_plugins_context_set_desktop_id (GstInstallPluginsContext * ctx,
+    const gchar * desktop_id)
+{
+  g_return_if_fail (ctx != NULL);
+
+  ctx->desktop_id = g_strdup (desktop_id);
+}
+
+/**
+ * gst_install_plugins_context_set_startup_notification_id:
+ * @ctx: a #GstInstallPluginsContext
+ * @startup_id: the startup notification ID
+ *
+ * Sets the startup notification ID for the launched process.
+ *
+ * This is typically used to to pass the current X11 event timestamp to the
+ * external installer process.
+ *
+ * Startup notification IDs are defined in the
+ * [FreeDesktop.Org Startup Notifications standard](http://standards.freedesktop.org/startup-notification-spec/startup-notification-latest.txt).
+ *
+ * If set, the ID will be passed to the installer via a
+ * --startup-notification-id= command line option.
+ *
+ * GTK+/GNOME applications should be able to create a startup notification ID
+ * like this:
+ * <programlisting>
+ *   timestamp = gtk_get_current_event_time ();
+ *   startup_id = g_strdup_printf ("_TIME%u", timestamp);
+ * ...
+ * </programlisting>
+ *
+ * Since: 1.6
+ */
+void gst_install_plugins_context_set_startup_notification_id
+    (GstInstallPluginsContext * ctx, const gchar * startup_id)
+{
+  g_return_if_fail (ctx != NULL);
+
+  ctx->startup_notification_id = g_strdup (startup_id);
+}
 
 /**
  * gst_install_plugins_context_set_xid:
@@ -445,6 +506,8 @@ gst_install_plugins_context_free (GstInstallPluginsContext * ctx)
 {
   g_return_if_fail (ctx != NULL);
 
+  g_free (ctx->desktop_id);
+  g_free (ctx->startup_notification_id);
   g_free (ctx);
 }
 
@@ -454,6 +517,8 @@ gst_install_plugins_context_copy (GstInstallPluginsContext * ctx)
   GstInstallPluginsContext *ret;
 
   ret = gst_install_plugins_context_new ();
+  ret->desktop_id = g_strdup (ctx->desktop_id);
+  ret->startup_notification_id = g_strdup (ctx->startup_notification_id);
   ret->xid = ctx->xid;
 
   return ret;
@@ -495,23 +560,29 @@ gst_install_plugins_spawn_child (const gchar * const *details,
   GPtrArray *arr;
   gboolean ret;
   GError *err = NULL;
-  gchar **argv, xid_str[64] = { 0, };
+  gchar **argv;
 
-  arr = g_ptr_array_new ();
+  arr = g_ptr_array_new_with_free_func (g_free);
 
   /* argv[0] = helper path */
-  g_ptr_array_add (arr, (gchar *) gst_install_plugins_get_helper ());
+  g_ptr_array_add (arr, g_strdup (gst_install_plugins_get_helper ()));
 
   /* add any additional command line args from the context */
+  if (ctx != NULL && ctx->desktop_id != NULL) {
+    g_ptr_array_add (arr, g_strdup_printf ("--desktop-id=%s", ctx->desktop_id));
+  }
+  if (ctx != NULL && ctx->startup_notification_id != NULL) {
+    g_ptr_array_add (arr, g_strdup_printf ("--startup-notification-id=%s",
+            ctx->startup_notification_id));
+  }
   if (ctx != NULL && ctx->xid != 0) {
-    g_snprintf (xid_str, sizeof (xid_str), "--transient-for=%u", ctx->xid);
-    g_ptr_array_add (arr, xid_str);
+    g_ptr_array_add (arr, g_strdup_printf ("--transient-for=%u", ctx->xid));
   }
 
   /* finally, add the detail strings, but without duplicates */
   while (details != NULL && details[0] != NULL) {
     if (!ptr_array_contains_string (arr, details[0]))
-      g_ptr_array_add (arr, (gpointer) details[0]);
+      g_ptr_array_add (arr, g_strdup (details[0]));
     ++details;
   }
 
@@ -538,7 +609,7 @@ gst_install_plugins_spawn_child (const gchar * const *details,
     g_error_free (err);
   }
 
-  g_ptr_array_free (arr, TRUE);
+  g_ptr_array_unref (arr);
   return ret;
 }
 
