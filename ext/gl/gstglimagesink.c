@@ -139,6 +139,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition);
 static void gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     GstClockTime * start, GstClockTime * end);
 static gboolean gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
+static GstCaps *gst_glimage_sink_get_caps (GstBaseSink * bsink,
+    GstCaps * filter);
 static GstFlowReturn gst_glimage_sink_prepare (GstBaseSink * bsink,
     GstBuffer * buf);
 static GstFlowReturn gst_glimage_sink_show_frame (GstVideoSink * bsink,
@@ -353,6 +355,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gstelement_class->set_context = gst_glimage_sink_set_context;
   gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_glimage_sink_query);
   gstbasesink_class->set_caps = gst_glimage_sink_set_caps;
+  gstbasesink_class->get_caps = gst_glimage_sink_get_caps;
   gstbasesink_class->get_times = gst_glimage_sink_get_times;
   gstbasesink_class->prepare = gst_glimage_sink_prepare;
   gstbasesink_class->propose_allocation = gst_glimage_sink_propose_allocation;
@@ -764,6 +767,80 @@ gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
   }
 }
 
+/* copies the given caps */
+static GstCaps *
+gst_glimage_sink_caps_remove_format_info (GstCaps * caps)
+{
+  GstStructure *st;
+  GstCapsFeatures *f;
+  gint i, n;
+  GstCaps *res;
+
+  res = gst_caps_new_empty ();
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    st = gst_caps_get_structure (caps, i);
+    f = gst_caps_get_features (caps, i);
+
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
+      continue;
+
+    st = gst_structure_copy (st);
+    /* Only remove format info for the cases when we can actually convert */
+    if (!gst_caps_features_is_any (f)
+        && gst_caps_features_is_equal (f,
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+      gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
+          NULL);
+    gst_structure_remove_fields (st, "width", "height", NULL);
+
+    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
+  }
+
+  return res;
+}
+
+static GstCaps *
+gst_glimage_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
+{
+  GstGLImageSink *gl_sink = GST_GLIMAGE_SINK (bsink);
+  GstCaps *tmp = NULL;
+  GstCaps *result = NULL;
+
+  tmp = gst_caps_from_string ("video/x-raw(memory:GLMemory),format=RGBA");
+
+  result = gst_glimage_sink_caps_remove_format_info (tmp);
+  gst_caps_unref (tmp);
+  tmp = result;
+  GST_DEBUG_OBJECT (bsink, "remove format returned caps %" GST_PTR_FORMAT, tmp);
+
+  result =
+      gst_gl_color_convert_transform_caps (gl_sink->context, GST_PAD_SRC, tmp,
+      NULL);
+  gst_caps_unref (tmp);
+  tmp = result;
+
+  result =
+      gst_gl_upload_transform_caps (gl_sink->context, GST_PAD_SRC, tmp, NULL);
+  gst_caps_unref (tmp);
+  tmp = result;
+  GST_DEBUG_OBJECT (bsink, "transfer returned caps %" GST_PTR_FORMAT, tmp);
+
+  if (filter) {
+    result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  } else {
+    result = tmp;
+  }
+
+  GST_DEBUG_OBJECT (bsink, "returning caps: %" GST_PTR_FORMAT, result);
+
+  return result;
+}
+
 static gboolean
 gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
@@ -1083,11 +1160,6 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstCaps *caps;
   guint size;
   gboolean need_pool;
-  GstStructure *gl_context;
-  gchar *platform, *gl_apis;
-  gpointer handle;
-  GstAllocator *allocator = NULL;
-  GstAllocationParams params;
 
   if (!_ensure_gl_setup (glimage_sink))
     return FALSE;
@@ -1140,44 +1212,10 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     gst_object_unref (pool);
   }
 
-  /* we also support various metadata */
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
+  gst_gl_upload_propose_allocation (glimage_sink->upload, NULL, query);
+
   if (glimage_sink->context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
-
-  gl_apis =
-      gst_gl_api_to_string (gst_gl_context_get_gl_api (glimage_sink->context));
-  platform =
-      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
-      (glimage_sink->context));
-  handle = (gpointer) gst_gl_context_get_gl_context (glimage_sink->context);
-
-  gl_context =
-      gst_structure_new ("GstVideoGLTextureUploadMeta", "gst.gl.GstGLContext",
-      GST_GL_TYPE_CONTEXT, glimage_sink->context, "gst.gl.context.handle",
-      G_TYPE_POINTER, handle, "gst.gl.context.type", G_TYPE_STRING, platform,
-      "gst.gl.context.apis", G_TYPE_STRING, gl_apis, NULL);
-  gst_query_add_allocation_meta (query,
-      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, gl_context);
-
-  g_free (gl_apis);
-  g_free (platform);
-  gst_structure_free (gl_context);
-
-  gst_allocation_params_init (&params);
-
-  allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
-  gst_query_add_allocation_param (query, allocator, &params);
-  gst_object_unref (allocator);
-
-#if GST_GL_HAVE_PLATFORM_EGL
-  if (gst_gl_context_check_feature (glimage_sink->context,
-          "EGL_KHR_image_base")) {
-    allocator = gst_allocator_find (GST_EGL_IMAGE_MEMORY_TYPE);
-    gst_query_add_allocation_param (query, allocator, &params);
-    gst_object_unref (allocator);
-  }
-#endif
 
   return TRUE;
 

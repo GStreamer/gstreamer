@@ -705,31 +705,13 @@ done:
   return othercaps;
 }
 
-
 static GstCaps *
 gst_gl_filter_set_caps_features (const GstCaps * caps,
     const gchar * feature_name)
 {
-  GstCaps *tmp = gst_caps_copy (caps);
-  guint n = gst_caps_get_size (tmp);
-  guint i = 0;
-
-  for (i = 0; i < n; i++) {
-    GstCapsFeatures *features = gst_caps_get_features (tmp, i);
-    if (features) {
-      guint n_f = gst_caps_features_get_size (features);
-      guint j = 0;
-      for (j = 0; j < n_f; j++) {
-        gst_caps_features_remove_id (features,
-            gst_caps_features_get_nth_id (features, j));
-      }
-    }
-
-    gst_caps_features_add (features, feature_name);
-    gst_caps_set_simple (tmp, "format", G_TYPE_STRING, "RGBA", NULL);
-  }
-
-  return tmp;
+  GstCaps *ret = gst_gl_caps_replace_all_caps_features (caps, feature_name);
+  gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
+  return ret;
 }
 
 /* copies the given caps */
@@ -770,35 +752,79 @@ gst_gl_filter_caps_remove_format_info (GstCaps * caps)
 
 static GstCaps *
 gst_gl_filter_transform_caps (GstBaseTransform * bt,
-    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
 {
+  GstGLFilter *filter = GST_GL_FILTER (bt);
   GstCaps *tmp = NULL;
   GstCaps *result = NULL;
-  GstCaps *glcaps = gst_gl_filter_set_caps_features (caps,
-      GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-#if GST_GL_HAVE_PLATFORM_EGL
-  GstCaps *eglcaps = gst_gl_filter_set_caps_features (caps,
-      GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
-#endif
-  GstCaps *uploadcaps = gst_gl_filter_set_caps_features (caps,
-      GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
-  GstCaps *raw_caps =
-      gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS));
 
-  tmp = gst_caps_new_empty ();
+  /* The following is the list of caps transformations performed.  When
+   * direction == GST_PAD_SINK we start at the sinkpad and work toward the src
+   * pad and vice versa for direction == GST_PAD_SRC.
+   *
+   * sinkpad <-> (upload <-> convert) <-> filter (possible resize) <->
+   * (convert <-> download/output) <-> srcpad
+   */
+  if (direction == GST_PAD_SINK) {
+    result =
+        gst_gl_upload_transform_caps (filter->context, direction, caps, NULL);
+    tmp = result;
 
-  tmp = gst_caps_merge (tmp, gst_gl_filter_caps_remove_format_info (glcaps));
-#if GST_GL_HAVE_PLATFORM_EGL
-  tmp = gst_caps_merge (tmp, gst_gl_filter_caps_remove_format_info (eglcaps));
-#endif
-  tmp =
-      gst_caps_merge (tmp, gst_gl_filter_caps_remove_format_info (uploadcaps));
-  tmp = gst_caps_merge (tmp, gst_gl_filter_caps_remove_format_info (raw_caps));
+    result =
+        gst_gl_color_convert_transform_caps (filter->context, direction, tmp,
+        NULL);
+    gst_caps_unref (tmp);
+  } else {
+    GstCaps *gl_caps =
+        gst_caps_merge (gst_caps_merge (gst_gl_filter_set_caps_features (caps,
+                GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
+            gst_gl_filter_set_caps_features (caps,
+                GST_CAPS_FEATURE_MEMORY_EGL_IMAGE)),
+        gst_gl_filter_set_caps_features (caps,
+            GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
 
-  tmp = gst_caps_merge (tmp, gst_gl_filter_caps_remove_format_info (caps));
+    result =
+        gst_gl_download_transform_caps (filter->context, direction, caps, NULL);
 
-  if (filter) {
-    result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    result = gst_caps_merge (gl_caps, result);
+  }
+  tmp = result;
+  GST_DEBUG_OBJECT (bt, "transfer returned caps %" GST_PTR_FORMAT, tmp);
+
+  result = gst_gl_filter_caps_remove_format_info (tmp);
+  gst_caps_unref (tmp);
+  tmp = result;
+  GST_DEBUG_OBJECT (bt, "remove format returned caps %" GST_PTR_FORMAT, tmp);
+
+  if (direction == GST_PAD_SRC) {
+    result =
+        gst_gl_color_convert_transform_caps (filter->context, direction, tmp,
+        NULL);
+    gst_caps_unref (tmp);
+    tmp = result;
+    result =
+        gst_gl_upload_transform_caps (filter->context, direction, tmp, NULL);
+  } else {
+    GstCaps *gl_caps =
+        gst_caps_merge (gst_caps_merge (gst_gl_filter_set_caps_features (tmp,
+                GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
+            gst_gl_filter_set_caps_features (tmp,
+                GST_CAPS_FEATURE_MEMORY_EGL_IMAGE)),
+        gst_gl_filter_set_caps_features (tmp,
+            GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
+
+    result =
+        gst_gl_download_transform_caps (filter->context, direction, tmp, NULL);
+
+    result = gst_caps_merge (gl_caps, result);
+  }
+  gst_caps_unref (tmp);
+  tmp = result;
+  GST_DEBUG_OBJECT (bt, "transfer returned caps %" GST_PTR_FORMAT, tmp);
+
+  if (filter_caps) {
+    result =
+        gst_caps_intersect_full (filter_caps, tmp, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp);
   } else {
     result = tmp;
@@ -868,18 +894,11 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   GstGLFilter *filter = GST_GL_FILTER (trans);
-  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
   GstBufferPool *pool;
   GstStructure *config;
   GstCaps *caps, *decide_caps;
   guint size;
   gboolean need_pool;
-  GError *error = NULL;
-  GstStructure *gl_context;
-  gchar *platform, *gl_apis;
-  gpointer handle;
-  GstAllocator *allocator = NULL;
-  GstAllocationParams params;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -904,19 +923,6 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
       pool = NULL;
     }
     gst_structure_free (config);
-  }
-
-  if (!gst_gl_ensure_element_data (filter, &filter->display,
-          &filter->other_context))
-    return FALSE;
-
-  gst_gl_display_filter_gl_api (filter->display,
-      filter_class->supported_gl_api);
-
-  if (!filter->context) {
-    filter->context = gst_gl_context_new (filter->display);
-    if (!gst_gl_context_create (filter->context, filter->other_context, &error))
-      goto context_error;
   }
 
   if (pool == NULL && need_pool) {
@@ -959,42 +965,10 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     gst_object_unref (pool);
   }
 
-  /* we also support various metadata */
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
+  gst_gl_upload_propose_allocation (filter->upload, decide_query, query);
+
   if (filter->context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
-
-  gl_apis = gst_gl_api_to_string (gst_gl_context_get_gl_api (filter->context));
-  platform =
-      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
-      (filter->context));
-  handle = (gpointer) gst_gl_context_get_gl_context (filter->context);
-
-  gl_context =
-      gst_structure_new ("GstVideoGLTextureUploadMeta", "gst.gl.GstGLContext",
-      GST_GL_TYPE_CONTEXT, filter->context, "gst.gl.context.handle",
-      G_TYPE_POINTER, handle, "gst.gl.context.type", G_TYPE_STRING, platform,
-      "gst.gl.context.apis", G_TYPE_STRING, gl_apis, NULL);
-  gst_query_add_allocation_meta (query,
-      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, gl_context);
-
-  g_free (gl_apis);
-  g_free (platform);
-  gst_structure_free (gl_context);
-
-  gst_allocation_params_init (&params);
-
-  allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
-  gst_query_add_allocation_param (query, allocator, &params);
-  gst_object_unref (allocator);
-
-#if GST_GL_HAVE_PLATFORM_EGL
-  if (gst_gl_context_check_feature (filter->context, "EGL_KHR_image_base")) {
-    allocator = gst_allocator_find (GST_EGL_IMAGE_MEMORY_TYPE);
-    gst_query_add_allocation_param (query, allocator, &params);
-    gst_object_unref (allocator);
-  }
-#endif
 
   return TRUE;
 
@@ -1014,12 +988,6 @@ config_failed:
     GST_DEBUG_OBJECT (trans, "failed setting config");
     return FALSE;
   }
-context_error:
-  {
-    GST_ELEMENT_ERROR (trans, RESOURCE, NOT_FOUND, ("%s", error->message),
-        (NULL));
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -1037,10 +1005,19 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   guint in_width, in_height, out_width, out_height;
   GstGLContext *other_context = NULL;
   gboolean same_downstream_gl_context = FALSE;
+  GstCapsFeatures *uploaded_features;
+  GstCaps *uploaded_caps;
+  GstCapsFeatures *converted_features;
+  GstVideoInfo converted_info;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (!caps)
+    return FALSE;
 
   if (!gst_gl_ensure_element_data (filter, &filter->display,
-          &filter->other_context))
+          &filter->other_context)) {
     return FALSE;
+  }
 
   gst_gl_display_filter_gl_api (filter->display,
       filter_class->supported_gl_api);
@@ -1105,6 +1082,41 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
 
+  if (!filter->upload) {
+    filter->upload = gst_gl_upload_new (filter->context);
+  }
+
+  uploaded_caps = gst_caps_copy (caps);
+  uploaded_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  gst_caps_set_features (uploaded_caps, 0, uploaded_features);
+
+  if (!gst_gl_upload_set_caps (filter->upload, caps, uploaded_caps)) {
+    gst_caps_unref (uploaded_caps);
+    return FALSE;
+  }
+
+  if (!filter->in_convert) {
+    filter->in_convert = gst_gl_color_convert_new (filter->context);
+  }
+
+  gst_video_info_set_format (&converted_info, GST_VIDEO_FORMAT_RGBA,
+      in_width, in_height);
+  converted_features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+
+  if (filter->in_converted_caps)
+    gst_caps_unref (filter->in_converted_caps);
+  filter->in_converted_caps = gst_video_info_to_caps (&converted_info);
+  gst_caps_set_features (filter->in_converted_caps, 0, converted_features);
+
+  if (!gst_gl_color_convert_set_caps (filter->in_convert, uploaded_caps,
+          filter->in_converted_caps)) {
+    gst_caps_unref (uploaded_caps);
+    return FALSE;
+  }
+  gst_caps_unref (uploaded_caps);
+
   if (filter->fbo) {
     gst_gl_context_del_fbo (filter->context, filter->fbo, filter->depthbuffer);
     filter->fbo = 0;
@@ -1139,8 +1151,6 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     if (!filter_class->onInitFBO (filter))
       goto error;
   }
-
-  gst_query_parse_allocation (query, &caps, NULL);
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
@@ -1177,11 +1187,6 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
       GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 
   gst_buffer_pool_set_config (pool, config);
-
-  if (filter->upload) {
-    gst_object_unref (filter->upload);
-    filter->upload = NULL;
-  }
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
@@ -1327,58 +1332,6 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
   if (!filter->display)
     return GST_FLOW_NOT_NEGOTIATED;
-
-  if (!filter->upload) {
-    GstCaps *in_caps =
-        gst_pad_get_current_caps (GST_BASE_TRANSFORM_SINK_PAD (bt));
-    GstCaps *uploaded_caps;
-    GstCapsFeatures *out_features;
-    GstVideoInfo out_info;
-
-    gst_video_info_set_format (&out_info,
-        GST_VIDEO_FORMAT_RGBA,
-        GST_VIDEO_INFO_WIDTH (&filter->in_info),
-        GST_VIDEO_INFO_HEIGHT (&filter->in_info));
-    out_features =
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-
-    uploaded_caps = gst_caps_copy (in_caps);
-    gst_caps_set_features (uploaded_caps, 0, out_features);
-
-    filter->upload = gst_gl_upload_new (filter->context);
-    if (!gst_gl_upload_set_caps (filter->upload, in_caps, uploaded_caps)) {
-      gst_caps_unref (in_caps);
-      return GST_FLOW_ERROR;
-    }
-
-    gst_caps_unref (in_caps);
-
-    if (!filter->in_convert) {
-      GstCapsFeatures *converted_features;
-      GstVideoInfo converted_info;
-
-      gst_video_info_set_format (&converted_info,
-          GST_VIDEO_FORMAT_RGBA,
-          GST_VIDEO_INFO_WIDTH (&filter->in_info),
-          GST_VIDEO_INFO_HEIGHT (&filter->in_info));
-      converted_features =
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-
-      if (filter->in_converted_caps)
-        gst_caps_unref (filter->in_converted_caps);
-      filter->in_converted_caps = gst_video_info_to_caps (&converted_info);
-      gst_caps_set_features (filter->in_converted_caps, 0, converted_features);
-
-      filter->in_convert = gst_gl_color_convert_new (filter->context);
-      if (!gst_gl_color_convert_set_caps (filter->in_convert, uploaded_caps,
-              filter->in_converted_caps)) {
-        gst_caps_unref (uploaded_caps);
-        return GST_FLOW_ERROR;
-      }
-    }
-
-    gst_caps_unref (uploaded_caps);
-  }
 
   g_assert (filter_class->filter || filter_class->filter_texture);
 

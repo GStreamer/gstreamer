@@ -78,13 +78,26 @@ struct _GstGLUploadClass
   GstObjectClass object_class;
 };
 
-GstGLUpload * gst_gl_upload_new            (GstGLContext * context);
+GstGLUpload * gst_gl_upload_new                    (GstGLContext * context);
 
-gboolean      gst_gl_upload_set_caps      (GstGLUpload * upload, GstCaps * in_caps, GstCaps * out_caps);
-void          gst_gl_upload_get_caps      (GstGLUpload * upload, GstCaps ** in_caps, GstCaps ** out_caps);
+GstCaps *     gst_gl_upload_transform_caps         (GstGLContext * context,
+                                                    GstPadDirection direction,
+                                                    GstCaps * caps,
+                                                    GstCaps * filter);
+gboolean      gst_gl_upload_set_caps               (GstGLUpload * upload,
+                                                    GstCaps * in_caps,
+                                                    GstCaps * out_caps);
+void          gst_gl_upload_get_caps               (GstGLUpload * upload,
+                                                    GstCaps ** in_caps,
+                                                    GstCaps ** out_caps);
+void          gst_gl_upload_propose_allocation     (GstGLUpload * upload,
+                                                    GstQuery * decide_query,
+                                                    GstQuery * query);
 
-GstGLUploadReturn gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer, GstBuffer ** outbuf);
-void              gst_gl_upload_release_buffer (GstGLUpload * upload);
+GstGLUploadReturn gst_gl_upload_perform_with_buffer (GstGLUpload * upload,
+                                                    GstBuffer * buffer,
+                                                    GstBuffer ** outbuf);
+void              gst_gl_upload_release_buffer     (GstGLUpload * upload);
 
 G_END_DECLS
 
