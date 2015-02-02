@@ -1292,7 +1292,7 @@ cleanup_hook (GstPad * pad, GHook * hook)
  *
  * Returns: an id or 0 if no probe is pending. The id can be used to remove the
  * probe with gst_pad_remove_probe(). When using GST_PAD_PROBE_TYPE_IDLE it can
- * happend that the probe can be run immediately and if the probe returns
+ * happen that the probe can be run immediately and if the probe returns
  * GST_PAD_PROBE_REMOVE this functions returns 0.
  *
  * MT safe.
