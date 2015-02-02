@@ -99,6 +99,10 @@ struct _GstGLColorConvertClass
 
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
 
+GstCaps *   gst_gl_color_convert_transform_caps (GstGLContext * convert,
+                                                 GstPadDirection direction,
+                                                 GstCaps * caps,
+                                                 GstCaps * filter);
 gboolean    gst_gl_color_convert_set_caps    (GstGLColorConvert * convert,
                                               GstCaps           * in_caps,
                                               GstCaps           * out_caps);

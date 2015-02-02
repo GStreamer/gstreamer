@@ -180,6 +180,77 @@ gst_gl_download_set_format (GstGLDownload * download, GstVideoInfo * out_info)
   GST_OBJECT_UNLOCK (download);
 }
 
+static GstCaps *
+_set_caps_features (const GstCaps * caps, const gchar * feature_name)
+{
+  GstCaps *tmp = gst_caps_copy (caps);
+  guint n = gst_caps_get_size (tmp);
+  guint i = 0;
+
+  for (i = 0; i < n; i++) {
+    GstCapsFeatures *features = gst_caps_get_features (tmp, i);
+    if (features) {
+      guint n_f = gst_caps_features_get_size (features);
+      guint j = 0;
+      for (j = 0; j < n_f; j++) {
+        gst_caps_features_remove_id (features,
+            gst_caps_features_get_nth_id (features, j));
+      }
+    }
+
+    gst_caps_features_add (features, feature_name);
+  }
+
+  return tmp;
+}
+
+GstCaps *
+gst_gl_download_transform_caps (GstGLContext * context,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *gl_templ, *templ, *result, *tmp;
+
+  templ =
+      gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS));
+  gl_templ =
+      gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_GL_COLOR_CONVERT_FORMATS));
+
+  if (direction == GST_PAD_SRC) {
+    tmp = gst_caps_intersect_full (caps, templ, GST_CAPS_INTERSECT_FIRST);
+    result = _set_caps_features (tmp, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+    gst_caps_unref (tmp);
+    tmp = result;
+  } else {
+    tmp = gst_caps_ref (caps);
+  }
+
+  result =
+      gst_gl_color_convert_transform_caps (context, direction, tmp, filter);
+  gst_caps_unref (tmp);
+  tmp = result;
+
+  if (direction == GST_PAD_SINK) {
+    result = _set_caps_features (tmp, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+    gst_caps_unref (tmp);
+    tmp = result;
+    result = gst_caps_intersect_full (tmp, templ, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    tmp = result;
+  }
+
+  if (filter) {
+    result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  } else {
+    result = tmp;
+  }
+  gst_caps_unref (templ);
+  gst_caps_unref (gl_templ);
+
+  return result;
+}
+
 /**
  * gst_gl_download_perform_with_data:
  * @download: a #GstGLDownload

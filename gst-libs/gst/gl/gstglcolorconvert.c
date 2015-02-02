@@ -631,6 +631,29 @@ gst_gl_color_convert_set_caps (GstGLColorConvert * convert,
   return ret;
 }
 
+GstCaps *
+gst_gl_color_convert_transform_caps (GstGLContext * convert,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *templ, *result, *tmp;
+
+  templ =
+      gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_GL_COLOR_CONVERT_FORMATS));
+
+  tmp = gst_caps_intersect_full (caps, templ, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (templ);
+
+  if (filter) {
+    result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  } else {
+    result = tmp;
+  }
+
+  return result;
+}
+
 /**
  * gst_gl_color_convert_perform:
  * @convert: a #GstGLColorConvert

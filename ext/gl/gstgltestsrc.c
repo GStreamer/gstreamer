@@ -93,6 +93,7 @@ static void gst_gl_test_src_get_property (GObject * object, guint prop_id,
 static void gst_gl_test_src_dispose (GObject * object);
 
 static gboolean gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
+static GstCaps *gst_gl_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter);
 static GstCaps *gst_gl_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 static gboolean gst_gl_test_src_is_seekable (GstBaseSrc * psrc);
@@ -189,6 +190,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
   element_class->set_context = gst_gl_test_src_set_context;
 
   gstbasesrc_class->set_caps = gst_gl_test_src_setcaps;
+  gstbasesrc_class->get_caps = gst_gl_test_src_getcaps;
   gstbasesrc_class->is_seekable = gst_gl_test_src_is_seekable;
   gstbasesrc_class->do_seek = gst_gl_test_src_do_seek;
   gstbasesrc_class->query = gst_gl_test_src_query;
@@ -468,6 +470,91 @@ wrong_caps:
     GST_WARNING ("wrong caps");
     return FALSE;
   }
+}
+
+/* copies the given caps */
+static GstCaps *
+gst_gl_test_src_caps_remove_format_info (GstCaps * caps)
+{
+  GstStructure *st;
+  GstCapsFeatures *f;
+  gint i, n;
+  GstCaps *res;
+
+  res = gst_caps_new_empty ();
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    st = gst_caps_get_structure (caps, i);
+    f = gst_caps_get_features (caps, i);
+
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
+      continue;
+
+    st = gst_structure_copy (st);
+    /* Only remove format info for the cases when we can actually convert */
+    if (!gst_caps_features_is_any (f)
+        && gst_caps_features_is_equal (f,
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+      gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
+          NULL);
+    gst_structure_remove_fields (st, "width", "height", NULL);
+
+    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
+  }
+
+  return res;
+}
+
+static GstCaps *
+gst_gl_test_src_set_caps_features (const GstCaps * caps,
+    const gchar * feature_name)
+{
+  GstCaps *ret = gst_gl_caps_replace_all_caps_features (caps, feature_name);
+  gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
+  return ret;
+}
+
+static GstCaps *
+gst_gl_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
+{
+  GstGLTestSrc *src = GST_GL_TEST_SRC (bsrc);
+  GstCaps *tmp = NULL;
+  GstCaps *result = NULL;
+  GstCaps *gl_caps;
+  GstCaps *caps =
+      gst_caps_from_string ("video/x-raw(memory:GLMemory),format=RGBA");
+
+  tmp = gst_gl_test_src_caps_remove_format_info (caps);
+  GST_DEBUG_OBJECT (bsrc, "remove format returned caps %" GST_PTR_FORMAT, tmp);
+
+  gl_caps =
+      gst_caps_merge (gst_caps_merge (gst_gl_test_src_set_caps_features (tmp,
+              GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
+          gst_gl_test_src_set_caps_features (tmp,
+              GST_CAPS_FEATURE_MEMORY_EGL_IMAGE)),
+      gst_gl_test_src_set_caps_features (tmp,
+          GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
+  result =
+      gst_gl_download_transform_caps (src->context, GST_PAD_SINK, tmp, NULL);
+  result = gst_caps_merge (gl_caps, result);
+
+  gst_caps_unref (tmp);
+  tmp = result;
+  GST_DEBUG_OBJECT (bsrc, "transfer returned caps %" GST_PTR_FORMAT, tmp);
+
+  if (filter) {
+    result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  } else {
+    result = tmp;
+  }
+
+  GST_DEBUG_OBJECT (bsrc, "returning caps: %" GST_PTR_FORMAT, result);
+
+  return result;
 }
 
 static void
