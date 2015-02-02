@@ -1072,6 +1072,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     copy_params.src = src;
     copy_params.tex_id = 0;
     copy_params.out_format = src->tex_type;
+    copy_params.tex_target = src->tex_target;
     copy_params.out_width = src->tex_width;
     copy_params.out_height = GL_MEM_HEIGHT (src);
     copy_params.out_stride = GL_MEM_STRIDE (src);
@@ -1196,6 +1197,7 @@ gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id,
   GstGLMemoryCopyParams copy_params;
 
   copy_params.src = gl_mem;
+  copy_params.tex_target = gl_mem->tex_target;
   copy_params.tex_id = tex_id;
   copy_params.out_format = tex_type;
   copy_params.out_width = width;
