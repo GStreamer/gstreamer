@@ -782,19 +782,15 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf,
   /* switch depending on packet type. A zero byte packet is always a data
    * packet; we don't dereference it in that case. */
   if (packet.bytes && packet.packet[0] & 0x80) {
+    /* header packets are not meant to be displayed - return FLOW_DROP */
     if (dec->have_header) {
       GST_WARNING_OBJECT (GST_OBJECT (dec), "Ignoring header");
-      GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
-          GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
       result = GST_CUSTOM_FLOW_DROP;
       goto done;
     }
-    result = theora_handle_header_packet (dec, &packet);
-    /* header packets are not meant to be displayed */
-    /* FIXME : This is a temporary hack. The proper fix would be to
-     * not call _finish_frame() for these types of packets */
-    GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
-        GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+    if ((result = theora_handle_header_packet (dec, &packet)) != GST_FLOW_OK)
+      goto done;
+    result = GST_CUSTOM_FLOW_DROP;
   } else {
     result = theora_handle_data_packet (dec, &packet, frame);
   }
