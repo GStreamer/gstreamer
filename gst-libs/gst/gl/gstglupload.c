@@ -59,8 +59,6 @@ struct _GstGLUploadPrivate
   GstCaps *in_caps;
   GstCaps *out_caps;
 
-  GstGLColorConvert *convert;
-
   GstBuffer *outbuf;
 
   /* all method impl pointers */
@@ -781,11 +779,6 @@ gst_gl_upload_finalize (GObject * object)
   if (upload->context) {
     gst_object_unref (upload->context);
     upload->context = NULL;
-  }
-
-  if (upload->priv->convert) {
-    gst_object_unref (upload->priv->convert);
-    upload->priv->convert = NULL;
   }
 
   if (upload->priv->in_caps) {
