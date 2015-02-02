@@ -480,16 +480,18 @@ gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc,
 {
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
     if (GST_CAT_DEFAULT)
-      GST_WARNING ("plugin \"%s\" has incompatible version, not loading",
-          GST_STR_NULL (plugin->filename));
+      GST_WARNING ("plugin \"%s\" has incompatible version "
+          "(plugin: %d.%d, gst: %d,%d), not loading",
+          GST_STR_NULL (plugin->filename), desc->major_version,
+          desc->minor_version, GST_VERSION_MAJOR, GST_VERSION_MINOR);
     return NULL;
   }
 
   if (!desc->license || !desc->description || !desc->source ||
       !desc->package || !desc->origin) {
     if (GST_CAT_DEFAULT)
-      GST_WARNING ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
-          GST_STR_NULL (plugin->filename));
+      GST_WARNING ("plugin \"%s\" has missing detail in GstPluginDesc, not "
+          "loading", GST_STR_NULL (plugin->filename));
     return NULL;
   }
 
