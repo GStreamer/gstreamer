@@ -25,11 +25,11 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include <GL/gl.h>
 #include "gstvaapivideometa.h"
 #include "gstvaapipluginutil.h"
 
 #if USE_GLX
+#include <GL/gl.h>
 #include <gst/vaapi/gstvaapitexture_glx.h>
 #endif
 
