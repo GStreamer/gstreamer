@@ -85,6 +85,7 @@ static guint scenario_signals[LAST_SIGNAL] = { 0 };
 static GList *action_types = NULL;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
+static GstValidateActionType *_find_action_type (const gchar * type_name);
 
 static GPrivate main_thread_priv;
 
@@ -164,13 +165,14 @@ GType _gst_validate_action_type;
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
 static GstValidateAction *gst_validate_action_new (GstValidateScenario *
-    scenario);
+    scenario, GstValidateActionType * type);
 static gboolean get_position (GstValidateScenario * scenario);
 
 static GstValidateAction *
 _action_copy (GstValidateAction * act)
 {
-  GstValidateAction *copy = gst_validate_action_new (act->scenario);
+  GstValidateAction *copy = gst_validate_action_new (act->scenario,
+      _find_action_type (act->type));
 
   if (act->structure) {
     copy->structure = gst_structure_copy (act->structure);
@@ -190,6 +192,8 @@ _action_free (GstValidateAction * action)
 {
   if (action->structure)
     gst_structure_free (action->structure);
+
+  g_slice_free1 (_find_action_type (action->type)->action_struct_size, action);
 }
 
 static void
@@ -207,12 +211,14 @@ gst_validate_action_unref (GstValidateAction * action)
 }
 
 static GstValidateAction *
-gst_validate_action_new (GstValidateScenario * scenario)
+gst_validate_action_new (GstValidateScenario * scenario,
+    GstValidateActionType * action_type)
 {
-  GstValidateAction *action = g_slice_new0 (GstValidateAction);
+  GstValidateAction *action = g_slice_alloc0 (action_type->action_struct_size);
 
   gst_validate_action_init (action);
   action->playback_time = GST_CLOCK_TIME_NONE;
+  action->type = action_type->name;
 
   action->scenario = scenario;
   if (scenario)
@@ -1553,8 +1559,7 @@ _load_scenario_file (GstValidateScenario * scenario,
       }
     }
 
-    action = gst_validate_action_new (scenario);
-    action->type = type;
+    action = gst_validate_action_new (scenario, action_type);
     action->repeat = -1;
     if (gst_structure_get_double (structure, "playback-time", &playback_time) ||
         gst_structure_get_double (structure, "playback_time", &playback_time)) {
@@ -2166,7 +2171,7 @@ gst_validate_action_set_done (GstValidateAction * action)
  * Register a new action type to the action type system. If the action type already
  * exists, it will be overriden by that new definition
  */
-void
+GstValidateActionType *
 gst_validate_register_action_type (const gchar * type_name,
     const gchar * implementer_namespace,
     GstValidateExecuteAction function,
@@ -2197,6 +2202,7 @@ gst_validate_register_action_type (const gchar * type_name,
   type->implementer_namespace = g_strdup (implementer_namespace);
   type->description = g_strdup (description);
   type->flags = flags;
+  type->action_struct_size = sizeof (GstValidateActionType);
 
   if ((tmptype = _find_action_type (type_name))) {
     action_types = g_list_remove (action_types, tmptype);
@@ -2204,6 +2210,17 @@ gst_validate_register_action_type (const gchar * type_name,
   }
 
   action_types = g_list_append (action_types, type);
+
+  return type;
+}
+
+void
+gst_validate_action_type_set_action_struct_size (GstValidateActionType * type,
+    gsize action_struct_size)
+{
+  g_return_if_fail (action_struct_size >= sizeof (GstValidateAction));
+
+  type->action_struct_size = sizeof (GstValidateActionType);
 }
 
 GstValidateActionType *
