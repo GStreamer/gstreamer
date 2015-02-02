@@ -160,15 +160,18 @@ _gl_memory_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (!ret)
     return FALSE;
 
-  if (gst_buffer_n_memory (buffer) !=
-      GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info))
-    return FALSE;
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info); i++) {
-    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
-
-    if (!gst_is_gl_memory (mem))
+  if (buffer) {
+    if (gst_buffer_n_memory (buffer) !=
+        GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info))
       return FALSE;
+
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->upload->priv->in_info);
+        i++) {
+      GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+      if (!gst_is_gl_memory (mem))
+        return FALSE;
+    }
   }
 
   return TRUE;
@@ -291,15 +294,18 @@ _egl_image_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (!ret)
     return FALSE;
 
-  if (gst_buffer_n_memory (buffer) !=
-      GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info))
-    return FALSE;
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info); i++) {
-    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
-
-    if (!gst_is_egl_image_memory (mem))
+  if (buffer) {
+    if (gst_buffer_n_memory (buffer) !=
+        GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info))
       return FALSE;
+
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info);
+        i++) {
+      GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+      if (!gst_is_egl_image_memory (mem))
+        return FALSE;
+    }
   }
 
   return TRUE;
@@ -435,9 +441,6 @@ _upload_meta_upload_accept (gpointer impl, GstBuffer * buffer,
 
   gst_caps_features_free (gl_features);
 
-  if ((meta = gst_buffer_get_video_gl_texture_upload_meta (buffer)) == NULL)
-    return FALSE;
-
   gl_features =
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   features = gst_caps_get_features (out_caps, 0);
@@ -449,15 +452,20 @@ _upload_meta_upload_accept (gpointer impl, GstBuffer * buffer,
   if (!ret)
     return ret;
 
-  if (meta->texture_type[0] != GST_VIDEO_GL_TEXTURE_TYPE_RGBA) {
-    GST_FIXME_OBJECT (upload, "only single rgba texture supported");
-    return FALSE;
-  }
+  if (buffer) {
+    if ((meta = gst_buffer_get_video_gl_texture_upload_meta (buffer)) == NULL)
+      return FALSE;
 
-  if (meta->texture_orientation !=
-      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL) {
-    GST_FIXME_OBJECT (upload, "only x-normal, y-normal textures supported");
-    return FALSE;
+    if (meta->texture_type[0] != GST_VIDEO_GL_TEXTURE_TYPE_RGBA) {
+      GST_FIXME_OBJECT (upload, "only single rgba texture supported");
+      return FALSE;
+    }
+
+    if (meta->texture_orientation !=
+        GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL) {
+      GST_FIXME_OBJECT (upload, "only x-normal, y-normal textures supported");
+      return FALSE;
+    }
   }
 
   return TRUE;
@@ -631,11 +639,13 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (!ret)
     return ret;
 
-  if (!gst_video_frame_map (&raw->in_frame, &raw->upload->priv->in_info, buffer,
-          GST_MAP_READ))
-    return FALSE;
+  if (buffer) {
+    if (!gst_video_frame_map (&raw->in_frame, &raw->upload->priv->in_info,
+            buffer, GST_MAP_READ))
+      return FALSE;
 
-  raw->upload->priv->in_info = raw->in_frame.info;
+    raw->upload->priv->in_info = raw->in_frame.info;
+  }
 
   return TRUE;
 }
