@@ -54,7 +54,7 @@ _set_sync_point (GstGLContext * context, GstGLSyncMeta * sync_meta)
       gl->DeleteSync (sync_meta->glsync);
 #if GST_GL_HAVE_OPENGL
     sync_meta->glsync = gl->FenceSync (GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    GST_LOG_OBJECT (sync_meta, "setting sync object %p", sync_meta->glsync);
+    GST_LOG ("setting sync object %p", sync_meta->glsync);
 #endif
   } else {
     gl->Flush ();
@@ -78,8 +78,7 @@ _wait (GstGLContext * context, GstGLSyncMeta * sync_meta)
 
   if (gl->ClientWaitSync) {
     do {
-      GST_LOG_OBJECT (sync_meta, "waiting on sync object %p",
-          sync_meta->glsync);
+      GST_LOG ("waiting on sync object %p", sync_meta->glsync);
       res =
           gl->ClientWaitSync (sync_meta->glsync, GL_SYNC_FLUSH_COMMANDS_BIT,
           1000000000 /* 1s */ );
