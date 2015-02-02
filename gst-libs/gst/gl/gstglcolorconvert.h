@@ -93,7 +93,9 @@ struct _GstGLColorConvertClass
  *
  * The currently supported #GstCaps that can be converted
  */
-#define GST_GL_COLOR_CONVERT_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS)
+#define GST_GL_COLOR_CONVERT_VIDEO_CAPS \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, \
+        GST_GL_COLOR_CONVERT_FORMATS)
 
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
 
