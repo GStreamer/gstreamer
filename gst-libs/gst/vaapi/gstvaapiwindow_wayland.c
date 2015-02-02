@@ -311,6 +311,7 @@ gst_vaapi_window_wayland_resize (GstVaapiWindow * window,
 
   GST_DEBUG ("resize window, new size %ux%u", width, height);
 
+  gst_vaapi_video_pool_replace (&priv->surface_pool, NULL);
   if (priv->opaque_region)
     wl_region_destroy (priv->opaque_region);
   GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
