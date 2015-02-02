@@ -1052,7 +1052,7 @@ get_position (GstValidateScenario * scenario)
 
   GST_DEBUG_OBJECT (scenario, "Executing %" GST_PTR_FORMAT
       " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
-
+  priv->seeked_in_pause = FALSE;
   act->state = type->execute (scenario, act);
   if (act->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
     gchar *str = gst_structure_to_string (act->structure);
@@ -1095,11 +1095,12 @@ stop_waiting (GstValidateAction * action)
 {
   GstValidateScenarioPrivate *priv = action->scenario->priv;
 
+  gst_validate_printf (action->scenario, "Stop waiting\n");
+
   priv->wait_id = 0;
   gst_validate_action_set_done (action);
   _add_get_position_source (action->scenario);
 
-  gst_validate_printf (action->scenario, "Stop waiting\n");
 
   return G_SOURCE_REMOVE;
 }
@@ -1126,7 +1127,7 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
 
     if (wait_multiplier == 0) {
       GST_INFO_OBJECT (scenario, "I have been told not to wait...");
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+      return GST_VALIDATE_EXECUTE_ACTION_OK;
     }
   }
 
