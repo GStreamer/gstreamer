@@ -246,6 +246,8 @@ static gboolean flac_streamheader_to_codecdata (const GValue * streamheader,
 static void
 gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
     gpointer data);
+static void gst_matroska_mux_write_streams_tags (GstMatroskaMux * mux);
+static gboolean gst_matroska_mux_streams_have_tags (GstMatroskaMux * mux);
 
 /* Cannot use boilerplate macros here because we need the full init function
  * signature with the additional class argument, so we use the right template
@@ -560,6 +562,10 @@ gst_matroska_pad_reset (GstMatroskaPad * collect_pad, gboolean full)
     g_free (collect_pad->track->codec_priv);
     g_free (collect_pad->track);
     collect_pad->track = NULL;
+    if (collect_pad->tags) {
+      gst_tag_list_unref (collect_pad->tags);
+      collect_pad->tags = NULL;
+    }
   }
 
   if (!full && type != 0) {
@@ -586,12 +592,15 @@ gst_matroska_pad_reset (GstMatroskaPad * collect_pad, gboolean full)
 
     context->type = type;
     context->name = name;
+    context->track_uid = gst_matroska_mux_create_uid (collect_pad->mux);
     /* TODO: check default values for the context */
     context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
     collect_pad->track = context;
     collect_pad->duration = 0;
     collect_pad->start_ts = GST_CLOCK_TIME_NONE;
     collect_pad->end_ts = GST_CLOCK_TIME_NONE;
+    collect_pad->tags = gst_tag_list_new_empty ();
+    gst_tag_list_set_scope (collect_pad->tags, GST_TAG_SCOPE_STREAM);
   }
 }
 
@@ -806,8 +815,12 @@ gst_matroska_mux_handle_sink_event (GstCollectPads * pads,
       }
 
       /* FIXME: what about stream-specific tags? */
-      gst_tag_setter_merge_tags (GST_TAG_SETTER (mux), list,
-          gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
+      if (gst_tag_list_get_scope (list) == GST_TAG_SCOPE_GLOBAL) {
+        gst_tag_setter_merge_tags (GST_TAG_SETTER (mux), list,
+            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
+      } else {
+        gst_tag_list_insert (collect_pad->tags, list, GST_TAG_MERGE_REPLACE);
+      }
 
       gst_event_unref (event);
       /* handled this, don't want collectpads to forward it downstream */
@@ -2281,6 +2294,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
       sizeof (GstMatroskamuxPad),
       (GstCollectDataDestroyNotify) gst_matroska_pad_free, locked);
 
+  collect_pad->mux = mux;
   collect_pad->track = context;
   gst_matroska_pad_reset (collect_pad, FALSE);
   collect_pad->track->codec_id = id;
@@ -2371,8 +2385,7 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKNUMBER, context->num);
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKTYPE, context->type);
 
-  gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKUID,
-      gst_matroska_mux_create_uid (mux));
+  gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKUID, context->track_uid);
   if (context->default_duration) {
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKDEFAULTDURATION,
         context->default_duration);
@@ -2659,21 +2672,25 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
 
   if (mux->streamable) {
     const GstTagList *tags;
+    gboolean has_main_tags;
 
     /* tags */
     tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
+    has_main_tags = tags != NULL && !gst_tag_list_is_empty (tags);
 
-    if (tags != NULL && !gst_tag_list_is_empty (tags)) {
+    if (has_main_tags || gst_matroska_mux_streams_have_tags (mux)) {
       guint64 master_tags, master_tag;
 
       GST_DEBUG_OBJECT (mux, "Writing tags");
 
-      /* TODO: maybe limit via the TARGETS id by looking at the source pad */
       mux->tags_pos = ebml->pos;
       master_tags = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAGS);
-      master_tag = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAG);
-      gst_tag_list_foreach (tags, gst_matroska_mux_write_simple_tag, ebml);
-      gst_ebml_write_master_finish (ebml, master_tag);
+      if (has_main_tags) {
+        master_tag = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAG);
+        gst_tag_list_foreach (tags, gst_matroska_mux_write_simple_tag, ebml);
+        gst_ebml_write_master_finish (ebml, master_tag);
+      }
+      gst_matroska_mux_write_streams_tags (mux);
       gst_ebml_write_master_finish (ebml, master_tags);
     }
   }
@@ -2885,6 +2902,57 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
   }
 }
 
+static void
+gst_matroska_mux_write_stream_tags (GstMatroskaMux * mux, GstMatroskaPad * mpad)
+{
+  guint64 master_tag, master_targets;
+  GstEbmlWrite *ebml;
+
+  ebml = mux->ebml_write;
+
+  if (G_UNLIKELY (mpad->tags == NULL || gst_tag_list_is_empty (mpad->tags)))
+    return;
+
+  master_tag = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAG);
+  master_targets = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TARGETS);
+
+  gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TARGETTRACKUID,
+      mpad->track->track_uid);
+
+  gst_ebml_write_master_finish (ebml, master_targets);
+  gst_tag_list_foreach (mpad->tags, gst_matroska_mux_write_simple_tag, ebml);
+  gst_ebml_write_master_finish (ebml, master_tag);
+}
+
+static void
+gst_matroska_mux_write_streams_tags (GstMatroskaMux * mux)
+{
+  GSList *walk;
+
+  for (walk = mux->collect->data; walk; walk = g_slist_next (walk)) {
+    GstMatroskaPad *collect_pad;
+
+    collect_pad = (GstMatroskaPad *) walk->data;
+
+    gst_matroska_mux_write_stream_tags (mux, collect_pad);
+  }
+}
+
+static gboolean
+gst_matroska_mux_streams_have_tags (GstMatroskaMux * mux)
+{
+  GSList *walk;
+
+  for (walk = mux->collect->data; walk; walk = g_slist_next (walk)) {
+    GstMatroskaPad *collect_pad;
+
+    collect_pad = (GstMatroskaPad *) walk->data;
+    if (!gst_tag_list_is_empty (collect_pad->tags))
+      return TRUE;
+  }
+  return FALSE;
+}
+
 #if 0
 static void
 gst_matroska_mux_write_toc_entry_tags (GstMatroskaMux * mux,
@@ -2940,6 +3008,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   guint64 duration = 0;
   GSList *collected;
   const GstTagList *tags;
+  gboolean has_main_tags;
 
   /* finish last cluster */
   if (mux->cluster) {
@@ -2977,8 +3046,9 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 
   /* tags */
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
+  has_main_tags = tags != NULL && !gst_tag_list_is_empty (tags);
 
-  if ((tags != NULL && !gst_tag_list_is_empty (tags))
+  if (has_main_tags || gst_matroska_mux_streams_have_tags (mux)
       || gst_toc_setter_get_toc (GST_TOC_SETTER (mux)) != NULL) {
     guint64 master_tags = 0, master_tag;
 #if 0
@@ -2991,7 +3061,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     toc = gst_toc_setter_get_toc (GST_TOC_SETTER (mux));
 #endif
 
-    if (tags != NULL) {
+    if (has_main_tags) {
       /* TODO: maybe limit via the TARGETS id by looking at the source pad */
       mux->tags_pos = ebml->pos;
       master_tags = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAGS);
@@ -3016,6 +3086,12 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
       }
     }
 #endif
+
+    if (master_tags == 0 && gst_matroska_mux_streams_have_tags (mux)) {
+      mux->tags_pos = ebml->pos;
+      master_tags = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAGS);
+    }
+    gst_matroska_mux_write_streams_tags (mux);
 
     if (master_tags != 0)
       gst_ebml_write_master_finish (ebml, master_tags);
