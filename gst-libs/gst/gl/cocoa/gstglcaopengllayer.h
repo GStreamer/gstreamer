@@ -35,7 +35,7 @@ G_BEGIN_DECLS
   CGLContextObj gl_context;
 
 @private
-  NSRect last_bounds;
+  CGRect last_bounds;
   gint expected_dims[4];
 
   GstGLWindowCB draw_cb;
