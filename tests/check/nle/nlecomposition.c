@@ -187,6 +187,116 @@ GST_START_TEST (test_remove_invalid_object)
 
 GST_END_TEST;
 
+static GstClockTime
+_query_position_cb (GstElement * composition, GstPipeline * pipeline)
+{
+  gint64 position;
+
+  if (gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+          &position))
+    return position;
+
+  return GST_CLOCK_TIME_NONE;
+}
+
+GST_START_TEST (test_remove_last_object)
+{
+  GstBin *composition;
+  GstElement *source1, *audiotestsrc, *source2, *audiotestsrc2, *fakesink,
+      *pipeline;
+  GstBus *bus;
+  GstMessage *message;
+  gboolean ret;
+  gint64 position = 0;
+  GstClockTime duration;
+
+  pipeline = GST_ELEMENT (gst_pipeline_new (NULL));
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+
+  composition = GST_BIN (gst_element_factory_make ("nlecomposition",
+          "composition"));
+
+  g_signal_connect (composition, "query-position",
+      G_CALLBACK (_query_position_cb), pipeline);
+
+  gst_element_set_state (GST_ELEMENT (composition), GST_STATE_READY);
+
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+  gst_bin_add_many (GST_BIN (pipeline), GST_ELEMENT (composition), fakesink,
+      NULL);
+  gst_element_link (GST_ELEMENT (composition), fakesink);
+
+  source1 = gst_element_factory_make ("nlesource", "source1");
+  audiotestsrc = gst_element_factory_make ("audiotestsrc", "audiotestsrc1");
+  gst_bin_add (GST_BIN (source1), audiotestsrc);
+  g_object_set (source1, "start", (guint64) 0 * GST_SECOND,
+      "duration", 10 * GST_SECOND, "inpoint", (guint64) 0, "priority", 1, NULL);
+
+  nle_composition_add (composition, source1);
+
+  source2 = gst_element_factory_make ("nlesource", "source1");
+  audiotestsrc2 = gst_element_factory_make ("audiotestsrc", "audiotestsrc1");
+  gst_bin_add (GST_BIN (source2), audiotestsrc2);
+  g_object_set (source2, "start", (guint64) 10 * GST_SECOND,
+      "duration", 10 * GST_SECOND, "inpoint", (guint64) 0, "priority", 1, NULL);
+
+  nle_composition_add (composition, source2);
+
+  fail_if (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED)
+      == GST_STATE_CHANGE_FAILURE);
+  message = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
+  gst_mini_object_unref (GST_MINI_OBJECT (message));
+
+  commit_and_wait (GST_ELEMENT (composition), &ret);
+
+  message = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
+  gst_mini_object_unref (GST_MINI_OBJECT (message));
+
+  gst_element_seek_simple (pipeline,
+      GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, 15 * GST_SECOND);
+
+  message = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
+  gst_mini_object_unref (GST_MINI_OBJECT (message));
+
+  ret =
+      gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+      &position);
+  fail_unless_equals_uint64 (position, 15 * GST_SECOND);
+
+  gst_element_seek_simple (pipeline,
+      GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, 18 * GST_SECOND);
+
+  message = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
+  gst_mini_object_unref (GST_MINI_OBJECT (message));
+
+  ret =
+      gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+      &position);
+  fail_unless_equals_uint64 (position, 18 * GST_SECOND);
+
+  nle_composition_remove (composition, source2);
+
+  commit_and_wait (GST_ELEMENT (composition), &ret);
+  g_object_get (composition, "duration", &duration, NULL);
+  fail_unless_equals_uint64 (duration, 10 * GST_SECOND);
+
+  ret =
+      gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+      &position);
+  fail_unless_equals_uint64 (position, 10 * GST_SECOND - 1);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_dispose_on_commit)
 {
   GstElement *composition;
@@ -235,7 +345,6 @@ GST_START_TEST (test_simple_audiomixer)
   pipeline = GST_ELEMENT (gst_pipeline_new (NULL));
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-  GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
   composition = gst_element_factory_make ("nlecomposition", "composition");
   gst_element_set_state (composition, GST_STATE_READY);
   fakesink = gst_element_factory_make ("fakesink", NULL);
@@ -250,7 +359,6 @@ GST_START_TEST (test_simple_audiomixer)
       "priority", 0, NULL);
   nle_composition_add (GST_BIN (composition), nle_audiomixer);
 
-  GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
   /* source 1 */
   nlesource1 = gst_element_factory_make ("nlesource", "nlesource1");
   audiotestsrc1 = gst_element_factory_make ("audiotestsrc", "audiotestsrc1");
@@ -269,8 +377,6 @@ GST_START_TEST (test_simple_audiomixer)
 
   GST_DEBUG ("Adding composition to pipeline");
   gst_bin_add_many (GST_BIN (pipeline), composition, fakesink, NULL);
-
-  GST_ERROR ("Pipeline refcounts: %i", ((GObject *) pipeline)->ref_count);
 
   fail_unless (nle_composition_add (GST_BIN (composition), nlesource2));
   fail_unless (gst_element_link (composition, fakesink) == TRUE);
@@ -336,6 +442,7 @@ gnonlin_suite (void)
 
   tcase_add_test (tc_chain, test_change_object_start_stop_in_current_stack);
   tcase_add_test (tc_chain, test_remove_invalid_object);
+  tcase_add_test (tc_chain, test_remove_last_object);
 
   tcase_add_test (tc_chain, test_dispose_on_commit);
 

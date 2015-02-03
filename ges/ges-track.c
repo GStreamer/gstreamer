@@ -218,7 +218,7 @@ update_gaps (GESTrack * track)
     duration = MAX (duration, end);
   }
 
-  /* 4- Add a gap at the end of the timeline if needed */
+  /* 3- Add a gap at the end of the timeline if needed */
   if (priv->timeline) {
     g_object_get (priv->timeline, "duration", &timeline_duration, NULL);
 
@@ -232,6 +232,10 @@ update_gaps (GESTrack * track)
       priv->duration = timeline_duration;
     }
   }
+
+  GST_DEBUG_OBJECT (track, "Adding a one second gap at the end");
+  gap = gap_new (track, timeline_duration, 1);
+  priv->gaps = g_list_prepend (priv->gaps, gap);
 
   /* 4- Remove old gaps */
   g_list_free_full (gaps, (GDestroyNotify) free_gap);

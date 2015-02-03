@@ -1328,7 +1328,9 @@ get_new_seek_event (NleComposition * comp, gboolean initial,
       GST_TIME_FORMAT, GST_TIME_ARGS (priv->segment->stop),
       GST_TIME_ARGS (priv->segment_stop));
 
-  start = MAX (priv->segment->start, priv->segment_start);
+  start = GST_CLOCK_TIME_IS_VALID (priv->segment->start)
+      ? MAX (priv->segment->start, priv->segment_start)
+      : priv->segment_start;
   stop = GST_CLOCK_TIME_IS_VALID (priv->segment->stop)
       ? MIN (priv->segment->stop, priv->segment_stop)
       : priv->segment_stop;
@@ -2801,11 +2803,18 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
   NleCompositionPrivate *priv = comp->priv;
   GstClockTime new_stop = GST_CLOCK_TIME_NONE;
   GstClockTime new_start = GST_CLOCK_TIME_NONE;
+  GstClockTime duration = NLE_OBJECT (comp)->duration - 1;
 
   GstState nextstate = (GST_STATE_NEXT (comp) == GST_STATE_VOID_PENDING) ?
       GST_STATE (comp) : GST_STATE_NEXT (comp);
 
   _assert_proper_thread (comp);
+
+  if (currenttime >= duration) {
+    currenttime = duration;
+    priv->segment->start = GST_CLOCK_TIME_NONE;
+    priv->segment->stop = GST_CLOCK_TIME_NONE;
+  }
 
   GST_INFO_OBJECT (comp,
       "currenttime:%" GST_TIME_FORMAT

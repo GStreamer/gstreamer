@@ -358,7 +358,6 @@ static GCond cond;
 static void
 commited_cb (GstElement * comp, gboolean changed)
 {
-  GST_ERROR ("commited !!");
   g_mutex_lock (&lock);
   g_cond_signal (&cond);
   g_mutex_unlock (&lock);
