@@ -911,10 +911,12 @@ gst_ks_read_request_pick_buffer (GstKsVideoDevice * self, ReadRequest * req)
   gboolean buffer_found = FALSE;
   guint i;
 
-  buffer_found = gst_buffer_is_writable (req->buf);
+  buffer_found = gst_buffer_is_writable (req->buf)
+      && gst_buffer_is_all_memory_writable (req->buf);
 
   for (i = 0; !buffer_found && i < G_N_ELEMENTS (priv->spare_buffers); i++) {
-    if (gst_buffer_is_writable (priv->spare_buffers[i])) {
+    if (gst_buffer_is_writable (priv->spare_buffers[i])
+        && gst_buffer_is_all_memory_writable (priv->spare_buffers[i])) {
       GstBuffer *hold;
 
       hold = req->buf;
@@ -962,7 +964,9 @@ gst_ks_video_device_request_frame (GstKsVideoDevice * self, ReadRequest * req,
   params = &req->params;
   memset (params, 0, sizeof (KSSTREAM_READ_PARAMS));
 
-  gst_buffer_map (req->buf, &info, GST_MAP_READ);
+  if (!gst_buffer_map (req->buf, &info, GST_MAP_WRITE))
+    goto map_failed;
+
   params->header.Size = sizeof (KSSTREAM_HEADER) + sizeof (KS_FRAME_INFO);
   params->header.PresentationTime.Numerator = 1;
   params->header.PresentationTime.Denominator = 1;
@@ -991,6 +995,10 @@ error_ioctl:
   {
     gst_ks_video_device_parse_win32_error ("DeviceIoControl", GetLastError (),
         error_code, error_str);
+    return FALSE;
+  }
+map_failed:
+  {
     return FALSE;
   }
 }
@@ -1160,20 +1168,23 @@ error_get_result:
   }
 }
 
-void
-gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self,
-    guint8 * buf, guint buf_size)
+gboolean
+gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self, GstBuffer * buf)
 {
   GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
 
   /* If it's RGB we need to flip the image */
   if (priv->rgb_swap_buf != NULL) {
+    GstMapInfo info;
     gint stride, line;
     guint8 *dst, *src;
 
-    stride = buf_size / priv->height;
-    dst = buf;
-    src = buf + buf_size - stride;
+    if (!gst_buffer_map (buf, &info, GST_MAP_READWRITE))
+      return FALSE;
+
+    stride = info.size / priv->height;
+    dst = info.data;
+    src = info.data + info.size - stride;
 
     for (line = 0; line < priv->height / 2; line++) {
       memcpy (priv->rgb_swap_buf, dst, stride);
@@ -1184,7 +1195,11 @@ gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self,
       dst += stride;
       src -= stride;
     }
+
+    gst_buffer_unmap (buf, &info);
   }
+
+  return TRUE;
 }
 
 void
