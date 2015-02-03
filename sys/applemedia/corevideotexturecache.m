@@ -111,6 +111,9 @@ texture_from_buffer (GstCoreVideoTextureCache * cache,
       (GstCoreVideoMeta *) gst_buffer_get_meta (buffer,
       gst_core_video_meta_api_get_type ());
   CVPixelBufferRef pixel_buf;
+
+  g_return_val_if_fail (cm_meta || cv_meta, (CFTypeRef) texture);
+
   if (cm_meta)
     pixel_buf = cm_meta->pixel_buf;
   else
@@ -147,6 +150,8 @@ gst_core_video_texture_cache_get_gl_buffer (GstCoreVideoTextureCache * cache,
 
   gl = cache->ctx->gl_vtable;
   texture = texture_from_buffer (cache, cv_buffer, &texture_id, &texture_target);
+  g_return_val_if_fail (texture != NULL, NULL);
+
   memory = (GstMemory *) gst_gl_memory_wrapped_texture (cache->ctx, texture_id, texture_target,
       &cache->input_info, 0, NULL, NULL, NULL);
   gst_buffer_append_memory (cv_buffer, memory);
