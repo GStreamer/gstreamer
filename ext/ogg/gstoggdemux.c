@@ -711,6 +711,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   /* don't push the header packets when we are asked to skip them */
   if (!packet->b_o_s || push_headers) {
     if (pad->last_ret == GST_FLOW_OK) {
+      GST_LOG_OBJECT (ogg, "Pushing buf %" GST_PTR_FORMAT, buf);
       ret = gst_pad_push (GST_PAD_CAST (pad), buf);
     } else {
       GST_DEBUG_OBJECT (ogg, "not pushing buffer on error pad");
@@ -748,8 +749,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   /* and store as the current position */
   ogg->segment.position = current_time;
 
-  GST_DEBUG_OBJECT (ogg, "ogg current time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (current_time));
+  GST_DEBUG_OBJECT (ogg, "ogg current time %" GST_TIME_FORMAT
+      " (%" G_GINT64_FORMAT ")", GST_TIME_ARGS (current_time), current_time);
 
   /* check stream eos */
   if (!pad->is_eos && !delta_unit &&
