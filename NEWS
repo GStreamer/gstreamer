@@ -1,7 +1,33 @@
-gst-vaapi NEWS -- summary of changes.  2014-07-29
+gst-vaapi NEWS -- summary of changes.  2015-02-03
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.5.10 - 3.Feb.2015
+* Add support for DRM Render-Nodes for headless operation
+* Add support for VA surface buffer sharing with DMABUF and GEM handles
+* Add support for v4l2src with io-mode={dmabuf,dmabuf-import}
+* Drop support for VA/GLX specific APIs in libgstvaapi and vaapisink [#736711]
+* Improvements to H.264 codecs
+  + Fix profile limits for encoding
+  + Fix pixel-aspect-ratio in the encoded stream
+  + Add decoding support for interlaced streams with repeat-first-field (RFF)
+  + Fix decoding of interlaced streams in top-field-first order (TFF) [#739291]
+  + Fix decoding of UK DVB-T2 streams [#739291]
+* Improvements to plugin elements
+  + Add support for dma_buf imports (Wind Yuan) [#735362]
+  + Allow for SW decoding fallbacks with unsupported profiles [#730997]
+  + Make vaapipostproc work with SW elements (+Victor Jaquez) [#720174, #704078]
+  + Allow vaapipostproc to integrate with GL downstream elements [#735231]
+  + Add support for high-quality scaling to vaapipostproc ("scale-method=hq")
+  + Fix advanced deinterlacing when it is the unique filter applied
+  + Add GstColorBalance interface to vaapisink (Changzhi Wei) [#722390]
+  + Implement the GstNavigation interface into vaapisink [#711479]
+  + Allow rescaling of X11 window for vaapisink (Holger Kaelberer) [#711478]
+  + Optimizations to vaapidecode thread handling (Sebastian Dröge) [#734616]
+  + Fix deinterlacing from non VA memory buffers (Simon Farnsworth) [#726270]
+  + Fix clearing of subtitle overlay (Simon Farnsworth)
+  + Fix clearing of vaapipostproc state during restart (Michael Olbrich)
 
 Version 0.5.9 - 29.Jul.2014
 * Add VP8 decoder (+Halley Zhao)
