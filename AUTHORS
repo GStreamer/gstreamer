@@ -1,6 +1,7 @@
 Maintainers:
 
 Gwenole Beauchesne      - Lead developer
+Sreerenj Balachandran   - Lead developer
 Halley Zhao             - MPEG-4:2 decoder
 
 This project is maintained by Intel Corporation.
@@ -8,6 +9,7 @@ This project is maintained by Intel Corporation.
 Contributors (sorted by first name):
 
 Cong Zhong
+Changzhi Wei
 Emilio Lopez
 Fabrice Bellet
 Feng Yuan
@@ -21,12 +23,12 @@ Kristian Hogsberg
 Lionel Landwerlin
 Matthew Waters
 Matthieu Bouron
+Michael Olbrich
 Nicolas Dufresne
 Philip Lorenz
 Robert Bradford
 Ross Burton
 Simon Farnsworth
-Sreerenj Balachandran
 Thibault Saunier
 Victor Manuel Jaquez Leal
 Xiaowei Li
