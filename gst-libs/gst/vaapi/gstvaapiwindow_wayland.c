@@ -114,6 +114,7 @@ struct _GstVaapiWindowWaylandPrivate
   guint is_shown:1;
   guint fullscreen_on_show:1;
   guint use_vpp:1;
+  guint frame_pending:1;
 };
 
 /**
@@ -162,14 +163,14 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
 
-  if (priv->frame) {
+  if (priv->frame_pending) {
     struct wl_display *const wl_display =
         GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
     do {
       if (wl_display_dispatch_queue (wl_display, priv->event_queue) < 0)
         return FALSE;
-    } while (priv->frame);
+    } while (priv->frame_pending);
   }
   return TRUE;
 }
@@ -329,13 +330,22 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (frame->window);
 
-  frame_state_free (frame);
   if (priv->frame == frame)
-    priv->frame = NULL;
+    priv->frame_pending = FALSE;
 }
 
 static const struct wl_callback_listener frame_callback_listener = {
   frame_redraw_callback
+};
+
+static void
+frame_release_callback (void *data, struct wl_buffer *wl_buffer)
+{
+  frame_state_free (data);
+}
+
+static const struct wl_buffer_listener frame_buffer_listener = {
+  frame_release_callback
 };
 
 static GstVaapiSurface *
@@ -474,6 +484,7 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   if (!frame)
     return FALSE;
   priv->frame = frame;
+  priv->frame_pending = TRUE;
 
   if (need_vpp && priv->use_vpp) {
     frame->surface = surface;
@@ -492,6 +503,9 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   }
 
   frame->buffer = buffer;
+  wl_proxy_set_queue ((struct wl_proxy *) buffer, priv->event_queue);
+  wl_buffer_add_listener (buffer, &frame_buffer_listener, frame);
+
   frame->callback = wl_surface_frame (priv->surface);
   wl_callback_add_listener (frame->callback, &frame_callback_listener, frame);
 
