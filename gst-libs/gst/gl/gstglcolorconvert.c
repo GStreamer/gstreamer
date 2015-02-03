@@ -1560,6 +1560,14 @@ out:
     convert->outbuf = NULL;
   }
 
+  if (convert->outbuf) {
+    GstGLSyncMeta *sync_meta =
+        gst_buffer_add_gl_sync_meta (convert->context, convert->outbuf);
+
+    if (sync_meta)
+      gst_gl_sync_meta_set_sync_point (sync_meta, convert->context);
+  }
+
   convert->priv->result = res;
   return;
 }
