@@ -1379,6 +1379,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   const GstGLFuncs *gl = NULL;
   GstGLWindow *window = NULL;
   gboolean do_redisplay;
+  GstGLSyncMeta *sync_meta;
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (gl_sink));
 
@@ -1406,6 +1407,10 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     GST_GLIMAGE_SINK_LOCK (gl_sink);
     gl_sink->caps_change = FALSE;
   }
+
+  sync_meta = gst_buffer_get_gl_sync_meta (gl_sink->stored_buffer);
+  if (sync_meta)
+    gst_gl_sync_meta_wait (sync_meta);
 
   /* make sure that the environnement is clean */
   gst_gl_context_clear_shader (gl_sink->context);
