@@ -4853,6 +4853,7 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstDecodeBin *dbin = GST_DECODE_BIN (element);
+  GstDecodeChain *chain_to_free = NULL;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -4911,10 +4912,13 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       do_async_done (dbin);
       EXPOSE_LOCK (dbin);
       if (dbin->decode_chain) {
-        gst_decode_chain_free (dbin->decode_chain);
+        chain_to_free = dbin->decode_chain;
+        gst_decode_chain_free_internal (dbin->decode_chain, TRUE);
         dbin->decode_chain = NULL;
       }
       EXPOSE_UNLOCK (dbin);
+      if (chain_to_free)
+        gst_decode_chain_free (chain_to_free);
       g_list_free_full (dbin->buffering_status,
           (GDestroyNotify) gst_message_unref);
       dbin->buffering_status = NULL;
