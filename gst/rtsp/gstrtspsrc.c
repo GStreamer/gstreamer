@@ -3297,7 +3297,7 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
        * so slaving in jitterbuffer does not make much sense
        * (and might mess things up due to bursts) */
       if (GST_CLOCK_TIME_IS_VALID (src->segment.duration) &&
-          src->segment.duration && !stream->container) {
+          src->segment.duration && stream->container) {
         src->use_buffering = TRUE;
       } else {
         src->use_buffering = FALSE;
@@ -4583,8 +4583,7 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
       gst_rtspsrc_stream_push_event (src, ostream, event);
 
       if ((caps = stream_get_caps_for_pt (ostream, ostream->default_pt))) {
-        gst_pad_push_event (ostream->channelpad[0], gst_event_new_caps (caps));
-        gst_caps_unref (caps);
+        gst_rtspsrc_stream_push_event (src, ostream, gst_event_new_caps (caps));
       }
     }
     g_checksum_free (cs);
@@ -6483,7 +6482,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
           break;
       }
 
-      if (!stream->container || (!src->interleaved && !retry)) {
+      if (stream->container || (!src->interleaved && !retry)) {
         /* now configure the stream with the selected transport */
         if (!gst_rtspsrc_stream_configure_transport (stream, &transport)) {
           GST_DEBUG_OBJECT (src,
