@@ -298,11 +298,11 @@ static void gst_ts_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_ts_demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_ts_demux_flush_streams (GstTSDemux * tsdemux);
+static void gst_ts_demux_flush_streams (GstTSDemux * tsdemux, gboolean hard);
 static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream);
 static void gst_ts_demux_stream_flush (TSDemuxStream * stream,
-    GstTSDemux * demux);
+    GstTSDemux * demux, gboolean hard);
 
 static gboolean push_event (MpegTSBase * base, GstEvent * event);
 static void gst_ts_demux_check_and_sync_streams (GstTSDemux * demux,
@@ -1473,7 +1473,7 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
     stream->pad = NULL;
   }
 
-  gst_ts_demux_stream_flush (stream, GST_TS_DEMUX_CAST (base));
+  gst_ts_demux_stream_flush (stream, GST_TS_DEMUX_CAST (base), TRUE);
 
   tsdemux_h264_parsing_info_clear (&stream->h264infos);
 }
@@ -1504,7 +1504,8 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
 }
 
 static void
-gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux)
+gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux,
+    gboolean hard)
 {
   GST_DEBUG ("flushing stream %p", stream);
 
@@ -1515,11 +1516,9 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux)
   stream->expected_size = 0;
   stream->allocated_size = 0;
   stream->current_size = 0;
-  stream->need_newsegment = TRUE;
   stream->discont = TRUE;
   stream->pts = GST_CLOCK_TIME_NONE;
   stream->dts = GST_CLOCK_TIME_NONE;
-  stream->first_dts = GST_CLOCK_TIME_NONE;
   stream->raw_pts = -1;
   stream->raw_dts = -1;
   stream->pending_ts = TRUE;
@@ -1527,16 +1526,21 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux)
   stream->gap_ref_buffers = 0;
   stream->gap_ref_pts = GST_CLOCK_TIME_NONE;
   stream->continuity_counter = CONTINUITY_UNSET;
+  if (hard) {
+    stream->first_dts = GST_CLOCK_TIME_NONE;
+    stream->need_newsegment = TRUE;
+  }
 }
 
 static void
-gst_ts_demux_flush_streams (GstTSDemux * demux)
+gst_ts_demux_flush_streams (GstTSDemux * demux, gboolean hard)
 {
+  GList *walk;
   if (!demux->program)
     return;
 
-  g_list_foreach (demux->program->stream_list,
-      (GFunc) gst_ts_demux_stream_flush, demux);
+  for (walk = demux->program->stream_list; walk; walk = g_list_next (walk))
+    gst_ts_demux_stream_flush (walk->data, demux, hard);
 }
 
 static void
@@ -2314,7 +2318,7 @@ gst_ts_demux_flush (MpegTSBase * base, gboolean hard)
 {
   GstTSDemux *demux = GST_TS_DEMUX_CAST (base);
 
-  gst_ts_demux_flush_streams (demux);
+  gst_ts_demux_flush_streams (demux, hard);
 
   if (demux->segment_event) {
     gst_event_unref (demux->segment_event);
