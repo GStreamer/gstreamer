@@ -381,10 +381,33 @@ static gboolean install_in_progress;    /* FALSE */
 /* private struct */
 struct _GstInstallPluginsContext
 {
+  gchar *confirm_search;
   gchar *desktop_id;
   gchar *startup_notification_id;
   guint xid;
 };
+
+/**
+ * gst_install_plugins_context_set_confirm_search:
+ * @ctx: a #GstInstallPluginsContext
+ * @confirm_search: whether to ask for confirmation before searching for plugins
+ *
+ * This function is used to tell the external installer process whether it
+ * should ask for confirmation or not before searching for missing plugins.
+ *
+ * If set, this option will be passed to the installer via a
+ * --interaction=[show-confirm-search|hide-confirm-search] command line option.
+ */
+void
+gst_install_plugins_context_set_confirm_search (GstInstallPluginsContext * ctx, gboolean confirm_search)
+{
+  g_return_if_fail (ctx != NULL);
+
+  if (confirm_search)
+    ctx->confirm_search = g_strdup ("show-confirm-search");
+  else
+    ctx->confirm_search = g_strdup ("hide-confirm-search");
+}
 
 /**
  * gst_install_plugins_context_set_desktop_id:
@@ -506,6 +529,7 @@ gst_install_plugins_context_free (GstInstallPluginsContext * ctx)
 {
   g_return_if_fail (ctx != NULL);
 
+  g_free (ctx->confirm_search);
   g_free (ctx->desktop_id);
   g_free (ctx->startup_notification_id);
   g_free (ctx);
@@ -517,6 +541,7 @@ gst_install_plugins_context_copy (GstInstallPluginsContext * ctx)
   GstInstallPluginsContext *ret;
 
   ret = gst_install_plugins_context_new ();
+  ret->confirm_search = g_strdup (ctx->confirm_search);
   ret->desktop_id = g_strdup (ctx->desktop_id);
   ret->startup_notification_id = g_strdup (ctx->startup_notification_id);
   ret->xid = ctx->xid;
@@ -568,6 +593,9 @@ gst_install_plugins_spawn_child (const gchar * const *details,
   g_ptr_array_add (arr, g_strdup (gst_install_plugins_get_helper ()));
 
   /* add any additional command line args from the context */
+  if (ctx != NULL && ctx->confirm_search) {
+    g_ptr_array_add (arr, g_strdup_printf ("--interaction=%s", ctx->confirm_search));
+  }
   if (ctx != NULL && ctx->desktop_id != NULL) {
     g_ptr_array_add (arr, g_strdup_printf ("--desktop-id=%s", ctx->desktop_id));
   }
