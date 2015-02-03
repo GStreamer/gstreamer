@@ -775,11 +775,8 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
         NULL);
     gst_caps_unref (tmp);
   } else {
-    GstCaps *gl_caps =
-        gst_caps_merge (gst_caps_merge (gst_gl_filter_set_caps_features (caps,
-                GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
-            gst_gl_filter_set_caps_features (caps,
-                GST_CAPS_FEATURE_MEMORY_EGL_IMAGE)),
+    GstCaps *gl_caps = gst_caps_merge (gst_gl_filter_set_caps_features (caps,
+            GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
         gst_gl_filter_set_caps_features (caps,
             GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
 
@@ -805,11 +802,8 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
     result =
         gst_gl_upload_transform_caps (filter->context, direction, tmp, NULL);
   } else {
-    GstCaps *gl_caps =
-        gst_caps_merge (gst_caps_merge (gst_gl_filter_set_caps_features (tmp,
-                GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
-            gst_gl_filter_set_caps_features (tmp,
-                GST_CAPS_FEATURE_MEMORY_EGL_IMAGE)),
+    GstCaps *gl_caps = gst_caps_merge (gst_gl_filter_set_caps_features (tmp,
+            GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
         gst_gl_filter_set_caps_features (tmp,
             GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
 

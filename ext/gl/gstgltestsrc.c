@@ -72,10 +72,6 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
             "RGBA") "; "
-#if GST_GL_HAVE_PLATFORM_EGL
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
-            "RGBA") "; "
-#endif
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
             "RGBA") "; " GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
@@ -531,10 +527,8 @@ gst_gl_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
   GST_DEBUG_OBJECT (bsrc, "remove format returned caps %" GST_PTR_FORMAT, tmp);
 
   gl_caps =
-      gst_caps_merge (gst_caps_merge (gst_gl_test_src_set_caps_features (tmp,
-              GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
-          gst_gl_test_src_set_caps_features (tmp,
-              GST_CAPS_FEATURE_MEMORY_EGL_IMAGE)),
+      gst_caps_merge (gst_gl_test_src_set_caps_features (tmp,
+          GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
       gst_gl_test_src_set_caps_features (tmp,
           GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
   result =
