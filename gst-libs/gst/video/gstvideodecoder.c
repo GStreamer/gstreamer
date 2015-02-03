@@ -568,6 +568,9 @@ gst_video_decoder_init (GstVideoDecoder * decoder, GstVideoDecoderClass * klass)
   decoder->priv->packetized = TRUE;
   decoder->priv->needs_format = FALSE;
 
+  decoder->priv->min_latency = 0;
+  decoder->priv->max_latency = GST_CLOCK_TIME_NONE;
+
   gst_video_decoder_reset (decoder, TRUE, TRUE);
 }
 
@@ -1538,10 +1541,11 @@ gst_video_decoder_src_query_default (GstVideoDecoder * dec, GstQuery * query)
 
         GST_OBJECT_LOCK (dec);
         min_latency += dec->priv->min_latency;
-        if (dec->priv->max_latency == GST_CLOCK_TIME_NONE) {
-          max_latency = GST_CLOCK_TIME_NONE;
-        } else if (max_latency != GST_CLOCK_TIME_NONE) {
+        if (max_latency != GST_CLOCK_TIME_NONE
+            && dec->priv->max_latency != GST_CLOCK_TIME_NONE) {
           max_latency += dec->priv->max_latency;
+        } else if (dec->priv->max_latency != GST_CLOCK_TIME_NONE) {
+          max_latency = dec->priv->max_latency;
         }
         GST_OBJECT_UNLOCK (dec);
 
@@ -1869,9 +1873,6 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
 
     priv->qos_frame_duration = 0;
     GST_OBJECT_UNLOCK (decoder);
-
-    priv->min_latency = 0;
-    priv->max_latency = 0;
 
     if (priv->tags)
       gst_tag_list_unref (priv->tags);

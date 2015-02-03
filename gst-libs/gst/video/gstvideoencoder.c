@@ -363,9 +363,6 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
     priv->tags = NULL;
     priv->tags_changed = FALSE;
 
-    priv->min_latency = 0;
-    priv->max_latency = 0;
-
     g_list_foreach (priv->headers, (GFunc) gst_event_unref, NULL);
     g_list_free (priv->headers);
     priv->headers = NULL;
@@ -455,6 +452,9 @@ gst_video_encoder_init (GstVideoEncoder * encoder, GstVideoEncoderClass * klass)
 
   priv->headers = NULL;
   priv->new_headers = FALSE;
+
+  priv->min_latency = 0;
+  priv->max_latency = GST_CLOCK_TIME_NONE;
 
   gst_video_encoder_reset (encoder, TRUE);
 }
@@ -1199,10 +1199,11 @@ gst_video_encoder_src_query_default (GstVideoEncoder * enc, GstQuery * query)
 
         GST_OBJECT_LOCK (enc);
         min_latency += priv->min_latency;
-        if (enc->priv->max_latency == GST_CLOCK_TIME_NONE) {
-          max_latency = GST_CLOCK_TIME_NONE;
-        } else if (max_latency != GST_CLOCK_TIME_NONE) {
+        if (max_latency != GST_CLOCK_TIME_NONE
+            && enc->priv->max_latency != GST_CLOCK_TIME_NONE) {
           max_latency += enc->priv->max_latency;
+        } else if (enc->priv->max_latency != GST_CLOCK_TIME_NONE) {
+          max_latency = enc->priv->max_latency;
         }
         GST_OBJECT_UNLOCK (enc);
 
