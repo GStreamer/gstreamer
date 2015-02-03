@@ -537,6 +537,10 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
             "RGBA") "; "
+#if GST_GL_HAVE_PLATFORM_EGL
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
+            "RGBA") "; "
+#endif
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
             "RGBA")
@@ -727,10 +731,8 @@ gst_gl_mixer_query_caps (GstPad * pad, GstAggregator * agg, GstQuery * query)
 
   /* convert from current caps to GLMemory caps */
   gl_caps =
-      gst_caps_merge (gst_caps_merge (gst_gl_mixer_set_caps_features
-          (current_caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
-          gst_gl_mixer_set_caps_features (current_caps,
-              GST_CAPS_FEATURE_MEMORY_EGL_IMAGE)),
+      gst_caps_merge (gst_gl_mixer_set_caps_features
+      (current_caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
       gst_gl_mixer_set_caps_features (current_caps,
           GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
   retcaps =
