@@ -3012,6 +3012,10 @@ gst_audio_decoder_set_latency (GstAudioDecoder * dec,
   dec->priv->ctx.min_latency = min;
   dec->priv->ctx.max_latency = max;
   GST_OBJECT_UNLOCK (dec);
+
+  /* post latency message on the bus */
+  gst_element_post_message (GST_ELEMENT (dec),
+      gst_message_new_latency (GST_OBJECT (dec)));
 }
 
 /**

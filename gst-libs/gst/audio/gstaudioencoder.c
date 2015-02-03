@@ -1250,8 +1250,6 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
   GstAudioInfo state;
   gboolean res = TRUE;
   guint old_rate;
-  GstClockTime old_min_latency;
-  GstClockTime old_max_latency;
 
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
 
@@ -1294,12 +1292,6 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
   enc->priv->ctx.frame_max = 0;
   enc->priv->ctx.lookahead = 0;
 
-  /* element might report latency */
-  GST_OBJECT_LOCK (enc);
-  old_min_latency = ctx->min_latency;
-  old_max_latency = ctx->max_latency;
-  GST_OBJECT_UNLOCK (enc);
-
   if (klass->set_format)
     res = klass->set_format (enc, &state);
 
@@ -1312,18 +1304,6 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
     gst_audio_info_init (&state);
     goto exit;
   }
-
-  /* notify if new latency */
-  GST_OBJECT_LOCK (enc);
-  if ((ctx->min_latency > 0 && ctx->min_latency != old_min_latency) ||
-      (ctx->max_latency > 0 && ctx->max_latency != old_max_latency)) {
-    GST_OBJECT_UNLOCK (enc);
-    /* post latency message on the bus */
-    gst_element_post_message (GST_ELEMENT (enc),
-        gst_message_new_latency (GST_OBJECT (enc)));
-    GST_OBJECT_LOCK (enc);
-  }
-  GST_OBJECT_UNLOCK (enc);
 
 exit:
 
@@ -2152,6 +2132,10 @@ gst_audio_encoder_set_latency (GstAudioEncoder * enc,
 
   GST_LOG_OBJECT (enc, "set to %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+  /* post latency message on the bus */
+  gst_element_post_message (GST_ELEMENT (enc),
+      gst_message_new_latency (GST_OBJECT (enc)));
 }
 
 /**
