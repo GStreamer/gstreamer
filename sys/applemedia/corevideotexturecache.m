@@ -123,7 +123,7 @@ texture_from_buffer (GstCoreVideoTextureCache * cache,
   CVOpenGLTextureCacheFlush (cache->cache, 0);
 #else
   CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
-      cache->cache, cm_meta->image_buf, NULL, GL_TEXTURE_2D, GL_RGBA,
+      cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, GL_RGBA,
       GST_VIDEO_INFO_WIDTH (&cache->input_info),
       GST_VIDEO_INFO_HEIGHT (&cache->input_info),
       GL_RGBA, GL_UNSIGNED_BYTE, 0, &texture);
