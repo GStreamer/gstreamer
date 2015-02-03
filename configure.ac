@@ -2,7 +2,7 @@
 m4_define([gst_vaapi_major_version], [0])
 m4_define([gst_vaapi_minor_version], [5])
 m4_define([gst_vaapi_micro_version], [10])
-m4_define([gst_vaapi_pre_version],   [1])
+m4_define([gst_vaapi_pre_version],   [0])
 m4_define([gst_vaapi_version],
           [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
 m4_if(gst_vaapi_pre_version, [0], [], [
@@ -187,7 +187,7 @@ if test "$GST_API_VERSION" = "autodetect"; then
 else
     AS_VERSION_COMPARE([$GST_API_VERSION], [1.0],
         [gst_pkg_versions="0.10"], [gst_pkg_versions="1.0"],
-        dnl GStreamer 1.2.x APIs don't have their own namespace
+        dnl GStreamer 1.2.x and 1.4.x APIs don't have their own namespace
         [gst_pkg_versions="1.0"])
 fi
 for gst_pkg_version in ${gst_pkg_versions}; do
@@ -222,12 +222,12 @@ case $GST_API_VERSION in
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst12_plugins_base_version
     GST_PLUGINS_BAD_VERSION_REQUIRED=gst12_plugins_bad_version
     ;;
-1.[[3-4]])
+1.4)
     GST_VERSION_REQUIRED=gst14_version
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst14_plugins_base_version
     GST_PLUGINS_BAD_VERSION_REQUIRED=gst14_plugins_bad_version
     ;;
-1.5)
+1.[[5-6]])
     GST_VERSION_REQUIRED=gst16_version
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst16_plugins_base_version
     GST_PLUGINS_BAD_VERSION_REQUIRED=gst16_plugins_bad_version
@@ -244,19 +244,23 @@ AC_SUBST(GST_PLUGINS_BAD_VERSION_REQUIRED)
 USE_GST_API_0_10="no"
 USE_GST_API_1_0p="no"
 USE_GST_API_1_2p="no"
+USE_GST_API_1_4p="no"
 AS_VERSION_COMPARE([$GST_API_VERSION], [0.10],
     [], [USE_GST_API_0_10="yes"], [])
 AS_VERSION_COMPARE([$GST_API_VERSION], [1.0],
     [], [USE_GST_API_1_0p="yes"], [USE_GST_API_1_0p="yes"])
 AS_VERSION_COMPARE([$GST_API_VERSION], [1.2],
     [], [USE_GST_API_1_2p="yes"], [USE_GST_API_1_2p="yes"])
+AS_VERSION_COMPARE([$GST_API_VERSION], [1.4],
+    [], [USE_GST_API_1_4p="yes"], [USE_GST_API_1_4p="yes"])
 AM_CONDITIONAL([USE_GST_API_0_10], [test "$USE_GST_API_0_10" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_0p], [test "$USE_GST_API_1_0p" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_2p], [test "$USE_GST_API_1_2p" = "yes"])
+AM_CONDITIONAL([USE_GST_API_1_4p], [test "$USE_GST_API_1_4p" = "yes"])
 
-dnl GStreamer 1.2.x APIs don't have their own namespace
+dnl GStreamer 1.2.x and 1.4.x APIs don't have their own namespace
 GST_PKG_VERSION="$GST_API_VERSION"
-if test "$USE_GST_API_1_2p" = "yes"; then
+if test "$USE_GST_API_1_2p" = "yes" || test "$USE_GST_API_1_4p" = "yes" ; then
     GST_PKG_VERSION="1.0"
 fi
 AC_SUBST([GST_PKG_VERSION])
@@ -268,8 +272,8 @@ if test "$USE_GST_API_0_10" = "yes"; then
         AC_MSG_WARN([disabled built-in videoparsers (unsupported)])
         enable_builtin_videoparsers="no"
     fi
-elif test "$USE_GST_API_1_2p" != "yes"; then
-    AC_MSG_WARN([support for GStreamer < 1.2 is deprecated, please upgrade])
+elif test "$GST_API_VERSION" = "1.0"; then
+    AC_MSG_WARN([support for GStreamer 1.0 is obsolete, and will be removed])
 fi
 
 dnl GStreamer Core
@@ -363,7 +367,7 @@ if test "$ac_cv_have_gst_video_overlay_hwcaps" = "yes"; then
 fi
 
 dnl GStreamer -bad plugins (deprecated in GStreamer v1.2)
-if test "$USE_GST_API_1_2p" != "yes"; then
+if test "$USE_GST_API_1_2p" != "yes" && test "$USE_GST_API_1_4p" != "yes"; then
 PKG_CHECK_MODULES([GST_BASEVIDEO],
     [gstreamer-basevideo-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
 fi
@@ -484,8 +488,8 @@ case $GST_API_VERSION in
 0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
 1.0)    lt_bias=gst1_vaapi_lt_current_bias;;
 1.2)    lt_bias=gst2_vaapi_lt_current_bias;;
-1.[[3-4]]) lt_bias=gst4_vaapi_lt_current_bias;;
-1.5)    lt_bias=gst6_vaapi_lt_current_bias;;
+1.4) lt_bias=gst4_vaapi_lt_current_bias;;
+1.[[5-6]])    lt_bias=gst6_vaapi_lt_current_bias;;
 esac
 GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - "$lt_bias"`
 AC_SUBST(GST_VAAPI_MAJOR_VERSION)
