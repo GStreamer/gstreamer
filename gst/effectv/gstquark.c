@@ -272,7 +272,7 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PLANES,
       g_param_spec_int ("planes", "Planes",
-          "Number of planes", 0, 64, PLANES,
+          "Number of planes", 1, 64, PLANES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   gst_element_class_set_static_metadata (gstelement_class, "QuarkTV effect",
