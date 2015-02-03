@@ -27,7 +27,7 @@
 #include "socket_interposer.h"
 #include <gst/validate/gst-validate-scenario.h>
 
-#if defined(G_OS_UNIX) && !defined(__ANDROID__)
+#if defined(__gnu_linux__) && !defined(__ANDROID__) && !defined (ANDROID)
 
 #include <sys/socket.h>
 #include <netinet/ip.h>
