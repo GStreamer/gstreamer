@@ -121,6 +121,11 @@ print_long_long (char *buf,
       digits = upper;
       negative = FALSE;
       break;
+    case 'u':
+      base = 10;
+      digits = lower;
+      negative = FALSE;
+      break;
     default:
       base = 10;
       digits = lower;
