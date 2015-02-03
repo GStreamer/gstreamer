@@ -374,7 +374,6 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   mux->is_delta = TRUE;
 
   mux->streamheader_sent = FALSE;
-  mux->force_key_unit_event = NULL;
   mux->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
 #if 0
   mux->spn_count = 0;
