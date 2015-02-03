@@ -702,7 +702,7 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
   while ((g_async_queue_length (vtdec->reorder_queue) >=
           vtdec->reorder_queue_length) || drain || flush) {
     frame = (GstVideoCodecFrame *) g_async_queue_try_pop (vtdec->reorder_queue);
-    if (vtdec->texture_cache != NULL)
+    if (frame && vtdec->texture_cache != NULL)
       frame->output_buffer =
           gst_core_video_texture_cache_get_gl_buffer (vtdec->texture_cache,
           frame->output_buffer);
