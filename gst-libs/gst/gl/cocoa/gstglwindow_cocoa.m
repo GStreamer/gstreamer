@@ -24,6 +24,7 @@
 #endif
 
 #include <Cocoa/Cocoa.h>
+#include <QuartzCore/QuartzCore.h>
 
 #include "gstgl_cocoa_private.h"
 
@@ -280,11 +281,12 @@ gst_gl_window_cocoa_draw (GstGLWindow * window)
   GstGLNSView *view = (GstGLNSView *)[window_cocoa->priv->internal_win_id contentView];
 
   /* this redraws the GstGLCAOpenGLLayer which calls
-   * gst_gl_window_cocoa_draw_thread()
+   * gst_gl_window_cocoa_draw_thread(). Use an explicit CATransaction since we
+   * don't know how often the main runloop is running.
    */
-  dispatch_sync (dispatch_get_main_queue(), ^{
-    [view setNeedsDisplay:YES];
-  });
+  [CATransaction begin];
+  [view setNeedsDisplay:YES];
+  [CATransaction commit];
 }
 
 static void
