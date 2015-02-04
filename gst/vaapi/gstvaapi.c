@@ -35,6 +35,10 @@
 #include "gstvaapiencode_mpeg2.h"
 #endif
 
+#if USE_JPEG_ENCODER
+#include "gstvaapiencode_jpeg.h"
+#endif
+
 #define PLUGIN_NAME     "vaapi"
 #define PLUGIN_DESC     "VA-API based elements"
 #define PLUGIN_LICENSE  "LGPL"
@@ -66,6 +70,11 @@ plugin_init (GstPlugin *plugin)
     gst_element_register(plugin, "vaapiencode_mpeg2",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPIENCODE_MPEG2);
+#endif
+#if USE_JPEG_ENCODER
+    gst_element_register(plugin, "vaapiencode_jpeg",
+                         GST_RANK_PRIMARY,
+                         GST_TYPE_VAAPIENCODE_JPEG);
 #endif
 
     return TRUE;

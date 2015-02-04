@@ -77,6 +77,13 @@ libgstvaapi_source_c += $(libgstvaapi_enc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_enc_source_h)
 endif
 
+libgstvaapi_jpegenc_source_c = gstvaapiencode_jpeg.c
+libgstvaapi_jpegenc_source_h = gstvaapiencode_jpeg.h
+if USE_JPEG_ENCODER
+libgstvaapi_source_c += $(libgstvaapi_jpegenc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_jpegenc_source_h)
+endif
+
 libgstvaapi_x11_source_c = gstvaapivideoconverter_x11.c
 libgstvaapi_x11_source_h = gstvaapivideoconverter_x11.h
 
@@ -235,20 +242,22 @@ CLEANFILES = \
 	$(libgstvaapi_parse_gen_sources)
 
 EXTRA_DIST = \
-	$(libgstvaapi_enc_source_c)	\
-	$(libgstvaapi_enc_source_h)	\
-	$(libgstvaapi_x11_source_c)	\
-	$(libgstvaapi_x11_source_h)	\
-	$(libgstvaapi_glx_source_c)	\
-	$(libgstvaapi_glx_source_h)	\
-	$(libgstvaapi_1_2p_source_c)	\
-	$(libgstvaapi_1_2p_source_h)	\
-	$(libgstvaapi_1_0p_source_c)	\
-	$(libgstvaapi_1_0p_source_h)	\
-	$(libgstvaapi_0_10_source_c)	\
-	$(libgstvaapi_0_10_source_h)	\
-	$(libgstvaapi_parse_source_c)	\
-	$(libgstvaapi_parse_source_h)	\
+	$(libgstvaapi_enc_source_c)	 \
+	$(libgstvaapi_enc_source_h)	 \
+        $(libgstvaapi_jpeg_enc_source_c) \
+        $(libgstvaapi_jpeg_enc_source_h) \
+	$(libgstvaapi_x11_source_c)	 \
+	$(libgstvaapi_x11_source_h)	 \
+	$(libgstvaapi_glx_source_c)	 \
+	$(libgstvaapi_glx_source_h)	 \
+	$(libgstvaapi_1_2p_source_c)	 \
+	$(libgstvaapi_1_2p_source_h)	 \
+	$(libgstvaapi_1_0p_source_c)	 \
+	$(libgstvaapi_1_0p_source_h)	 \
+	$(libgstvaapi_0_10_source_c)	 \
+	$(libgstvaapi_0_10_source_h)	 \
+	$(libgstvaapi_parse_source_c)	 \
+	$(libgstvaapi_parse_source_h)	 \
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*
