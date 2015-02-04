@@ -1800,8 +1800,10 @@ discarded_type:
 
     /* Try to expose anything */
     EXPOSE_LOCK (dbin);
-    if (gst_decode_chain_is_complete (dbin->decode_chain)) {
-      gst_decode_bin_expose (dbin);
+    if (dbin->decode_chain) {
+      if (gst_decode_chain_is_complete (dbin->decode_chain)) {
+        gst_decode_bin_expose (dbin);
+      }
     }
     EXPOSE_UNLOCK (dbin);
     do_async_done (dbin);
@@ -1826,8 +1828,10 @@ unknown_type:
 
     /* Try to expose anything */
     EXPOSE_LOCK (dbin);
-    if (gst_decode_chain_is_complete (dbin->decode_chain)) {
-      gst_decode_bin_expose (dbin);
+    if (dbin->decode_chain) {
+      if (gst_decode_chain_is_complete (dbin->decode_chain)) {
+        gst_decode_bin_expose (dbin);
+      }
     }
     EXPOSE_UNLOCK (dbin);
 
@@ -2686,8 +2690,10 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
   chain->endcaps = gst_caps_ref (caps);
 
   EXPOSE_LOCK (dbin);
-  if (gst_decode_chain_is_complete (dbin->decode_chain)) {
-    gst_decode_bin_expose (dbin);
+  if (dbin->decode_chain) {
+    if (gst_decode_chain_is_complete (dbin->decode_chain)) {
+      gst_decode_bin_expose (dbin);
+    }
   }
   EXPOSE_UNLOCK (dbin);
 
@@ -2802,8 +2808,9 @@ pad_event_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
       /* we don't set the endcaps because NULL endcaps means early EOS */
 
       EXPOSE_LOCK (dbin);
-      if (gst_decode_chain_is_complete (dbin->decode_chain))
-        gst_decode_bin_expose (dbin);
+      if (dbin->decode_chain)
+        if (gst_decode_chain_is_complete (dbin->decode_chain))
+          gst_decode_bin_expose (dbin);
       EXPOSE_UNLOCK (dbin);
       break;
     default:
@@ -2828,11 +2835,15 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
     gst_caps_unref (caps);
 
   EXPOSE_LOCK (dbin);
-  if (gst_decode_chain_is_complete (dbin->decode_chain)) {
-    GST_LOG_OBJECT (dbin,
-        "That was the last dynamic object, now attempting to expose the group");
-    if (!gst_decode_bin_expose (dbin))
-      GST_WARNING_OBJECT (dbin, "Couldn't expose group");
+  if (dbin->decode_chain) {
+    if (gst_decode_chain_is_complete (dbin->decode_chain)) {
+      GST_LOG_OBJECT (dbin,
+          "That was the last dynamic object, now attempting to expose the group");
+      if (!gst_decode_bin_expose (dbin))
+        GST_WARNING_OBJECT (dbin, "Couldn't expose group");
+    }
+  } else {
+    GST_DEBUG_OBJECT (dbin, "No decode chain, new pad ignored");
   }
   EXPOSE_UNLOCK (dbin);
 }
@@ -2910,8 +2921,10 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
   CHAIN_MUTEX_UNLOCK (chain);
 
   EXPOSE_LOCK (chain->dbin);
-  if (gst_decode_chain_is_complete (chain->dbin->decode_chain)) {
-    gst_decode_bin_expose (chain->dbin);
+  if (chain->dbin->decode_chain) {
+    if (gst_decode_chain_is_complete (chain->dbin->decode_chain)) {
+      gst_decode_bin_expose (chain->dbin);
+    }
   }
   EXPOSE_UNLOCK (chain->dbin);
 }
@@ -3047,9 +3060,13 @@ gst_decode_bin_reset_buffering (GstDecodeBin * dbin)
     return;
 
   GST_DEBUG_OBJECT (dbin, "Reseting multiqueues buffering");
-  CHAIN_MUTEX_LOCK (dbin->decode_chain);
-  gst_decode_chain_reset_buffering (dbin->decode_chain);
-  CHAIN_MUTEX_UNLOCK (dbin->decode_chain);
+  EXPOSE_LOCK (dbin);
+  if (dbin->decode_chain) {
+    CHAIN_MUTEX_LOCK (dbin->decode_chain);
+    gst_decode_chain_reset_buffering (dbin->decode_chain);
+    CHAIN_MUTEX_UNLOCK (dbin->decode_chain);
+  }
+  EXPOSE_UNLOCK (dbin);
 }
 
 /****
@@ -3336,9 +3353,11 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
    */
 
   EXPOSE_LOCK (dbin);
-  if (gst_decode_chain_is_complete (dbin->decode_chain)) {
-    if (!gst_decode_bin_expose (dbin))
-      GST_WARNING_OBJECT (dbin, "Couldn't expose group");
+  if (dbin->decode_chain) {
+    if (gst_decode_chain_is_complete (dbin->decode_chain)) {
+      if (!gst_decode_bin_expose (dbin))
+        GST_WARNING_OBJECT (dbin, "Couldn't expose group");
+    }
   }
   EXPOSE_UNLOCK (dbin);
 }
@@ -3872,16 +3891,18 @@ gst_decode_pad_handle_eos (GstDecodePad * pad)
   GstDecodeBin *dbin = chain->dbin;
 
   GST_LOG_OBJECT (dbin, "pad %p", pad);
+  EXPOSE_LOCK (dbin);
   drain_and_switch_chains (dbin->decode_chain, pad, &last_group, &drained,
       &switched);
 
   if (switched) {
     /* If we resulted in a group switch, expose what's needed */
-    EXPOSE_LOCK (dbin);
-    if (gst_decode_chain_is_complete (dbin->decode_chain))
-      gst_decode_bin_expose (dbin);
-    EXPOSE_UNLOCK (dbin);
+    if (dbin->decode_chain) {
+      if (gst_decode_chain_is_complete (dbin->decode_chain))
+        gst_decode_bin_expose (dbin);
+    }
   }
+  EXPOSE_UNLOCK (dbin);
 
   return last_group;
 }
@@ -4562,9 +4583,11 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   dpad->blocked = TRUE;
 
   EXPOSE_LOCK (dbin);
-  if (gst_decode_chain_is_complete (dbin->decode_chain)) {
-    if (!gst_decode_bin_expose (dbin))
-      GST_WARNING_OBJECT (dbin, "Couldn't expose group");
+  if (dbin->decode_chain) {
+    if (gst_decode_chain_is_complete (dbin->decode_chain)) {
+      if (!gst_decode_bin_expose (dbin))
+        GST_WARNING_OBJECT (dbin, "Couldn't expose group");
+    }
   }
   EXPOSE_UNLOCK (dbin);
 
