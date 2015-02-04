@@ -3085,8 +3085,8 @@ convert_scale_planes (GstVideoConverter * convert,
   }
 }
 
-static void
-setup_scale (GstVideoConverter * convert)
+static gboolean
+setup_scale (GstVideoConverter * convert, GstFormat fformat)
 {
   int i, n_planes;
   gint method, stride = 0;
@@ -3100,6 +3100,16 @@ setup_scale (GstVideoConverter * convert)
 
   method = GET_OPT_RESAMPLER_METHOD (convert);
   taps = GET_OPT_RESAMPLER_TAPS (convert);
+
+  switch (GST_VIDEO_INFO_FORMAT (in_info)) {
+    case GST_VIDEO_FORMAT_RGB15:
+    case GST_VIDEO_FORMAT_RGB16:
+      if (method != GST_VIDEO_RESAMPLER_METHOD_NEAREST)
+        return FALSE;
+      break;
+    default:
+      break;
+  }
 
   if (n_planes == 1) {
     if (GST_VIDEO_INFO_IS_YUV (in_info)) {
@@ -3136,7 +3146,7 @@ setup_scale (GstVideoConverter * convert)
         convert->config);
 
     gst_video_scaler_get_coeff (convert->fv_scaler[0], 0, NULL, &max_taps);
-    convert->fformat = GST_VIDEO_INFO_FORMAT (in_info);
+    convert->fformat = fformat;
   } else {
     for (i = 0; i < n_planes; i++) {
       guint n_taps;
@@ -3156,10 +3166,12 @@ setup_scale (GstVideoConverter * convert)
       gst_video_scaler_get_coeff (convert->fv_scaler[i], 0, NULL, &n_taps);
       max_taps = MAX (max_taps, n_taps);
     }
-    convert->fformat = GST_VIDEO_FORMAT_GRAY8;
+    convert->fformat = fformat;
   }
   convert->flines =
       converter_alloc_new (stride, max_taps + BACKLOG, NULL, NULL);
+
+  return TRUE;
 }
 
 /* Fast paths */
@@ -3174,6 +3186,7 @@ typedef struct
   gint width_align, height_align;
   void (*convert) (GstVideoConverter * convert, const GstVideoFrame * src,
       GstVideoFrame * dest);
+  GstVideoFormat fformat;
 } VideoTransform;
 
 static const VideoTransform transforms[] = {
@@ -3293,26 +3306,36 @@ static const VideoTransform transforms[] = {
 #endif
 
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_I420, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
   {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YV12, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
   {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_Y41B, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
   {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
   {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_A420, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
   {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_YUV9, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
   {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_YVU9, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
 
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_YUY2},
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_UYVY},
   {GST_VIDEO_FORMAT_YVYU, GST_VIDEO_FORMAT_YVYU, TRUE, FALSE, FALSE, 0, 0,
-      convert_scale_planes},
+      convert_scale_planes, GST_VIDEO_FORMAT_YVYU},
+
+  {GST_VIDEO_FORMAT_RGB15, GST_VIDEO_FORMAT_RGB15, TRUE, FALSE, FALSE, 0, 0,
+      convert_scale_planes, GST_VIDEO_FORMAT_NV12},
+  {GST_VIDEO_FORMAT_RGB16, GST_VIDEO_FORMAT_RGB16, TRUE, FALSE, FALSE, 0, 0,
+      convert_scale_planes, GST_VIDEO_FORMAT_NV12},
+
+  {GST_VIDEO_FORMAT_RGB, GST_VIDEO_FORMAT_RGB, TRUE, FALSE, FALSE, 0, 0,
+      convert_scale_planes, GST_VIDEO_FORMAT_RGB},
+  {GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_BGR, TRUE, FALSE, FALSE, 0, 0,
+      convert_scale_planes, GST_VIDEO_FORMAT_BGR},
 };
 
 static gboolean
@@ -3378,7 +3401,8 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
       convert->convert = transforms[i].convert;
       convert->tmpline = g_malloc0 (sizeof (guint16) * (width + 8) * 4);
       if (!transforms[i].keeps_size)
-        setup_scale (convert);
+        if (!setup_scale (convert, transforms[i].fformat))
+          return FALSE;
       return TRUE;
     }
   }

@@ -405,6 +405,53 @@ video_scale_h_near_u8 (GstVideoScaler * scale,
 }
 
 static void
+video_scale_h_near_3u8 (GstVideoScaler * scale,
+    gpointer src, gpointer dest, guint dest_offset, guint width, guint n_elems)
+{
+  guint8 *s, *d;
+  guint32 *offset;
+  gint i;
+
+  d = (guint8 *) dest + dest_offset;
+  s = (guint8 *) src;
+  offset = scale->resampler.offset + dest_offset;
+
+  for (i = 0; i < width; i++) {
+    d[i * 3 + 0] = s[offset[i] * 3 + 0];
+    d[i * 3 + 1] = s[offset[i] * 3 + 1];
+    d[i * 3 + 2] = s[offset[i] * 3 + 2];
+  }
+}
+
+static void
+video_scale_h_near_u16 (GstVideoScaler * scale,
+    gpointer src, gpointer dest, guint dest_offset, guint width, guint n_elems)
+{
+  guint16 *s, *d;
+  gint i;
+
+  d = (guint16 *) dest + dest_offset;
+  s = (guint16 *) src;
+
+  {
+#if 1
+    guint32 *offset = scale->resampler.offset + dest_offset;
+
+    for (i = 0; i < width; i++)
+      d[i] = s[offset[i]];
+#else
+    gint acc = 0;
+
+    for (i = 0; i < width; i++) {
+      gint j = (acc + 0x8000) >> 16;
+      d[i] = s[j];
+      acc += scale->inc;
+    }
+#endif
+  }
+}
+
+static void
 video_scale_h_near_u32 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width, guint n_elems)
 {
@@ -502,6 +549,29 @@ video_scale_h_ntap_u8 (GstVideoScaler * scale,
         pixels[i] = s[offset_n[i]];
 
       d = (guint8 *) dest + dest_offset;
+      break;
+    }
+    case 2:
+    {
+      guint16 *p16 = (guint16 *) pixels;
+      guint16 *s = (guint16 *) src;
+
+      for (i = 0; i < count; i++)
+        p16[i] = s[offset_n[i]];
+
+      d = (guint16 *) dest + dest_offset;
+      break;
+    }
+    case 3:
+    {
+      guint8 *s = (guint8 *) src;
+
+      for (i = 0; i < count; i++) {
+        pixels[i * 3 + 0] = s[offset_n[i] * 3 + 0];
+        pixels[i * 3 + 1] = s[offset_n[i] * 3 + 1];
+        pixels[i * 3 + 2] = s[offset_n[i] * 3 + 2];
+      }
+      d = (guint8 *) dest + dest_offset * 3;
       break;
     }
     case 4:
@@ -615,6 +685,18 @@ video_scale_h_ntap_u16 (GstVideoScaler * scale,
         pixels[i] = s[offset_n[i]];
 
       d = (guint16 *) dest + dest_offset;
+      break;
+    }
+    case 3:
+    {
+      guint8 *s = (guint8 *) src;
+
+      for (i = 0; i < count; i++) {
+        pixels[i * 3 + 0] = s[offset_n[i] * 3 + 0];
+        pixels[i * 3 + 1] = s[offset_n[i] * 3 + 1];
+        pixels[i * 3 + 2] = s[offset_n[i] * 3 + 2];
+      }
+      d = (guint8 *) dest + dest_offset * 3;
       break;
     }
     case 4:
@@ -1031,15 +1113,11 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
 {
   gint n_elems;
   GstVideoScalerHFunc func;
-  const GstVideoFormatInfo *finfo;
 
   g_return_if_fail (scale != NULL);
   g_return_if_fail (src != NULL);
   g_return_if_fail (dest != NULL);
   g_return_if_fail (dest_offset + width <= scale->resampler.out_size);
-
-  finfo = gst_video_format_get_info (format);
-  g_return_if_fail (finfo->n_planes == 1);
 
   switch (format) {
     case GST_VIDEO_FORMAT_GRAY8:
@@ -1069,6 +1147,18 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
       }
       n_elems = 1;
       width *= 2;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      switch (scale->resampler.max_taps) {
+        case 1:
+          func = video_scale_h_near_3u8;
+          break;
+        default:
+          func = video_scale_h_ntap_u8;
+          break;
+      }
+      n_elems = 3;
       break;
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_RGBx:
@@ -1103,6 +1193,21 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
           break;
       }
       n_elems = 4;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV24:
+      switch (scale->resampler.max_taps) {
+        case 1:
+          func = video_scale_h_near_u16;
+          n_elems = 1;
+          break;
+        default:
+          func = video_scale_h_ntap_u8;
+          n_elems = 2;
+          break;
+      }
       break;
     default:
       goto no_func;
@@ -1140,15 +1245,11 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
 {
   gint n_elems, bits = 0;
   GstVideoScalerVFunc func;
-  const GstVideoFormatInfo *finfo;
 
   g_return_if_fail (scale != NULL);
   g_return_if_fail (src_lines != NULL);
   g_return_if_fail (dest != NULL);
   g_return_if_fail (dest_offset < scale->resampler.out_size);
-
-  finfo = gst_video_format_get_info (format);
-  g_return_if_fail (finfo->n_planes == 1);
 
   switch (format) {
     case GST_VIDEO_FORMAT_GRAY8:
@@ -1160,6 +1261,11 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
     case GST_VIDEO_FORMAT_UYVY:
       bits = 8;
       n_elems = 2;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      bits = 8;
+      n_elems = 3;
       break;
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_RGBx:
@@ -1177,6 +1283,13 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
     case GST_VIDEO_FORMAT_AYUV64:
       bits = 16;
       n_elems = 4;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV24:
+      bits = 8;
+      n_elems = 2;
       break;
     default:
       goto no_func;
