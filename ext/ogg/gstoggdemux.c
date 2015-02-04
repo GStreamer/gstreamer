@@ -936,9 +936,11 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
   granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
       packet->granulepos);
-  if (granule >= 0) {
+  if (granule > 0) {
     GST_DEBUG_OBJECT (ogg, "%p has granulepos %" G_GINT64_FORMAT, pad, granule);
     pad->current_granule = granule;
+  } else if (granule == 0) {
+    /* headers */
   } else if (granule != -1) {
     GST_ERROR_OBJECT (ogg,
         "granulepos %" G_GINT64_FORMAT " yielded granule %" G_GINT64_FORMAT,
@@ -1200,6 +1202,62 @@ could_not_submit:
         "error: %d", pad->map.serialno, result);
     gst_ogg_pad_reset (pad);
     return result;
+  }
+}
+
+static void
+gst_ogg_demux_setup_first_granule (GstOggDemux * ogg, GstOggPad * pad,
+    ogg_page * page)
+{
+  /* When we submit a page, we check if we have started tracking granules.
+   * If not, we calculate the granule corresponding to the first packet
+   * on the page. */
+  if (pad->current_granule == -1) {
+    ogg_int64_t granpos = ogg_page_granulepos (page);
+    if (granpos > 0) {
+      ogg_int64_t granule =
+          gst_ogg_stream_granulepos_to_granule (&pad->map, granpos), duration;
+      int packets = ogg_page_packets (page), n;
+      GST_DEBUG_OBJECT (pad,
+          "This page completes %d packets, granule %" G_GINT64_FORMAT, packets,
+          granule);
+      if (packets > 0) {
+        ogg_stream_state os;
+        ogg_packet op;
+        int last_size = pad->map.last_size;
+
+        memcpy (&os, &pad->map.stream, sizeof (os));
+        for (n = 0; n < packets; ++n) {
+          int ret = ogg_stream_packetout (&os, &op);
+          if (ret < 0) {
+            GST_WARNING_OBJECT (pad, "Failed to read packets off first page");
+            granule = -1;
+            break;
+          }
+          if (ret == 0) {
+            GST_WARNING_OBJECT (pad,
+                "Short read getting %d packets off first page", packets);
+            granule = -1;
+            break;
+          }
+          duration = gst_ogg_stream_get_packet_duration (&pad->map, &op);
+          GST_DEBUG_OBJECT (pad, "Packet %d has duration %" G_GINT64_FORMAT, n,
+              duration);
+          granule -= duration;
+        }
+        pad->map.last_size = last_size;
+        if (granule >= 0) {
+          pad->current_granule = granule;
+          GST_INFO_OBJECT (pad, "Starting with first granule %" G_GINT64_FORMAT,
+              granule);
+        } else {
+          GST_WARNING_OBJECT (pad, "Extrapolated first granule is negative");
+        }
+      } else {
+        GST_WARNING_OBJECT (pad,
+            "Ogg page finishing no packets, but a valid granule");
+      }
+    }
   }
 }
 
@@ -1537,6 +1595,8 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
       GST_PUSH_UNLOCK (ogg);
       if (ogg_stream_pagein (&pad->map.stream, page) != 0)
         goto choked;
+      if (pad->current_granule == -1)
+        gst_ogg_demux_setup_first_granule (ogg, pad, page);
       return GST_FLOW_SKIP_PUSH;
     }
 
@@ -1556,6 +1616,8 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
             "Not enough timing info collected for sync, waiting for more");
         if (ogg_stream_pagein (&pad->map.stream, page) != 0)
           goto choked;
+        if (pad->current_granule == -1)
+          gst_ogg_demux_setup_first_granule (ogg, pad, page);
         return GST_FLOW_SKIP_PUSH;
       }
       ogg->push_last_seek_time = sync_time;
@@ -1803,6 +1865,8 @@ gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
 
   if (ogg_stream_pagein (&pad->map.stream, page) != 0)
     goto choked;
+  if (pad->current_granule == -1)
+    gst_ogg_demux_setup_first_granule (ogg, pad, page);
 
   /* flush all packets in the stream layer, this might not give a packet if
    * the page had no packets finishing on the page (npackets == 0). */
