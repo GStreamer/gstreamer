@@ -557,6 +557,7 @@ ensure_profiles (GstVaapiDisplay * display)
           g_array_append_val (priv->decoders, config);
           break;
         case GST_VAAPI_ENTRYPOINT_SLICE_ENCODE:
+        case GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE:
           g_array_append_val (priv->encoders, config);
           break;
       }

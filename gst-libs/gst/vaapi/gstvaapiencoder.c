@@ -512,14 +512,22 @@ get_config_attribute (GstVaapiEncoder * encoder, VAConfigAttribType type,
 {
   GstVaapiProfile profile;
   VAProfile va_profile;
+  VAEntrypoint va_entrypoint;
+  const GstVaapiEncoderClassData *const cdata =
+      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
 
   profile = get_profile (encoder);
   if (!profile)
     return FALSE;
-
   va_profile = gst_vaapi_profile_get_va_profile (profile);
+
+  if (cdata->codec != GST_VAAPI_CODEC_JPEG)
+    va_entrypoint = VAEntrypointEncSlice;
+  else
+    va_entrypoint = VAEntrypointEncPicture;
+
   return gst_vaapi_get_config_attribute (encoder->display, va_profile,
-      VAEntrypointEncSlice, type, out_value_ptr);
+      va_entrypoint, type, out_value_ptr);
 }
 
 /* Determines the set of supported packed headers */
@@ -550,10 +558,16 @@ set_context_info (GstVaapiEncoder * encoder)
   GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
   const GstVideoFormat format =
     GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
+  const GstVaapiEncoderClassData *const cdata =
+      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
 
   cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
   cip->profile = encoder->profile;
   cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  if (cdata->codec != GST_VAAPI_CODEC_JPEG)
+    cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  else
+    cip->entrypoint = GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
   cip->chroma_type = gst_vaapi_video_format_get_chroma_type (format);
   cip->width = GST_VAAPI_ENCODER_WIDTH (encoder);
   cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
