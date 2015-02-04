@@ -340,16 +340,27 @@ socket_interposer_init (GstPlugin * plugin)
   gst_validate_register_action_type ("corrupt-socket-recv", gst_plugin_get_name (plugin),
       _execute_corrupt_socket_recv, ((GstValidateActionParameter[]) {
             {
-            .name = "port",.description =
-              "The port the socket to be corrupted listens on",.mandatory =
-              TRUE,.types = "int",.possible_variables = NULL,}, {
-            .name = "errno",.description =
-              "errno to set when failing",.mandatory = TRUE,.types =
-              "string",}, {
-            .name = "times",.description =
-              "Number of times to corrupt recv, default is one",.mandatory =
-              FALSE,.types = "int",.possible_variables = NULL,.def = "1",}, {
-            NULL}
+              .name = "port",
+              .description = "The port the socket to be corrupted listens on",
+              .mandatory = TRUE,
+              .types = "int",
+              .possible_variables = NULL,
+            },
+            {
+              .name = "errno",
+              .description = "errno to set when failing",
+              .mandatory = TRUE,
+              .types = "string",
+            },
+            {
+              .name = "times",
+              .description = "Number of times to corrupt recv, default is one",
+              .mandatory = FALSE,
+              .types = "int",
+              .possible_variables = NULL,
+              .def = "1",
+            },
+            {NULL}
           }),
       "corrupt the next socket receive", GST_VALIDATE_ACTION_TYPE_ASYNC);
 /*  *INDENT-ON* */
