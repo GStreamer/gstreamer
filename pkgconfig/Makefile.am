@@ -20,6 +20,11 @@ pcverfiles_uninstalled = \
 	gstreamer-bad-audio-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-bad-video-@GST_API_VERSION@-uninstalled.pc
 
+if USE_SCTP
+pcverfiles += gstreamer-sctp-@GST_API_VERSION@.pc
+pcverfiles_uninstalled += gstreamer-sctp-@GST_API_VERSION@-uninstalled.pc
+endif
+
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
 cp_verbose = $(cp_verbose_$(V))
@@ -57,7 +62,8 @@ pcinfiles = \
            gstreamer-player.pc.in gstreamer-player-uninstalled.pc.in \
            gstreamer-webrtc.pc.in gstreamer-webrtc-uninstalled.pc.in \
            gstreamer-bad-audio.pc.in gstreamer-bad-audio-uninstalled.pc.in \
-           gstreamer-bad-video.pc.in gstreamer-bad-video-uninstalled.pc.in
+           gstreamer-bad-video.pc.in gstreamer-bad-video-uninstalled.pc.in \
+           gstreamer-sctp.pc.in gstreamer-sctp-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)
 EXTRA_DIST = $(pcinfiles)

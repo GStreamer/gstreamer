@@ -2356,6 +2356,22 @@ AG_GST_CHECK_FEATURE(WEBRTC, [WebRTC], webrtc, [
   ])
 ])
 
+dnl *** usrsctp ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SCTP, true)
+AG_GST_CHECK_FEATURE(SCTP, [sctp plug-in], sctp, [
+  AC_CHECK_HEADER(usrsctp.h, [
+    AC_CHECK_LIB(usrsctp, usrsctp_init, [
+      USRSCTP_LIBS="-lusrsctp"
+      AC_SUBST(USRSCTP_LIBS)
+      HAVE_SCTP=yes
+    ], [
+      HAVE_SCTP=no
+    ])
+  ], [
+    HAVE_SCTP=no
+  ])
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -2440,6 +2456,7 @@ AM_CONDITIONAL(USE_X265, false)
 AM_CONDITIONAL(USE_DTLS, false)
 AM_CONDITIONAL(USE_VULKAN, false)
 AM_CONDITIONAL(USE_TTML, false)
+AM_CONDITIONAL(USE_SCTP, false)
 
 fi dnl of EXT plugins
 
@@ -2612,6 +2629,7 @@ gst-libs/gst/interfaces/Makefile
 gst-libs/gst/isoff/Makefile
 gst-libs/gst/codecparsers/Makefile
 gst-libs/gst/mpegts/Makefile
+gst-libs/gst/sctp/Makefile
 gst-libs/gst/uridownloader/Makefile
 gst-libs/gst/wayland/Makefile
 gst-libs/gst/webrtc/Makefile
@@ -2714,6 +2732,7 @@ ext/rsvg/Makefile
 ext/resindvd/Makefile
 ext/rtmp/Makefile
 ext/sbc/Makefile
+ext/sctp/Makefile
 ext/smoothstreaming/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
@@ -2750,6 +2769,8 @@ pkgconfig/gstreamer-mpegts.pc
 pkgconfig/gstreamer-mpegts-uninstalled.pc
 pkgconfig/gstreamer-player.pc
 pkgconfig/gstreamer-player-uninstalled.pc
+pkgconfig/gstreamer-sctp.pc
+pkgconfig/gstreamer-sctp-uninstalled.pc
 pkgconfig/gstreamer-wayland.pc
 pkgconfig/gstreamer-wayland-uninstalled.pc
 pkgconfig/gstreamer-webrtc.pc
