@@ -218,19 +218,20 @@ context_create (GstVaapiContext * context)
       guint va_rate_control;
 
       /* Rate control */
-      attrib->type = VAConfigAttribRateControl;
-      if (!context_get_attribute (context, attrib->type, &value))
-        goto cleanup;
-
       va_rate_control = from_GstVaapiRateControl (config->rc_mode);
-      if ((value & va_rate_control) != va_rate_control) {
-        GST_ERROR ("unsupported %s rate control",
-            string_of_VARateControl (va_rate_control));
-        goto cleanup;
-      }
-      attrib->value = va_rate_control;
-      attrib++;
+      if (va_rate_control != VA_RC_NONE) {
+        attrib->type = VAConfigAttribRateControl;
+        if (!context_get_attribute (context, attrib->type, &value))
+          goto cleanup;
 
+        if ((value & va_rate_control) != va_rate_control) {
+          GST_ERROR ("unsupported %s rate control",
+              string_of_VARateControl (va_rate_control));
+          goto cleanup;
+        }
+        attrib->value = va_rate_control;
+        attrib++;
+      }
       /* Packed headers */
       if (config->packed_headers) {
         attrib->type = VAConfigAttribEncPackedHeaders;
