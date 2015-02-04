@@ -235,13 +235,16 @@ gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     GstVaapiDecoderStatus status;
     GstFlowReturn ret;
 
+
     /* Decode current frame */
     for (;;) {
         status = gst_vaapi_decoder_decode(decode->decoder, frame);
         if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
             GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
             g_mutex_lock(&decode->decoder_mutex);
-            g_cond_wait(&decode->decoder_ready, &decode->decoder_mutex);
+            if (gst_vaapi_decoder_check_status (decode->decoder) ==
+                GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE)
+              g_cond_wait(&decode->decoder_ready, &decode->decoder_mutex);
             g_mutex_unlock(&decode->decoder_mutex);
             GST_VIDEO_DECODER_STREAM_LOCK(vdec);
             if (decode->decoder_loop_status < 0)

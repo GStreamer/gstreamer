@@ -129,6 +129,9 @@ gst_vaapi_decoder_decode (GstVaapiDecoder * decoder,
 GstVaapiDecoderStatus
 gst_vaapi_decoder_flush (GstVaapiDecoder * decoder);
 
+GstVaapiDecoderStatus
+gst_vaapi_decoder_check_status (GstVaapiDecoder * decoder);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_H */
