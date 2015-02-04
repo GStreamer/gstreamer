@@ -2131,7 +2131,10 @@ _restart_task (NleComposition * comp)
   comp->priv->waiting_for_buffer = FALSE;
 
   comp->priv->updating_reason = COMP_UPDATE_STACK_NONE;
-  gst_task_start (comp->task);
+  GST_OBJECT_LOCK (comp);
+  if (comp->task)
+    gst_task_start (comp->task);
+  GST_OBJECT_UNLOCK (comp);
 }
 
 static gboolean
