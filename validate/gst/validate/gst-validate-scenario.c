@@ -2280,6 +2280,16 @@ gst_validate_print_action_types (const gchar ** wanted_types,
   return TRUE;
 }
 
+GstValidateAction *
+gst_validate_scenario_get_next_action (GstValidateScenario * scenario)
+{
+  if (scenario->priv->actions && scenario->priv->actions->next)
+    return (GstValidateAction *) gst_mini_object_ref ((GstMiniObject *)
+        scenario->priv->actions->next->data);
+
+  return NULL;
+}
+
 void
 init_scenarios (void)
 {

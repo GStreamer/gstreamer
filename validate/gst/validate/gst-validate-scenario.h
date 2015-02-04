@@ -257,6 +257,9 @@ gboolean gst_validate_scenario_execute_seek (GstValidateScenario *scenario,
                                              GstSeekType stop_type,
                                              GstClockTime stop);
 
+GstValidateAction *
+gst_validate_scenario_get_next_action       (GstValidateScenario *scenario);
+
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_SCENARIOS__ */
