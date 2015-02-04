@@ -854,7 +854,7 @@ gst_vaapi_encoder_set_rate_control (GstVaapiEncoder * encoder,
     goto error_operation_failed;
 
   rate_control_mask = get_rate_control_mask (encoder);
-  if (!(rate_control_mask & (1U << rate_control)))
+  if (rate_control_mask && !(rate_control_mask & (1U << rate_control)))
     goto error_unsupported_rate_control;
 
   encoder->rate_control = rate_control;
