@@ -910,6 +910,7 @@ class _TestsLauncher(Loggable):
         if env_dirs is not None:
             for dir_ in env_dirs.split(":"):
                 app_dirs.append(dir_)
+                sys.path.append(dir_)
 
         return app_dirs
 
@@ -1206,9 +1207,9 @@ class ScenarioManager(Loggable):
     def find_special_scenarios(self, mfile):
         scenarios = []
         mfile_bname = os.path.basename(mfile)
+
         for f in os.listdir(os.path.dirname(mfile)):
-            if re.findall("%s\..*\.%s$" % (mfile_bname, self.FILE_EXTENDION),
-                          f):
+            if re.findall("%s\..*\.%s$" % (mfile_bname, self.FILE_EXTENDION), f):
                 scenarios.append(os.path.join(os.path.dirname(mfile), f))
 
         if scenarios:
@@ -1241,7 +1242,10 @@ class ScenarioManager(Loggable):
         for section in config.sections():
             if scenario_paths:
                 for scenario_path in scenario_paths:
-                    if section in scenario_path:
+                    if mfile is None:
+                        name = section
+                        path = scenario_path
+                    elif section in scenario_path:
                         # The real name of the scenario is:
                         # filename.REALNAME.scenario
                         name = scenario_path.replace(mfile + ".", "").replace(
@@ -1260,6 +1264,12 @@ class ScenarioManager(Loggable):
         return scenarios
 
     def get_scenario(self, name):
+        if os.path.isabs(name) and name.endswith(self.FILE_EXTENDION):
+            scenarios = self.discover_scenarios([name])
+
+            if scenarios:
+                return scenarios[0]
+
         if self.discovered is False:
             self.discover_scenarios()
 

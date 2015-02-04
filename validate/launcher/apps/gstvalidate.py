@@ -187,7 +187,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
             scenarios = [None]
         elif self._valid_scenarios:
             scenarios = [scenario for scenario in scenarios if
-                         scenario.name in self._valid_scenarios]
+                         scenario is not None and scenario.name in self._valid_scenarios]
 
         return super(GstValidatePipelineTestsGenerator, self).generate_tests(
             uri_minfo_special_scenarios, scenarios)
@@ -246,6 +246,7 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
             protocol = minfo.media_descriptor.get_protocol()
 
             pipe += " uri=%s" % uri
+
             for scenario in special_scenarios + scenarios:
                 cpipe = pipe
                 if not minfo.media_descriptor.is_compatible(scenario):
