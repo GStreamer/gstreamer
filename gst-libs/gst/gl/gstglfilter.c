@@ -616,6 +616,7 @@ gst_gl_filter_fixate_caps (GstBaseTransform * bt,
               &to_par_n, &to_par_d)) {
         GST_ELEMENT_ERROR (bt, CORE, NEGOTIATION, (NULL),
             ("Error calculating the output scaled size - integer overflow"));
+        gst_structure_free (tmp);
         goto done;
       }
 
