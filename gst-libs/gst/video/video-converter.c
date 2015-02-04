@@ -3068,6 +3068,8 @@ convert_scale_planes (GstVideoConverter * convert,
 
       gst_video_scaler_get_coeff (v_scaler, i, &in, &n_taps);
 
+      while (tmp_in < in)
+        tmp_in++;
       while (tmp_in < in + n_taps) {
         s = FRAME_GET_PLANE_LINE (src, k, tmp_in);
         gst_video_scaler_horizontal (h_scaler, format,
