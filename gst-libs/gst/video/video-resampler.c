@@ -348,6 +348,7 @@ gst_video_resampler_init (GstVideoResampler * resampler,
 
   switch (method) {
     case GST_VIDEO_RESAMPLER_METHOD_NEAREST:
+      params.envelope = GET_OPT_ENVELOPE (options);
       params.get_tap = get_nearest_tap;
       if (n_taps == 0)
         n_taps = 1;
