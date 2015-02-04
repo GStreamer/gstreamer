@@ -126,6 +126,7 @@ run_test (const char *format, ...)
   g_free (url);
 
   g_object_set (src, "automatic-redirect", redirect, NULL);
+  g_object_set (src, "ssl-ca-file", GST_TEST_FILES_PATH "/test-cert.pem", NULL);
   if (cookies != NULL)
     g_object_set (src, "cookies", cookies, NULL);
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
