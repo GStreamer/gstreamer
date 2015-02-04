@@ -40,61 +40,33 @@
 
 GST_DEBUG_CATEGORY (gstvalidate_debug);
 
-static gboolean
-gst_validate_scan_path_for_plugins (const gchar * path)
+static GMutex _gst_validate_registry_mutex;
+static GstRegistry *_gst_validate_registry_default = NULL;
+
+static GstRegistry *
+gst_validate_registry_get (void)
 {
-  GDir *dir;
-  const gchar *dirent;
-  gchar *filename;
-  GstPlugin *plugin;
-  gboolean changed = FALSE;
+  GstRegistry *registry;
 
-  dir = g_dir_open (path, 0, NULL);
-  if (!dir)
-    return FALSE;
-
-  while ((dirent = g_dir_read_name (dir))) {
-    GStatBuf file_status;
-
-    filename = g_build_filename (path, dirent, NULL);
-    if (g_stat (filename, &file_status) < 0) {
-      /* Plugin will be removed from cache after the scan completes if it
-       * is still marked 'cached' */
-      g_free (filename);
-      continue;
-    }
-
-    if (!(file_status.st_mode & S_IFREG)) {
-      g_free (filename);
-      continue;
-    }
-    if (!g_str_has_suffix (dirent, G_MODULE_SUFFIX)) {
-      GST_TRACE ("extension is not recognized as module file, ignoring file %s",
-          filename);
-      g_free (filename);
-      continue;
-    }
-
-    plugin = gst_plugin_load_file (filename, NULL);
-    if (plugin) {
-      GST_DEBUG ("Plugin %s loaded", filename);
-      gst_object_unref (plugin);
-    }
-
-    g_free (filename);
+  g_mutex_lock (&_gst_validate_registry_mutex);
+  if (G_UNLIKELY (!_gst_validate_registry_default)) {
+    _gst_validate_registry_default = g_object_newv (GST_TYPE_REGISTRY, 0, NULL);
+    gst_object_ref_sink (GST_OBJECT_CAST (_gst_validate_registry_default));
   }
+  registry = _gst_validate_registry_default;
+  g_mutex_unlock (&_gst_validate_registry_mutex);
 
-  g_dir_close (dir);
-
-  return changed;
-
+  return registry;
 }
-
 
 static void
 gst_validate_init_plugins (void)
 {
+  GstRegistry *registry;
   const gchar *plugin_path;
+
+  gst_registry_fork_set_enabled (FALSE);
+  registry = gst_validate_registry_get ();
 
   plugin_path = g_getenv ("GST_VALIDATE_PLUGIN_PATH");
   if (plugin_path) {
@@ -104,7 +76,7 @@ gst_validate_init_plugins (void)
     GST_DEBUG ("GST_VALIDATE_PLUGIN_PATH set to %s", plugin_path);
     list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
     for (i = 0; list[i]; i++) {
-      gst_validate_scan_path_for_plugins (list[i]);
+      gst_registry_scan_path (registry, list[i]);
     }
     g_strfreev (list);
   } else {
@@ -120,7 +92,7 @@ gst_validate_init_plugins (void)
         "gstreamer-" GST_API_VERSION, "plugins", NULL);
 
     GST_DEBUG ("scanning home plugins %s", home_plugins);
-    gst_validate_scan_path_for_plugins (home_plugins);
+    gst_registry_scan_path (registry, home_plugins);
     g_free (home_plugins);
 
     /* add the main (installed) library path */
@@ -141,15 +113,16 @@ gst_validate_init_plugins (void)
           "lib", "gstreamer-" GST_API_VERSION, NULL);
       GST_DEBUG ("scanning DLL dir %s", dir);
 
-      gst_validate_scan_path_for_plugins (dir);
+      gst_registry_scan_path (registry, dir);
 
       g_free (dir);
       g_free (base_dir);
     }
 #else
-    gst_validate_scan_path_for_plugins (PLUGINDIR);
+    gst_registry_scan_path (registry, PLUGINDIR);
 #endif
   }
+  gst_registry_fork_set_enabled (TRUE);
 }
 
 /**
