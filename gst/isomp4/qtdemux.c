@@ -4531,6 +4531,15 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
               &offset, &sample_size, &dts, &pts, &duration, &keyframe)))
     goto eos_stream;
 
+  /* If we're doing a keyframe-only trickmode, only push keyframes on video streams */
+  if (G_UNLIKELY (qtdemux->
+          segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)) {
+    if (stream->subtype == FOURCC_vide && !keyframe) {
+      GST_LOG_OBJECT (qtdemux, "Skipping non-keyframe on stream %d", index);
+      goto next;
+    }
+  }
+
   GST_DEBUG_OBJECT (qtdemux,
       "pushing from stream %d, empty %d offset %" G_GUINT64_FORMAT
       ", size %d, dts=%" GST_TIME_FORMAT ", pts=%" GST_TIME_FORMAT
