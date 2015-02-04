@@ -980,6 +980,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
               &to_par_n, &to_par_d)) {
         GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
             ("Error calculating the output scaled size - integer overflow"));
+        gst_structure_free (tmp);
         goto done;
       }
 
