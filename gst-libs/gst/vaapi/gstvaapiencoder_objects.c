@@ -250,6 +250,80 @@ gst_vaapi_enc_misc_param_new (GstVaapiEncoder * encoder,
 }
 
 /* ------------------------------------------------------------------------- */
+/* ---  Quantization Matrices                                            --- */
+/* ------------------------------------------------------------------------- */
+
+GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiEncQMatrix, gst_vaapi_enc_q_matrix);
+
+void
+gst_vaapi_enc_q_matrix_destroy (GstVaapiEncQMatrix * q_matrix)
+{
+  vaapi_destroy_buffer (GET_VA_DISPLAY (q_matrix), &q_matrix->param_id);
+  q_matrix->param = NULL;
+}
+
+gboolean
+gst_vaapi_enc_q_matrix_create (GstVaapiEncQMatrix * q_matrix,
+    const GstVaapiCodecObjectConstructorArgs * args)
+{
+  q_matrix->param_id = VA_INVALID_ID;
+  return vaapi_create_buffer (GET_VA_DISPLAY (q_matrix),
+      GET_VA_CONTEXT (q_matrix), VAQMatrixBufferType,
+      args->param_size, args->param, &q_matrix->param_id, &q_matrix->param);
+}
+
+GstVaapiEncQMatrix *
+gst_vaapi_enc_q_matrix_new (GstVaapiEncoder * encoder,
+    gconstpointer param, guint param_size)
+{
+  GstVaapiCodecObject *object;
+
+  object = gst_vaapi_codec_object_new (&GstVaapiEncQMatrixClass,
+      GST_VAAPI_CODEC_BASE (encoder), param, param_size, NULL, 0, 0);
+  if (!object)
+    return NULL;
+  return GST_VAAPI_ENC_Q_MATRIX_CAST (object);
+}
+
+/* ------------------------------------------------------------------------- */
+/* --- JPEG Huffman Tables                                               --- */
+/* ------------------------------------------------------------------------- */
+
+#if USE_JPEG_ENCODER
+GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiEncHuffmanTable, gst_vaapi_enc_huffman_table);
+
+void
+gst_vaapi_enc_huffman_table_destroy (GstVaapiEncHuffmanTable * huf_table)
+{
+  vaapi_destroy_buffer (GET_VA_DISPLAY (huf_table), &huf_table->param_id);
+  huf_table->param = NULL;
+}
+
+gboolean
+gst_vaapi_enc_huffman_table_create (GstVaapiEncHuffmanTable * huf_table,
+    const GstVaapiCodecObjectConstructorArgs * args)
+{
+  huf_table->param_id = VA_INVALID_ID;
+  return vaapi_create_buffer (GET_VA_DISPLAY (huf_table),
+      GET_VA_CONTEXT (huf_table), VAHuffmanTableBufferType, args->param_size,
+      args->param, &huf_table->param_id, (void **) &huf_table->param);
+}
+
+GstVaapiEncHuffmanTable *
+gst_vaapi_enc_huffman_table_new (GstVaapiEncoder * encoder,
+    guint8 * data, guint data_size)
+{
+  GstVaapiCodecObject *object;
+
+  object = gst_vaapi_codec_object_new (&GstVaapiEncHuffmanTableClass,
+      GST_VAAPI_CODEC_BASE (encoder), data, data_size, NULL, 0, 0);
+  if (!object)
+    return NULL;
+  return GST_VAAPI_ENC_HUFFMAN_TABLE_CAST (object);
+}
+#endif
+
+/* ------------------------------------------------------------------------- */
 /* --- Encoder Picture                                                   --- */
 /* ------------------------------------------------------------------------- */
 
@@ -270,6 +344,10 @@ gst_vaapi_enc_picture_destroy (GstVaapiEncPicture * picture)
     g_ptr_array_unref (picture->slices);
     picture->slices = NULL;
   }
+
+  gst_vaapi_codec_object_replace (&picture->q_matrix, NULL);
+  gst_vaapi_codec_object_replace (&picture->huf_table, NULL);
+
   gst_vaapi_codec_object_replace (&picture->sequence, NULL);
 
   gst_vaapi_surface_proxy_replace (&picture->proxy, NULL);
@@ -422,6 +500,8 @@ gboolean
 gst_vaapi_enc_picture_encode (GstVaapiEncPicture * picture)
 {
   GstVaapiEncSequence *sequence;
+  GstVaapiEncQMatrix *q_matrix;
+  GstVaapiEncHuffmanTable *huf_table;
   VADisplay va_display;
   VAContextID va_context;
   VAStatus status;
@@ -443,6 +523,18 @@ gst_vaapi_enc_picture_encode (GstVaapiEncPicture * picture)
   sequence = picture->sequence;
   if (sequence && !do_encode (va_display, va_context,
           &sequence->param_id, &sequence->param))
+    return FALSE;
+
+  /* Submit Quantization matrix */
+  q_matrix = picture->q_matrix;
+  if (q_matrix && !do_encode (va_display, va_context,
+          &q_matrix->param_id, &q_matrix->param))
+    return FALSE;
+
+  /* Submit huffman table */
+  huf_table = picture->huf_table;
+  if (huf_table && !do_encode (va_display, va_context,
+          &huf_table->param_id, (void **) &huf_table->param))
     return FALSE;
 
   /* Submit Packed Headers */

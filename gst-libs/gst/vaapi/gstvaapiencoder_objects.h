@@ -33,6 +33,8 @@ typedef struct _GstVaapiEncPicture GstVaapiEncPicture;
 typedef struct _GstVaapiEncSequence GstVaapiEncSequence;
 typedef struct _GstVaapiEncMiscParam GstVaapiEncMiscParam;
 typedef struct _GstVaapiEncSlice GstVaapiEncSlice;
+typedef struct _GstVaapiEncQMatrix GstVaapiEncQMatrix;
+typedef struct _GstVaapiEncHuffmanTable GstVaapiEncHuffmanTable;
 typedef struct _GstVaapiCodedBuffer GstVaapiCodedBuffer;
 typedef struct _GstVaapiEncPackedHeader GstVaapiEncPackedHeader;
 
@@ -156,6 +158,60 @@ gst_vaapi_enc_misc_param_new (GstVaapiEncoder * encoder,
     VAEncMiscParameterType type, guint data_size);
 
 /* ------------------------------------------------------------------------- */
+/* ---  Quantization Matrices                                            --- */
+/* ------------------------------------------------------------------------- */
+
+#define GST_VAAPI_ENC_Q_MATRIX_CAST(obj) \
+  ((GstVaapiEncQMatrix *) (obj))
+
+/**
+ * GstVaapiEncQMatrix:
+ *
+ * A #GstVaapiCodecObject holding a quantization matrix parameter.
+ */
+struct _GstVaapiEncQMatrix
+{
+  /*< private >*/
+  GstVaapiCodecObject parent_instance;
+  VABufferID param_id;
+
+  /*< public >*/
+  gpointer param;
+};
+
+G_GNUC_INTERNAL
+GstVaapiEncQMatrix *
+gst_vaapi_enc_q_matrix_new (GstVaapiEncoder * encoder, gconstpointer param,
+    guint param_size);
+
+/* ------------------------------------------------------------------------- */
+/* --- JPEG Huffman Tables                                               --- */
+/* ------------------------------------------------------------------------- */
+
+#define GST_VAAPI_ENC_HUFFMAN_TABLE_CAST(obj) \
+  ((GstVaapiEncHuffmanTable *) (obj))
+
+/**
+ * GstVaapiEncHuffmanTable:
+ *
+ * A #GstVaapiCodecObject holding huffman table.
+ */
+struct _GstVaapiEncHuffmanTable
+{
+  /*< private >*/
+  GstVaapiCodecObject parent_instance;
+  VABufferID param_id;
+
+  /*< public >*/
+  gpointer param;
+};
+
+G_GNUC_INTERNAL
+GstVaapiEncHuffmanTable *
+gst_vaapi_enc_huffman_table_new (GstVaapiEncoder * encoder, guint8 * data,
+    guint data_size);
+
+/* ------------------------------------------------------------------------- */
 /* --- Encoder Picture                                                   --- */
 /* ------------------------------------------------------------------------- */
 
@@ -201,6 +257,8 @@ struct _GstVaapiEncPicture
   VASurfaceID surface_id;
   gpointer param;
   GPtrArray *slices;
+  GstVaapiEncQMatrix *q_matrix;
+  GstVaapiEncHuffmanTable *huf_table;
   GstClockTime pts;
   guint frame_num;
   guint poc;
@@ -271,6 +329,16 @@ gst_vaapi_enc_picture_encode (GstVaapiEncPicture * picture);
 #define GST_VAAPI_ENC_SLICE_NEW(codec, encoder)                         \
   gst_vaapi_enc_slice_new (GST_VAAPI_ENCODER_CAST (encoder),            \
       NULL, sizeof(G_PASTE (VAEncSliceParameterBuffer, codec)))
+
+/* GstVaapiEncQuantMatrix */
+#define GST_VAAPI_ENC_Q_MATRIX_NEW(codec, encoder)                      \
+  gst_vaapi_enc_q_matrix_new (GST_VAAPI_ENCODER_CAST (encoder),         \
+      NULL, sizeof (G_PASTE (VAQMatrixBuffer, codec)))
+
+/* GstVaapiEncHuffmanTable */
+#define GST_VAAPI_ENC_HUFFMAN_TABLE_NEW(codec, encoder)                 \
+  gst_vaapi_enc_huffman_table_new (GST_VAAPI_ENCODER_CAST (encoder),    \
+      NULL, sizeof (G_PASTE (VAHuffmanTableBuffer, codec)))
 
 G_END_DECLS
 
