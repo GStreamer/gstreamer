@@ -1,13 +1,13 @@
-libfaultinjection_@GST_API_VERSION@_la_SOURCES = \
+plugin_LTLIBRARIES = libfaultinjection.la
+
+libfaultinjection_la_SOURCES = \
 	socket_interposer.c
 
-libfaultinjection_@GST_API_VERSION@include_HEADERS = \
+noinst_HEADERS = \
 	socket_interposer.h
 
-lib_LTLIBRARIES = libfaultinjection-@GST_API_VERSION@.la
-
-libfaultinjection_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS)
-libfaultinjection_@GST_API_VERSION@_la_LIBADD = $(GST_ALL_LIBS)
-libfaultinjection_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/faultinjection
+libfaultinjection_la_CFLAGS = $(GST_ALL_CFLAGS)
+libfaultinjection_la_LIBADD = $(GST_ALL_LIBS) $(top_builddir)/gst/validate/libgstvalidate-@GST_API_VERSION@.la
+libfaultinjection_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_ALL_LDFLAGS)
 
 CLEANFILES =

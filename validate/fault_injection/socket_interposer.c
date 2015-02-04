@@ -24,8 +24,13 @@
 
 #define _GNU_SOURCE
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "socket_interposer.h"
-#include <gst/validate/gst-validate-scenario.h>
+#include <gst/gst.h>
+#include "../gst/validate/gst-validate-scenario.h"
 
 #if defined(__gnu_linux__) && !defined(__ANDROID__) && !defined (ANDROID)
 
@@ -329,8 +334,8 @@ _execute_corrupt_socket_recv (GstValidateScenario * scenario,
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
 
-void
-socket_interposer_init (void)
+static gboolean
+socket_interposer_init (GstPlugin * plugin)
 {
   gst_validate_register_action_type ("corrupt-socket-recv", "fault-injector",
       _execute_corrupt_socket_recv, ((GstValidateActionParameter[]) {
@@ -347,13 +352,23 @@ socket_interposer_init (void)
             NULL}
           }),
       "corrupt the next socket receive", GST_VALIDATE_ACTION_TYPE_ASYNC);
+
+  return TRUE;
 }
 
 #else /* No LD_PRELOAD tricks on Windows */
 
-void
-socket_interposer_init (void)
+static gboolean
+socket_interposer_init (GstPlugin * plugin)
 {
+  return TRUE;
 }
 
 #endif
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    faultinjector,
+    "Fault injector plugin for GstValidate",
+    socket_interposer_init, VERSION, "LGPL", GST_PACKAGE_NAME,
+    GST_PACKAGE_ORIGIN)

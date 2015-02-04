@@ -24,6 +24,4 @@
 #ifndef _SOCKET_INTERPOSER_H_
 #define _SOCKET_INTERPOSER_H_
 
-extern void socket_interposer_init(void);
-
 #endif /* _SOCKET_INTERPOSER_H_ */
