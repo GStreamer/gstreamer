@@ -3336,6 +3336,18 @@ static const VideoTransform transforms[] = {
       convert_scale_planes, GST_VIDEO_FORMAT_RGB},
   {GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_BGR, TRUE, FALSE, FALSE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_BGR},
+
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_GRAY8, TRUE, FALSE, FALSE, 0, 0,
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  {GST_VIDEO_FORMAT_GRAY16_LE, GST_VIDEO_FORMAT_GRAY16_LE, TRUE, FALSE, FALSE,
+        0, 0,
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY16_LE},
+#else
+  {GST_VIDEO_FORMAT_GRAY16_BE, GST_VIDEO_FORMAT_GRAY16_BE, TRUE, FALSE, FALSE,
+        0, 0,
+      convert_scale_planes, GST_VIDEO_FORMAT_GRAY16_BE},
+#endif
 };
 
 static gboolean

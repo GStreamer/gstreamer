@@ -1209,6 +1209,18 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
           break;
       }
       break;
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+      switch (scale->resampler.max_taps) {
+        case 1:
+          func = video_scale_h_near_u16;
+          break;
+        default:
+          func = video_scale_h_ntap_u16;
+          break;
+      }
+      n_elems = 1;
+      break;
     default:
       goto no_func;
   }
@@ -1290,6 +1302,11 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
     case GST_VIDEO_FORMAT_NV24:
       bits = 8;
       n_elems = 2;
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+      bits = 16;
+      n_elems = 1;
       break;
     default:
       goto no_func;
