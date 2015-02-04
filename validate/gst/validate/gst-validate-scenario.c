@@ -2160,7 +2160,10 @@ gst_validate_action_set_done (GstValidateAction * action)
 /**
  * gst_validate_register_action_type:
  * @type_name: The name of the new action type to add
- * @implementer_namespace: The namespace of the implementer of the action type
+ * @implementer_namespace: The namespace of the implementer of the action type.
+ *                         That  should always be the name of the GstPlugin as
+ *                         retrived with #gst_plugin_get_name when the action type
+ *                         is register inside a plugin.
  * @function: (scope notified): The function to be called to execute the action
  * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidate.ActionParameter): The #GstValidateActionParameter usable as parameter of the type
  * @description: A description of the new type

@@ -336,7 +336,8 @@ _execute_corrupt_socket_recv (GstValidateScenario * scenario,
 static gboolean
 socket_interposer_init (GstPlugin * plugin)
 {
-  gst_validate_register_action_type ("corrupt-socket-recv", "fault-injector",
+/*  *INDENT-OFF* */
+  gst_validate_register_action_type ("corrupt-socket-recv", gst_plugin_get_name (plugin),
       _execute_corrupt_socket_recv, ((GstValidateActionParameter[]) {
             {
             .name = "port",.description =
@@ -351,6 +352,7 @@ socket_interposer_init (GstPlugin * plugin)
             NULL}
           }),
       "corrupt the next socket receive", GST_VALIDATE_ACTION_TYPE_ASYNC);
+/*  *INDENT-ON* */
 
   return TRUE;
 }
