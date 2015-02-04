@@ -103,6 +103,9 @@ void gst_validate_report                       (GstValidateReporter * reporter, 
                                           const gchar * format, ...);
 void gst_validate_report_valist                (GstValidateReporter * reporter, GstValidateIssueId issue_id,
                                           const gchar * format, va_list var_args);
+void
+gst_validate_reporter_report_simple (GstValidateReporter * reporter, GstValidateIssueId issue_id,
+                                          const gchar * message);
 
 void gst_validate_reporter_set_runner          (GstValidateReporter * reporter, GstValidateRunner *runner);
 void gst_validate_reporter_set_handle_g_logs   (GstValidateReporter * reporter);

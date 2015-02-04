@@ -166,7 +166,7 @@ _set_reporting_level_for_name (GstValidateRunner * runner,
 }
 
 static void
-_replace_double_colons (gchar *word)
+_replace_double_colons (gchar * word)
 {
   while (word) {
     word = strstr (word, "::");
@@ -461,7 +461,7 @@ _do_report_synthesis (GstValidateRunner * runner)
  * Returns: 0 if no critical error has been found and 18 if a critical
  * error has been detected. That return value is usually to be used as
  * exit code of the application.
- * */
+ */
 int
 gst_validate_runner_printf (GstValidateRunner * runner)
 {

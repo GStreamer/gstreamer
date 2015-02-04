@@ -269,6 +269,13 @@ gst_validate_report (GstValidateReporter * reporter,
 }
 
 void
+gst_validate_reporter_report_simple (GstValidateReporter * reporter,
+    GstValidateIssueId issue_id, const gchar * message)
+{
+  gst_validate_report (reporter, issue_id, message);
+}
+
+void
 gst_validate_reporter_set_name (GstValidateReporter * reporter, gchar * name)
 {
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);

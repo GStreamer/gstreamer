@@ -504,6 +504,19 @@ gst_validate_printf (gpointer source, const gchar * format, ...)
   va_end (var_args);
 }
 
+/**
+ * gst_validate_print_action:
+ * @action: (allow-none): The source object to log
+ * @message: The message to print out in the GstValidate logging system
+ *
+ * Print @message to the GstValidate logging system
+ */
+void
+gst_validate_print_action (GstValidateAction * action, const gchar * message)
+{
+  gst_validate_printf_valist (action, message, NULL);
+}
+
 static void
 print_action_parametter (GString * string, GstValidateActionType * type,
     GstValidateActionParameter * param)
@@ -637,7 +650,10 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
     }
   }
 
-  g_string_append_vprintf (string, format, args);
+  if (args)
+    g_string_append_vprintf (string, format, args);
+  else
+    g_string_append (string, format);
 
   if (!newline_regex)
     newline_regex =
