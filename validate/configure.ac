@@ -282,11 +282,12 @@ Makefile
 common/Makefile
 common/m4/Makefile
 data/Makefile
-fault_injection/Makefile
 gst/Makefile
 gst/validate/Makefile
 gst/preload/Makefile
 gst/overrides/Makefile
+gst/plugins/Makefile
+gst/plugins/fault_injection/Makefile
 tests/Makefile
 tests/check/Makefile
 pkgconfig/Makefile

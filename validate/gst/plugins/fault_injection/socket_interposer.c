@@ -28,9 +28,8 @@
 #include "config.h"
 #endif
 
-#include "socket_interposer.h"
 #include <gst/gst.h>
-#include "../gst/validate/gst-validate-scenario.h"
+#include "../../validate/gst-validate-scenario.h"
 
 #if defined(__gnu_linux__) && !defined(__ANDROID__) && !defined (ANDROID)
 
