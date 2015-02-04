@@ -793,6 +793,7 @@ AC_CACHE_CHECK([for video post-postprocessing API],
 
 dnl Check for encoding support
 USE_ENCODERS=0
+USE_JPEG_ENCODER=0
 if test "$enable_encoders" = "yes"; then
     PKG_CHECK_MODULES([LIBVA], [libva >= va_api_enc_version],
         [HAVE_VA_ENC=1], [HAVE_VA_ENC=0])
@@ -804,6 +805,34 @@ if test "$enable_encoders" = "yes"; then
             [USE_ENCODERS=1], [HAVE_VA_ENC=0 USE_ENCODERS=0],
             [#include <va/va.h>
             ])
+
+        dnl Check for JPEG Encoding API (0.37.0+)
+        AC_CHECK_HEADERS([va/va_enc_jpeg.h],
+            [USE_JPEG_ENCODER=1], [],
+            [#include <va/va.h>
+            ])
+        AC_CACHE_CHECK([for JPEG encoding API],
+            ac_cv_have_jpeg_encoding_api, [
+            saved_CPPFLAGS="$CPPFLAGS"
+            CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+            saved_LIBS="$LIBS"
+            LIBS="$LIBS $LIBVA_LIBS"
+            AC_COMPILE_IFELSE(
+                [AC_LANG_PROGRAM(
+                    [[#include <va/va.h>
+                      #ifdef HAVE_VA_VA_ENC_JPEG_H
+                      #include <va/va_enc_jpeg.h>
+                      #endif
+                    ]],
+                    [[VAEncPictureParameterBufferJPEG pic_param;
+                      VAEncSliceParameterBufferJPEG slice_param;
+                      VAQMatrixBufferJPEG q_matrix;]])],
+                [ac_cv_have_jpeg_encoding_api="yes" USE_JPEG_ENCODER=1],
+                [ac_cv_have_jpeg_encoding_api="no"]
+            )
+            CPPFLAGS="$saved_CPPFLAGS"
+            LIBS="$saved_LIBS"
+        ])
         CPPFLAGS="$saved_CPPFLAGS"
     fi
 fi
@@ -829,6 +858,10 @@ esac
 AC_DEFINE_UNQUOTED([USE_ENCODERS], $USE_ENCODERS,
     [Defined to 1 if video encoders are used])
 AM_CONDITIONAL([USE_ENCODERS], [test $USE_ENCODERS -eq 1])
+
+AC_DEFINE_UNQUOTED(USE_JPEG_ENCODER, $USE_JPEG_ENCODER,
+    [Defined to 1 if JPEG encoder is used])
+AM_CONDITIONAL(USE_JPEG_ENCODER, test $USE_JPEG_ENCODER -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_VA_VPP, $USE_VA_VPP,
     [Defined to 1 if video post-processing is used])
