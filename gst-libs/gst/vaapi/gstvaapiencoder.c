@@ -547,6 +547,15 @@ get_packed_headers (GstVaapiEncoder * encoder)
 
   encoder->got_packed_headers = TRUE;
   encoder->packed_headers = cdata->packed_headers & value;
+
+  if (cdata->codec == GST_VAAPI_CODEC_JPEG) {
+#if !VA_CHECK_VERSION(0,37,1)
+    encoder->packed_headers = VA_ENC_PACKED_HEADER_RAW_DATA;
+    GST_DEBUG ("Hard coding the packed header flag value to VA_ENC_PACKED_HEADER_RAW_DATA,"
+        "This is a work around for the driver bug");
+#endif
+  }
+
   return encoder->packed_headers;
 }
 
