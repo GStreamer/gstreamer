@@ -194,6 +194,13 @@ libgstvaapi_source_h += $(libgstvaapi_enc_source_h)
 libgstvaapi_source_priv_h += $(libgstvaapi_enc_source_priv_h)
 endif
 
+libgstvaapi_jpegenc_source_c = gstvaapiencoder_jpeg.c
+libgstvaapi_jpegenc_source_h = gstvaapiencoder_jpeg.h
+if USE_JPEG_ENCODER
+libgstvaapi_source_c += $(libgstvaapi_jpegenc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_jpegenc_source_h)
+endif
+
 libgstvaapi_drm_source_c =			\
 	gstvaapidisplay_drm.c			\
 	gstvaapiwindow_drm.c			\
@@ -495,6 +502,8 @@ EXTRA_DIST += \
 	$(libgstvaapi_jpegdec_source_h)		\
 	$(libgstvaapi_vp8dec_source_c)		\
 	$(libgstvaapi_vp8dec_source_h)		\
+	$(libgstvaapi_jpegenc_source_c)		\
+	$(libgstvaapi_jpegenc_source_h)		\
 	$(NULL)
 
 CLEANFILES = \
