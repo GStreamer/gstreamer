@@ -1774,6 +1774,68 @@ GST_START_TEST (test_sync_unaligned)
 
 GST_END_TEST;
 
+#ifndef GST_DISABLE_PARSE
+GST_START_TEST (test_segment_base_handling)
+{
+  GstElement *pipeline, *sink, *mix, *src1, *src2;
+  GstPad *srcpad, *sinkpad;
+  GstClockTime end_time;
+  GstSample *last_sample = NULL;
+  GstSample *sample;
+  GstBuffer *buf;
+  GstCaps *caps;
+
+  caps = gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT, 44100,
+      "channels", G_TYPE_INT, 2, NULL);
+
+  pipeline = gst_pipeline_new ("pipeline");
+  mix = gst_element_factory_make ("audiomixer", "audiomixer");
+  sink = gst_element_factory_make ("appsink", "sink");
+  g_object_set (sink, "caps", caps, "sync", FALSE, NULL);
+  gst_caps_unref (caps);
+  src1 = gst_element_factory_make ("audiotestsrc", "src1");
+  g_object_set (src1, "samplesperbuffer", 4410, "num-buffers", 50, NULL);
+  src2 = gst_element_factory_make ("audiotestsrc", "src2");
+  g_object_set (src2, "samplesperbuffer", 4410, "num-buffers", 50, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src1, src2, mix, sink, NULL);
+  fail_unless (gst_element_link (mix, sink));
+
+  srcpad = gst_element_get_static_pad (src1, "src");
+  sinkpad = gst_element_get_request_pad (mix, "sink_1");
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  srcpad = gst_element_get_static_pad (src2, "src");
+  sinkpad = gst_element_get_request_pad (mix, "sink_2");
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  gst_pad_set_offset (sinkpad, 5 * GST_SECOND);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  do {
+    g_signal_emit_by_name (sink, "pull-sample", &sample);
+    if (sample == NULL)
+      break;
+    if (last_sample)
+      gst_sample_unref (last_sample);
+    last_sample = sample;
+  } while (TRUE);
+
+  buf = gst_sample_get_buffer (last_sample);
+  end_time = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+  fail_unless_equals_int64 (end_time, 10 * GST_SECOND);
+  gst_sample_unref (last_sample);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+#endif
+
 static Suite *
 audiomixer_suite (void)
 {
@@ -1797,6 +1859,9 @@ audiomixer_suite (void)
   tcase_add_test (tc_chain, test_sync);
   tcase_add_test (tc_chain, test_sync_discont);
   tcase_add_test (tc_chain, test_sync_unaligned);
+#ifndef GST_DISABLE_PARSE
+  tcase_add_test (tc_chain, test_segment_base_handling);
+#endif
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
