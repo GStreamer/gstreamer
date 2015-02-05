@@ -351,7 +351,7 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
   else if (rtt < priv->rtt_avg) /* Shorter RTTs carry more weight than longer */
     priv->rtt_avg = (3 * priv->rtt_avg + rtt) / 4;
   else
-    priv->rtt_avg = (7 * priv->rtt_avg + rtt) / 8;
+    priv->rtt_avg = (15 * priv->rtt_avg + rtt) / 16;
 
   if (rtt > 2 * priv->rtt_avg) {
     GST_LOG_OBJECT (self,
