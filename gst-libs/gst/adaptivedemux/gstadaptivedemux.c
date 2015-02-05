@@ -1450,7 +1450,6 @@ gst_adaptive_demux_stream_fragment_download_finish (GstAdaptiveDemuxStream *
 {
   g_mutex_lock (&stream->fragment_download_lock);
   stream->download_finished = TRUE;
-  stream->last_ret = ret;
 
   /* if we have an error, only replace last_ret if it was OK before to avoid
    * overwriting the first error we got */
