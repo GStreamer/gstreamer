@@ -394,13 +394,15 @@ splitmux_part_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
           "State %u EOS event. MaxTS seen %" GST_TIME_FORMAT,
           reader->prep_state, GST_TIME_ARGS (part_pad->max_ts));
 
-      if (reader->prep_state == PART_STATE_PREPARING_MEASURE_STREAMS) {
+      if (reader->prep_state == PART_STATE_PREPARING_COLLECT_STREAMS ||
+          reader->prep_state == PART_STATE_PREPARING_MEASURE_STREAMS) {
         /* Mark this pad as EOS */
         part_pad->is_eos = TRUE;
         if (splitmux_part_is_eos_locked (reader)) {
           /* Finished measuring things, set state and tell the state change func
            * so it can seek back to the start */
-          GST_LOG_OBJECT (reader, "EOS while measuring streams");
+          GST_LOG_OBJECT (reader,
+              "EOS while measuring streams. Resetting for ready");
           reader->prep_state = PART_STATE_PREPARING_RESET_FOR_READY;
           SPLITMUX_PART_BROADCAST (reader);
         }
@@ -788,9 +790,8 @@ gst_splitmux_part_reader_measure_streams (GstSplitMuxPartReader * reader)
   while (reader->prep_state == PART_STATE_PREPARING_MEASURE_STREAMS)
     SPLITMUX_PART_WAIT (reader);
 
-  /* Seek back to the start now */
   if (reader->prep_state == PART_STATE_PREPARING_RESET_FOR_READY) {
-    /* Fire the prepared signal */
+    /* Fire the prepared signal and go to READY state */
     GST_DEBUG_OBJECT (reader,
         "Stream measuring complete. File %s is now ready. Firing prepared signal",
         reader->path);
@@ -1007,6 +1008,8 @@ gst_splitmux_part_reader_change_state (GstElement * element,
 
       if (reader->prep_state == PART_STATE_PREPARING_MEASURE_STREAMS)
         gst_splitmux_part_reader_measure_streams (reader);
+      else if (reader->prep_state == PART_STATE_PREPARING_RESET_FOR_READY)
+        reader->prep_state = PART_STATE_READY;
       else if (reader->prep_state == PART_STATE_FAILED)
         ret = GST_STATE_CHANGE_FAILURE;
       SPLITMUX_PART_UNLOCK (reader);
