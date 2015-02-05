@@ -49,7 +49,7 @@ typedef struct _GstAudioMixerPadClass GstAudioMixerPadClass;
  * The audiomixer object structure.
  */
 struct _GstAudioMixer {
-  GstAggregator      element;
+  GstAggregator   aggregator;
 
   /* the next are valid for both int and float */
   GstAudioInfo    info;
@@ -68,8 +68,6 @@ struct _GstAudioMixer {
 
   GstClockTime alignment_threshold;
   GstClockTime discont_wait;
-
-  gint64          base_time;
 
   /* Duration of every output buffer */
   GstClockTime output_buffer_duration;
