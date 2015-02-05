@@ -3149,7 +3149,7 @@ static void gst_decode_group_free_internal (GstDecodeGroup * group,
 static void
 gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
 {
-  GList *l;
+  GList *l, *set_to_null = NULL;
 
   CHAIN_MUTEX_LOCK (chain);
 
@@ -3209,14 +3209,15 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
           GST_OBJECT_CAST (chain->dbin))
         gst_bin_remove (GST_BIN_CAST (chain->dbin), delem->capsfilter);
       if (!hide) {
-        gst_element_set_state (delem->capsfilter, GST_STATE_NULL);
+        set_to_null =
+            g_list_append (set_to_null, gst_object_ref (delem->capsfilter));
       }
     }
 
     if (GST_OBJECT_PARENT (element) == GST_OBJECT_CAST (chain->dbin))
       gst_bin_remove (GST_BIN_CAST (chain->dbin), element);
     if (!hide) {
-      gst_element_set_state (element, GST_STATE_NULL);
+      set_to_null = g_list_append (set_to_null, gst_object_ref (element));
     }
 
     SUBTITLE_LOCK (chain->dbin);
@@ -3275,6 +3276,14 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
   GST_DEBUG_OBJECT (chain->dbin, "%s chain %p", (hide ? "Hidden" : "Freed"),
       chain);
   CHAIN_MUTEX_UNLOCK (chain);
+
+  while (set_to_null) {
+    GstElement *element = set_to_null->data;
+    set_to_null = g_list_delete_link (set_to_null, set_to_null);
+    gst_element_set_state (element, GST_STATE_NULL);
+    gst_object_unref (element);
+  }
+
   if (!hide) {
     g_mutex_clear (&chain->lock);
     g_slice_free (GstDecodeChain, chain);
