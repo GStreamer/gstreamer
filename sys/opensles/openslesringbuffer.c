@@ -355,10 +355,12 @@ _opensles_player_acquire (GstAudioRingBuffer * rb,
   SLresult result;
   SLDataFormat_PCM format;
 
-  /* Configure audio source */
+  /* Configure audio source
+   * 4 buffers is the "typical" size as optimized inside Android's
+   * OpenSL ES, see frameworks/wilhelm/src/itfstruct.h BUFFER_HEADER_TYPICAL
+   */
   SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
-    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,
-    MIN (32, (spec->segtotal >> 1))
+    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, MIN (4, spec->segtotal)
   };
   SLDataSource audioSrc = { &loc_bufq, &format };
 
