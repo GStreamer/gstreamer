@@ -118,8 +118,10 @@ void video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1, const orc_uint8 * O
 void video_orc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
 void video_orc_convert_u16_to_u8 (guint8 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n);
 void video_orc_convert_u8_to_u16 (guint16 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void video_orc_splat_u16 (guint8 * ORC_RESTRICT d1, int p1, int n);
 void video_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n);
-void video_orc_splat_u64 (guint8 * ORC_RESTRICT d1, int p1, int n);
+void video_orc_splat_u64 (guint8 * ORC_RESTRICT d1, orc_int64 p1, int n);
+void video_orc_splat2_u64 (guint8 * ORC_RESTRICT d1, int p1, int n);
 void video_orc_convert_I420_UYVY (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
 void video_orc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
 void video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);

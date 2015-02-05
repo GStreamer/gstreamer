@@ -165,6 +165,7 @@ struct _GstVideoConverter
 
   gboolean fill_border;
   gpointer borderline;
+  guint64 borders[4];
   guint32 border_argb;
 
   void (*convert) (GstVideoConverter * convert, const GstVideoFrame * src,
@@ -246,6 +247,7 @@ struct _GstVideoConverter
   GstVideoScaler *fh_scaler[4];
   GstVideoScaler *fv_scaler[4];
   ConverterAlloc *flines;
+  gpointer *lineptr;
 };
 
 typedef gpointer (*GstLineCacheAllocLineFunc) (GstLineCache * cache, gint idx,
@@ -1631,6 +1633,50 @@ setup_allocators (GstVideoConverter * convert)
     notify (user_data);
 }
 
+static void
+setup_borderline (GstVideoConverter * convert)
+{
+  gint width;
+
+  width = MAX (convert->in_maxwidth, convert->out_maxwidth);
+  width += convert->out_x;
+
+  if (convert->fill_border && (convert->out_height < convert->out_maxheight ||
+          convert->out_width < convert->out_maxwidth)) {
+    guint32 border_val;
+    gint i;
+    const GstVideoFormatInfo *out_finfo;
+    gpointer planes[GST_VIDEO_MAX_PLANES];
+    gint strides[GST_VIDEO_MAX_PLANES];
+
+    convert->borderline = g_malloc0 (sizeof (guint16) * width * 4);
+
+    out_finfo = convert->out_info.finfo;
+
+    if (GST_VIDEO_INFO_IS_YUV (&convert->out_info)) {
+      /* FIXME, convert to AYUV, just black for now */
+      border_val = GINT32_FROM_BE (0x00007f7f);
+    } else {
+      border_val = GINT32_FROM_BE (convert->border_argb);
+    }
+    if (convert->pack_bits == 8)
+      video_orc_splat_u32 (convert->borderline, border_val, width);
+    else
+      video_orc_splat2_u64 (convert->borderline, border_val, width);
+
+    /* convert 1 pixel */
+    for (i = 0; i < 4; i++) {
+      planes[i] = &convert->borders[i];
+      strides[i] = sizeof (guint64);
+    }
+    out_finfo->pack_func (out_finfo, GST_VIDEO_PACK_FLAG_NONE,
+        convert->borderline, 0, planes, strides,
+        GST_VIDEO_CHROMA_SITE_UNKNOWN, 0, 1);
+  } else {
+    convert->borderline = NULL;
+  }
+}
+
 /**
  * gst_video_converter_new:
  * @in_info: a #GstVideoInfo
@@ -1649,7 +1695,6 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
     GstStructure * config)
 {
   GstVideoConverter *convert;
-  gint width;
   GstLineCache *prev;
   const GstVideoFormatInfo *fin, *fout, *finfo;
 
@@ -1754,29 +1799,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   /* pack into final format */
   convert->pack_lines = chain_pack (convert, prev);
 
-  width = MAX (convert->in_maxwidth, convert->out_maxwidth);
-  width += convert->out_x;
-
-  if (convert->fill_border && (convert->out_height < convert->out_maxheight ||
-          convert->out_width < convert->out_maxwidth)) {
-    guint32 border_val;
-
-    convert->borderline = g_malloc0 (sizeof (guint16) * width * 4);
-
-    if (GST_VIDEO_INFO_IS_YUV (&convert->out_info)) {
-      /* FIXME, convert to AYUV, just black for now */
-      border_val = GINT32_FROM_BE (0x00007f7f);
-    } else {
-      border_val = GINT32_FROM_BE (convert->border_argb);
-    }
-    if (convert->pack_bits == 8)
-      video_orc_splat_u32 (convert->borderline, border_val, width);
-    else
-      video_orc_splat_u64 (convert->borderline, border_val, width);
-  } else {
-    convert->borderline = NULL;
-  }
-
+  setup_borderline (convert);
   /* now figure out allocators */
   setup_allocators (convert);
 
@@ -1856,6 +1879,7 @@ gst_video_converter_free (GstVideoConverter * convert)
   g_free (convert->gamma_enc.gamma_table);
 
   g_free (convert->tmpline);
+  g_free (convert->lineptr);
   g_free (convert->borderline);
 
   if (convert->config)
@@ -3034,6 +3058,111 @@ convert_I420_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
 }
 #endif
 
+static void
+memset_u24 (guint8 * data, guint8 col[3], unsigned int n)
+{
+  unsigned int i;
+
+  for (i = 0; i < n; i++) {
+    data[0] = col[0];
+    data[1] = col[1];
+    data[2] = col[2];
+    data += 3;
+  }
+}
+
+#define MAKE_BORDER_FUNC(func)                                                  \
+        for (i = 0; i < out_y; i++)                                             \
+          func (FRAME_GET_PLANE_LINE (dest, k, i), col, out_maxwidth);          \
+        if (rb_width || lb_width) {                                             \
+          for (i = 0; i < out_height; i++) {                                    \
+            guint8 *d = FRAME_GET_PLANE_LINE (dest, k, i + out_y);              \
+            func (d, col, rb_width);                                            \
+            func (d + (pstride * r_border), col, lb_width);                     \
+          }                                                                     \
+        }                                                                       \
+        for (i = out_y + out_height; i < out_maxheight; i++)                    \
+          func (FRAME_GET_PLANE_LINE (dest, k, i), col, out_maxwidth);          \
+
+static void
+convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
+{
+  int k, n_planes;
+  const GstVideoFormatInfo *out_finfo;
+
+  if (!convert->fill_border || !convert->borderline)
+    return;
+
+  out_finfo = convert->out_info.finfo;
+
+  n_planes = GST_VIDEO_FRAME_N_PLANES (dest);
+
+  for (k = 0; k < n_planes; k++) {
+    gint i, out_x, out_y, out_width, out_height, pstride;
+    gint r_border, lb_width, rb_width;
+    gint out_maxwidth, out_maxheight;
+    gpointer borders;
+
+    out_x = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_x);
+    out_y = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k, convert->out_y);
+    out_width =
+        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_width);
+    out_height =
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k, convert->out_height);
+    out_maxwidth =
+        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_maxwidth);
+    out_maxheight =
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k,
+        convert->out_maxheight);
+
+    r_border = out_x + out_width;
+    rb_width = out_maxwidth - r_border;
+    lb_width = out_x;
+
+    borders = &convert->borders[k];
+
+    pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, k);
+
+    switch (pstride) {
+      case 1:
+      {
+        guint8 col = ((guint8 *) borders)[0];
+        MAKE_BORDER_FUNC (memset);
+        break;
+      }
+      case 2:
+      {
+        guint16 col = ((guint16 *) borders)[0];
+        MAKE_BORDER_FUNC (video_orc_splat_u16);
+        break;
+      }
+      case 3:
+      {
+        guint8 col[3];
+        col[0] = ((guint8 *) borders)[0];
+        col[1] = ((guint8 *) borders)[1];
+        col[2] = ((guint8 *) borders)[2];
+        MAKE_BORDER_FUNC (memset_u24);
+        break;
+      }
+      case 4:
+      {
+        guint32 col = ((guint32 *) borders)[0];
+        MAKE_BORDER_FUNC (video_orc_splat_u32);
+        break;
+      }
+      case 8:
+      {
+        guint64 col = ((guint64 *) borders)[0];
+        MAKE_BORDER_FUNC (video_orc_splat_u64);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
 #define GET_TMP_LINE(fl,idx) &fl->data[fl->stride * ((idx) % fl->n_lines)]
 
 static void
@@ -3042,11 +3171,16 @@ convert_scale_planes (GstVideoConverter * convert,
 {
   int k, n_planes;
   GstVideoFormat format = convert->fformat;
+  const GstVideoFormatInfo *in_finfo, *out_finfo;
+  gpointer *lines = convert->lineptr;
+
+  in_finfo = convert->in_info.finfo;
+  out_finfo = convert->out_info.finfo;
 
   n_planes = GST_VIDEO_FRAME_N_PLANES (src);
 
   for (k = 0; k < n_planes; k++) {
-    gint i, tmp_in, out_w, out_h;
+    gint i, tmp_in, in_x, in_y, out_x, out_y, out_width, out_height, pstride;
     GstVideoScaler *v_scaler, *h_scaler;
     ConverterAlloc *alloc;
 
@@ -3057,44 +3191,59 @@ convert_scale_planes (GstVideoConverter * convert,
 
     /* FIXME. assumes subsampling of component N is the same as plane N, which is
      * currently true for all formats we have but it might not be in the future. */
-    out_w = GST_VIDEO_FRAME_COMP_WIDTH (dest, k);
-    out_h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, k);
+    in_x = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, k, convert->in_x);
+    in_y = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, k, convert->in_y);
+    out_x = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_x);
+    out_y = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k, convert->out_y);
+    out_width =
+        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_width);
+    out_height =
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k, convert->out_height);
+
+    pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, k);
+    in_x *= pstride;
+    out_x *= pstride;
 
     tmp_in = 0;
-    for (i = 0; i < out_h; i++) {
+    for (i = 0; i < out_height; i++) {
       guint8 *d, *s;
       guint in, n_taps, j;
-      gpointer lines[32];
 
       gst_video_scaler_get_coeff (v_scaler, i, &in, &n_taps);
 
       while (tmp_in < in)
         tmp_in++;
       while (tmp_in < in + n_taps) {
-        s = FRAME_GET_PLANE_LINE (src, k, tmp_in);
+        s = FRAME_GET_PLANE_LINE (src, k, tmp_in + in_y);
         gst_video_scaler_horizontal (h_scaler, format,
-            s, GET_TMP_LINE (alloc, tmp_in), 0, out_w);
+            s + in_x, GET_TMP_LINE (alloc, tmp_in), 0, out_width);
         tmp_in++;
       }
       for (j = 0; j < n_taps; j++)
         lines[j] = GET_TMP_LINE (alloc, in + j);
 
-      d = FRAME_GET_PLANE_LINE (dest, k, i);
-      gst_video_scaler_vertical (v_scaler, format, lines, d, i, out_w);
+      d = FRAME_GET_PLANE_LINE (dest, k, i + out_y);
+      gst_video_scaler_vertical (v_scaler, format, lines, d + out_x, i,
+          out_width);
     }
   }
+  convert_fill_border (convert, dest);
 }
 
 static gboolean
 setup_scale (GstVideoConverter * convert, GstFormat fformat)
 {
   int i, n_planes;
-  gint method, stride = 0;
+  gint method, stride = 0, in_w, in_h, out_w, out_h;
   guint taps, max_taps = 0;
   GstVideoInfo *in_info, *out_info;
+  const GstVideoFormatInfo *in_finfo, *out_finfo;
 
   in_info = &convert->in_info;
   out_info = &convert->out_info;
+
+  in_finfo = in_info->finfo;
+  out_finfo = out_info->finfo;
 
   n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
 
@@ -3111,19 +3260,24 @@ setup_scale (GstVideoConverter * convert, GstFormat fformat)
       break;
   }
 
+  in_w = convert->in_width;
+  in_h = convert->in_height;
+  out_w = convert->out_width;
+  out_h = convert->out_height;
+
   if (n_planes == 1) {
     if (GST_VIDEO_INFO_IS_YUV (in_info)) {
       GstVideoScaler *y_scaler, *uv_scaler;
 
       y_scaler = gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_INFO_COMP_WIDTH (in_info, GST_VIDEO_COMP_Y),
-          GST_VIDEO_INFO_COMP_WIDTH (out_info, GST_VIDEO_COMP_Y),
-          convert->config);
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_Y, in_w),
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, GST_VIDEO_COMP_Y,
+              out_w), convert->config);
       uv_scaler =
           gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_INFO_COMP_WIDTH (in_info, GST_VIDEO_COMP_U),
-          GST_VIDEO_INFO_COMP_WIDTH (out_info, GST_VIDEO_COMP_U),
-          convert->config);
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_U, in_w),
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, GST_VIDEO_COMP_U,
+              out_w), convert->config);
 
       convert->fh_scaler[0] =
           gst_video_scaler_combine_packed_YUV (y_scaler, uv_scaler,
@@ -3134,16 +3288,14 @@ setup_scale (GstVideoConverter * convert, GstFormat fformat)
     } else {
       convert->fh_scaler[0] =
           gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_INFO_WIDTH (in_info), GST_VIDEO_INFO_WIDTH (out_info),
-          convert->config);
+          in_w, out_w, convert->config);
     }
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (in_info, 0));
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (out_info, 0));
 
     convert->fv_scaler[0] =
         gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-        GST_VIDEO_INFO_HEIGHT (in_info), GST_VIDEO_INFO_HEIGHT (out_info),
-        convert->config);
+        in_h, out_h, convert->config);
 
     gst_video_scaler_get_coeff (convert->fv_scaler[0], 0, NULL, &max_taps);
     convert->fformat = fformat;
@@ -3156,12 +3308,14 @@ setup_scale (GstVideoConverter * convert, GstFormat fformat)
 
       convert->fh_scaler[i] =
           gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_INFO_COMP_WIDTH (in_info, i),
-          GST_VIDEO_INFO_COMP_WIDTH (out_info, i), convert->config);
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, i, in_w),
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, i, out_w),
+          convert->config);
       convert->fv_scaler[i] =
           gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_INFO_COMP_HEIGHT (in_info, i),
-          GST_VIDEO_INFO_COMP_HEIGHT (out_info, i), convert->config);
+          GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, i, in_h),
+          GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, i, out_h),
+          convert->config);
 
       gst_video_scaler_get_coeff (convert->fv_scaler[i], 0, NULL, &n_taps);
       max_taps = MAX (max_taps, n_taps);
@@ -3170,6 +3324,8 @@ setup_scale (GstVideoConverter * convert, GstFormat fformat)
   }
   convert->flines =
       converter_alloc_new (stride, max_taps + BACKLOG, NULL, NULL);
+  convert->lineptr = g_malloc (sizeof (gpointer) * max_taps);
+  setup_borderline (convert);
 
   return TRUE;
 }
@@ -3359,62 +3515,62 @@ static const VideoTransform transforms[] = {
       convert_I420_BGRA},
 #endif
 
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_I420, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_I420, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YV12, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YV12, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_Y41B, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_Y41B, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_A420, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_A420, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_YUV9, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_YUV9, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_YVU9, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_YVU9, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
 
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_YUY2},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_UYVY},
-  {GST_VIDEO_FORMAT_YVYU, GST_VIDEO_FORMAT_YVYU, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YVYU, GST_VIDEO_FORMAT_YVYU, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_YVYU},
 
-  {GST_VIDEO_FORMAT_RGB15, GST_VIDEO_FORMAT_RGB15, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_RGB15, GST_VIDEO_FORMAT_RGB15, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_NV12},
-  {GST_VIDEO_FORMAT_RGB16, GST_VIDEO_FORMAT_RGB16, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_RGB16, GST_VIDEO_FORMAT_RGB16, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_NV12},
 
-  {GST_VIDEO_FORMAT_RGB, GST_VIDEO_FORMAT_RGB, TRUE, FALSE, FALSE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_RGB, GST_VIDEO_FORMAT_RGB, TRUE, FALSE, FALSE, TRUE, TRUE,
         0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_RGB},
-  {GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_BGR, TRUE, FALSE, FALSE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_BGR, TRUE, FALSE, FALSE, TRUE, TRUE,
         0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_BGR},
 
-  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_GRAY8, TRUE, FALSE, FALSE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_GRAY8, TRUE, FALSE, FALSE, TRUE,
+        TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   {GST_VIDEO_FORMAT_GRAY16_LE, GST_VIDEO_FORMAT_GRAY16_LE, TRUE, FALSE, FALSE,
-        FALSE, FALSE, 0, 0,
+        TRUE, TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY16_LE},
 #else
   {GST_VIDEO_FORMAT_GRAY16_BE, GST_VIDEO_FORMAT_GRAY16_BE, TRUE, FALSE, FALSE,
-        FALSE, FALSE, 0, 0,
+        TRUE, TRUE, 0, 0,
       convert_scale_planes, GST_VIDEO_FORMAT_GRAY16_BE},
 #endif
 };
@@ -3468,8 +3624,12 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   interlaced = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info);
   interlaced |= GST_VIDEO_INFO_IS_INTERLACED (&convert->out_info);
 
-  crop = convert->in_x || convert->in_y;
-  border = convert->out_x || convert->out_y;
+  crop = convert->in_x || convert->in_y
+      || convert->in_width < convert->in_maxwidth
+      || convert->in_height < convert->in_maxheight;
+  border = convert->out_x || convert->out_y
+      || convert->out_width < convert->out_maxwidth
+      || convert->out_height < convert->out_maxheight;
 
   for (i = 0; i < sizeof (transforms) / sizeof (transforms[0]); i++) {
     if (transforms[i].in_format == in_format &&

@@ -508,6 +508,12 @@ convhwb d, s
 
 mergebw d, s, s
 
+.function video_orc_splat_u16
+.dest 2 d1 guint8
+.param 2 p1
+
+storew d1, p1
+
 .function video_orc_splat_u32
 .dest 4 d1 guint8
 .param 4 p1
@@ -515,6 +521,12 @@ mergebw d, s, s
 storel d1, p1
 
 .function video_orc_splat_u64
+.dest 8 d1 guint8
+.longparam 8 p1
+
+storeq d1, p1
+
+.function video_orc_splat2_u64
 .dest 8 d1 guint8
 .param 4 p1
 
