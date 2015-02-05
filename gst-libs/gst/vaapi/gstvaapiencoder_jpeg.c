@@ -88,9 +88,21 @@ generate_sampling_factors (GstVaapiEncoderJpeg * encoder)
 
   vinfo = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
 
+  if (GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED) {
+    /* Use native I420 format */
+    encoder->n_components = 3;
+    for (i = 0; i < encoder->n_components; ++i) {
+      if (i == 0)
+        encoder->h_samp[i] = encoder->v_samp[i] = 2;
+      else
+        encoder->h_samp[i] = encoder->v_samp[i] = 1;
+      GST_DEBUG ("sampling factors: %d %d", encoder->h_samp[i],
+          encoder->v_samp[i]);
+    }
+    return;
+  }
+
   encoder->n_components = GST_VIDEO_INFO_N_COMPONENTS (vinfo);
-  if (GST_VIDEO_INFO_IS_GRAY (vinfo))
-    encoder->n_components = 1;
 
   encoder->h_max_samp = 0;
   encoder->v_max_samp = 0;
@@ -111,9 +123,10 @@ generate_sampling_factors (GstVaapiEncoderJpeg * encoder)
   /* now invert */
   /* maximum is invariant, as one of the components should have samp 1 */
   for (i = 0; i < encoder->n_components; ++i) {
-    GST_DEBUG ("%d %d", encoder->h_samp[i], encoder->h_max_samp);
     encoder->h_samp[i] = encoder->h_max_samp / encoder->h_samp[i];
     encoder->v_samp[i] = encoder->v_max_samp / encoder->v_samp[i];
+    GST_DEBUG ("sampling factors: %d %d", encoder->h_samp[i],
+        encoder->v_samp[i]);
   }
 }
 
@@ -216,7 +229,7 @@ fill_picture (GstVaapiEncoderJpeg * encoder,
   pic_param->pic_flags.bits.differential = 0;   /* non-Differential Encoding */
   pic_param->sample_bit_depth = 8;
   pic_param->num_scan = 1;
-  pic_param->num_components = GST_VIDEO_INFO_N_COMPONENTS (vinfo);
+  pic_param->num_components = encoder->n_components;
   pic_param->quality = encoder->quality;
   return TRUE;
 }
