@@ -2987,12 +2987,17 @@ static void
 convert_AYUV_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
-  MatrixData *data = &convert->convert_matrix;
   gint width = convert->in_width;
   gint height = convert->in_height;
+  MatrixData *data = &convert->convert_matrix;
+  guint8 *s, *d;
 
-  video_orc_convert_AYUV_ARGB (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (convert->in_x * 4);
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (convert->out_x * 4);
+
+  video_orc_convert_AYUV_ARGB (d, FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
       data->im[2][1], data->im[1][1], data->im[1][2], width, height);
 }
@@ -3004,9 +3009,14 @@ convert_AYUV_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
+  guint8 *s, *d;
 
-  video_orc_convert_AYUV_BGRA (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (convert->in_x * 4);
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (convert->out_x * 4);
+
+  video_orc_convert_AYUV_BGRA (d, FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
       data->im[2][1], data->im[1][1], data->im[1][2], width, height);
 }
@@ -3018,9 +3028,14 @@ convert_AYUV_ABGR (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
+  guint8 *s, *d;
 
-  video_orc_convert_AYUV_ABGR (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (convert->in_x * 4);
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (convert->out_x * 4);
+
+  video_orc_convert_AYUV_ABGR (d, FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
       data->im[2][1], data->im[1][1], data->im[1][2], width, height);
 }
@@ -3032,9 +3047,14 @@ convert_AYUV_RGBA (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
+  guint8 *s, *d;
 
-  video_orc_convert_AYUV_RGBA (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (convert->in_x * 4);
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (convert->out_x * 4);
+
+  video_orc_convert_AYUV_RGBA (d, FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
       data->im[2][1], data->im[1][1], data->im[1][2], width, height);
 }
@@ -3325,7 +3345,6 @@ setup_scale (GstVideoConverter * convert, GstFormat fformat)
   convert->flines =
       converter_alloc_new (stride, max_taps + BACKLOG, NULL, NULL);
   convert->lineptr = g_malloc (sizeof (gpointer) * max_taps);
-  setup_borderline (convert);
 
   return TRUE;
 }
@@ -3476,28 +3495,28 @@ static const VideoTransform transforms[] = {
       convert_Y444_Y42B},
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ARGB, TRUE, TRUE, TRUE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ARGB, TRUE, TRUE, TRUE, TRUE, TRUE,
         0, 0,
       convert_AYUV_ARGB},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_BGRA, TRUE, TRUE, TRUE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_BGRA, TRUE, TRUE, TRUE, TRUE, TRUE,
         0, 0,
       convert_AYUV_BGRA},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_xRGB, TRUE, TRUE, TRUE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_xRGB, TRUE, TRUE, TRUE, TRUE, TRUE,
         0, 0,
       convert_AYUV_ARGB},       /* alias */
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_BGRx, TRUE, TRUE, TRUE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_BGRx, TRUE, TRUE, TRUE, TRUE, TRUE,
         0, 0,
       convert_AYUV_BGRA},       /* alias */
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ABGR, TRUE, TRUE, TRUE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ABGR, TRUE, TRUE, TRUE, TRUE, TRUE,
         0, 0,
       convert_AYUV_ABGR},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_RGBA, TRUE, TRUE, TRUE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_RGBA, TRUE, TRUE, TRUE, TRUE, TRUE,
         0, 0,
       convert_AYUV_RGBA},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_xBGR, TRUE, TRUE, TRUE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_xBGR, TRUE, TRUE, TRUE, TRUE, TRUE,
         0, 0,
       convert_AYUV_ABGR},       /* alias */
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_RGBx, TRUE, TRUE, TRUE, FALSE, FALSE,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_RGBx, TRUE, TRUE, TRUE, TRUE, TRUE,
         0, 0,
       convert_AYUV_RGBA},       /* alias */
 
@@ -3649,6 +3668,8 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
       if (!transforms[i].keeps_size)
         if (!setup_scale (convert, transforms[i].fformat))
           return FALSE;
+      if (border)
+        setup_borderline (convert);
       return TRUE;
     }
   }
