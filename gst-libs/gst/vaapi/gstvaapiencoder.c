@@ -585,6 +585,13 @@ set_context_info (GstVaapiEncoder * encoder)
   if (!cip->chroma_type  && (format != GST_VIDEO_FORMAT_ENCODED))
     goto error_unsupported_format;
 
+  if (cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV420 &&
+      format != GST_VIDEO_FORMAT_ENCODED) {
+    GST_ERROR ("We are only supporting YUV:4:2:0 for encoding,"
+        "please try to use vaapipostproc to convert the input format!");
+    goto error_unsupported_format;
+  }
+  
   memset (config, 0, sizeof (*config));
   config->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
   config->packed_headers = get_packed_headers (encoder);
