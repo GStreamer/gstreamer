@@ -82,13 +82,15 @@
     "channels = (int) [ 1, 6 ], "      \
     "rate = (int) {" SAMPLE_RATES "}, "   \
     "stream-format = (string) { adts, raw }, " \
-    "base-profile = (string) { main, lc, ssr, ltp }; " \
+    "base-profile = (string) { main, lc, ssr, ltp }, " \
+    "framed = (boolean) true; " \
     "audio/mpeg, "                     \
     "mpegversion = (int) 2, "   \
     "channels = (int) [ 1, 6 ], "      \
     "rate = (int) {" SAMPLE_RATES "}, "   \
     "stream-format = (string) { adts, raw }, " \
-    "profile = (string) { main, lc }"
+    "profile = (string) { main, lc }," \
+    "parsed = (boolean) true; "
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -583,6 +585,8 @@ gst_faac_configure_source_pad (GstFaac * faac, GstAudioInfo * info)
     }
 
     free (config);
+
+    gst_caps_set_simple (srccaps, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
   } else {
     const gchar *profile;
 
@@ -602,7 +606,8 @@ gst_faac_configure_source_pad (GstFaac * faac, GstAudioInfo * info)
         profile = "lc";
         break;
     }
-    gst_caps_set_simple (srccaps, "profile", G_TYPE_STRING, profile, NULL);
+    gst_caps_set_simple (srccaps, "profile", G_TYPE_STRING, profile,
+        "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
     /* FIXME: How to get the profile for mpegversion==2? */
   }
 
