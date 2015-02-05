@@ -520,7 +520,6 @@ _opensles_player_start (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
-  gint i;
 
   /* Register callback on the buffer queue */
   if (!thiz->is_queue_callback_registered) {
@@ -534,11 +533,9 @@ _opensles_player_start (GstAudioRingBuffer * rb)
     thiz->is_queue_callback_registered = TRUE;
   }
 
-  /* Fill the queue by enqueing buffers */
+  /* Fill the queue by enqueing a buffer */
   if (!g_atomic_int_get (&thiz->is_prerolled)) {
-    for (i = 0; i < thiz->data_segtotal; i++) {
-      _opensles_player_cb (NULL, rb);
-    }
+    _opensles_player_cb (NULL, rb);
     g_atomic_int_set (&thiz->is_prerolled, 1);
   }
 
