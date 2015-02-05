@@ -267,6 +267,7 @@ _egl_image_upload_transform_caps (GstGLContext * context,
     ret = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   } else {
     ret = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_EGL_IMAGE);
+    gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
   }
 
   return ret;
@@ -423,6 +424,7 @@ _upload_meta_upload_transform_caps (GstGLContext * context,
     ret =
         _set_caps_features (caps,
         GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
+    gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
   }
 
   return ret;
