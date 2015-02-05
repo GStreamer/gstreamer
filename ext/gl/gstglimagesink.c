@@ -822,6 +822,7 @@ gst_glimage_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
       NULL);
   gst_caps_unref (tmp);
   tmp = result;
+  GST_DEBUG_OBJECT (bsink, "convert returned caps %" GST_PTR_FORMAT, tmp);
 
   result =
       gst_gl_upload_transform_caps (gl_sink->context, GST_PAD_SRC, tmp, NULL);
