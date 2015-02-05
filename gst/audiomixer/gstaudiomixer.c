@@ -639,9 +639,6 @@ gst_audiomixer_src_event (GstAggregator * agg, GstEvent * event)
 
       /* Link up */
       result = GST_AGGREGATOR_CLASS (parent_class)->src_event (agg, event);
-
-      if (result)
-        audiomixer->base_time = agg->segment.start;
       goto done;
     }
       break;
@@ -691,17 +688,6 @@ gst_audiomixer_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
         GST_ERROR_OBJECT (aggpad, "Negative rates not supported yet");
         res = FALSE;
         gst_event_unref (event);
-        event = NULL;
-      }
-
-      if (event) {
-        res =
-            GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, aggpad,
-            event);
-
-        if (res)
-          aggpad->segment.position = segment->start + segment->offset;
-
         event = NULL;
       }
       break;
@@ -761,23 +747,6 @@ gst_audiomixer_flush (GstAggregator * agg)
   return GST_FLOW_OK;
 }
 
-static gboolean
-gst_audiomixer_send_event (GstElement * element, GstEvent * event)
-{
-  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (element);
-
-  gboolean res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
-
-  GST_STATE_LOCK (element);
-  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK &&
-      GST_STATE (element) < GST_STATE_PAUSED) {
-    audiomixer->base_time = GST_AGGREGATOR (element)->segment.start;
-  }
-  GST_STATE_UNLOCK (element);
-
-  return res;
-}
-
 static void
 gst_audiomixer_class_init (GstAudioMixerClass * klass)
 {
@@ -827,8 +796,6 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
       GST_DEBUG_FUNCPTR (gst_audiomixer_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_audiomixer_release_pad);
-  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_audiomixer_send_event);
-
 
   agg_class->sinkpads_type = GST_TYPE_AUDIO_MIXER_PAD;
   agg_class->start = gst_audiomixer_start;
@@ -1093,7 +1060,6 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     guint64 start_running_time_offset;
     guint64 end_running_time_offset;
 
-    aggpad->segment.base = audiomixer->base_time;
     start_running_time =
         gst_segment_to_running_time (&aggpad->segment,
         GST_FORMAT_TIME, start_time);
