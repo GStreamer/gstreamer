@@ -1035,6 +1035,68 @@ GST_START_TEST (test_flush_start_flush_stop)
 
 GST_END_TEST;
 
+#ifndef GST_DISABLE_PARSE
+GST_START_TEST (test_segment_base_handling)
+{
+  GstElement *pipeline, *sink, *mix, *src1, *src2;
+  GstPad *srcpad, *sinkpad;
+  GstClockTime end_time;
+  GstSample *last_sample = NULL;
+  GstSample *sample;
+  GstBuffer *buf;
+  GstCaps *caps;
+
+  caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, 16,
+      "height", G_TYPE_INT, 16, "framerate", GST_TYPE_FRACTION, 30, 1, NULL);
+
+  /* each source generates 5 seconds of data, src2 shifted by 5 seconds */
+  pipeline = gst_pipeline_new ("pipeline");
+  mix = gst_element_factory_make ("compositor", "compositor");
+  sink = gst_element_factory_make ("appsink", "sink");
+  g_object_set (sink, "caps", caps, "sync", FALSE, NULL);
+  gst_caps_unref (caps);
+  src1 = gst_element_factory_make ("videotestsrc", "src1");
+  g_object_set (src1, "num-buffers", 30 * 5, "pattern", 2, NULL);
+  src2 = gst_element_factory_make ("videotestsrc", "src2");
+  g_object_set (src2, "num-buffers", 30 * 5, "pattern", 2, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src1, src2, mix, sink, NULL);
+  fail_unless (gst_element_link (mix, sink));
+
+  srcpad = gst_element_get_static_pad (src1, "src");
+  sinkpad = gst_element_get_request_pad (mix, "sink_1");
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  srcpad = gst_element_get_static_pad (src2, "src");
+  sinkpad = gst_element_get_request_pad (mix, "sink_2");
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  gst_pad_set_offset (sinkpad, 5 * GST_SECOND);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  do {
+    g_signal_emit_by_name (sink, "pull-sample", &sample);
+    if (sample == NULL)
+      break;
+    if (last_sample)
+      gst_sample_unref (last_sample);
+    last_sample = sample;
+  } while (TRUE);
+
+  buf = gst_sample_get_buffer (last_sample);
+  end_time = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+  fail_unless_equals_int64 (end_time, 10 * GST_SECOND);
+  gst_sample_unref (last_sample);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+#endif
 
 static Suite *
 compositor_suite (void)
@@ -1054,6 +1116,9 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_duration_unknown_overrides);
   tcase_add_test (tc_chain, test_loop);
   tcase_add_test (tc_chain, test_flush_start_flush_stop);
+#ifndef GST_DISABLE_PARSE
+  tcase_add_test (tc_chain, test_segment_base_handling);
+#endif
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
