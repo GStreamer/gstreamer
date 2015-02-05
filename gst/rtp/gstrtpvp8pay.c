@@ -509,8 +509,25 @@ gst_rtp_vp8_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 static gboolean
 gst_rtp_vp8_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 {
+  GstCaps *src_caps;
+  GstStructure *s;
+  char *encoding_name;
+
+  src_caps = gst_pad_get_allowed_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload));
+  if (src_caps) {
+    src_caps = gst_caps_truncate (src_caps);
+    src_caps = gst_caps_make_writable (src_caps);
+    s = gst_caps_get_structure (src_caps, 0);
+    gst_structure_fixate_field_string (s, "encoding-name", "VP8-DRAFT-IETF-01");
+    encoding_name = g_strdup (gst_structure_get_string (s, "encoding-name"));
+    gst_caps_unref (src_caps);
+  } else {
+    encoding_name = g_strdup ("VP8-DRAFT-IETF-01");
+  }
+
   gst_rtp_base_payload_set_options (payload, "video", TRUE,
-      "VP8-DRAFT-IETF-01", 90000);
+      encoding_name, 90000);
+  g_free (encoding_name);
   return gst_rtp_base_payload_set_outcaps (payload, NULL);
 }
 
