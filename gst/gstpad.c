@@ -115,7 +115,8 @@ enum
   PAD_PROP_CAPS,
   PAD_PROP_DIRECTION,
   PAD_PROP_TEMPLATE,
-  /* FILL ME */
+  PAD_PROP_OFFSET
+      /* FILL ME */
 };
 
 #define GST_PAD_GET_PRIVATE(obj)  \
@@ -353,6 +354,18 @@ gst_pad_class_init (GstPadClass * klass)
   g_object_class_install_property (gobject_class, PAD_PROP_TEMPLATE,
       g_param_spec_object ("template", "Template",
           "The GstPadTemplate of this pad", GST_TYPE_PAD_TEMPLATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPad:offset:
+   *
+   * The offset that will be applied to the running time of the pad.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PAD_PROP_OFFSET,
+      g_param_spec_int64 ("offset", "Offset",
+          "The running time offset of the pad", 0, G_MAXINT64, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstobject_class->path_string_separator = ".";
@@ -747,6 +760,9 @@ gst_pad_set_property (GObject * object, guint prop_id,
       gst_pad_set_pad_template (GST_PAD_CAST (object),
           (GstPadTemplate *) g_value_get_object (value));
       break;
+    case PAD_PROP_OFFSET:
+      gst_pad_set_offset (GST_PAD_CAST (object), g_value_get_int64 (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -770,6 +786,9 @@ gst_pad_get_property (GObject * object, guint prop_id,
       break;
     case PAD_PROP_TEMPLATE:
       g_value_set_object (value, GST_PAD_PAD_TEMPLATE (object));
+      break;
+    case PAD_PROP_OFFSET:
+      g_value_set_int64 (value, gst_pad_get_offset (GST_PAD_CAST (object)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
