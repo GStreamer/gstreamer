@@ -182,9 +182,6 @@ static GstCaps *gst_audio_base_sink_fixate (GstBaseSink * bsink,
 static gboolean gst_audio_base_sink_query_pad (GstBaseSink * bsink,
     GstQuery * query);
 
-static GstFlowReturn
-gst_audio_base_sink_render_samples (GstBaseSink * bsink,
-    GstBuffer * buf, GstClockTime time, GstClockTime duration);
 
 /* static guint gst_audio_base_sink_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -1032,6 +1029,7 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
 {
   GstAudioBaseSink *sink = GST_AUDIO_BASE_SINK (bsink);
   GstFlowReturn ret;
+  gboolean clear_force_start_flag = FALSE;
 
   /* For both gap and EOS events, make sure the ringbuffer is running
    * before trying to wait on the event! */
@@ -1046,6 +1044,9 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
       }
 
       gst_audio_base_sink_force_start (sink);
+      /* Make sure the ringbuffer will start again if interrupted during event_wait() */
+      g_atomic_int_set (&sink->eos_rendering, 1);
+      clear_force_start_flag = TRUE;
       break;
     default:
       break;
@@ -1053,15 +1054,9 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
 
   ret = GST_BASE_SINK_CLASS (parent_class)->wait_event (bsink, event);
   if (ret != GST_FLOW_OK)
-    return ret;
+    goto done;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_GAP:{
-      GstClockTime ts, dur;
-      gst_event_parse_gap (event, &ts, &dur);
-      gst_audio_base_sink_render_samples (bsink, NULL, ts, dur);
-      break;
-    }
     case GST_EVENT_EOS:
       /* now wait till we played everything */
       gst_audio_base_sink_drain (sink);
@@ -1069,6 +1064,10 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
     default:
       break;
   }
+
+done:
+  if (clear_force_start_flag)
+    g_atomic_int_set (&sink->eos_rendering, 0);
   return ret;
 }
 
@@ -1601,12 +1600,10 @@ gst_audio_base_sink_get_alignment (GstAudioBaseSink * sink,
   return align;
 }
 
-/* buf may be NULL, to render silence/skip */
 static GstFlowReturn
-gst_audio_base_sink_render_samples (GstBaseSink * bsink,
-    GstBuffer * buf, GstClockTime time, GstClockTime duration)
+gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
-  GstClockTime stop, render_start, render_stop, sample_offset;
+  GstClockTime time, stop, render_start, render_stop, sample_offset;
   GstClockTimeDiff sync_offset, ts_offset;
   GstAudioBaseSinkClass *bclass;
   GstAudioBaseSink *sink;
@@ -1615,7 +1612,8 @@ gst_audio_base_sink_render_samples (GstBaseSink * bsink,
   guint64 ctime, cstop;
   gsize offset;
   GstMapInfo info;
-  guint samples = 0, written;
+  gsize size;
+  guint samples, written;
   gint bpf, rate;
   gint accum;
   gint out_samples;
@@ -1654,7 +1652,7 @@ gst_audio_base_sink_render_samples (GstBaseSink * bsink,
 
   /* Before we go on, let's see if we need to payload the data. If yes, we also
    * need to unref the output buffer before leaving. */
-  if (buf && bclass->payload) {
+  if (bclass->payload) {
     out = bclass->payload (sink, buf);
 
     if (!out)
@@ -1666,26 +1664,36 @@ gst_audio_base_sink_render_samples (GstBaseSink * bsink,
   bpf = GST_AUDIO_INFO_BPF (&ringbuf->spec.info);
   rate = GST_AUDIO_INFO_RATE (&ringbuf->spec.info);
 
-  if (buf) {
-    gsize size = gst_buffer_get_size (buf);
-    if (G_UNLIKELY (size % bpf) != 0)
-      goto wrong_size;
+  size = gst_buffer_get_size (buf);
+  if (G_UNLIKELY (size % bpf) != 0)
+    goto wrong_size;
 
-    samples = size / bpf;
-  } else if (duration != GST_CLOCK_TIME_NONE) {
-    /* Convert the passed duration to a number of samples */
-    samples = gst_util_uint64_scale_int (duration, rate, GST_SECOND);
-  }
+  samples = size / bpf;
   out_samples = samples;
 
-  /* Last ditch attempt to ensure that we only place silence if
-   * we are in trickmode no-audio mode by dropping the buffer contents.
-   * We then continue calculations based on the passed times/duration */
+  time = GST_BUFFER_TIMESTAMP (buf);
+
+  /* Last ditch attempt to ensure that we only play silence if
+   * we are in trickmode no-audio mode (or if a buffer is marked as a GAP)
+   * by dropping the buffer contents and rendering as a gap event instead */
   if (G_UNLIKELY ((bsink->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO)
           || (buf && GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP)))) {
+    GstClockTime duration;
+    GstEvent *event;
+    GstBaseSinkClass *bclass;
     GST_DEBUG_OBJECT (bsink,
         "Received GAP or ignoring audio for trickplay. Dropping contents");
-    buf = NULL;
+
+    duration = gst_util_uint64_scale_int (samples, GST_SECOND, rate);
+    event = gst_event_new_gap (time, duration);
+
+    bclass = GST_BASE_SINK_GET_CLASS (bsink);
+    ret = bclass->wait_event (bsink, event);
+    gst_event_unref (event);
+
+    /* Ensure we'll resync on the next buffer as if discont */
+    sink->next_sample = -1;
+    goto done;
   }
 
   GST_DEBUG_OBJECT (sink,
@@ -1700,8 +1708,8 @@ gst_audio_base_sink_render_samples (GstBaseSink * bsink,
   if (!GST_CLOCK_TIME_IS_VALID (time)) {
     render_start = gst_audio_base_sink_get_offset (sink);
     render_stop = render_start + samples;
-    GST_DEBUG_OBJECT (sink, "Samples have no timestamp."
-        " Using render_start=%" G_GUINT64_FORMAT, render_start);
+    GST_DEBUG_OBJECT (sink, "Buffer of size %" G_GSIZE_FORMAT " has no time."
+        " Using render_start=%" G_GUINT64_FORMAT, size, render_start);
     /* we don't have a start so we don't know stop either */
     stop = -1;
     goto no_align;
@@ -1892,12 +1900,10 @@ gst_audio_base_sink_render_samples (GstBaseSink * bsink,
   }
 
   /* always resync after a discont */
-  if (G_LIKELY (buf)) {
-    if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT) ||
-            GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_RESYNC))) {
-      GST_DEBUG_OBJECT (sink, "resync after discont/resync");
-      goto no_align;
-    }
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT) ||
+          GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_RESYNC))) {
+    GST_DEBUG_OBJECT (sink, "resync after discont/resync");
+    goto no_align;
   }
 
   /* resync when we don't know what to align the sample with */
@@ -1937,48 +1943,37 @@ no_align:
   /* we need to accumulate over different runs for when we get interrupted */
   accum = 0;
   align_next = TRUE;
-  if (G_LIKELY (buf)) {
-    gst_buffer_map (buf, &info, GST_MAP_READ);
-    do {
-      written =
-          gst_audio_ring_buffer_commit (ringbuf, &sample_offset,
-          info.data + offset, samples, out_samples, &accum);
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  do {
+    written =
+        gst_audio_ring_buffer_commit (ringbuf, &sample_offset,
+        info.data + offset, samples, out_samples, &accum);
 
-      GST_DEBUG_OBJECT (sink, "wrote %u of %u", written, samples);
-      /* if we wrote all, we're done */
-      if (G_LIKELY (written == samples))
-        break;
+    GST_DEBUG_OBJECT (sink, "wrote %u of %u", written, samples);
+    /* if we wrote all, we're done */
+    if (G_LIKELY (written == samples))
+      break;
 
-      /* else something interrupted us and we wait for preroll. */
-      if ((ret = gst_base_sink_wait_preroll (bsink)) != GST_FLOW_OK)
-        goto stopping;
+    /* else something interrupted us and we wait for preroll. */
+    if ((ret = gst_base_sink_wait_preroll (bsink)) != GST_FLOW_OK)
+      goto stopping;
 
-      /* if we got interrupted, we cannot assume that the next sample should
-       * be aligned to this one */
-      align_next = FALSE;
+    /* if we got interrupted, we cannot assume that the next sample should
+     * be aligned to this one */
+    align_next = FALSE;
 
-      /* update the output samples. FIXME, this will just skip them when pausing
-       * during trick mode */
-      if (out_samples > written) {
-        out_samples -= written;
-        accum = 0;
-      } else
-        break;
+    /* update the output samples. FIXME, this will just skip them when pausing
+     * during trick mode */
+    if (out_samples > written) {
+      out_samples -= written;
+      accum = 0;
+    } else
+      break;
 
-      samples -= written;
-      offset += written * bpf;
-    } while (TRUE);
-    gst_buffer_unmap (buf, &info);
-  } else {
-    GstClockTime buffer_time = ringbuf->spec.buffer_time * GST_USECOND;
-
-    GST_DEBUG_OBJECT (sink, "Discarded audio content. Starting ringbuffer");
-    gst_audio_base_sink_force_start (sink);
-    /* Wait until the time when we would have written out this timestamp */
-    if (sink->priv->eos_time != -1 && sink->priv->eos_time > buffer_time)
-      gst_base_sink_wait (GST_BASE_SINK (sink),
-          sink->priv->eos_time - buffer_time, NULL);
-  }
+    samples -= written;
+    offset += written * bpf;
+  } while (TRUE);
+  gst_buffer_unmap (buf, &info);
 
   if (G_LIKELY (align_next))
     sink->next_sample = sample_offset;
@@ -2053,14 +2048,6 @@ sync_latency_failed:
     GST_DEBUG_OBJECT (sink, "failed waiting for latency");
     goto done;
   }
-}
-
-static GstFlowReturn
-gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
-{
-  GstClockTime ts = GST_BUFFER_TIMESTAMP (buf);
-  GstClockTime dur = GST_BUFFER_DURATION (buf);
-  return gst_audio_base_sink_render_samples (bsink, buf, ts, dur);
 }
 
 /**
