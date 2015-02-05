@@ -217,8 +217,11 @@ _priv_gst_do_linear_regression (GstClockTime * times, guint n,
 
   *m_num = sxy;
   *m_denom = sxx;
-  *xbase = xmin;
-  *b = (ybar + ymin) - gst_util_uint64_scale (xbar, *m_num, *m_denom);
+  *b = (ymin + ybar) - gst_util_uint64_scale (xbar, *m_num, *m_denom);
+  /* Report base starting from the most recent observation */
+  *xbase = xmax;
+  *b += gst_util_uint64_scale (xmax - xmin, *m_num, *m_denom);
+
   *r_squared = ((double) sxy * (double) sxy) / ((double) sxx * (double) syy);
 
 #ifdef DEBUGGING_ENABLED
