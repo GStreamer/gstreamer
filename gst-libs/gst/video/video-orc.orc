@@ -529,8 +529,10 @@ storeq d1, p1
 .function video_orc_splat2_u64
 .dest 8 d1 guint8
 .param 4 p1
+.temp 4 p
 
-x4 mergebw d1, p1, p1
+loadpl p, p1
+x4 mergebw d1, p, p
 
 .function video_orc_convert_I420_UYVY
 .dest 4 d1 guint8
