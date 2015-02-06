@@ -3121,8 +3121,10 @@ memset_u24 (guint8 * data, guint8 col[3], unsigned int n)
         if (rb_width || lb_width) {                                             \
           for (i = 0; i < out_height; i++) {                                    \
             guint8 *d = FRAME_GET_PLANE_LINE (dest, k, i + out_y);              \
-            func (d, col, rb_width);                                            \
-            func (d + (pstride * r_border), col, lb_width);                     \
+            if (lb_width)                                                       \
+              func (d, col, lb_width);                                          \
+            if (rb_width)                                                       \
+              func (d + (pstride * r_border), col, rb_width);                   \
           }                                                                     \
         }                                                                       \
         for (i = out_y + out_height; i < out_maxheight; i++)                    \
