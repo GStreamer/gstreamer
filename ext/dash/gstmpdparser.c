@@ -69,6 +69,8 @@ static gboolean gst_mpdparser_get_xml_node_content (xmlNode * a_node,
     gchar ** content);
 static gchar *gst_mpdparser_get_xml_node_namespace (xmlNode * a_node,
     const gchar * prefix);
+static gboolean gst_mpdparser_get_xml_node_as_string (xmlNode * a_node,
+    gchar ** content);
 
 /* XML node parsing */
 static void gst_mpdparser_parse_baseURL_node (GList ** list, xmlNode * a_node);
@@ -934,6 +936,24 @@ gst_mpdparser_get_xml_node_content (xmlNode * a_node, gchar ** content)
   return exists;
 }
 
+static gboolean
+gst_mpdparser_get_xml_node_as_string (xmlNode * a_node, gchar ** content)
+{
+  gboolean exists = FALSE;
+  xmlBufferPtr buffer = xmlBufferCreate ();
+  int size;
+
+  size = xmlNodeDump (buffer, a_node->doc, a_node, 0,   /* indent */
+      0 /* format */ );
+  if (size > 0) {
+    *content = (gchar *) xmlBufferDetach (buffer);
+    exists = TRUE;
+    GST_LOG (" - %s: %s", a_node->name, *content);
+  }
+  xmlBufferFree (buffer);
+  return exists;
+}
+
 static gchar *
 gst_mpdparser_get_xml_node_namespace (xmlNode * a_node, const gchar * prefix)
 {
@@ -992,7 +1012,11 @@ gst_mpdparser_parse_descriptor_type_node (GList ** list, xmlNode * a_node)
   GST_LOG ("attributes of %s node:", a_node->name);
   gst_mpdparser_get_xml_prop_string (a_node, "schemeIdUri",
       &new_descriptor->schemeIdUri);
-  gst_mpdparser_get_xml_prop_string (a_node, "value", &new_descriptor->value);
+  if (!gst_mpdparser_get_xml_prop_string (a_node, "value",
+          &new_descriptor->value)) {
+    /* if no value attribute, use XML string representation of the node */
+    gst_mpdparser_get_xml_node_as_string (a_node, &new_descriptor->value);
+  }
 }
 
 static void

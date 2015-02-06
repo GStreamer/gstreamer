@@ -118,6 +118,7 @@ struct _GstAdaptiveDemuxStream
   GstEvent *pending_segment;
   GstTagList *pending_tags;
   gboolean need_header;
+  GList *pending_events;
 
   GstFlowReturn last_ret;
   GError *last_error;
@@ -427,6 +428,9 @@ GstFlowReturn gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * st
 GstFlowReturn
 gst_adaptive_demux_stream_advance_fragment (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstClockTime duration);
+void gst_adaptive_demux_stream_queue_event (GstAdaptiveDemuxStream * stream,
+    GstEvent * event);
+
 GstFlowReturn
 gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstClockTime duration);

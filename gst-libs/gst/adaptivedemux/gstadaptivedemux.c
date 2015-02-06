@@ -657,6 +657,17 @@ gst_adaptive_demux_set_stream_struct_size (GstAdaptiveDemux * demux,
   demux->stream_struct_size = struct_size;
 }
 
+static void
+gst_adaptive_demux_send_event (gpointer data, gpointer userdata)
+{
+  GstEvent *event = (GstEvent *) data;
+  GstPad *pad = (GstPad *) userdata;
+
+  if (!gst_pad_push_event (pad, event)) {
+    GST_ERROR_OBJECT (pad, "Failed to send pending event");
+  }
+}
+
 static gboolean
 gst_adaptive_demux_expose_stream (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
@@ -875,6 +886,11 @@ gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream)
   if (stream->pending_segment) {
     gst_event_unref (stream->pending_segment);
     stream->pending_segment = NULL;
+  }
+
+  if (stream->pending_events) {
+    g_list_free_full (stream->pending_events, (GDestroyNotify) gst_event_unref);
+    stream->pending_events = NULL;
   }
 
   if (stream->src_srcpad) {
@@ -1296,6 +1312,13 @@ gst_adaptive_demux_stream_set_tags (GstAdaptiveDemuxStream * stream,
   stream->pending_tags = tags;
 }
 
+void
+gst_adaptive_demux_stream_queue_event (GstAdaptiveDemuxStream * stream,
+    GstEvent * event)
+{
+  stream->pending_events = g_list_append (stream->pending_events, event);
+}
+
 static guint64
 _update_average_bitrate (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, guint64 new_bitrate)
@@ -1447,6 +1470,13 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
     gst_pad_push_event (stream->pad, gst_event_new_tag (stream->pending_tags));
     stream->pending_tags = NULL;
   }
+  if (G_UNLIKELY (stream->pending_events)) {
+    g_list_foreach (stream->pending_events, gst_adaptive_demux_send_event,
+        stream->pad);
+    g_list_free (stream->pending_events);
+    stream->pending_events = NULL;
+  }
+
 
   ret = gst_pad_push (stream->pad, buffer);
   GST_LOG_OBJECT (stream->pad, "Push result: %d %s", ret,

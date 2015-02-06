@@ -241,6 +241,9 @@ static GstPad *gst_dash_demux_create_pad (GstDashDemux * demux,
 #define SIDX_ENTRY(s,i) (&(SIDX(s)->entries[(i)]))
 #define SIDX_CURRENT_ENTRY(s) SIDX_ENTRY(s, SIDX(s)->entry_index)
 
+static void gst_dash_demux_send_content_protection_event (gpointer cp_data,
+    gpointer stream);
+
 #define gst_dash_demux_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDashDemux, gst_dash_demux, GST_TYPE_ADAPTIVE_DEMUX,
     GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "dashdemux", 0,
@@ -525,10 +528,50 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
           (stream), tags);
     stream->index = i;
     stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
+    if (active_stream->cur_adapt_set &&
+        active_stream->cur_adapt_set->RepresentationBase &&
+        active_stream->cur_adapt_set->RepresentationBase->ContentProtection) {
+      GST_DEBUG_OBJECT (demux, "Adding ContentProtection events to source pad");
+      g_list_foreach (active_stream->cur_adapt_set->
+          RepresentationBase->ContentProtection,
+          gst_dash_demux_send_content_protection_event, stream);
+    }
+
     gst_isoff_sidx_parser_init (&stream->sidx_parser);
   }
 
   return TRUE;
+}
+
+static void
+gst_dash_demux_send_content_protection_event (gpointer data, gpointer userdata)
+{
+  GstDescriptorType *cp = (GstDescriptorType *) data;
+  GstDashDemuxStream *stream = (GstDashDemuxStream *) userdata;
+  GstEvent *event;
+  GstBuffer *pssi;
+  glong pssi_len;
+  gchar *schemeIdUri;
+
+  if (cp->schemeIdUri == NULL)
+    return;
+
+  GST_TRACE_OBJECT (stream, "check schemeIdUri %s", cp->schemeIdUri);
+  /* RFC 2141 states: The leading "urn:" sequence is case-insensitive */
+  schemeIdUri = g_ascii_strdown (cp->schemeIdUri, -1);
+  if (g_str_has_prefix (schemeIdUri, "urn:uuid:")) {
+    pssi_len = strlen (cp->value);
+    pssi = gst_buffer_new_wrapped (g_memdup (cp->value, pssi_len), pssi_len);
+    GST_LOG_OBJECT (stream, "Queuing Protection event on source pad");
+    /* RFC 4122 states that the hex part of a UUID is in lower case,
+     * but some streams seem to ignore this and use upper case for the
+     * protection system ID */
+    event = gst_event_new_protection (cp->schemeIdUri + 9, pssi, "dash/mpd");
+    gst_adaptive_demux_stream_queue_event ((GstAdaptiveDemuxStream *) stream,
+        event);
+    gst_buffer_unref (pssi);
+  }
+  g_free (schemeIdUri);
 }
 
 static GstClockTime
