@@ -1727,23 +1727,36 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
 
   convert->in_x = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_SRC_X, 0);
   convert->in_y = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_SRC_Y, 0);
-  convert->in_width = get_opt_int (convert,
-      GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, convert->in_maxwidth);
-  convert->in_height = get_opt_int (convert,
-      GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, convert->in_maxheight);
-
   convert->in_x &= ~((1 << fin->w_sub[1]) - 1);
   convert->in_y &= ~((1 << fin->h_sub[1]) - 1);
 
+  convert->in_width = get_opt_int (convert,
+      GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, convert->in_maxwidth - convert->in_x);
+  convert->in_height = get_opt_int (convert,
+      GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT,
+      convert->in_maxheight - convert->in_y);
+
+  convert->in_width =
+      MIN (convert->in_width, convert->in_maxwidth - convert->in_x);
+  convert->in_height =
+      MIN (convert->in_height, convert->in_maxheight - convert->in_y);
+
   convert->out_x = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_DEST_X, 0);
   convert->out_y = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_DEST_Y, 0);
-  convert->out_width = get_opt_int (convert,
-      GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, convert->out_maxwidth);
-  convert->out_height = get_opt_int (convert,
-      GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, convert->out_maxheight);
-
   convert->out_x &= ~((1 << fout->w_sub[1]) - 1);
   convert->out_y &= ~((1 << fout->h_sub[1]) - 1);
+
+  convert->out_width = get_opt_int (convert,
+      GST_VIDEO_CONVERTER_OPT_DEST_WIDTH,
+      convert->out_maxwidth - convert->out_x);
+  convert->out_height =
+      get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT,
+      convert->out_maxheight - convert->out_y);
+
+  convert->out_width =
+      MIN (convert->out_width, convert->out_maxwidth - convert->out_x);
+  convert->out_height =
+      MIN (convert->out_height, convert->out_maxheight - convert->out_y);
 
   convert->fill_border = get_opt_bool (convert,
       GST_VIDEO_CONVERTER_OPT_FILL_BORDER, TRUE);
