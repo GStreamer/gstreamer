@@ -2348,8 +2348,8 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
         if (stop > 0) {
           end_offset = stop;
-          segment.stop -= wav->datastart;
-          segment.stop = MAX (stop, 0);
+          stop -= wav->datastart;
+          stop = MAX (stop, 0);
         }
         if (wav->segment.format == GST_FORMAT_TIME) {
           guint64 bps = wav->bps;
