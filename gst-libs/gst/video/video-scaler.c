@@ -1150,6 +1150,7 @@ gst_video_scaler_horizontal (GstVideoScaler * scale, GstVideoFormat format,
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_v308:
       switch (scale->resampler.max_taps) {
         case 1:
           func = video_scale_h_near_3u8;
@@ -1276,6 +1277,7 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_v308:
       bits = 8;
       n_elems = 3;
       break;
