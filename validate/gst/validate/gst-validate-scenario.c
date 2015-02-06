@@ -2180,6 +2180,47 @@ gst_validate_register_action_type (const gchar * type_name,
     GstValidateActionParameter * parameters,
     const gchar * description, GstValidateActionTypeFlags flags)
 {
+  GstValidateActionType *type = gst_validate_register_action_type_dynamic (NULL,
+      type_name, GST_RANK_NONE, function, parameters, description,
+      flags);
+
+  g_free (type->implementer_namespace);
+  type->implementer_namespace = g_strdup (implementer_namespace);
+
+  return type;
+}
+
+static void
+_free_action_types (GList * action_types)
+{
+  g_list_free_full (action_types, (GDestroyNotify) gst_mini_object_unref);
+}
+
+/**
+ * gst_validate_register_action_type_dynamic:
+ * @plugin: (allow-none): The #GstPlugin that register the action type,
+ *                        or NULL for a static element.
+ * @rank: The ranking of that implementation of the action type called
+ *        @type_name. If an action type has been registered with the same
+ *        name with a higher rank, the new implementation will not be used,
+ *        and the already registered action type is returned.
+ *        If the already registered implementation has a lower rank, the
+ *        new implementation will be used and returned.
+ * @type_name: The name of the new action type to add
+ * @function: (scope notified): The function to be called to execute the action
+ * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidate.ActionParameter): The #GstValidateActionParameter usable as parameter of the type
+ * @description: A description of the new type
+ * @flags: The #GstValidateActionTypeFlags to be set on the new action type
+ *
+ * Returns: The newly created action type or the already registered action type
+ * if it had a higher rank
+ */
+GstValidateActionType *
+gst_validate_register_action_type_dynamic (GstPlugin * plugin,
+    const gchar * type_name, GstRank rank,
+    GstValidateExecuteAction function, GstValidateActionParameter * parameters,
+    const gchar * description, GstValidateActionTypeFlags flags)
+{
   GstValidateActionType *tmptype;
   GstValidateActionType *type = gst_validate_action_type_new ();
   gboolean is_config = IS_CONFIG_ACTION_TYPE (flags);
@@ -2201,17 +2242,40 @@ gst_validate_register_action_type (const gchar * type_name,
 
   type->execute = function;
   type->name = g_strdup (type_name);
-  type->implementer_namespace = g_strdup (implementer_namespace);
+  if (plugin)
+    type->implementer_namespace = g_strdup (gst_plugin_get_name (plugin));
+  else
+    type->implementer_namespace = g_strdup ("none");
+
   type->description = g_strdup (description);
   type->flags = flags;
   type->action_struct_size = sizeof (GstValidateActionType);
+  type->rank = rank;
 
   if ((tmptype = _find_action_type (type_name))) {
-    action_types = g_list_remove (action_types, tmptype);
-    gst_mini_object_unref (GST_MINI_OBJECT (tmptype));
+    if (tmptype->rank < rank) {
+      action_types = g_list_remove (action_types, tmptype);
+      gst_mini_object_unref (GST_MINI_OBJECT (tmptype));
+    } else {
+      gst_mini_object_unref (GST_MINI_OBJECT (type));
+
+      type = tmptype;
+    }
   }
 
-  action_types = g_list_append (action_types, type);
+  if (type != tmptype)
+    action_types = g_list_append (action_types, type);
+
+  if (plugin) {
+    GList *plugin_action_types = g_object_steal_data (G_OBJECT (plugin),
+        "GstValidatePluginActionTypes");
+
+    plugin_action_types = g_list_prepend (plugin_action_types,
+        gst_mini_object_ref (GST_MINI_OBJECT (type)));
+
+    g_object_set_data_full (G_OBJECT (plugin), "GstValidatePluginActionTypes",
+        plugin_action_types, (GDestroyNotify) _free_action_types);
+  }
 
   return type;
 }

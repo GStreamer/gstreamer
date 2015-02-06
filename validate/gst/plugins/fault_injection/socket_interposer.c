@@ -330,6 +330,7 @@ _execute_corrupt_socket_recv (GstValidateScenario * scenario,
 
   socket_interposer_set_callback (&addr,
       (socket_interposer_callback) socket_callback_, action);
+
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
 
@@ -337,7 +338,8 @@ static gboolean
 socket_interposer_init (GstPlugin * plugin)
 {
 /*  *INDENT-OFF* */
-  gst_validate_register_action_type ("corrupt-socket-recv", gst_plugin_get_name (plugin),
+  gst_validate_register_action_type_dynamic (plugin, "corrupt-socket-recv",
+      GST_RANK_PRIMARY,
       _execute_corrupt_socket_recv, ((GstValidateActionParameter[]) {
             {
               .name = "port",
