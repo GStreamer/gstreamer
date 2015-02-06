@@ -1805,6 +1805,11 @@ gst_aiff_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_DEBUG_OBJECT (aiff, "received segment %" GST_SEGMENT_FORMAT,
           &segment);
 
+      if (aiff->state != AIFF_PARSE_DATA) {
+        GST_DEBUG_OBJECT (aiff, "still starting, eating event");
+        goto exit;
+      }
+
       /* now we are either committed to TIME or BYTE format,
        * and we only expect a BYTE segment, e.g. following a seek */
       if (segment.format == GST_FORMAT_BYTES) {
