@@ -1644,7 +1644,7 @@ setup_borderline (GstVideoConverter * convert)
   if (convert->fill_border && (convert->out_height < convert->out_maxheight ||
           convert->out_width < convert->out_maxwidth)) {
     guint32 border_val;
-    gint i;
+    gint i, w_sub;
     const GstVideoFormatInfo *out_finfo;
     gpointer planes[GST_VIDEO_MAX_PLANES];
     gint strides[GST_VIDEO_MAX_PLANES];
@@ -1654,7 +1654,6 @@ setup_borderline (GstVideoConverter * convert)
     out_finfo = convert->out_info.finfo;
 
     if (GST_VIDEO_INFO_IS_YUV (&convert->out_info)) {
-
       MatrixData cm;
       gint a, r, g, b;
       gint y, u, v;
@@ -1689,14 +1688,22 @@ setup_borderline (GstVideoConverter * convert)
     else
       video_orc_splat2_u64 (convert->borderline, border_val, width);
 
-    /* convert 1 pixel */
-    for (i = 0; i < 4; i++) {
+    /* convert pixels */
+    for (i = 0; i < out_finfo->n_planes; i++) {
       planes[i] = &convert->borders[i];
       strides[i] = sizeof (guint64);
     }
+    w_sub = 0;
+    if (out_finfo->n_planes == 1) {
+      /* for packet formats, convert based on subsampling so that we
+       * get a complete group of pixels */
+      for (i = 0; i < out_finfo->n_components; i++) {
+        w_sub = MAX (w_sub, out_finfo->w_sub[i]);
+      }
+    }
     out_finfo->pack_func (out_finfo, GST_VIDEO_PACK_FLAG_NONE,
         convert->borderline, 0, planes, strides,
-        GST_VIDEO_CHROMA_SITE_UNKNOWN, 0, 1);
+        GST_VIDEO_CHROMA_SITE_UNKNOWN, 0, 1 << w_sub);
   } else {
     convert->borderline = NULL;
   }
@@ -3169,7 +3176,7 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
   n_planes = GST_VIDEO_FRAME_N_PLANES (dest);
 
   for (k = 0; k < n_planes; k++) {
-    gint i, out_x, out_y, out_width, out_height, pstride;
+    gint i, out_x, out_y, out_width, out_height, pstride, pgroup;
     gint r_border, lb_width, rb_width;
     gint out_maxwidth, out_maxheight;
     gpointer borders;
@@ -3194,7 +3201,23 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
 
     pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, k);
 
-    switch (pstride) {
+    switch (GST_VIDEO_FORMAT_INFO_FORMAT (out_finfo)) {
+      case GST_VIDEO_FORMAT_YUY2:
+      case GST_VIDEO_FORMAT_YVYU:
+      case GST_VIDEO_FORMAT_UYVY:
+        pgroup = 4;
+        r_border /= 2;
+        rb_width /= 2;
+        lb_width /= 2;
+        out_maxwidth /= 2;
+        out_x /= 2;
+        break;
+      default:
+        pgroup = pstride;
+        break;
+    }
+
+    switch (pgroup) {
       case 1:
       {
         guint8 col = ((guint8 *) borders)[0];
