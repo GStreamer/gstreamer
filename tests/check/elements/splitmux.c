@@ -100,10 +100,10 @@ GST_START_TEST (test_splitmuxsrc)
   g_free (uri);
 
   msg = run_pipeline (pipeline);
-  gst_object_unref (pipeline);
 
   fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
   gst_message_unref (msg);
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;

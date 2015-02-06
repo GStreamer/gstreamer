@@ -227,6 +227,21 @@ gst_splitmux_src_init (GstSplitMuxSrc * splitmux)
 static void
 gst_splitmux_src_dispose (GObject * object)
 {
+  GstSplitMuxSrc *splitmux = GST_SPLITMUX_SRC (object);
+  GList *cur;
+
+  SPLITMUX_SRC_PADS_LOCK (splitmux);
+
+  for (cur = g_list_first (splitmux->pads);
+      cur != NULL; cur = g_list_next (cur)) {
+    GstPad *pad = GST_PAD (cur->data);
+    gst_element_remove_pad (GST_ELEMENT (splitmux), pad);
+  }
+  g_list_free (splitmux->pads);
+  splitmux->pads = NULL;
+  SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -235,6 +250,9 @@ gst_splitmux_src_finalize (GObject * object)
   GstSplitMuxSrc *splitmux = GST_SPLITMUX_SRC (object);
   g_mutex_clear (&splitmux->lock);
   g_mutex_clear (&splitmux->pads_lock);
+  g_free (splitmux->location);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -292,8 +310,6 @@ gst_splitmux_src_change_state (GstElement * element, GstStateChange transition)
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (!gst_splitmux_src_stop (splitmux))
-        return GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
@@ -305,6 +321,8 @@ gst_splitmux_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      if (!gst_splitmux_src_stop (splitmux))
+        return GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
@@ -599,6 +617,8 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
   GstClockTime next_offset = 0;
   guint i;
 
+  GST_DEBUG_OBJECT (splitmux, "Starting");
+
   GST_OBJECT_LOCK (splitmux);
   if (splitmux->location != NULL && splitmux->location[0] != '\0') {
     basename = g_path_get_basename (splitmux->location);
@@ -610,6 +630,10 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
 
   if (files == NULL || *files == NULL)
     goto no_files;
+
+  SPLITMUX_SRC_LOCK (splitmux);
+  splitmux->running = TRUE;
+  SPLITMUX_SRC_UNLOCK (splitmux);
 
   splitmux->num_parts = g_strv_length (files);
 
@@ -654,9 +678,6 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
       " Activating first part", GST_TIME_ARGS (splitmux->total_duration));
   gst_splitmux_src_activate_part (splitmux, 0);
 
-  SPLITMUX_SRC_LOCK (splitmux);
-  splitmux->running = TRUE;
-  SPLITMUX_SRC_UNLOCK (splitmux);
   ret = TRUE;
 done:
   if (err != NULL)
@@ -694,10 +715,15 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   if (!splitmux->running)
     goto out;
 
+  GST_DEBUG_OBJECT (splitmux, "Stopping");
+
   /* Stop and destroy all parts  */
   for (i = 0; i < splitmux->num_parts; i++) {
+    if (splitmux->parts[i] == NULL)
+      continue;
     gst_splitmux_part_reader_unprepare (splitmux->parts[i]);
     g_object_unref (splitmux->parts[i]);
+    splitmux->parts[i] = NULL;
   }
 
   SPLITMUX_SRC_PADS_LOCK (splitmux);
@@ -903,6 +929,8 @@ splitmux_src_pad_constructed (GObject * pad)
       GST_DEBUG_FUNCPTR (splitmux_src_pad_event));
   gst_pad_set_query_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (splitmux_src_pad_query));
+
+  G_OBJECT_CLASS (splitmux_src_pad_parent_class)->constructed (pad);
 }
 
 static void

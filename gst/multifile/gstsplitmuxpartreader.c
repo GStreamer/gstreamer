@@ -482,10 +482,12 @@ splitmux_part_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
   gst_object_unref (part_pad->queue);
+  gst_object_unref (target);
 
   return ret;
 wrong_segment:
   gst_event_unref (event);
+  gst_object_unref (target);
   SPLITMUX_PART_UNLOCK (reader);
   GST_ELEMENT_ERROR (reader, STREAM, FAILED, (NULL),
       ("Received non-time segment - reader %s pad %" GST_PTR_FORMAT,
@@ -495,6 +497,7 @@ drop_event:
   GST_LOG_OBJECT (pad, "Dropping event %" GST_PTR_FORMAT
       " from %" GST_PTR_FORMAT " on %" GST_PTR_FORMAT, event, pad, target);
   gst_event_unref (event);
+  gst_object_unref (target);
   SPLITMUX_PART_UNLOCK (reader);
   return TRUE;
 }
@@ -536,6 +539,8 @@ splitmux_part_pad_constructed (GObject * pad)
       GST_DEBUG_FUNCPTR (splitmux_part_pad_event));
   gst_pad_set_query_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (splitmux_part_pad_query));
+
+  G_OBJECT_CLASS (gst_splitmux_part_pad_parent_class)->constructed (pad);
 }
 
 static void
@@ -560,7 +565,14 @@ static void
 splitmux_part_pad_finalize (GObject * obj)
 {
   GstSplitMuxPartPad *pad = (GstSplitMuxPartPad *) (obj);
-  g_object_unref ((GObject *) (pad->queue));
+
+  GST_DEBUG_OBJECT (obj, "finalize");
+  gst_data_queue_set_flushing (pad->queue, TRUE);
+  gst_data_queue_flush (pad->queue);
+  gst_object_unref (GST_OBJECT_CAST (pad->queue));
+  pad->queue = NULL;
+
+  G_OBJECT_CLASS (gst_splitmux_part_pad_parent_class)->finalize (obj);
 }
 
 static void
@@ -575,6 +587,9 @@ static gboolean gst_splitmux_part_reader_send_event (GstElement * element,
 static void gst_splitmux_part_reader_set_flushing_locked (GstSplitMuxPartReader
     * part, gboolean flushing);
 static void bus_handler (GstBin * bin, GstMessage * msg);
+static void splitmux_part_reader_dispose (GObject * object);
+static void splitmux_part_reader_finalize (GObject * object);
+static void splitmux_part_reader_reset (GstSplitMuxPartReader * reader);
 
 #define gst_splitmux_part_reader_parent_class parent_class
 G_DEFINE_TYPE (GstSplitMuxPartReader, gst_splitmux_part_reader,
@@ -583,11 +598,15 @@ G_DEFINE_TYPE (GstSplitMuxPartReader, gst_splitmux_part_reader,
 static void
 gst_splitmux_part_reader_class_init (GstSplitMuxPartReaderClass * klass)
 {
+  GObjectClass *gobject_klass = (GObjectClass *) (klass);
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBinClass *gstbin_class = (GstBinClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (splitmux_part_debug, "splitmuxpartreader", 0,
       "Split File Demuxing Source helper");
+
+  gobject_klass->dispose = splitmux_part_reader_dispose;
+  gobject_klass->finalize = splitmux_part_reader_finalize;
 
   part_reader_signals[SIGNAL_PREPARED] =
       g_signal_new ("prepared", G_TYPE_FROM_CLASS (klass),
@@ -638,6 +657,43 @@ gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
       reader);
 }
 
+static void
+splitmux_part_reader_dispose (GObject * object)
+{
+  GstSplitMuxPartReader *reader = (GstSplitMuxPartReader *) object;
+
+  splitmux_part_reader_reset (reader);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+splitmux_part_reader_finalize (GObject * object)
+{
+  GstSplitMuxPartReader *reader = (GstSplitMuxPartReader *) object;
+
+  g_free (reader->path);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+splitmux_part_reader_reset (GstSplitMuxPartReader * reader)
+{
+  GList *cur;
+
+  SPLITMUX_PART_LOCK (reader);
+  for (cur = g_list_first (reader->pads); cur != NULL; cur = g_list_next (cur)) {
+    GstPad *pad = GST_PAD_CAST (cur->data);
+    gst_pad_set_active (GST_PAD_CAST (pad), FALSE);
+    gst_object_unref (GST_OBJECT_CAST (pad));
+  }
+
+  g_list_free (reader->pads);
+  reader->pads = NULL;
+  SPLITMUX_PART_UNLOCK (reader);
+}
+
 static GstSplitMuxPartPad *
 gst_splitmux_part_reader_new_proxy_pad (GstSplitMuxPartReader * reader,
     GstPad * target)
@@ -667,6 +723,9 @@ new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
 
   GST_DEBUG_OBJECT (reader, "file %s new decoded pad %" GST_PTR_FORMAT
       " caps %" GST_PTR_FORMAT, reader->path, pad, caps);
+
+  gst_caps_unref (caps);
+
   /* Look up or create the output pad */
   if (reader->get_pad_cb)
     out_pad = reader->get_pad_cb (reader, pad, reader->cb_data);
@@ -925,7 +984,7 @@ gst_splitmux_part_reader_src_query (GstSplitMuxPartReader * part,
   gst_object_unref (GST_OBJECT_CAST (target));
 
   if (ret == FALSE)
-    return ret;
+    goto out;
 
   /* Post-massaging of queries */
   switch (GST_QUERY_TYPE (query)) {
@@ -949,6 +1008,8 @@ gst_splitmux_part_reader_src_query (GstSplitMuxPartReader * part,
       break;
   }
 
+out:
+  gst_object_unref (target);
   return ret;
 }
 
@@ -1023,6 +1084,7 @@ gst_splitmux_part_reader_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       reader->prep_state = PART_STATE_NULL;
+      splitmux_part_reader_reset (reader);
       break;
     default:
       break;
@@ -1209,6 +1271,7 @@ gst_splitmux_part_reader_pop (GstSplitMuxPartReader * reader, GstPad * pad,
 {
   GstSplitMuxPartPad *part_pad = (GstSplitMuxPartPad *) (pad);
   GstDataQueue *q;
+  GstFlowReturn ret;
 
   /* Get one item from the appropriate dataqueue */
   SPLITMUX_PART_LOCK (reader);
@@ -1221,8 +1284,10 @@ gst_splitmux_part_reader_pop (GstSplitMuxPartReader * reader, GstPad * pad,
 
   /* Have to drop the lock around pop, so we can be woken up for flush */
   SPLITMUX_PART_UNLOCK (reader);
-  if (!gst_data_queue_pop (q, item) || (*item == NULL))
-    return GST_FLOW_FLUSHING;
+  if (!gst_data_queue_pop (q, item) || (*item == NULL)) {
+    ret = GST_FLOW_FLUSHING;
+    goto out;
+  }
 
   SPLITMUX_PART_LOCK (reader);
 
@@ -1235,8 +1300,11 @@ gst_splitmux_part_reader_pop (GstSplitMuxPartReader * reader, GstPad * pad,
   }
 
   SPLITMUX_PART_UNLOCK (reader);
+
+  ret = GST_FLOW_OK;
+out:
   gst_object_unref (q);
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static void
