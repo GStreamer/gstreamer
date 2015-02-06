@@ -2663,10 +2663,17 @@ convert_YUY2_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *d;
 
-  video_orc_convert_YUY2_AYUV (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (GST_ROUND_UP_2 (convert->in_x) * 2);
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (convert->out_x * 4);
+
+  video_orc_convert_YUY2_AYUV (d, FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2675,12 +2682,23 @@ convert_YUY2_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *dy, *du, *dv;
 
-  video_orc_convert_YUY2_Y42B (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (GST_ROUND_UP_2 (convert->in_x) * 2);
+
+  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
+  dy += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y);
+  du += convert->out_x >> 1;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y);
+  dv += convert->out_x >> 1;
+
+  video_orc_convert_YUY2_Y42B (dy, FRAME_GET_Y_STRIDE (dest), du,
+      FRAME_GET_U_STRIDE (dest), dv, FRAME_GET_V_STRIDE (dest),
+      s, FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2689,12 +2707,25 @@ convert_YUY2_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *dy, *du, *dv;
 
-  video_orc_convert_YUY2_Y444 (FRAME_GET_COMP_LINE (dest, 0, 0),
-      FRAME_GET_COMP_STRIDE (dest, 0), FRAME_GET_COMP_LINE (dest, 1, 0),
-      FRAME_GET_COMP_STRIDE (dest, 1), FRAME_GET_COMP_LINE (dest, 2, 0),
-      FRAME_GET_COMP_STRIDE (dest, 2), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (GST_ROUND_UP_2 (convert->in_x) * 2);
+
+  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
+  dy += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y);
+  du += convert->out_x;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y);
+  dv += convert->out_x;
+
+  video_orc_convert_YUY2_Y444 (dy,
+      FRAME_GET_COMP_STRIDE (dest, 0), du,
+      FRAME_GET_COMP_STRIDE (dest, 1), dv,
+      FRAME_GET_COMP_STRIDE (dest, 2), s,
       FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 
@@ -2731,10 +2762,18 @@ convert_UYVY_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *d;
 
-  video_orc_convert_UYVY_AYUV (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (GST_ROUND_UP_2 (convert->in_x) * 2);
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (convert->out_x * 4);
+
+  video_orc_convert_UYVY_AYUV (d,
+      FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2743,10 +2782,18 @@ convert_UYVY_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *d;
 
-  video_orc_convert_UYVY_YUY2 (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (GST_ROUND_UP_2 (convert->in_x) * 2);
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (GST_ROUND_UP_2 (convert->out_x) * 2);
+
+  video_orc_convert_UYVY_YUY2 (d,
+      FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2755,12 +2802,25 @@ convert_UYVY_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *dy, *du, *dv;
 
-  video_orc_convert_UYVY_Y42B (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (GST_ROUND_UP_2 (convert->in_x) * 2);
+
+  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
+  dy += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y);
+  du += convert->out_x >> 1;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y);
+  dv += convert->out_x >> 1;
+
+  video_orc_convert_UYVY_Y42B (dy,
+      FRAME_GET_Y_STRIDE (dest), du,
+      FRAME_GET_U_STRIDE (dest), dv,
+      FRAME_GET_V_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2769,12 +2829,25 @@ convert_UYVY_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *dy, *du, *dv;
 
-  video_orc_convert_UYVY_Y444 (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (GST_ROUND_UP_2 (convert->in_x) * 2);
+
+  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
+  dy += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y);
+  du += convert->out_x;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y);
+  dv += convert->out_x;
+
+  video_orc_convert_UYVY_Y444 (dy,
+      FRAME_GET_Y_STRIDE (dest), du,
+      FRAME_GET_U_STRIDE (dest), dv,
+      FRAME_GET_V_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2783,15 +2856,32 @@ convert_AYUV_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s1, *s2, *dy1, *dy2, *du, *dv;
+
+  s1 = FRAME_GET_LINE (src, convert->in_y + 0);
+  s1 += convert->in_x * 4;
+  s2 = FRAME_GET_LINE (src, convert->in_y + 1);
+  s2 += convert->in_x * 4;
+
+  dy1 = FRAME_GET_Y_LINE (dest, convert->out_y + 0);
+  dy1 += convert->out_x;
+  dy2 = FRAME_GET_Y_LINE (dest, convert->out_y + 1);
+  dy2 += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y >> 1);
+  du += convert->out_x >> 1;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y >> 1);
+  dv += convert->out_x >> 1;
 
   /* only for even width/height */
-  video_orc_convert_AYUV_I420 (FRAME_GET_Y_LINE (dest, 0),
-      2 * FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (dest, 1),
-      2 * FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      2 * FRAME_GET_STRIDE (src), FRAME_GET_LINE (src, 1),
+  video_orc_convert_AYUV_I420 (dy1,
+      2 * FRAME_GET_Y_STRIDE (dest), dy2,
+      2 * FRAME_GET_Y_STRIDE (dest), du,
+      FRAME_GET_U_STRIDE (dest), dv,
+      FRAME_GET_V_STRIDE (dest), s1,
+      2 * FRAME_GET_STRIDE (src), s2,
       2 * FRAME_GET_STRIDE (src), width / 2, height / 2);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2800,11 +2890,18 @@ convert_AYUV_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *d;
+
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += convert->in_x * 4;
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   /* only for even width */
-  video_orc_convert_AYUV_YUY2 (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      FRAME_GET_STRIDE (src), width / 2, height);
+  video_orc_convert_AYUV_YUY2 (d,
+      FRAME_GET_STRIDE (dest), s, FRAME_GET_STRIDE (src), width / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2813,11 +2910,18 @@ convert_AYUV_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *d;
+
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += convert->in_x * 4;
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   /* only for even width */
-  video_orc_convert_AYUV_UYVY (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      FRAME_GET_STRIDE (src), width / 2, height);
+  video_orc_convert_AYUV_UYVY (d,
+      FRAME_GET_STRIDE (dest), s, FRAME_GET_STRIDE (src), width / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2826,13 +2930,25 @@ convert_AYUV_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *dy, *du, *dv;
+
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += convert->in_x * 4;
+
+  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
+  dy += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y);
+  du += convert->out_x >> 1;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y);
+  dv += convert->out_x >> 1;
 
   /* only works for even width */
-  video_orc_convert_AYUV_Y42B (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      FRAME_GET_STRIDE (src), width / 2, height);
+  video_orc_convert_AYUV_Y42B (dy,
+      FRAME_GET_Y_STRIDE (dest), du,
+      FRAME_GET_U_STRIDE (dest), dv,
+      FRAME_GET_V_STRIDE (dest), s, FRAME_GET_STRIDE (src), width / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2841,12 +2957,25 @@ convert_AYUV_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *s, *dy, *du, *dv;
+
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += convert->in_x * 4;
+
+  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
+  dy += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y);
+  du += convert->out_x;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y);
+  dv += convert->out_x;
 
   video_orc_convert_AYUV_Y444 (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), width, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2883,18 +3012,34 @@ convert_Y42B_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *dy, *sy, *du, *su, *dv, *sv;
 
-  video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
+  sy = FRAME_GET_Y_LINE (src, convert->in_y);
+  sy += convert->in_x;
+  su = FRAME_GET_U_LINE (src, convert->in_y);
+  su += convert->in_x >> 1;
+  sv = FRAME_GET_V_LINE (src, convert->in_y);
+  sv += convert->in_x >> 1;
+
+  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
+  dy += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y);
+  du += convert->out_x;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y);
+  dv += convert->out_x;
+
+  video_orc_memcpy_2d (dy, FRAME_GET_Y_STRIDE (dest), sy,
       FRAME_GET_Y_STRIDE (src), width, height);
 
-  video_orc_planar_chroma_422_444 (FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
+  video_orc_planar_chroma_422_444 (du,
+      FRAME_GET_U_STRIDE (dest), su,
       FRAME_GET_U_STRIDE (src), (width + 1) / 2, height);
 
-  video_orc_planar_chroma_422_444 (FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
+  video_orc_planar_chroma_422_444 (dv,
+      FRAME_GET_V_STRIDE (dest), sv,
       FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2903,12 +3048,25 @@ convert_Y42B_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *sy, *su, *sv, *d;
 
-  video_orc_convert_Y42B_YUY2 (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
-      FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
+  sy = FRAME_GET_Y_LINE (src, convert->in_y);
+  sy += convert->in_x;
+  su = FRAME_GET_U_LINE (src, convert->in_y);
+  su += convert->in_x >> 1;
+  sv = FRAME_GET_V_LINE (src, convert->in_y);
+  sv += convert->in_x >> 1;
+
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (GST_ROUND_UP_2 (convert->out_x) * 2);
+
+  video_orc_convert_Y42B_YUY2 (d,
+      FRAME_GET_STRIDE (dest), sy,
+      FRAME_GET_Y_STRIDE (src), su,
+      FRAME_GET_U_STRIDE (src), sv,
       FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2917,12 +3075,25 @@ convert_Y42B_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *sy, *su, *sv, *d;
 
-  video_orc_convert_Y42B_UYVY (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
-      FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
+  sy = FRAME_GET_Y_LINE (src, convert->in_y);
+  sy += convert->in_x;
+  su = FRAME_GET_U_LINE (src, convert->in_y);
+  su += convert->in_x >> 1;
+  sv = FRAME_GET_V_LINE (src, convert->in_y);
+  sv += convert->in_x >> 1;
+
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (GST_ROUND_UP_2 (convert->out_x) * 2);
+
+  video_orc_convert_Y42B_UYVY (d,
+      FRAME_GET_STRIDE (dest), sy,
+      FRAME_GET_Y_STRIDE (src), su,
+      FRAME_GET_U_STRIDE (src), sv,
       FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2931,13 +3102,26 @@ convert_Y42B_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *sy, *su, *sv, *d;
+
+  sy = FRAME_GET_Y_LINE (src, convert->in_y);
+  sy += convert->in_x;
+  su = FRAME_GET_U_LINE (src, convert->in_y);
+  su += convert->in_x >> 1;
+  sv = FRAME_GET_V_LINE (src, convert->in_y);
+  sv += convert->in_x >> 1;
+
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += convert->out_x * 4;
 
   /* only for even width */
-  video_orc_convert_Y42B_AYUV (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
-      FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
+  video_orc_convert_Y42B_AYUV (d,
+      FRAME_GET_STRIDE (dest), sy,
+      FRAME_GET_Y_STRIDE (src), su,
+      FRAME_GET_U_STRIDE (src), sv,
       FRAME_GET_V_STRIDE (src), width / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2974,18 +3158,34 @@ convert_Y444_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *sy, *su, *sv, *dy, *du, *dv;
 
-  video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), width, height);
+  sy = FRAME_GET_Y_LINE (src, convert->in_y);
+  sy += convert->in_x;
+  su = FRAME_GET_U_LINE (src, convert->in_y);
+  su += convert->in_x;
+  sv = FRAME_GET_V_LINE (src, convert->in_y);
+  sv += convert->in_x;
 
-  video_orc_planar_chroma_444_422 (FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
+  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
+  dy += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y);
+  du += convert->out_x >> 1;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y);
+  dv += convert->out_x >> 1;
+
+  video_orc_memcpy_2d (dy,
+      FRAME_GET_Y_STRIDE (dest), sy, FRAME_GET_Y_STRIDE (src), width, height);
+
+  video_orc_planar_chroma_444_422 (du,
+      FRAME_GET_U_STRIDE (dest), su,
       FRAME_GET_U_STRIDE (src), width / 2, height);
 
-  video_orc_planar_chroma_444_422 (FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
+  video_orc_planar_chroma_444_422 (dv,
+      FRAME_GET_V_STRIDE (dest), sv,
       FRAME_GET_V_STRIDE (src), width / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -2994,12 +3194,25 @@ convert_Y444_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *sy, *su, *sv, *d;
 
-  video_orc_convert_Y444_YUY2 (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
-      FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
+  sy = FRAME_GET_Y_LINE (src, convert->in_y);
+  sy += convert->in_x;
+  su = FRAME_GET_U_LINE (src, convert->in_y);
+  su += convert->in_x;
+  sv = FRAME_GET_V_LINE (src, convert->in_y);
+  sv += convert->in_x;
+
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (GST_ROUND_UP_2 (convert->out_x) * 2);
+
+  video_orc_convert_Y444_YUY2 (d,
+      FRAME_GET_STRIDE (dest), sy,
+      FRAME_GET_Y_STRIDE (src), su,
+      FRAME_GET_U_STRIDE (src), sv,
       FRAME_GET_V_STRIDE (src), width / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -3008,12 +3221,25 @@ convert_Y444_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *sy, *su, *sv, *d;
 
-  video_orc_convert_Y444_UYVY (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
-      FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
+  sy = FRAME_GET_Y_LINE (src, convert->in_y);
+  sy += convert->in_x;
+  su = FRAME_GET_U_LINE (src, convert->in_y);
+  su += convert->in_x;
+  sv = FRAME_GET_V_LINE (src, convert->in_y);
+  sv += convert->in_x;
+
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (GST_ROUND_UP_2 (convert->out_x) * 2);
+
+  video_orc_convert_Y444_UYVY (d,
+      FRAME_GET_STRIDE (dest), sy,
+      FRAME_GET_Y_STRIDE (src), su,
+      FRAME_GET_U_STRIDE (src), sv,
       FRAME_GET_V_STRIDE (src), width / 2, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -3022,12 +3248,24 @@ convert_Y444_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
+  guint8 *sy, *su, *sv, *d;
 
-  video_orc_convert_Y444_AYUV (FRAME_GET_LINE (dest, 0),
-      FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
-      FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
-      FRAME_GET_V_STRIDE (src), width, height);
+  sy = FRAME_GET_Y_LINE (src, convert->in_y);
+  sy += convert->in_x;
+  su = FRAME_GET_U_LINE (src, convert->in_y);
+  su += convert->in_x;
+  sv = FRAME_GET_V_LINE (src, convert->in_y);
+  sv += convert->in_x;
+
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += convert->out_x * 4;
+
+  video_orc_convert_Y444_AYUV (d,
+      FRAME_GET_STRIDE (dest), sy,
+      FRAME_GET_Y_STRIDE (src), su,
+      FRAME_GET_U_STRIDE (src), sv, FRAME_GET_V_STRIDE (src), width, height);
+
+  convert_fill_border (convert, dest);
 }
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -3125,12 +3363,22 @@ convert_I420_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
   MatrixData *data = &convert->convert_matrix;
 
   for (i = 0; i < height; i++) {
-    video_orc_convert_I420_BGRA (FRAME_GET_LINE (dest, i),
-        FRAME_GET_Y_LINE (src, i),
-        FRAME_GET_U_LINE (src, i >> 1), FRAME_GET_V_LINE (src, i >> 1),
+    guint8 *sy, *su, *sv, *d;
+
+    d = FRAME_GET_LINE (dest, i + convert->out_y);
+    d += (convert->out_x * 4);
+    sy = FRAME_GET_Y_LINE (src, i + convert->in_y);
+    sy += convert->in_x;
+    su = FRAME_GET_U_LINE (src, (i + convert->in_y) >> 1);
+    su += (convert->in_x >> 1);
+    sv = FRAME_GET_V_LINE (src, (i + convert->in_y) >> 1);
+    sv += (convert->in_x >> 1);
+
+    video_orc_convert_I420_BGRA (d, sy, su, sv,
         data->im[0][0], data->im[0][2],
         data->im[2][1], data->im[1][1], data->im[1][2], width);
   }
+  convert_fill_border (convert, dest);
 }
 #endif
 
@@ -3479,17 +3727,17 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_YV12, TRUE, FALSE, TRUE, FALSE,
         FALSE, 0, 0,
       convert_YUY2_I420},
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_UYVY_YUY2},       /* alias */
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 1, 0,
       convert_YUY2_AYUV},
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_YUY2_Y42B},
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_YUY2_Y444},
 
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_I420, TRUE, FALSE, TRUE, FALSE,
@@ -3498,36 +3746,36 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YV12, TRUE, FALSE, TRUE, FALSE,
         FALSE, 0, 0,
       convert_UYVY_I420},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_UYVY_YUY2},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_UYVY_AYUV},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_UYVY_Y42B},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_UYVY_Y444},
 
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_I420, FALSE, FALSE, TRUE, FALSE,
-        FALSE, 1, 1,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_I420, FALSE, FALSE, TRUE, TRUE,
+        TRUE, 1, 1,
       convert_AYUV_I420},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, TRUE, FALSE,
-        FALSE, 1, 1,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, TRUE, TRUE,
+        TRUE, 1, 1,
       convert_AYUV_I420},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 1, 0,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 1, 0,
       convert_AYUV_YUY2},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 1, 0,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 1, 0,
       convert_AYUV_UYVY},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 1, 0,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 1, 0,
       convert_AYUV_Y42B},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_AYUV_Y444},
 
   {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_I420, FALSE, FALSE, TRUE, FALSE,
@@ -3536,17 +3784,17 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, TRUE, FALSE,
         FALSE, 0, 0,
       convert_Y42B_I420},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_Y42B_YUY2},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_Y42B_UYVY},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 1, 0,
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 1, 0,
       convert_Y42B_AYUV},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_Y42B_Y444},
 
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_I420, FALSE, FALSE, TRUE, FALSE,
@@ -3555,17 +3803,17 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, TRUE, FALSE,
         FALSE, 1, 0,
       convert_Y444_I420},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 1, 0,
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 1, 0,
       convert_Y444_YUY2},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 1, 0,
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 1, 0,
       convert_Y444_UYVY},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_Y444_AYUV},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, FALSE,
-        FALSE, 1, 0,
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, TRUE,
+        TRUE, 1, 0,
       convert_Y444_Y42B},
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -3594,17 +3842,17 @@ static const VideoTransform transforms[] = {
         0, 0,
       convert_AYUV_RGBA},       /* alias */
 
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_BGRA, FALSE, TRUE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_BGRA, FALSE, TRUE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_I420_BGRA},
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_BGRx, FALSE, TRUE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_BGRx, FALSE, TRUE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_I420_BGRA},
-  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_BGRA, FALSE, TRUE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_BGRA, FALSE, TRUE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_I420_BGRA},
-  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_BGRx, FALSE, TRUE, TRUE, FALSE,
-        FALSE, 0, 0,
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_BGRx, FALSE, TRUE, TRUE, TRUE,
+        TRUE, 0, 0,
       convert_I420_BGRA},
 #endif
 
