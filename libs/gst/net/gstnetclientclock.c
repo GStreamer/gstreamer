@@ -71,6 +71,9 @@ GST_DEBUG_CATEGORY_STATIC (ncc_debug);
  * more often than 1/20th second (arbitrarily, to spread observations a little) */
 #define DEFAULT_MINIMUM_UPDATE_INTERVAL (GST_SECOND / 20)
 
+/* Maximum number of clock updates we can skip before updating */
+#define MAX_SKIPPED_UPDATES 5
+
 enum
 {
   PROP_0,
@@ -96,6 +99,7 @@ struct _GstNetClientClockPrivate
   GstClockTime roundtrip_limit;
   GstClockTime rtt_avg;
   GstClockTime minimum_update_interval;
+  guint skipped_updates;
 
   gchar *address;
   gint port;
@@ -189,6 +193,7 @@ gst_net_client_clock_init (GstNetClientClock * self)
   priv->rtt_avg = GST_CLOCK_TIME_NONE;
   priv->roundtrip_limit = DEFAULT_ROUNDTRIP_LIMIT;
   priv->minimum_update_interval = DEFAULT_MINIMUM_UPDATE_INTERVAL;
+  priv->skipped_updates = 0;
 }
 
 static void
@@ -306,7 +311,7 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
     GstClockTime local_1, GstClockTime remote, GstClockTime local_2)
 {
   GstNetClientClockPrivate *priv = self->priv;
-  GstClockTime current_timeout;
+  GstClockTime current_timeout = 0;
   GstClockTime local_avg;
   gdouble r_squared;
   GstClock *clock;
@@ -316,8 +321,10 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
   GstClockTime time_before = 0;
   GstClockTime min_guess = 0;
   GstClockTimeDiff time_discont = 0;
-  gboolean synched;
+  gboolean synched, now_synched;
   GstClockTime internal_time, external_time, rate_num, rate_den;
+  GstClockTime orig_internal_time, orig_external_time, orig_rate_num,
+      orig_rate_den;
   GstClockTime max_discont;
 
   GST_OBJECT_LOCK (self);
@@ -369,8 +376,12 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
   clock = GST_CLOCK_CAST (self);
 
   /* Store what the clock produced as 'now' before this update */
-  gst_clock_get_calibration (GST_CLOCK (self), &internal_time, &external_time,
-      &rate_num, &rate_den);
+  gst_clock_get_calibration (GST_CLOCK (self), &orig_internal_time,
+      &orig_external_time, &orig_rate_num, &orig_rate_den);
+  internal_time = orig_internal_time;
+  external_time = orig_external_time;
+  rate_num = orig_rate_num;
+  rate_den = orig_rate_den;
 
   min_guess =
       gst_clock_adjust_with_calibration (GST_CLOCK (self), local_1,
@@ -383,7 +394,7 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
    * but this value seems to work fine */
   max_discont = priv->rtt_avg / 4;
 
-  /* If the remote observation was within 1/4 RTT of our min/max estimates, we're synched */
+  /* If the remote observation was within a max_discont window around our min/max estimates, we're synched */
   synched =
       (GST_CLOCK_DIFF (remote, min_guess) < (GstClockTimeDiff) (max_discont)
       && GST_CLOCK_DIFF (time_before,
@@ -420,15 +431,33 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
       time_discont += offset;
     }
 
-    gst_clock_set_calibration (GST_CLOCK (self), internal_time, external_time,
-        rate_num, rate_den);
+    /* Check if the new clock params would have made our observation within range */
+    now_synched =
+        (GST_CLOCK_DIFF (remote,
+            gst_clock_adjust_with_calibration (GST_CLOCK (self), local_1,
+                internal_time, external_time, rate_num,
+                rate_den)) < (GstClockTimeDiff) (max_discont))
+        && (GST_CLOCK_DIFF (gst_clock_adjust_with_calibration (GST_CLOCK (self),
+                local_2, internal_time, external_time, rate_num, rate_den),
+            remote) < (GstClockTimeDiff) (max_discont));
 
-    /* ghetto formula - shorter timeout for bad correlations */
-    current_timeout = (1e-3 / (1 - MIN (r_squared, 0.99999))) * GST_SECOND;
-    current_timeout = MIN (current_timeout, gst_clock_get_timeout (clock));
-  } else {
-    /* No correlation, short timeout when starting up or lost sync */
-    current_timeout = 0;
+    /* Only update the clock if we had synch or just gained it */
+    if (synched || now_synched || priv->skipped_updates > MAX_SKIPPED_UPDATES) {
+      gst_clock_set_calibration (GST_CLOCK (self), internal_time, external_time,
+          rate_num, rate_den);
+      /* ghetto formula - shorter timeout for bad correlations */
+      current_timeout = (1e-3 / (1 - MIN (r_squared, 0.99999))) * GST_SECOND;
+      current_timeout = MIN (current_timeout, gst_clock_get_timeout (clock));
+      priv->skipped_updates = 0;
+    } else {
+      /* Restore original calibration vars for the report, we're not changing the clock */
+      internal_time = orig_internal_time;
+      external_time = orig_external_time;
+      rate_num = orig_rate_num;
+      rate_den = orig_rate_den;
+      time_discont = 0;
+      priv->skipped_updates++;
+    }
   }
 
   /* Limit the polling to at most one per minimum_update_interval */
