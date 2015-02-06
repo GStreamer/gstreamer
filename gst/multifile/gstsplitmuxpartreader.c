@@ -894,7 +894,7 @@ type_found (GstElement * typefind, guint probability,
 {
   GstElement *demux;
 
-  GST_WARNING ("Got type %" GST_PTR_FORMAT, caps);
+  GST_INFO_OBJECT (reader, "Got type %" GST_PTR_FORMAT, caps);
 
   /* typefind found a type. Look for the demuxer to handle it */
   demux = reader->demux = find_demuxer (caps);

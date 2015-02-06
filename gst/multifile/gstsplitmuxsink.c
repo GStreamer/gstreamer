@@ -130,6 +130,7 @@ static void bus_handler (GstBin * bin, GstMessage * msg);
 static void set_next_filename (GstSplitMuxSink * splitmux);
 static void start_next_fragment (GstSplitMuxSink * splitmux);
 static void check_queue_length (GstSplitMuxSink * splitmux, MqStreamCtx * ctx);
+static void mq_stream_ctx_unref (MqStreamCtx * ctx);
 
 static MqStreamBuf *
 mq_stream_buf_new (void)
@@ -249,8 +250,14 @@ gst_splitmux_sink_finalize (GObject * object)
   g_cond_clear (&splitmux->data_cond);
   if (splitmux->provided_sink)
     gst_object_unref (splitmux->provided_sink);
+  if (splitmux->provided_muxer)
+    gst_object_unref (splitmux->provided_muxer);
 
   g_free (splitmux->location);
+
+  /* Make sure to free any un-released contexts */
+  g_list_foreach (splitmux->contexts, (GFunc) mq_stream_ctx_unref, NULL);
+  g_list_free (splitmux->contexts);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -648,6 +655,8 @@ restart_context (MqStreamCtx * ctx, GstSplitMuxSink * splitmux)
 
   /* Clear EOS flag */
   ctx->out_eos = FALSE;
+
+  gst_object_unref (peer);
 }
 
 /* Called with lock held when a fragment
@@ -1133,14 +1142,19 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
 
   if (!get_pads_from_mq (splitmux, &mq_sink, &mq_src)) {
     gst_element_release_request_pad (splitmux->muxer, res);
+    gst_object_unref (GST_OBJECT (res));
     goto fail;
   }
 
   if (gst_pad_link (mq_src, res) != GST_PAD_LINK_OK) {
     gst_element_release_request_pad (splitmux->muxer, res);
+    gst_object_unref (GST_OBJECT (res));
     gst_element_release_request_pad (splitmux->mq, mq_sink);
+    gst_object_unref (GST_OBJECT (mq_sink));
     goto fail;
   }
+
+  gst_object_unref (GST_OBJECT (res));
 
   ctx = mq_stream_ctx_new (splitmux);
   ctx->is_video = is_video;
