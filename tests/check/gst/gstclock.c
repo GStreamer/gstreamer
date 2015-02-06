@@ -259,13 +259,13 @@ struct test_entry
   guint64 expect_denom;
 } times[] = {
   {
-  32, times1, 257116899087539, 120632768833649, 4052622913376634109,
+  32, times1, 257154512360784, 120670380469753, 4052622913376634109,
         4052799313904261962}, {
-  64, times1, 257100756525466, 120616627179145, 2011895759027682422,
+  64, times1, 257359198881356, 120875054227405, 2011895759027682422,
         2012014931360215503}, {
-  32, times2, 291667914301004, 162096729345562, 2319535707505209857,
+  32, times2, 291705506022294, 162134297192792, 2319535707505209857,
         2321009753483354451}, {
-  32, times3, 291881924291688, 162222328334994, 1370930728180888261,
+  32, times3, 291922315691409, 162234934150296, 1370930728180888261,
         4392719527011673456}
 };
 
@@ -297,8 +297,8 @@ GST_START_TEST (test_regression)
     fail_unless ((expect_rate - rate) >= -0.1 && (expect_rate - rate) <= 0.1,
         "Regression params %d fail. Rate out of range. Expected %f, got %f",
         i, expect_rate, rate);
-    fail_unless (external >= times[i].expect_external * 0.95 &&
-        external <= times[i].expect_internal * 1.05,
+    fail_unless (external >= times[i].expect_external * 0.99 &&
+        external <= times[i].expect_external * 1.01,
         "Regression params %d fail. external %" G_GUINT64_FORMAT
         " != expected %" G_GUINT64_FORMAT, i, external,
         times[i].expect_external);
