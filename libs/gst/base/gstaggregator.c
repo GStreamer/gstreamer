@@ -1193,16 +1193,6 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   GST_OBJECT_LOCK (self);
   our_latency = self->priv->latency;
 
-  if (data.live && GST_CLOCK_TIME_IS_VALID (our_latency) &&
-      our_latency > data.max) {
-    GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
-        ("%s", "Latency too big"),
-        ("The requested latency value is too big for the current pipeline.  "
-            "Limiting to %" G_GINT64_FORMAT, data.max));
-    self->priv->latency = data.max;
-    /* FIXME: shouldn't we g_object_notify() the change here? */
-  }
-
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (data.min))) {
     GST_WARNING_OBJECT (self, "Invalid minimum latency, using 0");
     data.min = 0;
@@ -1231,6 +1221,18 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max)
       && GST_CLOCK_TIME_IS_VALID (data.max))
     data.max += self->priv->sub_latency_max;
+
+  if (data.live && GST_CLOCK_TIME_IS_VALID (our_latency) && data.min > data.max) {
+    GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
+        ("%s", "Latency too big"),
+        ("The requested latency value is too big for the current pipeline.  "
+            "Limiting to %" G_GINT64_FORMAT, data.max));
+    data.min = data.max;
+    /* FIXME: This could in theory become negative, but in
+     * that case all is lost anyway */
+    self->priv->latency -= data.min - data.max;
+    /* FIXME: shouldn't we g_object_notify() the change here? */
+  }
 
   GST_OBJECT_UNLOCK (self);
 
@@ -1577,19 +1579,33 @@ static void
 gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
 {
   gboolean changed;
+  GstClockTime min, max;
 
   g_return_if_fail (GST_IS_AGGREGATOR (self));
 
   GST_OBJECT_LOCK (self);
+  if (self->priv->latency_live) {
+    min = self->priv->latency_min;
+    max = self->priv->latency_max;
+    /* add our own */
+    min += latency;
+    min += self->priv->sub_latency_min;
+    if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max)
+        && GST_CLOCK_TIME_IS_VALID (max))
+      max += self->priv->sub_latency_max;
+    else if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
+      max = self->priv->sub_latency_max;
 
-  if (self->priv->latency_live && self->priv->latency_max != 0 &&
-      GST_CLOCK_TIME_IS_VALID (latency) && latency > self->priv->latency_max) {
-    GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
-        ("%s", "Latency too big"),
-        ("The requested latency value is too big for the latency in the "
-            "current pipeline.  Limiting to %" G_GINT64_FORMAT,
-            self->priv->latency_max));
-    latency = self->priv->latency_max;
+    if (GST_CLOCK_TIME_IS_VALID (max) && min > max) {
+      GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
+          ("%s", "Latency too big"),
+          ("The requested latency value is too big for the latency in the "
+              "current pipeline.  Limiting to %" G_GINT64_FORMAT, max));
+      /* FIXME: This could in theory become negative, but in
+       * that case all is lost anyway */
+      latency -= min - max;
+      /* FIXME: shouldn't we g_object_notify() the change here? */
+    }
   }
 
   changed = (self->priv->latency != latency);
