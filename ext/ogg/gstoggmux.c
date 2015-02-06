@@ -300,7 +300,7 @@ gst_ogg_mux_sink_event (GstCollectPads * pads, GstCollectData * pad,
   GstOggMux *ogg_mux = GST_OGG_MUX (user_data);
   GstOggPadData *ogg_pad = (GstOggPadData *) pad;
 
-  GST_DEBUG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
+  GST_DEBUG_OBJECT (pad->pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
