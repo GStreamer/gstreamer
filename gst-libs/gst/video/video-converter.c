@@ -2451,6 +2451,9 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
   }
 }
 
+static void convert_fill_border (GstVideoConverter * convert,
+    GstVideoFrame * dest);
+
 /* Fast paths */
 
 #define GET_LINE_OFFSETS(interlaced,line,l1,l2) \
@@ -3013,6 +3016,8 @@ convert_AYUV_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
   video_orc_convert_AYUV_ARGB (d, FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
       data->im[2][1], data->im[1][1], data->im[1][2], width, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -3032,6 +3037,8 @@ convert_AYUV_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
   video_orc_convert_AYUV_BGRA (d, FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
       data->im[2][1], data->im[1][1], data->im[1][2], width, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -3051,6 +3058,8 @@ convert_AYUV_ABGR (GstVideoConverter * convert, const GstVideoFrame * src,
   video_orc_convert_AYUV_ABGR (d, FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
       data->im[2][1], data->im[1][1], data->im[1][2], width, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
@@ -3070,6 +3079,8 @@ convert_AYUV_RGBA (GstVideoConverter * convert, const GstVideoFrame * src,
   video_orc_convert_AYUV_RGBA (d, FRAME_GET_STRIDE (dest), s,
       FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
       data->im[2][1], data->im[1][1], data->im[1][2], width, height);
+
+  convert_fill_border (convert, dest);
 }
 
 static void
