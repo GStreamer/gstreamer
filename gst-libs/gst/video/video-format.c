@@ -126,9 +126,18 @@ pack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint8 *s = src;
 
   if (IS_CHROMA_LINE_420 (y, flags)) {
-    g_return_if_fail (IS_ALIGNED (s, 8));
+    if (IS_ALIGNED (s, 8))
+      video_orc_pack_I420 (dy, du, dv, s, width / 2);
+    else {
+      gint i;
 
-    video_orc_pack_I420 (dy, du, dv, s, width / 2);
+      for (i = 0; i < width / 2; i++) {
+        dy[i * 2 + 0] = s[i * 8 + 1];
+        dy[i * 2 + 1] = s[i * 8 + 5];
+        du[i] = s[i * 8 + 2];
+        dv[i] = s[i * 8 + 3];
+      }
+    }
     if (width & 1) {
       gint i = width - 1;
 
@@ -160,9 +169,22 @@ unpack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     width--;
   }
 
-  g_return_if_fail (IS_ALIGNED (d, 8));
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_YUY2 (d, s, width / 2);
+  else {
+    gint i;
 
-  video_orc_unpack_YUY2 (d, s, width / 2);
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = s[i * 4 + 0];
+      d[i * 8 + 2] = s[i * 4 + 1];
+      d[i * 8 + 3] = s[i * 4 + 3];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = s[i * 4 + 2];
+      d[i * 8 + 6] = s[i * 4 + 1];
+      d[i * 8 + 7] = s[i * 4 + 3];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -183,9 +205,17 @@ pack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *restrict d = GET_LINE (y);
   const guint8 *restrict s = src;
 
-  g_return_if_fail (IS_ALIGNED (s, 8));
-
-  video_orc_pack_YUY2 (d, s, width / 2);
+  if (IS_ALIGNED (s, 8))
+    video_orc_pack_YUY2 (d, s, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 4 + 0] = s[i * 8 + 1];
+      d[i * 4 + 1] = s[i * 8 + 2];
+      d[i * 4 + 2] = s[i * 8 + 5];
+      d[i * 4 + 3] = s[i * 8 + 3];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -216,9 +246,22 @@ unpack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     width--;
   }
 
-  g_return_if_fail (IS_ALIGNED (d, 8));
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_UYVY (d, s, width / 2);
+  else {
+    gint i;
 
-  video_orc_unpack_UYVY (d, s, width / 2);
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = s[i * 4 + 1];
+      d[i * 8 + 2] = s[i * 4 + 0];
+      d[i * 8 + 3] = s[i * 4 + 2];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = s[i * 4 + 3];
+      d[i * 8 + 6] = s[i * 4 + 0];
+      d[i * 8 + 7] = s[i * 4 + 2];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -239,10 +282,17 @@ pack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *restrict d = GET_LINE (y);
   const guint8 *restrict s = src;
 
-  g_return_if_fail (IS_ALIGNED (s, 8));
-
-  video_orc_pack_UYVY (d, s, width / 2);
-
+  if (IS_ALIGNED (s, 8))
+    video_orc_pack_UYVY (d, s, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 4 + 0] = s[i * 8 + 2];
+      d[i * 4 + 1] = s[i * 8 + 1];
+      d[i * 4 + 2] = s[i * 8 + 3];
+      d[i * 4 + 3] = s[i * 8 + 5];
+    }
+  }
   if (width & 1) {
     gint i = width - 1;
 
@@ -272,9 +322,22 @@ unpack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     width--;
   }
 
-  g_return_if_fail (IS_ALIGNED (d, 8));
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_YVYU (d, s, width / 2);
+  else {
+    gint i;
 
-  video_orc_unpack_YVYU (d, s, width / 2);
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = s[i * 4 + 0];
+      d[i * 8 + 2] = s[i * 4 + 3];
+      d[i * 8 + 3] = s[i * 4 + 1];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = s[i * 4 + 2];
+      d[i * 8 + 6] = s[i * 4 + 3];
+      d[i * 8 + 7] = s[i * 4 + 1];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -295,9 +358,17 @@ pack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *restrict d = GET_LINE (y);
   const guint8 *restrict s = src;
 
-  g_return_if_fail (IS_ALIGNED (s, 8));
-
-  video_orc_pack_YVYU (d, s, width / 2);
+  if (IS_ALIGNED (s, 8))
+    video_orc_pack_YVYU (d, s, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 4 + 0] = s[i * 8 + 1];
+      d[i * 4 + 1] = s[i * 8 + 3];
+      d[i * 4 + 2] = s[i * 8 + 5];
+      d[i * 4 + 3] = s[i * 8 + 2];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -628,9 +699,21 @@ unpack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     sy++;
   }
 
-  g_return_if_fail (IS_ALIGNED (d, 8));
-
-  video_orc_unpack_YUV9 (d, sy, su, sv, width / 2);
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_YUV9 (d, sy, su, sv, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = sy[i * 2 + 0];
+      d[i * 8 + 2] = su[i >> 1];
+      d[i * 8 + 3] = sv[i >> 1];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = sy[i * 2 + 1];
+      d[i * 8 + 6] = su[i >> 1];
+      d[i * 8 + 7] = sv[i >> 1];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -698,9 +781,21 @@ unpack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     d += 4;
   }
 
-  g_return_if_fail (IS_ALIGNED (d, 8));
-
-  video_orc_unpack_Y42B (d, sy, su, sv, width / 2);
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_Y42B (d, sy, su, sv, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = sy[i * 2 + 0];
+      d[i * 8 + 2] = su[i];
+      d[i * 8 + 3] = sv[i];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = sy[i * 2 + 1];
+      d[i * 8 + 6] = su[i];
+      d[i * 8 + 7] = sv[i];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -723,9 +818,17 @@ pack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *restrict dv = GET_V_LINE (y);
   const guint8 *restrict s = src;
 
-  g_return_if_fail (IS_ALIGNED (s, 8));
-
-  video_orc_pack_Y42B (dy, du, dv, s, width / 2);
+  if (IS_ALIGNED (s, 8))
+    video_orc_pack_Y42B (dy, du, dv, s, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      dy[i * 2 + 0] = s[i * 8 + 1];
+      dy[i * 2 + 1] = s[i * 8 + 5];
+      du[i] = s[i * 8 + 2];
+      dv[i] = s[i * 8 + 3];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -1244,9 +1347,21 @@ unpack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     suv += 2;
   }
 
-  g_return_if_fail (IS_ALIGNED (d, 8));
-
-  video_orc_unpack_NV12 (d, sy, suv, width / 2);
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_NV12 (d, sy, suv, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = sy[i * 2 + 0];
+      d[i * 8 + 2] = suv[i * 2 + 0];
+      d[i * 8 + 3] = suv[i * 2 + 1];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = sy[i * 2 + 1];
+      d[i * 8 + 6] = suv[i * 2 + 0];
+      d[i * 8 + 7] = suv[i * 2 + 1];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -1270,10 +1385,17 @@ pack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint8 *restrict s = src;
 
   if (IS_CHROMA_LINE_420 (y, flags)) {
-    g_return_if_fail (IS_ALIGNED (s, 8));
-
-    video_orc_pack_NV12 (dy, duv, s, width / 2);
-
+    if (IS_ALIGNED (s, 8))
+      video_orc_pack_NV12 (dy, duv, s, width / 2);
+    else {
+      gint i;
+      for (i = 0; i < width / 2; i++) {
+        dy[i * 2 + 0] = s[i * 8 + 1];
+        dy[i * 2 + 1] = s[i * 8 + 5];
+        duv[i * 2 + 0] = s[i * 8 + 2];
+        duv[i * 2 + 1] = s[i * 8 + 3];
+      }
+    }
     if (width & 1) {
       gint i = width - 1;
 
@@ -1309,9 +1431,21 @@ unpack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     suv += 2;
   }
 
-  g_return_if_fail (IS_ALIGNED (d, 8));
-
-  video_orc_unpack_NV21 (d, sy, suv, width / 2);
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_NV21 (d, sy, suv, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = sy[i * 2 + 0];
+      d[i * 8 + 2] = suv[i * 2 + 1];
+      d[i * 8 + 3] = suv[i * 2 + 0];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = sy[i * 2 + 1];
+      d[i * 8 + 6] = suv[i * 2 + 1];
+      d[i * 8 + 7] = suv[i * 2 + 0];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -1335,10 +1469,17 @@ pack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint8 *restrict s = src;
 
   if (IS_CHROMA_LINE_420 (y, flags)) {
-    g_return_if_fail (IS_ALIGNED (s, 8));
-
-    video_orc_pack_NV21 (dy, duv, s, width / 2);
-
+    if (IS_ALIGNED (s, 8))
+      video_orc_pack_NV21 (dy, duv, s, width / 2);
+    else {
+      gint i;
+      for (i = 0; i < width / 2; i++) {
+        dy[i * 2 + 0] = s[i * 8 + 1];
+        dy[i * 2 + 1] = s[i * 8 + 5];
+        duv[i * 2 + 0] = s[i * 8 + 3];
+        duv[i * 2 + 1] = s[i * 8 + 2];
+      }
+    }
     if (width & 1) {
       gint i = width - 1;
 
@@ -1373,9 +1514,21 @@ unpack_NV16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     suv += 2;
   }
 
-  g_return_if_fail (IS_ALIGNED (d, 8));
-
-  video_orc_unpack_NV12 (d, sy, suv, width / 2);
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_NV12 (d, sy, suv, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = sy[i * 2 + 0];
+      d[i * 8 + 2] = suv[i * 2 + 0];
+      d[i * 8 + 3] = suv[i * 2 + 1];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = sy[i * 2 + 1];
+      d[i * 8 + 6] = suv[i * 2 + 0];
+      d[i * 8 + 7] = suv[i * 2 + 1];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -1397,9 +1550,17 @@ pack_NV16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *restrict duv = GET_PLANE_LINE (1, y);
   const guint8 *restrict s = src;
 
-  g_return_if_fail (IS_ALIGNED (s, 8));
-
-  video_orc_pack_NV12 (dy, duv, s, width / 2);
+  if (IS_ALIGNED (s, 8))
+    video_orc_pack_NV12 (dy, duv, s, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      dy[i * 2 + 0] = s[i * 8 + 1];
+      dy[i * 2 + 1] = s[i * 8 + 5];
+      duv[i * 2 + 0] = s[i * 8 + 2];
+      duv[i * 2 + 1] = s[i * 8 + 3];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
@@ -1556,9 +1717,19 @@ pack_A420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint8 *restrict s = src;
 
   if (IS_CHROMA_LINE_420 (y, flags)) {
-    g_return_if_fail (IS_ALIGNED (s, 8));
-
-    video_orc_pack_A420 (dy, du, dv, da, s, width / 2);
+    if (IS_ALIGNED (s, 8))
+      video_orc_pack_A420 (dy, du, dv, da, s, width / 2);
+    else {
+      gint i;
+      for (i = 0; i < width / 2; i++) {
+        da[i * 2 + 0] = s[i * 8 + 0];
+        dy[i * 2 + 0] = s[i * 8 + 1];
+        da[i * 2 + 1] = s[i * 8 + 4];
+        dy[i * 2 + 1] = s[i * 8 + 5];
+        du[i] = s[i * 8 + 2];
+        dv[i] = s[i * 8 + 3];
+      }
+    }
 
     if (width & 1) {
       gint i = width - 1;
@@ -1691,9 +1862,21 @@ unpack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     sy++;
   }
 
-  g_return_if_fail (IS_ALIGNED (d, 8));
-
-  video_orc_unpack_YUV9 (d, sy, su, sv, width / 2);
+  if (IS_ALIGNED (d, 8))
+    video_orc_unpack_YUV9 (d, sy, su, sv, width / 2);
+  else {
+    gint i;
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = sy[i * 2 + 0];
+      d[i * 8 + 2] = su[i >> 1];
+      d[i * 8 + 3] = sv[i >> 1];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = sy[i * 2 + 1];
+      d[i * 8 + 6] = su[i >> 1];
+      d[i * 8 + 7] = sv[i >> 1];
+    }
+  }
 
   if (width & 1) {
     gint i = width - 1;
