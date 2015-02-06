@@ -1163,11 +1163,8 @@ gst_aggregator_get_latency_unlocked (GstAggregator * self, gboolean * live,
     max += self->priv->sub_latency_max;
 
   our_latency = self->priv->latency;
-  if (GST_CLOCK_TIME_IS_VALID (our_latency)) {
+  if (GST_CLOCK_TIME_IS_VALID (our_latency))
     min += our_latency;
-    if (GST_CLOCK_TIME_IS_VALID (max))
-      max += our_latency;
-  }
 
   if (live)
     *live = self->priv->latency_live;
@@ -1226,8 +1223,6 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   if (GST_CLOCK_TIME_IS_VALID (our_latency)) {
     if (GST_CLOCK_TIME_IS_VALID (data.min))
       data.min += our_latency;
-    if (GST_CLOCK_TIME_IS_VALID (data.max))
-      data.max += our_latency;
   }
 
   if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_min)
