@@ -45,6 +45,7 @@ timeout (GstRTSPServer * server)
   return TRUE;
 }
 
+#if 0
 static gboolean
 remove_map (GstRTSPServer * server)
 {
@@ -57,6 +58,7 @@ remove_map (GstRTSPServer * server)
 
   return FALSE;
 }
+#endif
 
 int
 main (int argc, char *argv[])
@@ -110,9 +112,12 @@ main (int argc, char *argv[])
 
   /* do session cleanup every 2 seconds */
   g_timeout_add_seconds (2, (GSourceFunc) timeout, server);
-  /* remove the mount point after 10 seconds, new clients won't be able to use the
-   * /test url anymore */
+
+#if 0
+  /* remove the mount point after 10 seconds, new clients won't be able to use
+   * the /test url anymore */
   g_timeout_add_seconds (10, (GSourceFunc) remove_map, server);
+#endif
 
   /* start serving */
   g_print ("stream ready at rtsp://127.0.0.1:%s/test\n", port);
