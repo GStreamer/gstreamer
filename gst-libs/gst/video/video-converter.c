@@ -1654,8 +1654,33 @@ setup_borderline (GstVideoConverter * convert)
     out_finfo = convert->out_info.finfo;
 
     if (GST_VIDEO_INFO_IS_YUV (&convert->out_info)) {
-      /* FIXME, convert to AYUV, just black for now */
-      border_val = GINT32_FROM_BE (0x00007f7f);
+
+      MatrixData cm;
+      gint a, r, g, b;
+      gint y, u, v;
+
+      /* Get Color matrix. */
+      color_matrix_set_identity (&cm);
+      compute_matrix_to_YUV (convert, &cm);
+      color_matrix_convert (&cm);
+
+      border_val = GINT32_FROM_BE (convert->border_argb);
+
+      b = (0xFF000000 & border_val) >> 24;
+      g = (0x00FF0000 & border_val) >> 16;
+      r = (0x0000FF00 & border_val) >> 8;
+      a = (0x000000FF & border_val);
+
+      y = 16 + ((r * cm.im[0][0] + g * cm.im[0][1] + b * cm.im[0][2]) >> 8);
+      u = 128 + ((r * cm.im[1][0] + g * cm.im[1][1] + b * cm.im[1][2]) >> 8);
+      v = 128 + ((r * cm.im[2][0] + g * cm.im[2][1] + b * cm.im[2][2]) >> 8);
+
+      a = CLAMP (a, 0, 255);
+      y = CLAMP (y, 0, 255);
+      u = CLAMP (u, 0, 255);
+      v = CLAMP (v, 0, 255);
+
+      border_val = a | (y << 8) | (u << 16) | (v << 24);
     } else {
       border_val = GINT32_FROM_BE (convert->border_argb);
     }
