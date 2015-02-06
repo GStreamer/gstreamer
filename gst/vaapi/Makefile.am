@@ -244,8 +244,8 @@ CLEANFILES = \
 EXTRA_DIST = \
 	$(libgstvaapi_enc_source_c)	 \
 	$(libgstvaapi_enc_source_h)	 \
-        $(libgstvaapi_jpeg_enc_source_c) \
-        $(libgstvaapi_jpeg_enc_source_h) \
+	$(libgstvaapi_jpegenc_source_c)  \
+	$(libgstvaapi_jpegenc_source_h)  \
 	$(libgstvaapi_x11_source_c)	 \
 	$(libgstvaapi_x11_source_h)	 \
 	$(libgstvaapi_glx_source_c)	 \
