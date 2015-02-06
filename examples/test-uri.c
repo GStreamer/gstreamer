@@ -69,6 +69,7 @@ main (int argc, char *argv[])
   GstRTSPMediaFactoryURI *factory;
   GOptionContext *optctx;
   GError *error = NULL;
+  gchar *uri;
 
   optctx = g_option_context_new ("<uri> - Test RTSP Server, URI");
   g_option_context_add_main_entries (optctx, entries, NULL);
@@ -78,6 +79,11 @@ main (int argc, char *argv[])
     return -1;
   }
   g_option_context_free (optctx);
+
+  if (argc < 2) {
+    g_printerr ("Please pass an URI or file as argument!\n");
+    return -1;
+  }
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -91,10 +97,25 @@ main (int argc, char *argv[])
 
   /* make a URI media factory for a test stream. */
   factory = gst_rtsp_media_factory_uri_new ();
+
   /* when using GStreamer as a client, one can use the gst payloader, which is
    * more efficient when there is no payloader for the compressed format */
   /* g_object_set (factory, "use-gstpay", TRUE, NULL); */
-  gst_rtsp_media_factory_uri_set_uri (factory, argv[1]);
+
+  /* check if URI is valid, otherwise convert filename to URI if it's a file */
+  if (gst_uri_is_valid (argv[1])) {
+    uri = g_strdup (argv[1]);
+  } else if (g_file_test (argv[1], G_FILE_TEST_EXISTS)) {
+    uri = gst_filename_to_uri (argv[1], NULL);
+  } else {
+    g_printerr ("Unrecognised command line argument '%s'.\n"
+        "Please pass an URI or file as argument!\n", argv[1]);
+    return -1;
+  }
+
+  gst_rtsp_media_factory_uri_set_uri (factory, uri);
+  g_free (uri);
+
   /* if you want multiple clients to see the same video, set the shared property
    * to TRUE */
   /* gst_rtsp_media_factory_set_shared ( GST_RTSP_MEDIA_FACTORY (factory), TRUE); */
