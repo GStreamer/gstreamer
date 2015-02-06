@@ -571,12 +571,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
       gst_object_ref (clock);
 
     time = base_time + start;
-
-    if (GST_CLOCK_TIME_IS_VALID (latency_min)) {
-      time += latency_min;
-    } else {
-      time += self->priv->latency;
-    }
+    time += latency_min;
 
     GST_DEBUG_OBJECT (self, "possibly waiting for clock to reach %"
         GST_TIME_FORMAT " (base %" GST_TIME_FORMAT " start %" GST_TIME_FORMAT
@@ -1148,7 +1143,6 @@ void
 gst_aggregator_get_latency_unlocked (GstAggregator * self, gboolean * live,
     GstClockTime * min_latency, GstClockTime * max_latency)
 {
-  GstClockTime our_latency;
   GstClockTime min, max;
 
   g_return_if_fail (GST_IS_AGGREGATOR (self));
@@ -1157,12 +1151,12 @@ gst_aggregator_get_latency_unlocked (GstAggregator * self, gboolean * live,
   min = self->priv->latency_min;
   max = self->priv->latency_max;
 
+  /* add our own */
+  min += self->priv->latency;
   min += self->priv->sub_latency_min;
   if (GST_CLOCK_TIME_IS_VALID (max)
       && GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
     max += self->priv->sub_latency_max;
-
-  our_latency = self->priv->latency;
   else if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
     max = self->priv->sub_latency_max;
 
@@ -1210,21 +1204,15 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   self->priv->latency_max = data.max;
 
   /* add our own */
-  if (GST_CLOCK_TIME_IS_VALID (our_latency)) {
-    if (GST_CLOCK_TIME_IS_VALID (data.min))
-      data.min += our_latency;
-  }
-
-  if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_min)
-      && GST_CLOCK_TIME_IS_VALID (data.min))
-    data.min += self->priv->sub_latency_min;
+  data.min += our_latency;
+  data.min += self->priv->sub_latency_min;
   if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max)
       && GST_CLOCK_TIME_IS_VALID (data.max))
     data.max += self->priv->sub_latency_max;
   else if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
     data.max = self->priv->sub_latency_max;
 
-  if (data.live && GST_CLOCK_TIME_IS_VALID (our_latency) && data.min > data.max) {
+  if (data.live && data.min > data.max) {
     GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
         ("%s", "Latency too big"),
         ("The requested latency value is too big for the current pipeline.  "
@@ -1584,6 +1572,7 @@ gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
   GstClockTime min, max;
 
   g_return_if_fail (GST_IS_AGGREGATOR (self));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (latency));
 
   GST_OBJECT_LOCK (self);
   if (self->priv->latency_live) {
