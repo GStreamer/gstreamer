@@ -21,7 +21,7 @@
 GST_GL_EXT_BEGIN (vao,
                   GST_GL_API_OPENGL3 | GST_GL_API_GLES2,
                   3, 0,
-                  2, 0,
+                  3, 0,
                   "ARB:\0OES\0",
                   "vertex_array_object\0")
 GST_GL_EXT_FUNCTION (void, GenVertexArrays,
