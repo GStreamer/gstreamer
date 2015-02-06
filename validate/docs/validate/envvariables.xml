@@ -112,5 +112,85 @@
   </para>
 </formalpara>
 
+<formalpara id="GST-VALIDATE-REPORTING-DETAILS">
+  <title><envar>GST_VALIDATE_REPORTING_DETAILS</envar></title>
+
+  <para>
+      The reporting level can be set through the "GST_VALIDATE_REPORTING_DETAILS"
+      environment variable, as  a comma-separated list of (optional) object categories / names
+      and levels. No object category / name sets the global level.
+
+    <informalexample>
+      Examples:
+      <programlisting>
+        GST_VALIDATE_REPORTING_DETAILS=synthetic,h264parse:all
+        GST_VALIDATE_REPORTING_DETAILS=none,h264parse::sink_0:synthetic
+      </programlisting>
+    </informalexample>
+    <para>
+      Levels being:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term>none</term>
+        <listitem><para>No debugging level specified or desired. Used to deactivate debugging output.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          synthetic
+        </term>
+        <listitem>
+          <para>
+            Summary of the issues found, with no details.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          subchain
+        </term>
+        <listitem>
+          <para>
+            If set as the default level, similar issues can be reported multiple times for
+            different subchains.  If set as the level for a particular object (my_object:subchain),
+            validate will report the issues where the object is the first to report an issue for
+            a subchain.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+            monitor
+        </term>
+        <listitem>
+          <para>
+            If set as the default level, all the
+            distinct issues for all the monitors will be reported.
+            If set as the level for a particular object, all the distinct issues for this object
+            will be reported.
+            Note that if the same issue happens twice on the same object, up until this
+            level that issue is only reported once.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+            all
+        </term>
+        <listitem>
+          <para>
+             All the issues will be reported, even those
+             that repeat themselves inside the same object. This can be *very* verbose if
+             set globally.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+   Setting the reporting level allows to control the way issues are reported
+   when calling #gst_validate_runner_printf.
+  </para>
+</formalpara>
+
   </refsect1>
 </refentry>
