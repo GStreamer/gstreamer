@@ -1741,7 +1741,7 @@ gst_x264_enc_set_latency (GstX264Enc * encoder)
         GST_TIME_ARGS (latency), max_delayed_frames);
 
     gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency,
-        latency);
+        GST_CLOCK_TIME_NONE);
   } else {
     /* We can't do live as we don't know our latency */
     gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder),
