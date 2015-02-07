@@ -168,7 +168,7 @@ gstspu_vobsub_get_rle_code (SpuState * state, guint16 * rle_offset)
   return code;
 }
 
-static inline void
+static inline gboolean
 gstspu_vobsub_draw_rle_run (SpuState * state, gint16 x, gint16 end,
     SpuColour * colour)
 {
@@ -191,7 +191,10 @@ gstspu_vobsub_draw_rle_run (SpuState * state, gint16 x, gint16 end,
     }
     /* Update the compositing buffer so we know how much to blend later */
     *(state->vobsub.comp_last_x_ptr) = end - 1; /* end is the start of the *next* run */
+
+    return TRUE;
   }
+  return FALSE;
 }
 
 static inline gint16
@@ -204,16 +207,17 @@ rle_end_x (guint16 rle_code, gint16 x, gint16 end)
     return MIN (end, x + (rle_code >> 2));
 }
 
-static void gstspu_vobsub_render_line_with_chgcol (SpuState * state,
+static gboolean gstspu_vobsub_render_line_with_chgcol (SpuState * state,
     guint8 * planes[3], guint16 * rle_offset);
 static gboolean gstspu_vobsub_update_chgcol (SpuState * state);
 
-static void
+static gboolean
 gstspu_vobsub_render_line (SpuState * state, guint8 * planes[3],
     guint16 * rle_offset)
 {
   gint16 x, next_x, end, rle_code, next_draw_x;
   SpuColour *colour;
+  gboolean visible = FALSE;
 
   /* Check for special case of chg_col info to use (either highlight or
    * ChgCol command */
@@ -222,8 +226,7 @@ gstspu_vobsub_render_line (SpuState * state, guint8 * planes[3],
       /* Check the top & bottom, because we might not be within the region yet */
       if (state->vobsub.cur_Y >= state->vobsub.cur_chg_col->top &&
           state->vobsub.cur_Y <= state->vobsub.cur_chg_col->bottom) {
-        gstspu_vobsub_render_line_with_chgcol (state, planes, rle_offset);
-        return;
+        return gstspu_vobsub_render_line_with_chgcol (state, planes, rle_offset);
       }
     }
   }
@@ -250,9 +253,11 @@ gstspu_vobsub_render_line (SpuState * state, guint8 * planes[3],
     /* Now draw the run between [x,next_x) */
     if (state->vobsub.cur_Y >= state->vobsub.clip_rect.top &&
         state->vobsub.cur_Y <= state->vobsub.clip_rect.bottom)
-      gstspu_vobsub_draw_rle_run (state, x, next_draw_x, colour);
+      visible |= gstspu_vobsub_draw_rle_run (state, x, next_draw_x, colour);
     x = next_x;
   }
+
+  return visible;
 }
 
 static gboolean
@@ -282,7 +287,7 @@ gstspu_vobsub_update_chgcol (SpuState * state)
   return FALSE;
 }
 
-static void
+static gboolean
 gstspu_vobsub_render_line_with_chgcol (SpuState * state, guint8 * planes[3],
     guint16 * rle_offset)
 {
@@ -294,6 +299,7 @@ gstspu_vobsub_render_line_with_chgcol (SpuState * state, guint8 * planes[3],
   SpuVobsubPixCtrlI *next_pix_ctrl;
   SpuVobsubPixCtrlI *end_pix_ctrl;
   SpuVobsubPixCtrlI dummy_pix_ctrl;
+  gboolean visible = FALSE;
   gint16 cur_reg_end;
   gint i;
 
@@ -342,7 +348,7 @@ gstspu_vobsub_render_line_with_chgcol (SpuState * state, guint8 * planes[3],
 
       if (G_LIKELY (x < run_end)) {
         colour = &cur_pix_ctrl->pal_cache[rle_code & 3];
-        gstspu_vobsub_draw_rle_run (state, x, run_draw_end, colour);
+        visible |= gstspu_vobsub_draw_rle_run (state, x, run_draw_end, colour);
         x = run_end;
       }
 
@@ -358,6 +364,8 @@ gstspu_vobsub_render_line_with_chgcol (SpuState * state, guint8 * planes[3],
       }
     }
   }
+
+  return visible;
 }
 
 static void
@@ -544,7 +552,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
 
   for (state->vobsub.cur_Y = y; state->vobsub.cur_Y <= last_y;
       state->vobsub.cur_Y++) {
-    gboolean clip;
+    gboolean clip, visible = FALSE;
 
     clip = (state->vobsub.cur_Y < state->vobsub.clip_rect.top
         || state->vobsub.cur_Y > state->vobsub.clip_rect.bottom);
@@ -562,9 +570,9 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
 
     /* Render odd line */
     state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x + 1;
-    gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[1]);
+    visible |= gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[1]);
 
-    if (!clip) {
+    if (visible && !clip) {
       /* Blend the accumulated UV compositing buffers onto the output */
       gstspu_vobsub_blend_comp_buffers (state, planes);
     }
@@ -576,7 +584,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
   }
 
   if (state->vobsub.cur_Y == state->vobsub.disp_rect.bottom) {
-    gboolean clip;
+    gboolean clip, visible = FALSE;
 
     clip = (state->vobsub.cur_Y < state->vobsub.clip_rect.top
         || state->vobsub.cur_Y > state->vobsub.clip_rect.bottom);
@@ -588,8 +596,9 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
        * after the above loop exited. */
       gstspu_vobsub_clear_comp_buffers (state);
       state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x;
-      gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
-      gstspu_vobsub_blend_comp_buffers (state, planes);
+      visible |= gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
+      if (visible)
+        gstspu_vobsub_blend_comp_buffers (state, planes);
     }
   }
 
