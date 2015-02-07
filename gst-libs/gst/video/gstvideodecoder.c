@@ -988,6 +988,12 @@ gst_video_decoder_drain_out (GstVideoDecoder * dec, gboolean at_eos)
     if (at_eos) {
       if (decoder_class->finish)
         ret = decoder_class->finish (dec);
+    } else {
+      if (decoder_class->drain) {
+        ret = decoder_class->drain (dec);
+      } else {
+        GST_FIXME_OBJECT (dec, "Sub-class should implement drain()");
+      }
     }
   } else {
     /* Reverse playback mode */
@@ -2115,10 +2121,17 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
       if (res != GST_FLOW_OK)
         goto done;
 
-      /* We need to tell the subclass to drain now */
-      GST_DEBUG_OBJECT (dec, "Finishing");
-      if (decoder_class->finish)
+      /* We need to tell the subclass to drain now.
+       * We prefer the drain vfunc, but for backward-compat
+       * we use a finish() vfunc if drain isn't implemented */
+      if (decoder_class->drain) {
+        GST_DEBUG_OBJECT (dec, "Draining");
+        res = decoder_class->drain (dec);
+      } else if (decoder_class->finish) {
+        GST_FIXME_OBJECT (dec, "Sub-class should implement drain(). "
+            "Calling finish() for backwards-compat");
         res = decoder_class->finish (dec);
+      }
 
       if (res != GST_FLOW_OK)
         goto done;

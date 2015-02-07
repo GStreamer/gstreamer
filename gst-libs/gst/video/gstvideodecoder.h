@@ -215,8 +215,12 @@ struct _GstVideoDecoder
  * @handle_frame:   Provides input data frame to subclass.
  * @finish:         Optional.
  *                  Called to request subclass to dispatch any pending remaining
- *                  data (e.g. at EOS or segment end). Sub-classes should be prepared
- *                  to handle new data afterward, or seamless segment processing will break.
+ *                  data at EOS. Sub-classes can refuse to decode new data after.
+ * @drain:	    Optional.
+ *                  Called to request subclass to decode any data it can at this
+ *                  point, but that more data may arrive after. (e.g. at segment end).
+ *                  Sub-classes should be prepared to handle new data afterward,
+ *                  or seamless segment processing will break. Since: 1.6
  * @sink_event:     Optional.
  *                  Event handler on the sink pad. This function should return
  *                  TRUE if the event was handled and should be discarded
@@ -320,9 +324,10 @@ struct _GstVideoDecoderClass
   GstCaps*      (*getcaps)        (GstVideoDecoder *decoder,
                                    GstCaps *filter);
 
+  GstFlowReturn (*drain)          (GstVideoDecoder *decoder);
 
   /*< private >*/
-  void         *padding[GST_PADDING_LARGE-4];
+  void         *padding[GST_PADDING_LARGE-5];
 };
 
 GType    gst_video_decoder_get_type (void);
