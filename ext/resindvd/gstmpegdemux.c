@@ -942,22 +942,20 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       demux->bytes_since_scr = 0;
 
       GST_DEBUG_OBJECT (demux,
-          "demux: received new segment start %" G_GINT64_FORMAT " stop %"
-          G_GINT64_FORMAT " time %" G_GINT64_FORMAT
-          " base %" G_GINT64_FORMAT, start, stop, time, base);
+          "demux: received new segment %" GST_SEGMENT_FORMAT,
+          &demux->sink_segment);
 #if 0
       g_print ("demux: received new segment start %" G_GINT64_FORMAT " stop %"
           G_GINT64_FORMAT " time %" G_GINT64_FORMAT
           " base %" G_GINT64_FORMAT "\n", start, stop, time, base);
 #endif
-      position = base - start;
-      adjust = position + SCR_MUNGE;
+      adjust = base - start + SCR_MUNGE;
       if (adjust >= 0)
         demux->scr_adjust = GSTTIME_TO_MPEGTIME (adjust);
       else
         demux->scr_adjust = -GSTTIME_TO_MPEGTIME (-adjust);
 
-      start = SCR_MUNGE;
+      position = start = SCR_MUNGE;
       base = 0;
 
       if (stop != -1)
@@ -973,12 +971,9 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       demux->src_segment.position = position;
 
       GST_DEBUG_OBJECT (demux,
-          "sending new segment: rate %g format %d, start: %"
-          G_GINT64_FORMAT ", stop: %" G_GINT64_FORMAT ", time: %"
-          G_GINT64_FORMAT ", base: %" G_GINT64_FORMAT
+          "sending new segment %" GST_SEGMENT_FORMAT
           ", scr_adjust: %" G_GINT64_FORMAT "(%" GST_TIME_FORMAT ")",
-          segment->rate, segment->format, start, stop, time, base,
-          demux->scr_adjust,
+          &demux->src_segment, demux->scr_adjust,
           GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->scr_adjust)));
 #if 0
       g_print ("sending new segment: rate %g format %d, start: %"
