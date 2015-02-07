@@ -107,6 +107,7 @@ typedef enum {
 #define QUERY_POSITION_OUT_OF_SEGMENT            _QUARK("query::position-out-of-segment")
 
 #define SCENARIO_NOT_ENDED                       _QUARK("scenario::not-ended")
+#define SCENARIO_FILE_MALFORMED                  _QUARK("scenario::malformed")
 #define SCENARIO_ACTION_EXECUTION_ERROR          _QUARK("scenario::execution-error")
 #define SCENARIO_ACTION_EXECUTION_ISSUE          _QUARK("scenario::execution-issue")
 
