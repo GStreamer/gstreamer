@@ -76,7 +76,7 @@ error_cb (GstPlayer * player, GError * err, GstPlay * play)
   }
 }
 
-static gboolean
+static void
 position_updated_cb (GstPlayer * player, GstClockTime pos, GstPlay * play)
 {
   GstClockTime dur = -1;
@@ -84,10 +84,7 @@ position_updated_cb (GstPlayer * player, GstClockTime pos, GstPlay * play)
 
   g_object_get (play->player, "duration", &dur, NULL);
 
-  if (play->desired_state == GST_STATE_PAUSED)
-    g_snprintf (status, sizeof (status), "Paused");
-  else
-    memset (status, ' ', sizeof (status) - 1);
+  memset (status, ' ', sizeof (status) - 1);
 
   if (pos >= 0 && dur > 0) {
     gchar dstr[32], pstr[32];
@@ -99,8 +96,18 @@ position_updated_cb (GstPlayer * player, GstClockTime pos, GstPlay * play)
     dstr[9] = '\0';
     g_print ("%s / %s %s\r", pstr, dstr, status);
   }
+}
 
-  return TRUE;
+static void
+state_changed_cb (GstPlayer * player, GstPlayerState state, GstPlay * play)
+{
+  g_print ("State changed: %s\n", gst_player_state_get_name (state));
+}
+
+static void
+buffering_cb (GstPlayer * player, gint percent, GstPlay * play)
+{
+  g_print ("Buffering: %d\n", percent);
 }
 
 static GstPlay *
@@ -119,6 +126,10 @@ play_new (gchar ** uris, gdouble initial_volume)
   g_object_set (play->player, "dispatch-to-main-context", TRUE, NULL);
   g_signal_connect (play->player, "position-updated",
       G_CALLBACK (position_updated_cb), play);
+  g_signal_connect (play->player, "state-changed",
+      G_CALLBACK (state_changed_cb), play);
+  g_signal_connect (play->player, "buffering",
+      G_CALLBACK (buffering_cb), play);
   g_signal_connect (play->player, "end-of-stream",
       G_CALLBACK (end_of_stream_cb), play);
   g_signal_connect (play->player, "error", G_CALLBACK (error_cb), play);
