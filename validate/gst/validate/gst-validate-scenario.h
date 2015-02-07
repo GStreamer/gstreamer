@@ -89,12 +89,13 @@ struct _GstValidateAction
   GstValidateScenario *scenario;
 
   /* < private > */
+  GstStructure *main_structure;
   guint action_number;
   gint repeat;
   GstClockTime playback_time;
   GstValidateExecuteActionReturn state; /* Actually ActionState */
 
-  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (gint) - 1];
+  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (gint) - 2];
 };
 
 void gst_validate_action_set_done (GstValidateAction *action);

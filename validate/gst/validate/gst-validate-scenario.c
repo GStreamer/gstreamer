@@ -180,6 +180,9 @@ _action_copy (GstValidateAction * act)
       act->name = "";
   }
 
+  if (act->main_structure)
+    copy->main_structure = gst_structure_copy (act->main_structure);
+
   copy->action_number = act->action_number;
   copy->playback_time = act->playback_time;
 
@@ -191,6 +194,9 @@ _action_free (GstValidateAction * action)
 {
   if (action->structure)
     gst_structure_free (action->structure);
+
+  if (action->main_structure)
+    gst_structure_free (action->main_structure);
 
   g_slice_free1 (_find_action_type (action->type)->action_struct_size, action);
 }
@@ -218,6 +224,7 @@ gst_validate_action_new (GstValidateScenario * scenario,
   gst_validate_action_init (action);
   action->playback_time = GST_CLOCK_TIME_NONE;
   action->type = action_type->name;
+  action->repeat = -1;
 
   action->scenario = scenario;
   if (scenario)
@@ -944,6 +951,22 @@ _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
   return TRUE;
 }
 
+static GstValidateExecuteActionReturn
+_execute_action (GstValidateActionType * action_type,
+    GstValidateAction * action)
+{
+  GstValidateExecuteActionReturn res =
+      action_type->execute (action->scenario, action);
+
+  if (!gst_structure_has_field (action->structure, "sub-action")) {
+    gst_structure_free (action->structure);
+
+    action->structure = gst_structure_copy (action->main_structure);
+  }
+
+  return res;
+}
+
 static gboolean
 get_position (GstValidateScenario * scenario)
 {
@@ -1058,7 +1081,8 @@ get_position (GstValidateScenario * scenario)
   GST_DEBUG_OBJECT (scenario, "Executing %" GST_PTR_FORMAT
       " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
   priv->seeked_in_pause = FALSE;
-  act->state = type->execute (scenario, act);
+
+  act->state = _execute_action (type, act);
   if (act->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
     gchar *str = gst_structure_to_string (act->structure);
 
@@ -1068,7 +1092,8 @@ get_position (GstValidateScenario * scenario)
     g_free (str);
   }
 
-  if (act->repeat > 0) {
+  if (act->repeat > 0 && gst_structure_is_equal (act->structure,
+          act->main_structure)) {
     act->repeat--;
   } else if (act->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     tmp = priv->actions;
@@ -1539,7 +1564,6 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
     return GST_VALIDATE_EXECUTE_ACTION_ERROR;
   }
 
-  action->repeat = -1;
   if (gst_structure_get_double (structure, "playback-time", &playback_time) ||
       gst_structure_get_double (structure, "playback_time", &playback_time)) {
     action->playback_time = playback_time * GST_SECOND;
@@ -1644,6 +1668,7 @@ _load_scenario_file (GstValidateScenario * scenario,
             structure, TRUE) == GST_VALIDATE_EXECUTE_ACTION_ERROR)
       goto failed;
 
+    action->main_structure = gst_structure_copy (structure);
     action->action_number = priv->num_actions++;
   }
 
@@ -2211,14 +2236,16 @@ _execute_sub_action_action (GstValidateAction * action)
     }
 
     if (!GST_CLOCK_TIME_IS_VALID (action->playback_time)) {
+      GstValidateExecuteActionReturn res;
       GstValidateActionType *action_type = _find_action_type (action->type);
 
       gst_validate_printf (action->scenario, "Executing sub action of type %s",
           action->type);
 
-      return action_type->execute (action->scenario, action);
-    }
+      res = _execute_action (action_type, action);
 
+      return res;
+    }
   }
 
   return GST_VALIDATE_EXECUTE_ACTION_OK;
