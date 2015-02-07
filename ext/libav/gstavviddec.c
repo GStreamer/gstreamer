@@ -246,6 +246,7 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   viddec_class->stop = gst_ffmpegviddec_stop;
   viddec_class->flush = gst_ffmpegviddec_flush;
   viddec_class->finish = gst_ffmpegviddec_finish;
+  viddec_class->drain = gst_ffmpegviddec_finish;        /* drain and finish are the same to us */
   viddec_class->decide_allocation = gst_ffmpegviddec_decide_allocation;
   viddec_class->propose_allocation = gst_ffmpegviddec_propose_allocation;
 }
