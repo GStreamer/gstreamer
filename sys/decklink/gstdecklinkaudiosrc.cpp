@@ -411,9 +411,25 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
 static void
 gst_decklink_audio_src_got_packet (GstElement * element,
-    IDeckLinkAudioInputPacket * packet, GstClockTime capture_time)
+    IDeckLinkAudioInputPacket * packet)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
+  GstClock *clock;
+  GstClockTime capture_time;
+
+  clock = gst_element_get_clock (element);
+  if (clock) {
+    GstClockTime clock_time, base_time;
+
+    clock_time = gst_clock_get_time (clock);
+    g_return_if_fail (clock_time != GST_CLOCK_TIME_NONE);
+    base_time = gst_element_get_base_time (element);
+    g_return_if_fail (base_time != GST_CLOCK_TIME_NONE);
+    capture_time = clock_time - base_time;
+    gst_object_unref (clock);
+  } else {
+    capture_time = GST_CLOCK_TIME_NONE;
+  }
 
   GST_LOG_OBJECT (self, "Got audio packet at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (capture_time));
@@ -748,18 +764,6 @@ gst_decklink_audio_src_change_state (GstElement * element,
       self->next_offset = -1;
       break;
     }
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
-      GstClock *clock;
-
-      clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
-      if (clock && clock != self->input->clock) {
-        gst_clock_set_master (self->input->clock, clock);
-      }
-      if (clock)
-        gst_object_unref (clock);
-
-      break;
-    }
     default:
       break;
   }
@@ -773,7 +777,6 @@ gst_decklink_audio_src_change_state (GstElement * element,
       gst_element_post_message (element,
           gst_message_new_clock_lost (GST_OBJECT_CAST (element),
               self->input->clock));
-      gst_clock_set_master (self->input->clock, NULL);
 
       g_queue_foreach (&self->current_packets, (GFunc) capture_packet_free,
           NULL);

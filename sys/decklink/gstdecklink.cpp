@@ -474,24 +474,37 @@ public:
       VideoInputFrameArrived (IDeckLinkVideoInputFrame * video_frame,
       IDeckLinkAudioInputPacket * audio_packet)
   {
-    GstClockTime clock_time = gst_clock_get_time (m_input->clock);
+    GstElement *videosrc = NULL, *audiosrc = NULL;
+    void (*got_video_frame) (GstElement * videosrc,
+        IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode) = NULL;
+    void (*got_audio_packet) (GstElement * videosrc,
+        IDeckLinkAudioInputPacket * packet) = NULL;
+    GstDecklinkModeEnum mode;
 
     g_mutex_lock (&m_input->lock);
-    if (m_input->got_video_frame) {
-      GstClockTime capture_time = clock_time -
-          gst_element_get_base_time (m_input->videosrc);
-      m_input->got_video_frame (m_input->videosrc, video_frame,
-          gst_decklink_get_mode_enum_from_bmd (m_input->mode->mode),
-          capture_time);
+    if (m_input->videosrc) {
+      videosrc = GST_ELEMENT_CAST (gst_object_ref (m_input->videosrc));
+      got_video_frame = m_input->got_video_frame;
     }
+    mode = gst_decklink_get_mode_enum_from_bmd (m_input->mode->mode);
 
-    if (m_input->got_audio_packet) {
-      GstClockTime capture_time = clock_time -
-          gst_element_get_base_time (m_input->audiosrc);
-      m_input->got_audio_packet (m_input->audiosrc, audio_packet, capture_time);
+    if (m_input->audiosrc) {
+      audiosrc = GST_ELEMENT_CAST (gst_object_ref (m_input->audiosrc));
+      got_audio_packet = m_input->got_audio_packet;
     }
-
     g_mutex_unlock (&m_input->lock);
+
+    if (got_video_frame && videosrc) {
+      got_video_frame (videosrc, video_frame, mode);
+    }
+
+    if (got_audio_packet && audiosrc) {
+      m_input->got_audio_packet (audiosrc, audio_packet);
+    }
+
+    gst_object_replace ((GstObject **) & videosrc, NULL);
+    gst_object_replace ((GstObject **) & audiosrc, NULL);
+
     return S_OK;
   }
 };
