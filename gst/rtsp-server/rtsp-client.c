@@ -2303,7 +2303,7 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* could not be set but since the request returned OK, we assume it
    * was SDP, else check it. */
   if (cont) {
-    if (!g_ascii_strcasecmp (cont, "application/sdp") == 0)
+    if (g_ascii_strcasecmp (cont, "application/sdp") != 0)
       goto wrong_content_type;
   }
 
