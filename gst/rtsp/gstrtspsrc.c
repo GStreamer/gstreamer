@@ -6961,7 +6961,7 @@ restart:
   /* could not be set but since the request returned OK, we assume it
    * was SDP, else check it. */
   if (respcont) {
-    if (!g_ascii_strcasecmp (respcont, "application/sdp") == 0)
+    if (g_ascii_strcasecmp (respcont, "application/sdp") != 0)
       goto wrong_content_type;
   }
 
