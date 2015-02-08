@@ -1755,7 +1755,7 @@ GST_START_TEST (test_record_tcp)
   GstRTSPResult rres;
   GSocketAddress *sa;
   GInetAddress *ia;
-  GstElement *sink = NULL;
+  GstElement *server_sink = NULL;
   GSocket *conn_socket;
   const gchar *proto;
   gchar *client_ip, *sess_id, *session = NULL;
@@ -1765,7 +1765,7 @@ GST_START_TEST (test_record_tcp)
       start_record_server ("( rtppcmadepay name=depay0 ! appsink name=sink )");
 
   g_signal_connect (mfactory, "media-constructed",
-      G_CALLBACK (media_constructed_cb), &sink);
+      G_CALLBACK (media_constructed_cb), &server_sink);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -1894,12 +1894,12 @@ GST_START_TEST (test_record_tcp)
   for (i = 0; i < RECORD_N_BUFS; ++i) {
     GstSample *sample = NULL;
 
-    g_signal_emit_by_name (G_OBJECT (sink), "pull-sample", &sample);
+    g_signal_emit_by_name (G_OBJECT (server_sink), "pull-sample", &sample);
     GST_INFO ("%2d recv sample: %p", i, sample);
     gst_sample_unref (sample);
   }
 
-  fail_unless_equals_int (GST_STATE (sink), GST_STATE_PLAYING);
+  fail_unless_equals_int (GST_STATE (server_sink), GST_STATE_PLAYING);
 
   /* clean up and iterate so the clean-up can finish */
   gst_rtsp_connection_free (conn);
