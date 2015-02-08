@@ -1000,6 +1000,25 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
       end_time = GST_BUFFER_DURATION (buf);
 
       if (end_time == -1) {
+        start_time = MAX (start_time, segment.start);
+        start_time =
+            gst_segment_to_running_time (&segment, GST_FORMAT_TIME, start_time);
+
+        if (start_time >= output_end_time) {
+          GST_DEBUG_OBJECT (pad, "buffer duration is -1, start_time >= "
+              "output_end_time.  Keeping previous buffer");
+          gst_buffer_unref (buf);
+          continue;
+        } else if (start_time < output_start_time) {
+          GST_DEBUG_OBJECT (pad, "buffer duration is -1, start_time < "
+              "output_start_time.  Discarding old buffer");
+          gst_buffer_replace (&pad->buffer, buf);
+          gst_buffer_unref (buf);
+          buf = gst_aggregator_pad_steal_buffer (bpad);
+          gst_buffer_unref (buf);
+          need_more_data = TRUE;
+          continue;
+        }
         gst_buffer_unref (buf);
         buf = gst_aggregator_pad_steal_buffer (bpad);
         gst_buffer_replace (&pad->buffer, buf);
