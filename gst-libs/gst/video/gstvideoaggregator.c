@@ -1947,14 +1947,6 @@ gst_videoaggregator_class_init (GstVideoAggregatorClass * klass)
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_videoaggregator_release_pad);
 
-  gst_element_class_set_static_metadata (gstelement_class,
-      "Video aggregator base class", "Filter/Editor/Video",
-      "Aggregate multiple video streams",
-      "Wim Taymans <wim@fluendo.com>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>, "
-      "Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>, "
-      "Thibault Saunier <tsaunier@gnome.org>");
-
   agg_class->sinkpads_type = GST_TYPE_VIDEO_AGGREGATOR_PAD;
   agg_class->start = gst_videoaggregator_start;
   agg_class->stop = gst_videoaggregator_stop;
