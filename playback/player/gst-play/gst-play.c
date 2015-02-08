@@ -329,16 +329,9 @@ relative_seek (GstPlay * play, gdouble percent)
     goto seek_failed;
 
   pos = pos + dur * percent;
-  if (pos > dur) {
-    if (!play_next (play)) {
-      g_print ("\nReached end of play list.\n");
-      g_main_loop_quit (play->loop);
-    }
-  } else {
-    if (pos < 0)
-      pos = 0;
-    gst_player_seek (play->player, pos);
-  }
+  if (pos < 0)
+    pos = 0;
+  gst_player_seek (play->player, pos);
 
   return;
 
