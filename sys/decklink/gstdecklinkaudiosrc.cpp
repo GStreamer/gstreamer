@@ -23,6 +23,7 @@
 #endif
 
 #include "gstdecklinkaudiosrc.h"
+#include "gstdecklinkvideosrc.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_audio_src_debug);
@@ -408,28 +409,25 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
 static void
 gst_decklink_audio_src_got_packet (GstElement * element,
-    IDeckLinkAudioInputPacket * packet)
+    IDeckLinkAudioInputPacket * packet, GstClockTime capture_time)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
-  GstClock *clock;
-  GstClockTime capture_time;
-
-  clock = gst_element_get_clock (element);
-  if (clock) {
-    GstClockTime clock_time, base_time;
-
-    clock_time = gst_clock_get_time (clock);
-    g_return_if_fail (clock_time != GST_CLOCK_TIME_NONE);
-    base_time = gst_element_get_base_time (element);
-    g_return_if_fail (base_time != GST_CLOCK_TIME_NONE);
-    capture_time = clock_time - base_time;
-    gst_object_unref (clock);
-  } else {
-    capture_time = GST_CLOCK_TIME_NONE;
-  }
+  GstDecklinkVideoSrc *videosrc = NULL;
 
   GST_LOG_OBJECT (self, "Got audio packet at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (capture_time));
+
+  g_mutex_lock (&self->input->lock);
+  if (self->input->videosrc)
+    videosrc =
+        GST_DECKLINK_VIDEO_SRC_CAST (gst_object_ref (self->input->videosrc));
+  g_mutex_unlock (&self->input->lock);
+
+  if (videosrc) {
+    gst_decklink_video_src_convert_to_external_clock (videosrc, &capture_time,
+        NULL);
+    gst_object_unref (videosrc);
+  }
 
   g_mutex_lock (&self->lock);
   if (!self->flushing) {
@@ -782,4 +780,3 @@ out:
 
   return ret;
 }
-

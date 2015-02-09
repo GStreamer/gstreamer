@@ -65,6 +65,9 @@ struct _GstDecklinkVideoSrc
   GQueue current_frames;
 
   guint buffer_size;
+
+  GstClockTime internal_base_time;
+  GstClockTime external_base_time;
 };
 
 struct _GstDecklinkVideoSrcClass
@@ -73,6 +76,8 @@ struct _GstDecklinkVideoSrcClass
 };
 
 GType gst_decklink_video_src_get_type (void);
+void gst_decklink_video_src_convert_to_external_clock (GstDecklinkVideoSrc * self,
+    GstClockTime * timestamp, GstClockTime * duration);
 
 G_END_DECLS
 

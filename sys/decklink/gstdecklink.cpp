@@ -476,12 +476,35 @@ public:
   {
     GstElement *videosrc = NULL, *audiosrc = NULL;
     void (*got_video_frame) (GstElement * videosrc,
-        IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode) = NULL;
+        IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
+        GstClockTime capture_time, GstClockTime capture_duration) = NULL;
     void (*got_audio_packet) (GstElement * videosrc,
-        IDeckLinkAudioInputPacket * packet) = NULL;
+        IDeckLinkAudioInputPacket * packet, GstClockTime capture_time) = NULL;
     GstDecklinkModeEnum mode;
+    BMDTimeValue capture_time, capture_duration;
+    HRESULT res;
+
+    res =
+        video_frame->GetHardwareReferenceTimestamp (GST_SECOND, &capture_time,
+        &capture_duration);
+    if (res != S_OK) {
+      GST_ERROR ("Failed to get capture time: 0x%08x", res);
+      capture_time = GST_CLOCK_TIME_NONE;
+      capture_duration = GST_CLOCK_TIME_NONE;
+    }
 
     g_mutex_lock (&m_input->lock);
+
+    if (capture_time > m_input->clock_start_time)
+      capture_time -= m_input->clock_start_time;
+    else
+      capture_time = 0;
+
+    if (capture_time > m_input->clock_offset)
+      capture_time -= m_input->clock_offset;
+    else
+      capture_time = 0;
+
     if (m_input->videosrc) {
       videosrc = GST_ELEMENT_CAST (gst_object_ref (m_input->videosrc));
       got_video_frame = m_input->got_video_frame;
@@ -495,11 +518,12 @@ public:
     g_mutex_unlock (&m_input->lock);
 
     if (got_video_frame && videosrc) {
-      got_video_frame (videosrc, video_frame, mode);
+      got_video_frame (videosrc, video_frame, mode, capture_time,
+          capture_duration);
     }
 
     if (got_audio_packet && audiosrc) {
-      m_input->got_audio_packet (audiosrc, audio_packet);
+      m_input->got_audio_packet (audiosrc, audio_packet, capture_time);
     }
 
     gst_object_replace ((GstObject **) & videosrc, NULL);
