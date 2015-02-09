@@ -1234,8 +1234,8 @@ gst_gl_memory_wrapped_texture (GstGLContext * context,
   GstGLMemory *mem;
 
   mem = g_slice_new0 (GstGLMemory);
-  _gl_mem_init (mem, _gl_allocator, NULL, context, info, valign, plane, NULL,
-      NULL);
+  _gl_mem_init (mem, _gl_allocator, NULL, context, info, valign, plane,
+      user_data, notify);
 
   mem->tex_id = texture_id;
   mem->tex_target = texture_target;
