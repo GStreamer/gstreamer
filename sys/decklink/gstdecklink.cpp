@@ -495,12 +495,12 @@ public:
 
     g_mutex_lock (&m_input->lock);
 
-    if (capture_time > m_input->clock_start_time)
+    if (capture_time > (BMDTimeValue) m_input->clock_start_time)
       capture_time -= m_input->clock_start_time;
     else
       capture_time = 0;
 
-    if (capture_time > m_input->clock_offset)
+    if (capture_time > (BMDTimeValue) m_input->clock_offset)
       capture_time -= m_input->clock_offset;
     else
       capture_time = 0;
