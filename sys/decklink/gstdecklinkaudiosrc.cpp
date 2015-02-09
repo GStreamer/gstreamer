@@ -92,7 +92,6 @@ static void gst_decklink_audio_src_finalize (GObject * object);
 static GstStateChangeReturn
 gst_decklink_audio_src_change_state (GstElement * element,
     GstStateChange transition);
-static GstClock *gst_decklink_audio_src_provide_clock (GstElement * element);
 
 static gboolean gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc,
     GstCaps * caps);
@@ -126,8 +125,6 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_decklink_audio_src_change_state);
-  element_class->provide_clock =
-      GST_DEBUG_FUNCPTR (gst_decklink_audio_src_provide_clock);
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_get_caps);
   basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_set_caps);
@@ -757,9 +754,6 @@ gst_decklink_audio_src_change_state (GstElement * element,
       if (videosrc)
         gst_object_unref (videosrc);
 
-      gst_element_post_message (element,
-          gst_message_new_clock_provide (GST_OBJECT_CAST (element),
-              self->input->clock, TRUE));
       self->flushing = FALSE;
       self->next_offset = -1;
       break;
@@ -774,10 +768,6 @@ gst_decklink_audio_src_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_element_post_message (element,
-          gst_message_new_clock_lost (GST_OBJECT_CAST (element),
-              self->input->clock));
-
       g_queue_foreach (&self->current_packets, (GFunc) capture_packet_free,
           NULL);
       g_queue_clear (&self->current_packets);
@@ -793,13 +783,3 @@ out:
   return ret;
 }
 
-static GstClock *
-gst_decklink_audio_src_provide_clock (GstElement * element)
-{
-  GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
-
-  if (!self->input)
-    return NULL;
-
-  return GST_CLOCK_CAST (gst_object_ref (self->input->clock));
-}
