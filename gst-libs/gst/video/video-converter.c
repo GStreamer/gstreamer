@@ -257,6 +257,7 @@ struct _GstVideoConverter
   gint fout_width[4];
   gint fout_height[4];
   gint fsplane[4];
+  gint ffill[4];
   GstVideoScaler *fh_scaler[4];
   GstVideoScaler *fv_scaler[4];
   FastConvertFunc fconvert[4];
@@ -556,6 +557,7 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
 /* options full, upsample-only, downsample-only, none */
 #define DEFAULT_OPT_CHROMA_MODE "full"
 #define DEFAULT_OPT_RESAMPLER_METHOD GST_VIDEO_RESAMPLER_METHOD_CUBIC
+#define DEFAULT_OPT_CHROMA_RESAMPLER_METHOD GST_VIDEO_RESAMPLER_METHOD_LINEAR
 #define DEFAULT_OPT_RESAMPLER_TAPS 0
 #define DEFAULT_OPT_DITHER_METHOD GST_VIDEO_DITHER_BAYER
 #define DEFAULT_OPT_DITHER_QUANTIZATION 1
@@ -575,6 +577,9 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
 #define GET_OPT_RESAMPLER_METHOD(c) get_opt_enum(c, \
     GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_VIDEO_RESAMPLER_METHOD, \
     DEFAULT_OPT_RESAMPLER_METHOD)
+#define GET_OPT_CHROMA_RESAMPLER_METHOD(c) get_opt_enum(c, \
+    GST_VIDEO_CONVERTER_OPT_CHROMA_RESAMPLER_METHOD, GST_TYPE_VIDEO_RESAMPLER_METHOD, \
+    DEFAULT_OPT_CHROMA_RESAMPLER_METHOD)
 #define GET_OPT_RESAMPLER_TAPS(c) get_opt_uint(c, \
     GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS, DEFAULT_OPT_RESAMPLER_TAPS)
 #define GET_OPT_DITHER_METHOD(c) get_opt_enum(c, \
@@ -3342,6 +3347,23 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
 #define GET_TMP_LINE(fl,idx) &fl->data[fl->stride * ((idx) % fl->n_lines)]
 
 static void
+convert_plane_fill (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  guint8 *s, *d;
+  gint splane = convert->fsplane[plane];
+
+  s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
+  s += convert->fin_x[splane];
+  d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
+  d += convert->fout_x[plane];
+
+  video_orc_memset_2d (d, FRAME_GET_PLANE_STRIDE (dest, plane),
+      convert->ffill[plane],
+      convert->fout_width[plane], convert->fout_height[plane]);
+}
+
+static void
 convert_plane_copy (GstVideoConverter * convert,
     const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
 {
@@ -3599,19 +3621,99 @@ convert_scale_planes (GstVideoConverter * convert,
 
   n_planes = GST_VIDEO_FRAME_N_PLANES (dest);
   for (i = 0; i < n_planes; i++) {
-    convert->fconvert[i] (convert, src, dest, i);
+    if (convert->fconvert[i])
+      convert->fconvert[i] (convert, src, dest, i);
   }
   convert_fill_border (convert, dest);
 }
 
+static GstVideoFormat
+get_scale_format (GstVideoFormat format, gint plane)
+{
+  GstVideoFormat res = GST_VIDEO_FORMAT_UNKNOWN;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_YUV9:
+    case GST_VIDEO_FORMAT_YVU9:
+    case GST_VIDEO_FORMAT_GBR:
+      res = GST_VIDEO_FORMAT_GRAY8;
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+      res = GST_VIDEO_FORMAT_GRAY16_BE;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+      res = format;
+      break;
+    case GST_VIDEO_FORMAT_RGB15:
+    case GST_VIDEO_FORMAT_BGR15:
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_BGR16:
+      res = GST_VIDEO_FORMAT_NV12;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV24:
+      res = plane == 0 ? GST_VIDEO_FORMAT_GRAY8 : GST_VIDEO_FORMAT_NV12;
+      break;
+    case GST_VIDEO_FORMAT_UNKNOWN:
+    case GST_VIDEO_FORMAT_ENCODED:
+    case GST_VIDEO_FORMAT_v210:
+    case GST_VIDEO_FORMAT_v216:
+    case GST_VIDEO_FORMAT_UYVP:
+    case GST_VIDEO_FORMAT_RGB8P:
+    case GST_VIDEO_FORMAT_IYU1:
+    case GST_VIDEO_FORMAT_r210:
+    case GST_VIDEO_FORMAT_I420_10BE:
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I422_10BE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_GBR_10BE:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_NV12_64Z32:
+      res = format;
+      g_assert_not_reached ();
+      break;
+  }
+  return res;
+}
+
 static gboolean
-setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
+setup_scale (GstVideoConverter * convert)
 {
   int i, n_planes;
-  gint method, stride = 0, in_width, in_height, out_width, out_height;
+  gint method, cr_method, stride =
+      0, in_width, in_height, out_width, out_height;
   guint taps, max_taps = 0;
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *in_finfo, *out_finfo;
+  GstVideoFormat in_format, out_format;
 
   in_info = &convert->in_info;
   out_info = &convert->out_info;
@@ -3619,18 +3721,25 @@ setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
   in_finfo = in_info->finfo;
   out_finfo = out_info->finfo;
 
-  n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
+  n_planes = GST_VIDEO_INFO_N_PLANES (out_info);
 
   method = GET_OPT_RESAMPLER_METHOD (convert);
+  cr_method = GET_OPT_CHROMA_RESAMPLER_METHOD (convert);
   taps = GET_OPT_RESAMPLER_TAPS (convert);
 
-  switch (GST_VIDEO_INFO_FORMAT (in_info)) {
+  in_format = GST_VIDEO_INFO_FORMAT (in_info);
+  out_format = GST_VIDEO_INFO_FORMAT (out_info);
+
+  switch (in_format) {
     case GST_VIDEO_FORMAT_RGB15:
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR15:
     case GST_VIDEO_FORMAT_BGR16:
-      if (method != GST_VIDEO_RESAMPLER_METHOD_NEAREST)
+      if (method != GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
+        GST_DEBUG ("%s only with nearest resampling",
+            gst_video_format_to_string (in_format));
         return FALSE;
+      }
       break;
     default:
       break;
@@ -3641,7 +3750,7 @@ setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
   out_width = convert->out_width;
   out_height = convert->out_height;
 
-  if (n_planes == 1) {
+  if (n_planes == 1 && !GST_VIDEO_FORMAT_INFO_IS_GRAY (out_finfo)) {
     if (GST_VIDEO_INFO_IS_YUV (in_info)) {
       GstVideoScaler *y_scaler, *uv_scaler;
 
@@ -3657,7 +3766,7 @@ setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
 
       convert->fh_scaler[0] =
           gst_video_scaler_combine_packed_YUV (y_scaler, uv_scaler,
-          GST_VIDEO_INFO_FORMAT (in_info), GST_VIDEO_INFO_FORMAT (out_info));
+          in_format, out_format);
 
       gst_video_scaler_free (y_scaler);
       gst_video_scaler_free (uv_scaler);
@@ -3676,20 +3785,23 @@ setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
     gst_video_scaler_get_coeff (convert->fv_scaler[0], 0, NULL, &max_taps);
 
     convert->fconvert[0] = convert_plane_hv;
-    convert->fformat[0] = fformat;
+    convert->fformat[0] = get_scale_format (in_format, 0);
     convert->fsplane[0] = 0;
   } else {
     for (i = 0; i < n_planes; i++) {
       guint n_taps = 0;
-      gint j, iw, ih, ow, oh, pstride;
+      gint comp, n_comp, j, iw, ih, ow, oh, pstride;
       gboolean need_v_scaler, need_h_scaler;
+      GstStructure *config;
+
+      n_comp = GST_VIDEO_FORMAT_INFO_N_COMPONENTS (in_finfo);
 
       /* find the component in this plane and map it to the plane of
        * the source */
-      for (j = 0; i < GST_VIDEO_MAX_COMPONENTS; j++) {
+      comp = -1;
+      for (j = 0; j < n_comp; j++) {
         if (GST_VIDEO_FORMAT_INFO_PLANE (out_finfo, j) == i) {
-          convert->fsplane[i] = GST_VIDEO_FORMAT_INFO_PLANE (in_finfo, j);
-          GST_DEBUG ("plane %d -> %d", i, convert->fsplane[i]);
+          comp = j;
           break;
         }
       }
@@ -3716,6 +3828,30 @@ setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
       convert->fout_x[i] *= pstride;
       convert->fout_y[i] =
           GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, i, convert->out_y);
+
+      if (comp == -1) {
+        convert->fconvert[i] = convert_plane_fill;
+        if (GST_VIDEO_INFO_IS_YUV (out_info)) {
+          if (i == 3)
+            convert->ffill[i] = 0xff;
+          if (i == 0)
+            convert->ffill[i] = 0x00;
+          else
+            convert->ffill[i] = 0x80;
+        } else {
+          if (i == 3)
+            convert->ffill[i] = 0xff;
+          else
+            convert->ffill[i] = 0x00;
+        }
+        GST_DEBUG ("plane %d fill %02x", i, convert->ffill[i]);
+        continue;
+      } else {
+        convert->fsplane[i] = GST_VIDEO_FORMAT_INFO_PLANE (in_finfo, comp);
+        GST_DEBUG ("plane %d -> %d", i, convert->fsplane[i]);
+      }
+
+      config = gst_structure_copy (convert->config);
 
       need_v_scaler = FALSE;
       need_h_scaler = FALSE;
@@ -3763,17 +3899,18 @@ setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
 
       if (need_h_scaler) {
         convert->fh_scaler[i] =
-            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-            iw, ow, convert->config);
+            gst_video_scaler_new (i == 0 ? method : cr_method,
+            GST_VIDEO_SCALER_FLAG_NONE, taps, iw, ow, config);
       }
       if (need_v_scaler) {
         convert->fv_scaler[i] =
-            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-            ih, oh, convert->config);
+            gst_video_scaler_new (i == 0 ? method : cr_method,
+            GST_VIDEO_SCALER_FLAG_NONE, taps, ih, oh, config);
         gst_video_scaler_get_coeff (convert->fv_scaler[i], 0, NULL, &n_taps);
       }
+      gst_structure_free (config);
       max_taps = MAX (max_taps, n_taps);
-      convert->fformat[i] = fformat;
+      convert->fformat[i] = get_scale_format (in_format, i);
     }
   }
   convert->flines =
@@ -3797,10 +3934,10 @@ typedef struct
   gint width_align, height_align;
   void (*convert) (GstVideoConverter * convert, const GstVideoFrame * src,
       GstVideoFrame * dest);
-  GstVideoFormat fformat;
 } VideoTransform;
 
 static const VideoTransform transforms[] = {
+  /* planar -> packed */
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_I420_YUY2},
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, FALSE,
@@ -3808,30 +3945,54 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_I420_AYUV},
 
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-
   {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_I420_YUY2},
   {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_I420_UYVY},
   {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_I420_AYUV},
-  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
 
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_I420, TRUE, FALSE, TRUE, FALSE,
-      FALSE, 0, 0, convert_YUY2_I420},
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_YV12, TRUE, FALSE, TRUE, FALSE,
-      FALSE, 0, 0, convert_YUY2_I420},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 0, 0, convert_Y42B_YUY2},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 0, 0, convert_Y42B_UYVY},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 1, 0, convert_Y42B_AYUV},
+
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 1, 0, convert_Y444_YUY2},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 1, 0, convert_Y444_UYVY},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 0, 0, convert_Y444_AYUV},
+
+  /* packed -> packed */
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
       TRUE, 0, 0, convert_UYVY_YUY2},   /* alias */
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
       TRUE, 1, 0, convert_YUY2_AYUV},
+
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 0, 0, convert_UYVY_YUY2},
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 0, 0, convert_UYVY_AYUV},
+
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, FALSE, TRUE, TRUE,
+      0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 1, 0, convert_AYUV_YUY2},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
+      TRUE, 1, 0, convert_AYUV_UYVY},
+
+  /* packed -> planar */
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_I420, TRUE, FALSE, TRUE, FALSE,
+      FALSE, 0, 0, convert_YUY2_I420},
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_YV12, TRUE, FALSE, TRUE, FALSE,
+      FALSE, 0, 0, convert_YUY2_I420},
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, TRUE,
       TRUE, 0, 0, convert_YUY2_Y42B},
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
@@ -3841,10 +4002,6 @@ static const VideoTransform transforms[] = {
       FALSE, 0, 0, convert_UYVY_I420},
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YV12, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_UYVY_I420},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 0, 0, convert_UYVY_YUY2},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 0, 0, convert_UYVY_AYUV},
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, TRUE,
       TRUE, 0, 0, convert_UYVY_Y42B},
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
@@ -3854,40 +4011,182 @@ static const VideoTransform transforms[] = {
       TRUE, 1, 1, convert_AYUV_I420},
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, TRUE, TRUE,
       TRUE, 1, 1, convert_AYUV_I420},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 1, 0, convert_AYUV_YUY2},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 1, 0, convert_AYUV_UYVY},
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, TRUE,
       TRUE, 1, 0, convert_AYUV_Y42B},
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
       TRUE, 0, 0, convert_AYUV_Y444},
 
+  /* planar -> planar */
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y41B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_GRAY8, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_A420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_Y41B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_GRAY8, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_A420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_Y41B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_GRAY8, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_A420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
   {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+      TRUE, 0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 0, 0, convert_Y42B_YUY2},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 0, 0, convert_Y42B_UYVY},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 1, 0, convert_Y42B_AYUV},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y41B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_GRAY8, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_A420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
 
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
-      TRUE, 1, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+      TRUE, 0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
-      TRUE, 1, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 1, 0, convert_Y444_YUY2},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 1, 0, convert_Y444_UYVY},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 0, 0, convert_Y444_AYUV},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 1, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y41B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_GRAY8, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_A420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_Y41B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_GRAY8, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_A420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_Y41B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_GRAY8, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_A420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_Y41B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_GRAY8, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_A420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_Y41B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_GRAY8, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_A420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ARGB, TRUE, TRUE, TRUE, TRUE, TRUE,
@@ -3918,84 +4217,56 @@ static const VideoTransform transforms[] = {
 #endif
 
   /* scalers */
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_I420, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YV12, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_Y41B, GST_VIDEO_FORMAT_Y41B, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_A420, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_YUV9, GST_VIDEO_FORMAT_YUV9, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_YVU9, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
   {GST_VIDEO_FORMAT_GBR, GST_VIDEO_FORMAT_GBR, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+      TRUE, 0, 0, convert_scale_planes},
 
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_YUY2},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_UYVY},
   {GST_VIDEO_FORMAT_YVYU, GST_VIDEO_FORMAT_YVYU, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_YVYU},
+      TRUE, 0, 0, convert_scale_planes},
 
   {GST_VIDEO_FORMAT_RGB15, GST_VIDEO_FORMAT_RGB15, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_NV12},
+      TRUE, 0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_RGB16, GST_VIDEO_FORMAT_RGB16, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_NV12},
+      TRUE, 0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_BGR15, GST_VIDEO_FORMAT_BGR15, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_NV12},
+      TRUE, 0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_BGR16, GST_VIDEO_FORMAT_BGR16, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_NV12},
+      TRUE, 0, 0, convert_scale_planes},
 
   {GST_VIDEO_FORMAT_RGB, GST_VIDEO_FORMAT_RGB, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_RGB},
+      0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_BGR, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_BGR},
+      0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_v308, GST_VIDEO_FORMAT_v308, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_v308},
-
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_AYUV},
+      0, 0, convert_scale_planes},
 
   {GST_VIDEO_FORMAT_ARGB, GST_VIDEO_FORMAT_ARGB, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_ARGB},
+      0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_xRGB, GST_VIDEO_FORMAT_xRGB, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_xRGB},
+      0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_ABGR, GST_VIDEO_FORMAT_ABGR, TRUE, FALSE, FALSE, TRUE, TRUE,
-        0, 0,
-      convert_scale_planes, GST_VIDEO_FORMAT_ABGR},
+      0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_xBGR, GST_VIDEO_FORMAT_xBGR, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_xBGR},
+      0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_RGBA, GST_VIDEO_FORMAT_RGBA, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_RGBA},
+      0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_RGBx, GST_VIDEO_FORMAT_RGBx, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_RGBx},
+      0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_BGRA, GST_VIDEO_FORMAT_BGRA, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_BGRA},
+      0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_BGRx, GST_VIDEO_FORMAT_BGRx, TRUE, FALSE, FALSE, TRUE, TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_BGRx},
+      0, 0, convert_scale_planes},
 
   {GST_VIDEO_FORMAT_ARGB64, GST_VIDEO_FORMAT_ARGB64, TRUE, FALSE, FALSE, TRUE,
-        TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_ARGB64},
+      TRUE, 0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_AYUV64, GST_VIDEO_FORMAT_AYUV64, TRUE, FALSE, FALSE, TRUE,
-        TRUE,
-      0, 0, convert_scale_planes, GST_VIDEO_FORMAT_AYUV64},
+      TRUE, 0, 0, convert_scale_planes},
 
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
-  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_GRAY8, TRUE, FALSE, FALSE, TRUE,
-      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   {GST_VIDEO_FORMAT_GRAY16_LE, GST_VIDEO_FORMAT_GRAY16_LE, TRUE, FALSE, FALSE,
-      TRUE, TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY16_LE},
+      TRUE, TRUE, 0, 0, convert_scale_planes},
 #else
   {GST_VIDEO_FORMAT_GRAY16_BE, GST_VIDEO_FORMAT_GRAY16_BE, TRUE, FALSE, FALSE,
-      TRUE, TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY16_BE},
+      TRUE, TRUE, 0, 0, convert_scale_planes},
 #endif
 };
 
@@ -4071,7 +4342,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
       convert->convert = transforms[i].convert;
       convert->tmpline = g_malloc0 (sizeof (guint16) * (width + 8) * 4);
       if (!transforms[i].keeps_size)
-        if (!setup_scale (convert, transforms[i].fformat))
+        if (!setup_scale (convert))
           return FALSE;
       if (border)
         setup_borderline (convert);

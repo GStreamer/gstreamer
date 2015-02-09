@@ -489,6 +489,13 @@ convhwb t, t2
 addb d1, t, a
 
 
+.function video_orc_memset_2d
+.flags 2d
+.dest 1 d1 guint8
+.param 1 p1
+
+storeb d1, p1
+
 .function video_orc_memcpy_2d
 .flags 2d
 .dest 1 d1 guint8

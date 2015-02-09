@@ -33,6 +33,14 @@ G_BEGIN_DECLS
  */
 #define GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD   "GstVideoConverter.resampler-method"
 /**
+ * GST_VIDEO_CONVERTER_OPT_CHROMA_RESAMPLER_METHOD:
+ *
+ * #GST_TYPE_RESAMPLER_METHOD, The resampler method to use for
+ * chroma resampling. Other options for the resampler can be used, see
+ * the #GstResampler. Default is #GST_RESAMPLER_METHOD_LINEAR
+ */
+#define GST_VIDEO_CONVERTER_OPT_CHROMA_RESAMPLER_METHOD   "GstVideoConverter.chroma-resampler-method"
+/**
  * GST_VIDEO_CONVERTER_OPT_RESAMPLER_TAPS:
  *
  * #G_TYPE_UINT, The number of taps for the resampler.
