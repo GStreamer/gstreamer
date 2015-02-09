@@ -69,6 +69,7 @@ struct _GstTSDemux
   /* segments to be sent */
   GstSegment segment;
   GstEvent *segment_event;
+  gboolean reset_segment;
 
   /* global taglist */
   GstTagList *global_tags;

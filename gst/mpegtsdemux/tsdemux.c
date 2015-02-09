@@ -815,14 +815,11 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   demux->rate = rate;
   res = GST_FLOW_OK;
 
-  if (flags & GST_SEEK_FLAG_ACCURATE) {
-    /* keep the seek infos for our segment */
-    gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
-        start, stop_type, stop, NULL);
-  } else {
-    /* Drop segment infos, it will be  recreated with actual seek infos */
-    gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
-  }
+  gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+      start, stop_type, stop, NULL);
+  if (!(flags & GST_SEEK_FLAG_ACCURATE))
+    demux->reset_segment = TRUE;
+
   if (demux->segment_event) {
     gst_event_unref (demux->segment_event);
     demux->segment_event = NULL;
@@ -831,12 +828,13 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
     TSDemuxStream *stream = tmp->data;
 
-
     if (flags & GST_SEEK_FLAG_ACCURATE)
       stream->needs_keyframe = TRUE;
 
     stream->seeked_pts = GST_CLOCK_TIME_NONE;
     stream->seeked_dts = GST_CLOCK_TIME_NONE;
+    stream->need_newsegment = TRUE;
+    stream->first_dts = GST_CLOCK_TIME_NONE;
   }
 
 done:
@@ -1951,7 +1949,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
   GST_DEBUG ("lowest_pts %" G_GUINT64_FORMAT " => clocktime %" GST_TIME_FORMAT,
       lowest_pts, GST_TIME_ARGS (firstts));
 
-  if (demux->segment.format != GST_FORMAT_TIME) {
+  if (demux->segment.format != GST_FORMAT_TIME || demux->reset_segment) {
     /* It will happen only if it's first program or after flushes. */
     GST_DEBUG ("Calculating actual segment");
     if (base->segment.format == GST_FORMAT_TIME) {
