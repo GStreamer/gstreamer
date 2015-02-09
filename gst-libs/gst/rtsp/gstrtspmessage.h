@@ -163,6 +163,25 @@ GstRTSPResult      gst_rtsp_message_get_header      (const GstRTSPMessage *msg,
                                                      GstRTSPHeaderField field,
                                                      gchar **value,
                                                      gint indx);
+
+GstRTSPResult      gst_rtsp_message_add_header_by_name    (GstRTSPMessage * msg,
+                                                           const gchar    * header,
+                                                           const gchar    * value);
+
+GstRTSPResult      gst_rtsp_message_take_header_by_name   (GstRTSPMessage * msg,
+                                                           const gchar    * header,
+                                                           gchar          * value);
+
+GstRTSPResult      gst_rtsp_message_remove_header_by_name (GstRTSPMessage * msg,
+                                                           const gchar    * header,
+                                                           gint             index);
+
+GstRTSPResult      gst_rtsp_message_get_header_by_name    (GstRTSPMessage * msg,
+                                                           const gchar    * header,
+                                                           gchar         ** value,
+                                                           gint             index);
+
+/* header serialization */
 GstRTSPResult      gst_rtsp_message_append_headers  (const GstRTSPMessage *msg,
                                                      GString *str);
 

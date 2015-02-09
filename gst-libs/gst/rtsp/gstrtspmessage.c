@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
  *               <2006> Lutz Mueller <lutz at topfrose dot de>
+ *               <2015> Tim-Philipp Müller <tim@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -58,6 +59,7 @@ typedef struct _RTSPKeyValue
 {
   GstRTSPHeaderField field;
   gchar *value;
+  gchar *custom_key;            /* custom header string (field is INVALID then) */
 } RTSPKeyValue;
 
 static void
@@ -462,6 +464,7 @@ gst_rtsp_message_unset (GstRTSPMessage * msg)
       RTSPKeyValue *keyval = &g_array_index (msg->hdr_fields, RTSPKeyValue, i);
 
       g_free (keyval->value);
+      g_free (keyval->custom_key);
     }
     g_array_free (msg->hdr_fields, TRUE);
   }
@@ -516,6 +519,7 @@ gst_rtsp_message_take_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
 
   key_value.field = field;
   key_value.value = value;
+  key_value.custom_key = NULL;
 
   g_array_append_val (msg->hdr_fields, key_value);
 
@@ -617,6 +621,173 @@ gst_rtsp_message_get_header (const GstRTSPMessage * msg,
 }
 
 /**
+ * gst_rtsp_message_add_header_by_name:
+ * @msg: a #GstRTSPMessage
+ * @header: (transfer none): header string
+ * @value: (transfer none): the value of the header
+ *
+ * Add a header with key @header and @value to @msg. This function takes a copy
+ * of @value.
+ *
+ * Returns: a #GstRTSPResult.
+ *
+ * Since: 1.6
+ */
+GstRTSPResult
+gst_rtsp_message_add_header_by_name (GstRTSPMessage * msg,
+    const gchar * header, const gchar * value)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (header != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (value != NULL, GST_RTSP_EINVAL);
+
+  return gst_rtsp_message_take_header_by_name (msg, header, g_strdup (value));
+}
+
+/**
+ * gst_rtsp_message_take_header_by_name:
+ * @msg: a #GstRTSPMessage
+ * @header: (transfer none): a header string
+ * @value: (transfer full): the value of the header
+ *
+ * Add a header with key @header and @value to @msg. This function takes
+ * ownership of @value, but not of @header.
+ *
+ * Returns: a #GstRTSPResult.
+ *
+ * Since: 1.6
+ */
+GstRTSPResult
+gst_rtsp_message_take_header_by_name (GstRTSPMessage * msg,
+    const gchar * header, gchar * value)
+{
+  RTSPKeyValue key_value;
+
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (header != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (value != NULL, GST_RTSP_EINVAL);
+
+  key_value.field = GST_RTSP_HDR_INVALID;
+  key_value.value = value;
+  key_value.custom_key = g_strdup (header);
+
+  g_array_append_val (msg->hdr_fields, key_value);
+
+  return GST_RTSP_OK;
+}
+
+/* returns -1 if not found, otherwise index position within msg->hdr_fields */
+static gint
+gst_rtsp_message_find_header_by_name (GstRTSPMessage * msg,
+    const gchar * header, gint index)
+{
+  GstRTSPHeaderField field;
+  gint cnt = 0;
+  guint i;
+
+  /* no header initialized, there are no headers */
+  if (msg->hdr_fields == NULL)
+    return -1;
+
+  field = gst_rtsp_find_header_field (header);
+  for (i = 0; i < msg->hdr_fields->len; i++) {
+    RTSPKeyValue *key_val;
+
+    key_val = &g_array_index (msg->hdr_fields, RTSPKeyValue, i);
+
+    if (key_val->field != field)
+      continue;
+
+    if (key_val->custom_key != NULL &&
+        g_ascii_strcasecmp (key_val->custom_key, header) != 0)
+      continue;
+
+    if (index < 0 || cnt++ == index)
+      return i;
+  }
+
+  return -1;
+}
+
+/**
+ * gst_rtsp_message_remove_header_by_name:
+ * @msg: a #GstRTSPMessage
+ * @header: the header string
+ * @index: the index of the header
+ *
+ * Remove the @index header with key @header from @msg. If @index equals -1,
+ * all matching headers will be removed.
+ *
+ * Returns: a #GstRTSPResult
+ *
+ * Since: 1.6
+ */
+GstRTSPResult
+gst_rtsp_message_remove_header_by_name (GstRTSPMessage * msg,
+    const gchar * header, gint index)
+{
+  GstRTSPResult res = GST_RTSP_ENOTIMPL;
+  RTSPKeyValue *kv;
+  gint pos;
+
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (header != NULL, GST_RTSP_EINVAL);
+
+  do {
+    pos = gst_rtsp_message_find_header_by_name (msg, header, index);
+
+    if (pos < 0)
+      break;
+
+    kv = &g_array_index (msg->hdr_fields, RTSPKeyValue, pos);
+    g_free (kv->value);
+    g_free (kv->custom_key);
+    g_array_remove_index (msg->hdr_fields, pos);
+    res = GST_RTSP_OK;
+  } while (index < 0);
+
+  return res;
+}
+
+/**
+ * gst_rtsp_message_get_header_by_name:
+ * @msg: a #GstRTSPMessage
+ * @header: a #GstRTSPHeaderField
+ * @value: (out) (transfer none): pointer to hold the result
+ * @index: the index of the header
+ *
+ * Get the @index header value with key @header from @msg. The result in @value
+ * stays valid as long as it remains present in @msg.
+ *
+ * Returns: #GST_RTSP_OK when @field was found, #GST_RTSP_ENOTIMPL if the key
+ * was not found.
+ *
+ * Since: 1.6
+ */
+GstRTSPResult
+gst_rtsp_message_get_header_by_name (GstRTSPMessage * msg,
+    const gchar * header, gchar ** value, gint index)
+{
+  RTSPKeyValue *key_val;
+  gint pos;
+
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (header != NULL, GST_RTSP_EINVAL);
+
+  pos = gst_rtsp_message_find_header_by_name (msg, header, index);
+
+  if (pos < 0)
+    return GST_RTSP_ENOTIMPL;
+
+  key_val = &g_array_index (msg->hdr_fields, RTSPKeyValue, pos);
+
+  if (value)
+    *value = key_val->value;
+
+  return GST_RTSP_OK;
+}
+
+/**
  * gst_rtsp_message_append_headers:
  * @msg: a #GstRTSPMessage
  * @str: (transfer none): a string
@@ -639,7 +810,11 @@ gst_rtsp_message_append_headers (const GstRTSPMessage * msg, GString * str)
     const gchar *keystr;
 
     key_value = &g_array_index (msg->hdr_fields, RTSPKeyValue, i);
-    keystr = gst_rtsp_header_as_text (key_value->field);
+
+    if (key_value->custom_key != NULL)
+      keystr = key_value->custom_key;
+    else
+      keystr = gst_rtsp_header_as_text (key_value->field);
 
     g_string_append_printf (str, "%s: %s\r\n", keystr, key_value->value);
   }
@@ -747,9 +922,14 @@ static void
 dump_key_value (gpointer data, gpointer user_data G_GNUC_UNUSED)
 {
   RTSPKeyValue *key_value = (RTSPKeyValue *) data;
+  const gchar *key_string;
 
-  g_print ("   key: '%s', value: '%s'\n",
-      gst_rtsp_header_as_text (key_value->field), key_value->value);
+  if (key_value->custom_key != NULL)
+    key_string = key_value->custom_key;
+  else
+    key_string = gst_rtsp_header_as_text (key_value->field);
+
+  g_print ("   key: '%s', value: '%s'\n", key_string, key_value->value);
 }
 
 /**
