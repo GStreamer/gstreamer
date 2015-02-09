@@ -133,6 +133,9 @@ typedef struct
   GDestroyNotify notify;
 } ConverterAlloc;
 
+typedef void (*FastConvertFunc) (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane);
+
 struct _GstVideoConverter
 {
   gint flags;
@@ -243,11 +246,20 @@ struct _GstVideoConverter
   GstVideoFrame *dest;
 
   /* fastpath */
-  GstVideoFormat fformat;
-  GstVideoScaler *fh_scaler[4];
-  GstVideoScaler *fv_scaler[4];
   ConverterAlloc *flines;
   gpointer *lineptr;
+
+  GstVideoFormat fformat[4];
+  gint fin_x[4];
+  gint fin_y[4];
+  gint fout_x[4];
+  gint fout_y[4];
+  gint fout_width[4];
+  gint fout_height[4];
+  gint fsplane[4];
+  GstVideoScaler *fh_scaler[4];
+  GstVideoScaler *fv_scaler[4];
+  FastConvertFunc fconvert[4];
 };
 
 typedef gpointer (*GstLineCacheAllocLineFunc) (GstLineCache * cache, gint idx,
@@ -2581,56 +2593,6 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
 }
 
 static void
-convert_I420_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
-    GstVideoFrame * dest)
-{
-  gint width = convert->in_width;
-  gint height = convert->in_height;
-
-  video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), width, height);
-
-  video_orc_planar_chroma_420_422 (FRAME_GET_U_LINE (dest, 0),
-      2 * FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (dest, 1),
-      2 * FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
-      FRAME_GET_U_STRIDE (src), (width + 1) / 2, height / 2);
-
-  video_orc_planar_chroma_420_422 (FRAME_GET_V_LINE (dest, 0),
-      2 * FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (dest, 1),
-      2 * FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
-      FRAME_GET_V_STRIDE (src), (width + 1) / 2, height / 2);
-}
-
-static void
-convert_I420_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
-    GstVideoFrame * dest)
-{
-  gint width = convert->in_width;
-  gint height = convert->in_height;
-
-  video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), width, height);
-
-  video_orc_planar_chroma_420_444 (FRAME_GET_U_LINE (dest, 0),
-      2 * FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (dest, 1),
-      2 * FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
-      FRAME_GET_U_STRIDE (src), (width + 1) / 2, height / 2);
-
-  video_orc_planar_chroma_420_444 (FRAME_GET_V_LINE (dest, 0),
-      2 * FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (dest, 1),
-      2 * FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
-      FRAME_GET_V_STRIDE (src), (width + 1) / 2, height / 2);
-
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->tmpline, height - 1, width);
-  }
-}
-
-static void
 convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
@@ -2979,70 +2941,6 @@ convert_AYUV_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
 }
 
 static void
-convert_Y42B_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
-    GstVideoFrame * dest)
-{
-  gint width = convert->in_width;
-  gint height = convert->in_height;
-
-  video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), width, height);
-
-  video_orc_planar_chroma_422_420 (FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
-      2 * FRAME_GET_U_STRIDE (src), FRAME_GET_U_LINE (src, 1),
-      2 * FRAME_GET_U_STRIDE (src), (width + 1) / 2, height / 2);
-
-  video_orc_planar_chroma_422_420 (FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
-      2 * FRAME_GET_V_STRIDE (src), FRAME_GET_V_LINE (src, 1),
-      2 * FRAME_GET_V_STRIDE (src), (width + 1) / 2, height / 2);
-
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->tmpline, height - 1, width);
-  }
-}
-
-static void
-convert_Y42B_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
-    GstVideoFrame * dest)
-{
-  gint width = convert->in_width;
-  gint height = convert->in_height;
-  guint8 *dy, *sy, *du, *su, *dv, *sv;
-
-  sy = FRAME_GET_Y_LINE (src, convert->in_y);
-  sy += convert->in_x;
-  su = FRAME_GET_U_LINE (src, convert->in_y);
-  su += convert->in_x >> 1;
-  sv = FRAME_GET_V_LINE (src, convert->in_y);
-  sv += convert->in_x >> 1;
-
-  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
-  dy += convert->out_x;
-  du = FRAME_GET_U_LINE (dest, convert->out_y);
-  du += convert->out_x;
-  dv = FRAME_GET_V_LINE (dest, convert->out_y);
-  dv += convert->out_x;
-
-  video_orc_memcpy_2d (dy, FRAME_GET_Y_STRIDE (dest), sy,
-      FRAME_GET_Y_STRIDE (src), width, height);
-
-  video_orc_planar_chroma_422_444 (du,
-      FRAME_GET_U_STRIDE (dest), su,
-      FRAME_GET_U_STRIDE (src), (width + 1) / 2, height);
-
-  video_orc_planar_chroma_422_444 (dv,
-      FRAME_GET_V_STRIDE (dest), sv,
-      FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
-
-  convert_fill_border (convert, dest);
-}
-
-static void
 convert_Y42B_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
 {
@@ -3119,70 +3017,6 @@ convert_Y42B_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
       FRAME_GET_STRIDE (dest), sy,
       FRAME_GET_Y_STRIDE (src), su,
       FRAME_GET_U_STRIDE (src), sv,
-      FRAME_GET_V_STRIDE (src), width / 2, height);
-
-  convert_fill_border (convert, dest);
-}
-
-static void
-convert_Y444_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
-    GstVideoFrame * dest)
-{
-  gint width = convert->in_width;
-  gint height = convert->in_height;
-
-  video_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
-      FRAME_GET_Y_STRIDE (src), width, height);
-
-  video_orc_planar_chroma_444_420 (FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
-      2 * FRAME_GET_U_STRIDE (src), FRAME_GET_U_LINE (src, 1),
-      2 * FRAME_GET_U_STRIDE (src), width / 2, height / 2);
-
-  video_orc_planar_chroma_444_420 (FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
-      2 * FRAME_GET_V_STRIDE (src), FRAME_GET_V_LINE (src, 1),
-      2 * FRAME_GET_V_STRIDE (src), width / 2, height / 2);
-
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->tmpline, height - 1, width);
-  }
-}
-
-static void
-convert_Y444_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
-    GstVideoFrame * dest)
-{
-  gint width = convert->in_width;
-  gint height = convert->in_height;
-  guint8 *sy, *su, *sv, *dy, *du, *dv;
-
-  sy = FRAME_GET_Y_LINE (src, convert->in_y);
-  sy += convert->in_x;
-  su = FRAME_GET_U_LINE (src, convert->in_y);
-  su += convert->in_x;
-  sv = FRAME_GET_V_LINE (src, convert->in_y);
-  sv += convert->in_x;
-
-  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
-  dy += convert->out_x;
-  du = FRAME_GET_U_LINE (dest, convert->out_y);
-  du += convert->out_x >> 1;
-  dv = FRAME_GET_V_LINE (dest, convert->out_y);
-  dv += convert->out_x >> 1;
-
-  video_orc_memcpy_2d (dy,
-      FRAME_GET_Y_STRIDE (dest), sy, FRAME_GET_Y_STRIDE (src), width, height);
-
-  video_orc_planar_chroma_444_422 (du,
-      FRAME_GET_U_STRIDE (dest), su,
-      FRAME_GET_U_STRIDE (src), width / 2, height);
-
-  video_orc_planar_chroma_444_422 (dv,
-      FRAME_GET_V_STRIDE (dest), sv,
       FRAME_GET_V_STRIDE (src), width / 2, height);
 
   convert_fill_border (convert, dest);
@@ -3508,66 +3342,264 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
 #define GET_TMP_LINE(fl,idx) &fl->data[fl->stride * ((idx) % fl->n_lines)]
 
 static void
+convert_plane_copy (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  guint8 *s, *d;
+  gint splane = convert->fsplane[plane];
+
+  s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
+  s += convert->fin_x[splane];
+  d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
+  d += convert->fout_x[plane];
+
+  video_orc_memcpy_2d (d, FRAME_GET_PLANE_STRIDE (dest, plane),
+      s, FRAME_GET_PLANE_STRIDE (src, splane),
+      convert->fout_width[plane], convert->fout_height[plane]);
+}
+
+static void
+convert_plane_h (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  gint i;
+  gint in_x, in_y, out_x, out_y, out_width, out_height;
+  GstFormat format;
+  GstVideoScaler *h_scaler;
+  guint8 *s, *d;
+  gint splane = convert->fsplane[plane];
+
+  in_x = convert->fin_x[splane];
+  in_y = convert->fin_y[splane];
+  out_x = convert->fout_x[plane];
+  out_y = convert->fout_y[plane];
+  out_width = convert->fout_width[plane];
+  out_height = convert->fout_height[plane];
+  format = convert->fformat[plane];
+  h_scaler = convert->fh_scaler[plane];
+
+  for (i = 0; i < out_height; i++) {
+    s = FRAME_GET_PLANE_LINE (src, splane, i + in_y);
+    d = FRAME_GET_PLANE_LINE (dest, plane, i + out_y);
+
+    gst_video_scaler_horizontal (h_scaler, format,
+        s + in_x, d + out_x, 0, out_width);
+  }
+}
+
+static void
+convert_plane_h_double (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  guint8 *s, *d;
+  gint splane = convert->fsplane[plane];
+
+  s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
+  s += convert->fin_x[splane];
+  d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
+  d += convert->fout_x[plane];
+
+  video_orc_planar_chroma_422_444 (d,
+      FRAME_GET_PLANE_STRIDE (dest, plane), s,
+      FRAME_GET_PLANE_STRIDE (src, splane), convert->fout_width[plane] / 2,
+      convert->fout_height[plane]);
+}
+
+static void
+convert_plane_h_halve (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  guint8 *s, *d;
+  gint splane = convert->fsplane[plane];
+
+  s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
+  s += convert->fin_x[splane];
+  d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
+  d += convert->fout_x[plane];
+
+  video_orc_planar_chroma_444_422 (d,
+      FRAME_GET_PLANE_STRIDE (dest, plane), s,
+      FRAME_GET_PLANE_STRIDE (src, splane), convert->fout_width[plane],
+      convert->fout_height[plane]);
+}
+
+static void
+convert_plane_v (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  gint i;
+  gint in_x, in_y, out_x, out_y, out_width, out_height;
+  GstFormat format;
+  GstVideoScaler *v_scaler;
+  gpointer *lines;
+  gint splane = convert->fsplane[plane];
+
+  in_x = convert->fin_x[splane];
+  in_y = convert->fin_y[splane];
+  out_x = convert->fout_x[plane];
+  out_y = convert->fout_y[plane];
+  out_width = convert->fout_width[plane];
+  out_height = convert->fout_height[plane];
+  format = convert->fformat[plane];
+  v_scaler = convert->fv_scaler[plane];
+  lines = convert->lineptr;
+
+  for (i = 0; i < out_height; i++) {
+    guint in, n_taps, j;
+    guint8 *s, *d;
+
+    gst_video_scaler_get_coeff (v_scaler, i, &in, &n_taps);
+    for (j = 0; j < n_taps; j++) {
+      s = FRAME_GET_PLANE_LINE (src, splane, in + in_y + j);
+      s += in_x;
+      lines[j] = s;
+    }
+
+    d = FRAME_GET_PLANE_LINE (dest, plane, i + out_y);
+    gst_video_scaler_vertical (v_scaler, format, lines, d + out_x, i,
+        out_width);
+  }
+}
+
+static void
+convert_plane_v_double (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  guint8 *s, *d1, *d2;
+  gint ds, splane = convert->fsplane[plane];
+
+  s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
+  s += convert->fin_x[splane];
+  d1 = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
+  d1 += convert->fout_x[plane];
+  d2 = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane] + 1);
+  d2 += convert->fout_x[plane];
+  ds = FRAME_GET_PLANE_STRIDE (dest, plane);
+
+  video_orc_planar_chroma_420_422 (d1, 2 * ds, d2, 2 * ds,
+      s, FRAME_GET_PLANE_STRIDE (src, splane), convert->fout_width[plane],
+      convert->fout_height[plane] / 2);
+}
+
+static void
+convert_plane_v_halve (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  guint8 *s1, *s2, *d;
+  gint ss, ds, splane = convert->fsplane[plane];
+
+  s1 = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
+  s1 += convert->fin_x[splane];
+  s2 = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane] + 1);
+  s2 += convert->fin_x[splane];
+  d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
+  d += convert->fout_x[plane];
+
+  ss = FRAME_GET_PLANE_STRIDE (src, splane);
+  ds = FRAME_GET_PLANE_STRIDE (dest, plane);
+
+  video_orc_planar_chroma_422_420 (d, ds, s1, 2 * ss, s2, 2 * ss,
+      convert->fout_width[plane], convert->fout_height[plane]);
+}
+
+static void
+convert_plane_hv (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  gint i, tmp_in;
+  gint in_x, in_y, out_x, out_y, out_width, out_height;
+  GstFormat format;
+  GstVideoScaler *h_scaler, *v_scaler;
+  ConverterAlloc *alloc;
+  gpointer *lines;
+  gint splane = convert->fsplane[plane];
+
+  in_x = convert->fin_x[splane];
+  in_y = convert->fin_y[splane];
+  out_x = convert->fout_x[plane];
+  out_y = convert->fout_y[plane];
+  out_width = convert->fout_width[plane];
+  out_height = convert->fout_height[plane];
+  format = convert->fformat[plane];
+  alloc = convert->flines;
+  lines = convert->lineptr;
+
+  h_scaler = convert->fh_scaler[plane];
+  v_scaler = convert->fv_scaler[plane];
+
+  tmp_in = 0;
+  for (i = 0; i < out_height; i++) {
+    guint in, n_taps, j;
+    guint8 *s, *d;
+
+    gst_video_scaler_get_coeff (v_scaler, i, &in, &n_taps);
+
+    while (tmp_in < in)
+      tmp_in++;
+    while (tmp_in < in + n_taps) {
+      s = FRAME_GET_PLANE_LINE (src, splane, tmp_in + in_y);
+      gst_video_scaler_horizontal (h_scaler, format,
+          s + in_x, GET_TMP_LINE (alloc, tmp_in), 0, out_width);
+      tmp_in++;
+    }
+    for (j = 0; j < n_taps; j++)
+      lines[j] = GET_TMP_LINE (alloc, in + j);
+
+    d = FRAME_GET_PLANE_LINE (dest, plane, i + out_y);
+    gst_video_scaler_vertical (v_scaler, format, lines, d + out_x, i,
+        out_width);
+  }
+}
+
+static void
+convert_plane_hv_double (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  guint8 *s, *d1, *d2;
+  gint ss, ds, splane = convert->fsplane[plane];
+
+  s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
+  s += convert->fin_x[splane];
+  d1 = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
+  d1 += convert->fout_x[plane];
+  d2 = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane] + 1);
+  d2 += convert->fout_x[plane];
+  ss = FRAME_GET_PLANE_STRIDE (src, splane);
+  ds = FRAME_GET_PLANE_STRIDE (dest, plane);
+
+  video_orc_planar_chroma_420_444 (d1, 2 * ds, d2, 2 * ds, s, ss,
+      (convert->fout_width[plane] + 1) / 2, convert->fout_height[plane] / 2);
+}
+
+static void
+convert_plane_hv_halve (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
+{
+  guint8 *s1, *s2, *d;
+  gint ss, ds, splane = convert->fsplane[plane];
+
+  s1 = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
+  s1 += convert->fin_x[splane];
+  s2 = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane] + 1);
+  s2 += convert->fin_x[splane];
+  d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
+  d += convert->fout_x[plane];
+  ss = FRAME_GET_PLANE_STRIDE (src, splane);
+  ds = FRAME_GET_PLANE_STRIDE (dest, plane);
+
+  video_orc_planar_chroma_444_420 (d, ds, s1, 2 * ss, s2, 2 * ss,
+      convert->fout_width[plane], convert->fout_height[plane]);
+}
+
+static void
 convert_scale_planes (GstVideoConverter * convert,
     const GstVideoFrame * src, GstVideoFrame * dest)
 {
-  int k, n_planes;
-  GstVideoFormat format = convert->fformat;
-  const GstVideoFormatInfo *in_finfo, *out_finfo;
-  gpointer *lines = convert->lineptr;
+  int i, n_planes;
 
-  in_finfo = convert->in_info.finfo;
-  out_finfo = convert->out_info.finfo;
-
-  n_planes = GST_VIDEO_FRAME_N_PLANES (src);
-
-  for (k = 0; k < n_planes; k++) {
-    gint i, tmp_in, in_x, in_y, out_x, out_y, out_width, out_height, pstride;
-    GstVideoScaler *v_scaler, *h_scaler;
-    ConverterAlloc *alloc;
-
-    v_scaler = convert->fv_scaler[k];
-    h_scaler = convert->fh_scaler[k];
-
-    alloc = convert->flines;
-
-    /* FIXME. assumes subsampling of component N is the same as plane N, which is
-     * currently true for all formats we have but it might not be in the future. */
-    in_x = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, k, convert->in_x);
-    in_y = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, k, convert->in_y);
-    out_x = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_x);
-    out_y = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k, convert->out_y);
-    out_width =
-        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_width);
-    out_height =
-        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k, convert->out_height);
-
-    pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, k);
-    in_x *= pstride;
-    out_x *= pstride;
-
-    tmp_in = 0;
-    for (i = 0; i < out_height; i++) {
-      guint8 *d, *s;
-      guint in, n_taps, j;
-
-      gst_video_scaler_get_coeff (v_scaler, i, &in, &n_taps);
-
-      while (tmp_in < in)
-        tmp_in++;
-      while (tmp_in < in + n_taps) {
-        s = FRAME_GET_PLANE_LINE (src, k, tmp_in + in_y);
-        gst_video_scaler_horizontal (h_scaler, format,
-            s + in_x, GET_TMP_LINE (alloc, tmp_in), 0, out_width);
-        tmp_in++;
-      }
-      for (j = 0; j < n_taps; j++)
-        lines[j] = GET_TMP_LINE (alloc, in + j);
-
-      d = FRAME_GET_PLANE_LINE (dest, k, i + out_y);
-      gst_video_scaler_vertical (v_scaler, format, lines, d + out_x, i,
-          out_width);
-    }
+  n_planes = GST_VIDEO_FRAME_N_PLANES (dest);
+  for (i = 0; i < n_planes; i++) {
+    convert->fconvert[i] (convert, src, dest, i);
   }
   convert_fill_border (convert, dest);
 }
@@ -3576,7 +3608,7 @@ static gboolean
 setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
 {
   int i, n_planes;
-  gint method, stride = 0, in_w, in_h, out_w, out_h;
+  gint method, stride = 0, in_width, in_height, out_width, out_height;
   guint taps, max_taps = 0;
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *in_finfo, *out_finfo;
@@ -3604,24 +3636,24 @@ setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
       break;
   }
 
-  in_w = convert->in_width;
-  in_h = convert->in_height;
-  out_w = convert->out_width;
-  out_h = convert->out_height;
+  in_width = convert->in_width;
+  in_height = convert->in_height;
+  out_width = convert->out_width;
+  out_height = convert->out_height;
 
   if (n_planes == 1) {
     if (GST_VIDEO_INFO_IS_YUV (in_info)) {
       GstVideoScaler *y_scaler, *uv_scaler;
 
       y_scaler = gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_Y, in_w),
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, GST_VIDEO_COMP_Y,
-              out_w), convert->config);
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_Y,
+              in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
+              GST_VIDEO_COMP_Y, out_width), convert->config);
       uv_scaler =
           gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_U, in_w),
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, GST_VIDEO_COMP_U,
-              out_w), convert->config);
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_U,
+              in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
+              GST_VIDEO_COMP_U, out_width), convert->config);
 
       convert->fh_scaler[0] =
           gst_video_scaler_combine_packed_YUV (y_scaler, uv_scaler,
@@ -3632,39 +3664,117 @@ setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
     } else {
       convert->fh_scaler[0] =
           gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          in_w, out_w, convert->config);
+          in_width, out_width, convert->config);
     }
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (in_info, 0));
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (out_info, 0));
 
     convert->fv_scaler[0] =
         gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-        in_h, out_h, convert->config);
+        in_height, out_height, convert->config);
 
     gst_video_scaler_get_coeff (convert->fv_scaler[0], 0, NULL, &max_taps);
-    convert->fformat = fformat;
+
+    convert->fconvert[0] = convert_plane_hv;
+    convert->fformat[0] = fformat;
+    convert->fsplane[0] = 0;
   } else {
     for (i = 0; i < n_planes; i++) {
-      guint n_taps;
+      guint n_taps = 0;
+      gint j, iw, ih, ow, oh, pstride;
+      gboolean need_v_scaler, need_h_scaler;
+
+      /* find the component in this plane and map it to the plane of
+       * the source */
+      for (j = 0; i < GST_VIDEO_MAX_COMPONENTS; j++) {
+        if (GST_VIDEO_FORMAT_INFO_PLANE (out_finfo, j) == i) {
+          convert->fsplane[i] = GST_VIDEO_FORMAT_INFO_PLANE (in_finfo, j);
+          GST_DEBUG ("plane %d -> %d", i, convert->fsplane[i]);
+          break;
+        }
+      }
 
       stride = MAX (stride, GST_VIDEO_INFO_COMP_STRIDE (in_info, i));
       stride = MAX (stride, GST_VIDEO_INFO_COMP_STRIDE (out_info, i));
 
-      convert->fh_scaler[i] =
-          gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, i, in_w),
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, i, out_w),
-          convert->config);
-      convert->fv_scaler[i] =
-          gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, i, in_h),
-          GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, i, out_h),
-          convert->config);
+      iw = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, i, in_width);
+      ih = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, i, in_height);
+      ow = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, i, out_width);
+      oh = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, i, out_height);
 
-      gst_video_scaler_get_coeff (convert->fv_scaler[i], 0, NULL, &n_taps);
+      convert->fout_width[i] = ow;
+      convert->fout_height[i] = oh;
+
+      pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, i);
+      convert->fin_x[i] =
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, i, convert->in_x);
+      convert->fin_x[i] *= pstride;
+      convert->fin_y[i] =
+          GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, i, convert->in_y);
+      convert->fout_x[i] =
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, i, convert->out_x);
+      convert->fout_x[i] *= pstride;
+      convert->fout_y[i] =
+          GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, i, convert->out_y);
+
+      need_v_scaler = FALSE;
+      need_h_scaler = FALSE;
+      if (iw == ow) {
+        if (ih == oh) {
+          convert->fconvert[i] = convert_plane_copy;
+          GST_DEBUG ("plane %d: copy", i);
+        } else if (ih == 2 * oh) {
+          convert->fconvert[i] = convert_plane_v_halve;
+          GST_DEBUG ("plane %d: vertical halve", i);
+        } else if (2 * ih == oh) {
+          convert->fconvert[i] = convert_plane_v_double;
+          GST_DEBUG ("plane %d: vertical double", i);
+        } else {
+          convert->fconvert[i] = convert_plane_v;
+          GST_DEBUG ("plane %d: vertical scale", i);
+          need_v_scaler = TRUE;
+        }
+      } else if (ih == oh) {
+        if (iw == 2 * ow) {
+          convert->fconvert[i] = convert_plane_h_halve;
+          GST_DEBUG ("plane %d: horizontal halve", i);
+        } else if (2 * iw == ow) {
+          convert->fconvert[i] = convert_plane_h_double;
+          GST_DEBUG ("plane %d: horizontal double", i);
+        } else {
+          convert->fconvert[i] = convert_plane_h;
+          GST_DEBUG ("plane %d: horizontal scale", i);
+          need_h_scaler = TRUE;
+        }
+      } else {
+        if (iw == 2 * ow && ih == 2 * oh) {
+          convert->fconvert[i] = convert_plane_hv_halve;
+          GST_DEBUG ("plane %d: horizontal/vertical halve", i);
+        } else if (2 * iw == ow && 2 * ih == oh) {
+          convert->fconvert[i] = convert_plane_hv_double;
+          GST_DEBUG ("plane %d: horizontal/vertical double", i);
+        } else {
+          convert->fconvert[i] = convert_plane_hv;
+          GST_DEBUG ("plane %d: horizontal/vertical scale", i);
+          need_v_scaler = TRUE;
+          need_h_scaler = TRUE;
+        }
+      }
+
+      if (need_h_scaler) {
+        convert->fh_scaler[i] =
+            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+            iw, ow, convert->config);
+      }
+      if (need_v_scaler) {
+        convert->fv_scaler[i] =
+            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+            ih, oh, convert->config);
+        gst_video_scaler_get_coeff (convert->fv_scaler[i], 0, NULL, &n_taps);
+      }
       max_taps = MAX (max_taps, n_taps);
+      convert->fformat[i] = fformat;
     }
-    convert->fformat = fformat;
   }
   convert->flines =
       converter_alloc_new (stride, max_taps + BACKLOG, NULL, NULL);
@@ -3697,10 +3807,11 @@ static const VideoTransform transforms[] = {
       FALSE, 0, 0, convert_I420_UYVY},
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_I420_AYUV},
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, TRUE, FALSE,
-      FALSE, 0, 0, convert_I420_Y42B},
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, TRUE, FALSE,
-      FALSE, 0, 0, convert_I420_Y444},
+
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
 
   {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_I420_YUY2},
@@ -3708,10 +3819,10 @@ static const VideoTransform transforms[] = {
       FALSE, 0, 0, convert_I420_UYVY},
   {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_I420_AYUV},
-  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, TRUE, FALSE,
-      FALSE, 0, 0, convert_I420_Y42B},
-  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, TRUE, FALSE,
-      FALSE, 0, 0, convert_I420_Y444},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_Y42B, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+  {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_Y444, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
 
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_I420, TRUE, FALSE, TRUE, FALSE,
       FALSE, 0, 0, convert_YUY2_I420},
@@ -3752,31 +3863,31 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
       TRUE, 0, 0, convert_AYUV_Y444},
 
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_I420, FALSE, FALSE, TRUE, FALSE,
-      FALSE, 0, 0, convert_Y42B_I420},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, TRUE, FALSE,
-      FALSE, 0, 0, convert_Y42B_I420},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
   {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
       TRUE, 0, 0, convert_Y42B_YUY2},
   {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
       TRUE, 0, 0, convert_Y42B_UYVY},
   {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
       TRUE, 1, 0, convert_Y42B_AYUV},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 0, 0, convert_Y42B_Y444},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y444, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
 
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_I420, FALSE, FALSE, TRUE, FALSE,
-      FALSE, 1, 0, convert_Y444_I420},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, TRUE, FALSE,
-      FALSE, 1, 0, convert_Y444_I420},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_I420, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 1, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YV12, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 1, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YUY2, TRUE, FALSE, TRUE, TRUE,
       TRUE, 1, 0, convert_Y444_YUY2},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_UYVY, TRUE, FALSE, TRUE, TRUE,
       TRUE, 1, 0, convert_Y444_UYVY},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_AYUV, TRUE, FALSE, TRUE, TRUE,
       TRUE, 0, 0, convert_Y444_AYUV},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, TRUE,
-      TRUE, 1, 0, convert_Y444_Y42B},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 1, 0, convert_scale_planes, GST_VIDEO_FORMAT_GRAY8},
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ARGB, TRUE, TRUE, TRUE, TRUE, TRUE,
@@ -3949,7 +4060,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
         transforms[i].out_format == out_format &&
         (transforms[i].keeps_interlaced || !interlaced) &&
         (transforms[i].needs_color_matrix || (same_matrix && same_primaries))
-        && (transforms[i].keeps_size || !same_size)
+        && (!transforms[i].keeps_size || same_size)
         && (transforms[i].width_align & width) == 0
         && (transforms[i].height_align & height) == 0
         && (transforms[i].do_crop || !crop)
