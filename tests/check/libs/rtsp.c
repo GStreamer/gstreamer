@@ -617,7 +617,34 @@ GST_START_TEST (test_rtsp_message)
   fail_unless_equals_int (res, GST_RTSP_OK);
   fail_unless_equals_string (val, "bar.0");
 
+  /* remove all headers for a name */
+  res = gst_rtsp_message_remove_header_by_name (msg, "FOO99-Version", -1);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res = gst_rtsp_message_get_header_by_name (msg, "FOO99-Version", &val, 0);
+  fail_unless_equals_int (res, GST_RTSP_ENOTIMPL);
+
   /* gst_rtsp_message_dump (msg); */
+
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  /* === */
+
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  res = gst_rtsp_message_add_header_by_name (msg, "CSeq", "3");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  res = gst_rtsp_message_get_header (msg, GST_RTSP_HDR_CSEQ, &val, 0);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "3");
+
+  val = NULL;
+  res = gst_rtsp_message_get_header_by_name (msg, "cseq", &val, 0);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "3");
 
   res = gst_rtsp_message_free (msg);
   fail_unless_equals_int (res, GST_RTSP_OK);

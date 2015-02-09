@@ -637,9 +637,15 @@ GstRTSPResult
 gst_rtsp_message_add_header_by_name (GstRTSPMessage * msg,
     const gchar * header, const gchar * value)
 {
+  GstRTSPHeaderField field;
+
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (header != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (value != NULL, GST_RTSP_EINVAL);
+
+  field = gst_rtsp_find_header_field (header);
+  if (field != GST_RTSP_HDR_INVALID)
+    return gst_rtsp_message_take_header (msg, field, g_strdup (value));
 
   return gst_rtsp_message_take_header_by_name (msg, header, g_strdup (value));
 }
