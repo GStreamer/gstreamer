@@ -1490,7 +1490,6 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
     if (priv->transport_mode != mode)
       GST_WARNING ("found different mode than expected (0x%02x != 0x%02d)",
           priv->transport_mode, mode);
-    gst_rtsp_media_set_transport_mode (media, mode);
   }
 }
 
