@@ -361,12 +361,6 @@ gst_decklink_audio_sink_ringbuffer_acquire (GstAudioRingBuffer * rb,
     return FALSE;
   }
 
-  g_mutex_lock (&self->output->lock);
-  self->output->audio_enabled = TRUE;
-  if (self->output->start_scheduled_playback)
-    self->output->start_scheduled_playback (self->output->videosink);
-  g_mutex_unlock (&self->output->lock);
-
   ret =
       self->output->
       output->SetAudioCallback (new GStreamerAudioOutputCallback (self));
@@ -473,6 +467,9 @@ static void gst_decklink_audio_sink_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
 static void gst_decklink_audio_sink_finalize (GObject * object);
 
+static GstStateChangeReturn gst_decklink_audio_sink_change_state (GstElement *
+    element, GstStateChange transition);
+
 static GstAudioRingBuffer
     * gst_decklink_audio_sink_create_ringbuffer (GstAudioBaseSink * absink);
 
@@ -491,6 +488,9 @@ gst_decklink_audio_sink_class_init (GstDecklinkAudioSinkClass * klass)
   gobject_class->set_property = gst_decklink_audio_sink_set_property;
   gobject_class->get_property = gst_decklink_audio_sink_get_property;
   gobject_class->finalize = gst_decklink_audio_sink_finalize;
+
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_decklink_audio_sink_change_state);
 
   audiobasesink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_decklink_audio_sink_create_ringbuffer);
@@ -561,6 +561,35 @@ void
 gst_decklink_audio_sink_finalize (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static GstStateChangeReturn
+gst_decklink_audio_sink_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstDecklinkAudioSink *self = GST_DECKLINK_AUDIO_SINK_CAST (element);
+  GstDecklinkAudioSinkRingBuffer *buf =
+      GST_DECKLINK_AUDIO_SINK_RING_BUFFER_CAST (GST_AUDIO_BASE_SINK_CAST
+      (self)->ringbuffer);
+  GstStateChangeReturn ret;
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      g_mutex_lock (&buf->output->lock);
+      buf->output->audio_enabled = TRUE;
+      if (buf->output->start_scheduled_playback)
+        buf->output->start_scheduled_playback (buf->output->videosink);
+      g_mutex_unlock (&buf->output->lock);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static GstAudioRingBuffer *
