@@ -454,7 +454,7 @@ gst_decklink_audio_sink_ringbuffer_release (GstAudioRingBuffer * rb)
 
     g_mutex_lock (&self->output->lock);
     self->output->audio_enabled = FALSE;
-    if (self->output->start_scheduled_playback)
+    if (self->output->start_scheduled_playback && self->output->videosink)
       self->output->start_scheduled_playback (self->output->videosink);
     g_mutex_unlock (&self->output->lock);
 
@@ -641,7 +641,7 @@ gst_decklink_audio_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       g_mutex_lock (&buf->output->lock);
       buf->output->audio_enabled = TRUE;
-      if (buf->output->start_scheduled_playback)
+      if (buf->output->start_scheduled_playback && buf->output->videosink)
         buf->output->start_scheduled_playback (buf->output->videosink);
       g_mutex_unlock (&buf->output->lock);
       break;
