@@ -3573,7 +3573,7 @@ convert_scale_planes (GstVideoConverter * convert,
 }
 
 static gboolean
-setup_scale (GstVideoConverter * convert, GstFormat fformat)
+setup_scale (GstVideoConverter * convert, GstVideoFormat fformat)
 {
   int i, n_planes;
   gint method, stride = 0, in_w, in_h, out_w, out_h;
