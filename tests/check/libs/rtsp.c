@@ -1,6 +1,6 @@
 /* GStreamer unit tests for the RTSP support library
- *
  * Copyright (C) 2010 Andy Wingo <wingo@oblong.com>
+ * Copyright (C) 2015 Tim-Philipp Müller <tim@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,8 +24,7 @@
 
 #include <gst/check/gstcheck.h>
 
-#include <gst/rtsp/gstrtspurl.h>
-#include <gst/rtsp/gstrtsprange.h>
+#include <gst/rtsp/rtsp.h>
 #include <string.h>
 
 GST_START_TEST (test_rtsp_url_basic)
@@ -539,6 +538,93 @@ GST_START_TEST (test_rtsp_range_convert)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtsp_message)
+{
+  GstRTSPMessage *msg;
+  GstRTSPResult res;
+  gchar *val = NULL;
+
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  res = gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CSEQ, "3");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res = gst_rtsp_message_add_header (msg, GST_RTSP_HDR_SERVER, "GStreamer");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res = gst_rtsp_message_add_header (msg, GST_RTSP_HDR_TRANSPORT,
+      "RTP/AVP/TCP;unicast;interleaved=0-1");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res = gst_rtsp_message_add_header (msg, GST_RTSP_HDR_SESSION, "xnb_NpaKEc");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  res = gst_rtsp_message_add_header_by_name (msg, "FOO99-Version", "bar.0");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res = gst_rtsp_message_add_header_by_name (msg, "Custom", "value");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res = gst_rtsp_message_add_header_by_name (msg, "FOO99-Version", "bar.1");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res = gst_rtsp_message_add_header_by_name (msg, "FOO99-Version", "bar.2");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  /* make sure fields added via enum work as well */
+  res = gst_rtsp_message_get_header_by_name (msg, "CSeq", &val, 0);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "3");
+  res = gst_rtsp_message_get_header_by_name (msg, "CSeq", &val, 1);
+  fail_unless_equals_int (res, GST_RTSP_ENOTIMPL);
+
+  res = gst_rtsp_message_get_header (msg, GST_RTSP_HDR_CSEQ, &val, 0);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "3");
+  res = gst_rtsp_message_get_header (msg, GST_RTSP_HDR_CSEQ, &val, 1);
+  fail_unless_equals_int (res, GST_RTSP_ENOTIMPL);
+
+  res = gst_rtsp_message_get_header_by_name (msg, "DoesNotExist", &val, 0);
+  fail_unless_equals_int (res, GST_RTSP_ENOTIMPL);
+
+  res = gst_rtsp_message_get_header_by_name (msg, "Custom", &val, 1);
+  fail_unless_equals_int (res, GST_RTSP_ENOTIMPL);
+  res = gst_rtsp_message_get_header_by_name (msg, "Custom", &val, 0);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "value");
+
+  res = gst_rtsp_message_get_header_by_name (msg, "FOO99-Version", &val, 3);
+  fail_unless_equals_int (res, GST_RTSP_ENOTIMPL);
+  res = gst_rtsp_message_get_header_by_name (msg, "FOO99-Version", &val, 1);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "bar.1");
+  res = gst_rtsp_message_get_header_by_name (msg, "FOO99-Version", &val, 2);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "bar.2");
+  res = gst_rtsp_message_get_header_by_name (msg, "FOO99-Version", &val, 0);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "bar.0");
+
+  res = gst_rtsp_message_remove_header_by_name (msg, "FOO99-Version", 3);
+  fail_unless_equals_int (res, GST_RTSP_ENOTIMPL);
+  res = gst_rtsp_message_remove_header_by_name (msg, "FOO99-Version", 1);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  res = gst_rtsp_message_get_header_by_name (msg, "FOO99-Version", &val, 2);
+  fail_unless_equals_int (res, GST_RTSP_ENOTIMPL);
+
+  /* 2 shifted to position 1 */
+  res = gst_rtsp_message_get_header_by_name (msg, "FOO99-Version", &val, 1);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "bar.2");
+  res = gst_rtsp_message_get_header_by_name (msg, "FOO99-Version", &val, 0);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  fail_unless_equals_string (val, "bar.0");
+
+  /* gst_rtsp_message_dump (msg); */
+
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtsp_suite (void)
 {
@@ -554,6 +640,7 @@ rtsp_suite (void)
   tcase_add_test (tc_chain, test_rtsp_range_smpte);
   tcase_add_test (tc_chain, test_rtsp_range_clock);
   tcase_add_test (tc_chain, test_rtsp_range_convert);
+  tcase_add_test (tc_chain, test_rtsp_message);
 
   return s;
 }
