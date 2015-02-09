@@ -73,6 +73,7 @@ struct _GstVideoAggregatorPad
 
   /* properties */
   guint zorder;
+  gboolean ignore_eos;
 
   /* < private > */
   GstVideoAggregatorPadPrivate *priv;

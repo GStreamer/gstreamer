@@ -54,10 +54,12 @@ static void gst_videoaggregator_reset_qos (GstVideoAggregator * vagg);
  ****************************************/
 
 #define DEFAULT_PAD_ZORDER 0
+#define DEFAULT_PAD_IGNORE_EOS FALSE
 enum
 {
   PROP_PAD_0,
   PROP_PAD_ZORDER,
+  PROP_PAD_IGNORE_EOS,
 };
 
 
@@ -87,6 +89,9 @@ gst_videoaggregator_pad_get_property (GObject * object, guint prop_id,
     case PROP_PAD_ZORDER:
       g_value_set_uint (value, pad->zorder);
       break;
+    case PROP_PAD_IGNORE_EOS:
+      g_value_set_boolean (value, pad->ignore_eos);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -115,6 +120,9 @@ gst_videoaggregator_pad_set_property (GObject * object, guint prop_id,
       GST_ELEMENT (vagg)->sinkpads = g_list_sort (GST_ELEMENT (vagg)->sinkpads,
           (GCompareFunc) pad_zorder_compare);
       GST_OBJECT_UNLOCK (vagg);
+      break;
+    case PROP_PAD_IGNORE_EOS:
+      pad->ignore_eos = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -304,6 +312,11 @@ gst_videoaggregator_pad_class_init (GstVideoAggregatorPadClass * klass)
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
           0, 10000, DEFAULT_PAD_ZORDER,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_IGNORE_EOS,
+      g_param_spec_boolean ("ignore-eos", "Ignore EOS", "Aggregate the last "
+          "frame on pads that are EOS till they are released",
+          DEFAULT_PAD_IGNORE_EOS,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_type_class_add_private (klass, sizeof (GstVideoAggregatorPadPrivate));
 
@@ -322,6 +335,7 @@ gst_videoaggregator_pad_init (GstVideoAggregatorPad * vaggpad)
       GstVideoAggregatorPadPrivate);
 
   vaggpad->zorder = DEFAULT_PAD_ZORDER;
+  vaggpad->ignore_eos = DEFAULT_PAD_IGNORE_EOS;
   vaggpad->aggregated_frame = NULL;
   vaggpad->priv->converted_buffer = NULL;
 
@@ -1112,6 +1126,12 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         continue;
       }
     } else {
+      if (is_eos && pad->ignore_eos) {
+        eos = FALSE;
+        GST_DEBUG_OBJECT (pad, "ignoring EOS and re-using previous buffer");
+        continue;
+      }
+
       if (pad->priv->end_time != -1) {
         if (pad->priv->end_time <= output_start_time) {
           pad->priv->start_time = pad->priv->end_time = -1;
