@@ -259,7 +259,7 @@ gst_field_analysis_class_init (GstFieldAnalysisClass * klass)
           DEFAULT_SPATIAL_THRESH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BLOCK_WIDTH,
       g_param_spec_uint64 ("block-width", "Block width",
-          "Block width for windowed comb detection", 0, G_MAXUINT64,
+          "Block width for windowed comb detection", 1, G_MAXUINT64,
           DEFAULT_BLOCK_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BLOCK_HEIGHT,
       g_param_spec_uint64 ("block-height", "Block height",
