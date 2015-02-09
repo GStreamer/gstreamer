@@ -55,6 +55,11 @@ meta_texture_ensure_format (GstVaapiVideoMetaTexture * meta,
       meta->gl_format = GL_RGBA;
       meta->texture_type = GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
       break;
+    case GST_VIDEO_FORMAT_BGRA:
+      meta->gl_format = GL_BGRA_EXT;
+      /* FIXME: add GST_VIDEO_GL_TEXTURE_TYPE_BGRA extension */
+      meta->texture_type = GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+      break;
     default:
       goto error_unsupported_format;
   }
@@ -67,19 +72,26 @@ error_unsupported_format:
   return FALSE;
 }
 
-static void
-meta_texture_ensure_size_from_buffer (GstVaapiVideoMetaTexture * meta,
+static gboolean
+meta_texture_ensure_info_from_buffer (GstVaapiVideoMetaTexture * meta,
     GstBuffer * buffer)
 {
   GstVideoMeta *vmeta;
+  GstVideoFormat format;
 
   if (!buffer || !(vmeta = gst_buffer_get_video_meta (buffer))) {
+    format = DEFAULT_FORMAT;
     meta->width = 0;
     meta->height = 0;
   } else {
+    const GstVideoFormatInfo *const fmt_info =
+        gst_video_format_get_info (vmeta->format);
+    format = (fmt_info && GST_VIDEO_FORMAT_INFO_IS_RGB (fmt_info)) ?
+        vmeta->format : DEFAULT_FORMAT;
     meta->width = vmeta->width;
     meta->height = vmeta->height;
   }
+  return meta_texture_ensure_format (meta, format);
 }
 
 static void
@@ -102,9 +114,13 @@ meta_texture_new (void)
     return NULL;
 
   meta->texture = NULL;
-  meta_texture_ensure_format (meta, DEFAULT_FORMAT);
-  meta_texture_ensure_size_from_buffer (meta, NULL);
+  if (!meta_texture_ensure_info_from_buffer (meta, NULL))
+    goto error;
   return meta;
+
+error:
+  meta_texture_free (meta);
+  return NULL;
 }
 
 static GstVaapiVideoMetaTexture *
@@ -172,7 +188,9 @@ gst_buffer_add_texture_upload_meta (GstBuffer * buffer)
   if (!meta_texture)
     return FALSE;
 
-  meta_texture_ensure_size_from_buffer (meta_texture, buffer);
+  if (!meta_texture_ensure_info_from_buffer (meta_texture, buffer))
+    goto error;
+
   meta = gst_buffer_add_video_gl_texture_upload_meta (buffer,
       GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
       1, &meta_texture->texture_type, gst_vaapi_texture_upload,
@@ -193,10 +211,8 @@ gst_buffer_ensure_texture_upload_meta (GstBuffer * buffer)
   GstVideoGLTextureUploadMeta *const meta =
       gst_buffer_get_video_gl_texture_upload_meta (buffer);
 
-  if (meta) {
-    meta_texture_ensure_size_from_buffer (meta->user_data, buffer);
-    return TRUE;
-  }
-  return gst_buffer_add_texture_upload_meta (buffer);
+  return meta ?
+      meta_texture_ensure_info_from_buffer (meta->user_data, buffer) :
+      gst_buffer_add_texture_upload_meta (buffer);
 }
 #endif

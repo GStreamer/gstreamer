@@ -634,8 +634,20 @@ gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
   return caps;
 }
 
+static GstCaps *
+new_gl_texture_upload_meta_caps (void)
+{
+#if GST_CHECK_VERSION(1,1,0)
+  return gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
+      GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }"));
+#else
+  return gst_caps_new_empty ();
+#endif
+}
+
 GstVaapiCapsFeature
-gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format)
+gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
+    GstVideoFormat * out_format_ptr)
 {
   GstVaapiCapsFeature feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
 #if GST_CHECK_VERSION(1,1,0)
@@ -645,29 +657,27 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format)
   GstCaps *sysmem_caps = NULL;
   GstCaps *vaapi_caps = NULL;
   GstCaps *out_caps;
+  GstVideoFormat out_format;
 
   out_caps = gst_pad_peer_query_caps (pad, NULL);
   if (!out_caps)
     goto cleanup;
 
-  gl_texture_upload_caps =
-      gst_vaapi_video_format_new_template_caps_with_features
-      (GST_VIDEO_FORMAT_RGBA,
-      GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
+  out_format = format == GST_VIDEO_FORMAT_ENCODED ?
+    GST_VIDEO_FORMAT_I420 : format;
+
+  gl_texture_upload_caps = new_gl_texture_upload_meta_caps ();
   if (!gl_texture_upload_caps)
     goto cleanup;
 
-  if (format == GST_VIDEO_FORMAT_ENCODED)
-    format = GST_VIDEO_FORMAT_I420;
-
   vaapi_caps =
-      gst_vaapi_video_format_new_template_caps_with_features (format,
+      gst_vaapi_video_format_new_template_caps_with_features (out_format,
       GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE);
   if (!vaapi_caps)
     goto cleanup;
 
   sysmem_caps =
-      gst_vaapi_video_format_new_template_caps_with_features (format,
+      gst_vaapi_video_format_new_template_caps_with_features (out_format,
       GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
   if (!sysmem_caps)
     goto cleanup;
@@ -705,6 +715,33 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format)
     if (feature != GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
       break;
 #endif
+  }
+
+  if (out_format_ptr) {
+#if GST_CHECK_VERSION(1,1,0)
+    if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META) {
+      GstStructure *structure;
+      gchar *format_str;
+      out_format = GST_VIDEO_FORMAT_UNKNOWN;
+      do {
+        caps = gst_caps_intersect_full (out_caps, gl_texture_upload_caps,
+            GST_CAPS_INTERSECT_FIRST);
+        if (!caps)
+          break;
+        structure = gst_caps_get_structure (caps, 0);
+        if (!structure)
+          break;
+        if (!gst_structure_get (structure, "format", G_TYPE_STRING,
+                &format_str, NULL))
+          break;
+        out_format = gst_video_format_from_string (format_str);
+        g_free (format_str);
+      } while (0);
+      if (!out_format)
+        goto cleanup;
+#endif
+    }
+    *out_format_ptr = out_format;
   }
 
 cleanup:

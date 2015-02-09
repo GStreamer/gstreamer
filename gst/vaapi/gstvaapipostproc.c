@@ -77,7 +77,7 @@ static const char gst_vaapipostproc_src_caps_str[] =
   GST_CAPS_INTERLACED_FALSE "; "
 #if GST_CHECK_VERSION(1,1,0)
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
-      GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA") ", "
+      GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }") ", "
   GST_CAPS_INTERLACED_FALSE "; "
 #endif
 #if GST_CHECK_VERSION(1,0,0)
@@ -1152,14 +1152,7 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
 
   feature =
       gst_vaapi_find_preferred_caps_feature (GST_BASE_TRANSFORM_SRC_PAD (trans),
-      out_format);
-  switch (feature) {
-    case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
-      out_format = GST_VIDEO_FORMAT_RGBA;
-      break;
-    default:
-      break;
-  }
+      out_format, &out_format);
 #else
   out_format = GST_VIDEO_FORMAT_ENCODED;
 #endif

@@ -79,7 +79,7 @@ static const char gst_vaapidecode_src_caps_str[] =
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
         GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, I420, YV12, NV12 }") ";"
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
-        GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA") ";"
+        GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }") ";"
     GST_VIDEO_CAPS_MAKE("{ I420, YV12, NV12 }");
 #else
     GST_VAAPI_SURFACE_CAPS;
@@ -148,7 +148,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
 
     feature = gst_vaapi_find_preferred_caps_feature(
         GST_VIDEO_DECODER_SRC_PAD(vdec),
-        GST_VIDEO_INFO_FORMAT(&ref_state->info));
+        GST_VIDEO_INFO_FORMAT(&ref_state->info), &out_format);
 #endif
 
     format = GST_VIDEO_INFO_FORMAT(&ref_state->info);
@@ -160,9 +160,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
         return FALSE;
 
     vi = &state->info;
-    out_format = format;
-    if (format == GST_VIDEO_FORMAT_ENCODED) {
-        out_format = GST_VIDEO_FORMAT_I420;
+    if (format != out_format) {
         gst_video_info_init(&vis);
         gst_video_info_set_format(&vis, out_format,
             GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
@@ -174,7 +172,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     vis = *vi;
     switch (feature) {
     case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
-        gst_video_info_change_format(&vis, GST_VIDEO_FORMAT_RGBA,
+        gst_video_info_change_format(&vis, out_format,
             GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
         features = gst_caps_features_new(
             GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
@@ -524,6 +522,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     gboolean need_pool;
     GstVideoCodecState *state;
     GstVaapiCapsFeature feature;
+    GstVideoFormat out_format;
 
     gst_query_parse_allocation(query, &caps, &need_pool);
 
@@ -531,7 +530,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
 #if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
     decode->has_texture_upload_meta =
         gst_vaapi_find_preferred_caps_feature(GST_VIDEO_DECODER_SRC_PAD(vdec),
-            GST_VIDEO_FORMAT_ENCODED) ==
+            GST_VIDEO_FORMAT_ENCODED, &out_format) ==
         GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META;
 #endif
 
@@ -543,7 +542,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     state = gst_video_decoder_get_output_state(vdec);
     if (!gst_caps_is_always_compatible(caps, state->caps)) {
         if (decode->has_texture_upload_meta)
-            gst_video_info_change_format(&state->info, GST_VIDEO_FORMAT_RGBA,
+            gst_video_info_change_format(&state->info, out_format,
                 GST_VIDEO_INFO_WIDTH(&state->info),
                 GST_VIDEO_INFO_HEIGHT(&state->info));
         gst_vaapidecode_update_src_caps(decode, state);
