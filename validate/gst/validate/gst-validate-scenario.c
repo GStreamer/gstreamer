@@ -1123,13 +1123,13 @@ get_position (GstValidateScenario * scenario)
 static gboolean
 stop_waiting (GstValidateAction * action)
 {
-  GstValidateScenarioPrivate *priv = action->scenario->priv;
+  GstValidateScenario *scenario = action->scenario;
 
   gst_validate_printf (action->scenario, "Stop waiting\n");
 
-  priv->wait_id = 0;
+  scenario->priv->wait_id = 0;
   gst_validate_action_set_done (action);
-  _add_get_position_source (action->scenario);
+  _add_get_position_source (scenario);
 
 
   return G_SOURCE_REMOVE;
