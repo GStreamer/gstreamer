@@ -99,6 +99,8 @@ gboolean gst_gl_handle_set_context (GstElement * element, GstContext * context,
 gboolean gst_gl_handle_context_query (GstElement * element, GstQuery * query, 
     GstGLDisplay ** display, GstGLContext ** other_context);
 
+gboolean gst_gl_run_query (GstElement * element,
+    GstQuery * query, GstPadDirection direction);
 gsize gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
     guint plane);
 GstCaps * gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
