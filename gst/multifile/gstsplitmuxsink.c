@@ -909,7 +909,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 {
   GstSplitMuxSink *splitmux = ctx->splitmux;
   GstBuffer *buf;
-  MqStreamBuf *buf_info;
+  MqStreamBuf *buf_info = NULL;
   GstClockTime ts;
   gboolean loop_again;
   gboolean keyframe = FALSE;
@@ -1090,9 +1090,13 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   GST_LOG_OBJECT (pad, "Returning to queue buffer %" GST_PTR_FORMAT
       " run ts %" GST_TIME_FORMAT, buf, GST_TIME_ARGS (ctx->in_running_time));
 
+  GST_SPLITMUX_UNLOCK (splitmux);
+  return GST_PAD_PROBE_PASS;
+
 beach:
   GST_SPLITMUX_UNLOCK (splitmux);
-
+  if (buf_info)
+    mq_stream_buf_free (buf_info);
   return GST_PAD_PROBE_PASS;
 }
 
