@@ -256,6 +256,10 @@ printf_parse (const char *format, char_directives * d, arguments * a)
               cp += 3;
             }
 #endif
+            else if (cp[0] == 'I' && cp[1] == '3' && cp[2] == '2') {
+              //flags = 32;
+              cp += 3;
+            }
 #ifdef HAVE_INTMAX_T
             else if (*cp == 'j') {
               if (sizeof (intmax_t) > sizeof (long)) {
