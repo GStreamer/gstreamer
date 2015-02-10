@@ -863,7 +863,7 @@ static gboolean
 gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
 {
   gint next_part = -1;
-  gint cur_part = cur_part = splitpad->cur_part;
+  gint cur_part = splitpad->cur_part;
   gboolean res = FALSE;
 
   if (splitmux->play_segment.rate >= 0.0) {
