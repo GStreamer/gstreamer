@@ -271,6 +271,7 @@ typedef gboolean (*GstLineCacheNeedLineFunc) (GstLineCache * cache,
 struct _GstLineCache
 {
   gint first;
+  gint backlog;
   GPtrArray *lines;
 
   GstLineCache *prev;
@@ -342,20 +343,22 @@ gst_line_cache_set_alloc_line_func (GstLineCache * cache,
   cache->alloc_line_notify = notify;
 }
 
-/* keep this much backlog */
+/* keep this much backlog for interlaced video */
 #define BACKLOG 2
 
 static gpointer *
 gst_line_cache_get_lines (GstLineCache * cache, gint out_line, gint in_line,
     gint n_lines)
 {
-  if (cache->first + BACKLOG < in_line) {
+  if (cache->first + cache->backlog < in_line) {
     gint to_remove =
-        MIN (in_line - (cache->first + BACKLOG), cache->lines->len);
+        MIN (in_line - (cache->first + cache->backlog), cache->lines->len);
     if (to_remove > 0) {
       g_ptr_array_remove_range (cache->lines, 0, to_remove);
-      cache->first += to_remove;
     }
+    cache->first += to_remove;
+    if (cache->first < in_line)
+      cache->first = in_line;
   } else if (in_line < cache->first) {
     gst_line_cache_clear (cache);
     cache->first = in_line;
@@ -1260,6 +1263,7 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
 {
   gint method;
   guint taps, taps_i = 0;
+  gint backlog = 0;
 
   method = GET_OPT_RESAMPLER_METHOD (convert);
   taps = GET_OPT_RESAMPLER_TAPS (convert);
@@ -1270,6 +1274,7 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
         taps, convert->in_height, convert->out_height, convert->config);
 
     gst_video_scaler_get_coeff (convert->v_scaler_i, 0, NULL, &taps_i);
+    backlog = BACKLOG;
   }
   convert->v_scaler_p =
       gst_video_scaler_new (method, 0, taps, convert->in_height,
@@ -1280,9 +1285,10 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
 
   gst_video_scaler_get_coeff (convert->v_scaler_p, 0, NULL, &taps);
 
-  GST_DEBUG ("chain vscale %d->%d, taps %d, method %d",
-      convert->in_height, convert->out_height, taps, method);
+  GST_DEBUG ("chain vscale %d->%d, taps %d, method %d, backlog %d",
+      convert->in_height, convert->out_height, taps, method, backlog);
 
+  prev->backlog = backlog;
   prev = convert->vscale_lines = gst_line_cache_new (prev);
   prev->pass_alloc = (taps == 1);
   prev->write_input = FALSE;
