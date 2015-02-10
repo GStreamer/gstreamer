@@ -1426,6 +1426,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
   GstPad *pad;
   gint i;
   gboolean have_elem;
+  gboolean more_elem_remaining = TRUE;
   GstRTSPTransportMode mode = 0;
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
@@ -1433,11 +1434,11 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
   priv = media->priv;
   element = priv->element;
 
-  have_elem = TRUE;
-  for (i = 0; have_elem; i++) {
+  have_elem = FALSE;
+  for (i = 0; more_elem_remaining; i++) {
     gchar *name;
 
-    have_elem = FALSE;
+    more_elem_remaining = FALSE;
 
     name = g_strdup_printf ("pay%d", i);
     if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
@@ -1451,6 +1452,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       gst_object_unref (elem);
 
       have_elem = TRUE;
+      more_elem_remaining = TRUE;
       mode |= GST_RTSP_TRANSPORT_MODE_PLAY;
     }
     g_free (name);
@@ -1465,6 +1467,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       g_mutex_unlock (&priv->lock);
 
       have_elem = TRUE;
+      more_elem_remaining = TRUE;
       mode |= GST_RTSP_TRANSPORT_MODE_PLAY;
     }
     g_free (name);
@@ -1481,6 +1484,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       gst_object_unref (elem);
 
       have_elem = TRUE;
+      more_elem_remaining = TRUE;
       mode |= GST_RTSP_TRANSPORT_MODE_RECORD;
     }
     g_free (name);
