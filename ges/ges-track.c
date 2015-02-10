@@ -183,7 +183,7 @@ update_gaps (GESTrack * track)
   GSequenceIter *it;
 
   GESTrackElement *trackelement;
-  GstClockTime start, end, duration = 0, timeline_duration;
+  GstClockTime start, end, duration = 0, timeline_duration = 0;
 
   GESTrackPrivate *priv = track->priv;
 
