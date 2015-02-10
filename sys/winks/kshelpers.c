@@ -54,6 +54,7 @@ ks_enumerate_devices (const GUID * category)
   for (i = 0;; i++) {
     BOOL success;
     SP_DEVICE_INTERFACE_DATA if_data = { 0, };
+    SP_DEVICE_INTERFACE_DATA if_alias_data = { 0,};
     SP_DEVICE_INTERFACE_DETAIL_DATA_W *if_detail_data;
     DWORD if_detail_data_size;
     SP_DEVINFO_DATA devinfo_data = { 0, };
@@ -65,6 +66,13 @@ ks_enumerate_devices (const GUID * category)
         &if_data);
     if (!success)               /* all devices enumerated? */
       break;
+
+    /* Enumerate only capture devices */
+    if_alias_data.cbSize = sizeof (SP_DEVICE_INTERFACE_DATA);
+    success = SetupDiGetDeviceInterfaceAlias (devinfo, &if_data, &KSCATEGORY_CAPTURE,
+        &if_alias_data);
+    if (!success)
+      continue;
 
     if_detail_data_size = (MAX_PATH - 1) * sizeof (gunichar2);
     if_detail_data = g_malloc0 (if_detail_data_size);
