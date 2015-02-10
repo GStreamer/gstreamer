@@ -198,7 +198,7 @@ _action_free (GstValidateAction * action)
   if (action->main_structure)
     gst_structure_free (action->main_structure);
 
-  g_slice_free1 (_find_action_type (action->type)->action_struct_size, action);
+  g_slice_free (GstValidateAction, action);
 }
 
 static void
@@ -219,7 +219,7 @@ static GstValidateAction *
 gst_validate_action_new (GstValidateScenario * scenario,
     GstValidateActionType * action_type)
 {
-  GstValidateAction *action = g_slice_alloc0 (action_type->action_struct_size);
+  GstValidateAction *action = g_slice_new0 (GstValidateAction);
 
   gst_validate_action_init (action);
   action->playback_time = GST_CLOCK_TIME_NONE;
@@ -2372,7 +2372,6 @@ gst_validate_register_action_type_dynamic (GstPlugin * plugin,
 
   type->description = g_strdup (description);
   type->flags = flags;
-  type->action_struct_size = sizeof (GstValidateActionType);
   type->rank = rank;
 
   if ((tmptype = _find_action_type (type_name))) {
@@ -2401,15 +2400,6 @@ gst_validate_register_action_type_dynamic (GstPlugin * plugin,
   }
 
   return type;
-}
-
-void
-gst_validate_action_type_set_action_struct_size (GstValidateActionType * type,
-    gsize action_struct_size)
-{
-  g_return_if_fail (action_struct_size >= sizeof (GstValidateAction));
-
-  type->action_struct_size = sizeof (GstValidateActionType);
 }
 
 GstValidateActionType *

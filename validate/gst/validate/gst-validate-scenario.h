@@ -155,11 +155,10 @@ struct _GstValidateActionType
   gchar *description;
   GstValidateActionTypeFlags flags;
 
-  gsize action_struct_size;
   GstRank rank;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof(gsize) -  sizeof (GstRank)];
+  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (GstRank)];
 };
 
 #define GST_TYPE_VALIDATE_ACTION_TYPE       (gst_validate_action_type_get_type ())
@@ -256,10 +255,6 @@ gst_validate_register_action_type_dynamic (GstPlugin *plugin,
                                            const gchar * description,
                                            GstValidateActionTypeFlags flags);
 
-
-void
-gst_validate_action_type_set_action_struct_size (GstValidateActionType *type,
-                                                 gsize action_struct_size);
 
 gboolean gst_validate_action_get_clocktime (GstValidateScenario * scenario,
                                             GstValidateAction *action,
