@@ -14,6 +14,7 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstglmemory.c \
 	gstglbufferpool.c \
 	gstglfilter.c \
+	gstglbasefilter.c \
         gstglshader.c \
         gstglshadervariables.c \
         gstglcolorconvert.c \
@@ -35,6 +36,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglmemory.h \
 	gstglbufferpool.h \
 	gstglfilter.h \
+	gstglbasefilter.h \
 	gstglshadervariables.h \
 	gstglshader.h \
 	gstglcolorconvert.h \

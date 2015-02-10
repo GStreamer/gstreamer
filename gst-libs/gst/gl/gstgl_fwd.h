@@ -63,6 +63,13 @@ typedef struct _GstGLColorConvert GstGLColorConvert;
 typedef struct _GstGLColorConvertClass GstGLColorConvertClass;
 typedef struct _GstGLColorConvertPrivate GstGLColorConvertPrivate;
 
+typedef struct _GstGLBaseFilter GstGLBaseFilter;
+typedef struct _GstGLBaseFilterClass GstGLBaseFilterClass;
+typedef struct _GstGLBaseFilterPrivate GstGLBaseFilterPrivate;
+
+typedef struct _GstGLFilter GstGLFilter;
+typedef struct _GstGLFilterClass GstGLFilterClass;
+
 G_END_DECLS
 
 #endif /* __GST_GL_FWD_H__ */

@@ -24,7 +24,6 @@
 #define _GST_GL_FILTER_H_
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
 #include <gst/gl/gl.h>
@@ -38,9 +37,6 @@ GType gst_gl_filter_get_type(void);
 #define GST_GL_FILTER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_GL_FILTER,GstGLFilterClass))
 #define GST_IS_GL_FILTER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_FILTER))
 #define GST_GL_FILTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_FILTER,GstGLFilterClass))
-
-typedef struct _GstGLFilter GstGLFilter;
-typedef struct _GstGLFilterClass GstGLFilterClass;
 
 /**
  * GstGLFilter:
@@ -60,11 +56,12 @@ typedef struct _GstGLFilterClass GstGLFilterClass;
  */
 struct _GstGLFilter
 {
-  GstBaseTransform   base_transform;
+  GstGLBaseFilter    parent;
+
+  /* FIXME remove */
+  GstGLContext      *context;
 
   GstBufferPool     *pool;
-
-  GstGLDisplay      *display;
 
   GstVideoInfo       in_info;
   GstVideoInfo       out_info;
@@ -87,9 +84,6 @@ struct _GstGLFilter
   GLuint             out_tex_id;
 
   GstGLShader       *default_shader;
-
-  GstGLContext      *context;
-  GstGLContext      *other_context;
 
   GLuint             vao;
   GLuint             vertex_buffer;
@@ -116,7 +110,7 @@ struct _GstGLFilter
  */
 struct _GstGLFilterClass
 {
-  GstBaseTransformClass base_transform_class;
+  GstGLBaseFilterClass parent_class;
   GstGLAPI supported_gl_api;
 
   gboolean (*set_caps)          (GstGLFilter* filter, GstCaps* incaps, GstCaps* outcaps);
