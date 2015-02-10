@@ -358,9 +358,13 @@ _opensles_player_acquire (GstAudioRingBuffer * rb,
   /* Configure audio source
    * 4 buffers is the "typical" size as optimized inside Android's
    * OpenSL ES, see frameworks/wilhelm/src/itfstruct.h BUFFER_HEADER_TYPICAL
+   *
+   * Also only use half of our segment size to make sure that there's always
+   * some more queued up in our ringbuffer and we don't start to read silence.
    */
   SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
-    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, MIN (4, spec->segtotal)
+    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, MIN (4, MAX (spec->segtotal >> 1,
+            1))
   };
   SLDataSource audioSrc = { &loc_bufq, &format };
 
