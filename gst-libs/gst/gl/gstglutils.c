@@ -487,7 +487,7 @@ gst_gl_display_found (GstElement * element, GstGLDisplay * display)
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
 static gboolean
-context_pad_query (const GValue * item, GValue * value, gpointer user_data)
+pad_query (const GValue * item, GValue * value, gpointer user_data)
 {
   GstPad *pad = g_value_get_object (item);
   GstQuery *query = user_data;
@@ -500,16 +500,16 @@ context_pad_query (const GValue * item, GValue * value, gpointer user_data)
     return FALSE;
   }
 
-  GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, pad, "context pad peer query failed");
+  GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, pad, "pad peer query failed");
   return TRUE;
 }
 
-static gboolean
-run_context_query (GstElement * element, GstQuery * query,
+gboolean
+gst_gl_run_query (GstElement * element, GstQuery * query,
     GstPadDirection direction)
 {
   GstIterator *it;
-  GstIteratorFoldFunction func = context_pad_query;
+  GstIteratorFoldFunction func = pad_query;
   GValue res = { 0 };
 
   g_value_init (&res, G_TYPE_BOOLEAN);
@@ -541,11 +541,11 @@ _gst_context_query (GstElement * element,
    *  2b) Query upstream as above.
    */
   query = gst_query_new_context (display_type);
-  if (run_context_query (element, query, GST_PAD_SRC)) {
+  if (gst_gl_run_query (element, query, GST_PAD_SRC)) {
     gst_query_parse_context (query, &ctxt);
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%p) in downstream query", ctxt);
-  } else if (run_context_query (element, query, GST_PAD_SINK)) {
+  } else if (gst_gl_run_query (element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &ctxt);
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%p) in upstream query", ctxt);
