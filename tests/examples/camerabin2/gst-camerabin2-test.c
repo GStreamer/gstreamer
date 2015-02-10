@@ -595,6 +595,7 @@ setup_pipeline_element (GstElement * element, const gchar * property_name,
     elem = gst_parse_launch (element_name, &error);
     if (elem) {
       g_object_set (element, property_name, elem, NULL);
+      g_object_unref (elem);
     } else {
       GST_WARNING ("can't create element '%s' for property '%s'", element_name,
           property_name);
@@ -695,6 +696,7 @@ setup_pipeline (void)
 
     if (setup_pipeline_element (wrapper, "video-source", videosrc_name, NULL)) {
       g_object_set (camerabin, "camera-source", wrapper, NULL);
+      g_object_unref (wrapper);
     } else {
       GST_WARNING ("Failed to set videosrc to %s", videosrc_name);
     }
@@ -718,15 +720,19 @@ setup_pipeline (void)
 
   if (imagepp_name) {
     ipp = create_ipp_bin ();
-    if (ipp)
+    if (ipp) {
       g_object_set (camerabin, "image-filter", ipp, NULL);
+      g_object_unref (ipp);
+    }
     else
       GST_WARNING ("Could not create ipp elements");
   }
 
   prof = load_encoding_profile ();
-  if (prof)
+  if (prof) {
     g_object_set (G_OBJECT (camerabin), "video-profile", prof, NULL);
+    gst_encoding_profile_unref (prof);
+  }
 
   GST_INFO_OBJECT (camerabin, "elements created");
 
