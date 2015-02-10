@@ -214,6 +214,7 @@ gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
     scale->inc = ((in_size - 1) << 16) / (out_size - 1) - 1;
 
   scaler_dump (scale);
+  GST_DEBUG ("max_taps %d", scale->resampler.max_taps);
 
   return scale;
 }
@@ -388,20 +389,34 @@ make_s16_taps (GstVideoScaler * scale, gint n_elems, gint precision)
   }
 }
 
+#undef ACC_SCALE
+
 static void
 video_scale_h_near_u8 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width, guint n_elems)
 {
   guint8 *s, *d;
-  guint32 *offset;
   gint i;
 
   d = (guint8 *) dest + dest_offset;
   s = (guint8 *) src;
-  offset = scale->resampler.offset + dest_offset;
 
-  for (i = 0; i < width; i++)
-    d[i] = s[offset[i]];
+  {
+#ifndef ACC_SCALE
+    guint32 *offset = scale->resampler.offset + dest_offset;
+
+    for (i = 0; i < width; i++)
+      d[i] = s[offset[i]];
+#else
+    gint acc = 0;
+
+    for (i = 0; i < width; i++) {
+      gint j = (acc + 0x8000) >> 16;
+      d[i] = s[j];
+      acc += scale->inc;
+    }
+#endif
+  }
 }
 
 static void
@@ -409,17 +424,34 @@ video_scale_h_near_3u8 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width, guint n_elems)
 {
   guint8 *s, *d;
-  guint32 *offset;
   gint i;
 
   d = (guint8 *) dest + dest_offset;
   s = (guint8 *) src;
-  offset = scale->resampler.offset + dest_offset;
 
-  for (i = 0; i < width; i++) {
-    d[i * 3 + 0] = s[offset[i] * 3 + 0];
-    d[i * 3 + 1] = s[offset[i] * 3 + 1];
-    d[i * 3 + 2] = s[offset[i] * 3 + 2];
+  {
+#ifndef ACC_SCALE
+    guint32 *offset = scale->resampler.offset + dest_offset;
+
+    for (i = 0; i < width; i++) {
+      gint j = offset[i] * 3;
+
+      d[i * 3 + 0] = s[j + 0];
+      d[i * 3 + 1] = s[j + 1];
+      d[i * 3 + 2] = s[j + 2];
+    }
+#else
+    gint acc = 0;
+
+    for (i = 0; i < width; i++) {
+      gint j = ((acc + 0x8000) >> 16) * 3;
+
+      d[i * 3 + 0] = s[j + 0];
+      d[i * 3 + 1] = s[j + 1];
+      d[i * 3 + 2] = s[j + 2];
+      acc += scale->inc;
+    }
+#endif
   }
 }
 
@@ -434,7 +466,7 @@ video_scale_h_near_u16 (GstVideoScaler * scale,
   s = (guint16 *) src;
 
   {
-#if 1
+#ifndef ACC_SCALE
     guint32 *offset = scale->resampler.offset + dest_offset;
 
     for (i = 0; i < width; i++)
@@ -455,11 +487,10 @@ static void
 video_scale_h_near_u32 (GstVideoScaler * scale,
     gpointer src, gpointer dest, guint dest_offset, guint width, guint n_elems)
 {
-  guint32 *s, *d, *offset;
+  guint32 *s, *d;
 
   d = (guint32 *) dest + dest_offset;
   s = (guint32 *) src;
-  offset = scale->resampler.offset + dest_offset;
 
 #if 0
   /* ORC is slower on this */
@@ -469,8 +500,20 @@ video_scale_h_near_u32 (GstVideoScaler * scale,
 #else
   {
     gint i;
+#ifndef ACC_SCALE
+    guint32 *offset = scale->resampler.offset + dest_offset;
+
     for (i = 0; i < width; i++)
       d[i] = s[offset[i]];
+#else
+    gint acc = 0;
+
+    for (i = 0; i < width; i++) {
+      gint j = (acc + 0x8000) >> 16;
+      d[i] = s[j];
+      acc += scale->inc;
+    }
+#endif
   }
 #endif
 }
@@ -567,9 +610,10 @@ video_scale_h_ntap_u8 (GstVideoScaler * scale,
       guint8 *s = (guint8 *) src;
 
       for (i = 0; i < count; i++) {
-        pixels[i * 3 + 0] = s[offset_n[i] * 3 + 0];
-        pixels[i * 3 + 1] = s[offset_n[i] * 3 + 1];
-        pixels[i * 3 + 2] = s[offset_n[i] * 3 + 2];
+        gint j = offset_n[i] * 3;
+        pixels[i * 3 + 0] = s[j + 0];
+        pixels[i * 3 + 1] = s[j + 1];
+        pixels[i * 3 + 2] = s[j + 2];
       }
       d = (guint8 *) dest + dest_offset * 3;
       break;
@@ -735,7 +779,7 @@ video_scale_v_near_u8 (GstVideoScaler * scale,
     guint n_elems)
 {
   if (dest != srcs[0])
-    orc_memcpy (dest, srcs[0], n_elems * width);
+    memcpy (dest, srcs[0], n_elems * width);
 }
 
 static void
@@ -744,7 +788,7 @@ video_scale_v_near_u16 (GstVideoScaler * scale,
     guint n_elems)
 {
   if (dest != srcs[0])
-    orc_memcpy (dest, srcs[0], n_elems * 2 * width);
+    memcpy (dest, srcs[0], n_elems * 2 * width);
 }
 
 static void
@@ -1273,7 +1317,8 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
     case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
       bits = 8;
-      n_elems = 2;
+      n_elems = 1;
+      width *= 2;
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
