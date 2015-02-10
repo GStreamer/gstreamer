@@ -1318,6 +1318,7 @@ gst_videoaggregator_aggregate (GstAggregator * agg, gboolean timeout)
           agg->segment.position -= frame_duration;
         else
           agg->segment.position = 0;
+        vagg->priv->nframes++;
         GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
         return GST_FLOW_OK;
       } else {
