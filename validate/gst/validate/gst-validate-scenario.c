@@ -2376,7 +2376,7 @@ gst_validate_register_action_type_dynamic (GstPlugin * plugin,
   type->rank = rank;
 
   if ((tmptype = _find_action_type (type_name))) {
-    if (tmptype->rank < rank) {
+    if (tmptype->rank <= rank) {
       action_types = g_list_remove (action_types, tmptype);
       gst_mini_object_unref (GST_MINI_OBJECT (tmptype));
     } else {
