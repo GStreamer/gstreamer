@@ -63,6 +63,7 @@ struct _GstVaapiDecoderVC1Private {
     GstVaapiDpb                *dpb;
     gint32                      next_poc;
     guint8                     *rbdu_buffer;
+    guint8                      rndctrl;
     guint                       rbdu_buffer_size;
     guint                       is_opened               : 1;
     guint                       is_first_field          : 1;
@@ -173,6 +174,7 @@ gst_vaapi_decoder_vc1_create(GstVaapiDecoder *base_decoder)
     GstVaapiDecoderVC1Private * const priv = &decoder->priv;
 
     priv->profile = (GstVaapiProfile)0;
+    priv->rndctrl = 0;
     return TRUE;
 }
 
@@ -668,7 +670,6 @@ fill_picture_structc(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     pic_param->cbp_table                                            = pic->cbptab;
     pic_param->mb_mode_table                                        = 0; /* XXX: interlaced frame */
     pic_param->range_reduction_frame                                = pic->rangeredfrm;
-    pic_param->rounding_control                                     = 0; /* advanced profile only */
     pic_param->post_processing                                      = 0; /* advanced profile only */
     pic_param->picture_resolution_index                             = pic->respic;
     pic_param->luma_scale                                           = pic->lumscale;
@@ -686,6 +687,16 @@ fill_picture_structc(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     pic_param->transform_fields.bits.mb_level_transform_type_flag   = pic->ttmbf;
     pic_param->transform_fields.bits.frame_level_transform_type     = pic->ttfrm;
     pic_param->transform_fields.bits.transform_ac_codingset_idx2    = pic->transacfrm2;
+
+    /* Refer to 8.3.7 Rounding control for Simple and Main Profile  */
+    if (frame_hdr->ptype == GST_VC1_PICTURE_TYPE_I ||
+        frame_hdr->ptype == GST_VC1_PICTURE_TYPE_BI)
+        priv->rndctrl = 1;
+    else if (frame_hdr->ptype == GST_VC1_PICTURE_TYPE_P)
+        priv->rndctrl ^= 1;
+
+    pic_param->rounding_control = priv->rndctrl;
+
     return TRUE;
 }
 
