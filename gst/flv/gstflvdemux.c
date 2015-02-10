@@ -43,6 +43,7 @@
 #include <gst/pbutils/descriptions.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/audio/audio.h>
+#include <gst/video/video.h>
 
 /* FIXME: don't rely on own GstIndex */
 #include "gstindex.c"
@@ -1255,7 +1256,7 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
   if (G_LIKELY (demux->framerate)) {
     gint num = 0, den = 0;
 
-    gst_util_double_to_fraction (demux->framerate, &num, &den);
+    gst_video_guess_framerate (GST_SECOND / demux->framerate, &num, &den);
     GST_DEBUG_OBJECT (demux->video_pad,
         "fps to be used on caps %f (as a fraction = %d/%d)", demux->framerate,
         num, den);
