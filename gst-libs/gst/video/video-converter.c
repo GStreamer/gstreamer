@@ -3392,7 +3392,7 @@ convert_plane_h (GstVideoConverter * convert,
 {
   gint i;
   gint in_x, in_y, out_x, out_y, out_width, out_height;
-  GstFormat format;
+  GstVideoFormat format;
   GstVideoScaler *h_scaler;
   guint8 *s, *d;
   gint splane = convert->fsplane[plane];
@@ -3457,7 +3457,7 @@ convert_plane_v (GstVideoConverter * convert,
 {
   gint i;
   gint in_x, in_y, out_x, out_y, out_width, out_height;
-  GstFormat format;
+  GstVideoFormat format;
   GstVideoScaler *v_scaler;
   gpointer *lines;
   gint splane = convert->fsplane[plane];
@@ -3536,7 +3536,7 @@ convert_plane_hv (GstVideoConverter * convert,
 {
   gint i, tmp_in;
   gint in_x, in_y, out_x, out_y, out_width, out_height;
-  GstFormat format;
+  GstVideoFormat format;
   GstVideoScaler *h_scaler, *v_scaler;
   ConverterAlloc *alloc;
   gpointer *lines;
