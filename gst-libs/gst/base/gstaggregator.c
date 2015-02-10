@@ -655,6 +655,15 @@ gst_aggregator_aggregate_func (GstAggregator * self)
     if (flow_return != GST_FLOW_OK)
       break;
   }
+
+  /* Pause the task here, the only ways to get here are:
+   * 1) We're stopping, in which case the task is stopped anyway
+   * 2) We got a flow error above, in which case it might take
+   *    some time to forward the flow return upstream and we
+   *    would otherwise call the task function over and over
+   *    again without doing anything
+   */
+  gst_pad_pause_task (self->srcpad);
 }
 
 static gboolean
