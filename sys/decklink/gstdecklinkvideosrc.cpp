@@ -664,6 +664,16 @@ gst_decklink_video_src_start_streams (GstElement * element)
           || GST_STATE_PENDING (self) == GST_STATE_PLAYING)) {
     GST_DEBUG_OBJECT (self, "Starting streams");
 
+    res = self->input->input->StartStreams ();
+    if (res != S_OK) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED,
+          (NULL), ("Failed to start streams: 0x%08x", res));
+      return;
+    }
+
+    self->input->started = TRUE;
+    self->input->clock_restart = TRUE;
+
     // Need to unlock to get the clock time
     g_mutex_unlock (&self->input->lock);
 
@@ -678,15 +688,6 @@ gst_decklink_video_src_start_streams (GstElement * element)
         gst_clock_get_internal_time (GST_ELEMENT_CLOCK (self));
 
     g_mutex_lock (&self->input->lock);
-
-    res = self->input->input->StartStreams ();
-    if (res != S_OK) {
-      GST_ELEMENT_ERROR (self, STREAM, FAILED,
-          (NULL), ("Failed to start streams: 0x%08x", res));
-      return;
-    }
-    self->input->started = TRUE;
-    self->input->clock_restart = TRUE;
   } else {
     GST_DEBUG_OBJECT (self, "Not starting streams yet");
   }
