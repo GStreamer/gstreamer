@@ -1340,6 +1340,9 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
         func = video_scale_v_ntap_u16;
         break;
     }
+  } else {
+    g_return_if_reached ();
+    func = NULL;
   }
 
   if (scale->tmpwidth < width)
