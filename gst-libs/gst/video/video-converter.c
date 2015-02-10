@@ -3711,11 +3711,23 @@ get_scale_format (GstVideoFormat format, gint plane)
 }
 
 static gboolean
+is_merge_yuv (GstVideoInfo * info)
+{
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_UYVY:
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
+static gboolean
 setup_scale (GstVideoConverter * convert)
 {
   int i, n_planes;
-  gint method, cr_method, stride =
-      0, in_width, in_height, out_width, out_height;
+  gint method, cr_method, stride, in_width, in_height, out_width, out_height;
   guint taps, max_taps = 0;
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *in_finfo, *out_finfo;
@@ -3730,7 +3742,10 @@ setup_scale (GstVideoConverter * convert)
   n_planes = GST_VIDEO_INFO_N_PLANES (out_info);
 
   method = GET_OPT_RESAMPLER_METHOD (convert);
-  cr_method = GET_OPT_CHROMA_RESAMPLER_METHOD (convert);
+  if (method == GST_VIDEO_RESAMPLER_METHOD_NEAREST)
+    cr_method = method;
+  else
+    cr_method = GET_OPT_CHROMA_RESAMPLER_METHOD (convert);
   taps = GET_OPT_RESAMPLER_TAPS (convert);
 
   in_format = GST_VIDEO_INFO_FORMAT (in_info);
@@ -3741,6 +3756,11 @@ setup_scale (GstVideoConverter * convert)
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR15:
     case GST_VIDEO_FORMAT_BGR16:
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+#else
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+#endif
       if (method != GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
         GST_DEBUG ("%s only with nearest resampling",
             gst_video_format_to_string (in_format));
@@ -3756,8 +3776,12 @@ setup_scale (GstVideoConverter * convert)
   out_width = convert->out_width;
   out_height = convert->out_height;
 
+  stride = 0;
+
   if (n_planes == 1 && !GST_VIDEO_FORMAT_INFO_IS_GRAY (out_finfo)) {
-    if (GST_VIDEO_INFO_IS_YUV (in_info)) {
+    gint pstride;
+
+    if (is_merge_yuv (in_info)) {
       GstVideoScaler *y_scaler, *uv_scaler;
 
       y_scaler = gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
@@ -3774,12 +3798,20 @@ setup_scale (GstVideoConverter * convert)
           gst_video_scaler_combine_packed_YUV (y_scaler, uv_scaler,
           in_format, out_format);
 
+      pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, GST_VIDEO_COMP_Y);
+      convert->fin_x[0] = GST_ROUND_UP_2 (convert->in_x) * pstride;
+      convert->fout_x[0] = GST_ROUND_UP_2 (convert->out_x) * pstride;
+
       gst_video_scaler_free (y_scaler);
       gst_video_scaler_free (uv_scaler);
     } else {
       convert->fh_scaler[0] =
           gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
           in_width, out_width, convert->config);
+
+      pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, GST_VIDEO_COMP_R);
+      convert->fin_x[0] = convert->in_x * pstride;
+      convert->fout_x[0] = convert->out_x * pstride;
     }
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (in_info, 0));
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (out_info, 0));
@@ -3790,6 +3822,10 @@ setup_scale (GstVideoConverter * convert)
 
     gst_video_scaler_get_coeff (convert->fv_scaler[0], 0, NULL, &max_taps);
 
+    convert->fin_y[0] = convert->in_y;
+    convert->fout_y[0] = convert->out_y;
+    convert->fout_width[0] = out_width;
+    convert->fout_height[0] = out_height;
     convert->fconvert[0] = convert_plane_hv;
     convert->fformat[0] = get_scale_format (in_format, 0);
     convert->fsplane[0] = 0;
@@ -4300,13 +4336,10 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_AYUV64, GST_VIDEO_FORMAT_AYUV64, TRUE, FALSE, FALSE, TRUE,
       TRUE, 0, 0, convert_scale_planes},
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   {GST_VIDEO_FORMAT_GRAY16_LE, GST_VIDEO_FORMAT_GRAY16_LE, TRUE, FALSE, FALSE,
       TRUE, TRUE, 0, 0, convert_scale_planes},
-#else
   {GST_VIDEO_FORMAT_GRAY16_BE, GST_VIDEO_FORMAT_GRAY16_BE, TRUE, FALSE, FALSE,
       TRUE, TRUE, 0, 0, convert_scale_planes},
-#endif
 };
 
 static gboolean
