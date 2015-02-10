@@ -1256,7 +1256,7 @@ void
 gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
     gpointer src_lines[], gpointer dest, guint dest_offset, guint width)
 {
-  gint n_elems, bits = 0;
+  gint n_elems, bits;
   GstVideoScalerVFunc func;
 
   g_return_if_fail (scale != NULL);
@@ -1340,8 +1340,7 @@ gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,
         func = video_scale_v_ntap_u16;
         break;
     }
-  } else
-    goto no_func;
+  }
 
   if (scale->tmpwidth < width)
     realloc_tmplines (scale, n_elems, width);
