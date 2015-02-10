@@ -3814,6 +3814,8 @@ setup_scale (GstVideoConverter * convert)
       ow = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, i, out_width);
       oh = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, i, out_height);
 
+      GST_DEBUG ("plane %d: %dx%d -> %dx%d", i, iw, ih, ow, oh);
+
       convert->fout_width[i] = ow;
       convert->fout_height[i] = oh;
 
@@ -3828,6 +3830,12 @@ setup_scale (GstVideoConverter * convert)
       convert->fout_x[i] *= pstride;
       convert->fout_y[i] =
           GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, i, convert->out_y);
+
+      GST_DEBUG ("plane %d: pstride %d", i, pstride);
+      GST_DEBUG ("plane %d: in_x %d, in_y %d", i, convert->fin_x[i],
+          convert->fin_y[i]);
+      GST_DEBUG ("plane %d: out_x %d, out_y %d", i, convert->fout_x[i],
+          convert->fout_y[i]);
 
       if (comp == -1) {
         convert->fconvert[i] = convert_plane_fill;
@@ -3848,7 +3856,7 @@ setup_scale (GstVideoConverter * convert)
         continue;
       } else {
         convert->fsplane[i] = GST_VIDEO_FORMAT_INFO_PLANE (in_finfo, comp);
-        GST_DEBUG ("plane %d -> %d", i, convert->fsplane[i]);
+        GST_DEBUG ("plane %d -> %d (comp %d)", i, convert->fsplane[i], comp);
       }
 
       config = gst_structure_copy (convert->config);
@@ -3859,10 +3867,10 @@ setup_scale (GstVideoConverter * convert)
         if (ih == oh) {
           convert->fconvert[i] = convert_plane_copy;
           GST_DEBUG ("plane %d: copy", i);
-        } else if (ih == 2 * oh) {
+        } else if (ih == 2 * oh && pstride == 1) {
           convert->fconvert[i] = convert_plane_v_halve;
           GST_DEBUG ("plane %d: vertical halve", i);
-        } else if (2 * ih == oh) {
+        } else if (2 * ih == oh && pstride == 1) {
           convert->fconvert[i] = convert_plane_v_double;
           GST_DEBUG ("plane %d: vertical double", i);
         } else {
@@ -3871,10 +3879,10 @@ setup_scale (GstVideoConverter * convert)
           need_v_scaler = TRUE;
         }
       } else if (ih == oh) {
-        if (iw == 2 * ow) {
+        if (iw == 2 * ow && pstride == 1) {
           convert->fconvert[i] = convert_plane_h_halve;
           GST_DEBUG ("plane %d: horizontal halve", i);
-        } else if (2 * iw == ow) {
+        } else if (2 * iw == ow && pstride == 1) {
           convert->fconvert[i] = convert_plane_h_double;
           GST_DEBUG ("plane %d: horizontal double", i);
         } else {
@@ -3883,10 +3891,10 @@ setup_scale (GstVideoConverter * convert)
           need_h_scaler = TRUE;
         }
       } else {
-        if (iw == 2 * ow && ih == 2 * oh) {
+        if (iw == 2 * ow && ih == 2 * oh && pstride == 1) {
           convert->fconvert[i] = convert_plane_hv_halve;
           GST_DEBUG ("plane %d: horizontal/vertical halve", i);
-        } else if (2 * iw == ow && 2 * ih == oh) {
+        } else if (2 * iw == ow && 2 * ih == oh && pstride == 1) {
           convert->fconvert[i] = convert_plane_hv_double;
           GST_DEBUG ("plane %d: horizontal/vertical double", i);
         } else {
@@ -4186,6 +4194,31 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_YUV9, FALSE, FALSE, FALSE, TRUE,
       TRUE, 0, 0, convert_scale_planes},
   {GST_VIDEO_FORMAT_YVU9, GST_VIDEO_FORMAT_YVU9, FALSE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  /* sempiplanar -> semiplanar */
+  {GST_VIDEO_FORMAT_NV12, GST_VIDEO_FORMAT_NV12, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_NV12, GST_VIDEO_FORMAT_NV16, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_NV12, GST_VIDEO_FORMAT_NV24, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  {GST_VIDEO_FORMAT_NV21, GST_VIDEO_FORMAT_NV21, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  {GST_VIDEO_FORMAT_NV16, GST_VIDEO_FORMAT_NV12, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_NV16, GST_VIDEO_FORMAT_NV16, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_NV16, GST_VIDEO_FORMAT_NV24, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+
+  {GST_VIDEO_FORMAT_NV24, GST_VIDEO_FORMAT_NV12, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_NV24, GST_VIDEO_FORMAT_NV16, TRUE, FALSE, FALSE, TRUE,
+      TRUE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_NV24, GST_VIDEO_FORMAT_NV24, TRUE, FALSE, FALSE, TRUE,
       TRUE, 0, 0, convert_scale_planes},
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
