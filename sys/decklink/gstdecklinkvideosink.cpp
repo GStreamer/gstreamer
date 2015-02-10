@@ -638,8 +638,20 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
           (NULL), ("Failed to start scheduled playback: 0x%08x", res));
       return;
     }
+
     self->output->started = TRUE;
     self->output->clock_restart = TRUE;
+
+    // Need to unlock to get the clock time
+    g_mutex_unlock (&self->output->lock);
+
+    // Sample the clocks again to get the most accurate values
+    // after we started scheduled playback
+    self->internal_base_time =
+        gst_clock_get_internal_time (self->output->clock);
+    self->external_base_time =
+        gst_clock_get_internal_time (GST_ELEMENT_CLOCK (self));
+    g_mutex_lock (&self->output->lock);
   } else {
     GST_DEBUG_OBJECT (self, "Not starting scheduled playback yet");
   }
