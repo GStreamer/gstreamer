@@ -56,16 +56,21 @@ static GstEncodingProfile *
 create_ogg_profile (void)
 {
   GstEncodingContainerProfile *container;
+  GstCaps *caps = NULL;
 
-  container = gst_encoding_container_profile_new ("ogg", NULL,
-      gst_caps_new_empty_simple ("application/ogg"), NULL);
+  caps = gst_caps_new_empty_simple ("application/ogg");
+  container = gst_encoding_container_profile_new ("ogg", NULL, caps, NULL);
+  gst_caps_unref (caps);
 
+  caps = gst_caps_new_empty_simple ("video/x-theora");
   gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
-      gst_encoding_video_profile_new (gst_caps_new_empty_simple
-          ("video/x-theora"), NULL, NULL, 1));
+      gst_encoding_video_profile_new (caps, NULL, NULL, 1));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_empty_simple ("audio/x-vorbis");
   gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
-      gst_encoding_audio_profile_new (gst_caps_new_empty_simple
-          ("audio/x-vorbis"), NULL, NULL, 1));
+      gst_encoding_audio_profile_new (caps, NULL, NULL, 1));
+  gst_caps_unref (caps);
 
   return (GstEncodingProfile *) container;
 }
@@ -74,16 +79,21 @@ static GstEncodingProfile *
 create_webm_profile (void)
 {
   GstEncodingContainerProfile *container;
+  GstCaps *caps = NULL;
 
-  container = gst_encoding_container_profile_new ("webm", NULL,
-      gst_caps_new_empty_simple ("video/webm"), NULL);
+  caps = gst_caps_new_empty_simple ("video/webm");
+  container = gst_encoding_container_profile_new ("webm", NULL, caps, NULL);
+  gst_caps_unref (caps);
 
+  caps = gst_caps_new_empty_simple ("video/x-vp8");
   gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
-      gst_encoding_video_profile_new (gst_caps_new_empty_simple ("video/x-vp8"),
-          NULL, NULL, 1));
+      gst_encoding_video_profile_new (caps, NULL, NULL, 1));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_empty_simple ("audio/x-vorbis");
   gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
-      gst_encoding_audio_profile_new (gst_caps_new_empty_simple
-          ("audio/x-vorbis"), NULL, NULL, 1));
+      gst_encoding_audio_profile_new (caps, NULL, NULL, 1));
+  gst_caps_unref (caps);
 
   return (GstEncodingProfile *) container;
 }
@@ -92,17 +102,22 @@ static GstEncodingProfile *
 create_mp4_profile (void)
 {
   GstEncodingContainerProfile *container;
+  GstCaps *caps = NULL;
 
-  container = gst_encoding_container_profile_new ("mp4", NULL,
-      gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING, "iso",
-          NULL), NULL);
+  caps = gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING, "iso",
+          NULL);
+  container = gst_encoding_container_profile_new ("mp4", NULL, caps, NULL);
+  gst_caps_unref (caps);
 
+  caps = gst_caps_new_empty_simple ("video/x-h264");
   gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
-      gst_encoding_video_profile_new (gst_caps_new_empty_simple
-          ("video/x-h264"), NULL, NULL, 1));
+      gst_encoding_video_profile_new (caps, NULL, NULL, 1));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_simple ("audio/mpeg", "version", G_TYPE_INT, 4, NULL);
   gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
-      gst_encoding_audio_profile_new (gst_caps_new_simple ("audio/mpeg",
-              "version", G_TYPE_INT, 4, NULL), NULL, NULL, 1));
+      gst_encoding_audio_profile_new (caps, NULL, NULL, 1));
+  gst_caps_unref (caps);
 
   return (GstEncodingProfile *) container;
 }
