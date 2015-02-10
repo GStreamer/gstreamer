@@ -376,27 +376,17 @@ gst_decklink_video_src_convert_to_external_clock (GstDecklinkVideoSrc * self,
   clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
   if (clock && clock != self->input->clock) {
     GstClockTime internal, external, rate_n, rate_d;
+    GstClockTimeDiff external_start_time_diff;
+
     gst_clock_get_calibration (self->input->clock, &internal, &external,
         &rate_n, &rate_d);
 
     if (rate_n != rate_d && self->internal_base_time != GST_CLOCK_TIME_NONE) {
       GstClockTime internal_timestamp = *timestamp;
-      GstClockTimeDiff external_start_time_diff;
 
       // Convert to the running time corresponding to both clock times
       internal -= self->internal_base_time;
       external -= self->external_base_time;
-
-      // Add the diff between the external time when we
-      // went to playing and the external time when the
-      // pipeline went to playing. Otherwise we will
-      // always start outputting from 0 instead of the
-      // current running time.
-      external_start_time_diff =
-          gst_element_get_base_time (GST_ELEMENT_CAST (self));
-      external_start_time_diff =
-          self->external_base_time - external_start_time_diff;
-      external += external_start_time_diff;
 
       // Get the difference in the internal time, note
       // that the capture time is internal time.
@@ -437,6 +427,17 @@ gst_decklink_video_src_convert_to_external_clock (GstDecklinkVideoSrc * self,
     } else {
       GST_LOG_OBJECT (self, "No clock conversion needed, relative rate is 1.0");
     }
+
+    // Add the diff between the external time when we
+    // went to playing and the external time when the
+    // pipeline went to playing. Otherwise we will
+    // always start outputting from 0 instead of the
+    // current running time.
+    external_start_time_diff =
+        gst_element_get_base_time (GST_ELEMENT_CAST (self));
+    external_start_time_diff =
+        self->external_base_time - external_start_time_diff;
+    *timestamp += external_start_time_diff;
   } else {
     GST_LOG_OBJECT (self, "No clock conversion needed, same clocks");
   }
