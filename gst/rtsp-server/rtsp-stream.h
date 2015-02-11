@@ -55,7 +55,8 @@ struct _GstRTSPStream {
 
   /*< private >*/
   GstRTSPStreamPrivate *priv;
-  gpointer _gst_reserved[GST_PADDING];};
+  gpointer _gst_reserved[GST_PADDING];
+};
 
 struct _GstRTSPStreamClass {
   GObjectClass parent_class;
