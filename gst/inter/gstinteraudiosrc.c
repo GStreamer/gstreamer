@@ -444,7 +444,7 @@ gst_inter_audio_src_query (GstBaseSrc * src, GstQuery * query)
       GstClockTime min_latency, max_latency;
 
       min_latency = interaudiosrc->latency_time;
-      max_latency = min_latency;
+      max_latency = interaudiosrc->buffer_time;
 
       GST_DEBUG_OBJECT (src,
           "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,

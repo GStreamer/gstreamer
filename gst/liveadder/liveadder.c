@@ -755,8 +755,10 @@ gst_live_adder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
                   GST_TIME_ARGS (pad_min_latency),
                   GST_TIME_ARGS (pad_max_latency));
 
-              min_latency = MAX (pad_min_latency, min_latency);
-              max_latency = MIN (pad_max_latency, max_latency);
+              if (pad_us_live) {
+                min_latency = MAX (pad_min_latency, min_latency);
+                max_latency = MIN (pad_max_latency, max_latency);
+              }
             }
           }
             break;

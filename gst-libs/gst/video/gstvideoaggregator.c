@@ -598,13 +598,15 @@ gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
 
   if (vagg->priv->current_caps == NULL ||
       gst_caps_is_equal (caps, vagg->priv->current_caps) == FALSE) {
+    GstClockTime latency;
+
     gst_caps_replace (&vagg->priv->current_caps, caps);
     GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
 
     gst_aggregator_set_src_caps (agg, caps);
-    gst_aggregator_set_latency (agg, gst_util_uint64_scale (GST_SECOND,
-            GST_VIDEO_INFO_FPS_D (&info), GST_VIDEO_INFO_FPS_N (&info)),
-        GST_CLOCK_TIME_NONE);
+    latency = gst_util_uint64_scale (GST_SECOND,
+        GST_VIDEO_INFO_FPS_D (&info), GST_VIDEO_INFO_FPS_N (&info));
+    gst_aggregator_set_latency (agg, latency, latency);
 
     GST_VIDEO_AGGREGATOR_LOCK (vagg);
   }

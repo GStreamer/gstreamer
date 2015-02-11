@@ -181,6 +181,9 @@ gst_opus_dec_start (GstAudioDecoder * dec)
   gst_audio_decoder_set_plc_aware (dec, TRUE);
 
   if (odec->use_inband_fec) {
+    /* FIXME: Is our maximum latency really 120ms, i.e. are we going
+     * to buffer up to 120ms?
+     */
     gst_audio_decoder_set_latency (dec, 2 * GST_MSECOND + GST_MSECOND / 2,
         120 * GST_MSECOND);
   }

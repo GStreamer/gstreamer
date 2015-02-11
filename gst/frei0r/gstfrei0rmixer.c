@@ -340,15 +340,17 @@ gst_frei0r_mixer_src_query_latency (GstFrei0rMixer * self, GstQuery * query)
         if (res) {
           gst_query_parse_latency (peerquery, &live_cur, &min_cur, &max_cur);
 
-          if (min_cur > min)
-            min = min_cur;
+          if (live_cur) {
+            if (min_cur > min)
+              min = min_cur;
 
-          if (max_cur != GST_CLOCK_TIME_NONE &&
-              ((max != GST_CLOCK_TIME_NONE && max_cur > max) ||
-                  (max == GST_CLOCK_TIME_NONE)))
-            max = max_cur;
+            if (max == GST_CLOCK_TIME_NONE)
+              max = max_cur;
+            else if (max_cur < max)
+              max = max_cur;
 
-          live = live || live_cur;
+            live = TRUE;
+          }
         }
 
         gst_query_unref (peerquery);
