@@ -22,7 +22,6 @@
 #define _GST_GL_VIDEO_MIXER_H_
 
 #include "gstglmixer.h"
-#include "gstglmixerpad.h"
 
 G_BEGIN_DECLS
 
