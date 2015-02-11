@@ -2295,6 +2295,9 @@ gst_validate_action_set_done (GstValidateAction * action)
  *
  * Register a new action type to the action type system. If the action type already
  * exists, it will be overriden by that new definition
+ *
+ * Returns: (transfer none): The newly created action type or the already registered action type
+ * if it had a higher rank
  */
 GstValidateActionType *
 gst_validate_register_action_type (const gchar * type_name,
@@ -2335,7 +2338,7 @@ _free_action_types (GList * action_types)
  * @description: A description of the new type
  * @flags: The #GstValidateActionTypeFlags to be set on the new action type
  *
- * Returns: The newly created action type or the already registered action type
+ * Returns: (transfer none): The newly created action type or the already registered action type
  * if it had a higher rank
  */
 GstValidateActionType *
