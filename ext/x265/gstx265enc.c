@@ -65,9 +65,9 @@ static GString *x265enc_defaults;
 #define PROP_TUNE_DEFAULT                2      // SSIM
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "I420, Y444"
+#define FORMATS "I420, Y444, I420_10LE, Y444_10LE"
 #else
-#define FORMATS "I420, Y444"
+#define FORMATS "I420, Y444, I420_10BE, Y444_10BE"
 #endif
 
 #define GST_X265_ENC_LOG_LEVEL_TYPE (gst_x265_enc_log_level_get_type())
@@ -239,15 +239,40 @@ gst_x265_enc_add_x265_chroma_format (GstStructure * s,
 {
   GValue fmt = G_VALUE_INIT;
 
-  GST_INFO ("This x265 build supports 8-bit depth");
-  if (x265_chroma_format_local == 0) {
-    set_value (&fmt, 2, "I420", "Y444");
-  } else if (x265_chroma_format_local == X265_CSP_I444) {
-    set_value (&fmt, 1, "Y444");
-  } else if (x265_chroma_format_local == X265_CSP_I420) {
-    set_value (&fmt, 1, "I420");
-  } else {
-    GST_ERROR ("Unsupported chroma format %d", x265_chroma_format_local);
+  if (x265_max_bit_depth >= 10) {
+    GST_INFO ("This x265 build supports %d-bit depth", x265_max_bit_depth);
+    if (x265_chroma_format_local == 0) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      set_value (&fmt, 4, "I420", "Y444", "I420_10LE", "Y444_10LE");
+#else
+      set_value (&fmt, 4, "I420", "Y444", "I420_10BE", "Y444_10BE");
+#endif
+    } else if (x265_chroma_format_local == X265_CSP_I444) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      set_value (&fmt, 2, "Y444", "Y444_10LE");
+#else
+      set_value (&fmt, 2, "Y444", "Y444_10BE");
+#endif
+    } else if (x265_chroma_format_local == X265_CSP_I420) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      set_value (&fmt, 2, "I420", "I420_10LE");
+#else
+      set_value (&fmt, 2, "I420", "I420_10BE");
+#endif
+    } else {
+      GST_ERROR ("Unsupported chroma format %d", x265_chroma_format_local);
+    }
+  } else if (x265_max_bit_depth == 8) {
+    GST_INFO ("This x265 build supports 8-bit depth");
+    if (x265_chroma_format_local == 0) {
+      set_value (&fmt, 2, "I420", "Y444");
+    } else if (x265_chroma_format_local == X265_CSP_I444) {
+      set_value (&fmt, 1, "Y444");
+    } else if (x265_chroma_format_local == X265_CSP_I420) {
+      set_value (&fmt, 1, "I420");
+    } else {
+      GST_ERROR ("Unsupported chroma format %d", x265_chroma_format_local);
+    }
   }
 
   if (G_VALUE_TYPE (&fmt) != G_TYPE_INVALID)
@@ -501,10 +526,14 @@ gst_x265_enc_gst_to_x265_video_format (GstVideoFormat format, gint * nplanes)
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_10BE:
       if (nplanes)
         *nplanes = 3;
       return X265_CSP_I420;
     case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_Y444_10BE:
       if (nplanes)
         *nplanes = 3;
       return X265_CSP_I444;
@@ -952,7 +981,7 @@ gst_x265_enc_handle_frame (GstVideoEncoder * video_enc,
   pic_in.sliceType = X265_TYPE_AUTO;
   pic_in.pts = frame->pts;
   pic_in.dts = frame->dts;
-  pic_in.bitDepth = 8;
+  pic_in.bitDepth = info->finfo->depth[0];
   pic_in.userData = GINT_TO_POINTER (frame->system_frame_number);
 
   ret = gst_x265_enc_encode_frame (encoder, &pic_in, frame, &i_nal, TRUE);
