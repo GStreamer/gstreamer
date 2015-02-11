@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstopengl.la
 libgstopengl_la_SOURCES = \
 	gstopengl.c \
 	gstglbasemixer.c \
+	gstgluploadelement.c \
 	gstglimagesink.c \
 	gstglfiltercube.c \
 	gstgleffects.c \
@@ -18,6 +19,7 @@ libgstopengl_la_SOURCES = \
 
 noinst_HEADERS = \
 	gstglbasemixer.h \
+	gstgluploadelement.h \
 	gstglimagesink.h \
 	gstglfiltercube.h \
 	gstgleffects.h \
