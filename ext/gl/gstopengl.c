@@ -44,6 +44,7 @@
 #endif
 
 #include "gstglimagesink.h"
+#include "gstgluploadelement.h"
 
 #include "gstglfiltercube.h"
 #include "gstgleffects.h"
@@ -109,6 +110,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glimagesink",
           GST_RANK_SECONDARY, GST_TYPE_GLIMAGE_SINK)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glupload",
+          GST_RANK_SECONDARY, GST_TYPE_GL_UPLOAD_ELEMENT)) {
     return FALSE;
   }
 
