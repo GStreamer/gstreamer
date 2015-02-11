@@ -228,12 +228,72 @@ The pipeline latency is queried with the LATENCY query.
  (out) "live", G_TYPE_BOOLEAN (default FALSE)
         - if a live element is found upstream
 
- (out) "min-latency", G_TYPE_UINT64 (default 0)
-        - the minimum latency in the pipeline
+ (out) "min-latency", G_TYPE_UINT64 (default 0, must not be NONE)
+        - the minimum latency in the pipeline, meaning the minimum time
+          an element synchronizing to the clock has to wait until it can
+          be sure that all data for the current running time has been
+          received.
 
- (out) "max-latency", G_TYPE_UINT64 (default 0)
-        - the maximum latency in the pipeline
+          Elements answering the latency query and introducing latency must
+          set this to the maximum time for which they will delay data, while
+          considering upstream's minimum latency. As such, from an element's
+          perspective this is *not* its own minimum latency but its own
+          maximum latency.
+          Considering upstream's minimum latency in general means that the
+          element's own value is added to upstream's value, as this will give
+          the overall minimum latency of all elements from the source to the
+          current element:
 
+          min_latency = upstream_min_latency + own_min_latency
+
+ (out) "max-latency", G_TYPE_UINT64 (default 0, NONE meaning infinity)
+        - the maximum latency in the pipeline, meaning the maximum time an
+          element synchronizing to the clock is allowed to wait for receiving
+          all data for the current running time. Waiting for a longer time
+          will result in data loss, overruns and underruns of buffers and in
+          general breaks synchronized data flow in the pipeline.
+
+          Elements answering the latency query should set this to the maximum
+          time for which they can buffer upstream data without blocking or
+          dropping further data. For an element this value will generally be
+          bigger than its own minimum latency, but might be bigger than that
+          if it can buffer more data. As such, queue elements can be used to
+          increase the maximum latency.
+
+          The value set in the query should again consider upstream's maximum
+          latency:
+          - If the current element has blocking buffering, i.e. it does
+            not drop data by itself when its internal buffer is full, it should
+            just add its own maximum latency (i.e. the size of its internal
+            buffer) to upstream's value. If upstream's maximum latency, or the
+            elements internal maximum latency was NONE (i.e. infinity), it will
+            be set to infinity.
+
+            if (upstream_max_latency == NONE || own_max_latency == NONE)
+              max_latency = NONE;
+            else
+              max_latency = upstream_max_latency + own_max_latency
+
+            If the element has multiple sinkpads, the minimum upstream latency is
+            the maximum of all live upstream minimum latencies.
+
+          - If the current element has leaky buffering, i.e. it drops data by
+            itself when its internal buffer is full, it should take the minimum
+            of its own maximum latency and upstream's. Examples for such
+            elements are audio sinks and sources with an internal ringbuffer,
+            leaky queues and in general live sources with a limited amount of
+            internal buffers that can be used.
+
+            max_latency = MIN (upstream_max_latency, own_max_latency)
+
+            Note: many GStreamer base classes allow subclasses to set a
+            minimum and maximum latency and handle the query themselves. These
+            base classes assume non-leaky (i.e. blocking) buffering for the
+            maximum latency. The base class' default query handler needs to be
+            overridden to correctly handle leaky buffering.
+
+          If the element has multiple sinkpads, the maximum upstream latency is
+          the minimum of all live upstream maximum latencies.
 
 Event
 ~~~~~
@@ -254,8 +314,10 @@ the PLAYING state.
 When the pipeline collected all ASYNC_DONE messages it can calculate the global
 latency as follows:
 
-  - perform a latency query on all sinks.
-  - latency = MAX (all min latencies) 
+  - perform a latency query on all sinks
+    - sources set their minimum and maximum latency
+    - other elements add their own values as described above
+  - latency = MAX (all min latencies)
   - if MIN (all max latencies) < latency we have an impossible situation and we
     must generate an error indicating that this pipeline cannot be played. This
     usually means that there is not enough buffering in some chain of the
