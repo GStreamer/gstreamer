@@ -4335,8 +4335,7 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstObject * parent,
           GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
       GST_OBJECT_LOCK (demux);
-      if (min != -1)
-        min += demux->latency;
+      min += demux->latency;
       if (max != -1)
         max += demux->latency;
       GST_OBJECT_UNLOCK (demux);

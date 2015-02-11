@@ -1728,25 +1728,27 @@ static void
 gst_x264_enc_set_latency (GstX264Enc * encoder)
 {
   GstVideoInfo *info = &encoder->input_state->info;
+  gint max_delayed_frames;
+  GstClockTime latency;
+
+  max_delayed_frames = x264_encoder_maximum_delayed_frames (encoder->x264enc);
 
   if (info->fps_n) {
-    GstClockTime latency;
-    gint max_delayed_frames;
-    max_delayed_frames = x264_encoder_maximum_delayed_frames (encoder->x264enc);
     latency = gst_util_uint64_scale_ceil (GST_SECOND * info->fps_d,
         max_delayed_frames, info->fps_n);
-
-    GST_INFO_OBJECT (encoder,
-        "Updating latency to %" GST_TIME_FORMAT " (%d frames)",
-        GST_TIME_ARGS (latency), max_delayed_frames);
-
-    gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency,
-        GST_CLOCK_TIME_NONE);
   } else {
-    /* We can't do live as we don't know our latency */
-    gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder),
-        0, GST_CLOCK_TIME_NONE);
+    /* FIXME: Assume 25fps. This is better than reporting no latency at
+     * all and then later failing in live pipelines
+     */
+    latency = gst_util_uint64_scale_ceil (GST_SECOND * 1,
+        max_delayed_frames, 25);
   }
+
+  GST_INFO_OBJECT (encoder,
+      "Updating latency to %" GST_TIME_FORMAT " (%d frames)",
+      GST_TIME_ARGS (latency), max_delayed_frames);
+
+  gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency, latency);
 }
 
 static gboolean
