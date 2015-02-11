@@ -887,10 +887,10 @@ gst_app_src_query (GstBaseSrc * src, GstQuery * query)
 
       /* overwrite with our values when we need to */
       g_mutex_lock (&priv->mutex);
-      if (priv->min_latency != -1)
+      if (priv->min_latency != -1) {
         min = priv->min_latency;
-      if (priv->max_latency != -1)
         max = priv->max_latency;
+      }
       g_mutex_unlock (&priv->mutex);
 
       gst_query_set_latency (query, live, min, max);

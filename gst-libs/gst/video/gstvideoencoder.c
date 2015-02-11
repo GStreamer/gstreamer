@@ -454,7 +454,7 @@ gst_video_encoder_init (GstVideoEncoder * encoder, GstVideoEncoderClass * klass)
   priv->new_headers = FALSE;
 
   priv->min_latency = 0;
-  priv->max_latency = GST_CLOCK_TIME_NONE;
+  priv->max_latency = 0;
 
   gst_video_encoder_reset (encoder, TRUE);
 }
@@ -1199,12 +1199,11 @@ gst_video_encoder_src_query_default (GstVideoEncoder * enc, GstQuery * query)
 
         GST_OBJECT_LOCK (enc);
         min_latency += priv->min_latency;
-        if (max_latency != GST_CLOCK_TIME_NONE
-            && enc->priv->max_latency != GST_CLOCK_TIME_NONE) {
+        if (max_latency == GST_CLOCK_TIME_NONE
+            || enc->priv->max_latency == GST_CLOCK_TIME_NONE)
+          max_latency = GST_CLOCK_TIME_NONE;
+        else
           max_latency += enc->priv->max_latency;
-        } else if (enc->priv->max_latency != GST_CLOCK_TIME_NONE) {
-          max_latency = enc->priv->max_latency;
-        }
         GST_OBJECT_UNLOCK (enc);
 
         gst_query_set_latency (query, live, min_latency, max_latency);

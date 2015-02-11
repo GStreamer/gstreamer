@@ -447,7 +447,7 @@ gst_audio_encoder_init (GstAudioEncoder * enc, GstAudioEncoderClass * bclass)
 
   /* init state */
   enc->priv->ctx.min_latency = 0;
-  enc->priv->ctx.max_latency = GST_CLOCK_TIME_NONE;
+  enc->priv->ctx.max_latency = 0;
   gst_audio_encoder_reset (enc, TRUE);
   GST_DEBUG_OBJECT (enc, "init ok");
 }
@@ -1837,9 +1837,10 @@ gst_audio_encoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
         GST_OBJECT_LOCK (enc);
         /* add our latency */
-        if (min_latency != -1)
-          min_latency += enc->priv->ctx.min_latency;
-        if (max_latency != -1 && enc->priv->ctx.max_latency != -1)
+        min_latency += enc->priv->ctx.min_latency;
+        if (max_latency == -1 || enc->priv->ctx.max_latency == -1)
+          max_latency = -1;
+        else
           max_latency += enc->priv->ctx.max_latency;
         GST_OBJECT_UNLOCK (enc);
 

@@ -464,7 +464,6 @@ gst_audio_base_sink_query (GstElement * element, GstQuery * query)
            * amount of time. */
           max_latency = (max_l == -1) ? -1 : (base_latency + max_l);
 
-
           GST_DEBUG_OBJECT (basesink,
               "peer min %" GST_TIME_FORMAT ", our min latency: %"
               GST_TIME_FORMAT, GST_TIME_ARGS (min_l),

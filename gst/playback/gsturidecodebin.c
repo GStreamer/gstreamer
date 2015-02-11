@@ -2564,16 +2564,18 @@ decoder_query_latency_fold (const GValue * item, GValue * ret, QueryFold * fold)
         "got latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
         ", live %d", GST_TIME_ARGS (min), GST_TIME_ARGS (max), live);
 
-    /* for the combined latency we collect the MAX of all min latencies and
-     * the MIN of all max latencies */
-    if (min > fold->min)
-      fold->min = min;
-    if (fold->max == -1)
-      fold->max = max;
-    else if (max < fold->max)
-      fold->max = max;
-    if (!fold->live)
-      fold->live = live;
+    if (live) {
+      /* for the combined latency we collect the MAX of all min latencies and
+       * the MIN of all max latencies */
+      if (min > fold->min)
+        fold->min = min;
+      if (fold->max == -1)
+        fold->max = max;
+      else if (max < fold->max)
+        fold->max = max;
+
+      fold->live = TRUE;
+    }
   }
 
   return TRUE;
