@@ -372,6 +372,7 @@ gst_rtp_dec_query_src (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_LATENCY:
     {
       /* we pretend to be live with a 3 second latency */
+      /* FIXME: Do we really have infinite maximum latency? */
       gst_query_set_latency (query, TRUE, 3 * GST_SECOND, -1);
       res = TRUE;
       break;

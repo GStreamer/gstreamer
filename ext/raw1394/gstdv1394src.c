@@ -980,7 +980,7 @@ gst_dv1394src_query (GstBaseSrc * basesrc, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
     {
-      gst_query_set_latency (query, TRUE, GST_SECOND / 25, GST_CLOCK_TIME_NONE);
+      gst_query_set_latency (query, TRUE, GST_SECOND / 25, GST_SECOND / 25);
     }
       break;
     default:

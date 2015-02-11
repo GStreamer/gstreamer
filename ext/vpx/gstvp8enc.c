@@ -1500,6 +1500,7 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   GstVideoInfo *info = &state->info;
   GstVideoCodecState *output_state;
   gchar *profile_str;
+  GstClockTime latency;
 
   encoder = GST_VP8_ENC (video_encoder);
   GST_DEBUG_OBJECT (video_encoder, "set_format");
@@ -1681,13 +1682,16 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   }
 
   if (GST_VIDEO_INFO_FPS_D (info) == 0 || GST_VIDEO_INFO_FPS_N (info) == 0) {
-    gst_video_encoder_set_latency (video_encoder, 0, GST_CLOCK_TIME_NONE);
+    /* FIXME: Assume 25fps for unknown framerates. Better than reporting
+     * that we introduce no latency while we actually do
+     */
+    latency = gst_util_uint64_scale (encoder->cfg.g_lag_in_frames,
+        1 * GST_SECOND, 25);
   } else {
-    gst_video_encoder_set_latency (video_encoder, 0,
-        gst_util_uint64_scale (encoder->cfg.g_lag_in_frames,
-            GST_VIDEO_INFO_FPS_D (info) * GST_SECOND,
-            GST_VIDEO_INFO_FPS_N (info)));
+    latency = gst_util_uint64_scale (encoder->cfg.g_lag_in_frames,
+        GST_VIDEO_INFO_FPS_D (info) * GST_SECOND, GST_VIDEO_INFO_FPS_N (info));
   }
+  gst_video_encoder_set_latency (video_encoder, latency, latency);
   encoder->inited = TRUE;
 
   /* Store input state */
