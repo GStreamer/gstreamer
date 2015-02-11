@@ -76,6 +76,14 @@ GstVideoScaler *      gst_video_scaler_combine_packed_YUV (GstVideoScaler * y_sc
                                                            GstVideoFormat in_format,
                                                            GstVideoFormat out_format);
 
+void                  gst_video_scaler_2d             (GstVideoScaler *hscale,
+                                                       GstVideoScaler *vscale,
+                                                       GstVideoFormat format,
+                                                       gpointer src, gint src_stride,
+                                                       gpointer dest, gint dest_stride,
+                                                       guint x, guint y,
+                                                       guint width, guint height);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_SCALER_H__ */
