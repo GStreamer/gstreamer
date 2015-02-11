@@ -2,6 +2,7 @@ plugin_LTLIBRARIES = libgstopengl.la
 
 libgstopengl_la_SOURCES = \
 	gstopengl.c \
+	gstglbasemixer.c \
 	gstglimagesink.c \
 	gstglfiltercube.c \
 	gstgleffects.c \
@@ -16,13 +17,13 @@ libgstopengl_la_SOURCES = \
 	gstglfilterapp.c
 
 noinst_HEADERS = \
+	gstglbasemixer.h \
 	gstglimagesink.h \
 	gstglfiltercube.h \
 	gstgleffects.h \
 	effects/gstgleffectssources.h \
 	gstglcolorscale.h \
 	gstglmixer.h \
-	gstglmixerpad.h \
 	gstglvideomixer.h \
 	gstglfiltershader.h \
 	gstglfilterapp.h
@@ -70,7 +71,6 @@ noinst_HEADERS += \
 	gstgldifferencematte.h
 endif
 endif
-
 
 if HAVE_GRAPHENE
 libgstopengl_la_SOURCES += \
