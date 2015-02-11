@@ -303,6 +303,8 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template,
   GstPad *pad;
   GstEvent *event;
   gchar *stream_id;
+  gchar rec_datetime[40];
+  GstDateTime *rec_dt;
 
   pad = gst_pad_new_from_static_template (template, template->name_template);
 
@@ -341,6 +343,16 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template,
 
     tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "DV", NULL);
     gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
+
+    if (dv_get_recording_datetime (dvdemux->decoder, rec_datetime)) {
+      rec_dt = gst_date_time_new_from_iso8601_string (rec_datetime);
+      if (rec_dt) {
+        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE_TIME,
+            rec_dt, NULL);
+        gst_date_time_unref (rec_dt);
+      }
+    }
+
     if (dvdemux->videosrcpad)
       gst_pad_push_event (dvdemux->videosrcpad,
           gst_event_new_tag (gst_tag_list_ref (tags)));
