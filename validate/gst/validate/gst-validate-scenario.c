@@ -2483,9 +2483,14 @@ gst_validate_print_action_types (const gchar ** wanted_types,
 GstValidateAction *
 gst_validate_scenario_get_next_action (GstValidateScenario * scenario)
 {
-  if (scenario->priv->actions && scenario->priv->actions->next)
-    return (GstValidateAction *) gst_mini_object_ref ((GstMiniObject *)
-        scenario->priv->actions->next->data);
+  if (GPOINTER_TO_INT (g_private_get (&main_thread_priv))) {
+    if (scenario->priv->actions && scenario->priv->actions->next)
+      return (GstValidateAction *) gst_mini_object_ref ((GstMiniObject *)
+          scenario->priv->actions->next->data);
+  } else {
+    GST_WARNING_OBJECT (scenario, "Trying to get next action from outside"
+        " the 'main' thread");
+  }
 
   return NULL;
 }
