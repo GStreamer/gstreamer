@@ -24,9 +24,49 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/gl/gl.h>
-#include "gstglmixerpad.h"
+#include "gstglbasemixer.h"
 
 G_BEGIN_DECLS
+
+typedef struct _GstGLMixer GstGLMixer;
+typedef struct _GstGLMixerClass GstGLMixerClass;
+typedef struct _GstGLMixerPrivate GstGLMixerPrivate;
+typedef struct _GstGLMixerFrameData GstGLMixerFrameData;
+
+#define GST_TYPE_GL_MIXER_PAD (gst_gl_mixer_pad_get_type())
+#define GST_GL_MIXER_PAD(obj) \
+        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_MIXER_PAD, GstGLMixerPad))
+#define GST_GL_MIXER_PAD_CLASS(klass) \
+        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GL_MIXER_PAD, GstGLMixerPadClass))
+#define GST_IS_GL_MIXER_PAD(obj) \
+        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_MIXER_PAD))
+#define GST_IS_GL_MIXER_PAD_CLASS(klass) \
+        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_MIXER_PAD))
+#define GST_GL_MIXER_PAD_GET_CLASS(obj) \
+        (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_GL_MIXER_PAD,GstGLMixerPadClass))
+
+typedef struct _GstGLMixerPad GstGLMixerPad;
+typedef struct _GstGLMixerPadClass GstGLMixerPadClass;
+
+/* all information needed for one video stream */
+struct _GstGLMixerPad
+{
+  GstGLBaseMixerPad parent;                /* subclass the pad */
+
+  /* <private> */
+  GstGLUpload *upload;
+  GstGLColorConvert *convert;
+  GstBuffer *gl_buffer;
+};
+
+struct _GstGLMixerPadClass
+{
+  GstGLBaseMixerPadClass parent_class;
+
+  GstBuffer * (*upload_buffer) (GstGLMixer * mix, GstGLMixerFrameData * frame, GstBuffer * buffer);
+};
+
+GType gst_gl_mixer_pad_get_type (void);
 
 #define GST_TYPE_GL_MIXER (gst_gl_mixer_get_type())
 #define GST_GL_MIXER(obj) \
@@ -40,11 +80,6 @@ G_BEGIN_DECLS
 #define GST_GL_MIXER_GET_CLASS(obj) \
         (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_GL_MIXER,GstGLMixerClass))
 
-typedef struct _GstGLMixer GstGLMixer;
-typedef struct _GstGLMixerClass GstGLMixerClass;
-typedef struct _GstGLMixerPrivate GstGLMixerPrivate;
-typedef struct _GstGLMixerFrameData GstGLMixerFrameData;
-
 typedef gboolean (*GstGLMixerSetCaps) (GstGLMixer* mixer,
   GstCaps* outcaps);
 typedef void (*GstGLMixerReset) (GstGLMixer *mixer);
@@ -55,9 +90,10 @@ typedef gboolean (*GstGLMixerProcessTextures) (GstGLMixer *mix,
 
 struct _GstGLMixer
 {
-  GstVideoAggregator vaggregator;
+  GstGLBaseMixer vaggregator;
 
-  GstGLMixerPrivate *priv;
+  /* FIXME remove */
+  GstGLContext      *context;
 
   GPtrArray *array_buffers;
   GPtrArray *frames;
@@ -65,17 +101,17 @@ struct _GstGLMixer
   GLuint out_tex_id;
   GstGLDownload *download;
 
-  GstGLDisplay *display;
-  GstGLContext *context, *other_context;
   GLuint fbo;
   GLuint depthbuffer;
 
   GstCaps *out_caps;
+
+  GstGLMixerPrivate *priv;
 };
 
 struct _GstGLMixerClass
 {
-  GstVideoAggregatorClass parent_class;
+  GstGLBaseMixerClass parent_class;
   GstGLAPI supported_gl_api;
 
   GstGLMixerSetCaps set_caps;
