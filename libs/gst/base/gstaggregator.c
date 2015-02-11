@@ -1118,15 +1118,17 @@ gst_aggregator_query_sink_latency_foreach (GstAggregator * self,
     GST_LOG_OBJECT (pad, "got latency live:%s min:%" G_GINT64_FORMAT
         " max:%" G_GINT64_FORMAT, live ? "true" : "false", min, max);
 
-    if (min != GST_CLOCK_TIME_NONE && min > data->min)
-      data->min = min;
+    if (live) {
+      if (min > data->min)
+        data->min = min;
 
-    if (max != GST_CLOCK_TIME_NONE &&
-        ((data->max != GST_CLOCK_TIME_NONE && max < data->max) ||
-            (data->max == GST_CLOCK_TIME_NONE)))
-      data->max = max;
+      if (data->max == GST_CLOCK_TIME_NONE)
+        data->max = max;
+      else if (max < data->max)
+        data->max = max;
 
-    data->live |= live;
+      data->live = TRUE;
+    }
   }
 
   gst_query_unref (query);
@@ -1166,8 +1168,8 @@ gst_aggregator_get_latency_unlocked (GstAggregator * self, gboolean * live,
   if (GST_CLOCK_TIME_IS_VALID (max)
       && GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
     max += self->priv->sub_latency_max;
-  else if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
-    max = self->priv->sub_latency_max;
+  else
+    max = GST_CLOCK_TIME_NONE;
 
   if (live)
     *live = self->priv->latency_live;
@@ -1218,8 +1220,8 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max)
       && GST_CLOCK_TIME_IS_VALID (data.max))
     data.max += self->priv->sub_latency_max;
-  else if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
-    data.max = self->priv->sub_latency_max;
+  else
+    data.max = GST_CLOCK_TIME_NONE;
 
   if (data.live && data.min > data.max) {
     GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
@@ -1593,8 +1595,8 @@ gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
     if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max)
         && GST_CLOCK_TIME_IS_VALID (max))
       max += self->priv->sub_latency_max;
-    else if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
-      max = self->priv->sub_latency_max;
+    else
+      max = GST_CLOCK_TIME_NONE;
 
     if (GST_CLOCK_TIME_IS_VALID (max) && min > max) {
       GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
@@ -1742,7 +1744,7 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
 
   self->priv->latency_live = FALSE;
   self->priv->latency_min = self->priv->sub_latency_min = 0;
-  self->priv->latency_max = self->priv->sub_latency_max = GST_CLOCK_TIME_NONE;
+  self->priv->latency_max = self->priv->sub_latency_max = 0;
   gst_aggregator_reset_flow_values (self);
 
   self->srcpad = gst_pad_new_from_template (pad_template, "src");
