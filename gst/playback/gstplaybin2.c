@@ -3358,8 +3358,8 @@ unknown_type:
 link_failed:
   {
     GST_ERROR_OBJECT (playbin,
-        "failed to link pad %s:%s to combiner, reason %d",
-        GST_DEBUG_PAD_NAME (pad), res);
+        "failed to link pad %s:%s to combiner, reason %s (%d)",
+        GST_DEBUG_PAD_NAME (pad), gst_pad_link_get_name (res), res);
     GST_SOURCE_GROUP_UNLOCK (group);
     goto done;
   }
