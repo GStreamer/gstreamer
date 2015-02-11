@@ -704,8 +704,17 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
     profile = "main-10";
   else if (profile_idc == 3 || gpcf3)
     profile = "main-still-picture";
+  else if (profile_idc == 4)
+    profile = "main-rext";
+  else if (profile_idc == 5)
+    profile = "high-throughput-rext";
   else
     profile = NULL;
+
+  /* FIXME: Check against the spec, especially for the rext formats. These
+   * values are from x265, but x265 also checks the chroma and bit depth
+   * fields of the SPS to decide on the profile.
+   */
 
   return profile;
 }
