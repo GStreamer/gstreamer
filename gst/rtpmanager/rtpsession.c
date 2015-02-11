@@ -558,6 +558,7 @@ rtp_session_init (RTPSession * sess)
 
   sess->first_rtcp = TRUE;
   sess->next_rtcp_check_time = GST_CLOCK_TIME_NONE;
+  sess->last_rtcp_send_time = GST_CLOCK_TIME_NONE;
 
   sess->allow_early = TRUE;
   sess->next_early_rtcp_time = GST_CLOCK_TIME_NONE;
@@ -3467,7 +3468,7 @@ make_source_bye (RTPSession * sess, RTPSource * source, ReportData * data)
 static gboolean
 is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
 {
-  GstClockTime new_send_time, elapsed;
+  GstClockTime new_send_time;
   GstClockTime interval;
   RTPSessionStats *stats;
 
@@ -3498,21 +3499,33 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
   }
 
 early:
-  /* get elapsed time since we last reported */
-  elapsed = current_time - sess->last_rtcp_send_time;
 
   /* take interval and add jitter */
   interval = data->interval;
   if (interval != GST_CLOCK_TIME_NONE)
     interval = rtp_stats_add_rtcp_jitter (stats, interval);
 
-  /* perform forward reconsideration */
-  if (interval != GST_CLOCK_TIME_NONE) {
-    GST_DEBUG ("forward reconsideration %" GST_TIME_FORMAT ", elapsed %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (interval), GST_TIME_ARGS (elapsed));
-    new_send_time = interval + sess->last_rtcp_send_time;
+  if (sess->last_rtcp_send_time != GST_CLOCK_TIME_NONE) {
+    /* perform forward reconsideration */
+    if (interval != GST_CLOCK_TIME_NONE) {
+      GstClockTime elapsed;
+
+      /* get elapsed time since we last reported */
+      elapsed = current_time - sess->last_rtcp_send_time;
+
+      GST_DEBUG ("forward reconsideration %" GST_TIME_FORMAT ", elapsed %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (interval), GST_TIME_ARGS (elapsed));
+      new_send_time = interval + sess->last_rtcp_send_time;
+    } else {
+      new_send_time = sess->last_rtcp_send_time;
+    }
   } else {
-    new_send_time = sess->last_rtcp_send_time;
+    /* If this is the first RTCP packet, we can reconsider anything based
+     * on the last RTCP send time because there was none.
+     */
+    g_warn_if_fail (!data->is_early);
+    data->is_early = FALSE;
+    new_send_time = current_time;
   }
 
   if (!data->is_early) {
@@ -3829,6 +3842,27 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
   if (!GST_CLOCK_TIME_IS_VALID (sess->next_rtcp_check_time)) {
     GST_LOG_OBJECT (sess, "no next RTCP check time");
     ret = FALSE;
+    goto end;
+  }
+
+  /* RFC 4585 section 3.5.3 step 1
+   * If no regular RTCP packet has been sent before, then a regular
+   * RTCP packet has to be scheduled first and FB messages might be
+   * included there
+   */
+  if (!GST_CLOCK_TIME_IS_VALID (sess->last_rtcp_send_time)) {
+    GST_LOG_OBJECT (sess, "no RTCP sent yet");
+
+    if (current_time + max_delay > sess->next_rtcp_check_time) {
+      GST_LOG_OBJECT (sess,
+          "next scheduled time is soon %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT
+          " > %" GST_TIME_FORMAT, GST_TIME_ARGS (current_time),
+          GST_TIME_ARGS (max_delay),
+          GST_TIME_ARGS (sess->next_rtcp_check_time));
+      ret = TRUE;
+    } else {
+      ret = FALSE;
+    }
     goto end;
   }
 
