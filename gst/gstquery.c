@@ -413,6 +413,7 @@ gst_query_set_latency (GstQuery * query, gboolean live,
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY);
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min_latency));
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_set (structure,

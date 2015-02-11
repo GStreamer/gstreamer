@@ -726,7 +726,7 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
   if (min_latency)
     *min_latency = min;
   if (max_latency)
-    *max_latency = -1;
+    *max_latency = min;
 
   GST_LOG_OBJECT (src, "latency: live %d, min %" GST_TIME_FORMAT
       ", max %" GST_TIME_FORMAT, src->is_live, GST_TIME_ARGS (min),

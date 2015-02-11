@@ -1435,13 +1435,17 @@ gst_queue_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
        * limit, the best thing we can do is to return an infinite delay. In
        * reality a better estimate would be the byte/buffer rate but that is not
        * possible right now. */
-      if (queue->max_size.time > 0 && max != -1)
+      /* TODO: Use CONVERT query? */
+      if (queue->max_size.time > 0 && max != -1
+          && queue->leaky == GST_QUEUE_NO_LEAK)
         max += queue->max_size.time;
+      else if (queue->max_size.time > 0 && queue->leaky != GST_QUEUE_NO_LEAK)
+        max = MIN (queue->max_size.time, max);
       else
         max = -1;
 
       /* adjust for min-threshold */
-      if (queue->min_threshold.time > 0 && min != -1)
+      if (queue->min_threshold.time > 0)
         min += queue->min_threshold.time;
 
       gst_query_set_latency (query, live, min, max);

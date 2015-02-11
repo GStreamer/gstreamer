@@ -3754,6 +3754,9 @@ void
 gst_base_parse_set_latency (GstBaseParse * parse, GstClockTime min_latency,
     GstClockTime max_latency)
 {
+  g_return_if_fail (min_latency != GST_CLOCK_TIME_NONE);
+  g_return_if_fail (min_latency <= max_latency);
+
   GST_OBJECT_LOCK (parse);
   parse->priv->min_latency = min_latency;
   parse->priv->max_latency = max_latency;
@@ -3923,9 +3926,10 @@ gst_base_parse_src_query_default (GstBaseParse * parse, GstQuery * query)
 
         GST_OBJECT_LOCK (parse);
         /* add our latency */
-        if (min_latency != -1)
-          min_latency += parse->priv->min_latency;
-        if (max_latency != -1)
+        min_latency += parse->priv->min_latency;
+        if (max_latency == -1 || parse->priv->max_latency == -1)
+          max_latency = -1;
+        else
           max_latency += parse->priv->max_latency;
         GST_OBJECT_UNLOCK (parse);
 

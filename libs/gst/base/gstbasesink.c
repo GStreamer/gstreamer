@@ -1086,8 +1086,7 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
       }
       if (l) {
         /* we need to add the render delay if we are live */
-        if (min != -1)
-          min += render_delay;
+        min += render_delay;
         if (max != -1)
           max += render_delay;
       }
