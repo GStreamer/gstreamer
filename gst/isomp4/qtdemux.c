@@ -497,6 +497,7 @@ static void qtdemux_do_allocation (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
 
 static gboolean qtdemux_pull_mfro_mfra (GstQTDemux * qtdemux);
+static void check_update_duration (GstQTDemux * qtdemux, GstClockTime duration);
 
 static void
 gst_qtdemux_class_init (GstQTDemuxClass * klass)
@@ -2328,6 +2329,24 @@ qtdemux_parse_uuid (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
   }
 }
 
+static void
+qtdemux_parse_sidx (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
+{
+  GstSidxParser sidx_parser;
+  GstIsoffParserResult res;
+  guint consumed;
+
+  gst_isoff_sidx_parser_init (&sidx_parser);
+
+  res =
+      gst_isoff_sidx_parser_add_data (&sidx_parser, buffer, length, &consumed);
+  GST_DEBUG_OBJECT (qtdemux, "sidx parse result: %d", res);
+  if (res == GST_ISOFF_PARSER_DONE) {
+    check_update_duration (qtdemux, sidx_parser.cumulative_pts);
+  }
+  gst_isoff_sidx_parser_clear (&sidx_parser);
+}
+
 /* caller verifies at least 8 bytes in buf */
 static void
 extract_initial_length_and_fourcc (const guint8 * data, guint size,
@@ -3356,6 +3375,19 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       qtdemux_parse_uuid (qtdemux, map.data, map.size);
       gst_buffer_unmap (uuid, &map);
       gst_buffer_unref (uuid);
+      break;
+    }
+    case FOURCC_sidx:
+    {
+      GstBuffer *sidx = NULL;
+      ret = gst_qtdemux_pull_atom (qtdemux, cur_offset, length, &sidx);
+      if (ret != GST_FLOW_OK)
+        goto beach;
+      qtdemux->offset += length;
+      gst_buffer_map (sidx, &map, GST_MAP_READ);
+      qtdemux_parse_sidx (qtdemux, map.data, map.size);
+      gst_buffer_unmap (sidx, &map);
+      gst_buffer_unref (sidx);
       break;
     }
     default:
@@ -5194,6 +5226,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         } else if (fourcc == FOURCC_uuid) {
           GST_DEBUG_OBJECT (demux, "Parsing [uuid]");
           qtdemux_parse_uuid (demux, data, demux->neededbytes);
+        } else if (fourcc == FOURCC_sidx) {
+          GST_DEBUG_OBJECT (demux, "Parsing [sidx]");
+          qtdemux_parse_sidx (demux, data, demux->neededbytes);
         } else {
           GST_WARNING_OBJECT (demux,
               "Unknown fourcc while parsing header : %" GST_FOURCC_FORMAT,

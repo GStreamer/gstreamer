@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstflowcombiner.h>
+#include "gstisoff.h"
 
 G_BEGIN_DECLS
 
