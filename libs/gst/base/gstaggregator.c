@@ -2144,15 +2144,25 @@ void
 gst_aggregator_set_latency (GstAggregator * self,
     GstClockTime min_latency, GstClockTime max_latency)
 {
+  gboolean changed = FALSE;
+
   g_return_if_fail (GST_IS_AGGREGATOR (self));
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min_latency));
   g_return_if_fail (max_latency >= min_latency);
 
   GST_OBJECT_LOCK (self);
-  self->priv->sub_latency_min = min_latency;
-  self->priv->sub_latency_max = max_latency;
+  if (self->priv->sub_latency_min != min_latency) {
+    self->priv->sub_latency_min = min_latency;
+    changed = TRUE;
+  }
+  if (self->priv->sub_latency_max != max_latency) {
+    self->priv->sub_latency_max = max_latency;
+    changed = TRUE;
+  }
   GST_OBJECT_UNLOCK (self);
 
-  gst_element_post_message (GST_ELEMENT_CAST (self),
-      gst_message_new_latency (GST_OBJECT_CAST (self)));
+  if (changed) {
+    gst_element_post_message (GST_ELEMENT_CAST (self),
+        gst_message_new_latency (GST_OBJECT_CAST (self)));
+  }
 }
