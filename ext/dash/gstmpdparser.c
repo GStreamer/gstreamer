@@ -1919,11 +1919,11 @@ gst_mpdparser_representation_get_mimetype (GstAdaptationSetNode * adapt_set,
     mime = adapt_set->RepresentationBase->mimeType;
   }
 
-  if (strncmp_ext (mime, "audio"))
+  if (strncmp_ext (mime, "audio") == 0)
     return GST_STREAM_AUDIO;
-  if (strncmp_ext (mime, "video"))
+  if (strncmp_ext (mime, "video") == 0)
     return GST_STREAM_VIDEO;
-  if (strncmp_ext (mime, "application"))
+  if (strncmp_ext (mime, "application") == 0)
     return GST_STREAM_APPLICATION;
 
   return GST_STREAM_UNKNOWN;
