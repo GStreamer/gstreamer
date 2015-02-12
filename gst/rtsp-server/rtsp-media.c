@@ -1952,6 +1952,9 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 
     /* and block for the seek to complete */
     GST_INFO ("done seeking %d", res);
+    if (!res)
+      goto seek_failed;
+
     g_rec_mutex_unlock (&priv->state_lock);
 
     /* wait until pipeline is prerolled again, this will also collect stats */
@@ -1985,6 +1988,12 @@ not_supported:
   {
     g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("conversion to npt not supported");
+    return FALSE;
+  }
+seek_failed:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_INFO ("seeking failed");
     return FALSE;
   }
 preroll_failed:

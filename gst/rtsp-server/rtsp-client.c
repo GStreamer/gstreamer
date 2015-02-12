@@ -1165,7 +1165,10 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
     if (gst_rtsp_range_parse (str, &range) == GST_RTSP_OK) {
       /* we have a range, seek to the position */
       unit = range->unit;
-      gst_rtsp_media_seek (media, range);
+      if (!gst_rtsp_media_seek (media, range)) {
+        gst_rtsp_range_free (range);
+        goto seek_failed;
+      }
       gst_rtsp_range_free (range);
     }
   }
@@ -1236,6 +1239,12 @@ invalid_state:
 unsuspend_failed:
   {
     GST_ERROR ("client %p: unsuspend failed", client);
+    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    return FALSE;
+  }
+seek_failed:
+  {
+    GST_ERROR ("client %p: seek failed", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     return FALSE;
   }
