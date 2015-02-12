@@ -470,6 +470,13 @@ gst_validate_utils_parse_expression (const gchar * expr,
   return val;
 }
 
+/**
+ * gst_validate_utils_flags_from_str:
+ * @type: The #GType of the flags we are trying to retrieve the flags from
+ * @str_flags: The string representation of the value
+ *
+ * Returns: The flags set in @str_flags
+ */
 guint
 gst_validate_utils_flags_from_str (GType type, const gchar * str_flags)
 {
@@ -490,6 +497,14 @@ gst_validate_utils_flags_from_str (GType type, const gchar * str_flags)
   return flags;
 }
 
+/**
+ * gst_validate_utils_enum_from_str:
+ * @type: The #GType of the enum we are trying to retrieve the enum value from
+ * @str_enum: The string representation of the value
+ * @enum_value: (out): The value of the enum
+ *
+ * Returns: %TRUE on success %FALSE otherwise
+ */
 gboolean
 gst_validate_utils_enum_from_str (GType type, const gchar * str_enum,
     guint * enum_value)
