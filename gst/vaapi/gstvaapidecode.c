@@ -165,6 +165,7 @@ gst_vaapi_decode_input_state_replace (GstVaapiDecode * decode,
 static inline gboolean
 gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode, GstCaps * caps)
 {
+  GST_INFO_OBJECT (decode, "new sink caps = %" GST_PTR_FORMAT, caps);
   gst_caps_replace (&decode->sinkpad_caps, caps);
   return TRUE;
 }
@@ -223,6 +224,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   state->caps = gst_video_info_to_caps (vi);
   if (features)
     gst_caps_set_features (state->caps, 0, features);
+  GST_INFO_OBJECT (decode, "new src caps = %" GST_PTR_FORMAT, state->caps);
   gst_caps_replace (&decode->srcpad_caps, state->caps);
   gst_video_codec_state_unref (state);
 
