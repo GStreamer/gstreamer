@@ -777,6 +777,9 @@ gst_gl_upload_new (GstGLContext * context)
     upload->priv->upload_impl[i] = upload_methods[i]->new (upload);
   }
 
+  GST_DEBUG_OBJECT (upload, "Created new GLUpload for context %" GST_PTR_FORMAT,
+      context);
+
   return upload;
 }
 

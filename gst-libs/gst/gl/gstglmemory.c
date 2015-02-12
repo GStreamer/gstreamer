@@ -62,7 +62,7 @@
         GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2, 3, 0))
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
-#define GST_CAT_DEFUALT GST_CAT_GL_MEMORY
+#define GST_CAT_DEFAULT GST_CAT_GL_MEMORY
 
 static GstAllocator *_gl_allocator;
 
@@ -385,9 +385,8 @@ _generate_texture (GstGLContext * context, GenTexture * data)
   const GstGLFuncs *gl = context->gl_vtable;
   GLenum internal_format;
 
-  GST_CAT_TRACE (GST_CAT_GL_MEMORY,
-      "Generating texture format:%u type:%u dimensions:%ux%u", data->gl_format,
-      data->gl_type, data->width, data->height);
+  GST_TRACE ("Generating texture format:%u type:%u dimensions:%ux%u",
+      data->gl_format, data->gl_type, data->width, data->height);
 
   internal_format =
       _sized_gl_format_from_gl_format_type (data->gl_format, data->gl_type);
@@ -402,7 +401,7 @@ _generate_texture (GstGLContext * context, GenTexture * data)
   gl->TexParameteri (data->gl_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   gl->TexParameteri (data->gl_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  GST_CAT_LOG (GST_CAT_GL_MEMORY, "generated texture id:%d", data->result);
+  GST_LOG ("generated texture id:%d", data->result);
 }
 
 /* find the difference between the start of the plane and where the video
@@ -453,7 +452,7 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
     gl->PixelStorei (GL_UNPACK_ALIGNMENT, gl_mem->unpack_length);
   }
 
-  GST_CAT_LOG (GST_CAT_GL_MEMORY, "upload for texture id:%u, with pbo %u %ux%u",
+  GST_LOG ("upload for texture id:%u, with pbo %u %ux%u",
       gl_mem->tex_id, gl_mem->transfer_pbo, gl_mem->tex_width,
       GL_MEM_HEIGHT (gl_mem));
 
@@ -501,7 +500,7 @@ _transfer_upload (GstGLContext * context, GstGLMemory * gl_mem)
   if (!gl_mem->transfer_pbo)
     gl->GenBuffers (1, &gl_mem->transfer_pbo);
 
-  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "uploading texture %u using pbo %u",
+  GST_DEBUG ("uploading texture %u using pbo %u",
       gl_mem->tex_id, gl_mem->transfer_pbo);
 
   size = ((GstMemory *) gl_mem)->maxsize;
@@ -537,8 +536,7 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
 
   n_gl_bytes = _gl_texture_type_n_bytes (gl_mem->tex_type);
   if (n_gl_bytes == 0) {
-    GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Unsupported texture type %d",
-        gl_mem->tex_type);
+    GST_ERROR ("Unsupported texture type %d", gl_mem->tex_type);
     return;
   }
 
@@ -554,7 +552,7 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
           ((GL_MEM_WIDTH (gl_mem) * n_gl_bytes) + j - 1) & ~(j - 1);
 
       if (round_up_j == GL_MEM_STRIDE (gl_mem)) {
-        GST_CAT_LOG (GST_CAT_GL_MEMORY, "Found alignment of %u based on width "
+        GST_LOG ("Found alignment of %u based on width "
             "(with plane width:%u, plane stride:%u and pixel stride:%u. "
             "RU%u(%u*%u) = %u)", j, GL_MEM_WIDTH (gl_mem),
             GL_MEM_STRIDE (gl_mem), n_gl_bytes, j, GL_MEM_WIDTH (gl_mem),
@@ -577,7 +575,7 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
         guint round_up_j = ((GL_MEM_STRIDE (gl_mem)) + j - 1) & ~(j - 1);
 
         if (round_up_j == (GL_MEM_STRIDE (gl_mem))) {
-          GST_CAT_LOG (GST_CAT_GL_MEMORY, "Found alignment of %u based on "
+          GST_LOG ("Found alignment of %u based on "
               "stride (with plane stride:%u and pixel stride:%u. "
               "RU%u(%u) = %u)", j, GL_MEM_STRIDE (gl_mem), n_gl_bytes, j,
               GL_MEM_STRIDE (gl_mem), round_up_j);
@@ -593,8 +591,8 @@ _calculate_unpack_length (GstGLMemory * gl_mem)
       }
 
       if (j < n_gl_bytes) {
-        GST_CAT_ERROR
-            (GST_CAT_GL_MEMORY, "Failed to find matching alignment. Image may "
+        GST_ERROR
+            ("Failed to find matching alignment. Image may "
             "look corrupted. plane width:%u, plane stride:%u and pixel "
             "stride:%u", GL_MEM_WIDTH (gl_mem), GL_MEM_STRIDE (gl_mem),
             n_gl_bytes);
@@ -623,7 +621,7 @@ _transfer_download (GstGLContext * context, GstGLMemory * gl_mem)
   if (!gl_mem->transfer_pbo)
     gl->GenBuffers (1, &gl_mem->transfer_pbo);
 
-  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "downloading texture %u using pbo %u",
+  GST_DEBUG ("downloading texture %u using pbo %u",
       gl_mem->tex_id, gl_mem->transfer_pbo);
 
   size = ((GstMemory *) gl_mem)->maxsize;
@@ -645,7 +643,7 @@ _transfer_download (GstGLContext * context, GstGLMemory * gl_mem)
       GL_TEXTURE_2D, gl_mem->tex_id, 0);
 
   if (!gst_gl_context_check_framebuffer_status (context)) {
-    GST_CAT_ERROR (GST_CAT_GL_MEMORY, "failed to download texture");
+    GST_ERROR ("failed to download texture");
     goto fbo_error;
   }
 
@@ -686,7 +684,7 @@ _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
     goto error;
   }
 
-  GST_CAT_LOG (GST_CAT_GL_MEMORY, "downloading memory %p, tex %u into %p",
+  GST_LOG ("downloading memory %p, tex %u into %p",
       gl_mem, gl_mem->tex_id, gl_mem->data);
 
   if (gl_mem->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
@@ -702,7 +700,7 @@ _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
     map_data =
         gl->MapBufferRange (GL_PIXEL_PACK_BUFFER, 0, size, GL_MAP_READ_BIT);
     if (!map_data) {
-      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "error mapping buffer for download");
+      GST_WARNING ("error mapping buffer for download");
       gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
       goto read_pixels;
     }
@@ -774,9 +772,10 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
 
   _calculate_unpack_length (mem);
 
-  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "new GL texture memory:%p format:%u "
-      "dimensions:%ux%u stride:%u size:%" G_GSIZE_FORMAT, mem, mem->tex_type,
-      mem->tex_width, GL_MEM_HEIGHT (mem), GL_MEM_STRIDE (mem), maxsize);
+  GST_DEBUG ("new GL texture context:%" GST_PTR_FORMAT " memory:%p format:%u "
+      "dimensions:%ux%u stride:%u size:%" G_GSIZE_FORMAT, context, mem,
+      mem->tex_type, mem->tex_width, GL_MEM_HEIGHT (mem), GL_MEM_STRIDE (mem),
+      maxsize);
 }
 
 static GstGLMemory *
@@ -801,11 +800,11 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
   gst_gl_context_thread_add (context,
       (GstGLContextThreadFunc) _generate_texture, &data);
   if (!data.result) {
-    GST_CAT_WARNING (GST_CAT_GL_MEMORY,
-        "Could not create GL texture with context:%p", context);
+    GST_WARNING ("Could not create GL texture with context:%" GST_PTR_FORMAT,
+        context);
   }
 
-  GST_CAT_TRACE (GST_CAT_GL_MEMORY, "created texture %u", data.result);
+  GST_TRACE ("created texture %u", data.result);
 
   mem->tex_id = data.result;
   mem->tex_target = data.gl_target;
@@ -824,8 +823,7 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
 
   if ((flags & GST_MAP_GL) == GST_MAP_GL) {
     if ((flags & GST_MAP_READ) == GST_MAP_READ) {
-      GST_CAT_TRACE (GST_CAT_GL_MEMORY, "mapping GL texture:%u for reading",
-          gl_mem->tex_id);
+      GST_TRACE ("mapping GL texture:%u for reading", gl_mem->tex_id);
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
         gst_gl_context_thread_add (gl_mem->context,
             (GstGLContextThreadFunc) _upload_memory, gl_mem);
@@ -834,8 +832,7 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
     }
 
     if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
-      GST_CAT_TRACE (GST_CAT_GL_MEMORY, "mapping GL texture:%u for writing",
-          gl_mem->tex_id);
+      GST_TRACE ("mapping GL texture:%u for writing", gl_mem->tex_id);
       GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
       GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
     }
@@ -843,8 +840,7 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
     data = &gl_mem->tex_id;
   } else {                      /* not GL */
     if ((flags & GST_MAP_READ) == GST_MAP_READ) {
-      GST_CAT_TRACE (GST_CAT_GL_MEMORY,
-          "mapping GL texture:%u for reading from system memory",
+      GST_TRACE ("mapping GL texture:%u for reading from system memory",
           gl_mem->tex_id);
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD)) {
         gst_gl_context_thread_add (gl_mem->context,
@@ -854,8 +850,8 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
     }
 
     if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
-      GST_CAT_TRACE (GST_CAT_GL_MEMORY,
-          "mapping GL texture:%u for writing to system memory", gl_mem->tex_id);
+      GST_TRACE ("mapping GL texture:%u for writing to system memory",
+          gl_mem->tex_id);
       GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
       GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
     }
@@ -962,11 +958,10 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   }
 
   if (!tex_id) {
-    GST_CAT_WARNING (GST_CAT_GL_MEMORY,
-        "Could not create GL texture with context:%p", src->context);
+    GST_WARNING ("Could not create GL texture with context:%p", src->context);
   }
 
-  GST_CAT_LOG (GST_CAT_GL_MEMORY, "copying memory %p, tex %u into texture %i",
+  GST_LOG ("copying memory %p, tex %u into texture %i",
       src, src->tex_id, tex_id);
 
   /* FIXME: try and avoid creating and destroying fbo's every copy... */
@@ -1060,7 +1055,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
         &src->valign, src->plane, NULL, NULL);
     dest->data = g_try_malloc (src->mem.maxsize);
     if (dest->data == NULL) {
-      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
+      GST_WARNING ("Could not copy GL Memory");
       gst_memory_unref ((GstMemory *) dest);
       return NULL;
     }
@@ -1085,7 +1080,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
         &src->valign, src->plane, NULL, NULL);
 
     if (!copy_params.result) {
-      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
+      GST_WARNING ("Could not copy GL Memory");
       gst_memory_unref ((GstMemory *) dest);
       return NULL;
     }
@@ -1093,7 +1088,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     dest->tex_id = copy_params.tex_id;
     dest->data = g_try_malloc (src->mem.maxsize);
     if (dest->data == NULL) {
-      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
+      GST_WARNING ("Could not copy GL Memory");
       gst_memory_unref ((GstMemory *) dest);
       return NULL;
     }
@@ -1144,7 +1139,7 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
 {
   GstGLMemory *gl_mem = (GstGLMemory *) mem;
 
-  GST_CAT_TRACE (GST_CAT_GL_MEMORY, "freeing texture %u", gl_mem->tex_id);
+  GST_TRACE ("freeing texture %u", gl_mem->tex_id);
 
   gst_gl_context_thread_add (gl_mem->context,
       (GstGLContextThreadFunc) _destroy_gl_objects, gl_mem);

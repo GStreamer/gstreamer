@@ -170,7 +170,7 @@ gst_gl_shader_finalize (GObject * object)
   shader = GST_GL_SHADER (object);
   priv = shader->priv;
 
-  GST_TRACE ("finalizing shader %u", priv->program_handle);
+  GST_TRACE_OBJECT (shader, "finalizing shader %u", priv->program_handle);
 
   g_free (priv->vertex_src);
   g_free (priv->fragment_src);
@@ -401,6 +401,9 @@ gst_gl_shader_new (GstGLContext * context)
 
   shader = g_object_new (GST_GL_TYPE_SHADER, NULL);
   shader->context = gst_object_ref (context);
+
+  GST_DEBUG_OBJECT (shader, "Created new GLShader for context %" GST_PTR_FORMAT,
+      context);
 
   return shader;
 }
