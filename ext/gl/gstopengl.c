@@ -45,6 +45,7 @@
 
 #include "gstglimagesink.h"
 #include "gstgluploadelement.h"
+#include "gstglcolorconvertelement.h"
 
 #include "gstglfiltercube.h"
 #include "gstgleffects.h"
@@ -115,6 +116,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glupload",
           GST_RANK_SECONDARY, GST_TYPE_GL_UPLOAD_ELEMENT)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glcolorconvert",
+          GST_RANK_SECONDARY, GST_TYPE_GL_COLOR_CONVERT_ELEMENT)) {
     return FALSE;
   }
 
