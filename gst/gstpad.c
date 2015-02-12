@@ -2770,7 +2770,7 @@ no_parent:
   {
     GST_DEBUG_OBJECT (pad, "no parent");
     GST_OBJECT_UNLOCK (pad);
-    return FALSE;
+    return NULL;
   }
 }
 
