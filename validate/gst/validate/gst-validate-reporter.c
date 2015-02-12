@@ -165,6 +165,26 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   message = g_strdup_vprintf (format, vacopy);
   report = gst_validate_report_new (issue, reporter, message);
 
+#ifndef GST_DISABLE_GST_DEBUG
+  combo =
+      g_strdup_printf ("<%s> %" GST_VALIDATE_ISSUE_FORMAT " : %s", priv->name,
+      GST_VALIDATE_ISSUE_ARGS (issue), format);
+  G_VA_COPY (vacopy, var_args);
+  if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
+    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_ERROR, __FILE__,
+        GST_FUNCTION, __LINE__, NULL, combo, vacopy);
+  } else if (report->level == GST_VALIDATE_REPORT_LEVEL_WARNING)
+    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_WARNING, __FILE__,
+        GST_FUNCTION, __LINE__, NULL, combo, vacopy);
+  else if (report->level == GST_VALIDATE_REPORT_LEVEL_ISSUE)
+    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_LOG, __FILE__,
+        GST_FUNCTION, __LINE__, (GObject *) NULL, combo, vacopy);
+  else
+    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_DEBUG, __FILE__,
+        GST_FUNCTION, __LINE__, NULL, combo, vacopy);
+  g_free (combo);
+#endif
+
   int_ret = gst_validate_reporter_intercept_report (reporter, report);
 
   if (int_ret == GST_VALIDATE_REPORTER_DROP) {
@@ -196,26 +216,6 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
   g_hash_table_insert (priv->reports, (gpointer) issue_id, report);
   GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
-
-#ifndef GST_DISABLE_GST_DEBUG
-  combo =
-      g_strdup_printf ("<%s> %" GST_VALIDATE_ISSUE_FORMAT " : %s", priv->name,
-      GST_VALIDATE_ISSUE_ARGS (issue), format);
-  G_VA_COPY (vacopy, var_args);
-  if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
-    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_ERROR, __FILE__,
-        GST_FUNCTION, __LINE__, NULL, combo, vacopy);
-  else if (report->level == GST_VALIDATE_REPORT_LEVEL_WARNING)
-    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_WARNING, __FILE__,
-        GST_FUNCTION, __LINE__, NULL, combo, vacopy);
-  else if (report->level == GST_VALIDATE_REPORT_LEVEL_ISSUE)
-    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_LOG, __FILE__,
-        GST_FUNCTION, __LINE__, (GObject *) NULL, combo, vacopy);
-  else
-    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_DEBUG, __FILE__,
-        GST_FUNCTION, __LINE__, NULL, combo, vacopy);
-  g_free (combo);
-#endif
 
   if (priv->runner && int_ret == GST_VALIDATE_REPORTER_REPORT) {
     gst_validate_runner_add_report (priv->runner, report);
