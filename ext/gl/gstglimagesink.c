@@ -533,8 +533,9 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
     if (!gl_sink->window_id && !gl_sink->new_window_id)
       gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (gl_sink));
 
-    GST_DEBUG_OBJECT (gl_sink, "window_id:%d, new_window_id:%d",
-        gl_sink->window_id, gl_sink->new_window_id);
+    GST_DEBUG_OBJECT (gl_sink,
+        "window_id : %" G_GUINTPTR_FORMAT " , new_window_id : %"
+        G_GUINTPTR_FORMAT, gl_sink->window_id, gl_sink->new_window_id);
 
     if (gl_sink->window_id != gl_sink->new_window_id) {
       gl_sink->window_id = gl_sink->new_window_id;
