@@ -256,9 +256,9 @@ The pipeline latency is queried with the LATENCY query.
           Elements answering the latency query should set this to the maximum
           time for which they can buffer upstream data without blocking or
           dropping further data. For an element this value will generally be
-          bigger than its own minimum latency, but might be bigger than that
-          if it can buffer more data. As such, queue elements can be used to
-          increase the maximum latency.
+          its own minimum latency, but might be bigger than that if it can
+          buffer more data. As such, queue elements can be used to increase
+          the maximum latency.
 
           The value set in the query should again consider upstream's maximum
           latency:
@@ -292,8 +292,8 @@ The pipeline latency is queried with the LATENCY query.
             maximum latency. The base class' default query handler needs to be
             overridden to correctly handle leaky buffering.
 
-          If the element has multiple sinkpads, the maximum upstream latency is
-          the minimum of all live upstream maximum latencies.
+            If the element has multiple sinkpads, the maximum upstream latency is
+            the minimum of all live upstream maximum latencies.
 
 Event
 ~~~~~
