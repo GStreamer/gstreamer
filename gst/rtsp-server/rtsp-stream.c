@@ -105,6 +105,7 @@ struct _GstRTSPStreamPrivate
    * sockets */
   GstElement *udpsrc_v6[2];
 
+  GstElement *udpqueue[2];
   GstElement *udpsink[2];
 
   /* for TCP transport */
@@ -2103,10 +2104,19 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
       gst_pad_link (priv->send_src[i], pad);
       gst_object_unref (pad);
 
-      /* link tee to udpsink */
+      priv->udpqueue[i] = gst_element_factory_make ("queue", NULL);
+      gst_bin_add (bin, priv->udpqueue[i]);
+      /* link tee to udpqueue */
       teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
-      gst_pad_link (teepad, sinkpad);
+      pad = gst_element_get_static_pad (priv->udpqueue[i], "sink");
+      gst_pad_link (teepad, pad);
+      gst_object_unref (pad);
       gst_object_unref (teepad);
+
+      /* link udpqueue to udpsink */
+      queuepad = gst_element_get_static_pad (priv->udpqueue[i], "src");
+      gst_pad_link (queuepad, sinkpad);
+      gst_object_unref (queuepad);
 
       /* make queue */
       priv->appqueue[i] = gst_element_factory_make ("queue", NULL);
@@ -2213,6 +2223,8 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
         gst_element_set_state (priv->appsink[i], state);
       if (priv->appqueue[i])
         gst_element_set_state (priv->appqueue[i], state);
+      if (priv->udpqueue[i])
+        gst_element_set_state (priv->udpqueue[i], state);
       if (priv->tee[i])
         gst_element_set_state (priv->tee[i], state);
       if (priv->funnel[i])
@@ -2309,6 +2321,8 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
       gst_element_set_state (priv->appsink[i], GST_STATE_NULL);
     if (priv->appqueue[i])
       gst_element_set_state (priv->appqueue[i], GST_STATE_NULL);
+    if (priv->udpqueue[i])
+      gst_element_set_state (priv->udpqueue[i], GST_STATE_NULL);
     if (priv->tee[i])
       gst_element_set_state (priv->tee[i], GST_STATE_NULL);
     if (priv->funnel[i])
@@ -2348,6 +2362,8 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
       gst_bin_remove (bin, priv->appsink[i]);
     if (priv->appqueue[i])
       gst_bin_remove (bin, priv->appqueue[i]);
+    if (priv->udpqueue[i])
+      gst_bin_remove (bin, priv->udpqueue[i]);
     if (priv->tee[i])
       gst_bin_remove (bin, priv->tee[i]);
     if (priv->funnel[i])
@@ -2363,6 +2379,7 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     priv->appsrc[i] = NULL;
     priv->appsink[i] = NULL;
     priv->appqueue[i] = NULL;
+    priv->udpqueue[i] = NULL;
     priv->tee[i] = NULL;
     priv->funnel[i] = NULL;
   }
