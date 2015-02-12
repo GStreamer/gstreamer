@@ -273,8 +273,8 @@ gboolean gst_validate_scenario_execute_seek (GstValidateScenario *scenario,
                                              GstSeekType stop_type,
                                              GstClockTime stop);
 
-GstValidateAction *
-gst_validate_scenario_get_next_action       (GstValidateScenario *scenario);
+GList *
+gst_validate_scenario_get_actions          (GstValidateScenario *scenario);
 GstValidateExecuteActionReturn
 gst_validate_execute_action                 (GstValidateActionType * action_type,
                                              GstValidateAction * action);
