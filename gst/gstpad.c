@@ -3106,6 +3106,10 @@ gst_pad_query_latency_default (GstPad * pad, GstQuery * query)
   LatencyFoldData fold_data;
 
   it = gst_pad_iterate_internal_links (pad);
+  if (!it) {
+    GST_DEBUG_OBJECT (pad, "Can't iterate internal links");
+    return FALSE;
+  }
 
 retry:
   fold_data.live = FALSE;
