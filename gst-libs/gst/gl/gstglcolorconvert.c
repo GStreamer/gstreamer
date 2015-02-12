@@ -494,6 +494,9 @@ gst_gl_color_convert_new (GstGLContext * context)
   gst_video_info_set_format (&convert->out_info, GST_VIDEO_FORMAT_ENCODED, 0,
       0);
 
+  GST_DEBUG_OBJECT (convert,
+      "Created new colorconvert for context %" GST_PTR_FORMAT, context);
+
   return convert;
 }
 

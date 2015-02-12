@@ -116,7 +116,7 @@ gst_gl_display_init (GstGLDisplay * display)
 static void
 gst_gl_display_finalize (GObject * object)
 {
-  GST_TRACE ("finalize %p", object);
+  GST_TRACE_OBJECT (object, "finalizing");
 
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
 }
@@ -272,8 +272,9 @@ gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
 
   g_return_if_fail (context != NULL);
 
-  GST_CAT_LOG (gst_context, "setting GstGLDisplay(%p) on context(%p)", display,
-      context);
+  GST_CAT_LOG (gst_context,
+      "setting GstGLDisplay(%" GST_PTR_FORMAT ") on context(%" GST_PTR_FORMAT
+      ")", display, context);
 
   s = gst_context_writable_structure (context);
   gst_structure_set (s, GST_GL_DISPLAY_CONTEXT_TYPE, GST_TYPE_GL_DISPLAY,
