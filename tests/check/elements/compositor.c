@@ -1035,7 +1035,6 @@ GST_START_TEST (test_flush_start_flush_stop)
 
 GST_END_TEST;
 
-#ifndef GST_DISABLE_PARSE
 GST_START_TEST (test_segment_base_handling)
 {
   GstElement *pipeline, *sink, *mix, *src1, *src2;
@@ -1096,7 +1095,6 @@ GST_START_TEST (test_segment_base_handling)
 }
 
 GST_END_TEST;
-#endif
 
 static Suite *
 compositor_suite (void)
@@ -1116,9 +1114,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_duration_unknown_overrides);
   tcase_add_test (tc_chain, test_loop);
   tcase_add_test (tc_chain, test_flush_start_flush_stop);
-#ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_segment_base_handling);
-#endif
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
