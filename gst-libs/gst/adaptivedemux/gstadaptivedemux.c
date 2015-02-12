@@ -702,7 +702,7 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
   }
 
   if (first_segment)
-    demux->segment.start = demux->segment.position = min_pts;
+    demux->segment.start = demux->segment.position = demux->segment.time = min_pts;
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
 
