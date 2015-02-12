@@ -908,8 +908,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   if (CMSampleBufferGetOutputSampleTimingInfoArray(sbuf, 1, &time_info, &num_timings) == noErr) {
     timestamp = gst_util_uint64_scale (GST_SECOND,
             time_info.presentationTimeStamp.value, time_info.presentationTimeStamp.timescale);
-    duration = gst_util_uint64_scale (GST_SECOND,
-            time_info.duration.value, time_info.duration.timescale);
+
+    if (CMTIME_IS_VALID (time_info.duration) && time_info.duration.timescale != 0)
+      duration = gst_util_uint64_scale (GST_SECOND,
+          time_info.duration.value, time_info.duration.timescale);
 
     now = CMClockGetTime(inputClock);
     inputClockNow = gst_util_uint64_scale (GST_SECOND,
