@@ -246,6 +246,9 @@ _action_type_free (GstValidateActionType * type)
   g_free (type->description);
   g_free (type->name);
   g_free (type->implementer_namespace);
+
+  if (type->overriden_type)
+    gst_mini_object_unref (GST_MINI_OBJECT (type->overriden_type));
 }
 
 static void
@@ -951,12 +954,16 @@ _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
   return TRUE;
 }
 
-static GstValidateExecuteActionReturn
-_execute_action (GstValidateActionType * action_type,
+GstValidateExecuteActionReturn
+gst_validate_execute_action (GstValidateActionType * action_type,
     GstValidateAction * action)
 {
-  GstValidateExecuteActionReturn res =
-      action_type->execute (action->scenario, action);
+  GstValidateExecuteActionReturn res;
+
+  g_return_val_if_fail (g_strcmp0 (action_type->name, action->type) == 0,
+      GST_VALIDATE_EXECUTE_ACTION_ERROR);
+
+  res = action_type->execute (action->scenario, action);
 
   if (!gst_structure_has_field (action->structure, "sub-action")) {
     gst_structure_free (action->structure);
@@ -1082,7 +1089,7 @@ get_position (GstValidateScenario * scenario)
       " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
   priv->seeked_in_pause = FALSE;
 
-  act->state = _execute_action (type, act);
+  act->state = gst_validate_execute_action (type, act);
   if (act->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
     gchar *str = gst_structure_to_string (act->structure);
 
@@ -2242,7 +2249,7 @@ _execute_sub_action_action (GstValidateAction * action)
       gst_validate_printf (action->scenario, "Executing sub action of type %s",
           action->type);
 
-      res = _execute_action (action_type, action);
+      res = gst_validate_execute_action (action_type, action);
 
       return res;
     }
@@ -2380,7 +2387,7 @@ gst_validate_register_action_type_dynamic (GstPlugin * plugin,
   if ((tmptype = _find_action_type (type_name))) {
     if (tmptype->rank <= rank) {
       action_types = g_list_remove (action_types, tmptype);
-      gst_mini_object_unref (GST_MINI_OBJECT (tmptype));
+      type->overriden_type = tmptype;
     } else {
       gst_mini_object_unref (GST_MINI_OBJECT (type));
 

@@ -157,8 +157,10 @@ struct _GstValidateActionType
 
   GstRank rank;
 
+  GstValidateActionType *overriden_type;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (GstRank)];
+  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (GstRank) - 1];
 };
 
 #define GST_TYPE_VALIDATE_ACTION_TYPE       (gst_validate_action_type_get_type ())
@@ -273,6 +275,9 @@ gboolean gst_validate_scenario_execute_seek (GstValidateScenario *scenario,
 
 GstValidateAction *
 gst_validate_scenario_get_next_action       (GstValidateScenario *scenario);
+GstValidateExecuteActionReturn
+gst_validate_execute_action                 (GstValidateActionType * action_type,
+                                             GstValidateAction * action);
 
 G_END_DECLS
 
