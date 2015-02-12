@@ -151,6 +151,8 @@ gboolean gst_gl_context_fill_info (GstGLContext * context, GError ** error);
 void gst_gl_context_thread_add (GstGLContext * context,
     GstGLContextThreadFunc func, gpointer data);
 
+GST_DEBUG_CATEGORY_EXTERN (gst_gl_context_debug);
+
 G_END_DECLS
 
 #endif /* __GST_GL_CONTEXT_H__ */

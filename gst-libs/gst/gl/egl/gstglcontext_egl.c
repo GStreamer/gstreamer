@@ -38,6 +38,8 @@
 #include "../win32/gstglwindow_win32.h"
 #endif
 
+#define GST_CAT_DEFAULT gst_gl_context_debug
+
 static gboolean gst_gl_context_egl_create_context (GstGLContext * context,
     GstGLAPI gl_api, GstGLContext * other_context, GError ** error);
 static void gst_gl_context_egl_destroy_context (GstGLContext * context);
@@ -227,6 +229,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   egl = GST_GL_CONTEXT_EGL (context);
   window = gst_gl_context_get_window (context);
 
+  GST_DEBUG_OBJECT (context, "Creating EGL context");
+
   if (other_context) {
     if (gst_gl_context_get_gl_platform (other_context) != GST_GL_PLATFORM_EGL) {
       g_set_error (error, GST_GL_CONTEXT_ERROR,
@@ -330,7 +334,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 
   egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
 
-  GST_DEBUG ("about to create gl context\n");
+  GST_DEBUG ("about to create gl context");
 
   if (egl->gl_api & GST_GL_API_GLES2) {
     context_attrib[i++] = EGL_CONTEXT_CLIENT_VERSION;
