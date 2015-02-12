@@ -262,6 +262,25 @@ gst_dash_demux_dispose (GObject * obj)
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
+static gboolean
+gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
+    gint64 * stop)
+{
+  GstDashDemux *self = GST_DASH_DEMUX (demux);
+  GDateTime *now = g_date_time_new_now_utc ();
+  GDateTime *mstart =
+      gst_date_time_to_g_date_time (self->client->mpd_node->availabilityStartTime);
+  GTimeSpan stream_now;
+
+  stream_now = g_date_time_difference (now, mstart);
+  g_date_time_unref (now);
+  g_date_time_unref (mstart);
+  *stop = stream_now * GST_USECOND;
+
+  *start = *stop - (self->client->mpd_node->timeShiftBufferDepth * GST_MSECOND);
+  return TRUE;
+}
+
 static void
 gst_dash_demux_class_init (GstDashDemuxClass * klass)
 {
@@ -338,6 +357,7 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
   gstadaptivedemux_class->stream_update_fragment_info =
       gst_dash_demux_stream_update_fragment_info;
   gstadaptivedemux_class->stream_free = gst_dash_demux_stream_free;
+  gstadaptivedemux_class->get_live_seek_range = gst_dash_demux_get_live_seek_range;
 }
 
 static void
