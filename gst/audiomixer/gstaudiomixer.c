@@ -973,14 +973,12 @@ static gboolean
 gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     GstBuffer * inbuf)
 {
+  GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
   GstClockTime start_time, end_time;
   gboolean discont = FALSE;
   guint64 start_offset, end_offset;
   GstClockTime timestamp, stream_time;
   gint rate, bpf;
-
-  GstAggregator *agg = GST_AGGREGATOR (audiomixer);
-  GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
 
   g_assert (pad->buffer == NULL);
 
@@ -988,7 +986,7 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
   bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
-  stream_time = gst_segment_to_stream_time (&agg->segment, GST_FORMAT_TIME,
+  stream_time = gst_segment_to_stream_time (&aggpad->segment, GST_FORMAT_TIME,
       timestamp);
 
   /* sync object properties on stream time */
