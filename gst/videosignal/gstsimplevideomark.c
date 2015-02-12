@@ -359,15 +359,13 @@ gst_video_mark_yuv (GstSimpleVideoMark * simplevideomark, GstVideoFrame * frame)
     return GST_FLOW_ERROR;
   }
 
+  d = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  /* move to start of bottom left */
+  d += row_stride * (height - ph - simplevideomark->bottom_offset) +
+      pixel_stride * simplevideomark->left_offset;
+
   /* draw the bottom left pixels */
   for (i = 0; i < simplevideomark->pattern_count; i++) {
-    d = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-    /* move to start of bottom left */
-    d += row_stride * (height - ph - simplevideomark->bottom_offset) +
-        pixel_stride * simplevideomark->left_offset;
-    /* move to i-th pattern */
-    d += pixel_stride * pw * i;
-
     if (i & 1)
       /* odd pixels must be white */
       color = 255;
@@ -377,6 +375,9 @@ gst_video_mark_yuv (GstSimpleVideoMark * simplevideomark, GstVideoFrame * frame)
     /* draw box of width * height */
     gst_video_mark_draw_box (simplevideomark, d, pw, ph, row_stride,
         pixel_stride, color);
+
+    /* move to i-th pattern */
+    d += pixel_stride * pw;
   }
 
   pattern_shift =
@@ -384,15 +385,6 @@ gst_video_mark_yuv (GstSimpleVideoMark * simplevideomark, GstVideoFrame * frame)
 
   /* get the data of the pattern */
   for (i = 0; i < simplevideomark->pattern_data_count; i++) {
-    d = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-    /* move to start of bottom left, adjust for offsets */
-    d += row_stride * (height - ph - simplevideomark->bottom_offset) +
-        pixel_stride * simplevideomark->left_offset;
-    /* move after the fixed pattern */
-    d += pixel_stride * simplevideomark->pattern_count * pw;
-    /* move to i-th pattern data */
-    d += pixel_stride * pw * i;
-
     if (simplevideomark->pattern_data & pattern_shift)
       color = 255;
     else
@@ -402,6 +394,9 @@ gst_video_mark_yuv (GstSimpleVideoMark * simplevideomark, GstVideoFrame * frame)
         pixel_stride, color);
 
     pattern_shift >>= 1;
+
+    /* move to i-th pattern data */
+    d += pixel_stride * pw;
   }
 
   return GST_FLOW_OK;
