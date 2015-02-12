@@ -695,9 +695,9 @@ gst_base_src_is_async (GstBaseSrc * src)
  * @max_latency: (out) (allow-none): the max latency of the source
  *
  * Query the source for the latency parameters. @live will be %TRUE when @src is
- * configured as a live source. @min_latency will be set to the difference
- * between the running time and the timestamp of the first buffer.
- * @max_latency is always the undefined value of -1.
+ * configured as a live source. @min_latency and @max_latency will be set
+ * to the difference between the running time and the timestamp of the first
+ * buffer.
  *
  * This function is mostly used by subclasses.
  *
@@ -730,7 +730,7 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
 
   GST_LOG_OBJECT (src, "latency: live %d, min %" GST_TIME_FORMAT
       ", max %" GST_TIME_FORMAT, src->is_live, GST_TIME_ARGS (min),
-      GST_TIME_ARGS (-1));
+      GST_TIME_ARGS (min));
   GST_OBJECT_UNLOCK (src);
 
   return TRUE;
