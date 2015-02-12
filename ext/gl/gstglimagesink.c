@@ -507,6 +507,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
 {
   GError *error = NULL;
 
+  GST_DEBUG_OBJECT (gl_sink, "Ensuring setup");
+
   if (!gst_gl_ensure_element_data (gl_sink, &gl_sink->display,
           &gl_sink->other_context))
     return FALSE;
@@ -516,19 +518,33 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
   if (!gl_sink->context) {
     GstGLWindow *window;
 
+    GST_DEBUG_OBJECT (gl_sink,
+        "No current context, creating one for %" GST_PTR_FORMAT,
+        gl_sink->display);
+
     gl_sink->context = gst_gl_context_new (gl_sink->display);
     if (!gl_sink->context)
       goto context_creation_error;
 
     window = gst_gl_context_get_window (gl_sink->context);
 
+    GST_DEBUG_OBJECT (gl_sink, "got window %" GST_PTR_FORMAT, window);
+
     if (!gl_sink->window_id && !gl_sink->new_window_id)
       gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (gl_sink));
 
+    GST_DEBUG_OBJECT (gl_sink, "window_id:%d, new_window_id:%d",
+        gl_sink->window_id, gl_sink->new_window_id);
+
     if (gl_sink->window_id != gl_sink->new_window_id) {
       gl_sink->window_id = gl_sink->new_window_id;
+      GST_DEBUG_OBJECT (gl_sink, "Setting window handle on gl window");
       gst_gl_window_set_window_handle (window, gl_sink->window_id);
     }
+
+    GST_DEBUG_OBJECT (gl_sink,
+        "creating context %" GST_PTR_FORMAT " from other context %"
+        GST_PTR_FORMAT, gl_sink->context, gl_sink->other_context);
 
     if (!gst_gl_context_create (gl_sink->context, gl_sink->other_context,
             &error)) {
@@ -554,7 +570,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
         (gst_glimage_sink_mouse_event_cb), gl_sink);
 
     gst_object_unref (window);
-  }
+  } else
+    GST_DEBUG_OBJECT (gl_sink, "Already have a context");
 
   return TRUE;
 
@@ -858,7 +875,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstCapsFeatures *gl_features;
   GstCaps *uploaded_caps;
 
-  GST_DEBUG ("set caps with %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (bsink, "set caps with %" GST_PTR_FORMAT, caps);
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
