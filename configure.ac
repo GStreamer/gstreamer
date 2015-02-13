@@ -794,6 +794,7 @@ AC_CACHE_CHECK([for video post-postprocessing API],
 dnl Check for encoding support
 USE_ENCODERS=0
 USE_JPEG_ENCODER=0
+USE_VP8_ENCODER=0
 if test "$enable_encoders" = "yes"; then
     PKG_CHECK_MODULES([LIBVA], [libva >= va_api_enc_version],
         [HAVE_VA_ENC=1], [HAVE_VA_ENC=0])
@@ -833,6 +834,34 @@ if test "$enable_encoders" = "yes"; then
             CPPFLAGS="$saved_CPPFLAGS"
             LIBS="$saved_LIBS"
         ])
+
+        dnl Check for VP8 Encoding API
+        AC_CHECK_HEADERS([va/va_enc_vp8.h],
+            [USE_VP8_ENCODER=1], [],
+            [#include <va/va.h>
+            ])
+        AC_CACHE_CHECK([for VP8 encoding API],
+            ac_cv_have_vp8_encoding_api, [
+            saved_CPPFLAGS="$CPPFLAGS"
+            CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+            saved_LIBS="$LIBS"
+            LIBS="$LIBS $LIBVA_LIBS"
+            AC_COMPILE_IFELSE(
+                [AC_LANG_PROGRAM(
+                    [[#include <va/va.h>
+                      #ifdef HAVE_VA_VA_ENC_VP8_H
+                      #include <va/va_enc_vp8.h>
+                      #endif
+                    ]],
+                    [[VAEncSequenceParameterBufferVP8 seq_param;
+                      VAEncPictureParameterBufferVP8 pic_param;
+                      VAQMatrixBufferVP8 q_matrix;]])],
+                [ac_cv_have_vp8_encoding_api="yes" USE_VP8_ENCODER=1],
+                [ac_cv_have_vp8_encoding_api="no" USE_VP8_ENCODER=0]
+            )
+            CPPFLAGS="$saved_CPPFLAGS"
+            LIBS="$saved_LIBS"
+        ])
         CPPFLAGS="$saved_CPPFLAGS"
     fi
 fi
@@ -862,6 +891,10 @@ AM_CONDITIONAL([USE_ENCODERS], [test $USE_ENCODERS -eq 1])
 AC_DEFINE_UNQUOTED(USE_JPEG_ENCODER, $USE_JPEG_ENCODER,
     [Defined to 1 if JPEG encoder is used])
 AM_CONDITIONAL(USE_JPEG_ENCODER, test $USE_JPEG_ENCODER -eq 1)
+
+AC_DEFINE_UNQUOTED(USE_VP8_ENCODER, $USE_VP8_ENCODER,
+    [Defined to 1 if VP8 encoder is used])
+AM_CONDITIONAL(USE_VP8_ENCODER, test $USE_VP8_ENCODER -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_VA_VPP, $USE_VA_VPP,
     [Defined to 1 if video post-processing is used])
