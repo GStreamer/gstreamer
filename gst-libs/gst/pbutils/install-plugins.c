@@ -397,9 +397,12 @@ struct _GstInstallPluginsContext
  *
  * If set, this option will be passed to the installer via a
  * --interaction=[show-confirm-search|hide-confirm-search] command line option.
+ *
+ * Since: 1.6
  */
 void
-gst_install_plugins_context_set_confirm_search (GstInstallPluginsContext * ctx, gboolean confirm_search)
+gst_install_plugins_context_set_confirm_search (GstInstallPluginsContext * ctx,
+    gboolean confirm_search)
 {
   g_return_if_fail (ctx != NULL);
 
@@ -594,7 +597,8 @@ gst_install_plugins_spawn_child (const gchar * const *details,
 
   /* add any additional command line args from the context */
   if (ctx != NULL && ctx->confirm_search) {
-    g_ptr_array_add (arr, g_strdup_printf ("--interaction=%s", ctx->confirm_search));
+    g_ptr_array_add (arr, g_strdup_printf ("--interaction=%s",
+            ctx->confirm_search));
   }
   if (ctx != NULL && ctx->desktop_id != NULL) {
     g_ptr_array_add (arr, g_strdup_printf ("--desktop-id=%s", ctx->desktop_id));
