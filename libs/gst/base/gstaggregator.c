@@ -910,6 +910,13 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     {
       goto eat;
     }
+    case GST_EVENT_GAP:
+    {
+      /* FIXME: need API to handle GAP events properly */
+      GST_FIXME_OBJECT (self, "implement support for GAP events");
+      /* don't forward GAP events downstream */
+      goto eat;
+    }
     case GST_EVENT_TAG:
     {
       GstTagList *tags;
