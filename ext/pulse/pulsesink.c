@@ -3174,7 +3174,7 @@ static gboolean
 gst_pulsesink_query (GstBaseSink * sink, GstQuery * query)
 {
   GstPulseSink *pulsesink = GST_PULSESINK_CAST (sink);
-  gboolean ret;
+  gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -3187,10 +3187,9 @@ gst_pulsesink_query (GstBaseSink * sink, GstQuery * query)
       if (caps) {
         gst_query_set_caps_result (query, caps);
         gst_caps_unref (caps);
-        return TRUE;
-      } else {
-        return FALSE;
+        ret = TRUE;
       }
+      break;
     }
     case GST_QUERY_ACCEPT_CAPS:
     {
