@@ -201,6 +201,13 @@ libgstvaapi_source_c += $(libgstvaapi_jpegenc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_jpegenc_source_h)
 endif
 
+libgstvaapi_vp8enc_source_c = gstvaapiencoder_vp8.c
+libgstvaapi_vp8enc_source_h = gstvaapiencoder_vp8.h
+if USE_VP8_ENCODER
+libgstvaapi_source_c += $(libgstvaapi_vp8enc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_vp8enc_source_h)
+endif
+
 libgstvaapi_drm_source_c =			\
 	gstvaapidisplay_drm.c			\
 	gstvaapiwindow_drm.c			\
@@ -502,8 +509,10 @@ EXTRA_DIST += \
 	$(libgstvaapi_jpegdec_source_h)		\
 	$(libgstvaapi_vp8dec_source_c)		\
 	$(libgstvaapi_vp8dec_source_h)		\
-	$(libgstvaapi_jpegenc_source_c)		\
 	$(libgstvaapi_jpegenc_source_h)		\
+	$(libgstvaapi_jpegenc_source_c)		\
+	$(libgstvaapi_vp8enc_source_h)		\
+	$(libgstvaapi_vp8enc_source_c)		\
 	$(NULL)
 
 CLEANFILES = \
