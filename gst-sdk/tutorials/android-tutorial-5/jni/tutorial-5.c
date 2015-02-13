@@ -214,7 +214,7 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
 /* Called when the End Of the Stream is reached. Just move to the beginning of the media and pause. */
 static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   data->target_state = GST_STATE_PAUSED;
-  data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
+  data->is_live |= (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
   execute_seek (0, data);
 }
 
@@ -291,6 +291,9 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
     gchar *message = g_strdup_printf("State changed to %s", gst_element_state_get_name(new_state));
     set_ui_message(message, data);
     g_free (message);
+
+    if (new_state == GST_STATE_NULL || new_state == GST_STATE_READY)
+      data->is_live = FALSE;
 
     /* The Ready to Paused state change is particularly interesting: */
     if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
@@ -442,7 +445,7 @@ void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   g_object_set(data->pipeline, "uri", char_uri, NULL);
   (*env)->ReleaseStringUTFChars (env, uri, char_uri);
   data->duration = GST_CLOCK_TIME_NONE;
-  data->is_live = (gst_element_set_state (data->pipeline, data->target_state) == GST_STATE_CHANGE_NO_PREROLL);
+  data->is_live |= (gst_element_set_state (data->pipeline, data->target_state) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
 /* Set pipeline to PLAYING state */
@@ -451,7 +454,7 @@ static void gst_native_play (JNIEnv* env, jobject thiz) {
   if (!data) return;
   GST_DEBUG ("Setting state to PLAYING");
   data->target_state = GST_STATE_PLAYING;
-  data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_NO_PREROLL);
+  data->is_live |= (gst_element_set_state (data->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
 /* Set pipeline to PAUSED state */
@@ -460,7 +463,7 @@ static void gst_native_pause (JNIEnv* env, jobject thiz) {
   if (!data) return;
   GST_DEBUG ("Setting state to PAUSED");
   data->target_state = GST_STATE_PAUSED;
-  data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
+  data->is_live |= (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
 /* Instruct the pipeline to seek to a different position */
