@@ -1163,13 +1163,16 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   res = gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_RANGE, &str, 0);
   if (res == GST_RTSP_OK) {
     if (gst_rtsp_range_parse (str, &range) == GST_RTSP_OK) {
+      GstRTSPMediaStatus media_status;
+
       /* we have a range, seek to the position */
       unit = range->unit;
-      if (!gst_rtsp_media_seek (media, range)) {
-        gst_rtsp_range_free (range);
-        goto seek_failed;
-      }
+      gst_rtsp_media_seek (media, range);
       gst_rtsp_range_free (range);
+
+      media_status = gst_rtsp_media_get_status (media);
+      if (media_status == GST_RTSP_MEDIA_STATUS_ERROR)
+        goto seek_failed;
     }
   }
 

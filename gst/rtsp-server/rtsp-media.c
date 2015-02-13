@@ -1994,6 +1994,7 @@ seek_failed:
   {
     g_rec_mutex_unlock (&priv->state_lock);
     GST_INFO ("seeking failed");
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
     return FALSE;
   }
 preroll_failed:
