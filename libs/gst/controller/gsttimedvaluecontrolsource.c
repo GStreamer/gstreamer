@@ -348,7 +348,10 @@ gst_timed_value_control_source_unset (GstTimedValueControlSource * self,
       self->nvalues--;
       self->valid_cache = FALSE;
       res = TRUE;
+    } else {
+      cp = NULL;
     }
+
   }
   g_mutex_unlock (&self->lock);
 
