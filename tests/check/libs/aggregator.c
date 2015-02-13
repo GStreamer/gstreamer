@@ -76,7 +76,6 @@ gst_test_aggregator_aggregate (GstAggregator * aggregator, gboolean timeout)
 
   iter = gst_element_iterate_sink_pads (GST_ELEMENT (testagg));
   while (!done_iterating) {
-    GstBuffer *buffer;
     GValue value = { 0, };
     GstAggregatorPad *pad;
 
@@ -86,8 +85,7 @@ gst_test_aggregator_aggregate (GstAggregator * aggregator, gboolean timeout)
 
         if (gst_aggregator_pad_is_eos (pad) == FALSE)
           all_eos = FALSE;
-        buffer = gst_aggregator_pad_steal_buffer (pad);
-        gst_buffer_replace (&buffer, NULL);
+        gst_aggregator_pad_drop_buffer (pad);
 
         g_value_reset (&value);
         break;

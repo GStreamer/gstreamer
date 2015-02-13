@@ -778,14 +778,13 @@ static void
 gst_aggregator_flush_start (GstAggregator * self, GstAggregatorPad * aggpad,
     GstEvent * event)
 {
-  GstBuffer *tmpbuf;
   GstAggregatorPrivate *priv = self->priv;
   GstAggregatorPadPrivate *padpriv = aggpad->priv;
 
   g_atomic_int_set (&aggpad->priv->flushing, TRUE);
+
   /*  Remove pad buffer and wake up the streaming thread */
-  tmpbuf = gst_aggregator_pad_steal_buffer (aggpad);
-  gst_buffer_replace (&tmpbuf, NULL);
+  gst_aggregator_pad_drop_buffer (aggpad);
 
   PAD_STREAM_LOCK (aggpad);
   PAD_LOCK (aggpad);
@@ -822,8 +821,7 @@ gst_aggregator_flush_start (GstAggregator * self, GstAggregatorPad * aggpad,
   }
   PAD_STREAM_UNLOCK (aggpad);
 
-  tmpbuf = gst_aggregator_pad_steal_buffer (aggpad);
-  gst_buffer_replace (&tmpbuf, NULL);
+  gst_aggregator_pad_drop_buffer (aggpad);
 }
 
 /* GstAggregator vmethods default implementations */
@@ -1028,7 +1026,6 @@ static void
 gst_aggregator_release_pad (GstElement * element, GstPad * pad)
 {
   GstAggregator *self = GST_AGGREGATOR (element);
-  GstBuffer *tmpbuf;
 
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
 
@@ -1036,8 +1033,7 @@ gst_aggregator_release_pad (GstElement * element, GstPad * pad)
 
   SRC_STREAM_LOCK (self);
   g_atomic_int_set (&aggpad->priv->flushing, TRUE);
-  tmpbuf = gst_aggregator_pad_steal_buffer (aggpad);
-  gst_buffer_replace (&tmpbuf, NULL);
+  gst_aggregator_pad_drop_buffer (aggpad);
   gst_element_remove_pad (element, pad);
 
   SRC_STREAM_BROADCAST (self);
@@ -1996,11 +1992,8 @@ static void
 gst_aggregator_pad_dispose (GObject * object)
 {
   GstAggregatorPad *pad = (GstAggregatorPad *) object;
-  GstBuffer *buf;
 
-  buf = gst_aggregator_pad_steal_buffer (pad);
-  if (buf)
-    gst_buffer_unref (buf);
+  gst_aggregator_pad_drop_buffer (pad);
 
   G_OBJECT_CLASS (gst_aggregator_pad_parent_class)->dispose (object);
 }
