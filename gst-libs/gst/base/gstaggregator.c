@@ -2063,6 +2063,28 @@ gst_aggregator_pad_steal_buffer (GstAggregatorPad * pad)
 }
 
 /**
+ * gst_aggregator_pad_drop_buffer:
+ * @pad: the pad where to drop any pending buffer
+ *
+ * Drop the buffer currently queued in @pad.
+ *
+ * Returns: TRUE if there was a buffer queued in @pad, or FALSE if not.
+ */
+gboolean
+gst_aggregator_pad_drop_buffer (GstAggregatorPad * pad)
+{
+  GstBuffer *buf;
+
+  buf = gst_aggregator_pad_steal_buffer (pad);
+
+  if (buf == NULL)
+    return FALSE;
+
+  gst_buffer_unref (buf);
+  return TRUE;
+}
+
+/**
  * gst_aggregator_pad_get_buffer:
  * @pad: the pad to get buffer from
  *

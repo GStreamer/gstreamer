@@ -1323,6 +1323,8 @@ GstAggregatorPad
 GstAggregatorPadClass
 gst_aggregator_pad_steal_buffer
 gst_aggregator_pad_get_buffer
+gst_aggregator_pad_drop_buffer
+gst_aggregator_pad_is_eos
 <SUBSECTION Standard>
 GST_IS_AGGREGATOR_PAD
 GST_IS_AGGREGATOR_PAD_CLASS
