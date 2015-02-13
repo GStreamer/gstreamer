@@ -628,15 +628,39 @@ gst_pipeline_provide_clock_func (GstElement * element)
 }
 
 /**
- * gst_pipeline_get_clock:
+ * gst_pipeline_get_clock: (skip)
  * @pipeline: a #GstPipeline
  *
- * Gets the current clock used by @pipeline.
+ * Gets the current clock used by @pipeline. Users of object
+ * oriented languages should use gst_pipeline_get_pipeline_clock()
+ * to avoid confusion with gst_element_get_clock() which has a different behavior.
+ *
+ * Unlike gst_element_get_clock(), this function will always return a
+ * clock, even if the pipeline is not in the PLAYING state.
  *
  * Returns: (transfer full): a #GstClock, unref after usage.
  */
 GstClock *
 gst_pipeline_get_clock (GstPipeline * pipeline)
+{
+  return gst_pipeline_get_pipeline_clock (pipeline);
+}
+
+/**
+ * gst_pipeline_get_pipeline_clock:
+ * @pipeline: a #GstPipeline
+ *
+ * Gets the current clock used by @pipeline.
+ *
+ * Unlike gst_element_get_clock(), this function will always return a
+ * clock, even if the pipeline is not in the PLAYING state.
+ *
+ * Returns: (transfer full): a #GstClock, unref after usage.
+ *
+ * Since: 1.6
+ */
+GstClock *
+gst_pipeline_get_pipeline_clock (GstPipeline * pipeline)
 {
   g_return_val_if_fail (GST_IS_PIPELINE (pipeline), NULL);
 
@@ -677,7 +701,7 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
 }
 
 /**
- * gst_pipeline_set_clock:
+ * gst_pipeline_set_clock: (skip)
  * @pipeline: a #GstPipeline
  * @clock: (transfer none): the clock to set
  *

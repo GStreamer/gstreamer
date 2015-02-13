@@ -96,6 +96,7 @@ GstBus*         gst_pipeline_get_bus            (GstPipeline *pipeline);
 void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock *clock);
 gboolean        gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);
 GstClock*       gst_pipeline_get_clock          (GstPipeline *pipeline);
+GstClock*       gst_pipeline_get_pipeline_clock (GstPipeline *pipeline);
 void            gst_pipeline_auto_clock         (GstPipeline *pipeline);
 
 void            gst_pipeline_set_delay          (GstPipeline *pipeline, GstClockTime delay);
