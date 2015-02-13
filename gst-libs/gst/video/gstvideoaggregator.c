@@ -993,8 +993,7 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
           || (pad->buffer && start_time < GST_BUFFER_TIMESTAMP (pad->buffer))) {
         GST_DEBUG_OBJECT (pad, "Buffer from the past, dropping");
         gst_buffer_unref (buf);
-        buf = gst_aggregator_pad_steal_buffer (bpad);
-        gst_buffer_unref (buf);
+        gst_aggregator_pad_drop_buffer (bpad);
         need_more_data = TRUE;
         continue;
       }
@@ -1016,8 +1015,7 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
               "output_start_time.  Discarding old buffer");
           gst_buffer_replace (&pad->buffer, buf);
           gst_buffer_unref (buf);
-          buf = gst_aggregator_pad_steal_buffer (bpad);
-          gst_buffer_unref (buf);
+          gst_aggregator_pad_drop_buffer (bpad);
           need_more_data = TRUE;
           continue;
         }
@@ -1044,8 +1042,7 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
             GST_TIME_ARGS (end_time));
 
         gst_buffer_unref (buf);
-        buf = gst_aggregator_pad_steal_buffer (bpad);
-        gst_buffer_unref (buf);
+        gst_aggregator_pad_drop_buffer (bpad);
 
         need_more_data = TRUE;
         continue;
@@ -1076,8 +1073,7 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
       if (pad->priv->end_time != -1 && pad->priv->end_time > end_time) {
         GST_DEBUG_OBJECT (pad, "Buffer from the past, dropping");
         gst_buffer_unref (buf);
-        buf = gst_aggregator_pad_steal_buffer (bpad);
-        gst_buffer_unref (buf);
+        gst_aggregator_pad_drop_buffer (bpad);
         continue;
       }
 
@@ -1091,9 +1087,7 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
         pad->priv->end_time = end_time;
 
         gst_buffer_unref (buf);
-        buf = gst_aggregator_pad_steal_buffer (bpad);
-        if (buf)
-          gst_buffer_unref (buf);
+        gst_aggregator_pad_drop_buffer (bpad);
         eos = FALSE;
       } else if (start_time >= output_end_time) {
         GST_DEBUG_OBJECT (pad, "Keeping buffer until %" GST_TIME_FORMAT,
@@ -1110,9 +1104,7 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
             " out end %" GST_TIME_FORMAT, GST_TIME_ARGS (start_time),
             GST_TIME_ARGS (output_end_time));
         gst_buffer_unref (buf);
-        buf = gst_aggregator_pad_steal_buffer (bpad);
-        if (buf)
-          gst_buffer_unref (buf);
+        gst_aggregator_pad_drop_buffer (bpad);
 
         need_more_data = TRUE;
         continue;
