@@ -1071,14 +1071,10 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
         gst_util_uint64_scale (end_running_time, rate, GST_SECOND);
 
     if (end_running_time_offset < audiomixer->offset) {
-      GstBuffer *buf;
-
       /* Before output segment, drop */
       gst_buffer_unref (inbuf);
       pad->buffer = NULL;
-      buf = gst_aggregator_pad_steal_buffer (aggpad);
-      if (buf)
-        gst_buffer_unref (buf);
+      gst_aggregator_pad_drop_buffer (aggpad);
       pad->position = 0;
       pad->size = 0;
       pad->output_offset = -1;
@@ -1089,7 +1085,6 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     }
 
     if (start_running_time_offset < audiomixer->offset) {
-      GstBuffer *buf;
       guint diff = (audiomixer->offset - start_running_time_offset) * bpf;
 
       pad->position += diff;
@@ -1097,9 +1092,7 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
         /* Empty buffer, drop */
         gst_buffer_unref (inbuf);
         pad->buffer = NULL;
-        buf = gst_aggregator_pad_steal_buffer (aggpad);
-        if (buf)
-          gst_buffer_unref (buf);
+        gst_aggregator_pad_drop_buffer (aggpad);
         pad->position = 0;
         pad->size = 0;
         pad->output_offset = -1;
@@ -1166,28 +1159,22 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     pad->position += overlap * bpf;
     pad->output_offset += overlap;
     if (pad->position >= pad->size) {
-      GstBuffer *buf;
       /* Buffer done, drop it */
       gst_buffer_replace (&pad->buffer, NULL);
-      buf = gst_aggregator_pad_steal_buffer (aggpad);
-      if (buf)
-        gst_buffer_unref (buf);
+      gst_aggregator_pad_drop_buffer (aggpad);
     }
     GST_OBJECT_UNLOCK (pad);
     return;
   }
 
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
-    GstBuffer *aggpadbuf = gst_aggregator_pad_steal_buffer (aggpad);
-
     /* skip gap buffer */
     GST_LOG_OBJECT (pad, "skipping GAP buffer");
     gst_buffer_unref (inbuf);
     pad->output_offset += pad->size / bpf;
     /* Buffer done, drop it */
     gst_buffer_replace (&pad->buffer, NULL);
-    if (aggpadbuf)
-      gst_buffer_unref (aggpadbuf);
+    gst_aggregator_pad_drop_buffer (aggpad);
     GST_OBJECT_UNLOCK (pad);
     return;
   }
@@ -1296,13 +1283,9 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
   pad->output_offset += overlap;
 
   if (pad->position == pad->size) {
-    GstBuffer *buf;
-
     /* Buffer done, drop it */
     gst_buffer_replace (&pad->buffer, NULL);
-    buf = gst_aggregator_pad_steal_buffer (aggpad);
-    if (buf)
-      gst_buffer_unref (buf);
+    gst_aggregator_pad_drop_buffer (aggpad);
     GST_DEBUG_OBJECT (pad, "Finished mixing buffer, waiting for next");
   }
 
@@ -1475,13 +1458,9 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
       pad->output_offset += diff;
 
       if (pad->position == pad->size) {
-        GstBuffer *buf;
-
         /* Buffer done, drop it */
         gst_buffer_replace (&pad->buffer, NULL);
-        buf = gst_aggregator_pad_steal_buffer (aggpad);
-        if (buf)
-          gst_buffer_unref (buf);
+        gst_aggregator_pad_drop_buffer (aggpad);
         dropped = TRUE;
         continue;
       }
