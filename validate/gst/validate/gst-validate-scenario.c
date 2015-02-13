@@ -70,6 +70,7 @@ enum
   PROP_0,
   PROP_RUNNER,
   PROP_HANDLES_STATE,
+  PROP_EXECUTE_ON_IDLE,
   PROP_LAST
 };
 
@@ -91,6 +92,7 @@ static GPrivate main_thread_priv;
 struct _GstValidateScenarioPrivate
 {
   GstValidateRunner *runner;
+  gboolean execute_on_idle;
 
   GMutex lock;
 
@@ -116,7 +118,7 @@ struct _GstValidateScenarioPrivate
 
   gboolean handles_state;
 
-  guint get_pos_id;
+  guint get_pos_id;             /* Protect with SCENARIO_LOCK */
   guint wait_id;
 
   gboolean buffering;
@@ -863,17 +865,20 @@ _set_rank (GstValidateScenario * scenario, GstValidateAction * action)
   return TRUE;
 }
 
-static gboolean
+static inline gboolean
 _add_get_position_source (GstValidateScenario * scenario)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
 
+  SCENARIO_LOCK (scenario);
   if (priv->get_pos_id == 0 && priv->wait_id == 0) {
-    priv->get_pos_id = g_timeout_add (50, (GSourceFunc) get_position, scenario);
+    priv->get_pos_id = g_idle_add ((GSourceFunc) get_position, scenario);
+    SCENARIO_UNLOCK (scenario);
 
     GST_DEBUG_OBJECT (scenario, "Start checking position again");
     return TRUE;
   }
+  SCENARIO_UNLOCK (scenario);
 
   GST_DEBUG_OBJECT (scenario, "No need to start a new gsource");
   return FALSE;
@@ -1053,6 +1058,8 @@ get_position (GstValidateScenario * scenario)
 
   if (has_pos && has_dur) {
     if (position > duration) {
+      _add_get_position_source (scenario);
+
       GST_VALIDATE_REPORT (scenario,
           QUERY_POSITION_SUPERIOR_DURATION,
           "Reported position %" GST_TIME_FORMAT " > reported duration %"
@@ -1067,8 +1074,11 @@ get_position (GstValidateScenario * scenario)
 
   _check_position (scenario, rate, position);
 
-  if (!_should_execute_action (scenario, act, position, rate))
+  if (!_should_execute_action (scenario, act, position, rate)) {
+    _add_get_position_source (scenario);
+
     return TRUE;
+  }
 
   type = _find_action_type (act->type);
 
@@ -1121,7 +1131,26 @@ get_position (GstValidateScenario * scenario)
 
     /* Recurse to the next action if it is possible
      * to execute right away */
-    return get_position (scenario);
+    if (!scenario->priv->execute_on_idle) {
+      GST_DEBUG_OBJECT (scenario, "linking next action execution");
+
+      return get_position (scenario);
+    } else {
+      _add_get_position_source (scenario);
+      GST_DEBUG_OBJECT (scenario, "Executing only on idle, waiting for"
+          " next dispatch");
+
+      return TRUE;
+    }
+  } else {
+    GST_DEBUG_OBJECT (scenario, "Remove source, waiting for action"
+        " to be done.");
+
+    SCENARIO_LOCK (scenario);
+    priv->get_pos_id = 0;
+    SCENARIO_UNLOCK (scenario);
+
+    return G_SOURCE_REMOVE;
   }
 
   return TRUE;
@@ -1134,7 +1163,10 @@ stop_waiting (GstValidateAction * action)
 
   gst_validate_printf (action->scenario, "Stop waiting\n");
 
+  SCENARIO_LOCK (scenario);
   scenario->priv->wait_id = 0;
+  SCENARIO_UNLOCK (scenario);
+
   gst_validate_action_set_done (action);
   _add_get_position_source (scenario);
 
@@ -1180,13 +1212,17 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
       "Waiting for %" GST_TIME_FORMAT " (wait_multiplier: %f)\n",
       GST_TIME_ARGS (duration), wait_multiplier);
 
+  SCENARIO_LOCK (scenario);
   if (priv->get_pos_id) {
     g_source_remove (priv->get_pos_id);
     priv->get_pos_id = 0;
   }
+  SCENARIO_UNLOCK (scenario);
 
+  SCENARIO_LOCK (scenario);
   priv->wait_id = g_timeout_add (duration / G_USEC_PER_SEC,
       (GSourceFunc) stop_waiting, action);
+  SCENARIO_UNLOCK (scenario);
 
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
@@ -1537,6 +1573,7 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
 
+  SCENARIO_LOCK (scenario);
   if (priv->get_pos_id) {
     g_source_remove (priv->get_pos_id);
     priv->get_pos_id = 0;
@@ -1546,6 +1583,8 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
     g_source_remove (priv->wait_id);
     priv->wait_id = 0;
   }
+  SCENARIO_UNLOCK (scenario);
+
   scenario->pipeline = NULL;
 
   GST_DEBUG_OBJECT (scenario, "pipeline was freed");
@@ -1810,6 +1849,8 @@ static void
 gst_validate_scenario_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstValidateScenario *self = GST_VALIDATE_SCENARIO (object);
+
   switch (prop_id) {
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this scenario is,
@@ -1819,6 +1860,9 @@ gst_validate_scenario_set_property (GObject * object, guint prop_id,
       break;
     case PROP_HANDLES_STATE:
       g_assert_not_reached ();
+      break;
+    case PROP_EXECUTE_ON_IDLE:
+      self->priv->execute_on_idle = g_value_get_boolean (value);
       break;
     default:
       break;
@@ -1840,6 +1884,9 @@ gst_validate_scenario_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HANDLES_STATE:
       g_value_set_boolean (value, self->priv->handles_state);
+      break;
+    case PROP_EXECUTE_ON_IDLE:
+      g_value_set_boolean (value, self->priv->execute_on_idle);
       break;
     default:
       break;
@@ -1870,6 +1917,16 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
           "True if the application should not set handle the first state change "
           " False if it is application responsibility",
           FALSE, G_PARAM_READABLE));
+
+  g_object_class_install_property (object_class,
+      PROP_EXECUTE_ON_IDLE,
+      g_param_spec_boolean ("execute-on-idle",
+          "Force waiting between actions",
+          "Always execute actions on idle and do not chain them"
+          " to execute as fast as possible. That is usefull if action execution"
+          " can lead to the addition of source on the same main loop."
+          " It allows those other GSources to have a chance to be dispatch between"
+          " validate actions execution", FALSE, G_PARAM_READWRITE));
 
   /**
    * GstValidateScenario::done:
@@ -2261,6 +2318,8 @@ _execute_sub_action_action (GstValidateAction * action)
 void
 gst_validate_action_set_done (GstValidateAction * action)
 {
+  GstValidateScenario *scenario = action->scenario;
+
   if (action->state == GST_VALIDATE_EXECUTE_ACTION_INTERLACED) {
 
     if (action->scenario) {
@@ -2274,17 +2333,27 @@ gst_validate_action_set_done (GstValidateAction * action)
   }
 
   action->state = _execute_sub_action_action (action);
+  if (action->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+    GST_DEBUG_OBJECT (scenario, "Sub action executed ASYNC");
 
-  if (action->scenario) {
+    return;
+  }
+
+  if (scenario) {
     if (GPOINTER_TO_INT (g_private_get (&main_thread_priv))) {
-      GST_DEBUG_OBJECT (action->scenario, "Right thread, executing next?");
-      get_position (action->scenario);
-    } else {
+      if (!scenario->priv->execute_on_idle) {
+        GST_DEBUG_OBJECT (scenario, "Right thread, executing next?");
+        get_position (scenario);
+
+        return;
+      } else
+        GST_DEBUG_OBJECT (scenario, "Right thread, but executing only on idle");
+    } else
       GST_DEBUG_OBJECT (action->scenario, "Not doing anything outside the"
           " 'main' thread");
-
-    }
   }
+
+  _add_get_position_source (scenario);
 }
 
 /**
