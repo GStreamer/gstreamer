@@ -84,6 +84,13 @@ libgstvaapi_source_c += $(libgstvaapi_jpegenc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_jpegenc_source_h)
 endif
 
+libgstvaapi_vp8enc_source_c = gstvaapiencode_vp8.c
+libgstvaapi_vp8enc_source_h = gstvaapiencode_vp8.h
+if USE_VP8_ENCODER
+libgstvaapi_source_c += $(libgstvaapi_vp8enc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_vp8enc_source_h)
+endif
+
 libgstvaapi_x11_source_c = gstvaapivideoconverter_x11.c
 libgstvaapi_x11_source_h = gstvaapivideoconverter_x11.h
 
@@ -246,6 +253,8 @@ EXTRA_DIST = \
 	$(libgstvaapi_enc_source_h)	 \
 	$(libgstvaapi_jpegenc_source_c)  \
 	$(libgstvaapi_jpegenc_source_h)  \
+	$(libgstvaapi_vp8enc_source_c)   \
+	$(libgstvaapi_vp8enc_source_h)   \
 	$(libgstvaapi_x11_source_c)	 \
 	$(libgstvaapi_x11_source_h)	 \
 	$(libgstvaapi_glx_source_c)	 \
