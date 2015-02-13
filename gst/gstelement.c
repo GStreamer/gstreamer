@@ -417,6 +417,9 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
  * Gets the currently configured clock of the element. This is the clock as was
  * last set with gst_element_set_clock().
  *
+ * Elements in a pipeline will only have their clock set when the
+ * pipeline is in the PLAYING state.
+ *
  * Returns: (transfer full): the #GstClock of the element. unref after usage.
  *
  * MT safe.
