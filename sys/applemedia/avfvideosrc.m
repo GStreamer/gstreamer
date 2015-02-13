@@ -749,10 +749,15 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
           GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
       GstCaps *query_caps;
+      GstCapsFeatures *features;
+
       gst_query_parse_allocation (query, &query_caps, NULL);
-      textureCache = gst_core_video_texture_cache_new (context);
-      gst_core_video_texture_cache_set_format (textureCache,
-              "NV12", query_caps);
+      features = gst_caps_get_features (query_caps, 0);
+      if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+        textureCache = gst_core_video_texture_cache_new (context);
+        gst_core_video_texture_cache_set_format (textureCache,
+            "NV12", query_caps);
+      }
       gst_object_unref (context);
     }
   }
