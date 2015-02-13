@@ -125,9 +125,14 @@ struct _GstValidateScenarioPrivate
 
   guint get_pos_id;             /* MT safe. Protect with SCENARIO_LOCK */
   guint wait_id;
+  guint signal_handler_id;
+
+  /* Name of message the wait action is waiting for */
+  const gchar *message_type;
 
   gboolean buffering;
 
+  gboolean got_eos;
   gboolean changing_state;
   GstState target_state;
 
@@ -907,7 +912,8 @@ _add_execute_actions_gsource (GstValidateScenario * scenario)
   GstValidateScenarioPrivate *priv = scenario->priv;
 
   SCENARIO_LOCK (scenario);
-  if (priv->get_pos_id == 0 && priv->wait_id == 0) {
+  if (priv->get_pos_id == 0 && priv->wait_id == 0
+      && priv->signal_handler_id == 0 && priv->message_type == NULL) {
     priv->get_pos_id = g_idle_add ((GSourceFunc) execute_next_action, scenario);
     SCENARIO_UNLOCK (scenario);
 
@@ -916,7 +922,7 @@ _add_execute_actions_gsource (GstValidateScenario * scenario)
   }
   SCENARIO_UNLOCK (scenario);
 
-  GST_DEBUG_OBJECT (scenario, "No need to start a new gsource");
+  GST_LOG_OBJECT (scenario, "No need to start a new gsource");
   return FALSE;
 }
 
@@ -969,6 +975,9 @@ _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
     GST_DEBUG_OBJECT (scenario, "No action to execute");
 
     return FALSE;
+  } else if (scenario->priv->got_eos) {
+    GST_DEBUG_OBJECT (scenario, "Just got EOS go and execute next action!");
+    scenario->priv->got_eos = FALSE;
   } else if (GST_STATE (scenario->pipeline) < GST_STATE_PAUSED) {
     GST_DEBUG_OBJECT (scenario, "Pipeline not even in paused, "
         "just executing actions");
@@ -1275,7 +1284,7 @@ execute_next_action (GstValidateScenario * scenario)
     return G_SOURCE_CONTINUE;
   }
 
-  if (has_pos && has_dur) {
+  if (has_pos && has_dur && !priv->got_eos) {
     if (position > duration) {
       _add_execute_actions_gsource (scenario);
 
@@ -1398,8 +1407,27 @@ stop_waiting (GstValidateAction * action)
   return G_SOURCE_REMOVE;
 }
 
+static GstElement *_get_target_element (GstValidateScenario * scenario,
+    GstValidateAction * action);
+
+static void
+stop_waiting_signal (GstBin * bin, GstElement * element,
+    GstValidateAction * action)
+{
+  GstValidateScenario *scenario = action->scenario;
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  gst_validate_printf (scenario, "Stop waiting for signal\n");
+
+  g_signal_handler_disconnect (bin, priv->signal_handler_id);
+
+  priv->signal_handler_id = 0;
+  gst_validate_action_set_done (action);
+  _add_execute_actions_gsource (scenario);
+}
+
 static gboolean
-_execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
+_execute_timed_wait (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstClockTime duration;
@@ -1449,6 +1477,75 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static gboolean
+_execute_wait_for_signal (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+  const gchar *signal_name = gst_structure_get_string
+      (action->structure, "signal-name");
+  GstElement *target;
+
+  if (signal_name == NULL) {
+    GST_ERROR ("No signal-name given for wait action");
+    return FALSE;
+  }
+
+  target = _get_target_element (scenario, action);
+  if (target == NULL) {
+    return FALSE;
+  }
+
+  gst_validate_printf (action, "Waiting for '%s' signal\n", signal_name);
+
+  if (priv->get_pos_id) {
+    g_source_remove (priv->get_pos_id);
+    priv->get_pos_id = 0;
+  }
+
+  priv->signal_handler_id =
+      g_signal_connect (target, signal_name, (GCallback) stop_waiting_signal,
+      action);
+
+  gst_object_unref (target);
+
+  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+}
+
+static gboolean
+_execute_wait_for_message (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+  const gchar *message_type = gst_structure_get_string
+      (action->structure, "message-type");
+
+  gst_validate_printf (action, "Waiting for '%s' message\n", message_type);
+
+  if (priv->get_pos_id) {
+    g_source_remove (priv->get_pos_id);
+    priv->get_pos_id = 0;
+  }
+
+  priv->message_type = g_strdup (message_type);
+
+  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+}
+
+static gboolean
+_execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  if (gst_structure_has_field (action->structure, "signal-name")) {
+    return _execute_wait_for_signal (scenario, action);
+  } else if (gst_structure_has_field (action->structure, "message-type")) {
+    return _execute_wait_for_message (scenario, action);
+  } else {
+    return _execute_timed_wait (scenario, action);
+  }
+
+  return FALSE;
+}
+
+static gboolean
 _execute_dot_pipeline (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
@@ -1478,6 +1575,10 @@ _get_target_element (GstValidateScenario * scenario, GstValidateAction * action)
   GstElement *target;
 
   name = gst_structure_get_string (action->structure, "target-element-name");
+  if (name == NULL) {
+    return NULL;
+  }
+
   if (strcmp (GST_OBJECT_NAME (scenario->pipeline), name) == 0) {
     target = gst_object_ref (scenario->pipeline);
   } else {
@@ -1669,9 +1770,30 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   return TRUE;
 }
 
+static void
+_check_waiting_for_message (GstValidateScenario * scenario,
+    GstMessage * message)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  if (!g_strcmp0 (priv->message_type,
+          gst_message_type_get_name (GST_MESSAGE_TYPE (message)))) {
+    GstValidateAction *action = scenario->priv->actions->data;
+
+    g_free ((gpointer) priv->message_type);
+    priv->message_type = NULL;
+
+    gst_validate_printf (scenario, "Stop waiting for message\n");
+
+    gst_validate_action_set_done (action);
+    _add_execute_actions_gsource (scenario);
+  }
+}
+
 static gboolean
 message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 {
+  gboolean is_error = FALSE;
   GstValidateScenarioPrivate *priv = scenario->priv;
 
   switch (GST_MESSAGE_TYPE (message)) {
@@ -1726,10 +1848,29 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       break;
     }
     case GST_MESSAGE_ERROR:
+      is_error = TRUE;
+
+      /* Passtrough */
     case GST_MESSAGE_EOS:
     {
       GstValidateAction *stop_action;
       GstValidateActionType *stop_action_type;
+
+      if (!is_error) {
+        priv->got_eos = TRUE;
+        if (priv->message_type) {
+
+          if (priv->actions->next) {
+            GST_DEBUG_OBJECT (scenario,
+                "Waiting for a message and got a next action"
+                " to execute, letting it a chance!");
+            goto done;
+          } else {
+            /* Clear current message wait if waiting for EOS */
+            _check_waiting_for_message (scenario, message);
+          }
+        }
+      }
 
       SCENARIO_LOCK (scenario);
       if (scenario->priv->actions || scenario->priv->interlaced_actions ||
@@ -1749,7 +1890,8 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
           tmpconcat = actions;
 
-          if (type->flags & GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL) {
+          if (type->flags & GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL ||
+              action->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
             gst_validate_action_unref (action);
 
             continue;
@@ -1774,6 +1916,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         g_free (actions);
       }
       SCENARIO_UNLOCK (scenario);
+
 
       stop_action_type = _find_action_type ("stop");
       stop_action = gst_validate_action_new (scenario, stop_action_type);
@@ -1800,6 +1943,11 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
     default:
       break;
   }
+
+done:
+  /* Check if we got the message expected by a wait action */
+  if (priv->message_type)
+    _check_waiting_for_message (scenario, message);
 
   return TRUE;
 }
@@ -2918,11 +3066,33 @@ init_scenarios (void)
         {
           .name = "duration",
           .description = "the duration while no other action will be executed",
-          .mandatory = TRUE,
+          .mandatory = FALSE,
           NULL},
+        {
+          .name = "target-element-name",
+          .description = "The name of the GstElement to wait @signal-name on.",
+          .mandatory = FALSE,
+          .types = "string"
+        },
+        {
+          .name = "signal-name",
+          .description = "The name of the signal to wait for on @target-element-name",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "message-type",
+          .description = "The name of the message type to wait for (on @target-element-name"
+            " if specified)",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
         {NULL}
       }),
-      "Waits during 'duration' seconds", GST_VALIDATE_ACTION_TYPE_NONE);
+      "Waits for signal 'signal-name', message 'message-type', or during 'duration' seconds",
+      GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("dot-pipeline", _execute_dot_pipeline, NULL,
       "Dots the pipeline (the 'name' property will be used in the dot filename).\n"
