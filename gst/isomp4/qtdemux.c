@@ -1180,7 +1180,7 @@ gst_qtdemux_move_stream (GstQTDemux * qtdemux, QtDemuxStream * str,
 
 static void
 gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
-    gint64 * key_time, gint64 * key_offset)
+    gboolean use_sparse, gint64 * key_time, gint64 * key_offset)
 {
   guint64 min_offset;
   gint64 min_byte_offset = -1;
@@ -1200,6 +1200,9 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
     QtDemuxSegment *seg;
 
     str = qtdemux->streams[n];
+
+    if (str->sparse && !use_sparse)
+      continue;
 
     seg_idx = gst_qtdemux_find_segment (qtdemux, str, desired_time);
     GST_DEBUG_OBJECT (qtdemux, "align segment %d", seg_idx);
@@ -1321,7 +1324,7 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   /* find reasonable corresponding BYTE position,
    * also try to mind about keyframes, since we can not go back a bit for them
    * later on */
-  gst_qtdemux_adjust_seek (qtdemux, cur, &key_cur, &byte_cur);
+  gst_qtdemux_adjust_seek (qtdemux, cur, FALSE, &key_cur, &byte_cur);
 
   if (byte_cur == -1)
     goto abort_seek;
@@ -1406,7 +1409,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
   if ((segment->flags & GST_SEEK_FLAG_KEY_UNIT) && !qtdemux->fragmented) {
     gint64 min_offset;
 
-    gst_qtdemux_adjust_seek (qtdemux, desired_offset, &min_offset, NULL);
+    gst_qtdemux_adjust_seek (qtdemux, desired_offset, TRUE, &min_offset, NULL);
     GST_DEBUG_OBJECT (qtdemux, "keyframe seek, align to %"
         GST_TIME_FORMAT, GST_TIME_ARGS (min_offset));
     desired_offset = min_offset;
