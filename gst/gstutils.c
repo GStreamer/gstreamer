@@ -3675,15 +3675,17 @@ gst_pad_create_stream_id_internal (GstPad * pad, GstElement * parent,
    * here is for source elements */
   if (!upstream_stream_id) {
     GstQuery *query;
+    gchar *uri = NULL;
 
     /* Try to generate one from the URI query and
      * if it fails take a random number instead */
     query = gst_query_new_uri ();
     if (gst_element_query (parent, query)) {
-      GChecksum *cs;
-      gchar *uri;
-
       gst_query_parse_uri (query, &uri);
+    }
+
+    if (uri) {
+      GChecksum *cs;
 
       /* And then generate an SHA256 sum of the URI */
       cs = g_checksum_new (G_CHECKSUM_SHA256);
