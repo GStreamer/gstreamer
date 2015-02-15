@@ -158,6 +158,30 @@ gst_flow_combiner_clear (GstFlowCombiner * combiner)
   combiner->last_ret = GST_FLOW_OK;
 }
 
+/**
+ * gst_flow_combiner_reset:
+ * @combiner: the #GstFlowCombiner to clear
+ *
+ * Removes all pads from a #GstFlowCombiner and resets it to its initial state.
+ *
+ * Since: 1.6
+ */
+void
+gst_flow_combiner_reset (GstFlowCombiner * combiner)
+{
+  GList *iter;
+
+  g_return_if_fail (combiner != NULL);
+
+  GST_DEBUG ("Reset flow returns");
+
+  for (iter = combiner->pads.head; iter; iter = iter->next) {
+    GST_PAD_LAST_FLOW_RETURN (iter->data) = GST_FLOW_OK;
+  }
+
+  combiner->last_ret = GST_FLOW_OK;
+}
+
 static GstFlowReturn
 gst_flow_combiner_get_flow (GstFlowCombiner * combiner)
 {

@@ -53,6 +53,8 @@ void              gst_flow_combiner_remove_pad (GstFlowCombiner * combiner, GstP
 
 void              gst_flow_combiner_clear (GstFlowCombiner * combiner);
 
+void              gst_flow_combiner_reset (GstFlowCombiner * combiner);
+
 GType             gst_flow_combiner_get_type (void);
 
 G_END_DECLS
