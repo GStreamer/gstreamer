@@ -330,6 +330,25 @@ static const FormatInfo formats[] = {
 };
 
 static const gchar *
+pbutils_desc_get_profile_name_from_nick (const gchar * map, gsize map_len,
+    const gchar * nick)
+{
+  const gchar *end = map + map_len;
+  const gchar *p;
+
+  p = map;
+  while (*p != '\0' && p < end) {
+    guint len = strlen (p);
+
+    if (strcmp (p, nick) == 0)
+      return p + len + 1;
+    p += len + 1;
+    p += strlen (p) + 1;
+  }
+  return NULL;
+}
+
+static const gchar *
 pbutils_desc_get_mpeg4v_profile_name_from_nick (const gchar * nick)
 {
   const gchar map[] = "simple\000Simple\000"
@@ -352,19 +371,8 @@ pbutils_desc_get_mpeg4v_profile_name_from_nick (const gchar * nick)
       "fine-granularity-scalable\000Fine Granularity Scalable\000"
       "basic-animated-texture\000Basic Animated Texture\000"
       "baseline\000Baseline Profile\000";
-  const gchar *end = map + sizeof (map);
-  const gchar *p;
 
-  p = map;
-  while (*p != '\0' && p < end) {
-    guint len = strlen (p);
-
-    if (strcmp (p, nick) == 0)
-      return p + len + 1;
-    p += len + 1;
-    p += strlen (p) + 1;
-  }
-  return NULL;
+  return pbutils_desc_get_profile_name_from_nick (map, sizeof (map), nick);
 }
 
 static const gchar *
@@ -387,19 +395,8 @@ pbutils_desc_get_h264_profile_name_from_nick (const gchar * nick)
       "scalable-constrained-baseline\000Scalable Constrained Baseline\000"
       "scalable-baseline\000Scalable Baseline\000"
       "scalable-high\000Scalable High\000";
-  const gchar *end = map + sizeof (map);
-  const gchar *p;
 
-  p = map;
-  while (*p != '\0' && p < end) {
-    guint len = strlen (p);
-
-    if (strcmp (p, nick) == 0)
-      return p + len + 1;
-    p += len + 1;
-    p += strlen (p) + 1;
-  }
-  return NULL;
+  return pbutils_desc_get_profile_name_from_nick (map, sizeof (map), nick);
 }
 
 static const gchar *
@@ -415,19 +412,8 @@ pbutils_desc_get_h265_profile_name_from_nick (const gchar * nick)
       "main-4:4:4-12\000Main 4:4:4 12\000"
       "main-4:4:4-16-intra\000Main 4:4:4 16 Intra\000"
       "main-still-picture\000Main Still Picture\000";
-  const gchar *end = map + sizeof (map);
-  const gchar *p;
 
-  p = map;
-  while (*p != '\0' && p < end) {
-    guint len = strlen (p);
-
-    if (strcmp (p, nick) == 0)
-      return p + len + 1;
-    p += len + 1;
-    p += strlen (p) + 1;
-  }
-  return NULL;
+  return pbutils_desc_get_profile_name_from_nick (map, sizeof (map), nick);
 }
 
 /* returns static descriptions and dynamic ones (such as video/x-raw),
