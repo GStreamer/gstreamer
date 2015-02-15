@@ -402,6 +402,34 @@ pbutils_desc_get_h264_profile_name_from_nick (const gchar * nick)
   return NULL;
 }
 
+static const gchar *
+pbutils_desc_get_h265_profile_name_from_nick (const gchar * nick)
+{
+  const gchar map[] = "main\000Main\000"
+      "main-10\000Main 10\000"
+      "main-12\000Main 12\000"
+      "main-4:2:2-10\000Main 4:2:2 10\000"
+      "main-4:2:2-12\000Main 4:2:2 12\000"
+      "main-4:4:4\000Main 4:4:4\000"
+      "main-4:4:4-10\000Main 4:4:4 10\000"
+      "main-4:4:4-12\000Main 4:4:4 12\000"
+      "main-4:4:4-16-intra\000Main 4:4:4 16 Intra\000"
+      "main-still-picture\000Main Still Picture\000";
+  const gchar *end = map + sizeof (map);
+  const gchar *p;
+
+  p = map;
+  while (*p != '\0' && p < end) {
+    guint len = strlen (p);
+
+    if (strcmp (p, nick) == 0)
+      return p + len + 1;
+    p += len + 1;
+    p += strlen (p) + 1;
+  }
+  return NULL;
+}
+
 /* returns static descriptions and dynamic ones (such as video/x-raw),
  * or NULL if caps aren't known at all */
 static gchar *
@@ -528,7 +556,13 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       return g_strdup (ret);
     return g_strdup_printf ("%s (%s Profile)", ret, profile);
   } else if (strcmp (info->type, "video/x-h265") == 0) {
-    /* TODO: Any variants? */
+    const gchar *profile = gst_structure_get_string (s, "profile");
+
+    if (profile != NULL)
+      profile = pbutils_desc_get_h265_profile_name_from_nick (profile);
+    if (profile != NULL)
+      return g_strdup_printf ("H.265 (%s Profile)", profile);
+
     return g_strdup ("H.265");
   } else if (strcmp (info->type, "video/x-dirac") == 0) {
     const gchar *profile = gst_structure_get_string (s, "profile");
