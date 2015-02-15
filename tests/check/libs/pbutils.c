@@ -337,6 +337,8 @@ static const gchar *caps_strings[] = {
   "video/x-h264, variant=(string)videosoft",
   "video/x-h264, variant=(string)foobar",
   "video/x-h264",
+  "video/x-h264, profile=(string)foobar",
+  "video/x-h264, profile=(string)high-4:4:4-intra",
   "video/x-h263, variant=(string)itu",
   "video/x-h263, variant=(string)lead",
   "video/x-h263, variant=(string)microsoft",

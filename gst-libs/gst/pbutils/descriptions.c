@@ -329,6 +329,41 @@ static const FormatInfo formats[] = {
   {"video/x-tscc", NULL, FLAG_VIDEO, ""}
 };
 
+static const gchar *
+pbutils_desc_get_h264_profile_name_from_nick (const gchar * nick)
+{
+  const gchar map[] = "baseline\000Baseline\000"
+      "constrained-baseline\000Constrained Baseline\000"
+      "main\000Main\000"
+      "extended\000Extended\000"
+      "high\000High\000"
+      "high-10-intra\000High 10 Intra\000"
+      "high-10\000High 10\000"
+      "high-4:2:2-intra\000High 4:2:2 Intra\000"
+      "high-4:2:2\000High 4:2:2\000"
+      "high-4:4:4-intra\000High 4:4:4 Intra\000"
+      "high-4:4:4\000High 4:4:4\000"
+      "cavlc-4:4:4-intra\000CAVLC 4:4:4 Intra\000"
+      "multiview-high\000Multiview High\000"
+      "stereo-high\000Stereo High\000"
+      "scalable-constrained-baseline\000Scalable Constrained Baseline\000"
+      "scalable-baseline\000Scalable Baseline\000"
+      "scalable-high\000Scalable High\000";
+  const gchar *end = map + sizeof (map);
+  const gchar *p;
+
+  p = map;
+  while (*p != '\0' && p < end) {
+    guint len = strlen (p);
+
+    if (strcmp (p, nick) == 0)
+      return p + len + 1;
+    p += len + 1;
+    p += strlen (p) + 1;
+  }
+  return NULL;
+}
+
 /* returns static descriptions and dynamic ones (such as video/x-raw),
  * or NULL if caps aren't known at all */
 static gchar *
@@ -432,6 +467,7 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
     return g_strdup (ret);
   } else if (strcmp (info->type, "video/x-h264") == 0) {
     const gchar *variant, *ret;
+    const gchar *profile;
 
     variant = gst_structure_get_string (s, "variant");
     if (variant == NULL)
@@ -446,7 +482,13 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       GST_WARNING ("Unknown H264 variant '%s'", variant);
       ret = "H.264";
     }
-    return g_strdup (ret);
+    /* profile */
+    profile = gst_structure_get_string (s, "profile");
+    if (profile != NULL)
+      profile = pbutils_desc_get_h264_profile_name_from_nick (profile);
+    if (profile == NULL)
+      return g_strdup (ret);
+    return g_strdup_printf ("%s (%s Profile)", ret, profile);
   } else if (strcmp (info->type, "video/x-h265") == 0) {
     /* TODO: Any variants? */
     return g_strdup ("H.265");
