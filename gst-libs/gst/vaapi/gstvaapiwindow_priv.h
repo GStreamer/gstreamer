@@ -111,7 +111,7 @@ struct _GstVaapiWindowClass
 
 GstVaapiWindow *
 gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
-    GstVaapiDisplay * display, guintptr handle, guint width, guint height);
+    GstVaapiDisplay * display, GstVaapiID handle, guint width, guint height);
 
 /* Inline reference counting for core libgstvaapi library */
 #ifdef IN_LIBGSTVAAPI_CORE
