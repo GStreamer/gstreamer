@@ -330,6 +330,44 @@ static const FormatInfo formats[] = {
 };
 
 static const gchar *
+pbutils_desc_get_mpeg4v_profile_name_from_nick (const gchar * nick)
+{
+  const gchar map[] = "simple\000Simple\000"
+      "simple-scalable\000Simple Scalable\000"
+      "core\000Core\000"
+      "main\000Main\000"
+      "n-bit\000N-bit\000"
+      "scalable\000Scalable\000"
+      "hybrid\000Hybrid\000"
+      "advanced-real-time-simple\000Advanced Real-Time Simple\000"
+      "core-scalable\000Core-Scalable\000"
+      "advanced-coding-efficiency\000Advanced Coding Efficiency\000"
+      "advanced-core\000Advanced Core\000"
+      "advanced-scalable-texture\000Advanced Scalable Texture\000"
+      "simple-face\000Simple Face Animation\000"
+      "simple-fba\000Simple FBA\000"
+      "simple-studio\000Simple Studio\000"
+      "core-studio\000Core Studio\000"
+      "advanced-simple\000Advanced Simple\000"
+      "fine-granularity-scalable\000Fine Granularity Scalable\000"
+      "basic-animated-texture\000Basic Animated Texture\000"
+      "baseline\000Baseline Profile\000";
+  const gchar *end = map + sizeof (map);
+  const gchar *p;
+
+  p = map;
+  while (*p != '\0' && p < end) {
+    guint len = strlen (p);
+
+    if (strcmp (p, nick) == 0)
+      return p + len + 1;
+    p += len + 1;
+    p += strlen (p) + 1;
+  }
+  return NULL;
+}
+
+static const gchar *
 pbutils_desc_get_h264_profile_name_from_nick (const gchar * nick)
 {
   const gchar map[] = "baseline\000Baseline\000"
@@ -730,7 +768,15 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       if (sysstream) {
         return g_strdup_printf ("MPEG-%d System Stream", ver);
       } else {
-        return g_strdup_printf ("MPEG-%d Video", ver);
+        const gchar *profile = gst_structure_get_string (s, "profile");
+        if (profile != NULL) {
+          if (ver == 4)
+            profile = pbutils_desc_get_mpeg4v_profile_name_from_nick (profile);
+        }
+        if (profile != NULL)
+          return g_strdup_printf ("MPEG-%d Video (%s Profile)", ver, profile);
+        else
+          return g_strdup_printf ("MPEG-%d Video", ver);
       }
     }
     GST_WARNING ("Missing mpegversion field in mpeg video caps "

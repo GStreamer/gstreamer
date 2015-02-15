@@ -310,6 +310,8 @@ static const gchar *caps_strings[] = {
   "video/mpeg, mpegversion=(int)4, systemstream=(boolean)FALSE",
   "video/mpeg, mpegversion=(int)99, systemstream=(boolean)TRUE",
   "video/mpeg, mpegversion=(int)99, systemstream=(boolean)FALSE",
+  "video/mpeg, mpegversion=(int)4, systemstream=(boolean)FALSE, profile=main",
+  "video/mpeg, mpegversion=(int)4, systemstream=(boolean)FALSE, profile=adsfad",
   "video/mpeg",
   "video/x-indeo, indeoversion=(int)3",
   "video/x-indeo, indeoversion=(int)5",
