@@ -198,7 +198,6 @@ static const FormatInfo formats[] = {
   {"video/x-cinepak", "Cinepak Video", FLAG_VIDEO, ""},
   {"video/x-cirrus-logic-accupak", "Cirrus Logipak AccuPak", FLAG_VIDEO, ""},
   {"video/x-compressed-yuv", N_("CYUV Lossless"), FLAG_VIDEO, ""},
-  {"video/x-dirac", "Dirac", FLAG_VIDEO, ""},
   {"video/x-dnxhd", "Digital Nonlinear Extensible High Definition (DNxHD)",
       FLAG_VIDEO, ""},
   {"subpicture/x-dvd", "DVD subpicture", FLAG_VIDEO, ""},
@@ -305,6 +304,7 @@ static const FormatInfo formats[] = {
   {"video/mpeg", NULL, FLAG_VIDEO, ""},
   {"video/x-asus", NULL, FLAG_VIDEO, ""},
   {"video/x-ati-vcr", NULL, FLAG_VIDEO, ""},
+  {"video/x-dirac", NULL, FLAG_VIDEO, ""},
   {"video/x-divx", NULL, FLAG_VIDEO, ""},
   {"video/x-dv", "Digital Video (DV) System Stream",
       FLAG_CONTAINER | FLAG_SYSTEMSTREAM, "dv"},
@@ -492,6 +492,18 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
   } else if (strcmp (info->type, "video/x-h265") == 0) {
     /* TODO: Any variants? */
     return g_strdup ("H.265");
+  } else if (strcmp (info->type, "video/x-dirac") == 0) {
+    const gchar *profile = gst_structure_get_string (s, "profile");
+    if (profile == NULL)
+      return g_strdup ("Dirac");
+    if (strcmp (profile, "vc2-low-delay") == 0)
+      return g_strdup_printf ("Dirac (%s)", "VC-2 Low Delay Profile");
+    else if (strcmp (profile, "vc2-simple") == 0)
+      return g_strdup_printf ("Dirac (%s)", "VC-2 Simple Profile");
+    else if (strcmp (profile, "vc2-main") == 0)
+      return g_strdup_printf ("Dirac (%s)", "VC-2 Main Profile");
+    else
+      return g_strdup ("Dirac");
   } else if (strcmp (info->type, "video/x-divx") == 0) {
     gint ver = 0;
 
