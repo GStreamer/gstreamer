@@ -145,14 +145,6 @@ _v4l2mem_dispose (GstV4l2Memory * mem)
   return ret;
 }
 
-static void
-_v4l2mem_free (GstV4l2Memory * mem)
-{
-  if (mem->dmafd >= 0)
-    close (mem->dmafd);
-  g_slice_free (GstV4l2Memory, mem);
-}
-
 static inline GstV4l2Memory *
 _v4l2mem_new (GstMemoryFlags flags, GstAllocator * allocator,
     GstMemory * parent, gsize maxsize, gsize align, gsize offset, gsize size,
@@ -388,23 +380,22 @@ gst_v4l2_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
   GstV4l2Memory *mem = (GstV4l2Memory *) gmem;
   GstV4l2MemoryGroup *group = mem->group;
 
-  GST_LOG_OBJECT (allocator, "freeing plane %i of buffer %u",
-      mem->plane, group->buffer.index);
+  /* Only free unparented memory */
+  if (mem->mem.parent == NULL) {
+    GST_LOG_OBJECT (allocator, "freeing plane %i of buffer %u",
+        mem->plane, group->buffer.index);
 
-  switch (allocator->memory) {
-    case V4L2_MEMORY_MMAP:
-      if (mem->data) {
+    if (allocator->memory == V4L2_MEMORY_MMAP) {
+      if (mem->data)
         v4l2_munmap (mem->data, group->planes[mem->plane].length);
-      } else if (group->planes[mem->plane].m.fd > 0) {
-        close (group->planes[mem->plane].m.fd);
-      }
-      break;
-    default:
-      /* Nothing to do */
-      break;
+    }
+
+    /* This apply for both mmap with expbuf, and dmabuf imported memory */
+    if (mem->dmafd >= 0)
+      close (mem->dmafd);
   }
 
-  _v4l2mem_free (mem);
+  g_slice_free (GstV4l2Memory, mem);
 }
 
 static void
