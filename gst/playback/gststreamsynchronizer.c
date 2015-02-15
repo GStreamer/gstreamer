@@ -215,11 +215,15 @@ gst_stream_synchronizer_wait (GstStreamSynchronizer * self, GstPad * pad)
   while (!self->eos && !self->flushing) {
     stream = gst_pad_get_element_private (pad);
     if (!stream) {
-      GST_WARNING_OBJECT (pad, "EOS for unknown stream");
+      GST_WARNING_OBJECT (pad, "unknown stream");
       return ret;
     }
     if (stream->flushing) {
       GST_DEBUG_OBJECT (pad, "Flushing");
+      break;
+    }
+    if (!stream->wait) {
+      GST_DEBUG_OBJECT (pad, "Stream not waiting anymore");
       break;
     }
 
@@ -383,6 +387,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
 
           for (l = self->streams; l; l = l->next) {
             GstStream *ostream = l->data;
+            ostream->wait = FALSE;
             g_cond_broadcast (&ostream->stream_finish_cond);
           }
         }
@@ -398,16 +403,8 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       gst_event_copy_segment (event, &segment);
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
-      stream = gst_pad_get_element_private (pad);
-      if (stream) {
-        if (stream->wait) {
-          GST_DEBUG_OBJECT (pad, "Stream %d is waiting", stream->stream_number);
-          g_cond_wait (&stream->stream_finish_cond, &self->lock);
-          stream = gst_pad_get_element_private (pad);
-          if (stream)
-            stream->wait = FALSE;
-        }
-      }
+
+      gst_stream_synchronizer_wait (self, pad);
 
       if (self->shutdown) {
         GST_STREAM_SYNCHRONIZER_UNLOCK (self);
@@ -415,6 +412,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         goto done;
       }
 
+      stream = gst_pad_get_element_private (pad);
       if (stream && segment.format == GST_FORMAT_TIME) {
         if (stream->new_stream) {
           stream->new_stream = FALSE;
@@ -552,6 +550,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         if (seen_data) {
           self->send_gap_event = TRUE;
           stream->gap_duration = GST_CLOCK_TIME_NONE;
+          stream->wait = TRUE;
           ret = gst_stream_synchronizer_wait (self, srcpad);
         }
       }
