@@ -89,6 +89,10 @@ static GstValidateActionType *_find_action_type (const gchar * type_name);
 
 static GPrivate main_thread_priv;
 
+/* GstValidateScenario is not really thread safe and
+ * everything should be done from the thread GstValidate
+ * was inited from, unless stated otherwize.
+ */
 struct _GstValidateScenarioPrivate
 {
   GstValidateRunner *runner;
@@ -97,8 +101,8 @@ struct _GstValidateScenarioPrivate
   GMutex lock;
 
   GList *actions;
-  GList *interlaced_actions;
-  GList *on_addition_actions;
+  GList *interlaced_actions;    /* MT safe. Protected with SCENARIO_LOCK */
+  GList *on_addition_actions;   /* MT safe. Protected with SCENARIO_LOCK */
 
   /*  List of action that need parsing when reaching ASYNC_DONE
    *  most probably to be able to query duration */
@@ -118,7 +122,7 @@ struct _GstValidateScenarioPrivate
 
   gboolean handles_state;
 
-  guint get_pos_id;             /* Protect with SCENARIO_LOCK */
+  guint get_pos_id;             /* MT safe. Protect with SCENARIO_LOCK */
   guint wait_id;
 
   gboolean buffering;
