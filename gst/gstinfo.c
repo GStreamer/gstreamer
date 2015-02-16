@@ -593,14 +593,29 @@ gst_info_structure_to_string (const GstStructure * s)
 static inline gchar *
 gst_info_describe_buffer (GstBuffer * buffer)
 {
+  const gchar *offset_str = "none";
+  const gchar *offset_end_str = "none";
+  gchar offset_buf[32], offset_end_buf[32];
+
+  if (GST_BUFFER_OFFSET_IS_VALID (buffer)) {
+    g_snprintf (offset_buf, sizeof (offset_buf), "%" G_GUINT64_FORMAT,
+        GST_BUFFER_OFFSET (buffer));
+    offset_str = offset_buf;
+  }
+  if (GST_BUFFER_OFFSET_END_IS_VALID (buffer)) {
+    g_snprintf (offset_end_buf, sizeof (offset_end_buf), "%" G_GUINT64_FORMAT,
+        GST_BUFFER_OFFSET_END (buffer));
+    offset_end_str = offset_end_buf;
+  }
+
   return g_strdup_printf ("buffer: %p, pts %" GST_TIME_FORMAT ", dts %"
       GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT
-      ", offset %" G_GUINT64_FORMAT ", offset_end %" G_GUINT64_FORMAT
-      ", flags 0x%x", buffer, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+      ", offset %s, offset_end %s, flags 0x%x", buffer,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
-      gst_buffer_get_size (buffer), GST_BUFFER_OFFSET (buffer),
-      GST_BUFFER_OFFSET_END (buffer), GST_BUFFER_FLAGS (buffer));
+      gst_buffer_get_size (buffer), offset_str, offset_end_str,
+      GST_BUFFER_FLAGS (buffer));
 }
 
 static inline gchar *
