@@ -729,6 +729,86 @@ GST_START_TEST (test_custom_main_context)
 
 GST_END_TEST;
 
+static GstBusSyncReply
+test_async_sync_handler (GstBus * bus, GstMessage * msg, gpointer user_data)
+{
+  GArray *timestamps = user_data;
+  gint64 ts = g_get_monotonic_time () * 1000;   /* microsecs -> nanosecs */
+
+  g_array_append_val (timestamps, ts);
+  GST_INFO ("[msg %p] %" GST_PTR_FORMAT, msg, msg);
+
+  return GST_BUS_ASYNC;
+}
+
+static gpointer
+post_10_app_messages_thread (gpointer data)
+{
+  THREAD_START ();
+  send_10_app_messages ();
+  return NULL;
+}
+
+/* Test GST_BUS_ASYNC actually causes the thread posting the message to
+ * block until the message has been freed. We spawn a thread to post ten
+ * messages. We install a bus sync handler to get the timestamp of each
+ * message as it is being posted, and to return GST_BUS_ASYNC. In the main
+ * thread we sleep a bit after we pop off a message and before we free it.
+ * The posting thread should be blocked while the main thread sleeps, so
+ * we expect the interval as the messages are posted to be roughly the same
+ * as the sleep time in the main thread. g_usleep() is not super-precise, so
+ * we allow for some slack there, we just want to check that the posting
+ * thread was blocked at all really. */
+GST_START_TEST (test_async_message)
+{
+  GArray *timestamps;
+  guint i;
+
+  MAIN_INIT ();
+
+  timestamps = g_array_sized_new (FALSE, FALSE, sizeof (gint64), 10);
+
+  test_bus = gst_bus_new ();
+
+  gst_bus_set_sync_handler (test_bus, test_async_sync_handler, timestamps,
+      NULL);
+
+  MAIN_START_THREAD_FUNCTIONS (1, post_10_app_messages_thread, NULL);
+
+  MAIN_SYNCHRONIZE ();
+
+  for (i = 0; i < 10; i++) {
+    GstMessage *msg;
+
+    GST_LOG ("(%d) waiting for message..", i);
+    msg = gst_bus_timed_pop (test_bus, GST_CLOCK_TIME_NONE);
+    GST_LOG ("(%d) got message, sleeping a bit", i);
+    g_usleep (60 * GST_MSECOND / (GST_SECOND / G_USEC_PER_SEC));
+    GST_LOG ("(%d) about to free message", i);
+    gst_message_unref (msg);
+  }
+
+  for (i = 1; i < 10; i++) {
+    gint64 prev_ts = g_array_index (timestamps, gint64, i - 1);
+    gint64 ts = g_array_index (timestamps, gint64, i);
+    gint64 diff = ts - prev_ts;
+
+    fail_unless (prev_ts < ts);
+    fail_unless (diff >= 20 * GST_MSECOND, "interval between messages being "
+        "posted was just %" G_GINT64_FORMAT "ms", diff / GST_MSECOND);
+  }
+
+  fail_if (gst_bus_have_pending (test_bus), "unexpected messages on bus");
+
+  MAIN_STOP_THREADS ();
+
+  gst_object_unref (test_bus);
+
+  g_array_unref (timestamps);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_bus_suite (void)
 {
@@ -749,6 +829,7 @@ gst_bus_suite (void)
   tcase_add_test (tc_chain, test_timed_pop_filtered);
   tcase_add_test (tc_chain, test_timed_pop_filtered_with_timeout);
   tcase_add_test (tc_chain, test_custom_main_context);
+  tcase_add_test (tc_chain, test_async_message);
   return s;
 }
 
