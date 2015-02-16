@@ -636,8 +636,6 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
 beach:
   GST_SPLITMUX_UNLOCK (splitmux);
-  if (buf_info)
-    mq_stream_buf_free (buf_info);
   return GST_PAD_PROBE_DROP;
 }
 
