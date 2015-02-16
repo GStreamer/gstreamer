@@ -1014,6 +1014,11 @@ gst_vtenc_update_latency (GstVTEnc * self)
 
   status = VTSessionCopyProperty (self->session,
       kVTCompressionPropertyKey_NumberOfPendingFrames, NULL, &value);
+  if (status != noErr || !value) {
+    GST_INFO_OBJECT (self, "failed to get NumberOfPendingFrames: %d", status);
+    return;
+  }
+
   CFNumberGetValue (value, kCFNumberSInt32Type, &frames);
   if (self->latency_frames == -1 || self->latency_frames != frames) {
     self->latency_frames = frames;
