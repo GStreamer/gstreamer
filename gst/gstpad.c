@@ -3111,12 +3111,13 @@ gst_pad_query_latency_default (GstPad * pad, GstQuery * query)
     return FALSE;
   }
 
+  g_value_init (&ret, G_TYPE_BOOLEAN);
+
 retry:
   fold_data.live = FALSE;
   fold_data.min = 0;
   fold_data.max = GST_CLOCK_TIME_NONE;
 
-  g_value_init (&ret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&ret, FALSE);
   res = gst_iterator_fold (it, query_latency_default_fold, &ret, &fold_data);
   switch (res) {
