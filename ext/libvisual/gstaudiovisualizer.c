@@ -63,7 +63,7 @@ static void gst_audio_visualizer_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_audio_visualizer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static void gst_audio_visualizer_dispose (GObject * object);
+static void gst_audio_visualizer_finalize (GObject * object);
 
 static gboolean gst_audio_visualizer_src_negotiate (GstAudioVisualizer * scope);
 static gboolean gst_audio_visualizer_src_setcaps (GstAudioVisualizer *
@@ -549,7 +549,7 @@ gst_audio_visualizer_class_init (GstAudioVisualizerClass * klass)
 
   gobject_class->set_property = gst_audio_visualizer_set_property;
   gobject_class->get_property = gst_audio_visualizer_get_property;
-  gobject_class->dispose = gst_audio_visualizer_dispose;
+  gobject_class->finalize = gst_audio_visualizer_finalize;
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_audio_visualizer_change_state);
@@ -656,7 +656,7 @@ gst_audio_visualizer_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_audio_visualizer_dispose (GObject * object)
+gst_audio_visualizer_finalize (GObject * object)
 {
   GstAudioVisualizer *scope = GST_AUDIO_VISUALIZER (object);
 
@@ -673,11 +673,10 @@ gst_audio_visualizer_dispose (GObject * object)
     gst_buffer_unref (scope->tempbuf);
     scope->tempbuf = NULL;
   }
-  if (scope->config_lock.p) {
-    g_mutex_clear (&scope->config_lock);
-    scope->config_lock.p = NULL;
-  }
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  g_mutex_clear (&scope->config_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
