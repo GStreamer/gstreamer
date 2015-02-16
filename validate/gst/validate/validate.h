@@ -5,6 +5,9 @@
 #ifndef _GST_VALIDATE_H
 #define _GST_VALIDATE_H
 
+#include <gst/validate/gst-validate-types.h>
+#include <gst/validate/gst-validate-enums.h>
+
 #include <gst/validate/gst-validate-runner.h>
 #include <gst/validate/gst-validate-monitor-factory.h>
 #include <gst/validate/gst-validate-override-registry.h>

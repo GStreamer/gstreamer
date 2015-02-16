@@ -29,10 +29,9 @@ typedef guintptr GstValidateIssueId;
 
 #include <gst/gst.h>
 #include <gst/validate/gst-validate-reporter.h>
+#include "gst-validate-types.h"
 
 G_BEGIN_DECLS
-
-typedef struct _GstValidateAction          GstValidateAction;
 
 GType           gst_validate_report_get_type (void);
 #define GST_TYPE_VALIDATE_REPORT (gst_validate_report_get_type ())
@@ -185,7 +184,6 @@ void gst_validate_report_add_message (GstValidateReport *report,
                                     gst_validate_reporter_get_name (r->reporter), \
                                     GST_VALIDATE_ISSUE_ARGS (r->issue), \
                                     r->message
-
 void               gst_validate_report_init (void);
 GstValidateIssue  *gst_validate_issue_from_id (GstValidateIssueId issue_id);
 GstValidateIssueId gst_validate_issue_get_id (GstValidateIssue * issue);

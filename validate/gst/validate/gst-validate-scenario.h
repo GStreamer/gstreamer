@@ -25,6 +25,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include "gst-validate-types.h"
 #include <gst/validate/gst-validate-runner.h>
 
 G_BEGIN_DECLS
@@ -36,10 +37,7 @@ G_BEGIN_DECLS
 #define GST_IS_VALIDATE_SCENARIO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VALIDATE_SCENARIO))
 #define GST_VALIDATE_SCENARIO_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioClass))
 
-typedef struct _GstValidateScenario        GstValidateScenario;
-typedef struct _GstValidateScenarioClass   GstValidateScenarioClass;
 typedef struct _GstValidateScenarioPrivate GstValidateScenarioPrivate;
-typedef struct _GstValidateAction          GstValidateAction;
 typedef struct _GstValidateActionParameter GstValidateActionParameter;
 
 GST_EXPORT GType _gst_validate_action_type;
@@ -103,8 +101,6 @@ void gst_validate_action_set_done (GstValidateAction *action);
 #define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))
 GType gst_validate_action_get_type (void);
-
-typedef struct _GstValidateActionType      GstValidateActionType;
 
 /**
  * GstValidateActionTypeFlags:

@@ -20,6 +20,7 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
 
 libgstvalidate_@GST_API_VERSION@include_HEADERS = \
 	validate.h \
+	gst-validate-types.h \
 	gst-validate-bin-monitor.h \
 	gst-validate-pipeline-monitor.h \
 	gst-validate-element-monitor.h \
