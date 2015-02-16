@@ -106,6 +106,8 @@ dump_error (GstMessage * msg)
 
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
 
+  gst_message_parse_error (msg, &err, &dbg_info);
+
   g_printerr ("ERROR from element %s: %s\n",
       GST_OBJECT_NAME (msg->src), err->message);
   g_printerr ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
