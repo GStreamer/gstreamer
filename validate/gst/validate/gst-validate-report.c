@@ -516,7 +516,7 @@ gst_validate_printf (gpointer source, const gchar * format, ...)
 void
 gst_validate_print_action (GstValidateAction * action, const gchar * message)
 {
-  gst_validate_printf_valist (action, message, NULL);
+  gst_validate_printf (action, "%s", message);
 }
 
 static void
@@ -652,10 +652,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
     }
   }
 
-  if (args)
-    g_string_append_vprintf (string, format, args);
-  else
-    g_string_append (string, format);
+  g_string_append_vprintf (string, format, args);
 
   if (!newline_regex)
     newline_regex =
