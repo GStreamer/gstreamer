@@ -27,4 +27,4 @@ typedef struct _GstValidateScenarioClass   GstValidateScenarioClass;
 typedef struct _GstValidateAction          GstValidateAction;
 typedef struct _GstValidateActionType      GstValidateActionType;
 
-#endif /* __GST_VALIDATE_TYPESS_ */
+#endif /* __GST_VALIDATE_TYPES_ */
