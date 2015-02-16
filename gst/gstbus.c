@@ -308,6 +308,10 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus %" GST_PTR_FORMAT, message,
       message);
 
+  /* check we didn't accidentally add a public flag that maps to same value */
+  g_assert (!GST_MINI_OBJECT_FLAG_IS_SET (message,
+          GST_MESSAGE_FLAG_ASYNC_DELIVERY));
+
   GST_OBJECT_LOCK (bus);
   /* check if the bus is flushing */
   if (GST_OBJECT_FLAG_IS_SET (bus, GST_BUS_FLUSHING))
@@ -357,6 +361,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_cond_init (cond);
       g_mutex_init (lock);
 
+      GST_MINI_OBJECT_FLAG_SET (message, GST_MESSAGE_FLAG_ASYNC_DELIVERY);
+
       GST_DEBUG_OBJECT (bus, "[msg %p] waiting for async delivery", message);
 
       /* now we lock the message mutex, send the message to the async
@@ -369,12 +375,18 @@ gst_bus_post (GstBus * bus, GstMessage * message)
 
       /* now block till the message is freed */
       g_cond_wait (cond, lock);
+
+      /* we acquired a new ref from gst_message_dispose() so we can clean up */
       g_mutex_unlock (lock);
 
       GST_DEBUG_OBJECT (bus, "[msg %p] delivered asynchronously", message);
 
+      GST_MINI_OBJECT_FLAG_UNSET (message, GST_MESSAGE_FLAG_ASYNC_DELIVERY);
+
       g_mutex_clear (lock);
       g_cond_clear (cond);
+
+      gst_message_unref (message);
       break;
     }
     default:

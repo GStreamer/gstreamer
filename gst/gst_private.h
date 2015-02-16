@@ -426,5 +426,8 @@ struct _GstDeviceProviderFactoryClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/* privat flag used by GstBus / GstMessage */
+#define GST_MESSAGE_FLAG_ASYNC_DELIVERY (GST_MINI_OBJECT_FLAG_LAST << 0)
+
 G_END_DECLS
 #endif /* __GST_PRIVATE_H__ */
