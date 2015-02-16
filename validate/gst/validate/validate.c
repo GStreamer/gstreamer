@@ -38,10 +38,30 @@
 #include "validate.h"
 #include "gst-validate-internal.h"
 
+#ifdef G_OS_WIN32
+#define WIN32_LEAN_AND_MEAN     /* prevents from including too many things */
+#include <windows.h>            /* GetStdHandle, windows console */
+
+HMODULE _priv_gstvalidate_dll_handle = NULL;
+#endif
+
 GST_DEBUG_CATEGORY (gstvalidate_debug);
 
 static GMutex _gst_validate_registry_mutex;
 static GstRegistry *_gst_validate_registry_default = NULL;
+
+#ifdef G_OS_WIN32
+BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+  if (fdwReason == DLL_PROCESS_ATTACH)
+    _priv_gstvalidate_dll_handle = (HMODULE) hinstDLL;
+
+  return TRUE;
+}
+
+#endif
 
 static GstRegistry *
 gst_validate_registry_get (void)
@@ -104,13 +124,11 @@ gst_validate_init_plugins (void)
 
       base_dir =
           g_win32_get_package_installation_directory_of_module
-          (_priv_gst_dll_handle);
+          (_priv_gstvalidate_dll_handle);
 
       dir = g_build_filename (base_dir,
-#ifdef _DEBUG
-          "debug"
-#endif
-          "lib", "gstreamer-" GST_API_VERSION, NULL);
+          "lib", "gstreamer-" GST_API_VERSION, "validate", NULL);
+
       GST_DEBUG ("scanning DLL dir %s", dir);
 
       gst_registry_scan_path (registry, dir);
