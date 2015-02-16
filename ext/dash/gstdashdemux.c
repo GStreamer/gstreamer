@@ -269,7 +269,8 @@ gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
   GstDashDemux *self = GST_DASH_DEMUX (demux);
   GDateTime *now = g_date_time_new_now_utc ();
   GDateTime *mstart =
-      gst_date_time_to_g_date_time (self->client->mpd_node->availabilityStartTime);
+      gst_date_time_to_g_date_time (self->client->
+      mpd_node->availabilityStartTime);
   GTimeSpan stream_now;
 
   stream_now = g_date_time_difference (now, mstart);
@@ -358,7 +359,8 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
   gstadaptivedemux_class->stream_update_fragment_info =
       gst_dash_demux_stream_update_fragment_info;
   gstadaptivedemux_class->stream_free = gst_dash_demux_stream_free;
-  gstadaptivedemux_class->get_live_seek_range = gst_dash_demux_get_live_seek_range;
+  gstadaptivedemux_class->get_live_seek_range =
+      gst_dash_demux_get_live_seek_range;
 }
 
 static void
@@ -943,17 +945,23 @@ gst_dash_demux_stream_advance_subfragment (GstAdaptiveDemuxStream * stream)
   GstSidxBox *sidx = SIDX (dashstream);
   gboolean fragment_finished = TRUE;
 
-  if (stream->demux->segment.rate > 0.0) {
-    sidx->entry_index++;
-    if (sidx->entry_index < sidx->entries_count) {
-      fragment_finished = FALSE;
-    }
-  } else {
-    sidx->entry_index--;
-    if (sidx->entry_index >= 0) {
-      fragment_finished = FALSE;
+  if (dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
+    if (stream->demux->segment.rate > 0.0) {
+      sidx->entry_index++;
+      if (sidx->entry_index < sidx->entries_count) {
+        fragment_finished = FALSE;
+      }
+    } else {
+      sidx->entry_index--;
+      if (sidx->entry_index >= 0) {
+        fragment_finished = FALSE;
+      }
     }
   }
+
+  GST_DEBUG_OBJECT (stream->pad, "New sidx index: %d / %d. "
+      "Finished fragment: %d", sidx->entry_index, sidx->entries_count,
+      fragment_finished);
 
   if (!fragment_finished) {
     dashstream->sidx_current_remaining = sidx->entries[sidx->entry_index].size;
@@ -966,6 +974,8 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
 {
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
+
+  GST_DEBUG_OBJECT (stream->pad, "Advance fragment");
 
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
     if (gst_dash_demux_stream_advance_subfragment (stream))
@@ -1293,11 +1303,15 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream)
 {
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
+  GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
-  if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+  if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
+      dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     /* fragment is advanced on data_received when byte limits are reached */
     return GST_FLOW_OK;
   } else {
+    if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
+      return GST_FLOW_OK;
     return gst_adaptive_demux_stream_advance_fragment (demux, stream,
         stream->fragment.duration);
   }

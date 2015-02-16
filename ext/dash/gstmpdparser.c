@@ -3699,7 +3699,7 @@ gst_mpd_client_update_segment (GstMpdClient * client, GstActiveStream * stream,
   guint segment_idx;
 
   segment_idx = gst_mpd_client_get_segment_index (stream);
-  GST_DEBUG ("Looking for fragment sequence chunk %d", segment_idx);
+  GST_DEBUG ("Looking for fragment sequence chunk %d", segment_idx + update);
 
   gst_mpd_client_set_segment_index (stream, segment_idx + update);
 
