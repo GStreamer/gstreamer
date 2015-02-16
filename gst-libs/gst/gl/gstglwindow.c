@@ -396,7 +396,6 @@ gst_gl_window_show (GstGLWindow * window)
 
   g_return_if_fail (GST_GL_IS_WINDOW (window));
   window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_if_fail (window_class->show != NULL);
 
   if (window_class->show)
     window_class->show (window);
