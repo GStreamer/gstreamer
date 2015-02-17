@@ -29,8 +29,8 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstGLMixer GstGLMixer;
-typedef struct _GstGLMixerFrameData GstGLMixerFrameData;
+struct _GstGLMixer;
+struct _GstGLMixerFrameData;
 
 #define GST_TYPE_GL_MIXER_PAD (gst_gl_mixer_pad_get_type())
 #define GST_GL_MIXER_PAD(obj) \
@@ -62,7 +62,7 @@ struct _GstGLMixerPadClass
 {
   GstVideoAggregatorPadClass parent_class;
 
-  GstBuffer * (*upload_buffer) (GstGLMixer * mix, GstGLMixerFrameData * frame, GstBuffer * buffer);
+  GstBuffer * (*upload_buffer) (struct _GstGLMixer * mix, struct _GstGLMixerFrameData * frame, GstBuffer * buffer);
 };
 
 GType gst_gl_mixer_pad_get_type (void);
