@@ -238,6 +238,20 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
 }
 
 static void
+_show_window (gpointer data)
+{
+  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (data);
+  GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
+
+  GST_DEBUG_OBJECT (window_cocoa, "make the window available\n");
+  [priv->internal_win_id makeMainWindow];
+  [priv->internal_win_id orderFrontRegardless];
+  [priv->internal_win_id setViewsNeedDisplay:YES];
+
+  priv->visible = TRUE;
+}
+
+static void
 gst_gl_window_cocoa_show (GstGLWindow * window)
 {
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
@@ -252,17 +266,8 @@ gst_gl_window_cocoa_show (GstGLWindow * window)
       return;
     }
 
-    dispatch_sync (dispatch_get_main_queue(), ^{
-      if (!priv->external_view && !priv->visible) {
-
-        GST_DEBUG_OBJECT (window_cocoa, "make the window available\n");
-        [priv->internal_win_id makeMainWindow];
-        [priv->internal_win_id orderFrontRegardless];
-        [priv->internal_win_id setViewsNeedDisplay:YES];
-
-        priv->visible = TRUE;
-      }
-    });
+    if (!priv->external_view && !priv->visible)
+      _invoke_on_main ((GstGLWindowCB) _show_window, window);
   }
 }
 
@@ -560,4 +565,16 @@ close_window_cb (gpointer data)
 }
 
 @end
+
+void
+_invoke_on_main (GstGLWindowCB func, gpointer data)
+{
+  if ([NSThread isMainThread]) {
+    func (data);
+  } else {
+    dispatch_sync (dispatch_get_main_queue (), ^{
+      func (data);
+    });
+  }
+}
 

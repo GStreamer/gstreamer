@@ -59,6 +59,8 @@ struct _GstGLContextCocoaPrivate
 
 gboolean gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa);
 
+void _invoke_on_main (GstGLWindowCB func, gpointer data);
+
 G_END_DECLS
 
 #endif /* __GST_GL_COCOA_PRIVATE_H__ */
