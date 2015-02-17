@@ -172,6 +172,9 @@ _gst_message_dispose (GstMessage * message)
   gboolean do_free = TRUE;
 
   if (GST_MINI_OBJECT_FLAG_IS_SET (message, GST_MESSAGE_FLAG_ASYNC_DELIVERY)) {
+    /* revive message, so bus can finish with it and clean it up */
+    gst_message_ref (message);
+
     GST_INFO ("[msg %p] signalling async free", message);
 
     GST_MESSAGE_LOCK (message);
@@ -179,7 +182,6 @@ _gst_message_dispose (GstMessage * message)
     GST_MESSAGE_UNLOCK (message);
 
     /* don't free it yet, let bus finish with it first */
-    gst_message_ref (message);
     do_free = FALSE;
   }
 
