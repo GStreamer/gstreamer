@@ -107,7 +107,7 @@ struct _GstValidateAction
   GstValidateExecuteActionReturn state; /* Actually ActionState */
   gboolean printed;
 
-  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (gint) - 2 - sizeof(gboolean)];
+  gpointer _gst_reserved[GST_PADDING_LARGE - 4];
 };
 
 void gst_validate_action_set_done (GstValidateAction *action);
