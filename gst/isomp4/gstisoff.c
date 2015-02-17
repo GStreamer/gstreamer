@@ -26,23 +26,23 @@
 #include <gst/base/gstbytereader.h>
 
 void
-gst_isoff_sidx_parser_init (GstSidxParser * parser)
+gst_isoff_qt_sidx_parser_init (GstSidxParser * parser)
 {
-  parser->status = GST_ISOFF_SIDX_PARSER_INIT;
+  parser->status = GST_ISOFF_QT_SIDX_PARSER_INIT;
   parser->cumulative_entry_size = 0;
   parser->sidx.entries = NULL;
   parser->sidx.entries_count = 0;
 }
 
 void
-gst_isoff_sidx_parser_clear (GstSidxParser * parser)
+gst_isoff_qt_sidx_parser_clear (GstSidxParser * parser)
 {
   g_free (parser->sidx.entries);
   parser->sidx.entries = NULL;
 }
 
 static void
-gst_isoff_parse_sidx_entry (GstSidxBoxEntry * entry, GstByteReader * reader)
+gst_isoff_qt_parse_sidx_entry (GstSidxBoxEntry * entry, GstByteReader * reader)
 {
   guint32 aux;
 
@@ -57,10 +57,10 @@ gst_isoff_parse_sidx_entry (GstSidxBoxEntry * entry, GstByteReader * reader)
 }
 
 GstIsoffParserResult
-gst_isoff_sidx_parser_add_data (GstSidxParser * parser, const guint8 * buffer,
-    gint length, guint * consumed)
+gst_isoff_qt_sidx_parser_add_data (GstSidxParser * parser,
+    const guint8 * buffer, gint length, guint * consumed)
 {
-  GstIsoffParserResult res = GST_ISOFF_PARSER_OK;
+  GstIsoffParserResult res = GST_ISOFF_QT_PARSER_OK;
   GstByteReader reader;
   gsize remaining;
   guint32 fourcc;
@@ -68,15 +68,15 @@ gst_isoff_sidx_parser_add_data (GstSidxParser * parser, const guint8 * buffer,
   gst_byte_reader_init (&reader, buffer, length);
 
   switch (parser->status) {
-    case GST_ISOFF_SIDX_PARSER_INIT:
-      if (gst_byte_reader_get_remaining (&reader) < GST_ISOFF_FULL_BOX_SIZE) {
+    case GST_ISOFF_QT_SIDX_PARSER_INIT:
+      if (gst_byte_reader_get_remaining (&reader) < GST_ISOFF_QT_FULL_BOX_SIZE) {
         break;
       }
 
       parser->size = gst_byte_reader_get_uint32_be_unchecked (&reader);
       fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
-      if (fourcc != GST_ISOFF_FOURCC_SIDX) {
-        res = GST_ISOFF_PARSER_UNEXPECTED;
+      if (fourcc != GST_ISOFF_QT_FOURCC_SIDX) {
+        res = GST_ISOFF_QT_PARSER_UNEXPECTED;
         gst_byte_reader_set_pos (&reader, 0);
         break;
       }
@@ -89,16 +89,16 @@ gst_isoff_sidx_parser_add_data (GstSidxParser * parser, const guint8 * buffer,
         parser->size = gst_byte_reader_get_uint64_be_unchecked (&reader);
       }
       if (parser->size == 0) {
-        res = GST_ISOFF_PARSER_ERROR;
+        res = GST_ISOFF_QT_PARSER_ERROR;
         gst_byte_reader_set_pos (&reader, 0);
         break;
       }
       parser->sidx.version = gst_byte_reader_get_uint8_unchecked (&reader);
       parser->sidx.flags = gst_byte_reader_get_uint24_le_unchecked (&reader);
 
-      parser->status = GST_ISOFF_SIDX_PARSER_HEADER;
+      parser->status = GST_ISOFF_QT_SIDX_PARSER_HEADER;
 
-    case GST_ISOFF_SIDX_PARSER_HEADER:
+    case GST_ISOFF_QT_SIDX_PARSER_HEADER:
       remaining = gst_byte_reader_get_remaining (&reader);
       if (remaining < 12 + (parser->sidx.version == 0 ? 8 : 16)) {
         break;
@@ -137,9 +137,9 @@ gst_isoff_sidx_parser_add_data (GstSidxParser * parser, const guint8 * buffer,
       }
       parser->sidx.entry_index = 0;
 
-      parser->status = GST_ISOFF_SIDX_PARSER_DATA;
+      parser->status = GST_ISOFF_QT_SIDX_PARSER_DATA;
 
-    case GST_ISOFF_SIDX_PARSER_DATA:
+    case GST_ISOFF_QT_SIDX_PARSER_DATA:
       while (parser->sidx.entry_index < parser->sidx.entries_count) {
         GstSidxBoxEntry *entry =
             &parser->sidx.entries[parser->sidx.entry_index];
@@ -150,7 +150,7 @@ gst_isoff_sidx_parser_add_data (GstSidxParser * parser, const guint8 * buffer,
 
         entry->offset = parser->cumulative_entry_size;
         entry->pts = parser->cumulative_pts;
-        gst_isoff_parse_sidx_entry (entry, &reader);
+        gst_isoff_qt_parse_sidx_entry (entry, &reader);
         entry->duration = gst_util_uint64_scale_int_round (entry->duration,
             GST_SECOND, parser->sidx.timescale);
         parser->cumulative_entry_size += entry->size;
@@ -166,12 +166,12 @@ gst_isoff_sidx_parser_add_data (GstSidxParser * parser, const guint8 * buffer,
       }
 
       if (parser->sidx.entry_index == parser->sidx.entries_count)
-        parser->status = GST_ISOFF_SIDX_PARSER_FINISHED;
+        parser->status = GST_ISOFF_QT_SIDX_PARSER_FINISHED;
       else
         break;
-    case GST_ISOFF_SIDX_PARSER_FINISHED:
+    case GST_ISOFF_QT_SIDX_PARSER_FINISHED:
       parser->sidx.entry_index = 0;
-      res = GST_ISOFF_PARSER_DONE;
+      res = GST_ISOFF_QT_PARSER_DONE;
       break;
   }
 
@@ -180,18 +180,20 @@ gst_isoff_sidx_parser_add_data (GstSidxParser * parser, const guint8 * buffer,
 }
 
 GstIsoffParserResult
-gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buffer,
+gst_isoff_qt_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buffer,
     guint * consumed)
 {
-  GstIsoffParserResult res = GST_ISOFF_PARSER_OK;
+  GstIsoffParserResult res = GST_ISOFF_QT_PARSER_OK;
   GstMapInfo info;
 
   if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
     *consumed = 0;
-    return GST_ISOFF_PARSER_ERROR;
+    return GST_ISOFF_QT_PARSER_ERROR;
   }
 
-  res = gst_isoff_sidx_parser_add_data (parser, info.data, info.size, consumed);
+  res =
+      gst_isoff_qt_sidx_parser_add_data (parser, info.data, info.size,
+      consumed);
 
   gst_buffer_unmap (buffer, &info);
   return res;

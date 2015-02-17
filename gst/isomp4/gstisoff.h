@@ -22,25 +22,25 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_ISOFF_H__
-#define __GST_ISOFF_H__
+#ifndef __GST_ISOFF_QT_H__
+#define __GST_ISOFF_QT_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
 typedef enum {
-  GST_ISOFF_PARSER_OK,
-  GST_ISOFF_PARSER_DONE,
-  GST_ISOFF_PARSER_UNEXPECTED,
-  GST_ISOFF_PARSER_ERROR
+  GST_ISOFF_QT_PARSER_OK,
+  GST_ISOFF_QT_PARSER_DONE,
+  GST_ISOFF_QT_PARSER_UNEXPECTED,
+  GST_ISOFF_QT_PARSER_ERROR
 } GstIsoffParserResult;
 
 /* this is the minimum size, it can be larger if it
  * uses extended size or type */
-#define GST_ISOFF_FULL_BOX_SIZE 12
+#define GST_ISOFF_QT_FULL_BOX_SIZE 12
 
-#define GST_ISOFF_FOURCC_SIDX GST_MAKE_FOURCC('s','i','d','x')
+#define GST_ISOFF_QT_FOURCC_SIDX GST_MAKE_FOURCC('s','i','d','x')
 typedef struct _GstSidxBoxEntry
 {
   gboolean ref_type;
@@ -72,10 +72,10 @@ typedef struct _GstSidxBox
 
 typedef enum _GstSidxParserStatus
 {
-  GST_ISOFF_SIDX_PARSER_INIT,
-  GST_ISOFF_SIDX_PARSER_HEADER,
-  GST_ISOFF_SIDX_PARSER_DATA,
-  GST_ISOFF_SIDX_PARSER_FINISHED
+  GST_ISOFF_QT_SIDX_PARSER_INIT,
+  GST_ISOFF_QT_SIDX_PARSER_HEADER,
+  GST_ISOFF_QT_SIDX_PARSER_DATA,
+  GST_ISOFF_QT_SIDX_PARSER_FINISHED
 } GstSidxParserStatus;
 
 typedef struct _GstSidxParser
@@ -89,12 +89,12 @@ typedef struct _GstSidxParser
   GstSidxBox sidx;
 } GstSidxParser;
 
-void gst_isoff_sidx_parser_init (GstSidxParser * parser);
-void gst_isoff_sidx_parser_clear (GstSidxParser * parser);
-GstIsoffParserResult gst_isoff_sidx_parser_add_data (GstSidxParser * parser, const guint8 * buffer, gint length, guint * consumed);
-GstIsoffParserResult gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buf, guint * consumed);
+void gst_isoff_qt_sidx_parser_init (GstSidxParser * parser);
+void gst_isoff_qt_sidx_parser_clear (GstSidxParser * parser);
+GstIsoffParserResult gst_isoff_qt_sidx_parser_add_data (GstSidxParser * parser, const guint8 * buffer, gint length, guint * consumed);
+GstIsoffParserResult gst_isoff_qt_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buf, guint * consumed);
 
 G_END_DECLS
 
-#endif /* __GST_ISOFF_H__ */
+#endif /* __GST_ISOFF_QT_H__ */
 
