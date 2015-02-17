@@ -139,9 +139,21 @@ gst_gl_window_cocoa_new (void)
 
 /* Must be called from the main thread */
 gboolean
-gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa, NSRect rect)
+gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
 {
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
+  GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
+  NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
+  gint h = priv->preferred_height;
+  gint y = mainRect.size.height > h ? (mainRect.size.height - h) * 0.5 : 0;
+  NSRect rect = NSMakeRect (0, y, priv->preferred_width, priv->preferred_height);
+  NSRect windowRect = NSMakeRect (0, y, priv->preferred_width, priv->preferred_height);
+  GstGLContext *context = gst_gl_window_get_context (window);
+  GstGLContextCocoa *context_cocoa = GST_GL_CONTEXT_COCOA (context);
+  GstGLCAOpenGLLayer *layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLContext:context_cocoa];
+  GstGLNSView *glView = [[GstGLNSView alloc] initWithFrameLayer:window_cocoa rect:windowRect layer:layer];
+
+  gst_object_unref (context);
 
   priv->internal_win_id = [[GstGLNSWindow alloc] initWithContentRect:rect styleMask: 
       (NSTitledWindowMask | NSClosableWindowMask |
@@ -149,6 +161,8 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa, NSRect rect)
       backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
 
       GST_DEBUG ("NSWindow id: %"G_GUINTPTR_FORMAT, (guintptr) priv->internal_win_id);
+
+ [priv->internal_win_id setContentView:glView];
 
   return TRUE;
 }
@@ -240,30 +254,8 @@ gst_gl_window_cocoa_show (GstGLWindow * window)
 
     dispatch_sync (dispatch_get_main_queue(), ^{
       if (!priv->external_view && !priv->visible) {
-        NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
-        NSRect windowRect = [priv->internal_win_id frame];
-        gint x = 0;
-        gint y = 0;
 
-        GST_DEBUG_OBJECT (window_cocoa, "main screen rect: %d %d %d %d\n", (int) mainRect.origin.x,
-            (int) mainRect.origin.y, (int) mainRect.size.width,
-            (int) mainRect.size.height);
-
-        windowRect.origin.x += x;
-        windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
-        windowRect.size.width = window_cocoa->priv->preferred_width;
-        windowRect.size.height = window_cocoa->priv->preferred_height;
-
-        GST_DEBUG_OBJECT (window_cocoa, "window rect: %d %d %d %d\n", (int) windowRect.origin.x,
-            (int) windowRect.origin.y, (int) windowRect.size.width,
-            (int) windowRect.size.height);
-
-        x += 20;
-        y += 20;
-
-        [priv->internal_win_id setFrame:windowRect display:NO];
         GST_DEBUG_OBJECT (window_cocoa, "make the window available\n");
-
         [priv->internal_win_id makeMainWindow];
         [priv->internal_win_id orderFrontRegardless];
         [priv->internal_win_id setViewsNeedDisplay:YES];
