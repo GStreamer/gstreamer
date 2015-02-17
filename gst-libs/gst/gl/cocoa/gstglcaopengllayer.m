@@ -37,6 +37,14 @@
   [super dealloc];
 }
 
+static void
+_context_ready (gpointer data)
+{
+  GstGLCAOpenGLLayer *ca_layer = data;
+
+  g_atomic_int_set (&ca_layer->can_draw, 1);
+}
+
 - (id)initWithGstGLContext:(GstGLContextCocoa *)parent_gl_context {
   [super init];
 
@@ -45,6 +53,9 @@
   self->gst_gl_context = parent_gl_context;
   self.asynchronous = YES;
   self.needsDisplayOnBoundsChange = YES;
+
+  gst_gl_window_send_message_async (GST_GL_CONTEXT (parent_gl_context)->window,
+      (GstGLWindowCB) _context_ready, self, NULL);
 
   return self;
 }
@@ -117,6 +128,13 @@
   self->resize_cb = cb;
   self->resize_data = data;
   self->resize_notify = notify;
+}
+
+- (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
+               pixelFormat:(CGLPixelFormatObj)pixelFormat
+            forLayerTime:(CFTimeInterval)interval
+             displayTime:(const CVTimeStamp *)timeStamp {
+  return g_atomic_int_get (&self->can_draw);
 }
 
 - (void)drawInCGLContext:(CGLContextObj)glContext

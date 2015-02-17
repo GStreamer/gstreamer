@@ -46,6 +46,7 @@ G_BEGIN_DECLS
   gpointer resize_data;
   GDestroyNotify resize_notify;
 
+  gint can_draw;
 }
 - (void) setDrawCallback:(GstGLWindowCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
 - (void) setResizeCallback:(GstGLWindowResizeCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
