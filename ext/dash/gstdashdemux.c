@@ -303,14 +303,15 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
           "(deprecated)",
           2, G_MAXUINT, DEFAULT_MAX_BUFFERING_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
-#endif
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH_USAGE,
       g_param_spec_float ("bandwidth-usage",
           "Bandwidth usage [0..1]",
-          "Percentage of the available bandwidth to use when selecting representations",
+          "Percentage of the available bandwidth to use when "
+          "selecting representations (deprecated)",
           0, 1, DEFAULT_BANDWIDTH_USAGE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
       g_param_spec_uint ("max-bitrate", "Max bitrate",
@@ -365,7 +366,6 @@ gst_dash_demux_init (GstDashDemux * demux)
 {
   /* Properties */
   demux->max_buffering_time = DEFAULT_MAX_BUFFERING_TIME * GST_SECOND;
-  demux->bandwidth_usage = DEFAULT_BANDWIDTH_USAGE;
   demux->max_bitrate = DEFAULT_MAX_BITRATE;
 
   g_mutex_init (&demux->client_lock);
@@ -378,6 +378,7 @@ static void
 gst_dash_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstAdaptiveDemux *adaptivedemux = GST_ADAPTIVE_DEMUX_CAST (object);
   GstDashDemux *demux = GST_DASH_DEMUX (object);
 
   switch (prop_id) {
@@ -385,7 +386,7 @@ gst_dash_demux_set_property (GObject * object, guint prop_id,
       demux->max_buffering_time = g_value_get_uint (value) * GST_SECOND;
       break;
     case PROP_BANDWIDTH_USAGE:
-      demux->bandwidth_usage = g_value_get_float (value);
+      adaptivedemux->bitrate_limit = g_value_get_float (value);
       break;
     case PROP_MAX_BITRATE:
       demux->max_bitrate = g_value_get_uint (value);
@@ -400,6 +401,7 @@ static void
 gst_dash_demux_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
+  GstAdaptiveDemux *adaptivedemux = GST_ADAPTIVE_DEMUX_CAST (object);
   GstDashDemux *demux = GST_DASH_DEMUX (object);
 
   switch (prop_id) {
@@ -407,7 +409,7 @@ gst_dash_demux_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_uint (value, demux->max_buffering_time / GST_SECOND);
       break;
     case PROP_BANDWIDTH_USAGE:
-      g_value_set_float (value, demux->bandwidth_usage);
+      g_value_set_float (value, adaptivedemux->bitrate_limit);
       break;
     case PROP_MAX_BITRATE:
       g_value_set_uint (value, demux->max_bitrate);
@@ -996,8 +998,6 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
   if (!rep_list) {
     goto end;
   }
-
-  bitrate *= demux->bandwidth_usage;
 
   GST_DEBUG_OBJECT (stream->pad,
       "Trying to change to bitrate: %" G_GUINT64_FORMAT, bitrate);

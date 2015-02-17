@@ -92,7 +92,6 @@ struct _GstDashDemux
 
   /* Properties */
   GstClockTime max_buffering_time;      /* Maximum buffering time accumulated during playback */
-  gfloat bandwidth_usage;       /* Percentage of the available bandwidth to use       */
   guint64 max_bitrate;          /* max of bitrate supported by target decoder         */
 
   gint n_audio_streams;
