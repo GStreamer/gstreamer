@@ -76,6 +76,7 @@ struct _GstJackAudioSrc
     gchar           *server;
     jack_client_t   *jclient;
     gchar           *client_name;
+    gchar           *port_pattern;
     guint            transport;
 
     /* our client */

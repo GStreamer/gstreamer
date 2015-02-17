@@ -469,9 +469,15 @@ gst_jack_ring_buffer_acquire (GstAudioRingBuffer * buf,
     /* find all the physical output ports. A physical output port is a port
      * associated with a hardware device. Someone needs connect to a physical
      * port in order to capture something. */
-    ports =
-        jack_get_ports (client, NULL, NULL,
-        JackPortIsPhysical | JackPortIsOutput);
+
+    if (src->port_pattern == NULL) {
+      ports = jack_get_ports (client, NULL, NULL,
+          JackPortIsPhysical | JackPortIsOutput);
+    } else {
+      ports = jack_get_ports (client, src->port_pattern, NULL,
+          JackPortIsOutput);
+    }
+
     if (ports == NULL) {
       /* no ports? fine then we don't do anything except for posting a warning
        * message. */
@@ -680,7 +686,7 @@ enum
 #define DEFAULT_PROP_SERVER 		NULL
 #define DEFAULT_PROP_CLIENT_NAME	NULL
 #define DEFAULT_PROP_TRANSPORT	GST_JACK_TRANSPORT_AUTONOMOUS
-
+#define DEFAULT_PROP_PORT_PATTERN     	NULL
 enum
 {
   PROP_0,
@@ -688,10 +694,10 @@ enum
   PROP_SERVER,
   PROP_CLIENT,
   PROP_CLIENT_NAME,
+  PROP_PORT_PATTERN,
   PROP_TRANSPORT,
   PROP_LAST
 };
-
 
 /* the capabilities of the inputs and outputs.
  *
@@ -771,6 +777,18 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
           GST_TYPE_JACK_CLIENT,
           GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
+   /**
+    * GstJackAudioSrc:port-pattern
+    *
+    * autoconnect to ports matching pattern, when NULL connect to physical ports
+    *
+    * Since: 1.6
+    */
+  g_object_class_install_property (gobject_class, PROP_PORT_PATTERN,
+      g_param_spec_string ("port-pattern", "port pattern",
+          "A pattern to select which ports to connect to (NULL = first physical ports)",
+          DEFAULT_PROP_PORT_PATTERN,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstJackAudioSink:transport:
@@ -828,6 +846,11 @@ gst_jack_audio_src_dispose (GObject * object)
     src->client_name = NULL;
   }
 
+  if (src->port_pattern != NULL) {
+    g_free (src->port_pattern);
+    src->port_pattern = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -841,6 +864,10 @@ gst_jack_audio_src_set_property (GObject * object, guint prop_id,
     case PROP_CLIENT_NAME:
       g_free (src->client_name);
       src->client_name = g_value_dup_string (value);
+      break;
+    case PROP_PORT_PATTERN:
+      g_free (src->port_pattern);
+      src->port_pattern = g_value_dup_string (value);
       break;
     case PROP_CONNECT:
       src->connect = g_value_get_enum (value);
@@ -874,6 +901,8 @@ gst_jack_audio_src_get_property (GObject * object, guint prop_id,
     case PROP_CLIENT_NAME:
       g_value_set_string (value, src->client_name);
       break;
+    case PROP_PORT_PATTERN:
+      g_value_set_string (value, src->port_pattern);
     case PROP_CONNECT:
       g_value_set_enum (value, src->connect);
       break;
