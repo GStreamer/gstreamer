@@ -57,7 +57,7 @@ struct _GstGLContextCocoaPrivate
 - (id) initWithFrameLayer:(GstGLWindowCocoa *)window rect:(NSRect)contentRect layer:(CALayer *)layerContent;
 @end
 
-gboolean gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa, NSRect rect);
+gboolean gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa);
 
 G_END_DECLS
 

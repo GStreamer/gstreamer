@@ -304,8 +304,6 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   dispatch_sync (dispatch_get_main_queue (), ^{
     NSAutoreleasePool *pool;
     CGLPixelFormatObj fmt = NULL;
-    GstGLNSView *glView = NULL;
-    GstGLCAOpenGLLayer *layer;
     CGLContextObj glContext;
     CGLPixelFormatAttribute attribs[] = {
       kCGLPFADoubleBuffer,
@@ -313,19 +311,9 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
       0
     };
     CGLError ret;
-    NSRect rect;
-    NSWindow *window_handle;
     gint npix;
 
     pool = [[NSAutoreleasePool alloc] init];
-
-    rect.origin.x = 0;
-    rect.origin.y = 0;
-    rect.size.width = 320;
-    rect.size.height = 240;
-
-    gst_gl_window_cocoa_create_window (window_cocoa, rect);
-    window_handle = (NSWindow *) gst_gl_window_get_window_handle (window);
 
     if (priv->external_gl_context) {
       fmt = CGLGetPixelFormat (priv->external_gl_context);
@@ -354,10 +342,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
     context_cocoa->priv->pixel_format = fmt;
     context_cocoa->priv->gl_context = glContext;
 
-    layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLContext:context_cocoa];
-    glView = [[GstGLNSView alloc] initWithFrameLayer:window_cocoa rect:rect layer:layer];
-
-    [window_handle setContentView:glView];
+    gst_gl_window_cocoa_create_window (window_cocoa);
 
     [pool release];
   });
