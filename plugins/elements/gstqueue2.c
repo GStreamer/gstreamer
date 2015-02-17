@@ -2029,7 +2029,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
 
     /* add buffer to the statistics */
     if (QUEUE_IS_USING_QUEUE (queue)) {
-      queue->cur_level.buffers++;
+      queue->cur_level.buffers += gst_buffer_list_length (buffer_list);
       queue->cur_level.bytes += size;
     }
     queue->bytes_in += size;
@@ -2222,7 +2222,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, GstQueue2ItemType * item_type)
         "retrieved buffer list %p from queue", buffer_list);
 
     if (QUEUE_IS_USING_QUEUE (queue)) {
-      queue->cur_level.buffers--;
+      queue->cur_level.buffers -= gst_buffer_list_length (buffer_list);
       queue->cur_level.bytes -= size;
     }
     queue->bytes_out += size;
