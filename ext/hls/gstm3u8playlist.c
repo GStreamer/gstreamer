@@ -129,7 +129,7 @@ gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
 
   entry = gst_m3u8_entry_new (url, title, duration, discontinuous);
 
-  if (playlist->window_size != -1) {
+  if (playlist->window_size > 0) {
     /* Delete old entries from the playlist */
     while (playlist->entries->length >= playlist->window_size) {
       GstM3U8Entry *old_entry;

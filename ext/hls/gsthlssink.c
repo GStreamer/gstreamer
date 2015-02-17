@@ -161,8 +161,9 @@ gst_hls_sink_class_init (GstHlsSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_PLAYLIST_LENGTH,
       g_param_spec_uint ("playlist-length", "Playlist length",
           "Length of HLS playlist. To allow players to conform to section 6.3.3 "
-          "of the HLS specification, this should be at least 3.",
-          1, G_MAXUINT, DEFAULT_PLAYLIST_LENGTH,
+          "of the HLS specification, this should be at least 3. If set to 0, "
+          "the playlist will be infinite.",
+          0, G_MAXUINT, DEFAULT_PLAYLIST_LENGTH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
