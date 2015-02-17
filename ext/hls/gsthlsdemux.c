@@ -63,14 +63,12 @@ enum
 
   PROP_FRAGMENTS_CACHE,
   PROP_BITRATE_LIMIT,
-  PROP_CONNECTION_SPEED,
   PROP_LAST
 };
 
 #define DEFAULT_FRAGMENTS_CACHE 1
 #define DEFAULT_FAILED_COUNT 3
 #define DEFAULT_BITRATE_LIMIT 0.8
-#define DEFAULT_CONNECTION_SPEED    0
 
 /* GObject */
 static void gst_hls_demux_set_property (GObject * object, guint prop_id,
@@ -177,12 +175,6 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
           0, 1, DEFAULT_BITRATE_LIMIT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
-      g_param_spec_uint ("connection-speed", "Connection Speed",
-          "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXUINT / 1000, DEFAULT_CONNECTION_SPEED,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
 
   gst_element_class_add_pad_template (element_class,
@@ -232,7 +224,6 @@ gst_hls_demux_init (GstHLSDemux * demux)
 
   /* Properties */
   demux->bitrate_limit = DEFAULT_BITRATE_LIMIT;
-  demux->connection_speed = DEFAULT_CONNECTION_SPEED;
 }
 
 static void
@@ -246,9 +237,6 @@ gst_hls_demux_set_property (GObject * object, guint prop_id,
       break;
     case PROP_BITRATE_LIMIT:
       demux->bitrate_limit = g_value_get_float (value);
-      break;
-    case PROP_CONNECTION_SPEED:
-      demux->connection_speed = g_value_get_uint (value) * 1000;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -268,9 +256,6 @@ gst_hls_demux_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_BITRATE_LIMIT:
       g_value_set_float (value, demux->bitrate_limit);
-      break;
-    case PROP_CONNECTION_SPEED:
-      g_value_set_uint (value, demux->connection_speed / 1000);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -488,13 +473,13 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
     GError *err = NULL;
 
     /* TODO seems like something that could be simplified */
-    if (hlsdemux->connection_speed == 0) {
+    if (demux->connection_speed == 0) {
       GST_M3U8_CLIENT_LOCK (hlsdemux->client);
       child = hlsdemux->client->main->current_variant->data;
       GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
     } else {
       GList *tmp = gst_m3u8_client_get_playlist_for_bitrate (hlsdemux->client,
-          hlsdemux->connection_speed);
+          demux->connection_speed);
 
       child = GST_M3U8 (tmp->data);
     }
@@ -1073,11 +1058,6 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, guint max_bitrate,
   g_return_val_if_fail (adaptive_demux->streams != NULL, FALSE);
 
   stream = adaptive_demux->streams->data;
-
-  /* If user specifies a connection speed never use a playlist with a bandwidth
-   * superior than it */
-  if (demux->connection_speed != 0 && max_bitrate > demux->connection_speed)
-    max_bitrate = demux->connection_speed;
 
   previous_variant = demux->client->main->current_variant;
   current_variant = gst_m3u8_client_get_playlist_for_bitrate (demux->client,

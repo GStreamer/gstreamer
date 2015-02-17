@@ -192,6 +192,7 @@ struct _GstAdaptiveDemux
   gchar *manifest_base_uri;
 
   guint num_lookback_fragments;
+  guint connection_speed;
 
   gboolean have_group_id;
   guint group_id;

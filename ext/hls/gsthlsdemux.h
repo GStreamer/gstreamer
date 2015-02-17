@@ -76,7 +76,6 @@ struct _GstHLSDemux
 
   /* Properties */
   gfloat bitrate_limit;         /* limit of the available bitrate to use */
-  guint connection_speed;       /* Network connection speed in kbps (0 = unknown) */
 
   /* Streaming task */
   gint64 next_download;

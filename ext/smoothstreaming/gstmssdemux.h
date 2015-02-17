@@ -70,10 +70,7 @@ struct _GstMssDemux {
   guint n_videos;
   guint n_audios;
 
-  gboolean update_bitrates;
-
   /* properties */
-  guint64 connection_speed; /* in bps */
   guint data_queue_max_size;
   gfloat bitrate_limit;
 };

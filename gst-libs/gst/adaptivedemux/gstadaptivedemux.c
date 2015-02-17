@@ -87,11 +87,13 @@ GST_DEBUG_CATEGORY (adaptivedemux_debug);
 #define MAX_DOWNLOAD_ERROR_COUNT 3
 #define DEFAULT_FAILED_COUNT 3
 #define DEFAULT_LOOKBACK_FRAGMENTS 3
+#define DEFAULT_CONNECTION_SPEED 0
 
 enum
 {
   PROP_0,
   PROP_LOOKBACK_FRAGMENTS,
+  PROP_CONNECTION_SPEED,
   PROP_LAST
 };
 
@@ -227,6 +229,11 @@ gst_adaptive_demux_set_property (GObject * object, guint prop_id,
     case PROP_LOOKBACK_FRAGMENTS:
       demux->num_lookback_fragments = g_value_get_uint (value);
       break;
+    case PROP_CONNECTION_SPEED:
+      demux->connection_speed = g_value_get_uint (value) * 1000;
+      GST_DEBUG_OBJECT (demux, "Connection speed set to %u",
+          demux->connection_speed);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -242,6 +249,9 @@ gst_adaptive_demux_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOOKBACK_FRAGMENTS:
       g_value_set_uint (value, demux->num_lookback_fragments);
+      break;
+    case PROP_CONNECTION_SPEED:
+      g_value_set_uint (value, demux->connection_speed / 1000);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -276,6 +286,12 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
           "The number of fragments the demuxer will look back to calculate an average bitrate",
           1, G_MAXUINT, DEFAULT_LOOKBACK_FRAGMENTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
+
+  g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
+      g_param_spec_uint ("connection-speed", "Connection Speed",
+          "Network connection speed in kbps (0 = calculate from downloaded"
+          " fragments)", 0, G_MAXUINT / 1000, DEFAULT_CONNECTION_SPEED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_adaptive_demux_change_state;
 
@@ -323,7 +339,9 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
   gst_pad_set_chain_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_adaptive_demux_sink_chain));
 
+  /* Properties */
   demux->num_lookback_fragments = DEFAULT_LOOKBACK_FRAGMENTS;
+  demux->connection_speed = DEFAULT_CONNECTION_SPEED;
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 }
@@ -702,7 +720,8 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
   }
 
   if (first_segment)
-    demux->segment.start = demux->segment.position = demux->segment.time = min_pts;
+    demux->segment.start = demux->segment.position = demux->segment.time =
+        min_pts;
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
 
@@ -1259,6 +1278,12 @@ gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemux * demux,
 
   /* Conservative approach, make sure we don't upgrade too fast */
   stream->current_download_rate = MIN (average_bitrate, fragment_bitrate);
+
+  if (demux->connection_speed) {
+    GST_LOG_OBJECT (demux, "Connection-speed is set to %u kbps, using it",
+        demux->connection_speed / 1000);
+    return demux->connection_speed;
+  }
 
   return stream->current_download_rate;
 }
