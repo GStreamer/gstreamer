@@ -286,9 +286,7 @@ gst_mss_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
   GstFlowReturn ret;
   gchar *path = NULL;
 
-  g_free (stream->fragment.uri);
-  stream->fragment.uri = NULL;
-
+  gst_adaptive_demux_stream_fragment_clear (&stream->fragment);
   ret = gst_mss_stream_get_fragment_url (mssstream->manifest_stream, &path);
 
   if (ret == GST_FLOW_OK) {
