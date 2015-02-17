@@ -252,7 +252,6 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
   switch (message->type) {
     case GST_MESSAGE_ELEMENT:
     {
-      GFile *file;
       const char *filename;
       char *playlist_content;
       GstClockTime running_time, duration;
@@ -270,7 +269,6 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
       duration = running_time - sink->last_running_time;
       sink->last_running_time = running_time;
 
-      file = g_file_new_for_path (filename);
       GST_INFO_OBJECT (sink, "COUNT %d", sink->index);
       if (sink->playlist_root == NULL)
         entry_location = g_path_get_basename (filename);
@@ -280,7 +278,7 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
         g_free (name);
       }
 
-      gst_m3u8_playlist_add_entry (sink->playlist, entry_location, file,
+      gst_m3u8_playlist_add_entry (sink->playlist, entry_location,
           NULL, duration, sink->index, discont);
       g_free (entry_location);
       playlist_content = gst_m3u8_playlist_render (sink->playlist);

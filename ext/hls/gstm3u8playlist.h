@@ -36,7 +36,6 @@ struct _GstM3U8Entry
   gfloat duration;
   gchar *title;
   gchar *url;
-  GFile *file;
   gboolean discontinuous;
 };
 
@@ -61,7 +60,6 @@ GstM3U8Playlist * gst_m3u8_playlist_new (guint version,
 void gst_m3u8_playlist_free (GstM3U8Playlist * playlist);
 gboolean gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
     				     const gchar * url,
-    				     GFile * file,
 				     const gchar *title,
 				     gfloat duration,
 				     guint index,

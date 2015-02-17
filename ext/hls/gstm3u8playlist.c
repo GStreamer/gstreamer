@@ -43,7 +43,7 @@ enum
 };
 
 static GstM3U8Entry *
-gst_m3u8_entry_new (const gchar * url, GFile * file, const gchar * title,
+gst_m3u8_entry_new (const gchar * url, const gchar * title,
     gfloat duration, gboolean discontinuous)
 {
   GstM3U8Entry *entry;
@@ -54,7 +54,6 @@ gst_m3u8_entry_new (const gchar * url, GFile * file, const gchar * title,
   entry->url = g_strdup (url);
   entry->title = g_strdup (title);
   entry->duration = duration;
-  entry->file = file;
   entry->discontinuous = discontinuous;
   return entry;
 }
@@ -66,8 +65,6 @@ gst_m3u8_entry_free (GstM3U8Entry * entry)
 
   g_free (entry->url);
   g_free (entry->title);
-  if (entry->file != NULL)
-    g_object_unref (entry->file);
   g_free (entry);
 }
 
@@ -119,7 +116,7 @@ gst_m3u8_playlist_free (GstM3U8Playlist * playlist)
 
 gboolean
 gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
-    const gchar * url, GFile * file, const gchar * title,
+    const gchar * url, const gchar * title,
     gfloat duration, guint index, gboolean discontinuous)
 {
   GstM3U8Entry *entry;
@@ -130,7 +127,7 @@ gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
   if (playlist->type == GST_M3U8_PLAYLIST_TYPE_VOD)
     return FALSE;
 
-  entry = gst_m3u8_entry_new (url, file, title, duration, discontinuous);
+  entry = gst_m3u8_entry_new (url, title, duration, discontinuous);
 
   if (playlist->window_size != -1) {
     /* Delete old entries from the playlist */
