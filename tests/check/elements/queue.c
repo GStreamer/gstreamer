@@ -937,6 +937,157 @@ GST_START_TEST (test_state_change_when_flushing)
 
 GST_END_TEST;
 
+GST_START_TEST (test_time_level_buffer_list)
+{
+  GstBuffer *buffer = NULL;
+  GstBufferList *buffer_list = NULL;
+  GstClockTime time;
+  guint buffers;
+  GstSegment segment;
+
+  g_signal_connect (queue, "overrun",
+      G_CALLBACK (queue_overrun_link_and_activate), NULL);
+  g_object_set (G_OBJECT (queue), "max-size-buffers", 11, NULL);
+  g_object_set (G_OBJECT (queue), "max-size-time",
+      G_GUINT64_CONSTANT (7000) * GST_MSECOND, NULL);
+
+  GST_DEBUG ("starting");
+
+  block_src ();
+
+  UNDERRUN_LOCK ();
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  UNDERRUN_WAIT ();
+  UNDERRUN_UNLOCK ();
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
+
+  /* push buffer without duration */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 1000 * GST_MSECOND;
+  /* pushing gives away my reference */
+  gst_pad_push (mysrcpad, buffer);
+
+  /* level should be 1 seconds because buffer has no duration and starts at 1
+   * SECOND (sparse stream). */
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_unless_equals_uint64 (time, 1000 * GST_MSECOND);
+  g_object_get (G_OBJECT (queue), "current-level-buffers", &buffers, NULL);
+  fail_unless_equals_int (buffers, 1);
+
+  /* second push should set the level to 2 second */
+  buffer_list = gst_buffer_list_new ();
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 1500 * GST_MSECOND;
+  gst_buffer_list_add (buffer_list, buffer);
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 2000 * GST_MSECOND;
+  gst_buffer_list_add (buffer_list, buffer);
+  gst_pad_push_list (mysrcpad, buffer_list);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_unless_equals_uint64 (time, 2000 * GST_MSECOND);
+  g_object_get (G_OBJECT (queue), "current-level-buffers", &buffers, NULL);
+  fail_unless_equals_int (buffers, 3);
+
+  /* third push should set the level to 4 seconds, the 1 second diff with the
+   * previous buffer (without duration) and the 1 second duration of this
+   * buffer. */
+  buffer_list = gst_buffer_list_new ();
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 3000 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 500 * GST_MSECOND;
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_list_add (buffer_list, buffer);
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 3500 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 500 * GST_MSECOND;
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_list_add (buffer_list, buffer);
+  gst_pad_push_list (mysrcpad, buffer_list);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_unless_equals_uint64 (time, 4000 * GST_MSECOND);
+  g_object_get (G_OBJECT (queue), "current-level-buffers", &buffers, NULL);
+  fail_unless_equals_int (buffers, 5);
+
+  /* fourth push should set the level to 6 seconds, the 2 second diff with the
+   * previous buffer, same duration. */
+  buffer_list = gst_buffer_list_new ();
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 5000 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 1000 * GST_MSECOND;
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_list_add (buffer_list, buffer);
+  gst_pad_push_list (mysrcpad, buffer_list);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_unless_equals_uint64 (time, 6000 * GST_MSECOND);
+  g_object_get (G_OBJECT (queue), "current-level-buffers", &buffers, NULL);
+  fail_unless_equals_int (buffers, 6);
+
+  /* fifth push should not adjust the level, the timestamp and duration are the
+   * same, meaning the previous buffer did not really have a duration. */
+  buffer_list = gst_buffer_list_new ();
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 5000 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  gst_buffer_list_add (buffer_list, buffer);
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 5250 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  gst_buffer_list_add (buffer_list, buffer);
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 5500 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  gst_buffer_list_add (buffer_list, buffer);
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 5750 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  gst_buffer_list_add (buffer_list, buffer);
+  gst_pad_push_list (mysrcpad, buffer_list);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_unless_equals_uint64 (time, 6000 * GST_MSECOND);
+  g_object_get (G_OBJECT (queue), "current-level-buffers", &buffers, NULL);
+  fail_unless_equals_int (buffers, 10);
+
+  /* sixth push should adjust the level with 1 second, we now know the
+   * previous buffer actually had a duration of 2 SECONDS */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 7000 * GST_MSECOND;
+  gst_pad_push (mysrcpad, buffer);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_unless_equals_uint64 (time, 7000 * GST_MSECOND);
+  g_object_get (G_OBJECT (queue), "current-level-buffers", &buffers, NULL);
+  fail_unless_equals_int (buffers, 11);
+
+  /* eighth push should cause overrun */
+  fail_unless (overrun_count == 0);
+  buffer_list = gst_buffer_list_new ();
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 8000 * GST_MSECOND;
+  /* the next call to gst_pad_push will emit the overrun signal. The signal
+   * handler queue_overrun_link_and_activate() (above) increases overrun_count,
+   * activates and links mysinkpad. The queue task then dequeues a buffer and
+   * gst_pad_push() will return. */
+  gst_buffer_list_add (buffer_list, buffer);
+  gst_pad_push_list (mysrcpad, buffer_list);
+
+  fail_unless (overrun_count == 1);
+
+  GST_DEBUG ("stopping");
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+}
+
+GST_END_TEST;
+
 static Suite *
 queue_suite (void)
 {
@@ -957,6 +1108,7 @@ queue_suite (void)
   tcase_add_test (tc_chain, test_newsegment);
 #endif
   tcase_add_test (tc_chain, test_sticky_not_linked);
+  tcase_add_test (tc_chain, test_time_level_buffer_list);
 
   return s;
 }
