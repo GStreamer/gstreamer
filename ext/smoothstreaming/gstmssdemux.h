@@ -72,7 +72,6 @@ struct _GstMssDemux {
 
   /* properties */
   guint data_queue_max_size;
-  gfloat bitrate_limit;
 };
 
 struct _GstMssDemuxClass {

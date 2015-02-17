@@ -74,8 +74,6 @@ struct _GstHLSDemux
   gboolean do_typefind;         /* Whether we need to typefind the next buffer */
   gboolean new_playlist;        /* Whether a new playlist is about to start and pads should be switched */
 
-  /* Properties */
-  gfloat bitrate_limit;         /* limit of the available bitrate to use */
 
   /* Streaming task */
   gint64 next_download;

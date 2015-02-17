@@ -85,7 +85,6 @@ enum
   PROP_0,
 
   PROP_MAX_QUEUE_SIZE_BUFFERS,
-  PROP_BITRATE_LIMIT,
   PROP_LAST
 };
 
@@ -173,13 +172,6 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 #endif
 
-  g_object_class_install_property (gobject_class, PROP_BITRATE_LIMIT,
-      g_param_spec_float ("bitrate-limit",
-          "Bitrate limit in %",
-          "Limit of the available bitrate to use when switching to alternates.",
-          0, 1, DEFAULT_BITRATE_LIMIT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gstadaptivedemux_class->process_manifest = gst_mss_demux_process_manifest;
   gstadaptivedemux_class->is_live = gst_mss_demux_is_live;
   gstadaptivedemux_class->get_duration = gst_mss_demux_get_duration;
@@ -205,7 +197,6 @@ static void
 gst_mss_demux_init (GstMssDemux * mssdemux)
 {
   mssdemux->data_queue_max_size = DEFAULT_MAX_QUEUE_SIZE_BUFFERS;
-  mssdemux->bitrate_limit = DEFAULT_BITRATE_LIMIT;
 
   gst_adaptive_demux_set_stream_struct_size (GST_ADAPTIVE_DEMUX_CAST (mssdemux),
       sizeof (GstMssDemuxStream));
@@ -245,9 +236,6 @@ gst_mss_demux_set_property (GObject * object, guint prop_id,
     case PROP_MAX_QUEUE_SIZE_BUFFERS:
       mssdemux->data_queue_max_size = g_value_get_uint (value);
       break;
-    case PROP_BITRATE_LIMIT:
-      mssdemux->bitrate_limit = g_value_get_float (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -263,9 +251,6 @@ gst_mss_demux_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_MAX_QUEUE_SIZE_BUFFERS:
       g_value_set_uint (value, mssdemux->data_queue_max_size);
-      break;
-    case PROP_BITRATE_LIMIT:
-      g_value_set_float (value, mssdemux->bitrate_limit);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -482,11 +467,8 @@ static gboolean
 gst_mss_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
     guint64 bitrate)
 {
-  GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (stream->demux);
   GstMssDemuxStream *mssstream = (GstMssDemuxStream *) stream;
   gboolean ret = FALSE;
-
-  bitrate *= mssdemux->bitrate_limit;
 
   GST_DEBUG_OBJECT (stream->pad,
       "Using stream download bitrate %" G_GUINT64_FORMAT, bitrate);

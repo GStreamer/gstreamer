@@ -88,12 +88,14 @@ GST_DEBUG_CATEGORY (adaptivedemux_debug);
 #define DEFAULT_FAILED_COUNT 3
 #define DEFAULT_LOOKBACK_FRAGMENTS 3
 #define DEFAULT_CONNECTION_SPEED 0
+#define DEFAULT_BITRATE_LIMIT 0.8
 
 enum
 {
   PROP_0,
   PROP_LOOKBACK_FRAGMENTS,
   PROP_CONNECTION_SPEED,
+  PROP_BITRATE_LIMIT,
   PROP_LAST
 };
 
@@ -234,6 +236,9 @@ gst_adaptive_demux_set_property (GObject * object, guint prop_id,
       GST_DEBUG_OBJECT (demux, "Connection speed set to %u",
           demux->connection_speed);
       break;
+    case PROP_BITRATE_LIMIT:
+      demux->bitrate_limit = g_value_get_float (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -252,6 +257,9 @@ gst_adaptive_demux_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONNECTION_SPEED:
       g_value_set_uint (value, demux->connection_speed / 1000);
+      break;
+    case PROP_BITRATE_LIMIT:
+      g_value_set_float (value, demux->bitrate_limit);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -291,6 +299,14 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
       g_param_spec_uint ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = calculate from downloaded"
           " fragments)", 0, G_MAXUINT / 1000, DEFAULT_CONNECTION_SPEED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /* FIXME 2.0: rename this property to bandwidth-usage or any better name */
+  g_object_class_install_property (gobject_class, PROP_BITRATE_LIMIT,
+      g_param_spec_float ("bitrate-limit",
+          "Bitrate limit in %",
+          "Limit of the available bitrate to use when switching to alternates.",
+          0, 1, DEFAULT_BITRATE_LIMIT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_adaptive_demux_change_state;
@@ -341,6 +357,7 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
 
   /* Properties */
   demux->num_lookback_fragments = DEFAULT_LOOKBACK_FRAGMENTS;
+  demux->bitrate_limit = DEFAULT_BITRATE_LIMIT;
   demux->connection_speed = DEFAULT_CONNECTION_SPEED;
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
@@ -1284,6 +1301,10 @@ gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemux * demux,
         demux->connection_speed / 1000);
     return demux->connection_speed;
   }
+
+  stream->current_download_rate *= demux->bitrate_limit;
+  GST_DEBUG_OBJECT (demux, "Bitrate after bitrate limit (%0.2f): %"
+      G_GUINT64_FORMAT, demux->bitrate_limit, stream->current_download_rate);
 
   return stream->current_download_rate;
 }

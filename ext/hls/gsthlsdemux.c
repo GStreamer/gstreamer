@@ -62,13 +62,11 @@ enum
   PROP_0,
 
   PROP_FRAGMENTS_CACHE,
-  PROP_BITRATE_LIMIT,
   PROP_LAST
 };
 
 #define DEFAULT_FRAGMENTS_CACHE 1
 #define DEFAULT_FAILED_COUNT 3
-#define DEFAULT_BITRATE_LIMIT 0.8
 
 /* GObject */
 static void gst_hls_demux_set_property (GObject * object, guint prop_id,
@@ -168,13 +166,6 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 #endif
 
-  g_object_class_install_property (gobject_class, PROP_BITRATE_LIMIT,
-      g_param_spec_float ("bitrate-limit",
-          "Bitrate limit in %",
-          "Limit of the available bitrate to use when switching to alternates.",
-          0, 1, DEFAULT_BITRATE_LIMIT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
 
   gst_element_class_add_pad_template (element_class,
@@ -222,21 +213,14 @@ gst_hls_demux_init (GstHLSDemux * demux)
 
   demux->do_typefind = TRUE;
 
-  /* Properties */
-  demux->bitrate_limit = DEFAULT_BITRATE_LIMIT;
 }
 
 static void
 gst_hls_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstHLSDemux *demux = GST_HLS_DEMUX (object);
-
   switch (prop_id) {
     case PROP_FRAGMENTS_CACHE:
-      break;
-    case PROP_BITRATE_LIMIT:
-      demux->bitrate_limit = g_value_get_float (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -248,14 +232,9 @@ static void
 gst_hls_demux_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstHLSDemux *demux = GST_HLS_DEMUX (object);
-
   switch (prop_id) {
     case PROP_FRAGMENTS_CACHE:
       g_value_set_uint (value, 1);
-      break;
-    case PROP_BITRATE_LIMIT:
-      g_value_set_float (value, demux->bitrate_limit);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -385,8 +364,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     hlsdemux->new_playlist = TRUE;
     hlsdemux->do_typefind = TRUE;
     /* TODO why not continue using the same? that was being used up to now? */
-    gst_hls_demux_change_playlist (hlsdemux, bitrate * hlsdemux->bitrate_limit,
-        NULL);
+    gst_hls_demux_change_playlist (hlsdemux, bitrate, NULL);
   }
 
   GST_M3U8_CLIENT_LOCK (hlsdemux->client);
@@ -785,8 +763,7 @@ gst_hls_demux_select_bitrate (GstAdaptiveDemuxStream * stream, guint64 bitrate)
   if (demux->segment.rate != 1.0)
     return FALSE;
 
-  gst_hls_demux_change_playlist (hlsdemux, bitrate * hlsdemux->bitrate_limit,
-      &changed);
+  gst_hls_demux_change_playlist (hlsdemux, bitrate, &changed);
   if (changed)
     gst_hls_demux_setup_streams (GST_ADAPTIVE_DEMUX_CAST (hlsdemux));
   return changed;

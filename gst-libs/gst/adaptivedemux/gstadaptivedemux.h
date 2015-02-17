@@ -142,7 +142,7 @@ struct _GstAdaptiveDemuxStream
   gint64 download_chunk_start_time;
   gint64 download_total_time;
   gint64 download_total_bytes;
-  gint current_download_rate;
+  guint64 current_download_rate;
 
   /* Per fragment download information */
   guint64 fragment_total_time;
@@ -191,7 +191,9 @@ struct _GstAdaptiveDemux
   gchar *manifest_uri;
   gchar *manifest_base_uri;
 
+  /* Properties */
   guint num_lookback_fragments;
+  gfloat bitrate_limit;         /* limit of the available bitrate to use */
   guint connection_speed;
 
   gboolean have_group_id;
