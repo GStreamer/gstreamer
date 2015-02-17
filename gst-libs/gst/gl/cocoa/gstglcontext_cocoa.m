@@ -290,6 +290,18 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   GstGLWindow *window = gst_gl_context_get_window (context);
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
   const GLint swapInterval = 1;
+  NSAutoreleasePool *pool;
+  CGLPixelFormatObj fmt = NULL;
+  CGLContextObj glContext;
+  CGLPixelFormatAttribute attribs[] = {
+    kCGLPFADoubleBuffer,
+    kCGLPFAAccumSize, 32,
+    0
+  };
+  CGLError ret;
+  gint npix;
+
+  pool = [[NSAutoreleasePool alloc] init];
 
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
   priv->source_id = g_timeout_add (200, gst_gl_window_cocoa_nsapp_iteration, NULL);
@@ -301,58 +313,40 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   else
     priv->external_gl_context = NULL;
 
-  dispatch_sync (dispatch_get_main_queue (), ^{
-    NSAutoreleasePool *pool;
-    CGLPixelFormatObj fmt = NULL;
-    CGLContextObj glContext;
-    CGLPixelFormatAttribute attribs[] = {
-      kCGLPFADoubleBuffer,
-      kCGLPFAAccumSize, 32,
-      0
-    };
-    CGLError ret;
-    gint npix;
+  if (priv->external_gl_context) {
+    fmt = CGLGetPixelFormat (priv->external_gl_context);
+  }
 
-    pool = [[NSAutoreleasePool alloc] init];
-
-    if (priv->external_gl_context) {
-      fmt = CGLGetPixelFormat (priv->external_gl_context);
-    }
-
-    if (!fmt) {
-      ret = CGLChoosePixelFormat (attribs, &fmt, &npix);
-      if (ret != kCGLNoError) {
-        gst_object_unref (window);
-        g_set_error (error, GST_GL_CONTEXT_ERROR,
-            GST_GL_CONTEXT_ERROR_WRONG_CONFIG, "cannot choose a pixel format: %s", CGLErrorString (ret));
-        return;
-      }
-    }
-
-    gst_gl_context_cocoa_dump_pixel_format (fmt);
-
-    ret = CGLCreateContext (fmt, priv->external_gl_context, &glContext);
+  if (!fmt) {
+    ret = CGLChoosePixelFormat (attribs, &fmt, &npix);
     if (ret != kCGLNoError) {
-      g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
-          "failed to create context: %s", CGLErrorString (ret));
-      gst_object_unref (window);
-      return;
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG, "cannot choose a pixel format: %s", CGLErrorString (ret));
+      goto error;
     }
+  }
 
-    context_cocoa->priv->pixel_format = fmt;
-    context_cocoa->priv->gl_context = glContext;
+  gst_gl_context_cocoa_dump_pixel_format (fmt);
 
-    gst_gl_window_cocoa_create_window (window_cocoa);
+  ret = CGLCreateContext (fmt, priv->external_gl_context, &glContext);
+  if (ret != kCGLNoError) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
+        "failed to create context: %s", CGLErrorString (ret));
+    goto error;
+  }
 
-    [pool release];
-  });
+  context_cocoa->priv->pixel_format = fmt;
+  context_cocoa->priv->gl_context = glContext;
+
+  _invoke_on_main ((GstGLWindowCB) gst_gl_window_cocoa_create_window,
+      window_cocoa);
 
   if (!context_cocoa->priv->gl_context) {
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
     g_source_remove (priv->source_id);
     priv->source_id = 0;
 #endif
-    return FALSE;
+    goto error;
   }
 
   GST_INFO_OBJECT (context, "GL context created: %p", context_cocoa->priv->gl_context);
@@ -365,8 +359,14 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   CGLSetParameter (context_cocoa->priv->gl_context, kCGLCPSwapInterval, &swapInterval);
 
   gst_object_unref (window);
+  [pool release];
 
   return TRUE;
+
+error:
+  gst_object_unref (window);
+  [pool release];
+  return FALSE;
 }
 
 static void
