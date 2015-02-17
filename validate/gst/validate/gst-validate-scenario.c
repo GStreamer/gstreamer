@@ -368,13 +368,24 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
 {
   gdouble val;
   const gchar *strval;
+  const GValue *gvalue = gst_structure_get_value (action->structure, name);
+
+  if (gvalue == NULL) {
+    return -1;
+  }
+
+  if (G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME) {
+    *retval = g_value_get_uint64 (gvalue);
+
+    return TRUE;
+  }
 
   if (!gst_structure_get_double (action->structure, name, &val)) {
     gchar *error = NULL;
 
     if (!(strval = gst_structure_get_string (action->structure, name))) {
       GST_INFO_OBJECT (scenario, "Could not find %s", name);
-      return FALSE;
+      return -1;
     }
     val =
         gst_validate_utils_parse_expression (strval, _set_variable_func,
@@ -482,10 +493,6 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 
   gst_validate_action_get_clocktime (scenario, action, "stop", &stop);
 
-  gst_validate_printf (action, "seeking to: %" GST_TIME_FORMAT
-      " stop: %" GST_TIME_FORMAT " Rate %lf\n",
-      GST_TIME_ARGS (start), GST_TIME_ARGS (stop), rate);
-
   return gst_validate_scenario_execute_seek (scenario, action, rate, format,
       flags, start_type, start, stop_type, stop);
 }
@@ -525,8 +532,6 @@ _execute_set_state (GstValidateScenario * scenario, GstValidateAction * action)
   scenario->priv->changing_state = TRUE;
   scenario->priv->seeked_in_pause = FALSE;
 
-  gst_validate_printf (action, "Setting state to %s\n", str_state);
-
   ret = gst_element_set_state (scenario->pipeline, state);
 
   if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -553,9 +558,6 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
   GstStateChangeReturn ret;
 
   gst_structure_get_double (action->structure, "duration", &duration);
-  gst_validate_printf (action, "pausing for %" GST_TIME_FORMAT "\n",
-      GST_TIME_ARGS (duration * GST_SECOND));
-
   gst_structure_set (action->structure, "state", G_TYPE_STRING, "paused", NULL);
 
   GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
@@ -606,8 +608,6 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GstBus *bus = gst_element_get_bus (scenario->pipeline);
 
-  gst_validate_printf (action, "Stoping pipeline\n");
-
   gst_bus_post (bus,
       gst_message_new_request_state (GST_OBJECT_CAST (scenario),
           GST_STATE_NULL));
@@ -618,9 +618,6 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  gst_validate_printf (action, "sending EOS at %" GST_TIME_FORMAT "\n",
-      GST_TIME_ARGS (action->playback_time));
-
   GST_DEBUG ("Sending eos to pipeline at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (action->playback_time));
 
@@ -808,10 +805,6 @@ _execute_switch_track (GstValidateScenario * scenario,
 
     pad = find_nth_sink_pad (input_selector, index);
     g_object_get (input_selector, "active-pad", &cpad, NULL);
-    gst_validate_printf (action, "Switching to track number: %i,"
-        " (from %s:%s to %s:%s)\n",
-        index, GST_DEBUG_PAD_NAME (cpad), GST_DEBUG_PAD_NAME (pad));
-
     if (gst_element_get_state (scenario->pipeline, &state, &next, 0) &&
         state == GST_STATE_PLAYING && next == GST_STATE_VOID_PENDING) {
       srcpad = gst_element_get_static_pad (input_selector, "src");
@@ -971,6 +964,17 @@ gst_validate_execute_action (GstValidateActionType * action_type,
 
   g_return_val_if_fail (g_strcmp0 (action_type->name, action->type) == 0,
       GST_VALIDATE_EXECUTE_ACTION_ERROR);
+
+  if (action_type->prepare) {
+    if (action_type->prepare (action) == FALSE) {
+      GST_ERROR_OBJECT (action->scenario, "Action %" GST_PTR_FORMAT
+          " could not be prepared", action->structure);
+
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    }
+  }
+
+  gst_validate_print_action (action, NULL);
 
   res = action_type->execute (action->scenario, action);
 
@@ -1212,9 +1216,6 @@ _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
   }
 
   duration *= wait_multiplier;
-  gst_validate_printf (action,
-      "Waiting for %" GST_TIME_FORMAT " (wait_multiplier: %f)\n",
-      GST_TIME_ARGS (duration), wait_multiplier);
 
   SCENARIO_LOCK (scenario);
   if (priv->get_pos_id) {
@@ -1246,7 +1247,6 @@ _execute_dot_pipeline (GstValidateScenario * scenario,
   else
     dotname = g_strdup ("validate.action.unnamed");
 
-  gst_validate_printf (action, "Doting pipeline (name %s)\n", dotname);
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (scenario->pipeline),
       details, dotname);
 
@@ -1310,8 +1310,6 @@ _execute_set_property (GstValidateScenario * scenario,
   property_value = gst_structure_get_value (action->structure,
       "property-value");
 
-  gst_validate_printf (action, "Setting property %s to %s\n",
-      property, gst_value_serialize (property_value));
   ret = _object_set_property (G_OBJECT (target), property, property_value);
 
   gst_object_unref (target);
@@ -1339,11 +1337,6 @@ _execute_set_debug_threshold (GstValidateScenario * scenario,
   }
 
   gst_structure_get_boolean (action->structure, "reset", &reset);
-
-  gst_validate_printf (action,
-      "%s -- Set debug threshold to '%s', %sreseting all\n",
-      gst_structure_to_string (action->structure), threshold_str,
-      reset ? "" : "NOT ");
 
   gst_debug_set_threshold_from_string (threshold_str, reset);
 
@@ -1441,6 +1434,36 @@ _set_action_playback_time (GstValidateScenario * scenario,
     g_free (str);
 
     return FALSE;
+  }
+
+  gst_structure_set (action->structure, "playback-time", GST_TYPE_CLOCK_TIME,
+      action->playback_time, NULL);
+
+  return TRUE;
+}
+
+static gboolean
+gst_validate_action_default_prepare_func (GstValidateAction * action)
+{
+  gulong i;
+  GstClockTime time;
+  const gchar *vars[] = { "duration", "start", "stop" };
+
+  for (i = 0; i < G_N_ELEMENTS (vars); i++) {
+    gint res =
+        gst_validate_action_get_clocktime (action->scenario, action, vars[i],
+        &time);
+    if (res == FALSE) {
+      GST_ERROR_OBJECT (action->scenario, "Could not get clocktime for"
+          " variable %s", vars[i]);
+
+      return FALSE;
+    } else if (res == -1) {
+      continue;
+    }
+
+    gst_structure_set (action->structure, vars[i], GST_TYPE_CLOCK_TIME,
+        time, NULL);
   }
 
   return TRUE;
@@ -2446,6 +2469,7 @@ gst_validate_register_action_type_dynamic (GstPlugin * plugin,
         sizeof (GstValidateActionParameter) * (n_params));
   }
 
+  type->prepare = gst_validate_action_default_prepare_func;
   type->execute = function;
   type->name = g_strdup (type_name);
   if (plugin)

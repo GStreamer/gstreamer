@@ -506,6 +506,27 @@ gst_validate_printf (gpointer source, const gchar * format, ...)
   va_end (var_args);
 }
 
+static gboolean
+_append_value (GQuark field_id, const GValue * value, GString * string)
+{
+  gchar *val_str = NULL;
+
+  if (G_VALUE_TYPE (value) == GST_TYPE_CLOCK_TIME)
+    val_str = g_strdup_printf ("%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (g_value_get_uint64 (value)));
+  else
+    val_str = gst_value_serialize (value);
+
+  g_string_append (string, g_quark_to_string (field_id));
+  g_string_append_len (string, "=", 1);
+  g_string_append (string, val_str);
+  g_string_append_len (string, " ", 1);
+
+  g_free (val_str);
+
+  return TRUE;
+}
+
 /**
  * gst_validate_print_action:
  * @action: (allow-none): The source object to log
@@ -516,7 +537,22 @@ gst_validate_printf (gpointer source, const gchar * format, ...)
 void
 gst_validate_print_action (GstValidateAction * action, const gchar * message)
 {
+  GString *string = NULL;
+
+  if (message == NULL) {
+    GString *string = g_string_new (gst_structure_get_name (action->structure));
+
+    g_string_append_len (string, ": ", 2);
+    gst_structure_foreach (action->structure,
+        (GstStructureForeachFunc) _append_value, string);
+    g_string_append_len (string, "\n", 1);
+    message = string->str;
+  }
+
   gst_validate_printf (action, "%s", message);
+
+  if (string)
+    g_string_free (string, TRUE);
 }
 
 static void
@@ -589,11 +625,11 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
     if (*(GType *) source == GST_TYPE_VALIDATE_ACTION) {
       GstValidateAction *action = (GstValidateAction *) source;
 
-      g_string_printf (string,
-          "\n(Executing action: %s, number: %u at position: %" GST_TIME_FORMAT
-          " repeat: %i) | ", g_strcmp0 (action->name,
-              "") == 0 ? "Unnamed" : action->name, action->action_number,
-          GST_TIME_ARGS (action->playback_time), action->repeat);
+      if (action->printed)
+        return;
+
+      action->printed = TRUE;
+      g_string_printf (string, "Executing ");
 
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;

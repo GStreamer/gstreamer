@@ -65,6 +65,19 @@ enum
  */
 typedef GstValidateExecuteActionReturn (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
+/**
+ * GstValidatePrepareAction:
+ * @action: The #GstValidateAction to prepare before execution
+ *
+ * A function that prepares @action so it can be executed right after.
+ * Most of the time that function is used to parse and set field with
+ * equations in the action structure.
+ *
+ * Returns: a %TRUE if the action could be prepared and is ready to be run
+ *          %FALSE otherwise
+ */
+typedef gboolean (*GstValidatePrepareAction) (GstValidateAction * action);
+
 
 /**
  * GstValidateAction:
@@ -92,8 +105,9 @@ struct _GstValidateAction
   gint repeat;
   GstClockTime playback_time;
   GstValidateExecuteActionReturn state; /* Actually ActionState */
+  gboolean printed;
 
-  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (gint) - 2];
+  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (gint) - 2 - sizeof(gboolean)];
 };
 
 void gst_validate_action_set_done (GstValidateAction *action);
@@ -144,6 +158,7 @@ struct _GstValidateActionType
   gchar *name;
   gchar *implementer_namespace;
 
+  GstValidatePrepareAction prepare;
   GstValidateExecuteAction execute;
 
   GstValidateActionParameter *parameters;
@@ -243,6 +258,10 @@ gst_validate_register_action_type      (const gchar *type_name,
                                         GstValidateActionParameter * parameters,
                                         const gchar *description,
                                         GstValidateActionTypeFlags flags);
+
+void
+gst_validate_action_type_set_prepare_function (GstValidateActionType *type,
+                                               GstValidatePrepareAction prepare_action);
 
 GstValidateActionType *
 gst_validate_register_action_type_dynamic (GstPlugin *plugin,
