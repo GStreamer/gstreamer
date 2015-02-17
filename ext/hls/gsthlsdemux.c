@@ -66,7 +66,6 @@ enum
 };
 
 #define DEFAULT_FRAGMENTS_CACHE 1
-#define DEFAULT_FAILED_COUNT 3
 
 /* GObject */
 static void gst_hls_demux_set_property (GObject * object, guint prop_id,
