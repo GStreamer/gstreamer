@@ -75,6 +75,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-utils.c \
 	ges-group.c \
 	ges-validate.c \
+	ges-structured-interface.c \
 	gstframepositionner.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
@@ -153,6 +154,7 @@ noinst_HEADERS = \
 	nle/nleurisource.h \
 	ges-internal.h \
 	ges-auto-transition.h \
+	ges-structured-interface.h \
 	gstframepositionner.h
 
 libges_@GST_API_VERSION@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \

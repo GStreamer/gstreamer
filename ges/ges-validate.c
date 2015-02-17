@@ -28,6 +28,8 @@
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-scenario.h>
 #include <gst/validate/gst-validate-utils.h>
+#include "ges-internal.h"
+#include "ges-structured-interface.h"
 
 #define MONITOR_ON_PIPELINE "validate-monitor"
 #define RUNNER_ON_PIPELINE "runner-monitor"
@@ -40,35 +42,6 @@ get_timeline (GstValidateScenario * scenario)
   g_object_get (scenario->pipeline, "timeline", &timeline, NULL);
 
   return timeline;
-}
-
-static gboolean
-_set_child_property (GstValidateScenario * scenario, GstValidateAction * action)
-{
-  const GValue *value;
-  GESTimeline *timeline;
-  GESTimelineElement *element;
-  const gchar *property_name, *element_name;
-
-  element_name = gst_structure_get_string (action->structure, "element-name");
-
-  timeline = get_timeline (scenario);
-  g_return_val_if_fail (timeline, FALSE);
-
-  element = ges_timeline_get_element (timeline, element_name);
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
-
-  property_name = gst_structure_get_string (action->structure, "property");
-  value = gst_structure_get_value (action->structure, "value");
-
-  GST_DEBUG ("%s Setting %s property to %p",
-      element->name, property_name, value);
-  ges_track_element_set_child_property (GES_TRACK_ELEMENT (element),
-      property_name, (GValue *) value);
-
-  g_object_unref (timeline);
-
-  return TRUE;
 }
 
 static gboolean
@@ -124,25 +97,6 @@ beach:
   return res;
 }
 
-static GESAsset *
-_get_asset (GESTimeline * timeline, GType type, const gchar * id)
-{
-  GESAsset *asset;
-  GError *error = NULL;
-  GESProject *project = ges_timeline_get_project (timeline);
-
-  asset = ges_project_create_asset_sync (project, id, type, &error);
-  if (!asset || error) {
-    GST_ERROR
-        ("There was an error requesting the asset with id %s and type %s (%s)",
-        id, g_type_name (type), error ? error->message : "unknown");
-
-    return NULL;
-  }
-
-  return asset;
-}
-
 static gboolean
 _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
 {
@@ -170,7 +124,7 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
     goto beach;
   }
 
-  asset = _get_asset (timeline, type, id);
+  asset = _ges_get_asset_from_timeline (timeline, type, id);
 
   if (!asset) {
     res = FALSE;
@@ -183,28 +137,6 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
 beach:
   g_object_unref (timeline);
   return res;
-}
-
-/* Unref after usage */
-static GESLayer *
-_get_layer_by_priority (GESTimeline * timeline, gint priority)
-{
-  GList *layers, *tmp;
-  GESLayer *layer = NULL;
-
-  layers = ges_timeline_get_layers (timeline);
-  for (tmp = layers; tmp; tmp = tmp->next) {
-    GESLayer *tmp_layer = GES_LAYER (tmp->data);
-    guint tmp_priority;
-    g_object_get (tmp_layer, "priority", &tmp_priority, NULL);
-    if ((gint) tmp_priority == priority) {
-      layer = gst_object_ref (tmp_layer);
-      break;
-    }
-  }
-
-  g_list_free_full (layers, gst_object_unref);
-  return layer;
 }
 
 static gboolean
@@ -220,7 +152,7 @@ _add_layer (GstValidateScenario * scenario, GstValidateAction * action)
     goto beach;
   }
 
-  layer = _get_layer_by_priority (timeline, priority);
+  layer = _ges_get_layer_by_priority (timeline, priority);
 
   if (layer != NULL) {
     GST_ERROR
@@ -258,7 +190,7 @@ _remove_layer (GstValidateScenario * scenario, GstValidateAction * action)
     goto beach;
   }
 
-  layer = _get_layer_by_priority (timeline, priority);
+  layer = _ges_get_layer_by_priority (timeline, priority);
 
   if (layer) {
     res = ges_timeline_remove_layer (timeline, layer);
@@ -299,78 +231,6 @@ _remove_clip (GstValidateScenario * scenario, GstValidateAction * action)
   return res;
 }
 
-static gboolean
-_add_clip (GstValidateScenario * scenario, GstValidateAction * action)
-{
-  GESTimeline *timeline = get_timeline (scenario);
-  GESAsset *asset;
-  GESLayer *layer;
-  GESClip *clip;
-  gint layer_priority;
-  const gchar *name;
-  const gchar *asset_id;
-  const gchar *type_string;
-  GType type;
-  gboolean res = FALSE;
-  GstClockTime duration = 1 * GST_SECOND, inpoint = 0, start =
-      GST_CLOCK_TIME_NONE;
-
-  gst_structure_get_int (action->structure, "layer-priority", &layer_priority);
-  name = gst_structure_get_string (action->structure, "name");
-  asset_id = gst_structure_get_string (action->structure, "asset-id");
-  type_string = gst_structure_get_string (action->structure, "type");
-
-  gst_validate_action_get_clocktime (scenario, action, "start", &start);
-  gst_validate_action_get_clocktime (scenario, action, "inpoint", &inpoint);
-  gst_validate_action_get_clocktime (scenario, action, "duration", &duration);
-
-  gst_validate_printf (action, "Adding clip from asset of type %s with ID %s"
-      " wanted name: %s"
-      " -- start: %" GST_TIME_FORMAT
-      ", inpoint: %" GST_TIME_FORMAT
-      ", duration: %" GST_TIME_FORMAT "\n",
-      type_string, asset_id, name,
-      GST_TIME_ARGS (start), GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration));
-
-  if (!(type = g_type_from_name (type_string))) {
-    GST_ERROR ("This type doesn't exist : %s", type_string);
-    goto beach;
-  }
-
-  asset = _get_asset (timeline, type, asset_id);
-  if (!asset) {
-    res = FALSE;
-
-    goto beach;
-  }
-
-  layer = _get_layer_by_priority (timeline, layer_priority);
-
-  if (!layer) {
-    GST_ERROR ("No layer with priority %d", layer_priority);
-    goto beach;
-  }
-
-  clip = ges_layer_add_asset (layer, asset, start, inpoint, duration,
-      GES_TRACK_TYPE_UNKNOWN);
-
-  if (clip) {
-    res = TRUE;
-    if (!ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip), name)) {
-      res = FALSE;
-      GST_ERROR ("couldn't set name %s on clip with id %s", name, asset_id);
-    }
-  } else {
-    GST_ERROR ("Couldn't add clip with id %s to layer with priority %d",
-        asset_id, layer_priority);
-  }
-
-  gst_object_unref (layer);
-
-beach:
-  g_object_unref (timeline);
-  return res;
-}
 
 static gboolean
 _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
@@ -559,7 +419,7 @@ _set_asset_on_element (GstValidateScenario * scenario,
   gst_validate_printf (action, "Setting asset %s on element %s\n",
       id, element_name);
 
-  asset = _get_asset (timeline, G_OBJECT_TYPE (element), id);
+  asset = _ges_get_asset_from_timeline (timeline, G_OBJECT_TYPE (element), id);
   if (asset == NULL) {
     res = FALSE;
     GST_ERROR ("Could not find asset: %s", id);
@@ -567,68 +427,6 @@ _set_asset_on_element (GstValidateScenario * scenario,
   }
 
   res = ges_extractable_set_asset (GES_EXTRACTABLE (element), asset);
-
-beach:
-  gst_object_unref (timeline);
-
-  return res;
-}
-
-static gboolean
-_container_add_child (GstValidateScenario * scenario,
-    GstValidateAction * action)
-{
-  GESAsset *asset;
-  GESContainer *container;
-  GESTimelineElement *child = NULL;
-  const gchar *container_name, *child_name, *child_type, *id;
-
-  gboolean res = TRUE;
-  GESTimeline *timeline = get_timeline (scenario);
-
-  container_name =
-      gst_structure_get_string (action->structure, "container-name");
-  container =
-      GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
-  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
-
-  id = gst_structure_get_string (action->structure, "asset-id");
-  child_type = gst_structure_get_string (action->structure, "child-type");
-
-  if (id && child_type) {
-    asset = _get_asset (timeline, g_type_from_name (child_type), id);
-
-    if (asset == NULL) {
-      res = FALSE;
-      GST_ERROR ("Could not find asset: %s", id);
-      goto beach;
-    }
-
-    child = GES_TIMELINE_ELEMENT (ges_asset_extract (asset, NULL));
-    g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
-  }
-
-  child_name = gst_structure_get_string (action->structure, "child-name");
-  if (!child && child_name) {
-    child = ges_timeline_get_element (timeline, child_name);
-    g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
-  }
-
-  if (!child) {
-    GST_ERROR_OBJECT (scenario, "Wong parametters, could not get a child");
-
-    return FALSE;
-  }
-
-  if (child_name)
-    ges_timeline_element_set_name (child, child_name);
-  else
-    child_name = GES_TIMELINE_ELEMENT_NAME (child);
-
-  gst_validate_printf (action, "Adding child %s to container %s\n",
-      child_name, GES_TIMELINE_ELEMENT_NAME (container));
-
-  res = ges_container_add (container, child);
 
 beach:
   gst_object_unref (timeline);
@@ -732,71 +530,38 @@ done:
 }
 
 static gboolean
-_add_remove_keyframe (GstValidateScenario * scenario,
+_validate_action_execute (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
-  GESTrackElement *element;
-
-  gdouble value;
-  GstClockTime timestamp;
-  GstControlBinding *binding = NULL;
-  GstTimedValueControlSource *source = NULL;
-  gchar *element_name, *property_name;
-
-  gboolean ret = FALSE;
+  GError *err = NULL;
   GESTimeline *timeline = get_timeline (scenario);
+  ActionFromStructureFunc func;
 
-  g_return_val_if_fail (gst_structure_get (action->structure,
-          "element-name", G_TYPE_STRING, &element_name,
-          "property-name", G_TYPE_STRING, &property_name,
-          "value", G_TYPE_DOUBLE, &value, NULL), FALSE);
-
-  gst_validate_action_get_clocktime (scenario, action, "timestamp", &timestamp);
-
-  element =
-      GES_TRACK_ELEMENT (ges_timeline_get_element (timeline, element_name));
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
-
-  binding = ges_track_element_get_control_binding (element, property_name);
-  if (binding == NULL) {
-    GST_ERROR_OBJECT (scenario, "No control binding found for %s:%s"
-        " you should first set-control-binding on it",
-        element_name, property_name);
-
-    goto done;
+  if (gst_structure_has_name (action->structure, "add-keyframe") ||
+      gst_structure_has_name (action->structure, "remove-keyframe")) {
+    func = _ges_add_remove_keyframe_from_struct;
+  } else if (gst_structure_has_name (action->structure, "add-clip")) {
+    func = _ges_add_clip_from_struct;
+  } else if (gst_structure_has_name (action->structure, "container-add-child")) {
+    func = _ges_container_add_child_from_struct;
+  } else if (gst_structure_has_name (action->structure, "set-child-property")) {
+    func = _ges_set_child_property_from_struct;
+  } else {
+    g_assert_not_reached ();
   }
 
-  g_object_get (binding, "control-source", &source, NULL);
+  if (!func (timeline, action->structure, &err)) {
+    GST_VALIDATE_REPORT (scenario,
+        g_quark_from_string ("scenario::execution-error"), err->message);
 
-  if (source == NULL) {
-    GST_ERROR_OBJECT (scenario, "No control source found for %s:%s"
-        " you should first set-control-binding on it",
-        element_name, property_name);
+    g_clear_error (&err);
 
-    goto done;
+    return TRUE;
   }
 
-  if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)) {
-    GST_ERROR_OBJECT (scenario, "You can use add-keyframe"
-        " only on GstTimedValueControlSource not %s",
-        G_OBJECT_TYPE_NAME (source));
-
-    goto done;
-  }
-
-  if (!g_strcmp0 (action->type, "add-keyframe"))
-    ret = gst_timed_value_control_source_set (source, timestamp, value);
-  else
-    ret = gst_timed_value_control_source_unset (source, timestamp);
-
-done:
   gst_object_unref (timeline);
-  if (source)
-    gst_object_unref (source);
-  g_free (element_name);
-  g_free (property_name);
 
-  return ret;
+  return TRUE;
 }
 
 static void
@@ -991,8 +756,10 @@ ges_validate_register_action_types (void)
       (GstValidateActionParameter [])  {
         {
           .name = "priority",
-          .description = "The priority of the new layer to add",
-          .mandatory = TRUE,
+          .description = "The priority of the new layer to add,"
+                         "if not specified, the new layer will be"
+                         " appended to the timeline",
+          .mandatory = FALSE,
           NULL
         },
         { NULL }
@@ -1018,7 +785,7 @@ ges_validate_register_action_types (void)
       },
       "Allows to remove a layer from the current timeline", GST_VALIDATE_ACTION_TYPE_NONE);
 
-  gst_validate_register_action_type ("add-clip", "ges", _add_clip,
+  gst_validate_register_action_type ("add-clip", "ges", _validate_action_execute,
       (GstValidateActionParameter []) {
         {
           .name = "name",
@@ -1087,7 +854,7 @@ ges_validate_register_action_types (void)
         {NULL}
       }, "serializes a project", GST_VALIDATE_ACTION_TYPE_NONE);
 
-  gst_validate_register_action_type ("set-child-property", "ges", _set_child_property,
+  gst_validate_register_action_type ("set-child-property", "ges", _validate_action_execute,
       (GstValidateActionParameter []) {
         {
           .name = "element-name",
@@ -1162,7 +929,7 @@ ges_validate_register_action_types (void)
       }, "Sets restriction caps on tracks of a specific type.", GST_VALIDATE_ACTION_TYPE_NONE);
 
 
-  gst_validate_register_action_type ("container-add-child", "ges", _container_add_child,
+  gst_validate_register_action_type ("container-add-child", "ges", _validate_action_execute,
       (GstValidateActionParameter []) {
         {
           .name = "container-name",
@@ -1252,7 +1019,7 @@ ges_validate_register_action_types (void)
       }, "Adds a GstControlSource on @element-name::@property-name"
          " allowing you to then add keyframes on that property.", GST_VALIDATE_ACTION_TYPE_NONE);
 
-  gst_validate_register_action_type ("add-keyframe", "ges", _add_remove_keyframe,
+  gst_validate_register_action_type ("add-keyframe", "ges", _validate_action_execute,
       (GstValidateActionParameter []) {
         {
           .name = "element-name",
@@ -1281,7 +1048,7 @@ ges_validate_register_action_types (void)
         {NULL}
       }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
 
-  gst_validate_register_action_type ("remove-keyframe", "ges", _add_remove_keyframe,
+  gst_validate_register_action_type ("remove-keyframe", "ges", _validate_action_execute,
       (GstValidateActionParameter []) {
         {
           .name = "element-name",
