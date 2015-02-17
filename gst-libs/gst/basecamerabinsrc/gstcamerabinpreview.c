@@ -231,14 +231,9 @@ gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData *
 {
   g_return_if_fail (preview != NULL);
 
-  if (preview->processing_lock.p) {
-    g_mutex_clear (&preview->processing_lock);
-    preview->processing_lock.p = NULL;
-  }
-  if (preview->processing_cond.p) {
-    g_cond_clear (&preview->processing_cond);
-    preview->processing_cond.p = NULL;
-  }
+  g_mutex_clear (&preview->processing_lock);
+  g_cond_clear (&preview->processing_cond);
+
   if (preview->pipeline) {
     gst_element_set_state (preview->pipeline, GST_STATE_NULL);
     gst_object_unref (preview->pipeline);
