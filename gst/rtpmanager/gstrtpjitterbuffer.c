@@ -835,6 +835,20 @@ free_item (RTPJitterBufferItem * item)
 }
 
 static void
+free_item_and_retain_events (RTPJitterBufferItem * item, gpointer user_data)
+{
+  GList **l = user_data;
+
+  if (item->data && item->type == ITEM_TYPE_EVENT
+      && GST_EVENT_IS_STICKY (item->data)) {
+    *l = g_list_prepend (*l, item->data);
+  } else if (item->data && item->type != ITEM_TYPE_QUERY) {
+    gst_mini_object_unref (item->data);
+  }
+  g_slice_free (RTPJitterBufferItem, item);
+}
+
+static void
 gst_rtp_jitter_buffer_finalize (GObject * object)
 {
   GstRtpJitterBuffer *jitterbuffer;
@@ -1416,7 +1430,7 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
         goto newseg_wrong_format;
 
       GST_DEBUG_OBJECT (jitterbuffer,
-          "newsegment:  %" GST_SEGMENT_FORMAT, &priv->segment);
+          "segment:  %" GST_SEGMENT_FORMAT, &priv->segment);
       break;
     case GST_EVENT_EOS:
       priv->eos = TRUE;
@@ -2253,13 +2267,29 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         }
       }
       if (G_UNLIKELY (reset)) {
+        GList *events = NULL, *l;
+
         GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
-        rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
+        rtp_jitter_buffer_flush (priv->jbuf,
+            (GFunc) free_item_and_retain_events, &events);
         rtp_jitter_buffer_reset_skew (priv->jbuf);
         remove_all_timers (jitterbuffer);
         priv->last_popped_seqnum = -1;
         priv->next_seqnum = seqnum;
         do_next_seqnum = TRUE;
+
+        /* Insert all sticky events again in order, otherwise we would
+         * potentially loose STREAM_START, CAPS or SEGMENT events
+         */
+        events = g_list_reverse (events);
+        for (l = events; l; l = l->next) {
+          RTPJitterBufferItem *item;
+
+          item = alloc_item (l->data, ITEM_TYPE_EVENT, -1, -1, -1, 0, -1);
+          rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
+        }
+        g_list_free (events);
+
         JBUF_SIGNAL_EVENT (priv);
       }
       /* reset spacing estimation when gap */
