@@ -3089,7 +3089,9 @@ query_latency_default_fold (const GValue * item, GValue * ret,
 
       fold_data->live = TRUE;
     }
-    g_value_set_boolean (ret, TRUE);
+  } else {
+    GST_DEBUG_OBJECT (pad, "latency query failed");
+    g_value_set_boolean (ret, FALSE);
   }
   gst_query_unref (query);
 
@@ -3118,7 +3120,7 @@ retry:
   fold_data.min = 0;
   fold_data.max = GST_CLOCK_TIME_NONE;
 
-  g_value_set_boolean (&ret, FALSE);
+  g_value_set_boolean (&ret, TRUE);
   res = gst_iterator_fold (it, query_latency_default_fold, &ret, &fold_data);
   switch (res) {
     case GST_ITERATOR_OK:
