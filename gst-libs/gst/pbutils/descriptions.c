@@ -349,6 +349,14 @@ pbutils_desc_get_profile_name_from_nick (const gchar * map, gsize map_len,
 }
 
 static const gchar *
+pbutils_desc_get_mpeg2v_profile_name_from_nick (const gchar * nick)
+{
+  const gchar map[] = "simple\000Simple\000main\000Main\000high\000High\000";
+
+  return pbutils_desc_get_profile_name_from_nick (map, sizeof (map), nick);
+}
+
+static const gchar *
 pbutils_desc_get_mpeg4v_profile_name_from_nick (const gchar * nick)
 {
   const gchar map[] = "simple\000Simple\000"
@@ -792,6 +800,10 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
         if (profile != NULL) {
           if (ver == 4)
             profile = pbutils_desc_get_mpeg4v_profile_name_from_nick (profile);
+          else if (ver == 2)
+            profile = pbutils_desc_get_mpeg2v_profile_name_from_nick (profile);
+          else
+            profile = NULL;
         }
         if (profile != NULL)
           return g_strdup_printf ("MPEG-%d Video (%s Profile)", ver, profile);
