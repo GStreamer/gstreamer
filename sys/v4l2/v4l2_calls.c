@@ -216,8 +216,8 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     GstTunerNorm *norm;
 
     /* fill in defaults */
-    standard.frameperiod.numerator = 0;
-    standard.frameperiod.denominator = 1;
+    standard.frameperiod.numerator = 1;
+    standard.frameperiod.denominator = 0;
     standard.index = n;
 
     if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_ENUMSTD, &standard) < 0) {
@@ -238,14 +238,14 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     }
 
     GST_DEBUG_OBJECT (e, "    '%s', fps: %d / %d",
-        standard.name, standard.frameperiod.numerator,
-        standard.frameperiod.denominator);
+        standard.name, standard.frameperiod.denominator,
+        standard.frameperiod.numerator);
 
     v4l2norm = g_object_new (GST_TYPE_V4L2_TUNER_NORM, NULL);
     norm = GST_TUNER_NORM (v4l2norm);
     norm->label = g_strdup ((const gchar *) standard.name);
     gst_value_set_fraction (&norm->framerate,
-        standard.frameperiod.numerator, standard.frameperiod.denominator);
+        standard.frameperiod.denominator, standard.frameperiod.numerator);
     v4l2norm->index = standard.id;
 
     GST_DEBUG_OBJECT (v4l2object->element, "index=%08x, label=%s",
