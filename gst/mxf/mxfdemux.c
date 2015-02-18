@@ -1898,16 +1898,14 @@ out:
 static void
 read_partition_header (GstMXFDemux * demux, guint64 offset)
 {
-  GstFlowReturn flow;
   GstBuffer *buf;
   MXFUL key;
   guint read;
 
-  flow = gst_mxf_demux_pull_klv_packet (demux, offset, &key, &buf, &read);
-  offset += read;
-
-  if (flow != GST_FLOW_OK)
+  if (gst_mxf_demux_pull_klv_packet (demux, offset, &key, &buf, &read)
+      != GST_FLOW_OK)
     return;
+  offset += read;
 
   if (!mxf_is_partition_pack (&key)) {
     gst_buffer_unref (buf);
@@ -1916,8 +1914,8 @@ read_partition_header (GstMXFDemux * demux, guint64 offset)
 
   do {
     gst_buffer_unref (buf);
-    flow = gst_mxf_demux_pull_klv_packet (demux, offset, &key, &buf, &read);
-    if (flow != GST_FLOW_OK)
+    if (gst_mxf_demux_pull_klv_packet (demux, offset, &key, &buf, &read)
+        != GST_FLOW_OK)
       return;
     offset += read;
   }
@@ -2160,7 +2158,6 @@ static void
 gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
 {
   GstBuffer *buffer;
-  GstFlowReturn flow;
   gint64 filesize = -1;
   GstFormat fmt = GST_FORMAT_BYTES;
   guint32 pack_size;
@@ -2177,9 +2174,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
   g_assert (filesize > 4);
 
   buffer = NULL;
-  if ((flow =
-          gst_mxf_demux_pull_range (demux, filesize - 4, 4,
-              &buffer)) != GST_FLOW_OK) {
+  if (gst_mxf_demux_pull_range (demux, filesize - 4, 4, &buffer) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Failed pulling last 4 bytes");
     return;
   }
@@ -2199,9 +2194,8 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
   }
 
   buffer = NULL;
-  if ((flow =
-          gst_mxf_demux_pull_range (demux, filesize - pack_size, 16,
-              &buffer)) != GST_FLOW_OK) {
+  if (gst_mxf_demux_pull_range (demux, filesize - pack_size, 16,
+          &buffer) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Failed pulling random index pack key");
     return;
   }
@@ -2217,9 +2211,8 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
   }
 
   demux->offset = filesize - pack_size;
-  if ((flow =
-          gst_mxf_demux_pull_klv_packet (demux, filesize - pack_size, &key,
-              &buffer, NULL)) != GST_FLOW_OK) {
+  if (gst_mxf_demux_pull_klv_packet (demux, filesize - pack_size, &key,
+          &buffer, NULL) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Failed pulling random index pack");
     return;
   }
