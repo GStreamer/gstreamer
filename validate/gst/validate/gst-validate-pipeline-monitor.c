@@ -125,8 +125,14 @@ _bus_handler (GstBus * bus, GstMessage * message,
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
       gst_message_parse_error (message, &err, &debug);
-      GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
-          "Got error: %s -- Debug message: %s", err->message, debug);
+
+      if (g_error_matches (err, GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN)) {
+        GST_VALIDATE_REPORT (monitor, MISSING_PLUGIN,
+            "Error: %s -- Debug message: %s", err->message, debug);
+      } else {
+        GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
+            "Got error: %s -- Debug message: %s", err->message, debug);
+      }
       g_error_free (err);
       g_free (debug);
       break;
