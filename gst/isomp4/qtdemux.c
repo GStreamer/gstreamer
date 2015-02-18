@@ -2969,8 +2969,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
           GST_TIME_ARGS (decode_time_ts));
 
       /* Discard the fragment buffer timestamp info to avoid using it.
-       * Rely on tfdt instead as it is more accurate than the timetamp
-       * that is fetches from a manifest/playlist and is usually
+       * Rely on tfdt instead as it is more accurate than the timestamp
+       * that is fetched from a manifest/playlist and is usually
        * less accurate. */
       qtdemux->fragment_start = -1;
     }
