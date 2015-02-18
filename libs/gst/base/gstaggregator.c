@@ -111,18 +111,18 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
   } G_STMT_END
 
 
-#define PAD_STREAM_LOCK(pad)   G_STMT_START {                           \
+#define PAD_FLUSH_LOCK(pad)     G_STMT_START {                          \
   GST_TRACE_OBJECT (pad, "Taking lock from thread %p",                  \
         g_thread_self());                                               \
-  g_mutex_lock(&pad->priv->stream_lock);                                \
+  g_mutex_lock(&pad->priv->flush_lock);                                 \
   GST_TRACE_OBJECT (pad, "Took lock from thread %p",                    \
         g_thread_self());                                               \
   } G_STMT_END
 
-#define PAD_STREAM_UNLOCK(pad)  G_STMT_START {                          \
+#define PAD_FLUSH_UNLOCK(pad)   G_STMT_START {                          \
   GST_TRACE_OBJECT (pad, "Releasing lock from thread %p",               \
         g_thread_self());                                               \
-  g_mutex_unlock(&pad->priv->stream_lock);                              \
+  g_mutex_unlock(&pad->priv->flush_lock);                               \
   GST_TRACE_OBJECT (pad, "Release lock from thread %p",                 \
         g_thread_self());                                               \
   } G_STMT_END
@@ -174,7 +174,10 @@ struct _GstAggregatorPadPrivate
 
   GMutex lock;
   GCond event_cond;
-  GMutex stream_lock;
+  /* This lock prevents a flush start processing happening while
+   * the chain function is also happening.
+   */
+  GMutex flush_lock;
 };
 
 static gboolean
@@ -786,7 +789,7 @@ gst_aggregator_flush_start (GstAggregator * self, GstAggregatorPad * aggpad,
   /*  Remove pad buffer and wake up the streaming thread */
   gst_aggregator_pad_drop_buffer (aggpad);
 
-  PAD_STREAM_LOCK (aggpad);
+  PAD_FLUSH_LOCK (aggpad);
   PAD_LOCK (aggpad);
   if (padpriv->pending_flush_start) {
     GST_DEBUG_OBJECT (aggpad, "Expecting FLUSH_STOP now");
@@ -819,7 +822,7 @@ gst_aggregator_flush_start (GstAggregator * self, GstAggregatorPad * aggpad,
     GST_OBJECT_UNLOCK (self);
     gst_event_unref (event);
   }
-  PAD_STREAM_UNLOCK (aggpad);
+  PAD_FLUSH_UNLOCK (aggpad);
 
   gst_aggregator_pad_drop_buffer (aggpad);
 }
@@ -1807,7 +1810,7 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (aggpad, "Start chaining a buffer %" GST_PTR_FORMAT, buffer);
 
-  PAD_STREAM_LOCK (aggpad);
+  PAD_FLUSH_LOCK (aggpad);
 
   if (g_atomic_int_get (&aggpad->priv->flushing) == TRUE)
     goto flushing;
@@ -1836,7 +1839,7 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
     gst_buffer_unref (aggpad->priv->buffer);
   aggpad->priv->buffer = actual_buf;
   PAD_UNLOCK (aggpad);
-  PAD_STREAM_UNLOCK (aggpad);
+  PAD_FLUSH_UNLOCK (aggpad);
 
   SRC_STREAM_BROADCAST (self);
   SRC_STREAM_UNLOCK (self);
@@ -1850,7 +1853,7 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
   return flow_return;
 
 flushing:
-  PAD_STREAM_UNLOCK (aggpad);
+  PAD_FLUSH_UNLOCK (aggpad);
 
   gst_buffer_unref (buffer);
   GST_DEBUG_OBJECT (aggpad, "We are flushing");
@@ -1859,7 +1862,7 @@ flushing:
 
 eos:
   PAD_UNLOCK (aggpad);
-  PAD_STREAM_UNLOCK (aggpad);
+  PAD_FLUSH_UNLOCK (aggpad);
 
   gst_buffer_unref (buffer);
   GST_DEBUG_OBJECT (pad, "We are EOS already...");
@@ -1989,7 +1992,7 @@ gst_aggregator_pad_finalize (GObject * object)
   GstAggregatorPad *pad = (GstAggregatorPad *) object;
 
   g_cond_clear (&pad->priv->event_cond);
-  g_mutex_clear (&pad->priv->stream_lock);
+  g_mutex_clear (&pad->priv->flush_lock);
   g_mutex_clear (&pad->priv->lock);
 
   G_OBJECT_CLASS (gst_aggregator_pad_parent_class)->finalize (object);
@@ -2027,7 +2030,7 @@ gst_aggregator_pad_init (GstAggregatorPad * pad)
   pad->priv->buffer = NULL;
   g_cond_init (&pad->priv->event_cond);
 
-  g_mutex_init (&pad->priv->stream_lock);
+  g_mutex_init (&pad->priv->flush_lock);
   g_mutex_init (&pad->priv->lock);
 }
 
