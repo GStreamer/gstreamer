@@ -1342,6 +1342,10 @@ d3d_release_swap_chain (GstD3DVideoSink * sink)
     goto end;
   }
 
+  gst_buffer_replace (&sink->fallback_buffer, NULL);
+  if (sink->fallback_pool)
+    gst_buffer_pool_set_active (sink->fallback_pool, FALSE);
+
   if (sink->d3d.swapchain) {
     ref_count = IDirect3DSwapChain9_Release (sink->d3d.swapchain);
     sink->d3d.swapchain = NULL;
