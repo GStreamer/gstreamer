@@ -78,19 +78,19 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
 #define GST_CAT_DEFAULT aggregator_debug
 
 /* GstAggregatorPad definitions */
-#define PAD_LOCK(pad)   G_STMT_START {                            \
-  GST_TRACE_OBJECT (pad, "Taking PAD lock from thread %p",            \
+#define PAD_LOCK(pad)   G_STMT_START {                                  \
+  GST_TRACE_OBJECT (pad, "Taking PAD lock from thread %p",              \
         g_thread_self());                                               \
-  g_mutex_lock(&pad->priv->lock);                                \
-  GST_TRACE_OBJECT (pad, "Took PAD lock from thread %p",              \
+  g_mutex_lock(&pad->priv->lock);                                       \
+  GST_TRACE_OBJECT (pad, "Took PAD lock from thread %p",                \
         g_thread_self());                                               \
   } G_STMT_END
 
-#define PAD_UNLOCK(pad)  G_STMT_START {                           \
-  GST_TRACE_OBJECT (pad, "Releasing PAD lock from thread %p",         \
-        g_thread_self());                                               \
-  g_mutex_unlock(&pad->priv->lock);                                \
-  GST_TRACE_OBJECT (pad, "Release PAD lock from thread %p",           \
+#define PAD_UNLOCK(pad)  G_STMT_START {                                 \
+  GST_TRACE_OBJECT (pad, "Releasing PAD lock from thread %p",           \
+      g_thread_self());                                                 \
+  g_mutex_unlock(&pad->priv->lock);                                     \
+  GST_TRACE_OBJECT (pad, "Release PAD lock from thread %p",             \
         g_thread_self());                                               \
   } G_STMT_END
 
@@ -99,7 +99,7 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
   GST_LOG_OBJECT (pad, "Waiting for EVENT on thread %p",                \
         g_thread_self());                                               \
   g_cond_wait(&(((GstAggregatorPad* )pad)->priv->event_cond),           \
-      (&((GstAggregatorPad*)pad)->priv->lock));                            \
+      (&((GstAggregatorPad*)pad)->priv->lock));                         \
   GST_LOG_OBJECT (pad, "DONE Waiting for EVENT on thread %p",           \
         g_thread_self());                                               \
   } G_STMT_END
