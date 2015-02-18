@@ -2714,7 +2714,7 @@ gst_uri_decode_bin_query (GstElement * element, GstQuery * query)
         gst_iterator_resync (iter);
         if (fold_init)
           fold_init (decoder, &fold_data);
-        g_value_set_boolean (&ret, FALSE);
+        g_value_set_boolean (&ret, default_ret);
         break;
       case GST_ITERATOR_OK:
       case GST_ITERATOR_DONE:
