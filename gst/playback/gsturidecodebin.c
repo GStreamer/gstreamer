@@ -2556,8 +2556,6 @@ decoder_query_latency_fold (const GValue * item, GValue * ret, QueryFold * fold)
     GstClockTime min, max;
     gboolean live;
 
-    g_value_set_boolean (ret, TRUE);
-
     gst_query_parse_latency (fold->query, &live, &min, &max);
 
     GST_DEBUG_OBJECT (pad,
@@ -2576,6 +2574,9 @@ decoder_query_latency_fold (const GValue * item, GValue * ret, QueryFold * fold)
 
       fold->live = TRUE;
     }
+  } else {
+    GST_LOG_OBJECT (pad, "latency query failed");
+    g_value_set_boolean (ret, FALSE);
   }
 
   return TRUE;
@@ -2656,6 +2657,7 @@ gst_uri_decode_bin_query (GstElement * element, GstQuery * query)
   QueryDoneFunction fold_done = NULL;
   QueryFold fold_data;
   GValue ret = { 0 };
+  gboolean default_ret = FALSE;
 
   decoder = GST_URI_DECODE_BIN (element);
 
@@ -2677,6 +2679,7 @@ gst_uri_decode_bin_query (GstElement * element, GstQuery * query)
       fold_func = (GstIteratorFoldFunction) decoder_query_latency_fold;
       fold_init = decoder_query_init;
       fold_done = decoder_query_latency_done;
+      default_ret = TRUE;
       break;
     case GST_QUERY_SEEKING:
       /* iterate and collect durations */
@@ -2692,7 +2695,7 @@ gst_uri_decode_bin_query (GstElement * element, GstQuery * query)
   fold_data.query = query;
 
   g_value_init (&ret, G_TYPE_BOOLEAN);
-  g_value_set_boolean (&ret, FALSE);
+  g_value_set_boolean (&ret, default_ret);
 
   iter = gst_element_iterate_src_pads (element);
   GST_DEBUG_OBJECT (element, "Sending query %p (type %d) to src pads",
