@@ -1071,6 +1071,13 @@ decode_ebdu(GstVaapiDecoderVC1 *decoder, GstVC1BDU *ebdu)
     case GST_VC1_END_OF_SEQ:
         status = decode_sequence_end(decoder);
         break;
+    case GST_VC1_FIELD_USER:
+    case GST_VC1_FRAME_USER:
+    case GST_VC1_ENTRY_POINT_USER:
+    case GST_VC1_SEQUENCE_USER:
+        /* Let's just ignore them */
+        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+        break;
     default:
         GST_WARNING("unsupported BDU type %d", ebdu->type);
         status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
