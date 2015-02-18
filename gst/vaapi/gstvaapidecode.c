@@ -279,6 +279,8 @@ error_decode:
             ret = GST_FLOW_NOT_SUPPORTED;
             break;
         default:
+            GST_ELEMENT_ERROR (vdec, STREAM, DECODE, ("Decoding error"),
+                ("Decode error %d", status));
             ret = GST_FLOW_ERROR;
             break;
         }
@@ -365,9 +367,11 @@ error_create_buffer:
         const GstVaapiID surface_id =
             gst_vaapi_surface_get_id(GST_VAAPI_SURFACE_PROXY_SURFACE(proxy));
 
-        GST_ERROR("video sink failed to create video buffer for proxy'ed "
+        GST_ELEMENT_ERROR(vdec, STREAM, FAILED,
+            ("Failed to create sink buffer"),
+            ("video sink failed to create video buffer for proxy'ed "
                   "surface %" GST_VAAPI_ID_FORMAT,
-                  GST_VAAPI_ID_ARGS(surface_id));
+                GST_VAAPI_ID_ARGS(surface_id)));
         gst_video_decoder_drop_frame(vdec, out_frame);
         gst_video_codec_frame_unref(out_frame);
         return GST_FLOW_ERROR;
@@ -375,7 +379,9 @@ error_create_buffer:
 #if GST_CHECK_VERSION(1,0,0)
 error_get_meta:
     {
-        GST_ERROR("failed to get vaapi video meta attached to video buffer");
+        GST_ELEMENT_ERROR(vdec, STREAM, FAILED,
+            ("Failed to get vaapi video meta attached to video buffer"),
+            ("Failed to get vaapi video meta attached to video buffer"));
         gst_video_decoder_drop_frame(vdec, out_frame);
         gst_video_codec_frame_unref(out_frame);
         return GST_FLOW_ERROR;
@@ -423,6 +429,8 @@ gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
         ret = GST_VIDEO_DECODER_FLOW_NEED_DATA;
         break;
     default:
+        GST_ELEMENT_ERROR (vdec, STREAM, DECODE, ("Decoding failed"),
+            ("Unknown decoding error"));
         ret = GST_FLOW_ERROR;
         break;
     }

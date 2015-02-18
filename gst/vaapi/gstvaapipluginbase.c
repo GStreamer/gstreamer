@@ -865,12 +865,16 @@ done:
   /* ERRORS */
 error_no_pool:
   {
-    GST_ERROR ("no buffer pool was negotiated");
+    GST_ELEMENT_ERROR (plugin, STREAM, FAILED,
+        ("no buffer pool was negotiated"),
+        ("no buffer pool was negotiated"));
     return GST_FLOW_ERROR;
   }
 error_active_pool:
   {
-    GST_ERROR ("failed to activate buffer pool");
+    GST_ELEMENT_ERROR (plugin, STREAM, FAILED,
+        ("failed to activate buffer pool"),
+        ("failed to activate buffer pool"));
     return GST_FLOW_ERROR;
   }
 error_map_dst_buffer:
@@ -907,17 +911,21 @@ error_map_src_buffer:
   /* ERRORS */
 error_invalid_buffer:
   {
-    GST_ERROR ("failed to validate source buffer");
+    GST_ELEMENT_ERROR (plugin, STREAM, FAILED,
+        ("failed to validate source buffer"),
+        ("failed to validate source buffer"));
     return GST_FLOW_ERROR;
   }
 error_create_buffer:
   {
-    GST_ERROR ("failed to create buffer");
+    GST_ELEMENT_ERROR (plugin, STREAM, FAILED, ("Allocation failed"),
+        ("failed to create buffer"));
     return GST_FLOW_ERROR;
   }
 error_bind_dma_buffer:
   {
-    GST_ERROR ("failed to bind dma_buf to VA surface buffer");
+    GST_ELEMENT_ERROR (plugin, STREAM, FAILED, ("Allocation failed"),
+        ("failed to bind dma_buf to VA surface buffer"));
     gst_buffer_unref (outbuf);
     return GST_FLOW_ERROR;
   }
