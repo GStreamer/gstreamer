@@ -79,6 +79,8 @@ typedef GstValidateExecuteActionReturn (*GstValidateExecuteAction) (GstValidateS
 typedef gboolean (*GstValidatePrepareAction) (GstValidateAction * action);
 
 
+typedef struct _GstValidateActionPrivate          GstValidateActionPrivate;
+
 /**
  * GstValidateAction:
  * @type: The type of the #GstValidateAction, which is the name of the
@@ -100,14 +102,13 @@ struct _GstValidateAction
   GstValidateScenario *scenario;
 
   /* < private > */
-  GstStructure *main_structure;
   guint action_number;
   gint repeat;
   GstClockTime playback_time;
-  GstValidateExecuteActionReturn state; /* Actually ActionState */
-  gboolean printed;
 
-  gpointer _gst_reserved[GST_PADDING_LARGE - 4];
+  GstValidateActionPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING_LARGE - 2]; /* ->scenario + ->priv */
 };
 
 void gst_validate_action_set_done (GstValidateAction *action);

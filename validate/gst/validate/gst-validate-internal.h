@@ -38,4 +38,9 @@ GST_EXPORT GType _gst_validate_action_type_type;
 
 void init_scenarios (void);
 
+/* FIXME 2.0 Remove that as this is only for backward compatibility
+ * as we used to have to print actions in the action execution function
+ * and this is done by the scenario itself now */
+gboolean _action_check_and_set_printed (GstValidateAction *action);
+
 #endif

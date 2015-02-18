@@ -168,6 +168,13 @@ G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
 /* GstValidateAction implementation */
 GType _gst_validate_action_type;
 
+struct _GstValidateActionPrivate
+{
+  GstStructure *main_structure;
+  GstValidateExecuteActionReturn state; /* Actually ActionState */
+  gboolean printed;
+};
+
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
 static GstValidateAction *gst_validate_action_new (GstValidateScenario *
     scenario, GstValidateActionType * type);
@@ -186,8 +193,8 @@ _action_copy (GstValidateAction * act)
       act->name = "";
   }
 
-  if (act->main_structure)
-    copy->main_structure = gst_structure_copy (act->main_structure);
+  if (act->priv->main_structure)
+    copy->priv->main_structure = gst_structure_copy (act->priv->main_structure);
 
   copy->action_number = act->action_number;
   copy->playback_time = act->playback_time;
@@ -201,9 +208,10 @@ _action_free (GstValidateAction * action)
   if (action->structure)
     gst_structure_free (action->structure);
 
-  if (action->main_structure)
-    gst_structure_free (action->main_structure);
+  if (action->priv->main_structure)
+    gst_structure_free (action->priv->main_structure);
 
+  g_slice_free (GstValidateActionPrivate, action->priv);
   g_slice_free (GstValidateAction, action);
 }
 
@@ -213,6 +221,8 @@ gst_validate_action_init (GstValidateAction * action)
   gst_mini_object_init (((GstMiniObject *) action), 0,
       _gst_validate_action_type, (GstMiniObjectCopyFunction) _action_copy, NULL,
       (GstMiniObjectFreeFunction) _action_free);
+
+  action->priv = g_slice_new0 (GstValidateActionPrivate);
 }
 
 static void
@@ -238,6 +248,18 @@ gst_validate_action_new (GstValidateScenario * scenario,
         ((gpointer *) & action->scenario));
 
   return action;
+}
+
+gboolean
+_action_check_and_set_printed (GstValidateAction * action)
+{
+  if (action->priv->printed == FALSE) {
+    action->priv->printed = TRUE;
+
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 /* GstValidateActionType implementation */
@@ -981,7 +1003,7 @@ gst_validate_execute_action (GstValidateActionType * action_type,
   if (!gst_structure_has_field (action->structure, "sub-action")) {
     gst_structure_free (action->structure);
 
-    action->structure = gst_structure_copy (action->main_structure);
+    action->structure = gst_structure_copy (action->priv->main_structure);
   }
 
   return res;
@@ -1022,7 +1044,7 @@ get_position (GstValidateScenario * scenario)
     act = scenario->priv->actions->data;
 
   if (act) {
-    if (act->state == GST_VALIDATE_EXECUTE_ACTION_OK && act->repeat <= 0) {
+    if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK && act->repeat <= 0) {
       tmp = priv->actions;
       priv->actions = g_list_remove_link (priv->actions, tmp);
 
@@ -1038,7 +1060,7 @@ get_position (GstValidateScenario * scenario)
         _check_scenario_is_done (scenario);
         act = NULL;
       }
-    } else if (act->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+    } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
       GST_DEBUG_OBJECT (scenario, "Action %" GST_PTR_FORMAT " still running",
           act->structure);
 
@@ -1107,8 +1129,8 @@ get_position (GstValidateScenario * scenario)
       " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
   priv->seeked_in_pause = FALSE;
 
-  act->state = gst_validate_execute_action (type, act);
-  if (act->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
+  act->priv->state = gst_validate_execute_action (type, act);
+  if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
     gchar *str = gst_structure_to_string (act->structure);
 
     GST_VALIDATE_REPORT (scenario,
@@ -1118,13 +1140,13 @@ get_position (GstValidateScenario * scenario)
   }
 
   if (act->repeat > 0 && gst_structure_is_equal (act->structure,
-          act->main_structure)) {
+          act->priv->main_structure)) {
     act->repeat--;
-  } else if (act->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+  } else if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
 
-    if (act->state != GST_VALIDATE_EXECUTE_ACTION_INTERLACED)
+    if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_INTERLACED)
       gst_validate_action_unref (act);
     else {
       SCENARIO_LOCK (scenario);
@@ -1741,7 +1763,7 @@ _load_scenario_file (GstValidateScenario * scenario,
             structure, TRUE) == GST_VALIDATE_EXECUTE_ACTION_ERROR)
       goto failed;
 
-    action->main_structure = gst_structure_copy (structure);
+    action->priv->main_structure = gst_structure_copy (structure);
     action->action_number = priv->num_actions++;
   }
 
@@ -2347,7 +2369,7 @@ gst_validate_action_set_done (GstValidateAction * action)
 {
   GstValidateScenario *scenario = action->scenario;
 
-  if (action->state == GST_VALIDATE_EXECUTE_ACTION_INTERLACED) {
+  if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_INTERLACED) {
 
     if (action->scenario) {
       SCENARIO_LOCK (action->scenario);
@@ -2359,8 +2381,8 @@ gst_validate_action_set_done (GstValidateAction * action)
     gst_validate_action_unref (action);
   }
 
-  action->state = _execute_sub_action_action (action);
-  if (action->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+  action->priv->state = _execute_sub_action_action (action);
+  if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     GST_DEBUG_OBJECT (scenario, "Sub action executed ASYNC");
 
     return;

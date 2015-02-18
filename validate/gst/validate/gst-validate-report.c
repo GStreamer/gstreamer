@@ -625,10 +625,9 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
     if (*(GType *) source == GST_TYPE_VALIDATE_ACTION) {
       GstValidateAction *action = (GstValidateAction *) source;
 
-      if (action->printed)
+      if (_action_check_and_set_printed (action))
         return;
 
-      action->printed = TRUE;
       g_string_printf (string, "Executing ");
 
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
