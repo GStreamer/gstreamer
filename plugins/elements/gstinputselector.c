@@ -1587,6 +1587,7 @@ gst_input_selector_query (GstPad * pad, GstObject * parent, GstQuery * query)
       resmin = 0;
       resmax = -1;
       reslive = FALSE;
+      res = TRUE;
 
       /* perform the query on all sinkpads and combine the results. We take the
        * max of min and the min of max for the result latency. */
@@ -1594,15 +1595,15 @@ gst_input_selector_query (GstPad * pad, GstObject * parent, GstQuery * query)
       for (walk = GST_ELEMENT_CAST (sel)->sinkpads; walk;
           walk = g_list_next (walk)) {
         GstPad *sinkpad = GST_PAD_CAST (walk->data);
+        GstQuery *peerquery;
 
-        if (gst_pad_peer_query (sinkpad, query)) {
+        peerquery = gst_query_new_latency ();
+
+        if (gst_pad_peer_query (sinkpad, peerquery)) {
           GstClockTime min, max;
           gboolean live;
 
-          /* one query succeeded, we succeed too */
-          res = TRUE;
-
-          gst_query_parse_latency (query, &live, &min, &max);
+          gst_query_parse_latency (peerquery, &live, &min, &max);
 
           GST_DEBUG_OBJECT (sinkpad,
               "peer latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
@@ -1618,7 +1619,11 @@ gst_input_selector_query (GstPad * pad, GstObject * parent, GstQuery * query)
             if (!reslive)
               reslive = live;
           }
+        } else {
+          GST_LOG_OBJECT (sinkpad, "latency query failed");
+          res = FALSE;
         }
+        gst_query_unref (peerquery);
       }
       GST_INPUT_SELECTOR_UNLOCK (sel);
       if (res) {
