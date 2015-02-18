@@ -1676,7 +1676,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
   if (etrack->offsets && etrack->offsets->len > etrack->position) {
     GstMXFDemuxIndex *index =
-          &g_array_index (etrack->offsets, GstMXFDemuxIndex, etrack->position);
+        &g_array_index (etrack->offsets, GstMXFDemuxIndex, etrack->position);
     if (index->offset != 0)
       keyframe = index->keyframe;
   }
@@ -2355,7 +2355,7 @@ next_try:
         goto next_try;
       }
     } else if (mxf_is_descriptive_metadata (&key)) {
-      ret = gst_mxf_demux_handle_descriptive_metadata (demux, &key, buffer);
+      gst_mxf_demux_handle_descriptive_metadata (demux, &key, buffer);
       demux->offset += read;
       gst_buffer_unref (buffer);
       buffer = NULL;
