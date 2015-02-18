@@ -326,6 +326,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     if (caps)
       gst_caps_unref (caps);
+    caps = NULL;
   });
 }
 
@@ -663,6 +664,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         dictionaryWithObject:[NSNumber numberWithInt:newformat]
         forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey];
 
+    if (caps)
+      gst_caps_unref (caps);
     caps = gst_caps_copy (new_caps);
     [session startRunning];
 
@@ -716,7 +719,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   BOOL result = NO;
 
   if (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY) {
-    if (device != nil) {
+    if (device != nil && caps != NULL) {
       GstClockTime min_latency, max_latency;
 
       min_latency = max_latency = latency;
