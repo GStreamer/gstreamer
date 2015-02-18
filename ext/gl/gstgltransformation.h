@@ -22,7 +22,7 @@
 #define _GST_GL_TRANSFORMATION_H_
 
 #include <gst/gl/gstglfilter.h>
-#include <graphene-1.0/graphene.h>
+#include <graphene.h>
 
 G_BEGIN_DECLS
 

@@ -44,9 +44,10 @@
 #include "config.h"
 #endif
 
-#include <gst/gl/gstglapi.h>
 #include "gstgltransformation.h"
-#include <graphene-1.0/graphene-gobject.h>
+
+#include <gst/gl/gstglapi.h>
+#include <graphene-gobject.h>
 
 #define GST_CAT_DEFAULT gst_gl_transformation_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
