@@ -1117,6 +1117,7 @@ typedef struct
 {
   GstClockTime min, max;
   gboolean live;
+  gboolean res;
 } LatencyData;
 
 static gboolean
@@ -1148,6 +1149,9 @@ gst_aggregator_query_sink_latency_foreach (GstAggregator * self,
 
       data->live = TRUE;
     }
+  } else {
+    GST_LOG_OBJECT (pad, "latency query failed");
+    data->res = FALSE;
   }
 
   gst_query_unref (query);
@@ -1207,6 +1211,7 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   data.min = 0;
   data.max = GST_CLOCK_TIME_NONE;
   data.live = FALSE;
+  data.res = TRUE;
 
   /* query upstream's latency */
   SRC_LOCK (self);
@@ -1262,7 +1267,7 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
 
   gst_query_set_latency (query, data.live, data.min, data.max);
 
-  return TRUE;
+  return data.res;
 }
 
 static gboolean
