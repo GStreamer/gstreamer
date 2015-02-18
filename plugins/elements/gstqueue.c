@@ -596,7 +596,7 @@ apply_gap (GstQueue * queue, GstEvent * event,
 /* take a buffer and update segment, updating the time level of the queue. */
 static void
 apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
-    gboolean with_duration, gboolean sink)
+    gboolean sink)
 {
   GstClockTime duration, timestamp;
 
@@ -609,7 +609,7 @@ apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
     timestamp = segment->position;
 
   /* add duration */
-  if (with_duration && duration != GST_CLOCK_TIME_NONE)
+  if (duration != GST_CLOCK_TIME_NONE)
     timestamp += duration;
 
   GST_LOG_OBJECT (queue, "position updated to %" GST_TIME_FORMAT,
@@ -626,16 +626,10 @@ apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
   update_time_level (queue);
 }
 
-typedef struct
-{
-  GstClockTime timestamp;
-  gboolean with_duration;
-} BufferListApplyTimeData;
-
 static gboolean
 buffer_list_apply_time (GstBuffer ** buf, guint idx, gpointer user_data)
 {
-  BufferListApplyTimeData *data = user_data;
+  GstClockTime *timestamp = user_data;
 
   GST_TRACE ("buffer %u has ts %" GST_TIME_FORMAT
       " duration %" GST_TIME_FORMAT, idx,
@@ -643,12 +637,12 @@ buffer_list_apply_time (GstBuffer ** buf, guint idx, gpointer user_data)
       GST_TIME_ARGS (GST_BUFFER_DURATION (*buf)));
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (*buf))
-    data->timestamp = GST_BUFFER_TIMESTAMP (*buf);
+    *timestamp = GST_BUFFER_TIMESTAMP (*buf);
 
-  if (data->with_duration && GST_BUFFER_DURATION_IS_VALID (*buf))
-    data->timestamp += GST_BUFFER_DURATION (*buf);
+  if (GST_BUFFER_DURATION_IS_VALID (*buf))
+    *timestamp += GST_BUFFER_DURATION (*buf);
 
-  GST_TRACE ("ts now %" GST_TIME_FORMAT, GST_TIME_ARGS (data->timestamp));
+  GST_TRACE ("ts now %" GST_TIME_FORMAT, GST_TIME_ARGS (*timestamp));
 
   return TRUE;
 }
@@ -656,20 +650,19 @@ buffer_list_apply_time (GstBuffer ** buf, guint idx, gpointer user_data)
 /* take a buffer list and update segment, updating the time level of the queue */
 static void
 apply_buffer_list (GstQueue * queue, GstBufferList * buffer_list,
-    GstSegment * segment, gboolean with_duration, gboolean sink)
+    GstSegment * segment, gboolean sink)
 {
-  BufferListApplyTimeData data;
+  GstClockTime timestamp;
 
   /* if no timestamp is set, assume it's continuous with the previous time */
-  data.timestamp = segment->position;
-  data.with_duration = with_duration;
+  timestamp = segment->position;
 
-  gst_buffer_list_foreach (buffer_list, buffer_list_apply_time, &data);
+  gst_buffer_list_foreach (buffer_list, buffer_list_apply_time, &timestamp);
 
   GST_DEBUG_OBJECT (queue, "position updated to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (data.timestamp));
+      GST_TIME_ARGS (timestamp));
 
-  segment->position = data.timestamp;
+  segment->position = timestamp;
 
   if (sink)
     queue->sink_tainted = TRUE;
@@ -726,7 +719,7 @@ gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
   /* add buffer to the statistics */
   queue->cur_level.buffers++;
   queue->cur_level.bytes += bsize;
-  apply_buffer (queue, buffer, &queue->sink_segment, TRUE, TRUE);
+  apply_buffer (queue, buffer, &queue->sink_segment, TRUE);
 
   qitem = g_slice_new (GstQueueItem);
   qitem->item = item;
@@ -760,7 +753,7 @@ gst_queue_locked_enqueue_buffer_list (GstQueue * queue, gpointer item)
   /* add buffer to the statistics */
   queue->cur_level.buffers += gst_buffer_list_length (buffer_list);
   queue->cur_level.bytes += bsize;
-  apply_buffer_list (queue, buffer_list, &queue->sink_segment, TRUE, TRUE);
+  apply_buffer_list (queue, buffer_list, &queue->sink_segment, TRUE);
 
   qitem = g_slice_new (GstQueueItem);
   qitem->item = item;
@@ -838,7 +831,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
 
     queue->cur_level.buffers--;
     queue->cur_level.bytes -= bufsize;
-    apply_buffer (queue, buffer, &queue->src_segment, TRUE, FALSE);
+    apply_buffer (queue, buffer, &queue->src_segment, FALSE);
 
     /* if the queue is empty now, update the other side */
     if (queue->cur_level.buffers == 0)
@@ -851,7 +844,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
 
     queue->cur_level.buffers -= gst_buffer_list_length (buffer_list);
     queue->cur_level.bytes -= bufsize;
-    apply_buffer_list (queue, buffer_list, &queue->src_segment, TRUE, FALSE);
+    apply_buffer_list (queue, buffer_list, &queue->src_segment, FALSE);
 
     /* if the queue is empty now, update the other side */
     if (queue->cur_level.buffers == 0)
