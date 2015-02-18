@@ -1614,6 +1614,20 @@ gst_tag_demux_src_activate_mode (GstPad * pad, GstObject * parent,
   return res;
 }
 
+static inline GstFlowReturn
+gst_tag_demux_ensure_tags (GstTagDemux * demux)
+{
+  GstFlowReturn flow = GST_FLOW_OK;
+
+  if (G_UNLIKELY (demux->priv->state == GST_TAG_DEMUX_READ_START_TAG &&
+          GST_PAD_MODE (demux->priv->srcpad) == GST_PAD_MODE_PULL)) {
+
+    flow = gst_tag_demux_element_find (demux);
+    GST_INFO_OBJECT (demux, "pulled tags: %s", gst_flow_get_name (flow));
+  }
+  return flow;
+}
+
 static GstFlowReturn
 gst_tag_demux_read_range (GstTagDemux * demux, GstObject * parent,
     guint64 offset, guint length, GstBuffer ** buffer)
@@ -1624,6 +1638,12 @@ gst_tag_demux_read_range (GstTagDemux * demux, GstObject * parent,
   gsize size;
 
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
+
+  /* Ensure we already have computed our tags to properly use the offsets
+   * below */
+  ret = gst_tag_demux_ensure_tags (demux);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   /* Adjust offset and length of the request to trim off tag information. 
    * For the returned buffer, adjust the output offset to match what downstream
@@ -1741,13 +1761,7 @@ gst_tag_demux_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
          * filesrc ! id3demux ! xyzparse ! .., read tags here, since we don't
          * have a streaming thread of our own to do that. We do it here and
          * not in get_range(), so we can return the right size in bytes.. */
-        if (demux->priv->state == GST_TAG_DEMUX_READ_START_TAG &&
-            GST_PAD_MODE (demux->priv->srcpad) == GST_PAD_MODE_PULL) {
-          GstFlowReturn flow G_GNUC_UNUSED;
-
-          flow = gst_tag_demux_element_find (demux);
-          GST_INFO_OBJECT (demux, "pulled tags: %s", gst_flow_get_name (flow));
-        }
+        gst_tag_demux_ensure_tags (demux);
         result -= demux->priv->strip_start + demux->priv->strip_end;
         if (result < 0)
           result = 0;
