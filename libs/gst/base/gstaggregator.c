@@ -127,36 +127,36 @@ GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
         g_thread_self());                                               \
   } G_STMT_END
 
-#define SRC_STREAM_LOCK(self)   G_STMT_START {                             \
-  GST_TRACE_OBJECT (self, "Taking src STREAM lock from thread %p",         \
-        g_thread_self());                                                  \
-  g_mutex_lock(&self->priv->src_lock);                                     \
-  GST_TRACE_OBJECT (self, "Took src STREAM lock from thread %p",           \
-        g_thread_self());                                                  \
+#define SRC_LOCK(self)   G_STMT_START {                             \
+  GST_TRACE_OBJECT (self, "Taking src lock from thread %p",         \
+      g_thread_self());                                             \
+  g_mutex_lock(&self->priv->src_lock);                              \
+  GST_TRACE_OBJECT (self, "Took src lock from thread %p",           \
+        g_thread_self());                                           \
   } G_STMT_END
 
-#define SRC_STREAM_UNLOCK(self)  G_STMT_START {                            \
-  GST_TRACE_OBJECT (self, "Releasing src STREAM lock from thread %p",      \
-        g_thread_self());                                                  \
-  g_mutex_unlock(&self->priv->src_lock);                                   \
-  GST_TRACE_OBJECT (self, "Released src STREAM lock from thread %p",       \
-        g_thread_self());                                                  \
+#define SRC_UNLOCK(self)  G_STMT_START {                            \
+  GST_TRACE_OBJECT (self, "Releasing src lock from thread %p",      \
+        g_thread_self());                                           \
+  g_mutex_unlock(&self->priv->src_lock);                            \
+  GST_TRACE_OBJECT (self, "Released src lock from thread %p",       \
+        g_thread_self());                                           \
   } G_STMT_END
 
-#define SRC_STREAM_WAIT(self) G_STMT_START {                               \
-  GST_LOG_OBJECT (self, "Waiting for src STREAM on thread %p",             \
-        g_thread_self());                                                  \
-  g_cond_wait(&(self->priv->src_cond), &(self->priv->src_lock));           \
-  GST_LOG_OBJECT (self, "DONE Waiting for src STREAM on thread %p",        \
-        g_thread_self());                                                  \
+#define SRC_WAIT(self) G_STMT_START {                               \
+  GST_LOG_OBJECT (self, "Waiting for src on thread %p",             \
+        g_thread_self());                                           \
+  g_cond_wait(&(self->priv->src_cond), &(self->priv->src_lock));    \
+  GST_LOG_OBJECT (self, "DONE Waiting for src on thread %p",        \
+        g_thread_self());                                           \
   } G_STMT_END
 
-#define SRC_STREAM_BROADCAST(self) G_STMT_START {                 \
-    GST_LOG_OBJECT (self, "Signaling src STREAM from thread %p",           \
-        g_thread_self());                                                  \
-    if (self->priv->aggregate_id)                                          \
-      gst_clock_id_unschedule (self->priv->aggregate_id);                  \
-    g_cond_broadcast(&(self->priv->src_cond));                             \
+#define SRC_BROADCAST(self) G_STMT_START {                          \
+    GST_LOG_OBJECT (self, "Signaling src from thread %p",           \
+        g_thread_self());                                           \
+    if (self->priv->aggregate_id)                                   \
+      gst_clock_id_unschedule (self->priv->aggregate_id);           \
+    g_cond_broadcast(&(self->priv->src_cond));                      \
   } G_STMT_END
 
 struct _GstAggregatorPadPrivate
@@ -208,7 +208,7 @@ struct _GstAggregatorPrivate
   gint padcount;
 
   /* Our state is >= PAUSED */
-  gboolean running;             /* protected by SRC_STREAM_LOCK */
+  gboolean running;             /* protected by src_lock */
 
   gint seqnum;
   gboolean send_stream_start;   /* protected by srcpad stream lock */
@@ -529,7 +529,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 
   *timeout = FALSE;
 
-  SRC_STREAM_LOCK (self);
+  SRC_LOCK (self);
 
   GST_OBJECT_LOCK (self);
   gst_aggregator_get_latency_unlocked (self, &live, &latency_min, &latency_max);
@@ -537,14 +537,14 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 
   if (gst_aggregator_check_pads_ready (self)) {
     GST_DEBUG_OBJECT (self, "all pads have data");
-    SRC_STREAM_UNLOCK (self);
+    SRC_UNLOCK (self);
 
     return TRUE;
   }
 
   /* Before waiting, check if we're actually still running */
   if (!self->priv->running || !self->priv->send_eos) {
-    SRC_STREAM_UNLOCK (self);
+    SRC_UNLOCK (self);
 
     return FALSE;
   }
@@ -557,7 +557,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
      * then check if we're ready now. If we return FALSE,
      * we will be directly called again.
      */
-    SRC_STREAM_WAIT (self);
+    SRC_WAIT (self);
   } else {
     GstClockTime base_time, time;
     GstClock *clock;
@@ -589,12 +589,12 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 
     self->priv->aggregate_id = gst_clock_new_single_shot_id (clock, time);
     gst_object_unref (clock);
-    SRC_STREAM_UNLOCK (self);
+    SRC_UNLOCK (self);
 
     jitter = 0;
     status = gst_clock_id_wait (self->priv->aggregate_id, &jitter);
 
-    SRC_STREAM_LOCK (self);
+    SRC_LOCK (self);
     if (self->priv->aggregate_id) {
       gst_clock_id_unref (self->priv->aggregate_id);
       self->priv->aggregate_id = NULL;
@@ -607,14 +607,14 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 
     /* we timed out */
     if (status == GST_CLOCK_OK || status == GST_CLOCK_EARLY) {
-      SRC_STREAM_UNLOCK (self);
+      SRC_UNLOCK (self);
       *timeout = TRUE;
       return TRUE;
     }
   }
 
   res = gst_aggregator_check_pads_ready (self);
-  SRC_STREAM_UNLOCK (self);
+  SRC_UNLOCK (self);
 
   return res;
 }
@@ -712,10 +712,10 @@ gst_aggregator_stop_srcpad_task (GstAggregator * self, GstEvent * flush_start)
   GST_INFO_OBJECT (self, "%s srcpad task",
       flush_start ? "Pausing" : "Stopping");
 
-  SRC_STREAM_LOCK (self);
+  SRC_LOCK (self);
   self->priv->running = FALSE;
-  SRC_STREAM_BROADCAST (self);
-  SRC_STREAM_UNLOCK (self);
+  SRC_BROADCAST (self);
+  SRC_UNLOCK (self);
 
   if (flush_start) {
     res = gst_pad_push_event (self->srcpad, flush_start);
@@ -859,10 +859,10 @@ gst_aggregator_default_sink_event (GstAggregator * self,
           gst_aggregator_flush (self);
           gst_pad_push_event (self->srcpad, event);
           event = NULL;
-          SRC_STREAM_LOCK (self);
+          SRC_LOCK (self);
           priv->send_eos = TRUE;
-          SRC_STREAM_BROADCAST (self);
-          SRC_STREAM_UNLOCK (self);
+          SRC_BROADCAST (self);
+          SRC_UNLOCK (self);
 
           GST_INFO_OBJECT (self, "Releasing source pad STREAM_LOCK");
           GST_PAD_STREAM_UNLOCK (self->srcpad);
@@ -885,7 +885,7 @@ gst_aggregator_default_sink_event (GstAggregator * self,
        * check for it. Mark pending_eos, eos will be set when steal_buffer is
        * called
        */
-      SRC_STREAM_LOCK (self);
+      SRC_LOCK (self);
       PAD_LOCK (aggpad);
       if (!aggpad->priv->buffer) {
         aggpad->priv->eos = TRUE;
@@ -894,8 +894,8 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       }
       PAD_UNLOCK (aggpad);
 
-      SRC_STREAM_BROADCAST (self);
-      SRC_STREAM_UNLOCK (self);
+      SRC_BROADCAST (self);
+      SRC_UNLOCK (self);
       goto eat;
     }
     case GST_EVENT_SEGMENT:
@@ -1041,13 +1041,13 @@ gst_aggregator_release_pad (GstElement * element, GstPad * pad)
 
   GST_INFO_OBJECT (pad, "Removing pad");
 
-  SRC_STREAM_LOCK (self);
+  SRC_LOCK (self);
   g_atomic_int_set (&aggpad->priv->flushing, TRUE);
   gst_aggregator_pad_drop_buffer (aggpad);
   gst_element_remove_pad (element, pad);
 
-  SRC_STREAM_BROADCAST (self);
-  SRC_STREAM_UNLOCK (self);
+  SRC_BROADCAST (self);
+  SRC_UNLOCK (self);
 }
 
 static GstPad *
@@ -1196,10 +1196,10 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   data.live = FALSE;
 
   /* query upstream's latency */
-  SRC_STREAM_LOCK (self);
+  SRC_LOCK (self);
   gst_aggregator_iterate_sinkpads (self,
       gst_aggregator_query_sink_latency_foreach, &data);
-  SRC_STREAM_UNLOCK (self);
+  SRC_UNLOCK (self);
 
   GST_OBJECT_LOCK (self);
   our_latency = self->priv->latency;
@@ -1313,9 +1313,9 @@ gst_aggregator_default_src_query (GstAggregator * self, GstQuery * query)
        * This is only to unschedule the clock id, we don't really care
        * about the GCond here.
        */
-      SRC_STREAM_LOCK (self);
-      SRC_STREAM_BROADCAST (self);
-      SRC_STREAM_UNLOCK (self);
+      SRC_LOCK (self);
+      SRC_BROADCAST (self);
+      SRC_UNLOCK (self);
       return ret;
     }
     default:
@@ -1833,7 +1833,7 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
     aggclass->clip (self, aggpad, buffer, &actual_buf);
   }
 
-  SRC_STREAM_LOCK (self);
+  SRC_LOCK (self);
   PAD_LOCK (aggpad);
   if (aggpad->priv->buffer)
     gst_buffer_unref (aggpad->priv->buffer);
@@ -1841,8 +1841,8 @@ gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
   PAD_UNLOCK (aggpad);
   PAD_FLUSH_UNLOCK (aggpad);
 
-  SRC_STREAM_BROADCAST (self);
-  SRC_STREAM_UNLOCK (self);
+  SRC_BROADCAST (self);
+  SRC_UNLOCK (self);
 
   GST_DEBUG_OBJECT (aggpad, "Done chaining");
 
