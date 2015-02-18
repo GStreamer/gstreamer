@@ -2134,7 +2134,7 @@ gst_vaapi_display_has_opengl (GstVaapiDisplay * display)
 {
   GstVaapiDisplayClass *klass;
 
-  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (display != NULL, FALSE);
 
   klass = GST_VAAPI_DISPLAY_GET_CLASS (display);
   return (klass->display_type == GST_VAAPI_DISPLAY_TYPE_GLX);

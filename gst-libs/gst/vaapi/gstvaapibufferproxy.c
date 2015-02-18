@@ -286,7 +286,7 @@ gst_vaapi_buffer_proxy_get_type (GstVaapiBufferProxy * proxy)
 guintptr
 gst_vaapi_buffer_proxy_get_handle (GstVaapiBufferProxy * proxy)
 {
-  g_return_val_if_fail (proxy != NULL, NULL);
+  g_return_val_if_fail (proxy != NULL, 0);
 
   return GST_VAAPI_BUFFER_PROXY_HANDLE (proxy);
 }

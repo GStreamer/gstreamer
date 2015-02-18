@@ -454,7 +454,6 @@ libgstvaapi_wayland_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_VIDEO_CFLAGS)			\
 	$(WAYLAND_CFLAGS)			\
 	$(LIBVA_WAYLAND_CFLAGS)			\
-	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la \
 	$(NULL)
 
 libgstvaapi_wayland_@GST_API_VERSION@_la_LIBADD = \
@@ -464,6 +463,7 @@ libgstvaapi_wayland_@GST_API_VERSION@_la_LIBADD = \
 	$(WAYLAND_LIBS)				\
 	$(LIBVA_WAYLAND_LIBS)			\
 	libgstvaapi-$(GST_API_VERSION).la	\
+	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la \
 	$(NULL)
 
 libgstvaapi_wayland_@GST_API_VERSION@_la_LDFLAGS = \

@@ -370,7 +370,7 @@ gst_vaapi_video_memory_reset_surface (GstVaapiVideoMemory * mem)
 gboolean
 gst_vaapi_video_memory_sync (GstVaapiVideoMemory * mem)
 {
-  g_return_val_if_fail (mem, NULL);
+  g_return_val_if_fail (mem, FALSE);
 
   return ensure_surface_is_current (mem);
 }

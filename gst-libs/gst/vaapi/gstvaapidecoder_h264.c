@@ -2561,7 +2561,7 @@ exec_picture_refs_modification_1(
     GstH264RefPicListModification *ref_pic_list_modification;
     guint num_ref_pic_list_modifications;
     GstVaapiPictureH264 **ref_list;
-    guint *ref_list_count_ptr, ref_list_count, ref_list_idx = 0;
+    guint *ref_list_count_ptr, ref_list_idx = 0;
     const guint16 *view_ids = NULL;
     guint i, j, n, num_refs, num_view_ids = 0;
     gint found_ref_idx;
@@ -2611,7 +2611,6 @@ exec_picture_refs_modification_1(
             }
         }
     }
-    ref_list_count = *ref_list_count_ptr;
 
     if (!GST_VAAPI_PICTURE_IS_FRAME(picture)) {
         MaxPicNum  = 1 << (sps->log2_max_frame_num_minus4 + 5); // 2 * MaxFrameNum

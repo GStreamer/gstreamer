@@ -908,8 +908,9 @@ gst_interlace_mode_to_string (GstVideoInterlaceMode mode)
       return "interleaved";
     case GST_VIDEO_INTERLACE_MODE_MIXED:
       return "mixed";
+    default:
+      return "<unknown>";
   }
-  return "<unknown>";
 }
 
 void

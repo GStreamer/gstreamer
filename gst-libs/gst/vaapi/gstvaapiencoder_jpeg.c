@@ -134,8 +134,6 @@ generate_sampling_factors (GstVaapiEncoderJpeg * encoder)
 static GstVaapiEncoderStatus
 ensure_profile (GstVaapiEncoderJpeg * encoder)
 {
-  GstVaapiProfile profile;
-
   /* Always start from "simple" profile for maximum compatibility */
   encoder->profile = GST_VAAPI_PROFILE_JPEG_BASELINE;
 
@@ -210,9 +208,7 @@ fill_picture (GstVaapiEncoderJpeg * encoder,
     GstVaapiEncPicture * picture,
     GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
 {
-  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   VAEncPictureParameterBufferJPEG *const pic_param = picture->param;
-  GstVideoInfo *vinfo = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
 
   memset (pic_param, 0, sizeof (VAEncPictureParameterBufferJPEG));
 
@@ -572,13 +568,6 @@ bs_write_jpeg_header (GstBitWriter * bs, GstVaapiEncoderJpeg * encoder,
   gst_bit_writer_put_bits_uint8 (bs, 0, 4);     //0 for Baseline
 
   return TRUE;
-
-  /* ERRORS */
-bs_error:
-  {
-    GST_WARNING ("failed to write Jpeg raw data header");
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -611,14 +600,6 @@ add_packed_header (GstVaapiEncoderJpeg * encoder, GstVaapiEncPicture * picture)
   gst_bit_writer_clear (&bs, TRUE);
 
   return TRUE;
-
-  /* ERRORS */
-bs_error:
-  {
-    GST_WARNING ("failed to write Packed Raw Data header");
-    gst_bit_writer_clear (&bs, TRUE);
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -722,9 +703,6 @@ gst_vaapi_encoder_jpeg_reconfigure (GstVaapiEncoder * base_encoder)
   generate_sampling_factors (encoder);
 
   return set_context_info (base_encoder);
-
-error:
-  return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
 }
 
 static gboolean
