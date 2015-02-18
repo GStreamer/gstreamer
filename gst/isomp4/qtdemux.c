@@ -2967,6 +2967,12 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
       GST_DEBUG_OBJECT (qtdemux, "decode time %" G_GINT64_FORMAT
           " (%" GST_TIME_FORMAT ")", decode_time,
           GST_TIME_ARGS (decode_time_ts));
+
+      /* Discard the fragment buffer timestamp info to avoid using it.
+       * Rely on tfdt instead as it is more accurate than the timetamp
+       * that is fetches from a manifest/playlist and is usually
+       * less accurate. */
+      qtdemux->fragment_start = -1;
     }
 
     if (G_UNLIKELY (!stream)) {
