@@ -822,6 +822,7 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   }
 
   if (pool->other_pool) {
+    gst_buffer_pool_set_active (pool->other_pool, FALSE);
     gst_object_unref (pool->other_pool);
     pool->other_pool = NULL;
   }
