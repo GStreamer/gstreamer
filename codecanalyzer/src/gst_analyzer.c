@@ -79,7 +79,7 @@ find_codec_info (gchar * name)
 {
   guint i;
   for (i = 0; i < G_N_ELEMENTS (codecs_info); ++i) {
-    if (!strcmp (name, codecs_info[i].discoverer_codec_name))
+    if (g_str_has_prefix (name, codecs_info[i].discoverer_codec_name))
       return &codecs_info[i];
   }
   return NULL;
