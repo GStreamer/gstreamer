@@ -390,7 +390,8 @@ error_get_meta:
 error_commit_buffer:
     {
         if (ret != GST_FLOW_FLUSHING)
-            GST_ERROR("video sink rejected the video buffer (error %d)", ret);
+            GST_ERROR("video sink rejected the video buffer (error: %s [%d])",
+                gst_flow_get_name (ret), ret);
         gst_video_codec_frame_unref(out_frame);
         return ret;
     }
