@@ -1032,12 +1032,12 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
 
     /* Pad through which data comes in to the element */
     pad = GST_VAAPI_PLUGIN_BASE_SINK_PAD(decode);
-    gst_pad_set_query_function(pad, gst_vaapidecode_query);
+    gst_pad_set_query_function(pad, GST_DEBUG_FUNCPTR(gst_vaapidecode_query));
 #if !GST_CHECK_VERSION(1,0,0)
     gst_pad_set_getcaps_function(pad, gst_vaapidecode_get_caps);
 #endif
 
     /* Pad through which data goes out of the element */
     pad = GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode);
-    gst_pad_set_query_function(pad, gst_vaapidecode_query);
+    gst_pad_set_query_function(pad, GST_DEBUG_FUNCPTR(gst_vaapidecode_query));
 }
