@@ -981,8 +981,6 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_AUDIO:
-      g_warning
-          ("opusenc's audio property is obsolete, use audio-type instead");
       g_value_set_boolean (value,
           enc->audio_type == OPUS_APPLICATION_AUDIO ? TRUE : FALSE);
       break;
@@ -1046,8 +1044,6 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_AUDIO:
-      g_warning
-          ("opusenc's audio property is obsolete, use audio-type instead");
       enc->audio_type =
           g_value_get_boolean (value) ? OPUS_APPLICATION_AUDIO :
           OPUS_APPLICATION_VOIP;
