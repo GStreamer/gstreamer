@@ -990,7 +990,24 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
         switch (GST_QUERY_TYPE(query)) {
 #if GST_CHECK_VERSION(1,0,0)
         case GST_QUERY_CAPS: {
-            GstCaps * const caps = gst_vaapidecode_get_caps(pad);
+            GstCaps *filter, *caps = NULL;
+
+            gst_query_parse_caps(query, &filter);
+            if (!decode->sinkpad_caps)
+                caps = gst_vaapidecode_get_caps(pad);
+            else
+                caps = gst_caps_ref(decode->sinkpad_caps);
+
+            if (filter) {
+                GstCaps *tmp = caps;
+                caps = gst_caps_intersect_full(filter, tmp,
+                   GST_CAPS_INTERSECT_FIRST);
+                gst_caps_unref(tmp);
+            }
+
+            GST_DEBUG_OBJECT(decode, "Returning sink caps %" GST_PTR_FORMAT,
+               caps);
+
             gst_query_set_caps_result(query, caps);
             gst_caps_unref(caps);
             res = TRUE;
@@ -1003,9 +1020,40 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
             break;
         }
     }
-    else
-        res = GST_PAD_QUERY_FUNCTION_CALL(plugin->srcpad_query, pad,
-            parent, query);
+    else {
+        switch (GST_QUERY_TYPE(query)) {
+#if GST_CHECK_VERSION(1,0,0)
+        case GST_QUERY_CAPS: {
+            GstCaps *filter, *caps = NULL;
+
+            gst_query_parse_caps(query, &filter);
+            if (!decode->srcpad_caps)
+                caps = gst_pad_get_pad_template_caps(pad);
+            else
+                caps = gst_caps_ref(decode->srcpad_caps);
+
+            if (filter) {
+                GstCaps *tmp = caps;
+                caps = gst_caps_intersect_full(filter, tmp,
+                   GST_CAPS_INTERSECT_FIRST);
+                gst_caps_unref(tmp);
+            }
+
+            GST_DEBUG_OBJECT(decode, "Returning src caps %" GST_PTR_FORMAT,
+               caps);
+
+            gst_query_set_caps_result(query, caps);
+            gst_caps_unref(caps);
+            res = TRUE;
+            break;
+        }
+#endif
+        default:
+            res = GST_PAD_QUERY_FUNCTION_CALL(plugin->srcpad_query, pad,
+                parent, query);
+            break;
+        }
+    }
 
     gst_object_unref(decode);
     return res;
