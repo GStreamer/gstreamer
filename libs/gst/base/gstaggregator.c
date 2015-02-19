@@ -448,7 +448,7 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
     GST_DEBUG_OBJECT (self, "pushing segment %" GST_PTR_FORMAT, segment);
   }
 
-  if (priv->tags && priv->tags_changed) {
+  if (priv->tags && priv->tags_changed && !self->priv->flush_seeking) {
     tags = gst_event_new_tag (gst_tag_list_ref (priv->tags));
     priv->tags_changed = FALSE;
   }
