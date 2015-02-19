@@ -51,6 +51,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_hls_sink_debug);
 #define DEFAULT_TARGET_DURATION 15
 #define DEFAULT_PLAYLIST_LENGTH 5
 
+#define GST_M3U8_PLAYLIST_VERSION 3
+
 enum
 {
   PROP_0,
@@ -205,7 +207,9 @@ gst_hls_sink_reset (GstHlsSink * sink)
 
   if (sink->playlist)
     gst_m3u8_playlist_free (sink->playlist);
-  sink->playlist = gst_m3u8_playlist_new (6, sink->playlist_length, FALSE);
+  sink->playlist =
+      gst_m3u8_playlist_new (GST_M3U8_PLAYLIST_VERSION, sink->playlist_length,
+      FALSE);
 }
 
 static gboolean
