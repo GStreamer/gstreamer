@@ -48,6 +48,7 @@
 #include "gstgldownloadelement.h"
 #include "gstglcolorconvertelement.h"
 #include "gstglfilterbin.h"
+#include "gstglsinkbin.h"
 
 #include "gstglfiltercube.h"
 #include "gstgleffects.h"
@@ -133,6 +134,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfilterbin",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_BIN)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glsinkbin",
+          GST_RANK_NONE, GST_TYPE_GL_SINK_BIN)) {
     return FALSE;
   }
 
