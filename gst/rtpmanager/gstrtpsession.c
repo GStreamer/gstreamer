@@ -1300,6 +1300,14 @@ gst_rtp_session_sync_rtcp (RTPSession * sess,
     gst_object_ref (sync_src);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
+    /* set rtcp caps on output pad, this happens
+     * when we receive RTCP muxed with RTP according
+     * to RFC5761. Otherwise we would have forwarded
+     * the events from the recv_rtcp_sink pad already
+     */
+    if (!gst_pad_has_current_caps (sync_src))
+      do_rtcp_events (rtpsession, sync_src);
+
     GST_LOG_OBJECT (rtpsession, "sending Sync RTCP");
     result = gst_pad_push (sync_src, buffer);
     gst_object_unref (sync_src);
