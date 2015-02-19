@@ -95,8 +95,12 @@ guint                  gst_rtsp_session_get_timeout          (GstRTSPSession *se
 void                   gst_rtsp_session_touch                (GstRTSPSession *session);
 void                   gst_rtsp_session_prevent_expire       (GstRTSPSession *session);
 void                   gst_rtsp_session_allow_expire         (GstRTSPSession *session);
+gint                   gst_rtsp_session_next_timeout_usec    (GstRTSPSession *session, gint64 now);
+gboolean               gst_rtsp_session_is_expired_usec      (GstRTSPSession *session, gint64 now);
+#ifndef GST_DISABLE_DEPRECATED
 gint                   gst_rtsp_session_next_timeout         (GstRTSPSession *session, GTimeVal *now);
 gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *session, GTimeVal *now);
+#endif
 
 /* handle media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,

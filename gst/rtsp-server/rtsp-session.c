@@ -57,9 +57,9 @@ struct _GstRTSPSessionPrivate
 
   guint timeout;
   gboolean timeout_always_visible;
-  GTimeVal create_time;         /* immutable */
   GMutex last_access_lock;
-  GTimeVal last_access;
+  gint64 last_access_monotonic_time;
+  gint64 last_access_real_time;
   gint expire_count;
 
   GList *medias;
@@ -135,7 +135,7 @@ gst_rtsp_session_init (GstRTSPSession * session)
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->last_access_lock);
   priv->timeout = DEFAULT_TIMEOUT;
-  g_get_current_time (&priv->create_time);
+
   gst_rtsp_session_touch (session);
 }
 
@@ -559,7 +559,8 @@ gst_rtsp_session_touch (GstRTSPSession * session)
   priv = session->priv;
 
   g_mutex_lock (&priv->last_access_lock);
-  g_get_current_time (&priv->last_access);
+  priv->last_access_monotonic_time = g_get_monotonic_time ();
+  priv->last_access_real_time = g_get_real_time ();
   g_mutex_unlock (&priv->last_access_lock);
 }
 
@@ -591,6 +592,52 @@ gst_rtsp_session_allow_expire (GstRTSPSession * session)
 }
 
 /**
+ * gst_rtsp_session_next_timeout_usec:
+ * @session: a #GstRTSPSession
+ * @now: (transfer none): the current monotonic time
+ *
+ * Get the amount of milliseconds till the session will expire.
+ *
+ * Returns: the amount of milliseconds since the session will time out.
+ */
+gint
+gst_rtsp_session_next_timeout_usec (GstRTSPSession * session, gint64 now)
+{
+  GstRTSPSessionPrivate *priv;
+  gint res;
+  GstClockTime last_access, now_ns;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (session), -1);
+
+  priv = session->priv;
+
+  g_mutex_lock (&priv->last_access_lock);
+  if (g_atomic_int_get (&priv->expire_count) != 0) {
+    /* touch session when the expire count is not 0 */
+    priv->last_access_monotonic_time = g_get_monotonic_time ();
+    priv->last_access_real_time = g_get_real_time ();
+  }
+
+  last_access = GST_USECOND * (priv->last_access_monotonic_time);
+
+  /* add timeout allow for 5 seconds of extra time */
+  last_access += priv->timeout * GST_SECOND + (5 * GST_SECOND);
+  g_mutex_unlock (&priv->last_access_lock);
+
+  now_ns = GST_USECOND * now;
+
+  if (last_access > now_ns) {
+    res = GST_TIME_AS_MSECONDS (last_access - now_ns);
+  } else {
+    res = 0;
+  }
+
+  return res;
+}
+
+/****** Deprecated API *******/
+
+/**
  * gst_rtsp_session_next_timeout:
  * @session: a #GstRTSPSession
  * @now: (transfer none): the current system time
@@ -598,7 +645,11 @@ gst_rtsp_session_allow_expire (GstRTSPSession * session)
  * Get the amount of milliseconds till the session will expire.
  *
  * Returns: the amount of milliseconds since the session will time out.
+ *
+ * Deprecated: Use gst_rtsp_session_next_timeout_usec() instead.
  */
+#ifndef GST_REMOVE_DEPRECATED
+#ifndef GST_DISABLE_DEPRECATED
 gint
 gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 {
@@ -614,23 +665,50 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
   g_mutex_lock (&priv->last_access_lock);
   if (g_atomic_int_get (&priv->expire_count) != 0) {
     /* touch session when the expire count is not 0 */
-    g_get_current_time (&priv->last_access);
+    priv->last_access_monotonic_time = g_get_monotonic_time ();
+    priv->last_access_real_time = g_get_real_time ();
   }
 
-  last_access = GST_TIMEVAL_TO_TIME (priv->last_access);
+  last_access = GST_USECOND * (priv->last_access_real_time);
+
   /* add timeout allow for 5 seconds of extra time */
   last_access += priv->timeout * GST_SECOND + (5 * GST_SECOND);
   g_mutex_unlock (&priv->last_access_lock);
 
   now_ns = GST_TIMEVAL_TO_TIME (*now);
 
-  if (last_access > now_ns)
+  if (last_access > now_ns) {
     res = GST_TIME_AS_MSECONDS (last_access - now_ns);
-  else
+  } else {
     res = 0;
+  }
 
   return res;
 }
+#endif
+#endif
+
+/**
+ * gst_rtsp_session_is_expired_usec:
+ * @session: a #GstRTSPSession
+ * @now: (transfer none): the current monotonic time
+ *
+ * Check if @session timeout out.
+ *
+ * Returns: %TRUE if @session timed out
+ */
+gboolean
+gst_rtsp_session_is_expired_usec (GstRTSPSession * session, gint64 now)
+{
+  gboolean res;
+
+  res = (gst_rtsp_session_next_timeout_usec (session, now) == 0);
+
+  return res;
+}
+
+
+/****** Deprecated API *******/
 
 /**
  * gst_rtsp_session_is_expired:
@@ -640,7 +718,11 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
  * Check if @session timeout out.
  *
  * Returns: %TRUE if @session timed out
+ *
+ * Deprecated: Use gst_rtsp_session_is_expired_usec() instead.
  */
+#ifndef GST_REMOVE_DEPRECATED
+#ifndef GST_DISABLE_DEPRECATED
 gboolean
 gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now)
 {
@@ -650,3 +732,5 @@ gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now)
 
   return res;
 }
+#endif
+#endif
