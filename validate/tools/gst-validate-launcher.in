@@ -18,21 +18,31 @@
 # Boston, MA 02110-1301, USA.
 
 import os
+import subprocess
 import sys
 
 LIBDIR = '@LIBDIR@'
+GIT_FIRST_HASH = 'da962d096af9460502843e41b7d25fdece7ff1c2'
+
+
+def _get_git_first_hash(path):
+    try:
+      return subprocess.check_output(['git', '-C', path, 'rev-list', '--max-parents=0', 'HEAD']).rstrip('\n')
+    except subprocess.CalledProcessError:
+      return ''
 
 
 def _in_devel():
     root_dir = os.path.abspath(os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                             "..", "..", "..")))
-    return os.path.exists(os.path.join(root_dir, '.git'))
+    return _get_git_first_hash(root_dir) == GIT_FIRST_HASH
 
 
 def _add_gst_launcher_path():
     if not _in_devel():
         root = os.path.join(LIBDIR, 'gst-validate-launcher', 'python')
     else:
+        print "Running with development path"
         dir_ = os.path.dirname(os.path.abspath(__file__))
         root = os.path.split(dir_)[0]
 
