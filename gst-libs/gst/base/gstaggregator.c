@@ -1159,49 +1159,6 @@ gst_aggregator_query_sink_latency_foreach (GstAggregator * self,
   return TRUE;
 }
 
-/**
- * gst_aggregator_get_latency_unlocked:
- * @self: a #GstAggregator
- * @live: (out) (allow-none): whether @self is live
- * @min_latency: (out) (allow-none): the configured minimum latency of @self
- * @max_latency: (out) (allow-none): the configured maximum latency of @self
- *
- * Retreives the latency values reported by @self in response to the latency
- * query.
- *
- * Typically only called by subclasses.
- *
- * MUST be called with the object lock held.
- */
-void
-gst_aggregator_get_latency_unlocked (GstAggregator * self, gboolean * live,
-    GstClockTime * min_latency, GstClockTime * max_latency)
-{
-  GstClockTime min, max;
-
-  g_return_if_fail (GST_IS_AGGREGATOR (self));
-
-  /* latency_min is never GST_CLOCK_TIME_NONE by construction */
-  min = self->priv->latency_min;
-  max = self->priv->latency_max;
-
-  /* add our own */
-  min += self->priv->latency;
-  min += self->priv->sub_latency_min;
-  if (GST_CLOCK_TIME_IS_VALID (max)
-      && GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
-    max += self->priv->sub_latency_max;
-  else
-    max = GST_CLOCK_TIME_NONE;
-
-  if (live)
-    *live = self->priv->latency_live;
-  if (min_latency)
-    *min_latency = min;
-  if (max_latency)
-    *max_latency = max;
-}
-
 static gboolean
 gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
 {
@@ -1268,6 +1225,49 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   gst_query_set_latency (query, data.live, data.min, data.max);
 
   return data.res;
+}
+
+/**
+ * gst_aggregator_get_latency_unlocked:
+ * @self: a #GstAggregator
+ * @live: (out) (allow-none): whether @self is live
+ * @min_latency: (out) (allow-none): the configured minimum latency of @self
+ * @max_latency: (out) (allow-none): the configured maximum latency of @self
+ *
+ * Retreives the latency values reported by @self in response to the latency
+ * query.
+ *
+ * Typically only called by subclasses.
+ *
+ * MUST be called with the object lock held.
+ */
+void
+gst_aggregator_get_latency_unlocked (GstAggregator * self, gboolean * live,
+    GstClockTime * min_latency, GstClockTime * max_latency)
+{
+  GstClockTime min, max;
+
+  g_return_if_fail (GST_IS_AGGREGATOR (self));
+
+  /* latency_min is never GST_CLOCK_TIME_NONE by construction */
+  min = self->priv->latency_min;
+  max = self->priv->latency_max;
+
+  /* add our own */
+  min += self->priv->latency;
+  min += self->priv->sub_latency_min;
+  if (GST_CLOCK_TIME_IS_VALID (max)
+      && GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max))
+    max += self->priv->sub_latency_max;
+  else
+    max = GST_CLOCK_TIME_NONE;
+
+  if (live)
+    *live = self->priv->latency_live;
+  if (min_latency)
+    *min_latency = min;
+  if (max_latency)
+    *max_latency = max;
 }
 
 static gboolean
