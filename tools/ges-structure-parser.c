@@ -107,6 +107,26 @@ ges_structure_parser_parse_symbol (GESStructureParser * self,
   self->add_comma = TRUE;
 }
 
+void
+ges_structure_parser_parse_setter (GESStructureParser * self,
+    const gchar * setter)
+{
+  gchar *parsed_setter;
+
+  while (*setter == '-' || *setter == ' ')
+    setter++;
+
+  while (*setter != '-')
+    setter++;
+
+  setter++;
+
+  parsed_setter = g_strdup_printf ("set-property, property=%s, value=", setter);
+  self->add_comma = FALSE;
+  ges_structure_parser_parse_string (self, parsed_setter, TRUE);
+  g_free (parsed_setter);
+}
+
 GESStructureParser *
 ges_structure_parser_new (void)
 {

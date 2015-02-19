@@ -10,14 +10,24 @@
 %option never-interactive
 %option noinput
 
+CLIP 		[ ]+--clip[ ]+|[ ]+-c[ ]+
+TRANSITION	[ ]+--transition[ ]+|[ ]+-t[ ]+
+EFFECT		[ ]+--effect[ ]+|[ ]+-e[ ]+
+
+SETTER		[ ]+--set-.[ ]+
+
 %%
 
 \"(\\.|[^"])*\"  {
 		ges_structure_parser_parse_string (yyextra, yytext, FALSE);
 }
 
-[ ]+--clip[ ]+|[ ]+-c[ ]+|[ ]+--transition[ ]+|[ ]+-t[ ]+|[ ]+--effect[ ]+|[ ]+-e[ ]+|[ ]+--set-property[ ]+|[ ]+-s[ ]+   {
+{CLIP}|{TRANSITION}|{EFFECT}   {
 		ges_structure_parser_parse_symbol (yyextra, yytext);
+}
+
+{SETTER}	 {
+	ges_structure_parser_parse_setter (yyextra, yytext);
 }
 
 [ \t\n]+ 	{
