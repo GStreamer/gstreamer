@@ -20,6 +20,9 @@
 #include "ges-structured-interface.h"
 
 
+#define LAST_CONTAINER_QDATA g_quark_from_string("ges-structured-last-container")
+#define LAST_CHILD_QDATA g_quark_from_string("ges-structured-last-child")
+
 gboolean
 _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
@@ -236,6 +239,11 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
         layer_priority);
   }
 
+  if (res) {
+    g_object_set_qdata (G_OBJECT (timeline), LAST_CONTAINER_QDATA, clip);
+    g_object_set_qdata (G_OBJECT (timeline), LAST_CHILD_QDATA, NULL);
+  }
+
   gst_object_unref (layer);
 
 beach:
@@ -257,8 +265,14 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   gboolean res = TRUE;
 
   container_name = gst_structure_get_string (structure, "container-name");
-  container =
-      GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
+
+  if (container_name == NULL) {
+    container = g_object_get_qdata (G_OBJECT (timeline), LAST_CONTAINER_QDATA);
+  } else {
+    container =
+        GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
+  }
+
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
 
   id = gst_structure_get_string (structure, "asset-id");
@@ -307,6 +321,8 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   res = ges_container_add (container, child);
   if (res == FALSE) {
     g_error_new (GES_ERROR, 0, "Could not add child to container");
+  } else {
+    g_object_set_qdata (G_OBJECT (timeline), LAST_CHILD_QDATA, child);
   }
 
 beach:
@@ -322,23 +338,61 @@ _ges_set_child_property_from_struct (GESTimeline * timeline,
   const gchar *property_name, *element_name;
 
   element_name = gst_structure_get_string (structure, "element-name");
-  element = ges_timeline_get_element (timeline, element_name);
-  if (!GES_IS_TRACK_ELEMENT (element)) {
+  if (element_name == NULL)
+    element = g_object_get_qdata (G_OBJECT (timeline), LAST_CHILD_QDATA);
+  else
+    element = ges_timeline_get_element (timeline, element_name);
+
+  property_name = gst_structure_get_string (structure, "property");
+  if (property_name == NULL) {
+    const gchar *name = gst_structure_get_name (structure);
+
+    if (g_str_has_prefix (name, "set-"))
+      property_name = &name[4];
+    else {
+      gchar *struct_str = gst_structure_to_string (structure);
+
+      *error =
+          g_error_new (GES_ERROR, 0, "Could not find any property name in %s",
+          struct_str);
+      g_free (struct_str);
+
+      return FALSE;
+    }
+  }
+
+  if (element) {
+    if (!ges_track_element_lookup_child (GES_TRACK_ELEMENT (element),
+            property_name, NULL, NULL))
+      element = NULL;
+  }
+
+  if (!element) {
+    element = g_object_get_qdata (G_OBJECT (timeline), LAST_CONTAINER_QDATA);
+
+    if (element == NULL) {
+      *error =
+          g_error_new (GES_ERROR, 0,
+          "Could not find anywhere to set property: %s", property_name);
+
+      return FALSE;
+    }
+  }
+
+  if (!GES_IS_TIMELINE_ELEMENT (element)) {
     *error =
-        g_error_new (GES_ERROR, 0, "Could not find TrackElement %s",
-        element_name);
+        g_error_new (GES_ERROR, 0, "Could not find child %s", element_name);
 
     return FALSE;
   }
 
-  property_name = gst_structure_get_string (structure, "property");
   value = gst_structure_get_value (structure, "value");
 
   GST_DEBUG ("%s Setting %s property to %p",
       element->name, property_name, value);
 
-  ges_track_element_set_child_property (GES_TRACK_ELEMENT (element),
-      property_name, (GValue *) value);
+  ges_timeline_element_set_child_property (element, property_name,
+      (GValue *) value);
 
   return TRUE;
 }
