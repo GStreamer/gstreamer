@@ -903,6 +903,7 @@ gst_jack_audio_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PORT_PATTERN:
       g_value_set_string (value, src->port_pattern);
+      break;
     case PROP_CONNECT:
       g_value_set_enum (value, src->connect);
       break;
