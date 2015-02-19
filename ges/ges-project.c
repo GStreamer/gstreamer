@@ -101,7 +101,6 @@ static GParamSpec *_properties[LAST_SIGNAL] = { 0 };
 static gboolean
 _emit_loaded_in_idle (EmitLoadedInIdle * data)
 {
-  ges_timeline_commit (data->timeline);
   g_signal_emit (data->project, _signals[LOADED_SIGNAL], 0, data->timeline);
 
   gst_object_unref (data->project);
