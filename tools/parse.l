@@ -14,7 +14,7 @@ CLIP 		[ ]+--clip[ ]+|[ ]+-c[ ]+
 TRANSITION	[ ]+--transition[ ]+|[ ]+-t[ ]+
 EFFECT		[ ]+--effect[ ]+|[ ]+-e[ ]+
 
-SETTER		[ ]+--set-.[ ]+
+SETTER		[ ]+--set-[^ ]+[ ]+
 
 %%
 

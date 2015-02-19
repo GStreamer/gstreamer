@@ -113,6 +113,8 @@ ges_structure_parser_parse_setter (GESStructureParser * self,
 {
   gchar *parsed_setter;
 
+  _finish_structure (self);
+
   while (*setter == '-' || *setter == ' ')
     setter++;
 
