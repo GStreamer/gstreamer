@@ -76,6 +76,13 @@ _finish_structure (GESStructureParser * self)
   if (self->current_string) {
     GstStructure *structure =
         gst_structure_new_from_string (self->current_string);
+
+    if (structure == NULL) {
+      GST_ERROR ("Error creating structure from %s", self->current_string);
+
+      return;
+    }
+
     self->structures = g_list_append (self->structures, structure);
     g_free (self->current_string);
     self->current_string = NULL;
