@@ -16,7 +16,7 @@
 		ges_structure_parser_parse_string (yyextra, yytext, FALSE);
 }
 
-[ ]+--clip[ ]+|[ ]+-c[ ]+|[ ]+--transition[ ]+|[ ]+-t[ ]+|[ ]+--effect[ ]+|[ ]+-e[ ]+        {
+[ ]+--clip[ ]+|[ ]+-c[ ]+|[ ]+--transition[ ]+|[ ]+-t[ ]+|[ ]+--effect[ ]+|[ ]+-e[ ]+|[ ]+--set-property[ ]+|[ ]+-s[ ]+   {
 		ges_structure_parser_parse_symbol (yyextra, yytext);
 }
 
