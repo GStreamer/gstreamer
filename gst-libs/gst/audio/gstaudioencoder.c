@@ -1336,7 +1336,7 @@ refuse_caps:
  * restricted to channel/rate combinations supported by downstream elements
  * (e.g. muxers).
  *
- * Returns: (transfer-full): a #GstCaps owned by caller
+ * Returns: (transfer full): a #GstCaps owned by caller
  */
 GstCaps *
 gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps,

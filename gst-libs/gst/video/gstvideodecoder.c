@@ -1591,9 +1591,9 @@ gst_video_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
  * restricted to resolution/format/... combinations supported by downstream
  * elements.
  *
- * Returns: (transfer-full): a #GstCaps owned by caller
+ * Returns: (transfer full): a #GstCaps owned by caller
  *
- * @Since: 1.6
+ * Since: 1.6
  */
 GstCaps *
 gst_video_decoder_proxy_getcaps (GstVideoDecoder * decoder, GstCaps * caps,

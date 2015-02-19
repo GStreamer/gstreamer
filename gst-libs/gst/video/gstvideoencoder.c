@@ -674,7 +674,7 @@ parse_fail:
  * restricted to resolution/format/... combinations supported by downstream
  * elements (e.g. muxers).
  *
- * Returns: (transfer-full): a #GstCaps owned by caller
+ * Returns: (transfer full): a #GstCaps owned by caller
  */
 GstCaps *
 gst_video_encoder_proxy_getcaps (GstVideoEncoder * encoder, GstCaps * caps,

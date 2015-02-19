@@ -2459,7 +2459,7 @@ exit:
  * restricted to rate/channels/... combinations supported by downstream
  * elements.
  *
- * Returns: (transfer-full): a #GstCaps owned by caller
+ * Returns: (transfer full): a #GstCaps owned by caller
  *
  * Since: 1.6
  */
