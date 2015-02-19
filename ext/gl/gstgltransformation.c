@@ -167,19 +167,19 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
   /* Translation */
   g_object_class_install_property (gobject_class, PROP_TRANSLATION_X,
       g_param_spec_float ("translation-x", "X Translation",
-          "Translates the video at the X-Axis.",
+          "Translates the video at the X-Axis, in universal [0-1] coordinate.",
           -G_MAXFLOAT, G_MAXFLOAT, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TRANSLATION_Y,
       g_param_spec_float ("translation-y", "Y Translation",
-          "Translates the video at the Y-Axis.",
+          "Translates the video at the Y-Axis, in universal [0-1] coordinate.",
           -G_MAXFLOAT, G_MAXFLOAT, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TRANSLATION_Z,
       g_param_spec_float ("translation-z", "Z Translation",
-          "Translates the video at the Z-Axis.",
+          "Translates the video at the Z-Axis, in universal [0-1] coordinate.",
           -G_MAXFLOAT, G_MAXFLOAT, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -230,9 +230,10 @@ static void
 gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
 {
   graphene_point3d_t translation_vector =
-      GRAPHENE_POINT3D_INIT (transformation->xtranslation,
-      transformation->ytranslation,
-      transformation->ztranslation);
+      GRAPHENE_POINT3D_INIT (transformation->xtranslation * 2.0 *
+      transformation->aspect,
+      transformation->ytranslation * 2.0,
+      transformation->ztranslation * 2.0);
 
   graphene_matrix_t model_matrix;
   graphene_matrix_t projection_matrix;
