@@ -354,7 +354,7 @@ GST_START_TEST (test_effect_set_properties)
   GESLayer *layer;
   GESTrack *track_video;
   GESEffectClip *effect_clip;
-  GESTrackElement *effect;
+  GESTimelineElement *effect;
   guint scratch_line, n_props, i;
   gboolean color_aging;
   GParamSpec **pspecs, *spec;
@@ -377,21 +377,21 @@ GST_START_TEST (test_effect_set_properties)
 
   ges_layer_add_clip (layer, (GESClip *) effect_clip);
 
-  effect = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
+  effect = GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"));
   fail_unless (ges_container_add (GES_CONTAINER (effect_clip),
           GES_TIMELINE_ELEMENT (effect)));
   fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect)) ==
       track_video);
 
-  ges_track_element_set_child_properties (effect,
+  ges_timeline_element_set_child_properties (effect,
       "GstAgingTV::scratch-lines", 17, "color-aging", FALSE, NULL);
-  ges_track_element_get_child_properties (effect,
+  ges_timeline_element_get_child_properties (effect,
       "GstAgingTV::scratch-lines", &scratch_line,
       "color-aging", &color_aging, NULL);
   fail_unless (scratch_line == 17);
   fail_unless (color_aging == FALSE);
 
-  pspecs = ges_track_element_list_children_properties (effect, &n_props);
+  pspecs = ges_timeline_element_list_children_properties (effect, &n_props);
   fail_unless (n_props == 7);
 
   spec = pspecs[0];
@@ -404,8 +404,8 @@ GST_START_TEST (test_effect_set_properties)
   g_value_init (&nval, G_TYPE_UINT);
   g_value_set_uint (&val, 10);
 
-  ges_track_element_set_child_property_by_pspec (effect, spec, &val);
-  ges_track_element_get_child_property_by_pspec (effect, spec, &nval);
+  ges_timeline_element_set_child_property_by_pspec (effect, spec, &val);
+  ges_timeline_element_get_child_property_by_pspec (effect, spec, &nval);
   fail_unless (g_value_get_uint (&nval) == 10);
 
   for (i = 0; i < n_props; i++) {
@@ -444,7 +444,7 @@ GST_START_TEST (test_clip_signals)
   GESLayer *layer;
   GESTrack *track_video;
   GESEffectClip *effect_clip;
-  GESEffect *effect;
+  GESTimelineElement *effect;
   GValue val = { 0, };
   gboolean effect_added = FALSE;
 
@@ -466,9 +466,8 @@ GST_START_TEST (test_clip_signals)
 
   ges_layer_add_clip (layer, (GESClip *) effect_clip);
 
-  effect = ges_effect_new ("agingtv");
-  fail_unless (ges_container_add (GES_CONTAINER (effect_clip),
-          GES_TIMELINE_ELEMENT (effect)));
+  effect = GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"));
+  fail_unless (ges_container_add (GES_CONTAINER (effect_clip), effect));
   fail_unless (effect_added);
   g_signal_handlers_disconnect_by_func (effect_clip, effect_added_cb,
       &effect_added);
@@ -477,11 +476,11 @@ GST_START_TEST (test_clip_signals)
   g_signal_connect (effect, "deep-notify", (GCallback) deep_prop_changed_cb,
       effect);
 
-  ges_track_element_set_child_properties (GES_TRACK_ELEMENT (effect),
+  ges_timeline_element_set_child_properties (effect,
       "GstAgingTV::scratch-lines", 17, NULL);
 
   g_value_init (&val, G_TYPE_UINT);
-  ges_track_element_get_child_property (GES_TRACK_ELEMENT (effect),
+  ges_timeline_element_get_child_property (effect,
       "GstAgingTV::scratch-lines", &val);
   fail_unless (G_VALUE_HOLDS_UINT (&val));
   g_value_unset (&val);
