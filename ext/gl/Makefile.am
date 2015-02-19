@@ -6,6 +6,7 @@ libgstopengl_la_SOURCES = \
 	gstgluploadelement.c \
 	gstgldownloadelement.c \
 	gstglcolorconvertelement.c \
+	gstglfilterbin.c \
 	gstglimagesink.c \
 	gstglfiltercube.c \
 	gstgleffects.c \
@@ -24,6 +25,7 @@ noinst_HEADERS = \
 	gstgluploadelement.h \
 	gstgldownloadelement.h \
 	gstglcolorconvertelement.h \
+	gstglfilterbin.h \
 	gstglimagesink.h \
 	gstglfiltercube.h \
 	gstgleffects.h \
