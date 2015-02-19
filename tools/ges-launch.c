@@ -35,6 +35,8 @@
 #include <glib-unix.h>
 #endif
 
+#include "ges-structure-parser.h"
+#include "parse_lex.h"
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
@@ -699,6 +701,65 @@ _add_media_path (const gchar * option_name, const gchar * value,
   return TRUE;
 }
 
+/* g_free after usage */
+static gchar *
+sanitize_argument (gchar * arg)
+{
+  char *equal_index = strstr (arg, "=");
+  char *space_index = strstr (arg, " ");
+  gchar *new_string = g_malloc (sizeof (gchar) * (strlen (arg) + 3));
+  gchar *tmp_string = new_string;
+
+  if (!space_index)
+    return g_strdup (arg);
+
+  if (!equal_index || equal_index > space_index)
+    return g_strdup_printf ("\"%s\"", arg);
+
+  for (arg = arg; *arg != '\0'; arg++) {
+    *tmp_string = *arg;
+    tmp_string += 1;
+    if (*arg == '=') {
+      *tmp_string = '"';
+      tmp_string += 1;
+    }
+  }
+  *tmp_string = '"';
+  tmp_string += 1;
+  *tmp_string = '\0';
+
+  return new_string;
+}
+
+static GESStructureParser *
+_parse_timeline (int argc, char **argv)
+{
+  gint i;
+  yyscan_t scanner;
+  gchar *string = g_strdup (" ");
+  GESStructureParser *parser = ges_structure_parser_new ();
+
+  priv_ges_parse_yylex_init_extra (parser, &scanner);
+  for (i = 1; i < argc; i++) {
+    gchar *new_string;
+    gchar *sanitized = sanitize_argument (argv[i]);
+
+    new_string = g_strconcat (string, " ", sanitized, NULL);
+
+    g_free (sanitized);
+    g_free (string);
+    string = new_string;
+  }
+
+  priv_ges_parse_yy_scan_string (string, scanner);
+  priv_ges_parse_yylex (scanner);
+  g_free (string);
+  priv_ges_parse_yylex_destroy (scanner);
+
+  ges_structure_parser_end_of_file (parser);
+  return parser;
+}
+
 int
 main (int argc, gchar ** argv)
 {
@@ -716,6 +777,7 @@ main (int argc, gchar ** argv)
   gchar *videosink = NULL, *audiosink = NULL;
   gboolean inspect_action_type = FALSE;
   gchar *encoding_profile = NULL;
+  GESStructureParser *parser;
 
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
@@ -820,6 +882,8 @@ main (int argc, gchar ** argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   g_option_context_add_group (ctx, ges_init_get_option_group ());
 
+  g_option_context_set_ignore_unknown_options (ctx, TRUE);
+
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_printerr ("Error initializing: %s\n", err->message);
     g_option_context_free (ctx);
@@ -831,6 +895,15 @@ main (int argc, gchar ** argv)
     g_printerr ("Error initializing GES\n");
 
     exit (1);
+  }
+
+  parser = _parse_timeline (argc, argv);
+
+  {
+    GList *tmp;
+    for (tmp = parser->structures; tmp; tmp = tmp->next) {
+      /* Do stuff here */
+    }
   }
 
   if (list_transitions) {

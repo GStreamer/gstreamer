@@ -81,6 +81,8 @@ AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
 AG_GST_PKG_CONFIG_PATH
 
+AG_GST_FLEX_CHECK
+
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *

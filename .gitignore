@@ -75,6 +75,8 @@ log
 /tests/check/nle/nlesource
 
 /tools/ges-launch-1.0
+tools/lex.priv_ges_parse_yy.c
+tools/parse_lex.h
 /tests/check/ges/project
 /tests/examples/assets
 
