@@ -993,10 +993,7 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
             GstCaps *filter, *caps = NULL;
 
             gst_query_parse_caps(query, &filter);
-            if (!decode->sinkpad_caps)
-                caps = gst_vaapidecode_get_caps(pad);
-            else
-                caps = gst_caps_ref(decode->sinkpad_caps);
+            caps = gst_vaapidecode_get_caps(pad);
 
             if (filter) {
                 GstCaps *tmp = caps;
@@ -1027,10 +1024,7 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
             GstCaps *filter, *caps = NULL;
 
             gst_query_parse_caps(query, &filter);
-            if (!decode->srcpad_caps)
-                caps = gst_pad_get_pad_template_caps(pad);
-            else
-                caps = gst_caps_ref(decode->srcpad_caps);
+            caps = gst_pad_get_pad_template_caps(pad);
 
             if (filter) {
                 GstCaps *tmp = caps;
