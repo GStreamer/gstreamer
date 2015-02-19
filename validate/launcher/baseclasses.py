@@ -1188,7 +1188,7 @@ class ScenarioManager(Loggable):
     _instance = None
     all_scenarios = []
 
-    FILE_EXTENDION = "scenario"
+    FILE_EXTENSION = "scenario"
     GST_VALIDATE_COMMAND = "gst-validate-1.0"
     if "win32" in sys.platform:
         GST_VALIDATE_COMMAND += ".exe"
@@ -1208,7 +1208,7 @@ class ScenarioManager(Loggable):
         mfile_bname = os.path.basename(mfile)
 
         for f in os.listdir(os.path.dirname(mfile)):
-            if re.findall("%s\..*\.%s$" % (mfile_bname, self.FILE_EXTENDION), f):
+            if re.findall("%s\..*\.%s$" % (mfile_bname, self.FILE_EXTENSION), f):
                 scenarios.append(os.path.join(os.path.dirname(mfile), f))
 
         if scenarios:
@@ -1248,7 +1248,7 @@ class ScenarioManager(Loggable):
                         # The real name of the scenario is:
                         # filename.REALNAME.scenario
                         name = scenario_path.replace(mfile + ".", "").replace(
-                            "." + self.FILE_EXTENDION, "")
+                            "." + self.FILE_EXTENSION, "")
                         path = scenario_path
             else:
                 name = section
@@ -1263,7 +1263,7 @@ class ScenarioManager(Loggable):
         return scenarios
 
     def get_scenario(self, name):
-        if name is not None and os.path.isabs(name) and name.endswith(self.FILE_EXTENDION):
+        if name is not None and os.path.isabs(name) and name.endswith(self.FILE_EXTENSION):
             scenarios = self.discover_scenarios([name])
 
             if scenarios:

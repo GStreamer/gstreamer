@@ -660,7 +660,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                         fpath = os.path.join(path, root, f)
                         if os.path.isdir(fpath) or \
                                 fpath.endswith(GstValidateMediaDescriptor.MEDIA_INFO_EXT) or\
-                                fpath.endswith(ScenarioManager.FILE_EXTENDION):
+                                fpath.endswith(ScenarioManager.FILE_EXTENSION):
                             continue
                         else:
                             self._discover_file(path2url(fpath), fpath)
