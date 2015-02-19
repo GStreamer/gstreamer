@@ -37,35 +37,21 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 
 static GstStaticPadTemplate gst_gl_filter_src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA") "; "
-#if GST_GL_HAVE_PLATFORM_EGL
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
-            "RGBA") "; "
-#endif
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
-            "RGBA") "; " GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
+            "RGBA"))
     );
 
 static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA") "; "
-#if GST_GL_HAVE_PLATFORM_EGL
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
-            "RGBA") "; "
-#endif
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA") "; "
-        GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
+            "RGBA"))
     );
 
 /* Properties */
@@ -77,16 +63,13 @@ enum
 #define gst_gl_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilter, gst_gl_filter, GST_TYPE_GL_BASE_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0,
-        "glfilter element");
-    );
+        "glfilter element"););
 
 static void gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_filter_query (GstBaseTransform * trans,
-    GstPadDirection direction, GstQuery * query);
 static GstCaps *gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_gl_filter_fixate_caps (GstBaseTransform * bt,
@@ -123,7 +106,6 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
       gst_gl_filter_transform_caps;
   GST_BASE_TRANSFORM_CLASS (klass)->fixate_caps = gst_gl_filter_fixate_caps;
   GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_filter_transform;
-  GST_BASE_TRANSFORM_CLASS (klass)->query = gst_gl_filter_query;
   GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_filter_start;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_stop;
   GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_filter_set_caps;
@@ -171,59 +153,14 @@ gst_gl_filter_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
-    GstQuery * query)
-{
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:
-    {
-      if (direction == GST_PAD_SINK
-          && gst_base_transform_is_passthrough (trans))
-        return gst_pad_peer_query (GST_BASE_TRANSFORM_SRC_PAD (trans), query);
-      break;
-    }
-    default:
-      break;
-  }
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
-      query);
-}
-
 static void
 gst_gl_filter_reset (GstGLFilter * filter)
 {
   gst_caps_replace (&filter->out_caps, NULL);
 
-  if (filter->upload) {
-    gst_object_unref (filter->upload);
-    filter->upload = NULL;
-  }
-
-  if (filter->in_convert) {
-    gst_object_unref (filter->in_convert);
-    filter->in_convert = NULL;
-  }
-
-  if (filter->download) {
-    gst_object_unref (filter->download);
-    filter->download = NULL;
-  }
-
-  if (filter->uploaded_buffer) {
-    gst_buffer_unref (filter->uploaded_buffer);
-    filter->uploaded_buffer = NULL;
-  }
-
   if (filter->pool) {
     gst_object_unref (filter->pool);
     filter->pool = NULL;
-  }
-
-  if (filter->in_converted_caps) {
-    gst_caps_unref (filter->in_converted_caps);
-    filter->in_converted_caps = NULL;
   }
 }
 
@@ -263,13 +200,11 @@ gst_gl_filter_gl_start (GstGLBaseFilter * base_filter)
   GstGLFilter *filter = GST_GL_FILTER (base_filter);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  gint in_width, in_height, out_width, out_height;
+  gint out_width, out_height;
   GError *error = NULL;
 
   filter->context = base_filter->context;
 
-  in_width = GST_VIDEO_INFO_WIDTH (&filter->in_info);
-  in_height = GST_VIDEO_INFO_HEIGHT (&filter->in_info);
   out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
 
@@ -278,26 +213,10 @@ gst_gl_filter_gl_start (GstGLBaseFilter * base_filter)
     filter->fbo = 0;
     filter->depthbuffer = 0;
   }
-
-  if (filter->in_tex_id) {
-    gst_gl_context_del_texture (context, &filter->in_tex_id);
-    filter->in_tex_id = 0;
-  }
-
-  if (filter->out_tex_id) {
-    gst_gl_context_del_texture (context, &filter->out_tex_id);
-    filter->out_tex_id = 0;
-  }
   //blocking call, generate a FBO
   if (!gst_gl_context_gen_fbo (context, out_width, out_height,
           &filter->fbo, &filter->depthbuffer))
     goto context_error;
-
-  gst_gl_context_gen_texture (context, &filter->in_tex_id,
-      GST_VIDEO_FORMAT_RGBA, in_width, in_height);
-
-  gst_gl_context_gen_texture (context, &filter->out_tex_id,
-      GST_VIDEO_FORMAT_RGBA, out_width, out_height);
 
   if (filter_class->display_init_cb)
     filter_class->display_init_cb (filter);
@@ -346,16 +265,6 @@ gst_gl_filter_gl_stop (GstGLBaseFilter * base_filter)
 
   if (filter->fbo != 0) {
     gst_gl_context_del_fbo (context, filter->fbo, filter->depthbuffer);
-  }
-
-  if (filter->in_tex_id) {
-    gst_gl_context_del_texture (context, &filter->in_tex_id);
-    filter->in_tex_id = 0;
-  }
-
-  if (filter->out_tex_id) {
-    gst_gl_context_del_texture (context, &filter->out_tex_id);
-    filter->out_tex_id = 0;
   }
 
   filter->fbo = 0;
@@ -732,61 +641,17 @@ static GstCaps *
 gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
 {
-  GstGLFilter *filter = GST_GL_FILTER (bt);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstCaps *tmp = NULL;
   GstCaps *result = NULL;
 
-  /* The following is the list of caps transformations performed.  When
-   * direction == GST_PAD_SINK we start at the sinkpad and work toward the src
-   * pad and vice versa for direction == GST_PAD_SRC.
-   *
-   * sinkpad <-> (upload <-> convert) <-> filter (possible resize) <->
-   * (convert <-> download/output) <-> srcpad
-   */
-  if (direction == GST_PAD_SINK) {
-    result = gst_gl_upload_transform_caps (context, direction, caps, NULL);
-    tmp = result;
-
-    result =
-        gst_gl_color_convert_transform_caps (context, direction, tmp, NULL);
-    gst_caps_unref (tmp);
-  } else {
-    GstCaps *gl_caps = gst_caps_merge (gst_gl_filter_set_caps_features (caps,
-            GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
-        gst_gl_filter_set_caps_features (caps,
-            GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
-
-    result = gst_gl_download_transform_caps (context, direction, caps, NULL);
-
-    result = gst_caps_merge (gl_caps, result);
-  }
-  GST_DEBUG_OBJECT (bt, "transfer returned caps %" GST_PTR_FORMAT, tmp);
-
-  tmp = gst_gl_filter_caps_remove_size (result);
-  gst_caps_unref (result);
-  result = tmp;
+  result = gst_gl_filter_caps_remove_size (caps);
+  tmp = result;
   GST_DEBUG_OBJECT (bt, "size removal returned caps %" GST_PTR_FORMAT, tmp);
 
-  if (direction == GST_PAD_SRC) {
-    result =
-        gst_gl_color_convert_transform_caps (context, direction, tmp, NULL);
-    gst_caps_unref (tmp);
-    tmp = result;
-    result = gst_gl_upload_transform_caps (context, direction, tmp, NULL);
-  } else {
-    GstCaps *gl_caps = gst_caps_merge (gst_gl_filter_set_caps_features (tmp,
-            GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
-        gst_gl_filter_set_caps_features (tmp,
-            GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
-
-    result = gst_gl_download_transform_caps (context, direction, tmp, NULL);
-
-    result = gst_caps_merge (gl_caps, result);
-  }
+  result =
+      gst_gl_filter_set_caps_features (tmp, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   gst_caps_unref (tmp);
   tmp = result;
-  GST_DEBUG_OBJECT (bt, "transfer returned caps %" GST_PTR_FORMAT, tmp);
 
   if (filter_caps) {
     result =
@@ -862,59 +727,6 @@ error:
 }
 
 static gboolean
-_ensure_input_chain (GstGLFilter * filter)
-{
-  GstBaseTransform *bt = GST_BASE_TRANSFORM (filter);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-
-  if (!filter->upload) {
-    GstCapsFeatures *uploaded_features;
-    GstCaps *uploaded_caps;
-    GstCapsFeatures *converted_features;
-    GstVideoInfo converted_info;
-    GstCaps *in_caps = gst_pad_get_current_caps (bt->sinkpad);
-
-    filter->upload = gst_gl_upload_new (context);
-
-    uploaded_caps = gst_caps_copy (in_caps);
-    uploaded_features =
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-    gst_caps_set_features (uploaded_caps, 0, uploaded_features);
-
-    if (!gst_gl_upload_set_caps (filter->upload, in_caps, uploaded_caps)) {
-      gst_caps_unref (uploaded_caps);
-      gst_caps_unref (in_caps);
-      return FALSE;
-    }
-    gst_caps_unref (in_caps);
-
-    if (!filter->in_convert) {
-      filter->in_convert = gst_gl_color_convert_new (context);
-    }
-
-    gst_video_info_set_format (&converted_info, GST_VIDEO_FORMAT_RGBA,
-        GST_VIDEO_INFO_WIDTH (&filter->in_info),
-        GST_VIDEO_INFO_HEIGHT (&filter->in_info));
-    converted_features =
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-
-    if (filter->in_converted_caps)
-      gst_caps_unref (filter->in_converted_caps);
-    filter->in_converted_caps = gst_video_info_to_caps (&converted_info);
-    gst_caps_set_features (filter->in_converted_caps, 0, converted_features);
-
-    if (!gst_gl_color_convert_set_caps (filter->in_convert, uploaded_caps,
-            filter->in_converted_caps)) {
-      gst_caps_unref (uploaded_caps);
-      return FALSE;
-    }
-    gst_caps_unref (uploaded_caps);
-  }
-
-  return TRUE;
-}
-
-static gboolean
 gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
@@ -969,11 +781,6 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
 
     gst_query_add_allocation_pool (query, filter->pool, size, 1, 0);
   }
-
-  if (!_ensure_input_chain (filter))
-    return FALSE;
-
-  gst_gl_upload_propose_allocation (filter->upload, decide_query, query);
 
   if (context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
@@ -1033,8 +840,11 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     update_pool = FALSE;
   }
 
-  if (!pool)
+  if (!pool || !GST_IS_GL_BUFFER_POOL (pool)) {
+    if (pool)
+      gst_object_unref (pool);
     pool = gst_gl_buffer_pool_new (context);
+  }
 
   config = gst_buffer_pool_get_config (pool);
 
@@ -1043,8 +853,6 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   if (gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL))
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_GL_SYNC_META);
-  gst_buffer_pool_config_add_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 
   gst_buffer_pool_set_config (pool, config);
 
@@ -1074,73 +882,27 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstGLFilterClass *filter_class;
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
-  guint in_tex, out_tex, out_tex_target;
+  guint in_tex, out_tex;
   GstVideoFrame gl_frame, out_frame;
-  GstVideoInfo gl_info;
   gboolean ret;
-  gboolean to_download =
-      gst_caps_features_is_equal (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY,
-      gst_caps_get_features (filter->out_caps, 0));
-  GstMapFlags out_map_flags = GST_MAP_WRITE;
-  GstBuffer *upload_buffer;
 
   filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  if (gst_gl_upload_perform_with_buffer (filter->upload, inbuf,
-          &upload_buffer) != GST_GL_UPLOAD_DONE) {
-    return FALSE;
-  }
-
-  if (filter->uploaded_buffer) {
-    gst_buffer_unref (filter->uploaded_buffer);
-    filter->uploaded_buffer = NULL;
-  }
-
-  filter->uploaded_buffer =
-      gst_gl_color_convert_perform (filter->in_convert, upload_buffer);
-
-  if (!filter->uploaded_buffer) {
-    ret = FALSE;
-    goto inbuf_error;
-  }
-
-  gst_video_info_from_caps (&gl_info, filter->in_converted_caps);
-
-  if (!gst_video_frame_map (&gl_frame, &gl_info, filter->uploaded_buffer,
+  if (!gst_video_frame_map (&gl_frame, &filter->in_info, inbuf,
           GST_MAP_READ | GST_MAP_GL)) {
     ret = FALSE;
     goto inbuf_error;
   }
 
   in_tex = *(guint *) gl_frame.data[0];
-  to_download |= !gst_is_gl_memory (gst_buffer_peek_memory (outbuf, 0));
-
-  if (!to_download)
-    out_map_flags |= GST_MAP_GL;
 
   if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
-          out_map_flags)) {
+          GST_MAP_WRITE | GST_MAP_GL)) {
     ret = FALSE;
     goto unmap_out_error;
   }
 
-  if (!to_download) {
-    out_tex = *(guint *) out_frame.data[0];
-    out_tex_target =
-        ((GstGLMemory *) gst_buffer_peek_memory (outbuf, 0))->tex_target;
-  } else {
-    GST_LOG ("Output Buffer does not contain correct memory, "
-        "attempting to wrap for download");
-
-    if (!filter->download)
-      filter->download = gst_gl_download_new (context);
-
-    gst_gl_download_set_format (filter->download, &out_frame.info);
-
-    out_tex = filter->out_tex_id;
-    out_tex_target = GL_TEXTURE_2D;
-  }
+  out_tex = *(guint *) out_frame.data[0];
 
   GST_DEBUG ("calling filter_texture with textures in:%i out:%i", in_tex,
       out_tex);
@@ -1148,21 +910,10 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
   g_assert (filter_class->filter_texture);
   ret = filter_class->filter_texture (filter, in_tex, out_tex);
 
-  if (to_download) {
-    if (!gst_gl_download_perform_with_data (filter->download,
-            out_tex, out_tex_target, out_frame.data)) {
-      GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-          ("%s", "Failed to download video frame"), (NULL));
-      ret = FALSE;
-    }
-  }
-
-  gst_video_frame_unmap (&gl_frame);
-unmap_out_error:
   gst_video_frame_unmap (&out_frame);
+unmap_out_error:
+  gst_video_frame_unmap (&gl_frame);
 inbuf_error:
-  gst_gl_upload_release_buffer (filter->upload);
-  gst_buffer_unref (upload_buffer);
 
   return ret;
 }
@@ -1185,9 +936,6 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   in_sync_meta = gst_buffer_get_gl_sync_meta (inbuf);
   if (in_sync_meta)
     gst_gl_sync_meta_wait (in_sync_meta);
-
-  if (!_ensure_input_chain (filter))
-    return GST_FLOW_ERROR;
 
   if (filter_class->filter)
     filter_class->filter (filter, inbuf, outbuf);
