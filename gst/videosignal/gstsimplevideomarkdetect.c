@@ -463,15 +463,13 @@ gst_video_detect_yuv (GstSimpleVideoMarkDetect * simplevideomarkdetect,
     goto no_pattern;
   }
 
+  d = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  /* move to start of bottom left, adjust for offsets */
+  d += row_stride * (height - ph - simplevideomarkdetect->bottom_offset) +
+      pixel_stride * simplevideomarkdetect->left_offset;
+
   /* analyse the bottom left pixels */
   for (i = 0; i < simplevideomarkdetect->pattern_count; i++) {
-    d = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-    /* move to start of bottom left, adjust for offsets */
-    d += row_stride * (height - ph - simplevideomarkdetect->bottom_offset) +
-        pixel_stride * simplevideomarkdetect->left_offset;
-    /* move to i-th pattern */
-    d += pixel_stride * pw * i;
-
     /* calc brightness of width * height box */
     brightness =
         gst_video_detect_calc_brightness (simplevideomarkdetect, d, pw, ph,
@@ -494,6 +492,9 @@ gst_video_detect_yuv (GstSimpleVideoMarkDetect * simplevideomarkdetect,
               simplevideomarkdetect->pattern_sensitivity))
         goto no_pattern;
     }
+
+    /* move to i-th pattern */
+    d += pixel_stride * pw;
   }
   GST_DEBUG_OBJECT (simplevideomarkdetect, "found pattern");
 
@@ -501,15 +502,6 @@ gst_video_detect_yuv (GstSimpleVideoMarkDetect * simplevideomarkdetect,
 
   /* get the data of the pattern */
   for (i = 0; i < simplevideomarkdetect->pattern_data_count; i++) {
-    d = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-    /* move to start of bottom left, adjust for offsets */
-    d += row_stride * (height - ph - simplevideomarkdetect->bottom_offset) +
-        pixel_stride * simplevideomarkdetect->left_offset;
-    /* move after the fixed pattern */
-    d += pixel_stride * (simplevideomarkdetect->pattern_count * pw);
-    /* move to i-th pattern data */
-    d += pixel_stride * pw * i;
-
     /* calc brightness of width * height box */
     brightness =
         gst_video_detect_calc_brightness (simplevideomarkdetect, d, pw, ph,
@@ -518,6 +510,8 @@ gst_video_detect_yuv (GstSimpleVideoMarkDetect * simplevideomarkdetect,
     pattern_data <<= 1;
     if (brightness > simplevideomarkdetect->pattern_center)
       pattern_data |= 1;
+    /* move to i-th pattern data */
+    d += pixel_stride * pw;
   }
 
   GST_DEBUG_OBJECT (simplevideomarkdetect, "have data %" G_GUINT64_FORMAT,
