@@ -565,7 +565,7 @@ G_STMT_START {                                                  \
 } G_STMT_END
 
 #define ASSERT_SET_STATE(element, state, ret)                   \
-fail_unless (gst_element_set_state (element,                    \
+fail_unless (gst_element_set_state (GST_ELEMENT(element),       \
   state) == ret,                                                \
   "could not change state to " #state);
 
