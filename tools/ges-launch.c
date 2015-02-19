@@ -290,6 +290,7 @@ _add_clip (GESTimeline * timeline, GstStructure * structure, GError ** error)
     {"duration", "d", GST_TYPE_CLOCK_TIME, NULL},
     {"inpoint", "i", GST_TYPE_CLOCK_TIME, NULL},
     {"track-types", "tt", 0, NULL},
+    {"layer", "l", 0, NULL},
     {NULL},
   };
 
