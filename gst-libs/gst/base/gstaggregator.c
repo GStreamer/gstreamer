@@ -532,7 +532,6 @@ gst_aggregator_get_next_time (GstAggregator * self)
   return GST_CLOCK_TIME_NONE;
 }
 
-/* called with the src STREAM lock */
 static gboolean
 gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 {
