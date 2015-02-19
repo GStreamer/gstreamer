@@ -103,8 +103,7 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
     src_caps = gst_caps_make_writable (src_caps);
     src_caps = gst_caps_truncate (src_caps);
     s = gst_caps_get_structure (src_caps, 0);
-    gst_structure_fixate_field_string (s, "encoding-name",
-        "X-GST-OPUS-DRAFT-SPITTKA-00");
+    gst_structure_fixate_field_string (s, "encoding-name", "OPUS");
     encoding_name = g_strdup (gst_structure_get_string (s, "encoding-name"));
     gst_caps_unref (src_caps);
   } else {
