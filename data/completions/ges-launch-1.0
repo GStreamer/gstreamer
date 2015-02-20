@@ -1,0 +1,136 @@
+# GStreamer
+# Copyright (C) 2015 Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+#
+# bash/zsh completion support for ges-launch
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this library; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+# Boston, MA 02110-1301, USA.
+
+HELPERDIR="${BASH_SOURCE[0]%/*}/../helpers"
+
+if [[ ! -d "$HELPERDIR" ]]; then
+	HELPERDIR="$(pkg-config --variable=helpersdir gstreamer-1.0)"
+else
+	HELPERDIR=`cd "$HELPERDIR"; pwd`
+fi
+
+# Common definitions
+. "$HELPERDIR"/gst
+
+HELPER="$HELPERDIR/gst-completion-helper-1.0"
+
+_ges___inspect_action_type ()
+{
+	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --inspect-action-type | grep '^[^ ]' | cut -d':' -f2)" -- $cur) )
+}
+
+_ges___track_types ()
+{
+	COMPREPLY=( $(compgen -W "audio video audio+video" -- $cur) )
+}
+
+_ges___set_scenario () {
+	COMPREPLY=( $(compgen -W "*.scenario $(gst-validate-1.0 -l | awk '$0=$2' FS=[ RS=])" -- $cur) )
+}
+
+_ges___load () {
+	COMPREPLY=( $(compgen -W "*.xges" -- $cur) )
+}
+
+_ges___outputuri () {
+	COMPREPLY=( $(compgen -W "file://" -- $cur) )
+}
+
+_ges___audiosink () {
+	COMPREPLY=( $(compgen -W "$($HELPER --klass=Sink --sinkcaps='audio/x-raw')" -- $cur) )
+}
+
+_ges___videosink () {
+	COMPREPLY=( $(compgen -W "$($HELPER --klass=Sink --sinkcaps='video/x-raw')" -- $cur) )
+}
+
+_ges___exclude_ () { _mandatory__argument; }
+_ges___encoding_profile () { _mandatory__argument; }
+_ges___ges_sample_path () { _mandatory__argument; }
+_ges___ges_sample_path_recurse () { _mandatory__argument; }
+_ges___thumbnail () { _mandatory__argument; }
+_ges___repeat () { _mandatory__argument; }
+_ges___save () { _mandatory__argument; }
+
+__ges_main ()
+{
+	local i=1 c=1 command function_exists completion_func
+
+	while [[ $i -ne $COMP_CWORD ]];
+		do
+			local var
+			var="${COMP_WORDS[i]}"
+			if [[ "$var" == "--"* ]]
+			then
+				command="$var"
+			fi
+		i=$[$i+1]
+		done
+
+	if [ -z "$command" ]; then
+		COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+		return
+	fi
+
+	if [[ "$command" == "--gst"* ]]; then
+		completion_func="_${command//-/_}"
+	else
+		completion_func="_ges_${command//-/_}"
+	fi
+
+	declare -f $completion_func >/dev/null 2>&1
+
+	function_exists=$?
+
+	if [[ "$cur" == "--"* ]]; then
+		COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+	elif [ $function_exists -eq 0 ]
+	then
+		$completion_func
+	else
+		COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+	fi
+}
+
+__ges_func_wrap ()
+{
+	local cur prev
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+	$1
+}
+
+# Setup completion for certain functions defined above by setting common
+# variables and workarounds.
+# This is NOT a public function; use at your own risk.
+__ges_complete ()
+{
+	local wrapper="__ges_wrap${2}"
+	eval "$wrapper () { __ges_func_wrap $2 ; }"
+	complete -o bashdefault -o default -o nospace -F $wrapper $1 2>/dev/null \
+		|| complete -o default -o nospace -F $wrapper $1
+}
+
+_ges ()
+{
+	__ges_wrap__ges_main
+}
+
+__ges_complete ges-launch-1.0 __ges_main

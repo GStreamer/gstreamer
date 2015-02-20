@@ -28,6 +28,11 @@ check-valgrind:
 check-integration:
 	$(MAKE) -C tests/check check-integration
 
+if ENABLE_BASH_COMPLETION
+bashcompletiondir = $(BASH_COMPLETION_DIR)
+dist_bashcompletion_DATA = data/completions/ges-launch-1.0
+endif
+
 if HAVE_GST_CHECK
 check-torture:
 	$(MAKE) -C tests/check torture
