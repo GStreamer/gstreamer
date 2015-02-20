@@ -109,6 +109,7 @@ gboolean ges_timeline_add_layer (GESTimeline *timeline, GESLayer *layer);
 GESLayer * ges_timeline_append_layer (GESTimeline * timeline);
 gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESLayer *layer);
 GList* ges_timeline_get_layers (GESTimeline *timeline);
+GESLayer* ges_timeline_get_layer (GESTimeline *timeline, guint priority);
 
 gboolean ges_timeline_add_track (GESTimeline *timeline, GESTrack *track);
 gboolean ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track);

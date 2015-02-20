@@ -3214,3 +3214,34 @@ ges_timeline_is_empty (GESTimeline * timeline)
 
   return TRUE;
 }
+
+/**
+ * ges_timeline_get_layer:
+ * @timeline: The #GESTimeline to retrive a layer from
+ * @priority: The priority of the layer to find
+ *
+ * Retrieve the layer with @priority as a priority
+ *
+ * Returns: A #GESLayer or %NULL if no layer with @priority was found
+ *
+ * Since 1.6
+ */
+GESLayer *
+ges_timeline_get_layer (GESTimeline * timeline, guint priority)
+{
+  GList *tmp;
+  GESLayer *layer = NULL;
+
+  for (tmp = timeline->layers; tmp; tmp = tmp->next) {
+    GESLayer *tmp_layer = GES_LAYER (tmp->data);
+    guint tmp_priority;
+
+    g_object_get (tmp_layer, "priority", &tmp_priority, NULL);
+    if (tmp_priority == priority) {
+      layer = gst_object_ref (tmp_layer);
+      break;
+    }
+  }
+
+  return layer;
+}
