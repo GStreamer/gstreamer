@@ -9,6 +9,9 @@ m4_if(gst_vaapi_pre_version, [0], [], [
 m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
 ])
 
+# Configure defaults
+m4_define([default_glapi],              [any])
+
 # gstreamer-vaapi library (libtool) version number
 m4_define([gst_vaapi_lt_current],       [6])
 m4_define([gst0_vaapi_lt_current_bias], [0])
@@ -147,6 +150,16 @@ AC_ARG_ENABLE(wayland,
                    [enable Wayland output @<:@default=yes@:>@]),
     [], [enable_wayland="yes"])
 
+AC_ARG_ENABLE([egl],
+    AS_HELP_STRING([--enable-egl],
+        [enable EGL output @<:@default=yes@:>@]),
+    [], [enable_egl="yes"])
+
+AC_ARG_WITH([glapi],
+    AS_HELP_STRING([--with-glapi=APIs],
+        [build with the specified OpenGL APIs @<:@default=default_glapi@:>@]),
+    [GLAPI="$with_glapi"], [GLAPI=default_glapi])
+
 AC_ARG_WITH([gstreamer-api],
     AC_HELP_STRING([--with-gstreamer-api=VERSION],
                    [build against the specified GStreamer API version
@@ -204,6 +217,9 @@ if test -z "$GST_PKG_VERSION"; then
     AC_MSG_ERROR([version $GST_API_VERSION not found])
 fi
 AC_MSG_RESULT([$GST_API_VERSION])
+
+AC_DEFINE_UNQUOTED([GST_API_VERSION_S], ["$GST_API_VERSION"],
+    [Defined to the string representation of GStreamer version])
 
 dnl Versions for GStreamer and plugins-base
 case $GST_API_VERSION in
@@ -264,6 +280,9 @@ if test "$USE_GST_API_1_2p" = "yes" || test "$USE_GST_API_1_4p" = "yes" ; then
     GST_PKG_VERSION="1.0"
 fi
 AC_SUBST([GST_PKG_VERSION])
+
+AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
+    [Defined to the string representation of GStreamer API version])
 
 dnl Validate certain features
 if test "$USE_GST_API_0_10" = "yes"; then
@@ -494,6 +513,9 @@ esac
 GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - "$lt_bias"`
 AC_SUBST(GST_VAAPI_MAJOR_VERSION)
 
+AC_DEFINE_UNQUOTED([GST_VAAPI_MAJOR_VERSION_S], ["$GST_VAAPI_MAJOR_VERSION"],
+    [Defined to the string representation of gstreamer-vaapi major version])
+
 dnl GST_VAAPI_LT_LDFLAGS:
 GST_VAAPI_LT_CURRENT="$GST_VAAPI_MAJOR_VERSION"
 GST_VAAPI_LT_REV=gst_vaapi_lt_revision
@@ -614,9 +636,15 @@ enable_opengl="no"
 if test "$enable_glx" = "yes"; then
     enable_opengl="yes"
 fi
+if test "$enable_egl" = "yes"; then
+    enable_opengl="yes"
+fi
+GLES_VERSION_MASK=0
 
 HAVE_GL=0
 if test "$enable_opengl" = "yes"; then
+case ",$GLAPI," in
+(*,any,*|*,gl,*)
     HAVE_GL=1
     PKG_CHECK_MODULES([GL], [gl], [:], [HAVE_GL=0])
     saved_CPPFLAGS="$CPPFLAGS"
@@ -627,7 +655,52 @@ if test "$enable_opengl" = "yes"; then
 #endif
     ])
     CPPFLAGS="$saved_CPPFLAGS"
+    ;;
+esac
 fi
+GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GL "*" 1`
+
+dnl OpenGL|ESv2
+HAVE_GLESv2=0
+if test "$enable_opengl" = "yes"; then
+case ",$GLAPI," in
+(*,any,*|*,gles2,*)
+    HAVE_GLESv2=1
+    PKG_CHECK_MODULES([GLES2], [glesv2], [:], [HAVE_GLESv2=0])
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GLES2_CFLAGS"
+    AC_CHECK_HEADERS([GLES2/gl2.h GLES2/gl2ext.h], [:],
+        [HAVE_GLESv2=0], [
+#ifdef HAVE_GLES2_GL2_H
+# include <GLES2/gl2.h>
+#endif
+    ])
+    CPPFLAGS="$saved_CPPFLAGS"
+    ;;
+esac
+fi
+GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GLESv2 "*" 4`
+
+dnl OpenGL|ESv3
+HAVE_GLESv3=0
+if test "$enable_opengl" = "yes"; then
+case ",$GLAPI," in
+(*,any,*|*,gles3,*)
+    HAVE_GLESv3=1
+    PKG_CHECK_MODULES([GLES3], [glesv2], [:], [HAVE_GLESv3=0])
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GLES3_CFLAGS"
+    AC_CHECK_HEADERS([GLES3/gl3.h GLES3/gl3ext.h GLES2/gl2ext.h], [:],
+        [HAVE_GLESv3=0], [
+#ifdef HAVE_GLES3_GL3_H
+# include <GLES3/gl3.h>
+#endif
+    ])
+    CPPFLAGS="$saved_CPPFLAGS"
+    ;;
+esac
+fi
+GLES_VERSION_MASK=`expr $GLES_VERSION_MASK "+" $HAVE_GLESv3 "*" 8`
 
 dnl ... GLX
 USE_GLX=0
@@ -643,6 +716,19 @@ if test "$enable_glx" = "yes" -a $HAVE_GL -eq 1 -a $USE_X11 -eq 1; then
 #endif
     ])
     AC_CHECK_LIB([GL], [glXCreateContext], [:], [USE_GLX=0])
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+fi
+
+dnl ... EGL
+USE_EGL=0
+if test "$enable_egl" = "yes" -a $GLES_VERSION_MASK -ne 0; then
+    USE_EGL=1
+    PKG_CHECK_MODULES([EGL], [egl], [:], [USE_EGL=0])
+    saved_CPPFLAGS="$CPPFLAGS"
+    saved_LIBS="$LIBS"
+    AC_CHECK_HEADERS([EGL/egl.h], [:], [USE_EGL=0])
+    AC_CHECK_LIB([EGL], [eglGetDisplay], [:], [USE_EGL=0])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
 fi
@@ -920,6 +1006,13 @@ AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
     [Defined to 1 if GLX is enabled])
 AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)
 
+AC_DEFINE_UNQUOTED([USE_EGL], [$USE_EGL],
+    [Defined to 1 if EGL is enabled])
+AM_CONDITIONAL([USE_EGL], [test $USE_EGL -eq 1])
+
+AC_DEFINE_UNQUOTED([USE_GLES_VERSION_MASK], [$GLES_VERSION_MASK],
+    [Defined to the set of enabled OpenGL ES APIs])
+
 AC_DEFINE_UNQUOTED(USE_WAYLAND, $USE_WAYLAND,
     [Defined to 1 if WAYLAND is enabled])
 AM_CONDITIONAL(USE_WAYLAND, test $USE_WAYLAND -eq 1)
@@ -990,6 +1083,7 @@ VIDEO_OUTPUTS=""
 AS_IF([test $USE_DRM -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS drm"])
 AS_IF([test $USE_X11 -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS x11"])
 AS_IF([test $USE_GLX -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS glx"])
+AS_IF([test $USE_EGL -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS egl"])
 AS_IF([test $USE_WAYLAND -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS wayland"])
 
 echo

@@ -163,6 +163,10 @@ gst_vaapi_display_type_get_type (void)
     {GST_VAAPI_DISPLAY_TYPE_GLX,
         "VA/GLX display", "glx"},
 #endif
+#if USE_EGL
+    {GST_VAAPI_DISPLAY_TYPE_EGL,
+        "VA/EGL display", "egl"},
+#endif
 #if USE_WAYLAND
     {GST_VAAPI_DISPLAY_TYPE_WAYLAND,
         "VA/Wayland display", "wayland"},
@@ -2137,5 +2141,6 @@ gst_vaapi_display_has_opengl (GstVaapiDisplay * display)
   g_return_val_if_fail (display != NULL, FALSE);
 
   klass = GST_VAAPI_DISPLAY_GET_CLASS (display);
-  return (klass->display_type == GST_VAAPI_DISPLAY_TYPE_GLX);
+  return (klass->display_type == GST_VAAPI_DISPLAY_TYPE_GLX ||
+          klass->display_type == GST_VAAPI_DISPLAY_TYPE_EGL);
 }

@@ -91,6 +91,7 @@ typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
  * @GST_VAAPI_DISPLAY_TYPE_GLX: VA/GLX display.
  * @GST_VAAPI_DISPLAY_TYPE_WAYLAND: VA/Wayland display.
  * @GST_VAAPI_DISPLAY_TYPE_DRM: VA/DRM display.
+ * @GST_VAAPI_DISPLAY_TYPE_EGL: VA/EGL display.
  */
 typedef enum
 {
@@ -99,6 +100,7 @@ typedef enum
   GST_VAAPI_DISPLAY_TYPE_GLX,
   GST_VAAPI_DISPLAY_TYPE_WAYLAND,
   GST_VAAPI_DISPLAY_TYPE_DRM,
+  GST_VAAPI_DISPLAY_TYPE_EGL,
 } GstVaapiDisplayType;
 
 #define GST_VAAPI_TYPE_DISPLAY_TYPE \

@@ -12,6 +12,10 @@ if USE_GLX
 lib_LTLIBRARIES += libgstvaapi-glx-@GST_API_VERSION@.la
 endif
 
+if USE_EGL
+lib_LTLIBRARIES += libgstvaapi-egl-@GST_API_VERSION@.la
+endif
+
 if USE_WAYLAND
 lib_LTLIBRARIES += libgstvaapi-wayland-@GST_API_VERSION@.la
 endif
@@ -271,6 +275,23 @@ libgstvaapi_glx_source_priv_h =			\
 	gstvaapiutils_x11.h			\
 	$(NULL)
 
+libgstvaapi_egl_source_c =			\
+	gstvaapidisplay_egl.c			\
+	gstvaapiutils_egl.c			\
+	$(NULL)
+
+libgstvaapi_egl_source_h =			\
+	gstvaapidisplay_egl.h			\
+	$(NULL)
+
+libgstvaapi_egl_source_priv_h =			\
+	egl_compat.h				\
+	egl_vtable.h				\
+	gstvaapidisplay_egl_priv.h		\
+	gstvaapiutils_egl.h			\
+	ogl_compat.h				\
+	$(NULL)
+
 libgstvaapi_wayland_source_c =			\
 	gstvaapidisplay_wayland.c		\
 	gstvaapiutils.c				\
@@ -433,6 +454,43 @@ libgstvaapi_glx_@GST_API_VERSION@_la_LDFLAGS =	\
 	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
+libgstvaapi_egl_@GST_API_VERSION@_la_SOURCES =	\
+	$(libgstvaapi_egl_source_c)		\
+	$(libgstvaapi_egl_source_priv_h)	\
+	$(NULL)
+
+libgstvaapi_egl_@GST_API_VERSION@include_HEADERS = \
+	$(libgstvaapi_egl_source_h)		\
+	$(NULL)
+
+libgstvaapi_egl_@GST_API_VERSION@includedir =	\
+	$(libgstvaapi_includedir)
+
+libgstvaapi_egl_@GST_API_VERSION@_la_CFLAGS =	\
+	-DIN_LIBGSTVAAPI			\
+	-DGST_USE_UNSTABLE_API			\
+	-I$(top_srcdir)/gst-libs		\
+	$(GLIB_CFLAGS)				\
+	$(GST_BASE_CFLAGS)			\
+	$(GST_VIDEO_CFLAGS)			\
+	$(EGL_CFLAGS)				\
+	$(NULL)
+
+libgstvaapi_egl_@GST_API_VERSION@_la_LIBADD =	\
+	$(GLIB_LIBS)				\
+	$(GST_LIBS)				\
+	$(GST_BASE_LIBS)			\
+	$(GST_VIDEO_LIBS)			\
+	libgstvaapi-$(GST_API_VERSION).la	\
+	$(EGL_LIBS)				\
+	$(DLOPEN_LIBS)				\
+	$(NULL)
+
+libgstvaapi_egl_@GST_API_VERSION@_la_LDFLAGS =	\
+	$(GST_ALL_LDFLAGS)			\
+	$(GST_VAAPI_LT_LDFLAGS)			\
+	$(NULL)
+
 libgstvaapi_wayland_@GST_API_VERSION@_la_SOURCES = \
 	$(libgstvaapi_wayland_source_c)		\
 	$(libgstvaapi_wayland_source_priv_h)	\
@@ -513,6 +571,9 @@ EXTRA_DIST += \
 	$(libgstvaapi_jpegenc_source_c)		\
 	$(libgstvaapi_vp8enc_source_h)		\
 	$(libgstvaapi_vp8enc_source_c)		\
+	$(libgstvaapi_egl_source_c)		\
+	$(libgstvaapi_egl_source_h)		\
+	$(libgstvaapi_egl_source_priv_h)	\
 	$(NULL)
 
 CLEANFILES = \
