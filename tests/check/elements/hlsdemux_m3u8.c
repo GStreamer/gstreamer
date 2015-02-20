@@ -496,8 +496,7 @@ GST_START_TEST (test_live_playlist)
   pl = client->current;
   /* Check that we are live */
   assert_equals_int (gst_m3u8_client_is_live (client), TRUE);
-  /* FIXME: Sequence should last - 3. Should it? */
-  assert_equals_int (client->sequence, 2680);
+  assert_equals_int (client->sequence, 2681);
   /* Check number of entries */
   assert_equals_int (g_list_length (pl->files), 4);
   /* Check first media segments */
@@ -528,8 +527,7 @@ GST_START_TEST (test_live_playlist_rotated)
 
   client = load_playlist (LIVE_PLAYLIST);
   pl = client->current;
-  /* FIXME: Sequence should last - 3. Should it? */
-  assert_equals_int (client->sequence, 2680);
+  assert_equals_int (client->sequence, 2681);
   /* Check first media segments */
   file = GST_M3U8_MEDIA_FILE (g_list_first (pl->files)->data);
   assert_equals_int (file->sequence, 2680);

@@ -42,6 +42,12 @@ typedef struct _GstM3U8Client GstM3U8Client;
    value is three fragments */
 #define GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE 3
 
+/* hlsdemux must not get closer to the end of a live stream than
+   GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE fragments. Section 6.3.3
+   "Playing the Playlist file" of the HLS draft states that this
+   value is three fragments */
+#define GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE 3
+
 struct _GstM3U8
 {
   gchar *uri;                   /* actually downloaded URI */
