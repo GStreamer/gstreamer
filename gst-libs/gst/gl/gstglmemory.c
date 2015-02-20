@@ -859,7 +859,9 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
     data = gl_mem->data;
   }
 
-  gl_mem->map_flags = flags;
+  /* only store the first map flags, subsequent maps must be a subset of this */
+  if (gl_mem->map_count++ == 0)
+    gl_mem->map_flags = flags;
 
   g_mutex_unlock (&gl_mem->lock);
 
@@ -882,13 +884,15 @@ _gl_mem_unmap (GstGLMemory * gl_mem)
 {
   g_mutex_lock (&gl_mem->lock);
 
-  if (gl_mem->map_flags & GST_MAP_WRITE) {
-    if (!(gl_mem->map_flags & GST_MAP_GL))
+  if (gl_mem->map_count <= 1 && gl_mem->map_flags & GST_MAP_WRITE) {
+    if (!(gl_mem->map_flags & GST_MAP_GL)) {
       gst_gl_context_thread_add (gl_mem->context,
           (GstGLContextThreadFunc) _transfer_upload, gl_mem);
+    }
   }
 
-  gl_mem->map_flags = 0;
+  if (--gl_mem->map_count <= 0)
+    gl_mem->map_flags = 0;
 
   g_mutex_unlock (&gl_mem->lock);
 }

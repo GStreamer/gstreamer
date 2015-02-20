@@ -103,6 +103,7 @@ struct _GstGLMemory
   guint                 tex_width;
   guint                 transfer_pbo;
   GstMapFlags           map_flags;
+  guint                 map_count;
 
   GMutex                lock;
 };
