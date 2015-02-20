@@ -154,16 +154,7 @@ _ges_get_layer_by_priority (GESTimeline * timeline, gint priority)
     goto done;
   }
 
-  for (tmp = layers; tmp; tmp = tmp->next) {
-    GESLayer *tmp_layer = GES_LAYER (tmp->data);
-    guint tmp_priority;
-
-    g_object_get (tmp_layer, "priority", &tmp_priority, NULL);
-    if ((gint) tmp_priority == priority) {
-      layer = gst_object_ref (tmp_layer);
-      break;
-    }
-  }
+  layer = ges_timeline_get_layer (timeline, priority);
 
 done:
   g_list_free_full (layers, gst_object_unref);
@@ -209,7 +200,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   TRY_GET ("layer", G_TYPE_INT, &layer_priority,
       g_list_length (timeline->layers));
   TRY_GET ("type", G_TYPE_STRING, &type_string, "GESUriClip");
-  TRY_GET ("start", GST_TYPE_CLOCK_TIME, &start, 0);
+  TRY_GET ("start", GST_TYPE_CLOCK_TIME, &start, GST_CLOCK_TIME_NONE);
   TRY_GET ("inpoint", GST_TYPE_CLOCK_TIME, &inpoint, 0);
   TRY_GET ("duration", GST_TYPE_CLOCK_TIME, &duration, GST_CLOCK_TIME_NONE);
 
