@@ -1,3 +1,19 @@
+if ENABLE_BASH_COMPLETION
+bin_PROGRAMS = gst-completion-helper-@GST_API_VERSION@
+
+gst_completion_helper_@GST_API_VERSION@_SOURCES = gst-completion-helper.c
+gst_completion_helper_@GST_API_VERSION@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_completion_helper_@GST_API_VERSION@_LDADD = $(GST_OBJ_LIBS)
+
+bashhelpersdir = $(BASH_HELPERS_DIR)
+dist_bashhelpers_DATA = gst
+
+install-data-hook:
+	cd $(DESTDIR)$(bindir) && \
+	mv gst-completion-helper-@GST_API_VERSION@ $(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@
+	chmod 755 $(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@
+endif
+
 helpers_PROGRAMS = gst-plugin-scanner
 helpersdir=$(libexecdir)/gstreamer-$(GST_API_VERSION)
 

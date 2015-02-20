@@ -7,6 +7,8 @@ includedir=@abs_top_builddir@
 toolsdir=@abs_top_builddir@/tools
 pluginsdir=@abs_top_builddir@
 girdir=@abs_top_builddir@/gst
+completionsdir=@abs_top_builddir@/data/completions
+helpersdir=@abs_top_builddir@/libs/gst/helpers
 typelibdir=@abs_top_builddir@/gst
 
 Name: GStreamer Uninstalled

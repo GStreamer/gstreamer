@@ -1,2 +1,3 @@
 gst-plugin-scanner
+gst-completion-helper-?.?*
 *.o

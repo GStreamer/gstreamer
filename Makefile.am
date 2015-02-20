@@ -11,7 +11,8 @@ SUBDIRS = pkgconfig \
 	docs \
 	po \
 	m4 \
-	common
+	common \
+	data
 
 if BUILD_TOOLS
 SUBDIRS += tools
