@@ -490,6 +490,10 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
     GST_WARNING_OBJECT (pool,
         "libv4l2 converter detected, disabling CREATE_BUFS");
     can_allocate = FALSE;
+    GST_OBJECT_FLAG_UNSET (pool->vallocator,
+        GST_V4L2_ALLOCATOR_FLAG_MMAP_CREATE_BUFS
+        | GST_V4L2_ALLOCATOR_FLAG_USERPTR_CREATE_BUFS
+        | GST_V4L2_ALLOCATOR_FLAG_DMABUF_CREATE_BUFS);
   }
 
   if (min_buffers < GST_V4L2_MIN_BUFFERS) {
