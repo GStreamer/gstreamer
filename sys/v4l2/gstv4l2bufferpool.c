@@ -46,9 +46,9 @@
 #include "gst/gst-i18n-plugin.h"
 #include <gst/glib-compat-private.h>
 
-GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
+GST_DEBUG_CATEGORY_STATIC (v4l2bufferpool_debug);
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
-#define GST_CAT_DEFAULT v4l2_debug
+#define GST_CAT_DEFAULT v4l2bufferpool_debug
 
 #define GST_V4L2_IMPORT_QUARK gst_v4l2_buffer_pool_import_quark ()
 
@@ -1414,6 +1414,9 @@ gst_v4l2_buffer_pool_class_init (GstV4l2BufferPoolClass * klass)
   bufferpool_class->release_buffer = gst_v4l2_buffer_pool_release_buffer;
   bufferpool_class->flush_start = gst_v4l2_buffer_pool_flush_start;
   bufferpool_class->flush_stop = gst_v4l2_buffer_pool_flush_stop;
+
+  GST_DEBUG_CATEGORY_INIT (v4l2bufferpool_debug, "v4l2bufferpool", 0,
+      "V4L2 Buffer Pool");
 }
 
 /**
