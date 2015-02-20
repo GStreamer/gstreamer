@@ -1715,7 +1715,9 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       GST_DEBUG ("Trying factory %s",
           gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
 
-      if (gst_element_get_factory (src) == factory) {
+      if (gst_element_get_factory (src) == factory ||
+          gst_element_factory_list_is_type (factory,
+              GST_ELEMENT_FACTORY_TYPE_PARSER)) {
         GST_DEBUG ("Skipping factory");
         continue;
       }
