@@ -718,11 +718,15 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
  * @caps: the #GstCaps to set
  *
  * Sets the given @caps on the track.
+ * Note that the capsfeatures of @caps will always be set
+ * to ANY. If you want to restrict them, you should
+ * do it in #ges_track_set_restriction_caps.
  */
 void
 ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 {
   GESTrackPrivate *priv;
+  gint i;
 
   g_return_if_fail (GES_IS_TRACK (track));
 
@@ -734,6 +738,9 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
   if (priv->caps)
     gst_caps_unref (priv->caps);
   priv->caps = gst_caps_copy (caps);
+
+  for (i = 0; i < (int) gst_caps_get_size (priv->caps); i++)
+    gst_caps_set_features (priv->caps, i, gst_caps_features_new_any ());
 
   g_object_set (priv->composition, "caps", caps, NULL);
   /* FIXME : update all trackelements ? */
