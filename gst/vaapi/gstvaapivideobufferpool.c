@@ -24,7 +24,7 @@
 #include "gstvaapivideobufferpool.h"
 #include "gstvaapivideobuffer.h"
 #include "gstvaapivideomemory.h"
-#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
 #include "gstvaapivideometa_texture.h"
 #endif
 
@@ -288,7 +288,7 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
     }
   }
 
-#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
   if (priv->has_texture_upload_meta)
     gst_buffer_add_texture_upload_meta (buffer);
 #endif

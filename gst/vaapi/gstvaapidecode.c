@@ -36,7 +36,7 @@
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
-#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
 #include "gstvaapivideometa_texture.h"
 #endif
 #if GST_CHECK_VERSION(1,0,0)
@@ -342,7 +342,7 @@ gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec,
             }
         }
 
-#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
         if (decode->has_texture_upload_meta)
             gst_buffer_ensure_texture_upload_meta(out_frame->output_buffer);
 #endif
@@ -528,7 +528,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     gst_query_parse_allocation(query, &caps, &need_pool);
 
     decode->has_texture_upload_meta = FALSE;
-#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
     decode->has_texture_upload_meta =
         gst_vaapi_find_preferred_caps_feature(GST_VIDEO_DECODER_SRC_PAD(vdec),
             GST_VIDEO_FORMAT_ENCODED) ==

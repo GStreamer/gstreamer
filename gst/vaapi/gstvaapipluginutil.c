@@ -33,6 +33,9 @@
 #if USE_GLX
 # include <gst/vaapi/gstvaapidisplay_glx.h>
 #endif
+#if USE_EGL
+# include <gst/vaapi/gstvaapidisplay_egl.h>
+#endif
 #if USE_WAYLAND
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 #endif
@@ -58,36 +61,48 @@ static const char *display_types[] = {
   NULL
 };
 
+typedef GstVaapiDisplay *(*GstVaapiDisplayCreateFunc) (const gchar *);
+typedef GstVaapiDisplay *(*GstVaapiDisplayCreateFromHandleFunc) (gpointer);
+
 typedef struct
 {
   const gchar *type_str;
   GstVaapiDisplayType type;
-  GstVaapiDisplay *(*create_display) (const gchar *);
+  GstVaapiDisplayCreateFunc create_display;
+  GstVaapiDisplayCreateFromHandleFunc create_display_from_handle;
 } DisplayMap;
 
+/* *INDENT-OFF* */
 static const DisplayMap g_display_map[] = {
 #if USE_WAYLAND
   {"wayland",
-        GST_VAAPI_DISPLAY_TYPE_WAYLAND,
-      gst_vaapi_display_wayland_new},
+   GST_VAAPI_DISPLAY_TYPE_WAYLAND,
+   gst_vaapi_display_wayland_new,
+   (GstVaapiDisplayCreateFromHandleFunc)
+   gst_vaapi_display_wayland_new_with_display},
 #endif
 #if USE_GLX
   {"glx",
-        GST_VAAPI_DISPLAY_TYPE_GLX,
-      gst_vaapi_display_glx_new},
+   GST_VAAPI_DISPLAY_TYPE_GLX,
+   gst_vaapi_display_glx_new,
+   (GstVaapiDisplayCreateFromHandleFunc)
+   gst_vaapi_display_glx_new_with_display},
 #endif
 #if USE_X11
   {"x11",
-        GST_VAAPI_DISPLAY_TYPE_X11,
-      gst_vaapi_display_x11_new},
+   GST_VAAPI_DISPLAY_TYPE_X11,
+   gst_vaapi_display_x11_new,
+   (GstVaapiDisplayCreateFromHandleFunc)
+   gst_vaapi_display_x11_new_with_display},
 #endif
 #if USE_DRM
   {"drm",
-        GST_VAAPI_DISPLAY_TYPE_DRM,
-      gst_vaapi_display_drm_new},
+   GST_VAAPI_DISPLAY_TYPE_DRM,
+   gst_vaapi_display_drm_new},
 #endif
   {NULL,}
 };
+/* *INDENT-ON* */
 
 static GstVaapiDisplay *
 gst_vaapi_create_display (GstVaapiDisplayType display_type,
@@ -105,6 +120,98 @@ gst_vaapi_create_display (GstVaapiDisplayType display_type,
       break;
   }
   return display;
+}
+
+static GstVaapiDisplay *
+gst_vaapi_create_display_from_handle (GstVaapiDisplayType display_type,
+    gpointer handle)
+{
+  GstVaapiDisplay *display;
+  const DisplayMap *m;
+
+  if (display_type == GST_VAAPI_DISPLAY_TYPE_ANY)
+    return NULL;
+
+  for (m = g_display_map; m->type_str != NULL; m++) {
+    if (m->type == display_type) {
+      display = m->create_display_from_handle ?
+          m->create_display_from_handle (handle) : NULL;
+      return display;
+    }
+  }
+  return NULL;
+}
+
+static GstVaapiDisplay *
+gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
+{
+#if USE_GST_GL_HELPERS
+  GstGLContext *const gl_context = GST_GL_CONTEXT (gl_context_object);
+  GstGLDisplay *const gl_display = gst_gl_context_get_display (gl_context);
+  GstVaapiDisplay *display, *out_display;
+  GstVaapiDisplayType display_type;
+
+  switch (gst_gl_display_get_handle_type (gl_display)) {
+#if USE_X11
+    case GST_GL_DISPLAY_TYPE_X11:
+      display_type = GST_VAAPI_DISPLAY_TYPE_X11;
+      break;
+#endif
+#if USE_WAYLAND
+    case GST_GL_DISPLAY_TYPE_WAYLAND:
+      display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
+      break;
+#endif
+    default:
+      display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
+      break;
+  }
+  if (!display_type)
+    return NULL;
+
+  display = gst_vaapi_create_display_from_handle (display_type,
+      GSIZE_TO_POINTER (gst_gl_display_get_handle (gl_display)));
+  if (!display)
+    return NULL;
+
+  switch (gst_gl_context_get_gl_platform (gl_context)) {
+#if USE_EGL
+    case GST_GL_PLATFORM_EGL:{
+      guint gles_version;
+
+      switch (gst_gl_context_get_gl_api (gl_context)) {
+        case GST_GL_API_GLES1:
+          gles_version = 1;
+          goto create_egl_display;
+        case GST_GL_API_GLES2:
+          gles_version = 2;
+          goto create_egl_display;
+        case GST_GL_API_OPENGL:
+        case GST_GL_API_OPENGL3:
+          gles_version = 0;
+        create_egl_display:
+          out_display = gst_vaapi_display_egl_new (display, gles_version);
+          break;
+        default:
+          out_display = NULL;
+          break;
+      }
+      if (!out_display)
+        return NULL;
+      gst_vaapi_display_egl_set_gl_context (GST_VAAPI_DISPLAY_EGL (out_display),
+          GSIZE_TO_POINTER (gst_gl_context_get_gl_context (gl_context)));
+      break;
+    }
+#endif
+    default:
+      out_display = gst_vaapi_display_ref (display);
+      break;
+  }
+  gst_vaapi_display_unref (display);
+  return out_display;
+#endif
+  GST_ERROR ("unsupported GStreamer version %s", GST_API_VERSION_S);
+  return NULL;
 }
 
 gboolean
@@ -126,7 +233,10 @@ gst_vaapi_ensure_display (gpointer element, GstVaapiDisplayType type)
     return TRUE;
 
   /* If no neighboor, or application not interested, use system default */
-  display = gst_vaapi_create_display (type, plugin->display_name);
+  if (plugin->gl_context)
+    display = gst_vaapi_create_display_from_gl_context (plugin->gl_context);
+  else
+    display = gst_vaapi_create_display (type, plugin->display_name);
   if (!display)
     return FALSE;
 

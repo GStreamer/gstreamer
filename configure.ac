@@ -535,6 +535,11 @@ AM_CONDITIONAL([USE_GST_GL_HELPERS], [test $HAVE_GSTGL -eq 1])
 AC_DEFINE_UNQUOTED([USE_GST_GL_HELPERS], [$HAVE_GSTGL],
     [Defined to 1 if GStreamer OpenGL helper libraries are available])
 
+if test "$enable_egl" = "yes" -a $HAVE_GSTGL -ne 1; then
+    AC_MSG_WARN([GStreamer/GL helper libraries not found, disabling EGL support])
+    enable_egl="no"
+fi
+
 case $GST_API_VERSION in
 0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
 1.0)    lt_bias=gst1_vaapi_lt_current_bias;;

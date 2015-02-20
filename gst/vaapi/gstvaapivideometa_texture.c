@@ -25,20 +25,18 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#include "gst/vaapi/ogl_compat.h"
 #include "gstvaapivideometa.h"
+#include "gstvaapivideometa_texture.h"
 #include "gstvaapipluginutil.h"
 
 #if USE_GLX
-#include <GL/gl.h>
 #include <gst/vaapi/gstvaapitexture_glx.h>
 #endif
 
 #define DEFAULT_FORMAT GST_VIDEO_FORMAT_RGBA
 
-#if GST_CHECK_VERSION(1,1,0) && USE_GLX
-
-#include "gstvaapivideometa_texture.h"
-
+#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
 struct _GstVaapiVideoMetaTexture
 {
   GstVaapiTexture *texture;
@@ -148,8 +146,9 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
       gst_vaapi_texture_get_id (meta_texture->texture) != texture_id[0]) {
     /* FIXME: should we assume target? */
     GstVaapiTexture *const texture =
-        gst_vaapi_texture_glx_new_wrapped (dpy, texture_id[0],
-        GL_TEXTURE_2D, meta_texture->gl_format);
+        gst_vaapi_texture_new_wrapped (dpy, texture_id[0],
+        GL_TEXTURE_2D, meta_texture->gl_format, meta_texture->width,
+        meta_texture->height);
     gst_vaapi_texture_replace (&meta_texture->texture, texture);
     if (!texture)
       return FALSE;
