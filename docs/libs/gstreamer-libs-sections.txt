@@ -361,6 +361,7 @@ gst_base_transform_get_allocator
 gst_base_transform_get_buffer_pool
 gst_base_transform_reconfigure_sink
 gst_base_transform_reconfigure_src
+gst_base_transform_update_src
 
 GST_BASE_TRANSFORM_SINK_NAME
 GST_BASE_TRANSFORM_SRC_NAME

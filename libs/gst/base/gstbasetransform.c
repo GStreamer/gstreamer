@@ -2786,3 +2786,33 @@ gst_base_transform_get_allocator (GstBaseTransform * trans,
   if (params)
     *params = trans->priv->params;
 }
+
+/**
+ * gst_base_transform_update_src_caps:
+ * @trans: a #GstBaseTransform
+ * @updated_caps: An updated version of the srcpad caps to be pushed
+ * downstream
+ *
+ * Updates the srcpad caps and send the caps downstream. This function
+ * can be used by subclasses when they have already negotiated their caps
+ * but found a change in them (or computed new informations). This way,
+ * they can notify downstream about that change without loosing any
+ * buffer.
+ *
+ * Returns: %TRUE if the caps could be send downstream %FALSE otherwise
+ */
+gboolean
+gst_base_transform_update_src_caps (GstBaseTransform * trans,
+    GstCaps * updated_caps)
+{
+  g_return_val_if_fail (GST_IS_BASE_TRANSFORM (trans), FALSE);
+
+  if (gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (trans),
+          gst_event_new_caps (updated_caps))) {
+    gst_pad_mark_reconfigure (trans->srcpad);
+
+    return TRUE;
+  }
+
+  return FALSE;
+}

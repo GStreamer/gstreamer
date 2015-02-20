@@ -293,6 +293,8 @@ void            gst_base_transform_get_allocator    (GstBaseTransform *trans,
 
 void		gst_base_transform_reconfigure_sink (GstBaseTransform *trans);
 void		gst_base_transform_reconfigure_src  (GstBaseTransform *trans);
+gboolean gst_base_transform_update_src_caps (GstBaseTransform *trans,
+                                             GstCaps *updated_caps);
 G_END_DECLS
 
 #endif /* __GST_BASE_TRANSFORM_H__ */
