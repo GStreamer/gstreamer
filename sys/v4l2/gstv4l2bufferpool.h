@@ -75,6 +75,7 @@ struct _GstV4l2BufferPool
   GstVideoInfo caps_info;   /* Default video information */
 
   gboolean add_videometa;    /* set if video meta should be added */
+  gboolean enable_copy_threshold; /* If copy_threshold should be set */
 
   guint min_latency;         /* number of buffers we will hold */
   guint max_latency;         /* number of buffers we can hold */
@@ -103,6 +104,8 @@ GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, Gst
 
 void                gst_v4l2_buffer_pool_set_other_pool (GstV4l2BufferPool * pool,
                                                          GstBufferPool * other_pool);
+void                gst_v4l2_buffer_pool_copy_at_threshold (GstV4l2BufferPool * pool,
+                                                            gboolean copy);
 
 G_END_DECLS
 

@@ -686,15 +686,11 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
        * falling back to copy if the pipeline needed more buffers. This also
        * prevent having to do REQBUFS(N)/REQBUFS(0) everytime configure is
        * called. */
-      if (count != min_buffers) {
-        GST_WARNING_OBJECT (pool, "using %u buffers instead of %u",
-            count, min_buffers);
+      if (count != min_buffers || pool->enable_copy_threshold) {
+        GST_WARNING_OBJECT (pool,
+            "Uncertain or not enough buffers, enabling copy threshold");
         min_buffers = count;
         copy_threshold = min_latency;
-
-        /* The initial minimum could be provide either by GstBufferPool or
-         * driver needs. */
-        min_buffers = count;
       }
 
       break;
@@ -1862,4 +1858,12 @@ gst_v4l2_buffer_pool_set_other_pool (GstV4l2BufferPool * pool,
   if (pool->other_pool)
     gst_object_unref (pool->other_pool);
   pool->other_pool = gst_object_ref (other_pool);
+}
+
+void
+gst_v4l2_buffer_pool_copy_at_threshold (GstV4l2BufferPool * pool, gboolean copy)
+{
+  GST_OBJECT_LOCK (pool);
+  pool->enable_copy_threshold = copy;
+  GST_OBJECT_UNLOCK (pool);
 }

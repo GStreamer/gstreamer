@@ -3306,6 +3306,18 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
      * driver and 1 more, so we don't endup up with everything downstream or
      * held by the decoder. */
     own_min = min + obj->min_buffers + 1;
+
+    /* If no allocation parameters where provided, allow for a little more
+     * buffers and enable copy threshold */
+    if (!update) {
+      own_min += 3;
+      gst_v4l2_buffer_pool_copy_at_threshold (GST_V4L2_BUFFER_POOL (pool),
+          TRUE);
+    } else {
+      gst_v4l2_buffer_pool_copy_at_threshold (GST_V4L2_BUFFER_POOL (pool),
+          FALSE);
+    }
+
   } else {
     /* In this case we'll have to configure two buffer pool. For our buffer
      * pool, we'll need what the driver one, and one more, so we can dequeu */
