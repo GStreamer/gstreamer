@@ -236,12 +236,12 @@ struct _GstAggregatorPrivate
   GstTagList *tags;
   gboolean tags_changed;
 
-  gboolean latency_live;
-  GstClockTime latency_min;
-  GstClockTime latency_max;
+  gboolean latency_live;        /* protected by src_lock */
+  GstClockTime latency_min;     /* protected by src_lock */
+  GstClockTime latency_max;     /* protected by src_lock */
 
-  GstClockTime sub_latency_min;
-  GstClockTime sub_latency_max;
+  GstClockTime sub_latency_min; /* protected by src_lock */
+  GstClockTime sub_latency_max; /* protected by src_lock */
 
   /* aggregate */
   GstClockID aggregate_id;      /* protected by src_lock */
@@ -543,9 +543,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 
   SRC_LOCK (self);
 
-  GST_OBJECT_LOCK (self);
   gst_aggregator_get_latency_unlocked (self, &live, &latency_min, &latency_max);
-  GST_OBJECT_UNLOCK (self);
 
   if (gst_aggregator_check_pads_ready (self)) {
     GST_DEBUG_OBJECT (self, "all pads have data");
@@ -584,6 +582,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     clock = GST_ELEMENT_CLOCK (self);
     if (clock)
       gst_object_ref (clock);
+    GST_OBJECT_UNLOCK (self);
 
     time = base_time + start;
     time += latency_min;
@@ -597,7 +596,6 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
         GST_TIME_ARGS (latency_min),
         GST_TIME_ARGS (gst_clock_get_time (clock)));
 
-    GST_OBJECT_UNLOCK (self);
 
     self->priv->aggregate_id = gst_clock_new_single_shot_id (clock, time);
     gst_object_unref (clock);
@@ -1202,7 +1200,7 @@ retry:
     return FALSE;
   }
 
-  GST_OBJECT_LOCK (self);
+  SRC_LOCK (self);
   our_latency = self->priv->latency;
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (data.min))) {
@@ -1242,7 +1240,8 @@ retry:
     /* FIXME: shouldn't we g_object_notify() the change here? */
   }
 
-  GST_OBJECT_UNLOCK (self);
+  SRC_BROADCAST (self);
+  SRC_UNLOCK (self);
 
   GST_DEBUG_OBJECT (self, "configured latency live:%s min:%" G_GINT64_FORMAT
       " max:%" G_GINT64_FORMAT, data.live ? "true" : "false", data.min,
@@ -1265,7 +1264,7 @@ retry:
  *
  * Typically only called by subclasses.
  *
- * MUST be called with the object lock held.
+ * MUST be called with the src_lock held.
  */
 void
 gst_aggregator_get_latency_unlocked (GstAggregator * self, gboolean * live,
@@ -1347,21 +1346,7 @@ gst_aggregator_default_src_query (GstAggregator * self, GstQuery * query)
       goto discard;
     }
     case GST_QUERY_LATENCY:
-    {
-      gboolean ret;
-
-      ret = gst_aggregator_query_latency (self, query);
-      /* Wake up the src thread again, due to changed latencies
-       * or changed live-ness we might have to adjust if we wait
-       * on a deadline at all and how long.
-       * This is only to unschedule the clock id, we don't really care
-       * about the GCond here.
-       */
-      SRC_LOCK (self);
-      SRC_BROADCAST (self);
-      SRC_UNLOCK (self);
-      return ret;
-    }
+      return gst_aggregator_query_latency (self, query);
     default:
       break;
   }
@@ -1635,7 +1620,7 @@ gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
   g_return_if_fail (GST_IS_AGGREGATOR (self));
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (latency));
 
-  GST_OBJECT_LOCK (self);
+  SRC_LOCK (self);
   if (self->priv->latency_live) {
     min = self->priv->latency_min;
     max = self->priv->latency_max;
@@ -1662,7 +1647,10 @@ gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
 
   changed = (self->priv->latency != latency);
   self->priv->latency = latency;
-  GST_OBJECT_UNLOCK (self);
+
+  if (changed)
+    SRC_BROADCAST (self);
+  SRC_UNLOCK (self);
 
   if (changed)
     gst_element_post_message (GST_ELEMENT_CAST (self),
@@ -2218,7 +2206,7 @@ gst_aggregator_set_latency (GstAggregator * self,
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min_latency));
   g_return_if_fail (max_latency >= min_latency);
 
-  GST_OBJECT_LOCK (self);
+  SRC_LOCK (self);
   if (self->priv->sub_latency_min != min_latency) {
     self->priv->sub_latency_min = min_latency;
     changed = TRUE;
@@ -2227,7 +2215,10 @@ gst_aggregator_set_latency (GstAggregator * self,
     self->priv->sub_latency_max = max_latency;
     changed = TRUE;
   }
-  GST_OBJECT_UNLOCK (self);
+
+  if (changed)
+    SRC_BROADCAST (self);
+  SRC_UNLOCK (self);
 
   if (changed) {
     gst_element_post_message (GST_ELEMENT_CAST (self),
