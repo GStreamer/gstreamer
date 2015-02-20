@@ -39,6 +39,10 @@
 #undef gst_vaapi_texture_unref
 #undef gst_vaapi_texture_replace
 
+#define GST_VAAPI_TEXTURE_ORIENTATION_FLAGS \
+  (GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED | \
+   GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED)
+
 static void
 gst_vaapi_texture_init (GstVaapiTexture * texture, GstVaapiID id,
     guint target, guint format, guint width, guint height)
@@ -295,6 +299,43 @@ gst_vaapi_texture_get_size (GstVaapiTexture * texture,
 
   if (height_ptr)
     *height_ptr = GST_VAAPI_TEXTURE_HEIGHT (texture);
+}
+
+/**
+ * gst_vaapi_texture_get_orientation_flags:
+ * @texture: a #GstVaapiTexture
+ *
+ * Retrieves the texture memory layout flags, i.e. orientation.
+ *
+ * Return value: the #GstVaapiTextureOrientationFlags.
+ */
+guint
+gst_vaapi_texture_get_orientation_flags (GstVaapiTexture * texture)
+{
+  g_return_val_if_fail (texture != NULL, 0);
+
+  return GST_VAAPI_TEXTURE_FLAGS (texture) &
+      GST_VAAPI_TEXTURE_ORIENTATION_FLAGS;
+}
+
+/**
+ * gst_vaapi_texture_set_orientation_flags:
+ * @texture: a #GstVaapiTexture
+ * @flags: a bitmask of #GstVaapiTextureOrientationFlags
+ *
+ * Reset the texture orientation flags to the supplied set of
+ * @flags. This completely replaces the previously installed
+ * flags. So, should they still be needed, then they shall be
+ * retrieved first with gst_vaapi_texture_get_orientation_flags().
+ */
+void
+gst_vaapi_texture_set_orientation_flags (GstVaapiTexture * texture, guint flags)
+{
+  g_return_if_fail (texture != NULL);
+  g_return_if_fail ((flags & ~GST_VAAPI_TEXTURE_ORIENTATION_FLAGS) == 0);
+
+  GST_VAAPI_TEXTURE_FLAG_UNSET (texture, GST_VAAPI_TEXTURE_ORIENTATION_FLAGS);
+  GST_VAAPI_TEXTURE_FLAG_SET (texture, flags);
 }
 
 /**

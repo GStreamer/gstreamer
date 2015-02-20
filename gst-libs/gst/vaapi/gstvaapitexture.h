@@ -80,6 +80,24 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiTexture GstVaapiTexture;
 
+/**
+ * GstVaapiTextureOrientationFlags:
+ * @GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED: indicates whether
+ *   the right row comes first in memory.
+ * @GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED: indicates whether
+ *   the bottom line comes first in memory.
+ *
+ * Additional flags to indicate whether the texture data is organized
+ * in memory with the X or Y, or both, axis inverted. e.g. if only
+ * @GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED is set, this means
+ * that the bottom line comes first in memory, with pixels laid out
+ * from the left to the right.
+ */
+typedef enum {
+  GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED = 1 << 31,
+  GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED = 1 << 30,
+} GstVaapiTextureOrientationFlags;
+
 GstVaapiTexture *
 gst_vaapi_texture_new (GstVaapiDisplay * display, guint target, guint format,
     guint width, guint height);
@@ -116,6 +134,13 @@ gst_vaapi_texture_get_height (GstVaapiTexture * texture);
 void
 gst_vaapi_texture_get_size (GstVaapiTexture * texture, guint * width_ptr,
     guint * height_ptr);
+
+guint
+gst_vaapi_texture_get_orientation_flags (GstVaapiTexture * texture);
+
+void
+gst_vaapi_texture_set_orientation_flags (GstVaapiTexture * texture,
+    guint flags);
 
 gboolean
 gst_vaapi_texture_put_surface (GstVaapiTexture * texture,

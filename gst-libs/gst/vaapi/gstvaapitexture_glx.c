@@ -312,6 +312,12 @@ gst_vaapi_texture_glx_put_surface_unlocked (GstVaapiTexture * base_texture,
   GLContextState old_cs;
   gboolean success = FALSE;
 
+  const GLfloat *txc, *tyc;
+  static const GLfloat g_texcoords[2][2] = {
+    {0.0f, 1.0f},
+    {1.0f, 0.0f},
+  };
+
   status = vaPutSurface (GST_VAAPI_OBJECT_VADISPLAY (texture),
       GST_VAAPI_OBJECT_ID (surface), texture->pixo->pixmap,
       crop_rect->x, crop_rect->y, crop_rect->width, crop_rect->height,
@@ -339,16 +345,20 @@ gst_vaapi_texture_glx_put_surface_unlocked (GstVaapiTexture * base_texture,
     goto out_unbind_fbo;
   }
 
+  flags = GST_VAAPI_TEXTURE_FLAGS (texture);
+  txc = g_texcoords[! !(flags & GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED)];
+  tyc = g_texcoords[! !(flags & GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED)];
+
   glColor4f (1.0f, 1.0f, 1.0f, 1.0f);
   glBegin (GL_QUADS);
   {
-    glTexCoord2f (0.0f, 0.0f);
+    glTexCoord2f (txc[0], tyc[0]);
     glVertex2i (0, 0);
-    glTexCoord2f (0.0f, 1.0f);
+    glTexCoord2f (txc[0], tyc[1]);
     glVertex2i (0, base_texture->height);
-    glTexCoord2f (1.0f, 1.0f);
+    glTexCoord2f (txc[1], tyc[1]);
     glVertex2i (base_texture->width, base_texture->height);
-    glTexCoord2f (1.0f, 0.0f);
+    glTexCoord2f (txc[1], tyc[0]);
     glVertex2i (base_texture->width, 0);
   }
   glEnd ();

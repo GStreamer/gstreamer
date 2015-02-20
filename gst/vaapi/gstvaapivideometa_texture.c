@@ -46,6 +46,29 @@ struct _GstVaapiVideoMetaTexture
   guint height;
 };
 
+static guint
+get_texture_orientation_flags (GstVideoGLTextureOrientation orientation)
+{
+  guint flags;
+
+  switch (orientation) {
+    case GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_FLIP:
+      flags = GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED;
+      break;
+    case GST_VIDEO_GL_TEXTURE_ORIENTATION_X_FLIP_Y_NORMAL:
+      flags = GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED;
+      break;
+    case GST_VIDEO_GL_TEXTURE_ORIENTATION_X_FLIP_Y_FLIP:
+      flags = GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED |
+          GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED;
+      break;
+    default:
+      flags = 0;
+      break;
+  }
+  return flags;
+}
+
 static gboolean
 meta_texture_ensure_format (GstVaapiVideoMetaTexture * meta,
     GstVideoFormat format)
@@ -170,6 +193,10 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
       return FALSE;
     gst_vaapi_texture_unref (texture);
   }
+
+  gst_vaapi_texture_set_orientation_flags (meta_texture->texture,
+      get_texture_orientation_flags (meta->texture_orientation));
+
   return gst_vaapi_texture_put_surface (meta_texture->texture, surface,
       gst_vaapi_surface_proxy_get_crop_rect (proxy),
       gst_vaapi_video_meta_get_render_flags (vmeta));

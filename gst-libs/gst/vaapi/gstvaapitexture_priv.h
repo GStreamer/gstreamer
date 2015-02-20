@@ -85,6 +85,11 @@ G_BEGIN_DECLS
 #define GST_VAAPI_TEXTURE_HEIGHT(texture) \
   (GST_VAAPI_TEXTURE (texture)->height)
 
+#define GST_VAAPI_TEXTURE_FLAGS         GST_VAAPI_MINI_OBJECT_FLAGS
+#define GST_VAAPI_TEXTURE_FLAG_IS_SET   GST_VAAPI_MINI_OBJECT_FLAG_IS_SET
+#define GST_VAAPI_TEXTURE_FLAG_SET      GST_VAAPI_MINI_OBJECT_FLAG_SET
+#define GST_VAAPI_TEXTURE_FLAG_UNSET    GST_VAAPI_MINI_OBJECT_FLAG_UNSET
+
 /* GstVaapiTextureClass hooks */
 typedef gboolean (*GstVaapiTextureAllocateFunc) (GstVaapiTexture * texture);
 typedef gboolean (*GstVaapiTexturePutSurfaceFunc) (GstVaapiTexture * texture,
