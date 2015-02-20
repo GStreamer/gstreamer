@@ -135,11 +135,21 @@ GESLayer *
 _ges_get_layer_by_priority (GESTimeline * timeline, gint priority)
 {
   GList *layers, *tmp;
+  gint nlayers;
   GESLayer *layer = NULL;
 
   layers = ges_timeline_get_layers (timeline);
-  if (priority == (gint) g_list_length (layers)) {
-    layer = gst_object_ref (ges_timeline_append_layer (timeline));
+  nlayers = (gint) g_list_length (layers);
+  if (priority >= nlayers) {
+    gint i = nlayers;
+
+    while (i <= priority) {
+      layer = ges_timeline_append_layer (timeline);
+
+      i++;
+    }
+
+    layer = gst_object_ref (layer);
 
     goto done;
   }
