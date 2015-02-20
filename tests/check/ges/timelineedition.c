@@ -1265,11 +1265,9 @@ _set_track_element_width_height (GESTrackElement * trksrc, gint wvalue,
   g_value_set_int (&width, wvalue);
   g_value_set_int (&height, hvalue);
   if (wvalue >= 0)
-    ges_timeline_element_set_child_property (GES_TIMELINE_ELEMENT (trksrc),
-        "width", &width);
+    ges_track_element_set_child_property (trksrc, "width", &width);
   if (hvalue >= 0)
-    ges_timeline_element_set_child_property (GES_TIMELINE_ELEMENT (trksrc),
-        "height", &height);
+    ges_track_element_set_child_property (trksrc, "height", &height);
 }
 
 static gboolean
@@ -1287,10 +1285,8 @@ check_frame_positionner_size (GESClip * clip, gint width, gint height)
   g_value_init (&val_width, G_TYPE_INT);
   g_value_init (&val_height, G_TYPE_INT);
 
-  ges_timeline_element_get_child_property (GES_TIMELINE_ELEMENT (trksrc),
-      "width", &val_width);
-  ges_timeline_element_get_child_property (GES_TIMELINE_ELEMENT (trksrc),
-      "height", &val_height);
+  ges_track_element_get_child_property (trksrc, "width", &val_width);
+  ges_track_element_get_child_property (trksrc, "height", &val_height);
 
   real_width = g_value_get_int (&val_width);
   real_height = g_value_get_int (&val_height);
