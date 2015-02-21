@@ -122,11 +122,28 @@ static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_WARNING:
-    case GST_MESSAGE_ERROR:
-      g_error ("Got error");
+    case GST_MESSAGE_WARNING:{
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_warning (message, &err, &debug);
+      g_print ("Warning: %s\n", err->message);
+      g_error_free (err);
+      g_free (debug);
+      break;
+    }
+    case GST_MESSAGE_ERROR:{
+      GError *err;
+      gchar *debug = NULL;
+
+      gst_message_parse_error (message, &err, &debug);
+      g_print ("Error: %s : %s\n", err->message, debug);
+      g_error_free (err);
+      g_free (debug);
+
       gtk_main_quit ();
       break;
+    }
     case GST_MESSAGE_TAG:{
       GstTagList *tags;
       GValue v = { 0, };
