@@ -29,31 +29,25 @@ static GtkTreeStore *treestore = NULL;
 static gchar *
 g_value_to_string (const GValue * val)
 {
+  gchar *ret = NULL;
+
   if (G_VALUE_TYPE (val) == GST_TYPE_BUFFER) {
     GstBuffer *buf = gst_value_get_buffer (val);
     GstMapInfo map;
-    gchar *ret;
 
     gst_buffer_map (buf, &map, GST_MAP_READ);
     ret = g_base64_encode (map.data, map.size);
     gst_buffer_unmap (buf, &map);
-
-    return ret;
   } else {
     GValue s = { 0, };
-    gchar *ret;
 
     g_value_init (&s, G_TYPE_STRING);
-
-    if (!g_value_transform (val, &s)) {
-      return NULL;
+    if (g_value_transform (val, &s)) {
+      ret = g_value_dup_string (&s);
+      g_value_unset (&s);
     }
-
-    ret = g_value_dup_string (&s);
-    g_value_unset (&s);
-
-    return ret;
   }
+  return ret;
 }
 
 static gboolean
