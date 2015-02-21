@@ -73,6 +73,11 @@
     <xi:include href="xml/element-ofa.xml" />
     <xi:include href="xml/element-openalsrc.xml" />
     <xi:include href="xml/element-openalsink.xml" />
+    <xi:include href="xml/element-opusdec.xml" />
+    <xi:include href="xml/element-opusenc.xml" />
+    <xi:include href="xml/element-opusparse.xml" />
+    <xi:include href="xml/element-rtpopuspay.xml" />
+    <xi:include href="xml/element-rtpopusdepay.xml" />
     <xi:include href="xml/element-pcapparse.xml" />
     <xi:include href="xml/element-pinch.xml" />
     <xi:include href="xml/element-pyramidsegment.xml" />
@@ -139,6 +144,7 @@
     <xi:include href="xml/plugin-ofa.xml" />
     <xi:include href="xml/plugin-openal.xml" />
     <xi:include href="xml/plugin-opencv.xml" />
+    <xi:include href="xml/plugin-opus.xml" />
     <xi:include href="xml/plugin-pcapparse.xml" />
     <xi:include href="xml/plugin-rawparse.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />
