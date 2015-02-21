@@ -134,7 +134,7 @@ _ges_get_asset_from_timeline (GESTimeline * timeline, GType type,
 GESLayer *
 _ges_get_layer_by_priority (GESTimeline * timeline, gint priority)
 {
-  GList *layers, *tmp;
+  GList *layers;
   gint nlayers;
   GESLayer *layer = NULL;
 
