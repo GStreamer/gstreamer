@@ -47,6 +47,9 @@ void              gst_flow_combiner_free (GstFlowCombiner * combiner);
 
 GstFlowReturn     gst_flow_combiner_update_flow (GstFlowCombiner * combiner, GstFlowReturn fret);
 
+GstFlowReturn     gst_flow_combiner_update_pad_flow (GstFlowCombiner * combiner, GstPad * pad,
+                                                     GstFlowReturn fret);
+
 void              gst_flow_combiner_add_pad    (GstFlowCombiner * combiner, GstPad * pad);
 
 void              gst_flow_combiner_remove_pad (GstFlowCombiner * combiner, GstPad * pad);

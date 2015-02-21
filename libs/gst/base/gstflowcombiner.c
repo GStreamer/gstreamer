@@ -253,6 +253,34 @@ gst_flow_combiner_update_flow (GstFlowCombiner * combiner, GstFlowReturn fret)
 }
 
 /**
+ * gst_flow_combiner_update_pad_flow:
+ * @combiner: the #GstFlowCombiner
+ * @pad: the #GstPad whose #GstFlowReturn to update
+ * @fret: the latest #GstFlowReturn received for a pad in this #GstFlowCombiner
+ *
+ * Sets the provided pad's last flow return to provided value and computes
+ * the combined flow return for the pads in it.
+ *
+ * The #GstFlowReturn parameter should be the last flow return update for a pad
+ * in this #GstFlowCombiner. It will use this value to be able to shortcut some
+ * combinations and avoid looking over all pads again. e.g. The last combined
+ * return is the same as the latest obtained #GstFlowReturn.
+ *
+ * Returns: The combined #GstFlowReturn
+ * Since: 1.6
+ */
+GstFlowReturn
+gst_flow_combiner_update_pad_flow (GstFlowCombiner * combiner, GstPad * pad,
+    GstFlowReturn fret)
+{
+  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
+
+  GST_PAD_LAST_FLOW_RETURN (pad) = fret;
+
+  return gst_flow_combiner_update_flow (combiner, fret);
+}
+
+/**
  * gst_flow_combiner_add_pad:
  * @combiner: the #GstFlowCombiner
  * @pad: (transfer none): the #GstPad that is being added
