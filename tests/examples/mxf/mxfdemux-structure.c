@@ -177,8 +177,8 @@ on_pad_added (GstElement * src, GstPad * pad, gpointer data)
   gst_object_unref (bin);
 }
 
-gint
-main (gint argc, gchar ** argv)
+int
+main (int argc, char **argv)
 {
   GstElement *pipeline, *src, *mxfdemux;
   GstBus *bus;
@@ -189,8 +189,8 @@ main (gint argc, gchar ** argv)
     return -1;
   }
 
-  gst_init (NULL, NULL);
-  gtk_init (NULL, NULL);
+  gst_init (&argc, &argv);
+  gtk_init (&argc, &argv);
 
   pipeline = gst_pipeline_new ("pipeline");
 
