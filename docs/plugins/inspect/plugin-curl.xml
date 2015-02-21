@@ -55,6 +55,21 @@
       </pads>
     </element>
     <element>
+      <name>curlsftpsink</name>
+      <longname>Curl sftp sink</longname>
+      <class>Sink/Network</class>
+      <description>Upload data over the SFTP protocol using libcurl</description>
+      <author>Sorin L. &lt;sorin@axis.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>curlsmtpsink</name>
       <longname>Curl smtp sink</longname>
       <class>Sink/Network</class>

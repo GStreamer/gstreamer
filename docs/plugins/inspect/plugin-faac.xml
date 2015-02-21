@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)4, channels=(int)[ 1, 6 ], rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000 }, stream-format=(string){ adts, raw }, base-profile=(string){ main, lc, ssr, ltp }; audio/mpeg, mpegversion=(int)2, channels=(int)[ 1, 6 ], rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000 }, stream-format=(string){ adts, raw }, profile=(string){ main, lc }</details>
+          <details>audio/mpeg, mpegversion=(int)4, channels=(int)[ 1, 6 ], rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000 }, stream-format=(string){ adts, raw }, base-profile=(string){ main, lc, ssr, ltp }, framed=(boolean)true; audio/mpeg, mpegversion=(int)2, channels=(int)[ 1, 6 ], rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000 }, stream-format=(string){ adts, raw }, profile=(string){ main, lc }, framed=(boolean)true</details>
         </caps>
       </pads>
     </element>

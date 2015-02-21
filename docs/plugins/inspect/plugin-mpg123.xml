@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int){ 1 }, layer=(int)[ 1, 3 ], rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ], parsed=(boolean)true</details>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ], parsed=(boolean)true</details>
         </caps>
         <caps>
           <name>src</name>

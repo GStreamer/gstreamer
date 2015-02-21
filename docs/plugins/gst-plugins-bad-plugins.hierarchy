@@ -3,6 +3,7 @@ GObject
     GstObject
       GstAllocator
         GstAllocatorSysmem
+        GstVdpVideoAllocator
         GstWlShmAllocator
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
@@ -27,18 +28,19 @@ GObject
         GstAssRender
         GstAudioDecoder
           ADPCMDec
-          GstCeltDec
           GstDtsDec
           GstFaad
           GstGSMDec
           GstMpg123AudioDec
           GstOpusDec
+          GstSbcDec
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
-          GstCeltEnc
+          GstFaac
           GstGSMEnc
           GstOpusEnc
+          GstSbcEnc
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
@@ -70,6 +72,8 @@ GObject
           GstChecksumSink
           GstCurlBaseSink
             GstCurlFileSink
+            GstCurlSshSink
+              GstCurlSftpSink
             GstCurlTlsSink
               GstCurlFtpSink
               GstCurlHttpSink
@@ -78,58 +82,22 @@ GObject
           GstInterAudioSink
           GstInterSubSink
           GstInterVideoSink
-          GstLADSPASink
-            ladspasink-cmt-so-null-ai
-            ladspasink-cmt-so-peak
-            ladspasink-cmt-so-track-max-peak
-            ladspasink-cmt-so-track-max-rms
-            ladspasink-cmt-so-track-peak
-            ladspasink-cmt-so-track-rms
-            ladspasink-multiplexer-4420-so-mux-cr
           GstRTMPSink
           GstShmSink
           GstVideoSink
-            GstDfbVideoSink
             GstFBDEVSink
             GstGLImageSink
             GstWaylandSink
         GstBaseSrc
           GstAvdtpSrc
-          GstDTMFSrc
           GstDataURISrc
           GstFliteTestSrc
           GstInterAudioSrc
           GstInterSubSrc
           GstInterVideoSrc
           GstLADSPASource
-            ladspasrc-analogue-osc-1416-so-analogueosc
-            ladspasrc-caps-so-ceo
-            ladspasrc-caps-so-click
-            ladspasrc-caps-so-fractal
-            ladspasrc-caps-so-sin
-            ladspasrc-caps-so-white
-            ladspasrc-cmt-so-analogue
-            ladspasrc-cmt-so-logistic
-            ladspasrc-cmt-so-noise-source-white
-            ladspasrc-cmt-so-null-ao
-            ladspasrc-cmt-so-organ
-            ladspasrc-cmt-so-phasemod
-            ladspasrc-cmt-so-pink-full-frequency
-            ladspasrc-cmt-so-pink-interpolated-audio
-            ladspasrc-cmt-so-pink-sh
-            ladspasrc-cmt-so-sine-fcac
-            ladspasrc-cmt-so-syndrum
-            ladspasrc-dahdsr-2021-so-dahdsr-cg+t-control
-            ladspasrc-impulse-1885-so-impulse-fc
-            ladspasrc-interpolator-1660-so-interpolator
             ladspasrc-noise-so-noise-white
-            ladspasrc-pulse-1645-so-pulse-fcpc-oa
-            ladspasrc-random-1661-so-random-fcsc-oa
-            ladspasrc-sawtooth-1641-so-sawtooth-fc-oa
-            ladspasrc-sin-cos-1881-so-sincos
             ladspasrc-sine-so-sine-fcac
-            ladspasrc-square-1643-so-square-fc-oa
-            ladspasrc-triangle-1649-so-triangle-fcsc-oa
           GstPushSrc
             GstAudioBaseSrc
               GstAudioSrc
@@ -144,320 +112,25 @@ GObject
             GstRfbSrc
             GstShmSrc
             GstVCDSrc
-          GstRTPDTMFSrc
         GstBaseTransform
           GstAudioFilter
             GstAccurip
             GstAudioChannelMix
             GstBPMDetect
-            GstBs2b
+            GstChromaprint
             GstLADSPAFilter
-              ladspa-adenv-lvl-so-adenv-lvl
-              ladspa-adenv-so-adenv
-              ladspa-adsr-1653-so-adsr
-              ladspa-adsr-1680-so-adsr-g+t
-              ladspa-alias-1407-so-alias
-              ladspa-allpass-1895-so-allpass-c
-              ladspa-allpass-1895-so-allpass-l
-              ladspa-allpass-1895-so-allpass-n
-              ladspa-am-pitchshift-1433-so-ampitchshift
-              ladspa-amp-1181-so-amp
-              ladspa-amp-1654-so-amp-gaia-oa
-              ladspa-amp-1654-so-amp-gcia-oa
               ladspa-amp-so-amp-mono
               ladspa-amp-so-amp-stereo
-              ladspa-autowah-so-autowah
-              ladspa-bandpass-a-iir-1893-so-bandpass-a-iir
-              ladspa-bandpass-iir-1892-so-bandpass-iir
-              ladspa-blepvco-so-sync-rect-vco
-              ladspa-blepvco-so-sync-saw-vco
-              ladspa-blepvco-so-sync-tri-vco
-              ladspa-blvco-so-pulse-vco
-              ladspa-blvco-so-rec-vco
-              ladspa-blvco-so-saw-vco
-              ladspa-bode-shifter-1431-so-bodeshifter
-              ladspa-bode-shifter-cv-1432-so-bodeshiftercv
-              ladspa-branch-1673-so-branch-ia-oaoa
-              ladspa-butterworth-1902-so-butthigh-iir
-              ladspa-butterworth-1902-so-buttlow-iir
-              ladspa-butterworth-1902-so-bwxover-iir
-              ladspa-caps-so-ampvts
-              ladspa-caps-so-autofilter
-              ladspa-caps-so-cabinetiv
-              ladspa-caps-so-chorusi
-              ladspa-caps-so-compress
-              ladspa-caps-so-compressx2
-              ladspa-caps-so-eq10
-              ladspa-caps-so-eq10x2
-              ladspa-caps-so-eq4p
-              ladspa-caps-so-narrower
-              ladspa-caps-so-noisegate
-              ladspa-caps-so-phaserii
-              ladspa-caps-so-plate
-              ladspa-caps-so-platex2
-              ladspa-caps-so-saturate
-              ladspa-caps-so-scape
-              ladspa-caps-so-spice
-              ladspa-caps-so-spicex2
-              ladspa-caps-so-tonestack
-              ladspa-caps-so-wider
-              ladspa-chebstortion-1430-so-chebstortion
-              ladspa-cmt-so-am
-              ladspa-cmt-so-amp-mono
-              ladspa-cmt-so-amp-stereo
-              ladspa-cmt-so-bf-rotate-z
-              ladspa-cmt-so-bf2cube
-              ladspa-cmt-so-bf2quad
-              ladspa-cmt-so-bf2stereo
-              ladspa-cmt-so-canyon-delay
-              ladspa-cmt-so-compress-peak
-              ladspa-cmt-so-compress-rms
-              ladspa-cmt-so-delay-0-01s
-              ladspa-cmt-so-delay-0-1s
-              ladspa-cmt-so-delay-1s
-              ladspa-cmt-so-delay-5s
-              ladspa-cmt-so-delay-60s
-              ladspa-cmt-so-disintegrator
-              ladspa-cmt-so-encode-bformat
-              ladspa-cmt-so-encode-fmh
-              ladspa-cmt-so-expand-peak
-              ladspa-cmt-so-expand-rms
-              ladspa-cmt-so-fbdelay-0-01s
-              ladspa-cmt-so-fbdelay-0-1s
-              ladspa-cmt-so-fbdelay-1s
-              ladspa-cmt-so-fbdelay-5s
-              ladspa-cmt-so-fbdelay-60s
-              ladspa-cmt-so-fmh-rotate-z
-              ladspa-cmt-so-fmh2bf
-              ladspa-cmt-so-fmh2oct
-              ladspa-cmt-so-freeverb3
-              ladspa-cmt-so-grain-scatter
-              ladspa-cmt-so-hard-gate
-              ladspa-cmt-so-hpf
-              ladspa-cmt-so-identity-audio
-              ladspa-cmt-so-limit-peak
-              ladspa-cmt-so-limit-rms
-              ladspa-cmt-so-lofi
-              ladspa-cmt-so-lpf
-              ladspa-cmt-so-mixer
-              ladspa-cmt-so-sine-faaa
-              ladspa-cmt-so-sine-faac
-              ladspa-cmt-so-sine-fcaa
-              ladspa-cmt-so-sledgehammer
-              ladspa-cmt-so-vcf303
-              ladspa-cmt-so-wshape-sine
-              ladspa-comb-1190-so-comb
-              ladspa-comb-1887-so-comb-c
-              ladspa-comb-1887-so-comb-l
-              ladspa-comb-1887-so-comb-n
-              ladspa-comb-splitter-1411-so-combsplitter
-              ladspa-comparison-4440-so-comp-aa
-              ladspa-comparison-4440-so-comp-ac
-              ladspa-const-1909-so-const
-              ladspa-crossover-dist-1404-so-crossoverdist
-              ladspa-cs-chorus-so-chorus1
-              ladspa-cs-chorus-so-chorus2
-              ladspa-cs-chorus-so-triplechorus
-              ladspa-cs-phaser-so-phaser1
-              ladspa-cs-phaser-so-phaser1+lfo
-              ladspa-dahdsr-2021-so-dahdsr-g+t-audio
-              ladspa-dahdsr-2021-so-dahdsr-g+t-control
-              ladspa-dahdsr-fexp-so-dahdsr-fexp
-              ladspa-dahdsr-hexp-so-dahdsr-hexp
-              ladspa-dc-remove-1207-so-dcremove
-              ladspa-decay-1886-so-decay
-              ladspa-decimator-1202-so-decimator
-              ladspa-declip-1195-so-declip
-              ladspa-delay-1898-so-delay-c
-              ladspa-delay-1898-so-delay-l
-              ladspa-delay-1898-so-delay-n
               ladspa-delay-so-delay-5s
-              ladspa-delayorama-1402-so-delayorama
-              ladspa-difference-2030-so-difference-iama-oa
-              ladspa-difference-2030-so-difference-iamc-oa
-              ladspa-difference-2030-so-difference-icma-oa
-              ladspa-diode-1185-so-diode
-              ladspa-divider-1186-so-divider
-              ladspa-dj-eq-1901-so-dj-eq
-              ladspa-dj-eq-1901-so-dj-eq-mono
-              ladspa-dj-flanger-1438-so-djflanger
-              ladspa-dyson-compress-1403-so-dysoncompress
-              ladspa-fad-delay-1192-so-faddelay
-              ladspa-fast-crossfade-4410-so-fast-xfade
-              ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter
               ladspa-filter-so-hpf
               ladspa-filter-so-lpf
-              ladspa-filters-so-parametric1
-              ladspa-flanger-1191-so-flanger
-              ladspa-fm-osc-1415-so-fmosc
-              ladspa-fmod-1656-so-fmod-fama-oa
-              ladspa-fmod-1656-so-fmod-famc-oa
-              ladspa-fmod-1656-so-fmod-fcma-oa
-              ladspa-foldover-1213-so-foldover
-              ladspa-formant-filter-4300-so-formant-vc
-              ladspa-foverdrive-1196-so-foverdrive
-              ladspa-freq-tracker-1418-so-freqtracker
-              ladspa-gate-1410-so-gate
-              ladspa-giant-flange-1437-so-giantflange
-              ladspa-gong-1424-so-gong
-              ladspa-gong-beater-1439-so-gongbeater
-              ladspa-gsm-1215-so-gsm
-              ladspa-gverb-1216-so-gverb
-              ladspa-hard-limiter-1413-so-hardlimiter
-              ladspa-harmonic-gen-1220-so-harmonicgen
-              ladspa-hermes-filter-1200-so-hermesfilter
-              ladspa-highpass-iir-1890-so-highpass-iir
-              ladspa-hilbert-1440-so-hilbert
-              ladspa-hz-voct-4200-so-hz-voct-ar
-              ladspa-imp-1199-so-imp
-              ladspa-inv-1429-so-inv
-              ladspa-inv-compressor-so-invada-mono-compressor-module-0-1
-              ladspa-inv-compressor-so-invada-stereo-compressor-module-0-1
-              ladspa-inv-erreverb-so-invada-mono-reverber-module-0-1
-              ladspa-inv-erreverb-so-invada-sum-reverber-module-0-1
-              ladspa-inv-filter-so-invada-hp-mono-filter-module-0-1
-              ladspa-inv-filter-so-invada-hp-stereo-filter-module-0-1
-              ladspa-inv-filter-so-invada-lp-mono-filter-module-0-1
-              ladspa-inv-filter-so-invada-lp-stereo-filter-module-0-1
-              ladspa-inv-input-so-invada-stereo-input-module-0-1
-              ladspa-inv-tube-so-invada-mono-tube-module-0-1
-              ladspa-inv-tube-so-invada-stereo-tube-module-0-1
-              ladspa-karaoke-1409-so-karaoke
-              ladspa-latency-1914-so-artificiallatency
-              ladspa-lcr-delay-1436-so-lcrdelay
-              ladspa-lowpass-iir-1891-so-lowpass-iir
-              ladspa-lp4pole-1671-so-lp4pole-faraia-oa
-              ladspa-lp4pole-1671-so-lp4pole-fcrcia-oa
-              ladspa-ls-filter-1908-so-lsfilter
-              ladspa-masher-4310-so-ssm-masher
-              ladspa-matrix-ms-st-1421-so-matrixmsst
-              ladspa-matrix-spatialiser-1422-so-matrixspatialiser
-              ladspa-matrix-st-ms-1420-so-matrixstms
-              ladspa-mbeq-1197-so-mbeq
-              ladspa-mod-delay-1419-so-moddelay
-              ladspa-multiplexer-4420-so-mux-ar
-              ladspa-multivoice-chorus-1201-so-multivoicechorus
-              ladspa-mvchpf24-so-mvchpf-1
-              ladspa-mvclpf24-so-mvclpf-1
-              ladspa-mvclpf24-so-mvclpf-2
-              ladspa-mvclpf24-so-mvclpf-3
-              ladspa-mvclpf24-so-mvclpf-4
-              ladspa-notch-iir-1894-so-notch-iir
-              ladspa-phasers-1217-so-autophaser
-              ladspa-phasers-1217-so-fourbyfourpole
-              ladspa-phasers-1217-so-lfophaser
-              ladspa-pitch-scale-1193-so-pitchscale
-              ladspa-pitch-scale-1194-so-pitchscalehq
-              ladspa-plate-1423-so-plate
-              ladspa-pointer-cast-1910-so-pointercastdistortion
-              ladspa-power-4400-so-power
-              ladspa-prob-switch-2667-so-prob-switch-ar
-              ladspa-prob-switch-2667-so-prob-switch-cr
-              ladspa-product-1668-so-product-iaia-oa
-              ladspa-product-1668-so-product-iaic-oa
-              ladspa-pulse-1645-so-pulse-fapa-oa
-              ladspa-pulse-1645-so-pulse-fapc-oa
-              ladspa-pulse-1645-so-pulse-fcpa-oa
-              ladspa-quantiser100-2029-so-quantiser100
-              ladspa-quantiser20-2027-so-quantiser20
-              ladspa-quantiser50-2028-so-quantiser50
-              ladspa-random-1661-so-random-fasa-oa
-              ladspa-random-1661-so-random-fasc-oa
-              ladspa-random-1661-so-random-fcsa-oa
-              ladspa-range-trans-4210-so-range-trans-ar
-              ladspa-range-trans-4210-so-range-trans-cr
-              ladspa-rate-shifter-1417-so-rateshifter
-              ladspa-ratio-2034-so-ratio-nada-oa
-              ladspa-ratio-2034-so-ratio-nadc-oa
-              ladspa-ratio-2034-so-ratio-ncda-oa
-              ladspa-retro-flange-1208-so-retroflange
-              ladspa-revdelay-1605-so-revdelay
-              ladspa-ringmod-1188-so-ringmod-1i1o1l
-              ladspa-ringmod-1188-so-ringmod-2i1o
-              ladspa-sample-and-hold-4430-so-sh-ar
-              ladspa-sample-and-hold-4430-so-sh-cr
-              ladspa-satan-maximiser-1408-so-satanmaximiser
-              ladspa-sawtooth-1641-so-sawtooth-fa-oa
-              ladspa-sc1-1425-so-sc1
-              ladspa-sc2-1426-so-sc2
-              ladspa-sc3-1427-so-sc3
-              ladspa-sc4-1882-so-sc4
-              ladspa-sc4m-1916-so-sc4m
-              ladspa-se4-1883-so-se4
-              ladspa-sequencer16-1677-so-sequencer16
-              ladspa-sequencer32-1676-so-sequencer32
-              ladspa-sequencer64-1675-so-sequencer64
-              ladspa-shaper-1187-so-shaper
-              ladspa-sifter-1210-so-sifter
-              ladspa-signal-abs-2669-so-signal-abs-ar
-              ladspa-signal-abs-2669-so-signal-abs-cr
               ladspa-sine-so-sine-faaa
               ladspa-sine-so-sine-faac
               ladspa-sine-so-sine-fcaa
-              ladspa-single-para-1203-so-singlepara
-              ladspa-sinus-wavewrapper-1198-so-sinuswavewrapper
-              ladspa-slew-limiter-2743-so-slew-limiter-ra
-              ladspa-slew-limiter-2743-so-slew-limiter-rc
-              ladspa-slide-2741-so-slide-ta
-              ladspa-slide-2741-so-slide-tc
-              ladspa-smooth-decimate-1414-so-smoothdecimate
-              ladspa-split-1406-so-split
-              ladspa-square-1643-so-square-fa-oa
-              ladspa-step-muxer-1212-so-stepmuxer
-              ladspa-sum-1665-so-sum-iaia-oa
-              ladspa-sum-1665-so-sum-iaic-oa
-              ladspa-surround-encoder-1401-so-surroundencoder
-              ladspa-svf-1214-so-svf
-              ladspa-sync-pulse-2023-so-syncpulse-fapaga-oa
-              ladspa-sync-pulse-2023-so-syncpulse-fcpcga-oa
-              ladspa-sync-square-1678-so-syncsquare-faga-oa
-              ladspa-sync-square-1678-so-syncsquare-fcga-oa
-              ladspa-tap-autopan-so-tap-autopan
-              ladspa-tap-chorusflanger-so-tap-chorusflanger
-              ladspa-tap-deesser-so-tap-deesser
-              ladspa-tap-doubler-so-tap-doubler
-              ladspa-tap-dynamics-m-so-tap-dynamics-m
-              ladspa-tap-dynamics-st-so-tap-dynamics-st
-              ladspa-tap-echo-so-tap-stereo-echo
-              ladspa-tap-eq-so-tap-equalizer
-              ladspa-tap-eqbw-so-tap-equalizer-bw
-              ladspa-tap-limiter-so-tap-limiter
-              ladspa-tap-pinknoise-so-tap-pinknoise
-              ladspa-tap-pitch-so-tap-pitch
-              ladspa-tap-reflector-so-tap-reflector
-              ladspa-tap-reverb-so-tap-reverb
-              ladspa-tap-rotspeak-so-tap-rotspeak
-              ladspa-tap-sigmoid-so-tap-sigmoid
-              ladspa-tap-tremolo-so-tap-tremolo
-              ladspa-tap-tubewarmth-so-tap-tubewarmth
-              ladspa-tap-vibrato-so-tap-vibrato
-              ladspa-tape-delay-1211-so-tapedelay
-              ladspa-tracker-2025-so-tracker-gaaadaia-oa
-              ladspa-tracker-2025-so-tracker-gaacdcia-oa
-              ladspa-transient-1206-so-transient
-              ladspa-triangle-1649-so-triangle-fasa-oa
-              ladspa-triangle-1649-so-triangle-fasc-oa
-              ladspa-triangle-1649-so-triangle-fcsa-oa
-              ladspa-triple-para-1204-so-triplepara
-              ladspa-valve-1209-so-valve
-              ladspa-valve-rect-1405-so-valverect
-              ladspa-vco-sawpulse-so-pulse-vco
-              ladspa-vco-sawpulse-so-rec-vco
-              ladspa-vco-sawpulse-so-saw-vco
-              ladspa-vynil-1905-so-vynil
-              ladspa-wave-terrain-1412-so-waveterrain
-              ladspa-waveguide-mesh-2670-so-wg-mesh-cr
-              ladspa-xfade-1915-so-xfade
-              ladspa-xfade-1915-so-xfade4
-              ladspa-zita-reverbs-so-g2reverb
-              ladspa-zita-reverbs-so-zita-reverb
-              ladspa-zita-reverbs-so-zita-reverb-amb
-              ladspa-zm1-1428-so-zm1
             GstOFA
             GstStereo
           GstBayer2RGB
           GstDebugSpy
-          GstDtmfDetect
           GstFreeverb
           GstGLFilter
             GstGLColorscale
@@ -526,7 +199,6 @@ GObject
             GstSolarize
             GstVideoAnalyse
             GstVideoDiff
-            GstZBar
             GstZebraStripe
           GstWatchdog
           GstYadif
@@ -577,14 +249,15 @@ GObject
         GstMimEnc
         GstModPlug
         GstMotioncells
+        GstMpeg2enc
         GstMpegPSDemux
+        GstMplex
         GstOpencvTextOverlay
         GstPcapParse
         GstPitch
         GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
-          GstRtpDTMFDepay
           GstRtpH265Depay
         GstRTPBasePayload
           GstRtpAsfPay
@@ -599,14 +272,16 @@ GObject
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
-        GstSpanPlc
         GstSpeed
         GstSrtEnc
+        GstSrtpDec
+        GstSrtpEnc
         GstTagMux
           GstId3Mux
         GstTemplateMatch
         GstUvcH264MjpgDemux
         GstVideoDecoder
+          GstLibde265Dec
           GstOpenEXRDec
           GstOpenJPEGDec
           GstOpenh264Dec
@@ -614,6 +289,8 @@ GObject
           GstRsvgDec
           GstSchroDec
           GstVMncDec
+          GstVdpDecoder
+            GstVdpMpegDec
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
@@ -646,8 +323,8 @@ GObject
       GstRegistry
       GstTask
       GstTaskPool
-  GstColorBalanceChannel
   GstEncodingProfile
+  GstVdpDevice
   MXFMetadataBase
     MXFDescriptiveMetadata
       MXFDMS1
@@ -724,7 +401,6 @@ GObject
 GInterface
   GTypePlugin
   GstChildProxy
-  GstColorBalance
   GstNavigation
   GstPreset
   GstTagSetter

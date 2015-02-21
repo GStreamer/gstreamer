@@ -1349,6 +1349,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstGLImageSink::handle-events</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Handle XEvents</NICK>
+<BLURB>When enabled, XEvents will be selected and handled.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLImageSink::ignore-alpha</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore Alpha</NICK>
+<BLURB>When enabled, alpha will be ignored and converted to black.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRgAnalysis::forced</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -1754,7 +1774,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>modulation</NICK>
-<BLURB>(DVB-T and DVB-C) Modulation type.</BLURB>
+<BLURB>(DVB-T/T2/C/S2, TURBO and ATSC) Modulation type.</BLURB>
 <DEFAULT>QAM 16</DEFAULT>
 </ARG>
 
@@ -2156,6 +2176,16 @@
 <NICK>Tuning Timeout</NICK>
 <BLURB>LNB's Upper bound for low band reception (kHz).</BLURB>
 <DEFAULT>11700000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::interleaving</NAME>
+<TYPE>GstDvbSrcInterleaving</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DTMB Interleaving</NICK>
+<BLURB>(DTMB) Interleaving type.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18054,7 +18084,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>modulation</NICK>
-<BLURB>(DVB-T and DVB-C) Modulation type.</BLURB>
+<BLURB>(DVB-T/T2/C/S2, TURBO and ATSC) Modulation type.</BLURB>
 <DEFAULT>QAM 16</DEFAULT>
 </ARG>
 
@@ -18376,6 +18406,16 @@
 <NICK>Tuning Timeout</NICK>
 <BLURB>LNB's Upper bound for low band reception (kHz).</BLURB>
 <DEFAULT>11700000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::interleaving</NAME>
+<TYPE>GstDvbSrcInterleaving</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DTMB Interleaving</NICK>
+<BLURB>(DTMB) Interleaving type.</BLURB>
+<DEFAULT>AUTO</DEFAULT>
 </ARG>
 
 <ARG>
@@ -47399,6 +47439,36 @@
 </ARG>
 
 <ARG>
+<NAME>MpegTSParse2::pcr-pid</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PID containing PCR</NICK>
+<BLURB>Set the PID to use for PCR values (-1 for auto).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>MpegTSParse2::set-timestamps</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp (or re-timestamp) the output stream</NICK>
+<BLURB>If set, timestamps will be set on the output buffers using PCRs and smoothed over the smoothing-latency period.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>MpegTSParse2::smoothing-latency</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Smoothing Latency</NICK>
+<BLURB>Additional latency in microseconds for smoothing jitter in input timestamps on live capture.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstTSDemux::emit-stats</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -58183,8 +58253,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Audio or voice</NICK>
-<BLURB>Audio or voice.</BLURB>
+<NICK>Audio or voice (obsolete, use audio-type)</NICK>
+<BLURB>Audio or voice (obsolete, use audio-type).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -58289,6 +58359,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstOpusEnc::audio-type</NAME>
+<TYPE>GstOpusEncAudioType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>What type of audio to optimize for</NICK>
+<BLURB>What type of audio to optimize for.</BLURB>
+<DEFAULT>Generic audio</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstOpusDec::apply-gain</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -58316,6 +58396,16 @@
 <NICK>Channel</NICK>
 <BLURB>Channel name to match inter src and sink elements.</BLURB>
 <DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterVideoSrc::timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timeout</NICK>
+<BLURB>Timeout after which to start outputting black frames.</BLURB>
+<DEFAULT>1000000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58356,6 +58446,36 @@
 <NICK>Channel</NICK>
 <BLURB>Channel name to match inter src and sink elements.</BLURB>
 <DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterAudioSrc::buffer-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Time</NICK>
+<BLURB>Size of audio buffer.</BLURB>
+<DEFAULT>1000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterAudioSrc::latency-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Latency Time</NICK>
+<BLURB>Latency as reported by the source.</BLURB>
+<DEFAULT>100000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterAudioSrc::period-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Period Time</NICK>
+<BLURB>The minimum amount of data to read in each iteration.</BLURB>
+<DEFAULT>25000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58716,6 +58836,16 @@
 <NICK>Updates</NICK>
 <BLURB>When send update bus messages, if at all.</BLURB>
 <DEFAULT>Send update messages on every frame</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::min-stddev</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum image standard deviation</NICK>
+<BLURB>Minimum image average standard deviation: on images with standard deviation lesser than this value facedetection will not be performed. Setting this property help to save cpu and reduce false positives not performing face detection on images with little changes.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60000,6 +60130,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Block Size</NICK>
 <BLURB>Output block size in number of samples.</BLURB>
 <DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioMixer::output-buffer-duration</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Buffer Duration</NICK>
+<BLURB>Output block size in nanoseconds.</BLURB>
+<DEFAULT>10000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -66847,8 +66987,8 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Location of the image</NICK>
-<BLURB>Location of the image.</BLURB>
+<NICK>location</NICK>
+<BLURB>Location of image file to overlay.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -66957,6 +67097,76 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>Y position of overlay video in percents</NICK>
 <BLURB>Y position of overlay video in percents.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLOverlay::alpha</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha</NICK>
+<BLURB>Global alpha of overlay image.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLOverlay::offset-x</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X Offset</NICK>
+<BLURB>For positive value, horizontal offset of overlay image in pixels from left of video image. For negative value, horizontal offset of overlay image in pixels from right of video image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLOverlay::offset-y</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y Offset</NICK>
+<BLURB>For positive value, vertical offset of overlay image in pixels from top of video image. For negative value, vertical offset of overlay image in pixels from bottom of video image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLOverlay::overlay-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlay Height</NICK>
+<BLURB>Height of overlay image in pixels (0 = same as overlay image).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLOverlay::overlay-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlay Width</NICK>
+<BLURB>Width of overlay image in pixels (0 = same as overlay image).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLOverlay::relative-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Relative X Offset</NICK>
+<BLURB>Horizontal offset of overlay image in fractions of video image width, from top-left corner of video image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLOverlay::relative-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Relative Y Offset</NICK>
+<BLURB>Vertical offset of overlay image in fractions of video image height, from top-left corner of video image.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -67076,7 +67286,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Green</NICK>
-<BLURB>Background reen color.</BLURB>
+<BLURB>Background green color.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -67240,3 +67450,322 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <DEFAULT>4</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstRtpH265Pay::config-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VPS SPS PPS Send Interval</NICK>
+<BLURB>Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpH265Pay::sprop-parameter-sets</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>sprop-parameter-sets</NICK>
+<BLURB>The base64 sprop-parameter-sets to set in out caps (set to NULL to extract from stream).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpOnvifTimestamp::cseq</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CSeq</NICK>
+<BLURB>The RTSP CSeq which initiated the playback.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpOnvifTimestamp::ntp-offset</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>NTP offset</NICK>
+<BLURB>Offset between the pipeline running time and the absolute UTC time, in nano-seconds since 1900 (-1 for automatic computation).</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpOnvifTimestamp::set-e-bit</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Set 'E' bit</NICK>
+<BLURB>If the element should set the 'E' bit as defined in the ONVIF RTP extension. This increases latency by one packet.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSrc::buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,G_MAXINT]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of internal buffer in number of video frames.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSrc::connection</NAME>
+<TYPE>GstDecklinkConnection</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Connection</NICK>
+<BLURB>Video input connection to use.</BLURB>
+<DEFAULT>auto</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSrc::device-number</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Device number</NICK>
+<BLURB>Output device instance to use.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSrc::mode</NAME>
+<TYPE>GstDecklinkModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Playback Mode</NICK>
+<BLURB>Video Mode to use for playback.</BLURB>
+<DEFAULT>auto</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSink::device-number</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Device number</NICK>
+<BLURB>Output device instance to use.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSink::mode</NAME>
+<TYPE>GstDecklinkModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Playback Mode</NICK>
+<BLURB>Video Mode to use for playback.</BLURB>
+<DEFAULT>ntsc</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSrc::alignment-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551614</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alignment Threshold</NICK>
+<BLURB>Timestamp alignment threshold in nanoseconds.</BLURB>
+<DEFAULT>40000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSrc::buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,G_MAXINT]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of internal buffer in number of video frames.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSrc::connection</NAME>
+<TYPE>GstDecklinkAudioConnection</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Connection</NICK>
+<BLURB>Audio input connection to use.</BLURB>
+<DEFAULT>auto</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSrc::device-number</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Device number</NICK>
+<BLURB>Output device instance to use.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSrc::discont-wait</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551614</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Discont Wait</NICK>
+<BLURB>Window of time in nanoseconds to wait before creating a discontinuity.</BLURB>
+<DEFAULT>1000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSink::device-number</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Device number</NICK>
+<BLURB>Output device instance to use.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::adaptive-quantization</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Adaptive quantization</NICK>
+<BLURB>Adaptive quantization.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::background-detection</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Background detection</NICK>
+<BLURB>Background detection.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::bitrate</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate</NICK>
+<BLURB>Bitrate (in bits per second).</BLURB>
+<DEFAULT>128000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::deblocking</NAME>
+<TYPE>GstOpenh264encDeblockingModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Deblocking mode</NICK>
+<BLURB>Deblocking mode.</BLURB>
+<DEFAULT>Deblocking on</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::enable-denoise</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Denoise Control</NICK>
+<BLURB>Denoise control.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::enable-frame-skip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip Frames</NICK>
+<BLURB>Skip frames to reach target bitrate.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::gop-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GOP size</NICK>
+<BLURB>Number of frames between intra frames.</BLURB>
+<DEFAULT>90</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::max-slice-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max slice size</NICK>
+<BLURB>The maximum size of one slice (in bytes).</BLURB>
+<DEFAULT>1500000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::multi-thread</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of threads</NICK>
+<BLURB>The number of threads.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::num-slices</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of slices</NICK>
+<BLURB>The number of slices (needs slice-mode=n-slices).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::rate-control</NAME>
+<TYPE>RC_MODES</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rate control</NICK>
+<BLURB>Rate control mode.</BLURB>
+<DEFAULT>Quality mode</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::scene-change-detection</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scene change detection</NICK>
+<BLURB>Scene change detection.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::slice-mode</NAME>
+<TYPE>GstOpenh264encSliceModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Slice mode</NICK>
+<BLURB>Slice mode.</BLURB>
+<DEFAULT>num-slices slices</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenh264Enc::usage-type</NAME>
+<TYPE>EUsageType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Usage type</NICK>
+<BLURB>Type of video content.</BLURB>
+<DEFAULT>video from camera</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLibde265Dec::max-threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum decode threads</NICK>
+<BLURB>Maximum number of worker threads to spawn. (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>

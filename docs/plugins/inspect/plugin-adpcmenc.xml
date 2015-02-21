@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-adpcm, layout=(string){ dvi }, block_align=(int)[ 64, 8192 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-adpcm, layout=(string)dvi, block_align=(int)[ 64, 8192 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>

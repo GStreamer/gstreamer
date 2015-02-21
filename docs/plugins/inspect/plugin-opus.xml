@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string){ S16LE }, layout=(string)interleaved, rate=(int){ 48000, 24000, 16000, 12000, 8000 }, channels=(int)[ 1, 8 ]</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 48000, 24000, 16000, 12000, 8000 }, channels=(int)[ 1, 8 ]</details>
         </caps>
       </pads>
     </element>
@@ -83,7 +83,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)48000, encoding-name=(string)X-GST-OPUS-DRAFT-SPITTKA-00</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)48000, encoding-name=(string){ OPUS, X-GST-OPUS-DRAFT-SPITTKA-00 }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -110,7 +110,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)48000, encoding-name=(string)X-GST-OPUS-DRAFT-SPITTKA-00</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)48000, encoding-name=(string){ OPUS, X-GST-OPUS-DRAFT-SPITTKA-00 }</details>
         </caps>
       </pads>
     </element>
