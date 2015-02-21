@@ -363,17 +363,12 @@ gst_osx_audio_sink_getcaps (GstBaseSink * sink, GstCaps * filter)
   if (buf) {
     GST_OBJECT_LOCK (buf);
 
-    if (buf->acquired && buf->spec.caps) {
-      /* Caps are fixed, use what we have */
-      ret = gst_caps_ref (buf->spec.caps);
-    }
-
-    if (!ret && buf->open && !osxsink->cached_caps) {
+    if (buf->open && !osxsink->cached_caps) {
       /* Device is open, let's probe its caps */
       gst_osx_audio_sink_probe_caps (osxsink);
     }
 
-    if (!ret && osxsink->cached_caps)
+    if (osxsink->cached_caps)
       ret = gst_caps_ref (osxsink->cached_caps);
 
     GST_OBJECT_UNLOCK (buf);
@@ -381,7 +376,10 @@ gst_osx_audio_sink_getcaps (GstBaseSink * sink, GstCaps * filter)
     gst_object_unref (buf);
   }
 
-  if (ret && filter) {
+  if (!ret)
+    ret = gst_pad_get_pad_template_caps (GST_AUDIO_BASE_SINK_PAD (osxsink));
+
+  if (filter) {
     GstCaps *tmp;
     tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (ret);
