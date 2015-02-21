@@ -104,8 +104,9 @@ create_mp4_profile (void)
   GstEncodingContainerProfile *container;
   GstCaps *caps = NULL;
 
-  caps = gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING, "iso",
-          NULL);
+  caps =
+      gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING, "iso",
+      NULL);
   container = gst_encoding_container_profile_new ("mp4", NULL, caps, NULL);
   gst_caps_unref (caps);
 
@@ -299,7 +300,6 @@ init_gtkwidgets_data (void)
 int
 main (int argc, char *argv[])
 {
-  int ret = 0;
   GError *error = NULL;
   GstBus *bus;
 
@@ -334,5 +334,5 @@ main (int argc, char *argv[])
 error:
   gst_element_set_state (camera, GST_STATE_NULL);
   gst_object_unref (camera);
-  return ret;
+  return 0;
 }
