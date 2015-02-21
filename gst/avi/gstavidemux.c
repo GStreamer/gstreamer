@@ -4634,6 +4634,8 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     GST_DEBUG_OBJECT (avi, "marking DISCONT");
     avi->stream[i].discont = TRUE;
   }
+  /* likewise for the whole new segment */
+  gst_flow_combiner_reset (avi->flowcombiner);
   GST_PAD_STREAM_UNLOCK (avi->sinkpad);
 
   return TRUE;
@@ -4998,7 +5000,7 @@ gst_avi_demux_combine_flows (GstAviDemux * avi, GstAviStream * stream,
 {
   GST_LOG_OBJECT (avi, "Stream %s:%s flow return: %s",
       GST_DEBUG_PAD_NAME (stream->pad), gst_flow_get_name (ret));
-  ret = gst_flow_combiner_update_flow (avi->flowcombiner, ret);
+  ret = gst_flow_combiner_update_pad_flow (avi->flowcombiner, stream->pad, ret);
   GST_LOG_OBJECT (avi, "combined to return %s", gst_flow_get_name (ret));
 
   return ret;
