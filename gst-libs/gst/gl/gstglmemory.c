@@ -884,13 +884,6 @@ _gl_mem_unmap (GstGLMemory * gl_mem)
 {
   g_mutex_lock (&gl_mem->lock);
 
-  if (gl_mem->map_count <= 1 && gl_mem->map_flags & GST_MAP_WRITE) {
-    if (!(gl_mem->map_flags & GST_MAP_GL)) {
-      gst_gl_context_thread_add (gl_mem->context,
-          (GstGLContextThreadFunc) _transfer_upload, gl_mem);
-    }
-  }
-
   if (--gl_mem->map_count <= 0)
     gl_mem->map_flags = 0;
 
