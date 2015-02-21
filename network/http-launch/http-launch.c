@@ -41,6 +41,7 @@ static GList *clients = NULL;
 static GstElement *pipeline = NULL;
 static GstElement *multisocketsink = NULL;
 static gboolean started = FALSE;
+static gchar content_type[256];
 
 static void
 remove_client (Client * client)
@@ -107,7 +108,7 @@ client_message (Client * client, const gchar * data, guint len)
       http_version = "HTTP/1.0";
 
     if (parts[1] && strcmp (parts[1], "/") == 0) {
-      response = g_strdup_printf ("%s 200 OK\r\n" "\r\n", http_version);
+      response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", http_version, content_type);
     } else {
       response = g_strdup_printf ("%s 404 Not Found\r\n\r\n", http_version);
     }
@@ -126,7 +127,7 @@ client_message (Client * client, const gchar * data, guint len)
       http_version = "HTTP/1.0";
 
     if (parts[1] && strcmp (parts[1], "/") == 0) {
-      response = g_strdup_printf ("%s 200 OK\r\n" "\r\n", http_version);
+      response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", http_version, content_type);
       ok = TRUE;
     } else {
       response = g_strdup_printf ("%s 404 Not Found\r\n\r\n", http_version);
@@ -377,6 +378,17 @@ main (gint argc, gchar ** argv)
     g_print ("no element with name \"stream\" found\n");
     gst_object_unref (bin);
     return -3;
+  }
+  
+  /* 
+   * Make the HTTP header 'Content-type' if we are trying to create a 
+   * MJPEG (or any other multipart) stream.
+   */
+  if ( strcmp ("GstMultipartMux", g_type_name(G_OBJECT_TYPE(stream)) ) == 0 ) {
+    strcpy (content_type, "Content-Type: "
+	      "multipart/x-mixed-replace;boundary=--ThisRandomString\r\n");
+  } else {
+    strcpy (content_type, "");
   }
 
   srcpad = gst_element_get_static_pad (stream, "src");
