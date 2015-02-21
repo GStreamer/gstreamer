@@ -41,7 +41,7 @@ static GList *clients = NULL;
 static GstElement *pipeline = NULL;
 static GstElement *multisocketsink = NULL;
 static gboolean started = FALSE;
-static gchar content_type[256];
+static gchar *content_type;
 
 static void
 remove_client (Client * client)
@@ -384,12 +384,21 @@ main (gint argc, gchar ** argv)
    * Make the HTTP header 'Content-type' if we are trying to create a 
    * MJPEG (or any other multipart) stream.
    */
+  content_type = g_strdup ("");
+
   if ( strcmp ("GstMultipartMux", g_type_name(G_OBJECT_TYPE(stream)) ) == 0 ) {
-    strcpy (content_type, "Content-Type: "
-	      "multipart/x-mixed-replace;boundary=--ThisRandomString\r\n");
-  } else {
-    strcpy (content_type, "");
+    gchar *boundary = NULL;
+    g_object_get (stream, "boundary", &boundary, NULL);
+    if (boundary == NULL) {
+      g_print ("Warning: \"boundary\" property not found in mutipartmux\n");
+    } else {
+      /* Free default empty string "" created above, and create new string */
+      g_free(content_type);
+      content_type = g_strdup_printf ("Content-Type: "
+	        "multipart/x-mixed-replace;boundary=--%s\r\n", boundary);	    
+	  }
   }
+
 
   srcpad = gst_element_get_static_pad (stream, "src");
   if (!srcpad) {
