@@ -225,6 +225,7 @@ main (int argc, char **argv)
 
   gtk_container_add (GTK_CONTAINER (scrolled_window), treeview);
   gtk_container_add (GTK_CONTAINER (window), scrolled_window);
+  gtk_widget_show_all (window);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
