@@ -124,8 +124,8 @@ insert_structure (const GstStructure * s, GtkTreeIter * iter)
   gst_structure_foreach (s, insert_field, iter);
 }
 
-static void
-on_message (GstBus * bus, GstMessage * message, gpointer data)
+static gboolean
+bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_WARNING:
@@ -160,6 +160,7 @@ on_message (GstBus * bus, GstMessage * message, gpointer data)
     default:
       break;
   }
+  return TRUE;
 }
 
 static void
@@ -212,8 +213,7 @@ main (int argc, char **argv)
   }
 
   bus = gst_element_get_bus (pipeline);
-  gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message", G_CALLBACK (on_message), NULL);
+  gst_bus_add_watch (bus, bus_callback, NULL);
   gst_object_unref (bus);
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
