@@ -108,7 +108,8 @@ client_message (Client * client, const gchar * data, guint len)
       http_version = "HTTP/1.0";
 
     if (parts[1] && strcmp (parts[1], "/") == 0) {
-      response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", http_version, content_type);
+      response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", http_version,
+        content_type);
     } else {
       response = g_strdup_printf ("%s 404 Not Found\r\n\r\n", http_version);
     }
@@ -127,7 +128,8 @@ client_message (Client * client, const gchar * data, guint len)
       http_version = "HTTP/1.0";
 
     if (parts[1] && strcmp (parts[1], "/") == 0) {
-      response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", http_version, content_type);
+      response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", http_version,
+        content_type);
       ok = TRUE;
     } else {
       response = g_strdup_printf ("%s 404 Not Found\r\n\r\n", http_version);
@@ -379,9 +381,9 @@ main (gint argc, gchar ** argv)
     gst_object_unref (bin);
     return -3;
   }
-  
-  /* 
-   * Make the HTTP header 'Content-type' if we are trying to create a 
+
+  /*
+   * Make the HTTP header 'Content-type' if we are trying to create a
    * MJPEG (or any other multipart) stream.
    */
   content_type = g_strdup ("");
@@ -395,10 +397,9 @@ main (gint argc, gchar ** argv)
       /* Free default empty string "" created above, and create new string */
       g_free(content_type);
       content_type = g_strdup_printf ("Content-Type: "
-	        "multipart/x-mixed-replace;boundary=--%s\r\n", boundary);	    
+	        "multipart/x-mixed-replace;boundary=--%s\r\n", boundary);
 	  }
   }
-
 
   srcpad = gst_element_get_static_pad (stream, "src");
   if (!srcpad) {
