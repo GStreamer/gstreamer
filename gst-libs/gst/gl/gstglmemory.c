@@ -485,45 +485,6 @@ _upload_memory (GstGLContext * context, GstGLMemory * gl_mem)
   GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
 }
 
-static void
-_transfer_upload (GstGLContext * context, GstGLMemory * gl_mem)
-{
-  const GstGLFuncs *gl;
-  gsize size;
-
-  if (!CONTEXT_SUPPORTS_PBO_UPLOAD (context))
-    /* not supported */
-    return;
-
-  gl = context->gl_vtable;
-
-  if (!gl_mem->transfer_pbo)
-    gl->GenBuffers (1, &gl_mem->transfer_pbo);
-
-  GST_DEBUG ("uploading texture %u using pbo %u",
-      gl_mem->tex_id, gl_mem->transfer_pbo);
-
-  size = ((GstMemory *) gl_mem)->maxsize;
-
-  if (USING_OPENGL (context) || USING_GLES3 (context)
-      || USING_OPENGL3 (context)) {
-    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, gl_mem->unpack_length);
-  } else if (USING_GLES2 (context)) {
-    gl->PixelStorei (GL_UNPACK_ALIGNMENT, gl_mem->unpack_length);
-  }
-
-  gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, gl_mem->transfer_pbo);
-  gl->BufferData (GL_PIXEL_UNPACK_BUFFER, size, gl_mem->data, GL_STREAM_DRAW);
-  gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
-
-  /* Reset to default values */
-  if (USING_OPENGL (context) || USING_GLES3 (context)) {
-    gl->PixelStorei (GL_UNPACK_ROW_LENGTH, 0);
-  } else if (USING_GLES2 (context)) {
-    gl->PixelStorei (GL_UNPACK_ALIGNMENT, 4);
-  }
-}
-
 static inline void
 _calculate_unpack_length (GstGLMemory * gl_mem)
 {
