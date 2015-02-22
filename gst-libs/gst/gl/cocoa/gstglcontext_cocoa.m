@@ -304,7 +304,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   pool = [[NSAutoreleasePool alloc] init];
 
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-  priv->source_id = g_timeout_add (200, gst_gl_window_cocoa_nsapp_iteration, NULL);
+  priv->source_id = g_timeout_add (60, gst_gl_window_cocoa_nsapp_iteration, NULL);
 #endif
 
   priv->gl_context = nil;
