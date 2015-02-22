@@ -239,6 +239,9 @@ struct _GstAudioDecoderPrivate
   gboolean drained;
   /* subclass currently being forcibly drained */
   gboolean force;
+  /* input_segment are output_segment identical */
+  gboolean in_out_segment_sync;
+
 
   /* input bps estimatation */
   /* global in bytes seen */
@@ -549,6 +552,7 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
 
     gst_segment_init (&dec->input_segment, GST_FORMAT_TIME);
     gst_segment_init (&dec->output_segment, GST_FORMAT_TIME);
+    dec->priv->in_out_segment_sync = TRUE;
 
     g_list_foreach (dec->priv->pending_events, (GFunc) gst_event_unref, NULL);
     g_list_free (dec->priv->pending_events);
@@ -617,6 +621,8 @@ gst_audio_decoder_push_event (GstAudioDecoder * dec, GstEvent * event)
       GST_DEBUG_OBJECT (dec, "starting segment %" GST_SEGMENT_FORMAT, &seg);
 
       dec->output_segment = seg;
+      dec->priv->in_out_segment_sync =
+          (memcmp (&dec->input_segment, &seg, sizeof (seg)) == 0);
       GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
       break;
     }
@@ -930,11 +936,15 @@ gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
       ctx->info.bpf);
   if (G_UNLIKELY (!buf)) {
     GST_DEBUG_OBJECT (dec, "no data after clipping to segment");
-    if (dec->output_segment.rate >= 0) {
-      if (ts >= dec->output_segment.stop)
+    /* only check and return EOS if upstream still
+     * in the same segment and interested as such */
+    if (dec->priv->in_out_segment_sync) {
+      if (dec->output_segment.rate >= 0) {
+        if (ts >= dec->output_segment.stop)
+          ret = GST_FLOW_EOS;
+      } else if (ts < dec->output_segment.start) {
         ret = GST_FLOW_EOS;
-    } else if (ts < dec->output_segment.start) {
-      ret = GST_FLOW_EOS;
+      }
     }
     goto exit;
   }
@@ -1102,6 +1112,8 @@ apply_pending_events (GstAudioDecoder * dec)
         GST_DEBUG_OBJECT (dec, "starting segment %" GST_SEGMENT_FORMAT, &seg);
 
         dec->output_segment = seg;
+        dec->priv->in_out_segment_sync =
+            (memcmp (&dec->input_segment, &seg, sizeof (seg)) == 0);
         GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
         break;
       }
@@ -2118,6 +2130,7 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       }
 
       /* and follow along with segment */
+      dec->priv->in_out_segment_sync = FALSE;
       dec->input_segment = seg;
       dec->priv->pending_events =
           g_list_append (dec->priv->pending_events, event);
