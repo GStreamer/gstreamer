@@ -338,6 +338,8 @@ struct _GstVideoDecoderPrivate
   gboolean had_input_data;
 
   gboolean needs_format;
+  /* input_segment are output_segment identical */
+  gboolean in_out_segment_sync;
 
   /* ... being tracked here;
    * only available during parsing */
@@ -906,6 +908,8 @@ gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
 
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       decoder->output_segment = segment;
+      decoder->priv->in_out_segment_sync =
+          (memcmp (&decoder->input_segment, &segment, sizeof (segment)) == 0);
       decoder->priv->last_timestamp_out = GST_CLOCK_TIME_NONE;
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
@@ -1168,6 +1172,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       priv->base_picture_number = 0;
 
       decoder->input_segment = segment;
+      decoder->priv->in_out_segment_sync = FALSE;
 
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
@@ -1844,6 +1849,7 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
     gst_segment_init (&decoder->input_segment, GST_FORMAT_UNDEFINED);
     gst_segment_init (&decoder->output_segment, GST_FORMAT_UNDEFINED);
     gst_video_decoder_clear_queues (decoder);
+    decoder->priv->in_out_segment_sync = TRUE;
 
     if (priv->current_frame) {
       gst_video_codec_frame_unref (priv->current_frame);
@@ -2086,6 +2092,8 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
           gst_event_copy_segment (event, &segment);
           if (segment.format == GST_FORMAT_TIME) {
             dec->output_segment = segment;
+            dec->priv->in_out_segment_sync =
+                (memcmp (&dec->input_segment, &segment, sizeof (segment)) == 0);
           }
         }
         dec->priv->pending_events =
@@ -2842,11 +2850,15 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
         GST_TIME_ARGS (segment->start),
         GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time));
-    if (segment->rate >= 0) {
-      if (GST_BUFFER_PTS (buf) >= segment->stop)
+    /* only check and return EOS if upstream still
+     * in the same segment and interested as such */
+    if (decoder->priv->in_out_segment_sync) {
+      if (segment->rate >= 0) {
+        if (GST_BUFFER_PTS (buf) >= segment->stop)
+          ret = GST_FLOW_EOS;
+      } else if (GST_BUFFER_PTS (buf) < segment->start) {
         ret = GST_FLOW_EOS;
-    } else if (GST_BUFFER_PTS (buf) < segment->start) {
-      ret = GST_FLOW_EOS;
+      }
     }
     gst_buffer_unref (buf);
     goto done;
