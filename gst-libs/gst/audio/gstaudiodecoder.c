@@ -2040,11 +2040,6 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       GstFormat format;
 
       GST_AUDIO_DECODER_STREAM_LOCK (dec);
-      /* finish data in current segment because upstream now thinks in terms
-       * of a new segment so it will get confused if remaining data of the old
-       * segment is delay decoded and dropped with EOS return due to clipping */
-      gst_audio_decoder_flush (dec, FALSE);
-
       gst_event_copy_segment (event, &seg);
 
       format = seg.format;
