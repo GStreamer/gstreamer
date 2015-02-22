@@ -200,7 +200,7 @@ done:
  *
  * Computes the combined flow return for the pads in it.
  *
- * The #GstFlowReturn paramter should be the last flow return update for a pad
+ * The #GstFlowReturn parameter should be the last flow return update for a pad
  * in this #GstFlowCombiner. It will use this value to be able to shortcut some
  * combinations and avoid looking over all pads again. e.g. The last combined
  * return is the same as the latest obtained #GstFlowReturn.
