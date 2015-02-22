@@ -1080,6 +1080,37 @@ send_pending_events (GstAudioDecoder * dec)
   g_list_free (pending_events);
 }
 
+/* Iterate the list of pending events, and ensure
+ * the current output segment is up to date for
+ * decoding */
+static void
+apply_pending_events (GstAudioDecoder * dec)
+{
+  GstAudioDecoderPrivate *priv = dec->priv;
+  GList *l;
+
+  GST_DEBUG_OBJECT (dec, "Applying pending segments");
+  for (l = priv->pending_events; l; l = l->next) {
+    GstEvent *event = GST_EVENT (l->data);
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_SEGMENT:{
+        GstSegment seg;
+
+        GST_AUDIO_DECODER_STREAM_LOCK (dec);
+        gst_event_copy_segment (event, &seg);
+
+        GST_DEBUG_OBJECT (dec, "starting segment %" GST_SEGMENT_FORMAT, &seg);
+
+        dec->output_segment = seg;
+        GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
 static GstFlowReturn
 check_pending_reconfigure (GstAudioDecoder * dec)
 {
@@ -1467,9 +1498,10 @@ gst_audio_decoder_drain (GstAudioDecoder * dec)
   if (dec->priv->drained && !dec->priv->gather)
     return GST_FLOW_OK;
 
-  /* Send any pending events before draining, as that
+  /* Apply any pending events before draining, as that
    * may update the pending segment info */
-  send_pending_events (dec);
+  apply_pending_events (dec);
+
   /* dispatch reverse pending buffers */
   /* chain eventually calls upon drain as well, but by that time
    * gather list should be clear, so ok ... */
