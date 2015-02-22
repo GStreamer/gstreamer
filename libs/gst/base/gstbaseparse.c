@@ -1135,6 +1135,17 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       break;
     }
 
+    case GST_EVENT_SEGMENT_DONE:
+      /* need to drain now, rather than upon a new segment,
+       * since that would have SEGMENT_DONE come before potential
+       * delayed last part of the current segment */
+      GST_DEBUG_OBJECT (parse, "draining current segment");
+      if (parse->segment.rate > 0.0)
+        gst_base_parse_drain (parse);
+      else
+        gst_base_parse_finish_fragment (parse, FALSE);
+      break;
+
     case GST_EVENT_FLUSH_START:
       GST_OBJECT_LOCK (parse);
       parse->priv->flushing = TRUE;
