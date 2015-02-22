@@ -1240,10 +1240,8 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
     if (!GST_EVENT_IS_SERIALIZED (event) || forward_immediate) {
       ret = gst_pad_push_event (parse->srcpad, event);
     } else {
-      // GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       parse->priv->pending_events =
           g_list_prepend (parse->priv->pending_events, event);
-      // GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       ret = TRUE;
     }
   }
