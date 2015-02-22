@@ -1123,16 +1123,6 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     {
       GstSegment segment;
 
-      /* need to drain here because:
-       * - done in case of GAP and this is no less invasive
-       * - upstream now thinks in terms of a new segment so it will get
-       *   confused if remaining data of the old segment is delay decoded, then
-       *   dropped with EOS return due to clipping
-       * - it is said in @finish documentation subclass should expect this upon
-       *   end of a segment and be able to handle this
-       */
-      gst_video_decoder_drain_out (decoder, TRUE);
-
       gst_event_copy_segment (event, &segment);
 
       if (segment.format == GST_FORMAT_TIME) {
@@ -2839,14 +2829,12 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
         GST_TIME_ARGS (segment->start),
         GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time));
-#if 1
     if (segment->rate >= 0) {
       if (GST_BUFFER_PTS (buf) >= segment->stop)
         ret = GST_FLOW_EOS;
     } else if (GST_BUFFER_PTS (buf) < segment->start) {
       ret = GST_FLOW_EOS;
     }
-#endif
     gst_buffer_unref (buf);
     goto done;
   }
