@@ -5717,6 +5717,10 @@ error_response:
         GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), ("%s",
                 response->type_data.response.reason));
         break;
+      case GST_RTSP_STS_UNAUTHORIZED:
+        GST_ELEMENT_ERROR (src, RESOURCE, NOT_AUTHORIZED, (NULL), ("%s",
+                response->type_data.response.reason));
+        break;
       case GST_RTSP_STS_MOVED_PERMANENTLY:
       case GST_RTSP_STS_MOVE_TEMPORARILY:
       {
