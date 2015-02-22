@@ -145,36 +145,28 @@ _add_layer (GstValidateScenario * scenario, GstValidateAction * action)
   GESTimeline *timeline = get_timeline (scenario);
   GESLayer *layer;
   gint priority;
-  gboolean res = FALSE, auto_transition = FALSE;
+  gboolean res = TRUE, auto_transition = FALSE;
 
   if (!gst_structure_get_int (action->structure, "priority", &priority)) {
     GST_ERROR ("priority is needed when adding a layer");
-    goto beach;
+    goto failed;
   }
 
+  gst_validate_printf (action, "Adding layer with priority %d\n", priority);
   layer = _ges_get_layer_by_priority (timeline, priority);
-
-  if (layer != NULL) {
-    GST_ERROR
-        ("A layer with priority %d already exists, not creating a new one",
-        priority);
-    gst_object_unref (layer);
-    goto beach;
-  }
 
   gst_structure_get_boolean (action->structure, "auto-transition",
       &auto_transition);
-
-  layer = ges_layer_new ();
   g_object_set (layer, "priority", priority, "auto-transition", auto_transition,
       NULL);
 
-  gst_validate_printf (action, "Adding layer with priority %d\n", priority);
-  res = ges_timeline_add_layer (timeline, layer);
 
 beach:
   g_object_unref (timeline);
   return res;
+
+failed:
+  goto beach;
 }
 
 static gboolean

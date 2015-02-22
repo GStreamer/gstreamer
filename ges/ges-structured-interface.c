@@ -138,6 +138,7 @@ _ges_get_layer_by_priority (GESTimeline * timeline, gint priority)
   gint nlayers;
   GESLayer *layer = NULL;
 
+  priority = MAX (priority, 0);
   layers = ges_timeline_get_layers (timeline);
   nlayers = (gint) g_list_length (layers);
   if (priority >= nlayers) {
@@ -195,10 +196,8 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   GET_AND_CHECK ("asset-id", G_TYPE_STRING, &asset_id);
 
   TRY_GET ("name", G_TYPE_STRING, &name, NULL);
-  TRY_GET ("layer-priority", G_TYPE_INT, &layer_priority,
-      g_list_length (timeline->layers));
-  TRY_GET ("layer", G_TYPE_INT, &layer_priority,
-      g_list_length (timeline->layers));
+  TRY_GET ("layer-priority", G_TYPE_INT, &layer_priority, -1);
+  TRY_GET ("layer", G_TYPE_INT, &layer_priority, -1);
   TRY_GET ("type", G_TYPE_STRING, &type_string, "GESUriClip");
   TRY_GET ("start", GST_TYPE_CLOCK_TIME, &start, GST_CLOCK_TIME_NONE);
   TRY_GET ("inpoint", GST_TYPE_CLOCK_TIME, &inpoint, 0);
@@ -218,7 +217,17 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     goto beach;
   }
 
-  layer = _ges_get_layer_by_priority (timeline, layer_priority);
+  if (layer_priority == -1) {
+    GESContainer *container;
+
+    container = g_object_get_qdata (G_OBJECT (timeline), LAST_CONTAINER_QDATA);
+    if (!container || !GES_IS_CLIP (container))
+      layer = _ges_get_layer_by_priority (timeline, 0);
+    else
+      layer = ges_clip_get_layer (GES_CLIP (container));
+  } else {
+    layer = _ges_get_layer_by_priority (timeline, layer_priority);
+  }
 
   if (!layer) {
     g_error_new (GES_ERROR, 0, "No layer with priority %d", layer_priority);
