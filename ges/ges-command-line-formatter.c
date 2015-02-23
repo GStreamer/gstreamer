@@ -270,7 +270,17 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
 {
   guint i;
   GList *tmp;
+  GError *err;
   GESStructureParser *parser = _parse_structures (string);
+
+  err = ges_structure_parser_get_error (parser);
+
+  if (err) {
+    if (error)
+      *error = err;
+
+    return FALSE;
+  }
 
   g_object_set (timeline, "auto-transition", TRUE, NULL);
   if (!(ges_timeline_add_track (timeline, GES_TRACK (ges_video_track_new ()))))
@@ -283,10 +293,8 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
    * ready to start using it... by solely working with the layer !*/
   for (tmp = parser->structures; tmp; tmp = tmp->next) {
     const gchar *name = gst_structure_get_name (tmp->data);
-    GError *error = NULL;
-
     if (g_str_has_prefix (name, "set-")) {
-      EXEC (_set_child_property, tmp->data, &error);
+      EXEC (_set_child_property, tmp->data, &err);
       continue;
     }
 
@@ -296,7 +304,7 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
           || (strlen (name) == 1 &&
               *name == timeline_parsing_options[i].short_name)) {
         EXEC (((ActionFromStructureFunc) timeline_parsing_options[i].arg_data),
-            tmp->data, &error);
+            tmp->data, &err);
       }
     }
   }
@@ -307,6 +315,10 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
 
 fail:
   gst_object_unref (parser);
+  if (err) {
+    if (error)
+      *error = err;
+  }
 
   return FALSE;
 }

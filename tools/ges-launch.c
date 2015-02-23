@@ -251,6 +251,8 @@ create_timeline (const gchar * serialized_timeline, const gchar * proj_uri,
   GESTimeline *timeline;
   GESProject *project;
 
+  GError *error = NULL;
+
   if (proj_uri != NULL) {
     project = ges_project_new (proj_uri);
   } else if (scenario == NULL) {
@@ -263,7 +265,13 @@ create_timeline (const gchar * serialized_timeline, const gchar * proj_uri,
       G_CALLBACK (error_loading_asset_cb), NULL);
   g_signal_connect (project, "loaded", G_CALLBACK (project_loaded_cb), NULL);
 
-  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &error));
+
+  if (error) {
+    g_error ("Could not create timeline, error: %s", error->message);
+
+    return NULL;
+  }
 
   return timeline;
 }

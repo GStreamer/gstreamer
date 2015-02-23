@@ -124,7 +124,7 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
     goto beach;
   }
 
-  asset = _ges_get_asset_from_timeline (timeline, type, id);
+  asset = _ges_get_asset_from_timeline (timeline, type, id, NULL);
 
   if (!asset) {
     res = FALSE;
@@ -411,7 +411,8 @@ _set_asset_on_element (GstValidateScenario * scenario,
   gst_validate_printf (action, "Setting asset %s on element %s\n",
       id, element_name);
 
-  asset = _ges_get_asset_from_timeline (timeline, G_OBJECT_TYPE (element), id);
+  asset = _ges_get_asset_from_timeline (timeline, G_OBJECT_TYPE (element), id,
+      NULL);
   if (asset == NULL) {
     res = FALSE;
     GST_ERROR ("Could not find asset: %s", id);

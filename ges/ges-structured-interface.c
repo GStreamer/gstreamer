@@ -19,9 +19,69 @@
  */
 #include "ges-structured-interface.h"
 
+#include <string.h>
+
 
 #define LAST_CONTAINER_QDATA g_quark_from_string("ges-structured-last-container")
 #define LAST_CHILD_QDATA g_quark_from_string("ges-structured-last-child")
+
+typedef struct
+{
+  const gchar **fields;
+  GList *invalid_fields;
+} FieldsError;
+
+static gboolean
+_check_field (GQuark field_id, const GValue * value, FieldsError * fields_error)
+{
+  guint i;
+  const gchar *field = g_quark_to_string (field_id);
+
+  for (i = 0; fields_error->fields[i]; i++) {
+    if (g_strcmp0 (fields_error->fields[i], field) == 0) {
+
+      return TRUE;
+    }
+  }
+
+  fields_error->invalid_fields =
+      g_list_append (fields_error->invalid_fields, (gpointer) field);
+
+  return TRUE;
+}
+
+static gboolean
+_check_fields (GstStructure * structure, FieldsError fields_error,
+    GError ** error)
+{
+  gst_structure_foreach (structure,
+      (GstStructureForeachFunc) _check_field, &fields_error);
+
+  if (fields_error.invalid_fields) {
+    GList *tmp;
+    const gchar *struct_name = gst_structure_get_name (structure);
+    GString *msg = g_string_new (NULL);
+
+    g_string_append_printf (msg, "Unknown propert%s in %s%s:",
+        g_list_length (fields_error.invalid_fields) > 1 ? "ies" : "y",
+        strlen (struct_name) > 1 ? "--" : "-",
+        gst_structure_get_name (structure));
+
+    for (tmp = fields_error.invalid_fields; tmp; tmp = tmp->next)
+      g_string_append_printf (msg, " %s", (gchar *) tmp->data);
+
+    if (error)
+      *error = g_error_new_literal (GES_ERROR, 0, msg->str);
+    GST_ERROR ("%s", msg->str);
+
+    g_string_free (msg, TRUE);
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 
 gboolean
 _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
@@ -37,6 +97,15 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
 
   gboolean ret = FALSE;
 
+  const gchar *valid_fields[] =
+      { "element-name", "property-name", "value", "timestamp",
+    NULL
+  };
+
+  FieldsError fields_error = { valid_fields, NULL };
+
+  if (!_check_fields (structure, fields_error, error))
+    return FALSE;
 
   if (!gst_structure_get (structure,
           "element-name", G_TYPE_STRING, &element_name,
@@ -112,17 +181,16 @@ done:
 
 GESAsset *
 _ges_get_asset_from_timeline (GESTimeline * timeline, GType type,
-    const gchar * id)
+    const gchar * id, GError ** error)
 {
   GESAsset *asset;
-  GError *error = NULL;
   GESProject *project = ges_timeline_get_project (timeline);
 
-  asset = ges_project_create_asset_sync (project, id, type, &error);
-  if (!asset || error) {
+  asset = ges_project_create_asset_sync (project, id, type, error);
+  if (!asset || (error && *error)) {
     GST_ERROR
         ("There was an error requesting the asset with id %s and type %s (%s)",
-        id, g_type_name (type), error ? error->message : "unknown");
+        id, g_type_name (type), (*error) ? (*error)->message : "unknown");
 
     return NULL;
   }
@@ -177,6 +245,7 @@ done:
   } \
 } G_STMT_END
 
+
 gboolean
 _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     GError ** error)
@@ -190,8 +259,19 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   const gchar *type_string;
   GType type;
   gboolean res = FALSE;
+
   GstClockTime duration = 1 * GST_SECOND, inpoint = 0, start =
       GST_CLOCK_TIME_NONE;
+
+  const gchar *valid_fields[] =
+      { "asset-id", "name", "layer-priority", "layer", "type",
+    "start", "inpoint", "duration", NULL
+  };
+
+  FieldsError fields_error = { valid_fields, NULL };
+
+  if (!_check_fields (structure, fields_error, error))
+    return FALSE;
 
   GET_AND_CHECK ("asset-id", G_TYPE_STRING, &asset_id);
 
@@ -210,7 +290,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     goto beach;
   }
 
-  asset = _ges_get_asset_from_timeline (timeline, type, asset_id);
+  asset = _ges_get_asset_from_timeline (timeline, type, asset_id, error);
   if (!asset) {
     res = FALSE;
 
@@ -275,6 +355,14 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   const gchar *container_name, *child_name, *child_type, *id;
 
   gboolean res = TRUE;
+  const gchar *valid_fields[] = { "container-name", "asset-id",
+    "child-type", "child-name", NULL
+  };
+
+  FieldsError fields_error = { valid_fields, NULL };
+
+  if (!_check_fields (structure, fields_error, error))
+    return FALSE;
 
   container_name = gst_structure_get_string (structure, "container-name");
 
@@ -293,11 +381,10 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   if (id && child_type) {
     asset =
         _ges_get_asset_from_timeline (timeline, g_type_from_name (child_type),
-        id);
+        id, error);
 
     if (asset == NULL) {
       res = FALSE;
-      g_error_new (GES_ERROR, 0, "Could not find asset: %s", id);
       goto beach;
     }
 
@@ -348,6 +435,13 @@ _ges_set_child_property_from_struct (GESTimeline * timeline,
   const GValue *value;
   GESTimelineElement *element;
   const gchar *property_name, *element_name;
+
+  const gchar *valid_fields[] = { "element-name", "property", "value", NULL };
+
+  FieldsError fields_error = { valid_fields, NULL };
+
+  if (!_check_fields (structure, fields_error, error))
+    return FALSE;
 
   element_name = gst_structure_get_string (structure, "element-name");
   if (element_name == NULL)

@@ -35,6 +35,8 @@ struct _GESStructureParser
   GObject parent;
   GList *structures;
 
+  GList *wrong_strings;
+
   /*< private > */
   gchar *current_string;
   gboolean add_comma;
@@ -48,6 +50,7 @@ struct _GESStructureParserClass
 
 GType ges_structure_parser_get_type (void) G_GNUC_CONST;
 
+GError * ges_structure_parser_get_error (GESStructureParser *self);
 void ges_structure_parser_parse_string (GESStructureParser *self, const gchar *string, gboolean is_symbol);
 void ges_structure_parser_parse_default (GESStructureParser *self, const gchar *text);
 void ges_structure_parser_parse_whitespace (GESStructureParser *self);

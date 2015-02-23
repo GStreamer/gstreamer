@@ -20,6 +20,8 @@
 
 #include "ges-structure-parser.h"
 
+#include <ges/ges.h>
+
 G_DEFINE_TYPE (GESStructureParser, ges_structure_parser, G_TYPE_OBJECT);
 
 static void
@@ -28,8 +30,23 @@ ges_structure_parser_init (GESStructureParser * self)
 }
 
 static void
+_finalize (GObject * self)
+{
+  GList *tmp;
+
+  for (tmp = ((GESStructureParser *) self)->structures; tmp; tmp = tmp->next) {
+    gst_structure_free (tmp->data);
+  }
+
+  for (tmp = ((GESStructureParser *) self)->wrong_strings; tmp; tmp = tmp->next) {
+    g_free (tmp->data);
+  }
+}
+
+static void
 ges_structure_parser_class_init (GESStructureParserClass * klass)
 {
+  G_OBJECT_CLASS (klass)->finalize = _finalize;
 }
 
 void
@@ -78,7 +95,10 @@ _finish_structure (GESStructureParser * self)
         gst_structure_new_from_string (self->current_string);
 
     if (structure == NULL) {
-      GST_ERROR ("Error creating structure from %s", self->current_string);
+      GST_ERROR ("Could not parse %s", self->current_string);
+
+      self->wrong_strings = g_list_append (self->wrong_strings,
+          g_strdup (self->current_string));
 
       return;
     }
@@ -133,4 +153,28 @@ GESStructureParser *
 ges_structure_parser_new (void)
 {
   return (g_object_new (GES_TYPE_STRUCTURE_PARSER, NULL));
+}
+
+GError *
+ges_structure_parser_get_error (GESStructureParser * self)
+{
+  GList *tmp;
+  GError *error = NULL;
+  GString *msg = NULL;
+
+  if (self->wrong_strings == NULL)
+    return NULL;
+
+  msg = g_string_new ("Could not parse: ");
+
+
+  for (tmp = self->wrong_strings; tmp; tmp = tmp->next) {
+    g_string_append_printf (msg, " %s", (gchar *) tmp->data);
+  }
+
+  error = g_error_new_literal (GES_ERROR, 0, msg->str);
+  g_string_free (msg, TRUE);
+
+  GST_ERROR ("BoOOOM ");
+  return error;
 }

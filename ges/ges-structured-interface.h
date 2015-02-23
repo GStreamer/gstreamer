@@ -49,7 +49,8 @@ _ges_set_child_property_from_struct           (GESTimeline * timeline,
 G_GNUC_INTERNAL GESAsset *
 _ges_get_asset_from_timeline                  (GESTimeline * timeline,
                                                GType type,
-                                               const gchar * id);
+                                               const gchar * id,
+                                               GError **error);
 G_GNUC_INTERNAL GESLayer *
 _ges_get_layer_by_priority                    (GESTimeline * timeline,
                                                gint priority);
