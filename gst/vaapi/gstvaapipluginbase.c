@@ -681,7 +681,8 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
 #if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
   has_texture_upload_meta = gst_query_find_allocation_meta (query,
-      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx);
+      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx) &&
+      (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
 
 #if USE_GST_GL_HELPERS
   if (has_texture_upload_meta) {
@@ -751,11 +752,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
-#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
-    if (has_texture_upload_meta)
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
-#endif
     gst_buffer_pool_set_config (pool, config);
   } else if (has_video_alignment) {
     config = gst_buffer_pool_get_config (pool);
@@ -766,8 +762,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   /* GstVideoGLTextureUploadMeta (OpenGL) */
 #if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
-  if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META
-      && !has_texture_upload_meta) {
+  if (has_texture_upload_meta) {
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
