@@ -1822,6 +1822,36 @@ choked:
   }
 }
 
+static void
+gst_ogg_demux_query_duration_push (GstOggDemux * ogg)
+{
+  if (!ogg->pullmode && ogg->push_byte_length == -1) {
+    GstQuery *query;
+    gboolean seekable = FALSE;
+
+    query = gst_query_new_seeking (GST_FORMAT_BYTES);
+    if (gst_pad_peer_query (ogg->sinkpad, query))
+      gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+    gst_query_unref (query);
+
+    if (seekable) {
+      gint64 length = -1;
+      if (!gst_element_query_duration (GST_ELEMENT (ogg), GST_FORMAT_BYTES,
+              &length)
+          || length <= 0) {
+        GST_DEBUG_OBJECT (ogg,
+            "Unable to determine stream size, assuming live, seeking disabled");
+        ogg->push_disable_seeking = TRUE;
+      } else {
+        ogg->push_disable_seeking = FALSE;
+      }
+    } else {
+      GST_DEBUG_OBJECT (ogg, "Stream is not seekable, seeking disabled");
+      ogg->push_disable_seeking = TRUE;
+    }
+  }
+}
+
 /* submit a page to an oggpad, this function will then submit all
  * the packets in the page.
  */
@@ -1859,6 +1889,8 @@ gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
       goto done;
     }
   }
+
+  gst_ogg_demux_query_duration_push (ogg);
 
   /* keep track of time in push mode */
   if (!ogg->pullmode) {
@@ -4832,24 +4864,9 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
       ogg->group_id = G_MAXUINT;
 
       ogg->push_disable_seeking = FALSE;
-      if (!ogg->pullmode) {
-        GstPad *peer;
-        if ((peer = gst_pad_get_peer (ogg->sinkpad)) != NULL) {
-          gint64 length = -1;
-          if (!gst_pad_query_duration (peer, GST_FORMAT_BYTES, &length)
-              || length <= 0) {
-            GST_DEBUG_OBJECT (ogg,
-                "Unable to determine stream size, assuming live, seeking disabled");
-            ogg->push_disable_seeking = TRUE;
-          }
-          gst_object_unref (peer);
-        }
-      }
-
+      gst_ogg_demux_query_duration_push (ogg);
       GST_PUSH_UNLOCK (ogg);
       gst_segment_init (&ogg->segment, GST_FORMAT_TIME);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
