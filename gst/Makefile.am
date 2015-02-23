@@ -74,6 +74,7 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gstdatetime.c		\
 	gstdebugutils.c		\
 	gstdevice.c		\
+	gstdevicemonitor.c 	\
 	gstdeviceprovider.c	\
 	gstdeviceproviderfactory.c \
 	gstelement.c		\
@@ -82,7 +83,6 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gstevent.c		\
 	gstformat.c		\
 	gstghostpad.c		\
-	gstdevicemonitor.c 	\
 	gstinfo.c		\
 	gstiterator.c		\
 	gstatomicqueue.c	\

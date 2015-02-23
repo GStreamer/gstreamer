@@ -44,13 +44,13 @@
 #include <gst/gstdatetime.h>
 #include <gst/gstdebugutils.h>
 #include <gst/gstdevice.h>
+#include <gst/gstdevicemonitor.h>
 #include <gst/gstdeviceprovider.h>
 #include <gst/gstelement.h>
 #include <gst/gstelementmetadata.h>
 #include <gst/gsterror.h>
 #include <gst/gstevent.h>
 #include <gst/gstghostpad.h>
-#include <gst/gstdevicemonitor.h>
 #include <gst/gstinfo.h>
 #include <gst/gstiterator.h>
 #include <gst/gstmessage.h>
