@@ -3726,7 +3726,6 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     event = gst_event_new_segment (&stream->segment);
     if (stream->segment_seqnum) {
       gst_event_set_seqnum (event, stream->segment_seqnum);
-      stream->segment_seqnum = 0;
     }
     gst_pad_push_event (stream->pad, event);
     /* clear to send tags on this pad now */
