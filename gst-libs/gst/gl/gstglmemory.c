@@ -1090,6 +1090,8 @@ _destroy_gl_objects (GstGLContext * context, GstGLMemory * gl_mem)
 
   if (gl_mem->pbo)
     gl->DeleteBuffers (1, &gl_mem->pbo);
+  if (gl_mem->transfer_pbo)
+    gl->DeleteBuffers (1, &gl_mem->transfer_pbo);
 }
 
 static void
