@@ -87,6 +87,7 @@ gst_bin_recalculate_latency
 gst_bin_add_many
 gst_bin_remove_many
 gst_bin_find_unlinked_pad
+gst_bin_sync_children_states
 
 <SUBSECTION>
 GstBinFlags

@@ -109,6 +109,7 @@ EXPORTS
 	gst_bin_recalculate_latency
 	gst_bin_remove
 	gst_bin_remove_many
+	gst_bin_sync_children_states
 	gst_bitmask_get_type
 	gst_buffer_add_meta
 	gst_buffer_append

@@ -3068,6 +3068,58 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
   return pad;
 }
 
+static void
+gst_bin_sync_children_states_foreach (const GValue * value, gpointer user_data)
+{
+  gboolean *success = user_data;
+  GstElement *element = g_value_get_object (value);
+
+  if (gst_element_is_locked_state (element)) {
+    *success = TRUE;
+  } else {
+    *success = *success && gst_element_sync_state_with_parent (element);
+
+    if (GST_IS_BIN (element))
+      *success = *success
+          && gst_bin_sync_children_states (GST_BIN_CAST (element));
+  }
+}
+
+/**
+ * gst_bin_sync_children_states:
+ * @bin: a #GstBin
+ *
+ * Synchronizes the state of every child of @bin with the state
+ * of @bin. See also gst_element_sync_state_with_parent().
+ *
+ * Returns: %TRUE if syncing the state was successful for all children,
+ *  otherwise %FALSE.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_bin_sync_children_states (GstBin * bin)
+{
+  GstIterator *it;
+  GstIteratorResult res = GST_ITERATOR_OK;
+  gboolean success = TRUE;
+
+  it = gst_bin_iterate_sorted (bin);
+
+  do {
+    if (res == GST_ITERATOR_RESYNC) {
+      success = TRUE;
+      gst_iterator_resync (it);
+    }
+    res =
+        gst_iterator_foreach (it, gst_bin_sync_children_states_foreach,
+        &success);
+  } while (res == GST_ITERATOR_RESYNC);
+  gst_iterator_free (it);
+
+  return success;
+}
+
 /**
  * gst_parse_bin_from_description:
  * @bin_description: command line describing the bin

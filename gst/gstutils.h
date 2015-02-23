@@ -983,6 +983,8 @@ void                    gst_bin_add_many                (GstBin *bin, GstElement
 void                    gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
 GstPad *                gst_bin_find_unlinked_pad       (GstBin *bin, GstPadDirection direction);
 
+gboolean                gst_bin_sync_children_states    (GstBin *bin);
+
 /* parse utility functions */
 GstElement *            gst_parse_bin_from_description      (const gchar     * bin_description,
                                                              gboolean          ghost_unlinked_pads,
