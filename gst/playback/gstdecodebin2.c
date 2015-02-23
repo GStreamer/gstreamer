@@ -3903,12 +3903,12 @@ gst_decode_pad_handle_eos (GstDecodePad * pad)
 
   GST_LOG_OBJECT (dbin, "pad %p", pad);
   EXPOSE_LOCK (dbin);
-  drain_and_switch_chains (dbin->decode_chain, pad, &last_group, &drained,
-      &switched);
+  if (dbin->decode_chain) {
+    drain_and_switch_chains (dbin->decode_chain, pad, &last_group, &drained,
+        &switched);
 
-  if (switched) {
-    /* If we resulted in a group switch, expose what's needed */
-    if (dbin->decode_chain) {
+    if (switched) {
+      /* If we resulted in a group switch, expose what's needed */
       if (gst_decode_chain_is_complete (dbin->decode_chain))
         gst_decode_bin_expose (dbin);
     }
