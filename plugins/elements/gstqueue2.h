@@ -115,6 +115,7 @@ struct _GstQueue2
   /* for measuring input/output rates */
   GTimer *in_timer;
   gboolean in_timer_started;
+  gdouble last_update_in_rates_elapsed;
   gdouble last_in_elapsed;
   guint64 bytes_in;
   gdouble byte_in_rate;

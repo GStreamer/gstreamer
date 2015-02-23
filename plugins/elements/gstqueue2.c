@@ -129,6 +129,7 @@ enum
   PROP_TEMP_LOCATION,
   PROP_TEMP_REMOVE,
   PROP_RING_BUFFER_MAX_SIZE,
+  PROP_AVG_IN_RATE,
   PROP_LAST
 };
 
@@ -397,6 +398,16 @@ gst_queue2_class_init (GstQueue2Class * klass)
           "Max. amount of data in the ring buffer (bytes, 0 = disabled)",
           0, G_MAXUINT64, DEFAULT_RING_BUFFER_MAX_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstQueue2:avg-in-rate
+   *
+   * The average input data rate.
+   */
+  g_object_class_install_property (gobject_class, PROP_AVG_IN_RATE,
+      g_param_spec_int64 ("avg-in-rate", "Input data rate (bytes/s)",
+          "Average input data rate (bytes/s)",
+          0, G_MAXINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /* set several parent class virtual functions */
   gobject_class->finalize = gst_queue2_finalize;
@@ -996,6 +1007,7 @@ reset_rate_timer (GstQueue2 * queue)
   queue->byte_in_rate = 0.0;
   queue->byte_in_period = 0;
   queue->byte_out_rate = 0.0;
+  queue->last_update_in_rates_elapsed = 0.0;
   queue->last_in_elapsed = 0.0;
   queue->last_out_elapsed = 0.0;
   queue->in_timer_started = FALSE;
@@ -1026,7 +1038,8 @@ update_in_rates (GstQueue2 * queue)
     return;
   }
 
-  elapsed = g_timer_elapsed (queue->in_timer, NULL);
+  queue->last_update_in_rates_elapsed = elapsed =
+      g_timer_elapsed (queue->in_timer, NULL);
 
   /* recalc after each interval. */
   if (queue->last_in_elapsed + RATE_INTERVAL < elapsed) {
@@ -3618,6 +3631,19 @@ gst_queue2_get_property (GObject * object,
     case PROP_RING_BUFFER_MAX_SIZE:
       g_value_set_uint64 (value, queue->ring_buffer_max_size);
       break;
+    case PROP_AVG_IN_RATE:
+    {
+      gdouble in_rate = queue->byte_in_rate;
+
+      /* During the first RATE_INTERVAL, byte_in_rate will not have been
+       * calculated, so calculate it here. */
+      if (in_rate == 0.0 && queue->bytes_in
+          && queue->last_update_in_rates_elapsed > 0.0)
+        in_rate = queue->bytes_in / queue->last_update_in_rates_elapsed;
+
+      g_value_set_int64 (value, (gint64) in_rate);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
