@@ -1080,7 +1080,6 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
             segment.time = ogg->push_seek_time_original_target;
             segment.base = ogg->segment.base;
             event = gst_event_new_segment (&segment);
-            gst_event_set_seqnum (event, ogg->push_seek_seqnum);
             ogg->push_state = PUSH_PLAYING;
           } else {
             segment.rate = ogg->segment.rate;
@@ -1790,7 +1789,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
           gst_event_new_seek (ogg->push_seek_rate, GST_FORMAT_BYTES,
           ogg->push_seek_flags, GST_SEEK_TYPE_SET, best,
           GST_SEEK_TYPE_NONE, -1);
-      gst_event_set_seqnum (sevent, ogg->push_seek_seqnum);
+      gst_event_set_seqnum (sevent, ogg->seqnum);
 
       GST_PUSH_UNLOCK (ogg);
       res = gst_pad_push_event (ogg->sinkpad, sevent);
@@ -2282,7 +2281,7 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           ogg->push_byte_offset = segment.start;
           ogg->push_last_seek_offset = segment.start;
 
-          if (gst_event_get_seqnum (event) == ogg->push_seek_seqnum) {
+          if (gst_event_get_seqnum (event) == ogg->seqnum) {
             GstSeekType stop_type = GST_SEEK_TYPE_NONE;
             if (ogg->push_seek_time_original_stop != -1)
               stop_type = GST_SEEK_TYPE_SET;
@@ -3731,7 +3730,7 @@ gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
   ogg->push_offset1 = ogg->push_byte_length - 1;
   ogg->push_time0 = ogg->push_start_time;
   ogg->push_time1 = ogg->push_time_length;
-  ogg->push_seek_seqnum = gst_event_get_seqnum (event);
+  ogg->seqnum = gst_event_get_seqnum (event);
   ogg->push_seek_time_target = start;
   ogg->push_prev_seek_time = GST_CLOCK_TIME_NONE;
   ogg->push_seek_time_original_target = start;

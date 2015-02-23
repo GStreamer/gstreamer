@@ -191,7 +191,6 @@ struct _GstOggDemux
   gboolean seek_secant;
   gboolean seek_undershot;
   GstClockTime push_prev_seek_time;
-  guint32 push_seek_seqnum;
 
   gint push_bisection_steps[2];
   gint stats_bisection_steps[2];
