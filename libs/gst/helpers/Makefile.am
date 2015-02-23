@@ -10,8 +10,8 @@ dist_bashhelpers_DATA = gst
 
 install-data-hook:
 	cd $(DESTDIR)$(bindir) && \
-	mv gst-completion-helper-@GST_API_VERSION@$(EXEEXT) $(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
-	chmod 755 $(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
+	mv gst-completion-helper-@GST_API_VERSION@$(EXEEXT) $(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
+	chmod 755 $(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
 endif
 
 helpers_PROGRAMS = gst-plugin-scanner
