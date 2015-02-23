@@ -116,6 +116,9 @@ typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
 struct _GESFormatterClass {
   GInitiallyUnownedClass parent_class;
 
+  /* TODO 2.0: Rename the loading method to can_load and load.
+   * Technically we just pass data to load, it should not necessarily
+   * be a URI */
   GESFormatterCanLoadURIMethod can_load_uri;
   GESFormatterLoadFromURIMethod load_from_uri;
   GESFormatterSaveToURIMethod save_to_uri;

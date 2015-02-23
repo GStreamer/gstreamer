@@ -163,7 +163,7 @@ ges_formatter_set_project                        (GESFormatter *formatter,
 G_GNUC_INTERNAL GESProject *
 ges_formatter_get_project                        (GESFormatter *formatter);
 G_GNUC_INTERNAL  GESAsset *
-_find_formatter_asset_for_uri                    (const gchar *uri);
+_find_formatter_asset_for_id                     (const gchar *id);
 
 
 
@@ -288,6 +288,13 @@ ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFormatter * self,
 					       GESTimeline *timeline,
 					       const gchar *properties,
 					       const gchar *metadatas);
+
+
+/****************************************************
+ *        GESCommandLineFormatter                   *
+ ****************************************************/
+GOptionGroup *
+_ges_command_line_formatter_get_option_group (void);
 
 /****************************************************
  *              GESContainer                        *

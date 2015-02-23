@@ -151,8 +151,8 @@ ges_project_set_uri (GESProject * project, const gchar * uri)
     return;
   }
 
-  if (uri == NULL || !gst_uri_is_valid (uri)) {
-    GST_LOG_OBJECT (project, "Invalid URI: %s", uri);
+  if (uri == NULL) {
+    GST_LOG_OBJECT (project, "Uri should not be NULL");
     return;
   }
 
@@ -189,7 +189,7 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
   }
 
   if (priv->formatter_asset == NULL)
-    priv->formatter_asset = _find_formatter_asset_for_uri (priv->uri);
+    priv->formatter_asset = _find_formatter_asset_for_id (priv->uri);
 
   if (priv->formatter_asset == NULL)
     goto failed;

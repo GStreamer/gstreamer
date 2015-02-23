@@ -93,6 +93,7 @@ ges_init (void)
 
   /* register formatter types with the system */
   GES_TYPE_PITIVI_FORMATTER;
+  GES_TYPE_COMMAND_LINE_FORMATTER;
   GES_TYPE_XML_FORMATTER;
 
   /* Register track elements */

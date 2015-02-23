@@ -74,6 +74,7 @@
 #include <ges/ges-effect.h>
 #include <ges/ges-formatter.h>
 #include <ges/ges-pitivi-formatter.h>
+#include <ges/ges-command-line-formatter.h>
 #include <ges/ges-utils.h>
 #include <ges/ges-meta-container.h>
 #include <ges/ges-gerror.h>

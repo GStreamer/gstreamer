@@ -27,7 +27,8 @@ typedef gboolean (*ActionFromStructureFunc)   (GESTimeline * timeline,
                                                GstStructure * structure,
                                                GError ** error);
 
-gboolean _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
+G_GNUC_INTERNAL gboolean
+_ges_add_remove_keyframe_from_struct          (GESTimeline * timeline,
                                                GstStructure * structure,
                                                GError ** error);
 G_GNUC_INTERNAL gboolean
@@ -35,20 +36,22 @@ _ges_add_clip_from_struct                     (GESTimeline * timeline,
                                                GstStructure * structure,
                                                GError ** error);
 
-gboolean
+G_GNUC_INTERNAL gboolean
 _ges_container_add_child_from_struct          (GESTimeline * timeline,
                                                GstStructure * structure,
                                                GError ** error);
 
-gboolean
+G_GNUC_INTERNAL gboolean
 _ges_set_child_property_from_struct           (GESTimeline * timeline,
                                                GstStructure * structure,
                                                GError ** error);
 
-GESAsset * _ges_get_asset_from_timeline       (GESTimeline * timeline,
+G_GNUC_INTERNAL GESAsset *
+_ges_get_asset_from_timeline                  (GESTimeline * timeline,
                                                GType type,
                                                const gchar * id);
-GESLayer * _ges_get_layer_by_priority         (GESTimeline * timeline,
+G_GNUC_INTERNAL GESLayer *
+_ges_get_layer_by_priority                    (GESTimeline * timeline,
                                                gint priority);
 
 #endif /* __GES_STRUCTURED_INTERFACE__*/

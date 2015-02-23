@@ -27,7 +27,6 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <ges/ges.h>
-#include "../ges/ges-structured-interface.h"
 #include <gst/pbutils/encoding-profile.h>
 
 #include <locale.h>             /* for LC_ALL */
@@ -35,9 +34,6 @@
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
 #endif
-
-#include "ges-structure-parser.h"
-#include "parse_lex.h"
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
@@ -136,6 +132,56 @@ error_loading_asset_cb (GESProject * project, GError * error,
   g_main_loop_quit (mainloop);
 }
 
+static gboolean
+_timeline_set_user_options (GESTimeline * timeline, const gchar * load_path)
+{
+  GList *tmp;
+  GESTrack *tracka, *trackv;
+  gboolean has_audio = FALSE, has_video = FALSE;
+
+retry:
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+
+    if (GES_TRACK (tmp->data)->type == GES_TRACK_TYPE_VIDEO)
+      has_video = TRUE;
+    else if (GES_TRACK (tmp->data)->type == GES_TRACK_TYPE_AUDIO)
+      has_audio = TRUE;
+
+    if (disable_mixing) {
+      GST_ERROR_OBJECT (tmp->data, "DISABLE MIXING");
+      ges_track_set_mixing (tmp->data, FALSE);
+    }
+
+    if (!(GES_TRACK (tmp->data)->type & track_types)) {
+      ges_timeline_remove_track (timeline, tmp->data);
+      goto retry;
+    }
+  }
+
+  if (scenario && !load_path) {
+    if (!has_video && track_types & GES_TRACK_TYPE_VIDEO) {
+      trackv = GES_TRACK (ges_video_track_new ());
+
+      if (disable_mixing)
+        ges_track_set_mixing (trackv, FALSE);
+
+      if (!(ges_timeline_add_track (timeline, trackv)))
+        return FALSE;
+    }
+
+    if (!has_audio && track_types & GES_TRACK_TYPE_AUDIO) {
+      tracka = GES_TRACK (ges_audio_track_new ());
+      if (disable_mixing)
+        ges_track_set_mixing (tracka, FALSE);
+
+      if (!(ges_timeline_add_track (timeline, tracka)))
+        return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
 static void
 project_loaded_cb (GESProject * project, GESTimeline * timeline)
 {
@@ -165,7 +211,10 @@ project_loaded_cb (GESProject * project, GESTimeline * timeline)
     }
   }
 
-  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario,
+  _timeline_set_user_options (timeline, ges_project_get_uri (project));
+
+  if (ges_project_get_uri (project)
+      && ges_validate_activate (GST_PIPELINE (pipeline), scenario,
           &needs_set_state) == FALSE) {
     g_error ("Could not activate scenario %s", scenario);
     seenerrors = TRUE;
@@ -178,264 +227,6 @@ project_loaded_cb (GESProject * project, GESTimeline * timeline)
   }
 }
 
-static gint                     /*  -1: not present, 0: failure, 1: OK */
-_convert_to_clocktime (GstStructure * structure, const gchar * name,
-    GstClockTime default_value)
-{
-  gint res = 1;
-  gdouble val;
-  GValue d_val = { 0 };
-  GstClockTime timestamp;
-  const GValue *gvalue = gst_structure_get_value (structure, name);
-
-  if (gvalue == NULL) {
-    timestamp = default_value;
-
-    res = -1;
-
-    goto done;
-  }
-
-  if (G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME)
-    return 1;
-
-  g_value_init (&d_val, G_TYPE_DOUBLE);
-  if (!g_value_transform (gvalue, &d_val)) {
-    GST_ERROR ("Could not get timestamp for %s", name);
-
-    return 0;
-  }
-  val = g_value_get_double ((const GValue *) &d_val);
-
-  if (val == -1.0)
-    timestamp = GST_CLOCK_TIME_NONE;
-  else
-    timestamp = val * GST_SECOND;
-
-done:
-  gst_structure_set (structure, name, G_TYPE_UINT64, timestamp, NULL);
-
-  return res;
-}
-
-typedef struct
-{
-  const gchar *long_name;
-  const gchar *short_name;
-  GType type;
-  const gchar *new_name;
-} Properties;
-
-static gboolean
-_cleanup_fields (const Properties * filed_names, GstStructure * structure,
-    GError ** error)
-{
-  guint i;
-
-  for (i = 0; filed_names[i].long_name; i++) {
-    gboolean exists = FALSE;
-
-    /* Move shortly named fields to longname variante */
-    if (gst_structure_has_field (structure, filed_names[i].short_name)) {
-      exists = TRUE;
-
-      if (gst_structure_has_field (structure, filed_names[i].long_name)) {
-        *error = g_error_new (GES_ERROR, 0, "Using short and long name"
-            " at the same time for property: %s, which one should I use?!",
-            filed_names[i].long_name);
-
-        return FALSE;
-      } else {
-        const GValue *val =
-            gst_structure_get_value (structure, filed_names[i].short_name);
-
-        gst_structure_set_value (structure, filed_names[i].long_name, val);
-        gst_structure_remove_field (structure, filed_names[i].short_name);
-      }
-    } else if (gst_structure_has_field (structure, filed_names[i].long_name)) {
-      exists = TRUE;
-    }
-
-    if (exists) {
-      if (filed_names[i].type == GST_TYPE_CLOCK_TIME) {
-        if (_convert_to_clocktime (structure, filed_names[i].long_name, 0) == 0) {
-          *error = g_error_new (GES_ERROR, 0, "Could not convert"
-              " %s to GstClockTime", filed_names[i].long_name);
-
-          return FALSE;
-        }
-      }
-    }
-
-    if (filed_names[i].new_name
-        && gst_structure_has_field (structure, filed_names[i].long_name)) {
-      const GValue *val =
-          gst_structure_get_value (structure, filed_names[i].long_name);
-
-      gst_structure_set_value (structure, filed_names[i].new_name, val);
-      gst_structure_remove_field (structure, filed_names[i].long_name);
-    }
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_add_clip (GESTimeline * timeline, GstStructure * structure, GError ** error)
-{
-  const Properties filed_names[] = {
-    {"uri", "n", 0, "asset-id"},
-    {"name", "n", 0, NULL},
-    {"start", "s", GST_TYPE_CLOCK_TIME, NULL},
-    {"duration", "d", GST_TYPE_CLOCK_TIME, NULL},
-    {"inpoint", "i", GST_TYPE_CLOCK_TIME, NULL},
-    {"track-types", "tt", 0, NULL},
-    {"layer", "l", 0, NULL},
-    {NULL},
-  };
-
-  if (!_cleanup_fields (filed_names, structure, error))
-    return FALSE;
-
-  gst_structure_set (structure, "type", G_TYPE_STRING, "GESUriClip", NULL);
-
-  GST_ERROR ("Adding a clip %" GST_PTR_FORMAT, structure);
-
-  return _ges_add_add_clip_from_struct (timeline, structure, error);
-}
-
-static gboolean
-_add_effect (GESTimeline * timeline, GstStructure * structure, GError ** error)
-{
-  const Properties filed_names[] = {
-    {"element-name", "e", 0, NULL},
-    {"bin-description", "d", 0, "asset-id"},
-    {"name", "n", 0, "child-name"},
-    {NULL, NULL, 0, NULL},
-  };
-
-  if (!_cleanup_fields (filed_names, structure, error))
-    return FALSE;
-
-  gst_structure_set (structure, "child-type", G_TYPE_STRING, "GESEffect", NULL);
-
-  GST_ERROR ("Adding a clip %" GST_PTR_FORMAT, structure);
-
-  return _ges_container_add_child_from_struct (timeline, structure, error);
-}
-
-static gboolean
-_set_child_property (GESTimeline * timeline, GstStructure * structure,
-    GError ** error)
-{
-  return _ges_set_child_property_from_struct (timeline, structure, error);
-}
-
-static GOptionEntry timeline_parsing_options[] = {
-  {"clip", 'c', 0.0, G_OPTION_ARG_CALLBACK, &_add_clip,
-        "Adds a clip in the timeline",
-      " start - s: The start position of the element inside the layer.\n"
-        " duration - d: The duration of the clip.\n"
-        " inpoint - i: The inpoint of the clip\n."
-        " track-types - tt: The type of the tracks where the clip should be used:\n"
-        " Examples:\n"
-        "  * audio  / a\n"
-        "  * video / v\n"
-        "  * audio+video / a+v\n"
-        " Will default to all the media types in the clip that match the global track-types"},
-  {"effect", 'e', 0.0, G_OPTION_ARG_CALLBACK, &_add_effect,
-        "Adds an effect as decribed by 'bin-description'",
-        " bin-description - d: The description of the effect bin with a gst-launch-style pipeline description."
-        " element-name - d: The name of the element to apply the effect on."
-        /* TODO: Implement that:
-         * " start - s: The start position of the element inside the layer -- implies creation of effect *Clip*.\n"
-         * " duration - d: The duration of the clip -- implies creation of effect *Clip*.\n"
-         * " inpoint - i: The inpoint of the clip-- implies creation of effect *Clip*.\n" */
-      },
-};
-
-#define EXEC(func,structure,error) G_STMT_START { \
-  gboolean res = ((ActionFromStructureFunc)func)(timeline, structure, error); \
-  if (!res) {\
-    GST_ERROR ("Could not execute: %" GST_PTR_FORMAT ", error: %s", structure, (*error)->message); \
-    goto build_failure; \
-  } \
-} G_STMT_END
-
-static GESTimeline *
-create_timeline (GList * structures, const gchar * proj_uri,
-    const gchar * scenario)
-{
-  guint i;
-  GList *tmp;
-  GESTimeline *timeline;
-  GESTrack *tracka = NULL, *trackv = NULL;
-  GESProject *project = ges_project_new (proj_uri);
-
-  g_signal_connect (project, "error-loading-asset",
-      G_CALLBACK (error_loading_asset_cb), NULL);
-
-  if (proj_uri != NULL) {
-    g_signal_connect (project, "loaded", G_CALLBACK (project_loaded_cb), NULL);
-  }
-
-  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
-
-  if (proj_uri) {
-    goto done;
-  }
-
-  g_object_set (timeline, "auto-transition", TRUE, NULL);
-  if (track_types & GES_TRACK_TYPE_VIDEO) {
-    trackv = GES_TRACK (ges_video_track_new ());
-
-    if (disable_mixing)
-      ges_track_set_mixing (trackv, FALSE);
-
-    if (!(ges_timeline_add_track (timeline, trackv)))
-      goto build_failure;
-  }
-
-  if (track_types & GES_TRACK_TYPE_AUDIO) {
-    tracka = GES_TRACK (ges_audio_track_new ());
-    if (disable_mixing)
-      ges_track_set_mixing (tracka, FALSE);
-
-    if (!(ges_timeline_add_track (timeline, tracka)))
-      goto build_failure;
-  }
-
-  /* Here we've finished initializing our timeline, we're
-   * ready to start using it... by solely working with the layer !*/
-  for (tmp = structures; tmp; tmp = tmp->next) {
-    const gchar *name = gst_structure_get_name (tmp->data);
-    GError *error = NULL;
-
-    if (g_str_has_prefix (name, "set-")) {
-      EXEC (_set_child_property, tmp->data, &error);
-      continue;
-    }
-
-    for (i = 0; i < G_N_ELEMENTS (timeline_parsing_options); i++) {
-      if (gst_structure_has_name (tmp->data,
-              timeline_parsing_options[i].long_name)
-          || (strlen (name) == 1 &&
-              *name == timeline_parsing_options[i].short_name)) {
-        EXEC (((ActionFromStructureFunc) timeline_parsing_options[i].arg_data),
-            tmp->data, &error);
-      }
-    }
-  }
-
-done:
-  return timeline;
-
-build_failure:
-  {
-    gst_object_unref (timeline);
-    return NULL;
-  }
-}
 
 static gboolean
 _save_timeline (GESTimeline * timeline, const gchar * load_path)
@@ -453,9 +244,33 @@ _save_timeline (GESTimeline * timeline, const gchar * load_path)
   return TRUE;
 }
 
+static GESTimeline *
+create_timeline (const gchar * serialized_timeline, const gchar * proj_uri,
+    const gchar * scenario)
+{
+  GESTimeline *timeline;
+  GESProject *project;
+
+  if (proj_uri != NULL) {
+    project = ges_project_new (proj_uri);
+  } else if (scenario == NULL) {
+    project = ges_project_new (serialized_timeline);
+  } else {
+    project = ges_project_new (NULL);
+  }
+
+  g_signal_connect (project, "error-loading-asset",
+      G_CALLBACK (error_loading_asset_cb), NULL);
+  g_signal_connect (project, "loaded", G_CALLBACK (project_loaded_cb), NULL);
+
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+
+  return timeline;
+}
+
 static GESPipeline *
 create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
-    GList * structures, const gchar * scenario)
+    const gchar * serialized_timeline, const gchar * scenario)
 {
   gchar *uri = NULL;
   GESTimeline *timeline = NULL;
@@ -472,8 +287,10 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
 
   pipeline = ges_pipeline_new ();
 
-  if (!(timeline = create_timeline (structures, uri, scenario)))
+  if (!(timeline = create_timeline (serialized_timeline, uri, scenario))) {
+    GST_ERROR ("Could not create the timeline");
     goto failure;
+  }
 
   if (!load_path)
     ges_timeline_commit (timeline);
@@ -790,15 +607,13 @@ sanitize_argument (gchar * arg)
   return new_string;
 }
 
-static GESStructureParser *
+static gchar *
 _parse_timeline (int argc, char **argv)
 {
   gint i;
-  yyscan_t scanner;
-  gchar *string = g_strdup (" ");
-  GESStructureParser *parser = ges_structure_parser_new ();
 
-  priv_ges_parse_yylex_init_extra (parser, &scanner);
+  gchar *string = g_strdup (" ");
+
   for (i = 1; i < argc; i++) {
     gchar *new_string;
     gchar *sanitized = sanitize_argument (argv[i]);
@@ -810,13 +625,8 @@ _parse_timeline (int argc, char **argv)
     string = new_string;
   }
 
-  priv_ges_parse_yy_scan_string (string, scanner);
-  priv_ges_parse_yylex (scanner);
-  g_free (string);
-  priv_ges_parse_yylex_destroy (scanner);
 
-  ges_structure_parser_end_of_file (parser);
-  return parser;
+  return string;
 }
 
 int
@@ -824,7 +634,7 @@ main (int argc, gchar ** argv)
 {
   gint validate_res;
   GError *err = NULL;
-  gchar *outputuri = NULL;
+  gchar *outputuri = NULL, *serialized_timeline = NULL;
   const gchar *format = NULL;
   gchar *exclude_args = NULL;
   static gboolean smartrender = FALSE;
@@ -836,7 +646,6 @@ main (int argc, gchar ** argv)
   gchar *videosink = NULL, *audiosink = NULL;
   gboolean inspect_action_type = FALSE;
   gchar *encoding_profile = NULL;
-  GESStructureParser *parser;
 
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
@@ -979,8 +788,8 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   /* Create the pipeline */
-  parser = _parse_timeline (argc, argv);
-  create_pipeline (&timeline, load_path, parser->structures, scenario);
+  serialized_timeline = _parse_timeline (argc, argv);
+  create_pipeline (&timeline, load_path, serialized_timeline, scenario);
   if (!pipeline)
     exit (1);
 
@@ -1068,6 +877,11 @@ main (int argc, gchar ** argv)
     if (ges_validate_activate (GST_PIPELINE (pipeline), scenario,
             &needs_set_state) == FALSE) {
       g_error ("Could not activate scenario %s", scenario);
+      return 29;
+    }
+
+    if (!_timeline_set_user_options (timeline, NULL)) {
+      g_error ("Could not properly set tracks");
       return 29;
     }
   }

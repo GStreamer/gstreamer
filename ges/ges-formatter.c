@@ -513,7 +513,7 @@ _sort_formatters (GESAsset * asset, GESAsset * asset1)
 }
 
 GESAsset *
-_find_formatter_asset_for_uri (const gchar * uri)
+_find_formatter_asset_for_id (const gchar * id)
 {
   GESFormatterClass *class = NULL;
   GList *formatter_assets, *tmp;
@@ -528,7 +528,7 @@ _find_formatter_asset_for_uri (const gchar * uri)
     class = g_type_class_ref (ges_asset_get_extractable_type (asset));
     dummy_instance =
         g_object_new (ges_asset_get_extractable_type (asset), NULL);
-    if (class->can_load_uri (dummy_instance, uri, NULL)) {
+    if (class->can_load_uri (dummy_instance, id, NULL)) {
       g_type_class_unref (class);
       asset = gst_object_ref (asset);
       gst_object_unref (dummy_instance);

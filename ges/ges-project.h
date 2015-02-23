@@ -87,7 +87,7 @@ gboolean  ges_project_save         (GESProject * project,
 gboolean  ges_project_load         (GESProject * project,
                                     GESTimeline * timeline,
                                     GError **error);
-GESProject * ges_project_new       (const gchar *uri);
+GESProject * ges_project_new       (const gchar *id);
 gchar      * ges_project_get_uri   (GESProject *project);
 GESAsset   * ges_project_get_asset (GESProject * project,
                                     const gchar *id,

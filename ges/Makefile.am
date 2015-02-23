@@ -6,7 +6,7 @@ lib_LTLIBRARIES = libges-@GST_API_VERSION@.la
 
 EXTRA_libges_@GST_API_VERSION@_la_SOURCES = gesmarshal.list
 
-CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make) *.gcno *.gcda *.gcov *.gcov.out
+CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make) *.gcno *.gcda *.gcov *.gcov.out lex.priv_ges_parse_yy.c
 
 libges_@GST_API_VERSION@_la_SOURCES = 		\
 	$(built_source_make)			\
@@ -66,6 +66,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-project.c \
 	ges-base-xml-formatter.c \
 	ges-xml-formatter.c \
+	ges-command-line-formatter.c \
 	ges-auto-transition.c \
 	ges-timeline-element.c \
 	ges-container.c \
@@ -76,6 +77,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-group.c \
 	ges-validate.c \
 	ges-structured-interface.c \
+	ges-structure-parser.c \
 	gstframepositionner.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
@@ -133,6 +135,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-project.h \
 	ges-base-xml-formatter.h \
 	ges-xml-formatter.h \
+	ges-command-line-formatter.h \
 	ges-timeline-element.h \
 	ges-container.h \
 	ges-effect-asset.h \
@@ -155,6 +158,7 @@ noinst_HEADERS = \
 	ges-internal.h \
 	ges-auto-transition.h \
 	ges-structured-interface.h \
+	ges-structure-parser.h \
 	gstframepositionner.h
 
 libges_@GST_API_VERSION@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \
@@ -165,6 +169,8 @@ libges_@GST_API_VERSION@_la_LIBADD = $(GST_PBUTILS_LIBS) \
 		$(GST_BASE_LIBS) $(GST_LIBS) $(XML_LIBS) $(GIO_LIBS) $(GST_VALIDATE_LIBS)
 libges_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
 		$(GST_LT_LDFLAGS) $(GIO_CFLAGS) $(GST_VALIDATE_CFLAGS)
+
+nodist_libges_@GST_API_VERSION@_la_SOURCES = lex.priv_ges_parse_yy.c parse_lex.h
 
 DISTCLEANFILE = $(CLEANFILES)
 
@@ -267,3 +273,6 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	           $(nodist_libges_@GST_API_VERSION@include_HEADERS) \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 	> $@
+
+lex.priv_ges_parse_yy.c parse_lex.h: parse.l
+	$(AM_V_GEN)$(FLEX_PATH) --header-file=parse_lex.h -Ppriv_ges_parse_yy $^
