@@ -1,4 +1,4 @@
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc --enable-docbook
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc --enable-docbook --with-bash-completion-dir=no
 
 # note: keep in sync with configure.ac
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
