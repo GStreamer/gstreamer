@@ -28,6 +28,14 @@
 #define GST_CAT_DEFAULT gst_gl_sync_meta_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
+#ifndef GL_SYNC_GPU_COMMANDS_COMPLETE
+#define GL_SYNC_GPU_COMMANDS_COMPLETE 0x9117
+#endif
+
+#ifndef GL_SYNC_FLUSH_COMMANDS_BIT
+#define GL_SYNC_FLUSH_COMMANDS_BIT        0x00000001
+#endif
+
 GstGLSyncMeta *
 gst_buffer_add_gl_sync_meta (GstGLContext * context, GstBuffer * buffer)
 {
@@ -49,13 +57,11 @@ _set_sync_point (GstGLContext * context, GstGLSyncMeta * sync_meta)
 {
   const GstGLFuncs *gl = context->gl_vtable;
 
-  if (gl->FenceSync && gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3) {
+  if (gl->FenceSync) {
     if (sync_meta->glsync)
       gl->DeleteSync (sync_meta->glsync);
-#if GST_GL_HAVE_OPENGL
     sync_meta->glsync = gl->FenceSync (GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     GST_LOG ("setting sync object %p", sync_meta->glsync);
-#endif
   } else {
     gl->Flush ();
   }
@@ -69,7 +75,6 @@ gst_gl_sync_meta_set_sync_point (GstGLSyncMeta * sync_meta,
       (GstGLContextThreadFunc) _set_sync_point, sync_meta);
 }
 
-#if GST_GL_HAVE_OPENGL
 static void
 _wait (GstGLContext * context, GstGLSyncMeta * sync_meta)
 {
@@ -85,18 +90,14 @@ _wait (GstGLContext * context, GstGLSyncMeta * sync_meta)
     } while (res == GL_TIMEOUT_EXPIRED);
   }
 }
-#endif
 
 void
 gst_gl_sync_meta_wait (GstGLSyncMeta * sync_meta)
 {
-#if GST_GL_HAVE_OPENGL
-  if (sync_meta->glsync
-      && gst_gl_context_get_gl_api (sync_meta->context) & GST_GL_API_OPENGL3) {
+  if (sync_meta->glsync) {
     gst_gl_context_thread_add (sync_meta->context,
         (GstGLContextThreadFunc) _wait, sync_meta);
   }
-#endif
 }
 
 static gboolean
