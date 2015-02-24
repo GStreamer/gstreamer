@@ -1454,11 +1454,8 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     gl->Clear (GL_COLOR_BUFFER_BIT);
 
     if (gl_sink->ignore_alpha) {
-      GLenum dst_func =
-          gl_sink->ignore_alpha ? GL_CONSTANT_COLOR : GL_ONE_MINUS_SRC_ALPHA;
-
       gl->BlendColor (0.0, 0.0, 0.0, alpha);
-      gl->BlendFunc (GL_SRC_ALPHA, dst_func);
+      gl->BlendFunc (GL_SRC_ALPHA, GL_CONSTANT_COLOR);
       gl->BlendEquation (GL_FUNC_ADD);
       gl->Enable (GL_BLEND);
     }
