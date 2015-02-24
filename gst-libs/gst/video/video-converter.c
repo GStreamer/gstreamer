@@ -4282,10 +4282,12 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   /* we don't do gamma conversion in fastpath */
   in_transf = convert->in_info.colorimetry.transfer;
   out_transf = convert->out_info.colorimetry.transfer;
-  if (CHECK_GAMMA_REMAP (convert) && in_transf != out_transf)
-    return FALSE;
 
   same_size = (width == convert->out_width && height == convert->out_height);
+
+  /* fastpaths don't do gamma */
+  if (CHECK_GAMMA_REMAP (convert) && (!same_size || in_transf != out_transf))
+    return FALSE;
 
   in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
   out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
