@@ -49,6 +49,9 @@ struct _GstGLContextEGL {
   EGLImageKHR (*eglCreateImage) (EGLDisplay dpy, EGLContext ctx, EGLenum target,
       EGLClientBuffer buffer, const EGLint *attrib_list);
   EGLBoolean (*eglDestroyImage) (EGLDisplay dpy, EGLImageKHR image);
+
+  /* Cached handle */
+  EGLNativeWindowType window_handle;
 };
 
 struct _GstGLContextEGLClass {
