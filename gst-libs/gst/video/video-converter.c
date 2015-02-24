@@ -1089,8 +1089,12 @@ gamma_convert_u8_u16 (GammaData * data, gpointer dest, gpointer src)
   guint16 *table = data->gamma_table;
   gint width = data->width * 4;
 
-  for (i = 0; i < width; i++)
-    d[i] = table[s[i]];
+  for (i = 0; i < width; i += 4) {
+    d[i + 0] = (s[i] << 8) | s[i];
+    d[i + 1] = table[s[i + 1]];
+    d[i + 2] = table[s[i + 2]];
+    d[i + 3] = table[s[i + 3]];
+  }
 }
 
 static void
@@ -1102,8 +1106,12 @@ gamma_convert_u16_u8 (GammaData * data, gpointer dest, gpointer src)
   guint8 *table = data->gamma_table;
   gint width = data->width * 4;
 
-  for (i = 0; i < width; i++)
-    d[i] = table[s[i]];
+  for (i = 0; i < width; i += 4) {
+    d[i + 0] = s[i] >> 8;
+    d[i + 1] = table[s[i + 1]];
+    d[i + 2] = table[s[i + 2]];
+    d[i + 3] = table[s[i + 3]];
+  }
 }
 
 static void
@@ -1115,8 +1123,12 @@ gamma_convert_u16_u16 (GammaData * data, gpointer dest, gpointer src)
   guint16 *table = data->gamma_table;
   gint width = data->width * 4;
 
-  for (i = 0; i < width; i++)
-    d[i] = table[s[i]];
+  for (i = 0; i < width; i += 4) {
+    d[i + 0] = s[i];
+    d[i + 1] = table[s[i + 1]];
+    d[i + 2] = table[s[i + 2]];
+    d[i + 3] = table[s[i + 3]];
+  }
 }
 
 static void
