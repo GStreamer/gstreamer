@@ -328,18 +328,9 @@ gst_modplug_do_seek (GstModPlug * modplug, GstEvent * event)
   gboolean flush;
   gint64 cur, stop;
   GstSegment seg;
-/* FIXME timestamp is set but not used */
-#if 0
-  guint64 timestamp;
-#endif
 
   if (modplug->frequency == 0)
     goto no_song;
-
-#if 0
-  timestamp = gst_util_uint64_scale_int (modplug->offset, GST_SECOND,
-      modplug->frequency);
-#endif
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
