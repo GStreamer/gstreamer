@@ -49,7 +49,7 @@
  *    chroma-siting
  *  </para></listitem>
  *  <listitem><para>
- *    video size (planned)
+ *    video size
  *  </para></listitem>
  * </para>
  * </refsect2>
