@@ -126,9 +126,11 @@ gst_core_audio_initialize (GstCoreAudio * core_audio,
 
   if (core_audio->is_src) {
     /* create AudioBufferList needed for recording */
+    core_audio->recBufferSize = frame_size * format.mBytesPerFrame;
     core_audio->recBufferList =
-        buffer_list_alloc (format.mChannelsPerFrame,
-        frame_size * format.mBytesPerFrame);
+        buffer_list_alloc (format.mChannelsPerFrame, core_audio->recBufferSize,
+        /* Currently always TRUE (i.e. interleaved) */
+        !(format.mFormatFlags & kAudioFormatFlagIsNonInterleaved));
   }
 
   /* Initialize the AudioUnit */
@@ -141,10 +143,8 @@ gst_core_audio_initialize (GstCoreAudio * core_audio,
   return TRUE;
 
 error:
-  if (core_audio->is_src && core_audio->recBufferList) {
-    buffer_list_free (core_audio->recBufferList);
-    core_audio->recBufferList = NULL;
-  }
+  buffer_list_free (core_audio->recBufferList);
+  core_audio->recBufferList = NULL;
   return FALSE;
 }
 
@@ -153,10 +153,8 @@ gst_core_audio_unitialize (GstCoreAudio * core_audio)
 {
   AudioUnitUninitialize (core_audio->audiounit);
 
-  if (core_audio->recBufferList) {
-    buffer_list_free (core_audio->recBufferList);
-    core_audio->recBufferList = NULL;
-  }
+  buffer_list_free (core_audio->recBufferList);
+  core_audio->recBufferList = NULL;
 }
 
 void

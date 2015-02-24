@@ -40,7 +40,7 @@ gboolean gst_core_audio_io_proc_start                     (GstCoreAudio * core_a
 
 gboolean gst_core_audio_io_proc_stop                      (GstCoreAudio * core_audio);
 
-AudioBufferList * buffer_list_alloc                       (int channels, int size);
+AudioBufferList * buffer_list_alloc                       (UInt32 channels, UInt32 size, gboolean interleaved);
 
 void buffer_list_free                                     (AudioBufferList * list);
 

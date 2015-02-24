@@ -150,18 +150,21 @@ gst_core_audio_io_proc_stop (GstCoreAudio * core_audio)
 }
 
 AudioBufferList *
-buffer_list_alloc (int channels, int size)
+buffer_list_alloc (UInt32 channels, UInt32 size, gboolean interleaved)
 {
   AudioBufferList *list;
-  int total_size;
-  int n;
+  gsize list_size;
+  UInt32 num_buffers, n;
 
-  total_size = sizeof (AudioBufferList) + 1 * sizeof (AudioBuffer);
-  list = (AudioBufferList *) g_malloc (total_size);
+  num_buffers = interleaved ? 1 : channels;
+  list_size = G_STRUCT_OFFSET (AudioBufferList, mBuffers[num_buffers]);
+  list = (AudioBufferList *) g_malloc (list_size);
 
-  list->mNumberBuffers = 1;
-  for (n = 0; n < (int) list->mNumberBuffers; ++n) {
-    list->mBuffers[n].mNumberChannels = channels;
+  list->mNumberBuffers = num_buffers;
+  for (n = 0; n < num_buffers; ++n) {
+    /* See http://lists.apple.com/archives/coreaudio-api/2015/Feb/msg00027.html */
+    list->mBuffers[n].mNumberChannels = interleaved ? channels : 1;
+    /* AudioUnitRender will keep overwriting mDataByteSize */
     list->mBuffers[n].mDataByteSize = size;
     list->mBuffers[n].mData = g_malloc (size);
   }
@@ -172,11 +175,13 @@ buffer_list_alloc (int channels, int size)
 void
 buffer_list_free (AudioBufferList * list)
 {
-  int n;
+  UInt32 n;
 
-  for (n = 0; n < (int) list->mNumberBuffers; ++n) {
-    if (list->mBuffers[n].mData)
-      g_free (list->mBuffers[n].mData);
+  if (list == NULL)
+    return;
+
+  for (n = 0; n < list->mNumberBuffers; ++n) {
+    g_free (list->mBuffers[n].mData);
   }
 
   g_free (list);

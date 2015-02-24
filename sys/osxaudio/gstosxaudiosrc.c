@@ -384,7 +384,15 @@ gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
   gint writeseg;
   gint len;
   gint remaining;
+  UInt32 n;
   gint offset = 0;
+
+  /* Previous invoke of AudioUnitRender changed mDataByteSize into
+   * number of bytes actually read. Reset the members. */
+  for (n = 0; n < buf->core_audio->recBufferList->mNumberBuffers; ++n) {
+    buf->core_audio->recBufferList->mBuffers[n].mDataByteSize =
+        buf->core_audio->recBufferSize;
+  }
 
   status = AudioUnitRender (buf->core_audio->audiounit, ioActionFlags,
       inTimeStamp, inBusNumber, inNumberFrames, buf->core_audio->recBufferList);
@@ -393,6 +401,9 @@ gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
     GST_WARNING_OBJECT (buf, "AudioUnitRender returned %d", (int) status);
     return status;
   }
+
+  /* TODO: To support non-interleaved audio, go over all mBuffers,
+   *       not just the first one. */
 
   remaining = buf->core_audio->recBufferList->mBuffers[0].mDataByteSize;
 

@@ -90,6 +90,7 @@ struct _GstCoreAudio
 
   /* For LPCM in/out */
   AudioUnit audiounit;
+  UInt32 recBufferSize; /* AudioUnitRender clobbers mDataByteSize */
   AudioBufferList *recBufferList;
 
 #ifndef HAVE_IOS
