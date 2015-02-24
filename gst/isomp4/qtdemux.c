@@ -3313,6 +3313,8 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       }
       if (qtdemux_pull_mfro_mfra (qtdemux)) {
         /* FIXME */
+      } else {
+        qtdemux->offset += length;      /* skip moof and keep going */
       }
       if (qtdemux->got_moov) {
         GST_INFO_OBJECT (qtdemux, "moof header, got moov, done with headers");
