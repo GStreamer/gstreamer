@@ -21,6 +21,11 @@
  *  Boston, MA 02110-1301 USA
  */
 
+/* GValueArray has deprecated without providing an alternative in glib >= 2.32
+ * See https://bugzilla.gnome.org/show_bug.cgi?id=667228
+ */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include "sysdeps.h"
 #include <va/va.h>
 #include <va/va_enc_h264.h>
@@ -37,8 +42,12 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+
 /* Define the maximum number of views supported */
-#define MAX_NUM_VIEWS 2
+#define MAX_NUM_VIEWS 10
+
+/* Define the maximum value for view-id */
+#define MAX_VIEW_ID 1023
 
 /* Define the maximum IDR period */
 #define MAX_IDR_PERIOD 512
@@ -549,7 +558,7 @@ bs_write_sps (GstBitWriter * bs,
 static gboolean
 bs_write_subset_sps (GstBitWriter * bs,
     const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile,
-    guint num_views, const VAEncMiscParameterHRD * hrd_params)
+    guint num_views, guint16 *view_ids, const VAEncMiscParameterHRD * hrd_params)
 {
   guint32 i, j, k;
 
@@ -569,7 +578,7 @@ bs_write_subset_sps (GstBitWriter * bs,
     WRITE_UE (bs, num_views_minus1);
 
     for (i = 0; i <= num_views_minus1; i++)
-      WRITE_UE (bs, i);
+      WRITE_UE (bs, view_ids[i]);
 
     for (i = 1; i <= num_views_minus1; i++) {
       guint32 num_anchor_refs_l0 = 0;
@@ -759,8 +768,9 @@ struct _GstVaapiEncoderH264
 
   /* MVC */
   gboolean is_mvc;
-  guint32 view_idx;
+  guint32 view_idx; /* View Order Index (VOIdx) */
   guint32 num_views;
+  guint16 view_ids[MAX_NUM_VIEWS];
   GstVaapiH264ViewRefPool ref_pools[MAX_NUM_VIEWS];
   GstVaapiH264ViewReorderPool reorder_pools[MAX_NUM_VIEWS];
 };
@@ -1311,7 +1321,7 @@ add_packed_sequence_header_mvc (GstVaapiEncoderH264 * encoder,
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_SUBSET_SPS);
 
-  bs_write_subset_sps (&bs, seq_param, encoder->profile, encoder->num_views,
+  bs_write_subset_sps (&bs, seq_param, encoder->profile, encoder->num_views, encoder->view_ids,
       &hrd_params);
 
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
@@ -1491,7 +1501,7 @@ add_packed_slice_header (GstVaapiEncoderH264 * encoder,
   /* pack nal_unit_header_mvc_extension() for the non base view */
   if (encoder->is_mvc && encoder->view_idx) {
     bs_write_nal_header (&bs, nal_ref_idc, GST_H264_NAL_SLICE_EXT);
-    bs_write_nal_header_mvc_extension (&bs, picture, encoder->view_idx);
+    bs_write_nal_header_mvc_extension (&bs, picture, encoder->view_ids[encoder->view_idx]);
   } else
     bs_write_nal_header (&bs, nal_ref_idc, nal_unit_type);
 
@@ -1760,7 +1770,7 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
   pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
 
   pic_param->pic_parameter_set_id = encoder->view_idx;
-  pic_param->seq_parameter_set_id = encoder->view_idx;
+  pic_param->seq_parameter_set_id = encoder->view_idx ? 1 : 0;
   pic_param->last_picture = 0;  /* means last encoding picture */
   pic_param->frame_num = picture->frame_num;
   pic_param->pic_init_qp = encoder->init_qp;
@@ -2404,9 +2414,9 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
   /* encoding views alternatively for MVC */
   if (encoder->is_mvc) {
     if (frame)
-      encoder->view_idx = frame->system_frame_number % MAX_NUM_VIEWS;
+      encoder->view_idx = frame->system_frame_number % encoder->num_views;
     else
-      encoder->view_idx = (encoder->view_idx + 1) % MAX_NUM_VIEWS;
+      encoder->view_idx = (encoder->view_idx + 1) % encoder->num_views;
   }
   reorder_pool = &encoder->reorder_pools[encoder->view_idx];
 
@@ -2584,6 +2594,7 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base_encoder)
   encoder->is_mvc = FALSE;
   encoder->num_views = 1;
   encoder->view_idx = 0;
+  memset (encoder->view_ids, 0, sizeof (encoder->view_ids));
 
   /* re-ordering  list initialize */
   for (i = 0; i < MAX_NUM_VIEWS; i++) {
@@ -2677,6 +2688,25 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_NUM_VIEWS:
       encoder->num_views = g_value_get_uint (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_VIEW_IDS:
+      {
+        guint i;
+        GValueArray *view_ids = g_value_get_boxed (value);
+
+        if (view_ids == NULL) {
+          for (i = 0; i < encoder->num_views; i++)
+            encoder->view_ids[i] = i;
+        }
+        else {
+          g_assert (view_ids->n_values <= encoder->num_views);
+
+          for (i = 0; i < encoder->num_views; i++) {
+            GValue *val = g_value_array_get_nth (view_ids, i);
+            encoder->view_ids[i] = g_value_get_uint (val);
+          }
+        }
+      break;
+    }
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -2828,6 +2858,19 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           "Number of Views",
           "Number of Views for MVC encoding",
           1, MAX_NUM_VIEWS, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstVaapiEncoderH264:view-ids:
+   *
+   * The view ids for MVC encoding .
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_VIEW_IDS,
+      g_param_spec_value_array ("view-ids",
+          "View IDs", "Set of View Ids used for MVC encoding",
+          g_param_spec_uint ("view-id-value", "View id value",
+              "view id values used for mvc encoding", 0, MAX_VIEW_ID, 0,
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
