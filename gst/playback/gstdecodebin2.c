@@ -3062,13 +3062,11 @@ gst_decode_bin_reset_buffering (GstDecodeBin * dbin)
     return;
 
   GST_DEBUG_OBJECT (dbin, "Reseting multiqueues buffering");
-  EXPOSE_LOCK (dbin);
   if (dbin->decode_chain) {
     CHAIN_MUTEX_LOCK (dbin->decode_chain);
     gst_decode_chain_reset_buffering (dbin->decode_chain);
     CHAIN_MUTEX_UNLOCK (dbin->decode_chain);
   }
-  EXPOSE_UNLOCK (dbin);
 }
 
 /****
