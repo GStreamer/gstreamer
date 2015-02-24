@@ -398,8 +398,10 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   if (oldpool)
     gst_object_unref (oldpool);
-  if (oldfbpool)
+  if (oldfbpool) {
+    gst_buffer_pool_set_active (oldfbpool, FALSE);
     gst_object_unref (oldfbpool);
+  }
 
   return TRUE;
   /* ERRORS */
