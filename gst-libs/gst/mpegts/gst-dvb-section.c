@@ -564,7 +564,7 @@ _parse_nit (GstMpegtsSection * section)
       GST_WARNING
           ("PID %d invalid NIT entry %d descriptors loop length %d (only have %"
           G_GSIZE_FORMAT ")", section->pid, section->subtable_extension,
-          descriptors_loop_length, end - 4 - data);
+          descriptors_loop_length, (gsize) (end - 4 - data));
       goto error;
     }
     stream->descriptors =
