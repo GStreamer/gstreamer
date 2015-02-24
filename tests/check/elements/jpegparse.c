@@ -137,7 +137,19 @@ guint8 test_data_comment[] = {
 };
 
 guint8 test_data_sof0[] = {
-  0xff, 0xc0,
+  0xff, 0xc0,                   /* baseline dct-based */
+  0x00, 0x11,                   /* size */
+  0x08,                         /* precision */
+  0x00, 0x3c,                   /* width */
+  0x00, 0x50,                   /* height */
+  0x03,                         /* number of components */
+  0x01, 0x22, 0x00,             /* component 1 */
+  0x02, 0x11, 0x01,             /* component 2 */
+  0x03, 0x11, 0x01,             /* component 3 */
+};
+
+guint8 test_data_sof2[] = {
+  0xff, 0xc2,                   /* progressive dct-based */
   0x00, 0x11,                   /* size */
   0x08,                         /* precision */
   0x00, 0x3c,                   /* width */
@@ -278,14 +290,15 @@ GST_START_TEST (test_parse_all_in_one_buf)
 GST_END_TEST;
 
 static inline GstBuffer *
-make_my_input_buffer (guint8 * test_data_header, gsize test_data_size)
+make_my_input_buffer (guint8 * test_data_header, gsize test_data_size,
+    gboolean interlaced)
 {
   GstBuffer *buffer;
   gsize total_size = 0, offset = 0;
 
   total_size += sizeof (test_data_soi);
   total_size += test_data_size;
-  total_size += sizeof (test_data_sof0);
+  total_size += sizeof (test_data_sof0);        /* sof0 and sof2 are the same size */
   total_size += sizeof (test_data_eoi);
 
   buffer = gst_buffer_new_and_alloc (total_size);
@@ -294,8 +307,13 @@ make_my_input_buffer (guint8 * test_data_header, gsize test_data_size)
   offset += sizeof (test_data_soi);
   gst_buffer_fill (buffer, offset, test_data_header, test_data_size);
   offset += test_data_size;
-  gst_buffer_fill (buffer, offset, test_data_sof0, sizeof (test_data_sof0));
-  offset += sizeof (test_data_sof0);
+  if (interlaced) {
+    gst_buffer_fill (buffer, offset, test_data_sof2, sizeof (test_data_sof2));
+    offset += sizeof (test_data_sof2);
+  } else {
+    gst_buffer_fill (buffer, offset, test_data_sof0, sizeof (test_data_sof0));
+    offset += sizeof (test_data_sof0);
+  }
   gst_buffer_fill (buffer, offset, test_data_eoi, sizeof (test_data_eoi));
   offset += sizeof (test_data_eoi);
 
@@ -331,7 +349,7 @@ GST_START_TEST (test_parse_app1_exif)
       "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
 
   buffer_in = make_my_input_buffer (test_data_app1_exif,
-      sizeof (test_data_app1_exif));
+      sizeof (test_data_app1_exif), FALSE);
   buffer_out = make_my_output_buffer (buffer_in);
 
   gst_check_element_push_buffer ("jpegparse", buffer_in, caps_in, buffer_out,
@@ -357,7 +375,33 @@ GST_START_TEST (test_parse_comment)
       "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
 
   buffer_in = make_my_input_buffer (test_data_comment,
-      sizeof (test_data_comment));
+      sizeof (test_data_comment), FALSE);
+  buffer_out = make_my_output_buffer (buffer_in);
+
+  gst_check_element_push_buffer ("jpegparse", buffer_in, caps_in, buffer_out,
+      caps_out);
+
+  gst_caps_unref (caps_in);
+  gst_caps_unref (caps_out);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_parse_interlaced)
+{
+  GstBuffer *buffer_in, *buffer_out;
+  GstCaps *caps_in, *caps_out;
+
+  caps_in = gst_caps_new_simple ("image/jpeg", "parsed",
+      G_TYPE_BOOLEAN, FALSE, NULL);
+
+  caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+      "framerate", GST_TYPE_FRACTION, 1, 1, "format", G_TYPE_STRING,
+      "I420", "interlaced", G_TYPE_BOOLEAN, TRUE,
+      "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
+
+  buffer_in = make_my_input_buffer (test_data_comment,
+      sizeof (test_data_comment), TRUE);
   buffer_out = make_my_output_buffer (buffer_in);
 
   gst_check_element_push_buffer ("jpegparse", buffer_in, caps_in, buffer_out,
@@ -380,6 +424,7 @@ jpegparse_suite (void)
   tcase_add_test (tc_chain, test_parse_all_in_one_buf);
   tcase_add_test (tc_chain, test_parse_app1_exif);
   tcase_add_test (tc_chain, test_parse_comment);
+  tcase_add_test (tc_chain, test_parse_interlaced);
 
   return s;
 }
