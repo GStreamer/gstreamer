@@ -51,7 +51,6 @@ _context_ready (gpointer data)
   GST_LOG ("init CAOpenGLLayer");
 
   self->gst_gl_context = parent_gl_context;
-  self.asynchronous = YES;
   self.needsDisplayOnBoundsChange = YES;
 
   gst_gl_window_send_message_async (GST_GL_CONTEXT (parent_gl_context)->window,
