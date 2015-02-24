@@ -24,8 +24,7 @@
 #include "gstglapi.h"
 
 /**
- * gst_gl_api_to_string():
- *
+ * gst_gl_api_to_string:
  * @api: a #GstGLAPI to stringify
  *
  * Returns: A space seperated string of the OpenGL api's enabled in @api
@@ -78,11 +77,10 @@ out:
 }
 
 /**
- * gst_gl_api_from_string():
+ * gst_gl_api_from_string:
+ * @api_s: a space seperated string of OpenGL apis
  *
- * @apis_s: a space seperated string of OpenGL apis
- *
- * Returns: The #GstGLAPI represented by @apis_s
+ * Returns: The #GstGLAPI represented by @api_s
  */
 GstGLAPI
 gst_gl_api_from_string (const gchar * apis_s)
@@ -121,8 +119,7 @@ gst_gl_api_from_string (const gchar * apis_s)
 }
 
 /**
- * gst_gl_platform_to_string():
- *
+ * gst_gl_platform_to_string:
  * @api: a #GstGLPlatform to stringify
  *
  * Returns: A space seperated string of the OpenGL platforms enabled in @api
@@ -165,8 +162,7 @@ out:
 }
 
 /**
- * gst_gl_platform_from_string():
- *
+ * gst_gl_platform_from_string:
  * @platform_s: a space seperated string of OpenGL platformss
  *
  * Returns: The #GstGLPlatform represented by @platform_s
