@@ -98,9 +98,6 @@ libgstopengl_la_OBJCFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_OBJCFLAGS)
-
-
-libgstopengl_la_LIBTOOLFLAGS += --tag=CC
 endif
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
