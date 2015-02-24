@@ -572,7 +572,7 @@ get_opt_str (GstVideoConverter * convert, const gchar * opt, const gchar * def)
 }
 
 #define DEFAULT_OPT_FILL_BORDER TRUE
-#define DEFAULT_OPT_ALPHA_VALUE 0.5
+#define DEFAULT_OPT_ALPHA_VALUE 1.0
 /* options copy, set, mult */
 #define DEFAULT_OPT_ALPHA_MODE "copy"
 #define DEFAULT_OPT_BORDER_ARGB 0xff000000
