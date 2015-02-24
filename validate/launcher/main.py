@@ -57,7 +57,8 @@ been compiled against GstValidate.
 2. Default test suite
 ---------------------
 
-A default suite of tests is provided and you can run it pretty simply doing:
+A default suite of tests is provided and is available at: http://cgit.freedesktop.org/gstreamer/gst-integration-testsuites/
+You can run it pretty simply doing:
 
 .    $gst-validate-launch --sync
 
@@ -267,7 +268,7 @@ class LauncherConfig(Loggable):
         if not os.path.exists(self.logsdir):
             os.makedirs(self.logsdir)
 
-        if not self.redirect_logs in ['stdout', 'stderr', False]:
+        if self.redirect_logs not in ['stdout', 'stderr', False]:
             printc("Log redirection (%s) must be either 'stdout' or 'stderr'."
                    % self.redirect_logs, Colors.FAIL, True)
             return False
