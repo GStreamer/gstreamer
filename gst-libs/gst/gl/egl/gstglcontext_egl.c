@@ -399,13 +399,18 @@ gst_gl_context_egl_create_context (GstGLContext * context,
         (EGLNativeWindowType) gst_gl_window_get_window_handle (window);
 
   if (window_handle) {
+    GST_DEBUG ("Creating EGLSurface from window_handle %p",
+        (void *) window_handle);
     egl->egl_surface =
         eglCreateWindowSurface (egl->egl_display, egl->egl_config,
         window_handle, NULL);
+    /* Store window handle for later comparision */
+    egl->window_handle = window_handle;
   } else if (!gst_gl_check_extension ("EGL_KHR_surfaceless_context", egl_exts)) {
     EGLint surface_attrib[7];
     gint j = 0;
 
+    GST_DEBUG ("Surfaceless context, creating PBufferSurface");
     /* FIXME: Width/height doesn't seem to matter but we can't leave them
      * at 0, otherwise X11 complains about BadValue */
     surface_attrib[j++] = EGL_WIDTH;
@@ -420,6 +425,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
         eglCreatePbufferSurface (egl->egl_display, egl->egl_config,
         surface_attrib);
   } else {
+    GST_DEBUG ("No surface/handle !");
     egl->egl_surface = EGL_NO_SURFACE;
     need_surface = FALSE;
   }
@@ -473,11 +479,16 @@ gst_gl_context_egl_destroy_context (GstGLContext * context)
 
   gst_gl_context_egl_activate (context, FALSE);
 
-  if (egl->egl_surface)
+  if (egl->egl_surface) {
     eglDestroySurface (egl->egl_display, egl->egl_surface);
+    egl->egl_surface = EGL_NO_SURFACE;
+  }
 
-  if (egl->egl_context)
+  if (egl->egl_context) {
     eglDestroyContext (egl->egl_display, egl->egl_context);
+    egl->egl_context = NULL;
+  }
+  egl->window_handle = 0;
 
   eglReleaseThread ();
 }
@@ -490,10 +501,30 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
 
   egl = GST_GL_CONTEXT_EGL (context);
 
-  if (activate)
+  if (activate) {
+    GstGLWindow *window = gst_gl_context_get_window (context);
+    EGLNativeWindowType handle = 0;
+    /* Check if the backing handle changed */
+    if (window) {
+      handle = (EGLNativeWindowType) gst_gl_window_get_window_handle (window);
+      gst_object_unref (window);
+    }
+    if (handle && handle != egl->window_handle) {
+      GST_DEBUG_OBJECT (context,
+          "Handle changed (have:%p, now:%p), switching surface",
+          (void *) egl->window_handle, (void *) handle);
+      if (egl->egl_surface) {
+        eglDestroySurface (egl->egl_display, egl->egl_surface);
+        egl->egl_surface = EGL_NO_SURFACE;
+      }
+      egl->egl_surface =
+          eglCreateWindowSurface (egl->egl_display, egl->egl_config, handle,
+          NULL);
+      egl->window_handle = handle;
+    }
     result = eglMakeCurrent (egl->egl_display, egl->egl_surface,
         egl->egl_surface, egl->egl_context);
-  else
+  } else
     result = eglMakeCurrent (egl->egl_display, EGL_NO_SURFACE,
         EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
