@@ -126,10 +126,36 @@ G_BEGIN_DECLS
  */
 #define GST_VIDEO_CONVERTER_OPT_FILL_BORDER   "GstVideoConverter.fill-border"
 /**
+ * GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE:
+ *
+ * #G_TYPE_DOUBLE, the alpha color value to use.
+ * Default to 1.0
+ */
+#define GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE   "GstVideoConverter.alpha-value"
+/**
+ * GST_VIDEO_CONVERTER_OPT_ALPHA_MODE:
+ *
+ * #G_TYPE_STRING, the alpha mode to use.
+ *
+ * "copy": When input and output have alpha, it will be copied.
+ *         When the input has no alpha, alpha will be set to
+ *         GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE
+ * "set": set all alpha to #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE
+ * "mult": multiply all alpha with #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE.
+ *         When the input format has no alpha but the output format has,
+ *         the alpha value will be set to
+ *         #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE
+ *
+ * Default to "none".
+ */
+#define GST_VIDEO_CONVERTER_OPT_ALPHA_MODE   "GstVideoConverter.alpha-mode"
+/**
  * GST_VIDEO_CONVERTER_OPT_BORDER_ARGB:
  *
  * #G_TYPE_UINT, the border color to use if #GST_VIDEO_CONVERTER_OPT_FILL_BORDER
- * is set to %TRUE. Default 0x00000000
+ * is set to %TRUE.
+ * Default 0xff000000 and the alpha component is influenced by
+ * #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE and #GST_VIDEO_CONVERTER_OPT_ALPHA_MODE.
  */
 #define GST_VIDEO_CONVERTER_OPT_BORDER_ARGB   "GstVideoConverter.border-argb"
 /**

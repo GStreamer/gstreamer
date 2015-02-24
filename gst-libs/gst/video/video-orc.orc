@@ -842,7 +842,7 @@ x2 mergebw d2, y2, uv
 .source 1 y2 guint8
 .source 1 u guint8
 .source 1 v guint8
-.const 1 c255 255
+.param 1 alpha
 .temp 2 uv
 .temp 2 ay
 .temp 1 tu
@@ -851,9 +851,9 @@ x2 mergebw d2, y2, uv
 loadupdb tu, u
 loadupdb tv, v
 mergebw uv, tu, tv
-mergebw ay, c255, y1
+mergebw ay, alpha, y1
 mergewl d1, ay, uv
-mergebw ay, c255, y2
+mergebw ay, alpha, y2
 mergewl d2, ay, uv
 
 
@@ -954,14 +954,14 @@ avgub d, s1, s2
 .flags 2d
 .dest 8 ayuv guint8
 .source 4 yuy2 guint8
-.const 2 c255 0xff
+.param 1 alpha
 .temp 2 yy
 .temp 2 uv
 .temp 4 ayay
 .temp 4 uvuv
 
 x2 splitwb uv, yy, yuy2
-x2 mergebw ayay, c255, yy
+x2 mergebw ayay, alpha, yy
 mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
@@ -970,14 +970,14 @@ x2 mergewl ayuv, ayay, uvuv
 .flags 2d
 .dest 8 ayuv guint8
 .source 4 uyvy guint8
-.const 2 c255 0xff
+.param 1 alpha
 .temp 2 yy
 .temp 2 uv
 .temp 4 ayay
 .temp 4 uvuv
 
 x2 splitwb yy, uv, uyvy
-x2 mergebw ayay, c255, yy
+x2 mergebw ayay, alpha, yy
 mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
@@ -1185,14 +1185,14 @@ x2 mergebw uyvy, uv, y
 .source 2 yy guint8
 .source 1 u guint8
 .source 1 v guint8
-.const 1 c255 255
+.param 1 alpha
 .temp 2 uv
 .temp 2 ay
 .temp 4 uvuv
 .temp 4 ayay
 
 mergebw uv, u, v
-x2 mergebw ayay, c255, yy
+x2 mergebw ayay, alpha, yy
 mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
@@ -1237,12 +1237,12 @@ x2 mergebw uyvy, uv, y
 .source 1 yy guint8
 .source 1 u guint8
 .source 1 v guint8
-.const 1 c255 255
+.param 1 alpha
 .temp 2 uv
 .temp 2 ay
 
 mergebw uv, u, v
-mergebw ay, c255, yy
+mergebw ay, alpha, yy
 mergewl ayuv, ay, uv
 
 

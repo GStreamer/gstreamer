@@ -219,7 +219,7 @@ void video_orc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1,
 void video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1,
     guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3,
-    const guint8 * ORC_RESTRICT s4, int n);
+    const guint8 * ORC_RESTRICT s4, int p1, int n);
 void video_orc_convert_YUY2_I420 (guint8 * ORC_RESTRICT d1,
     guint8 * ORC_RESTRICT d2, guint8 * ORC_RESTRICT d3,
     guint8 * ORC_RESTRICT d4, const guint8 * ORC_RESTRICT s1,
@@ -243,9 +243,9 @@ void video_orc_planar_chroma_422_420 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m);
 void video_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
-    const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
 void video_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
-    const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
 void video_orc_convert_YUY2_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
     guint8 * ORC_RESTRICT d2, int d2_stride, guint8 * ORC_RESTRICT d3,
     int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
@@ -288,7 +288,7 @@ void video_orc_convert_Y42B_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
 void video_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride,
-    const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
+    const guint8 * ORC_RESTRICT s3, int s3_stride, int p1, int n, int m);
 void video_orc_convert_Y444_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride,
@@ -300,7 +300,7 @@ void video_orc_convert_Y444_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
 void video_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride,
-    const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m);
+    const guint8 * ORC_RESTRICT s3, int s3_stride, int p1, int n, int m);
 void video_orc_convert_AYUV_ARGB (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int p2, int p3,
     int p4, int p5, int n, int m);
@@ -11983,7 +11983,8 @@ video_orc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 void
 video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n)
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -11992,11 +11993,7 @@ video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
   const orc_int8 *ORC_RESTRICT ptr7;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_int8 var36;
-#else
   orc_int8 var36;
-#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_int8 var39;
@@ -12015,7 +12012,7 @@ video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
   ptr7 = (orc_int8 *) s4;
 
   /* 3: loadpb */
-  var36 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36 = p1;
 
   for (i = 0; i < n; i++) {
     /* 0: loadupdb */
@@ -12081,11 +12078,7 @@ _backup_video_orc_convert_I420_AYUV (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
   const orc_int8 *ORC_RESTRICT ptr7;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_int8 var36;
-#else
   orc_int8 var36;
-#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_int8 var39;
@@ -12104,7 +12097,7 @@ _backup_video_orc_convert_I420_AYUV (OrcExecutor * ORC_RESTRICT ex)
   ptr7 = (orc_int8 *) ex->arrays[7];
 
   /* 3: loadpb */
-  var36 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36 = ex->params[24];
 
   for (i = 0; i < n; i++) {
     /* 0: loadupdb */
@@ -12161,7 +12154,8 @@ _backup_video_orc_convert_I420_AYUV (OrcExecutor * ORC_RESTRICT ex)
 void
 video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n)
+    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -12178,9 +12172,9 @@ video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
         1, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 99, 111, 110,
         118, 101, 114, 116, 95, 73, 52, 50, 48, 95, 65, 89, 85, 86, 11, 4,
         4, 11, 4, 4, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1,
-        14, 1, 255, 0, 0, 0, 20, 2, 20, 2, 20, 1, 20, 1, 45, 34,
-        6, 45, 35, 7, 196, 32, 34, 35, 196, 33, 16, 4, 195, 0, 33, 32,
-        196, 33, 16, 5, 195, 1, 33, 32, 2, 0,
+        16, 1, 20, 2, 20, 2, 20, 1, 20, 1, 45, 34, 6, 45, 35, 7,
+        196, 32, 34, 35, 196, 33, 24, 4, 195, 0, 33, 32, 196, 33, 24, 5,
+        195, 1, 33, 32, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p, _backup_video_orc_convert_I420_AYUV);
@@ -12194,7 +12188,7 @@ video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_source (p, 1, "s4");
-      orc_program_add_constant (p, 1, 0x000000ff, "c1");
+      orc_program_add_parameter (p, 1, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -12206,11 +12200,11 @@ video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
           ORC_VAR_D1, ORC_VAR_D1);
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T1, ORC_VAR_T3, ORC_VAR_T4,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_C1, ORC_VAR_S1,
+      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_P1, ORC_VAR_S1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_T1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_C1, ORC_VAR_S2,
+      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_P1, ORC_VAR_S2,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_D2, ORC_VAR_T2, ORC_VAR_T1,
           ORC_VAR_D1);
@@ -12233,6 +12227,7 @@ video_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->arrays[ORC_VAR_S4] = (void *) s4;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = c->exec;
   func (ex);
@@ -13467,18 +13462,14 @@ video_orc_planar_chroma_422_420 (guint8 * ORC_RESTRICT d1, int d1_stride,
 #ifdef DISABLE_ORC
 void
 video_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
-    const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
 {
   int i;
   int j;
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_union16 var37;
-#else
   orc_union16 var37;
-#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -13490,8 +13481,8 @@ video_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
 
     /* 2: loadpb */
-    var37.x2[0] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
-    var37.x2[1] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+    var37.x2[0] = p1;
+    var37.x2[1] = p1;
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -13560,11 +13551,7 @@ _backup_video_orc_convert_YUY2_AYUV (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_union16 var37;
-#else
   orc_union16 var37;
-#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -13576,8 +13563,8 @@ _backup_video_orc_convert_YUY2_AYUV (OrcExecutor * ORC_RESTRICT ex)
     ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
 
     /* 2: loadpb */
-    var37.x2[0] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
-    var37.x2[1] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+    var37.x2[0] = ex->params[24];
+    var37.x2[1] = ex->params[24];
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -13637,7 +13624,7 @@ _backup_video_orc_convert_YUY2_AYUV (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
-    const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -13653,9 +13640,9 @@ video_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
       static const orc_uint8 bc[] = {
         1, 7, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 99, 111,
         110, 118, 101, 114, 116, 95, 89, 85, 89, 50, 95, 65, 89, 85, 86, 11,
-        8, 8, 12, 4, 4, 14, 2, 255, 0, 0, 0, 20, 2, 20, 2, 20,
-        4, 20, 4, 21, 1, 199, 33, 32, 4, 21, 1, 196, 34, 16, 32, 195,
-        35, 33, 33, 21, 1, 195, 0, 34, 35, 2, 0,
+        8, 8, 12, 4, 4, 16, 1, 20, 2, 20, 2, 20, 4, 20, 4, 21,
+        1, 199, 33, 32, 4, 21, 1, 196, 34, 24, 32, 195, 35, 33, 33, 21,
+        1, 195, 0, 34, 35, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p, _backup_video_orc_convert_YUY2_AYUV);
@@ -13666,7 +13653,7 @@ video_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
       orc_program_set_backup_function (p, _backup_video_orc_convert_YUY2_AYUV);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
-      orc_program_add_constant (p, 2, 0x000000ff, "c1");
+      orc_program_add_parameter (p, 1, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 4, "t3");
@@ -13674,7 +13661,7 @@ video_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
 
       orc_program_append_2 (p, "splitwb", 1, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_S1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "mergebw", 1, ORC_VAR_T3, ORC_VAR_C1, ORC_VAR_T1,
+      orc_program_append_2 (p, "mergebw", 1, ORC_VAR_T3, ORC_VAR_P1, ORC_VAR_T1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T4, ORC_VAR_T2, ORC_VAR_T2,
           ORC_VAR_D1);
@@ -13698,6 +13685,7 @@ video_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->params[ORC_VAR_D1] = d1_stride;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = c->exec;
   func (ex);
@@ -13709,18 +13697,14 @@ video_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
 #ifdef DISABLE_ORC
 void
 video_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
-    const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
 {
   int i;
   int j;
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_union16 var37;
-#else
   orc_union16 var37;
-#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -13732,8 +13716,8 @@ video_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
 
     /* 2: loadpb */
-    var37.x2[0] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
-    var37.x2[1] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+    var37.x2[0] = p1;
+    var37.x2[1] = p1;
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -13802,11 +13786,7 @@ _backup_video_orc_convert_UYVY_AYUV (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_union16 var37;
-#else
   orc_union16 var37;
-#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -13818,8 +13798,8 @@ _backup_video_orc_convert_UYVY_AYUV (OrcExecutor * ORC_RESTRICT ex)
     ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
 
     /* 2: loadpb */
-    var37.x2[0] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
-    var37.x2[1] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+    var37.x2[0] = ex->params[24];
+    var37.x2[1] = ex->params[24];
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -13879,7 +13859,7 @@ _backup_video_orc_convert_UYVY_AYUV (OrcExecutor * ORC_RESTRICT ex)
 
 void
 video_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
-    const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -13895,9 +13875,9 @@ video_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
       static const orc_uint8 bc[] = {
         1, 7, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 99, 111,
         110, 118, 101, 114, 116, 95, 85, 89, 86, 89, 95, 65, 89, 85, 86, 11,
-        8, 8, 12, 4, 4, 14, 2, 255, 0, 0, 0, 20, 2, 20, 2, 20,
-        4, 20, 4, 21, 1, 199, 32, 33, 4, 21, 1, 196, 34, 16, 32, 195,
-        35, 33, 33, 21, 1, 195, 0, 34, 35, 2, 0,
+        8, 8, 12, 4, 4, 16, 1, 20, 2, 20, 2, 20, 4, 20, 4, 21,
+        1, 199, 32, 33, 4, 21, 1, 196, 34, 24, 32, 195, 35, 33, 33, 21,
+        1, 195, 0, 34, 35, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p, _backup_video_orc_convert_UYVY_AYUV);
@@ -13908,7 +13888,7 @@ video_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
       orc_program_set_backup_function (p, _backup_video_orc_convert_UYVY_AYUV);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
-      orc_program_add_constant (p, 2, 0x000000ff, "c1");
+      orc_program_add_parameter (p, 1, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 4, "t3");
@@ -13916,7 +13896,7 @@ video_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
 
       orc_program_append_2 (p, "splitwb", 1, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_S1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "mergebw", 1, ORC_VAR_T3, ORC_VAR_C1, ORC_VAR_T1,
+      orc_program_append_2 (p, "mergebw", 1, ORC_VAR_T3, ORC_VAR_P1, ORC_VAR_T1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T4, ORC_VAR_T2, ORC_VAR_T2,
           ORC_VAR_D1);
@@ -13940,6 +13920,7 @@ video_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->params[ORC_VAR_D1] = d1_stride;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = c->exec;
   func (ex);
@@ -16682,7 +16663,7 @@ void
 video_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride,
-    const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
+    const guint8 * ORC_RESTRICT s3, int s3_stride, int p1, int n, int m)
 {
   int i;
   int j;
@@ -16692,11 +16673,7 @@ video_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var36;
   orc_int8 var37;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_union16 var38;
-#else
   orc_union16 var38;
-#endif
   orc_union16 var39;
   orc_union64 var40;
   orc_union16 var41;
@@ -16710,8 +16687,8 @@ video_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     ptr6 = ORC_PTR_OFFSET (s3, s3_stride * j);
 
     /* 3: loadpb */
-    var38.x2[0] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
-    var38.x2[1] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+    var38.x2[0] = p1;
+    var38.x2[1] = p1;
 
     for (i = 0; i < n; i++) {
       /* 0: loadb */
@@ -16781,11 +16758,7 @@ _backup_video_orc_convert_Y42B_AYUV (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var36;
   orc_int8 var37;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_union16 var38;
-#else
   orc_union16 var38;
-#endif
   orc_union16 var39;
   orc_union64 var40;
   orc_union16 var41;
@@ -16799,8 +16772,8 @@ _backup_video_orc_convert_Y42B_AYUV (OrcExecutor * ORC_RESTRICT ex)
     ptr6 = ORC_PTR_OFFSET (ex->arrays[6], ex->params[6] * j);
 
     /* 3: loadpb */
-    var38.x2[0] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
-    var38.x2[1] = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+    var38.x2[0] = ex->params[24];
+    var38.x2[1] = ex->params[24];
 
     for (i = 0; i < n; i++) {
       /* 0: loadb */
@@ -16860,7 +16833,7 @@ void
 video_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride,
-    const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
+    const guint8 * ORC_RESTRICT s3, int s3_stride, int p1, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -16876,9 +16849,9 @@ video_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
       static const orc_uint8 bc[] = {
         1, 7, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 99, 111,
         110, 118, 101, 114, 116, 95, 89, 52, 50, 66, 95, 65, 89, 85, 86, 11,
-        8, 8, 12, 2, 2, 12, 1, 1, 12, 1, 1, 14, 1, 255, 0, 0,
-        0, 20, 2, 20, 2, 20, 4, 20, 4, 196, 32, 5, 6, 21, 1, 196,
-        35, 16, 4, 195, 34, 32, 32, 21, 1, 195, 0, 35, 34, 2, 0,
+        8, 8, 12, 2, 2, 12, 1, 1, 12, 1, 1, 16, 1, 20, 2, 20,
+        2, 20, 4, 20, 4, 196, 32, 5, 6, 21, 1, 196, 35, 24, 4, 195,
+        34, 32, 32, 21, 1, 195, 0, 35, 34, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p, _backup_video_orc_convert_Y42B_AYUV);
@@ -16891,7 +16864,7 @@ video_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
-      orc_program_add_constant (p, 1, 0x000000ff, "c1");
+      orc_program_add_parameter (p, 1, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 4, "t3");
@@ -16899,7 +16872,7 @@ video_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
 
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T1, ORC_VAR_S2, ORC_VAR_S3,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "mergebw", 1, ORC_VAR_T4, ORC_VAR_C1, ORC_VAR_S1,
+      orc_program_append_2 (p, "mergebw", 1, ORC_VAR_T4, ORC_VAR_P1, ORC_VAR_S1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T3, ORC_VAR_T1, ORC_VAR_T1,
           ORC_VAR_D1);
@@ -16927,6 +16900,7 @@ video_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->params[ORC_VAR_S2] = s2_stride;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->params[ORC_VAR_S3] = s3_stride;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = c->exec;
   func (ex);
@@ -17418,7 +17392,7 @@ void
 video_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride,
-    const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
+    const guint8 * ORC_RESTRICT s3, int s3_stride, int p1, int n, int m)
 {
   int i;
   int j;
@@ -17428,11 +17402,7 @@ video_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var34;
   orc_int8 var35;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_int8 var36;
-#else
   orc_int8 var36;
-#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_union16 var39;
@@ -17445,7 +17415,7 @@ video_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     ptr6 = ORC_PTR_OFFSET (s3, s3_stride * j);
 
     /* 3: loadpb */
-    var36 = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+    var36 = p1;
 
     for (i = 0; i < n; i++) {
       /* 0: loadb */
@@ -17496,11 +17466,7 @@ _backup_video_orc_convert_Y444_AYUV (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var34;
   orc_int8 var35;
-#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
-  volatile orc_int8 var36;
-#else
   orc_int8 var36;
-#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_union16 var39;
@@ -17513,7 +17479,7 @@ _backup_video_orc_convert_Y444_AYUV (OrcExecutor * ORC_RESTRICT ex)
     ptr6 = ORC_PTR_OFFSET (ex->arrays[6], ex->params[6] * j);
 
     /* 3: loadpb */
-    var36 = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+    var36 = ex->params[24];
 
     for (i = 0; i < n; i++) {
       /* 0: loadb */
@@ -17554,7 +17520,7 @@ void
 video_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride,
-    const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
+    const guint8 * ORC_RESTRICT s3, int s3_stride, int p1, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -17570,9 +17536,8 @@ video_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
       static const orc_uint8 bc[] = {
         1, 7, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 99, 111,
         110, 118, 101, 114, 116, 95, 89, 52, 52, 52, 95, 65, 89, 85, 86, 11,
-        4, 4, 12, 1, 1, 12, 1, 1, 12, 1, 1, 14, 1, 255, 0, 0,
-        0, 20, 2, 20, 2, 196, 32, 5, 6, 196, 33, 16, 4, 195, 0, 33,
-        32, 2, 0,
+        4, 4, 12, 1, 1, 12, 1, 1, 12, 1, 1, 16, 1, 20, 2, 20,
+        2, 196, 32, 5, 6, 196, 33, 24, 4, 195, 0, 33, 32, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
       orc_program_set_backup_function (p, _backup_video_orc_convert_Y444_AYUV);
@@ -17585,13 +17550,13 @@ video_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
-      orc_program_add_constant (p, 1, 0x000000ff, "c1");
+      orc_program_add_parameter (p, 1, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
 
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T1, ORC_VAR_S2, ORC_VAR_S3,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_C1, ORC_VAR_S1,
+      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_P1, ORC_VAR_S1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_T1,
           ORC_VAR_D1);
@@ -17617,6 +17582,7 @@ video_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->params[ORC_VAR_S2] = s2_stride;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->params[ORC_VAR_S3] = s3_stride;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = c->exec;
   func (ex);
