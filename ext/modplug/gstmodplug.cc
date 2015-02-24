@@ -34,7 +34,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -v filesrc location=1990s-nostalgia.xm ! modplug ! audioconvert ! alsasink
+ * gst-launch-1.0 -v filesrc location=1990s-nostalgia.xm ! modplug ! audioconvert ! alsasink
  * ]| Play a FastTracker xm file.
  * </refsect2>
  */
