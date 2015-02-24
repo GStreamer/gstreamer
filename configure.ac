@@ -173,9 +173,15 @@ AC_ARG_WITH([bash-completion-dir],
     [with_bash_completion_dir=yes])
 
 if test "x$with_bash_completion_dir" = "xyes"; then
-    PKG_CHECK_MODULES([BASH_COMPLETION], [bash-completion >= 2.0],
-        [BASH_COMPLETION_DIR="`pkg-config --variable=completionsdir bash-completion`"],
-        [BASH_COMPLETION_DIR="$datadir/bash-completion/completions"])
+	if test "x$prefix" = xNONE; then
+		PKG_CHECK_MODULES([BASH_COMPLETION], [bash-completion >= 2.0],
+			[BASH_COMPLETION_DIR="`pkg-config --variable=completionsdir bash-completion`"],
+			[BASH_COMPLETION_DIR="$datadir/bash-completion/completions"])
+	else
+		PKG_CHECK_MODULES([BASH_COMPLETION], [bash-completion >= 2.0],
+		[BASH_COMPLETION_DIR="`pkg-config --define-variable=prefix=$prefix --variable=completionsdir bash-completion`"],
+		[BASH_COMPLETION_DIR="$prefix/$datadir/bash-completion/completions"])
+	fi
 else
     BASH_COMPLETION_DIR="$with_bash_completion_dir"
 fi
