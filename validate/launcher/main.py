@@ -18,10 +18,12 @@
 # Boston, MA 02110-1301, USA.
 import os
 import re
+import sys
 import utils
 import urlparse
 import loggable
 import argparse
+import tempfile
 import reporters
 import subprocess
 
@@ -29,9 +31,10 @@ import subprocess
 from loggable import Loggable
 from httpserver import HTTPServer
 from baseclasses import _TestsLauncher, ScenarioManager
-from utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors, Protocols
+from utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors, Protocols, which
 
 
+LESS = "less"
 HELP = '''
 
 ===============================================================================
@@ -307,7 +310,7 @@ class LauncherConfig(Loggable):
 
     def set_http_server_dir(self, path):
         if self.http_server_dir is not None:
-            princ("Server directory already set to %s" % self.http_server_dir)
+            printc("Server directory already set to %s" % self.http_server_dir)
             return
 
         self.http_server_dir = path
@@ -327,9 +330,15 @@ class LauncherConfig(Loggable):
 
 
 def main(libsdir):
+    if "--help" in sys.argv:
+        _help_message = HELP
+    else:
+        _help_message = "Use --help for the full help"
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
-        prog='gst-validate-launcher', description=HELP)
+        prog='gst-validate-launcher', description=_help_message)
+
     parser.add_argument('testsuites', metavar='N', nargs='*',
                         help="""Lets you specify a file where the testsuite to execute is defined.
 
@@ -469,6 +478,12 @@ Note that all testsuite should be inside python modules, so the directory should
                               help="Print usage documentation")
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
+
+    if _help_message == HELP and which(LESS):
+        tmpf = tempfile.NamedTemporaryFile()
+
+        parser.print_help(file=tmpf)
+        exit(os.system("%s %s" % (LESS, tmpf.name)))
 
     tests_launcher = _TestsLauncher(libsdir)
     tests_launcher.add_options(parser)
