@@ -1062,7 +1062,12 @@ d3d_prepare_render_window (GstD3DVideoSink * sink)
   LOCK_SINK (sink);
 
   if (sink->d3d.window_handle == NULL) {
-    GST_DEBUG_OBJECT (sink, "No window handle has been set..");
+    GST_DEBUG_OBJECT (sink, "No window handle has been set.");
+    goto end;
+  }
+
+  if (sink->d3d.device_lost) {
+    GST_DEBUG_OBJECT (sink, "Device is lost, waiting for reset.");
     goto end;
   }
 
