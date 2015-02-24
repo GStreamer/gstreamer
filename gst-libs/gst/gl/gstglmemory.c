@@ -714,8 +714,8 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
 
   maxsize = gst_gl_get_plane_data_size (info, valign, plane);
 
-  gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
-      allocator, parent, maxsize, 0, 0, maxsize);
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, parent, maxsize, 0, 0,
+      maxsize);
 
   mem->context = gst_object_ref (context);
   mem->tex_type =
