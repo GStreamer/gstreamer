@@ -99,6 +99,22 @@ gst_gl_context_eagl_new (void)
   return context;
 }
 
+void
+gst_gl_context_eagl_resize (GstGLContextEagl * eagl_context)
+{
+  int width, height;
+
+  glBindRenderbuffer (GL_RENDERBUFFER, eagl_context->priv->color_renderbuffer);
+  [eagl_context->priv->eagl_context renderbufferStorage:GL_RENDERBUFFER fromDrawable:eagl_context->priv->eagl_layer];
+  glGetRenderbufferParameteriv (GL_RENDERBUFFER,
+      GL_RENDERBUFFER_WIDTH, &width);
+  glGetRenderbufferParameteriv (GL_RENDERBUFFER,
+      GL_RENDERBUFFER_HEIGHT, &height);
+  glBindRenderbuffer (GL_RENDERBUFFER, eagl_context->priv->depth_renderbuffer);
+  glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width,
+      height);
+}
+
 static gboolean
 gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
     GstGLContext * other_context, GError ** error)

@@ -244,14 +244,17 @@ draw_cb (gpointer data)
     eagl_layer = (CAEAGLLayer *)[window_eagl->priv->view layer];
     size = eagl_layer.frame.size;
 
-    if (window_eagl->priv->window_width != window_eagl->priv->preferred_width ||
-        window_eagl->priv->window_height != window_eagl->priv->preferred_height) {
-      window_eagl->priv->window_width = window_eagl->priv->preferred_width;
-      window_eagl->priv->window_height = window_eagl->priv->preferred_height;
+    if (window_eagl->priv->window_width != size.width ||
+        window_eagl->priv->window_height != size.height) {
+
+      window_eagl->priv->window_width = size.width;
+      window_eagl->priv->window_height = size.height;
+
+      gst_gl_context_eagl_resize (eagl_context);
 
       if (window->resize)
-        window->resize (window->resize_data, window_eagl->priv->preferred_width,
-            window_eagl->priv->preferred_height);
+        window->resize (window->resize_data, window_eagl->priv->window_width,
+            window_eagl->priv->window_height);
     }
   }
 
