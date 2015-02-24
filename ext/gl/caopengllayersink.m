@@ -983,6 +983,8 @@ gst_ca_opengl_layer_sink_on_draw (GstCAOpenGLLayerSink * ca_sink)
 
   /* check if texture is ready for being drawn */
   if (!ca_sink->redisplay_texture) {
+    gl->ClearColor (0.0f, 0.0f, 0.0f, 1.0f);
+    gl->Clear (GL_COLOR_BUFFER_BIT);
     GST_CA_OPENGL_LAYER_SINK_UNLOCK (ca_sink);
     return;
   }
