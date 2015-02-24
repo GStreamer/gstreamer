@@ -2161,8 +2161,8 @@ get_dest_line (GstLineCache * cache, gint idx, gpointer user_data)
 
   cline = CLAMP (idx, 0, convert->out_maxheight - 1);
 
-  GST_DEBUG ("get dest line %d", cline);
   line = FRAME_GET_LINE (convert->dest, cline);
+  GST_DEBUG ("get dest line %d %p", cline, line);
 
   if (convert->borderline) {
     gint r_border = (out_x + convert->out_width) * pstride;
@@ -2212,8 +2212,10 @@ do_upsample_lines (GstLineCache * cache, gint out_line, gint in_line,
 
   n_lines = convert->up_n_lines;
   start_line = in_line;
-  if (start_line < n_lines + convert->up_offset)
+  if (start_line < n_lines + convert->up_offset) {
     start_line += convert->up_offset;
+    out_line += convert->up_offset;
+  }
 
   /* get the lines needed for chroma upsample */
   lines = gst_line_cache_get_lines (cache->prev, out_line, start_line, n_lines);
