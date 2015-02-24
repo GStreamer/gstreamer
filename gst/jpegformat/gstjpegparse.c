@@ -62,7 +62,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "format = (string) { I420, Y41B, UYVY, YV12 }, "
         "width = (int) [ 0, MAX ],"
         "height = (int) [ 0, MAX ], "
-        "interlaced = (boolean) { true, false }, "
         "framerate = (fraction) [ 0/1, MAX ], " "parsed = (boolean) true")
     );
 
@@ -89,9 +88,6 @@ struct _GstJpegParsePrivate
 
   /* the parsed frame size */
   guint16 width, height;
-
-  /* TRUE if the image is interlaced */
-  gboolean interlaced;
 
   /* format color space */
   const gchar *format;
@@ -672,9 +668,6 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstMapInfo * map, gint len)
           goto error;
         break;
 
-      case SOF2:
-        parse->priv->interlaced = TRUE;
-        /* fall through */
       case SOF0:
         /* parse Start Of Frame */
         if (!gst_jpeg_parse_sof (parse, &reader))
@@ -731,7 +724,6 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse, gboolean header_ok)
   if (header_ok == TRUE) {
     gst_caps_set_simple (caps,
         "format", G_TYPE_STRING, parse->priv->format,
-        "interlaced", G_TYPE_BOOLEAN, parse->priv->interlaced,
         "width", G_TYPE_INT, parse->priv->width,
         "height", G_TYPE_INT, parse->priv->height, NULL);
   }
@@ -912,7 +904,6 @@ gst_jpeg_parse_start (GstBaseParse * bparse)
 
   parse->priv->has_fps = FALSE;
 
-  parse->priv->interlaced = FALSE;
   parse->priv->width = parse->priv->height = 0;
   parse->priv->framerate_numerator = 0;
   parse->priv->framerate_denominator = 1;

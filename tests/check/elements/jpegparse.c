@@ -137,7 +137,7 @@ guint8 test_data_comment[] = {
 };
 
 guint8 test_data_sof0[] = {
-  0xff, 0xc0,
+  0xff, 0xc0,                   /* baseline dct-based */
   0x00, 0x11,                   /* size */
   0x08,                         /* precision */
   0x00, 0x3c,                   /* width */
@@ -327,8 +327,7 @@ GST_START_TEST (test_parse_app1_exif)
 
   caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
       "framerate", GST_TYPE_FRACTION, 1, 1, "format", G_TYPE_STRING,
-      "I420", "interlaced", G_TYPE_BOOLEAN, FALSE,
-      "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
+      "I420", "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
 
   buffer_in = make_my_input_buffer (test_data_app1_exif,
       sizeof (test_data_app1_exif));
@@ -353,8 +352,7 @@ GST_START_TEST (test_parse_comment)
 
   caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
       "framerate", GST_TYPE_FRACTION, 1, 1, "format", G_TYPE_STRING,
-      "I420", "interlaced", G_TYPE_BOOLEAN, FALSE,
-      "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
+      "I420", "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
 
   buffer_in = make_my_input_buffer (test_data_comment,
       sizeof (test_data_comment));
