@@ -290,6 +290,30 @@ gst_gl_window_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
 }
 
+typedef struct _GstSetWindowHandleCb
+{
+  GstGLWindow *window;
+  guintptr handle;
+} GstSetWindowHandleCb;
+
+static void
+_set_window_handle_cb (GstSetWindowHandleCb * data)
+{
+  GstGLContext *context = gst_gl_window_get_context (data->window);
+  GstGLWindowClass *window_class = GST_GL_WINDOW_GET_CLASS (data->window);
+
+  gst_gl_context_activate (context, FALSE);
+  window_class->set_window_handle (data->window, data->handle);
+  gst_gl_context_activate (context, TRUE);
+}
+
+static void
+_free_swh_cb (GstSetWindowHandleCb * data)
+{
+  gst_object_unref (data->window);
+  g_slice_free (GstSetWindowHandleCb, data);
+}
+
 /**
  * gst_gl_window_set_window_handle:
  * @window: a #GstGLWindow
@@ -304,13 +328,23 @@ void
 gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
 {
   GstGLWindowClass *window_class;
+  GstSetWindowHandleCb *data;
 
   g_return_if_fail (GST_GL_IS_WINDOW (window));
   g_return_if_fail (handle != 0);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->set_window_handle != NULL);
 
-  window_class->set_window_handle (window, handle);
+  data = g_slice_new (GstSetWindowHandleCb);
+  data->window = gst_object_ref (window);
+  data->handle = handle;
+
+  /* FIXME: Move to a message which deactivates, calls implementation, activates */
+  gst_gl_window_send_message_async (window,
+      (GstGLWindowCB) _set_window_handle_cb, data,
+      (GDestroyNotify) _free_swh_cb);
+
+  /* window_class->set_window_handle (window, handle); */
 }
 
 /**
