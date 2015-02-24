@@ -204,9 +204,7 @@ Patches should be made against git master or the latest release and should be
 in 'unified context' format (use diff -u -p). They should be attached to
 a bug report (or feature request) in
 <ulink url="http://bugzilla.gnome.org">bugzilla</ulink> rather than
-sent to the mailing list. Also see
-<ulink url="http://gstreamer.freedesktop.org/wiki/SubmittingPatches">SubmittingPatches</ulink>
-in the GStreamer wiki.
+sent to the mailing list.
         </para>
       </answer>
     </qandaentry>
