@@ -931,7 +931,6 @@ gst_pad_check_link (GstPad * srcpad, GstPad * sinkpad)
   GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
-  /* FIXME: shouldn't we convert this to g_return_val_if_fail? */
   if (GST_PAD_PEER (srcpad) != NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Source pad %s:%s has a peer, failed",
         GST_DEBUG_PAD_NAME (srcpad));
