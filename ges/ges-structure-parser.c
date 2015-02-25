@@ -121,10 +121,16 @@ ges_structure_parser_parse_symbol (GESStructureParser * self,
 {
   _finish_structure (self);
 
-  while (*symbol == '-' || *symbol == ' ')
+  while (*symbol == ' ')
     symbol++;
-  ges_structure_parser_parse_string (self, symbol, TRUE);
-  self->add_comma = TRUE;
+
+  self->add_comma = FALSE;
+  if (!g_ascii_strncasecmp (symbol, "clip", 4))
+    ges_structure_parser_parse_string (self, "clip, uri=", TRUE);
+  else if (!g_ascii_strncasecmp (symbol, "effect", 6))
+    ges_structure_parser_parse_string (self, "effect, bin-description=", TRUE);
+  else if (!g_ascii_strncasecmp (symbol, "transition", 10))
+    ges_structure_parser_parse_string (self, "transition, type=", TRUE);
 }
 
 void
