@@ -638,7 +638,8 @@ gst_gl_overlay_load_jpeg (GstGLFilter * filter)
         overlay->image_width, overlay->image_height);
 
   overlay->image_memory =
-      (GstGLMemory *) gst_gl_memory_alloc (filter->context, &v_info, 0, NULL);
+      (GstGLMemory *) gst_gl_memory_alloc (filter->context, NULL, &v_info, 0,
+      NULL);
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
           GST_MAP_WRITE)) {
@@ -740,7 +741,8 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
 
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, width, height);
   overlay->image_memory =
-      (GstGLMemory *) gst_gl_memory_alloc (filter->context, &v_info, 0, NULL);
+      (GstGLMemory *) gst_gl_memory_alloc (filter->context, NULL, &v_info, 0,
+      NULL);
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
           GST_MAP_WRITE)) {

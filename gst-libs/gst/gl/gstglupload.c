@@ -347,7 +347,7 @@ _egl_image_upload_perform_gl_thread (GstGLContext * context,
   /* FIXME: buffer pool */
   *image->outbuf = gst_buffer_new ();
   gst_gl_memory_setup_buffer (image->upload->context,
-      &image->upload->priv->out_info, NULL, *image->outbuf);
+      NULL, &image->upload->priv->out_info, NULL, *image->outbuf);
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info); i++) {
     GstMemory *mem = gst_buffer_peek_memory (image->buffer, i);
@@ -556,7 +556,7 @@ _upload_meta_upload_perform (gpointer impl, GstBuffer * buffer,
   /* FIXME: buffer pool */
   *outbuf = gst_buffer_new ();
   gst_gl_memory_setup_buffer (upload->upload->context,
-      &upload->upload->priv->in_info, NULL, *outbuf);
+      NULL, &upload->upload->priv->in_info, NULL, *outbuf);
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     guint tex_id = 0;
