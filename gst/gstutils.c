@@ -924,11 +924,6 @@ gst_element_request_compatible_pad (GstElement * element,
 static gboolean
 gst_pad_check_link (GstPad * srcpad, GstPad * sinkpad)
 {
-  /* FIXME This function is gross.  It's almost a direct copy of
-   * gst_pad_link_filtered().  Any decent programmer would attempt
-   * to merge the two functions, which I will do some day. --ds
-   */
-
   /* generic checks */
   g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
