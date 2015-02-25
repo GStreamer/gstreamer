@@ -731,18 +731,6 @@ video_scale_h_ntap_u16 (GstVideoScaler * scale,
       d = (guint16 *) dest + dest_offset;
       break;
     }
-    case 3:
-    {
-      guint8 *s = (guint8 *) src;
-
-      for (i = 0; i < count; i++) {
-        pixels[i * 3 + 0] = s[offset_n[i] * 3 + 0];
-        pixels[i * 3 + 1] = s[offset_n[i] * 3 + 1];
-        pixels[i * 3 + 2] = s[offset_n[i] * 3 + 2];
-      }
-      d = (guint8 *) dest + dest_offset * 3;
-      break;
-    }
     case 4:
     {
       guint64 *p64 = (guint64 *) pixels;
