@@ -1313,6 +1313,10 @@ d3d_init_swap_chain (GstD3DVideoSink * sink, HWND hWnd)
   GST_DEBUG ("Direct3D stretch rect texture filter: %d", d3d_filtertype);
 
   sink->d3d.filtertype = d3d_filtertype;
+
+  if (sink->d3d.swapchain != NULL)
+    IDirect3DSwapChain9_Release (sink->d3d.swapchain);
+
   sink->d3d.swapchain = d3d_swapchain;
 
   ret = TRUE;
