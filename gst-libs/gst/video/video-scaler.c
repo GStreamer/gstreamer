@@ -1423,27 +1423,54 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
       }
     } else {
       gint tmp_in = y;
+      gint s1, s2;
 
       if (hscale->tmpwidth < width)
         realloc_tmplines (hscale, n_elems, width);
 
-      /* horizontal and vertical scaling FIXME, we could probably do better
-       * by swapping horizontal or vertical scaling in some cases */
-      for (i = y; i < height; i++) {
-        guint in, j;
+      s1 = width * vscale->resampler.offset[height - 1];
+      s2 = width * height;
 
-        in = vscale->resampler.offset[i];
-        while (tmp_in < in)
-          tmp_in++;
-        while (tmp_in < in + v_taps) {
-          hfunc (hscale, LINE (src, src_stride, tmp_in), TMP_LINE (vscale,
-                  tmp_in, v_taps), x, width, n_elems);
-          tmp_in++;
+      if (s1 <= s2) {
+        for (i = y; i < height; i++) {
+          guint in, j;
+
+          in = vscale->resampler.offset[i];
+          while (tmp_in < in)
+            tmp_in++;
+          while (tmp_in < in + v_taps) {
+            hfunc (hscale, LINE (src, src_stride, tmp_in), TMP_LINE (vscale,
+                    tmp_in, v_taps), x, width, n_elems);
+            tmp_in++;
+          }
+          for (j = 0; j < v_taps; j++)
+            lines[j] = TMP_LINE (vscale, in + j, v_taps);
+
+          vfunc (vscale, lines, LINE (dest, dest_stride, i), i, width, n_elems);
         }
-        for (j = 0; j < v_taps; j++)
-          lines[j] = TMP_LINE (vscale, in + j, v_taps);
+      } else {
+        guint vx, vw;
 
-        vfunc (vscale, lines, LINE (dest, dest_stride, i), i, width, n_elems);
+        vx = hscale->resampler.offset[x];
+        vw = hscale->resampler.offset[x + width - 1] +
+            hscale->resampler.max_taps;
+
+        if (vscale->tmpwidth < vw)
+          realloc_tmplines (vscale, n_elems, vw);
+
+        for (i = y; i < height; i++) {
+          guint in, j;
+
+          in = vscale->resampler.offset[i];
+          for (j = 0; j < v_taps; j++)
+            lines[j] = LINE (src, src_stride, in + j) + vx * n_elems;
+
+          vfunc (vscale, lines, TMP_LINE (vscale, 0, v_taps) + vx * n_elems, i,
+              vw - vx, n_elems);
+
+          hfunc (hscale, TMP_LINE (vscale, 0, v_taps), LINE (dest, dest_stride,
+                  i), x, width, n_elems);
+        }
       }
     }
   }
