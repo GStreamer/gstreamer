@@ -421,7 +421,7 @@ _find_plane_frame_start (GstGLMemory * gl_mem)
 
   /* offset between the plane data start and where the video frame starts */
   return (GST_VIDEO_INFO_PLANE_OFFSET (&gl_mem->info,
-          gl_mem->plane)) - plane_start;
+          gl_mem->plane)) - plane_start + gl_mem->mem.offset;
 }
 
 static void
@@ -699,10 +699,12 @@ error:
 
 static void
 _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
-    GstGLContext * context, GstVideoInfo * info, GstVideoAlignment * valign,
-    guint plane, gpointer user_data, GDestroyNotify notify)
+    GstGLContext * context, GstAllocationParams * params, GstVideoInfo * info,
+    GstVideoAlignment * valign, guint plane, gpointer user_data,
+    GDestroyNotify notify)
 {
-  gsize maxsize;
+  gsize size, maxsize;
+  gsize align = gst_memory_alignment, offset = 0;
 
   g_return_if_fail (plane < GST_VIDEO_INFO_N_PLANES (info));
 
@@ -712,10 +714,16 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   else
     gst_video_alignment_reset (&mem->valign);
 
-  maxsize = gst_gl_get_plane_data_size (info, valign, plane);
+  size = maxsize = gst_gl_get_plane_data_size (info, valign, plane);
 
-  gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, parent, maxsize, 0, 0,
-      maxsize);
+  if (params) {
+    align |= params->align;
+    offset = params->prefix;
+    maxsize += params->prefix + params->padding + align;
+  }
+
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, parent, maxsize, align,
+      offset, size);
 
   mem->context = gst_object_ref (context);
   mem->tex_type =
@@ -726,7 +734,6 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->plane = plane;
   mem->notify = notify;
   mem->user_data = user_data;
-  mem->data_wrapped = FALSE;
   mem->texture_wrapped = FALSE;
 
   g_mutex_init (&mem->lock);
@@ -741,13 +748,14 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
 
 static GstGLMemory *
 _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
-    GstGLContext * context, GstVideoInfo * info, GstVideoAlignment * valign,
-    guint plane, gpointer user_data, GDestroyNotify notify)
+    GstGLContext * context, GstAllocationParams * params, GstVideoInfo * info,
+    GstVideoAlignment * valign, guint plane, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstGLMemory *mem;
   GenTexture data = { 0, };
   mem = g_slice_new0 (GstGLMemory);
-  _gl_mem_init (mem, allocator, parent, context, info, valign, plane,
+  _gl_mem_init (mem, allocator, parent, context, params, info, valign, plane,
       user_data, notify);
 
   data.width = mem->tex_width;
@@ -769,6 +777,32 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
 
   mem->tex_id = data.result;
   mem->tex_target = data.gl_target;
+
+  return mem;
+}
+
+static GstGLMemory *
+_gl_mem_alloc_data (GstGLMemory * mem)
+{
+  guint8 *data;
+  gsize align, aoffset;
+
+  data = g_try_malloc (mem->mem.maxsize);
+  mem->alloc_data = mem->data = data;
+
+  if (data == NULL) {
+    gst_memory_unref ((GstMemory *) mem);
+    return NULL;
+  }
+
+  /* do alignment */
+  align = mem->mem.align;
+  if ((aoffset = ((guintptr) data & align))) {
+    aoffset = (align + 1) - aoffset;
+    data += aoffset;
+    mem->mem.maxsize -= aoffset;
+    mem->data = data;
+  }
 
   return mem;
 }
@@ -1009,17 +1043,22 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
   g_mutex_lock (&((GstGLMemory *) src)->lock);
 
   if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
-    dest = _gl_mem_new (src->mem.allocator, NULL, src->context, &src->info,
-        &src->valign, src->plane, NULL, NULL);
-    dest->data = g_try_malloc (src->mem.maxsize);
-    if (dest->data == NULL) {
+    GstAllocationParams params = { 0, src->mem.align, 0, 0 };
+
+    dest = _gl_mem_new (src->mem.allocator, NULL, src->context, &params,
+        &src->info, &src->valign, src->plane, NULL, NULL);
+    dest = _gl_mem_alloc_data (dest);
+
+    if (dest == NULL) {
       GST_WARNING ("Could not copy GL Memory");
       gst_memory_unref ((GstMemory *) dest);
-      return NULL;
+      goto done;
     }
-    memcpy (dest->data, src->data, src->mem.maxsize);
+
+    memcpy (dest->data, (guint8 *) src->data + src->mem.offset, src->mem.size);
     GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
   } else {
+    GstAllocationParams params = { 0, src->mem.align, 0, 0 };
     GstGLMemoryCopyParams copy_params;
 
     copy_params.src = src;
@@ -1033,26 +1072,22 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 
     gst_gl_context_thread_add (src->context, _gl_mem_copy_thread, &copy_params);
 
-    dest = g_slice_new0 (GstGLMemory);
-    _gl_mem_init (dest, src->mem.allocator, NULL, src->context, &src->info,
-        &src->valign, src->plane, NULL, NULL);
-
     if (!copy_params.result) {
       GST_WARNING ("Could not copy GL Memory");
-      gst_memory_unref ((GstMemory *) dest);
-      return NULL;
+      goto done;
     }
 
+    dest = g_slice_new0 (GstGLMemory);
+    _gl_mem_init (dest, src->mem.allocator, NULL, src->context, &params,
+        &src->info, &src->valign, src->plane, NULL, NULL);
+
     dest->tex_id = copy_params.tex_id;
-    dest->data = g_try_malloc (src->mem.maxsize);
-    if (dest->data == NULL) {
-      GST_WARNING ("Could not copy GL Memory");
-      gst_memory_unref ((GstMemory *) dest);
-      return NULL;
-    }
+    dest->tex_target = copy_params.tex_target;
+    dest = _gl_mem_alloc_data (dest);
     GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
   }
 
+done:
   g_mutex_unlock (&((GstGLMemory *) src)->lock);
 
   return (GstMemory *) dest;
@@ -1107,8 +1142,9 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
   if (gl_mem->notify)
     gl_mem->notify (gl_mem->user_data);
 
-  if (gl_mem->data && !gl_mem->data_wrapped) {
-    g_free (gl_mem->data);
+  if (gl_mem->alloc_data) {
+    g_free (gl_mem->alloc_data);
+    gl_mem->alloc_data = NULL;
     gl_mem->data = NULL;
   }
 
@@ -1189,18 +1225,14 @@ gst_gl_memory_wrapped_texture (GstGLContext * context,
   GstGLMemory *mem;
 
   mem = g_slice_new0 (GstGLMemory);
-  _gl_mem_init (mem, _gl_allocator, NULL, context, info, valign, plane,
+  _gl_mem_init (mem, _gl_allocator, NULL, context, NULL, info, valign, plane,
       user_data, notify);
 
   mem->tex_id = texture_id;
   mem->tex_target = texture_target;
   mem->texture_wrapped = TRUE;
-  mem->data = g_try_malloc (mem->mem.maxsize);
-  if (mem->data == NULL) {
-    gst_memory_unref ((GstMemory *) mem);
-    return NULL;
-  }
 
+  mem = _gl_mem_alloc_data (mem);
   GST_GL_MEMORY_FLAG_SET (mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
 
   return mem;
@@ -1209,6 +1241,7 @@ gst_gl_memory_wrapped_texture (GstGLContext * context,
 /**
  * gst_gl_memory_alloc:
  * @context:a #GstGLContext
+ * @params: a #GstAllocationParams
  * @info: the #GstVideoInfo of the memory
  * @plane: the plane this memory will represent
  * @valign: the #GstVideoAlignment applied to @info
@@ -1219,19 +1252,14 @@ gst_gl_memory_wrapped_texture (GstGLContext * context,
  *          from @context
  */
 GstMemory *
-gst_gl_memory_alloc (GstGLContext * context, GstVideoInfo * info,
-    guint plane, GstVideoAlignment * valign)
+gst_gl_memory_alloc (GstGLContext * context, GstAllocationParams * params,
+    GstVideoInfo * info, guint plane, GstVideoAlignment * valign)
 {
   GstGLMemory *mem;
 
-  mem = _gl_mem_new (_gl_allocator, NULL, context, info, valign, plane, NULL,
-      NULL);
-
-  mem->data = g_try_malloc (mem->mem.maxsize);
-  if (mem->data == NULL) {
-    gst_memory_unref ((GstMemory *) mem);
-    return NULL;
-  }
+  mem = _gl_mem_new (_gl_allocator, NULL, context, params, info, valign, plane,
+      NULL, NULL);
+  mem = _gl_mem_alloc_data (mem);
 
   return (GstMemory *) mem;
 }
@@ -1259,11 +1287,10 @@ gst_gl_memory_wrapped (GstGLContext * context, GstVideoInfo * info,
 {
   GstGLMemory *mem;
 
-  mem = _gl_mem_new (_gl_allocator, NULL, context, info, valign, plane,
+  mem = _gl_mem_new (_gl_allocator, NULL, context, NULL, info, valign, plane,
       user_data, notify);
 
   mem->data = data;
-  mem->data_wrapped = TRUE;
 
   GST_GL_MEMORY_FLAG_SET (mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
 
@@ -1349,6 +1376,7 @@ gst_is_gl_memory (GstMemory * mem)
 /**
  * gst_gl_memory_setup_buffer:
  * @context: a #GstGLContext
+ * @param: a #GstAllocationParams
  * @info: a #GstVideoInfo
  * @valign: the #GstVideoAlignment applied to @info
  * @buffer: a #GstBuffer
@@ -1359,7 +1387,8 @@ gst_is_gl_memory (GstMemory * mem)
  * Returns: whether the memory's were sucessfully added.
  */
 gboolean
-gst_gl_memory_setup_buffer (GstGLContext * context, GstVideoInfo * info,
+gst_gl_memory_setup_buffer (GstGLContext * context,
+    GstAllocationParams * params, GstVideoInfo * info,
     GstVideoAlignment * valign, GstBuffer * buffer)
 {
   GstGLMemory *gl_mem[GST_VIDEO_MAX_PLANES] = { NULL, };
@@ -1368,7 +1397,8 @@ gst_gl_memory_setup_buffer (GstGLContext * context, GstVideoInfo * info,
   n_mem = GST_VIDEO_INFO_N_PLANES (info);
 
   for (i = 0; i < n_mem; i++) {
-    gl_mem[i] = (GstGLMemory *) gst_gl_memory_alloc (context, info, i, valign);
+    gl_mem[i] =
+        (GstGLMemory *) gst_gl_memory_alloc (context, params, info, i, valign);
     if (gl_mem[i] == NULL)
       return FALSE;
 
