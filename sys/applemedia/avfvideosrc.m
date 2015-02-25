@@ -24,6 +24,9 @@
 #include "avfvideosrc.h"
 
 #import <AVFoundation/AVFoundation.h>
+#if !HAVE_IOS
+#import <AppKit/AppKit.h>
+#endif
 #include <gst/video/video.h>
 #include <gst/gl/gstglcontext.h>
 #include "coremediabuffer.h"
@@ -75,9 +78,6 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 
   gint deviceIndex;
   BOOL doStats;
-#if !HAVE_IOS
-  CGDirectDisplayID displayId;
-#endif
 
   AVCaptureSession *session;
   AVCaptureInput *input;
@@ -126,6 +126,9 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 - (BOOL)openDevice;
 - (void)closeDevice;
 - (GstVideoFormat)getGstVideoFormat:(NSNumber *)pixel_format;
+#if !HAVE_IOS
+- (CGDirectDisplayID)getDisplayIdFromDeviceIndex;
+#endif
 - (BOOL)getDeviceCaps:(GstCaps *)result;
 - (BOOL)setDeviceCaps:(GstVideoInfo *)info;
 - (BOOL)getSessionPresetCaps:(GstCaps *)result;
@@ -169,9 +172,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     captureScreenMouseClicks = NO;
     useVideoMeta = NO;
     textureCache = NULL;
-#if !HAVE_IOS
-    displayId = kCGDirectMainDisplay;
-#endif
 
     mainQueue =
         dispatch_queue_create ("org.freedesktop.gstreamer.avfvideosrc.main", NULL);
@@ -200,7 +200,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   NSString *mediaType = AVMediaTypeVideo;
   NSError *err;
 
-  if (deviceIndex == -1) {
+  if (deviceIndex == DEFAULT_DEVICE_INDEX) {
     device = [AVCaptureDevice defaultDeviceWithMediaType:mediaType];
     if (device == nil) {
       GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
@@ -241,7 +241,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 #if HAVE_IOS
   return NO;
 #else
+  CGDirectDisplayID displayId;
+
   GST_DEBUG_OBJECT (element, "Opening screen input");
+
+  displayId = [self getDisplayIdFromDeviceIndex];
+  if (displayId == 0)
+    return NO;
 
   AVCaptureScreenInput *screenInput =
       [[AVCaptureScreenInput alloc] initWithDisplayID:displayId];
@@ -367,6 +373,26 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   return gst_format;
 }
+
+#if !HAVE_IOS
+- (CGDirectDisplayID)getDisplayIdFromDeviceIndex
+{
+  NSDictionary *description;
+  NSNumber *displayId;
+  NSArray *screens = [NSScreen screens];
+
+  if (deviceIndex == DEFAULT_DEVICE_INDEX)
+    return kCGDirectMainDisplay;
+  if (deviceIndex >= [screens count]) {
+    GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+                        ("Invalid screen capture device index"), (NULL));
+    return 0;
+  }
+  description = [[screens objectAtIndex:deviceIndex] deviceDescription];
+  displayId = [description objectForKey:@"NSScreenNumber"];
+  return [displayId unsignedIntegerValue];
+}
+#endif
 
 - (BOOL)getDeviceCaps:(GstCaps *)result
 {
@@ -547,7 +573,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   if (captureScreen) {
 #if !HAVE_IOS
-    CGRect rect = CGDisplayBounds (displayId);
+    CGRect rect = CGDisplayBounds ([self getDisplayIdFromDeviceIndex]);
     for (NSNumber *pixel_format in pixel_formats) {
       GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
       if (gst_format != GST_VIDEO_FORMAT_UNKNOWN)
