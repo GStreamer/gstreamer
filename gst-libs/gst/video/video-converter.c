@@ -3568,23 +3568,6 @@ convert_plane_fill (GstVideoConverter * convert,
 }
 
 static void
-convert_plane_copy (GstVideoConverter * convert,
-    const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
-{
-  guint8 *s, *d;
-  gint splane = convert->fsplane[plane];
-
-  s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
-  s += convert->fin_x[splane];
-  d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
-  d += convert->fout_x[plane];
-
-  video_orc_memcpy_2d (d, FRAME_GET_PLANE_STRIDE (dest, plane),
-      s, FRAME_GET_PLANE_STRIDE (src, splane),
-      convert->fout_width[plane], convert->fout_height[plane]);
-}
-
-static void
 convert_plane_h_double (GstVideoConverter * convert,
     const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
 {
@@ -4030,7 +4013,7 @@ setup_scale (GstVideoConverter * convert)
       need_h_scaler = FALSE;
       if (iw == ow) {
         if (ih == oh) {
-          convert->fconvert[i] = convert_plane_copy;
+          convert->fconvert[i] = convert_plane_hv;
           GST_DEBUG ("plane %d: copy", i);
         } else if (ih == 2 * oh && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
