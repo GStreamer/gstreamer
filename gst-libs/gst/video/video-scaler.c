@@ -1353,18 +1353,18 @@ no_func:
  * @src: source pixels
  * @src_stride: source pixels stride
  * @dest: destination pixels
- * @dest_stride: sinationource pixels stride
+ * @dest_stride: destination pixels stride
  * @x: the horizontal destination offset
  * @y: the vertical destination offset
- * @width: the number of pixels to scale
- * @height: the number of lines to scale
+ * @width: the number of output pixels to scale
+ * @height: the number of output lines to scale
  *
  * Scale a rectangle of pixels in @src with @src_stride to @dest with
  * @dest_stride using the horizontal scaler @hscaler and the vertical
  * scaler @vscale.
  *
- * One of @hscale and @vscale can be NULL to only perform scaling in
- * one dimension.
+ * One or both of @hscale and @vscale can be NULL to only perform scaling in
+ * one dimension or do a copy without scaling.
  *
  * @x and @y are the coordinates in the destination image to process.
  */
@@ -1379,7 +1379,6 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
   GstVideoScalerVFunc vfunc;
   gint i;
 
-  g_return_if_fail (hscale != NULL || vscale != NULL);
   g_return_if_fail (src != NULL);
   g_return_if_fail (dest != NULL);
 
@@ -1392,13 +1391,31 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
 #define TMP_LINE(s,i,v) ((guint8 *)(s->tmpline1) + (((i) % (v)) * (sizeof (gint32) * width * n_elems)))
 
   if (vscale == NULL) {
-    if (hscale->tmpwidth < width)
-      realloc_tmplines (hscale, n_elems, width);
+    if (hscale == NULL) {
+      guint xo, xw;
+      guint8 *s, *d;
 
-    /* only horizontal scaling */
-    for (i = y; i < height; i++) {
-      hfunc (hscale, LINE (src, src_stride, i), LINE (dest, dest_stride, i),
-          x, width, n_elems);
+      xo = x * n_elems;
+      xw = width * n_elems;
+
+      s = LINE (src, src_stride, y) + xo;
+      d = LINE (dest, dest_stride, y) + xo;
+
+      /* no scaling, do memcpy */
+      for (i = y; i < height; i++) {
+        memcpy (d, s, xw);
+        d += dest_stride;
+        s += src_stride;
+      }
+    } else {
+      if (hscale->tmpwidth < width)
+        realloc_tmplines (hscale, n_elems, width);
+
+      /* only horizontal scaling */
+      for (i = y; i < height; i++) {
+        hfunc (hscale, LINE (src, src_stride, i), LINE (dest, dest_stride, i),
+            x, width, n_elems);
+      }
     }
   } else {
     guint v_taps;
