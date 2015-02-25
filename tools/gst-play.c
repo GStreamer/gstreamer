@@ -626,9 +626,57 @@ seek_failed:
 }
 
 static void
+change_rate (GstPlay * play, gdouble rate)
+{
+  GstQuery *query;
+  GstEvent *seek;
+  gboolean seekable = FALSE;
+  gint64 pos = -1;
+
+  g_return_if_fail (rate != 0 && rate >= -10.0 && rate <= 10.0);
+
+  if (!gst_element_query_position (play->playbin, GST_FORMAT_TIME, &pos))
+    goto seek_failed;
+
+  query = gst_query_new_seeking (GST_FORMAT_TIME);
+  if (!gst_element_query (play->playbin, query)) {
+    gst_query_unref (query);
+    goto seek_failed;
+  }
+
+  gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+  gst_query_unref (query);
+
+  if (!seekable)
+    goto seek_failed;
+
+  if (rate > 0)
+    seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
+        /* start */ GST_SEEK_TYPE_SET, pos,
+        /* stop */ GST_SEEK_TYPE_NONE, 0);
+  else
+    seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+        /* start */ GST_SEEK_TYPE_SET, 0,
+        /* stop */ GST_SEEK_TYPE_SET, pos);
+
+  if (!gst_element_send_event (play->playbin, seek))
+    goto seek_failed;
+
+  return;
+
+seek_failed:
+  {
+    g_print ("\nCould not seek.\n");
+  }
+}
+
+static void
 keyboard_cb (const gchar * key_input, gpointer user_data)
 {
   GstPlay *play = (GstPlay *) user_data;
+  static gdouble rate = 1.0;
 
   switch (g_ascii_tolower (key_input[0])) {
     case ' ':
@@ -646,6 +694,18 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
       break;
     case '<':
       play_prev (play);
+      break;
+    case '+':
+      rate += 0.5;
+      change_rate (play, rate);
+      break;
+    case '-':
+      rate -= 0.5;
+      change_rate (play, rate);
+      break;
+    case 'd':
+      rate *= -1.0;
+      change_rate (play, rate);
       break;
     case 27:                   /* ESC */
       if (key_input[1] == '\0') {
