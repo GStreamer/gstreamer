@@ -332,6 +332,23 @@ GST_START_TEST (info_register_same_debug_category_twice)
 GST_END_TEST;
 #endif
 
+GST_START_TEST (info_fourcc)
+{
+  gchar *res;
+  const gchar *cmp;
+
+  cmp = "abcd";
+  res = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (0x64636261));
+  fail_unless_equals_string (res, cmp);
+  g_free (res);
+
+  cmp = ".bcd";
+  res = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (0x646362a9));
+  fail_unless_equals_string (res, cmp);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_info_suite (void)
 {
@@ -341,6 +358,7 @@ gst_info_suite (void)
   tcase_set_timeout (tc_chain, 30);
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, info_fourcc);
 #ifndef GST_DISABLE_GST_DEBUG
   tcase_add_test (tc_chain, info_segment_format_printf_extension);
   tcase_add_test (tc_chain, info_ptr_format_printf_extension);

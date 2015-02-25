@@ -80,12 +80,14 @@ G_BEGIN_DECLS
  * Can be used together with #GST_FOURCC_FORMAT to properly output a
  * #guint32 fourcc value in a printf()-style text message.
  */
-#define GST_FOURCC_ARGS(fourcc) \
-        ((gchar) ((fourcc)     &0xff)), \
-        ((gchar) (((fourcc)>>8 )&0xff)), \
-        ((gchar) (((fourcc)>>16)&0xff)), \
-        ((gchar) (((fourcc)>>24)&0xff))
 
+#define __GST_PRINT_CHAR(c) \
+  g_ascii_isprint(c) ? (c) : '.'
+#define GST_FOURCC_ARGS(fourcc)               \
+  __GST_PRINT_CHAR((fourcc) & 0xff),          \
+  __GST_PRINT_CHAR(((fourcc) >> 8) & 0xff),   \
+  __GST_PRINT_CHAR(((fourcc) >> 16) & 0xff),  \
+  __GST_PRINT_CHAR(((fourcc) >> 24) & 0xff)
 /**
  * GST_VALUE_HOLDS_INT_RANGE:
  * @x: the #GValue to check
