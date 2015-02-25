@@ -3918,9 +3918,12 @@ setup_scale (GstVideoConverter * convert)
       gst_video_scaler_free (y_scaler);
       gst_video_scaler_free (uv_scaler);
     } else {
-      convert->fh_scaler[0] =
-          gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          in_width, out_width, convert->config);
+      if (in_width != out_width)
+        convert->fh_scaler[0] =
+            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+            in_width, out_width, convert->config);
+      else
+        convert->fh_scaler[0] = NULL;
 
       pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, GST_VIDEO_COMP_R);
       convert->fin_x[0] = convert->in_x * pstride;
@@ -3929,11 +3932,15 @@ setup_scale (GstVideoConverter * convert)
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (in_info, 0));
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (out_info, 0));
 
-    convert->fv_scaler[0] =
-        gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-        in_height, out_height, convert->config);
+    if (in_height != out_height) {
+      convert->fv_scaler[0] =
+          gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+          in_height, out_height, convert->config);
+      gst_video_scaler_get_coeff (convert->fv_scaler[0], 0, NULL, &max_taps);
+    } else {
+      convert->fv_scaler[0] = NULL;
+    }
 
-    gst_video_scaler_get_coeff (convert->fv_scaler[0], 0, NULL, &max_taps);
 
     convert->fin_y[0] = convert->in_y;
     convert->fout_y[0] = convert->out_y;
