@@ -1916,7 +1916,6 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   GstLineCache *prev;
   const GstVideoFormatInfo *fin, *fout, *finfo;
   gdouble alpha_value;
-  guint8 av255;
 
   g_return_val_if_fail (in_info != NULL, NULL);
   g_return_val_if_fail (out_info != NULL, NULL);
@@ -1984,16 +1983,6 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
 
   alpha_value = GET_OPT_ALPHA_VALUE (convert);
   convert->alpha_value = 255 * alpha_value;
-  if (CHECK_ALPHA_SET (convert)) {
-    av255 = CLAMP (convert->alpha_value, 0, 255);
-  } else {
-    av255 = convert->border_argb >> 24;
-    if (CHECK_ALPHA_MULT (convert)) {
-      av255 = (av255 * convert->alpha_value) / 255;
-      av255 = CLAMP (av255, 0, 255);
-    }
-  }
-  convert->border_argb = (av255 << 24) | (convert->border_argb & 0x00ffffff);
   convert->alpha_mode = convert_get_alpha_mode (convert);
 
   convert->unpack_format = in_info->finfo->unpack_format;

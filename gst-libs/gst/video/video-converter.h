@@ -153,9 +153,8 @@ G_BEGIN_DECLS
  * GST_VIDEO_CONVERTER_OPT_BORDER_ARGB:
  *
  * #G_TYPE_UINT, the border color to use if #GST_VIDEO_CONVERTER_OPT_FILL_BORDER
- * is set to %TRUE.
- * Default 0xff000000 and the alpha component is influenced by
- * #GST_VIDEO_CONVERTER_OPT_ALPHA_VALUE and #GST_VIDEO_CONVERTER_OPT_ALPHA_MODE.
+ * is set to %TRUE. The color is in ARGB format.
+ * Default 0xff000000
  */
 #define GST_VIDEO_CONVERTER_OPT_BORDER_ARGB   "GstVideoConverter.border-argb"
 /**
