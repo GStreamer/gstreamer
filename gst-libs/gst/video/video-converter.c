@@ -3948,6 +3948,7 @@ setup_scale (GstVideoConverter * convert)
       gint comp, n_comp, j, iw, ih, ow, oh, pstride;
       gboolean need_v_scaler, need_h_scaler;
       GstStructure *config;
+      gint resample_method;
 
       n_comp = GST_VIDEO_FORMAT_INFO_N_COMPONENTS (in_finfo);
 
@@ -4016,16 +4017,20 @@ setup_scale (GstVideoConverter * convert)
 
       config = gst_structure_copy (convert->config);
 
+      resample_method = (i == 0 ? method : cr_method);
+
       need_v_scaler = FALSE;
       need_h_scaler = FALSE;
       if (iw == ow) {
         if (ih == oh) {
           convert->fconvert[i] = convert_plane_copy;
           GST_DEBUG ("plane %d: copy", i);
-        } else if (ih == 2 * oh && pstride == 1) {
+        } else if (ih == 2 * oh && pstride == 1
+            && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
           convert->fconvert[i] = convert_plane_v_halve;
           GST_DEBUG ("plane %d: vertical halve", i);
-        } else if (2 * ih == oh && pstride == 1) {
+        } else if (2 * ih == oh && pstride == 1
+            && resample_method == GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
           convert->fconvert[i] = convert_plane_v_double;
           GST_DEBUG ("plane %d: vertical double", i);
         } else {
@@ -4034,10 +4039,12 @@ setup_scale (GstVideoConverter * convert)
           need_v_scaler = TRUE;
         }
       } else if (ih == oh) {
-        if (iw == 2 * ow && pstride == 1) {
+        if (iw == 2 * ow && pstride == 1
+            && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
           convert->fconvert[i] = convert_plane_h_halve;
           GST_DEBUG ("plane %d: horizontal halve", i);
-        } else if (2 * iw == ow && pstride == 1) {
+        } else if (2 * iw == ow && pstride == 1
+            && resample_method == GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
           convert->fconvert[i] = convert_plane_h_double;
           GST_DEBUG ("plane %d: horizontal double", i);
         } else {
@@ -4046,10 +4053,12 @@ setup_scale (GstVideoConverter * convert)
           need_h_scaler = TRUE;
         }
       } else {
-        if (iw == 2 * ow && ih == 2 * oh && pstride == 1) {
+        if (iw == 2 * ow && ih == 2 * oh && pstride == 1
+            && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
           convert->fconvert[i] = convert_plane_hv_halve;
           GST_DEBUG ("plane %d: horizontal/vertical halve", i);
-        } else if (2 * iw == ow && 2 * ih == oh && pstride == 1) {
+        } else if (2 * iw == ow && 2 * ih == oh && pstride == 1
+            && resample_method == GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
           convert->fconvert[i] = convert_plane_hv_double;
           GST_DEBUG ("plane %d: horizontal/vertical double", i);
         } else {
@@ -4061,15 +4070,13 @@ setup_scale (GstVideoConverter * convert)
       }
 
       if (need_h_scaler) {
-        convert->fh_scaler[i] =
-            gst_video_scaler_new (i == 0 ? method : cr_method,
+        convert->fh_scaler[i] = gst_video_scaler_new (resample_method,
             GST_VIDEO_SCALER_FLAG_NONE, taps, iw, ow, config);
       } else
         convert->fh_scaler[i] = NULL;
 
       if (need_v_scaler) {
-        convert->fv_scaler[i] =
-            gst_video_scaler_new (i == 0 ? method : cr_method,
+        convert->fv_scaler[i] = gst_video_scaler_new (resample_method,
             GST_VIDEO_SCALER_FLAG_NONE, taps, ih, oh, config);
         gst_video_scaler_get_coeff (convert->fv_scaler[i], 0, NULL, &n_taps);
       } else
