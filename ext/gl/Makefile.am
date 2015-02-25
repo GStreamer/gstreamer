@@ -1,31 +1,43 @@
-
 plugin_LTLIBRARIES = libgstopengl.la
 
-AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
-AM_LIBS = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
+libgstopengl_la_SOURCES = \
+	gstopengl.c \
+	gstglimagesink.c \
+	gstglfiltercube.c \
+	gstgleffects.c \
+	effects/gstgleffectssources.c \
+	effects/gstgleffectidentity.c \
+	effects/gstgleffectmirror.c \
+	effects/gstgleffectsqueeze.c \
+	gstglcolorscale.c \
+	gstglmixer.c \
+	gstglvideomixer.c \
+	gstglfiltershader.c \
+	gstglfilterapp.c
 
-libgstopengl_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
+noinst_HEADERS = \
+	gstglimagesink.h \
+	gstglfiltercube.h \
+	gstgleffects.h \
+	effects/gstgleffectssources.h \
+	gstglcolorscale.h \
+	gstglmixer.h \
+	gstglmixerpad.h \
+	gstglvideomixer.h \
+	gstglfiltershader.h \
+	gstglfilterapp.h
 
 # full opengl required
 if USE_OPENGL
-OPENGL_SOURCES =  \
+libgstopengl_la_SOURCES += \
 	gstglfilterblur.c \
-	gstglfilterblur.h \
 	gstglfiltersobel.c \
-	gstglfiltersobel.h \
 	gstglfilterlaplacian.c \
-	gstglfilterlaplacian.h \
 	gstglfilterglass.c \
-	gstglfilterglass.h \
 	gstgldeinterlace.c \
-	gstgldeinterlace.h \
 	gltestsrc.c \
-	gltestsrc.h \
 	gstgltestsrc.c \
-	gstgltestsrc.h \
 	gstglmosaic.c \
-	gstglmosaic.h \
-	effects/gstgleffectscurves.h \
 	effects/gstgleffectstretch.c \
 	effects/gstgleffecttunnel.c \
 	effects/gstgleffectfisheye.c \
@@ -33,44 +45,32 @@ OPENGL_SOURCES =  \
 	effects/gstgleffectbulge.c \
 	effects/gstgleffectsquare.c \
 	effects/gstgleffectlumatocurve.c \
-	effects/gstgleffectlumatocurve.h \
 	effects/gstgleffectrgbtocurve.c \
 	effects/gstgleffectsin.c \
 	effects/gstgleffectglow.c \
 	effects/gstgleffectxray.c
 
+noinst_HEADERS += \
+	gstglfilterblur.h \
+	gstglfiltersobel.h \
+	gstglfilterlaplacian.h \
+	gstglfilterglass.h \
+	gstgldeinterlace.h \
+	gltestsrc.h \
+	gstgltestsrc.h \
+	gstglmosaic.h \
+	effects/gstgleffectscurves.h \
+	effects/gstgleffectlumatocurve.h
+
 if HAVE_PNG
-OPENGL_SOURCES += \
-	gstgldifferencematte.c \
+libgstopengl_la_SOURCES += \
+	gstgldifferencematte.c
+
+noinst_HEADERS += \
 	gstgldifferencematte.h
 endif
 endif
 
-libgstopengl_la_SOURCES = \
-	gstopengl.c \
-	gstglimagesink.c \
-	gstglimagesink.h \
-	gstglfiltercube.c \
-	gstglfiltercube.h \
-	gstgleffects.c \
-	gstgleffects.h \
-	effects/gstgleffectssources.c \
-	effects/gstgleffectssources.h \
-	effects/gstgleffectidentity.c \
-	effects/gstgleffectmirror.c \
-	effects/gstgleffectsqueeze.c \
-	gstglcolorscale.c \
-	gstglcolorscale.h \
-	gstglmixer.c \
-	gstglmixer.h \
-	gstglmixerpad.h \
-	gstglvideomixer.c \
-	gstglvideomixer.h \
-	gstglfiltershader.c \
-	gstglfiltershader.h \
-	gstglfilterapp.c \
-	gstglfilterapp.h \
-	$(OPENGL_SOURCES)
 
 if HAVE_GRAPHENE
 libgstopengl_la_SOURCES += \
@@ -81,24 +81,28 @@ endif
 if HAVE_JPEG
 if HAVE_PNG
 libgstopengl_la_SOURCES += \
-	gstgloverlay.c \
+	gstgloverlay.c
+
+noinst_HEADERS += \
 	gstgloverlay.h
 endif
 endif
 
 if HAVE_WINDOW_COCOA
 libgstopengl_la_SOURCES += \
-	caopengllayersink.m \
+	caopengllayersink.m
+
+noinst_HEADERS += \
 	caopengllayersink.h
+endif
 
 libgstopengl_la_OBJCFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
-	$(GL_OBJCFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_OBJCFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_OBJCFLAGS)
-endif
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GL_OBJCFLAGS)
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?
@@ -126,4 +130,6 @@ libgstopengl_la_LIBADD = \
 	$(GRAPHENE_LIBS)
 
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstopengl_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
+
 
