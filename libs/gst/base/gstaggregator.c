@@ -1110,133 +1110,58 @@ gst_aggregator_request_new_pad (GstElement * element,
   return GST_PAD (agg_pad);
 }
 
-typedef struct
-{
-  GstClockTime min, max;
-  gboolean live;
-} LatencyData;
-
-static gboolean
-query_upstream_latency_fold (const GValue * item, GValue * ret,
-    gpointer user_data)
-{
-  GstPad *pad = g_value_get_object (item);
-  LatencyData *data = user_data;
-  GstClockTime min, max;
-  GstQuery *query;
-  gboolean live, res;
-
-  query = gst_query_new_latency ();
-  res = gst_pad_peer_query (GST_PAD_CAST (pad), query);
-
-  if (res) {
-    gst_query_parse_latency (query, &live, &min, &max);
-
-    GST_LOG_OBJECT (pad, "got latency live:%s min:%" G_GINT64_FORMAT
-        " max:%" G_GINT64_FORMAT, live ? "true" : "false", min, max);
-
-    if (live) {
-      if (min > data->min)
-        data->min = min;
-
-      if (data->max == GST_CLOCK_TIME_NONE)
-        data->max = max;
-      else if (max < data->max)
-        data->max = max;
-
-      data->live = TRUE;
-    }
-  } else {
-    GST_LOG_OBJECT (pad, "latency query failed");
-    g_value_set_boolean (ret, FALSE);
-  }
-
-  gst_query_unref (query);
-
-  return TRUE;
-}
-
 static gboolean
 gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
 {
-  GstIterator *it;
-  GstIteratorResult res;
-  GValue ret = G_VALUE_INIT;
-  gboolean query_ret;
-  LatencyData data;
-  GstClockTime our_latency;
+  gboolean query_ret, live;
+  GstClockTime our_latency, min, max;
 
-  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (self));
-  g_value_init (&ret, G_TYPE_BOOLEAN);
+  query_ret = gst_pad_query_default (self->srcpad, GST_OBJECT (self), query);
 
-retry:
-  data.min = 0;
-  data.max = GST_CLOCK_TIME_NONE;
-  data.live = FALSE;
-  g_value_set_boolean (&ret, TRUE);
-
-  /* query upstream's latency */
-  res = gst_iterator_fold (it, query_upstream_latency_fold, &ret, &data);
-  switch (res) {
-    case GST_ITERATOR_OK:
-      g_assert_not_reached ();
-      break;
-    case GST_ITERATOR_DONE:
-      break;
-    case GST_ITERATOR_ERROR:
-      g_value_set_boolean (&ret, FALSE);
-      break;
-    case GST_ITERATOR_RESYNC:
-      gst_iterator_resync (it);
-      goto retry;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-  gst_iterator_free (it);
-  query_ret = g_value_get_boolean (&ret);
   if (!query_ret) {
     GST_WARNING_OBJECT (self, "Latency query failed");
     return FALSE;
   }
 
+  gst_query_parse_latency (query, &live, &min, &max);
+
   SRC_LOCK (self);
   our_latency = self->priv->latency;
 
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (data.min))) {
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (min))) {
     GST_WARNING_OBJECT (self, "Invalid minimum latency, using 0");
-    data.min = 0;
+    min = 0;
   }
 
-  if (G_UNLIKELY (data.min > data.max)) {
+  if (G_UNLIKELY (min > max)) {
     GST_WARNING_OBJECT (self, "Minimum latency is greater than maximum latency "
         "(%" G_GINT64_FORMAT " > %" G_GINT64_FORMAT "). "
-        "Clamping it at the maximum latency", data.min, data.max);
-    data.min = data.max;
+        "Clamping it at the maximum latency", min, max);
+    min = max;
   }
 
-  self->priv->latency_live = data.live;
-  self->priv->latency_min = data.min;
-  self->priv->latency_max = data.max;
+  self->priv->latency_live = live;
+  self->priv->latency_min = min;
+  self->priv->latency_max = max;
 
   /* add our own */
-  data.min += our_latency;
-  data.min += self->priv->sub_latency_min;
+  min += our_latency;
+  min += self->priv->sub_latency_min;
   if (GST_CLOCK_TIME_IS_VALID (self->priv->sub_latency_max)
-      && GST_CLOCK_TIME_IS_VALID (data.max))
-    data.max += self->priv->sub_latency_max;
+      && GST_CLOCK_TIME_IS_VALID (max))
+    max += self->priv->sub_latency_max;
   else
-    data.max = GST_CLOCK_TIME_NONE;
+    max = GST_CLOCK_TIME_NONE;
 
-  if (data.live && data.min > data.max) {
+  if (live && min > max) {
     GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
         ("%s", "Latency too big"),
         ("The requested latency value is too big for the current pipeline.  "
-            "Limiting to %" G_GINT64_FORMAT, data.max));
-    data.min = data.max;
+            "Limiting to %" G_GINT64_FORMAT, max));
+    min = max;
     /* FIXME: This could in theory become negative, but in
      * that case all is lost anyway */
-    self->priv->latency -= data.min - data.max;
+    self->priv->latency -= min - max;
     /* FIXME: shouldn't we g_object_notify() the change here? */
   }
 
@@ -1244,10 +1169,9 @@ retry:
   SRC_UNLOCK (self);
 
   GST_DEBUG_OBJECT (self, "configured latency live:%s min:%" G_GINT64_FORMAT
-      " max:%" G_GINT64_FORMAT, data.live ? "true" : "false", data.min,
-      data.max);
+      " max:%" G_GINT64_FORMAT, live ? "true" : "false", min, max);
 
-  gst_query_set_latency (query, data.live, data.min, data.max);
+  gst_query_set_latency (query, live, min, max);
 
   return query_ret;
 }
