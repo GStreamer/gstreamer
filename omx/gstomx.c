@@ -1335,16 +1335,12 @@ retry:
 
     /* And now check everything again and maybe get a buffer */
     goto retry;
-  } else {
-    GST_DEBUG_OBJECT (comp->parent, "%s port %u has pending buffers",
-        comp->name, port->index);
-    _buf = g_queue_pop_head (&port->pending_buffers);
-    ret = GST_OMX_ACQUIRE_BUFFER_OK;
-    goto done;
   }
 
-  g_assert_not_reached ();
-  goto retry;
+  GST_DEBUG_OBJECT (comp->parent, "%s port %u has pending buffers",
+      comp->name, port->index);
+  _buf = g_queue_pop_head (&port->pending_buffers);
+  ret = GST_OMX_ACQUIRE_BUFFER_OK;
 
 done:
   g_mutex_unlock (&comp->lock);
