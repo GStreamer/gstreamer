@@ -125,14 +125,6 @@
    refcounting */
 #define GST_HAVE_GLIB_2_8 1
 
-/***** Deal with XML stuff, we have to handle both loadsave and registry *****/
-
-#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )
-# include <libxml/parser.h>
-#else
-# define GST_DISABLE_LOADSAVE_REGISTRY
-#endif
-
 /**
  * GST_EXPORT:
  *
