@@ -1177,8 +1177,6 @@ static GstStateChangeReturn gst_input_selector_change_state (GstElement *
 
 static gboolean gst_input_selector_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
-static gboolean gst_input_selector_query (GstPad * pad, GstObject * parent,
-    GstQuery * query);
 static gint64 gst_input_selector_block (GstInputSelector * self);
 
 #define _do_init \
@@ -1302,8 +1300,6 @@ gst_input_selector_init (GstInputSelector * sel)
   sel->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_iterate_internal_links_function (sel->srcpad,
       GST_DEBUG_FUNCPTR (gst_selector_pad_iterate_linked_pads));
-  gst_pad_set_query_function (sel->srcpad,
-      GST_DEBUG_FUNCPTR (gst_input_selector_query));
   gst_pad_set_event_function (sel->srcpad,
       GST_DEBUG_FUNCPTR (gst_input_selector_event));
   GST_OBJECT_FLAG_SET (sel->srcpad, GST_PAD_FLAG_PROXY_CAPS);
@@ -1565,84 +1561,6 @@ gst_input_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
   gst_event_unref (event);
 
   return result;
-}
-
-/* query on the srcpad. We override this function because by default it will
- * only forward the query to one random sinkpad */
-static gboolean
-gst_input_selector_query (GstPad * pad, GstObject * parent, GstQuery * query)
-{
-  gboolean res = FALSE;
-  GstInputSelector *sel;
-
-  sel = GST_INPUT_SELECTOR (parent);
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_LATENCY:
-    {
-      GList *walk;
-      GstClockTime resmin, resmax;
-      gboolean reslive;
-
-      resmin = 0;
-      resmax = -1;
-      reslive = FALSE;
-      res = TRUE;
-
-      /* perform the query on all sinkpads and combine the results. We take the
-       * max of min and the min of max for the result latency. */
-      GST_INPUT_SELECTOR_LOCK (sel);
-      for (walk = GST_ELEMENT_CAST (sel)->sinkpads; walk;
-          walk = g_list_next (walk)) {
-        GstPad *sinkpad = GST_PAD_CAST (walk->data);
-        GstQuery *peerquery;
-
-        peerquery = gst_query_new_latency ();
-
-        if (gst_pad_peer_query (sinkpad, peerquery)) {
-          GstClockTime min, max;
-          gboolean live;
-
-          gst_query_parse_latency (peerquery, &live, &min, &max);
-
-          GST_DEBUG_OBJECT (sinkpad,
-              "peer latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
-              ", live %d", GST_TIME_ARGS (min), GST_TIME_ARGS (max), live);
-
-          if (live) {
-            if (min > resmin)
-              resmin = min;
-            if (resmax == -1)
-              resmax = max;
-            else if (max < resmax)
-              resmax = max;
-            if (!reslive)
-              reslive = live;
-          }
-        } else {
-          GST_LOG_OBJECT (sinkpad, "latency query failed");
-          res = FALSE;
-        }
-        gst_query_unref (peerquery);
-      }
-      GST_INPUT_SELECTOR_UNLOCK (sel);
-      if (res) {
-        gst_query_set_latency (query, reslive, resmin, resmax);
-
-        GST_DEBUG_OBJECT (sel,
-            "total latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
-            ", live %d", GST_TIME_ARGS (resmin), GST_TIME_ARGS (resmax),
-            reslive);
-      }
-
-      break;
-    }
-    default:
-      res = gst_pad_query_default (pad, parent, query);
-      break;
-  }
-
-  return res;
 }
 
 /* check if the pad is the active sinkpad */
