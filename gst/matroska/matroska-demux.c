@@ -432,6 +432,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   context->from_offset = -1;
   context->to_offset = G_MAXINT64;
   context->alignment = 1;
+  context->dts_only = FALSE;
   demux->common.num_streams++;
   g_assert (demux->common.src->len == demux->common.num_streams);
 

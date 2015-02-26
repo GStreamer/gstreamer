@@ -2299,6 +2299,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   collect_pad->track = context;
   gst_matroska_pad_reset (collect_pad, FALSE);
   collect_pad->track->codec_id = id;
+  collect_pad->track->dts_only = FALSE;
 
   collect_pad->capsfunc = capsfunc;
   gst_pad_set_active (GST_PAD (newpad), TRUE);
