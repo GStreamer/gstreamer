@@ -444,7 +444,6 @@ gst_debug_log (GstDebugCategory * category, GstDebugLevel level,
   va_end (var_args);
 }
 
-#ifdef G_OS_WIN32
 /* based on g_basename(), which we can't use because it was deprecated */
 static inline const gchar *
 gst_path_basename (const gchar * file_name)
@@ -467,7 +466,6 @@ gst_path_basename (const gchar * file_name)
 
   return file_name;
 }
-#endif
 
 /**
  * gst_debug_log_valist:
@@ -500,9 +498,7 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   /* The predefined macro __FILE__ is always the exact path given to the
    * compiler with MSVC, which may or may not be the basename.  We work
    * around it at runtime to improve the readability. */
-#ifdef G_OS_WIN32
   file = gst_path_basename (file);
-#endif
 
   message.message = NULL;
   message.format = format;
