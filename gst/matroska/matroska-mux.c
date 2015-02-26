@@ -1128,6 +1128,7 @@ skip_details:
     gst_matroska_mux_free_codec_priv (context);
     context->codec_priv = (gpointer) bih;
     context->codec_priv_size = size;
+    context->dts_only = TRUE;
   } else if (!strcmp (mimetype, "video/x-h264")) {
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AVC);
@@ -3392,7 +3393,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
    * this would wreak havoc with time stored in matroska file */
   /* TODO: maybe calculate a timestamp by using the previous timestamp
    * and default duration */
-  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+  if ((!GST_BUFFER_PTS_IS_VALID (buf) && !collect_pad->track->dts_only)
+      || (!GST_BUFFER_DTS_IS_VALID (buf) && collect_pad->track->dts_only)) {
     GST_WARNING_OBJECT (collect_pad->collect.pad,
         "Invalid buffer timestamp; dropping buffer");
     gst_buffer_unref (buf);
@@ -3400,7 +3402,11 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   }
 
   /* set the timestamp for outgoing buffers */
-  ebml->timestamp = GST_BUFFER_TIMESTAMP (buf);
+  if (collect_pad->track->dts_only) {
+    ebml->timestamp = GST_BUFFER_DTS (buf);
+  } else {
+    ebml->timestamp = GST_BUFFER_PTS (buf);
+  }
 
   if (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
     if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
