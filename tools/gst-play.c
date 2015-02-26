@@ -637,7 +637,7 @@ change_rate (GstPlay * play, gdouble rate)
   gboolean seekable = FALSE;
   gint64 pos = -1;
 
-  g_return_if_fail (rate != 0 && rate >= -10.0 && rate <= 10.0);
+  g_return_if_fail (rate != 0);
 
   if (!gst_element_query_position (play->playbin, GST_FORMAT_TIME, &pos))
     goto seek_failed;
@@ -668,11 +668,12 @@ change_rate (GstPlay * play, gdouble rate)
   if (!gst_element_send_event (play->playbin, seek))
     goto seek_failed;
 
+  g_print ("Rate: %.2f                     \n", rate);
   return;
 
 seek_failed:
   {
-    g_print ("\nCould not seek.\n");
+    g_print ("\nCould not change playback rate to %.2f.\n", rate);
   }
 }
 
@@ -699,11 +700,27 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
       play_prev (play);
       break;
     case '+':
-      play->rate += 0.5;
+      if (play->rate > -0.2 && play->rate < 0.0)
+        play->rate *= -1.0;
+      else if (ABS (play->rate) < 2.0)
+        play->rate += 0.1;
+      else if (ABS (play->rate) < 4.0)
+        play->rate += 0.5;
+      else
+        play->rate += 1.0;
+
       change_rate (play, play->rate);
       break;
     case '-':
-      play->rate -= 0.5;
+      if (play->rate > 0.0 && play->rate < 0.20) {
+        play->rate *= -1.0;
+      } else if (ABS (play->rate) <= 2.0)
+        play->rate -= 0.1;
+      else if (ABS (play->rate) <= 4.0)
+        play->rate -= 0.5;
+      else
+        play->rate -= 1.0;
+
       change_rate (play, play->rate);
       break;
     case 'd':
