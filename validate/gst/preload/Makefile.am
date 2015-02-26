@@ -10,4 +10,6 @@ libgstvalidate_preload_@GST_API_VERSION@_la_LIBADD =  \
 libgstvalidate_preload_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/validate
 libgstvalidate_preload_@GST_API_VERSION@include_HEADERS =
 
+lib_LTLIBRARIES = libgstvalidate_preload-@GST_API_VERSION@.la
+
 CLEANFILES =
