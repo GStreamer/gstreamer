@@ -6,7 +6,12 @@ lib_LTLIBRARIES = libges-@GST_API_VERSION@.la
 
 EXTRA_libges_@GST_API_VERSION@_la_SOURCES = gesmarshal.list
 
-CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make) *.gcno *.gcda *.gcov *.gcov.out lex.priv_ges_parse_yy.c
+EXTRA_DIST=parse.l
+
+CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make) *.gcno *.gcda *.gcov *.gcov.out
+
+nodist_libges_@GST_API_VERSION@_la_SOURCES = lex.priv_ges_parse_yy.c parse_lex.h
+
 
 libges_@GST_API_VERSION@_la_SOURCES = 		\
 	$(built_source_make)			\
@@ -170,14 +175,14 @@ libges_@GST_API_VERSION@_la_LIBADD = $(GST_PBUTILS_LIBS) \
 libges_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
 		$(GST_LT_LDFLAGS) $(GIO_CFLAGS) $(GST_VALIDATE_CFLAGS)
 
-nodist_libges_@GST_API_VERSION@_la_SOURCES = lex.priv_ges_parse_yy.c parse_lex.h
-
 DISTCLEANFILE = $(CLEANFILES)
 
 #files built on make all/check/instal
 BUILT_SOURCES =			\
 	$(built_header_make)	\
-	$(built_source_make)
+	$(built_source_make)    \
+	lex.priv_ges_parse_yy.c \
+	parse_lex.h
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 
