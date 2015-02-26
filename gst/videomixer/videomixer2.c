@@ -1434,91 +1434,6 @@ gst_videomixer2_query_duration (GstVideoMixer2 * mix, GstQuery * query)
 }
 
 static gboolean
-gst_videomixer2_query_latency (GstVideoMixer2 * mix, GstQuery * query)
-{
-  GstClockTime min, max;
-  gboolean live;
-  gboolean res;
-  GstIterator *it;
-  gboolean done;
-  GValue item = { 0 };
-
-  res = TRUE;
-  done = FALSE;
-  live = FALSE;
-  min = 0;
-  max = GST_CLOCK_TIME_NONE;
-
-  /* Take maximum of all latency values */
-  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (mix));
-  while (!done) {
-    switch (gst_iterator_next (it, &item)) {
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-      case GST_ITERATOR_OK:
-      {
-        GstPad *pad = g_value_get_object (&item);
-        GstQuery *peerquery;
-        GstClockTime min_cur, max_cur;
-        gboolean live_cur;
-
-        peerquery = gst_query_new_latency ();
-
-        /* Ask peer for latency */
-        res &= gst_pad_peer_query (pad, peerquery);
-
-        /* take max from all valid return values */
-        if (res) {
-          gst_query_parse_latency (peerquery, &live_cur, &min_cur, &max_cur);
-
-          if (live_cur) {
-            if (min_cur > min)
-              min = min_cur;
-
-            if (max == GST_CLOCK_TIME_NONE)
-              max = max_cur;
-            else if (max_cur < max)
-              max = max_cur;
-
-            live = TRUE;
-          }
-        }
-
-        gst_query_unref (peerquery);
-        g_value_reset (&item);
-        break;
-      }
-      case GST_ITERATOR_RESYNC:
-        live = FALSE;
-        min = 0;
-        max = GST_CLOCK_TIME_NONE;
-        res = TRUE;
-        gst_iterator_resync (it);
-        break;
-      default:
-        res = FALSE;
-        done = TRUE;
-        break;
-    }
-  }
-  g_value_unset (&item);
-  gst_iterator_free (it);
-
-  mix->live = live;
-
-  if (res) {
-    /* store the results */
-    GST_DEBUG_OBJECT (mix, "Calculated total latency: live %s, min %"
-        GST_TIME_FORMAT ", max %" GST_TIME_FORMAT,
-        (live ? "yes" : "no"), GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-    gst_query_set_latency (query, live, min, max);
-  }
-
-  return res;
-}
-
-static gboolean
 gst_videomixer2_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (parent);
@@ -1545,9 +1460,6 @@ gst_videomixer2_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_DURATION:
       res = gst_videomixer2_query_duration (mix, query);
-      break;
-    case GST_QUERY_LATENCY:
-      res = gst_videomixer2_query_latency (mix, query);
       break;
     case GST_QUERY_CAPS:
       res = gst_pad_query_default (pad, parent, query);
