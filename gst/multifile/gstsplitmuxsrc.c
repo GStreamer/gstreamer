@@ -39,7 +39,6 @@
  * |[
  * gst-launch-1.0 playbin uri="splitmux://path/to/foo.mp4.*"
  * ]| Play back a set of files created by splitmuxsink
- *
  * </refsect2>
  */
 
