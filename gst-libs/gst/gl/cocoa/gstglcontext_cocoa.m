@@ -229,8 +229,6 @@ static struct pixel_attr pixel_attrs[] = {
   {kCGLPFAAccumSize, "Accum Size"},
   {kCGLPFAMinimumPolicy, "Minimum Policy"},
   {kCGLPFAMaximumPolicy, "Maximum Policy"},
-//  {kCGLPFAOffScreen, "Off Screen"},
-//  {kCGLPFAFullScreen, "Full Screen"},
   {kCGLPFASampleBuffers, "Sample Buffers"},
   {kCGLPFASamples, "Samples"},
   {kCGLPFAAuxDepthStencil, "Aux Depth Stencil"},
@@ -238,23 +236,33 @@ static struct pixel_attr pixel_attrs[] = {
   {kCGLPFAMultisample, "Multisample"},
   {kCGLPFASupersample, "Supersample"},
   {kCGLPFARendererID, "Renderer ID"},
-  {kCGLPFASingleRenderer, "Single Renderer"},
   {kCGLPFANoRecovery, "No Recovery"},
   {kCGLPFAAccelerated, "Accelerated"},
   {kCGLPFAClosestPolicy, "Closest Policy"},
-//  {kCGLPFARobust, "Robust"},
   {kCGLPFABackingStore, "Backing Store"},
-//  {kCGLPFAMPSafe, "MP Safe"},
-  {kCGLPFAWindow, "Window"},
-//  {kCGLPFAMultiScreen, "Multi Screen"},
-  {kCGLPFACompliant, "Compliant"},
   {kCGLPFADisplayMask, "Display Mask"},
-//  {kCGLPFAPBuffer, "PBuffer"},
-  {kCGLPFARemotePBuffer, "Remote PBuffer"},
   {kCGLPFAAllowOfflineRenderers, "Allow Offline Renderers"},
   {kCGLPFAAcceleratedCompute, "Accelerated Compute"},
   {kCGLPFAOpenGLProfile, "OpenGL Profile"},
   {kCGLPFAVirtualScreenCount, "Virtual Screen Count"},
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+  {kCGLPFACompliant, "Compliant"},
+  {kCGLPFARemotePBuffer, "Remote PBuffer"},
+  {kCGLPFASingleRenderer, "Single Renderer"},
+  {kCGLPFAWindow, "Window"},
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
+//  {kCGLPFAOffScreen, "Off Screen"},
+//  {kCGLPFAPBuffer, "PBuffer"},
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
+//  {kCGLPFAFullScreen, "Full Screen"},
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+//  {kCGLPFAMPSafe, "MP Safe"},
+//  {kCGLPFAMultiScreen, "Multi Screen"},
+//  {kCGLPFARobust, "Robust"},
+#endif
 };
 
 void
