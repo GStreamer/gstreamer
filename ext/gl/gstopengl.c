@@ -169,7 +169,7 @@ plugin_init (GstPlugin * plugin)
   }
 
   if (!gst_element_register (plugin, "glvideomixer",
-          GST_RANK_NONE, GST_TYPE_GL_VIDEO_MIXER)) {
+          GST_RANK_NONE, gst_gl_video_mixer_bin_get_type ())) {
     return FALSE;
   }
 
