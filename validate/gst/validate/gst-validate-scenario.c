@@ -1711,6 +1711,9 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
     case GST_MESSAGE_ERROR:
     case GST_MESSAGE_EOS:
     {
+      GstValidateAction *stop_action;
+      GstValidateActionType *stop_action_type;
+
       SCENARIO_LOCK (scenario);
       if (scenario->priv->actions || scenario->priv->interlaced_actions ||
           scenario->priv->on_addition_actions) {
@@ -1754,6 +1757,12 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         g_free (actions);
       }
       SCENARIO_UNLOCK (scenario);
+
+      stop_action_type = _find_action_type ("stop");
+      stop_action = gst_validate_action_new (scenario, stop_action_type);
+      _fill_action (scenario, stop_action,
+          gst_structure_from_string ("stop;", NULL), FALSE);
+      gst_validate_execute_action (stop_action_type, stop_action);
 
       break;
     }
