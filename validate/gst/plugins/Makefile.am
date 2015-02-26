@@ -1,2 +1,1 @@
-SUBDIRS = fault_injection
-
+SUBDIRS = fault_injection gapplication

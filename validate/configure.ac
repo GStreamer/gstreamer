@@ -295,6 +295,7 @@ gst/preload/Makefile
 gst/overrides/Makefile
 gst/plugins/Makefile
 gst/plugins/fault_injection/Makefile
+gst/plugins/gapplication/Makefile
 tests/Makefile
 tests/check/Makefile
 pkgconfig/Makefile
