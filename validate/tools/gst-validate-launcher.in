@@ -26,10 +26,16 @@ GIT_FIRST_HASH = 'da962d096af9460502843e41b7d25fdece7ff1c2'
 
 
 def _get_git_first_hash(path):
+    cdir = os.path.abspath(os.curdir)
     try:
-      return subprocess.check_output(['git', '-C', path, 'rev-list', '--max-parents=0', 'HEAD']).rstrip('\n')
+        os.chdir(path)
+        res = subprocess.check_output(['git', 'rev-list', '--max-parents=0', 'HEAD']).rstrip('\n')
     except subprocess.CalledProcessError:
-      return ''
+        res = ''
+    finally:
+        os.chdir(cdir)
+
+    return res
 
 
 def _in_devel():
