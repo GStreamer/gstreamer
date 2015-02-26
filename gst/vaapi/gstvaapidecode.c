@@ -106,8 +106,11 @@ G_DEFINE_TYPE_WITH_CODE(
     GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
 
 static gboolean
-gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
-    const GstVideoCodecState *ref_state);
+gst_vaapidecode_update_src_caps(GstVaapiDecode *decode);
+
+static gboolean
+gst_vaapi_decode_input_state_replace(GstVaapiDecode *decode,
+    const GstVideoCodecState *new_state);
 
 static void
 gst_vaapi_decoder_state_changed(GstVaapiDecoder *decoder,
@@ -119,12 +122,36 @@ gst_vaapi_decoder_state_changed(GstVaapiDecoder *decoder,
 
     g_assert(decode->decoder == decoder);
 
-    if (gst_vaapidecode_update_src_caps(decode, codec_state)) {
-        if (!gst_video_decoder_negotiate(vdec))
-            return;
-        if (!gst_vaapi_plugin_base_set_caps(plugin, NULL, decode->srcpad_caps))
-            return;
-   }
+    if (!gst_vaapi_decode_input_state_replace(decode, codec_state))
+        return;
+    if (!gst_vaapidecode_update_src_caps(decode))
+        return;
+    if (!gst_video_decoder_negotiate(vdec))
+        return;
+    if (!gst_vaapi_plugin_base_set_caps(plugin, NULL, decode->srcpad_caps))
+        return;
+}
+
+static gboolean
+gst_vaapi_decode_input_state_replace(GstVaapiDecode *decode,
+    const GstVideoCodecState *new_state)
+{
+    if (decode->input_state) {
+        if (new_state) {
+            const GstCaps *curcaps = decode->input_state->caps;
+            if (gst_caps_is_always_compatible(curcaps, new_state->caps))
+                return FALSE;
+        }
+        gst_video_codec_state_unref(decode->input_state);
+    }
+
+    if (new_state)
+        decode->input_state = gst_video_codec_state_ref
+            ((GstVideoCodecState*) new_state);
+    else
+        decode->input_state = NULL;
+
+    return TRUE;
 }
 
 static inline gboolean
@@ -135,13 +162,18 @@ gst_vaapidecode_update_sink_caps(GstVaapiDecode *decode, GstCaps *caps)
 }
 
 static gboolean
-gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
-    const GstVideoCodecState *ref_state)
+gst_vaapidecode_update_src_caps(GstVaapiDecode *decode)
 {
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
-    GstVideoCodecState *state;
+    GstVideoCodecState *state, *ref_state;
     GstVideoInfo *vi, vis;
     GstVideoFormat format, out_format;
+
+    if (!decode->input_state)
+        return FALSE;
+
+    ref_state = decode->input_state;
+
 #if GST_CHECK_VERSION(1,1,0)
     GstCapsFeatures *features = NULL;
     GstVaapiCapsFeature feature;
@@ -149,6 +181,9 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     feature = gst_vaapi_find_preferred_caps_feature(
         GST_VIDEO_DECODER_SRC_PAD(vdec),
         GST_VIDEO_INFO_FORMAT(&ref_state->info), &out_format);
+
+    if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
+        return FALSE;
 #endif
 
     format = GST_VIDEO_INFO_FORMAT(&ref_state->info);
@@ -398,7 +433,27 @@ error_commit_buffer:
 static GstFlowReturn
 gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
 {
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstFlowReturn ret;
+
+    if (!decode->input_state)
+        goto not_negotiated;
+
+    if (G_UNLIKELY(!decode->active) ||
+        gst_pad_needs_reconfigure(GST_VIDEO_DECODER_SRC_PAD(vdec))) {
+        GST_DEBUG_OBJECT(decode, "activating the decoder");
+        if (!gst_vaapidecode_update_src_caps(decode))
+            goto not_negotiated;
+
+        if (!gst_video_decoder_negotiate(vdec))
+            goto not_negotiated;
+
+        GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(vdec);
+        if (!gst_vaapi_plugin_base_set_caps(plugin, NULL, decode->srcpad_caps))
+            goto not_negotiated;
+
+        decode->active = TRUE;
+    }
 
     /* Make sure to release the base class stream lock so that decode
        loop can call gst_video_decoder_finish_frame() without blocking */
@@ -406,6 +461,15 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     ret = gst_vaapidecode_decode_frame(vdec, frame);
     GST_VIDEO_DECODER_STREAM_LOCK(vdec);
     return ret;
+
+    /* ERRORS */
+not_negotiated:
+  {
+      GST_ERROR_OBJECT (decode, "not negotiated");
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      gst_video_decoder_drop_frame (vdec, frame);
+      return ret;
+  }
 }
 
 static void
@@ -545,7 +609,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
             gst_video_info_change_format(&state->info, out_format,
                 GST_VIDEO_INFO_WIDTH(&state->info),
                 GST_VIDEO_INFO_HEIGHT(&state->info));
-        gst_vaapidecode_update_src_caps(decode, state);
+        gst_vaapidecode_update_src_caps(decode);
     }
     gst_video_codec_state_unref(state);
 
@@ -639,6 +703,9 @@ gst_vaapidecode_destroy(GstVaapiDecode *decode)
     gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
     gst_vaapi_decoder_replace(&decode->decoder, NULL);
     gst_caps_replace(&decode->decoder_caps, NULL);
+
+    decode->active = FALSE;
+
     gst_vaapidecode_release(decode);
 }
 
@@ -728,6 +795,7 @@ gst_vaapidecode_close(GstVideoDecoder *vdec)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
 
+    gst_vaapi_decode_input_state_replace(decode, NULL);
     gst_vaapidecode_destroy(decode);
     gst_vaapi_plugin_base_close(GST_VAAPI_PLUGIN_BASE(decode));
     return TRUE;
@@ -750,20 +818,15 @@ gst_vaapidecode_set_format(GstVideoDecoder *vdec, GstVideoCodecState *state)
     GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(vdec);
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
 
+    if (!gst_vaapi_decode_input_state_replace(decode, state))
+        return TRUE;
     if (!gst_vaapidecode_update_sink_caps(decode, state->caps))
         return FALSE;
     if (!gst_vaapi_plugin_base_set_caps(plugin, decode->sinkpad_caps, NULL))
         return FALSE;
-
-    if (gst_vaapidecode_update_src_caps(decode, state)) {
-        if (!gst_video_decoder_negotiate(vdec))
-            return FALSE;
-        if (!gst_vaapi_plugin_base_set_caps(plugin, NULL, decode->srcpad_caps))
-            return FALSE;
-    }
-
     if (!gst_vaapidecode_reset_full(decode, decode->sinkpad_caps, FALSE))
         return FALSE;
+
     return TRUE;
 }
 

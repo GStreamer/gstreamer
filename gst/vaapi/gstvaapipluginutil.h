@@ -70,7 +70,8 @@ gst_vaapi_value_set_format_list (GValue * value, GArray * formats);
 /* Helpers to build video caps */
 typedef enum
 {
-  GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY = 1,
+  GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED,
+  GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY,
   GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META,
   GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE,
 } GstVaapiCapsFeature;

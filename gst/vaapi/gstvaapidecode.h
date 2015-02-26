@@ -73,6 +73,9 @@ struct _GstVaapiDecode {
     GstCaps            *allowed_caps;
     guint               current_frame_size;
     guint               has_texture_upload_meta : 1;
+
+    GstVideoCodecState *input_state;
+    volatile gboolean   active;
 };
 
 struct _GstVaapiDecodeClass {

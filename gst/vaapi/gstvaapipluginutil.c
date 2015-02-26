@@ -659,9 +659,11 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
   GstCaps *out_caps;
   GstVideoFormat out_format;
 
-  out_caps = gst_pad_peer_query_caps (pad, NULL);
-  if (!out_caps)
+  out_caps= gst_pad_get_allowed_caps (pad);
+  if (!out_caps) {
+    feature = GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED;
     goto cleanup;
+  }
 
   out_format = format == GST_VIDEO_FORMAT_ENCODED ?
     GST_VIDEO_FORMAT_I420 : format;
