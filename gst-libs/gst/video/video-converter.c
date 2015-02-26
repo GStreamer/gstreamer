@@ -1508,7 +1508,7 @@ static void
 convert_set_alpha_u8 (GstVideoConverter * convert, gpointer pixels, gint width)
 {
   guint8 *p = pixels;
-  guint8 alpha = CLAMP (convert->alpha_value, 0, 255);
+  guint8 alpha = MIN (convert->alpha_value, 255);
   int i;
 
   for (i = 0; i < width; i++)
@@ -1522,7 +1522,7 @@ convert_set_alpha_u16 (GstVideoConverter * convert, gpointer pixels, gint width)
   guint16 alpha;
   int i;
 
-  alpha = CLAMP (convert->alpha_value, 0, 255);
+  alpha = MIN (convert->alpha_value, 255);
   alpha |= alpha << 8;
 
   for (i = 0; i < width; i++)
@@ -2773,7 +2773,7 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
-  guint8 alpha = CLAMP (convert->alpha_value, 0, 255);
+  guint8 alpha = MIN (convert->alpha_value, 255);
   gint l1, l2;
 
   for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
@@ -2830,7 +2830,7 @@ convert_YUY2_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *d;
-  guint8 alpha = CLAMP (convert->alpha_value, 0, 255);
+  guint8 alpha = MIN (convert->alpha_value, 255);
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (GST_ROUND_UP_2 (convert->in_x) * 2);
@@ -2930,7 +2930,7 @@ convert_UYVY_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *d;
-  guint8 alpha = CLAMP (convert->alpha_value, 0, 255);
+  guint8 alpha = MIN (convert->alpha_value, 255);
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (GST_ROUND_UP_2 (convert->in_x) * 2);
@@ -3207,7 +3207,7 @@ convert_Y42B_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *sy, *su, *sv, *d;
-  guint8 alpha = CLAMP (convert->alpha_value, 0, 255);
+  guint8 alpha = MIN (convert->alpha_value, 255);
 
   sy = FRAME_GET_Y_LINE (src, convert->in_y);
   sy += convert->in_x;
@@ -3290,7 +3290,7 @@ convert_Y444_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *sy, *su, *sv, *d;
-  guint8 alpha = CLAMP (convert->alpha_value, 0, 255);
+  guint8 alpha = MIN (convert->alpha_value, 255);
 
   sy = FRAME_GET_Y_LINE (src, convert->in_y);
   sy += convert->in_x;
