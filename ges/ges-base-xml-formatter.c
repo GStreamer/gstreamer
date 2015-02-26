@@ -495,10 +495,11 @@ _set_child_property (GQuark field_id, const GValue * value,
   gst_object_unref (element);
 }
 
-void
+gboolean
 set_property_foreach (GQuark field_id, const GValue * value, GObject * object)
 {
   g_object_set_property (object, g_quark_to_string (field_id), value);
+  return TRUE;
 }
 
 static inline GESClip *

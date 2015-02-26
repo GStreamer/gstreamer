@@ -267,7 +267,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding (GESBaseXmlForma
                                                                   const gchar *track_id,
                                                                   GSList * timed_values);
 
-G_GNUC_INTERNAL void set_property_foreach                       (GQuark field_id,
+G_GNUC_INTERNAL gboolean set_property_foreach                   (GQuark field_id,
                                                                  const GValue * value,
                                                                  GObject * object);;
 
