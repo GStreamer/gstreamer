@@ -1037,93 +1037,6 @@ gst_interleave_src_query_duration (GstInterleave * self, GstQuery * query)
 }
 
 static gboolean
-gst_interleave_src_query_latency (GstInterleave * self, GstQuery * query)
-{
-  GstClockTime min, max;
-  gboolean live;
-  gboolean res;
-  GstIterator *it;
-  gboolean done;
-
-  res = TRUE;
-  done = FALSE;
-
-  live = FALSE;
-  min = 0;
-  max = GST_CLOCK_TIME_NONE;
-
-  /* Take maximum of all latency values */
-  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (self));
-  while (!done) {
-    GstIteratorResult ires;
-    GValue item = { 0, };
-
-    ires = gst_iterator_next (it, &item);
-    switch (ires) {
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-      case GST_ITERATOR_OK:
-      {
-        GstPad *pad = GST_PAD_CAST (g_value_dup_object (&item));
-        GstQuery *peerquery;
-        GstClockTime min_cur, max_cur;
-        gboolean live_cur;
-
-        peerquery = gst_query_new_latency ();
-
-        /* Ask peer for latency */
-        res &= gst_pad_peer_query (pad, peerquery);
-
-        /* take max from all valid return values */
-        if (res) {
-          gst_query_parse_latency (peerquery, &live_cur, &min_cur, &max_cur);
-
-          if (live_cur) {
-            if (min_cur > min)
-              min = min_cur;
-
-            if (max == GST_CLOCK_TIME_NONE)
-              max = max_cur;
-            else if (max_cur < max)
-              max = max_cur;
-
-            live = TRUE;
-          }
-        }
-
-        gst_query_unref (peerquery);
-        gst_object_unref (pad);
-        g_value_unset (&item);
-        break;
-      }
-      case GST_ITERATOR_RESYNC:
-        live = FALSE;
-        min = 0;
-        max = GST_CLOCK_TIME_NONE;
-        res = TRUE;
-        gst_iterator_resync (it);
-        break;
-      default:
-        res = FALSE;
-        done = TRUE;
-        break;
-    }
-  }
-  gst_iterator_free (it);
-
-  if (res) {
-    /* store the results */
-    GST_DEBUG_OBJECT (self, "Calculated total latency: live %s, min %"
-        GST_TIME_FORMAT ", max %" GST_TIME_FORMAT,
-        (live ? "yes" : "no"), GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-    gst_query_set_latency (query, live, min, max);
-  }
-
-  return res;
-}
-
-static gboolean
 gst_interleave_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstInterleave *self = GST_INTERLEAVE (parent);
@@ -1158,9 +1071,6 @@ gst_interleave_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_DURATION:
       res = gst_interleave_src_query_duration (self, query);
-      break;
-    case GST_QUERY_LATENCY:
-      res = gst_interleave_src_query_latency (self, query);
       break;
     default:
       /* FIXME, needs a custom query handler because we have multiple
