@@ -1916,7 +1916,7 @@ remove_error_filter (GstDecodeBin * dbin, GstElement * element,
       if (error)
         gst_message_replace (error, msg);
       gst_message_unref (msg);
-      l = g_list_delete_link (dbin->filtered_errors, l);
+      l = dbin->filtered_errors = g_list_delete_link (dbin->filtered_errors, l);
     } else {
       l = l->next;
     }
