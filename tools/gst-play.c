@@ -65,6 +65,8 @@ typedef struct
 
   /* configuration */
   gboolean gapless;
+
+  gdouble rate;
 } GstPlay;
 
 static gboolean quiet = FALSE;
@@ -162,6 +164,8 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
 
   if (initial_volume != -1)
     play_set_relative_volume (play, initial_volume - 1.0);
+
+  play->rate = 1.0;
 
   return play;
 }
@@ -676,7 +680,6 @@ static void
 keyboard_cb (const gchar * key_input, gpointer user_data)
 {
   GstPlay *play = (GstPlay *) user_data;
-  static gdouble rate = 1.0;
 
   switch (g_ascii_tolower (key_input[0])) {
     case ' ':
@@ -696,16 +699,16 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
       play_prev (play);
       break;
     case '+':
-      rate += 0.5;
-      change_rate (play, rate);
+      play->rate += 0.5;
+      change_rate (play, play->rate);
       break;
     case '-':
-      rate -= 0.5;
-      change_rate (play, rate);
+      play->rate -= 0.5;
+      change_rate (play, play->rate);
       break;
     case 'd':
-      rate *= -1.0;
-      change_rate (play, rate);
+      play->rate *= -1.0;
+      change_rate (play, play->rate);
       break;
     case 27:                   /* ESC */
       if (key_input[1] == '\0') {
