@@ -576,6 +576,8 @@ _upload_meta_upload_free (gpointer impl)
   struct GLUploadMeta *upload = impl;
   gint i;
 
+  g_return_if_fail (impl != NULL);
+
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     if (upload->texture_ids[i])
       gst_gl_context_del_texture (upload->upload->context,
@@ -971,8 +973,10 @@ _upload_find_method (GstGLUpload * upload)
   if (upload->priv->method_i >= G_N_ELEMENTS (upload_methods))
     return FALSE;
 
-  if (upload->priv->method_impl)
+  if (upload->priv->method_impl) {
     upload->priv->method->free (upload->priv->method_impl);
+    upload->priv->method_impl = NULL;
+  }
 
   upload->priv->method = upload_methods[upload->priv->method_i];
   upload->priv->method_impl = upload->priv->method->new (upload);
@@ -1039,6 +1043,7 @@ restart:
   } else {
     gst_gl_upload_release_buffer_unlocked (upload);
     upload->priv->method->free (upload->priv->method_impl);
+    upload->priv->method_impl = NULL;
     NEXT_METHOD;
   }
 
