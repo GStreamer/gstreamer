@@ -637,6 +637,46 @@ _parse_timeline (int argc, char **argv)
   return string;
 }
 
+static void
+_print_all_commands (void)
+{
+  /* Yeah I know very fancy */
+  g_print ("Available ges-launch-1.0 commands:\n\n");
+  g_print ("  %-9s %-11s %-10s\n\n", "+clip", "+effect", "set-");
+  g_print ("See ges-launch-1.0 help <command> or ges-launch-1.0 help <guide> "
+      "to read about a specific command or a given guide\n");
+}
+
+static void
+_check_command_help (int argc, gchar ** argv)
+{
+/**
+ *   gchar *page = NULL;
+ *
+ *     if (argc == 2)
+ *       page = g_strdup ("ges-launch-1.0");
+ *     else if (!g_strcmp0 (argv[2], "all"))
+ */
+
+  if (!g_strcmp0 (argv[1], "help")) {
+    _print_all_commands ();
+    exit (0);
+  }
+
+/*     else
+ *       page = g_strconcat ("ges-launch-1.0", "-", argv[2], NULL);
+ *
+ *     if (page) {
+ *       execlp ("man", "man", page, NULL);
+ *       g_free (page);
+ *     }
+ *
+ *     an error is raised by execlp it will be displayed in the terminal
+ *     exit (0);
+ *   }
+ */
+}
+
 int
 main (int argc, gchar ** argv)
 {
@@ -716,6 +756,7 @@ main (int argc, gchar ** argv)
   guint signal_watch_id;
 #endif
 
+  _check_command_help (argc, argv);
   setlocale (LC_ALL, "");
 
   ctx = g_option_context_new ("- plays or renders a timeline.");

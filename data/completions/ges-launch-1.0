@@ -61,6 +61,58 @@ _ges___videosink () {
 	COMPREPLY=( $(compgen -W "$($HELPER --klass=Sink --sinkcaps='video/x-raw')" -- $cur) )
 }
 
+_ges_clip () {
+	if [[ "$prev" == "$command" ]];
+	then
+		_mandatory__argument
+	else
+		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(ges-launch-1.0 help all | egrep '^  [a-zA-Z0-9]')" -- $cur) )
+	fi
+}
+
+_ges_effect () {
+	if [[ "$prev" == "$command" ]];
+	then
+		_mandatory__argument
+	else
+		COMPREPLY=( $(compgen -W "duration= start= layer= $(ges-launch-1.0 help all | egrep '^  [a-zA-Z0-9]')" -- $cur) )
+	fi
+}
+
+_ges_list_options () {
+	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+}
+
+_ges_list_commands () {
+	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 help all | egrep '^  [a-zA-Z0-9]')" -- $cur) )
+}
+
+_ges_list_properties () {
+	local props
+
+	if [[ "$real_command" == "" ]]
+	then
+		_mandatory__argument
+	elif [[ "$real_command" == "clip" ]]
+	then
+		COMPREPLY=( $(compgen -W "set-alpha set-posx set-posy set-width set-height set-volume set-mute" -- $cur) )
+	elif [[ "$real_command" == "effect" ]]
+	then
+		COMPREPLY=()
+		effect_bin_description="${effect_bin_description//\"/ }"
+		array=(${effect_bin_description//!/ })
+		for i in "${array[@]}"; do
+			props=("$($HELPER --element-properties $i)")
+			for j in $props; do
+				j="${j//=/ }"
+				COMPREPLY+=( $(compgen -W "set-$j" -- $cur) )
+			done
+		done
+	else
+		_mandatory__argument
+	fi
+}
+
 _ges___exclude_ () { _mandatory__argument; }
 _ges___encoding_profile () { _mandatory__argument; }
 _ges___ges_sample_path () { _mandatory__argument; }
@@ -69,9 +121,27 @@ _ges___thumbnail () { _mandatory__argument; }
 _ges___repeat () { _mandatory__argument; }
 _ges___save () { _mandatory__argument; }
 
+containsElement () {
+	local e
+	for e in "${@:2}";
+	do
+		[[ "$e" == "$1" ]] && return 0;
+	done
+	return 1
+}
+
 __ges_main ()
 {
-	local i=1 c=1 command function_exists completion_func
+	local i=1 c=1 command function_exists completion_func commands real_command effect_bin_description
+
+	commands=($(ges-launch-1.0 help all | egrep '^  [a-zA-Z0-9]'))
+	real_command=""
+	effect_bin_description=""
+
+	if [[ "$cur" == "=" ]]; then
+		_mandatory__argument
+		return
+	fi
 
 	while [[ $i -ne $COMP_CWORD ]];
 		do
@@ -80,14 +150,17 @@ __ges_main ()
 			if [[ "$var" == "--"* ]]
 			then
 				command="$var"
+			elif containsElement "$var" "${commands[@]}";
+			then
+				real_command="$var"
+				command="$var"
+				if [[ "$var" == "effect" ]]
+				then
+					effect_bin_description="${COMP_WORDS[i+1]}"
+				fi
 			fi
 		i=$[$i+1]
 		done
-
-	if [ -z "$command" ]; then
-		COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
-		return
-	fi
 
 	if [[ "$command" == "--gst"* ]]; then
 		completion_func="_${command//-/_}"
@@ -99,13 +172,19 @@ __ges_main ()
 
 	function_exists=$?
 
-	if [[ "$cur" == "--"* ]]; then
-		COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+	if [[ "$cur" == "-"* ]]; then
+		_ges_list_options
+	elif [[ "$cur" == "="* ]]
+	then
+		_mandatory__argument
+	elif [[ "$cur" == "set-"* ]]
+	then
+		_ges_list_properties
 	elif [ $function_exists -eq 0 ]
 	then
 		$completion_func
 	else
-		COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+		_ges_list_commands
 	fi
 }
 
