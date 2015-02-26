@@ -583,24 +583,22 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstCaps *caps = NULL;
-    gboolean need_pool;
     GstVideoCodecState *state;
     GstVaapiCapsFeature feature;
     GstVideoFormat out_format;
 
-    gst_query_parse_allocation(query, &caps, &need_pool);
+    gst_query_parse_allocation(query, &caps, NULL);
 
+    feature =
+        gst_vaapi_find_preferred_caps_feature(GST_VIDEO_DECODER_SRC_PAD(vdec),
+            GST_VIDEO_FORMAT_ENCODED, &out_format);
     decode->has_texture_upload_meta = FALSE;
 #if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
     decode->has_texture_upload_meta =
-        gst_vaapi_find_preferred_caps_feature(GST_VIDEO_DECODER_SRC_PAD(vdec),
-            GST_VIDEO_FORMAT_ENCODED, &out_format) ==
-        GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META;
+        (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META) &&
+        gst_query_find_allocation_meta (query,
+            GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
 #endif
-
-    feature = decode->has_texture_upload_meta ?
-        GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META :
-        GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE;
 
     /* Update src caps if feature is not handled downstream */
     state = gst_video_decoder_get_output_state(vdec);
