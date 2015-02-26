@@ -3467,7 +3467,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         goto next_lace;
       }
 
-      GST_BUFFER_TIMESTAMP (sub) = lace_time;
+      if (!stream->dts_only)
+        GST_BUFFER_PTS (sub) = lace_time;
+      else
+        GST_BUFFER_DTS (sub) = lace_time;
 
       if (GST_CLOCK_TIME_IS_VALID (lace_time)) {
         GstClockTime last_stop_end;
@@ -3614,6 +3617,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       if (GST_BUFFER_PTS_IS_VALID (sub)) {
         stream->pos = GST_BUFFER_PTS (sub);
+        if (GST_BUFFER_DURATION_IS_VALID (sub))
+          stream->pos += GST_BUFFER_DURATION (sub);
+      } else if (GST_BUFFER_DTS_IS_VALID (sub)) {
+        stream->pos = GST_BUFFER_DTS (sub);
         if (GST_BUFFER_DURATION_IS_VALID (sub))
           stream->pos += GST_BUFFER_DURATION (sub);
       }
@@ -4815,6 +4822,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         vids = g_new (gst_riff_strf_vids, 1);
         memcpy (vids, data, size);
       }
+
+      context->dts_only = TRUE; /* VFW files only store DTS */
 
       /* little-endian -> byte-order */
       vids->size = GUINT32_FROM_LE (vids->size);

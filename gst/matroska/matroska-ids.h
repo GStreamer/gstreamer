@@ -552,6 +552,9 @@ struct _GstMatroskaTrackContext {
 
   /* any alignment we need our output buffers to have */
   gint          alignment;
+  
+  /* for compatibility with VFW files, where timestamp represents DTS */
+  gboolean      dts_only;
 };
 
 typedef struct _GstMatroskaTrackVideoContext {
