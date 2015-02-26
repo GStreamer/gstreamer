@@ -9,6 +9,7 @@ libgstopengl_la_SOURCES = \
 	gstglfilterbin.c \
 	gstglmixerbin.c \
 	gstglsinkbin.c \
+	gstglsrcbin.c \
 	gstglimagesink.c \
 	gstglfiltercube.c \
 	gstgleffects.c \
@@ -30,6 +31,7 @@ noinst_HEADERS = \
 	gstglfilterbin.h \
 	gstglmixerbin.h \
 	gstglsinkbin.h \
+	gstglsrcbin.h \
 	gstglimagesink.h \
 	gstglfiltercube.h \
 	gstgleffects.h \
