@@ -3061,13 +3061,19 @@ static gboolean
 query_latency_default_fold (const GValue * item, GValue * ret,
     gpointer user_data)
 {
-  GstPad *pad = g_value_get_object (item);
+  GstPad *pad = g_value_get_object (item), *peer;
   LatencyFoldData *fold_data = user_data;
   GstQuery *query;
-  gboolean res;
+  gboolean res = FALSE;
 
   query = gst_query_new_latency ();
-  res = gst_pad_peer_query (pad, query);
+
+  peer = gst_pad_get_peer (pad);
+  if (peer) {
+    res = gst_pad_peer_query (pad, query);
+  } else {
+    GST_LOG_OBJECT (pad, "No peer pad found, ignoring this pad");
+  }
 
   if (res) {
     gboolean live;
@@ -3089,11 +3095,14 @@ query_latency_default_fold (const GValue * item, GValue * ret,
 
       fold_data->live = TRUE;
     }
-  } else {
+  } else if (peer) {
     GST_DEBUG_OBJECT (pad, "latency query failed");
     g_value_set_boolean (ret, FALSE);
   }
+
   gst_query_unref (query);
+  if (peer)
+    gst_object_unref (peer);
 
   return TRUE;
 }
