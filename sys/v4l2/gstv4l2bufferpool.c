@@ -1715,9 +1715,12 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
 
           /* An empty buffer on capture indicates the end of stream */
           if (gst_buffer_get_size (tmp) == 0) {
+            gboolean corrupted = GST_BUFFER_FLAG_IS_SET (tmp,
+                GST_BUFFER_FLAG_CORRUPTED);
+
             gst_v4l2_buffer_pool_release_buffer (bpool, tmp);
 
-            if (GST_BUFFER_FLAG_IS_SET (*buf, GST_BUFFER_FLAG_CORRUPTED))
+            if (corrupted)
               goto buffer_corrupted;
             else
               goto eos;
