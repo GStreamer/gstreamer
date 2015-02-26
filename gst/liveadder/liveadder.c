@@ -728,63 +728,15 @@ gst_live_adder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       /* We need to send the query upstream and add the returned latency to our
        * own */
-      GstClockTime min_latency = 0, max_latency = G_MAXUINT64;
-      GValue item = { 0 };
-      GstIterator *iter = NULL;
-      gboolean done = FALSE;
-
-      iter = gst_element_iterate_sink_pads (GST_ELEMENT (adder));
-      res = TRUE;
-
-      while (!done) {
-        switch (gst_iterator_next (iter, &item)) {
-          case GST_ITERATOR_OK:
-          {
-            GstPad *sinkpad = GST_PAD (g_value_get_object (&item));
-            GstClockTime pad_min_latency, pad_max_latency;
-            gboolean pad_us_live;
-
-            if (gst_pad_peer_query (sinkpad, query)) {
-              gst_query_parse_latency (query, &pad_us_live, &pad_min_latency,
-                  &pad_max_latency);
-
-              GST_DEBUG_OBJECT (adder, "Peer latency for pad %s: min %"
-                  GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-                  GST_PAD_NAME (sinkpad),
-                  GST_TIME_ARGS (pad_min_latency),
-                  GST_TIME_ARGS (pad_max_latency));
-
-              if (pad_us_live) {
-                min_latency = MAX (pad_min_latency, min_latency);
-                max_latency = MIN (pad_max_latency, max_latency);
-              }
-            } else {
-              GST_LOG_OBJECT (adder, "latency query failed");
-              res = FALSE;
-            }
-          }
-            break;
-          case GST_ITERATOR_RESYNC:
-            res = TRUE;
-            min_latency = 0;
-            max_latency = G_MAXUINT64;
-
-            gst_iterator_resync (iter);
-            break;
-          case GST_ITERATOR_ERROR:
-            GST_ERROR_OBJECT (adder, "Error looping sink pads");
-            res = FALSE;
-            done = TRUE;
-            break;
-          case GST_ITERATOR_DONE:
-            done = TRUE;
-            break;
-        }
-      }
-      gst_iterator_free (iter);
+      res = gst_pad_query_default (pad, parent, query);
 
       if (res) {
         GstClockTime my_latency = adder->latency_ms * GST_MSECOND;
+        GstClockTime min_latency, max_latency;
+        gboolean live;
+
+        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+
         GST_OBJECT_LOCK (adder);
         adder->peer_latency = min_latency;
         min_latency += my_latency;
