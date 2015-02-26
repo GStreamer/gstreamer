@@ -166,8 +166,8 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode)
 {
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
     GstVideoCodecState *state, *ref_state;
-    GstVideoInfo *vi, vis;
-    GstVideoFormat format, out_format;
+    GstVideoInfo *vi;
+    GstVideoFormat format = GST_VIDEO_FORMAT_I420;
 
     if (!decode->input_state)
         return FALSE;
@@ -180,13 +180,31 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode)
 
     feature = gst_vaapi_find_preferred_caps_feature(
         GST_VIDEO_DECODER_SRC_PAD(vdec),
-        GST_VIDEO_INFO_FORMAT(&ref_state->info), &out_format);
+        GST_VIDEO_INFO_FORMAT(&ref_state->info), &format);
 
     if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
         return FALSE;
-#endif
 
-    format = GST_VIDEO_INFO_FORMAT(&ref_state->info);
+    switch (feature) {
+#if (USE_GLX || USE_EGL)
+    case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
+        if (decode->has_texture_upload_meta)
+            features = gst_caps_features_new(
+                GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
+        else
+            format = GST_VIDEO_FORMAT_I420;
+        break;
+#endif
+#if GST_CHECK_VERSION(1,5,0)
+    case GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE:
+        features = gst_caps_features_new(
+            GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, NULL);
+        break;
+#endif
+    default:
+        break;
+    }
+#endif
 
     state = gst_video_decoder_set_output_state(vdec, format,
         ref_state->info.width, ref_state->info.height,
@@ -195,40 +213,9 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode)
         return FALSE;
 
     vi = &state->info;
-    if (format != out_format) {
-        gst_video_info_init(&vis);
-        gst_video_info_set_format(&vis, out_format,
-            GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
-        vi->size = vis.size;
-    }
-    gst_video_codec_state_unref(state);
 
 #if GST_CHECK_VERSION(1,1,0)
-    vis = *vi;
-    switch (feature) {
-    case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
-        gst_video_info_change_format(&vis, out_format,
-            GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
-        features = gst_caps_features_new(
-            GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
-        break;
-    default:
-        if (format == GST_VIDEO_FORMAT_ENCODED) {
-            /* XXX: this is a workaround until auto-plugging is fixed when
-               format=ENCODED + memory:VASurface caps feature are provided.
-               Meanwhile, providing a random format here works but this is
-               a terribly wrong thing per se. */
-            gst_video_info_change_format(&vis, out_format,
-                GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
-#if GST_CHECK_VERSION(1,5,0)
-            if (feature == GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)
-                features = gst_caps_features_new(
-                    GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, NULL);
-#endif
-        }
-        break;
-    }
-    state->caps = gst_video_info_to_caps(&vis);
+    state->caps = gst_video_info_to_caps(vi);
     if (features)
         gst_caps_set_features(state->caps, 0, features);
 #else
@@ -250,6 +237,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode)
     gst_caps_set_interlaced(state->caps, vi);
 #endif
     gst_caps_replace(&decode->srcpad_caps, state->caps);
+    gst_video_codec_state_unref(state);
     return TRUE;
 }
 
@@ -602,13 +590,8 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
 
     /* Update src caps if feature is not handled downstream */
     state = gst_video_decoder_get_output_state(vdec);
-    if (!gst_caps_is_always_compatible(caps, state->caps)) {
-        if (decode->has_texture_upload_meta)
-            gst_video_info_change_format(&state->info, out_format,
-                GST_VIDEO_INFO_WIDTH(&state->info),
-                GST_VIDEO_INFO_HEIGHT(&state->info));
+    if (!gst_caps_is_always_compatible(caps, state->caps))
         gst_vaapidecode_update_src_caps(decode);
-    }
     gst_video_codec_state_unref(state);
 
     return gst_vaapi_plugin_base_decide_allocation(GST_VAAPI_PLUGIN_BASE(vdec),
