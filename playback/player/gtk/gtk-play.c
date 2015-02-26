@@ -319,8 +319,32 @@ main (gint argc, gchar ** argv)
   // FIXME: Add support for playlists and stuff
   /* Parse the list of the file names we have to play. */
   if (!file_names) {
-    g_print ("Usage: %s FILE(s)|URI(s)\n", APP_NAME);
-    return 1;
+    GtkWidget *chooser;
+    int res;
+
+    chooser = gtk_file_chooser_dialog_new ("Select files to play", NULL,
+                                          GTK_FILE_CHOOSER_ACTION_OPEN,
+                                          "_Cancel", GTK_RESPONSE_CANCEL,
+                                          "_Open", GTK_RESPONSE_ACCEPT,
+                                          NULL);
+    g_object_set (chooser,
+                  "local-only", FALSE,
+                  "select-multiple", TRUE,
+                  NULL);
+
+    res = gtk_dialog_run (GTK_DIALOG (chooser));
+    if (res == GTK_RESPONSE_ACCEPT) {
+      GSList *l;
+
+      l = gtk_file_chooser_get_uris (GTK_FILE_CHOOSER (chooser));
+      while (l) {
+        play.uris = g_list_append (play.uris, l->data);
+        l = g_slist_delete_link (l, l);
+      }
+    } else {
+      return 0;
+    }
+    gtk_widget_destroy (chooser);
   } else {
     guint i;
 
