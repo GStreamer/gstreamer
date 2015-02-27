@@ -462,8 +462,12 @@ class GstValidateTest(Test):
             self.add_env_variable("GST_VALIDATE_SCENARIOS_PATH",
                                   os.environ["GST_VALIDATE_SCENARIOS_PATH"])
         if self.scenario is not None:
-            self.add_arguments("--set-scenario",
-                               self.scenario.get_execution_name())
+            os.environ["GST_VALIDATE_SCENARIO"] = self.scenario.get_execution_name()
+            self.add_env_variable("GST_VALIDATE_SCENARIO",
+                                  os.environ["GST_VALIDATE_SCENARIO"])
+
+        if "LD_PRELOAD" in os.environ:
+            self.add_env_variable("LD_PRELOAD", os.environ["LD_PRELOAD"])
 
     def get_extra_log_content(self, extralog):
         value = Test.get_extra_log_content(self, extralog)
