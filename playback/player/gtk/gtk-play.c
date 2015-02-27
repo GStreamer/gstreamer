@@ -32,8 +32,8 @@ typedef struct
   GtkWidget *video_area;
   GtkWidget *volume_button;
   gulong seekbar_value_changed_signal_id;
+  gboolean playing;
 } GtkPlay;
-
 
 static void
 set_title (GtkPlay * play, const gchar * title)
@@ -76,12 +76,13 @@ play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
 {
   GtkWidget *image;
 
-  if (gst_player_is_playing (play->player)) {
+  if (play->playing) {
     gst_player_pause (play->player);
     image =
         gtk_image_new_from_icon_name ("media-playback-start",
         GTK_ICON_SIZE_BUTTON);
     gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
+    play->playing = FALSE;
   } else {
     gchar *title;
 
@@ -94,6 +95,7 @@ play_pause_clicked_cb (GtkButton * button, GtkPlay * play)
     title = gst_player_get_uri (play->player);
     set_title (play, title);
     g_free (title);
+    play->playing = TRUE;
   }
 }
 
@@ -263,7 +265,7 @@ video_dimensions_changed_cb (GstPlayer * unused, gint width, gint height,
 static void
 eos_cb (GstPlayer * unused, GtkPlay * play)
 {
-  if (gst_player_is_playing (play->player)) {
+  if (play->playing) {
     GList *next = NULL;
     gchar *uri;
 
@@ -361,6 +363,7 @@ main (gint argc, gchar ** argv)
   }
 
   play.player = gst_player_new ();
+  play.playing = TRUE;
 
   g_object_set (play.player, "dispatch-to-main-context", TRUE, NULL);
 
