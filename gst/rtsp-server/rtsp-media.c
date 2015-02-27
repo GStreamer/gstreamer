@@ -1152,7 +1152,7 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
 
   priv = media->priv;
 
-  g_mutex_unlock (&priv->lock);
+  g_mutex_lock (&priv->lock);
   res = priv->buffer_size;
   g_mutex_unlock (&priv->lock);
 
