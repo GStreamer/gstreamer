@@ -344,7 +344,7 @@ GST_START_TEST (videodecoder_playback_with_events)
 {
   GstSegment segment;
   GstBuffer *buffer;
-  guint64 i;
+  guint i;
   GList *iter;
   GList *events_iter;
 
@@ -453,7 +453,7 @@ GST_START_TEST (videodecoder_flush_events)
 {
   GstSegment segment;
   GstBuffer *buffer;
-  guint64 i;
+  guint i;
   GList *events_iter;
 
   setup_videodecodertester (NULL, NULL);

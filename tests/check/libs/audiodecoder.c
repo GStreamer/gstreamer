@@ -448,7 +448,7 @@ _audiodecoder_flush_events (gboolean send_buffers)
 {
   GstSegment segment;
   GstBuffer *buffer;
-  guint64 i;
+  guint i;
   GList *events_iter;
   GstMessage *msg;
 

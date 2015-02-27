@@ -396,7 +396,7 @@ GST_START_TEST (videoencoder_flush_events)
 {
   GstSegment segment;
   GstBuffer *buffer;
-  guint64 i;
+  guint i;
   GList *events_iter;
 
   setup_videoencodertester ();
