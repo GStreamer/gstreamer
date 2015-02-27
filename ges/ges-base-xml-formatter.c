@@ -479,20 +479,22 @@ _loading_done_cb (GESFormatter * self)
   return FALSE;
 }
 
-static void
+static gboolean
 _set_child_property (GQuark field_id, const GValue * value,
     GESTrackElement * effect)
 {
   GParamSpec *pspec;
   GstElement *element;
 
+  /* FIXME: error handling? */
   if (!ges_track_element_lookup_child (effect,
           g_quark_to_string (field_id), &element, &pspec))
-    return;
+    return TRUE;
 
   g_object_set_property (G_OBJECT (element), pspec->name, value);
   g_param_spec_unref (pspec);
   gst_object_unref (element);
+  return TRUE;
 }
 
 gboolean
