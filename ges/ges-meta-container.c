@@ -123,13 +123,14 @@ typedef struct
   gpointer data;
 } MetadataForeachData;
 
-static void
+static gboolean
 structure_foreach_wrapper (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
   MetadataForeachData *data = (MetadataForeachData *) user_data;
 
   data->func (data->container, g_quark_to_string (field_id), value, data->data);
+  return TRUE;
 }
 
 static gboolean
