@@ -407,6 +407,26 @@ class GstValidateTest(Test):
         else:
             self.scenario = scenario
 
+    def get_current_value(self):
+        if self.scenario:
+            sent_eos = self.sent_eos_position()
+            if sent_eos is not None:
+                t = time.time()
+                if ((t - sent_eos)) > 30:
+                    if self.media_descriptor.get_protocol() == Protocols.HLS:
+                        self.set_result(Result.PASSED,
+                                        """Got no EOS 30 seconds after sending EOS,
+                                        in HLS known and tolerated issue:
+                                        https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
+                        return Result.KNOWN_ERROR
+
+                    self.set_result(
+                        Result.FAILED, "Pipeline did not stop 30 Seconds after sending EOS")
+
+                    return Result.FAILED
+
+        return self.get_current_position()
+
     def get_subproc_env(self):
         self.validatelogs = self.logfile + '.validate.logs'
         logfiles = self.validatelogs
