@@ -397,11 +397,11 @@ gst_decklink_video_src_convert_to_external_clock (GstDecklinkVideoSrc * self,
       // For the duration we just scale
       if (internal > internal_timestamp) {
         guint64 diff = internal - internal_timestamp;
-        diff = gst_util_uint64_scale (diff, rate_d, rate_n);
+        diff = gst_util_uint64_scale (diff, rate_n, rate_d);
         *timestamp = external - diff;
       } else {
         guint64 diff = internal_timestamp - internal;
-        diff = gst_util_uint64_scale (diff, rate_d, rate_n);
+        diff = gst_util_uint64_scale (diff, rate_n, rate_d);
         *timestamp = external + diff;
       }
 
