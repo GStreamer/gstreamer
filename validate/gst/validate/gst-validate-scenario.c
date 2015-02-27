@@ -86,6 +86,9 @@ static GList *action_types = NULL;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
 static GstValidateActionType *_find_action_type (const gchar * type_name);
+static void
+gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
+    GstEvent * seek);
 
 static GPrivate main_thread_priv;
 
@@ -438,10 +441,20 @@ _check_new_segment_done (GstPad * pad, GstPadProbeInfo * info,
     GstValidateAction * action)
 {
   GstEvent *event = GST_EVENT (info->data);
-  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+  GstValidateScenarioPrivate *priv = action->scenario->priv;
+
+  if (priv->last_seek && GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     if (GST_EVENT_SEQNUM (event) == action->scenario->priv->expected_seqnum) {
       if (!--action->scenario->priv->segments_needed) {
+        gst_validate_scenario_update_segment_from_seek (action->scenario,
+            priv->last_seek);
+
+        if (priv->target_state == GST_STATE_PAUSED)
+          priv->seeked_in_pause = TRUE;
+
+        gst_event_replace (&priv->last_seek, NULL);
         gst_validate_action_set_done (action);
+
         return GST_PAD_PROBE_REMOVE;
       }
     }
@@ -598,11 +611,8 @@ gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
   }
   gst_event_unref (seek);
 
-  /* Flushing seeks will be deemed done when an ASYNC_DONE message gets
-     received on the bus. We don't get one for non flushing seeks though,
-     so we look for a new segment event with a matching seqnum. */
-  if (ret != GST_VALIDATE_EXECUTE_ACTION_ERROR
-      && !(flags & GST_SEEK_FLAG_FLUSH)) {
+  /* After seeking, we wait for a new segment with a matching seqnum */
+  if (ret != GST_VALIDATE_EXECUTE_ACTION_ERROR) {
     action->scenario->priv->segments_needed =
         _run_for_all_sinks (scenario, _add_segment_check_probe, action);
   }
@@ -1766,17 +1776,6 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ASYNC_DONE:
-      if (priv->last_seek) {
-        gst_validate_scenario_update_segment_from_seek (scenario,
-            priv->last_seek);
-
-        if (priv->target_state == GST_STATE_PAUSED)
-          priv->seeked_in_pause = TRUE;
-
-        gst_event_replace (&priv->last_seek, NULL);
-        gst_validate_action_set_done (priv->actions->data);
-      }
-
       if (priv->needs_parsing) {
         GList *tmp;
 
