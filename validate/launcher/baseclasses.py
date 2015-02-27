@@ -102,11 +102,17 @@ class Test(Loggable):
 
         return string
 
-    def add_env_variable(self, variable, value):
+    def add_env_variable(self, variable, value=None):
         """
         Only usefull so that the gst-validate-launcher can print the exact
         right command line to reproduce the tests
         """
+        if value is None:
+            value = os.environ.get(variable, None)
+
+        if value is None:
+            return
+
         if self._env_variable:
             self._env_variable += " "
         self._env_variable += "%s=%s" % (variable, value)
@@ -160,7 +166,8 @@ class Test(Loggable):
             self.command += " " + arg
 
     def build_arguments(self):
-        pass
+        self.add_env_variable("LD_PRELOAD")
+        self.add_env_variable("DISPLAY")
 
     def set_result(self, result, message="", error=""):
         self.debug("Setting result: %s (message: %s, error: %s)" % (result,
@@ -455,6 +462,7 @@ class GstValidateTest(Test):
         self._sent_eos_pos = None
 
     def build_arguments(self):
+        super(GstValidateTest, self).build_arguments()
         if "GST_VALIDATE" in os.environ:
             self.add_env_variable("GST_VALIDATE", os.environ["GST_VALIDATE"])
 
@@ -466,8 +474,8 @@ class GstValidateTest(Test):
             self.add_env_variable("GST_VALIDATE_SCENARIO",
                                   os.environ["GST_VALIDATE_SCENARIO"])
 
-        if "LD_PRELOAD" in os.environ:
-            self.add_env_variable("LD_PRELOAD", os.environ["LD_PRELOAD"])
+        self.add_env_variable("GST_VALIDATE_CONFIG")
+        self.add_env_variable("GST_VALIDATE_OVERRIDE")
 
     def get_extra_log_content(self, extralog):
         value = Test.get_extra_log_content(self, extralog)

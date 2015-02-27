@@ -410,6 +410,7 @@ class GstValidateMediaCheckTest(GstValidateTest):
         self._media_info_path = minfo_path
 
     def build_arguments(self):
+        Test.build_arguments(self)
         self.add_arguments(self._uri, "--expected-results",
                            self._media_info_path)
 
