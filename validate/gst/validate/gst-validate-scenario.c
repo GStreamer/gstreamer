@@ -1043,7 +1043,6 @@ _set_action_playback_time (GstValidateScenario * scenario,
   return TRUE;
 }
 
-
 static GstValidateExecuteActionReturn
 _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
     GstStructure * structure, gboolean add_to_lists)
@@ -1086,6 +1085,9 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
 
   action->structure = gst_structure_copy (structure);
 
+  if (!action->priv->main_structure)
+    action->priv->main_structure = gst_structure_copy (structure);
+
   if (IS_CONFIG_ACTION_TYPE (action_type->flags)) {
     res = action_type->execute (scenario, action);
     gst_validate_action_unref (action);
@@ -1114,7 +1116,6 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
 
   return res;
 }
-
 
 static GstValidateExecuteActionReturn
 _execute_sub_action_action (GstValidateAction * action)
@@ -1859,7 +1860,6 @@ _load_scenario_file (GstValidateScenario * scenario,
             structure, TRUE) == GST_VALIDATE_EXECUTE_ACTION_ERROR)
       goto failed;
 
-    action->priv->main_structure = gst_structure_copy (structure);
     action->action_number = priv->num_actions++;
   }
 
