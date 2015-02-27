@@ -248,7 +248,6 @@ gst_stream_synchronizer_wait (GstStreamSynchronizer * self, GstPad * pad)
       ret = gst_pad_push_event (pad, event);
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       if (!ret) {
-        GST_ERROR_OBJECT (pad, "Failed to send GAP event");
         return ret;
       }
       self->send_gap_event = FALSE;
