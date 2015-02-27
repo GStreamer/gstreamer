@@ -289,10 +289,10 @@ GObject
           GstPngEnc
           GstVP8Enc
           GstVP9Enc
+          GstY4mEncode
         GstVideoMixer2
         GstWavEnc
         GstWavParse
-        GstY4mEncode
       GstPad
         GstInterleavePad
         GstVideoMixer2Pad

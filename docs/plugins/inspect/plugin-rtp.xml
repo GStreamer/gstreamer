@@ -887,7 +887,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MP2T</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)33, clock-rate=(int)90000, encoding-name=(string)MP2T; application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MP2T</details>
         </caps>
       </pads>
     </element>
@@ -1028,7 +1028,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, clock-rate=(int)90000, encoding-name=(string)MPA; application/x-rtp, media=(string)audio, payload=(int)14, clock-rate=(int)90000</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)14, clock-rate=(int)90000; application/x-rtp, media=(string)audio, encoding-name=(string)MPA, clock-rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1502,10 +1502,10 @@
     </element>
     <element>
       <name>rtpvorbispay</name>
-      <longname>RTP Vorbis depayloader</longname>
+      <longname>RTP Vorbis payloader</longname>
       <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encode Vorbis audio into RTP packets (RFC 5215)</description>
-      <author>Wim Taymans &lt;wimi.taymans@gmail.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -1532,7 +1532,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, clock-rate=(int)90000, media=(string)video, encoding-name=(string)VP8-DRAFT-IETF-01</details>
+          <details>application/x-rtp, clock-rate=(int)90000, media=(string)video, encoding-name=(string){ VP8, VP8-DRAFT-IETF-01 }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1559,7 +1559,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)VP8-DRAFT-IETF-01</details>
+          <details>application/x-rtp, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string){ VP8, VP8-DRAFT-IETF-01 }</details>
         </caps>
       </pads>
     </element>
@@ -1574,7 +1574,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)RAW</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)RAW, sampling=(string){ RGB, RGBA, BGR, BGRA, YCbCr-4:4:4, YCbCr-4:2:2, YCbCr-4:2:0, YCbCr-4:1:1 }, depth=(string){ 8, 10, 12, 16 }</details>
         </caps>
         <caps>
           <name>src</name>

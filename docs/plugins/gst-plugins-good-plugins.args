@@ -281,7 +281,7 @@
 <ARG>
 <NAME>GstSpectrum::bands</NAME>
 <TYPE>guint</TYPE>
-<RANGE></RANGE>
+<RANGE>[2,1073741824]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bands</NICK>
 <BLURB>Number of frequency bands.</BLURB>
@@ -484,7 +484,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Multicast Group</NICK>
-<BLURB>The Address of multicast group to join. DEPRECATED: Use address property instead.</BLURB>
+<BLURB>The Address of multicast group to join. (DEPRECATED: Use address property instead).</BLURB>
 <DEFAULT>"0.0.0.0"</DEFAULT>
 </ARG>
 
@@ -1009,6 +1009,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::do-retransmission</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Retransmission</NICK>
+<BLURB>Ask the server to retransmit lost packets.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -1044,7 +1054,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>message</NICK>
-<BLURB>Post a 'level' message for each passed interval (deprecated).</BLURB>
+<BLURB>Post a 'level' message for each passed interval (deprecated, use the post-messages property instead).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -21344,7 +21354,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Do retransmission</NICK>
-<BLURB>Send an event downstream to request packet retransmission.</BLURB>
+<BLURB>Enable retransmission on all streams.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -21466,6 +21476,26 @@
 <NICK>Statistics</NICK>
 <BLURB>Various statistics.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rtx-min-delay</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum RTX Delay</NICK>
+<BLURB>Minimum time in ms to wait before sending retransmission event.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rtx-min-retry-timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTX Min Retry Timeout</NICK>
+<BLURB>Minimum timeout between sending a transmission event in ms (-1 automatic).</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22189,6 +22219,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstJackAudioSrc::port-pattern</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>port pattern</NICK>
+<BLURB>A pattern to select which ports to connect to (NULL = first physical ports).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstJackAudioSink::client</NAME>
 <TYPE>JackClient*</TYPE>
 <RANGE></RANGE>
@@ -22239,6 +22279,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstJackAudioSink::port-pattern</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>port pattern</NICK>
+<BLURB>A pattern to select which ports to connect to (NULL = first physical ports).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFlacParse::check-frame-checksums</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -22274,7 +22324,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
+<BLURB>Method to determine DTS time (DEPRECATED).</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -22325,7 +22375,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Movie timescale</NICK>
 <BLURB>Timescale to use in the movie (units per second).</BLURB>
-<DEFAULT>1000</DEFAULT>
+<DEFAULT>1800</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22404,7 +22454,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
+<BLURB>Method to determine DTS time (DEPRECATED).</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -22455,7 +22505,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Movie timescale</NICK>
 <BLURB>Timescale to use in the movie (units per second).</BLURB>
-<DEFAULT>1000</DEFAULT>
+<DEFAULT>1800</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22494,7 +22544,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
+<BLURB>Method to determine DTS time (DEPRECATED).</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -22545,7 +22595,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Movie timescale</NICK>
 <BLURB>Timescale to use in the movie (units per second).</BLURB>
-<DEFAULT>1000</DEFAULT>
+<DEFAULT>1800</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22584,7 +22634,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
+<BLURB>Method to determine DTS time (DEPRECATED).</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -22635,7 +22685,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Movie timescale</NICK>
 <BLURB>Timescale to use in the movie (units per second).</BLURB>
-<DEFAULT>1000</DEFAULT>
+<DEFAULT>1800</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22764,7 +22814,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
+<BLURB>Method to determine DTS time (DEPRECATED).</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -22815,7 +22865,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Movie timescale</NICK>
 <BLURB>Timescale to use in the movie (units per second).</BLURB>
-<DEFAULT>1000</DEFAULT>
+<DEFAULT>1800</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23326,6 +23376,26 @@
 <NICK>Alpha</NICK>
 <BLURB>Global alpha of overlay image.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::pixbuf</NAME>
+<TYPE>GdkPixbuf*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixbuf</NICK>
+<BLURB>GdkPixbuf object to render.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::positioning-mode</NAME>
+<TYPE>GstGdkPixbufPositioningMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Positioning mode</NICK>
+<BLURB>Positioning mode of offset-x and offset-y properties.</BLURB>
+<DEFAULT>pixels-relative-to-edges</DEFAULT>
 </ARG>
 
 <ARG>
@@ -24736,5 +24806,145 @@
 <NICK>Chunks per Frame</NICK>
 <BLURB>Split and send out each frame in multiple chunks to reduce overhead.</BLURB>
 <DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPushFileSrc::applied-rate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= G_MINDOUBLE</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Applied Rate</NICK>
+<BLURB>Applied rate to use in TIME SEGMENT.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPushFileSrc::initial-timestamp</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial Timestamp</NICK>
+<BLURB>Initial Buffer Timestamp (if time-segment TRUE).</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPushFileSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to read.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPushFileSrc::rate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= G_MINDOUBLE</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rate</NICK>
+<BLURB>Rate to use in TIME SEGMENT.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPushFileSrc::start-time</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Time</NICK>
+<BLURB>Initial Start Time (if time-segment TRUE).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPushFileSrc::stream-time</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stream Time</NICK>
+<BLURB>Initial Stream Time (if time-segment TRUE).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPushFileSrc::time-segment</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Time Segment</NICK>
+<BLURB>Emit TIME SEGMENTS.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Input Pattern</NICK>
+<BLURB>Glob pattern for the location of the files to read.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Output Pattern</NICK>
+<BLURB>Format string pattern for the location of the files to write (e.g. video%05d.mp4).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::max-size-bytes</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size bytes</NICK>
+<BLURB>Max. amount of data per file (in bytes, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::max-size-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (ns)</NICK>
+<BLURB>Max. amount of time per file (in ns, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::mux-overhead</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Muxing Overhead</NICK>
+<BLURB>Extra size overhead of muxing (0.02 = 2%).</BLURB>
+<DEFAULT>0.02</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::muxer</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Muxer</NICK>
+<BLURB>The muxer element to use (NULL = default mp4mux).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::sink</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sink</NICK>
+<BLURB>The sink element (or element chain) to use (NULL = default filesink).</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 

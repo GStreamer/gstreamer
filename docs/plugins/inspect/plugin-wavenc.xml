@@ -20,13 +20,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, rate=(int)[ 1, 2147483647 ], channels=(int)1, format=(string){ S32LE, S24LE, S16LE, U8, F32LE, F64LE }, layout=(string)interleaved; audio/x-raw, rate=(int)[ 1, 2147483647 ], channels=(int)2, channel-mask=(bitmask)0x0000000000000003, format=(string){ S32LE, S24LE, S16LE, U8, F32LE, F64LE }, layout=(string)interleaved; audio/x-alaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]; audio/x-mulaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 65535 ], format=(string){ S32LE, S24LE, S16LE, U8, F32LE, F64LE }, layout=(string)interleaved; audio/x-alaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]; audio/x-mulaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-wav</details>
+          <details>audio/x-wav; audio/x-rf64</details>
         </caps>
       </pads>
     </element>

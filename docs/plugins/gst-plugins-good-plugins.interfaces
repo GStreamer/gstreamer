@@ -97,3 +97,4 @@ GstWavEnc GstTagSetter GstTocSetter
 GstWavpackEnc GstPreset
 GstWebMMux GstTagSetter
 GstWebMMux GstTagSetter GstTocSetter
+GstY4mEncode GstPreset
