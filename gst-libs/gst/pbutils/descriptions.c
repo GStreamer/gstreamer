@@ -351,7 +351,8 @@ pbutils_desc_get_profile_name_from_nick (const gchar * map, gsize map_len,
 static const gchar *
 pbutils_desc_get_mpeg2v_profile_name_from_nick (const gchar * nick)
 {
-  const gchar map[] = "simple\000Simple\000main\000Main\000high\000High\000";
+  static const gchar map[] =
+      "simple\000Simple\000main\000Main\000high\000High\000";
 
   return pbutils_desc_get_profile_name_from_nick (map, sizeof (map), nick);
 }
@@ -359,7 +360,7 @@ pbutils_desc_get_mpeg2v_profile_name_from_nick (const gchar * nick)
 static const gchar *
 pbutils_desc_get_mpeg4v_profile_name_from_nick (const gchar * nick)
 {
-  const gchar map[] = "simple\000Simple\000"
+  static const gchar map[] = "simple\000Simple\000"
       "simple-scalable\000Simple Scalable\000"
       "core\000Core\000"
       "main\000Main\000"
@@ -386,7 +387,7 @@ pbutils_desc_get_mpeg4v_profile_name_from_nick (const gchar * nick)
 static const gchar *
 pbutils_desc_get_h264_profile_name_from_nick (const gchar * nick)
 {
-  const gchar map[] = "baseline\000Baseline\000"
+  static const gchar map[] = "baseline\000Baseline\000"
       "constrained-baseline\000Constrained Baseline\000"
       "main\000Main\000"
       "extended\000Extended\000"
@@ -410,7 +411,7 @@ pbutils_desc_get_h264_profile_name_from_nick (const gchar * nick)
 static const gchar *
 pbutils_desc_get_h265_profile_name_from_nick (const gchar * nick)
 {
-  const gchar map[] = "main\000Main\000"
+  static const gchar map[] = "main\000Main\000"
       "main-10\000Main 10\000"
       "main-12\000Main 12\000"
       "main-4:2:2-10\000Main 4:2:2 10\000"
