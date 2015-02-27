@@ -350,6 +350,7 @@ static const gchar *caps_strings[] = {
   "video/x-h264",
   "video/x-h264, profile=(string)foobar",
   "video/x-h264, profile=(string)high-4:4:4-intra",
+  "video/x-h264, profile=(string)high",
   "video/x-h263, variant=(string)itu",
   "video/x-h263, variant=(string)lead",
   "video/x-h263, variant=(string)microsoft",
@@ -419,14 +420,17 @@ GST_START_TEST (test_pb_utils_get_codec_description)
     desc = gst_pb_utils_get_codec_description (caps);
     fail_unless (desc != NULL);
     GST_LOG (" - codec   : %s", desc);
+    fail_unless (g_utf8_validate (desc, -1, NULL));
     g_free (desc);
     desc = gst_pb_utils_get_decoder_description (caps);
     fail_unless (desc != NULL);
     GST_LOG (" - decoder : %s", desc);
+    fail_unless (g_utf8_validate (desc, -1, NULL));
     g_free (desc);
     desc = gst_pb_utils_get_encoder_description (caps);
     fail_unless (desc != NULL);
     GST_LOG (" - encoder : %s", desc);
+    fail_unless (g_utf8_validate (desc, -1, NULL));
     g_free (desc);
     gst_caps_unref (caps);
   }
