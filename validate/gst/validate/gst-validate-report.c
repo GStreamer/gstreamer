@@ -186,6 +186,8 @@ gst_validate_report_load_issues (void)
           " all buffers coming into the decoders might be checked"
           " and should have the exact expected metadatas and hash of the"
           " content"));
+  REGISTER_VALIDATE_ISSUE (ISSUE, FIRST_BUFFER_NOT_DISCONT,
+      _("First buffer after a seek does not have the DISCONT flag set"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, WRONG_FLOW_RETURN,
       _("flow return from pad push doesn't match expected value"),
       _("flow return from a 1:1 sink/src pad element is as simple as "

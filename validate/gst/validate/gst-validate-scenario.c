@@ -437,6 +437,19 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
 }
 
 static GstPadProbeReturn
+_check_discont_buffer_done (GstPad * pad, GstPadProbeInfo * info,
+    GstValidateAction * action)
+{
+  GstBuffer *buffer = GST_BUFFER (info->data);
+  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    GST_VALIDATE_REPORT (action->scenario, FIRST_BUFFER_NOT_DISCONT,
+        "First buffer after a seek does not have the DISCONT flag set");
+  }
+  gst_validate_action_set_done (action);
+  return GST_PAD_PROBE_REMOVE;
+}
+
+static GstPadProbeReturn
 _check_new_segment_done (GstPad * pad, GstPadProbeInfo * info,
     GstValidateAction * action)
 {
@@ -453,7 +466,10 @@ _check_new_segment_done (GstPad * pad, GstPadProbeInfo * info,
           priv->seeked_in_pause = TRUE;
 
         gst_event_replace (&priv->last_seek, NULL);
-        gst_validate_action_set_done (action);
+
+        gst_pad_add_probe (pad,
+            GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+            (GstPadProbeCallback) _check_discont_buffer_done, action, NULL);
 
         return GST_PAD_PROBE_REMOVE;
       }
