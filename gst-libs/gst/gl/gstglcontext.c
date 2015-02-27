@@ -66,6 +66,8 @@
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_performance);
+static GPrivate current_context_key;
+
 static GModule *module_self;
 static GOnce module_self_gonce = G_ONCE_INIT;
 
@@ -630,8 +632,13 @@ gst_gl_context_activate (GstGLContext * context, gboolean activate)
   GST_OBJECT_LOCK (context);
   result = context_class->activate (context, activate);
 
-  context->priv->active_thread = result
-      && activate ? context->priv->gl_thread : NULL;
+  if (result && activate) {
+    context->priv->active_thread = g_thread_self ();
+    g_private_set (&current_context_key, context);
+  } else {
+    context->priv->active_thread = NULL;
+    g_private_set (&current_context_key, NULL);
+  }
   GST_OBJECT_UNLOCK (context);
 
   return result;
@@ -1682,6 +1689,21 @@ gst_gl_context_check_feature (GstGLContext * context, const gchar * feature)
     return FALSE;
 
   return context_class->check_feature (context, feature);
+}
+
+/**
+ * gst_gl_context_get_current:
+ *
+ * See also gst_gl_context_activate().
+ *
+ * Returns: the #GstGLContext active in the current thread or %NULL
+ *
+ * Since: 1.6
+ */
+GstGLContext *
+gst_gl_context_get_current (void)
+{
+  return g_private_get (&current_context_key);
 }
 
 static GstGLAPI
