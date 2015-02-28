@@ -1393,7 +1393,7 @@ no_format:
  */
 static gboolean
 gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
-    guint32 seqnum)
+    guint32 seqnum, GstSeekFlags flags)
 {
   gint64 desired_offset;
   gint n;
@@ -1406,7 +1406,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
   /* may not have enough fragmented info to do this adjustment,
    * and we can't scan (and probably should not) at this time with
    * possibly flushing upstream */
-  if ((segment->flags & GST_SEEK_FLAG_KEY_UNIT) && !qtdemux->fragmented) {
+  if ((flags & GST_SEEK_FLAG_KEY_UNIT) && !qtdemux->fragmented) {
     gint64 min_offset;
 
     gst_qtdemux_adjust_seek (qtdemux, desired_offset, TRUE, &min_offset, NULL);
@@ -1507,7 +1507,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   }
 
   /* now do the seek, this actually never returns FALSE */
-  gst_qtdemux_perform_seek (qtdemux, &seeksegment, seqnum);
+  gst_qtdemux_perform_seek (qtdemux, &seeksegment, seqnum, flags);
 
   /* prepare for streaming again */
   if (flush) {
