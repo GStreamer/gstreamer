@@ -655,8 +655,11 @@ _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
     gl->GetTexImage (gl_mem->tex_target, 0, format, type, gl_mem->data);
     gl->BindTexture (gl_mem->tex_target, 0);
   } else if (gl_mem->transfer_pbo && CONTEXT_SUPPORTS_PBO_DOWNLOAD (context)) {
-    gsize size = ((GstMemory *) gl_mem)->maxsize;
+    gsize size;
     gpointer map_data = NULL;
+
+    size = gst_gl_get_plane_data_size (&gl_mem->info, &gl_mem->valign,
+        gl_mem->plane);
 
     gl->BindBuffer (GL_PIXEL_PACK_BUFFER, gl_mem->transfer_pbo);
     map_data =
