@@ -245,6 +245,8 @@ static const UploadMethod _gl_memory_upload = {
 struct EGLImageUpload
 {
   GstGLUpload *upload;
+  GstBuffer *buffer;
+  GstBuffer **outbuf;
 };
 
 static gpointer
@@ -336,22 +338,21 @@ _egl_image_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   }
 }
 
-static GstGLUploadReturn
-_egl_image_upload_perform (gpointer impl, GstBuffer * buffer,
-    GstBuffer ** outbuf)
+static void
+_egl_image_upload_perform_gl_thread (GstGLContext * context,
+    struct EGLImageUpload *image)
 {
-  struct EGLImageUpload *image = impl;
   guint i;
 
   /* FIXME: buffer pool */
-  *outbuf = gst_buffer_new ();
+  *image->outbuf = gst_buffer_new ();
   gst_gl_memory_setup_buffer (image->upload->context,
-      &image->upload->priv->out_info, NULL, *outbuf);
+      &image->upload->priv->out_info, NULL, *image->outbuf);
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&image->upload->priv->in_info); i++) {
-    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+    GstMemory *mem = gst_buffer_peek_memory (image->buffer, i);
     GstGLMemory *out_gl_mem =
-        (GstGLMemory *) gst_buffer_peek_memory (*outbuf, i);
+        (GstGLMemory *) gst_buffer_peek_memory (*image->outbuf, i);
     const GstGLFuncs *gl = NULL;
 
     gl = GST_GL_CONTEXT (((GstEGLImageMemory *) mem)->context)->gl_vtable;
@@ -362,9 +363,25 @@ _egl_image_upload_perform (gpointer impl, GstBuffer * buffer,
         gst_egl_image_memory_get_image (mem));
   }
 
-  if (GST_IS_GL_BUFFER_POOL (buffer->pool))
-    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (buffer->pool),
-        buffer);
+  if (GST_IS_GL_BUFFER_POOL (image->buffer->pool))
+    gst_gl_buffer_pool_replace_last_buffer (GST_GL_BUFFER_POOL (image->buffer->
+            pool), image->buffer);
+}
+
+static GstGLUploadReturn
+_egl_image_upload_perform (gpointer impl, GstBuffer * buffer,
+    GstBuffer ** outbuf)
+{
+  struct EGLImageUpload *image = impl;
+
+  image->buffer = buffer;
+  image->outbuf = outbuf;
+
+  gst_gl_context_thread_add (image->upload->context,
+      (GstGLContextThreadFunc) _egl_image_upload_perform_gl_thread, image);
+
+  if (!*image->outbuf)
+    return GST_GL_UPLOAD_ERROR;
 
   return GST_GL_UPLOAD_DONE;
 }
@@ -489,11 +506,11 @@ _upload_meta_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   gpointer handle;
 
   gl_apis =
-      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->upload->
-          context));
-  platform =
-      gst_gl_platform_to_string (gst_gl_context_get_gl_platform (upload->
+      gst_gl_api_to_string (gst_gl_context_get_gl_api (upload->
           upload->context));
+  platform =
+      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
+      (upload->upload->context));
   handle = (gpointer) gst_gl_context_get_gl_context (upload->upload->context);
 
   gl_context =
