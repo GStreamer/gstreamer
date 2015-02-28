@@ -60,6 +60,10 @@ struct _GstGLTransformation
     gfloat ytranslation;
     gfloat ztranslation;
 
+    gfloat xpivot;
+    gfloat ypivot;
+    gfloat zpivot;
+
     /* perspective */
     gfloat fov;
     gfloat aspect;

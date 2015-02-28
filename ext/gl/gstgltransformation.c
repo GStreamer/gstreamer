@@ -67,7 +67,10 @@ enum
   PROP_ROTATION_Z,
   PROP_SCALE_X,
   PROP_SCALE_Y,
-  PROP_MVP
+  PROP_MVP,
+  PROP_PIVOT_X,
+  PROP_PIVOT_Y,
+  PROP_PIVOT_Z,
 };
 
 #define DEBUG_INIT \
@@ -196,6 +199,27 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
           "Scale multiplier for the Y-Axis.",
           0.0, G_MAXFLOAT, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* Pivot */
+  g_object_class_install_property (gobject_class, PROP_PIVOT_X,
+      g_param_spec_float ("pivot-x", "X Pivot",
+          "Rotation pivot point X coordinate, where 0 is the center,"
+          " -1 the lef +1 the right boarder and <-1, >1 outside.",
+          -G_MAXFLOAT, G_MAXFLOAT, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_PIVOT_Y,
+      g_param_spec_float ("pivot-y", "Y Pivot",
+          "Rotation pivot point X coordinate, where 0 is the center,"
+          " -1 the lef +1 the right boarder and <-1, >1 outside.",
+          -G_MAXFLOAT, G_MAXFLOAT, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_PIVOT_Z,
+      g_param_spec_float ("pivot-z", "Z Pivot",
+          "Relevant for rotation in 3D space. You look into the negative Z axis direction",
+          -G_MAXFLOAT, G_MAXFLOAT, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* MVP */
   g_object_class_install_property (gobject_class, PROP_MVP,
       g_param_spec_boxed ("mvp-matrix",
@@ -237,6 +261,13 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
       transformation->ytranslation * 2.0,
       transformation->ztranslation * 2.0);
 
+  graphene_point3d_t pivot_vector =
+      GRAPHENE_POINT3D_INIT (-transformation->xpivot * transformation->aspect,
+      transformation->ypivot,
+      -transformation->zpivot);
+
+  graphene_point3d_t negative_pivot_vector;
+
   graphene_matrix_t model_matrix;
   graphene_matrix_t projection_matrix;
   graphene_matrix_t view_matrix;
@@ -250,9 +281,14 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
   graphene_vec3_init (&center, 0.f, 0.f, 0.f);
   graphene_vec3_init (&up, 0.f, 1.f, 0.f);
 
-  graphene_matrix_init_scale (&model_matrix,
+  /* Translate into pivot origin */
+  graphene_matrix_init_translate (&model_matrix, &pivot_vector);
+
+  /* Scale */
+  graphene_matrix_scale (&model_matrix,
       transformation->xscale, transformation->yscale, 1.0f);
 
+  /* Rotation */
   graphene_matrix_rotate (&model_matrix,
       transformation->xrotation, graphene_vec3_x_axis ());
   graphene_matrix_rotate (&model_matrix,
@@ -260,6 +296,11 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
   graphene_matrix_rotate (&model_matrix,
       transformation->zrotation, graphene_vec3_z_axis ());
 
+  /* Translate back from pivot origin */
+  graphene_point3d_scale (&pivot_vector, -1.0, &negative_pivot_vector);
+  graphene_matrix_translate (&model_matrix, &negative_pivot_vector);
+
+  /* Translation */
   graphene_matrix_translate (&model_matrix, &translation_vector);
 
   if (transformation->ortho) {
@@ -316,6 +357,15 @@ gst_gl_transformation_set_property (GObject * object, guint prop_id,
     case PROP_SCALE_Y:
       filter->yscale = g_value_get_float (value);
       break;
+    case PROP_PIVOT_X:
+      filter->xpivot = g_value_get_float (value);
+      break;
+    case PROP_PIVOT_Y:
+      filter->ypivot = g_value_get_float (value);
+      break;
+    case PROP_PIVOT_Z:
+      filter->zpivot = g_value_get_float (value);
+      break;
     case PROP_MVP:
       if (g_value_get_boxed (value) != NULL)
         filter->mvp_matrix = *((graphene_matrix_t *) g_value_get_boxed (value));
@@ -364,6 +414,15 @@ gst_gl_transformation_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCALE_Y:
       g_value_set_float (value, filter->yscale);
+      break;
+    case PROP_PIVOT_X:
+      g_value_set_float (value, filter->xpivot);
+      break;
+    case PROP_PIVOT_Y:
+      g_value_set_float (value, filter->ypivot);
+      break;
+    case PROP_PIVOT_Z:
+      g_value_set_float (value, filter->zpivot);
       break;
     case PROP_MVP:
       g_value_set_boxed (value, (gconstpointer) & filter->mvp_matrix);
