@@ -585,7 +585,8 @@ _transfer_download (GstGLContext * context, GstGLMemory * gl_mem)
   GST_DEBUG ("downloading texture %u using pbo %u",
       gl_mem->tex_id, gl_mem->transfer_pbo);
 
-  size = ((GstMemory *) gl_mem)->maxsize;
+  size = gst_gl_get_plane_data_size (&gl_mem->info, &gl_mem->valign,
+      gl_mem->plane);
   plane_start = _find_plane_frame_start (gl_mem);
   format = _gst_gl_format_from_gl_texture_type (gl_mem->tex_type);
   type = GL_UNSIGNED_BYTE;
