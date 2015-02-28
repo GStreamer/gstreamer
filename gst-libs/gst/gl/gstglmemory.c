@@ -1038,12 +1038,18 @@ error:
 static GstMemory *
 _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 {
-  GstGLMemory *dest;
+  GstGLAllocator *allocator = (GstGLAllocator *) src->mem.allocator;
+  GstMemory *ret = NULL;
 
   g_mutex_lock (&((GstGLMemory *) src)->lock);
 
-  if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
+  /* If not doing a full copy, then copy to sysmem, the 2D represention of the
+   * texture would become wrong */
+  if (offset > 0 || size < src->mem.size) {
+    ret = allocator->fallback_mem_copy (&src->mem, offset, size);
+  } else if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
     GstAllocationParams params = { 0, src->mem.align, 0, 0 };
+    GstGLMemory *dest;
 
     dest = _gl_mem_new (src->mem.allocator, NULL, src->context, &params,
         &src->info, &src->valign, src->plane, NULL, NULL);
@@ -1057,9 +1063,11 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 
     memcpy (dest->data, (guint8 *) src->data + src->mem.offset, src->mem.size);
     GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+    ret = (GstMemory *) dest;
   } else {
     GstAllocationParams params = { 0, src->mem.align, 0, 0 };
     GstGLMemoryCopyParams copy_params;
+    GstGLMemory *dest;
 
     copy_params.src = src;
     copy_params.tex_id = 0;
@@ -1085,12 +1093,13 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     dest->tex_target = copy_params.tex_target;
     dest = _gl_mem_alloc_data (dest);
     GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
+    ret = (GstMemory *) dest;
   }
 
 done:
   g_mutex_unlock (&((GstGLMemory *) src)->lock);
 
-  return (GstMemory *) dest;
+  return ret;
 }
 
 static GstMemory *
@@ -1331,12 +1340,18 @@ gst_gl_allocator_init (GstGLAllocator * allocator)
 {
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
 
+  /* Keep the fallback copy function around, we will need it when copying with
+   * at an offset or smaller size */
+  allocator->fallback_mem_copy = alloc->mem_copy;
+
   alloc->mem_type = GST_GL_MEMORY_ALLOCATOR;
   alloc->mem_map = (GstMemoryMapFunction) _gl_mem_map;
   alloc->mem_unmap = (GstMemoryUnmapFunction) _gl_mem_unmap;
   alloc->mem_copy = (GstMemoryCopyFunction) _gl_mem_copy;
   alloc->mem_share = (GstMemoryShareFunction) _gl_mem_share;
   alloc->mem_is_span = (GstMemoryIsSpanFunction) _gl_mem_is_span;
+
+  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
 /**
