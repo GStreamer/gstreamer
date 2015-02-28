@@ -655,7 +655,7 @@ _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
     gl->GetTexImage (gl_mem->tex_target, 0, format, type, gl_mem->data);
     gl->BindTexture (gl_mem->tex_target, 0);
   } else if (gl_mem->transfer_pbo && CONTEXT_SUPPORTS_PBO_DOWNLOAD (context)) {
-    gsize size;
+    gsize size, plane_start;
     gpointer map_data = NULL;
 
     size = gst_gl_get_plane_data_size (&gl_mem->info, &gl_mem->valign,
@@ -671,7 +671,8 @@ _download_memory (GstGLContext * context, GstGLMemory * gl_mem)
     }
 
     /* FIXME: COPY! use glMapBuffer + glSync everywhere to remove this */
-    memcpy (gl_mem->data, map_data, size);
+    plane_start = _find_plane_frame_start (gl_mem);
+    memcpy ((guint8 *) gl_mem->data + plane_start, map_data, size);
 
     gl->UnmapBuffer (GL_PIXEL_PACK_BUFFER);
     gl->BindBuffer (GL_PIXEL_PACK_BUFFER, 0);
