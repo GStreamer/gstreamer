@@ -190,6 +190,7 @@ void gst_gl_memory_download_transfer (GstGLMemory * gl_mem);
 struct _GstGLAllocator
 {
   GstAllocator parent;
+  GstMemoryCopyFunction fallback_mem_copy;
 };
 
 /**
