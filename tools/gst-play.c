@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2013-2014 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2013 Collabora Ltd.
+ * Copyright (C) 2015 Centricular Ltd
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -43,6 +44,16 @@
 GST_DEBUG_CATEGORY (play_debug);
 #define GST_CAT_DEFAULT play_debug
 
+typedef enum
+{
+  GST_PLAY_TRICK_MODE_NONE = 0,
+  GST_PLAY_TRICK_MODE_DEFAULT,
+  GST_PLAY_TRICK_MODE_DEFAULT_NO_AUDIO,
+  GST_PLAY_TRICK_MODE_KEY_UNITS,
+  GST_PLAY_TRICK_MODE_KEY_UNITS_NO_AUDIO,
+  GST_PLAY_TRICK_MODE_LAST
+} GstPlayTrickMode;
+
 typedef struct
 {
   gchar **uris;
@@ -66,6 +77,7 @@ typedef struct
   /* configuration */
   gboolean gapless;
 
+  GstPlayTrickMode trick_mode;
   gdouble rate;
 } GstPlay;
 
@@ -169,6 +181,7 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
     play_set_relative_volume (play, initial_volume - 1.0);
 
   play->rate = 1.0;
+  play->trick_mode = GST_PLAY_TRICK_MODE_NONE;
 
   return play;
 }
@@ -632,9 +645,11 @@ seek_failed:
   }
 }
 
-static void
-change_rate (GstPlay * play, gdouble rate)
+static gboolean
+play_set_rate_and_trick_mode (GstPlay * play, gdouble rate,
+    GstPlayTrickMode mode)
 {
+  GstSeekFlags seek_flags;
   GstQuery *query;
   GstEvent *seek;
   gboolean seekable = FALSE;
@@ -643,40 +658,117 @@ change_rate (GstPlay * play, gdouble rate)
   g_return_if_fail (rate != 0);
 
   if (!gst_element_query_position (play->playbin, GST_FORMAT_TIME, &pos))
-    goto seek_failed;
+    return FALSE;
 
   query = gst_query_new_seeking (GST_FORMAT_TIME);
   if (!gst_element_query (play->playbin, query)) {
     gst_query_unref (query);
-    goto seek_failed;
+    return FALSE;
   }
 
   gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
   gst_query_unref (query);
 
   if (!seekable)
-    goto seek_failed;
+    return FALSE;
+
+  seek_flags = GST_SEEK_FLAG_FLUSH;
+
+  switch (mode) {
+    case GST_PLAY_TRICK_MODE_DEFAULT:
+      seek_flags |= GST_SEEK_FLAG_TRICKMODE;
+      break;
+    case GST_PLAY_TRICK_MODE_DEFAULT_NO_AUDIO:
+      seek_flags |= GST_SEEK_FLAG_TRICKMODE | GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
+      break;
+    case GST_PLAY_TRICK_MODE_KEY_UNITS:
+      seek_flags |= GST_SEEK_FLAG_TRICKMODE_KEY_UNITS;
+      break;
+    case GST_PLAY_TRICK_MODE_KEY_UNITS_NO_AUDIO:
+      seek_flags |=
+          GST_SEEK_FLAG_TRICKMODE_KEY_UNITS | GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
+      break;
+    case GST_PLAY_TRICK_MODE_NONE:
+    default:
+      break;
+  }
 
   if (rate > 0)
     seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-        GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
+        seek_flags | GST_SEEK_FLAG_KEY_UNIT,
         /* start */ GST_SEEK_TYPE_SET, pos,
         /* stop */ GST_SEEK_TYPE_NONE, 0);
   else
     seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-        GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+        seek_flags | GST_SEEK_FLAG_ACCURATE,
         /* start */ GST_SEEK_TYPE_SET, 0,
         /* stop */ GST_SEEK_TYPE_SET, pos);
 
   if (!gst_element_send_event (play->playbin, seek))
-    goto seek_failed;
+    return FALSE;
 
-  g_print ("Rate: %.2f                     \n", rate);
-  return;
+  play->rate = rate;
+  play->trick_mode = mode;
+  return TRUE;
+}
 
-seek_failed:
-  {
+static void
+play_set_playback_rate (GstPlay * play, gdouble rate)
+{
+  if (play_set_rate_and_trick_mode (play, rate, play->trick_mode)) {
+    g_print ("Rate: %.2f                               \n", rate);
+  } else {
     g_print ("\nCould not change playback rate to %.2f.\n", rate);
+  }
+}
+
+static void
+play_set_relative_playback_rate (GstPlay * play, gdouble rate_step,
+    gboolean reverse_direction)
+{
+  gdouble new_rate = play->rate + rate_step;
+
+  if (reverse_direction)
+    new_rate *= -1.0;
+
+  play_set_playback_rate (play, new_rate);
+}
+
+static const gchar *
+trick_mode_get_description (GstPlayTrickMode mode)
+{
+  switch (mode) {
+    case GST_PLAY_TRICK_MODE_NONE:
+      return "normal playback, trick modes disabled";
+    case GST_PLAY_TRICK_MODE_DEFAULT:
+      return "trick mode: default";
+    case GST_PLAY_TRICK_MODE_DEFAULT_NO_AUDIO:
+      return "trick mode: default, no audio";
+    case GST_PLAY_TRICK_MODE_KEY_UNITS:
+      return "trick mode: key frames only";
+    case GST_PLAY_TRICK_MODE_KEY_UNITS_NO_AUDIO:
+      return "trick mode: key frames only, no audio";
+    default:
+      break;
+  }
+  return "unknown trick mode";
+}
+
+static void
+play_switch_trick_mode (GstPlay * play)
+{
+  GstPlayTrickMode new_mode = ++play->trick_mode;
+  const gchar *mode_desc;
+
+  if (new_mode == GST_PLAY_TRICK_MODE_LAST)
+    new_mode = GST_PLAY_TRICK_MODE_NONE;
+
+  mode_desc = trick_mode_get_description (new_mode);
+
+  if (play_set_rate_and_trick_mode (play, play->rate, new_mode)) {
+    g_print ("Rate: %.2f (%s)                      \n", play->rate, mode_desc);
+  } else {
+    g_print ("\nCould not change trick mode to %s.\n", mode_desc);
   }
 }
 
@@ -704,31 +796,29 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
       break;
     case '+':
       if (play->rate > -0.2 && play->rate < 0.0)
-        play->rate *= -1.0;
+        play_set_relative_playback_rate (play, 0.0, TRUE);
       else if (ABS (play->rate) < 2.0)
-        play->rate += 0.1;
+        play_set_relative_playback_rate (play, 0.1, FALSE);
       else if (ABS (play->rate) < 4.0)
-        play->rate += 0.5;
+        play_set_relative_playback_rate (play, 0.5, FALSE);
       else
-        play->rate += 1.0;
-
-      change_rate (play, play->rate);
+        play_set_relative_playback_rate (play, 1.0, FALSE);
       break;
     case '-':
-      if (play->rate > 0.0 && play->rate < 0.20) {
-        play->rate *= -1.0;
-      } else if (ABS (play->rate) <= 2.0)
-        play->rate -= 0.1;
+      if (play->rate > 0.0 && play->rate < 0.20)
+        play_set_relative_playback_rate (play, 0.0, TRUE);
+      else if (ABS (play->rate) <= 2.0)
+        play_set_relative_playback_rate (play, -0.1, FALSE);
       else if (ABS (play->rate) <= 4.0)
-        play->rate -= 0.5;
+        play_set_relative_playback_rate (play, -0.5, FALSE);
       else
-        play->rate -= 1.0;
-
-      change_rate (play, play->rate);
+        play_set_relative_playback_rate (play, -1.0, FALSE);
       break;
     case 'd':
-      play->rate *= -1.0;
-      change_rate (play, play->rate);
+      play_set_relative_playback_rate (play, 0.0, TRUE);
+      break;
+    case 't':
+      play_switch_trick_mode (play);
       break;
     case 27:                   /* ESC */
       if (key_input[1] == '\0') {
