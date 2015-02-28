@@ -655,7 +655,7 @@ play_set_rate_and_trick_mode (GstPlay * play, gdouble rate,
   gboolean seekable = FALSE;
   gint64 pos = -1;
 
-  g_return_if_fail (rate != 0);
+  g_return_val_if_fail (rate != 0, FALSE);
 
   if (!gst_element_query_position (play->playbin, GST_FORMAT_TIME, &pos))
     return FALSE;
