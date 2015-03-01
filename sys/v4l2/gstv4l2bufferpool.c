@@ -1164,6 +1164,34 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   }
 #endif
 
+  /* Check for driver bug in reporting feild */
+  if (group->buffer.field == V4L2_FIELD_ANY) {
+    /* Only warn once to avoid the spamming */
+#ifndef GST_DISABLE_GST_DEBUG
+    if (!pool->has_warned_on_buggy_field) {
+      pool->has_warned_on_buggy_field = TRUE;
+      GST_WARNING_OBJECT (pool,
+          "Driver should never set v4l2_buffer.field to ANY");
+    }
+#endif
+
+    /* Use the value from the format (works for UVC bug) */
+    group->buffer.field = obj->format.fmt.pix.field;
+
+    /* If driver also has buggy S_FMT, assume progressive */
+    if (group->buffer.field == V4L2_FIELD_ANY) {
+#ifndef GST_DISABLE_GST_DEBUG
+      if (!pool->has_warned_on_buggy_field) {
+        pool->has_warned_on_buggy_field = TRUE;
+        GST_WARNING_OBJECT (pool,
+            "Driver should never set v4l2_format.pix.field to ANY");
+      }
+#endif
+
+      group->buffer.field = V4L2_FIELD_NONE;
+    }
+  }
+
   /* set top/bottom field first if v4l2_buffer has the information */
   switch (group->buffer.field) {
     case V4L2_FIELD_NONE:

@@ -89,6 +89,9 @@ struct _GstV4l2BufferPool
 
   /* signal handlers */
   gulong group_released_handler;
+
+  /* Control to warn only once on buggy feild driver bug */
+  gboolean has_warned_on_buggy_field;
 };
 
 struct _GstV4l2BufferPoolClass
