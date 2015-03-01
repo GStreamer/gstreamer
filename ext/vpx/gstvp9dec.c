@@ -381,7 +381,8 @@ gst_vp9_dec_image_to_buffer (GstVP9Dec * dec, const vpx_image_t * img,
   for (comp = 0; comp < 3; comp++) {
     dest = GST_VIDEO_FRAME_COMP_DATA (&frame, comp);
     src = img->planes[comp];
-    width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, comp);
+    width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, comp)
+        * GST_VIDEO_FRAME_COMP_PSTRIDE (&frame, comp);
     height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, comp);
     deststride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, comp);
     srcstride = img->stride[comp];
