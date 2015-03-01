@@ -73,7 +73,7 @@ GST_START_TEST (test_basic)
     gst_video_info_set_format (&v_info, formats[i], width, height);
 
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&v_info); j++) {
-      mem = gst_gl_memory_alloc (context, &v_info, j, NULL);
+      mem = gst_gl_memory_alloc (context, NULL, &v_info, j, NULL);
       fail_if (mem == NULL);
       gl_mem = (GstGLMemory *) mem;
 
@@ -124,7 +124,7 @@ GST_START_TEST (test_transfer)
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 1, 1);
 
   /* texture creation */
-  mem = (GstMemory *) gst_gl_memory_alloc (context, &v_info, 0, NULL);
+  mem = (GstMemory *) gst_gl_memory_alloc (context, NULL, &v_info, 0, NULL);
   fail_unless (!GST_GL_MEMORY_FLAG_IS_SET (mem,
           GST_GL_MEMORY_FLAG_NEED_UPLOAD));
   fail_unless (!GST_GL_MEMORY_FLAG_IS_SET (mem,
