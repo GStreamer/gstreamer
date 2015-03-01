@@ -609,9 +609,9 @@ wrong_config:
  *
  * Set the configuration of the pool. If the pool is already configured, and
  * the configuration haven't change, this function will return %TRUE. If the
- * pool is active, this function will try deactivating it. Buffers allocated
- * form this pool must be returned or else this function will do nothing and
- * return %FALSE.
+ * pool is active, this method will return %FALSE and active configuration
+ * will remain. Buffers allocated form this pool must be returned or else this
+ * function will do nothing and return %FALSE.
  *
  * @config is a #GstStructure that contains the configuration parameters for
  * the pool. A default and mandatory set of parameters can be configured with
@@ -645,18 +645,8 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     goto config_unchanged;
 
   /* can't change the settings when active */
-  if (priv->active) {
-    GST_BUFFER_POOL_UNLOCK (pool);
-    if (!gst_buffer_pool_set_active (pool, FALSE)) {
-      GST_BUFFER_POOL_LOCK (pool);
-      goto was_active;
-    }
-    GST_BUFFER_POOL_LOCK (pool);
-
-    /* not likely but as we released the lock */
-    if (priv->active)
-      goto was_active;
-  }
+  if (priv->active)
+    goto was_active;
 
   /* we can't change when outstanding buffers */
   if (g_atomic_int_get (&priv->outstanding) != 0)
@@ -694,7 +684,7 @@ config_unchanged:
 was_active:
   {
     gst_structure_free (config);
-    GST_WARNING_OBJECT (pool, "can't change config, we are active");
+    GST_INFO_OBJECT (pool, "can't change config, we are active");
     GST_BUFFER_POOL_UNLOCK (pool);
     return FALSE;
   }

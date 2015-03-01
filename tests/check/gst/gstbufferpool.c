@@ -179,7 +179,6 @@ GST_START_TEST (test_pool_activation_and_config)
   GstBufferPool *pool = gst_buffer_pool_new ();
   GstStructure *config = gst_buffer_pool_get_config (pool);
   GstCaps *caps = gst_caps_new_empty_simple ("test/data");
-  GstBuffer *buffer = NULL;
 
   /* unconfigured pool cannot be activated */
   fail_if (gst_buffer_pool_set_active (pool, TRUE));
@@ -192,26 +191,11 @@ GST_START_TEST (test_pool_activation_and_config)
   config = gst_buffer_pool_get_config (pool);
   fail_unless (gst_buffer_pool_set_config (pool, config));
 
-  /* setting a different config should deactivate the pool */
+  /* setting a different config on active pool should fail */
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, 12, 10, 0);
-  fail_unless (gst_buffer_pool_set_config (pool, config));
-  fail_if (gst_buffer_pool_is_active (pool));
-
-  /* though it should fail if there is outstanding buffers */
-  gst_buffer_pool_set_active (pool, TRUE);
-  gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
-  fail_if (buffer == NULL);
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, caps, 10, 10, 0);
   fail_if (gst_buffer_pool_set_config (pool, config));
-
-  /* and work when last buffer is back */
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, caps, 10, 10, 0);
-  gst_buffer_unref (buffer);
-  fail_unless (gst_buffer_pool_set_config (pool, config));
-  fail_unless (gst_buffer_pool_set_active (pool, TRUE));
+  fail_unless (gst_buffer_pool_is_active (pool));
 
   gst_buffer_pool_set_active (pool, FALSE);
   gst_object_unref (pool);
