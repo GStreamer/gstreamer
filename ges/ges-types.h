@@ -29,9 +29,6 @@
 
 /* Type definitions */
 
-typedef struct _GESSimpleLayer GESSimpleLayer;
-typedef struct _GESSimpleLayerClass GESSimpleLayerClass;
-
 typedef struct _GESTimeline GESTimeline;
 typedef struct _GESTimelineClass GESTimelineClass;
 
