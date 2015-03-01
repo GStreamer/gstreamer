@@ -38,8 +38,6 @@ struct _GstGLContextCocoaPrivate
   CGLContextObj external_gl_context;
 
   GstGLAPI context_api;
-
-  gint source_id;
 };
 
 
