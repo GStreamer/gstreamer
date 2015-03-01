@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
+ * Copyright (C) 2014-2015 Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -77,11 +77,6 @@ public class Player implements Closeable {
         nativeSetUri(uri);
     }
 
-    private native boolean nativeIsPlaying();
-    public boolean isPlaying() {
-        return nativeIsPlaying();
-    }
-
     private native long nativeGetPosition();
     public long getPosition() {
         return nativeGetPosition();
@@ -150,6 +145,45 @@ public class Player implements Closeable {
     private void onDurationChanged(long duration) {
         if (durationChangedListener != null) {
             durationChangedListener.durationChanged(this, duration);
+        }
+    }
+
+    private static final State[] stateMap = {State.STOPPED, State.BUFFERING, State.PAUSED, State.PLAYING};
+    public enum State {
+        STOPPED,
+        BUFFERING,
+        PAUSED,
+        PLAYING
+    }
+
+    public static interface StateChangedListener {
+        abstract void stateChanged(Player player, State state);
+    }
+
+    private StateChangedListener stateChangedListener;
+    public void setStateChangedListener(StateChangedListener listener) {
+        stateChangedListener = listener;
+    }
+
+    private void onStateChanged(int stateIdx) {
+        if (stateChangedListener != null) {
+            State state = stateMap[stateIdx];
+            stateChangedListener.stateChanged(this, state);
+        }
+    }
+
+    public static interface BufferingListener {
+        abstract void buffering(Player player, int percent);
+    }
+
+    private BufferingListener bufferingListener;
+    public void setBufferingListener(BufferingListener listener) {
+        bufferingListener = listener;
+    }
+
+    private void onBuffering(int percent) {
+        if (bufferingListener != null) {
+            bufferingListener.buffering(this, percent);
         }
     }
 

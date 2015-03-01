@@ -55,6 +55,8 @@ static JavaVM *java_vm;
 static jfieldID native_player_field_id;
 static jmethodID on_position_updated_method_id;
 static jmethodID on_duration_changed_method_id;
+static jmethodID on_state_changed_method_id;
+static jmethodID on_buffering_method_id;
 static jmethodID on_end_of_stream_method_id;
 static jmethodID on_error_method_id;
 static jmethodID on_video_dimensions_changed_method_id;
@@ -131,6 +133,32 @@ on_duration_changed (GstPlayer * unused, GstClockTime duration, Player * player)
 }
 
 static void
+on_state_changed (GstPlayer * unused, GstPlayerState state, Player * player)
+{
+  JNIEnv *env = get_jni_env ();
+
+  (*env)->CallVoidMethod (env, player->java_player,
+      on_state_changed_method_id, state);
+  if ((*env)->ExceptionCheck (env)) {
+    (*env)->ExceptionDescribe (env);
+    (*env)->ExceptionClear (env);
+  }
+}
+
+static void
+on_buffering (GstPlayer * unused, gint percent, Player * player)
+{
+  JNIEnv *env = get_jni_env ();
+
+  (*env)->CallVoidMethod (env, player->java_player,
+      on_buffering_method_id, percent);
+  if ((*env)->ExceptionCheck (env)) {
+    (*env)->ExceptionDescribe (env);
+    (*env)->ExceptionClear (env);
+  }
+}
+
+static void
 on_end_of_stream (GstPlayer * unused, Player * player)
 {
   JNIEnv *env = get_jni_env ();
@@ -187,6 +215,10 @@ native_new (JNIEnv * env, jobject thiz)
       G_CALLBACK (on_position_updated), player);
   g_signal_connect (player->player, "duration-changed",
       G_CALLBACK (on_duration_changed), player);
+  g_signal_connect (player->player, "state-changed",
+      G_CALLBACK (on_state_changed), player);
+  g_signal_connect (player->player, "buffering",
+      G_CALLBACK (on_buffering), player);
   g_signal_connect (player->player, "end-of-stream",
       G_CALLBACK (on_end_of_stream), player);
   g_signal_connect (player->player, "error", G_CALLBACK (on_error), player);
@@ -281,20 +313,6 @@ native_get_uri (JNIEnv * env, jobject thiz)
   g_free (uri_str);
 
   return uri;
-}
-
-static jboolean
-native_is_playing (JNIEnv * env, jobject thiz)
-{
-  Player *player = GET_CUSTOM_DATA (env, thiz, native_player_field_id);
-  jboolean is_playing;
-
-  if (!player)
-    return FALSE;
-
-  g_object_get (player->player, "is-playing", &is_playing, NULL);
-
-  return is_playing;
 }
 
 static jlong
@@ -406,6 +424,10 @@ native_class_init (JNIEnv * env, jclass klass)
       (*env)->GetMethodID (env, klass, "onPositionUpdated", "(J)V");
   on_duration_changed_method_id =
       (*env)->GetMethodID (env, klass, "onDurationChanged", "(J)V");
+  on_state_changed_method_id =
+      (*env)->GetMethodID (env, klass, "onStateChanged", "(I)V");
+  on_buffering_method_id =
+      (*env)->GetMethodID (env, klass, "onBuffering", "(I)V");
   on_end_of_stream_method_id =
       (*env)->GetMethodID (env, klass, "onEndOfStream", "()V");
   on_error_method_id =
@@ -415,6 +437,7 @@ native_class_init (JNIEnv * env, jclass klass)
 
   if (!native_player_field_id ||
       !on_position_updated_method_id || !on_duration_changed_method_id ||
+      !on_state_changed_method_id || !on_buffering_method_id ||
       !on_end_of_stream_method_id ||
       !on_error_method_id || !on_video_dimensions_changed_method_id) {
     static const gchar *message =
@@ -437,7 +460,6 @@ static JNINativeMethod native_methods[] = {
   {"nativeFree", "()V", (void *) native_free},
   {"nativeGetUri", "()Ljava/lang/String;", (void *) native_get_uri},
   {"nativeSetUri", "(Ljava/lang/String;)V", (void *) native_set_uri},
-  {"nativeIsPlaying", "()Z", (void *) native_is_playing},
   {"nativeGetPosition", "()J", (void *) native_get_position},
   {"nativeGetDuration", "()J", (void *) native_get_duration},
   {"nativeGetVolume", "()D", (void *) native_get_volume},
