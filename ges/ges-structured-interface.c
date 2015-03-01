@@ -245,6 +245,14 @@ done:
   } \
 } G_STMT_END
 
+static gchar *
+ensure_uri (gchar * location)
+{
+  if (gst_uri_is_valid (location))
+    return g_strdup (location);
+  else
+    return gst_filename_to_uri (location, NULL);
+}
 
 gboolean
 _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
@@ -255,7 +263,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   GESClip *clip;
   gint layer_priority;
   const gchar *name;
-  const gchar *asset_id;
+  gchar *asset_id = NULL;
   const gchar *type_string;
   GType type;
   gboolean res = FALSE;
@@ -288,6 +296,12 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
         type_string);
 
     goto beach;
+  }
+
+  if (type == GES_TYPE_URI_CLIP) {
+    asset_id = ensure_uri (asset_id);
+  } else {
+    asset_id = g_strdup (asset_id);
   }
 
   asset = _ges_get_asset_from_timeline (timeline, type, asset_id, error);
@@ -339,6 +353,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   gst_object_unref (layer);
 
 beach:
+  g_free (asset_id);
   return res;
 }
 
