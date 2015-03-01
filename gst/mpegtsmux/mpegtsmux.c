@@ -312,9 +312,6 @@ mpegtsmux_init (MpegTsMux * mux)
   gst_collect_pads_set_clip_function (mux->collect, (GstCollectPadsClipFunction)
       GST_DEBUG_FUNCPTR (mpegtsmux_clip_inc_running_time), mux);
 
-  mux->tsmux = tsmux_new ();
-  tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
-
   mux->adapter = gst_adapter_new ();
   mux->out_adapter = gst_adapter_new ();
 
