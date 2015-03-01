@@ -172,9 +172,10 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     glpool->upload = gst_gl_upload_meta_new (glpool->context);
   }
 
-  /* Recalulate the size as we don't add padding between planes. */
+  /* Recalulate the size and offset as we don't add padding between planes. */
   priv->info.size = 0;
   for (p = 0; p < GST_VIDEO_INFO_N_PLANES (&priv->info); p++) {
+    priv->info.offset[p] = priv->info.size;
     priv->info.size +=
         gst_gl_get_plane_data_size (&priv->info, &priv->valign, p);
   }
