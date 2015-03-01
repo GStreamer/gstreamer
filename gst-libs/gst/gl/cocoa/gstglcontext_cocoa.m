@@ -50,8 +50,12 @@ G_DEFINE_TYPE_WITH_CODE (GstGLContextCocoa, gst_gl_context_cocoa,
  */
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
 
+static gboolean gst_gl_window_cocoa_nsapp_iteration (gpointer data);
+
 static GMutex nsapp_lock;
 static GCond nsapp_cond;
+static gint nsapp_count = 0;
+static gint nsapp_source_id = 0;
 
 static gboolean
 gst_gl_window_cocoa_init_nsapp (gpointer data)
@@ -72,9 +76,13 @@ gst_gl_window_cocoa_init_nsapp (gpointer data)
    */
 
   /* has to be called in the main thread */
-  [NSApplication sharedApplication];
+  if ([NSThread isMainThread]) {
+    [NSApplication sharedApplication];
 
-  GST_DEBUG ("NSApp initialized from a GTimeoutSource");
+    GST_DEBUG ("NSApp initialized from a GTimeoutSource");
+
+    nsapp_source_id = g_timeout_add (60, gst_gl_window_cocoa_nsapp_iteration, NULL);
+  }
 
   [pool release];
 
@@ -104,6 +112,23 @@ gst_gl_window_cocoa_nsapp_iteration (gpointer data)
   [pool release];
 
   return TRUE;
+}
+
+static void
+gst_gl_context_cocoa_check_nsapp_loop (gboolean activate)
+{
+  g_mutex_lock (&nsapp_lock);
+
+  if (activate) ++nsapp_count;
+  else --nsapp_count;
+
+  if (nsapp_count == 0) {
+    if (nsapp_source_id)
+      g_source_remove (nsapp_source_id);
+    nsapp_source_id = 0;
+  }
+
+  g_mutex_unlock (&nsapp_lock);
 }
 
 static gpointer
@@ -314,7 +339,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
   static GOnce once = G_ONCE_INIT;
   g_once (&once, gst_gl_context_cocoa_setup_nsapp, context);
-  priv->source_id = g_timeout_add (60, gst_gl_window_cocoa_nsapp_iteration, NULL);
+  gst_gl_context_cocoa_check_nsapp_loop (TRUE);
 #endif
 
   priv->gl_context = nil;
@@ -353,8 +378,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 
   if (!context_cocoa->priv->gl_context) {
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-    g_source_remove (priv->source_id);
-    priv->source_id = 0;
+    gst_gl_context_cocoa_check_nsapp_loop (FALSE);
 #endif
     goto error;
   }
@@ -382,14 +406,10 @@ error:
 static void
 gst_gl_context_cocoa_destroy_context (GstGLContext *context)
 {
-  GstGLContextCocoa *context_cocoa = GST_GL_CONTEXT_COCOA (context);
-  GstGLContextCocoaPrivate *priv = context_cocoa->priv;
-
   /* FIXME: Need to release context and other things? */
-  if (priv->source_id) {
-    g_source_remove (priv->source_id);
-    priv->source_id = 0;
-  }
+#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
+  gst_gl_context_cocoa_check_nsapp_loop (FALSE);
+#endif
 }
 
 static guintptr
