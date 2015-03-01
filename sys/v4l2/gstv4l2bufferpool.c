@@ -1222,6 +1222,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
       GST_FIXME_OBJECT (pool,
           "Unhandled enum v4l2_field %d - treating as progressive",
           group->buffer.field);
+      break;
   }
 
   if (GST_VIDEO_INFO_FORMAT (&obj->info) == GST_VIDEO_FORMAT_ENCODED) {
