@@ -375,6 +375,7 @@ gst_vp9_dec_image_to_buffer (GstVP9Dec * dec, const vpx_image_t * img,
 
   if (!gst_video_frame_map (&frame, info, buffer, GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (dec, "Could not map video buffer");
+    return;
   }
 
   for (comp = 0; comp < 3; comp++) {
