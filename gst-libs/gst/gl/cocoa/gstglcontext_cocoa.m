@@ -105,36 +105,15 @@ gst_gl_window_cocoa_nsapp_iteration (gpointer data)
 
   return TRUE;
 }
-#endif
 
-static void
-gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
+static gpointer
+gst_gl_context_cocoa_setup_nsapp (gpointer data)
 {
-  GstGLContextClass *context_class = (GstGLContextClass *) klass;
-#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-  NSAutoreleasePool* pool = nil;
-#endif
-
-  g_type_class_add_private (klass, sizeof (GstGLContextCocoaPrivate));
-
-  context_class->destroy_context =
-      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_destroy_context);
-  context_class->create_context =
-      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_create_context);
-  context_class->get_gl_context =
-      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_context);
-  context_class->activate = GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_activate);
-  context_class->get_gl_api =
-      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_api);
-  context_class->get_gl_platform =
-      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_platform);
-
-#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-  pool = [[NSAutoreleasePool alloc] init];
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   /* [NSApplication sharedApplication] will usually be
    * called in your application so it's not necessary
-   * to do that the following. Except for debugging 
+   * to do that the following. Except for debugging
    * purpose like when using gst-launch.
    * So here we handle the two cases where the first
    * GstGLContext is either created in the main thread
@@ -193,7 +172,30 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
   }
 
   [pool release];
+
+  return NULL;
+}
+
 #endif
+
+static void
+gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
+{
+  GstGLContextClass *context_class = (GstGLContextClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstGLContextCocoaPrivate));
+
+  context_class->destroy_context =
+      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_destroy_context);
+  context_class->create_context =
+      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_create_context);
+  context_class->get_gl_context =
+      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_context);
+  context_class->activate = GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_activate);
+  context_class->get_gl_api =
+      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_api);
+  context_class->get_gl_platform =
+      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_platform);
 }
 
 static void
@@ -298,7 +300,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   GstGLWindow *window = gst_gl_context_get_window (context);
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
   const GLint swapInterval = 1;
-  NSAutoreleasePool *pool;
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   CGLPixelFormatObj fmt = NULL;
   CGLContextObj glContext;
   CGLPixelFormatAttribute attribs[] = {
@@ -309,9 +311,9 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   CGLError ret;
   gint npix;
 
-  pool = [[NSAutoreleasePool alloc] init];
-
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
+  static GOnce once = G_ONCE_INIT;
+  g_once (&once, gst_gl_context_cocoa_setup_nsapp, context);
   priv->source_id = g_timeout_add (60, gst_gl_window_cocoa_nsapp_iteration, NULL);
 #endif
 
