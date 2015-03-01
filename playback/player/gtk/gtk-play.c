@@ -325,14 +325,9 @@ main (gint argc, gchar ** argv)
     int res;
 
     chooser = gtk_file_chooser_dialog_new ("Select files to play", NULL,
-                                          GTK_FILE_CHOOSER_ACTION_OPEN,
-                                          "_Cancel", GTK_RESPONSE_CANCEL,
-                                          "_Open", GTK_RESPONSE_ACCEPT,
-                                          NULL);
-    g_object_set (chooser,
-                  "local-only", FALSE,
-                  "select-multiple", TRUE,
-                  NULL);
+        GTK_FILE_CHOOSER_ACTION_OPEN,
+        "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
+    g_object_set (chooser, "local-only", FALSE, "select-multiple", TRUE, NULL);
 
     res = gtk_dialog_run (GTK_DIALOG (chooser));
     if (res == GTK_RESPONSE_ACCEPT) {
