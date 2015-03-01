@@ -284,7 +284,14 @@ eos_cb (GstPlayer * unused, GtkPlay * play)
       gst_player_play (play->player);
       set_title (play, next->data);
     } else {
-      gst_player_stop (play->player);
+      GtkWidget *image;
+
+      gst_player_pause (play->player);
+      image =
+          gtk_image_new_from_icon_name ("media-playback-start",
+          GTK_ICON_SIZE_BUTTON);
+      gtk_button_set_image (GTK_BUTTON (play->play_pause_button), image);
+      play->playing = FALSE;
     }
   }
 }
