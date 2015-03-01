@@ -904,7 +904,11 @@ theora_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
   dec->can_crop = FALSE;
+
   config = gst_buffer_pool_get_config (pool);
+
+  /* FIXME the usage of crop meta is incorrect */
+#if 0
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -912,6 +916,7 @@ theora_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
         gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
         NULL);
   }
+#endif
 
   if (dec->can_crop) {
     GstVideoInfo *info = &dec->uncropped_info;
