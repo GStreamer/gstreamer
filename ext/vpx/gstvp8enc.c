@@ -1888,7 +1888,7 @@ gst_vp8_enc_drain (GstVideoEncoder * video_encoder)
       encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND,
       encoder->cfg.g_timebase.den);
 
-  status = vpx_codec_encode (&encoder->encoder, NULL, pts, 1, flags, deadline);
+  status = vpx_codec_encode (&encoder->encoder, NULL, pts, 0, flags, deadline);
   g_mutex_unlock (&encoder->encoder_lock);
 
   if (status != 0) {
