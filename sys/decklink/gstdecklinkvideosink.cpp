@@ -705,6 +705,8 @@ gst_decklink_video_sink_change_state (GstElement * element,
           gst_message_new_clock_lost (GST_OBJECT_CAST (element),
               self->output->clock));
       gst_clock_set_master (self->output->clock, NULL);
+      // Reset calibration to make the clock reusable next time we use it
+      gst_clock_set_calibration (self->output->clock, 0, 0, 1, 1);
       g_mutex_lock (&self->output->lock);
       self->output->clock_start_time = GST_CLOCK_TIME_NONE;
       self->output->clock_last_time = 0;
