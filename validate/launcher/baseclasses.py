@@ -370,11 +370,12 @@ class GstValidateTest(Test):
         subproc_env["GST_VALIDATE_FILE"] = logfiles
         self.extra_logfiles.append(self.validatelogs)
 
-        if 'GST_DEBUG' in os.environ:
+        if 'GST_DEBUG' in os.environ and not self.options.redirect_logs:
             gstlogsfile = self.logfile + '.gstdebug'
             self.extra_logfiles.append(gstlogsfile)
             subproc_env["GST_DEBUG_FILE"] = gstlogsfile
-        elif self.options.no_color:
+
+        if self.options.no_color:
             subproc_env["GST_DEBUG_NO_COLOR"] = '1'
 
         return subproc_env
