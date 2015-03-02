@@ -1001,10 +1001,17 @@ unpack_RGB16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   const guint16 *restrict s = GET_LINE (y);
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
-    video_orc_unpack_RGB16_trunc (dest, s + x, width);
+    video_orc_unpack_RGB16_le_trunc (dest, s + x, width);
   else
-    video_orc_unpack_RGB16 (dest, s + x, width);
+    video_orc_unpack_RGB16_le (dest, s + x, width);
+#else
+  if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
+    video_orc_unpack_RGB16_be_trunc (dest, s + x, width);
+  else
+    video_orc_unpack_RGB16_be (dest, s + x, width);
+#endif
 }
 
 static void
@@ -1015,7 +1022,11 @@ pack_RGB16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint16 *restrict d = GET_LINE (y);
 
-  video_orc_pack_RGB16 (d, src, width);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_pack_RGB16_le (d, src, width);
+#else
+  video_orc_pack_RGB16_be (d, src, width);
+#endif
 }
 
 #define PACK_BGR16 GST_VIDEO_FORMAT_ARGB, unpack_BGR16, 1, pack_BGR16
@@ -1026,10 +1037,17 @@ unpack_BGR16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   const guint16 *restrict s = GET_LINE (y);
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
-    video_orc_unpack_BGR16_trunc (dest, s + x, width);
+    video_orc_unpack_BGR16_le_trunc (dest, s + x, width);
   else
-    video_orc_unpack_BGR16 (dest, s + x, width);
+    video_orc_unpack_BGR16_le (dest, s + x, width);
+#else
+  if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
+    video_orc_unpack_BGR16_be_trunc (dest, s + x, width);
+  else
+    video_orc_unpack_BGR16_be (dest, s + x, width);
+#endif
 }
 
 static void
@@ -1040,7 +1058,11 @@ pack_BGR16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint16 *restrict d = GET_LINE (y);
 
-  video_orc_pack_BGR16 (d, src, width);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_pack_BGR16_le (d, src, width);
+#else
+  video_orc_pack_BGR16_be (d, src, width);
+#endif
 }
 
 #define PACK_RGB15 GST_VIDEO_FORMAT_ARGB, unpack_RGB15, 1, pack_RGB15
@@ -1051,10 +1073,17 @@ unpack_RGB15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   const guint16 *restrict s = GET_LINE (y);
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
-    video_orc_unpack_RGB15_trunc (dest, s + x, width);
+    video_orc_unpack_RGB15_le_trunc (dest, s + x, width);
   else
-    video_orc_unpack_RGB15 (dest, s + x, width);
+    video_orc_unpack_RGB15_le (dest, s + x, width);
+#else
+  if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
+    video_orc_unpack_RGB15_be_trunc (dest, s + x, width);
+  else
+    video_orc_unpack_RGB15_be (dest, s + x, width);
+#endif
 }
 
 static void
@@ -1065,7 +1094,11 @@ pack_RGB15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint16 *restrict d = GET_LINE (y);
 
-  video_orc_pack_RGB15 (d, src, width);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_pack_RGB15_le (d, src, width);
+#else
+  video_orc_pack_RGB15_be (d, src, width);
+#endif
 }
 
 #define PACK_BGR15 GST_VIDEO_FORMAT_ARGB, unpack_BGR15, 1, pack_BGR15
@@ -1076,10 +1109,17 @@ unpack_BGR15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   const guint16 *restrict s = GET_LINE (y);
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
-    video_orc_unpack_BGR15_trunc (dest, s + x, width);
+    video_orc_unpack_BGR15_le_trunc (dest, s + x, width);
   else
-    video_orc_unpack_BGR15 (dest, s + x, width);
+    video_orc_unpack_BGR15_le (dest, s + x, width);
+#else
+  if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
+    video_orc_unpack_BGR15_be_trunc (dest, s + x, width);
+  else
+    video_orc_unpack_BGR15_be (dest, s + x, width);
+#endif
 }
 
 static void
@@ -1090,7 +1130,11 @@ pack_BGR15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint16 *restrict d = GET_LINE (y);
 
-  video_orc_pack_BGR15 (d, src, width);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_pack_BGR15_le (d, src, width);
+#else
+  video_orc_pack_BGR15_be (d, src, width);
+#endif
 }
 
 #define PACK_BGRA GST_VIDEO_FORMAT_ARGB, unpack_BGRA, 1, pack_BGRA
