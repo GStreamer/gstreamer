@@ -456,6 +456,7 @@ struct _GstActiveStream
   GstSegmentTemplateNode *cur_seg_template;   /* active segment template */
   guint segment_idx;                          /* index of next sequence chunk */
   GPtrArray *segments;                        /* array of GstMediaSegment */
+  GstClockTime presentationTimeOffset;        /* presentation time offset of the current segment */
 };
 
 struct _GstMpdClient
@@ -503,6 +504,7 @@ gboolean gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time);
 GstDateTime *gst_mpd_client_add_time_difference (GstDateTime * t1, gint64 usecs);
 gint gst_mpd_client_get_segment_index_at_time (GstMpdClient *client, GstActiveStream * stream, const GstDateTime *time);
 gint gst_mpd_client_check_time_position (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts, gint64 * diff);
+GstClockTime gst_mpd_parser_get_stream_presentation_offset (GstMpdClient *client, guint stream_idx);
 
 /* Period selection */
 guint gst_mpd_client_get_period_index_at_time (GstMpdClient * client, GstDateTime * time);

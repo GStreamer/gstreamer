@@ -282,6 +282,17 @@ gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
   return TRUE;
 }
 
+static GstClockTime
+gst_dash_demux_get_presentation_offset (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream)
+{
+  GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
+  GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
+
+  return gst_mpd_parser_get_stream_presentation_offset (dashdemux->client,
+      dashstream->index);
+}
+
 static void
 gst_dash_demux_class_init (GstDashDemuxClass * klass)
 {
@@ -361,6 +372,8 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
   gstadaptivedemux_class->stream_free = gst_dash_demux_stream_free;
   gstadaptivedemux_class->get_live_seek_range =
       gst_dash_demux_get_live_seek_range;
+  gstadaptivedemux_class->get_presentation_offset =
+      gst_dash_demux_get_presentation_offset;
 }
 
 static void
