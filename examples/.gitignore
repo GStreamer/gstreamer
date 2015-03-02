@@ -10,3 +10,5 @@ test-video
 test-video-rtx
 test-uri
 test-auth
+test-netclock
+test-netclock-client
