@@ -589,7 +589,7 @@ shrul g, g, 6
 shrul b, b, 3
 orl t2, r, g
 orl t2, t2, b
-select0lw rgb15, t2
+select1lw rgb15, t2
 
 .function video_orc_unpack_BGR15_le
 .dest 4 argb guint32
@@ -719,9 +719,9 @@ shrul g, g, 6
 shrul r, r, 19
 orl t2, r, g
 orl t2, t2, b
-select0lw rgb15, t2
+select1lw rgb15, t2
 
-.function video_orc_unpack_RGB16_le
+.function video_orc_unpack_RGB16
 .dest 4 argb guint32
 .source 2 rgb16 guint16
 .temp 2 t
@@ -746,32 +746,7 @@ mergewl gb, g, b
 mergelq t2, ar, gb
 x4 convsuswb argb, t2
 
-.function video_orc_unpack_RGB16_be
-.dest 4 argb guint32
-.source 2 rgb16 guint16
-.temp 2 t
-.temp 2 r
-.temp 2 g
-.temp 2 b
-.temp 4 ar
-.temp 4 gb
-.temp 8 t2
-
-loadw t, rgb16
-andw r, t, 0xf800
-andw g, t, 0x07e0
-andw b, t, 0x001f
-shruw r, r, 6
-shlw b, b, 5
-mulhsw r, r, 0x4200
-mulhsw g, g, 0x2080
-mulhsw b, b, 0x4200
-mergewl ar, r, 0xff
-mergewl gb, b, g
-mergelq t2, gb, ar
-x4 convsuswb argb, t2
-
-.function video_orc_unpack_RGB16_le_trunc
+.function video_orc_unpack_RGB16_trunc
 .dest 4 argb guint32
 .source 2 rgb16 guint16
 .temp 2 t
@@ -792,29 +767,6 @@ shlw b, b, 3
 mergewl ar, 0xff, r
 mergewl gb, g, b
 mergelq t2, ar, gb
-x4 convsuswb argb, t2
-
-.function video_orc_unpack_RGB16_be_trunc
-.dest 4 argb guint32
-.source 2 rgb16 guint16
-.temp 2 t
-.temp 2 r
-.temp 2 g
-.temp 2 b
-.temp 4 ar
-.temp 4 gb
-.temp 8 t2
-
-loadw t, rgb16
-andw r, t, 0xf800
-andw g, t, 0x07e0
-andw b, t, 0x001f
-shruw r, r, 8
-shruw g, g, 3
-shlw b, b, 3
-mergewl ar, r, 0xff
-mergewl gb, b, g
-mergelq t2, gb, ar
 x4 convsuswb argb, t2
 
 .function video_orc_pack_RGB16_le
@@ -854,9 +806,9 @@ shrul g, g, 5
 shrul b, b, 3
 orl t2, r, g
 orl t2, t2, b
-select0lw rgb16, t2
+select1lw rgb16, t2
 
-.function video_orc_unpack_BGR16_le
+.function video_orc_unpack_BGR16
 .dest 4 argb guint32
 .source 2 bgr16 guint16
 .temp 2 t
@@ -881,32 +833,7 @@ mergewl gb, g, b
 mergelq t2, ar, gb
 x4 convsuswb argb, t2
 
-.function video_orc_unpack_BGR16_be
-.dest 4 argb guint32
-.source 2 bgr16 guint16
-.temp 2 t
-.temp 2 r
-.temp 2 g
-.temp 2 b
-.temp 4 ar
-.temp 4 gb
-.temp 8 t2
-
-loadw t, bgr16
-andw b, t, 0xf800
-andw g, t, 0x07e0
-andw r, t, 0x001f
-shruw b, b, 6
-shlw r, r, 5
-mulhsw b, b, 0x4200
-mulhsw g, g, 0x2080
-mulhsw r, r, 0x4200
-mergewl ar, r, 0xff
-mergewl gb, b, g
-mergelq t2, gb, ar
-x4 convsuswb argb, t2
-
-.function video_orc_unpack_BGR16_le_trunc
+.function video_orc_unpack_BGR16_trunc
 .dest 4 argb guint32
 .source 2 bgr16 guint16
 .temp 2 t
@@ -927,29 +854,6 @@ shlw r, r, 3
 mergewl ar, 0xff, r
 mergewl gb, g, b
 mergelq t2, ar, gb
-x4 convsuswb argb, t2
-
-.function video_orc_unpack_BGR16_be_trunc
-.dest 4 argb guint32
-.source 2 bgr16 guint16
-.temp 2 t
-.temp 2 r
-.temp 2 g
-.temp 2 b
-.temp 4 ar
-.temp 4 gb
-.temp 8 t2
-
-loadw t, bgr16
-andw b, t, 0xf800
-andw g, t, 0x07e0
-andw r, t, 0x001f
-shruw b, b, 8
-shruw g, g, 3
-shlw r, r, 3
-mergewl ar, r, 0xff
-mergewl gb, b, g
-mergelq t2, gb, ar
 x4 convsuswb argb, t2
 
 .function video_orc_pack_BGR16_le
@@ -990,7 +894,7 @@ shrul g, g, 5
 shrul r, r, 19
 orl t2, r, g
 orl t2, t2, b
-select0lw rgb15, t2
+select1lw rgb15, t2
 
 .function video_orc_resample_bilinear_u32
 .dest 4 d1 guint8

@@ -1001,17 +1001,10 @@ unpack_RGB16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   const guint16 *restrict s = GET_LINE (y);
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
-    video_orc_unpack_RGB16_le_trunc (dest, s + x, width);
+    video_orc_unpack_RGB16_trunc (dest, s + x, width);
   else
-    video_orc_unpack_RGB16_le (dest, s + x, width);
-#else
-  if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
-    video_orc_unpack_RGB16_be_trunc (dest, s + x, width);
-  else
-    video_orc_unpack_RGB16_be (dest, s + x, width);
-#endif
+    video_orc_unpack_RGB16 (dest, s + x, width);
 }
 
 static void
@@ -1037,17 +1030,10 @@ unpack_BGR16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   const guint16 *restrict s = GET_LINE (y);
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
-    video_orc_unpack_BGR16_le_trunc (dest, s + x, width);
+    video_orc_unpack_BGR16_trunc (dest, s + x, width);
   else
-    video_orc_unpack_BGR16_le (dest, s + x, width);
-#else
-  if (flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)
-    video_orc_unpack_BGR16_be_trunc (dest, s + x, width);
-  else
-    video_orc_unpack_BGR16_be (dest, s + x, width);
-#endif
+    video_orc_unpack_BGR16 (dest, s + x, width);
 }
 
 static void
