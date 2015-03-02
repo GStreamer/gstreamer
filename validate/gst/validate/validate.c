@@ -36,6 +36,7 @@
 #include <unistd.h>
 
 #include "validate.h"
+#include "gst-validate-utils.h"
 #include "gst-validate-internal.h"
 
 #ifdef G_OS_WIN32
@@ -77,6 +78,37 @@ gst_validate_registry_get (void)
   g_mutex_unlock (&_gst_validate_registry_mutex);
 
   return registry;
+}
+
+#define GST_VALIDATE_PLUGIN_CONFIG "gst-validate-plugin-config"
+
+static void
+_free_plugin_config (gpointer data)
+{
+  g_list_free_full (data, (GDestroyNotify) gst_structure_free);
+}
+
+GList *
+gst_validate_plugin_get_config (GstPlugin * plugin)
+{
+  GList *structures = NULL, *tmp, *plugin_conf = NULL;
+  const gchar *config = g_getenv ("GST_VALIDATE_CONFIG");
+
+  if ((plugin_conf =
+          g_object_get_data (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG)))
+    return plugin_conf;
+
+  if (config)
+    structures = gst_validate_utils_structs_parse_from_filename (config);
+
+  for (tmp = structures; tmp; tmp = tmp->next) {
+    if (gst_structure_has_name (tmp->data, gst_plugin_get_name (plugin)))
+      plugin_conf = g_list_append (plugin_conf, tmp->data);
+  }
+  g_object_set_data_full (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG,
+      plugin_conf, _free_plugin_config);
+
+  return plugin_conf;
 }
 
 static void

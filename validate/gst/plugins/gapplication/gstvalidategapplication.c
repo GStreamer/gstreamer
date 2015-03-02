@@ -30,6 +30,7 @@
 #include <gst/gst.h>
 #include <gio/gio.h>
 
+#include "../../validate/validate.h"
 #include "../../validate/gst-validate-scenario.h"
 #include "../../validate/gst-validate-utils.h"
 
@@ -45,25 +46,22 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 gst_validate_gapplication_init (GstPlugin * plugin)
 {
-  GList *structures, *tmp;
-  const gchar *appname = NULL, *config = g_getenv ("GST_VALIDATE_CONFIG");
+  GList *config, *tmp;
+  const gchar *appname;
+
+  config = gst_validate_plugin_get_config (plugin);
 
   if (!config)
     return TRUE;
 
-  structures = gst_validate_utils_structs_parse_from_filename (config);
-
-  if (!structures)
-    return TRUE;
-
-  for (tmp = structures; tmp; tmp = tmp->next) {
-    if (gst_structure_has_name (tmp->data, "gapplication"))
-      appname = gst_structure_get_string (tmp->data, "application-name");
+  for (tmp = config; tmp; tmp = tmp->next) {
+    appname = gst_structure_get_string (tmp->data, "application-name");
   }
-  g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
 
-  if (appname && g_strcmp0 (g_get_prgname (), appname))
+  if (appname && g_strcmp0 (g_get_prgname (), appname)) {
+    GST_INFO_OBJECT (plugin, "App: %s is not %s", g_get_prgname (), appname);
     return TRUE;
+  }
 
   gst_validate_register_action_type_dynamic (plugin, "stop",
       GST_RANK_PRIMARY, _execute_stop, NULL,
