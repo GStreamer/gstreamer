@@ -56,6 +56,7 @@ libgstvaapi_source_c = \
 	gstvaapivideobuffer.c	\
 	gstvaapivideocontext.c	\
 	gstvaapivideometa.c	\
+	gstvaapidecodebin.c	\
 	$(NULL)
 
 libgstvaapi_source_h = \
@@ -68,6 +69,7 @@ libgstvaapi_source_h = \
 	gstvaapivideobuffer.h	\
 	gstvaapivideocontext.h	\
 	gstvaapivideometa.h	\
+	gstvaapidecodebin.h	\
 	$(NULL)
 
 libgstvaapi_enc_source_c =	\
@@ -189,7 +191,7 @@ libgstvaapi_la_LIBADD =	\
 	$(libgstvaapi_LIBS)	\
 	$(GST_LIBS)		\
 	$(GST_BASE_LIBS)	\
-	$(GST_VIDEO_LIBS)	\
+	$(GST_VIDEO_LIBS) -lgstpbutils-$(GST_PKG_VERSION) \
 	$(GST_INTERFACES_LIBS)	\
 	$(GST_BASEVIDEO_LIBS)	\
 	$(GST_PLUGINS_BASE_LIBS) \

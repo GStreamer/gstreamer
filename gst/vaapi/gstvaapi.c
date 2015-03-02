@@ -29,6 +29,7 @@
 #include "gstvaapidecode.h"
 #include "gstvaapipostproc.h"
 #include "gstvaapisink.h"
+#include "gstvaapidecodebin.h"
 
 #if USE_ENCODERS
 #include "gstvaapiencode_h264.h"
@@ -86,6 +87,9 @@ plugin_init (GstPlugin *plugin)
                          GST_TYPE_VAAPIENCODE_VP8);
 #endif
 
+    gst_element_register(plugin, "vaapidecodebin",
+                         GST_RANK_PRIMARY + 2,
+                         GST_TYPE_VAAPI_DECODE_BIN);
     return TRUE;
 }
 
