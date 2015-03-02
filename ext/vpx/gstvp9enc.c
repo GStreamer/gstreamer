@@ -780,7 +780,6 @@ gst_vp9_enc_finalize (GObject * object)
   g_mutex_clear (&gst_vp9_enc->encoder_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-
 }
 
 static void
@@ -1816,15 +1815,19 @@ gst_vp9_enc_drain (GstVideoEncoder * video_encoder)
   int flags = 0;
   vpx_codec_err_t status;
   gint64 deadline;
+  vpx_codec_pts_t pts;
 
   encoder = GST_VP9_ENC (video_encoder);
 
   g_mutex_lock (&encoder->encoder_lock);
   deadline = encoder->deadline;
 
-  status =
-      vpx_codec_encode (&encoder->encoder, NULL, encoder->n_frames, 1, flags,
-      deadline);
+  pts =
+      gst_util_uint64_scale (encoder->last_pts,
+      encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND,
+      encoder->cfg.g_timebase.den);
+
+  status = vpx_codec_encode (&encoder->encoder, NULL, pts, 0, flags, deadline);
   g_mutex_unlock (&encoder->encoder_lock);
 
   if (status != 0) {
@@ -1856,11 +1859,18 @@ gst_vp9_enc_drain (GstVideoEncoder * video_encoder)
 static GstFlowReturn
 gst_vp9_enc_finish (GstVideoEncoder * video_encoder)
 {
+  GstVP9Enc *encoder;
   GstFlowReturn ret;
 
   GST_DEBUG_OBJECT (video_encoder, "finish");
 
-  ret = gst_vp9_enc_drain (video_encoder);
+  encoder = GST_VP9_ENC (video_encoder);
+
+  if (encoder->inited) {
+    ret = gst_vp9_enc_drain (video_encoder);
+  } else {
+    ret = GST_FLOW_OK;
+  }
 
   return ret;
 }
@@ -1892,12 +1902,12 @@ gst_vp9_enc_handle_frame (GstVideoEncoder * video_encoder,
   int flags = 0;
   vpx_image_t *image;
   GstVideoFrame vframe;
+  vpx_codec_pts_t pts;
+  unsigned long duration;
 
   GST_DEBUG_OBJECT (video_encoder, "handle_frame");
 
   encoder = GST_VP9_ENC (video_encoder);
-
-  encoder->n_frames++;
 
   GST_DEBUG_OBJECT (video_encoder, "size %d %d",
       GST_VIDEO_INFO_WIDTH (&encoder->input_state->info),
@@ -1912,8 +1922,25 @@ gst_vp9_enc_handle_frame (GstVideoEncoder * video_encoder,
   }
 
   g_mutex_lock (&encoder->encoder_lock);
+  pts =
+      gst_util_uint64_scale (frame->pts,
+      encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND,
+      encoder->cfg.g_timebase.den);
+  encoder->last_pts = frame->pts;
+
+  if (frame->duration != GST_CLOCK_TIME_NONE) {
+    duration =
+        gst_util_uint64_scale (frame->duration,
+        encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND,
+        encoder->cfg.g_timebase.den);
+    encoder->last_pts += frame->duration;
+  } else {
+    duration = 1;
+  }
+
   status = vpx_codec_encode (&encoder->encoder, image,
-      encoder->n_frames, 1, flags, encoder->deadline);
+      pts, duration, flags, encoder->deadline);
+
   g_mutex_unlock (&encoder->encoder_lock);
   gst_video_frame_unmap (&vframe);
 

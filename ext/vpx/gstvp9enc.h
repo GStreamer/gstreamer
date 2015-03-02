@@ -102,8 +102,7 @@ struct _GstVP9Enc
 
   vpx_image_t image;
 
-  int n_frames;
-
+  GstClockTime last_pts;
   GstVideoCodecState *input_state;
 };
 

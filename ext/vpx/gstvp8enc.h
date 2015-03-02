@@ -102,7 +102,7 @@ struct _GstVP8Enc
 
   vpx_image_t image;
 
-  int n_frames;
+  GstClockTime last_pts;
   int keyframe_distance;
 
   GstVideoCodecState *input_state;
