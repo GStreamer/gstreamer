@@ -25,8 +25,8 @@
       The name of the scenario is the name of the file without its '.scenario' extension.
       The scenario file file format is based on the <link linkend="GstStructure"><type>GstStructure</type></link> serialized format which is a basic, type aware,
       key value format.
-      It takes the type of the action as first coma separated field, and then
-      the key values pair of the form 'parameter=value' separated by comas. The values
+      It takes the type of the action as first comma separated field, and then
+      the key values pair of the form 'parameter=value' separated by commas. The values
       type will be guessed if not casted as in 'parameter=(string)value'. You can force the type
       guessing system to actually know what type you want by giving it the right hints. For example
       to make sure the value is a double, you should add a decimal (ie '1' will be considered as a
