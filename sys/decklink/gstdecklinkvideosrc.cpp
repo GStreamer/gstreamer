@@ -504,11 +504,14 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   if (self->flushing) {
     if (f)
       capture_frame_free (f);
+    GST_DEBUG_OBJECT (self, "Flushing");
     return GST_FLOW_FLUSHING;
   }
 
   g_mutex_lock (&self->lock);
   if (self->mode == GST_DECKLINK_MODE_AUTO && self->caps_mode != f->mode) {
+    GST_DEBUG_OBJECT (self, "Mode changed from %d to %d", self->caps_mode,
+        f->mode);
     self->caps_mode = f->mode;
     g_mutex_unlock (&self->lock);
     g_mutex_lock (&self->input->lock);
@@ -541,6 +544,11 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   GST_BUFFER_TIMESTAMP (*buffer) = f->capture_time;
   GST_BUFFER_DURATION (*buffer) = f->capture_duration;
+
+  GST_DEBUG_OBJECT (self,
+      "Outputting buffer %p with timestamp %" GST_TIME_FORMAT " and duration %"
+      GST_TIME_FORMAT, *buffer, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (*buffer)));
 
   capture_frame_free (f);
 

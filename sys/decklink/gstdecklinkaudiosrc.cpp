@@ -476,6 +476,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   if (self->flushing) {
     if (p)
       capture_packet_free (p);
+    GST_DEBUG_OBJECT (self, "Flushing");
     return GST_FLOW_FLUSHING;
   }
 
@@ -569,6 +570,11 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   GST_BUFFER_TIMESTAMP (*buffer) = timestamp;
   GST_BUFFER_DURATION (*buffer) = duration;
+
+  GST_DEBUG_OBJECT (self,
+      "Outputting buffer %p with timestamp %" GST_TIME_FORMAT " and duration %"
+      GST_TIME_FORMAT, *buffer, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (*buffer)));
 
   capture_packet_free (p);
 
