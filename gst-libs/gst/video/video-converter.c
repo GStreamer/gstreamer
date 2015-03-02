@@ -1849,7 +1849,7 @@ setup_borderline (GstVideoConverter * convert)
     }
     w_sub = 0;
     if (out_finfo->n_planes == 1) {
-      /* for packet formats, convert based on subsampling so that we
+      /* for packed formats, convert based on subsampling so that we
        * get a complete group of pixels */
       for (i = 0; i < out_finfo->n_components; i++) {
         w_sub = MAX (w_sub, out_finfo->w_sub[i]);

@@ -1467,10 +1467,15 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
         }
       } else {
         guint vx, vw;
+        guint h_taps;
 
-        vx = hscale->resampler.offset[x];
-        vw = hscale->resampler.offset[x + width - 1] +
-            hscale->resampler.max_taps;
+        h_taps = hscale->resampler.max_taps;
+
+        vx = (hscale->inc * x) >> 16;
+        vx = MIN (vx, hscale->resampler.offset[x]);
+        vw = (hscale->inc * (x + width)) >> 16;
+        vw = MAX (vw, hscale->resampler.offset[x + width - 1] + h_taps);
+        vw += 1;
 
         if (vscale->tmpwidth < vw)
           realloc_tmplines (vscale, n_elems, vw);
