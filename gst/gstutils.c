@@ -1446,8 +1446,24 @@ prepare_link_maybe_ghosting (GstPad ** src, GstPad ** sink,
   /* we need to setup some ghost pads */
   root = find_common_root (e1, e2);
   if (!root) {
-    g_warning ("Trying to connect elements that don't share a common "
-        "ancestor: %s and %s", GST_ELEMENT_NAME (e1), GST_ELEMENT_NAME (e2));
+    if (GST_OBJECT_PARENT (e1) == NULL)
+      g_warning ("Trying to link elements %s and %s that don't share a common "
+          "ancestor: %s hasn't been added to a bin or pipeline, but %s is in %s",
+          GST_ELEMENT_NAME (e1), GST_ELEMENT_NAME (e2),
+          GST_ELEMENT_NAME (e1), GST_ELEMENT_NAME (e2),
+          GST_ELEMENT_NAME (GST_OBJECT_PARENT (e2)));
+    else if (GST_OBJECT_PARENT (e2) == NULL)
+      g_warning ("Trying to link elements %s and %s that don't share a common "
+          "ancestor: %s hasn't been added to a bin or pipeline, and %s is in %s",
+          GST_ELEMENT_NAME (e1), GST_ELEMENT_NAME (e2),
+          GST_ELEMENT_NAME (e2), GST_ELEMENT_NAME (e1),
+          GST_ELEMENT_NAME (GST_OBJECT_PARENT (e1)));
+    else
+      g_warning ("Trying to link elements %s and %s that don't share a common "
+          "ancestor: %s is in %s, and %s is in %s",
+          GST_ELEMENT_NAME (e1), GST_ELEMENT_NAME (e2),
+          GST_ELEMENT_NAME (e1), GST_ELEMENT_NAME (GST_OBJECT_PARENT (e1)),
+          GST_ELEMENT_NAME (e2), GST_ELEMENT_NAME (GST_OBJECT_PARENT (e2)));
     return FALSE;
   }
 
