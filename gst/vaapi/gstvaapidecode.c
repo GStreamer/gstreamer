@@ -244,70 +244,9 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode)
 static void
 gst_vaapidecode_release(GstVaapiDecode *decode)
 {
-    g_mutex_lock(&decode->decoder_mutex);
-    g_cond_signal(&decode->decoder_ready);
-    g_mutex_unlock(&decode->decoder_mutex);
-}
-
-static GstFlowReturn
-gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
-{
-    GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
-    GstVaapiDecoderStatus status;
-    GstFlowReturn ret;
-
-
-    /* Decode current frame */
-    for (;;) {
-        status = gst_vaapi_decoder_decode(decode->decoder, frame);
-        if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
-            GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
-            g_mutex_lock(&decode->decoder_mutex);
-            if (gst_vaapi_decoder_check_status (decode->decoder) ==
-                GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE)
-              g_cond_wait(&decode->decoder_ready, &decode->decoder_mutex);
-            g_mutex_unlock(&decode->decoder_mutex);
-            GST_VIDEO_DECODER_STREAM_LOCK(vdec);
-            if (decode->decoder_loop_status < 0)
-                goto error_decode_loop;
-            continue;
-        }
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            goto error_decode;
-        break;
-    }
-
-    /* Try to report back early any error that occured in the decode task */
-    GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
-    GST_VIDEO_DECODER_STREAM_LOCK(vdec);
-    return decode->decoder_loop_status;
-
-    /* ERRORS */
-error_decode_loop:
-    {
-        if (decode->decoder_loop_status != GST_FLOW_FLUSHING)
-            GST_ERROR("decode loop error %d", decode->decoder_loop_status);
-        gst_video_decoder_drop_frame(vdec, frame);
-        return decode->decoder_loop_status;
-    }
-error_decode:
-    {
-        GST_ERROR("decode error %d", status);
-        switch (status) {
-        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC:
-        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE:
-        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT:
-            ret = GST_FLOW_NOT_SUPPORTED;
-            break;
-        default:
-            GST_ELEMENT_ERROR (vdec, STREAM, DECODE, ("Decoding error"),
-                ("Decode error %d", status));
-            ret = GST_FLOW_ERROR;
-            break;
-        }
-        gst_video_decoder_drop_frame(vdec, frame);
-        return ret;
-    }
+    g_mutex_lock(&decode->surface_ready_mutex);
+    g_cond_signal(&decode->surface_ready);
+    g_mutex_unlock(&decode->surface_ready_mutex);
 }
 
 static GstFlowReturn
@@ -419,9 +358,38 @@ error_commit_buffer:
 }
 
 static GstFlowReturn
+gst_vaapidecode_push_all_decoded_frames(GstVaapiDecode *decode)
+{
+    GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
+    GstVaapiDecoderStatus status;
+    GstVideoCodecFrame *out_frame;
+    GstFlowReturn ret;
+
+    for (;;) {
+        status = gst_vaapi_decoder_get_frame(decode->decoder, &out_frame);
+
+        switch (status) {
+        case GST_VAAPI_DECODER_STATUS_SUCCESS:
+            ret = gst_vaapidecode_push_decoded_frame(vdec, out_frame);
+            if (ret != GST_FLOW_OK)
+                return ret;
+            break;
+        case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
+            return GST_FLOW_OK;
+        default:
+            GST_ELEMENT_ERROR (vdec, STREAM, DECODE, ("Decoding failed"),
+                ("Unknown decoding error"));
+            return GST_FLOW_ERROR;
+        }
+    }
+    g_assert_not_reached();
+}
+
+static GstFlowReturn
 gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
+    GstVaapiDecoderStatus status;
     GstFlowReturn ret;
 
     if (!decode->input_state)
@@ -443,67 +411,67 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
         decode->active = TRUE;
     }
 
-    /* Make sure to release the base class stream lock so that decode
-       loop can call gst_video_decoder_finish_frame() without blocking */
-    GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
-    ret = gst_vaapidecode_decode_frame(vdec, frame);
-    GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+    /* Decode current frame */
+    for (;;) {
+        status = gst_vaapi_decoder_decode(decode->decoder, frame);
+        if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
+            /* Make sure that there are no decoded frames waiting in the
+               output queue. */
+            ret = gst_vaapidecode_push_all_decoded_frames(decode);
+            if (ret != GST_FLOW_OK)
+                goto error_push_all_decoded_frames;
+
+            g_mutex_lock(&decode->surface_ready_mutex);
+            if (gst_vaapi_decoder_check_status (decode->decoder) == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE)
+              g_cond_wait(&decode->surface_ready, &decode->surface_ready_mutex);
+            g_mutex_unlock(&decode->surface_ready_mutex);
+            continue;
+        }
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            goto error_decode;
+        break;
+    }
+
+    /* Note that gst_vaapi_decoder_decode cannot return success without
+       completing the decode and pushing all decoded frames into the output
+       queue */
+    ret = gst_vaapidecode_push_all_decoded_frames(decode);
+    if (ret != GST_FLOW_OK && ret != GST_FLOW_FLUSHING)
+        GST_ERROR("push loop error after decoding %d", ret);
     return ret;
 
     /* ERRORS */
+error_push_all_decoded_frames:
+    {
+        GST_ERROR("push loop error while decoding %d", ret);
+        gst_video_decoder_drop_frame(vdec, frame);
+        return ret;
+    }
+error_decode:
+    {
+        GST_ERROR("decode error %d", status);
+        switch (status) {
+        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC:
+        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE:
+        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT:
+            ret = GST_FLOW_NOT_SUPPORTED;
+            break;
+        default:
+            GST_ELEMENT_ERROR (vdec, STREAM, DECODE, ("Decoding error"),
+                ("Decode error %d", status));
+            ret = GST_FLOW_ERROR;
+            break;
+        }
+        gst_video_decoder_drop_frame(vdec, frame);
+        return ret;
+    }
 not_negotiated:
-  {
-      GST_ERROR_OBJECT (decode, "not negotiated");
-      ret = GST_FLOW_NOT_NEGOTIATED;
-      gst_video_decoder_drop_frame (vdec, frame);
-      return ret;
-  }
-}
-
-static void
-gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
-{
-    GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
-    GstVaapiDecoderStatus status;
-    GstVideoCodecFrame *out_frame;
-    GstFlowReturn ret;
-
-    status = gst_vaapi_decoder_get_frame_with_timeout(decode->decoder,
-        &out_frame, 100000);
-
-    GST_VIDEO_DECODER_STREAM_LOCK(vdec);
-    switch (status) {
-    case GST_VAAPI_DECODER_STATUS_SUCCESS:
-        ret = gst_vaapidecode_push_decoded_frame(vdec, out_frame);
-        break;
-    case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
-        ret = GST_VIDEO_DECODER_FLOW_NEED_DATA;
-        break;
-    default:
-        GST_ELEMENT_ERROR (vdec, STREAM, DECODE, ("Decoding failed"),
-            ("Unknown decoding error"));
-        ret = GST_FLOW_ERROR;
-        break;
+    {
+        GST_ERROR_OBJECT (decode, "not negotiated");
+        ret = GST_FLOW_NOT_NEGOTIATED;
+        gst_video_decoder_drop_frame (vdec, frame);
+        return ret;
     }
-    decode->decoder_loop_status = ret;
-    GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
-
-    /* If invoked from gst_vaapidecode_finish(), then return right
-       away no matter the errors, or the GstVaapiDecoder needs further
-       data to complete decoding (there no more data to feed in) */
-    if (decode->decoder_finish) {
-        g_mutex_lock(&decode->decoder_mutex);
-        g_cond_signal(&decode->decoder_finish_done);
-        g_mutex_unlock(&decode->decoder_mutex);
-        return;
-    }
-
-    if (ret == GST_FLOW_OK)
-        return;
-
-    /* Suspend the task if an error occurred */
-    if (ret != GST_VIDEO_DECODER_FLOW_NEED_DATA)
-        gst_pad_pause_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
 }
 
 static gboolean
@@ -544,25 +512,12 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
     if (!decode->decoder)
       return GST_FLOW_OK;
 
-    if (!gst_vaapidecode_flush(vdec))
-        ret = GST_FLOW_OK;
-
-    /* Make sure the decode loop function has a chance to return, thus
-       possibly unlocking gst_video_decoder_finish_frame() */
-    if (decode->decoder_loop_status == GST_FLOW_OK) {
-        decode->decoder_finish = TRUE;
-        GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
-        g_mutex_lock(&decode->decoder_mutex);
-        while (decode->decoder_loop_status == GST_FLOW_OK)
-            g_cond_wait(&decode->decoder_finish_done, &decode->decoder_mutex);
-        g_mutex_unlock(&decode->decoder_mutex);
-        gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
-        GST_VIDEO_DECODER_STREAM_LOCK(vdec);
-        decode->decoder_finish = FALSE;
-        gst_pad_start_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode),
-            (GstTaskFunction)gst_vaapidecode_decode_loop, decode, NULL);
+    if (!gst_vaapidecode_flush(vdec)) {
+        gst_vaapidecode_push_all_decoded_frames(decode);
+        return GST_FLOW_ERROR;
     }
-    return ret;
+
+    return gst_vaapidecode_push_all_decoded_frames(decode);
 }
 
 #if GST_CHECK_VERSION(1,0,0)
@@ -674,14 +629,12 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
         gst_vaapi_decoder_state_changed, decode);
 
     decode->decoder_caps = gst_caps_ref(caps);
-    return gst_pad_start_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode),
-        (GstTaskFunction)gst_vaapidecode_decode_loop, decode, NULL);
+    return TRUE;
 }
 
 static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
-    gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
     gst_vaapi_decoder_replace(&decode->decoder, NULL);
     gst_caps_replace(&decode->decoder_caps, NULL);
 
@@ -706,10 +659,6 @@ gst_vaapidecode_reset_full(GstVaapiDecode *decode, GstCaps *caps, gboolean hard)
         GstVideoCodecFrame *out_frame = NULL;
 
         gst_vaapi_decoder_flush(decode->decoder);
-        GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
-        gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
-        GST_VIDEO_DECODER_STREAM_LOCK(vdec);
-        decode->decoder_loop_status = GST_FLOW_OK;
 
         /* Purge all decoded frames as we don't need them (e.g. seek) */
         while (gst_vaapi_decoder_get_frame_with_timeout(decode->decoder,
@@ -741,9 +690,8 @@ gst_vaapidecode_finalize(GObject *object)
     gst_caps_replace(&decode->srcpad_caps,  NULL);
     gst_caps_replace(&decode->allowed_caps, NULL);
 
-    g_cond_clear(&decode->decoder_finish_done);
-    g_cond_clear(&decode->decoder_ready);
-    g_mutex_clear(&decode->decoder_mutex);
+    g_cond_clear(&decode->surface_ready);
+    g_mutex_clear(&decode->surface_ready_mutex);
 
     gst_vaapi_plugin_base_finalize(GST_VAAPI_PLUGIN_BASE(object));
     G_OBJECT_CLASS(gst_vaapidecode_parent_class)->finalize(object);
@@ -868,28 +816,6 @@ gst_vaapidecode_parse(GstVideoDecoder *vdec,
     return ret;
 }
 
-static GstStateChangeReturn
-gst_vaapidecode_change_state (GstElement * element, GstStateChange transition)
-{
-    GstVaapiDecode * const decode = GST_VAAPIDECODE(element);
-
-    switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-        g_mutex_lock(&decode->decoder_mutex);
-        decode->decoder_finish = TRUE;
-        g_cond_signal(&decode->decoder_finish_done);
-        g_cond_signal(&decode->decoder_ready);
-        g_mutex_unlock(&decode->decoder_mutex);
-        gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
-        decode->decoder_finish = FALSE;
-        break;
-    default:
-        break;
-    }
-    return GST_ELEMENT_CLASS(gst_vaapidecode_parent_class)->change_state(
-        element, transition);
-}
-
 static void
 gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
 {
@@ -904,9 +830,6 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     gst_vaapi_plugin_base_class_init(GST_VAAPI_PLUGIN_BASE_CLASS(klass));
 
     object_class->finalize   = gst_vaapidecode_finalize;
-
-    element_class->change_state =
-        GST_DEBUG_FUNCPTR(gst_vaapidecode_change_state);
 
     vdec_class->open         = GST_DEBUG_FUNCPTR(gst_vaapidecode_open);
     vdec_class->close        = GST_DEBUG_FUNCPTR(gst_vaapidecode_close);
@@ -1108,11 +1031,9 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
     decode->decoder             = NULL;
     decode->decoder_caps        = NULL;
     decode->allowed_caps        = NULL;
-    decode->decoder_loop_status = GST_FLOW_OK;
 
-    g_mutex_init(&decode->decoder_mutex);
-    g_cond_init(&decode->decoder_ready);
-    g_cond_init(&decode->decoder_finish_done);
+    g_mutex_init(&decode->surface_ready_mutex);
+    g_cond_init(&decode->surface_ready);
 
     gst_video_decoder_set_packetized(vdec, FALSE);
 

@@ -64,11 +64,8 @@ struct _GstVaapiDecode {
     GstCaps            *sinkpad_caps;
     GstCaps            *srcpad_caps;
     GstVaapiDecoder    *decoder;
-    GMutex              decoder_mutex;
-    GCond               decoder_ready;
-    GstFlowReturn       decoder_loop_status;
-    volatile gboolean   decoder_finish;
-    GCond               decoder_finish_done;
+    GMutex              surface_ready_mutex;
+    GCond               surface_ready;
     GstCaps            *decoder_caps;
     GstCaps            *allowed_caps;
     guint               current_frame_size;
