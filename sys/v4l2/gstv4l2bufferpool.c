@@ -1364,7 +1364,9 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
         case GST_V4L2_IO_USERPTR:
         case GST_V4L2_IO_DMABUF_IMPORT:
         {
-          if (gst_v4l2_is_buffer_valid (buffer, NULL)) {
+          GstV4l2MemoryGroup *group;
+          if (gst_v4l2_is_buffer_valid (buffer, &group)) {
+            gst_v4l2_allocator_reset_group (pool->vallocator, group);
             /* queue back in the device */
             if (pool->other_pool)
               gst_v4l2_buffer_pool_prepare_buffer (pool, buffer, NULL);
