@@ -21,6 +21,7 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#include <unistd.h>
 #include <gst/vaapi/gstvaapisurface_drm.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
 #include <gst/vaapi/gstvaapiimagepool.h>
@@ -773,6 +774,7 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta)
   GstVaapiSurface *surface;
   GstVaapiSurfaceProxy *proxy;
   GstVaapiBufferProxy *dmabuf_proxy;
+  gint dmabuf_fd;
   const GstVideoInfo *vip;
   guint flags;
 
@@ -803,8 +805,11 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta)
   gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
   gst_vaapi_surface_proxy_unref (proxy);
 
-  mem = gst_dmabuf_allocator_alloc (allocator,
-      gst_vaapi_buffer_proxy_get_handle (dmabuf_proxy),
+  dmabuf_fd = gst_vaapi_buffer_proxy_get_handle (dmabuf_proxy);
+  if (dmabuf_fd < 0 || (dmabuf_fd = dup (dmabuf_fd)) < 0)
+    goto error_create_dmabuf_handle;
+
+  mem = gst_dmabuf_allocator_alloc (allocator, dmabuf_fd,
       gst_vaapi_buffer_proxy_get_size (dmabuf_proxy));
   if (!mem)
     goto error_create_dmabuf_memory;
@@ -832,6 +837,12 @@ error_create_dmabuf_proxy:
   {
     GST_ERROR ("failed to export VA surface to DMABUF");
     gst_vaapi_surface_proxy_unref (proxy);
+    return NULL;
+  }
+error_create_dmabuf_handle:
+  {
+    GST_ERROR ("failed to duplicate DMABUF handle");
+    gst_vaapi_buffer_proxy_unref (dmabuf_proxy);
     return NULL;
   }
 error_create_dmabuf_memory:
