@@ -1282,7 +1282,13 @@ update_colorimetry (GstVaapiSink * sink, GstVideoColorimetry * cinfo)
   else
     sink->color_standard = 0;
 
-  GST_DEBUG ("colorimetry %s", gst_video_colorimetry_to_string (cinfo));
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    gchar *const colorimetry_string = gst_video_colorimetry_to_string (cinfo);
+    GST_DEBUG ("colorimetry %s", colorimetry_string);
+    g_free (colorimetry_string);
+  }
+#endif
 #endif
 }
 
