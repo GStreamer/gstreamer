@@ -502,8 +502,8 @@ shlw b, b, 5
 mulhsw r, r, 0x0210
 mulhsw g, g, 0x4200
 mulhsw b, b, 0x4200
-mergewl ag, g, 0xff
-mergewl rb, b, r
+mergewl ag, 0xff, g
+mergewl rb, r, b
 shll ag, ag, 8
 orl argb, ag, rb
 
@@ -632,8 +632,8 @@ shlw r, r, 5
 mulhsw b, b, 0x0210
 mulhsw g, g, 0x4200
 mulhsw r, r, 0x4200
-mergewl ag, g, 0xff
-mergewl rb, b, r
+mergewl ag, 0xff, g
+mergewl rb, r, b
 shll ag, ag, 8
 orl argb, ag, rb
 
@@ -676,8 +676,8 @@ andw r, t, 0x001f
 shruw b, b, 7
 shruw g, g, 2
 shlw r, r, 3
-mergewl ag, g, 0xff
-mergewl rb, b, r
+mergewl ag, 0xff, g
+mergewl rb, r, b
 shll ag, ag, 8
 orl argb, ag, rb
 
