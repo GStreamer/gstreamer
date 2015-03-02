@@ -701,6 +701,19 @@ gst_adaptive_demux_expose_stream (GstAdaptiveDemux * demux,
   return gst_element_add_pad (GST_ELEMENT_CAST (demux), pad);
 }
 
+static GstClockTime
+gst_adaptive_demux_stream_get_presentation_offset (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream)
+{
+  GstAdaptiveDemuxClass *klass;
+
+  klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+
+  g_return_val_if_fail (klass->get_presentation_offset, FALSE);
+
+  return klass->get_presentation_offset (demux, stream);
+}
+
 static gboolean
 gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
     gboolean first_segment)
@@ -741,8 +754,12 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
         min_pts;
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
+    GstClockTime offset;
 
+    offset = gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
     stream->segment = demux->segment;
+    stream->segment.start = stream->segment.position =
+        stream->fragment.timestamp + offset;
     stream->pending_segment = gst_event_new_segment (&stream->segment);
   }
 
@@ -1347,6 +1364,8 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
   GstAdaptiveDemux *demux = stream->demux;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean discont = FALSE;
+  GstClockTime offset =
+      gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
 
   if (stream->first_fragment_buffer) {
     if (demux->segment.rate < 0)
@@ -1375,6 +1394,8 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
 
   stream->first_fragment_buffer = FALSE;
 
+  if (GST_BUFFER_PTS (buffer) != GST_CLOCK_TIME_NONE)
+    GST_BUFFER_PTS (buffer) += offset;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
 

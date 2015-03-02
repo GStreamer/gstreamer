@@ -377,6 +377,18 @@ struct _GstAdaptiveDemuxClass
    * Return: %TRUE if successful
    */
   gboolean (*get_live_seek_range) (GstAdaptiveDemux * demux, gint64 * start, gint64 * stop);
+
+  /**
+   * get_presentation_offset:
+   * @demux: #GstAdaptiveDemux
+   * @stream: #GstAdaptiveDemuxStream
+   *
+   * Gets the delay to apply to @stream.
+   *
+   * Return: a #GstClockTime representing the (positive) time offset to apply to
+   * @stream.
+   */
+  GstClockTime (*get_presentation_offset) (GstAdaptiveDemux *demux, GstAdaptiveDemuxStream *stream);
 };
 
 GType    gst_adaptive_demux_get_type (void);
