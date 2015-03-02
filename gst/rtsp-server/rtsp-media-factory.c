@@ -66,6 +66,8 @@ struct _GstRTSPMediaFactoryPrivate
 
   GMutex medias_lock;
   GHashTable *medias;           /* protected by medias_lock */
+
+  GType media_gtype;
 };
 
 #define DEFAULT_LAUNCH          NULL
@@ -243,6 +245,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   g_mutex_init (&priv->medias_lock);
   priv->medias = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, g_object_unref);
+  priv->media_gtype = GST_TYPE_RTSP_MEDIA;
 }
 
 static void
@@ -1091,6 +1094,54 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
   return media;
 }
 
+/**
+ * gst_rtsp_media_factory_set_media_gtype:
+ * @factory: a #GstRTSPMediaFactory
+ * @media_gtype: the GType of the class to create
+ *
+ * Configure the GType of the GstRTSPMedia subclass to
+ * create (by default, overridden construct vmethods
+ * may of course do something different)
+ *
+ * Since: 1.6
+ */
+void
+gst_rtsp_media_factory_set_media_gtype (GstRTSPMediaFactory * factory,
+    GType media_gtype)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (g_type_is_a (media_gtype, GST_TYPE_RTSP_MEDIA));
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv = factory->priv;
+  priv->media_gtype = media_gtype;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_media_gtype:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Return the GType of the GstRTSPMedia subclass this
+ * factory will create.
+ *
+ * Since: 1.6
+ */
+GType
+gst_rtsp_media_factory_get_media_gtype (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  GType ret;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv = factory->priv;
+  ret = priv->media_gtype;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return ret;
+}
+
 static gchar *
 default_gen_key (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
@@ -1157,6 +1208,7 @@ default_construct (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   GstRTSPMedia *media;
   GstElement *element, *pipeline;
   GstRTSPMediaFactoryClass *klass;
+  GType media_gtype;
 
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
 
@@ -1167,8 +1219,12 @@ default_construct (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   if (element == NULL)
     goto no_element;
 
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  media_gtype = factory->priv->media_gtype;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
   /* create a new empty media */
-  media = gst_rtsp_media_new (element);
+  media = g_object_new (media_gtype, "element", element, NULL);
 
   gst_rtsp_media_collect_streams (media);
 

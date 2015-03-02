@@ -153,6 +153,10 @@ void                  gst_rtsp_media_factory_set_transport_mode (GstRTSPMediaFac
                                                                  GstRTSPTransportMode mode);
 GstRTSPTransportMode  gst_rtsp_media_factory_get_transport_mode (GstRTSPMediaFactory *factory);
 
+void                  gst_rtsp_media_factory_set_media_gtype  (GstRTSPMediaFactory * factory,
+                                                               GType media_gtype);
+GType                 gst_rtsp_media_factory_get_media_gtype  (GstRTSPMediaFactory * factory);
+
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct        (GstRTSPMediaFactory *factory,
                                                                const GstRTSPUrl *url);
