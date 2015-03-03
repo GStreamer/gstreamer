@@ -206,7 +206,7 @@
       <informalexample>
         The first time you launch the testsuite, you will need to make sure that the media samples are
         downloaded. To do so and launch the testsuite you can simply do:
-          <programlisting>gst-validate-launch validate --sync</programlisting>
+          <programlisting>gst-validate-launcher validate --sync</programlisting>
       </informalexample>
       <para>
         This will only launch the GstValidate tests and not other application that might be supported
@@ -215,7 +215,7 @@
       <informalexample>
         Launching the default testsuite will open/close many windows, you might want to mute it
         so you can keep using your computer:
-        <programlisting>gst-validate-launch validate --sync --mute</programlisting>
+        <programlisting>gst-validate-launcher validate --sync --mute</programlisting>
       </informalexample>
     </refsect2>
     <refsect2 id="gst-validate-launcher--implement-testsuite">
@@ -244,7 +244,7 @@ testsuite_folder/
         <informalexample>
           You should generate the .media_infos files. To generate them for local files,
           you can use:
-          <programlisting>gst-validate-launch --medias-paths /path/to/sample_files/ --generate-media-info</programlisting>
+          <programlisting>gst-validate-launcher --medias-paths /path/to/sample_files/ --generate-media-info</programlisting>
             For remote streams, you should use gst-validate-media-check-&GST_API_VERSION;. For an http stream you can for example do:
             <programlisting>gst-validate-media-check-&GST_API_VERSION; http://someonlinestream.com/thestream --output-file /path/to/testsuite_folder/sample_files/thestream.stream_info</programlisting>
         </informalexample>
