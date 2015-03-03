@@ -252,6 +252,12 @@ void                  gst_rtsp_media_factory_set_bind_mcast_address (GstRTSPMedi
 GST_RTSP_SERVER_API
 gboolean              gst_rtsp_media_factory_is_bind_mcast_address (GstRTSPMediaFactory * factory);
 
+GST_RTSP_SERVER_API
+void                  gst_rtsp_media_factory_set_dscp_qos (GstRTSPMediaFactory * factory,
+                                                           gint dscp_qos);
+GST_RTSP_SERVER_API
+gint                  gst_rtsp_media_factory_get_dscp_qos (GstRTSPMediaFactory * factory);
+
 /* creating the media from the factory and a url */
 
 GST_RTSP_SERVER_API

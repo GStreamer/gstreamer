@@ -58,6 +58,7 @@ struct _GstRTSPMediaFactoryPrivate
   GstRTSPProfile profiles;
   GstRTSPLowerTrans protocols;
   guint buffer_size;
+  gint dscp_qos;
   GstRTSPAddressPool *pool;
   GstRTSPTransportMode transport_mode;
   gboolean stop_on_disconnect;
@@ -93,6 +94,7 @@ struct _GstRTSPMediaFactoryPrivate
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
 #define DEFAULT_STOP_ON_DISCONNECT TRUE
 #define DEFAULT_DO_RETRANSMISSION FALSE
+#define DEFAULT_DSCP_QOS        (-1)
 
 enum
 {
@@ -110,6 +112,7 @@ enum
   PROP_CLOCK,
   PROP_MAX_MCAST_TTL,
   PROP_BIND_MCAST_ADDRESS,
+  PROP_DSCP_QOS,
   PROP_LAST
 };
 
@@ -244,6 +247,11 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           DEFAULT_BIND_MCAST_ADDRESS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_DSCP_QOS,
+      g_param_spec_int ("dscp-qos", "DSCP QoS",
+          "The IP DSCP field to use", -1, 63,
+          DEFAULT_DSCP_QOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
       g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
@@ -287,6 +295,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
   priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
+  priv->dscp_qos = DEFAULT_DSCP_QOS;
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->medias_lock);
@@ -369,6 +378,9 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
       g_value_set_boolean (value,
           gst_rtsp_media_factory_is_bind_mcast_address (factory));
       break;
+    case PROP_DSCP_QOS:
+      g_value_set_int (value, gst_rtsp_media_factory_get_dscp_qos (factory));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -426,6 +438,9 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_BIND_MCAST_ADDRESS:
       gst_rtsp_media_factory_set_bind_mcast_address (factory,
           g_value_get_boolean (value));
+      break;
+    case PROP_DSCP_QOS:
+      gst_rtsp_media_factory_set_dscp_qos (factory, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -808,6 +823,62 @@ gst_rtsp_media_factory_get_buffer_size (GstRTSPMediaFactory * factory)
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = priv->buffer_size;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_factory_set_dscp_qos:
+ * @factory: a #GstRTSPMediaFactory
+ * @dscp_qos: a new dscp qos value (0-63, or -1 to disable)
+ *
+ * Configure the media dscp qos to @dscp_qos.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_media_factory_set_dscp_qos (GstRTSPMediaFactory * factory,
+    gint dscp_qos)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  if (dscp_qos < -1 || dscp_qos > 63) {
+    GST_WARNING_OBJECT (factory, "trying to set illegal dscp qos %d", dscp_qos);
+    return;
+  }
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv->dscp_qos = dscp_qos;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_dscp_qos:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get the configured media DSCP QoS.
+ *
+ * Returns: the media DSCP QoS value or -1 if disabled.
+ *
+ * Since: 1.18
+ */
+gint
+gst_rtsp_media_factory_get_dscp_qos (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  guint result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), 0);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  result = priv->dscp_qos;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
@@ -1754,6 +1825,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstRTSPMediaFactoryPrivate *priv = factory->priv;
   gboolean shared, eos_shutdown, stop_on_disconnect;
   guint size;
+  gint dscp_qos;
   GstRTSPSuspendMode suspend_mode;
   GstRTSPProfile profiles;
   GstRTSPLowerTrans protocols;
@@ -1774,6 +1846,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   shared = priv->shared;
   eos_shutdown = priv->eos_shutdown;
   size = priv->buffer_size;
+  dscp_qos = priv->dscp_qos;
   profiles = priv->profiles;
   protocols = priv->protocols;
   rtx_time = priv->rtx_time;
@@ -1790,6 +1863,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_shared (media, shared);
   gst_rtsp_media_set_eos_shutdown (media, eos_shutdown);
   gst_rtsp_media_set_buffer_size (media, size);
+  gst_rtsp_media_set_dscp_qos (media, dscp_qos);
   gst_rtsp_media_set_profiles (media, profiles);
   gst_rtsp_media_set_protocols (media, protocols);
   gst_rtsp_media_set_retransmission_time (media, rtx_time);

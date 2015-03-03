@@ -106,6 +106,7 @@ struct _GstRTSPMediaPrivate
   gboolean reused;
   gboolean eos_shutdown;
   guint buffer_size;
+  gint dscp_qos;
   GstRTSPAddressPool *pool;
   gchar *multicast_iface;
   guint max_mcast_ttl;
@@ -169,6 +170,7 @@ struct _GstRTSPMediaPrivate
                                         GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_EOS_SHUTDOWN    FALSE
 #define DEFAULT_BUFFER_SIZE     0x80000
+#define DEFAULT_DSCP_QOS        (-1)
 #define DEFAULT_TIME_PROVIDER   FALSE
 #define DEFAULT_LATENCY         200
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
@@ -200,6 +202,7 @@ enum
   PROP_CLOCK,
   PROP_MAX_MCAST_TTL,
   PROP_BIND_MCAST_ADDRESS,
+  PROP_DSCP_QOS,
   PROP_LAST
 };
 
@@ -410,6 +413,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           DEFAULT_BIND_MCAST_ADDRESS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_DSCP_QOS,
+      g_param_spec_int ("dscp-qos", "DSCP QoS",
+          "The IP DSCP field to use for each related stream", -1, 63,
+          DEFAULT_DSCP_QOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_stream), NULL, NULL, NULL,
@@ -483,6 +491,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
   priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
   priv->do_rate_control = DEFAULT_DO_RATE_CONTROL;
+  priv->dscp_qos = DEFAULT_DSCP_QOS;
   priv->expected_async_done = FALSE;
 }
 
@@ -577,6 +586,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_BIND_MCAST_ADDRESS:
       g_value_set_boolean (value, gst_rtsp_media_is_bind_mcast_address (media));
       break;
+    case PROP_DSCP_QOS:
+      g_value_set_int (value, gst_rtsp_media_get_dscp_qos (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -636,6 +648,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
     case PROP_BIND_MCAST_ADDRESS:
       gst_rtsp_media_set_bind_mcast_address (media,
           g_value_get_boolean (value));
+      break;
+    case PROP_DSCP_QOS:
+      gst_rtsp_media_set_dscp_qos (media, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1406,6 +1421,70 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
 
   g_mutex_lock (&priv->lock);
   res = priv->buffer_size;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
+static void
+do_set_dscp_qos (GstRTSPStream * stream, gint * dscp_qos)
+{
+  gst_rtsp_stream_set_dscp_qos (stream, *dscp_qos);
+}
+
+/**
+ * gst_rtsp_media_set_dscp_qos:
+ * @media: a #GstRTSPMedia
+ * @dscp_qos: a new dscp qos value (0-63, or -1 to disable)
+ *
+ * Configure the dscp qos of attached streams to @dscp_qos.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_media_set_dscp_qos (GstRTSPMedia * media, gint dscp_qos)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  GST_LOG_OBJECT (media, "set DSCP QoS %d", dscp_qos);
+
+  if (dscp_qos < -1 || dscp_qos > 63) {
+    GST_WARNING_OBJECT (media, "trying to set illegal dscp qos %d", dscp_qos);
+    return;
+  }
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->dscp_qos = dscp_qos;
+  g_ptr_array_foreach (priv->streams, (GFunc) do_set_dscp_qos, &dscp_qos);
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_dscp_qos:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the configured DSCP QoS of attached media.
+ *
+ * Returns: the DSCP QoS value of attached streams or -1 if disabled.
+ *
+ * Since: 1.18
+ */
+gint
+gst_rtsp_media_get_dscp_qos (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gint res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_unlock (&priv->lock);
+  res = priv->dscp_qos;
   g_mutex_unlock (&priv->lock);
 
   return res;

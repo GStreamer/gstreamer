@@ -307,7 +307,6 @@ GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_clock         (GstRTSPMedia *media, GstClock * clock);
 
-
 GST_RTSP_SERVER_API
 void                    gst_rtsp_media_set_publish_clock_mode (GstRTSPMedia * media, GstRTSPPublishClockMode mode);
 
@@ -324,6 +323,11 @@ GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_bind_mcast_address  (GstRTSPMedia *media, gboolean bind_mcast_addr);
 GST_RTSP_SERVER_API
 gboolean              gst_rtsp_media_is_bind_mcast_address  (GstRTSPMedia *media);
+
+GST_RTSP_SERVER_API
+void                  gst_rtsp_media_set_dscp_qos (GstRTSPMedia * media, gint dscp_qos);
+GST_RTSP_SERVER_API
+gint                  gst_rtsp_media_get_dscp_qos (GstRTSPMedia * media);
 
 /* prepare the media for playback */
 
