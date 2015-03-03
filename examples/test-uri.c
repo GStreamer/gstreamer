@@ -61,7 +61,7 @@ remove_map (GstRTSPServer * server)
 #endif
 
 int
-main (int argc, char *argv[])
+main (int argc, gchar * argv[])
 {
   GMainLoop *loop;
   GstRTSPServer *server;
