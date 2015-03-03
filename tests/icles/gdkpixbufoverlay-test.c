@@ -24,8 +24,6 @@
 #include <gio/gio.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
-
-#define GDK_PIXBUF_DISABLE_DEPRECATED   /* for gdk_pixbuf_new_from_inline */
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <math.h>
@@ -93,8 +91,9 @@ create_overlay_pixbuf (void)
 {
   GZlibDecompressor *decompress;
   GConverterResult decomp_res;
-  guchar *gzipped_pixdata, *pixdata;
+  guchar *gzipped_pixdata, *pixdata, *pixels_copy;
   gsize gzipped_size, bytes_read, pixdata_size;
+  guint stride, width, height;
   GdkPixbuf *pixbuf;
 
   gzipped_pixdata = g_base64_decode (gzipped_pixdata_base64, &gzipped_size);
@@ -114,7 +113,25 @@ create_overlay_pixbuf (void)
   /* 0: Pixbuf magic (0x47646b50) */
   g_assert (GST_READ_UINT32_BE (pixdata) == 0x47646b50);
 
-  pixbuf = gdk_pixbuf_new_from_inline (pixdata_size, pixdata, TRUE, NULL);
+  /* pixdata length */
+  pixdata_size = GST_READ_UINT32_BE (pixdata + 4);
+  g_assert (pixdata_size > 4 + 4 + 4 + 4 + 4 + 4);
+
+  /* raw, 8-bit depth, RGBA */
+  g_assert (GST_READ_UINT32_BE (pixdata + 8) == 0x01010002);
+
+  stride = GST_READ_UINT32_BE (pixdata + 12);
+  width = GST_READ_UINT32_BE (pixdata + 16);
+  height = GST_READ_UINT32_BE (pixdata + 20);
+
+  g_assert (pixdata_size == 24 + height * stride);
+
+  pixels_copy = g_memdup (pixdata + 24, height * stride);
+
+  pixbuf =
+      gdk_pixbuf_new_from_data (pixels_copy, GDK_COLORSPACE_RGB, TRUE, 8,
+      width, height, stride, (GdkPixbufDestroyNotify) g_free, pixels_copy);
+
   g_assert (pixbuf != NULL);
 
   g_free (pixdata);
