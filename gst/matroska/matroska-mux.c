@@ -596,7 +596,6 @@ gst_matroska_pad_reset (GstMatroskaPad * collect_pad, gboolean full)
     /* TODO: check default values for the context */
     context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
     collect_pad->track = context;
-    collect_pad->duration = 0;
     collect_pad->start_ts = GST_CLOCK_TIME_NONE;
     collect_pad->end_ts = GST_CLOCK_TIME_NONE;
     collect_pad->tags = gst_tag_list_new_empty ();
@@ -2344,18 +2343,21 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
     GstMatroskaPad *collect_pad = (GstMatroskaPad *) cdata;
 
     if (cdata->pad == pad) {
-      GstClockTime min_dur;     /* observed minimum duration */
+      /*
+       * observed duration, this will remain GST_CLOCK_TIME_NONE
+       * only if the pad is resetted 
+       */
+      GstClockTime collected_duration = GST_CLOCK_TIME_NONE;
 
       if (GST_CLOCK_TIME_IS_VALID (collect_pad->start_ts) &&
           GST_CLOCK_TIME_IS_VALID (collect_pad->end_ts)) {
-        min_dur = GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
-        if (collect_pad->duration < min_dur)
-          collect_pad->duration = min_dur;
+        collected_duration =
+            GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
       }
 
-      if (GST_CLOCK_TIME_IS_VALID (collect_pad->duration) &&
-          mux->duration < collect_pad->duration)
-        mux->duration = collect_pad->duration;
+      if (GST_CLOCK_TIME_IS_VALID (collected_duration)
+          && mux->duration < collected_duration)
+        mux->duration = collected_duration;
 
       break;
     }
@@ -3159,7 +3161,11 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   for (collected = mux->collect->data; collected;
       collected = g_slist_next (collected)) {
     GstMatroskaPad *collect_pad;
-    GstClockTime min_duration;  /* observed minimum duration */
+    /*
+     * observed duration, this will never remain GST_CLOCK_TIME_NONE
+     * since this means buffer without timestamps that is not possibile
+     */
+    GstClockTime collected_duration = GST_CLOCK_TIME_NONE;
 
     collect_pad = (GstMatroskaPad *) collected->data;
 
@@ -3171,18 +3177,18 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 
     if (GST_CLOCK_TIME_IS_VALID (collect_pad->start_ts) &&
         GST_CLOCK_TIME_IS_VALID (collect_pad->end_ts)) {
-      min_duration =
+      collected_duration =
           GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
-      if (collect_pad->duration < min_duration)
-        collect_pad->duration = min_duration;
       GST_DEBUG_OBJECT (collect_pad,
           "final track duration: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (collect_pad->duration));
+          GST_TIME_ARGS (collected_duration));
+    } else {
+      GST_WARNING_OBJECT (collect_pad, "unable to get final track duration");
     }
+    if (GST_CLOCK_TIME_IS_VALID (collected_duration) &&
+        duration < collected_duration)
+      duration = collected_duration;
 
-    if (GST_CLOCK_TIME_IS_VALID (collect_pad->duration) &&
-        duration < collect_pad->duration)
-      duration = collect_pad->duration;
   }
 
   /* seek back (optional, but do anyway) */
@@ -3464,10 +3470,6 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     gst_ebml_write_flush_cache (ebml, TRUE, buffer_timestamp);
     mux->cluster_time = buffer_timestamp;
   }
-
-  /* update duration of this track */
-  if (GST_BUFFER_DURATION_IS_VALID (buf))
-    collect_pad->duration += GST_BUFFER_DURATION (buf);
 
   /* We currently write index entries for all video tracks or for the audio
    * track in a single-track audio file.  This could be improved by keeping the
