@@ -173,6 +173,7 @@ struct _GstValidateActionPrivate
   GstStructure *main_structure;
   GstValidateExecuteActionReturn state; /* Actually ActionState */
   gboolean printed;
+  gboolean executing_last_subaction;
 };
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
@@ -1005,6 +1006,9 @@ gst_validate_execute_action (GstValidateActionType * action_type,
 
     action->priv->printed = FALSE;
     action->structure = gst_structure_copy (action->priv->main_structure);
+
+    if (res == GST_VALIDATE_EXECUTE_ACTION_ASYNC)
+      action->priv->executing_last_subaction = TRUE;
   }
 
   return res;
@@ -2316,6 +2320,11 @@ _execute_sub_action_action (GstValidateAction * action)
   const gchar *subaction_str;
   GstStructure *subaction_struct = NULL;
 
+  if (action->priv->executing_last_subaction) {
+    action->priv->executing_last_subaction = FALSE;
+
+    return GST_VALIDATE_EXECUTE_ACTION_OK;
+  }
   subaction_str = gst_structure_get_string (action->structure, "sub-action");
   if (subaction_str) {
     subaction_struct = gst_structure_from_string (subaction_str, NULL);
