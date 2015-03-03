@@ -24,6 +24,8 @@
 #include <gio/gio.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
+
+#define GDK_PIXBUF_DISABLE_DEPRECATED   /* for gdk_pixbuf_new_from_inline */
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <math.h>
