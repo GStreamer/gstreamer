@@ -1015,6 +1015,158 @@ gst_validate_execute_action (GstValidateActionType * action_type,
 }
 
 static gboolean
+_set_action_playback_time (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  if (!gst_validate_action_get_clocktime (scenario, action,
+          "playback-time", &action->playback_time)) {
+    gchar *str = gst_structure_to_string (action->structure);
+
+    g_error ("Could not parse playback-time on structure: %s", str);
+    g_free (str);
+
+    return FALSE;
+  }
+
+  gst_structure_set (action->structure, "playback-time", GST_TYPE_CLOCK_TIME,
+      action->playback_time, NULL);
+
+  return TRUE;
+}
+
+
+static GstValidateExecuteActionReturn
+_fill_action (GstValidateScenario * scenario, GstValidateAction * action,
+    GstStructure * structure, gboolean add_to_lists)
+{
+  gdouble playback_time;
+  GstValidateActionType *action_type;
+  const gchar *str_playback_time = NULL;
+  GstValidateScenarioPrivate *priv = scenario->priv;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+
+  action->type = gst_structure_get_name (structure);
+  action_type = _find_action_type (action->type);
+
+  if (!action_type) {
+    GST_ERROR_OBJECT (scenario, "Action type %s no found",
+        gst_structure_get_name (structure));
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  }
+
+  if (gst_structure_get_double (structure, "playback-time", &playback_time) ||
+      gst_structure_get_double (structure, "playback_time", &playback_time)) {
+    action->playback_time = playback_time * GST_SECOND;
+  } else if ((str_playback_time =
+          gst_structure_get_string (structure, "playback-time")) ||
+      (str_playback_time =
+          gst_structure_get_string (structure, "playback_time"))) {
+
+    if (add_to_lists)
+      priv->needs_parsing = g_list_append (priv->needs_parsing, action);
+    else if (!_set_action_playback_time (scenario, action))
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+
+  } else
+    GST_INFO_OBJECT (scenario,
+        "No playback time for action %" GST_PTR_FORMAT, structure);
+
+  if (!(action->name = gst_structure_get_string (structure, "name")))
+    action->name = "";
+
+  action->structure = structure;
+
+  if (IS_CONFIG_ACTION_TYPE (action_type->flags)) {
+    res = action_type->execute (scenario, action);
+    gst_validate_action_unref (action);
+
+    if (res == GST_VALIDATE_EXECUTE_ACTION_ERROR)
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  }
+
+  if (!add_to_lists)
+    return res;
+
+  if (str_playback_time == NULL) {
+    GstValidateActionType *type = _find_action_type (action->type);
+
+    if (type->flags & GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION
+        && !GST_CLOCK_TIME_IS_VALID (action->playback_time)) {
+      SCENARIO_LOCK (scenario);
+      priv->on_addition_actions = g_list_append (priv->on_addition_actions,
+          action);
+      SCENARIO_UNLOCK (scenario);
+
+    } else {
+      priv->actions = g_list_append (priv->actions, action);
+    }
+  }
+
+  return res;
+}
+
+
+static GstValidateExecuteActionReturn
+_execute_sub_action_action (GstValidateAction * action)
+{
+  const gchar *subaction_str;
+  GstStructure *subaction_struct = NULL;
+
+  if (action->priv->executing_last_subaction) {
+    action->priv->executing_last_subaction = FALSE;
+
+    return GST_VALIDATE_EXECUTE_ACTION_OK;
+  }
+
+  subaction_str = gst_structure_get_string (action->structure, "sub-action");
+  if (subaction_str) {
+    subaction_struct = gst_structure_from_string (subaction_str, NULL);
+
+    if (subaction_struct == NULL) {
+      GST_VALIDATE_REPORT (action->scenario, SCENARIO_FILE_MALFORMED,
+          "Sub action %s could not be parsed", subaction_str);
+
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    }
+
+  } else {
+    gst_structure_get (action->structure, "sub-action", GST_TYPE_STRUCTURE,
+        &subaction_struct, NULL);
+  }
+
+  if (subaction_struct) {
+    GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+
+    if (action->structure) {
+      GST_INFO_OBJECT (action->scenario, "Clearing old action structure");
+      gst_structure_free (action->structure);
+    }
+
+    res = _fill_action (action->scenario, action, subaction_struct, FALSE);
+    if (res == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
+      GST_VALIDATE_REPORT (action->scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+          "Sub action %" GST_PTR_FORMAT " could not be filled",
+          subaction_struct);
+
+      return GST_VALIDATE_EXECUTE_ACTION_OK;
+    }
+
+    if (!GST_CLOCK_TIME_IS_VALID (action->playback_time)) {
+      GstValidateExecuteActionReturn res;
+      GstValidateActionType *action_type = _find_action_type (action->type);
+
+      action->priv->printed = FALSE;
+      res = gst_validate_execute_action (action_type, action);
+
+      return res;
+    }
+  }
+
+  return GST_VALIDATE_EXECUTE_ACTION_OK;
+}
+
+static gboolean
 get_position (GstValidateScenario * scenario)
 {
   GList *tmp;
@@ -1142,6 +1294,8 @@ get_position (GstValidateScenario * scenario)
         SCENARIO_ACTION_EXECUTION_ERROR, "Could not execute %s", str);
 
     g_free (str);
+  } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
+    act->priv->state = _execute_sub_action_action (act);
   }
 
   if (act->repeat > 0 && gst_structure_is_equal (act->structure,
@@ -1450,26 +1604,6 @@ _compare_actions (GstValidateAction * a, GstValidateAction * b)
 }
 
 static gboolean
-_set_action_playback_time (GstValidateScenario * scenario,
-    GstValidateAction * action)
-{
-  if (!gst_validate_action_get_clocktime (scenario, action,
-          "playback-time", &action->playback_time)) {
-    gchar *str = gst_structure_to_string (action->structure);
-
-    g_error ("Could not parse playback-time on structure: %s", str);
-    g_free (str);
-
-    return FALSE;
-  }
-
-  gst_structure_set (action->structure, "playback-time", GST_TYPE_CLOCK_TIME,
-      action->playback_time, NULL);
-
-  return TRUE;
-}
-
-static gboolean
 gst_validate_action_default_prepare_func (GstValidateAction * action)
 {
   gulong i;
@@ -1539,7 +1673,8 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
         gst_message_parse_state_changed (message, &pstate, &nstate, NULL);
 
-        if (scenario->priv->target_state == nstate) {
+        if (scenario->priv->changing_state &&
+            scenario->priv->target_state == nstate) {
           if (scenario->priv->actions &&
               _action_sets_state (scenario->priv->actions->data))
             gst_validate_action_set_done (priv->actions->data);
@@ -1642,77 +1777,6 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
   scenario->pipeline = NULL;
 
   GST_DEBUG_OBJECT (scenario, "pipeline was freed");
-}
-
-static GstValidateExecuteActionReturn
-_fill_action (GstValidateScenario * scenario, GstValidateAction * action,
-    GstStructure * structure, gboolean add_to_lists)
-{
-  gdouble playback_time;
-  GstValidateActionType *action_type;
-  const gchar *str_playback_time = NULL;
-  GstValidateScenarioPrivate *priv = scenario->priv;
-  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
-
-  action->type = gst_structure_get_name (structure);
-  action_type = _find_action_type (action->type);
-
-  if (!action_type) {
-    GST_ERROR_OBJECT (scenario, "Action type %s no found",
-        gst_structure_get_name (structure));
-
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
-  }
-
-  if (gst_structure_get_double (structure, "playback-time", &playback_time) ||
-      gst_structure_get_double (structure, "playback_time", &playback_time)) {
-    action->playback_time = playback_time * GST_SECOND;
-  } else if ((str_playback_time =
-          gst_structure_get_string (structure, "playback-time")) ||
-      (str_playback_time =
-          gst_structure_get_string (structure, "playback_time"))) {
-
-    if (add_to_lists)
-      priv->needs_parsing = g_list_append (priv->needs_parsing, action);
-    else if (!_set_action_playback_time (scenario, action))
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
-
-  } else
-    GST_INFO_OBJECT (scenario,
-        "No playback time for action %" GST_PTR_FORMAT, structure);
-
-  if (!(action->name = gst_structure_get_string (structure, "name")))
-    action->name = "";
-
-  action->structure = structure;
-
-  if (IS_CONFIG_ACTION_TYPE (action_type->flags)) {
-    res = action_type->execute (scenario, action);
-    gst_validate_action_unref (action);
-
-    if (res == GST_VALIDATE_EXECUTE_ACTION_ERROR)
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
-  }
-
-  if (!add_to_lists)
-    return res;
-
-  if (str_playback_time == NULL) {
-    GstValidateActionType *type = _find_action_type (action->type);
-
-    if (type->flags & GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION
-        && !GST_CLOCK_TIME_IS_VALID (action->playback_time)) {
-      SCENARIO_LOCK (scenario);
-      priv->on_addition_actions = g_list_append (priv->on_addition_actions,
-          action);
-      SCENARIO_UNLOCK (scenario);
-
-    } else {
-      priv->actions = g_list_append (priv->actions, action);
-    }
-  }
-
-  return res;
 }
 
 static gboolean
@@ -2312,64 +2376,6 @@ done:
   g_key_file_free (kf);
 
   return res;
-}
-
-static GstValidateExecuteActionReturn
-_execute_sub_action_action (GstValidateAction * action)
-{
-  const gchar *subaction_str;
-  GstStructure *subaction_struct = NULL;
-
-  if (action->priv->executing_last_subaction) {
-    action->priv->executing_last_subaction = FALSE;
-
-    return GST_VALIDATE_EXECUTE_ACTION_OK;
-  }
-  subaction_str = gst_structure_get_string (action->structure, "sub-action");
-  if (subaction_str) {
-    subaction_struct = gst_structure_from_string (subaction_str, NULL);
-
-    if (subaction_struct == NULL) {
-      GST_VALIDATE_REPORT (action->scenario, SCENARIO_FILE_MALFORMED,
-          "Sub action %s could not be parsed", subaction_str);
-
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
-    }
-
-  } else {
-    gst_structure_get (action->structure, "sub-action", GST_TYPE_STRUCTURE,
-        &subaction_struct, NULL);
-  }
-
-  if (subaction_struct) {
-    GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
-
-    if (action->structure) {
-      GST_INFO_OBJECT (action->scenario, "Clearing old action structure");
-      gst_structure_free (action->structure);
-    }
-
-    res = _fill_action (action->scenario, action, subaction_struct, FALSE);
-    if (res == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
-      GST_VALIDATE_REPORT (action->scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-          "Sub action %" GST_PTR_FORMAT " could not be filled",
-          subaction_struct);
-
-      return GST_VALIDATE_EXECUTE_ACTION_OK;
-    }
-
-    if (!GST_CLOCK_TIME_IS_VALID (action->playback_time)) {
-      GstValidateExecuteActionReturn res;
-      GstValidateActionType *action_type = _find_action_type (action->type);
-
-      action->priv->printed = FALSE;
-      res = gst_validate_execute_action (action_type, action);
-
-      return res;
-    }
-  }
-
-  return GST_VALIDATE_EXECUTE_ACTION_OK;
 }
 
 void
