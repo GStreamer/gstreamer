@@ -84,6 +84,8 @@ static guintptr gst_gl_display_default_get_handle (GstGLDisplay * display);
 struct _GstGLDisplayPrivate
 {
   GstGLAPI gl_api;
+
+  GList *contexts;
 };
 
 static void
@@ -116,7 +118,17 @@ gst_gl_display_init (GstGLDisplay * display)
 static void
 gst_gl_display_finalize (GObject * object)
 {
+  GstGLDisplay *display = GST_GL_DISPLAY (object);
+  GList *l;
+
   GST_TRACE_OBJECT (object, "finalizing");
+
+  for (l = display->priv->contexts; l; l = l->next) {
+    g_weak_ref_clear ((GWeakRef *) l->data);
+    g_free (l->data);
+  }
+
+  g_list_free (display->priv->contexts);
 
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
 }
@@ -306,6 +318,123 @@ gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display)
 
   GST_CAT_LOG (gst_context, "got GstGLDisplay(%p) from context(%p)", *display,
       context);
+
+  return ret;
+}
+
+static GstGLContext *
+_get_gl_context_for_thread_unlocked (GstGLDisplay * display, GThread * thread)
+{
+  GstGLContext *context = NULL;
+  GList *prev = NULL, *l = display->priv->contexts;
+
+  while (l) {
+    GWeakRef *ref = l->data;
+    GThread *context_thread;
+
+    context = g_weak_ref_get (ref);
+    if (!context) {
+      /* remove dead contexts */
+      g_weak_ref_clear (l->data);
+      display->priv->contexts = g_list_delete_link (display->priv->contexts, l);
+      l = prev ? prev->next : display->priv->contexts;
+      continue;
+    }
+
+    context_thread = gst_gl_context_get_thread (context);
+    if (thread != NULL && thread == context_thread) {
+      g_thread_unref (context_thread);
+      gst_object_unref (context);
+      prev = l;
+      l = l->next;
+      continue;
+    }
+
+    if (context_thread)
+      g_thread_unref (context_thread);
+    return context;
+  }
+
+  return NULL;
+}
+
+/**
+ * gst_gl_display_get_gl_context_for_thread:
+ * @display: a #GstGLDisplay
+ * @thread: a #GThread
+ *
+ * Returns: (transfer full): the #GstGLContext current on @thread or %NULL
+ *
+ * Since: 1.6
+ */
+GstGLContext *
+gst_gl_display_get_gl_context_for_thread (GstGLDisplay * display,
+    GThread * thread)
+{
+  GstGLContext *context;
+
+  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
+
+  GST_OBJECT_LOCK (display);
+  context = _get_gl_context_for_thread_unlocked (display, thread);
+  GST_DEBUG_OBJECT (display, "returning context %" GST_PTR_FORMAT " for thread "
+      "%p", context, thread);
+  GST_OBJECT_UNLOCK (display);
+
+  return context;
+}
+
+/**
+ * gst_gl_display_add_context:
+ * @display: a #GstGLDisplay
+ * @context: (transfer none): a #GstGLContext
+ *
+ * Returns: whether @context was successfully added. %FALSE may be returned
+ * if there already exists another context for @context's active thread.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
+{
+  GstGLDisplay *context_display;
+  gboolean ret = TRUE;
+  GThread *thread;
+  GWeakRef *ref;
+
+  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), FALSE);
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), FALSE);
+
+  context_display = gst_gl_context_get_display (context);
+  g_assert (context_display == display);
+  gst_object_unref (context_display);
+
+  GST_OBJECT_LOCK (display);
+
+  thread = gst_gl_context_get_thread (context);
+  if (thread) {
+    GstGLContext *collision =
+        _get_gl_context_for_thread_unlocked (display, thread);
+    g_thread_unref (thread);
+    if (collision) {
+      if (collision != context) {
+        gst_object_unref (collision);
+        ret = FALSE;
+        goto out;
+      }
+      gst_object_unref (collision);
+    }
+  }
+
+  ref = g_new0 (GWeakRef, 1);
+  g_weak_ref_init (ref, context);
+
+  display->priv->contexts = g_list_prepend (display->priv->contexts, ref);
+
+out:
+  GST_DEBUG_OBJECT (display, "%ssuccessfully inserted context %" GST_PTR_FORMAT,
+      ret ? "" : "un", context);
+  GST_OBJECT_UNLOCK (display);
 
   return ret;
 }

@@ -91,6 +91,11 @@ GstGLAPI         gst_gl_display_get_gl_api             (GstGLDisplay * display);
 void     gst_context_set_gl_display (GstContext * context, GstGLDisplay * display);
 gboolean gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display);
 
+GstGLContext * gst_gl_display_get_gl_context_for_thread (GstGLDisplay * display,
+    GThread * thread);
+gboolean gst_gl_display_add_context (GstGLDisplay * display,
+    GstGLContext * context);
+
 G_END_DECLS
 
 #endif /* __GST_GL_DISPLAY_H__ */
