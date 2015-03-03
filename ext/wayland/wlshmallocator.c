@@ -53,7 +53,7 @@ gst_wl_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   snprintf (filename, 1024, "%s/%s-%d-%s", g_get_user_runtime_dir (),
       "wayland-shm", init++, "XXXXXX");
 
-  fd = mkstemp (filename);
+  fd = g_mkstemp (filename);
   if (fd < 0) {
     GST_ERROR_OBJECT (self, "opening temp file %s failed: %s", filename,
         strerror (errno));
