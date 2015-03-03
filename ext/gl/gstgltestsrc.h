@@ -104,9 +104,6 @@ struct _GstGLTestSrc {
     GstBuffer* buffer;
     GstBufferPool *pool;
 
-    guint out_tex_id;
-    GstGLDownload *download;
-
     GstGLDisplay *display;
     GstGLContext *context, *other_context;
     gint64 timestamp_offset;              /* base offset */
