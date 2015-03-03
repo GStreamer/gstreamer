@@ -305,6 +305,8 @@ _set_window_handle_cb (GstSetWindowHandleCb * data)
   gst_gl_context_activate (context, FALSE);
   window_class->set_window_handle (data->window, data->handle);
   gst_gl_context_activate (context, TRUE);
+
+  gst_object_unref (context);
 }
 
 static void
