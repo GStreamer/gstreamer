@@ -20,8 +20,8 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifndef __GST_VAAPI_DECODE_BIN_H__
-#define __GST_VAAPI_DECODE_BIN_H__
+#ifndef GST_VAAPI_DECODE_BIN_H
+#define GST_VAAPI_DECODE_BIN_H
 
 G_BEGIN_DECLS
 
@@ -61,4 +61,4 @@ GType   gst_vaapi_decode_bin_get_type    (void);
 
 G_END_DECLS
 
-#endif /* __GST_VAAPI_DECODE_BIN_H__ */
+#endif /* GST_VAAPI_DECODE_BIN_H */
