@@ -865,6 +865,13 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
       goto error;
   }
 
+  if (filter->out_caps && !gst_caps_is_equal (filter->out_caps, outcaps)) {
+    if (filter->upload) {
+      gst_object_unref (filter->upload);
+      filter->upload = NULL;
+    }
+  }
+
   gst_caps_replace (&filter->out_caps, outcaps);
 
   GST_DEBUG ("set_caps %dx%d", GST_VIDEO_INFO_WIDTH (&filter->out_info),
