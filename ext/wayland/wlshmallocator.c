@@ -30,7 +30,6 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
 #define GST_CAT_DEFAULT gstwayland_debug
@@ -47,7 +46,6 @@ gst_wl_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   int fd;
   gpointer data;
   GstWlShmMemory *mem;
-  mode_t mask;
 
   /* TODO: make use of the allocation params, if necessary */
 
@@ -55,9 +53,7 @@ gst_wl_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   snprintf (filename, 1024, "%s/%s-%d-%s", g_get_user_runtime_dir (),
       "wayland-shm", init++, "XXXXXX");
 
-  mask = umask (S_IRWXO | S_IRWXG);
   fd = mkstemp (filename);
-  umask (mask);
   if (fd < 0) {
     GST_ERROR_OBJECT (self, "opening temp file %s failed: %s", filename,
         strerror (errno));
