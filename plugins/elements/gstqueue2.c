@@ -2812,6 +2812,13 @@ out_flushing:
     GstFlowReturn ret = queue->srcresult;
 
     gst_pad_pause_task (queue->srcpad);
+    if (ret == GST_FLOW_FLUSHING) {
+      gst_queue2_locked_flush (queue, FALSE, FALSE);
+    } else {
+      GST_QUEUE2_SIGNAL_DEL (queue);
+      queue->last_query = FALSE;
+      g_cond_signal (&queue->query_handled);
+    }
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
