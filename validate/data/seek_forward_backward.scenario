@@ -1,4 +1,4 @@
-description, seek=true, duration=40
+description, seek=true, duration=40, min-media-duration=45.0
 seek, name=Forward-seek,       playback-time=0.0,    rate=1.0, start=5.0,             flags=accurate+flush
 seek, name=Backward-seek,      playback-time=10.0,   rate=1.0, start=0.0,             flags=accurate+flush
 seek, name=Backward-seek,      playback-time=5.0,    rate=1.0, start=25.0, stop=-1,   flags=accurate+flush
