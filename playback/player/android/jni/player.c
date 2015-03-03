@@ -30,17 +30,8 @@
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
 
-/*
- * These macros provide a way to store the native pointer to Player, which might be 32 or 64 bits, into
- * a jlong, which is always 64 bits, without warnings.
- */
-#if GLIB_SIZEOF_VOID_P == 8
-# define GET_CUSTOM_DATA(env, thiz, fieldID) (Player *)(*env)->GetLongField (env, thiz, fieldID)
-# define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)data)
-#else
-# define GET_CUSTOM_DATA(env, thiz, fieldID) (Player *)(jint)(*env)->GetLongField (env, thiz, fieldID)
-# define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(jint)data)
-#endif
+#define GET_CUSTOM_DATA(env, thiz, fieldID) (Player *)(gintptr)(*env)->GetLongField (env, thiz, fieldID)
+#define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(gintptr)data)
 
 typedef struct _Player
 {
