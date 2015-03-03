@@ -2391,6 +2391,8 @@ rtp_session_process_pli (RTPSession * sess, guint32 sender_ssrc,
     return;
 
   rtp_session_request_local_key_unit (sess, src, FALSE, current_time);
+
+  src->stats.recv_pli_count++;
 }
 
 static void
@@ -3209,6 +3211,8 @@ session_pli (const gchar * key, RTPSource * source, ReportData * data)
 
   source->send_pli = FALSE;
   data->may_suppress = FALSE;
+
+  source->stats.sent_pli_count++;
 }
 
 /* construct NACK */

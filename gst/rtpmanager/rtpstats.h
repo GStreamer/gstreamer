@@ -135,6 +135,9 @@ typedef struct {
   guint64      packets_sent;
   guint64      octets_sent;
 
+  guint        sent_pli_count;
+  guint        recv_pli_count;
+
   /* when we received stuff */
   GstClockTime prev_rtptime;
   GstClockTime prev_rtcptime;
