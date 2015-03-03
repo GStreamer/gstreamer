@@ -604,46 +604,6 @@ gst_glimage_sink_mouse_event_cb (GstGLWindow * window, char *event_name,
 }
 
 static gboolean
-_find_local_gl_context (GstGLImageSink * gl_sink)
-{
-  GstQuery *query;
-  GstContext *context;
-  const GstStructure *s;
-
-  if (gl_sink->context)
-    return TRUE;
-
-  query = gst_query_new_context ("gst.gl.local_context");
-  if (!gl_sink->context
-      && gst_gl_run_query (GST_ELEMENT (gl_sink), query, GST_PAD_SRC)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_sink->context,
-          NULL);
-    }
-  }
-  if (!gl_sink->context
-      && gst_gl_run_query (GST_ELEMENT (gl_sink), query, GST_PAD_SINK)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_sink->context,
-          NULL);
-    }
-  }
-
-  GST_ERROR_OBJECT (gl_sink, "found local context %p", gl_sink->context);
-
-  gst_query_unref (query);
-
-  if (gl_sink->context)
-    return TRUE;
-
-  return FALSE;
-}
-
-static gboolean
 _ensure_gl_setup (GstGLImageSink * gl_sink)
 {
   GError *error = NULL;
@@ -657,65 +617,79 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
   gst_gl_display_filter_gl_api (gl_sink->display, SUPPORTED_GL_APIS);
 
   if (!gl_sink->context) {
-    GstGLWindow *window;
+    do {
+      GstGLContext *other_context;
+      GstGLWindow *window;
 
-    GST_DEBUG_OBJECT (gl_sink,
-        "No current context, creating one for %" GST_PTR_FORMAT,
-        gl_sink->display);
+      if (gl_sink->context)
+        gst_object_unref (gl_sink->context);
 
-    gl_sink->context = gst_gl_context_new (gl_sink->display);
-    if (!gl_sink->context)
-      goto context_creation_error;
+      GST_DEBUG_OBJECT (gl_sink,
+          "No current context, creating one for %" GST_PTR_FORMAT,
+          gl_sink->display);
 
-    window = gst_gl_context_get_window (gl_sink->context);
+      gl_sink->context = gst_gl_context_new (gl_sink->display);
+      if (!gl_sink->context)
+        goto context_creation_error;
 
-    GST_DEBUG_OBJECT (gl_sink, "got window %" GST_PTR_FORMAT, window);
+      window = gst_gl_context_get_window (gl_sink->context);
 
-    if (!gl_sink->window_id && !gl_sink->new_window_id)
-      gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (gl_sink));
+      GST_DEBUG_OBJECT (gl_sink, "got window %" GST_PTR_FORMAT, window);
 
-    GST_DEBUG_OBJECT (gl_sink,
-        "window_id : %" G_GUINTPTR_FORMAT " , new_window_id : %"
-        G_GUINTPTR_FORMAT, gl_sink->window_id, gl_sink->new_window_id);
+      if (!gl_sink->window_id && !gl_sink->new_window_id)
+        gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (gl_sink));
 
-    if (gl_sink->window_id != gl_sink->new_window_id) {
-      gl_sink->window_id = gl_sink->new_window_id;
-      GST_DEBUG_OBJECT (gl_sink, "Setting window handle on gl window");
-      gst_gl_window_set_window_handle (window, gl_sink->window_id);
-    }
+      GST_DEBUG_OBJECT (gl_sink,
+          "window_id : %" G_GUINTPTR_FORMAT " , new_window_id : %"
+          G_GUINTPTR_FORMAT, gl_sink->window_id, gl_sink->new_window_id);
 
-    GST_DEBUG_OBJECT (gl_sink,
-        "creating context %" GST_PTR_FORMAT " from other context %"
-        GST_PTR_FORMAT, gl_sink->context, gl_sink->other_context);
+      if (gl_sink->window_id != gl_sink->new_window_id) {
+        gl_sink->window_id = gl_sink->new_window_id;
+        GST_DEBUG_OBJECT (gl_sink, "Setting window handle on gl window");
+        gst_gl_window_set_window_handle (window, gl_sink->window_id);
+      }
 
-    if (!gst_gl_context_create (gl_sink->context, gl_sink->other_context,
-            &error)) {
+      if (gl_sink->other_context) {
+        other_context = gst_object_ref (gl_sink->other_context);
+      } else {
+        other_context =
+            gst_gl_display_get_gl_context_for_thread (gl_sink->display, NULL);
+      }
+
+      GST_DEBUG_OBJECT (gl_sink,
+          "creating context %" GST_PTR_FORMAT " from other context %"
+          GST_PTR_FORMAT, gl_sink->context, other_context);
+
+      if (!gst_gl_context_create (gl_sink->context, other_context, &error)) {
+        gst_object_unref (other_context);
+        gst_object_unref (window);
+        goto context_error;
+      }
+
+      gst_gl_window_handle_events (window, gl_sink->handle_events);
+
+      /* setup callbacks */
+      gst_gl_window_set_resize_callback (window,
+          GST_GL_WINDOW_RESIZE_CB (gst_glimage_sink_on_resize),
+          gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
+      gst_gl_window_set_draw_callback (window,
+          GST_GL_WINDOW_CB (gst_glimage_sink_on_draw),
+          gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
+      gst_gl_window_set_close_callback (window,
+          GST_GL_WINDOW_CB (gst_glimage_sink_on_close),
+          gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
+      gl_sink->key_sig_id = g_signal_connect (window, "key-event", G_CALLBACK
+          (gst_glimage_sink_key_event_cb), gl_sink);
+      gl_sink->mouse_sig_id =
+          g_signal_connect (window, "mouse-event",
+          G_CALLBACK (gst_glimage_sink_mouse_event_cb), gl_sink);
+
+      if (other_context)
+        gst_object_unref (other_context);
       gst_object_unref (window);
-      goto context_error;
-    }
-
-    gst_gl_window_handle_events (window, gl_sink->handle_events);
-
-    /* setup callbacks */
-    gst_gl_window_set_resize_callback (window,
-        GST_GL_WINDOW_RESIZE_CB (gst_glimage_sink_on_resize),
-        gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
-    gst_gl_window_set_draw_callback (window,
-        GST_GL_WINDOW_CB (gst_glimage_sink_on_draw),
-        gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
-    gst_gl_window_set_close_callback (window,
-        GST_GL_WINDOW_CB (gst_glimage_sink_on_close),
-        gst_object_ref (gl_sink), (GDestroyNotify) gst_object_unref);
-    gl_sink->key_sig_id = g_signal_connect (window, "key-event", G_CALLBACK
-        (gst_glimage_sink_key_event_cb), gl_sink);
-    gl_sink->mouse_sig_id = g_signal_connect (window, "mouse-event", G_CALLBACK
-        (gst_glimage_sink_mouse_event_cb), gl_sink);
-
-    gst_object_unref (window);
+    } while (!gst_gl_display_add_context (gl_sink->display, gl_sink->context));
   } else
     GST_DEBUG_OBJECT (gl_sink, "Already have a context");
-
-  _find_local_gl_context (gl_sink);
 
   return TRUE;
 
@@ -845,6 +819,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      _ensure_gl_setup (glimage_sink);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_atomic_int_set (&glimage_sink->to_quit, 0);

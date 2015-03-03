@@ -49,8 +49,7 @@ enum
 #define gst_gl_base_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLBaseFilter, gst_gl_base_filter,
     GST_TYPE_BASE_TRANSFORM, GST_DEBUG_CATEGORY_INIT (gst_gl_base_filter_debug,
-        "glbasefilter", 0, "glbasefilter element");
-    );
+        "glbasefilter", 0, "glbasefilter element"););
 
 static void gst_gl_base_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -356,64 +355,23 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
 {
   GstGLBaseFilter *filter = GST_GL_BASE_FILTER (trans);
   GError *error = NULL;
-  GstGLContext *other_context = NULL;
-  guint idx;
 
-  if (!_ensure_gl_setup (filter))
-    return FALSE;
-
-  if (!filter->context && gst_query_find_allocation_meta (query,
-          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
-    GstGLContext *context;
-    const GstStructure *upload_meta_params;
-    gpointer handle;
-    gchar *type;
-    gchar *apis;
-
-    gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
-    if (upload_meta_params) {
-      if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
-              GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
-        GstGLContext *old = filter->context;
-
-        filter->context = context;
-        if (old)
-          gst_object_unref (old);
-      } else if (gst_structure_get (upload_meta_params, "gst.gl.context.handle",
-              G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
-              &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
-          && handle) {
-        GstGLPlatform platform = GST_GL_PLATFORM_NONE;
-        GstGLAPI gl_apis;
-
-        GST_DEBUG ("got GL context handle 0x%p with type %s and apis %s",
-            handle, type, apis);
-
-        platform = gst_gl_platform_from_string (type);
-        gl_apis = gst_gl_api_from_string (apis);
-
-        if (gl_apis && platform)
-          other_context =
-              gst_gl_context_new_wrapped (filter->display, (guintptr) handle,
-              platform, gl_apis);
-      }
-    }
-  }
-
-  if (filter->priv->other_context) {
-    if (!other_context) {
-      other_context = filter->priv->other_context;
-    } else {
-      GST_ELEMENT_WARNING (filter, LIBRARY, SETTINGS,
-          ("%s", "Cannot share with more than one GL context"),
-          ("%s", "Cannot share with more than one GL context"));
-    }
-  }
+  _find_local_gl_context (filter);
 
   if (!filter->context) {
-    filter->context = gst_gl_context_new (filter->display);
-    if (!gst_gl_context_create (filter->context, other_context, &error))
-      goto context_error;
+    do {
+      if (filter->context)
+        gst_object_unref (filter->context);
+      /* just get a GL context.  we don't care */
+      filter->context =
+          gst_gl_display_get_gl_context_for_thread (filter->display, NULL);
+      if (!filter->context) {
+        filter->context = gst_gl_context_new (filter->display);
+        if (!gst_gl_context_create (filter->context,
+                filter->priv->other_context, &error))
+          goto context_error;
+      }
+    } while (!gst_gl_display_add_context (filter->display, filter->context));
   }
 
   gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_start,

@@ -803,10 +803,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   guint min, max, size;
   gboolean update_pool;
   GError *error = NULL;
-  guint idx;
   guint out_width, out_height;
-  GstGLContext *other_context = NULL;
-  gboolean same_downstream_gl_context = FALSE;
 
   if (!gst_gl_ensure_element_data (src, &src->display, &src->other_context))
     return FALSE;
@@ -815,59 +812,19 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
 
   _find_local_gl_context (src);
 
-  if (gst_query_find_allocation_meta (query,
-          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
-    GstGLContext *context;
-    const GstStructure *upload_meta_params;
-    gpointer handle;
-    gchar *type;
-    gchar *apis;
-
-    gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
-    if (upload_meta_params) {
-      if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
-              GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
-        GstGLContext *old = src->context;
-
-        src->context = context;
-        if (old)
-          gst_object_unref (old);
-        same_downstream_gl_context = TRUE;
-      } else if (gst_structure_get (upload_meta_params, "gst.gl.context.handle",
-              G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
-              &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
-          && handle) {
-        GstGLPlatform platform = GST_GL_PLATFORM_NONE;
-        GstGLAPI gl_apis;
-
-        GST_DEBUG ("got GL context handle 0x%p with type %s and apis %s",
-            handle, type, apis);
-
-        platform = gst_gl_platform_from_string (type);
-        gl_apis = gst_gl_api_from_string (apis);
-
-        if (gl_apis && platform)
-          other_context =
-              gst_gl_context_new_wrapped (src->display, (guintptr) handle,
-              platform, gl_apis);
-      }
-    }
-  }
-
-  if (src->other_context) {
-    if (!other_context) {
-      other_context = src->other_context;
-    } else {
-      GST_ELEMENT_WARNING (src, LIBRARY, SETTINGS,
-          ("%s", "Cannot share with more than one GL context"),
-          ("%s", "Cannot share with more than one GL context"));
-    }
-  }
-
   if (!src->context) {
-    src->context = gst_gl_context_new (src->display);
-    if (!gst_gl_context_create (src->context, other_context, &error))
-      goto context_error;
+    do {
+      if (src->context)
+        gst_object_unref (src->context);
+      /* just get a GL context.  we don't care */
+      src->context =
+          gst_gl_display_get_gl_context_for_thread (src->display, NULL);
+      if (!src->context) {
+        src->context = gst_gl_context_new (src->display);
+        if (!gst_gl_context_create (src->context, src->other_context, &error))
+          goto context_error;
+      }
+    } while (!gst_gl_display_add_context (src->display, src->context));
   }
 
   out_width = GST_VIDEO_INFO_WIDTH (&src->out_info);
@@ -893,11 +850,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
     update_pool = FALSE;
   }
 
-  if (!pool || (!same_downstream_gl_context
-          && gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE,
-              NULL)
-          && !gst_buffer_pool_has_option (pool,
-              GST_BUFFER_POOL_OPTION_GL_SYNC_META))) {
+  if (!pool || !GST_IS_GL_BUFFER_POOL (pool)) {
     /* can't use this pool */
     if (pool)
       gst_object_unref (pool);
