@@ -101,21 +101,21 @@ run_streamsynchronizer_handle_eos (const gchar * launch_line)
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ASYNC_DONE);
   gst_message_unref (msg);
 
-  fail_unless_equals_int (gst_element_get_state (pipeline, NULL, NULL, -1),
-      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (gst_element_get_state (pipeline, NULL, NULL,
+          GST_CLOCK_TIME_NONE), GST_STATE_CHANGE_SUCCESS);
 
   fail_unless (gst_element_set_state (pipeline, GST_STATE_PAUSED) !=
       GST_STATE_CHANGE_FAILURE);
 
-  /* wait for preroll */
-  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
-      GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
-
-  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ASYNC_DONE);
-  gst_message_unref (msg);
+  /* can't ensure can received async-done message when call state change very quickly. */
+  fail_unless_equals_int (gst_element_get_state (pipeline, NULL, NULL,
+          GST_CLOCK_TIME_NONE), GST_STATE_CHANGE_SUCCESS);
 
   fail_unless (gst_element_set_state (pipeline, GST_STATE_PLAYING) !=
       GST_STATE_CHANGE_FAILURE);
+
+  fail_unless_equals_int (gst_element_get_state (pipeline, NULL, NULL,
+          GST_CLOCK_TIME_NONE), GST_STATE_CHANGE_SUCCESS);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
