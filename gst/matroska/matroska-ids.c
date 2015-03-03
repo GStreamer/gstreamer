@@ -297,6 +297,17 @@ gst_matroska_parse_flac_stream_headers (gpointer codec_data,
   return list;
 }
 
+GstClockTime
+gst_matroska_track_get_buffer_timestamp (GstMatroskaTrackContext * track,
+    GstBuffer * buf)
+{
+  if (track->dts_only) {
+    return GST_BUFFER_DTS (buf);
+  } else {
+    return GST_BUFFER_PTS (buf);
+  }
+}
+
 void
 gst_matroska_track_free (GstMatroskaTrackContext * track)
 {

@@ -3090,6 +3090,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   gint flags = 0;
   gint64 referenceblock = 0;
   gint64 offset;
+  GstClockTime buffer_timestamp;
 
   offset = gst_ebml_read_get_offset (ebml);
 
@@ -3468,6 +3469,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         goto next_lace;
       }
 
+      buffer_timestamp = gst_matroska_track_get_buffer_timestamp (stream, sub);
+
       if (!stream->dts_only)
         GST_BUFFER_PTS (sub) = lace_time;
       else
@@ -3580,7 +3583,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           "Pushing lace %d, data of size %" G_GSIZE_FORMAT
           " for stream %d, time=%" GST_TIME_FORMAT " and duration=%"
           GST_TIME_FORMAT, n, gst_buffer_get_size (sub), stream_num,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sub)),
+          GST_TIME_ARGS (buffer_timestamp),
           GST_TIME_ARGS (GST_BUFFER_DURATION (sub)));
 
 #if 0
@@ -3591,13 +3594,13 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
         GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
             G_GUINT64_FORMAT " for writer id %d",
-            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sub)), cluster_offset,
+            GST_TIME_ARGS (buffer_timestamp), cluster_offset,
             stream->index_writer_id);
         gst_index_add_association (demux->common.element_index,
             stream->index_writer_id, GST_BUFFER_FLAG_IS_SET (sub,
                 GST_BUFFER_FLAG_DELTA_UNIT) ? 0 : GST_ASSOCIATION_FLAG_KEY_UNIT,
-            GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (sub), GST_FORMAT_BYTES,
-            cluster_offset, NULL);
+            GST_FORMAT_TIME, buffer_timestamp, GST_FORMAT_BYTES, cluster_offset,
+            NULL);
       }
 #endif
 

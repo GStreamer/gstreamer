@@ -3369,6 +3369,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   gboolean is_video_invisible = FALSE;
   GstMatroskamuxPad *pad;
   gint flags = 0;
+  GstClockTime buffer_timestamp;
 
   /* write data */
   pad = GST_MATROSKAMUX_PAD_CAST (collect_pad->collect.pad);
@@ -3390,12 +3391,14 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
       return GST_FLOW_OK;
   }
 
+  buffer_timestamp =
+      gst_matroska_track_get_buffer_timestamp (collect_pad->track, buf);
+
   /* hm, invalid timestamp (due to --to be fixed--- element upstream);
    * this would wreak havoc with time stored in matroska file */
   /* TODO: maybe calculate a timestamp by using the previous timestamp
    * and default duration */
-  if ((!GST_BUFFER_PTS_IS_VALID (buf) && !collect_pad->track->dts_only)
-      || (!GST_BUFFER_DTS_IS_VALID (buf) && collect_pad->track->dts_only)) {
+  if (!GST_CLOCK_TIME_IS_VALID (buffer_timestamp)) {
     GST_WARNING_OBJECT (collect_pad->collect.pad,
         "Invalid buffer timestamp; dropping buffer");
     gst_buffer_unref (buf);
@@ -3403,16 +3406,12 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   }
 
   /* set the timestamp for outgoing buffers */
-  if (collect_pad->track->dts_only) {
-    ebml->timestamp = GST_BUFFER_DTS (buf);
-  } else {
-    ebml->timestamp = GST_BUFFER_PTS (buf);
-  }
+  ebml->timestamp = buffer_timestamp;
 
   if (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
     if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
       GST_LOG_OBJECT (mux, "have video keyframe, ts=%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+          GST_TIME_ARGS (buffer_timestamp));
       is_video_keyframe = TRUE;
     } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY) &&
         (!strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8)
@@ -3420,7 +3419,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
                 GST_MATROSKA_CODEC_ID_VIDEO_VP9))) {
       GST_LOG_OBJECT (mux,
           "have VP8 video invisible frame, " "ts=%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+          GST_TIME_ARGS (buffer_timestamp));
       is_video_invisible = TRUE;
     }
   }
@@ -3429,7 +3428,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     /* start a new cluster at every keyframe, at every GstForceKeyUnit event,
      * or when we may be reaching the limit of the relative timestamp */
     if (mux->cluster_time +
-        mux->max_cluster_duration < GST_BUFFER_TIMESTAMP (buf)
+        mux->max_cluster_duration < buffer_timestamp
         || is_video_keyframe || mux->force_key_unit_event) {
       if (!mux->streamable)
         gst_ebml_write_master_finish (ebml, mux->cluster);
@@ -3446,13 +3445,11 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
       mux->cluster =
           gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
-          gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buf), 1,
-              mux->time_scale));
+          gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale));
       GST_LOG_OBJECT (mux, "cluster timestamp %" G_GUINT64_FORMAT,
-          gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buf), 1,
-              mux->time_scale));
-      gst_ebml_write_flush_cache (ebml, TRUE, GST_BUFFER_TIMESTAMP (buf));
-      mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
+          gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale));
+      gst_ebml_write_flush_cache (ebml, TRUE, buffer_timestamp);
+      mux->cluster_time = buffer_timestamp;
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_PREVSIZE,
           mux->prev_cluster_size);
     }
@@ -3463,9 +3460,9 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     gst_ebml_write_set_cache (ebml, 0x20);
     mux->cluster = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
-        gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buf), 1, mux->time_scale));
-    gst_ebml_write_flush_cache (ebml, TRUE, GST_BUFFER_TIMESTAMP (buf));
-    mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
+        gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale));
+    gst_ebml_write_flush_cache (ebml, TRUE, buffer_timestamp);
+    mux->cluster_time = buffer_timestamp;
   }
 
   /* update duration of this track */
@@ -3494,7 +3491,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     }
 
     if (last_idx < 0 || mux->min_index_interval == 0 ||
-        (GST_CLOCK_DIFF (mux->index[last_idx].time, GST_BUFFER_TIMESTAMP (buf))
+        (GST_CLOCK_DIFF (mux->index[last_idx].time, buffer_timestamp)
             >= mux->min_index_interval)) {
       GstMatroskaIndex *idx;
 
@@ -3505,7 +3502,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
       idx = &mux->index[mux->num_indexes++];
 
       idx->pos = mux->cluster_pos;
-      idx->time = GST_BUFFER_TIMESTAMP (buf);
+      idx->time = buffer_timestamp;
       idx->track = collect_pad->track->num;
     }
   }
@@ -3527,7 +3524,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   /* write the block, for doctype v2 use SimpleBlock if possible
    * one slice (*breath*).
    * FIXME: Need to do correct lacing! */
-  relative_timestamp64 = GST_BUFFER_TIMESTAMP (buf) - mux->cluster_time;
+  relative_timestamp64 = buffer_timestamp - mux->cluster_time;
   if (relative_timestamp64 >= 0) {
     /* round the timestamp */
     relative_timestamp64 += gst_util_uint64_scale (mux->time_scale, 1, 2);
@@ -3555,7 +3552,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_SIMPLEBLOCK,
         gst_buffer_get_size (buf) + gst_buffer_get_size (hdr));
     gst_ebml_write_buffer (ebml, hdr);
-    gst_ebml_write_flush_cache (ebml, FALSE, GST_BUFFER_TIMESTAMP (buf));
+    gst_ebml_write_flush_cache (ebml, FALSE, buffer_timestamp);
     gst_ebml_write_buffer (ebml, buf);
 
     return gst_ebml_last_write_result (ebml);
@@ -3574,7 +3571,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     gst_ebml_write_buffer (ebml, hdr);
     gst_ebml_write_master_finish_full (ebml, blockgroup,
         gst_buffer_get_size (buf));
-    gst_ebml_write_flush_cache (ebml, FALSE, GST_BUFFER_TIMESTAMP (buf));
+    gst_ebml_write_flush_cache (ebml, FALSE, buffer_timestamp);
     gst_ebml_write_buffer (ebml, buf);
 
     return gst_ebml_last_write_result (ebml);
@@ -3594,11 +3591,11 @@ static GstFlowReturn
 gst_matroska_mux_handle_buffer (GstCollectPads * pads, GstCollectData * data,
     GstBuffer * buf, gpointer user_data)
 {
+  GstClockTime buffer_timestamp;
   GstMatroskaMux *mux = GST_MATROSKA_MUX (user_data);
   GstEbmlWrite *ebml = mux->ebml_write;
   GstMatroskaPad *best;
   GstFlowReturn ret = GST_FLOW_OK;
-
   GST_DEBUG_OBJECT (mux, "Collected pads");
 
   /* start with a header */
@@ -3634,15 +3631,17 @@ gst_matroska_mux_handle_buffer (GstCollectPads * pads, GstCollectData * data,
   /* if we have a best stream, should also have a buffer */
   g_assert (buf);
 
+  buffer_timestamp = gst_matroska_track_get_buffer_timestamp (best->track, buf);
+
   GST_DEBUG_OBJECT (best->collect.pad, "best pad - buffer ts %"
       GST_TIME_FORMAT " dur %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (buffer_timestamp),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
   /* make note of first and last encountered timestamps, so we can calculate
    * the actual duration later when we send an updated header on eos */
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    GstClockTime start_ts = GST_BUFFER_TIMESTAMP (buf);
+  if (GST_CLOCK_TIME_IS_VALID (buffer_timestamp)) {
+    GstClockTime start_ts = buffer_timestamp;
     GstClockTime end_ts = start_ts;
 
     if (GST_BUFFER_DURATION_IS_VALID (buf))
