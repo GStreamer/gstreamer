@@ -1003,6 +1003,7 @@ gst_validate_execute_action (GstValidateActionType * action_type,
   if (!gst_structure_has_field (action->structure, "sub-action")) {
     gst_structure_free (action->structure);
 
+    action->priv->printed = FALSE;
     action->structure = gst_structure_copy (action->priv->main_structure);
   }
 
@@ -2352,9 +2353,7 @@ _execute_sub_action_action (GstValidateAction * action)
       GstValidateExecuteActionReturn res;
       GstValidateActionType *action_type = _find_action_type (action->type);
 
-      gst_validate_printf (action->scenario, "Executing sub action of type %s",
-          action->type);
-
+      action->priv->printed = FALSE;
       res = gst_validate_execute_action (action_type, action);
 
       return res;
