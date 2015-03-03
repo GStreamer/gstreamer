@@ -848,6 +848,11 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
   if (!gst_video_info_from_caps (&info, caps))
     goto invalid_caps;
 
+  /* Render again if size have changed */
+  if (GST_VIDEO_INFO_WIDTH (&info) != GST_VIDEO_INFO_WIDTH (&overlay->info) ||
+      GST_VIDEO_INFO_HEIGHT (&info) != GST_VIDEO_INFO_HEIGHT (&overlay->info))
+    overlay->need_render = TRUE;
+
   overlay->info = info;
   overlay->format = GST_VIDEO_INFO_FORMAT (&info);
   overlay->width = GST_VIDEO_INFO_WIDTH (&info);
