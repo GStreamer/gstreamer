@@ -272,8 +272,6 @@ _ensure_gl_setup (GstCAOpenGLLayerSink * ca_sink)
 {
   GError *error = NULL;
 
-  g_assert (![NSThread isMainThread]);
-
   if (!gst_gl_ensure_element_data (ca_sink, &ca_sink->display,
           &ca_sink->other_context))
     return FALSE;
@@ -400,6 +398,7 @@ gst_ca_opengl_layer_sink_change_state (GstElement * element, GstStateChange tran
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      _ensure_gl_setup (ca_sink);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_atomic_int_set (&ca_sink->to_quit, 0);

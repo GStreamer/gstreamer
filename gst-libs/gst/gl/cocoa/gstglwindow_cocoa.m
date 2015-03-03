@@ -92,6 +92,9 @@ struct _GstGLWindowCocoaPrivate
   gint preferred_height;
 
   GLint viewport_dim[4];
+
+  /* atomic set when the internal NSView has been created */
+  int view_ready;
 };
 
 static void
@@ -178,7 +181,9 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
 
       GST_DEBUG ("NSWindow id: %"G_GUINTPTR_FORMAT, (guintptr) priv->internal_win_id);
 
- [priv->internal_win_id setContentView:glView];
+  [priv->internal_win_id setContentView:glView];
+
+  g_atomic_int_set (&window_cocoa->priv->view_ready, 1);
 
   return TRUE;
 }
@@ -287,7 +292,14 @@ static void
 gst_gl_window_cocoa_draw (GstGLWindow * window)
 {
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
-  GstGLNSView *view = (GstGLNSView *)[window_cocoa->priv->internal_win_id contentView];
+  GstGLNSView *view;
+
+  /* As the view is created asynchronously in the main thread we cannot know
+   * exactly when it will be ready to draw to */
+  if (!g_atomic_int_get (&window_cocoa->priv->view_ready))
+    return;
+
+  view = (GstGLNSView *)[window_cocoa->priv->internal_win_id contentView];
 
   /* this redraws the GstGLCAOpenGLLayer which calls
    * gst_gl_window_cocoa_draw_thread(). Use an explicit CATransaction since we
@@ -584,9 +596,8 @@ _invoke_on_main (GstGLWindowCB func, gpointer data)
   if ([NSThread isMainThread]) {
     func (data);
   } else {
-    dispatch_sync (dispatch_get_main_queue (), ^{
+    dispatch_async (dispatch_get_main_queue (), ^{
       func (data);
     });
   }
 }
-
