@@ -579,7 +579,18 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
   GString *string = NULL;
 
   if (message == NULL) {
-    string = g_string_new (gst_structure_get_name (action->structure));
+    gint nrepeats;
+
+    string = g_string_new (NULL);
+
+    if (gst_validate_action_is_subaction (action))
+      g_string_append_printf (string, "(subaction)");
+
+    if (gst_structure_get_int (action->structure, "repeat", &nrepeats))
+      g_string_append_printf (string, "(%d/%d)", action->repeat, nrepeats);
+
+    g_string_append_printf (string, " %s",
+        gst_structure_get_name (action->structure));
 
     g_string_append_len (string, ": ", 2);
     gst_structure_foreach (action->structure,

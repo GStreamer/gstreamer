@@ -41,6 +41,7 @@ void init_scenarios (void);
 /* FIXME 2.0 Remove that as this is only for backward compatibility
  * as we used to have to print actions in the action execution function
  * and this is done by the scenario itself now */
-gboolean _action_check_and_set_printed (GstValidateAction *action);
+GST_EXPORT gboolean _action_check_and_set_printed (GstValidateAction *action);
+GST_EXPORT gboolean gst_validate_action_is_subaction (GstValidateAction *action);
 
 #endif

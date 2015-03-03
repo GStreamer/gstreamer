@@ -268,6 +268,13 @@ _action_check_and_set_printed (GstValidateAction * action)
   return TRUE;
 }
 
+gboolean
+gst_validate_action_is_subaction (GstValidateAction * action)
+{
+  return !gst_structure_is_equal (action->structure,
+      action->priv->main_structure);
+}
+
 /* GstValidateActionType implementation */
 GType _gst_validate_action_type_type;
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateActionType, gst_validate_action_type);
@@ -1316,14 +1323,17 @@ execute_next_action (GstValidateScenario * scenario)
         SCENARIO_ACTION_EXECUTION_ERROR, "Could not execute %s", str);
 
     g_free (str);
-  } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
+  }
+
+  if (act->repeat > 0 && !gst_validate_action_is_subaction (act)) {
+    act->repeat--;
+  }
+
+  if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
     act->priv->state = _execute_sub_action_action (act);
   }
 
-  if (act->repeat > 0 && gst_structure_is_equal (act->structure,
-          act->priv->main_structure)) {
-    act->repeat--;
-  } else if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+  if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
 
