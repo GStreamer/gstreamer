@@ -142,8 +142,12 @@ main (int argc, gchar ** argv)
   /* We set our output URI and rendering setting on the pipeline */
   if (gst_uri_is_valid (argv[1])) {
     output_uri = g_strdup (argv[1]);
-  } else {
+  } else if (g_file_test (argv[1], G_FILE_TEST_EXISTS)) {
     output_uri = gst_filename_to_uri (argv[1], NULL);
+  } else {
+    g_printerr ("Unrecognised command line argument '%s'.\n"
+        "Please pass an URI or file as argument!\n", argv[1]);
+    return -1;
   }
   profile = make_encoding_profile (audio, container);
   if (!ges_pipeline_set_render_settings (pipeline, output_uri, profile))
