@@ -720,7 +720,7 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
   }
 
   /* set up our source for download */
-  if (hlsdemux->reset_pts) {
+  if (hlsdemux->reset_pts || discont) {
     stream->fragment.timestamp = timestamp;
   } else {
     stream->fragment.timestamp = GST_CLOCK_TIME_NONE;
