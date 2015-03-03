@@ -1485,6 +1485,8 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
+    gst_gl_context_clear_shader (gl_sink->context);
+
     if (gl->GenVertexArrays)
       gl->BindVertexArray (0);
     else
