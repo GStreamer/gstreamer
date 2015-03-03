@@ -2449,6 +2449,7 @@ rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
     return;
 
   rtp_session_request_local_key_unit (sess, src, TRUE, current_time);
+  src->stats.recv_fir_count++;
 }
 
 static void
@@ -3143,6 +3144,7 @@ session_add_fir (const gchar * key, RTPSource * source, ReportData * data)
   fci_data[1] = fci_data[2] = fci_data[3] = 0;
 
   source->send_fir = FALSE;
+  source->stats.sent_fir_count++;
 }
 
 static void

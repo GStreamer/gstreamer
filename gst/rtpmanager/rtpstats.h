@@ -137,6 +137,8 @@ typedef struct {
 
   guint        sent_pli_count;
   guint        recv_pli_count;
+  guint        sent_fir_count;
+  guint        recv_fir_count;
 
   /* when we received stuff */
   GstClockTime prev_rtptime;

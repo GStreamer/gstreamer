@@ -240,6 +240,7 @@ rtp_source_reset (RTPSource * src)
   g_array_set_size (src->nacks, 0);
 
   src->stats.sent_pli_count = 0;
+  src->stats.sent_fir_count = 0;
 }
 
 static void
@@ -368,7 +369,9 @@ rtp_source_create_stats (RTPSource * src)
       (gint) rtp_stats_get_packets_lost (&src->stats), "jitter", G_TYPE_UINT,
       (guint) (src->stats.jitter >> 4),
       "sent-pli-count", G_TYPE_UINT, src->stats.sent_pli_count,
-      "recv-pli-count", G_TYPE_UINT, src->stats.recv_pli_count, NULL);
+      "recv-pli-count", G_TYPE_UINT, src->stats.recv_pli_count,
+      "sent-fir-count", G_TYPE_UINT, src->stats.sent_fir_count,
+      "recv-fir-count", G_TYPE_UINT, src->stats.recv_fir_count, NULL);
 
   /* get the last SR. */
   have_sr = rtp_source_get_last_sr (src, &time, &ntptime, &rtptime,
@@ -947,6 +950,7 @@ init_seq (RTPSource * src, guint16 seq)
   src->stats.prev_received = 0;
   src->stats.prev_expected = 0;
   src->stats.recv_pli_count = 0;
+  src->stats.recv_fir_count = 0;
 
   GST_DEBUG ("base_seq %d", seq);
 }
