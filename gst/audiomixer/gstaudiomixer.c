@@ -826,7 +826,8 @@ gst_audiomixer_init (GstAudioMixer * audiomixer)
   audiomixer->discont_wait = DEFAULT_DISCONT_WAIT;
   audiomixer->output_buffer_duration = DEFAULT_OUTPUT_BUFFER_DURATION;
   gst_aggregator_set_latency (GST_AGGREGATOR (audiomixer),
-      audiomixer->output_buffer_duration, audiomixer->output_buffer_duration);
+      2 * audiomixer->output_buffer_duration,
+      2 * audiomixer->output_buffer_duration);
 }
 
 static void
@@ -877,8 +878,8 @@ gst_audiomixer_set_property (GObject * object, guint prop_id,
     case PROP_OUTPUT_BUFFER_DURATION:
       audiomixer->output_buffer_duration = g_value_get_uint64 (value);
       gst_aggregator_set_latency (GST_AGGREGATOR (audiomixer),
-          audiomixer->output_buffer_duration,
-          audiomixer->output_buffer_duration);
+          2 * audiomixer->output_buffer_duration,
+          2 * audiomixer->output_buffer_duration);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
