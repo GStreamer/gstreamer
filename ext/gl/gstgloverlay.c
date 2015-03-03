@@ -610,6 +610,7 @@ gst_gl_overlay_load_jpeg (GstGLFilter * filter)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
   GstVideoInfo v_info;
+  GstVideoAlignment v_align;
   GstMapInfo map_info;
   FILE *fp = NULL;
   struct jpeg_decompress_struct cinfo;
@@ -637,9 +638,13 @@ gst_gl_overlay_load_jpeg (GstGLFilter * filter)
     gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGB,
         overlay->image_width, overlay->image_height);
 
+  gst_video_alignment_reset (&v_align);
+  v_align.stride_align[0] = 32 - 1;
+  gst_video_info_align (&v_info, &v_align);
+
   overlay->image_memory =
       (GstGLMemory *) gst_gl_memory_alloc (filter->context, NULL, &v_info, 0,
-      NULL);
+      &v_align);
 
   if (!gst_memory_map ((GstMemory *) overlay->image_memory, &map_info,
           GST_MAP_WRITE)) {
@@ -647,9 +652,7 @@ gst_gl_overlay_load_jpeg (GstGLFilter * filter)
   }
 
   for (i = 0; i < overlay->image_height; ++i) {
-    j = (map_info.data +
-        (((int) overlay->image_height - (i +
-                    1)) * (int) overlay->image_width * cinfo.num_components));
+    j = map_info.data + v_info.stride[0] * i;
     jpeg_read_scanlines (&cinfo, &j, 1);
   }
   jpeg_finish_decompress (&cinfo);
