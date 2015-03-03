@@ -479,8 +479,6 @@ gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
 {
   GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_GET_CLASS (mix);
   GError *error = NULL;
-  guint idx;
-  GstGLContext *other_context = NULL;
   gboolean ret = TRUE;
 
   if (!gst_gl_ensure_element_data (mix, &mix->display,
@@ -491,58 +489,20 @@ gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
 
   _find_local_gl_context (mix);
 
-  if (gst_query_find_allocation_meta (query,
-          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
-    GstGLContext *context;
-    const GstStructure *upload_meta_params;
-    gpointer handle;
-    gchar *type;
-    gchar *apis;
-
-    gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
-    if (upload_meta_params) {
-      if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
-              GST_GL_TYPE_CONTEXT, &context, NULL) && context) {
-        GstGLContext *old = mix->context;
-
-        mix->context = context;
-        if (old)
-          gst_object_unref (old);
-      } else if (gst_structure_get (upload_meta_params, "gst.gl.context.handle",
-              G_TYPE_POINTER, &handle, "gst.gl.context.type", G_TYPE_STRING,
-              &type, "gst.gl.context.apis", G_TYPE_STRING, &apis, NULL)
-          && handle) {
-        GstGLPlatform platform;
-        GstGLAPI gl_apis;
-
-        GST_DEBUG ("got GL context handle 0x%p with type %s and apis %s",
-            handle, type, apis);
-
-        platform = gst_gl_platform_from_string (type);
-        gl_apis = gst_gl_api_from_string (apis);
-
-        if (gl_apis && platform)
-          other_context =
-              gst_gl_context_new_wrapped (mix->display, (guintptr) handle,
-              platform, gl_apis);
-      }
-    }
-  }
-
-  if (mix->priv->other_context) {
-    if (!other_context) {
-      other_context = mix->priv->other_context;
-    } else {
-      GST_ELEMENT_WARNING (mix, LIBRARY, SETTINGS,
-          ("%s", "Cannot share with more than one GL context"),
-          ("%s", "Cannot share with more than one GL context"));
-    }
-  }
-
   if (!mix->context) {
-    mix->context = gst_gl_context_new (mix->display);
-    if (!gst_gl_context_create (mix->context, other_context, &error))
-      goto context_error;
+    do {
+      if (mix->context)
+        gst_object_unref (mix->context);
+      /* just get a GL context.  we don't care */
+      mix->context =
+          gst_gl_display_get_gl_context_for_thread (mix->display, NULL);
+      if (!mix->context) {
+        mix->context = gst_gl_context_new (mix->display);
+        if (!gst_gl_context_create (mix->context, mix->priv->other_context,
+                &error))
+          goto context_error;
+      }
+    } while (!gst_gl_display_add_context (mix->display, mix->context));
   }
 
   if (mix_class->decide_allocation)
