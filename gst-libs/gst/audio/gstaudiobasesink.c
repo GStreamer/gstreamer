@@ -381,6 +381,14 @@ clock_disabled:
 }
 
 static gboolean
+gst_audio_base_sink_is_self_provided_clock (GstAudioBaseSink * sink)
+{
+  return (sink->provided_clock && GST_IS_AUDIO_CLOCK (sink->provided_clock) &&
+      GST_AUDIO_CLOCK_CAST (sink->provided_clock)->func ==
+      (GstAudioClockGetTimeFunc) gst_audio_base_sink_get_time);
+}
+
+static gboolean
 gst_audio_base_sink_query_pad (GstBaseSink * bsink, GstQuery * query)
 {
   gboolean res = FALSE;
@@ -886,6 +894,11 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_DEBUG_OBJECT (sink, "acquire ringbuffer");
   if (!gst_audio_ring_buffer_acquire (sink->ringbuffer, spec))
     goto acquire_error;
+
+  /* If we use our own clock, we need to adjust the offset since it will now
+   * restart from zero */
+  if (gst_audio_base_sink_is_self_provided_clock (sink))
+    gst_audio_clock_reset (GST_AUDIO_CLOCK (sink->provided_clock), 0);
 
   /* We need to resync since the ringbuffer restarted */
   gst_audio_base_sink_reset_sync (sink);
@@ -2224,9 +2237,7 @@ gst_audio_base_sink_change_state (GstElement * element,
       /* Only post clock-provide messages if this is the clock that
        * we've created. If the subclass has overriden it the subclass
        * should post this messages whenever necessary */
-      if (sink->provided_clock && GST_IS_AUDIO_CLOCK (sink->provided_clock) &&
-          GST_AUDIO_CLOCK_CAST (sink->provided_clock)->func ==
-          (GstAudioClockGetTimeFunc) gst_audio_base_sink_get_time)
+      if (gst_audio_base_sink_is_self_provided_clock (sink))
         gst_element_post_message (element,
             gst_message_new_clock_provide (GST_OBJECT_CAST (element),
                 sink->provided_clock, TRUE));
@@ -2264,9 +2275,7 @@ gst_audio_base_sink_change_state (GstElement * element,
       /* Only post clock-lost messages if this is the clock that
        * we've created. If the subclass has overriden it the subclass
        * should post this messages whenever necessary */
-      if (sink->provided_clock && GST_IS_AUDIO_CLOCK (sink->provided_clock) &&
-          GST_AUDIO_CLOCK_CAST (sink->provided_clock)->func ==
-          (GstAudioClockGetTimeFunc) gst_audio_base_sink_get_time)
+      if (gst_audio_base_sink_is_self_provided_clock (sink))
         gst_element_post_message (element,
             gst_message_new_clock_lost (GST_OBJECT_CAST (element),
                 sink->provided_clock));
