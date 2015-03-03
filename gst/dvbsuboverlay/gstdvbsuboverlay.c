@@ -715,7 +715,7 @@ gst_dvbsub_overlay_negotiate (GstDVBSubOverlay * overlay, GstCaps * caps)
     GstQuery *query;
 
     /* find supported meta */
-    query = gst_query_new_allocation (caps, TRUE);
+    query = gst_query_new_allocation (caps, FALSE);
 
     if (!gst_pad_peer_query (overlay->srcpad, query)) {
       /* no problem, we use the query defaults */
