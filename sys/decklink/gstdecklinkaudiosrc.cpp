@@ -504,14 +504,11 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   // Jitter and discontinuity handling, based on audiobasesrc
   start_time = timestamp;
-  end_time = p->capture_time;
+  end_time = p->capture_time + duration;
 
   // Convert to the sample numbers
-  end_offset = gst_util_uint64_scale (end_time, self->info.rate, GST_SECOND);
-  if (end_offset >= (guint64) sample_count)
-    start_offset = end_offset - sample_count;
-  else
-    start_offset = 0;
+  start_offset = gst_util_uint64_scale (start_time, self->info.rate, GST_SECOND);
+  end_offset = start_offset + sample_count;
 
   if (self->next_offset == (guint64) - 1) {
     discont = TRUE;
