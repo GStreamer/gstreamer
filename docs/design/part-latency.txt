@@ -230,9 +230,9 @@ The pipeline latency is queried with the LATENCY query.
 
  (out) "min-latency", G_TYPE_UINT64 (default 0, must not be NONE)
         - the minimum latency in the pipeline, meaning the minimum time
-          an element synchronizing to the clock has to wait until it can
-          be sure that all data for the current running time has been
-          received.
+          downstream elements synchronizing to the clock have to wait until
+          they can be sure that all data for the current running time has
+          been received.
 
           Elements answering the latency query and introducing latency must
           set this to the maximum time for which they will delay data, while
