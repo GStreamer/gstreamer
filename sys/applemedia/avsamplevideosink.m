@@ -127,6 +127,8 @@ static void
 gst_av_sample_video_sink_init (GstAVSampleVideoSink * av_sink)
 {
   av_sink->keep_aspect_ratio = TRUE;
+
+  g_mutex_init (&av_sink->render_lock);
 }
 
 static void
@@ -161,6 +163,8 @@ gst_av_sample_video_sink_finalize (GObject * object)
       [av_sink->layer release];
     });
   }
+
+  g_mutex_clear (&av_sink->render_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -214,6 +218,17 @@ gst_av_sample_video_sink_start (GstBaseSink * bsink)
   return TRUE;
 }
 
+/* with render lock */
+static void
+_stop_requesting_data (GstAVSampleVideoSink * av_sink)
+{
+  if (av_sink->layer) {
+    if (av_sink->layer_requesting_data)
+      [av_sink->layer stopRequestingMediaData];
+    av_sink->layer_requesting_data = FALSE;
+  }
+}
+
 static gboolean
 gst_av_sample_video_sink_stop (GstBaseSink * bsink)
 {
@@ -225,9 +240,10 @@ gst_av_sample_video_sink_stop (GstBaseSink * bsink)
   }
 
   if (av_sink->layer) {
-    dispatch_async (dispatch_get_main_queue (), ^{
-      [av_sink->layer flushAndRemoveImage];
-    });
+    g_mutex_lock (&av_sink->render_lock);
+    _stop_requesting_data (av_sink);
+    g_mutex_unlock (&av_sink->render_lock);
+    [av_sink->layer flushAndRemoveImage];
   }
 
   return TRUE;
@@ -479,23 +495,6 @@ gst_av_sample_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   return TRUE;
 }
 
-static GstFlowReturn
-gst_av_sample_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
-{
-  GstAVSampleVideoSink *av_sink;
-
-  av_sink = GST_AV_SAMPLE_VIDEO_SINK (bsink);
-
-  GST_LOG_OBJECT (bsink, "preparing buffer:%p", buf);
-
-  if (GST_VIDEO_SINK_WIDTH (av_sink) < 1 ||
-      GST_VIDEO_SINK_HEIGHT (av_sink) < 1) {
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
-  return GST_FLOW_OK;
-}
-
 static void
 _unmap_planar_frame (GstVideoFrame * v_frame, const void * data, gsize dataSize,
     gsize numberOfPlanes, const void *planeAddressed[])
@@ -515,10 +514,10 @@ _unmap_frame (GstVideoFrame * v_frame, const void * data)
   g_free (v_frame);
 }
 
-static GstFlowReturn
-gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
+/* with render lock */
+static gboolean
+_enqueue_sample (GstAVSampleVideoSink * av_sink, GstBuffer *buf)
 {
-  GstAVSampleVideoSink *av_sink;
   CVPixelBufferRef pbuf;
   CMVideoFormatDescriptionRef v_format_desc;
   GstVideoFrame *v_frame;
@@ -528,11 +527,7 @@ gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   gsize l, r, t, b;
   gint i;
 
-  GST_TRACE_OBJECT (vsink, "rendering buffer:%p", buf);
-
-  av_sink = GST_AV_SAMPLE_VIDEO_SINK (vsink);
-
-  GST_TRACE_OBJECT (vsink, "redisplay of size:%ux%u, window size:%ux%u",
+  GST_TRACE_OBJECT (av_sink, "redisplay of size:%ux%u, window size:%ux%u",
       GST_VIDEO_INFO_WIDTH (&av_sink->info),
       GST_VIDEO_INFO_HEIGHT (&av_sink->info),
       GST_VIDEO_SINK_WIDTH (av_sink),
@@ -543,7 +538,7 @@ gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   if (!gst_video_frame_map (v_frame, &av_sink->info, buf, GST_MAP_READ)) {
     GST_ERROR_OBJECT (av_sink, "Failed to map input video frame");
     g_free (v_frame);
-    return GST_FLOW_ERROR;
+    return FALSE;
   }
 
   if (GST_VIDEO_INFO_N_PLANES (&v_frame->info) == 1) {
@@ -558,7 +553,7 @@ gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
       GST_ERROR_OBJECT (av_sink, "Error creating Core Video pixel buffer");
       gst_video_frame_unmap (v_frame);
       g_free (v_frame);
-      return GST_FLOW_ERROR;
+      return FALSE;
     }
   } else {
     /* multi-planar */
@@ -587,7 +582,7 @@ gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
       GST_ERROR_OBJECT (av_sink, "Error creating Core Video pixel buffer");
       gst_video_frame_unmap (v_frame);
       g_free (v_frame);
-      return GST_FLOW_ERROR;
+      return FALSE;
     }
   }
 
@@ -640,7 +635,7 @@ gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     GST_ERROR_OBJECT (av_sink, "Failed to retreive video format from "
         "pixel buffer");
     CFRelease (pbuf);
-    return GST_FLOW_ERROR;
+    return FALSE;
   }
 
   sample_time.duration = CMTimeMake (GST_BUFFER_DURATION (buf), GST_SECOND);
@@ -653,7 +648,7 @@ gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
         "CVImageBuffer");
     CFRelease (v_format_desc);
     CFRelease (pbuf);
-    return GST_FLOW_ERROR;
+    return FALSE;
   }
   CFRelease (v_format_desc);
 
@@ -666,16 +661,92 @@ gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
         kCFBooleanTrue);
   }
 
-  dispatch_sync (dispatch_get_main_queue (), ^{
-    if (av_sink->keep_aspect_ratio)
-      av_sink->layer.videoGravity = AVLayerVideoGravityResizeAspect;
-    else
-      av_sink->layer.videoGravity = AVLayerVideoGravityResize;
-    [av_sink->layer enqueueSampleBuffer:sample_buf];
-  });
+  if (av_sink->keep_aspect_ratio)
+    av_sink->layer.videoGravity = AVLayerVideoGravityResizeAspect;
+  else
+    av_sink->layer.videoGravity = AVLayerVideoGravityResize;
+  [av_sink->layer enqueueSampleBuffer:sample_buf];
 
   CFRelease (pbuf);
   CFRelease (sample_buf);
+
+  return TRUE;
+}
+
+static void
+_request_data (GstAVSampleVideoSink * av_sink)
+{
+  av_sink->layer_requesting_data = TRUE;
+
+  [av_sink->layer requestMediaDataWhenReadyOnQueue:
+        dispatch_get_global_queue (DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+        usingBlock:^{
+    while (TRUE) {
+      /* don't needlessly fill up avsamplebufferdisplaylayer's queue.
+       * This also allows us to skip displaying late frames */
+      if (!av_sink->layer.readyForMoreMediaData)
+        break;
+
+      g_mutex_lock (&av_sink->render_lock);
+
+      if (!av_sink->buffer || av_sink->render_flow_return != GST_FLOW_OK) {
+        _stop_requesting_data (av_sink);
+        g_mutex_unlock (&av_sink->render_lock);
+        break;
+      }
+
+      if (!_enqueue_sample (av_sink, av_sink->buffer)) {
+        gst_buffer_unref (av_sink->buffer);
+        av_sink->buffer = NULL;
+        av_sink->render_flow_return = GST_FLOW_ERROR;
+        g_mutex_unlock (&av_sink->render_lock);
+        break;
+      }
+
+      gst_buffer_unref (av_sink->buffer);
+      av_sink->buffer = NULL;
+      av_sink->render_flow_return = GST_FLOW_OK;
+      g_mutex_unlock (&av_sink->render_lock);
+    }
+  }];
+}
+
+static GstFlowReturn
+gst_av_sample_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
+{
+  GstAVSampleVideoSink *av_sink;
+
+  av_sink = GST_AV_SAMPLE_VIDEO_SINK (bsink);
+
+  GST_LOG_OBJECT (bsink, "preparing buffer:%p", buf);
+
+  if (GST_VIDEO_SINK_WIDTH (av_sink) < 1 ||
+      GST_VIDEO_SINK_HEIGHT (av_sink) < 1) {
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
+{
+  GstAVSampleVideoSink *av_sink;
+  GstFlowReturn ret;
+
+  GST_TRACE_OBJECT (vsink, "rendering buffer:%p", buf);
+
+  av_sink = GST_AV_SAMPLE_VIDEO_SINK (vsink);
+
+  g_mutex_lock (&av_sink->render_lock);
+  if (av_sink->buffer)
+    gst_buffer_unref (av_sink->buffer);
+  av_sink->buffer = gst_buffer_ref (buf);
+  ret = av_sink->render_flow_return;
+
+  if (!av_sink->layer_requesting_data)
+    _request_data (av_sink);
+  g_mutex_unlock (&av_sink->render_lock);
 
   if ([av_sink->layer status] == AVQueuedSampleBufferRenderingStatusFailed) {
     GST_ERROR_OBJECT (av_sink, "failed to enqueue buffer on layer, %s",
@@ -683,7 +754,7 @@ gst_av_sample_video_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     return GST_FLOW_ERROR;
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static gboolean

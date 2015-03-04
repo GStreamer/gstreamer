@@ -57,6 +57,12 @@ struct _GstAVSampleVideoSink
     gboolean keep_aspect_ratio;
 
     GstBufferPool *pool;
+
+    gboolean layer_requesting_data;
+
+    GMutex render_lock;
+    GstBuffer *buffer;
+    GstFlowReturn render_flow_return;
 };
 
 struct _GstAVSampleVideoSinkClass
