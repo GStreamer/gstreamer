@@ -231,7 +231,9 @@ struct _RTPSession {
 
   /* for sender/receiver counting */
   guint32       key;
-  GHashTable   *ssrcs;
+  guint32       mask_idx;
+  guint32       mask;
+  GHashTable   *ssrcs[32];
   guint         total_sources;
 
   guint16       generation;
