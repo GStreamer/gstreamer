@@ -415,7 +415,7 @@ class GstValidateTest(Test):
                     errors.append(error)
 
         if ret == "[":
-            return "No critical"
+            return None
         else:
             return ret + "]"
 
@@ -426,21 +426,22 @@ class GstValidateTest(Test):
         self.debug("%s returncode: %s", self, self.process.returncode)
         if self.result == Result.TIMEOUT:
             self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
-        elif self.process.returncode == 0:
-            self.set_result(Result.PASSED)
+
+        criticals = self.get_validate_criticals_errors()
+        if self.process.returncode == 139:
+            # FIXME Reimplement something like that if needed
+            # self.get_backtrace("SEGFAULT")
+            self.set_result(Result.FAILED,
+                            "Application segfaulted",
+                            "segfault")
+        elif criticals or self.process.returncode != 0:
+            if criticals is None:
+                criticals = "No criticals"
+            self.set_result(Result.FAILED,
+                            "Application returned %s (issues: %s)"
+                            % (self.process.returncode, criticals))
         else:
-            if self.process.returncode == 139:
-                # FIXME Reimplement something like that if needed
-                # self.get_backtrace("SEGFAULT")
-                self.set_result(Result.FAILED,
-                                "Application segfaulted",
-                                "segfault")
-            else:
-                self.set_result(Result.FAILED,
-                                "Application returned %s (issues: %s)" % (
-                                    self.process.returncode,
-                                    self.get_validate_criticals_errors()
-                                ))
+            self.set_result(Result.PASSED)
 
     def _parse_position(self, p):
         self.log("Parsing %s" % p)
