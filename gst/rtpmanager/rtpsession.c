@@ -513,7 +513,11 @@ rtp_session_init (RTPSession * sess)
   sess->mask_idx = 0;
   sess->mask = 0;
 
-  for (i = 0; i < 32; i++) {
+  /* TODO: We currently only use the first hash table but this is the
+   * beginning of an implementation for RFC2762
+   for (i = 0; i < 32; i++) {
+   */
+  for (i = 0; i < 1; i++) {
     sess->ssrcs[i] =
         g_hash_table_new_full (NULL, NULL, NULL,
         (GDestroyNotify) g_object_unref);
@@ -584,7 +588,10 @@ rtp_session_finalize (GObject * object)
   g_list_free_full (sess->conflicting_addresses,
       (GDestroyNotify) rtp_conflicting_address_free);
 
-  for (i = 0; i < 32; i++)
+  /* TODO: Change this again when implementing RFC 2762
+   * for (i = 0; i < 32; i++)
+   */
+  for (i = 0; i < 1; i++)
     g_hash_table_destroy (sess->ssrcs[i]);
 
   g_mutex_clear (&sess->lock);
