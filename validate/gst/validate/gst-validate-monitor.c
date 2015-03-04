@@ -64,10 +64,11 @@ gst_validate_monitor_intercept_report (GstValidateReporter * reporter,
   G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init)
 
 static GstValidateReportingDetails
-_get_reporting_level (GstValidateReporter *monitor)
+_get_reporting_level (GstValidateReporter * monitor)
 {
   return GST_VALIDATE_MONITOR (monitor)->level;
 }
+
 static void
 _reporter_iface_init (GstValidateReporterInterface * iface)
 {
@@ -130,7 +131,7 @@ gst_validate_monitor_class_init (GstValidateMonitorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_OBJECT,
       g_param_spec_object ("object", "Object", "The object to be monitored",
-          GST_TYPE_OBJECT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+          G_TYPE_OBJECT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_RUNNER,
       g_param_spec_object ("validate-runner", "VALIDATE Runner",
@@ -205,7 +206,7 @@ gst_validate_monitor_do_setup (GstValidateMonitor * monitor)
 }
 
 static GstValidateReportingDetails
-_get_report_level_for_pad (GstValidateRunner *runner, GstObject *pad)
+_get_report_level_for_pad (GstValidateRunner * runner, GstObject * pad)
 {
   GstObject *parent;
   gchar *name;
@@ -222,17 +223,20 @@ _get_report_level_for_pad (GstValidateRunner *runner, GstObject *pad)
 }
 
 static void
-_determine_reporting_level (GstValidateMonitor *monitor)
+_determine_reporting_level (GstValidateMonitor * monitor)
 {
   GstValidateRunner *runner;
   GstObject *object, *parent;
   gchar *object_name;
   GstValidateReportingDetails level = GST_VALIDATE_SHOW_UNKNOWN;
 
-  object = gst_object_ref(monitor->target);
+  object = gst_object_ref (monitor->target);
   runner = gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
 
   do {
+    if (!GST_IS_OBJECT (object))
+      break;
+
     /* Let's allow for singling out pads */
     if (GST_IS_PAD (object)) {
       level = _get_report_level_for_pad (runner, object);
@@ -241,7 +245,8 @@ _determine_reporting_level (GstValidateMonitor *monitor)
     }
 
     object_name = gst_object_get_name (object);
-    level = gst_validate_runner_get_reporting_level_for_name (runner, object_name);
+    level =
+        gst_validate_runner_get_reporting_level_for_name (runner, object_name);
     parent = gst_object_get_parent (object);
     gst_object_unref (object);
     object = parent;
