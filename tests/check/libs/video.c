@@ -2251,6 +2251,47 @@ GST_END_TEST;
 #undef WIDTH
 #undef HEIGHT
 
+GST_START_TEST (test_video_convert)
+{
+  GstVideoInfo ininfo, outinfo;
+  GstVideoFrame inframe, outframe;
+  GstBuffer *inbuffer, *outbuffer;
+  GstVideoConverter *convert;
+
+  gst_video_info_set_format (&ininfo, GST_VIDEO_FORMAT_ARGB, 320, 240);
+  inbuffer = gst_buffer_new_and_alloc (ininfo.size);
+  gst_buffer_memset (inbuffer, 0, 0, -1);
+  gst_video_frame_map (&inframe, &ininfo, inbuffer, GST_MAP_READ);
+
+  gst_video_info_set_format (&outinfo, GST_VIDEO_FORMAT_BGRx, 400, 300);
+  outbuffer = gst_buffer_new_and_alloc (outinfo.size);
+  gst_video_frame_map (&outframe, &outinfo, outbuffer, GST_MAP_WRITE);
+
+  convert = gst_video_converter_new (&ininfo, &outinfo,
+      gst_structure_new ("options",
+          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+          GST_TYPE_VIDEO_RESAMPLER_METHOD, 3,
+          GST_VIDEO_CONVERTER_OPT_SRC_X, G_TYPE_INT, 10,
+          GST_VIDEO_CONVERTER_OPT_SRC_Y, G_TYPE_INT, 0,
+          GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, G_TYPE_INT, 300,
+          GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, G_TYPE_INT, 220,
+          GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, 80,
+          GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, 60,
+          GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT, 300,
+          GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT, 220, NULL));
+
+  gst_video_converter_frame (convert, &inframe, &outframe);
+  gst_video_converter_free (convert);
+
+  gst_video_frame_unmap (&outframe);
+  gst_buffer_unref (outbuffer);
+  gst_video_frame_unmap (&inframe);
+  gst_buffer_unref (inbuffer);
+
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_transfer)
 {
   gint i, j;
@@ -2527,6 +2568,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_scaler);
   tcase_add_test (tc_chain, test_video_color_convert);
   tcase_add_test (tc_chain, test_video_size_convert);
+  tcase_add_test (tc_chain, test_video_convert);
   tcase_add_test (tc_chain, test_video_transfer);
   tcase_add_test (tc_chain, test_overlay_blend);
   tcase_add_test (tc_chain, test_video_center_rect);

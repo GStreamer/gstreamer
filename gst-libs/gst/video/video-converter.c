@@ -1754,7 +1754,8 @@ setup_allocators (GstVideoConverter * convert)
     setup_border_alloc (convert, user_data);
     notify = (GDestroyNotify) converter_alloc_free;
     alloc_line = get_border_temp_line;
-    alloc_writable = FALSE;
+    /* when we add a border, we need to write */
+    alloc_writable = convert->borderline != NULL;
   }
 
   /* now walk backwards, we try to write into the dest lines directly
