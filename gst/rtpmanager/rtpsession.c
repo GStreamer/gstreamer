@@ -505,19 +505,13 @@ rtp_session_class_init (RTPSessionClass * klass)
 static void
 rtp_session_init (RTPSession * sess)
 {
-  gint i;
   gchar *str;
 
   g_mutex_init (&sess->lock);
   sess->key = g_random_int ();
-  sess->mask_idx = 0;
-  sess->mask = 0;
 
-  for (i = 0; i < 32; i++) {
-    sess->ssrcs[i] =
-        g_hash_table_new_full (NULL, NULL, NULL,
-        (GDestroyNotify) g_object_unref);
-  }
+  sess->ssrcs = g_hash_table_new_full (NULL, NULL, NULL,
+      (GDestroyNotify) g_object_unref);
 
   rtp_stats_init_defaults (&sess->stats);
   INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
@@ -575,7 +569,6 @@ static void
 rtp_session_finalize (GObject * object)
 {
   RTPSession *sess;
-  gint i;
 
   sess = RTP_SESSION_CAST (object);
 
@@ -584,8 +577,7 @@ rtp_session_finalize (GObject * object)
   g_list_free_full (sess->conflicting_addresses,
       (GDestroyNotify) rtp_conflicting_address_free);
 
-  for (i = 0; i < 32; i++)
-    g_hash_table_destroy (sess->ssrcs[i]);
+  g_hash_table_destroy (sess->ssrcs);
 
   g_mutex_clear (&sess->lock);
 
@@ -611,12 +603,12 @@ rtp_session_create_sources (RTPSession * sess)
 
   RTP_SESSION_LOCK (sess);
   /* get number of elements in the table */
-  size = g_hash_table_size (sess->ssrcs[sess->mask_idx]);
+  size = g_hash_table_size (sess->ssrcs);
   /* create the result value array */
   res = g_value_array_new (size);
 
   /* and copy all values into the array */
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx], (GHFunc) copy_source, res);
+  g_hash_table_foreach (sess->ssrcs, (GHFunc) copy_source, res);
   RTP_SESSION_UNLOCK (sess);
 
   return res;
@@ -1460,14 +1452,14 @@ session_update_ptp (RTPSession * sess)
    */
   data.is_doing_ptp = TRUE;
   data.new_addr = NULL;
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+  g_hash_table_foreach (sess->ssrcs,
       (GHFunc) compare_rtp_source_addr, (gpointer) & data);
   is_doing_rtp_ptp = data.is_doing_ptp;
 
   /* same but about rtcp */
   data.is_doing_ptp = TRUE;
   data.new_addr = NULL;
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+  g_hash_table_foreach (sess->ssrcs,
       (GHFunc) compare_rtcp_source_addr, (gpointer) & data);
   is_doing_rtcp_ptp = data.is_doing_ptp;
 
@@ -1481,8 +1473,7 @@ session_update_ptp (RTPSession * sess)
 static void
 add_source (RTPSession * sess, RTPSource * src)
 {
-  g_hash_table_insert (sess->ssrcs[sess->mask_idx],
-      GINT_TO_POINTER (src->ssrc), src);
+  g_hash_table_insert (sess->ssrcs, GINT_TO_POINTER (src->ssrc), src);
   /* report the new source ASAP */
   src->generation = sess->generation;
   /* we have one more source now */
@@ -1503,8 +1494,7 @@ add_source (RTPSession * sess, RTPSource * src)
 static RTPSource *
 find_source (RTPSession * sess, guint32 ssrc)
 {
-  return g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
-      GINT_TO_POINTER (ssrc));
+  return g_hash_table_lookup (sess->ssrcs, GINT_TO_POINTER (ssrc));
 }
 
 /* must be called with the session lock, the returned source needs to be
@@ -2411,7 +2401,7 @@ rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
     if (sess->stats.sender_sources > sess->stats.internal_sender_sources + 1)
       return;
 
-    g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
+    g_hash_table_iter_init (&iter, sess->ssrcs);
     while (g_hash_table_iter_next (&iter, NULL, (gpointer *) & src)) {
       if (!src->internal && rtp_source_is_sender (src))
         break;
@@ -2781,8 +2771,7 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
       /* If it is <= 0, then try to estimate the actual bandwidth */
       bandwidth = 0;
 
-      g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-          (GHFunc) add_bitrates, &bandwidth);
+      g_hash_table_foreach (sess->ssrcs, (GHFunc) add_bitrates, &bandwidth);
       bandwidth /= 8.0;
     }
     if (bandwidth < 8000)
@@ -2834,7 +2823,7 @@ rtp_session_mark_all_bye (RTPSession * sess, const gchar * reason)
   g_return_if_fail (RTP_IS_SESSION (sess));
 
   RTP_SESSION_LOCK (sess);
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+  g_hash_table_foreach (sess->ssrcs,
       (GHFunc) source_mark_bye, (gpointer) reason);
   RTP_SESSION_UNLOCK (sess);
 }
@@ -3149,8 +3138,7 @@ session_fir (RTPSession * sess, ReportData * data)
   gst_rtcp_packet_fb_set_sender_ssrc (packet, data->source->ssrc);
   gst_rtcp_packet_fb_set_media_ssrc (packet, 0);
 
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-      (GHFunc) session_add_fir, data);
+  g_hash_table_foreach (sess->ssrcs, (GHFunc) session_add_fir, data);
 
   if (gst_rtcp_packet_fb_get_fci_length (packet) == 0)
     gst_rtcp_packet_remove (packet);
@@ -3615,8 +3603,7 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
   } else if (!data->is_early) {
     /* loop over all known sources and add report blocks. If we are early, we
      * just make a minimal RTCP packet and skip this step */
-    g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-        (GHFunc) session_report_blocks, data);
+    g_hash_table_foreach (sess->ssrcs, (GHFunc) session_report_blocks, data);
   }
   if (!data->has_sdes)
     session_sdes (sess, data);
@@ -3625,12 +3612,10 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
     session_fir (sess, data);
 
   if (data->have_pli)
-    g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-        (GHFunc) session_pli, data);
+    g_hash_table_foreach (sess->ssrcs, (GHFunc) session_pli, data);
 
   if (data->have_nack)
-    g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-        (GHFunc) session_nack, data);
+    g_hash_table_foreach (sess->ssrcs, (GHFunc) session_nack, data);
 
   gst_rtcp_buffer_unmap (&data->rtcpbuf);
 
@@ -3729,7 +3714,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
    * cleanup stage below releases the session lock. */
   table_copy = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) g_object_unref);
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+  g_hash_table_foreach (sess->ssrcs,
       (GHFunc) clone_ssrcs_hashtable, table_copy);
 
   /* Clean up the session, mark the source for removing, this might release the
@@ -3738,7 +3723,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   g_hash_table_destroy (table_copy);
 
   /* Now remove the marked sources */
-  g_hash_table_foreach_remove (sess->ssrcs[sess->mask_idx],
+  g_hash_table_foreach_remove (sess->ssrcs,
       (GHRFunc) remove_closing_sources, &data);
 
   /* update point-to-point status */
@@ -3752,12 +3737,10 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
       sess->generation, data.num_to_report, data.is_early);
 
   /* generate RTCP for all internal sources */
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-      (GHFunc) generate_rtcp, &data);
+  g_hash_table_foreach (sess->ssrcs, (GHFunc) generate_rtcp, &data);
 
   /* update the generation for all the sources that have been reported */
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-      (GHFunc) update_generation, &data);
+  g_hash_table_foreach (sess->ssrcs, (GHFunc) update_generation, &data);
 
   /* we keep track of the last report time in order to timeout inactive
    * receivers or senders */
