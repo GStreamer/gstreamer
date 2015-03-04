@@ -64,12 +64,50 @@ G_DEFINE_BOXED_TYPE (GstValidateReport, gst_validate_report,
     (GBoxedCopyFunc) gst_validate_report_ref,
     (GBoxedFreeFunc) gst_validate_report_unref);
 
+static GstValidateIssue *
+gst_validate_issue_ref (GstValidateIssue * issue)
+{
+  g_return_val_if_fail (issue != NULL, NULL);
+
+  g_atomic_int_inc (&issue->refcount);
+
+  return issue;
+}
+
+static void
+gst_validate_issue_unref (GstValidateIssue * issue)
+{
+  if (G_UNLIKELY (g_atomic_int_dec_and_test (&issue->refcount))) {
+    g_free (issue->summary);
+    g_free (issue->description);
+
+    /* We are using an string array for area and name */
+    g_strfreev (&issue->area);
+
+    g_slice_free (GstValidateIssue, issue);
+  }
+}
+
+
+G_DEFINE_BOXED_TYPE (GstValidateIssue, gst_validate_issue,
+    (GBoxedCopyFunc) gst_validate_issue_ref,
+    (GBoxedFreeFunc) gst_validate_issue_unref);
+
 GstValidateIssueId
 gst_validate_issue_get_id (GstValidateIssue * issue)
 {
   return issue->issue_id;
 }
 
+/**
+ * gst_validate_issue_new:
+ * @issue_id: The ID of the issue, should be a GQuark
+ * @summary: A summary of the issue
+ * @description: A more complete of what the issue is about
+ * @default_level: The level at which the issue will be reported by default
+ *
+ * Returns: (transfer full): The newly created #GstValidateIssue
+ */
 GstValidateIssue *
 gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
     const gchar * description, GstValidateReportLevel default_level)
@@ -101,17 +139,12 @@ gst_validate_issue_set_default_level (GstValidateIssue * issue,
   issue->default_level = default_level;
 }
 
-static void
-gst_validate_issue_free (GstValidateIssue * issue)
-{
-  g_free (issue->summary);
-  g_free (issue->description);
-
-  /* We are using an string array for area and name */
-  g_strfreev (&issue->area);
-  g_slice_free (GstValidateIssue, issue);
-}
-
+/**
+ * gst_validate_issue_register:
+ * @issue: (transfer none): The #GstValidateIssue to register
+ *
+ * Registers @issue in the issue type system
+ */
 void
 gst_validate_issue_register (GstValidateIssue * issue)
 {
@@ -131,7 +164,7 @@ gst_validate_report_load_issues (void)
   g_return_if_fail (_gst_validate_issues == NULL);
 
   _gst_validate_issues = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-      NULL, (GDestroyNotify) gst_validate_issue_free);
+      NULL, (GDestroyNotify) gst_validate_issue_unref);
 
   REGISTER_VALIDATE_ISSUE (WARNING, BUFFER_BEFORE_SEGMENT,
       _("buffer was received before a segment"),

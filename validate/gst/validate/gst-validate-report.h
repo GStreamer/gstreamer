@@ -136,7 +136,13 @@ typedef struct {
   * issue. */
   GstValidateReportLevel default_level;
 
+  gint    refcount;
+
+  gpointer _gst_reserved[GST_PADDING];
+
 } GstValidateIssue;
+
+GType           gst_validate_issue_get_type (void);
 
 struct _GstValidateReport {
   gint    refcount;
@@ -168,6 +174,8 @@ struct _GstValidateReport {
   GList *repeated_reports;
 
   GstValidateReportingDetails reporting_level;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 void gst_validate_report_add_message (GstValidateReport *report,

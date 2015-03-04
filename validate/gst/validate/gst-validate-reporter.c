@@ -275,6 +275,13 @@ gst_validate_reporter_report_simple (GstValidateReporter * reporter,
   gst_validate_report (reporter, issue_id, message);
 }
 
+/**
+ * gst_validate_reporter_set_name:
+ * @reporter: The reporter to set the name on
+ * @name: (transfer full): The name of the reporter
+ *
+ * Sets @ name on @reporter
+ */
 void
 gst_validate_reporter_set_name (GstValidateReporter * reporter, gchar * name)
 {
