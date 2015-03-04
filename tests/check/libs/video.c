@@ -2267,6 +2267,8 @@ GST_START_TEST (test_video_convert)
   outbuffer = gst_buffer_new_and_alloc (outinfo.size);
   gst_video_frame_map (&outframe, &outinfo, outbuffer, GST_MAP_WRITE);
 
+  /* see that we don't reuse the source line directly because we need
+   * to add borders to it */
   convert = gst_video_converter_new (&ininfo, &outinfo,
       gst_structure_new ("options",
           GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
@@ -2279,6 +2281,24 @@ GST_START_TEST (test_video_convert)
           GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, 60,
           GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT, 300,
           GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT, 220, NULL));
+
+  gst_video_converter_frame (convert, &inframe, &outframe);
+  gst_video_converter_free (convert);
+
+  /* see that we reuse the source line directly because we need to scale
+   * it first */
+  convert = gst_video_converter_new (&ininfo, &outinfo,
+      gst_structure_new ("options",
+          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+          GST_TYPE_VIDEO_RESAMPLER_METHOD, 3,
+          GST_VIDEO_CONVERTER_OPT_SRC_X, G_TYPE_INT, 10,
+          GST_VIDEO_CONVERTER_OPT_SRC_Y, G_TYPE_INT, 0,
+          GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, G_TYPE_INT, 300,
+          GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, G_TYPE_INT, 220,
+          GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, 80,
+          GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, 60,
+          GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT, 310,
+          GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT, 230, NULL));
 
   gst_video_converter_frame (convert, &inframe, &outframe);
   gst_video_converter_free (convert);
