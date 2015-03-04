@@ -427,6 +427,8 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     gst_decklink_video_src_convert_to_external_clock (videosrc, &capture_time,
         NULL);
     gst_object_unref (videosrc);
+    GST_LOG_OBJECT (self, "Actual timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (capture_time));
   }
 
   g_mutex_lock (&self->lock);
@@ -496,14 +498,9 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   ap->input = self->input->input;
   ap->input->AddRef ();
 
+  timestamp = p->capture_time;
   duration =
       gst_util_uint64_scale_int (sample_count, GST_SECOND, self->info.rate);
-  // Our capture time is the end timestamp, subtract the
-  // duration to get the start timestamp
-  if (p->capture_time >= duration)
-    timestamp = p->capture_time - duration;
-  else
-    timestamp = 0;
 
   // Jitter and discontinuity handling, based on audiobasesrc
   start_time = timestamp;
