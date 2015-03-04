@@ -809,7 +809,7 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
 
   for (i = 0; i < avail - 4; i++) {
     if (((data[i] == 0xff) && ((data[i + 1] & 0xf6) == 0xf0)) ||
-        ((data[0] == 0x56) && ((data[1] & 0xe0) == 0xe0)) ||
+        ((data[i] == 0x56) && ((data[i + 1] & 0xe0) == 0xe0)) ||
         strncmp ((char *) data + i, "ADIF", 4) == 0) {
       GST_DEBUG_OBJECT (aacparse, "Found signature at offset %u", i);
       found = TRUE;
