@@ -1802,6 +1802,28 @@ addw w1, w1, 32
 shrsw w1, w1, 6
 convsuswb d, w1
 
+.function video_orc_resample_h_2tap_u16
+.source 2 s1 guint16
+.source 2 s2 guint16
+.source 2 t1 gint16
+.source 2 t2 gint16
+.dest 2 d guint16
+.temp 4 w1
+.temp 4 w2
+.temp 4 tl1
+.temp 4 tl2
+
+convuwl w1, s1
+convswl tl1, t1
+mulll w1, w1, tl1
+convuwl w2, s2
+convswl tl2, t2
+mulll w2, w2, tl2
+addl w1, w1, w2
+addl w1, w1, 4096
+shrsl w1, w1, 12
+convsuslw d, w1
+
 .function video_orc_resample_v_2tap_u8_lq
 .source 1 src1 guint8
 .source 1 src2 guint8

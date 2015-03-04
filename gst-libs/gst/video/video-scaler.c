@@ -752,13 +752,18 @@ video_scale_h_ntap_u16 (GstVideoScaler * scale,
   taps = scale->taps_s16_4;
   count = width * n_elems;
 
-  /* first pixels with first tap to t4 */
-  video_orc_resample_h_multaps_u16 (temp, pixels, taps, count);
-  /* add other pixels with other taps to t4 */
-  video_orc_resample_h_muladdtaps_u16 (temp, 0, pixels + count, count * 2,
-      taps + count, count * 2, count, max_taps - 1);
-  /* scale and write final result */
-  video_orc_resample_scaletaps_u16 (d, temp, count);
+  if (max_taps == 2) {
+    video_orc_resample_h_2tap_u16 (d, pixels, pixels + count, taps,
+        taps + count, count);
+  } else {
+    /* first pixels with first tap to t4 */
+    video_orc_resample_h_multaps_u16 (temp, pixels, taps, count);
+    /* add other pixels with other taps to t4 */
+    video_orc_resample_h_muladdtaps_u16 (temp, 0, pixels + count, count * 2,
+        taps + count, count * 2, count, max_taps - 1);
+    /* scale and write final result */
+    video_orc_resample_scaletaps_u16 (d, temp, count);
+  }
 }
 
 static void
