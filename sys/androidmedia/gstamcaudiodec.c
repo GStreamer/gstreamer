@@ -492,7 +492,6 @@ retry:
   is_eos = ! !(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
 
   if (buffer_info.size > 0) {
-    GstAmcAudioDecClass *klass = GST_AMC_AUDIO_DEC_GET_CLASS (self);
     GstBuffer *outbuf;
     GstAmcBuffer *buf;
     GstMapInfo minfo;
@@ -550,7 +549,6 @@ retry:
         nframes);
   }
 
-done:
   if (!gst_amc_codec_release_output_buffer (self->codec, idx, &err)) {
     if (self->flushing) {
       g_clear_error (&err);
