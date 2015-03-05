@@ -426,12 +426,12 @@ open_codec (GstVP9Dec * dec, GstVideoCodecFrame * frame)
   if (status != VPX_CODEC_OK) {
     GST_WARNING_OBJECT (dec, "VPX preprocessing error: %s",
         gst_vpx_error_name (status));
-    gst_video_decoder_finish_frame (GST_VIDEO_DECODER (dec), frame);
+    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (dec), frame);
     return GST_FLOW_CUSTOM_SUCCESS_1;
   }
   if (!stream_info.is_kf) {
     GST_WARNING_OBJECT (dec, "No keyframe, skipping");
-    gst_video_decoder_finish_frame (GST_VIDEO_DECODER (dec), frame);
+    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (dec), frame);
     return GST_FLOW_CUSTOM_SUCCESS_1;
   }
 
@@ -584,7 +584,7 @@ gst_vp9_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         gst_vp9_dec_image_to_buffer (dec, img, frame->output_buffer);
         ret = gst_video_decoder_finish_frame (decoder, frame);
       } else {
-        gst_video_decoder_finish_frame (decoder, frame);
+        gst_video_decoder_drop_frame (decoder, frame);
       }
     }
 
