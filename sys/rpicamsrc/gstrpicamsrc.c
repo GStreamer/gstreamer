@@ -106,6 +106,8 @@ enum
   PROP_EXPOSURE_MODE,
   PROP_EXPOSURE_METERING_MODE,
   PROP_AWB_MODE,
+  PROP_AWB_GAIN_B,
+  PROP_AWB_GAIN_G,
   PROP_IMAGE_EFFECT,
   PROP_IMAGE_EFFECT_PARAMS,
   PROP_COLOUR_EFFECTS,
@@ -116,7 +118,13 @@ enum
   PROP_ROI_Y,
   PROP_ROI_W,
   PROP_ROI_H,
-  PROP_QUANTISATION_PARAMETER
+  PROP_QUANTISATION_PARAMETER,
+  PROP_INLINE_HEADERS,
+  PROP_SHUTTER_SPEED,
+  PROP_SENSOR_MODE,
+  PROP_DRC,
+  PROP_ANNOTATION_MODE,
+  PROP_ANNOTATION_STRING
 };
 
 #define BITRATE_DEFAULT 17000000        /* 17Mbit/s default for 1080p */
@@ -317,6 +325,16 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           0, G_MAXINT, QUANTISATION_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_INLINE_HEADERS,
+      g_param_spec_boolean ("inline-headers", "Inline Headers",
+          "Set to TRUE to insert SPS/PPS before each IDR packet", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SHUTTER_SPEED,
+      g_param_spec_int ("shutter-speed", "Shutter Speed",
+          "Set a fixed shutter speed, in microseconds. (0 = Auto)",
+          0, 6000000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (gstelement_class,
       "Raspberry Pi Camera Source",
       "Source/Video",
@@ -444,6 +462,13 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     case PROP_QUANTISATION_PARAMETER:
       src->capture_config.quantisationParameter = g_value_get_int (value);
       break;
+    case PROP_INLINE_HEADERS:
+      src->capture_config.bInlineHeaders = g_value_get_boolean (value);
+      break;
+    case PROP_SHUTTER_SPEED:
+      src->capture_config.camera_parameters.shutter_speed =
+          g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -540,6 +565,13 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_QUANTISATION_PARAMETER:
       g_value_set_int (value, src->capture_config.quantisationParameter);
+      break;
+    case PROP_INLINE_HEADERS:
+      g_value_set_boolean (value, src->capture_config.bInlineHeaders);
+      break;
+    case PROP_SHUTTER_SPEED:
+      g_value_set_int (value,
+          src->capture_config.camera_parameters.shutter_speed);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
