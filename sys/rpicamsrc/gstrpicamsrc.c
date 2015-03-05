@@ -125,7 +125,7 @@ enum
   PROP_SENSOR_MODE,
   PROP_DRC,
   PROP_ANNOTATION_MODE,
-  PROP_ANNOTATION_STRING
+  PROP_ANNOTATION_TEXT
 };
 
 #define CAMERA_DEFAULT 0
@@ -394,6 +394,16 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           gst_rpi_cam_src_sensor_mode_get_type (),
           GST_RPI_CAM_SRC_SENSOR_MODE_AUTOMATIC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ANNOTATION_MODE,
+      g_param_spec_flags ("annotation-mode", "Annotation Mode",
+          "Flags to control annotation of the output video",
+          GST_RPI_CAM_TYPE_RPI_CAM_SRC_ANNOTATION_MODE, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT,
+      g_param_spec_string ("annotation-text", "Annotation Text",
+          "Text string to annotate onto video when annotation-mode flags include 'custom-text'",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (gstelement_class,
       "Raspberry Pi Camera Source", "Source/Video",
       "Raspberry Pi camera module source", "Jan Schmidt <jan@centricular.com>");
@@ -539,6 +549,14 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     case PROP_SENSOR_MODE:
       src->capture_config.sensor_mode = g_value_get_enum (value);
       break;
+    case PROP_ANNOTATION_MODE:
+      src->capture_config.camera_parameters.enable_annotate = g_value_get_flags (value);
+      break;
+    case PROP_ANNOTATION_TEXT:
+      strncpy (src->capture_config.camera_parameters.annotate_string,
+          g_value_get_string (value), MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2);
+      src->capture_config.camera_parameters.annotate_string[MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2 - 1] = '\0';
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -658,6 +676,12 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SENSOR_MODE:
       g_value_set_enum (value, src->capture_config.sensor_mode);
+      break;
+    case PROP_ANNOTATION_MODE:
+      g_value_set_flags (value, src->capture_config.camera_parameters.enable_annotate);
+      break;
+    case PROP_ANNOTATION_TEXT:
+      g_value_set_string (value, src->capture_config.camera_parameters.annotate_string);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

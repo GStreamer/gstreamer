@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2013 Jan Schmidt <jan@centricular.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -74,7 +74,7 @@ struct _GstRpiCamSrc
   gboolean started;
 };
 
-struct _GstRpiCamSrcClass 
+struct _GstRpiCamSrcClass
 {
   GstPushSrcClass parent_class;
 };
