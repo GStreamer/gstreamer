@@ -271,7 +271,7 @@ void raspicapture_default_config(RASPIVID_CONFIG *config)
    config->bInlineHeaders = 0;
 
    config->inlineMotionVectors = 0;
-   
+
    config->cameraNum = 0;
    config->settings = 0;
    config->sensor_mode = 0;
@@ -565,7 +565,7 @@ static int parse_cmdline(int argc, const char **argv, RASPIVID_STATE *state)
          break;
       }
 
-      case CommandSplitWait: // split files on restart 
+      case CommandSplitWait: // split files on restart
       {
          // Must enable inline headers for this to work
          state->bInlineHeaders = 1;
@@ -733,7 +733,7 @@ static void camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buf
          {
             MMAL_PARAMETER_CAMERA_SETTINGS_T *settings = (MMAL_PARAMETER_CAMERA_SETTINGS_T*)param;
             vcos_log_error("Exposure now %u, analog gain %u/%u, digital gain %u/%u",
-			settings->exposure,
+            settings->exposure,
                         settings->analog_gain.num, settings->analog_gain.den,
                         settings->digital_gain.num, settings->digital_gain.den);
             vcos_log_error("AWB R=%u/%u, B=%u/%u",
@@ -898,7 +898,7 @@ static void encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buf
    current_time = vcos_getmicrosecs64()/1000;
    if (state->base_time == -1)
      state->base_time = current_time;
-   
+
    // See if the second count has changed and we need to update any annotation
    if (current_time/1000 != state->last_second)
    {
@@ -973,18 +973,18 @@ static MMAL_STATUS_T create_camera_component(RASPIVID_STATE *state)
       vcos_log_error("Failed to create camera component");
       goto error;
    }
-   
+
    MMAL_PARAMETER_INT32_T camera_num =
       {{MMAL_PARAMETER_CAMERA_NUM, sizeof(camera_num)}, config->cameraNum};
 
    status = mmal_port_parameter_set(camera->control, &camera_num.hdr);
-   
+
    if (status != MMAL_SUCCESS)
    {
       vcos_log_error("Could not select camera : error %d", status);
       goto error;
    }
-   
+
    if (!camera->output_num)
    {
       status = MMAL_ENOSYS;
@@ -1091,15 +1091,14 @@ raspi_capture_set_format_and_start(RASPIVID_STATE *state)
 
    //enable dynamic framerate if necessary
    if (config->camera_parameters.shutter_speed)
-   {   
+   {
       if (((float)(config->fps_n) / config->fps_d) > 1000000.0 / config->camera_parameters.shutter_speed)
       {
          config->fps_n = 0;
          config->fps_d = 1;
-         if (config->verbose)
-            fprintf(stderr, "Enable dynamic frame rate to fulfil shutter speed requirement\n");
+         GST_INFO ("Enabling dynamic frame rate to fulfil shutter speed requirement");
       }
-   } 
+   }
 
    format->encoding = MMAL_ENCODING_OPAQUE;
    format->es->video.width = VCOS_ALIGN_UP(config->width, 32);
@@ -1393,7 +1392,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
       vcos_log_error("failed to set INLINE HEADER FLAG parameters");
       // Continue rather than abort..
    }
-   
+
    //set INLINE VECTORS flag to request motion vector estimates
    if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_INLINE_VECTORS, config->inlineMotionVectors) != MMAL_SUCCESS)
    {
