@@ -90,6 +90,7 @@ enum
 enum
 {
   PROP_0,
+  PROP_CAMERA_NUMBER,
   PROP_BITRATE,
   PROP_KEYFRAME_INTERVAL,
   PROP_PREVIEW,
@@ -126,6 +127,8 @@ enum
   PROP_ANNOTATION_MODE,
   PROP_ANNOTATION_STRING
 };
+
+#define CAMERA_DEFAULT 0
 
 #define BITRATE_DEFAULT 17000000        /* 17Mbit/s default for 1080p */
 #define BITRATE_HIGHEST 25000000
@@ -214,6 +217,11 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
 
   gobject_class->set_property = gst_rpi_cam_src_set_property;
   gobject_class->get_property = gst_rpi_cam_src_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_CAMERA_NUMBER,
+      g_param_spec_int ("camera-number", "Camera Number",
+          "Which camera to use on a multi-camera system - 0 or 1", 0,
+          1, CAMERA_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate",
@@ -378,6 +386,9 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
 
   switch (prop_id) {
+    case PROP_CAMERA_NUMBER:
+      src->capture_config.cameraNum = g_value_get_int (value);
+      break;
     case PROP_BITRATE:
       src->capture_config.bitrate = g_value_get_int (value);
       break;
@@ -482,6 +493,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
 
   switch (prop_id) {
+    case PROP_CAMERA_NUMBER:
+      g_value_set_int (value, src->capture_config.cameraNum);
+      break;
     case PROP_BITRATE:
       g_value_set_int (value, src->capture_config.bitrate);
       break;
