@@ -202,6 +202,41 @@ static gboolean gst_rpi_cam_src_event (GstBaseSrc * src, GstEvent * event);
 static gboolean gst_rpi_cam_src_send_event (GstElement * element,
     GstEvent * event);
 
+#define C_ENUM(v) ((gint) v)
+
+GType
+gst_rpi_cam_src_sensor_mode_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_AUTOMATIC), "Automatic", "automatic"},
+    {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_1920x1080), "1920x1080 16:9 1-30fps",
+        "1920x1080"},
+    {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_2592x1944_FAST),
+          "2592x1944 4:3 1-15fps",
+        "2592x1944-fast"},
+    {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_2592x1944_SLOW),
+        "2592x1944 4:3 0.1666-1fps", "2592x1944-slow"},
+    {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_1296x972), "1296x972 4:3 1-42fps",
+        "1296x972"},
+    {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_1296x730), "1296x730 16:9 1-49fps",
+        "1296x730"},
+    {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_640x480_SLOW),
+        "640x480 4:3 42.1-60fps", "640x480-slow"},
+    {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_640x480_FAST),
+        "640x480 4:3 60.1-90fps", "640x480-fast"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+    _id = g_enum_register_static ("GstRpiCamSrcSensorMode", values);
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
+
 static void
 gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
 {
@@ -209,20 +244,16 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   GstElementClass *gstelement_class;
   GstBaseSrcClass *basesrc_class;
   GstPushSrcClass *pushsrc_class;
-
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   basesrc_class = (GstBaseSrcClass *) klass;
   pushsrc_class = (GstPushSrcClass *) klass;
-
   gobject_class->set_property = gst_rpi_cam_src_set_property;
   gobject_class->get_property = gst_rpi_cam_src_get_property;
-
   g_object_class_install_property (gobject_class, PROP_CAMERA_NUMBER,
       g_param_spec_int ("camera-number", "Camera Number",
           "Which camera to use on a multi-camera system - 0 or 1", 0,
           1, CAMERA_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate",
           "Bitrate for encoding. 0 for VBR using quantisation-parameter", 0,
@@ -245,50 +276,50 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
       g_param_spec_boolean ("preview-encoded", "Preview Encoded",
           "Display encoder output in the preview", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREVIEW_OPACITY,
-      g_param_spec_int ("preview-opacity", "Preview Opacity",
-          "Opacity to use for the preview window", 0, 255, 255,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_PREVIEW_OPACITY, g_param_spec_int ("preview-opacity",
+          "Preview Opacity", "Opacity to use for the preview window", 0,
+          255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHARPNESS,
       g_param_spec_int ("sharpness", "Sharpness", "Image capture sharpness",
           -100, 100, SHARPNESS_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CONTRAST,
-      g_param_spec_int ("contrast", "Contrast", "Image capture contrast", -100,
-          100, CONTRAST_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("contrast", "Contrast", "Image capture contrast",
+          -100, 100, CONTRAST_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BRIGHTNESS,
-      g_param_spec_int ("brightness", "Brightness", "Image capture brightness",
-          0, 100, BRIGHTNESS_DEFAULT,
+      g_param_spec_int ("brightness", "Brightness",
+          "Image capture brightness", 0, 100, BRIGHTNESS_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SATURATION,
-      g_param_spec_int ("saturation", "Saturation", "Image capture saturation",
-          -100, 100, SATURATION_DEFAULT,
+      g_param_spec_int ("saturation", "Saturation",
+          "Image capture saturation", -100, 100, SATURATION_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ISO,
-      g_param_spec_int ("iso", "ISO", "ISO value to use (0 = Auto)", 0, 3200, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("iso", "ISO", "ISO value to use (0 = Auto)", 0,
+          3200, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_VIDEO_STABILISATION,
       g_param_spec_boolean ("video-stabilisation", "Video Stabilisation",
           "Enable or disable video stabilisation", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_EXPOSURE_COMPENSATION,
-      g_param_spec_int ("exposure-compensation", "EV compensation",
-          "Exposure Value compensation", -10, 10, 0,
+  g_object_class_install_property (gobject_class,
+      PROP_EXPOSURE_COMPENSATION, g_param_spec_int ("exposure-compensation",
+          "EV compensation", "Exposure Value compensation", -10, 10, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_EXPOSURE_MODE,
       g_param_spec_enum ("exposure-mode", "Exposure Mode",
           "Camera exposure mode to use",
           GST_RPI_CAM_TYPE_RPI_CAM_SRC_EXPOSURE_MODE, EXPOSURE_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_EXPOSURE_METERING_MODE,
-      g_param_spec_enum ("metering-mode", "Exposure Metering Mode",
-          "Camera exposure metering mode to use",
+  g_object_class_install_property (gobject_class,
+      PROP_EXPOSURE_METERING_MODE, g_param_spec_enum ("metering-mode",
+          "Exposure Metering Mode", "Camera exposure metering mode to use",
           GST_RPI_CAM_TYPE_RPI_CAM_SRC_EXPOSURE_METERING_MODE,
           EXPOSURE_METERING_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DRC,
-      g_param_spec_enum ("drc", "DRC level",
-          "Dynamic Range Control level",
+      g_param_spec_enum ("drc", "DRC level", "Dynamic Range Control level",
           GST_RPI_CAM_TYPE_RPI_CAM_SRC_DRC_LEVEL,
           GST_RPI_CAM_SRC_DRC_LEVEL_OFF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -299,12 +330,12 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_AWB_GAIN_RED,
       g_param_spec_float ("awb-gain-red", "AWB Red Gain",
-          "Manual AWB Gain for red channel when awb-mode=OFF",
-          0, 8.0, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Manual AWB Gain for red channel when awb-mode=OFF", 0, 8.0, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_AWB_GAIN_RED,
       g_param_spec_float ("awb-gain-blue", "AWB Blue Gain",
-          "Manual AWB Gain for blue channel when awb-mode=OFF",
-          0, 8.0, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Manual AWB Gain for blue channel when awb-mode=OFF", 0, 8.0, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_IMAGE_EFFECT,
       g_param_spec_enum ("image-effect", "Image effect",
           "Visual FX to apply to the image",
@@ -323,8 +354,9 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           "Flip capture horizontally", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_VFLIP,
-      g_param_spec_boolean ("vflip", "Vertical Flip", "Flip capture vertically",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("vflip", "Vertical Flip",
+          "Flip capture vertically", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ROI_X,
       g_param_spec_float ("roi-x", "ROI X",
           "Normalised region-of-interest X coord", 0, 1.0, 0,
@@ -341,30 +373,32 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
       g_param_spec_float ("roi-h", "ROI H",
           "Normalised region-of-interest H coord", 0, 1.0, 1.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_QUANTISATION_PARAMETER,
-      g_param_spec_int ("quantisation-parameter", "Quantisation Parameter",
+  g_object_class_install_property (gobject_class,
+      PROP_QUANTISATION_PARAMETER,
+      g_param_spec_int ("quantisation-parameter",
+          "Quantisation Parameter",
           "Set a Quantisation Parameter approx 10-40 with bitrate=0 for VBR encoding. 0 = off",
           0, G_MAXINT, QUANTISATION_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class, PROP_INLINE_HEADERS,
       g_param_spec_boolean ("inline-headers", "Inline Headers",
           "Set to TRUE to insert SPS/PPS before each IDR packet", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class, PROP_SHUTTER_SPEED,
       g_param_spec_int ("shutter-speed", "Shutter Speed",
-          "Set a fixed shutter speed, in microseconds. (0 = Auto)",
-          0, 6000000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+          "Set a fixed shutter speed, in microseconds. (0 = Auto)", 0,
+          6000000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SENSOR_MODE,
+      g_param_spec_enum ("sensor-mode", "Camera Sensor Mode",
+          "Manually set the camera sensor mode",
+          gst_rpi_cam_src_sensor_mode_get_type (),
+          GST_RPI_CAM_SRC_SENSOR_MODE_AUTOMATIC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   gst_element_class_set_static_metadata (gstelement_class,
-      "Raspberry Pi Camera Source",
-      "Source/Video",
+      "Raspberry Pi Camera Source", "Source/Video",
       "Raspberry Pi camera module source", "Jan Schmidt <jan@centricular.com>");
-
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&video_src_template));
-
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_start);
   basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_stop);
   basesrc_class->decide_allocation =
@@ -375,7 +409,6 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   basesrc_class->event = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_event);
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_send_event);
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_create);
-
   raspicapture_init ();
 }
 
@@ -385,10 +418,8 @@ gst_rpi_cam_src_init (GstRpiCamSrc * src)
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
   raspicapture_default_config (&src->capture_config);
-
   src->capture_config.intraperiod = KEYFRAME_INTERVAL_DEFAULT;
   src->capture_config.verbose = 1;
-
   /* do-timestamping by default for now. FIXME: Implement proper timestamping */
   gst_base_src_set_do_timestamp (GST_BASE_SRC (src), TRUE);
 }
@@ -398,7 +429,6 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
-
   switch (prop_id) {
     case PROP_CAMERA_NUMBER:
       src->capture_config.cameraNum = g_value_get_int (value);
@@ -506,7 +536,9 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.camera_parameters.drc_level =
           g_value_get_enum (value);
       break;
-
+    case PROP_SENSOR_MODE:
+      src->capture_config.sensor_mode = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -518,7 +550,6 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
-
   switch (prop_id) {
     case PROP_CAMERA_NUMBER:
       g_value_set_int (value, src->capture_config.cameraNum);
@@ -625,6 +656,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     case PROP_DRC:
       g_value_set_enum (value, src->capture_config.camera_parameters.drc_level);
       break;
+    case PROP_SENSOR_MODE:
+      g_value_set_enum (value, src->capture_config.sensor_mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -639,7 +673,6 @@ gst_rpi_cam_src_start (GstBaseSrc * parent)
   src->capture_state = raspi_capture_setup (&src->capture_config);
   if (src->capture_state == NULL)
     return FALSE;
-
   return TRUE;
 }
 
@@ -711,18 +744,14 @@ gst_rpi_cam_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (bsrc);
   GstCaps *caps;
-
   caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   if (src->capture_state == NULL)
     goto done;
-
   /* FIXME: Retrieve limiting parameters from the camera module, max width/height fps-range */
   caps = gst_caps_make_writable (caps);
-  gst_caps_set_simple (caps,
-      "width", GST_TYPE_INT_RANGE, 1, 1920,
-      "height", GST_TYPE_INT_RANGE, 1, 1080,
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 90, 1, NULL);
-
+  gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 1920, "height",
+      GST_TYPE_INT_RANGE, 1, 1080, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+      90, 1, NULL);
 done:
   GST_DEBUG_OBJECT (src, "get_caps returning %" GST_PTR_FORMAT, caps);
   return caps;
@@ -733,16 +762,13 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (bsrc);
   GstVideoInfo info;
-
   GST_DEBUG_OBJECT (src, "In set_caps %" GST_PTR_FORMAT, caps);
   if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
-
   src->capture_config.width = info.width;
   src->capture_config.height = info.height;
   src->capture_config.fps_n = info.fps_n;
   src->capture_config.fps_d = info.fps_d;
-
   return TRUE;
 }
 
@@ -758,14 +784,10 @@ gst_rpi_cam_src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 {
   GstStructure *structure;
   gint i;
-
   GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
-
   caps = gst_caps_make_writable (caps);
-
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     structure = gst_caps_get_structure (caps, i);
-
     /* Fixate to 1920x1080 resolution if possible */
     gst_structure_fixate_field_nearest_int (structure, "width", 1920);
     gst_structure_fixate_field_nearest_int (structure, "height", 1080);
@@ -774,9 +796,7 @@ gst_rpi_cam_src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
   }
 
   GST_DEBUG_OBJECT (basesrc, "fixated caps %" GST_PTR_FORMAT, caps);
-
   caps = GST_BASE_SRC_CLASS (parent_class)->fixate (basesrc, caps);
-
   return caps;
 }
 
@@ -785,7 +805,6 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (parent);
   GstFlowReturn ret;
-
   if (!src->started) {
     if (!raspi_capture_start (src->capture_state))
       return GST_FLOW_ERROR;
@@ -797,7 +816,6 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
   if (*buf)
     GST_LOG_OBJECT (src, "Made buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (*buf));
-
   return ret;
 }
 
@@ -805,20 +823,14 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
-
   GST_DEBUG_CATEGORY_INIT (gst_rpi_cam_src_debug, "rpicamsrc",
       0, "rpicamsrc debug");
-
   ret = gst_element_register (plugin, "rpicamsrc", GST_RANK_NONE,
       GST_TYPE_RPICAMSRC);
-
 #if GST_CHECK_VERSION (1,4,0)
-
   ret &= gst_device_provider_register (plugin, "rpicamsrcdeviceprovider",
       GST_RANK_PRIMARY, GST_TYPE_RPICAMSRC_DEVICE_PROVIDER);
-
 #endif
-
   return ret;
 }
 
