@@ -4586,7 +4586,37 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
       gst_rtspsrc_stream_push_event (src, ostream, event);
 
       if ((caps = stream_get_caps_for_pt (ostream, ostream->default_pt))) {
-        gst_rtspsrc_stream_push_event (src, ostream, gst_event_new_caps (caps));
+        /* only streams that have a connection to the outside world */
+        if (ostream->setup) {
+          if (ostream->udpsrc[0]) {
+            gst_element_send_event (ostream->udpsrc[0],
+                gst_event_new_caps (caps));
+          } else if (ostream->channelpad[0]) {
+            if (GST_PAD_IS_SRC (ostream->channelpad[0]))
+              gst_pad_push_event (ostream->channelpad[0],
+                  gst_event_new_caps (caps));
+            else
+              gst_pad_send_event (ostream->channelpad[0],
+                  gst_event_new_caps (caps));
+          }
+
+          gst_caps_unref (caps);
+          caps = gst_caps_new_empty_simple ("application/x-rtcp");
+
+          if (ostream->udpsrc[1]) {
+            gst_element_send_event (ostream->udpsrc[1],
+                gst_event_new_caps (caps));
+          } else if (ostream->channelpad[1]) {
+            if (GST_PAD_IS_SRC (ostream->channelpad[1]))
+              gst_pad_push_event (ostream->channelpad[1],
+                  gst_event_new_caps (caps));
+            else
+              gst_pad_send_event (ostream->channelpad[1],
+                  gst_event_new_caps (caps));
+          }
+        }
+
+        gst_caps_unref (caps);
       }
 
       /* Push a SEGMENT event if we don't have one pending, if we have one
