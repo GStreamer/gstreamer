@@ -1156,7 +1156,7 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
     res = gst_ffmpeg_pipe_open (&demux->ffpipe, AVIO_FLAG_READ, &iocontext);
 
   if (res < 0)
-    goto open_failed;
+    goto beach;
 
   demux->context = avformat_alloc_context ();
   demux->context->pb = iocontext;
@@ -1164,12 +1164,12 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "av_open_input returned %d", res);
   if (res < 0)
-    goto open_failed;
+    goto beach;
 
   res = gst_ffmpeg_av_find_stream_info (demux->context);
   GST_DEBUG_OBJECT (demux, "av_find_stream_info returned %d", res);
   if (res < 0)
-    goto no_info;
+    goto beach;
 
   n_streams = demux->context->nb_streams;
   GST_DEBUG_OBJECT (demux, "we have %d streams", n_streams);
@@ -1251,13 +1251,7 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   return TRUE;
 
   /* ERRORS */
-open_failed:
-  {
-    GST_ELEMENT_ERROR (demux, LIBRARY, FAILED, (NULL),
-        ("%s", gst_ffmpegdemux_averror (res)));
-    return FALSE;
-  }
-no_info:
+beach:
   {
     GST_ELEMENT_ERROR (demux, LIBRARY, FAILED, (NULL),
         ("%s", gst_ffmpegdemux_averror (res)));
