@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2013-2014 Jan Schmidt <jan@centricular.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -116,10 +116,13 @@ enum
   PROP_ROI_Y,
   PROP_ROI_W,
   PROP_ROI_H,
+  PROP_QUANTISATION_PARAMETER
 };
 
 #define BITRATE_DEFAULT 17000000        /* 17Mbit/s default for 1080p */
 #define BITRATE_HIGHEST 25000000
+
+#define QUANTISATION_DEFAULT 0
 
 #define SHARPNESS_DEFAULT 0
 #define CONTRAST_DEFAULT 0
@@ -153,7 +156,7 @@ enum
   "width = " GST_VIDEO_SIZE_RANGE ","             \
   "height = " GST_VIDEO_SIZE_RANGE ","            \
   "framerate = " GST_VIDEO_FPS_RANGE
-#define H264_CAPS 				\
+#define H264_CAPS               \
   "video/x-h264, "                              \
   "width = " GST_VIDEO_SIZE_RANGE ", "          \
   "height = " GST_VIDEO_SIZE_RANGE ", "         \
@@ -185,7 +188,8 @@ static GstCaps *gst_rpi_cam_src_get_caps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_rpi_cam_src_set_caps (GstBaseSrc * src, GstCaps * caps);
 static GstCaps *gst_rpi_cam_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 static gboolean gst_rpi_cam_src_event (GstBaseSrc * src, GstEvent * event);
-static gboolean gst_rpi_cam_src_send_event (GstElement * element, GstEvent * event);
+static gboolean gst_rpi_cam_src_send_event (GstElement * element,
+    GstEvent * event);
 
 static void
 gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
@@ -204,26 +208,27 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   gobject_class->get_property = gst_rpi_cam_src_get_property;
 
   g_object_class_install_property (gobject_class, PROP_BITRATE,
-      g_param_spec_int ("bitrate", "Bitrate", "Bitrate for encoding",
-          1, BITRATE_HIGHEST, BITRATE_DEFAULT,
+      g_param_spec_int ("bitrate", "Bitrate",
+          "Bitrate for encoding. 0 for VBR using quantisation-parameter", 0,
+          BITRATE_HIGHEST, BITRATE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_KEYFRAME_INTERVAL,
       g_param_spec_int ("keyframe-interval", "Keyframe Interface",
-          "Interval (in frames) between I frames. 0 = single-keyframe",
-          0, G_MAXINT, KEYFRAME_INTERVAL_DEFAULT,
+          "Interval (in frames) between I frames. 0 = single-keyframe", 0,
+          G_MAXINT, KEYFRAME_INTERVAL_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PREVIEW,
-      g_param_spec_boolean ("preview",
-          "Preview Window", "Display preview window overlay",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("preview", "Preview Window",
+          "Display preview window overlay", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
-      g_param_spec_boolean ("fullscreen",
-          "Fullscreen Preview", "Display preview window full screen",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("fullscreen", "Fullscreen Preview",
+          "Display preview window full screen", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PREVIEW_ENCODED,
-      g_param_spec_boolean ("preview-encoded",
-          "Preview Encoded", "Display encoder output in the preview",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("preview-encoded", "Preview Encoded",
+          "Display encoder output in the preview", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREVIEW_OPACITY,
       g_param_spec_int ("preview-opacity", "Preview Opacity",
           "Opacity to use for the preview window", 0, 255, 255,
@@ -305,6 +310,11 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_ROI_H,
       g_param_spec_float ("roi-h", "ROI H",
           "Normalised region-of-interest H coord", 0, 1.0, 1.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QUANTISATION_PARAMETER,
+      g_param_spec_int ("quantisation-parameter", "Quantisation Parameter",
+          "Set a Quantisation Parameter approx 10-40 with bitrate=0 for VBR encoding. 0 = off",
+          0, G_MAXINT, QUANTISATION_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -410,7 +420,8 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.camera_parameters.awbMode = g_value_get_enum (value);
       break;
     case PROP_IMAGE_EFFECT:
-      src->capture_config.camera_parameters.imageEffect = g_value_get_enum (value);
+      src->capture_config.camera_parameters.imageEffect =
+          g_value_get_enum (value);
       break;
     case PROP_HFLIP:
       src->capture_config.camera_parameters.hflip = g_value_get_boolean (value);
@@ -429,6 +440,9 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ROI_H:
       src->capture_config.camera_parameters.roi.h = g_value_get_float (value);
+      break;
+    case PROP_QUANTISATION_PARAMETER:
+      src->capture_config.quantisationParameter = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -501,7 +515,8 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, src->capture_config.camera_parameters.awbMode);
       break;
     case PROP_IMAGE_EFFECT:
-      g_value_set_enum (value, src->capture_config.camera_parameters.imageEffect);
+      g_value_set_enum (value,
+          src->capture_config.camera_parameters.imageEffect);
       break;
     case PROP_HFLIP:
       g_value_set_boolean (value,
@@ -522,6 +537,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ROI_H:
       g_value_set_float (value, src->capture_config.camera_parameters.roi.h);
+      break;
+    case PROP_QUANTISATION_PARAMETER:
+      g_value_set_int (value, src->capture_config.quantisationParameter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -568,12 +586,12 @@ gst_rpi_cam_src_send_event (GstElement * parent, GstEvent * event)
         }
         gst_event_unref (event);
       } else {
-        ret = GST_ELEMENT_CLASS (parent_class)->send_event(parent, event);
+        ret = GST_ELEMENT_CLASS (parent_class)->send_event (parent, event);
       }
       break;
     default:
-     ret = GST_ELEMENT_CLASS (parent_class)->send_event(parent, event);
-     break;
+      ret = GST_ELEMENT_CLASS (parent_class)->send_event (parent, event);
+      break;
   }
   return ret;
 }
@@ -594,12 +612,12 @@ gst_rpi_cam_src_event (GstBaseSrc * parent, GstEvent * event)
         }
         gst_event_unref (event);
       } else {
-        ret = GST_BASE_SRC_CLASS (parent_class)->event(parent, event);
+        ret = GST_BASE_SRC_CLASS (parent_class)->event (parent, event);
       }
       break;
     default:
-     ret = GST_BASE_SRC_CLASS (parent_class)->event(parent, event);
-     break;
+      ret = GST_BASE_SRC_CLASS (parent_class)->event (parent, event);
+      break;
   }
   return ret;
 }
