@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Jan Schmidt <jan@centricular.com>
+ * Copyright (c) 2013-2015 Jan Schmidt <jan@centricular.com>
 Portions:
 Copyright (c) 2013, Broadcom Europe Ltd
 Copyright (c) 2013, James Hughes
@@ -87,6 +87,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
 
+/// Annotate bitmask options
+/// Supplied by user on command line
+#define ANNOTATE_USER_TEXT          1
+/// Supplied by app using this module
+#define ANNOTATE_APP_TEXT           2
+/// Insert current date
+#define ANNOTATE_DATE_TEXT          4
+// Insert current time
+#define ANNOTATE_TIME_TEXT          8
+
+#define ANNOTATE_SHUTTER_SETTINGS   16
+#define ANNOTATE_CAF_SETTINGS       32
+#define ANNOTATE_GAIN_SETTINGS      64
+#define ANNOTATE_LENS_SETTINGS      128
+#define ANNOTATE_MOTION_SETTINGS    256
+#define ANNOTATE_FRAME_NUMBER       512
+#define ANNOTATE_BLACK_BACKGROUND   1024
 
 
 // There isn't actually a MMAL structure for the following, so make one
@@ -131,6 +148,14 @@ typedef struct
    int hflip;                 /// 0 or 1
    int vflip;                 /// 0 or 1
    PARAM_FLOAT_RECT_T  roi;   /// region of interest to use on the sensor. Normalised [0,1] values in the rect
+   int shutter_speed;         /// 0 = auto, otherwise the shutter speed in ms
+   float awb_gains_r;         /// AWB red gain
+   float awb_gains_b;         /// AWB blue gain
+   MMAL_PARAMETER_DRC_STRENGTH_T drc_level;  // Strength of Dynamic Range compression to apply
+   MMAL_BOOL_T stats_pass;    /// Stills capture statistics pass on/off
+   int enable_annotate;       /// Flag to enable the annotate, 0 = disabled, otherwise a bitmask of what needs to be displayed
+   char annotate_string[MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2]; /// String to use for annotate - overrides certain bitmask settings
+
 } RASPICAM_CAMERA_PARAMETERS;
 
 
@@ -160,11 +185,16 @@ int raspicamcontrol_set_video_stabilisation(MMAL_COMPONENT_T *camera, int vstabi
 int raspicamcontrol_set_exposure_compensation(MMAL_COMPONENT_T *camera, int exp_comp);
 int raspicamcontrol_set_exposure_mode(MMAL_COMPONENT_T *camera, MMAL_PARAM_EXPOSUREMODE_T mode);
 int raspicamcontrol_set_awb_mode(MMAL_COMPONENT_T *camera, MMAL_PARAM_AWBMODE_T awb_mode);
+int raspicamcontrol_set_awb_gains(MMAL_COMPONENT_T *camera, float r_gain, float b_gain);
 int raspicamcontrol_set_imageFX(MMAL_COMPONENT_T *camera, MMAL_PARAM_IMAGEFX_T imageFX);
 int raspicamcontrol_set_colourFX(MMAL_COMPONENT_T *camera, const MMAL_PARAM_COLOURFX_T *colourFX);
 int raspicamcontrol_set_rotation(MMAL_COMPONENT_T *camera, int rotation);
 int raspicamcontrol_set_flips(MMAL_COMPONENT_T *camera, int hflip, int vflip);
 int raspicamcontrol_set_ROI(MMAL_COMPONENT_T *camera, PARAM_FLOAT_RECT_T rect);
+int raspicamcontrol_set_shutter_speed(MMAL_COMPONENT_T *camera, int speed_ms);
+int raspicamcontrol_set_DRC(MMAL_COMPONENT_T *camera, MMAL_PARAMETER_DRC_STRENGTH_T strength);
+int raspicamcontrol_set_stats_pass(MMAL_COMPONENT_T *camera, int stats_pass);
+int raspicamcontrol_set_annotate(MMAL_COMPONENT_T *camera, const int bitmask, const char *string);
 
 //Individual getting functions
 int raspicamcontrol_get_saturation(MMAL_COMPONENT_T *camera);

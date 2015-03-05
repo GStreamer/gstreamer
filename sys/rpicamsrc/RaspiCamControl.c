@@ -118,6 +118,16 @@ static XREF_T metering_mode_map[] =
 
 static const int metering_mode_map_size = sizeof(metering_mode_map)/sizeof(metering_mode_map[0]);
 
+static XREF_T drc_mode_map[] =
+{
+   {"off",           MMAL_PARAMETER_DRC_STRENGTH_OFF},
+   {"low",           MMAL_PARAMETER_DRC_STRENGTH_LOW},
+   {"med",           MMAL_PARAMETER_DRC_STRENGTH_MEDIUM},
+   {"high",          MMAL_PARAMETER_DRC_STRENGTH_HIGH}
+};
+
+static const int drc_mode_map_size = sizeof(drc_mode_map)/sizeof(drc_mode_map[0]);
+
 
 #define CommandSharpness   0
 #define CommandContrast    1
@@ -126,7 +136,7 @@ static const int metering_mode_map_size = sizeof(metering_mode_map)/sizeof(meter
 #define CommandISO         4
 #define CommandVideoStab   5
 #define CommandEVComp      6
-#define CommandExposure  7
+#define CommandExposure    7
 #define CommandAWB         8
 #define CommandImageFX     9
 #define CommandColourFX    10
@@ -135,6 +145,11 @@ static const int metering_mode_map_size = sizeof(metering_mode_map)/sizeof(meter
 #define CommandHFlip       13
 #define CommandVFlip       14
 #define CommandROI         15
+#define CommandShutterSpeed 16
+#define CommandAwbGains    17
+#define CommandDRCLevel    18
+#define CommandStatsPass   19
+#define CommandAnnotate    20
 
 static COMMAND_LIST  cmdline_commands[] =
 {
@@ -143,7 +158,7 @@ static COMMAND_LIST  cmdline_commands[] =
    {CommandBrightness,  "-brightness","br", "Set image brightness (0 to 100)",  1},
    {CommandSaturation,  "-saturation","sa", "Set image saturation (-100 to 100)", 1},
    {CommandISO,         "-ISO",       "ISO","Set capture ISO",  1},
-   {CommandVideoStab,   "-vstab",     "vs", "Turn on video stablisation", 0},
+   {CommandVideoStab,   "-vstab",     "vs", "Turn on video stabilisation", 0},
    {CommandEVComp,      "-ev",        "ev", "Set EV compensation",  1},
    {CommandExposure,    "-exposure",  "ex", "Set exposure mode (see Notes)", 1},
    {CommandAWB,         "-awb",       "awb","Set AWB mode (see Notes)", 1},
@@ -153,7 +168,12 @@ static COMMAND_LIST  cmdline_commands[] =
    {CommandRotation,    "-rotation",  "rot","Set image rotation (0-359)", 1},
    {CommandHFlip,       "-hflip",     "hf", "Set horizontal flip", 0},
    {CommandVFlip,       "-vflip",     "vf", "Set vertical flip", 0},
-   {CommandROI,         "-roi",       "roi","Set region of interest (x,y,w,d as normalised coordinates [0.0-1.0])", 1}
+   {CommandROI,         "-roi",       "roi","Set region of interest (x,y,w,d as normalised coordinates [0.0-1.0])", 1},
+   {CommandShutterSpeed,"-shutter",   "ss", "Set shutter speed in microseconds", 1},
+   {CommandAwbGains,    "-awbgains",  "awbg", "Set AWB gains - AWB mode must be off", 1},
+   {CommandDRCLevel,    "-drc",       "drc", "Set DRC Level", 1},
+   {CommandStatsPass,   "-stats",     "st", "Force recomputation of statistics on stills capture pass"},
+   {CommandAnnotate,    "-annotate",  "a",  "Enable/Set annotate flags or text", 1},
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
@@ -521,6 +541,63 @@ int raspicamcontrol_parse_cmdline(RASPICAM_CAMERA_PARAMETERS *params, const char
       break;
    }
 
+   case CommandShutterSpeed : // Shutter speed needs single number parameter
+   {
+      sscanf(arg2, "%d", &params->shutter_speed);
+      used = 2;
+      break;
+   }
+
+   case CommandAwbGains :
+      {
+      double r,b;
+      int args;
+
+      args = sscanf(arg2, "%lf,%lf", &r,&b);
+
+      if (args != 2 || r > 8.0 || b > 8.0)
+      {
+         return 0;
+      }
+
+      params->awb_gains_r = r;
+      params->awb_gains_b = b;
+
+      used = 2;
+      break;
+      }
+
+   case CommandDRCLevel:
+   {
+      params->drc_level = drc_mode_from_string(arg2);
+      used = 2;
+      break;
+   }
+
+   case CommandStatsPass:
+   {
+      params->stats_pass = MMAL_TRUE;
+      used = 1;
+      break;
+   }
+
+   case CommandAnnotate:
+   {
+      // If parameter is a number, assume its a bitmask, otherwise a string
+      if (isdigit(*arg2))
+      {
+         sscanf(arg2, "%u", &params->enable_annotate);
+      }
+      else
+      {
+         params->enable_annotate = ANNOTATE_USER_TEXT;
+         strncpy(params->annotate_string, arg2, MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2);
+         params->annotate_string[MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2-1] = '\0';
+      }
+      used=2;
+      break;
+   }
+
    }
 
    return used;
@@ -563,6 +640,13 @@ void raspicamcontrol_display_help()
    for (i=1;i<metering_mode_map_size;i++)
    {
       fprintf(stderr, ",%s", metering_mode_map[i].mode);
+   }
+
+   fprintf(stderr, "\n\nDynamic Range Compression (DRC) options :\n%s", drc_mode_map[0].mode );
+
+   for (i=1;i<drc_mode_map_size;i++)
+   {
+      fprintf(stderr, ",%s", drc_mode_map[i].mode);
    }
 
    fprintf(stderr, "\n");
@@ -653,6 +737,13 @@ void raspicamcontrol_set_defaults(RASPICAM_CAMERA_PARAMETERS *params)
    params->hflip = params->vflip = 0;
    params->roi.x = params->roi.y = 0.0;
    params->roi.w = params->roi.h = 1.0;
+   params->shutter_speed = 0;          // 0 = auto
+   params->awb_gains_r = 0;      // Only have any function if AWB OFF is used.
+   params->awb_gains_b = 0;
+   params->drc_level = MMAL_PARAMETER_DRC_STRENGTH_OFF;
+   params->stats_pass = MMAL_FALSE;
+   params->enable_annotate = 0;
+   params->annotate_string[0] = '\0';
 }
 
 /**
@@ -706,12 +797,17 @@ int raspicamcontrol_set_all_parameters(MMAL_COMPONENT_T *camera, const RASPICAM_
    result += raspicamcontrol_set_exposure_mode(camera, params->exposureMode);
    result += raspicamcontrol_set_metering_mode(camera, params->exposureMeterMode);
    result += raspicamcontrol_set_awb_mode(camera, params->awbMode);
+   result += raspicamcontrol_set_awb_gains(camera, params->awb_gains_r, params->awb_gains_b);
    result += raspicamcontrol_set_imageFX(camera, params->imageEffect);
    result += raspicamcontrol_set_colourFX(camera, &params->colourEffects);
    //result += raspicamcontrol_set_thumbnail_parameters(camera, &params->thumbnailConfig);  TODO Not working for some reason
    result += raspicamcontrol_set_rotation(camera, params->rotation);
    result += raspicamcontrol_set_flips(camera, params->hflip, params->vflip);
    result += raspicamcontrol_set_ROI(camera, params->roi);
+   result += raspicamcontrol_set_shutter_speed(camera, params->shutter_speed);
+   result += raspicamcontrol_set_DRC(camera, params->drc_level);
+   result += raspicamcontrol_set_stats_pass(camera, params->stats_pass);
+   result += raspicamcontrol_set_annotate(camera, params->enable_annotate, params->annotate_string);
 
    return result;
 }
@@ -944,6 +1040,22 @@ int raspicamcontrol_set_awb_mode(MMAL_COMPONENT_T *camera, MMAL_PARAM_AWBMODE_T 
    return mmal_status_to_int(mmal_port_parameter_set(camera->control, &param.hdr));
 }
 
+int raspicamcontrol_set_awb_gains(MMAL_COMPONENT_T *camera, float r_gain, float b_gain)
+{
+   MMAL_PARAMETER_AWB_GAINS_T param = {{MMAL_PARAMETER_CUSTOM_AWB_GAINS,sizeof(param)}, {0,0}, {0,0}};
+
+   if (!camera)
+      return 1;
+
+   if (!r_gain || !b_gain)
+      return 0;
+
+   param.r_gain.num = (unsigned int)(r_gain * 65536);
+   param.b_gain.num = (unsigned int)(b_gain * 65536);
+   param.r_gain.den = param.b_gain.den = 65536;
+   return mmal_status_to_int(mmal_port_parameter_set(camera->control, &param.hdr));
+}
+
 /**
  * Set the image effect for the images
  * @param camera Pointer to camera component
@@ -1072,6 +1184,116 @@ int raspicamcontrol_set_ROI(MMAL_COMPONENT_T *camera, PARAM_FLOAT_RECT_T rect)
    crop.rect.height = (65536 * rect.h);
 
    return mmal_port_parameter_set(camera->control, &crop.hdr);
+}
+
+/**
+ * Adjust the exposure time used for images
+ * @param camera Pointer to camera component
+ * @param shutter speed in microseconds
+ * @return 0 if successful, non-zero if any parameters out of range
+ */
+int raspicamcontrol_set_shutter_speed(MMAL_COMPONENT_T *camera, int speed)
+{
+   if (!camera)
+      return 1;
+
+   return mmal_status_to_int(mmal_port_parameter_set_uint32(camera->control, MMAL_PARAMETER_SHUTTER_SPEED, speed));
+}
+
+/**
+ * Adjust the Dynamic range compression level
+ * @param camera Pointer to camera component
+ * @param strength Strength of DRC to apply
+ *        MMAL_PARAMETER_DRC_STRENGTH_OFF
+ *        MMAL_PARAMETER_DRC_STRENGTH_LOW
+ *        MMAL_PARAMETER_DRC_STRENGTH_MEDIUM
+ *        MMAL_PARAMETER_DRC_STRENGTH_HIGH
+ *
+ * @return 0 if successful, non-zero if any parameters out of range
+ */
+int raspicamcontrol_set_DRC(MMAL_COMPONENT_T *camera, MMAL_PARAMETER_DRC_STRENGTH_T strength)
+{
+   MMAL_PARAMETER_DRC_T drc = {{MMAL_PARAMETER_DYNAMIC_RANGE_COMPRESSION, sizeof(MMAL_PARAMETER_DRC_T)}, strength};
+
+   if (!camera)
+      return 1;
+
+   return mmal_status_to_int(mmal_port_parameter_set(camera->control, &drc.hdr));
+}
+
+int raspicamcontrol_set_stats_pass(MMAL_COMPONENT_T *camera, int stats_pass)
+{
+   if (!camera)
+      return 1;
+
+   return mmal_status_to_int(mmal_port_parameter_set_boolean(camera->control, MMAL_PARAMETER_CAPTURE_STATS_PASS, stats_pass));
+}
+
+
+/**
+ * Set the annotate data
+ * @param camera Pointer to camera component
+ * @param Bitmask of required annotation data. 0 for off.
+ * @param If set, a pointer to text string to use instead of bitmask, max length 32 characters
+ *
+ * @return 0 if successful, non-zero if any parameters out of range
+ */
+int raspicamcontrol_set_annotate(MMAL_COMPONENT_T *camera, const int settings, const char *string)
+{
+   MMAL_PARAMETER_CAMERA_ANNOTATE_V2_T annotate =
+      {{MMAL_PARAMETER_ANNOTATE, sizeof(MMAL_PARAMETER_CAMERA_ANNOTATE_V2_T)}};
+
+   if (settings)
+   {
+      time_t t = time(NULL);
+      struct tm tm = *localtime(&t);
+      char tmp[MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2];
+
+      annotate.enable = 1;
+
+      if (settings & (ANNOTATE_APP_TEXT | ANNOTATE_USER_TEXT))
+      {
+         strncpy(annotate.text, string, MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2);
+         annotate.text[MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2-1] = '\0';
+      }
+
+      if (settings & ANNOTATE_TIME_TEXT)
+      {
+         strftime(tmp, 32, "%X ", &tm );
+         strncat(annotate.text, tmp, MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2 - strlen(annotate.text) - 1);
+      }
+
+      if (settings & ANNOTATE_DATE_TEXT)
+      {
+         strftime(tmp, 32, "%x", &tm );
+         strncat(annotate.text, tmp, MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2 - strlen(annotate.text) - 1);
+      }
+
+      if (settings & ANNOTATE_SHUTTER_SETTINGS)
+         annotate.show_shutter = 1;
+
+      if (settings & ANNOTATE_GAIN_SETTINGS)
+         annotate.show_analog_gain = 1;
+
+      if (settings & ANNOTATE_LENS_SETTINGS)
+         annotate.show_lens = 1;
+
+      if (settings & ANNOTATE_CAF_SETTINGS)
+         annotate.show_caf = 1;
+
+      if (settings & ANNOTATE_MOTION_SETTINGS)
+         annotate.show_motion = 1;
+
+      if (settings & ANNOTATE_FRAME_NUMBER)
+         annotate.show_frame_num = 1;
+
+      if (settings & ANNOTATE_BLACK_BACKGROUND)
+         annotate.black_text_background = 1;
+   }
+   else
+      annotate.enable = 0;
+
+   return mmal_status_to_int(mmal_port_parameter_set(camera->control, &annotate.hdr));
 }
 
 

@@ -26,42 +26,31 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef RASPIPREVIEW_H_
-#define RASPIPREVIEW_H_
-
-/// Layer that preview window should be displayed on
-#define PREVIEW_LAYER      2
-
-// Frames rates of 0 implies variable, but denominator needs to be 1 to prevent div by 0
-#define PREVIEW_FRAME_RATE_NUM 0
-#define PREVIEW_FRAME_RATE_DEN 1
-
-#define FULL_RES_PREVIEW_FRAME_RATE_NUM 0
-#define FULL_RES_PREVIEW_FRAME_RATE_DEN 1
-
-#define FULL_FOV_PREVIEW_16x9_X 1280
-#define FULL_FOV_PREVIEW_16x9_Y 720
-
-#define FULL_FOV_PREVIEW_4x3_X 1296
-#define FULL_FOV_PREVIEW_4x3_Y 972
-
-#define FULL_FOV_PREVIEW_FRAME_RATE_NUM 0
-#define FULL_FOV_PREVIEW_FRAME_RATE_DEN 1
+#ifndef RASPICLI_H_
+#define RASPICLI_H_
 
 typedef struct
 {
-   int wantPreview;                       /// Display a preview
-   int wantFullScreenPreview;             /// 0 is use previewRect, non-zero to use full screen
-   int opacity;                           /// Opacity of window - 0 = transparent, 255 = opaque
-   MMAL_RECT_T previewWindow;             /// Destination rectangle for the preview window.
-   MMAL_COMPONENT_T *preview_component;   /// Pointer to the created preview display component
-} RASPIPREVIEW_PARAMETERS;
+   int id;
+   char *command;
+   char *abbrev;
+   char *help;
+   int num_parameters;
+} COMMAND_LIST;
 
-MMAL_STATUS_T raspipreview_create(RASPIPREVIEW_PARAMETERS *state);
-void raspipreview_destroy(RASPIPREVIEW_PARAMETERS *state);
-void raspipreview_set_defaults(RASPIPREVIEW_PARAMETERS *state);
-void raspipreview_dump_parameters(RASPIPREVIEW_PARAMETERS *state);
-int raspipreview_parse_cmdline(RASPIPREVIEW_PARAMETERS *params, const char *arg1, const char *arg2);
-void raspipreview_display_help();
+/// Cross reference structure, mode string against mode id
+typedef struct xref_t
+{
+   char *mode;
+   int mmal_mode;
+} XREF_T;
 
-#endif /* RASPIPREVIEW_H_ */
+
+void raspicli_display_help(const COMMAND_LIST *commands, const int num_commands);
+int raspicli_get_command_id(const COMMAND_LIST *commands, const int num_commands, const char *arg, int *num_parameters);
+
+int raspicli_map_xref(const char *str, const XREF_T *map, int num_refs);
+const char *raspicli_unmap_xref(const int en, const XREF_T *map, int num_refs);
+
+
+#endif

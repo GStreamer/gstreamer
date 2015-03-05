@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2013 Jan Schmidt <jan@centricular.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -66,7 +66,7 @@ G_BEGIN_DECLS
 typedef struct
 {
    int verbose; /// !0 if want detailed run information
-   
+
    int timeout;                        /// Time taken before frame is grabbed and app then shuts down. Units are milliseconds
    int width;                          /// Requested width of image
    int height;                         /// requested height of image
@@ -74,6 +74,8 @@ typedef struct
    int fps_n;                      /// Requested frame rate (fps) numerator
    int fps_d;                      /// Requested frame rate (fps) denominator
    int intraperiod;                    /// Intra-refresh period (key frame rate)
+   int quantisationParameter;          /// Quantisation parameter - quality. Set bitrate 0 and set this for variable bitrate
+   int bInlineHeaders;                  /// Insert inline headers to stream (SPS, PPS)
    int demoMode;                       /// Run app in demo mode
    int demoInterval;                   /// Interval between camera settings changes
    int immutableInput;                 /// Flag to specify whether encoder works in place or creates a new buffer. Result is preview can display either
@@ -81,6 +83,13 @@ typedef struct
    int profile;                        /// H264 profile to use for encoding
    RASPIPREVIEW_PARAMETERS preview_parameters;   /// Preview setup parameters
    RASPICAM_CAMERA_PARAMETERS camera_parameters; /// Camera setup parameters
+
+   int inlineMotionVectors;             /// Encoder outputs inline Motion Vectors
+
+   int cameraNum;                       /// Camera number
+   int settings;                        /// Request settings from the camera
+   int sensor_mode;                     /// Sensor mode. 0=auto. Check docs/forum for modes selected by other values.
+   int intra_refresh_type;              /// What intra refresh type to use. -1 to not set.
 } RASPIVID_CONFIG;
 
 typedef struct RASPIVID_STATE_T RASPIVID_STATE;

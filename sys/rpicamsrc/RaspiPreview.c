@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Jan Schmidt <jan@centricular.com>
+ * Copyright (c) 2013-2015 Jan Schmidt <jan@centricular.com>
 Portions:
 Copyright (c) 2013, Broadcom Europe Ltd
 Copyright (c) 2013, James Hughes
