@@ -722,13 +722,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       }
 
       glimage_sink->window_id = 0;
-      //but do not reset glimage_sink->new_window_id
-
-      if (glimage_sink->pool) {
-        gst_buffer_pool_set_active (glimage_sink->pool, FALSE);
-        gst_object_unref (glimage_sink->pool);
-        glimage_sink->pool = NULL;
-      }
+      /* but do not reset glimage_sink->new_window_id */
 
       GST_VIDEO_SINK_WIDTH (glimage_sink) = 1;
       GST_VIDEO_SINK_HEIGHT (glimage_sink) = 1;
@@ -830,8 +824,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gint display_par_n, display_par_d;
   guint display_ratio_num, display_ratio_den;
   GstVideoInfo vinfo;
-  GstStructure *structure;
-  GstBufferPool *newpool, *oldpool;
   GstCapsFeatures *gl_features;
   GstCaps *uploaded_caps;
 
@@ -895,24 +887,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   glimage_sink->info = vinfo;
   if (!_ensure_gl_setup (glimage_sink))
     return FALSE;
-
-  newpool = gst_gl_buffer_pool_new (glimage_sink->context);
-  structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set_params (structure, caps, vinfo.size, 2, 0);
-  gst_buffer_pool_set_config (newpool, structure);
-
-  oldpool = glimage_sink->pool;
-  /* we don't activate the pool yet, this will be done by downstream after it
-   * has configured the pool. If downstream does not want our pool we will
-   * activate it when we render into it */
-  glimage_sink->pool = newpool;
-
-  /* unref the old sink */
-  if (oldpool) {
-    /* we don't deactivate, some elements might still be using it, it will
-     * be deactivated when the last ref is gone */
-    gst_object_unref (oldpool);
-  }
 
   if (glimage_sink->upload)
     gst_object_unref (glimage_sink->upload);
@@ -1133,7 +1107,6 @@ static gboolean
 gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (bsink);
-  GstBufferPool *pool;
   GstStructure *config;
   GstCaps *caps;
   guint size;
@@ -1147,47 +1120,45 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (caps == NULL)
     goto no_caps;
 
-  if ((pool = glimage_sink->pool))
-    gst_object_ref (pool);
-
-  if (pool != NULL) {
-    GstCaps *pcaps;
-
-    /* we had a pool, check caps */
-    GST_DEBUG_OBJECT (glimage_sink, "check existing pool caps");
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
-
-    if (!gst_caps_is_equal (caps, pcaps)) {
-      GST_DEBUG_OBJECT (glimage_sink, "pool has different caps");
-      /* different caps, we can't use this pool */
-      gst_object_unref (pool);
-      pool = NULL;
-    }
-    gst_structure_free (config);
-  }
-
-  if (pool == NULL && need_pool) {
+  if (need_pool) {
     GstVideoInfo info;
 
     if (!gst_video_info_from_caps (&info, caps))
       goto invalid_caps;
 
-    GST_DEBUG_OBJECT (glimage_sink, "create new pool");
-    pool = gst_gl_buffer_pool_new (glimage_sink->context);
-
     /* the normal size of a frame */
     size = info.size;
 
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
-  }
-  /* we need at least 2 buffer because we hold on to the last one */
-  if (pool) {
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
-    gst_object_unref (pool);
+    if (glimage_sink->pool) {
+      GstCaps *pcaps;
+
+      /* we had a pool, check caps */
+      GST_DEBUG_OBJECT (glimage_sink, "check existing pool caps");
+      config = gst_buffer_pool_get_config (glimage_sink->pool);
+      gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+
+      if (!gst_caps_is_equal (caps, pcaps)) {
+        GST_DEBUG_OBJECT (glimage_sink, "pool has different caps");
+        /* different caps, we can't use this pool */
+        gst_object_unref (glimage_sink->pool);
+        glimage_sink->pool = NULL;
+      }
+      gst_structure_free (config);
+    }
+
+    if (glimage_sink->pool == NULL) {
+      GST_DEBUG_OBJECT (glimage_sink, "create new pool");
+
+      glimage_sink->pool = gst_gl_buffer_pool_new (glimage_sink->context);
+      config = gst_buffer_pool_get_config (glimage_sink->pool);
+      gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+
+      if (!gst_buffer_pool_set_config (glimage_sink->pool, config))
+        goto config_failed;
+    }
+
+    /* we need at least 2 buffer because we hold on to the last one */
+    gst_query_add_allocation_pool (query, glimage_sink->pool, size, 2, 0);
   }
 
   gst_gl_upload_propose_allocation (glimage_sink->upload, NULL, query);
@@ -1200,17 +1171,17 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   /* ERRORS */
 no_caps:
   {
-    GST_DEBUG_OBJECT (bsink, "no caps specified");
+    GST_WARNING_OBJECT (bsink, "no caps specified");
     return FALSE;
   }
 invalid_caps:
   {
-    GST_DEBUG_OBJECT (bsink, "invalid caps specified");
+    GST_WARNING_OBJECT (bsink, "invalid caps specified");
     return FALSE;
   }
 config_failed:
   {
-    GST_DEBUG_OBJECT (bsink, "failed setting config");
+    GST_WARNING_OBJECT (bsink, "failed setting config");
     return FALSE;
   }
 }
