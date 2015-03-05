@@ -286,6 +286,12 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           GST_RPI_CAM_TYPE_RPI_CAM_SRC_EXPOSURE_METERING_MODE,
           EXPOSURE_METERING_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DRC,
+      g_param_spec_enum ("drc", "DRC level",
+          "Dynamic Range Control level",
+          GST_RPI_CAM_TYPE_RPI_CAM_SRC_DRC_LEVEL,
+          GST_RPI_CAM_SRC_DRC_LEVEL_OFF,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_AWB_MODE,
       g_param_spec_enum ("awb-mode", "Automatic White Balance Mode",
           "White Balance mode", GST_RPI_CAM_TYPE_RPI_CAM_SRC_AWB_MODE,
@@ -496,6 +502,11 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.camera_parameters.shutter_speed =
           g_value_get_int (value);
       break;
+    case PROP_DRC:
+      src->capture_config.camera_parameters.drc_level =
+          g_value_get_enum (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -610,6 +621,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     case PROP_SHUTTER_SPEED:
       g_value_set_int (value,
           src->capture_config.camera_parameters.shutter_speed);
+      break;
+    case PROP_DRC:
+      g_value_set_enum (value, src->capture_config.camera_parameters.drc_level);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
