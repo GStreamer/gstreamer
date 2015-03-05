@@ -444,12 +444,12 @@ gst_directsound_sink_prepare (GstAudioSink * asink,
         gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->buffer_time,
         GST_MSECOND);
     /* Make sure we make those numbers multiple of our sample size in bytes */
-    dsoundsink->buffer_size += dsoundsink->buffer_size % spec->info.bpf;
+    dsoundsink->buffer_size -= dsoundsink->buffer_size % spec->info.bpf;
 
     spec->segsize =
         gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->latency_time,
         GST_MSECOND);
-    spec->segsize += spec->segsize % spec->info.bpf;
+    spec->segsize -= spec->segsize % spec->info.bpf;
     spec->segtotal = dsoundsink->buffer_size / spec->segsize;
   } else {
 #ifdef WAVE_FORMAT_DOLBY_AC3_SPDIF
