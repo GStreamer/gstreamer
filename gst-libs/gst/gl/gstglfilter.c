@@ -268,6 +268,11 @@ gst_gl_filter_reset (GstGLFilter * filter)
     filter->uploaded_buffer = NULL;
   }
 
+  if (filter->pool) {
+    gst_object_unref (filter->pool);
+    filter->pool = NULL;
+  }
+
   if (filter->context) {
     if (filter_class->onReset)
       filter_class->onReset (filter);
@@ -276,7 +281,7 @@ gst_gl_filter_reset (GstGLFilter * filter)
       gst_gl_context_thread_add (filter->context, gst_gl_filter_stop_gl,
           filter);
     }
-    //blocking call, delete the FBO
+    /* blocking call, delete the FBO */
     if (filter->fbo != 0) {
       gst_gl_context_del_fbo (filter->context, filter->fbo,
           filter->depthbuffer);
@@ -907,9 +912,8 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   GstGLFilter *filter = GST_GL_FILTER (trans);
-  GstBufferPool *pool;
   GstStructure *config;
-  GstCaps *caps, *decide_caps;
+  GstCaps *caps;
   guint size;
   gboolean need_pool;
 
@@ -918,64 +922,44 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
   if (caps == NULL)
     goto no_caps;
 
-  if ((pool = filter->pool))
-    gst_object_ref (pool);
+  if (need_pool) {
+    if (filter->pool) {
+      GstCaps *pcaps;
 
-  if (pool != NULL) {
-    GstCaps *pcaps;
+      /* we had a pool, check caps */
+      GST_DEBUG_OBJECT (filter, "check existing pool caps");
+      config = gst_buffer_pool_get_config (filter->pool);
+      gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
 
-    /* we had a pool, check caps */
-    GST_DEBUG_OBJECT (filter, "check existing pool caps");
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
-
-    if (!gst_caps_is_equal (caps, pcaps)) {
-      GST_DEBUG_OBJECT (filter, "pool has different caps");
-      /* different caps, we can't use this pool */
-      gst_object_unref (pool);
-      pool = NULL;
-    }
-    gst_structure_free (config);
-  }
-
-  if (pool == NULL && need_pool) {
-    GstVideoInfo info;
-    GstBufferPool *decide_pool = NULL;
-
-    if (!gst_video_info_from_caps (&info, caps))
-      goto invalid_caps;
-
-    if (decide_query) {
-      gst_query_parse_allocation (decide_query, &decide_caps, NULL);
-      decide_pool = gst_base_transform_get_buffer_pool (trans);
-    }
-
-    if (decide_pool && GST_IS_GL_BUFFER_POOL (decide_pool)
-        && gst_caps_is_equal_fixed (decide_caps, caps)) {
-      config = gst_buffer_pool_get_config (decide_pool);
-      gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+      if (!gst_caps_is_equal (caps, pcaps)) {
+        GST_DEBUG_OBJECT (filter, "pool has different caps");
+        /* different caps, we can't use this pool */
+        gst_object_unref (filter->pool);
+        filter->pool = NULL;
+      }
       gst_structure_free (config);
+    }
 
-      pool = decide_pool;
-    } else {
-      GST_DEBUG_OBJECT (filter, "create new pool");
-      if (decide_pool)
-        gst_object_unref (decide_pool);
-      pool = gst_gl_buffer_pool_new (filter->context);
+    if (filter->pool == NULL) {
+      GstVideoInfo info;
+
+      if (!gst_video_info_from_caps (&info, caps))
+        goto invalid_caps;
 
       /* the normal size of a frame */
       size = info.size;
 
-      config = gst_buffer_pool_get_config (pool);
+      GST_DEBUG_OBJECT (filter, "create new pool");
+      filter->pool = gst_gl_buffer_pool_new (filter->context);
+
+      config = gst_buffer_pool_get_config (filter->pool);
       gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-      if (!gst_buffer_pool_set_config (pool, config))
+
+      if (!gst_buffer_pool_set_config (filter->pool, config))
         goto config_failed;
     }
-  }
-  /* we need at least 2 buffer because we hold on to the last one */
-  if (pool) {
-    gst_query_add_allocation_pool (query, pool, size, 1, 0);
-    gst_object_unref (pool);
+
+    gst_query_add_allocation_pool (query, filter->pool, size, 1, 0);
   }
 
   if (!_ensure_input_chain (filter))
