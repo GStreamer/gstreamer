@@ -125,7 +125,8 @@ enum
   PROP_SENSOR_MODE,
   PROP_DRC,
   PROP_ANNOTATION_MODE,
-  PROP_ANNOTATION_TEXT
+  PROP_ANNOTATION_TEXT,
+  PROP_INTRA_REFRESH_TYPE
 };
 
 #define CAMERA_DEFAULT 0
@@ -142,7 +143,7 @@ enum
 #define ISO_DEFAULT 0
 #define VIDEO_STABILISATION_DEFAULT FALSE
 #define EXPOSURE_COMPENSATION_DEFAULT 0
-#define KEYFRAME_INTERVAL_DEFAULT 25
+#define KEYFRAME_INTERVAL_DEFAULT -1
 
 #define EXPOSURE_MODE_DEFAULT GST_RPI_CAM_SRC_EXPOSURE_MODE_AUTO
 #define EXPOSURE_METERING_MODE_DEFAULT GST_RPI_CAM_SRC_EXPOSURE_METERING_MODE_AVERAGE
@@ -261,8 +262,8 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_KEYFRAME_INTERVAL,
       g_param_spec_int ("keyframe-interval", "Keyframe Interface",
-          "Interval (in frames) between I frames. 0 = single-keyframe", 0,
-          G_MAXINT, KEYFRAME_INTERVAL_DEFAULT,
+          "Interval (in frames) between I frames. -1 = automatic, 0 = single-keyframe",
+          -1, G_MAXINT, KEYFRAME_INTERVAL_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PREVIEW,
       g_param_spec_boolean ("preview", "Preview Window",
@@ -276,52 +277,50 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
       g_param_spec_boolean ("preview-encoded", "Preview Encoded",
           "Display encoder output in the preview", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_PREVIEW_OPACITY, g_param_spec_int ("preview-opacity",
-          "Preview Opacity", "Opacity to use for the preview window", 0,
-          255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREVIEW_OPACITY,
+      g_param_spec_int ("preview-opacity", "Preview Opacity",
+          "Opacity to use for the preview window", 0, 255, 255,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHARPNESS,
       g_param_spec_int ("sharpness", "Sharpness", "Image capture sharpness",
           -100, 100, SHARPNESS_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CONTRAST,
-      g_param_spec_int ("contrast", "Contrast", "Image capture contrast",
-          -100, 100, CONTRAST_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("contrast", "Contrast", "Image capture contrast", -100,
+          100, CONTRAST_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BRIGHTNESS,
-      g_param_spec_int ("brightness", "Brightness",
-          "Image capture brightness", 0, 100, BRIGHTNESS_DEFAULT,
+      g_param_spec_int ("brightness", "Brightness", "Image capture brightness",
+          0, 100, BRIGHTNESS_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SATURATION,
-      g_param_spec_int ("saturation", "Saturation",
-          "Image capture saturation", -100, 100, SATURATION_DEFAULT,
+      g_param_spec_int ("saturation", "Saturation", "Image capture saturation",
+          -100, 100, SATURATION_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ISO,
-      g_param_spec_int ("iso", "ISO", "ISO value to use (0 = Auto)", 0,
-          3200, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("iso", "ISO", "ISO value to use (0 = Auto)", 0, 3200, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_VIDEO_STABILISATION,
       g_param_spec_boolean ("video-stabilisation", "Video Stabilisation",
           "Enable or disable video stabilisation", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class,
-      PROP_EXPOSURE_COMPENSATION, g_param_spec_int ("exposure-compensation",
-          "EV compensation", "Exposure Value compensation", -10, 10, 0,
+  g_object_class_install_property (gobject_class, PROP_EXPOSURE_COMPENSATION,
+      g_param_spec_int ("exposure-compensation", "EV compensation",
+          "Exposure Value compensation", -10, 10, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_EXPOSURE_MODE,
       g_param_spec_enum ("exposure-mode", "Exposure Mode",
           "Camera exposure mode to use",
           GST_RPI_CAM_TYPE_RPI_CAM_SRC_EXPOSURE_MODE, EXPOSURE_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class,
-      PROP_EXPOSURE_METERING_MODE, g_param_spec_enum ("metering-mode",
-          "Exposure Metering Mode", "Camera exposure metering mode to use",
+  g_object_class_install_property (gobject_class, PROP_EXPOSURE_METERING_MODE,
+      g_param_spec_enum ("metering-mode", "Exposure Metering Mode",
+          "Camera exposure metering mode to use",
           GST_RPI_CAM_TYPE_RPI_CAM_SRC_EXPOSURE_METERING_MODE,
           EXPOSURE_METERING_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DRC,
       g_param_spec_enum ("drc", "DRC level", "Dynamic Range Control level",
-          GST_RPI_CAM_TYPE_RPI_CAM_SRC_DRC_LEVEL,
-          GST_RPI_CAM_SRC_DRC_LEVEL_OFF,
+          GST_RPI_CAM_TYPE_RPI_CAM_SRC_DRC_LEVEL, GST_RPI_CAM_SRC_DRC_LEVEL_OFF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_AWB_MODE,
       g_param_spec_enum ("awb-mode", "Automatic White Balance Mode",
@@ -403,6 +402,12 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
       g_param_spec_string ("annotation-text", "Annotation Text",
           "Text string to annotate onto video when annotation-mode flags include 'custom-text'",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_INTRA_REFRESH_TYPE,
+      g_param_spec_enum ("intra-refresh-type", "Intra Refresh Type",
+          "Type of Intra Refresh to use, -1 to disable intra refresh",
+          GST_RPI_CAM_TYPE_RPI_CAM_SRC_INTRA_REFRESH_TYPE,
+          GST_RPI_CAM_SRC_INTRA_REFRESH_TYPE_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Raspberry Pi Camera Source", "Source/Video",
@@ -550,12 +555,19 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.sensor_mode = g_value_get_enum (value);
       break;
     case PROP_ANNOTATION_MODE:
-      src->capture_config.camera_parameters.enable_annotate = g_value_get_flags (value);
+      src->capture_config.camera_parameters.enable_annotate =
+          g_value_get_flags (value);
       break;
     case PROP_ANNOTATION_TEXT:
       strncpy (src->capture_config.camera_parameters.annotate_string,
           g_value_get_string (value), MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2);
-      src->capture_config.camera_parameters.annotate_string[MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2 - 1] = '\0';
+      src->capture_config.
+          camera_parameters.annotate_string[MMAL_CAMERA_ANNOTATE_MAX_TEXT_LEN_V2
+          - 1] = '\0';
+      break;
+    case PROP_INTRA_REFRESH_TYPE:
+      src->capture_config.intra_refresh_type =
+          g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -678,10 +690,16 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, src->capture_config.sensor_mode);
       break;
     case PROP_ANNOTATION_MODE:
-      g_value_set_flags (value, src->capture_config.camera_parameters.enable_annotate);
+      g_value_set_flags (value,
+          src->capture_config.camera_parameters.enable_annotate);
       break;
     case PROP_ANNOTATION_TEXT:
-      g_value_set_string (value, src->capture_config.camera_parameters.annotate_string);
+      g_value_set_string (value,
+          src->capture_config.camera_parameters.annotate_string);
+      break;
+    case PROP_INTRA_REFRESH_TYPE:
+      g_value_set_enum (value,
+          src->capture_config.intra_refresh_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
