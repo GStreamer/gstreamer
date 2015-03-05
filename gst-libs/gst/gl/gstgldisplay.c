@@ -272,9 +272,10 @@ gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
 
   g_return_if_fail (context != NULL);
 
-  GST_CAT_LOG (gst_context,
-      "setting GstGLDisplay(%" GST_PTR_FORMAT ") on context(%" GST_PTR_FORMAT
-      ")", display, context);
+  if (display)
+    GST_CAT_LOG (gst_context,
+        "setting GstGLDisplay(%" GST_PTR_FORMAT ") on context(%" GST_PTR_FORMAT
+        ")", display, context);
 
   s = gst_context_writable_structure (context);
   gst_structure_set (s, GST_GL_DISPLAY_CONTEXT_TYPE, GST_TYPE_GL_DISPLAY,
