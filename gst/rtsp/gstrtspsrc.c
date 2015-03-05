@@ -4600,7 +4600,6 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
                   gst_event_new_caps (caps));
           }
 
-          gst_caps_unref (caps);
           caps = gst_caps_new_empty_simple ("application/x-rtcp");
 
           if (ostream->udpsrc[1]) {
@@ -4615,8 +4614,6 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
                   gst_event_new_caps (caps));
           }
         }
-
-        gst_caps_unref (caps);
       }
 
       /* Push a SEGMENT event if we don't have one pending, if we have one
