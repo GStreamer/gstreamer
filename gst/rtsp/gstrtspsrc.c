@@ -4564,11 +4564,14 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     gchar *uri;
     GList *streams;
     guint group_id = gst_util_group_id_next ();
+    GstSegment segment;
 
     /* generate an SHA256 sum of the URI */
     cs = g_checksum_new (G_CHECKSUM_SHA256);
     uri = src->conninfo.location;
     g_checksum_update (cs, (const guchar *) uri, strlen (uri));
+
+    gst_segment_init (&segment, GST_FORMAT_TIME);
 
     for (streams = src->streams; streams; streams = g_list_next (streams)) {
       GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
@@ -4585,6 +4588,13 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
       if ((caps = stream_get_caps_for_pt (ostream, ostream->default_pt))) {
         gst_rtspsrc_stream_push_event (src, ostream, gst_event_new_caps (caps));
       }
+
+      /* Push a SEGMENT event if we don't have one pending, if we have one
+       * pending we will just send that one a few lines below to all pads
+       */
+      if (!src->start_segment)
+        gst_rtspsrc_stream_push_event (src, ostream,
+            gst_event_new_segment (&segment));
     }
     g_checksum_free (cs);
 
