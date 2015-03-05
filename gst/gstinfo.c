@@ -1006,7 +1006,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   if (object) {
     obj = gst_debug_print_object (object);
   } else {
-    obj = g_strdup ("");
+    obj = (gchar *) "";
   }
 
   elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
@@ -1089,7 +1089,8 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 #undef PRINT_FMT
   }
 
-  g_free (obj);
+  if (object != NULL)
+    g_free (obj);
 }
 
 /**
