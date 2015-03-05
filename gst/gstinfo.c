@@ -495,11 +495,6 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   g_return_if_fail (function != NULL);
   g_return_if_fail (format != NULL);
 
-  /* The predefined macro __FILE__ is always the exact path given to the
-   * compiler with MSVC, which may or may not be the basename.  We work
-   * around it at runtime to improve the readability. */
-  file = gst_path_basename (file);
-
   message.message = NULL;
   message.format = format;
   G_VA_COPY (message.arguments, args);
@@ -991,9 +986,19 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gchar *obj = NULL;
   GstDebugColorMode color_mode;
   FILE *log_file = user_data ? user_data : stderr;
+  gchar c;
 
   if (level > gst_debug_category_get_threshold (category))
     return;
+
+  /* __FILE__ might be a file name or an absolute path or a
+   * relative path, irrespective of the exact compiler used,
+   * in which case we want to shorten it to the filename for
+   * readability. */
+  c = file[0];
+  if (c == '.' || c == '/' || c == '\\' || (c != '\0' && file[1] == ':')) {
+    file = gst_path_basename (file);
+  }
 
   pid = getpid ();
   color_mode = gst_debug_get_color_mode ();
