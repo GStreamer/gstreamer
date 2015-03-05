@@ -356,7 +356,7 @@ gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       }
     }
   }
-  if (filter->cvTemplateImage && filter->cvImage && filter->cvDistImage) {
+  if (filter->cvTemplateImage && filter->cvDistImage) {
     GstStructure *s;
 
     gst_template_match_match (filter->cvImage, filter->cvTemplateImage,
