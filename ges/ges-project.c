@@ -764,8 +764,6 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
         return NULL;
 
       g_clear_error (error);
-      if (error)
-        *error = NULL;
 
       id = possible_id;
     }
