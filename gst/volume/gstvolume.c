@@ -250,10 +250,14 @@ volume_update_volume (GstVolume * self, const GstAudioInfo * info,
     self->current_mute = FALSE;
     self->current_volume = volume;
 
-    self->current_vol_i8 = volume * VOLUME_UNITY_INT8;
-    self->current_vol_i16 = volume * VOLUME_UNITY_INT16;
-    self->current_vol_i24 = volume * VOLUME_UNITY_INT24;
-    self->current_vol_i32 = volume * VOLUME_UNITY_INT32;
+    self->current_vol_i8 =
+        (gint) ((gdouble) volume * (gdouble) VOLUME_UNITY_INT8);
+    self->current_vol_i16 =
+        (gint) ((gdouble) volume * (gdouble) VOLUME_UNITY_INT16);
+    self->current_vol_i24 =
+        (gint) ((gdouble) volume * (gdouble) VOLUME_UNITY_INT24);
+    self->current_vol_i32 =
+        (gint) ((gdouble) volume * (gdouble) VOLUME_UNITY_INT32);
 
     passthrough = (self->current_vol_i16 == VOLUME_UNITY_INT16);
   }
