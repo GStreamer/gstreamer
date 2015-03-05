@@ -3881,26 +3881,31 @@ setup_scale (GstVideoConverter * convert)
     if (is_merge_yuv (in_info)) {
       GstVideoScaler *y_scaler, *uv_scaler;
 
-      y_scaler = gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_Y,
-              in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
-              GST_VIDEO_COMP_Y, out_width), convert->config);
-      uv_scaler =
-          gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_U,
-              in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
-              GST_VIDEO_COMP_U, out_width), convert->config);
+      if (in_width != out_width) {
+        y_scaler =
+            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_Y,
+                in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
+                GST_VIDEO_COMP_Y, out_width), convert->config);
+        uv_scaler =
+            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_U,
+                in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
+                GST_VIDEO_COMP_U, out_width), convert->config);
 
-      convert->fh_scaler[0] =
-          gst_video_scaler_combine_packed_YUV (y_scaler, uv_scaler,
-          in_format, out_format);
+        convert->fh_scaler[0] =
+            gst_video_scaler_combine_packed_YUV (y_scaler, uv_scaler,
+            in_format, out_format);
+
+        gst_video_scaler_free (y_scaler);
+        gst_video_scaler_free (uv_scaler);
+      } else
+        convert->fh_scaler[0] = NULL;
 
       pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, GST_VIDEO_COMP_Y);
       convert->fin_x[0] = GST_ROUND_UP_2 (convert->in_x) * pstride;
       convert->fout_x[0] = GST_ROUND_UP_2 (convert->out_x) * pstride;
 
-      gst_video_scaler_free (y_scaler);
-      gst_video_scaler_free (uv_scaler);
     } else {
       if (in_width != out_width && in_width != 0 && out_width != 0)
         convert->fh_scaler[0] =
