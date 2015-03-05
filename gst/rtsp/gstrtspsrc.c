@@ -6523,7 +6523,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
           break;
       }
 
-      if (stream->container || (!src->interleaved && !retry)) {
+      if (!src->interleaved || !retry) {
         /* now configure the stream with the selected transport */
         if (!gst_rtspsrc_stream_configure_transport (stream, &transport)) {
           GST_DEBUG_OBJECT (src,
