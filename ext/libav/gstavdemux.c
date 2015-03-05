@@ -1155,6 +1155,9 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   else
     res = gst_ffmpeg_pipe_open (&demux->ffpipe, AVIO_FLAG_READ, &iocontext);
 
+  if (res < 0)
+    goto open_failed;
+
   demux->context = avformat_alloc_context ();
   demux->context->pb = iocontext;
   res = avformat_open_input (&demux->context, NULL, oclass->in_plugin, NULL);
