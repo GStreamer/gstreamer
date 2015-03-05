@@ -107,8 +107,8 @@ enum
   PROP_EXPOSURE_MODE,
   PROP_EXPOSURE_METERING_MODE,
   PROP_AWB_MODE,
-  PROP_AWB_GAIN_B,
-  PROP_AWB_GAIN_G,
+  PROP_AWB_GAIN_RED,
+  PROP_AWB_GAIN_BLUE,
   PROP_IMAGE_EFFECT,
   PROP_IMAGE_EFFECT_PARAMS,
   PROP_COLOUR_EFFECTS,
@@ -291,6 +291,14 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           "White Balance mode", GST_RPI_CAM_TYPE_RPI_CAM_SRC_AWB_MODE,
           GST_RPI_CAM_SRC_AWB_MODE_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_AWB_GAIN_RED,
+      g_param_spec_float ("awb-gain-red", "AWB Red Gain",
+          "Manual AWB Gain for red channel when awb-mode=OFF",
+          0, 8.0, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_AWB_GAIN_RED,
+      g_param_spec_float ("awb-gain-blue", "AWB Blue Gain",
+          "Manual AWB Gain for blue channel when awb-mode=OFF",
+          0, 8.0, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_IMAGE_EFFECT,
       g_param_spec_enum ("image-effect", "Image effect",
           "Visual FX to apply to the image",
@@ -448,6 +456,14 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     case PROP_AWB_MODE:
       src->capture_config.camera_parameters.awbMode = g_value_get_enum (value);
       break;
+    case PROP_AWB_GAIN_RED:
+      src->capture_config.camera_parameters.awb_gains_r =
+          g_value_get_float (value);
+      break;
+    case PROP_AWB_GAIN_BLUE:
+      src->capture_config.camera_parameters.awb_gains_b =
+          g_value_get_float (value);
+      break;
     case PROP_IMAGE_EFFECT:
       src->capture_config.camera_parameters.imageEffect =
           g_value_get_enum (value);
@@ -552,6 +568,14 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AWB_MODE:
       g_value_set_enum (value, src->capture_config.camera_parameters.awbMode);
+      break;
+    case PROP_AWB_GAIN_RED:
+      g_value_set_float (value,
+          src->capture_config.camera_parameters.awb_gains_r);
+      break;
+    case PROP_AWB_GAIN_BLUE:
+      g_value_set_float (value,
+          src->capture_config.camera_parameters.awb_gains_b);
       break;
     case PROP_IMAGE_EFFECT:
       g_value_set_enum (value,
