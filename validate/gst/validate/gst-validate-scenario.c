@@ -1808,6 +1808,12 @@ _load_scenario_file (GstValidateScenario * scenario,
           &priv->handles_state);
       continue;
     } else if (!(action_type = _find_action_type (type))) {
+      if (gst_structure_has_field (structure, "optional-action-type")) {
+        GST_INFO_OBJECT (scenario,
+            "Action type not found %s but marked as not mandatory", type);
+        continue;
+      }
+
       GST_ERROR_OBJECT (scenario, "We do not handle action types %s", type);
       goto failed;
     }
