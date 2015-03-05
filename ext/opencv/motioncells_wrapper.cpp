@@ -89,12 +89,15 @@ perform_detection_motion_cells (IplImage * p_image, double p_sensitivity,
 {
   int idx = 0;
   idx = searchIdx (p_id);
-  return motioncellsvector.at (idx).mc->performDetectionMotionCells (p_image,
-      p_sensitivity, p_framerate, p_gridx, p_gridy, p_timestamp_millisec,
-      p_isVisible, p_useAlpha, motionmaskcoord_count, motionmaskcoords,
-      motionmaskcells_count, motionmaskcellsidx, motioncellscolor,
-      motioncells_count, motioncellsidx, starttime, p_datafile,
-      p_changed_datafile, p_thickness);
+  if (idx > -1)
+    return motioncellsvector.at (idx).mc->performDetectionMotionCells (p_image,
+        p_sensitivity, p_framerate, p_gridx, p_gridy, p_timestamp_millisec,
+        p_isVisible, p_useAlpha, motionmaskcoord_count, motionmaskcoords,
+        motionmaskcells_count, motionmaskcellsidx, motioncellscolor,
+        motioncells_count, motioncellsidx, starttime, p_datafile,
+        p_changed_datafile, p_thickness);
+  else
+    return -1;
 }
 
 
@@ -103,7 +106,8 @@ setPrevFrame (IplImage * p_prevFrame, int p_id)
 {
   int idx = 0;
   idx = searchIdx (p_id);
-  motioncellsvector.at (idx).mc->setPrevFrame (p_prevFrame);
+  if (idx > -1)
+    motioncellsvector.at (idx).mc->setPrevFrame (p_prevFrame);
 }
 
 char *
@@ -113,10 +117,8 @@ getMotionCellsIdx (int p_id)
   idx = searchIdx (p_id);
   if (idx > -1)
     return motioncellsvector.at (idx).mc->getMotionCellsIdx ();
-  else {
+  else
     return p_str;
-  }
-
 }
 
 int
@@ -161,9 +163,8 @@ getInitDataFileFailed (int p_id)
   idx = searchIdx (p_id);
   if (idx > -1)
     return motioncellsvector.at (idx).mc->getDatafileInitFailed ();
-  else {
+  else
     return p_str;
-  }
 }
 
 char *
@@ -173,9 +174,8 @@ getSaveDataFileFailed (int p_id)
   idx = searchIdx (p_id);
   if (idx > -1)
     return motioncellsvector.at (idx).mc->getDatafileSaveFailed ();
-  else {
+  else
     return p_str;
-  }
 }
 
 int
