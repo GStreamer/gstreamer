@@ -1900,7 +1900,7 @@ convert_get_alpha_mode (GstVideoConverter * convert)
  * gst_video_converter_new:
  * @in_info: a #GstVideoInfo
  * @out_info: a #GstVideoInfo
- * @config: a #GstStructure with configuration options
+ * @config: (transfer full): a #GstStructure with configuration options
  *
  * Create a new converter object to convert between @in_info and @out_info
  * with @config.
