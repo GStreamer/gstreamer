@@ -1143,6 +1143,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
      * and maybe drop the current buffer */
     if (pad->priv->output_offset < aagg->priv->offset) {
       gint64 diff = aagg->priv->offset - pad->priv->output_offset;
+      gint64 odiff = diff;
 
       if (pad->priv->position + diff > pad->priv->size)
         diff = pad->priv->size - pad->priv->position;
@@ -1150,6 +1151,10 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       pad->priv->output_offset += diff;
 
       if (pad->priv->position == pad->priv->size) {
+        GST_LOG_OBJECT (pad, "Buffer was late by %" GST_TIME_FORMAT
+            ", dropping %" GST_PTR_FORMAT,
+            GST_TIME_ARGS (gst_util_uint64_scale (odiff, GST_SECOND,
+                    GST_AUDIO_INFO_RATE (&aagg->info))), pad->priv->buffer);
         /* Buffer done, drop it */
         gst_buffer_replace (&pad->priv->buffer, NULL);
         dropped = TRUE;
