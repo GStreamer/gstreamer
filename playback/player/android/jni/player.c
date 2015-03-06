@@ -196,7 +196,7 @@ on_video_dimensions_changed (GstPlayer * unused, gint width, gint height,
 static void
 native_new (JNIEnv * env, jobject thiz)
 {
-  Player *player = g_slice_new0 (Player);
+  Player *player = g_new0 (Player, 1);
 
   player->player = gst_player_new ();
   SET_CUSTOM_DATA (env, thiz, native_player_field_id, player);
@@ -226,7 +226,7 @@ native_free (JNIEnv * env, jobject thiz)
     return;
 
   (*env)->DeleteGlobalRef (env, player->java_player);
-  g_slice_free (Player, player);
+  g_free (player);
   SET_CUSTOM_DATA (env, thiz, native_player_field_id, NULL);
 }
 
