@@ -180,6 +180,7 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
     case TSMUX_ST_PS_TELETEXT:
       /* needs fixes PES header length */
       stream->pi.pes_header_length = 36;
+      /* fall through */
     case TSMUX_ST_PS_DVB_SUBPICTURE:
       /* private stream 1 */
       stream->id = 0xBD;
