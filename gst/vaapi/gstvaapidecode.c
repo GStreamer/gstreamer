@@ -513,7 +513,6 @@ static GstFlowReturn
 gst_vaapidecode_finish (GstVideoDecoder * vdec)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
-  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!decode->decoder)
     return GST_FLOW_OK;
@@ -605,8 +604,8 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
             alignment = GST_VAAPI_STREAM_ALIGN_H264_NALU;
           else
             alignment = GST_VAAPI_STREAM_ALIGN_H264_NONE;
-          gst_vaapi_decoder_h264_set_alignment (GST_VAAPI_DECODER_H264 (decode->
-                  decoder), alignment);
+          gst_vaapi_decoder_h264_set_alignment (GST_VAAPI_DECODER_H264
+              (decode->decoder), alignment);
         }
       }
       break;
@@ -662,7 +661,6 @@ gst_vaapidecode_reset_full (GstVaapiDecode * decode, GstCaps * caps,
 
   /* Reset timers if hard reset was requested (e.g. seek) */
   if (hard) {
-    GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
     GstVideoCodecFrame *out_frame = NULL;
 
     gst_vaapi_decoder_flush (decode->decoder);
