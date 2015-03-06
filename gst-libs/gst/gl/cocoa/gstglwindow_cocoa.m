@@ -65,6 +65,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
   GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_cocoa_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLWindowCocoa, gst_gl_window_cocoa, GST_GL_TYPE_WINDOW, DEBUG_INIT);
+static void gst_gl_window_cocoa_finalize (GObject * object);
 
 static gboolean gst_gl_window_cocoa_open (GstGLWindow *window, GError **err);
 static void gst_gl_window_cocoa_close (GstGLWindow *window);
@@ -96,9 +97,8 @@ struct _GstGLWindowCocoaPrivate
 static void
 gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
 {
-  GstGLWindowClass *window_class;
-
-  window_class = (GstGLWindowClass *) klass;
+  GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGLWindowCocoaPrivate));
 
@@ -117,6 +117,8 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_preferred_size);
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_show);
+
+  gobject_class->finalize = gst_gl_window_cocoa_finalize;
 }
 
 static void
@@ -126,6 +128,20 @@ gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 
   window->priv->preferred_width = 320;
   window->priv->preferred_height = 240;
+
+  window->priv->main_context = g_main_context_new ();
+  window->priv->loop =g_main_loop_new (window->priv->main_context, FALSE);
+}
+
+static void
+gst_gl_window_cocoa_finalize (GObject * object)
+{
+  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (object);
+
+  g_main_loop_unref (window_cocoa->priv->loop);
+  g_main_context_unref (window_cocoa->priv->main_context);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -173,10 +189,6 @@ gst_gl_window_cocoa_open (GstGLWindow *window, GError **err)
   GstGLWindowCocoa *window_cocoa;
 
   window_cocoa = GST_GL_WINDOW_COCOA (window);
-
-  window_cocoa->priv->main_context = g_main_context_new ();
-  window_cocoa->priv->loop =
-      g_main_loop_new (window_cocoa->priv->main_context, FALSE);
 
   return TRUE;
 }

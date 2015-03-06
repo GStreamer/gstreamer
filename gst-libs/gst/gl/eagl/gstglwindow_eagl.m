@@ -40,6 +40,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define gst_gl_window_eagl_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLWindowEagl, gst_gl_window_eagl,
     GST_GL_TYPE_WINDOW, DEBUG_INIT);
+static void gst_gl_window_eagl_finalize (GObject * object);
 
 static guintptr gst_gl_window_eagl_get_display (GstGLWindow * window);
 static guintptr gst_gl_window_eagl_get_window_handle (GstGLWindow * window);
@@ -68,9 +69,8 @@ struct _GstGLWindowEaglPrivate
 static void
 gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
 {
-  GstGLWindowClass *window_class;
-
-  window_class = (GstGLWindowClass *) klass;
+  GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGLWindowEaglPrivate));
 
@@ -90,12 +90,29 @@ gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_eagl_close);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_set_preferred_size);
+
+  gobject_class->finalize = gst_gl_window_eagl_finalize;
 }
 
 static void
 gst_gl_window_eagl_init (GstGLWindowEagl * window)
 {
   window->priv = GST_GL_WINDOW_EAGL_GET_PRIVATE (window);
+
+  window_eagl->priv->main_context = g_main_context_new ();
+  window_eagl->priv->loop =
+      g_main_loop_new (window_eagl->priv->main_context, FALSE);
+}
+
+static void
+gst_gl_window_eagl_finalize (GObject * object)
+{
+  GstGLWindowWaylandEagl *window_eagl = GST_GL_WINDOW_EAGL (object);
+
+  g_main_loop_unref (window_eagl->priv->loop);
+  g_main_context_unref (window_egl->priv->main_context);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -132,26 +149,12 @@ gst_gl_window_eagl_set_window_handle (GstGLWindow * window, guintptr handle)
 static gboolean
 gst_gl_window_eagl_open (GstGLWindow * window, GError ** error)
 {
-  GstGLWindowEagl *window_eagl;
-
-  window_eagl = GST_GL_WINDOW_EAGL (window);
-
-  window_eagl->priv->main_context = g_main_context_new ();
-  window_eagl->priv->loop =
-      g_main_loop_new (window_eagl->priv->main_context, FALSE);
-
   return TRUE;
 }
 
 static void
 gst_gl_window_eagl_close (GstGLWindow * window)
 {
-  GstGLWindowEagl *window_eagl;
-
-  window_eagl = GST_GL_WINDOW_EAGL (window);
-
-  g_main_loop_unref (window_eagl->priv->loop);
-  g_main_context_unref (window_eagl->priv->main_context);
 }
 
 static void
