@@ -322,13 +322,13 @@ gst_audio_interleave_channel_positions_to_mask (GValueArray * positions,
   return ret;
 }
 
-static void
-gst_audio_interleave_set_channel_positions (GstAudioInterleave * self,
-    GstStructure * s)
+
+/* Must be called with the object lock held */
+
+static guint64
+gst_audio_interleave_get_channel_mask (GstAudioInterleave * self)
 {
   guint64 channel_mask = 0;
-
-  GST_OBJECT_LOCK (self);
 
   if (self->channel_positions != NULL &&
       self->channels == self->channel_positions->n_values) {
@@ -341,9 +341,8 @@ gst_audio_interleave_set_channel_positions (GstAudioInterleave * self,
   } else {
     GST_WARNING_OBJECT (self, "Using NONE channel positions");
   }
-  gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
 
-  GST_OBJECT_UNLOCK (self);
+  return channel_mask;
 }
 
 
@@ -377,11 +376,10 @@ interleave_24 (guint8 * out, guint8 * in, guint stride, guint nframes)
 }
 
 static void
-gst_audio_interleave_set_process_function (GstAudioInterleave * self)
+gst_audio_interleave_set_process_function (GstAudioInterleave * self,
+    GstAudioInfo * info)
 {
-  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (self);
-
-  switch (GST_AUDIO_INFO_WIDTH (&aagg->info)) {
+  switch (GST_AUDIO_INFO_WIDTH (info)) {
     case 8:
       self->func = (GstInterleaveFunc) interleave_8;
       break;
@@ -412,56 +410,17 @@ gst_audio_interleave_setcaps (GstAudioInterleave * self, GstPad * pad,
     GstCaps * caps)
 {
   GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (self);
-  GstAudioAggregatorPad *aaggpad = GST_AUDIO_AGGREGATOR_PAD (pad);
   GstAudioInfo info;
   GValue *val;
   guint channel;
-  GstCaps *srccaps;
-  GstStructure *s;
-  gboolean ret;
-
-  if (self->sinkcaps && !gst_caps_is_subset (caps, self->sinkcaps))
-    goto cannot_change_caps;
+  gboolean new = FALSE;
 
   if (!gst_audio_info_from_caps (&info, caps))
     goto invalid_format;
 
-  if (aaggpad->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN)
-    g_atomic_int_add (&self->configured_sinkpads_counter, 1);
-
-  gst_audio_aggregator_set_sink_caps (aagg, GST_AUDIO_AGGREGATOR_PAD (pad),
-      caps);
-
-  if (self->channel_positions_from_input
-      && GST_AUDIO_INFO_CHANNELS (&info) == 1) {
-    channel = GST_AUDIO_INTERLEAVE_PAD (pad)->channel;
-    val = g_value_array_get_nth (self->input_channel_positions, channel);
-    g_value_set_enum (val, GST_AUDIO_INFO_POSITION (&info, 0));
-  }
-
-  if (g_atomic_int_get (&self->configured_sinkpads_counter) < self->channels)
-    return TRUE;
-
-  srccaps = gst_caps_copy (caps);
-  s = gst_caps_get_structure (srccaps, 0);
-
-  gst_structure_remove_field (s, "channel-mask");
-
-  gst_structure_set (s, "channels", G_TYPE_INT, self->channels, "layout",
-      G_TYPE_STRING, "interleaved", NULL);
-  gst_audio_interleave_set_channel_positions (self, s);
-
-  ret = gst_audio_aggregator_set_src_caps (aagg, srccaps);
-
-  gst_caps_unref (srccaps);
-
-  if (!ret)
-    goto src_did_not_accept;
-
-  gst_audio_aggregator_set_sink_caps (aagg, GST_AUDIO_AGGREGATOR_PAD (pad),
-      caps);
-
-  gst_audio_interleave_set_process_function (self);
+  GST_OBJECT_LOCK (self);
+  if (self->sinkcaps && !gst_caps_is_subset (caps, self->sinkcaps))
+    goto cannot_change_caps;
 
   if (!self->sinkcaps) {
     GstCaps *sinkcaps = gst_caps_copy (caps);
@@ -474,8 +433,23 @@ gst_audio_interleave_setcaps (GstAudioInterleave * self, GstPad * pad,
     gst_caps_replace (&self->sinkcaps, sinkcaps);
 
     gst_caps_unref (sinkcaps);
+    new = TRUE;
+    self->new_caps = TRUE;
   }
 
+  if (self->channel_positions_from_input
+      && GST_AUDIO_INFO_CHANNELS (&info) == 1) {
+    channel = GST_AUDIO_INTERLEAVE_PAD (pad)->channel;
+    val = g_value_array_get_nth (self->input_channel_positions, channel);
+    g_value_set_enum (val, GST_AUDIO_INFO_POSITION (&info, 0));
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  gst_audio_aggregator_set_sink_caps (aagg, GST_AUDIO_AGGREGATOR_PAD (pad),
+      caps);
+
+  if (!new)
+    return TRUE;
 
   GST_INFO_OBJECT (pad, "handle caps change to %" GST_PTR_FORMAT, caps);
 
@@ -490,13 +464,9 @@ invalid_format:
   }
 cannot_change_caps:
   {
+    GST_OBJECT_UNLOCK (self);
     GST_WARNING_OBJECT (self, "caps of %" GST_PTR_FORMAT " already set, can't "
         "change", self->sinkcaps);
-    return FALSE;
-  }
-src_did_not_accept:
-  {
-    GST_WARNING_OBJECT (self, "src did not accept setcaps()");
     return FALSE;
   }
 }
@@ -530,6 +500,48 @@ gst_audio_interleave_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
     return GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, aggpad, event);
 
   return res;
+}
+
+static GstFlowReturn
+gst_audio_interleave_aggregate (GstAggregator * aggregator, gboolean timeout)
+{
+  GstAudioInterleave *self = GST_AUDIO_INTERLEAVE (aggregator);
+  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (aggregator);
+
+  GST_OBJECT_LOCK (aggregator);
+  if (self->new_caps) {
+    GstCaps *srccaps;
+    GstStructure *s;
+    gboolean ret;
+
+    srccaps = gst_caps_copy (self->sinkcaps);
+    s = gst_caps_get_structure (srccaps, 0);
+
+    gst_structure_set (s, "channels", G_TYPE_INT, self->channels, "layout",
+        G_TYPE_STRING, "interleaved", "channel-mask", GST_TYPE_BITMASK,
+        gst_audio_interleave_get_channel_mask (self), NULL);
+
+
+    GST_OBJECT_UNLOCK (aggregator);
+    ret = gst_audio_aggregator_set_src_caps (aagg, srccaps);
+    gst_caps_unref (srccaps);
+
+    if (!ret)
+      goto src_did_not_accept;
+
+    GST_OBJECT_LOCK (aggregator);
+
+    gst_audio_interleave_set_process_function (self, &aagg->info);
+
+    self->new_caps = FALSE;
+  }
+  GST_OBJECT_UNLOCK (aggregator);
+
+  return GST_AGGREGATOR_CLASS (parent_class)->aggregate (aggregator, timeout);
+
+src_did_not_accept:
+  GST_WARNING_OBJECT (self, "src did not accept setcaps()");
+  return GST_FLOW_NOT_NEGOTIATED;;
 }
 
 static void
@@ -567,6 +579,7 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
   agg_class->sink_query = GST_DEBUG_FUNCPTR (gst_audio_interleave_sink_query);
   agg_class->sink_event = GST_DEBUG_FUNCPTR (gst_audio_interleave_sink_event);
   agg_class->stop = gst_audio_interleave_stop;
+  agg_class->aggregate = gst_audio_interleave_aggregate;
 
   aagg_class->aggregate_one_buffer = gst_audio_interleave_aggregate_one_buffer;
 
@@ -701,6 +714,7 @@ gst_audio_interleave_stop (GstAggregator * agg)
   if (!GST_AGGREGATOR_CLASS (parent_class)->stop (agg))
     return FALSE;
 
+  self->new_caps = FALSE;
   gst_caps_replace (&self->sinkcaps, NULL);
 
   return TRUE;
@@ -746,22 +760,9 @@ gst_audio_interleave_request_new_pad (GstElement * element,
   g_value_unset (&val);
 
   /* Update the src caps if we already have them */
-  if (self->sinkcaps) {
-    GstCaps *srccaps;
-    GstStructure *s;
-
-    /* Take lock to make sure processing finishes first */
-
-    srccaps = gst_caps_copy (self->sinkcaps);
-    s = gst_caps_get_structure (srccaps, 0);
-
-    gst_structure_set (s, "channels", G_TYPE_INT, self->channels, NULL);
-
-    gst_audio_interleave_set_channel_positions (self, s);
-
-    gst_audio_aggregator_set_src_caps (GST_AUDIO_AGGREGATOR (self), srccaps);
-    gst_caps_unref (srccaps);
-  }
+  GST_OBJECT_LOCK (self);
+  self->new_caps = TRUE;
+  GST_OBJECT_UNLOCK (self);
 
   return GST_PAD_CAST (newpad);
 
@@ -786,9 +787,6 @@ gst_audio_interleave_release_pad (GstElement * element, GstPad * pad)
 
   g_atomic_int_add (&self->channels, -1);
 
-  if (gst_pad_has_current_caps (pad))
-    g_atomic_int_add (&self->configured_sinkpads_counter, -1);
-
   position = GST_AUDIO_INTERLEAVE_PAD (pad)->channel;
   g_value_array_remove (self->input_channel_positions, position);
 
@@ -801,32 +799,8 @@ gst_audio_interleave_release_pad (GstElement * element, GstPad * pad)
       ipad->channel--;
   }
 
-
-  /* Update the src caps if we already have them */
-  if (self->sinkcaps) {
-    if (self->channels > 0) {
-      GstCaps *srccaps;
-      GstStructure *s;
-
-      srccaps = gst_caps_copy (self->sinkcaps);
-      s = gst_caps_get_structure (srccaps, 0);
-
-      gst_structure_set (s, "channels", G_TYPE_INT, self->channels, NULL);
-      gst_audio_interleave_set_channel_positions (self, s);
-
-      GST_OBJECT_UNLOCK (self);
-
-      gst_audio_aggregator_set_src_caps (GST_AUDIO_AGGREGATOR (self), srccaps);
-      gst_caps_unref (srccaps);
-    } else {
-      gst_caps_replace (&self->sinkcaps, NULL);
-      GST_OBJECT_UNLOCK (self);
-    }
-  } else {
-    GST_OBJECT_UNLOCK (self);
-  }
-
-
+  self->new_caps = TRUE;
+  GST_OBJECT_UNLOCK (self);
 
 
   GST_DEBUG_OBJECT (self, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
