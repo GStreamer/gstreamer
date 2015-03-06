@@ -113,6 +113,11 @@ static gboolean
 gst_vaapi_decode_input_state_replace (GstVaapiDecode * decode,
     const GstVideoCodecState * new_state);
 
+static gboolean
+gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query);
+static gboolean
+gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query);
+
 static void
 gst_vaapi_decoder_state_changed (GstVaapiDecoder * decoder,
     const GstVideoCodecState * codec_state, gpointer user_data)
@@ -844,6 +849,10 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   vdec_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_vaapidecode_decide_allocation);
 #endif
+#if GST_CHECK_VERSION(1,4,0)
+  vdec_class->src_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_src_query);
+  vdec_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_query);
+#endif
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API decoder",
@@ -940,88 +949,134 @@ gst_vaapidecode_get_caps (GstPad * pad)
   return gst_caps_ref (decode->allowed_caps);
 }
 
+#if !GST_CHECK_VERSION(1,4,0)
 static gboolean
 gst_vaapidecode_query (GST_PAD_QUERY_FUNCTION_ARGS)
 {
   GstVaapiDecode *const decode =
       GST_VAAPIDECODE (gst_pad_get_parent_element (pad));
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (decode);
+  GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
   gboolean res;
 
-  GST_INFO_OBJECT (decode, "query type %s", GST_QUERY_TYPE_NAME (query));
+  GST_INFO_OBJECT (decode, "query type %s on %s pad",
+      GST_QUERY_TYPE_NAME (query), GST_PAD_IS_SINK (pad) ? "sink" : "src");
+
+  if (GST_PAD_IS_SINK (pad))
+    res = gst_vaapidecode_sink_query (vdec, query);
+  else
+    res = gst_vaapidecode_src_query (vdec, query);
+
+  gst_object_unref (vdec);
+  return res;
+}
+#endif
+
+static gboolean
+gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query)
+{
+  gboolean ret = TRUE;
+  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (decode);
 
   if (gst_vaapi_reply_to_query (query, plugin->display)) {
-    GST_DEBUG ("sharing display %p", plugin->display);
-    res = TRUE;
-  } else if (GST_PAD_IS_SINK (pad)) {
-    switch (GST_QUERY_TYPE (query)) {
+    GST_DEBUG_OBJECT (decode, "sharing display %p", plugin->display);
+    return TRUE;
+  }
+
+  switch (GST_QUERY_TYPE (query)) {
 #if GST_CHECK_VERSION(1,0,0)
-      case GST_QUERY_CAPS:{
-        GstCaps *filter, *caps = NULL;
+    case GST_QUERY_CAPS:{
+      GstCaps *caps, *filter = NULL;
+      GstPad *pad = GST_VIDEO_DECODER_SINK_PAD (vdec);
 
-        gst_query_parse_caps (query, &filter);
-        caps = gst_vaapidecode_get_caps (pad);
+      gst_query_parse_caps (query, &filter);
+      caps = gst_vaapidecode_get_caps (pad);
 
-        if (filter) {
-          GstCaps *tmp = caps;
-          caps = gst_caps_intersect_full (filter, tmp,
-              GST_CAPS_INTERSECT_FIRST);
-          gst_caps_unref (tmp);
-        }
-
-        GST_DEBUG_OBJECT (decode, "Returning sink caps %" GST_PTR_FORMAT, caps);
-
-        gst_query_set_caps_result (query, caps);
-        gst_caps_unref (caps);
-        res = TRUE;
-        break;
+      if (filter) {
+        GstCaps *tmp = caps;
+        caps = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (tmp);
       }
-#endif
-      default:
-        res = GST_PAD_QUERY_FUNCTION_CALL (plugin->sinkpad_query, pad,
-            parent, query);
-        break;
+
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      break;
     }
-  } else {
-    switch (GST_QUERY_TYPE (query)) {
-#if GST_CHECK_VERSION(1,0,0)
-      case GST_QUERY_CAPS:{
-        GstCaps *filter, *caps = NULL;
-
-        gst_query_parse_caps (query, &filter);
-        caps = gst_pad_get_pad_template_caps (pad);
-
-        if (filter) {
-          GstCaps *tmp = caps;
-          caps = gst_caps_intersect_full (filter, tmp,
-              GST_CAPS_INTERSECT_FIRST);
-          gst_caps_unref (tmp);
-        }
-
-        GST_DEBUG_OBJECT (decode, "Returning src caps %" GST_PTR_FORMAT, caps);
-
-        gst_query_set_caps_result (query, caps);
-        gst_caps_unref (caps);
-        res = TRUE;
-        break;
-      }
 #endif
-      default:
-        res = GST_PAD_QUERY_FUNCTION_CALL (plugin->srcpad_query, pad,
-            parent, query);
-        break;
+    default:{
+#if GST_CHECK_VERSION(1,4,0)
+      ret = GST_VIDEO_DECODER_CLASS (gst_vaapidecode_parent_class)->sink_query
+          (vdec, query);
+#else
+      GstPad *pad = GST_VIDEO_DECODER_SINK_PAD (vdec);
+      GstObject *parent = gst_pad_get_parent (pad);
+      ret = GST_PAD_QUERY_FUNCTION_CALL (plugin->sinkpad_query, pad, parent,
+          query);
+      if (parent)
+        gst_object_unref (parent);
+#endif
+      break;
     }
   }
 
-  gst_object_unref (decode);
-  return res;
+  return ret;
+}
+
+static gboolean
+gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
+{
+  gboolean ret = TRUE;
+  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (decode);
+
+  if (gst_vaapi_reply_to_query (query, plugin->display)) {
+    GST_DEBUG_OBJECT (decode, "sharing display %p", plugin->display);
+    return TRUE;
+  }
+
+  switch (GST_QUERY_TYPE (query)) {
+#if GST_CHECK_VERSION(1,0,0)
+    case GST_QUERY_CAPS:{
+      GstCaps *caps, *filter = NULL;
+      GstPad *pad = GST_VIDEO_DECODER_SRC_PAD (vdec);
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_pad_get_pad_template_caps (pad);
+
+      if (filter) {
+        GstCaps *tmp = caps;
+        caps = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (tmp);
+      }
+
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      break;
+    }
+#endif
+    default:{
+#if GST_CHECK_VERSION(1,4,0)
+      ret = GST_VIDEO_DECODER_CLASS (gst_vaapidecode_parent_class)->src_query
+          (vdec, query);
+#else
+      GstPad *pad = GST_VIDEO_DECODER_SRC_PAD (vdec);
+      GstObject *parent = gst_pad_get_parent (pad);
+      ret = GST_PAD_QUERY_FUNCTION_CALL (plugin->sinkpad_query, pad, parent,
+          query);
+      if (parent)
+        gst_object_unref (parent);
+#endif
+      break;
+    }
+  }
+
+  return ret;
 }
 
 static void
 gst_vaapidecode_init (GstVaapiDecode * decode)
 {
   GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
-  GstPad *pad;
 
   gst_vaapi_plugin_base_init (GST_VAAPI_PLUGIN_BASE (decode), GST_CAT_DEFAULT);
 
@@ -1034,8 +1089,9 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
 
   gst_video_decoder_set_packetized (vdec, FALSE);
 
+#if !GST_CHECK_VERSION(1,4,0)
   /* Pad through which data comes in to the element */
-  pad = GST_VAAPI_PLUGIN_BASE_SINK_PAD (decode);
+  GstPad *pad = GST_VAAPI_PLUGIN_BASE_SINK_PAD (decode);
   gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_vaapidecode_query));
 #if !GST_CHECK_VERSION(1,0,0)
   gst_pad_set_getcaps_function (pad, gst_vaapidecode_get_caps);
@@ -1044,4 +1100,5 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
   /* Pad through which data goes out of the element */
   pad = GST_VAAPI_PLUGIN_BASE_SRC_PAD (decode);
   gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_vaapidecode_query));
+#endif
 }
