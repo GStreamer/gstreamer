@@ -1055,6 +1055,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
     GstStructure * structure, gboolean add_to_lists)
 {
   gdouble playback_time;
+  gboolean is_config = FALSE;
   GstValidateActionType *action_type;
   const gchar *str_playback_time = NULL;
   GstValidateScenarioPrivate *priv = scenario->priv;
@@ -1095,12 +1096,13 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   if (!action->priv->main_structure)
     action->priv->main_structure = gst_structure_copy (structure);
 
-  if (IS_CONFIG_ACTION_TYPE (action_type->flags)) {
+  if (IS_CONFIG_ACTION_TYPE (action_type->flags) ||
+      (gst_structure_get_boolean (action->structure, "as-config",
+              &is_config) && is_config == TRUE)) {
+    gst_validate_print_action (action, NULL);
     res = action_type->execute (scenario, action);
-    gst_validate_action_unref (action);
 
-    if (res == GST_VALIDATE_EXECUTE_ACTION_ERROR)
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    return res;
   }
 
   if (!add_to_lists)
@@ -3028,6 +3030,13 @@ init_scenarios (void)
           .description = "The name of the GstPlugin to disable",
           .mandatory = TRUE,
           .types = "string"
+        },
+        {
+          .name = "as-config",
+          .description = "Execute action as a config action (meaning when loading the scenario)",
+          .mandatory = FALSE,
+          .types = "boolean",
+          .def = "false"
         },
         {NULL}
       }),
