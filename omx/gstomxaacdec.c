@@ -148,7 +148,7 @@ gst_omx_aac_dec_set_format (GstOMXAudioDec * dec, GstOMXPort * port,
     aac_param.eAACStreamFormat = OMX_AUDIO_AACStreamFormatADIF;
   else if (strcmp (stream_format, "raw") == 0)
     aac_param.eAACStreamFormat = OMX_AUDIO_AACStreamFormatRAW;
-  else
+  else                          /* fallback instead of failing */
     aac_param.eAACStreamFormat = OMX_AUDIO_AACStreamFormatRAW;
 
   err =
