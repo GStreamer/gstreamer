@@ -175,7 +175,7 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
     if (!gst_byte_reader_get_uint32_le (&reader, &code))
       goto beach;
 
-    GST_INFO_OBJECT (parse, "%" GST_FOURCC_FORMAT " chunk, %u bytes",
+    GST_TRACE_OBJECT (parse, "%" GST_FOURCC_FORMAT " chunk, %u bytes",
         GST_FOURCC_ARGS (code), length);
 
     if (code == GST_MAKE_FOURCC ('I', 'H', 'D', 'R')) {
