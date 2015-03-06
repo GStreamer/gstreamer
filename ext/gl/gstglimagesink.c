@@ -785,42 +785,6 @@ gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
   }
 }
 
-/* copies the given caps */
-static GstCaps *
-gst_glimage_sink_caps_remove_format_info (GstCaps * caps)
-{
-  GstStructure *st;
-  GstCapsFeatures *f;
-  gint i, n;
-  GstCaps *res;
-
-  res = gst_caps_new_empty ();
-
-  n = gst_caps_get_size (caps);
-  for (i = 0; i < n; i++) {
-    st = gst_caps_get_structure (caps, i);
-    f = gst_caps_get_features (caps, i);
-
-    /* If this is already expressed by the existing caps
-     * skip this structure */
-    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
-      continue;
-
-    st = gst_structure_copy (st);
-    /* Only remove format info for the cases when we can actually convert */
-    if (!gst_caps_features_is_any (f)
-        && gst_caps_features_is_equal (f,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
-      gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
-          NULL);
-    gst_structure_remove_fields (st, "width", "height", NULL);
-
-    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
-  }
-
-  return res;
-}
-
 static GstCaps *
 gst_glimage_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 {
@@ -829,11 +793,6 @@ gst_glimage_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   GstCaps *result = NULL;
 
   tmp = gst_caps_from_string ("video/x-raw(memory:GLMemory),format=RGBA");
-
-  result = gst_glimage_sink_caps_remove_format_info (tmp);
-  gst_caps_unref (tmp);
-  tmp = result;
-  GST_DEBUG_OBJECT (bsink, "remove format returned caps %" GST_PTR_FORMAT, tmp);
 
   result =
       gst_gl_color_convert_transform_caps (gl_sink->context, GST_PAD_SRC, tmp,

@@ -468,42 +468,6 @@ wrong_caps:
   }
 }
 
-/* copies the given caps */
-static GstCaps *
-gst_gl_test_src_caps_remove_format_info (GstCaps * caps)
-{
-  GstStructure *st;
-  GstCapsFeatures *f;
-  gint i, n;
-  GstCaps *res;
-
-  res = gst_caps_new_empty ();
-
-  n = gst_caps_get_size (caps);
-  for (i = 0; i < n; i++) {
-    st = gst_caps_get_structure (caps, i);
-    f = gst_caps_get_features (caps, i);
-
-    /* If this is already expressed by the existing caps
-     * skip this structure */
-    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
-      continue;
-
-    st = gst_structure_copy (st);
-    /* Only remove format info for the cases when we can actually convert */
-    if (!gst_caps_features_is_any (f)
-        && gst_caps_features_is_equal (f,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
-      gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
-          NULL);
-    gst_structure_remove_fields (st, "width", "height", NULL);
-
-    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
-  }
-
-  return res;
-}
-
 static GstCaps *
 gst_gl_test_src_set_caps_features (const GstCaps * caps,
     const gchar * feature_name)
@@ -517,32 +481,26 @@ static GstCaps *
 gst_gl_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (bsrc);
-  GstCaps *tmp = NULL;
+  GstCaps *tmp;
   GstCaps *result = NULL;
   GstCaps *gl_caps;
   GstCaps *caps =
       gst_caps_from_string ("video/x-raw(memory:GLMemory),format=RGBA");
 
-  tmp = gst_gl_test_src_caps_remove_format_info (caps);
-  GST_DEBUG_OBJECT (bsrc, "remove format returned caps %" GST_PTR_FORMAT, tmp);
-
   gl_caps =
-      gst_caps_merge (gst_gl_test_src_set_caps_features (tmp,
+      gst_caps_merge (gst_gl_test_src_set_caps_features (caps,
           GST_CAPS_FEATURE_MEMORY_GL_MEMORY),
-      gst_gl_test_src_set_caps_features (tmp,
+      gst_gl_test_src_set_caps_features (caps,
           GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META));
   result =
-      gst_gl_download_transform_caps (src->context, GST_PAD_SINK, tmp, NULL);
+      gst_gl_download_transform_caps (src->context, GST_PAD_SINK, caps, NULL);
   result = gst_caps_merge (gl_caps, result);
 
-  gst_caps_unref (tmp);
-  tmp = result;
-  GST_DEBUG_OBJECT (bsrc, "transfer returned caps %" GST_PTR_FORMAT, tmp);
+  GST_DEBUG_OBJECT (bsrc, "transfer returned caps %" GST_PTR_FORMAT, result);
 
   if (filter) {
-    result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (tmp);
-  } else {
+    tmp = gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (result);
     result = tmp;
   }
 
