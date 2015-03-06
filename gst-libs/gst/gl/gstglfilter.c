@@ -715,42 +715,6 @@ gst_gl_filter_set_caps_features (const GstCaps * caps,
   return ret;
 }
 
-/* copies the given caps */
-static GstCaps *
-gst_gl_filter_caps_remove_format_info (GstCaps * caps)
-{
-  GstStructure *st;
-  GstCapsFeatures *f;
-  gint i, n;
-  GstCaps *res;
-
-  res = gst_caps_new_empty ();
-
-  n = gst_caps_get_size (caps);
-  for (i = 0; i < n; i++) {
-    st = gst_caps_get_structure (caps, i);
-    f = gst_caps_get_features (caps, i);
-
-    /* If this is already expressed by the existing caps
-     * skip this structure */
-    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
-      continue;
-
-    st = gst_structure_copy (st);
-    /* Only remove format info for the cases when we can actually convert */
-    if (!gst_caps_features_is_any (f)
-        && gst_caps_features_is_equal (f,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
-      gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
-          NULL);
-    gst_structure_remove_fields (st, "width", "height", NULL);
-
-    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
-  }
-
-  return res;
-}
-
 static GstCaps *
 gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
@@ -788,11 +752,6 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
   }
   tmp = result;
   GST_DEBUG_OBJECT (bt, "transfer returned caps %" GST_PTR_FORMAT, tmp);
-
-  result = gst_gl_filter_caps_remove_format_info (tmp);
-  gst_caps_unref (tmp);
-  tmp = result;
-  GST_DEBUG_OBJECT (bt, "remove format returned caps %" GST_PTR_FORMAT, tmp);
 
   if (direction == GST_PAD_SRC) {
     result =
