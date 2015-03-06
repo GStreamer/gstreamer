@@ -38,6 +38,7 @@
 #define gst_gl_window_android_egl_parent_class parent_class
 G_DEFINE_TYPE (GstGLWindowAndroidEGL, gst_gl_window_android_egl,
     GST_GL_TYPE_WINDOW);
+static void gst_gl_window_android_egl_finalize (GObject * object);
 
 static guintptr gst_gl_window_android_egl_get_display (GstGLWindow * window);
 static guintptr gst_gl_window_android_egl_get_window_handle (GstGLWindow *
@@ -57,6 +58,7 @@ static void
 gst_gl_window_android_egl_class_init (GstGLWindowAndroidEGLClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_get_display);
@@ -73,11 +75,26 @@ gst_gl_window_android_egl_class_init (GstGLWindowAndroidEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_send_message_async);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_close);
+
+  gobject_class->finalize = gst_gl_window_android_egl_finalize;
 }
 
 static void
 gst_gl_window_android_egl_init (GstGLWindowAndroidEGL * window)
 {
+  window->main_context = g_main_context_new ();
+  window->loop = g_main_loop_new (window->main_context, FALSE);
+}
+
+static void
+gst_gl_window_android_egl_finalize (GObject * object)
+{
+  GstGLWindowAndroidEGL *window_egl GST_GL_WINDOW_ANDROID_EGL (object);
+
+  g_main_loop_unref (window_egl->loop);
+  g_main_context_unref (window_egl->main_context);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -98,11 +115,6 @@ gst_gl_window_android_egl_open (GstGLWindow * window, GError ** error)
 {
   GstGLWindowAndroidEGL *window_egl;
 
-  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  window_egl->main_context = g_main_context_new ();
-  window_egl->loop = g_main_loop_new (window_egl->main_context, FALSE);
-
   return TRUE;
 }
 
@@ -112,9 +124,6 @@ gst_gl_window_android_egl_close (GstGLWindow * window)
   GstGLWindowAndroidEGL *window_egl;
 
   window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  g_main_loop_unref (window_egl->loop);
-  g_main_context_unref (window_egl->main_context);
 }
 
 static void

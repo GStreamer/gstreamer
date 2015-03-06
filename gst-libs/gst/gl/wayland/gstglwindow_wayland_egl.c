@@ -41,6 +41,7 @@ const gchar *WlEGLErrorString ();
 #define gst_gl_window_wayland_egl_parent_class parent_class
 G_DEFINE_TYPE (GstGLWindowWaylandEGL, gst_gl_window_wayland_egl,
     GST_GL_TYPE_WINDOW);
+static void gst_gl_window_wayland_egl_finalize (GObject * object);
 
 static guintptr gst_gl_window_wayland_egl_get_window_handle (GstGLWindow *
     window);
@@ -268,13 +269,6 @@ destroy_surface (GstGLWindowWaylandEGL * window_egl)
 
   if (window_egl->window.callback)
     wl_callback_destroy (window_egl->window.callback);
-
-  g_source_destroy (window_egl->wl_source);
-  g_source_unref (window_egl->wl_source);
-  window_egl->wl_source = NULL;
-  g_main_loop_unref (window_egl->loop);
-  window_egl->loop = NULL, g_main_context_unref (window_egl->main_context);
-  window_egl->main_context = NULL;
 }
 
 static void
@@ -311,6 +305,7 @@ static void
 gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   window_class->get_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_window_handle);
@@ -327,11 +322,26 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_open);
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_display);
+
+  gobject_class->finalize = gst_gl_window_wayland_egl_finalize;
 }
 
 static void
 gst_gl_window_wayland_egl_init (GstGLWindowWaylandEGL * window)
 {
+  window->main_context = g_main_context_new ();
+  window->loop = g_main_loop_new (window->main_context, FALSE);
+}
+
+static void
+gst_gl_window_wayland_egl_finalize (GObject * object)
+{
+  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (object);
+
+  g_main_loop_unref (window_egl->loop);
+  g_main_context_unref (window_egl->main_context);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* Must be called in the gl thread */
@@ -372,6 +382,10 @@ gst_gl_window_wayland_egl_close (GstGLWindow * window)
     wl_display_flush (window_egl->display.display);
     wl_display_disconnect (window_egl->display.display);
   }
+
+  g_source_destroy (window_egl->wl_source);
+  g_source_unref (window_egl->wl_source);
+  window_egl->wl_source = NULL;
 }
 
 static gboolean
@@ -401,8 +415,6 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
 
   window_egl->wl_source =
       wayland_event_source_new (window_egl->display.display);
-  window_egl->main_context = g_main_context_new ();
-  window_egl->loop = g_main_loop_new (window_egl->main_context, FALSE);
 
   g_source_attach (window_egl->wl_source, window_egl->main_context);
 
