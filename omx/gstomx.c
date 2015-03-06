@@ -1197,7 +1197,7 @@ OMX_ERRORTYPE
 gst_omx_port_update_port_definition (GstOMXPort * port,
     OMX_PARAM_PORTDEFINITIONTYPE * port_def)
 {
-  OMX_ERRORTYPE err = OMX_ErrorNone;
+  OMX_ERRORTYPE err_get, err_set = OMX_ErrorNone;
   GstOMXComponent *comp;
 
   g_return_val_if_fail (port != NULL, FALSE);
@@ -1205,16 +1205,19 @@ gst_omx_port_update_port_definition (GstOMXPort * port,
   comp = port->comp;
 
   if (port_def)
-    err =
+    err_set =
         gst_omx_component_set_parameter (comp, OMX_IndexParamPortDefinition,
         port_def);
-  gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
+  err_get = gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
 
   GST_DEBUG_OBJECT (comp->parent, "Updated %s port %u definition: %s (0x%08x)",
-      comp->name, port->index, gst_omx_error_to_string (err), err);
+      comp->name, port->index, gst_omx_error_to_string (err_set), err_set);
 
-  return err;
+  if (err_set != OMX_ErrorNone)
+    return err_set;
+  else
+    return err_get;
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
