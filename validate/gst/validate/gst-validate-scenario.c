@@ -1099,6 +1099,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   if (IS_CONFIG_ACTION_TYPE (action_type->flags) ||
       (gst_structure_get_boolean (action->structure, "as-config",
               &is_config) && is_config == TRUE)) {
+
     gst_validate_print_action (action, NULL);
     res = action_type->execute (scenario, action);
 
@@ -1594,8 +1595,12 @@ _execute_disable_plugin (GstValidateScenario * scenario,
 
   plugin = gst_registry_find_plugin (gst_registry_get (), plugin_name);
 
-  if (plugin == NULL)
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  if (plugin == NULL) {
+    GST_VALIDATE_REPORT (action->scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not find plugin to disable: %s", plugin_name);
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
 
   gst_registry_remove_plugin (gst_registry_get (), plugin);
 

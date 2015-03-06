@@ -42,14 +42,14 @@ typedef struct _GstValidateActionParameter GstValidateActionParameter;
 
 GST_EXPORT GType _gst_validate_action_type;
 
-enum
+typedef enum
 {
   GST_VALIDATE_EXECUTE_ACTION_ERROR,
   GST_VALIDATE_EXECUTE_ACTION_OK,
   GST_VALIDATE_EXECUTE_ACTION_ASYNC,
-  GST_VALIDATE_EXECUTE_ACTION_INTERLACED
-
-};
+  GST_VALIDATE_EXECUTE_ACTION_INTERLACED,
+  GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED
+} GstValidateActionReturn;
 
 /* TODO 2.0 -- Make it an actual enum type */
 #define GstValidateExecuteActionReturn gint
