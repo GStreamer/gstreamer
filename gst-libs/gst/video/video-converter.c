@@ -3498,7 +3498,6 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
       case GST_VIDEO_FORMAT_YVYU:
       case GST_VIDEO_FORMAT_UYVY:
         pgroup = 4;
-        r_border /= 2;
         rb_width /= 2;
         lb_width /= 2;
         out_maxwidth /= 2;
