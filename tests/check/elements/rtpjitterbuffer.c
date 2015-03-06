@@ -1568,6 +1568,56 @@ GST_START_TEST (test_gap_exceeds_latency)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deadline_ts_offset)
+{
+  TestData data;
+  GstClockID id, test_id;
+  GstBuffer *in_buf, *out_buf;
+  gint jb_latency_ms = 10;
+
+  setup_testharness (&data);
+
+  g_object_set (data.jitter_buffer, "latency", jb_latency_ms, NULL);
+
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 0);
+
+  /* push the first buffer in */
+  in_buf = generate_test_buffer (0 * GST_MSECOND, TRUE, 0, 0);
+  g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
+
+  /* wait_next_timeout() syncs on the deadline timer */
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  g_assert_cmpint (gst_clock_id_get_time (id), ==, jb_latency_ms * GST_MSECOND);
+
+  /* add ts-offset while waiting */
+  g_object_set (data.jitter_buffer, "ts-offset", 20 * GST_MSECOND, NULL);
+
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock),
+      jb_latency_ms * GST_MSECOND);
+  test_id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (test_id == id);
+
+  /* wait_next_timeout() syncs on the new deadline timer */
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  g_assert_cmpint (gst_clock_id_get_time (id), ==,
+      (20 + jb_latency_ms) * GST_MSECOND);
+
+  /* now make deadline timer timeout */
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock),
+      (20 + jb_latency_ms) * GST_MSECOND);
+  test_id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (test_id == id);
+
+  gst_clock_id_unref (test_id);
+  gst_clock_id_unref (id);
+  out_buf = g_async_queue_pop (data.buf_queue);
+  g_assert (out_buf != NULL);
+
+  destroy_testharness (&data);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 rtpjitterbuffer_suite (void)
@@ -1589,6 +1639,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_rtx_two_missing);
   tcase_add_test (tc_chain, test_rtx_packet_delay);
   tcase_add_test (tc_chain, test_gap_exceeds_latency);
+  tcase_add_test (tc_chain, test_deadline_ts_offset);
 
   return s;
 }
