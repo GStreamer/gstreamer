@@ -566,8 +566,7 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
           - 1] = '\0';
       break;
     case PROP_INTRA_REFRESH_TYPE:
-      src->capture_config.intra_refresh_type =
-          g_value_get_enum (value);
+      src->capture_config.intra_refresh_type = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -698,8 +697,7 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
           src->capture_config.camera_parameters.annotate_string);
       break;
     case PROP_INTRA_REFRESH_TYPE:
-      g_value_set_enum (value,
-          src->capture_config.intra_refresh_type);
+      g_value_set_enum (value, src->capture_config.intra_refresh_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -804,9 +802,26 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (bsrc);
   GstVideoInfo info;
+  GstStructure *structure;
+  const gchar *profile_str = NULL;
+
   GST_DEBUG_OBJECT (src, "In set_caps %" GST_PTR_FORMAT, caps);
   if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
+
+  structure = gst_caps_get_structure (caps, 0);
+  profile_str = gst_structure_get_string (structure, "profile");
+  if (profile_str) {
+    if (g_str_equal (profile_str, "baseline"))
+      src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_BASELINE;
+    else if (g_str_equal (profile_str, "main"))
+      src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_MAIN;
+    else if (g_str_equal (profile_str, "high"))
+      src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_HIGH;
+    else
+      g_warning ("Unknown profile string in rpicamsrc caps: %s", profile_str);
+  }
+
   src->capture_config.width = info.width;
   src->capture_config.height = info.height;
   src->capture_config.fps_n = info.fps_n;
