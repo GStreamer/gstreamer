@@ -292,18 +292,18 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_SINK:
-      GST_SPLITMUX_LOCK (splitmux);
+      GST_OBJECT_LOCK (splitmux);
       if (splitmux->provided_sink)
         gst_object_unref (splitmux->provided_sink);
       splitmux->provided_sink = g_value_dup_object (value);
-      GST_SPLITMUX_UNLOCK (splitmux);
+      GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_MUXER:
-      GST_SPLITMUX_LOCK (splitmux);
+      GST_OBJECT_LOCK (splitmux);
       if (splitmux->provided_muxer)
         gst_object_unref (splitmux->provided_muxer);
       splitmux->provided_muxer = g_value_dup_object (value);
-      GST_SPLITMUX_UNLOCK (splitmux);
+      GST_OBJECT_UNLOCK (splitmux);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -339,14 +339,14 @@ gst_splitmux_sink_get_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_SINK:
-      GST_SPLITMUX_LOCK (splitmux);
+      GST_OBJECT_LOCK (splitmux);
       g_value_set_object (value, splitmux->provided_sink);
-      GST_SPLITMUX_UNLOCK (splitmux);
+      GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_MUXER:
-      GST_SPLITMUX_LOCK (splitmux);
+      GST_OBJECT_LOCK (splitmux);
       g_value_set_object (value, splitmux->provided_muxer);
-      GST_SPLITMUX_UNLOCK (splitmux);
+      GST_OBJECT_UNLOCK (splitmux);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1282,16 +1282,26 @@ create_elements (GstSplitMuxSink * splitmux)
   }
 
   if (splitmux->muxer == NULL) {
-    if (splitmux->provided_muxer == NULL) {
+    GstElement *provided_muxer = NULL;
+
+    GST_OBJECT_LOCK (splitmux);
+    if (splitmux->provided_muxer != NULL)
+      provided_muxer = gst_object_ref (splitmux->provided_muxer);
+    GST_OBJECT_UNLOCK (splitmux);
+
+    if (provided_muxer == NULL) {
       if ((splitmux->muxer =
               create_element (splitmux, "mp4mux", "muxer")) == NULL)
         goto fail;
     } else {
-      splitmux->muxer = splitmux->provided_muxer;
       if (!gst_bin_add (GST_BIN (splitmux), splitmux->provided_muxer)) {
         g_warning ("Could not add muxer element - splitmuxsink will not work");
+        gst_object_unref (provided_muxer);
         goto fail;
       }
+
+      splitmux->muxer = provided_muxer;
+      gst_object_unref (provided_muxer);
     }
   }
 
@@ -1345,20 +1355,31 @@ find_sink (GstElement * e)
 static gboolean
 create_sink (GstSplitMuxSink * splitmux)
 {
+  GstElement *provided_sink = NULL;
+
   g_return_val_if_fail (splitmux->active_sink == NULL, TRUE);
 
-  if (splitmux->provided_sink == NULL) {
+  GST_OBJECT_LOCK (splitmux);
+  if (splitmux->provided_sink != NULL)
+    provided_sink = gst_object_ref (splitmux->provided_sink);
+  GST_OBJECT_UNLOCK (splitmux);
+
+  if (provided_sink == NULL) {
     if ((splitmux->sink =
             create_element (splitmux, DEFAULT_SINK, "sink")) == NULL)
       goto fail;
     splitmux->active_sink = splitmux->sink;
   } else {
-    if (!gst_bin_add (GST_BIN (splitmux), splitmux->provided_sink)) {
+    if (!gst_bin_add (GST_BIN (splitmux), provided_sink)) {
       g_warning ("Could not add sink elements - splitmuxsink will not work");
+      gst_object_unref (provided_sink);
       goto fail;
     }
 
-    splitmux->active_sink = splitmux->provided_sink;
+    splitmux->active_sink = provided_sink;
+
+    /* The bin holds a ref now, we can drop our tmp ref */
+    gst_object_unref (provided_sink);
 
     /* Find the sink element */
     splitmux->sink = find_sink (splitmux->active_sink);
