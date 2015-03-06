@@ -3078,7 +3078,7 @@ gst_base_src_decide_allocation_default (GstBaseSrc * basesrc, GstQuery * query)
       /* If change are not acceptable, fallback to generic pool */
       if (!gst_buffer_pool_config_validate_params (config, outcaps, size, min,
               max)) {
-        GST_DEBUG_OBJECT (basesrc, "unsuported pool, making new pool");
+        GST_DEBUG_OBJECT (basesrc, "unsupported pool, making new pool");
 
         gst_object_unref (pool);
         pool = gst_buffer_pool_new ();
