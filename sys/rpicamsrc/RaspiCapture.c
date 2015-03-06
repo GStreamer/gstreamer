@@ -1466,20 +1466,21 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
 static void destroy_encoder_component(RASPIVID_STATE *state)
 {
   /* Empty the buffer header q */
-  while (mmal_queue_length(state->encoded_buffer_q)) {
-    MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(state->encoded_buffer_q);
-    mmal_buffer_header_release(buffer);
-  }
-  mmal_queue_destroy(state->encoded_buffer_q);
-
-   // Get rid of any port buffers first
-   if (state->encoder_pool)
-   {
-      mmal_port_pool_destroy(state->encoder_component->output[0], state->encoder_pool);
+   if (state->encoded_buffer_q) {
+      while (mmal_queue_length(state->encoded_buffer_q)) {
+        MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(state->encoded_buffer_q);
+        mmal_buffer_header_release(buffer);
+      }
    }
 
-   if (state->encoder_component)
-   {
+   if (state->encoder_component) {
+      // Get rid of any port buffers first
+      if (state->encoder_pool)
+      {
+         mmal_port_pool_destroy(state->encoder_component->output[0], state->encoder_pool);
+         state->encoder_pool = NULL;
+      }
+
       mmal_component_destroy(state->encoder_component);
       state->encoder_component = NULL;
    }
@@ -1566,14 +1567,6 @@ raspi_capture_setup(RASPIVID_CONFIG *config)
      return NULL;
   }
 
-  if ((status = create_encoder_component(state)) != MMAL_SUCCESS)
-  {
-     vcos_log_error("%s: Failed to create encode component", __func__);
-     raspipreview_destroy(&state->config->preview_parameters);
-     destroy_camera_component(state);
-     return NULL;
-  }
-
   state->encoded_buffer_q = mmal_queue_create();
 
   return state;
@@ -1586,6 +1579,12 @@ raspi_capture_start(RASPIVID_STATE *state)
   MMAL_PORT_T *camera_preview_port = NULL;
   MMAL_PORT_T *preview_input_port = NULL;
   MMAL_PORT_T *encoder_input_port = NULL;
+
+  if ((status = create_encoder_component(state)) != MMAL_SUCCESS)
+  {
+     vcos_log_error("%s: Failed to create encode component", __func__);
+     return FALSE;
+  }
 
   if (state->config->verbose)
   {
@@ -1737,6 +1736,11 @@ raspi_capture_stop(RASPIVID_STATE *state)
   // Disable all our ports that are not handled by connections
   check_disable_port(state->camera_still_port);
   check_disable_port(state->encoder_output_port);
+
+  if (state->encoder_component) {
+     mmal_component_disable(state->encoder_component);
+     destroy_encoder_component(state);
+  }
 }
 
 void
@@ -1760,6 +1764,11 @@ raspi_capture_free(RASPIVID_STATE *state)
   destroy_encoder_component(state);
   raspipreview_destroy(&state->config->preview_parameters);
   destroy_camera_component(state);
+
+  if (state->encoded_buffer_q) {
+    mmal_queue_destroy(state->encoded_buffer_q);
+    state->encoded_buffer_q = NULL;
+  }
 
   if (state->config->verbose)
      fprintf(stderr, "Close down completed, all components disconnected, disabled and destroyed\n\n");
