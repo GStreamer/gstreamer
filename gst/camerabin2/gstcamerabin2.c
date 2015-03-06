@@ -1338,10 +1338,18 @@ static void
 gst_camera_bin_src_notify_max_zoom_cb (GObject * self, GParamSpec * pspec,
     gpointer user_data)
 {
+  GParamSpecFloat *zoom_pspec;
   GstCameraBin2 *camera = (GstCameraBin2 *) user_data;
 
   g_object_get (self, "max-zoom", &camera->max_zoom, NULL);
   GST_DEBUG_OBJECT (camera, "Max zoom updated to %f", camera->max_zoom);
+
+  /* update zoom pspec */
+  zoom_pspec =
+      G_PARAM_SPEC_FLOAT (g_object_class_find_property (G_OBJECT_GET_CLASS
+          (G_OBJECT (camera)), "zoom"));
+  zoom_pspec->maximum = camera->max_zoom;
+
   g_object_notify (G_OBJECT (camera), "max-zoom");
 }
 
