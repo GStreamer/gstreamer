@@ -1040,10 +1040,12 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     guint outsize, nalu_size;
     GstClockTime timestamp;
     gboolean marker;
-    gboolean donl_present = FALSE;
     guint8 nuh_layer_id, nuh_temporal_id_plus1;
     guint8 S, E;
     guint16 nal_header;
+#if 0
+    gboolean donl_present = FALSE;
+#endif
 
     timestamp = GST_BUFFER_TIMESTAMP (buf);
 
@@ -1128,8 +1130,10 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
         rtph265depay->wait_start = FALSE;
 
+#if 0
         if (donl_present)
           goto not_implemented_donl_present;
+#endif
 
         while (payload_len > 2) {
 
@@ -1207,8 +1211,10 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         if (rtph265depay->wait_start && !S)
           goto waiting_start;
 
+#if 0
         if (donl_present)
           goto not_implemented_donl_present;
+#endif
 
         if (S) {
 
@@ -1288,8 +1294,10 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         /* All other cases: Single NAL unit packet   Section 4.6 */
         /* the entire payload is the output buffer */
 
+#if 0
         if (donl_present)
           goto not_implemented_donl_present;
+#endif
 
         nalu_size = payload_len;
         outsize = nalu_size + sizeof (sync_bytes);
@@ -1327,6 +1335,7 @@ waiting_start:
     gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
+#if 0
 not_implemented_donl_present:
   {
     GST_ELEMENT_ERROR (rtph265depay, STREAM, FORMAT,
@@ -1334,6 +1343,7 @@ not_implemented_donl_present:
     gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
+#endif
 not_implemented:
   {
     GST_ELEMENT_ERROR (rtph265depay, STREAM, FORMAT,
