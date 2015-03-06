@@ -1344,10 +1344,9 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
           &intval)) {
     mult_seg_base_type->duration = intval;
   }
-  if (gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "startNumber", 1,
-          &intval)) {
-    mult_seg_base_type->startNumber = intval;
-  }
+
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "startNumber", 1,
+      &mult_seg_base_type->startNumber);
 
   GST_LOG ("extension of MultipleSegmentBaseType extension:");
   gst_mpdparser_parse_seg_base_type_ext (&mult_seg_base_type->SegBaseType,
