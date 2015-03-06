@@ -599,14 +599,24 @@ gst_videoaggregator_src_setcaps (GstVideoAggregator * vagg, GstCaps * caps)
   if (vagg->priv->current_caps == NULL ||
       gst_caps_is_equal (caps, vagg->priv->current_caps) == FALSE) {
     GstClockTime latency;
+    GstCaps *full_caps;
 
-    gst_caps_replace (&vagg->priv->current_caps, caps);
+    /* Create new caps from the video-info, in case the original caps
+     * were missing some optional fields like interlace-mode. We assume
+     * default values for those everywhere, but they can still cause
+     * negotiation to fail if a downstream element expects the field to be
+     * there and at a specific value.
+     */
+    full_caps = gst_video_info_to_caps (&info);
+
+    gst_caps_replace (&vagg->priv->current_caps, full_caps);
     GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
 
-    gst_aggregator_set_src_caps (agg, caps);
+    gst_aggregator_set_src_caps (agg, full_caps);
     latency = gst_util_uint64_scale (GST_SECOND,
         GST_VIDEO_INFO_FPS_D (&info), GST_VIDEO_INFO_FPS_N (&info));
     gst_aggregator_set_latency (agg, latency, latency);
+    gst_caps_unref (full_caps);
 
     GST_VIDEO_AGGREGATOR_LOCK (vagg);
   }
