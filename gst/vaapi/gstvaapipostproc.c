@@ -299,7 +299,6 @@ gst_vaapipostproc_destroy_filter (GstVaapiPostproc * postproc)
   }
   gst_vaapi_filter_replace (&postproc->filter, NULL);
   gst_vaapi_video_pool_replace (&postproc->filter_pool, NULL);
-  postproc->filter_pool_active = FALSE;
 }
 
 static void
@@ -333,7 +332,6 @@ gst_vaapipostproc_stop (GstBaseTransform * trans)
 
   ds_reset (&postproc->deinterlace_state);
   gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (postproc));
-  postproc->filter_pool_active = FALSE;
 
   postproc->field_duration = GST_CLOCK_TIME_NONE;
   gst_video_info_init(&postproc->sinkpad_info);
@@ -388,11 +386,8 @@ create_output_buffer (GstVaapiPostproc * postproc)
 
   g_return_val_if_fail (pool != NULL, NULL);
 
-  if (!postproc->filter_pool_active) {
-    if (!gst_buffer_pool_set_active (pool, TRUE))
-      goto error_activate_pool;
-    postproc->filter_pool_active = TRUE;
-  }
+  if (!gst_buffer_pool_set_active (pool, TRUE))
+    goto error_activate_pool;
 
   outbuf = NULL;
   ret = gst_buffer_pool_acquire_buffer (pool, &outbuf, NULL);
