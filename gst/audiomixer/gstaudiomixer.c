@@ -1465,11 +1465,9 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
       gint64 diff = audiomixer->offset - pad->output_offset;
       gint bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
 
+      if (pad->position + (diff * bpf) > pad->size)
+        diff = (pad->size - pad->position) / bpf;
       pad->position += diff * bpf;
-      if (pad->position > pad->size) {
-        diff = (pad->position - pad->size) / bpf;
-        pad->position = pad->size;
-      }
       pad->output_offset += diff;
 
       if (pad->position == pad->size) {
