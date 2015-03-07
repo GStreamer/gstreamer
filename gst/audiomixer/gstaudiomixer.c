@@ -1436,8 +1436,20 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
       is_eos = FALSE;
 
     inbuf = gst_aggregator_pad_get_buffer (aggpad);
-    if (!inbuf)
+    if (!inbuf) {
+      if (timeout) {
+        if (pad->output_offset < next_offset) {
+          gint64 diff = next_offset - pad->output_offset;
+
+          GST_LOG_OBJECT (pad, "Timeout, missing %" G_GINT64_FORMAT " frames (%"
+              GST_TIME_FORMAT ")", diff,
+              GST_TIME_ARGS (gst_util_uint64_scale (diff, GST_SECOND, rate)));
+        }
+      } else if (!gst_aggregator_pad_is_eos (aggpad)) {
+        is_done = FALSE;
+      }
       continue;
+    }
 
     g_assert (!pad->buffer || pad->buffer == inbuf);
 
@@ -1497,14 +1509,14 @@ gst_audiomixer_aggregate (GstAggregator * agg, gboolean timeout)
 
   gst_buffer_unmap (outbuf, &outmap);
 
-  if (dropped && !timeout) {
+  if (dropped) {
     /* We dropped a buffer, retry */
     GST_INFO_OBJECT (audiomixer,
         "A pad dropped a buffer, wait for the next one");
     return GST_FLOW_OK;
   }
 
-  if (!is_done && !is_eos && !timeout) {
+  if (!is_done && !is_eos) {
     /* Get more buffers */
     GST_INFO_OBJECT (audiomixer,
         "We're not done yet for the current offset, waiting for more data");
