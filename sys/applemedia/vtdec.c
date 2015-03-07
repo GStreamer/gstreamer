@@ -96,6 +96,9 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
 const CFStringRef
     kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder =
 CFSTR ("EnableHardwareAcceleratedVideoDecoder");
+const CFStringRef
+    kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder =
+CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #endif
 
 #ifdef HAVE_IOS
@@ -110,9 +113,7 @@ CFSTR ("EnableHardwareAcceleratedVideoDecoder");
     (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, \
         "RGBA") ";"
 
-G_DEFINE_TYPE_WITH_CODE (GstVtdec, gst_vtdec, GST_TYPE_VIDEO_DECODER,
-    GST_DEBUG_CATEGORY_INIT (gst_vtdec_debug_category, "vtdec", 0,
-        "debug category for vtdec element"));
+G_DEFINE_TYPE (GstVtdec, gst_vtdec, GST_TYPE_VIDEO_DECODER);
 
 static void
 gst_vtdec_class_init (GstVtdecClass * klass)
@@ -424,6 +425,10 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format)
 #ifndef HAVE_IOS
   gst_vtutil_dict_set_boolean (videoDecoderSpecification,
       kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder, TRUE);
+  if (vtdec->require_hardware)
+    gst_vtutil_dict_set_boolean (videoDecoderSpecification,
+        kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder,
+        TRUE);
 #endif
 
   output_image_buffer_attrs =
@@ -896,4 +901,52 @@ gst_vtdec_set_latency (GstVtdec * vtdec)
   GST_INFO_OBJECT (vtdec, "setting latency frames:%d time:%" GST_TIME_FORMAT,
       vtdec->reorder_queue_length, GST_TIME_ARGS (latency));
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (vtdec), latency, latency);
+}
+
+#ifndef HAVE_IOS
+#define GST_TYPE_VTDEC_HW   (gst_vtdec_hw_get_type())
+#define GST_VTDEC_HW(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VTDEC_HW,GstVtdecHw))
+#define GST_VTDEC_HW_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VTDEC_HW,GstVtdecHwClass))
+#define GST_IS_VTDEC_HW(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VTDEC_HW))
+#define GST_IS_VTDEC_HW_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VTDEC_HW))
+
+typedef GstVtdec GstVtdecHw;
+typedef GstVtdecClass GstVtdecHwClass;
+
+GType gst_vtdec_hw_get_type (void);
+
+G_DEFINE_TYPE (GstVtdecHw, gst_vtdec_hw, GST_TYPE_VTDEC);
+
+static void
+gst_vtdec_hw_class_init (GstVtdecHwClass * klass)
+{
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
+      "Apple VideoToolbox decoder (hardware only)",
+      "Codec/Decoder/Video",
+      "Apple VideoToolbox Decoder",
+      "Ole André Vadla Ravnås <oleavr@soundrop.com>; "
+      "Alessandro Decina <alessandro.d@gmail.com>");
+}
+
+static void
+gst_vtdec_hw_init (GstVtdecHw * vtdec)
+{
+  GST_VTDEC (vtdec)->require_hardware = TRUE;
+}
+
+#endif
+
+void
+gst_vtdec_register_elements (GstPlugin * plugin)
+{
+  GST_DEBUG_CATEGORY_INIT (gst_vtdec_debug_category, "vtdec", 0,
+      "debug category for vtdec element");
+
+#ifdef HAVE_IOS
+  gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
+#else
+  gst_element_register (plugin, "vtdec_hw", GST_RANK_PRIMARY + 1,
+      GST_TYPE_VTDEC_HW);
+  gst_element_register (plugin, "vtdec", GST_RANK_SECONDARY, GST_TYPE_VTDEC);
+#endif
 }

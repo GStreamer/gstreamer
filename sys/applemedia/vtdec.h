@@ -47,6 +47,8 @@ struct _GstVtdec
   GAsyncQueue *reorder_queue;
   gint reorder_queue_length;
   GstCoreVideoTextureCache *texture_cache;
+
+  gboolean require_hardware;
 };
 
 struct _GstVtdecClass
@@ -55,6 +57,8 @@ struct _GstVtdecClass
 };
 
 GType gst_vtdec_get_type (void);
+
+void gst_vtdec_register_elements (GstPlugin * plugin);
 
 G_END_DECLS
 
