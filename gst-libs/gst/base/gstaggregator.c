@@ -1129,15 +1129,19 @@ gst_aggregator_query_latency (GstAggregator * self, GstQuery * query)
   our_latency = self->priv->latency;
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (min))) {
-    GST_WARNING_OBJECT (self, "Invalid minimum latency, using 0");
-    min = 0;
+    GST_ERROR_OBJECT (self, "Invalid minimum latency %" GST_TIME_FORMAT
+        ". Please file a bug at " PACKAGE_BUGREPORT ".", GST_TIME_ARGS (min));
+    SRC_UNLOCK (self);
+    return FALSE;
   }
 
-  if (G_UNLIKELY (min > max)) {
-    GST_WARNING_OBJECT (self, "Minimum latency is greater than maximum latency "
-        "(%" G_GINT64_FORMAT " > %" G_GINT64_FORMAT "). "
-        "Clamping it at the maximum latency", min, max);
-    min = max;
+  if (min > max && GST_CLOCK_TIME_IS_VALID (max)) {
+    GST_ELEMENT_WARNING (self, CORE, CLOCK, (NULL),
+        ("Impossible to configure latency: max %" GST_TIME_FORMAT " < min %"
+            GST_TIME_FORMAT ". Add queues or other buffering elements.",
+            GST_TIME_ARGS (max), GST_TIME_ARGS (min)));
+    SRC_UNLOCK (self);
+    return FALSE;
   }
 
   self->priv->latency_live = live;
