@@ -880,9 +880,11 @@ gst_videoaggregator_update_qos (GstVideoAggregator * vagg, gdouble proportion,
       GST_TIME_FORMAT, proportion, (diff < 0) ? "-" : "",
       GST_TIME_ARGS (ABS (diff)), GST_TIME_ARGS (timestamp));
 
+  live =
+      GST_CLOCK_TIME_IS_VALID (gst_aggregator_get_latency (GST_AGGREGATOR
+          (vagg)));
+
   GST_OBJECT_LOCK (vagg);
-  gst_aggregator_get_latency_unlocked (GST_AGGREGATOR (vagg), &live, NULL,
-      NULL);
 
   vagg->priv->proportion = proportion;
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
