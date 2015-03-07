@@ -271,10 +271,7 @@ gboolean gst_aggregator_iterate_sinkpads           (GstAggregator               
                                                     GstAggregatorPadForeachFunc      func,
                                                     gpointer                         user_data);
 
-void     gst_aggregator_get_latency_unlocked       (GstAggregator                 *  self,
-                                                    gboolean                      *  live,
-                                                    GstClockTime                  *  min,
-                                                    GstClockTime                  *  max);
+GstClockTime  gst_aggregator_get_latency           (GstAggregator                 *  self);
 
 G_END_DECLS
 
