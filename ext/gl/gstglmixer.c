@@ -197,7 +197,7 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix, GstGLMixerPad * pad,
     GstQuery * decide_query, GstQuery * query)
 {
   GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
-  GstBufferPool *pool;
+  GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
   guint size = 0;
@@ -209,26 +209,7 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix, GstGLMixerPad * pad,
   if (caps == NULL)
     goto no_caps;
 
-  if ((pool = mix->priv->pool))
-    gst_object_ref (pool);
-
-  if (pool != NULL) {
-    GstCaps *pcaps;
-
-    /* we had a pool, check caps */
-    GST_DEBUG_OBJECT (mix, "check existing pool caps");
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
-
-    if (!gst_caps_is_equal (caps, pcaps)) {
-      GST_DEBUG_OBJECT (mix, "pool has different caps");
-      /* different caps, we can't use this pool */
-      gst_object_unref (pool);
-      pool = NULL;
-    }
-    gst_structure_free (config);
-  }
-
+  /* FIXME this is not thread safe, this method can be called in parallel */
   if (!gst_gl_ensure_element_data (mix, &mix->display, &mix->other_context))
     return FALSE;
 
@@ -240,7 +221,7 @@ gst_gl_mixer_propose_allocation (GstGLMixer * mix, GstGLMixerPad * pad,
       goto context_error;
   }
 
-  if (pool == NULL && need_pool) {
+  if (need_pool) {
     GstVideoInfo info;
 
     if (!gst_video_info_from_caps (&info, caps))
