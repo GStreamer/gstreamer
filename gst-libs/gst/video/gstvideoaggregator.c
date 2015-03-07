@@ -1621,68 +1621,6 @@ gst_videoaggregator_src_event (GstAggregator * agg, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_videoaggregator_sink_clip (GstAggregator * agg,
-    GstAggregatorPad * bpad, GstBuffer * buf, GstBuffer ** outbuf)
-{
-  GstVideoAggregatorPad *pad = GST_VIDEO_AGGREGATOR_PAD (bpad);
-  GstClockTime start_time, end_time;
-  GstBuffer *pbuf;
-
-  start_time = GST_BUFFER_TIMESTAMP (buf);
-  if (start_time == -1) {
-    GST_WARNING_OBJECT (pad, "Timestamped buffers required!");
-    gst_buffer_unref (buf);
-    *outbuf = NULL;
-    return GST_FLOW_ERROR;
-  }
-
-  end_time = GST_BUFFER_DURATION (buf);
-  if (end_time == -1 && GST_VIDEO_INFO_FPS_N (&pad->info) != 0)
-    end_time =
-        gst_util_uint64_scale_int_round (GST_SECOND,
-        GST_VIDEO_INFO_FPS_D (&pad->info), GST_VIDEO_INFO_FPS_N (&pad->info));
-  if (end_time == -1) {
-    *outbuf = buf;
-    return GST_FLOW_OK;
-  }
-
-  GST_OBJECT_LOCK (bpad);
-
-  start_time = MAX (start_time, bpad->segment.start);
-  start_time =
-      gst_segment_to_running_time (&bpad->segment, GST_FORMAT_TIME, start_time);
-
-  end_time += GST_BUFFER_TIMESTAMP (buf);
-  if (bpad->segment.stop != -1)
-    end_time = MIN (end_time, bpad->segment.stop);
-  end_time =
-      gst_segment_to_running_time (&bpad->segment, GST_FORMAT_TIME, end_time);
-
-  /* Convert to the output segment rate */
-  if (ABS (agg->segment.rate) != 1.0) {
-    end_time *= ABS (agg->segment.rate);
-  }
-
-  pbuf = gst_aggregator_pad_get_buffer (bpad);
-  if (pbuf != NULL) {
-    gst_buffer_unref (pbuf);
-
-    if (end_time < pad->priv->end_time) {
-      gst_buffer_unref (buf);
-      *outbuf = NULL;
-      goto done;
-    }
-  }
-
-  *outbuf = buf;
-
-done:
-
-  GST_OBJECT_UNLOCK (bpad);
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
 gst_videoaggregator_flush (GstAggregator * agg)
 {
   GList *l;
@@ -2025,7 +1963,6 @@ gst_videoaggregator_class_init (GstVideoAggregatorClass * klass)
   agg_class->sink_query = gst_videoaggregator_sink_query;
   agg_class->sink_event = gst_videoaggregator_sink_event;
   agg_class->flush = gst_videoaggregator_flush;
-  agg_class->clip = gst_videoaggregator_sink_clip;
   agg_class->aggregate = gst_videoaggregator_aggregate;
   agg_class->src_event = gst_videoaggregator_src_event;
   agg_class->src_query = gst_videoaggregator_src_query;
