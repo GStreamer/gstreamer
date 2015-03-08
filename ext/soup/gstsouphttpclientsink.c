@@ -428,6 +428,7 @@ gst_soup_http_client_sink_finalize (GObject * object)
   if (souphttpsink->proxy)
     soup_uri_free (souphttpsink->proxy);
   g_free (souphttpsink->location);
+  g_strfreev (souphttpsink->cookies);
 
   g_cond_clear (&souphttpsink->cond);
   g_mutex_clear (&souphttpsink->mutex);
@@ -657,6 +658,15 @@ send_message_locked (GstSoupHttpClientSink * souphttpsink)
   souphttpsink->message = soup_message_new ("PUT", souphttpsink->location);
   soup_message_set_flags (souphttpsink->message,
       (souphttpsink->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
+
+  if (souphttpsink->cookies) {
+    gchar **cookie;
+
+    for (cookie = souphttpsink->cookies; *cookie != NULL; cookie++) {
+      soup_message_headers_append (souphttpsink->message->request_headers,
+          "Cookie", *cookie);
+    }
+  }
 
   n = 0;
   if (souphttpsink->offset == 0) {
