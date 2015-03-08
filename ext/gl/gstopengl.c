@@ -84,7 +84,7 @@
 
 #if GST_GL_HAVE_WINDOW_COCOA
 /* avoid including Cocoa/CoreFoundation from a C file... */
-extern GType gst_ca_opengl_layer_sink_get_type (void);
+extern GType gst_ca_opengl_layer_sink_bin_get_type (void);
 #endif
 
 #ifdef USE_EGL_RPI
@@ -251,7 +251,7 @@ plugin_init (GstPlugin * plugin)
 #endif /* GST_GL_HAVE_OPENGL */
 #if GST_GL_HAVE_WINDOW_COCOA
   if (!gst_element_register (plugin, "caopengllayersink",
-          GST_RANK_NONE, gst_ca_opengl_layer_sink_get_type ())) {
+          GST_RANK_NONE, gst_ca_opengl_layer_sink_bin_get_type ())) {
     return FALSE;
   }
 #endif

@@ -31,10 +31,91 @@
 #endif
 
 #include "caopengllayersink.h"
+#include "gstglsinkbin.h"
 #include <QuartzCore/QuartzCore.h>
 
 GST_DEBUG_CATEGORY (gst_debug_ca_sink);
 #define GST_CAT_DEFAULT gst_debug_ca_sink
+
+typedef GstGLSinkBin GstCAOpenGLLayerSinkBin;
+typedef GstGLSinkBinClass GstCAOpenGLLayerSinkBinClass;
+
+G_DEFINE_TYPE (GstCAOpenGLLayerSinkBin, gst_ca_opengl_layer_sink_bin,
+    GST_TYPE_GL_SINK_BIN);
+
+enum
+{
+  PROP_BIN_0,
+  PROP_BIN_QOS,
+  PROP_BIN_FORCE_ASPECT_RATIO,
+  PROP_BIN_LAST_SAMPLE,
+  PROP_BIN_LAYER,
+};
+
+static void
+_on_notify_layer (GObject * object, GParamSpec *pspec, gpointer user_data)
+{
+  GstCAOpenGLLayerSinkBin *self = user_data;
+
+  g_object_notify (G_OBJECT (self), "layer");
+}
+
+static void
+gst_ca_opengl_layer_sink_bin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * param_spec)
+{
+  g_object_set_property (G_OBJECT (GST_GL_SINK_BIN (object)->sink),
+      param_spec->name, value);
+}
+
+static void
+gst_ca_opengl_layer_sink_bin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * param_spec)
+{
+  g_object_get_property (G_OBJECT (GST_GL_SINK_BIN (object)->sink),
+      param_spec->name, value);
+}
+
+static void
+gst_ca_opengl_layer_sink_bin_init (GstCAOpenGLLayerSinkBin * self)
+{
+  GstGLCAOpenGLLayer *sink = g_object_new (GST_TYPE_CA_OPENGL_LAYER_SINK, NULL);
+
+  g_signal_connect (sink, "notify::layer", G_CALLBACK (_on_notify_layer), self);
+
+  gst_gl_sink_bin_finish_init_with_element (GST_GL_SINK_BIN (self),
+      GST_ELEMENT (sink));
+}
+
+static void
+gst_ca_opengl_layer_sink_bin_class_init (GstCAOpenGLLayerSinkBinClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->get_property = gst_ca_opengl_layer_sink_bin_get_property;
+  gobject_class->set_property = gst_ca_opengl_layer_sink_bin_set_property;
+
+  g_object_class_install_property (gobject_class, PROP_BIN_FORCE_ASPECT_RATIO,
+      g_param_spec_boolean ("force-aspect-ratio",
+          "Force aspect ratio",
+          "When enabled, scaling will respect original aspect ratio", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_BIN_LAST_SAMPLE,
+      g_param_spec_boxed ("last-sample", "Last Sample",
+          "The last sample received in the sink", GST_TYPE_SAMPLE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_BIN_LAYER,
+      g_param_spec_pointer ("layer", "CAOpenGLLayer",
+          "OpenGL Core Animation layer",
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_BIN_QOS,
+      g_param_spec_boolean ("qos", "Quality of Service",
+          "Generate Quality-of-Service events upstream", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
 
 #define GST_CA_OPENGL_LAYER_SINK_GET_LOCK(glsink) \
   (GST_CA_OPENGL_LAYER_SINK(glsink)->drawing_lock)
@@ -88,10 +169,7 @@ static GstStaticPadTemplate gst_ca_opengl_layer_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA") "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
-            "RGBA") "; " GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
+            "RGBA"))
     );
 
 enum
@@ -320,12 +398,41 @@ gst_ca_opengl_layer_sink_query (GstBaseSink * bsink, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      gboolean ret =
+      const gchar *context_type;
+      GstContext *context, *old_context;
+      gboolean ret;
+
+      ret =
           gst_gl_handle_context_query ((GstElement *) ca_sink, query,
           &ca_sink->display, &ca_sink->other_context);
       if (ca_sink->display)
         gst_gl_display_filter_gl_api (ca_sink->display, SUPPORTED_GL_APIS);
-      return ret;
+
+      gst_query_parse_context_type (query, &context_type);
+
+      if (g_strcmp0 (context_type, "gst.gl.local_context") == 0) {
+        GstStructure *s;
+
+        gst_query_parse_context (query, &old_context);
+
+        if (old_context)
+          context = gst_context_copy (old_context);
+        else
+          context = gst_context_new ("gst.gl.local_context", FALSE);
+
+        s = gst_context_writable_structure (context);
+        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT,
+            ca_sink->context, NULL);
+        gst_query_set_context (query, context);
+        gst_context_unref (context);
+
+        ret = ca_sink->context != NULL;
+      }
+      GST_DEBUG_OBJECT (ca_sink, "context query of type %s %i",
+          context_type, ret);
+
+      if (ret)
+        return ret;
     }
     case GST_QUERY_DRAIN:
     {
@@ -341,17 +448,15 @@ gst_ca_opengl_layer_sink_query (GstBaseSink * bsink, GstQuery * query)
         gst_buffer_unref (buf);
 
       gst_buffer_replace (&ca_sink->next_buffer, NULL);
-      gst_gl_upload_release_buffer (ca_sink->upload);
 
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
     }
     default:
-      res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
   }
 
-  return res;
+  return GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
 }
 
 static gboolean
@@ -430,16 +535,6 @@ gst_ca_opengl_layer_sink_change_state (GstElement * element, GstStateChange tran
       GST_CA_OPENGL_LAYER_SINK_UNLOCK (ca_sink);
       gst_buffer_replace (&ca_sink->next_buffer, NULL);
 
-      if (ca_sink->upload) {
-        gst_object_unref (ca_sink->upload);
-        ca_sink->upload = NULL;
-      }
-
-      if (ca_sink->convert) {
-        gst_object_unref (ca_sink->convert);
-        ca_sink->convert = NULL;
-      }
-
       if (ca_sink->pool) {
         gst_buffer_pool_set_active (ca_sink->pool, FALSE);
         gst_object_unref (ca_sink->pool);
@@ -502,10 +597,6 @@ gst_ca_opengl_layer_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gint display_par_n, display_par_d;
   guint display_ratio_num, display_ratio_den;
   GstVideoInfo vinfo;
-  GstStructure *structure;
-  GstBufferPool *newpool, *oldpool;
-  GstCapsFeatures *gl_features;
-  GstCaps *uploaded_caps;
 
   GST_DEBUG ("set caps with %" GST_PTR_FORMAT, caps);
 
@@ -562,56 +653,6 @@ gst_ca_opengl_layer_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!_ensure_gl_setup (ca_sink))
     return FALSE;
 
-  newpool = gst_gl_buffer_pool_new (ca_sink->context);
-  structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set_params (structure, caps, vinfo.size, 2, 0);
-  gst_buffer_pool_set_config (newpool, structure);
-
-  oldpool = ca_sink->pool;
-  /* we don't activate the pool yet, this will be done by downstream after it
-   * has configured the pool. If downstream does not want our pool we will
-   * activate it when we render into it */
-  ca_sink->pool = newpool;
-
-  /* unref the old sink */
-  if (oldpool) {
-    /* we don't deactivate, some elements might still be using it, it will
-     * be deactivated when the last ref is gone */
-    gst_object_unref (oldpool);
-  }
-
-  if (ca_sink->upload)
-    gst_object_unref (ca_sink->upload);
-  ca_sink->upload = gst_gl_upload_new (ca_sink->context);
-
-  gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-
-  uploaded_caps = gst_caps_copy (caps);
-  gst_caps_set_features (uploaded_caps, 0,
-      gst_caps_features_copy (gl_features));
-  gst_gl_upload_set_caps (ca_sink->upload, caps, uploaded_caps);
-
-  if (ca_sink->gl_caps)
-    gst_caps_unref (ca_sink->gl_caps);
-  ca_sink->gl_caps = gst_caps_copy (caps);
-  gst_caps_set_simple (ca_sink->gl_caps, "format", G_TYPE_STRING, "RGBA",
-      NULL);
-  gst_caps_set_features (ca_sink->gl_caps, 0,
-      gst_caps_features_copy (gl_features));
-
-  if (ca_sink->convert)
-    gst_object_unref (ca_sink->convert);
-  ca_sink->convert = gst_gl_color_convert_new (ca_sink->context);
-  if (!gst_gl_color_convert_set_caps (ca_sink->convert, uploaded_caps,
-          ca_sink->gl_caps)) {
-    gst_caps_unref (uploaded_caps);
-    gst_caps_features_free (gl_features);
-    return FALSE;
-  }
-  gst_caps_unref (uploaded_caps);
-  gst_caps_features_free (gl_features);
-
   ca_sink->caps_change = TRUE;
 
   return TRUE;
@@ -621,9 +662,7 @@ static GstFlowReturn
 gst_ca_opengl_layer_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstCAOpenGLLayerSink *ca_sink;
-  GstBuffer *uploaded_buffer, *next_buffer = NULL;
   GstVideoFrame gl_frame;
-  GstVideoInfo gl_info;
 
   ca_sink = GST_CA_OPENGL_LAYER_SINK (bsink);
 
@@ -637,31 +676,14 @@ gst_ca_opengl_layer_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
   if (!_ensure_gl_setup (ca_sink))
     return GST_FLOW_NOT_NEGOTIATED;
 
-  if (gst_gl_upload_perform_with_buffer (ca_sink->upload, buf,
-          &uploaded_buffer) != GST_GL_UPLOAD_DONE)
-    goto upload_failed;
-
-  if (!(next_buffer =
-          gst_gl_color_convert_perform (ca_sink->convert,
-              uploaded_buffer))) {
-    gst_buffer_unref (uploaded_buffer);
-    goto upload_failed;
-  }
-
-  gst_video_info_from_caps (&gl_info, ca_sink->gl_caps);
-
-  if (!gst_video_frame_map (&gl_frame, &gl_info, next_buffer,
+  if (!gst_video_frame_map (&gl_frame, &ca_sink->info, buf,
           GST_MAP_READ | GST_MAP_GL)) {
-    gst_buffer_unref (uploaded_buffer);
-    gst_buffer_unref (next_buffer);
     goto upload_failed;
   }
-  gst_buffer_unref (uploaded_buffer);
 
   ca_sink->next_tex = *(guint *) gl_frame.data[0];
 
-  gst_buffer_replace (&ca_sink->next_buffer, next_buffer);
-  gst_buffer_unref (next_buffer);
+  gst_buffer_replace (&ca_sink->next_buffer, buf);
 
   gst_video_frame_unmap (&gl_frame);
 
@@ -712,7 +734,6 @@ gst_ca_opengl_layer_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   if (g_atomic_int_get (&ca_sink->to_quit) != 0) {
     GST_ELEMENT_ERROR (ca_sink, RESOURCE, NOT_FOUND,
         ("%s", gst_gl_context_get_error ()), (NULL));
-    gst_gl_upload_release_buffer (ca_sink->upload);
     return GST_FLOW_ERROR;
   }
 
@@ -723,16 +744,10 @@ static gboolean
 gst_ca_opengl_layer_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstCAOpenGLLayerSink *ca_sink = GST_CA_OPENGL_LAYER_SINK (bsink);
-  GstBufferPool *pool;
   GstStructure *config;
   GstCaps *caps;
   guint size;
   gboolean need_pool;
-  GstStructure *gl_context;
-  gchar *platform, *gl_apis;
-  gpointer handle;
-  GstAllocator *allocator = NULL;
-  GstAllocationParams params;
 
   if (!_ensure_gl_setup (ca_sink))
     return FALSE;
@@ -742,78 +757,49 @@ gst_ca_opengl_layer_sink_propose_allocation (GstBaseSink * bsink, GstQuery * que
   if (caps == NULL)
     goto no_caps;
 
-  if ((pool = ca_sink->pool))
-    gst_object_ref (pool);
-
-  if (pool != NULL) {
-    GstCaps *pcaps;
-
-    /* we had a pool, check caps */
-    GST_DEBUG_OBJECT (ca_sink, "check existing pool caps");
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
-
-    if (!gst_caps_is_equal (caps, pcaps)) {
-      GST_DEBUG_OBJECT (ca_sink, "pool has different caps");
-      /* different caps, we can't use this pool */
-      gst_object_unref (pool);
-      pool = NULL;
-    }
-    gst_structure_free (config);
-  }
-
-  if (pool == NULL && need_pool) {
+  if (need_pool) {
     GstVideoInfo info;
 
     if (!gst_video_info_from_caps (&info, caps))
       goto invalid_caps;
 
-    GST_DEBUG_OBJECT (ca_sink, "create new pool");
-    pool = gst_gl_buffer_pool_new (ca_sink->context);
-
     /* the normal size of a frame */
     size = info.size;
 
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
-  }
-  /* we need at least 2 buffer because we hold on to the last one */
-  if (pool) {
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
-    gst_object_unref (pool);
+    if (ca_sink->pool) {
+      GstCaps *pcaps;
+
+      /* we had a pool, check caps */
+      GST_DEBUG_OBJECT (ca_sink, "check existing pool caps");
+      config = gst_buffer_pool_get_config (ca_sink->pool);
+      gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+
+      if (!gst_caps_is_equal (caps, pcaps)) {
+        GST_DEBUG_OBJECT (ca_sink, "pool has different caps");
+        /* different caps, we can't use this pool */
+        gst_object_unref (ca_sink->pool);
+        ca_sink->pool = NULL;
+      }
+      gst_structure_free (config);
+    }
+
+    if (ca_sink->pool == NULL) {
+      GST_DEBUG_OBJECT (ca_sink, "create new pool");
+
+      ca_sink->pool = gst_gl_buffer_pool_new (ca_sink->context);
+      config = gst_buffer_pool_get_config (ca_sink->pool);
+      gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+
+      if (!gst_buffer_pool_set_config (ca_sink->pool, config))
+        goto config_failed;
+    }
+
+    /* we need at least 2 buffer because we hold on to the last one */
+    gst_query_add_allocation_pool (query, ca_sink->pool, size, 2, 0);
   }
 
-  /* we also support various metadata */
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
   if (ca_sink->context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
-
-  gl_apis =
-      gst_gl_api_to_string (gst_gl_context_get_gl_api (ca_sink->context));
-  platform =
-      gst_gl_platform_to_string (gst_gl_context_get_gl_platform
-      (ca_sink->context));
-  handle = (gpointer) gst_gl_context_get_gl_context (ca_sink->context);
-
-  gl_context =
-      gst_structure_new ("GstVideoGLTextureUploadMeta", "gst.gl.GstGLContext",
-      GST_GL_TYPE_CONTEXT, ca_sink->context, "gst.gl.context.handle",
-      G_TYPE_POINTER, handle, "gst.gl.context.type", G_TYPE_STRING, platform,
-      "gst.gl.context.apis", G_TYPE_STRING, gl_apis, NULL);
-  gst_query_add_allocation_meta (query,
-      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, gl_context);
-
-  g_free (gl_apis);
-  g_free (platform);
-  gst_structure_free (gl_context);
-
-  gst_allocation_params_init (&params);
-
-  allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
-  gst_query_add_allocation_param (query, allocator, &params);
-  gst_object_unref (allocator);
 
   return TRUE;
 
