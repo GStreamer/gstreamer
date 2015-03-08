@@ -57,8 +57,6 @@ struct _GstCAOpenGLLayerSink
     GstGLContext *other_context;
     GstGLContext *context;
 
-    GstGLUpload *upload;
-    GstGLColorConvert *convert;
     guint      next_tex;
     GstBuffer *next_buffer;
 
@@ -92,6 +90,7 @@ struct _GstCAOpenGLLayerSinkClass
 };
 
 GType gst_ca_opengl_layer_sink_get_type(void);
+GType gst_ca_opengl_layer_sink_bin_get_type (void);
 
 G_END_DECLS
 
