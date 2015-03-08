@@ -1164,6 +1164,10 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   }
 #endif
 
+  /* Ignore timestamp and field for OUTPUT device */
+  if (V4L2_TYPE_IS_OUTPUT (obj->type))
+    goto done;
+
   /* Check for driver bug in reporting feild */
   if (group->buffer.field == V4L2_FIELD_ANY) {
     /* Only warn once to avoid the spamming */
@@ -1237,6 +1241,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
+done:
   *buffer = outbuf;
 
   return GST_FLOW_OK;
