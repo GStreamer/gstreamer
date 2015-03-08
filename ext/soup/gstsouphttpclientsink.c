@@ -655,6 +655,8 @@ send_message_locked (GstSoupHttpClientSink * souphttpsink)
   }
 
   souphttpsink->message = soup_message_new ("PUT", souphttpsink->location);
+  soup_message_set_flags (souphttpsink->message,
+      (souphttpsink->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
 
   n = 0;
   if (souphttpsink->offset == 0) {
