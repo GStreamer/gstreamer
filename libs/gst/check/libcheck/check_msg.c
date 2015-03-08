@@ -216,10 +216,11 @@ teardown_messaging (void)
 FILE *
 open_tmp_file (char **name)
 {
-  FILE *file;
+  FILE *file = NULL;
 
   *name = NULL;
 
+#if !HAVE_MKSTEMP
   /* Windows does not like tmpfile(). This is likely because tmpfile()
    * call unlink() on the file before returning it, to make sure the
    * file is deleted when it is closed. The unlink() call also fails
@@ -250,6 +251,21 @@ open_tmp_file (char **name)
     *name = uniq_tmp_file;
     free (tmp_file);
   }
+#else
+  int fd = -1;
+  const char *tmp_dir = getenv ("TEMP");
+  if (!tmp_dir) {
+    tmp_dir = ".";
+  }
+  *name = ck_strdup_printf ("%s/check_XXXXXX", tmp_dir);
+  if (-1 < (fd = mkstemp (*name))) {
+    file = fdopen (fd, "w+b");
+    if (0 == unlink (*name) || NULL == file) {
+      free (*name);
+      *name = NULL;
+    }
+  }
+#endif
   return file;
 }
 
