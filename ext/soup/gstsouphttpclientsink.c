@@ -535,11 +535,19 @@ gst_soup_http_client_sink_start (GstBaseSink * sink)
     g_mutex_unlock (&souphttpsink->mutex);
     GST_LOG_OBJECT (souphttpsink, "main loop thread running");
 
-    souphttpsink->session =
-        soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
-        souphttpsink->context, SOUP_SESSION_USER_AGENT,
-        souphttpsink->user_agent, SOUP_SESSION_TIMEOUT, souphttpsink->timeout,
-        NULL);
+    if (souphttpsink->proxy == NULL) {
+      souphttpsink->session =
+          soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
+          souphttpsink->context, SOUP_SESSION_USER_AGENT,
+          souphttpsink->user_agent, SOUP_SESSION_TIMEOUT, souphttpsink->timeout,
+          NULL);
+    } else {
+      souphttpsink->session =
+          soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
+          souphttpsink->context, SOUP_SESSION_USER_AGENT,
+          souphttpsink->user_agent, SOUP_SESSION_TIMEOUT, souphttpsink->timeout,
+          SOUP_SESSION_PROXY_URI, souphttpsink->proxy, NULL);
+    }
 
     g_signal_connect (souphttpsink->session, "authenticate",
         G_CALLBACK (authenticate), souphttpsink);
@@ -793,9 +801,15 @@ authenticate (SoupSession * session, SoupMessage * msg,
   GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (user_data);
 
   if (!retrying) {
-    if (souphttpsink->user_id && souphttpsink->user_pw) {
-      soup_auth_authenticate (auth,
-          souphttpsink->user_id, souphttpsink->user_pw);
+    /* First time authentication only, if we fail and are called again with retry true fall through */
+    if (msg->status_code == SOUP_STATUS_UNAUTHORIZED) {
+      if (souphttpsink->user_id && souphttpsink->user_pw)
+        soup_auth_authenticate (auth, souphttpsink->user_id,
+            souphttpsink->user_pw);
+    } else if (msg->status_code == SOUP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
+      if (souphttpsink->proxy_id && souphttpsink->proxy_pw)
+        soup_auth_authenticate (auth, souphttpsink->proxy_id,
+            souphttpsink->proxy_pw);
     }
   }
 }
