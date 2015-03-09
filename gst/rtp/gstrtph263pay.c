@@ -1384,7 +1384,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
 
     /*---------- MODE B MODE FRAGMENTATION ----------*/
-  GstRtpH263PayMB *mac;
+  GstRtpH263PayMB *mac = NULL;
   guint max_payload_size;
   GstRtpH263PayBoundry boundry;
   guint mb;
@@ -1537,7 +1537,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
       if (gst_rtp_h263_pay_B_fragment_push (rtph263pay, context, gob, first,
               mb - 1, &boundry)) {
         GST_ERROR ("Oooops, there was an error sending");
-        return FALSE;
+        goto decode_error;
       }
 
       payload_len = 0;
@@ -1555,15 +1555,17 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
     if (gst_rtp_h263_pay_B_fragment_push (rtph263pay, context, gob, first,
             mb - 1, &boundry)) {
       GST_ERROR ("Oooops, there was an error sending!");
-      return FALSE;
+      goto decode_error;
     }
   }
 
     /*---------- END OF MODE B FRAGMENTATION ----------*/
 
+  gst_rtp_h263_pay_mb_destroy (mac);
   return TRUE;
 
 decode_error:
+  gst_rtp_h263_pay_mb_destroy (mac);
   return FALSE;
 }
 
