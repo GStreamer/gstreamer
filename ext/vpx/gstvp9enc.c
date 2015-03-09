@@ -350,7 +350,6 @@ static gboolean gst_vp9_enc_flush (GstVideoEncoder * video_encoder);
 static GstFlowReturn gst_vp9_enc_drain (GstVideoEncoder * video_encoder);
 static GstFlowReturn gst_vp9_enc_handle_frame (GstVideoEncoder *
     video_encoder, GstVideoCodecFrame * frame);
-static GstFlowReturn gst_vp9_enc_drain (GstVideoEncoder * video_encoder);
 static gboolean gst_vp9_enc_sink_event (GstVideoEncoder *
     video_encoder, GstEvent * event);
 static gboolean gst_vp9_enc_propose_allocation (GstVideoEncoder * encoder,
