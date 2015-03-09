@@ -2457,7 +2457,7 @@ gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-    ret = gst_pad_push (parse->srcpad, buf);
+    gst_pad_push (parse->srcpad, buf);
 
     parse->pushed_headers = TRUE;
   }
