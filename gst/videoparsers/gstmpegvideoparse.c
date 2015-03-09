@@ -619,7 +619,7 @@ retry:
 
   /* if already found a previous start code, e.g. start of frame, go for next */
   if (mpvparse->last_sc >= 0) {
-    off = packet.offset = mpvparse->last_sc;
+    packet.offset = mpvparse->last_sc;
     packet.size = 0;
     goto next;
   }
