@@ -55,6 +55,8 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 
+#include <gst/rtp/gstrtpbuffer.h>
+
 #include "rtsp-stream.h"
 
 #define GST_RTSP_STREAM_GET_PRIVATE(obj)  \
@@ -2457,6 +2459,60 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
 
   g_mutex_lock (&priv->lock);
 
+  /* First try to extract the information from the last buffer on the sinks.
+   * This will have a more accurate sequence number and timestamp, as between
+   * the payloader and the sink there can be some queues
+   */
+  if (priv->udpsink[0] || priv->appsink[0]) {
+    GstSample *last_sample;
+
+    if (priv->udpsink[0])
+      g_object_get (priv->udpsink[0], "last-sample", &last_sample, NULL);
+    else
+      g_object_get (priv->appsink[0], "last-sample", &last_sample, NULL);
+
+    if (last_sample) {
+      GstCaps *caps;
+      GstBuffer *buffer;
+      GstSegment *segment;
+      GstRTPBuffer rtp_buffer = GST_RTP_BUFFER_INIT;
+
+      caps = gst_sample_get_caps (last_sample);
+      buffer = gst_sample_get_buffer (last_sample);
+      segment = gst_sample_get_segment (last_sample);
+
+      if (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp_buffer)) {
+        if (seq) {
+          *seq = gst_rtp_buffer_get_seq (&rtp_buffer);
+          gst_rtp_buffer_unmap (&rtp_buffer);
+        }
+
+        if (rtptime) {
+          *rtptime = GST_BUFFER_TIMESTAMP (buffer);
+        }
+
+        if (running_time) {
+          *running_time =
+              gst_segment_to_running_time (segment, GST_FORMAT_TIME,
+              GST_BUFFER_TIMESTAMP (buffer));
+        }
+
+        if (clock_rate) {
+          GstStructure *s = gst_caps_get_structure (caps, 0);
+
+          gst_structure_get_uint (s, "clock-rate", clock_rate);
+          if (*clock_rate == 0 && running_time)
+            *running_time = GST_CLOCK_TIME_NONE;
+        }
+        gst_sample_unref (last_sample);
+
+        goto done;
+      } else {
+        gst_sample_unref (last_sample);
+      }
+    }
+  }
+
   if (g_object_class_find_property (payobjclass, "stats")) {
     g_object_get (priv->payloader, "stats", &stats, NULL);
     if (stats == NULL)
@@ -2491,6 +2547,8 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
     if (running_time)
       *running_time = GST_CLOCK_TIME_NONE;
   }
+
+done:
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
