@@ -99,6 +99,22 @@ set_default_colorimetry (GstVideoInfo * info)
   }
 }
 
+static gboolean
+validate_colorimetry (GstVideoInfo * info)
+{
+  const GstVideoFormatInfo *finfo = info->finfo;
+
+  if (!GST_VIDEO_FORMAT_INFO_IS_RGB (finfo) &&
+      info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB)
+    return FALSE;
+
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo) &&
+      info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN)
+    return FALSE;
+
+  return TRUE;
+}
+
 /**
  * gst_video_info_set_format:
  * @info: a #GstVideoInfo
@@ -244,10 +260,17 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     info->chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
 
   if ((s = gst_structure_get_string (structure, "colorimetry"))) {
-    if (!gst_video_colorimetry_from_string (&info->colorimetry, s))
+    if (!gst_video_colorimetry_from_string (&info->colorimetry, s)) {
+      GST_WARNING ("unparsable colorimetry, using default");
       set_default_colorimetry (info);
-  } else
+    } else if (!validate_colorimetry (info)) {
+      GST_WARNING ("invalid colorimetry, using default");
+      set_default_colorimetry (info);
+    }
+  } else {
+    GST_DEBUG ("no colorimetry, using default");
     set_default_colorimetry (info);
+  }
 
   if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
           &par_n, &par_d)) {
