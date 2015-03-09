@@ -63,7 +63,6 @@ typedef enum {
 #define WRONG_FLOW_RETURN                        _QUARK("buffer::wrong-flow-return")
 #define BUFFER_AFTER_EOS                         _QUARK("buffer::after-eos")
 #define WRONG_BUFFER                             _QUARK("buffer::not-expected-one")
-#define FIRST_BUFFER_NOT_DISCONT                 _QUARK("buffer::first-buffer-not-discont")
 
 #define CAPS_IS_MISSING_FIELD                    _QUARK("caps::is-missing-field")
 #define CAPS_FIELD_HAS_BAD_TYPE                  _QUARK("caps::field-has-bad-type")
