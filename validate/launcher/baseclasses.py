@@ -180,8 +180,7 @@ class Test(Loggable):
             self.set_result(Result.PASSED)
         else:
             self.set_result(Result.FAILED,
-                            "Application returned %d" % (
-                                self.process.returncode))
+                            "Application returned %d" % (self.process.returncode))
 
     def get_current_value(self):
         """
@@ -427,6 +426,7 @@ class GstValidateTest(Test):
         self.debug("%s returncode: %s", self, self.process.returncode)
         if self.result == Result.TIMEOUT:
             self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
+            return
 
         criticals = self.get_validate_criticals_errors()
         if self.process.returncode == 139:
