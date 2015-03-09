@@ -342,7 +342,7 @@ too_few_planes:
   gst_video_frame_unmap (&vframe);
 
 buffer_not_mapped:
-  g_object_unref (test_buffer);
+  gst_buffer_unref (test_buffer);
 
 buffer_not_acquired:
   gst_buffer_pool_set_active (pool, pool_was_active);
