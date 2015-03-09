@@ -319,7 +319,8 @@ _audio_device_has_output (AudioDeviceID device_id)
   return TRUE;
 }
 
-AudioChannelLayout *
+#ifdef GST_CORE_AUDIO_DEBUG
+static AudioChannelLayout *
 gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id,
     gboolean output)
 {
@@ -384,6 +385,7 @@ failed:
   g_free (layout);
   return NULL;
 }
+#endif
 
 static inline AudioStreamID *
 _audio_device_get_streams (AudioDeviceID device_id, gint * nstreams)

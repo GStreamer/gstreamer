@@ -77,10 +77,8 @@ struct _GstOsxAudioSink
 
   AudioUnit audiounit;
   double volume;
-  GstCaps *cached_caps;
 
   guint channels;
-  GstAudioChannelPosition channel_positions[GST_OSX_AUDIO_MAX_CHANNEL];
 };
 
 struct _GstOsxAudioSinkClass

@@ -61,5 +61,6 @@ OSStatus gst_core_audio_render_notify                     (GstCoreAudio * core_a
                                                            unsigned int inNumberFrames,
                                                            AudioBufferList * ioData);
 
-AudioChannelLabel gst_audio_channel_position_to_coreaudio_channel_label (GstAudioChannelPosition position, int channel);
+AudioChannelLabel gst_audio_channel_position_to_core_audio (GstAudioChannelPosition position, int channel);
 
+GstAudioChannelPosition gst_core_audio_channel_label_to_gst (AudioChannelLabel label, int channel, gboolean warn);

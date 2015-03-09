@@ -99,13 +99,6 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
   return TRUE;
 }
 
-AudioChannelLayout *
-gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id,
-    gboolean output)
-{
-  return NULL;
-}
-
 static gboolean
 gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
 {

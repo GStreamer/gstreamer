@@ -220,10 +220,9 @@ gst_osx_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
   GST_DEBUG_OBJECT (osxbuf, "Format: " CORE_AUDIO_FORMAT,
       CORE_AUDIO_FORMAT_ARGS (format));
 
-  if (GST_IS_OSX_AUDIO_SINK (GST_OBJECT_PARENT (buf))) {
-    gst_audio_ring_buffer_set_channel_positions (buf,
-        GST_OSX_AUDIO_SINK (GST_OBJECT_PARENT (buf))->channel_positions);
-  }
+  /* gst_audio_ring_buffer_set_channel_positions is not called
+   * since the AUs perform channel reordering themselves.
+   * (see gst_core_audio_set_channel_layout) */
 
   buf->size = spec->segtotal * spec->segsize;
   buf->memory = g_malloc0 (buf->size);

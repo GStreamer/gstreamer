@@ -68,8 +68,6 @@ struct _GstOsxAudioSrc
   GstAudioBaseSrc src;
 
   AudioDeviceID device_id;
-
-  GstCaps *cached_caps;
 };
 
 struct _GstOsxAudioSrcClass

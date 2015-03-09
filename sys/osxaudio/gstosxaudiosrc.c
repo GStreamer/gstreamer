@@ -97,7 +97,6 @@ static GstStateChangeReturn
 gst_osx_audio_src_change_state (GstElement * element,
     GstStateChange transition);
 
-static void gst_osx_audio_src_probe_caps (GstOsxAudioSrc * src);
 static GstCaps *gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter);
 
 static GstAudioRingBuffer *gst_osx_audio_src_create_ringbuffer (GstAudioBaseSrc
@@ -171,7 +170,6 @@ gst_osx_audio_src_init (GstOsxAudioSrc * src)
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
 
   src->device_id = kAudioDeviceUnknown;
-  src->cached_caps = NULL;
 }
 
 static void
@@ -241,72 +239,14 @@ out:
   return ret;
 }
 
-static void
-gst_osx_audio_src_probe_caps (GstOsxAudioSrc * osxsrc)
-{
-  GstOsxAudioRingBuffer *ringbuffer =
-      GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SRC (osxsrc)->ringbuffer);
-  GstCoreAudio *core_audio = ringbuffer->core_audio;
-  GstCaps *caps;
-  gint channels;
-  AudioChannelLayout *layout;
-  AudioStreamBasicDescription asbd_in;
-  UInt32 propertySize;
-  OSStatus status;
-
-  propertySize = sizeof (asbd_in);
-  status = AudioUnitGetProperty (core_audio->audiounit,
-      kAudioUnitProperty_StreamFormat,
-      kAudioUnitScope_Input, 1, &asbd_in, &propertySize);
-  if (status)
-    goto fail;
-
-  layout = gst_core_audio_audio_device_get_channel_layout (osxsrc->device_id,
-      FALSE);
-
-  if (layout) {
-    channels = MIN (layout->mNumberChannelDescriptions,
-        GST_OSX_AUDIO_MAX_CHANNEL);
-  } else {
-    GST_WARNING_OBJECT (osxsrc, "This driver does not support "
-        "kAudioDevicePropertyPreferredChannelLayout.");
-    channels = 2;
-  }
-
-  caps = gst_core_audio_asbd_to_caps (&asbd_in, layout);
-  if (!caps) {
-    GST_WARNING_OBJECT (osxsrc, "Could not get caps from stream description");
-    g_free (layout);
-    goto fail;
-  } else {
-    GST_DEBUG_OBJECT (osxsrc, "Got caps on device: %p", caps);
-  }
-
-  g_free (layout);
-
-  if (osxsrc->cached_caps)
-    gst_caps_unref (osxsrc->cached_caps);
-
-  osxsrc->cached_caps = caps;
-
-  return;
-
-fail:
-  AudioComponentInstanceDispose (core_audio->audiounit);
-  core_audio->audiounit = NULL;
-  GST_WARNING_OBJECT (osxsrc,
-      "Unable to obtain device properties: %d", (int) status);
-}
-
 static GstCaps *
 gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
-  GstElementClass *gstelement_class;
   GstOsxAudioSrc *osxsrc;
   GstAudioRingBuffer *buf;
-  GstCaps *ret = NULL;
+  GstOsxAudioRingBuffer *osxbuf;
+  GstCaps *caps, *filtered_caps;
 
-  gstelement_class = GST_ELEMENT_GET_CLASS (src);
   osxsrc = GST_OSX_AUDIO_SRC (src);
 
   GST_OBJECT_LOCK (osxsrc);
@@ -315,31 +255,51 @@ gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
     gst_object_ref (buf);
   GST_OBJECT_UNLOCK (osxsrc);
 
-  if (buf) {
-    GST_OBJECT_LOCK (buf);
-
-    if (buf->open && !osxsrc->cached_caps) {
-      /* Device is open, let's probe its caps */
-      gst_osx_audio_src_probe_caps (osxsrc);
-    }
-
-    GST_OBJECT_UNLOCK (buf);
-    gst_object_unref (buf);
+  if (!buf) {
+    GST_DEBUG_OBJECT (src, "no ring buffer, using template caps");
+    return GST_BASE_SRC_CLASS (parent_class)->get_caps (src, filter);
   }
 
-  if (osxsrc->cached_caps)
-    ret = gst_caps_ref (osxsrc->cached_caps);
-  else
-    ret = gst_pad_get_pad_template_caps (GST_AUDIO_BASE_SRC_PAD (osxsrc));
+  osxbuf = GST_OSX_AUDIO_RING_BUFFER (buf);
 
-  if (filter) {
-    GstCaps *tmp;
-    tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (ret);
-    ret = tmp;
+  /* protect against cached_caps going away */
+  GST_OBJECT_LOCK (buf);
+
+  if (osxbuf->core_audio->cached_caps) {
+    GST_LOG_OBJECT (src, "Returning cached caps");
+    caps = gst_caps_ref (osxbuf->core_audio->cached_caps);
+  } else if (buf->open) {
+    GstCaps *template_caps;
+
+    /* Get template caps */
+    template_caps =
+        gst_pad_get_pad_template_caps (GST_AUDIO_BASE_SRC_PAD (osxsrc));
+
+    /* Device is open, let's probe its caps */
+    caps = gst_core_audio_probe_caps (osxbuf->core_audio, template_caps);
+    gst_caps_replace (&osxbuf->core_audio->cached_caps, caps);
+
+    gst_caps_unref (template_caps);
+  } else {
+    GST_DEBUG_OBJECT (src, "ring buffer not open, using template caps");
+    caps = GST_BASE_SRC_CLASS (parent_class)->get_caps (src, NULL);
   }
 
-  return ret;
+  GST_OBJECT_UNLOCK (buf);
+
+  gst_object_unref (buf);
+
+  if (!caps)
+    return NULL;
+
+  if (!filter)
+    return caps;
+
+  /* Take care of filtered caps */
+  filtered_caps =
+      gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (caps);
+  return filtered_caps;
 }
 
 static GstAudioRingBuffer *

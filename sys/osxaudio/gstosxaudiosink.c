@@ -116,7 +116,6 @@ gst_osx_audio_sink_change_state (GstElement * element,
 
 static gboolean gst_osx_audio_sink_query (GstBaseSink * base, GstQuery * query);
 
-static gboolean gst_osx_audio_sink_stop (GstBaseSink * base);
 static GstCaps *gst_osx_audio_sink_getcaps (GstBaseSink * base,
     GstCaps * filter);
 static gboolean gst_osx_audio_sink_acceptcaps (GstOsxAudioSink * sink,
@@ -128,7 +127,6 @@ static GstAudioRingBuffer
     * gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink);
 static void gst_osx_audio_sink_osxelement_init (gpointer g_iface,
     gpointer iface_data);
-static void gst_osx_audio_sink_probe_caps (GstOsxAudioSink * sink);
 static void gst_osx_audio_sink_set_volume (GstOsxAudioSink * sink);
 
 static OSStatus gst_osx_audio_sink_io_proc (GstOsxAudioRingBuffer * buf,
@@ -191,7 +189,6 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
           0, 1.0, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_osx_audio_sink_getcaps);
-  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_osx_audio_sink_stop);
 
   gstaudiobasesink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_osx_audio_sink_create_ringbuffer);
@@ -210,19 +207,10 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
 static void
 gst_osx_audio_sink_init (GstOsxAudioSink * sink)
 {
-  gint i;
-
   GST_DEBUG ("Initialising object");
 
   sink->device_id = kAudioDeviceUnknown;
-  sink->cached_caps = NULL;
-
   sink->volume = DEFAULT_VOLUME;
-
-  sink->channels = 0;
-  for (i = 0; i < GST_OSX_AUDIO_MAX_CHANNEL; i++) {
-    sink->channel_positions[i] = GST_AUDIO_CHANNEL_POSITION_INVALID;
-  }
 }
 
 static void
@@ -330,28 +318,14 @@ gst_osx_audio_sink_query (GstBaseSink * base, GstQuery * query)
   return ret;
 }
 
-static gboolean
-gst_osx_audio_sink_stop (GstBaseSink * base)
-{
-  GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (base);
-
-  if (sink->cached_caps) {
-    gst_caps_unref (sink->cached_caps);
-    sink->cached_caps = NULL;
-  }
-
-  return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SINK_CLASS, stop, (base), TRUE);
-}
-
 static GstCaps *
 gst_osx_audio_sink_getcaps (GstBaseSink * sink, GstCaps * filter)
 {
-  GstElementClass *gstelement_class;
   GstOsxAudioSink *osxsink;
   GstAudioRingBuffer *buf;
-  GstCaps *ret = NULL;
+  GstOsxAudioRingBuffer *osxbuf;
+  GstCaps *caps, *filtered_caps;
 
-  gstelement_class = GST_ELEMENT_GET_CLASS (sink);
   osxsink = GST_OSX_AUDIO_SINK (sink);
 
   GST_OBJECT_LOCK (osxsink);
@@ -360,33 +334,51 @@ gst_osx_audio_sink_getcaps (GstBaseSink * sink, GstCaps * filter)
     gst_object_ref (buf);
   GST_OBJECT_UNLOCK (osxsink);
 
-  if (buf) {
-    GST_OBJECT_LOCK (buf);
-
-    if (buf->open && !osxsink->cached_caps) {
-      /* Device is open, let's probe its caps */
-      gst_osx_audio_sink_probe_caps (osxsink);
-    }
-
-    if (osxsink->cached_caps)
-      ret = gst_caps_ref (osxsink->cached_caps);
-
-    GST_OBJECT_UNLOCK (buf);
-
-    gst_object_unref (buf);
+  if (!buf) {
+    GST_DEBUG_OBJECT (sink, "no ring buffer, returning NULL caps");
+    return GST_BASE_SINK_CLASS (parent_class)->get_caps (sink, filter);
   }
 
-  if (!ret)
-    ret = gst_pad_get_pad_template_caps (GST_AUDIO_BASE_SINK_PAD (osxsink));
+  osxbuf = GST_OSX_AUDIO_RING_BUFFER (buf);
 
-  if (filter) {
-    GstCaps *tmp;
-    tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (ret);
-    ret = tmp;
+  /* protect against cached_caps going away */
+  GST_OBJECT_LOCK (buf);
+
+  if (osxbuf->core_audio->cached_caps) {
+    GST_LOG_OBJECT (sink, "Returning cached caps");
+    caps = gst_caps_ref (osxbuf->core_audio->cached_caps);
+  } else if (buf->open) {
+    GstCaps *template_caps;
+
+    /* Get template caps */
+    template_caps =
+        gst_pad_get_pad_template_caps (GST_AUDIO_BASE_SINK_PAD (osxsink));
+
+    /* Device is open, let's probe its caps */
+    caps = gst_core_audio_probe_caps (osxbuf->core_audio, template_caps);
+    gst_caps_replace (&osxbuf->core_audio->cached_caps, caps);
+
+    gst_caps_unref (template_caps);
+  } else {
+    GST_DEBUG_OBJECT (sink, "ring buffer not open, returning NULL caps");
+    caps = NULL;
   }
 
-  return ret;
+  GST_OBJECT_UNLOCK (buf);
+
+  gst_object_unref (buf);
+
+  if (!caps)
+    return NULL;
+
+  if (!filter)
+    return caps;
+
+  /* Take care of filtered caps */
+  filtered_caps =
+      gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (caps);
+  return filtered_caps;
 }
 
 static gboolean
@@ -585,86 +577,4 @@ gst_osx_audio_sink_set_volume (GstOsxAudioSink * sink)
     return;
 
   gst_core_audio_set_volume (osxbuf->core_audio, sink->volume);
-}
-
-static void
-gst_osx_audio_sink_probe_caps (GstOsxAudioSink * osxsink)
-{
-  gint i, channels;
-  gboolean spdif_allowed;
-  AudioChannelLayout *layout;
-  GstElementClass *element_class;
-  GstPadTemplate *pad_template;
-  GstCaps *caps, *in_caps;
-  guint64 channel_mask = 0;
-  GstAudioChannelPosition *pos = osxsink->channel_positions;
-
-  /* First collect info about the HW capabilites and preferences */
-  spdif_allowed =
-      gst_core_audio_audio_device_is_spdif_avail (osxsink->device_id);
-  layout = gst_core_audio_audio_device_get_channel_layout (osxsink->device_id,
-      TRUE);
-
-  GST_DEBUG_OBJECT (osxsink, "Selected device ID: %u SPDIF allowed: %d",
-      (unsigned) osxsink->device_id, spdif_allowed);
-
-  if (layout) {
-    channels = MIN (layout->mNumberChannelDescriptions,
-        GST_OSX_AUDIO_MAX_CHANNEL);
-  } else {
-    GST_WARNING_OBJECT (osxsink, "This driver does not support "
-        "kAudioDevicePropertyPreferredChannelLayout.");
-    channels = 2;
-  }
-
-  if (!gst_core_audio_parse_channel_layout (layout, channels, &channel_mask,
-          pos)) {
-    GST_WARNING_OBJECT (osxsink, "Failed to parse channel layout");
-  }
-
-  g_free (layout);
-
-  if (!gst_audio_channel_positions_to_mask (pos, channels, TRUE, &channel_mask)) {
-    GST_WARNING_OBJECT (osxsink, "Probably unsupported channel order");
-  }
-
-  /* Recover the template caps */
-  element_class = GST_ELEMENT_GET_CLASS (osxsink);
-  pad_template = gst_element_class_get_pad_template (element_class, "sink");
-  in_caps = gst_pad_template_get_caps (pad_template);
-
-  /* Create the allowed subset  */
-  caps = gst_caps_new_empty ();
-  for (i = 0; i < gst_caps_get_size (in_caps); i++) {
-    GstStructure *in_s, *out_s;
-
-    in_s = gst_caps_get_structure (in_caps, i);
-
-    if (gst_structure_has_name (in_s, "audio/x-ac3") ||
-        gst_structure_has_name (in_s, "audio/x-dts")) {
-      if (spdif_allowed) {
-        gst_caps_append_structure (caps, gst_structure_copy (in_s));
-      }
-    } else {
-      out_s = gst_structure_copy (in_s);
-
-      gst_structure_remove_fields (out_s, "channels", NULL);
-      gst_structure_set (out_s, "channels", G_TYPE_INT, channels, NULL);
-
-      if (channel_mask) {
-        gst_structure_remove_fields (out_s, "channel-mask", NULL);
-        gst_structure_set (out_s, "channel-mask", GST_TYPE_BITMASK,
-            channel_mask, NULL);
-      }
-
-      gst_caps_append_structure (caps, out_s);
-    }
-  }
-
-  if (osxsink->cached_caps) {
-    gst_caps_unref (osxsink->cached_caps);
-  }
-
-  osxsink->cached_caps = caps;
-  osxsink->channels = channels;
 }

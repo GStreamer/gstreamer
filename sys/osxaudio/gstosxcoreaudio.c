@@ -48,6 +48,7 @@ gst_core_audio_init (GstCoreAudio * core_audio)
   core_audio->device_id = kAudioDeviceUnknown;
   core_audio->is_src = FALSE;
   core_audio->audiounit = NULL;
+  core_audio->cached_caps = NULL;
 #ifndef HAVE_IOS
   core_audio->hog_pid = -1;
   core_audio->disabled_mixing = FALSE;
@@ -65,6 +66,7 @@ gst_core_audio_new (GstObject * osxbuf)
 
   core_audio = g_object_new (GST_TYPE_CORE_AUDIO, NULL);
   core_audio->osxbuf = osxbuf;
+  core_audio->cached_caps = NULL;
   return core_audio;
 }
 
@@ -80,6 +82,9 @@ gst_core_audio_close (GstCoreAudio * core_audio)
         (int) status);
     return FALSE;
   }
+
+  /* core_audio->osxbuf is already locked at this point */
+  gst_caps_replace (&core_audio->cached_caps, NULL);
 
   AudioComponentInstanceDispose (core_audio->audiounit);
   core_audio->audiounit = NULL;
@@ -191,79 +196,143 @@ gst_core_audio_audio_device_is_spdif_avail (AudioDeviceID device_id)
   return gst_core_audio_audio_device_is_spdif_avail_impl (device_id);
 }
 
-gboolean
-gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
-    gint channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+/* Does the channel have at least one positioned channel?
+ * (GStreamer is more strict than Core Audio, in that it requires either
+ * all channels to be positioned, or all unpositioned.) */
+static gboolean
+_is_core_audio_layout_positioned (AudioChannelLayout * layout)
 {
-  gint i;
-  gboolean ret = TRUE;
+  guint i;
 
-  g_return_val_if_fail (channels <= GST_OSX_AUDIO_MAX_CHANNEL, FALSE);
+  g_assert (layout->mChannelLayoutTag ==
+      kAudioChannelLayoutTag_UseChannelDescriptions);
 
-  switch (channels) {
-    case 0:
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_NONE;
-      break;
-    case 1:
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
-      break;
-    case 2:
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-      *channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT);
-      *channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
-      break;
-    default:
-      for (i = 0; i < channels; i++) {
-        switch (layout->mChannelDescriptions[i].mChannelLabel) {
-          case kAudioChannelLabel_Left:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-            break;
-          case kAudioChannelLabel_Right:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-            break;
-          case kAudioChannelLabel_Center:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-            break;
-          case kAudioChannelLabel_LFEScreen:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_LFE1;
-            break;
-          case kAudioChannelLabel_LeftSurround:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-            break;
-          case kAudioChannelLabel_RightSurround:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
-            break;
-          case kAudioChannelLabel_RearSurroundLeft:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
-            break;
-          case kAudioChannelLabel_RearSurroundRight:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
-            break;
-          case kAudioChannelLabel_CenterSurround:
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
-            break;
-          default:
-            GST_WARNING ("unrecognized channel: %d",
-                (int) layout->mChannelDescriptions[i].mChannelLabel);
-            *channel_mask = 0;
-            ret = FALSE;
-            break;
-        }
-      }
+  for (i = 0; i < layout->mNumberChannelDescriptions; ++i) {
+    GstAudioChannelPosition p =
+        gst_core_audio_channel_label_to_gst
+        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE);
+
+    if (p >= 0)                 /* not special positition */
+      return TRUE;
   }
 
-  return ret;
+  return FALSE;
 }
 
+static void
+_core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
+    guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+{
+  gboolean positioned;
+  guint i;
+
+  g_assert (layout->mChannelLayoutTag ==
+      kAudioChannelLayoutTag_UseChannelDescriptions);
+
+  positioned = _is_core_audio_layout_positioned (layout);
+  *channel_mask = 0;
+
+  /* Go over all labels, either taking only positioned or only
+   * unpositioned channels, up to GST_OSX_AUDIO_MAX_CHANNEL channels.
+   *
+   * The resulting 'pos' array will contain either:
+   *  - only regular (>= 0) positions
+   *  - only GST_AUDIO_CHANNEL_POSITION_NONE positions
+   * in a compact form, skipping over all unsupported positions.
+   */
+  *channels = 0;
+  for (i = 0; i < layout->mNumberChannelDescriptions; ++i) {
+    GstAudioChannelPosition p =
+        gst_core_audio_channel_label_to_gst
+        (layout->mChannelDescriptions[i].mChannelLabel, i, TRUE);
+
+    /* In positioned layouts, skip all unpositioned channels.
+     * In unpositioned layouts, skip all invalid channels. */
+    if ((positioned && p >= 0) ||
+        (!positioned && p == GST_AUDIO_CHANNEL_POSITION_NONE)) {
+
+      if (pos)
+        pos[*channels] = p;
+      *channel_mask |= G_GUINT64_CONSTANT (1) << p;
+      ++(*channels);
+
+      if (*channels == GST_OSX_AUDIO_MAX_CHANNEL)
+        break;                  /* not to overflow */
+    }
+  }
+}
+
+gboolean
+gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
+    guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+{
+  g_assert (channels != NULL);
+  g_assert (channel_mask != NULL);
+  g_assert (layout != NULL);
+
+  if (layout->mChannelLayoutTag !=
+      kAudioChannelLayoutTag_UseChannelDescriptions) {
+    GST_ERROR
+        ("Only kAudioChannelLayoutTag_UseChannelDescriptions is supported.");
+    *channels = 0;
+    *channel_mask = 0;
+    return FALSE;
+  }
+
+  switch (layout->mNumberChannelDescriptions) {
+    case 0:
+      if (pos)
+        pos[0] = GST_AUDIO_CHANNEL_POSITION_NONE;
+      *channels = 0;
+      *channel_mask = 0;
+      return TRUE;
+    case 1:
+      if (pos)
+        pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+      *channels = 1;
+      *channel_mask = 0;
+      return TRUE;
+    case 2:
+      if (pos) {
+        pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      }
+      *channels = 2;
+      *channel_mask =
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
+      return TRUE;
+    default:
+      _core_audio_parse_channel_descriptions (layout, channels, channel_mask,
+          pos);
+      return TRUE;
+  }
+}
+
+/* Converts an AudioStreamBasicDescription to preferred caps.
+ *
+ * These caps will indicate the AU element's canonical format, which won't
+ * make Core Audio resample nor convert.
+ *
+ * NOTE ON MULTI-CHANNEL AUDIO:
+ *
+ * If layout is not NULL, resulting caps will only include the subset
+ * of channels supported by GStreamer. If the Core Audio layout contained
+ * ANY positioned channels, then ONLY positioned channels will be included
+ * in the resulting caps. Otherwise, resulting caps will be unpositioned,
+ * and include only unpositioned channels.
+ * (Channels with unsupported AudioChannelLabel will be skipped either way.)
+ *
+ * Naturally, the number of channels indicated by 'channels' can be lower
+ * than the AU element's total number of channels.
+ */
 GstCaps *
 gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
     AudioChannelLayout * layout)
 {
   GstAudioInfo info;
   GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
-  GstAudioChannelPosition pos[64] = { GST_AUDIO_CHANNEL_POSITION_INVALID, };
-  gint rate, channels, bps, endianness;
+  guint rate, channels, bps, endianness;
   guint64 channel_mask;
   gboolean sign, interleaved;
 
@@ -283,13 +352,9 @@ gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
   }
 
   rate = asbd->mSampleRate;
-  if (rate == kAudioStreamAnyRate)
-    rate = GST_AUDIO_DEF_RATE;
-
-  channels = asbd->mChannelsPerFrame;
-  if (channels == 0) {
-    /* The documentation says this should not happen! */
-    channels = 1;
+  if (rate == kAudioStreamAnyRate) {
+    GST_WARNING ("No sample rate");
+    goto error;
   }
 
   bps = asbd->mBitsPerChannel;
@@ -321,16 +386,206 @@ gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
     goto error;
   }
 
-  if (!gst_core_audio_parse_channel_layout (layout, channels, &channel_mask,
-          pos)) {
-    GST_WARNING ("Failed to parse channel layout");
-    goto error;
-  }
+  if (layout) {
+    GstAudioChannelPosition pos[GST_OSX_AUDIO_MAX_CHANNEL];
 
-  gst_audio_info_set_format (&info, format, rate, channels, pos);
+    if (!gst_core_audio_parse_channel_layout (layout, &channels, &channel_mask,
+            pos)) {
+      GST_WARNING ("Failed to parse channel layout");
+      goto error;
+    }
+
+    /* The AU can have arbitrary channel order, but we're using GstAudioInfo
+     * which supports only the GStreamer channel order.
+     * Also, we're eventually producing caps, which only have channel-mask
+     * (whose implied order is the GStreamer channel order). */
+    gst_audio_channel_positions_to_valid_order (pos, channels);
+
+    gst_audio_info_set_format (&info, format, rate, channels, pos);
+  } else {
+    channels = MIN (asbd->mChannelsPerFrame, GST_OSX_AUDIO_MAX_CHANNEL);
+    gst_audio_info_set_format (&info, format, rate, channels, NULL);
+  }
 
   return gst_audio_info_to_caps (&info);
 
 error:
   return NULL;
+}
+
+static gboolean
+_core_audio_get_property (GstCoreAudio * core_audio, gboolean outer,
+    AudioUnitPropertyID inID, void *inData, UInt32 * inDataSize)
+{
+  OSStatus status;
+  AudioUnitScope scope;
+  AudioUnitElement element;
+
+  scope = outer ?
+      CORE_AUDIO_OUTER_SCOPE (core_audio) : CORE_AUDIO_INNER_SCOPE (core_audio);
+  element = CORE_AUDIO_ELEMENT (core_audio);
+
+  status =
+      AudioUnitGetProperty (core_audio->audiounit, inID, scope, element, inData,
+      inDataSize);
+
+  return status == noErr;
+}
+
+static gboolean
+_core_audio_get_stream_format (GstCoreAudio * core_audio,
+    AudioStreamBasicDescription * asbd, gboolean outer)
+{
+  UInt32 size;
+
+  size = sizeof (AudioStreamBasicDescription);
+  return _core_audio_get_property (core_audio, outer,
+      kAudioUnitProperty_StreamFormat, asbd, &size);
+}
+
+AudioChannelLayout *
+gst_core_audio_get_channel_layout (GstCoreAudio * core_audio, gboolean outer)
+{
+  UInt32 size;
+  AudioChannelLayout *layout;
+
+  if (core_audio->is_src) {
+    GST_WARNING_OBJECT (core_audio,
+        "gst_core_audio_get_channel_layout not supported on source.");
+    return NULL;
+  }
+
+  if (!_core_audio_get_property (core_audio, outer,
+          kAudioUnitProperty_AudioChannelLayout, NULL, &size)) {
+    GST_WARNING_OBJECT (core_audio, "unable to get channel layout");
+    return NULL;
+  }
+
+  layout = g_malloc (size);
+  if (!_core_audio_get_property (core_audio, outer,
+          kAudioUnitProperty_AudioChannelLayout, layout, &size)) {
+    GST_WARNING_OBJECT (core_audio, "unable to get channel layout");
+    g_free (layout);
+    return NULL;
+  }
+
+  return layout;
+}
+
+GstCaps *
+gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
+{
+  guint i, channels;
+  gboolean spdif_allowed;
+  AudioChannelLayout *layout;
+  AudioStreamBasicDescription outer_asbd;
+  gboolean got_outer_asbd;
+  GstCaps *caps = NULL;
+  guint64 channel_mask;
+
+  /* Get the ASBD of the outer scope (i.e. input scope of Input,
+   * output scope of Output).
+   * This ASBD indicates the hardware format. */
+  got_outer_asbd =
+      _core_audio_get_stream_format (core_audio, &outer_asbd, TRUE);
+
+  /* Collect info about the HW capabilites and preferences */
+  spdif_allowed =
+      gst_core_audio_audio_device_is_spdif_avail (core_audio->device_id);
+  layout = gst_core_audio_get_channel_layout (core_audio, TRUE);
+
+  GST_DEBUG_OBJECT (core_audio, "Selected device ID: %u SPDIF allowed: %d",
+      (unsigned) core_audio->device_id, spdif_allowed);
+
+  if (layout) {
+    if (!gst_core_audio_parse_channel_layout (layout, &channels, &channel_mask,
+            NULL)) {
+      GST_WARNING_OBJECT (core_audio, "Failed to parse channel layout");
+      channel_mask = 0;
+    }
+
+    /* If available, start with the preferred caps. */
+    if (got_outer_asbd)
+      caps = gst_core_audio_asbd_to_caps (&outer_asbd, layout);
+
+    g_free (layout);
+  } else if (got_outer_asbd) {
+    channels = outer_asbd.mChannelsPerFrame;
+    channel_mask = 0;
+    /* If available, start with the preferred caps */
+    caps = gst_core_audio_asbd_to_caps (&outer_asbd, NULL);
+  } else {
+    GST_ERROR_OBJECT (core_audio,
+        "Unable to get any information about hardware");
+    return NULL;
+  }
+
+  /* Append the allowed subset based on the template caps  */
+  if (!caps)
+    caps = gst_caps_new_empty ();
+  for (i = 0; i < gst_caps_get_size (in_caps); i++) {
+    GstStructure *in_s;
+
+    in_s = gst_caps_get_structure (in_caps, i);
+
+    if (gst_structure_has_name (in_s, "audio/x-ac3") ||
+        gst_structure_has_name (in_s, "audio/x-dts")) {
+      if (spdif_allowed) {
+        gst_caps_append_structure (caps, gst_structure_copy (in_s));
+      }
+    } else {
+      GstStructure *out_s;
+
+      out_s = gst_structure_copy (in_s);
+      gst_structure_set (out_s, "channels", G_TYPE_INT, channels, NULL);
+      if (channel_mask != 0) {
+        /* positioned layout */
+        gst_structure_set (out_s,
+            "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
+      } else {
+        /* unpositioned layout */
+        gst_structure_remove_field (out_s, "channel-mask");
+      }
+
+      gst_caps_append_structure (caps, out_s);
+
+      /* Special cases for upmixing and downmixing.
+       * Other than that, the AUs don't upmix or downmix multi-channel audio,
+       * e.g. if you push 5.1-surround audio to a stereo configuration,
+       * the left and right channels will be played accordingly,
+       * and the rest will be dropped. */
+
+      if (channels >= 2 &&
+          (channel_mask & GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT)) &&
+          (channel_mask & GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT))) {
+
+        /* If have stereo channels, then also offer mono since CoreAudio
+         * upmixes it */
+
+        out_s = gst_structure_copy (out_s);
+
+        gst_structure_set (out_s, "channels", G_TYPE_INT, 1, NULL);
+        /* Mono has no channel-mask */
+        gst_structure_remove_field (out_s, "channel-mask");
+
+        gst_caps_append_structure (caps, out_s);
+
+      } else if (channels == 1 && channel_mask == 0) {
+
+        /* If mono, then also offer stereo since CoreAudio downmixes to it */
+
+        out_s = gst_structure_copy (out_s);
+
+        gst_structure_set (out_s,
+            "channels", G_TYPE_INT, 1,
+            "channel-mask", GST_TYPE_BITMASK,
+            GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+            GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT), NULL);
+
+        gst_caps_append_structure (caps, out_s);
+      }
+    }
+  }
+
+  return caps;
 }
