@@ -628,7 +628,7 @@ gst_video_encoder_setcaps (GstVideoEncoder * encoder, GstCaps * caps)
 
   if (encoder_class->reset) {
     GST_FIXME_OBJECT (encoder, "GstVideoEncoder::reset() is deprecated");
-    ret = encoder_class->reset (encoder, TRUE);
+    encoder_class->reset (encoder, TRUE);
   }
 
   /* and subclass should be ready to configure format at any time around */
