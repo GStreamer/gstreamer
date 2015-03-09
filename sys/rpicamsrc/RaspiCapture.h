@@ -101,7 +101,8 @@ void raspicapture_init();
 void raspicapture_default_config(RASPIVID_CONFIG *config);
 RASPIVID_STATE *raspi_capture_setup(RASPIVID_CONFIG *config);
 gboolean raspi_capture_start(RASPIVID_STATE *state);
-GstFlowReturn raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **buf);
+GstFlowReturn raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **buf,
+    GstClock *clock, GstClockTime base_time);
 void raspi_capture_stop(RASPIVID_STATE *state);
 void raspi_capture_free(RASPIVID_STATE *state);
 gboolean raspi_capture_request_i_frame(RASPIVID_STATE *state);

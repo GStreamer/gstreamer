@@ -911,18 +911,48 @@ static void encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buf
 }
 
 GstFlowReturn
-raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp)
+raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
+    GstClock *clock, GstClockTime base_time)
 {
   GstBuffer *buf;
   MMAL_BUFFER_HEADER_T *buffer;
   GstFlowReturn ret = GST_FLOW_ERROR;
+  /* No timestamps if no clockm or invalid PTS */
+  GstClockTime gst_pts = GST_CLOCK_TIME_NONE;
 
   /* FIXME: Use our own interruptible cond wait: */
   buffer = mmal_queue_wait(state->encoded_buffer_q);
 
+  
+  if (G_LIKELY (clock)) {
+    MMAL_PARAMETER_INT64_T param;
+    GstClockTime runtime;
+
+    runtime = gst_clock_get_time (clock) - base_time;
+
+    param.hdr.id = MMAL_PARAMETER_SYSTEM_TIME;
+    param.hdr.size = sizeof(param);
+    param.value = -1;
+
+    mmal_port_parameter_get(state->encoder_output_port, &param.hdr);
+
+    if (param.value != -1 && param.value >= buffer->pts) {
+      GstClockTime offset = param.value - buffer->pts;
+      if (runtime >= offset)
+        gst_pts = runtime - offset;
+    }
+    GST_LOG ("Buf PTS %" G_GINT64_FORMAT " DTS %" G_GINT64_FORMAT
+        " STC %" G_GINT64_FORMAT " TS %" GST_TIME_FORMAT,
+        buffer->pts, buffer->dts, param.value,
+        GST_TIME_ARGS (gst_pts));
+  }
+
+
   mmal_buffer_header_mem_lock(buffer);
   buf = gst_buffer_new_allocate(NULL, buffer->length, NULL);
   if (buf) {
+    /* FIXME: Can we avoid copies and give MMAL our own buffers to fill? */
+    GST_BUFFER_PTS(buf) = gst_pts;
     gst_buffer_fill(buf, 0, buffer->data, buffer->length);
     ret = GST_FLOW_OK;
   }
@@ -1056,7 +1086,7 @@ raspi_capture_set_format_and_start(RASPIVID_STATE *state)
       .num_preview_video_frames = 3,
       .stills_capture_circular_buffer_height = 0,
       .fast_preview_resume = 0,
-      .use_stc_timestamp = MMAL_PARAM_TIMESTAMP_MODE_RESET_STC
+      .use_stc_timestamp = MMAL_PARAM_TIMESTAMP_MODE_RAW_STC
    };
 
    camera = state->camera_component;

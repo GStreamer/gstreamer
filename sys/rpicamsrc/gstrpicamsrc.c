@@ -435,8 +435,9 @@ gst_rpi_cam_src_init (GstRpiCamSrc * src)
   raspicapture_default_config (&src->capture_config);
   src->capture_config.intraperiod = KEYFRAME_INTERVAL_DEFAULT;
   src->capture_config.verbose = 1;
-  /* do-timestamping by default for now. FIXME: Implement proper timestamping */
-  gst_base_src_set_do_timestamp (GST_BASE_SRC (src), TRUE);
+  /* Don't let basesrc set timestamps, we'll do it using
+   * buffer PTS and system times */
+  gst_base_src_set_do_timestamp (GST_BASE_SRC (src), FALSE);
 }
 
 static void
@@ -862,17 +863,29 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (parent);
   GstFlowReturn ret;
+  GstClock *clock = NULL;
+  GstClockTime base_time;
+
   if (!src->started) {
     if (!raspi_capture_start (src->capture_state))
       return GST_FLOW_ERROR;
     src->started = TRUE;
   }
 
+  GST_OBJECT_LOCK (src);
+  if ((clock = GST_ELEMENT_CLOCK (src)) != NULL)
+    gst_object_ref (clock);
+  base_time = GST_ELEMENT_CAST (src)->base_time;
+  GST_OBJECT_UNLOCK (src);
+
   /* FIXME: Use custom allocator */
-  ret = raspi_capture_fill_buffer (src->capture_state, buf);
+  ret = raspi_capture_fill_buffer (src->capture_state, buf, clock, base_time);
   if (*buf)
     GST_LOG_OBJECT (src, "Made buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (*buf));
+
+  if (clock)
+    gst_object_unref (clock);
   return ret;
 }
 
