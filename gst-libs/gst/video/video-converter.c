@@ -973,6 +973,34 @@ is_ayuv_to_rgb_matrix (MatrixData * data)
   return TRUE;
 }
 
+static gboolean
+is_identity_matrix (MatrixData * data)
+{
+  gint i, j;
+  gint c = data->im[0][0];
+
+  /* not really checking identity because of rounding errors but given
+   * the conversions we do we just check for anything that looks like:
+   *
+   *  c 0 0 0
+   *  0 c 0 0
+   *  0 0 c 0
+   *  0 0 0 1
+   */
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      if (i == j) {
+        if (i == 3 && data->im[i][j] != 1)
+          return FALSE;
+        else if (data->im[i][j] != c)
+          return FALSE;
+      } else if (data->im[i][j] != 0)
+        return FALSE;
+    }
+  }
+  return TRUE;
+}
+
 static void
 video_converter_matrix16 (MatrixData * data, gpointer pixels)
 {
@@ -1004,6 +1032,9 @@ video_converter_matrix16 (MatrixData * data, gpointer pixels)
 static void
 prepare_matrix (GstVideoConverter * convert, MatrixData * data)
 {
+  if (is_identity_matrix (data))
+    return;
+
   color_matrix_scale_components (data, SCALE_F, SCALE_F, SCALE_F);
   color_matrix_convert (data);
 
