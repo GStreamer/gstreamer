@@ -1540,16 +1540,16 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     len =
         gst_ffmpegviddec_frame (ffmpegdec, data, size, &have_data, frame, &ret);
 
-    if (do_padding) {
-      memcpy (data + size, tmp_padding, FF_INPUT_BUFFER_PADDING_SIZE);
-    }
-
     if (ret != GST_FLOW_OK) {
       GST_LOG_OBJECT (ffmpegdec, "breaking because of flow ret %s",
           gst_flow_get_name (ret));
-      /* bad flow retun, make sure we discard all data and exit */
+      /* bad flow return, make sure we discard all data and exit */
       bsize = 0;
       break;
+    }
+
+    if (do_padding) {
+      memcpy (data + size, tmp_padding, FF_INPUT_BUFFER_PADDING_SIZE);
     }
 
     if (len == 0 && have_data == 0) {
