@@ -3129,6 +3129,7 @@ parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
  *  Mapping of caps to and from SDP fields:
  *
  *   a=rtpmap:<payload> <encoding_name>/<clock_rate>[/<encoding_params>]
+ *   a=framesize:<payload> <width>-<height>
  *   a=fmtp:<payload> <param>[=<value>];...
  */
 static GstCaps *
@@ -3137,6 +3138,7 @@ media_to_caps (gint pt, const GstSDPMedia * media)
   GstCaps *caps;
   const gchar *rtpmap;
   const gchar *fmtp;
+  const gchar *framesize;
   gchar *name = NULL;
   gint rate = -1;
   gchar *params = NULL;
@@ -3248,6 +3250,19 @@ media_to_caps (gint pt, const GstSDPMedia * media)
         }
       }
       g_strfreev (pairs);
+    }
+  }
+
+  /* parse framesize: field */
+  if ((framesize = gst_sdp_media_get_attribute_val (media, "framesize"))) {
+    gchar *p;
+
+    /* p is now of the format <payload> <width>-<height> */
+    p = (gchar *) framesize;
+
+    PARSE_INT (p, " ", payload);
+    if (payload != -1 && payload == pt) {
+      gst_structure_set (s, "a-framesize", G_TYPE_STRING, p, NULL);
     }
   }
   return caps;
@@ -3440,6 +3455,8 @@ sdp_attributes_to_caps (GArray * attributes, GstCaps * caps)
       if (!strcmp (key, "control"))
         continue;
       if (!strcmp (key, "range"))
+        continue;
+      if (!strcmp (key, "framesize"))
         continue;
       if (g_str_equal (key, "key-mgmt")) {
         parse_keymgmt (attr->value, caps);
