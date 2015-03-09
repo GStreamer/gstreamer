@@ -255,6 +255,8 @@ struct _GstRtpJitterBufferPrivate
   guint32 last_popped_seqnum;
   /* the next expected seqnum we push */
   guint32 next_seqnum;
+  /* seqnum-base, if known */
+  guint32 seqnum_base;
   /* last output time */
   GstClockTime last_out_time;
   /* last valid input timestamp and rtptime pair */
@@ -1157,6 +1159,9 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
       priv->next_seqnum = val;
       JBUF_SIGNAL_EVENT (priv);
     }
+    priv->seqnum_base = val;
+  } else {
+    priv->seqnum_base = -1;
   }
 
   GST_DEBUG_OBJECT (jitterbuffer, "got seqnum-base %d", priv->next_in_seqnum);
@@ -1225,6 +1230,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->last_popped_seqnum = -1;
   priv->last_out_time = -1;
   priv->next_seqnum = -1;
+  priv->seqnum_base = -1;
   priv->ips_rtptime = -1;
   priv->ips_dts = GST_CLOCK_TIME_NONE;
   priv->packet_spacing = 0;
@@ -2216,6 +2222,26 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     goto have_eos;
 
   calculate_jitter (jitterbuffer, dts, rtptime);
+
+  if (priv->seqnum_base != -1) {
+    gint gap;
+
+    gap = gst_rtp_buffer_compare_seqnum (priv->seqnum_base, seqnum);
+
+    if (gap < 0) {
+      GST_DEBUG_OBJECT (jitterbuffer,
+          "packet seqnum #%d before seqnum-base #%d", seqnum,
+          priv->seqnum_base);
+      gst_buffer_unref (buffer);
+      ret = GST_FLOW_OK;
+      goto finished;
+    } else if (gap > 16384) {
+      /* From now on don't compare against the seqnum base anymore as
+       * at some point in the future we will wrap around and also that
+       * much reordering is very unlikely */
+      priv->seqnum_base = -1;
+    }
+  }
 
   expected = priv->next_in_seqnum;
 
