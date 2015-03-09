@@ -1066,7 +1066,7 @@ compute_matrix_to_RGB (GstVideoConverter * convert, MatrixData * data)
         1 / ((float) scale[1]), 1 / ((float) scale[2]));
   }
 
-  if (!CHECK_MATRIX_NONE (convert)) {
+  if (!convert->unpack_rgb && !CHECK_MATRIX_NONE (convert)) {
     if (CHECK_MATRIX_OUTPUT (convert))
       info = &convert->out_info;
 
@@ -1074,7 +1074,6 @@ compute_matrix_to_RGB (GstVideoConverter * convert, MatrixData * data)
     if (gst_video_color_matrix_get_Kr_Kb (info->colorimetry.matrix, &Kr, &Kb))
       color_matrix_YCbCr_to_RGB (data, Kr, Kb);
   }
-
   color_matrix_debug (data);
 }
 
@@ -1084,7 +1083,7 @@ compute_matrix_to_YUV (GstVideoConverter * convert, MatrixData * data)
   GstVideoInfo *info;
   gdouble Kr = 0, Kb = 0;
 
-  if (!CHECK_MATRIX_NONE (convert)) {
+  if (!convert->pack_rgb && !CHECK_MATRIX_NONE (convert)) {
     if (CHECK_MATRIX_INPUT (convert))
       info = &convert->in_info;
     else
