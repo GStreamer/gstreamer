@@ -61,7 +61,6 @@ GST_DEBUG_CATEGORY_STATIC (osx_audio_debug);
 #include "gstosxcoreaudio.h"
 
 static void gst_osx_audio_ring_buffer_dispose (GObject * object);
-static void gst_osx_audio_ring_buffer_finalize (GObject * object);
 static gboolean gst_osx_audio_ring_buffer_open_device (GstAudioRingBuffer *
     buf);
 static gboolean gst_osx_audio_ring_buffer_close_device (GstAudioRingBuffer *
@@ -95,7 +94,6 @@ gst_osx_audio_ring_buffer_class_init (GstOsxAudioRingBufferClass * klass)
   ring_parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_osx_audio_ring_buffer_dispose;
-  gobject_class->finalize = gst_osx_audio_ring_buffer_finalize;
 
   gstringbuffer_class->open_device =
       GST_DEBUG_FUNCPTR (gst_osx_audio_ring_buffer_open_device);
@@ -137,12 +135,6 @@ gst_osx_audio_ring_buffer_dispose (GObject * object)
     osxbuf->core_audio = NULL;
   }
   G_OBJECT_CLASS (ring_parent_class)->dispose (object);
-}
-
-static void
-gst_osx_audio_ring_buffer_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ring_parent_class)->finalize (object);
 }
 
 static gboolean
