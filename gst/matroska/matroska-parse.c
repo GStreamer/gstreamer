@@ -2414,7 +2414,7 @@ static GstFlowReturn
 gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
     gboolean keyframe)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret;
 
   if (!parse->pushed_headers) {
     GstCaps *caps;
@@ -2457,7 +2457,11 @@ gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-    gst_pad_push (parse->srcpad, buf);
+    ret = gst_pad_push (parse->srcpad, buf);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (parse, "Failed to push buffer");
+      return ret;
+    }
 
     parse->pushed_headers = TRUE;
   }
@@ -2472,9 +2476,8 @@ gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
   } else {
     GST_BUFFER_TIMESTAMP (buffer) = parse->last_timestamp;
   }
-  ret = gst_pad_push (parse->srcpad, gst_buffer_ref (buffer));
 
-  return ret;
+  return gst_pad_push (parse->srcpad, gst_buffer_ref (buffer));
 }
 
 static GstFlowReturn
