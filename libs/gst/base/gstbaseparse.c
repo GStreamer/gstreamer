@@ -2948,13 +2948,17 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       gst_base_parse_frame_free (&frame);
       return ret;
     }
-    /* upstream feeding us in reverse playback;
-     * finish previous fragment and start new upon DISCONT */
-    if (parse->segment.rate < 0.0) {
-      if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
+    if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
+      /* upstream feeding us in reverse playback;
+       * finish previous fragment and start new upon DISCONT */
+      if (parse->segment.rate < 0.0) {
         GST_DEBUG_OBJECT (parse, "buffer starts new reverse playback fragment");
         ret = gst_base_parse_finish_fragment (parse, TRUE);
         gst_base_parse_start_fragment (parse);
+      } else {
+        /* discont in the stream, drain and mark discont for next output */
+        gst_base_parse_drain (parse);
+        parse->priv->discont = TRUE;
       }
     }
     gst_adapter_push (parse->priv->adapter, buffer);
