@@ -72,7 +72,7 @@ struct _GstOsxAudioSrc
   GstCaps *cached_caps;
 };
 
-struct _GstOsxAudioSrcClass 
+struct _GstOsxAudioSrcClass
 {
   GstAudioBaseSrcClass parent_class;
 };
