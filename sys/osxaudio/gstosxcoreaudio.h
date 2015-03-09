@@ -83,7 +83,6 @@ struct _GstCoreAudio
   gboolean is_src;
   gboolean is_passthrough;
   AudioDeviceID device_id;
-  AudioStreamBasicDescription stream_format;
   gint stream_idx;
   gboolean io_proc_active;
   gboolean io_proc_needs_deactivation;
@@ -99,7 +98,7 @@ struct _GstCoreAudio
   gboolean disabled_mixing;
   AudioStreamID stream_id;
   gboolean revert_format;
-  AudioStreamBasicDescription original_format;
+  AudioStreamBasicDescription original_format, stream_format;
   AudioDeviceIOProcID procID;
 #endif
 };
