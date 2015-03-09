@@ -1212,6 +1212,11 @@ gst_rtp_buffer_default_clock_rate (guint8 payload_type)
 gint
 gst_rtp_buffer_compare_seqnum (guint16 seqnum1, guint16 seqnum2)
 {
+  /* See http://en.wikipedia.org/wiki/Serial_number_arithmetic
+   * for an explanation why this does the right thing even for
+   * wraparounds, under the assumption that the difference is
+   * never bigger than 2**15 sequence numbers
+   */
   return (gint16) (seqnum2 - seqnum1);
 }
 
