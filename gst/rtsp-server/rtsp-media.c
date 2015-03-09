@@ -1855,6 +1855,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   GstClockTime start, stop;
   GstSeekType start_type, stop_type;
   GstQuery *query;
+  gint64 current_position;
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
 
@@ -1899,6 +1900,12 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   GST_INFO ("current %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
       GST_TIME_ARGS (priv->range_start), GST_TIME_ARGS (priv->range_stop));
 
+  current_position = -1;
+  if (klass->query_position)
+    klass->query_position (media, &current_position);
+  GST_INFO ("current media position %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (current_position));
+
   if (start != GST_CLOCK_TIME_NONE)
     start_type = GST_SEEK_TYPE_SET;
 
@@ -1913,10 +1920,6 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     GST_INFO ("seeking to %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
-    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
-    if (priv->blocked)
-      media_streams_set_blocked (media, TRUE);
-
     /* depends on the current playing state of the pipeline. We might need to
      * queue this until we get EOS. */
     flags = GST_SEEK_FLAG_FLUSH;
@@ -1925,18 +1928,12 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
      * but since we're doing a flushing seek, let us query the current position
      * so we end up at exactly the same position after the seek. */
     if (range->min.type == GST_RTSP_TIME_END) { /* Yepp, that's right! */
-      gint64 position;
-      gboolean ret = FALSE;
-
-      if (klass->query_position)
-        ret = klass->query_position (media, &position);
-
-      if (!ret) {
-        GST_WARNING ("position query failed");
+      if (current_position == -1) {
+        GST_WARNING ("current position unknown");
       } else {
         GST_DEBUG ("doing accurate seek to %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (position));
-        start = position;
+            GST_TIME_ARGS (current_position));
+        start = current_position;
         start_type = GST_SEEK_TYPE_SET;
         flags |= GST_SEEK_FLAG_ACCURATE;
       }
@@ -1946,23 +1943,32 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
         flags |= GST_SEEK_FLAG_KEY_UNIT;
     }
 
-    /* FIXME, we only do forwards playback, no trick modes yet */
-    res = gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
-        flags, start_type, start, stop_type, stop);
+    if (start == current_position && stop_type == GST_SEEK_TYPE_NONE) {
+      GST_DEBUG ("not seeking because no position change");
+      res = TRUE;
+    } else {
+      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
+      if (priv->blocked)
+        media_streams_set_blocked (media, TRUE);
 
-    /* and block for the seek to complete */
-    GST_INFO ("done seeking %d", res);
-    if (!res)
-      goto seek_failed;
+      /* FIXME, we only do forwards playback, no trick modes yet */
+      res = gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
+          flags, start_type, start, stop_type, stop);
 
-    g_rec_mutex_unlock (&priv->state_lock);
+      /* and block for the seek to complete */
+      GST_INFO ("done seeking %d", res);
+      if (!res)
+        goto seek_failed;
 
-    /* wait until pipeline is prerolled again, this will also collect stats */
-    if (!wait_preroll (media))
-      goto preroll_failed;
+      g_rec_mutex_unlock (&priv->state_lock);
 
-    g_rec_mutex_lock (&priv->state_lock);
-    GST_INFO ("prerolled again");
+      /* wait until pipeline is prerolled again, this will also collect stats */
+      if (!wait_preroll (media))
+        goto preroll_failed;
+
+      g_rec_mutex_lock (&priv->state_lock);
+      GST_INFO ("prerolled again");
+    }
   } else {
     GST_INFO ("no seek needed");
     res = TRUE;
