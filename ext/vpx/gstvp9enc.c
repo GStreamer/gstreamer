@@ -346,6 +346,8 @@ static gboolean gst_vp9_enc_stop (GstVideoEncoder * encoder);
 static gboolean gst_vp9_enc_set_format (GstVideoEncoder *
     video_encoder, GstVideoCodecState * state);
 static GstFlowReturn gst_vp9_enc_finish (GstVideoEncoder * video_encoder);
+static gboolean gst_vp9_enc_flush (GstVideoEncoder * video_encoder);
+static GstFlowReturn gst_vp9_enc_drain (GstVideoEncoder * video_encoder);
 static GstFlowReturn gst_vp9_enc_handle_frame (GstVideoEncoder *
     video_encoder, GstVideoCodecFrame * frame);
 static GstFlowReturn gst_vp9_enc_drain (GstVideoEncoder * video_encoder);
@@ -405,6 +407,7 @@ gst_vp9_enc_class_init (GstVP9EncClass * klass)
   video_encoder_class->stop = gst_vp9_enc_stop;
   video_encoder_class->handle_frame = gst_vp9_enc_handle_frame;
   video_encoder_class->set_format = gst_vp9_enc_set_format;
+  video_encoder_class->flush = gst_vp9_enc_flush;
   video_encoder_class->finish = gst_vp9_enc_finish;
   video_encoder_class->sink_event = gst_vp9_enc_sink_event;
   video_encoder_class->propose_allocation = gst_vp9_enc_propose_allocation;
@@ -1392,15 +1395,9 @@ gst_vp9_enc_start (GstVideoEncoder * video_encoder)
   return TRUE;
 }
 
-static gboolean
-gst_vp9_enc_stop (GstVideoEncoder * video_encoder)
+static void
+gst_vp9_enc_destroy_encoder (GstVP9Enc * encoder)
 {
-  GstVP9Enc *encoder;
-
-  GST_DEBUG_OBJECT (video_encoder, "stop");
-
-  encoder = GST_VP9_ENC (video_encoder);
-
   g_mutex_lock (&encoder->encoder_lock);
   if (encoder->inited) {
     vpx_codec_destroy (&encoder->encoder);
@@ -1418,6 +1415,18 @@ gst_vp9_enc_stop (GstVideoEncoder * video_encoder)
     encoder->cfg.rc_twopass_stats_in.sz = 0;
   }
   g_mutex_unlock (&encoder->encoder_lock);
+}
+
+static gboolean
+gst_vp9_enc_stop (GstVideoEncoder * video_encoder)
+{
+  GstVP9Enc *encoder;
+
+  GST_DEBUG_OBJECT (video_encoder, "stop");
+
+  encoder = GST_VP9_ENC (video_encoder);
+
+  gst_vp9_enc_destroy_encoder (encoder);
 
   gst_tag_setter_reset_tags (GST_TAG_SETTER (encoder));
 
@@ -1854,6 +1863,25 @@ gst_vp9_enc_drain (GstVideoEncoder * video_encoder)
   g_mutex_unlock (&encoder->encoder_lock);
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_vp9_enc_flush (GstVideoEncoder * video_encoder)
+{
+  GstVP9Enc *encoder;
+
+  GST_DEBUG_OBJECT (video_encoder, "flush");
+
+  encoder = GST_VP9_ENC (video_encoder);
+
+  gst_vp9_enc_destroy_encoder (encoder);
+  if (encoder->input_state) {
+    gst_video_codec_state_ref (encoder->input_state);
+    gst_vp9_enc_set_format (video_encoder, encoder->input_state);
+    gst_video_codec_state_unref (encoder->input_state);
+  }
+
+  return TRUE;
 }
 
 static GstFlowReturn
