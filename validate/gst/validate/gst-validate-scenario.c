@@ -113,7 +113,6 @@ struct _GstValidateScenarioPrivate
   GstClockTime segment_start;
   GstClockTime segment_stop;
   GstClockTime seek_pos_tol;
-  guint32 expected_seqnum;
 
   /* If we seeked in paused the position should be exactly what
    * the seek value was (if accurate) */
@@ -132,8 +131,6 @@ struct _GstValidateScenarioPrivate
   GstState target_state;
 
   GList *overrides;
-
-  guint segments_needed;
 };
 
 typedef struct KeyFileGroupName
@@ -433,122 +430,6 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
   return TRUE;
 }
 
-static GstPadProbeReturn
-_check_new_segment_done (GstPad * pad, GstPadProbeInfo * info,
-    GstValidateAction * action)
-{
-  GstEvent *event = GST_EVENT (info->data);
-  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-    if (GST_EVENT_SEQNUM (event) == action->scenario->priv->expected_seqnum) {
-      if (!--action->scenario->priv->segments_needed) {
-        gst_validate_action_set_done (action);
-        return GST_PAD_PROBE_REMOVE;
-      }
-    }
-  }
-
-  return GST_PAD_PROBE_OK;
-}
-
-static GstObject *
-_find_any_object (GstIterator * iter)
-{
-  GstObject *object = NULL;
-  gboolean done = FALSE;
-  GValue data = { 0, };
-
-  while (!done) {
-    switch (gst_iterator_next (iter, &data)) {
-      case GST_ITERATOR_OK:
-      {
-        object = g_value_get_object (&data);
-        gst_object_ref (object);
-        g_value_reset (&data);
-        done = TRUE;
-        break;
-      }
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (iter);
-        break;
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-      case GST_ITERATOR_ERROR:
-        g_assert_not_reached ();
-        done = TRUE;
-        break;
-    }
-  }
-  g_value_unset (&data);
-  gst_iterator_free (iter);
-
-  return object;
-}
-
-static guint
-_run_for_all_sinks (GstValidateScenario * scenario,
-    void (*f) (GstValidateScenario *, GstElement *, gpointer),
-    gpointer userdata)
-{
-  GstElement *sink = NULL;
-  gboolean done = FALSE;
-  GValue data = { 0, };
-  GstIterator *iter;
-  guint nsinks = 0;
-
-  iter = gst_bin_iterate_sinks (GST_BIN (scenario->pipeline));
-  while (!done) {
-    switch (gst_iterator_next (iter, &data)) {
-      case GST_ITERATOR_OK:
-      {
-        sink = GST_ELEMENT (g_value_get_object (&data));
-        (*f) (scenario, sink, userdata);
-        g_value_reset (&data);
-        ++nsinks;
-        break;
-      }
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (iter);
-        break;
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-      case GST_ITERATOR_ERROR:
-        g_assert_not_reached ();
-        done = TRUE;
-        break;
-    }
-  }
-  g_value_unset (&data);
-  gst_iterator_free (iter);
-
-  return nsinks;
-}
-
-static GstPad *
-_find_any_sink_pad (GstElement * e)
-{
-  return GST_PAD (_find_any_object (gst_element_iterate_sink_pads (e)));
-}
-
-static void
-_add_segment_check_probe (GstValidateScenario * scenario, GstElement * sink,
-    gpointer data)
-{
-  GstPad *sinkpad;
-  GstValidateAction *action = data;
-
-  sinkpad = _find_any_sink_pad (sink);
-  if (sinkpad) {
-    gst_pad_add_probe (sinkpad,
-        GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-        (GstPadProbeCallback) _check_new_segment_done, action, NULL);
-    gst_object_unref (sinkpad);
-  } else {
-    GST_WARNING_OBJECT (scenario, "No sink pad found on sink");
-  }
-}
-
 /**
  * gst_validate_scenario_execute_seek:
  * @scenario: The #GstValidateScenario for which to execute a seek action
@@ -585,7 +466,6 @@ gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
   if (gst_element_send_event (scenario->pipeline, seek)) {
     gst_event_replace (&priv->last_seek, seek);
     priv->seek_flags = flags;
-    priv->expected_seqnum = GST_EVENT_SEQNUM (seek);
   } else {
     GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
         "Could not execute seek: '(position %" GST_TIME_FORMAT
@@ -597,15 +477,6 @@ gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
     ret = GST_VALIDATE_EXECUTE_ACTION_ERROR;
   }
   gst_event_unref (seek);
-
-  /* Flushing seeks will be deemed done when an ASYNC_DONE message gets
-     received on the bus. We don't get one for non flushing seeks though,
-     so we look for a new segment event with a matching seqnum. */
-  if (ret != GST_VALIDATE_EXECUTE_ACTION_ERROR
-      && !(flags & GST_SEEK_FLAG_FLUSH)) {
-    action->scenario->priv->segments_needed =
-        _run_for_all_sinks (scenario, _add_segment_check_probe, action);
-  }
 
   return ret;
 }
