@@ -701,10 +701,10 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       gst_video_frame_map (&oframe, &y4mdec->out_info, outbuf, GST_MAP_WRITE);
 
       for (i = 0; i < 3; i++) {
-        w = GST_VIDEO_FRAME_COMP_WIDTH (&iframe, i);;
-        h = GST_VIDEO_FRAME_COMP_HEIGHT (&iframe, i);;
-        istride = GST_VIDEO_FRAME_COMP_STRIDE (&iframe, i);;
-        ostride = GST_VIDEO_FRAME_COMP_STRIDE (&oframe, i);;
+        w = GST_VIDEO_FRAME_COMP_WIDTH (&iframe, i);
+        h = GST_VIDEO_FRAME_COMP_HEIGHT (&iframe, i);
+        istride = GST_VIDEO_FRAME_COMP_STRIDE (&iframe, i);
+        ostride = GST_VIDEO_FRAME_COMP_STRIDE (&oframe, i);
         src = GST_VIDEO_FRAME_COMP_DATA (&iframe, i);
         dest = GST_VIDEO_FRAME_COMP_DATA (&oframe, i);
 
