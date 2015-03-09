@@ -2142,6 +2142,8 @@ gst_pulsesink_query_getcaps (GstPulseSink * psink, GstCaps * filter)
     goto unlock;
   }
 
+  ret = gst_caps_new_empty ();
+
   if (pbuf->stream) {
     /* We're in PAUSED or higher */
     stream = pbuf->stream;
@@ -2175,8 +2177,6 @@ gst_pulsesink_query_getcaps (GstPulseSink * psink, GstCaps * filter)
     stream = pbuf->probe_stream;
   }
 
-  ret = gst_caps_new_empty ();
-
   if (!(o = pa_context_get_sink_info_by_name (pbuf->context,
               pa_stream_get_device_name (stream), gst_pulsesink_sink_info_cb,
               &device_info)))
@@ -2193,17 +2193,17 @@ gst_pulsesink_query_getcaps (GstPulseSink * psink, GstCaps * filter)
         gst_pulse_format_info_to_caps ((pa_format_info *) i->data));
   }
 
+unlock:
+  pa_threaded_mainloop_unlock (mainloop);
+  /* FIXME: this could be freed after device_name is got */
+  GST_OBJECT_UNLOCK (pbuf);
+
   if (filter) {
     GstCaps *tmp = gst_caps_intersect_full (filter, ret,
         GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (ret);
     ret = tmp;
   }
-
-unlock:
-  pa_threaded_mainloop_unlock (mainloop);
-  /* FIXME: this could be freed after device_name is got */
-  GST_OBJECT_UNLOCK (pbuf);
 
 out:
   free_device_info (&device_info);
