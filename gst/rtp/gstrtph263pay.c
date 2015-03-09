@@ -1388,8 +1388,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
   guint max_payload_size;
   GstRtpH263PayBoundry boundry;
   guint mb;
-  //TODO remove m
-  GstRtpH263PayMB *m;
+  guint8 ebit;
 
   guint first = 0;
   guint payload_len;
@@ -1482,15 +1481,16 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
   // We are on MB layer
 
-  m = mac = gst_rtp_h263_pay_mb_new (&boundry, 0);
+  mac = gst_rtp_h263_pay_mb_new (&boundry, 0);
   for (mb = 0; mb < format_props[context->piclayer->ptype_srcformat][1]; mb++) {
 
     GST_DEBUG ("================ START MB %d =================", mb);
 
     //Find next macroblock boundaries
+    ebit = mac->ebit;
     if (!(mac = gst_rtp_h263_pay_B_mbfinder (context, gob, mac, mb))) {
 
-      GST_DEBUG ("Error decoding MB - sbit: %d", 8 - m->ebit);
+      GST_DEBUG ("Error decoding MB - sbit: %d", 8 - ebit);
       GST_ERROR ("Error decoding in GOB");
 
       goto decode_error;
@@ -1513,7 +1513,6 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
       gob->end = mac->end;
       break;
     }
-    m = mac;
     GST_DEBUG ("Found MB: mba: %d start: %p end: %p len: %d sbit: %d ebit: %d",
         mac->mba, mac->start, mac->end, mac->length, mac->sbit, mac->ebit);
     GST_DEBUG ("================ END MB %d =================", mb);
