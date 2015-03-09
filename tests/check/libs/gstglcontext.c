@@ -114,7 +114,7 @@ deinit (gpointer data)
 {
   GstGLContext *context = data;
   GstGLFuncs *gl = context->gl_vtable;
-  gl->DeleteTextures (1, &tex);;
+  gl->DeleteTextures (1, &tex);
   gst_object_unref (fbo);
 #if GST_GL_HAVE_GLES2
   if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
