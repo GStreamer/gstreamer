@@ -214,7 +214,7 @@ audiounit_error:
 }
 
 gboolean
-gst_core_audio_set_channels_layout (GstCoreAudio * core_audio,
+gst_core_audio_set_channel_layout (GstCoreAudio * core_audio,
     gint channels, GstCaps * caps)
 {
   /* Configure the output stream and allocate ringbuffer memory */

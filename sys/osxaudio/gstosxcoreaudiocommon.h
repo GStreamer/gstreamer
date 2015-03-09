@@ -47,7 +47,7 @@ void buffer_list_free                                     (AudioBufferList * lis
 gboolean gst_core_audio_set_format                        (GstCoreAudio * core_audio,
                                                            AudioStreamBasicDescription format);
 
-gboolean gst_core_audio_set_channels_layout               (GstCoreAudio * core_audio,
+gboolean gst_core_audio_set_channel_layout                (GstCoreAudio * core_audio,
                                                            gint channels, GstCaps * caps);
 
 gboolean gst_core_audio_open_device                       (GstCoreAudio *core_audio,

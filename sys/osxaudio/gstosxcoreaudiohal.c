@@ -1135,7 +1135,7 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
     if (!gst_core_audio_set_format (core_audio, format))
       goto done;
 
-    if (!gst_core_audio_set_channels_layout (core_audio,
+    if (!gst_core_audio_set_channel_layout (core_audio,
             format.mChannelsPerFrame, caps))
       goto done;
 
