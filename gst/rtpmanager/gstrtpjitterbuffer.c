@@ -2446,7 +2446,8 @@ gap_but_no_dts:
     GST_ELEMENT_ERROR (jitterbuffer, STREAM, DECODE, (NULL),
         ("Received packet without DTS after a gap"));
     gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto finished;
   }
 }
 
