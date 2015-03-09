@@ -71,6 +71,16 @@ gst_core_audio_new (GstObject * osxbuf)
 gboolean
 gst_core_audio_close (GstCoreAudio * core_audio)
 {
+  OSStatus status;
+
+  /* Uninitialize the AudioUnit */
+  status = AudioUnitUninitialize (core_audio->audiounit);
+  if (status) {
+    GST_ERROR_OBJECT (core_audio, "Failed to uninitialize AudioUnit: %d",
+        (int) status);
+    return FALSE;
+  }
+
   AudioComponentInstanceDispose (core_audio->audiounit);
   core_audio->audiounit = NULL;
   return TRUE;
@@ -79,7 +89,20 @@ gst_core_audio_close (GstCoreAudio * core_audio)
 gboolean
 gst_core_audio_open (GstCoreAudio * core_audio)
 {
-  return gst_core_audio_open_impl (core_audio);
+  OSStatus status;
+
+  if (!gst_core_audio_open_impl (core_audio))
+    return FALSE;
+
+  /* Initialize the AudioUnit */
+  status = AudioUnitInitialize (core_audio->audiounit);
+  if (status) {
+    GST_ERROR_OBJECT (core_audio, "Failed to initialize AudioUnit: %d",
+        (int) status);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 gboolean
@@ -113,7 +136,6 @@ gst_core_audio_initialize (GstCoreAudio * core_audio,
     AudioStreamBasicDescription format, GstCaps * caps, gboolean is_passthrough)
 {
   guint32 frame_size;
-  OSStatus status;
 
   GST_DEBUG_OBJECT (core_audio,
       "Initializing: passthrough:%d caps:%" GST_PTR_FORMAT, is_passthrough,
@@ -121,7 +143,7 @@ gst_core_audio_initialize (GstCoreAudio * core_audio,
 
   if (!gst_core_audio_initialize_impl (core_audio, format, caps,
           is_passthrough, &frame_size)) {
-    goto error;
+    return FALSE;
   }
 
   if (core_audio->is_src) {
@@ -133,26 +155,12 @@ gst_core_audio_initialize (GstCoreAudio * core_audio,
         !(format.mFormatFlags & kAudioFormatFlagIsNonInterleaved));
   }
 
-  /* Initialize the AudioUnit */
-  status = AudioUnitInitialize (core_audio->audiounit);
-  if (status) {
-    GST_ERROR_OBJECT (core_audio, "Failed to initialise AudioUnit: %d",
-        (int) status);
-    goto error;
-  }
   return TRUE;
-
-error:
-  buffer_list_free (core_audio->recBufferList);
-  core_audio->recBufferList = NULL;
-  return FALSE;
 }
 
 void
 gst_core_audio_unitialize (GstCoreAudio * core_audio)
 {
-  AudioUnitUninitialize (core_audio->audiounit);
-
   buffer_list_free (core_audio->recBufferList);
   core_audio->recBufferList = NULL;
 }
