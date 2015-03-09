@@ -1957,12 +1957,14 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
       demux->segment = base->segment;
     } else {
       /* Start from the first ts/pts */
+      GstClockTime base = demux->segment.base;
       gst_segment_init (&demux->segment, GST_FORMAT_TIME);
       demux->segment.start = firstts;
       demux->segment.stop = GST_CLOCK_TIME_NONE;
       demux->segment.position = firstts;
       demux->segment.time = firstts;
       demux->segment.rate = demux->rate;
+      demux->segment.base = base;
     }
   } else if (demux->segment.start < firstts) {
     /* Take into account the offset to the first buffer timestamp */
@@ -2199,6 +2201,9 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   if (stream->discont)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
   stream->discont = FALSE;
+
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buffer)))
+    demux->segment.position = GST_BUFFER_DTS (buffer);
 
   res = gst_pad_push (stream->pad, buffer);
   /* Record that a buffer was pushed */
