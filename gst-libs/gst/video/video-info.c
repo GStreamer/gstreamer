@@ -243,9 +243,10 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   else
     info->chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
 
-  if ((s = gst_structure_get_string (structure, "colorimetry")))
-    gst_video_colorimetry_from_string (&info->colorimetry, s);
-  else
+  if ((s = gst_structure_get_string (structure, "colorimetry"))) {
+    if (!gst_video_colorimetry_from_string (&info->colorimetry, s))
+      set_default_colorimetry (info);
+  } else
     set_default_colorimetry (info);
 
   if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
