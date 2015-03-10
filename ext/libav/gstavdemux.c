@@ -1414,7 +1414,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
       src.data[0] = pkt.data;
       src.data[1] = NULL;
       src.data[2] = NULL;
-      src.linesize[0] = avstream->codec->width * 3;;
+      src.linesize[0] = avstream->codec->width * 3;
     } else {
       GST_WARNING ("Unknown demuxer %s, no idea what to do", plugin_name);
       gst_ffmpeg_avpicture_fill (&src, pkt.data,
