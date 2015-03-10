@@ -754,9 +754,9 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
 
       gst_buffer_map (buf, &map, GST_MAP_READ);
       gst_ffmpeg_avpicture_fill (&src, map.data,
-          PIX_FMT_RGB24, st->codec->width, st->codec->height);
+          AV_PIX_FMT_RGB24, st->codec->width, st->codec->height);
 
-      av_picture_copy (&dst, &src, PIX_FMT_RGB24,
+      av_picture_copy (&dst, &src, AV_PIX_FMT_RGB24,
           st->codec->width, st->codec->height);
       gst_buffer_unmap (buf, &map);
     } else {

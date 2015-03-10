@@ -206,9 +206,9 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
   ctx = avcodec_alloc_context3 (NULL);
   ctx->width = deinterlace->width;
   ctx->height = deinterlace->height;
-  ctx->pix_fmt = PIX_FMT_NB;
+  ctx->pix_fmt = AV_PIX_FMT_NB;
   gst_ffmpeg_caps_with_codectype (AVMEDIA_TYPE_VIDEO, caps, ctx);
-  if (ctx->pix_fmt == PIX_FMT_NB) {
+  if (ctx->pix_fmt == AV_PIX_FMT_NB) {
     gst_ffmpeg_avcodec_close (ctx);
     av_free (ctx);
     return FALSE;
@@ -270,7 +270,7 @@ gst_ffmpegdeinterlace_init (GstFFMpegDeinterlace * deinterlace)
   deinterlace->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (deinterlace), deinterlace->srcpad);
 
-  deinterlace->pixfmt = PIX_FMT_NB;
+  deinterlace->pixfmt = AV_PIX_FMT_NB;
 
   deinterlace->interlaced = FALSE;
   deinterlace->passthrough = FALSE;

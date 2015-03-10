@@ -478,7 +478,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   /* we may have failed mapping caps to a pixfmt,
    * and quite some codecs do not make up their own mind about that
    * in any case, _NONE can never work out later on */
-  if (pix_fmt == PIX_FMT_NONE)
+  if (pix_fmt == AV_PIX_FMT_NONE)
     goto bad_input_fmt;
 
   /* second pass stats buffer no longer needed */
