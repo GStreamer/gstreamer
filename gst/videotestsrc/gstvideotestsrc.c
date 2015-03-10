@@ -152,6 +152,7 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_PINWHEEL, "Pinwheel", "pinwheel"},
     {GST_VIDEO_TEST_SRC_SPOKES, "Spokes", "spokes"},
     {GST_VIDEO_TEST_SRC_GRADIENT, "Gradient", "gradient"},
+    {GST_VIDEO_TEST_SRC_COLORS, "Colors", "colors"},
     {0, NULL, NULL}
   };
 
@@ -427,6 +428,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_GRADIENT:
       videotestsrc->make_image = gst_video_test_src_gradient;
+      break;
+    case GST_VIDEO_TEST_SRC_COLORS:
+      videotestsrc->make_image = gst_video_test_src_colors;
       break;
     default:
       g_assert_not_reached ();

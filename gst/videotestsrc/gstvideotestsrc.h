@@ -64,6 +64,8 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_BAR: Bar with foreground color
  * @GST_VIDEO_TEST_SRC_PINWHEEL: Pinwheel
  * @GST_VIDEO_TEST_SRC_SPOKES: Spokes
+ * @GST_VIDEO_TEST_SRC_GRADIENT: Gradient
+ * @GST_VIDEO_TEST_SRC_COLORS: All colors
  *
  * The test pattern to produce.
  *
@@ -108,7 +110,8 @@ typedef enum {
   GST_VIDEO_TEST_SRC_BAR,
   GST_VIDEO_TEST_SRC_PINWHEEL,
   GST_VIDEO_TEST_SRC_SPOKES,
-  GST_VIDEO_TEST_SRC_GRADIENT
+  GST_VIDEO_TEST_SRC_GRADIENT,
+  GST_VIDEO_TEST_SRC_COLORS
 } GstVideoTestSrcPattern;
 
 typedef struct _GstVideoTestSrc GstVideoTestSrc;
