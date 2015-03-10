@@ -873,7 +873,7 @@ out:
   for (i = 0; i < mem; ++i)
     gst_memory_unmap (map_infos[i].memory, &map_infos[i]);
 
-  return flow_ret;;
+  return flow_ret;
 
 no_clients:
   {

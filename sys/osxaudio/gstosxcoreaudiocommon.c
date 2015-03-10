@@ -304,7 +304,7 @@ gst_core_audio_set_format (GstCoreAudio * core_audio,
   if (status) {
     GST_WARNING_OBJECT (core_audio->osxbuf,
         "Failed to set audio description: %d", (int) status);
-    return FALSE;;
+    return FALSE;
   }
 
   return TRUE;

@@ -135,7 +135,7 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstPadTemplate *videosrctempl, *audiosrctempl, *subsrctempl, *subpicsrctempl;
-  GstCaps *audcaps, *vidcaps, *subcaps, *subpiccaps;;
+  GstCaps *audcaps, *vidcaps, *subcaps, *subpiccaps;
 
   GST_DEBUG_CATEGORY_INIT (avidemux_debug, "avidemux",
       0, "Demuxer for AVI streams");

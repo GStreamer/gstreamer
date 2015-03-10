@@ -144,7 +144,7 @@ gst_isoff_qt_sidx_parser_add_data (GstSidxParser * parser,
         GstSidxBoxEntry *entry =
             &parser->sidx.entries[parser->sidx.entry_index];
 
-        remaining = gst_byte_reader_get_remaining (&reader);;
+        remaining = gst_byte_reader_get_remaining (&reader);
         if (remaining < 12)
           break;
 

@@ -2358,7 +2358,7 @@ rtp_session_request_local_key_unit (RTPSession * sess, RTPSource * src,
           "RTT (%" GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")",
           fir ? "FIR" : "PLI",
           GST_TIME_ARGS (current_time - sess->last_keyframe_request),
-          GST_TIME_ARGS (round_trip_in_ns));;
+          GST_TIME_ARGS (round_trip_in_ns));
       return FALSE;
     }
   }

@@ -140,7 +140,7 @@ gst_osx_audio_ring_buffer_dispose (GObject * object)
 static gboolean
 gst_osx_audio_ring_buffer_open_device (GstAudioRingBuffer * buf)
 {
-  GstOsxAudioRingBuffer *osxbuf = GST_OSX_AUDIO_RING_BUFFER (buf);;
+  GstOsxAudioRingBuffer *osxbuf = GST_OSX_AUDIO_RING_BUFFER (buf);
 
   if (!gst_core_audio_select_device (osxbuf->core_audio))
     return FALSE;

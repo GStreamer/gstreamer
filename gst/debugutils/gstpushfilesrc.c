@@ -384,7 +384,7 @@ gst_push_file_src_uri_get_uri (GstURIHandler * handler)
   if (src->filesrc == NULL)
     return NULL;
 
-  fileuri = gst_uri_handler_get_uri (GST_URI_HANDLER (src->filesrc));;
+  fileuri = gst_uri_handler_get_uri (GST_URI_HANDLER (src->filesrc));
   if (fileuri == NULL)
     return NULL;
   pushfileuri = g_strconcat ("push", fileuri, NULL);
