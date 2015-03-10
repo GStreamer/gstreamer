@@ -582,11 +582,7 @@ set_fork_info (TestResult * tr, int status, int signal_expected,
         free (tr->msg);
       }
       tr->msg = exit_msg (exit_status);
-      if (exit_status == allowed_exit_value) {
-        tr->rtype = CK_FAILURE; /* normal exit status */
-      } else {
-        tr->rtype = CK_FAILURE; /* early exit */
-      }
+      tr->rtype = CK_FAILURE;   /* normal exit status */
     }
   }
 }
