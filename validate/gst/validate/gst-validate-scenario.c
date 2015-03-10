@@ -179,7 +179,7 @@ struct _GstValidateActionPrivate
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateAction, gst_validate_action);
 static GstValidateAction *gst_validate_action_new (GstValidateScenario *
     scenario, GstValidateActionType * type);
-static gboolean get_position (GstValidateScenario * scenario);
+static gboolean execute_next_action (GstValidateScenario * scenario);
 
 static GstValidateAction *
 _action_copy (GstValidateAction * act)
@@ -886,13 +886,13 @@ _set_rank (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static inline gboolean
-_add_get_position_source (GstValidateScenario * scenario)
+_add_execute_actions_gsource (GstValidateScenario * scenario)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
 
   SCENARIO_LOCK (scenario);
   if (priv->get_pos_id == 0 && priv->wait_id == 0) {
-    priv->get_pos_id = g_idle_add ((GSourceFunc) get_position, scenario);
+    priv->get_pos_id = g_idle_add ((GSourceFunc) execute_next_action, scenario);
     SCENARIO_UNLOCK (scenario);
 
     GST_DEBUG_OBJECT (scenario, "Start checking position again");
@@ -1166,8 +1166,17 @@ _execute_sub_action_action (GstValidateAction * action)
   return GST_VALIDATE_EXECUTE_ACTION_OK;
 }
 
+
+/* This is the main action execution function
+ * it checks whether it is time to run the next action
+ * and if it is the case executes it.
+ *
+ * If the 'execute-on-idle' property is not TRUE,
+ * the function will recurse while the actions are run
+ * synchronously
+ */
 static gboolean
-get_position (GstValidateScenario * scenario)
+execute_next_action (GstValidateScenario * scenario)
 {
   GList *tmp;
   GstQuery *query;
@@ -1183,18 +1192,18 @@ get_position (GstValidateScenario * scenario)
   if (priv->buffering) {
     GST_DEBUG_OBJECT (scenario, "Buffering not executing any action");
 
-    return TRUE;
+    return G_SOURCE_CONTINUE;
   }
 
   if (priv->changing_state) {
     GST_DEBUG_OBJECT (scenario, "Changing state, not executing any action");
-    return TRUE;
+    return G_SOURCE_CONTINUE;
   }
 
   /* TODO what about non flushing seeks? */
   if (priv->last_seek && priv->target_state > GST_STATE_READY) {
     GST_INFO_OBJECT (scenario, "Still seeking -- not executing action");
-    return TRUE;
+    return G_SOURCE_CONTINUE;
   }
 
   if (scenario->priv->actions)
@@ -1221,7 +1230,7 @@ get_position (GstValidateScenario * scenario)
       GST_DEBUG_OBJECT (scenario, "Action %" GST_PTR_FORMAT " still running",
           act->structure);
 
-      return TRUE;
+      return G_SOURCE_CONTINUE;
     }
   }
 
@@ -1240,19 +1249,19 @@ get_position (GstValidateScenario * scenario)
       act && GST_CLOCK_TIME_IS_VALID (act->playback_time)) {
     GST_INFO_OBJECT (scenario, "Unknown position: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (position));
-    return TRUE;
+    return G_SOURCE_CONTINUE;
   }
 
   if (has_pos && has_dur) {
     if (position > duration) {
-      _add_get_position_source (scenario);
+      _add_execute_actions_gsource (scenario);
 
       GST_VALIDATE_REPORT (scenario,
           QUERY_POSITION_SUPERIOR_DURATION,
           "Reported position %" GST_TIME_FORMAT " > reported duration %"
           GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
 
-      return TRUE;
+      return G_SOURCE_CONTINUE;
     }
   }
 
@@ -1262,9 +1271,9 @@ get_position (GstValidateScenario * scenario)
   _check_position (scenario, rate, position);
 
   if (!_should_execute_action (scenario, act, position, rate)) {
-    _add_get_position_source (scenario);
+    _add_execute_actions_gsource (scenario);
 
-    return TRUE;
+    return G_SOURCE_CONTINUE;
   }
 
   type = _find_action_type (act->type);
@@ -1323,13 +1332,13 @@ get_position (GstValidateScenario * scenario)
     if (!scenario->priv->execute_on_idle) {
       GST_DEBUG_OBJECT (scenario, "linking next action execution");
 
-      return get_position (scenario);
+      return execute_next_action (scenario);
     } else {
-      _add_get_position_source (scenario);
+      _add_execute_actions_gsource (scenario);
       GST_DEBUG_OBJECT (scenario, "Executing only on idle, waiting for"
           " next dispatch");
 
-      return TRUE;
+      return G_SOURCE_REMOVE;
     }
   } else {
     GST_DEBUG_OBJECT (scenario, "Remove source, waiting for action"
@@ -1339,10 +1348,10 @@ get_position (GstValidateScenario * scenario)
     priv->get_pos_id = 0;
     SCENARIO_UNLOCK (scenario);
 
-    return G_SOURCE_REMOVE;
+    return G_SOURCE_CONTINUE;
   }
 
-  return TRUE;
+  return G_SOURCE_CONTINUE;
 }
 
 static gboolean
@@ -1357,7 +1366,7 @@ stop_waiting (GstValidateAction * action)
   SCENARIO_UNLOCK (scenario);
 
   gst_validate_action_set_done (action);
-  _add_get_position_source (scenario);
+  _add_execute_actions_gsource (scenario);
 
 
   return G_SOURCE_REMOVE;
@@ -1664,7 +1673,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         g_list_free (priv->needs_parsing);
         priv->needs_parsing = NULL;
       }
-      _add_get_position_source (scenario);
+      _add_execute_actions_gsource (scenario);
       break;
     case GST_MESSAGE_STATE_CHANGED:
     {
@@ -1682,7 +1691,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         }
 
         if (pstate == GST_STATE_READY && nstate == GST_STATE_PAUSED)
-          _add_get_position_source (scenario);
+          _add_execute_actions_gsource (scenario);
       }
       break;
     }
@@ -2191,7 +2200,7 @@ gst_validate_scenario_factory_create (GstValidateRunner *
   if (scenario->priv->handles_state) {
     GST_INFO_OBJECT (scenario, "Scenario handles state,"
         " Starting the get position source");
-    _add_get_position_source (scenario);
+    _add_execute_actions_gsource (scenario);
   }
 
   gst_validate_printf (NULL,
@@ -2412,7 +2421,7 @@ gst_validate_action_set_done (GstValidateAction * action)
     if (GPOINTER_TO_INT (g_private_get (&main_thread_priv))) {
       if (!scenario->priv->execute_on_idle) {
         GST_DEBUG_OBJECT (scenario, "Right thread, executing next?");
-        get_position (scenario);
+        execute_next_action (scenario);
 
         return;
       } else
@@ -2422,7 +2431,7 @@ gst_validate_action_set_done (GstValidateAction * action)
           " 'main' thread");
   }
 
-  _add_get_position_source (scenario);
+  _add_execute_actions_gsource (scenario);
 }
 
 /**
