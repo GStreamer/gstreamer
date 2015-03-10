@@ -108,14 +108,14 @@ static GstStaticPadTemplate gst_video_rate_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw;" "image/jpeg;" "image/png")
+    GST_STATIC_CAPS ("video/x-raw(ANY);" "image/jpeg(ANY);" "image/png(ANY)")
     );
 
 static GstStaticPadTemplate gst_video_rate_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw;" "image/jpeg;" "image/png")
+    GST_STATIC_CAPS ("video/x-raw(ANY);" "image/jpeg(ANY);" "image/png(ANY)")
     );
 
 static void gst_video_rate_swap_prev (GstVideoRate * videorate,
@@ -435,10 +435,13 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
           G_MAXINT, 1, NULL);
     }
     if (s1 != NULL)
-      ret = gst_caps_merge_structure (ret, s1);
-    ret = gst_caps_merge_structure (ret, s2);
+      ret = gst_caps_merge_structure_full (ret, s1,
+          gst_caps_features_copy (gst_caps_get_features (caps, i)));
+    ret = gst_caps_merge_structure_full (ret, s2,
+        gst_caps_features_copy (gst_caps_get_features (caps, i)));
     if (s3 != NULL)
-      ret = gst_caps_merge_structure (ret, s3);
+      ret = gst_caps_merge_structure_full (ret, s3,
+          gst_caps_features_copy (gst_caps_get_features (caps, i)));
   }
   if (filter) {
     GstCaps *intersection;
