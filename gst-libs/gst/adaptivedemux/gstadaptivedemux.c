@@ -709,7 +709,8 @@ gst_adaptive_demux_stream_get_presentation_offset (GstAdaptiveDemux * demux,
 
   klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
 
-  g_return_val_if_fail (klass->get_presentation_offset, FALSE);
+  if (klass->get_presentation_offset == NULL)
+    return 0;
 
   return klass->get_presentation_offset (demux, stream);
 }
