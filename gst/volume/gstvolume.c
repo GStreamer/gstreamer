@@ -341,7 +341,7 @@ gst_volume_class_init (GstVolumeClass * klass)
 static void
 gst_volume_init (GstVolume * self)
 {
-  self->mute = DEFAULT_PROP_MUTE;;
+  self->mute = DEFAULT_PROP_MUTE;
   self->volume = DEFAULT_PROP_VOLUME;
 
   self->tracklist = NULL;

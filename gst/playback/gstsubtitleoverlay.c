@@ -1796,7 +1796,7 @@ gst_subtitle_overlay_subtitle_sink_setcaps (GstSubtitleOverlay * self,
     GstCaps * caps)
 {
   gboolean ret = TRUE;
-  GstPad *target = NULL;;
+  GstPad *target = NULL;
 
   GST_DEBUG_OBJECT (self, "Setting caps: %" GST_PTR_FORMAT, caps);
 

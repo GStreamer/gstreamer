@@ -495,7 +495,7 @@ packet_lost (State * state, GstClockTime timestamp, GstClockTime duration)
           "seqnum", G_TYPE_UINT, seqnum,
           "timestamp", G_TYPE_UINT64, timestamp,
           "duration", G_TYPE_UINT64, duration,
-          "late", G_TYPE_BOOLEAN, late, "retry", G_TYPE_UINT, retries, NULL));;
+          "late", G_TYPE_BOOLEAN, late, "retry", G_TYPE_UINT, retries, NULL));
 
   fail_unless (gst_pad_push_event (state->srcpad, event));
 }

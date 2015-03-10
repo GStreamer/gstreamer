@@ -342,7 +342,7 @@ static gboolean
 time_to_string (const GstRTSPTime * t1, const GstRTSPTime2 * t2,
     GString * string)
 {
-  gboolean res = TRUE;;
+  gboolean res = TRUE;
 
   switch (t1->type) {
     case GST_RTSP_TIME_SECONDS:

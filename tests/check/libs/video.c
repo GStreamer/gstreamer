@@ -1930,7 +1930,7 @@ GST_START_TEST (test_video_pack_unpack2)
 
   g_array_sort (packarray, compare_result);
   for (i = 0; i < packarray->len; i++) {
-    ConvertResult *res = &g_array_index (packarray, ConvertResult, i);;
+    ConvertResult *res = &g_array_index (packarray, ConvertResult, i);
 
     GST_DEBUG ("%f pack/sec %s->%s", res->convert_sec,
         gst_video_format_to_string (res->infmt),
@@ -1939,7 +1939,7 @@ GST_START_TEST (test_video_pack_unpack2)
 
   g_array_sort (unpackarray, compare_result);
   for (i = 0; i < unpackarray->len; i++) {
-    ConvertResult *res = &g_array_index (unpackarray, ConvertResult, i);;
+    ConvertResult *res = &g_array_index (unpackarray, ConvertResult, i);
 
     GST_DEBUG ("%f unpack/sec %s->%s", res->convert_sec,
         gst_video_format_to_string (res->infmt),
@@ -2139,7 +2139,7 @@ GST_START_TEST (test_video_color_convert)
   g_array_sort (array, compare_result);
 
   for (i = 0; i < array->len; i++) {
-    ConvertResult *res = &g_array_index (array, ConvertResult, i);;
+    ConvertResult *res = &g_array_index (array, ConvertResult, i);
 
     GST_DEBUG ("%f conversions/sec %s->%s", res->convert_sec,
         gst_video_format_to_string (res->infmt),
@@ -2235,7 +2235,7 @@ GST_START_TEST (test_video_size_convert)
   g_array_sort (array, compare_result);
 
   for (i = 0; i < array->len; i++) {
-    ConvertResult *res = &g_array_index (array, ConvertResult, i);;
+    ConvertResult *res = &g_array_index (array, ConvertResult, i);
 
     GST_DEBUG ("%f method %d, resize/sec %s->%s", res->convert_sec, res->method,
         gst_video_format_to_string (res->infmt),

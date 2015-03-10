@@ -154,7 +154,7 @@ unknown_format:
   {
     GST_WARNING_OBJECT (pool, "failed to get format from caps %"
         GST_PTR_FORMAT, caps);
-    return FALSE;;
+    return FALSE;
   }
 }
 
