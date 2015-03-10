@@ -71,8 +71,9 @@ struct _GstMpeg2dec {
   /* video state */
   GstVideoCodecState *input_state;
   GstVideoInfo        decoded_info;
-  gboolean       need_cropping;
-  gboolean       has_cropping;
+  GstVideoAlignment   valign;
+  GstBufferPool *     downstream_pool;
+  gboolean            need_alignment;
 
   guint8        *dummybuf[4];
 };
