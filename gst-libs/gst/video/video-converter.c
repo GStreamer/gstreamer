@@ -111,6 +111,10 @@ struct _MatrixData
   guint64 orc_p2;
   guint64 orc_p3;
   guint64 orc_p4;
+  gint64 *t_r;
+  gint64 *t_g;
+  gint64 *t_b;
+  gint64 t_c;
   void (*matrix_func) (MatrixData * data, gpointer pixels);
 };
 
@@ -906,6 +910,32 @@ color_matrix_RGB_to_XYZ (MatrixData * dst, double Rx, double Ry, double Gx,
   color_matrix_copy (dst, &m);
 }
 
+static void
+videoconvert_convert_init_tables (MatrixData * data)
+{
+  gint i, j;
+
+  data->t_r = g_new (gint64, 256);
+  data->t_g = g_new (gint64, 256);
+  data->t_b = g_new (gint64, 256);
+
+  for (i = 0; i < 256; i++) {
+    gint64 r = 0, g = 0, b = 0;
+
+    for (j = 0; j < 3; j++) {
+      r = (r << 16) + data->im[j][0] * i;
+      g = (g << 16) + data->im[j][1] * i;
+      b = (b << 16) + data->im[j][2] * i;
+    }
+    data->t_r[i] = r;
+    data->t_g[i] = g;
+    data->t_b[i] = b;
+  }
+  data->t_c = ((gint64) data->im[0][3] << 32)
+      + ((gint64) data->im[1][3] << 16)
+      + ((gint64) data->im[2][3] << 0);
+}
+
 void
 _custom_video_orc_matrix8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, orc_int64 p1, orc_int64 p2, orc_int64 p3,
@@ -951,6 +981,28 @@ video_converter_matrix8 (MatrixData * data, gpointer pixels)
 {
   video_orc_matrix8 (pixels, pixels, data->orc_p1, data->orc_p2,
       data->orc_p3, data->orc_p4, data->width);
+}
+
+static void
+video_converter_matrix8_table (MatrixData * data, gpointer pixels)
+{
+  gint i, width = data->width * 4;
+  guint8 r, g, b;
+  gint64 c = data->t_c;
+  guint8 *p = pixels;
+  gint64 x;
+
+  for (i = 0; i < width; i += 4) {
+    r = p[i + 1];
+    g = p[i + 2];
+    b = p[i + 3];
+
+    x = data->t_r[r] + data->t_g[g] + data->t_b[b] + c;
+
+    p[i + 1] = x >> (32 + SCALE);
+    p[i + 2] = x >> (16 + SCALE);
+    p[i + 3] = x >> (0 + SCALE);
+  }
 }
 
 static void
@@ -1001,6 +1053,43 @@ is_identity_matrix (MatrixData * data)
   return TRUE;
 }
 
+static gboolean
+is_no_clip_matrix (MatrixData * data)
+{
+  gint i;
+  static const guint8 test[8][3] = {
+    {0, 0, 0},
+    {0, 0, 255},
+    {0, 255, 0},
+    {0, 255, 255},
+    {255, 0, 0},
+    {255, 0, 255},
+    {255, 255, 0},
+    {255, 255, 255}
+  };
+
+  for (i = 0; i < 8; i++) {
+    gint r, g, b;
+    gint y, u, v;
+
+    r = test[i][0];
+    g = test[i][1];
+    b = test[i][2];
+
+    y = (data->im[0][0] * r + data->im[0][1] * g +
+        data->im[0][2] * b + data->im[0][3]) >> SCALE;
+    u = (data->im[1][0] * r + data->im[1][1] * g +
+        data->im[1][2] * b + data->im[1][3]) >> SCALE;
+    v = (data->im[2][0] * r + data->im[2][1] * g +
+        data->im[2][2] * b + data->im[2][3]) >> SCALE;
+
+    if (y != CLAMP (y, 0, 255) || u != CLAMP (u, 0, 255)
+        || v != CLAMP (v, 0, 255))
+      return FALSE;
+  }
+  return TRUE;
+}
+
 static void
 video_converter_matrix16 (MatrixData * data, gpointer pixels)
 {
@@ -1045,6 +1134,10 @@ prepare_matrix (GstVideoConverter * convert, MatrixData * data)
         && is_ayuv_to_rgb_matrix (data)) {
       GST_DEBUG ("use fast AYUV -> RGB matrix");
       data->matrix_func = video_converter_matrix8_AYUV_ARGB;
+    } else if (is_no_clip_matrix (data)) {
+      GST_DEBUG ("use 8bit table");
+      data->matrix_func = video_converter_matrix8_table;
+      videoconvert_convert_init_tables (data);
     } else {
       gint a03, a13, a23;
 
@@ -2091,6 +2184,14 @@ no_pack_func:
   }
 }
 
+static void
+clear_matrix_data (MatrixData * data)
+{
+  g_free (data->t_r);
+  g_free (data->t_g);
+  g_free (data->t_b);
+}
+
 /**
  * gst_video_converter_free:
  * @convert: a #GstVideoConverter
@@ -2160,6 +2261,9 @@ gst_video_converter_free (GstVideoConverter * convert)
     if (convert->fh_scaler[i])
       gst_video_scaler_free (convert->fh_scaler[i]);
   }
+  clear_matrix_data (&convert->to_RGB_matrix);
+  clear_matrix_data (&convert->convert_matrix);
+  clear_matrix_data (&convert->to_YUV_matrix);
 
   g_slice_free (GstVideoConverter, convert);
 }
