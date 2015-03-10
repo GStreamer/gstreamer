@@ -975,7 +975,7 @@ media_unprepared (GstRTSPMedia * media, GWeakRef * ref)
   if (!factory)
     return;
 
-  priv = factory->priv;;
+  priv = factory->priv;
 
   g_mutex_lock (&priv->medias_lock);
   g_hash_table_foreach_remove (priv->medias, (GHRFunc) compare_media, media);
@@ -1029,7 +1029,7 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
   g_return_val_if_fail (url != NULL, NULL);
 
-  priv = factory->priv;;
+  priv = factory->priv;
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
 
   /* convert the url to a key for the hashtable. NULL return or a NULL function

@@ -333,7 +333,7 @@ GST_START_TEST (test_describe)
 
 GST_END_TEST;
 
-static const gchar *expected_transport = NULL;;
+static const gchar *expected_transport = NULL;
 
 static gboolean
 test_setup_response_200_multicast (GstRTSPClient * client,
