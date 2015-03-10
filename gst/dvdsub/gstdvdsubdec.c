@@ -569,7 +569,7 @@ gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec, GstVideoFrame * frame)
   gint hl_top, hl_bottom;
   gint last_y;
   RLE_state state;
-  guint8 *Y_data;;
+  guint8 *Y_data;
 
   GST_DEBUG_OBJECT (dec, "Merging subtitle on frame");
 
