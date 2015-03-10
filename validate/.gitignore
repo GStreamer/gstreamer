@@ -37,7 +37,11 @@ stamp-h.in
 .dirstamp
 *.gir
 *.typefind
+*.orig
 
+.arcconfig
 /m4/*m4
 
 /po
+*docs/launcher/html
+*tools/gst-validate-launcher
