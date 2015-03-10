@@ -80,7 +80,7 @@ GST_START_TEST (test_queue)
   fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
 
   msg = gst_bus_poll (bus, GST_MESSAGE_ERROR | GST_MESSAGE_EOS, 5 * GST_SECOND);
-  fail_unless (msg != NULL, "timeout waiting for error or eos message");;
+  fail_unless (msg != NULL, "timeout waiting for error or eos message");
 
   gst_message_unref (msg);
   gst_object_unref (bus);
