@@ -324,7 +324,7 @@ gst_funnel_sink_chain_object (GstPad * pad, GstFunnel * funnel,
 {
   GstFlowReturn res;
 
-  GST_DEBUG_OBJECT (pad, "received buffer%s %p", (is_list ? "list" : ""), obj);
+  GST_DEBUG_OBJECT (pad, "received %" GST_PTR_FORMAT, obj);
 
   GST_PAD_STREAM_LOCK (funnel->srcpad);
 
