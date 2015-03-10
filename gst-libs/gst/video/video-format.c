@@ -3301,7 +3301,7 @@ typedef struct
 #define SUB444            { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
 #define SUB4444           { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
 #define SUB4204           { 0, 1, 1, 0 }, { 0, 1, 1, 0 }
-#define SUB4224           { 0, 1, 1, 0 }, { 0, 1, 1, 0 }
+#define SUB4224           { 0, 1, 1, 0 }, { 0, 0, 0, 0 }
 
 /* tile_mode, tile_width, tile_height */
 #define TILE_64x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 6, 5
