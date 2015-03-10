@@ -585,7 +585,6 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
 
         GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
-        mq->buffering = TRUE;
         tmp = mq->queues;
         while (tmp) {
           GstSingleQueue *q = (GstSingleQueue *) tmp->data;
