@@ -309,17 +309,7 @@ gst_splitmux_src_change_state (GstElement * element, GstStateChange transition)
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto beach;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
+      /* Make sure the element will shut down */
       if (!gst_splitmux_src_stop (splitmux))
         return GST_STATE_CHANGE_FAILURE;
       break;
@@ -327,7 +317,8 @@ gst_splitmux_src_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-beach:
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
   return ret;
 }
 
