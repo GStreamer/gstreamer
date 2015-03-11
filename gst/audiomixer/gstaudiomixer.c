@@ -675,7 +675,9 @@ gst_audiomixer_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
     }
     case GST_EVENT_SEGMENT:
     {
+      GstAudioMixerPad *pad = GST_AUDIO_MIXER_PAD (aggpad);
       const GstSegment *segment;
+
       gst_event_parse_segment (event, &segment);
       if (segment->rate != agg->segment.rate) {
         GST_ERROR_OBJECT (aggpad,
@@ -689,6 +691,10 @@ gst_audiomixer_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
         res = FALSE;
         gst_event_unref (event);
         event = NULL;
+      } else {
+        /* Ideally, this should only be set when the new segment causes running
+         * times to change, and hence needs discont calculation in fill_buffer */
+        pad->new_segment = TRUE;
       }
       break;
     }
@@ -1007,8 +1013,9 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
 
   if (GST_BUFFER_IS_DISCONT (inbuf)
       || GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_RESYNC)
-      || pad->next_offset == -1) {
+      || pad->new_segment || pad->next_offset == -1) {
     discont = TRUE;
+    pad->new_segment = FALSE;
   } else {
     guint64 diff, max_sample_diff;
 

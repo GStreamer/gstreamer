@@ -110,6 +110,9 @@ struct _GstAudioMixerPad {
 
   /* Last time we noticed a discont */
   GstClockTime discont_time;
+
+  /* A new unhandled segment event has been received */
+  gboolean new_segment;
 };
 
 struct _GstAudioMixerPadClass {
