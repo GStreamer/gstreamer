@@ -675,7 +675,6 @@ gst_audiomixer_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
     }
     case GST_EVENT_SEGMENT:
     {
-      GstAudioMixerPad *pad = GST_AUDIO_MIXER_PAD (aggpad);
       const GstSegment *segment;
 
       gst_event_parse_segment (event, &segment);
@@ -692,9 +691,13 @@ gst_audiomixer_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
         gst_event_unref (event);
         event = NULL;
       } else {
+        GstAudioMixerPad *pad = GST_AUDIO_MIXER_PAD (aggpad);
+
         /* Ideally, this should only be set when the new segment causes running
          * times to change, and hence needs discont calculation in fill_buffer */
+        GST_OBJECT_LOCK (pad);
         pad->new_segment = TRUE;
+        GST_OBJECT_UNLOCK (pad);
       }
       break;
     }
@@ -991,7 +994,7 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
   rate = GST_AUDIO_INFO_RATE (&audiomixer->info);
   bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
 
-  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+  timestamp = GST_BUFFER_PTS (inbuf);
   stream_time = gst_segment_to_stream_time (&aggpad->segment, GST_FORMAT_TIME,
       timestamp);
 
@@ -1000,6 +1003,7 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
+  GST_OBJECT_LOCK (pad);
   pad->position = 0;
   pad->size = gst_buffer_get_size (inbuf);
 
@@ -1088,6 +1092,7 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
       GST_DEBUG_OBJECT (pad,
           "Buffer before segment or current position: %" G_GUINT64_FORMAT " < %"
           G_GUINT64_FORMAT, end_running_time_offset, audiomixer->offset);
+      GST_OBJECT_UNLOCK (pad);
       return FALSE;
     }
 
@@ -1107,6 +1112,7 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
             "Buffer before segment or current position: %" G_GUINT64_FORMAT
             " < %" G_GUINT64_FORMAT, end_running_time_offset,
             audiomixer->offset);
+        GST_OBJECT_UNLOCK (pad);
         return FALSE;
       }
     }
@@ -1122,6 +1128,7 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
       "Queued new buffer at offset %" G_GUINT64_FORMAT, pad->output_offset);
   pad->buffer = inbuf;
 
+  GST_OBJECT_UNLOCK (pad);
   return TRUE;
 }
 
@@ -1145,6 +1152,7 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
 
   bpf = GST_AUDIO_INFO_BPF (&audiomixer->info);
 
+  GST_OBJECT_LOCK (pad);
   /* Overlap => mix */
   if (audiomixer->offset < pad->output_offset)
     out_start = pad->output_offset - audiomixer->offset;
@@ -1156,10 +1164,11 @@ gst_audio_mixer_mix_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
     overlap = blocksize - out_start;
 
   inbuf = gst_aggregator_pad_get_buffer (aggpad);
-  if (inbuf == NULL)
+  if (inbuf == NULL) {
+    GST_OBJECT_UNLOCK (pad);
     return;
+  }
 
-  GST_OBJECT_LOCK (pad);
   if (pad->mute || pad->volume < G_MINDOUBLE) {
     GST_DEBUG_OBJECT (pad, "Skipping muted pad");
     gst_buffer_unref (inbuf);
