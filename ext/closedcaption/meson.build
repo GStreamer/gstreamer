@@ -9,7 +9,8 @@ zvbi_sources = [
 
 if pangocairo_dep.found()
   gstclosedcaption = library('gstclosedcaption',
-    'gstccextractor.c', 'gstclosedcaption.c', 'gstline21dec.c', zvbi_sources,
+    'gstccextractor.c', 'gstclosedcaption.c', 'gstline21dec.c',
+    'gstcea708decoder.c', 'gstceaccoverlay.c', zvbi_sources,
     c_args : gst_plugins_bad_args,
     link_args : noseh_link_args,
     include_directories : [configinc],

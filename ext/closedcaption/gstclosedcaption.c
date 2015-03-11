@@ -27,17 +27,21 @@
 
 #include "gstccextractor.h"
 #include "gstline21dec.h"
+#include "gstceaccoverlay.h"
 
 static gboolean
-closedcaption_init (GstPlugin * ccextractor)
+closedcaption_init (GstPlugin * plugin)
 {
   gboolean ret;
 
-  ret = gst_element_register (ccextractor, "ccextractor", GST_RANK_NONE,
+  ret = gst_element_register (plugin, "ccextractor", GST_RANK_NONE,
       GST_TYPE_CCEXTRACTOR);
 
-  ret &= gst_element_register (ccextractor, "line21decoder", GST_RANK_NONE,
+  ret &= gst_element_register (plugin, "line21decoder", GST_RANK_NONE,
       GST_TYPE_LINE21DECODER);
+
+  ret = gst_element_register (plugin, "cc708overlay", GST_RANK_PRIMARY,
+      GST_TYPE_CEA_CC_OVERLAY);
 
   return ret;
 }

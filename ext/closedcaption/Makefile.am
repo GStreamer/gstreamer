@@ -21,6 +21,10 @@ libgstclosedcaption_la_SOURCES = \
 	$(zvbi_headers) \
 	gstccextractor.c \
 	gstccextractor.h \
+	gstcea708decoder.c \
+	gstcea708decoder.h \
+	gstceaccoverlay.c \
+	gstceaccoverlay.h \
 	gstline21dec.c \
 	gstline21dec.h \
 	gstclosedcaption.c
@@ -28,12 +32,14 @@ libgstclosedcaption_la_SOURCES = \
 libgstclosedcaption_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS)
+	$(GST_CFLAGS) \
+	$(PANGO_CFLAGS)
 
 libgstclosedcaption_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
-	$(GST_LIBS)
+	$(GST_LIBS) \
+	$(PANGO_LIBS)
 
 libgstclosedcaption_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
