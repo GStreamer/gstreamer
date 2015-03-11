@@ -315,10 +315,6 @@ gst_gl_filter_reset (GstGLFilter * filter)
     gst_object_unref (filter->other_context);
   filter->other_context = NULL;
 
-  if (filter->context)
-    gst_object_unref (filter->context);
-  filter->context = NULL;
-
   if (filter->in_converted_caps) {
     gst_caps_unref (filter->in_converted_caps);
     filter->in_converted_caps = NULL;
