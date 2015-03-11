@@ -180,7 +180,7 @@ gst_ossdmabuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 {
   int tmp;
   struct audio_buf_info info;
-  GstOssDMABuffer *obuf = (GstOssDMABuffer *) buf;;
+  GstOssDMABuffer *obuf = (GstOssDMABuffer *) buf;
   caddr_t mmap_buf;
   int mode;
   gint size;
@@ -283,7 +283,7 @@ gst_ossdmabuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 static gboolean
 gst_ossdmabuffer_release (GstRingBuffer * buf)
 {
-  GstOssDMABuffer *obuf = (GstOssDMABuffer *) buf;;
+  GstOssDMABuffer *obuf = (GstOssDMABuffer *) buf;
 
   gst_buffer_unref (buf->data);
 
