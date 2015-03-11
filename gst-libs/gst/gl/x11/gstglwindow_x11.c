@@ -539,7 +539,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
   KeySym keysym;
   struct mouse_event *mouse_data;
   struct key_event *key_data;
-  XWindowAttributes attr;
 
   window = GST_GL_WINDOW (window_x11);
 
@@ -549,10 +548,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 
     /* XSendEvent (which are called in other threads) are done from another display structure */
     XNextEvent (window_x11->device, &event);
-    XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
-        &attr);
-    window_x11->current_width = attr.width;
-    window_x11->current_height = attr.height;
 
     window_x11->allow_extra_expose_events = XPending (window_x11->device) <= 2;
 
@@ -585,6 +580,9 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
         if (window->resize)
           window->resize (window->resize_data, event.xconfigure.width,
               event.xconfigure.height);
+
+        window_x11->current_width = event.xconfigure.width;
+        window_x11->current_height = event.xconfigure.width;
         break;
       }
 
@@ -610,6 +608,9 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 
           gst_object_unref (context);
         }
+
+        window_x11->current_width = event.xexpose.width;
+        window_x11->current_height = event.xexpose.width;
         break;
 
       case VisibilityNotify:
