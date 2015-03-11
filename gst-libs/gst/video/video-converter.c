@@ -3574,6 +3574,22 @@ memset_u24 (guint8 * data, guint8 col[3], unsigned int n)
   }
 }
 
+static void
+memset_u32_16 (guint8 * data, guint8 col[4], unsigned int n)
+{
+  unsigned int i;
+
+  for (i = 0; i < n; i += 2) {
+    data[0] = col[0];
+    data[1] = col[1];
+    if (i + 1 < n) {
+      data[2] = col[2];
+      data[3] = col[3];
+    }
+    data += 4;
+  }
+}
+
 #define MAKE_BORDER_FUNC(func)                                                  \
         for (i = 0; i < out_y; i++)                                             \
           func (FRAME_GET_PLANE_LINE (dest, k, i), col, out_maxwidth);          \
@@ -3632,11 +3648,7 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
       case GST_VIDEO_FORMAT_YUY2:
       case GST_VIDEO_FORMAT_YVYU:
       case GST_VIDEO_FORMAT_UYVY:
-        pgroup = 4;
-        rb_width /= 2;
-        lb_width /= 2;
-        out_maxwidth /= 2;
-        out_x /= 2;
+        pgroup = 42;
         break;
       default:
         pgroup = pstride;
@@ -3675,6 +3687,16 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
       {
         guint64 col = ((guint64 *) borders)[0];
         MAKE_BORDER_FUNC (video_orc_splat_u64);
+        break;
+      }
+      case 42:
+      {
+        guint8 col[4];
+        col[0] = ((guint8 *) borders)[0];
+        col[2] = ((guint8 *) borders)[2];
+        col[1] = ((guint8 *) borders)[r_border & 1 ? 3 : 1];
+        col[3] = ((guint8 *) borders)[r_border & 1 ? 1 : 3];
+        MAKE_BORDER_FUNC (memset_u32_16);
         break;
       }
       default:
