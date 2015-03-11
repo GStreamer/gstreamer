@@ -555,6 +555,9 @@ struct _GstMatroskaTrackContext {
   
   /* for compatibility with VFW files, where timestamp represents DTS */
   gboolean      dts_only;
+  
+  /* indicate that the track is raw (jpeg,raw variants) and so pts=dts */
+  gboolean		intra_only;
 };
 
 typedef struct _GstMatroskaTrackVideoContext {

@@ -433,6 +433,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   context->to_offset = G_MAXINT64;
   context->alignment = 1;
   context->dts_only = FALSE;
+  context->intra_only = FALSE;
   demux->common.num_streams++;
   g_assert (demux->common.src->len == demux->common.num_streams);
 
@@ -3480,10 +3481,13 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       buffer_timestamp = gst_matroska_track_get_buffer_timestamp (stream, sub);
 
-      if (!stream->dts_only)
+      if (!stream->dts_only) {
         GST_BUFFER_PTS (sub) = lace_time;
-      else
+      } else {
         GST_BUFFER_DTS (sub) = lace_time;
+        if (stream->intra_only)
+          GST_BUFFER_PTS (sub) = lace_time;
+      }
 
       if (GST_CLOCK_TIME_IS_VALID (lace_time)) {
         GstClockTime last_stop_end;
@@ -4874,6 +4878,12 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       if (caps == NULL) {
         GST_WARNING ("Unhandled RIFF fourcc %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (vids->compression));
+      } else {
+        static GstStaticCaps intra_caps = GST_STATIC_CAPS ("image/jpeg; "
+            "video/x-raw; image/png; video/x-dv; video/x-huffyuv; video/x-ffv; "
+            "video/x-compressed-yuv");
+        context->intra_only =
+            gst_caps_can_intersect (gst_static_caps_get (&intra_caps), caps);
       }
 
       if (buf)
@@ -4918,6 +4928,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
             GST_FOURCC_ARGS (videocontext->fourcc));
         return NULL;
     }
+
+    context->intra_only = TRUE;
 
     gst_video_info_set_format (&info, format, videocontext->pixel_width,
         videocontext->pixel_height);
@@ -4972,6 +4984,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MJPEG)) {
     caps = gst_caps_new_empty_simple ("image/jpeg");
     *codec_name = g_strdup ("Motion-JPEG");
+    context->intra_only = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AVC)) {
     caps = gst_caps_new_empty_simple ("video/x-h264");
     if (data) {
