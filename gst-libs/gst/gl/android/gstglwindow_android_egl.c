@@ -89,7 +89,7 @@ gst_gl_window_android_egl_init (GstGLWindowAndroidEGL * window)
 static void
 gst_gl_window_android_egl_finalize (GObject * object)
 {
-  GstGLWindowAndroidEGL *window_egl GST_GL_WINDOW_ANDROID_EGL (object);
+  GstGLWindowAndroidEGL *window_egl = GST_GL_WINDOW_ANDROID_EGL (object);
 
   g_main_loop_unref (window_egl->loop);
   g_main_context_unref (window_egl->main_context);
@@ -113,17 +113,12 @@ gst_gl_window_android_egl_new (void)
 static gboolean
 gst_gl_window_android_egl_open (GstGLWindow * window, GError ** error)
 {
-  GstGLWindowAndroidEGL *window_egl;
-
   return TRUE;
 }
 
 static void
 gst_gl_window_android_egl_close (GstGLWindow * window)
 {
-  GstGLWindowAndroidEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
 }
 
 static void
