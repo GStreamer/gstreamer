@@ -56,14 +56,14 @@
  * <listitem>
  *   <para>
  *   #gdouble
- *   <classname>&quot;brightness&quot;</classname>:
- *   the average brightness of the frame.
+ *   <classname>&quot;luma-average&quot;</classname>:
+ *   the average brightness of the frame. Range: 0.0-1.0
  *   </para>
  * </listitem>
  * <listitem>
  *   <para>
  *   #gdouble
- *   <classname>&quot;brightness-variance&quot;</classname>:
+ *   <classname>&quot;luma-variance&quot;</classname>:
  *   the brightness variance of the frame.
  *   </para>
  * </listitem>
