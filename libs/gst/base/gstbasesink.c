@@ -5020,11 +5020,6 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       if (bclass->unlock_stop)
         bclass->unlock_stop (basesink);
 
-      /* we need preroll again and we set the flag before unlocking the clockid
-       * because if the clockid is unlocked before a current buffer expired, we
-       * can use that buffer to preroll with */
-      basesink->need_preroll = TRUE;
-
       if (basesink->clock_id) {
         GST_DEBUG_OBJECT (basesink, "unschedule clock");
         gst_clock_id_unschedule (basesink->clock_id);
@@ -5035,6 +5030,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       if (!gst_base_sink_needs_preroll (basesink)) {
         GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, we are prerolled");
         basesink->playing_async = FALSE;
+        basesink->need_preroll = FALSE;
       } else {
         if (GST_STATE_TARGET (GST_ELEMENT (basesink)) <= GST_STATE_READY) {
           GST_DEBUG_OBJECT (basesink, "element is <= READY");
@@ -5043,6 +5039,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
           GST_DEBUG_OBJECT (basesink,
               "PLAYING to PAUSED, we are not prerolled");
           basesink->playing_async = TRUE;
+          basesink->need_preroll = TRUE;
           priv->commited = FALSE;
           priv->call_preroll = TRUE;
           if (priv->async_enabled) {
