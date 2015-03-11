@@ -1202,12 +1202,13 @@ compute_matrix_to_RGB (GstVideoConverter * convert, MatrixData * data)
 }
 
 static void
-compute_matrix_to_YUV (GstVideoConverter * convert, MatrixData * data)
+compute_matrix_to_YUV (GstVideoConverter * convert, MatrixData * data,
+    gboolean force)
 {
   GstVideoInfo *info;
   gdouble Kr = 0, Kb = 0;
 
-  if (!convert->pack_rgb && !CHECK_MATRIX_NONE (convert)) {
+  if (force || (!convert->pack_rgb && !CHECK_MATRIX_NONE (convert))) {
     if (CHECK_MATRIX_INPUT (convert))
       info = &convert->in_info;
     else
@@ -1581,7 +1582,7 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev)
       color_matrix_debug (&convert->convert_matrix);
 
       GST_DEBUG ("to YUV matrix");
-      compute_matrix_to_YUV (convert, &convert->convert_matrix);
+      compute_matrix_to_YUV (convert, &convert->convert_matrix, FALSE);
       GST_DEBUG ("current matrix");
       color_matrix_debug (&convert->convert_matrix);
       if (convert->in_bits > convert->out_bits) {
@@ -1731,7 +1732,7 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev)
 
     if (!convert->pack_rgb) {
       color_matrix_set_identity (&convert->to_YUV_matrix);
-      compute_matrix_to_YUV (convert, &convert->to_YUV_matrix);
+      compute_matrix_to_YUV (convert, &convert->to_YUV_matrix, FALSE);
 
       /* matrix is in 0..255 range, scale to pack bits */
       GST_DEBUG ("chain YUV convert");
@@ -1938,7 +1939,7 @@ setup_borderline (GstVideoConverter * convert)
 
       /* Get Color matrix. */
       color_matrix_set_identity (&cm);
-      compute_matrix_to_YUV (convert, &cm);
+      compute_matrix_to_YUV (convert, &cm, TRUE);
       color_matrix_convert (&cm);
 
       border_val = GINT32_FROM_BE (convert->border_argb);
@@ -2354,7 +2355,7 @@ video_converter_compute_matrix (GstVideoConverter * convert)
 
   color_matrix_set_identity (dst);
   compute_matrix_to_RGB (convert, dst);
-  compute_matrix_to_YUV (convert, dst);
+  compute_matrix_to_YUV (convert, dst, FALSE);
 
   convert->current_bits = 8;
   prepare_matrix (convert, dst);
