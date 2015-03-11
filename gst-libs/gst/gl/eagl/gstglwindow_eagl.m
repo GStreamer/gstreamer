@@ -99,18 +99,17 @@ gst_gl_window_eagl_init (GstGLWindowEagl * window)
 {
   window->priv = GST_GL_WINDOW_EAGL_GET_PRIVATE (window);
 
-  window_eagl->priv->main_context = g_main_context_new ();
-  window_eagl->priv->loop =
-      g_main_loop_new (window_eagl->priv->main_context, FALSE);
+  window->priv->main_context = g_main_context_new ();
+  window->priv->loop = g_main_loop_new (window->priv->main_context, FALSE);
 }
 
 static void
 gst_gl_window_eagl_finalize (GObject * object)
 {
-  GstGLWindowWaylandEagl *window_eagl = GST_GL_WINDOW_EAGL (object);
+  GstGLWindowEagl *window_eagl = GST_GL_WINDOW_EAGL (object);
 
   g_main_loop_unref (window_eagl->priv->loop);
-  g_main_context_unref (window_egl->priv->main_context);
+  g_main_context_unref (window_eagl->priv->main_context);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
