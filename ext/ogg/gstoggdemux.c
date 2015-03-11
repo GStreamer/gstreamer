@@ -59,6 +59,8 @@
 #define GST_FLOW_LIMIT GST_FLOW_CUSTOM_ERROR
 #define GST_FLOW_SKIP_PUSH GST_FLOW_CUSTOM_SUCCESS_1
 
+#define SEEK_GIVE_UP_THRESHOLD (3*GST_SECOND)
+
 #define GST_CHAIN_LOCK(ogg)     g_mutex_lock(&(ogg)->chain_lock)
 #define GST_CHAIN_UNLOCK(ogg)   g_mutex_unlock(&(ogg)->chain_lock)
 
@@ -3117,6 +3119,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   gint i, pending;
   gint serialno = 0;
   gboolean found_keyframe = FALSE;
+  GstClockTime ts, first_ts = GST_CLOCK_TIME_NONE;
 
   position = segment->position;
 
@@ -3208,6 +3211,28 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
     if (granulepos == -1 || granulepos == 0) {
       GST_LOG_OBJECT (ogg, "granulepos of next page is -1");
       continue;
+    }
+
+    /* We have a valid granpos, and we bail out when the time since the
+       first seen time to the time corresponding to this granpos is larger
+       then a threshold, to guard against some streams having large holes
+       (eg, a stream ending early, which would cause seeking after that
+       to fill up a queue for streams still active). */
+    ts = gst_ogg_stream_get_end_time_for_granulepos (&pad->map, granulepos);
+    if (GST_CLOCK_TIME_IS_VALID (ts)) {
+      if (first_ts == GST_CLOCK_TIME_NONE) {
+        GST_WARNING_OBJECT (pad, "Locking on ts %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (ts));
+        first_ts = ts;
+      }
+      if (ts - first_ts > SEEK_GIVE_UP_THRESHOLD) {
+        GST_WARNING_OBJECT (pad,
+            "No data found for %" GST_TIME_FORMAT ", giving up",
+            GST_TIME_ARGS (SEEK_GIVE_UP_THRESHOLD));
+        found_keyframe = FALSE;
+        keytarget = target;
+        break;
+      }
     }
 
     /* in reverse we want to go past the page with the lower timestamp */
@@ -4607,10 +4632,10 @@ gst_ogg_demux_sync_streams (GstOggDemux * ogg)
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *stream = g_array_index (chain->streams, GstOggPad *, i);
 
-    /* Theoretically, we should be doing this for all streams, but we're only
-     * doing it for known-to-be-sparse streams at the moment in order not to
-     * break things for wrongly-muxed streams (like we used to produce once) */
-    if (stream->map.is_sparse && stream->position != GST_CLOCK_TIME_NONE) {
+    /* Theoretically, we should be doing this for all streams, so we're doing
+     * it, but it might break things break things for wrongly-muxed streams
+     * (like we used to produce once) */
+    if ( /*stream->map.is_sparse && */ stream->position != GST_CLOCK_TIME_NONE) {
 
       /* Does this stream lag? Random threshold of 2 seconds */
       if (GST_CLOCK_DIFF (stream->position, cur) > (2 * GST_SECOND)) {
