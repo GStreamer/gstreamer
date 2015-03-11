@@ -194,7 +194,7 @@ static gpointer
 gst_egl_image_allocator_init_instance (gpointer data)
 {
   GstAllocator *allocator =
-      g_object_new (gst_egl_image_allocator_get_type (), NULL);;
+      g_object_new (gst_egl_image_allocator_get_type (), NULL);
 
   GST_DEBUG_CATEGORY_INIT (GST_CAT_EGL_IMAGE_MEMORY, "eglimagememory", 0,
       "EGLImage Memory");

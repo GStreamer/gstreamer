@@ -4080,7 +4080,7 @@ mxf_metadata_generic_descriptor_write_tags (MXFMetadataBase * m,
 
     t = g_slice_new0 (MXFLocalTag);
     memcpy (&t->ul, MXF_UL (LOCATORS), 16);
-    t->size = 8 + 16 * self->n_locators;;
+    t->size = 8 + 16 * self->n_locators;
     t->data = g_slice_alloc0 (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->n_locators);

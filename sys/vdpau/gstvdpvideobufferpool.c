@@ -111,7 +111,7 @@ unknown_format:
         ("Failed to create output image buffer of %dx%d pixels",
             info.width, info.height),
         ("Invalid input caps %" GST_PTR_FORMAT, caps));
-    return FALSE;;
+    return FALSE;
   }
 }
 

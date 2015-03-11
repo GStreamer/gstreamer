@@ -238,7 +238,7 @@ gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
   }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
-      query);;
+      query);
 }
 
 static void

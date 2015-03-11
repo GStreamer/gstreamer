@@ -369,7 +369,7 @@ fill_image_packed16_4 (opj_image_t * image, GstVideoFrame * frame)
       data_out[2]++;
       data_out[3]++;
     }
-    data_in += sstride;;
+    data_in += sstride;
   }
 }
 
@@ -406,7 +406,7 @@ fill_image_packed8_4 (opj_image_t * image, GstVideoFrame * frame)
       data_out[2]++;
       data_out[3]++;
     }
-    data_in += sstride;;
+    data_in += sstride;
   }
 }
 

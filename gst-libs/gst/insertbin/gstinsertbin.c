@@ -310,7 +310,7 @@ gst_insert_bin_dispose (GObject * object)
 static gboolean
 validate_element (GstInsertBin * self, GstElement * element)
 {
-  gboolean valid = TRUE;;
+  gboolean valid = TRUE;
 
   GST_OBJECT_LOCK (element);
   if (element->numsrcpads != 1 || element->numsinkpads != 1) {

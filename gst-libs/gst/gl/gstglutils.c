@@ -290,7 +290,7 @@ gst_gl_generate_texture_full (GstGLContext * context, const GstVideoInfo * info,
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
     {
-      stride[comp] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (info, comp));;
+      stride[comp] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (info, comp));
       size[comp] = stride[comp] * GST_VIDEO_INFO_COMP_HEIGHT (info, comp);
       if (comp == 0)
         offset[0] = 0;

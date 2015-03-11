@@ -568,7 +568,7 @@ acmenc_register_file (GstPlugin * plugin, wchar_t * filename)
 
   /* register type */
   if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
-    g_warning ("Failed to register %s", type_name);;
+    g_warning ("Failed to register %s", type_name);
     g_type_set_qdata (type, ACMENC_PARAMS_QDATA, NULL);
     g_free (name);
     g_free (type_name);

@@ -57,7 +57,7 @@ gst_mpeg_descriptor_parse_1 (guint8 * data, guint size)
   if (length > size)
     return 0;
 
-  return length + 2;;
+  return length + 2;
 }
 
 GstMPEGDescriptor *

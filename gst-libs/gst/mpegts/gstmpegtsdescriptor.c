@@ -190,7 +190,7 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
       if (table < 17)
         encoding = _ICONV_UNKNOWN + table;
       else
-        encoding = _ICONV_UNKNOWN;;
+        encoding = _ICONV_UNKNOWN;
       *start_text = 3;
       break;
     }

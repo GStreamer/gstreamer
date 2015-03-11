@@ -105,7 +105,7 @@ gst_siren_dec_start (GstAudioDecoder * dec)
 
   GST_DEBUG_OBJECT (dec, "start");
 
-  sdec->decoder = Siren7_NewDecoder (16000);;
+  sdec->decoder = Siren7_NewDecoder (16000);
 
   /* no flushing please */
   gst_audio_decoder_set_drainable (dec, FALSE);

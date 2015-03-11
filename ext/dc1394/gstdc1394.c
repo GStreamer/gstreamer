@@ -1254,7 +1254,7 @@ error:
     src->camera = NULL;
   }
 
-  return FALSE;;
+  return FALSE;
 
 }
 

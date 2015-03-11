@@ -1475,7 +1475,7 @@ gst_ssim_collected (GstCollectPads * pads, gpointer user_data)
       collect_data = (GstCollectData *) collected->data;
 
       if (collect_data->pad == ssim->orig) {
-        orgbuf = gst_collect_pads_pop (pads, collect_data);;
+        orgbuf = gst_collect_pads_pop (pads, collect_data);
 
         GST_DEBUG_OBJECT (ssim, "Original stream - flags(0x%x), timestamp(%"
             GST_TIME_FORMAT "), duration(%" GST_TIME_FORMAT ")",

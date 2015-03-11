@@ -771,7 +771,7 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux,
     GstEvent *eos = gst_event_new_eos ();
 
     for (iter = old_streams; iter; iter = g_list_next (iter)) {
-      GstAdaptiveDemuxStream *stream = iter->data;;
+      GstAdaptiveDemuxStream *stream = iter->data;
 
       GST_LOG_OBJECT (stream->pad, "Removing stream");
       gst_pad_push_event (stream->pad, gst_event_ref (eos));
