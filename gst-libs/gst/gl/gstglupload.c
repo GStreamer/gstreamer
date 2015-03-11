@@ -180,14 +180,63 @@ static void
 _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstQuery * query)
 {
+  struct GLMemoryUpload *upload = impl;
   GstAllocationParams params;
   GstAllocator *allocator;
+  GstBufferPool *pool = NULL;
+  guint n_pools, i;
 
   gst_allocation_params_init (&params);
 
   allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR);
   gst_query_add_allocation_param (query, allocator, &params);
   gst_object_unref (allocator);
+
+  n_pools = gst_query_get_n_allocation_pools (query);
+  for (i = 0; i < n_pools; i++) {
+    gst_query_parse_nth_allocation_pool (query, i, &pool, NULL, NULL, NULL);
+    if (!GST_IS_GL_BUFFER_POOL (pool)) {
+      gst_object_unref (pool);
+      pool = NULL;
+    }
+  }
+
+  if (!pool) {
+    GstStructure *config;
+    GstVideoInfo info;
+    GstCaps *caps;
+    gsize size;
+
+    gst_query_parse_allocation (query, &caps, NULL);
+
+    if (!gst_video_info_from_caps (&info, caps))
+      goto invalid_caps;
+
+    pool = gst_gl_buffer_pool_new (upload->upload->context);
+    config = gst_buffer_pool_get_config (pool);
+
+    /* the normal size of a frame */
+    size = info.size;
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
+
+    gst_query_add_allocation_pool (query, pool, size, 1, 0);
+  }
+
+  return;
+
+invalid_caps:
+  {
+    GST_WARNING_OBJECT (upload->upload, "invalid caps specified");
+    return;
+  }
+config_failed:
+  {
+    GST_WARNING_OBJECT (upload->upload, "failed setting config");
+    return;
+  }
 }
 
 static GstGLUploadReturn
