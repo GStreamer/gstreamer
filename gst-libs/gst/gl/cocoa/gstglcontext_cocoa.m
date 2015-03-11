@@ -44,165 +44,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_context_cocoa_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLContextCocoa, gst_gl_context_cocoa,
     GST_GL_TYPE_CONTEXT, GST_DEBUG_CATEGORY_INIT (gst_gl_context_cocoa_debug, "glcontext_cocoa", 0, "Cocoa GL Context"); );
 
-/* Define this if the GLib patch from
- * https://bugzilla.gnome.org/show_bug.cgi?id=741450
- * is used
- */
-#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-
-static gboolean gst_gl_window_cocoa_nsapp_iteration (gpointer data);
-
-static GMutex nsapp_lock;
-static GCond nsapp_cond;
-static gint nsapp_count = 0;
-static gint nsapp_source_id = 0;
-
-static gboolean
-gst_gl_window_cocoa_init_nsapp (gpointer data)
-{
-  NSAutoreleasePool *pool = nil;
-
-  g_mutex_lock (&nsapp_lock);
-
-  pool = [[NSAutoreleasePool alloc] init];
-
-  /* The sharedApplication class method initializes
-   * the display environment and connects your program
-   * to the window server and the display server
-   */
-
-  /* TODO: so consider to create GstGLDisplayCocoa
-   * in gst/gl/cocoa/gstgldisplay_cocoa.h/c
-   */
-
-  /* has to be called in the main thread */
-  if ([NSThread isMainThread]) {
-    [NSApplication sharedApplication];
-
-    GST_DEBUG ("NSApp initialized from a GTimeoutSource");
-
-    nsapp_source_id = g_timeout_add (60, gst_gl_window_cocoa_nsapp_iteration, NULL);
-  }
-
-  [pool release];
-
-  g_cond_signal (&nsapp_cond);
-  g_mutex_unlock (&nsapp_lock);
-
-  return FALSE;
-}
-
-static gboolean
-gst_gl_window_cocoa_nsapp_iteration (gpointer data)
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-  NSEvent *event = nil;
-
-  if ([NSThread isMainThread]) {
-
-    while ((event = ([NSApp nextEventMatchingMask:NSAnyEventMask
-      untilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]
-      inMode:NSDefaultRunLoopMode dequeue:YES])) != nil) {
-
-      [NSApp sendEvent:event];
-    }
-  }
-
-  [pool release];
-
-  return TRUE;
-}
-
-static void
-gst_gl_context_cocoa_check_nsapp_loop (gboolean activate)
-{
-  g_mutex_lock (&nsapp_lock);
-
-  if (activate) ++nsapp_count;
-  else --nsapp_count;
-
-  if (nsapp_count == 0) {
-    if (nsapp_source_id)
-      g_source_remove (nsapp_source_id);
-    nsapp_source_id = 0;
-  }
-
-  g_mutex_unlock (&nsapp_lock);
-}
-
-static gpointer
-gst_gl_context_cocoa_setup_nsapp (gpointer data)
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-  /* [NSApplication sharedApplication] will usually be
-   * called in your application so it's not necessary
-   * to do that the following. Except for debugging
-   * purpose like when using gst-launch.
-   * So here we handle the two cases where the first
-   * GstGLContext is either created in the main thread
-   * or from another thread like a streaming thread
-   */
-
-  if ([NSThread isMainThread]) {
-    /* In the main thread so just do the call now */
-
-    /* The sharedApplication class method initializes
-     * the display environment and connects your program
-     * to the window server and the display server
-     */
-
-    /* TODO: so consider to create GstGLDisplayCocoa
-     * in gst/gl/cocoa/gstgldisplay_cocoa.h/c
-     */
-
-    /* has to be called in the main thread */
-    [NSApplication sharedApplication];
-
-    GST_DEBUG ("NSApp initialized");
-  } else {
-    /* Not in the main thread, assume there is a
-     * glib main loop running this is for debugging
-     * purposes so that's ok to let us a chance
-     */
-    GMainContext *context;
-    gboolean is_loop_running = FALSE;
-    gint64 end_time = 0;
-
-    context = g_main_context_default ();
-
-    if (g_main_context_is_owner (context)) {
-      /* At the thread running the default GLib main context but
-       * not the Cocoa main thread
-       * We can't do anything here
-       */
-    } else if (g_main_context_acquire (context)) {
-      /* No main loop running on the default main context,
-       * we can't do anything here */
-      g_main_context_release (context);
-    } else {
-      /* Main loop running on the default main context but it
-       * is not running in this thread */
-      g_mutex_lock (&nsapp_lock);
-      g_idle_add_full (G_PRIORITY_HIGH, gst_gl_window_cocoa_init_nsapp, NULL, NULL);
-      end_time = g_get_monotonic_time () + 500 * 1000;
-      is_loop_running = g_cond_wait_until (&nsapp_cond, &nsapp_lock, end_time);
-      g_mutex_unlock (&nsapp_lock);
-
-      if (!is_loop_running) {
-        GST_WARNING ("no mainloop running");
-      }
-    }
-  }
-
-  [pool release];
-
-  return NULL;
-}
-
-#endif
-
 static void
 gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
 {
@@ -336,12 +177,6 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   CGLError ret;
   gint npix;
 
-#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-  static GOnce once = G_ONCE_INIT;
-  g_once (&once, gst_gl_context_cocoa_setup_nsapp, context);
-  gst_gl_context_cocoa_check_nsapp_loop (TRUE);
-#endif
-
   priv->gl_context = nil;
   if (other_context)
     priv->external_gl_context = (CGLContextObj) gst_gl_context_get_gl_context (other_context);
@@ -377,9 +212,6 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
       window_cocoa);
 
   if (!context_cocoa->priv->gl_context) {
-#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-    gst_gl_context_cocoa_check_nsapp_loop (FALSE);
-#endif
     goto error;
   }
 
@@ -407,9 +239,6 @@ static void
 gst_gl_context_cocoa_destroy_context (GstGLContext *context)
 {
   /* FIXME: Need to release context and other things? */
-#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-  gst_gl_context_cocoa_check_nsapp_loop (FALSE);
-#endif
 }
 
 static guintptr

@@ -5,9 +5,11 @@ noinst_LTLIBRARIES = libgstgl-cocoa.la
 libgstgl_cocoa_la_SOURCES = \
 	gstglwindow_cocoa.m \
 	gstglcontext_cocoa.m \
+	gstgldisplay_cocoa.m \
 	gstglcaopengllayer.m
 
 noinst_HEADERS = \
+	gstgldisplay_cocoa.h \
 	gstglwindow_cocoa.h \
 	gstgl_cocoa_private.h
 

@@ -56,6 +56,9 @@
 #include "gl.h"
 #include "gstgldisplay.h"
 
+#if GST_GL_HAVE_WINDOW_COCOA
+#include <gst/gl/cocoa/gstgldisplay_cocoa.h>
+#endif
 #if GST_GL_HAVE_WINDOW_X11
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #endif
@@ -159,8 +162,11 @@ gst_gl_display_new (void)
       GST_STR_NULL (user_choice), GST_STR_NULL (platform_choice));
 
 #if GST_GL_HAVE_WINDOW_COCOA
-  if (!display && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
-    display = g_object_new (GST_TYPE_GL_DISPLAY, NULL);
+  if (!display && (!user_choice || g_strstr_len (user_choice, 5, "cocoa"))) {
+    display = GST_GL_DISPLAY (gst_gl_display_cocoa_new ());
+    if (!display)
+      return NULL;
+  }
 #endif
 #if GST_GL_HAVE_WINDOW_X11
   if (!display && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
