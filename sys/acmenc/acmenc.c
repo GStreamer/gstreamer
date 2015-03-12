@@ -50,7 +50,7 @@ GST_DEBUG_CATEGORY_STATIC (acmenc_debug);
 
 static GstStaticPadTemplate acmenc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS ("audio/x-raw-int, "
+    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS ("audio/x-raw, "
         "depth = (int)16, "
         "width = (int)16, "
         "endianness = (int)" G_STRINGIFY (G_BYTE_ORDER) ", "
@@ -106,7 +106,7 @@ static GstCaps *
 acmenc_caps_from_format (WAVEFORMATEX * fmt)
 {
   return gst_riff_create_audio_caps (fmt->wFormatTag, NULL,
-      (gst_riff_strf_auds *) fmt, NULL, NULL, NULL);
+      (gst_riff_strf_auds *) fmt, NULL, NULL, NULL, NULL);
 }
 
 static gboolean
@@ -298,8 +298,18 @@ acmenc_push_output (ACMEnc * enc)
   GstFlowReturn ret = GST_FLOW_OK;
   if (enc->header.cbDstLengthUsed > 0) {
     GstBuffer *outbuf = gst_buffer_new_and_alloc (enc->header.cbDstLengthUsed);
-    memcpy (GST_BUFFER_DATA (outbuf), enc->header.pbDst,
-        enc->header.cbDstLengthUsed);
+    if (!outbuf) {
+      GST_WARNING_OBJECT (enc, "cannot allocate a new GstBuffer");
+      goto done_push_output;
+    }
+
+    if (gst_buffer_fill (outbuf, 0, enc->header.pbDst,
+            enc->header.cbDstLengthUsed) != enc->header.cbDstLengthUsed) {
+      gst_buffer_unref (outbuf);
+      GST_WARNING_OBJECT (enc, "unable to fill output buffer");
+      goto done_push_output;
+    }
+
     if (enc->outfmt->nAvgBytesPerSec > 0) {
 
       /* We have a bitrate, so we can create a timestamp, hopefully */
@@ -312,18 +322,24 @@ acmenc_push_output (ACMEnc * enc)
         enc->header.cbDstLengthUsed);
     ret = gst_pad_push (enc->srcpad, outbuf);
   }
+
+done_push_output:
   return ret;
 }
 
 static GstFlowReturn
-acmenc_chain (GstPad * pad, GstBuffer * buf)
+acmenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   MMRESULT res;
   ACMEnc *enc = (ACMEnc *) GST_PAD_PARENT (pad);
-  guchar *data = GST_BUFFER_DATA (buf);
-  gint len = GST_BUFFER_SIZE (buf);
+  GstMapInfo map;
+  guchar *data;
+  gint len;
   int chunklen;
   GstFlowReturn ret = GST_FLOW_OK;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  len = map.size;
+  data = map.data;
   while (len) {
     chunklen = MIN (len, ACM_BUFFER_SIZE - enc->offset);
     memcpy (enc->header.pbSrc + enc->offset, data, chunklen);
@@ -356,6 +372,7 @@ acmenc_chain (GstPad * pad, GstBuffer * buf)
     /* Write out any data produced */
     acmenc_push_output (enc);
   }
+  gst_buffer_unmap (buf, &map);
   return ret;
 }
 
@@ -381,11 +398,17 @@ acmenc_finish_stream (ACMEnc * enc)
 }
 
 static gboolean
-acmenc_sink_event (GstPad * pad, GstEvent * event)
+acmenc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   ACMEnc *enc = (ACMEnc *) GST_PAD_PARENT (pad);
   gboolean res;
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+      return acmenc_sink_setcaps (pad, caps);
+      break;
+    }
     case GST_EVENT_EOS:
       acmenc_finish_stream (enc);
       res = gst_pad_push_event (enc->srcpad, event);
@@ -409,8 +432,6 @@ acmenc_init (ACMEnc * enc)
 {
   enc->sinkpad =
       gst_pad_new_from_static_template (&acmenc_sink_template, "sink");
-  gst_pad_set_setcaps_function (enc->sinkpad,
-      GST_DEBUG_FUNCPTR (acmenc_sink_setcaps));
   gst_pad_set_chain_function (enc->sinkpad, GST_DEBUG_FUNCPTR (acmenc_chain));
   gst_pad_set_event_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (acmenc_sink_event));
@@ -451,6 +472,12 @@ static void
 acmenc_class_init (ACMEncClass * klass)
 {
   GObjectClass *gobjectclass = (GObjectClass *) klass;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  ACMEncParams *params;
+  ACMDRIVERDETAILS driverdetails;
+  gchar *shortname, *longname, *detail, *description;
+  MMRESULT res;
+
   parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
   gobjectclass->dispose = acmenc_dispose;
   gobjectclass->set_property = acmenc_set_property;
@@ -458,15 +485,6 @@ acmenc_class_init (ACMEncClass * klass)
   g_object_class_install_property (gobjectclass, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Bitrate to encode at (in bps)",
           0, 1000000, DEFAULT_BITRATE, G_PARAM_READWRITE));
-} static void
-
-acmenc_base_init (ACMEncClass * klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  ACMEncParams *params;
-  ACMDRIVERDETAILS driverdetails;
-  gchar *shortname, *longname, *detail, *description;
-  MMRESULT res;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&acmenc_sink_template));
@@ -545,7 +563,7 @@ acmenc_register_file (GstPlugin * plugin, wchar_t * filename)
   GType type;
   GTypeInfo typeinfo = {
     sizeof (ACMEncClass),
-    (GBaseInitFunc) acmenc_base_init, NULL,
+    NULL, NULL,
     (GClassInitFunc) acmenc_class_init, NULL, NULL, sizeof (ACMEnc),
     0, (GInstanceInitFunc) acmenc_init,
   };

@@ -36,6 +36,12 @@
       (acmmp3dec_get_type())
 #define GST_ACM_MP3_DEC(obj) \
       (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ACM_MP3_DEC,ACMMP3Dec))
+#define GST_ACM_MP3_DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ACM_MP3_DEC,ACMMP3DecClass))
+#define GST_IS_ACM_MP3_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ACM_MP3_DEC))
+#define GST_IS_ACM_MP3_DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ACM_MP3_DEC))
 
 #define GST_CAT_DEFAULT acmmp3dec_debug
 GST_DEBUG_CATEGORY_STATIC (acmmp3dec_debug);
@@ -44,7 +50,7 @@ static GstStaticPadTemplate acmmp3dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
+    GST_STATIC_CAPS ("audio/x-raw, "
         "depth = (int)16, "
         "width = (int)16, "
         "endianness = (int)" G_STRINGIFY (G_BYTE_ORDER) ", "
@@ -96,13 +102,14 @@ typedef struct _ACMMP3Dec
 
 GType acmmp3dec_get_type (void);
 
-GST_BOILERPLATE (ACMMP3Dec, acmmp3dec, GstElement, GST_TYPE_ELEMENT);
+#define acmmp3dec_parent_class parent_class
+G_DEFINE_TYPE (ACMMP3Dec, acmmp3dec, GST_TYPE_ELEMENT);
 
 static GstCaps *
 acmmp3dec_caps_from_format (WAVEFORMATEX * fmt)
 {
   return gst_riff_create_audio_caps (fmt->wFormatTag,
-      NULL, (gst_riff_strf_auds *) fmt, NULL, NULL, NULL);
+      NULL, (gst_riff_strf_auds *) fmt, NULL, NULL, NULL, NULL);
 }
 
 static gboolean
@@ -239,20 +246,27 @@ acmmp3dec_push_output (ACMMP3Dec * dec)
 
   if (dec->header.cbDstLengthUsed > 0) {
     GstBuffer *outbuf = gst_buffer_new_and_alloc (dec->header.cbDstLengthUsed);
-    memcpy (GST_BUFFER_DATA (outbuf), dec->header.pbDst,
-        dec->header.cbDstLengthUsed);
+    if (!outbuf) {
+      GST_WARNING_OBJECT (dec, "cannot allocate a new GstBuffer");
+      goto done_push_output;
+    }
+
+    if (gst_buffer_fill (outbuf, 0, dec->header.pbDst,
+            dec->header.cbDstLengthUsed) != dec->header.cbDstLengthUsed) {
+      gst_buffer_unref (outbuf);
+      GST_WARNING_OBJECT (dec, "unable to fill output buffer");
+      goto done_push_output;
+    }
 
     if (dec->timestamp != GST_CLOCK_TIME_NONE)
       GST_BUFFER_TIMESTAMP (outbuf) = dec->timestamp;
     GST_BUFFER_DURATION (outbuf) =
-        gst_util_uint64_scale_int (GST_BUFFER_SIZE (outbuf), GST_SECOND,
+        gst_util_uint64_scale_int (dec->header.cbDstLengthUsed, GST_SECOND,
         dec->rate * dec->channels * 2);
 
     GST_DEBUG_OBJECT (dec, "decoded buffer has ts %d, duration %d",
         (int) (GST_BUFFER_TIMESTAMP (outbuf)),
         (int) (GST_BUFFER_DURATION (outbuf)));
-
-    gst_buffer_set_caps (outbuf, dec->output_caps);
 
     if (dec->timestamp != GST_CLOCK_TIME_NONE)
       dec->timestamp += GST_BUFFER_DURATION (outbuf);
@@ -263,20 +277,21 @@ acmmp3dec_push_output (ACMMP3Dec * dec)
   } else
     GST_DEBUG_OBJECT (dec, "Not pushing decoded buffer, no output");
 
-
+done_push_output:
   return ret;
 }
 
 static GstFlowReturn
-acmmp3dec_chain (GstPad * pad, GstBuffer * buf)
+acmmp3dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   MMRESULT res;
   ACMMP3Dec *dec = (ACMMP3Dec *) GST_PAD_PARENT (pad);
-  guchar *data = GST_BUFFER_DATA (buf);
-  gint len = GST_BUFFER_SIZE (buf);
+  GstMapInfo map;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (len > ACM_BUFFER_SIZE) {
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+
+  if (map.size > ACM_BUFFER_SIZE) {
     GST_WARNING_OBJECT (dec, "Impossibly large mp3 frame!");
     ret = GST_FLOW_ERROR;
     goto done;
@@ -288,8 +303,8 @@ acmmp3dec_chain (GstPad * pad, GstBuffer * buf)
     dec->timestamp = GST_BUFFER_TIMESTAMP (buf);
   }
 
-  memcpy (dec->header.pbSrc, data, len);
-  dec->header.cbSrcLength = len;
+  memcpy (dec->header.pbSrc, map.data, map.size);
+  dec->header.cbSrcLength = map.size;
 
   /* Now we have a buffer ready to go */
   res = acmStreamConvert (dec->stream, &dec->header,
@@ -314,6 +329,7 @@ acmmp3dec_chain (GstPad * pad, GstBuffer * buf)
   }
 
 done:
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
 
   return ret;
@@ -340,11 +356,17 @@ acmmp3dec_finish_stream (ACMMP3Dec * dec)
 }
 
 static gboolean
-acmmp3dec_sink_event (GstPad * pad, GstEvent * event)
+acmmp3dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   ACMMP3Dec *dec = (ACMMP3Dec *) GST_PAD_PARENT (pad);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+      return acmmp3dec_sink_setcaps (pad, caps);
+      break;
+    }
     case GST_EVENT_EOS:
       acmmp3dec_finish_stream (dec);
       break;
@@ -373,12 +395,10 @@ acmmp3dec_dispose (GObject * obj)
 }
 
 static void
-acmmp3dec_init (ACMMP3Dec * dec, ACMMP3DecClass * decclass)
+acmmp3dec_init (ACMMP3Dec * dec)
 {
   dec->sinkpad =
       gst_pad_new_from_static_template (&acmmp3dec_sink_template, "sink");
-  gst_pad_set_setcaps_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (acmmp3dec_sink_setcaps));
   gst_pad_set_chain_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (acmmp3dec_chain));
   gst_pad_set_event_function (dec->sinkpad,
@@ -395,13 +415,8 @@ static void
 acmmp3dec_class_init (ACMMP3DecClass * klass)
 {
   GObjectClass *gobjectclass = (GObjectClass *) klass;
-  gobjectclass->dispose = acmmp3dec_dispose;
-}
-
-static void
-acmmp3dec_base_init (gpointer klass)
-{
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  gobjectclass->dispose = acmmp3dec_dispose;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&acmmp3dec_sink_template));

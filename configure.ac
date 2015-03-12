@@ -426,7 +426,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  apexsink dc1394 \
  gsettings \
  musepack nas sdl timidity \
- acm wininet \
+ wininet \
  xvid lv2 sndio libvisual"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
