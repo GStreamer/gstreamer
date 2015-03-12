@@ -55,6 +55,43 @@ gst_core_audio_init (GstCoreAudio * core_audio)
 #endif
 }
 
+static gboolean
+_is_outer_scope (AudioUnitScope scope, AudioUnitElement element)
+{
+  return
+      (scope == kAudioUnitScope_Input && element == 1) ||
+      (scope == kAudioUnitScope_Output && element == 0);
+}
+
+static void
+_audio_unit_property_listener (void *inRefCon, AudioUnit inUnit,
+    AudioUnitPropertyID inID, AudioUnitScope inScope,
+    AudioUnitElement inElement)
+{
+  GstCoreAudio *core_audio;
+
+  core_audio = GST_CORE_AUDIO (inRefCon);
+  g_assert (inUnit == core_audio->audiounit);
+
+  switch (inID) {
+    case kAudioUnitProperty_AudioChannelLayout:
+    case kAudioUnitProperty_StreamFormat:
+      if (_is_outer_scope (inScope, inElement)) {
+        /* We don't push gst_event_new_caps here (for src),
+         * nor gst_event_new_reconfigure (for sink), since Core Audio continues
+         * to happily function with the old format, doing conversion/resampling
+         * as needed.
+         * This merely "refreshes" our PREFERRED caps. */
+
+        /* protect against cached_caps going away */
+        GST_OBJECT_LOCK (core_audio->osxbuf);
+        gst_caps_replace (&core_audio->cached_caps, NULL);
+        GST_OBJECT_UNLOCK (core_audio->osxbuf);
+      }
+      break;
+  }
+}
+
 /**************************
  *       Public API       *
  *************************/
@@ -83,6 +120,13 @@ gst_core_audio_close (GstCoreAudio * core_audio)
     return FALSE;
   }
 
+  AudioUnitRemovePropertyListenerWithUserData (core_audio->audiounit,
+      kAudioUnitProperty_AudioChannelLayout, _audio_unit_property_listener,
+      core_audio);
+  AudioUnitRemovePropertyListenerWithUserData (core_audio->audiounit,
+      kAudioUnitProperty_StreamFormat, _audio_unit_property_listener,
+      core_audio);
+
   /* core_audio->osxbuf is already locked at this point */
   gst_caps_replace (&core_audio->cached_caps, NULL);
 
@@ -98,6 +142,22 @@ gst_core_audio_open (GstCoreAudio * core_audio)
 
   if (!gst_core_audio_open_impl (core_audio))
     return FALSE;
+
+  /* Add property listener */
+  status = AudioUnitAddPropertyListener (core_audio->audiounit,
+      kAudioUnitProperty_AudioChannelLayout, _audio_unit_property_listener,
+      core_audio);
+  if (status != noErr) {
+    GST_ERROR_OBJECT (core_audio, "Failed to add audio channel layout property "
+        "listener for AudioUnit: %d", (int) status);
+  }
+  status = AudioUnitAddPropertyListener (core_audio->audiounit,
+      kAudioUnitProperty_StreamFormat, _audio_unit_property_listener,
+      core_audio);
+  if (status != noErr) {
+    GST_ERROR_OBJECT (core_audio, "Failed to add stream format property "
+        "listener for AudioUnit: %d", (int) status);
+  }
 
   /* Initialize the AudioUnit */
   status = AudioUnitInitialize (core_audio->audiounit);
