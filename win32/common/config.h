@@ -56,19 +56,22 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer source release"
+#define GST_PACKAGE_NAME "GStreamer git"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2014-07-19"
+#define GST_PACKAGE_RELEASE_DATETIME "2015-03-12T12:48Z"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
 
 /* location of the installed gst-plugin-scanner */
 #define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\gst-plugin-scanner"
+
+/* Define to 1 if you have the `alarm' function. */
+#undef HAVE_ALARM
 
 /* Define to 1 if you have the MacOS X function CFLocaleCopyCurrent in the
    CoreFoundation framework. */
@@ -81,8 +84,14 @@
 /* Define to 1 if you have the `clock_gettime' function. */
 #undef HAVE_CLOCK_GETTIME
 
+/* Define if the target CPU is AARCH64 */
+#undef HAVE_CPU_AARCH64
+
 /* Define if the target CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
+
+/* Define if the target CPU is an ARC */
+#undef HAVE_CPU_ARC
 
 /* Define if the target CPU is an ARM */
 #undef HAVE_CPU_ARM
@@ -127,6 +136,22 @@
    */
 #undef HAVE_DCGETTEXT
 
+/* Define to 1 if you have the declaration of `alarm', and to 0 if you don't.
+   */
+#undef HAVE_DECL_ALARM
+
+/* Define to 1 if you have the declaration of `localtime_r', and to 0 if you
+   don't. */
+#undef HAVE_DECL_LOCALTIME_R
+
+/* Define to 1 if you have the declaration of `strdup', and to 0 if you don't.
+   */
+#undef HAVE_DECL_STRDUP
+
+/* Define to 1 if you have the declaration of `strsignal', and to 0 if you
+   don't. */
+#undef HAVE_DECL_STRSIGNAL
+
 /* Defined if we have dladdr () */
 #undef HAVE_DLADDR
 
@@ -135,6 +160,9 @@
 
 /* Define to 1 if you have the `fgetpos' function. */
 #define HAVE_FGETPOS 1
+
+/* Define to 1 if you have the `fork' function. */
+#undef HAVE_FORK
 
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
@@ -153,6 +181,9 @@
 
 /* Define to 1 if you have the `getpagesize' function. */
 #undef HAVE_GETPAGESIZE
+
+/* Define to 1 if you have the `getpid' function. */
+#undef HAVE_GETPID
 
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
@@ -178,6 +209,9 @@
 /* Define if <inttypes.h> exists, doesn't clash with <sys/types.h>, and
    declares uintmax_t. */
 #undef HAVE_INTTYPES_H_WITH_UINTMAX
+
+/* Define to 1 if you have the `rt' library (-lrt). */
+#undef HAVE_LIBRT
 
 /* Define to 1 if you have the `localtime_r' function. */
 #undef HAVE_LOCALTIME_R
@@ -230,11 +264,17 @@
 /* Have PTHREAD_PRIO_INHERIT. */
 #undef HAVE_PTHREAD_PRIO_INHERIT
 
+/* Have function pthread_setname_np(const char*) */
+#undef HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID
+
 /* Define to 1 if the system has the type `ptrdiff_t'. */
 #undef HAVE_PTRDIFF_T
 
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
+
+/* Define to 1 if you have the `setitimer' function. */
+#undef HAVE_SETITIMER
 
 /* Define to 1 if you have the `sigaction' function. */
 #undef HAVE_SIGACTION
@@ -252,11 +292,29 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
 
+/* Define to 1 if you have the `strcasestr' function. */
+#undef HAVE_STRCASESTR
+
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
+
+/* Define to 1 if you have the `strsignal' function. */
+#undef HAVE_STRSIGNAL
+
+/* Define to 1 if `it_interval' is a member of `struct itimerspec'. */
+#undef HAVE_STRUCT_ITIMERSPEC_IT_INTERVAL
+
+/* Define to 1 if `it_value' is a member of `struct itimerspec'. */
+#undef HAVE_STRUCT_ITIMERSPEC_IT_VALUE
+
+/* Define to 1 if `tv_nsec' is a member of `struct timespec'. */
+#undef HAVE_STRUCT_TIMESPEC_TV_NSEC
+
+/* Define to 1 if `tv_sec' is a member of `struct timespec'. */
+#undef HAVE_STRUCT_TIMESPEC_TV_SEC
 
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
@@ -282,11 +340,17 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
+/* Define to 1 if you have the <sys/uio.h> header file. */
+#undef HAVE_SYS_UIO_H
+
 /* Define to 1 if you have the <sys/utsname.h> header file. */
 #undef HAVE_SYS_UTSNAME_H
 
 /* Define to 1 if you have the <sys/wait.h> header file. */
 #undef HAVE_SYS_WAIT_H
+
+/* Define to 1 if you have the <time.h> header file. */
+#undef HAVE_TIME_H
 
 /* Have tm_gmtoff field in struct tm */
 #undef HAVE_TM_GMTOFF
@@ -317,6 +381,12 @@
 
 /* Define to 1 if you have the <winsock2.h> header file. */
 #define HAVE_WINSOCK2_H 1
+
+/* Define to 1 if you have the `_getpid' function. */
+#undef HAVE__GETPID
+
+/* Define to 1 if you have the `_strdup' function. */
+#undef HAVE__STRDUP
 
 /* the host CPU */
 #define HOST_CPU "i686"
@@ -354,7 +424,7 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 1.4.0"
+#define PACKAGE_STRING "GStreamer 1.5.0.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
@@ -363,7 +433,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.4.0"
+#define PACKAGE_VERSION "1.5.0.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -394,6 +464,12 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Need to define the itimerspec structure */
+#undef STRUCT_ITIMERSPEC_DEFINITION_MISSING
+
+/* Need to define the timespec structure */
+#undef STRUCT_TIMESPEC_DEFINITION_MISSING
+
 /* the target CPU */
 #undef TARGET_CPU
 
@@ -401,7 +477,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "1.4.0"
+#define VERSION "1.5.0.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
@@ -432,9 +508,15 @@
 /* We need at least WinXP SP2 for __stat64 */
 #undef __MSVCRT_VERSION__
 
+/* clockid_t */
+#undef clockid_t
+
 /* Define to the widest signed integer type if <stdint.h> and <inttypes.h> do
    not define. */
 #undef intmax_t
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
+
+/* timer_t */
+#undef timer_t

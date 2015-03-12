@@ -310,7 +310,11 @@ gst_debug_graph_details_get_type (void)
         "GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS", "non-default-params"},
     {C_FLAGS (GST_DEBUG_GRAPH_SHOW_STATES), "GST_DEBUG_GRAPH_SHOW_STATES",
         "states"},
+    {C_FLAGS (GST_DEBUG_GRAPH_SHOW_FULL_PARAMS),
+        "GST_DEBUG_GRAPH_SHOW_FULL_PARAMS", "full-params"},
     {C_FLAGS (GST_DEBUG_GRAPH_SHOW_ALL), "GST_DEBUG_GRAPH_SHOW_ALL", "all"},
+    {C_FLAGS (GST_DEBUG_GRAPH_SHOW_VERBOSE), "GST_DEBUG_GRAPH_SHOW_VERBOSE",
+        "verbose"},
     {0, NULL, NULL}
   };
 
@@ -1586,6 +1590,7 @@ gst_seek_flags_get_type (void)
     {C_FLAGS (GST_SEEK_FLAG_ACCURATE), "GST_SEEK_FLAG_ACCURATE", "accurate"},
     {C_FLAGS (GST_SEEK_FLAG_KEY_UNIT), "GST_SEEK_FLAG_KEY_UNIT", "key-unit"},
     {C_FLAGS (GST_SEEK_FLAG_SEGMENT), "GST_SEEK_FLAG_SEGMENT", "segment"},
+    {C_FLAGS (GST_SEEK_FLAG_TRICKMODE), "GST_SEEK_FLAG_TRICKMODE", "trickmode"},
     {C_FLAGS (GST_SEEK_FLAG_SKIP), "GST_SEEK_FLAG_SKIP", "skip"},
     {C_FLAGS (GST_SEEK_FLAG_SNAP_BEFORE), "GST_SEEK_FLAG_SNAP_BEFORE",
         "snap-before"},
@@ -1593,6 +1598,10 @@ gst_seek_flags_get_type (void)
         "snap-after"},
     {C_FLAGS (GST_SEEK_FLAG_SNAP_NEAREST), "GST_SEEK_FLAG_SNAP_NEAREST",
         "snap-nearest"},
+    {C_FLAGS (GST_SEEK_FLAG_TRICKMODE_KEY_UNITS),
+        "GST_SEEK_FLAG_TRICKMODE_KEY_UNITS", "trickmode-key-units"},
+    {C_FLAGS (GST_SEEK_FLAG_TRICKMODE_NO_AUDIO),
+        "GST_SEEK_FLAG_TRICKMODE_NO_AUDIO", "trickmode-no-audio"},
     {0, NULL, NULL}
   };
 
@@ -1611,8 +1620,14 @@ gst_segment_flags_get_type (void)
   static const GFlagsValue values[] = {
     {C_FLAGS (GST_SEGMENT_FLAG_NONE), "GST_SEGMENT_FLAG_NONE", "none"},
     {C_FLAGS (GST_SEGMENT_FLAG_RESET), "GST_SEGMENT_FLAG_RESET", "reset"},
+    {C_FLAGS (GST_SEGMENT_FLAG_TRICKMODE), "GST_SEGMENT_FLAG_TRICKMODE",
+        "trickmode"},
     {C_FLAGS (GST_SEGMENT_FLAG_SKIP), "GST_SEGMENT_FLAG_SKIP", "skip"},
     {C_FLAGS (GST_SEGMENT_FLAG_SEGMENT), "GST_SEGMENT_FLAG_SEGMENT", "segment"},
+    {C_FLAGS (GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS),
+        "GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS", "trickmode-key-units"},
+    {C_FLAGS (GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO),
+        "GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO", "trickmode-no-audio"},
     {0, NULL, NULL}
   };
 
