@@ -27,6 +27,14 @@
 
 #include "video-resampler.h"
 
+/**
+ * SECTION:gstvideoresampler
+ * @short_description: Utility structure for resampler information
+ *
+ * #GstVideoResampler is a structure which holds the information
+ * required to perform various kinds of resampling filtering.
+ *
+ */
 
 #define DEFAULT_OPT_CUBIC_B (1.0 / 3.0)
 #define DEFAULT_OPT_CUBIC_C (1.0 / 3.0)

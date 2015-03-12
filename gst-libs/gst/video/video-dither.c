@@ -22,6 +22,14 @@
 #include "video-dither.h"
 #include "video-orc.h"
 
+/**
+ * SECTION:gstvideodither
+ * @short_description: Utility object for dithering and quantizing lines of video
+ *
+ * GstVideoDither provides implementations of several dithering algorithms
+ * that can be applied to lines of video pixels to quantize and dither them.
+ *
+ */
 struct _GstVideoDither
 {
   GstVideoDitherMethod method;

@@ -2312,7 +2312,7 @@ gst_video_converter_set_config (GstVideoConverter * convert,
 
 /**
  * gst_video_converter_get_config:
- * @@convert: a #GstVideoConverter
+ * @convert: a #GstVideoConverter
  *
  * Get the current configuration of @convert.
  *

@@ -27,6 +27,18 @@
 #include "video-orc.h"
 #include "video-format.h"
 
+/**
+ * SECTION:gstvideochroma
+ * @short_description: Functions and utility object for operating on chroma video planes
+ *
+ * The functions gst_video_chroma_from_string() and gst_video_chroma_to_string() convert
+ * between #GstVideoChromaSite and string descriptions.
+ *
+ * #GstVideoChromaResample is a utility object for resampling chroma planes
+ * and converting between different chroma sampling sitings.
+ *
+ */
+
 typedef struct
 {
   const gchar *name;

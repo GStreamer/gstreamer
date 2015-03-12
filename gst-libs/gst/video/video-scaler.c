@@ -25,6 +25,15 @@
 #include <stdio.h>
 #include <math.h>
 
+/**
+ * SECTION:gstvideoscaler
+ * @short_description: Utility object for rescaling video frames
+ *
+ * #GstVideoScaler is a utility object for rescaling and resampling
+ * video frames using various interpolation / sampling methods.
+ *
+ */
+
 #ifndef DISABLE_ORC
 #include <orc/orcfunctions.h>
 #else

@@ -151,6 +151,7 @@ struct _GstVideoResampler
   guint32 *n_taps;
   gdouble *taps;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

@@ -645,7 +645,7 @@ gst_video_region_of_interest_meta_get_info (void)
  * Buffers can contain multiple #GstVideoRegionOfInterestMeta metadata items if
  * multiple regions of interests are marked on a frame.
  *
- * Returns: the #GstVideoeRegionOfInterestMeta with @id or %NULL when there is
+ * Returns: the #GstVideoRegionOfInterestMeta with @id or %NULL when there is
  * no such metadata on @buffer.
  */
 GstVideoRegionOfInterestMeta *

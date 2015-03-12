@@ -48,7 +48,6 @@ GST_DEBUG_CATEGORY_EXTERN (video_scale_debug);
  * @GST_VIDEO_SCALE_BILINEAR: use 2-tap bilinear scaling (slower but prettier).
  * @GST_VIDEO_SCALE_4TAP: use a 4-tap sinc filter for scaling (slow).
  * @GST_VIDEO_SCALE_LANCZOS: use a multitap Lanczos filter for scaling (slow).
- *
  * @GST_VIDEO_SCALE_BILINEAR2: use a multitap bilinear filter
  * @GST_VIDEO_SCALE_SINC: use a multitap sinc filter
  * @GST_VIDEO_SCALE_HERMITE: use a multitap bicubic Hermite filter

@@ -2241,9 +2241,6 @@ GstVideoFormat
 GST_VIDEO_MAX_PLANES
 GST_VIDEO_MAX_COMPONENTS
 GstVideoFormatInfo
-GstVideoChromaSite
-gst_video_chroma_from_string
-gst_video_chroma_to_string
 GstVideoFormatFlags
 GstVideoPackFlags
 GstVideoFormatUnpack
@@ -2427,6 +2424,7 @@ gst_video_blend_scale_linear_RGBA
 
 #video-converter.h
 <SUBSECTION>
+GstVideoConverter
 gst_video_converter_new
 gst_video_converter_free
 gst_video_converter_get_config
@@ -2518,7 +2516,6 @@ gst_video_gl_texture_upload_meta_get_info
 <INCLUDE>gst/video/video-overlay-composition.h</INCLUDE>
 <SUBSECTION composition>
 GstVideoOverlayComposition
-GstVideoOverlayCompositionClass
 gst_video_overlay_composition_new
 gst_video_overlay_composition_ref
 gst_video_overlay_composition_unref
@@ -2542,7 +2539,6 @@ gst_buffer_remove_video_overlay_composition_meta
 <SUBSECTION rectangle>
 GstVideoOverlayFormatFlags
 GstVideoOverlayRectangle
-GstVideoOverlayRectangleClass
 gst_video_overlay_rectangle_new_raw
 gst_video_overlay_rectangle_ref
 gst_video_overlay_rectangle_unref
@@ -2562,10 +2558,7 @@ gst_video_overlay_rectangle_set_global_alpha
 <SUBSECTION Standard>
 GST_TYPE_VIDEO_OVERLAY_COMPOSITION
 GST_VIDEO_OVERLAY_COMPOSITION
-GST_VIDEO_OVERLAY_COMPOSITION_CLASS
-GST_VIDEO_OVERLAY_COMPOSITION_GET_CLASS
 GST_IS_VIDEO_OVERLAY_COMPOSITION
-GST_IS_VIDEO_VIDEO_OVERLAY_COMPOSITION_CLASS
 GST_VIDEO_OVERLAY_COMPOSITION_CAST
 GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE
 GST_VIDEO_OVERLAY_COMPOSITION_META_INFO
@@ -2574,10 +2567,7 @@ gst_video_overlay_composition_meta_api_get_type
 
 GST_TYPE_VIDEO_OVERLAY_RECTANGLE
 GST_VIDEO_OVERLAY_RECTANGLE
-GST_VIDEO_OVERLAY_RECTANGLE_CLASS
-GST_VIDEO_OVERLAY_RECTANGLE_GET_CLASS
 GST_IS_VIDEO_OVERLAY_RECTANGLE
-GST_IS_VIDEO_VIDEO_OVERLAY_RECTANGLE_CLASS
 gst_video_overlay_rectangle_get_type
 </SECTION>
 
@@ -2715,6 +2705,81 @@ GST_VIDEO_ENCODER_CLASS
 GST_VIDEO_ENCODER_GET_CLASS
 GstVideoEncoderPrivate
 gst_video_encoder_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstvideodither</FILE>
+<TITLE>GstVideoDither</TITLE>
+<INCLUDE>gst/video/video-dither.h</INCLUDE>
+GstVideoDither
+GstVideoDitherFlags
+GstVideoDitherMethod
+gst_video_dither_free
+gst_video_dither_line
+gst_video_dither_new
+<SUBSECTION Standard>
+GST_TYPE_VIDEO_DITHER_FLAGS
+gst_video_dither_flags_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstvideochroma</FILE>
+<TITLE>GstVideoChroma</TITLE>
+<INCLUDE>gst/video/video-chroma.h</INCLUDE>
+GstVideoChromaSite
+gst_video_chroma_from_string
+gst_video_chroma_to_string
+GstVideoChromaFlags
+<SUBSECTION GstVideoChromaResample>
+GstVideoChromaMethod
+GstVideoChromaResample
+gst_video_chroma_resample
+gst_video_chroma_resample_free
+gst_video_chroma_resample_get_info
+gst_video_chroma_resample_new
+<SUBSECTION Standard>
+gst_video_chroma_flags_get_type
+gst_video_chroma_method_get_type
+GST_TYPE_VIDEO_CHROMA_FLAGS
+GST_TYPE_VIDEO_CHROMA_METHOD
+</SECTION>
+
+<SECTION>
+<FILE>gstvideoresampler</FILE>
+<TITLE>GstVideoResampler</TITLE>
+<INCLUDE>gst/video/video-resampler.h</INCLUDE>
+GstVideoResampler
+GstVideoResamplerFlags
+GstVideoResamplerMethod
+gst_video_resampler_clear
+gst_video_resampler_init
+GST_VIDEO_RESAMPLER_OPT_CUBIC_B
+GST_VIDEO_RESAMPLER_OPT_CUBIC_C
+GST_VIDEO_RESAMPLER_OPT_ENVELOPE
+GST_VIDEO_RESAMPLER_OPT_MAX_TAPS
+GST_VIDEO_RESAMPLER_OPT_SHARPEN
+GST_VIDEO_RESAMPLER_OPT_SHARPNESS
+<SUBSECTION Standard>
+gst_video_resampler_flags_get_type
+gst_video_resampler_method_get_type
+GST_TYPE_VIDEO_RESAMPLER_FLAGS
+GST_TYPE_VIDEO_RESAMPLER_METHOD
+</SECTION>
+
+<SECTION>
+<FILE>gstvideoscaler</FILE>
+<TITLE>GstVideoScaler</TITLE>
+<INCLUDE>gst/video/video-scaler.h</INCLUDE>
+GstVideoScaler
+GstVideoScalerFlags
+gst_video_scaler_2d
+gst_video_scaler_combine_packed_YUV
+gst_video_scaler_free
+gst_video_scaler_get_coeff
+gst_video_scaler_horizontal
+gst_video_scaler_new
+gst_video_scaler_vertical
+<SUBSECTION Standard>
 </SECTION>
 
 <SECTION>
