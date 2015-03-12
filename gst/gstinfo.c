@@ -491,6 +491,10 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   GSList *handler;
 
   g_return_if_fail (category != NULL);
+
+  if (level > gst_debug_category_get_threshold (category))
+    return;
+
   g_return_if_fail (file != NULL);
   g_return_if_fail (function != NULL);
   g_return_if_fail (format != NULL);
@@ -987,9 +991,6 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   GstDebugColorMode color_mode;
   FILE *log_file = user_data ? user_data : stderr;
   gchar c;
-
-  if (level > gst_debug_category_get_threshold (category))
-    return;
 
   /* __FILE__ might be a file name or an absolute path or a
    * relative path, irrespective of the exact compiler used,
