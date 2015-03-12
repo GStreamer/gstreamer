@@ -467,7 +467,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
             [device setValue:min_frame_duration forKey:@"activeVideoMinFrameDuration"];
             @try {
               /* Only available on OSX >= 10.8 and iOS >= 7.0 */
-              [device setValue:max_frame_duration forKey:@"activeVideoMaxFrameDuration"];
+              // Restrict activeVideoMaxFrameDuration to the minimum value so we get a better capture frame rate
+              [device setValue:min_frame_duration forKey:@"activeVideoMaxFrameDuration"];
             } @catch (NSException *exception) {
               if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
                 GST_WARNING ("An unexcepted error occured: %s",
