@@ -517,7 +517,9 @@ struct _GstVaapiDecoderH264Private {
     gint32                      frame_num_offset;       // FrameNumOffset
     gint32                      frame_num;              // frame_num (from slice_header())
     gint32                      prev_frame_num;         // prevFrameNum
+    gint32                      prev_ref_frame_num;     // prevRefFrameNum
     gboolean                    prev_pic_has_mmco5;     // prevMmco5Pic
+    gboolean                    prev_pic_reference;     // previous picture is a reference
     guint                       prev_pic_structure;     // previous picture structure
     guint                       is_opened               : 1;
     guint                       is_avcC                 : 1;
@@ -803,6 +805,29 @@ dpb_find_nearest_prev_poc(GstVaapiDecoderH264 *decoder,
     if (found_picture_ptr)
         *found_picture_ptr = found_picture;
     return found_picture ? found_index : -1;
+}
+
+/* Finds the picture with the associated FrameNum */
+static gint
+dpb_find_frame_num(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
+    gint frame_num, GstVaapiPictureH264 **found_picture_ptr)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    guint i, j;
+
+    for (i = 0; i < priv->dpb_count; i++) {
+        GstVaapiFrameStore * const fs = priv->dpb[i];
+        if (picture && picture->base.view_id != fs->view_id)
+            continue;
+        for (j = 0; j < fs->num_buffers; j++) {
+            if (fs->buffers[j]->frame_num != frame_num)
+                continue;
+            if (found_picture_ptr)
+                *found_picture_ptr = fs->buffers[j];
+            return i;
+        }
+    }
+    return -1;
 }
 
 /* Finds the picture with the lowest POC that needs to be output */
@@ -3084,6 +3109,114 @@ error_append_field:
 }
 
 static gboolean
+fill_picture_gaps(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture,
+    GstH264SliceHdr *slice_hdr)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstH264SPS * const sps = get_sps(decoder);
+    const gint32 MaxFrameNum = 1 << (sps->log2_max_frame_num_minus4 + 4);
+    GstVaapiPicture *base_picture;
+    GstVaapiPictureH264 *lost_picture, *prev_picture;
+    GstH264SliceHdr lost_slice_hdr;
+    gboolean success = FALSE;
+
+    if (priv->prev_ref_frame_num == priv->frame_num)
+        return TRUE;
+    if ((priv->prev_ref_frame_num + 1) % MaxFrameNum == priv->frame_num)
+        return TRUE;
+    if (priv->dpb_count == 0)
+        return TRUE;
+
+    prev_picture = NULL;
+    dpb_find_frame_num(decoder, picture, priv->prev_ref_frame_num,
+        &prev_picture);
+    if (prev_picture)
+        gst_vaapi_picture_ref(prev_picture);
+    gst_vaapi_picture_ref(picture);
+
+    lost_slice_hdr = *slice_hdr;
+    lost_slice_hdr.field_pic_flag = 0;
+    if (sps->pic_order_cnt_type == 1) {
+        lost_slice_hdr.delta_pic_order_cnt[0] = 0;
+        lost_slice_hdr.delta_pic_order_cnt[1] = 0;
+    }
+    lost_slice_hdr.dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag = 0;
+
+    /* XXX: this process is incorrect for MVC */
+    /* XXX: optimize to reduce the number of dummy pictures created */
+    priv->frame_num = priv->prev_ref_frame_num;
+    for (;;) {
+        priv->prev_ref_frame_num = priv->frame_num;
+        priv->frame_num = (priv->prev_ref_frame_num + 1) % MaxFrameNum;
+        if (priv->frame_num == slice_hdr->frame_num)
+            break;
+
+        /* Create new picture */
+        if (prev_picture)
+            lost_picture = gst_vaapi_picture_h264_new_clone(prev_picture);
+        else
+            lost_picture = gst_vaapi_picture_h264_new(decoder);
+        if (!lost_picture)
+            goto error_allocate_picture;
+
+        base_picture                    = &lost_picture->base;
+        base_picture->type              = GST_VAAPI_PICTURE_TYPE_NONE;
+        base_picture->pts               = GST_CLOCK_TIME_NONE;
+        base_picture->structure         = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+        lost_picture->frame_num         = priv->frame_num;
+        lost_picture->frame_num_wrap    = priv->frame_num;
+        lost_picture->structure         = base_picture->structure;
+
+        GST_VAAPI_PICTURE_FLAG_SET(lost_picture,
+            (GST_VAAPI_PICTURE_FLAG_SKIPPED |
+             GST_VAAPI_PICTURE_FLAG_GHOST |
+             GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE));
+
+        if (sps->pic_order_cnt_type != 0)
+            init_picture_poc(decoder, lost_picture, &lost_slice_hdr);
+        else {
+            base_picture->poc = prev_picture->base.poc + 2;
+            if (prev_picture->field_poc[0] != G_MAXINT32)
+                lost_picture->field_poc[0] = prev_picture->field_poc[0] + 2;
+            if (prev_picture->field_poc[1] != G_MAXINT32)
+                lost_picture->field_poc[1] = prev_picture->field_poc[1] + 2;
+        }
+
+        gst_vaapi_picture_replace(&prev_picture, lost_picture);
+        gst_vaapi_picture_replace(&priv->current_picture, lost_picture);
+        gst_vaapi_picture_unref(lost_picture);
+
+        init_picture_ref_lists(decoder, lost_picture);
+        init_picture_refs_pic_num(decoder, lost_picture, &lost_slice_hdr);
+        if (!exec_ref_pic_marking_sliding_window(decoder))
+            goto error_exec_ref_pic_marking;
+        if (!dpb_add(decoder, lost_picture))
+            goto error_dpb_add;
+        gst_vaapi_picture_replace(&priv->current_picture, NULL);
+    }
+    success = TRUE;
+
+cleanup:
+    priv->frame_num = slice_hdr->frame_num;
+    priv->prev_ref_frame_num = (priv->frame_num + MaxFrameNum - 1) % MaxFrameNum;
+    gst_vaapi_picture_replace(&prev_picture, NULL);
+    gst_vaapi_picture_replace(&priv->current_picture, picture);
+    gst_vaapi_picture_unref(picture);
+    return success;
+
+    /* ERRORS */
+error_allocate_picture:
+    GST_ERROR("failed to allocate lost picture");
+    goto cleanup;
+error_exec_ref_pic_marking:
+    GST_ERROR("failed to execute reference picture marking process");
+    goto cleanup;
+error_dpb_add:
+    GST_ERROR("failed to store lost picture into the DPB");
+    goto cleanup;
+}
+
+static gboolean
 init_picture(
     GstVaapiDecoderH264 *decoder,
     GstVaapiPictureH264 *picture, GstVaapiParserInfoH264 *pi)
@@ -3092,6 +3225,8 @@ init_picture(
     GstVaapiPicture * const base_picture = &picture->base;
     GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
 
+    if (priv->prev_pic_reference)
+        priv->prev_ref_frame_num = priv->frame_num;
     priv->prev_frame_num        = priv->frame_num;
     priv->frame_num             = slice_hdr->frame_num;
     picture->frame_num          = priv->frame_num;
@@ -3124,6 +3259,8 @@ init_picture(
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR);
         dpb_flush(decoder, picture);
     }
+    else if (!fill_picture_gaps(decoder, picture, slice_hdr))
+        return FALSE;
 
     /* Initialize picture structure */
     if (slice_hdr->field_pic_flag) {
@@ -3457,13 +3594,14 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
 
+    priv->prev_pic_reference = GST_VAAPI_PICTURE_IS_REFERENCE(picture);
     priv->prev_pic_has_mmco5 = FALSE;
     priv->prev_pic_structure = picture->structure;
 
     if (GST_VAAPI_PICTURE_IS_INTER_VIEW(picture))
         g_ptr_array_add(priv->inter_views, gst_vaapi_picture_ref(picture));
 
-    if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture))
+    if (!priv->prev_pic_reference)
         return TRUE;
 
     if (!GST_VAAPI_PICTURE_IS_IDR(picture)) {
