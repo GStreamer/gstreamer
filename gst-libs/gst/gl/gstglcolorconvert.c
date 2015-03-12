@@ -415,6 +415,9 @@ static const GLfloat vertices[] = {
     -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
      1.0f,  1.0f, 0.0f, 1.0f, 1.0f
 };
+
+static const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+
 /* *INDENT-ON* */
 
 struct ConvertInfo
@@ -441,6 +444,7 @@ struct _GstGLColorConvertPrivate
 
   GLuint vao;
   GLuint vertex_buffer;
+  GLuint vbo_indices;
   GLuint attr_position;
   GLuint attr_texture;
 };
@@ -530,6 +534,11 @@ _reset_gl (GstGLContext * context, GstGLColorConvert * convert)
   if (convert->priv->vertex_buffer) {
     gl->DeleteBuffers (1, &convert->priv->vertex_buffer);
     convert->priv->vertex_buffer = 0;
+  }
+
+  if (convert->priv->vbo_indices) {
+    gl->DeleteBuffers (1, &convert->priv->vbo_indices);
+    convert->priv->vbo_indices = 0;
   }
 }
 
@@ -1335,6 +1344,15 @@ _init_convert (GstGLColorConvert * convert)
     gl->BindBuffer (GL_ARRAY_BUFFER, 0);
   }
 
+  if (!convert->priv->vbo_indices) {
+    gl->GenBuffers (1, &convert->priv->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, convert->priv->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+  }
+
+
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
   convert->initted = TRUE;
@@ -1621,8 +1639,6 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   GLint viewport_dim[4];
 
-  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-
   GLenum multipleRT[] = {
     GL_COLOR_ATTACHMENT0,
     GL_COLOR_ATTACHMENT1,
@@ -1679,7 +1695,8 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
     g_free (scale_name);
   }
 
-  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, convert->priv->vbo_indices);
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
   if (gl->BindVertexArray)
     gl->BindVertexArray (0);
@@ -1688,6 +1705,8 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   if (gl->DrawBuffer)
     gl->DrawBuffer (GL_NONE);
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
 
   /* we are done with the shader */
   gst_gl_context_clear_shader (context);
