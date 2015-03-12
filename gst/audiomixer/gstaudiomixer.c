@@ -1058,11 +1058,10 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstAudioMixerPad * pad,
           G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
           pad->next_offset, start_offset);
     pad->output_offset = -1;
+    pad->next_offset = end_offset;
   } else {
-    pad->discont_time = GST_CLOCK_TIME_NONE;
+    pad->next_offset += pad->size / bpf;
   }
-
-  pad->next_offset = end_offset;
 
   if (pad->output_offset == -1) {
     GstClockTime start_running_time;
