@@ -658,7 +658,6 @@ gst_gl_color_convert_caps_remove_format_info (GstCaps * caps)
     st = gst_structure_copy (st);
     gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
         NULL);
-    gst_structure_remove_fields (st, "width", "height", NULL);
 
     gst_caps_append_structure_full (res, st,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
