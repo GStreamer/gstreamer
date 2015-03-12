@@ -148,6 +148,8 @@ struct _GstOggDemux
      useful for skewing when seeking */
   guint64 max_packet_size, max_page_size;
 
+  gboolean check_index_overflow;
+
   /* state */
   GMutex chain_lock;           /* we need the lock to protect the chains */
   GArray *chains;               /* list of chains we know */

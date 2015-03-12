@@ -586,6 +586,74 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     GST_DEBUG_OBJECT (ogg, "packet duration %" G_GUINT64_FORMAT, duration);
   }
 
+
+  /* If we get a hole at start, it might be we're catching a stream
+   * partway through. In that case, if the stream has an index, the
+   * index might be mooted. However, as it's totally valid to index
+   * a stream with a hole at start (ie, capturing a live stream and
+   * then index it), we now check whether the index references some
+   * offset beyond the byte length (if known). If this is the case,
+   * we can be reasonably sure we're getting a stream partway, with
+   * its index being now useless since we don't know how many bytes
+   * were skipped, preventing us from patching the index offsets to
+   * match the hole size. */
+  if (!is_header && ogg->check_index_overflow) {
+    GstQuery *query;
+    GstFormat format;
+    int i;
+    gint64 length;
+    gboolean beyond;
+
+    if (ogg->current_chain) {
+      query = gst_query_new_duration (GST_FORMAT_BYTES);
+      if (gst_pad_peer_query (ogg->sinkpad, query)) {
+        gst_query_parse_duration (query, &format, &length);
+        if (format == GST_FORMAT_BYTES && length >= 0) {
+          for (i = 0; i < ogg->current_chain->streams->len; i++) {
+            GstOggPad *ipad =
+                g_array_index (ogg->current_chain->streams, GstOggPad *, i);
+            if (!ipad->map.index)
+              continue;
+            beyond = ipad->map.n_index
+                && ipad->map.index[ipad->map.n_index - 1].offset >= length;
+            if (beyond) {
+              GST_WARNING_OBJECT (pad, "Index offsets beyong byte length");
+              if (ipad->discont) {
+                /* hole - the index is most likely screwed up */
+                GST_WARNING_OBJECT (ogg, "Discarding entire index");
+                g_free (ipad->map.index);
+                ipad->map.index = NULL;
+                ipad->map.n_index = 0;
+              } else {
+                /* no hole - we can just clip the index if needed */
+                GST_WARNING_OBJECT (ogg, "Clipping index");
+                while (ipad->map.n_index > 0
+                    && ipad->map.index[ipad->map.n_index - 1].offset >= length)
+                  ipad->map.n_index--;
+                if (ipad->map.n_index == 0) {
+                  GST_WARNING_OBJECT (ogg, "The entire index was clipped");
+                  g_free (ipad->map.index);
+                  ipad->map.index = NULL;
+                }
+              }
+              /* We can't trust the total time if the index goes beyond */
+              ipad->map.total_time = -1;
+            } else {
+              /* use total time to update the total ogg time */
+              if (ogg->total_time == -1) {
+                ogg->total_time = ipad->map.total_time;
+              } else if (ipad->map.total_time > 0) {
+                ogg->total_time = MAX (ogg->total_time, ipad->map.total_time);
+              }
+            }
+          }
+        }
+      }
+      gst_query_unref (query);
+    }
+    ogg->check_index_overflow = FALSE;
+  }
+
   if (packet->b_o_s) {
     out_timestamp = GST_CLOCK_TIME_NONE;
     out_duration = GST_CLOCK_TIME_NONE;
@@ -919,13 +987,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
           case GST_OGG_SKELETON_INDEX:
             gst_ogg_map_add_index (&skel_pad->map, &pad->map, packet->packet,
                 packet->bytes);
-
-            /* use total time to update the total ogg time */
-            if (ogg->total_time == -1) {
-              ogg->total_time = skel_pad->map.total_time;
-            } else if (skel_pad->map.total_time > 0) {
-              ogg->total_time = MAX (ogg->total_time, skel_pad->map.total_time);
-            }
+            ogg->check_index_overflow = TRUE;
             break;
           default:
             break;
