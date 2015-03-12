@@ -624,7 +624,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
     for (i = 0; i < channels; ++i) {
       if (!GST_BUFFER_FLAG_IS_SET (in, GST_BUFFER_FLAG_GAP)) {
-        filter->process (in_data, block_int_size, channels, &CS,
+        filter->process (in_data + (bps * i), block_int_size, channels, &CS,
             &filter->peak[i]);
         GST_LOG_OBJECT (filter,
             "[%d]: cumulative squares %lf, over %d samples/%d channels",
@@ -633,7 +633,6 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       } else {
         filter->peak[i] = 0.0;
       }
-      in_data += bps;
 
       filter->decay_peak_age[i] += GST_FRAMES_TO_CLOCK_TIME (num_frames, rate);
       GST_LOG_OBJECT (filter,
