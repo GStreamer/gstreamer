@@ -2351,8 +2351,10 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 #endif
       res = gst_ogg_demux_send_event (ogg, event);
       if (ogg->current_chain == NULL) {
-        GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
-            ("can't get first chain"));
+        GST_WARNING_OBJECT (ogg,
+            "EOS while trying to retrieve chain, seeking disabled");
+        ogg->push_disable_seeking = TRUE;
+        res = TRUE;
       }
       break;
     }
