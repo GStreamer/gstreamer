@@ -45,6 +45,13 @@ G_BEGIN_DECLS
 #define MAX_FRAME_SIZE 2000*2
 #define MAX_FRAME_BYTES 2000
 
+typedef enum
+{
+  BITRATE_TYPE_CBR,
+  BITRATE_TYPE_VBR,
+  BITRATE_TYPE_CONSTRAINED_VBR,
+} GstOpusEncBitrateType;
+
 typedef struct _GstOpusEnc GstOpusEnc;
 typedef struct _GstOpusEncClass GstOpusEncClass;
 
@@ -61,8 +68,7 @@ struct _GstOpusEnc {
   gint                  bitrate;
   gint                  bandwidth;
   gint                  frame_size;
-  gboolean              cbr;
-  gboolean              constrained_vbr;
+  GstOpusEncBitrateType bitrate_type;
   gint                  complexity;
   gboolean              inband_fec;
   gboolean              dtx;

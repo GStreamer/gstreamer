@@ -136,6 +136,29 @@ gst_opus_enc_audio_type_get_type (void)
   return id;
 }
 
+#define GST_OPUS_ENC_TYPE_BITRATE_TYPE (gst_opus_enc_bitrate_type_get_type())
+static GType
+gst_opus_enc_bitrate_type_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {BITRATE_TYPE_CBR, "CBR", "cbr"},
+    {BITRATE_TYPE_VBR, "VBR", "vbr"},
+    {BITRATE_TYPE_CONSTRAINED_VBR, "Constrained VBR", "constrained-vbr"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstOpusEncBitrateType", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
 #define FORMAT_STR GST_AUDIO_NE(S16)
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -160,6 +183,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define DEFAULT_FRAMESIZE       20
 #define DEFAULT_CBR             TRUE
 #define DEFAULT_CONSTRAINED_VBR TRUE
+#define DEFAULT_BITRATE_TYPE    BITRATE_TYPE_CBR
 #define DEFAULT_COMPLEXITY      10
 #define DEFAULT_INBAND_FEC      FALSE
 #define DEFAULT_DTX             FALSE
@@ -176,6 +200,7 @@ enum
   PROP_FRAME_SIZE,
   PROP_CBR,
   PROP_CONSTRAINED_VBR,
+  PROP_BITRATE_TYPE,
   PROP_COMPLEXITY,
   PROP_INBAND_FEC,
   PROP_DTX,
@@ -271,10 +296,16 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
       g_param_spec_boolean ("cbr", "Constant bit rate", "Constant bit rate",
           DEFAULT_CBR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_PLAYING));
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_DEPRECATED));
   g_object_class_install_property (gobject_class, PROP_CONSTRAINED_VBR,
       g_param_spec_boolean ("constrained-vbr", "Constrained VBR",
           "Constrained VBR", DEFAULT_CONSTRAINED_VBR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_DEPRECATED));
+  g_object_class_install_property (gobject_class, PROP_BITRATE_TYPE,
+      g_param_spec_enum ("bitrate-type", "Bitrate type",
+          "Bitrate type", GST_OPUS_ENC_TYPE_BITRATE_TYPE,
+          DEFAULT_BITRATE_TYPE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_COMPLEXITY,
@@ -337,8 +368,7 @@ gst_opus_enc_init (GstOpusEnc * enc)
   enc->bitrate = DEFAULT_BITRATE;
   enc->bandwidth = DEFAULT_BANDWIDTH;
   enc->frame_size = DEFAULT_FRAMESIZE;
-  enc->cbr = DEFAULT_CBR;
-  enc->constrained_vbr = DEFAULT_CONSTRAINED_VBR;
+  enc->bitrate_type = DEFAULT_BITRATE_TYPE;
   enc->complexity = DEFAULT_COMPLEXITY;
   enc->inband_fec = DEFAULT_INBAND_FEC;
   enc->dtx = DEFAULT_DTX;
@@ -695,9 +725,11 @@ gst_opus_enc_setup (GstOpusEnc * enc)
   opus_multistream_encoder_ctl (enc->state, OPUS_SET_BITRATE (enc->bitrate), 0);
   opus_multistream_encoder_ctl (enc->state, OPUS_SET_BANDWIDTH (enc->bandwidth),
       0);
-  opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr), 0);
   opus_multistream_encoder_ctl (enc->state,
-      OPUS_SET_VBR_CONSTRAINT (enc->constrained_vbr), 0);
+      OPUS_SET_VBR (enc->bitrate_type != BITRATE_TYPE_CBR), 0);
+  opus_multistream_encoder_ctl (enc->state,
+      OPUS_SET_VBR_CONSTRAINT (enc->bitrate_type ==
+          BITRATE_TYPE_CONSTRAINED_VBR), 0);
   opus_multistream_encoder_ctl (enc->state,
       OPUS_SET_COMPLEXITY (enc->complexity), 0);
   opus_multistream_encoder_ctl (enc->state,
@@ -997,10 +1029,16 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_enum (value, enc->frame_size);
       break;
     case PROP_CBR:
-      g_value_set_boolean (value, enc->cbr);
+      g_warning ("cbr property is deprecated; use bitrate-type instead");
+      g_value_set_boolean (value, enc->bitrate_type == BITRATE_TYPE_CBR);
       break;
     case PROP_CONSTRAINED_VBR:
-      g_value_set_boolean (value, enc->constrained_vbr);
+      g_warning
+          ("constrained-vbr property is deprecated; use bitrate-type instead");
+      g_value_set_boolean (value,
+          enc->bitrate_type == BITRATE_TYPE_CONSTRAINED_VBR);
+    case PROP_BITRATE_TYPE:
+      g_value_set_enum (value, enc->bitrate_type);
       break;
     case PROP_COMPLEXITY:
       g_value_set_int (value, enc->complexity);
@@ -1065,15 +1103,40 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       g_mutex_unlock (&enc->property_lock);
       break;
     case PROP_CBR:
-      /* this one has an opposite meaning to the opus ctl... */
+      g_warning ("cbr property is deprecated; use bitrate-type instead");
       g_mutex_lock (&enc->property_lock);
-      enc->cbr = g_value_get_boolean (value);
-      if (enc->state)
-        opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr));
+      enc->bitrate_type = BITRATE_TYPE_CBR;
+      if (enc->state) {
+        opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (FALSE));
+        opus_multistream_encoder_ctl (enc->state,
+            OPUS_SET_VBR_CONSTRAINT (FALSE), 0);
+      }
       g_mutex_unlock (&enc->property_lock);
       break;
     case PROP_CONSTRAINED_VBR:
-      GST_OPUS_UPDATE_PROPERTY (constrained_vbr, boolean, VBR_CONSTRAINT);
+      g_warning
+          ("constrained-vbr property is deprecated; use bitrate-type instead");
+      g_mutex_lock (&enc->property_lock);
+      enc->bitrate_type = BITRATE_TYPE_CONSTRAINED_VBR;
+      if (enc->state) {
+        opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (TRUE));
+        opus_multistream_encoder_ctl (enc->state,
+            OPUS_SET_VBR_CONSTRAINT (TRUE), 0);
+      }
+      g_mutex_unlock (&enc->property_lock);
+      break;
+    case PROP_BITRATE_TYPE:
+      /* this one has an opposite meaning to the opus ctl... */
+      g_mutex_lock (&enc->property_lock);
+      enc->bitrate_type = g_value_get_enum (value);
+      if (enc->state) {
+        opus_multistream_encoder_ctl (enc->state,
+            OPUS_SET_VBR (enc->bitrate_type != BITRATE_TYPE_CBR));
+        opus_multistream_encoder_ctl (enc->state,
+            OPUS_SET_VBR_CONSTRAINT (enc->bitrate_type ==
+                BITRATE_TYPE_CONSTRAINED_VBR), 0);
+      }
+      g_mutex_unlock (&enc->property_lock);
       break;
     case PROP_COMPLEXITY:
       GST_OPUS_UPDATE_PROPERTY (complexity, int, COMPLEXITY);
