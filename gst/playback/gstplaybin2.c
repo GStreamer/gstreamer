@@ -5270,7 +5270,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
     goto uridecodebin_failure;
 
   GST_SOURCE_GROUP_LOCK (group);
-  /* alow state changes of the playbin affect the group elements now */
+  /* allow state changes of the playbin affect the group elements now */
   group_set_locked_state_unlocked (playbin, group, FALSE);
   group->active = TRUE;
   GST_SOURCE_GROUP_UNLOCK (group);
@@ -5335,6 +5335,16 @@ error_cleanup:
     group->text_sink = NULL;
 
     if (uridecodebin) {
+      REMOVE_SIGNAL (group->uridecodebin, group->pad_added_id);
+      REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
+      REMOVE_SIGNAL (group->uridecodebin, group->no_more_pads_id);
+      REMOVE_SIGNAL (group->uridecodebin, group->notify_source_id);
+      REMOVE_SIGNAL (group->uridecodebin, group->drained_id);
+      REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
+      REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);
+      REMOVE_SIGNAL (group->uridecodebin, group->autoplug_continue_id);
+      REMOVE_SIGNAL (group->uridecodebin, group->autoplug_query_id);
+
       gst_element_set_state (uridecodebin, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (playbin), uridecodebin);
     }
@@ -5352,8 +5362,8 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
 {
   gint i;
 
-  g_return_val_if_fail (group->valid, FALSE);
   g_return_val_if_fail (group->active, FALSE);
+  g_return_val_if_fail (group->valid, FALSE);
 
   GST_DEBUG_OBJECT (playbin, "unlinking group %p", group);
 
@@ -5499,6 +5509,7 @@ activate_failed:
   {
     new_group->stream_changed_pending = FALSE;
     GST_DEBUG_OBJECT (playbin, "activate failed");
+    new_group->valid = FALSE;
     GST_PLAY_BIN_UNLOCK (playbin);
     return GST_STATE_CHANGE_FAILURE;
   }
@@ -5714,8 +5725,8 @@ failure:
       if (curr_group && curr_group->active && curr_group->valid) {
         /* unlink our pads with the sink */
         deactivate_group (playbin, curr_group);
-        curr_group->valid = FALSE;
       }
+      curr_group->valid = FALSE;
 
       /* Swap current and next group back */
       playbin->curr_group = playbin->next_group;
