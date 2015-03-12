@@ -138,6 +138,9 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!gst_video_info_from_caps (&info, caps))
     goto wrong_caps;
 
+  if (size < info.size)
+    goto wrong_size;
+
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, &params))
     goto wrong_config;
 
@@ -172,6 +175,7 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     gst_buffer_pool_config_set_video_alignment (config, &priv->video_align);
   }
   priv->info = info;
+  info.size = MAX (size, info.size);
 
   gst_buffer_pool_config_set_params (config, caps, info.size, min_buffers,
       max_buffers);
@@ -194,6 +198,13 @@ wrong_caps:
     GST_WARNING_OBJECT (pool,
         "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
+  }
+wrong_size:
+  {
+    GST_WARNING_OBJECT (pool,
+        "Provided size is to small for the caps: %u", size);
+    return FALSE;
+
   }
 }
 
