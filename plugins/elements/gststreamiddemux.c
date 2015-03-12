@@ -353,6 +353,7 @@ gst_streamid_demux_reset (GstStreamidDemux * demux)
   if (demux->active_srcpad != NULL)
     demux->active_srcpad = NULL;
 
+  demux->nb_srcpads = 0;
   GST_OBJECT_UNLOCK (demux);
 
   if (demux->stream_id_pairs != NULL) {
