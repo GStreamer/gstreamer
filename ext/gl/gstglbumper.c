@@ -297,7 +297,7 @@ gst_gl_bumper_class_init (GstGLBumperClass * klass)
       "Cyril Comparon <cyril.comparon@gmail.com>, "
       "Julien Isorce <julien.isorce@gmail.com>");
 
-  GST_GL_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
+  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
 
 static void

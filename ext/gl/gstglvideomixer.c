@@ -577,7 +577,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 
   agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
 
-  GST_GL_MIXER_CLASS (klass)->supported_gl_api =
+  GST_GL_BASE_MIXER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
 }
 
@@ -680,7 +680,7 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
 static gboolean
 _reset_pad_gl (GstAggregator * agg, GstAggregatorPad * aggpad, gpointer udata)
 {
-  const GstGLFuncs *gl = GST_GL_MIXER (agg)->context->gl_vtable;
+  const GstGLFuncs *gl = GST_GL_BASE_MIXER (agg)->context->gl_vtable;
   GstGLVideoMixerPad *pad = GST_GL_VIDEO_MIXER_PAD (aggpad);
 
   if (pad->vertex_buffer) {
@@ -694,7 +694,7 @@ _reset_pad_gl (GstAggregator * agg, GstAggregatorPad * aggpad, gpointer udata)
 static void
 _reset_gl (GstGLContext * context, GstGLVideoMixer * video_mixer)
 {
-  const GstGLFuncs *gl = GST_GL_MIXER (video_mixer)->context->gl_vtable;
+  const GstGLFuncs *gl = GST_GL_BASE_MIXER (video_mixer)->context->gl_vtable;
 
   if (video_mixer->vao) {
     gl->DeleteVertexArrays (1, &video_mixer->vao);
@@ -713,16 +713,17 @@ gst_gl_video_mixer_reset (GstGLMixer * mixer)
   video_mixer->input_frames = NULL;
 
   if (video_mixer->shader)
-    gst_gl_context_del_shader (mixer->context, video_mixer->shader);
+    gst_gl_context_del_shader (GST_GL_BASE_MIXER (mixer)->context,
+        video_mixer->shader);
   video_mixer->shader = NULL;
 
   if (video_mixer->checker)
-    gst_gl_context_del_shader (mixer->context, video_mixer->checker);
+    gst_gl_context_del_shader (GST_GL_BASE_MIXER (mixer)->context,
+        video_mixer->checker);
   video_mixer->checker = NULL;
 
-  if (mixer->context)
-    gst_gl_context_thread_add (mixer->context,
-        (GstGLContextThreadFunc) _reset_gl, mixer);
+  gst_gl_context_thread_add (GST_GL_BASE_MIXER (mixer)->context,
+      (GstGLContextThreadFunc) _reset_gl, mixer);
 }
 
 static gboolean
@@ -731,10 +732,11 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mixer);
 
   if (video_mixer->shader)
-    gst_gl_context_del_shader (mixer->context, video_mixer->shader);
+    gst_gl_context_del_shader (GST_GL_BASE_MIXER (mixer)->context,
+        video_mixer->shader);
 
-  return gst_gl_context_gen_shader (mixer->context, video_mixer_v_src,
-      video_mixer_f_src, &video_mixer->shader);
+  return gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
+      video_mixer_v_src, video_mixer_f_src, &video_mixer->shader);
 }
 
 static gboolean
@@ -745,7 +747,7 @@ gst_gl_video_mixer_process_textures (GstGLMixer * mix, GPtrArray * frames,
 
   video_mixer->input_frames = frames;
 
-  gst_gl_context_use_fbo_v2 (mix->context,
+  gst_gl_context_use_fbo_v2 (GST_GL_BASE_MIXER (mix)->context,
       GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR (mix)->info),
       GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR (mix)->info),
       mix->fbo, mix->depthbuffer,
@@ -758,7 +760,7 @@ static gboolean
 _draw_checker_background (GstGLVideoMixer * video_mixer)
 {
   GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
-  const GstGLFuncs *gl = mixer->context->gl_vtable;
+  const GstGLFuncs *gl = GST_GL_BASE_MIXER (mixer)->context->gl_vtable;
   gint attr_position_loc = 0;
 
   const GLushort indices[] = {
@@ -775,8 +777,8 @@ _draw_checker_background (GstGLVideoMixer * video_mixer)
   /* *INDENT-ON* */
 
   if (!video_mixer->checker) {
-    if (!gst_gl_context_gen_shader (mixer->context, checker_v_src,
-            checker_f_src, &video_mixer->checker))
+    if (!gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
+            checker_v_src, checker_f_src, &video_mixer->checker))
       return FALSE;
   }
 
@@ -810,7 +812,7 @@ static gboolean
 _draw_background (GstGLVideoMixer * video_mixer)
 {
   GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
-  const GstGLFuncs *gl = mixer->context->gl_vtable;
+  const GstGLFuncs *gl = GST_GL_BASE_MIXER (mixer)->context->gl_vtable;
 
   switch (video_mixer->background) {
     case GST_GL_VIDEO_MIXER_BACKGROUND_BLACK:
@@ -841,7 +843,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (stuff);
   GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
-  GstGLFuncs *gl = mixer->context->gl_vtable;
+  GstGLFuncs *gl = GST_GL_BASE_MIXER (mixer)->context->gl_vtable;
 
   GLint attr_position_loc = 0;
   GLint attr_texture_loc = 0;
@@ -857,9 +859,10 @@ gst_gl_video_mixer_callback (gpointer stuff)
   out_width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR (stuff)->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR (stuff)->info);
 
-  gst_gl_context_clear_shader (mixer->context);
+  gst_gl_context_clear_shader (GST_GL_BASE_MIXER (mixer)->context);
   gl->BindTexture (GL_TEXTURE_2D, 0);
-  if (gst_gl_context_get_gl_api (mixer->context) & GST_GL_API_OPENGL)
+  if (gst_gl_context_get_gl_api (GST_GL_BASE_MIXER (mixer)->context) &
+      GST_GL_API_OPENGL)
     gl->Disable (GL_TEXTURE_2D);
 
   gl->Disable (GL_DEPTH_TEST);
@@ -986,5 +989,5 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
   gl->Disable (GL_BLEND);
 
-  gst_gl_context_clear_shader (mixer->context);
+  gst_gl_context_clear_shader (GST_GL_BASE_MIXER (mixer)->context);
 }

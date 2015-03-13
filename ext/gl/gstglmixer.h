@@ -85,8 +85,6 @@ struct _GstGLMixer
 {
   GstGLBaseMixer vaggregator;
 
-  GstGLContext      *context;
-
   GPtrArray *array_buffers;
   GPtrArray *frames;
 
@@ -101,7 +99,6 @@ struct _GstGLMixer
 struct _GstGLMixerClass
 {
   GstGLBaseMixerClass parent_class;
-  GstGLAPI supported_gl_api;
 
   GstGLMixerSetCaps set_caps;
   GstGLMixerReset reset;

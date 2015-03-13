@@ -130,8 +130,8 @@ gst_gl_effects_effect_get_type (void)
 static void
 gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
 {
-  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (effects);
-  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (effects);
+  GstGLContext *context = GST_GL_BASE_FILTER (effects)->context;
 
   switch (effect_type) {
     case GST_GL_EFFECT_IDENTITY:
@@ -232,7 +232,7 @@ static void
 gst_gl_effects_init_gl_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
-  GstGLFuncs *gl = filter->context->gl_vtable;
+  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
   gint i = 0;
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
@@ -260,7 +260,7 @@ static void
 gst_gl_effects_reset_gl_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
-  GstGLFuncs *gl = filter->context->gl_vtable;
+  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
   gint i = 0;
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
@@ -313,7 +313,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
       "GL Shading Language effects",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
-  GST_GL_FILTER_CLASS (klass)->supported_gl_api =
+  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;
 }
 
@@ -349,7 +349,7 @@ gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data)
   GstGLFilter *filter = (GstGLFilter *) data;
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (filter->context, shader);
+  gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context, shader);
 
   value = NULL;
 }
@@ -440,7 +440,8 @@ gst_gl_effects_filter_texture (GstGLFilter * filter, guint in_tex,
   effects->outtexture = out_tex;
 
   if (effects->horizontal_swap == TRUE)
-    gst_gl_context_thread_add (filter->context, set_horizontal_swap, effects);
+    gst_gl_context_thread_add (GST_GL_BASE_FILTER (filter)->context,
+        set_horizontal_swap, effects);
 
   effects->effect (effects);
 

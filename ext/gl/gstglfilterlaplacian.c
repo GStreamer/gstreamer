@@ -120,7 +120,7 @@ gst_gl_filter_laplacian_class_init (GstGLFilterLaplacianClass * klass)
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_laplacian_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_laplacian_reset;
 
-  GST_GL_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
+  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
 
 static void
@@ -136,7 +136,8 @@ gst_gl_filter_laplacian_reset (GstGLFilter * filter)
 
   //blocking call, wait the opengl thread has destroyed the shader
   if (laplacian_filter->shader)
-    gst_gl_context_del_shader (filter->context, laplacian_filter->shader);
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+        laplacian_filter->shader);
   laplacian_filter->shader = NULL;
 }
 
@@ -172,7 +173,7 @@ gst_gl_filter_laplacian_init_shader (GstGLFilter * filter)
   GstGLFilterLaplacian *laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  return gst_gl_context_gen_shader (filter->context, 0,
+  return gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context, 0,
       convolution_fragment_source, &laplacian_filter->shader);
 }
 
@@ -197,7 +198,7 @@ gst_gl_filter_laplacian_callback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterLaplacian *laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
-  GstGLFuncs *gl = filter->context->gl_vtable;
+  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
   gfloat kernel[9] = { 0.0, -1.0, 0.0,
     -1.0, 4.0, -1.0,

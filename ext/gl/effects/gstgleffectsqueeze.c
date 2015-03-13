@@ -36,7 +36,7 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
   GstGLShader *shader;
   GstGLFilter *filter = GST_GL_FILTER (data);
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLContext *context = filter->context;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "squeeze0");

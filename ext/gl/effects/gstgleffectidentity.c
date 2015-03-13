@@ -35,7 +35,7 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
 {
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = filter->context;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL

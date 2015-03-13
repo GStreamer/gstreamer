@@ -58,9 +58,6 @@ struct _GstGLFilter
 {
   GstGLBaseFilter    parent;
 
-  /* FIXME remove */
-  GstGLContext      *context;
-
   GstBufferPool     *pool;
 
   GstVideoInfo       in_info;
@@ -68,18 +65,10 @@ struct _GstGLFilter
 
   GstCaps           *out_caps;
 
+  /* <private> */
   GLuint             fbo;
   GLuint             depthbuffer;
 
-  GstGLUpload       *upload;
-  GstGLColorConvert *in_convert;
-  GstCaps           *in_converted_caps;
-
-  GstGLDownload     *download;
-
-  GstBuffer         *uploaded_buffer;
-
-  /* <private> */
   GLuint             in_tex_id;
   GLuint             out_tex_id;
 
@@ -111,7 +100,6 @@ struct _GstGLFilter
 struct _GstGLFilterClass
 {
   GstGLBaseFilterClass parent_class;
-  GstGLAPI supported_gl_api;
 
   gboolean (*set_caps)          (GstGLFilter* filter, GstCaps* incaps, GstCaps* outcaps);
   gboolean (*filter)            (GstGLFilter *filter, GstBuffer *inbuf, GstBuffer *outbuf);
