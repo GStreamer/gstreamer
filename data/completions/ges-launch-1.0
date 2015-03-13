@@ -75,7 +75,7 @@ _ges_effect () {
 	then
 		_mandatory__argument
 	else
-		COMPREPLY=( $(compgen -W "duration= start= layer= $(ges-launch-1.0 help all | egrep '^  [a-zA-Z0-9]')" -- $cur) )
+		COMPREPLY=( $(compgen -W "duration= start= layer= $(ges-launch-1.0 help all | egrep '^  +')" -- $cur) )
 	fi
 }
 
@@ -84,7 +84,7 @@ _ges_list_options () {
 }
 
 _ges_list_commands () {
-	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 help all | egrep '^  [a-zA-Z0-9]')" -- $cur) )
+	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 help all | egrep '^  +')" -- $cur) )
 }
 
 _ges_list_properties () {
@@ -93,10 +93,10 @@ _ges_list_properties () {
 	if [[ "$real_command" == "" ]]
 	then
 		_mandatory__argument
-	elif [[ "$real_command" == "clip" ]]
+	elif [[ "$real_command" == "+clip" ]]
 	then
 		COMPREPLY=( $(compgen -W "set-alpha set-posx set-posy set-width set-height set-volume set-mute" -- $cur) )
-	elif [[ "$real_command" == "effect" ]]
+	elif [[ "$real_command" == "+effect" ]]
 	then
 		COMPREPLY=()
 		effect_bin_description="${effect_bin_description//\"/ }"
@@ -134,7 +134,7 @@ __ges_main ()
 {
 	local i=1 c=1 command function_exists completion_func commands real_command effect_bin_description
 
-	commands=($(ges-launch-1.0 help all | egrep '^  [a-zA-Z0-9]'))
+	commands=($(ges-launch-1.0 help all | egrep '^  +'))
 	real_command=""
 	effect_bin_description=""
 
@@ -154,7 +154,7 @@ __ges_main ()
 			then
 				real_command="$var"
 				command="$var"
-				if [[ "$var" == "effect" ]]
+				if [[ "$var" == "+effect" ]]
 				then
 					effect_bin_description="${COMP_WORDS[i+1]}"
 				fi
@@ -165,7 +165,8 @@ __ges_main ()
 	if [[ "$command" == "--gst"* ]]; then
 		completion_func="_${command//-/_}"
 	else
-		completion_func="_ges_${command//-/_}"
+		completion_func="_ges_${command//-|+/_}"
+		completion_func="${completion_func//+/}"
 	fi
 
 	declare -f $completion_func >/dev/null 2>&1

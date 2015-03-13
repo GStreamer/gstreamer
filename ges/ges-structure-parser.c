@@ -121,7 +121,7 @@ ges_structure_parser_parse_symbol (GESStructureParser * self,
 {
   _finish_structure (self);
 
-  while (*symbol == ' ')
+  while (*symbol == ' ' || *symbol == '+')
     symbol++;
 
   self->add_comma = FALSE;

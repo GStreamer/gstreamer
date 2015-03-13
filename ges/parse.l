@@ -10,9 +10,9 @@
 %option never-interactive
 %option noinput
 
-CLIP 		[ ]+clip[ ]+
-TRANSITION	[ ]+transition[ ]+
-EFFECT		[ ]+effect[ ]+
+CLIP 		[ ]+\+clip[ ]+
+TRANSITION	[ ]+\+transition[ ]+
+EFFECT		[ ]+\+effect[ ]+
 
 SETTER		[ ]+set-[^ ]+[ ]+
 
