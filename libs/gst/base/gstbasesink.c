@@ -4857,7 +4857,7 @@ gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
 
       GST_OBJECT_LOCK (basesink);
       if ((old = basesink->priv->last_buffer))
-        basesink->priv->last_buffer = gst_buffer_copy (old);
+        basesink->priv->last_buffer = gst_buffer_copy_deep (old);
       GST_OBJECT_UNLOCK (basesink);
       if (old)
         gst_buffer_unref (old);
