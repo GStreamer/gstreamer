@@ -648,7 +648,6 @@ gst_udp_address_get_string (GSocketAddress * addr, gchar * s, gsize size)
   addr_str = g_inet_address_to_string (ia);
   g_snprintf (s, size, "%s:%u", addr_str, g_inet_socket_address_get_port (isa));
   g_free (addr_str);
-  g_object_unref (ia);
 
   return s;
 }
