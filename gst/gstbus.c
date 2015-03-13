@@ -388,8 +388,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
 is_flushing:
   {
     GST_DEBUG_OBJECT (bus, "bus is flushing");
-    gst_message_unref (message);
     GST_OBJECT_UNLOCK (bus);
+    gst_message_unref (message);
 
     return FALSE;
   }
