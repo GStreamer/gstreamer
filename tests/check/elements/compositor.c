@@ -33,6 +33,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstconsistencychecker.h>
+#include <gst/video/gstvideometa.h>
 #include <gst/base/gstbasesrc.h>
 
 #define VIDEO_CAPS_STRING               \
@@ -1096,6 +1097,213 @@ GST_START_TEST (test_segment_base_handling)
 
 GST_END_TEST;
 
+static gboolean buffer_mapped;
+static gboolean (*default_map) (GstVideoMeta * meta, guint plane,
+    GstMapInfo * info, gpointer * data, gint * stride, GstMapFlags flags);
+
+static gboolean
+test_obscured_new_videometa_map (GstVideoMeta * meta, guint plane,
+    GstMapInfo * info, gpointer * data, gint * stride, GstMapFlags flags)
+{
+  buffer_mapped = TRUE;
+  return default_map (meta, plane, info, data, stride, flags);
+}
+
+static GstPadProbeReturn
+test_obscured_pad_probe_cb (GstPad * srcpad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstBuffer *obuf, *nbuf;
+  GstVideoMeta *meta;
+
+  GST_DEBUG ("pad probe called");
+  /* We need to deep-copy the buffer here because videotestsrc reuses buffers
+   * and hence the GstVideoMap associated with the buffers, and that causes a
+   * segfault inside videotestsrc when it tries to reuse the buffer */
+  obuf = GST_PAD_PROBE_INFO_BUFFER (info);
+  nbuf = gst_buffer_new ();
+  gst_buffer_copy_into (nbuf, obuf, GST_BUFFER_COPY_ALL | GST_BUFFER_COPY_DEEP,
+      0, -1);
+  meta = gst_buffer_get_video_meta (nbuf);
+  /* Override the default map() function to set also buffer_mapped */
+  default_map = meta->map;
+  meta->map = test_obscured_new_videometa_map;
+  /* Replace the buffer that's going downstream */
+  GST_PAD_PROBE_INFO_DATA (info) = nbuf;
+  gst_buffer_unref (obuf);
+
+  return GST_PAD_PROBE_PASS;
+}
+
+static void
+_test_obscured (const gchar * caps_str, gint xpos0, gint ypos0, gint width0,
+    gint height0, gdouble alpha0, gint xpos1, gint ypos1, gint width1,
+    gint height1, gdouble alpha1)
+{
+  GstElement *pipeline, *sink, *mix, *src0, *cfilter0, *src1, *cfilter1;
+  GstPad *srcpad, *sinkpad;
+  GstSample *last_sample = NULL;
+  GstSample *sample;
+  GstCaps *caps;
+
+  GST_INFO ("preparing test");
+
+  pipeline = gst_pipeline_new ("pipeline");
+  src0 = gst_element_factory_make ("videotestsrc", "src0");
+  g_object_set (src0, "num-buffers", 5, NULL);
+  cfilter0 = gst_element_factory_make ("capsfilter", "capsfilter0");
+  caps = gst_caps_from_string (caps_str);
+  g_object_set (cfilter0, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  src1 = gst_element_factory_make ("videotestsrc", "src1");
+  g_object_set (src1, "num-buffers", 5, NULL);
+  cfilter1 = gst_element_factory_make ("capsfilter", "capsfilter1");
+  caps = gst_caps_from_string (caps_str);
+  g_object_set (cfilter1, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  mix = gst_element_factory_make ("compositor", "compositor");
+  sink = gst_element_factory_make ("appsink", "sink");
+  gst_bin_add_many (GST_BIN (pipeline), src0, cfilter0, src1, cfilter1, mix,
+      sink, NULL);
+  fail_unless (gst_element_link (src0, cfilter0));
+  fail_unless (gst_element_link (src1, cfilter1));
+  fail_unless (gst_element_link (mix, sink));
+
+  srcpad = gst_element_get_static_pad (cfilter0, "src");
+  sinkpad = gst_element_get_request_pad (mix, "sink_0");
+  g_object_set (sinkpad, "xpos", xpos0, "ypos", ypos0, "width", width0,
+      "height", height0, "alpha", alpha0, NULL);
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER,
+      test_obscured_pad_probe_cb, NULL, NULL);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  srcpad = gst_element_get_static_pad (cfilter1, "src");
+  sinkpad = gst_element_get_request_pad (mix, "sink_1");
+  g_object_set (sinkpad, "xpos", xpos1, "ypos", ypos1, "width", width1,
+      "height", height1, "alpha", alpha1, NULL);
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  GST_INFO ("sample prepared");
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  do {
+    GST_DEBUG ("sample pulling");
+    g_signal_emit_by_name (sink, "pull-sample", &sample);
+    if (sample == NULL)
+      break;
+    if (last_sample)
+      gst_sample_unref (last_sample);
+    last_sample = sample;
+    GST_DEBUG ("sample pulled");
+  } while (TRUE);
+  gst_sample_unref (last_sample);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_obscured_skipped)
+{
+  gint xpos0, xpos1;
+  gint ypos0, ypos1;
+  gint width0, width1;
+  gint height0, height1;
+  gdouble alpha0, alpha1;
+  const gchar *caps_str;
+
+  caps_str = "video/x-raw";
+  buffer_mapped = FALSE;
+  /* Set else to compositor defaults */
+  alpha0 = alpha1 = 1.0;
+  xpos0 = xpos1 = ypos0 = ypos1 = 0;
+  width0 = width1 = height0 = height1 = 0;
+
+  GST_INFO ("testing defaults");
+  /* With everything at defaults, sink_1 will obscure sink_0, so buffers from
+   * sink_0 will never get mapped by compositor. To verify, run with
+   * GST_DEBUG=compositor:6 and look for "Obscured by" messages */
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1);
+  fail_unless (buffer_mapped == FALSE);
+  buffer_mapped = FALSE;
+
+  caps_str = "video/x-raw,format=ARGB";
+  GST_INFO ("testing video with alpha channel");
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1);
+  fail_unless (buffer_mapped == TRUE);
+  caps_str = "video/x-raw";
+  buffer_mapped = FALSE;
+
+  alpha1 = 0.0;
+  GST_INFO ("testing alpha1 = %.2g", alpha1);
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1);
+  fail_unless (buffer_mapped == TRUE);
+  alpha1 = 1.0;
+  buffer_mapped = FALSE;
+
+  /* Test 0.1, ..., 0.9 */
+  for (alpha1 = 1; alpha1 < 10; alpha1 += 1) {
+    GST_INFO ("testing alpha1 = %.2g", alpha1 / 10);
+    _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1,
+        ypos1, width1, height1, alpha1 / 10);
+    fail_unless (buffer_mapped == TRUE);
+  }
+  alpha1 = 1.0;
+  buffer_mapped = FALSE;
+
+  width1 = height1 = 10;
+  GST_INFO ("testing smaller sink_1");
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1);
+  fail_unless (buffer_mapped == TRUE);
+  width1 = height1 = 0;
+  buffer_mapped = FALSE;
+
+  width0 = height0 = width1 = height1 = 10;
+  GST_INFO ("testing smaller sink_1 and sink0 (same sizes)");
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1);
+  fail_unless (buffer_mapped == FALSE);
+  width0 = height0 = width1 = height1 = 0;
+  buffer_mapped = FALSE;
+
+  width0 = height0 = 20;
+  width1 = height1 = 10;
+  GST_INFO ("testing smaller sink_1 and sink0 (sink_0 > sink_1)");
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1);
+  fail_unless (buffer_mapped == TRUE);
+  width0 = height0 = width1 = height1 = 0;
+  buffer_mapped = FALSE;
+
+  width0 = height0 = 10;
+  width1 = height1 = 20;
+  GST_INFO ("testing smaller sink_1 and sink0 (sink_0 < sink_1)");
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1);
+  fail_unless (buffer_mapped == FALSE);
+  width0 = height0 = width1 = height1 = 0;
+  buffer_mapped = FALSE;
+
+  xpos0 = ypos0 = 10000;
+  GST_INFO ("testing sink_0 outside the frame");
+  _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
+      width1, height1, alpha1);
+  fail_unless (buffer_mapped == FALSE);
+  xpos0 = ypos0 = 0;
+  buffer_mapped = FALSE;
+}
+
+GST_END_TEST;
+
 static Suite *
 compositor_suite (void)
 {
@@ -1115,6 +1323,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_loop);
   tcase_add_test (tc_chain, test_flush_start_flush_stop);
   tcase_add_test (tc_chain, test_segment_base_handling);
+  tcase_add_test (tc_chain, test_obscured_skipped);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
