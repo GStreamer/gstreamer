@@ -446,7 +446,7 @@ void
 gst_bus_set_flushing (GstBus * bus, gboolean flushing)
 {
   GstMessage *message;
-  GList *l, *message_list = NULL;
+  GList *message_list = NULL;
 
   GST_OBJECT_LOCK (bus);
 
@@ -464,11 +464,7 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
 
   GST_OBJECT_UNLOCK (bus);
 
-  for (l = message_list; l; l = l->next) {
-    message = GST_MESSAGE (l);
-    gst_message_unref (message);
-  }
-  g_list_free (message_list);
+  g_list_free_full (message_list, (GDestroyNotify) gst_message_unref);
 }
 
 /**
