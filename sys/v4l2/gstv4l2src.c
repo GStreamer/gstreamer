@@ -290,19 +290,10 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 static gboolean
 gst_v4l2src_negotiate (GstBaseSrc * basesrc)
 {
-  GstV4l2Src *v4l2src;
-  GstV4l2Object *obj;
   GstCaps *thiscaps;
   GstCaps *caps = NULL;
   GstCaps *peercaps = NULL;
   gboolean result = FALSE;
-
-  v4l2src = GST_V4L2SRC (basesrc);
-  obj = v4l2src->v4l2object;
-
-  /* We don't allow renegotiation, just return TRUE in that case */
-  if (GST_V4L2_IS_ACTIVE (obj))
-    return TRUE;
 
   /* first see what is possible on our source pad */
   thiscaps = gst_pad_query_caps (GST_BASE_SRC_PAD (basesrc), NULL);
@@ -432,21 +423,11 @@ gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
 }
 
 static gboolean
-gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
+gst_v4l2src_set_format (GstV4l2Src * v4l2src, GstCaps * caps)
 {
-  GstV4l2Src *v4l2src;
   GstV4l2Object *obj;
 
-  v4l2src = GST_V4L2SRC (src);
   obj = v4l2src->v4l2object;
-
-  /* make sure the caps changed before doing anything */
-  if (gst_v4l2_object_caps_equal (obj, caps))
-    return TRUE;
-
-  /* make sure we stop capturing and dealloc buffers */
-  if (!gst_v4l2_object_stop (obj))
-    return FALSE;
 
   g_signal_emit (v4l2src, gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT], 0,
       v4l2src->v4l2object->video_fd, caps);
@@ -459,13 +440,61 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 }
 
 static gboolean
+gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
+{
+  GstV4l2Src *v4l2src;
+  GstV4l2Object *obj;
+
+  v4l2src = GST_V4L2SRC (src);
+  obj = v4l2src->v4l2object;
+
+  /* make sure the caps changed before doing anything */
+  if (gst_v4l2_object_caps_equal (obj, caps))
+    return TRUE;
+
+  if (GST_V4L2_IS_ACTIVE (obj)) {
+    /* Just check if the format is acceptable, once we know
+     * no buffers should be outstanding we try S_FMT.
+     *
+     * Basesrc will do an allocation query that
+     * should indirectly reclaim buffers, after that we can
+     * set the format and then configure our pool */
+    if (gst_v4l2_object_try_format (obj, caps))
+      v4l2src->pending_set_fmt = TRUE;
+    else
+      return FALSE;
+  } else {
+    /* make sure we stop capturing and dealloc buffers */
+    if (!gst_v4l2_object_stop (obj))
+      return FALSE;
+
+    return gst_v4l2src_set_format (v4l2src, caps);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstV4l2Src *src = GST_V4L2SRC (bsrc);
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
-  if (gst_v4l2_object_decide_allocation (src->v4l2object, query))
-    ret = GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
+  if (src->pending_set_fmt) {
+    GstCaps *caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc));
+
+    if (!gst_v4l2_object_stop (src->v4l2object))
+      return FALSE;
+    ret = gst_v4l2src_set_format (src, caps);
+    gst_caps_unref (caps);
+    src->pending_set_fmt = FALSE;
+  }
+
+  if (ret) {
+    ret = gst_v4l2_object_decide_allocation (src->v4l2object, query);
+    if (ret)
+      ret = GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
+  }
 
   if (ret) {
     if (!gst_buffer_pool_set_active (src->v4l2object->pool, TRUE))
@@ -597,6 +626,9 @@ gst_v4l2src_stop (GstBaseSrc * src)
     if (!gst_v4l2_object_stop (obj))
       return FALSE;
   }
+
+  v4l2src->pending_set_fmt = FALSE;
+
   return TRUE;
 }
 

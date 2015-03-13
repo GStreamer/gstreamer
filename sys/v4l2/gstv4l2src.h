@@ -61,6 +61,8 @@ struct _GstV4l2Src
 
   GstClockTime ctrl_time;
 
+  gboolean pending_set_fmt;
+
   /* Timestamp sanity check */
   GstClockTime last_timestamp;
   gboolean has_bad_timestamp;
