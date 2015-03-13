@@ -1260,11 +1260,11 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   }
 
   /* Output Queue.
-   * We only use a 1buffer long queue here, the actual queueing will be done
-   * in the input queue */
+   * The actual queueing will be done in the input queue, but some queuing
+   * after the encoder can be beneficial for encoding performance. */
   last = sgroup->outqueue = gst_element_factory_make ("queue", NULL);
-  g_object_set (sgroup->outqueue, "max-size-buffers", (guint32) 1,
-      "max-size-bytes", (guint32) 0, "max-size-time", (guint64) 0,
+  g_object_set (sgroup->outqueue, "max-size-buffers", (guint) 0,
+      "max-size-bytes", (guint) 0, "max-size-time", (guint64) 3 * GST_SECOND,
       "silent", TRUE, NULL);
 
   gst_bin_add (GST_BIN (ebin), sgroup->outqueue);
