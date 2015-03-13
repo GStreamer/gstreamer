@@ -3812,6 +3812,7 @@ gst_pad_query (GstPad * pad, GstQuery * query)
 
   GST_DEBUG_OBJECT (pad, "doing query %p (%s)", query,
       GST_QUERY_TYPE_NAME (query));
+  GST_TRACER_PAD_QUERY_PRE (pad, query);
 
   serialized = GST_QUERY_IS_SERIALIZED (query);
   if (G_UNLIKELY (serialized))
@@ -3834,6 +3835,7 @@ gst_pad_query (GstPad * pad, GstQuery * query)
 
   GST_DEBUG_OBJECT (pad, "sent query %p (%s), result %d", query,
       GST_QUERY_TYPE_NAME (query), res);
+  GST_TRACER_PAD_QUERY_POST (pad, res, query);
 
   if (res != TRUE)
     goto query_failed;

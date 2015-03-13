@@ -46,7 +46,8 @@
 static const gchar *_quark_strings[] = {
   "pad-push-pre", "pad-push-post", "pad-push-list-pre", "pad-push-list-post",
   "pad-pull-range-pre", "pad-pull-range-post", "pad-push-event-pre",
-  "pad-push-event-post", "element-post-message-pre",
+  "pad-push-event-post", "pad-query-pre", "pad-query-post",
+  "element-post-message-pre",
   "element-post-message-post", "element-query-pre", "element-query-post"
 };
 

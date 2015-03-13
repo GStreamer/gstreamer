@@ -55,6 +55,8 @@ typedef enum _GstTracerQuarkId
   GST_TRACER_QUARK_HOOK_PAD_PULL_RANGE_POST,
   GST_TRACER_QUARK_HOOK_PAD_PUSH_EVENT_PRE ,
   GST_TRACER_QUARK_HOOK_PAD_PUSH_EVENT_POST,
+  GST_TRACER_QUARK_HOOK_PAD_QUERY_PRE ,
+  GST_TRACER_QUARK_HOOK_PAD_QUERY_POST,
   GST_TRACER_QUARK_HOOK_ELEMENT_POST_MESSAGE_PRE,
   GST_TRACER_QUARK_HOOK_ELEMENT_POST_MESSAGE_POST,
   GST_TRACER_QUARK_HOOK_ELEMENT_QUERY_PRE,
@@ -159,6 +161,20 @@ typedef void (*GstTracerHookPadPushEventPost) (GObject *, GstClockTime,
     GstTracerHookPadPushEventPost, (GST_TRACER_ARGS, pad, res)); \
 }G_STMT_END
 
+typedef void (*GstTracerHookPadQueryPre) (GObject *, GstClockTime, GstPad *,
+    GstQuery *);
+#define GST_TRACER_PAD_QUERY_PRE(pad, query) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_QUERY_PRE), \
+    GstTracerHookPadQueryPre, (GST_TRACER_ARGS, pad, query)); \
+}G_STMT_END
+
+typedef void (*GstTracerHookPadQueryPost) (GObject *, GstClockTime,
+    GstPad *, gboolean, GstQuery *);
+#define GST_TRACER_PAD_QUERY_POST(pad, res, query) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_QUERY_POST), \
+    GstTracerHookPadQueryPost, (GST_TRACER_ARGS, pad, res, query)); \
+}G_STMT_END
+
 typedef void (*GstTracerHookElementPostMessagePre) (GObject *, GstClockTime,
     GstElement *, GstMessage *);
 #define GST_TRACER_ELEMENT_POST_MESSAGE_PRE(element, message) G_STMT_START{ \
@@ -197,6 +213,8 @@ typedef void (*GstTracerHookElementQueryPost) (GObject *, GstClockTime,
 #define GST_TRACER_PAD_PULL_RANGE_POST(pad, buffer, res)
 #define GST_TRACER_PAD_PUSH_EVENT_PRE(pad, event)
 #define GST_TRACER_PAD_PUSH_EVENT_POST(pad, res)
+#define GST_TRACER_PAD_QUERY_PRE(pad, event)
+#define GST_TRACER_PAD_QUERY_POST(pad, res)
 #define GST_TRACER_ELEMENT_POST_MESSAGE_PRE(element, message)
 #define GST_TRACER_ELEMENT_POST_MESSAGE_POST(element, res)
 #define GST_TRACER_ELEMENT_QUERY_PRE(element, query)
