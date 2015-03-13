@@ -31,8 +31,8 @@
  *
  * The RTP "DTMF" Muxer muxes multiple RTP streams into a valid RTP
  * stream. It does exactly what its parent (#rtpmux) does, except
- * that it prevent buffers coming over a regular sink_%%u pad from going through
- * for the duration of buffers that came in a priority_sink_%%u pad.
+ * that it prevent buffers coming over a regular sink_\%u pad from going through
+ * for the duration of buffers that came in a priority_sink_\%u pad.
  *
  * This is especially useful if a discontinuous source like dtmfsrc or
  * rtpdtmfsrc are connected to the priority sink pads. This way, the generated
