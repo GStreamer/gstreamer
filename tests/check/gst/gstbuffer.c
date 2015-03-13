@@ -340,6 +340,8 @@ GST_START_TEST (test_copy)
 
   /* NOTE that data is refcounted */
   fail_unless (info.size == sinfo.size);
+  /* GstBuffer was copied but the underlying GstMemory should be the same */
+  fail_unless (info.data == sinfo.data);
 
   gst_buffer_unmap (copy, &sinfo);
   gst_buffer_unmap (buffer, &info);
@@ -400,6 +402,37 @@ GST_START_TEST (test_copy)
   gst_buffer_memset (copy, 0, 0x80, 4);
   gst_buffer_map (buffer, &info, GST_MAP_READ);
   fail_if (gst_buffer_memcmp (copy, 0, info.data, info.size) == 0);
+  gst_buffer_unmap (buffer, &info);
+
+  gst_buffer_unref (copy);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_copy_deep)
+{
+  GstBuffer *buffer, *copy;
+  GstMapInfo info, sinfo;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+
+  copy = gst_buffer_copy_deep (buffer);
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  ASSERT_BUFFER_REFCOUNT (copy, "copy", 1);
+  /* buffers are copied and must point to different memory */
+  fail_if (buffer == copy);
+
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  fail_unless (gst_buffer_map (copy, &sinfo, GST_MAP_READ));
+
+  /* NOTE that data is refcounted */
+  fail_unless (info.size == sinfo.size);
+  /* copy_deep() forces new GstMemory to be used */
+  fail_unless (info.data != sinfo.data);
+
+  gst_buffer_unmap (copy, &sinfo);
   gst_buffer_unmap (buffer, &info);
 
   gst_buffer_unref (copy);
@@ -871,6 +904,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_metadata_writable);
   tcase_add_test (tc_chain, test_memcmp);
   tcase_add_test (tc_chain, test_copy);
+  tcase_add_test (tc_chain, test_copy_deep);
   tcase_add_test (tc_chain, test_try_new_and_alloc);
   tcase_add_test (tc_chain, test_size);
   tcase_add_test (tc_chain, test_resize);

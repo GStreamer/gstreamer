@@ -115,6 +115,7 @@ EXPORTS
 	gst_buffer_append
 	gst_buffer_append_memory
 	gst_buffer_append_region
+	gst_buffer_copy_deep
 	gst_buffer_copy_flags_get_type
 	gst_buffer_copy_into
 	gst_buffer_copy_region

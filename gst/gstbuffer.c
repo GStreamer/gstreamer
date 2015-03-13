@@ -508,7 +508,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 }
 
 static GstBuffer *
-_gst_buffer_copy (GstBuffer * buffer)
+gst_buffer_copy_with_flags (const GstBuffer * buffer, GstBufferFlags flags)
 {
   GstBuffer *copy;
 
@@ -517,14 +517,37 @@ _gst_buffer_copy (GstBuffer * buffer)
   /* create a fresh new buffer */
   copy = gst_buffer_new ();
 
-  /* we simply copy everything from our parent */
-  if (!gst_buffer_copy_into (copy, buffer, GST_BUFFER_COPY_ALL, 0, -1))
+  /* copy what the 'flags' want from our parent */
+  /* FIXME why we can't pass const to gst_buffer_copy_into() ? */
+  if (!gst_buffer_copy_into (copy, (GstBuffer *) buffer, flags, 0, -1))
     gst_buffer_replace (&copy, NULL);
 
   if (copy)
     GST_BUFFER_FLAG_UNSET (copy, GST_BUFFER_FLAG_TAG_MEMORY);
 
   return copy;
+}
+
+static GstBuffer *
+_gst_buffer_copy (const GstBuffer * buffer)
+{
+  return gst_buffer_copy_with_flags (buffer, GST_BUFFER_COPY_ALL);
+}
+
+/**
+ * gst_buffer_copy_deep:
+ * @buf: a #GstBuffer.
+ *
+ * Create a copy of the given buffer. This will make a newly allocated
+ * copy of the data the source buffer contains.
+ *
+ * Returns: (transfer full): a new copy of @buf.
+ */
+GstBuffer *
+gst_buffer_copy_deep (const GstBuffer * buffer)
+{
+  return gst_buffer_copy_with_flags (buffer,
+      GST_BUFFER_COPY_ALL | GST_BUFFER_COPY_DEEP);
 }
 
 /* the default dispose function revives the buffer and returns it to the

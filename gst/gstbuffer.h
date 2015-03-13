@@ -365,8 +365,11 @@ gst_buffer_unref (GstBuffer * buf)
  * gst_buffer_copy:
  * @buf: a #GstBuffer.
  *
- * Create a copy of the given buffer. This will also make a newly allocated
- * copy of the data the source buffer contains.
+ * Create a copy of the given buffer. This will only copy the buffer's
+ * data to a newly allocated memory if needed (if the type of memory
+ * requires it), otherwise the underlying data is just referenced.
+ * Check gst_buffer_copy_deep() if you want to force the data
+ * to be copied to newly allocated memory.
  *
  * Returns: (transfer full): a new copy of @buf.
  */
@@ -380,6 +383,7 @@ gst_buffer_copy (const GstBuffer * buf)
   return GST_BUFFER (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (buf)));
 }
 
+GstBuffer * gst_buffer_copy_deep (const GstBuffer * buf);
 
 /**
  * GstBufferCopyFlags:
