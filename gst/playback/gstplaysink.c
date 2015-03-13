@@ -4364,15 +4364,12 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
                   "tee"), (NULL));
           res = NULL;
           break;
-        } else {
-          playsink->audio_tee_sink =
-              gst_element_get_static_pad (playsink->audio_tee, "sink");
-          gst_bin_add (GST_BIN_CAST (playsink), playsink->audio_tee);
-          gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);
         }
-      } else {
-        gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);
+        playsink->audio_tee_sink =
+            gst_element_get_static_pad (playsink->audio_tee, "sink");
+        gst_bin_add (GST_BIN_CAST (playsink), playsink->audio_tee);
       }
+      gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);
       if (!playsink->audio_pad) {
         GST_LOG_OBJECT (playsink, "ghosting tee sinkpad");
         playsink->audio_pad =
