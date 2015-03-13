@@ -211,6 +211,7 @@ gst_gl_upload_element_query (GstBaseTransform * bt, GstPadDirection direction,
     case GST_QUERY_DRAIN:
       if (upload->upload)
         gst_gl_upload_release_buffer (upload->upload);
+      break;
     default:
       break;
   }
@@ -238,6 +239,10 @@ gst_gl_upload_element_prepare_output_buffer (GstBaseTransform * bt,
   if (*outbuf)
     gst_buffer_copy_into (*outbuf, buffer,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
+  /* basetransform doesn't unref if they're the same */
+  if (buffer == *outbuf)
+    gst_buffer_unref (*outbuf);
 
   return ret == GST_GL_UPLOAD_DONE ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
