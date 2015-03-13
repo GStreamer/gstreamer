@@ -49,7 +49,8 @@ enum
 #define gst_gl_base_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLBaseFilter, gst_gl_base_filter,
     GST_TYPE_BASE_TRANSFORM, GST_DEBUG_CATEGORY_INIT (gst_gl_base_filter_debug,
-        "glbasefilter", 0, "glbasefilter element"););
+        "glbasefilter", 0, "glbasefilter element");
+    );
 
 static void gst_gl_base_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -58,6 +59,8 @@ static void gst_gl_base_filter_get_property (GObject * object, guint prop_id,
 
 static void gst_gl_base_filter_set_context (GstElement * element,
     GstContext * context);
+static GstStateChangeReturn gst_gl_base_filter_change_state (GstElement *
+    element, GstStateChange transition);
 static gboolean gst_gl_base_filter_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
 static void gst_gl_base_filter_reset (GstGLBaseFilter * filter);
@@ -95,6 +98,7 @@ gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
       gst_gl_base_filter_propose_allocation;
 
   element_class->set_context = gst_gl_base_filter_set_context;
+  element_class->change_state = gst_gl_base_filter_change_state;
 
   g_object_class_install_property (gobject_class, PROP_CONTEXT,
       g_param_spec_object ("context",
@@ -192,24 +196,6 @@ _find_local_gl_context (GstGLBaseFilter * filter)
 }
 
 static gboolean
-_ensure_gl_setup (GstGLBaseFilter * filter)
-{
-  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
-
-  if (!gst_gl_ensure_element_data (filter, &filter->display,
-          &filter->priv->other_context)) {
-    return FALSE;
-  }
-
-  gst_gl_display_filter_gl_api (filter->display,
-      filter_class->supported_gl_api);
-
-  _find_local_gl_context (filter);
-
-  return TRUE;
-}
-
-static gboolean
 gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     GstQuery * query)
 {
@@ -221,8 +207,7 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     {
       if (direction == GST_PAD_SINK
           && gst_base_transform_is_passthrough (trans)) {
-        if (!_ensure_gl_setup (filter))
-          return FALSE;
+        _find_local_gl_context (filter);
 
         return gst_pad_peer_query (GST_BASE_TRANSFORM_SRC_PAD (trans), query);
       }
@@ -303,16 +288,6 @@ gst_gl_base_filter_reset (GstGLBaseFilter * filter)
 static gboolean
 gst_gl_base_filter_start (GstBaseTransform * bt)
 {
-  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (bt);
-  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
-
-  if (!gst_gl_ensure_element_data (filter, &filter->display,
-          &filter->priv->other_context))
-    return FALSE;
-
-  gst_gl_display_filter_gl_api (filter->display,
-      filter_class->supported_gl_api);
-
   return TRUE;
 }
 
@@ -400,4 +375,41 @@ gst_gl_base_filter_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   return FALSE;
+}
+
+static GstStateChangeReturn
+gst_gl_base_filter_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (element);
+  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  GST_DEBUG_OBJECT (filter, "changing state: %s => %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!gst_gl_ensure_element_data (element, &filter->display,
+              &filter->priv->other_context))
+        return GST_STATE_CHANGE_FAILURE;
+
+      gst_gl_display_filter_gl_api (filter->display,
+          filter_class->supported_gl_api);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  return ret;
 }

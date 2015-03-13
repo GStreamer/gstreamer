@@ -45,6 +45,8 @@ static void gst_gl_base_mixer_pad_finalize (GObject * object);
 
 static void gst_gl_base_mixer_set_context (GstElement * element,
     GstContext * context);
+static GstStateChangeReturn gst_gl_base_mixer_change_state (GstElement *
+    element, GstStateChange transition);
 
 enum
 {
@@ -280,6 +282,7 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_gl_base_mixer_set_context);
+  element_class->change_state = gst_gl_base_mixer_change_state;
 
   agg_class->sinkpads_type = GST_TYPE_GL_BASE_MIXER_PAD;
   agg_class->sink_query = gst_gl_base_mixer_sink_query;
@@ -691,4 +694,39 @@ gst_gl_base_mixer_stop (GstAggregator * agg)
   gst_gl_base_mixer_reset (mix);
 
   return TRUE;
+}
+
+static GstStateChangeReturn
+gst_gl_base_mixer_change_state (GstElement * element, GstStateChange transition)
+{
+  GstGLBaseMixer *mix = GST_GL_BASE_MIXER (element);
+  GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_GET_CLASS (mix);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  GST_DEBUG_OBJECT (mix, "changing state: %s => %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!gst_gl_ensure_element_data (element, &mix->display,
+              &mix->priv->other_context))
+        return GST_STATE_CHANGE_FAILURE;
+
+      gst_gl_display_filter_gl_api (mix->display, mix_class->supported_gl_api);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  return ret;
 }

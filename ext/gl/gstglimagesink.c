@@ -610,12 +610,6 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
 
   GST_DEBUG_OBJECT (gl_sink, "Ensuring setup");
 
-  if (!gst_gl_ensure_element_data (gl_sink, &gl_sink->display,
-          &gl_sink->other_context))
-    return FALSE;
-
-  gst_gl_display_filter_gl_api (gl_sink->display, SUPPORTED_GL_APIS);
-
   if (!gl_sink->context) {
     do {
       GstGLContext *other_context;
@@ -819,7 +813,11 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      _ensure_gl_setup (glimage_sink);
+      if (!gst_gl_ensure_element_data (glimage_sink, &glimage_sink->display,
+              &glimage_sink->other_context))
+        return GST_STATE_CHANGE_FAILURE;
+
+      gst_gl_display_filter_gl_api (glimage_sink->display, SUPPORTED_GL_APIS);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_atomic_int_set (&glimage_sink->to_quit, 0);

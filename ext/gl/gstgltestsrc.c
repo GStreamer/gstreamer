@@ -92,6 +92,8 @@ static gboolean gst_gl_test_src_do_seek (GstBaseSrc * bsrc,
 static gboolean gst_gl_test_src_query (GstBaseSrc * bsrc, GstQuery * query);
 static void gst_gl_test_src_set_context (GstElement * element,
     GstContext * context);
+static GstStateChangeReturn gst_gl_test_src_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_gl_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
@@ -178,6 +180,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
       gst_static_pad_template_get (&src_factory));
 
   element_class->set_context = gst_gl_test_src_set_context;
+  element_class->change_state = gst_gl_test_src_change_state;
 
   gstbasesrc_class->set_caps = gst_gl_test_src_setcaps;
   gstbasesrc_class->get_caps = gst_gl_test_src_getcaps;
@@ -900,4 +903,38 @@ gst_gl_test_src_callback (gpointer stuff)
 
   gst_buffer_unref (src->buffer);
   src->buffer = NULL;
+}
+
+static GstStateChangeReturn
+gst_gl_test_src_change_state (GstElement * element, GstStateChange transition)
+{
+  GstGLTestSrc *src = GST_GL_TEST_SRC (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  GST_DEBUG_OBJECT (src, "changing state: %s => %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!gst_gl_ensure_element_data (element, &src->display,
+              &src->other_context))
+        return GST_STATE_CHANGE_FAILURE;
+
+      gst_gl_display_filter_gl_api (src->display, SUPPORTED_GL_APIS);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  return ret;
 }
