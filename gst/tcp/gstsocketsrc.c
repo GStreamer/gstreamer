@@ -137,12 +137,8 @@ gst_socket_src_finalize (GObject * gobject)
 {
   GstSocketSrc *this = GST_SOCKET_SRC (gobject);
 
-  if (this->cancellable)
-    g_object_unref (this->cancellable);
-  this->cancellable = NULL;
-  if (this->socket)
-    g_object_unref (this->socket);
-  this->socket = NULL;
+  g_clear_object (&this->cancellable);
+  g_clear_object (&this->socket);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -155,20 +151,19 @@ gst_socket_src_fill (GstPushSrc * psrc, GstBuffer * outbuf)
   gssize rret;
   GError *err = NULL;
   GstMapInfo map;
-  GSocket *socket;
+  GSocket *socket = NULL;
 
   src = GST_SOCKET_SRC (psrc);
 
   GST_OBJECT_LOCK (src);
 
-  socket = src->socket;
-  if (socket == NULL) {
-    GST_OBJECT_UNLOCK (src);
-    goto no_socket;
-  }
-  g_object_ref (socket);
+  if (src->socket)
+    socket = g_object_ref (src->socket);
 
   GST_OBJECT_UNLOCK (src);
+
+  if (socket == NULL)
+    goto no_socket;
 
   GST_LOG_OBJECT (src, "asked for a buffer");
 
@@ -203,8 +198,8 @@ gst_socket_src_fill (GstPushSrc * psrc, GstBuffer * outbuf)
         GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));
   }
   g_clear_error (&err);
+  g_clear_object (&socket);
 
-  g_object_unref (socket);
   return ret;
 
 no_socket:
