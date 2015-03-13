@@ -254,6 +254,25 @@ gst_mpeg2dec_finish (GstVideoDecoder * decoder)
   return GST_FLOW_OK;
 }
 
+static GstBufferPool *
+gst_mpeg2dec_create_generic_pool (GstAllocator * allocator,
+    GstAllocationParams * params, GstCaps * caps, guint size, guint min,
+    guint max, GstStructure ** out_config)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  pool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (pool);
+
+  gst_buffer_pool_config_set_allocator (config, allocator, params);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  *out_config = config;
+  return pool;
+}
+
 static gboolean
 gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
@@ -334,14 +353,9 @@ gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       config = NULL;
     }
 
-    if (!pool) {
-      pool = gst_video_buffer_pool_new ();
-      config = gst_buffer_pool_get_config (pool);
-      gst_buffer_pool_config_set_allocator (config, allocator, &params);
-      gst_buffer_pool_config_set_params (config, caps, size, min, max);
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_META);
-    }
+    if (!pool)
+      pool = gst_mpeg2dec_create_generic_pool (allocator, &params, caps, size,
+          min, max, &config);
 
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
@@ -351,7 +365,7 @@ gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (allocator)
     gst_object_unref (allocator);
 
-  /* If we are copying out, we'll need to setup and active the other pool */
+  /* If we are copying out, we'll need to setup and activate the other pool */
   if (dec->downstream_pool) {
     if (!gst_buffer_pool_set_config (dec->downstream_pool, down_config)) {
       down_config = gst_buffer_pool_get_config (dec->downstream_pool);
@@ -366,7 +380,7 @@ gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     }
 
     if (!gst_buffer_pool_set_active (dec->downstream_pool, TRUE))
-      goto pool_activation_failed;
+      goto activate_failed;
   }
 
   /* Now configure the pool, if the pool had made some changes, it will
@@ -399,8 +413,48 @@ gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
+  }
 
-    /* FIXME Activate the pool, and check that strides are uniform */
+  /* For external pools, we need to check strides */
+  if (!GST_IS_VIDEO_BUFFER_POOL (pool) && has_videometa) {
+    GstBuffer *buffer;
+    const GstVideoFormatInfo *finfo;
+    GstVideoMeta *vmeta;
+    gint uv_stride;
+
+    if (!gst_buffer_pool_set_active (pool, TRUE))
+      goto activate_failed;
+
+    if (gst_buffer_pool_acquire_buffer (pool, &buffer, NULL) != GST_FLOW_OK) {
+      gst_buffer_pool_set_active (pool, FALSE);
+      goto acquire_failed;
+    }
+
+    vmeta = gst_buffer_get_video_meta (buffer);
+    finfo = gst_video_format_get_info (vmeta->format);
+
+    /* Check that strides are compatible. In this case, we can scale the
+     * stride directly since all the pixel strides for the formats we support
+     * is 1 */
+    uv_stride = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, 1, vmeta->stride[0]);
+    if (uv_stride != vmeta->stride[1] || uv_stride != vmeta->stride[2]) {
+      gst_buffer_pool_set_active (pool, FALSE);
+      gst_object_unref (pool);
+
+      pool = gst_mpeg2dec_create_generic_pool (allocator, &params, caps, size,
+          min, max, &config);
+
+      if (dec->need_alignment) {
+        gst_buffer_pool_config_add_option (config,
+            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+        gst_buffer_pool_config_set_video_alignment (config, &dec->valign);
+      }
+
+      /* Generic pool don't fail on _set_config() */
+      gst_buffer_pool_set_config (pool, config);
+    }
+
+    gst_buffer_unref (buffer);
   }
 
   gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
@@ -415,10 +469,16 @@ config_failed:
       ("Configuration is most likely invalid, please report this issue."));
   return FALSE;
 
-pool_activation_failed:
+activate_failed:
   gst_object_unref (pool);
   GST_ELEMENT_ERROR (dec, RESOURCE, SETTINGS,
-      ("Failed to activate downstream buffer pool"), (NULL));
+      ("Failed to activate buffer pool"), (NULL));
+  return FALSE;
+
+acquire_failed:
+  gst_object_unref (pool);
+  GST_ELEMENT_ERROR (dec, RESOURCE, SETTINGS,
+      ("Failed to acquire a buffer"), (NULL));
   return FALSE;
 }
 
@@ -900,6 +960,7 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
   /* Note: We use a non-null 'id' value to make the distinction
    * between the dummy buffers (which have an id of NULL) and the
    * ones we did */
+  mpeg2_stride (mpeg2dec->decoder, vframe.info.stride[0]);
   mpeg2_set_buf (mpeg2dec->decoder, buf,
       GINT_TO_POINTER (frame->system_frame_number + 1));
   gst_mpeg2dec_save_buffer (mpeg2dec, frame->system_frame_number, &vframe);
