@@ -74,8 +74,6 @@ gst_gl_filter_bin_class_init (GstGLFilterBinClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  printf ("bin class_init klass %p\n", klass);
-
   element_class->change_state = gst_gl_filter_bin_change_state;
 
   gobject_class->set_property = gst_gl_filter_bin_set_property;
