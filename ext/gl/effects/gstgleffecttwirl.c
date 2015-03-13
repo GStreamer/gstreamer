@@ -30,13 +30,13 @@ gst_gl_effects_twirl_callback (gint width, gint height, guint texture,
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = filter->context;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "twirl0");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->context);
+    shader = gst_gl_shader_new (context);
     g_hash_table_insert (effects->shaderstable, (gchar *) "twirl0", shader);
   }
 

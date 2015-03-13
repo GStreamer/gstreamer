@@ -31,7 +31,7 @@ gst_gl_effects_rgb_to_curve (GstGLEffects * effects,
 {
   GstGLShader *shader;
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = filter->context;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "rgbmap0");

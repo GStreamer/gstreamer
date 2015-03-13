@@ -33,7 +33,7 @@ gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = filter->context;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow0");
@@ -73,7 +73,7 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = filter->context;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow1");
@@ -120,7 +120,7 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = filter->context;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow2");
@@ -162,7 +162,7 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLContext *context = filter->context;
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow3");

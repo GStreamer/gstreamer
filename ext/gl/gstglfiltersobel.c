@@ -71,7 +71,7 @@ static void
 gst_gl_filtersobel_init_resources (GstGLFilter * filter)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
-  GstGLFuncs *gl = filter->context->gl_vtable;
+  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
   int i;
 
   for (i = 0; i < 2; i++) {
@@ -92,7 +92,7 @@ static void
 gst_gl_filtersobel_reset_resources (GstGLFilter * filter)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
-  GstGLFuncs *gl = filter->context->gl_vtable;
+  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
   int i;
 
   for (i = 0; i < 2; i++) {
@@ -132,7 +132,7 @@ gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
       "Gstreamer OpenGL Sobel", "Filter/Effect/Video", "Sobel edge detection",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
-  GST_GL_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
+  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
 
 static void
@@ -154,19 +154,23 @@ gst_gl_filter_filtersobel_reset (GstGLFilter * filter)
 
   //blocking call, wait the opengl thread has destroyed the shader
   if (filtersobel->desat)
-    gst_gl_context_del_shader (filter->context, filtersobel->desat);
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+        filtersobel->desat);
   filtersobel->desat = NULL;
 
   if (filtersobel->hconv)
-    gst_gl_context_del_shader (filter->context, filtersobel->hconv);
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+        filtersobel->hconv);
   filtersobel->hconv = NULL;
 
   if (filtersobel->vconv)
-    gst_gl_context_del_shader (filter->context, filtersobel->vconv);
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+        filtersobel->vconv);
   filtersobel->vconv = NULL;
 
   if (filtersobel->len)
-    gst_gl_context_del_shader (filter->context, filtersobel->len);
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+        filtersobel->len);
   filtersobel->len = NULL;
 }
 
@@ -210,16 +214,16 @@ gst_gl_filtersobel_init_shader (GstGLFilter * filter)
 
   //blocking call, wait the opengl thread has compiled the shader
   ret =
-      gst_gl_context_gen_shader (filter->context, 0, desaturate_fragment_source,
-      &filtersobel->desat);
+      gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context, 0,
+      desaturate_fragment_source, &filtersobel->desat);
   ret &=
-      gst_gl_context_gen_shader (filter->context, 0,
+      gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context, 0,
       sep_sobel_hconv3_fragment_source, &filtersobel->hconv);
   ret &=
-      gst_gl_context_gen_shader (filter->context, 0,
+      gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context, 0,
       sep_sobel_vconv3_fragment_source, &filtersobel->vconv);
   ret &=
-      gst_gl_context_gen_shader (filter->context, 0,
+      gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context, 0,
       sep_sobel_length_fragment_source, &filtersobel->len);
 
   return ret;
@@ -250,7 +254,7 @@ gst_gl_filtersobel_length (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
-  GstGLFuncs *gl = filter->context->gl_vtable;
+  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
 
   glMatrixMode (GL_PROJECTION);

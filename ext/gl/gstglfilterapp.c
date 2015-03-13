@@ -112,7 +112,7 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
       "Use client callbacks to define the scene",
       "Julien Isorce <julien.isorce@gmail.com>");
 
-  GST_GL_FILTER_CLASS (klass)->supported_gl_api =
+  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;
 }
 
@@ -196,7 +196,7 @@ gst_gl_filter_app_filter_texture (GstGLFilter * filter, guint in_tex,
   cb.height = GST_VIDEO_INFO_HEIGHT (&filter->in_info);
 
   //blocking call, use a FBO
-  gst_gl_context_use_fbo_v2 (filter->context,
+  gst_gl_context_use_fbo_v2 (GST_GL_BASE_FILTER (filter)->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       filter->fbo, filter->depthbuffer, out_tex, _glcb2, &cb);
@@ -217,8 +217,9 @@ gst_gl_filter_app_callback (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (stuff);
 
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
-    GstGLFuncs *gl = filter->context->gl_vtable;
+  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
+      GST_GL_API_OPENGL) {
+    GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();

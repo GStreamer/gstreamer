@@ -150,7 +150,7 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filtershader_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_filtershader_reset;
 
-  GST_GL_FILTER_CLASS (klass)->supported_gl_api =
+  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;
 }
 
@@ -167,7 +167,8 @@ gst_gl_filter_filtershader_reset (GstGLFilter * filter)
 
   //blocking call, wait the opengl thread has destroyed the shader
   if (filtershader->shader0)
-    gst_gl_context_del_shader (filter->context, filtershader->shader0);
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+        filtershader->shader0);
   filtershader->shader0 = NULL;
 }
 
@@ -326,8 +327,8 @@ gst_gl_filtershader_init_shader (GstGLFilter * filter)
     return FALSE;
 
   //blocking call, wait the opengl thread has compiled the shader
-  if (!gst_gl_context_gen_shader (filter->context, text_vertex_shader,
-          hfilter_fragment_source, &filtershader->shader0))
+  if (!gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context,
+          text_vertex_shader, hfilter_fragment_source, &filtershader->shader0))
     return FALSE;
 
 
@@ -395,7 +396,7 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
-  GstGLFuncs *gl = filter->context->gl_vtable;
+  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
   gst_gl_shader_use (filtershader->shader0);
 

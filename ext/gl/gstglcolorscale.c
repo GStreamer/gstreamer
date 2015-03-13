@@ -104,7 +104,7 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
   filter_class->filter_texture = gst_gl_colorscale_filter_texture;
 
   basetransform_class->passthrough_on_same_caps = TRUE;
-  filter_class->supported_gl_api =
+  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
 }
 
@@ -156,13 +156,13 @@ gst_gl_colorscale_gen_gl_resources (GstGLFilter * filter)
 {
   GstGLColorscale *colorscale = GST_GL_COLORSCALE (filter);
 
-  if (gst_gl_context_get_gl_api (filter->context) & (GST_GL_API_GLES2 |
-          GST_GL_API_OPENGL3)) {
-    gst_gl_context_thread_add (filter->context,
+  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
+      (GST_GL_API_GLES2 | GST_GL_API_OPENGL3)) {
+    gst_gl_context_thread_add (GST_GL_BASE_FILTER (filter)->context,
         (GstGLContextThreadFunc) _compile_identity_shader, colorscale);
 
     if (!colorscale->shader) {
-      gst_gl_context_set_error (filter->context,
+      gst_gl_context_set_error (GST_GL_BASE_FILTER (filter)->context,
           "Failed to initialize identity shader");
       GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND, ("%s",
               gst_gl_context_get_error ()), (NULL));
@@ -179,7 +179,8 @@ gst_gl_colorscale_del_gl_resources (GstGLFilter * filter)
   GstGLColorscale *colorscale = GST_GL_COLORSCALE (filter);
 
   if (colorscale->shader) {
-    gst_gl_context_del_shader (filter->context, colorscale->shader);
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+        colorscale->shader);
     colorscale->shader = NULL;
   }
 }
@@ -192,12 +193,13 @@ gst_gl_colorscale_filter_texture (GstGLFilter * filter, guint in_tex,
 
   colorscale = GST_GL_COLORSCALE (filter);
 
-  if (gst_gl_context_get_gl_api (filter->context) & (GST_GL_API_GLES2 |
-          GST_GL_API_OPENGL3))
+  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
+      (GST_GL_API_GLES2 | GST_GL_API_OPENGL3))
     gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex, out_tex,
         colorscale->shader);
 
-  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL)
+  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
+      GST_GL_API_OPENGL)
     gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
         gst_gl_colorscale_callback, colorscale);
 
@@ -211,8 +213,9 @@ gst_gl_colorscale_callback (gint width, gint height, guint texture,
   GstGLFilter *filter = GST_GL_FILTER (stuff);
 
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_OPENGL) {
-    const GstGLFuncs *gl = filter->context->gl_vtable;
+  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context) &
+      GST_GL_API_OPENGL) {
+    const GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();

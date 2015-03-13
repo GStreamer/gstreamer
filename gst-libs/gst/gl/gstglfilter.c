@@ -199,8 +199,6 @@ gst_gl_filter_gl_start (GstGLBaseFilter * base_filter)
   gint out_width, out_height;
   GError *error = NULL;
 
-  filter->context = base_filter->context;
-
   out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
 
@@ -694,13 +692,6 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
   if (filter_class->set_caps) {
     if (!filter_class->set_caps (filter, incaps, outcaps))
       goto error;
-  }
-
-  if (filter->out_caps && !gst_caps_is_equal (filter->out_caps, outcaps)) {
-    if (filter->upload) {
-      gst_object_unref (filter->upload);
-      filter->upload = NULL;
-    }
   }
 
   gst_caps_replace (&filter->out_caps, outcaps);

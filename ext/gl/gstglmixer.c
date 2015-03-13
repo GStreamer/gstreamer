@@ -112,18 +112,13 @@ static gboolean
 _negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
 {
   GstGLMixer *mix = GST_GL_MIXER (vagg);
-  GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
-  GstGLBaseMixerClass *base_mix_class = GST_GL_BASE_MIXER_GET_CLASS (mix);
   gboolean ret;
 
   mix->priv->negotiated = TRUE;
-  base_mix_class->supported_gl_api = mix_class->supported_gl_api;
 
   gst_caps_replace (&mix->out_caps, caps);
 
   ret = GST_VIDEO_AGGREGATOR_CLASS (parent_class)->negotiated_caps (vagg, caps);
-
-  mix->context = GST_GL_BASE_MIXER (mix)->context;
 
   return ret;
 }
@@ -389,7 +384,6 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   g_type_class_ref (GST_TYPE_GL_MIXER_PAD);
 
   klass->set_caps = NULL;
-  klass->supported_gl_api = GST_GL_API_ANY;
 }
 
 static void
@@ -537,7 +531,6 @@ gst_gl_mixer_decide_allocation (GstGLBaseMixer * base_mix, GstQuery * query)
 
   gst_query_parse_allocation (query, &caps, NULL);
 
-  mix->context = context;
   if (mixer_class->set_caps)
     mixer_class->set_caps (mix, caps);
 

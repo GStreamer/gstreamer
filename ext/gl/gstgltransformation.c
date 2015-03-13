@@ -205,7 +205,7 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
       "Filter/Effect/Video", "Transform video on the GPU",
       "Lubosz Sarnecki <lubosz@gmail.com>");
 
-  GST_GL_FILTER_CLASS (klass)->supported_gl_api =
+  GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
 }
 
@@ -393,7 +393,7 @@ static void
 gst_gl_transformation_reset_gl (GstGLFilter * filter)
 {
   GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
-  const GstGLFuncs *gl = filter->context->gl_vtable;
+  const GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
   if (transformation->vao) {
     gl->DeleteVertexArrays (1, &transformation->vao);
@@ -413,7 +413,8 @@ gst_gl_transformation_reset (GstGLFilter * filter)
 
   /* blocking call, wait until the opengl thread has destroyed the shader */
   if (transformation->shader)
-    gst_gl_context_del_shader (filter->context, transformation->shader);
+    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
+        transformation->shader);
   transformation->shader = NULL;
 }
 
@@ -422,10 +423,10 @@ gst_gl_transformation_init_shader (GstGLFilter * filter)
 {
   GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
 
-  if (gst_gl_context_get_gl_api (filter->context)) {
+  if (gst_gl_context_get_gl_api (GST_GL_BASE_FILTER (filter)->context)) {
     /* blocking call, wait until the opengl thread has compiled the shader */
-    return gst_gl_context_gen_shader (filter->context, cube_v_src, cube_f_src,
-        &transformation->shader);
+    return gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context,
+        cube_v_src, cube_f_src, &transformation->shader);
   }
   return TRUE;
 }
@@ -439,7 +440,7 @@ gst_gl_transformation_filter_texture (GstGLFilter * filter, guint in_tex,
   transformation->in_tex = in_tex;
 
   /* blocking call, use a FBO */
-  gst_gl_context_use_fbo_v2 (filter->context,
+  gst_gl_context_use_fbo_v2 (GST_GL_BASE_FILTER (filter)->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       filter->fbo, filter->depthbuffer,
@@ -452,7 +453,8 @@ gst_gl_transformation_filter_texture (GstGLFilter * filter, guint in_tex,
 static void
 _upload_vertices (GstGLTransformation * transformation)
 {
-  const GstGLFuncs *gl = GST_GL_FILTER (transformation)->context->gl_vtable;
+  const GstGLFuncs *gl =
+      GST_GL_BASE_FILTER (transformation)->context->gl_vtable;
 
 /* *INDENT-OFF* */
   GLfloat vertices[] = {
@@ -472,7 +474,8 @@ _upload_vertices (GstGLTransformation * transformation)
 static void
 _bind_buffer (GstGLTransformation * transformation)
 {
-  const GstGLFuncs *gl = GST_GL_FILTER (transformation)->context->gl_vtable;
+  const GstGLFuncs *gl =
+      GST_GL_BASE_FILTER (transformation)->context->gl_vtable;
 
   gl->BindBuffer (GL_ARRAY_BUFFER, transformation->vertex_buffer);
 
@@ -491,7 +494,8 @@ _bind_buffer (GstGLTransformation * transformation)
 static void
 _unbind_buffer (GstGLTransformation * transformation)
 {
-  const GstGLFuncs *gl = GST_GL_FILTER (transformation)->context->gl_vtable;
+  const GstGLFuncs *gl =
+      GST_GL_BASE_FILTER (transformation)->context->gl_vtable;
 
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
@@ -504,13 +508,13 @@ gst_gl_transformation_callback (gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLTransformation *transformation = GST_GL_TRANSFORMATION (filter);
-  GstGLFuncs *gl = filter->context->gl_vtable;
+  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
   GLushort indices[] = { 0, 1, 2, 3, 0 };
 
   GLfloat temp_matrix[16];
 
-  gst_gl_context_clear_shader (filter->context);
+  gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
   gl->ClearColor (0.f, 0.f, 0.f, 1.f);
@@ -563,6 +567,6 @@ gst_gl_transformation_callback (gpointer stuff)
   else
     _unbind_buffer (transformation);
 
-  gst_gl_context_clear_shader (filter->context);
+  gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
   transformation->caps_change = FALSE;
 }
