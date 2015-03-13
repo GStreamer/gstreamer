@@ -169,10 +169,6 @@ gst_gl_filter_start (GstBaseTransform * bt)
 {
   GstGLFilter *filter = GST_GL_FILTER (bt);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
-  GstGLDisplay *display = GST_GL_BASE_FILTER (bt)->display;
-
-  if (display)
-    gst_gl_display_filter_gl_api (display, filter_class->supported_gl_api);
 
   if (filter_class->onStart)
     filter_class->onStart (filter);
