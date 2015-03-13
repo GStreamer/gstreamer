@@ -1338,7 +1338,7 @@ execute_next_action (GstValidateScenario * scenario)
       GST_DEBUG_OBJECT (scenario, "Executing only on idle, waiting for"
           " next dispatch");
 
-      return G_SOURCE_REMOVE;
+      return G_SOURCE_CONTINUE;
     }
   } else {
     GST_DEBUG_OBJECT (scenario, "Remove source, waiting for action"
