@@ -1134,6 +1134,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       parse->priv->prev_dts = GST_CLOCK_TIME_NONE;
       parse->priv->discont = TRUE;
       parse->priv->seen_keyframe = FALSE;
+      parse->priv->skip = 0;
       break;
     }
 
@@ -2824,6 +2825,8 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GST_DEBUG_OBJECT (parent, "chain");
 
   /* early out for speed, if we need to skip */
+  if (buffer && GST_BUFFER_IS_DISCONT (buffer))
+    parse->priv->skip = 0;
   if (parse->priv->skip > 0) {
     gsize bsize = gst_buffer_get_size (buffer);
     GST_DEBUG ("Got %" G_GSIZE_FORMAT " buffer, need to skip %u", bsize,
