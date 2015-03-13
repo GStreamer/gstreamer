@@ -1167,9 +1167,9 @@ gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
   GstGLShaderPrivate *priv;
   GstGLFuncs *gl;
 
-  g_return_val_if_fail (shader != NULL, 0);
+  g_return_val_if_fail (shader != NULL, -1);
   priv = shader->priv;
-  g_return_val_if_fail (priv->program_handle != 0, 0);
+  g_return_val_if_fail (priv->program_handle != 0, -1);
   if (0 == priv->vertex_handle)
     return -1;
 

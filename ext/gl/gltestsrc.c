@@ -222,8 +222,8 @@ gst_gl_test_src_shader (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 
   GLushort indices[] = { 0, 1, 2, 3, 0 };
 
-  GLint attr_position_loc = 0;
-  GLint attr_uv_loc = 0;
+  GLint attr_position_loc = -1;
+  GLint attr_uv_loc = -1;
 
   if (gst_gl_context_get_gl_api (v->context)) {
 
@@ -316,7 +316,7 @@ gst_gl_test_src_checkers (GstGLTestSrc * v, gint checker_width)
 
   GLushort indices[] = { 0, 1, 2, 3, 0 };
 
-  GLint attr_position_loc = 0;
+  GLint attr_position_loc = -1;
 
   if (gst_gl_context_get_gl_api (v->context)) {
 
