@@ -2294,8 +2294,9 @@ gst_amc_color_format_copy (GstAmcColorFormatInfo * cinfo,
     goto done;
   }
 
-  GST_DEBUG ("Sizes not equal (%d vs %d), doing slow line-by-line copying",
-      cbuffer_info->size, gst_buffer_get_size (vbuffer));
+  GST_DEBUG ("Sizes not equal (%d vs %" G_GSIZE_FORMAT
+      "), doing slow line-by-line copying", cbuffer_info->size,
+      gst_buffer_get_size (vbuffer));
 
   /* Different video format, try to convert */
   switch (cinfo->color_format) {

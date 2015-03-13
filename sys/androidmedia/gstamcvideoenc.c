@@ -1525,8 +1525,9 @@ failed_to_get_input_buffer:
 buffer_fill_error:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
-        ("Failed to write input into the amc buffer(write %dB to a %dB buffer)",
-            self->color_format_info.frame_size, buf->size));
+        ("Failed to write input into the amc buffer(write %dB to a %"
+            G_GSIZE_FORMAT "B buffer)", self->color_format_info.frame_size,
+            buf->size));
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
