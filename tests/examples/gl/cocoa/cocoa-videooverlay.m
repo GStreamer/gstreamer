@@ -166,6 +166,9 @@ int main(int argc, char **argv)
   NSRect rect;
   MainWindow *window=nil;
 
+  pool = [[NSAutoreleasePool alloc] init];
+  [NSApplication sharedApplication];
+
   g_print("app created\n");
 
   gst_init (&argc, &argv);
@@ -191,9 +194,6 @@ int main(int argc, char **argv)
   gst_caps_unref(caps);
   if (!ok)
     g_warning("could not link videosrc to videosink\n");
-
-  pool = [[NSAutoreleasePool alloc] init];
-  [NSApplication sharedApplication];
 
   rect.origin.x = 0; rect.origin.y = 0;
   rect.size.width = width; rect.size.height = height;
