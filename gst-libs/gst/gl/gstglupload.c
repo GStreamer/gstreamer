@@ -225,6 +225,9 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     gst_query_add_allocation_pool (query, pool, size, 1, 0);
   }
 
+  if (pool)
+    gst_object_unref (pool);
+
   return;
 
 invalid_caps:
