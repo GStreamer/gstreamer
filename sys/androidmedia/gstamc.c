@@ -1775,6 +1775,7 @@ static const struct
 } color_format_mapping_table[] = {
   {
   COLOR_FormatYUV420Planar, GST_VIDEO_FORMAT_I420}, {
+  COLOR_FormatYUV420Flexible, GST_VIDEO_FORMAT_I420}, {
   COLOR_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
   COLOR_TI_FormatYUV420PackedSemiPlanar, GST_VIDEO_FORMAT_NV12}, {
   COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced, GST_VIDEO_FORMAT_NV12}, {
@@ -1968,7 +1969,8 @@ gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
   }
 
   switch (color_format) {
-    case COLOR_FormatYUV420Planar:{
+    case COLOR_FormatYUV420Planar:
+    case COLOR_FormatYUV420Flexible:{
       if (stride == 0 || slice_height == 0) {
         GST_ERROR ("Stride or slice height is 0");
         return FALSE;

@@ -102,6 +102,7 @@ enum
   COLOR_QCOM_FormatYVU420SemiPlanar32m = 0x7fa30c04,
   /* From hardware/ti/omap4xxx/domx/omx_core/inc/OMX_TI_IVCommon.h */
   COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced = 0x7f000001,
+  COLOR_FormatYUV420Flexible = 0x7f420888,
   /* This format is Exynos specific from the OMX vendor-specific
    * numeric range, but is defined in the Android OMX headers, so
    * we shouldn't find incompatible usage and crash horribly... right?
