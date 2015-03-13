@@ -577,8 +577,8 @@ _gst_context_query (GstElement * element,
 static void
 gst_gl_display_context_query (GstElement * element, GstGLDisplay ** display_ptr)
 {
-  GstContext *ctxt;
-  GstQuery *query;
+  GstContext *ctxt = NULL;
+  GstQuery *query = NULL;
 
 #ifndef GST_DISABLE_GST_DEBUG
   if (!GST_CAT_CONTEXT)
@@ -588,8 +588,12 @@ gst_gl_display_context_query (GstElement * element, GstGLDisplay ** display_ptr)
   query =
       _gst_context_query (element, display_ptr, GST_GL_DISPLAY_CONTEXT_TYPE);
   gst_query_parse_context (query, &ctxt);
-  if (ctxt && gst_context_has_context_type (ctxt, GST_GL_DISPLAY_CONTEXT_TYPE))
-    gst_context_get_gl_display (ctxt, display_ptr);
+
+  if (ctxt && gst_context_has_context_type (ctxt, GST_GL_DISPLAY_CONTEXT_TYPE)) {
+    GstGLDisplay *tmp_disp = NULL;
+    if (gst_context_get_gl_display (ctxt, &tmp_disp) && tmp_disp)
+      *display_ptr = tmp_disp;
+  }
 
   if (*display_ptr)
     goto out;
@@ -633,7 +637,10 @@ gst_gl_context_query (GstElement * element, GstGLContext ** context_ptr)
   gst_query_parse_context (query, &ctxt);
   if (ctxt && gst_context_has_context_type (ctxt, "gst.gl.app_context")) {
     const GstStructure *s = gst_context_get_structure (ctxt);
-    gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, context_ptr, NULL);
+    GstGLContext *tmp_ctx = NULL;
+    if (gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &tmp_ctx, NULL)
+        && tmp_ctx)
+      *context_ptr = tmp_ctx;
   }
 
   gst_query_unref (query);
