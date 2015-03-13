@@ -251,6 +251,7 @@ gint          gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * fin
                                                   gint plane, gint stride);
 
 gboolean      gst_v4l2_object_set_format  (GstV4l2Object * v4l2object, GstCaps * caps);
+gboolean      gst_v4l2_object_try_format  (GstV4l2Object * v4l2object, GstCaps * caps);
 
 gboolean      gst_v4l2_object_caps_equal  (GstV4l2Object * v4l2object, GstCaps * caps);
 

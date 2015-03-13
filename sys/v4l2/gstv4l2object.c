@@ -2647,8 +2647,9 @@ gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * finfo,
   return estride;
 }
 
-gboolean
-gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
+static gboolean
+gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
+    gboolean try_only)
 {
   gint fd = v4l2object->video_fd;
   struct v4l2_format format;
@@ -2665,7 +2666,8 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   enum v4l2_colorspace colorspace = 0;
 
   GST_V4L2_CHECK_OPEN (v4l2object);
-  GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
+  if (!try_only)
+    GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
 
   is_mplane = V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type);
 
@@ -2796,8 +2798,13 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         colorspace);
   }
 
-  if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
-    goto set_fmt_failed;
+  if (try_only) {
+    if (v4l2_ioctl (fd, VIDIOC_TRY_FMT, &format) < 0)
+      goto try_fmt_failed;
+  } else {
+    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
+      goto set_fmt_failed;
+  }
 
   GST_DEBUG_OBJECT (v4l2object->element, "Got format of %dx%d, format "
       "%" GST_FOURCC_FORMAT ", nb planes %d, colorspace %d",
@@ -2839,6 +2846,9 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 
   if (is_mplane && format.fmt.pix_mp.num_planes != n_v4l_planes)
     goto invalid_planes;
+
+  if (try_only)                 /* good enough for trying only */
+    return TRUE;
 
   if (GST_VIDEO_INFO_HAS_ALPHA (&info)) {
     struct v4l2_control ctl = { 0, };
@@ -2894,7 +2904,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
       goto set_parm_failed;
 
     if (streamparm.parm.capture.timeperframe.numerator > 0 &&
-      streamparm.parm.capture.timeperframe.denominator > 0) {
+        streamparm.parm.capture.timeperframe.denominator > 0) {
       /* get new values */
       fps_d = streamparm.parm.capture.timeperframe.numerator;
       fps_n = streamparm.parm.capture.timeperframe.denominator;
@@ -2904,8 +2914,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     } else {
       /* fix v4l2 capture driver to provide framerate values */
       GST_WARNING_OBJECT (v4l2object->element,
-          "Reuse caps framerate %u/%u - fix v4l2 capture driver",
-          fps_n, fps_d);
+          "Reuse caps framerate %u/%u - fix v4l2 capture driver", fps_n, fps_d);
     }
 
     GST_VIDEO_INFO_FPS_N (&info) = fps_n;
@@ -2929,6 +2938,17 @@ invalid_caps:
         caps);
     return FALSE;
   }
+try_fmt_failed:
+  {
+    if (errno == EBUSY) {
+      GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, BUSY,
+          (_("Device '%s' is busy"), v4l2object->videodev),
+          ("Call to TRY_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
+              GST_FOURCC_ARGS (pixelformat), width, height,
+              g_strerror (errno)));
+    }
+    return FALSE;
+  }
 set_fmt_failed:
   {
     if (errno == EBUSY) {
@@ -2949,30 +2969,36 @@ set_fmt_failed:
   }
 invalid_dimensions:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Device '%s' cannot capture at %dx%d"),
-            v4l2object->videodev, width, height),
-        ("Tried to capture at %dx%d, but device returned size %dx%d",
-            width, height, format.fmt.pix.width, format.fmt.pix.height));
+    if (!try_only) {
+      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+          (_("Device '%s' cannot capture at %dx%d"),
+              v4l2object->videodev, width, height),
+          ("Tried to capture at %dx%d, but device returned size %dx%d",
+              width, height, format.fmt.pix.width, format.fmt.pix.height));
+    }
     return FALSE;
   }
 invalid_pixelformat:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Device '%s' cannot capture in the specified format"),
-            v4l2object->videodev),
-        ("Tried to capture in %" GST_FOURCC_FORMAT
-            ", but device returned format" " %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (pixelformat),
-            GST_FOURCC_ARGS (format.fmt.pix.pixelformat)));
+    if (!try_only) {
+      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+          (_("Device '%s' cannot capture in the specified format"),
+              v4l2object->videodev),
+          ("Tried to capture in %" GST_FOURCC_FORMAT
+              ", but device returned format" " %" GST_FOURCC_FORMAT,
+              GST_FOURCC_ARGS (pixelformat),
+              GST_FOURCC_ARGS (format.fmt.pix.pixelformat)));
+    }
     return FALSE;
   }
 invalid_planes:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Device '%s' does support non-contiguous planes"),
-            v4l2object->videodev),
-        ("Device wants %d planes", format.fmt.pix_mp.num_planes));
+    if (!try_only) {
+      GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+          (_("Device '%s' does support non-contiguous planes"),
+              v4l2object->videodev),
+          ("Device wants %d planes", format.fmt.pix_mp.num_planes));
+    }
     return FALSE;
   }
 get_parm_failed:
@@ -2997,6 +3023,18 @@ pool_failed:
     /* setup_pool already send the error */
     return FALSE;
   }
+}
+
+gboolean
+gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
+{
+  return gst_v4l2_object_set_format_full (v4l2object, caps, FALSE);
+}
+
+gboolean
+gst_v4l2_object_try_format (GstV4l2Object * v4l2object, GstCaps * caps)
+{
+  return gst_v4l2_object_set_format_full (v4l2object, caps, TRUE);
 }
 
 /**
