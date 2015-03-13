@@ -685,6 +685,7 @@ class TestsManager(Loggable):
         self.jobs = []
         self.total_num_tests = 0
         self.starting_test_num = 0
+        self.check_testslist = True
 
     def init(self):
         return False
@@ -1049,7 +1050,7 @@ class _TestsLauncher(Loggable):
         return False
 
     def _check_defined_tests(self, tester, tests):
-        if self.options.blacklisted_tests or self.options.wanted_tests:
+        if self.options.blacklisted_tests or self.options.wanted_tests and not self.check_testslist:
             return
 
         tests_names = [test.classname for test in tests]

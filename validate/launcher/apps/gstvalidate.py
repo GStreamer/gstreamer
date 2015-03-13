@@ -27,7 +27,7 @@ from launcher.loggable import Loggable
 from launcher.baseclasses import GstValidateTest, Test, \
     ScenarioManager, NamedDic, GstValidateTestsGenerator, \
     GstValidateMediaDescriptor, GstValidateEncodingTestInterface, \
-    GstValidateBaseTestManager, MediaDescriptor
+    GstValidateBaseTestManager, MediaDescriptor, MediaFormatCombination
 
 from launcher.utils import path2url, DEFAULT_TIMEOUT, which, \
     GST_SECOND, Result, Protocols, mkdir, printc, Colors
@@ -221,7 +221,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                     videosink = 'autovideosink'
 
                 pipeline_desc = pipeline % {'videosink': videosink,
-                                       'audiosink': audiosink}
+                                            'audiosink': audiosink}
 
                 fname = self.get_fname(scenario, protocol=mediainfo.get_protocol(), name=name)
 
@@ -296,6 +296,9 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
                                                            valid_scenarios=valid_scenarios)
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
+        if self.test_manager.options.validate_uris:
+            return
+
         wanted_ressources = []
         for uri, minfo, special_scenarios in uri_minfo_special_scenarios:
             protocol = minfo.media_descriptor.get_protocol()
@@ -547,10 +550,12 @@ class GstValidateTestManager(GstValidateBaseTestManager):
         return False
 
     def add_options(self, parser):
-        parser.add_argument_group("GstValidate tools specific options"
-                                  " and behaviours",
-                                  description="""When using --wanted-tests, all the scenarios can be used, even those which have
+        group = parser.add_argument_group("GstValidate tools specific options"
+                                          " and behaviours",
+                                          description="""When using --wanted-tests, all the scenarios can be used, even those which have
 not been tested and explicitely activated if you set use --wanted-tests ALL""")
+        group.add_argument("--validate-check-uri", dest="validate_uris",
+                           action="append", help="defines the uris to run default tests on")
 
     def populate_testsuite(self):
 
@@ -624,7 +629,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             elif fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT):
                 self._add_media(fpath)
                 return True
-            elif not self.options.generate_info and not self.options.update_media_info:
+            elif not self.options.generate_info and not self.options.update_media_info and not self.options.validate_uris:
                 return True
             elif self.options.update_media_info and not os.path.isfile(media_info):
                 return True
@@ -648,6 +653,11 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
     def _list_uris(self):
         if self._uris:
+            return self._uris
+
+        if self.options.validate_uris:
+            for uri in self.options.validate_uris:
+                self._discover_file(uri, uri)
             return self._uris
 
         if not self.args:
@@ -691,6 +701,9 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             options.wanted_tests.remove("")
         except ValueError:
             pass
+
+        if options.validate_uris:
+            self.check_testslist = False
 
         super(GstValidateTestManager, self).set_settings(
             options, args, reporter)
