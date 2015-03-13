@@ -4805,6 +4805,18 @@ default_element_query (GstElement * element, GstQuery * query)
   return res;
 }
 
+static void
+gst_base_sink_drain (GstBaseSink * basesink)
+{
+  GstBuffer *old;
+
+  GST_OBJECT_LOCK (basesink);
+  if ((old = basesink->priv->last_buffer))
+    basesink->priv->last_buffer = gst_buffer_copy_deep (old);
+  GST_OBJECT_UNLOCK (basesink);
+  if (old)
+    gst_buffer_unref (old);
+}
 
 static gboolean
 gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
@@ -4817,6 +4829,7 @@ gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
     {
+      gst_base_sink_drain (basesink);
       if (bclass->propose_allocation)
         res = bclass->propose_allocation (basesink, query);
       else
@@ -4853,14 +4866,7 @@ gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
     }
     case GST_QUERY_DRAIN:
     {
-      GstBuffer *old;
-
-      GST_OBJECT_LOCK (basesink);
-      if ((old = basesink->priv->last_buffer))
-        basesink->priv->last_buffer = gst_buffer_copy_deep (old);
-      GST_OBJECT_UNLOCK (basesink);
-      if (old)
-        gst_buffer_unref (old);
+      gst_base_sink_drain (basesink);
       res = TRUE;
       break;
     }
