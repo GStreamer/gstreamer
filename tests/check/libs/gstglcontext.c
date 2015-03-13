@@ -374,13 +374,12 @@ GST_START_TEST (test_wrapped_context)
     i++;
   }
 
-  gst_object_unref (other_context);
-
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (check_wrapped),
       wrapped_context);
 
   gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit), context);
 
+  gst_object_unref (other_context);
   gst_object_unref (other_window);
   gst_object_unref (window);
   gst_object_unref (context);
