@@ -435,6 +435,7 @@ void
 gst_bus_set_flushing (GstBus * bus, gboolean flushing)
 {
   GstMessage *message;
+  GList *l, *message_list = NULL;
 
   GST_OBJECT_LOCK (bus);
 
@@ -444,13 +445,19 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
     GST_DEBUG_OBJECT (bus, "set bus flushing");
 
     while ((message = gst_bus_pop (bus)))
-      gst_message_unref (message);
+      message_list = g_list_prepend (message_list, message);
   } else {
     GST_DEBUG_OBJECT (bus, "unset bus flushing");
     GST_OBJECT_FLAG_UNSET (bus, GST_BUS_FLUSHING);
   }
 
   GST_OBJECT_UNLOCK (bus);
+
+  for (l = message_list; l; l = l->next) {
+    message = GST_MESSAGE (l);
+    gst_message_unref (message);
+  }
+  g_list_free (message_list);
 }
 
 /**
