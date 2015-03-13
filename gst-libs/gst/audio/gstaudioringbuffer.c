@@ -1737,8 +1737,8 @@ gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
        * reading) */
       diff = segdone - readseg;
 
-      GST_DEBUG
-          ("pointer at %d, sample %" G_GUINT64_FORMAT
+      GST_DEBUG_OBJECT
+          (buf, "pointer at %d, sample %" G_GUINT64_FORMAT
           ", read from %d-%d, to_read %d, diff %d, segtotal %d, segsize %d",
           segdone, sample, readseg, sampleoff, to_read, diff, segtotal,
           segsize);
@@ -1850,7 +1850,7 @@ gst_audio_ring_buffer_prepare_read (GstAudioRingBuffer * buf, gint * segment,
   *len = buf->spec.segsize;
   *readptr = data + *segment * *len;
 
-  GST_LOG ("prepare read from segment %d (real %d) @%p",
+  GST_LOG_OBJECT (buf, "prepare read from segment %d (real %d) @%p",
       *segment, segdone, *readptr);
 
   /* callback to fill the memory with data, for pull based
@@ -1920,7 +1920,7 @@ gst_audio_ring_buffer_clear (GstAudioRingBuffer * buf, gint segment)
   data = buf->memory;
   data += segment * buf->spec.segsize;
 
-  GST_LOG ("clear segment %d @%p", segment, data);
+  GST_LOG_OBJECT (buf, "clear segment %d @%p", segment, data);
 
   memcpy (data, buf->empty_seg, buf->spec.segsize);
 }
