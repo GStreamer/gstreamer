@@ -70,6 +70,14 @@ enum
   PROP_SOCKET,
 };
 
+enum
+{
+  CONNECTION_CLOSED_BY_PEER,
+  LAST_SIGNAL
+};
+
+static guint gst_socket_src_signals[LAST_SIGNAL] = { 0 };
+
 #define gst_socket_src_parent_class parent_class
 G_DEFINE_TYPE (GstSocketSrc, gst_socket_src, GST_TYPE_PUSH_SRC);
 
@@ -85,6 +93,8 @@ static void gst_socket_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_socket_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+#define SWAP(a, b) do { GSocket* _swap_tmp = a; a = b; b = _swap_tmp; } while (0);
 
 static void
 gst_socket_src_class_init (GstSocketSrcClass * klass)
@@ -107,6 +117,11 @@ gst_socket_src_class_init (GstSocketSrcClass * klass)
       g_param_spec_object ("socket", "Socket",
           "The socket to receive packets from", G_TYPE_SOCKET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_socket_src_signals[CONNECTION_CLOSED_BY_PEER] =
+      g_signal_new ("connection-closed-by-peer", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstSocketSrcClass,
+          connection_closed_by_peer), NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
@@ -167,14 +182,43 @@ gst_socket_src_fill (GstPushSrc * psrc, GstBuffer * outbuf)
 
   GST_LOG_OBJECT (src, "asked for a buffer");
 
+retry:
   gst_buffer_map (outbuf, &map, GST_MAP_READWRITE);
   rret = g_socket_receive_with_blocking (socket, (gchar *) map.data,
       map.size, TRUE, src->cancellable, &err);
   gst_buffer_unmap (outbuf, &map);
 
   if (rret == 0) {
-    GST_DEBUG_OBJECT (src, "Connection closed");
-    ret = GST_FLOW_EOS;
+    GSocket *tmp = NULL;
+    GST_DEBUG_OBJECT (src, "Received EOS on socket %p fd %i", socket,
+        g_socket_get_fd (socket));
+
+    /* We've hit EOS but we'll send this signal to allow someone to change
+     * our socket before we send EOS downstream. */
+    g_signal_emit (src, gst_socket_src_signals[CONNECTION_CLOSED_BY_PEER], 0);
+
+    GST_OBJECT_LOCK (src);
+
+    if (src->socket)
+      tmp = g_object_ref (src->socket);
+
+    GST_OBJECT_UNLOCK (src);
+
+    /* Do this dance with tmp to avoid unreffing with the lock held */
+    if (tmp != NULL && tmp != socket) {
+      SWAP (socket, tmp);
+      g_clear_object (&tmp);
+
+      GST_INFO_OBJECT (src, "New socket available after EOS %p fd %i: Retrying",
+          socket, g_socket_get_fd (socket));
+
+      /* retry with our new socket: */
+      goto retry;
+    } else {
+      g_clear_object (&tmp);
+      GST_INFO_OBJECT (src, "Forwarding EOS downstream");
+      ret = GST_FLOW_EOS;
+    }
   } else if (rret < 0) {
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       ret = GST_FLOW_FLUSHING;
@@ -209,8 +253,6 @@ no_socket:
     return GST_FLOW_ERROR;
   }
 }
-
-#define SWAP(a, b) do { GSocket* tmp = a; a = b; b = tmp; } while (0);
 
 static void
 gst_socket_src_set_property (GObject * object, guint prop_id,

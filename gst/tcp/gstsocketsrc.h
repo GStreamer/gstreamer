@@ -54,6 +54,9 @@ struct _GstSocketSrc {
 
 struct _GstSocketSrcClass {
   GstPushSrcClass parent_class;
+
+  /* signals */
+  void  (*connection_closed_by_peer) (GstElement*);
 };
 
 GType gst_socket_src_get_type (void);
