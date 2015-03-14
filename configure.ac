@@ -836,7 +836,7 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
     ]])],[ AC_MSG_RESULT(yes)
     ],[AC_MSG_RESULT(no)
     if test "x$NEED_GLES2" = "xyes"; then
-      if test "x$NEED_OPENGL" = "xyes"; then
+      if test "x$NEED_GL" = "xyes"; then
         AC_MSG_ERROR([Cannot seem to include both GL and GLES2 headers. Try disabling one API])
       fi
       AC_MSG_WARN([Disabling Desktop GL support])
@@ -1041,7 +1041,7 @@ case $host in
     fi
 
     if test "x$HAVE_GL" = "xyes"; then
-      if test "$NEED_GL" != "xno"; then
+      if test "x$NEED_GL" != "xno"; then
         if test "x$HAVE_WGL" = "xyes"; then
           if test "$NEED_WGL" != "xno"; then
             GL_LIBS="$GL_LIBS -lgdi32 -lopengl32"
