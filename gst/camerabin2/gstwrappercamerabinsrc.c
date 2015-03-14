@@ -852,17 +852,17 @@ start_image_capture (GstWrapperCameraBinSrc * self)
       GST_TYPE_PHOTOGRAPHY);
   gboolean ret = FALSE;
   GstCaps *caps;
-  GstPad *pad, *peer;
 
   GST_DEBUG_OBJECT (self, "Starting image capture");
 
   /* V4L2 source will not close the device until all buffers have came
    * back. Draining the pipeline, will ensure it's properly closed, and that
    * setting it back to PLAYING will work. */
-  pad = gst_element_get_static_pad (self->src_vid_src, "src");
   if (self->image_renegotiate) {
+    GstPad *pad, *peer;
 
     g_mutex_unlock (&bcamsrc->capturing_mutex);
+    pad = gst_element_get_static_pad (self->src_vid_src, "src");
     peer = gst_pad_get_peer (pad);
     gst_object_unref (pad);
     gst_pad_query (peer, gst_query_new_drain ());
