@@ -132,6 +132,7 @@ struct _GstAdapter
   GSList *buflist_end;
   gsize size;
   gsize skip;
+  guint count;
 
   /* we keep state of assembled pieces */
   gpointer assembled_data;
@@ -233,6 +234,7 @@ gst_adapter_clear (GstAdapter * adapter)
   g_slist_free (adapter->buflist);
   adapter->buflist = NULL;
   adapter->buflist_end = NULL;
+  adapter->count = 0;
   adapter->size = 0;
   adapter->skip = 0;
   adapter->assembled_len = 0;
@@ -346,6 +348,7 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
     adapter->buflist_end = g_slist_append (adapter->buflist_end, buf);
     adapter->buflist_end = g_slist_next (adapter->buflist_end);
   }
+  ++adapter->count;
 }
 
 #if 0
@@ -607,6 +610,7 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
 
     gst_buffer_unref (cur);
     g = g_slist_delete_link (g, g);
+    --adapter->count;
 
     if (G_UNLIKELY (g == NULL)) {
       GST_LOG_OBJECT (adapter, "adapter empty now");
@@ -972,6 +976,7 @@ gst_adapter_take_buffer_list (GstAdapter * adapter, gsize nbytes)
   GstBufferList *buffer_list;
   GstBuffer *cur;
   gsize hsize, skip, cur_size;
+  guint n_bufs;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
 
@@ -980,7 +985,14 @@ gst_adapter_take_buffer_list (GstAdapter * adapter, gsize nbytes)
 
   GST_LOG_OBJECT (adapter, "taking %" G_GSIZE_FORMAT " bytes", nbytes);
 
-  buffer_list = gst_buffer_list_new ();
+  /* try to create buffer list with sufficient size, so no resize is done later */
+  if (adapter->count < 64)
+    n_bufs = adapter->count;
+  else
+    n_bufs = (adapter->count * nbytes * 1.2 / adapter->size) + 1;
+
+  buffer_list = gst_buffer_list_new_sized (n_bufs);
+
   while (nbytes > 0) {
     cur = adapter->buflist->data;
     skip = adapter->skip;
