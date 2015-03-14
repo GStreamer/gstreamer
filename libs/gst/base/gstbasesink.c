@@ -3288,7 +3288,12 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     goto was_eos;
 
   if (is_list) {
-    sync_buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
+    GstBufferList *buffer_list = GST_BUFFER_LIST_CAST (obj);
+
+    if (gst_buffer_list_length (buffer_list) == 0)
+      goto empty_list;
+
+    sync_buf = gst_buffer_list_get (buffer_list, 0);
     g_assert (NULL != sync_buf);
   } else {
     sync_buf = GST_BUFFER_CAST (obj);
@@ -3469,6 +3474,12 @@ was_eos:
     GST_DEBUG_OBJECT (basesink, "we are EOS, dropping object, return EOS");
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
     return GST_FLOW_EOS;
+  }
+empty_list:
+  {
+    GST_DEBUG_OBJECT (basesink, "buffer list with no buffers");
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
+    return GST_FLOW_OK;
   }
 out_of_segment:
   {
