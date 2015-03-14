@@ -180,12 +180,12 @@ _on_client_reshape (GstGLImageSink * sink, GstGLContext * context,
 
 static gboolean
 _on_client_draw (GstGLImageSink * sink, GstGLContext * context,
-    guint tex_id, guint width, guint height, gpointer data)
+    GstSample * sample, gpointer data)
 {
   gboolean ret;
 
   g_signal_emit (data, gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW], 0,
-      context, tex_id, width, height, &ret);
+      context, sample, &ret);
 
   return ret;
 }
@@ -288,8 +288,7 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
   gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 4, GST_GL_TYPE_CONTEXT,
-      G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
+      G_TYPE_BOOLEAN, 2, GST_GL_TYPE_CONTEXT, GST_TYPE_SAMPLE);
 
   gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_RESHAPE] =
       g_signal_new ("client-reshape", G_TYPE_FROM_CLASS (klass),
@@ -516,8 +515,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 4, GST_GL_TYPE_CONTEXT,
-      G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
+      G_TYPE_BOOLEAN, 2, GST_GL_TYPE_CONTEXT, GST_TYPE_SAMPLE);
 
   /**
    * GstGLImageSink::client-reshape:
@@ -1472,8 +1470,9 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   const GstGLFuncs *gl = NULL;
   GstGLWindow *window = NULL;
-  gboolean do_redisplay;
-  GstGLSyncMeta *sync_meta;
+  gboolean do_redisplay = FALSE;
+  GstGLSyncMeta *sync_meta = NULL;
+  GstSample *sample = NULL;
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (gl_sink));
 
@@ -1516,10 +1515,14 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
+  sample = gst_sample_new (gl_sink->stored_buffer,
+      gst_video_info_to_caps (&gl_sink->info),
+      &GST_BASE_SINK (gl_sink)->segment, NULL);
+
   g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL], 0,
-      gl_sink->context,
-      gl_sink->redisplay_texture, GST_VIDEO_INFO_WIDTH (&gl_sink->info),
-      GST_VIDEO_INFO_HEIGHT (&gl_sink->info), &do_redisplay);
+      gl_sink->context, sample, &do_redisplay);
+
+  gst_sample_unref (sample);
 
   if (!do_redisplay) {
     gfloat alpha = gl_sink->ignore_alpha ? 1.0f : 0.0f;
