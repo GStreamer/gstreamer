@@ -508,7 +508,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 }
 
 static GstBuffer *
-gst_buffer_copy_with_flags (const GstBuffer * buffer, GstBufferFlags flags)
+gst_buffer_copy_with_flags (const GstBuffer * buffer, GstBufferCopyFlags flags)
 {
   GstBuffer *copy;
 
