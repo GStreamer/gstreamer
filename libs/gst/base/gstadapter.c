@@ -795,10 +795,11 @@ gst_adapter_take_buffer_fast (GstAdapter * adapter, gsize nbytes)
   }
 
   for (item = adapter->buflist; item && left > 0; item = item->next) {
-    gsize size;
+    gsize size, cur_size;
 
     cur = item->data;
-    size = MIN (gst_buffer_get_size (cur) - skip, left);
+    cur_size = gst_buffer_get_size (cur);
+    size = MIN (cur_size - skip, left);
 
     GST_LOG_OBJECT (adapter, "appending %" G_GSIZE_FORMAT " bytes"
         " via region copy", size);
@@ -924,7 +925,7 @@ gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)
 {
   GQueue queue = G_QUEUE_INIT;
   GstBuffer *cur;
-  gsize hsize, skip;
+  gsize hsize, skip, cur_size;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (nbytes <= adapter->size, NULL);
@@ -934,7 +935,8 @@ gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)
   while (nbytes > 0) {
     cur = adapter->buflist->data;
     skip = adapter->skip;
-    hsize = MIN (nbytes, gst_buffer_get_size (cur) - skip);
+    cur_size = gst_buffer_get_size (cur);
+    hsize = MIN (nbytes, cur_size - skip);
 
     cur = gst_adapter_take_buffer (adapter, hsize);
 
