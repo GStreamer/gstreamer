@@ -1109,8 +1109,12 @@ restart:
     NEXT_METHOD;
   }
 
-  if (outbuf_ptr)
+  if (outbuf_ptr) {
+    if (buffer != upload->priv->outbuf)
+      gst_buffer_copy_into (upload->priv->outbuf, buffer,
+          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
     *outbuf_ptr = gst_buffer_ref (upload->priv->outbuf);
+  }
 
   GST_OBJECT_UNLOCK (upload);
 
