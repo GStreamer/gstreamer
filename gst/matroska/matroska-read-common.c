@@ -452,6 +452,7 @@ gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
   } else {
     common->global_tags = taglist;
   }
+  common->global_tags_changed = TRUE;
 }
 
 gint64
@@ -2923,6 +2924,7 @@ gst_matroska_read_common_reset (GstElement * element,
   ctx->chapters_parsed = FALSE;
 
   /* tags */
+  ctx->global_tags_changed = FALSE;
   g_list_foreach (ctx->tags_parsed,
       (GFunc) gst_matroska_read_common_free_parsed_el, NULL);
   g_list_free (ctx->tags_parsed);

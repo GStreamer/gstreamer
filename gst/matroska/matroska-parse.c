@@ -1071,6 +1071,27 @@ gst_matroska_parse_handle_src_query (GstPad * pad, GstObject * parent,
   return ret;
 }
 
+static void
+gst_matroska_parse_send_tags (GstMatroskaParse * parse)
+{
+  if (G_UNLIKELY (parse->common.global_tags_changed)) {
+    GstEvent *tag_event;
+    gst_tag_list_add (parse->common.global_tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_CONTAINER_FORMAT, "Matroska", NULL);
+    GST_DEBUG_OBJECT (parse, "Sending global_tags %p : %" GST_PTR_FORMAT,
+        parse->common.global_tags, parse->common.global_tags);
+
+    /* Send a copy as we want to keep our local ref writable to add more tags
+     * if any are found */
+    tag_event =
+        gst_event_new_tag (gst_tag_list_copy (parse->common.global_tags));
+
+    gst_pad_push_event (parse->srcpad, tag_event);
+
+    parse->common.global_tags_changed = FALSE;
+  }
+}
+
 /* returns FALSE if there are no pads to deliver event to,
  * otherwise TRUE (whatever the outcome of event sending),
  * takes ownership of the passed event! */
@@ -2567,6 +2588,8 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           if (!parse->common.segmentinfo_parsed) {
             ret = gst_matroska_read_common_parse_info (&parse->common,
                 GST_ELEMENT_CAST (parse), &ebml);
+            if (ret == GST_FLOW_OK)
+              gst_matroska_parse_send_tags (parse);
           }
           gst_matroska_parse_accumulate_streamheader (parse, ebml.buf);
           break;
@@ -2660,6 +2683,8 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           if (!parse->common.attachments_parsed) {
             ret = gst_matroska_read_common_parse_attachments (&parse->common,
                 GST_ELEMENT_CAST (parse), &ebml);
+            if (ret == GST_FLOW_OK)
+              gst_matroska_parse_send_tags (parse);
           }
           gst_matroska_parse_output (parse, ebml.buf, FALSE);
           break;
@@ -2667,6 +2692,8 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
           ret = gst_matroska_read_common_parse_metadata (&parse->common,
               GST_ELEMENT_CAST (parse), &ebml);
+          if (ret == GST_FLOW_OK)
+            gst_matroska_parse_send_tags (parse);
           gst_matroska_parse_accumulate_streamheader (parse, ebml.buf);
           break;
         case GST_MATROSKA_ID_CHAPTERS:

@@ -90,6 +90,7 @@ typedef struct _GstMatroskaReadCommon {
   GstSegment               segment;
 
   GstTagList              *global_tags;
+  gboolean                 global_tags_changed;
 
   /* pull mode caching */
   GstBuffer *cached_buffer;
