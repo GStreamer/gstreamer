@@ -1,5 +1,6 @@
 examples = [
     'concatenate',
+    'gessrc',
     'simple1',
     'test1',
     'test2',
