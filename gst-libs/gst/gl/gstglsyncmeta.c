@@ -41,7 +41,11 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GstGLSyncMeta *
 gst_buffer_add_gl_sync_meta (GstGLContext * context, GstBuffer * buffer)
 {
-  GstGLSyncMeta *meta =
+  GstGLSyncMeta *meta;
+
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
+
+  meta =
       (GstGLSyncMeta *) gst_buffer_add_meta ((buffer), GST_GL_SYNC_META_INFO,
       NULL);
 
@@ -94,10 +98,13 @@ _wait (GstGLContext * context, GstGLSyncMeta * sync_meta)
 }
 
 void
-gst_gl_sync_meta_wait (GstGLSyncMeta * sync_meta)
+gst_gl_sync_meta_wait (GstGLSyncMeta * sync_meta, GstGLContext * context)
 {
+  if (sync_meta->context == context)
+    return;
+
   if (sync_meta->glsync) {
-    gst_gl_context_thread_add (sync_meta->context,
+    gst_gl_context_thread_add (context,
         (GstGLContextThreadFunc) _wait, sync_meta);
   }
 }

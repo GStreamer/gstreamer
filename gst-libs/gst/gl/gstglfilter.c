@@ -922,7 +922,7 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
   in_sync_meta = gst_buffer_get_gl_sync_meta (inbuf);
   if (in_sync_meta)
-    gst_gl_sync_meta_wait (in_sync_meta);
+    gst_gl_sync_meta_wait (in_sync_meta, context);
 
   if (filter_class->filter)
     filter_class->filter (filter, inbuf, outbuf);
