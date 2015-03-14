@@ -190,6 +190,9 @@ gst_gl_color_convert_element_prepare_output_buffer (GstBaseTransform * bt,
 
   *outbuf = gst_gl_color_convert_perform (convert->convert, inbuf);
 
+  /* basetransform doesn't unref if they're the same */
+  if (inbuf == *outbuf)
+    gst_buffer_unref (*outbuf);
   if (*outbuf)
     gst_buffer_copy_into (*outbuf, inbuf,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
