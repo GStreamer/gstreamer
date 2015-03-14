@@ -12,6 +12,7 @@ multiqueue
 queue
 queue2
 selector
+streamiddemux
 tee
 valve
 *.check.xml
