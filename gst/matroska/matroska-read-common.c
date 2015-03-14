@@ -447,25 +447,10 @@ gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
     GstElement * el, GstTagList * taglist)
 {
   if (common->global_tags) {
-    /* nothing sent yet, add to cache */
     gst_tag_list_insert (common->global_tags, taglist, GST_TAG_MERGE_APPEND);
     gst_tag_list_unref (taglist);
   } else {
-    GstEvent *tag_event = gst_event_new_tag (taglist);
-    gint i;
-
-    /* hm, already sent, no need to cache and wait anymore */
-    GST_DEBUG_OBJECT (common->sinkpad,
-        "Sending late global tags %" GST_PTR_FORMAT, taglist);
-
-    for (i = 0; i < common->src->len; i++) {
-      GstMatroskaTrackContext *stream;
-
-      stream = g_ptr_array_index (common->src, i);
-      gst_pad_push_event (stream->pad, gst_event_ref (tag_event));
-    }
-
-    gst_event_unref (tag_event);
+    common->global_tags = taglist;
   }
 }
 
@@ -2402,6 +2387,9 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
         GstMatroskaTrackContext *stream = g_ptr_array_index (common->src, j);
 
         if (stream->uid == tgt) {
+          if (stream->pending_tags == NULL)
+            stream->pending_tags = gst_tag_list_new_empty ();
+
           gst_tag_list_insert (stream->pending_tags, taglist,
               GST_TAG_MERGE_REPLACE);
           found = TRUE;
