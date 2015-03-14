@@ -129,6 +129,8 @@ DrawGLScene (GstBuffer * buf)
 
   // swap buffers to display, since we're double buffered.
   SDL_GL_SwapBuffers ();
+
+  gst_video_frame_unmap (&v_frame);
 }
 
 static gboolean
@@ -337,7 +339,7 @@ main (int argc, char **argv)
   pipeline =
       GST_PIPELINE (gst_parse_launch
       ("videotestsrc ! video/x-raw, width=320, height=240, framerate=(fraction)30/1 ! "
-          "gleffects effect=5 ! fakesink sync=1", NULL));
+          "glupload ! gleffects effect=5 ! fakesink sync=1", NULL));
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch (bus);
