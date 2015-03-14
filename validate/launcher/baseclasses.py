@@ -1036,7 +1036,7 @@ class _TestsLauncher(Loggable):
         if not options.config and options.testsuites:
             self._setup_testsuites()
 
-    def _other_testsuite_for_tester(self, testsuite, tester):
+    def _check_tester_has_other_testsuite(self, testsuite, tester):
         if len(testsuite.TEST_MANAGER) > 1:
             return True
 
@@ -1057,7 +1057,7 @@ class _TestsLauncher(Loggable):
 
         tests_names = [test.classname for test in tests]
         for testsuite in self.options.testsuites:
-            if not self._other_testsuite_for_tester(testsuite, tester) \
+            if not self._check_tester_has_other_testsuite(testsuite, tester) \
                     and tester.check_testslist:
                 try:
                     testlist_file = open(os.path.splitext(testsuite.__file__)[0] + ".testslist",
