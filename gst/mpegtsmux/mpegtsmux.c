@@ -280,7 +280,7 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALIGNMENT,
       g_param_spec_int ("alignment", "packet alignment",
           "Number of packets per buffer (padded with dummy packets on EOS) "
-          "(-1 = auto, 0 = all available packets)",
+          "(-1 = auto, 0 = all available packets, 7 for UDP streaming)",
           -1, G_MAXINT, MPEGTSMUX_DEFAULT_ALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -1362,11 +1362,9 @@ new_packet_common_init (MpegTsMux * mux, GstBuffer * buf, guint8 * data,
 static GstFlowReturn
 mpegtsmux_push_packets (MpegTsMux * mux, gboolean force)
 {
+  GstBufferList *buffer_list;
   gint align = mux->alignment;
   gint av, packet_size;
-  GstBuffer *buf;
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstClockTime ts;
 
   if (mux->m2ts_mode) {
     packet_size = M2TS_PACKET_LENGTH;
@@ -1381,25 +1379,31 @@ mpegtsmux_push_packets (MpegTsMux * mux, gboolean force)
   av = gst_adapter_available (mux->out_adapter);
   GST_LOG_OBJECT (mux, "align %d, av %d", align, av);
 
-  if (!align)
-    align = av;
-  else
-    align *= packet_size;
+  if (av == 0)
+    return GST_FLOW_OK;
 
-  /* FIXME: what about DTS here? */
-  GST_LOG_OBJECT (mux, "aligning to %d bytes", align);
-  if (G_LIKELY ((align <= av) && av)) {
-    GST_LOG_OBJECT (mux, "pushing %d aligned bytes", av - (av % align));
-    ts = gst_adapter_prev_pts (mux->out_adapter, NULL);
-    buf = gst_adapter_take_buffer (mux->out_adapter, av - (av % align));
-    g_assert (buf);
-    GST_BUFFER_PTS (buf) = ts;
-
-    ret = gst_pad_push (mux->srcpad, buf);
-    av = av % align;
+  /* no alignment, just push all available data */
+  if (align == 0) {
+    buffer_list = gst_adapter_take_buffer_list (mux->out_adapter, av);
+    return gst_pad_push_list (mux->srcpad, buffer_list);
   }
 
-  if (av && force) {
+  align *= packet_size;
+
+  if (!force && align > av)
+    return GST_FLOW_OK;
+
+  buffer_list = gst_buffer_list_new_sized ((av / align) + 1);
+
+  GST_LOG_OBJECT (mux, "aligning to %d bytes", align);
+  while (align <= av) {
+    gst_buffer_list_add (buffer_list,
+        gst_adapter_take_buffer (mux->out_adapter, align));
+    av -= align;
+  }
+
+  if (av > 0 && force) {
+    GstBuffer *buf;
     guint8 *data;
     guint32 header;
     gint dummy;
@@ -1409,11 +1413,9 @@ mpegtsmux_push_packets (MpegTsMux * mux, gboolean force)
     buf = gst_buffer_new_and_alloc (align);
     gst_buffer_map (buf, &map, GST_MAP_READ);
     data = map.data;
-    ts = gst_adapter_prev_pts (mux->out_adapter, NULL);
 
     gst_adapter_copy (mux->out_adapter, data, 0, av);
     gst_adapter_clear (mux->out_adapter);
-    GST_BUFFER_PTS (buf) = ts;
 
     data += av;
     header = GST_READ_UINT32_BE (data - packet_size);
@@ -1443,11 +1445,10 @@ mpegtsmux_push_packets (MpegTsMux * mux, gboolean force)
     }
 
     gst_buffer_unmap (buf, &map);
-
-    ret = gst_pad_push (mux->srcpad, buf);
+    gst_buffer_list_add (buffer_list, buf);
   }
 
-  return ret;
+  return gst_pad_push_list (mux->srcpad, buffer_list);
 }
 
 static GstFlowReturn
