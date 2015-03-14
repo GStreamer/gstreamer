@@ -1596,7 +1596,13 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
     return FALSE;
 
   if (gst_gl_window_is_running (window)) {
-    if (G_UNLIKELY (!gl_sink->redisplay_shader)) {
+    gulong handler_id =
+        g_signal_handler_find (GST_ELEMENT_PARENT (gl_sink), G_SIGNAL_MATCH_ID,
+        gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW], 0,
+        NULL, NULL, NULL);
+
+    if (G_UNLIKELY (!gl_sink->redisplay_shader) && (!handler_id
+            || !gl_sink->other_context)) {
       gst_gl_window_send_message (window,
           GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), gl_sink);
 
