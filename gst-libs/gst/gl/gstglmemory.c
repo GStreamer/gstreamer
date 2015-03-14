@@ -224,7 +224,9 @@ gst_gl_texture_type_from_format (GstGLContext * context,
 #else
   gboolean texture_rg =
       gst_gl_context_check_feature (context, "GL_EXT_texture_rg")
-      || gst_gl_context_check_feature (context, "GL_ARB_texture_rg");
+      || gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0)
+      || gst_gl_context_check_feature (context, "GL_ARB_texture_rg")
+      || gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 0);
 #endif
   guint n_plane_components;
 
@@ -295,8 +297,12 @@ gst_gl_texture_type_from_format (GstGLContext * context,
 }
 
 static inline GLenum
-_sized_gl_format_from_gl_format_type (GLenum format, GLenum type)
+_sized_gl_format_from_gl_format_type (GstGLContext * context, GLenum format,
+    GLenum type)
 {
+  gboolean ext_texture_rg =
+      gst_gl_context_check_feature (context, "GL_EXT_texture_rg");
+
   switch (format) {
     case GL_RGBA:
       switch (type) {
@@ -318,6 +324,8 @@ _sized_gl_format_from_gl_format_type (GLenum format, GLenum type)
     case GL_RG:
       switch (type) {
         case GL_UNSIGNED_BYTE:
+          if (ext_texture_rg)
+            return GL_RG;
           return GL_RG8;
           break;
       }
@@ -325,6 +333,8 @@ _sized_gl_format_from_gl_format_type (GLenum format, GLenum type)
     case GL_RED:
       switch (type) {
         case GL_UNSIGNED_BYTE:
+          if (ext_texture_rg)
+            return GL_RED;
           return GL_R8;
           break;
       }
@@ -389,7 +399,8 @@ _generate_texture (GstGLContext * context, GenTexture * data)
       data->gl_format, data->gl_type, data->width, data->height);
 
   internal_format =
-      _sized_gl_format_from_gl_format_type (data->gl_format, data->gl_type);
+      _sized_gl_format_from_gl_format_type (context, data->gl_format,
+      data->gl_type);
 
   gl->GenTextures (1, &data->result);
   gl->BindTexture (data->gl_target, data->result);
