@@ -239,9 +239,6 @@ gst_gl_upload_element_prepare_output_buffer (GstBaseTransform * bt,
   /* basetransform doesn't unref if they're the same */
   if (buffer == *outbuf)
     gst_buffer_unref (*outbuf);
-  else if (*outbuf)
-    gst_buffer_copy_into (*outbuf, buffer,
-        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
   return ret == GST_GL_UPLOAD_DONE ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
