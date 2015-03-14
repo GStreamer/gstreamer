@@ -982,14 +982,7 @@ gst_camera_bin_video_reset_elements (gpointer u_data)
   if (camerabin->audio_src) {
     gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
     gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
-
-    /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
-     * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
-     * fixed.
-     *
-     * Also, we don't reinit the audiosrc to keep audio devices from being open
-     * and running until we really need them */
-    gst_element_set_state (camerabin->audio_src, GST_STATE_NULL);
+    gst_element_set_state (camerabin->audio_src, GST_STATE_READY);
 
     if (camerabin->audio_filter) {
       gst_element_set_state (camerabin->audio_filter, GST_STATE_READY);
