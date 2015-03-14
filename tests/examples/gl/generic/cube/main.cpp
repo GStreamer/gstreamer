@@ -120,7 +120,7 @@ static gboolean drawCallback (GstElement * gl_sink, GstGLContext *context, GstSa
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glTranslatef(0.0f,0.0f,-5.0f);
+    glScalef(0.5f,0.5f,0.5f);
 
     glRotatef(xrot,1.0f,0.0f,0.0f);
     glRotatef(yrot,0.0f,1.0f,0.0f);
@@ -164,6 +164,9 @@ static gboolean drawCallback (GstElement * gl_sink, GstGLContext *context, GstSa
     xrot+=0.3f;
     yrot+=0.2f;
     zrot+=0.4f;
+
+    glDisable (GL_DEPTH_TEST);
+    glDisable (GL_TEXTURE_2D);
 
     return TRUE;
 }
