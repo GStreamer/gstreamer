@@ -1131,7 +1131,7 @@ GstBuffer *
 gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
     guint size)
 {
-  guint readsize;
+  guint readsize, buf_size;
   GstBuffer *buffer;
 
   g_return_val_if_fail (pads != NULL, NULL);
@@ -1142,7 +1142,8 @@ gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
   if ((buffer = data->buffer) == NULL)
     return NULL;
 
-  readsize = MIN (size, gst_buffer_get_size (buffer) - data->pos);
+  buf_size = gst_buffer_get_size (buffer);
+  readsize = MIN (size, buf_size - data->pos);
 
   return gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, data->pos,
       readsize);
