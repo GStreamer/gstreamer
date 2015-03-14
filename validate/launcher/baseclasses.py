@@ -684,8 +684,9 @@ class TestsManager(Loggable):
         self.queue = Queue.Queue()
         self.jobs = []
         self.total_num_tests = 0
-        self.starting_test_num = 0
+        self.test_num = 0
         self.check_testslist = True
+        self.all_tests = None
 
     def init(self):
         return False
@@ -824,7 +825,7 @@ class TestsManager(Loggable):
 
     def run_tests(self, starting_test_num, total_num_tests):
         self.total_num_tests = total_num_tests
-        self.starting_test_num = starting_test_num
+        self.test_num = starting_test_num
 
         num_jobs = min(self.options.num_jobs, len(self.tests))
         tests_left = list(self.tests)
@@ -843,15 +844,15 @@ class TestsManager(Loggable):
             self.reporter.after_test(test)
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
-                return test.result
+                return test.result, self.test_num
             if self.start_new_job(tests_left):
                 jobs_running += 1
 
-        return Result.PASSED
+        return Result.PASSED, self.test_num
 
     def print_test_num(self, test):
-        cur_test_num = self.starting_test_num + self.tests.index(test) + 1
-        sys.stdout.write("[%d / %d] " % (cur_test_num, self.total_num_tests))
+        self.test_num += 1
+        sys.stdout.write("[%d / %d] " % (self.test_num, self.total_num_tests))
 
     def clean_tests(self):
         for test in self.tests:
@@ -903,6 +904,7 @@ class _TestsLauncher(Loggable):
         self.tests = []
         self.reporter = None
         self._list_testers()
+        self.all_tests = None
         self.wanted_tests_patterns = []
 
     def _list_app_dirs(self):
@@ -1050,12 +1052,13 @@ class _TestsLauncher(Loggable):
         return False
 
     def _check_defined_tests(self, tester, tests):
-        if self.options.blacklisted_tests or self.options.wanted_tests and not self.check_testslist:
+        if self.options.blacklisted_tests or self.options.wanted_tests:
             return
 
         tests_names = [test.classname for test in tests]
         for testsuite in self.options.testsuites:
-            if not self._other_testsuite_for_tester(testsuite, tester):
+            if not self._other_testsuite_for_tester(testsuite, tester) \
+                    and tester.check_testslist:
                 try:
                     testlist_file = open(os.path.splitext(testsuite.__file__)[0] + ".testslist",
                                          'rw')
@@ -1091,14 +1094,17 @@ class _TestsLauncher(Loggable):
 
     def _run_tests(self):
         cur_test_num = 0
-        total_num_tests = 0
-        for tester in self.testers:
-            total_num_tests += len(tester.list_tests())
+
+        if not self.all_tests:
+            total_num_tests = 0
+            self.all_tests = []
+            for tester in self.testers:
+                self.all_tests.extend(tester.list_tests())
+        total_num_tests = len(self.all_tests)
 
         self.reporter.init_timer()
         for tester in self.testers:
-            res = tester.run_tests(cur_test_num, total_num_tests)
-            cur_test_num += len(tester.list_tests())
+            res, cur_test_num = tester.run_tests(cur_test_num, total_num_tests)
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
                 return False
