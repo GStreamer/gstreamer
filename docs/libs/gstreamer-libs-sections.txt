@@ -166,6 +166,7 @@ gst_adapter_take
 gst_adapter_take_buffer
 gst_adapter_take_buffer_fast
 gst_adapter_take_list
+gst_adapter_take_buffer_list
 gst_adapter_prev_pts
 gst_adapter_prev_dts
 gst_adapter_prev_pts_at_offset

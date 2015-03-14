@@ -948,6 +948,52 @@ gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)
 }
 
 /**
+ * gst_adapter_take_buffer_list:
+ * @adapter: a #GstAdapter
+ * @nbytes: the number of bytes to take
+ *
+ * Returns a #GstBufferList of buffers containing the first @nbytes bytes of
+ * the @adapter. The returned bytes will be flushed from the adapter.
+ * When the caller can deal with individual buffers, this function is more
+ * performant because no memory should be copied.
+ *
+ * Caller owns the returned list. Call gst_buffer_list_unref() to free
+ * the list after usage.
+ *
+ * Returns: (transfer full) (nullable): a #GstBufferList of buffers containing
+ *     the first @nbytes of the adapter, or %NULL if @nbytes bytes are not
+ *     available
+ *
+ * Since: 1.6
+ */
+GstBufferList *
+gst_adapter_take_buffer_list (GstAdapter * adapter, gsize nbytes)
+{
+  GstBufferList *buffer_list;
+  GstBuffer *cur;
+  gsize hsize, skip, cur_size;
+
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
+
+  if (nbytes > adapter->size)
+    return NULL;
+
+  GST_LOG_OBJECT (adapter, "taking %" G_GSIZE_FORMAT " bytes", nbytes);
+
+  buffer_list = gst_buffer_list_new ();
+  while (nbytes > 0) {
+    cur = adapter->buflist->data;
+    skip = adapter->skip;
+    cur_size = gst_buffer_get_size (cur);
+    hsize = MIN (nbytes, cur_size - skip);
+
+    gst_buffer_list_add (buffer_list, gst_adapter_take_buffer (adapter, hsize));
+    nbytes -= hsize;
+  }
+  return buffer_list;
+}
+
+/**
  * gst_adapter_available:
  * @adapter: a #GstAdapter
  *
