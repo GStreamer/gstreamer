@@ -1504,7 +1504,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   sync_meta = gst_buffer_get_gl_sync_meta (gl_sink->stored_buffer);
   if (sync_meta)
-    gst_gl_sync_meta_wait (sync_meta);
+    gst_gl_sync_meta_wait (sync_meta, gl_sink->context);
 
   /* make sure that the environnement is clean */
   gst_gl_context_clear_shader (gl_sink->context);
