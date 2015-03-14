@@ -1602,7 +1602,6 @@ gst_query_add_allocation_pool (GstQuery * query, GstBufferPool * pool,
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
   g_return_if_fail (gst_query_is_writable (query));
-  g_return_if_fail (size != 0);
 
   structure = GST_QUERY_STRUCTURE (query);
   array = ensure_array (structure, GST_QUARK (POOL),
