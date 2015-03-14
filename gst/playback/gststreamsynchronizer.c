@@ -251,6 +251,10 @@ gst_stream_synchronizer_wait (GstStreamSynchronizer * self, GstPad * pad)
         return ret;
       }
       self->send_gap_event = FALSE;
+
+      /* force a check on the loop conditions as we unlocked a
+       * few lines above and those variables could have changed */
+      continue;
     }
 
     g_cond_wait (&stream->stream_finish_cond, &self->lock);
@@ -554,7 +558,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         }
       }
 
-      /* send eos if haven't seen data. seen_data will be ture if data buffer
+      /* send eos if haven't seen data. seen_data will be true if data buffer
        * of the track have received in anytime. sink is ready if seen_data is
        * true, so can send GAP event. Will send EOS if sink isn't ready. The
        * scenario for the case is one track haven't any media data and then
