@@ -3207,7 +3207,6 @@ sys/dvb/Makefile
 sys/fbdev/Makefile
 sys/linsys/Makefile
 sys/opensles/Makefile
-sys/osxvideo/Makefile
 sys/shm/Makefile
 sys/uvch264/Makefile
 sys/vcd/Makefile
