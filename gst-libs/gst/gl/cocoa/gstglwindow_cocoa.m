@@ -201,12 +201,7 @@ gst_gl_window_cocoa_open (GstGLWindow *window, GError **err)
 static void
 gst_gl_window_cocoa_close (GstGLWindow *window)
 {
-  GstGLWindowCocoa *window_cocoa;
-
-  window_cocoa = GST_GL_WINDOW_COCOA (window);
-
-  g_main_loop_unref (window_cocoa->priv->loop);
-  g_main_context_unref (window_cocoa->priv->main_context);
+  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
 
   [window_cocoa->priv->internal_win_id release];
   window_cocoa->priv->internal_win_id = nil;
