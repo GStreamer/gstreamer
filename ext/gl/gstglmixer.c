@@ -631,7 +631,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
       sync_meta = gst_buffer_get_gl_sync_meta (vaggpad->buffer);
       if (sync_meta)
-        gst_gl_sync_meta_wait (sync_meta);
+        gst_gl_sync_meta_wait (sync_meta, GST_GL_BASE_MIXER (mix)->context);
 
       if (gst_video_frame_map (&gl_frame, &gl_info, vaggpad->buffer,
               GST_MAP_READ | GST_MAP_GL)) {
