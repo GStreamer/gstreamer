@@ -744,7 +744,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
           GST_PTR_FORMAT, gl_sink->context, other_context);
 
       if (!gst_gl_context_create (gl_sink->context, other_context, &error)) {
-        gst_object_unref (other_context);
+        if (other_context)
+          gst_object_unref (other_context);
         gst_object_unref (window);
         goto context_error;
       }
