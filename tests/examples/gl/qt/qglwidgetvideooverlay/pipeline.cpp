@@ -167,7 +167,7 @@ gboolean Pipeline::reshapeCallback (void *sink, void *context, guint width, guin
 }
 
 //client draw callback
-gboolean Pipeline::drawCallback (void *sink, void *context, guint texture, guint width, guint height, gpointer data)
+gboolean Pipeline::drawCallback (GstElement * gl_sink, GstGLContext *context, GstSample * sample, gpointer data)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;				
@@ -175,6 +175,21 @@ gboolean Pipeline::drawCallback (void *sink, void *context, guint texture, guint
     static GTimeVal current_time;
     static glong last_sec = current_time.tv_sec;
     static gint nbFrames = 0;  
+
+    GstVideoFrame v_frame;
+    GstVideoInfo v_info;
+    guint texture = 0;
+    GstBuffer *buf = gst_sample_get_buffer (sample);
+    GstCaps *caps = gst_sample_get_caps (sample);
+
+    gst_video_info_from_caps (&v_info, caps);
+
+    if (!gst_video_frame_map (&v_frame, &v_info, buf, (GstMapFlags) (GST_MAP_READ | GST_MAP_GL))) {
+      g_warning ("Failed to map the video buffer");
+      return TRUE;
+    }
+
+    texture = *(guint *) v_frame.data[0];
 
     g_get_current_time (&current_time);
     nbFrames++ ;
@@ -237,13 +252,14 @@ gboolean Pipeline::drawCallback (void *sink, void *context, guint texture, guint
 	      glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
 	      glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
 	      glTexCoord2f(1.0, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
-    glEnd(); 
+    glEnd();
+
+    gst_video_frame_unmap (&v_frame);
 
 	xrot+=0.03f;
     yrot+=0.02f;
     zrot+=0.04f;
 
-    //return TRUE causes a postRedisplay
     return TRUE;
 }
 

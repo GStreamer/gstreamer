@@ -18,11 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <GL/gl.h>
-#if __WIN32__ || _WIN32
-# include <GL/glext.h>
-#endif
 #include <gst/gst.h>
+#include <gst/gl/gl.h>
 
 #include <iostream>
 #include <sstream>
@@ -98,7 +95,7 @@ static gboolean reshapeCallback (void * gl_sink, void *context, GLuint width, GL
 
 
 //client draw callback
-static gboolean drawCallback (void * gl_sink, void *context, GLuint texture, GLuint width, GLuint height, gpointer data)
+static gboolean drawCallback (GstElement * gl_sink, GstGLContext *context, GstSample * sample, gpointer data)
 {
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;
@@ -106,6 +103,21 @@ static gboolean drawCallback (void * gl_sink, void *context, GLuint texture, GLu
     static GTimeVal current_time;
     static glong last_sec = current_time.tv_sec;
     static gint nbFrames = 0;
+
+    GstVideoFrame v_frame;
+    GstVideoInfo v_info;
+    guint texture = 0;
+    GstBuffer *buf = gst_sample_get_buffer (sample);
+    GstCaps *caps = gst_sample_get_caps (sample);
+
+    gst_video_info_from_caps (&v_info, caps);
+
+    if (!gst_video_frame_map (&v_frame, &v_info, buf, (GstMapFlags) (GST_MAP_READ | GST_MAP_GL))) {
+      g_warning ("Failed to map the video buffer");
+      return TRUE;
+    }
+
+    texture = *(guint *) v_frame.data[0];
 
     g_get_current_time (&current_time);
     nbFrames++ ;
@@ -170,19 +182,11 @@ static gboolean drawCallback (void * gl_sink, void *context, GLuint texture, GLu
 	      glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
     glEnd();
 
+    gst_video_frame_unmap (&v_frame);
+
 	xrot+=0.03f;
     yrot+=0.02f;
     zrot+=0.04f;
-
-    //return TRUE causes a postRedisplay
-    //so you have to return FALSE to synchronise to have a graphic FPS
-    //equals to the input video frame rate
-
-    //Usually, we will not always return TRUE (or FALSE)
-    //For example, if you want a fixed graphic FPS equals to 60
-    //then you have to use the timeclock to return TRUE or FALSE
-    //in order to increase or decrease the FPS in real time
-    //to reach the 60.
 
     return TRUE;
 }
