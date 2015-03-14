@@ -684,3 +684,52 @@ guint  arg2
 guint  arg3
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstGLSrcBin::create-element</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLSrcBin *gstglsrcbin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLSinkBin::create-element</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLSinkBin *gstglsinkbin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLMixerBin::create-element</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLMixerBin *gstglmixerbin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLImageSinkBin::client-draw</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLImageSinkBin *gstglimagesinkbin
+GstGLContext *arg1
+guint  arg2
+guint  arg3
+guint  arg4
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLImageSinkBin::client-reshape</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLImageSinkBin *gstglimagesinkbin
+GstGLContext *arg1
+guint  arg2
+guint  arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLFilterBin::create-element</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLFilterBin *gstglfilterbin
+</SIGNAL>
+

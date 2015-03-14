@@ -19,9 +19,9 @@ GObject
           GstAudioMixer
           GstVideoAggregator
             GstCompositor
-            GstGLMixer
-              GstGLMosaic
-              GstGLVideoMixer
+            GstGLBaseMixer
+              GstGLMixer
+                GstGLMosaic
         GstAiffMux
         GstAiffParse
         GstAsfMux
@@ -86,7 +86,6 @@ GObject
           GstShmSink
           GstVideoSink
             GstFBDEVSink
-            GstGLImageSink
             GstWaylandSink
         GstBaseSrc
           GstAvdtpSrc
@@ -132,19 +131,23 @@ GObject
           GstBayer2RGB
           GstDebugSpy
           GstFreeverb
-          GstGLFilter
-            GstGLColorscale
-            GstGLDeinterlace
-            GstGLDifferenceMatte
-            GstGLEffects
-            GstGLFilterApp
-            GstGLFilterBlur
-            GstGLFilterCube
-            GstGLFilterGlass
-            GstGLFilterLaplacian
-            GstGLFilterShader
-            GstGLFilterSobel
-            GstGLOverlay
+          GstGLBaseFilter
+            GstGLColorConvertElement
+            GstGLDownloadElement
+            GstGLFilter
+              GstGLColorscale
+              GstGLDeinterlace
+              GstGLDifferenceMatte
+              GstGLEffects
+              GstGLFilterApp
+              GstGLFilterBlur
+              GstGLFilterCube
+              GstGLFilterGlass
+              GstGLFilterLaplacian
+              GstGLFilterShader
+              GstGLFilterSobel
+              GstGLOverlay
+            GstGLUploadElement
           GstIvtc
           GstRGB2Bayer
           GstRemoveSilence
@@ -215,6 +218,12 @@ GObject
             GstUvcH264Src
             GstWrapperCameraBinSrc
           GstFPSDisplaySink
+          GstGLFilterBin
+          GstGLMixerBin
+            GstGLVideoMixerBin
+          GstGLSinkBin
+            GstGLImageSinkBin
+          GstGLSrcBin
           GstHlsSink
           GstPipeline
             GstCameraBin
@@ -312,8 +321,8 @@ GObject
           GstAudioMixerPad
           GstVideoAggregatorPad
             GstCompositorPad
-            GstGLMixerPad
-              GstGLVideoMixerPad
+            GstGLBaseMixerPad
+              GstGLMixerPad
       GstPadTemplate
       GstPlugin
       GstPluginFeature
