@@ -422,7 +422,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  gsettings \
  musepack nas sdl timidity \
  acm wininet \
- xvid lv2 teletextdec sndio osx_video libvisual"
+ xvid lv2 teletextdec sndio libvisual"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
@@ -1630,22 +1630,6 @@ AG_GST_CHECK_FEATURE(BLUEZ, [Bluez], bluez, [
     PKG_CHECK_MODULES([DBUS], [dbus-1], [HAVE_BLUEZ=yes], [HAVE_BLUEZ=no])
   ])
 ])
-
-dnl *** OS X videosrc ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
-HAVE_OSX_VIDEO="no"
-AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosrc, [
-  AC_CHECK_TYPE([SeqGrabComponent], HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no",
-      [#include <Quicktime/Quicktime.h>])
-])
-dnl in case header Quicktime/Quicktime.h is found on other platforms
-case "$host" in
-  *-*darwin*)
-    ;;
-  *)
-    HAVE_OSX_VIDEO="no"
-    ;;
-esac
 
 dnl *** OS/X AVCVideoServices ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVC, true)
