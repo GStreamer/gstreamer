@@ -54,6 +54,8 @@ static GstPad *mysrcpad, *mysinkpad;
                           "alignment = (string) nal, " \
                           "parsed = (boolean) true "
 
+#define KEYFRAME_DISTANCE 10
+
 typedef void (CheckOutputBuffersFunc) (GList * buffers);
 
 /* setup and teardown needs some special handling for muxer */
@@ -184,6 +186,14 @@ check_tsmux_pad (GstStaticPadTemplate * srctemplate,
 
     GST_BUFFER_TIMESTAMP (inbuffer) = ts;
     ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+    if (i % KEYFRAME_DISTANCE == 0 && pes_id == 0xe0) {
+      GST_TRACE ("input keyframe");
+      GST_BUFFER_FLAG_UNSET (inbuffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    } else {
+      GST_TRACE ("input delta");
+      GST_BUFFER_FLAG_SET (inbuffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    }
     flow = gst_pad_push (mysrcpad, inbuffer);
     if (flow != GST_FLOW_OK)
       fail ("Got %s flow instead of OK", gst_flow_get_name (flow));
@@ -224,12 +234,12 @@ check_tsmux_pad (GstStaticPadTemplate * srctemplate,
       y = GST_READ_UINT16_BE (data);
       pid = y & (0x1FFF);
       data += 2;
-      GST_DEBUG ("pid: %d", pid);
+      GST_TRACE ("pid: %d", pid);
 
       y = (y >> 14) & 0x1;
       /* only check packets with payload_start_indicator == 1 */
       if (!y) {
-        GST_DEBUG ("not at start");
+        GST_TRACE ("not at start");
         continue;
       }
 
@@ -241,7 +251,7 @@ check_tsmux_pad (GstStaticPadTemplate * srctemplate,
         y = *data;
         data++;
         data += y;
-        GST_DEBUG ("adaptation %d", y);
+        GST_TRACE ("adaptation %d", y);
       }
 
       if (pid == 0) {
@@ -764,6 +774,35 @@ GST_START_TEST (test_align)
 
 GST_END_TEST;
 
+static void
+test_keyframe_propagation_check_output (GList * bufs)
+{
+  guint keyframe_count = 0;
+
+  GST_LOG ("%u buffers", g_list_length (bufs));
+  while (bufs != NULL) {
+    GstBuffer *buf = bufs->data;
+    gboolean keyunit;
+
+    keyunit = !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    if (keyunit)
+      ++keyframe_count;
+
+    GST_LOG ("buffer, keyframe=%d", keyunit);
+    bufs = bufs->next;
+  }
+  fail_unless_equals_int (keyframe_count, 50 / KEYFRAME_DISTANCE);
+}
+
+GST_START_TEST (test_keyframe_flag_propagation)
+{
+  check_tsmux_pad (&video_src_template, VIDEO_CAPS_STRING, 0xE0, 0x1b,
+      "sink_%d", test_keyframe_propagation_check_output, 50, -1, 0);
+}
+
+GST_END_TEST;
+
 static Suite *
 mpegtsmux_suite (void)
 {
@@ -779,6 +818,7 @@ mpegtsmux_suite (void)
   tcase_add_test (tc_chain, test_propagate_flow_status);
   tcase_add_test (tc_chain, test_multiple_state_change);
   tcase_add_test (tc_chain, test_align);
+  tcase_add_test (tc_chain, test_keyframe_flag_propagation);
 
   return s;
 }
