@@ -25,8 +25,24 @@
 
 G_BEGIN_DECLS
 
+/**
+ * @GST_FD_MEMORY_FLAG_NONE: no flag
+ * @GST_FD_MEMORY_FLAG_KEEP_MAPPED: once the memory is mapped,
+ *        keep it mapped until the memory is destroyed.
+ * @GST_FD_MEMORY_FLAG_MAP_PRIVATE: do a private mapping instead of
+ *        the default shared mapping.
+ *
+ * Various flags to control the operation of the fd backed memory.
+ */
+typedef enum {
+  GST_FD_MEMORY_FLAG_NONE = 0,
+  GST_FD_MEMORY_FLAG_KEEP_MAPPED = (1 << 0),
+  GST_FD_MEMORY_FLAG_MAP_PRIVATE = (1 << 1),
+} GstFdMemoryFlags;
+
 /*
- * GstFdfMemory
+ * GstFdMemory
+ * @flags: #GstFdMemoryFlags
  * @fd: the file descriptor associated this memory
  * @data: mmapped address
  * @mmapping_flags: mmapping flags
@@ -37,6 +53,7 @@ typedef struct
 {
   GstMemory mem;
 
+  GstFdMemoryFlags flags;
   gint fd;
   gpointer data;
   gint mmapping_flags;
@@ -47,7 +64,8 @@ typedef struct
 void        __gst_fd_memory_class_init_allocator  (GstAllocatorClass * allocator);
 void        __gst_fd_memory_init_allocator        (GstAllocator * allocator, const gchar *type);
 
-GstMemory * __gst_fd_memory_new                   (GstAllocator * allocator, gint fd, gsize size);
+GstMemory * __gst_fd_memory_new                   (GstAllocator * allocator, gint fd, gsize size,
+                                                   GstFdMemoryFlags flags);
 
 
 G_END_DECLS

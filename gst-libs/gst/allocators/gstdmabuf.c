@@ -120,7 +120,7 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
   }
 
   GST_DEBUG ("alloc from allocator %p", allocator);
-  return __gst_fd_memory_new (allocator, fd, size);
+  return __gst_fd_memory_new (allocator, fd, size, GST_FD_MEMORY_FLAG_NONE);
 #else /* !HAVE_MMAP */
   return NULL;
 #endif

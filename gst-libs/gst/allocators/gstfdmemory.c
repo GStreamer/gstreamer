@@ -36,7 +36,10 @@ gst_fd_mem_free (GstAllocator * allocator, GstMemory * gmem)
   GstFdMemory *mem = (GstFdMemory *) gmem;
 
   if (mem->data) {
-    g_warning (G_STRLOC ":%s: Freeing memory %p still mapped", G_STRFUNC, mem);
+    if (!(mem->flags & GST_FD_MEMORY_FLAG_KEEP_MAPPED))
+      g_warning (G_STRLOC ":%s: Freeing memory %p still mapped", G_STRFUNC,
+          mem);
+
     munmap ((void *) mem->data, gmem->maxsize);
   }
   if (mem->fd >= 0 && gmem->parent == NULL)
@@ -58,11 +61,10 @@ gst_fd_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
   if (gmem->parent)
     return gst_fd_mem_map (gmem->parent, maxsize, flags);
 
-  g_mutex_lock (&mem->lock);
-
   prot = flags & GST_MAP_READ ? PROT_READ : 0;
   prot |= flags & GST_MAP_WRITE ? PROT_WRITE : 0;
 
+  g_mutex_lock (&mem->lock);
   /* do not mmap twice the buffer */
   if (mem->data) {
     /* only return address if mapping flags are a subset
@@ -76,7 +78,13 @@ gst_fd_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
   }
 
   if (mem->fd != -1) {
-    mem->data = mmap (0, gmem->maxsize, prot, MAP_SHARED, mem->fd, 0);
+    gint flags;
+
+    flags =
+        (mem->flags & GST_FD_MEMORY_FLAG_MAP_PRIVATE) ? MAP_PRIVATE :
+        MAP_SHARED;
+
+    mem->data = mmap (0, gmem->maxsize, prot, flags, mem->fd, 0);
     if (mem->data == MAP_FAILED) {
       mem->data = NULL;
       GST_ERROR ("%p: fd %d: mmap failed: %s", mem, mem->fd,
@@ -110,8 +118,10 @@ gst_fd_mem_unmap (GstMemory * gmem)
   if (gmem->parent)
     return gst_fd_mem_unmap (gmem->parent);
 
-  g_mutex_lock (&mem->lock);
+  if (mem->flags & GST_FD_MEMORY_FLAG_KEEP_MAPPED)
+    return;
 
+  g_mutex_lock (&mem->lock);
   if (mem->data && !(--mem->mmap_count)) {
     munmap ((void *) mem->data, gmem->maxsize);
     mem->data = NULL;
@@ -160,6 +170,7 @@ gst_fd_mem_share (GstMemory * gmem, gssize offset, gssize size)
  * @allocator: allocator to be used for this memory
  * @fd: file descriptor
  * @size: memory size
+ * @flags: extra #GstFdMemoryFlags
  *
  * Return a %GstMemory that wraps a file descriptor.
  *
@@ -170,7 +181,8 @@ gst_fd_mem_share (GstMemory * gmem, gssize offset, gssize size)
  * Since: 1.2
  */
 GstMemory *
-__gst_fd_memory_new (GstAllocator * allocator, gint fd, gsize size)
+__gst_fd_memory_new (GstAllocator * allocator, gint fd, gsize size,
+    GstFdMemoryFlags flags)
 {
 #ifdef HAVE_MMAP
   GstFdMemory *mem;
@@ -178,6 +190,7 @@ __gst_fd_memory_new (GstAllocator * allocator, gint fd, gsize size)
   mem = g_slice_new0 (GstFdMemory);
   gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, NULL, size, 0, 0, size);
 
+  mem->flags = flags;
   mem->fd = fd;
   g_mutex_init (&mem->lock);
 
