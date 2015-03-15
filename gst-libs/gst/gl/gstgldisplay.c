@@ -390,6 +390,37 @@ gst_gl_display_get_gl_context_for_thread (GstGLDisplay * display,
   return context;
 }
 
+static gboolean
+_check_collision (GstGLContext * context, GstGLContext * collision)
+{
+  GThread *thread, *collision_thread;
+  gboolean ret = FALSE;
+
+  if (!context || !collision)
+    return FALSE;
+
+  thread = gst_gl_context_get_thread (context);
+  collision_thread = gst_gl_context_get_thread (collision);
+
+  if (!thread || !collision_thread) {
+    ret = FALSE;
+    goto out;
+  }
+
+  if (collision == context) {
+    ret = TRUE;
+    goto out;
+  }
+
+out:
+  if (thread)
+    g_thread_unref (thread);
+  if (collision_thread)
+    g_thread_unref (collision_thread);
+
+  return ret;
+}
+
 /**
  * gst_gl_display_add_context:
  * @display: a #GstGLDisplay
@@ -403,6 +434,7 @@ gst_gl_display_get_gl_context_for_thread (GstGLDisplay * display,
 gboolean
 gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
 {
+  GstGLContext *collision = NULL;
   GstGLDisplay *context_display;
   gboolean ret = TRUE;
   GThread *thread;
@@ -419,16 +451,10 @@ gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
 
   thread = gst_gl_context_get_thread (context);
   if (thread) {
-    GstGLContext *collision =
-        _get_gl_context_for_thread_unlocked (display, thread);
-    g_thread_unref (thread);
-    if (collision) {
-      if (collision != context) {
-        gst_object_unref (collision);
-        ret = FALSE;
-        goto out;
-      }
-      gst_object_unref (collision);
+    collision = _get_gl_context_for_thread_unlocked (display, thread);
+    if (_check_collision (context, collision)) {
+      ret = FALSE;
+      goto out;
     }
   }
 
@@ -438,6 +464,9 @@ gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
   display->priv->contexts = g_list_prepend (display->priv->contexts, ref);
 
 out:
+  if (collision)
+    gst_object_unref (collision);
+
   GST_DEBUG_OBJECT (display, "%ssuccessfully inserted context %" GST_PTR_FORMAT,
       ret ? "" : "un", context);
   GST_OBJECT_UNLOCK (display);
