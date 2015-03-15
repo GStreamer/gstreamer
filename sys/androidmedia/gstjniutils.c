@@ -661,6 +661,52 @@ gst_amc_jni_is_vm_started (void)
   return started_java_vm;
 }
 
+#define CALL_STATIC_TYPE_METHOD(_type, _name,  _jname, _retval)                                                     \
+_type gst_amc_jni_call_static_##_name##_method (JNIEnv *env, GError ** err, jclass klass, jmethodID methodID, ...)   \
+  {                                                                                                          \
+    _type ret;                                                                                               \
+    va_list args;                                                                                            \
+    va_start(args, methodID);                                                                                \
+    ret = (*env)->CallStatic##_jname##MethodV(env, klass, methodID, args);                                           \
+    if ((*env)->ExceptionCheck (env)) {                                                                      \
+      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
+          err, "Failed to call static Java method");                                                                \
+      (*env)->ExceptionClear (env);                                                                          \
+      ret = _retval;                                                                                         \
+    }                                                                                                        \
+    va_end(args);                                                                                            \
+    return (_type) ret;                                                                                      \
+  }
+
+CALL_STATIC_TYPE_METHOD (gboolean, boolean, Boolean, FALSE);
+CALL_STATIC_TYPE_METHOD (gint8, byte, Byte, G_MININT8);
+CALL_STATIC_TYPE_METHOD (gshort, short, Short, G_MINSHORT);
+CALL_STATIC_TYPE_METHOD (gint, int, Int, G_MININT);
+CALL_STATIC_TYPE_METHOD (gchar, char, Char, 0);
+CALL_STATIC_TYPE_METHOD (glong, long, Long, G_MINLONG);
+CALL_STATIC_TYPE_METHOD (gfloat, float, Float, G_MINFLOAT);
+CALL_STATIC_TYPE_METHOD (gdouble, double, Double, G_MINDOUBLE);
+CALL_STATIC_TYPE_METHOD (jobject, object, Object, NULL);
+
+gboolean
+gst_amc_jni_call_static_void_method (JNIEnv * env, GError ** err, jclass klass,
+    jmethodID methodID, ...)
+{
+  gboolean ret = TRUE;
+  va_list args;
+  va_start (args, methodID);
+
+  (*env)->CallStaticVoidMethodV (env, klass, methodID, args);
+  if ((*env)->ExceptionCheck (env)) {
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to call static Java method");
+    (*env)->ExceptionClear (env);
+    ret = FALSE;
+  }
+  va_end (args);
+  return ret;
+}
+
 #define CALL_TYPE_METHOD(_type, _name,  _jname, _retval)                                                     \
 _type gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject obj, jmethodID methodID, ...)   \
   {                                                                                                          \
