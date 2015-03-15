@@ -1424,14 +1424,15 @@ gst_matroska_demux_send_tags (GstMatroskaDemux * demux)
 {
   gint i;
 
-  if (G_UNLIKELY (demux->common.global_tags != NULL)) {
+  if (G_UNLIKELY (demux->common.global_tags_changed)) {
     GstEvent *tag_event;
     gst_tag_list_add (demux->common.global_tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_CONTAINER_FORMAT, "Matroska", NULL);
     GST_DEBUG_OBJECT (demux, "Sending global_tags %p : %" GST_PTR_FORMAT,
         demux->common.global_tags, demux->common.global_tags);
 
-    tag_event = gst_event_new_tag (demux->common.global_tags);
+    tag_event =
+        gst_event_new_tag (gst_tag_list_copy (demux->common.global_tags));
 
     for (i = 0; i < demux->common.src->len; i++) {
       GstMatroskaTrackContext *stream;
@@ -1441,7 +1442,7 @@ gst_matroska_demux_send_tags (GstMatroskaDemux * demux)
     }
 
     gst_event_unref (tag_event);
-    demux->common.global_tags = NULL;
+    demux->common.global_tags_changed = FALSE;
   }
 
   g_assert (demux->common.src->len == demux->common.num_streams);
