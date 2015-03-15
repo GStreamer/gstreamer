@@ -6,9 +6,10 @@ libgstallocators_@GST_API_VERSION@_include_HEADERS = \
 	allocators.h \
 	gstdmabuf.h
 
-noinst_HEADERS =
+noinst_HEADERS = gstfdmemory.h
 
 libgstallocators_@GST_API_VERSION@_la_SOURCES = \
+	gstfdmemory.c \
 	gstdmabuf.c 
 
 libgstallocators_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(LIBM)
