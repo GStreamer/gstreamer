@@ -189,6 +189,7 @@ check_PROGRAMS = \
 	generic/clock-selection \
 	generic/states \
 	libs/libsabi \
+	libs/allocators \
 	libs/audio \
 	libs/audiocdsrc \
 	libs/audiodecoder \
@@ -283,6 +284,16 @@ libs_libsabi_LDADD = \
 	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
+
+libs_allocators_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+libs_allocators_LDADD = \
+	$(top_builddir)/gst-libs/gst/allocators/libgstallocators-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
