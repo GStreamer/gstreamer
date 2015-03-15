@@ -591,7 +591,6 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
       GST_PTR_FORMAT, ts_data->pid, caps);
 
   s = gst_caps_get_structure (caps, 0);
-  g_return_val_if_fail (s != NULL, FALSE);
 
   mt = gst_structure_get_name (s);
   value = gst_structure_get_value (s, "codec_data");
@@ -973,8 +972,7 @@ check_pending_key_unit_event (GstEvent * pending_event, GstSegment * segment,
   guint count;
   GstEvent *event = NULL;
 
-  g_return_val_if_fail (pending_event != NULL, NULL);
-  g_return_val_if_fail (segment != NULL, NULL);
+  g_assert (segment != NULL);
 
   if (pending_event == NULL)
     goto out;
@@ -1004,8 +1002,6 @@ check_pending_key_unit_event (GstEvent * pending_event, GstSegment * segment,
     gst_video_event_parse_downstream_force_key_unit (pending_event,
         NULL, NULL, NULL, &all_headers, &count);
   } else {
-    g_return_val_if_fail (GST_EVENT_TYPE (pending_event) ==
-        GST_EVENT_CUSTOM_UPSTREAM, NULL);
     gst_video_event_parse_upstream_force_key_unit (pending_event, NULL,
         &all_headers, &count);
   }
@@ -1327,7 +1323,7 @@ new_packet_common_init (MpegTsMux * mux, GstBuffer * buf, guint8 * data,
     guint len)
 {
   /* Packets should be at least 188 bytes, but check anyway */
-  g_return_if_fail (len >= 2 || !data);
+  g_assert (len >= 2 || !data);
 
   if (!mux->streamheader_sent && data) {
     guint pid = ((data[1] & 0x1f) << 8) | data[2];
@@ -1739,8 +1735,6 @@ mpegtsmux_send_event (GstElement * element, GstEvent * event)
 {
   GstMpegtsSection *section;
   MpegTsMux *mux = GST_MPEG_TSMUX (element);
-
-  g_return_val_if_fail (event != NULL, FALSE);
 
   section = gst_event_parse_mpegts_section (event);
   gst_event_unref (event);
