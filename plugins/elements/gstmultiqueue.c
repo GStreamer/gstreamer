@@ -1413,8 +1413,8 @@ next:
 
   /* If we're not-linked, we do some extra work because we might need to
    * wait before pushing. If we're linked but there's a gap in the IDs,
-   * or it's the first loop, or we just passed the previous highid, 
-   * we might need to wake some sleeping pad up, so there's extra work 
+   * or it's the first loop, or we just passed the previous highid,
+   * we might need to wake some sleeping pad up, so there's extra work
    * there too */
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
   if (sq->srcresult == GST_FLOW_NOT_LINKED
@@ -2161,7 +2161,6 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
   GList *tmp;
   GstDataQueueSize size;
   gboolean filled = TRUE;
-  gboolean all_not_linked = TRUE;
   gboolean empty_found = FALSE;
 
   gst_data_queue_get_level (sq->queue, &size);
@@ -2180,7 +2179,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
     goto done;
   }
 
-  /* Search for empty or unlinked queues */
+  /* Search for empty queues */
   for (tmp = mq->queues; tmp; tmp = g_list_next (tmp)) {
     GstSingleQueue *oq = (GstSingleQueue *) tmp->data;
 
@@ -2192,7 +2191,6 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
       continue;
     }
 
-    all_not_linked = FALSE;
     GST_LOG_OBJECT (mq, "Checking Queue %d", oq->id);
     if (gst_data_queue_is_empty (oq->queue)) {
       GST_LOG_OBJECT (mq, "Queue %d is empty", oq->id);
@@ -2201,16 +2199,9 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
     }
   }
 
-  if (!mq->queues || !mq->queues->next)
-    all_not_linked = FALSE;
-
   /* if hard limits are not reached then we allow one more buffer in the full
-   * queue, but only if any of the other singelqueues are empty or all are
-   * not linked */
-  if (all_not_linked || empty_found) {
-    if (all_not_linked) {
-      GST_LOG_OBJECT (mq, "All other queues are not linked");
-    }
+   * queue, but only if any of the other singelqueues are empty */
+  if (empty_found) {
     if (IS_FILLED (sq, visible, size.visible)) {
       sq->max_size.visible = size.visible + 1;
       GST_DEBUG_OBJECT (mq,
