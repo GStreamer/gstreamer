@@ -772,10 +772,12 @@ GstGLColorConvert
 GstGLColorConvertClass
 gst_gl_color_convert_new
 gst_gl_color_convert_set_caps
+gst_gl_color_convert_transform_caps
 gst_gl_color_convert_perform
 <SUBSECTION Standard>
 GstGLColorConvertPrivate
 GST_GL_COLOR_CONVERT
+GST_GL_COLOR_CONVERT_CAST
 GST_GL_COLOR_CONVERT_CLASS
 gst_gl_color_convert_get_type
 GST_IS_GL_COLOR_CONVERT
@@ -794,6 +796,7 @@ GstGLContext
 gst_gl_context_new
 gst_gl_context_new_wrapped
 gst_gl_context_create
+gst_gl_context_destroy
 gst_gl_context_activate
 gst_gl_context_default_get_proc_address
 gst_gl_context_get_proc_address
@@ -811,6 +814,8 @@ gst_gl_context_can_share
 gst_gl_context_check_feature
 gst_gl_context_check_gl_version
 gst_gl_context_get_gl_version
+gst_gl_context_fill_info
+gst_gl_context_get_current
 <SUBSECTION Standard>
 GST_GL_CONTEXT
 GST_GL_IS_CONTEXT
@@ -828,6 +833,8 @@ gst_gl_context_get_type
 <TITLE>GstGLContextCocoa</TITLE>
 GstGLContextCocoa
 gst_gl_context_cocoa_new
+gst_gl_context_cocoa_get_current_context
+gst_gl_context_cocoa_get_pixel_format
 <SUBSECTION Standard>
 GST_GL_CONTEXT_COCOA
 GST_GL_IS_CONTEXT_COCOA
@@ -838,6 +845,8 @@ GST_GL_IS_CONTEXT_COCOA_CLASS
 GST_GL_CONTEXT_COCOA_CAST
 GstGLContextCocoaPrivate
 gst_gl_context_cocoa_get_type
+<SUBSECTION Private>
+gst_gl_context_cocoa_dump_pixel_format
 </SECTION>
 
 <SECTION>
@@ -845,6 +854,8 @@ gst_gl_context_cocoa_get_type
 <TITLE>GstGLContextEGL</TITLE>
 GstGLContextEGL
 gst_gl_context_egl_new
+gst_gl_context_egl_get_current_context
+gst_gl_context_egl_get_proc_address
 <SUBSECTION Standard>
 GST_GL_CONTEXT_EGL
 GST_GL_IS_CONTEXT_EGL
@@ -862,6 +873,8 @@ gst_gl_context_egl_get_type
 <TITLE>GstGLContextGLX</TITLE>
 GstGLContextGLX
 gst_gl_context_glx_new
+gst_gl_context_glx_get_current_context
+gst_gl_context_glx_get_proc_address
 <SUBSECTION Standard>
 GST_GL_CONTEXT_GLX
 GST_GL_IS_CONTEXT_GLX
@@ -879,6 +892,8 @@ gst_gl_context_glx_get_type
 <TITLE>GstGLContextWGL</TITLE>
 GstGLContextWGL
 gst_gl_context_wgl_new
+gst_gl_context_wgl_get_current_context
+gst_gl_context_wgl_get_proc_address
 <SUBSECTION Standard>
 GST_GL_CONTEXT_WGL
 GST_GL_IS_CONTEXT_WGL
@@ -892,6 +907,29 @@ gst_gl_context_wgl_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstglcontexteagl</FILE>
+<TITLE>GstGLContextEagl</TITLE>
+GstGLContextEagl
+gst_gl_context_eagl_new
+gst_gl_context_eagl_get_current_context
+<SUBSECTION Standard>
+GST_GL_CONTEXT_EAGL
+GST_GL_IS_CONTEXT_EAGL
+GST_GL_TYPE_CONTEXT_EAGL
+GST_GL_CONTEXT_EAGL_CLASS
+GST_GL_CONTEXT_EAGL_GET_CLASS
+GST_GL_IS_CONTEXT_EAGL_CLASS
+GST_GL_CONTEXT_EAGL_CAST
+GstGLContextEaglPrivate
+
+<SUBSECTION Private>
+gst_gl_context_eagl_get_type
+gst_gl_context_eagl_prepare_draw
+gst_gl_context_eagl_finish_draw
+gst_gl_context_eagl_resize
+</SECTION>
+
+<SECTION>
 <FILE>gstgldisplay</FILE>
 <TITLE>GstGLDisplay</TITLE>
 GST_GL_DISPLAY_CONTEXT_TYPE
@@ -901,6 +939,9 @@ gst_gl_display_new
 gst_gl_display_get_handle_type
 gst_gl_display_filter_gl_api
 gst_gl_display_get_gl_api
+gst_gl_display_add_context
+gst_gl_display_get_gl_context_for_thread
+gst_gl_display_get_handle
 gst_context_get_gl_display
 gst_context_set_gl_display
 <SUBSECTION Standard>
@@ -920,6 +961,7 @@ gst_gl_display_get_type
 GstGLDownload
 gst_gl_download_new
 gst_gl_download_set_format
+gst_gl_download_transform_caps
 gst_gl_download_perform_with_data
 <SUBSECTION Standard>
 GST_GL_DOWNLOAD
@@ -931,6 +973,22 @@ GST_IS_GL_DOWNLOAD
 GST_IS_GL_DOWNLOAD_CLASS
 GST_TYPE_GL_DOWNLOAD
 GstGLDownloadPrivate
+</SECTION>
+
+<SECTION>
+<FILE>gstglbasefilter</FILE>
+<TITLE>GstGLBaseFilter</TITLE>
+GstGLBaseFilter
+GstGLBaseFilterClass
+<SUBSECTION Standard>
+GST_GL_BASE_FILTER
+GST_IS_GL_BASE_FILTER
+GST_TYPE_GL_BASE_FILTER
+gst_gl_base_filter_get_type
+GST_GL_BASE_FILTER_CLASS
+GST_IS_GL_FILTER_CLASS
+GST_GL_BASE_FILTER_GET_CLASS
+GstGLBaseFilterPrivate
 </SECTION>
 
 <SECTION>
@@ -960,10 +1018,10 @@ GstGLFramebufferClass
 gst_gl_framebuffer_new
 gst_gl_framebuffer_generate
 gst_gl_framebuffer_delete
-gst_gl_framebuffer_use
 gst_gl_framebuffer_use_v2
 <SUBSECTION Standard>
 GST_GL_FRAMEBUFFER
+GST_GL_FRAMEBUFFER_CAST
 GST_IS_GL_FRAMEBUFFER
 GST_TYPE_GL_FRAMEBUFFER
 gst_gl_framebuffer_get_type
@@ -1036,6 +1094,7 @@ gst_gl_shader_set_vertex_source
 gst_gl_shader_set_fragment_source
 gst_gl_shader_get_vertex_source
 gst_gl_shader_get_fragment_source
+gst_gl_shader_get_program_handle
 gst_gl_shader_set_active
 gst_gl_shader_is_compiled
 gst_gl_shader_compile
@@ -1085,14 +1144,30 @@ GST_GL_SHADER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gstglsyncmeta</FILE>
+<TITLE>GstGLSyncMeta</TITLE>
+GstGLSyncMeta
+gst_buffer_add_gl_sync_meta
+gst_buffer_get_gl_sync_meta
+gst_gl_sync_meta_api_get_type
+gst_gl_sync_meta_get_info
+gst_gl_sync_meta_set_sync_point
+gst_gl_sync_meta_wait
+GST_BUFFER_POOL_OPTION_GL_SYNC_META
+<SUBSECTION Standard>
+GST_GL_SYNC_META_API_TYPE
+GST_GL_SYNC_META_INFO
+</SECTION>
+
+<SECTION>
 <FILE>gstglupload</FILE>
 <TITLE>GstGLUpload</TITLE>
 GstGLUpload
 gst_gl_upload_new
-gst_gl_upload_set_format
-gst_gl_upload_get_format
-gst_gl_upload_perform_with_data
-gst_gl_upload_perform_with_gl_texture_upload_meta
+gst_gl_upload_get_caps
+gst_gl_upload_set_caps
+gst_gl_upload_propose_allocation
+gst_gl_upload_transform_caps
 gst_gl_upload_perform_with_buffer
 gst_gl_upload_release_buffer
 <SUBSECTION Standard>
@@ -1135,14 +1210,12 @@ GLCB_V2
 CRCB
 CDCB
 GstGLDisplayProjection
-gst_gl_ensure_display
 gst_gl_handle_set_context
 gst_gl_handle_context_query
 gst_gl_context_gen_texture
 gst_gl_context_del_texture
 gst_gl_context_gen_fbo
 gst_gl_context_del_fbo
-gst_gl_context_use_fbo
 gst_gl_context_use_fbo_v2
 gst_gl_context_gen_shader
 gst_gl_context_del_shader
@@ -1151,6 +1224,10 @@ gst_gl_context_set_error
 gst_gl_context_get_error
 gst_gl_context_clear_shader
 gst_gl_generate_texture_full
+gst_gl_caps_replace_all_caps_features
+gst_gl_ensure_element_data
+gst_gl_get_plane_data_size
+gst_gl_run_query
 </SECTION>
 
 <SECTION>
@@ -1180,6 +1257,10 @@ gst_gl_window_set_draw_callback
 gst_gl_window_set_resize_callback
 gst_gl_window_set_window_handle
 gst_gl_window_get_window_handle
+gst_gl_window_set_preferred_size
+gst_gl_window_show
+gst_gl_window_get_surface_dimensions
+gst_gl_window_handle_events
 <SUBSECTION Standard>
 GST_GL_IS_WINDOW
 GST_GL_IS_WINDOW_CLASS
@@ -1189,6 +1270,11 @@ GST_GL_WINDOW_CLASS
 GST_GL_WINDOW_GET_CLASS
 gst_gl_window_get_type
 GstGLWindowPrivate
+<SUBSECTION Private>
+gst_gl_window_key_event_cb
+gst_gl_window_mouse_event_cb
+gst_gl_window_send_key_event
+gst_gl_window_send_mouse_event
 </SECTION>
 
 <SECTION>
