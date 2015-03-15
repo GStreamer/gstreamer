@@ -678,15 +678,15 @@ _type gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject obj
     return (_type) ret;                                                                                      \
   }
 
-CALL_TYPE_METHOD (gboolean, boolean, Boolean, FALSE)
-    CALL_TYPE_METHOD (gint8, byte, Byte, G_MININT8)
-    CALL_TYPE_METHOD (gshort, short, Short, G_MINSHORT)
-    CALL_TYPE_METHOD (gint, int, Int, G_MININT)
-CALL_TYPE_METHOD (gchar, char, Char, 0)
-CALL_TYPE_METHOD (glong, long, Long, G_MINLONG)
-CALL_TYPE_METHOD (gfloat, float, Float, G_MINFLOAT)
-CALL_TYPE_METHOD (gdouble, double, Double, G_MINDOUBLE)
-CALL_TYPE_METHOD (jobject, object, Object, NULL)
+CALL_TYPE_METHOD (gboolean, boolean, Boolean, FALSE);
+CALL_TYPE_METHOD (gint8, byte, Byte, G_MININT8);
+CALL_TYPE_METHOD (gshort, short, Short, G_MINSHORT);
+CALL_TYPE_METHOD (gint, int, Int, G_MININT);
+CALL_TYPE_METHOD (gchar, char, Char, 0);
+CALL_TYPE_METHOD (glong, long, Long, G_MINLONG);
+CALL_TYPE_METHOD (gfloat, float, Float, G_MINFLOAT);
+CALL_TYPE_METHOD (gdouble, double, Double, G_MINDOUBLE);
+CALL_TYPE_METHOD (jobject, object, Object, NULL);
 
 gboolean
 gst_amc_jni_call_void_method (JNIEnv * env, GError ** err, jobject obj,
@@ -722,5 +722,5 @@ _type gst_amc_jni_get_##_name##_field (JNIEnv *env, GError ** err, jobject obj, 
     return res;                                                                                     \
   }
 
-GET_TYPE_FIELD (gint, int, Int, G_MININT)
-    GET_TYPE_FIELD (glong, long, Long, G_MINLONG)
+GET_TYPE_FIELD (gint, int, Int, G_MININT);
+GET_TYPE_FIELD (glong, long, Long, G_MINLONG);

@@ -88,17 +88,17 @@ gboolean gst_amc_jni_is_vm_started           (void);
 JNIEnv *gst_amc_jni_get_env                  (void);
 
 #define DEF_CALL_TYPE_METHOD(_type, _name,  _jname, _retval) \
-_type gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject obj, jmethodID methodID, ...);
+_type gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject obj, jmethodID methodID, ...)
 
-DEF_CALL_TYPE_METHOD (gboolean, boolean, Boolean, FALSE)
-DEF_CALL_TYPE_METHOD (gint8, byte, Byte, G_MININT8)
-DEF_CALL_TYPE_METHOD (gshort, short, Short, G_MINSHORT)
-DEF_CALL_TYPE_METHOD (gint, int, Int, G_MININT)
-DEF_CALL_TYPE_METHOD (gchar, char, Char, 0)
-DEF_CALL_TYPE_METHOD (glong, long, Long, G_MINLONG)
-DEF_CALL_TYPE_METHOD (gfloat, float, Float, G_MINFLOAT)
-DEF_CALL_TYPE_METHOD (gdouble, double, Double, G_MINDOUBLE)
-DEF_CALL_TYPE_METHOD (jobject, object, Object, NULL)
+DEF_CALL_TYPE_METHOD (gboolean, boolean, Boolean, FALSE);
+DEF_CALL_TYPE_METHOD (gint8, byte, Byte, G_MININT8);
+DEF_CALL_TYPE_METHOD (gshort, short, Short, G_MINSHORT);
+DEF_CALL_TYPE_METHOD (gint, int, Int, G_MININT);
+DEF_CALL_TYPE_METHOD (gchar, char, Char, 0);
+DEF_CALL_TYPE_METHOD (glong, long, Long, G_MINLONG);
+DEF_CALL_TYPE_METHOD (gfloat, float, Float, G_MINFLOAT);
+DEF_CALL_TYPE_METHOD (gdouble, double, Double, G_MINDOUBLE);
+DEF_CALL_TYPE_METHOD (jobject, object, Object, NULL);
 
 gboolean gst_amc_jni_call_void_method        (JNIEnv * env,
                                              GError ** error,
@@ -106,9 +106,9 @@ gboolean gst_amc_jni_call_void_method        (JNIEnv * env,
                                              jmethodID method, ...);
 
 #define DEF_GET_TYPE_FIELD(_type, _name, _jname, _retval) \
-_type gst_amc_jni_get_##_name##_field (JNIEnv *env, GError ** err, jobject obj, jfieldID fieldID);
+_type gst_amc_jni_get_##_name##_field (JNIEnv *env, GError ** err, jobject obj, jfieldID fieldID)
 
-DEF_GET_TYPE_FIELD (gint, int, Int, G_MININT)
-DEF_GET_TYPE_FIELD (glong, long, Long, G_MINLONG)
+DEF_GET_TYPE_FIELD (gint, int, Int, G_MININT);
+DEF_GET_TYPE_FIELD (glong, long, Long, G_MINLONG);
 
 #endif
