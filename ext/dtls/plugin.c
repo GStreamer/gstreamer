@@ -35,13 +35,19 @@
 
 #include <gst/gst.h>
 
-static gboolean plugin_init(GstPlugin *plugin)
+static gboolean
+plugin_init (GstPlugin * plugin)
 {
-    return gst_element_register(plugin, "erdtlsenc", GST_RANK_NONE, GST_TYPE_ER_DTLS_ENC)
-        && gst_element_register(plugin, "erdtlsdec", GST_RANK_NONE, GST_TYPE_ER_DTLS_DEC)
-        && gst_element_register(plugin, "erdtlssrtpdec", GST_RANK_NONE, GST_TYPE_ER_DTLS_SRTP_DEC)
-        && gst_element_register(plugin, "erdtlssrtpenc", GST_RANK_NONE, GST_TYPE_ER_DTLS_SRTP_ENC)
-        && gst_element_register(plugin, "erdtlssrtpdemux", GST_RANK_NONE, GST_TYPE_ER_DTLS_SRTP_DEMUX);
+  return gst_element_register (plugin, "erdtlsenc", GST_RANK_NONE,
+      GST_TYPE_ER_DTLS_ENC)
+      && gst_element_register (plugin, "erdtlsdec", GST_RANK_NONE,
+      GST_TYPE_ER_DTLS_DEC)
+      && gst_element_register (plugin, "erdtlssrtpdec", GST_RANK_NONE,
+      GST_TYPE_ER_DTLS_SRTP_DEC)
+      && gst_element_register (plugin, "erdtlssrtpenc", GST_RANK_NONE,
+      GST_TYPE_ER_DTLS_SRTP_ENC)
+      && gst_element_register (plugin, "erdtlssrtpdemux", GST_RANK_NONE,
+      GST_TYPE_ER_DTLS_SRTP_DEMUX);
 }
 
 /* PACKAGE: this is usually set by autotools depending on some _INIT macro
@@ -55,14 +61,10 @@ static gboolean plugin_init(GstPlugin *plugin)
 
 /* gstreamer looks for this structure to register plugins
  */
-GST_PLUGIN_DEFINE(
-    GST_VERSION_MAJOR,
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     erdtls,
     "Ericsson DTLS decoder and encoder plugins",
     plugin_init,
     PACKAGE_VERSION,
-    "BSD",
-    "OpenWebRTC GStreamer plugins",
-    "http://www.openwebrtc.io/"
-)
+    "BSD", "OpenWebRTC GStreamer plugins", "http://www.openwebrtc.io/")

@@ -32,108 +32,109 @@
 #define PACKET_IS_DTLS(b) (b > 0x13 && b < 0x40)
 #define PACKET_IS_RTP(b) (b > 0x7f && b < 0xc0)
 
-static GstStaticPadTemplate sink_template =
-    GST_STATIC_PAD_TEMPLATE("sink",
-        GST_PAD_SINK,
-        GST_PAD_ALWAYS,
-        GST_STATIC_CAPS_ANY
-    );
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate rtp_src_template =
-    GST_STATIC_PAD_TEMPLATE("rtp_src",
-        GST_PAD_SRC,
-        GST_PAD_ALWAYS,
-        GST_STATIC_CAPS(
-            "application/x-rtp;"
-            "application/x-rtcp;"
-            "application/x-srtp;"
-            "application/x-srtcp")
+    GST_STATIC_PAD_TEMPLATE ("rtp_src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtp;"
+        "application/x-rtcp;" "application/x-srtp;" "application/x-srtcp")
     );
 
 static GstStaticPadTemplate dtls_src_template =
-    GST_STATIC_PAD_TEMPLATE("dtls_src",
-        GST_PAD_SRC,
-        GST_PAD_ALWAYS,
-        GST_STATIC_CAPS("application/x-dtls")
+GST_STATIC_PAD_TEMPLATE ("dtls_src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-dtls")
     );
 
-GST_DEBUG_CATEGORY_STATIC(er_er_dtls_srtp_demux_debug);
+GST_DEBUG_CATEGORY_STATIC (er_er_dtls_srtp_demux_debug);
 #define GST_CAT_DEFAULT er_er_dtls_srtp_demux_debug
 
 #define gst_er_dtls_srtp_demux_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE(GstErDtlsSrtpDemux, gst_er_dtls_srtp_demux, GST_TYPE_ELEMENT,
-    GST_DEBUG_CATEGORY_INIT(er_er_dtls_srtp_demux_debug, "erdtlssrtpdemux", 0, "Ericsson DTLS SRTP Demultiplexer"));
+G_DEFINE_TYPE_WITH_CODE (GstErDtlsSrtpDemux, gst_er_dtls_srtp_demux,
+    GST_TYPE_ELEMENT, GST_DEBUG_CATEGORY_INIT (er_er_dtls_srtp_demux_debug,
+        "erdtlssrtpdemux", 0, "Ericsson DTLS SRTP Demultiplexer"));
 
-static GstFlowReturn sink_chain(GstPad *, GstObject *self, GstBuffer *);
+static GstFlowReturn sink_chain (GstPad *, GstObject * self, GstBuffer *);
 
-static void gst_er_dtls_srtp_demux_class_init(GstErDtlsSrtpDemuxClass *klass)
+static void
+gst_er_dtls_srtp_demux_class_init (GstErDtlsSrtpDemuxClass * klass)
 {
-    GstElementClass *element_class;
+  GstElementClass *element_class;
 
-    element_class = (GstElementClass *) klass;
+  element_class = (GstElementClass *) klass;
 
-    gst_element_class_add_pad_template(element_class,
-        gst_static_pad_template_get(&sink_template));
-    gst_element_class_add_pad_template(element_class,
-        gst_static_pad_template_get(&rtp_src_template));
-    gst_element_class_add_pad_template(element_class,
-        gst_static_pad_template_get(&dtls_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&rtp_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&dtls_src_template));
 
-    gst_element_class_set_static_metadata(element_class,
-        "DTLS SRTP Demultiplexer",
-        "DTLS/SRTP/Demux",
-        "Demultiplexes DTLS and SRTP packets",
-        "Patrik Oldsberg patrik.oldsberg@ericsson.com");
+  gst_element_class_set_static_metadata (element_class,
+      "DTLS SRTP Demultiplexer",
+      "DTLS/SRTP/Demux",
+      "Demultiplexes DTLS and SRTP packets",
+      "Patrik Oldsberg patrik.oldsberg@ericsson.com");
 }
 
-static void gst_er_dtls_srtp_demux_init(GstErDtlsSrtpDemux *self)
+static void
+gst_er_dtls_srtp_demux_init (GstErDtlsSrtpDemux * self)
 {
-    GstPad *sink;
+  GstPad *sink;
 
-    sink = gst_pad_new_from_static_template(&sink_template, "sink");
-    self->rtp_src = gst_pad_new_from_static_template(&rtp_src_template, "rtp_src");
-    self->dtls_src = gst_pad_new_from_static_template(&dtls_src_template, "dtls_src");
-    g_return_if_fail(sink);
-    g_return_if_fail(self->rtp_src);
-    g_return_if_fail(self->dtls_src);
+  sink = gst_pad_new_from_static_template (&sink_template, "sink");
+  self->rtp_src =
+      gst_pad_new_from_static_template (&rtp_src_template, "rtp_src");
+  self->dtls_src =
+      gst_pad_new_from_static_template (&dtls_src_template, "dtls_src");
+  g_return_if_fail (sink);
+  g_return_if_fail (self->rtp_src);
+  g_return_if_fail (self->dtls_src);
 
-    gst_pad_set_chain_function(sink, GST_DEBUG_FUNCPTR(sink_chain));
+  gst_pad_set_chain_function (sink, GST_DEBUG_FUNCPTR (sink_chain));
 
-    gst_element_add_pad(GST_ELEMENT(self), sink);
-    gst_element_add_pad(GST_ELEMENT(self), self->rtp_src);
-    gst_element_add_pad(GST_ELEMENT(self), self->dtls_src);
+  gst_element_add_pad (GST_ELEMENT (self), sink);
+  gst_element_add_pad (GST_ELEMENT (self), self->rtp_src);
+  gst_element_add_pad (GST_ELEMENT (self), self->dtls_src);
 }
 
-static GstFlowReturn sink_chain(GstPad *pad, GstObject *parent, GstBuffer *buffer)
+static GstFlowReturn
+sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-    GstErDtlsSrtpDemux *self = GST_ER_DTLS_SRTP_DEMUX(parent);
-    guint8 first_byte;
+  GstErDtlsSrtpDemux *self = GST_ER_DTLS_SRTP_DEMUX (parent);
+  guint8 first_byte;
 
-    if (gst_buffer_get_size(buffer) == 0) {
-        GST_LOG_OBJECT(self, "received buffer with size 0");
-        gst_buffer_unref(buffer);
-        return GST_FLOW_OK;
-    }
-
-    if (gst_buffer_extract(buffer, 0, &first_byte, 1) != 1) {
-        GST_WARNING_OBJECT(self, "could not extract first byte from buffer");
-        gst_buffer_unref(buffer);
-        return GST_FLOW_OK;
-    }
-
-    if (PACKET_IS_DTLS(first_byte)) {
-        GST_LOG_OBJECT(self, "pushing dtls packet");
-
-        return gst_pad_push(self->dtls_src, buffer);
-    }
-
-    if (PACKET_IS_RTP(first_byte)) {
-        GST_LOG_OBJECT(self, "pushing rtp packet");
-
-        return gst_pad_push(self->rtp_src, buffer);
-    }
-
-    GST_WARNING_OBJECT(self, "received invalid buffer: %x", first_byte);
-    gst_buffer_unref(buffer);
+  if (gst_buffer_get_size (buffer) == 0) {
+    GST_LOG_OBJECT (self, "received buffer with size 0");
+    gst_buffer_unref (buffer);
     return GST_FLOW_OK;
+  }
+
+  if (gst_buffer_extract (buffer, 0, &first_byte, 1) != 1) {
+    GST_WARNING_OBJECT (self, "could not extract first byte from buffer");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
+
+  if (PACKET_IS_DTLS (first_byte)) {
+    GST_LOG_OBJECT (self, "pushing dtls packet");
+
+    return gst_pad_push (self->dtls_src, buffer);
+  }
+
+  if (PACKET_IS_RTP (first_byte)) {
+    GST_LOG_OBJECT (self, "pushing rtp packet");
+
+    return gst_pad_push (self->rtp_src, buffer);
+  }
+
+  GST_WARNING_OBJECT (self, "received invalid buffer: %x", first_byte);
+  gst_buffer_unref (buffer);
+  return GST_FLOW_OK;
 }
