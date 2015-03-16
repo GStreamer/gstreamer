@@ -88,6 +88,7 @@ gboolean                gst_element_register                    (GstPlugin *plug
  * @GST_ELEMENT_FACTORY_TYPE_PARSER: Parser elements
  * @GST_ELEMENT_FACTORY_TYPE_PAYLOADER: Payloader elements
  * @GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER: Depayloader elements
+ * @GST_ELEMENT_FACTORY_TYPE_DECRYPTOR: Elements handling decryption
  * @GST_ELEMENT_FACTORY_TYPE_MAX_ELEMENTS: Private, do not use
  * @GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO: Elements handling video media types
  * @GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO: Elements handling audio media types
@@ -115,6 +116,7 @@ typedef guint64 GstElementFactoryListType;
 #define  GST_ELEMENT_FACTORY_TYPE_PAYLOADER      (G_GUINT64_CONSTANT (1) << 7)
 #define  GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER    (G_GUINT64_CONSTANT (1) << 8)
 #define  GST_ELEMENT_FACTORY_TYPE_FORMATTER      (G_GUINT64_CONSTANT (1) << 9)
+#define  GST_ELEMENT_FACTORY_TYPE_DECRYPTOR      (G_GUINT64_CONSTANT (1) << 10)
 
 #define  GST_ELEMENT_FACTORY_TYPE_MAX_ELEMENTS   (G_GUINT64_CONSTANT (1) << 48)
 
@@ -187,7 +189,7 @@ typedef guint64 GstElementFactoryListType;
  * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_DECODABLE \
-  (GST_ELEMENT_FACTORY_TYPE_DECODER | GST_ELEMENT_FACTORY_TYPE_DEMUXER | GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER | GST_ELEMENT_FACTORY_TYPE_PARSER)
+  (GST_ELEMENT_FACTORY_TYPE_DECODER | GST_ELEMENT_FACTORY_TYPE_DEMUXER | GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER | GST_ELEMENT_FACTORY_TYPE_PARSER | GST_ELEMENT_FACTORY_TYPE_DECRYPTOR)
 
 /* Element klass defines */
 #define GST_ELEMENT_FACTORY_KLASS_DECODER               "Decoder"
@@ -200,6 +202,7 @@ typedef guint64 GstElementFactoryListType;
 #define GST_ELEMENT_FACTORY_KLASS_PAYLOADER             "Payloader"
 #define GST_ELEMENT_FACTORY_KLASS_DEPAYLOADER           "Depayloader"
 #define GST_ELEMENT_FACTORY_KLASS_FORMATTER             "Formatter"
+#define GST_ELEMENT_FACTORY_KLASS_DECRYPTOR             "Decryptor"
 
 #define GST_ELEMENT_FACTORY_KLASS_MEDIA_VIDEO           "Video"
 #define GST_ELEMENT_FACTORY_KLASS_MEDIA_AUDIO           "Audio"
