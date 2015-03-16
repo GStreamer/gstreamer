@@ -97,6 +97,9 @@ G_DEFINE_TYPE (GstFlvDemux, gst_flv_demux, GST_TYPE_ELEMENT);
 /* two seconds - consider dts are resynced to another base if this different */
 #define RESYNC_THRESHOLD 2000
 
+/* how much stream time to wait for audio tags to appear after we have video, or vice versa */
+#define NO_MORE_PADS_THRESHOLD (6 * GST_SECOND)
+
 static gboolean flv_demux_handle_seek_push (GstFlvDemux * demux,
     GstEvent * event);
 static gboolean gst_flv_demux_handle_seek_pull (GstFlvDemux * demux,
@@ -1171,7 +1174,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   if (G_UNLIKELY (!demux->no_more_pads
           && (GST_CLOCK_DIFF (demux->audio_start,
-                  GST_BUFFER_TIMESTAMP (outbuf)) > 6 * GST_SECOND))) {
+                  GST_BUFFER_TIMESTAMP (outbuf)) > NO_MORE_PADS_THRESHOLD))) {
     GST_DEBUG_OBJECT (demux,
         "Signalling no-more-pads because no video stream was found"
         " after 6 seconds of audio");
@@ -1558,7 +1561,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   if (G_UNLIKELY (!demux->no_more_pads
           && (GST_CLOCK_DIFF (demux->video_start,
-                  GST_BUFFER_TIMESTAMP (outbuf)) > 6 * GST_SECOND))) {
+                  GST_BUFFER_TIMESTAMP (outbuf)) > NO_MORE_PADS_THRESHOLD))) {
     GST_DEBUG_OBJECT (demux,
         "Signalling no-more-pads because no audio stream was found"
         " after 6 seconds of video");
