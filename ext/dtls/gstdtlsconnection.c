@@ -125,8 +125,8 @@ er_dtls_connection_class_init (ErDtlsConnectionClass * klass)
   gobject_class->set_property = er_dtls_connection_set_property;
 
   connection_ex_index =
-      SSL_get_ex_new_index (0, "gstdtlsagent connection index", NULL, NULL,
-      NULL);
+      SSL_get_ex_new_index (0, (gpointer) "gstdtlsagent connection index", NULL,
+      NULL, NULL);
 
   signals[SIGNAL_ON_DECODER_KEY] =
       g_signal_new ("on-decoder-key", G_TYPE_FROM_CLASS (klass),
@@ -819,7 +819,8 @@ bio_method_read (BIO * bio, char *out_buffer, int size)
       "reading %d/%d bytes %d at offset %d, output buff size is %d", copy_size,
       priv->bio_buffer_len, internal_size, priv->bio_buffer_offset, size);
 
-  memcpy (out_buffer, priv->bio_buffer + priv->bio_buffer_offset, copy_size);
+  memcpy (out_buffer, (guint8 *) priv->bio_buffer + priv->bio_buffer_offset,
+      copy_size);
   priv->bio_buffer_offset += copy_size;
 
   if (priv->bio_buffer_len == priv->bio_buffer_offset) {
