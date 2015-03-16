@@ -559,6 +559,7 @@ EXPORTS
 	gst_event_new_gap
 	gst_event_new_latency
 	gst_event_new_navigation
+	gst_event_new_protection
 	gst_event_new_qos
 	gst_event_new_reconfigure
 	gst_event_new_seek
@@ -576,6 +577,7 @@ EXPORTS
 	gst_event_parse_gap
 	gst_event_parse_group_id
 	gst_event_parse_latency
+	gst_event_parse_protection
 	gst_event_parse_qos
 	gst_event_parse_seek
 	gst_event_parse_segment

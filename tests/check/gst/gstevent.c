@@ -235,6 +235,42 @@ GST_START_TEST (create_events)
     gst_event_unref (event);
   }
 
+  /* Protection */
+  {
+    GstBuffer *data;
+    GstMemory *mem;
+    const gchar *parsed_origin;
+    const gchar *parsed_id;
+    GstBuffer *parsed_data;
+    const gchar clearkey_sys_id[] = "78f32170-d883-11e0-9572-0800200c9a66";
+
+    data = gst_buffer_new ();
+    mem = gst_allocator_alloc (NULL, 40, NULL);
+    gst_buffer_insert_memory (data, -1, mem);
+    for (gsize offset = 0; offset < 40; offset += 4) {
+      gst_buffer_fill (data, offset, "pssi", 4);
+    }
+    ASSERT_MINI_OBJECT_REFCOUNT (data, "data", 1);
+    event = gst_event_new_protection (clearkey_sys_id, data, "test");
+    fail_if (event == NULL);
+    ASSERT_MINI_OBJECT_REFCOUNT (data, "data", 2);
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_PROTECTION);
+    fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
+    fail_unless (GST_EVENT_IS_SERIALIZED (event));
+    gst_event_parse_protection (event, &parsed_id, &parsed_data,
+        &parsed_origin);
+    fail_if (parsed_id == NULL);
+    fail_unless (g_strcmp0 (clearkey_sys_id, parsed_id) == 0);
+    fail_if (parsed_data == NULL);
+    fail_if (parsed_data != data);
+    ASSERT_MINI_OBJECT_REFCOUNT (data, "data", 2);
+    fail_if (parsed_origin == NULL);
+    fail_unless (g_strcmp0 ("test", parsed_origin) == 0);
+    gst_event_unref (event);
+    ASSERT_MINI_OBJECT_REFCOUNT (data, "data", 1);
+    gst_buffer_unref (data);
+  }
+
   /* Custom event types */
   {
     structure = gst_structure_new_empty ("application/x-custom");

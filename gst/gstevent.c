@@ -109,6 +109,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_SEGMENT, "segment", 0},
   {GST_EVENT_TAG, "tag", 0},
   {GST_EVENT_TOC, "toc", 0},
+  {GST_EVENT_PROTECTION, "protection", 0},
   {GST_EVENT_BUFFERSIZE, "buffersize", 0},
   {GST_EVENT_SINK_MESSAGE, "sink-message", 0},
   {GST_EVENT_EOS, "eos", 0},
@@ -1688,6 +1689,127 @@ gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
   if (uid != NULL)
     *uid = g_strdup (g_value_get_string (val));
 
+}
+
+/**
+ * SECTION:gstprotectionevent
+ * @short_description: Functions to support the passing of
+ * protection system specific information via events.
+ *
+ * In order for a decryption element to decrypt media
+ * protected using a specific system, it first needs all the
+ * protection system specific information necessary to acquire the decryption
+ * key(s) for that stream. The functions defined here enable this information
+ * to be passed in events from elements that extract it
+ * (e.g., ISOBMFF demuxers, MPEG DASH demuxers) to protection decrypter
+ * elements that use it.
+ *
+ * Events containing protection system specific information are created using
+ * #gst_event_new_protection, and they can be parsed by downstream elements
+ * using #gst_event_parse_protection.
+ *
+ * In Common Encryption, protection system specific information may be located
+ * within ISOBMFF files, both in movie (moov) boxes and movie fragment (moof)
+ * boxes; it may also be contained in ContentProtection elements within MPEG
+ * DASH MPDs. The events created by #gst_event_new_protection contain data
+ * identifying from which of these locations the encapsulated protection system
+ * specific information originated. This origin information is required as
+ * some protection systems use different encodings depending upon where the
+ * information originates.
+ *
+ * The events returned by #gst_event_new_protection are implemented
+ * in such a way as to ensure that the most recently-pushed protection info
+ * event of a particular @origin and @system_id will
+ * be stuck to the output pad of the sending element.
+ *
+ * Since: 1.6
+ */
+
+/**
+ * gst_event_new_protection:
+ * @system_id: (transfer none): a string holding a UUID that uniquely
+ * identifies a protection system.
+ * @data: (transfer none): a #GstBuffer holding protection system specific
+ * information. The reference count of the buffer will be incremented by one.
+ * @origin: a string indicating where the protection
+ * information carried in the event was extracted from. The allowed values
+ * of this string will depend upon the protection scheme.
+ *
+ * Creates a new event containing information specific to a particular
+ * protection system (uniquely identified by @system_id), by which that
+ * protection system can acquire key(s) to decrypt a protected stream.
+ *
+ * Returns: a #GST_EVENT_PROTECTION event, if successful; %NULL
+ * if unsuccessful.
+ *
+ * Since: 1.6
+ */
+GstEvent *
+gst_event_new_protection (const gchar * system_id,
+    GstBuffer * data, const gchar * origin)
+{
+  gchar *event_name;
+  GstEvent *event;
+  GstStructure *s;
+
+  g_return_val_if_fail (system_id != NULL, NULL);
+  g_return_val_if_fail (data != NULL, NULL);
+
+  event_name =
+      g_strconcat ("GstProtectionEvent", origin ? "-" : "",
+      origin ? origin : "", "-", system_id, NULL);
+
+  GST_CAT_INFO (GST_CAT_EVENT, "creating protection event %s", event_name);
+
+  s = gst_structure_new (event_name, "data", GST_TYPE_BUFFER, data,
+      "system_id", G_TYPE_STRING, system_id, NULL);
+  if (origin)
+    gst_structure_set (s, "origin", G_TYPE_STRING, origin, NULL);
+  event = gst_event_new_custom (GST_EVENT_PROTECTION, s);
+
+  g_free (event_name);
+  return event;
+}
+
+/**
+ * gst_event_parse_protection:
+ * @event: a #GST_EVENT_PROTECTION event.
+ * @system_id: (out) (allow-none) (transfer none): pointer to store the UUID
+ * string uniquely identifying a content protection system.
+ * @data: (out) (allow-none) (transfer none): pointer to store a #GstBuffer
+ * holding protection system specific information.
+ * @origin: (allow-none) (transfer none): pointer to store a value that
+ * indicates where the protection information carried by @event was extracted
+ * from.
+ *
+ * Parses an event containing protection system specific information and stores
+ * the results in @system_id, @data and @origin. The data stored in @system_id,
+ * @origin and @data are valid until @event is released.
+ *
+ * Since: 1.6
+ */
+void
+gst_event_parse_protection (GstEvent * event, const gchar ** system_id,
+    GstBuffer ** data, const gchar ** origin)
+{
+  const GstStructure *s;
+
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_PROTECTION);
+
+  s = gst_event_get_structure (event);
+
+  if (origin)
+    *origin = gst_structure_get_string (s, "origin");
+
+  if (system_id)
+    *system_id = gst_structure_get_string (s, "system_id");
+
+  if (data) {
+    const GValue *value = gst_structure_get_value (s, "data");
+    *data = gst_value_get_buffer (value);
+  }
 }
 
 /**

@@ -99,6 +99,8 @@ typedef enum {
  * @GST_EVENT_GAP: Marks a gap in the datastream.
  * @GST_EVENT_TOC: An event which indicates that a new table of contents (TOC)
  *                 was found or updated.
+ * @GST_EVENT_PROTECTION: An event which indicates that new or updated
+ *                 encryption information has been found in the stream.
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements should adjust their processing
  *                 rate.
@@ -147,6 +149,7 @@ typedef enum {
   GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (100, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (110, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_TOC                   = GST_EVENT_MAKE_TYPE (120, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
+  GST_EVENT_PROTECTION            = GST_EVENT_MAKE_TYPE (130, FLAG (DOWNSTREAM) | FLAG (SERIALIZED) | FLAG (STICKY) | FLAG (STICKY_MULTI)),
 
   /* non-sticky downstream serialized */
   GST_EVENT_SEGMENT_DONE          = GST_EVENT_MAKE_TYPE (150, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
@@ -530,6 +533,12 @@ void            gst_event_parse_tag             (GstEvent *event, GstTagList **t
 GstEvent*      gst_event_new_toc                (GstToc *toc, gboolean updated);
 void           gst_event_parse_toc              (GstEvent *event, GstToc **toc, gboolean *updated);
 
+/* Protection event */
+     GstEvent *gst_event_new_protection (const gchar * system_id,
+    GstBuffer * data, const gchar * origin);
+
+     void gst_event_parse_protection (GstEvent * event,
+    const gchar ** system_id, GstBuffer ** data, const gchar ** origin);
 
 /* buffer */
 GstEvent *      gst_event_new_buffer_size       (GstFormat format, gint64 minsize, gint64 maxsize,
