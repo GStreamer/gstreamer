@@ -1271,6 +1271,20 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   aagg->priv->offset = next_offset;
   agg->segment.position = next_timestamp;
 
+  /* If there was a timeout and there was a gap in data in out of the streams,
+   * then it's a very good time to for a resync with the timestamps.
+   */
+  if (timeout) {
+    for (iter = element->sinkpads; iter; iter = iter->next) {
+      GstAudioAggregatorPad *pad = GST_AUDIO_AGGREGATOR_PAD (iter->data);
+
+      GST_OBJECT_LOCK (pad);
+      if (pad->priv->output_offset < aagg->priv->offset)
+        pad->priv->output_offset = -1;
+      GST_OBJECT_UNLOCK (pad);
+    }
+  }
+
   GST_OBJECT_UNLOCK (agg);
 
   /* send it out */
