@@ -111,7 +111,7 @@ ssl_thread_id_function (void)
 }
 
 void
-_gst_dtls_init_openssl ()
+_gst_dtls_init_openssl (void)
 {
   static gsize is_init = 0;
   gint i;

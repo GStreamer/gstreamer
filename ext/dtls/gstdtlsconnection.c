@@ -109,7 +109,7 @@ static void openssl_poll (GstDtlsConnection *);
 static int openssl_verify_callback (int preverify_ok,
     X509_STORE_CTX * x509_ctx);
 
-static BIO_METHOD *BIO_s_gst_dtls_connection ();
+static BIO_METHOD *BIO_s_gst_dtls_connection (void);
 static int bio_method_write (BIO *, const char *data, int size);
 static int bio_method_read (BIO *, char *out_buffer, int size);
 static long bio_method_ctrl (BIO *, int cmd, long arg1, void *arg2);
@@ -249,8 +249,12 @@ gst_dtls_connection_set_property (GObject * object, guint prop_id,
 void
 gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
 {
+  GstDtlsConnectionPrivate *priv;
+
   g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
-  GstDtlsConnectionPrivate *priv = self->priv;
+
+  priv = self->priv;
+
   g_return_if_fail (priv->send_closure);
   g_return_if_fail (priv->ssl);
   g_return_if_fail (priv->bio);
@@ -286,11 +290,15 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
 void
 gst_dtls_connection_start_timeout (GstDtlsConnection * self)
 {
+  GstDtlsConnectionPrivate *priv;
+  GError *error = NULL;
+  gchar *thread_name;
+
   g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
 
-  GstDtlsConnectionPrivate *priv = self->priv;
-  GError *error = NULL;
-  gchar *thread_name = g_strdup_printf ("connection_thread_%p", self);
+  priv = self->priv;
+
+  thread_name = g_strdup_printf ("connection_thread_%p", self);
 
   GST_TRACE_OBJECT (self, "locking @ start_timeout");
   g_mutex_lock (&priv->mutex);
@@ -387,12 +395,14 @@ gst_dtls_connection_set_send_callback (GstDtlsConnection * self,
 gint
 gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gint len)
 {
-  g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
-  GstDtlsConnectionPrivate *priv = self->priv;
+  GstDtlsConnectionPrivate *priv;
   gint result;
 
+  g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
   g_return_val_if_fail (self->priv->ssl, 0);
   g_return_val_if_fail (self->priv->bio, 0);
+
+  priv = self->priv;
 
   GST_TRACE_OBJECT (self, "locking @ process");
   g_mutex_lock (&priv->mutex);
@@ -430,8 +440,9 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gint len)
 gint
 gst_dtls_connection_send (GstDtlsConnection * self, gpointer data, gint len)
 {
-  g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
   int ret = 0;
+
+  g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
 
   g_return_val_if_fail (self->priv->ssl, 0);
   g_return_val_if_fail (self->priv->bio, 0);
@@ -762,7 +773,7 @@ static BIO_METHOD custom_bio_methods = {
 };
 
 static BIO_METHOD *
-BIO_s_gst_dtls_connection ()
+BIO_s_gst_dtls_connection (void)
 {
   return &custom_bio_methods;
 }
