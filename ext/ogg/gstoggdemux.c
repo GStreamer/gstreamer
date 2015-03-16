@@ -1261,7 +1261,9 @@ gst_ogg_demux_setup_first_granule (GstOggDemux * ogg, GstOggPad * pad,
           GST_INFO_OBJECT (pad, "Starting with first granule %" G_GINT64_FORMAT,
               granule);
         } else {
-          GST_WARNING_OBJECT (pad, "Extrapolated first granule is negative");
+          pad->current_granule = 0;
+          GST_INFO_OBJECT (pad, "Extrapolated first granule is negative, "
+              "used to clip samples at start");
         }
       } else {
         GST_WARNING_OBJECT (pad,
