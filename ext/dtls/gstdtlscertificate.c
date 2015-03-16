@@ -27,10 +27,11 @@
 #include "config.h"
 #endif
 
+#include <gst/gst.h>
+
 #include "gstdtlscertificate.h"
 
 #include "gstdtlsagent.h"
-#include "gstdtlscommon.h"
 
 #ifdef __APPLE__
 # define __AVAILABILITYMACROS__
@@ -182,14 +183,14 @@ init_generated (GstDtlsCertificate * self)
   priv->private_key = EVP_PKEY_new ();
 
   if (!priv->private_key) {
-    LOG_WARNING (self, "failed to create private key");
+    GST_WARNING_OBJECT (self, "failed to create private key");
     return;
   }
 
   priv->x509 = X509_new ();
 
   if (!priv->x509) {
-    LOG_WARNING (self, "failed to create certificate");
+    GST_WARNING_OBJECT (self, "failed to create certificate");
     EVP_PKEY_free (priv->private_key);
     priv->private_key = NULL;
     return;
@@ -197,7 +198,7 @@ init_generated (GstDtlsCertificate * self)
   rsa = RSA_generate_key (2048, RSA_F4, NULL, NULL);
 
   if (!rsa) {
-    LOG_WARNING (self, "failed to generate RSA");
+    GST_WARNING_OBJECT (self, "failed to generate RSA");
     EVP_PKEY_free (priv->private_key);
     priv->private_key = NULL;
     X509_free (priv->x509);
@@ -206,7 +207,7 @@ init_generated (GstDtlsCertificate * self)
   }
 
   if (!EVP_PKEY_assign_RSA (priv->private_key, rsa)) {
-    LOG_WARNING (self, "failed to assign RSA");
+    GST_WARNING_OBJECT (self, "failed to assign RSA");
     RSA_free (rsa);
     rsa = NULL;
     EVP_PKEY_free (priv->private_key);
@@ -232,7 +233,7 @@ init_generated (GstDtlsCertificate * self)
   name = NULL;
 
   if (!X509_sign (priv->x509, priv->private_key, EVP_sha256 ())) {
-    LOG_WARNING (self, "failed to sign certificate");
+    GST_WARNING_OBJECT (self, "failed to sign certificate");
     EVP_PKEY_free (priv->private_key);
     priv->private_key = NULL;
     X509_free (priv->x509);
@@ -259,7 +260,7 @@ init_from_pem_string (GstDtlsCertificate * self, const gchar * pem)
   priv->x509 = PEM_read_bio_X509 (bio, NULL, NULL, NULL);
 
   if (!priv->x509) {
-    LOG_WARNING (self, "failed to read certificate from pem string");
+    GST_WARNING_OBJECT (self, "failed to read certificate from pem string");
     return;
   }
 
@@ -271,7 +272,7 @@ init_from_pem_string (GstDtlsCertificate * self, const gchar * pem)
   bio = NULL;
 
   if (!priv->private_key) {
-    LOG_WARNING (self, "failed to read private key from pem string");
+    GST_WARNING_OBJECT (self, "failed to read private key from pem string");
     X509_free (priv->x509);
     priv->x509 = NULL;
     return;

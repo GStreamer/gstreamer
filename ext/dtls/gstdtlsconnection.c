@@ -27,11 +27,12 @@
 #include "config.h"
 #endif
 
+#include <gst/gst.h>
+
 #include "gstdtlsconnection.h"
 
 #include "gstdtlsagent.h"
 #include "gstdtlscertificate.h"
-#include "gstdtlscommon.h"
 
 #ifdef __APPLE__
 # define __AVAILABILITYMACROS__
@@ -202,7 +203,7 @@ gst_dtls_connection_finalize (GObject * gobject)
   g_mutex_clear (&priv->mutex);
   g_cond_clear (&priv->condition);
 
-  LOG_DEBUG (self, "finalized");
+  GST_DEBUG_OBJECT (self, "finalized");
 
   G_OBJECT_CLASS (gst_dtls_connection_parent_class)->finalize (gobject);
 }
@@ -254,9 +255,9 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
   g_return_if_fail (priv->ssl);
   g_return_if_fail (priv->bio);
 
-  LOG_TRACE (self, "locking @ start");
+  GST_TRACE_OBJECT (self, "locking @ start");
   g_mutex_lock (&priv->mutex);
-  LOG_TRACE (self, "locked @ start");
+  GST_TRACE_OBJECT (self, "locked @ start");
 
   priv->is_alive = TRUE;
   priv->timeout_set = FALSE;
@@ -278,7 +279,7 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
   log_state (self, "first poll done");
   priv->thread = NULL;
 
-  LOG_TRACE (self, "unlocking @ start");
+  GST_TRACE_OBJECT (self, "unlocking @ start");
   g_mutex_unlock (&priv->mutex);
 }
 
@@ -291,22 +292,22 @@ gst_dtls_connection_start_timeout (GstDtlsConnection * self)
   GError *error = NULL;
   gchar *thread_name = g_strdup_printf ("connection_thread_%p", self);
 
-  LOG_TRACE (self, "locking @ start_timeout");
+  GST_TRACE_OBJECT (self, "locking @ start_timeout");
   g_mutex_lock (&priv->mutex);
-  LOG_TRACE (self, "locked @ start_timeout");
+  GST_TRACE_OBJECT (self, "locked @ start_timeout");
 
-  LOG_INFO (self, "starting connection timeout");
+  GST_INFO_OBJECT (self, "starting connection timeout");
   priv->thread = g_thread_try_new (thread_name,
       (GThreadFunc) connection_timeout_thread_func, self, &error);
   if (error) {
-    LOG_WARNING (self, "error creating connection thread: %s (%d)",
+    GST_WARNING_OBJECT (self, "error creating connection thread: %s (%d)",
         error->message, error->code);
     g_clear_error (&error);
   }
 
   g_free (thread_name);
 
-  LOG_TRACE (self, "unlocking @ start_timeout");
+  GST_TRACE_OBJECT (self, "unlocking @ start_timeout");
   g_mutex_unlock (&priv->mutex);
 }
 
@@ -317,21 +318,21 @@ gst_dtls_connection_stop (GstDtlsConnection * self)
   g_return_if_fail (self->priv->ssl);
   g_return_if_fail (self->priv->bio);
 
-  LOG_DEBUG (self, "stopping connection");
+  GST_DEBUG_OBJECT (self, "stopping connection");
 
-  LOG_TRACE (self, "locking @ stop");
+  GST_TRACE_OBJECT (self, "locking @ stop");
   g_mutex_lock (&self->priv->mutex);
-  LOG_TRACE (self, "locked @ stop");
+  GST_TRACE_OBJECT (self, "locked @ stop");
 
   self->priv->is_alive = FALSE;
-  LOG_TRACE (self, "signaling @ stop");
+  GST_TRACE_OBJECT (self, "signaling @ stop");
   g_cond_signal (&self->priv->condition);
-  LOG_TRACE (self, "signaled @ stop");
+  GST_TRACE_OBJECT (self, "signaled @ stop");
 
-  LOG_TRACE (self, "unlocking @ stop");
+  GST_TRACE_OBJECT (self, "unlocking @ stop");
   g_mutex_unlock (&self->priv->mutex);
 
-  LOG_DEBUG (self, "stopped connection");
+  GST_DEBUG_OBJECT (self, "stopped connection");
 }
 
 void
@@ -341,18 +342,18 @@ gst_dtls_connection_close (GstDtlsConnection * self)
   g_return_if_fail (self->priv->ssl);
   g_return_if_fail (self->priv->bio);
 
-  LOG_DEBUG (self, "closing connection");
+  GST_DEBUG_OBJECT (self, "closing connection");
 
-  LOG_TRACE (self, "locking @ close");
+  GST_TRACE_OBJECT (self, "locking @ close");
   g_mutex_lock (&self->priv->mutex);
-  LOG_TRACE (self, "locked @ close");
+  GST_TRACE_OBJECT (self, "locked @ close");
 
   if (self->priv->is_alive) {
     self->priv->is_alive = FALSE;
     g_cond_signal (&self->priv->condition);
   }
 
-  LOG_TRACE (self, "unlocking @ close");
+  GST_TRACE_OBJECT (self, "unlocking @ close");
   g_mutex_unlock (&self->priv->mutex);
 
   if (self->priv->thread) {
@@ -360,7 +361,7 @@ gst_dtls_connection_close (GstDtlsConnection * self)
     self->priv->thread = NULL;
   }
 
-  LOG_DEBUG (self, "closed connection");
+  GST_DEBUG_OBJECT (self, "closed connection");
 }
 
 void
@@ -369,9 +370,9 @@ gst_dtls_connection_set_send_callback (GstDtlsConnection * self,
 {
   g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
 
-  LOG_TRACE (self, "locking @ set_send_callback");
+  GST_TRACE_OBJECT (self, "locking @ set_send_callback");
   g_mutex_lock (&self->priv->mutex);
-  LOG_TRACE (self, "locked @ set_send_callback");
+  GST_TRACE_OBJECT (self, "locked @ set_send_callback");
 
   self->priv->send_closure = closure;
 
@@ -379,7 +380,7 @@ gst_dtls_connection_set_send_callback (GstDtlsConnection * self,
     g_closure_set_marshal (closure, g_cclosure_marshal_generic);
   }
 
-  LOG_TRACE (self, "unlocking @ set_send_callback");
+  GST_TRACE_OBJECT (self, "unlocking @ set_send_callback");
   g_mutex_unlock (&self->priv->mutex);
 }
 
@@ -393,9 +394,9 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gint len)
   g_return_val_if_fail (self->priv->ssl, 0);
   g_return_val_if_fail (self->priv->bio, 0);
 
-  LOG_TRACE (self, "locking @ process");
+  GST_TRACE_OBJECT (self, "locking @ process");
   g_mutex_lock (&priv->mutex);
-  LOG_TRACE (self, "locked @ process");
+  GST_TRACE_OBJECT (self, "locked @ process");
 
   g_warn_if_fail (!priv->bio_buffer);
 
@@ -418,9 +419,9 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gint len)
 
   log_state (self, "process after poll");
 
-  LOG_DEBUG (self, "read result: %d", result);
+  GST_DEBUG_OBJECT (self, "read result: %d", result);
 
-  LOG_TRACE (self, "unlocking @ process");
+  GST_TRACE_OBJECT (self, "unlocking @ process");
   g_mutex_unlock (&priv->mutex);
 
   return result;
@@ -435,19 +436,21 @@ gst_dtls_connection_send (GstDtlsConnection * self, gpointer data, gint len)
   g_return_val_if_fail (self->priv->ssl, 0);
   g_return_val_if_fail (self->priv->bio, 0);
 
-  LOG_TRACE (self, "locking @ send");
+  GST_TRACE_OBJECT (self, "locking @ send");
   g_mutex_lock (&self->priv->mutex);
-  LOG_TRACE (self, "locked @ send");
+  GST_TRACE_OBJECT (self, "locked @ send");
 
   if (SSL_is_init_finished (self->priv->ssl)) {
     ret = SSL_write (self->priv->ssl, data, len);
-    LOG_DEBUG (self, "data sent: input was %d B, output is %d B", len, ret);
+    GST_DEBUG_OBJECT (self, "data sent: input was %d B, output is %d B", len,
+        ret);
   } else {
-    LOG_WARNING (self, "tried to send data before handshake was complete");
+    GST_WARNING_OBJECT (self,
+        "tried to send data before handshake was complete");
     ret = 0;
   }
 
-  LOG_TRACE (self, "unlocking @ send");
+  GST_TRACE_OBJECT (self, "unlocking @ send");
   g_mutex_unlock (&self->priv->mutex);
 
   return ret;
@@ -477,7 +480,7 @@ log_state (GstDtlsConnection * self, const gchar * str)
   states |= (! !SSL_want_write (priv->ssl) << 20);
   states |= (! !SSL_want_read (priv->ssl) << 24);
 
-  LOG_LOG (self, "%s: role=%s buf=(%d,%p:%d/%d) %x|%x %s",
+  GST_LOG_OBJECT (self, "%s: role=%s buf=(%d,%p:%d/%d) %x|%x %s",
       str,
       priv->is_client ? "client" : "server",
       pqueue_size (priv->ssl->d1->sent_messages),
@@ -496,30 +499,31 @@ connection_timeout_thread_func (GstDtlsConnection * self)
   gint ret;
 
   while (priv->is_alive) {
-    LOG_TRACE (self, "locking @ timeout");
+    GST_TRACE_OBJECT (self, "locking @ timeout");
     g_mutex_lock (&priv->mutex);
-    LOG_TRACE (self, "locked @ timeout");
+    GST_TRACE_OBJECT (self, "locked @ timeout");
 
     if (DTLSv1_get_timeout (priv->ssl, &timeout)) {
       wait_time = timeout.tv_sec * G_USEC_PER_SEC + timeout.tv_usec;
 
       if (wait_time) {
-        LOG_DEBUG (self, "waiting for %" G_GINT64_FORMAT " usec", wait_time);
+        GST_DEBUG_OBJECT (self, "waiting for %" G_GINT64_FORMAT " usec",
+            wait_time);
 
         end_time = g_get_monotonic_time () + wait_time;
 
-        LOG_TRACE (self, "wait @ timeout");
+        GST_TRACE_OBJECT (self, "wait @ timeout");
         g_cond_wait_until (&priv->condition, &priv->mutex, end_time);
-        LOG_TRACE (self, "continued @ timeout");
+        GST_TRACE_OBJECT (self, "continued @ timeout");
       }
 
       ret = DTLSv1_handle_timeout (priv->ssl);
 
-      LOG_DEBUG (self, "handle timeout returned %d, is_alive: %d", ret,
+      GST_DEBUG_OBJECT (self, "handle timeout returned %d, is_alive: %d", ret,
           priv->is_alive);
 
       if (ret < 0) {
-        LOG_TRACE (self, "unlocking @ timeout failed");
+        GST_TRACE_OBJECT (self, "unlocking @ timeout failed");
         g_mutex_unlock (&priv->mutex);
         break;                  /* self failed after DTLS1_TMO_ALERT_COUNT (12) attempts */
       }
@@ -530,18 +534,18 @@ connection_timeout_thread_func (GstDtlsConnection * self)
         log_state (self, "handling timeout after poll");
       }
     } else {
-      LOG_DEBUG (self, "waiting indefinitely");
+      GST_DEBUG_OBJECT (self, "waiting indefinitely");
 
       priv->timeout_set = FALSE;
 
       while (!priv->timeout_set && priv->is_alive) {
-        LOG_TRACE (self, "wait @ timeout");
+        GST_TRACE_OBJECT (self, "wait @ timeout");
         g_cond_wait (&priv->condition, &priv->mutex);
       }
-      LOG_TRACE (self, "continued @ timeout");
+      GST_TRACE_OBJECT (self, "continued @ timeout");
     }
 
-    LOG_TRACE (self, "unlocking @ timeout");
+    GST_TRACE_OBJECT (self, "unlocking @ timeout");
     g_mutex_unlock (&priv->mutex);
   }
 
@@ -589,13 +593,13 @@ export_srtp_keys (GstDtlsConnection * self)
       NULL, 0, 0);
 
   if (!success) {
-    LOG_WARNING (self, "failed to export srtp keys");
+    GST_WARNING_OBJECT (self, "failed to export srtp keys");
     return;
   }
 
   profile = SSL_get_selected_srtp_profile (self->priv->ssl);
 
-  LOG_INFO (self, "keys received, profile is %s", profile->name);
+  GST_INFO_OBJECT (self, "keys received, profile is %s", profile->name);
 
   switch (profile->id) {
     case SRTP_AES128_CM_SHA1_80:
@@ -607,7 +611,7 @@ export_srtp_keys (GstDtlsConnection * self)
       auth = GST_DTLS_SRTP_AUTH_HMAC_SHA1_32;
       break;
     default:
-      LOG_WARNING (self, "invalid crypto suite set by handshake");
+      GST_WARNING_OBJECT (self, "invalid crypto suite set by handshake");
       goto beach;
   }
 
@@ -647,19 +651,20 @@ openssl_poll (GstDtlsConnection * self)
 
   if (ret == 1) {
     if (!self->priv->keys_exported) {
-      LOG_INFO (self, "handshake just completed successfully, exporting keys");
+      GST_INFO_OBJECT (self,
+          "handshake just completed successfully, exporting keys");
       export_srtp_keys (self);
     } else {
-      LOG_INFO (self, "handshake is completed");
+      GST_INFO_OBJECT (self, "handshake is completed");
     }
     return;
   } else {
     if (ret == 0) {
-      LOG_DEBUG (self, "do_handshake encountered EOF");
+      GST_DEBUG_OBJECT (self, "do_handshake encountered EOF");
     } else if (ret == -1) {
-      LOG_WARNING (self, "do_handshake encountered BIO error");
+      GST_WARNING_OBJECT (self, "do_handshake encountered BIO error");
     } else {
-      LOG_DEBUG (self, "do_handshake returned %d", ret);
+      GST_DEBUG_OBJECT (self, "do_handshake returned %d", ret);
     }
   }
 
@@ -667,24 +672,24 @@ openssl_poll (GstDtlsConnection * self)
 
   switch (error) {
     case SSL_ERROR_NONE:
-      LOG_WARNING (self, "no error, handshake should be done");
+      GST_WARNING_OBJECT (self, "no error, handshake should be done");
       break;
     case SSL_ERROR_SSL:
-      LOG_LOG (self, "SSL error %d: %s", error,
+      GST_LOG_OBJECT (self, "SSL error %d: %s", error,
           ERR_error_string (ERR_get_error (), buf));
       break;
     case SSL_ERROR_WANT_READ:
-      LOG_LOG (self, "SSL wants read");
+      GST_LOG_OBJECT (self, "SSL wants read");
       break;
     case SSL_ERROR_WANT_WRITE:
-      LOG_LOG (self, "SSL wants write");
+      GST_LOG_OBJECT (self, "SSL wants write");
       break;
     case SSL_ERROR_SYSCALL:{
-      LOG_LOG (self, "SSL syscall (error) : %lu", ERR_get_error ());
+      GST_LOG_OBJECT (self, "SSL syscall (error) : %lu", ERR_get_error ());
       break;
     }
     default:
-      LOG_WARNING (self, "Unknown SSL error: %d, ret: %d", error, ret);
+      GST_WARNING_OBJECT (self, "Unknown SSL error: %d, ret: %d", error, ret);
   }
 }
 
@@ -706,7 +711,8 @@ openssl_verify_callback (int preverify_ok, X509_STORE_CTX * x509_ctx)
   pem = _gst_dtls_x509_to_pem (x509_ctx->cert);
 
   if (!pem) {
-    LOG_WARNING (self, "failed to convert received certificate to pem format");
+    GST_WARNING_OBJECT (self,
+        "failed to convert received certificate to pem format");
   } else {
     bio = BIO_new (BIO_s_mem ());
     if (bio) {
@@ -718,10 +724,10 @@ openssl_verify_callback (int preverify_ok, X509_STORE_CTX * x509_ctx)
           XN_FLAG_MULTILINE);
       BIO_read (bio, buffer, len);
       buffer[len] = '\0';
-      LOG_DEBUG (self, "Peer certificate received:\n%s", buffer);
+      GST_DEBUG_OBJECT (self, "Peer certificate received:\n%s", buffer);
       BIO_free (bio);
     } else {
-      LOG_DEBUG (self, "failed to create certificate print membio");
+      GST_DEBUG_OBJECT (self, "failed to create certificate print membio");
     }
 
     g_signal_emit (self, signals[SIGNAL_ON_PEER_CERTIFICATE], 0, pem,
@@ -766,7 +772,7 @@ bio_method_write (BIO * bio, const char *data, int size)
 {
   GstDtlsConnection *self = GST_DTLS_CONNECTION (bio->ptr);
 
-  LOG_LOG (self, "BIO: writing %d", size);
+  GST_LOG_OBJECT (self, "BIO: writing %d", size);
 
   if (self->priv->send_closure) {
     GValue values[3] = { G_VALUE_INIT };
@@ -797,12 +803,12 @@ bio_method_read (BIO * bio, char *out_buffer, int size)
   internal_size = priv->bio_buffer_len - priv->bio_buffer_offset;
 
   if (!priv->bio_buffer) {
-    LOG_LOG (self, "BIO: EOF");
+    GST_LOG_OBJECT (self, "BIO: EOF");
     return 0;
   }
 
   if (!out_buffer || size <= 0) {
-    LOG_WARNING (self, "BIO: read got invalid arguments");
+    GST_WARNING_OBJECT (self, "BIO: read got invalid arguments");
     if (internal_size) {
       BIO_set_retry_read (bio);
     }
@@ -815,7 +821,7 @@ bio_method_read (BIO * bio, char *out_buffer, int size)
     copy_size = size;
   }
 
-  LOG_DEBUG (self,
+  GST_DEBUG_OBJECT (self,
       "reading %d/%d bytes %d at offset %d, output buff size is %d", copy_size,
       priv->bio_buffer_len, internal_size, priv->bio_buffer_offset, size);
 
@@ -839,7 +845,7 @@ bio_method_ctrl (BIO * bio, int cmd, long arg1, void *arg2)
   switch (cmd) {
     case BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT:
     case BIO_CTRL_DGRAM_SET_RECV_TIMEOUT:
-      LOG_LOG (self, "BIO: Timeout set");
+      GST_LOG_OBJECT (self, "BIO: Timeout set");
       priv->timeout_set = TRUE;
       g_cond_signal (&priv->condition);
       return 1;
@@ -847,32 +853,32 @@ bio_method_ctrl (BIO * bio, int cmd, long arg1, void *arg2)
       priv->bio_buffer = NULL;
       priv->bio_buffer_len = 0;
       priv->bio_buffer_offset = 0;
-      LOG_LOG (self, "BIO: EOF reset");
+      GST_LOG_OBJECT (self, "BIO: EOF reset");
       return 1;
     case BIO_CTRL_EOF:{
       gint eof = !(priv->bio_buffer_len - priv->bio_buffer_offset);
-      LOG_LOG (self, "BIO: EOF query returned %d", eof);
+      GST_LOG_OBJECT (self, "BIO: EOF query returned %d", eof);
       return eof;
     }
     case BIO_CTRL_WPENDING:
-      LOG_LOG (self, "BIO: pending write");
+      GST_LOG_OBJECT (self, "BIO: pending write");
       return 1;
     case BIO_CTRL_PENDING:{
       gint pending = priv->bio_buffer_len - priv->bio_buffer_offset;
-      LOG_LOG (self, "BIO: %d bytes pending", pending);
+      GST_LOG_OBJECT (self, "BIO: %d bytes pending", pending);
       return pending;
     }
     case BIO_CTRL_FLUSH:
-      LOG_LOG (self, "BIO: flushing");
+      GST_LOG_OBJECT (self, "BIO: flushing");
       return 1;
     case BIO_CTRL_DGRAM_QUERY_MTU:
-      LOG_DEBUG (self, "BIO: MTU query, returning 0...");
+      GST_DEBUG_OBJECT (self, "BIO: MTU query, returning 0...");
       return 0;
     case BIO_CTRL_DGRAM_MTU_EXCEEDED:
-      LOG_WARNING (self, "BIO: MTU exceeded");
+      GST_WARNING_OBJECT (self, "BIO: MTU exceeded");
       return 0;
     default:
-      LOG_LOG (self, "BIO: unhandled ctrl, %d", cmd);
+      GST_LOG_OBJECT (self, "BIO: unhandled ctrl, %d", cmd);
       return 0;
   }
 }
@@ -880,7 +886,7 @@ bio_method_ctrl (BIO * bio, int cmd, long arg1, void *arg2)
 static int
 bio_method_new (BIO * bio)
 {
-  LOG_LOG (NULL, "BIO: new");
+  GST_LOG_OBJECT (NULL, "BIO: new");
 
   bio->shutdown = 0;
   bio->init = 1;
@@ -892,10 +898,10 @@ static int
 bio_method_free (BIO * bio)
 {
   if (!bio) {
-    LOG_LOG (NULL, "BIO free called with null bio");
+    GST_LOG_OBJECT (NULL, "BIO free called with null bio");
     return 0;
   }
 
-  LOG_LOG (GST_DTLS_CONNECTION (bio->ptr), "BIO free");
+  GST_LOG_OBJECT (GST_DTLS_CONNECTION (bio->ptr), "BIO free");
   return 0;
 }

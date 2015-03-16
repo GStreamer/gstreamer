@@ -27,9 +27,9 @@
 #include "config.h"
 #endif
 
-#include "gstdtlsagent.h"
+#include <gst/gst.h>
 
-#include "gstdtlscommon.h"
+#include "gstdtlsagent.h"
 
 #ifdef __APPLE__
 # define __AVAILABILITYMACROS__
@@ -85,7 +85,7 @@ ssl_locking_function (gint mode, gint lock_num, const gchar * file, gint line)
   reading = mode & CRYPTO_READ;
   lock = &ssl_locks[lock_num];
 
-  LOG_LOG (NULL, "%s SSL lock for %s, thread=%p location=%s:%d",
+  GST_LOG_OBJECT (NULL, "%s SSL lock for %s, thread=%p location=%s:%d",
       locking ? "locking" : "unlocking", reading ? "reading" : "writing",
       g_thread_self (), file, line);
 
@@ -119,12 +119,13 @@ _gst_dtls_init_openssl ()
 
   if (g_once_init_enter (&is_init)) {
     if (OPENSSL_VERSION_NUMBER < 0x1000100fL) {
-      LOG_WARNING (NULL, "Incorrect OpenSSL version, should be >= 1.0.1, is %s",
+      GST_WARNING_OBJECT (NULL,
+          "Incorrect OpenSSL version, should be >= 1.0.1, is %s",
           OPENSSL_VERSION_TEXT);
       g_assert_not_reached ();
     }
 
-    LOG_INFO (NULL, "initializing openssl %lx", OPENSSL_VERSION_NUMBER);
+    GST_INFO_OBJECT (NULL, "initializing openssl %lx", OPENSSL_VERSION_NUMBER);
     SSL_library_init ();
     SSL_load_error_strings ();
     ERR_load_BIO_strings ();
@@ -177,7 +178,7 @@ gst_dtls_agent_init (GstDtlsAgent * self)
 
     priv->ssl_context = NULL;
 
-    LOG_WARNING (self, "Error creating SSL Context: %s",
+    GST_WARNING_OBJECT (self, "Error creating SSL Context: %s",
         ERR_error_string (ERR_get_error (), buf));
 
     g_return_if_reached ();
@@ -201,7 +202,7 @@ gst_dtls_agent_finalize (GObject * gobject)
   SSL_CTX_free (priv->ssl_context);
   priv->ssl_context = NULL;
 
-  LOG_DEBUG (gobject, "finalized");
+  GST_DEBUG_OBJECT (gobject, "finalized");
 
   G_OBJECT_CLASS (gst_dtls_agent_parent_class)->finalize (gobject);
 }
@@ -224,18 +225,18 @@ gst_dtls_agent_set_property (GObject * object, guint prop_id,
 
       if (!SSL_CTX_use_certificate (self->priv->ssl_context,
               _gst_dtls_certificate_get_internal_certificate (certificate))) {
-        LOG_WARNING (self, "could not use certificate");
+        GST_WARNING_OBJECT (self, "could not use certificate");
         g_return_if_reached ();
       }
 
       if (!SSL_CTX_use_PrivateKey (self->priv->ssl_context,
               _gst_dtls_certificate_get_internal_key (certificate))) {
-        LOG_WARNING (self, "could not use private key");
+        GST_WARNING_OBJECT (self, "could not use private key");
         g_return_if_reached ();
       }
 
       if (!SSL_CTX_check_private_key (self->priv->ssl_context)) {
-        LOG_WARNING (self, "invalid private key");
+        GST_WARNING_OBJECT (self, "invalid private key");
         g_return_if_reached ();
       }
       break;

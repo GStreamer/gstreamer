@@ -31,6 +31,5 @@ noinst_HEADERS = \
     gstdtlssrtpenc.h \
     gstdtlsagent.h \
     gstdtlsconnection.h \
-    gstdtlscertificate.h \
-    gstdtlscommon.h
+    gstdtlscertificate.h
 

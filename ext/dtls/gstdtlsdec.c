@@ -49,8 +49,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_dtls_dec_debug);
 G_DEFINE_TYPE_WITH_CODE (GstDtlsDec, gst_dtls_dec, GST_TYPE_ELEMENT,
     GST_DEBUG_CATEGORY_INIT (gst_dtls_dec_debug, "dtlsdec", 0, "DTLS Decoder"));
 
-#define UNUSED(param) while (0) { (void)(param); }
-
 enum
 {
   SIGNAL_ON_KEY_RECEIVED,
@@ -387,7 +385,6 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
   gpointer key_dup;
   gchar *key_str;
 
-  UNUSED (connection);
   g_return_if_fail (GST_IS_DTLS_DEC (self));
 
   self->srtp_cipher = cipher;
@@ -429,7 +426,6 @@ on_pegst_certificate_received (GstDtlsConnection * connection, gchar * pem,
 {
   GWeakRef *ref;
 
-  UNUSED (connection);
   g_return_val_if_fail (GST_IS_DTLS_DEC (self), TRUE);
 
   GST_DEBUG_OBJECT (self, "Received peer certificate PEM: \n%s", pem);
@@ -557,8 +553,6 @@ get_agent_by_pem (const gchar * pem)
 static void
 agent_weak_ref_notify (gchar * pem, GstDtlsAgent * agent)
 {
-  UNUSED (agent);
-
   G_LOCK (agent_table);
   g_hash_table_remove (agent_table, pem);
   G_UNLOCK (agent_table);
@@ -633,8 +627,6 @@ create_connection (GstDtlsDec * self, gchar * id)
 static void
 connection_weak_ref_notify (gchar * id, GstDtlsConnection * connection)
 {
-  UNUSED (connection);
-
   G_LOCK (connection_table);
   g_hash_table_remove (connection_table, id);
   G_UNLOCK (connection_table);

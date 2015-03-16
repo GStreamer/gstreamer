@@ -57,8 +57,6 @@ G_DEFINE_TYPE_WITH_CODE (GstDtlsSrtpDec, gst_dtls_srtp_dec,
     GST_TYPE_DTLS_SRTP_BIN, GST_DEBUG_CATEGORY_INIT (gst_dtls_srtp_dec_debug,
         "dtlssrtpdec", 0, "DTLS Decoder"));
 
-#define UNUSED(param) while (0) { (void)(param); }
-
 enum
 {
   PROP_0,
@@ -396,8 +394,6 @@ static void
 on_pegst_pem (GstElement * srtp_decoder, GParamSpec * pspec,
     GstDtlsSrtpDec * self)
 {
-  UNUSED (srtp_decoder);
-  UNUSED (pspec);
   g_return_if_fail (self);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_PEER_PEM]);
 }
