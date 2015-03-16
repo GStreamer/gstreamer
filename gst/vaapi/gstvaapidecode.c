@@ -736,7 +736,6 @@ gst_vaapidecode_close (GstVideoDecoder * vdec)
   return TRUE;
 }
 
-#if GST_CHECK_VERSION(1,2,0)
 static gboolean
 gst_vaapidecode_flush (GstVideoDecoder * vdec)
 {
@@ -749,18 +748,6 @@ gst_vaapidecode_flush (GstVideoDecoder * vdec)
    * seeking: we have to reset the internal state */
   return gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, TRUE);
 }
-#else
-static gboolean
-gst_vaapidecode_reset (GstVideoDecoder * vdec, gboolean hard)
-{
-  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
-
-  /* In GStreamer 1.0 context, this means a flush */
-  if (decode->decoder && !hard && !gst_vaapidecode_internal_flush (vdec))
-    return FALSE;
-  return gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, hard);
-}
-#endif
 
 static gboolean
 gst_vaapidecode_set_format (GstVideoDecoder * vdec, GstVideoCodecState * state)
@@ -854,11 +841,7 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   vdec_class->open = GST_DEBUG_FUNCPTR (gst_vaapidecode_open);
   vdec_class->close = GST_DEBUG_FUNCPTR (gst_vaapidecode_close);
   vdec_class->set_format = GST_DEBUG_FUNCPTR (gst_vaapidecode_set_format);
-#if GST_CHECK_VERSION(1,2,0)
   vdec_class->flush = GST_DEBUG_FUNCPTR (gst_vaapidecode_flush);
-#else
-  vdec_class->reset = GST_DEBUG_FUNCPTR (gst_vaapidecode_reset);
-#endif
   vdec_class->parse = GST_DEBUG_FUNCPTR (gst_vaapidecode_parse);
   vdec_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vaapidecode_handle_frame);
   vdec_class->finish = GST_DEBUG_FUNCPTR (gst_vaapidecode_finish);
