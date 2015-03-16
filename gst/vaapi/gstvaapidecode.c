@@ -1060,7 +1060,7 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
 #else
       GstPad *pad = GST_VIDEO_DECODER_SRC_PAD (vdec);
       GstObject *parent = gst_pad_get_parent (pad);
-      ret = GST_PAD_QUERY_FUNCTION_CALL (plugin->sinkpad_query, pad, parent,
+      ret = GST_PAD_QUERY_FUNCTION_CALL (plugin->srcpad_query, pad, parent,
           query);
       if (parent)
         gst_object_unref (parent);
