@@ -30,8 +30,8 @@
 
 #include "gstdtlssrtpbin.h"
 
-#define gst_er_dtls_srtp_bin_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstErDtlsSrtpBin, gst_er_dtls_srtp_bin, GST_TYPE_BIN);
+#define gst_dtls_srtp_bin_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE (GstDtlsSrtpBin, gst_dtls_srtp_bin, GST_TYPE_BIN);
 
 enum
 {
@@ -54,24 +54,24 @@ static GParamSpec *properties[NUM_PROPERTIES];
 #define DEFAULT_SRTCP_AUTH NULL
 #define DEFAULT_SRTCP_CIPHER NULL
 
-static void gst_er_dtls_srtp_bin_finalize (GObject *);
-static void gst_er_dtls_srtp_bin_set_property (GObject *, guint prop_id,
+static void gst_dtls_srtp_bin_finalize (GObject *);
+static void gst_dtls_srtp_bin_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
-static void gst_er_dtls_srtp_bin_get_property (GObject *, guint prop_id,
+static void gst_dtls_srtp_bin_get_property (GObject *, guint prop_id,
     GValue *, GParamSpec *);
 
 static void
-gst_er_dtls_srtp_bin_class_init (GstErDtlsSrtpBinClass * klass)
+gst_dtls_srtp_bin_class_init (GstDtlsSrtpBinClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_bin_finalize);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_dtls_srtp_bin_finalize);
   gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_bin_set_property);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_bin_set_property);
   gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_bin_get_property);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_bin_get_property);
 
   klass->remove_dtls_element = NULL;
 
@@ -124,7 +124,7 @@ gst_er_dtls_srtp_bin_class_init (GstErDtlsSrtpBinClass * klass)
 }
 
 static void
-gst_er_dtls_srtp_bin_init (GstErDtlsSrtpBin * self)
+gst_dtls_srtp_bin_init (GstDtlsSrtpBin * self)
 {
   self->key = NULL;
   self->key_is_set = FALSE;
@@ -135,9 +135,9 @@ gst_er_dtls_srtp_bin_init (GstErDtlsSrtpBin * self)
 }
 
 static void
-gst_er_dtls_srtp_bin_finalize (GObject * object)
+gst_dtls_srtp_bin_finalize (GObject * object)
 {
-  GstErDtlsSrtpBin *self = GST_ER_DTLS_SRTP_BIN (object);
+  GstDtlsSrtpBin *self = GST_DTLS_SRTP_BIN (object);
 
   if (self->key) {
     gst_buffer_unref (self->key);
@@ -156,11 +156,11 @@ gst_er_dtls_srtp_bin_finalize (GObject * object)
 }
 
 static void
-gst_er_dtls_srtp_bin_set_property (GObject * object,
+gst_dtls_srtp_bin_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstErDtlsSrtpBin *self = GST_ER_DTLS_SRTP_BIN (object);
-  GstErDtlsSrtpBinClass *klass = GST_ER_DTLS_SRTP_BIN_GET_CLASS (self);
+  GstDtlsSrtpBin *self = GST_DTLS_SRTP_BIN (object);
+  GstDtlsSrtpBinClass *klass = GST_DTLS_SRTP_BIN_GET_CLASS (self);
 
   switch (prop_id) {
     case PROP_CONNECTION_ID:
@@ -205,10 +205,10 @@ gst_er_dtls_srtp_bin_set_property (GObject * object,
 }
 
 static void
-gst_er_dtls_srtp_bin_get_property (GObject * object,
+gst_dtls_srtp_bin_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstErDtlsSrtpBin *self = GST_ER_DTLS_SRTP_BIN (object);
+  GstDtlsSrtpBin *self = GST_DTLS_SRTP_BIN (object);
 
   switch (prop_id) {
     case PROP_CONNECTION_ID:

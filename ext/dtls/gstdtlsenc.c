@@ -42,13 +42,12 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-dtls")
     );
 
-GST_DEBUG_CATEGORY_STATIC (er_dtls_enc_debug);
-#define GST_CAT_DEFAULT er_dtls_enc_debug
+GST_DEBUG_CATEGORY_STATIC (gst_dtls_enc_debug);
+#define GST_CAT_DEFAULT gst_dtls_enc_debug
 
-#define gst_er_dtls_enc_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstErDtlsEnc, gst_er_dtls_enc, GST_TYPE_ELEMENT,
-    GST_DEBUG_CATEGORY_INIT (er_dtls_enc_debug, "erdtlsenc", 0,
-        "Ericsson DTLS Encoder"));
+#define gst_dtls_enc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstDtlsEnc, gst_dtls_enc, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (gst_dtls_enc_debug, "dtlsenc", 0, "DTLS Encoder"));
 
 enum
 {
@@ -81,15 +80,15 @@ static GParamSpec *properties[NUM_PROPERTIES];
 
 #define INITIAL_QUEUE_SIZE 64
 
-static void gst_er_dtls_enc_finalize (GObject *);
-static void gst_er_dtls_enc_set_property (GObject *, guint prop_id,
+static void gst_dtls_enc_finalize (GObject *);
+static void gst_dtls_enc_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
-static void gst_er_dtls_enc_get_property (GObject *, guint prop_id, GValue *,
+static void gst_dtls_enc_get_property (GObject *, guint prop_id, GValue *,
     GParamSpec *);
 
-static GstStateChangeReturn gst_er_dtls_enc_change_state (GstElement *,
+static GstStateChangeReturn gst_dtls_enc_change_state (GstElement *,
     GstStateChange);
-static GstPad *gst_er_dtls_enc_request_new_pad (GstElement *, GstPadTemplate *,
+static GstPad *gst_dtls_enc_request_new_pad (GstElement *, GstPadTemplate *,
     const gchar * name, const GstCaps *);
 
 static gboolean src_activate_mode (GstPad *, GstObject *, GstPadMode,
@@ -98,13 +97,13 @@ static void src_task_loop (GstPad *);
 
 static GstFlowReturn sink_chain (GstPad *, GstObject *, GstBuffer *);
 
-static void on_key_received (ErDtlsConnection *, gpointer key, guint cipher,
-    guint auth, GstErDtlsEnc *);
-static void on_send_data (ErDtlsConnection *, gconstpointer data, gint length,
-    GstErDtlsEnc *);
+static void on_key_received (GstDtlsConnection *, gpointer key, guint cipher,
+    guint auth, GstDtlsEnc *);
+static void on_send_data (GstDtlsConnection *, gconstpointer data, gint length,
+    GstDtlsEnc *);
 
 static void
-gst_er_dtls_enc_class_init (GstErDtlsEncClass * klass)
+gst_dtls_enc_class_init (GstDtlsEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
@@ -112,16 +111,13 @@ gst_er_dtls_enc_class_init (GstErDtlsEncClass * klass)
   gobject_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_er_dtls_enc_finalize);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_enc_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_enc_get_property);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_dtls_enc_finalize);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_dtls_enc_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_dtls_enc_get_property);
 
-  element_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_enc_change_state);
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_dtls_enc_change_state);
   element_class->request_new_pad =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_enc_request_new_pad);
+      GST_DEBUG_FUNCPTR (gst_dtls_enc_request_new_pad);
 
   signals[SIGNAL_ON_KEY_RECEIVED] =
       g_signal_new ("on-key-received", G_TYPE_FROM_CLASS (klass),
@@ -152,16 +148,16 @@ gst_er_dtls_enc_class_init (GstErDtlsEncClass * klass)
       g_param_spec_uint ("srtp-cipher",
       "SRTP cipher",
       "The SRTP cipher selected in the DTLS handshake. "
-      "The value will be set to an ErDtlsSrtpCipher.",
-      0, ER_DTLS_SRTP_CIPHER_AES_128_ICM, DEFAULT_SRTP_CIPHER,
+      "The value will be set to an GstDtlsSrtpCipher.",
+      0, GST_DTLS_SRTP_CIPHER_AES_128_ICM, DEFAULT_SRTP_CIPHER,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_SRTP_AUTH] =
       g_param_spec_uint ("srtp-auth",
       "SRTP authentication",
       "The SRTP authentication selected in the DTLS handshake. "
-      "The value will be set to an ErDtlsSrtpAuth.",
-      0, ER_DTLS_SRTP_AUTH_HMAC_SHA1_80, DEFAULT_SRTP_AUTH,
+      "The value will be set to an GstDtlsSrtpAuth.",
+      0, GST_DTLS_SRTP_AUTH_HMAC_SHA1_80, DEFAULT_SRTP_AUTH,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
@@ -179,14 +175,14 @@ gst_er_dtls_enc_class_init (GstErDtlsEncClass * klass)
 }
 
 static void
-gst_er_dtls_enc_init (GstErDtlsEnc * self)
+gst_dtls_enc_init (GstDtlsEnc * self)
 {
   self->connection_id = NULL;
   self->connection = NULL;
 
   self->is_client = DEFAULT_IS_CLIENT;
 
-  self->encoder_key = NULL;
+  self->encodgst_key = NULL;
   self->srtp_cipher = DEFAULT_SRTP_CIPHER;
   self->srtp_auth = DEFAULT_SRTP_AUTH;
 
@@ -205,13 +201,13 @@ gst_er_dtls_enc_init (GstErDtlsEnc * self)
 }
 
 static void
-gst_er_dtls_enc_finalize (GObject * object)
+gst_dtls_enc_finalize (GObject * object)
 {
-  GstErDtlsEnc *self = GST_ER_DTLS_ENC (object);
+  GstDtlsEnc *self = GST_DTLS_ENC (object);
 
-  if (self->encoder_key) {
-    gst_buffer_unref (self->encoder_key);
-    self->encoder_key = NULL;
+  if (self->encodgst_key) {
+    gst_buffer_unref (self->encodgst_key);
+    self->encodgst_key = NULL;
   }
 
   g_mutex_lock (&self->queue_lock);
@@ -231,10 +227,10 @@ gst_er_dtls_enc_finalize (GObject * object)
 }
 
 static void
-gst_er_dtls_enc_set_property (GObject * object, guint prop_id,
+gst_dtls_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstErDtlsEnc *self = GST_ER_DTLS_ENC (object);
+  GstDtlsEnc *self = GST_DTLS_ENC (object);
 
   switch (prop_id) {
     case PROP_CONNECTION_ID:
@@ -249,10 +245,10 @@ gst_er_dtls_enc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_er_dtls_enc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_dtls_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstErDtlsEnc *self = GST_ER_DTLS_ENC (object);
+  GstDtlsEnc *self = GST_DTLS_ENC (object);
 
   switch (prop_id) {
     case PROP_CONNECTION_ID:
@@ -262,7 +258,7 @@ gst_er_dtls_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, self->is_client);
       break;
     case PROP_ENCODER_KEY:
-      g_value_set_boxed (value, self->encoder_key);
+      g_value_set_boxed (value, self->encodgst_key);
       break;
     case PROP_SRTP_CIPHER:
       g_value_set_uint (value, self->srtp_cipher);
@@ -276,16 +272,15 @@ gst_er_dtls_enc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstStateChangeReturn
-gst_er_dtls_enc_change_state (GstElement * element, GstStateChange transition)
+gst_dtls_enc_change_state (GstElement * element, GstStateChange transition)
 {
-  GstErDtlsEnc *self = GST_ER_DTLS_ENC (element);
+  GstDtlsEnc *self = GST_DTLS_ENC (element);
   GstStateChangeReturn ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (self->connection_id) {
-        self->connection =
-            gst_er_dtls_dec_fetch_connection (self->connection_id);
+        self->connection = gst_dtls_dec_fetch_connection (self->connection_id);
 
         if (!self->connection) {
           GST_WARNING_OBJECT (self,
@@ -297,7 +292,7 @@ gst_er_dtls_enc_change_state (GstElement * element, GstStateChange transition)
         g_signal_connect_object (self->connection,
             "on-encoder-key", G_CALLBACK (on_key_received), self, 0);
 
-        er_dtls_connection_set_send_callback (self->connection,
+        gst_dtls_connection_set_send_callback (self->connection,
             g_cclosure_new (G_CALLBACK (on_send_data), self, NULL));
       } else {
         GST_WARNING_OBJECT (self,
@@ -307,7 +302,7 @@ gst_er_dtls_enc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (self, "starting connection %s", self->connection_id);
-      er_dtls_connection_start (self->connection, self->is_client);
+      gst_dtls_connection_start (self->connection, self->is_client);
 
       gst_pad_set_active (self->src, TRUE);
       break;
@@ -315,14 +310,14 @@ gst_er_dtls_enc_change_state (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (self, "stopping connection %s", self->connection_id);
       gst_pad_set_active (self->src, FALSE);
 
-      er_dtls_connection_stop (self->connection);
+      gst_dtls_connection_stop (self->connection);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_DEBUG_OBJECT (self, "closing connection %s", self->connection_id);
 
       if (self->connection) {
-        er_dtls_connection_close (self->connection);
-        er_dtls_connection_set_send_callback (self->connection, NULL);
+        gst_dtls_connection_close (self->connection);
+        gst_dtls_connection_set_send_callback (self->connection, NULL);
         g_object_unref (self->connection);
         self->connection = NULL;
       }
@@ -337,7 +332,7 @@ gst_er_dtls_enc_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstPad *
-gst_er_dtls_enc_request_new_pad (GstElement * element,
+gst_dtls_enc_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstPad *sink;
@@ -368,7 +363,7 @@ static gboolean
 src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
     gboolean active)
 {
-  GstErDtlsEnc *self = GST_ER_DTLS_ENC (parent);
+  GstDtlsEnc *self = GST_DTLS_ENC (parent);
   gboolean success = TRUE;
   g_return_val_if_fail (mode == GST_PAD_MODE_PUSH, FALSE);
 
@@ -401,10 +396,10 @@ src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
 static void
 src_task_loop (GstPad * pad)
 {
-  GstErDtlsEnc *self = GST_ER_DTLS_ENC (GST_PAD_PARENT (pad));
+  GstDtlsEnc *self = GST_DTLS_ENC (GST_PAD_PARENT (pad));
   GstFlowReturn ret;
   GstPad *peer;
-  gboolean peer_is_active;
+  gboolean pegst_is_active;
 
   GST_TRACE_OBJECT (self, "src loop: acquiring lock");
   g_mutex_lock (&self->queue_lock);
@@ -432,10 +427,10 @@ src_task_loop (GstPad * pad)
   GST_TRACE_OBJECT (self, "src loop: queue has element");
 
   peer = gst_pad_get_peer (pad);
-  peer_is_active = gst_pad_is_active (peer);
+  pegst_is_active = gst_pad_is_active (peer);
   gst_object_unref (peer);
 
-  if (peer_is_active) {
+  if (pegst_is_active) {
     GstBuffer *buffer;
     gboolean start_connection_timeout = FALSE;
 
@@ -444,7 +439,7 @@ src_task_loop (GstPad * pad)
       gchar s_id[32];
       GstCaps *caps;
 
-      g_snprintf (s_id, sizeof (s_id), "erdtlsenc-%08x", g_random_int ());
+      g_snprintf (s_id, sizeof (s_id), "dtlsenc-%08x", g_random_int ());
       gst_pad_push_event (self->src, gst_event_new_stream_start (s_id));
       caps = gst_caps_new_empty_simple ("application/x-dtls");
       gst_pad_push_event (self->src, gst_event_new_caps (caps));
@@ -462,7 +457,7 @@ src_task_loop (GstPad * pad)
 
     ret = gst_pad_push (self->src, buffer);
     if (start_connection_timeout)
-      er_dtls_connection_start_timeout (self->connection);
+      gst_dtls_connection_start_timeout (self->connection);
 
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
       GST_WARNING_OBJECT (self, "failed to push buffer on src pad: %s",
@@ -478,7 +473,7 @@ src_task_loop (GstPad * pad)
 static GstFlowReturn
 sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstErDtlsEnc *self = GST_ER_DTLS_ENC (parent);
+  GstDtlsEnc *self = GST_DTLS_ENC (parent);
   GstMapInfo map_info;
   gint ret;
 
@@ -486,7 +481,7 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   if (map_info.size) {
     ret =
-        er_dtls_connection_send (self->connection, map_info.data,
+        gst_dtls_connection_send (self->connection, map_info.data,
         map_info.size);
     if (ret != map_info.size) {
       GST_WARNING_OBJECT (self,
@@ -503,23 +498,23 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 }
 
 static void
-on_key_received (ErDtlsConnection * connection, gpointer key, guint cipher,
-    guint auth, GstErDtlsEnc * self)
+on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
+    guint auth, GstDtlsEnc * self)
 {
   gpointer key_dup;
   gchar *key_str;
 
-  g_return_if_fail (GST_IS_ER_DTLS_ENC (self));
-  g_return_if_fail (ER_IS_DTLS_CONNECTION (connection));
+  g_return_if_fail (GST_IS_DTLS_ENC (self));
+  g_return_if_fail (GST_IS_DTLS_CONNECTION (connection));
 
   self->srtp_cipher = cipher;
   self->srtp_auth = auth;
 
-  key_dup = g_memdup (key, ER_DTLS_SRTP_MASTER_KEY_LENGTH);
-  self->encoder_key =
-      gst_buffer_new_wrapped (key_dup, ER_DTLS_SRTP_MASTER_KEY_LENGTH);
+  key_dup = g_memdup (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
+  self->encodgst_key =
+      gst_buffer_new_wrapped (key_dup, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
 
-  key_str = g_base64_encode (key, ER_DTLS_SRTP_MASTER_KEY_LENGTH);
+  key_str = g_base64_encode (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
   GST_INFO_OBJECT (self, "received key: %s", key_str);
   g_free (key_str);
 
@@ -527,8 +522,8 @@ on_key_received (ErDtlsConnection * connection, gpointer key, guint cipher,
 }
 
 static void
-on_send_data (ErDtlsConnection * connection, gconstpointer data, gint length,
-    GstErDtlsEnc * self)
+on_send_data (GstDtlsConnection * connection, gconstpointer data, gint length,
+    GstDtlsEnc * self)
 {
   GstBuffer *buffer;
 

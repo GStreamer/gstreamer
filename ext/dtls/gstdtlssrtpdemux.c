@@ -52,18 +52,18 @@ GST_STATIC_PAD_TEMPLATE ("dtls_src",
     GST_STATIC_CAPS ("application/x-dtls")
     );
 
-GST_DEBUG_CATEGORY_STATIC (er_er_dtls_srtp_demux_debug);
-#define GST_CAT_DEFAULT er_er_dtls_srtp_demux_debug
+GST_DEBUG_CATEGORY_STATIC (gst_gst_dtls_srtp_demux_debug);
+#define GST_CAT_DEFAULT gst_gst_dtls_srtp_demux_debug
 
-#define gst_er_dtls_srtp_demux_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstErDtlsSrtpDemux, gst_er_dtls_srtp_demux,
-    GST_TYPE_ELEMENT, GST_DEBUG_CATEGORY_INIT (er_er_dtls_srtp_demux_debug,
-        "erdtlssrtpdemux", 0, "Ericsson DTLS SRTP Demultiplexer"));
+#define gst_dtls_srtp_demux_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstDtlsSrtpDemux, gst_dtls_srtp_demux,
+    GST_TYPE_ELEMENT, GST_DEBUG_CATEGORY_INIT (gst_gst_dtls_srtp_demux_debug,
+        "dtlssrtpdemux", 0, "DTLS SRTP Demultiplexer"));
 
 static GstFlowReturn sink_chain (GstPad *, GstObject * self, GstBuffer *);
 
 static void
-gst_er_dtls_srtp_demux_class_init (GstErDtlsSrtpDemuxClass * klass)
+gst_dtls_srtp_demux_class_init (GstDtlsSrtpDemuxClass * klass)
 {
   GstElementClass *element_class;
 
@@ -84,7 +84,7 @@ gst_er_dtls_srtp_demux_class_init (GstErDtlsSrtpDemuxClass * klass)
 }
 
 static void
-gst_er_dtls_srtp_demux_init (GstErDtlsSrtpDemux * self)
+gst_dtls_srtp_demux_init (GstDtlsSrtpDemux * self)
 {
   GstPad *sink;
 
@@ -107,7 +107,7 @@ gst_er_dtls_srtp_demux_init (GstErDtlsSrtpDemux * self)
 static GstFlowReturn
 sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstErDtlsSrtpDemux *self = GST_ER_DTLS_SRTP_DEMUX (parent);
+  GstDtlsSrtpDemux *self = GST_DTLS_SRTP_DEMUX (parent);
   guint8 first_byte;
 
   if (gst_buffer_get_size (buffer) == 0) {

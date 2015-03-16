@@ -33,16 +33,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ER_DTLS_ENC (gst_er_dtls_enc_get_type())
-#define GST_ER_DTLS_ENC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_ER_DTLS_ENC, GstErDtlsEnc))
-#define GST_ER_DTLS_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_ER_DTLS_ENC, GstErDtlsEncClass))
-#define GST_IS_ER_DTLS_ENC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_ER_DTLS_ENC))
-#define GST_IS_ER_DTLS_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_ER_DTLS_ENC))
+#define GST_TYPE_DTLS_ENC (gst_dtls_enc_get_type())
+#define GST_DTLS_ENC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DTLS_ENC, GstDtlsEnc))
+#define GST_DTLS_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DTLS_ENC, GstDtlsEncClass))
+#define GST_IS_DTLS_ENC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DTLS_ENC))
+#define GST_IS_DTLS_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DTLS_ENC))
 
-typedef struct _GstErDtlsEnc GstErDtlsEnc;
-typedef struct _GstErDtlsEncClass GstErDtlsEncClass;
+typedef struct _GstDtlsEnc GstDtlsEnc;
+typedef struct _GstDtlsEncClass GstDtlsEncClass;
 
-struct _GstErDtlsEnc {
+struct _GstDtlsEnc {
     GstElement element;
 
     GstPad *src;
@@ -51,25 +51,25 @@ struct _GstErDtlsEnc {
     GMutex queue_lock;
     GCond queue_cond_add;
 
-    ErDtlsConnection *connection;
+    GstDtlsConnection *connection;
     gchar *connection_id;
 
     gboolean is_client;
 
-    GstBuffer *encoder_key;
+    GstBuffer *encodgst_key;
     guint srtp_cipher;
     guint srtp_auth;
 
     gboolean send_initial_events;
 };
 
-struct _GstErDtlsEncClass {
+struct _GstDtlsEncClass {
     GstElementClass parent_class;
 };
 
-GType gst_er_dtls_enc_get_type(void);
+GType gst_dtls_enc_get_type(void);
 
-gboolean gst_er_dtls_enc_plugin_init(GstPlugin *);
+gboolean gst_dtls_enc_plugin_init(GstPlugin *);
 
 G_END_DECLS
 

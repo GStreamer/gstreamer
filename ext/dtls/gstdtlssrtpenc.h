@@ -32,32 +32,32 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ER_DTLS_SRTP_ENC (gst_er_dtls_srtp_enc_get_type())
-#define GST_ER_DTLS_SRTP_ENC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_ER_DTLS_SRTP_ENC, GstErDtlsSrtpEnc))
-#define GST_ER_DTLS_SRTP_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_ER_DTLS_SRTP_ENC, GstErDtlsSrtpEncClass))
-#define GST_IS_ER_DTLS_SRTP_ENC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_ER_DTLS_SRTP_ENC))
-#define GST_IS_ER_DTLS_SRTP_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_ER_DTLS_SRTP_ENC))
+#define GST_TYPE_DTLS_SRTP_ENC (gst_dtls_srtp_enc_get_type())
+#define GST_DTLS_SRTP_ENC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DTLS_SRTP_ENC, GstDtlsSrtpEnc))
+#define GST_DTLS_SRTP_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DTLS_SRTP_ENC, GstDtlsSrtpEncClass))
+#define GST_IS_DTLS_SRTP_ENC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DTLS_SRTP_ENC))
+#define GST_IS_DTLS_SRTP_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DTLS_SRTP_ENC))
 
-typedef struct _GstErDtlsSrtpEnc GstErDtlsSrtpEnc;
-typedef struct _GstErDtlsSrtpEncClass GstErDtlsSrtpEncClass;
+typedef struct _GstDtlsSrtpEnc GstDtlsSrtpEnc;
+typedef struct _GstDtlsSrtpEncClass GstDtlsSrtpEncClass;
 
-struct _GstErDtlsSrtpEnc {
-    GstErDtlsSrtpBin bin;
+struct _GstDtlsSrtpEnc {
+    GstDtlsSrtpBin bin;
 
     GstElement *srtp_enc;
     GstElement *funnel;
 };
 
-struct _GstErDtlsSrtpEncClass {
-    GstErDtlsSrtpBinClass parent_class;
+struct _GstDtlsSrtpEncClass {
+    GstDtlsSrtpBinClass parent_class;
 };
 
-GType gst_er_dtls_srtp_enc_get_type(void);
+GType gst_dtls_srtp_enc_get_type(void);
 
-gboolean gst_er_dtls_srtp_enc_plugin_init(GstPlugin *);
+gboolean gst_dtls_srtp_enc_plugin_init(GstPlugin *);
 
-guint gst_er_dtls_srtp_enc_get_cipher_value_by_nick(const gchar *cipher_nick);
-guint gst_er_dtls_srtp_enc_get_auth_value_by_nick(const gchar *auth_nick);
+guint gst_dtls_srtp_enc_get_ciphgst_value_by_nick(const gchar *ciphgst_nick);
+guint gst_dtls_srtp_enc_get_auth_value_by_nick(const gchar *auth_nick);
 
 G_END_DECLS
 

@@ -26,11 +26,11 @@
 #ifndef gstdtlscommon_h
 #define gstdtlscommon_h
 
-#ifndef ER_DTLS_USE_GST_LOG
-# define ER_DTLS_USE_GST_LOG 0
+#ifndef GST_DTLS_USE_GST_LOG
+# define GST_DTLS_USE_GST_LOG 0
 #endif
 
-#if ER_DTLS_USE_GST_LOG
+#if GST_DTLS_USE_GST_LOG
 # include <gst/gst.h>
 #endif
 
@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 
 #define UNUSED(param) while (0) { (void)(param); }
 
-#if ER_DTLS_USE_GST_LOG
+#if GST_DTLS_USE_GST_LOG
 #   define LOG_ERROR(obj, ...) GST_ERROR_OBJECT(obj, __VA_ARGS__ )
 #   define LOG_WARNING(obj, ...) GST_WARNING_OBJECT(obj, __VA_ARGS__ )
 #   define LOG_FIXME(obj, ...) GST_FIXME_OBJECT(obj, __VA_ARGS__ )

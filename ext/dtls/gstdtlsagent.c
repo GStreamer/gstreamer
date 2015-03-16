@@ -39,17 +39,17 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
-#if ER_DTLS_USE_GST_LOG
-GST_DEBUG_CATEGORY_STATIC (er_dtls_agent_debug);
-#   define GST_CAT_DEFAULT er_dtls_agent_debug
-G_DEFINE_TYPE_WITH_CODE (ErDtlsAgent, er_dtls_agent, G_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (er_dtls_agent_debug, "gstdtlsagent", 0,
-        "Ericsson DTLS Agent"));
+#if GST_DTLS_USE_GST_LOG
+GST_DEBUG_CATEGORY_STATIC (gst_dtls_agent_debug);
+#   define GST_CAT_DEFAULT gst_dtls_agent_debug
+G_DEFINE_TYPE_WITH_CODE (GstDtlsAgent, gst_dtls_agent, G_TYPE_OBJECT,
+    GST_DEBUG_CATEGORY_INIT (gst_dtls_agent_debug, "dtlsagent", 0,
+        "DTLS Agent"));
 #else
-G_DEFINE_TYPE (ErDtlsAgent, er_dtls_agent, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GstDtlsAgent, gst_dtls_agent, G_TYPE_OBJECT);
 #endif
 
-#define ER_DTLS_AGENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), ER_TYPE_DTLS_AGENT, ErDtlsAgentPrivate))
+#define GST_DTLS_AGENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_AGENT, GstDtlsAgentPrivate))
 
 enum
 {
@@ -60,17 +60,17 @@ enum
 
 static GParamSpec *properties[NUM_PROPERTIES];
 
-struct _ErDtlsAgentPrivate
+struct _GstDtlsAgentPrivate
 {
   SSL_CTX *ssl_context;
 
-  ErDtlsCertificate *certificate;
+  GstDtlsCertificate *certificate;
 };
 
-static void er_dtls_agent_finalize (GObject * gobject);
-static void er_dtls_agent_set_property (GObject *, guint prop_id,
+static void gst_dtls_agent_finalize (GObject * gobject);
+static void gst_dtls_agent_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
-const gchar *er_dtls_agent_peek_id (ErDtlsAgent *);
+const gchar *gst_dtls_agent_peek_id (GstDtlsAgent *);
 
 static GRWLock *ssl_locks;
 
@@ -111,7 +111,7 @@ ssl_thread_id_function (void)
 }
 
 void
-_er_dtls_init_openssl ()
+_gst_dtls_init_openssl ()
 {
   static gsize is_init = 0;
   gint i;
@@ -142,31 +142,31 @@ _er_dtls_init_openssl ()
 }
 
 static void
-er_dtls_agent_class_init (ErDtlsAgentClass * klass)
+gst_dtls_agent_class_init (GstDtlsAgentClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (ErDtlsAgentPrivate));
+  g_type_class_add_private (klass, sizeof (GstDtlsAgentPrivate));
 
-  gobject_class->set_property = er_dtls_agent_set_property;
-  gobject_class->finalize = er_dtls_agent_finalize;
+  gobject_class->set_property = gst_dtls_agent_set_property;
+  gobject_class->finalize = gst_dtls_agent_finalize;
 
   properties[PROP_CERTIFICATE] =
       g_param_spec_object ("certificate",
-      "ErDtlsCertificate",
+      "GstDtlsCertificate",
       "Sets the certificate of the agent",
-      ER_TYPE_DTLS_CERTIFICATE,
+      GST_TYPE_DTLS_CERTIFICATE,
       G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
-  _er_dtls_init_openssl ();
+  _gst_dtls_init_openssl ();
 }
 
 static void
-er_dtls_agent_init (ErDtlsAgent * self)
+gst_dtls_agent_init (GstDtlsAgent * self)
 {
-  ErDtlsAgentPrivate *priv = ER_DTLS_AGENT_GET_PRIVATE (self);
+  GstDtlsAgentPrivate *priv = GST_DTLS_AGENT_GET_PRIVATE (self);
   self->priv = priv;
 
   ERR_clear_error ();
@@ -194,42 +194,42 @@ er_dtls_agent_init (ErDtlsAgent * self)
 }
 
 static void
-er_dtls_agent_finalize (GObject * gobject)
+gst_dtls_agent_finalize (GObject * gobject)
 {
-  ErDtlsAgentPrivate *priv = ER_DTLS_AGENT (gobject)->priv;
+  GstDtlsAgentPrivate *priv = GST_DTLS_AGENT (gobject)->priv;
 
   SSL_CTX_free (priv->ssl_context);
   priv->ssl_context = NULL;
 
   LOG_DEBUG (gobject, "finalized");
 
-  G_OBJECT_CLASS (er_dtls_agent_parent_class)->finalize (gobject);
+  G_OBJECT_CLASS (gst_dtls_agent_parent_class)->finalize (gobject);
 }
 
 static void
-er_dtls_agent_set_property (GObject * object, guint prop_id,
+gst_dtls_agent_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  ErDtlsAgent *self = ER_DTLS_AGENT (object);
-  ErDtlsCertificate *certificate;
+  GstDtlsAgent *self = GST_DTLS_AGENT (object);
+  GstDtlsCertificate *certificate;
 
   switch (prop_id) {
     case PROP_CERTIFICATE:
-      certificate = ER_DTLS_CERTIFICATE (g_value_get_object (value));
-      g_return_if_fail (ER_IS_DTLS_CERTIFICATE (certificate));
+      certificate = GST_DTLS_CERTIFICATE (g_value_get_object (value));
+      g_return_if_fail (GST_IS_DTLS_CERTIFICATE (certificate));
       g_return_if_fail (self->priv->ssl_context);
 
       self->priv->certificate = certificate;
       g_object_ref (certificate);
 
       if (!SSL_CTX_use_certificate (self->priv->ssl_context,
-              _er_dtls_certificate_get_internal_certificate (certificate))) {
+              _gst_dtls_certificate_get_internal_certificate (certificate))) {
         LOG_WARNING (self, "could not use certificate");
         g_return_if_reached ();
       }
 
       if (!SSL_CTX_use_PrivateKey (self->priv->ssl_context,
-              _er_dtls_certificate_get_internal_key (certificate))) {
+              _gst_dtls_certificate_get_internal_key (certificate))) {
         LOG_WARNING (self, "could not use private key");
         g_return_if_reached ();
       }
@@ -244,10 +244,10 @@ er_dtls_agent_set_property (GObject * object, guint prop_id,
   }
 }
 
-ErDtlsCertificate *
-er_dtls_agent_get_certificate (ErDtlsAgent * self)
+GstDtlsCertificate *
+gst_dtls_agent_get_certificate (GstDtlsAgent * self)
 {
-  g_return_val_if_fail (ER_IS_DTLS_AGENT (self), NULL);
+  g_return_val_if_fail (GST_IS_DTLS_AGENT (self), NULL);
   if (self->priv->certificate) {
     g_object_ref (self->priv->certificate);
   }
@@ -255,20 +255,21 @@ er_dtls_agent_get_certificate (ErDtlsAgent * self)
 }
 
 gchar *
-er_dtls_agent_get_certificate_pem (ErDtlsAgent * self)
+gst_dtls_agent_get_certificate_pem (GstDtlsAgent * self)
 {
   gchar *pem;
-  g_return_val_if_fail (ER_IS_DTLS_AGENT (self), NULL);
-  g_return_val_if_fail (ER_IS_DTLS_CERTIFICATE (self->priv->certificate), NULL);
+  g_return_val_if_fail (GST_IS_DTLS_AGENT (self), NULL);
+  g_return_val_if_fail (GST_IS_DTLS_CERTIFICATE (self->priv->certificate),
+      NULL);
 
   g_object_get (self->priv->certificate, "pem", &pem, NULL);
 
   return pem;
 }
 
-const ErDtlsAgentContext
-_er_dtls_agent_peek_context (ErDtlsAgent * self)
+const GstDtlsAgentContext
+_gst_dtls_agent_peek_context (GstDtlsAgent * self)
 {
-  g_return_val_if_fail (ER_IS_DTLS_AGENT (self), NULL);
+  g_return_val_if_fail (GST_IS_DTLS_AGENT (self), NULL);
   return self->priv->ssl_context;
 }

@@ -33,46 +33,46 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ER_DTLS_DEC \
-    (gst_er_dtls_dec_get_type())
-#define GST_ER_DTLS_DEC(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_ER_DTLS_DEC, GstErDtlsDec))
-#define GST_ER_DTLS_DEC_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_ER_DTLS_DEC, GstErDtlsDecClass))
-#define GST_IS_ER_DTLS_DEC(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_ER_DTLS_DEC))
-#define GST_IS_ER_DTLS_DEC_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_ER_DTLS_DEC))
+#define GST_TYPE_DTLS_DEC \
+    (gst_dtls_dec_get_type())
+#define GST_DTLS_DEC(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DTLS_DEC, GstDtlsDec))
+#define GST_DTLS_DEC_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DTLS_DEC, GstDtlsDecClass))
+#define GST_IS_DTLS_DEC(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DTLS_DEC))
+#define GST_IS_DTLS_DEC_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DTLS_DEC))
 
-typedef struct _GstErDtlsDec GstErDtlsDec;
-typedef struct _GstErDtlsDecClass GstErDtlsDecClass;
+typedef struct _GstDtlsDec GstDtlsDec;
+typedef struct _GstDtlsDecClass GstDtlsDecClass;
 
-struct _GstErDtlsDec {
+struct _GstDtlsDec {
     GstElement element;
 
     GstPad *src;
     GMutex src_mutex;
 
-    ErDtlsAgent *agent;
-    ErDtlsConnection *connection;
+    GstDtlsAgent *agent;
+    GstDtlsConnection *connection;
     GMutex connection_mutex;
     gchar *connection_id;
-    gchar *peer_pem;
+    gchar *pegst_pem;
 
-    GstBuffer *decoder_key;
+    GstBuffer *decodgst_key;
     guint srtp_cipher;
     guint srtp_auth;
 };
 
-struct _GstErDtlsDecClass {
+struct _GstDtlsDecClass {
     GstElementClass parent_class;
 };
 
-GType gst_er_dtls_dec_get_type(void);
+GType gst_dtls_dec_get_type(void);
 
-gboolean gst_er_dtls_dec_plugin_init(GstPlugin *);
+gboolean gst_dtls_dec_plugin_init(GstPlugin *);
 
-ErDtlsConnection *gst_er_dtls_dec_fetch_connection(gchar *id);
+GstDtlsConnection *gst_dtls_dec_fetch_connection(gchar *id);
 
 G_END_DECLS
 

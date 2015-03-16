@@ -49,13 +49,13 @@ GST_STATIC_PAD_TEMPLATE ("data_src",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (er_dtls_srtp_dec_debug);
-#define GST_CAT_DEFAULT er_dtls_srtp_dec_debug
+GST_DEBUG_CATEGORY_STATIC (gst_dtls_srtp_dec_debug);
+#define GST_CAT_DEFAULT gst_dtls_srtp_dec_debug
 
-#define gst_er_dtls_srtp_dec_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstErDtlsSrtpDec, gst_er_dtls_srtp_dec,
-    GST_TYPE_ER_DTLS_SRTP_BIN, GST_DEBUG_CATEGORY_INIT (er_dtls_srtp_dec_debug,
-        "erdtlssrtpdec", 0, "Ericsson DTLS Decoder"));
+#define gst_dtls_srtp_dec_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstDtlsSrtpDec, gst_dtls_srtp_dec,
+    GST_TYPE_DTLS_SRTP_BIN, GST_DEBUG_CATEGORY_INIT (gst_dtls_srtp_dec_debug,
+        "dtlssrtpdec", 0, "DTLS Decoder"));
 
 #define UNUSED(param) while (0) { (void)(param); }
 
@@ -72,46 +72,46 @@ static GParamSpec *properties[NUM_PROPERTIES];
 #define DEFAULT_PEM NULL
 #define DEFAULT_PEER_PEM NULL
 
-static void gst_er_dtls_srtp_dec_set_property (GObject *, guint prop_id,
+static void gst_dtls_srtp_dec_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
-static void gst_er_dtls_srtp_dec_get_property (GObject *, guint prop_id,
+static void gst_dtls_srtp_dec_get_property (GObject *, guint prop_id,
     GValue *, GParamSpec *);
 
-static GstPad *gst_er_dtls_srtp_dec_request_new_pad (GstElement *,
+static GstPad *gst_dtls_srtp_dec_request_new_pad (GstElement *,
     GstPadTemplate *, const gchar * name, const GstCaps *);
-static GstCaps *on_decoder_request_key (GstElement * srtp_decoder, guint ssrc,
-    GstErDtlsSrtpBin *);
-static void on_peer_pem (GstElement * srtp_decoder, GParamSpec * pspec,
-    GstErDtlsSrtpDec * self);
+static GstCaps *on_decodgst_request_key (GstElement * srtp_decoder, guint ssrc,
+    GstDtlsSrtpBin *);
+static void on_pegst_pem (GstElement * srtp_decoder, GParamSpec * pspec,
+    GstDtlsSrtpDec * self);
 
-static void gst_er_dtls_srtp_dec_remove_dtls_element (GstErDtlsSrtpBin *);
-static GstPadProbeReturn remove_dtls_decoder_probe_callback (GstPad *,
+static void gst_dtls_srtp_dec_remove_dtls_element (GstDtlsSrtpBin *);
+static GstPadProbeReturn remove_dtls_decodgst_probe_callback (GstPad *,
     GstPadProbeInfo *, GstElement *);
 
 static GstPadProbeReturn drop_funnel_rtcp_caps (GstPad *, GstPadProbeInfo *,
     gpointer);
 
 static void
-gst_er_dtls_srtp_dec_class_init (GstErDtlsSrtpDecClass * klass)
+gst_dtls_srtp_dec_class_init (GstDtlsSrtpDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
-  GstErDtlsSrtpBinClass *dtls_srtp_bin_class;
+  GstDtlsSrtpBinClass *dtls_srtp_bin_class;
 
   gobject_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
-  dtls_srtp_bin_class = (GstErDtlsSrtpBinClass *) klass;
+  dtls_srtp_bin_class = (GstDtlsSrtpBinClass *) klass;
 
   gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_dec_set_property);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_dec_set_property);
   gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_dec_get_property);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_dec_get_property);
 
   element_class->request_new_pad =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_dec_request_new_pad);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_dec_request_new_pad);
 
   dtls_srtp_bin_class->remove_dtls_element =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_dec_remove_dtls_element);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_dec_remove_dtls_element);
 
   properties[PROP_PEM] =
       g_param_spec_string ("pem",
@@ -142,7 +142,7 @@ gst_er_dtls_srtp_dec_class_init (GstErDtlsSrtpDecClass * klass)
 }
 
 static void
-gst_er_dtls_srtp_dec_init (GstErDtlsSrtpDec * self)
+gst_dtls_srtp_dec_init (GstDtlsSrtpDec * self)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (GST_ELEMENT (self));
   GstPadTemplate *templ;
@@ -151,7 +151,7 @@ gst_er_dtls_srtp_dec_init (GstErDtlsSrtpDec * self)
 
 /*
                                  +--------------------+
-            +--------------+  .-o|      erdtlsdec     |o-R----------data
+            +--------------+  .-o|       dtlsdec      |o-R----------data
             |          dtls|o-'  +--------------------+
     sink---o|  dtlsdemux   |
             |       srt(c)p|o-.  +-----------+     +-----------+
@@ -168,13 +168,12 @@ gst_er_dtls_srtp_dec_init (GstErDtlsSrtpDec * self)
     return;
   }
   self->dtls_srtp_demux =
-      gst_element_factory_make ("erdtlssrtpdemux", "dtls-srtp-demux");
+      gst_element_factory_make ("dtlssrtpdemux", "dtls-srtp-demux");
   if (!self->dtls_srtp_demux) {
     GST_ERROR_OBJECT (self, "failed to create dtls_srtp_demux");
     return;
   }
-  self->bin.dtls_element =
-      gst_element_factory_make ("erdtlsdec", "dtls-decoder");
+  self->bin.dtls_element = gst_element_factory_make ("dtlsdec", "dtls-decoder");
   if (!self->bin.dtls_element) {
     GST_ERROR_OBJECT (self, "failed to create dtls_dec");
     return;
@@ -229,16 +228,16 @@ gst_er_dtls_srtp_dec_init (GstErDtlsSrtpDec * self)
   g_return_if_fail (ret);
 
   g_signal_connect (self->srtp_dec, "request-key",
-      G_CALLBACK (on_decoder_request_key), self);
+      G_CALLBACK (on_decodgst_request_key), self);
   g_signal_connect (self->bin.dtls_element, "notify::peer-pem",
-      G_CALLBACK (on_peer_pem), self);
+      G_CALLBACK (on_pegst_pem), self);
 }
 
 static void
-gst_er_dtls_srtp_dec_set_property (GObject * object,
+gst_dtls_srtp_dec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstErDtlsSrtpDec *self = GST_ER_DTLS_SRTP_DEC (object);
+  GstDtlsSrtpDec *self = GST_DTLS_SRTP_DEC (object);
 
   switch (prop_id) {
     case PROP_PEM:
@@ -254,10 +253,10 @@ gst_er_dtls_srtp_dec_set_property (GObject * object,
 }
 
 static void
-gst_er_dtls_srtp_dec_get_property (GObject * object,
+gst_dtls_srtp_dec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstErDtlsSrtpDec *self = GST_ER_DTLS_SRTP_DEC (object);
+  GstDtlsSrtpDec *self = GST_DTLS_SRTP_DEC (object);
 
   switch (prop_id) {
     case PROP_PEM:
@@ -281,10 +280,10 @@ gst_er_dtls_srtp_dec_get_property (GObject * object,
 }
 
 static GstPad *
-gst_er_dtls_srtp_dec_request_new_pad (GstElement * element,
+gst_dtls_srtp_dec_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
-  GstErDtlsSrtpDec *self = GST_ER_DTLS_SRTP_DEC (element);
+  GstDtlsSrtpDec *self = GST_DTLS_SRTP_DEC (element);
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   GstPad *ghost_pad = NULL;
   gboolean ret;
@@ -321,8 +320,8 @@ gst_er_dtls_srtp_dec_request_new_pad (GstElement * element,
 }
 
 static GstCaps *
-on_decoder_request_key (GstElement * srtp_decoder,
-    guint ssrc, GstErDtlsSrtpBin * bin)
+on_decodgst_request_key (GstElement * srtp_decoder,
+    guint ssrc, GstDtlsSrtpBin * bin)
 {
   GstCaps *key_caps;
   GstBuffer *key_buffer = NULL;
@@ -364,7 +363,7 @@ on_decoder_request_key (GstElement * srtp_decoder,
     g_object_get (bin->dtls_element,
         "srtp-cipher", &cipher, "srtp-auth", &auth, NULL);
 
-    g_return_val_if_fail (cipher == ER_DTLS_SRTP_CIPHER_AES_128_ICM, NULL);
+    g_return_val_if_fail (cipher == GST_DTLS_SRTP_CIPHER_AES_128_ICM, NULL);
 
     key_caps = gst_caps_new_simple ("application/x-srtp",
         "srtp-key", GST_TYPE_BUFFER, key_buffer,
@@ -372,12 +371,12 @@ on_decoder_request_key (GstElement * srtp_decoder,
         "srtcp-cipher", G_TYPE_STRING, "aes-128-icm", NULL);
 
     switch (auth) {
-      case ER_DTLS_SRTP_AUTH_HMAC_SHA1_32:
+      case GST_DTLS_SRTP_AUTH_HMAC_SHA1_32:
         gst_caps_set_simple (key_caps,
             "srtp-auth", G_TYPE_STRING, "hmac-sha1-32",
             "srtcp-auth", G_TYPE_STRING, "hmac-sha1-32", NULL);
         break;
-      case ER_DTLS_SRTP_AUTH_HMAC_SHA1_80:
+      case GST_DTLS_SRTP_AUTH_HMAC_SHA1_80:
         gst_caps_set_simple (key_caps,
             "srtp-auth", G_TYPE_STRING, "hmac-sha1-80",
             "srtcp-auth", G_TYPE_STRING, "hmac-sha1-80", NULL);
@@ -394,8 +393,8 @@ on_decoder_request_key (GstElement * srtp_decoder,
 }
 
 static void
-on_peer_pem (GstElement * srtp_decoder, GParamSpec * pspec,
-    GstErDtlsSrtpDec * self)
+on_pegst_pem (GstElement * srtp_decoder, GParamSpec * pspec,
+    GstDtlsSrtpDec * self)
 {
   UNUSED (srtp_decoder);
   UNUSED (pspec);
@@ -404,9 +403,9 @@ on_peer_pem (GstElement * srtp_decoder, GParamSpec * pspec,
 }
 
 static void
-gst_er_dtls_srtp_dec_remove_dtls_element (GstErDtlsSrtpBin * bin)
+gst_dtls_srtp_dec_remove_dtls_element (GstDtlsSrtpBin * bin)
 {
-  GstErDtlsSrtpDec *self = GST_ER_DTLS_SRTP_DEC (bin);
+  GstDtlsSrtpDec *self = GST_DTLS_SRTP_DEC (bin);
   GstPad *demux_pad;
   gulong id;
 
@@ -417,7 +416,7 @@ gst_er_dtls_srtp_dec_remove_dtls_element (GstErDtlsSrtpBin * bin)
   demux_pad = gst_element_get_static_pad (self->dtls_srtp_demux, "dtls_src");
 
   id = gst_pad_add_probe (demux_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-      (GstPadProbeCallback) remove_dtls_decoder_probe_callback,
+      (GstPadProbeCallback) remove_dtls_decodgst_probe_callback,
       bin->dtls_element, NULL);
   g_return_if_fail (id);
   bin->dtls_element = NULL;
@@ -430,7 +429,7 @@ gst_er_dtls_srtp_dec_remove_dtls_element (GstErDtlsSrtpBin * bin)
 }
 
 static GstPadProbeReturn
-remove_dtls_decoder_probe_callback (GstPad * pad,
+remove_dtls_decodgst_probe_callback (GstPad * pad,
     GstPadProbeInfo * info, GstElement * element)
 {
   gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));

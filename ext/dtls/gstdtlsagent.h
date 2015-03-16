@@ -32,50 +32,50 @@
 
 G_BEGIN_DECLS
 
-#define ER_TYPE_DTLS_AGENT            (er_dtls_agent_get_type())
-#define ER_DTLS_AGENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), ER_TYPE_DTLS_AGENT, ErDtlsAgent))
-#define ER_DTLS_AGENT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), ER_TYPE_DTLS_AGENT, ErDtlsAgentClass))
-#define ER_IS_DTLS_AGENT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), ER_TYPE_DTLS_AGENT))
-#define ER_IS_DTLS_AGENT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), ER_TYPE_DTLS_AGENT))
-#define ER_DTLS_AGENT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), ER_TYPE_DTLS_AGENT, ErDtlsAgentClass))
+#define GST_TYPE_DTLS_AGENT            (gst_dtls_agent_get_type())
+#define GST_DTLS_AGENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DTLS_AGENT, GstDtlsAgent))
+#define GST_DTLS_AGENT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DTLS_AGENT, GstDtlsAgentClass))
+#define GST_IS_DTLS_AGENT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DTLS_AGENT))
+#define GST_IS_DTLS_AGENT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DTLS_AGENT))
+#define GST_DTLS_AGENT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_DTLS_AGENT, GstDtlsAgentClass))
 
-typedef gpointer ErDtlsAgentContext;
+typedef gpointer GstDtlsAgentContext;
 
-typedef struct _ErDtlsAgent        ErDtlsAgent;
-typedef struct _ErDtlsAgentClass   ErDtlsAgentClass;
-typedef struct _ErDtlsAgentPrivate ErDtlsAgentPrivate;
+typedef struct _GstDtlsAgent        GstDtlsAgent;
+typedef struct _GstDtlsAgentClass   GstDtlsAgentClass;
+typedef struct _GstDtlsAgentPrivate GstDtlsAgentPrivate;
 
 /*
- * ErDtlsAgent:
+ * GstDtlsAgent:
  *
- * A context for creating ErDtlsConnections with a ErDtlsCertificate.
- * ErDtlsAgent needs to be constructed with the "certificate" property set.
+ * A context for creating GstDtlsConnections with a GstDtlsCertificate.
+ * GstDtlsAgent needs to be constructed with the "certificate" property set.
  */
-struct _ErDtlsAgent {
+struct _GstDtlsAgent {
     GObject parent_instance;
 
-    ErDtlsAgentPrivate *priv;
+    GstDtlsAgentPrivate *priv;
 };
 
-struct _ErDtlsAgentClass {
+struct _GstDtlsAgentClass {
     GObjectClass parent_class;
 };
 
-GType er_dtls_agent_get_type(void) G_GNUC_CONST;
+GType gst_dtls_agent_get_type(void) G_GNUC_CONST;
 
 /*
  * Returns the certificate used by the agent.
  */
-ErDtlsCertificate *er_dtls_agent_get_certificate(ErDtlsAgent *);
+GstDtlsCertificate *gst_dtls_agent_get_certificate(GstDtlsAgent *);
 
 /*
  * Returns the certificate used by the agent, in PEM format.
  */
-gchar *er_dtls_agent_get_certificate_pem(ErDtlsAgent *self);
+gchar *gst_dtls_agent_get_certificate_pem(GstDtlsAgent *self);
 
 /* internal */
-void _er_dtls_init_openssl(void);
-const ErDtlsAgentContext _er_dtls_agent_peek_context(ErDtlsAgent *);
+void _gst_dtls_init_openssl(void);
+const GstDtlsAgentContext _gst_dtls_agent_peek_context(GstDtlsAgent *);
 
 G_END_DECLS
 

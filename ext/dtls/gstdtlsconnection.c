@@ -41,17 +41,17 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
-#if ER_DTLS_USE_GST_LOG
-GST_DEBUG_CATEGORY_STATIC (er_dtls_connection_debug);
-#   define GST_CAT_DEFAULT er_dtls_connection_debug
-G_DEFINE_TYPE_WITH_CODE (ErDtlsConnection, er_dtls_connection, G_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (er_dtls_connection_debug, "gstdtlsconnection", 0,
-        "Ericsson DTLS Connection"));
+#if GST_DTLS_USE_GST_LOG
+GST_DEBUG_CATEGORY_STATIC (gst_dtls_connection_debug);
+#   define GST_CAT_DEFAULT gst_dtls_connection_debug
+G_DEFINE_TYPE_WITH_CODE (GstDtlsConnection, gst_dtls_connection, G_TYPE_OBJECT,
+    GST_DEBUG_CATEGORY_INIT (gst_dtls_connection_debug, "dtlsconnection", 0,
+        "DTLS Connection"));
 #else
-G_DEFINE_TYPE (ErDtlsConnection, er_dtls_connection, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GstDtlsConnection, gst_dtls_connection, G_TYPE_OBJECT);
 #endif
 
-#define ER_DTLS_CONNECTION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), ER_TYPE_DTLS_CONNECTION, ErDtlsConnectionPrivate))
+#define GST_DTLS_CONNECTION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_CONNECTION, GstDtlsConnectionPrivate))
 
 #define SRTP_KEY_LEN 16
 #define SRTP_SALT_LEN 14
@@ -77,7 +77,7 @@ static GParamSpec *properties[NUM_PROPERTIES];
 
 static int connection_ex_index;
 
-struct _ErDtlsConnectionPrivate
+struct _GstDtlsConnectionPrivate
 {
   SSL *ssl;
   BIO *bio;
@@ -97,18 +97,18 @@ struct _ErDtlsConnectionPrivate
   GClosure *send_closure;
 };
 
-static void er_dtls_connection_finalize (GObject * gobject);
-static void er_dtls_connection_set_property (GObject *, guint prop_id,
+static void gst_dtls_connection_finalize (GObject * gobject);
+static void gst_dtls_connection_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
 
-static void log_state (ErDtlsConnection *, const gchar * str);
-static gpointer connection_timeout_thread_func (ErDtlsConnection *);
-static void export_srtp_keys (ErDtlsConnection *);
-static void openssl_poll (ErDtlsConnection *);
+static void log_state (GstDtlsConnection *, const gchar * str);
+static gpointer connection_timeout_thread_func (GstDtlsConnection *);
+static void export_srtp_keys (GstDtlsConnection *);
+static void openssl_poll (GstDtlsConnection *);
 static int openssl_verify_callback (int preverify_ok,
     X509_STORE_CTX * x509_ctx);
 
-static BIO_METHOD *BIO_s_er_dtls_connection ();
+static BIO_METHOD *BIO_s_gst_dtls_connection ();
 static int bio_method_write (BIO *, const char *data, int size);
 static int bio_method_read (BIO *, char *out_buffer, int size);
 static long bio_method_ctrl (BIO *, int cmd, long arg1, void *arg2);
@@ -116,13 +116,13 @@ static int bio_method_new (BIO *);
 static int bio_method_free (BIO *);
 
 static void
-er_dtls_connection_class_init (ErDtlsConnectionClass * klass)
+gst_dtls_connection_class_init (GstDtlsConnectionClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (ErDtlsConnectionPrivate));
+  g_type_class_add_private (klass, sizeof (GstDtlsConnectionPrivate));
 
-  gobject_class->set_property = er_dtls_connection_set_property;
+  gobject_class->set_property = gst_dtls_connection_set_property;
 
   connection_ex_index =
       SSL_get_ex_new_index (0, (gpointer) "gstdtlsagent connection index", NULL,
@@ -147,22 +147,22 @@ er_dtls_connection_class_init (ErDtlsConnectionClass * klass)
 
   properties[PROP_AGENT] =
       g_param_spec_object ("agent",
-      "ERDtlsAgent",
+      "DTLS Agent",
       "Agent to use in creation of the connection",
-      ER_TYPE_DTLS_AGENT,
+      GST_TYPE_DTLS_AGENT,
       G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
-  _er_dtls_init_openssl ();
+  _gst_dtls_init_openssl ();
 
-  gobject_class->finalize = er_dtls_connection_finalize;
+  gobject_class->finalize = gst_dtls_connection_finalize;
 }
 
 static void
-er_dtls_connection_init (ErDtlsConnection * self)
+gst_dtls_connection_init (GstDtlsConnection * self)
 {
-  ErDtlsConnectionPrivate *priv = ER_DTLS_CONNECTION_GET_PRIVATE (self);
+  GstDtlsConnectionPrivate *priv = GST_DTLS_CONNECTION_GET_PRIVATE (self);
   self->priv = priv;
 
   priv->ssl = NULL;
@@ -185,10 +185,10 @@ er_dtls_connection_init (ErDtlsConnection * self)
 }
 
 static void
-er_dtls_connection_finalize (GObject * gobject)
+gst_dtls_connection_finalize (GObject * gobject)
 {
-  ErDtlsConnection *self = ER_DTLS_CONNECTION (gobject);
-  ErDtlsConnectionPrivate *priv = self->priv;
+  GstDtlsConnection *self = GST_DTLS_CONNECTION (gobject);
+  GstDtlsConnectionPrivate *priv = self->priv;
 
 
   SSL_free (priv->ssl);
@@ -204,30 +204,30 @@ er_dtls_connection_finalize (GObject * gobject)
 
   LOG_DEBUG (self, "finalized");
 
-  G_OBJECT_CLASS (er_dtls_connection_parent_class)->finalize (gobject);
+  G_OBJECT_CLASS (gst_dtls_connection_parent_class)->finalize (gobject);
 }
 
 static void
-er_dtls_connection_set_property (GObject * object, guint prop_id,
+gst_dtls_connection_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  ErDtlsConnection *self = ER_DTLS_CONNECTION (object);
-  ErDtlsAgent *agent;
-  ErDtlsConnectionPrivate *priv = self->priv;
+  GstDtlsConnection *self = GST_DTLS_CONNECTION (object);
+  GstDtlsAgent *agent;
+  GstDtlsConnectionPrivate *priv = self->priv;
   SSL_CTX *ssl_context;
 
   switch (prop_id) {
     case PROP_AGENT:
       g_return_if_fail (!priv->ssl);
-      agent = ER_DTLS_AGENT (g_value_get_object (value));
-      g_return_if_fail (ER_IS_DTLS_AGENT (agent));
+      agent = GST_DTLS_AGENT (g_value_get_object (value));
+      g_return_if_fail (GST_IS_DTLS_AGENT (agent));
 
-      ssl_context = _er_dtls_agent_peek_context (agent);
+      ssl_context = _gst_dtls_agent_peek_context (agent);
 
       priv->ssl = SSL_new (ssl_context);
       g_return_if_fail (priv->ssl);
 
-      priv->bio = BIO_new (BIO_s_er_dtls_connection ());
+      priv->bio = BIO_new (BIO_s_gst_dtls_connection ());
       g_return_if_fail (priv->bio);
 
       priv->bio->ptr = self;
@@ -246,10 +246,10 @@ er_dtls_connection_set_property (GObject * object, guint prop_id,
 }
 
 void
-er_dtls_connection_start (ErDtlsConnection * self, gboolean is_client)
+gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
 {
-  g_return_if_fail (ER_IS_DTLS_CONNECTION (self));
-  ErDtlsConnectionPrivate *priv = self->priv;
+  g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
+  GstDtlsConnectionPrivate *priv = self->priv;
   g_return_if_fail (priv->send_closure);
   g_return_if_fail (priv->ssl);
   g_return_if_fail (priv->bio);
@@ -283,11 +283,11 @@ er_dtls_connection_start (ErDtlsConnection * self, gboolean is_client)
 }
 
 void
-er_dtls_connection_start_timeout (ErDtlsConnection * self)
+gst_dtls_connection_start_timeout (GstDtlsConnection * self)
 {
-  g_return_if_fail (ER_IS_DTLS_CONNECTION (self));
+  g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
 
-  ErDtlsConnectionPrivate *priv = self->priv;
+  GstDtlsConnectionPrivate *priv = self->priv;
   GError *error = NULL;
   gchar *thread_name = g_strdup_printf ("connection_thread_%p", self);
 
@@ -311,9 +311,9 @@ er_dtls_connection_start_timeout (ErDtlsConnection * self)
 }
 
 void
-er_dtls_connection_stop (ErDtlsConnection * self)
+gst_dtls_connection_stop (GstDtlsConnection * self)
 {
-  g_return_if_fail (ER_IS_DTLS_CONNECTION (self));
+  g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
   g_return_if_fail (self->priv->ssl);
   g_return_if_fail (self->priv->bio);
 
@@ -335,9 +335,9 @@ er_dtls_connection_stop (ErDtlsConnection * self)
 }
 
 void
-er_dtls_connection_close (ErDtlsConnection * self)
+gst_dtls_connection_close (GstDtlsConnection * self)
 {
-  g_return_if_fail (ER_IS_DTLS_CONNECTION (self));
+  g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
   g_return_if_fail (self->priv->ssl);
   g_return_if_fail (self->priv->bio);
 
@@ -364,10 +364,10 @@ er_dtls_connection_close (ErDtlsConnection * self)
 }
 
 void
-er_dtls_connection_set_send_callback (ErDtlsConnection * self,
+gst_dtls_connection_set_send_callback (GstDtlsConnection * self,
     GClosure * closure)
 {
-  g_return_if_fail (ER_IS_DTLS_CONNECTION (self));
+  g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
 
   LOG_TRACE (self, "locking @ set_send_callback");
   g_mutex_lock (&self->priv->mutex);
@@ -384,10 +384,10 @@ er_dtls_connection_set_send_callback (ErDtlsConnection * self,
 }
 
 gint
-er_dtls_connection_process (ErDtlsConnection * self, gpointer data, gint len)
+gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gint len)
 {
-  g_return_val_if_fail (ER_IS_DTLS_CONNECTION (self), 0);
-  ErDtlsConnectionPrivate *priv = self->priv;
+  g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
+  GstDtlsConnectionPrivate *priv = self->priv;
   gint result;
 
   g_return_val_if_fail (self->priv->ssl, 0);
@@ -427,9 +427,9 @@ er_dtls_connection_process (ErDtlsConnection * self, gpointer data, gint len)
 }
 
 gint
-er_dtls_connection_send (ErDtlsConnection * self, gpointer data, gint len)
+gst_dtls_connection_send (GstDtlsConnection * self, gpointer data, gint len)
 {
-  g_return_val_if_fail (ER_IS_DTLS_CONNECTION (self), 0);
+  g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
   int ret = 0;
 
   g_return_val_if_fail (self->priv->ssl, 0);
@@ -464,9 +464,9 @@ er_dtls_connection_send (ErDtlsConnection * self, gpointer data, gint len)
 */
 
 static void
-log_state (ErDtlsConnection * self, const gchar * str)
+log_state (GstDtlsConnection * self, const gchar * str)
 {
-  ErDtlsConnectionPrivate *priv = self->priv;
+  GstDtlsConnectionPrivate *priv = self->priv;
   guint states = 0;
 
   states |= (! !SSL_is_init_finished (priv->ssl) << 0);
@@ -488,9 +488,9 @@ log_state (ErDtlsConnection * self, const gchar * str)
 }
 
 static gpointer
-connection_timeout_thread_func (ErDtlsConnection * self)
+connection_timeout_thread_func (GstDtlsConnection * self)
 {
-  ErDtlsConnectionPrivate *priv = self->priv;
+  GstDtlsConnectionPrivate *priv = self->priv;
   struct timeval timeout;
   gint64 end_time, wait_time;
   gint ret;
@@ -551,7 +551,7 @@ connection_timeout_thread_func (ErDtlsConnection * self)
 }
 
 static void
-export_srtp_keys (ErDtlsConnection * self)
+export_srtp_keys (GstDtlsConnection * self)
 {
   typedef struct
   {
@@ -566,20 +566,20 @@ export_srtp_keys (ErDtlsConnection * self)
   struct
   {
     Key client_key;
-    Key server_key;
+    Key servgst_key;
     Salt client_salt;
-    Salt server_salt;
+    Salt servgst_salt;
   } exported_keys;
 
   struct
   {
     Key key;
     Salt salt;
-  } client_key, server_key;
+  } client_key, servgst_key;
 
   SRTP_PROTECTION_PROFILE *profile;
-  ErDtlsSrtpCipher cipher;
-  ErDtlsSrtpAuth auth;
+  GstDtlsSrtpCipher cipher;
+  GstDtlsSrtpAuth auth;
   gint success;
 
   static gchar export_string[] = "EXTRACTOR-dtls_srtp";
@@ -599,12 +599,12 @@ export_srtp_keys (ErDtlsConnection * self)
 
   switch (profile->id) {
     case SRTP_AES128_CM_SHA1_80:
-      cipher = ER_DTLS_SRTP_CIPHER_AES_128_ICM;
-      auth = ER_DTLS_SRTP_AUTH_HMAC_SHA1_80;
+      cipher = GST_DTLS_SRTP_CIPHER_AES_128_ICM;
+      auth = GST_DTLS_SRTP_AUTH_HMAC_SHA1_80;
       break;
     case SRTP_AES128_CM_SHA1_32:
-      cipher = ER_DTLS_SRTP_CIPHER_AES_128_ICM;
-      auth = ER_DTLS_SRTP_AUTH_HMAC_SHA1_32;
+      cipher = GST_DTLS_SRTP_CIPHER_AES_128_ICM;
+      auth = GST_DTLS_SRTP_AUTH_HMAC_SHA1_32;
       break;
     default:
       LOG_WARNING (self, "invalid crypto suite set by handshake");
@@ -612,18 +612,18 @@ export_srtp_keys (ErDtlsConnection * self)
   }
 
   client_key.key = exported_keys.client_key;
-  server_key.key = exported_keys.server_key;
+  servgst_key.key = exported_keys.servgst_key;
   client_key.salt = exported_keys.client_salt;
-  server_key.salt = exported_keys.server_salt;
+  servgst_key.salt = exported_keys.servgst_salt;
 
   if (self->priv->is_client) {
     g_signal_emit (self, signals[SIGNAL_ON_ENCODER_KEY], 0, &client_key, cipher,
         auth);
-    g_signal_emit (self, signals[SIGNAL_ON_DECODER_KEY], 0, &server_key, cipher,
-        auth);
+    g_signal_emit (self, signals[SIGNAL_ON_DECODER_KEY], 0, &servgst_key,
+        cipher, auth);
   } else {
-    g_signal_emit (self, signals[SIGNAL_ON_ENCODER_KEY], 0, &server_key, cipher,
-        auth);
+    g_signal_emit (self, signals[SIGNAL_ON_ENCODER_KEY], 0, &servgst_key,
+        cipher, auth);
     g_signal_emit (self, signals[SIGNAL_ON_DECODER_KEY], 0, &client_key, cipher,
         auth);
   }
@@ -633,7 +633,7 @@ beach:
 }
 
 static void
-openssl_poll (ErDtlsConnection * self)
+openssl_poll (GstDtlsConnection * self)
 {
   int ret;
   char buf[512];
@@ -691,7 +691,7 @@ openssl_poll (ErDtlsConnection * self)
 static int
 openssl_verify_callback (int preverify_ok, X509_STORE_CTX * x509_ctx)
 {
-  ErDtlsConnection *self;
+  GstDtlsConnection *self;
   SSL *ssl;
   BIO *bio;
   gchar *pem = NULL;
@@ -701,9 +701,9 @@ openssl_verify_callback (int preverify_ok, X509_STORE_CTX * x509_ctx)
       X509_STORE_CTX_get_ex_data (x509_ctx,
       SSL_get_ex_data_X509_STORE_CTX_idx ());
   self = SSL_get_ex_data (ssl, connection_ex_index);
-  g_return_val_if_fail (ER_IS_DTLS_CONNECTION (self), FALSE);
+  g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), FALSE);
 
-  pem = _er_dtls_x509_to_pem (x509_ctx->cert);
+  pem = _gst_dtls_x509_to_pem (x509_ctx->cert);
 
   if (!pem) {
     LOG_WARNING (self, "failed to convert received certificate to pem format");
@@ -756,7 +756,7 @@ static BIO_METHOD custom_bio_methods = {
 };
 
 static BIO_METHOD *
-BIO_s_er_dtls_connection ()
+BIO_s_gst_dtls_connection ()
 {
   return &custom_bio_methods;
 }
@@ -764,14 +764,14 @@ BIO_s_er_dtls_connection ()
 static int
 bio_method_write (BIO * bio, const char *data, int size)
 {
-  ErDtlsConnection *self = ER_DTLS_CONNECTION (bio->ptr);
+  GstDtlsConnection *self = GST_DTLS_CONNECTION (bio->ptr);
 
   LOG_LOG (self, "BIO: writing %d", size);
 
   if (self->priv->send_closure) {
     GValue values[3] = { G_VALUE_INIT };
 
-    g_value_init (&values[0], ER_TYPE_DTLS_CONNECTION);
+    g_value_init (&values[0], GST_TYPE_DTLS_CONNECTION);
     g_value_set_object (&values[0], self);
 
     g_value_init (&values[1], G_TYPE_POINTER);
@@ -789,8 +789,8 @@ bio_method_write (BIO * bio, const char *data, int size)
 static int
 bio_method_read (BIO * bio, char *out_buffer, int size)
 {
-  ErDtlsConnection *self = ER_DTLS_CONNECTION (bio->ptr);
-  ErDtlsConnectionPrivate *priv = self->priv;
+  GstDtlsConnection *self = GST_DTLS_CONNECTION (bio->ptr);
+  GstDtlsConnectionPrivate *priv = self->priv;
   guint internal_size;
   gint copy_size;
 
@@ -833,8 +833,8 @@ bio_method_read (BIO * bio, char *out_buffer, int size)
 static long
 bio_method_ctrl (BIO * bio, int cmd, long arg1, void *arg2)
 {
-  ErDtlsConnection *self = ER_DTLS_CONNECTION (bio->ptr);
-  ErDtlsConnectionPrivate *priv = self->priv;
+  GstDtlsConnection *self = GST_DTLS_CONNECTION (bio->ptr);
+  GstDtlsConnectionPrivate *priv = self->priv;
 
   switch (cmd) {
     case BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT:
@@ -896,6 +896,6 @@ bio_method_free (BIO * bio)
     return 0;
   }
 
-  LOG_LOG (ER_DTLS_CONNECTION (bio->ptr), "BIO free");
+  LOG_LOG (GST_DTLS_CONNECTION (bio->ptr), "BIO free");
   return 0;
 }

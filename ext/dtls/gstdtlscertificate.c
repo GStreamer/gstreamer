@@ -39,17 +39,17 @@
 
 #include <openssl/ssl.h>
 
-#if ER_DTLS_USE_GST_LOG
-GST_DEBUG_CATEGORY_STATIC (er_dtls_certificate_debug);
-#   define GST_CAT_DEFAULT er_dtls_certificate_debug
-G_DEFINE_TYPE_WITH_CODE (ErDtlsCertificate, er_dtls_certificate, G_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (er_dtls_certificate_debug, "gstdtlscertificate", 0,
-        "Ericsson DTLS Certificate"));
+#if GST_DTLS_USE_GST_LOG
+GST_DEBUG_CATEGORY_STATIC (gst_dtls_certificate_debug);
+#   define GST_CAT_DEFAULT gst_dtls_certificate_debug
+G_DEFINE_TYPE_WITH_CODE (GstDtlsCertificate, gst_dtls_certificate,
+    G_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (gst_dtls_certificate_debug,
+        "dtlscertificate", 0, "DTLS Certificate"));
 #else
-G_DEFINE_TYPE (ErDtlsCertificate, er_dtls_certificate, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GstDtlsCertificate, gst_dtls_certificate, G_TYPE_OBJECT);
 #endif
 
-#define ER_DTLS_CERTIFICATE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), ER_TYPE_DTLS_CERTIFICATE, ErDtlsCertificatePrivate))
+#define GST_DTLS_CERTIFICATE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_CERTIFICATE, GstDtlsCertificatePrivate))
 
 enum
 {
@@ -62,7 +62,7 @@ static GParamSpec *properties[NUM_PROPERTIES];
 
 #define DEFAULT_PEM NULL
 
-struct _ErDtlsCertificatePrivate
+struct _GstDtlsCertificatePrivate
 {
   X509 *x509;
   EVP_PKEY *private_key;
@@ -70,24 +70,24 @@ struct _ErDtlsCertificatePrivate
   gchar *pem;
 };
 
-static void er_dtls_certificate_finalize (GObject * gobject);
-static void er_dtls_certificate_set_property (GObject *, guint prop_id,
+static void gst_dtls_certificate_finalize (GObject * gobject);
+static void gst_dtls_certificate_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
-static void er_dtls_certificate_get_property (GObject *, guint prop_id,
+static void gst_dtls_certificate_get_property (GObject *, guint prop_id,
     GValue *, GParamSpec *);
 
-static void init_generated (ErDtlsCertificate *);
-static void init_from_pem_string (ErDtlsCertificate *, const gchar * pem);
+static void init_generated (GstDtlsCertificate *);
+static void init_from_pem_string (GstDtlsCertificate *, const gchar * pem);
 
 static void
-er_dtls_certificate_class_init (ErDtlsCertificateClass * klass)
+gst_dtls_certificate_class_init (GstDtlsCertificateClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (ErDtlsCertificatePrivate));
+  g_type_class_add_private (klass, sizeof (GstDtlsCertificatePrivate));
 
-  gobject_class->set_property = er_dtls_certificate_set_property;
-  gobject_class->get_property = er_dtls_certificate_get_property;
+  gobject_class->set_property = gst_dtls_certificate_set_property;
+  gobject_class->get_property = gst_dtls_certificate_get_property;
 
   properties[PROP_PEM] =
       g_param_spec_string ("pem",
@@ -98,15 +98,15 @@ er_dtls_certificate_class_init (ErDtlsCertificateClass * klass)
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
-  _er_dtls_init_openssl ();
+  _gst_dtls_init_openssl ();
 
-  gobject_class->finalize = er_dtls_certificate_finalize;
+  gobject_class->finalize = gst_dtls_certificate_finalize;
 }
 
 static void
-er_dtls_certificate_init (ErDtlsCertificate * self)
+gst_dtls_certificate_init (GstDtlsCertificate * self)
 {
-  ErDtlsCertificatePrivate *priv = ER_DTLS_CERTIFICATE_GET_PRIVATE (self);
+  GstDtlsCertificatePrivate *priv = GST_DTLS_CERTIFICATE_GET_PRIVATE (self);
   self->priv = priv;
 
   priv->x509 = NULL;
@@ -115,9 +115,9 @@ er_dtls_certificate_init (ErDtlsCertificate * self)
 }
 
 static void
-er_dtls_certificate_finalize (GObject * gobject)
+gst_dtls_certificate_finalize (GObject * gobject)
 {
-  ErDtlsCertificatePrivate *priv = ER_DTLS_CERTIFICATE (gobject)->priv;
+  GstDtlsCertificatePrivate *priv = GST_DTLS_CERTIFICATE (gobject)->priv;
 
   X509_free (priv->x509);
   priv->x509 = NULL;
@@ -129,14 +129,14 @@ er_dtls_certificate_finalize (GObject * gobject)
   g_free (priv->pem);
   priv->pem = NULL;
 
-  G_OBJECT_CLASS (er_dtls_certificate_parent_class)->finalize (gobject);
+  G_OBJECT_CLASS (gst_dtls_certificate_parent_class)->finalize (gobject);
 }
 
 static void
-er_dtls_certificate_set_property (GObject * object, guint prop_id,
+gst_dtls_certificate_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  ErDtlsCertificate *self = ER_DTLS_CERTIFICATE (object);
+  GstDtlsCertificate *self = GST_DTLS_CERTIFICATE (object);
   const gchar *pem;
 
   switch (prop_id) {
@@ -154,10 +154,10 @@ er_dtls_certificate_set_property (GObject * object, guint prop_id,
 }
 
 static void
-er_dtls_certificate_get_property (GObject * object, guint prop_id,
+gst_dtls_certificate_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  ErDtlsCertificate *self = ER_DTLS_CERTIFICATE (object);
+  GstDtlsCertificate *self = GST_DTLS_CERTIFICATE (object);
 
   switch (prop_id) {
     case PROP_PEM:
@@ -170,9 +170,9 @@ er_dtls_certificate_get_property (GObject * object, guint prop_id,
 }
 
 static void
-init_generated (ErDtlsCertificate * self)
+init_generated (GstDtlsCertificate * self)
 {
-  ErDtlsCertificatePrivate *priv = self->priv;
+  GstDtlsCertificatePrivate *priv = self->priv;
   RSA *rsa;
   X509_NAME *name = NULL;
 
@@ -240,13 +240,13 @@ init_generated (ErDtlsCertificate * self)
     return;
   }
 
-  self->priv->pem = _er_dtls_x509_to_pem (priv->x509);
+  self->priv->pem = _gst_dtls_x509_to_pem (priv->x509);
 }
 
 static void
-init_from_pem_string (ErDtlsCertificate * self, const gchar * pem)
+init_from_pem_string (GstDtlsCertificate * self, const gchar * pem)
 {
-  ErDtlsCertificatePrivate *priv = self->priv;
+  GstDtlsCertificatePrivate *priv = self->priv;
   BIO *bio;
 
   g_return_if_fail (pem);
@@ -281,11 +281,11 @@ init_from_pem_string (ErDtlsCertificate * self, const gchar * pem)
 }
 
 gchar *
-_er_dtls_x509_to_pem (gpointer x509)
+_gst_dtls_x509_to_pem (gpointer x509)
 {
-#define ER_DTLS_BIO_BUFFER_SIZE 4096
+#define GST_DTLS_BIO_BUFFER_SIZE 4096
   BIO *bio;
-  gchar buffer[ER_DTLS_BIO_BUFFER_SIZE] = { 0 };
+  gchar buffer[GST_DTLS_BIO_BUFFER_SIZE] = { 0 };
   gint len;
   gchar *pem = NULL;
 
@@ -297,7 +297,7 @@ _er_dtls_x509_to_pem (gpointer x509)
     goto beach;
   }
 
-  len = BIO_read (bio, buffer, ER_DTLS_BIO_BUFFER_SIZE);
+  len = BIO_read (bio, buffer, GST_DTLS_BIO_BUFFER_SIZE);
   if (!len) {
     g_warn_if_reached ();
     goto beach;
@@ -311,16 +311,16 @@ beach:
   return pem;
 }
 
-ErDtlsCertificateInternalCertificate
-_er_dtls_certificate_get_internal_certificate (ErDtlsCertificate * self)
+GstDtlsCertificateInternalCertificate
+_gst_dtls_certificate_get_internal_certificate (GstDtlsCertificate * self)
 {
-  g_return_val_if_fail (ER_IS_DTLS_CERTIFICATE (self), NULL);
+  g_return_val_if_fail (GST_IS_DTLS_CERTIFICATE (self), NULL);
   return self->priv->x509;
 }
 
-ErDtlsCertificateInternalKey
-_er_dtls_certificate_get_internal_key (ErDtlsCertificate * self)
+GstDtlsCertificateInternalKey
+_gst_dtls_certificate_get_internal_key (GstDtlsCertificate * self)
 {
-  g_return_val_if_fail (ER_IS_DTLS_CERTIFICATE (self), NULL);
+  g_return_val_if_fail (GST_IS_DTLS_CERTIFICATE (self), NULL);
   return self->priv->private_key;
 }

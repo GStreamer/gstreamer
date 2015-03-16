@@ -38,33 +38,20 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "erdtlsenc", GST_RANK_NONE,
-      GST_TYPE_ER_DTLS_ENC)
-      && gst_element_register (plugin, "erdtlsdec", GST_RANK_NONE,
-      GST_TYPE_ER_DTLS_DEC)
-      && gst_element_register (plugin, "erdtlssrtpdec", GST_RANK_NONE,
-      GST_TYPE_ER_DTLS_SRTP_DEC)
-      && gst_element_register (plugin, "erdtlssrtpenc", GST_RANK_NONE,
-      GST_TYPE_ER_DTLS_SRTP_ENC)
-      && gst_element_register (plugin, "erdtlssrtpdemux", GST_RANK_NONE,
-      GST_TYPE_ER_DTLS_SRTP_DEMUX);
+  return gst_element_register (plugin, "dtlsenc", GST_RANK_NONE,
+      GST_TYPE_DTLS_ENC)
+      && gst_element_register (plugin, "dtlsdec", GST_RANK_NONE,
+      GST_TYPE_DTLS_DEC)
+      && gst_element_register (plugin, "dtlssrtpdec", GST_RANK_NONE,
+      GST_TYPE_DTLS_SRTP_DEC)
+      && gst_element_register (plugin, "dtlssrtpenc", GST_RANK_NONE,
+      GST_TYPE_DTLS_SRTP_ENC)
+      && gst_element_register (plugin, "dtlssrtpdemux", GST_RANK_NONE,
+      GST_TYPE_DTLS_SRTP_DEMUX);
 }
 
-/* PACKAGE: this is usually set by autotools depending on some _INIT macro
- * in configure.ac and then written into and defined in config.h, but we can
- * just set it ourselves here in case someone doesn't use autotools to
- * compile this code. GST_PLUGIN_DEFINE needs PACKAGE to be defined.
- */
-#ifndef PACKAGE
-#define PACKAGE "erdtls"
-#endif
-
-/* gstreamer looks for this structure to register plugins
- */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    erdtls,
-    "Ericsson DTLS decoder and encoder plugins",
-    plugin_init,
-    PACKAGE_VERSION,
-    "BSD", "OpenWebRTC GStreamer plugins", "http://www.openwebrtc.io/")
+    dtls,
+    "DTLS decoder and encoder plugins",
+    plugin_init, PACKAGE_VERSION, "BSD", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -42,13 +42,12 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (er_dtls_dec_debug);
-#define GST_CAT_DEFAULT er_dtls_dec_debug
+GST_DEBUG_CATEGORY_STATIC (gst_dtls_dec_debug);
+#define GST_CAT_DEFAULT gst_dtls_dec_debug
 
-#define gst_er_dtls_dec_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstErDtlsDec, gst_er_dtls_dec, GST_TYPE_ELEMENT,
-    GST_DEBUG_CATEGORY_INIT (er_dtls_dec_debug, "erdtlsdec", 0,
-        "Ericsson DTLS Decoder"));
+#define gst_dtls_dec_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstDtlsDec, gst_dtls_dec, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (gst_dtls_dec_debug, "dtlsdec", 0, "DTLS Decoder"));
 
 #define UNUSED(param) while (0) { (void)(param); }
 
@@ -84,32 +83,32 @@ static GParamSpec *properties[NUM_PROPERTIES];
 #define DEFAULT_SRTP_AUTH 0
 
 
-static void gst_er_dtls_dec_finalize (GObject *);
-static void gst_er_dtls_dec_dispose (GObject *);
-static void gst_er_dtls_dec_set_property (GObject *, guint prop_id,
+static void gst_dtls_dec_finalize (GObject *);
+static void gst_dtls_dec_dispose (GObject *);
+static void gst_dtls_dec_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
-static void gst_er_dtls_dec_get_property (GObject *, guint prop_id, GValue *,
+static void gst_dtls_dec_get_property (GObject *, guint prop_id, GValue *,
     GParamSpec *);
 
-static GstStateChangeReturn gst_er_dtls_dec_change_state (GstElement *,
+static GstStateChangeReturn gst_dtls_dec_change_state (GstElement *,
     GstStateChange);
-static GstPad *gst_er_dtls_dec_request_new_pad (GstElement *, GstPadTemplate *,
+static GstPad *gst_dtls_dec_request_new_pad (GstElement *, GstPadTemplate *,
     const gchar * name, const GstCaps *);
-static void gst_er_dtls_dec_release_pad (GstElement *, GstPad *);
+static void gst_dtls_dec_release_pad (GstElement *, GstPad *);
 
-static void on_key_received (ErDtlsConnection *, gpointer key, guint cipher,
-    guint auth, GstErDtlsDec *);
-static gboolean on_peer_certificate_received (ErDtlsConnection *, gchar * pem,
-    GstErDtlsDec *);
+static void on_key_received (GstDtlsConnection *, gpointer key, guint cipher,
+    guint auth, GstDtlsDec *);
+static gboolean on_pegst_certificate_received (GstDtlsConnection *, gchar * pem,
+    GstDtlsDec *);
 static GstFlowReturn sink_chain (GstPad *, GstObject * parent, GstBuffer *);
 
-static ErDtlsAgent *get_agent_by_pem (const gchar * pem);
-static void agent_weak_ref_notify (gchar * pem, ErDtlsAgent *);
-static void create_connection (GstErDtlsDec *, gchar * id);
-static void connection_weak_ref_notify (gchar * id, ErDtlsConnection *);
+static GstDtlsAgent *get_agent_by_pem (const gchar * pem);
+static void agent_weak_ref_notify (gchar * pem, GstDtlsAgent *);
+static void create_connection (GstDtlsDec *, gchar * id);
+static void connection_weak_ref_notify (gchar * id, GstDtlsConnection *);
 
 static void
-gst_er_dtls_dec_class_init (GstErDtlsDecClass * klass)
+gst_dtls_dec_class_init (GstDtlsDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
@@ -117,18 +116,15 @@ gst_er_dtls_dec_class_init (GstErDtlsDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_er_dtls_dec_finalize);
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_er_dtls_dec_dispose);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_dec_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_dec_get_property);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_dtls_dec_finalize);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_dtls_dec_dispose);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_dtls_dec_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_dtls_dec_get_property);
 
-  element_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_dec_change_state);
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_dtls_dec_change_state);
   element_class->request_new_pad =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_dec_request_new_pad);
-  element_class->release_pad = GST_DEBUG_FUNCPTR (gst_er_dtls_dec_release_pad);
+      GST_DEBUG_FUNCPTR (gst_dtls_dec_request_new_pad);
+  element_class->release_pad = GST_DEBUG_FUNCPTR (gst_dtls_dec_release_pad);
 
   signals[SIGNAL_ON_KEY_RECEIVED] =
       g_signal_new ("on-key-received", G_TYPE_FROM_CLASS (klass),
@@ -163,16 +159,16 @@ gst_er_dtls_dec_class_init (GstErDtlsDecClass * klass)
       g_param_spec_uint ("srtp-cipher",
       "SRTP cipher",
       "The SRTP cipher selected in the DTLS handshake. "
-      "The value will be set to an ErDtlsSrtpCipher.",
-      0, ER_DTLS_SRTP_CIPHER_AES_128_ICM, DEFAULT_SRTP_CIPHER,
+      "The value will be set to an GstDtlsSrtpCipher.",
+      0, GST_DTLS_SRTP_CIPHER_AES_128_ICM, DEFAULT_SRTP_CIPHER,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_SRTP_AUTH] =
       g_param_spec_uint ("srtp-auth",
       "SRTP authentication",
       "The SRTP authentication selected in the DTLS handshake. "
-      "The value will be set to an ErDtlsSrtpAuth.",
-      0, ER_DTLS_SRTP_AUTH_HMAC_SHA1_80, DEFAULT_SRTP_AUTH,
+      "The value will be set to an GstDtlsSrtpAuth.",
+      0, GST_DTLS_SRTP_AUTH_HMAC_SHA1_80, DEFAULT_SRTP_AUTH,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
@@ -189,15 +185,15 @@ gst_er_dtls_dec_class_init (GstErDtlsDecClass * klass)
 }
 
 static void
-gst_er_dtls_dec_init (GstErDtlsDec * self)
+gst_dtls_dec_init (GstDtlsDec * self)
 {
   GstPad *sink;
   self->agent = get_agent_by_pem (NULL);
   self->connection_id = NULL;
   self->connection = NULL;
-  self->peer_pem = NULL;
+  self->pegst_pem = NULL;
 
-  self->decoder_key = NULL;
+  self->decodgst_key = NULL;
   self->srtp_cipher = DEFAULT_SRTP_CIPHER;
   self->srtp_auth = DEFAULT_SRTP_AUTH;
 
@@ -213,20 +209,20 @@ gst_er_dtls_dec_init (GstErDtlsDec * self)
 }
 
 static void
-gst_er_dtls_dec_finalize (GObject * object)
+gst_dtls_dec_finalize (GObject * object)
 {
-  GstErDtlsDec *self = GST_ER_DTLS_DEC (object);
+  GstDtlsDec *self = GST_DTLS_DEC (object);
 
-  if (self->decoder_key) {
-    gst_buffer_unref (self->decoder_key);
-    self->decoder_key = NULL;
+  if (self->decodgst_key) {
+    gst_buffer_unref (self->decodgst_key);
+    self->decodgst_key = NULL;
   }
 
   g_free (self->connection_id);
   self->connection_id = NULL;
 
-  g_free (self->peer_pem);
-  self->peer_pem = NULL;
+  g_free (self->pegst_pem);
+  self->pegst_pem = NULL;
 
   g_mutex_clear (&self->src_mutex);
 
@@ -236,9 +232,9 @@ gst_er_dtls_dec_finalize (GObject * object)
 }
 
 static void
-gst_er_dtls_dec_dispose (GObject * object)
+gst_dtls_dec_dispose (GObject * object)
 {
-  GstErDtlsDec *self = GST_ER_DTLS_DEC (object);
+  GstDtlsDec *self = GST_DTLS_DEC (object);
 
   if (self->agent) {
     g_object_unref (self->agent);
@@ -252,10 +248,10 @@ gst_er_dtls_dec_dispose (GObject * object)
 }
 
 static void
-gst_er_dtls_dec_set_property (GObject * object, guint prop_id,
+gst_dtls_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstErDtlsDec *self = GST_ER_DTLS_DEC (object);
+  GstDtlsDec *self = GST_DTLS_DEC (object);
 
   switch (prop_id) {
     case PROP_CONNECTION_ID:
@@ -279,10 +275,10 @@ gst_er_dtls_dec_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_er_dtls_dec_get_property (GObject * object, guint prop_id, GValue * value,
+gst_dtls_dec_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstErDtlsDec *self = GST_ER_DTLS_DEC (object);
+  GstDtlsDec *self = GST_DTLS_DEC (object);
 
   switch (prop_id) {
     case PROP_CONNECTION_ID:
@@ -290,13 +286,13 @@ gst_er_dtls_dec_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_PEM:
       g_value_take_string (value,
-          er_dtls_agent_get_certificate_pem (self->agent));
+          gst_dtls_agent_get_certificate_pem (self->agent));
       break;
     case PROP_PEER_PEM:
-      g_value_set_string (value, self->peer_pem);
+      g_value_set_string (value, self->pegst_pem);
       break;
     case PROP_DECODER_KEY:
-      g_value_set_boxed (value, self->decoder_key);
+      g_value_set_boxed (value, self->decodgst_key);
       break;
     case PROP_SRTP_CIPHER:
       g_value_set_uint (value, self->srtp_cipher);
@@ -310,9 +306,9 @@ gst_er_dtls_dec_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstStateChangeReturn
-gst_er_dtls_dec_change_state (GstElement * element, GstStateChange transition)
+gst_dtls_dec_change_state (GstElement * element, GstStateChange transition)
 {
-  GstErDtlsDec *self = GST_ER_DTLS_DEC (element);
+  GstDtlsDec *self = GST_DTLS_DEC (element);
   GstStateChangeReturn ret;
 
   switch (transition) {
@@ -321,7 +317,7 @@ gst_er_dtls_dec_change_state (GstElement * element, GstStateChange transition)
         g_signal_connect_object (self->connection,
             "on-decoder-key", G_CALLBACK (on_key_received), self, 0);
         g_signal_connect_object (self->connection,
-            "on-peer-certificate", G_CALLBACK (on_peer_certificate_received),
+            "on-peer-certificate", G_CALLBACK (on_pegst_certificate_received),
             self, 0);
       } else {
         GST_WARNING_OBJECT (self,
@@ -339,10 +335,10 @@ gst_er_dtls_dec_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstPad *
-gst_er_dtls_dec_request_new_pad (GstElement * element,
+gst_dtls_dec_request_new_pad (GstElement * element,
     GstPadTemplate * tmpl, const gchar * name, const GstCaps * caps)
 {
-  GstErDtlsDec *self = GST_ER_DTLS_DEC (element);
+  GstDtlsDec *self = GST_DTLS_DEC (element);
 
   GST_DEBUG_OBJECT (element, "requesting pad");
 
@@ -367,9 +363,9 @@ gst_er_dtls_dec_request_new_pad (GstElement * element,
 }
 
 static void
-gst_er_dtls_dec_release_pad (GstElement * element, GstPad * pad)
+gst_dtls_dec_release_pad (GstElement * element, GstPad * pad)
 {
-  GstErDtlsDec *self = GST_ER_DTLS_DEC (element);
+  GstDtlsDec *self = GST_DTLS_DEC (element);
 
   g_mutex_lock (&self->src_mutex);
 
@@ -385,23 +381,23 @@ gst_er_dtls_dec_release_pad (GstElement * element, GstPad * pad)
 }
 
 static void
-on_key_received (ErDtlsConnection * connection, gpointer key, guint cipher,
-    guint auth, GstErDtlsDec * self)
+on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
+    guint auth, GstDtlsDec * self)
 {
   gpointer key_dup;
   gchar *key_str;
 
   UNUSED (connection);
-  g_return_if_fail (GST_IS_ER_DTLS_DEC (self));
+  g_return_if_fail (GST_IS_DTLS_DEC (self));
 
   self->srtp_cipher = cipher;
   self->srtp_auth = auth;
 
-  key_dup = g_memdup (key, ER_DTLS_SRTP_MASTER_KEY_LENGTH);
-  self->decoder_key =
-      gst_buffer_new_wrapped (key_dup, ER_DTLS_SRTP_MASTER_KEY_LENGTH);
+  key_dup = g_memdup (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
+  self->decodgst_key =
+      gst_buffer_new_wrapped (key_dup, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
 
-  key_str = g_base64_encode (key, ER_DTLS_SRTP_MASTER_KEY_LENGTH);
+  key_str = g_base64_encode (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
   GST_INFO_OBJECT (self, "received key: %s", key_str);
   g_free (key_str);
 
@@ -409,9 +405,9 @@ on_key_received (ErDtlsConnection * connection, gpointer key, guint cipher,
 }
 
 static gboolean
-signal_peer_certificate_received (GWeakRef * ref)
+signal_pegst_certificate_received (GWeakRef * ref)
 {
-  GstErDtlsDec *self;
+  GstDtlsDec *self;
 
   self = g_weak_ref_get (ref);
   g_weak_ref_clear (ref);
@@ -428,22 +424,22 @@ signal_peer_certificate_received (GWeakRef * ref)
 }
 
 static gboolean
-on_peer_certificate_received (ErDtlsConnection * connection, gchar * pem,
-    GstErDtlsDec * self)
+on_pegst_certificate_received (GstDtlsConnection * connection, gchar * pem,
+    GstDtlsDec * self)
 {
   GWeakRef *ref;
 
   UNUSED (connection);
-  g_return_val_if_fail (GST_IS_ER_DTLS_DEC (self), TRUE);
+  g_return_val_if_fail (GST_IS_DTLS_DEC (self), TRUE);
 
   GST_DEBUG_OBJECT (self, "Received peer certificate PEM: \n%s", pem);
 
-  self->peer_pem = g_strdup (pem);
+  self->pegst_pem = g_strdup (pem);
 
   ref = g_new (GWeakRef, 1);
   g_weak_ref_init (ref, self);
 
-  g_idle_add ((GSourceFunc) signal_peer_certificate_received, ref);
+  g_idle_add ((GSourceFunc) signal_pegst_certificate_received, ref);
 
   return TRUE;
 }
@@ -451,7 +447,7 @@ on_peer_certificate_received (ErDtlsConnection * connection, gchar * pem,
 static GstFlowReturn
 sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstErDtlsDec *self = GST_ER_DTLS_DEC (parent);
+  GstDtlsDec *self = GST_DTLS_DEC (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   GstMapInfo map_info = GST_MAP_INFO_INIT;
   gint size;
@@ -472,7 +468,7 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   size =
-      er_dtls_connection_process (self->connection, map_info.data,
+      gst_dtls_connection_process (self->connection, map_info.data,
       map_info.size);
   gst_buffer_unmap (buffer, &map_info);
 
@@ -501,19 +497,19 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 static GHashTable *agent_table = NULL;
 G_LOCK_DEFINE_STATIC (agent_table);
 
-static ErDtlsAgent *generated_cert_agent = NULL;
+static GstDtlsAgent *generated_cert_agent = NULL;
 
-static ErDtlsAgent *
+static GstDtlsAgent *
 get_agent_by_pem (const gchar * pem)
 {
-  ErDtlsAgent *agent;
+  GstDtlsAgent *agent;
 
   if (!pem) {
     if (g_once_init_enter (&generated_cert_agent)) {
-      ErDtlsAgent *new_agent;
+      GstDtlsAgent *new_agent;
 
-      new_agent = g_object_new (ER_TYPE_DTLS_AGENT, "certificate",
-          g_object_new (ER_TYPE_DTLS_CERTIFICATE, NULL), NULL);
+      new_agent = g_object_new (GST_TYPE_DTLS_AGENT, "certificate",
+          g_object_new (GST_TYPE_DTLS_CERTIFICATE, NULL), NULL);
 
       GST_DEBUG_OBJECT (generated_cert_agent,
           "no agent with generated cert found, creating new");
@@ -533,11 +529,11 @@ get_agent_by_pem (const gchar * pem)
           g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
     }
 
-    agent = ER_DTLS_AGENT (g_hash_table_lookup (agent_table, pem));
+    agent = GST_DTLS_AGENT (g_hash_table_lookup (agent_table, pem));
 
     if (!agent) {
-      agent = g_object_new (ER_TYPE_DTLS_AGENT,
-          "certificate", g_object_new (ER_TYPE_DTLS_CERTIFICATE, "pem", pem,
+      agent = g_object_new (GST_TYPE_DTLS_AGENT,
+          "certificate", g_object_new (GST_TYPE_DTLS_CERTIFICATE, "pem", pem,
               NULL), NULL);
 
       g_object_weak_ref (G_OBJECT (agent), (GWeakNotify) agent_weak_ref_notify,
@@ -559,7 +555,7 @@ get_agent_by_pem (const gchar * pem)
 }
 
 static void
-agent_weak_ref_notify (gchar * pem, ErDtlsAgent * agent)
+agent_weak_ref_notify (gchar * pem, GstDtlsAgent * agent)
 {
   UNUSED (agent);
 
@@ -574,10 +570,10 @@ agent_weak_ref_notify (gchar * pem, ErDtlsAgent * agent)
 static GHashTable *connection_table = NULL;
 G_LOCK_DEFINE_STATIC (connection_table);
 
-ErDtlsConnection *
-gst_er_dtls_dec_fetch_connection (gchar * id)
+GstDtlsConnection *
+gst_dtls_dec_fetch_connection (gchar * id)
 {
-  ErDtlsConnection *connection;
+  GstDtlsConnection *connection;
   g_return_val_if_fail (id, NULL);
 
   GST_DEBUG ("fetching '%s' from connection table, size is %d",
@@ -600,10 +596,10 @@ gst_er_dtls_dec_fetch_connection (gchar * id)
 }
 
 static void
-create_connection (GstErDtlsDec * self, gchar * id)
+create_connection (GstDtlsDec * self, gchar * id)
 {
-  g_return_if_fail (GST_IS_ER_DTLS_DEC (self));
-  g_return_if_fail (ER_IS_DTLS_AGENT (self->agent));
+  g_return_if_fail (GST_IS_DTLS_DEC (self));
+  g_return_if_fail (GST_IS_DTLS_AGENT (self->agent));
 
   if (self->connection) {
     g_object_unref (self->connection);
@@ -624,7 +620,7 @@ create_connection (GstErDtlsDec * self, gchar * id)
   }
 
   self->connection =
-      g_object_new (ER_TYPE_DTLS_CONNECTION, "agent", self->agent, NULL);
+      g_object_new (GST_TYPE_DTLS_CONNECTION, "agent", self->agent, NULL);
 
   g_object_weak_ref (G_OBJECT (self->connection),
       (GWeakNotify) connection_weak_ref_notify, g_strdup (id));
@@ -635,7 +631,7 @@ create_connection (GstErDtlsDec * self, gchar * id)
 }
 
 static void
-connection_weak_ref_notify (gchar * id, ErDtlsConnection * connection)
+connection_weak_ref_notify (gchar * id, GstDtlsConnection * connection)
 {
   UNUSED (connection);
 

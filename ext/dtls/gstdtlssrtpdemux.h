@@ -30,34 +30,34 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ER_DTLS_SRTP_DEMUX \
-    (gst_er_dtls_srtp_demux_get_type())
-#define GST_ER_DTLS_SRTP_DEMUX(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_ER_DTLS_SRTP_DEMUX, GstErDtlsSrtpDemux))
-#define GST_ER_DTLS_SRTP_DEMUX_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_ER_DTLS_SRTP_DEMUX, GstErDtlsSrtpDemuxClass))
-#define GST_IS_ER_DTLS_SRTP_DEMUX(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_ER_DTLS_SRTP_DEMUX))
-#define GST_IS_ER_DTLS_SRTP_DEMUX_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_ER_DTLS_SRTP_DEMUX))
+#define GST_TYPE_DTLS_SRTP_DEMUX \
+    (gst_dtls_srtp_demux_get_type())
+#define GST_DTLS_SRTP_DEMUX(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DTLS_SRTP_DEMUX, GstDtlsSrtpDemux))
+#define GST_DTLS_SRTP_DEMUX_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DTLS_SRTP_DEMUX, GstDtlsSrtpDemuxClass))
+#define GST_IS_DTLS_SRTP_DEMUX(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DTLS_SRTP_DEMUX))
+#define GST_IS_DTLS_SRTP_DEMUX_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DTLS_SRTP_DEMUX))
 
-typedef struct _GstErDtlsSrtpDemux GstErDtlsSrtpDemux;
-typedef struct _GstErDtlsSrtpDemuxClass GstErDtlsSrtpDemuxClass;
+typedef struct _GstDtlsSrtpDemux GstDtlsSrtpDemux;
+typedef struct _GstDtlsSrtpDemuxClass GstDtlsSrtpDemuxClass;
 
-struct _GstErDtlsSrtpDemux {
+struct _GstDtlsSrtpDemux {
     GstElement element;
 
     GstPad *rtp_src;
     GstPad *dtls_src;
 };
 
-struct _GstErDtlsSrtpDemuxClass {
+struct _GstDtlsSrtpDemuxClass {
     GstElementClass parent_class;
 };
 
-GType gst_er_dtls_srtp_demux_get_type(void);
+GType gst_dtls_srtp_demux_get_type(void);
 
-gboolean gst_er_dtls_srtp_demux_plugin_init(GstPlugin *);
+gboolean gst_dtls_srtp_demux_plugin_init(GstPlugin *);
 
 G_END_DECLS
 

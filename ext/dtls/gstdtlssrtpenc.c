@@ -56,13 +56,13 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (er_dtls_srtp_enc_debug);
-#define GST_CAT_DEFAULT er_dtls_srtp_enc_debug
+GST_DEBUG_CATEGORY_STATIC (gst_dtls_srtp_enc_debug);
+#define GST_CAT_DEFAULT gst_dtls_srtp_enc_debug
 
-#define gst_er_dtls_srtp_enc_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstErDtlsSrtpEnc, gst_er_dtls_srtp_enc,
-    GST_TYPE_ER_DTLS_SRTP_BIN, GST_DEBUG_CATEGORY_INIT (er_dtls_srtp_enc_debug,
-        "erdtlssrtpenc", 0, "Ericsson DTLS Decoder"));
+#define gst_dtls_srtp_enc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstDtlsSrtpEnc, gst_dtls_srtp_enc,
+    GST_TYPE_DTLS_SRTP_BIN, GST_DEBUG_CATEGORY_INIT (gst_dtls_srtp_enc_debug,
+        "dtlssrtpenc", 0, "DTLS Decoder"));
 
 enum
 {
@@ -86,43 +86,43 @@ static GParamSpec *properties[NUM_PROPERTIES];
 static gboolean transform_enum (GBinding *, const GValue * source_value,
     GValue * target_value, GEnumClass *);
 
-static void gst_er_dtls_srtp_enc_set_property (GObject *, guint prop_id,
+static void gst_dtls_srtp_enc_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
-static void gst_er_dtls_srtp_enc_get_property (GObject *, guint prop_id,
+static void gst_dtls_srtp_enc_get_property (GObject *, guint prop_id,
     GValue *, GParamSpec *);
 
 static GstPad *add_ghost_pad (GstElement *, const gchar * name, GstPad *,
     GstPadTemplate *);
-static GstPad *gst_er_dtls_srtp_enc_request_new_pad (GstElement *,
+static GstPad *gst_dtls_srtp_enc_request_new_pad (GstElement *,
     GstPadTemplate *, const gchar * name, const GstCaps *);
 
-static void on_key_received (GObject * encoder, GstErDtlsSrtpEnc *);
+static void on_key_received (GObject * encoder, GstDtlsSrtpEnc *);
 
-static void gst_er_dtls_srtp_enc_remove_dtls_element (GstErDtlsSrtpBin *);
-static GstPadProbeReturn remove_dtls_encoder_probe_callback (GstPad *,
+static void gst_dtls_srtp_enc_remove_dtls_element (GstDtlsSrtpBin *);
+static GstPadProbeReturn remove_dtls_encodgst_probe_callback (GstPad *,
     GstPadProbeInfo *, GstElement *);
 
 static void
-gst_er_dtls_srtp_enc_class_init (GstErDtlsSrtpEncClass * klass)
+gst_dtls_srtp_enc_class_init (GstDtlsSrtpEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
-  GstErDtlsSrtpBinClass *dtls_srtp_bin_class;
+  GstDtlsSrtpBinClass *dtls_srtp_bin_class;
 
   gobject_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
-  dtls_srtp_bin_class = (GstErDtlsSrtpBinClass *) klass;
+  dtls_srtp_bin_class = (GstDtlsSrtpBinClass *) klass;
 
   gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_enc_set_property);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_enc_set_property);
   gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_enc_get_property);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_enc_get_property);
 
   element_class->request_new_pad =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_enc_request_new_pad);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_enc_request_new_pad);
 
   dtls_srtp_bin_class->remove_dtls_element =
-      GST_DEBUG_FUNCPTR (gst_er_dtls_srtp_enc_remove_dtls_element);
+      GST_DEBUG_FUNCPTR (gst_dtls_srtp_enc_remove_dtls_element);
 
   signals[SIGNAL_ON_KEY_SET] =
       g_signal_new ("on-key-set", G_TYPE_FROM_CLASS (klass),
@@ -156,7 +156,7 @@ gst_er_dtls_srtp_enc_class_init (GstErDtlsSrtpEncClass * klass)
 }
 
 static void
-gst_er_dtls_srtp_enc_init (GstErDtlsSrtpEnc * self)
+gst_dtls_srtp_enc_init (GstDtlsSrtpEnc * self)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (GST_ELEMENT (self));
   static GEnumClass *cipher_enum_class, *auth_enum_class;
@@ -170,7 +170,7 @@ gst_er_dtls_srtp_enc_init (GstErDtlsSrtpEnc * self)
                  +--------------------+     |     funnel      |o---src
                                             |                 |
                  +--------------------+     |                 |
-    data_sink-R-o|      erdtlsenc     |o---o|                 |
+    data_sink-R-o|       dtlsenc      |o---o|                 |
                  +--------------------+     +-----------------+
 */
 
@@ -181,8 +181,7 @@ gst_er_dtls_srtp_enc_init (GstErDtlsSrtpEnc * self)
     return;
   }
   g_return_if_fail (self->srtp_enc);
-  self->bin.dtls_element =
-      gst_element_factory_make ("erdtlsenc", "dtls-encoder");
+  self->bin.dtls_element = gst_element_factory_make ("dtlsenc", "dtls-encoder");
   if (!self->bin.dtls_element) {
     GST_ERROR_OBJECT (self, "failed to create dtls encoder");
     return;
@@ -257,10 +256,10 @@ transform_enum (GBinding * binding, const GValue * source_value,
 }
 
 static void
-gst_er_dtls_srtp_enc_set_property (GObject * object,
+gst_dtls_srtp_enc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstErDtlsSrtpEnc *self = GST_ER_DTLS_SRTP_ENC (object);
+  GstDtlsSrtpEnc *self = GST_DTLS_SRTP_ENC (object);
 
   switch (prop_id) {
     case PROP_IS_CLIENT:
@@ -278,10 +277,10 @@ gst_er_dtls_srtp_enc_set_property (GObject * object,
 }
 
 static void
-gst_er_dtls_srtp_enc_get_property (GObject * object,
+gst_dtls_srtp_enc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstErDtlsSrtpEnc *self = GST_ER_DTLS_SRTP_ENC (object);
+  GstDtlsSrtpEnc *self = GST_DTLS_SRTP_ENC (object);
 
   switch (prop_id) {
     case PROP_IS_CLIENT:
@@ -319,10 +318,10 @@ add_ghost_pad (GstElement * element,
 }
 
 static GstPad *
-gst_er_dtls_srtp_enc_request_new_pad (GstElement * element,
+gst_dtls_srtp_enc_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
-  GstErDtlsSrtpEnc *self = GST_ER_DTLS_SRTP_ENC (element);
+  GstDtlsSrtpEnc *self = GST_DTLS_SRTP_ENC (element);
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   GstPad *target_pad;
   GstPad *ghost_pad = NULL;
@@ -382,9 +381,9 @@ gst_er_dtls_srtp_enc_request_new_pad (GstElement * element,
 }
 
 static void
-on_key_received (GObject * encoder, GstErDtlsSrtpEnc * self)
+on_key_received (GObject * encoder, GstDtlsSrtpEnc * self)
 {
-  GstErDtlsSrtpBin *bin = GST_ER_DTLS_SRTP_BIN (self);
+  GstDtlsSrtpBin *bin = GST_DTLS_SRTP_BIN (self);
   GstBuffer *buffer = NULL;
   guint cipher, auth;
 
@@ -408,10 +407,10 @@ on_key_received (GObject * encoder, GstErDtlsSrtpEnc * self)
 }
 
 static void
-gst_er_dtls_srtp_enc_remove_dtls_element (GstErDtlsSrtpBin * bin)
+gst_dtls_srtp_enc_remove_dtls_element (GstDtlsSrtpBin * bin)
 {
-  GstErDtlsSrtpEnc *self = GST_ER_DTLS_SRTP_ENC (bin);
-  GstPad *dtls_sink_pad, *peer_pad;
+  GstDtlsSrtpEnc *self = GST_DTLS_SRTP_ENC (bin);
+  GstPad *dtls_sink_pad, *pegst_pad;
   gulong id;
   guint rtp_cipher = 1, rtcp_cipher = 1, rtp_auth = 1, rtcp_auth = 1;
 
@@ -437,26 +436,26 @@ gst_er_dtls_srtp_enc_remove_dtls_element (GstErDtlsSrtpBin * bin)
     return;
   }
 
-  peer_pad = gst_pad_get_peer (dtls_sink_pad);
-  g_return_if_fail (peer_pad);
+  pegst_pad = gst_pad_get_peer (dtls_sink_pad);
+  g_return_if_fail (pegst_pad);
   gst_object_unref (dtls_sink_pad);
   dtls_sink_pad = NULL;
 
-  id = gst_pad_add_probe (peer_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-      (GstPadProbeCallback) remove_dtls_encoder_probe_callback,
+  id = gst_pad_add_probe (pegst_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      (GstPadProbeCallback) remove_dtls_encodgst_probe_callback,
       bin->dtls_element, NULL);
   g_return_if_fail (id);
   bin->dtls_element = NULL;
 
-  gst_pad_push_event (peer_pad,
+  gst_pad_push_event (pegst_pad,
       gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
           gst_structure_new_empty ("dummy")));
 
-  gst_object_unref (peer_pad);
+  gst_object_unref (pegst_pad);
 }
 
 static GstPadProbeReturn
-remove_dtls_encoder_probe_callback (GstPad * pad,
+remove_dtls_encodgst_probe_callback (GstPad * pad,
     GstPadProbeInfo * info, GstElement * element)
 {
   gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));

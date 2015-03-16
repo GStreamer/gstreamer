@@ -30,42 +30,42 @@
 
 G_BEGIN_DECLS
 
-#define ER_TYPE_DTLS_CERTIFICATE            (er_dtls_certificate_get_type())
-#define ER_DTLS_CERTIFICATE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), ER_TYPE_DTLS_CERTIFICATE, ErDtlsCertificate))
-#define ER_DTLS_CERTIFICATE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), ER_TYPE_DTLS_CERTIFICATE, ErDtlsCertificateClass))
-#define ER_IS_DTLS_CERTIFICATE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), ER_TYPE_DTLS_CERTIFICATE))
-#define ER_IS_DTLS_CERTIFICATE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), ER_TYPE_DTLS_CERTIFICATE))
-#define ER_DTLS_CERTIFICATE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), ER_TYPE_DTLS_CERTIFICATE, ErDtlsCertificateClass))
+#define GST_TYPE_DTLS_CERTIFICATE            (gst_dtls_certificate_get_type())
+#define GST_DTLS_CERTIFICATE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DTLS_CERTIFICATE, GstDtlsCertificate))
+#define GST_DTLS_CERTIFICATE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DTLS_CERTIFICATE, GstDtlsCertificateClass))
+#define GST_IS_DTLS_CERTIFICATE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DTLS_CERTIFICATE))
+#define GST_IS_DTLS_CERTIFICATE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DTLS_CERTIFICATE))
+#define GST_DTLS_CERTIFICATE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_DTLS_CERTIFICATE, GstDtlsCertificateClass))
 
-typedef gpointer ErDtlsCertificateInternalCertificate;
-typedef gpointer ErDtlsCertificateInternalKey;
+typedef gpointer GstDtlsCertificateInternalCertificate;
+typedef gpointer GstDtlsCertificateInternalKey;
 
-typedef struct _ErDtlsCertificate        ErDtlsCertificate;
-typedef struct _ErDtlsCertificateClass   ErDtlsCertificateClass;
-typedef struct _ErDtlsCertificatePrivate ErDtlsCertificatePrivate;
+typedef struct _GstDtlsCertificate        GstDtlsCertificate;
+typedef struct _GstDtlsCertificateClass   GstDtlsCertificateClass;
+typedef struct _GstDtlsCertificatePrivate GstDtlsCertificatePrivate;
 
 /*
- * ErDtlsCertificate:
+ * GstDtlsCertificate:
  *
  * Handles a X509 certificate and a private key.
  * If a certificate is created without the "pem" property, a self-signed certificate is generated.
  */
-struct _ErDtlsCertificate {
+struct _GstDtlsCertificate {
     GObject parent_instance;
 
-    ErDtlsCertificatePrivate *priv;
+    GstDtlsCertificatePrivate *priv;
 };
 
-struct _ErDtlsCertificateClass {
+struct _GstDtlsCertificateClass {
     GObjectClass parent_class;
 };
 
-GType er_dtls_certificate_get_type(void) G_GNUC_CONST;
+GType gst_dtls_certificate_get_type(void) G_GNUC_CONST;
 
 /* internal */
-ErDtlsCertificateInternalCertificate _er_dtls_certificate_get_internal_certificate(ErDtlsCertificate *);
-ErDtlsCertificateInternalKey _er_dtls_certificate_get_internal_key(ErDtlsCertificate *);
-gchar *_er_dtls_x509_to_pem(gpointer x509);
+GstDtlsCertificateInternalCertificate _gst_dtls_certificate_get_internal_certificate(GstDtlsCertificate *);
+GstDtlsCertificateInternalKey _gst_dtls_certificate_get_internal_key(GstDtlsCertificate *);
+gchar *_gst_dtls_x509_to_pem(gpointer x509);
 
 G_END_DECLS
 

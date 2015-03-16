@@ -30,17 +30,17 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ER_DTLS_SRTP_BIN (gst_er_dtls_srtp_bin_get_type())
-#define GST_ER_DTLS_SRTP_BIN(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_ER_DTLS_SRTP_BIN, GstErDtlsSrtpBin))
-#define GST_ER_DTLS_SRTP_BIN_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_ER_DTLS_SRTP_BIN, GstErDtlsSrtpBinClass))
-#define GST_ER_DTLS_SRTP_BIN_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_ER_DTLS_SRTP_BIN, GstErDtlsSrtpBinClass))
-#define GST_IS_ER_DTLS_SRTP_BIN(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_ER_DTLS_SRTP_BIN))
-#define GST_IS_ER_DTLS_SRTP_BIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_ER_DTLS_SRTP_BIN))
+#define GST_TYPE_DTLS_SRTP_BIN (gst_dtls_srtp_bin_get_type())
+#define GST_DTLS_SRTP_BIN(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DTLS_SRTP_BIN, GstDtlsSrtpBin))
+#define GST_DTLS_SRTP_BIN_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DTLS_SRTP_BIN, GstDtlsSrtpBinClass))
+#define GST_DTLS_SRTP_BIN_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_DTLS_SRTP_BIN, GstDtlsSrtpBinClass))
+#define GST_IS_DTLS_SRTP_BIN(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DTLS_SRTP_BIN))
+#define GST_IS_DTLS_SRTP_BIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DTLS_SRTP_BIN))
 
-typedef struct _GstErDtlsSrtpBin GstErDtlsSrtpBin;
-typedef struct _GstErDtlsSrtpBinClass GstErDtlsSrtpBinClass;
+typedef struct _GstDtlsSrtpBin GstDtlsSrtpBin;
+typedef struct _GstDtlsSrtpBinClass GstDtlsSrtpBinClass;
 
-struct _GstErDtlsSrtpBin {
+struct _GstDtlsSrtpBin {
     GstBin bin;
 
     GstElement *dtls_element;
@@ -53,13 +53,13 @@ struct _GstErDtlsSrtpBin {
     gchar *srtcp_auth;
 };
 
-struct _GstErDtlsSrtpBinClass {
+struct _GstDtlsSrtpBinClass {
     GstBinClass parent_class;
 
-    void (*remove_dtls_element)(GstErDtlsSrtpBin *);
+    void (*remove_dtls_element)(GstDtlsSrtpBin *);
 };
 
-GType gst_er_dtls_srtp_bin_get_type(void);
+GType gst_dtls_srtp_bin_get_type(void);
 
 G_END_DECLS
 

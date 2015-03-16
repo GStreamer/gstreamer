@@ -32,30 +32,30 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ER_DTLS_SRTP_DEC (gst_er_dtls_srtp_dec_get_type())
-#define GST_ER_DTLS_SRTP_DEC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_ER_DTLS_SRTP_DEC, GstErDtlsSrtpDec))
-#define GST_ER_DTLS_SRTP_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_ER_DTLS_SRTP_DEC, GstErDtlsSrtpDecClass))
-#define GST_IS_ER_DTLS_SRTP_DEC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_ER_DTLS_SRTP_DEC))
-#define GST_IS_ER_DTLS_SRTP_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_ER_DTLS_SRTP_DEC))
+#define GST_TYPE_DTLS_SRTP_DEC (gst_dtls_srtp_dec_get_type())
+#define GST_DTLS_SRTP_DEC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DTLS_SRTP_DEC, GstDtlsSrtpDec))
+#define GST_DTLS_SRTP_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DTLS_SRTP_DEC, GstDtlsSrtpDecClass))
+#define GST_IS_DTLS_SRTP_DEC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DTLS_SRTP_DEC))
+#define GST_IS_DTLS_SRTP_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DTLS_SRTP_DEC))
 
-typedef struct _GstErDtlsSrtpDec GstErDtlsSrtpDec;
-typedef struct _GstErDtlsSrtpDecClass GstErDtlsSrtpDecClass;
+typedef struct _GstDtlsSrtpDec GstDtlsSrtpDec;
+typedef struct _GstDtlsSrtpDecClass GstDtlsSrtpDecClass;
 
-struct _GstErDtlsSrtpDec {
-    GstErDtlsSrtpBin bin;
+struct _GstDtlsSrtpDec {
+    GstDtlsSrtpBin bin;
 
     GstElement *dtls_srtp_demux;
     GstElement *srtp_dec;
     GstElement *funnel;
 };
 
-struct _GstErDtlsSrtpDecClass {
-    GstErDtlsSrtpBinClass parent_class;
+struct _GstDtlsSrtpDecClass {
+    GstDtlsSrtpBinClass parent_class;
 };
 
-GType gst_er_dtls_srtp_dec_get_type(void);
+GType gst_dtls_srtp_dec_get_type(void);
 
-gboolean gst_er_dtls_srtp_dec_plugin_init(GstPlugin *);
+gboolean gst_dtls_srtp_dec_plugin_init(GstPlugin *);
 
 G_END_DECLS
 
