@@ -2119,15 +2119,28 @@ check_pending_buffers (GstTSDemux * demux)
   /* The biggest offset */
   guint64 offset = 0;
   GList *tmp;
+  gboolean have_only_sparse = TRUE;
+
+  /* 0. Do we only have sparse stream */
+  for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+    TSDemuxStream *tmpstream = (TSDemuxStream *) tmp->data;
+
+    if (!tmpstream->sparse) {
+      have_only_sparse = FALSE;
+      break;
+    }
+  }
 
   /* 1. Go over all streams */
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
     TSDemuxStream *tmpstream = (TSDemuxStream *) tmp->data;
     /* 1.1 check if at least one stream got a valid DTS */
-    if ((tmpstream->raw_dts != -1 && tmpstream->dts != GST_CLOCK_TIME_NONE) ||
-        (tmpstream->raw_pts != -1 && tmpstream->pts != GST_CLOCK_TIME_NONE)) {
-      have_observation = TRUE;
-      break;
+    if (have_only_sparse || !tmpstream->sparse) {
+      if ((tmpstream->raw_dts != -1 && tmpstream->dts != GST_CLOCK_TIME_NONE) ||
+          (tmpstream->raw_pts != -1 && tmpstream->pts != GST_CLOCK_TIME_NONE)) {
+        have_observation = TRUE;
+        break;
+      }
     }
   }
 
