@@ -42,15 +42,11 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
-#if GST_DTLS_USE_GST_LOG
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_connection_debug);
-#   define GST_CAT_DEFAULT gst_dtls_connection_debug
+#define GST_CAT_DEFAULT gst_dtls_connection_debug
 G_DEFINE_TYPE_WITH_CODE (GstDtlsConnection, gst_dtls_connection, G_TYPE_OBJECT,
     GST_DEBUG_CATEGORY_INIT (gst_dtls_connection_debug, "dtlsconnection", 0,
         "DTLS Connection"));
-#else
-G_DEFINE_TYPE (GstDtlsConnection, gst_dtls_connection, G_TYPE_OBJECT);
-#endif
 
 #define GST_DTLS_CONNECTION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_CONNECTION, GstDtlsConnectionPrivate))
 

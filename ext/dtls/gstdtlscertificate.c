@@ -40,15 +40,12 @@
 
 #include <openssl/ssl.h>
 
-#if GST_DTLS_USE_GST_LOG
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_certificate_debug);
-#   define GST_CAT_DEFAULT gst_dtls_certificate_debug
+#define GST_CAT_DEFAULT gst_dtls_certificate_debug
+
 G_DEFINE_TYPE_WITH_CODE (GstDtlsCertificate, gst_dtls_certificate,
     G_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (gst_dtls_certificate_debug,
         "dtlscertificate", 0, "DTLS Certificate"));
-#else
-G_DEFINE_TYPE (GstDtlsCertificate, gst_dtls_certificate, G_TYPE_OBJECT);
-#endif
 
 #define GST_DTLS_CERTIFICATE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_CERTIFICATE, GstDtlsCertificatePrivate))
 

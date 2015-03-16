@@ -39,15 +39,12 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
-#if GST_DTLS_USE_GST_LOG
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_agent_debug);
-#   define GST_CAT_DEFAULT gst_dtls_agent_debug
+#define GST_CAT_DEFAULT gst_dtls_agent_debug
+
 G_DEFINE_TYPE_WITH_CODE (GstDtlsAgent, gst_dtls_agent, G_TYPE_OBJECT,
     GST_DEBUG_CATEGORY_INIT (gst_dtls_agent_debug, "dtlsagent", 0,
         "DTLS Agent"));
-#else
-G_DEFINE_TYPE (GstDtlsAgent, gst_dtls_agent, G_TYPE_OBJECT);
-#endif
 
 #define GST_DTLS_AGENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_AGENT, GstDtlsAgentPrivate))
 
