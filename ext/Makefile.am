@@ -412,6 +412,12 @@ else
 X265_DIR=
 endif
 
+if USE_DTLS
+DTLS_DIR=dtls
+else
+DTLS_DIR=
+endif
+
 SUBDIRS=\
 	$(VOAACENC_DIR) \
 	$(ASSRENDER_DIR) \
@@ -480,7 +486,8 @@ SUBDIRS=\
 	$(RTMP_DIR) \
 	$(HLS_DIR) \
 	$(WEBP_DIR) \
-	$(X265_DIR)
+	$(X265_DIR) \
+	$(DTLS_DIR)
 
 DIST_SUBDIRS = \
 	assrender \
@@ -546,6 +553,7 @@ DIST_SUBDIRS = \
 	zbar \
 	rtmp \
 	webp \
-	x265
+	x265 \
+	dtls
 
 include $(top_srcdir)/common/parallel-subdirs.mak
