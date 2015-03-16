@@ -57,6 +57,7 @@ GType gst_autoplug_select_result_get_type (void);
  *   formats.
  * @GST_PLAY_FLAG_BUFFERING: enable buffering of the demuxed or parsed data.
  * @GST_PLAY_FLAG_DEINTERLACE: deinterlace raw video (if native not forced).
+ * @GST_PLAY_FLAG_SOFT_COLORBALANCE: Use a software filter for colour balance
  * @GST_PLAY_FLAG_FORCE_FILTERS: force audio/video filters to be applied if
  *   set.
  *
