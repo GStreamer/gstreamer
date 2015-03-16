@@ -481,6 +481,19 @@ not_negotiated:
   }
 }
 
+#if GST_CHECK_VERSION(1,5,0)
+static GstFlowReturn
+gst_vaapidecode_drain (GstVideoDecoder * vdec)
+{
+  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+
+  if (!decode->decoder)
+    return GST_FLOW_NOT_NEGOTIATED;
+
+  return gst_vaapidecode_push_all_decoded_frames (decode);
+}
+#endif
+
 static gboolean
 gst_vaapidecode_internal_flush (GstVideoDecoder * vdec)
 {
@@ -845,6 +858,9 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   vdec_class->parse = GST_DEBUG_FUNCPTR (gst_vaapidecode_parse);
   vdec_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vaapidecode_handle_frame);
   vdec_class->finish = GST_DEBUG_FUNCPTR (gst_vaapidecode_finish);
+#if GST_CHECK_VERSION(1,5,0)
+  vdec_class->drain = GST_DEBUG_FUNCPTR (gst_vaapidecode_drain);
+#endif
 
 #if GST_CHECK_VERSION(1,0,0)
   vdec_class->decide_allocation =
