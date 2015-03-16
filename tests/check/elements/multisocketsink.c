@@ -161,7 +161,7 @@ GST_START_TEST (test_add_client)
   GstElement *sink;
   GstBuffer *buffer;
   GstCaps *caps;
-  gchar data[4];
+  gchar data[9];
   GSocket *sinksocket, *srcsocket;
 
   sink = setup_multisocketsink ();
