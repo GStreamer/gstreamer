@@ -480,12 +480,12 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
     {
       gchar *basedir;
 
-      basedir = g_win32_get_package_installation_directory_of_module (_priv_gst_dll_handle);
-      helper_bin = g_build_filename (basedir,
-                                     "lib",
-                                     "gstreamer-" GST_API_VERSION,
-                                     "gst-plugin-scanner.exe",
-                                     NULL);
+      basedir =
+          g_win32_get_package_installation_directory_of_module
+          (_priv_gst_dll_handle);
+      helper_bin =
+          g_build_filename (basedir, "lib", "gstreamer-" GST_API_VERSION,
+          "gst-plugin-scanner.exe", NULL);
       g_free (basedir);
     }
 #else
