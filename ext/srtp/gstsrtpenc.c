@@ -1050,7 +1050,7 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
     gst_buffer_set_size (bufout, size);
     gst_buffer_copy_into (bufout, buf, GST_BUFFER_COPY_METADATA, 0, -1);
 
-    GST_LOG_OBJECT (pad, "Encing %s buffer of size %d",
+    GST_LOG_OBJECT (pad, "Encoding %s buffer of size %d",
         is_rtcp ? "RTCP" : "RTP", size);
 
     /* Push buffer to source pad */
