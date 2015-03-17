@@ -185,12 +185,16 @@ _ges_get_asset_from_timeline (GESTimeline * timeline, GType type,
 {
   GESAsset *asset;
   GESProject *project = ges_timeline_get_project (timeline);
+  GError *err = NULL;
 
-  asset = ges_project_create_asset_sync (project, id, type, error);
+  asset = ges_project_create_asset_sync (project, id, type, &err);
+
+  if (err)
+    g_propagate_error (error, err);
   if (!asset || (error && *error)) {
     GST_ERROR
         ("There was an error requesting the asset with id %s and type %s (%s)",
-        id, g_type_name (type), (*error) ? (*error)->message : "unknown");
+        id, g_type_name (type), error ? (*error)->message : "unknown");
 
     return NULL;
   }
