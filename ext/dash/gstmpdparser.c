@@ -1329,6 +1329,9 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
     return;
   }
 
+  mult_seg_base_type->duration = 0;
+  mult_seg_base_type->startNumber = 1;
+
   /* Inherit attribute values from parent */
   if (parent) {
     mult_seg_base_type->duration = parent->duration;
@@ -1345,8 +1348,10 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
     mult_seg_base_type->duration = intval;
   }
 
-  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "startNumber", 1,
-      &mult_seg_base_type->startNumber);
+  if (gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "startNumber", 1,
+          &intval)) {
+    mult_seg_base_type->startNumber = intval;
+  }
 
   GST_LOG ("extension of MultipleSegmentBaseType extension:");
   gst_mpdparser_parse_seg_base_type_ext (&mult_seg_base_type->SegBaseType,
