@@ -959,7 +959,7 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   gint size_max, size;
   GstBuffer *bufout = NULL;
   gboolean do_setcaps = FALSE;
-  GstMapInfo mapin, mapout;
+  GstMapInfo mapout;
 
   if (!is_rtcp) {
     GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
@@ -1023,16 +1023,13 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
 
 
   /* Create a bigger buffer to add protection */
-  size_max = gst_buffer_get_size (buf) + SRTP_MAX_TRAILER_LEN + 10;
+  size = gst_buffer_get_size (buf);
+  size_max = size + SRTP_MAX_TRAILER_LEN + 10;
   bufout = gst_buffer_new_allocate (NULL, size_max, NULL);
 
-  gst_buffer_map (buf, &mapin, GST_MAP_READ);
   gst_buffer_map (bufout, &mapout, GST_MAP_READWRITE);
 
-  size = mapin.size;
-  memcpy (mapout.data, mapin.data, mapin.size);
-
-  gst_buffer_unmap (buf, &mapin);
+  gst_buffer_extract (buf, 0, mapout.data, size);
 
   gst_srtp_init_event_reporter ();
 
