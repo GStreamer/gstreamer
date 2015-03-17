@@ -42,9 +42,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_agent_debug);
 #define GST_CAT_DEFAULT gst_dtls_agent_debug
 
-G_DEFINE_TYPE_WITH_CODE (GstDtlsAgent, gst_dtls_agent, G_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (gst_dtls_agent_debug, "dtlsagent", 0,
-        "DTLS Agent"));
+G_DEFINE_TYPE (GstDtlsAgent, gst_dtls_agent, G_TYPE_OBJECT);
 
 #define GST_DTLS_AGENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_AGENT, GstDtlsAgentPrivate))
 
@@ -115,6 +113,9 @@ _gst_dtls_init_openssl (void)
   gint num_locks;
 
   if (g_once_init_enter (&is_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_dtls_agent_debug, "dtlsagent", 0,
+        "DTLS Agent");
+
     if (OPENSSL_VERSION_NUMBER < 0x1000100fL) {
       GST_WARNING_OBJECT (NULL,
           "Incorrect OpenSSL version, should be >= 1.0.1, is %s",
