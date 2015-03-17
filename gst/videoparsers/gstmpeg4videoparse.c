@@ -730,8 +730,8 @@ gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         GST_TAG_VIDEO_CODEC, caps);
     gst_caps_unref (caps);
 
-    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (mp4vparse),
-        gst_event_new_tag (taglist));
+    gst_base_parse_merge_tags (parse, taglist, GST_TAG_MERGE_REPLACE);
+    gst_tag_list_unref (taglist);
 
     /* also signals the end of first-frame processing */
     mp4vparse->sent_codec_tag = TRUE;
