@@ -112,6 +112,8 @@ static void gst_funnel_release_pad (GstElement * element, GstPad * pad);
 
 static GstFlowReturn gst_funnel_sink_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
+static GstFlowReturn gst_funnel_sink_chain_list (GstPad * pad,
+    GstObject * parent, GstBufferList * list);
 static gboolean gst_funnel_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
@@ -183,6 +185,8 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gst_pad_set_chain_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_funnel_sink_chain));
+  gst_pad_set_chain_list_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_funnel_sink_chain_list));
   gst_pad_set_event_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_funnel_sink_event));
 
@@ -261,12 +265,13 @@ forward_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 }
 
 static GstFlowReturn
-gst_funnel_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+gst_funnel_sink_chain_object (GstPad * pad, GstFunnel * funnel,
+    gboolean is_list, GstMiniObject * obj)
 {
   GstFlowReturn res;
-  GstFunnel *funnel = GST_FUNNEL (parent);
 
-  GST_DEBUG_OBJECT (funnel, "received buffer %p", buffer);
+  GST_DEBUG_OBJECT (funnel, "received buffer%s %p", (is_list ? "list" : ""),
+      obj);
 
   GST_PAD_STREAM_LOCK (funnel->srcpad);
 
@@ -277,13 +282,36 @@ gst_funnel_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     gst_pad_sticky_events_foreach (pad, forward_events, funnel->srcpad);
   }
 
-  res = gst_pad_push (funnel->srcpad, buffer);
+  if (is_list)
+    res = gst_pad_push_list (funnel->srcpad, GST_BUFFER_LIST_CAST (obj));
+  else
+    res = gst_pad_push (funnel->srcpad, GST_BUFFER_CAST (obj));
 
   GST_PAD_STREAM_UNLOCK (funnel->srcpad);
 
-  GST_LOG_OBJECT (funnel, "handled buffer %s", gst_flow_get_name (res));
+  GST_LOG_OBJECT (funnel, "handled buffer%s %s", (is_list ? "list" : ""),
+      gst_flow_get_name (res));
 
   return res;
+}
+
+static GstFlowReturn
+gst_funnel_sink_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
+{
+  GstFunnel *funnel = GST_FUNNEL (parent);
+
+  return gst_funnel_sink_chain_object (pad, funnel, TRUE,
+      GST_MINI_OBJECT_CAST (list));
+}
+
+static GstFlowReturn
+gst_funnel_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  GstFunnel *funnel = GST_FUNNEL (parent);
+
+  return gst_funnel_sink_chain_object (pad, funnel, FALSE,
+      GST_MINI_OBJECT_CAST (buffer));
 }
 
 static gboolean
