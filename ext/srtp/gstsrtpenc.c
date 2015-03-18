@@ -389,6 +389,8 @@ max_cipher_key_size (GstSrtpEnc * filter)
 }
 
 /* Create stream
+ *
+ * Should be called with the filter locked
  */
 static err_status_t
 gst_srtp_enc_create_session (GstSrtpEnc * filter)
@@ -399,8 +401,6 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
   guchar tmp[1];
 
   memset (&policy, 0, sizeof (srtp_policy_t));
-
-  GST_OBJECT_LOCK (filter);
 
   if (HAS_CRYPTO (filter)) {
     guint expected;
@@ -457,24 +457,26 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
   if (HAS_CRYPTO (filter))
     gst_buffer_unmap (filter->key, &map);
 
-  GST_OBJECT_UNLOCK (filter);
-
   return ret;
 }
 
 /* Release ressources and set default values
  */
 static void
-gst_srtp_enc_reset (GstSrtpEnc * filter)
+gst_srtp_enc_reset_no_lock (GstSrtpEnc * filter)
 {
-  GST_OBJECT_LOCK (filter);
-
   if (!filter->first_session)
     srtp_dealloc (filter->session);
 
   filter->first_session = TRUE;
   filter->key_changed = FALSE;
+}
 
+static void
+gst_srtp_enc_reset (GstSrtpEnc * filter)
+{
+  GST_OBJECT_LOCK (filter);
+  gst_srtp_enc_reset_no_lock (filter);
   GST_OBJECT_UNLOCK (filter);
 }
 
@@ -982,22 +984,26 @@ gst_srtp_enc_check_set_caps (GstSrtpEnc * filter, GstPad * pad,
 {
   gboolean do_setcaps = FALSE;
 
-  do_setcaps = filter->key_changed;
+  GST_OBJECT_LOCK (filter);
 
-  if (do_setcaps) {
-    gst_srtp_enc_reset (filter);
+  if (filter->key_changed) {
+    gst_srtp_enc_reset_no_lock (filter);
+    do_setcaps = TRUE;
   }
 
   if (filter->first_session) {
     err_status_t status = gst_srtp_enc_create_session (filter);
 
     if (status != err_status_ok) {
+      GST_OBJECT_UNLOCK (filter);
       GST_ELEMENT_ERROR (filter, LIBRARY, INIT,
           ("Could not initialize SRTP encoder"),
           ("Failed to add stream to SRTP encoder (err: %d)", status));
       return GST_FLOW_ERROR;
     }
   }
+
+  GST_OBJECT_UNLOCK (filter);
 
   /* Update source caps if asked */
   if (do_setcaps) {
@@ -1116,7 +1122,9 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   GST_OBJECT_LOCK (filter);
 
   if (gst_srtp_get_soft_limit_reached ()) {
+    GST_OBJECT_UNLOCK (filter);
     g_signal_emit (filter, gst_srtp_enc_signals[SIGNAL_SOFT_LIMIT], 0);
+    GST_OBJECT_LOCK (filter);
     if (filter->random_key && !filter->key_changed)
       gst_srtp_enc_replace_random_key (filter);
   }
@@ -1178,8 +1186,10 @@ gst_srtp_enc_change_state (GstElement * element, GstStateChange transition)
             "RTCP authentication can't be NULL if encryption is not NULL.");
         return GST_STATE_CHANGE_FAILURE;
       }
+      GST_OBJECT_LOCK (filter);
       if (!filter->first_session)
-        gst_srtp_enc_reset (filter);
+        gst_srtp_enc_reset_no_lock (filter);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
