@@ -1003,33 +1003,16 @@ gst_srtp_dec_push_early_events (GstSrtpDec * filter, GstPad * pad,
 
 }
 
-static GstFlowReturn
-gst_srtp_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
-    gboolean is_rtcp)
+/*
+ * This function should be called while holding the filter lock
+ */
+static gboolean
+gst_srtp_dec_decode_buffer (GstSrtpDec * filter, GstPad * pad, GstBuffer * buf,
+    gboolean is_rtcp, guint32 ssrc)
 {
-  GstSrtpDec *filter = GST_SRTP_DEC (parent);
-  GstPad *otherpad;
-  err_status_t err = err_status_ok;
-  GstSrtpDecSsrcStream *stream = NULL;
-  GstFlowReturn ret = GST_FLOW_OK;
-  gint size;
-  guint32 ssrc = 0;
   GstMapInfo map;
-
-  GST_OBJECT_LOCK (filter);
-
-  /* Check if this stream exists, if not create a new stream */
-
-  if (!(stream = validate_buffer (filter, buf, &ssrc, &is_rtcp))) {
-    GST_OBJECT_UNLOCK (filter);
-    GST_WARNING_OBJECT (filter, "Invalid buffer, dropping");
-    goto drop_buffer;
-  }
-
-  if (!STREAM_HAS_CRYPTO (stream)) {
-    GST_OBJECT_UNLOCK (filter);
-    goto push_out;
-  }
+  err_status_t err;
+  gint size;
 
   GST_LOG_OBJECT (pad, "Received %s buffer of size %" G_GSIZE_FORMAT
       " with SSRC = %u", is_rtcp ? "RTCP" : "RTP", gst_buffer_get_size (buf),
@@ -1038,10 +1021,10 @@ gst_srtp_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   /* Change buffer to remove protection */
   buf = gst_buffer_make_writable (buf);
 
-unprotect:
-
   gst_buffer_map (buf, &map, GST_MAP_READWRITE);
   size = map.size;
+
+unprotect:
 
   gst_srtp_init_event_reporter ();
 
@@ -1073,8 +1056,6 @@ unprotect:
     }
     err = srtp_unprotect (filter->session, map.data, &size);
   }
-
-  gst_buffer_unmap (buf, &map);
 
   GST_OBJECT_UNLOCK (filter);
 
@@ -1113,10 +1094,51 @@ unprotect:
         break;
     }
 
+    gst_buffer_unmap (buf, &map);
+
+    GST_OBJECT_LOCK (filter);
+    return FALSE;
+  }
+
+  gst_buffer_unmap (buf, &map);
+
+  gst_buffer_set_size (buf, size);
+
+  GST_OBJECT_LOCK (filter);
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_srtp_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
+    gboolean is_rtcp)
+{
+  GstSrtpDec *filter = GST_SRTP_DEC (parent);
+  GstPad *otherpad;
+  GstSrtpDecSsrcStream *stream = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint32 ssrc = 0;
+
+  GST_OBJECT_LOCK (filter);
+
+  /* Check if this stream exists, if not create a new stream */
+
+  if (!(stream = validate_buffer (filter, buf, &ssrc, &is_rtcp))) {
+    GST_OBJECT_UNLOCK (filter);
+    GST_WARNING_OBJECT (filter, "Invalid buffer, dropping");
     goto drop_buffer;
   }
 
-  gst_buffer_set_size (buf, size);
+  if (!STREAM_HAS_CRYPTO (stream)) {
+    GST_OBJECT_UNLOCK (filter);
+    goto push_out;
+  }
+
+  if (!gst_srtp_dec_decode_buffer (filter, pad, buf, is_rtcp, ssrc)) {
+    GST_OBJECT_UNLOCK (filter);
+    goto drop_buffer;
+  }
+
+  GST_OBJECT_UNLOCK (filter);
 
   /* If all is well, we may have reached soft limit */
   if (gst_srtp_get_soft_limit_reached ())
