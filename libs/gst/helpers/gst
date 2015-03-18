@@ -18,13 +18,13 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
-___gst_debug_level () { _mandatory__argument; }
-___gst_debug () { _mandatory__argument; }
-___gst_debug_color_mode () { _mandatory__argument; }
-___gst_plugin_path () { _mandatory__argument; }
-___gst_plugin_load () { _mandatory__argument; }
+___gst_debug_level () { _gst_mandatory_argument; }
+___gst_debug () { _gst_mandatory_argument; }
+___gst_debug_color_mode () { _gst_mandatory_argument; }
+___gst_plugin_path () { _gst_mandatory_argument; }
+___gst_plugin_load () { _gst_mandatory_argument; }
 
-_mandatory__argument ()
+_gst_mandatory_argument ()
 {
 	if [[ "$prev" != "$command" ]]
 	then
