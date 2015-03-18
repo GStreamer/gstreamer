@@ -43,16 +43,16 @@ GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
 
 typedef struct
 {
-  GstAllocator parent;
+  GstFdAllocator parent;
 } GstDmaBufAllocator;
 
 typedef struct
 {
-  GstAllocatorClass parent_class;
+  GstFdAllocatorClass parent_class;
 } GstDmaBufAllocatorClass;
 
 GType dmabuf_mem_allocator_get_type (void);
-G_DEFINE_TYPE (GstDmaBufAllocator, dmabuf_mem_allocator, GST_TYPE_ALLOCATOR);
+G_DEFINE_TYPE (GstDmaBufAllocator, dmabuf_mem_allocator, GST_TYPE_FD_ALLOCATOR);
 
 #define GST_TYPE_DMABUF_ALLOCATOR   (dmabuf_mem_allocator_get_type())
 #define GST_IS_DMABUF_ALLOCATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DMABUF_ALLOCATOR))
@@ -60,11 +60,6 @@ G_DEFINE_TYPE (GstDmaBufAllocator, dmabuf_mem_allocator, GST_TYPE_ALLOCATOR);
 static void
 dmabuf_mem_allocator_class_init (GstDmaBufAllocatorClass * klass)
 {
-  GstAllocatorClass *allocator_class;
-
-  allocator_class = (GstAllocatorClass *) klass;
-
-  __gst_fd_memory_class_init_allocator (allocator_class);
 }
 
 static void
@@ -72,9 +67,7 @@ dmabuf_mem_allocator_init (GstDmaBufAllocator * allocator)
 {
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
 
-  __gst_fd_memory_init_allocator (alloc, GST_ALLOCATOR_DMABUF);
-
-  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
+  alloc->mem_type = GST_ALLOCATOR_DMABUF;
 }
 
 /**
@@ -113,17 +106,16 @@ gst_dmabuf_allocator_new (void)
 GstMemory *
 gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
 {
-#ifdef HAVE_MMAP
+  GstFdAllocator *alloc = GST_FD_ALLOCATOR_CAST (allocator);
+  GstFdAllocatorClass *klass = GST_FD_ALLOCATOR_GET_CLASS (alloc);
+
   if (!GST_IS_DMABUF_ALLOCATOR (allocator)) {
     GST_WARNING ("it isn't the correct allocator for dmabuf");
     return NULL;
   }
 
   GST_DEBUG ("alloc from allocator %p", allocator);
-  return __gst_fd_memory_new (allocator, fd, size, GST_FD_MEMORY_FLAG_NONE);
-#else /* !HAVE_MMAP */
-  return NULL;
-#endif
+  return klass->alloc (alloc, fd, size, GST_FD_MEMORY_FLAG_NONE);
 }
 
 /**
@@ -141,11 +133,9 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
 gint
 gst_dmabuf_memory_get_fd (GstMemory * mem)
 {
-  GstFdMemory *fdmem = (GstFdMemory *) mem;
-
   g_return_val_if_fail (gst_is_dmabuf_memory (mem), -1);
 
-  return fdmem->fd;
+  return gst_fd_memory_get_fd (mem);
 }
 
 /**

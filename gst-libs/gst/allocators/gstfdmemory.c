@@ -29,6 +29,18 @@
 #include <unistd.h>
 #endif
 
+typedef struct
+{
+  GstMemory mem;
+
+  GstFdMemoryFlags flags;
+  gint fd;
+  gpointer data;
+  gint mmapping_flags;
+  gint mmap_count;
+  GMutex lock;
+} GstFdMemory;
+
 static void
 gst_fd_mem_free (GstAllocator * allocator, GstMemory * gmem)
 {
@@ -165,30 +177,16 @@ gst_fd_mem_share (GstMemory * gmem, gssize offset, gssize size)
 #endif
 }
 
-/**
- * gst_fd_memory_new:
- * @allocator: allocator to be used for this memory
- * @fd: file descriptor
- * @size: memory size
- * @flags: extra #GstFdMemoryFlags
- *
- * Return a %GstMemory that wraps a file descriptor.
- *
- * Returns: (transfer full): a GstMemory based on @allocator.
- * When the buffer is released, @fd is closed.
- * The memory is only mmapped on gst_buffer_mmap() request.
- *
- * Since: 1.2
- */
-GstMemory *
-__gst_fd_memory_new (GstAllocator * allocator, gint fd, gsize size,
+static GstMemory *
+gst_fd_allocator_alloc (GstFdAllocator * allocator, gint fd, gsize size,
     GstFdMemoryFlags flags)
 {
 #ifdef HAVE_MMAP
   GstFdMemory *mem;
 
   mem = g_slice_new0 (GstFdMemory);
-  gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, NULL, size, 0, 0, size);
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, GST_ALLOCATOR_CAST (allocator),
+      NULL, size, 0, 0, size);
 
   mem->flags = flags;
   mem->fd = fd;
@@ -203,33 +201,68 @@ __gst_fd_memory_new (GstAllocator * allocator, gint fd, gsize size,
 #endif
 }
 
-/**
- * gst_fd_memory_class_init_allocator:
- * @allocator: a #GstAllocatorClass
- *
- * Sets up the methods to alloc and free fd backed memory created
- * with @gst_fd_memory_new by @allocator.
- */
-void
-__gst_fd_memory_class_init_allocator (GstAllocatorClass * allocator)
+G_DEFINE_ABSTRACT_TYPE (GstFdAllocator, gst_fd_allocator, GST_TYPE_ALLOCATOR);
+
+static void
+gst_fd_allocator_class_init (GstFdAllocatorClass * klass)
 {
-  allocator->alloc = NULL;
-  allocator->free = gst_fd_mem_free;
+  GstAllocatorClass *allocator_class;
+
+  allocator_class = (GstAllocatorClass *) klass;
+
+  allocator_class->alloc = NULL;
+  allocator_class->free = gst_fd_mem_free;
+
+  klass->alloc = gst_fd_allocator_alloc;
+}
+
+static void
+gst_fd_allocator_init (GstFdAllocator * allocator)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_map = gst_fd_mem_map;
+  alloc->mem_unmap = gst_fd_mem_unmap;
+  alloc->mem_share = gst_fd_mem_share;
+
+  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
 /**
- * gst_fd_memory_init_allocator:
- * @allocator: a #GstAllocator
- * @type: the memory type
+ * gst_is_fd_memory:
+ * @mem: #GstMemory
  *
- * Sets up the methods to map and unmap and share fd backed memory
- * created with @allocator.
+ * Check if @mem is memory backed by an fd
+ *
+ * Returns: %TRUE when @mem has an fd that can be retrieved with
+ * gst_fd_memory_get_fd().
+ *
+ * Since: 1.6
  */
-void
-__gst_fd_memory_init_allocator (GstAllocator * allocator, const gchar * type)
+gboolean
+gst_is_fd_memory (GstMemory * mem)
 {
-  allocator->mem_type = type;
-  allocator->mem_map = gst_fd_mem_map;
-  allocator->mem_unmap = gst_fd_mem_unmap;
-  allocator->mem_share = gst_fd_mem_share;
+  g_return_val_if_fail (mem != NULL, FALSE);
+
+  return GST_IS_FD_ALLOCATOR (mem->allocator);
+}
+
+/**
+ * gst_fd_memory_get_fd:
+ * @mem: #GstMemory
+ *
+ * Get the fd from @mem. Call gst_is_fd_memory() to check if @mem has
+ * an fd.
+ *
+ * Returns: the fd of @mem or -1 when there is no fd on @mem
+ *
+ * Since: 1.6
+ */
+gint
+gst_fd_memory_get_fd (GstMemory * mem)
+{
+  g_return_val_if_fail (mem != NULL, -1);
+  g_return_val_if_fail (GST_IS_FD_ALLOCATOR (mem->allocator), -1);
+
+  return ((GstFdMemory *) mem)->fd;
 }

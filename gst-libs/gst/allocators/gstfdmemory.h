@@ -18,12 +18,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_FD_MEMORY_H__
-#define __GST_FD_MEMORY_H__
+#ifndef __GST_FD_ALLOCATOR_H__
+#define __GST_FD_ALLOCATOR_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+typedef struct _GstFdAllocator GstFdAllocator;
+typedef struct _GstFdAllocatorClass GstFdAllocatorClass;
+
+#define GST_TYPE_FD_ALLOCATOR              (gst_fd_allocator_get_type())
+#define GST_IS_FD_ALLOCATOR(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_FD_ALLOCATOR))
+#define GST_IS_FD_ALLOCATOR_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FD_ALLOCATOR))
+#define GST_FD_ALLOCATOR_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_FD_ALLOCATOR, GstFdAllocatorClass))
+#define GST_FD_ALLOCATOR(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_FD_ALLOCATOR, GstFdAllocator))
+#define GST_FD_ALLOCATOR_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_FD_ALLOCATOR, GstFdAllocatorClass))
+#define GST_FD_ALLOCATOR_CAST(obj)         ((GstFdAllocator *)(obj))
 
 /**
  * @GST_FD_MEMORY_FLAG_NONE: no flag
@@ -33,6 +44,8 @@ G_BEGIN_DECLS
  *        the default shared mapping.
  *
  * Various flags to control the operation of the fd backed memory.
+ *
+ * Since: 1.6
  */
 typedef enum {
   GST_FD_MEMORY_FLAG_NONE = 0,
@@ -40,33 +53,32 @@ typedef enum {
   GST_FD_MEMORY_FLAG_MAP_PRIVATE = (1 << 1),
 } GstFdMemoryFlags;
 
-/*
- * GstFdMemory
- * @flags: #GstFdMemoryFlags
- * @fd: the file descriptor associated this memory
- * @data: mmapped address
- * @mmapping_flags: mmapping flags
- * @mmap_count: mmapping counter
- * @lock: a mutex to make mmapping thread safe
+/**
+ * GstFdAllocator:
+ *
+ * Base class for allocators with fd-backed memory
+ *
+ * Since: 1.6
  */
-typedef struct
+struct _GstFdAllocator
 {
-  GstMemory mem;
+  GstAllocator parent;
+};
 
-  GstFdMemoryFlags flags;
-  gint fd;
-  gpointer data;
-  gint mmapping_flags;
-  gint mmap_count;
-  GMutex lock;
-} GstFdMemory;
+struct _GstFdAllocatorClass
+{
+  GstAllocatorClass parent_class;
 
-void        __gst_fd_memory_class_init_allocator  (GstAllocatorClass * allocator);
-void        __gst_fd_memory_init_allocator        (GstAllocator * allocator, const gchar *type);
+  /*< protected >*/
+  GstMemory * (*alloc)  (GstFdAllocator *alloc, gint fd,
+                         gsize size, GstFdMemoryFlags flags);
+};
 
-GstMemory * __gst_fd_memory_new                   (GstAllocator * allocator, gint fd, gsize size,
-                                                   GstFdMemoryFlags flags);
+GType gst_fd_allocator_get_type (void);
 
+gboolean     gst_is_fd_memory                    (GstMemory *mem);
+gint         gst_fd_memory_get_fd                (GstMemory *mem);
 
 G_END_DECLS
-#endif /* __GST_FD_MEMORY_H__ */
+
+#endif /* __GST_FD_ALLOCATOR_H__ */
