@@ -442,6 +442,8 @@ gst_task_new (GstTaskFunction func, gpointer user_data, GDestroyNotify notify)
 void
 gst_task_set_lock (GstTask * task, GRecMutex * mutex)
 {
+  g_return_if_fail (GST_IS_TASK (task));
+
   GST_OBJECT_LOCK (task);
   if (G_UNLIKELY (task->running))
     goto is_running;
@@ -797,9 +799,9 @@ gst_task_join (GstTask * task)
   gpointer id;
   GstTaskPool *pool = NULL;
 
-  priv = task->priv;
-
   g_return_val_if_fail (GST_IS_TASK (task), FALSE);
+
+  priv = task->priv;
 
   tself = g_thread_self ();
 
