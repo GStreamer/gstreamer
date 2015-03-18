@@ -670,11 +670,11 @@ gst_base_text_overlay_update_wrap_mode (GstBaseTextOverlay * overlay)
       }
     } else {
       width =
-          (overlay->use_vertical_render ? overlay->height : overlay->width) *
-          PANGO_SCALE;
+          ((overlay->use_vertical_render ? overlay->height : overlay->width) -
+          overlay->deltax) * PANGO_SCALE;
     }
 
-    GST_DEBUG_OBJECT (overlay, "Set layout width %d", overlay->width);
+    GST_DEBUG_OBJECT (overlay, "Set layout width %d", width);
     GST_DEBUG_OBJECT (overlay, "Set wrap mode    %d", overlay->wrap_mode);
     pango_layout_set_width (overlay->layout, width);
     pango_layout_set_wrap (overlay->layout, (PangoWrapMode) overlay->wrap_mode);
