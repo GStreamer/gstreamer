@@ -338,6 +338,31 @@ static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE_WITH_CODE (GstRTSPSrc, gst_rtspsrc, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_rtspsrc_uri_handler_init));
 
+#ifndef GST_DISABLE_GST_DEBUG
+static inline const char *
+cmd_to_string (guint cmd)
+{
+  switch (cmd) {
+    case CMD_OPEN:
+      return "OPEN";
+    case CMD_PLAY:
+      return "PLAY";
+    case CMD_PAUSE:
+      return "PAUSE";
+    case CMD_CLOSE:
+      return "CLOSE";
+    case CMD_WAIT:
+      return "WAIT";
+    case CMD_RECONNECT:
+      return "RECONNECT";
+    case CMD_LOOP:
+      return "LOOP";
+  }
+
+  return "unknown";
+}
+#endif
+
 static gboolean
 default_select_stream (GstRTSPSrc * src, guint id, GstCaps * caps)
 {
@@ -5173,7 +5198,7 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
   /* start new request */
   gst_rtspsrc_loop_start_cmd (src, cmd);
 
-  GST_DEBUG_OBJECT (src, "sending cmd %d", cmd);
+  GST_DEBUG_OBJECT (src, "sending cmd %s", cmd_to_string (cmd));
 
   GST_OBJECT_LOCK (src);
   old = src->pending_cmd;
@@ -5185,18 +5210,20 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
     src->pending_cmd = CMD_WAIT;
     GST_OBJECT_UNLOCK (src);
     /* cancel previous request */
-    GST_DEBUG_OBJECT (src, "cancel previous request %d", old);
+    GST_DEBUG_OBJECT (src, "cancel previous request %s", cmd_to_string (old));
     gst_rtspsrc_loop_cancel_cmd (src, old);
     GST_OBJECT_LOCK (src);
   }
   src->pending_cmd = cmd;
   /* interrupt if allowed */
   if (src->busy_cmd & mask) {
-    GST_DEBUG_OBJECT (src, "connection flush busy %d", src->busy_cmd);
+    GST_DEBUG_OBJECT (src, "connection flush busy %s",
+        cmd_to_string (src->busy_cmd));
     gst_rtspsrc_connection_flush (src, TRUE);
     flushed = TRUE;
   } else {
-    GST_DEBUG_OBJECT (src, "not interrupting busy cmd %d", src->busy_cmd);
+    GST_DEBUG_OBJECT (src, "not interrupting busy cmd %s",
+        cmd_to_string (src->busy_cmd));
   }
   if (src->task)
     gst_task_start (src->task);
@@ -7883,7 +7910,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
     src->pending_cmd = CMD_LOOP;
   else
     src->pending_cmd = CMD_WAIT;
-  GST_DEBUG_OBJECT (src, "got command %d", cmd);
+  GST_DEBUG_OBJECT (src, "got command %s", cmd_to_string (cmd));
 
   /* we got the message command, so ensure communication is possible again */
   gst_rtspsrc_connection_flush (src, FALSE);
