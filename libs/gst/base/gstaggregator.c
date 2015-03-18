@@ -946,9 +946,23 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     }
     case GST_EVENT_GAP:
     {
-      /* FIXME: need API to handle GAP events properly */
-      GST_FIXME_OBJECT (self, "implement support for GAP events");
-      /* don't forward GAP events downstream */
+      GstClockTime pts;
+      GstClockTime duration;
+      GstBuffer *gapbuf;
+
+      gst_event_parse_gap (event, &pts, &duration);
+      gapbuf = gst_buffer_new ();
+
+      GST_BUFFER_PTS (gapbuf) = pts;
+      GST_BUFFER_DURATION (gapbuf) = duration;
+      GST_BUFFER_FLAG_SET (gapbuf, GST_BUFFER_FLAG_GAP);
+      GST_BUFFER_FLAG_SET (gapbuf, GST_BUFFER_FLAG_DROPPABLE);
+
+      if (gst_pad_chain (pad, gapbuf) != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "Failed to chain gap buffer");
+        res = FALSE;
+      }
+
       goto eat;
     }
     case GST_EVENT_TAG:
