@@ -35,6 +35,12 @@ typedef struct
   GByteArray *current_message;
 } Client;
 
+static const char *known_mimetypes[] = {
+  "video/webm",
+  "multipart/x-mixed-replace",
+  NULL
+};
+
 static GMainLoop *loop = NULL;
 G_LOCK_DEFINE_STATIC (clients);
 static GList *clients = NULL;
@@ -347,6 +353,51 @@ on_client_socket_removed (GstElement * element, GSocket * socket,
     remove_client (client);
 }
 
+static void on_stream_caps_changed (GObject *obj, GParamSpec *pspec,
+    gpointer user_data)
+{
+  GstPad *src_pad;
+  GstCaps *src_caps;
+  GstStructure *gstrc;
+
+  src_pad = (GstPad *) obj;
+  src_caps = gst_pad_get_current_caps (src_pad);
+  gstrc = gst_caps_get_structure (src_caps, 0);
+
+  /*
+   * Include a Content-type header in the case we know the mime
+   * type is OK in HTTP. Required for MJPEG streams.
+   */
+  int i = 0;
+  const gchar *mimetype = gst_structure_get_name(gstrc);
+  while (known_mimetypes[i] != NULL)
+  {
+    if (strcmp(mimetype, known_mimetypes[i]) == 0)
+    {
+      if (content_type)
+        g_free(content_type);
+
+      /* Handle the (maybe not so) especial case of multipart to add boundary */
+      if (strcmp(mimetype, "multipart/x-mixed-replace") == 0 &&
+          gst_structure_has_field_typed(gstrc, "boundary", G_TYPE_STRING))
+      {
+        const gchar *boundary = gst_structure_get_string(gstrc, "boundary");
+        content_type = g_strdup_printf ("Content-Type: "
+	          "multipart/x-mixed-replace;boundary=--%s\r\n", boundary);
+      }
+      else
+      {
+        content_type = g_strdup_printf ("Content-Type: %s\r\n", mimetype);
+      }
+      g_print("%s", content_type);
+      break;
+    }
+    i++;
+  }
+
+  gst_caps_unref (src_caps);
+}
+
 int
 main (gint argc, gchar ** argv)
 {
@@ -382,25 +433,6 @@ main (gint argc, gchar ** argv)
     return -3;
   }
 
-  /*
-   * Make the HTTP header 'Content-type' if we are trying to create a
-   * MJPEG (or any other multipart) stream.
-   */
-  content_type = g_strdup ("");
-
-  if ( strcmp ("GstMultipartMux", g_type_name(G_OBJECT_TYPE(stream)) ) == 0 ) {
-    gchar *boundary = NULL;
-    g_object_get (stream, "boundary", &boundary, NULL);
-    if (boundary == NULL) {
-      g_print ("Warning: \"boundary\" property not found in mutipartmux\n");
-    } else {
-      /* Free default empty string "" created above, and create new string */
-      g_free(content_type);
-      content_type = g_strdup_printf ("Content-Type: "
-	        "multipart/x-mixed-replace;boundary=--%s\r\n", boundary);
-	  }
-  }
-
   srcpad = gst_element_get_static_pad (stream, "src");
   if (!srcpad) {
     g_print ("no \"src\" pad in element \"stream\" found\n");
@@ -408,6 +440,11 @@ main (gint argc, gchar ** argv)
     gst_object_unref (bin);
     return -4;
   }
+
+  content_type = g_strdup ("");
+  g_signal_connect (srcpad, "notify::caps",
+                  G_CALLBACK (on_stream_caps_changed),
+                  NULL);
 
   ghostpad = gst_ghost_pad_new ("src", srcpad);
   gst_element_add_pad (GST_ELEMENT (bin), ghostpad);
