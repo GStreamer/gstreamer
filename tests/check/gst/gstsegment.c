@@ -30,6 +30,8 @@ check_times (GstSegment * segment, guint64 position, guint64 stream_time,
 
   st = gst_segment_to_stream_time (segment, segment->format, position);
   rt = gst_segment_to_running_time (segment, segment->format, position);
+  GST_DEBUG ("position %" G_GUINT64_FORMAT ", st %" G_GUINT64_FORMAT ", rt %"
+      G_GUINT64_FORMAT, position, stream_time, running_time);
 
   fail_unless_equals_int64 (st, stream_time);
   fail_unless_equals_int64 (rt, running_time);
@@ -744,6 +746,45 @@ GST_START_TEST (segment_offset)
 
 GST_END_TEST;
 
+GST_START_TEST (segment_full)
+{
+  GstSegment segment;
+  guint64 rt;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  segment.start = 50;
+  segment.position = 150;
+  segment.stop = 200;
+  segment.time = 0;
+
+  check_times (&segment, 100, 50, 50);
+  check_times (&segment, 220, -1, -1);
+
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
+          50, &rt) == GST_SEGMENT_RESULT_OK);
+  fail_unless (rt == 0);
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
+          200, &rt) == GST_SEGMENT_RESULT_OK);
+  fail_unless (rt == 150);
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
+          40, &rt) == GST_SEGMENT_RESULT_BEFORE);
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
+          49, &rt) == GST_SEGMENT_RESULT_BEFORE);
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
+          201, &rt) == GST_SEGMENT_RESULT_AFTER);
+
+  fail_unless (gst_segment_offset_running_time (&segment, GST_FORMAT_TIME,
+          -50) == TRUE);
+  fail_unless (segment.offset == 50);
+
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
+          50, &rt) == GST_SEGMENT_RESULT_NEGATIVE);
+  GST_DEBUG ("%" G_GUINT64_FORMAT, rt);
+  fail_unless (rt == 50);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_segment_suite (void)
@@ -761,6 +802,7 @@ gst_segment_suite (void)
   tcase_add_test (tc_chain, segment_copy);
   tcase_add_test (tc_chain, segment_seek_noupdate);
   tcase_add_test (tc_chain, segment_offset);
+  tcase_add_test (tc_chain, segment_full);
 
   return s;
 }
