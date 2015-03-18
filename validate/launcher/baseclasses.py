@@ -611,7 +611,7 @@ class GstValidateEncodingTestInterface(object):
                 possible_c_variant = c.replace(media_type, tmptype)
                 if possible_c_variant in ccaps:
                     self.info(
-                        "Found %s in %s, good enough!", possible_c_variant)
+                        "Found %s in %s, good enough!", possible_c_variant, ccaps)
                     has_variant = True
 
         return has_variant
@@ -684,7 +684,7 @@ class TestsManager(Loggable):
         self.queue = Queue.Queue()
         self.jobs = []
         self.total_num_tests = 0
-        self.test_num = 0
+        self.test_num = 1
         self.check_testslist = True
         self.all_tests = None
 
@@ -841,6 +841,7 @@ class TestsManager(Loggable):
             jobs_running -= 1
             self.print_test_num(test)
             res = test.test_end()
+            self.test_num += 1
             self.reporter.after_test(test)
             if res != Result.PASSED and (self.options.forever or
                                          self.options.fatal_error):
@@ -851,7 +852,6 @@ class TestsManager(Loggable):
         return Result.PASSED, self.test_num
 
     def print_test_num(self, test):
-        self.test_num += 1
         sys.stdout.write("[%d / %d] " % (self.test_num, self.total_num_tests))
 
     def clean_tests(self):
@@ -1096,7 +1096,7 @@ class _TestsLauncher(Loggable):
         cur_test_num = 0
 
         if not self.all_tests:
-            total_num_tests = 0
+            total_num_tests = 1
             self.all_tests = []
             for tester in self.testers:
                 self.all_tests.extend(tester.list_tests())
