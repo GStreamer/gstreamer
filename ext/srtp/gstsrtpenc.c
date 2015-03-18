@@ -948,27 +948,17 @@ gst_srtp_enc_replace_random_key (GstSrtpEnc * filter)
   filter->key_changed = TRUE;
 }
 
-static GstFlowReturn
-gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
+static gboolean
+gst_srtp_enc_check_buffer (GstSrtpEnc * filter, GstBuffer * buf,
     gboolean is_rtcp)
 {
-  GstSrtpEnc *filter = GST_SRTP_ENC (parent);
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstPad *otherpad = NULL;
-  err_status_t err = err_status_ok;
-  gint size_max, size;
-  GstBuffer *bufout = NULL;
-  gboolean do_setcaps = FALSE;
-  GstMapInfo mapout;
-
   if (!is_rtcp) {
     GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
 
     if (!gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf)) {
       GST_ELEMENT_ERROR (filter, STREAM, WRONG_TYPE, (NULL),
           ("Could not map RTP buffer"));
-      ret = GST_FLOW_ERROR;
-      goto out;
+      return FALSE;
     }
 
     gst_rtp_buffer_unmap (&rtpbuf);
@@ -978,49 +968,60 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
     if (!gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcpbuf)) {
       GST_ELEMENT_ERROR (filter, STREAM, WRONG_TYPE, (NULL),
           ("Could not map RTCP buffer"));
-      ret = GST_FLOW_ERROR;
-      goto out;
+      return FALSE;
     }
     gst_rtcp_buffer_unmap (&rtcpbuf);
   }
 
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_srtp_enc_check_set_caps (GstSrtpEnc * filter, GstPad * pad,
+    gboolean is_rtcp)
+{
+  gboolean do_setcaps = FALSE;
+
   do_setcaps = filter->key_changed;
-  if (filter->key_changed)
+
+  if (do_setcaps) {
     gst_srtp_enc_reset (filter);
+  }
+
   if (filter->first_session) {
     err_status_t status = gst_srtp_enc_create_session (filter);
+
     if (status != err_status_ok) {
       GST_ELEMENT_ERROR (filter, LIBRARY, INIT,
           ("Could not initialize SRTP encoder"),
           ("Failed to add stream to SRTP encoder (err: %d)", status));
-      ret = GST_FLOW_ERROR;
-      goto out;
+      return GST_FLOW_ERROR;
     }
   }
-  GST_OBJECT_LOCK (filter);
 
   /* Update source caps if asked */
   if (do_setcaps) {
     GstCaps *caps;
-    GST_OBJECT_UNLOCK (filter);
 
     caps = gst_pad_get_current_caps (pad);
     if (!gst_srtp_enc_sink_setcaps (pad, filter, caps, is_rtcp)) {
       gst_caps_unref (caps);
-      ret = GST_FLOW_NOT_NEGOTIATED;
-      goto out;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
     gst_caps_unref (caps);
-
-    GST_OBJECT_LOCK (filter);
   }
 
-  if (!HAS_CRYPTO (filter)) {
-    GST_OBJECT_UNLOCK (filter);
-    otherpad = get_rtp_other_pad (pad);
-    return gst_pad_push (otherpad, buf);
-  }
+  return GST_FLOW_OK;
+}
 
+static GstBuffer *
+gst_srtp_enc_process_buffer (GstSrtpEnc * filter, GstPad * pad,
+    GstBuffer * buf, gboolean is_rtcp)
+{
+  gint size_max, size;
+  GstBuffer *bufout = NULL;
+  GstMapInfo mapout;
+  err_status_t err;
 
   /* Create a bigger buffer to add protection */
   size = gst_buffer_get_size (buf);
@@ -1031,6 +1032,8 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
 
   gst_buffer_extract (buf, 0, mapout.data, size);
 
+  GST_OBJECT_LOCK (filter);
+
   gst_srtp_init_event_reporter ();
 
   if (is_rtcp)
@@ -1038,9 +1041,9 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   else
     err = srtp_protect (filter->session, mapout.data, &size);
 
-  gst_buffer_unmap (bufout, &mapout);
-
   GST_OBJECT_UNLOCK (filter);
+
+  gst_buffer_unmap (bufout, &mapout);
 
   if (err == err_status_ok) {
     /* Buffer protected */
@@ -1050,6 +1053,55 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
     GST_LOG_OBJECT (pad, "Encoding %s buffer of size %d",
         is_rtcp ? "RTCP" : "RTP", size);
 
+  } else if (err == err_status_key_expired) {
+
+    GST_ELEMENT_ERROR (GST_ELEMENT_CAST (filter), STREAM, ENCODE,
+        ("Key usage limit has been reached"),
+        ("Unable to protect buffer (hard key usage limit reached)"));
+    goto fail;
+
+  } else {
+    /* srtp_protect failed */
+    GST_ELEMENT_ERROR (filter, LIBRARY, FAILED, (NULL),
+        ("Unable to protect buffer (protect failed) code %d", err));
+    goto fail;
+  }
+
+  return bufout;
+
+fail:
+  gst_buffer_unref (bufout);
+  return NULL;
+}
+
+static GstFlowReturn
+gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
+    gboolean is_rtcp)
+{
+  GstSrtpEnc *filter = GST_SRTP_ENC (parent);
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstPad *otherpad;
+  GstBuffer *bufout;
+
+  if (!gst_srtp_enc_check_buffer (filter, buf, is_rtcp)) {
+    goto fail;
+  }
+
+  if ((ret = gst_srtp_enc_check_set_caps (filter, pad, is_rtcp)) != GST_FLOW_OK) {
+    goto out;
+  }
+
+  GST_OBJECT_LOCK (filter);
+
+  if (!HAS_CRYPTO (filter)) {
+    GST_OBJECT_UNLOCK (filter);
+    otherpad = get_rtp_other_pad (pad);
+    return gst_pad_push (otherpad, buf);
+  }
+
+  GST_OBJECT_UNLOCK (filter);
+
+  if ((bufout = gst_srtp_enc_process_buffer (filter, pad, buf, is_rtcp))) {
     /* Push buffer to source pad */
     otherpad = get_rtp_other_pad (pad);
     ret = gst_pad_push (otherpad, bufout);
@@ -1057,28 +1109,19 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
 
     if (ret != GST_FLOW_OK)
       goto out;
-
-  } else if (err == err_status_key_expired) {
-
-    GST_ELEMENT_ERROR (GST_ELEMENT_CAST (filter), STREAM, ENCODE,
-        ("Key usage limit has been reached"),
-        ("Unable to protect buffer (hard key usage limit reached)"));
-    gst_buffer_unref (bufout);
-    goto fail;
-
   } else {
-    /* srtp_protect failed */
-    GST_ELEMENT_ERROR (filter, LIBRARY, FAILED, (NULL),
-        ("Unable to protect buffer (protect failed) code %d", err));
-    gst_buffer_unref (bufout);
     goto fail;
   }
+
+  GST_OBJECT_LOCK (filter);
 
   if (gst_srtp_get_soft_limit_reached ()) {
     g_signal_emit (filter, gst_srtp_enc_signals[SIGNAL_SOFT_LIMIT], 0);
     if (filter->random_key && !filter->key_changed)
       gst_srtp_enc_replace_random_key (filter);
   }
+
+  GST_OBJECT_UNLOCK (filter);
 
 out:
 
