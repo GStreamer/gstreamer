@@ -31,12 +31,12 @@ fi
 
 HELPER="$HELPERDIR/gst-completion-helper-1.0"
 
-_inspect_all_arguments ()
+_gst_inspect_all_arguments ()
 {
 	COMPREPLY=( $(compgen -W "$(gst-inspect-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
 }
 
-_inspect_all_elements ()
+_gst_inspect_all_elements ()
 {
 	COMPREPLY=( $(compgen -W "$($HELPER -l)" -- $cur) )
 }
@@ -45,7 +45,7 @@ _gstinspect___atleast_version () { _mandatory__argument; }
 
 _gstinspect___exists ()
 {
-	_inspect_all_elements
+	_gst_inspect_all_elements
 }
 
 __inspect_main ()
@@ -74,16 +74,16 @@ __inspect_main ()
 	function_exists=$?
 
 	if [[ "$cur" == "--"* ]]; then
-		_inspect_all_arguments
+		_gst_inspect_all_arguments
 	elif [ $function_exists -eq 0 ]
 	then
 		$completion_func
 	else
-		_inspect_all_elements
+		_gst_inspect_all_elements
 	fi
 }
 
-__inspect_func_wrap ()
+_gst_inspect_func_wrap ()
 {
 	local cur prev
 	cur="${COMP_WORDS[COMP_CWORD]}"
@@ -94,12 +94,12 @@ __inspect_func_wrap ()
 # Setup completion for certain functions defined above by setting common
 # variables and workarounds.
 # This is NOT a public function; use at your own risk.
-__inspect_complete ()
+_gst_inspect_complete ()
 {
 	local wrapper="__inspect_wrap${2}"
-	eval "$wrapper () { __inspect_func_wrap $2 ; }"
+	eval "$wrapper () { _gst_inspect_func_wrap $2 ; }"
 	complete -o bashdefault -o default -o nospace -F $wrapper $1 2>/dev/null \
 		|| complete -o default -o nospace -F $wrapper $1
 }
 
-__inspect_complete gst-inspect-1.0 __inspect_main
+_gst_inspect_complete gst-inspect-1.0 __inspect_main

@@ -31,29 +31,29 @@ fi
 
 HELPER="$HELPERDIR/gst-completion-helper-1.0"
 
-_launch_all_arguments ()
+_gst_launch_all_arguments ()
 {
 	COMPREPLY=( $(compgen -W "$(gst-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
 }
 
-_complete_compatible_elements ()
+_gst_complete_compatible_elements ()
 {
 	COMPREPLY=( $(compgen -W "$($HELPER --compatible-with $previous_element)" -- $cur) )
 }
 
-_complete_all_elements ()
+_gst_complete_all_elements ()
 {
 	COMPREPLY=( $(compgen -W "$($HELPER -l)" -- $cur) )
 }
 
-_complete_element_properties ()
+_gst_complete_element_properties ()
 {
 	COMPREPLY=( $(compgen -W "$($HELPER --element-properties $previous_element)" -- $cur) )
 }
 
 _gstlaunch___exclude_ () { _mandatory__argument; }
 
-__launch_main ()
+_gst_launch_main ()
 {
 	local i=1 command function_exists previous_element have_previous_element=0 completion_func
 
@@ -106,22 +106,22 @@ __launch_main ()
 	function_exists=$?
 
 	if [[ "$cur" == "--"* ]]; then
-		_launch_all_arguments
+		_gst_launch_all_arguments
 	elif [ $function_exists -eq 0 ]
 	then
 		$completion_func
 	elif [ $have_previous_element -ne 0 ] && [[ "$prev" == "!" ]]
 	then
-		_complete_compatible_elements
+		_gst_complete_compatible_elements
 	elif [ $have_previous_element -ne 0 ]
 	then
-		_complete_element_properties
+		_gst_complete_element_properties
 	else
-		_complete_all_elements
+		_gst_complete_all_elements
 	fi
 }
 
-__launch_func_wrap ()
+_gst_launch_func_wrap ()
 {
 	local cur prev
 	cur="${COMP_WORDS[COMP_CWORD]}"
@@ -132,12 +132,12 @@ __launch_func_wrap ()
 # Setup completion for certain functions defined above by setting common
 # variables and workarounds.
 # This is NOT a public function; use at your own risk.
-__launch_complete ()
+_gst_launch_complete ()
 {
 	local wrapper="__launch_wrap${2}"
-	eval "$wrapper () { __launch_func_wrap $2 ; }"
+	eval "$wrapper () { _gst_launch_func_wrap $2 ; }"
 	complete -o bashdefault -o default -o nospace -F $wrapper $1 2>/dev/null \
 		|| complete -o default -o nospace -F $wrapper $1
 }
 
-__launch_complete gst-launch-1.0 __launch_main
+_gst_launch_complete gst-launch-1.0 _gst_launch_main
