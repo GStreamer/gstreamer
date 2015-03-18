@@ -296,15 +296,8 @@ gst_dtls_enc_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_DEBUG_OBJECT (self, "starting connection %s", self->connection_id);
-      gst_dtls_connection_start (self->connection, self->is_client);
-
-      gst_pad_set_active (self->src, TRUE);
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (self, "stopping connection %s", self->connection_id);
-      gst_pad_set_active (self->src, FALSE);
 
       gst_dtls_connection_stop (self->connection);
       break;
@@ -323,6 +316,15 @@ gst_dtls_enc_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_DEBUG_OBJECT (self, "starting connection %s", self->connection_id);
+      gst_dtls_connection_start (self->connection, self->is_client);
+      break;
+    default:
+      break;
+  }
 
   return ret;
 }
