@@ -25,6 +25,7 @@
 # any later version.
 
 import sys
+from inspect import signature
 from ..overrides import override
 from ..importer import modules
 
@@ -99,12 +100,27 @@ class Pad(Gst.Pad):
     def __init__(self):
         self._real_chain_func = None
         self._real_event_func = None
+        self._real_query_func = None
 
     def _chain_override(self, pad, parent, buf):
         return self._real_chain_func(pad, buf)
 
-    def _event_override(self, pad, parent, buf):
-        return self._real_event_func(pad, buf)
+    def _event_override(self, pad, parent, event):
+        return self._real_event_func(pad, event)
+
+    def _query_override(self, pad, parent, query):
+        query.mini_object.refcount -= 1
+        n_params = len(signature(self._real_query_func).parameters)
+        if n_params == 2:
+            res = self._real_query_func(pad, query)
+        elif n_params == 3:
+            res = self._real_query_func(pad, parent, query)
+        else:
+            raise TypeError("Invalid query method %s, 2 or 3 arguments requiered"
+                            % self._real_query_func)
+        query.mini_object.refcount += 1
+
+        return res
 
     def set_chain_function(self, func):
         self._real_chain_func = func
@@ -113,6 +129,14 @@ class Pad(Gst.Pad):
     def set_event_function(self, func):
         self._real_event_func = func
         self.set_event_function_full(self._event_override, None)
+
+    def set_query_function(self, func):
+        self._real_query_func = func
+        self.set_query_function_full(self._chain_override, None)
+
+    def set_query_function_full(self, func, udata):
+        self._real_query_func = func
+        self._real_set_query_function_full(self._query_override, None)
 
     def query_caps(self, filter=None):
         return Gst.Pad.query_caps(self, filter)
@@ -123,6 +147,7 @@ class Pad(Gst.Pad):
             raise LinkError(ret)
         return ret
 
+Pad._real_set_query_function_full = Gst.Pad.set_query_function_full
 Pad = override(Pad)
 __all__.append('Pad')
 
@@ -131,7 +156,7 @@ class GhostPad(Gst.GhostPad):
         if direction is None:
             if target is None:
                 raise TypeError('you must pass at least one of target'
-                        'and direction')
+                                'and direction')
             direction = target.props.direction
 
         Gst.GhostPad.__init__(self, name=name, direction=direction)
@@ -199,6 +224,7 @@ __all__.append('Pipeline')
 class Structure(Gst.Structure):
     def __getitem__(self, key):
         return self.get_value(key)
+
     def __setitem__(self, key, value):
         return self.set_value(key, value)
 
