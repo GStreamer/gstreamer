@@ -340,6 +340,7 @@ gst_dtls_dec_request_new_pad (GstElement * element,
     GstPadTemplate * tmpl, const gchar * name, const GstCaps * caps)
 {
   GstDtlsDec *self = GST_DTLS_DEC (element);
+  GstPad *pad;
 
   GST_DEBUG_OBJECT (element, "requesting pad");
 
@@ -347,20 +348,26 @@ gst_dtls_dec_request_new_pad (GstElement * element,
   g_return_val_if_fail (tmpl->direction == GST_PAD_SRC, NULL);
 
   g_mutex_lock (&self->src_mutex);
-
-  self->src = gst_pad_new_from_template (tmpl, name);
-  g_return_val_if_fail (self->src, NULL);
-
-  if (caps) {
-    g_object_set (self->src, "caps", caps, NULL);
+  if (self->src) {
+    GST_ERROR_OBJECT (self, "Pad %s:%s exists already",
+        GST_DEBUG_PAD_NAME (self->src));
+    g_mutex_unlock (&self->src_mutex);
+    return NULL;
   }
 
-  gst_pad_set_active (self->src, TRUE);
-  gst_element_add_pad (element, self->src);
-
+  self->src = pad = gst_pad_new_from_template (tmpl, name);
+  gst_object_ref (pad);
   g_mutex_unlock (&self->src_mutex);
 
-  return self->src;
+  gst_pad_set_active (pad, TRUE);
+
+  if (caps)
+    gst_pad_set_caps (pad, (GstCaps *) caps);
+
+  gst_element_add_pad (element, pad);
+  gst_object_unref (pad);
+
+  return pad;
 }
 
 static void
@@ -368,15 +375,16 @@ gst_dtls_dec_release_pad (GstElement * element, GstPad * pad)
 {
   GstDtlsDec *self = GST_DTLS_DEC (element);
 
-  g_mutex_lock (&self->src_mutex);
-
   g_return_if_fail (self->src == pad);
-  gst_element_remove_pad (element, self->src);
+
+  g_mutex_lock (&self->src_mutex);
+  gst_object_unref (self->src);
   self->src = NULL;
+  g_mutex_unlock (&self->src_mutex);
+
+  gst_element_remove_pad (element, pad);
 
   GST_DEBUG_OBJECT (self, "releasing src pad");
-
-  g_mutex_unlock (&self->src_mutex);
 
   GST_ELEMENT_GET_CLASS (element)->release_pad (element, pad);
 }
@@ -489,6 +497,7 @@ sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 {
   GstDtlsDec *self = GST_DTLS_DEC (parent);
   GstFlowReturn ret = GST_FLOW_OK;
+  GstPad *other_pad;
 
   list = gst_buffer_list_make_writable (list);
   gst_buffer_list_foreach (list, process_buffer_from_list, self);
@@ -501,18 +510,21 @@ sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   }
 
   g_mutex_lock (&self->src_mutex);
+  other_pad = self->src;
+  if (other_pad)
+    gst_object_ref (other_pad);
+  g_mutex_unlock (&self->src_mutex);
 
-  if (self->src) {
+  if (other_pad) {
     GST_LOG_OBJECT (self, "decoded buffer list with length %u, pushing",
         gst_buffer_list_length (list));
-    ret = gst_pad_push_list (self->src, list);
+    ret = gst_pad_push_list (other_pad, list);
+    gst_object_unref (other_pad);
   } else {
     GST_LOG_OBJECT (self, "dropped buffer list with length %d, not linked",
         gst_buffer_list_length (list));
     gst_buffer_list_unref (list);
   }
-
-  g_mutex_unlock (&self->src_mutex);
 
   return ret;
 }
@@ -523,6 +535,7 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstDtlsDec *self = GST_DTLS_DEC (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   gint size;
+  GstPad *other_pad;
 
   if (!self->agent) {
     gst_buffer_unref (buffer);
@@ -542,16 +555,19 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   g_mutex_lock (&self->src_mutex);
+  other_pad = self->src;
+  if (other_pad)
+    gst_object_ref (other_pad);
+  g_mutex_unlock (&self->src_mutex);
 
-  if (self->src) {
+  if (other_pad) {
     GST_LOG_OBJECT (self, "decoded buffer with length %d, pushing", size);
-    ret = gst_pad_push (self->src, buffer);
+    ret = gst_pad_push (other_pad, buffer);
+    gst_object_unref (other_pad);
   } else {
     GST_LOG_OBJECT (self, "dropped buffer with length %d, not linked", size);
     gst_buffer_unref (buffer);
   }
-
-  g_mutex_unlock (&self->src_mutex);
 
   return ret;
 }
