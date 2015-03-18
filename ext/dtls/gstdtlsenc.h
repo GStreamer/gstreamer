@@ -47,7 +47,7 @@ struct _GstDtlsEnc {
 
     GstPad *src;
 
-    GPtrArray *queue;
+    GQueue queue;
     GMutex queue_lock;
     GCond queue_cond_add;
 

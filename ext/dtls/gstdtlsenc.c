@@ -186,8 +186,7 @@ gst_dtls_enc_init (GstDtlsEnc * self)
   self->srtp_cipher = DEFAULT_SRTP_CIPHER;
   self->srtp_auth = DEFAULT_SRTP_AUTH;
 
-  self->queue = g_ptr_array_sized_new (INITIAL_QUEUE_SIZE);
-
+  g_queue_init (&self->queue);
   g_mutex_init (&self->queue_lock);
   g_cond_init (&self->queue_cond_add);
 
@@ -211,11 +210,8 @@ gst_dtls_enc_finalize (GObject * object)
   }
 
   g_mutex_lock (&self->queue_lock);
-
-  g_ptr_array_set_free_func (self->queue, (GDestroyNotify) gst_buffer_unref);
-  g_ptr_array_unref (self->queue);
-  self->queue = NULL;
-
+  g_queue_foreach (&self->queue, (GFunc) gst_buffer_unref, NULL);
+  g_queue_clear (&self->queue);
   g_mutex_unlock (&self->queue_lock);
 
   g_mutex_clear (&self->queue_lock);
@@ -412,7 +408,7 @@ src_task_loop (GstPad * pad)
     return;
   }
 
-  while (!self->queue->len) {
+  while (g_queue_is_empty (&self->queue)) {
     GST_TRACE_OBJECT (self, "src loop: queue empty, waiting for add");
     g_cond_wait (&self->queue_cond_add, &self->queue_lock);
     GST_TRACE_OBJECT (self, "src loop: add signaled");
@@ -434,10 +430,15 @@ src_task_loop (GstPad * pad)
     GstBuffer *buffer;
     gboolean start_connection_timeout = FALSE;
 
+    buffer = g_queue_pop_head (&self->queue);
+    g_mutex_unlock (&self->queue_lock);
+
     if (self->send_initial_events) {
       GstSegment segment;
       gchar s_id[32];
       GstCaps *caps;
+
+      self->send_initial_events = FALSE;
 
       g_snprintf (s_id, sizeof (s_id), "dtlsenc-%08x", g_random_int ());
       gst_pad_push_event (self->src, gst_event_new_stream_start (s_id));
@@ -446,14 +447,10 @@ src_task_loop (GstPad * pad)
       gst_caps_unref (caps);
       gst_segment_init (&segment, GST_FORMAT_BYTES);
       gst_pad_push_event (self->src, gst_event_new_segment (&segment));
-      self->send_initial_events = FALSE;
       start_connection_timeout = TRUE;
     }
 
-    buffer = g_ptr_array_remove_index (self->queue, 0);
-
     GST_TRACE_OBJECT (self, "src loop: releasing lock");
-    g_mutex_unlock (&self->queue_lock);
 
     ret = gst_pad_push (self->src, buffer);
     if (start_connection_timeout)
@@ -464,9 +461,9 @@ src_task_loop (GstPad * pad)
           gst_flow_get_name (ret));
     }
   } else {
+    g_mutex_unlock (&self->queue_lock);
     g_warn_if_reached ();
     GST_TRACE_OBJECT (self, "src loop: releasing lock");
-    g_mutex_unlock (&self->queue_lock);
   }
 }
 
@@ -536,7 +533,7 @@ on_send_data (GstDtlsConnection * connection, gconstpointer data, gint length,
   g_mutex_lock (&self->queue_lock);
   GST_TRACE_OBJECT (self, "send data: acquired lock");
 
-  g_ptr_array_add (self->queue, buffer);
+  g_queue_push_tail (&self->queue, buffer);
 
   GST_TRACE_OBJECT (self, "send data: signaling add");
   g_cond_signal (&self->queue_cond_add);
