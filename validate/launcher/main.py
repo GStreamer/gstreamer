@@ -479,14 +479,14 @@ Note that all testsuite should be inside python modules, so the directory should
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
+    tests_launcher = _TestsLauncher(libsdir)
+    tests_launcher.add_options(parser)
+
     if _help_message == HELP and which(LESS):
         tmpf = tempfile.NamedTemporaryFile()
 
         parser.print_help(file=tmpf)
         exit(os.system("%s %s" % (LESS, tmpf.name)))
-
-    tests_launcher = _TestsLauncher(libsdir)
-    tests_launcher.add_options(parser)
 
     options = LauncherConfig()
     parser.parse_args(namespace=options)
