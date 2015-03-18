@@ -74,8 +74,8 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
   if (meta) {
     /* All these values must be consistent */
     g_return_val_if_fail (info->finfo->format == meta->format, FALSE);
-    g_return_val_if_fail (info->width >= meta->width, FALSE);
-    g_return_val_if_fail (info->height >= meta->height, FALSE);
+    g_return_val_if_fail (info->width <= meta->width, FALSE);
+    g_return_val_if_fail (info->height <= meta->height, FALSE);
     g_return_val_if_fail (info->finfo->n_planes == meta->n_planes, FALSE);
 
     frame->info.finfo = gst_video_format_get_info (meta->format);
