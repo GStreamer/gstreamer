@@ -326,7 +326,7 @@ gst_gl_buffer_pool_acquire_buffer (GstBufferPool * bpool,
 
 /**
  * gst_gl_buffer_pool_new:
- * @display: the #GstGLDisplay to use
+ * @context: the #GstGLContext to use
  *
  * Returns: a #GstBufferPool that allocates buffers with #GstGLMemory
  */

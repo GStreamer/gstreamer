@@ -1407,7 +1407,7 @@ gst_is_gl_memory (GstMemory * mem)
 /**
  * gst_gl_memory_setup_buffer:
  * @context: a #GstGLContext
- * @param: a #GstAllocationParams
+ * @params: a #GstAllocationParams
  * @info: a #GstVideoInfo
  * @valign: the #GstVideoAlignment applied to @info
  * @buffer: a #GstBuffer

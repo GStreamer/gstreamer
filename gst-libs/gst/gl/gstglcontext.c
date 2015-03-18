@@ -449,7 +449,6 @@ gst_gl_context_get_current_gl_context (GstGLPlatform context_type)
 
 /**
  * gst_gl_context_get_current_gl_api:
- * @context_type: a #GstGLPlatform specifying the type of context to retreive
  * @major: (out): (allow-none): the major version
  * @minor: (out): (allow-none): the minor version
  *

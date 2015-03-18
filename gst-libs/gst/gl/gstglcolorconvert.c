@@ -625,8 +625,8 @@ _gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
 /**
  * gst_gl_color_convert_set_caps:
  * @convert: a #GstGLColorConvert
- * @in_info: input #GstVideoInfo
- * @out_info: output #GstVideoInfo
+ * @in_caps: input #GstCaps
+ * @out_caps: output #GstCaps
  *
  * Initializes @convert with the information required for conversion.
  */

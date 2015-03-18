@@ -214,6 +214,7 @@ gst_gl_display_default_get_handle (GstGLDisplay * display)
 /**
  * gst_gl_display_filter_gl_api:
  * @display: a #GstGLDisplay
+ * @gl_api: a #GstGLAPI to filter with
  *
  * limit the use of OpenGL to the requested @gl_api.  This is intended to allow
  * application and elements to request a specific set of OpenGL API's based on
