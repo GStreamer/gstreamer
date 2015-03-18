@@ -185,11 +185,15 @@ struct _GESTimelineElementClass
   gboolean (*roll_start)       (GESTimelineElement *self, guint64  start);
   gboolean (*roll_end)         (GESTimelineElement *self, guint64  end);
   gboolean (*trim)             (GESTimelineElement *self, guint64  start);
-  void (*deep_copy)            (GESTimelineElement *self, GESTimelineElement *copy);
+  void     (*deep_copy)        (GESTimelineElement *self, GESTimelineElement *copy);
+
+  GParamSpec** (*list_children_properties) (GESTimelineElement * self, guint *n_properties);
+  gboolean (*lookup_child)                 (GESTimelineElement *self, const gchar *prop_name,
+                                            GObject **child, GParamSpec **pspec);
 
   /*< private > */
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING_LARGE];
+  gpointer _ges_reserved[GES_PADDING_LARGE - 2];
 };
 
 GType ges_timeline_element_get_type (void) G_GNUC_CONST;
@@ -220,6 +224,57 @@ gboolean ges_timeline_element_trim                   (GESTimelineElement *self, 
 GESTimelineElement * ges_timeline_element_copy       (GESTimelineElement *self, gboolean deep);
 gchar  * ges_timeline_element_get_name               (GESTimelineElement *self);
 gboolean  ges_timeline_element_set_name              (GESTimelineElement *self, const gchar *name);
+GParamSpec **
+ges_timeline_element_list_children_properties        (GESTimelineElement *self,
+                                                      guint *n_properties);
+
+gboolean ges_timeline_element_lookup_child           (GESTimelineElement *self,
+                                                      const gchar *prop_name,
+                                                      GObject  **child,
+                                                      GParamSpec **pspec);
+
+void
+ges_timeline_element_get_child_property_by_pspec     (GESTimelineElement * self,
+                                                      GParamSpec * pspec,
+                                                      GValue * value);
+
+void
+ges_timeline_element_get_child_property_valist       (GESTimelineElement * self,
+                                                      const gchar * first_property_name,
+                                                      va_list var_args);
+
+void ges_timeline_element_get_child_properties       (GESTimelineElement *self,
+                                                      const gchar * first_property_name,
+                                                      ...) G_GNUC_NULL_TERMINATED;
+
+void
+ges_timeline_element_set_child_property_valist      (GESTimelineElement * self,
+                                                     const gchar * first_property_name,
+                                                     va_list var_args);
+
+void
+ges_timeline_element_set_child_property_by_pspec    (GESTimelineElement * self,
+                                                     GParamSpec * pspec,
+                                                     GValue * value);
+
+void ges_timeline_element_set_child_properties     (GESTimelineElement * self,
+                                                     const gchar * first_property_name,
+                                                     ...) G_GNUC_NULL_TERMINATED;
+
+gboolean ges_timeline_element_set_child_property   (GESTimelineElement *self,
+                                                    const gchar *property_name,
+                                                    GValue * value);
+
+gboolean ges_timeline_element_get_child_property   (GESTimelineElement *self,
+                                                    const gchar *property_name,
+                                                    GValue * value);
+
+gboolean ges_timeline_element_add_child_property   (GESTimelineElement * self,
+                                                    GParamSpec *pspec,
+                                                    GObject *child);
+
+gboolean ges_timeline_element_remove_child_property(GESTimelineElement * self,
+                                                    GParamSpec *pspec);
 
 G_END_DECLS
 

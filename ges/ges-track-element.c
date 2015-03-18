@@ -29,13 +29,11 @@
  * its container, like the start position, the inpoint, the duration and the
  * priority.
  */
-#include "ges-utils.h"
 #include "ges-internal.h"
 #include "ges-extractable.h"
 #include "ges-track-element.h"
 #include "ges-clip.h"
 #include "ges-meta-container.h"
-#include <gobject/gvaluecollector.h>
 
 G_DEFINE_ABSTRACT_TYPE (GESTrackElement, ges_track_element,
     GES_TYPE_TIMELINE_ELEMENT);
@@ -53,11 +51,6 @@ struct _GESTrackElementPrivate
 
   GstElement *nleobject;        /* The NleObject */
   GstElement *element;          /* The element contained in the nleobject (can be NULL) */
-
-  /* We keep a link between properties name and elements internally
-   * The hashtable should look like
-   * {GParamaSpec ---> element,}*/
-  GHashTable *children_props;
 
   GESTrack *track;
 
@@ -92,7 +85,6 @@ static GParamSpec *properties[PROP_LAST];
 
 enum
 {
-  DEEP_NOTIFY,
   CONTROL_BINDING_ADDED,
   LAST_SIGNAL
 };
@@ -101,11 +93,6 @@ static guint ges_track_element_signals[LAST_SIGNAL] = { 0 };
 
 static GstElement *ges_track_element_create_nle_object_func (GESTrackElement *
     object);
-
-static void connect_properties_signals (GESTrackElement * object);
-static void connect_signal (gpointer key, gpointer value, gpointer user_data);
-static void gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * track_element);
 
 static gboolean _set_start (GESTimelineElement * element, GstClockTime start);
 static gboolean _set_inpoint (GESTimelineElement * element,
@@ -125,41 +112,26 @@ static gboolean
 _lookup_child (GESTrackElement * object,
     const gchar * prop_name, GstElement ** element, GParamSpec ** pspec)
 {
-  GHashTableIter iter;
-  gpointer key, value;
-  gchar **names, *name, *classename;
-  gboolean res;
-
-  classename = NULL;
-  res = FALSE;
-
-  names = g_strsplit (prop_name, "::", 2);
-  if (names[1] != NULL) {
-    classename = names[0];
-    name = names[1];
-  } else
-    name = names[0];
-
-  g_hash_table_iter_init (&iter, object->priv->children_props);
-  while (g_hash_table_iter_next (&iter, &key, &value)) {
-    if (g_strcmp0 (G_PARAM_SPEC (key)->name, name) == 0) {
-      if (classename == NULL ||
-          g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (value)), classename) == 0) {
-        GST_DEBUG ("The %s property from %s has been found", name, classename);
-        if (element)
-          *element = gst_object_ref (value);
-
-        *pspec = g_param_spec_ref (key);
-        res = TRUE;
-        break;
-      }
-    }
-  }
-  g_strfreev (names);
-
-  return res;
+  return
+      GES_TIMELINE_ELEMENT_GET_CLASS (object)->lookup_child
+      (GES_TIMELINE_ELEMENT (object), prop_name, (GObject **) element, pspec);
 }
 
+static gboolean
+strv_find_str (const gchar ** strv, const char *str)
+{
+  guint i;
+
+  if (strv == NULL)
+    return FALSE;
+
+  for (i = 0; strv[i]; i++) {
+    if (g_strcmp0 (strv[i], str) == 0)
+      return TRUE;
+  }
+
+  return FALSE;
+}
 
 static void
 ges_track_element_get_property (GObject * object, guint property_id,
@@ -206,7 +178,6 @@ ges_track_element_dispose (GObject * object)
   GESTrackElement *element = GES_TRACK_ELEMENT (object);
   GESTrackElementPrivate *priv = element->priv;
 
-  g_hash_table_destroy (priv->children_props);
   if (priv->bindings_hashtable)
     g_hash_table_destroy (priv->bindings_hashtable);
 
@@ -278,21 +249,6 @@ ges_track_element_class_init (GESTrackElementClass * klass)
       properties[PROP_TRACK]);
 
   /**
-   * GESTrackElement::deep-notify:
-   * @track_element: a #GESTrackElement
-   * @prop_object: the object that originated the signal
-   * @prop: the property that changed
-   *
-   * The deep notify signal is used to be notified of property changes of all
-   * the childs of @track_element
-   */
-  ges_track_element_signals[DEEP_NOTIFY] =
-      g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
-      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 2, GST_TYPE_ELEMENT, G_TYPE_PARAM);
-
-  /**
    * GESTrackElement::control-binding-added:
    * @track_element: a #GESTrackElement
    * @control_binding: the #GstControlBinding that has been added
@@ -330,16 +286,6 @@ ges_track_element_init (GESTrackElement * self)
   priv->pending_active = TRUE;
   priv->bindings_hashtable = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, NULL);
-  priv->children_props =
-      g_hash_table_new_full ((GHashFunc) ges_pspec_hash, ges_pspec_equal,
-      (GDestroyNotify) g_param_spec_unref, gst_object_unref);
-
-}
-
-static gint
-compare_gparamspec (GParamSpec ** a, GParamSpec ** b, gpointer udata)
-{
-  return g_strcmp0 ((*a)->name, (*b)->name);
 }
 
 static gfloat
@@ -591,33 +537,6 @@ ges_track_element_get_track_type (GESTrackElement * object)
   return object->priv->track_type;
 }
 
-static void
-gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * track_element)
-{
-  g_signal_emit (track_element, ges_track_element_signals[DEEP_NOTIFY], 0,
-      GST_ELEMENT (element), arg);
-}
-
-static void
-connect_signal (gpointer key, gpointer value, gpointer user_data)
-{
-  gchar *signame = g_strconcat ("notify::", G_PARAM_SPEC (key)->name, NULL);
-
-  g_signal_connect (G_OBJECT (value),
-      signame, G_CALLBACK (gst_element_prop_changed_cb),
-      GES_TRACK_ELEMENT (user_data));
-
-  g_free (signame);
-}
-
-static void
-connect_properties_signals (GESTrackElement * object)
-{
-  g_hash_table_foreach (object->priv->children_props,
-      (GHFunc) connect_signal, object);
-}
-
 /* default 'create_nle_object' virtual method implementation */
 static GstElement *
 ges_track_element_create_nle_object_func (GESTrackElement * self)
@@ -768,22 +687,6 @@ done:
   return res;
 }
 
-static gboolean
-strv_find_str (const gchar ** strv, const char *str)
-{
-  guint i;
-
-  if (strv == NULL)
-    return FALSE;
-
-  for (i = 0; strv[i]; i++) {
-    if (g_strcmp0 (strv[i], str) == 0)
-      return TRUE;
-  }
-
-  return FALSE;
-}
-
 /**
  * ges_track_element_add_children_props:
  * @self: The #GESTrackElement to set chidlren props on
@@ -830,8 +733,8 @@ ges_track_element_add_children_props (GESTrackElement * self,
       }
 
       if (pspec->flags & G_PARAM_WRITABLE) {
-        g_hash_table_insert (self->priv->children_props,
-            g_param_spec_ref (pspec), gst_object_ref (element));
+        ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (self),
+            pspec, G_OBJECT (element));
         GST_LOG_OBJECT (self,
             "added property %s to controllable properties successfully !",
             whitelist[i]);
@@ -841,8 +744,6 @@ ges_track_element_add_children_props (GESTrackElement * self,
             whitelist[i], gst_element_get_name (element));
 
     }
-
-    connect_properties_signals (self);
     return;
   }
 
@@ -881,8 +782,8 @@ ges_track_element_add_children_props (GESTrackElement * self,
             for (i = 0; i < nb_specs; i++) {
               if ((parray[i]->flags & G_PARAM_WRITABLE) &&
                   (!whitelist || strv_find_str (whitelist, parray[i]->name))) {
-                g_hash_table_insert (self->priv->children_props,
-                    g_param_spec_ref (parray[i]), gst_object_ref (child));
+                ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT
+                    (self), parray[i], G_OBJECT (child));
               }
             }
             g_free (parray);
@@ -915,8 +816,6 @@ ges_track_element_add_children_props (GESTrackElement * self,
     g_value_unset (&item);
   }
   gst_iterator_free (it);
-
-  connect_properties_signals (self);
 }
 
 /* INTERNAL USAGE */
@@ -1080,18 +979,15 @@ ges_track_element_is_active (GESTrackElement * object)
  * Returns: TRUE if @element and @pspec could be found. FALSE otherwise. In that
  * case the values for @pspec and @element are not modified. Unref @element after
  * usage.
+ *
+ * Deprecated: Use #ges_timeline_element_lookup_child
  */
 gboolean
 ges_track_element_lookup_child (GESTrackElement * object,
     const gchar * prop_name, GstElement ** element, GParamSpec ** pspec)
 {
-  GESTrackElementClass *class;
-
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
-  class = GES_TRACK_ELEMENT_GET_CLASS (object);
-  g_return_val_if_fail (class->lookup_child, FALSE);
-
-  return class->lookup_child (object, prop_name, element, pspec);
+  return ges_timeline_element_lookup_child (GES_TIMELINE_ELEMENT (object),
+      prop_name, ((GObject **) element), pspec);
 }
 
 /**
@@ -1101,26 +997,19 @@ ges_track_element_lookup_child (GESTrackElement * object,
  * @value: the value
  *
  * Sets a property of a child of @object.
+ *
+ * Deprecated: Use #ges_timeline_element_set_child_property_by_spec
  */
 void
 ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
     GParamSpec * pspec, GValue * value)
 {
-  GstElement *element;
   g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
-  if (!ges_track_element_lookup_child (object, pspec->name, &element, &pspec))
-    goto not_found;
-
-  g_object_set_property (G_OBJECT (element), pspec->name, value);
+  ges_timeline_element_set_child_property_by_pspec (GES_TIMELINE_ELEMENT
+      (object), pspec, value);
 
   return;
-
-not_found:
-  {
-    GST_ERROR ("The %s property doesn't exist", pspec->name);
-    return;
-  }
 }
 
 /**
@@ -1134,62 +1023,15 @@ not_found:
  * that have the same property name, you can distinguish them using the following
  * syntax: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
+ *
+ * Deprecated: Use #ges_timeline_element_set_child_property_valist
  */
 void
 ges_track_element_set_child_property_valist (GESTrackElement * object,
     const gchar * first_property_name, va_list var_args)
 {
-  const gchar *name;
-  GParamSpec *pspec;
-  GstElement *element;
-
-  gchar *error = NULL;
-  GValue value = { 0, };
-
-  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
-
-  name = first_property_name;
-
-  /* Note: This part is in big part copied from the gst_child_object_set_valist
-   * method. */
-
-  /* iterate over pairs */
-  while (name) {
-    if (!ges_track_element_lookup_child (object, name, &element, &pspec))
-      goto not_found;
-
-#if GLIB_CHECK_VERSION(2,23,3)
-    G_VALUE_COLLECT_INIT (&value, pspec->value_type, var_args,
-        G_VALUE_NOCOPY_CONTENTS, &error);
-#else
-    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-    G_VALUE_COLLECT (&value, var_args, G_VALUE_NOCOPY_CONTENTS, &error);
-#endif
-
-    if (error)
-      goto cant_copy;
-
-    g_object_set_property (G_OBJECT (element), pspec->name, &value);
-
-    gst_object_unref (element);
-    g_value_unset (&value);
-
-    name = va_arg (var_args, gchar *);
-  }
-  return;
-
-not_found:
-  {
-    GST_WARNING ("No property %s in OBJECT\n", name);
-    return;
-  }
-cant_copy:
-  {
-    GST_WARNING ("error copying value %s in object %p: %s", pspec->name, object,
-        error);
-    g_value_unset (&value);
-    return;
-  }
+  ges_timeline_element_set_child_property_valist (GES_TIMELINE_ELEMENT (object),
+      first_property_name, var_args);
 }
 
 /**
@@ -1203,6 +1045,8 @@ cant_copy:
  * that have the same property name, you can distinguish them using the following
  * syntax: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
+ *
+ * Deprecated: Use #ges_timeline_element_set_child_properties
  */
 void
 ges_track_element_set_child_properties (GESTrackElement * object,
@@ -1229,50 +1073,15 @@ ges_track_element_set_child_properties (GESTrackElement * object,
  * that have the same property name, you can distinguish them using the following
  * syntax: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
+ *
+ * Deprecated: Use #ges_timeline_element_get_child_property_valist
  */
 void
 ges_track_element_get_child_property_valist (GESTrackElement * object,
     const gchar * first_property_name, va_list var_args)
 {
-  const gchar *name;
-  gchar *error = NULL;
-  GValue value = { 0, };
-  GParamSpec *pspec;
-  GstElement *element;
-
-  g_return_if_fail (G_IS_OBJECT (object));
-
-  name = first_property_name;
-
-  /* This part is in big part copied from the gst_child_object_get_valist method */
-  while (name) {
-    if (!ges_track_element_lookup_child (object, name, &element, &pspec))
-      goto not_found;
-
-    g_value_init (&value, pspec->value_type);
-    g_object_get_property (G_OBJECT (element), pspec->name, &value);
-    gst_object_unref (element);
-
-    G_VALUE_LCOPY (&value, var_args, 0, &error);
-    if (error)
-      goto cant_copy;
-    g_value_unset (&value);
-    name = va_arg (var_args, gchar *);
-  }
-  return;
-
-not_found:
-  {
-    GST_WARNING ("no property %s in object", name);
-    return;
-  }
-cant_copy:
-  {
-    GST_WARNING ("error copying value %s in object %p: %s", pspec->name, object,
-        error);
-    g_value_unset (&value);
-    return;
-  }
+  ges_timeline_element_get_child_property_valist (GES_TIMELINE_ELEMENT (object),
+      first_property_name, var_args);
 }
 
 /**
@@ -1285,23 +1094,16 @@ cant_copy:
  *
  * Returns: (transfer full) (array length=n_properties): an array of #GParamSpec* which should be freed after use or
  * %NULL if something went wrong
+ *
+ * Deprecated: Use #ges_timeline_element_list_children_properties
  */
 GParamSpec **
 ges_track_element_list_children_properties (GESTrackElement * object,
     guint * n_properties)
 {
-  GParamSpec **ret;
-  GESTrackElementClass *class;
-
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
-
-  class = GES_TRACK_ELEMENT_GET_CLASS (object);
-
-  ret = class->list_children_properties (object, n_properties);
-  g_qsort_with_data (ret, *n_properties, sizeof (GParamSpec *),
-      (GCompareDataFunc) compare_gparamspec, NULL);
-
-  return ret;
+  return
+      ges_timeline_element_list_children_properties (GES_TIMELINE_ELEMENT
+      (object), n_properties);
 }
 
 /**
@@ -1312,6 +1114,8 @@ ges_track_element_list_children_properties (GESTrackElement * object,
  * name/return location pairs, followed by NULL
  *
  * Gets properties of a child of @object.
+ *
+ * Deprecated: Use #ges_timeline_element_get_child_properties
  */
 void
 ges_track_element_get_child_properties (GESTrackElement * object,
@@ -1334,28 +1138,15 @@ ges_track_element_get_child_properties (GESTrackElement * object,
  * @value: (out): return location for the value
  *
  * Gets a property of a child of @object.
+ *
+ * Deprecated: Use #ges_timeline_element_get_child_property_by_pspec
  */
 void
 ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
     GParamSpec * pspec, GValue * value)
 {
-  GstElement *element;
-
-  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
-
-  element = g_hash_table_lookup (object->priv->children_props, pspec);
-  if (!element)
-    goto not_found;
-
-  g_object_get_property (G_OBJECT (element), pspec->name, value);
-
-  return;
-
-not_found:
-  {
-    GST_ERROR ("The %s property doesn't exist", pspec->name);
-    return;
-  }
+  ges_timeline_element_get_child_property_by_pspec (GES_TIMELINE_ELEMENT
+      (object), pspec, value);
 }
 
 /**
@@ -1371,104 +1162,53 @@ not_found:
  * is much more convenient for C programming.
  *
  * Returns: %TRUE if the property was set, %FALSE otherwize
+ *
+ * Deprecated: use #ges_timeline_element_set_child_property instead
  */
 gboolean
 ges_track_element_set_child_property (GESTrackElement * object,
     const gchar * property_name, GValue * value)
 {
-  GParamSpec *pspec;
-  GstElement *element;
-
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
-
-  if (!ges_track_element_lookup_child (object, property_name, &element, &pspec))
-    goto not_found;
-
-  g_object_set_property (G_OBJECT (element), pspec->name, value);
-
-  gst_object_unref (element);
-  g_param_spec_unref (pspec);
-
-  return TRUE;
-
-not_found:
-  {
-    GST_WARNING_OBJECT (object, "The %s property doesn't exist", property_name);
-
-    return FALSE;
-  }
+  return ges_timeline_element_set_child_property (GES_TIMELINE_ELEMENT (object),
+      property_name, value);
 }
 
 /**
-* ges_track_element_get_child_property:
-* @object: The origin #GESTrackElement
-* @property_name: The name of the property
-* @value: (out): return location for the property value, it will
-* be initialized if it is initialized with 0
-*
-* In general, a copy is made of the property contents and
-* the caller is responsible for freeing the memory by calling
-* g_value_unset().
-*
-* Gets a property of a GstElement contained in @object.
-*
-* Note that #ges_track_element_get_child_property is really
-* intended for language bindings, #ges_track_element_get_child_properties
-* is much more convenient for C programming.
-*
-* Returns: %TRUE if the property was found, %FALSE otherwize
-*/
+ * ges_track_element_get_child_property:
+ * @object: The origin #GESTrackElement
+ * @property_name: The name of the property
+ * @value: (out): return location for the property value, it will
+ * be initialized if it is initialized with 0
+ *
+ * In general, a copy is made of the property contents and
+ * the caller is responsible for freeing the memory by calling
+ * g_value_unset().
+ *
+ * Gets a property of a GstElement contained in @object.
+ *
+ * Note that #ges_track_element_get_child_property is really
+ * intended for language bindings, #ges_track_element_get_child_properties
+ * is much more convenient for C programming.
+ *
+ * Returns: %TRUE if the property was found, %FALSE otherwize
+ *
+ * Deprecated: Use #ges_timeline_element_get_child_property
+ */
 gboolean
 ges_track_element_get_child_property (GESTrackElement * object,
     const gchar * property_name, GValue * value)
 {
-  GParamSpec *pspec;
-  GstElement *element;
-
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
-
-  if (!ges_track_element_lookup_child (object, property_name, &element, &pspec))
-    goto not_found;
-
-  if (G_VALUE_TYPE (value) == G_TYPE_INVALID)
-    g_value_init (value, pspec->value_type);
-
-  g_object_get_property (G_OBJECT (element), pspec->name, value);
-
-  gst_object_unref (element);
-  g_param_spec_unref (pspec);
-
-  return TRUE;
-
-not_found:
-  {
-    GST_WARNING_OBJECT (object, "The %s property doesn't exist", property_name);
-
-    return FALSE;
-  }
+  return ges_timeline_element_get_child_property (GES_TIMELINE_ELEMENT (object),
+      property_name, value);
 }
 
 static GParamSpec **
 default_list_children_properties (GESTrackElement * object,
     guint * n_properties)
 {
-  GParamSpec **pspec, *spec;
-  GHashTableIter iter;
-  gpointer key, value;
-
-  guint i = 0;
-
-  *n_properties = g_hash_table_size (object->priv->children_props);
-  pspec = g_new (GParamSpec *, *n_properties);
-
-  g_hash_table_iter_init (&iter, object->priv->children_props);
-  while (g_hash_table_iter_next (&iter, &key, &value)) {
-    spec = G_PARAM_SPEC (key);
-    pspec[i] = g_param_spec_ref (spec);
-    i++;
-  }
-
-  return pspec;
+  return
+      GES_TIMELINE_ELEMENT_GET_CLASS (object)->list_children_properties
+      (GES_TIMELINE_ELEMENT (object), n_properties);
 }
 
 void

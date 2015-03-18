@@ -249,7 +249,7 @@ _test_project (GESProject * project, GESTimeline * timeline)
           if (GES_IS_BASE_EFFECT (trackelement)) {
             guint nb_scratch_lines;
 
-            ges_track_element_get_child_properties (trackelement,
+            ges_timeline_element_get_child_properties (tmptrackelement->data,
                 "scratch-lines", &nb_scratch_lines, NULL);
             assert_equals_int (nb_scratch_lines, 12);
 
@@ -339,10 +339,10 @@ _add_properties (GESTimeline * timeline)
           /* Adding children properties */
           else if (GES_IS_VIDEO_SOURCE (element)) {
             gint64 posx = 42;
-            ges_track_element_set_child_properties (element, "posx", posx,
-                NULL);
-            ges_track_element_get_child_properties (element, "posx", &posx,
-                NULL);
+            ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT
+                (element), "posx", posx, NULL);
+            ges_timeline_element_get_child_properties (GES_TIMELINE_ELEMENT
+                (element), "posx", &posx, NULL);
             fail_unless_equals_int64 (posx, 42);
           }
         }
@@ -406,8 +406,8 @@ _check_properties (GESTimeline * timeline)
           else if (GES_IS_VIDEO_SOURCE (element)) {
             /* Init 'posx' with a wrong value */
             gint64 posx = 27;
-            ges_track_element_get_child_properties (element, "posx", &posx,
-                NULL);
+            ges_timeline_element_get_child_properties (GES_TIMELINE_ELEMENT
+                (element), "posx", &posx, NULL);
             fail_unless_equals_int64 (posx, 42);
           }
         }

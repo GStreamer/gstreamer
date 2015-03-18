@@ -26,11 +26,14 @@
  * responsible for controlling its timing properties.
  */
 
+#include "ges-utils.h"
 #include "ges-timeline-element.h"
 #include "ges-extractable.h"
 #include "ges-meta-container.h"
 #include "ges-internal.h"
+
 #include <string.h>
+#include <gobject/gvaluecollector.h>
 
 /* maps type name quark => count */
 static GData *object_name_counts = NULL;
@@ -67,12 +70,89 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  DEEP_NOTIFY,
+  LAST_SIGNAL
+};
+
+static guint ges_timeline_element_signals[LAST_SIGNAL] = { 0 };
+
 static GParamSpec *properties[PROP_LAST] = { NULL, };
 
 struct _GESTimelineElementPrivate
 {
   gboolean serialize;
+
+  /* We keep a link between properties name and elements internally
+   * The hashtable should look like
+   * {GParamaSpec ---> child}*/
+  GHashTable *children_props;
 };
+
+static gboolean
+_lookup_child (GESTimelineElement * self, const gchar * prop_name,
+    GObject ** child, GParamSpec ** pspec)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+  gchar **names, *name, *classename;
+  gboolean res;
+
+  classename = NULL;
+  res = FALSE;
+
+  names = g_strsplit (prop_name, "::", 2);
+  if (names[1] != NULL) {
+    classename = names[0];
+    name = names[1];
+  } else
+    name = names[0];
+
+  g_hash_table_iter_init (&iter, self->priv->children_props);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    if (g_strcmp0 (G_PARAM_SPEC (key)->name, name) == 0) {
+      if (classename == NULL ||
+          g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (value)), classename) == 0) {
+        GST_DEBUG_OBJECT (self, "The %s property from %s has been found", name,
+            classename);
+        if (child)
+          *child = gst_object_ref (value);
+
+        if (pspec)
+          *pspec = g_param_spec_ref (key);
+        res = TRUE;
+        break;
+      }
+    }
+  }
+  g_strfreev (names);
+
+  return res;
+}
+
+static GParamSpec **
+default_list_children_properties (GESTimelineElement * self,
+    guint * n_properties)
+{
+  GParamSpec **pspec, *spec;
+  GHashTableIter iter;
+  gpointer key, value;
+
+  guint i = 0;
+
+  *n_properties = g_hash_table_size (self->priv->children_props);
+  pspec = g_new (GParamSpec *, *n_properties);
+
+  g_hash_table_iter_init (&iter, self->priv->children_props);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    spec = G_PARAM_SPEC (key);
+    pspec[i] = g_param_spec_ref (spec);
+    i++;
+  }
+
+  return pspec;
+}
 
 static void
 _get_property (GObject * object, guint property_id,
@@ -169,6 +249,10 @@ ges_timeline_element_init (GESTimelineElement * self)
       GES_TYPE_TIMELINE_ELEMENT, GESTimelineElementPrivate);
 
   self->priv->serialize = TRUE;
+
+  self->priv->children_props =
+      g_hash_table_new_full ((GHashFunc) ges_pspec_hash, ges_pspec_equal,
+      (GDestroyNotify) g_param_spec_unref, gst_object_unref);
 }
 
 static void
@@ -268,6 +352,21 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
 
   g_object_class_install_properties (object_class, PROP_LAST, properties);
 
+  /**
+   * GESTimelineElement::deep-notify:
+   * @timeline_element: a #GESTtimelineElement
+   * @prop_object: the object that originated the signal
+   * @prop: the property that changed
+   *
+   * The deep notify signal is used to be notified of property changes of all
+   * the childs of @timeline_element
+   */
+  ges_timeline_element_signals[DEEP_NOTIFY] =
+      g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
+      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 2, G_TYPE_OBJECT, G_TYPE_PARAM);
+
   object_class->finalize = ges_timeline_element_finalize;
 
   klass->set_parent = NULL;
@@ -282,6 +381,9 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   klass->roll_start = NULL;
   klass->roll_end = NULL;
   klass->trim = NULL;
+
+  klass->list_children_properties = default_list_children_properties;
+  klass->lookup_child = _lookup_child;
 }
 
 static void
@@ -1081,4 +1183,441 @@ had_timeline:
     GST_WARNING ("Objects already in a timeline can't be renamed");
     return FALSE;
   }
+}
+
+static void
+child_prop_changed_cb (GObject * child, GParamSpec * arg
+    G_GNUC_UNUSED, GESTimelineElement * self)
+{
+  g_signal_emit (self, ges_timeline_element_signals[DEEP_NOTIFY], 0,
+      child, arg);
+}
+
+gboolean
+ges_timeline_element_add_child_property (GESTimelineElement * self,
+    GParamSpec * pspec, GObject * child)
+{
+  GST_DEBUG_OBJECT (self, "Adding child property: %" GST_PTR_FORMAT "::%s",
+      child, pspec->name);
+
+  if (g_hash_table_insert (self->priv->children_props,
+          g_param_spec_ref (pspec), gst_object_ref (child))) {
+    gchar *signame = g_strconcat ("notify::", pspec->name, NULL);
+
+    g_signal_connect (child, signame, G_CALLBACK (child_prop_changed_cb), self);
+
+    g_free (signame);
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * ges_track_element_get_child_property_by_pspec:
+ * @self: a #GESTrackElement
+ * @pspec: The #GParamSpec that specifies the property you want to get
+ * @value: (out): return location for the value
+ *
+ * Gets a property of a child of @self.
+ */
+void
+ges_timeline_element_get_child_property_by_pspec (GESTimelineElement * self,
+    GParamSpec * pspec, GValue * value)
+{
+  GstElement *element;
+
+  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+
+  element = g_hash_table_lookup (self->priv->children_props, pspec);
+  if (!element)
+    goto not_found;
+
+  g_object_get_property (G_OBJECT (element), pspec->name, value);
+
+  return;
+
+not_found:
+  {
+    GST_ERROR_OBJECT (self, "The %s property doesn't exist", pspec->name);
+    return;
+  }
+}
+
+/**
+ * ges_timeline_element_set_child_property_by_pspec:
+ * @self: a #GESTimelineElement
+ * @pspec: The #GParamSpec that specifies the property you want to set
+ * @value: the value
+ *
+ * Sets a property of a child of @self.
+ */
+void
+ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
+    GParamSpec * pspec, GValue * value)
+{
+  GObject *child;
+
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (self));
+
+  if (!ges_timeline_element_lookup_child (self, pspec->name, &child, &pspec))
+    goto not_found;
+
+  g_object_set_property (child, pspec->name, value);
+
+  return;
+
+not_found:
+  {
+    GST_ERROR ("The %s property doesn't exist", pspec->name);
+    return;
+  }
+}
+
+/**
+ * ges_timeline_element_set_child_property:
+ * @self: The origin #GESTimelineElement
+ * @property_name: The name of the property
+ * @value: the value
+ *
+ * Sets a property of a child of @self
+ *
+ * Note that #ges_timeline_element_set_child_property is really
+ * intended for language bindings, #ges_timeline_element_set_child_properties
+ * is much more convenient for C programming.
+ *
+ * Returns: %TRUE if the property was set, %FALSE otherwize
+ */
+gboolean
+ges_timeline_element_set_child_property (GESTimelineElement * self,
+    const gchar * property_name, GValue * value)
+{
+  GParamSpec *pspec;
+  GObject *child;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
+    goto not_found;
+
+  g_object_set_property (child, pspec->name, value);
+
+  gst_object_unref (child);
+  g_param_spec_unref (pspec);
+
+  return TRUE;
+
+not_found:
+  {
+    GST_WARNING_OBJECT (self, "The %s property doesn't exist", property_name);
+
+    return FALSE;
+  }
+}
+
+/**
+* ges_timeline_element_get_child_property:
+* @object: The origin #GESTimelineElement
+* @property_name: The name of the property
+* @value: (out): return location for the property value, it will
+* be initialized if it is initialized with 0
+*
+* In general, a copy is made of the property contents and
+* the caller is responsible for freeing the memory by calling
+* g_value_unset().
+*
+* Gets a property of a GstElement contained in @object.
+*
+* Note that #ges_timeline_element_get_child_property is really
+* intended for language bindings, #ges_timeline_element_get_child_properties
+* is much more convenient for C programming.
+*
+* Returns: %TRUE if the property was found, %FALSE otherwize
+*/
+gboolean
+ges_timeline_element_get_child_property (GESTimelineElement * self,
+    const gchar * property_name, GValue * value)
+{
+  GParamSpec *pspec;
+  GObject *child;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
+    goto not_found;
+
+  if (G_VALUE_TYPE (value) == G_TYPE_INVALID)
+    g_value_init (value, pspec->value_type);
+
+  g_object_get_property (child, pspec->name, value);
+
+  gst_object_unref (child);
+  g_param_spec_unref (pspec);
+
+  return TRUE;
+
+not_found:
+  {
+    GST_WARNING_OBJECT (self, "The %s property doesn't exist", property_name);
+
+    return FALSE;
+  }
+}
+
+/**
+ * ges_timeline_element_lookup_child:
+ * @self: object to lookup the property in
+ * @prop_name: name of the property to look up. You can specify the name of the
+ *     class as such: "ClassName::property-name", to guarantee that you get the
+ *     proper GParamSpec in case various GstElement-s contain the same property
+ *     name. If you don't do so, you will get the first element found, having
+ *     this property and the and the corresponding GParamSpec.
+ * @element: (out) (allow-none) (transfer full): pointer to a #GstElement that
+ *     takes the real object to set property on
+ * @pspec: (out) (allow-none) (transfer full): pointer to take the #GParamSpec
+ *     describing the property
+ *
+ * Looks up which @element and @pspec would be effected by the given @name. If various
+ * contained elements have this property name you will get the first one, unless you
+ * specify the class name in @name.
+ *
+ * Returns: TRUE if @element and @pspec could be found. FALSE otherwise. In that
+ * case the values for @pspec and @element are not modified. Unref @element after
+ * usage.
+ */
+gboolean
+ges_timeline_element_lookup_child (GESTimelineElement * self,
+    const gchar * prop_name, GObject ** child, GParamSpec ** pspec)
+{
+  GESTimelineElementClass *class;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  class = GES_TIMELINE_ELEMENT_GET_CLASS (self);
+  g_return_val_if_fail (class->lookup_child, FALSE);
+
+  return class->lookup_child (self, prop_name, child, pspec);
+}
+
+/**
+ * ges_timeline_element_set_child_property_valist:
+ * @self: The #GESTimelineElement parent object
+ * @first_property_name: The name of the first property to set
+ * @var_args: value for the first property, followed optionally by more
+ * name/return location pairs, followed by NULL
+ *
+ * Sets a property of a child of @self. If there are various child elements
+ * that have the same property name, you can distinguish them using the following
+ * syntax: 'ClasseName::property_name' as property name. If you don't, the
+ * corresponding property of the first element found will be set.
+ */
+void
+ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
+    const gchar * first_property_name, va_list var_args)
+{
+  const gchar *name;
+  GParamSpec *pspec;
+  GObject *child;
+
+  gchar *error = NULL;
+  GValue value = { 0, };
+
+  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+
+  name = first_property_name;
+
+  /* Note: This part is in big part copied from the gst_child_object_set_valist
+   * method. */
+
+  /* iterate over pairs */
+  while (name) {
+    if (!ges_timeline_element_lookup_child (self, name, &child, &pspec))
+      goto not_found;
+
+    G_VALUE_COLLECT_INIT (&value, pspec->value_type, var_args,
+        G_VALUE_NOCOPY_CONTENTS, &error);
+
+    if (error)
+      goto cant_copy;
+
+    g_object_set_property (child, pspec->name, &value);
+
+    gst_object_unref (child);
+    g_value_unset (&value);
+
+    name = va_arg (var_args, gchar *);
+  }
+  return;
+
+not_found:
+  {
+    GST_WARNING_OBJECT (self, "No property %s in OBJECT\n", name);
+    return;
+  }
+cant_copy:
+  {
+    GST_WARNING_OBJECT (self, "error copying value %s in %p: %s", pspec->name,
+        self, error);
+
+    g_value_unset (&value);
+    return;
+  }
+}
+
+/**
+ * ges_timeline_element_set_child_properties:
+ * @self: The #GESTimelineElement parent object
+ * @first_property_name: The name of the first property to set
+ * @...: value for the first property, followed optionally by more
+ * name/return location pairs, followed by NULL
+ *
+ * Sets a property of a child of @self. If there are various child elements
+ * that have the same property name, you can distinguish them using the following
+ * syntax: 'ClasseName::property_name' as property name. If you don't, the
+ * corresponding property of the first element found will be set.
+ */
+void
+ges_timeline_element_set_child_properties (GESTimelineElement * self,
+    const gchar * first_property_name, ...)
+{
+  va_list var_args;
+
+  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+
+  va_start (var_args, first_property_name);
+  ges_timeline_element_set_child_property_valist (self, first_property_name,
+      var_args);
+  va_end (var_args);
+}
+
+/**
+ * ges_timeline_element_get_child_property_valist:
+ * @self: The #GESTimelineElement parent object
+ * @first_property_name: The name of the first property to get
+ * @var_args: value for the first property, followed optionally by more
+ * name/return location pairs, followed by NULL
+ *
+ * Gets a property of a child of @self. If there are various child elements
+ * that have the same property name, you can distinguish them using the following
+ * syntax: 'ClasseName::property_name' as property name. If you don't, the
+ * corresponding property of the first element found will be set.
+ */
+void
+ges_timeline_element_get_child_property_valist (GESTimelineElement * self,
+    const gchar * first_property_name, va_list var_args)
+{
+  const gchar *name;
+  gchar *error = NULL;
+  GValue value = { 0, };
+  GParamSpec *pspec;
+  GObject *child;
+
+  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+
+  name = first_property_name;
+
+  /* This part is in big part copied from the gst_child_object_get_valist method */
+  while (name) {
+    if (!ges_timeline_element_lookup_child (self, name, &child, &pspec))
+      goto not_found;
+
+    g_value_init (&value, pspec->value_type);
+    g_object_get_property (child, pspec->name, &value);
+    gst_object_unref (child);
+
+    G_VALUE_LCOPY (&value, var_args, 0, &error);
+    if (error)
+      goto cant_copy;
+    g_value_unset (&value);
+    name = va_arg (var_args, gchar *);
+  }
+  return;
+
+not_found:
+  {
+    GST_WARNING_OBJECT (self, "no child property %s", name);
+    return;
+  }
+cant_copy:
+  {
+    GST_WARNING_OBJECT (self, "error copying value %s in %s", pspec->name,
+        error);
+
+    g_value_unset (&value);
+    return;
+  }
+}
+
+static gint
+compare_gparamspec (GParamSpec ** a, GParamSpec ** b, gpointer udata)
+{
+  return g_strcmp0 ((*a)->name, (*b)->name);
+}
+
+
+/**
+ * ges_timeline_element_list_children_properties:
+ * @self: The #GESTimelineElement to get the list of children properties from
+ * @n_properties: (out): return location for the length of the returned array
+ *
+ * Gets an array of #GParamSpec* for all configurable properties of the
+ * children of @self.
+ *
+ * Returns: (transfer full) (array length=n_properties): an array of #GParamSpec* which should be freed after use or
+ * %NULL if something went wrong
+ */
+GParamSpec **
+ges_timeline_element_list_children_properties (GESTimelineElement * self,
+    guint * n_properties)
+{
+  GParamSpec **ret;
+  GESTimelineElementClass *class;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
+
+  class = GES_TIMELINE_ELEMENT_GET_CLASS (self);
+
+  if (!class->list_children_properties) {
+    GST_INFO_OBJECT (self, "No %s->list_children_properties implementation",
+        G_OBJECT_TYPE_NAME (self));
+
+    *n_properties = 0;
+    return NULL;
+  }
+
+  ret = class->list_children_properties (self, n_properties);
+  g_qsort_with_data (ret, *n_properties, sizeof (GParamSpec *),
+      (GCompareDataFunc) compare_gparamspec, NULL);
+
+  return ret;
+}
+
+/**
+ * ges_timeline_element_get_child_properties:
+ * @self: The origin #GESTimelineElement
+ * @first_property_name: The name of the first property to get
+ * @...: return location for the first property, followed optionally by more
+ * name/return location pairs, followed by NULL
+ *
+ * Gets properties of a child of @self.
+ */
+void
+ges_timeline_element_get_child_properties (GESTimelineElement * self,
+    const gchar * first_property_name, ...)
+{
+  va_list var_args;
+
+  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+
+  va_start (var_args, first_property_name);
+  ges_timeline_element_get_child_property_valist (self, first_property_name,
+      var_args);
+  va_end (var_args);
+}
+
+gboolean
+ges_timeline_element_remove_child_property (GESTimelineElement * self,
+    GParamSpec * pspec)
+{
+  return g_hash_table_remove (self->priv->children_props, pspec);
 }

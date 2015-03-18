@@ -185,6 +185,86 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
   return TRUE;
 }
 
+static void
+_ges_container_add_child_properties (GESContainer * container,
+    GESTimelineElement * child)
+{
+  guint n_props, i;
+
+  GParamSpec **child_props =
+      ges_timeline_element_list_children_properties (child,
+      &n_props);
+
+  for (i = 0; i < n_props; i++) {
+    GObject *prop_child;
+
+    if (ges_timeline_element_lookup_child (child, child_props[i]->name,
+            &prop_child, NULL)) {
+      ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (container),
+          child_props[i], prop_child);
+
+    }
+
+    g_param_spec_unref (child_props[i]);
+  }
+
+  g_free (child_props);
+}
+
+static void
+_ges_container_remove_child_properties (GESContainer * container,
+    GESTimelineElement * child)
+{
+  guint n_props, i;
+
+  GParamSpec **child_props =
+      ges_timeline_element_list_children_properties (child,
+      &n_props);
+
+  for (i = 0; i < n_props; i++) {
+    GObject *prop_child;
+
+    if (ges_timeline_element_lookup_child (child, child_props[i]->name,
+            &prop_child, NULL)) {
+      ges_timeline_element_remove_child_property (GES_TIMELINE_ELEMENT
+          (container), child_props[i]);
+
+    }
+
+    g_param_spec_unref (child_props[i]);
+  }
+
+  g_free (child_props);
+}
+
+static GParamSpec **
+_list_children_properties (GESTimelineElement * self, guint * n_properties)
+{
+  GList *tmp;
+
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next)
+    _ges_container_add_child_properties (GES_CONTAINER (self), tmp->data);
+
+  return
+      GES_TIMELINE_ELEMENT_CLASS
+      (ges_container_parent_class)->list_children_properties (self,
+      n_properties);
+}
+
+static gboolean
+_lookup_child (GESTimelineElement * self, const gchar * prop_name,
+    GObject ** child, GParamSpec ** pspec)
+{
+  GList *tmp;
+
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next)
+    _ges_container_add_child_properties (GES_CONTAINER (self), tmp->data);
+
+  return
+      GES_TIMELINE_ELEMENT_CLASS (ges_container_parent_class)->lookup_child
+      (self, prop_name, child, pspec);
+}
+
 /******************************************
  *                                        *
  * GObject virtual methods implementation *
@@ -281,6 +361,8 @@ ges_container_class_init (GESContainerClass * klass)
   element_class->set_start = _set_start;
   element_class->set_duration = _set_duration;
   element_class->set_inpoint = _set_inpoint;
+  element_class->list_children_properties = _list_children_properties;
+  element_class->lookup_child = _lookup_child;
 
   /* No default implementations */
   klass->remove_child = NULL;
@@ -558,6 +640,8 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
     return FALSE;
   }
 
+  _ges_container_add_child_properties (container, child);
+
   g_signal_emit (container, ges_container_signals[CHILD_ADDED_SIGNAL], 0,
       child);
 
@@ -601,6 +685,8 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
   container->children = g_list_remove (container->children, child);
   /* Let it live removing from our mappings */
   g_hash_table_remove (priv->mappings, child);
+
+  _ges_container_remove_child_properties (container, child);
 
   g_signal_emit (container, ges_container_signals[CHILD_REMOVED_SIGNAL], 0,
       child);

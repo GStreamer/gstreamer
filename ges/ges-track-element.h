@@ -80,6 +80,7 @@ struct _GESTrackElement {
  *                            The default implementation will create an object
  *                            of type @nleobject_factorytype and call
  *                            @create_element.
+ *                            DeprecatedUse: GESTimelineElement.list_children_properties instead
  * @lookup_child: method letting subclasses look for a child, overriding the
  *                simple standard behaviour. This vmethod can be used for example
  *                in the case where you want the name of a child property to be
@@ -90,6 +91,7 @@ struct _GESTrackElement {
  *                has been overriden so that we tweak the name passed has parametter
  *                to rename "background" to "foreground-backend" making our API
  *                understandable.
+ *                Deprecated: use GESTimelineElement.lookup_child instead
  *
  * Subclasses can override the @create_nle_object method to override what type
  * of GNonLin object will be created.
@@ -114,8 +116,6 @@ struct _GESTrackElementClass {
   /* virtual methods for subclasses */
   GParamSpec** (*list_children_properties) (GESTrackElement * object,
               guint *n_properties);
-
-
   gboolean (*lookup_child)                 (GESTrackElement *object,
                                             const gchar *prop_name,
                                             GstElement **element,
