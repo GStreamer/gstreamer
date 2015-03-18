@@ -380,6 +380,8 @@ src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
     GST_DEBUG_OBJECT (self, "deactivating src pad");
 
     g_mutex_lock (&self->queue_lock);
+    g_queue_foreach (&self->queue, (GFunc) gst_buffer_unref, NULL);
+    g_queue_clear (&self->queue);
     self->flushing = TRUE;
     g_cond_signal (&self->queue_cond_add);
     g_mutex_unlock (&self->queue_lock);
