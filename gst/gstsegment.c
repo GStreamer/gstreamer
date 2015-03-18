@@ -757,7 +757,7 @@ gst_segment_offset_running_time (GstSegment * segment, GstFormat format,
       if (position == -1)
         return FALSE;
 
-      segment->offset = position;
+      segment->offset = position - segment->start;
     }
   }
   return TRUE;

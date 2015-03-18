@@ -689,6 +689,57 @@ GST_START_TEST (segment_offset)
   fail_unless (segment.base == 0);
   fail_unless (segment.offset == 200);
   check_times (&segment, 200, 200, 0);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  segment.start = 20;
+  segment.position = 50;
+  segment.stop = 220;
+  segment.time = 0;
+
+  check_times (&segment, 40, 20, 20);
+  check_times (&segment, 240, -1, -1);
+
+  fail_unless (gst_segment_offset_running_time (&segment, GST_FORMAT_TIME,
+          0) == TRUE);
+  fail_unless (segment.start == 20);
+  fail_unless (segment.stop == 220);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.position == 50);
+  fail_unless (segment.base == 0);
+  fail_unless (segment.offset == 0);
+  check_times (&segment, 40, 20, 20);
+
+  fail_unless (gst_segment_offset_running_time (&segment, GST_FORMAT_TIME,
+          100) == TRUE);
+  fail_unless (segment.start == 20);
+  fail_unless (segment.stop == 220);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.position == 50);
+  fail_unless (segment.base == 100);
+  fail_unless (segment.offset == 0);
+  check_times (&segment, 40, 20, 120);
+
+  fail_unless (gst_segment_offset_running_time (&segment, GST_FORMAT_TIME,
+          -50) == TRUE);
+  fail_unless (segment.start == 20);
+  fail_unless (segment.stop == 220);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.position == 50);
+  fail_unless (segment.base == 50);
+  fail_unless (segment.offset == 0);
+  check_times (&segment, 40, 20, 70);
+
+  fail_unless (gst_segment_offset_running_time (&segment, GST_FORMAT_TIME,
+          -100) == TRUE);
+  fail_unless (segment.start == 20);
+  fail_unless (segment.stop == 220);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.position == 50);
+  fail_unless (segment.base == 0);
+  fail_unless (segment.offset == 50);
+  check_times (&segment, 40, 20, -1);
+  check_times (&segment, 220, 200, 150);
 }
 
 GST_END_TEST;
