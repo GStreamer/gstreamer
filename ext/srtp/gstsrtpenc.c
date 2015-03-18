@@ -219,6 +219,10 @@ static GstFlowReturn gst_srtp_enc_chain_rtp (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static GstFlowReturn gst_srtp_enc_chain_rtcp (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
+static GstFlowReturn gst_srtp_enc_chain_list_rtp (GstPad * pad,
+    GstObject * parent, GstBufferList * buf);
+static GstFlowReturn gst_srtp_enc_chain_list_rtcp (GstPad * pad,
+    GstObject * parent, GstBufferList * buf);
 
 static gboolean gst_srtp_enc_sink_event_rtp (GstPad * pad, GstObject * parent,
     GstEvent * event);
@@ -511,6 +515,8 @@ create_rtp_sink (GstSrtpEnc * filter, const gchar * name)
       GST_DEBUG_FUNCPTR (gst_srtp_enc_iterate_internal_links_rtp));
   gst_pad_set_chain_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_chain_rtp));
+  gst_pad_set_chain_list_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_srtp_enc_chain_list_rtp));
   gst_pad_set_event_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_sink_event_rtp));
   gst_pad_set_active (sinkpad, TRUE);
@@ -555,6 +561,8 @@ create_rtcp_sink (GstSrtpEnc * filter, const gchar * name)
       GST_DEBUG_FUNCPTR (gst_srtp_enc_iterate_internal_links_rtcp));
   gst_pad_set_chain_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_chain_rtcp));
+  gst_pad_set_chain_list_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_srtp_enc_chain_list_rtcp));
   gst_pad_set_event_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_srtp_enc_sink_event_rtcp));
   gst_pad_set_active (sinkpad, TRUE);
@@ -1087,7 +1095,7 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   GstSrtpEnc *filter = GST_SRTP_ENC (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   GstPad *otherpad;
-  GstBuffer *bufout;
+  GstBuffer *bufout = NULL;
 
   if (!gst_srtp_enc_check_buffer (filter, buf, is_rtcp)) {
     goto fail;
@@ -1143,6 +1151,87 @@ fail:
 }
 
 static GstFlowReturn
+gst_srtp_enc_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * buf_list, gboolean is_rtcp)
+{
+  GstSrtpEnc *filter = GST_SRTP_ENC (parent);
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstPad *otherpad;
+  GstBufferList *out_list = NULL;
+  guint i, num_buffers;
+
+  num_buffers = gst_buffer_list_length (buf_list);
+
+  GST_LOG_OBJECT (pad, "Buffer chain with list of %d", num_buffers);
+
+  for (i = 0; i < num_buffers; i++) {
+    GstBuffer *buf = gst_buffer_list_get (buf_list, i);
+
+    if (!gst_srtp_enc_check_buffer (filter, buf, is_rtcp)) {
+      goto fail;
+    }
+  }
+
+  if ((ret = gst_srtp_enc_check_set_caps (filter, pad, is_rtcp)) != GST_FLOW_OK) {
+    goto out;
+  }
+
+  GST_OBJECT_LOCK (filter);
+
+  if (!HAS_CRYPTO (filter)) {
+    GST_OBJECT_UNLOCK (filter);
+    otherpad = get_rtp_other_pad (pad);
+    return gst_pad_push_list (otherpad, buf_list);
+  }
+
+  GST_OBJECT_UNLOCK (filter);
+
+  out_list = gst_buffer_list_new ();
+
+  for (i = 0; i < num_buffers; i++) {
+    GstBuffer *bufout;
+    GstBuffer *buf = gst_buffer_list_get (buf_list, i);
+
+    if ((bufout = gst_srtp_enc_process_buffer (filter, pad, buf, is_rtcp))) {
+      gst_buffer_list_add (out_list, bufout);
+    } else {
+      gst_buffer_list_unref (out_list);
+      goto fail;
+    }
+  }
+
+  /* Push buffer to source pad */
+  otherpad = get_rtp_other_pad (pad);
+  ret = gst_pad_push_list (otherpad, out_list);
+
+  if (ret != GST_FLOW_OK) {
+    goto out;
+  }
+
+  GST_OBJECT_LOCK (filter);
+
+  if (gst_srtp_get_soft_limit_reached ()) {
+    GST_OBJECT_UNLOCK (filter);
+    g_signal_emit (filter, gst_srtp_enc_signals[SIGNAL_SOFT_LIMIT], 0);
+    GST_OBJECT_LOCK (filter);
+    if (filter->random_key && !filter->key_changed)
+      gst_srtp_enc_replace_random_key (filter);
+  }
+
+  GST_OBJECT_UNLOCK (filter);
+
+out:
+
+  gst_buffer_list_unref (buf_list);
+
+  return ret;
+
+fail:
+  ret = GST_FLOW_ERROR;
+  goto out;
+}
+
+static GstFlowReturn
 gst_srtp_enc_chain_rtp (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   return gst_srtp_enc_chain (pad, parent, buf, FALSE);
@@ -1152,6 +1241,20 @@ static GstFlowReturn
 gst_srtp_enc_chain_rtcp (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   return gst_srtp_enc_chain (pad, parent, buf, TRUE);
+}
+
+static GstFlowReturn
+gst_srtp_enc_chain_list_rtp (GstPad * pad, GstObject * parent,
+    GstBufferList * buf_list)
+{
+  return gst_srtp_enc_chain_list (pad, parent, buf_list, FALSE);
+}
+
+static GstFlowReturn
+gst_srtp_enc_chain_list_rtcp (GstPad * pad, GstObject * parent,
+    GstBufferList * buf_list)
+{
+  return gst_srtp_enc_chain_list (pad, parent, buf_list, TRUE);
 }
 
 
