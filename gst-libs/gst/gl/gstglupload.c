@@ -984,8 +984,8 @@ gst_gl_upload_set_caps (GstGLUpload * upload, GstCaps * in_caps,
 /**
  * gst_gl_upload_get_caps:
  * @upload: a #GstGLUpload
- * @in_caps: (transfer full): (allow-none): (out): the input #GstCaps
- * @ou_caps: (transfer full): (allow-none): (out): the output #GstCaps
+ * @in_caps: (transfer full) (allow-none) (out): the input #GstCaps
+ * @out_caps: (transfer full) (allow-none) (out): the output #GstCaps
  *
  * Returns: (transfer none): The #GstCaps set by gst_gl_upload_set_caps()
  */

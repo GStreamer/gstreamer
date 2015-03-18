@@ -151,9 +151,7 @@ gst_gl_download_reset (GstGLDownload * download)
 /**
  * gst_gl_download_set_format:
  * @download: a #GstGLDownload
- * @v_format: a #GstVideoFormat
- * @out_width: the width to download to
- * @out_height: the height to download to
+ * @out_info: a #GstVideoInfo
  *
  * Initializes @download with the information required for download.
  */
