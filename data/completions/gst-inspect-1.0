@@ -60,7 +60,7 @@ __inspect_main ()
 			then
 				command="$var"
 			fi
-		i=$[$i+1]
+		i=$(($i+1))
 		done
 
 	if [[ "$command" == "--gst"* ]]; then

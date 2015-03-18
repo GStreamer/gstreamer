@@ -65,7 +65,7 @@ _gst_launch_main ()
 			then
 				command="$var"
 			fi
-		i=$[$i+1]
+		i=$(($i+1))
 		done
 
 	i=1
@@ -76,7 +76,7 @@ _gst_launch_main ()
 
 			if [[ "$var" == "--"* ]]
 			then
-				i=$[$i+1]
+				i=$(($i+1))
 				continue
 			fi
 
@@ -86,7 +86,7 @@ _gst_launch_main ()
 				previous_element="$var"
 				have_previous_element=1
 			fi
-		i=$[$i+1]
+		i=$(($i+1))
 		done
 
 	if [[ "$command" == "--gst"* ]]; then
