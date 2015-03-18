@@ -50,6 +50,7 @@ struct _GstDtlsEnc {
     GQueue queue;
     GMutex queue_lock;
     GCond queue_cond_add;
+    gboolean flushing;
 
     GstDtlsConnection *connection;
     gchar *connection_id;

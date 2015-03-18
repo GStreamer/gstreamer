@@ -368,6 +368,7 @@ src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
   if (active) {
     GST_DEBUG_OBJECT (self, "src pad activating in push mode");
 
+    self->flushing = FALSE;
     self->send_initial_events = TRUE;
     success =
         gst_pad_start_task (pad, (GstTaskFunction) src_task_loop, self->src,
@@ -379,7 +380,7 @@ src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
     GST_DEBUG_OBJECT (self, "deactivating src pad");
 
     g_mutex_lock (&self->queue_lock);
-    GST_PAD_MODE (pad) = GST_PAD_MODE_NONE;
+    self->flushing = TRUE;
     g_cond_signal (&self->queue_cond_add);
     g_mutex_unlock (&self->queue_lock);
     success = gst_pad_stop_task (pad);
@@ -396,14 +397,14 @@ src_task_loop (GstPad * pad)
 {
   GstDtlsEnc *self = GST_DTLS_ENC (GST_PAD_PARENT (pad));
   GstFlowReturn ret;
-  GstPad *peer;
-  gboolean peer_is_active;
+  GstBuffer *buffer;
+  gboolean start_connection_timeout = FALSE;
 
   GST_TRACE_OBJECT (self, "src loop: acquiring lock");
   g_mutex_lock (&self->queue_lock);
   GST_TRACE_OBJECT (self, "src loop: acquired lock");
 
-  if (!gst_pad_is_active (pad)) {
+  if (self->flushing) {
     GST_LOG_OBJECT (self, "src task loop entered on inactive pad");
     GST_TRACE_OBJECT (self, "src loop: releasing lock");
     g_mutex_unlock (&self->queue_lock);
@@ -415,7 +416,7 @@ src_task_loop (GstPad * pad)
     g_cond_wait (&self->queue_cond_add, &self->queue_lock);
     GST_TRACE_OBJECT (self, "src loop: add signaled");
 
-    if (!gst_pad_is_active (pad)) {
+    if (self->flushing) {
       GST_LOG_OBJECT (self, "pad inactive, task returning");
       GST_TRACE_OBJECT (self, "src loop: releasing lock");
       g_mutex_unlock (&self->queue_lock);
@@ -424,48 +425,35 @@ src_task_loop (GstPad * pad)
   }
   GST_TRACE_OBJECT (self, "src loop: queue has element");
 
-  peer = gst_pad_get_peer (pad);
-  peer_is_active = gst_pad_is_active (peer);
-  gst_object_unref (peer);
+  buffer = g_queue_pop_head (&self->queue);
+  g_mutex_unlock (&self->queue_lock);
 
-  if (peer_is_active) {
-    GstBuffer *buffer;
-    gboolean start_connection_timeout = FALSE;
+  if (self->send_initial_events) {
+    GstSegment segment;
+    gchar s_id[32];
+    GstCaps *caps;
 
-    buffer = g_queue_pop_head (&self->queue);
-    g_mutex_unlock (&self->queue_lock);
+    self->send_initial_events = FALSE;
 
-    if (self->send_initial_events) {
-      GstSegment segment;
-      gchar s_id[32];
-      GstCaps *caps;
+    g_snprintf (s_id, sizeof (s_id), "dtlsenc-%08x", g_random_int ());
+    gst_pad_push_event (self->src, gst_event_new_stream_start (s_id));
+    caps = gst_caps_new_empty_simple ("application/x-dtls");
+    gst_pad_push_event (self->src, gst_event_new_caps (caps));
+    gst_caps_unref (caps);
+    gst_segment_init (&segment, GST_FORMAT_BYTES);
+    gst_pad_push_event (self->src, gst_event_new_segment (&segment));
+    start_connection_timeout = TRUE;
+  }
 
-      self->send_initial_events = FALSE;
+  GST_TRACE_OBJECT (self, "src loop: releasing lock");
 
-      g_snprintf (s_id, sizeof (s_id), "dtlsenc-%08x", g_random_int ());
-      gst_pad_push_event (self->src, gst_event_new_stream_start (s_id));
-      caps = gst_caps_new_empty_simple ("application/x-dtls");
-      gst_pad_push_event (self->src, gst_event_new_caps (caps));
-      gst_caps_unref (caps);
-      gst_segment_init (&segment, GST_FORMAT_BYTES);
-      gst_pad_push_event (self->src, gst_event_new_segment (&segment));
-      start_connection_timeout = TRUE;
-    }
+  ret = gst_pad_push (self->src, buffer);
+  if (start_connection_timeout)
+    gst_dtls_connection_start_timeout (self->connection);
 
-    GST_TRACE_OBJECT (self, "src loop: releasing lock");
-
-    ret = gst_pad_push (self->src, buffer);
-    if (start_connection_timeout)
-      gst_dtls_connection_start_timeout (self->connection);
-
-    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-      GST_WARNING_OBJECT (self, "failed to push buffer on src pad: %s",
-          gst_flow_get_name (ret));
-    }
-  } else {
-    g_mutex_unlock (&self->queue_lock);
-    g_warn_if_reached ();
-    GST_TRACE_OBJECT (self, "src loop: releasing lock");
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    GST_WARNING_OBJECT (self, "failed to push buffer on src pad: %s",
+        gst_flow_get_name (ret));
   }
 }
 
