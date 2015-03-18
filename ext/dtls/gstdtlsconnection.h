@@ -102,7 +102,7 @@ void gst_dtls_connection_close(GstDtlsConnection *);
  * Sets the closure that will be called whenever data needs to be sent.
  *
  * The closure will get called with the following arguments:
- * void cb(GstDtlsConnection *, gpointer data, gint length, gpointer usgst_data)
+ * void cb(GstDtlsConnection *, gpointer data, gint length, gpointer user_data)
  */
 void gst_dtls_connection_set_send_callback(GstDtlsConnection *, GClosure *);
 

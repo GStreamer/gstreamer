@@ -96,7 +96,7 @@ static void gst_dtls_dec_release_pad (GstElement *, GstPad *);
 
 static void on_key_received (GstDtlsConnection *, gpointer key, guint cipher,
     guint auth, GstDtlsDec *);
-static gboolean on_pegst_certificate_received (GstDtlsConnection *, gchar * pem,
+static gboolean on_peer_certificate_received (GstDtlsConnection *, gchar * pem,
     GstDtlsDec *);
 static GstFlowReturn sink_chain (GstPad *, GstObject * parent, GstBuffer *);
 
@@ -189,9 +189,9 @@ gst_dtls_dec_init (GstDtlsDec * self)
   self->agent = get_agent_by_pem (NULL);
   self->connection_id = NULL;
   self->connection = NULL;
-  self->pegst_pem = NULL;
+  self->peer_pem = NULL;
 
-  self->decodgst_key = NULL;
+  self->decoder_key = NULL;
   self->srtp_cipher = DEFAULT_SRTP_CIPHER;
   self->srtp_auth = DEFAULT_SRTP_AUTH;
 
@@ -211,16 +211,16 @@ gst_dtls_dec_finalize (GObject * object)
 {
   GstDtlsDec *self = GST_DTLS_DEC (object);
 
-  if (self->decodgst_key) {
-    gst_buffer_unref (self->decodgst_key);
-    self->decodgst_key = NULL;
+  if (self->decoder_key) {
+    gst_buffer_unref (self->decoder_key);
+    self->decoder_key = NULL;
   }
 
   g_free (self->connection_id);
   self->connection_id = NULL;
 
-  g_free (self->pegst_pem);
-  self->pegst_pem = NULL;
+  g_free (self->peer_pem);
+  self->peer_pem = NULL;
 
   g_mutex_clear (&self->src_mutex);
 
@@ -287,10 +287,10 @@ gst_dtls_dec_get_property (GObject * object, guint prop_id, GValue * value,
           gst_dtls_agent_get_certificate_pem (self->agent));
       break;
     case PROP_PEER_PEM:
-      g_value_set_string (value, self->pegst_pem);
+      g_value_set_string (value, self->peer_pem);
       break;
     case PROP_DECODER_KEY:
-      g_value_set_boxed (value, self->decodgst_key);
+      g_value_set_boxed (value, self->decoder_key);
       break;
     case PROP_SRTP_CIPHER:
       g_value_set_uint (value, self->srtp_cipher);
@@ -315,7 +315,7 @@ gst_dtls_dec_change_state (GstElement * element, GstStateChange transition)
         g_signal_connect_object (self->connection,
             "on-decoder-key", G_CALLBACK (on_key_received), self, 0);
         g_signal_connect_object (self->connection,
-            "on-peer-certificate", G_CALLBACK (on_pegst_certificate_received),
+            "on-peer-certificate", G_CALLBACK (on_peer_certificate_received),
             self, 0);
       } else {
         GST_WARNING_OBJECT (self,
@@ -391,7 +391,7 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
   self->srtp_auth = auth;
 
   key_dup = g_memdup (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
-  self->decodgst_key =
+  self->decoder_key =
       gst_buffer_new_wrapped (key_dup, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
 
   key_str = g_base64_encode (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
@@ -402,7 +402,7 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
 }
 
 static gboolean
-signal_pegst_certificate_received (GWeakRef * ref)
+signal_peer_certificate_received (GWeakRef * ref)
 {
   GstDtlsDec *self;
 
@@ -421,7 +421,7 @@ signal_pegst_certificate_received (GWeakRef * ref)
 }
 
 static gboolean
-on_pegst_certificate_received (GstDtlsConnection * connection, gchar * pem,
+on_peer_certificate_received (GstDtlsConnection * connection, gchar * pem,
     GstDtlsDec * self)
 {
   GWeakRef *ref;
@@ -430,12 +430,12 @@ on_pegst_certificate_received (GstDtlsConnection * connection, gchar * pem,
 
   GST_DEBUG_OBJECT (self, "Received peer certificate PEM: \n%s", pem);
 
-  self->pegst_pem = g_strdup (pem);
+  self->peer_pem = g_strdup (pem);
 
   ref = g_new (GWeakRef, 1);
   g_weak_ref_init (ref, self);
 
-  g_idle_add ((GSourceFunc) signal_pegst_certificate_received, ref);
+  g_idle_add ((GSourceFunc) signal_peer_certificate_received, ref);
 
   return TRUE;
 }

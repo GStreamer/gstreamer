@@ -57,9 +57,9 @@ struct _GstDtlsDec {
     GstDtlsConnection *connection;
     GMutex connection_mutex;
     gchar *connection_id;
-    gchar *pegst_pem;
+    gchar *peer_pem;
 
-    GstBuffer *decodgst_key;
+    GstBuffer *decoder_key;
     guint srtp_cipher;
     guint srtp_auth;
 };

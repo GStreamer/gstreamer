@@ -77,13 +77,13 @@ static void gst_dtls_srtp_dec_get_property (GObject *, guint prop_id,
 
 static GstPad *gst_dtls_srtp_dec_request_new_pad (GstElement *,
     GstPadTemplate *, const gchar * name, const GstCaps *);
-static GstCaps *on_decodgst_request_key (GstElement * srtp_decoder, guint ssrc,
+static GstCaps *on_decoder_request_key (GstElement * srtp_decoder, guint ssrc,
     GstDtlsSrtpBin *);
-static void on_pegst_pem (GstElement * srtp_decoder, GParamSpec * pspec,
+static void on_peer_pem (GstElement * srtp_decoder, GParamSpec * pspec,
     GstDtlsSrtpDec * self);
 
 static void gst_dtls_srtp_dec_remove_dtls_element (GstDtlsSrtpBin *);
-static GstPadProbeReturn remove_dtls_decodgst_probe_callback (GstPad *,
+static GstPadProbeReturn remove_dtls_decoder_probe_callback (GstPad *,
     GstPadProbeInfo *, GstElement *);
 
 static GstPadProbeReturn drop_funnel_rtcp_caps (GstPad *, GstPadProbeInfo *,
@@ -226,9 +226,9 @@ gst_dtls_srtp_dec_init (GstDtlsSrtpDec * self)
   g_return_if_fail (ret);
 
   g_signal_connect (self->srtp_dec, "request-key",
-      G_CALLBACK (on_decodgst_request_key), self);
+      G_CALLBACK (on_decoder_request_key), self);
   g_signal_connect (self->bin.dtls_element, "notify::peer-pem",
-      G_CALLBACK (on_pegst_pem), self);
+      G_CALLBACK (on_peer_pem), self);
 }
 
 static void
@@ -318,7 +318,7 @@ gst_dtls_srtp_dec_request_new_pad (GstElement * element,
 }
 
 static GstCaps *
-on_decodgst_request_key (GstElement * srtp_decoder,
+on_decoder_request_key (GstElement * srtp_decoder,
     guint ssrc, GstDtlsSrtpBin * bin)
 {
   GstCaps *key_caps;
@@ -391,7 +391,7 @@ on_decodgst_request_key (GstElement * srtp_decoder,
 }
 
 static void
-on_pegst_pem (GstElement * srtp_decoder, GParamSpec * pspec,
+on_peer_pem (GstElement * srtp_decoder, GParamSpec * pspec,
     GstDtlsSrtpDec * self)
 {
   g_return_if_fail (self);
@@ -412,7 +412,7 @@ gst_dtls_srtp_dec_remove_dtls_element (GstDtlsSrtpBin * bin)
   demux_pad = gst_element_get_static_pad (self->dtls_srtp_demux, "dtls_src");
 
   id = gst_pad_add_probe (demux_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-      (GstPadProbeCallback) remove_dtls_decodgst_probe_callback,
+      (GstPadProbeCallback) remove_dtls_decoder_probe_callback,
       bin->dtls_element, NULL);
   g_return_if_fail (id);
   bin->dtls_element = NULL;
@@ -425,7 +425,7 @@ gst_dtls_srtp_dec_remove_dtls_element (GstDtlsSrtpBin * bin)
 }
 
 static GstPadProbeReturn
-remove_dtls_decodgst_probe_callback (GstPad * pad,
+remove_dtls_decoder_probe_callback (GstPad * pad,
     GstPadProbeInfo * info, GstElement * element)
 {
   gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));

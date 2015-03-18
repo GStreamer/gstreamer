@@ -577,16 +577,16 @@ export_srtp_keys (GstDtlsConnection * self)
   struct
   {
     Key client_key;
-    Key servgst_key;
+    Key server_key;
     Salt client_salt;
-    Salt servgst_salt;
+    Salt server_salt;
   } exported_keys;
 
   struct
   {
     Key key;
     Salt salt;
-  } client_key, servgst_key;
+  } client_key, server_key;
 
   SRTP_PROTECTION_PROFILE *profile;
   GstDtlsSrtpCipher cipher;
@@ -623,17 +623,17 @@ export_srtp_keys (GstDtlsConnection * self)
   }
 
   client_key.key = exported_keys.client_key;
-  servgst_key.key = exported_keys.servgst_key;
+  server_key.key = exported_keys.server_key;
   client_key.salt = exported_keys.client_salt;
-  servgst_key.salt = exported_keys.servgst_salt;
+  server_key.salt = exported_keys.server_salt;
 
   if (self->priv->is_client) {
     g_signal_emit (self, signals[SIGNAL_ON_ENCODER_KEY], 0, &client_key, cipher,
         auth);
-    g_signal_emit (self, signals[SIGNAL_ON_DECODER_KEY], 0, &servgst_key,
+    g_signal_emit (self, signals[SIGNAL_ON_DECODER_KEY], 0, &server_key,
         cipher, auth);
   } else {
-    g_signal_emit (self, signals[SIGNAL_ON_ENCODER_KEY], 0, &servgst_key,
+    g_signal_emit (self, signals[SIGNAL_ON_ENCODER_KEY], 0, &server_key,
         cipher, auth);
     g_signal_emit (self, signals[SIGNAL_ON_DECODER_KEY], 0, &client_key, cipher,
         auth);

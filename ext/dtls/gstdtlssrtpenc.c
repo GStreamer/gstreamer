@@ -99,7 +99,7 @@ static GstPad *gst_dtls_srtp_enc_request_new_pad (GstElement *,
 static void on_key_received (GObject * encoder, GstDtlsSrtpEnc *);
 
 static void gst_dtls_srtp_enc_remove_dtls_element (GstDtlsSrtpBin *);
-static GstPadProbeReturn remove_dtls_encodgst_probe_callback (GstPad *,
+static GstPadProbeReturn remove_dtls_encoder_probe_callback (GstPad *,
     GstPadProbeInfo *, GstElement *);
 
 static void
@@ -410,7 +410,7 @@ static void
 gst_dtls_srtp_enc_remove_dtls_element (GstDtlsSrtpBin * bin)
 {
   GstDtlsSrtpEnc *self = GST_DTLS_SRTP_ENC (bin);
-  GstPad *dtls_sink_pad, *pegst_pad;
+  GstPad *dtls_sink_pad, *peer_pad;
   gulong id;
   guint rtp_cipher = 1, rtcp_cipher = 1, rtp_auth = 1, rtcp_auth = 1;
 
@@ -436,26 +436,26 @@ gst_dtls_srtp_enc_remove_dtls_element (GstDtlsSrtpBin * bin)
     return;
   }
 
-  pegst_pad = gst_pad_get_peer (dtls_sink_pad);
-  g_return_if_fail (pegst_pad);
+  peer_pad = gst_pad_get_peer (dtls_sink_pad);
+  g_return_if_fail (peer_pad);
   gst_object_unref (dtls_sink_pad);
   dtls_sink_pad = NULL;
 
-  id = gst_pad_add_probe (pegst_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-      (GstPadProbeCallback) remove_dtls_encodgst_probe_callback,
+  id = gst_pad_add_probe (peer_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      (GstPadProbeCallback) remove_dtls_encoder_probe_callback,
       bin->dtls_element, NULL);
   g_return_if_fail (id);
   bin->dtls_element = NULL;
 
-  gst_pad_push_event (pegst_pad,
+  gst_pad_push_event (peer_pad,
       gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
           gst_structure_new_empty ("dummy")));
 
-  gst_object_unref (pegst_pad);
+  gst_object_unref (peer_pad);
 }
 
 static GstPadProbeReturn
-remove_dtls_encodgst_probe_callback (GstPad * pad,
+remove_dtls_encoder_probe_callback (GstPad * pad,
     GstPadProbeInfo * info, GstElement * element)
 {
   gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));

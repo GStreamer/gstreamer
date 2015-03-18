@@ -56,7 +56,7 @@ GType gst_dtls_srtp_enc_get_type(void);
 
 gboolean gst_dtls_srtp_enc_plugin_init(GstPlugin *);
 
-guint gst_dtls_srtp_enc_get_ciphgst_value_by_nick(const gchar *ciphgst_nick);
+guint gst_dtls_srtp_enc_get_cipher_value_by_nick(const gchar *cipher_nick);
 guint gst_dtls_srtp_enc_get_auth_value_by_nick(const gchar *auth_nick);
 
 G_END_DECLS

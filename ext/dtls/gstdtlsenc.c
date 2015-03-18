@@ -182,7 +182,7 @@ gst_dtls_enc_init (GstDtlsEnc * self)
 
   self->is_client = DEFAULT_IS_CLIENT;
 
-  self->encodgst_key = NULL;
+  self->encoder_key = NULL;
   self->srtp_cipher = DEFAULT_SRTP_CIPHER;
   self->srtp_auth = DEFAULT_SRTP_AUTH;
 
@@ -205,9 +205,9 @@ gst_dtls_enc_finalize (GObject * object)
 {
   GstDtlsEnc *self = GST_DTLS_ENC (object);
 
-  if (self->encodgst_key) {
-    gst_buffer_unref (self->encodgst_key);
-    self->encodgst_key = NULL;
+  if (self->encoder_key) {
+    gst_buffer_unref (self->encoder_key);
+    self->encoder_key = NULL;
   }
 
   g_mutex_lock (&self->queue_lock);
@@ -258,7 +258,7 @@ gst_dtls_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, self->is_client);
       break;
     case PROP_ENCODER_KEY:
-      g_value_set_boxed (value, self->encodgst_key);
+      g_value_set_boxed (value, self->encoder_key);
       break;
     case PROP_SRTP_CIPHER:
       g_value_set_uint (value, self->srtp_cipher);
@@ -399,7 +399,7 @@ src_task_loop (GstPad * pad)
   GstDtlsEnc *self = GST_DTLS_ENC (GST_PAD_PARENT (pad));
   GstFlowReturn ret;
   GstPad *peer;
-  gboolean pegst_is_active;
+  gboolean peer_is_active;
 
   GST_TRACE_OBJECT (self, "src loop: acquiring lock");
   g_mutex_lock (&self->queue_lock);
@@ -427,10 +427,10 @@ src_task_loop (GstPad * pad)
   GST_TRACE_OBJECT (self, "src loop: queue has element");
 
   peer = gst_pad_get_peer (pad);
-  pegst_is_active = gst_pad_is_active (peer);
+  peer_is_active = gst_pad_is_active (peer);
   gst_object_unref (peer);
 
-  if (pegst_is_active) {
+  if (peer_is_active) {
     GstBuffer *buffer;
     gboolean start_connection_timeout = FALSE;
 
@@ -511,7 +511,7 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
   self->srtp_auth = auth;
 
   key_dup = g_memdup (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
-  self->encodgst_key =
+  self->encoder_key =
       gst_buffer_new_wrapped (key_dup, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
 
   key_str = g_base64_encode (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
