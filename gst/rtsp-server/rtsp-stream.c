@@ -2484,8 +2484,9 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
       if (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp_buffer)) {
         if (seq) {
           *seq = gst_rtp_buffer_get_seq (&rtp_buffer);
-          gst_rtp_buffer_unmap (&rtp_buffer);
         }
+
+        gst_rtp_buffer_unmap (&rtp_buffer);
 
         if (rtptime) {
           *rtptime = GST_BUFFER_TIMESTAMP (buffer);
