@@ -247,8 +247,6 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
 {
   GstDtlsConnectionPrivate *priv;
 
-  g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
-
   priv = self->priv;
 
   g_return_if_fail (priv->send_closure);
@@ -277,14 +275,13 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
   openssl_poll (self);
 
   log_state (self, "first poll done");
-  priv->thread = NULL;
 
   GST_TRACE_OBJECT (self, "unlocking @ start");
   g_mutex_unlock (&priv->mutex);
 }
 
-void
-gst_dtls_connection_start_timeout (GstDtlsConnection * self)
+static void
+gst_dtls_connection_start_timeout_locked (GstDtlsConnection * self)
 {
   GstDtlsConnectionPrivate *priv;
   GError *error = NULL;
@@ -293,12 +290,10 @@ gst_dtls_connection_start_timeout (GstDtlsConnection * self)
   g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
 
   priv = self->priv;
+  if (priv->thread)
+    return;
 
   thread_name = g_strdup_printf ("connection_thread_%p", self);
-
-  GST_TRACE_OBJECT (self, "locking @ start_timeout");
-  g_mutex_lock (&priv->mutex);
-  GST_TRACE_OBJECT (self, "locked @ start_timeout");
 
   GST_INFO_OBJECT (self, "starting connection timeout");
   priv->thread = g_thread_try_new (thread_name,
@@ -310,9 +305,23 @@ gst_dtls_connection_start_timeout (GstDtlsConnection * self)
   }
 
   g_free (thread_name);
+}
 
-  GST_TRACE_OBJECT (self, "unlocking @ start_timeout");
+void
+gst_dtls_connection_start_timeout (GstDtlsConnection * self)
+{
+  GstDtlsConnectionPrivate *priv;
+
+  g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
+
+  priv = self->priv;
+
+  GST_TRACE_OBJECT (self, "locking @ start_timeout");
+  g_mutex_lock (&priv->mutex);
+  GST_TRACE_OBJECT (self, "locked @ start_timeout");
+  gst_dtls_connection_start_timeout_locked (self);
   g_mutex_unlock (&priv->mutex);
+  GST_TRACE_OBJECT (self, "unlocking @ start_timeout");
 }
 
 void
@@ -541,15 +550,11 @@ connection_timeout_thread_func (GstDtlsConnection * self)
         log_state (self, "handling timeout after poll");
       }
     } else {
-      GST_DEBUG_OBJECT (self, "waiting indefinitely");
-
+      GST_DEBUG_OBJECT (self, "no timeout set, stopping thread");
       priv->timeout_set = FALSE;
-
-      while (!priv->timeout_set && priv->is_alive) {
-        GST_TRACE_OBJECT (self, "wait @ timeout");
-        g_cond_wait (&priv->condition, &priv->mutex);
-      }
-      GST_TRACE_OBJECT (self, "continued @ timeout");
+      priv->thread = NULL;
+      g_mutex_unlock (&priv->mutex);
+      break;
     }
 
     GST_TRACE_OBJECT (self, "unlocking @ timeout");
@@ -854,7 +859,10 @@ bio_method_ctrl (BIO * bio, int cmd, long arg1, void *arg2)
     case BIO_CTRL_DGRAM_SET_RECV_TIMEOUT:
       GST_LOG_OBJECT (self, "BIO: Timeout set");
       priv->timeout_set = TRUE;
-      g_cond_signal (&priv->condition);
+      if (priv->thread)
+        g_cond_signal (&priv->condition);
+      else
+        gst_dtls_connection_start_timeout_locked (self);
       return 1;
     case BIO_CTRL_RESET:
       priv->bio_buffer = NULL;
