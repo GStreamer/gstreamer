@@ -107,15 +107,6 @@ gst_vaapi_video_meta_set_surface_proxy (GstVaapiVideoMeta * meta,
     GstVaapiSurfaceProxy * proxy);
 
 G_GNUC_INTERNAL
-GFunc
-gst_vaapi_video_meta_get_surface_converter (GstVaapiVideoMeta * meta);
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_video_meta_set_surface_converter (GstVaapiVideoMeta * meta,
-    GFunc func);
-
-G_GNUC_INTERNAL
 guint
 gst_vaapi_video_meta_get_render_flags (GstVaapiVideoMeta * meta);
 

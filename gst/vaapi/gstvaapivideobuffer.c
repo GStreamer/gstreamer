@@ -33,25 +33,6 @@
 #include "gstcompat.h"
 #include "gstvaapivideobuffer.h"
 
-static inline GstBuffer *
-gst_surface_buffer_new (void)
-{
-  return gst_buffer_new ();
-}
-
-static GFunc
-get_surface_converter (GstVaapiDisplay * display)
-{
-  GFunc func;
-
-  switch (gst_vaapi_display_get_class_type (display)) {
-    default:
-      func = NULL;
-      break;
-  }
-  return func;
-}
-
 static GstBuffer *
 new_vbuffer (GstVaapiVideoMeta * meta)
 {
@@ -59,10 +40,7 @@ new_vbuffer (GstVaapiVideoMeta * meta)
 
   g_return_val_if_fail (meta != NULL, NULL);
 
-  gst_vaapi_video_meta_set_surface_converter (meta,
-      get_surface_converter (gst_vaapi_video_meta_get_display (meta)));
-
-  buffer = gst_surface_buffer_new ();
+  buffer = gst_buffer_new ();
   if (buffer)
     gst_buffer_set_vaapi_video_meta (buffer, meta);
   gst_vaapi_video_meta_unref (meta);
@@ -80,7 +58,7 @@ gst_vaapi_video_buffer_new (GstVaapiVideoMeta * meta)
 GstBuffer *
 gst_vaapi_video_buffer_new_empty (void)
 {
-  return gst_surface_buffer_new ();
+  return gst_buffer_new ();
 }
 
 GstBuffer *

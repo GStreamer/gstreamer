@@ -589,38 +589,6 @@ gst_vaapi_video_meta_set_surface_proxy (GstVaapiVideoMeta * meta,
 }
 
 /**
- * gst_vaapi_video_meta_get_surface_converter:
- * @meta: a #GstVaapiVideoMeta
- *
- * Retrieves the surface converter bound to the @meta.
- *
- * Return value: the surface converter associated with the video @meta
- */
-GFunc
-gst_vaapi_video_meta_get_surface_converter (GstVaapiVideoMeta * meta)
-{
-  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_META (meta), NULL);
-
-  return meta->converter;
-}
-
-/**
- * gst_vaapi_video_meta_set_surface_converter:
- * @meta: a #GstVaapiVideoMeta
- * @func: a pointer to the surface converter function
- *
- * Sets the @meta surface converter function to @func.
- */
-void
-gst_vaapi_video_meta_set_surface_converter (GstVaapiVideoMeta * meta,
-    GFunc func)
-{
-  g_return_if_fail (GST_VAAPI_IS_VIDEO_META (meta));
-
-  meta->converter = func;
-}
-
-/**
  * gst_vaapi_video_meta_get_render_flags:
  * @meta: a #GstVaapiVideoMeta
  *
