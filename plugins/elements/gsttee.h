@@ -79,6 +79,8 @@ struct _GstTee {
   GstPadMode      sink_mode;
   GstTeePullMode  pull_mode;
   GstPad         *pull_pad;
+
+  gboolean        allow_not_linked;
 };
 
 struct _GstTeeClass {

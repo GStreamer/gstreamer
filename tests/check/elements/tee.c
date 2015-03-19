@@ -625,6 +625,79 @@ GST_START_TEST (test_request_pads)
 
 GST_END_TEST;
 
+GST_START_TEST (test_allow_not_linked)
+{
+  GstElement *tee;
+  GstPad *src1, *src2;
+  GstBuffer *buffer;
+  GstPad *srcpad;
+  GstCaps *caps;
+  GstSegment segment;
+
+  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS_ANY);
+
+  caps = gst_caps_new_empty_simple ("test/test");
+
+  tee = gst_check_setup_element ("tee");
+  fail_unless (tee);
+  g_object_set (tee, "allow-not-linked", TRUE, NULL);
+
+  srcpad = gst_check_setup_src_pad (tee, &srctemplate);
+  gst_pad_set_active (srcpad, TRUE);
+
+  gst_pad_push_event (srcpad, gst_event_new_stream_start ("test"));
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (srcpad, gst_event_new_stream_start ("test"));
+  gst_pad_set_caps (srcpad, caps);
+  gst_caps_unref (caps);
+  gst_pad_push_event (srcpad, gst_event_new_segment (&segment));
+
+  fail_unless (gst_element_set_state (tee,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+
+  buffer = gst_buffer_new ();
+  fail_unless (buffer);
+
+  fail_unless (gst_pad_push (srcpad, gst_buffer_ref (buffer)) == GST_FLOW_OK);
+
+  src1 = gst_element_get_request_pad (tee, "src_%u");
+
+  fail_unless (gst_pad_push (srcpad, gst_buffer_ref (buffer)) == GST_FLOW_OK);
+
+  src2 = gst_element_get_request_pad (tee, "src_%u");
+
+  fail_unless (gst_pad_push (srcpad, gst_buffer_ref (buffer)) == GST_FLOW_OK);
+
+  g_object_set (tee, "allow-not-linked", FALSE, NULL);
+
+  fail_unless (gst_pad_push (srcpad,
+          gst_buffer_ref (buffer)) == GST_FLOW_NOT_LINKED);
+
+  gst_element_release_request_pad (tee, src1);
+
+  fail_unless (gst_pad_push (srcpad,
+          gst_buffer_ref (buffer)) == GST_FLOW_NOT_LINKED);
+
+  gst_element_release_request_pad (tee, src2);
+  g_object_unref (src1);
+  g_object_unref (src2);
+
+  fail_unless (gst_pad_push (srcpad,
+          gst_buffer_ref (buffer)) == GST_FLOW_NOT_LINKED);
+
+  gst_pad_set_active (srcpad, FALSE);
+  gst_check_teardown_src_pad (tee);
+  gst_check_teardown_element (tee);
+
+  fail_if (buffer->mini_object.refcount != 1);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 static Suite *
 tee_suite (void)
 {
@@ -642,6 +715,7 @@ tee_suite (void)
   tcase_add_test (tc_chain, test_internal_links);
   tcase_add_test (tc_chain, test_flow_aggregation);
   tcase_add_test (tc_chain, test_request_pads);
+  tcase_add_test (tc_chain, test_allow_not_linked);
 
   return s;
 }

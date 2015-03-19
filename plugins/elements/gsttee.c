@@ -84,6 +84,7 @@ gst_tee_pull_mode_get_type (void)
 #define DEFAULT_PROP_SILENT		TRUE
 #define DEFAULT_PROP_LAST_MESSAGE	NULL
 #define DEFAULT_PULL_MODE		GST_TEE_PULL_MODE_NEVER
+#define DEFAULT_PROP_ALLOW_NOT_LINKED	FALSE
 
 enum
 {
@@ -94,6 +95,7 @@ enum
   PROP_LAST_MESSAGE,
   PROP_PULL_MODE,
   PROP_ALLOC_PAD,
+  PROP_ALLOW_NOT_LINKED,
 };
 
 static GstStaticPadTemplate tee_src_template =
@@ -264,6 +266,23 @@ gst_tee_class_init (GstTeeClass * klass)
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_ALLOC_PAD,
       pspec_alloc_pad);
+
+  /**
+   * GstTee:allow-not-linked
+   *
+   * This property makes sink pad return GST_FLOW_OK even if there are no
+   * source pads or any of them is linked.
+   *
+   * This is useful to avoid errors when you have a dynamic pipeline and during
+   * a reconnection you can have all the pads unlinked or removed.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_ALLOW_NOT_LINKED,
+      g_param_spec_boolean ("allow-not-linked", "Allow not linked",
+          "Return GTS_FLOW_OK even if there are not source pads or all are "
+          "unlinked", DEFAULT_PROP_ALLOW_NOT_LINKED,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Tee pipe fitting",
@@ -487,6 +506,9 @@ gst_tee_set_property (GObject * object, guint prop_id, const GValue * value,
       GST_OBJECT_UNLOCK (pad);
       break;
     }
+    case PROP_ALLOW_NOT_LINKED:
+      tee->allow_not_linked = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -519,6 +541,9 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ALLOC_PAD:
       g_value_set_object (value, tee->allocpad);
+      break;
+    case PROP_ALLOW_NOT_LINKED:
+      g_value_set_boolean (value, tee->allow_not_linked);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -636,6 +661,10 @@ gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
 
     gst_object_unref (pad);
 
+    if (ret == GST_FLOW_NOT_LINKED && tee->allow_not_linked) {
+      ret = GST_FLOW_OK;
+    }
+
     return ret;
   }
 
@@ -643,7 +672,11 @@ gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
   g_list_foreach (pads, (GFunc) clear_pads, tee);
 
 restart:
-  cret = GST_FLOW_NOT_LINKED;
+  if (tee->allow_not_linked) {
+    cret = GST_FLOW_OK;
+  } else {
+    cret = GST_FLOW_NOT_LINKED;
+  }
   pads = GST_ELEMENT_CAST (tee)->srcpads;
   cookie = GST_ELEMENT_CAST (tee)->pads_cookie;
 
@@ -709,13 +742,23 @@ restart:
   /* ERRORS */
 no_pads:
   {
-    GST_DEBUG_OBJECT (tee, "there are no pads, return not-linked");
-    ret = GST_FLOW_NOT_LINKED;
-    goto error;
+    if (tee->allow_not_linked) {
+      GST_DEBUG_OBJECT (tee, "there are no pads, dropping %s",
+          is_list ? "buffer-list" : "buffer");
+      ret = GST_FLOW_OK;
+    } else {
+      GST_DEBUG_OBJECT (tee, "there are no pads, return not-linked");
+      ret = GST_FLOW_NOT_LINKED;
+    }
+    goto end;
   }
 error:
   {
     GST_DEBUG_OBJECT (tee, "received error %s", gst_flow_get_name (ret));
+    goto end;
+  }
+end:
+  {
     GST_OBJECT_UNLOCK (tee);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return ret;
