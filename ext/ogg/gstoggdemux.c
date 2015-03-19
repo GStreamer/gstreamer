@@ -4816,7 +4816,7 @@ gst_ogg_demux_loop_push (GstOggDemux * ogg)
     if (!event)
       continue;
 
-    GST_ERROR ("Pushing event %" GST_PTR_FORMAT, event);
+    GST_DEBUG_OBJECT (ogg->sinkpad, "Pushing event %" GST_PTR_FORMAT, event);
     if (!gst_pad_push_event (ogg->sinkpad, event)) {
       GST_WARNING_OBJECT (ogg, "Failed to push event");
       GST_PUSH_LOCK (ogg);
@@ -4826,7 +4826,7 @@ gst_ogg_demux_loop_push (GstOggDemux * ogg)
       }
       GST_PUSH_UNLOCK (ogg);
     } else {
-      GST_ERROR ("Pushed event ok");
+      GST_DEBUG_OBJECT (ogg->sinkpad, "Pushed event ok");
     }
   }
   gst_object_unref (ogg);
