@@ -34,6 +34,7 @@ import ConfigParser
 import loggable
 from loggable import Loggable
 import xml.etree.cElementTree as ET
+from gi.repository import GLib
 
 from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
     Protocols
@@ -274,6 +275,9 @@ class Test(Loggable):
         if self.result is not Result.TIMEOUT:
             self.queue.put(None)
 
+    def get_valgrind_suppressions(self):
+        return None
+
     def use_valgrind(self):
         vg_args = [
             ('trace-children', 'yes'),
@@ -282,6 +286,10 @@ class Test(Loggable):
             ('leak-resolution', 'high'),
             ('num-callers', '20'),
         ]
+
+        supps = self.get_valgrind_suppressions()
+        if supps:
+            vg_args.append(('suppressions', supps))
 
         self.command = "valgrind %s %s" % (' '.join(map(lambda x: '--%s=%s' % (x[0], x[1]), vg_args)),
                                            self.command)
@@ -554,6 +562,21 @@ class GstValidateTest(Test):
             return position
 
         return position
+
+    def get_valgrind_suppressions(self):
+        # Are we running from sources?
+        root_dir = os.path.abspath(os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)))))
+        p = os.path.join(root_dir, 'common', 'gst.supp')
+        if os.path.exists(p):
+            return p
+
+        # Look in system data dirs
+        for datadir in GLib.get_system_data_dirs():
+            p = os.path.join(datadir, 'gstreamer-1.0', 'validate', 'gst.supp')
+            if os.path.exists(p):
+                return p
+
+        return None
 
 
 class GstValidateEncodingTestInterface(object):
