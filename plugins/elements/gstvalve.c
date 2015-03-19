@@ -253,7 +253,7 @@ gst_valve_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstValve *valve = GST_VALVE (parent);
 
-  if (g_atomic_int_get (&valve->drop))
+  if (GST_QUERY_IS_SERIALIZED (query) && g_atomic_int_get (&valve->drop))
     return FALSE;
 
   return gst_pad_query_default (pad, parent, query);
