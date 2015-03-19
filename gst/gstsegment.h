@@ -234,6 +234,7 @@ gboolean     gst_segment_do_seek             (GstSegment * segment, gdouble rate
                                               GstFormat format, GstSeekFlags flags,
                                               GstSeekType start_type, guint64 start,
                                               GstSeekType stop_type, guint64 stop, gboolean * update);
+gboolean     gst_segment_is_equal            (const GstSegment * s0, const GstSegment * s1);
 
 G_END_DECLS
 

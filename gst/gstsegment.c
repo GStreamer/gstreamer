@@ -830,3 +830,43 @@ gst_segment_offset_running_time (GstSegment * segment, GstFormat format,
   }
   return TRUE;
 }
+
+/**
+ * gst_segment_is_equal:
+ * @s0: a #GstSegment structure.
+ * @s1: a #GstSegment structure.
+ *
+ * Checks for two segments being equal. Equality here is defined
+ * as perfect equality, including floating point values.
+ *
+ * Since: 1.6
+ *
+ * Returns: %TRUE if the segments are equal, %FALSE otherwise.
+ */
+gboolean
+gst_segment_is_equal (const GstSegment * s0, const GstSegment * s1)
+{
+  if (s0->flags != s1->flags)
+    return FALSE;
+  if (s0->rate != s1->rate)
+    return FALSE;
+  if (s0->applied_rate != s1->applied_rate)
+    return FALSE;
+  if (s0->format != s1->format)
+    return FALSE;
+  if (s0->base != s1->base)
+    return FALSE;
+  if (s0->offset != s1->offset)
+    return FALSE;
+  if (s0->start != s1->start)
+    return FALSE;
+  if (s0->stop != s1->stop)
+    return FALSE;
+  if (s0->time != s1->time)
+    return FALSE;
+  if (s0->position != s1->position)
+    return FALSE;
+  if (s0->duration != s1->duration)
+    return FALSE;
+  return TRUE;
+}
