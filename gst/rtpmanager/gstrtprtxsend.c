@@ -86,6 +86,8 @@ static gboolean gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static GstFlowReturn gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
+static GstFlowReturn gst_rtp_rtx_send_chain_list (GstPad * pad,
+    GstObject * parent, GstBufferList * list);
 
 static void gst_rtp_rtx_send_src_loop (GstRtpRtxSend * rtx);
 static gboolean gst_rtp_rtx_send_activate_mode (GstPad * pad,
@@ -258,6 +260,8 @@ gst_rtp_rtx_send_init (GstRtpRtxSend * rtx)
       GST_DEBUG_FUNCPTR (gst_rtp_rtx_send_sink_event));
   gst_pad_set_chain_function (rtx->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_rtx_send_chain));
+  gst_pad_set_chain_list_function (rtx->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rtp_rtx_send_chain_list));
   gst_element_add_pad (GST_ELEMENT (rtx), rtx->sinkpad);
 
   rtx->queue = gst_data_queue_new (gst_rtp_rtx_send_queue_check_full, NULL,
@@ -640,11 +644,10 @@ gst_rtp_rtx_send_get_ts_diff (SSRCRtxData * data)
   return (guint32) gst_util_uint64_scale_int (result, 1000, data->clock_rate);
 }
 
-static GstFlowReturn
-gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+/* Must be called with lock */
+static void
+process_buffer (GstRtpRtxSend * rtx, GstBuffer * buffer)
 {
-  GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (parent);
-  GstFlowReturn ret = GST_FLOW_ERROR;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   BufferQueueItem *item;
   SSRCRtxData *data;
@@ -660,7 +663,9 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
-  GST_OBJECT_LOCK (rtx);
+  GST_LOG_OBJECT (rtx,
+      "Processing buffer seqnum: %" G_GUINT16_FORMAT ", ssrc: %"
+      G_GUINT32_FORMAT, seqnum, ssrc);
 
   /* do not store the buffer if it's payload type is unknown */
   if (g_hash_table_contains (rtx->rtx_pt_map, GUINT_TO_POINTER (payload_type))) {
@@ -683,14 +688,41 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         g_sequence_remove (g_sequence_get_begin_iter (data->queue));
     }
   }
+}
 
+static GstFlowReturn
+gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (parent);
+  GstFlowReturn ret;
+
+  GST_OBJECT_LOCK (rtx);
+  process_buffer (rtx, buffer);
+  GST_OBJECT_UNLOCK (rtx);
+  ret = gst_pad_push (rtx->srcpad, buffer);
+
+  return ret;
+}
+
+static gboolean
+process_buffer_from_list (GstBuffer ** buffer, guint idx, gpointer user_data)
+{
+  process_buffer (user_data, *buffer);
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_rtp_rtx_send_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
+{
+  GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (parent);
+  GstFlowReturn ret;
+
+  GST_OBJECT_LOCK (rtx);
+  gst_buffer_list_foreach (list, process_buffer_from_list, rtx);
   GST_OBJECT_UNLOCK (rtx);
 
-  GST_LOG_OBJECT (rtx,
-      "push seqnum: %" G_GUINT16_FORMAT ", ssrc: %" G_GUINT32_FORMAT, seqnum,
-      ssrc);
-
-  ret = gst_pad_push (rtx->srcpad, buffer);
+  ret = gst_pad_push_list (rtx->srcpad, list);
 
   return ret;
 }
