@@ -305,120 +305,63 @@ transform (guint32 * src, guint32 * dest, gint video_area, gint width,
   guint32 *down;
   guint32 *right;
 
-  if (erode) {
+  while (src != src_end) {
+    guint32 *src_line_start = src;
+    guint32 *src_line_end = src + width;
 
-    while (src != src_end) {
-      guint32 *src_line_start = src;
-      guint32 *src_line_end = src + width;
-      while (src != src_line_end) {
-
-        up = src - width;
-        if (up < src) {
-          up = src;
-        }
-
-        left = src - 1;
-        if (left < src_line_start) {
-          left = src;
-        }
-
-        down = src + width;
-        if (down >= src_end) {
-          down = src;
-        }
-
-        right = src + 1;
-        if (right >= src_line_end) {
-          right = src;
-        }
-
-        *dest = *src;
-        out_luminance = get_luminance (*src);
-
-        down_luminance = get_luminance (*down);
-        if (down_luminance < out_luminance) {
-          *dest = *down;
-          out_luminance = down_luminance;
-        }
-
-        right_luminance = get_luminance (*right);
-        if (right_luminance < out_luminance) {
-          *dest = *right;
-          out_luminance = right_luminance;
-        }
-
-        up_luminance = get_luminance (*up);
-        if (up_luminance < out_luminance) {
-          *dest = *up;
-          out_luminance = up_luminance;
-        }
-
-        left_luminance = get_luminance (*left);
-        if (left_luminance < out_luminance) {
-          *dest = *left;
-        }
-
-        src += 1;
-        dest += 1;
+    while (src != src_line_end) {
+      up = src - width;
+      if (up < src) {
+        up = src;
       }
-    }
 
-  } else {
-
-    while (src != src_end) {
-      guint32 *src_line_start = src;
-      guint32 *src_line_end = src + width;
-      while (src != src_line_end) {
-
-        up = src - width;
-        if (up < src) {
-          up = src;
-        }
-
-        left = src - 1;
-        if (left < src_line_start) {
-          left = src;
-        }
-
-        down = src + width;
-        if (down >= src_end) {
-          down = src;
-        }
-
-        right = src + 1;
-        if (right >= src_line_end) {
-          right = src;
-        }
-
-        *dest = *src;
-        out_luminance = get_luminance (*src);
-
-        down_luminance = get_luminance (*down);
-        if (down_luminance > out_luminance) {
-          *dest = *down;
-          out_luminance = down_luminance;
-        }
-
-        right_luminance = get_luminance (*right);
-        if (right_luminance > out_luminance) {
-          *dest = *right;
-          out_luminance = right_luminance;
-        }
-
-        up_luminance = get_luminance (*up);
-        if (up_luminance > out_luminance) {
-          *dest = *up;
-          out_luminance = up_luminance;
-        }
-
-        left_luminance = get_luminance (*left);
-        if (left_luminance > out_luminance) {
-          *dest = *left;
-        }
-
-        src += 1;
-        dest += 1;
+      left = src - 1;
+      if (left < src_line_start) {
+        left = src;
       }
+
+      down = src + width;
+      if (down >= src_end) {
+        down = src;
+      }
+
+      right = src + 1;
+      if (right >= src_line_end) {
+        right = src;
+      }
+
+      *dest = *src;
+      out_luminance = get_luminance (*src);
+
+      down_luminance = get_luminance (*down);
+      if ((erode && down_luminance < out_luminance) ||
+          (!erode && down_luminance > out_luminance)) {
+        *dest = *down;
+        out_luminance = down_luminance;
+      }
+
+      right_luminance = get_luminance (*right);
+      if ((erode && right_luminance < out_luminance) ||
+          (!erode && right_luminance > out_luminance)) {
+        *dest = *right;
+        out_luminance = right_luminance;
+      }
+
+      up_luminance = get_luminance (*up);
+      if ((erode && up_luminance < out_luminance) ||
+          (!erode && up_luminance > out_luminance)) {
+        *dest = *up;
+        out_luminance = up_luminance;
+      }
+
+      left_luminance = get_luminance (*left);
+      if ((erode && left_luminance < out_luminance) ||
+          (!erode && left_luminance > out_luminance)) {
+        *dest = *left;
+      }
+
+      src += 1;
+      dest += 1;
     }
   }
 }
