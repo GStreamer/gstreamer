@@ -81,7 +81,6 @@ struct _GstDtlsConnectionPrivate
 {
   SSL *ssl;
   BIO *bio;
-  GThread *thread;
 
   gboolean is_client;
   gboolean is_alive;
@@ -170,7 +169,6 @@ gst_dtls_connection_init (GstDtlsConnection * self)
 
   priv->ssl = NULL;
   priv->bio = NULL;
-  priv->thread = NULL;
 
   priv->send_closure = NULL;
 
@@ -441,11 +439,6 @@ gst_dtls_connection_close (GstDtlsConnection * self)
 
   GST_TRACE_OBJECT (self, "unlocking @ close");
   g_mutex_unlock (&self->priv->mutex);
-
-  if (self->priv->thread) {
-    g_thread_join (self->priv->thread);
-    self->priv->thread = NULL;
-  }
 
   GST_DEBUG_OBJECT (self, "closed connection");
 }
