@@ -606,6 +606,7 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
   gchar **files;
   GstClockTime next_offset = 0;
   guint i;
+  GstClockTime total_duration = 0;
 
   GST_DEBUG_OBJECT (splitmux, "Starting");
 
@@ -649,13 +650,19 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
     }
 
     /* Extend our total duration to cover this part */
-    splitmux->total_duration =
+    total_duration =
         next_offset +
         gst_splitmux_part_reader_get_duration (splitmux->parts[i]);
-    splitmux->play_segment.duration = splitmux->total_duration;
+    splitmux->play_segment.duration = total_duration;
 
     next_offset = gst_splitmux_part_reader_get_end_offset (splitmux->parts[i]);
   }
+
+  /* Update total_duration state variable */
+  GST_OBJECT_LOCK (splitmux);
+  splitmux->total_duration = total_duration;
+  GST_OBJECT_UNLOCK (splitmux);
+
   /* Store how many parts we actually created */
   splitmux->num_parts = i;
 
@@ -665,7 +672,7 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
   /* All done preparing, activate the first part */
   GST_INFO_OBJECT (splitmux,
       "All parts prepared. Total duration %" GST_TIME_FORMAT
-      " Activating first part", GST_TIME_ARGS (splitmux->total_duration));
+      " Activating first part", GST_TIME_ARGS (total_duration));
   gst_splitmux_src_activate_part (splitmux, 0);
 
   ret = TRUE;
@@ -1094,13 +1101,13 @@ splitmux_src_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (fmt != GST_FORMAT_TIME)
         break;
 
-      SPLITMUX_SRC_LOCK (splitmux);
+      GST_OBJECT_LOCK (splitmux);
       if (splitmux->total_duration > 0) {
         gst_query_set_duration (query, GST_FORMAT_TIME,
             splitmux->total_duration);
         ret = TRUE;
       }
-      SPLITMUX_SRC_UNLOCK (splitmux);
+      GST_OBJECT_UNLOCK (splitmux);
       break;
     }
     case GST_QUERY_SEEKING:{
@@ -1110,11 +1117,11 @@ splitmux_src_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (format != GST_FORMAT_TIME)
         break;
 
-      SPLITMUX_SRC_LOCK (splitmux);
+      GST_OBJECT_LOCK (splitmux);
       gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0,
           splitmux->total_duration);
       ret = TRUE;
-      SPLITMUX_SRC_UNLOCK (splitmux);
+      GST_OBJECT_UNLOCK (splitmux);
 
       break;
     }
