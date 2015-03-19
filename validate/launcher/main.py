@@ -96,7 +96,7 @@ file is not seekable, seeking scenarios will not be run on it etc...
 It is possible that some scenarios are very specific to one media file. In that case,
 the .scenario file should be present in the same folder as the .media_info file and
 be called similarly. For example for a file called /some/media/file.mp4, the media_info
-file will be called /some/media/file.mp4 and a scenario that will seek to a position that
+file will be called /some/media/file.media_info and a scenario that will seek to a position that
 is known to fail would be called: /some/media/file.mp4.seek_to_failing_pos.scenario and
 gst-validate-launcher will run that scenario only on that media file.
 
