@@ -85,7 +85,7 @@ struct _GstDtlsConnectionClass {
 GType gst_dtls_connection_get_type(void) G_GNUC_CONST;
 
 void gst_dtls_connection_start(GstDtlsConnection *, gboolean is_client);
-void gst_dtls_connection_start_timeout(GstDtlsConnection *);
+void gst_dtls_connection_check_timeout(GstDtlsConnection *);
 
 /*
  * Stops the connections, it is not required to call this function.

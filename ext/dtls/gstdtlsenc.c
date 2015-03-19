@@ -400,7 +400,7 @@ src_task_loop (GstPad * pad)
   GstDtlsEnc *self = GST_DTLS_ENC (GST_PAD_PARENT (pad));
   GstFlowReturn ret;
   GstBuffer *buffer;
-  gboolean start_connection_timeout = FALSE;
+  gboolean check_connection_timeout = FALSE;
 
   GST_TRACE_OBJECT (self, "src loop: acquiring lock");
   g_mutex_lock (&self->queue_lock);
@@ -444,14 +444,14 @@ src_task_loop (GstPad * pad)
     gst_caps_unref (caps);
     gst_segment_init (&segment, GST_FORMAT_BYTES);
     gst_pad_push_event (self->src, gst_event_new_segment (&segment));
-    start_connection_timeout = TRUE;
+    check_connection_timeout = TRUE;
   }
 
   GST_TRACE_OBJECT (self, "src loop: releasing lock");
 
   ret = gst_pad_push (self->src, buffer);
-  if (start_connection_timeout)
-    gst_dtls_connection_start_timeout (self->connection);
+  if (check_connection_timeout)
+    gst_dtls_connection_check_timeout (self->connection);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_WARNING_OBJECT (self, "failed to push buffer on src pad: %s",
