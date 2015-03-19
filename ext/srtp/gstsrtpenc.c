@@ -162,6 +162,20 @@ enum
   PROP_ALLOW_REPEAT_TX
 };
 
+typedef struct ValidateBufferItData
+{
+  GstSrtpEnc *filter;
+  gboolean is_rtcp;
+} ValidateBufferItData;
+
+typedef struct ProcessBufferItData
+{
+  GstSrtpEnc *filter;
+  GstPad *pad;
+  GstBufferList *out_list;
+  gboolean is_rtcp;
+} ProcessBufferItData;
+
 /* the capabilities of the inputs and outputs.
  *
  * describe the real formats here.
@@ -1150,6 +1164,36 @@ fail:
   goto out;
 }
 
+static gboolean
+validate_buffer_it (GstBuffer ** buffer, guint index, gpointer user_data)
+{
+  ValidateBufferItData *data = user_data;
+
+  if (!gst_srtp_enc_check_buffer (data->filter, *buffer, data->is_rtcp)) {
+    GST_WARNING_OBJECT (data->filter, "Invalid buffer, dropping");
+    gst_buffer_replace (buffer, NULL);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+process_buffer_it (GstBuffer ** buffer, guint index, gpointer user_data)
+{
+  ProcessBufferItData *data = user_data;
+  GstBuffer *bufout;
+
+  if ((bufout =
+          gst_srtp_enc_process_buffer (data->filter, data->pad, *buffer,
+              data->is_rtcp))) {
+    gst_buffer_list_add (data->out_list, bufout);
+  } else {
+    GST_WARNING_OBJECT (data->filter, "Error encoding buffer, dropping");
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_srtp_enc_chain_list (GstPad * pad, GstObject * parent,
     GstBufferList * buf_list, gboolean is_rtcp)
@@ -1158,23 +1202,22 @@ gst_srtp_enc_chain_list (GstPad * pad, GstObject * parent,
   GstFlowReturn ret = GST_FLOW_OK;
   GstPad *otherpad;
   GstBufferList *out_list = NULL;
-  guint i, num_buffers;
+  ValidateBufferItData validate_data;
+  ProcessBufferItData process_data;
 
-  num_buffers = gst_buffer_list_length (buf_list);
+  validate_data.filter = filter;
+  validate_data.is_rtcp = is_rtcp;
 
-  GST_LOG_OBJECT (pad, "Buffer chain with list of %d", num_buffers);
+  GST_LOG_OBJECT (pad, "Buffer chain with list of %d",
+      gst_buffer_list_length (buf_list));
 
-  for (i = 0; i < num_buffers; i++) {
-    GstBuffer *buf = gst_buffer_list_get (buf_list, i);
+  gst_buffer_list_foreach (buf_list, validate_buffer_it, &validate_data);
 
-    if (!gst_srtp_enc_check_buffer (filter, buf, is_rtcp)) {
-      goto fail;
-    }
-  }
-
-  if ((ret = gst_srtp_enc_check_set_caps (filter, pad, is_rtcp)) != GST_FLOW_OK) {
+  if (!gst_buffer_list_length (buf_list))
     goto out;
-  }
+
+  if ((ret = gst_srtp_enc_check_set_caps (filter, pad, is_rtcp)) != GST_FLOW_OK)
+    goto out;
 
   GST_OBJECT_LOCK (filter);
 
@@ -1188,20 +1231,23 @@ gst_srtp_enc_chain_list (GstPad * pad, GstObject * parent,
 
   out_list = gst_buffer_list_new ();
 
-  for (i = 0; i < num_buffers; i++) {
-    GstBuffer *bufout;
-    GstBuffer *buf = gst_buffer_list_get (buf_list, i);
+  process_data.filter = filter;
+  process_data.pad = pad;
+  process_data.is_rtcp = is_rtcp;
+  process_data.out_list = out_list;
 
-    if ((bufout = gst_srtp_enc_process_buffer (filter, pad, buf, is_rtcp))) {
-      gst_buffer_list_add (out_list, bufout);
-    } else {
-      gst_buffer_list_unref (out_list);
-      goto fail;
-    }
+  gst_buffer_list_foreach (buf_list, process_buffer_it, &process_data);
+
+  if (!gst_buffer_list_length (out_list)) {
+    gst_buffer_list_unref (out_list);
+    ret = GST_FLOW_OK;
+    goto out;
   }
 
   /* Push buffer to source pad */
   otherpad = get_rtp_other_pad (pad);
+  GST_LOG_OBJECT (pad, "Pushing buffer chain of %d",
+      gst_buffer_list_length (buf_list));
   ret = gst_pad_push_list (otherpad, out_list);
 
   if (ret != GST_FLOW_OK) {
@@ -1225,10 +1271,6 @@ out:
   gst_buffer_list_unref (buf_list);
 
   return ret;
-
-fail:
-  ret = GST_FLOW_ERROR;
-  goto out;
 }
 
 static GstFlowReturn
