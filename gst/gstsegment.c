@@ -457,23 +457,27 @@ gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
  * @position: the position in the segment
+ * @clip: clip against segment boundaries
  * @running_time: result running-time
  *
  * Translate @position to the total running time using the currently configured
- * segment. Position is a value between @segment start and stop time. Compared to
- * gst_segment_to_running_time() this function can return negative running-time
- * and specify if the position was before or after the segment incase it is outside
- * of the segment.
+ * segment. Compared to gst_segment_to_running_time() this function can return
+ * negative running-time and also check if a @position is before or after the
+ * segment.
  *
  * This function is typically used by elements that need to synchronize buffers
  * against the clock or eachother.
  *
- * When #GST_SEGMENT_RESULT_OK is returned, @position is between start and stop of
- * @segment and thus resulted in a positive running-time returned in @running_time.
- *
+ * If clip is %TRUE, @position is a value between @segment start and stop.
  * When @position is outside of the segment start and stop values,
  * #GST_SEGMENT_RESULT_BEFORE or #GST_SEGMENT_RESULT_AFTER is returned depending
  * if @position is respectively before or after the segment.
+ *
+ * If clip is %FALSE, @position can be any value and the result of this function
+ * for values outside of the segment is extrapolated.
+ *
+ * When #GST_SEGMENT_RESULT_OK is returned, @position resulted in a positive
+ * running-time returned in @running_time.
  *
  * When this function returns #GST_SEGMENT_RESULT_NEGATIVE, the returned
  * @running_time should be negated to get the real negative running time.
@@ -484,7 +488,7 @@ gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
  */
 GstSegmentResult
 gst_segment_to_running_time_full (const GstSegment * segment, GstFormat format,
-    guint64 position, guint64 * running_time)
+    guint64 position, gboolean clip, guint64 * running_time)
 {
   GstSegmentResult res;
   guint64 result;
@@ -502,7 +506,7 @@ gst_segment_to_running_time_full (const GstSegment * segment, GstFormat format,
 
   start = segment->start;
   /* before the segment boundary */
-  if (G_UNLIKELY (position < start)) {
+  if (clip && G_UNLIKELY (position < start)) {
     GST_DEBUG ("position(%" G_GUINT64_FORMAT ") < start(%" G_GUINT64_FORMAT
         ")", position, start);
     if (G_LIKELY (segment->rate > 0.0))
@@ -514,7 +518,7 @@ gst_segment_to_running_time_full (const GstSegment * segment, GstFormat format,
 
   stop = segment->stop;
   /* after the segment boundary */
-  if (G_UNLIKELY (stop != -1 && position > stop)) {
+  if (clip && G_UNLIKELY (stop != -1 && position > stop)) {
     GST_DEBUG ("position(%" G_GUINT64_FORMAT ") > stop(%" G_GUINT64_FORMAT
         ")", position, stop);
     if (G_LIKELY (segment->rate > 0.0))
@@ -527,13 +531,15 @@ gst_segment_to_running_time_full (const GstSegment * segment, GstFormat format,
   offset = segment->offset;
 
   if (G_LIKELY (segment->rate > 0.0)) {
+    start += offset;
+
     /* bring to uncorrected position in segment */
-    if (position < start + offset) {
+    if (position < start) {
       /* negative value */
-      result = (start + offset) - position;
+      result = start - position;
       res = GST_SEGMENT_RESULT_NEGATIVE;
     } else {
-      result = position - (start + offset);
+      result = position - start;
       res = GST_SEGMENT_RESULT_OK;
     }
   } else {
@@ -541,13 +547,15 @@ gst_segment_to_running_time_full (const GstSegment * segment, GstFormat format,
     g_return_val_if_fail (stop != -1, GST_SEGMENT_RESULT_INVALID);
     g_return_val_if_fail (stop >= segment->offset, GST_SEGMENT_RESULT_INVALID);
 
+    stop -= offset;
+
     /* bring to uncorrected position in segment */
-    if (position > stop - offset) {
+    if (position > stop) {
       /* negative value */
-      result = position - (stop - offset);
+      result = position - stop;
       res = GST_SEGMENT_RESULT_NEGATIVE;
     } else {
-      result = (stop - offset) - position;
+      result = stop - position;
       res = GST_SEGMENT_RESULT_OK;
     }
   }
@@ -610,7 +618,9 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
   guint64 result;
   GstSegmentResult res;
 
-  res = gst_segment_to_running_time_full (segment, format, position, &result);
+  res =
+      gst_segment_to_running_time_full (segment, format, position, TRUE,
+      &result);
   if (res == GST_SEGMENT_RESULT_OK)
     return result;
 

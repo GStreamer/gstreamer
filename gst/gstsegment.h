@@ -240,7 +240,7 @@ guint64      gst_segment_to_stream_time      (const GstSegment *segment, GstForm
 guint64      gst_segment_to_running_time     (const GstSegment *segment, GstFormat format, guint64 position);
 GstSegmentResult
              gst_segment_to_running_time_full (const GstSegment *segment, GstFormat format, guint64 position,
-                                               guint64 * running_time);
+                                               gboolean clip, guint64 * running_time);
 guint64      gst_segment_to_position         (const GstSegment *segment, GstFormat format, guint64 running_time);
 
 gboolean     gst_segment_set_running_time    (GstSegment *segment, GstFormat format, guint64 running_time);
