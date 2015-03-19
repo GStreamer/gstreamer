@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) <2010-2012> Luis de Bethencourt <luis@debethencourt.com>
+ * Copyright (C) <2010-2015> Luis de Bethencourt <luis@debethencourt.com>
  *
  * Dilate - dilated eye video effect.
  * Based on Pete Warden's FreeFrame plugin with the same name.
