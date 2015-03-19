@@ -1197,21 +1197,26 @@ gboolean
 ges_timeline_element_add_child_property (GESTimelineElement * self,
     GParamSpec * pspec, GObject * child)
 {
+  gchar *signame = g_strconcat ("notify::", pspec->name, NULL);
+
+  if (g_hash_table_contains (self->priv->children_props, pspec)) {
+    GST_INFO_OBJECT (self, "Child property already exists: %s", pspec->name);
+
+    return FALSE;
+  }
+
   GST_DEBUG_OBJECT (self, "Adding child property: %" GST_PTR_FORMAT "::%s",
       child, pspec->name);
 
-  if (g_hash_table_insert (self->priv->children_props,
-          g_param_spec_ref (pspec), gst_object_ref (child))) {
-    gchar *signame = g_strconcat ("notify::", pspec->name, NULL);
+  g_hash_table_insert (self->priv->children_props,
+      g_param_spec_ref (pspec), gst_object_ref (child));
+  signame = g_strconcat ("notify::", pspec->name, NULL);
 
-    g_signal_connect (child, signame, G_CALLBACK (child_prop_changed_cb), self);
+  g_signal_connect (child, signame, G_CALLBACK (child_prop_changed_cb), self);
 
-    g_free (signame);
+  g_free (signame);
 
-    return TRUE;
-  }
-
-  return FALSE;
+  return TRUE;
 }
 
 /**
