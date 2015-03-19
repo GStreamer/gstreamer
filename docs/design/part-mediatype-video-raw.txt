@@ -1197,6 +1197,7 @@ Formats
  "GBR_10LE" planar 4:4:4 RGB, 10 bits per channel
 
  "NV16" planar 4:2:2 YUV with interleaved UV plane
+ "NV61" planar 4:2:2 YUV with interleaved VU plane
  "NV24" planar 4:4:4 YUV with interleaved UV plane
 
 

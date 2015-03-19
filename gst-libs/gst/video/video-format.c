@@ -1517,6 +1517,88 @@ pack_NV16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_NV61 GST_VIDEO_FORMAT_AYUV, unpack_NV61, 1, pack_NV61
+static void
+unpack_NV61 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const guint8 *restrict sy = GET_PLANE_LINE (0, y);
+  const guint8 *restrict svu = GET_PLANE_LINE (1, y);
+  guint8 *restrict d = dest;
+
+  sy += x;
+  svu += (x & ~1);
+
+  if (x & 1) {
+    d[0] = 0xff;
+    d[1] = *sy++;
+    d[2] = svu[1];
+    d[3] = svu[0];
+    width--;
+    d += 4;
+    svu += 2;
+  }
+
+  if (IS_ALIGNED (d, 8)) {
+    video_orc_unpack_NV21 (d, sy, svu, width / 2);
+  } else {
+    gint i;
+
+    for (i = 0; i < width / 2; i++) {
+      d[i * 8 + 0] = 0xff;
+      d[i * 8 + 1] = sy[i * 2 + 0];
+      d[i * 8 + 2] = svu[i * 2 + 1];
+      d[i * 8 + 3] = svu[i * 2 + 0];
+      d[i * 8 + 4] = 0xff;
+      d[i * 8 + 5] = sy[i * 2 + 1];
+      d[i * 8 + 6] = svu[i * 2 + 1];
+      d[i * 8 + 7] = svu[i * 2 + 0];
+    }
+  }
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = sy[i];
+    d[i * 4 + 2] = svu[i + 1];
+    d[i * 4 + 3] = svu[i + 0];
+  }
+}
+
+static void
+pack_NV61 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  const guint8 *restrict s = src;
+  guint8 *restrict dy = GET_PLANE_LINE (0, y);
+  guint8 *restrict dvu = GET_PLANE_LINE (1, y);
+
+  if (IS_ALIGNED (s, 8)) {
+    video_orc_pack_NV21 (dy, dvu, s, width / 2);
+  } else {
+    gint i;
+
+    for (i = 0; i < width / 2; i++) {
+      dy[i * 2 + 0] = s[i * 8 + 1];
+      dy[i * 2 + 1] = s[i * 8 + 5];
+      dvu[i * 2 + 0] = s[i * 8 + 3];
+      dvu[i * 2 + 1] = s[i * 8 + 2];
+    }
+  }
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    dy[i] = s[i * 4 + 1];
+    dvu[i + 0] = s[i * 4 + 2];
+    dvu[i + 1] = s[i * 4 + 3];
+  }
+}
+
 #define PACK_NV24 GST_VIDEO_FORMAT_AYUV, unpack_NV24, 1, pack_NV24
 static void
 unpack_NV24 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
@@ -3488,6 +3570,8 @@ static const VideoFormat formats[] = {
       PSTR2222, PLANE0123, OFFS0, SUB4444, PACK_A444_10BE),
   MAKE_YUV_LE_FORMAT (A444_10LE, "raw video", 0x00000000, DPTH10_10_10_10,
       PSTR2222, PLANE0123, OFFS0, SUB4444, PACK_A444_10LE),
+  MAKE_YUV_FORMAT (NV61, "raw video", GST_MAKE_FOURCC ('N', 'V', '6', '1'),
+      DPTH888, PSTR122, PLANE011, OFFS010, SUB422, PACK_NV61),
 };
 
 static GstVideoFormat
@@ -3692,6 +3776,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_NV21;
     case GST_MAKE_FOURCC ('N', 'V', '1', '6'):
       return GST_VIDEO_FORMAT_NV16;
+    case GST_MAKE_FOURCC ('N', 'V', '6', '1'):
+      return GST_VIDEO_FORMAT_NV61;
     case GST_MAKE_FOURCC ('N', 'V', '2', '4'):
       return GST_VIDEO_FORMAT_NV24;
     case GST_MAKE_FOURCC ('v', '3', '0', '8'):
