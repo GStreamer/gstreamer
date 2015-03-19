@@ -186,7 +186,7 @@ gst_dtls_connection_init (GstDtlsConnection * self)
   /* Thread pool for handling timeouts, we only need one thread for that
    * really and share threads with all other thread pools around there as
    * this is not going to happen very often */
-  priv->thread_pool = g_thread_pool_new (handle_timeout, NULL, 1, FALSE, NULL);
+  priv->thread_pool = g_thread_pool_new (handle_timeout, self, 1, FALSE, NULL);
   g_assert (priv->thread_pool);
   priv->timeout_pending = FALSE;
 }
@@ -294,7 +294,7 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
 static void
 handle_timeout (gpointer data, gpointer user_data)
 {
-  GstDtlsConnection *self = data;
+  GstDtlsConnection *self = user_data;
   GstDtlsConnectionPrivate *priv;
   gint ret;
 
@@ -317,7 +317,6 @@ handle_timeout (gpointer data, gpointer user_data)
     }
   }
   g_mutex_unlock (&priv->mutex);
-  g_object_unref (self);
 }
 
 static gboolean
@@ -331,7 +330,8 @@ schedule_timeout_handling (GstClock * clock, GstClockTime time, GstClockID id,
     self->priv->timeout_pending = TRUE;
 
     GST_TRACE_OBJECT (self, "Schedule timeout now");
-    g_thread_pool_push (self->priv->thread_pool, g_object_ref (self), NULL);
+    g_thread_pool_push (self->priv->thread_pool, GINT_TO_POINTER (0xc0ffee),
+        NULL);
   }
   g_mutex_unlock (&self->priv->mutex);
 
@@ -370,7 +370,8 @@ gst_dtls_connection_check_timeout_locked (GstDtlsConnection * self)
         self->priv->timeout_pending = TRUE;
         GST_TRACE_OBJECT (self, "Schedule timeout now");
 
-        g_thread_pool_push (self->priv->thread_pool, g_object_ref (self), NULL);
+        g_thread_pool_push (self->priv->thread_pool, GINT_TO_POINTER (0xc0ffee),
+            NULL);
       }
     }
   } else {
