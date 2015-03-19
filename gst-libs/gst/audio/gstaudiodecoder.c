@@ -622,7 +622,7 @@ gst_audio_decoder_push_event (GstAudioDecoder * dec, GstEvent * event)
 
       dec->output_segment = seg;
       dec->priv->in_out_segment_sync =
-          (memcmp (&dec->input_segment, &seg, sizeof (seg)) == 0);
+          gst_segment_is_equal (&dec->input_segment, &seg);
       GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
       break;
     }
@@ -1113,7 +1113,7 @@ apply_pending_events (GstAudioDecoder * dec)
 
         dec->output_segment = seg;
         dec->priv->in_out_segment_sync =
-            (memcmp (&dec->input_segment, &seg, sizeof (seg)) == 0);
+            gst_segment_is_equal (&dec->input_segment, &seg);
         GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
         break;
       }

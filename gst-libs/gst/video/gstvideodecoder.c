@@ -909,7 +909,7 @@ gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       decoder->output_segment = segment;
       decoder->priv->in_out_segment_sync =
-          (memcmp (&decoder->input_segment, &segment, sizeof (segment)) == 0);
+          gst_segment_is_equal (&decoder->input_segment, &segment);
       decoder->priv->last_timestamp_out = GST_CLOCK_TIME_NONE;
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
@@ -2093,7 +2093,7 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
           if (segment.format == GST_FORMAT_TIME) {
             dec->output_segment = segment;
             dec->priv->in_out_segment_sync =
-                (memcmp (&dec->input_segment, &segment, sizeof (segment)) == 0);
+                gst_segment_is_equal (&dec->input_segment, &segment);
           }
         }
         dec->priv->pending_events =
