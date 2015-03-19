@@ -1676,7 +1676,7 @@ convert_mult_alpha_u16 (GstVideoConverter * convert, gpointer pixels,
 
   for (i = 0; i < width; i++) {
     gint a = (p[i * 4] * alpha) / 255;
-    p[i * 4] = CLAMP (a, 0, 255);
+    p[i * 4] = CLAMP (a, 0, 65535);
   }
 }
 
