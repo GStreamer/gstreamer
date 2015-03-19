@@ -368,7 +368,7 @@ run_input_selector_buffer_count (gint num_input_pads,
 
 /* Push buffers to input pad and check the 
    amount of buffers arrived to output pads */
-GST_START_TEST (test_output_selector_buffer_count);
+GST_START_TEST (test_output_selector_buffer_count)
 {
   gint i, j;
 
@@ -383,7 +383,7 @@ GST_END_TEST;
 
 /* Push buffers to input pads and check the 
    amount of buffers arrived to output pad */
-GST_START_TEST (test_input_selector_buffer_count);
+GST_START_TEST (test_input_selector_buffer_count)
 {
   gint i, j;
 
@@ -397,7 +397,7 @@ GST_START_TEST (test_input_selector_buffer_count);
 GST_END_TEST;
 
 
-GST_START_TEST (test_output_selector_no_srcpad_negotiation);
+GST_START_TEST (test_output_selector_no_srcpad_negotiation)
 {
   GstElement *sel;
   GstCaps *caps;
@@ -478,7 +478,7 @@ teardown_output_selector (void)
   output_pads = NULL;
 }
 
-GST_START_TEST (test_output_selector_getcaps_none);
+GST_START_TEST (test_output_selector_getcaps_none)
 {
   GList *walker;
 
@@ -513,7 +513,7 @@ GST_START_TEST (test_output_selector_getcaps_none);
 GST_END_TEST;
 
 
-GST_START_TEST (test_output_selector_getcaps_all);
+GST_START_TEST (test_output_selector_getcaps_all)
 {
   GList *walker;
   GstCaps *expected;
@@ -553,7 +553,7 @@ GST_START_TEST (test_output_selector_getcaps_all);
 GST_END_TEST;
 
 
-GST_START_TEST (test_output_selector_getcaps_active);
+GST_START_TEST (test_output_selector_getcaps_active)
 {
   GList *walker;
   GstCaps *expected;
