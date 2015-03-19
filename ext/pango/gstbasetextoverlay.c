@@ -629,6 +629,9 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   overlay->text_buffer = NULL;
   overlay->text_linked = FALSE;
 
+  overlay->composition = NULL;
+  overlay->upstream_composition = NULL;
+
   g_mutex_init (&overlay->lock);
   g_cond_init (&overlay->cond);
   gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
@@ -1414,6 +1417,8 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
 
   gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
 
+  GST_DEBUG ("updating composition for '%s'", overlay->default_text);
+
   if (overlay->text_image) {
     gst_buffer_add_video_meta (overlay->text_image, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
@@ -1426,6 +1431,21 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
       gst_video_overlay_composition_unref (overlay->composition);
     overlay->composition = gst_video_overlay_composition_new (rectangle);
     gst_video_overlay_rectangle_unref (rectangle);
+
+    if (overlay->upstream_composition) {
+      guint num_overlays =
+          gst_video_overlay_composition_n_rectangles
+          (overlay->upstream_composition);
+
+      for (guint i = 0; i < num_overlays; i++) {
+        GstVideoOverlayRectangle *rectangle;
+        rectangle =
+            gst_video_overlay_composition_get_rectangle
+            (overlay->upstream_composition, i);
+        gst_video_overlay_composition_add_rectangle (overlay->composition,
+            rectangle);
+      }
+    }
 
   } else if (overlay->composition) {
     gst_video_overlay_composition_unref (overlay->composition);
@@ -2297,8 +2317,16 @@ gst_base_text_overlay_video_chain (GstPad * pad, GstObject * parent,
   gboolean in_seg = FALSE;
   guint64 start, stop, clip_start = 0, clip_stop = 0;
   gchar *text = NULL;
+  GstVideoOverlayCompositionMeta *composition_meta;
 
   overlay = GST_BASE_TEXT_OVERLAY (parent);
+
+  composition_meta = gst_buffer_get_video_overlay_composition_meta (buffer);
+  if (composition_meta) {
+    GST_DEBUG ("GstVideoOverlayCompositionMeta found.");
+    overlay->upstream_composition = composition_meta->overlay;
+  }
+
   klass = GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay);
 
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer))

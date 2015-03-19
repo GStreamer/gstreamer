@@ -184,6 +184,7 @@ struct _GstBaseTextOverlay {
     gboolean                 attach_compo_to_buffer;
 
     GstVideoOverlayComposition *composition;
+    GstVideoOverlayComposition *upstream_composition;
 };
 
 struct _GstBaseTextOverlayClass {
