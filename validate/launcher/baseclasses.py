@@ -38,6 +38,10 @@ import xml.etree.cElementTree as ET
 from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
     Protocols
 
+# The factor by which we increase the hard timeout when running inside
+# Valgrind
+VALGRIND_TIMEOUT_FACTOR = 5
+
 
 class Test(Loggable):
 
@@ -270,6 +274,27 @@ class Test(Loggable):
         if self.result is not Result.TIMEOUT:
             self.queue.put(None)
 
+    def use_valgrind(self):
+        vg_args = [
+            ('trace-children', 'yes'),
+            ('tool', 'memcheck'),
+            ('leak-check', 'full'),
+            ('leak-resolution', 'high'),
+            ('num-callers', '20'),
+        ]
+
+        self.command = "valgrind %s %s" % (' '.join(map(lambda x: '--%s=%s' % (x[0], x[1]), vg_args)),
+                                           self.command)
+
+        # Tune GLib's memory allocator to be more valgrind friendly
+        self.proc_env['G_DEBUG'] = 'gc-friendly'
+        self.add_env_variable('G_DEBUG', 'gc-friendly')
+
+        self.proc_env['G_SLICE'] = 'always-malloc'
+        self.add_env_variable('G_SLICE', 'always-malloc')
+
+        self.hard_timeout *= VALGRIND_TIMEOUT_FACTOR
+
     def test_start(self, queue):
         self.open_logfile()
 
@@ -278,6 +303,9 @@ class Test(Loggable):
         self._starting_time = time.time()
         self.build_arguments()
         self.proc_env = self.get_subproc_env()
+
+        if self.options.valgrind:
+            self.use_valgrind()
 
         message = "Launching: %s%s\n" \
                   "    Command: '%s %s'\n" % (Colors.ENDC, self.classname,

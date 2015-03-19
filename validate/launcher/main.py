@@ -217,6 +217,7 @@ class LauncherConfig(Loggable):
         self.generate_info_full = False
         self.long_limit = utils.LONG_TEST
         self.config = None
+        self.valgrind = False
         self.xunit_file = None
         self.main_dir = utils.DEFAULT_MAIN_DIR
         self.output_dir = None
@@ -416,6 +417,9 @@ Note that all testsuite should be inside python modules, so the directory should
     parser.add_argument("-c", "--config", dest="config",
                         help="This is DEPRECATED, prefer using the testsuite format"
                         " to configure testsuites")
+    parser.add_argument("-vg", "--valgrind", dest="valgrind",
+                        action="store_true",
+                        help="Run the tests inside Valgrind")
     dir_group = parser.add_argument_group(
         "Directories and files to be used by the launcher")
     parser.add_argument('--xunit-file', action='store',
