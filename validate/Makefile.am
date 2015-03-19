@@ -13,6 +13,9 @@ SUBDIRS = 	\
 
 DIST_SUBDIRS = $(SUBDIRS)
 
+suppsdir=${datadir}/gstreamer-$(GST_API_VERSION)/validate/
+supps_DATA = common/gst.supp
+
 EXTRA_DIST = \
 	ChangeLog autogen.sh depcomp \
 	COPYING
