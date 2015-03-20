@@ -1870,7 +1870,7 @@ static gboolean
 gst_validate_scenario_load (GstValidateScenario * scenario,
     const gchar * scenario_name)
 {
-  gchar **scenarios;
+  gchar **scenarios = NULL;
   guint i;
   gchar *lfilename = NULL, *tldir = NULL;
   gboolean found_actions = FALSE, is_config, ret = TRUE;
@@ -1951,6 +1951,8 @@ done:
 
   if (env_scenariodir)
     g_strfreev (env_scenariodir);
+
+  g_strfreev (scenarios);
 
   if (ret == FALSE)
     g_error ("Could not set scenario %s => EXIT\n", scenario_name);
