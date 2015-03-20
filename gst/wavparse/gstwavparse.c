@@ -1261,8 +1261,14 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     }
 
     GST_INFO_OBJECT (wav,
-        "Got TAG: %" GST_FOURCC_FORMAT ", offset %" G_GUINT64_FORMAT,
-        GST_FOURCC_ARGS (tag), wav->offset);
+        "Got TAG: %" GST_FOURCC_FORMAT ", offset %" G_GUINT64_FORMAT ", size %"
+        G_GUINT32_FORMAT, GST_FOURCC_ARGS (tag), wav->offset, size);
+
+    /* Clip to upstream size if known */
+    if (wav->datasize > 0 && size + wav->offset > wav->datasize) {
+      GST_WARNING_OBJECT (wav, "Clipping chunk size to file size");
+      size = wav->datasize - wav->offset;
+    }
 
     /* wav is a st00pid format, we don't know for sure where data starts.
      * So we have to go bit by bit until we find the 'data' header
