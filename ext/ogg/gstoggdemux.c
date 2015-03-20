@@ -1225,8 +1225,9 @@ gst_ogg_demux_setup_first_granule (GstOggDemux * ogg, GstOggPad * pad,
   if (pad->current_granule == -1) {
     ogg_int64_t granpos = ogg_page_granulepos (page);
     if (granpos > 0) {
-      ogg_int64_t granule =
-          gst_ogg_stream_granulepos_to_granule (&pad->map, granpos), duration;
+      gint64 granule =
+          (gint64) gst_ogg_stream_granulepos_to_granule (&pad->map, granpos);
+      gint64 duration;
       int packets = ogg_page_packets (page), n;
       GST_DEBUG_OBJECT (pad,
           "This page completes %d packets, granule %" G_GINT64_FORMAT, packets,
