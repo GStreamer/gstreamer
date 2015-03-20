@@ -2300,6 +2300,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
             (GFunc) free_item_and_retain_events, &events);
         rtp_jitter_buffer_reset_skew (priv->jbuf);
         remove_all_timers (jitterbuffer);
+        priv->discont = TRUE;
         priv->last_popped_seqnum = -1;
         priv->next_seqnum = seqnum;
         do_next_seqnum = TRUE;
