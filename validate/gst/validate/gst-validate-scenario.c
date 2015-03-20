@@ -1075,7 +1075,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   if (!(action->name = gst_structure_get_string (structure, "name")))
     action->name = "";
 
-  action->structure = structure;
+  action->structure = gst_structure_copy (structure);
 
   if (IS_CONFIG_ACTION_TYPE (action_type->flags)) {
     res = action_type->execute (scenario, action);
@@ -1112,11 +1112,12 @@ _execute_sub_action_action (GstValidateAction * action)
 {
   const gchar *subaction_str;
   GstStructure *subaction_struct = NULL;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
 
   if (action->priv->executing_last_subaction) {
     action->priv->executing_last_subaction = FALSE;
 
-    return GST_VALIDATE_EXECUTE_ACTION_OK;
+    goto done;
   }
 
   subaction_str = gst_structure_get_string (action->structure, "sub-action");
@@ -1127,7 +1128,8 @@ _execute_sub_action_action (GstValidateAction * action)
       GST_VALIDATE_REPORT (action->scenario, SCENARIO_FILE_MALFORMED,
           "Sub action %s could not be parsed", subaction_str);
 
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
+      goto done;
     }
 
   } else {
@@ -1136,8 +1138,6 @@ _execute_sub_action_action (GstValidateAction * action)
   }
 
   if (subaction_struct) {
-    GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
-
     if (action->structure) {
       GST_INFO_OBJECT (action->scenario, "Clearing old action structure");
       gst_structure_free (action->structure);
@@ -1149,21 +1149,24 @@ _execute_sub_action_action (GstValidateAction * action)
           "Sub action %" GST_PTR_FORMAT " could not be filled",
           subaction_struct);
 
-      return GST_VALIDATE_EXECUTE_ACTION_OK;
+      goto done;
     }
 
     if (!GST_CLOCK_TIME_IS_VALID (action->playback_time)) {
-      GstValidateExecuteActionReturn res;
       GstValidateActionType *action_type = _find_action_type (action->type);
 
       action->priv->printed = FALSE;
       res = gst_validate_execute_action (action_type, action);
 
-      return res;
+      goto done;
     }
+
   }
 
-  return GST_VALIDATE_EXECUTE_ACTION_OK;
+done:
+  if (subaction_struct)
+    gst_structure_free (subaction_struct);
+  return res;
 }
 
 
@@ -1852,16 +1855,12 @@ _load_scenario_file (GstValidateScenario * scenario,
   }
 
 done:
-  if (structures)
-    g_list_free (structures);
+  g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
 
   return ret;
 
 failed:
   ret = FALSE;
-  if (structures)
-    g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
-  structures = NULL;
 
   goto done;
 }
