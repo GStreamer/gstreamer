@@ -404,7 +404,7 @@ int
 main (int argc, gchar ** argv)
 {
   GError *err = NULL;
-  const gchar *scenario = NULL, *configs = NULL, *media_info = NULL;
+  gchar *scenario = NULL, *configs = NULL, *media_info = NULL;
   gboolean list_scenarios = FALSE, monitor_handles_state,
       inspect_action_type = FALSE;
   GstStateChangeReturn sret;
@@ -479,6 +479,8 @@ main (int argc, gchar ** argv)
 
     g_setenv ("GST_VALIDATE_SCENARIO", scenarios, TRUE);
     g_free (scenarios);
+    g_free (scenario);
+    g_free (configs);
   }
 
   gst_init (&argc, &argv);
@@ -556,12 +558,14 @@ main (int argc, gchar ** argv)
       GST_ERROR ("Could not use %s as a media-info file (error: %s)",
           media_info, err ? err->message : "Unknown error");
 
+      g_free (media_info);
       exit (1);
     }
 
     gst_validate_monitor_set_media_descriptor (monitor,
         GST_MEDIA_DESCRIPTOR (parser));
     gst_object_unref (parser);
+    g_free (media_info);
   }
 
   mainloop = g_main_loop_new (NULL, FALSE);
