@@ -189,8 +189,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
 
   if (int_ret == GST_VALIDATE_REPORTER_DROP) {
     gst_validate_report_unref (report);
-    g_free (message);
-    return;
+    goto done;
   }
 
   prev_report = g_hash_table_lookup (priv->reports, (gconstpointer) issue_id);
@@ -210,7 +209,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
       gst_validate_report_add_repeated_report (prev_report, report);
 
     gst_validate_report_unref (report);
-    return;
+    goto done;
   }
 
   GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
@@ -229,6 +228,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
         GST_VALIDATE_REPORT_PRINT_ARGS (report));
   }
 
+done:
   g_free (message);
 }
 
