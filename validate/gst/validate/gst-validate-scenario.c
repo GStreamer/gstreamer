@@ -638,6 +638,7 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
   gst_bus_post (bus,
       gst_message_new_request_state (GST_OBJECT_CAST (scenario),
           GST_STATE_NULL));
+  gst_object_unref (bus);
 
   return TRUE;
 }

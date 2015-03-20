@@ -549,8 +549,11 @@ check_playback_scenario (GstValidateMediaInfo * mi,
   }
 
   if (configure_function) {
-    if (!configure_function (mi, playbin, error_message))
+    if (!configure_function (mi, playbin, error_message)) {
+      gst_object_unref (bus);
+      gst_object_unref (playbin);
       return FALSE;
+    }
   }
 
   if (gst_element_set_state (playbin,

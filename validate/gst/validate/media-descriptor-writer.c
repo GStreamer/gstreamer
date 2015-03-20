@@ -495,6 +495,7 @@ _run_frame_analisis (GstMediaDescriptorWriter * writer,
   writer->priv->pipeline = NULL;
   g_main_loop_unref (writer->priv->loop);
   writer->priv->loop = NULL;
+  gst_object_unref (bus);
 
   return TRUE;
 }
