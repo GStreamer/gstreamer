@@ -212,6 +212,10 @@ _action_free (GstValidateAction * action)
   if (action->priv->main_structure)
     gst_structure_free (action->priv->main_structure);
 
+  if (action->scenario)
+    g_object_remove_weak_pointer (G_OBJECT (action->scenario),
+        ((gpointer *) & action->scenario));
+
   g_slice_free (GstValidateActionPrivate, action->priv);
   g_slice_free (GstValidateAction, action);
 }
