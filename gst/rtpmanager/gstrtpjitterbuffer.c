@@ -2063,7 +2063,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
       GstClockTime timeout = timer->timeout;
 
       timer->duration = duration;
-      if (timeout > expected_dts) {
+      if (timeout > (expected_dts + timer->rtx_retry)) {
         GstClockTime delay = timeout - expected_dts - timer->rtx_retry;
         reschedule_timer (jitterbuffer, timer, timer->seqnum, expected_dts,
             delay, TRUE);
