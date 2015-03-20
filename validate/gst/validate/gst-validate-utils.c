@@ -596,6 +596,7 @@ _get_lines (const gchar * scenario_file)
   return lines;
 }
 
+/* Returns: (transfer full): a #GList of #GstStructure */
 static GList *
 _lines_get_strutures (gchar ** lines)
 {

@@ -319,10 +319,14 @@ _load_text_override_file (const gchar * filename)
       }
     }
 
-    return ret;
+    goto done;
   }
 
-  return WRONG_FILE;
+  ret = WRONG_FILE;
+
+done:
+  g_list_free_full (structs, (GDestroyNotify) gst_structure_free);
+  return ret;
 }
 
 int
