@@ -762,24 +762,30 @@ GST_START_TEST (segment_full)
   check_times (&segment, 220, -1, -1);
 
   fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
-          50, TRUE, &rt) == GST_SEGMENT_RESULT_OK);
+          50, &rt) == 1);
   fail_unless (rt == 0);
   fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
-          200, TRUE, &rt) == GST_SEGMENT_RESULT_OK);
+          200, &rt) == 1);
   fail_unless (rt == 150);
-  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
-          40, TRUE, &rt) == GST_SEGMENT_RESULT_BEFORE);
-  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
-          49, TRUE, &rt) == GST_SEGMENT_RESULT_BEFORE);
-  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
-          201, TRUE, &rt) == GST_SEGMENT_RESULT_AFTER);
+  fail_unless (!gst_segment_clip (&segment, GST_FORMAT_TIME, 40, 40, NULL,
+          NULL));
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME, 40,
+          &rt) == -1);
+  fail_unless (!gst_segment_clip (&segment, GST_FORMAT_TIME, 49, 49, NULL,
+          NULL));
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME, 49,
+          &rt) == -1);
+  fail_unless (!gst_segment_clip (&segment, GST_FORMAT_TIME, 201, 201, NULL,
+          NULL));
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME, 201,
+          &rt) == 1);
 
   fail_unless (gst_segment_offset_running_time (&segment, GST_FORMAT_TIME,
           -50) == TRUE);
   fail_unless (segment.offset == 50);
 
   fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
-          50, TRUE, &rt) == GST_SEGMENT_RESULT_NEGATIVE);
+          50, &rt) == -1);
   GST_DEBUG ("%" G_GUINT64_FORMAT, rt);
   fail_unless (rt == 50);
 }

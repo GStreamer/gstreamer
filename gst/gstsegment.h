@@ -169,27 +169,6 @@ typedef enum { /*< flags >*/
 } GstSegmentFlags;
 
 /**
- * GstSegmentResult:
- * @GST_SEGMENT_RESULT_INVALID: input value is invalid and no output value can
- *     be calculated.
- * @GST_SEGMENT_RESULT_OK: value is within the segment and positive.
- * @GST_SEGMENT_RESULT_NEGATIVE: value is within the segment but negative.
- * @GST_SEGMENT_RESULT_BEFORE: value is outside before the segment.
- * @GST_SEGMENT_RESULT_AFTER: value is outside after the segment.
- *
- * Possible return values from gst_segment_to_running_time_full().
- *
- * Since: 1.6
- */
-typedef enum {
-  GST_SEGMENT_RESULT_INVALID = 0,
-  GST_SEGMENT_RESULT_OK = 1,
-  GST_SEGMENT_RESULT_NEGATIVE = -1,
-  GST_SEGMENT_RESULT_BEFORE = -2,
-  GST_SEGMENT_RESULT_AFTER = -3
-} GstSegmentResult;
-
-/**
  * GstSegment:
  * @flags: flags for this segment
  * @rate: the rate of the segment
@@ -238,9 +217,9 @@ void         gst_segment_init                (GstSegment *segment, GstFormat for
 
 guint64      gst_segment_to_stream_time      (const GstSegment *segment, GstFormat format, guint64 position);
 guint64      gst_segment_to_running_time     (const GstSegment *segment, GstFormat format, guint64 position);
-GstSegmentResult
-             gst_segment_to_running_time_full (const GstSegment *segment, GstFormat format, guint64 position,
-                                               gboolean clip, guint64 * running_time);
+
+gint         gst_segment_to_running_time_full (const GstSegment *segment, GstFormat format, guint64 position,
+                                               guint64 * running_time);
 guint64      gst_segment_to_position         (const GstSegment *segment, GstFormat format, guint64 running_time);
 
 gboolean     gst_segment_set_running_time    (GstSegment *segment, GstFormat format, guint64 running_time);
