@@ -125,6 +125,7 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
   issue->area = area_name[0];
   issue->name = area_name[1];
 
+  g_free (area_name);
   return issue;
 }
 
