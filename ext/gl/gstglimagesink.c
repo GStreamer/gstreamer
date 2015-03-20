@@ -1473,6 +1473,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   gboolean do_redisplay = FALSE;
   GstGLSyncMeta *sync_meta = NULL;
   GstSample *sample = NULL;
+  GstCaps *caps = NULL;
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (gl_sink));
 
@@ -1515,13 +1516,15 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
+  caps = gst_video_info_to_caps (&gl_sink->info);
+
   sample = gst_sample_new (gl_sink->stored_buffer,
-      gst_video_info_to_caps (&gl_sink->info),
-      &GST_BASE_SINK (gl_sink)->segment, NULL);
+      caps, &GST_BASE_SINK (gl_sink)->segment, NULL);
 
   g_signal_emit (gl_sink, gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL], 0,
       gl_sink->context, sample, &do_redisplay);
 
+  gst_caps_unref (caps);
   gst_sample_unref (sample);
 
   if (!do_redisplay) {
