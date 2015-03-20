@@ -50,7 +50,7 @@
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioPrivate))
 
 #define GST_VALIDATE_SCENARIO_SUFFIX ".scenario"
-#define GST_VALIDATE_SCENARIO_DIRECTORY "validate-scenario"
+#define GST_VALIDATE_SCENARIO_DIRECTORY "scenarios"
 
 #define DEFAULT_SEEK_TOLERANCE (1 * GST_MSECOND)        /* tolerance seek interval
                                                            TODO make it overridable  */
@@ -1919,15 +1919,14 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
     /* Try from local profiles */
     tldir =
         g_build_filename (g_get_user_data_dir (),
-        "gstreamer-" GST_API_VERSION, GST_VALIDATE_SCENARIO_DIRECTORY,
-        lfilename, NULL);
-
+        "gstreamer-" GST_API_VERSION, "validate",
+        GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
 
     if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
       g_free (tldir);
       /* Try from system-wide profiles */
       tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
-          GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
+          "validate", GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
 
       if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
         goto error;
@@ -2319,7 +2318,7 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
   const gchar *envvar;
   gchar **env_scenariodir = NULL;
   gchar *tldir = g_build_filename (g_get_user_data_dir (),
-      "gstreamer-" GST_API_VERSION, GST_VALIDATE_SCENARIO_DIRECTORY,
+      "gstreamer-" GST_API_VERSION, "validate", GST_VALIDATE_SCENARIO_DIRECTORY,
       NULL);
   GFile *dir = g_file_new_for_path (tldir);
 
@@ -2350,7 +2349,7 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
   g_free (tldir);
 
   tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
-      GST_VALIDATE_SCENARIO_DIRECTORY, NULL);
+      "validate", GST_VALIDATE_SCENARIO_DIRECTORY, NULL);
   dir = g_file_new_for_path (tldir);
   _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);

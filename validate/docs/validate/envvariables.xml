@@ -84,8 +84,8 @@
     scan these paths for GstValidate scenario files.
 
     By default GstValidate will look for scenarios in the user data directory as
-    specified in the XDG standard: <filename>.local/share/gstreamer-&GST_API_VERSION;/validate-scenario</filename>
-    and the system wide user data directory: <filename>/usr/lib/gstreamer-&GST_API_VERSION;/validate-scenario</filename>
+    specified in the XDG standard: <filename>.local/share/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
+    and the system wide user data directory: <filename>/usr/lib/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
   </para>
 </formalpara>
 
@@ -97,8 +97,8 @@
     scan these paths for GstValidate overrides
 
     By default GstValidate will look for scenarios in the user data directory as
-    specified in the XDG standard: <filename>.local/share/gstreamer-&GST_API_VERSION;/validate-scenario</filename>
-    and the system wide user data directory: <filename>/usr/lib/gstreamer-&GST_API_VERSION;/validate-scenario</filename>
+    specified in the XDG standard: <filename>.local/share/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
+    and the system wide user data directory: <filename>/usr/lib/gstreamer-&GST_API_VERSION;/validate/scenarios</filename>
   </para>
 </formalpara>
 

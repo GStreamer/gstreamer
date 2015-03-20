@@ -1,4 +1,4 @@
-scenariosdir=${datadir}/gstreamer-$(GST_API_VERSION)/validate-scenario
+scenariosdir=${datadir}/gstreamer-$(GST_API_VERSION)/validate/scenarios
 scenarios_DATA = simple_seeks.scenario \
                  seek_forward.scenario \
                  seek_backward.scenario \

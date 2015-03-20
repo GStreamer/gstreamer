@@ -45,8 +45,8 @@
     </para>
     <para>
       The files to be used as scenario should have a '.scenario' extension and
-      should be placed either in $USER_DATA_DIR/gstreamer-1.0/validate-scenario ,
-      $GST_DATADIR/gstreamer-1.0/validate-scenario or in a path defined in the
+      should be placed either in $USER_DATA_DIR/gstreamer-1.0/validate/scenarios ,
+      $GST_DATADIR/gstreamer-1.0/validate/scenarios or in a path defined in the
       $GST_VALIDATE_SCENARIOS_PATH environment variable.
     </para>
     <para>
