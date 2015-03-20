@@ -579,7 +579,7 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
   GString *string = NULL;
 
   if (message == NULL) {
-    GString *string = g_string_new (gst_structure_get_name (action->structure));
+    string = g_string_new (gst_structure_get_name (action->structure));
 
     g_string_append_len (string, ": ", 2);
     gst_structure_foreach (action->structure,
