@@ -517,8 +517,8 @@ gst_validate_report_unref (GstValidateReport * report)
         (GDestroyNotify) gst_validate_report_unref);
     g_list_free_full (report->repeated_reports,
         (GDestroyNotify) gst_validate_report_unref);
-    g_slice_free (GstValidateReport, report);
     g_mutex_clear (&report->shadow_reports_lock);
+    g_slice_free (GstValidateReport, report);
   }
 }
 
