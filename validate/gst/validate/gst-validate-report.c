@@ -387,6 +387,8 @@ gst_validate_report_init (void)
 
       log_files[i] = log_file;
     }
+
+    g_strfreev (wanted_files);
   } else {
     log_files = g_malloc0 (sizeof (FILE *) * 2);
     log_files[0] = stdout;
