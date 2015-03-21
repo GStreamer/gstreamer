@@ -192,7 +192,7 @@ const gchar *fisheye_fragment_source_opengl =
   "  vec2 normcoord;"
   "  normcoord = texturecoord - 0.5;"
   "  float r = length (normcoord);"
-  "  normcoord *= r * sqrt(2);"
+  "  normcoord *= r * sqrt(2.0);"
   "  texturecoord = normcoord + 0.5;"
   "  vec4 color = texture2D (tex, texturecoord);"
   "  gl_FragColor = color;"
