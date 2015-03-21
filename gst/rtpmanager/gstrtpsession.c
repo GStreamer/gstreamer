@@ -1773,6 +1773,18 @@ gst_rtp_session_event_recv_rtcp_sink (GstPad * pad, GstObject * parent,
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+      /* Make sure that the sync_src pad has caps before the segment event.
+       * Otherwise we might get a segment event before caps from the receive
+       * RTCP pad, and then later when receiving RTCP packets will set caps.
+       * This will results in a sticky event misordering warning
+       */
+      if (!gst_pad_has_current_caps (rtpsession->sync_src)) {
+        GstCaps *caps = gst_caps_new_empty_simple ("application/x-rtcp");
+        gst_pad_set_caps (rtpsession->sync_src, caps);
+        gst_caps_unref (caps);
+      }
+      /* fall through */
     default:
       ret = gst_pad_push_event (rtpsession->sync_src, event);
       break;
