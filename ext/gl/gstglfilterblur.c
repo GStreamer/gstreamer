@@ -228,7 +228,7 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (filterblur->shader0, "tex", 1);
   gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 7,
       filterblur->gauss_kernel);
-  gst_gl_shader_set_uniform_1f (filterblur->shader0, "width", width);
+  gst_gl_shader_set_uniform_1f (filterblur->shader0, "gauss_width", width);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
@@ -255,7 +255,7 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (filterblur->shader1, "tex", 1);
   gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 7,
       filterblur->gauss_kernel);
-  gst_gl_shader_set_uniform_1f (filterblur->shader1, "height", height);
+  gst_gl_shader_set_uniform_1f (filterblur->shader1, "gauss_height", height);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
