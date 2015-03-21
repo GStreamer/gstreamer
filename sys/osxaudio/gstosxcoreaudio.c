@@ -49,6 +49,7 @@ gst_core_audio_init (GstCoreAudio * core_audio)
   core_audio->is_src = FALSE;
   core_audio->audiounit = NULL;
   core_audio->cached_caps = NULL;
+  core_audio->cached_caps_valid = FALSE;
 #ifndef HAVE_IOS
   core_audio->hog_pid = -1;
   core_audio->disabled_mixing = FALSE;
@@ -83,10 +84,13 @@ _audio_unit_property_listener (void *inRefCon, AudioUnit inUnit,
          * as needed.
          * This merely "refreshes" our PREFERRED caps. */
 
-        /* protect against cached_caps going away */
-        GST_OBJECT_LOCK (core_audio->osxbuf);
-        gst_caps_replace (&core_audio->cached_caps, NULL);
-        GST_OBJECT_UNLOCK (core_audio->osxbuf);
+        /* This function is called either from a Core Audio thread
+         * or as a result of a Core Audio API (e.g. AudioUnitInitialize)
+         * from our own thread. In the latter case, osxbuf can be
+         * already locked (GStreamer's mutex is not recursive).
+         * For this reason we use a boolean flag instead of nullifying
+         * cached_caps. */
+        core_audio->cached_caps_valid = FALSE;
       }
       break;
   }
@@ -128,6 +132,7 @@ gst_core_audio_close (GstCoreAudio * core_audio)
       core_audio);
 
   /* core_audio->osxbuf is already locked at this point */
+  core_audio->cached_caps_valid = FALSE;
   gst_caps_replace (&core_audio->cached_caps, NULL);
 
   AudioComponentInstanceDispose (core_audio->audiounit);
@@ -139,6 +144,10 @@ gboolean
 gst_core_audio_open (GstCoreAudio * core_audio)
 {
   OSStatus status;
+
+  /* core_audio->osxbuf is already locked at this point */
+  core_audio->cached_caps_valid = FALSE;
+  gst_caps_replace (&core_audio->cached_caps, NULL);
 
   if (!gst_core_audio_open_impl (core_audio))
     return FALSE;

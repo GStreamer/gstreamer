@@ -88,6 +88,7 @@ struct _GstCoreAudio
   gboolean is_src;
   gboolean is_passthrough;
   AudioDeviceID device_id;
+  gboolean cached_caps_valid; /* thread-safe flag */
   GstCaps *cached_caps;
   gint stream_idx;
   gboolean io_proc_active;

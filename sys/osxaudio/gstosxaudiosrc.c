@@ -265,7 +265,7 @@ gst_osx_audio_src_get_caps (GstBaseSrc * src, GstCaps * filter)
   /* protect against cached_caps going away */
   GST_OBJECT_LOCK (buf);
 
-  if (osxbuf->core_audio->cached_caps) {
+  if (osxbuf->core_audio->cached_caps_valid) {
     GST_LOG_OBJECT (src, "Returning cached caps");
     caps = gst_caps_ref (osxbuf->core_audio->cached_caps);
   } else if (buf->open) {
