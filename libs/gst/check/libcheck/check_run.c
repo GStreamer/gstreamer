@@ -116,7 +116,8 @@ sig_handler (int sig_nr)
       if (sig_nr == SIGINT) {
         idx = 1;
         child_sig = SIGKILL;
-      } else if (sig_nr == SIGTERM) {
+      } else {                  /* if (sig_nr == SIGTERM) */
+
         idx = 2;
         child_sig = SIGTERM;
       }
