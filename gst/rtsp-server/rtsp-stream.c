@@ -2486,11 +2486,11 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
           *seq = gst_rtp_buffer_get_seq (&rtp_buffer);
         }
 
-        gst_rtp_buffer_unmap (&rtp_buffer);
-
         if (rtptime) {
-          *rtptime = GST_BUFFER_TIMESTAMP (buffer);
+          *rtptime = gst_rtp_buffer_get_timestamp (&rtp_buffer);
         }
+
+        gst_rtp_buffer_unmap (&rtp_buffer);
 
         if (running_time) {
           *running_time =
