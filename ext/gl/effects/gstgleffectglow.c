@@ -97,7 +97,7 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "gauss_width", height);
+  gst_gl_shader_set_uniform_1f (shader, "gauss_width", width);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
@@ -134,7 +134,7 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "gauss_height", width);
+  gst_gl_shader_set_uniform_1f (shader, "gauss_height", height);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
