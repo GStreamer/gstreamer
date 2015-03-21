@@ -544,7 +544,7 @@ _gst_plugin_loader_client_run (void)
 
     dup_fd = dup (0);           /* STDIN */
     if (dup_fd == -1) {
-      GST_ERROR ("Failed to start. Could no dup STDIN, errno %d", errno);
+      GST_ERROR ("Failed to start. Could not dup STDIN, errno %d", errno);
       res = FALSE;
       goto beach;
     }
@@ -553,7 +553,7 @@ _gst_plugin_loader_client_run (void)
 
     dup_fd = dup (1);           /* STDOUT */
     if (dup_fd == -1) {
-      GST_ERROR ("Failed to start. Could no dup STDOUT, errno %d", errno);
+      GST_ERROR ("Failed to start. Could not dup STDOUT, errno %d", errno);
       res = FALSE;
       goto beach;
     }
