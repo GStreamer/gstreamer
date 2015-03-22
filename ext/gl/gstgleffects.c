@@ -90,6 +90,7 @@ typedef enum
   GST_GL_EFFECT_XRAY,
   GST_GL_EFFECT_SIN,
   GST_GL_EFFECT_GLOW,
+  GST_GL_EFFECT_SOBEL,
   GST_GL_EFFECT_BLUR,
   GST_GL_N_EFFECTS
 } GstGLEffectsEffect;
@@ -116,6 +117,7 @@ gst_gl_effects_effect_get_type (void)
     {GST_GL_EFFECT_XRAY, "Glowing negative effect", "xray"},
     {GST_GL_EFFECT_SIN, "All Grey but Red Effect", "sin"},
     {GST_GL_EFFECT_GLOW, "Glow Lighting Effect", "glow"},
+    {GST_GL_EFFECT_SOBEL, "Sobel edge detection Effect", "sobel"},
     {GST_GL_EFFECT_BLUR, "Blur with 9x9 separable convolution Effect", "blur"},
     {0, NULL, NULL}
   };
@@ -229,6 +231,12 @@ gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
           GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
       effects->current_effect = effect_type;
       break;
+    case GST_GL_EFFECT_SOBEL:
+      effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_sobel;
+      filter_class->supported_gl_api =
+          GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
+      effects->current_effect = effect_type;
+      break;
     case GST_GL_EFFECT_BLUR:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_blur;
       filter_class->supported_gl_api =
@@ -322,6 +330,13 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
           "Horizontal Swap",
           "Switch video texture left to right, useful with webcams",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /* FIXME: make it work on every effect */
+  g_object_class_install_property (gobject_class,
+      PROP_INVERT,
+      g_param_spec_boolean ("invert",
+          "Invert the colours for sobel effect",
+          "Invert colors to get dark edges on bright background when using sobel effect",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class,
       "Gstreamer OpenGL Effects", "Filter/Effect/Video",
@@ -355,6 +370,7 @@ gst_gl_effects_init (GstGLEffects * effects)
 {
   effects->effect = gst_gl_effects_identity;
   effects->horizontal_swap = FALSE;
+  effects->invert = FALSE;
 }
 
 static void
@@ -398,6 +414,9 @@ gst_gl_effects_set_property (GObject * object, guint prop_id,
     case PROP_HSWAP:
       effects->horizontal_swap = g_value_get_boolean (value);
       break;
+    case PROP_INVERT:
+      effects->invert = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -416,6 +435,9 @@ gst_gl_effects_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HSWAP:
       g_value_set_boolean (value, effects->horizontal_swap);
+      break;
+    case PROP_INVERT:
+      g_value_set_boolean (value, effects->invert);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

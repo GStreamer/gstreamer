@@ -29,6 +29,7 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectxray.c \
 	effects/gstgleffectglow.c \
 	effects/gstgleffectblur.c \
+	effects/gstgleffectsobel.c \
 	gstglcolorscale.c \
 	gstglmixer.c \
 	gstglvideomixer.c \
@@ -57,7 +58,6 @@ noinst_HEADERS = \
 # full opengl required
 if USE_OPENGL
 libgstopengl_la_SOURCES += \
-	gstglfiltersobel.c \
 	gstglfilterlaplacian.c \
 	gstglfilterglass.c \
 	gstgldeinterlace.c \
@@ -66,7 +66,6 @@ libgstopengl_la_SOURCES += \
 	gstglmosaic.c
 
 noinst_HEADERS += \
-	gstglfiltersobel.h \
 	gstglfilterlaplacian.h \
 	gstglfilterglass.h \
 	gstgldeinterlace.h \

@@ -72,6 +72,7 @@ struct _GstGLEffects
   GHashTable *shaderstable;
 
   gboolean horizontal_swap; /* switch left to right */
+  gboolean invert; /* colours */
 };
 
 struct _GstGLEffectsClass
@@ -83,7 +84,8 @@ enum
 {
   PROP_0,
   PROP_EFFECT,
-  PROP_HSWAP
+  PROP_HSWAP,
+  PROP_INVERT
 };
 
 
@@ -107,6 +109,7 @@ void gst_gl_effects_xray (GstGLEffects *effects);
 void gst_gl_effects_luma_xpro (GstGLEffects *effects);
 void gst_gl_effects_sin (GstGLEffects *effects);
 void gst_gl_effects_glow (GstGLEffects *effects);
+void gst_gl_effects_sobel (GstGLEffects *effects);
 void gst_gl_effects_blur (GstGLEffects *effects);
 
 G_END_DECLS
