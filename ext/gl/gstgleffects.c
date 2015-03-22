@@ -92,6 +92,7 @@ typedef enum
   GST_GL_EFFECT_GLOW,
   GST_GL_EFFECT_SOBEL,
   GST_GL_EFFECT_BLUR,
+  GST_GL_EFFECT_LAPLACIAN,
   GST_GL_N_EFFECTS
 } GstGLEffectsEffect;
 
@@ -119,6 +120,7 @@ gst_gl_effects_effect_get_type (void)
     {GST_GL_EFFECT_GLOW, "Glow Lighting Effect", "glow"},
     {GST_GL_EFFECT_SOBEL, "Sobel edge detection Effect", "sobel"},
     {GST_GL_EFFECT_BLUR, "Blur with 9x9 separable convolution Effect", "blur"},
+    {GST_GL_EFFECT_LAPLACIAN, "Laplacian Convolution Demo Effect", "laplacian"},
     {0, NULL, NULL}
   };
 
@@ -243,6 +245,12 @@ gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
           GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
       effects->current_effect = effect_type;
       break;
+    case GST_GL_EFFECT_LAPLACIAN:
+      effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_laplacian;
+      filter_class->supported_gl_api =
+          GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
+      effects->current_effect = effect_type;
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -334,7 +342,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_INVERT,
       g_param_spec_boolean ("invert",
-          "Invert the colours for sobel effect",
+          "Invert the colours for sobel and laplacian effect",
           "Invert colors to get dark edges on bright background when using sobel effect",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
