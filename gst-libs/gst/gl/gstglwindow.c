@@ -87,7 +87,6 @@ void gst_gl_window_quit_navigation (GstGLWindow * window);
 
 struct _GstGLWindowPrivate
 {
-  GThread *gl_thread;
   GThread *navigation_thread;
 
   gboolean alive;
