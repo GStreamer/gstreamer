@@ -68,7 +68,7 @@ G_BEGIN_DECLS
 #define CORE_AUDIO_FORMAT_IS_SPDIF(f) ((f).mFormat.mFormatID == 'IAC3' || (f).mFormat.mFormatID == 'iac3' || (f).mFormat.mFormatID == kAudioFormat60958AC3 || (f).mFormat.mFormatID == kAudioFormatAC3)
 
 #define CORE_AUDIO_FORMAT "FormatID: %" GST_FOURCC_FORMAT " rate: %f flags: 0x%x BytesPerPacket: %u FramesPerPacket: %u BytesPerFrame: %u ChannelsPerFrame: %u BitsPerChannel: %u"
-#define CORE_AUDIO_FORMAT_ARGS(f) GST_FOURCC_ARGS((f).mFormatID),(f).mSampleRate,(unsigned)(f).mFormatFlags,(unsigned)(f).mBytesPerPacket,(unsigned)(f).mFramesPerPacket,(unsigned)(f).mBytesPerFrame,(unsigned)(f).mChannelsPerFrame,(unsigned)(f).mBitsPerChannel
+#define CORE_AUDIO_FORMAT_ARGS(f) GST_FOURCC_ARGS((unsigned int)(f).mFormatID),(f).mSampleRate,(unsigned int)(f).mFormatFlags,(unsigned int)(f).mBytesPerPacket,(unsigned int)(f).mFramesPerPacket,(unsigned int)(f).mBytesPerFrame,(unsigned int)(f).mChannelsPerFrame,(unsigned int)(f).mBitsPerChannel
 
 typedef struct _GstCoreAudio GstCoreAudio;
 typedef struct _GstCoreAudioClass GstCoreAudioClass;
