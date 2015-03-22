@@ -107,6 +107,7 @@ void gst_gl_effects_xray (GstGLEffects *effects);
 void gst_gl_effects_luma_xpro (GstGLEffects *effects);
 void gst_gl_effects_sin (GstGLEffects *effects);
 void gst_gl_effects_glow (GstGLEffects *effects);
+void gst_gl_effects_blur (GstGLEffects *effects);
 
 G_END_DECLS
 
