@@ -90,6 +90,7 @@ typedef enum
   GST_GL_EFFECT_XRAY,
   GST_GL_EFFECT_SIN,
   GST_GL_EFFECT_GLOW,
+  GST_GL_EFFECT_BLUR,
   GST_GL_N_EFFECTS
 } GstGLEffectsEffect;
 
@@ -115,6 +116,7 @@ gst_gl_effects_effect_get_type (void)
     {GST_GL_EFFECT_XRAY, "Glowing negative effect", "xray"},
     {GST_GL_EFFECT_SIN, "All Grey but Red Effect", "sin"},
     {GST_GL_EFFECT_GLOW, "Glow Lighting Effect", "glow"},
+    {GST_GL_EFFECT_BLUR, "Blur with 9x9 separable convolution Effect", "blur"},
     {0, NULL, NULL}
   };
 
@@ -223,6 +225,12 @@ gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
       break;
     case GST_GL_EFFECT_GLOW:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_glow;
+      filter_class->supported_gl_api =
+          GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
+      effects->current_effect = effect_type;
+      break;
+    case GST_GL_EFFECT_BLUR:
+      effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_blur;
       filter_class->supported_gl_api =
           GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
       effects->current_effect = effect_type;
