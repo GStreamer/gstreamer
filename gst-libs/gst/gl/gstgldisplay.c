@@ -453,6 +453,7 @@ gst_gl_display_add_context (GstGLDisplay * display, GstGLContext * context)
   thread = gst_gl_context_get_thread (context);
   if (thread) {
     collision = _get_gl_context_for_thread_unlocked (display, thread);
+    g_thread_unref (thread);
     if (_check_collision (context, collision)) {
       ret = FALSE;
       goto out;
