@@ -111,6 +111,7 @@ void gst_gl_effects_sin (GstGLEffects *effects);
 void gst_gl_effects_glow (GstGLEffects *effects);
 void gst_gl_effects_sobel (GstGLEffects *effects);
 void gst_gl_effects_blur (GstGLEffects *effects);
+void gst_gl_effects_laplacian (GstGLEffects *effects);
 
 G_END_DECLS
 

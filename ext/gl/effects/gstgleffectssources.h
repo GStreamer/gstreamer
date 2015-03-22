@@ -41,6 +41,7 @@ extern const gchar *sep_sobel_hconv3_fragment_source_opengl;
 extern const gchar *sep_sobel_vconv3_fragment_source_opengl;
 extern const gchar *sep_sobel_length_fragment_source_opengl;
 extern const gchar *multiply_fragment_source_opengl;
+extern const gchar *conv9_fragment_source_opengl;
 
 extern const gchar *mirror_fragment_source_gles2;
 extern const gchar *squeeze_fragment_source_gles2;
@@ -62,6 +63,7 @@ extern const gchar *sep_sobel_hconv3_fragment_source_gles2;
 extern const gchar *sep_sobel_vconv3_fragment_source_gles2;
 extern const gchar *sep_sobel_length_fragment_source_gles2;
 extern const gchar *multiply_fragment_source_gles2;
+extern const gchar *conv9_fragment_source_gles2;
 
 extern const gchar *interpolate_fragment_source;
 extern const gchar *texture_interp_fragment_source;
