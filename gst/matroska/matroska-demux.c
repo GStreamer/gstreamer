@@ -1502,6 +1502,7 @@ gst_matroska_demux_move_to_entry (GstMatroskaDemux * demux,
 
     /* update the time */
     gst_matroska_read_common_reset_streams (&demux->common, entry->time, TRUE);
+    gst_flow_combiner_reset (demux->flowcombiner);
     demux->common.segment.position = entry->time;
     demux->seek_block = entry->block;
     demux->seek_first = TRUE;
@@ -3655,7 +3656,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         }
       }
       /* combine flows */
-      ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
+      ret = gst_flow_combiner_update_pad_flow (demux->flowcombiner,
+          stream->pad, ret);
 
     next_lace:
       size -= lace_size[n];
@@ -3681,7 +3683,8 @@ eos:
     stream->eos = TRUE;
     ret = GST_FLOW_OK;
     /* combine flows */
-    ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
+    ret = gst_flow_combiner_update_pad_flow (demux->flowcombiner, stream->pad,
+        ret);
     goto done;
   }
 invalid_lacing:
@@ -4744,6 +4747,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       GST_OBJECT_LOCK (demux);
       gst_matroska_read_common_reset_streams (&demux->common,
           GST_CLOCK_TIME_NONE, TRUE);
+      gst_flow_combiner_reset (demux->flowcombiner);
       dur = demux->common.segment.duration;
       gst_segment_init (&demux->common.segment, GST_FORMAT_TIME);
       demux->common.segment.duration = dur;
