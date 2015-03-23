@@ -312,26 +312,22 @@ transform (guint32 * src, guint32 * dest, gint video_area,
 {
   guint32 in;
   guint32 color[3];
+  gint period = 1, up_length = 1, down_length = 1;
   gint x, c;
+  gint param;
   static const guint floor = 0;
   static const guint ceiling = 255;
 
-  gint period, up_length, down_length, param;
 
-  period = end - start;
-  if (period == 0) {
-    period = 1;
-  }
 
-  up_length = threshold - start;
-  if (up_length == 0) {
-    up_length = 1;
-  }
+  if (end != start)
+    period = end - start;
 
-  down_length = end - threshold;
-  if (down_length == 0) {
-    down_length = 1;
-  }
+  if (threshold != start)
+    up_length = threshold - start;
+
+  if (threshold != end)
+    down_length = end - threshold;
 
   /* Loop through pixels. */
   for (x = 0; x < video_area; x++) {
