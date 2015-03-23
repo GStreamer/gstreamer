@@ -1230,7 +1230,8 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     goto beach;
   }
 
-  ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
+  ret = gst_flow_combiner_update_pad_flow (demux->flowcombiner,
+      demux->audio_pad, ret);
 
 beach:
   gst_buffer_unmap (buffer, &map);
@@ -1651,7 +1652,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     goto beach;
   }
 
-  ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
+  ret = gst_flow_combiner_update_pad_flow (demux->flowcombiner,
+      demux->video_pad, ret);
 
 beach:
   gst_buffer_unmap (buffer, &map);
@@ -2761,6 +2763,7 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
       GST_WARNING_OBJECT (demux, "upstream seek failed");
     }
 
+    gst_flow_combiner_reset (demux->flowcombiner);
     /* Tell all the stream we moved to a different position (discont) */
     demux->audio_need_discont = TRUE;
     demux->video_need_discont = TRUE;
@@ -2972,6 +2975,7 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
               demux->segment.format, demux->segment.position));
     }
 
+    gst_flow_combiner_reset (demux->flowcombiner);
     /* Tell all the stream a new segment is needed */
     demux->audio_need_segment = TRUE;
     demux->video_need_segment = TRUE;
@@ -3162,6 +3166,7 @@ gst_flv_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           demux->new_seg_event = NULL;
         }
       }
+      gst_flow_combiner_reset (demux->flowcombiner);
       break;
     }
     default:
