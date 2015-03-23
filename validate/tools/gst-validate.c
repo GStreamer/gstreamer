@@ -605,6 +605,7 @@ main (int argc, gchar ** argv)
 
   /* Clean the bus */
   gst_bus_set_flushing (bus, TRUE);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
 
   rep_err = gst_validate_runner_printf (runner);

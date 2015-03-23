@@ -95,6 +95,7 @@ static GPrivate main_thread_priv;
  */
 struct _GstValidateScenarioPrivate
 {
+  GstBus *bus;
   GstValidateRunner *runner;
   gboolean execute_on_idle;
 
@@ -2102,6 +2103,12 @@ gst_validate_scenario_dispose (GObject * object)
         (GWeakNotify) _pipeline_freed_cb, object);
   g_list_free_full (priv->actions, (GDestroyNotify) gst_validate_action_unref);
 
+  if (priv->bus) {
+    gst_bus_remove_signal_watch (priv->bus);
+    gst_object_unref (priv->bus);
+    priv->bus = NULL;
+  }
+
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
 }
 
@@ -2176,7 +2183,6 @@ GstValidateScenario *
 gst_validate_scenario_factory_create (GstValidateRunner *
     runner, GstElement * pipeline, const gchar * scenario_name)
 {
-  GstBus *bus;
   GstValidateScenario *scenario =
       g_object_new (GST_TYPE_VALIDATE_SCENARIO, "validate-runner",
       runner, NULL);
@@ -2197,10 +2203,10 @@ gst_validate_scenario_factory_create (GstValidateRunner *
   g_signal_connect (pipeline, "element-added", (GCallback) _element_added_cb,
       scenario);
 
-  bus = gst_element_get_bus (pipeline);
-  gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message", (GCallback) message_cb, scenario);
-  gst_object_unref (bus);
+  scenario->priv->bus = gst_element_get_bus (pipeline);
+  gst_bus_add_signal_watch (scenario->priv->bus);
+  g_signal_connect (scenario->priv->bus, "message", (GCallback) message_cb,
+      scenario);
 
   if (scenario->priv->handles_state) {
     GST_INFO_OBJECT (scenario, "Scenario handles state,"

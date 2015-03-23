@@ -918,7 +918,6 @@ main (int argc, gchar ** argv)
   bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", (GCallback) bus_callback, mainloop);
-  gst_object_unref (bus);
 
   g_print ("Starting pipeline\n");
   sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -946,6 +945,9 @@ main (int argc, gchar ** argv)
     ret = rep_err;
 
 exit:
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_main_loop_unref (mainloop);
   g_object_unref (pipeline);
