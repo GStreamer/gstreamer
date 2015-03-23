@@ -541,8 +541,21 @@ gst_opus_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
   gboolean ret = TRUE;
   GstStructure *s;
   const GValue *streamheader;
+  GstCaps *old_caps;
 
   GST_DEBUG_OBJECT (dec, "set_format: %" GST_PTR_FORMAT, caps);
+
+  if ((old_caps = gst_pad_get_current_caps (GST_AUDIO_DECODER_SINK_PAD (bdec)))) {
+    if (gst_caps_is_equal (caps, old_caps)) {
+      gst_caps_unref (old_caps);
+      GST_DEBUG_OBJECT (dec, "caps didn't change");
+      goto done;
+    }
+
+    GST_DEBUG_OBJECT (dec, "caps have changed, resetting decoder");
+    gst_opus_dec_reset (dec);
+    gst_caps_unref (old_caps);
+  }
 
   s = gst_caps_get_structure (caps, 0);
   if ((streamheader = gst_structure_get_value (s, "streamheader")) &&
