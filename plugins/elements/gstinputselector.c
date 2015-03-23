@@ -535,9 +535,10 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       selpad->eos = TRUE;
 
       if (!forward) {
-        /* blocked until active the sind pad or flush */
-        gst_input_selector_wait (sel, selpad);
         forward = TRUE;
+        /* Wait until we're the active sink pad or we're flushing */
+        while (!sel->eos && !sel->flushing && !selpad->flushing)
+          GST_INPUT_SELECTOR_WAIT (sel);
       } else {
         /* Notify all waiting pads about going EOS now */
         sel->eos = TRUE;
