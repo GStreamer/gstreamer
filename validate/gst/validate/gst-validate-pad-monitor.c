@@ -855,6 +855,7 @@ gst_validate_pad_monitor_dispose (GObject * object)
   gst_structure_free (monitor->pending_setcaps_fields);
   g_ptr_array_unref (monitor->serialized_events);
   g_list_free_full (monitor->expired_events, (GDestroyNotify) gst_event_unref);
+  g_list_free_full (monitor->all_bufs, (GDestroyNotify) gst_buffer_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
