@@ -582,6 +582,22 @@ gst_opus_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
         goto done;
       gst_buffer_replace (&dec->vorbiscomment, buf);
     }
+  } else {
+    /* defaults if not in the caps */
+    dec->n_channels = 2;
+    dec->sample_rate = 48000;
+
+    gst_structure_get_int (s, "channels", &dec->n_channels);
+    gst_structure_get_int (s, "rate", &dec->sample_rate);
+
+    /* default stereo mapping */
+    dec->channel_mapping_family = 0;
+    dec->channel_mapping[0] = 0;
+    dec->channel_mapping[1] = 1;
+    dec->n_streams = 1;
+    dec->n_stereo_streams = 1;
+
+    gst_opus_dec_negotiate (dec, NULL);
   }
 
 done:
