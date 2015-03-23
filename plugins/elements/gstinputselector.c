@@ -125,15 +125,6 @@ enum
   PROP_PAD_ALWAYS_OK
 };
 
-enum
-{
-  /* methods */
-  SIGNAL_BLOCK,
-  SIGNAL_SWITCH,
-  LAST_SIGNAL
-};
-static guint gst_input_selector_signals[LAST_SIGNAL] = { 0 };
-
 static void gst_input_selector_active_pad_changed (GstInputSelector * sel,
     GParamSpec * pspec, gpointer user_data);
 static inline gboolean gst_input_selector_is_active_sinkpad (GstInputSelector *
@@ -1178,7 +1169,6 @@ static GstStateChangeReturn gst_input_selector_change_state (GstElement *
 
 static gboolean gst_input_selector_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
-static gint64 gst_input_selector_block (GstInputSelector * self);
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (input_selector_debug, \
@@ -1264,20 +1254,6 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
-  /**
-   * GstInputSelector::block:
-   * @inputselector: the #GstInputSelector
-   *
-   * Block all sink pads in preparation for a switch. Returns the stop time of
-   * the current switch segment, as a running time, or 0 if there is no current
-   * active pad or the current active pad never received data.
-   */
-  gst_input_selector_signals[SIGNAL_BLOCK] =
-      g_signal_new ("block", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstInputSelectorClass, block), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_INT64, 0);
-
   gst_element_class_set_static_metadata (gstelement_class, "Input selector",
       "Generic", "N-to-1 input stream selector",
       "Julien Moutte <julien@moutte.net>, "
@@ -1291,8 +1267,6 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
   gstelement_class->request_new_pad = gst_input_selector_request_new_pad;
   gstelement_class->release_pad = gst_input_selector_release_pad;
   gstelement_class->change_state = gst_input_selector_change_state;
-
-  klass->block = GST_DEBUG_FUNCPTR (gst_input_selector_block);
 }
 
 static void
@@ -1739,28 +1713,4 @@ gst_input_selector_change_state (GstElement * element,
   }
 
   return result;
-}
-
-static gint64
-gst_input_selector_block (GstInputSelector * self)
-{
-  gint64 ret = 0;
-  GstSelectorPad *spad;
-
-  GST_INPUT_SELECTOR_LOCK (self);
-
-  if (self->blocked)
-    GST_WARNING_OBJECT (self, "switch already blocked");
-
-  self->blocked = TRUE;
-  spad = GST_SELECTOR_PAD_CAST (self->active_sinkpad);
-
-  if (spad)
-    ret = gst_selector_pad_get_running_time (spad);
-  else
-    GST_DEBUG_OBJECT (self, "no active pad while blocking");
-
-  GST_INPUT_SELECTOR_UNLOCK (self);
-
-  return ret;
 }
