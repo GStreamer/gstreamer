@@ -64,7 +64,7 @@ _ges___videosink () {
 _ges_clip () {
 	if [[ "$prev" == "$command" ]];
 	then
-		_mandatory__argument
+		_gst_mandatory_argument
 	else
 		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(ges-launch-1.0 help all | egrep '^  [a-zA-Z0-9]')" -- $cur) )
 	fi
@@ -73,7 +73,7 @@ _ges_clip () {
 _ges_effect () {
 	if [[ "$prev" == "$command" ]];
 	then
-		_mandatory__argument
+		_gst_mandatory_argument
 	else
 		COMPREPLY=( $(compgen -W "duration= start= layer= $(ges-launch-1.0 help all | egrep '^  +')" -- $cur) )
 	fi
@@ -92,7 +92,7 @@ _ges_list_properties () {
 
 	if [[ "$real_command" == "" ]]
 	then
-		_mandatory__argument
+		_gst_mandatory_argument
 	elif [[ "$real_command" == "+clip" ]]
 	then
 		COMPREPLY=( $(compgen -W "set-alpha set-posx set-posy set-width set-height set-volume set-mute" -- $cur) )
@@ -109,17 +109,17 @@ _ges_list_properties () {
 			done
 		done
 	else
-		_mandatory__argument
+		_gst_mandatory_argument
 	fi
 }
 
-_ges___exclude_ () { _mandatory__argument; }
-_ges___encoding_profile () { _mandatory__argument; }
-_ges___ges_sample_path () { _mandatory__argument; }
-_ges___ges_sample_path_recurse () { _mandatory__argument; }
-_ges___thumbnail () { _mandatory__argument; }
-_ges___repeat () { _mandatory__argument; }
-_ges___save () { _mandatory__argument; }
+_ges___exclude_ () { _gst_mandatory_argument; }
+_ges___encoding_profile () { _gst_mandatory_argument; }
+_ges___ges_sample_path () { _gst_mandatory_argument; }
+_ges___ges_sample_path_recurse () { _gst_mandatory_argument; }
+_ges___thumbnail () { _gst_mandatory_argument; }
+_ges___repeat () { _gst_mandatory_argument; }
+_ges___save () { _gst_mandatory_argument; }
 
 containsElement () {
 	local e
@@ -139,7 +139,7 @@ __ges_main ()
 	effect_bin_description=""
 
 	if [[ "$cur" == "=" ]]; then
-		_mandatory__argument
+		_gst_mandatory_argument
 		return
 	fi
 
@@ -179,7 +179,7 @@ __ges_main ()
 		_ges_list_commands
 	elif [[ "$cur" == "="* ]]
 	then
-		_mandatory__argument
+		_gst_mandatory_argument
 	elif [[ "$cur" == "set-"* ]]
 	then
 		_ges_list_properties
