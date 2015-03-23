@@ -163,7 +163,7 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
   guint8 *data;
 
   g_return_if_fail (caps);
-  g_return_if_fail (headers && !*headers);
+  g_return_if_fail (!headers || !*headers);
   g_return_if_fail (gst_buffer_get_size (buf1) >= 19);
 
   gst_buffer_map (buf1, &map, GST_MAP_READ);
@@ -199,8 +199,10 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
       "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
   *caps = _gst_caps_set_buffer_array (*caps, "streamheader", buf1, buf2, NULL);
 
-  *headers = g_slist_prepend (*headers, gst_buffer_ref (buf2));
-  *headers = g_slist_prepend (*headers, gst_buffer_ref (buf1));
+  if (headers) {
+    *headers = g_slist_prepend (*headers, gst_buffer_ref (buf2));
+    *headers = g_slist_prepend (*headers, gst_buffer_ref (buf1));
+  }
 }
 
 void
@@ -211,7 +213,7 @@ gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
   GstBuffer *buf1, *buf2;
 
   g_return_if_fail (caps);
-  g_return_if_fail (headers && !*headers);
+  g_return_if_fail (!headers || !*headers);
   g_return_if_fail (nchannels > 0);
   g_return_if_fail (sample_rate >= 0);  /* 0 -> unset */
   g_return_if_fail (channel_mapping_family == 0 || channel_mapping);

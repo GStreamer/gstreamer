@@ -388,7 +388,6 @@ gst_opus_enc_start (GstAudioEncoder * benc)
 
   GST_DEBUG_OBJECT (enc, "start");
   enc->tags = gst_tag_list_new_empty ();
-  enc->header_sent = FALSE;
   enc->encoded_samples = 0;
 
   return TRUE;
@@ -400,16 +399,12 @@ gst_opus_enc_stop (GstAudioEncoder * benc)
   GstOpusEnc *enc = GST_OPUS_ENC (benc);
 
   GST_DEBUG_OBJECT (enc, "stop");
-  enc->header_sent = FALSE;
   if (enc->state) {
     opus_multistream_encoder_destroy (enc->state);
     enc->state = NULL;
   }
   gst_tag_list_unref (enc->tags);
   enc->tags = NULL;
-  g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
-  g_slist_free (enc->headers);
-  enc->headers = NULL;
   gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
 
   return TRUE;
@@ -971,26 +966,19 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   enc = GST_OPUS_ENC (benc);
   GST_DEBUG_OBJECT (enc, "handle_frame");
 
-  if (!enc->header_sent) {
+  if (!gst_pad_has_current_caps (GST_AUDIO_ENCODER_SRC_PAD (benc))) {
     GstCaps *caps;
 
-    g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
-    g_slist_free (enc->headers);
-    enc->headers = NULL;
-
-    gst_opus_header_create_caps (&caps, &enc->headers, enc->n_channels,
+    gst_opus_header_create_caps (&caps, NULL, enc->n_channels,
         enc->n_stereo_streams, enc->sample_rate, enc->channel_mapping_family,
         enc->decoding_channel_mapping,
         gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc)));
-
 
     /* negotiate with these caps */
     GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
 
     gst_audio_encoder_set_output_format (benc, caps);
     gst_caps_unref (caps);
-
-    enc->header_sent = TRUE;
   }
 
   GST_DEBUG_OBJECT (enc, "received buffer %p of %" G_GSIZE_FORMAT " bytes", buf,
