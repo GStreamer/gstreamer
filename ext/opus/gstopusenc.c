@@ -387,7 +387,6 @@ gst_opus_enc_start (GstAudioEncoder * benc)
   GstOpusEnc *enc = GST_OPUS_ENC (benc);
 
   GST_DEBUG_OBJECT (enc, "start");
-  enc->tags = gst_tag_list_new_empty ();
   enc->encoded_samples = 0;
 
   return TRUE;
@@ -403,8 +402,6 @@ gst_opus_enc_stop (GstAudioEncoder * benc)
     opus_multistream_encoder_destroy (enc->state);
     enc->state = NULL;
   }
-  gst_tag_list_unref (enc->tags);
-  enc->tags = NULL;
   gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
 
   return TRUE;
