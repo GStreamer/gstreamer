@@ -2076,14 +2076,14 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     GstPad *teepad, *queuepad;
     /* For the sender we create this bit of pipeline for both
      * RTP and RTCP. Sync and preroll are enabled on udpsink so
-     * we need to add a queue before appsink to make the pipeline
-     * not block. For the TCP case, we want to pump data to the
-     * client as fast as possible anyway.
+     * we need to add a queue before appsink and udpsink to make
+     * the pipeline not block. For the TCP case, we want to pump
+     * data to the client as fast as possible.
      *
-     * .--------.      .-----.    .---------.
-     * | rtpbin |      | tee |    | udpsink |
-     * |       send->sink   src->sink       |
-     * '--------'      |     |    '---------'
+     * .--------.      .-----.    .---------.    .---------.
+     * | rtpbin |      | tee |    |  queue  |    | udpsink |
+     * |       send->sink   src->sink      src->sink       |
+     * '--------'      |     |    '---------'    '---------'
      *                 |     |    .---------.    .---------.
      *                 |     |    |  queue  |    | appsink |
      *                 |    src->sink      src->sink       |
