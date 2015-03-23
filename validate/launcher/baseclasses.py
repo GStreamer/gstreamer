@@ -279,12 +279,16 @@ class Test(Loggable):
         return None
 
     def use_valgrind(self):
+        vglogsfile = self.logfile + '.valgrind'
+        self.extra_logfiles.append(vglogsfile)
+
         vg_args = [
             ('trace-children', 'yes'),
             ('tool', 'memcheck'),
             ('leak-check', 'full'),
             ('leak-resolution', 'high'),
             ('num-callers', '20'),
+            ('log-file', vglogsfile),
         ]
 
         supps = self.get_valgrind_suppressions()
