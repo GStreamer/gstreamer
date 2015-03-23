@@ -224,13 +224,11 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
     caps = gst_caps_truncate (caps);
     caps = gst_caps_make_writable (caps);
     s = gst_caps_get_structure (caps, 0);
-    gst_structure_fixate_field_nearest_int (s, "rate", 48000);
+    gst_structure_fixate_field_nearest_int (s, "rate", dec->sample_rate);
     gst_structure_get_int (s, "rate", &dec->sample_rate);
     gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
     gst_structure_get_int (s, "channels", &dec->n_channels);
     gst_caps_unref (caps);
-  } else {
-    dec->sample_rate = 48000;
   }
 
   GST_INFO_OBJECT (dec, "Negotiated %d channels, %d Hz", dec->n_channels,
@@ -282,6 +280,7 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
   }
 
   dec->n_channels = data[9];
+  dec->sample_rate = GST_READ_UINT32_LE (data + 12);
   dec->pre_skip = GST_READ_UINT16_LE (data + 10);
   dec->r128_gain = GST_READ_UINT16_LE (data + 16);
   dec->r128_gain_volume = gst_opus_dec_get_r128_volume (dec->r128_gain);
