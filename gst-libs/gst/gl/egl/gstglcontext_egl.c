@@ -37,6 +37,9 @@
 #if GST_GL_HAVE_WINDOW_WIN32
 #include "../win32/gstglwindow_win32.h"
 #endif
+#if GST_GL_HAVE_WINDOW_DISPMANX
+#include "../dispmanx/gstglwindow_dispmanx_egl.h"
+#endif
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
@@ -390,6 +393,12 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 #if GST_GL_HAVE_WINDOW_WIN32
     if (GST_GL_IS_WINDOW_WIN32 (context->window)) {
       gst_gl_window_win32_create_window ((GstGLWindowWin32 *) context->window);
+    }
+#endif
+#if GST_GL_HAVE_WINDOW_DISPMANX
+    if (GST_GL_IS_WINDOW_DISPMANX_EGL (context->window)) {
+      gst_gl_window_dispmanx_egl_create_window ((GstGLWindowDispmanxEGL *)
+          context->window);
     }
 #endif
   }
