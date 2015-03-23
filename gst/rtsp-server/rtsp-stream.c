@@ -2107,6 +2107,8 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
       gst_object_unref (pad);
 
       priv->udpqueue[i] = gst_element_factory_make ("queue", NULL);
+      g_object_set (priv->udpqueue[i], "max-size-buffers",
+          1, "max-size-bytes", 0, "max-size-time", G_GINT64_CONSTANT (0), NULL);
       gst_bin_add (bin, priv->udpqueue[i]);
       /* link tee to udpqueue */
       teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
@@ -2122,6 +2124,8 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
 
       /* make queue */
       priv->appqueue[i] = gst_element_factory_make ("queue", NULL);
+      g_object_set (priv->appqueue[i], "max-size-buffers",
+          1, "max-size-bytes", 0, "max-size-time", G_GINT64_CONSTANT (0), NULL);
       gst_bin_add (bin, priv->appqueue[i]);
       /* and link to tee */
       teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
