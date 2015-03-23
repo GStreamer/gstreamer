@@ -157,6 +157,7 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
     GstBuffer * buf1, GstBuffer * buf2)
 {
   int n_streams, family;
+  gint channels, rate;
   gboolean multistream;
   GstMapInfo map;
   guint8 *data;
@@ -167,6 +168,9 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
 
   gst_buffer_map (buf1, &map, GST_MAP_READ);
   data = map.data;
+
+  channels = data[9];
+  rate = GST_READ_UINT32_LE (data + 12);
 
   /* work out the number of streams */
   family = data[18];
@@ -183,12 +187,16 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
     }
   }
 
+  /* TODO: should probably also put the channel mapping into the caps too once
+   * we actually support multi channel, and pre-skip and other fields */
+
   gst_buffer_unmap (buf1, &map);
 
   /* mark and put on caps */
   multistream = n_streams > 1;
   *caps = gst_caps_new_simple ("audio/x-opus",
-      "multistream", G_TYPE_BOOLEAN, multistream, NULL);
+      "multistream", G_TYPE_BOOLEAN, multistream,
+      "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
   *caps = _gst_caps_set_buffer_array (*caps, "streamheader", buf1, buf2, NULL);
 
   *headers = g_slist_prepend (*headers, gst_buffer_ref (buf2));
