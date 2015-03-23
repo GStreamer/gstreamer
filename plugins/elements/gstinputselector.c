@@ -425,19 +425,6 @@ gst_selector_pad_iterate_linked_pads (GstPad * pad, GstObject * parent)
   return it;
 }
 
-/* must be called with the SELECTOR_LOCK, will block while the pad is blocked 
- * or return TRUE when flushing */
-static gboolean
-gst_input_selector_wait (GstInputSelector * self, GstSelectorPad * pad)
-{
-  while (!self->eos && self->blocked && !self->flushing && !pad->flushing) {
-    /* we can be unlocked here when we are shutting down (flushing) or when we
-     * get unblocked */
-    GST_INPUT_SELECTOR_WAIT (self);
-  }
-  return self->flushing;
-}
-
 static gboolean
 gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -664,8 +651,7 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
   /* Wait until
    *   a) this is the active pad
    *   b) the pad or the selector is flushing
-   *   c) the selector is not blocked
-   *   d) the buffer running time is before the current running time
+   *   c) the buffer running time is before the current running time
    *      (either active-seg or clock, depending on sync-mode)
    */
 
@@ -734,17 +720,12 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
     }
 
     if (selpad != active_selpad && !sel->eos && !sel->flushing
-        && !selpad->flushing && (sel->blocked
-            || cur_running_time == GST_CLOCK_TIME_NONE
+        && !selpad->flushing && (cur_running_time == GST_CLOCK_TIME_NONE
             || running_time >= cur_running_time)) {
-      if (!sel->blocked) {
-        GST_DEBUG_OBJECT (selpad,
-            "Waiting for active streams to advance. %" GST_TIME_FORMAT " >= %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
-            GST_TIME_ARGS (cur_running_time));
-      } else
-        GST_DEBUG_OBJECT (selpad, "Waiting for selector to unblock");
-
+      GST_DEBUG_OBJECT (selpad,
+          "Waiting for active streams to advance. %" GST_TIME_FORMAT " >= %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
+          GST_TIME_ARGS (cur_running_time));
       GST_INPUT_SELECTOR_WAIT (sel);
     } else {
       GST_INPUT_SELECTOR_UNLOCK (sel);
@@ -951,13 +932,13 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
 
   GST_INPUT_SELECTOR_LOCK (sel);
+
   if (sel->eos) {
     GST_INPUT_SELECTOR_UNLOCK (sel);
     goto eos;
   }
 
-  /* wait or check for flushing */
-  if (gst_input_selector_wait (sel, selpad)) {
+  if (sel->flushing) {
     GST_INPUT_SELECTOR_UNLOCK (sel);
     goto flushing;
   }
@@ -1287,7 +1268,6 @@ gst_input_selector_init (GstInputSelector * sel)
 
   g_mutex_init (&sel->lock);
   g_cond_init (&sel->cond);
-  sel->blocked = FALSE;
   sel->eos = FALSE;
 
   /* lets give a change for downstream to do something on
@@ -1684,7 +1664,6 @@ gst_input_selector_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_INPUT_SELECTOR_LOCK (self);
       self->eos = FALSE;
-      self->blocked = FALSE;
       self->flushing = FALSE;
       GST_INPUT_SELECTOR_UNLOCK (self);
       break;
@@ -1693,7 +1672,6 @@ gst_input_selector_change_state (GstElement * element,
        * tries to acquire the stream lock when going to ready. */
       GST_INPUT_SELECTOR_LOCK (self);
       self->eos = TRUE;
-      self->blocked = FALSE;
       self->flushing = TRUE;
       GST_INPUT_SELECTOR_BROADCAST (self);
       GST_INPUT_SELECTOR_UNLOCK (self);
