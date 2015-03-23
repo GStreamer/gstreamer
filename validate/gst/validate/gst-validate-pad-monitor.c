@@ -793,6 +793,8 @@ gst_validate_pad_monitor_check_caps_fields_proxied (GstValidatePadMonitor *
       g_free (caps_str);
     }
   }
+
+  gst_caps_unref (othercaps);
 }
 
 static void
