@@ -53,7 +53,6 @@
 
 G_BEGIN_DECLS
 
-/* #defines don't like whitespacey bits */
 #define GST_TYPE_BURN \
   (gst_burn_get_type())
 #define GST_BURN(obj) \
@@ -73,7 +72,6 @@ struct _GstBurn
   GstVideoFilter videofilter;
 
   /* < private > */
-
   gint adjustment;
   gboolean silent;
 };
