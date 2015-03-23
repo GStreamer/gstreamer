@@ -97,6 +97,9 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   GstCaps *src_caps;
   GstStructure *s;
   char *encoding_name;
+  gint channels, rate;
+  const char *sprop_stereo = NULL;
+  char *sprop_maxcapturerate = NULL;
 
   src_caps = gst_pad_get_allowed_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload));
   if (src_caps) {
@@ -110,10 +113,44 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
     encoding_name = g_strdup ("X-GST-OPUS-DRAFT-SPITTKA-00");
   }
 
+  s = gst_caps_get_structure (caps, 0);
+  if (gst_structure_get_int (s, "channels", &channels)) {
+    if (channels > 2) {
+      GST_ERROR_OBJECT (payload, "More than 2 channels are not supported yet");
+      return FALSE;
+    } else if (channels == 2) {
+      sprop_stereo = "1";
+    } else {
+      sprop_stereo = "0";
+    }
+  }
+
+  if (gst_structure_get_int (s, "rate", &rate)) {
+    sprop_maxcapturerate = g_strdup_printf ("%d", rate);
+  }
+
   gst_rtp_base_payload_set_options (payload, "audio", FALSE,
       encoding_name, 48000);
   g_free (encoding_name);
-  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
+
+  if (sprop_maxcapturerate && sprop_stereo) {
+    res =
+        gst_rtp_base_payload_set_outcaps (payload, "sprop-maxcapturerate",
+        G_TYPE_STRING, sprop_maxcapturerate, "sprop-stereo", G_TYPE_STRING,
+        sprop_stereo, NULL);
+  } else if (sprop_maxcapturerate) {
+    res =
+        gst_rtp_base_payload_set_outcaps (payload, "sprop-maxcapturerate",
+        G_TYPE_STRING, sprop_maxcapturerate, NULL);
+  } else if (sprop_stereo) {
+    res =
+        gst_rtp_base_payload_set_outcaps (payload, "sprop-stereo",
+        G_TYPE_STRING, sprop_stereo, NULL);
+  } else {
+    res = gst_rtp_base_payload_set_outcaps (payload, NULL);
+  }
+
+  g_free (sprop_maxcapturerate);
 
   return res;
 }

@@ -92,9 +92,38 @@ static gboolean
 gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
+  GstStructure *s;
   gboolean ret;
+  const gchar *sprop_stereo, *sprop_maxcapturerate;
 
   srccaps = gst_caps_new_empty_simple ("audio/x-opus");
+
+  s = gst_caps_get_structure (caps, 0);
+  if ((sprop_stereo = gst_structure_get_string (s, "sprop-stereo"))) {
+    if (strcmp (sprop_stereo, "0") == 0)
+      gst_caps_set_simple (srccaps, "channels", G_TYPE_INT, 1, NULL);
+    else if (strcmp (sprop_stereo, "1") == 0)
+      gst_caps_set_simple (srccaps, "channels", G_TYPE_INT, 2, NULL);
+    else
+      GST_WARNING_OBJECT (depayload, "Unknown sprop-stereo value '%s'",
+          sprop_stereo);
+  }
+
+  if ((sprop_maxcapturerate =
+          gst_structure_get_string (s, "sprop-maxcapturerate"))) {
+    gulong rate;
+    gchar *tailptr;
+
+    rate = strtoul (sprop_maxcapturerate, &tailptr, 10);
+    if (rate > INT_MAX || *tailptr != '\0') {
+      GST_WARNING_OBJECT (depayload,
+          "Failed to parse sprop-maxcapturerate value '%s'",
+          sprop_maxcapturerate);
+    } else {
+      gst_caps_set_simple (srccaps, "rate", G_TYPE_INT, rate, NULL);
+    }
+  }
+
   ret = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
 
   GST_DEBUG_OBJECT (depayload,
