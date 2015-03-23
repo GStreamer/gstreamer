@@ -266,13 +266,16 @@ set_xml_path (GstMediaDescriptorParser * parser, const gchar * path,
   gchar *content;
   GError *err = NULL;
   GstMediaDescriptorParserPrivate *priv = parser->priv;
+  gboolean result;
 
   if (!g_file_get_contents (path, &content, &xmlsize, &err))
     goto failed;
 
   priv->xmlpath = g_strdup (path);
 
-  return _set_content (parser, content, xmlsize, error);
+  result = _set_content (parser, content, xmlsize, error);
+  g_free (content);
+  return result;
 
 failed:
   g_propagate_error (error, err);
@@ -379,8 +382,7 @@ gst_media_descriptor_parser_new_from_xml (GstValidateRunner * runner,
 
   parser = g_object_new (GST_TYPE_MEDIA_DESCRIPTOR_PARSER, "validate-runner",
       runner, NULL);
-  if (_set_content (parser, g_strdup (xml), strlen (xml) * sizeof (gchar),
-          error) == FALSE) {
+  if (_set_content (parser, xml, strlen (xml) * sizeof (gchar), error) == FALSE) {
     g_object_unref (parser);
 
     return NULL;
