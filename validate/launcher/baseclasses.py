@@ -42,6 +42,8 @@ from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
 VALGRIND_TIMEOUT_FACTOR = 5
+# The error reported by valgrind when detecting errors
+VALGRIND_ERROR_CODE = 20
 
 
 class Test(Loggable):
@@ -289,6 +291,7 @@ class Test(Loggable):
             ('leak-resolution', 'high'),
             ('num-callers', '20'),
             ('log-file', vglogsfile),
+            ('error-exitcode', str(VALGRIND_ERROR_CODE)),
         ]
 
         supps = self.get_valgrind_suppressions()
@@ -475,6 +478,8 @@ class GstValidateTest(Test):
             self.set_result(Result.FAILED,
                             "Application segfaulted",
                             "segfault")
+        elif self.process.returncode == VALGRIND_ERROR_CODE:
+            self.set_result(Result.FAILED, "Valgrind reported errors")
         elif criticals or self.process.returncode != 0:
             if criticals is None:
                 criticals = "No criticals"
