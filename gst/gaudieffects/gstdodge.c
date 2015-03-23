@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) <2010-2012> Luis de Bethencourt <luis@debethencourt.com>
+ * Copyright (C) <2010-2015> Luis de Bethencourt <luis@debethencourt.com>
  *
  * Dodge - saturation video effect.
  * Based on Pete Warden's FreeFrame plugin with the same name.
@@ -213,7 +213,7 @@ gst_dodge_transform_frame (GstVideoFilter * vfilter,
 {
   GstDodge *filter = GST_DODGE (vfilter);
   guint32 *src, *dest;
-  gint video_size, width, height;
+  gint video_size;
 
   GstClockTime timestamp;
   gint64 stream_time;
@@ -221,9 +221,7 @@ gst_dodge_transform_frame (GstVideoFilter * vfilter,
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
-  width = GST_VIDEO_FRAME_WIDTH (in_frame);
-  height = GST_VIDEO_FRAME_HEIGHT (in_frame);
-
+  /* GstController: update the properties */
   timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
   stream_time =
       gst_segment_to_stream_time (&GST_BASE_TRANSFORM (filter)->segment,
@@ -235,7 +233,8 @@ gst_dodge_transform_frame (GstVideoFilter * vfilter,
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
-  video_size = width * height;
+  video_size = GST_VIDEO_FRAME_WIDTH (in_frame) *
+      GST_VIDEO_FRAME_HEIGHT (in_frame);
 
   transform (src, dest, video_size);
 

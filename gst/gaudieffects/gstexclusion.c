@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) <2010-2012> Luis de Bethencourt <luis@debethencourt.com>
+ * Copyright (C) <2010-2015> Luis de Bethencourt <luis@debethencourt.com>
  *
  * Exclusion - color exclusion video effect.
  * Based on Pete Warden's FreeFrame plugin with the same name.
@@ -229,16 +229,13 @@ gst_exclusion_transform_frame (GstVideoFilter * vfilter,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame)
 {
   GstExclusion *filter = GST_EXCLUSION (vfilter);
-  gint video_size, factor, width, height;
+  gint video_size, factor;
   guint32 *src, *dest;
   GstClockTime timestamp;
   gint64 stream_time;
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
-
-  width = GST_VIDEO_FRAME_WIDTH (in_frame);
-  height = GST_VIDEO_FRAME_HEIGHT (in_frame);
 
   /* GstController: update the properties */
   timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
@@ -256,7 +253,8 @@ gst_exclusion_transform_frame (GstVideoFilter * vfilter,
   factor = filter->factor;
   GST_OBJECT_UNLOCK (filter);
 
-  video_size = width * height;
+  video_size = GST_VIDEO_FRAME_WIDTH (in_frame) *
+      GST_VIDEO_FRAME_HEIGHT (in_frame);
   transform (src, dest, video_size, factor);
 
   return GST_FLOW_OK;

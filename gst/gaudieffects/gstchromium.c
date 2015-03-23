@@ -255,16 +255,13 @@ gst_chromium_transform_frame (GstVideoFilter * vfilter,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame)
 {
   GstChromium *filter = GST_CHROMIUM (vfilter);
-  gint video_size, edge_a, edge_b, width, height;
+  gint video_size, edge_a, edge_b;
   guint32 *src, *dest;
   GstClockTime timestamp;
   gint64 stream_time;
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
-
-  width = GST_VIDEO_FRAME_WIDTH (in_frame);
-  height = GST_VIDEO_FRAME_HEIGHT (in_frame);
 
   /* GstController: update the properties */
   timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
@@ -283,7 +280,8 @@ gst_chromium_transform_frame (GstVideoFilter * vfilter,
   edge_b = filter->edge_b;
   GST_OBJECT_UNLOCK (filter);
 
-  video_size = width * height;
+  video_size = GST_VIDEO_FRAME_WIDTH (in_frame) *
+      GST_VIDEO_FRAME_HEIGHT (in_frame);
   transform (src, dest, video_size, edge_a, edge_b);
 
   return GST_FLOW_OK;
