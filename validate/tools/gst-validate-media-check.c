@@ -132,6 +132,7 @@ main (int argc, gchar ** argv)
     gst_object_unref (reference);
   gst_object_unref (writer);
   gst_object_unref (runner);
+  gst_deinit ();
 
   return ret;
 }

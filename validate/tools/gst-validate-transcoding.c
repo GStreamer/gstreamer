@@ -957,6 +957,7 @@ exit:
 #ifdef G_OS_UNIX
   g_source_remove (signal_watch_id);
 #endif
+  gst_deinit ();
 
   g_print ("\n=======> Test %s (Return value: %i)\n\n",
       ret == 0 ? "PASSED" : "FAILED", ret);
