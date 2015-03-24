@@ -491,7 +491,7 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstVideoCodecFrame * in_frame,
   GstVideoInfo *dinfo;
   GstVideoFrame output_frame;
   GstFlowReturn ret;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
 
   state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (dec));
   info = &state->info;
