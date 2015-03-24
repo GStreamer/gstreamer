@@ -597,8 +597,10 @@ sanitize_argument (gchar * arg)
   if (!space_index)
     return g_strdup (arg);
 
-  if (!equal_index || equal_index > space_index)
+  if (!equal_index || equal_index > space_index) {
+    g_free (new_string);
     return g_strdup_printf ("\"%s\"", arg);
+  }
 
   for (arg = arg; *arg != '\0'; arg++) {
     *tmp_string = *arg;
