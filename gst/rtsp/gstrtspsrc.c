@@ -2716,9 +2716,8 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstObject * parent,
         seekable = seekable && src->seekable && src->segment.duration &&
             GST_CLOCK_TIME_IS_VALID (src->segment.duration);
 
-        /* FIXME ?? should we have 0 and segment.duration here; see demuxers */
-        gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
-            src->segment.start, src->segment.stop);
+        gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0,
+            src->segment.duration);
         res = TRUE;
       }
       break;
