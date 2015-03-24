@@ -13,6 +13,9 @@ install-data-hook:
 	mv `echo "gst-completion-helper-" | sed '$(transform)'`@GST_API_VERSION@$(EXEEXT) \
 	$(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
 	chmod 755 $(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
+
+uninstall-hook:
+	rm -f $(DESTDIR)$(BASH_HELPERS_DIR)/gst-completion-helper-@GST_API_VERSION@$(EXEEXT)
 endif
 
 helpers_PROGRAMS = gst-plugin-scanner
@@ -34,3 +37,7 @@ Android.mk: Makefile.am
 # clean out the old one to make sure everything is udpated correctly
 # remove again after release
 CLEANFILES = plugin-scanner
+
+if ENABLE_BASH_COMPLETION
+CLEANFILES += gst-completion-helper-@GST_API_VERSION@
+endif
