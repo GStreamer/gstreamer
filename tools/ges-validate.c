@@ -101,7 +101,7 @@ ges_validate_clean (GstPipeline * pipeline)
 
 void
 ges_validate_handle_request_state_change (GstMessage * message,
-    GMainLoop * mainloop)
+    GApplication * application)
 {
   GstState state;
 
@@ -110,8 +110,8 @@ ges_validate_handle_request_state_change (GstMessage * message,
   if (GST_IS_VALIDATE_SCENARIO (GST_MESSAGE_SRC (message))
       && state == GST_STATE_NULL) {
     gst_validate_printf (GST_MESSAGE_SRC (message),
-        "State change request NULL, " "quiting mainloop\n");
-    g_main_loop_quit (mainloop);
+        "State change request NULL, " "quiting application\n");
+    g_application_release (application);
   }
 }
 
@@ -180,7 +180,7 @@ ges_validate_clean (GstPipeline * pipeline)
 
 void
 ges_validate_handle_request_state_change (GstMessage * message,
-    GMainLoop * mainloop)
+    GApplication * application)
 {
   return;
 }

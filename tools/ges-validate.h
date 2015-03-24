@@ -21,6 +21,7 @@
 #define _GES_VALIDATE_
 
 #include <glib.h>
+#include <gio/gio.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
@@ -32,7 +33,7 @@ void ges_launch_validate_uri (const gchar *nid);
 gint
 ges_validate_clean (GstPipeline *pipeline);
 
-void ges_validate_handle_request_state_change (GstMessage *message, GMainLoop *mainloop);
+void ges_validate_handle_request_state_change (GstMessage *message, GApplication *application);
 gint ges_validate_print_action_types (const gchar **types, gint num_types);
 
 G_END_DECLS
