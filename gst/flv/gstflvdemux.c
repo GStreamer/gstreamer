@@ -704,29 +704,32 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       break;
     case 10:
     {
-      if (demux->audio_codec_data) {
-        GstMapInfo map;
-
-        gst_buffer_map (demux->audio_codec_data, &map, GST_MAP_READ);
-
-        /* use codec-data to extract and verify samplerate */
-        if (map.size >= 2) {
-          gint freq_index;
-
-          freq_index = GST_READ_UINT16_BE (map.data);
-          freq_index = (freq_index & 0x0780) >> 7;
-          adjusted_rate =
-              gst_codec_utils_aac_get_sample_rate_from_index (freq_index);
-
-          if (adjusted_rate && (rate != adjusted_rate)) {
-            GST_LOG_OBJECT (demux, "Ajusting AAC sample rate %d -> %d", rate,
-                adjusted_rate);
-          } else {
-            adjusted_rate = rate;
-          }
-        }
-        gst_buffer_unmap (demux->audio_codec_data, &map);
+      GstMapInfo map;
+      if (!demux->audio_codec_data) {
+        GST_DEBUG_OBJECT (demux, "don't have AAC codec data yet");
+        ret = TRUE;
+        goto done;
       }
+
+      gst_buffer_map (demux->audio_codec_data, &map, GST_MAP_READ);
+
+      /* use codec-data to extract and verify samplerate */
+      if (map.size >= 2) {
+        gint freq_index;
+
+        freq_index = GST_READ_UINT16_BE (map.data);
+        freq_index = (freq_index & 0x0780) >> 7;
+        adjusted_rate =
+            gst_codec_utils_aac_get_sample_rate_from_index (freq_index);
+
+        if (adjusted_rate && (rate != adjusted_rate)) {
+          GST_LOG_OBJECT (demux, "Ajusting AAC sample rate %d -> %d", rate,
+              adjusted_rate);
+        } else {
+          adjusted_rate = rate;
+        }
+      }
+      gst_buffer_unmap (demux->audio_codec_data, &map);
 
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE,
@@ -823,6 +826,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
 
   ret = gst_pad_set_caps (demux->audio_pad, caps);
 
+done:
   if (G_LIKELY (ret)) {
     /* Store the caps we got from tags */
     demux->audio_codec_tag = codec_tag;
@@ -830,24 +834,29 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     demux->channels = channels;
     demux->width = width;
 
-    codec_name = gst_pb_utils_get_codec_description (caps);
+    if (caps) {
+      codec_name = gst_pb_utils_get_codec_description (caps);
 
-    if (codec_name) {
-      if (demux->taglist == NULL)
-        demux->taglist = gst_tag_list_new_empty ();
-      gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-          GST_TAG_AUDIO_CODEC, codec_name, NULL);
-      g_free (codec_name);
+      if (codec_name) {
+        if (demux->taglist == NULL)
+          demux->taglist = gst_tag_list_new_empty ();
+        gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_AUDIO_CODEC, codec_name, NULL);
+        g_free (codec_name);
+      }
+
+      GST_DEBUG_OBJECT (demux->audio_pad, "successfully negotiated caps %"
+          GST_PTR_FORMAT, caps);
+    } else {
+      GST_DEBUG_OBJECT (demux->audio_pad, "delayed setting caps");
     }
-
-    GST_DEBUG_OBJECT (demux->audio_pad, "successfully negotiated caps %"
-        GST_PTR_FORMAT, caps);
   } else {
     GST_WARNING_OBJECT (demux->audio_pad, "failed negotiating caps %"
         GST_PTR_FORMAT, caps);
   }
 
-  gst_caps_unref (caps);
+  if (caps)
+    gst_caps_unref (caps);
 
 beach:
   return ret;
@@ -1068,6 +1077,8 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
           codec_tag != demux->audio_codec_tag || width != demux->width)) {
     GST_DEBUG_OBJECT (demux, "audio settings have changed, changing caps");
 
+    gst_buffer_replace (&demux->audio_codec_data, NULL);
+
     /* Negotiate caps */
     if (!gst_flv_demux_audio_negotiate (demux, codec_tag, rate, channels,
             width)) {
@@ -1107,6 +1118,12 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         goto beach;
       }
       case 1:
+        if (!demux->audio_codec_data) {
+          GST_ERROR_OBJECT (demux, "got AAC audio packet before codec data");
+          ret = GST_FLOW_OK;
+          gst_buffer_unref (outbuf);
+          goto beach;
+        }
         /* AAC raw packet */
         GST_LOG_OBJECT (demux, "got a raw AAC audio packet");
         break;
@@ -1239,6 +1256,11 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
       caps = gst_caps_new_empty_simple ("video/x-vp6-alpha");
       break;
     case 7:
+      if (!demux->video_codec_data) {
+        GST_DEBUG_OBJECT (demux, "don't have h264 codec data yet");
+        ret = TRUE;
+        goto done;
+      }
       caps =
           gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
           "avc", NULL);
@@ -1290,28 +1312,34 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
   gst_pad_push_event (demux->video_pad, event);
   ret = gst_pad_set_caps (demux->video_pad, caps);
 
+done:
   if (G_LIKELY (ret)) {
     /* Store the caps we have set */
     demux->video_codec_tag = codec_tag;
 
-    codec_name = gst_pb_utils_get_codec_description (caps);
+    if (caps) {
+      codec_name = gst_pb_utils_get_codec_description (caps);
 
-    if (codec_name) {
-      if (demux->taglist == NULL)
-        demux->taglist = gst_tag_list_new_empty ();
-      gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-          GST_TAG_VIDEO_CODEC, codec_name, NULL);
-      g_free (codec_name);
+      if (codec_name) {
+        if (demux->taglist == NULL)
+          demux->taglist = gst_tag_list_new_empty ();
+        gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_VIDEO_CODEC, codec_name, NULL);
+        g_free (codec_name);
+      }
+
+      GST_DEBUG_OBJECT (demux->video_pad, "successfully negotiated caps %"
+          GST_PTR_FORMAT, caps);
+    } else {
+      GST_DEBUG_OBJECT (demux->video_pad, "delayed setting caps");
     }
-
-    GST_DEBUG_OBJECT (demux->video_pad, "successfully negotiated caps %"
-        GST_PTR_FORMAT, caps);
   } else {
     GST_WARNING_OBJECT (demux->video_pad, "failed negotiating caps %"
         GST_PTR_FORMAT, caps);
   }
 
-  gst_caps_unref (caps);
+  if (caps)
+    gst_caps_unref (caps);
 
 beach:
   return ret;
@@ -1452,8 +1480,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* Check if caps have changed */
   if (G_UNLIKELY (codec_tag != demux->video_codec_tag || demux->got_par)) {
-
     GST_DEBUG_OBJECT (demux, "video settings have changed, changing caps");
+    gst_buffer_replace (&demux->video_codec_data, NULL);
 
     if (!gst_flv_demux_video_negotiate (demux, codec_tag)) {
       ret = GST_FLOW_ERROR;
@@ -1497,6 +1525,12 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
       }
       case 1:
         /* H.264 NALU packet */
+        if (!demux->video_codec_data) {
+          GST_ERROR_OBJECT (demux, "got H.264 video packet before codec data");
+          ret = GST_FLOW_OK;
+          gst_buffer_unref (outbuf);
+          goto beach;
+        }
         GST_LOG_OBJECT (demux, "got a H.264 NALU video packet");
         break;
       default:
@@ -2356,7 +2390,6 @@ gst_flv_demux_seek_to_prev_keyframe (GstFlvDemux * demux)
 
     gst_object_unref (index);
   }
-
 
 done:
   return ret;
