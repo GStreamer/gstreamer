@@ -1399,6 +1399,7 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     stream->active = FALSE;
 
     stream->need_newsegment = TRUE;
+    demux->reset_segment = TRUE;
     stream->needs_keyframe = FALSE;
     stream->discont = TRUE;
     stream->pts = GST_CLOCK_TIME_NONE;
@@ -1957,7 +1958,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
       demux->segment = base->segment;
     } else {
       /* Start from the first ts/pts */
-      GstClockTime base = demux->segment.base;
+      GstClockTime base = base = demux->segment.position - demux->segment.start;
       gst_segment_init (&demux->segment, GST_FORMAT_TIME);
       demux->segment.start = firstts;
       demux->segment.stop = GST_CLOCK_TIME_NONE;
