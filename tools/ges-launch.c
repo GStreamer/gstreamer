@@ -592,7 +592,6 @@ sanitize_argument (gchar * arg)
   char *equal_index = strstr (arg, "=");
   char *space_index = strstr (arg, " ");
   gchar *new_string = g_malloc (sizeof (gchar) * (strlen (arg) + 3));
-  gchar *tmp_string = new_string;
 
   if (!space_index)
     return g_strdup (arg);
@@ -603,16 +602,16 @@ sanitize_argument (gchar * arg)
   }
 
   for (arg = arg; *arg != '\0'; arg++) {
-    *tmp_string = *arg;
-    tmp_string += 1;
+    *new_string = *arg;
+    new_string += 1;
     if (*arg == '=') {
-      *tmp_string = '"';
-      tmp_string += 1;
+      *new_string = '"';
+      new_string += 1;
     }
   }
-  *tmp_string = '"';
-  tmp_string += 1;
-  *tmp_string = '\0';
+  *new_string = '"';
+  new_string += 1;
+  *new_string = '\0';
 
   return new_string;
 }
