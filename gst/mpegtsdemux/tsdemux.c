@@ -205,6 +205,7 @@ struct _TSDemuxStream
     "video/x-h264,stream-format=(string)byte-stream," \
       "alignment=(string)nal;" \
     "video/x-dirac;" \
+    "video/x-cavs;" \
     "video/x-wmv," \
       "wmvversion = (int) 3, " \
       "format = (string) WVC1" \
@@ -1348,6 +1349,13 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       name = g_strdup_printf ("subpicture_%04x", bstream->pid);
       caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
       sparse = TRUE;
+      break;
+    case 0x42:
+      /* hack for Chinese AVS video stream which use 0x42 as stream_id
+       * NOTE: this is unofficial and within the ISO reserved range. */
+      template = gst_static_pad_template_get (&video_template);
+      name = g_strdup_printf ("video_%04x", bstream->pid);
+      caps = gst_caps_new_empty_simple ("video/x-cavs");
       break;
     default:
       GST_WARNING ("Non-media stream (stream_type:0x%x). Not creating pad",
