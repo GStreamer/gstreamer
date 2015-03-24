@@ -927,16 +927,18 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   GST_LOG_OBJECT (demux, "parsing an audio tag");
 
-  if G_UNLIKELY (!demux->audio_pad && demux->no_more_pads) {
+  if G_UNLIKELY
+    (!demux->audio_pad && demux->no_more_pads) {
 #ifndef GST_DISABLE_DEBUG
-    if G_UNLIKELY (!demux->no_audio_warned) {
+    if G_UNLIKELY
+      (!demux->no_audio_warned) {
       GST_WARNING_OBJECT (demux,
           "Signaled no-more-pads already but had no audio pad -- ignoring");
       demux->no_audio_warned = TRUE;
-    }
+      }
 #endif
     return GST_FLOW_OK;
-  }
+    }
 
   g_return_val_if_fail (gst_buffer_get_size (buffer) == demux->tag_size,
       GST_FLOW_ERROR);
@@ -1332,16 +1334,18 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   GST_LOG_OBJECT (demux, "parsing a video tag");
 
-  if G_UNLIKELY (!demux->video_pad && demux->no_more_pads) {
+  if G_UNLIKELY
+    (!demux->video_pad && demux->no_more_pads) {
 #ifndef GST_DISABLE_DEBUG
-    if G_UNLIKELY (!demux->no_video_warned) {
+    if G_UNLIKELY
+      (!demux->no_video_warned) {
       GST_WARNING_OBJECT (demux,
           "Signaled no-more-pads already but had no video pad -- ignoring");
       demux->no_video_warned = TRUE;
-    }
+      }
 #endif
     return GST_FLOW_OK;
-  }
+    }
 
   if (gst_buffer_get_size (buffer) < 12) {
     GST_ERROR_OBJECT (demux, "Too small tag size");
