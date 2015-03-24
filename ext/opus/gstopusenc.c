@@ -1019,6 +1019,7 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
           ("constrained-vbr property is deprecated; use bitrate-type instead");
       g_value_set_boolean (value,
           enc->bitrate_type == BITRATE_TYPE_CONSTRAINED_VBR);
+      /* fall through */
     case PROP_BITRATE_TYPE:
       g_value_set_enum (value, enc->bitrate_type);
       break;
