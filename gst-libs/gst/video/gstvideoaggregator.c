@@ -1006,8 +1006,14 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
             gst_segment_to_running_time (&segment, GST_FORMAT_TIME, start_time);
 
         if (start_time >= output_end_time) {
-          GST_DEBUG_OBJECT (pad, "buffer duration is -1, start_time >= "
-              "output_end_time.  Keeping previous buffer");
+          if (pad->buffer) {
+            GST_DEBUG_OBJECT (pad, "buffer duration is -1, start_time >= "
+                "output_end_time. Keeping previous buffer");
+          } else {
+            GST_DEBUG_OBJECT (pad, "buffer duration is -1, start_time >= "
+                "output_end_time. No previous buffer, need more data");
+            need_more_data = TRUE;
+          }
           gst_buffer_unref (buf);
           continue;
         } else if (start_time < output_start_time) {
