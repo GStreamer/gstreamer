@@ -175,6 +175,8 @@ __ges_main ()
 
 	if [[ "$cur" == "-"* ]]; then
 		_ges_list_options
+	elif [[ "$cur" == "+"* ]]; then
+		_ges_list_commands
 	elif [[ "$cur" == "="* ]]
 	then
 		_mandatory__argument
