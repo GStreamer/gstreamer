@@ -136,7 +136,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
 
 /* Dithering definitions
  * See http://en.wikipedia.org/wiki/Dithering or
- * http://www.cadenzarecording.com/Dither.html for explainations.
+ * http://www.users.qwest.net/~volt42/cadenzarecording/DitherExplained.pdf for explainations.
  *
  * We already add the rounding offset to the dither noise here
  * to have only one overflow check instead of two. */
@@ -145,9 +145,14 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
   gint32 rand;                                                          \
   gint32 dither = (1<<(scale));
 
+/* Assuming dither == 2^n,
+ * returns one of 2^(n+1) possible random values:
+ * -dither <= retval < dither */
+#define RANDOM_INT_DITHER(dither)                                       \
+  (- dither + (gst_fast_random_int32 () & ((dither << 1) - 1)))
+
 #define ADD_DITHER_RPDF_I()                                             \
-        rand = gst_fast_random_int32_range (bias - dither,              \
-	    bias + dither);                                             \
+        rand = bias + RANDOM_INT_DITHER(dither);                        \
         if (rand > 0 && tmp > 0 && G_MAXINT32 - tmp <= rand)            \
                 tmp = G_MAXINT32;                                       \
         else if (rand < 0 && tmp < 0 && G_MININT32 - tmp >= rand)       \
@@ -163,14 +168,11 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
 
 #define INIT_DITHER_TPDF_I()                                            \
   gint32 rand;                                                          \
-  gint32 dither = (1<<(scale - 1));                                     \
-  bias = bias >> 1;
+  gint32 dither = (1<<(scale - 1));
 
 #define ADD_DITHER_TPDF_I()                                             \
-        rand = gst_fast_random_int32_range (bias - dither,              \
-                   bias + dither - 1)                                   \
-               + gst_fast_random_int32_range (bias - dither,            \
-                   bias + dither - 1);                                  \
+        rand = bias + RANDOM_INT_DITHER(dither)                         \
+                    + RANDOM_INT_DITHER(dither);                        \
         if (rand > 0 && tmp > 0 && G_MAXINT32 - tmp <= rand)            \
                 tmp = G_MAXINT32;                                       \
         else if (rand < 0 && tmp < 0 && G_MININT32 - tmp >= rand)       \
@@ -188,13 +190,11 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
 #define INIT_DITHER_TPDF_HF_I()                                         \
   gint32 rand;                                                          \
   gint32 dither = (1<<(scale-1));                                       \
-  gint32 *last_random = (gint32 *) ctx->last_random, tmp_rand;          \
-  bias = bias >> 1;
+  gint32 *last_random = (gint32 *) ctx->last_random, tmp_rand;
 
 #define ADD_DITHER_TPDF_HF_I()                                          \
-        tmp_rand = gst_fast_random_int32_range (bias - dither,          \
-                       bias + dither);                                  \
-        rand = tmp_rand - last_random[chan_pos];                        \
+        tmp_rand = RANDOM_INT_DITHER(dither);                           \
+        rand = bias + tmp_rand - last_random[chan_pos];                 \
         last_random[chan_pos] = tmp_rand;                               \
         if (rand > 0 && tmp > 0 && G_MAXINT32 - tmp <= rand)            \
                 tmp = G_MAXINT32;                                       \
