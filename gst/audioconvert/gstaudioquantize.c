@@ -306,20 +306,12 @@ static const gdouble ns_high_coeffs[] = {
         errors[chan_pos] = (*dst)/factor - orig;
 
 
-MAKE_QUANTIZE_FUNC_I (signed_none_none, NONE_FUNC, NONE_FUNC, ROUND);
-MAKE_QUANTIZE_FUNC_I (signed_rpdf_none, INIT_DITHER_RPDF_I, ADD_DITHER_RPDF_I,
+MAKE_QUANTIZE_FUNC_I (int_none_none, NONE_FUNC, NONE_FUNC, ROUND);
+MAKE_QUANTIZE_FUNC_I (int_rpdf_none, INIT_DITHER_RPDF_I, ADD_DITHER_RPDF_I,
     NONE_FUNC);
-MAKE_QUANTIZE_FUNC_I (signed_tpdf_none, INIT_DITHER_TPDF_I, ADD_DITHER_TPDF_I,
+MAKE_QUANTIZE_FUNC_I (int_tpdf_none, INIT_DITHER_TPDF_I, ADD_DITHER_TPDF_I,
     NONE_FUNC);
-MAKE_QUANTIZE_FUNC_I (signed_tpdf_hf_none, INIT_DITHER_TPDF_HF_I,
-    ADD_DITHER_TPDF_HF_I, NONE_FUNC);
-
-MAKE_QUANTIZE_FUNC_I (unsigned_none_none, NONE_FUNC, NONE_FUNC, ROUND);
-MAKE_QUANTIZE_FUNC_I (unsigned_rpdf_none, INIT_DITHER_RPDF_I, ADD_DITHER_RPDF_I,
-    NONE_FUNC);
-MAKE_QUANTIZE_FUNC_I (unsigned_tpdf_none, INIT_DITHER_TPDF_I, ADD_DITHER_TPDF_I,
-    NONE_FUNC);
-MAKE_QUANTIZE_FUNC_I (unsigned_tpdf_hf_none, INIT_DITHER_TPDF_HF_I,
+MAKE_QUANTIZE_FUNC_I (int_tpdf_hf_none, INIT_DITHER_TPDF_HF_I,
     ADD_DITHER_TPDF_HF_I, NONE_FUNC);
 
 MAKE_QUANTIZE_FUNC_F (float_none_error_feedback, NONE_FUNC,
@@ -363,14 +355,10 @@ MAKE_QUANTIZE_FUNC_F (float_tpdf_hf_high, INIT_DITHER_TPDF_HF_F, INIT_NS_HIGH,
     ADD_NS_HIGH, ADD_DITHER_TPDF_HF_F, UPDATE_ERROR_HIGH);
 
 static const AudioConvertQuantize quantize_funcs[] = {
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (signed_none_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (signed_rpdf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (signed_tpdf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (signed_tpdf_hf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (unsigned_none_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (unsigned_rpdf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (unsigned_tpdf_none),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (unsigned_tpdf_hf_none),
+  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_none_none),
+  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_rpdf_none),
+  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_tpdf_none),
+  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (int_tpdf_hf_none),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_error_feedback),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_simple),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_none_medium),
@@ -476,9 +464,8 @@ gst_audio_quantize_setup_quantize_func (AudioConvertCtx * ctx)
 
   if (ctx->ns == NOISE_SHAPING_NONE) {
     index += ctx->dither;
-    index += GST_AUDIO_FORMAT_INFO_IS_SIGNED (ctx->out.finfo) ? 0 : 4;
   } else {
-    index += 8 + (4 * ctx->dither);
+    index += 4 + (4 * ctx->dither);
     index += ctx->ns - 1;
   }
 
