@@ -58,7 +58,7 @@ gst_fd_mem_free (GstAllocator * allocator, GstMemory * gmem)
     close (mem->fd);
   g_mutex_clear (&mem->lock);
   g_slice_free (GstFdMemory, mem);
-  GST_DEBUG ("freed GstFdMemory pointer");
+  GST_DEBUG ("%p: freed", mem);
 #endif
 }
 
