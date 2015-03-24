@@ -61,6 +61,12 @@ struct _GstVideoAggregatorPad
   GstVideoInfo info;
 
   GstBuffer *buffer;
+  /* The caps on the pad may not match the buffer above because of two reasons:
+   * 1) When caps change, the info above will get updated, but the buffer might
+   *    not since it might be pending on the GstAggregatorPad
+   * 2) We might reject the new buffer in fill_queues() and reuse a previous
+   *    buffer which has older GstVideoInfo
+   * Hence, we need to maintain a GstVideoInfo for mapping buffers separately */
   GstVideoInfo buffer_vinfo;
 
   GstVideoFrame *aggregated_frame;
