@@ -595,9 +595,16 @@ gst_output_selector_query (GstPad * pad, GstObject * parent, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_DRAIN:
+      if (sel->latest_buffer) {
+        gst_buffer_unref (sel->latest_buffer);
+        sel->latest_buffer = NULL;
+      }
+      /* fall through */
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
   }
+
   return res;
 }
