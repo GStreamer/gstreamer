@@ -616,9 +616,13 @@ void
 gst_audio_aggregator_set_sink_caps (GstAudioAggregator * aagg,
     GstAudioAggregatorPad * pad, GstCaps * caps)
 {
+  gboolean valid;
+
   GST_OBJECT_LOCK (pad);
-  gst_audio_info_from_caps (&pad->info, caps);
+  valid = gst_audio_info_from_caps (&pad->info, caps);
   GST_OBJECT_UNLOCK (pad);
+
+  g_assert (valid);
 }
 
 
