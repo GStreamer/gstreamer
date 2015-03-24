@@ -337,7 +337,7 @@ gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     if (!has_videometa) {
       dec->downstream_pool = pool;
       pool = NULL;
-      down_config = gst_structure_copy (config);
+      down_config = config;
       config = NULL;
       min = 2;
       max = 0;
