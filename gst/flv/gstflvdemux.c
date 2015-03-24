@@ -663,7 +663,7 @@ static gboolean
 gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     guint32 rate, guint32 channels, guint32 width)
 {
-  GstCaps *caps = NULL;
+  GstCaps *caps = NULL, *old_caps;
   gchar *codec_name = NULL;
   gboolean ret = FALSE;
   guint adjusted_rate = rate;
@@ -814,17 +814,25 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
         demux->audio_codec_data, NULL);
   }
 
-  stream_id =
-      gst_pad_create_stream_id (demux->audio_pad, GST_ELEMENT_CAST (demux),
-      "audio");
+  old_caps = gst_pad_get_current_caps (demux->audio_pad);
+  if (!old_caps) {
+    stream_id =
+        gst_pad_create_stream_id (demux->audio_pad, GST_ELEMENT_CAST (demux),
+        "audio");
 
-  event = gst_event_new_stream_start (stream_id);
-  if (have_group_id (demux))
-    gst_event_set_group_id (event, demux->group_id);
-  gst_pad_push_event (demux->audio_pad, event);
-  g_free (stream_id);
+    event = gst_event_new_stream_start (stream_id);
+    if (have_group_id (demux))
+      gst_event_set_group_id (event, demux->group_id);
+    gst_pad_push_event (demux->audio_pad, event);
+    g_free (stream_id);
+  }
+  if (!old_caps || !gst_caps_is_equal (old_caps, caps))
+    ret = gst_pad_set_caps (demux->audio_pad, caps);
+  else
+    ret = TRUE;
 
-  ret = gst_pad_set_caps (demux->audio_pad, caps);
+  if (old_caps)
+    gst_caps_unref (old_caps);
 
 done:
   if (G_LIKELY (ret)) {
@@ -1234,7 +1242,7 @@ static gboolean
 gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
 {
   gboolean ret = FALSE;
-  GstCaps *caps = NULL;
+  GstCaps *caps = NULL, *old_caps;
   gchar *codec_name = NULL;
   GstEvent *event;
   gchar *stream_id;
@@ -1301,16 +1309,26 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
         demux->video_codec_data, NULL);
   }
 
-  stream_id =
-      gst_pad_create_stream_id (demux->video_pad, GST_ELEMENT_CAST (demux),
-      "video");
-  event = gst_event_new_stream_start (stream_id);
-  g_free (stream_id);
+  old_caps = gst_pad_get_current_caps (demux->video_pad);
+  if (!old_caps) {
+    stream_id =
+        gst_pad_create_stream_id (demux->video_pad, GST_ELEMENT_CAST (demux),
+        "video");
+    event = gst_event_new_stream_start (stream_id);
+    g_free (stream_id);
 
-  if (have_group_id (demux))
-    gst_event_set_group_id (event, demux->group_id);
-  gst_pad_push_event (demux->video_pad, event);
-  ret = gst_pad_set_caps (demux->video_pad, caps);
+    if (have_group_id (demux))
+      gst_event_set_group_id (event, demux->group_id);
+    gst_pad_push_event (demux->video_pad, event);
+  }
+
+  if (!old_caps || !gst_caps_is_equal (old_caps, caps))
+    ret = gst_pad_set_caps (demux->video_pad, caps);
+  else
+    ret = TRUE;
+
+  if (old_caps)
+    gst_caps_unref (old_caps);
 
 done:
   if (G_LIKELY (ret)) {
