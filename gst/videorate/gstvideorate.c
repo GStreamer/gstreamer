@@ -892,7 +892,7 @@ gst_video_rate_propose_allocation (GstBaseTransform * trans,
     n_allocation = gst_query_get_n_allocation_pools (query);
 
     while (i < n_allocation) {
-      GstBufferPool *pool;
+      GstBufferPool *pool = NULL;
       guint size, min, max;
 
       gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
@@ -907,6 +907,8 @@ gst_video_rate_propose_allocation (GstBaseTransform * trans,
       }
 
       gst_query_set_nth_allocation_pool (query, i, pool, size, min + 1, max);
+      if (pool)
+        gst_object_unref (pool);
       i++;
     }
 
