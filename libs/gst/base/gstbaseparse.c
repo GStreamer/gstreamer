@@ -1165,7 +1165,8 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
         gst_base_parse_finish_fragment (parse, TRUE);
 
       /* If we STILL have zero frames processed, fire an error */
-      if (parse->priv->framecount == 0 && !parse->priv->saw_gaps) {
+      if (parse->priv->framecount == 0 && !parse->priv->saw_gaps &&
+          !parse->priv->first_buffer) {
         GST_ELEMENT_ERROR (parse, STREAM, WRONG_TYPE,
             ("No valid frames found before end of stream"), (NULL));
       }

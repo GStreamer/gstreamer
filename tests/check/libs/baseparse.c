@@ -28,6 +28,7 @@
 
 static GstPad *mysrcpad, *mysinkpad;
 static GstElement *parsetest;
+static GstBus *bus;
 
 #define TEST_VIDEO_WIDTH 640
 #define TEST_VIDEO_HEIGHT 480
@@ -134,11 +135,17 @@ setup_parsertester (void)
   parsetest = g_object_new (GST_PARSER_TESTER_TYPE, NULL);
   mysrcpad = gst_check_setup_src_pad (parsetest, &srctemplate);
   mysinkpad = gst_check_setup_sink_pad (parsetest, &sinktemplate);
+  bus = gst_bus_new ();
+  gst_element_set_bus (parsetest, bus);
 }
 
 static void
 cleanup_parsertest (void)
 {
+  /* release the bus first to get rid of all refcounts */
+  gst_element_set_bus (parsetest, NULL);
+  gst_object_unref (bus);
+
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (parsetest);
@@ -181,6 +188,17 @@ send_startup_events (void)
       GST_TYPE_FRACTION, TEST_VIDEO_FPS_N, TEST_VIDEO_FPS_D, NULL);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
   gst_caps_unref (caps);
+}
+
+static void
+check_no_error_received (void)
+{
+  GstMessage *msg;
+
+  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_ERROR);
+  fail_unless (msg == NULL);
+  if (msg)
+    gst_message_unref (msg);
 }
 
 static void
@@ -238,6 +256,8 @@ run_parser_playback_test (GList * input, gint expected_output, gdouble rate)
   g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
   buffers = NULL;
 
+  check_no_error_received ();
+
   cleanup_parsertest ();
 }
 
@@ -287,6 +307,15 @@ GST_START_TEST (parser_reverse_playback_on_passthrough)
 
 GST_END_TEST;
 
+GST_START_TEST (parser_empty_stream)
+{
+  setup_parsertester ();
+
+  run_parser_playback_test (NULL, 0, 1.0);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_baseparse_suite (void)
@@ -296,6 +325,7 @@ gst_baseparse_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, parser_playback);
+  tcase_add_test (tc, parser_empty_stream);
   tcase_add_test (tc, parser_reverse_playback_on_passthrough);
 
   return s;
