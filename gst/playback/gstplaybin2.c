@@ -3148,6 +3148,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   playbin = group->playbin;
 
+  GST_PLAY_BIN_SHUTDOWN_LOCK (playbin, shutdown);
+
   caps = gst_pad_get_current_caps (pad);
   if (!caps)
     caps = gst_pad_query_caps (pad, NULL);
@@ -3189,8 +3191,10 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   }
   /* no combiner found for the media type, don't bother linking it to a
    * combiner. This will leave the pad unlinked and thus ignored. */
-  if (combine == NULL)
+  if (combine == NULL) {
+    GST_PLAY_BIN_SHUTDOWN_UNLOCK (playbin);
     goto unknown_type;
+  }
 
   GST_SOURCE_GROUP_LOCK (group);
   if (combine->combiner == NULL && playbin->have_selector) {
@@ -3235,6 +3239,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       gst_bin_add (GST_BIN_CAST (playbin), combine->combiner);
     }
   }
+
+  GST_PLAY_BIN_SHUTDOWN_UNLOCK (playbin);
 
   if (combine->srcpad == NULL) {
     if (combine->combiner) {
@@ -3385,6 +3391,12 @@ request_pad_failed:
       ("Failed to get request pad from combiner %p.", combine->combiner));
   GST_SOURCE_GROUP_UNLOCK (group);
   goto done;
+shutdown:
+  {
+    GST_DEBUG ("ignoring, we are shutting down. Pad will be left unlinked");
+    /* not going to done as we didn't request the caps */
+    return;
+  }
 }
 
 /* called when a pad is removed from the uridecodebin. We unlink the pad from
@@ -5596,7 +5608,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
         break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* we go async to PAUSED, so if that fails, we never make it to PAUSED
-       * an no state change PAUSED to READY passes here,
+       * and no state change PAUSED to READY passes here,
        * though it is a nice-to-have ... */
       if (!g_atomic_int_get (&playbin->shutdown)) {
         do_save = TRUE;
