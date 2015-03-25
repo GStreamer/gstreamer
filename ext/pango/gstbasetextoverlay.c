@@ -268,6 +268,9 @@ gst_base_text_overlay_adjust_values_with_fontdesc (GstBaseTextOverlay * overlay,
     PangoFontDescription * desc);
 static gboolean gst_base_text_overlay_can_handle_caps (GstCaps * incaps);
 
+static void
+gst_base_text_overlay_update_render_size (GstBaseTextOverlay * overlay);
+
 GType
 gst_base_text_overlay_get_type (void)
 {
@@ -632,6 +635,18 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   overlay->composition = NULL;
   overlay->upstream_composition = NULL;
 
+  overlay->width = 1;
+  overlay->height = 1;
+
+  overlay->window_width = 1;
+  overlay->window_height = 1;
+
+  overlay->stream_height = 1;
+  overlay->stream_width = 1;
+
+  overlay->image_width = 1;
+  overlay->image_height = 1;
+
   g_mutex_init (&overlay->lock);
   g_cond_init (&overlay->cond);
   gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
@@ -729,6 +744,7 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
     overlay_caps = gst_caps_ref (caps);
   } else {
     GstQuery *query;
+    guint alloc_index;
 
     /* First check if the allocation meta has compositon */
     query = gst_query_new_allocation (caps, FALSE);
@@ -744,7 +760,31 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
     }
 
     alloc_has_meta = gst_query_find_allocation_meta (query,
-        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
+        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, &alloc_index);
+
+    if (alloc_has_meta) {
+      guint width, height;
+      const GstStructure *params;
+
+      gst_query_parse_nth_allocation_meta (query, alloc_index, &params);
+      if (params) {
+        if (!gst_structure_get (params,
+                "width", G_TYPE_UINT, &width,
+                "height", G_TYPE_UINT, &height, NULL)) {
+          GST_ERROR ("%s: Could not read window dimensions",
+              gst_structure_get_name (params));
+        } else {
+          GST_DEBUG ("received window size: %dx%d", width, height);
+          if ((width != 0 && height != 0) &&
+              (overlay->window_width != width
+                  || overlay->window_height != height)) {
+            overlay->window_width = width;
+            overlay->window_height = height;
+            gst_base_text_overlay_update_render_size (overlay);
+          }
+        }
+      }
+    }
 
     gst_query_unref (query);
 
@@ -839,8 +879,19 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   overlay->info = info;
   overlay->format = GST_VIDEO_INFO_FORMAT (&info);
-  overlay->width = GST_VIDEO_INFO_WIDTH (&info);
-  overlay->height = GST_VIDEO_INFO_HEIGHT (&info);
+
+  overlay->stream_width = GST_VIDEO_INFO_WIDTH (&info);
+  overlay->stream_height = GST_VIDEO_INFO_HEIGHT (&info);
+
+  if (overlay->width == 1) {
+    overlay->width = overlay->stream_width;
+    overlay->height = overlay->stream_height;
+    GST_DEBUG ("getting rendering dimensions from stream %dx%d",
+        overlay->width, overlay->height);
+  }
+
+  if (overlay->window_height != 1)
+    gst_base_text_overlay_update_render_size (overlay);
 
   ret = gst_base_text_overlay_negotiate (overlay, caps);
 
@@ -1101,6 +1152,37 @@ gst_base_text_overlay_src_query (GstPad * pad, GstObject * parent,
   }
 
   return ret;
+}
+
+static void
+gst_base_text_overlay_update_render_size (GstBaseTextOverlay * overlay)
+{
+  gfloat video_aspect = (float) overlay->stream_width /
+      (float) overlay->stream_height;
+
+  gfloat window_aspect = (float) overlay->window_width /
+      (float) overlay->window_height;
+
+  guint text_buffer_width = 0;
+  guint text_buffer_height = 0;
+
+  if (video_aspect >= window_aspect) {
+    text_buffer_width = overlay->window_width;
+    text_buffer_height = window_aspect * overlay->window_height / video_aspect;
+  } else if (video_aspect < window_aspect) {
+    text_buffer_width = video_aspect * overlay->window_width / window_aspect;
+    text_buffer_height = overlay->window_height;
+  }
+
+  overlay->need_render = TRUE;
+
+  overlay->width = text_buffer_width;
+  overlay->height = text_buffer_height;
+  GST_DEBUG
+      ("updating render dimensions %dx%d from stream %dx%d and window %dx%d",
+      overlay->width, overlay->height,
+      overlay->stream_width, overlay->stream_height,
+      overlay->window_width, overlay->window_height);
 }
 
 static gboolean
@@ -1417,9 +1499,10 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
 
   gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
 
-  GST_DEBUG ("updating composition for '%s'", overlay->default_text);
+  GST_DEBUG ("updating composition for '%s' with window size %dx%d",
+      overlay->default_text, overlay->window_width, overlay->window_height);
 
-  if (overlay->text_image) {
+  if (overlay->text_image && overlay->image_width != 1) {
     gst_buffer_add_video_meta (overlay->text_image, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
         overlay->image_width, overlay->image_height);
@@ -1628,8 +1711,10 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
   gst_buffer_unmap (buffer, &map);
-  overlay->image_width = width;
-  overlay->image_height = height;
+  if (width != 0)
+    overlay->image_width = width;
+  if (height != 0)
+    overlay->image_height = height;
   overlay->baseline_y = ink_rect.y;
   g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 

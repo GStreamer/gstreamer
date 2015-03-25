@@ -170,6 +170,11 @@ struct _GstBaseTextOverlay {
     gint                     image_height;
     gint                     baseline_y;
 
+    gint                     stream_width;
+    gint                     stream_height;
+    gint                     window_width;
+    gint                     window_height;
+
     gboolean                 auto_adjust_size;
     gboolean                 need_render;
 
