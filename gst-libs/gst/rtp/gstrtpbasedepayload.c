@@ -563,24 +563,31 @@ static GstEvent *
 create_segment_event (GstRTPBaseDepayload * filter, GstClockTime position)
 {
   GstEvent *event;
-  GstClockTime stop;
+  GstClockTime stop, running_time;
   GstRTPBaseDepayloadPrivate *priv;
   GstSegment segment;
 
   priv = filter->priv;
 
   if (priv->npt_stop != -1)
-    stop = priv->npt_stop - priv->npt_start;
+    stop = position + priv->npt_stop - priv->npt_start;
   else
     stop = -1;
+
+  if (position == -1)
+    position = 0;
+
+  running_time = gst_segment_to_running_time (&filter->segment,
+      GST_FORMAT_TIME, position);
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
   segment.rate = priv->play_speed;
   segment.applied_rate = priv->play_scale;
-  segment.start = 0;
+  segment.start = position;
   segment.stop = stop;
   segment.time = priv->npt_start;
   segment.position = position;
+  segment.base = running_time;
 
   event = gst_event_new_segment (&segment);
 
@@ -649,8 +656,19 @@ gst_rtp_base_depayload_prepare_push (GstRTPBaseDepayload * filter,
   /* if this is the first buffer send a NEWSEGMENT */
   if (G_UNLIKELY (filter->need_newsegment)) {
     GstEvent *event;
+    GstClockTime pts;
 
-    event = create_segment_event (filter, 0);
+    if (is_list) {
+      GstBufferList **blist = obj;
+      GstBuffer *buf = gst_buffer_list_get (*blist, 0);
+      pts = GST_BUFFER_PTS (buf);
+    } else {
+      GstBuffer **buf = obj;
+      set_headers (buf, 0, &data);
+      pts = GST_BUFFER_PTS (*buf);
+    }
+
+    event = create_segment_event (filter, pts);
 
     gst_pad_push_event (filter->srcpad, event);
 

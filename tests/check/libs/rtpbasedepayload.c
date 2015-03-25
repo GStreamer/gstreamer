@@ -933,8 +933,8 @@ GST_START_TEST (rtp_base_depayload_npt_test)
 
   validate_event (6, "segment",
       "time", G_GUINT64_CONSTANT (1234),
-      "start", G_GUINT64_CONSTANT (0),
-      "stop", G_GUINT64_CONSTANT (4321 - 1234), NULL);
+      "start", GST_SECOND,
+      "stop", GST_SECOND + G_GUINT64_CONSTANT (4321 - 1234), NULL);
 
   destroy_depayloader (state);
 }
@@ -994,7 +994,7 @@ GST_START_TEST (rtp_base_depayload_play_scale_test)
 
   validate_event (6, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
+      "start", GST_SECOND,
       "stop", G_MAXUINT64, "rate", 1.0, "applied-rate", 2.0, NULL);
 
   destroy_depayloader (state);
@@ -1055,7 +1055,7 @@ GST_START_TEST (rtp_base_depayload_play_speed_test)
 
   validate_event (6, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", G_GUINT64_CONSTANT (0),
+      "start", GST_SECOND,
       "stop", G_MAXUINT64, "rate", 2.0, "applied-rate", 1.0, NULL);
 
   destroy_depayloader (state);
