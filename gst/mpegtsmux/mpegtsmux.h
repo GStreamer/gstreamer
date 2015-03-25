@@ -112,7 +112,6 @@ G_BEGIN_DECLS
 #define NORMAL_TS_PACKET_LENGTH 188
 #define M2TS_PACKET_LENGTH      192
 
-#define MAX_PROG_NUMBER	32
 #define DEFAULT_PROG_ID	0
 
 typedef struct MpegTsMux MpegTsMux;
@@ -132,7 +131,7 @@ struct MpegTsMux {
   GstCollectPads *collect;
 
   TsMux *tsmux;
-  TsMuxProgram *programs[MAX_PROG_NUMBER];
+  GHashTable *programs;
 
   /* properties */
   gboolean m2ts_mode;
@@ -205,9 +204,9 @@ struct MpegTsPadData {
   /* handler to free the private data */
   MpegTsPadDataFreePrepareDataFunction free_func;
 
-  /* program id == idx to which it is attached to (not program pid) */
+  /* program id to which it is attached to (not program pid) */
   gint prog_id;
-  /* program this stream belongs to == mux->programs[prog_id] */
+  /* program this stream belongs to */
   TsMuxProgram *prog;
 
   gchar *language;

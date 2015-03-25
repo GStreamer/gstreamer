@@ -390,7 +390,10 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
     mux->tsmux = NULL;
   }
 
-  memset (mux->programs, 0, sizeof (mux->programs));
+  if (mux->programs) {
+    g_hash_table_destroy (mux->programs);
+  }
+  mux->programs = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   if (mux->streamheader) {
     GstBuffer *buf;
@@ -444,6 +447,10 @@ mpegtsmux_dispose (GObject * object)
   if (mux->prog_map) {
     gst_structure_free (mux->prog_map);
     mux->prog_map = NULL;
+  }
+  if (mux->programs) {
+    g_hash_table_destroy (mux->programs);
+    mux->programs = NULL;
   }
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -750,10 +757,10 @@ mpegtsmux_create_streams (MpegTsMux * mux)
               ("Reading program map failed. Assuming default"), (NULL));
           idx = DEFAULT_PROG_ID;
         }
-        if (idx < 0 || idx >= MAX_PROG_NUMBER) {
-          GST_DEBUG_OBJECT (mux, "Program number %d associate with pad %s out "
-              "of range (max = %d); DEFAULT_PROGRAM = %d is used instead",
-              idx, name, MAX_PROG_NUMBER, DEFAULT_PROG_ID);
+        if (idx < 0) {
+          GST_DEBUG_OBJECT (mux, "Program number %d associate with pad %s less "
+              "than zero; DEFAULT_PROGRAM = %d is used instead",
+              idx, name, DEFAULT_PROG_ID);
           idx = DEFAULT_PROG_ID;
         }
         ts_data->prog_id = idx;
@@ -762,13 +769,15 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       }
     }
 
-    ts_data->prog = mux->programs[ts_data->prog_id];
+    ts_data->prog =
+        g_hash_table_lookup (mux->programs, GINT_TO_POINTER (ts_data->prog_id));
     if (ts_data->prog == NULL) {
       ts_data->prog = tsmux_program_new (mux->tsmux, ts_data->prog_id);
       if (ts_data->prog == NULL)
         goto no_program;
       tsmux_set_pmt_interval (ts_data->prog, mux->pmt_interval);
-      mux->programs[ts_data->prog_id] = ts_data->prog;
+      g_hash_table_insert (mux->programs,
+          GINT_TO_POINTER (ts_data->prog_id), ts_data->prog);
     }
 
     if (ts_data->stream == NULL) {
