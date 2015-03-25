@@ -2410,16 +2410,6 @@ out:
 }
 
 static gboolean
-gst_rtspsrc_do_seek (GstRTSPSrc * src, GstSegment * segment)
-{
-  src->state = GST_RTSP_STATE_SEEKING;
-  /* PLAY will add the range header now. */
-  src->need_range = TRUE;
-
-  return TRUE;
-}
-
-static gboolean
 gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 {
   gdouble rate;
@@ -2508,7 +2498,10 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   }
   src->skip = skip;
 
-  gst_rtspsrc_do_seek (src, &seeksegment);
+  src->state = GST_RTSP_STATE_SEEKING;
+
+  /* PLAY will add the range header now. */
+  src->need_range = TRUE;
 
   /* and continue playing */
   if (playing)
