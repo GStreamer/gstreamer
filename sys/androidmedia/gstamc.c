@@ -1778,6 +1778,8 @@ static const struct
   COLOR_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
   COLOR_TI_FormatYUV420PackedSemiPlanar, GST_VIDEO_FORMAT_NV12}, {
   COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced, GST_VIDEO_FORMAT_NV12}, {
+  COLOR_INTEL_FormatYUV420PackedSemiPlanar, GST_VIDEO_FORMAT_NV12}, {
+  COLOR_INTEL_FormatYUV420PackedSemiPlanar_Tiled, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYVU420SemiPlanar32m, GST_VIDEO_FORMAT_NV12}, {
@@ -1977,6 +1979,20 @@ gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
               1) / 2);
       break;
     }
+    case COLOR_INTEL_FormatYUV420PackedSemiPlanar:
+    case COLOR_INTEL_FormatYUV420PackedSemiPlanar_Tiled:
+      if (stride == 0) {
+        GST_ERROR ("Stride is 0");
+        return FALSE;
+      }
+      if (slice_height <= 0)
+        slice_height = height;
+
+      frame_size =
+          stride * (slice_height - crop_top / 2) +
+          (GST_ROUND_UP_2 (stride) * ((slice_height + 1) / 2));
+      break;
+
     case COLOR_TI_FormatYUV420PackedSemiPlanar:
     case COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced:{
       if (stride == 0 || slice_height == 0) {

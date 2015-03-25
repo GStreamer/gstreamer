@@ -94,6 +94,8 @@ enum
   COLOR_Format24BitABGR6666 = 43,
   COLOR_FormatAndroidOpaque = 0x7F000789,
   COLOR_TI_FormatYUV420PackedSemiPlanar = 0x7f000100,
+  COLOR_INTEL_FormatYUV420PackedSemiPlanar = 0x7fa00e00,
+  COLOR_INTEL_FormatYUV420PackedSemiPlanar_Tiled = 0x7fa00f00,
   COLOR_QCOM_FormatYUV420SemiPlanar = 0x7fa30c00,
   COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka = 0x7fa30c03,
   /* NV12 but with stride and plane heights aligned to 32 */
