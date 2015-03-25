@@ -465,6 +465,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoInfo info;
     GstVideoCodecState *output_state;
     GstBuffer *codec_data;
+    GstCaps *acquired_caps, *caps, *filter;
+    GstStructure *st;
 
     GST_DEBUG_OBJECT (self, "Sending header");
 
@@ -505,6 +507,34 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     if (!gst_v4l2_object_acquire_format (self->v4l2capture, &info))
       goto not_negotiated;
+
+    /* Create caps from the acquired format, remove the format field */
+    acquired_caps = gst_video_info_to_caps (&info);
+    st = gst_caps_get_structure (acquired_caps, 0);
+    gst_structure_remove_field (st, "format");
+
+    /* Probe currently available pixel formats */
+    filter = gst_v4l2_object_probe_caps (self->v4l2capture, acquired_caps);
+    gst_caps_unref (acquired_caps);
+    caps = gst_pad_peer_query_caps (decoder->srcpad, filter);
+    gst_caps_unref (filter);
+
+    GST_DEBUG_OBJECT (self, "Possible decoded caps: %" GST_PTR_FORMAT,
+        caps);
+    if (gst_caps_is_empty (caps)) {
+      gst_caps_unref (caps);
+      goto not_negotiated;
+    }
+
+    /* Fixate pixel format */
+    caps = gst_caps_fixate(caps);
+
+    GST_DEBUG_OBJECT (self, "Chosen decoded caps: %" GST_PTR_FORMAT, caps);
+
+    /* Try to set negotiated format, on success replace acquired format */
+    if (gst_v4l2_object_set_format (self->v4l2capture, caps))
+      gst_video_info_from_caps (&info, caps);
+    gst_caps_unref (caps);
 
     output_state = gst_video_decoder_set_output_state (decoder,
         info.finfo->format, info.width, info.height, self->input_state);
