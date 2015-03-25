@@ -190,11 +190,8 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GES-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libges_@GST_API_VERSION@include_HEADERS))
-gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libges_@GST_API_VERSION@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libges_@GST_API_VERSION@_la_SOURCES))
-gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libges_@GST_API_VERSION@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='ges/%',$(libges_@GST_API_VERSION@include_HEADERS))
-gir_cincludes+=$(patsubst %,--c-include='ges/%',$(nodist_libges_@GST_API_VERSION@include_HEADERS))
 
 GES-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libges-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
