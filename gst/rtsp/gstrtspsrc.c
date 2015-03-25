@@ -1661,10 +1661,9 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
     gst_sdp_message_free (src->sdp);
     src->sdp = NULL;
   }
-  if (src->start_segment) {
-    gst_event_unref (src->start_segment);
-    src->start_segment = NULL;
-  }
+
+  src->need_segment = FALSE;
+
   if (src->provided_clock) {
     gst_object_unref (src->provided_clock);
     src->provided_clock = NULL;
@@ -4541,7 +4540,6 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
   guint size;
   GstBuffer *buf;
   gboolean is_rtcp;
-  GstEvent *event;
 
   channel = message->type_data.data.channel;
 
@@ -4598,14 +4596,11 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     gchar *uri;
     GList *streams;
     guint group_id = gst_util_group_id_next ();
-    GstSegment segment;
 
     /* generate an SHA256 sum of the URI */
     cs = g_checksum_new (G_CHECKSUM_SHA256);
     uri = src->conninfo.location;
     g_checksum_update (cs, (const guchar *) uri, strlen (uri));
-
-    gst_segment_init (&segment, GST_FORMAT_TIME);
 
     for (streams = src->streams; streams; streams = g_list_next (streams)) {
       GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
@@ -4649,23 +4644,12 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
           }
         }
       }
-
-      /* Push a SEGMENT event if we don't have one pending, if we have one
-       * pending we will just send that one a few lines below to all pads
-       */
-      if (!src->start_segment)
-        gst_rtspsrc_stream_push_event (src, ostream,
-            gst_event_new_segment (&segment));
     }
     g_checksum_free (cs);
 
     gst_rtspsrc_activate_streams (src);
     src->need_activate = FALSE;
-  }
-
-  if ((event = src->start_segment) != NULL) {
-    src->start_segment = NULL;
-    gst_rtspsrc_push_event (src, event);
+    src->need_segment = TRUE;
   }
 
   if (src->base_time == -1) {
@@ -4690,6 +4674,15 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
           GST_TIME_FORMAT, GST_TIME_ARGS (now), GST_TIME_ARGS (base_time));
     }
     GST_OBJECT_UNLOCK (src);
+  }
+
+  /* If needed send a new segment, don't forget we are live and buffer are
+   * timestamped with running time */
+  if (src->need_segment) {
+    GstSegment segment;
+    src->need_segment = FALSE;
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    gst_rtspsrc_push_event (src, gst_event_new_segment (&segment));
   }
 
   if (stream->discont && !is_rtcp) {
@@ -7535,9 +7528,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
       gst_rtsp_message_take_header (&request, GST_RTSP_HDR_RANGE, hval);
 
       /* store the newsegment event so it can be sent from the streaming thread. */
-      if (src->start_segment)
-        gst_event_unref (src->start_segment);
-      src->start_segment = gst_event_new_segment (segment);
+      src->need_segment = TRUE;
     }
 
     if (segment->rate != 1.0) {

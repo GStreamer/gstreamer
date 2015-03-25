@@ -185,7 +185,7 @@ struct _GstRTSPSrc {
   gboolean         need_range;
   gboolean         skip;
   gint             free_channel;
-  GstEvent        *start_segment;
+  gboolean         need_segment;
   GstClockTime     base_time;
 
   /* UDP mode loop */
