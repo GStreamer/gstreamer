@@ -3247,8 +3247,10 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
 
   if (chain->endpad) {
     if (chain->endpad->exposed) {
-      gst_element_remove_pad (GST_ELEMENT_CAST (chain->dbin),
-          GST_PAD_CAST (chain->endpad));
+      GstPad *endpad = GST_PAD_CAST (chain->endpad);
+      gst_pad_push_event (endpad, gst_event_new_flush_start ());
+      gst_pad_push_event (endpad, gst_event_new_flush_stop (FALSE));
+      gst_element_remove_pad (GST_ELEMENT_CAST (chain->dbin), endpad);
     }
 
     decode_pad_set_target (chain->endpad, NULL);
