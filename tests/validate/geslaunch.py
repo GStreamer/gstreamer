@@ -130,9 +130,9 @@ class GESTest(GstValidateTest):
             # We always want paths separator to be cut with '/' for ges-launch
             path = path.replace("\\", "/")
             if not self.options.disable_recurse:
-                self.add_arguments("--sample-path-recurse", quote_uri(path))
+                self.add_arguments("--ges-sample-path-recurse", quote_uri(path))
             else:
-                self.add_arguments("--sample-path", quote_uri(path))
+                self.add_arguments("--ges-sample-paths", quote_uri(path))
 
     def build_arguments(self):
         GstValidateTest.build_arguments(self)

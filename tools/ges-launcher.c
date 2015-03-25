@@ -48,6 +48,7 @@ typedef struct
   gchar *videosink;
   gchar *audiosink;
   gboolean list_transitions;
+  gboolean inspect_action_type;
   gchar *sanitized_timeline;
 } ParsedOptions;
 
@@ -65,40 +66,16 @@ struct _GESLauncherPrivate
 G_DEFINE_TYPE (GESLauncher, ges_launcher, G_TYPE_APPLICATION);
 
 static const gchar *HELP_SUMMARY =
-    "ges-launch renders a timeline, which can be specified on the commandline,\n"
-    "or loaded from a xges file using the -l option.\n\n"
-    "A timeline is a list of files, patterns, and transitions to be rendered\n"
-    "one after the other. Files and Patterns provide video and audio as the\n"
-    "primary input, and transitions animate between the end of one file/pattern\n"
-    "and the beginning of a new one. Hence, transitions can only be listed\n"
-    "in between patterns or files.\n\n"
-    "A file is a triplet of filename, inpoint (in seconds) and\n"
-    "duration (in seconds). If the duration is 0, the full file length is used.\n\n"
-    "Patterns and transitions are triplets that begin with either \"+pattern\"\n"
-    "or \"+transition\", followed by a <type> and duration (in seconds, must be\n"
-    "greater than 0)\n\n"
-    "Durations in all cases can be fractions of a second.\n\n"
-    "========\nExamples\n========\n\n"
-    "Play video1.ogv from inpoint 5 with duration 10 in seconds:\n"
-    "$ ges-launch video1.ogv 5 10\n\n"
-    "Crossfade:\n"
-    "$ ges-launch video1.ogv 0 10 +transition crossfade 3.5 video2.ogv 0 10\n\n"
-    "Render xges to ogv:\n"
-    "$ ges-launch -l project.xges -o rendering.ogv\n\n"
-    "Render xges to an XML encoding-profile called mymkv:\n"
-    "$ ges-launch -l project.xges -o rendering.mkv -e mymkv\n\n"
-    "Render to mp4:\n"
-    "$ ges-launch -l project.xges -o out.mp4 \\\n"
-    "             -f \"video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3\"\n\n"
-    "Render xges to WebM with 1920x1080 resolution:\n"
-    "$ ges-launch -l project.xges -o out.webm \\\n"
-    "             -f \"video/webm:video/x-raw,width=1920,height=1080->video/x-vp8:audio/x-vorbis\"\n\n"
-    "A preset name can be used by adding +presetname:\n"
-    "$ ges-launch -l project.xges -o out.webm \\\n"
-    "             -f \"video/webm:video/x-vp8+presetname:x-vorbis\"\n\n"
-    "The presence property of the profile can be specified with |<presence>:\n"
-    "$ ges-launch -l project.xges -o out.ogv \\\n"
-    "             -f \"application/ogg:video/x-theora|<presence>:audio/x-vorbis\"";
+    "ges-launch-1.0 creates a multimedia timeline and plays it back,\n"
+    "  or renders it to the specified format.\n\n"
+    " It can load a timeline from an existing project, or create one\n"
+    " from the specified commands.\n\n"
+    " Updating an existing project can be done through --set-scenario\n"
+    " if ges-launch-1.0 has been compiled with gst-validate, see\n"
+    " ges-launch-1.0 --inspect-action-type for the available commands.\n\n"
+    " You can learn more about individual ges-launch-1.0 commands with\n"
+    " \"ges-launch-1.0 help command\".\n\n"
+    " By default, ges-launch-1.0 is in \"playback-mode\".";
 
 static gboolean
 _parse_track_type (const gchar * option_name, const gchar * value,
@@ -536,27 +513,120 @@ failure:
   }
 }
 
-static gboolean
-_add_media_path (const gchar * option_name, const gchar * value,
-    gpointer udata, GError ** error)
-{
-  g_return_val_if_fail (gst_uri_is_valid (value), FALSE);
-
-  if (g_strcmp0 (option_name, "--sample-path-recurse") == 0 ||
-      g_strcmp0 (option_name, "-R") == 0) {
-    ges_add_missing_uri_relocation_uri (value, TRUE);
-  } else {
-    GST_INFO ("Adding folder: %s", value);
-    ges_add_missing_uri_relocation_uri (value, FALSE);
-  }
-
-  return TRUE;
-}
-
 static void
 _print_transition_list (void)
 {
   print_enum (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
+}
+
+static GOptionGroup *
+ges_launcher_get_project_option_group (GESLauncher * self)
+{
+  GOptionGroup *group;
+  ParsedOptions *opts = &self->priv->parsed_options;
+
+  GOptionEntry options[] = {
+    {"load", 'l', 0, G_OPTION_ARG_STRING, &opts->load_path,
+          "Load project from file. The project can be saved "
+          "again with the --save option.",
+        "<path>"},
+    {"save", 's', 0, G_OPTION_ARG_STRING, &opts->save_path,
+          "Save project to file before rendering. "
+          "It can then be loaded with the --load option",
+        "<path>"},
+    {NULL}
+  };
+  group = g_option_group_new ("project", "Project Options",
+      "Show project-related options", NULL, NULL);
+
+  g_option_group_add_entries (group, options);
+
+  return group;
+}
+
+static GOptionGroup *
+ges_launcher_get_info_option_group (GESLauncher * self)
+{
+  GOptionGroup *group;
+  ParsedOptions *opts = &self->priv->parsed_options;
+
+  GOptionEntry options[] = {
+#ifdef HAVE_GST_VALIDATE
+    {"inspect-action-type", 0, 0, G_OPTION_ARG_NONE, &opts->inspect_action_type,
+          "Inspect the available action types that can be defined in a scenario "
+          "set with --set-scenario. "
+          "Will list all action-types if action-type is empty.",
+        "<[action-type]>"},
+#endif
+    {"list-transitions", 0, 0, G_OPTION_ARG_NONE, &opts->list_transitions,
+          "List all valid transition types and exit. "
+          "See ges-launch-1.0 help transition for more information.",
+        NULL},
+    {NULL}
+  };
+
+  group = g_option_group_new ("informative", "Informative Options",
+      "Show informative options", NULL, NULL);
+
+  g_option_group_add_entries (group, options);
+
+  return group;
+}
+
+static GOptionGroup *
+ges_launcher_get_rendering_option_group (GESLauncher * self)
+{
+  GOptionGroup *group;
+  ParsedOptions *opts = &self->priv->parsed_options;
+
+  GOptionEntry options[] = {
+    {"outputuri", 'o', 0, G_OPTION_ARG_STRING, &opts->outputuri,
+          "If set, ges-launch-1.0 will render the timeline instead of playing "
+          "it back. The default rendering format is ogv, containing theora and vorbis.",
+        "<URI>"},
+    {"format", 'f', 0, G_OPTION_ARG_STRING, &opts->format,
+          "Set an encoding profile on the command line. "
+          "See ges-launch-1.0 help profile for more information. "
+          "This will have no effect if no outputuri has been specified.",
+        "<profile>"},
+    {"encoding-profile", 'e', 0, G_OPTION_ARG_STRING, &opts->encoding_profile,
+          "Set an encoding profile from a preset file. "
+          "See ges-launch-1.0 help profile for more information. "
+          "This will have no effect if no outputuri has been specified.",
+        "<profile-name>"},
+    {NULL}
+  };
+
+  group = g_option_group_new ("rendering", "Rendering Options",
+      "Show rendering options", NULL, NULL);
+
+  g_option_group_add_entries (group, options);
+
+  return group;
+}
+
+static GOptionGroup *
+ges_launcher_get_playback_option_group (GESLauncher * self)
+{
+  GOptionGroup *group;
+  ParsedOptions *opts = &self->priv->parsed_options;
+
+  GOptionEntry options[] = {
+    {"videosink", 'v', 0, G_OPTION_ARG_STRING, &opts->videosink,
+        "Set the videosink used for playback.", "<videosink>"},
+    {"audiosink", 'a', 0, G_OPTION_ARG_STRING, &opts->audiosink,
+        "Set the audiosink used for playback.", "<audiosink>"},
+    {"mute", 'm', 0, G_OPTION_ARG_NONE, &opts->mute,
+        "Mute playback output. This has no effect when rendering.", NULL},
+    {NULL}
+  };
+
+  group = g_option_group_new ("playback", "Playback Options",
+      "Show playback options", NULL, NULL);
+
+  g_option_group_add_entries (group, options);
+
+  return group;
 }
 
 static gboolean
@@ -567,48 +637,24 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   GError *error = NULL;
   gchar **argv;
   gint argc;
-  gboolean inspect_action_type = FALSE;
   GOptionContext *ctx;
   ParsedOptions *opts = &self->priv->parsed_options;
   GOptionGroup *main_group;
   GOptionEntry options[] = {
-    {"outputuri", 'o', 0, G_OPTION_ARG_STRING, &opts->outputuri,
-        "URI to encode to", "<protocol>://<location>"},
-    {"format", 'f', 0, G_OPTION_ARG_STRING, &opts->format,
-          "Specify an encoding profile on the command line",
-        "<profile>"},
-    {"encoding-profile", 'e', 0, G_OPTION_ARG_STRING, &opts->encoding_profile,
-        "Use a specific encoding profile from XML", "<profile-name>"},
-    {"list-transitions", 0, 0, G_OPTION_ARG_NONE, &opts->list_transitions,
-        "List valid transition types and exit", NULL},
-    {"save", 's', 0, G_OPTION_ARG_STRING, &opts->save_path,
-        "Save project to file before rendering", "<path>"},
-    {"load", 'l', 0, G_OPTION_ARG_STRING, &opts->load_path,
-        "Load project from file before rendering", "<path>"},
-    {"track-types", 't', 0, G_OPTION_ARG_CALLBACK, &_parse_track_type,
-        "Defines the track types to be created", "<track-types>"},
-    {"mute", 'm', 0, G_OPTION_ARG_NONE, &opts->mute,
-        "Mute playback output by using fakesinks", ""},
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &opts->disable_mixing,
-        "Do not use mixing element in the tracks", ""},
-    {"videosink", 'v', 0, G_OPTION_ARG_STRING, &opts->videosink,
-        "The video sink used for playing back", "<videosink>"},
-    {"audiosink", 'a', 0, G_OPTION_ARG_STRING, &opts->audiosink,
-        "The audio sink used for playing back", "<audiosink>"},
-    {"sample-paths", 'p', 0, G_OPTION_ARG_CALLBACK, &_add_media_path,
-        "List of pathes to look assets in if they were moved", ""},
-    {"sample-path-recurse", 'R', 0, G_OPTION_ARG_CALLBACK,
-          &_add_media_path,
-        "Same as above, but recursing into the folder", ""},
+        "Do not use mixing elements to mix layers together.", NULL},
+    {"track-types", 't', 0, G_OPTION_ARG_CALLBACK, &_parse_track_type,
+          "Specify the track types to be created. "
+          "When loading a project, only relevant tracks will be added to the timeline.",
+        "<track-types>"},
 #ifdef HAVE_GST_VALIDATE
-    {"inspect-action-type", 0, 0, G_OPTION_ARG_NONE, &inspect_action_type,
-          "Inspect the avalaible action types with which to write scenarios"
-          " if no parameter passed, it will list all avalaible action types"
-          " otherwize will print the full description of the wanted types",
-        NULL},
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &opts->scenario,
-        "Specify a GstValidate scenario to run, 'none' means load gst-validate"
-          " but run no scenario on it", "<scenario_name>"},
+          "ges-launch-1.0 exposes gst-validate functionalities, such as scenarios."
+          " Scenarios describe actions to execute, such as seeks or setting of properties. "
+          "GES implements editing-specific actions such as adding or removing clips. "
+          "See gst-validate-1.0 --help for more info about validate and scenarios, "
+          "and --inspect-action-type.",
+        "<scenario_name>"},
 #endif
     {NULL}
   };
@@ -623,6 +669,13 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   g_option_context_set_main_group (ctx, main_group);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   g_option_context_add_group (ctx, ges_init_get_option_group ());
+  g_option_context_add_group (ctx,
+      ges_launcher_get_project_option_group (self));
+  g_option_context_add_group (ctx,
+      ges_launcher_get_rendering_option_group (self));
+  g_option_context_add_group (ctx,
+      ges_launcher_get_playback_option_group (self));
+  g_option_context_add_group (ctx, ges_launcher_get_info_option_group (self));
   g_option_context_set_ignore_unknown_options (ctx, TRUE);
 
   argv = *arguments;
@@ -635,7 +688,7 @@ _local_command_line (GApplication * application, gchar ** arguments[],
     *exit_status = 1;
   }
 
-  if (inspect_action_type) {
+  if (opts->inspect_action_type) {
     ges_validate_print_action_types ((const gchar **) argv + 1, argc - 1);
     return TRUE;
   }
