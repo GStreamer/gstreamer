@@ -108,10 +108,17 @@ pitivi_can_load_uri (GESFormatter * dummy_instance, const gchar * uri,
   gboolean ret = TRUE;
   xmlXPathObjectPtr xpathObj;
   xmlXPathContextPtr xpathCtx;
+  gchar *filename = g_filename_from_uri (uri, NULL, NULL);
+
+  if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
+    g_free (filename);
+    return FALSE;
+  }
+
+  g_free (filename);
 
   if (!(doc = xmlParseFile (uri))) {
-    GST_ERROR ("The xptv file for uri %s was badly formed or did not exist",
-        uri);
+    GST_ERROR ("The xptv file for uri %s was badly formed", uri);
     return FALSE;
   }
 
