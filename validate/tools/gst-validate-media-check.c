@@ -46,8 +46,8 @@ main (int argc, gchar ** argv)
   gchar *output_file = NULL;
   gchar *expected_file = NULL;
   gchar *output = NULL;
-  GstMediaDescriptorWriter *writer;
-  GstValidateRunner *runner;
+  GstMediaDescriptorWriter *writer = NULL;
+  GstValidateRunner *runner = NULL;
   GstMediaDescriptorParser *reference = NULL;
 
   GOptionEntry options[] = {
@@ -88,7 +88,8 @@ main (int argc, gchar ** argv)
     g_printerr ("%s\n", msg);
     g_free (msg);
     g_option_context_free (ctx);
-    return 1;
+    ret = 1;
+    goto out;
   }
   g_option_context_free (ctx);
 
@@ -97,7 +98,8 @@ main (int argc, gchar ** argv)
       gst_media_descriptor_writer_new_discover (runner, argv[1], full, &err);
   if (writer == NULL) {
     g_print ("Could not discover file: %s", argv[1]);
-    return 1;
+    ret = 1;
+    goto out;
   }
 
   if (output_file)
@@ -109,8 +111,8 @@ main (int argc, gchar ** argv)
     if (reference == NULL) {
       g_print ("Could not parse file: %s", expected_file);
       gst_object_unref (writer);
-
-      return 1;
+      ret = 1;
+      goto out;
     }
 
     gst_media_descriptors_compare (GST_MEDIA_DESCRIPTOR (reference),
@@ -128,10 +130,16 @@ main (int argc, gchar ** argv)
     g_free (output);
   }
 
+out:
+  g_free (output_file);
+  g_free (expected_file);
+
   if (reference)
     gst_object_unref (reference);
-  gst_object_unref (writer);
-  gst_object_unref (runner);
+  if (writer)
+    gst_object_unref (writer);
+  if (runner)
+    gst_object_unref (runner);
   gst_deinit ();
 
   return ret;
