@@ -3012,12 +3012,13 @@ gst_value_deserialize_string (GValue * dest, const gchar * s)
   if (G_UNLIKELY (strcmp (s, "NULL") == 0)) {
     g_value_set_string (dest, NULL);
     return TRUE;
-  } else if (G_LIKELY (*s != '"')) {
+  } else if (G_LIKELY (*s != '"' || s[strlen (s) - 1] != '"')) {
     if (!g_utf8_validate (s, -1, NULL))
       return FALSE;
     g_value_set_string (dest, s);
     return TRUE;
   } else {
+    /* strings delimited with double quotes should be unwrapped */
     gchar *str = gst_string_unwrap (s);
     if (G_UNLIKELY (!str))
       return FALSE;

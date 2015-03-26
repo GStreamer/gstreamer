@@ -542,20 +542,17 @@ GST_START_TEST (test_deserialize_string)
     "\"foo\\%\"", "foo%"}, {
     "\"0123456789_-+/:.\"", "0123456789_-+/:."}, {
     "\"Hello\\ World\"", "Hello World"}, {
+    "\"Hello\\ World", "\"Hello\\ World"}, {
+    "\"\\", "\"\\"}, {
+    "\"\\0", "\"\\0"}, {
     "", ""},                    /* empty strings */
     {
     "\"\"", ""},                /* quoted empty string -> empty string */
         /* Expected FAILURES: */
     {
-    "\"", NULL},                /* missing second quote */
-    {
-    "\"Hello\\ World", NULL},   /* missing second quote */
-    {
-    "\"\\", NULL},              /* quote at end, missing second quote */
-    {
-    "\"\\0", NULL},             /* missing second quote */
-    {
     "\"\\0\"", NULL},           /* unfinished escaped character */
+    {
+    "\"", NULL},                /* solitary quote */
     {
     "\" \"", NULL},             /* spaces must be escaped */
 #if 0
