@@ -53,7 +53,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
   guint32 val32;
   guint8 val8, flags;
 
-  g_return_val_if_fail (res != NULL, PES_PARSING_BAD);
+  g_assert (res != NULL);
 
   /* The smallest valid PES header is 6 bytes (prefix + stream_id + length) */
   if (G_UNLIKELY (length < 6))
