@@ -185,6 +185,8 @@ class Test(Loggable):
             self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
         elif self.process.returncode == 0:
             self.set_result(Result.PASSED)
+        elif self.process.returncode == VALGRIND_ERROR_CODE:
+            self.set_result(Result.FAILED, "Valgrind reported errors")
         else:
             self.set_result(Result.FAILED,
                             "Application returned %d" % (self.process.returncode))
