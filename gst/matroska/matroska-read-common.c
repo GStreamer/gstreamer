@@ -2210,71 +2210,67 @@ gst_matroska_read_common_apply_target_type_foreach (const GstTagList * list,
     return;
 
   for (i = 0; i < vallen; i++) {
-    GValue val = { 0 };
     const GValue *val_ref;
 
     val_ref = gst_tag_list_get_value_index (list, tag, i);
     if (val_ref == NULL)
       continue;
-    g_value_init (&val, G_VALUE_TYPE (val_ref));
-    g_value_copy (val_ref, &val);
 
     /* TODO: use the optional ctx->target_type somehow */
     if (strcmp (tag, GST_TAG_TITLE) == 0) {
       if (ctx->target_type_value >= 70 && !ctx->audio_only) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_SHOW_NAME, &val);
+            GST_TAG_SHOW_NAME, val_ref);
         continue;
       } else if (ctx->target_type_value >= 50) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_ALBUM, &val);
+            GST_TAG_ALBUM, val_ref);
         continue;
       }
     } else if (strcmp (tag, GST_TAG_TITLE_SORTNAME) == 0) {
       if (ctx->target_type_value >= 70 && !ctx->audio_only) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_SHOW_SORTNAME, &val);
+            GST_TAG_SHOW_SORTNAME, val_ref);
         continue;
       } else if (ctx->target_type_value >= 50) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_ALBUM_SORTNAME, &val);
+            GST_TAG_ALBUM_SORTNAME, val_ref);
         continue;
       }
     } else if (strcmp (tag, GST_TAG_ARTIST) == 0) {
       if (ctx->target_type_value >= 50) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_ALBUM_ARTIST, &val);
+            GST_TAG_ALBUM_ARTIST, val_ref);
         continue;
       }
     } else if (strcmp (tag, GST_TAG_ARTIST_SORTNAME) == 0) {
       if (ctx->target_type_value >= 50) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_ALBUM_ARTIST_SORTNAME, &val);
+            GST_TAG_ALBUM_ARTIST_SORTNAME, val_ref);
         continue;
       }
     } else if (strcmp (tag, GST_TAG_TRACK_COUNT) == 0) {
       if (ctx->target_type_value >= 60) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_ALBUM_VOLUME_COUNT, &val);
+            GST_TAG_ALBUM_VOLUME_COUNT, val_ref);
         continue;
       }
     } else if (strcmp (tag, GST_TAG_TRACK_NUMBER) == 0) {
       if (ctx->target_type_value >= 60 && !ctx->audio_only) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_SHOW_SEASON_NUMBER, &val);
+            GST_TAG_SHOW_SEASON_NUMBER, val_ref);
         continue;
       } else if (ctx->target_type_value >= 50 && !ctx->audio_only) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_SHOW_EPISODE_NUMBER, &val);
+            GST_TAG_SHOW_EPISODE_NUMBER, val_ref);
         continue;
       } else if (ctx->target_type_value >= 50) {
         gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
-            GST_TAG_ALBUM_VOLUME_NUMBER, &val);
+            GST_TAG_ALBUM_VOLUME_NUMBER, val_ref);
         continue;
       }
     }
-    gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND, tag, &val);
-    g_value_unset (&val);
+    gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND, tag, val_ref);
   }
 }
 
