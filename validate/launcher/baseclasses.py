@@ -309,6 +309,7 @@ class Test(Loggable):
         self.add_env_variable('G_SLICE', 'always-malloc')
 
         self.hard_timeout *= VALGRIND_TIMEOUT_FACTOR
+        self.timeout *= VALGRIND_TIMEOUT_FACTOR
 
     def test_start(self, queue):
         self.open_logfile()
