@@ -1827,12 +1827,16 @@ gst_wavparse_have_dts_caps (const GstCaps * caps, GstTypeFindProbability prob)
   s = gst_caps_get_structure (caps, 0);
   if (!gst_structure_has_name (s, "audio/x-dts"))
     return FALSE;
-  if (prob >= GST_TYPE_FIND_LIKELY)
+  /* typefind behavior for DTS:
+   *  MAXIMUM: multiple frame syncs detected, certainly DTS
+   *  LIKELY: single frame sync at offset 0.  Maybe DTS?
+   *  POSSIBLE: single frame sync, not at offset 0.  Highly unlikely
+   *    to be DTS.  */
+  if (prob > GST_TYPE_FIND_LIKELY)
     return TRUE;
-  /* DTS at non-0 offsets and without second sync may yield POSSIBLE .. */
   if (prob <= GST_TYPE_FIND_POSSIBLE)
     return FALSE;
-  /* .. in which case we want at least a valid-looking rate and channels */
+  /* for maybe, check for at least a valid-looking rate and channels */
   if (!gst_structure_has_field (s, "channels"))
     return FALSE;
   /* and for extra assurance we could also check the rate from the DTS frame
