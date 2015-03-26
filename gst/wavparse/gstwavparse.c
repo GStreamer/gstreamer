@@ -1830,7 +1830,7 @@ gst_wavparse_have_dts_caps (const GstCaps * caps, GstTypeFindProbability prob)
   if (prob >= GST_TYPE_FIND_LIKELY)
     return TRUE;
   /* DTS at non-0 offsets and without second sync may yield POSSIBLE .. */
-  if (prob < GST_TYPE_FIND_POSSIBLE)
+  if (prob <= GST_TYPE_FIND_POSSIBLE)
     return FALSE;
   /* .. in which case we want at least a valid-looking rate and channels */
   if (!gst_structure_has_field (s, "channels"))
