@@ -359,8 +359,15 @@ debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details)
       for (i = 0; i < gst_caps_get_size (caps); i++) {
         GstStructure *structure = gst_caps_get_structure (caps, i);
 
+        const GstCapsFeatures *features = gst_caps_get_features (caps, i);
+        gchar *features_name = gst_caps_features_to_string (features);
+
         g_string_append (str, gst_structure_get_name (structure));
-        g_string_append (str, "\\l");
+        g_string_append (str, "(");
+        g_string_append (str, features_name);
+        g_string_append (str, ")\\l");
+
+        g_free (features_name);
 
         gst_structure_foreach (structure, string_append_field, (gpointer) str);
       }
