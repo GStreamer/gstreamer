@@ -41,7 +41,7 @@ from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
 
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
-VALGRIND_TIMEOUT_FACTOR = 5
+VALGRIND_TIMEOUT_FACTOR = 20
 # The error reported by valgrind when detecting errors
 VALGRIND_ERROR_CODE = 20
 
