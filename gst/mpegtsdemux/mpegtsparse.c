@@ -234,8 +234,10 @@ mpegts_parse_reset (MpegTSBase * base)
 
   parse->current_pcr = GST_CLOCK_TIME_NONE;
   parse->previous_pcr = GST_CLOCK_TIME_NONE;
+  parse->base_pcr = GST_CLOCK_TIME_NONE;
   parse->bytes_since_pcr = 0;
   parse->pcr_pid = parse->user_pcr_pid;
+  parse->ts_offset = 0;
 }
 
 static void
@@ -359,6 +361,9 @@ push_event (MpegTSBase * base, GstEvent * event)
   }
   if (G_UNLIKELY (GST_EVENT_TYPE (event) == GST_EVENT_EOS))
     drain_pending_buffers (parse, TRUE);
+
+  if (G_UNLIKELY (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT))
+    parse->ts_offset = 0;
 
   for (tmp = parse->srcpads; tmp; tmp = tmp->next) {
     GstPad *pad = (GstPad *) tmp->data;
@@ -680,8 +685,12 @@ mpegts_parse_inspect_packet (MpegTSBase * base, MpegTSPacketizerPacket * packet)
     if (parse->pcr_pid == -1)
       parse->pcr_pid = packet->pid;
     /* Check the PCR-PID matches the program we want for multiple programs */
-    if (parse->pcr_pid == packet->pid)
+    if (parse->pcr_pid == packet->pid) {
       parse->current_pcr = PCRTIME_TO_GSTTIME (packet->pcr);
+      if (parse->base_pcr == GST_CLOCK_TIME_NONE) {
+        parse->base_pcr = parse->current_pcr;
+      }
+    }
   }
 }
 
@@ -807,8 +816,8 @@ drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all)
         "InputTS %" GST_TIME_FORMAT " out %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_PTS (buffer)), GST_TIME_ARGS (out_ts));
 
-    GST_BUFFER_PTS (buffer) = out_ts;
-    GST_BUFFER_DTS (buffer) = out_ts;
+    GST_BUFFER_PTS (buffer) = out_ts + parse->ts_offset;
+    GST_BUFFER_DTS (buffer) = out_ts + parse->ts_offset;
     if (ret == GST_FLOW_OK)
       ret = gst_pad_push (parse->srcpad, buffer);
     else
@@ -914,6 +923,10 @@ mpegts_parse_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program)
     tspad->program = NULL;
     parseprogram->tspad = NULL;
   }
+
+  parse->pcr_pid = -1;
+  parse->ts_offset += parse->current_pcr - parse->base_pcr;
+  parse->base_pcr = GST_CLOCK_TIME_NONE;
 }
 
 static gboolean

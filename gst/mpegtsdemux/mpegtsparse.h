@@ -52,6 +52,8 @@ struct _MpegTSParse2 {
   guint group_id;
 
   GstClockTime smoothing_latency;
+  GstClockTime base_pcr;
+  GstClockTime ts_offset;
   GstClockTime current_pcr;
   gint user_pcr_pid;
   gint pcr_pid;
