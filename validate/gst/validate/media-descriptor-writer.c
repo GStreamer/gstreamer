@@ -226,7 +226,7 @@ gst_media_descriptor_writer_add_stream (GstMediaDescriptorWriter * writer,
   }
 
   caps = gst_discoverer_stream_info_get_caps (info);
-  snode->caps = caps;
+  snode->caps = caps;           /* Pass ownership */
   capsstr = gst_caps_to_string (caps);
   if (GST_IS_DISCOVERER_AUDIO_INFO (info)) {
     stype = "audio";
@@ -262,7 +262,6 @@ gst_media_descriptor_writer_add_stream (GstMediaDescriptorWriter * writer,
     writer->priv->raw_caps = gst_caps_merge (writer->priv->raw_caps,
         gst_caps_copy (caps));
   }
-  gst_caps_unref (caps);
   g_free (capsstr);
 
   return ret;
@@ -506,10 +505,10 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
     const gchar * uri, gboolean full, GError ** err)
 {
   GList *tmp, *streams = NULL;
-  GstDiscovererInfo *info;
+  GstDiscovererInfo *info = NULL;
   GstDiscoverer *discoverer;
-  GstDiscovererStreamInfo *streaminfo;
-  GstMediaDescriptorWriter *writer;
+  GstDiscovererStreamInfo *streaminfo = NULL;
+  GstMediaDescriptorWriter *writer = NULL;
 
   discoverer = gst_discoverer_new (GST_SECOND * 60, err);
 
@@ -526,7 +525,7 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
     GST_ERROR ("Could not discover URI: %s (error: %s(", uri,
         err && *err ? (*err)->message : "Unkown");
 
-    return NULL;
+    goto out;
   }
 
   writer =
@@ -563,6 +562,12 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   if (full == TRUE)
     _run_frame_analisis (writer, runner, uri);
 
+out:
+  if (info)
+    gst_discoverer_info_unref (info);
+  if (streaminfo)
+    gst_discoverer_stream_info_unref (streaminfo);
+  g_object_unref (discoverer);
   return writer;
 }
 
