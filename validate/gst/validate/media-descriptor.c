@@ -384,6 +384,7 @@ done:
   if (compare_func == NULL)
     *bufs = g_list_reverse (*bufs);
 
+  gst_caps_unref (pad_caps);
   return ret;
 }
 
