@@ -459,9 +459,10 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
      * Basesrc will do an allocation query that
      * should indirectly reclaim buffers, after that we can
      * set the format and then configure our pool */
-    if (gst_v4l2_object_try_format (obj, caps))
+    if (gst_v4l2_object_try_format (obj, caps)) {
+      v4l2src->renegotiation_adjust = v4l2src->offset + 1;
       v4l2src->pending_set_fmt = TRUE;
-    else
+    } else
       return FALSE;
   } else {
     /* make sure we stop capturing and dealloc buffers */
@@ -588,6 +589,7 @@ gst_v4l2src_start (GstBaseSrc * src)
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
 
   v4l2src->offset = 0;
+  v4l2src->renegotiation_adjust = 0;
 
   /* activate settings for first frame */
   v4l2src->ctrl_time = 0;
@@ -813,6 +815,10 @@ retry:
     GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
     GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
   } else {
+    /* adjust raw v4l2 device sequence, will restart at null in case of renegotiation
+     * (streamoff/streamon) */
+    GST_BUFFER_OFFSET (*buf) += v4l2src->renegotiation_adjust;
+    GST_BUFFER_OFFSET_END (*buf) += v4l2src->renegotiation_adjust;
     /* check for frame loss with given (from v4l2 device) buffer offset */
     if ((v4l2src->offset != 0) && (GST_BUFFER_OFFSET (*buf) != (v4l2src->offset + 1))) {
       guint64 lost_frame_count = GST_BUFFER_OFFSET (*buf) - v4l2src->offset - 1;

@@ -59,6 +59,9 @@ struct _GstV4l2Src
 
   guint64 offset;
 
+  /* offset adjust after renegotiation */
+  guint64 renegotiation_adjust;
+
   GstClockTime ctrl_time;
 
   gboolean pending_set_fmt;
