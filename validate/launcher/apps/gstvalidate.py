@@ -417,7 +417,7 @@ class GstValidateLaunchTest(GstValidateTest):
         return self.get_current_position()
 
 
-class GstValidateMediaCheckTest(Test):
+class GstValidateMediaCheckTest(GstValidateTest):
 
     def __init__(self, classname, options, reporter, media_descriptor,
                  uri, minfo_path, timeout=DEFAULT_TIMEOUT):
