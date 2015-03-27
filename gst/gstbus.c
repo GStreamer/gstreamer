@@ -448,6 +448,8 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
   GstMessage *message;
   GList *message_list = NULL;
 
+  g_return_if_fail (GST_IS_BUS (bus));
+
   GST_OBJECT_LOCK (bus);
 
   if (flushing) {
@@ -1121,6 +1123,8 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTime timeout)
   GstBusPollData *poll_data;
   GstMessage *ret;
   gulong id;
+
+  g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
   poll_data = g_slice_new (GstBusPollData);
   poll_data->source_running = TRUE;
