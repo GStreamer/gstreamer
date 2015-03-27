@@ -2805,7 +2805,7 @@ pad_event_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
   g_assert (dbin);
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      GST_DEBUG_OBJECT (dbin, "Received EOS on a non final pad, this stream "
+      GST_DEBUG_OBJECT (pad, "Received EOS on a non final pad, this stream "
           "ended too early");
       chain->deadend = TRUE;
       chain->drained = TRUE;
