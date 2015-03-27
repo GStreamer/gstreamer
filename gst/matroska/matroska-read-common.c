@@ -2388,16 +2388,13 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
         GstMatroskaTrackContext *stream = g_ptr_array_index (common->src, j);
 
         if (stream->uid == tgt) {
-          if (stream->pending_tags == NULL)
-            stream->pending_tags = gst_tag_list_new_empty ();
-
-          gst_tag_list_insert (stream->pending_tags, taglist,
-              GST_TAG_MERGE_REPLACE);
+          gst_tag_list_insert (stream->tags, taglist, GST_TAG_MERGE_REPLACE);
+          stream->tags_changed = TRUE;
           found = TRUE;
         }
       }
       if (!found) {
-        GST_WARNING_OBJECT (common->sinkpad,
+        GST_FIXME_OBJECT (common->sinkpad,
             "Found track-specific tag(s), but track %" G_GUINT64_FORMAT
             " is not known (yet?)", tgt);
       }

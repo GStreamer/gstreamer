@@ -331,8 +331,8 @@ gst_matroska_track_free (GstMatroskaTrackContext * track)
     g_array_free (track->encodings, TRUE);
   }
 
-  if (track->pending_tags)
-    gst_tag_list_unref (track->pending_tags);
+  if (track->tags)
+    gst_tag_list_unref (track->tags);
 
   if (track->index_table)
     g_array_free (track->index_table, TRUE);

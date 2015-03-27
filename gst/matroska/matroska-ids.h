@@ -540,8 +540,10 @@ struct _GstMatroskaTrackContext {
                                       GstMatroskaTrackContext *context,
 				      GstBuffer **buffer);
 
-  /* Tags to send after newsegment event */
-  GstTagList   *pending_tags;
+  /* List of tags for this stream */
+  GstTagList   *tags;
+  /* Tags changed and should be pushed again */
+  gboolean      tags_changed;
 
   /* A GArray of GstMatroskaTrackEncoding structures which contain the
    * encoding (compression/encryption) settings for this track, if any */

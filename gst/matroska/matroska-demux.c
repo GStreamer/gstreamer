@@ -401,7 +401,6 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   GstFlowReturn ret;
   guint32 id, riff_fourcc = 0;
   guint16 riff_audio_fmt = 0;
-  GstTagList *list = NULL;
   GstEvent *stream_start;
   gchar *codec = NULL;
   gchar *stream_id;
@@ -434,6 +433,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   context->alignment = 1;
   context->dts_only = FALSE;
   context->intra_only = FALSE;
+  context->tags = gst_tag_list_new_empty ();
   demux->common.num_streams++;
   g_assert (demux->common.src->len == demux->common.num_streams);
 
@@ -1094,7 +1094,9 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
           context->codec_priv_size, &codec, &riff_fourcc);
 
       if (codec) {
-        list = gst_tag_list_new (GST_TAG_VIDEO_CODEC, codec, NULL);
+        gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_VIDEO_CODEC, codec, NULL);
+        context->tags_changed = TRUE;
         g_free (codec);
       }
       break;
@@ -1111,7 +1113,9 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
           &codec, &riff_audio_fmt);
 
       if (codec) {
-        list = gst_tag_list_new (GST_TAG_AUDIO_CODEC, codec, NULL);
+        gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_AUDIO_CODEC, codec, NULL);
+        context->tags_changed = TRUE;
         g_free (codec);
       }
       break;
@@ -1147,13 +1151,11 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   if (context->language) {
     const gchar *lang;
 
-    if (!list)
-      list = gst_tag_list_new_empty ();
-
     /* Matroska contains ISO 639-2B codes, we want ISO 639-1 */
     lang = gst_tag_get_language_code (context->language);
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_LANGUAGE_CODE, (lang) ? lang : context->language, NULL);
+    context->tags_changed = TRUE;
   }
 
   if (caps == NULL) {
@@ -1202,8 +1204,6 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 
   GST_INFO_OBJECT (demux, "Adding pad '%s' with caps %" GST_PTR_FORMAT,
       padname, caps);
-
-  context->pending_tags = list;
 
   gst_pad_set_element_private (context->pad, context);
 
@@ -1451,13 +1451,13 @@ gst_matroska_demux_send_tags (GstMatroskaDemux * demux)
 
     stream = g_ptr_array_index (demux->common.src, i);
 
-    if (G_UNLIKELY (stream->pending_tags != NULL)) {
-      GST_DEBUG_OBJECT (demux, "Sending pending_tags %p for pad %s:%s : %"
-          GST_PTR_FORMAT, stream->pending_tags,
-          GST_DEBUG_PAD_NAME (stream->pad), stream->pending_tags);
+    if (G_UNLIKELY (stream->tags_changed)) {
+      GST_DEBUG_OBJECT (demux, "Sending tags %p for pad %s:%s : %"
+          GST_PTR_FORMAT, stream->tags,
+          GST_DEBUG_PAD_NAME (stream->pad), stream->tags);
       gst_pad_push_event (stream->pad,
-          gst_event_new_tag (stream->pending_tags));
-      stream->pending_tags = NULL;
+          gst_event_new_tag (gst_tag_list_copy (stream->tags)));
+      stream->tags_changed = FALSE;
     }
   }
 }
