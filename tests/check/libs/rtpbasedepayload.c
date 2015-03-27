@@ -253,6 +253,11 @@ validate_event (guint index, const gchar * name, const gchar * field, ...)
       const GstSegment *segment;
       gst_event_parse_segment (event, &segment);
       fail_unless_equals_uint64 (segment->rate, expected);
+    } else if (!g_strcmp0 (field, "base")) {
+      GstClockTime expected = va_arg (var_args, GstClockTime);
+      const GstSegment *segment;
+      gst_event_parse_segment (event, &segment);
+      fail_unless_equals_uint64 (segment->base, expected);
     } else if (!g_strcmp0 (field, "media-type")) {
       const gchar *expected = va_arg (var_args, const gchar *);
       GstCaps *caps;
@@ -292,6 +297,15 @@ validate_event (guint index, const gchar * name, const gchar * field, ...)
       fail_unless (gst_structure_get_double (gst_caps_get_structure (caps, 0),
               "play-scale", &scale));
       fail_unless (scale == expected);
+    } else if (!g_strcmp0 (field, "clock-base")) {
+      guint expected = va_arg (var_args, guint);
+      GstCaps *caps;
+      guint clock_base;
+      gst_event_parse_caps (event, &caps);
+      fail_unless (gst_structure_get_uint (gst_caps_get_structure (caps, 0),
+              "clock-base", &clock_base));
+      fail_unless (clock_base == expected);
+
     } else {
       fail ("test cannot validate unknown event field '%s'", field);
     }
@@ -933,8 +947,8 @@ GST_START_TEST (rtp_base_depayload_npt_test)
 
   validate_event (6, "segment",
       "time", G_GUINT64_CONSTANT (1234),
-      "start", GST_SECOND,
-      "stop", GST_SECOND + G_GUINT64_CONSTANT (4321 - 1234), NULL);
+      "start", G_GUINT64_CONSTANT (0),
+      "stop", G_GUINT64_CONSTANT (4321 - 1234), NULL);
 
   destroy_depayloader (state);
 }
@@ -994,7 +1008,7 @@ GST_START_TEST (rtp_base_depayload_play_scale_test)
 
   validate_event (6, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", GST_SECOND,
+      "start", G_GUINT64_CONSTANT (0),
       "stop", G_MAXUINT64, "rate", 1.0, "applied-rate", 2.0, NULL);
 
   destroy_depayloader (state);
@@ -1055,8 +1069,74 @@ GST_START_TEST (rtp_base_depayload_play_speed_test)
 
   validate_event (6, "segment",
       "time", G_GUINT64_CONSTANT (0),
-      "start", GST_SECOND,
+      "start", G_GUINT64_CONSTANT (0),
       "stop", G_MAXUINT64, "rate", 2.0, "applied-rate", 1.0, NULL);
+
+  destroy_depayloader (state);
+}
+
+GST_END_TEST
+/* when a depayloader receives new caps events with npt-start, npt-stop and
+ * clock-base it should save these timestamps as they should affect the next
+ * segment event being pushed by the depayloader. the produce segment should
+ * make the positon of the stream reflect the postion form clock-base instead
+ * of reflecting the running time (for RTSP).
+ */
+GST_START_TEST (rtp_base_depayload_clock_base_test)
+{
+  State *state;
+
+  state = create_depayloader ("application/x-rtp", NULL);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_rtp_buffer (state,
+      "pts", 0 * GST_SECOND,
+      "rtptime", G_GUINT64_CONSTANT (1234), "seq", 0x4242, NULL);
+
+  reconfigure_caps (state,
+      "application/x-rtp, npt-start=(guint64)1234, npt-stop=(guint64)4321, clock-base=(guint)1234");
+
+  flush_pipeline (state);
+
+  push_rtp_buffer (state,
+      "pts", 1 * GST_SECOND,
+      "rtptime", 1234 + DEFAULT_CLOCK_RATE,
+      "seq", 0x4242 + 1, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (2);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
+
+  validate_buffer (1, "pts", 1 * GST_SECOND, "discont", FALSE, NULL);
+
+  validate_events_received (7);
+
+  validate_event (0, "stream-start", NULL);
+
+  validate_event (1, "caps", "media-type", "application/x-rtp", NULL);
+
+  validate_event (2, "segment",
+      "time", G_GUINT64_CONSTANT (0),
+      "start", G_GUINT64_CONSTANT (0), "stop", G_MAXUINT64, NULL);
+
+  validate_event (3, "caps",
+      "media-type", "application/x-rtp",
+      "npt-start", G_GUINT64_CONSTANT (1234),
+      "npt-stop", G_GUINT64_CONSTANT (4321),
+      "clock-base", 1234, NULL);
+
+  validate_event (4, "flush-start", NULL);
+
+  validate_event (5, "flush-stop", NULL);
+
+  validate_event (6, "segment",
+      "time", G_GUINT64_CONSTANT (1234),
+      "start", GST_SECOND,
+      "stop", GST_SECOND + G_GUINT64_CONSTANT (4321 - 1234),
+      "base", GST_SECOND, NULL);
 
   destroy_depayloader (state);
 }
@@ -1085,6 +1165,7 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_depayload_npt_test);
   tcase_add_test (tc_chain, rtp_base_depayload_play_scale_test);
   tcase_add_test (tc_chain, rtp_base_depayload_play_speed_test);
+  tcase_add_test (tc_chain, rtp_base_depayload_clock_base_test);
 
   return s;
 }
