@@ -323,7 +323,7 @@ _quit (GMainLoop * ml)
 static GstPadProbeReturn
 _aggregated_cb (GstPad * pad, GstPadProbeInfo * info, GMainLoop * ml)
 {
-  GST_DEBUG ("SHould quit ML");
+  GST_DEBUG ("Should quit ML");
   g_idle_add ((GSourceFunc) _quit, ml);
 
   return GST_PAD_PROBE_REMOVE;
