@@ -340,10 +340,6 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 
   priv->drained = TRUE;
 
-  g_list_foreach (priv->frames, (GFunc) gst_video_codec_frame_unref, NULL);
-  g_list_free (priv->frames);
-  priv->frames = NULL;
-
   priv->bytes = 0;
   priv->time = 0;
 
@@ -388,6 +384,10 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
     priv->current_frame_events = _flush_events (encoder->srcpad,
         encoder->priv->current_frame_events);
   }
+
+  g_list_foreach (priv->frames, (GFunc) gst_video_codec_frame_unref, NULL);
+  g_list_free (priv->frames);
+  priv->frames = NULL;
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
