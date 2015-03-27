@@ -1197,7 +1197,7 @@ gst_aggregator_query_latency_unlocked (GstAggregator * self, GstQuery * query)
   if (live && min > max) {
     GST_ELEMENT_WARNING (self, CORE, NEGOTIATION,
         ("%s", "Latency too big"),
-        ("The requested latency value is too big for the current pipeline.  "
+        ("The requested latency value is too big for the current pipeline. "
             "Limiting to %" G_GINT64_FORMAT, max));
     min = max;
     /* FIXME: This could in theory become negative, but in
