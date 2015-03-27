@@ -2395,7 +2395,13 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
 
   if (GST_CLOCK_TIME_IS_VALID (duration))
     stream->segment.position += duration;
-  ret = klass->stream_advance_fragment (stream);
+
+  if (gst_adaptive_demux_is_live (demux)
+      || gst_adaptive_demux_stream_has_next_fragment (demux, stream)) {
+    ret = klass->stream_advance_fragment (stream);
+  } else {
+    ret = GST_FLOW_EOS;
+  }
 
   stream->download_start_time = stream->download_chunk_start_time =
       g_get_monotonic_time ();
