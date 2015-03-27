@@ -554,8 +554,6 @@ create_transcoding_pipeline (gchar * uri, gchar * outuri)
 {
   GstElement *src, *sink;
 
-  mainloop = g_main_loop_new (NULL, FALSE);
-
   pipeline = gst_pipeline_new ("encoding-pipeline");
   src = gst_element_factory_make ("uridecodebin", NULL);
 
