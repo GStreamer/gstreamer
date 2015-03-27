@@ -3560,42 +3560,56 @@ done:
 }
 
 GstCaps *
-gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
+gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 {
   GstCaps *ret;
   GSList *walk;
   GSList *formats;
 
-  if (v4l2object->probed_caps == NULL) {
-    formats = gst_v4l2_object_get_format_list (v4l2object);
+  formats = gst_v4l2_object_get_format_list (v4l2object);
 
-    ret = gst_caps_new_empty ();
+  ret = gst_caps_new_empty ();
 
-    for (walk = formats; walk; walk = walk->next) {
-      struct v4l2_fmtdesc *format;
-      GstStructure *template;
+  for (walk = formats; walk; walk = walk->next) {
+    struct v4l2_fmtdesc *format;
+    GstStructure *template;
 
-      format = (struct v4l2_fmtdesc *) walk->data;
+    format = (struct v4l2_fmtdesc *) walk->data;
 
-      template =
-          gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat);
+    template =
+        gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat);
 
-      if (template) {
-        GstCaps *tmp;
+    if (template) {
+      GstCaps *tmp;
 
-        tmp = gst_v4l2_object_probe_caps_for_format (v4l2object,
-            format->pixelformat, template);
-        if (tmp)
-          gst_caps_append (ret, tmp);
+      tmp = gst_v4l2_object_probe_caps_for_format (v4l2object,
+          format->pixelformat, template);
+      if (tmp)
+        gst_caps_append (ret, tmp);
 
-        gst_structure_free (template);
-      } else {
-        GST_DEBUG_OBJECT (v4l2object->element, "unknown format %u",
-            format->pixelformat);
-      }
+      gst_structure_free (template);
+    } else {
+      GST_DEBUG_OBJECT (v4l2object->element, "unknown format %u",
+          format->pixelformat);
     }
-    v4l2object->probed_caps = ret;
   }
+
+  if (filter) {
+    ret = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+  } else {
+    ret = gst_caps_ref (ret);
+  }
+
+  return ret;
+}
+
+GstCaps *
+gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
+{
+  GstCaps *ret;
+
+  if (v4l2object->probed_caps == NULL)
+    v4l2object->probed_caps = gst_v4l2_object_probe_caps (v4l2object, NULL);
 
   if (filter) {
     ret = gst_caps_intersect_full (filter, v4l2object->probed_caps,
