@@ -1666,10 +1666,22 @@ gst_app_src_push_sample_internal (GstAppSrc * appsrc, GstSample * sample)
 {
   GstBuffer *buffer;
   GstCaps *caps;
+
   g_return_val_if_fail (GST_IS_SAMPLE (sample), GST_FLOW_ERROR);
+
   caps = gst_sample_get_caps (sample);
-  gst_app_src_set_caps (appsrc, caps);
+  if (caps != NULL) {
+    gst_app_src_set_caps (appsrc, caps);
+  } else {
+    GST_WARNING_OBJECT (appsrc, "received sample without caps");
+  }
+
   buffer = gst_sample_get_buffer (sample);
+  if (buffer == NULL) {
+    GST_WARNING_OBJECT (appsrc, "received sample without buffer");
+    return GST_FLOW_OK;
+  }
+
   return gst_app_src_push_buffer_full (appsrc, buffer, FALSE);
 }
 
