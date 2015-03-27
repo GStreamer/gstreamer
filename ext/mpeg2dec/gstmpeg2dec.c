@@ -509,7 +509,9 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstVideoCodecFrame * in_frame,
   if (!gst_video_frame_map (&output_frame, info, buffer, GST_MAP_WRITE))
     goto map_fail;
 
-  gst_buffer_replace (&in_frame->output_buffer, buffer);
+  if (in_frame->output_buffer)
+    gst_buffer_unref (in_frame->output_buffer);
+  in_frame->output_buffer = buffer;
 
   if (!gst_video_frame_copy (&output_frame, input_vframe))
     goto copy_failed;
