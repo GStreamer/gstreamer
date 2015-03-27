@@ -63,6 +63,7 @@ G_BEGIN_DECLS
 #define GST_RIFF_TAG_note GST_MAKE_FOURCC ('n','o','t','e')
 #define GST_RIFF_TAG_smpl GST_MAKE_FOURCC ('s','m','p','l')
 #define GST_RIFF_TAG_inst GST_MAKE_FOURCC ('i','n','s','t')
+#define GST_RIFF_TAG_FLLR GST_MAKE_FOURCC ('F','L','L','R')
 
 /* LIST types */
 #define GST_RIFF_LIST_movi GST_MAKE_FOURCC ('m','o','v','i')
