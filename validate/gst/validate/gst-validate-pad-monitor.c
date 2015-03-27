@@ -666,7 +666,7 @@ static GstCaps *
 gst_validate_pad_monitor_transform_caps (GstValidatePadMonitor * monitor,
     GstCaps * caps)
 {
-  GstCaps *othercaps = gst_caps_new_empty ();
+  GstCaps *othercaps;
   GstCaps *new_caps;
   GstIterator *iter;
   gboolean done;
@@ -677,6 +677,8 @@ gst_validate_pad_monitor_transform_caps (GstValidatePadMonitor * monitor,
 
   if (caps == NULL)
     return NULL;
+
+  othercaps = gst_caps_new_empty ();
 
   iter =
       gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
