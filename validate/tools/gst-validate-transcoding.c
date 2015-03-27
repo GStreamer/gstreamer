@@ -545,6 +545,7 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstElement * encodebin)
     gst_caps_unref (othercaps);
   }
 
+  gst_object_unref (sinkpad);
   return;
 }
 
