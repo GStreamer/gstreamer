@@ -390,7 +390,8 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
   }
   pos++;
   while (g_ascii_isspace (*pos)) pos++;
-  if (*pos == '"') {
+  /* truncate a string if it is delimited with double quotes */
+  if (*pos == '"' && pos[strlen (pos) - 1] == '"') {
     pos++;
     pos[strlen (pos) - 1] = '\0';
   }
