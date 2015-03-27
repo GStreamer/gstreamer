@@ -362,6 +362,11 @@ GST_START_TEST (test_uri_interface)
   fail_unless_equals_string (location, "file:///foo/b%3Fr");
   g_free (location);
 
+  g_object_set (G_OBJECT (filesink), "location", "\".donotexist", NULL);
+  g_object_get (G_OBJECT (filesink), "location", &location, NULL);
+  fail_unless_equals_string (location, "\".donotexist");
+  g_free (location);
+
   /* should fail with other hostnames */
   fail_if (gst_uri_handler_set_uri (GST_URI_HANDLER (filesink),
           "file://hostname/foo/foo", NULL));
