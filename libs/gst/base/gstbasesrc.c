@@ -1800,6 +1800,12 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       GST_OBJECT_LOCK (src->srcpad);
       start = (GST_PAD_MODE (src->srcpad) == GST_PAD_MODE_PUSH);
       GST_OBJECT_UNLOCK (src->srcpad);
+
+      if (src->is_live) {
+        if (!src->live_running)
+          start = FALSE;
+      }
+
       if (start)
         gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
             src->srcpad, NULL);
