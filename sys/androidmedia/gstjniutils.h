@@ -30,43 +30,43 @@
 #include <gst/gst.h>
 
 jclass    gst_amc_jni_get_class              (JNIEnv * env,
-                                             const gchar * name,
-                                             GError ** err);
+                                             GError ** err,
+                                             const gchar * name);
 
 jmethodID gst_amc_jni_get_method_id          (JNIEnv * env,
+                                             GError ** err,
                                              jclass klass,
                                              const gchar * name,
-                                             const gchar * signature,
-                                             GError ** err);
+                                             const gchar * signature);
 
 jmethodID gst_amc_jni_get_static_method_id   (JNIEnv * env,
+                                             GError ** err,
                                              jclass klass,
                                              const gchar * name,
-                                             const gchar * signature,
-                                             GError ** err);
+                                             const gchar * signature);
 
 jfieldID gst_amc_jni_get_field_id            (JNIEnv * env,
+                                             GError ** err,
                                              jclass klass,
                                              const gchar * name,
-                                             const gchar * type,
-                                             GError ** err);
+                                             const gchar * type);
 
 jfieldID gst_amc_jni_get_static_field_id     (JNIEnv * env,
+                                             GError ** err,
                                              jclass klass,
                                              const gchar * name,
-                                             const gchar * type,
-                                             GError ** err);
+                                             const gchar * type);
 
 jobject gst_amc_jni_new_object               (JNIEnv * env,
+                                             GError ** err,
                                              jclass klass,
                                              jmethodID constructor,
-                                             GError ** err,
                                              ...);
 
 jobject gst_amc_jni_new_object_from_static   (JNIEnv * env,
+                                             GError ** err,
                                              jclass klass,
                                              jmethodID constructor,
-                                             GError ** err,
                                              ...);
 
 jobject gst_amc_jni_object_make_global       (JNIEnv * env,
@@ -86,14 +86,14 @@ gchar *gst_amc_jni_string_to_gchar           (JNIEnv * env,
                                              gboolean release);
 
 jstring gst_amc_jni_string_from_gchar        (JNIEnv * env,
-                                             const gchar * string,
-                                             GError ** err);
+                                             GError ** error,
+                                             const gchar * string);
 
 G_GNUC_PRINTF (5, 6)
 void gst_amc_jni_set_error                   (JNIEnv * env,
+                                              GError ** error,
                                               GQuark domain,
                                               gint code,
-                                              GError ** error,
                                               const gchar * format, ...);
 
 gboolean gst_amc_jni_initialize              (void);

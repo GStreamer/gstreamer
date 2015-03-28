@@ -42,7 +42,7 @@ static gboolean started_java_vm = FALSE;
 static pthread_key_t current_jni_env;
 
 jclass
-gst_amc_jni_get_class (JNIEnv * env, const gchar * name, GError ** err)
+gst_amc_jni_get_class (JNIEnv * env, GError ** err, const gchar * name)
 {
   jclass tmp, ret = NULL;
 
@@ -50,8 +50,8 @@ gst_amc_jni_get_class (JNIEnv * env, const gchar * name, GError ** err)
 
   tmp = (*env)->FindClass (env, name);
   if ((*env)->ExceptionCheck (env) || !tmp) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to find class %s", name);
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to find class %s", name);
     goto done;
   }
 
@@ -69,75 +69,78 @@ done:
 }
 
 jmethodID
-gst_amc_jni_get_method_id (JNIEnv * env, jclass klass, const gchar * name,
-    const gchar * signature, GError ** err)
+gst_amc_jni_get_method_id (JNIEnv * env, GError ** err, jclass klass,
+    const gchar * name, const gchar * signature)
 {
   jmethodID ret;
 
   ret = (*env)->GetMethodID (env, klass, name, signature);
   if ((*env)->ExceptionCheck (env) || !ret) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to get method ID %s (%s)", name, signature);
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to get method ID %s (%s)", name,
+        signature);
   }
   return ret;
 }
 
 jmethodID
-gst_amc_jni_get_static_method_id (JNIEnv * env, jclass klass,
-    const gchar * name, const gchar * signature, GError ** err)
+gst_amc_jni_get_static_method_id (JNIEnv * env, GError ** err, jclass klass,
+    const gchar * name, const gchar * signature)
 {
   jmethodID ret;
 
   ret = (*env)->GetStaticMethodID (env, klass, name, signature);
   if ((*env)->ExceptionCheck (env) || !ret) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to get static method ID %s (%s)", name, signature);
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to get static method ID %s (%s)",
+        name, signature);
   }
   return ret;
 }
 
 jfieldID
-gst_amc_jni_get_field_id (JNIEnv * env, jclass klass, const gchar * name,
-    const gchar * type, GError ** err)
+gst_amc_jni_get_field_id (JNIEnv * env, GError ** err, jclass klass,
+    const gchar * name, const gchar * type)
 {
   jfieldID ret;
 
   ret = (*env)->GetFieldID (env, klass, name, type);
   if ((*env)->ExceptionCheck (env) || !ret) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to get field ID %s (%s)", name, type);
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to get field ID %s (%s)", name, type);
   }
   return ret;
 }
 
 jfieldID
-gst_amc_jni_get_static_field_id (JNIEnv * env, jclass klass, const gchar * name,
-    const gchar * type, GError ** err)
+gst_amc_jni_get_static_field_id (JNIEnv * env, GError ** err, jclass klass,
+    const gchar * name, const gchar * type)
 {
   jfieldID ret;
 
   ret = (*env)->GetStaticFieldID (env, klass, name, type);
   if ((*env)->ExceptionCheck (env) || !ret) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to get static field ID %s (%s)", name, type);
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to get static field ID %s (%s)", name,
+        type);
   }
   return ret;
 }
 
 jobject
-gst_amc_jni_new_object (JNIEnv * env, jclass klass, jmethodID constructor,
-    GError ** err, ...)
+gst_amc_jni_new_object (JNIEnv * env, GError ** err, jclass klass,
+    jmethodID constructor, ...)
 {
   jobject tmp;
   va_list args;
 
-  va_start (args, err);
+  va_start (args, constructor);
   tmp = (*env)->NewObjectV (env, klass, constructor, args);
   va_end (args);
 
   if ((*env)->ExceptionCheck (env) || !tmp) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to create object");
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to create object");
     return NULL;
   }
 
@@ -145,19 +148,19 @@ gst_amc_jni_new_object (JNIEnv * env, jclass klass, jmethodID constructor,
 }
 
 jobject
-gst_amc_jni_new_object_from_static (JNIEnv * env, jclass klass,
-    jmethodID method, GError ** err, ...)
+gst_amc_jni_new_object_from_static (JNIEnv * env, GError ** err, jclass klass,
+    jmethodID method, ...)
 {
   jobject tmp;
   va_list args;
 
-  va_start (args, err);
+  va_start (args, method);
   tmp = (*env)->CallStaticObjectMethodV (env, klass, method, args);
   va_end (args);
 
   if ((*env)->ExceptionCheck (env) || !tmp) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to create object");
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to create object");
     return NULL;
   }
 
@@ -203,15 +206,15 @@ gst_amc_jni_object_local_unref (JNIEnv * env, jobject object)
 }
 
 jstring
-gst_amc_jni_string_from_gchar (JNIEnv * env, const gchar * string,
-    GError ** err)
+gst_amc_jni_string_from_gchar (JNIEnv * env, GError ** err,
+    const gchar * string)
 {
   jstring ret;
 
   ret = (*env)->NewStringUTF (env, string);
   if ((*env)->ExceptionCheck (env)) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to call Java method");
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to call Java method");
     ret = NULL;
   }
 
@@ -606,8 +609,8 @@ create_failed:
 }
 
 static void
-gst_amc_jni_set_error_string (JNIEnv * env, GQuark domain, gint code,
-    GError ** err, const gchar * message)
+gst_amc_jni_set_error_string (JNIEnv * env, GError ** err, GQuark domain,
+    gint code, const gchar * message)
 {
   jthrowable exception;
 
@@ -642,8 +645,8 @@ gst_amc_jni_set_error_string (JNIEnv * env, GQuark domain, gint code,
 }
 
 G_GNUC_PRINTF (5, 6)
-     void gst_amc_jni_set_error (JNIEnv * env, GQuark domain, gint code,
-    GError ** err, const gchar * format, ...)
+     void gst_amc_jni_set_error (JNIEnv * env, GError ** err, GQuark domain,
+    gint code, const gchar * format, ...)
 {
   gchar *message;
   va_list var_args;
@@ -652,7 +655,7 @@ G_GNUC_PRINTF (5, 6)
   message = g_strdup_vprintf (format, var_args);
   va_end (var_args);
 
-  gst_amc_jni_set_error_string (env, domain, code, err, message);
+  gst_amc_jni_set_error_string (env, err, domain, code, message);
 
   g_free (message);
 }
@@ -700,8 +703,8 @@ gboolean gst_amc_jni_call_static_##_name##_method (JNIEnv *env, GError ** err, j
     va_start(args, value);                                                                                \
     *value = (*env)->CallStatic##_jname##MethodV(env, klass, methodID, args);                                \
     if ((*env)->ExceptionCheck (env)) {                                                                      \
-      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
-          err, "Failed to call static Java method");                                                         \
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
+          "Failed to call static Java method");                                                         \
       ret = FALSE;                                                                                           \
     }                                                                                                        \
     va_end(args);                                                                                            \
@@ -728,8 +731,8 @@ gst_amc_jni_call_static_void_method (JNIEnv * env, GError ** err, jclass klass,
 
   (*env)->CallStaticVoidMethodV (env, klass, methodID, args);
   if ((*env)->ExceptionCheck (env)) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to call static Java method");
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to call static Java method");
     ret = FALSE;
   }
   va_end (args);
@@ -744,8 +747,8 @@ gboolean gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject 
     va_start(args, value);                                                                                \
     *value = (*env)->Call##_jname##MethodV(env, obj, methodID, args);                                        \
     if ((*env)->ExceptionCheck (env)) {                                                                      \
-      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
-          err, "Failed to call Java method");                                                                \
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
+          "Failed to call Java method");                                                                \
       ret = FALSE;                                                                                           \
     }                                                                                                        \
     va_end(args);                                                                                            \
@@ -772,8 +775,8 @@ gst_amc_jni_call_void_method (JNIEnv * env, GError ** err, jobject obj,
 
   (*env)->CallVoidMethodV (env, obj, methodID, args);
   if ((*env)->ExceptionCheck (env)) {
-    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        err, "Failed to call Java method");
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to call Java method");
     ret = FALSE;
   }
   va_end (args);
@@ -787,8 +790,8 @@ gboolean gst_amc_jni_get_##_name##_field (JNIEnv *env, GError ** err, jobject ob
                                                                                                     \
     *value = (*env)->Get##_jname##Field(env, obj, fieldID);                                         \
     if ((*env)->ExceptionCheck (env)) {                                                             \
-      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                      \
-          err, "Failed to get Java field");                                                         \
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                      \
+          "Failed to get Java field");                                                         \
       ret = FALSE;                                                                                  \
     }                                                                                               \
     return ret;                                                                                     \
@@ -811,8 +814,8 @@ gboolean gst_amc_jni_get_static_##_name##_field (JNIEnv *env, GError ** err, jcl
                                                                                                     \
     *value = (*env)->GetStatic##_jname##Field(env, klass, fieldID);                                 \
     if ((*env)->ExceptionCheck (env)) {                                                             \
-      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                      \
-          err, "Failed to get static Java field");                                                  \
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                      \
+          "Failed to get static Java field");                                                  \
       ret = FALSE;                                                                                  \
     }                                                                                               \
     return ret;                                                                                     \
@@ -842,23 +845,24 @@ gst_amc_jni_get_buffer_array (JNIEnv * env, GError ** err, jobject array,
 
     buffer = (*env)->GetObjectArrayElement (env, array, i);
     if ((*env)->ExceptionCheck (env) || !buffer) {
-      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-          err, "Failed to get buffer %d", i);
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+          GST_LIBRARY_ERROR_FAILED, "Failed to get buffer %d", i);
       goto error;
     }
 
     (*buffers)[i].object = gst_amc_jni_object_make_global (env, buffer);
     if (!(*buffers)[i].object) {
-      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-          err, "Failed to create global buffer reference %d", i);
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+          GST_LIBRARY_ERROR_FAILED,
+          "Failed to create global buffer reference %d", i);
       goto error;
     }
 
     (*buffers)[i].data =
         (*env)->GetDirectBufferAddress (env, (*buffers)[i].object);
     if (!(*buffers)[i].data) {
-      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-          err, "Failed to get buffer address %d", i);
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+          GST_LIBRARY_ERROR_FAILED, "Failed to get buffer address %d", i);
       goto error;
     }
     (*buffers)[i].size =
