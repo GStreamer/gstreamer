@@ -25,6 +25,7 @@ import re
 import time
 import utils
 import signal
+import config
 import urlparse
 import subprocess
 import threading
@@ -34,7 +35,6 @@ import ConfigParser
 import loggable
 from loggable import Loggable
 import xml.etree.cElementTree as ET
-from gi.repository import GLib
 
 from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
     Protocols
@@ -584,10 +584,11 @@ class GstValidateTest(Test):
             return p
 
         # Look in system data dirs
-        for datadir in GLib.get_system_data_dirs():
-            p = os.path.join(datadir, 'gstreamer-1.0', 'validate', 'gst.supp')
-            if os.path.exists(p):
-                return p
+        p = os.path.join(config.DATADIR, 'gstreamer-1.0', 'validate', 'gst.supp')
+        if os.path.exists(p):
+            return p
+
+        self.error("Could not find any gst.sup file")
 
         return None
 

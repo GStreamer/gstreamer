@@ -275,6 +275,8 @@ AM_PATH_PYTHON(2.7.0)
 AS_AC_EXPAND(LIBDIR, $libdir)
 AC_MSG_NOTICE(Storing library files in $LIBDIR)
 AC_CONFIG_FILES([tools/gst-validate-launcher], [chmod +x tools/gst-validate-launcher])
+AS_AC_EXPAND(DATADIR, $datadir)
+AC_CONFIG_FILES([launcher/config.py])
 
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
