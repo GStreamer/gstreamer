@@ -190,6 +190,8 @@ static GstStaticPadTemplate audiosink_templ =
         "layout = (string)dvi, "
         "block_align = (int)[64, 8192], "
         "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]; "
+        "audio/G722, "
+        "channels = (int)1," "rate = (int)16000; "
         "audio/x-adpcm, "
         "layout = (string)g726, " "channels = (int)1," "rate = (int)8000; ")
     );
@@ -2024,7 +2026,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   } else if (!strcmp (mimetype, "audio/x-wma")
       || !strcmp (mimetype, "audio/x-alaw")
       || !strcmp (mimetype, "audio/x-mulaw")
-      || !strcmp (mimetype, "audio/x-adpcm")) {
+      || !strcmp (mimetype, "audio/x-adpcm")
+      || !strcmp (mimetype, "audio/G722")) {
     guint8 *codec_priv;
     guint codec_priv_size;
     guint16 format = 0;
@@ -2102,6 +2105,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         goto refuse_caps;
       }
 
+    } else if (!strcmp (mimetype, "audio/G722")) {
+      format = GST_RIFF_WAVE_FORMAT_ADPCM_G722;
     }
     g_assert (format != 0);
 
