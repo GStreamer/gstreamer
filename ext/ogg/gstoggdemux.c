@@ -4542,7 +4542,8 @@ gst_ogg_demux_combine_flows (GstOggDemux * ogg, GstOggPad * pad,
   pad->last_ret = ret;
   pad->is_eos = (ret == GST_FLOW_EOS);
 
-  return gst_flow_combiner_update_flow (ogg->flowcombiner, ret);
+  return gst_flow_combiner_update_pad_flow (ogg->flowcombiner,
+      GST_PAD_CAST (pad), ret);
 }
 
 static GstFlowReturn
