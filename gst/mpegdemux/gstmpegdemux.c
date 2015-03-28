@@ -900,6 +900,7 @@ gst_ps_demux_clear_times (GstPsDemux * demux)
 {
   gint i, count = demux->found_count;
 
+  gst_flow_combiner_reset (demux->flowcombiner);
   /* Clear the last ts for all streams */
   for (i = 0; i < count; i++) {
     GstPsStream *stream = demux->streams_found[i];
