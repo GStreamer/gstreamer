@@ -359,6 +359,7 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_CANOPUS_ATRAC  (0x0063)
 #define GST_RIFF_WAVE_FORMAT_G726_ADPCM     (0x0064)
 #define GST_RIFF_WAVE_FORMAT_G722_ADPCM     (0x0065)
+#define GST_RIFF_WAVE_FORMAT_ADPCM_G722     (0x028F)
 #define GST_RIFF_WAVE_FORMAT_DSAT_DISPLAY   (0x0067)
 #define GST_RIFF_WAVE_FORMAT_ADPCM_IMA_WAV (0x0069)
 /* FIXME: where are these from? are they used at all? */

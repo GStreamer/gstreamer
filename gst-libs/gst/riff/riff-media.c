@@ -1411,6 +1411,15 @@ gst_riff_create_audio_caps (guint16 codec_id,
       block_align = TRUE;
       break;
 
+    case GST_RIFF_WAVE_FORMAT_ADPCM_G722:
+      rate_min = 16000;
+      rate_max = 16000;
+      channels_max = 1;
+      caps = gst_caps_new_empty_simple ("audio/G722");
+      if (codec_name)
+        *codec_name = g_strdup ("G722 audio");
+      break;
+
     case GST_RIFF_WAVE_FORMAT_ITU_G726_ADPCM:
       if (strf != NULL) {
         gint bitrate;
