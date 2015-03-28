@@ -2562,7 +2562,8 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
     ret = GST_FLOW_OK;
   }
 
-  cret = gst_flow_combiner_update_flow (rmdemux->flowcombiner, ret);
+  cret = gst_flow_combiner_update_pad_flow (rmdemux->flowcombiner, stream->pad,
+      ret);
 
 beach:
   return cret;
