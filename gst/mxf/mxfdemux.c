@@ -3554,6 +3554,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       }
       p->discont = TRUE;
     }
+    gst_flow_combiner_reset (demux->flowcombiner);
     if (new_offset == -1) {
       GST_WARNING_OBJECT (demux, "No new offset found");
       ret = FALSE;
