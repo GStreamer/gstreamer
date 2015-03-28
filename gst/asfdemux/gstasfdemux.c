@@ -527,6 +527,7 @@ gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "reset stream state");
 
+  gst_flow_combiner_reset (demux->flowcombiner);
   for (n = 0; n < demux->num_streams; n++) {
     demux->stream[n].discont = TRUE;
     demux->stream[n].first_buffer = TRUE;
