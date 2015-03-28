@@ -827,3 +827,65 @@ GET_STATIC_TYPE_FIELD (gint64, long, Long);
 GET_STATIC_TYPE_FIELD (gfloat, float, Float);
 GET_STATIC_TYPE_FIELD (gdouble, double, Double);
 GET_STATIC_TYPE_FIELD (jobject, object, Object);
+
+gboolean
+gst_amc_jni_get_buffer_array (JNIEnv * env, GError ** err, jobject array,
+    GstAmcBuffer ** buffers, gsize * n_buffers)
+{
+  jsize i;
+
+  *n_buffers = (*env)->GetArrayLength (env, array);
+  *buffers = g_new0 (GstAmcBuffer, *n_buffers);
+
+  for (i = 0; i < *n_buffers; i++) {
+    jobject buffer = NULL;
+
+    buffer = (*env)->GetObjectArrayElement (env, array, i);
+    if ((*env)->ExceptionCheck (env) || !buffer) {
+      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+          err, "Failed to get buffer %d", i);
+      goto error;
+    }
+
+    (*buffers)[i].object = gst_amc_jni_object_make_global (env, buffer);
+    if (!(*buffers)[i].object) {
+      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+          err, "Failed to create global buffer reference %d", i);
+      goto error;
+    }
+
+    (*buffers)[i].data =
+        (*env)->GetDirectBufferAddress (env, (*buffers)[i].object);
+    if (!(*buffers)[i].data) {
+      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+          err, "Failed to get buffer address %d", i);
+      goto error;
+    }
+    (*buffers)[i].size =
+        (*env)->GetDirectBufferCapacity (env, (*buffers)[i].object);
+  }
+
+  return TRUE;
+
+error:
+  if (*buffers)
+    gst_amc_jni_free_buffer_array (env, *buffers, *n_buffers);
+  *buffers = NULL;
+  *n_buffers = 0;
+  return FALSE;
+}
+
+void
+gst_amc_jni_free_buffer_array (JNIEnv * env, GstAmcBuffer * buffers,
+    gsize n_buffers)
+{
+  jsize i;
+
+  g_return_if_fail (buffers != NULL);
+
+  for (i = 0; i < n_buffers; i++) {
+    if (buffers[i].object)
+      gst_amc_jni_object_unref (env, buffers[i].object);
+  }
+  g_free (buffers);
+}

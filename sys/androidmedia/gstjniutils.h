@@ -164,4 +164,15 @@ DEF_GET_STATIC_TYPE_FIELD (gfloat, float, Float);
 DEF_GET_STATIC_TYPE_FIELD (gdouble, double, Double);
 DEF_GET_STATIC_TYPE_FIELD (jobject, object, Object);
 
+typedef struct _GstAmcBuffer GstAmcBuffer;
+
+struct _GstAmcBuffer {
+  jobject object; /* global reference */
+  guint8 *data;
+  gsize size;
+};
+
+gboolean gst_amc_jni_get_buffer_array (JNIEnv * env, GError ** err, jobject array, GstAmcBuffer ** buffers, gsize * n_buffers);
+void gst_amc_jni_free_buffer_array (JNIEnv * env, GstAmcBuffer * buffers, gsize n_buffers);
+
 #endif
