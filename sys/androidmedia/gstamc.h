@@ -26,6 +26,8 @@
 #include <gst/audio/audio.h>
 #include <jni.h>
 
+#include "gstjniutils.h"
+
 G_BEGIN_DECLS
 
 typedef struct _GstAmcCodecInfo GstAmcCodecInfo;
@@ -33,7 +35,6 @@ typedef struct _GstAmcCodecType GstAmcCodecType;
 typedef struct _GstAmcCodec GstAmcCodec;
 typedef struct _GstAmcBufferInfo GstAmcBufferInfo;
 typedef struct _GstAmcFormat GstAmcFormat;
-typedef struct _GstAmcBuffer GstAmcBuffer;
 typedef struct _GstAmcColorFormatInfo GstAmcColorFormatInfo;
 
 struct _GstAmcCodecType {
@@ -54,12 +55,6 @@ struct _GstAmcCodecInfo {
   gboolean is_encoder;
   GstAmcCodecType *supported_types;
   gint n_supported_types;
-};
-
-struct _GstAmcBuffer {
-  jobject object; /* global reference */
-  guint8 *data;
-  gsize size;
 };
 
 struct _GstAmcFormat {
@@ -112,13 +107,13 @@ gchar * gst_amc_format_to_string (GstAmcFormat * format, GError **err);
 gboolean gst_amc_format_contains_key (GstAmcFormat *format, const gchar *key, GError **err);
 
 gboolean gst_amc_format_get_float (GstAmcFormat *format, const gchar *key, gfloat *value, GError **err);
-void gst_amc_format_set_float (GstAmcFormat *format, const gchar *key, gfloat value, GError **err);
+gboolean gst_amc_format_set_float (GstAmcFormat *format, const gchar *key, gfloat value, GError **err);
 gboolean gst_amc_format_get_int (GstAmcFormat *format, const gchar *key, gint *value, GError **err);
-void gst_amc_format_set_int (GstAmcFormat *format, const gchar *key, gint value, GError **err);
+gboolean gst_amc_format_set_int (GstAmcFormat *format, const gchar *key, gint value, GError **err);
 gboolean gst_amc_format_get_string (GstAmcFormat *format, const gchar *key, gchar **value, GError **err);
-void gst_amc_format_set_string (GstAmcFormat *format, const gchar *key, const gchar *value, GError **err);
+gboolean gst_amc_format_set_string (GstAmcFormat *format, const gchar *key, const gchar *value, GError **err);
 gboolean gst_amc_format_get_buffer (GstAmcFormat *format, const gchar *key, guint8 **data, gsize *size, GError **err);
-void gst_amc_format_set_buffer (GstAmcFormat *format, const gchar *key, guint8 *data, gsize size, GError **err);
+gboolean gst_amc_format_set_buffer (GstAmcFormat *format, const gchar *key, guint8 *data, gsize size, GError **err);
 
 GstVideoFormat gst_amc_color_format_to_video_format (const GstAmcCodecInfo * codec_info, const gchar * mime, gint color_format);
 gint gst_amc_video_format_to_color_format (const GstAmcCodecInfo * codec_info, const gchar * mime, GstVideoFormat video_format);
