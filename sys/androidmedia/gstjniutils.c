@@ -128,8 +128,8 @@ gst_amc_jni_get_static_field_id (JNIEnv * env, GError ** err, jclass klass,
 }
 
 jobject
-gst_amc_jni_new_object (JNIEnv * env, GError ** err, jclass klass,
-    jmethodID constructor, ...)
+gst_amc_jni_new_object (JNIEnv * env, GError ** err, gboolean global,
+    jclass klass, jmethodID constructor, ...)
 {
   jobject tmp;
   va_list args;
@@ -144,12 +144,15 @@ gst_amc_jni_new_object (JNIEnv * env, GError ** err, jclass klass,
     return NULL;
   }
 
-  return gst_amc_jni_object_make_global (env, tmp);
+  if (global)
+    return gst_amc_jni_object_make_global (env, tmp);
+  else
+    return tmp;
 }
 
 jobject
-gst_amc_jni_new_object_from_static (JNIEnv * env, GError ** err, jclass klass,
-    jmethodID method, ...)
+gst_amc_jni_new_object_from_static (JNIEnv * env, GError ** err,
+    gboolean global, jclass klass, jmethodID method, ...)
 {
   jobject tmp;
   va_list args;
@@ -164,7 +167,10 @@ gst_amc_jni_new_object_from_static (JNIEnv * env, GError ** err, jclass klass,
     return NULL;
   }
 
-  return gst_amc_jni_object_make_global (env, tmp);
+  if (global)
+    return gst_amc_jni_object_make_global (env, tmp);
+  else
+    return tmp;
 }
 
 jobject
@@ -207,18 +213,21 @@ gst_amc_jni_object_local_unref (JNIEnv * env, jobject object)
 
 jstring
 gst_amc_jni_string_from_gchar (JNIEnv * env, GError ** err,
-    const gchar * string)
+    gboolean global, const gchar * string)
 {
-  jstring ret;
+  jstring tmp;
 
-  ret = (*env)->NewStringUTF (env, string);
+  tmp = (*env)->NewStringUTF (env, string);
   if ((*env)->ExceptionCheck (env)) {
     gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
         GST_LIBRARY_ERROR_FAILED, "Failed to call Java method");
-    ret = NULL;
+    tmp = NULL;
   }
 
-  return ret;
+  if (global)
+    return gst_amc_jni_object_make_global (env, tmp);
+  else
+    return tmp;
 }
 
 gchar *
