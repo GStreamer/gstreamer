@@ -504,15 +504,29 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_FLUSH_START:{
+      gboolean forward;
       g_mutex_lock (&self->lock);
       spad->flushing = TRUE;
       g_cond_broadcast (&self->cond);
+      forward = (self->current_sinkpad == GST_PAD_CAST (spad));
       g_mutex_unlock (&self->lock);
+      if (forward)
+        ret = gst_pad_event_default (pad, parent, event);
+      else
+        gst_event_unref (event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:{
+      gboolean forward;
       gst_segment_init (&spad->segment, GST_FORMAT_UNDEFINED);
       spad->flushing = FALSE;
+      g_mutex_lock (&self->lock);
+      forward = (self->current_sinkpad == GST_PAD_CAST (spad));
+      g_mutex_unlock (&self->lock);
+      if (forward)
+        ret = gst_pad_event_default (pad, parent, event);
+      else
+        gst_event_unref (event);
       break;
     }
     default:{
