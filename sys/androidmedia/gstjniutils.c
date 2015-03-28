@@ -38,28 +38,25 @@ static jint (*get_created_java_vms) (JavaVM ** vmBuf, jsize bufLen,
     jsize * nVMs);
 static jint (*create_java_vm) (JavaVM ** p_vm, JNIEnv ** p_env, void *vm_args);
 static JavaVM *java_vm;
-static gboolean initialized = FALSE;
 static gboolean started_java_vm = FALSE;
 static pthread_key_t current_jni_env;
 
 jclass
-gst_amc_jni_get_class (JNIEnv * env, const gchar * name)
+gst_amc_jni_get_class (JNIEnv * env, const gchar * name, GError ** err)
 {
   jclass tmp, ret = NULL;
 
   GST_DEBUG ("Retrieving Java class %s", name);
 
   tmp = (*env)->FindClass (env, name);
-  if (!tmp) {
-    ret = FALSE;
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get %s class", name);
+  if ((*env)->ExceptionCheck (env) || !tmp) {
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to find class %s", name);
     goto done;
   }
 
   ret = (*env)->NewGlobalRef (env, tmp);
   if (!ret) {
-    (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get %s class global reference", name);
   }
 
@@ -72,60 +69,75 @@ done:
 }
 
 jmethodID
-gst_amc_jni_get_method (JNIEnv * env, jclass klass, const gchar * name,
-    const gchar * signature)
+gst_amc_jni_get_method_id (JNIEnv * env, jclass klass, const gchar * name,
+    const gchar * signature, GError ** err)
 {
   jmethodID ret;
 
   ret = (*env)->GetMethodID (env, klass, name, signature);
-  if (!ret) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get method ID %s", name);
+  if ((*env)->ExceptionCheck (env) || !ret) {
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to get method ID %s (%s)", name, signature);
   }
   return ret;
 }
 
 jmethodID
-gst_amc_jni_get_static_method (JNIEnv * env, jclass klass, const gchar * name,
-    const gchar * signature)
+gst_amc_jni_get_static_method_id (JNIEnv * env, jclass klass,
+    const gchar * name, const gchar * signature, GError ** err)
 {
   jmethodID ret;
 
   ret = (*env)->GetStaticMethodID (env, klass, name, signature);
-  if (!ret) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get static method id %s", name);
+  if ((*env)->ExceptionCheck (env) || !ret) {
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to get static method ID %s (%s)", name, signature);
   }
   return ret;
 }
 
 jfieldID
 gst_amc_jni_get_field_id (JNIEnv * env, jclass klass, const gchar * name,
-    const gchar * type)
+    const gchar * type, GError ** err)
 {
   jfieldID ret;
 
   ret = (*env)->GetFieldID (env, klass, name, type);
-  if (!ret) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get field ID %s", name);
+  if ((*env)->ExceptionCheck (env) || !ret) {
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to get field ID %s (%s)", name, type);
+  }
+  return ret;
+}
+
+jfieldID
+gst_amc_jni_get_static_field_id (JNIEnv * env, jclass klass, const gchar * name,
+    const gchar * type, GError ** err)
+{
+  jfieldID ret;
+
+  ret = (*env)->GetStaticFieldID (env, klass, name, type);
+  if ((*env)->ExceptionCheck (env) || !ret) {
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to get static field ID %s (%s)", name, type);
   }
   return ret;
 }
 
 jobject
-gst_amc_jni_new_object (JNIEnv * env, jclass klass, jmethodID constructor, ...)
+gst_amc_jni_new_object (JNIEnv * env, jclass klass, jmethodID constructor,
+    GError ** err, ...)
 {
   jobject tmp;
   va_list args;
 
-  va_start (args, constructor);
+  va_start (args, err);
   tmp = (*env)->NewObjectV (env, klass, constructor, args);
   va_end (args);
 
-  if (!tmp) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to create object");
+  if ((*env)->ExceptionCheck (env) || !tmp) {
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to create object");
     return NULL;
   }
 
@@ -134,18 +146,18 @@ gst_amc_jni_new_object (JNIEnv * env, jclass klass, jmethodID constructor, ...)
 
 jobject
 gst_amc_jni_new_object_from_static (JNIEnv * env, jclass klass,
-    jmethodID method, ...)
+    jmethodID method, GError ** err, ...)
 {
   jobject tmp;
   va_list args;
 
-  va_start (args, method);
+  va_start (args, err);
   tmp = (*env)->CallStaticObjectMethodV (env, klass, method, args);
   va_end (args);
 
   if ((*env)->ExceptionCheck (env) || !tmp) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to create object from static method");
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to create object");
     return NULL;
   }
 
@@ -160,10 +172,9 @@ gst_amc_jni_object_make_global (JNIEnv * env, jobject object)
   ret = (*env)->NewGlobalRef (env, object);
   if (!ret) {
     GST_ERROR ("Failed to create global reference");
-    (*env)->ExceptionClear (env);
-  } else {
-    gst_amc_jni_object_local_unref (env, object);
   }
+  gst_amc_jni_object_local_unref (env, object);
+
   return ret;
 }
 
@@ -175,7 +186,6 @@ gst_amc_jni_object_ref (JNIEnv * env, jobject object)
   ret = (*env)->NewGlobalRef (env, object);
   if (!ret) {
     GST_ERROR ("Failed to create global reference");
-    (*env)->ExceptionClear (env);
   }
   return ret;
 }
@@ -193,9 +203,19 @@ gst_amc_jni_object_local_unref (JNIEnv * env, jobject object)
 }
 
 jstring
-gst_amc_jni_string_from_gchar (JNIEnv * env, const gchar * string)
+gst_amc_jni_string_from_gchar (JNIEnv * env, const gchar * string,
+    GError ** err)
 {
-  return (*env)->NewStringUTF (env, string);
+  jstring ret;
+
+  ret = (*env)->NewStringUTF (env, string);
+  if ((*env)->ExceptionCheck (env)) {
+    gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        err, "Failed to call Java method");
+    ret = NULL;
+  }
+
+  return ret;
 }
 
 gchar *
@@ -207,13 +227,13 @@ gst_amc_jni_string_to_gchar (JNIEnv * env, jstring string, gboolean release)
   s = (*env)->GetStringUTFChars (env, string, NULL);
   if (!s) {
     GST_ERROR ("Failed to convert string to UTF8");
-    (*env)->ExceptionClear (env);
-    return ret;
+    goto done;
   }
 
   ret = g_strdup (s);
   (*env)->ReleaseStringUTFChars (env, string, s);
 
+done:
   if (release) {
     (*env)->DeleteLocalRef (env, string);
   }
@@ -425,14 +445,15 @@ gst_amc_jni_attach_current_thread (void)
 {
   JNIEnv *env;
   JavaVMAttachArgs args;
+  gint ret;
 
   GST_DEBUG ("Attaching thread %p", g_thread_self ());
   args.version = JNI_VERSION_1_6;
   args.name = NULL;
   args.group = NULL;
 
-  if ((*java_vm)->AttachCurrentThread (java_vm, &env, &args) < 0) {
-    GST_ERROR ("Failed to attach current thread");
+  if ((ret = (*java_vm)->AttachCurrentThread (java_vm, &env, &args)) != JNI_OK) {
+    GST_ERROR ("Failed to attach current thread: %d", ret);
     return NULL;
   }
 
@@ -442,8 +463,12 @@ gst_amc_jni_attach_current_thread (void)
 static void
 gst_amc_jni_detach_current_thread (void *env)
 {
+  gint ret;
+
   GST_DEBUG ("Detaching thread %p", g_thread_self ());
-  (*java_vm)->DetachCurrentThread (java_vm);
+  if ((ret = (*java_vm)->DetachCurrentThread (java_vm)) != JNI_OK) {
+    GST_ERROR ("Failed to detach current thread: %d", ret);
+  }
 }
 
 static gboolean
@@ -514,6 +539,7 @@ static gboolean
 gst_amc_jni_initialize_java_vm (void)
 {
   jsize n_vms;
+  gint ret;
 
   /* Returns TRUE if we can safely
    * a) get the current VMs and
@@ -533,7 +559,7 @@ gst_amc_jni_initialize_java_vm (void)
   }
 
   n_vms = 0;
-  if (get_created_java_vms (&java_vm, 1, &n_vms) < 0)
+  if ((ret = get_created_java_vms (&java_vm, 1, &n_vms)) != JNI_OK)
     goto get_created_failed;
 
   if (n_vms > 0) {
@@ -554,7 +580,7 @@ gst_amc_jni_initialize_java_vm (void)
     vm_args.options = options;
     vm_args.nOptions = 4;
     vm_args.ignoreUnrecognized = JNI_TRUE;
-    if (create_java_vm (&java_vm, &env, &vm_args) < 0)
+    if ((ret = create_java_vm (&java_vm, &env, &vm_args)) != JNI_OK)
       goto create_failed;
     GST_DEBUG ("Successfully created Java VM %p", java_vm);
 
@@ -565,14 +591,14 @@ gst_amc_jni_initialize_java_vm (void)
 
 get_created_failed:
   {
-    GST_ERROR ("Failed to get already created VMs");
+    GST_ERROR ("Failed to get already created VMs: %d", ret);
     g_module_close (java_module);
     java_module = NULL;
     return FALSE;
   }
 create_failed:
   {
-    GST_ERROR ("Failed to create a Java VM");
+    GST_ERROR ("Failed to create a Java VM: %d", ret);
     g_module_close (java_module);
     java_module = NULL;
     return FALSE;
@@ -631,15 +657,20 @@ G_GNUC_PRINTF (5, 6)
   g_free (message);
 }
 
+static gpointer
+gst_amc_jni_initialize_internal (gpointer data)
+{
+  pthread_key_create (&current_jni_env, gst_amc_jni_detach_current_thread);
+  return gst_amc_jni_initialize_java_vm ()? GINT_TO_POINTER (1) : NULL;
+}
 
 gboolean
 gst_amc_jni_initialize (void)
 {
-  if (!initialized) {
-    pthread_key_create (&current_jni_env, gst_amc_jni_detach_current_thread);
-    initialized = gst_amc_jni_initialize_java_vm ();
-  }
-  return initialized;
+  GOnce once = G_ONCE_INIT;
+
+  g_once (&once, gst_amc_jni_initialize_internal, NULL);
+  return once.retval != NULL;
 }
 
 JNIEnv *
@@ -661,32 +692,31 @@ gst_amc_jni_is_vm_started (void)
   return started_java_vm;
 }
 
-#define CALL_STATIC_TYPE_METHOD(_type, _name,  _jname, _retval)                                                     \
-_type gst_amc_jni_call_static_##_name##_method (JNIEnv *env, GError ** err, jclass klass, jmethodID methodID, ...)   \
+#define CALL_STATIC_TYPE_METHOD(_type, _name,  _jname)                                                     \
+gboolean gst_amc_jni_call_static_##_name##_method (JNIEnv *env, GError ** err, jclass klass, jmethodID methodID, _type * value, ...)   \
   {                                                                                                          \
-    _type ret;                                                                                               \
+    gboolean ret = TRUE;                                                                                     \
     va_list args;                                                                                            \
-    va_start(args, methodID);                                                                                \
-    ret = (*env)->CallStatic##_jname##MethodV(env, klass, methodID, args);                                           \
+    va_start(args, value);                                                                                \
+    *value = (*env)->CallStatic##_jname##MethodV(env, klass, methodID, args);                                \
     if ((*env)->ExceptionCheck (env)) {                                                                      \
       gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
-          err, "Failed to call static Java method");                                                                \
-      (*env)->ExceptionClear (env);                                                                          \
-      ret = _retval;                                                                                         \
+          err, "Failed to call static Java method");                                                         \
+      ret = FALSE;                                                                                           \
     }                                                                                                        \
     va_end(args);                                                                                            \
-    return (_type) ret;                                                                                      \
+    return ret;                                                                                              \
   }
 
-CALL_STATIC_TYPE_METHOD (gboolean, boolean, Boolean, FALSE);
-CALL_STATIC_TYPE_METHOD (gint8, byte, Byte, G_MININT8);
-CALL_STATIC_TYPE_METHOD (gshort, short, Short, G_MINSHORT);
-CALL_STATIC_TYPE_METHOD (gint, int, Int, G_MININT);
-CALL_STATIC_TYPE_METHOD (gchar, char, Char, 0);
-CALL_STATIC_TYPE_METHOD (glong, long, Long, G_MINLONG);
-CALL_STATIC_TYPE_METHOD (gfloat, float, Float, G_MINFLOAT);
-CALL_STATIC_TYPE_METHOD (gdouble, double, Double, G_MINDOUBLE);
-CALL_STATIC_TYPE_METHOD (jobject, object, Object, NULL);
+CALL_STATIC_TYPE_METHOD (gboolean, boolean, Boolean);
+CALL_STATIC_TYPE_METHOD (gint8, byte, Byte);
+CALL_STATIC_TYPE_METHOD (gshort, short, Short);
+CALL_STATIC_TYPE_METHOD (gint, int, Int);
+CALL_STATIC_TYPE_METHOD (gchar, char, Char);
+CALL_STATIC_TYPE_METHOD (glong, long, Long);
+CALL_STATIC_TYPE_METHOD (gfloat, float, Float);
+CALL_STATIC_TYPE_METHOD (gdouble, double, Double);
+CALL_STATIC_TYPE_METHOD (jobject, object, Object);
 
 gboolean
 gst_amc_jni_call_static_void_method (JNIEnv * env, GError ** err, jclass klass,
@@ -700,39 +730,37 @@ gst_amc_jni_call_static_void_method (JNIEnv * env, GError ** err, jclass klass,
   if ((*env)->ExceptionCheck (env)) {
     gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
         err, "Failed to call static Java method");
-    (*env)->ExceptionClear (env);
     ret = FALSE;
   }
   va_end (args);
   return ret;
 }
 
-#define CALL_TYPE_METHOD(_type, _name,  _jname, _retval)                                                     \
-_type gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject obj, jmethodID methodID, ...)   \
+#define CALL_TYPE_METHOD(_type, _name,  _jname)                                                              \
+gboolean gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject obj, jmethodID methodID, _type *value, ...)   \
   {                                                                                                          \
-    _type ret;                                                                                               \
+    gboolean ret = TRUE;                                                                                     \
     va_list args;                                                                                            \
-    va_start(args, methodID);                                                                                \
-    ret = (*env)->Call##_jname##MethodV(env, obj, methodID, args);                                           \
+    va_start(args, value);                                                                                \
+    *value = (*env)->Call##_jname##MethodV(env, obj, methodID, args);                                        \
     if ((*env)->ExceptionCheck (env)) {                                                                      \
       gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
           err, "Failed to call Java method");                                                                \
-      (*env)->ExceptionClear (env);                                                                          \
-      ret = _retval;                                                                                         \
+      ret = FALSE;                                                                                           \
     }                                                                                                        \
     va_end(args);                                                                                            \
-    return (_type) ret;                                                                                      \
+    return ret;                                                                                              \
   }
 
-CALL_TYPE_METHOD (gboolean, boolean, Boolean, FALSE);
-CALL_TYPE_METHOD (gint8, byte, Byte, G_MININT8);
-CALL_TYPE_METHOD (gshort, short, Short, G_MINSHORT);
-CALL_TYPE_METHOD (gint, int, Int, G_MININT);
-CALL_TYPE_METHOD (gchar, char, Char, 0);
-CALL_TYPE_METHOD (glong, long, Long, G_MINLONG);
-CALL_TYPE_METHOD (gfloat, float, Float, G_MINFLOAT);
-CALL_TYPE_METHOD (gdouble, double, Double, G_MINDOUBLE);
-CALL_TYPE_METHOD (jobject, object, Object, NULL);
+CALL_TYPE_METHOD (gboolean, boolean, Boolean);
+CALL_TYPE_METHOD (gint8, byte, Byte);
+CALL_TYPE_METHOD (gshort, short, Short);
+CALL_TYPE_METHOD (gint, int, Int);
+CALL_TYPE_METHOD (gchar, char, Char);
+CALL_TYPE_METHOD (glong, long, Long);
+CALL_TYPE_METHOD (gfloat, float, Float);
+CALL_TYPE_METHOD (gdouble, double, Double);
+CALL_TYPE_METHOD (jobject, object, Object);
 
 gboolean
 gst_amc_jni_call_void_method (JNIEnv * env, GError ** err, jobject obj,
@@ -746,27 +774,56 @@ gst_amc_jni_call_void_method (JNIEnv * env, GError ** err, jobject obj,
   if ((*env)->ExceptionCheck (env)) {
     gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
         err, "Failed to call Java method");
-    (*env)->ExceptionClear (env);
     ret = FALSE;
   }
   va_end (args);
   return ret;
 }
 
-#define GET_TYPE_FIELD(_type, _name, _jname, _retval)                                               \
-_type gst_amc_jni_get_##_name##_field (JNIEnv *env, GError ** err, jobject obj, jfieldID fieldID)   \
+#define GET_TYPE_FIELD(_type, _name, _jname)                                               \
+gboolean gst_amc_jni_get_##_name##_field (JNIEnv *env, GError ** err, jobject obj, jfieldID fieldID, _type *value)   \
   {                                                                                                 \
-    _type res;                                                                                      \
+    gboolean ret = TRUE;                                                                            \
                                                                                                     \
-    res = (*env)->Get##_jname##Field(env, obj, fieldID);                                            \
+    *value = (*env)->Get##_jname##Field(env, obj, fieldID);                                         \
     if ((*env)->ExceptionCheck (env)) {                                                             \
       gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                      \
-          err, "Failed to call Java field");                                                        \
-      (*env)->ExceptionClear (env);                                                                 \
-      res = _retval;                                                                                \
+          err, "Failed to get Java field");                                                         \
+      ret = FALSE;                                                                                  \
     }                                                                                               \
-    return res;                                                                                     \
+    return ret;                                                                                     \
   }
 
-GET_TYPE_FIELD (gint, int, Int, G_MININT);
-GET_TYPE_FIELD (glong, long, Long, G_MINLONG);
+GET_TYPE_FIELD (gboolean, boolean, Boolean);
+GET_TYPE_FIELD (gint8, byte, Byte);
+GET_TYPE_FIELD (gshort, short, Short);
+GET_TYPE_FIELD (gint, int, Int);
+GET_TYPE_FIELD (gchar, char, Char);
+GET_TYPE_FIELD (glong, long, Long);
+GET_TYPE_FIELD (gfloat, float, Float);
+GET_TYPE_FIELD (gdouble, double, Double);
+GET_TYPE_FIELD (jobject, object, Object);
+
+#define GET_STATIC_TYPE_FIELD(_type, _name, _jname)                                               \
+gboolean gst_amc_jni_get_static_##_name##_field (JNIEnv *env, GError ** err, jclass klass, jfieldID fieldID, _type *value)   \
+  {                                                                                                 \
+    gboolean ret = TRUE;                                                                            \
+                                                                                                    \
+    *value = (*env)->GetStatic##_jname##Field(env, klass, fieldID);                                 \
+    if ((*env)->ExceptionCheck (env)) {                                                             \
+      gst_amc_jni_set_error (env, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                      \
+          err, "Failed to get static Java field");                                                  \
+      ret = FALSE;                                                                                  \
+    }                                                                                               \
+    return ret;                                                                                     \
+  }
+
+GET_STATIC_TYPE_FIELD (gboolean, boolean, Boolean);
+GET_STATIC_TYPE_FIELD (gint8, byte, Byte);
+GET_STATIC_TYPE_FIELD (gshort, short, Short);
+GET_STATIC_TYPE_FIELD (gint, int, Int);
+GET_STATIC_TYPE_FIELD (gchar, char, Char);
+GET_STATIC_TYPE_FIELD (glong, long, Long);
+GET_STATIC_TYPE_FIELD (gfloat, float, Float);
+GET_STATIC_TYPE_FIELD (gdouble, double, Double);
+GET_STATIC_TYPE_FIELD (jobject, object, Object);

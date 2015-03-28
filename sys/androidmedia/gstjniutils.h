@@ -30,30 +30,44 @@
 #include <gst/gst.h>
 
 jclass    gst_amc_jni_get_class              (JNIEnv * env,
-                                             const gchar * name);
+                                             const gchar * name,
+                                             GError ** err);
 
-jmethodID gst_amc_jni_get_method             (JNIEnv * env,
+jmethodID gst_amc_jni_get_method_id          (JNIEnv * env,
                                              jclass klass,
                                              const gchar * name,
-                                             const gchar * signature);
+                                             const gchar * signature,
+                                             GError ** err);
 
-jmethodID gst_amc_jni_get_static_method      (JNIEnv * env,
+jmethodID gst_amc_jni_get_static_method_id   (JNIEnv * env,
                                              jclass klass,
                                              const gchar * name,
-                                             const gchar * signature);
+                                             const gchar * signature,
+                                             GError ** err);
 
 jfieldID gst_amc_jni_get_field_id            (JNIEnv * env,
                                              jclass klass,
                                              const gchar * name,
-                                             const gchar * type);
+                                             const gchar * type,
+                                             GError ** err);
+
+jfieldID gst_amc_jni_get_static_field_id     (JNIEnv * env,
+                                             jclass klass,
+                                             const gchar * name,
+                                             const gchar * type,
+                                             GError ** err);
 
 jobject gst_amc_jni_new_object               (JNIEnv * env,
                                              jclass klass,
-                                             jmethodID constructor, ...);
+                                             jmethodID constructor,
+                                             GError ** err,
+                                             ...);
 
 jobject gst_amc_jni_new_object_from_static   (JNIEnv * env,
                                              jclass klass,
-                                             jmethodID constructor, ...);
+                                             jmethodID constructor,
+                                             GError ** err,
+                                             ...);
 
 jobject gst_amc_jni_object_make_global       (JNIEnv * env,
                                              jobject object);
@@ -72,7 +86,8 @@ gchar *gst_amc_jni_string_to_gchar           (JNIEnv * env,
                                              gboolean release);
 
 jstring gst_amc_jni_string_from_gchar        (JNIEnv * env,
-                                             const gchar * string);
+                                             const gchar * string,
+                                             GError ** err);
 
 G_GNUC_PRINTF (5, 6)
 void gst_amc_jni_set_error                   (JNIEnv * env,
@@ -88,7 +103,7 @@ gboolean gst_amc_jni_is_vm_started           (void);
 JNIEnv *gst_amc_jni_get_env                  (void);
 
 #define DEF_CALL_STATIC_TYPE_METHOD(_type, _name,  _jname, _retval) \
-_type gst_amc_jni_call_static_##_name##_method (JNIEnv *env, GError ** err, jclass klass, jmethodID methodID, ...)
+gboolean gst_amc_jni_call_static_##_name##_method (JNIEnv *env, GError ** err, jclass klass, jmethodID methodID, _type * value, ...)
 
 DEF_CALL_STATIC_TYPE_METHOD (gboolean, boolean, Boolean, FALSE);
 DEF_CALL_STATIC_TYPE_METHOD (gint8, byte, Byte, G_MININT8);
@@ -106,7 +121,7 @@ gboolean gst_amc_jni_call_static_void_method        (JNIEnv * env,
                                                     jmethodID method, ...);
 
 #define DEF_CALL_TYPE_METHOD(_type, _name,  _jname, _retval) \
-_type gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject obj, jmethodID methodID, ...)
+gboolean gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject obj, jmethodID methodID, _type * value, ...)
 
 DEF_CALL_TYPE_METHOD (gboolean, boolean, Boolean, FALSE);
 DEF_CALL_TYPE_METHOD (gint8, byte, Byte, G_MININT8);
@@ -123,10 +138,30 @@ gboolean gst_amc_jni_call_void_method        (JNIEnv * env,
                                              jobject obj,
                                              jmethodID method, ...);
 
-#define DEF_GET_TYPE_FIELD(_type, _name, _jname, _retval) \
-_type gst_amc_jni_get_##_name##_field (JNIEnv *env, GError ** err, jobject obj, jfieldID fieldID)
+#define DEF_GET_TYPE_FIELD(_type, _name, _jname) \
+gboolean gst_amc_jni_get_##_name##_field (JNIEnv *env, GError ** err, jobject obj, jfieldID fieldID, _type * value)
 
-DEF_GET_TYPE_FIELD (gint, int, Int, G_MININT);
-DEF_GET_TYPE_FIELD (glong, long, Long, G_MINLONG);
+DEF_GET_TYPE_FIELD (gboolean, boolean, Boolean);
+DEF_GET_TYPE_FIELD (gint8, byte, Byte);
+DEF_GET_TYPE_FIELD (gshort, short, Short);
+DEF_GET_TYPE_FIELD (gint, int, Int);
+DEF_GET_TYPE_FIELD (gchar, char, Char);
+DEF_GET_TYPE_FIELD (glong, long, Long);
+DEF_GET_TYPE_FIELD (gfloat, float, Float);
+DEF_GET_TYPE_FIELD (gdouble, double, Double);
+DEF_GET_TYPE_FIELD (jobject, object, Object);
+
+#define DEF_GET_STATIC_TYPE_FIELD(_type, _name, _jname) \
+gboolean gst_amc_jni_get_static_##_name##_field (JNIEnv *env, GError ** err, jclass klass, jfieldID fieldID, _type * value)
+
+DEF_GET_STATIC_TYPE_FIELD (gboolean, boolean, Boolean);
+DEF_GET_STATIC_TYPE_FIELD (gint8, byte, Byte);
+DEF_GET_STATIC_TYPE_FIELD (gshort, short, Short);
+DEF_GET_STATIC_TYPE_FIELD (gint, int, Int);
+DEF_GET_STATIC_TYPE_FIELD (gchar, char, Char);
+DEF_GET_STATIC_TYPE_FIELD (glong, long, Long);
+DEF_GET_STATIC_TYPE_FIELD (gfloat, float, Float);
+DEF_GET_STATIC_TYPE_FIELD (gdouble, double, Double);
+DEF_GET_STATIC_TYPE_FIELD (jobject, object, Object);
 
 #endif
