@@ -177,13 +177,11 @@ class Test(Loggable):
         self.error_str = error
 
     def check_results(self):
-        if self.result is Result.FAILED:
+        if self.result is Result.FAILED or self.result is Result.TIMEOUT:
             return
 
         self.debug("%s returncode: %s", self, self.process.returncode)
-        if self.result == Result.TIMEOUT:
-            self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
-        elif self.process.returncode == 0:
+        if self.process.returncode == 0:
             self.set_result(Result.PASSED)
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             self.set_result(Result.FAILED, "Valgrind reported errors")
@@ -220,7 +218,10 @@ class Test(Loggable):
             # The get_current_value logic is not implemented... dumb
             # timeout
             if time.time() - self.last_change_ts > self.timeout:
-                self.set_result(Result.TIMEOUT)
+                self.set_result(Result.TIMEOUT,
+                                "Application timed out: %s secs" %
+                                self.timeout,
+                                "timeout")
                 return True
             return False
         elif val is Result.FAILED:
@@ -235,7 +236,10 @@ class Test(Loggable):
             self.debug("%s: Same value for %d/%d seconds" %
                        (self, delta, self.timeout))
             if delta > self.timeout:
-                self.set_result(Result.TIMEOUT)
+                self.set_result(Result.TIMEOUT,
+                                "Application timed out: %s secs" %
+                                self.timeout,
+                                "timeout")
                 return True
         elif self.hard_timeout and time.time() - self.start_ts > self.hard_timeout:
             self.set_result(
@@ -467,13 +471,10 @@ class GstValidateTest(Test):
             return ret + "]"
 
     def check_results(self):
-        if self.result is Result.FAILED or self.result is Result.PASSED:
+        if self.result is Result.FAILED or self.result is Result.PASSED or self.result is Result.TIMEOUT:
             return
 
         self.debug("%s returncode: %s", self, self.process.returncode)
-        if self.result == Result.TIMEOUT:
-            self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
-            return
 
         criticals = self.get_validate_criticals_errors()
         if self.process.returncode == 139:
