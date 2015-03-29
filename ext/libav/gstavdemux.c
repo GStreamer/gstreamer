@@ -634,6 +634,7 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
 
   /* Mark discont on all srcpads and remove eos */
   gst_ffmpegdemux_set_flags (demux, TRUE, FALSE);
+  gst_flow_combiner_reset (demux->flowcombiner);
 
   /* and restart the task in case it got paused explicitely or by
    * the FLUSH_START event we pushed out. */
