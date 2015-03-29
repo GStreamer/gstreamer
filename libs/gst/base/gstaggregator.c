@@ -54,6 +54,12 @@
  *    subclass, it should instead return GST_FLOW_EOS in its aggregate
  *    implementation.
  *  </para></listitem>
+ *  <listitem><para>
+ *    Note that the aggregator logic regarding gap event handling is to turn
+ *    these into gap buffers with matching PTS and duration. It will also
+ *    flag these buffers with GST_BUFFER_FLAG_GAP and GST_BUFFER_FLAG_DROPPABLE
+ *    to ease their identification and subsequent processing.
+ *  </para></listitem>
  * </itemizedlist>
  */
 
