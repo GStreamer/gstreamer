@@ -666,6 +666,7 @@ ges_track_new (GESTrackType type, GstCaps * caps)
   /* TODO Be smarter with well known track types */
   if (type == GES_TRACK_TYPE_VIDEO) {
     tmpcaps = gst_caps_new_empty_simple ("video/x-raw");
+    gst_caps_set_features (tmpcaps, 0, gst_caps_features_new_any ());
 
     if (gst_caps_is_subset (caps, tmpcaps)) {
       track = GES_TRACK (ges_video_track_new ());
@@ -677,6 +678,7 @@ ges_track_new (GESTrackType type, GstCaps * caps)
     gst_caps_unref (tmpcaps);
   } else if (type == GES_TRACK_TYPE_AUDIO) {
     tmpcaps = gst_caps_new_empty_simple ("audio/x-raw");
+    gst_caps_set_features (tmpcaps, 0, gst_caps_features_new_any ());
 
     if (gst_caps_is_subset (caps, tmpcaps)) {
       track = GES_TRACK (ges_audio_track_new ());
