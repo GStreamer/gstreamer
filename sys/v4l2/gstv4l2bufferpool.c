@@ -549,6 +549,13 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
     GST_INFO_OBJECT (pool, "increasing minimum buffers to %u", min_buffers);
   }
 
+  /* respect driver requirements */
+  if (min_buffers < obj->min_buffers) {
+    updated = TRUE;
+    min_buffers = obj->min_buffers;
+    GST_INFO_OBJECT (pool, "increasing minimum buffers to %u", min_buffers);
+  }
+
   if (max_buffers > VIDEO_MAX_FRAME || max_buffers == 0) {
     updated = TRUE;
     max_buffers = VIDEO_MAX_FRAME;
