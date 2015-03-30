@@ -95,6 +95,9 @@ free_filenode (FileNode * filenode)
   if (filenode->uri)
     g_free (filenode->uri);
 
+  if (filenode->caps)
+    gst_caps_unref (filenode->caps);
+
   g_free (filenode->str_open);
   g_free (filenode->str_close);
 
