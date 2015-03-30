@@ -434,6 +434,30 @@ gst_multi_file_sink_post_message_full (GstMultiFileSink * multifilesink,
       gst_message_new_element (GST_OBJECT_CAST (multifilesink), s));
 }
 
+static void
+gst_multi_file_sink_post_message_from_time (GstMultiFileSink * multifilesink,
+    GstClockTime timestamp, GstClockTime duration, const char *filename)
+{
+  GstClockTime running_time, stream_time;
+  guint64 offset, offset_end;
+  GstSegment *segment;
+  GstFormat format;
+
+  if (!multifilesink->post_messages)
+    return;
+
+  segment = &GST_BASE_SINK (multifilesink)->segment;
+  format = segment->format;
+
+  offset = -1;
+  offset_end = -1;
+
+  running_time = gst_segment_to_running_time (segment, format, timestamp);
+  stream_time = gst_segment_to_stream_time (segment, format, timestamp);
+
+  gst_multi_file_sink_post_message_full (multifilesink, timestamp, duration,
+      offset, offset_end, running_time, stream_time, filename);
+}
 
 static void
 gst_multi_file_sink_post_message (GstMultiFileSink * multifilesink,
@@ -826,6 +850,19 @@ gst_multi_file_sink_event (GstBaseSink * sink, GstEvent * event)
 
       break;
     }
+    case GST_EVENT_EOS:
+      if (multifilesink->file) {
+        gchar *filename;
+
+        filename = g_strdup_printf (multifilesink->filename,
+            multifilesink->index);
+        gst_multi_file_sink_post_message_from_time (multifilesink,
+            GST_BASE_SINK (multifilesink)->segment.position, -1, filename);
+        g_free (filename);
+
+        gst_multi_file_sink_close_file (multifilesink, NULL);
+      }
+      break;
     default:
       break;
   }
