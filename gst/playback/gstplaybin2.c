@@ -5734,11 +5734,13 @@ failure:
       GstSourceGroup *curr_group;
 
       curr_group = playbin->curr_group;
-      if (curr_group && curr_group->active && curr_group->valid) {
-        /* unlink our pads with the sink */
-        deactivate_group (playbin, curr_group);
+      if (curr_group) {
+        if (curr_group->active && curr_group->valid) {
+          /* unlink our pads with the sink */
+          deactivate_group (playbin, curr_group);
+        }
+        curr_group->valid = FALSE;
       }
-      curr_group->valid = FALSE;
 
       /* Swap current and next group back */
       playbin->curr_group = playbin->next_group;
