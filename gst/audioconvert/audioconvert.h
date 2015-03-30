@@ -107,6 +107,11 @@ struct _AudioConvertCtx
   /* channel conversion matrix, m[in_channels][out_channels].
    * If identity matrix, passthrough applies. */
   gfloat **matrix;
+
+  /* channel conversion matrix with int values, m[in_channels][out_channels].
+   * this is matrix * (2^10) as integers */
+  gint **matrix_int;
+
   /* temp storage for channelmix */
   gpointer tmp;
 

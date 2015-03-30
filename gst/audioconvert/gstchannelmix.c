@@ -29,6 +29,8 @@
 
 #include "gstchannelmix.h"
 
+#define INT_MATRIX_FACTOR_EXPONENT 10
+
 /*
  * Channel matrix functions.
  */
@@ -48,6 +50,13 @@ gst_channel_mix_unset_matrix (AudioConvertCtx * this)
   g_free (this->matrix);
 
   this->matrix = NULL;
+
+  for (i = 0; i < this->in.channels; i++)
+    g_free (this->matrix_int[i]);
+  g_free (this->matrix_int);
+
+  this->matrix_int = NULL;
+
   g_free (this->tmp);
   this->tmp = NULL;
 }
@@ -590,6 +599,26 @@ gst_channel_mix_fill_matrix (AudioConvertCtx * this)
   }
 }
 
+/* only call this after this->matrix is fully set up and normalized */
+static void
+gst_channel_mix_setup_matrix_int (AudioConvertCtx * this)
+{
+  gint i, j;
+  gfloat tmp;
+  gfloat factor = (1 << INT_MATRIX_FACTOR_EXPONENT);
+
+  this->matrix_int = g_new0 (gint32 *, this->in.channels);
+
+  for (i = 0; i < this->in.channels; i++) {
+    this->matrix_int[i] = g_new (gint32, this->out.channels);
+
+    for (j = 0; j < this->out.channels; j++) {
+      tmp = this->matrix[i][j] * factor;
+      this->matrix_int[i][j] = (gint)tmp;
+    }
+  }
+}
+
 /* only call after this->out and this->in are filled in */
 void
 gst_channel_mix_setup_matrix (AudioConvertCtx * this)
@@ -617,6 +646,8 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
 
   /* setup the matrix' internal values */
   gst_channel_mix_fill_matrix (this);
+
+  gst_channel_mix_setup_matrix_int(this);
 
 #ifndef GST_DISABLE_GST_DEBUG
   /* debug */
@@ -694,8 +725,11 @@ gst_channel_mix_mix_int (AudioConvertCtx * this,
       /* convert */
       res = 0;
       for (in = 0; in < inchannels; in++) {
-        res += in_data[n * inchannels + in] * this->matrix[in][out];
+        res += in_data[n * inchannels + in] * (gint64)this->matrix_int[in][out];
       }
+
+      /* remove factor from int matrix */
+      res = res >> INT_MATRIX_FACTOR_EXPONENT;
 
       /* clip (shouldn't we use doubles instead as intermediate format?) */
       if (res < G_MININT32)
