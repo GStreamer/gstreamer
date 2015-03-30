@@ -109,7 +109,7 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
   }
 
   if (!gst_gl_shader_compile_and_check (differencematte->shader[1],
-          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+          hconv7_fragment_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
     gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
         "Failed to initialize hconv7 shader");
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
@@ -118,7 +118,7 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
   }
 
   if (!gst_gl_shader_compile_and_check (differencematte->shader[2],
-          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+          vconv7_fragment_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
     gst_gl_context_set_error (GST_GL_BASE_FILTER (differencematte)->context,
         "Failed to initialize vconv7 shader");
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,

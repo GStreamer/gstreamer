@@ -17,6 +17,17 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectidentity.c \
 	effects/gstgleffectmirror.c \
 	effects/gstgleffectsqueeze.c \
+	effects/gstgleffectstretch.c \
+	effects/gstgleffectfisheye.c \
+	effects/gstgleffecttwirl.c \
+	effects/gstgleffectbulge.c \
+	effects/gstgleffecttunnel.c \
+	effects/gstgleffectsquare.c \
+	effects/gstgleffectlumatocurve.c \
+	effects/gstgleffectrgbtocurve.c \
+	effects/gstgleffectsin.c \
+	effects/gstgleffectxray.c \
+	effects/gstgleffectglow.c \
 	gstglcolorscale.c \
 	gstglmixer.c \
 	gstglvideomixer.c \
@@ -52,18 +63,7 @@ libgstopengl_la_SOURCES += \
 	gstgldeinterlace.c \
 	gltestsrc.c \
 	gstgltestsrc.c \
-	gstglmosaic.c \
-	effects/gstgleffectstretch.c \
-	effects/gstgleffecttunnel.c \
-	effects/gstgleffectfisheye.c \
-	effects/gstgleffecttwirl.c \
-	effects/gstgleffectbulge.c \
-	effects/gstgleffectsquare.c \
-	effects/gstgleffectlumatocurve.c \
-	effects/gstgleffectrgbtocurve.c \
-	effects/gstgleffectsin.c \
-	effects/gstgleffectglow.c \
-	effects/gstgleffectxray.c
+	gstglmosaic.c
 
 noinst_HEADERS += \
 	gstglfilterblur.h \

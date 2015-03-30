@@ -34,6 +34,12 @@ G_BEGIN_DECLS
 #define GST_IS_GL_EFFECTS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) , GST_TYPE_GL_EFFECTS))
 #define GST_GL_EFFECTS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) , GST_TYPE_GL_EFFECTS,GstGLEffectsClass))
 
+#define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
+#define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
+#define USING_GLES(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES, 1, 0))
+#define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
+#define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
+
 typedef struct _GstGLEffects GstGLEffects;
 typedef struct _GstGLEffectsClass GstGLEffectsClass;
 
@@ -82,6 +88,8 @@ enum
 
 
 GType gst_gl_effects_get_type (void);
+GstGLShader* gst_gl_effects_get_fragment_shader (GstGLEffects *effects,
+    const gchar * shader_name, const gchar * shader_source_gles2, const gchar * shader_source_opengl);
 
 void gst_gl_effects_identity (GstGLEffects *effects);
 void gst_gl_effects_mirror (GstGLEffects *effects);
