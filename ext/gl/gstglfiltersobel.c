@@ -215,16 +215,16 @@ gst_gl_filtersobel_init_shader (GstGLFilter * filter)
   //blocking call, wait the opengl thread has compiled the shader
   ret =
       gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context, 0,
-      desaturate_fragment_source, &filtersobel->desat);
+      desaturate_fragment_source_opengl, &filtersobel->desat);
   ret &=
       gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context, 0,
-      sep_sobel_hconv3_fragment_source, &filtersobel->hconv);
+      sep_sobel_hconv3_fragment_source_opengl, &filtersobel->hconv);
   ret &=
       gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context, 0,
-      sep_sobel_vconv3_fragment_source, &filtersobel->vconv);
+      sep_sobel_vconv3_fragment_source_opengl, &filtersobel->vconv);
   ret &=
       gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context, 0,
-      sep_sobel_length_fragment_source, &filtersobel->len);
+      sep_sobel_length_fragment_source_opengl, &filtersobel->len);
 
   return ret;
 }

@@ -48,28 +48,22 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
-  shader = g_hash_table_lookup (effects->shaderstable, "xray1");
+  shader = gst_gl_effects_get_fragment_shader (effects, "hconv7",
+      hconv7_fragment_source_gles2, hconv7_fragment_source_opengl);
 
-  if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) "xray1", shader);
-  }
+  if (!shader)
+    return;
 
   if (!kernel_ready) {
     fill_gaussian_kernel (gauss_kernel, 7, 1.5);
     kernel_ready = TRUE;
   }
-
-  if (!gst_gl_shader_compile_and_check (shader,
-          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_context_set_error (context, "Failed to initialize hconv7 shader");
-    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
-    return;
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (context)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
   }
-
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#endif
 
   gst_gl_shader_use (shader);
 
@@ -80,7 +74,7 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "width", width);
+  gst_gl_shader_set_uniform_1f (shader, "gauss_width", width);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
@@ -95,23 +89,18 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
-  shader = g_hash_table_lookup (effects->shaderstable, "xray2");
+  shader = gst_gl_effects_get_fragment_shader (effects, "vconv7",
+      vconv7_fragment_source_gles2, vconv7_fragment_source_opengl);
 
-  if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) "xray2", shader);
-  }
-
-  if (!gst_gl_shader_compile_and_check (shader,
-          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_context_set_error (context, "Failed to initialize vconv7 shader");
-    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+  if (!shader)
     return;
-  }
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (context)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (shader);
 
@@ -122,7 +111,7 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "height", height);
+  gst_gl_shader_set_uniform_1f (shader, "gauss_height", height);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
@@ -138,24 +127,18 @@ gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
-  shader = g_hash_table_lookup (effects->shaderstable, "xray_desat");
+  shader = gst_gl_effects_get_fragment_shader (effects, "desaturate",
+      desaturate_fragment_source_gles2, desaturate_fragment_source_opengl);
 
-  if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) "xray_desat", shader);
-  }
-
-  if (!gst_gl_shader_compile_and_check (shader,
-          desaturate_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_context_set_error (context,
-        "Failed to initialize desaturate shader");
-    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+  if (!shader)
     return;
-  }
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (context)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (shader);
 
@@ -178,25 +161,19 @@ gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
-  shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_hconv");
+  shader = gst_gl_effects_get_fragment_shader (effects, "sobel_hconv3",
+      sep_sobel_hconv3_fragment_source_gles2,
+      sep_sobel_hconv3_fragment_source_opengl);
 
-  if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) "xray_sob_hconv",
-        shader);
-  }
-
-  if (!gst_gl_shader_compile_and_check (shader,
-          sep_sobel_hconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_context_set_error (context,
-        "Failed to initialize sobel hvonc3 shader");
-    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+  if (!shader)
     return;
-  }
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (context)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (shader);
 
@@ -221,25 +198,19 @@ gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
-  shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_vconv");
+  shader = gst_gl_effects_get_fragment_shader (effects, "sobel_vconv3",
+      sep_sobel_vconv3_fragment_source_gles2,
+      sep_sobel_vconv3_fragment_source_opengl);
 
-  if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) "xray_sob_vconv",
-        shader);
-  }
-
-  if (!gst_gl_shader_compile_and_check (shader,
-          sep_sobel_vconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_context_set_error (context,
-        "Failed to initialize sobel vconv3 shader");
-    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+  if (!shader)
     return;
-  }
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (context)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (shader);
 
@@ -264,25 +235,19 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
-  shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_len");
+  shader = gst_gl_effects_get_fragment_shader (effects, "sobel_length",
+      sep_sobel_length_fragment_source_gles2,
+      sep_sobel_length_fragment_source_opengl);
 
-  if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) "xray_sob_len",
-        shader);
-  }
-
-  if (!gst_gl_shader_compile_and_check (shader,
-          sep_sobel_length_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_context_set_error (context,
-        "Failed to initialize seobel length shader");
-    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+  if (!shader)
     return;
-  }
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (context)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (shader);
 
@@ -308,23 +273,18 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
-  shader = g_hash_table_lookup (effects->shaderstable, "xray4");
+  shader = gst_gl_effects_get_fragment_shader (effects, "multiply",
+      multiply_fragment_source_gles2, multiply_fragment_source_opengl);
 
-  if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) "xray4", shader);
-  }
-
-  if (!gst_gl_shader_compile_and_check (shader,
-          multiply_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_context_set_error (context, "Failed to initialize multiply shader");
-    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
+  if (!shader)
     return;
-  }
 
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (context)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (shader);
 

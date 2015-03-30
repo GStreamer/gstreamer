@@ -23,12 +23,6 @@
 
 #include "../gstgleffects.h"
 
-#define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
-#define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
-#define USING_GLES(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES, 1, 0))
-#define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
-#define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
-
 static void
 gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
     gpointer data)
@@ -39,37 +33,12 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
   GstGLFuncs *gl = context->gl_vtable;
 
-  shader = g_hash_table_lookup (effects->shaderstable, "mirror0");
+  shader = gst_gl_effects_get_fragment_shader (effects, "mirror",
+      mirror_fragment_source_gles2, mirror_fragment_source_opengl);
 
-  if (!shader) {
-    shader = gst_gl_shader_new (context);
-    g_hash_table_insert (effects->shaderstable, (gchar *) "mirror0", shader);
+  if (!shader)
+    return;
 
-    if (USING_GLES2 (context) || USING_OPENGL3 (context)) {
-      if (!gst_gl_shader_compile_with_default_v_and_check (shader,
-              mirror_fragment_source_gles2, &filter->draw_attr_position_loc,
-              &filter->draw_attr_texture_loc)) {
-        /* gst gl context error is already set */
-        GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-            ("Failed to initialize squeeze shader, %s",
-                gst_gl_context_get_error ()), (NULL));
-        return;
-      }
-    }
-#if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (context)) {
-      if (!gst_gl_shader_compile_and_check (shader,
-              mirror_fragment_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-        gst_gl_context_set_error (context,
-            "Failed to initialize mirror shader");
-        GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-            ("%s", gst_gl_context_get_error ()), (NULL));
-        return;
-      }
-
-    }
-#endif
-  }
 #if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (context)) {
     gl->MatrixMode (GL_PROJECTION);
