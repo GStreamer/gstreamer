@@ -657,6 +657,7 @@ static int
 find_input_selector (GValue * velement, const gchar * type)
 {
   GstElement *element = g_value_get_object (velement);
+  int result = !0;
 
   if (G_OBJECT_TYPE (element) == g_type_from_name ("GstInputSelector")) {
     GstPad *srcpad = gst_element_get_static_pad (element, "src");
@@ -681,11 +682,13 @@ find_input_selector (GValue * velement, const gchar * type)
 
         gst_object_unref (srcpad);
         if (found)
-          return 0;
+          result = 0;
       }
+
+      gst_caps_unref (caps);
     }
   }
-  return !0;
+  return result;
 }
 
 static GstElement *
