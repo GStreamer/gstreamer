@@ -30,6 +30,29 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+static GList *mfs_messages = NULL;
+
+static void
+mfs_check_next_message (const gchar * filename)
+{
+  GstMessage *msg;
+  const gchar *msg_filename;
+  const GstStructure *structure;
+
+  fail_unless (mfs_messages != NULL);
+
+  msg = mfs_messages->data;
+  mfs_messages = g_list_delete_link (mfs_messages, mfs_messages);
+
+  structure = gst_message_get_structure (msg);
+
+  msg_filename = gst_structure_get_string (structure, "filename");
+
+  fail_unless (strcmp (filename, msg_filename) == 0);
+
+  gst_message_unref (msg);
+}
+
 static void
 run_pipeline (GstElement * pipeline)
 {
@@ -42,11 +65,27 @@ run_pipeline (GstElement * pipeline)
   gst_element_get_state (pipeline, NULL, NULL, -1);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  msg =
-      gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
-      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
-  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
-  gst_message_unref (msg);
+  while (1) {
+    msg =
+        gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+        GST_MESSAGE_EOS | GST_MESSAGE_ERROR | GST_MESSAGE_ELEMENT);
+
+    fail_unless (msg != NULL);
+    if (msg) {
+      if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT) {
+        if (gst_message_has_name (msg, "GstMultiFileSink"))
+          mfs_messages = g_list_append (mfs_messages, msg);
+        else
+          gst_message_unref (msg);
+
+        continue;
+      }
+
+      fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+      gst_message_unref (msg);
+    }
+    break;
+  }
 
   gst_object_unref (bus);
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -75,7 +114,8 @@ GST_START_TEST (test_multifilesink_key_frame)
   mfs = gst_bin_get_by_name (GST_BIN (pipeline), "mfs");
   fail_if (mfs == NULL);
   mfs_pattern = g_build_filename (my_tmpdir, "%05d", NULL);
-  g_object_set (G_OBJECT (mfs), "location", mfs_pattern, NULL);
+  g_object_set (G_OBJECT (mfs), "location", mfs_pattern, "post-messages", TRUE,
+      NULL);
   g_object_unref (mfs);
   run_pipeline (pipeline);
   gst_object_unref (pipeline);
@@ -85,10 +125,14 @@ GST_START_TEST (test_multifilesink_key_frame)
 
     s = g_strdup_printf (mfs_pattern, i);
     fail_if (g_remove (s) != 0);
+
+    mfs_check_next_message (s);
+
     g_free (s);
   }
   fail_if (g_remove (my_tmpdir) != 0);
 
+  fail_unless (mfs_messages == NULL);
   g_free (mfs_pattern);
   g_free (my_tmpdir);
 }
@@ -156,6 +200,7 @@ GST_START_TEST (test_multifilesink_key_unit)
   GstBuffer *buf;
   GstPad *sink;
   GstSegment segment;
+  GstBus *bus;
 
   tmpdir = g_get_tmp_dir ();
   template = g_build_filename (tmpdir, "multifile-test-XXXXXX", NULL);
@@ -165,7 +210,10 @@ GST_START_TEST (test_multifilesink_key_unit)
   mfs = gst_element_factory_make ("multifilesink", NULL);
   fail_if (mfs == NULL);
   mfs_pattern = g_build_filename (my_tmpdir, "%05d", NULL);
-  g_object_set (G_OBJECT (mfs), "location", mfs_pattern, "next-file", 3, NULL);
+  g_object_set (G_OBJECT (mfs), "location", mfs_pattern, "next-file", 3,
+      "post-messages", TRUE, NULL);
+  bus = gst_bus_new ();
+  gst_element_set_bus (mfs, bus);
   fail_if (gst_element_set_state (mfs,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
@@ -190,18 +238,32 @@ GST_START_TEST (test_multifilesink_key_unit)
   gst_buffer_fill (buf, 0, "baz", 4);
   fail_if (gst_pad_chain (sink, buf) != GST_FLOW_OK);
 
+  gst_pad_send_event (sink, gst_event_new_eos ());
+
   fail_if (gst_element_set_state (mfs,
           GST_STATE_NULL) == GST_STATE_CHANGE_FAILURE);
+  gst_element_set_bus (mfs, NULL);
 
   for (i = 0; i < 2; i++) {
     char *s;
+    GstMessage *msg;
 
     s = g_strdup_printf (mfs_pattern, i);
     fail_if (g_remove (s) != 0);
+
+    msg = gst_bus_pop_filtered (bus, GST_MESSAGE_ELEMENT);
+    fail_unless (msg != NULL);
+    fail_unless (gst_message_has_name (msg, "GstMultiFileSink"));
+    fail_unless (strcmp (s,
+            gst_structure_get_string (gst_message_get_structure (msg),
+                "filename")) == 0);
+
+    gst_message_unref (msg);
     g_free (s);
   }
   fail_if (g_remove (my_tmpdir) != 0);
 
+  gst_object_unref (bus);
   g_free (mfs_pattern);
   g_free (my_tmpdir);
   gst_object_unref (sink);
