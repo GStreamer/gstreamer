@@ -855,7 +855,6 @@ static void
 _unlink_track (GESPipeline * self, GESTrack * track)
 {
   OutputChain *chain;
-  GstPad *pad, *peer;
 
   GST_DEBUG_OBJECT (self, "Unlinking removed %" GST_PTR_FORMAT, track);
 
@@ -864,10 +863,9 @@ _unlink_track (GESPipeline * self, GESTrack * track)
     return;
   }
 
-  pad = ges_timeline_get_pad_for_track (self->priv->timeline, track);
   /* Unlink encodebin */
   if (chain->encodebinpad) {
-    peer = gst_pad_get_peer (chain->encodebinpad);
+    GstPad *peer = gst_pad_get_peer (chain->encodebinpad);
     gst_pad_unlink (peer, chain->encodebinpad);
     gst_object_unref (peer);
     gst_element_release_request_pad (self->priv->encodebin,
@@ -877,16 +875,13 @@ _unlink_track (GESPipeline * self, GESTrack * track)
 
   /* Unlink playsink */
   if (chain->playsinkpad) {
-    peer = gst_pad_get_peer (chain->playsinkpad);
+    GstPad *peer = gst_pad_get_peer (chain->playsinkpad);
     gst_pad_unlink (peer, chain->playsinkpad);
     gst_object_unref (peer);
     gst_element_release_request_pad (self->priv->playsink, chain->playsinkpad);
     gst_object_unref (chain->playsinkpad);
   }
 
-  peer = gst_element_get_static_pad (chain->tee, "sink");
-  gst_pad_unlink (pad, peer);
-  gst_object_unref (peer);
   gst_element_set_state (chain->tee, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (self), chain->tee);
   if (chain->query_position_id) {
@@ -897,7 +892,6 @@ _unlink_track (GESPipeline * self, GESTrack * track)
 
   self->priv->chains = g_list_remove (self->priv->chains, chain);
   g_free (chain);
-  gst_object_unref (pad);
 
   GST_DEBUG ("done");
 }
