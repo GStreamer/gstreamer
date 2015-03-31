@@ -1712,8 +1712,8 @@ scan_codecs (GstPlugin * plugin)
 
         if (!ignore_unknown_color_formats
             && !accepted_color_formats (gst_codec_type, is_encoder)) {
-          GST_ERROR ("%s codec has unknown color formats, ignoring",
-              is_encoder ? "Encoder" : "Decoder");
+          GST_ERROR ("%s %s has unknown color formats, ignoring",
+              gst_codec_type->mime, is_encoder ? "encoder" : "decoder");
           valid_codec = FALSE;
           goto next_supported_type;
         }
@@ -2018,7 +2018,7 @@ accepted_color_formats (GstAmcCodecType * type, gboolean is_encoder)
     }
 
     if (!found) {
-      GST_DEBUG ("Unknown color format 0x%x, ignoring", type->color_formats[i]);
+      GST_ERROR ("Unknown color format 0x%x, ignoring", type->color_formats[i]);
     }
   }
 
@@ -3460,7 +3460,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               gst_amc_color_format_to_video_format (codec_info,
               type->mime, type->color_formats[j]);
           if (format == GST_VIDEO_FORMAT_UNKNOWN) {
-            GST_WARNING ("Unknown color format 0x%08x", type->color_formats[j]);
+            GST_WARNING ("Unknown color format 0x%08x for codec %s",
+                type->color_formats[j], type->mime);
             continue;
           }
 
