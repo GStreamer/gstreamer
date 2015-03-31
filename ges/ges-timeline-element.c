@@ -80,6 +80,12 @@ static guint ges_timeline_element_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *properties[PROP_LAST] = { NULL, };
 
+typedef struct
+{
+  GObject *child;
+  gulong handler_id;
+} ChildPropHandler;
+
 struct _GESTimelineElementPrivate
 {
   gboolean serialize;
@@ -112,12 +118,14 @@ _lookup_child (GESTimelineElement * self, const gchar * prop_name,
   g_hash_table_iter_init (&iter, self->priv->children_props);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     if (g_strcmp0 (G_PARAM_SPEC (key)->name, name) == 0) {
+      ChildPropHandler *handler = (ChildPropHandler *) value;
       if (classename == NULL ||
-          g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (value)), classename) == 0) {
+          g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (handler->child)),
+              classename) == 0) {
         GST_DEBUG_OBJECT (self, "The %s property from %s has been found", name,
             classename);
         if (child)
-          *child = gst_object_ref (value);
+          *child = gst_object_ref (handler->child);
 
         if (pspec)
           *pspec = g_param_spec_ref (key);
@@ -243,6 +251,17 @@ ges_timeline_element_finalize (GObject * self)
 }
 
 static void
+_child_prop_handler_free (ChildPropHandler * handler)
+{
+  g_object_freeze_notify (handler->child);
+  if (handler->handler_id)
+    g_signal_handler_disconnect (handler->child, handler->handler_id);
+  g_object_thaw_notify (handler->child);
+  gst_object_unref (handler->child);
+  g_slice_free (ChildPropHandler, handler);
+}
+
+static void
 ges_timeline_element_init (GESTimelineElement * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
@@ -252,7 +271,8 @@ ges_timeline_element_init (GESTimelineElement * self)
 
   self->priv->children_props =
       g_hash_table_new_full ((GHashFunc) ges_pspec_hash, ges_pspec_equal,
-      (GDestroyNotify) g_param_spec_unref, gst_object_unref);
+      (GDestroyNotify) g_param_spec_unref,
+      (GDestroyNotify) _child_prop_handler_free);
 }
 
 static void
@@ -1198,6 +1218,7 @@ ges_timeline_element_add_child_property (GESTimelineElement * self,
     GParamSpec * pspec, GObject * child)
 {
   gchar *signame = g_strconcat ("notify::", pspec->name, NULL);
+  ChildPropHandler *handler;
 
   if (g_hash_table_contains (self->priv->children_props, pspec)) {
     GST_INFO_OBJECT (self, "Child property already exists: %s", pspec->name);
@@ -1208,11 +1229,13 @@ ges_timeline_element_add_child_property (GESTimelineElement * self,
   GST_DEBUG_OBJECT (self, "Adding child property: %" GST_PTR_FORMAT "::%s",
       child, pspec->name);
 
-  g_hash_table_insert (self->priv->children_props,
-      g_param_spec_ref (pspec), gst_object_ref (child));
-  signame = g_strconcat ("notify::", pspec->name, NULL);
-
-  g_signal_connect (child, signame, G_CALLBACK (child_prop_changed_cb), self);
+  handler = (ChildPropHandler *) g_slice_new0 (ChildPropHandler);
+  handler->child = gst_object_ref (child);
+  handler->handler_id =
+      g_signal_connect (child, signame, G_CALLBACK (child_prop_changed_cb),
+      self);
+  g_hash_table_insert (self->priv->children_props, g_param_spec_ref (pspec),
+      handler);
 
   g_free (signame);
 
@@ -1231,15 +1254,15 @@ void
 ges_timeline_element_get_child_property_by_pspec (GESTimelineElement * self,
     GParamSpec * pspec, GValue * value)
 {
-  GstElement *element;
+  ChildPropHandler *handler;
 
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
 
-  element = g_hash_table_lookup (self->priv->children_props, pspec);
-  if (!element)
+  handler = g_hash_table_lookup (self->priv->children_props, pspec);
+  if (!handler)
     goto not_found;
 
-  g_object_get_property (G_OBJECT (element), pspec->name, value);
+  g_object_get_property (G_OBJECT (handler->child), pspec->name, value);
 
   return;
 
