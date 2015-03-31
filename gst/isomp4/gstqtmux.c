@@ -249,7 +249,6 @@ enum
 #define DEFAULT_DTS_METHOD              DTS_METHOD_REORDER
 #endif
 
-
 static void gst_qt_mux_finalize (GObject * object);
 
 static GstStateChangeReturn gst_qt_mux_change_state (GstElement * element,
@@ -2110,25 +2109,29 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       first_ts = qtpad->first_ts;
     }
   }
+
   GST_DEBUG_OBJECT (qtmux, "Media first ts selected: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (first_ts));
-  /* add EDTSs for late streams */
+  /* add/update EDTSs for late streams. configure_moov will have
+   * set the trak durations above by summing the sample tables */
   for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
     GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
     guint32 lateness;
     guint32 duration;
 
-    if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts) && qtpad->first_ts > first_ts) {
+    if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts)
+        && qtpad->first_ts > first_ts) {
       GST_DEBUG_OBJECT (qtmux, "Pad %s is a late stream by %" GST_TIME_FORMAT,
           GST_PAD_NAME (qtpad->collect.pad),
           GST_TIME_ARGS (qtpad->first_ts - first_ts));
-      lateness = gst_util_uint64_scale_round (qtpad->first_ts - first_ts,
-          timescale, GST_SECOND);
+      lateness =
+          gst_util_uint64_scale_round (qtpad->first_ts - first_ts, timescale,
+          GST_SECOND);
       duration = qtpad->trak->tkhd.duration;
-      atom_trak_add_elst_entry (qtpad->trak, lateness, (guint32) - 1,
+      atom_trak_set_elst_entry (qtpad->trak, 0, lateness, (guint32) - 1,
           (guint32) (1 * 65536.0));
-      atom_trak_add_elst_entry (qtpad->trak, duration, 0,
+      atom_trak_set_elst_entry (qtpad->trak, 1, duration, 0,
           (guint32) (1 * 65536.0));
 
       /* need to add the empty time to the trak duration */

@@ -3279,31 +3279,41 @@ atom_tkhd_set_subtitle (AtomTKHD * tkhd, AtomsContext * context, guint32 width,
 
 
 static void
-atom_edts_add_entry (AtomEDTS * edts, EditListEntry * entry)
+atom_edts_add_entry (AtomEDTS * edts, gint index, EditListEntry * entry)
 {
-  edts->elst.entries = g_slist_append (edts->elst.entries, entry);
+  EditListEntry *e =
+      (EditListEntry *) g_slist_nth_data (edts->elst.entries, index);
+  /* Create a new entry if missing (appends to the list if index is larger) */
+  if (e == NULL) {
+    e = g_new (EditListEntry, 1);
+    edts->elst.entries = g_slist_insert (edts->elst.entries, e, index);
+  }
+
+  /* Update the entry */
+  *e = *entry;
 }
 
-/* 
- * Adds a new entry to this trak edits list
+/*
+ * Update an entry in this trak edits list, creating it if needed.
+ * index is the index of the entry to update, or create if it's past the end.
  * duration is in the moov's timescale
  * media_time is the offset in the media time to start from (media's timescale)
  * rate is a 32 bits fixed-point
  */
 void
-atom_trak_add_elst_entry (AtomTRAK * trak, guint32 duration, guint32 media_time,
-    guint32 rate)
+atom_trak_set_elst_entry (AtomTRAK * trak, gint index,
+    guint32 duration, guint32 media_time, guint32 rate)
 {
-  EditListEntry *entry = g_new (EditListEntry, 1);
+  EditListEntry entry;
 
-  entry->duration = duration;
-  entry->media_time = media_time;
-  entry->media_rate = rate;
+  entry.duration = duration;
+  entry.media_time = media_time;
+  entry.media_rate = rate;
 
-  if (trak->edts == NULL) {
+  if (trak->edts == NULL)
     trak->edts = atom_edts_new ();
-  }
-  atom_edts_add_entry (trak->edts, entry);
+
+  atom_edts_add_entry (trak->edts, index, &entry);
 }
 
 /* re-negotiation is prevented at top-level, so only 1 entry expected.
