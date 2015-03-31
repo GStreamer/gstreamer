@@ -1423,7 +1423,9 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 
       gst_message_parse_toc (msg, &tmp, NULL);
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "Got toc %" GST_PTR_FORMAT, tmp);
-      dc->priv->current_info->toc = tmp;
+      if (dc->priv->current_info->toc)
+        gst_toc_unref (dc->priv->current_info->toc);
+      dc->priv->current_info->toc = tmp;        /* transfer ownership */
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "Current info %p, toc %"
           GST_PTR_FORMAT, dc->priv->current_info, tmp);
     }
