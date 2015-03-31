@@ -136,6 +136,8 @@ serialize_filenode (GstMediaDescriptorWriter * writer)
 
   res = g_string_new (tmpstr);
   g_string_append_printf (res, "  <streams caps=\"%s\">", caps_str);
+  g_free (caps_str);
+  g_free (tmpstr);
   for (tmp = filenode->streams; tmp; tmp = tmp->next) {
     GList *tmp3;
     StreamNode *snode = ((StreamNode *) tmp->data);
