@@ -342,6 +342,9 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
           gst_gl_display_get_gl_context_for_thread (filter->display, NULL);
       if (!filter->context) {
         filter->context = gst_gl_context_new (filter->display);
+        if (!filter->context)
+          goto context_null_error;
+
         if (!gst_gl_context_create (filter->context,
                 filter->priv->other_context, &error))
           goto context_error;
@@ -360,6 +363,12 @@ context_error:
   {
     GST_ELEMENT_ERROR (trans, RESOURCE, NOT_FOUND, ("%s", error->message),
         (NULL));
+    return FALSE;
+  }
+context_null_error:
+  {
+    GST_ELEMENT_ERROR (trans, RESOURCE, FAILED,
+        ("Failed to create context."), (NULL));
     return FALSE;
   }
 error:
