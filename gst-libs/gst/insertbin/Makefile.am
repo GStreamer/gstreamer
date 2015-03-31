@@ -29,7 +29,7 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstinsertbin_@GST_API_VERSION@_la_SOU
 gir_sources+=$(patsubst %,$(builddir)/%, $(built_sources))
 
 GstInsertBin-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstinsertbin-@GST_API_VERSION@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)"  GI_SCANNER_DISABLE_CACHE=yes\
 		GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstInsertBin \
 		--nsversion=@GST_API_VERSION@ \
