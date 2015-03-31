@@ -11,7 +11,8 @@ launcher_PYTHON = \
 	main.py  \
 	httpserver.py  \
 	RangeHTTPServer.py  \
-	utils.py
+	utils.py  \
+	config.py
 
 clean-local:
 	rm -rf *.pyc *.pyo
