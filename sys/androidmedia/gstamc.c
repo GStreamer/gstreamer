@@ -2004,8 +2004,10 @@ accepted_color_formats (GstAmcCodecType * type, gboolean is_encoder)
   for (i = 0; i < type->n_color_formats; i++) {
     gboolean found = FALSE;
     /* We ignore this one */
-    if (type->color_formats[i] == COLOR_FormatAndroidOpaque)
+    if (type->color_formats[i] == COLOR_FormatAndroidOpaque) {
       all--;
+      continue;
+    }
 
     for (j = 0; j < G_N_ELEMENTS (color_format_mapping_table); j++) {
       if (color_format_mapping_table[j].color_format == type->color_formats[i]) {
