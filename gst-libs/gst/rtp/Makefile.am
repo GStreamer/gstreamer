@@ -31,7 +31,7 @@ gir_headers=$(patsubst %,$(srcdir)/%, $(libgstrtpinclude_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstrtp_@GST_API_VERSION@_la_SOURCES))
 
 GstRtp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtp-@GST_API_VERSION@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" GI_SCANNER_DISABLE_CACHE=yes\
 		GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstRtp \
 		--nsversion=@GST_API_VERSION@ \

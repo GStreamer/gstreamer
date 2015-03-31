@@ -25,7 +25,7 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstallocators_@GST_API_VERSION@_la_SO
 gir_cincludes=$(patsubst %,--c-include='gst/allocators/%',$(libgstallocators_@GST_API_VERSION@_include_HEADERS))
 
 GstAllocators-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstallocators-@GST_API_VERSION@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" GI_SCANNER_DISABLE_CACHE=yes\
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstAllocators \
 		--nsversion=@GST_API_VERSION@ \
