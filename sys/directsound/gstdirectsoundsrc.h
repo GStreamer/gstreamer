@@ -52,6 +52,7 @@
 #include <gst/audio/gstaudiosrc.h>
 #include <windows.h>
 #include <dsound.h>
+#include <mmsystem.h>
 
 /* add here some headers if needed */
 
@@ -91,6 +92,15 @@ struct _GstDirectSoundSrc
   guint buffer_time;
   guint latency_time;
 
+  HMIXER mixer;
+  DWORD mixerline_cchannels;
+  gint control_id_volume;
+  gint control_id_mute;
+  glong dw_vol_max;
+  glong dw_vol_min;
+
+  glong volume;
+  gboolean mute;
 
   GUID *device_guid;
   char *device_name;

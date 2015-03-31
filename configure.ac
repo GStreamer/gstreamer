@@ -1397,12 +1397,13 @@ AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], directsoundsrc, [
   save_LIBS="$LIBS"
   CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
-  LIBS="$LIBS -ldsound -ldxerr9 -luser32"
+  LIBS="$LIBS -lwinmm -ldsound -ldxerr9 -luser32"
   AC_MSG_CHECKING(for DirectSound LDFLAGS)
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <dxerr9.h>
 #include <dsound.h>
+#include <mmsystem.h>
 ]], [[
   DXGetErrorString9 (0);
   DirectSoundCreate(NULL, NULL, NULL);
@@ -1416,7 +1417,7 @@ AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], directsoundsrc, [
 
   if test "x$HAVE_DIRECTSOUND" = "xyes";  then
     dnl this is much more than we want
-    DIRECTSOUND_LIBS="-ldsound -ldxerr9 -luser32"
+    DIRECTSOUND_LIBS="-lwinmm -ldsound -ldxerr9 -luser32"
     AC_SUBST(DIRECTX_CFLAGS)
     AC_SUBST(DIRECTX_LDFLAGS)
     AC_SUBST(DIRECTSOUND_LIBS)
