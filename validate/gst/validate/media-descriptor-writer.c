@@ -504,7 +504,7 @@ _run_frame_analisis (GstMediaDescriptorWriter * writer,
 
 GstMediaDescriptorWriter *
 gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
-    const gchar * uri, gboolean full, GError ** err)
+    const gchar * uri, gboolean full, gboolean handle_g_logs, GError ** err)
 {
   GList *tmp, *streams = NULL;
   GstDiscovererInfo *info = NULL;
@@ -535,6 +535,9 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
       gst_discoverer_info_get_uri (info),
       gst_discoverer_info_get_duration (info),
       gst_discoverer_info_get_seekable (info));
+
+  if (handle_g_logs)
+    gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (writer));
 
   if (gst_discoverer_info_get_tags (info))
     gst_media_descriptor_writer_add_taglist (writer,

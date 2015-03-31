@@ -95,7 +95,8 @@ main (int argc, gchar ** argv)
 
   runner = gst_validate_runner_new ();
   writer =
-      gst_media_descriptor_writer_new_discover (runner, argv[1], full, &err);
+      gst_media_descriptor_writer_new_discover (runner, argv[1], full, TRUE,
+      &err);
   if (writer == NULL) {
     g_print ("Could not discover file: %s", argv[1]);
     ret = 1;
