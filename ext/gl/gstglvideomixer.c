@@ -709,21 +709,23 @@ static void
 gst_gl_video_mixer_reset (GstGLMixer * mixer)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mixer);
+  GstGLContext *context = GST_GL_BASE_MIXER (mixer)->context;
 
   video_mixer->input_frames = NULL;
 
+  GST_DEBUG_OBJECT (mixer, "context:%p", context);
+
   if (video_mixer->shader)
-    gst_gl_context_del_shader (GST_GL_BASE_MIXER (mixer)->context,
-        video_mixer->shader);
+    gst_gl_context_del_shader (context, video_mixer->shader);
   video_mixer->shader = NULL;
 
   if (video_mixer->checker)
-    gst_gl_context_del_shader (GST_GL_BASE_MIXER (mixer)->context,
-        video_mixer->checker);
+    gst_gl_context_del_shader (context, video_mixer->checker);
   video_mixer->checker = NULL;
 
-  gst_gl_context_thread_add (GST_GL_BASE_MIXER (mixer)->context,
-      (GstGLContextThreadFunc) _reset_gl, mixer);
+  if (GST_GL_BASE_MIXER (mixer)->context)
+    gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _reset_gl,
+        mixer);
 }
 
 static gboolean
