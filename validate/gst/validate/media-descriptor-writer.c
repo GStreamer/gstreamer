@@ -511,6 +511,7 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   GstDiscoverer *discoverer;
   GstDiscovererStreamInfo *streaminfo = NULL;
   GstMediaDescriptorWriter *writer = NULL;
+  GstMediaDescriptor *media_descriptor;
 
   discoverer = gst_discoverer_new (GST_SECOND * 60, err);
 
@@ -558,9 +559,9 @@ gst_media_descriptor_writer_new_discover (GstValidateRunner * runner,
     gst_media_descriptor_writer_add_stream (writer, streaminfo);
   }
 
-  if (streams == NULL)
-    writer->priv->raw_caps =
-        gst_caps_copy (((GstMediaDescriptor *) writer)->filenode->caps);
+  media_descriptor = (GstMediaDescriptor *) writer;
+  if (streams == NULL && media_descriptor->filenode->caps)
+    writer->priv->raw_caps = gst_caps_copy (media_descriptor->filenode->caps);
   gst_discoverer_stream_info_list_free (streams);
 
 
