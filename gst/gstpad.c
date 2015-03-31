@@ -2884,7 +2884,7 @@ event_forward_func (GstPad * pad, EventData * data)
  * The EOS event will pause the task associated with @pad before it is forwarded
  * to all internally linked pads,
  *
- * The the event is sent to all pads internally linked to @pad. This function
+ * The event is sent to all pads internally linked to @pad. This function
  * takes ownership of @event.
  *
  * Returns: %TRUE if the event was sent successfully.
