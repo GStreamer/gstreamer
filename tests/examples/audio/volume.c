@@ -23,9 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GTK versions (>= 3.3.0) */
-#define GDK_DISABLE_DEPRECATION_WARNINGS
 
 #include <math.h>
 
@@ -62,11 +59,11 @@ setup_gui (GstElement * volume)
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect (window, "destroy", gtk_main_quit, NULL);
 
-  vbox = gtk_vbox_new (TRUE, 0);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
   gtk_container_add (GTK_CONTAINER (window), vbox);
 
   /* elapsed widget */
-  hbox = gtk_hbox_new (TRUE, 0);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   label = gtk_label_new ("Elapsed");
   elapsed = gtk_label_new ("0.000");
   gtk_container_add (GTK_CONTAINER (hbox), label);
@@ -74,10 +71,11 @@ setup_gui (GstElement * volume)
   gtk_container_add (GTK_CONTAINER (vbox), hbox);
 
   /* volume */
-  hbox = gtk_hbox_new (TRUE, 0);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   label = gtk_label_new ("volume");
   gtk_container_add (GTK_CONTAINER (hbox), label);
-  scale = gtk_hscale_new_with_range (-90.0, 10.0, 0.2);
+  scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, -90.0, 10.0,
+      0.2);
   gtk_range_set_value (GTK_RANGE (scale), 0.0);
   gtk_widget_set_size_request (scale, 100, -1);
   gtk_container_add (GTK_CONTAINER (hbox), scale);
