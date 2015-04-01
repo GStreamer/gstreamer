@@ -972,7 +972,7 @@ moov_recov_write_file (MoovRecovFile * moovrf, MdatRecovFile * mdatrf,
     TrakRecovData *trak = &(moovrf->traks_rd[i]);
     /* 16 for the mdat header */
     gint64 offset = moov_size + ftell (outf) + 16;
-    atom_stco64_chunks_add_offset (&trak->stbl.stco64, offset);
+    atom_stco64_chunks_set_offset (&trak->stbl.stco64, offset);
   }
 
   /* write the moov */

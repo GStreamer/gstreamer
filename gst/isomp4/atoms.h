@@ -478,7 +478,8 @@ typedef struct _AtomSTSC
 typedef struct _AtomSTCO64
 {
   AtomFull header;
-
+  /* Global offset to add to entries when serialising */
+  guint32 chunk_offset;
   ATOM_ARRAY (guint64) entries;
 } AtomSTCO64;
 
@@ -754,6 +755,7 @@ typedef struct _AtomMOOV
   AtomUDTA udta;
 
   gboolean fragmented;
+  guint32 chunks_offset;
 } AtomMOOV;
 
 typedef struct _AtomWAVE
@@ -843,12 +845,13 @@ guint64    atom_moov_copy_data         (AtomMOOV *atom, guint8 **buffer, guint64
 void       atom_moov_update_timescale  (AtomMOOV *moov, guint32 timescale);
 void       atom_moov_update_duration   (AtomMOOV *moov);
 void       atom_moov_set_fragmented    (AtomMOOV *moov, gboolean fragmented);
-void       atom_moov_chunks_add_offset (AtomMOOV *moov, guint32 offset);
+void       atom_moov_chunks_set_offset (AtomMOOV *moov, guint32 offset);
 void       atom_moov_add_trak          (AtomMOOV *moov, AtomTRAK *trak);
+guint      atom_moov_get_trak_count    (AtomMOOV *moov);
 
 guint64    atom_mvhd_copy_data         (AtomMVHD * atom, guint8 ** buffer,
                                         guint64 * size, guint64 * offset);
-void       atom_stco64_chunks_add_offset (AtomSTCO64 * stco64, guint32 offset);
+void       atom_stco64_chunks_set_offset (AtomSTCO64 * stco64, guint32 offset);
 guint64    atom_trak_copy_data         (AtomTRAK * atom, guint8 ** buffer,
                                         guint64 * size, guint64 * offset);
 void       atom_stbl_clear             (AtomSTBL * stbl);
@@ -974,6 +977,7 @@ AtomInfo *   build_uuid_xmp_atom         (GstBuffer * xmp);
 /*
  * Meta tags functions
  */
+void atom_udta_clear_tags (AtomUDTA *udta);
 void atom_udta_add_str_tag    (AtomUDTA *udta, guint32 fourcc, const gchar *value);
 void atom_udta_add_uint_tag   (AtomUDTA *udta, guint32 fourcc, guint32 flags,
                                guint32 value);
