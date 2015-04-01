@@ -186,6 +186,10 @@ _priv_gst_do_linear_regression (GstClockTime *times, guint n,
     GstClockTime * m_num, GstClockTime * m_denom, GstClockTime * b,
     GstClockTime * xbase, gdouble * r_squared);
 
+/* For use in gstdebugutils */
+G_GNUC_INTERNAL
+GstCapsFeatures * __gst_caps_get_features_unchecked (const GstCaps * caps, guint idx);
+
 #ifndef GST_DISABLE_REGISTRY
 /* Secret variable to initialise gst without registry cache */
 GST_EXPORT gboolean _gst_disable_registry_cache;

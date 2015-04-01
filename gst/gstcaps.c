@@ -145,6 +145,12 @@ _priv_gst_caps_initialize (void)
       G_TYPE_STRING, gst_caps_transform_to_string);
 }
 
+GstCapsFeatures *
+__gst_caps_get_features_unchecked (const GstCaps * caps, guint idx)
+{
+  return gst_caps_get_features_unchecked (caps, idx);
+}
+
 static GstCaps *
 _gst_caps_copy (const GstCaps * caps)
 {
