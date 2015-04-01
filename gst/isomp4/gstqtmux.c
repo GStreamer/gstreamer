@@ -1691,10 +1691,29 @@ serialize_error:
   }
 }
 
+static gboolean
+gst_qt_mux_downstream_is_seekable (GstQTMux * qtmux)
+{
+  gboolean seekable = FALSE;
+  GstQuery *query = gst_query_new_seeking (GST_FORMAT_BYTES);
+
+  if (gst_pad_peer_query (qtmux->srcpad, query)) {
+    gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+    GST_INFO_OBJECT (qtmux, "downstream is %sseekable", seekable ? "" : "not ");
+  } else {
+    /* have to assume seeking is not supported if query not handled downstream */
+    GST_WARNING_OBJECT (qtmux, "downstream did not handle seeking query");
+    seekable = FALSE;
+  }
+  gst_query_unref (query);
+
+  return seekable;
+}
+
+
 static GstFlowReturn
 gst_qt_mux_start_file (GstQTMux * qtmux)
 {
-  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps;
   GstSegment segment;
@@ -1713,30 +1732,15 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   gst_pad_set_caps (qtmux->srcpad, caps);
   gst_caps_unref (caps);
 
-  /* if not streaming, check if downstream is seekable */
+  /* if not streaming or doing fast-start, check if downstream is seekable */
   if (!qtmux->streamable) {
-    gboolean seekable;
-    GstQuery *query;
-
-    query = gst_query_new_seeking (GST_FORMAT_BYTES);
-    if (gst_pad_peer_query (qtmux->srcpad, query)) {
-      gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
-      GST_INFO_OBJECT (qtmux, "downstream is %sseekable",
-          seekable ? "" : "not ");
-    } else {
-      /* have to assume seeking is supported if query not handled downstream */
-      GST_WARNING_OBJECT (qtmux, "downstream did not handle seeking query");
-      seekable = FALSE;
-    }
-    gst_query_unref (query);
-    if (!seekable) {
-      if (qtmux_klass->format != GST_QT_MUX_FORMAT_ISML) {
+    if (!gst_qt_mux_downstream_is_seekable (qtmux)) {
+      if (qtmux->fragment_duration == 0) {
         if (!qtmux->fast_start) {
-          GST_ELEMENT_WARNING (qtmux, STREAM, FAILED,
-              ("Downstream is not seekable and headers can't be rewritten"),
+          GST_ELEMENT_ERROR (qtmux, STREAM, MUX,
+              ("Downstream is not seekable - will not be able to create a playable file"),
               (NULL));
-          /* FIXME: Is there something better we can do? */
-          qtmux->streamable = TRUE;
+          return GST_FLOW_ERROR;
         }
       } else {
         GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "

@@ -153,8 +153,24 @@ teardown_src_pad (GstPad * srcpad)
   gst_object_unref (srcpad);
 }
 
+gboolean downstream_is_seekable;
+static gboolean
+qtmux_sinkpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  gboolean ret = FALSE;
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_SEEKING) {
+    gst_query_set_seeking (query, GST_FORMAT_BYTES, downstream_is_seekable, 0,
+        -1);
+    ret = TRUE;
+  }
+
+  return ret;
+}
+
 static GstElement *
-setup_qtmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
+setup_qtmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
+    gboolean seekable)
 {
   GstElement *qtmux;
 
@@ -162,6 +178,10 @@ setup_qtmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
   qtmux = gst_check_setup_element ("qtmux");
   mysrcpad = setup_src_pad (qtmux, srctemplate, sinkname);
   mysinkpad = gst_check_setup_sink_pad (qtmux, &sinktemplate);
+
+  downstream_is_seekable = seekable;
+  gst_pad_set_query_function (mysinkpad, qtmux_sinkpad_query);
+
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -195,7 +215,7 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
   guint8 data2[4] = "moov";
   GstSegment segment;
 
-  qtmux = setup_qtmux (srctemplate, sinkname);
+  qtmux = setup_qtmux (srctemplate, sinkname, TRUE);
   g_object_set (qtmux, "dts-method", dts_method, NULL);
   fail_unless (gst_element_set_state (qtmux,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -285,7 +305,7 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
   guint8 data4[4] = "mfra";
   GstSegment segment;
 
-  qtmux = setup_qtmux (srctemplate, sinkname);
+  qtmux = setup_qtmux (srctemplate, sinkname, !streamable);
   g_object_set (qtmux, "dts-method", dts_method, NULL);
   g_object_set (qtmux, "fragment-duration", 2000, NULL);
   g_object_set (qtmux, "streamable", streamable, NULL);
@@ -515,7 +535,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_reuse)
 {
-  GstElement *qtmux = setup_qtmux (&srcvideotemplate, "video_%u");
+  GstElement *qtmux = setup_qtmux (&srcvideotemplate, "video_%u", TRUE);
   GstBuffer *inbuffer;
   GstCaps *caps;
   GstSegment segment;

@@ -196,6 +196,9 @@ struct _GstQTMux
   gchar *fast_start_file_path;
   gchar *moov_recov_file_path;
   guint32 fragment_duration;
+  /* Whether or not to work in 'streamable' mode and not
+   * seek to rewrite headers - only valid for fragmented
+   * mode. */
   gboolean streamable;
 
   /* for request pad naming */
