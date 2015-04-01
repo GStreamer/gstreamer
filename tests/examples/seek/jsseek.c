@@ -2651,7 +2651,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *panel, *expander, *pb2vbox, *boxes,
-      *flagtable, *boxes2, *step;
+      *flaggrid, *boxes2, *step;
   GtkWidget *play_button, *pause_button, *stop_button, *shot_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox;
@@ -2734,7 +2734,7 @@ main (int argc, char **argv)
   gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Stopped");
   hbox = gtk_hbox_new (FALSE, 0);
   vbox = gtk_vbox_new (FALSE, 0);
-  flagtable = gtk_table_new (4, 2, FALSE);
+  flaggrid = gtk_grid_new ();
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 3);
 
   /* media controls */
@@ -2936,19 +2936,17 @@ main (int argc, char **argv)
   gtk_box_pack_start (GTK_BOX (hbox), play_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), pause_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), stop_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (hbox), flagtable, FALSE, FALSE, 2);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), accurate_checkbox, 0, 1, 0,
-      1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), flush_checkbox, 1, 2, 0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), loop_checkbox, 2, 3, 0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), key_checkbox, 0, 1, 1, 2);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), scrub_checkbox, 1, 2, 1, 2);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), play_scrub_checkbox, 2, 3,
-      1, 2);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), skip_checkbox, 3, 4, 0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_label, 4, 5, 0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 4, 5, 1,
-      2);
+  gtk_box_pack_start (GTK_BOX (hbox), flaggrid, FALSE, FALSE, 2);
+  gtk_grid_attach (GTK_GRID (flaggrid), accurate_checkbox, 0, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (flaggrid), flush_checkbox, 1, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (flaggrid), loop_checkbox, 2, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (flaggrid), key_checkbox, 0, 1, 1, 1);
+  gtk_grid_attach (GTK_GRID (flaggrid), scrub_checkbox, 1, 1, 1, 1);
+  gtk_grid_attach (GTK_GRID (flaggrid), play_scrub_checkbox, 2, 1, 1, 1);
+  gtk_grid_attach (GTK_GRID (flaggrid), skip_checkbox, 3, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (flaggrid), rate_label, 4, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (flaggrid), rate_spinbutton, 4, 1, 1, 1);
+
   if (panel && boxes && boxes2) {
     expander = gtk_expander_new ("playbin options");
     pb2vbox = gtk_vbox_new (FALSE, 0);
