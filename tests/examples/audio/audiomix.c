@@ -23,9 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GTK versions (>= 3.3.0) */
-#define GDK_DISABLE_DEPRECATION_WARNINGS
 
 #include <string.h>
 #include <gst/gst.h>
@@ -55,8 +52,8 @@ setup_gui (GstElement * volume, gchar * file_name1, gchar * file_name2)
   gtk_window_set_title (GTK_WINDOW (window), "audiomix");
   g_signal_connect (window, "destroy", gtk_main_quit, NULL);
 
-  layout = gtk_table_new (2, 3, FALSE);
-  gtk_table_set_col_spacings (GTK_TABLE (layout), 6);
+  layout = gtk_grid_new ();
+  g_object_set (G_OBJECT (layout), "column-spacing", 6, NULL);
   gtk_container_add (GTK_CONTAINER (window), layout);
 
   /* channel labels */
@@ -65,25 +62,25 @@ setup_gui (GstElement * volume, gchar * file_name1, gchar * file_name2)
     *ext = '\0';
   label = gtk_label_new (name);
   g_free (name);
-  gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (layout), label, 0, 1, 0, 1);
+  gtk_grid_attach (GTK_GRID (layout), label, 0, 0, 1, 1);
 
-  gtk_table_attach_defaults (GTK_TABLE (layout), gtk_label_new ("|"), 1, 2, 0,
-      1);
+  gtk_grid_attach (GTK_GRID (layout), gtk_label_new ("|"), 1, 0, 1, 1);
 
   name = g_path_get_basename (file_name2);
   if ((ext = strrchr (name, '.')))
     *ext = '\0';
   label = gtk_label_new (name);
   g_free (name);
-  gtk_misc_set_alignment (GTK_MISC (label), 1.0, 0.5);
-  gtk_table_attach_defaults (GTK_TABLE (layout), label, 2, 3, 0, 1);
+  gtk_grid_attach (GTK_GRID (layout), label, 2, 0, 1, 1);
 
   /* mix slider */
-  scale = gtk_hscale_new_with_range (0.0, 1.0, 1.0 / 200.0);
+  scale =
+      gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0.0, 1.0,
+      1.0 / 200.0);
   gtk_range_set_value (GTK_RANGE (scale), 0.0);
   gtk_widget_set_size_request (scale, 200, -1);
-  gtk_table_attach_defaults (GTK_TABLE (layout), scale, 0, 3, 1, 2);
+  gtk_widget_set_hexpand (scale, TRUE);
+  gtk_grid_attach (GTK_GRID (layout), scale, 0, 1, 3, 1);
   g_signal_connect (scale, "value-changed",
       G_CALLBACK (value_changed_callback), volume);
 
