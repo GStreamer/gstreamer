@@ -24,14 +24,18 @@
 
 #include "gstrtpvp8depay.h"
 
+#include <stdio.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_depay_debug);
 #define GST_CAT_DEFAULT gst_rtp_vp8_depay_debug
 
 static void gst_rtp_vp8_depay_dispose (GObject * object);
 static GstBuffer *gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_vp8_depay_set_caps (GstRTPBaseDepayload * depayload,
-    GstCaps * caps);
+static GstStateChangeReturn gst_rtp_vp8_depay_change_state (GstElement *
+    element, GstStateChange transition);
+static gboolean gst_rtp_vp8_depay_handle_event (GstRTPBaseDepayload * depay,
+    GstEvent * event);
 
 G_DEFINE_TYPE (GstRtpVP8Depay, gst_rtp_vp8_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
@@ -78,8 +82,10 @@ gst_rtp_vp8_depay_class_init (GstRtpVP8DepayClass * gst_rtp_vp8_depay_class)
 
   object_class->dispose = gst_rtp_vp8_depay_dispose;
 
+  element_class->change_state = gst_rtp_vp8_depay_change_state;
+
   depay_class->process = gst_rtp_vp8_depay_process;
-  depay_class->set_caps = gst_rtp_vp8_depay_set_caps;
+  depay_class->handle_event = gst_rtp_vp8_depay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_vp8_depay_debug, "rtpvp8depay", 0,
       "VP8 Video RTP Depayloader");
@@ -177,10 +183,50 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
 
     /* mark keyframes */
     out = gst_buffer_make_writable (out);
-    if ((flag0 & 0x01))
+    if ((flag0 & 0x01)) {
       GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
-    else
+
+      if (!self->caps_sent) {
+        gst_buffer_unref (out);
+        out = NULL;
+        GST_WARNING_OBJECT (self, "Dropping inter-frame before intra-frame");
+
+      }
+    } else {
+      GstMapInfo info;
+
       GST_BUFFER_FLAG_UNSET (out, GST_BUFFER_FLAG_DELTA_UNIT);
+
+      if (gst_buffer_map (out, &info, GST_MAP_READ)) {
+        guint profile, width, height;
+
+        profile = (flag0 & 0x0e) >> 1;
+        width = GST_READ_UINT16_LE (info.data + 6) & 0x3fff;
+        height = GST_READ_UINT16_LE (info.data + 8) & 0x3fff;
+        gst_buffer_unmap (out, &info);
+
+        if (G_UNLIKELY (self->last_width != width ||
+                self->last_height != height || self->last_profile != profile)) {
+          gchar profile_str[3];
+          GstCaps *srccaps;
+
+          snprintf (profile_str, 3, "%u", profile);
+          srccaps = gst_caps_new_simple ("video/x-vp8",
+              "framerate", GST_TYPE_FRACTION, 0, 1,
+              "height", G_TYPE_INT, height,
+              "width", G_TYPE_INT, width,
+              "profile", G_TYPE_STRING, profile_str, NULL);
+
+          gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depay), srccaps);
+          gst_caps_unref (srccaps);
+
+          self->caps_sent = TRUE;
+          self->last_width = width;
+          self->last_height = height;
+          self->last_profile = profile;
+        }
+      }
+    }
 
     return out;
   }
@@ -197,17 +243,45 @@ too_small:
   goto done;
 }
 
-static gboolean
-gst_rtp_vp8_depay_set_caps (GstRTPBaseDepayload * depayload, GstCaps * caps)
+static GstStateChangeReturn
+gst_rtp_vp8_depay_change_state (GstElement * element, GstStateChange transition)
 {
-  GstCaps *srccaps = gst_caps_new_simple ("video/x-vp8",
-      "framerate", GST_TYPE_FRACTION, 0, 1,
-      NULL);
+  GstRtpVP8Depay *self = GST_RTP_VP8_DEPAY (element);
 
-  gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
-  gst_caps_unref (srccaps);
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      self->last_profile = -1;
+      self->last_height = -1;
+      self->last_width = -1;
+      self->caps_sent = FALSE;
+      break;
+    default:
+      break;
+  }
 
-  return TRUE;
+  return
+      GST_ELEMENT_CLASS (gst_rtp_vp8_depay_parent_class)->change_state (element,
+      transition);
+}
+
+static gboolean
+gst_rtp_vp8_depay_handle_event (GstRTPBaseDepayload * depay, GstEvent * event)
+{
+  GstRtpVP8Depay *self = GST_RTP_VP8_DEPAY (depay);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      self->last_profile = -1;
+      self->last_height = -1;
+      self->last_width = -1;
+      break;
+    default:
+      break;
+  }
+
+  return
+      GST_RTP_BASE_DEPAYLOAD_CLASS
+      (gst_rtp_vp8_depay_parent_class)->handle_event (depay, event);
 }
 
 gboolean
