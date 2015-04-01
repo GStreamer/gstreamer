@@ -144,6 +144,13 @@ typedef enum _GstQTMuxState
   GST_QT_MUX_STATE_EOS
 } GstQTMuxState;
 
+typedef enum _GstQtMuxMode {
+    GST_QT_MUX_MODE_MOOV_AT_END,
+    GST_QT_MUX_MODE_FRAGMENTED,
+    GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE,
+    GST_QT_MUX_MODE_FAST_START
+} GstQtMuxMode;
+
 struct _GstQTMux
 {
   GstElement element;
@@ -155,7 +162,11 @@ struct _GstQTMux
   /* state */
   GstQTMuxState state;
 
-  /* size of header (prefix, atoms (ftyp, mdat)) */
+  /* Mux mode, inferred from property
+   * set in gst_qt_mux_start_file() */
+  GstQtMuxMode mux_mode;
+
+  /* size of header (prefix, atoms (ftyp, possibly moov, mdat header)) */
   guint64 header_size;
   /* accumulated size of raw media data (a priori not including mdat header) */
   guint64 mdat_size;

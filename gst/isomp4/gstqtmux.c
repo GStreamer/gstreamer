@@ -127,6 +127,58 @@
 GST_DEBUG_CATEGORY_STATIC (gst_qt_mux_debug);
 #define GST_CAT_DEFAULT gst_qt_mux_debug
 
+/* Hacker notes.
+ *
+ * The basic building blocks of MP4 files are:
+ *  - an 'ftyp' box at the very start
+ *  - an 'mdat' box which contains the raw audio/video/subtitle data;
+ *    this is just a bunch of bytes, completely unframed and possibly
+ *    unordered with no additional meta-information
+ *  - a 'moov' box that contains information about the different streams
+ *    and what they contain, as well as sample tables for each stream
+ *    that tell the demuxer where in the mdat box each buffer/sample is
+ *    and what its duration/timestamp etc. is, and whether it's a
+ *    keyframe etc.
+ * Additionally, fragmented MP4 works by writing chunks of data in
+ * pairs of 'moof' and 'mdat' boxes:
+ *  - 'moof' boxes, header preceding each mdat fragment describing the
+ *    contents, like a moov but only for that fragment.
+ *  - a 'mfra' box for Fragmented MP4, which is written at the end and
+ *    contains a summary of all fragments and seek tables.
+ *
+ * Currently mp4mux can work in 3 different modes / generate 3 types
+ * of output files/streams:
+ *
+ * - Normal mp4: mp4mux will write a little ftyp identifier at the
+ *   beginning, then start an mdat box into which it will write all the
+ *   sample data. At EOS it will then write the moov header with track
+ *   headers and sample tables at the end of the file, and rewrite the
+ *   start of the file to fix up the mdat box size at the beginning.
+ *   It has to wait for EOS to write the moov (which includes the
+ *   sample tables) because it doesn't know how much space those
+ *   tables will be. The output downstream must be seekable to rewrite
+ *   the mdat box at EOS.
+ *
+ * - Fragmented mp4: moov header with track headers at start
+ *   but no sample table), followed by N fragments, each containing
+ *   track headers with sample tables followed by some data. Downstream
+ *   does not need to be seekable if the 'streamable' flag is TRUE,
+ *   as the final mfra and total duration will be omitted.
+ *
+ * - Fast-start mp4: the goal here is to create a file where the moov
+ *   headers are at the beginning; what mp4mux will do is write all
+ *   sample data into a temp file and build moov header plus sample
+ *   tables in memory and then when EOS comes, it will push out the
+ *   moov header plus sample tables at the beginning, followed by the
+ *   mdat sample data at the end which is read in from the temp file
+ *   Files created in this mode are better for streaming over the
+ *   network, since the client doesn't have to seek to the end of the
+ *   file to get the headers, but it requires copying all sample data
+ *   out of the temp file at EOS, which can be expensive. Downstream does
+ *   not need to be seekable, because of the use of the temp file.
+ *
+ */
+
 #ifndef GST_REMOVE_DEPRECATED
 enum
 {
@@ -1710,10 +1762,60 @@ gst_qt_mux_downstream_is_seekable (GstQTMux * qtmux)
   return seekable;
 }
 
+static void
+gst_qt_mux_prepare_moov_recovery (GstQTMux * qtmux)
+{
+  GSList *walk;
+  gboolean fail = FALSE;
+  AtomFTYP *ftyp = NULL;
+  GstBuffer *prefix = NULL;
+
+  GST_DEBUG_OBJECT (qtmux, "Openning moov recovery file: %s",
+      qtmux->moov_recov_file_path);
+
+  qtmux->moov_recov_file = g_fopen (qtmux->moov_recov_file_path, "wb+");
+  if (qtmux->moov_recov_file == NULL) {
+    GST_WARNING_OBJECT (qtmux, "Failed to open moov recovery file in %s",
+        qtmux->moov_recov_file_path);
+    return;
+  }
+
+  gst_qt_mux_prepare_ftyp (qtmux, &ftyp, &prefix);
+
+  if (!atoms_recov_write_headers (qtmux->moov_recov_file, ftyp, prefix,
+          qtmux->moov, qtmux->timescale, g_slist_length (qtmux->sinkpads))) {
+    GST_WARNING_OBJECT (qtmux, "Failed to write moov recovery file " "headers");
+    goto fail;
+  }
+
+  atom_ftyp_free (ftyp);
+  if (prefix)
+    gst_buffer_unref (prefix);
+
+  for (walk = qtmux->sinkpads; walk && !fail; walk = g_slist_next (walk)) {
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstQTPad *qpad = (GstQTPad *) cdata;
+    /* write info for each stream */
+    fail = atoms_recov_write_trak_info (qtmux->moov_recov_file, qpad->trak);
+    if (fail) {
+      GST_WARNING_OBJECT (qtmux, "Failed to write trak info to recovery "
+          "file");
+      break;
+    }
+  }
+
+fail:
+  /* cleanup */
+  fclose (qtmux->moov_recov_file);
+  qtmux->moov_recov_file = NULL;
+  GST_WARNING_OBJECT (qtmux, "An error was detected while writing to "
+      "recover file, moov recovery won't work");
+}
 
 static GstFlowReturn
 gst_qt_mux_start_file (GstQTMux * qtmux)
 {
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps;
   GstSegment segment;
@@ -1732,24 +1834,49 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   gst_pad_set_caps (qtmux->srcpad, caps);
   gst_caps_unref (caps);
 
-  /* if not streaming or doing fast-start, check if downstream is seekable */
-  if (!qtmux->streamable) {
-    if (!gst_qt_mux_downstream_is_seekable (qtmux)) {
-      if (qtmux->fragment_duration == 0) {
-        if (!qtmux->fast_start) {
-          GST_ELEMENT_ERROR (qtmux, STREAM, MUX,
-              ("Downstream is not seekable - will not be able to create a playable file"),
-              (NULL));
-          return GST_FLOW_ERROR;
-        }
-      } else {
+  /* Default is 'normal' mode */
+  qtmux->mux_mode = GST_QT_MUX_MODE_MOOV_AT_END;
+
+  /* Require a sensible fragment duration when muxing
+   * using the ISML muxer */
+  if (qtmux_klass->format == GST_QT_MUX_FORMAT_ISML &&
+      qtmux->fragment_duration == 0)
+    goto invalid_isml;
+
+  if (qtmux->fragment_duration > 0) {
+    if (qtmux->streamable)
+      qtmux->mux_mode = GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE;
+    else
+      qtmux->mux_mode = GST_QT_MUX_MODE_FRAGMENTED;
+  } else if (qtmux->fast_start) {
+    qtmux->mux_mode = GST_QT_MUX_MODE_FAST_START;
+  }
+
+  switch (qtmux->mux_mode) {
+    case GST_QT_MUX_MODE_MOOV_AT_END:
+      /* We have to be able to seek to rewrite the mdat header, or any
+       * moov atom we write will not be visible in the file, because an
+       * MDAT with 0 as the size covers the rest of the file. A file
+       * with no moov is not playable, so error out now. */
+      if (!gst_qt_mux_downstream_is_seekable (qtmux)) {
+        GST_ELEMENT_ERROR (qtmux, STREAM, MUX,
+            ("Downstream is not seekable - will not be able to create a playable file"),
+            (NULL));
+        return GST_FLOW_ERROR;
+      }
+      break;
+    case GST_QT_MUX_MODE_FAST_START:
+    case GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE:
+      break;                    /* Don't need seekability, ignore */
+    case GST_QT_MUX_MODE_FRAGMENTED:
+      if (!gst_qt_mux_downstream_is_seekable (qtmux)) {
         GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "
             "streamable=false. Will ignore that and create streamable output "
             "instead");
         qtmux->streamable = TRUE;
         g_object_notify (G_OBJECT (qtmux), "streamable");
       }
-    }
+      break;
   }
 
   /* let downstream know we think in BYTES and expect to do seeking later on */
@@ -1759,81 +1886,44 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   /* initialize our moov recovery file */
   GST_OBJECT_LOCK (qtmux);
   if (qtmux->moov_recov_file_path) {
-    GST_DEBUG_OBJECT (qtmux, "Openning moov recovery file: %s",
-        qtmux->moov_recov_file_path);
-    qtmux->moov_recov_file = g_fopen (qtmux->moov_recov_file_path, "wb+");
-    if (qtmux->moov_recov_file == NULL) {
-      GST_WARNING_OBJECT (qtmux, "Failed to open moov recovery file in %s",
-          qtmux->moov_recov_file_path);
-    } else {
-      GSList *walk;
-      gboolean fail = FALSE;
-      AtomFTYP *ftyp = NULL;
-      GstBuffer *prefix = NULL;
-
-      gst_qt_mux_prepare_ftyp (qtmux, &ftyp, &prefix);
-
-      if (!atoms_recov_write_headers (qtmux->moov_recov_file, ftyp, prefix,
-              qtmux->moov, qtmux->timescale,
-              g_slist_length (qtmux->sinkpads))) {
-        GST_WARNING_OBJECT (qtmux, "Failed to write moov recovery file "
-            "headers");
-        fail = TRUE;
-      }
-
-      atom_ftyp_free (ftyp);
-      if (prefix)
-        gst_buffer_unref (prefix);
-
-      for (walk = qtmux->sinkpads; walk && !fail; walk = g_slist_next (walk)) {
-        GstCollectData *cdata = (GstCollectData *) walk->data;
-        GstQTPad *qpad = (GstQTPad *) cdata;
-        /* write info for each stream */
-        fail = atoms_recov_write_trak_info (qtmux->moov_recov_file, qpad->trak);
-        if (fail) {
-          GST_WARNING_OBJECT (qtmux, "Failed to write trak info to recovery "
-              "file");
-        }
-      }
-      if (fail) {
-        /* cleanup */
-        fclose (qtmux->moov_recov_file);
-        qtmux->moov_recov_file = NULL;
-        GST_WARNING_OBJECT (qtmux, "An error was detected while writing to "
-            "recover file, moov recovery won't work");
-      }
-    }
+    gst_qt_mux_prepare_moov_recovery (qtmux);
   }
   GST_OBJECT_UNLOCK (qtmux);
 
-  /* 
+  /*
    * send mdat header if already needed, and mark position for later update.
    * We don't send ftyp now if we are on fast start mode, because we can
    * better fine tune using the information we gather to create the whole moov
    * atom.
    */
-  if (qtmux->fast_start) {
-    GST_OBJECT_LOCK (qtmux);
-    qtmux->fast_start_file = g_fopen (qtmux->fast_start_file_path, "wb+");
-    if (!qtmux->fast_start_file)
-      goto open_failed;
-    GST_OBJECT_UNLOCK (qtmux);
+  switch (qtmux->mux_mode) {
+    case GST_QT_MUX_MODE_MOOV_AT_END:
+      ret = gst_qt_mux_prepare_and_send_ftyp (qtmux);
+      if (ret != GST_FLOW_OK)
+        break;
 
-    /* send a dummy buffer for preroll */
-    ret = gst_qt_mux_send_buffer (qtmux, gst_buffer_new (), NULL, FALSE);
-    if (ret != GST_FLOW_OK)
-      goto exit;
-
-  } else {
-    ret = gst_qt_mux_prepare_and_send_ftyp (qtmux);
-    if (ret != GST_FLOW_OK) {
-      goto exit;
-    }
-
-    /* well, it's moov pos if fragmented ... */
-    qtmux->mdat_pos = qtmux->header_size;
-
-    if (qtmux->fragment_duration) {
+      /* store the mdat position for rewriting later ... */
+      qtmux->mdat_pos = qtmux->header_size;
+      /* extended atom in case we go over 4GB while writing and need
+       * the full 64-bit atom */
+      ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE);
+      break;
+    case GST_QT_MUX_MODE_FAST_START:
+      GST_OBJECT_LOCK (qtmux);
+      qtmux->fast_start_file = g_fopen (qtmux->fast_start_file_path, "wb+");
+      if (!qtmux->fast_start_file)
+        goto open_failed;
+      GST_OBJECT_UNLOCK (qtmux);
+      /* send a dummy buffer for preroll */
+      ret = gst_qt_mux_send_buffer (qtmux, gst_buffer_new (), NULL, FALSE);
+      break;
+    case GST_QT_MUX_MODE_FRAGMENTED:
+    case GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE:
+      ret = gst_qt_mux_prepare_and_send_ftyp (qtmux);
+      if (ret != GST_FLOW_OK)
+        break;
+      /* well, it's moov pos if fragmented ... */
+      qtmux->mdat_pos = qtmux->header_size;
       GST_DEBUG_OBJECT (qtmux, "fragment duration %d ms, writing headers",
           qtmux->fragment_duration);
       /* also used as snapshot marker to indicate fragmented file */
@@ -1848,25 +1938,27 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       ret =
           gst_qt_mux_send_extra_atoms (qtmux, TRUE, &qtmux->header_size, FALSE);
       if (ret != GST_FLOW_OK)
-        return ret;
-      /* prepare index */
-      if (!qtmux->streamable)
+        break;
+      /* prepare index if not streamable */
+      if (qtmux->mux_mode == GST_QT_MUX_MODE_FRAGMENTED)
         qtmux->mfra = atom_mfra_new (qtmux->context);
-    } else {
-      /* extended to ensure some spare space */
-      ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE);
-    }
+      break;
   }
 
-exit:
   return ret;
-
   /* ERRORS */
+invalid_isml:
+  {
+    GST_ELEMENT_ERROR (qtmux, STREAM, MUX,
+        ("Cannot create an ISML file with 0 fragment duration"), (NULL));
+    return GST_FLOW_ERROR;
+  }
+
 open_failed:
   {
     GST_ELEMENT_ERROR (qtmux, RESOURCE, OPEN_READ_WRITE,
-        (("Could not open temporary file \"%s\""), qtmux->fast_start_file_path),
-        GST_ERROR_SYSTEM);
+        (("Could not open temporary file \"%s\""),
+            qtmux->fast_start_file_path), GST_ERROR_SYSTEM);
     GST_OBJECT_UNLOCK (qtmux);
     return GST_FLOW_ERROR;
   }
@@ -1963,10 +2055,16 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     }
   }
 
-  if (qtmux->fragment_sequence) {
-    GstSegment segment;
-
-    if (qtmux->mfra) {
+  switch (qtmux->mux_mode) {
+    case GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE:
+    {
+      /* Streamable mode; no need to write duration or MFRA */
+      GST_DEBUG_OBJECT (qtmux, "streamable file; nothing to stop");
+      return GST_FLOW_OK;
+    }
+    case GST_QT_MUX_MODE_FRAGMENTED:
+    {
+      GstSegment segment;
       guint8 *data = NULL;
       GstBuffer *buf;
 
@@ -1978,31 +2076,29 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       ret = gst_qt_mux_send_buffer (qtmux, buf, NULL, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
-    } else {
-      /* must have been streamable; no need to write duration */
-      GST_DEBUG_OBJECT (qtmux, "streamable file; nothing to stop");
-      return GST_FLOW_OK;
-    }
 
-    timescale = qtmux->timescale;
-    /* only mvex duration is updated,
-     * mvhd should be consistent with empty moov
-     * (but TODO maybe some clients do not handle that well ?) */
-    qtmux->moov->mvex.mehd.fragment_duration =
-        gst_util_uint64_scale (first_ts, timescale, GST_SECOND);
-    GST_DEBUG_OBJECT (qtmux, "rewriting moov with mvex duration %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (first_ts));
-    /* seek and rewrite the header */
-    gst_segment_init (&segment, GST_FORMAT_BYTES);
-    segment.start = qtmux->mdat_pos;
-    gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
-    /* no need to seek back */
-    return gst_qt_mux_send_moov (qtmux, NULL, FALSE);
+      timescale = qtmux->timescale;
+      /* only mvex duration is updated,
+       * mvhd should be consistent with empty moov
+       * (but TODO maybe some clients do not handle that well ?) */
+      qtmux->moov->mvex.mehd.fragment_duration =
+          gst_util_uint64_scale (first_ts, timescale, GST_SECOND);
+      GST_DEBUG_OBJECT (qtmux, "rewriting moov with mvex duration %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (first_ts));
+      /* seek and rewrite the header */
+      gst_segment_init (&segment, GST_FORMAT_BYTES);
+      segment.start = qtmux->mdat_pos;
+      gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
+      /* no need to seek back */
+      return gst_qt_mux_send_moov (qtmux, NULL, FALSE);
+    }
+    default:
+      break;
   }
 
+  /* Moov-at-end or fast-start mode from here down */
   gst_qt_mux_configure_moov (qtmux, &timescale);
-
-  /* check for late streams */
+  /* check for late streams. First, find the earliest start time */
   first_ts = GST_CLOCK_TIME_NONE;
   for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
     GstCollectData *cdata = (GstCollectData *) walk->data;
@@ -2050,12 +2146,12 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
 
   /* tags into file metadata */
   gst_qt_mux_setup_metadata (qtmux);
-
   large_file = (qtmux->mdat_size > MDAT_LARGE_FILE_LIMIT);
+
   /* if faststart, update the offset of the atoms in the movie with the offset
    * that the movie headers before mdat will cause.
    * Also, send the ftyp */
-  if (qtmux->fast_start_file) {
+  if (qtmux->mux_mode == GST_QT_MUX_MODE_FAST_START) {
     GstFlowReturn flow_ret;
     offset = size = 0;
 
@@ -2077,9 +2173,12 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   } else {
     offset = qtmux->header_size;
   }
+
+  /* Now that we know the size of moov + extra atoms, we can adjust
+   * the chunk offsets stored into the moov */
   atom_moov_chunks_add_offset (qtmux->moov, offset);
 
-  /* moov */
+  /* write out moov and extra atoms */
   /* note: as of this point, we no longer care about tracking written data size,
    * since there is no more use for it anyway */
   ret = gst_qt_mux_send_moov (qtmux, NULL, FALSE);
@@ -2091,23 +2190,32 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   if (ret != GST_FLOW_OK)
     return ret;
 
-  /* if needed, send mdat atom and move buffered data into it */
-  if (qtmux->fast_start_file) {
-    /* mdat_size = accumulated (buffered data) */
-    ret = gst_qt_mux_send_mdat_header (qtmux, NULL, qtmux->mdat_size,
-        large_file);
-    if (ret != GST_FLOW_OK)
-      return ret;
-    ret = gst_qt_mux_send_buffered_data (qtmux, NULL);
-    if (ret != GST_FLOW_OK)
-      return ret;
-  } else if (!qtmux->streamable) {
-    /* mdat needs update iff not using faststart */
-    GST_DEBUG_OBJECT (qtmux, "updating mdat size");
-    ret = gst_qt_mux_update_mdat_size (qtmux, qtmux->mdat_pos,
-        qtmux->mdat_size, NULL);
-    /* note; no seeking back to the end of file is done,
-     * since we no longer write anything anyway */
+  switch (qtmux->mux_mode) {
+    case GST_QT_MUX_MODE_MOOV_AT_END:
+    {
+      /* mdat needs update iff not using faststart */
+      GST_DEBUG_OBJECT (qtmux, "updating mdat size");
+      ret = gst_qt_mux_update_mdat_size (qtmux, qtmux->mdat_pos,
+          qtmux->mdat_size, NULL);
+      /* note; no seeking back to the end of file is done,
+       * since we no longer write anything anyway */
+      break;
+    }
+    case GST_QT_MUX_MODE_FAST_START:
+    {
+      /* send mdat atom and move buffered data into it */
+      /* mdat_size = accumulated (buffered data) */
+      ret = gst_qt_mux_send_mdat_header (qtmux, NULL, qtmux->mdat_size,
+          large_file);
+      if (ret != GST_FLOW_OK)
+        return ret;
+      ret = gst_qt_mux_send_buffered_data (qtmux, NULL);
+      if (ret != GST_FLOW_OK)
+        return ret;
+      break;
+    }
+    default:
+      g_assert_not_reached ();
   }
 
   return ret;
@@ -2257,15 +2365,21 @@ gst_qt_mux_register_and_push_sample (GstQTMux * qtmux, GstQTPad * pad,
     }
   }
 
-  if (qtmux->fragment_sequence) {
-    /* ensure that always sync samples are marked as such */
-    ret = gst_qt_mux_pad_fragment_add_buffer (qtmux, pad, buffer,
-        is_last_buffer, nsamples, last_dts, (gint32) scaled_duration,
-        sample_size, !pad->sync || sync, pts_offset);
-  } else {
-    atom_trak_add_samples (pad->trak, nsamples, (gint32) scaled_duration,
-        sample_size, chunk_offset, sync, pts_offset);
-    ret = gst_qt_mux_send_buffer (qtmux, buffer, &qtmux->mdat_size, TRUE);
+  switch (qtmux->mux_mode) {
+    case GST_QT_MUX_MODE_MOOV_AT_END:
+    case GST_QT_MUX_MODE_FAST_START:
+
+      atom_trak_add_samples (pad->trak, nsamples, (gint32) scaled_duration,
+          sample_size, chunk_offset, sync, pts_offset);
+      ret = gst_qt_mux_send_buffer (qtmux, buffer, &qtmux->mdat_size, TRUE);
+      break;
+    case GST_QT_MUX_MODE_FRAGMENTED:
+    case GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE:
+      /* ensure that always sync samples are marked as such */
+      ret = gst_qt_mux_pad_fragment_add_buffer (qtmux, pad, buffer,
+          is_last_buffer, nsamples, last_dts, (gint32) scaled_duration,
+          sample_size, !pad->sync || sync, pts_offset);
+      break;
   }
 
   return ret;
