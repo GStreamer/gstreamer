@@ -385,7 +385,10 @@ static GstStaticPadTemplate gst_vp8_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) \"I420\", "
+        "width = (int) [1, 16383], "
+        "height = (int) [1, 16383], framerate = (fraction) [ 0/1, MAX ]")
     );
 
 static GstStaticPadTemplate gst_vp8_enc_src_template =
