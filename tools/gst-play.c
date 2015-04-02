@@ -29,6 +29,7 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-app.h>
 #include <gst/audio/audio.h>
+#include <gst/video/video.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/math-compat.h>
 #include <stdlib.h>
@@ -94,6 +95,9 @@ static void play_set_relative_volume (GstPlay * play, gdouble volume_step);
 /* *INDENT-OFF* */
 static void gst_play_printf (const gchar * format, ...) G_GNUC_PRINTF (1, 2);
 /* *INDENT-ON* */
+
+static void keyboard_cb (const gchar * key_input, gpointer user_data);
+static void relative_seek (GstPlay * play, gdouble percent);
 
 static void
 gst_play_printf (const gchar * format, ...)
@@ -364,6 +368,48 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       if (!play_next (play)) {
         g_print ("Reached end of play list.\n");
         g_main_loop_quit (play->loop);
+      }
+      break;
+    }
+    case GST_MESSAGE_ELEMENT:
+    {
+      GstNavigationMessageType mtype = gst_navigation_message_get_type (msg);
+      if (mtype == GST_NAVIGATION_MESSAGE_EVENT) {
+        GstEvent *ev;
+        if (gst_navigation_message_parse_event (msg, &ev)) {
+          GstNavigationEventType e_type = gst_navigation_event_get_type (ev);
+          switch (e_type) {
+            case GST_NAVIGATION_EVENT_KEY_PRESS:
+            {
+              const gchar *key;
+              if (gst_navigation_event_parse_key_event (ev, &key)) {
+                if (strcmp (key, "Left") == 0)
+                  key = GST_PLAY_KB_ARROW_LEFT;
+                else if (strcmp (key, "Right") == 0)
+                  key = GST_PLAY_KB_ARROW_RIGHT;
+                keyboard_cb (key, user_data);
+              }
+              break;
+            }
+            case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:
+            {
+              gint button;
+              if (gst_navigation_event_parse_mouse_button_event (ev, &button,
+                      NULL, NULL)) {
+                if (button == 4) {
+                  /* wheel up */
+                  relative_seek (play, +0.08);
+                } else if (button == 5) {
+                  /* wheel down */
+                  relative_seek (play, -0.01);
+                }
+              }
+              break;
+            }
+            default:
+              break;
+          }
+        }
       }
       break;
     }
