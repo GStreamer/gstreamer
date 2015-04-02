@@ -23,11 +23,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GTK versions (>= 3.3.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-#define GDK_DISABLE_DEPRECATION_WARNINGS
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,7 +36,7 @@
 static GtkWidget *video_window = NULL;
 static GstElement *sink = NULL;
 static gulong embed_xid = 0;
-static GdkColor trans_color;
+static GdkRGBA trans_color;
 static gboolean trans_color_set = FALSE;
 
 static void
@@ -62,7 +57,7 @@ redraw_overlay (GtkWidget * widget)
     guint x, y;
     guint h = allocation.height * 0.75;
 
-    gdk_cairo_set_source_color (cr, &trans_color);
+    gdk_cairo_set_source_rgba (cr, &trans_color);
     cairo_rectangle (cr, 0, 0, allocation.width, h);
     cairo_fill (cr);
 
@@ -242,7 +237,6 @@ main (int argc, char **argv)
   g_signal_connect (G_OBJECT (video_window), "draw",
       G_CALLBACK (draw_cb), NULL);
   g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), NULL);
-  gtk_widget_set_double_buffered (video_window, FALSE);
   gtk_container_add (GTK_CONTAINER (window), video_window);
 
   /* show the gui and play */
