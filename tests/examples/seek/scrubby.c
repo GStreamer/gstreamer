@@ -1,9 +1,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GTK versions (>= 3.3.0) */
-#define GDK_DISABLE_DEPRECATION_WARNINGS
 #include <stdlib.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -494,8 +491,8 @@ main (int argc, char **argv)
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  hbox = gtk_hbox_new (FALSE, 0);
-  vbox = gtk_vbox_new (FALSE, 0);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
   play_button = gtk_button_new_with_label ("play");
   pause_button = gtk_button_new_with_label ("pause");
   stop_button = gtk_button_new_with_label ("stop");
@@ -503,12 +500,12 @@ main (int argc, char **argv)
   adjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, (gdouble) RANGE_PREC, 0.1,
           1.0, 1.0));
-  hscale = gtk_hscale_new (adjustment);
+  hscale = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, adjustment);
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
 
   sadjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (1.0, 0.0, 5.0, 0.1, 1.0, 0.0));
-  shscale = gtk_hscale_new (sadjustment);
+  shscale = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, sadjustment);
   gtk_scale_set_digits (GTK_SCALE (shscale), 2);
 
   schanged_id =
