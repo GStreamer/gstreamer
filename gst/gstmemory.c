@@ -343,12 +343,12 @@ gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
 /**
  * gst_memory_copy:
  * @mem: a #GstMemory
- * @offset: an offset to copy
- * @size: size to copy or -1 to copy all bytes from offset
+ * @offset: offset to copy from
+ * @size: size to copy, or -1 to copy to the end of the memory region
  *
  * Return a copy of @size bytes from @mem starting from @offset. This copy is
- * guaranteed to be writable. @size can be set to -1 to return a copy all bytes
- * from @offset.
+ * guaranteed to be writable. @size can be set to -1 to return a copy
+ * from @offset to the end of the memory region.
  *
  * Returns: a new #GstMemory.
  */
@@ -367,13 +367,13 @@ gst_memory_copy (GstMemory * mem, gssize offset, gssize size)
 /**
  * gst_memory_share:
  * @mem: a #GstMemory
- * @offset: an offset to share
- * @size: size to share or -1 to share bytes from offset
+ * @offset: offset to share from
+ * @size: size to share, or -1 to share to the end of the memory region
  *
  * Return a shared copy of @size bytes from @mem starting from @offset. No
  * memory copy is performed and the memory region is simply shared. The result
- * is guaranteed to be not-writable. @size can be set to -1 to return a share
- * all bytes from @offset.
+ * is guaranteed to be non-writable. @size can be set to -1 to return a shared
+ * copy from @offset to the end of the memory region.
  *
  * Returns: a new #GstMemory.
  */
