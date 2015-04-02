@@ -115,107 +115,12 @@ gst_gl_context_eagl_resize (GstGLContextEagl * eagl_context)
       height);
 }
 
-static gboolean
-gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
-    GstGLContext * other_context, GError ** error)
-{
-  GstGLContextEagl *context_eagl = GST_GL_CONTEXT_EAGL (context);
-  GstGLContextEaglPrivate *priv = context_eagl->priv;
-  GstGLWindow *window = gst_gl_context_get_window (context);
-  UIView *window_handle = nil;
-
-  dispatch_sync (dispatch_get_main_queue (), ^{
-    if (other_context) {
-      EAGLContext *external_gl_context = (EAGLContext *)
-          gst_gl_context_get_gl_context (other_context);
-      EAGLSharegroup *share_group = [external_gl_context sharegroup];
-
-      priv->eagl_context = [[EAGLContext alloc] initWithAPI: kEAGLRenderingAPIOpenGLES2 sharegroup:share_group];
-      [share_group release];
-    } else {
-      priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    }
-  });
-
-  if (window)
-    window_handle = (UIView *) gst_gl_window_get_window_handle (window);
-
-  if (window_handle) {
-    __block GLuint framebuffer;
-    __block GLuint color_renderbuffer;
-    __block GLuint depth_renderbuffer;
-    __block GLint width;
-    __block GLint height;
-    __block CAEAGLLayer *eagl_layer;
-    GLenum status;
-
-    dispatch_sync (dispatch_get_main_queue (), ^{
-          eagl_layer = (CAEAGLLayer *)[window_handle layer];
-          [EAGLContext setCurrentContext:priv->eagl_context];
-
-          /* Allocate framebuffer */
-          glGenFramebuffers (1, &framebuffer);
-          glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
-          /* Allocate color render buffer */
-          glGenRenderbuffers (1, &color_renderbuffer);
-          glBindRenderbuffer (GL_RENDERBUFFER, color_renderbuffer);
-          [priv->eagl_context renderbufferStorage: GL_RENDERBUFFER fromDrawable:eagl_layer];
-          glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-              GL_RENDERBUFFER, color_renderbuffer);
-          /* Get renderbuffer width/height */
-          glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,
-              &width);
-          glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT,
-              &height);
-          /* allocate depth render buffer */
-          glGenRenderbuffers (1, &depth_renderbuffer);
-          glBindRenderbuffer (GL_RENDERBUFFER, depth_renderbuffer);
-          glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width,
-              height);
-          glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-              GL_RENDERBUFFER, depth_renderbuffer);
-          [EAGLContext setCurrentContext:nil];
-    });
-
-    [EAGLContext setCurrentContext:priv->eagl_context];
-
-    glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
-    /* check creation status */
-    status = glCheckFramebufferStatus (GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-      GST_ERROR ("Failed to make complete framebuffer object %x", status);
-      if (window)
-        gst_object_unref (window);
-      return FALSE;
-    }
-    glBindFramebuffer (GL_FRAMEBUFFER, 0);
-
-    priv->eagl_layer = eagl_layer;
-    priv->framebuffer = framebuffer;
-    priv->color_renderbuffer = color_renderbuffer;
-    priv->depth_renderbuffer = depth_renderbuffer;
-  } else {
-    priv->eagl_layer = NULL;
-    priv->framebuffer = 0;
-    priv->color_renderbuffer = 0;
-    priv->depth_renderbuffer = 0;
-  }
-
-  if (window)
-    gst_object_unref (window);
-
-  return TRUE;
-}
-
 static void
-gst_gl_context_eagl_destroy_context (GstGLContext * context)
+gst_gl_context_eagl_release_layer (GstGLContext * context)
 {
   GstGLContextEagl *context_eagl;
 
   context_eagl = GST_GL_CONTEXT_EAGL (context);
-
-  if (!context_eagl->priv->eagl_context)
-    return;
 
   if (context_eagl->priv->eagl_layer) {
     gst_gl_context_eagl_activate (context, TRUE);
@@ -233,6 +138,127 @@ gst_gl_context_eagl_destroy_context (GstGLContext * context)
     context_eagl->priv->eagl_layer = nil;
     gst_gl_context_eagl_activate (context, FALSE);
   }
+}
+
+void
+gst_gl_context_eagl_update_layer (GstGLContext * context)
+{
+  __block GLuint framebuffer;
+  __block GLuint color_renderbuffer;
+  __block GLuint depth_renderbuffer;
+  __block GLint width;
+  __block GLint height;
+  __block CAEAGLLayer *eagl_layer;
+  GLenum status;
+  GstGLContextEagl *context_eagl = GST_GL_CONTEXT_EAGL (context);
+  GstGLContextEaglPrivate *priv = context_eagl->priv;
+  UIView *window_handle = nil;
+  GstGLWindow *window = gst_gl_context_get_window (context);
+  if (window)
+    window_handle = (UIView *) gst_gl_window_get_window_handle (window);
+
+  if (!window_handle) {
+    GST_INFO_OBJECT (context, "window handle not set yet, not updating layer");
+    goto out;
+  }
+
+  GST_INFO_OBJECT (context, "updating layer, frame %fx%f",
+      window_handle.frame.size.width, window_handle.frame.size.height);
+
+  if (priv->eagl_layer)
+    gst_gl_context_eagl_release_layer (context);
+
+  dispatch_sync (dispatch_get_main_queue (), ^{
+      eagl_layer = (CAEAGLLayer *)[window_handle layer];
+      [EAGLContext setCurrentContext:priv->eagl_context];
+
+      /* Allocate framebuffer */
+      glGenFramebuffers (1, &framebuffer);
+      glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
+      /* Allocate color render buffer */
+      glGenRenderbuffers (1, &color_renderbuffer);
+      glBindRenderbuffer (GL_RENDERBUFFER, color_renderbuffer);
+      [priv->eagl_context renderbufferStorage: GL_RENDERBUFFER fromDrawable:eagl_layer];
+      glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+          GL_RENDERBUFFER, color_renderbuffer);
+      /* Get renderbuffer width/height */
+      glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,
+          &width);
+      glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT,
+          &height);
+      /* allocate depth render buffer */
+      glGenRenderbuffers (1, &depth_renderbuffer);
+      glBindRenderbuffer (GL_RENDERBUFFER, depth_renderbuffer);
+      glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width,
+          height);
+      glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+          GL_RENDERBUFFER, depth_renderbuffer);
+      [EAGLContext setCurrentContext:nil];
+  });
+
+  [EAGLContext setCurrentContext:priv->eagl_context];
+
+  glBindFramebuffer (GL_FRAMEBUFFER, framebuffer);
+  /* check creation status */
+  status = glCheckFramebufferStatus (GL_FRAMEBUFFER);
+  if (status != GL_FRAMEBUFFER_COMPLETE) {
+    GST_ERROR ("Failed to make complete framebuffer object %x", status);
+    goto out;
+  }
+  glBindFramebuffer (GL_FRAMEBUFFER, 0);
+
+  priv->eagl_layer = eagl_layer;
+  priv->framebuffer = framebuffer;
+  priv->color_renderbuffer = color_renderbuffer;
+  priv->depth_renderbuffer = depth_renderbuffer;
+
+out:
+  if (window)
+    gst_object_unref (window);
+}
+
+static gboolean
+gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
+    GstGLContext * other_context, GError ** error)
+{
+  GstGLContextEagl *context_eagl = GST_GL_CONTEXT_EAGL (context);
+  GstGLContextEaglPrivate *priv = context_eagl->priv;
+
+  dispatch_sync (dispatch_get_main_queue (), ^{
+    if (other_context) {
+      EAGLContext *external_gl_context = (EAGLContext *)
+          gst_gl_context_get_gl_context (other_context);
+      EAGLSharegroup *share_group = [external_gl_context sharegroup];
+
+      priv->eagl_context = [[EAGLContext alloc] initWithAPI: kEAGLRenderingAPIOpenGLES2 sharegroup:share_group];
+      [share_group release];
+    } else {
+      priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    }
+  });
+  
+  priv->eagl_layer = NULL;
+  priv->framebuffer = 0;
+  priv->color_renderbuffer = 0;
+  priv->depth_renderbuffer = 0;
+
+  GST_INFO_OBJECT (context, "context created, updating layer");
+  gst_gl_context_eagl_update_layer (context);
+
+  return TRUE;
+}
+
+static void
+gst_gl_context_eagl_destroy_context (GstGLContext * context)
+{
+  GstGLContextEagl *context_eagl;
+
+  context_eagl = GST_GL_CONTEXT_EAGL (context);
+
+  if (!context_eagl->priv->eagl_context)
+    return;
+
+  gst_gl_context_eagl_release_layer (context);
 
   [context_eagl->priv->eagl_context release];
   context_eagl->priv->eagl_context = nil;
