@@ -95,6 +95,52 @@ cleanup_filesink (GstElement * filesink)
       g_rand_free (rand);                                                 \
     } G_STMT_END
 
+/* Push Buffer with num_mem_blocks memory block each of size num_bytes*/
+#define PUSH_BUFFER_WITH_MULTIPLE_MEM_BLOCKS(num_mem_blocks, num_bytes)      \
+    G_STMT_START {                                                           \
+      GstBuffer *buf = gst_buffer_new();                                     \
+      guint i;                                                               \
+      for (i = 0; i < num_mem_blocks; ++i){                                  \
+        GstMapInfo info;                                                     \
+        GstMemory* mem_block = gst_allocator_alloc(NULL,num_bytes,NULL);     \
+        GRand *rand = g_rand_new_with_seed (num_bytes);                      \
+        guint j;                                                             \
+        fail_unless (gst_memory_map (mem_block, &info, GST_MAP_WRITE));      \
+        for (j = 0; j < num_bytes; ++j)                                      \
+           ((guint8 *)info.data)[j] = (g_rand_int (rand) >> 24) & 0xff;      \
+        gst_memory_unmap (mem_block, &info);                                 \
+        gst_buffer_append_memory(buf,mem_block);                             \
+        g_rand_free (rand);                                                  \
+      }                                                                      \
+      fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);    \
+    } G_STMT_END
+
+/* Push Buffer List with num_buffers buffers each containing num_mem_blocks
+ * memory blocks of size num_bytes */
+#define PUSH_BUFFER_LIST_WITH_MULTI_MEM_BLOCKS_BUFFERS(num_buffers, num_mem_blocks, num_bytes) \
+    G_STMT_START {                                                             \
+      guint i;                                                                 \
+      GstBufferList* buf_list = gst_buffer_list_new();                         \
+      for(i = 0; i < num_buffers; ++i){                                        \
+        GstBuffer *buf = gst_buffer_new();                                     \
+        guint j;                                                               \
+        for (j = 0; j < num_mem_blocks; ++j){                                  \
+          GstMapInfo info;                                                     \
+          GstMemory* mem_block = gst_allocator_alloc(NULL,num_bytes,NULL);     \
+          GRand *rand = g_rand_new_with_seed (num_bytes);                      \
+          guint k;                                                             \
+          fail_unless (gst_memory_map (mem_block, &info, GST_MAP_WRITE));      \
+          for (k = 0; k < num_bytes; ++k)                                      \
+            ((guint8 *)info.data)[k] = (g_rand_int (rand) >> 24) & 0xff;       \
+          gst_memory_unmap (mem_block, &info);                                 \
+          gst_buffer_append_memory(buf,mem_block);                             \
+          g_rand_free (rand);                                                  \
+        }                                                                      \
+        gst_buffer_list_add(buf_list,buf);                                     \
+      }                                                                        \
+      fail_unless_equals_int (gst_pad_push_list (mysrcpad, buf_list), GST_FLOW_OK); \
+    } G_STMT_END
+
 /* Push buffer_list containing num_buffers number of buffers with size
  *   num_bytes bytes
  * Example: PUSH_BUFFER_LIST(2,10) will push the buffer list containing
@@ -231,6 +277,18 @@ GST_START_TEST (test_seeking)
   CHECK_WRITTEN_BYTES (9000, 10, 9030);
   CHECK_WRITTEN_BYTES (9010, 10, 9030);
   CHECK_WRITTEN_BYTES (9020, 10, 9030);
+
+  /* Push buffer with 2 memory blocks each of size 20 bytes */
+  PUSH_BUFFER_WITH_MULTIPLE_MEM_BLOCKS (2, 20);
+  CHECK_WRITTEN_BYTES (9030, 20, 9070);
+  CHECK_WRITTEN_BYTES (9050, 20, 9070);
+
+  /* Push buffer list with 2 buffers each containing 2 memory blocks each of size 20 bytes */
+  PUSH_BUFFER_LIST_WITH_MULTI_MEM_BLOCKS_BUFFERS (2, 2, 20);
+  CHECK_WRITTEN_BYTES (9070, 20, 9150);
+  CHECK_WRITTEN_BYTES (9090, 20, 9150);
+  CHECK_WRITTEN_BYTES (9110, 20, 9150);
+  CHECK_WRITTEN_BYTES (9130, 20, 9150);
 
   segment.start = 8800;
   if (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment))) {
