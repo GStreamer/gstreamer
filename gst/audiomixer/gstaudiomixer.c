@@ -350,11 +350,12 @@ static gboolean
 gst_audiomixer_setcaps (GstAudioMixer * audiomixer, GstPad * pad,
     GstCaps * orig_caps)
 {
+  GstAggregator *agg = GST_AGGREGATOR (audiomixer);
   GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (audiomixer);
   GstCaps *caps;
   GstAudioInfo info;
   GstStructure *s;
-  gint channels;
+  gint channels = 0;
   gboolean ret;
 
   caps = gst_caps_copy (orig_caps);
@@ -366,6 +367,31 @@ gst_audiomixer_setcaps (GstAudioMixer * audiomixer, GstPad * pad,
 
   if (!gst_audio_info_from_caps (&info, caps))
     goto invalid_format;
+
+  if (channels == 1) {
+    GstCaps *filter;
+    GstCaps *downstream_caps;
+
+    if (audiomixer->filter_caps)
+      filter = gst_caps_intersect_full (caps, audiomixer->filter_caps,
+          GST_CAPS_INTERSECT_FIRST);
+    else
+      filter = gst_caps_ref (caps);
+
+    downstream_caps = gst_pad_peer_query_caps (agg->srcpad, filter);
+    gst_caps_unref (filter);
+
+    if (downstream_caps) {
+      gst_caps_unref (caps);
+      caps = downstream_caps;
+
+      if (gst_caps_is_empty (caps)) {
+        gst_caps_unref (caps);
+        return FALSE;
+      }
+      caps = gst_caps_fixate (caps);
+    }
+  }
 
   GST_OBJECT_LOCK (audiomixer);
   /* don't allow reconfiguration for now; there's still a race between the

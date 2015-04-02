@@ -89,7 +89,8 @@ GST_START_TEST (test_filter_caps)
   filter_caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
       "layout", G_TYPE_STRING, "interleaved",
-      "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1, NULL);
+      "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1,
+      "channel-mask", GST_TYPE_BITMASK, 0x04, NULL);
 
   /* build pipeline */
   pipeline = gst_pipeline_new ("pipeline");
