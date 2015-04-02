@@ -495,6 +495,8 @@ gst_navigation_message_get_type (GstMessage * message)
     return GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED;
   else if (g_str_equal (m_type, "angles-changed"))
     return GST_NAVIGATION_MESSAGE_ANGLES_CHANGED;
+  else if (g_str_equal (m_type, "event"))
+    return GST_NAVIGATION_MESSAGE_EVENT;
 
   return GST_NAVIGATION_MESSAGE_INVALID;
 }
@@ -547,6 +549,57 @@ gst_navigation_message_parse_mouse_over (GstMessage * message,
   if (active) {
     const GstStructure *s = gst_message_get_structure (message);
     if (!gst_structure_get_boolean (s, "active", active))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_navigation_message_new_event:
+ * @src: A #GstObject to set as source of the new message.
+ * @event: (transfer none): A navigation #GstEvent
+ *
+ * Creates a new #GstNavigation message with type
+ * #GST_NAVIGATION_MESSAGE_EVENT.
+ *
+ * Returns: The new #GstMessage.
+ */
+GstMessage *
+gst_navigation_message_new_event (GstObject * src, GstEvent * event)
+{
+  GstStructure *s;
+  GstMessage *m;
+
+  s = gst_structure_new (GST_NAVIGATION_MESSAGE_NAME,
+      "type", G_TYPE_STRING, "event", "event", GST_TYPE_EVENT, event, NULL);
+
+  m = gst_message_new_custom (GST_MESSAGE_ELEMENT, src, s);
+
+  return m;
+}
+
+/**
+ * gst_navigation_message_parse_event:
+ * @message: A #GstMessage to inspect.
+ * @event: (transfer full): a pointer to a #GstEvent to receive the contained
+ * navigation event.
+ *
+ * Parse a #GstNavigation message of type #GST_NAVIGATION_MESSAGE_EVENT
+ * and extract contained #GstEvent. The caller must unref the @event when done
+ * with it.
+ *
+ * Returns: %TRUE if the message could be successfully parsed. %FALSE if not.
+ */
+gboolean
+gst_navigation_message_parse_event (GstMessage * message, GstEvent ** event)
+{
+  if (!GST_NAVIGATION_MESSAGE_HAS_TYPE (message, EVENT))
+    return FALSE;
+
+  if (event) {
+    const GstStructure *s = gst_message_get_structure (message);
+    if (!gst_structure_get (s, "event", GST_TYPE_EVENT, event, NULL))
       return FALSE;
   }
 

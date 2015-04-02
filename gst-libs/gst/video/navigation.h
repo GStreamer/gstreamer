@@ -178,6 +178,8 @@ gboolean        gst_navigation_query_parse_angles       (GstQuery *query, guint 
  * @GST_NAVIGATION_MESSAGE_ANGLES_CHANGED: Sent when display angles in a multi-angle
  * feature (such as a multiangle DVD) change - either angles have appeared or
  * disappeared.
+ * @GST_NAVIGATION_MESSAGE_EVENT: Sent when a navigation event was not handled
+ * by any element in the pipeline.
  *
  * A set of notifications that may be received on the bus when navigation
  * related status changes.
@@ -186,7 +188,8 @@ typedef enum {
   GST_NAVIGATION_MESSAGE_INVALID,
   GST_NAVIGATION_MESSAGE_MOUSE_OVER,
   GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED,
-  GST_NAVIGATION_MESSAGE_ANGLES_CHANGED
+  GST_NAVIGATION_MESSAGE_ANGLES_CHANGED,
+  GST_NAVIGATION_MESSAGE_EVENT
 } GstNavigationMessageType;
 
 GstNavigationMessageType gst_navigation_message_get_type (GstMessage *message);
@@ -205,6 +208,10 @@ gboolean        gst_navigation_message_parse_angles_changed (GstMessage *message
                                                              guint *cur_angle,
                                                              guint *n_angles);
 
+GstMessage *    gst_navigation_message_new_event            (GstObject *src,
+							     GstEvent *event);
+gboolean        gst_navigation_message_parse_event          (GstMessage *message,
+							     GstEvent ** event);
 /* event parsing functions */
 /**
  * GstNavigationEventType:
