@@ -1127,9 +1127,10 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (navigation);
   GstPad *peer;
+  gboolean handled = FALSE;
+  GstEvent *event = NULL;
 
   if ((peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (xvimagesink)))) {
-    GstEvent *event;
     GstVideoRectangle src = { 0, };
     GstVideoRectangle dst = { 0, };
     GstVideoRectangle result;
@@ -1182,8 +1183,16 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
           (gdouble) y * yscale, NULL);
     }
 
-    gst_pad_send_event (peer, event);
+    gst_event_ref (event);
+    handled = gst_pad_send_event (peer, event);
+    if (handled)
+      gst_event_unref (event);
     gst_object_unref (peer);
+  }
+
+  if (!handled && event) {
+    gst_element_post_message ((GstElement *) xvimagesink,
+        gst_navigation_message_new_event ((GstObject *) xvimagesink, event));
   }
 }
 
