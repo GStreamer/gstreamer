@@ -242,10 +242,12 @@ gst_a52dec_start (GstAudioDecoder * dec)
 {
   GstA52Dec *a52dec = GST_A52DEC (dec);
   GstA52DecClass *klass;
+  static GMutex init_mutex;
 
   GST_DEBUG_OBJECT (dec, "start");
 
   klass = GST_A52DEC_CLASS (G_OBJECT_GET_CLASS (a52dec));
+  g_mutex_lock (&init_mutex);
 #if defined(A52_ACCEL_DETECT)
   a52dec->state = a52_init ();
   /* This line is just to avoid being accused of not using klass */
@@ -253,6 +255,7 @@ gst_a52dec_start (GstAudioDecoder * dec)
 #else
   a52dec->state = a52_init (klass->a52_cpuflags);
 #endif
+  g_mutex_unlock (&init_mutex);
 
   if (!a52dec->state) {
     GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), LIBRARY, INIT, (NULL),
