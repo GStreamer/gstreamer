@@ -220,7 +220,7 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
   int num_buffers;
   int i;
   guint8 data0[12] = "\000\000\000\024ftypqt  ";
-  guint8 data1[8] = "\000\000\000\001mdat";
+  guint8 data1[16] = "\000\000\000\010free\000\000\000\000mdat";
   guint8 data2[4] = "moov";
   GstSegment segment;
 
