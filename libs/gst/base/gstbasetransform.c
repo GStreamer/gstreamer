@@ -2800,6 +2800,8 @@ gst_base_transform_get_allocator (GstBaseTransform * trans,
  * buffer.
  *
  * Returns: %TRUE if the caps could be send downstream %FALSE otherwise
+ *
+ * Since: 1.6
  */
 gboolean
 gst_base_transform_update_src_caps (GstBaseTransform * trans,
