@@ -2369,7 +2369,7 @@ extract_initial_length_and_fourcc (const guint8 * data, guint size,
   GST_DEBUG ("atom type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
 
   if (length == 0) {
-    length = G_MAXUINT32;
+    length = G_MAXUINT64;
   } else if (length == 1 && size >= 16) {
     /* this means we have an extended size, which is the 64 bit value of
      * the next 8 bytes */
@@ -3240,6 +3240,15 @@ broken_file:
   }
 }
 
+static guint64
+add_offset (guint64 offset, guint64 advance)
+{
+  /* Avoid 64-bit overflow by clamping */
+  if (offset > G_MAXUINT64 - advance)
+    return G_MAXUINT64;
+  return offset + advance;
+}
+
 static GstFlowReturn
 gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
 {
@@ -3293,7 +3302,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       GST_LOG_OBJECT (qtdemux,
           "skipping atom '%" GST_FOURCC_FORMAT "' at %" G_GUINT64_FORMAT,
           GST_FOURCC_ARGS (fourcc), cur_offset);
-      qtdemux->offset += length;
+      qtdemux->offset = add_offset (qtdemux->offset, length);
       break;
     }
     case FOURCC_moov:
@@ -3302,7 +3311,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
 
       if (qtdemux->got_moov) {
         GST_DEBUG_OBJECT (qtdemux, "Skipping moov atom as we have one already");
-        qtdemux->offset += length;
+        qtdemux->offset = add_offset (qtdemux->offset, length);
         goto beach;
       }
 
