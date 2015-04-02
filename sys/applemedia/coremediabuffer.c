@@ -19,13 +19,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "corevideobuffer.h"
 #include "coremediabuffer.h"
+#include "corevideomemory.h"
 
 static void
 gst_core_media_meta_free (GstCoreMediaMeta * meta, GstBuffer * buf)
 {
   if (meta->image_buf != NULL) {
-    CVPixelBufferUnlockBaseAddress (meta->image_buf, 0);
     CVBufferRelease (meta->image_buf);
   }
   if (meta->block_buf != NULL) {
@@ -82,68 +83,6 @@ gst_core_media_buffer_get_video_format (OSType format)
       GST_WARNING ("Unknown OSType format: %d", (gint) format);
       return GST_VIDEO_FORMAT_UNKNOWN;
   }
-}
-
-static gboolean
-gst_core_media_buffer_wrap_pixel_buffer (GstBuffer * buf, GstVideoInfo * info,
-    CVPixelBufferRef pixel_buf, gboolean * has_padding, gboolean map)
-{
-  guint n_planes;
-  gsize offset[GST_VIDEO_MAX_PLANES] = { 0 };
-  gint stride[GST_VIDEO_MAX_PLANES] = { 0 };
-  GstVideoMeta *video_meta;
-  UInt32 size;
-
-  if (map && CVPixelBufferLockBaseAddress (pixel_buf, 0) != kCVReturnSuccess) {
-    GST_ERROR ("Could not lock pixel buffer base address");
-    return FALSE;
-  }
-
-  *has_padding = FALSE;
-
-  if (CVPixelBufferIsPlanar (pixel_buf)) {
-    gint i, size = 0, plane_offset = 0;
-
-    n_planes = CVPixelBufferGetPlaneCount (pixel_buf);
-    for (i = 0; i < n_planes; i++) {
-      stride[i] = CVPixelBufferGetBytesPerRowOfPlane (pixel_buf, i);
-
-      if (stride[i] != GST_VIDEO_INFO_PLANE_STRIDE (info, i)) {
-        *has_padding = TRUE;
-      }
-
-      size = stride[i] * CVPixelBufferGetHeightOfPlane (pixel_buf, i);
-      offset[i] = plane_offset;
-      plane_offset += size;
-
-      if (map) {
-        gst_buffer_append_memory (buf,
-            gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
-                CVPixelBufferGetBaseAddressOfPlane (pixel_buf, i), size, 0,
-                size, NULL, NULL));
-      }
-    }
-  } else {
-
-    n_planes = 1;
-    stride[0] = CVPixelBufferGetBytesPerRow (pixel_buf);
-    offset[0] = 0;
-    size = stride[0] * CVPixelBufferGetHeight (pixel_buf);
-
-    if (map) {
-      gst_buffer_append_memory (buf,
-          gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
-              CVPixelBufferGetBaseAddress (pixel_buf), size, 0, size, NULL,
-              NULL));
-    }
-  }
-
-  video_meta =
-      gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
-      GST_VIDEO_INFO_FORMAT (info), info->width, info->height, n_planes, offset,
-      stride);
-
-  return TRUE;
 }
 
 static gboolean
@@ -280,10 +219,8 @@ gst_core_media_buffer_new (CMSampleBufferRef sample_buf,
       goto error;
     }
 
-    if (!gst_core_media_buffer_wrap_pixel_buffer (buf, &info, meta->pixel_buf,
-            &has_padding, map)) {
-      goto error;
-    }
+    gst_core_video_wrap_pixel_buffer (buf, &info, meta->pixel_buf, &has_padding,
+        map);
 
     /* If the video meta API is not supported, remove padding by
      * copying the core media buffer to a system memory buffer */

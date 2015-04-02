@@ -22,6 +22,7 @@
 #endif
 
 #include <Foundation/Foundation.h>
+#include "corevideomemory.h"
 #ifdef HAVE_IOS
 #include "iosassetsrc.h"
 #else
@@ -62,6 +63,8 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean res = TRUE;
+
+  gst_apple_core_video_memory_init ();
 
 #ifdef HAVE_IOS
   res &= gst_element_register (plugin, "iosassetsrc", GST_RANK_SECONDARY,

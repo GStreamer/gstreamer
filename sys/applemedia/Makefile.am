@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstapplemedia.la
 libgstapplemedia_la_SOURCES =			\
 	plugin.m				\
 	vtutil.c				\
+	corevideomemory.c			\
 	corevideobuffer.c			\
 	coremediabuffer.c			\
 	videotexturecache.m 		\
