@@ -791,16 +791,24 @@ gst_aggregator_all_flush_stop_received_locked (GstAggregator * self)
 }
 
 static void
+gst_aggregator_pad_set_flushing (GstAggregatorPad * aggpad)
+{
+  PAD_LOCK (aggpad);
+  g_atomic_int_set (&aggpad->priv->flushing, TRUE);
+  gst_buffer_replace (&aggpad->priv->buffer, NULL);
+  PAD_BROADCAST_EVENT (aggpad);
+  PAD_UNLOCK (aggpad);
+}
+
+
+static void
 gst_aggregator_flush_start (GstAggregator * self, GstAggregatorPad * aggpad,
     GstEvent * event)
 {
   GstAggregatorPrivate *priv = self->priv;
   GstAggregatorPadPrivate *padpriv = aggpad->priv;
 
-  g_atomic_int_set (&aggpad->priv->flushing, TRUE);
-
-  /*  Remove pad buffer and wake up the streaming thread */
-  gst_aggregator_pad_drop_buffer (aggpad);
+  gst_aggregator_pad_set_flushing (aggpad);
 
   PAD_FLUSH_LOCK (aggpad);
   PAD_LOCK (aggpad);
@@ -1053,14 +1061,12 @@ static void
 gst_aggregator_release_pad (GstElement * element, GstPad * pad)
 {
   GstAggregator *self = GST_AGGREGATOR (element);
-
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
 
   GST_INFO_OBJECT (pad, "Removing pad");
 
   SRC_LOCK (self);
-  g_atomic_int_set (&aggpad->priv->flushing, TRUE);
-  gst_aggregator_pad_drop_buffer (aggpad);
+  gst_aggregator_pad_set_flushing (aggpad);
   gst_element_remove_pad (element, pad);
 
   SRC_BROADCAST (self);
@@ -1933,11 +1939,7 @@ gst_aggregator_pad_activate_mode_func (GstPad * pad,
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
 
   if (active == FALSE) {
-    PAD_LOCK (aggpad);
-    g_atomic_int_set (&aggpad->priv->flushing, TRUE);
-    gst_buffer_replace (&aggpad->priv->buffer, NULL);
-    PAD_BROADCAST_EVENT (aggpad);
-    PAD_UNLOCK (aggpad);
+    gst_aggregator_pad_set_flushing (aggpad);
   } else {
     PAD_LOCK (aggpad);
     g_atomic_int_set (&aggpad->priv->flushing, FALSE);
