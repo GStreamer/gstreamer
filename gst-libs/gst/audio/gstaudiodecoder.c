@@ -383,6 +383,10 @@ static gboolean gst_audio_decoder_negotiate_default (GstAudioDecoder * dec);
 static gboolean gst_audio_decoder_negotiate_unlocked (GstAudioDecoder * dec);
 static gboolean gst_audio_decoder_handle_gap (GstAudioDecoder * dec,
     GstEvent * event);
+static gboolean gst_audio_decoder_sink_query_default (GstAudioDecoder * dec,
+    GstQuery * query);
+static gboolean gst_audio_decoder_src_query_default (GstAudioDecoder * dec,
+    GstQuery * query);
 
 static GstElementClass *parent_class = NULL;
 
@@ -470,6 +474,10 @@ gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_decoder_decide_allocation_default);
   audiodecoder_class->negotiate =
       GST_DEBUG_FUNCPTR (gst_audio_decoder_negotiate_default);
+  audiodecoder_class->sink_query =
+      GST_DEBUG_FUNCPTR (gst_audio_decoder_sink_query_default);
+  audiodecoder_class->src_query =
+      GST_DEBUG_FUNCPTR (gst_audio_decoder_src_query_default);
 }
 
 static void
@@ -2541,15 +2549,11 @@ gst_audio_decoder_sink_getcaps (GstAudioDecoder * decoder, GstCaps * filter)
   return caps;
 }
 
-
 static gboolean
-gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
-    GstQuery * query)
+gst_audio_decoder_sink_query_default (GstAudioDecoder * dec, GstQuery * query)
 {
+  GstPad *pad = GST_AUDIO_DECODER_SINK_PAD (dec);
   gboolean res = FALSE;
-  GstAudioDecoder *dec;
-
-  dec = GST_AUDIO_DECODER (parent);
 
   GST_LOG_OBJECT (dec, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -2630,7 +2634,7 @@ gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
       /* fall-through */
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, GST_OBJECT_CAST (dec), query);
       break;
   }
 
@@ -2638,17 +2642,34 @@ error:
   return res;
 }
 
+static gboolean
+gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
+{
+  GstAudioDecoderClass *dec_class;
+  GstAudioDecoder *dec;
+  gboolean ret = FALSE;
+
+  dec = GST_AUDIO_DECODER (parent);
+  dec_class = GST_AUDIO_DECODER_GET_CLASS (dec);
+
+  GST_DEBUG_OBJECT (pad, "received query %" GST_PTR_FORMAT, query);
+
+  if (dec_class->sink_query)
+    ret = dec_class->sink_query (dec, query);
+
+  return ret;
+}
+
 /* FIXME ? are any of these queries (other than latency) a decoder's business ??
  * also, the conversion stuff might seem to make sense, but seems to not mind
  * segment stuff etc at all
  * Supposedly that's backward compatibility ... */
 static gboolean
-gst_audio_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_audio_decoder_src_query_default (GstAudioDecoder * dec, GstQuery * query)
 {
-  GstAudioDecoder *dec;
+  GstPad *pad = GST_AUDIO_DECODER_SRC_PAD (dec);
   gboolean res = FALSE;
-
-  dec = GST_AUDIO_DECODER (parent);
 
   GST_LOG_OBJECT (dec, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -2658,7 +2679,7 @@ gst_audio_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstFormat format;
 
       /* upstream in any case */
-      if ((res = gst_pad_query_default (pad, parent, query)))
+      if ((res = gst_pad_query_default (pad, GST_OBJECT_CAST (dec), query)))
         break;
 
       gst_query_parse_duration (query, &format, NULL);
@@ -2755,11 +2776,29 @@ gst_audio_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, GST_OBJECT_CAST (dec), query);
       break;
   }
 
   return res;
+}
+
+static gboolean
+gst_audio_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstAudioDecoder *dec;
+  GstAudioDecoderClass *dec_class;
+  gboolean ret = FALSE;
+
+  dec = GST_AUDIO_DECODER (parent);
+  dec_class = GST_AUDIO_DECODER_GET_CLASS (dec);
+
+  GST_DEBUG_OBJECT (pad, "received query %" GST_PTR_FORMAT, query);
+
+  if (dec_class->src_query)
+    ret = dec_class->src_query (dec, query);
+
+  return ret;
 }
 
 static gboolean

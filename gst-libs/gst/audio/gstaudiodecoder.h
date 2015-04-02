@@ -231,6 +231,16 @@ struct _GstAudioDecoder
  *                      Propose buffer allocation parameters for upstream elements.
  *                      Subclasses should chain up to the parent implementation to
  *                      invoke the default handler.
+ * @sink_query:     Optional.
+ *                  Query handler on the sink pad. This function should
+ *                  return TRUE if the query could be performed. Subclasses
+ *                  should chain up to the parent implementation to invoke the
+ *                  default handler. Since 1.6
+ * @src_query:      Optional.
+ *                  Query handler on the source pad. This function should
+ *                  return TRUE if the query could be performed. Subclasses
+ *                  should chain up to the parent implementation to invoke the
+ *                  default handler. Since 1.6
  * @getcaps:        Optional.
  *                  Allows for a custom sink getcaps implementation.
  *                  If not implemented,
@@ -283,11 +293,15 @@ struct _GstAudioDecoderClass
   gboolean      (*propose_allocation) (GstAudioDecoder *dec,
                                        GstQuery * query);
 
+  gboolean      (*sink_query)         (GstAudioDecoder *dec, GstQuery *query);
+
+  gboolean      (*src_query)          (GstAudioDecoder *dec, GstQuery *query);
+
   GstCaps *     (*getcaps)            (GstAudioDecoder * dec,
                                        GstCaps * filter);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 1];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 3];
 };
 
 GType             gst_audio_decoder_get_type (void);
