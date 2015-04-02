@@ -153,7 +153,7 @@ static gboolean	gst_my_filter_activate	    (GstPad      * pad,
                                              GstObject   * parent);
 static gboolean	gst_my_filter_activate_mode (GstPad      * pad,
                                              GstObject   * parent,
-                                             GstPadMode    mode
+                                             GstPadMode    mode,
 					     gboolean      active);
 static void	gst_my_filter_loop	    (GstMyFilter * filter);
 

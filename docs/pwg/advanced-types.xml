@@ -128,9 +128,8 @@ gst_my_typefind_function (GstTypeFind *tf,
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  static gchar *exts[] = { "avi", NULL };
   if (!gst_type_find_register (plugin, "", GST_RANK_PRIMARY,
-			       gst_my_typefind_function, exts,
+			       gst_my_typefind_function, "avi",
 			       gst_caps_new_simple ("video/x-msvideo",
 						    NULL), NULL))
     return FALSE;
