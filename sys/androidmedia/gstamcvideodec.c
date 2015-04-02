@@ -551,9 +551,10 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
   }
 
   GST_DEBUG_OBJECT (self,
-      "Color format info: {color_format=%d, width=%d, height=%d, "
+      "Color format info: {color_format=%d (0x%08x), width=%d, height=%d, "
       "stride=%d, slice-height=%d, crop-left=%d, crop-top=%d, "
       "crop-right=%d, crop-bottom=%d, frame-size=%d}",
+      self->color_format_info.color_format,
       self->color_format_info.color_format, self->color_format_info.width,
       self->color_format_info.height, self->color_format_info.stride,
       self->color_format_info.slice_height, self->color_format_info.crop_left,
