@@ -26,10 +26,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GTK versions (>= 3.3.0) */
-#define GDK_DISABLE_DEPRECATION_WARNINGS
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include <stdlib.h>
 #include <math.h>
@@ -2626,7 +2622,6 @@ create_ui (PlaybackApp * app)
   g_signal_connect (app->video_window, "motion-notify-event",
       G_CALLBACK (motion_notify_cb), app);
   gtk_widget_set_can_focus (app->video_window, TRUE);
-  gtk_widget_set_double_buffered (app->video_window, FALSE);
   gtk_widget_add_events (app->video_window,
       GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
       | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
@@ -2637,14 +2632,17 @@ create_ui (PlaybackApp * app)
       "playback-test");
   gtk_statusbar_push (GTK_STATUSBAR (app->statusbar), app->status_id,
       "Stopped");
-  hbox = gtk_hbox_new (FALSE, 0);
-  vbox = gtk_vbox_new (FALSE, 0);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 3);
 
   /* media controls */
-  play_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_PLAY);
-  pause_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_PAUSE);
-  stop_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_STOP);
+  play_button = gtk_button_new_from_icon_name ("media-playback-start",
+      GTK_ICON_SIZE_BUTTON);
+  pause_button = gtk_button_new_from_icon_name ("media-playback-pause",
+      GTK_ICON_SIZE_BUTTON);
+  stop_button = gtk_button_new_from_icon_name ("media-playback-stop",
+      GTK_ICON_SIZE_BUTTON);
 
   /* seek expander */
   {
@@ -2806,7 +2804,7 @@ create_ui (PlaybackApp * app)
     GtkWidget *step_button, *shuttle_checkbox;
 
     step = gtk_expander_new ("step options");
-    hbox = gtk_hbox_new (FALSE, 0);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 
     app->step_format_combo = gtk_combo_box_text_new ();
     gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (app->step_format_combo),
@@ -2832,7 +2830,9 @@ create_ui (PlaybackApp * app)
     gtk_box_pack_start (GTK_BOX (hbox), app->step_rate_spinbutton, FALSE, FALSE,
         2);
 
-    step_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_FORWARD);
+    step_button =
+        gtk_button_new_from_icon_name ("media-seek-forward",
+        GTK_ICON_SIZE_BUTTON);
     gtk_button_set_label (GTK_BUTTON (step_button), "Step");
     gtk_box_pack_start (GTK_BOX (hbox), step_button, FALSE, FALSE, 2);
 
@@ -2848,7 +2848,7 @@ create_ui (PlaybackApp * app)
 
     adjustment =
         GTK_ADJUSTMENT (gtk_adjustment_new (0.0, -3.00, 4.0, 0.1, 1.0, 1.0));
-    app->shuttle_scale = gtk_hscale_new (adjustment);
+    app->shuttle_scale = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, adjustment);
     gtk_scale_set_digits (GTK_SCALE (app->shuttle_scale), 2);
     gtk_scale_set_value_pos (GTK_SCALE (app->shuttle_scale), GTK_POS_TOP);
     g_signal_connect (app->shuttle_scale, "value-changed",
@@ -3001,14 +3001,15 @@ create_ui (PlaybackApp * app)
     GtkWidget *vbox, *frame;
 
     colorbalance = gtk_expander_new ("color balance options");
-    vbox = gtk_vbox_new (FALSE, 0);
+    vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 
     /* contrast scale */
     frame = gtk_frame_new ("Contrast");
     adjustment =
         GTK_ADJUSTMENT (gtk_adjustment_new (N_GRAD / 2.0, 0.00, N_GRAD, 0.1,
             1.0, 1.0));
-    app->contrast_scale = gtk_hscale_new (adjustment);
+    app->contrast_scale =
+        gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, adjustment);
     gtk_scale_set_draw_value (GTK_SCALE (app->contrast_scale), FALSE);
     g_signal_connect (app->contrast_scale, "value-changed",
         G_CALLBACK (colorbalance_value_changed), app);
@@ -3020,7 +3021,8 @@ create_ui (PlaybackApp * app)
     adjustment =
         GTK_ADJUSTMENT (gtk_adjustment_new (N_GRAD / 2.0, 0.00, N_GRAD, 0.1,
             1.0, 1.0));
-    app->brightness_scale = gtk_hscale_new (adjustment);
+    app->brightness_scale =
+        gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, adjustment);
     gtk_scale_set_draw_value (GTK_SCALE (app->brightness_scale), FALSE);
     g_signal_connect (app->brightness_scale, "value-changed",
         G_CALLBACK (colorbalance_value_changed), app);
@@ -3032,7 +3034,7 @@ create_ui (PlaybackApp * app)
     adjustment =
         GTK_ADJUSTMENT (gtk_adjustment_new (N_GRAD / 2.0, 0.00, N_GRAD, 0.1,
             1.0, 1.0));
-    app->hue_scale = gtk_hscale_new (adjustment);
+    app->hue_scale = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, adjustment);
     gtk_scale_set_draw_value (GTK_SCALE (app->hue_scale), FALSE);
     g_signal_connect (app->hue_scale, "value-changed",
         G_CALLBACK (colorbalance_value_changed), app);
@@ -3044,7 +3046,8 @@ create_ui (PlaybackApp * app)
     adjustment =
         GTK_ADJUSTMENT (gtk_adjustment_new (N_GRAD / 2.0, 0.00, N_GRAD, 0.1,
             1.0, 1.0));
-    app->saturation_scale = gtk_hscale_new (adjustment);
+    app->saturation_scale =
+        gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, adjustment);
     gtk_scale_set_draw_value (GTK_SCALE (app->saturation_scale), FALSE);
     g_signal_connect (app->saturation_scale, "value-changed",
         G_CALLBACK (colorbalance_value_changed), app);
@@ -3057,7 +3060,7 @@ create_ui (PlaybackApp * app)
   /* seek bar */
   adjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, N_GRAD, 0.1, 1.0, 1.0));
-  app->seek_scale = gtk_hscale_new (adjustment);
+  app->seek_scale = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, adjustment);
   gtk_scale_set_digits (GTK_SCALE (app->seek_scale), 2);
   gtk_scale_set_value_pos (GTK_SCALE (app->seek_scale), GTK_POS_RIGHT);
   gtk_range_set_show_fill_level (GTK_RANGE (app->seek_scale), TRUE);
@@ -3078,7 +3081,7 @@ create_ui (PlaybackApp * app)
 
     playbin = gtk_expander_new ("playbin options");
     /* the playbin panel controls for the video/audio/subtitle tracks */
-    panel = gtk_hbox_new (FALSE, 0);
+    panel = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
     app->video_combo = gtk_combo_box_text_new ();
     app->audio_combo = gtk_combo_box_text_new ();
     app->text_combo = gtk_combo_box_text_new ();
@@ -3187,8 +3190,9 @@ create_ui (PlaybackApp * app)
     g_signal_connect (G_OBJECT (app->volume_spinbutton), "value-changed",
         G_CALLBACK (volume_spinbutton_changed_cb), app);
     /* playbin panel for snapshot */
-    boxes2 = gtk_hbox_new (FALSE, 0);
-    shot_button = gtk_button_new_from_stock (GTK_STOCK_SAVE);
+    boxes2 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+    shot_button =
+        gtk_button_new_from_icon_name ("document-save", GTK_ICON_SIZE_BUTTON);
     gtk_widget_set_tooltip_text (shot_button,
         "save a screenshot .png in the current directory");
     g_signal_connect (G_OBJECT (shot_button), "clicked", G_CALLBACK (shot_cb),
@@ -3291,7 +3295,7 @@ create_ui (PlaybackApp * app)
     gtk_grid_attach (GTK_GRID (boxes3), app->subtitle_fontdesc_button, 1, 5, 1,
         1);
 
-    pb2vbox = gtk_vbox_new (FALSE, 0);
+    pb2vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_box_pack_start (GTK_BOX (pb2vbox), panel, FALSE, FALSE, 2);
     gtk_box_pack_start (GTK_BOX (pb2vbox), boxes, FALSE, FALSE, 2);
     gtk_box_pack_start (GTK_BOX (pb2vbox), boxes2, FALSE, FALSE, 2);
@@ -3319,7 +3323,8 @@ create_ui (PlaybackApp * app)
   gtk_box_pack_start (GTK_BOX (vbox), step, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), navigation, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), colorbalance, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (vbox), gtk_hseparator_new (), FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (vbox),
+      gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), app->seek_scale, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), app->statusbar, FALSE, FALSE, 2);
 
