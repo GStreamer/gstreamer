@@ -26,7 +26,7 @@
 #define __GST_MULTIFILESINK_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesink.h>
+#include <gst/base/base.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -94,6 +94,10 @@ struct _GstMultiFileSink
 
   guint64 cur_file_size;
   guint64 max_file_size;
+
+  gboolean aggregate_gops;
+  GstAdapter *gop_adapter;  /* to aggregate GOPs */
+  GList *potential_next_gop;	/* To detect false-positives */
 };
 
 struct _GstMultiFileSinkClass

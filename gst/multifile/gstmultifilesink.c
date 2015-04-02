@@ -4,6 +4,7 @@
  *                    2006 Wim Taymans <wim@fluendo.com>
  *                    2006 David A. Schleef <ds@schleef.org>
  *                    2011 Collabora Ltd. <tim.muller@collabora.co.uk>
+ *                    2015 Tim-Philipp Müller <tim@centricular.com>
  *
  * gstmultifilesink.c:
  *
@@ -135,6 +136,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multi_file_sink_debug);
 #define DEFAULT_NEXT_FILE GST_MULTI_FILE_SINK_NEXT_BUFFER
 #define DEFAULT_MAX_FILES 0
 #define DEFAULT_MAX_FILE_SIZE G_GUINT64_CONSTANT(2*1024*1024*1024)
+#define DEFAULT_AGGREGATE_GOPS FALSE
 
 enum
 {
@@ -144,7 +146,8 @@ enum
   PROP_POST_MESSAGES,
   PROP_NEXT_FILE,
   PROP_MAX_FILES,
-  PROP_MAX_FILE_SIZE
+  PROP_MAX_FILE_SIZE,
+  PROP_AGGREGATE_GOPS
 };
 
 static void gst_multi_file_sink_finalize (GObject * object);
@@ -154,6 +157,7 @@ static void gst_multi_file_sink_set_property (GObject * object, guint prop_id,
 static void gst_multi_file_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_multi_file_sink_start (GstBaseSink * bsink);
 static gboolean gst_multi_file_sink_stop (GstBaseSink * sink);
 static GstFlowReturn gst_multi_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
@@ -266,8 +270,26 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
           0, G_MAXUINT64, DEFAULT_MAX_FILE_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMultiFileSink:aggregate-gops:
+   *
+   * Whether to aggregate complete GOPs before doing any processing. Set this
+   * to TRUE to make sure each new file starts with a keyframe. This requires
+   * the upstream element to flag buffers containing key units and delta
+   * units correctly. At least the MPEG-PS and MPEG-TS muxers should be doing
+   * this.
+   *
+   * Since: 1.6
+   */
+  g_object_class_install_property (gobject_class, PROP_AGGREGATE_GOPS,
+      g_param_spec_boolean ("aggregate-gops", "Aggregate GOPs",
+          "Whether to aggregate GOPs and process them as a whole without "
+          "splitting", DEFAULT_AGGREGATE_GOPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = gst_multi_file_sink_finalize;
 
+  gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_multi_file_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_multi_file_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_file_sink_render);
   gstbasesink_class->render_list =
@@ -297,6 +319,9 @@ gst_multi_file_sink_init (GstMultiFileSink * multifilesink)
   multifilesink->max_file_size = DEFAULT_MAX_FILE_SIZE;
   multifilesink->files = NULL;
   multifilesink->n_files = 0;
+
+  multifilesink->aggregate_gops = DEFAULT_AGGREGATE_GOPS;
+  multifilesink->gop_adapter = NULL;
 
   gst_base_sink_set_sync (GST_BASE_SINK (multifilesink), FALSE);
 
@@ -352,6 +377,9 @@ gst_multi_file_sink_set_property (GObject * object, guint prop_id,
     case PROP_MAX_FILE_SIZE:
       sink->max_file_size = g_value_get_uint64 (value);
       break;
+    case PROP_AGGREGATE_GOPS:
+      sink->aggregate_gops = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -383,10 +411,25 @@ gst_multi_file_sink_get_property (GObject * object, guint prop_id,
     case PROP_MAX_FILE_SIZE:
       g_value_set_uint64 (value, sink->max_file_size);
       break;
+    case PROP_AGGREGATE_GOPS:
+      g_value_set_boolean (value, sink->aggregate_gops);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_multi_file_sink_start (GstBaseSink * bsink)
+{
+  GstMultiFileSink *sink = GST_MULTI_FILE_SINK (bsink);
+
+  if (sink->aggregate_gops)
+    sink->gop_adapter = gst_adapter_new ();
+  sink->potential_next_gop = NULL;
+
+  return TRUE;
 }
 
 static gboolean
@@ -408,6 +451,17 @@ gst_multi_file_sink_stop (GstBaseSink * sink)
     }
     g_free (multifilesink->streamheaders);
     multifilesink->streamheaders = NULL;
+  }
+
+  if (multifilesink->gop_adapter != NULL) {
+    g_object_unref (multifilesink->gop_adapter);
+    multifilesink->gop_adapter = NULL;
+  }
+
+  if (multifilesink->potential_next_gop != NULL) {
+    g_list_free_full (multifilesink->potential_next_gop,
+        (GDestroyNotify) gst_buffer_unref);
+    multifilesink->potential_next_gop = NULL;
   }
 
   multifilesink->force_key_unit_count = -1;
@@ -525,9 +579,9 @@ gst_multi_file_sink_write_stream_headers (GstMultiFileSink * sink)
 }
 
 static GstFlowReturn
-gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
+gst_multi_file_sink_write_buffer (GstMultiFileSink * multifilesink,
+    GstBuffer * buffer)
 {
-  GstMultiFileSink *multifilesink;
   GstMapInfo map;
   gchar *filename;
   gboolean ret;
@@ -535,8 +589,6 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   gboolean first_file = TRUE;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
-
-  multifilesink = GST_MULTI_FILE_SINK (sink);
 
   switch (multifilesink->next_file) {
     case GST_MULTI_FILE_SINK_NEXT_BUFFER:
@@ -692,6 +744,65 @@ stdio_write_error:
   }
   gst_buffer_unmap (buffer, &map);
   return GST_FLOW_ERROR;
+}
+
+static GstFlowReturn
+gst_multi_file_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+{
+  GstMultiFileSink *sink = GST_MULTI_FILE_SINK (bsink);
+  GstFlowReturn flow = GST_FLOW_OK;
+  gboolean key_unit, header;
+
+  header = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER);
+  key_unit = !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  if (sink->aggregate_gops) {
+    GstBuffer *gop_buffer = NULL;
+    guint avail;
+
+    avail = gst_adapter_available (sink->gop_adapter);
+
+    GST_LOG_OBJECT (sink, "aggregate GOP: received %s%s unit buffer: "
+        "%" GST_PTR_FORMAT,
+        (key_unit) ? "key" : "delta", (header) ? " header" : "", buffer);
+
+    /* If it's a header buffer, it might potentially be for the next GOP */
+    if (header) {
+      GST_LOG_OBJECT (sink, "Accumulating buffer to potential next GOP");
+      sink->potential_next_gop =
+          g_list_append (sink->potential_next_gop, gst_buffer_ref (buffer));
+    } else {
+      if (key_unit && avail > 0) {
+        GST_LOG_OBJECT (sink, "Grabbing pending completed GOP");
+        gop_buffer = gst_adapter_take_buffer (sink->gop_adapter, avail);
+      }
+
+      /* just accumulate the buffer */
+      if (sink->potential_next_gop) {
+        GList *tmp;
+        GST_LOG_OBJECT (sink,
+            "Carrying over pending next GOP data into adapter");
+        /* If we have pending data, put that first in the adapter */
+        for (tmp = sink->potential_next_gop; tmp; tmp = tmp->next) {
+          GstBuffer *tmpb = (GstBuffer *) tmp->data;
+          gst_adapter_push (sink->gop_adapter, tmpb);
+        }
+        g_list_free (sink->potential_next_gop);
+        sink->potential_next_gop = NULL;
+      }
+      GST_LOG_OBJECT (sink, "storing buffer in adapter");
+      gst_adapter_push (sink->gop_adapter, gst_buffer_ref (buffer));
+
+      if (gop_buffer != NULL) {
+        GST_DEBUG_OBJECT (sink, "writing out pending GOP, %u bytes", avail);
+        flow = gst_multi_file_sink_write_buffer (sink, gop_buffer);
+        gst_buffer_unref (gop_buffer);
+      }
+    }
+  } else {
+    flow = gst_multi_file_sink_write_buffer (sink, buffer);
+  }
+  return flow;
 }
 
 static gboolean
@@ -857,6 +968,15 @@ gst_multi_file_sink_event (GstBaseSink * sink, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:
+      if (multifilesink->aggregate_gops) {
+        GstBuffer *buf = gst_buffer_new ();
+
+        /* push key unit buffer to force writing out the pending GOP data */
+        GST_INFO_OBJECT (sink, "EOS, write pending GOP data");
+        GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+        gst_multi_file_sink_render (sink, buf);
+        gst_buffer_unref (buf);
+      }
       if (multifilesink->file) {
         gchar *filename;
 
