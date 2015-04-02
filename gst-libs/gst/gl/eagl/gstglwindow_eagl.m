@@ -139,10 +139,14 @@ static void
 gst_gl_window_eagl_set_window_handle (GstGLWindow * window, guintptr handle)
 {
   GstGLWindowEagl *window_eagl;
+  GstGLContext *context;
 
   window_eagl = GST_GL_WINDOW_EAGL (window);
+  context = gst_gl_window_get_context (window);
 
   window_eagl->priv->view = (UIView *) handle;
+  GST_INFO_OBJECT (context, "handle set, updating layer");
+  gst_gl_context_eagl_update_layer (context);
 }
 
 static gboolean
