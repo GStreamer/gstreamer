@@ -1824,7 +1824,11 @@ gst_qt_mux_send_moov (GstQTMux * qtmux, guint64 * _offset,
     goto too_small_reserved;
   buf = _gst_buffer_new_take_data (data, offset);
   GST_DEBUG_OBJECT (qtmux, "Pushing moov atoms");
-  gst_qt_mux_set_header_on_caps (qtmux, buf);
+
+  /* If at EOS, this is the final moov, put in the streamheader
+   * (apparently used by a flumotion util) */
+  if (qtmux->state == GST_QT_MUX_STATE_EOS)
+    gst_qt_mux_set_header_on_caps (qtmux, buf);
   ret = gst_qt_mux_send_buffer (qtmux, buf, _offset, mind_fast);
 
   /* Write out a free atom if needed */
@@ -2381,7 +2385,7 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
 }
 
 static GstFlowReturn
-gst_qt_mux_stop_file (GstQTMux * qtmux, gboolean at_eos)
+gst_qt_mux_stop_file (GstQTMux * qtmux)
 {
   gboolean ret = GST_FLOW_OK;
   guint64 offset = 0, size = 0;
@@ -2390,7 +2394,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux, gboolean at_eos)
   GST_DEBUG_OBJECT (qtmux, "Updating remaining values and sending last data");
 
   /* pushing last buffers for each pad */
-  if (at_eos && (ret = gst_qt_mux_send_last_buffers (qtmux)) != GST_FLOW_OK)
+  if ((ret = gst_qt_mux_send_last_buffers (qtmux)) != GST_FLOW_OK)
     return ret;
 
   if (qtmux->mux_mode == GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE) {
@@ -3174,7 +3178,8 @@ gst_qt_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
         GST_PAD_NAME (best_pad->collect.pad), GST_TIME_ARGS (best_time));
     ret = gst_qt_mux_add_buffer (qtmux, best_pad, buf);
   } else {
-    ret = gst_qt_mux_stop_file (qtmux, TRUE);
+    qtmux->state = GST_QT_MUX_STATE_EOS;
+    ret = gst_qt_mux_stop_file (qtmux);
     if (ret == GST_FLOW_OK) {
       GST_DEBUG_OBJECT (qtmux, "Pushing eos");
       gst_pad_push_event (qtmux->srcpad, gst_event_new_eos ());
@@ -3183,7 +3188,6 @@ gst_qt_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
       GST_WARNING_OBJECT (qtmux, "Failed to stop file: %s",
           gst_flow_get_name (ret));
     }
-    qtmux->state = GST_QT_MUX_STATE_EOS;
   }
 
   return ret;
