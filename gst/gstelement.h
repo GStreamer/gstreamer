@@ -624,8 +624,10 @@ struct _GstElementClass
   /* virtual methods for subclasses */
 
   /* request/release pads */
+  /* FIXME 2.0 harmonize naming with gst_element_request_pad */
   GstPad*               (*request_new_pad)      (GstElement *element, GstPadTemplate *templ,
                                                  const gchar* name, const GstCaps *caps);
+
   void                  (*release_pad)          (GstElement *element, GstPad *pad);
 
   /* state changes */
