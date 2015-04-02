@@ -28,6 +28,14 @@
  *
  * Write incoming data to a series of sequentially-named files.
  *
+ * This element is usually used with data where each buffer is an
+ * independent unit of data in its own right (e.g. raw video buffers or
+ * encoded JPEG or PNG images) or with streamable container formats such
+ * as MPEG-TS or MPEG-PS.
+ *
+ * It is not possible to use this element to create independently playable
+ * mp4 files, use the splitmuxsink element for that instead.
+ *
  * The filename property should contain a string with a \%d placeholder that will
  * be substituted with the index for each filename.
  *
