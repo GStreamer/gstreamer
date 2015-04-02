@@ -103,6 +103,7 @@ EXPORTS
 	gst_base_transform_set_prefer_passthrough
 	gst_base_transform_set_qos_enabled
 	gst_base_transform_update_qos
+	gst_base_transform_update_src_caps
 	gst_bit_reader_free
 	gst_bit_reader_get_bits_uint16
 	gst_bit_reader_get_bits_uint32
