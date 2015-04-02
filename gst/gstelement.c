@@ -1069,7 +1069,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
 }
 
 /**
- * gst_element_request_pad:
+ * gst_element_request_pad: (virtual request_new_pad)
  * @element: a #GstElement to find a request pad of.
  * @templ: a #GstPadTemplate of which we want a pad of.
  * @name: (transfer none) (allow-none): the name of the request #GstPad
