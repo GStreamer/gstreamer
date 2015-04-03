@@ -801,6 +801,20 @@ write_exif_undefined_tag (GstExifWriter * writer, guint16 tag,
   }
 }
 
+static inline gboolean
+gst_exif_tag_str_is_ascii (const gchar * str, gsize * length)
+{
+  gsize len = 0;
+
+  while (*str) {
+    if (*str++ & 0x80)
+      return FALSE;
+    ++len;
+  }
+  *length = len;
+  return TRUE;
+}
+
 static void
 write_exif_ascii_tag (GstExifWriter * writer, guint16 tag, const gchar * str)
 {
@@ -809,7 +823,11 @@ write_exif_ascii_tag (GstExifWriter * writer, guint16 tag, const gchar * str)
   gsize ascii_size;
   GError *error = NULL;
 
-  ascii_str = g_convert (str, -1, "latin1", "utf8", NULL, &ascii_size, &error);
+  if (gst_exif_tag_str_is_ascii (str, &ascii_size))
+    ascii_str = g_strndup (str, ascii_size);
+  else
+    ascii_str =
+        g_convert (str, -1, "latin1", "utf8", NULL, &ascii_size, &error);
 
   if (error) {
     GST_WARNING ("Failed to convert exif tag to ascii: 0x%x - %s. Error: %s",
