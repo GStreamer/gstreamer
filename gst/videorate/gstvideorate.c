@@ -1032,7 +1032,7 @@ gst_video_rate_check_variable_rate (GstVideoRate * videorate,
   videorate->to_rate_numerator = fps_n;
   videorate->to_rate_denominator = fps_d;
 
-  GST_ERROR_OBJECT (videorate, "Computed framerate to %d/%d",
+  GST_INFO_OBJECT (videorate, "Computed framerate to %d/%d",
       videorate->to_rate_numerator, videorate->to_rate_denominator);
 
   videorate->updating_caps = TRUE;
