@@ -495,6 +495,10 @@ gst_collect_pads_set_query_function (GstCollectPads * pads,
 *
 * Convenience clipping function that converts incoming buffer's timestamp
 * to running time, or clips the buffer if outside configured segment.
+*
+* Since 1.6, this clipping function also sets the DTS parameter of the
+* GstCollectData structure. This version of the running time DTS can be
+* negative. G_MININT64 is used to indicate invalid value.
 */
 GstFlowReturn
 gst_collect_pads_clip_running_time (GstCollectPads * pads,
@@ -515,13 +519,32 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
       gst_buffer_unref (buf);
       *outbuf = NULL;
     } else {
-      GST_LOG_OBJECT (cdata->pad, "buffer ts %" GST_TIME_FORMAT " -> %"
+      GstClockTime buf_dts, abs_dts;
+      gint dts_sign;
+
+      GST_LOG_OBJECT (cdata->pad, "buffer pts %" GST_TIME_FORMAT " -> %"
           GST_TIME_FORMAT " running time",
           GST_TIME_ARGS (GST_BUFFER_PTS (buf)), GST_TIME_ARGS (time));
       *outbuf = gst_buffer_make_writable (buf);
       GST_BUFFER_PTS (*outbuf) = time;
-      GST_BUFFER_DTS (*outbuf) = gst_segment_to_running_time (&cdata->segment,
-          GST_FORMAT_TIME, GST_BUFFER_DTS (*outbuf));
+
+      dts_sign = gst_segment_to_running_time_full (&cdata->segment,
+          GST_FORMAT_TIME, GST_BUFFER_DTS (*outbuf), &abs_dts);
+      buf_dts = GST_BUFFER_DTS (*outbuf);
+      if (dts_sign > 0) {
+        GST_BUFFER_DTS (*outbuf) = abs_dts;
+        GST_COLLECT_PADS_DTS (cdata) = abs_dts;
+      } else if (dts_sign < 0) {
+        GST_BUFFER_DTS (*outbuf) = GST_CLOCK_TIME_NONE;
+        GST_COLLECT_PADS_DTS (cdata) = -((gint64) abs_dts);
+      } else {
+        GST_BUFFER_DTS (*outbuf) = GST_CLOCK_TIME_NONE;
+        GST_COLLECT_PADS_DTS (cdata) = GST_CLOCK_STIME_NONE;
+      }
+
+      GST_LOG_OBJECT (cdata->pad, "buffer dts %" GST_TIME_FORMAT " -> %"
+          GST_STIME_FORMAT " running time", GST_TIME_ARGS (buf_dts),
+          GST_STIME_ARGS (GST_COLLECT_PADS_DTS (cdata)));
     }
   }
 
@@ -634,6 +657,7 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size,
   data->state |= lock ? GST_COLLECT_PADS_STATE_LOCKED : 0;
   data->priv->refcount = 1;
   data->priv->destroy_notify = destroy_notify;
+  data->ABI.abi.dts = G_MININT64;
 
   GST_OBJECT_LOCK (pads);
   GST_OBJECT_LOCK (pad);

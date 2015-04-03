@@ -1005,6 +1005,58 @@ GST_START_TEST (test_flushing_seek)
 
 GST_END_TEST;
 
+GST_START_TEST (test_clip_running_time)
+{
+  GstBuffer *buf;
+  GstCollectData data = { 0 };
+
+  buf = gst_buffer_new ();
+  data.pad = gst_pad_new ("clip_test", GST_PAD_SRC);
+
+  GST_BUFFER_PTS (buf) = 0;
+  GST_BUFFER_DTS (buf) = 0;
+  gst_segment_init (&data.segment, GST_FORMAT_TIME);
+
+  gst_collect_pads_clip_running_time (NULL, &data, buf, &buf, NULL);
+
+  fail_unless (buf != NULL);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), 0);
+  fail_unless_equals_uint64 (GST_BUFFER_DTS (buf), 0);
+  fail_unless_equals_int64 (GST_COLLECT_PADS_DTS (&data), 0);
+
+  GST_BUFFER_PTS (buf) = 1000;
+  GST_BUFFER_DTS (buf) = 0;
+  data.segment.start = 1000;
+
+  gst_collect_pads_clip_running_time (NULL, &data, buf, &buf, NULL);
+
+  fail_unless (buf != NULL);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), 0);
+  fail_unless_equals_uint64 (GST_BUFFER_DTS (buf), GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int64 (GST_COLLECT_PADS_DTS (&data), -1000);
+
+  GST_BUFFER_PTS (buf) = 1000;
+  GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
+
+  gst_collect_pads_clip_running_time (NULL, &data, buf, &buf, NULL);
+
+  fail_unless (buf != NULL);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), 0);
+  fail_unless_equals_uint64 (GST_BUFFER_DTS (buf), GST_CLOCK_TIME_NONE);
+  fail_if (GST_COLLECT_PADS_DTS_IS_VALID (&data));
+
+  GST_BUFFER_PTS (buf) = 0;
+  GST_BUFFER_DTS (buf) = 0;
+
+  gst_collect_pads_clip_running_time (NULL, &data, buf, &buf, NULL);
+
+  fail_unless (buf == NULL);
+  gst_object_unref (data.pad);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_collect_pads_suite (void)
 {
@@ -1022,6 +1074,7 @@ gst_collect_pads_suite (void)
   tcase_add_test (general, test_collect);
   tcase_add_test (general, test_collect_eos);
   tcase_add_test (general, test_collect_twice);
+  tcase_add_test (general, test_clip_running_time);
 
   buffers = tcase_create ("buffers");
   suite_add_tcase (suite, buffers);

@@ -104,12 +104,38 @@ typedef enum {
 #define GST_COLLECT_PADS_STATE_UNSET(data,flag)      (GST_COLLECT_PADS_STATE (data) &= ~(flag))
 
 /**
+ * GST_COLLECT_PADS_DTS:
+ * @data: A #GstCollectData.
+ *
+ * Returns the DTS that has been converted to running time when using
+ * gst_collect_pads_clip_running_time(). Unlike the value saved into
+ * the buffer, this value is of type gint64 and may be negative. This allow
+ * properly handling streams with frame reordering where the first DTS may
+ * be negative. If the initial DTS was not set, this value will be
+ * set to %G_MININT64.
+ *
+ * Since 1.6
+ */
+#define GST_COLLECT_PADS_DTS(data)                   (((GstCollectData *) data)->ABI.abi.dts)
+
+/**
+ * GST_COLLECT_PADS_DTS_IS_VALID:
+ * @data: A #GstCollectData.
+ *
+ * Check if running DTS value store is valid.
+ *
+ * Since 1.6
+ */
+#define GST_COLLECT_PADS_DTS_IS_VALID(data)          (GST_CLOCK_STIME_IS_VALID (GST_COLLECT_PADS_DTS (data)))
+
+/**
  * GstCollectData:
  * @collect: owner #GstCollectPads
  * @pad: #GstPad managed by this data
  * @buffer: currently queued buffer.
  * @pos: position in the buffer
  * @segment: last segment received.
+ * @dts: the signed version of the DTS converted to running time. Since 1.6
  *
  * Structure used by the collect_pads.
  */
@@ -129,7 +155,14 @@ struct _GstCollectData
 
   GstCollectDataPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING];
+  /*< public >*/
+  union {
+    struct {
+      gint64 dts;
+    } abi;
+    /*< private >*/
+    gpointer _gst_reserved[GST_PADDING];
+  } ABI;
 };
 
 /**
@@ -363,7 +396,7 @@ void            gst_collect_pads_set_waiting   (GstCollectPads *pads, GstCollect
 
 /* convenience helper */
 GstFlowReturn	gst_collect_pads_clip_running_time (GstCollectPads * pads,
-					            GstCollectData * cdata,
+                                                    GstCollectData * cdata,
                                                     GstBuffer * buf, GstBuffer ** outbuf,
                                                     gpointer user_data);
 
