@@ -37,6 +37,7 @@ typedef struct
   gboolean mute;
   gboolean disable_mixing;
   gchar *save_path;
+  gchar *save_only_path;
   gchar *load_path;
   GESTrackType track_types;
   gboolean needs_set_state;
@@ -341,6 +342,18 @@ _save_timeline (GESLauncher * self)
 {
   ParsedOptions *opts = &self->priv->parsed_options;
 
+  if (opts->save_only_path) {
+    gchar *uri;
+
+    if (!(uri = ensure_uri (opts->save_only_path))) {
+      g_error ("couldn't create uri for '%s", opts->save_only_path);
+      return FALSE;
+    }
+
+    return ges_timeline_save_to_uri (self->priv->timeline, uri, NULL, TRUE,
+        NULL);
+  }
+
   if (opts->save_path && !opts->load_path) {
     gchar *uri;
     if (!(uri = ensure_uri (opts->save_path))) {
@@ -475,6 +488,9 @@ _create_pipeline (GESLauncher * self, const gchar * serialized_timeline)
   if (!_save_timeline (self))
     goto failure;
 
+  if (opts->save_only_path)
+    goto done;
+
   /* In order to view our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
 
@@ -533,6 +549,10 @@ ges_launcher_get_project_option_group (GESLauncher * self)
     {"save", 's', 0, G_OPTION_ARG_STRING, &opts->save_path,
           "Save project to file before rendering. "
           "It can then be loaded with the --load option",
+        "<path>"},
+    {"save-only", 0, 0, G_OPTION_ARG_STRING, &opts->save_only_path,
+          "Same as save project, except exit as soon as the timeline "
+          "is saved instead of playing it back",
         "<path>"},
     {NULL}
   };
@@ -738,6 +758,9 @@ _startup (GApplication * application)
 
   if (!_create_pipeline (self, opts->sanitized_timeline))
     goto failure;
+
+  if (opts->save_only_path)
+    goto done;
 
   if (!_set_playback_details (self))
     goto failure;
