@@ -241,7 +241,7 @@ do_decode_1 (GstVaapiDecoder * decoder, GstVaapiParserFrame * frame)
 
   /* Drop frame if there is no slice data unit in there */
   if (G_UNLIKELY (frame->units->len == 0))
-    return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 

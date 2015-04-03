@@ -241,7 +241,7 @@ error:
 
 drop_frame:
     priv->decoder_state = 0;
-    return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
 }
 
 static gboolean

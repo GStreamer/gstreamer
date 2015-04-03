@@ -550,7 +550,7 @@ error:
 
 drop_frame:
     priv->state &= GST_MPEG_VIDEO_STATE_VALID_SEQ_HEADERS;
-    return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
 }
 
 static GstVaapiDecoderStatus

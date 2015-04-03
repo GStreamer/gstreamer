@@ -1515,7 +1515,7 @@ error:
 drop_frame:
     priv->decoder_state = 0;
     priv->pic_structure = GST_H264_SEI_PIC_STRUCT_FRAME;
-    return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
 }
 
 static GstVaapiDecoderStatus
@@ -3522,10 +3522,6 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     switch (sps->profile_idc) {
     case GST_H264_PROFILE_MULTIVIEW_HIGH:
     case GST_H264_PROFILE_STEREO_HIGH:
-        if (0) {
-            GST_DEBUG("drop picture from substream");
-            return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
-        }
         break;
     }
 
