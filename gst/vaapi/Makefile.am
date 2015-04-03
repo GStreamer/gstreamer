@@ -57,6 +57,8 @@ libgstvaapi_source_c = \
 	gstvaapivideocontext.c	\
 	gstvaapivideometa.c	\
 	gstvaapidecodebin.c	\
+	gstvaapivideobufferpool.c \
+	gstvaapivideomemory.c	\
 	$(NULL)
 
 libgstvaapi_source_h = \
@@ -70,6 +72,8 @@ libgstvaapi_source_h = \
 	gstvaapivideocontext.h	\
 	gstvaapivideometa.h	\
 	gstvaapidecodebin.h	\
+	gstvaapivideobufferpool.h \
+	gstvaapivideomemory.h	\
 	$(NULL)
 
 libgstvaapi_enc_source_c =	\
@@ -103,26 +107,6 @@ libgstvaapi_source_c += $(libgstvaapi_vp8enc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_vp8enc_source_h)
 endif
 
-libgstvaapi_x11_source_c = gstvaapivideoconverter_x11.c
-libgstvaapi_x11_source_h = gstvaapivideoconverter_x11.h
-
-if USE_X11
-if !USE_GST_API_1_2p
-libgstvaapi_source_c += $(libgstvaapi_x11_source_c)
-libgstvaapi_source_h += $(libgstvaapi_x11_source_h)
-endif
-endif
-
-libgstvaapi_glx_source_c = gstvaapivideoconverter_glx.c
-libgstvaapi_glx_source_h = gstvaapivideoconverter_glx.h
-
-if USE_GLX
-if !USE_GST_API_1_2p
-libgstvaapi_source_c += $(libgstvaapi_glx_source_c)
-libgstvaapi_source_h += $(libgstvaapi_glx_source_h)
-endif
-endif
-
 libgstvaapi_egl_source_c =
 libgstvaapi_egl_source_h =
 
@@ -142,21 +126,6 @@ libgstvaapi_1_2p_source_h = \
 if USE_GST_API_1_2p
 libgstvaapi_source_c += $(libgstvaapi_1_2p_source_c)
 libgstvaapi_source_h += $(libgstvaapi_1_2p_source_h)
-endif
-
-libgstvaapi_1_0p_source_c = \
-	gstvaapivideobufferpool.c \
-	gstvaapivideomemory.c	\
-	$(NULL)
-
-libgstvaapi_1_0p_source_h = \
-	gstvaapivideobufferpool.h \
-	gstvaapivideomemory.h	\
-	$(NULL)
-
-if USE_GST_API_1_0p
-libgstvaapi_source_c += $(libgstvaapi_1_0p_source_c)
-libgstvaapi_source_h += $(libgstvaapi_1_0p_source_h)
 endif
 
 libgstvaapi_la_SOURCES		= $(libgstvaapi_source_c)
@@ -259,16 +228,10 @@ EXTRA_DIST = \
 	$(libgstvaapi_jpegenc_source_h)  \
 	$(libgstvaapi_vp8enc_source_c)   \
 	$(libgstvaapi_vp8enc_source_h)   \
-	$(libgstvaapi_x11_source_c)	 \
-	$(libgstvaapi_x11_source_h)	 \
-	$(libgstvaapi_glx_source_c)	 \
-	$(libgstvaapi_glx_source_h)	 \
 	$(libgstvaapi_egl_source_c)	\
 	$(libgstvaapi_egl_source_h)	\
 	$(libgstvaapi_1_2p_source_c)	 \
 	$(libgstvaapi_1_2p_source_h)	 \
-	$(libgstvaapi_1_0p_source_c)	 \
-	$(libgstvaapi_1_0p_source_h)	 \
 	$(libgstvaapi_parse_source_c)	 \
 	$(libgstvaapi_parse_source_h)	 \
 	$(NULL)

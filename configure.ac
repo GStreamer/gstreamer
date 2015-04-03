@@ -27,9 +27,6 @@ m4_define([glib_version], [2.28])
 
 # gstreamer version number
 m4_define([gst_api_version],            [autodetect])
-m4_define([gst1_version],               [1.0.0])
-m4_define([gst1_plugins_base_version],  [1.0.0])
-m4_define([gst1_plugins_bad_version],   [1.0.0])
 m4_define([gst12_version],              [1.1.90])
 m4_define([gst12_plugins_base_version], [1.1.0])
 m4_define([gst12_plugins_bad_version],  [1.1.0])
@@ -200,11 +197,6 @@ AC_DEFINE_UNQUOTED([GST_API_VERSION_S], ["$GST_API_VERSION"],
 
 dnl Versions for GStreamer and plugins-base
 case $GST_API_VERSION in
-1.0)
-    GST_VERSION_REQUIRED=gst1_version
-    GST_PLUGINS_BASE_VERSION_REQUIRED=gst1_plugins_base_version
-    GST_PLUGINS_BAD_VERSION_REQUIRED=gst1_plugins_bad_version
-    ;;
 1.2)
     GST_VERSION_REQUIRED=gst12_version
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst12_plugins_base_version
@@ -229,16 +221,12 @@ AC_SUBST(GST_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BASE_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BAD_VERSION_REQUIRED)
 
-USE_GST_API_1_0p="no"
 USE_GST_API_1_2p="no"
 USE_GST_API_1_4p="no"
-AS_VERSION_COMPARE([$GST_API_VERSION], [1.0],
-    [], [USE_GST_API_1_0p="yes"], [USE_GST_API_1_0p="yes"])
 AS_VERSION_COMPARE([$GST_API_VERSION], [1.2],
     [], [USE_GST_API_1_2p="yes"], [USE_GST_API_1_2p="yes"])
 AS_VERSION_COMPARE([$GST_API_VERSION], [1.4],
     [], [USE_GST_API_1_4p="yes"], [USE_GST_API_1_4p="yes"])
-AM_CONDITIONAL([USE_GST_API_1_0p], [test "$USE_GST_API_1_0p" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_2p], [test "$USE_GST_API_1_2p" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_4p], [test "$USE_GST_API_1_4p" = "yes"])
 
@@ -246,11 +234,6 @@ AC_SUBST([GST_PKG_VERSION])
 
 AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
     [Defined to the string representation of GStreamer API version])
-
-dnl Validate certain features
-if test "$GST_API_VERSION" = "1.0"; then
-    AC_MSG_WARN([support for GStreamer 1.0 is obsolete, and will be removed])
-fi
 
 dnl GStreamer Core
 PKG_CHECK_MODULES([GST],
