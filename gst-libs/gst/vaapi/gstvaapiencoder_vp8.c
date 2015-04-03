@@ -78,8 +78,6 @@ struct _GstVaapiEncoderVP8
 static GstVaapiEncoderStatus
 ensure_profile (GstVaapiEncoderVP8 * encoder)
 {
-  GstVaapiProfile profile;
-
   /* Always start from "simple" profile for maximum compatibility */
   encoder->profile = GST_VAAPI_PROFILE_VP8;
 
@@ -258,7 +256,6 @@ fill_picture (GstVaapiEncoderVP8 * encoder,
     GstVaapiEncPicture * picture,
     GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
 {
-  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   VAEncPictureParameterBufferVP8 *const pic_param = picture->param;
   int i;
 

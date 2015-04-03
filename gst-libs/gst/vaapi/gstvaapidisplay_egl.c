@@ -258,8 +258,6 @@ gst_vaapi_display_loader_map_lookup_type (GstVaapiDisplayType type)
 /* --- EGL backend implementation                                        --- */
 /* ------------------------------------------------------------------------- */
 
-static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_EGL;
-
 typedef struct
 {
   gpointer display;
