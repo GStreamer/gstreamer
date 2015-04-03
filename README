@@ -133,7 +133,7 @@ Sources
   <http://www.freedesktop.org/software/vaapi/releases/gstreamer-vaapi/>
 
   Git repository for work-in-progress changes is available at:
-  <http://gitorious.org/vaapi/gstreamer-vaapi>
+  <https://github.com/01org/gstreamer-vaapi>
 
 
 Reporting Bugs
