@@ -1,7 +1,7 @@
 /*
- *  sysdeps.h - System-dependent definitions
+ *  gstcompat.h - Compatibility glue for GStreamer
  *
- *  Copyright (C) 2012-2013 Intel Corporation
+ *  Copyright (C) 2013 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
@@ -20,19 +20,9 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifndef SYSDEPS_H
-#define SYSDEPS_H
+#ifndef GST_COMPAT_H
+#define GST_COMPAT_H
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include "gst/vaapi/sysdeps.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "glibcompat.h"
-
-#include <gst/gst.h>
-
-#endif /* SYSDEPS_H */
+#endif /* GST_COMPAT_H */

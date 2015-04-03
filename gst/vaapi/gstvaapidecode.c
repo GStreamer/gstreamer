@@ -30,7 +30,7 @@
  * the vaapisink element.
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 
 #include "gstvaapidecode.h"
@@ -950,7 +950,7 @@ gst_vaapidecode_get_caps (GstPad * pad)
 
 #if !GST_CHECK_VERSION(1,4,0)
 static gboolean
-gst_vaapidecode_query (GST_PAD_QUERY_FUNCTION_ARGS)
+gst_vaapidecode_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstVaapiDecode *const decode =
       GST_VAAPIDECODE (gst_pad_get_parent_element (pad));
@@ -1007,8 +1007,7 @@ gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query)
 #else
       GstPad *pad = GST_VIDEO_DECODER_SINK_PAD (vdec);
       GstObject *parent = gst_pad_get_parent (pad);
-      ret = GST_PAD_QUERY_FUNCTION_CALL (plugin->sinkpad_query, pad, parent,
-          query);
+      ret = plugin->sinkpad_query (pad, parent, query);
       if (parent)
         gst_object_unref (parent);
 #endif
@@ -1056,8 +1055,7 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
 #else
       GstPad *pad = GST_VIDEO_DECODER_SRC_PAD (vdec);
       GstObject *parent = gst_pad_get_parent (pad);
-      ret = GST_PAD_QUERY_FUNCTION_CALL (plugin->srcpad_query, pad, parent,
-          query);
+      ret = plugin->srcpad_query (pad, parent, query);
       if (parent)
         gst_object_unref (parent);
 #endif

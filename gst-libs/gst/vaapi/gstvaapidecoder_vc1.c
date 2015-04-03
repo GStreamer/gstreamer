@@ -1124,6 +1124,7 @@ gst_vaapi_decoder_vc1_decode_codec_data(GstVaapiDecoder *base_decoder,
     gint width, height;
     guint32 format;
     gint version;
+    const gchar *s;
 
     priv->has_codec_data = TRUE;
 
@@ -1136,7 +1137,10 @@ gst_vaapi_decoder_vc1_decode_codec_data(GstVaapiDecoder *base_decoder,
 
     caps = GST_VAAPI_DECODER_CODEC_STATE(decoder)->caps;
     structure = gst_caps_get_structure(caps, 0);
-    if (!gst_structure_get_fourcc(structure, "format", &format)) {
+    s = gst_structure_get_string(structure, "format");
+    if (s && strlen(s) == 4) {
+        format = GST_MAKE_FOURCC(s[0], s[1], s[2], s[3]);
+    } else {
         /* Try to determine format from "wmvversion" property */
         if (gst_structure_get_int(structure, "wmvversion", &version))
             format = (version >= 1 && version <= 3) ?

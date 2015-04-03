@@ -21,7 +21,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include <gst/vaapi/gstvaapivalue.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include "gstvaapiencode.h"
@@ -68,7 +68,7 @@ ensure_uploader (GstVaapiEncode * encode)
 }
 
 static gboolean
-gst_vaapiencode_query (GST_PAD_QUERY_FUNCTION_ARGS)
+gst_vaapiencode_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstVaapiPluginBase *const plugin =
       GST_VAAPI_PLUGIN_BASE (gst_pad_get_parent_element (pad));
@@ -79,11 +79,9 @@ gst_vaapiencode_query (GST_PAD_QUERY_FUNCTION_ARGS)
   if (gst_vaapi_reply_to_query (query, plugin->display))
     success = TRUE;
   else if (GST_PAD_IS_SINK (pad))
-    success = GST_PAD_QUERY_FUNCTION_CALL (plugin->sinkpad_query,
-        plugin->sinkpad, parent, query);
+    success = plugin->sinkpad_query (plugin->sinkpad, parent, query);
   else
-    success = GST_PAD_QUERY_FUNCTION_CALL (plugin->srcpad_query,
-        plugin->srcpad, parent, query);
+    success = plugin->srcpad_query (plugin->srcpad, parent, query);
 
   gst_object_unref (plugin);
   return success;

@@ -20,7 +20,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include <gst/vaapi/gstvaapipixmap_x11.h>
 #include "gstvaapivideoconverter_x11.h"
 #include "gstvaapipluginutil.h"

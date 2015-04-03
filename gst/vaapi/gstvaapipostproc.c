@@ -29,7 +29,7 @@
  * implemented.
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include <gst/video/video.h>
 
 #include "gstvaapipostproc.h"

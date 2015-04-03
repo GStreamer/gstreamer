@@ -27,7 +27,7 @@
  * @short_description: VA video meta for GStreamer
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include <gst/vaapi/gstvaapiimagepool.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
 #include "gstvaapivideometa.h"

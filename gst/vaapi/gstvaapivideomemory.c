@@ -20,7 +20,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include <unistd.h>
 #include <gst/vaapi/gstvaapisurface_drm.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>

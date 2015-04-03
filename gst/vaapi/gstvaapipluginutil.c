@@ -22,7 +22,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include "gstvaapivideocontext.h"
 #if USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>

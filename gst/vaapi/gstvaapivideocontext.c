@@ -23,7 +23,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include "gstvaapivideocontext.h"
 
 #if GST_CHECK_VERSION(1,1,0)

@@ -42,7 +42,7 @@ static const CodecMap g_codec_map[] = {
     { "wmv3",   GST_VAAPI_CODEC_VC1,
       "video/x-wmv, wmvversion=3" },
     { "vc1",    GST_VAAPI_CODEC_VC1,
-      "video/x-wmv, wmvversion=3, " GST_MAKE_FORMAT_STRING(WVC1) },
+      "video/x-wmv, wmvversion=3, format=(string)WVC1" },
     { NULL, }
 };
 
@@ -156,8 +156,8 @@ codec_identifier_new(const gchar *filename)
         goto error;
 
     tfp = &cip->type_find;
-    tfp->peek = (GstTypeFindPeekFunction)codec_identifier_peek;
-    tfp->suggest = (GstTypeFindSuggestFunction)codec_identifier_suggest;
+    tfp->peek = codec_identifier_peek;
+    tfp->suggest = codec_identifier_suggest;
     tfp->data = cip;
     return cip;
 

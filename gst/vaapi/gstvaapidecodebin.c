@@ -20,7 +20,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include <stdio.h>
 #include <string.h>
 #include <gst/gst.h>

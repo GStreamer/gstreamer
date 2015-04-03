@@ -31,7 +31,7 @@
  * create its own internal window and render into it.
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 

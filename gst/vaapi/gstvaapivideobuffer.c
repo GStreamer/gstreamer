@@ -27,7 +27,7 @@
  * @short_description: VA video buffer for GStreamer
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include "gstcompat.h"
 #include "gstvaapivideobuffer.h"
 #if USE_X11 && !GST_CHECK_VERSION(1,1,0)
 # include "gstvaapivideoconverter_x11.h"
