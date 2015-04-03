@@ -1,9 +1,6 @@
 [submodule "ext/codecparsers"]
 	path = ext/codecparsers
 	url = https://gitorious.org/vaapi/gstreamer-codecparsers.git
-[submodule "ext/videoutils"]
-	path = ext/videoutils
-	url = https://gitorious.org/vaapi/gstreamer-videoutils.git
 [submodule "ext/libvpx/upstream"]
 	path = ext/libvpx/upstream
 	url = https://chromium.googlesource.com/webm/libvpx
