@@ -818,9 +818,6 @@ decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
     GstMpeg4Packet *tos = &packet;
     GstVaapiDecoderStatus status;
 
-    if (tos->size < 0)
-        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-
     // packet.size is the size from current marker to the next.
     if (tos->type == GST_MPEG4_VISUAL_OBJ_SEQ_START) {
         status = decode_sequence(decoder, packet.data + packet.offset, packet.size);
