@@ -35,7 +35,6 @@ typedef struct _GstVaapiEncMiscParam GstVaapiEncMiscParam;
 typedef struct _GstVaapiEncSlice GstVaapiEncSlice;
 typedef struct _GstVaapiEncQMatrix GstVaapiEncQMatrix;
 typedef struct _GstVaapiEncHuffmanTable GstVaapiEncHuffmanTable;
-typedef struct _GstVaapiCodedBuffer GstVaapiCodedBuffer;
 typedef struct _GstVaapiEncPackedHeader GstVaapiEncPackedHeader;
 
 /* ------------------------------------------------------------------------- */
