@@ -1838,7 +1838,7 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     slice_param->num_macroblocks = cur_slice_mbs;
     slice_param->macroblock_info = VA_INVALID_ID;
     slice_param->slice_type = h264_get_slice_type (picture->type);
-    g_assert (slice_param->slice_type != -1);
+    g_assert ((gint8) slice_param->slice_type != -1);
     slice_param->pic_parameter_set_id = encoder->view_idx;
     slice_param->idr_pic_id = encoder->idr_num;
     slice_param->pic_order_cnt_lsb = picture->poc;
