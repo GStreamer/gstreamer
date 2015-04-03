@@ -267,6 +267,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   GESClip *clip;
   gint layer_priority;
   const gchar *name;
+  const gchar *pattern;
   gchar *asset_id = NULL;
   const gchar *type_string;
   GType type;
@@ -276,7 +277,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
       GST_CLOCK_TIME_NONE;
 
   const gchar *valid_fields[] =
-      { "asset-id", "name", "layer-priority", "layer", "type",
+      { "asset-id", "pattern", "name", "layer-priority", "layer", "type",
     "start", "inpoint", "duration", NULL
   };
 
@@ -287,6 +288,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
 
   GET_AND_CHECK ("asset-id", G_TYPE_STRING, &asset_id);
 
+  TRY_GET ("pattern", G_TYPE_STRING, &pattern, NULL);
   TRY_GET ("name", G_TYPE_STRING, &name, NULL);
   TRY_GET ("layer-priority", G_TYPE_INT, &layer_priority, -1);
   TRY_GET ("layer", G_TYPE_INT, &layer_priority, -1);
@@ -337,6 +339,23 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
 
   if (clip) {
     res = TRUE;
+
+    if (GES_IS_TEST_CLIP (clip)) {
+      if (pattern) {
+        GEnumClass *enum_class =
+            G_ENUM_CLASS (g_type_class_ref (GES_VIDEO_TEST_PATTERN_TYPE));
+        GEnumValue *value = g_enum_get_value_by_nick (enum_class, pattern);
+
+        if (!value) {
+          res = FALSE;
+          goto beach;
+        }
+
+        ges_test_clip_set_vpattern (GES_TEST_CLIP (clip), value->value);
+        g_type_class_unref (enum_class);
+      }
+    }
+
     if (name
         && !ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip), name)) {
       res = FALSE;

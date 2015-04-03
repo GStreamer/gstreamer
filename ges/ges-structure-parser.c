@@ -127,6 +127,8 @@ ges_structure_parser_parse_symbol (GESStructureParser * self,
   self->add_comma = FALSE;
   if (!g_ascii_strncasecmp (symbol, "clip", 4))
     ges_structure_parser_parse_string (self, "clip, uri=", TRUE);
+  else if (!g_ascii_strncasecmp (symbol, "test-clip", 9))
+    ges_structure_parser_parse_string (self, "test-clip, pattern=", TRUE);
   else if (!g_ascii_strncasecmp (symbol, "effect", 6))
     ges_structure_parser_parse_string (self, "effect, bin-description=", TRUE);
   else if (!g_ascii_strncasecmp (symbol, "transition", 10))

@@ -66,7 +66,16 @@ _ges_clip () {
 	then
 		_gst_mandatory_argument
 	else
-		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(ges-launch-1.0 help all | egrep '^  [a-zA-Z0-9]')" -- $cur) )
+		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(ges-launch-1.0 help all | egrep '^  +')" -- $cur) )
+	fi
+}
+
+_ges_test_clip () {
+	if [[ "$prev" == "$command" ]];
+	then
+		_gst_mandatory_argument
+	else
+		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(ges-launch-1.0 help all | egrep '^  +')" -- $cur) )
 	fi
 }
 
@@ -94,6 +103,9 @@ _ges_list_properties () {
 	then
 		_gst_mandatory_argument
 	elif [[ "$real_command" == "+clip" ]]
+	then
+		COMPREPLY=( $(compgen -W "set-alpha set-posx set-posy set-width set-height set-volume set-mute" -- $cur) )
+	elif [[ "$real_command" == "+test-clip" ]]
 	then
 		COMPREPLY=( $(compgen -W "set-alpha set-posx set-posy set-width set-height set-volume set-mute" -- $cur) )
 	elif [[ "$real_command" == "+effect" ]]
@@ -165,7 +177,7 @@ __ges_main ()
 	if [[ "$command" == "--gst"* ]]; then
 		completion_func="_${command//-/_}"
 	else
-		completion_func="_ges_${command//-|+/_}"
+		completion_func="_ges_${command//-/_}"
 		completion_func="${completion_func//+/}"
 	fi
 

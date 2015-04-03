@@ -160,6 +160,30 @@ _ges_command_line_formatter_add_clip (GESTimeline * timeline,
 }
 
 static gboolean
+_ges_command_line_formatter_add_test_clip (GESTimeline * timeline,
+    GstStructure * structure, GError ** error)
+{
+  const Properties field_names[] = {
+    {"pattern", "p", G_TYPE_STRING, NULL},
+    {"name", "n", 0, NULL},
+    {"start", "s", GST_TYPE_CLOCK_TIME, NULL},
+    {"duration", "d", GST_TYPE_CLOCK_TIME, NULL},
+    {"inpoint", "i", GST_TYPE_CLOCK_TIME, NULL},
+    {"layer", "l", 0, NULL},
+    {NULL, 0, 0, NULL},
+  };
+
+  if (!_cleanup_fields (field_names, structure, error))
+    return FALSE;
+
+  gst_structure_set (structure, "type", G_TYPE_STRING, "GESTestClip", NULL);
+  gst_structure_set (structure, "asset-id", G_TYPE_STRING,
+      gst_structure_get_string (structure, "pattern"), NULL);
+
+  return _ges_add_clip_from_struct (timeline, structure, error);
+}
+
+static gboolean
 _ges_command_line_formatter_add_effect (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
@@ -197,6 +221,13 @@ static GOptionEntry timeline_parsing_options[] = {
       "Adds an effect as specified by 'bin-description'\n"
         "       * bin-description - d: The description of the effect bin with a gst-launch-style pipeline description.\n"
         "       * element-name - e   : The name of the element to apply the effect on.\n"},
+  {"test-clip", 0, 0.0, G_OPTION_ARG_CALLBACK,
+        &_ges_command_line_formatter_add_test_clip,
+        "",
+      "Add a test clip in the timeline\n"
+        "           * start -s : The start position of the element inside the layer.\n"
+        "           * duration -d : The duration of the clip."
+        "           * inpoint - i : The inpoint of the clip.\n"},
 };
 
 GOptionGroup *
