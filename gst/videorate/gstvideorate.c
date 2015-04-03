@@ -371,8 +371,6 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
     s = gst_caps_get_structure (caps, i);
 
     s1 = gst_structure_copy (s);
-    s2 = gst_structure_copy (s);
-    s3 = NULL;
 
     if (videorate->updating_caps) {
       GST_INFO_OBJECT (trans,
@@ -384,7 +382,12 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
       ret = gst_caps_merge_structure (ret, s1);
 
       continue;
-    } else if (videorate->drop_only) {
+    }
+
+    s2 = gst_structure_copy (s);
+    s3 = NULL;
+
+    if (videorate->drop_only) {
       gint min_num = 0, min_denom = 1;
       gint max_num = G_MAXINT, max_denom = 1;
 
@@ -1004,7 +1007,6 @@ gst_video_rate_check_variable_rate (GstVideoRate * videorate,
   GstStructure *st;
   gint fps_d, fps_n;
   GstCaps *srcpadcaps, *tmpcaps;
-
   GstPad *pad = NULL;
 
   srcpadcaps =
@@ -1012,6 +1014,7 @@ gst_video_rate_check_variable_rate (GstVideoRate * videorate,
 
   gst_video_guess_framerate (GST_BUFFER_PTS (buffer) -
       GST_BUFFER_PTS (videorate->prevbuf), &fps_n, &fps_d);
+
   tmpcaps = gst_caps_copy (srcpadcaps);
   st = gst_caps_get_structure (tmpcaps, 0);
   gst_structure_set (st, "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
@@ -1036,6 +1039,7 @@ gst_video_rate_check_variable_rate (GstVideoRate * videorate,
   gst_base_transform_update_src_caps (GST_BASE_TRANSFORM (videorate), tmpcaps);
 
 done:
+  gst_caps_unref (tmpcaps);
   if (pad)
     gst_object_unref (pad);
 }

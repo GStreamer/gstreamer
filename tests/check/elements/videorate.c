@@ -1095,7 +1095,7 @@ videorate_send_buffers (GstElement * videorate,
 GST_START_TEST (test_fixed_framerate)
 {
   GstElement *videorate;
-  GstCaps *caps = gst_caps_from_string ("video/x-raw,framerate=0/1");
+  GstCaps *caps;
 
   /* 1) if upstream caps contain a non-0/1 framerate, we should use that and pass
    *    it on downstream (if possible; otherwise fixate_to_nearest)
