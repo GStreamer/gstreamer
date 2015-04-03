@@ -1297,7 +1297,7 @@ _gst_uri_string_to_list (const gchar * str, const gchar * sep, gboolean convert,
 
   if (str) {
     guint pct_sep_len = 0;
-    gchar *pct_sep;
+    gchar *pct_sep = NULL;
     gchar **split_str;
 
     if (convert && !unescape) {
