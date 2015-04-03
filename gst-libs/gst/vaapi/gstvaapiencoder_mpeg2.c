@@ -22,6 +22,7 @@
  */
 
 #include "sysdeps.h"
+#include <math.h>
 #include <va/va.h>
 #include <va/va_enc_mpeg2.h>
 #include <gst/base/gstbitwriter.h>
@@ -887,9 +888,9 @@ find_frame_rate_code (const VAEncSequenceParameterBufferMPEG2 * seq_param)
 
   for (i = 0; i < sizeof (frame_rate_tab) / sizeof (frame_rate_tab[0]); i++) {
 
-    if (abs (1000 * frame_rate_tab[i].value - 1000 * frame_rate_value) < delta) {
+    if (fabsf (1000 * frame_rate_tab[i].value - 1000 * frame_rate_value) < delta) {
       code = frame_rate_tab[i].code;
-      delta = abs (1000 * frame_rate_tab[i].value - 1000 * frame_rate_value);
+      delta = fabsf (1000 * frame_rate_tab[i].value - 1000 * frame_rate_value);
     }
   }
   return code;
