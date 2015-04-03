@@ -21,11 +21,6 @@ libgstvaapi_videoutils_libs =			\
 gen_source_c =
 gen_source_h =
 
-if USE_GST_API_0_10
-gen_source_c += gstvideodecoder.c gstvideoencoder.c gstvideoutils.c video.c
-gen_source_h += gstvideodecoder.h gstvideoencoder.h gstvideoutils.h video.h
-endif
-
 GENFILES = \
 	$(gen_source_c)				\
 	$(gen_source_h)				\

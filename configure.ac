@@ -27,9 +27,6 @@ m4_define([glib_version], [2.28])
 
 # gstreamer version number
 m4_define([gst_api_version],            [autodetect])
-m4_define([gst0_version],               [0.10.36])
-m4_define([gst0_plugins_base_version],  [0.10.31])
-m4_define([gst0_plugins_bad_version],   [0.10.22])
 m4_define([gst1_version],               [1.0.0])
 m4_define([gst1_plugins_base_version],  [1.0.0])
 m4_define([gst1_plugins_bad_version],   [1.0.0])
@@ -160,12 +157,6 @@ AC_ARG_WITH([glapi],
         [build with the specified OpenGL APIs @<:@default=default_glapi@:>@]),
     [GLAPI="$with_glapi"], [GLAPI=default_glapi])
 
-AC_ARG_WITH([gstreamer-api],
-    AC_HELP_STRING([--with-gstreamer-api=VERSION],
-                   [build against the specified GStreamer API version
-                    @<:@default=gst_api_version@:>@]),
-    [GST_API_VERSION="$with_gstreamer_api"], [GST_API_VERSION=gst_api_version])
-
 dnl Check for basic libraries
 AC_CHECK_LIB(m, tan)
 
@@ -191,30 +182,16 @@ AC_SUBST([DLOPEN_LIBS])
 dnl ---------------------------------------------------------------------------
 dnl -- GStreamer                                                             --
 dnl ---------------------------------------------------------------------------
-
-dnl If GStreamer API version is to be autodetected, then always try
-dnl with the latest version first
 AC_MSG_CHECKING([for GStreamer API version])
-if test "$GST_API_VERSION" = "autodetect"; then
-    gst_pkg_versions="1.0 0.10"
-else
-    AS_VERSION_COMPARE([$GST_API_VERSION], [1.0],
-        [gst_pkg_versions="0.10"], [gst_pkg_versions="1.0"],
-        dnl GStreamer 1.2.x and 1.4.x APIs don't have their own namespace
-        [gst_pkg_versions="1.0"])
+if $PKG_CONFIG --exists "gstreamer-1.0"; then
+    gst_version=`$PKG_CONFIG --modversion "gstreamer-1.0"`
+    gst_major_version=`echo "$gst_version" | cut -d'.' -f1`
+    gst_minor_version=`echo "$gst_version" | cut -d'.' -f2`
+    GST_API_VERSION="${gst_major_version}.${gst_minor_version}"
+    GST_PKG_VERSION="1.0"
 fi
-for gst_pkg_version in ${gst_pkg_versions}; do
-    if $PKG_CONFIG --exists "gstreamer-$gst_pkg_version"; then
-        gst_version=`$PKG_CONFIG --modversion "gstreamer-$gst_pkg_version"`
-        gst_major_version=`echo "$gst_version" | cut -d'.' -f1`
-        gst_minor_version=`echo "$gst_version" | cut -d'.' -f2`
-        GST_API_VERSION="${gst_major_version}.${gst_minor_version}"
-        GST_PKG_VERSION="$gst_pkg_version"
-        break
-    fi
-done
 if test -z "$GST_PKG_VERSION"; then
-    AC_MSG_ERROR([version $GST_API_VERSION not found])
+    AC_MSG_ERROR([gstreamer-$GST_PKG_VERSION was not found])
 fi
 AC_MSG_RESULT([$GST_API_VERSION])
 
@@ -223,11 +200,6 @@ AC_DEFINE_UNQUOTED([GST_API_VERSION_S], ["$GST_API_VERSION"],
 
 dnl Versions for GStreamer and plugins-base
 case $GST_API_VERSION in
-0.10)
-    GST_VERSION_REQUIRED=gst0_version
-    GST_PLUGINS_BASE_VERSION_REQUIRED=gst0_plugins_base_version
-    GST_PLUGINS_BAD_VERSION_REQUIRED=gst0_plugins_bad_version
-    ;;
 1.0)
     GST_VERSION_REQUIRED=gst1_version
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst1_plugins_base_version
@@ -257,41 +229,26 @@ AC_SUBST(GST_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BASE_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BAD_VERSION_REQUIRED)
 
-USE_GST_API_0_10="no"
 USE_GST_API_1_0p="no"
 USE_GST_API_1_2p="no"
 USE_GST_API_1_4p="no"
-AS_VERSION_COMPARE([$GST_API_VERSION], [0.10],
-    [], [USE_GST_API_0_10="yes"], [])
 AS_VERSION_COMPARE([$GST_API_VERSION], [1.0],
     [], [USE_GST_API_1_0p="yes"], [USE_GST_API_1_0p="yes"])
 AS_VERSION_COMPARE([$GST_API_VERSION], [1.2],
     [], [USE_GST_API_1_2p="yes"], [USE_GST_API_1_2p="yes"])
 AS_VERSION_COMPARE([$GST_API_VERSION], [1.4],
     [], [USE_GST_API_1_4p="yes"], [USE_GST_API_1_4p="yes"])
-AM_CONDITIONAL([USE_GST_API_0_10], [test "$USE_GST_API_0_10" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_0p], [test "$USE_GST_API_1_0p" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_2p], [test "$USE_GST_API_1_2p" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_4p], [test "$USE_GST_API_1_4p" = "yes"])
 
-dnl GStreamer 1.2.x and 1.4.x APIs don't have their own namespace
-GST_PKG_VERSION="$GST_API_VERSION"
-if test "$USE_GST_API_1_2p" = "yes" || test "$USE_GST_API_1_4p" = "yes" ; then
-    GST_PKG_VERSION="1.0"
-fi
 AC_SUBST([GST_PKG_VERSION])
 
 AC_DEFINE_UNQUOTED([GST_PKG_VERSION_S], ["$GST_PKG_VERSION"],
     [Defined to the string representation of GStreamer API version])
 
 dnl Validate certain features
-if test "$USE_GST_API_0_10" = "yes"; then
-    AC_MSG_WARN([support for GStreamer 0.10 is obsolete, and will be removed])
-    if test "$enable_builtin_videoparsers" = "yes"; then
-        AC_MSG_WARN([disabled built-in videoparsers (unsupported)])
-        enable_builtin_videoparsers="no"
-    fi
-elif test "$GST_API_VERSION" = "1.0"; then
+if test "$GST_API_VERSION" = "1.0"; then
     AC_MSG_WARN([support for GStreamer 1.0 is obsolete, and will be removed])
 fi
 
@@ -300,25 +257,6 @@ PKG_CHECK_MODULES([GST],
     [gstreamer-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
 PKG_CHECK_MODULES([GST_BASE],
     [gstreamer-base-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
-
-AC_CACHE_CHECK([for GstBaseSink::query hook], ac_cv_have_gst_base_sink_query, [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_BASE_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_BASE_LIBS"
-    AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/base/gstbasesink.h>]],
-            [[GstBaseSinkClass klass; klass.query = NULL;]])],
-        [ac_cv_have_gst_base_sink_query="yes"],
-        [ac_cv_have_gst_base_sink_query="no"]
-    )
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-])
-if test "$ac_cv_have_gst_base_sink_query" != "yes"; then
-    AC_MSG_ERROR([GstBaseSink does not contain the 'query' vfunc])
-fi
 
 dnl GStreamer -base plugins
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
@@ -336,54 +274,8 @@ dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],
     [gstreamer-video-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 
-AC_CACHE_CHECK([for GstVideoOverlayComposition],
-    ac_cv_have_gst_video_overlay_composition, [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_VIDEO_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS $GST_VIDEO_LIBS"
-    AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/video/video-overlay-composition.h>]],
-            [[GstVideoOverlayComposition *c;
-              c = gst_video_overlay_composition_new(0);]])],
-        [ac_cv_have_gst_video_overlay_composition="yes"],
-        [ac_cv_have_gst_video_overlay_composition="no"]
-    )
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-])
-if test "$ac_cv_have_gst_video_overlay_composition" != "yes"; then
-    AC_MSG_ERROR([GstVideoOverlayComposition is not available])
-fi
-
-AC_CACHE_CHECK([... with advanced format flags],
-    ac_cv_have_gst_video_overlay_hwcaps, [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_VIDEO_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS $GST_VIDEO_LIBS"
-    AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/video/video-overlay-composition.h>]],
-            [[GstVideoOverlayRectangle *rect;
-              const guint w = 64, h = 64;
-              guint flags = (
-                  GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA|
-                  GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA);
-              rect = gst_video_overlay_rectangle_new_argb(NULL, w, h, w * 4,
-                  0, 0, w, h, flags);
-              gst_video_overlay_rectangle_set_global_alpha(rect, 0.5f);]])],
-        [ac_cv_have_gst_video_overlay_hwcaps="yes"],
-        [ac_cv_have_gst_video_overlay_hwcaps="no"]
-    )
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-])
-if test "$ac_cv_have_gst_video_overlay_hwcaps" = "yes"; then
-    AC_DEFINE_UNQUOTED([HAVE_GST_VIDEO_OVERLAY_HWCAPS], 1,
-        [Defined to 1 if GstVideoOverlayComposition API supports HW hints.])
-fi
+AC_DEFINE_UNQUOTED([HAVE_GST_VIDEO_OVERLAY_HWCAPS], 1,
+    [Defined to 1 if GstVideoOverlayComposition API supports HW hints.])
 
 dnl GStreamer -bad plugins (deprecated in GStreamer v1.2)
 if test "$USE_GST_API_1_2p" != "yes" && test "$USE_GST_API_1_4p" != "yes"; then
@@ -541,7 +433,6 @@ if test "$enable_egl" = "yes" -a $HAVE_GSTGL -ne 1; then
 fi
 
 case $GST_API_VERSION in
-0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
 1.0)    lt_bias=gst1_vaapi_lt_current_bias;;
 1.2)    lt_bias=gst2_vaapi_lt_current_bias;;
 1.4) lt_bias=gst4_vaapi_lt_current_bias;;
@@ -575,15 +466,10 @@ GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^([_]*gst_plug
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl Check for the GStreamer plugins directory
-AC_ARG_VAR([GST_PLUGIN_PATH], [installation path for gstreamer-vaapi plugin elements for GStreamer 0.10])
 AC_ARG_VAR([GST_PLUGIN_PATH_1_0], [installation path for gstreamer-vaapi plugin elements for GStreamer 1.0])
 AC_MSG_CHECKING([for GStreamer plugins directory])
-case $GST_PKG_VERSION in
-0.10)   _gst_plugin_path="$GST_PLUGIN_PATH";;
-1.0)    _gst_plugin_path="$GST_PLUGIN_PATH_1_0";;
-esac
-if test -d "$_gst_plugin_path"; then
-    GST_PLUGINS_DIR="$_gst_plugin_path"
+if test -d "$GST_PLUGIN_PATH_1_0"; then
+    GST_PLUGINS_DIR="$GST_PLUGIN_PATH_1_0"
 else
     GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_PKG_VERSION --variable pluginsdir`
     if test -z "$GST_PLUGINS_DIR"; then
