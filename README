@@ -26,9 +26,10 @@ GStreamer and helper libraries.
     implicitly download the decoded surface to raw YUV buffers.
 
   * `vaapiencode_<CODEC>' is used to encode into MPEG-2, H.264 AVC,
-    H.264 MVC videos, depending on the actual value of <CODEC> (mpeg2,
-    h264, etc.). By default, raw format bitstreams are generated, so
-    the result may be piped to a muxer. e.g. qtmux for MP4 containers.
+    H.264 MVC, JPEG, VP8 videos, depending on the actual value of
+    <CODEC> (mpeg2, h264, etc.). By default, raw format bitstreams
+    are generated, so the result may be piped to a muxer.
+    e.g. qtmux for MP4 containers.
 
   * `vaapipostproc' is used to filter VA surfaces, for e.g. scaling,
     deinterlacing (bob, motion-adaptive, motion-compensated), noise
@@ -43,9 +44,9 @@ GStreamer and helper libraries.
 Features
 --------
 
-  * VA-API support from 0.29 to 0.35
+  * VA-API support from 0.29 to 0.37
   * JPEG, MPEG-2, MPEG-4, H.264 AVC, H.264 MVC, VP8 and VC-1 ad-hoc decoders
-  * MPEG-2, H.264 AVC and H.264 MVC ad-hoc encoders
+  * MPEG-2, H.264 AVC,H.264 MVC, JPEG and VP8 ad-hoc encoders
   * OpenGL rendering through VA/GLX or GLX texture-from-pixmap + FBO
   * Support for the Wayland display server
   * Support for headless decode pipelines with VA/DRM
@@ -62,22 +63,11 @@ Requirements
 
 Software requirements
 
-  * GStreamer 0.10.x [DEPRECATED]:
+  * GStreamer 1.2.x (up to including GStreamer 1.6):
       libglib2.0-dev (>= 2.28)
-      libgstreamer0.10-dev (>= 0.10.36)
-        or with GstBaseSink::query()
-      libgstreamer-plugins-base0.10-dev (>= 0.10.36)
-      libgstreamer-plugins-bad0.10-dev (>= 0.10.22.1)
-        or with GstVideoContext, GstSurfaceBuffer, codecparsers
-
-    Note: support for GStreamer 0.10 APIs is deprecated and will be
-    removed in a future release.
-
-  * GStreamer 1.0.x (up to including GStreamer 1.4):
-      libglib2.0-dev (>= 2.28)
-      libgstreamer1.0-dev (>= 1.0.0)
-      libgstreamer-plugins-base1.0-dev (>= 1.0.0)
-      libgstreamer-plugins-bad1.0-dev (>= 1.0.0)
+      libgstreamer1.0-dev (>= 1.2.0)
+      libgstreamer-plugins-base1.0-dev (>= 1.2.0)
+      libgstreamer-plugins-bad1.0-dev (>= 1.2.0)
 
   * Renderers:
       DRM: libva-dev (>= 1.1.0), libdrm-dev, libudev-dev
@@ -89,7 +79,8 @@ Hardware requirements
 
   * AMD platforms with UVD2 (XvBA supported)
   * Intel Eaglelake (G45)
-  * Intel Ironlake, Sandybridge, Ivybridge and Haswell (HD Graphics)
+  * Intel Ironlake, Sandybridge, Ivybridge, Haswell and Broadwell (HD Graphics)
+  * Intel BayTrail
   * Intel Poulsbo (US15W)
   * Intel Medfield or Cedar Trail
   * NVIDIA platforms with PureVideo (VDPAU supported)
@@ -99,7 +90,7 @@ Usage
 -----
 
   VA elements are automatically plugged into GStreamer pipelines. So,
-  using playbin (or playbin2 with GStreamer 0.10) should work as is.
+  using playbin should work as is.
   However, here are a few alternate pipelines that could be manually
   constructed.
 
