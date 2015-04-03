@@ -191,8 +191,10 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
   if (priv->formatter_asset == NULL)
     priv->formatter_asset = _find_formatter_asset_for_id (priv->uri);
 
-  if (priv->formatter_asset == NULL)
+  if (priv->formatter_asset == NULL) {
+    lerr = g_error_new (GES_ERROR, 0, "Could not find a suitable formatter");
     goto failed;
+  }
 
   formatter = GES_FORMATTER (ges_asset_extract (priv->formatter_asset, &lerr));
   if (lerr) {
