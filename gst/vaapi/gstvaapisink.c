@@ -57,14 +57,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapisink);
 /* Default template */
 /* *INDENT-OFF* */
 static const char gst_vaapisink_sink_caps_str[] =
-#if GST_CHECK_VERSION(1,1,0)
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
         "{ ENCODED, NV12, I420, YV12 }") ";"
     GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL);
-#else
-    GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) "; "
-    GST_VAAPI_SURFACE_CAPS;
-#endif
 /* *INDENT-ON* */
 
 static GstStaticPadTemplate gst_vaapisink_sink_factory =
@@ -1203,11 +1198,7 @@ gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
   GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
   GstCaps *out_caps, *yuv_caps;
 
-#if GST_CHECK_VERSION(1,1,0)
   out_caps = gst_static_pad_template_get_caps (&gst_vaapisink_sink_factory);
-#else
-  out_caps = gst_caps_from_string (GST_VAAPI_SURFACE_CAPS);
-#endif
   if (!out_caps)
     return NULL;
 

@@ -30,9 +30,7 @@
 #include "gstvaapivideocontext.h"
 #include "gstvaapivideometa.h"
 #include "gstvaapivideobufferpool.h"
-#if GST_CHECK_VERSION(1,1,0)
 #include <gst/allocators/allocators.h>
-#endif
 
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
@@ -57,7 +55,6 @@ plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
   gst_vaapi_display_unref (display);
 }
 
-#if GST_CHECK_VERSION(1,1,0)
 static void
 plugin_set_context (GstElement * element, GstContext * context)
 {
@@ -67,33 +64,10 @@ plugin_set_context (GstElement * element, GstContext * context)
   if (gst_vaapi_video_context_get_display (context, &display))
     plugin_set_display (plugin, display);
 }
-#else
-static void
-plugin_set_context (GstVideoContext * context, const gchar * type,
-    const GValue * value)
-{
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (context);
-  GstVaapiDisplay *display = NULL;
-
-  gst_vaapi_set_display (type, value, &display);
-  plugin_set_display (plugin, display);
-}
-
-static void
-video_context_interface_init (GstVideoContextInterface * iface)
-{
-  iface->set_context = plugin_set_context;
-}
-
-#define GstVideoContextClass GstVideoContextInterface
-#endif
 
 void
 gst_vaapi_plugin_base_init_interfaces (GType g_define_type_id)
 {
-#if !GST_CHECK_VERSION(1,1,0)
-  G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_CONTEXT, video_context_interface_init);
-#endif
 }
 
 static gboolean
@@ -133,7 +107,6 @@ plugin_update_sinkpad_info_from_buffer (GstVaapiPluginBase * plugin,
   return TRUE;
 }
 
-#if GST_CHECK_VERSION(1,1,0)
 static gboolean
 is_dma_buffer (GstBuffer * buf)
 {
@@ -197,7 +170,6 @@ error_create_proxy:
   GST_ERROR ("failed to create VA surface proxy from wrapped VA surface");
   return FALSE;
 }
-#endif
 
 void
 gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
@@ -205,10 +177,8 @@ gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
   klass->has_interface = default_has_interface;
   klass->display_changed = default_display_changed;
 
-#if GST_CHECK_VERSION(1,1,0)
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   element_class->set_context = GST_DEBUG_FUNCPTR (plugin_set_context);
-#endif
 }
 
 void
@@ -640,7 +610,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   gboolean need_pool, update_pool;
   gboolean has_video_meta = FALSE;
   gboolean has_video_alignment = FALSE;
-#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
+#if (USE_GLX || USE_EGL)
   gboolean has_texture_upload_meta = FALSE;
   guint idx;
 #endif
@@ -664,7 +634,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   has_video_meta = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
-#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
+#if (USE_GLX || USE_EGL)
   has_texture_upload_meta = gst_query_find_allocation_meta (query,
       GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx) &&
       (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META);
@@ -746,7 +716,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   }
 
   /* GstVideoGLTextureUploadMeta (OpenGL) */
-#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
+#if (USE_GLX || USE_EGL)
   if (has_texture_upload_meta) {
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
@@ -871,13 +841,11 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
           &outbuf, NULL) != GST_FLOW_OK)
     goto error_create_buffer;
 
-#if GST_CHECK_VERSION(1,1,0)
   if (is_dma_buffer (inbuf)) {
     if (!plugin_bind_dma_to_vaapi_buffer (plugin, inbuf, outbuf))
       goto error_bind_dma_buffer;
     goto done;
   }
-#endif
 
   if (!gst_video_frame_map (&src_frame, &plugin->sinkpad_info, inbuf,
           GST_MAP_READ))

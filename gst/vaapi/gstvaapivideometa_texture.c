@@ -36,7 +36,7 @@
 
 #define DEFAULT_FORMAT GST_VIDEO_FORMAT_RGBA
 
-#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
+#if (USE_GLX || USE_EGL)
 struct _GstVaapiVideoMetaTexture
 {
   GstVaapiTexture *texture;

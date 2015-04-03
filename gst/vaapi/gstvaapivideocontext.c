@@ -26,8 +26,6 @@
 #include "gstcompat.h"
 #include "gstvaapivideocontext.h"
 
-#if GST_CHECK_VERSION(1,1,0)
-
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
 #define GST_VAAPI_TYPE_DISPLAY \
@@ -177,5 +175,3 @@ gst_vaapi_video_context_propagate (GstElement * element,
   msg = gst_message_new_have_context (GST_OBJECT_CAST (element), context);
   gst_element_post_message (GST_ELEMENT_CAST (element), msg);
 }
-
-#endif

@@ -34,11 +34,6 @@ gboolean
 gst_vaapi_ensure_display (gpointer element, GstVaapiDisplayType type);
 
 G_GNUC_INTERNAL
-void
-gst_vaapi_set_display (const gchar * type,
-    const GValue * value, GstVaapiDisplay ** display_ptr);
-
-G_GNUC_INTERNAL
 gboolean
 gst_vaapi_reply_to_query (GstQuery * query, GstVaapiDisplay * display);
 

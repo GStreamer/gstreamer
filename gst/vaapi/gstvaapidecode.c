@@ -36,7 +36,7 @@
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
-#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
+#if (USE_GLX || USE_EGL)
 #include "gstvaapivideometa_texture.h"
 #endif
 #include "gstvaapivideobufferpool.h"
@@ -74,15 +74,11 @@ static const char gst_vaapidecode_sink_caps_str[] =
     ;
 
 static const char gst_vaapidecode_src_caps_str[] =
-#if GST_CHECK_VERSION(1,1,0)
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
         GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, I420, YV12, NV12 }") ";"
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
         GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }") ";"
     GST_VIDEO_CAPS_MAKE("{ I420, YV12, NV12 }");
-#else
-    GST_VAAPI_SURFACE_CAPS;
-#endif
 
 static GstStaticPadTemplate gst_vaapidecode_sink_factory =
     GST_STATIC_PAD_TEMPLATE(
@@ -178,7 +174,6 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
 
   ref_state = decode->input_state;
 
-#if GST_CHECK_VERSION(1,1,0)
   GstCapsFeatures *features = NULL;
   GstVaapiCapsFeature feature;
 
@@ -209,7 +204,6 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
     default:
       break;
   }
-#endif
 
   state = gst_video_decoder_set_output_state (vdec, format,
       ref_state->info.width, ref_state->info.height,
@@ -219,27 +213,9 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
 
   vi = &state->info;
 
-#if GST_CHECK_VERSION(1,1,0)
   state->caps = gst_video_info_to_caps (vi);
   if (features)
     gst_caps_set_features (state->caps, 0, features);
-#else
-  /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
-     reconstruct suitable caps for "encoded" video formats */
-  state->caps = gst_caps_from_string (GST_VAAPI_SURFACE_CAPS_NAME);
-  if (!state->caps)
-    return FALSE;
-
-  gst_caps_set_simple (state->caps,
-      "type", G_TYPE_STRING, "vaapi",
-      "opengl", G_TYPE_BOOLEAN, USE_GLX,
-      "width", G_TYPE_INT, vi->width,
-      "height", G_TYPE_INT, vi->height,
-      "framerate", GST_TYPE_FRACTION, vi->fps_n, vi->fps_d,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, vi->par_n, vi->par_d, NULL);
-
-  gst_caps_set_interlaced (state->caps, vi);
-#endif
   gst_caps_replace (&decode->srcpad_caps, state->caps);
   gst_video_codec_state_unref (state);
   return TRUE;
@@ -303,7 +279,7 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
         crop_meta->height = crop_rect->height;
       }
     }
-#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
+#if (USE_GLX || USE_EGL)
     if (decode->has_texture_upload_meta)
       gst_buffer_ensure_texture_upload_meta (out_frame->output_buffer);
 #endif
@@ -541,7 +517,7 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
       gst_vaapi_find_preferred_caps_feature (GST_VIDEO_DECODER_SRC_PAD (vdec),
       GST_VIDEO_FORMAT_ENCODED, &out_format);
   decode->has_texture_upload_meta = FALSE;
-#if GST_CHECK_VERSION(1,1,0) && (USE_GLX || USE_EGL)
+#if (USE_GLX || USE_EGL)
   decode->has_texture_upload_meta =
       (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META) &&
       gst_query_find_allocation_meta (query,

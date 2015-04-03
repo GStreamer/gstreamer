@@ -44,14 +44,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapipostproc);
 #define GST_CAT_DEFAULT gst_debug_vaapipostproc
 
-#if GST_CHECK_VERSION(1,1,0)
 # define GST_VAAPIPOSTPROC_SURFACE_CAPS \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(  \
         GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, I420, YV12, NV12 }")
-#else
-# define GST_VAAPIPOSTPROC_SURFACE_CAPS \
-    GST_VAAPI_SURFACE_CAPS
-#endif
 
 /* Default templates */
 /* *INDENT-OFF* */
@@ -66,11 +61,9 @@ static const char gst_vaapipostproc_sink_caps_str[] =
 static const char gst_vaapipostproc_src_caps_str[] =
   GST_VAAPIPOSTPROC_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_FALSE "; "
-#if GST_CHECK_VERSION(1,1,0)
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
       GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }") ", "
   GST_CAPS_INTERLACED_FALSE "; "
-#endif
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
   GST_CAPS_INTERLACED_FALSE;
 /* *INDENT-ON* */
@@ -961,12 +954,10 @@ expand_allowed_srcpad_caps (GstVaapiPostproc * postproc, GstCaps * caps)
 
   num_structures = gst_caps_get_size (caps);
   for (i = 0; i < num_structures; i++) {
-#if GST_CHECK_VERSION(1,1,0)
     GstCapsFeatures *const features = gst_caps_get_features (caps, i);
     if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META))
       continue;
-#endif
 
     GstStructure *const structure = gst_caps_get_structure (caps, i);
     if (!structure)
@@ -1038,10 +1029,8 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
   GstVideoInfo vi;
   GstVideoFormat out_format;
   GstCaps *out_caps;
-#if GST_CHECK_VERSION(1,1,0)
   GstVaapiCapsFeature feature;
   const gchar *feature_str;
-#endif
   guint width, height;
 
   /* Generate the sink pad caps, that could be fixated afterwards */
@@ -1081,7 +1070,6 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
   find_best_size (postproc, &vi, &width, &height);
 
   // Update format from user-specified parameters
-#if GST_CHECK_VERSION(1,1,0)
   /* XXX: this is a workaround until auto-plugging is fixed when
    * format=ENCODED + memory:VASurface caps feature are provided.
    * use the downstream negotiated video format as the output format
@@ -1109,12 +1097,8 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
   feature =
       gst_vaapi_find_preferred_caps_feature (GST_BASE_TRANSFORM_SRC_PAD (trans),
       out_format, &out_format);
-#else
-  out_format = GST_VIDEO_FORMAT_ENCODED;
-#endif
   gst_video_info_change_format (&vi, out_format, width, height);
 
-#if GST_CHECK_VERSION(1,1,0)
   out_caps = gst_video_info_to_caps (&vi);
   if (!out_caps)
     return NULL;
@@ -1125,25 +1109,6 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
       gst_caps_set_features (out_caps, 0,
           gst_caps_features_new (feature_str, NULL));
   }
-#else
-  /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
-     reconstruct suitable caps for "encoded" video formats */
-  out_caps = gst_caps_from_string (GST_VAAPI_SURFACE_CAPS_NAME);
-  if (!out_caps)
-    return NULL;
-
-  gst_caps_set_simple (out_caps,
-      "type", G_TYPE_STRING, "vaapi",
-      "opengl", G_TYPE_BOOLEAN, USE_GLX,
-      "width", G_TYPE_INT, GST_VIDEO_INFO_WIDTH (&vi),
-      "height", G_TYPE_INT, GST_VIDEO_INFO_HEIGHT (&vi),
-      "framerate", GST_TYPE_FRACTION, GST_VIDEO_INFO_FPS_N (&vi),
-      GST_VIDEO_INFO_FPS_D (&vi),
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, GST_VIDEO_INFO_PAR_N (&vi),
-      GST_VIDEO_INFO_PAR_D (&vi), NULL);
-
-  gst_caps_set_interlaced (out_caps, &vi);
-#endif
   return out_caps;
 }
 

@@ -278,75 +278,9 @@ gst_vaapi_ensure_display (gpointer element, GstVaapiDisplayType type)
   return TRUE;
 }
 
-void
-gst_vaapi_set_display (const gchar * type,
-    const GValue * value, GstVaapiDisplay ** display_ptr)
-{
-  GstVaapiDisplay *display = NULL;
-
-  if (!strcmp (type, "vaapi-display")) {
-    g_return_if_fail (G_VALUE_HOLDS_POINTER (value));
-    display = gst_vaapi_display_new_with_display (g_value_get_pointer (value));
-  } else if (!strcmp (type, "gst-vaapi-display")) {
-    g_return_if_fail (G_VALUE_HOLDS_POINTER (value));
-    display = gst_vaapi_display_ref (g_value_get_pointer (value));
-  }
-#if USE_DRM
-  else if (!strcmp (type, "drm-device")) {
-    gint device;
-    g_return_if_fail (G_VALUE_HOLDS_INT (value));
-    device = g_value_get_int (value);
-    display = gst_vaapi_display_drm_new_with_device (device);
-  } else if (!strcmp (type, "drm-device-path")) {
-    const gchar *device_path;
-    g_return_if_fail (G_VALUE_HOLDS_STRING (value));
-    device_path = g_value_get_string (value);
-    display = gst_vaapi_display_drm_new (device_path);
-  }
-#endif
-#if USE_X11
-  else if (!strcmp (type, "x11-display-name")) {
-    g_return_if_fail (G_VALUE_HOLDS_STRING (value));
-#if USE_GLX
-    display = gst_vaapi_display_glx_new (g_value_get_string (value));
-#endif
-    if (!display)
-      display = gst_vaapi_display_x11_new (g_value_get_string (value));
-  } else if (!strcmp (type, "x11-display")) {
-    g_return_if_fail (G_VALUE_HOLDS_POINTER (value));
-#if USE_GLX
-    display =
-        gst_vaapi_display_glx_new_with_display (g_value_get_pointer (value));
-#endif
-    if (!display)
-      display =
-          gst_vaapi_display_x11_new_with_display (g_value_get_pointer (value));
-  }
-#endif
-#if USE_WAYLAND
-  else if (!strcmp (type, "wl-display")) {
-    struct wl_display *wl_display;
-    g_return_if_fail (G_VALUE_HOLDS_POINTER (value));
-    wl_display = g_value_get_pointer (value);
-    display = gst_vaapi_display_wayland_new_with_display (wl_display);
-  } else if (!strcmp (type, "wl-display-name")) {
-    const gchar *display_name;
-    g_return_if_fail (G_VALUE_HOLDS_STRING (value));
-    display_name = g_value_get_string (value);
-    display = gst_vaapi_display_wayland_new (display_name);
-  }
-#endif
-
-  if (display) {
-    gst_vaapi_display_replace (display_ptr, display);
-    gst_vaapi_display_unref (display);
-  }
-}
-
 gboolean
 gst_vaapi_reply_to_query (GstQuery * query, GstVaapiDisplay * display)
 {
-#if GST_CHECK_VERSION(1,1,0)
   const gchar *type = NULL;
   GstContext *context;
 
@@ -367,88 +301,6 @@ gst_vaapi_reply_to_query (GstQuery * query, GstVaapiDisplay * display)
   gst_context_unref (context);
 
   return TRUE;
-#else
-  GstVaapiDisplayType display_type;
-  const gchar **types;
-  const gchar *type;
-  gint i;
-  gboolean res = FALSE;
-
-  if (GST_QUERY_TYPE (query) != GST_QUERY_CUSTOM)
-    return FALSE;
-
-  if (!display)
-    return FALSE;
-
-  types = gst_video_context_query_get_supported_types (query);
-
-  if (!types)
-    return FALSE;
-
-  display_type = gst_vaapi_display_get_display_type (display);
-  for (i = 0; types[i] && !res; i++) {
-    type = types[i];
-
-    res = TRUE;
-    if (!strcmp (type, "gst-vaapi-display")) {
-      gst_video_context_query_set_pointer (query, type, display);
-    } else if (!strcmp (type, "vaapi-display")) {
-      VADisplay vadpy = gst_vaapi_display_get_display (display);
-      gst_video_context_query_set_pointer (query, type, vadpy);
-    } else {
-      switch (display_type) {
-#if USE_DRM
-        case GST_VAAPI_DISPLAY_TYPE_DRM:{
-          GstVaapiDisplayDRM *const drm_dpy = GST_VAAPI_DISPLAY_DRM (display);
-          if (!strcmp (type, "drm-device-path"))
-            gst_video_context_query_set_string (query, type,
-                gst_vaapi_display_drm_get_device_path (drm_dpy));
-#if 0
-          /* XXX: gst_video_context_query_set_int() does not exist yet */
-          else if (!strcmp (type, "drm-device"))
-            gst_video_context_query_set_int (query, type,
-                gst_vaapi_display_drm_get_device (drm_dpy));
-#endif
-          else
-            res = FALSE;
-          break;
-        }
-#endif
-#if USE_X11
-        case GST_VAAPI_DISPLAY_TYPE_X11:{
-          GstVaapiDisplayX11 *const xvadpy = GST_VAAPI_DISPLAY_X11 (display);
-          Display *const x11dpy = gst_vaapi_display_x11_get_display (xvadpy);
-          if (!strcmp (type, "x11-display"))
-            gst_video_context_query_set_pointer (query, type, x11dpy);
-          else if (!strcmp (type, "x11-display-name"))
-            gst_video_context_query_set_string (query, type,
-                DisplayString (x11dpy));
-          else
-            res = FALSE;
-          break;
-        }
-#endif
-#if USE_WAYLAND
-        case GST_VAAPI_DISPLAY_TYPE_WAYLAND:{
-          GstVaapiDisplayWayland *const wlvadpy =
-              GST_VAAPI_DISPLAY_WAYLAND (display);
-          struct wl_display *const wldpy =
-              gst_vaapi_display_wayland_get_display (wlvadpy);
-          if (!strcmp (type, "wl-display"))
-            gst_video_context_query_set_pointer (query, type, wldpy);
-          else
-            res = FALSE;
-          break;
-        }
-#endif
-        default:
-          res = FALSE;
-          break;
-      }
-    }
-  }
-  return res;
-#endif /* !GST_CHECK_VERSION(1,1,0) */
 }
 
 gboolean
@@ -584,7 +436,6 @@ gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
   if (!caps)
     return NULL;
 
-#if GST_CHECK_VERSION(1,1,0)
   GstCapsFeatures *const features =
       gst_caps_features_new (features_string, NULL);
   if (!features) {
@@ -592,19 +443,14 @@ gst_vaapi_video_format_new_template_caps_with_features (GstVideoFormat format,
     return NULL;
   }
   gst_caps_set_features (caps, 0, features);
-#endif
   return caps;
 }
 
 static GstCaps *
 new_gl_texture_upload_meta_caps (void)
 {
-#if GST_CHECK_VERSION(1,1,0)
   return gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
       GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }"));
-#else
-  return gst_caps_new_empty ();
-#endif
 }
 
 GstVaapiCapsFeature
@@ -612,7 +458,6 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
     GstVideoFormat * out_format_ptr)
 {
   GstVaapiCapsFeature feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
-#if GST_CHECK_VERSION(1,1,0)
   guint i, num_structures;
   GstCaps *caps = NULL;
   GstCaps *gl_texture_upload_caps = NULL;
@@ -682,7 +527,6 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
   }
 
   if (out_format_ptr) {
-#if GST_CHECK_VERSION(1,1,0)
     if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META) {
       GstStructure *structure;
       gchar *format_str;
@@ -703,7 +547,6 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstVideoFormat format,
       } while (0);
       if (!out_format)
         goto cleanup;
-#endif
     }
     *out_format_ptr = out_format;
   }
@@ -714,7 +557,6 @@ cleanup:
   gst_caps_replace (&vaapi_caps, NULL);
   gst_caps_replace (&caps, NULL);
   gst_caps_replace (&out_caps, NULL);
-#endif
   return feature;
 }
 
@@ -724,7 +566,6 @@ gst_vaapi_caps_feature_to_string (GstVaapiCapsFeature feature)
   const gchar *str;
 
   switch (feature) {
-#if GST_CHECK_VERSION(1,1,0)
     case GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY:
       str = GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY;
       break;
@@ -734,7 +575,6 @@ gst_vaapi_caps_feature_to_string (GstVaapiCapsFeature feature)
     case GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE:
       str = GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE;
       break;
-#endif
     default:
       str = NULL;
       break;
@@ -782,7 +622,6 @@ gst_caps_has_vaapi_surface (GstCaps * caps)
   if (num_structures < 1)
     return FALSE;
 
-#if GST_CHECK_VERSION(1,1,0)
   for (i = 0; i < num_structures && !found_caps; i++) {
     GstCapsFeatures *const features = gst_caps_get_features (caps, i);
 
@@ -795,21 +634,6 @@ gst_caps_has_vaapi_surface (GstCaps * caps)
     found_caps = gst_caps_features_contains (features,
         GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE);
   }
-#else
-  for (i = 0; i < num_structures && !found_caps; i++) {
-    GstStructure *const structure = gst_caps_get_structure (caps, i);
-    GstCaps *test_caps;
-    GstVideoInfo vi;
-
-    test_caps = gst_caps_new_full (gst_structure_copy (structure), NULL);
-    if (!test_caps)
-      continue;
-
-    found_caps = gst_video_info_from_caps (&vi, test_caps) &&
-        GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED;
-    gst_caps_unref (test_caps);
-  }
-#endif
   return found_caps;
 }
 

@@ -28,9 +28,7 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapivideopool.h>
 #include "gstvaapivideometa.h"
-#if GST_CHECK_VERSION(1,1,0)
 #include <gst/allocators/allocators.h>
-#endif
 
 G_BEGIN_DECLS
 
@@ -50,9 +48,7 @@ typedef struct _GstVaapiVideoAllocatorClass GstVaapiVideoAllocatorClass;
 
 #define GST_VAAPI_VIDEO_MEMORY_NAME             "GstVaapiVideoMemory"
 
-#if GST_CHECK_VERSION(1,1,0)
 #define GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE   "memory:VASurface"
-#endif
 
 #define GST_VAAPI_VIDEO_MEMORY_FLAG_IS_SET(mem, flag) \
   GST_MEMORY_FLAG_IS_SET (mem, flag)

@@ -38,12 +38,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_jpeg_encode_debug);
 
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_jpeg_sink_caps_str[] =
-#if GST_CHECK_VERSION(1,1,0)
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
       "{ ENCODED, NV12, I420, YV12 }") ", "
-#else
-  GST_VAAPI_SURFACE_CAPS ", "
-#endif
   GST_CAPS_INTERLACED_FALSE "; "
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
   GST_CAPS_INTERLACED_FALSE;
