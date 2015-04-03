@@ -3865,7 +3865,7 @@ failure:
  * @src: a #GstBaseSrc
  *
  * Returns: (transfer full): the instance of the #GstBufferPool used
- * by the src; free it after use it
+ * by the src; unref it after usage.
  */
 GstBufferPool *
 gst_base_src_get_buffer_pool (GstBaseSrc * src)
@@ -3889,7 +3889,7 @@ gst_base_src_get_buffer_pool (GstBaseSrc * src)
  * Lets #GstBaseSrc sub-classes to know the memory @allocator
  * used by the base class and its @params.
  *
- * Unref the @allocator after use it.
+ * Unref the @allocator after usage.
  */
 void
 gst_base_src_get_allocator (GstBaseSrc * src,
