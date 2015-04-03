@@ -482,17 +482,12 @@ gst_vaapi_append_surface_caps (GstCaps * out_caps, GstCaps * in_caps)
 gboolean
 gst_vaapi_apply_composition (GstVaapiSurface * surface, GstBuffer * buffer)
 {
-#if GST_CHECK_VERSION(1,0,0)
   GstVideoOverlayCompositionMeta *const cmeta =
       gst_buffer_get_video_overlay_composition_meta (buffer);
   GstVideoOverlayComposition *composition = NULL;
 
   if (cmeta)
     composition = cmeta->overlay;
-#else
-  GstVideoOverlayComposition *const composition =
-      gst_video_buffer_get_overlay_composition (buffer);
-#endif
   return gst_vaapi_surface_set_subpictures_from_composition (surface,
       composition, TRUE);
 }
@@ -500,7 +495,6 @@ gst_vaapi_apply_composition (GstVaapiSurface * surface, GstBuffer * buffer)
 gboolean
 gst_vaapi_value_set_format (GValue * value, GstVideoFormat format)
 {
-#if GST_CHECK_VERSION(1,0,0)
   const gchar *str;
 
   str = gst_video_format_to_string (format);
@@ -509,16 +503,6 @@ gst_vaapi_value_set_format (GValue * value, GstVideoFormat format)
 
   g_value_init (value, G_TYPE_STRING);
   g_value_set_string (value, str);
-#else
-  guint32 fourcc;
-
-  fourcc = gst_video_format_to_fourcc (format);
-  if (!fourcc)
-    return FALSE;
-
-  g_value_init (value, GST_TYPE_FOURCC);
-  gst_value_set_fourcc (value, fourcc);
-#endif
   return TRUE;
 }
 
@@ -555,7 +539,6 @@ set_video_template_caps (GstCaps * caps)
 GstCaps *
 gst_vaapi_video_format_new_template_caps (GstVideoFormat format)
 {
-#if GST_CHECK_VERSION(1,0,0)
   GstCaps *caps;
 
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
@@ -568,15 +551,11 @@ gst_vaapi_video_format_new_template_caps (GstVideoFormat format)
       "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
   set_video_template_caps (caps);
   return caps;
-#else
-  return gst_video_format_new_template_caps (format);
-#endif
 }
 
 GstCaps *
 gst_vaapi_video_format_new_template_caps_from_list (GArray * formats)
 {
-#if GST_CHECK_VERSION(1,0,0)
   GValue v_formats = G_VALUE_INIT;
   GstCaps *caps;
 
@@ -592,23 +571,6 @@ gst_vaapi_video_format_new_template_caps_from_list (GArray * formats)
   gst_caps_set_value (caps, "format", &v_formats);
   set_video_template_caps (caps);
   g_value_unset (&v_formats);
-#else
-  GstCaps *caps, *tmp_caps;
-  guint i;
-
-  g_return_val_if_fail (formats != NULL, NULL);
-
-  caps = gst_caps_new_empty ();
-  if (!caps)
-    return NULL;
-
-  for (i = 0; i < formats->len; i++) {
-    const GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
-    tmp_caps = gst_vaapi_video_format_new_template_caps (format);
-    if (tmp_caps)
-      gst_caps_append (caps, tmp_caps);
-  }
-#endif
   return caps;
 }
 
@@ -783,7 +745,6 @@ gst_vaapi_caps_feature_to_string (GstVaapiCapsFeature feature)
 gboolean
 gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip)
 {
-#if GST_CHECK_VERSION(1,0,0)
   GstVideoInterlaceMode mode;
   const gchar *mode_str;
 
@@ -805,10 +766,6 @@ gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip)
   }
 
   gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING, mode_str, NULL);
-#else
-  gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN,
-      vip ? GST_VIDEO_INFO_IS_INTERLACED (vip) : FALSE, NULL);
-#endif
   return TRUE;
 }
 

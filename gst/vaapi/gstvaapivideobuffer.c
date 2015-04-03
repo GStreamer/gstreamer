@@ -42,7 +42,7 @@ gst_surface_buffer_new (void)
 {
   return gst_buffer_new ();
 }
-#elif GST_CHECK_VERSION(1,0,0)
+#else
 #include <gst/video/gstsurfacemeta.h>
 
 #define GST_VAAPI_SURFACE_META_CAST(obj) \
@@ -173,93 +173,7 @@ gst_surface_buffer_new (void)
     gst_buffer_add_meta (buffer, GST_VAAPI_SURFACE_META_INFO, NULL);
   return buffer;
 }
-#else
-#include <gst/video/gstsurfacebuffer.h>
 
-#define GST_VAAPI_TYPE_VIDEO_BUFFER \
-  (gst_vaapi_video_buffer_get_type ())
-#define GST_VAAPI_VIDEO_BUFFER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_VAAPI_TYPE_VIDEO_BUFFER, \
-      GstVaapiVideoBuffer))
-#define GST_VAAPI_VIDEO_BUFFER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_VAAPI_TYPE_VIDEO_BUFFER, \
-      GstVaapiVideoBufferClass))
-#define GST_VAAPI_IS_VIDEO_BUFFER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_VAAPI_TYPE_VIDEO_BUFFER))
-#define GST_VAAPI_IS_VIDEO_BUFFER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_VAAPI_TYPE_VIDEO_BUFFER))
-#define GST_VAAPI_VIDEO_BUFFER_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_VAAPI_TYPE_VIDEO_BUFFER, \
-      GstVaapiVideoBufferClass))
-
-typedef struct _GstVaapiVideoBufferClass GstVaapiVideoBufferClass;
-
-/**
- * GstVaapiVideoBuffer:
- *
- * A #GstBuffer holding video objects (#GstVaapiSurface and #GstVaapiImage).
- */
-struct _GstVaapiVideoBuffer
-{
-  /*< private >*/
-  GstSurfaceBuffer parent_instance;
-};
-
-/**
- * GstVaapiVideoBufferClass:
- *
- * A #GstBuffer holding video objects
- */
-struct _GstVaapiVideoBufferClass
-{
-  /*< private >*/
-  GstSurfaceBufferClass parent_class;
-};
-
-GType
-gst_vaapi_video_buffer_get_type (void) G_GNUC_CONST;
-
-G_DEFINE_TYPE (GstVaapiVideoBuffer,
-    gst_vaapi_video_buffer, GST_TYPE_SURFACE_BUFFER);
-
-typedef GstSurfaceConverter *
-(*GstSurfaceConverterCreateFunc) (GstSurfaceBuffer * surface,
-    const gchar * type, GValue * dest);
-
-static GstSurfaceConverter *
-gst_vaapi_video_buffer_create_converter (GstSurfaceBuffer * surface,
-    const gchar * type, GValue * dest)
-{
-  GstVaapiVideoMeta *const meta =
-      gst_buffer_get_vaapi_video_meta (GST_BUFFER (surface));
-  GstSurfaceConverterCreateFunc func;
-
-  g_return_val_if_fail (meta != NULL, NULL);
-
-  func = (GstSurfaceConverterCreateFunc)
-      gst_vaapi_video_meta_get_surface_converter (meta);
-
-  return func ? func (surface, type, dest) : NULL;
-}
-
-static void
-gst_vaapi_video_buffer_class_init (GstVaapiVideoBufferClass * klass)
-{
-  GstSurfaceBufferClass *const surface_class = GST_SURFACE_BUFFER_CLASS (klass);
-
-  surface_class->create_converter = gst_vaapi_video_buffer_create_converter;
-}
-
-static void
-gst_vaapi_video_buffer_init (GstVaapiVideoBuffer * buffer)
-{
-}
-
-static inline GstBuffer *
-gst_surface_buffer_new (void)
-{
-  return GST_BUFFER_CAST (gst_mini_object_new (GST_VAAPI_TYPE_VIDEO_BUFFER));
-}
 #endif
 
 static GFunc

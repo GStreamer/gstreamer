@@ -27,9 +27,7 @@
 
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
-#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideomemory.h"
-#endif
 
 G_GNUC_INTERNAL
 gboolean
@@ -99,17 +97,10 @@ const gchar *
 gst_vaapi_caps_feature_to_string (GstVaapiCapsFeature feature);
 
 /* Helpers to handle interlaced contents */
-#if GST_CHECK_VERSION(1,0,0)
 # define GST_CAPS_INTERLACED_MODES \
     "interlace-mode = (string){ progressive, interleaved, mixed }"
 # define GST_CAPS_INTERLACED_FALSE \
     "interlace-mode = (string)progressive"
-#else
-# define GST_CAPS_INTERLACED_MODES \
-    "interlaced = (boolean){ true, false }"
-# define GST_CAPS_INTERLACED_FALSE \
-    "interlaced = (boolean)false"
-#endif
 
 G_GNUC_INTERNAL
 gboolean

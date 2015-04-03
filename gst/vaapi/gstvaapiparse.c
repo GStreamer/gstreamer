@@ -40,14 +40,6 @@ plugin_init (GstPlugin * plugin)
   return !failure;
 }
 
-#if GST_CHECK_VERSION(1,0,0)
-/* XXX: use PLUGIN_NAME when GST_PLUGIN_DEFINE is fixed to use
-   G_STRINGIFY() for name argument, instead of plain #name */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
     vaapiparse, PLUGIN_DESC, plugin_init,
     PACKAGE_VERSION, PLUGIN_LICENSE, PACKAGE, PACKAGE_BUGREPORT)
-#else
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    PLUGIN_NAME, PLUGIN_DESC, plugin_init,
-    PACKAGE_VERSION, PLUGIN_LICENSE, PACKAGE, PACKAGE_BUGREPORT)
-#endif

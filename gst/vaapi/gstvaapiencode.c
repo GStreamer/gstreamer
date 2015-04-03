@@ -27,10 +27,8 @@
 #include "gstvaapiencode.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
-#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideomemory.h"
 #include "gstvaapivideobufferpool.h"
-#endif
 
 #define GST_PLUGIN_NAME "vaapiencode"
 #define GST_PLUGIN_DESC "A VA-API based video encoder"
@@ -187,13 +185,9 @@ gst_vaapiencode_default_alloc_buffer (GstVaapiEncode * encode,
   if (buf_size <= 0)
     goto error_invalid_buffer;
 
-#if GST_CHECK_VERSION(1,0,0)
   buf =
       gst_video_encoder_allocate_output_buffer (GST_VIDEO_ENCODER_CAST (encode),
       buf_size);
-#else
-  buf = gst_buffer_new_and_alloc (buf_size);
-#endif
   if (!buf)
     goto error_create_buffer;
   if (!gst_vaapi_coded_buffer_copy_into (buf, coded_buf))
@@ -248,10 +242,8 @@ ensure_output_state (GstVaapiEncode * encode)
       return FALSE;
   }
 
-#if GST_CHECK_VERSION(1,0,0)
   if (!gst_video_encoder_negotiate (venc))
     return FALSE;
-#endif
 
   encode->input_state_changed = FALSE;
   return TRUE;
@@ -350,24 +342,11 @@ gst_vaapiencode_get_caps_impl (GstVideoEncoder * venc)
   if (plugin->sinkpad_caps)
     caps = gst_caps_ref (plugin->sinkpad_caps);
   else {
-#if GST_CHECK_VERSION(1,0,0)
     caps = gst_pad_get_pad_template_caps (plugin->sinkpad);
-#else
-    caps = gst_caps_from_string (GST_VAAPI_SURFACE_CAPS);
-
-    if (caps && ensure_uploader (GST_VAAPIENCODE_CAST (plugin))) {
-      GstCaps *const yuv_caps = GST_VAAPI_PLUGIN_BASE_UPLOADER_CAPS (plugin);
-      if (yuv_caps) {
-        caps = gst_caps_make_writable (caps);
-        gst_caps_append (caps, gst_caps_copy (yuv_caps));
-      }
-    }
-#endif
   }
   return caps;
 }
 
-#if GST_CHECK_VERSION(1,0,0)
 static GstCaps *
 gst_vaapiencode_get_caps (GstVideoEncoder * venc, GstCaps * filter)
 {
@@ -381,9 +360,6 @@ gst_vaapiencode_get_caps (GstVideoEncoder * venc, GstCaps * filter)
   }
   return out_caps;
 }
-#else
-#define gst_vaapiencode_get_caps gst_vaapiencode_get_caps_impl
-#endif
 
 static gboolean
 gst_vaapiencode_destroy (GstVaapiEncode * encode)
@@ -615,7 +591,6 @@ gst_vaapiencode_change_state (GstElement * element, GstStateChange transition)
       change_state (element, transition);
 }
 
-#if GST_CHECK_VERSION(1,0,0)
 static gboolean
 gst_vaapiencode_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
 {
@@ -625,7 +600,6 @@ gst_vaapiencode_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
     return FALSE;
   return TRUE;
 }
-#endif
 
 static void
 gst_vaapiencode_finalize (GObject * object)
@@ -678,11 +652,8 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   venc_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vaapiencode_handle_frame);
   venc_class->finish = GST_DEBUG_FUNCPTR (gst_vaapiencode_finish);
   venc_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapiencode_get_caps);
-
-#if GST_CHECK_VERSION(1,0,0)
   venc_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_vaapiencode_propose_allocation);
-#endif
 
   klass->get_property = gst_vaapiencode_default_get_property;
   klass->set_property = gst_vaapiencode_default_set_property;

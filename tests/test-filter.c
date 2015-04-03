@@ -100,7 +100,7 @@ create_test_surface(GstVaapiDisplay *display, guint width, guint height,
     GError *error = NULL;
 
     if (g_src_format_str) {
-        format = gst_vaapi_video_format_from_string(g_src_format_str);
+        format = gst_video_format_from_string(g_src_format_str);
         if (format == GST_VIDEO_FORMAT_UNKNOWN)
             goto error_invalid_format;
     }

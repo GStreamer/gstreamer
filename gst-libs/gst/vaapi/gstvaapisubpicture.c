@@ -191,10 +191,8 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
     gfloat global_alpha;
     guint width, height, stride;
     guint hw_flags, flags;
-#if GST_CHECK_VERSION(1,0,0)
     GstVideoMeta *vmeta;
     GstMapInfo map_info;
-#endif
 
     g_return_val_if_fail(GST_IS_VIDEO_OVERLAY_RECTANGLE(rect), NULL);
 
@@ -206,11 +204,10 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
 #endif
     if (!gst_vaapi_display_has_subpicture_format(display, format, &hw_flags))
         return NULL;
-    
+
     flags = hw_flags & from_GstVideoOverlayFormatFlags(
         gst_video_overlay_rectangle_get_flags(rect));
 
-#if GST_CHECK_VERSION(1,0,0)
     buffer = gst_video_overlay_rectangle_get_pixels_unscaled_argb(rect,
         to_GstVideoOverlayFormatFlags(flags));
     if (!buffer)
@@ -225,13 +222,6 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
     if (!gst_video_meta_map(vmeta, 0, &map_info, (gpointer *)&data,
             (gint *)&stride, GST_MAP_READ))
         return NULL;
-#else
-    buffer = (gst_video_overlay_rectangle_get_pixels_unscaled_argb)(rect,
-        &width, &height, &stride, to_GstVideoOverlayFormatFlags(flags));
-    if (!buffer)
-        return NULL;
-    data = GST_BUFFER_DATA(buffer);
-#endif
 
     image = gst_vaapi_image_new(display, format, width, height);
     if (!image)
@@ -251,9 +241,7 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
 
     subpicture = gst_vaapi_subpicture_new(image, flags);
     gst_vaapi_object_unref(image);
-#if GST_CHECK_VERSION(1,0,0)
     gst_video_meta_unmap(vmeta, 0, &map_info);
-#endif
     if (!subpicture)
         return NULL;
 

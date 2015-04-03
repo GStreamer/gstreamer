@@ -698,7 +698,6 @@ gst_vaapi_image_get_data_size(GstVaapiImage *image)
     return image->image.data_size;
 }
 
-#if GST_CHECK_VERSION(1,0,0)
 #include <gst/video/gstvideometa.h>
 
 static gboolean
@@ -715,52 +714,6 @@ init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
 
     return vmeta ? init_image_from_video_meta(raw_image, vmeta) : FALSE;
 }
-#else
-static gboolean
-init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
-{
-    GstCaps *caps;
-    guchar *data;
-    guint32 data_size;
-    GstVideoInfo vi;
-    guint i, frame_size;
-
-    data      = GST_BUFFER_DATA(buffer);
-    data_size = GST_BUFFER_SIZE(buffer);
-    caps      = GST_BUFFER_CAPS(buffer);
-
-    if (!caps)
-        return FALSE;
-
-    if (!gst_video_info_from_caps(&vi, caps))
-        goto error_unsupported_caps;
-
-    /* Check for compatible data size */
-    frame_size = GST_VIDEO_INFO_SIZE(&vi);
-    if (frame_size != data_size)
-        goto error_incompatible_size;
-
-    raw_image->format = GST_VIDEO_INFO_FORMAT(&vi);
-    raw_image->width  = GST_VIDEO_INFO_WIDTH(&vi);
-    raw_image->height = GST_VIDEO_INFO_HEIGHT(&vi);
-
-    raw_image->num_planes = GST_VIDEO_INFO_N_PLANES(&vi);
-    for (i = 0; i < raw_image->num_planes; i++) {
-        raw_image->pixels[i] = data + GST_VIDEO_INFO_PLANE_OFFSET(&vi, i);
-        raw_image->stride[i] = GST_VIDEO_INFO_PLANE_STRIDE(&vi, i);
-    }
-    return TRUE;
-
-    /* ERRORS */
-error_unsupported_caps:
-    GST_ERROR("unsupported caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-error_incompatible_size:
-    GST_ERROR("incompatible frame size (%u) with buffer size (%u)",
-              frame_size, data_size);
-    return FALSE;
-}
-#endif
 
 /* Copy N lines of an image */
 static inline void

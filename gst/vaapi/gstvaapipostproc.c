@@ -35,10 +35,8 @@
 #include "gstvaapipostproc.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
-#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
 #include "gstvaapivideomemory.h"
-#endif
 
 #define GST_PLUGIN_NAME "vaapipostproc"
 #define GST_PLUGIN_DESC "A video postprocessing filter"
@@ -60,14 +58,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapipostproc);
 static const char gst_vaapipostproc_sink_caps_str[] =
   GST_VAAPIPOSTPROC_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_MODES "; "
-#if GST_CHECK_VERSION(1,0,0)
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
-#else
-  "video/x-raw-yuv, "
-  "width  = " GST_VIDEO_SIZE_RANGE ", "
-  "height = " GST_VIDEO_SIZE_RANGE ", "
-  "framerate = " GST_VIDEO_FPS_RANGE ", "
-#endif
    GST_CAPS_INTERLACED_MODES;
 /* *INDENT-ON* */
 
@@ -80,14 +71,7 @@ static const char gst_vaapipostproc_src_caps_str[] =
       GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }") ", "
   GST_CAPS_INTERLACED_FALSE "; "
 #endif
-#if GST_CHECK_VERSION(1,0,0)
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
-#else
-  "video/x-raw-yuv, "
-  "width  = " GST_VIDEO_SIZE_RANGE ", "
-  "height = " GST_VIDEO_SIZE_RANGE ", "
-  "framerate = " GST_VIDEO_FPS_RANGE ", "
-#endif
   GST_CAPS_INTERLACED_FALSE;
 /* *INDENT-ON* */
 
@@ -359,13 +343,8 @@ should_deinterlace_buffer (GstVaapiPostproc * postproc, GstBuffer * buf)
     case GST_VIDEO_INTERLACE_MODE_PROGRESSIVE:
       return FALSE;
     case GST_VIDEO_INTERLACE_MODE_MIXED:
-#if GST_CHECK_VERSION(1,0,0)
       if (GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_INTERLACED))
         return TRUE;
-#else
-      if (!GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_PROGRESSIVE))
-        return TRUE;
-#endif
       break;
     default:
       GST_ERROR ("unhandled \"interlace-mode\", disabling deinterlacing");
@@ -379,7 +358,6 @@ create_output_buffer (GstVaapiPostproc * postproc)
 {
   GstBuffer *outbuf;
 
-#if GST_CHECK_VERSION(1,0,0)
   GstBufferPool *const pool =
       GST_VAAPI_PLUGIN_BASE (postproc)->srcpad_buffer_pool;
   GstFlowReturn ret;
@@ -393,25 +371,14 @@ create_output_buffer (GstVaapiPostproc * postproc)
   ret = gst_buffer_pool_acquire_buffer (pool, &outbuf, NULL);
   if (ret != GST_FLOW_OK || !outbuf)
     goto error_create_buffer;
-#else
-  /* Create a raw VA video buffer without GstVaapiVideoMeta attached
-     to it yet, as this will be done next in the transform() hook */
-  outbuf = gst_vaapi_video_buffer_new_empty ();
-  if (!outbuf)
-    goto error_create_buffer;
-
-  gst_buffer_set_caps (outbuf, GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAPS (postproc));
-#endif
   return outbuf;
 
   /* ERRORS */
-#if GST_CHECK_VERSION(1,0,0)
 error_activate_pool:
   {
     GST_ERROR ("failed to activate output video buffer pool");
     return NULL;
   }
-#endif
 error_create_buffer:
   {
     GST_ERROR ("failed to create output video buffer");
@@ -429,7 +396,6 @@ append_output_buffer_metadata (GstVaapiPostproc * postproc, GstBuffer * outbuf,
   gst_buffer_copy_into (outbuf, inbuf, flags | GST_BUFFER_COPY_FLAGS, 0, -1);
 
   /* GstVideoCropMeta */
-#if GST_CHECK_VERSION(1,0,0)
   if (!postproc->use_vpp) {
     GstVideoCropMeta *const crop_meta = gst_buffer_get_video_crop_meta (inbuf);
     if (crop_meta) {
@@ -439,7 +405,6 @@ append_output_buffer_metadata (GstVaapiPostproc * postproc, GstBuffer * outbuf,
         *out_crop_meta = *crop_meta;
     }
   }
-#endif
 
   /* GstVaapiVideoMeta */
   inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
@@ -524,9 +489,7 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
   guint flags, deint_flags;
   gboolean tff, deint, deint_refs, deint_changed;
   GstVaapiRectangle *crop_rect = NULL;
-#if GST_CHECK_VERSION(1,0,0)
   GstVaapiRectangle tmp_rect;
-#endif
 
   /* Validate filters */
   if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_FORMAT) &&
@@ -568,7 +531,6 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
     goto error_invalid_buffer;
   inbuf_surface = gst_vaapi_video_meta_get_surface (inbuf_meta);
 
-#if GST_CHECK_VERSION(1,0,0)
   GstVideoCropMeta *const crop_meta = gst_buffer_get_video_crop_meta (inbuf);
   if (crop_meta) {
     crop_rect = &tmp_rect;
@@ -577,7 +539,6 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
     crop_rect->width = crop_meta->width;
     crop_rect->height = crop_meta->height;
   }
-#endif
   if (!crop_rect)
     crop_rect = (GstVaapiRectangle *)
         gst_vaapi_video_meta_get_render_rect (inbuf_meta);
@@ -1186,7 +1147,6 @@ gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
   return out_caps;
 }
 
-#if GST_CHECK_VERSION(1,0,0)
 static GstCaps *
 gst_vaapipostproc_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
@@ -1201,21 +1161,11 @@ gst_vaapipostproc_transform_caps (GstBaseTransform * trans,
   }
   return caps;
 }
-#else
-#define gst_vaapipostproc_transform_caps \
-    gst_vaapipostproc_transform_caps_impl
-#endif
-
-#if GST_CHECK_VERSION(1,0,0)
-typedef gsize GstBaseTransformSizeType;
-#else
-typedef guint GstBaseTransformSizeType;
-#endif
 
 static gboolean
 gst_vaapipostproc_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, GstBaseTransformSizeType size,
-    GstCaps * othercaps, GstBaseTransformSizeType * othersize)
+    GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
 
@@ -1271,9 +1221,6 @@ done:
 static GstFlowReturn
 gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf,
-#if !GST_CHECK_VERSION(1,0,0)
-    gint size, GstCaps * caps,
-#endif
     GstBuffer ** outbuf_ptr)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
@@ -1354,7 +1301,6 @@ gst_vaapipostproc_query (GstBaseTransform * trans, GstPadDirection direction,
       direction, query);
 }
 
-#if GST_CHECK_VERSION(1,0,0)
 static gboolean
 gst_vaapipostproc_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
@@ -1376,7 +1322,6 @@ gst_vaapipostproc_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   return gst_vaapi_plugin_base_decide_allocation (GST_VAAPI_PLUGIN_BASE (trans),
       query, 0);
 }
-#endif
 
 static void
 gst_vaapipostproc_finalize (GObject * object)
@@ -1525,11 +1470,8 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   trans_class->transform = gst_vaapipostproc_transform;
   trans_class->set_caps = gst_vaapipostproc_set_caps;
   trans_class->query = gst_vaapipostproc_query;
-
-#if GST_CHECK_VERSION(1,0,0)
   trans_class->propose_allocation = gst_vaapipostproc_propose_allocation;
   trans_class->decide_allocation = gst_vaapipostproc_decide_allocation;
-#endif
 
   trans_class->prepare_output_buffer = gst_vaapipostproc_prepare_output_buffer;
 

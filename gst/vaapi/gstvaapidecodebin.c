@@ -80,9 +80,7 @@ static const char gst_vaapi_decode_bin_src_caps_str[] =
       GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }") ", "
   GST_CAPS_INTERLACED_FALSE "; "
 #endif
-#if GST_CHECK_VERSION(1,0,0)
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
-#endif
   GST_CAPS_INTERLACED_FALSE;
 /* *INDENT-ON* */
 

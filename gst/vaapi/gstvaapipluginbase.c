@@ -29,34 +29,13 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideocontext.h"
 #include "gstvaapivideometa.h"
-#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
-#endif
 #if GST_CHECK_VERSION(1,1,0)
 #include <gst/allocators/allocators.h>
 #endif
 
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
-
-/* GstImplementsInterface interface */
-#if !GST_CHECK_VERSION(1,0,0)
-static gboolean
-implements_interface_supported (GstImplementsInterface * iface, GType type)
-{
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (iface);
-
-  if (type == GST_TYPE_VIDEO_CONTEXT)
-    return TRUE;
-  return GST_VAAPI_PLUGIN_BASE_GET_CLASS (plugin)->has_interface (plugin, type);
-}
-
-static void
-implements_interface_init (GstImplementsInterfaceClass * iface)
-{
-  iface->supported = implements_interface_supported;
-}
-#endif
 
 /* GstVideoContext interface */
 static void
@@ -112,10 +91,6 @@ video_context_interface_init (GstVideoContextInterface * iface)
 void
 gst_vaapi_plugin_base_init_interfaces (GType g_define_type_id)
 {
-#if !GST_CHECK_VERSION(1,0,0)
-  G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
-      implements_interface_init);
-#endif
 #if !GST_CHECK_VERSION(1,1,0)
   G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_CONTEXT, video_context_interface_init);
 #endif
@@ -300,13 +275,11 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
   gst_caps_replace (&plugin->sinkpad_caps, NULL);
   plugin->sinkpad_caps_changed = FALSE;
   gst_video_info_init (&plugin->sinkpad_info);
-#if GST_CHECK_VERSION(1,0,0)
   if (plugin->sinkpad_buffer_pool) {
     gst_object_unref (plugin->sinkpad_buffer_pool);
     plugin->sinkpad_buffer_pool = NULL;
   }
   g_clear_object (&plugin->srcpad_buffer_pool);
-#endif
 
   gst_caps_replace (&plugin->srcpad_caps, NULL);
   plugin->srcpad_caps_changed = FALSE;
@@ -489,7 +462,6 @@ has_dmabuf_capable_peer (GstVaapiPluginBase * plugin, GstPad * pad)
 static gboolean
 ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
 {
-#if GST_CHECK_VERSION(1,0,0)
   GstBufferPool *pool;
   GstCaps *pool_caps;
   GstStructure *config;
@@ -546,9 +518,6 @@ error_pool_config:
     gst_object_unref (pool);
     return FALSE;
   }
-#else
-  return TRUE;
-#endif
 }
 
 /**
@@ -603,7 +572,6 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
  */
-#if GST_CHECK_VERSION(1,0,0)
 gboolean
 gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
     GstQuery * query)
@@ -648,7 +616,6 @@ error_pool_config:
     return FALSE;
   }
 }
-#endif
 
 /**
  * gst_vaapi_plugin_base_decide_allocation:
@@ -661,7 +628,6 @@ error_pool_config:
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
  */
-#if GST_CHECK_VERSION(1,0,0)
 gboolean
 gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     GstQuery * query, guint feature)
@@ -816,7 +782,6 @@ error_create_pool:
     return FALSE;
   }
 }
-#endif
 
 /**
  * gst_vaapi_plugin_base_allocate_input_buffer:
@@ -880,16 +845,13 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
 {
   GstVaapiVideoMeta *meta;
   GstBuffer *outbuf;
-#if GST_CHECK_VERSION(1,0,0)
   GstVideoFrame src_frame, out_frame;
   gboolean success;
-#endif
 
   g_return_val_if_fail (inbuf != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (outbuf_ptr != NULL, GST_FLOW_ERROR);
 
   meta = gst_buffer_get_vaapi_video_meta (inbuf);
-#if GST_CHECK_VERSION(1,0,0)
   if (meta) {
     *outbuf_ptr = gst_buffer_ref (inbuf);
     return GST_FLOW_OK;
@@ -963,25 +925,6 @@ error_map_src_buffer:
     gst_buffer_unref (outbuf);
     return GST_FLOW_NOT_SUPPORTED;
   }
-#else
-  if (meta)
-    outbuf = gst_buffer_ref (inbuf);
-  else if (plugin->sinkpad_caps_is_raw) {
-    outbuf = gst_vaapi_uploader_get_buffer (plugin->uploader);
-    if (!outbuf)
-      goto error_create_buffer;
-    gst_buffer_copy_metadata (outbuf, inbuf,
-        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
-  } else
-    goto error_invalid_buffer;
-
-  if (plugin->sinkpad_caps_is_raw &&
-      !gst_vaapi_uploader_process (plugin->uploader, inbuf, outbuf))
-    goto error_copy_buffer;
-
-  *outbuf_ptr = outbuf;
-  return GST_FLOW_OK;
-#endif
 
   /* ERRORS */
 error_invalid_buffer:

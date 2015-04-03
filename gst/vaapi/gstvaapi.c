@@ -24,8 +24,6 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include <gst/gst.h>
-#include "gstvaapidownload.h"
-#include "gstvaapiupload.h"
 #include "gstvaapidecode.h"
 #include "gstvaapipostproc.h"
 #include "gstvaapisink.h"
@@ -51,14 +49,6 @@
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-#if !GST_CHECK_VERSION(1,0,0)
-    gst_element_register(plugin, "vaapidownload",
-                         GST_RANK_SECONDARY,
-                         GST_TYPE_VAAPIDOWNLOAD);
-    gst_element_register(plugin, "vaapiupload",
-                         GST_RANK_PRIMARY,
-                         GST_TYPE_VAAPIUPLOAD);
-#endif
     gst_element_register(plugin, "vaapidecode",
                          GST_RANK_PRIMARY + 1,
                          GST_TYPE_VAAPIDECODE);
@@ -95,14 +85,6 @@ plugin_init (GstPlugin *plugin)
     return TRUE;
 }
 
-#if GST_CHECK_VERSION(1,0,0)
-/* XXX: use PLUGIN_NAME when GST_PLUGIN_DEFINE is fixed to use
-   G_STRINGIFY() for name argument, instead of plain #name */
 GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR,
                   vaapi, PLUGIN_DESC, plugin_init,
                   PACKAGE_VERSION, PLUGIN_LICENSE, PACKAGE, PACKAGE_BUGREPORT)
-#else
-GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR,
-                  PLUGIN_NAME, PLUGIN_DESC, plugin_init,
-                  PACKAGE_VERSION, PLUGIN_LICENSE, PACKAGE, PACKAGE_BUGREPORT)
-#endif

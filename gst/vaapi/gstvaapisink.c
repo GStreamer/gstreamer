@@ -38,34 +38,15 @@
 #include <gst/vaapi/gstvaapivalue.h>
 
 /* Supported interfaces */
-#if GST_CHECK_VERSION(1,0,0)
 # include <gst/video/videooverlay.h>
 # include <gst/video/colorbalance.h>
 # include <gst/video/navigation.h>
-#else
-# include <gst/interfaces/xoverlay.h>
-# include <gst/interfaces/colorbalance.h>
-
-# define GST_TYPE_VIDEO_OVERLAY         GST_TYPE_X_OVERLAY
-# define GST_VIDEO_OVERLAY              GST_X_OVERLAY
-# define GstVideoOverlay                GstXOverlay
-# define GstVideoOverlayInterface       GstXOverlayClass
-
-# define gst_video_overlay_prepare_window_handle(sink) \
-    gst_x_overlay_prepare_xwindow_id(sink)
-# define gst_video_overlay_got_window_handle(sink, window_handle) \
-    gst_x_overlay_got_window_handle(sink, window_handle)
-
-# define GstColorBalanceInterface       GstColorBalanceClass
-#endif
 
 #include "gstvaapisink.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
-#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
 #include "gstvaapivideomemory.h"
-#endif
 
 #define GST_PLUGIN_NAME "vaapisink"
 #define GST_PLUGIN_DESC "A VA-API based videosink"
@@ -81,13 +62,7 @@ static const char gst_vaapisink_sink_caps_str[] =
         "{ ENCODED, NV12, I420, YV12 }") ";"
     GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL);
 #else
-#if GST_CHECK_VERSION(1,0,0)
     GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) "; "
-#else
-    "video/x-raw-yuv, "
-    "width  = (int) [ 1, MAX ], "
-    "height = (int) [ 1, MAX ]; "
-#endif
     GST_VAAPI_SURFACE_CAPS;
 #endif
 /* *INDENT-ON* */
@@ -831,11 +806,7 @@ gst_vaapisink_color_balance_iface_init (GstColorBalanceInterface * iface)
   iface->list_channels = gst_vaapisink_color_balance_list_channels;
   iface->set_value = gst_vaapisink_color_balance_set_value;
   iface->get_value = gst_vaapisink_color_balance_get_value;
-#if GST_CHECK_VERSION(1,0,0)
   iface->get_balance_type = gst_vaapisink_color_balance_get_type;
-#else
-  iface->balance_type = gst_vaapisink_color_balance_get_type (NULL);
-#endif
 }
 
 /* ------------------------------------------------------------------------ */
@@ -1250,7 +1221,6 @@ gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
   return out_caps;
 }
 
-#if GST_CHECK_VERSION(1,0,0)
 static inline GstCaps *
 gst_vaapisink_get_caps (GstBaseSink * base_sink, GstCaps * filter)
 {
@@ -1264,14 +1234,10 @@ gst_vaapisink_get_caps (GstBaseSink * base_sink, GstCaps * filter)
     out_caps = caps;
   return out_caps;
 }
-#else
-#define gst_vaapisink_get_caps gst_vaapisink_get_caps_impl
-#endif
 
 static void
 update_colorimetry (GstVaapiSink * sink, GstVideoColorimetry * cinfo)
 {
-#if GST_CHECK_VERSION(1,0,0)
   if (gst_video_colorimetry_matches (cinfo, GST_VIDEO_COLORIMETRY_BT601))
     sink->color_standard = GST_VAAPI_COLOR_STANDARD_ITUR_BT_601;
   else if (gst_video_colorimetry_matches (cinfo, GST_VIDEO_COLORIMETRY_BT709))
@@ -1288,7 +1254,6 @@ update_colorimetry (GstVaapiSink * sink, GstVideoColorimetry * cinfo)
     GST_DEBUG ("colorimetry %s", colorimetry_string);
     g_free (colorimetry_string);
   }
-#endif
 #endif
 }
 
@@ -1357,13 +1322,10 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
   GstBuffer *buffer;
   guint flags;
   GstVaapiRectangle *surface_rect = NULL;
-#if GST_CHECK_VERSION(1,0,0)
   GstVaapiRectangle tmp_rect;
-#endif
   GstFlowReturn ret;
   gint32 view_id;
 
-#if GST_CHECK_VERSION(1,0,0)
   GstVideoCropMeta *const crop_meta =
       gst_buffer_get_video_crop_meta (src_buffer);
   if (crop_meta) {
@@ -1373,7 +1335,6 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
     surface_rect->width = crop_meta->width;
     surface_rect->height = crop_meta->height;
   }
-#endif
 
   ret = gst_vaapi_plugin_base_get_input_buffer (GST_VAAPI_PLUGIN_BASE (sink),
       src_buffer, &buffer);
@@ -1454,7 +1415,6 @@ gst_vaapisink_show_frame (GstBaseSink * base_sink, GstBuffer * src_buffer)
   return ret;
 }
 
-#if GST_CHECK_VERSION(1,0,0)
 static gboolean
 gst_vaapisink_propose_allocation (GstBaseSink * base_sink, GstQuery * query)
 {
@@ -1468,16 +1428,6 @@ gst_vaapisink_propose_allocation (GstBaseSink * base_sink, GstQuery * query)
       GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
   return TRUE;
 }
-#else
-static GstFlowReturn
-gst_vaapisink_buffer_alloc (GstBaseSink * base_sink, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** outbuf_ptr)
-{
-  return
-      gst_vaapi_plugin_base_allocate_input_buffer (GST_VAAPI_PLUGIN_BASE
-      (base_sink), caps, outbuf_ptr);
-}
-#endif
 
 static gboolean
 gst_vaapisink_query (GstBaseSink * base_sink, GstQuery * query)
@@ -1631,11 +1581,7 @@ gst_vaapisink_class_init (GstVaapiSinkClass * klass)
   basesink_class->preroll = gst_vaapisink_show_frame;
   basesink_class->render = gst_vaapisink_show_frame;
   basesink_class->query = gst_vaapisink_query;
-#if GST_CHECK_VERSION(1,0,0)
   basesink_class->propose_allocation = gst_vaapisink_propose_allocation;
-#else
-  basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
-#endif
 
   element_class->set_bus = gst_vaapisink_set_bus;
   gst_element_class_set_static_metadata (element_class,

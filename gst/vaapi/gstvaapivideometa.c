@@ -31,10 +31,7 @@
 #include <gst/vaapi/gstvaapiimagepool.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
 #include "gstvaapivideometa.h"
-
-#if GST_CHECK_VERSION(1,0,0)
-# include "gstvaapivideomemory.h"
-#endif
+#include "gstvaapivideomemory.h"
 
 #define GST_VAAPI_VIDEO_META(obj) \
   ((GstVaapiVideoMeta *) (obj))
@@ -61,14 +58,12 @@ ensure_surface_proxy (GstVaapiVideoMeta * meta)
   if (!meta->proxy)
     return FALSE;
 
-#if GST_CHECK_VERSION(1,0,0)
   if (meta->buffer) {
     GstMemory *const mem = gst_buffer_peek_memory (meta->buffer, 0);
 
     if (GST_VAAPI_IS_VIDEO_MEMORY (mem))
       return gst_vaapi_video_memory_sync (GST_VAAPI_VIDEO_MEMORY_CAST (mem));
   }
-#endif
   return TRUE;
 }
 
@@ -145,24 +140,6 @@ gst_vaapi_video_meta_destroy_proxy (GstVaapiVideoMeta * meta)
 {
   gst_vaapi_surface_proxy_replace (&meta->proxy, NULL);
 }
-
-#if !GST_CHECK_VERSION(1,0,0)
-#define GST_VAAPI_TYPE_VIDEO_META gst_vaapi_video_meta_get_type ()
-static GType
-gst_vaapi_video_meta_get_type (void)
-{
-  static gsize g_type;
-
-  if (g_once_init_enter (&g_type)) {
-    GType type;
-    type = g_boxed_type_register_static ("GstVaapiVideoMeta",
-        (GBoxedCopyFunc) gst_vaapi_video_meta_ref,
-        (GBoxedFreeFunc) gst_vaapi_video_meta_unref);
-    g_once_init_leave (&g_type, type);
-  }
-  return (GType) g_type;
-}
-#endif
 
 static void
 gst_vaapi_video_meta_finalize (GstVaapiVideoMeta * meta)
@@ -707,8 +684,6 @@ gst_vaapi_video_meta_set_render_rect (GstVaapiVideoMeta * meta,
     meta->render_rect = *rect;
 }
 
-#if GST_CHECK_VERSION(1,0,0)
-
 #define GST_VAAPI_VIDEO_META_HOLDER(meta) \
   ((GstVaapiVideoMetaHolder *) (meta))
 
@@ -812,64 +787,3 @@ gst_buffer_set_vaapi_video_meta (GstBuffer * buffer, GstVaapiVideoMeta * meta)
   if (m)
     GST_VAAPI_VIDEO_META_HOLDER (m)->meta = gst_vaapi_video_meta_ref (meta);
 }
-#else
-
-#define GST_VAAPI_VIDEO_META_QUARK gst_vaapi_video_meta_quark_get ()
-static GQuark
-gst_vaapi_video_meta_quark_get (void)
-{
-  static gsize g_quark;
-
-  if (g_once_init_enter (&g_quark)) {
-    gsize quark = (gsize) g_quark_from_static_string ("GstVaapiVideoMeta");
-    g_once_init_leave (&g_quark, quark);
-  }
-  return g_quark;
-}
-
-#define META_QUARK meta_quark_get ()
-static GQuark
-meta_quark_get (void)
-{
-  static gsize g_quark;
-
-  if (g_once_init_enter (&g_quark)) {
-    gsize quark = (gsize) g_quark_from_static_string ("meta");
-    g_once_init_leave (&g_quark, quark);
-  }
-  return g_quark;
-}
-
-GstVaapiVideoMeta *
-gst_buffer_get_vaapi_video_meta (GstBuffer * buffer)
-{
-  GstVaapiVideoMeta *meta;
-  const GstStructure *structure;
-  const GValue *value;
-
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-
-  structure = gst_buffer_get_qdata (buffer, GST_VAAPI_VIDEO_META_QUARK);
-  if (!structure)
-    return NULL;
-
-  value = gst_structure_id_get_value (structure, META_QUARK);
-  if (!value)
-    return NULL;
-
-  meta = GST_VAAPI_VIDEO_META (g_value_get_boxed (value));
-  meta->buffer = buffer;
-  return meta;
-}
-
-void
-gst_buffer_set_vaapi_video_meta (GstBuffer * buffer, GstVaapiVideoMeta * meta)
-{
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_VAAPI_IS_VIDEO_META (meta));
-
-  gst_buffer_set_qdata (buffer, GST_VAAPI_VIDEO_META_QUARK,
-      gst_structure_id_new (GST_VAAPI_VIDEO_META_QUARK,
-          META_QUARK, GST_VAAPI_TYPE_VIDEO_META, meta, NULL));
-}
-#endif

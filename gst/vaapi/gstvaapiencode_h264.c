@@ -27,9 +27,7 @@
 #include <gst/vaapi/gstvaapiutils_h264.h>
 #include "gstvaapiencode_h264.h"
 #include "gstvaapipluginutil.h"
-#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideomemory.h"
-#endif
 
 #define GST_PLUGIN_NAME "vaapiencode_h264"
 #define GST_PLUGIN_DESC "A VA-API based H.264 video encoder"
@@ -51,13 +49,7 @@ static const char gst_vaapiencode_h264_sink_caps_str[] =
   GST_VAAPI_SURFACE_CAPS ", "
 #endif
   GST_CAPS_INTERLACED_FALSE "; "
-#if GST_CHECK_VERSION(1,0,0)
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
-#else
-  "video/x-raw-yuv, "
-  "width  = (int) [ 1, MAX ], "
-  "height = (int) [ 1, MAX ], "
-#endif
   GST_CAPS_INTERLACED_FALSE;
 /* *INDENT-ON* */
 

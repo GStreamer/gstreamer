@@ -198,7 +198,6 @@ overlay_rectangle_changed_pixels (GstVaapiOverlayRectangle * overlay,
   buffer = gst_video_overlay_rectangle_get_pixels_unscaled_raw (rect, flags);
   if (!buffer)
     return FALSE;
-#if GST_CHECK_VERSION(1,0,0)
   {
     const guint n_blocks = gst_buffer_n_memory (buffer);
     gsize ofs;
@@ -217,10 +216,6 @@ overlay_rectangle_changed_pixels (GstVaapiOverlayRectangle * overlay,
         return FALSE;
     }
   }
-#else
-  if (GST_BUFFER_DATA (overlay->rect_buffer) != GST_BUFFER_DATA (buffer))
-    return FALSE;
-#endif
   return TRUE;
 }
 

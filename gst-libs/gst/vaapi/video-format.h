@@ -29,9 +29,6 @@
 
 G_BEGIN_DECLS
 
-GstVideoFormat
-gst_vaapi_video_format_from_string (const gchar * str);
-
 const gchar *
 gst_vaapi_video_format_to_string (GstVideoFormat format);
 

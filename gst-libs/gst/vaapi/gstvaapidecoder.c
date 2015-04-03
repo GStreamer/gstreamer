@@ -816,21 +816,6 @@ gst_vaapi_decoder_get_frame_with_timeout (GstVaapiDecoder * decoder,
   if (!out_frame)
     return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-#if !GST_CHECK_VERSION(1,0,0)
-  if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (out_frame)) {
-    const guint flags = GST_VAAPI_SURFACE_PROXY_FLAGS (out_frame->user_data);
-    guint out_flags = 0;
-
-    if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_TFF)
-      out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_TFF;
-    if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_RFF)
-      out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_RFF;
-    if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
-      out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD;
-    GST_VIDEO_CODEC_FRAME_FLAG_SET (out_frame, out_flags);
-  }
-#endif
-
   *out_frame_ptr = out_frame;
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }

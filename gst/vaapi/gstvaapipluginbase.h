@@ -130,19 +130,15 @@ struct _GstVaapiPluginBase
   gboolean sinkpad_caps_is_raw;
   GstVideoInfo sinkpad_info;
   GstPadQueryFunction sinkpad_query;
-#if GST_CHECK_VERSION(1,0,0)
   GstBufferPool *sinkpad_buffer_pool;
   guint sinkpad_buffer_size;
-#endif
 
   GstPad *srcpad;
   GstCaps *srcpad_caps;
   gboolean srcpad_caps_changed;
   GstVideoInfo srcpad_info;
   GstPadQueryFunction srcpad_query;
-#if GST_CHECK_VERSION(1,0,0)
   GstBufferPool *srcpad_buffer_pool;
-#endif
 
   GstVaapiDisplay *display;
   GstVaapiDisplayType display_type;

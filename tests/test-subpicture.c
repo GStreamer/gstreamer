@@ -130,7 +130,6 @@ main(int argc, char *argv[])
     subrect.height = subinfo.height;
     subrect.width = subinfo.width;
 
-#if GST_CHECK_VERSION(1,0,0)
     {
         GstVideoMeta * const vmeta =
             gst_buffer_add_video_meta(buffer, GST_VIDEO_FRAME_FLAG_NONE,
@@ -142,11 +141,6 @@ main(int argc, char *argv[])
         overlay = gst_video_overlay_rectangle_new_raw(buffer,
             subrect.x, subrect.y, subrect.width, subrect.height, flags);
     }
-#else
-    overlay = gst_video_overlay_rectangle_new_argb(buffer,
-        subinfo.width, subinfo.height, subinfo.width * 4,
-        subrect.x, subrect.y, subrect.width, subrect.height, flags);
-#endif
     if (!overlay)
         g_error("could not create video overlay");
     gst_buffer_unref(buffer);

@@ -25,9 +25,7 @@
 #include <gst/vaapi/gstvaapiencoder_jpeg.h>
 #include "gstvaapiencode_jpeg.h"
 #include "gstvaapipluginutil.h"
-#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideomemory.h"
-#endif
 
 #define GST_PLUGIN_NAME "vaapiencode_jpeg"
 #define GST_PLUGIN_DESC "A VA-API based JPEG video encoder"
@@ -47,9 +45,7 @@ static const char gst_vaapiencode_jpeg_sink_caps_str[] =
   GST_VAAPI_SURFACE_CAPS ", "
 #endif
   GST_CAPS_INTERLACED_FALSE "; "
-#if GST_CHECK_VERSION(1,0,0)
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
-#endif
   GST_CAPS_INTERLACED_FALSE;
 /* *INDENT-ON* */
 

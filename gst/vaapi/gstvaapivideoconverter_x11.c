@@ -26,13 +26,8 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
 
-#if GST_CHECK_VERSION(1,0,0)
-typedef gboolean (*GstSurfaceUploadFunction) (GstSurfaceConverter *,
-    GstBuffer *);
-#else
 typedef gboolean (*GstSurfaceUploadFunction) (GstSurfaceConverter *,
     GstSurfaceBuffer *);
-#endif
 
 static void
 gst_vaapi_video_converter_x11_iface_init (GstSurfaceConverterInterface * iface);
@@ -175,7 +170,6 @@ gst_vaapi_video_converter_x11_upload (GstSurfaceConverter * self,
   if (!gst_vaapi_apply_composition (surface, buffer))
     GST_WARNING ("could not update subtitles");
 
-#if GST_CHECK_VERSION(1,0,0)
   GstVideoCropMeta *const crop_meta = gst_buffer_get_video_crop_meta (buffer);
   if (crop_meta) {
     GstVaapiRectangle crop_rect_tmp;
@@ -185,7 +179,6 @@ gst_vaapi_video_converter_x11_upload (GstSurfaceConverter * self,
     crop_rect_tmp.width = crop_meta->width;
     crop_rect_tmp.height = crop_meta->height;
   }
-#endif
   if (!crop_rect)
     crop_rect = gst_vaapi_video_meta_get_render_rect (meta);
 
