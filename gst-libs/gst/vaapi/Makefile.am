@@ -45,7 +45,6 @@ libgstvaapi_libs =				\
 	$(GST_CODEC_PARSERS_LIBS)		\
 	$(LIBVA_LIBS)				\
 	$(top_builddir)/gst-libs/gst/base/libgstvaapi-baseutils.la \
-	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstvaapi-codecparsers.la
 
 libgstvaapi_source_c =				\
@@ -527,7 +526,6 @@ libgstvaapi_wayland_@GST_API_VERSION@_la_LIBADD = \
 	$(WAYLAND_LIBS)				\
 	$(LIBVA_WAYLAND_LIBS)			\
 	libgstvaapi-$(GST_API_VERSION).la	\
-	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la \
 	$(NULL)
 
 libgstvaapi_wayland_@GST_API_VERSION@_la_LDFLAGS = \

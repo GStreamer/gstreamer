@@ -180,8 +180,7 @@ libgstvaapi_la_LIBADD =	\
 	$(GST_INTERFACES_LIBS)	\
 	$(GST_BASEVIDEO_LIBS)	\
 	$(GST_PLUGINS_BASE_LIBS) \
-	$(GST_ALLOCATORS_LIBS) \
-	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la
+	$(GST_ALLOCATORS_LIBS)
 
 libgstvaapi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvaapi_la_LIBTOOLFLAGS = --tag=disable-static
