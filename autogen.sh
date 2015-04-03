@@ -57,21 +57,10 @@ autogen_options $@
 
 printf "+ check for build tools"
 if test ! -z "$NOCHECK"; then echo ": skipped version checks"; else  echo; fi
-version_check "autoconf" "$AUTOCONF autoconf autoconf270 autoconf269 autoconf268 " \
+version_check "autoreconf" "autoreconf " \
               "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 68 || DIE=1
-version_check "automake" "$AUTOMAKE automake automake-1.11" \
-              "ftp://ftp.gnu.org/pub/gnu/automake/" 1 11 || DIE=1
-version_check "autopoint" "autopoint" \
-              "ftp://ftp.gnu.org/pub/gnu/gettext/" 0 17 || DIE=1
-version_check "libtoolize" "$LIBTOOLIZE libtoolize glibtoolize" \
-              "ftp://ftp.gnu.org/pub/gnu/libtool/" 2 2 6 || DIE=1
 version_check "pkg-config" "" \
               "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
-
-die_check $DIE
-
-aclocal_check || DIE=1
-autoheader_check || DIE=1
 
 die_check $DIE
 
@@ -88,22 +77,13 @@ toplevel_check $srcfile
 
 # autopoint
 if test -d po ; then
-  tool_run "$autopoint" "--force"
+  tool_run "autopoint" "--force"
 fi
 
 # aclocal
 if test -f acinclude.m4; then rm acinclude.m4; fi
 
-tool_run "$libtoolize" "--copy --force"
-tool_run "$aclocal" "-I m4 -I common/m4 $ACLOCAL_FLAGS"
-tool_run "$autoheader"
-
-# touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode
-echo timestamp > stamp-h.in 2> /dev/null
-
-tool_run "$autoconf"
-debug "automake: $automake"
-tool_run "$automake" "--add-missing --copy"
+autoreconf --force --install || exit 1
 
 test -n "$NOCONFIGURE" && {
   echo "+ skipping configure stage for package $package, as requested."
