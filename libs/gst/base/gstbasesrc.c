@@ -3099,6 +3099,7 @@ config_failed:
   GST_ELEMENT_ERROR (basesrc, RESOURCE, SETTINGS,
       ("Failed to configure the buffer pool"),
       ("Configuration is most likely invalid, please report this issue."));
+  gst_object_unref (pool);
   return FALSE;
 }
 
