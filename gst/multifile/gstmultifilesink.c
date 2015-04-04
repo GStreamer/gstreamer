@@ -834,13 +834,12 @@ gst_multi_file_sink_event (GstBaseSink * sink, GstEvent * event)
         offset = offset_end = -1;
         filename = g_strdup_printf (multifilesink->filename,
             multifilesink->index);
-        gst_multi_file_sink_post_message_full (multifilesink, timestamp,
-            duration, offset, offset_end, running_time, stream_time, filename);
-
-        g_free (filename);
 
         gst_multi_file_sink_close_file (multifilesink, NULL);
 
+        gst_multi_file_sink_post_message_full (multifilesink, timestamp,
+            duration, offset, offset_end, running_time, stream_time, filename);
+        g_free (filename);
       }
 
       if (multifilesink->file == NULL) {
@@ -856,11 +855,12 @@ gst_multi_file_sink_event (GstBaseSink * sink, GstEvent * event)
 
         filename = g_strdup_printf (multifilesink->filename,
             multifilesink->index);
+
+        gst_multi_file_sink_close_file (multifilesink, NULL);
+
         gst_multi_file_sink_post_message_from_time (multifilesink,
             GST_BASE_SINK (multifilesink)->segment.position, -1, filename);
         g_free (filename);
-
-        gst_multi_file_sink_close_file (multifilesink, NULL);
       }
       break;
     default:
