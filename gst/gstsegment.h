@@ -179,7 +179,8 @@ typedef enum { /*< flags >*/
  * @start: the start of the segment
  * @stop: the stop of the segment
  * @time: the stream time of the segment
- * @position: the position in the segment
+ * @position: the position in the segment (used internally by elements
+ *     such as sources, demuxers or parsers to track progress)
  * @duration: the duration of the segment
  *
  * A helper structure that holds the configured region of
