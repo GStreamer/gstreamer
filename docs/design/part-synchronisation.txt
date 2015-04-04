@@ -114,8 +114,8 @@ For S.rate > 1.0, the timestamps will be scaled down to increase the playback
 rate. Likewise, a rate between 0.0 and 1.0 will slow down playback.
 
 For negative rates, timestamps are received stop S.stop to S.start so that the
-first buffer received will be transformed into B.running_time of 0 (B.timestamp ==
-S.stop and S.accum == 0).
+first buffer received will be transformed into B.running_time of 0
+(B.timestamp == S.stop and S.base == 0).
 
 This makes it so that B.running_time is always monotonically increasing
 starting from 0 with both positive and negative rates.
@@ -219,7 +219,7 @@ allows us to rewrite the above formula for stream_time (and for positive rates).
   filling (B.timestamp - S.start) in the above formule for stream time
 
   =>
-    stream_time = (S.offset + (absolute_time - base_time - S.base) * ABS (S.rate)) * S.abs_applied_rate + S.time
+    stream_time = (S.offset + (absolute_time - base_time - S.base) * ABS (S.rate)) * ABS (S.applied_rate) + S.time
 
 This last formula is typically used in sinks to report the current position in
 an accurate and efficient way.
