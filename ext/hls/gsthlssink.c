@@ -253,6 +253,25 @@ missing_element:
 }
 
 static void
+gst_hls_sink_write_playlist (GstHlsSink * sink)
+{
+  char *playlist_content;
+  GError *error = NULL;
+
+  playlist_content = gst_m3u8_playlist_render (sink->playlist);
+  if (!g_file_set_contents (sink->playlist_location,
+          playlist_content, -1, &error)) {
+    GST_ERROR ("Failed to write playlist: %s", error->message);
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+        (("Failed to write playlist '%s'."), error->message), (NULL));
+    g_error_free (error);
+    error = NULL;
+  }
+  g_free (playlist_content);
+
+}
+
+static void
 gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
 {
   GstHlsSink *sink = GST_HLS_SINK_CAST (bin);
@@ -261,10 +280,8 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_ELEMENT:
     {
       const char *filename;
-      char *playlist_content;
       GstClockTime running_time, duration;
       gboolean discont = FALSE;
-      GError *error = NULL;
       gchar *entry_location;
       const GstStructure *structure;
 
@@ -289,16 +306,8 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
       gst_m3u8_playlist_add_entry (sink->playlist, entry_location,
           NULL, duration, sink->index, discont);
       g_free (entry_location);
-      playlist_content = gst_m3u8_playlist_render (sink->playlist);
-      if (!g_file_set_contents (sink->playlist_location,
-              playlist_content, -1, &error)) {
-        GST_ERROR ("Failed to write playlist: %s", error->message);
-        GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-            (("Failed to write playlist '%s'."), error->message), (NULL));
-        g_error_free (error);
-        error = NULL;
-      }
-      g_free (playlist_content);
+
+      gst_hls_sink_write_playlist (sink);
 
       /* multifilesink is starting a new file. It means that upstream sent a key
        * unit and we can schedule the next key unit now.
@@ -311,6 +320,11 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
       GST_DEBUG_OBJECT (bin, "dropping message %" GST_PTR_FORMAT, message);
       gst_message_unref (message);
       message = NULL;
+      break;
+    }
+    case GST_MESSAGE_EOS:{
+      sink->playlist->end_list = TRUE;
+      gst_hls_sink_write_playlist (sink);
       break;
     }
     default:
