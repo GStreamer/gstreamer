@@ -308,13 +308,6 @@ enum
   PROP_LAST
 };
 
-enum
-{
-  GST_RTP_BIN_RTCP_SYNC_ALWAYS,
-  GST_RTP_BIN_RTCP_SYNC_INITIAL,
-  GST_RTP_BIN_RTCP_SYNC_RTP
-};
-
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
 static GType
 gst_rtp_bin_rtcp_sync_get_type (void)

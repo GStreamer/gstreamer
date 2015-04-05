@@ -36,6 +36,13 @@
 #define GST_IS_RTP_BIN_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_BIN))
 
+typedef enum
+{
+  GST_RTP_BIN_RTCP_SYNC_ALWAYS,
+  GST_RTP_BIN_RTCP_SYNC_INITIAL,
+  GST_RTP_BIN_RTCP_SYNC_RTP
+} GstRTCPSync;
+
 typedef struct _GstRtpBin GstRtpBin;
 typedef struct _GstRtpBinClass GstRtpBinClass;
 typedef struct _GstRtpBinPrivate GstRtpBinPrivate;
