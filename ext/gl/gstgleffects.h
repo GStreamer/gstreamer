@@ -26,7 +26,6 @@
 
 G_BEGIN_DECLS
 
-
 #define GST_TYPE_GL_EFFECTS            (gst_gl_effects_get_type())
 #define GST_GL_EFFECTS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_EFFECTS,GstGLEffects))
 #define GST_IS_GL_EFFECTS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_GL_EFFECTS))
@@ -42,6 +41,12 @@ G_BEGIN_DECLS
 
 typedef struct _GstGLEffects GstGLEffects;
 typedef struct _GstGLEffectsClass GstGLEffectsClass;
+
+typedef struct {
+  gint effect;
+  guint supported_properties;
+  const gchar *filter_name;
+} GstGLEffectsFilterDescriptor;
 
 typedef void (* GstGLEffectProcessFunc) (GstGLEffects *effects);
 
@@ -78,18 +83,11 @@ struct _GstGLEffects
 struct _GstGLEffectsClass
 {
   GstGLFilterClass filter_class;
+  const GstGLEffectsFilterDescriptor *filter_descriptor;
 };
-
-enum
-{
-  PROP_0,
-  PROP_EFFECT,
-  PROP_HSWAP,
-  PROP_INVERT
-};
-
 
 GType gst_gl_effects_get_type (void);
+gboolean gst_gl_effects_register_filters (GstPlugin *, GstRank);
 GstGLShader* gst_gl_effects_get_fragment_shader (GstGLEffects *effects,
     const gchar * shader_name, const gchar * shader_source_gles2, const gchar * shader_source_opengl);
 

@@ -161,10 +161,10 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 #endif
-  if (!gst_element_register (plugin, "gleffects",
-          GST_RANK_NONE, gst_gl_effects_get_type ())) {
+
+  if (!gst_gl_effects_register_filters (plugin, GST_RANK_NONE)) {
     return FALSE;
-  }
+  };
 
   if (!gst_element_register (plugin, "glcolorscale",
           GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
