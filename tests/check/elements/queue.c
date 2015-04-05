@@ -45,6 +45,9 @@ static GMutex underrun_mutex;
 static GCond underrun_cond;
 static gint underrun_count;
 
+static GMutex events_lock;
+static GCond events_cond;
+static gint events_count;
 static GList *events;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -76,19 +79,17 @@ queue_underrun (GstElement * queue, gpointer user_data)
 static gboolean
 event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GST_DEBUG ("%s event", gst_event_type_get_name (GST_EVENT_TYPE (event)));
+  GST_DEBUG ("%s event", GST_EVENT_TYPE_NAME (event));
+
+  g_mutex_lock (&events_lock);
+
   events = g_list_append (events, event);
+  ++events_count;
+
+  g_cond_broadcast (&events_cond);
+  g_mutex_unlock (&events_lock);
 
   return TRUE;
-}
-
-static void
-drop_events (void)
-{
-  while (events != NULL) {
-    gst_event_unref (GST_EVENT (events->data));
-    events = g_list_delete_link (events, events);
-  }
 }
 
 static void
@@ -123,6 +124,10 @@ setup (void)
 
   underrun_count = 0;
 
+
+  g_mutex_init (&events_lock);
+  g_cond_init (&events_cond);
+  events_count = 0;
   events = NULL;
 }
 
@@ -133,7 +138,13 @@ cleanup (void)
 
   gst_check_drop_buffers ();
 
-  drop_events ();
+  while (events != NULL) {
+    gst_event_unref (GST_EVENT (events->data));
+    events = g_list_delete_link (events, events);
+  }
+  events_count = 0;
+  g_mutex_clear (&events_lock);
+  g_cond_clear (&events_cond);
 
   if (mysinkpad != NULL) {
     gst_pad_set_active (mysinkpad, FALSE);
@@ -1088,6 +1099,53 @@ GST_START_TEST (test_time_level_buffer_list)
 
 GST_END_TEST;
 
+GST_START_TEST (test_initial_events_nodelay)
+{
+  GstSegment segment;
+  GstEvent *event;
+  GstCaps *caps;
+  gboolean ret;
+
+  mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate);
+  gst_pad_set_event_function (mysinkpad, event_func);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  GST_DEBUG ("starting");
+
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
+  ret = gst_pad_push_event (mysrcpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  fail_unless (ret == TRUE);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  ret = gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
+  fail_unless (ret == TRUE);
+
+  g_mutex_lock (&events_lock);
+  while (events_count < 3) {
+    g_cond_wait (&events_cond, &events_lock);
+  }
+  g_mutex_unlock (&events_lock);
+
+  fail_unless_equals_int (g_list_length (events), 3);
+  event = g_list_nth_data (events, 0);
+  fail_unless_equals_int (GST_EVENT_TYPE (event), GST_EVENT_STREAM_START);
+  event = g_list_nth_data (events, 1);
+  fail_unless_equals_int (GST_EVENT_TYPE (event), GST_EVENT_CAPS);
+  event = g_list_nth_data (events, 2);
+  fail_unless_equals_int (GST_EVENT_TYPE (event), GST_EVENT_SEGMENT);
+
+  gst_element_set_state (queue, GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
 static Suite *
 queue_suite (void)
 {
@@ -1109,6 +1167,7 @@ queue_suite (void)
 #endif
   tcase_add_test (tc_chain, test_sticky_not_linked);
   tcase_add_test (tc_chain, test_time_level_buffer_list);
+  tcase_add_test (tc_chain, test_initial_events_nodelay);
 
   return s;
 }
