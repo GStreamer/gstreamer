@@ -18,9 +18,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/check/gstcheck.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
+
+#ifdef HAVE_VALGRIND
+#include <valgrind/valgrind.h>
+#else
+#define RUNNING_ON_VALGRIND FALSE
+#endif
 
 #define SAMPLE_CAPS "application/x-gst-check-test"
 
@@ -115,7 +125,6 @@ static GstAppSinkCallbacks app_callbacks;
 
 typedef struct
 {
-  GMainLoop *loop;
   GstElement *source;
   GstElement *sink;
 } ProgramData;
@@ -137,64 +146,6 @@ on_new_sample_from_source (GstAppSink * elt, gpointer user_data)
   return GST_FLOW_OK;
 }
 
-/* called when we get a GstMessage from the source pipeline when we get EOS, we
- * notify the appsrc of it. */
-static gboolean
-on_source_message (GstBus * bus, GstMessage * message, ProgramData * data)
-{
-  GstElement *source;
-  gboolean ret = TRUE;
-
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_EOS:
-      source = gst_bin_get_by_name (GST_BIN (data->sink), "testsource");
-      fail_unless (gst_app_src_end_of_stream (GST_APP_SRC (source)) ==
-          GST_FLOW_OK);
-      gst_object_unref (source);
-      break;
-    case GST_MESSAGE_ERROR:
-      g_main_loop_quit (data->loop);
-      ret = FALSE;
-      break;
-    default:
-      break;
-  }
-  return ret;
-}
-
-static gboolean
-on_sink_message (GstBus * bus, GstMessage * message, ProgramData * data)
-{
-  gboolean ret = TRUE;
-
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_EOS:
-      g_main_loop_quit (data->loop);
-      ret = FALSE;
-      break;
-    case GST_MESSAGE_ERROR:
-      ASSERT_SET_STATE (data->sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
-      ASSERT_SET_STATE (data->source, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
-      g_main_loop_quit (data->loop);
-      ret = FALSE;
-      break;
-    default:
-      break;
-  }
-  return ret;
-}
-
-static gboolean
-error_timeout (ProgramData * data)
-{
-  GstBus *bus;
-  bus = gst_element_get_bus (data->sink);
-  gst_bus_post (bus, gst_message_new_error (GST_OBJECT (data->sink), NULL,
-          "test error"));
-  gst_object_unref (bus);
-  return FALSE;
-}
-
 /*
  * appsink => appsrc pipelines executed 100 times: 
  * - appsink pipeline has sync=false
@@ -208,62 +159,48 @@ error_timeout (ProgramData * data)
 
 GST_START_TEST (test_appsrc_block_deadlock)
 {
-  int i = 0;
-  int num_iteration = 100;
-  while (i < num_iteration) {
-    ProgramData *data = NULL;
-    GstBus *bus = NULL;
-    GstElement *testsink = NULL;
+  GstElement *testsink;
+  ProgramData *data;
 
-    data = g_new0 (ProgramData, 1);
+  GST_INFO ("iteration %d", __i__);
 
-    data->loop = g_main_loop_new (NULL, FALSE);
+  data = g_new0 (ProgramData, 1);
 
-    data->source =
-        gst_parse_launch ("videotestsrc ! appsink sync=false name=testsink",
-        NULL);
+  data->source =
+      gst_parse_launch ("videotestsrc ! video/x-raw,width=16,height=16 ! "
+      "appsink sync=false name=testsink", NULL);
 
-    fail_unless (data->source != NULL);
+  fail_unless (data->source != NULL);
 
-    bus = gst_element_get_bus (data->source);
-    gst_bus_add_watch (bus, (GstBusFunc) on_source_message, data);
-    gst_object_unref (bus);
+  app_callbacks.new_sample = on_new_sample_from_source;
+  testsink = gst_bin_get_by_name (GST_BIN (data->source), "testsink");
+  gst_app_sink_set_callbacks (GST_APP_SINK_CAST (testsink), &app_callbacks,
+      data, NULL);
 
-    app_callbacks.new_sample = on_new_sample_from_source;
-    testsink = gst_bin_get_by_name (GST_BIN (data->source), "testsink");
-    gst_app_sink_set_callbacks (GST_APP_SINK_CAST (testsink), &app_callbacks,
-        data, NULL);
+  gst_object_unref (testsink);
 
-    gst_object_unref (testsink);
+  data->sink =
+      gst_parse_launch
+      ("appsrc name=testsource block=1 max-bytes=1000 is-live=true ! "
+      "fakesink sync=true", NULL);
 
-    data->sink =
-        gst_parse_launch
-        ("appsrc name=testsource block=1 max-bytes=1000 is-live=true ! fakesink sync=true",
-        NULL);
+  fail_unless (data->sink != NULL);
 
-    fail_unless (data->sink != NULL);
+  ASSERT_SET_STATE (data->sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+  ASSERT_SET_STATE (data->source, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
-    bus = gst_element_get_bus (data->sink);
-    gst_bus_add_watch (bus, (GstBusFunc) on_sink_message, data);
-    gst_object_unref (bus);
+  /* wait for preroll */
+  gst_element_get_state (data->source, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_element_get_state (data->sink, NULL, NULL, GST_CLOCK_TIME_NONE);
 
-    g_timeout_add (150, (GSourceFunc) error_timeout, data);
+  g_usleep (50 * (G_USEC_PER_SEC / 1000));
 
-    ASSERT_SET_STATE (data->sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
-    ASSERT_SET_STATE (data->source, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+  ASSERT_SET_STATE (data->sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  ASSERT_SET_STATE (data->source, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
 
-    g_main_loop_run (data->loop);
-
-    ASSERT_SET_STATE (data->sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
-    ASSERT_SET_STATE (data->source, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
-
-    gst_object_unref (data->source);
-    gst_object_unref (data->sink);
-    g_main_loop_unref (data->loop);
-    g_free (data);
-    i++;
-    GST_INFO ("appsrc deadlock test iteration number %d/%d", i, num_iteration);
-  }
+  gst_object_unref (data->source);
+  gst_object_unref (data->sink);
+  g_free (data);
 }
 
 GST_END_TEST;
@@ -275,9 +212,12 @@ appsrc_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   tcase_add_test (tc_chain, test_appsrc_non_null_caps);
-  tcase_add_test (tc_chain, test_appsrc_block_deadlock);
 
-  tcase_set_timeout (tc_chain, 20);
+  if (RUNNING_ON_VALGRIND)
+    tcase_add_loop_test (tc_chain, test_appsrc_block_deadlock, 0, 5);
+  else
+    tcase_add_loop_test (tc_chain, test_appsrc_block_deadlock, 0, 100);
+
   suite_add_tcase (s, tc_chain);
 
   return s;
