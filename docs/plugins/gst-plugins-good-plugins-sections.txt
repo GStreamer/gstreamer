@@ -904,6 +904,7 @@ GST_IS_GOOM_CLASS
 <FILE>element-rtpbin</FILE>
 <TITLE>rtpbin</TITLE>
 GstRtpBin
+RTPJitterBufferMode
 <SUBSECTION Standard>
 GstRtpBinPrivate
 GstRtpBinClass
