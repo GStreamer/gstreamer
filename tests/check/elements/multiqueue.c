@@ -323,6 +323,9 @@ struct PadData
 
   GMutex *mutex;
   GCond *cond;
+
+  /* used by initial_events_nodelay */
+  gint event_count;
 };
 
 static GstFlowReturn
@@ -949,6 +952,113 @@ GST_START_TEST (test_buffering_with_none_pts)
 
 GST_END_TEST;
 
+static gboolean
+event_func_signal (GstPad * sinkpad, GstObject * parent, GstEvent * event)
+{
+  struct PadData *pad_data;
+
+  GST_LOG_OBJECT (sinkpad, "%s event", GST_EVENT_TYPE_NAME (event));
+
+  pad_data = gst_pad_get_element_private (sinkpad);
+
+  g_mutex_lock (pad_data->mutex);
+  ++pad_data->event_count;
+  g_cond_broadcast (pad_data->cond);
+  g_mutex_unlock (pad_data->mutex);
+
+  gst_event_unref (event);
+  return TRUE;
+}
+
+GST_START_TEST (test_initial_events_nodelay)
+{
+  struct PadData pad_data = { 0, };
+  GstElement *pipe;
+  GstElement *mq;
+  GstPad *inputpad;
+  GstPad *sinkpad;
+  GstSegment segment;
+  GstCaps *caps;
+  GMutex mutex;
+  GCond cond;
+
+  g_mutex_init (&mutex);
+  g_cond_init (&cond);
+
+  pipe = gst_pipeline_new ("testbin");
+
+  mq = gst_element_factory_make ("multiqueue", NULL);
+  fail_unless (mq != NULL);
+  gst_bin_add (GST_BIN (pipe), mq);
+
+  {
+    GstPad *mq_srcpad, *mq_sinkpad;
+
+    inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
+
+    mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+    fail_unless (mq_sinkpad != NULL);
+    fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
+
+    gst_pad_set_active (inputpad, TRUE);
+
+    mq_srcpad = mq_sinkpad_to_srcpad (mq, mq_sinkpad);
+
+    sinkpad = gst_pad_new ("dummysink", GST_PAD_SINK);
+    gst_pad_set_event_function (sinkpad, event_func_signal);
+
+    pad_data.event_count = 0;
+    pad_data.cond = &cond;
+    pad_data.mutex = &mutex;
+    gst_pad_set_element_private (sinkpad, &pad_data);
+
+    fail_unless (gst_pad_link (mq_srcpad, sinkpad) == GST_PAD_LINK_OK);
+    gst_pad_set_active (sinkpad, TRUE);
+
+    gst_object_unref (mq_sinkpad);
+    gst_object_unref (mq_srcpad);
+  }
+
+  /* Run the test: push events through multiqueue */
+  gst_element_set_state (pipe, GST_STATE_PLAYING);
+
+  gst_pad_push_event (inputpad, gst_event_new_stream_start ("test"));
+
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
+  gst_pad_push_event (inputpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_pad_push_event (inputpad, gst_event_new_segment (&segment));
+
+  g_mutex_lock (&mutex);
+  while (pad_data.event_count < 3) {
+    GST_LOG ("%d events so far, waiting for more", pad_data.event_count);
+    g_cond_wait (&cond, &mutex);
+  }
+  g_mutex_unlock (&mutex);
+
+  /* Clean up */
+  {
+    GstPad *mq_input = gst_pad_get_peer (inputpad);
+
+    gst_pad_unlink (inputpad, mq_input);
+    gst_element_release_request_pad (mq, mq_input);
+    gst_object_unref (mq_input);
+    gst_object_unref (inputpad);
+
+    gst_object_unref (sinkpad);
+  }
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (pipe);
+
+  g_cond_clear (&cond);
+  g_mutex_clear (&mutex);
+}
+
+GST_END_TEST;
+
 static Suite *
 multiqueue_suite (void)
 {
@@ -971,6 +1081,7 @@ multiqueue_suite (void)
   tcase_add_test (tc_chain, test_limit_changes);
 
   tcase_add_test (tc_chain, test_buffering_with_none_pts);
+  tcase_add_test (tc_chain, test_initial_events_nodelay);
 
   return s;
 }
