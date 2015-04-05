@@ -918,7 +918,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     *buf = gst_core_video_texture_cache_get_gl_buffer (textureCache, *buf);
 
   GST_BUFFER_OFFSET (*buf) = offset++;
-  GST_BUFFER_OFFSET_END (*buf) = GST_BUFFER_OFFSET (buf) + 1;
+  GST_BUFFER_OFFSET_END (*buf) = GST_BUFFER_OFFSET (*buf) + 1;
   GST_BUFFER_TIMESTAMP (*buf) = timestamp;
   GST_BUFFER_DURATION (*buf) = duration;
 
