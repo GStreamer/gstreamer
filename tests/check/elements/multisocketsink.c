@@ -124,6 +124,39 @@ setup_handles (GSocket ** sinkhandle, GSocket ** srchandle)
   return TRUE;
 }
 
+static gboolean
+read_handle_n_bytes_exactly (GSocket * srchandle, void *buf, size_t count)
+{
+  gssize total_read, read;
+  gchar *data = buf;
+
+  GST_DEBUG ("reading exactly %" G_GSIZE_FORMAT " bytes", count);
+
+  /* loop to make sure the sink has had a chance to write out all data.
+   * Depending on system load it might be written in multiple write calls,
+   * so it's possible our first read() just returns parts of the data. */
+  total_read = 0;
+  do {
+    read =
+        g_socket_receive (srchandle, data + total_read, count - total_read,
+        NULL, NULL);
+
+    if (read == 0)              /* socket was closed */
+      return FALSE;
+
+    if (read < 0)
+      fail ("read error");
+
+    total_read += read;
+
+    GST_INFO ("read %" G_GSSIZE_FORMAT " bytes, total now %" G_GSSIZE_FORMAT,
+        read, total_read);
+  }
+  while (total_read < count);
+
+  return TRUE;
+}
+
 static ssize_t
 read_handle (GSocket * srchandle, void *buf, size_t count)
 {
@@ -245,7 +278,7 @@ teardown_sink_with_socket (TestSinkAndSocket * tsas)
   }
 }
 
-GST_START_TEST (test_sending_buffers_with_9_gstmemorys)
+GST_START_TEST (test_sending_buffers_with_9_gstmemories)
 {
   TestSinkAndSocket tsas = { 0 };
   GstBuffer *buffer;
@@ -260,14 +293,13 @@ GST_START_TEST (test_sending_buffers_with_9_gstmemorys)
   setup_sink_with_socket (&tsas);
 
   buffer = gst_buffer_new ();
-  for (i = 0; i < sizeof (numbers) / sizeof (*numbers); i++)
+  for (i = 0; i < G_N_ELEMENTS (numbers); i++)
     gst_buffer_append_memory (buffer,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, (gpointer) numbers[i],
             strlen (numbers[i]), 0, strlen (numbers[i]), NULL, NULL));
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
-  GST_DEBUG ("reading");
-  fail_if (read_handle (tsas.srcsocket, data, len) < len);
+  fail_unless (read_handle_n_bytes_exactly (tsas.srcsocket, data, len));
   fail_unless (strncmp (data, numbers_concat, len) == 0);
 
   teardown_sink_with_socket (&tsas);
@@ -949,7 +981,7 @@ multisocketsink_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_no_clients);
   tcase_add_test (tc_chain, test_add_client);
-  tcase_add_test (tc_chain, test_sending_buffers_with_9_gstmemorys);
+  tcase_add_test (tc_chain, test_sending_buffers_with_9_gstmemories);
   tcase_add_test (tc_chain, test_streamheader);
   tcase_add_test (tc_chain, test_change_streamheader);
   tcase_add_test (tc_chain, test_burst_client_bytes);
