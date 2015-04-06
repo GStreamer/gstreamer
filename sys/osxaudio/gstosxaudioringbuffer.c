@@ -248,7 +248,7 @@ gst_osx_audio_ring_buffer_release (GstAudioRingBuffer * buf)
 
   osxbuf = GST_OSX_AUDIO_RING_BUFFER (buf);
 
-  gst_core_audio_unitialize (osxbuf->core_audio);
+  gst_core_audio_uninitialize (osxbuf->core_audio);
 
   g_free (buf->memory);
   buf->memory = NULL;

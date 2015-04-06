@@ -130,7 +130,7 @@ gboolean gst_core_audio_initialize                           (GstCoreAudio *core
                                                               GstCaps *caps,
                                                               gboolean is_passthrough);
 
-void gst_core_audio_unitialize                               (GstCoreAudio *core_audio);
+void gst_core_audio_uninitialize                             (GstCoreAudio *core_audio);
 
 gboolean gst_core_audio_start_processing                     (GstCoreAudio *core_audio);
 

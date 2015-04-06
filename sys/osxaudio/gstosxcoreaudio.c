@@ -233,7 +233,7 @@ gst_core_audio_initialize (GstCoreAudio * core_audio,
 }
 
 void
-gst_core_audio_unitialize (GstCoreAudio * core_audio)
+gst_core_audio_uninitialize (GstCoreAudio * core_audio)
 {
   buffer_list_free (core_audio->recBufferList);
   core_audio->recBufferList = NULL;
