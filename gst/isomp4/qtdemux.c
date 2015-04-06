@@ -9470,7 +9470,7 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
         break;
       ++sample_num;
     }
-    if (stream->n_samples > 0 && stream->stbl_index > 0) {
+    if (stream->n_samples > 0 && stream->stbl_index >= 0) {
       stream->first_duration = stream->samples[0].duration;
       GST_LOG_OBJECT (qtdemux, "stream %d first duration %u",
           stream->track_id, stream->first_duration);
