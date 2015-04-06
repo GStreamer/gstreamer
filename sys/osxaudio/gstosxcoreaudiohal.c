@@ -1123,6 +1123,15 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
     gboolean is_passthrough, guint32 * frame_size)
 {
   gboolean ret = FALSE;
+  OSStatus status;
+
+  /* Uninitialize the AudioUnit before changing formats */
+  status = AudioUnitUninitialize (core_audio->audiounit);
+  if (status) {
+    GST_ERROR_OBJECT (core_audio, "Failed to uninitialize AudioUnit: %d",
+        (int) status);
+    return FALSE;
+  }
 
   core_audio->is_passthrough = is_passthrough;
   if (is_passthrough) {
@@ -1157,9 +1166,18 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
   ret = TRUE;
 
 done:
+  /* Format changed, initialise the AudioUnit again */
+  status = AudioUnitInitialize (core_audio->audiounit);
+  if (status) {
+    GST_ERROR_OBJECT (core_audio, "Failed to initialize AudioUnit: %d",
+        (int) status);
+    ret = FALSE;
+  }
+
   if (ret) {
     GST_DEBUG_OBJECT (core_audio, "osxbuf ring buffer acquired");
   }
+
   return ret;
 }
 

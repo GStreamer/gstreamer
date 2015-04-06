@@ -238,6 +238,7 @@ _core_audio_set_property (GstCoreAudio * core_audio, AudioUnitPropertyID inID,
   return TRUE;
 }
 
+/* The AudioUnit must be uninitialized before calling this */
 gboolean
 gst_core_audio_set_channel_layout (GstCoreAudio * core_audio,
     gint channels, GstCaps * caps)
@@ -297,6 +298,7 @@ gst_core_audio_set_channel_layout (GstCoreAudio * core_audio,
   return ret;
 }
 
+/* The AudioUnit must be uninitialized before calling this */
 gboolean
 gst_core_audio_set_format (GstCoreAudio * core_audio,
     AudioStreamBasicDescription format)

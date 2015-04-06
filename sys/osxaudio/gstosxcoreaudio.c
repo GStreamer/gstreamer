@@ -168,7 +168,8 @@ gst_core_audio_open (GstCoreAudio * core_audio)
         "listener for AudioUnit: %d", (int) status);
   }
 
-  /* Initialize the AudioUnit */
+  /* Initialize the AudioUnit. We keep the audio unit initialized early so that
+   * we can probe the underlying device. */
   status = AudioUnitInitialize (core_audio->audiounit);
   if (status) {
     GST_ERROR_OBJECT (core_audio, "Failed to initialize AudioUnit: %d",

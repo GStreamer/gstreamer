@@ -84,10 +84,22 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
     AudioStreamBasicDescription format, GstCaps * caps,
     gboolean is_passthrough, guint32 * frame_size)
 {
+  gboolean ret = FALSE;
+  OSStatus status;
+
+  /* Uninitialize the AudioUnit before changing formats */
+  status = AudioUnitUninitialize (core_audio->audiounit);
+  if (status) {
+    GST_ERROR_OBJECT (core_audio, "Failed to uninitialize AudioUnit: %d",
+        (int) status);
+    return FALSE;
+  }
+
   core_audio->is_passthrough = is_passthrough;
   core_audio->stream_idx = 0;
+
   if (!gst_core_audio_set_format (core_audio, format))
-    return FALSE;
+    goto done;
 
   /* FIXME: Use kAudioSessionProperty_CurrentHardwareSampleRate and
    * kAudioSessionProperty_CurrentHardwareIOBufferDuration with property
@@ -96,7 +108,18 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
   *frame_size = 4196;
 
   GST_DEBUG_OBJECT (core_audio, "osxbuf ring buffer acquired");
-  return TRUE;
+  ret = TRUE;
+
+done:
+  /* Format changed, initialise the AudioUnit again */
+  status = AudioUnitInitialize (core_audio->audiounit);
+  if (status) {
+    GST_ERROR_OBJECT (core_audio, "Failed to initialize AudioUnit: %d",
+        (int) status);
+    ret = FALSE;
+  }
+
+  return ret;
 }
 
 static gboolean
