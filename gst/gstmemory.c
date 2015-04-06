@@ -197,6 +197,7 @@ void
 gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
 {
   g_return_if_fail (mem != NULL);
+  g_return_if_fail (gst_memory_is_writable (mem));
   g_return_if_fail (offset >= 0 || mem->offset >= -offset);
   g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
 
