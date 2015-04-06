@@ -38,6 +38,8 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
+#define VIDEO_RAW_CAPS_STRING "video/x-raw"
+
 #define AUDIO_CAPS_STRING "audio/mpeg, " \
                         "mpegversion = (int) 1, " \
                         "layer = (int) 3, " \
@@ -78,6 +80,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/quicktime"));
+
 static GstStaticPadTemplate srcvideotemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -88,6 +91,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (VIDEO_CAPS_H264_STRING));
+
+static GstStaticPadTemplate srcvideorawtemplate =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (VIDEO_RAW_CAPS_STRING));
 
 static GstStaticPadTemplate srcaudiotemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -908,6 +917,330 @@ GST_START_TEST (test_average_bitrate)
 
 GST_END_TEST;
 
+struct TestInputData
+{
+  GstPad *srcpad;
+  GstSegment segment;
+  GList *input;
+  GThread *thread;
+
+  GstPad *sinkpad;
+
+  GList *output_iter;
+};
+
+static void
+test_input_data_init (struct TestInputData *data)
+{
+  data->srcpad = NULL;
+  data->sinkpad = NULL;
+  data->input = NULL;
+  data->thread = NULL;
+}
+
+static void
+test_input_data_clean (struct TestInputData *data)
+{
+  g_list_free_full (data->input, (GDestroyNotify) gst_mini_object_unref);
+
+  if (data->sinkpad) {
+    gst_pad_set_active (data->sinkpad, FALSE);
+    gst_object_unref (data->sinkpad);
+  }
+
+  gst_pad_set_active (data->srcpad, FALSE);
+  teardown_src_pad (data->srcpad);
+}
+
+static gpointer
+test_input_push_data (gpointer user_data)
+{
+  struct TestInputData *data = user_data;
+  GList *iter;
+  GstFlowReturn flow;
+
+  for (iter = data->input; iter; iter = g_list_next (iter)) {
+    if (GST_IS_BUFFER (iter->data)) {
+      GST_INFO ("Pushing buffer %" GST_PTR_FORMAT " on pad: %s:%s", iter->data,
+          GST_DEBUG_PAD_NAME (data->srcpad));
+      flow =
+          gst_pad_push (data->srcpad,
+          gst_buffer_ref ((GstBuffer *) iter->data));
+      fail_unless (flow == GST_FLOW_OK);
+    } else {
+      GST_INFO_OBJECT (data->srcpad, "Pushing event: %"
+          GST_PTR_FORMAT, iter->data);
+      fail_unless (gst_pad_push_event (data->srcpad,
+              gst_event_ref ((GstEvent *) iter->data)) == TRUE);
+    }
+  }
+  return NULL;
+}
+
+static GstBuffer *
+create_buffer (GstClockTime pts, GstClockTime dts, GstClockTime duration,
+    guint bytes)
+{
+  GstBuffer *buf;
+  guint8 *data;
+
+  data = g_malloc0 (bytes);
+  buf = gst_buffer_new_wrapped (data, bytes);
+  GST_BUFFER_PTS (buf) = pts;
+  GST_BUFFER_DTS (buf) = dts;
+  GST_BUFFER_DURATION (buf) = duration;
+  return buf;
+}
+
+static GstFlowReturn
+_test_sink_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  struct TestInputData *test_data = g_object_get_qdata (G_OBJECT (pad),
+      g_quark_from_static_string ("test-mux-pad"));
+  GstBuffer *expected_buffer;
+
+  fail_unless (test_data->output_iter);
+  fail_unless (GST_IS_BUFFER (test_data->output_iter->data));
+  expected_buffer = test_data->output_iter->data;
+
+  fail_unless (GST_BUFFER_PTS (buffer) == GST_BUFFER_PTS (expected_buffer));
+  fail_unless (GST_BUFFER_DTS (buffer) == GST_BUFFER_DTS (expected_buffer));
+  fail_unless (GST_BUFFER_DURATION (buffer) ==
+      GST_BUFFER_DURATION (expected_buffer));
+
+
+  test_data->output_iter = g_list_next (test_data->output_iter);
+
+  gst_buffer_unref (buffer);
+  return GST_FLOW_OK;
+}
+
+static void
+compare_event (GstEvent * event, GstEvent * expected)
+{
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_TYPE (expected));
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:{
+      GstCaps *caps, *expected_caps;
+
+      gst_event_parse_caps (event, &caps);
+      gst_event_parse_caps (expected, &expected_caps);
+      fail_unless (gst_caps_can_intersect (caps, expected_caps));
+    }
+      break;
+    default:
+      break;
+  }
+}
+
+static gboolean
+_test_sink_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  struct TestInputData *test_data = g_object_get_qdata (G_OBJECT (pad),
+      g_quark_from_static_string ("test-mux-pad"));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+    case GST_EVENT_SEGMENT:
+    case GST_EVENT_CAPS:
+    case GST_EVENT_EOS:
+      fail_unless (test_data->output_iter);
+      fail_unless (GST_IS_EVENT (test_data->output_iter->data));
+      compare_event (event, test_data->output_iter->data);
+      test_data->output_iter = g_list_next (test_data->output_iter);
+      break;
+    case GST_EVENT_TAG:
+      /* ignore this event */
+      break;
+    default:
+      fail ("Unexpected event received %s", GST_EVENT_TYPE_NAME (event));
+      break;
+  }
+
+  gst_event_unref (event);
+  return TRUE;
+}
+
+static void
+_test_pad_added_cb (GstElement * element, GstPad * pad, gpointer udata)
+{
+  GstCaps *caps;
+  struct TestInputData **inputs = udata;
+  gint i = -1;
+  const gchar *name;
+  const gchar *strname;
+
+  caps = gst_pad_get_current_caps (pad);
+  strname = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  if (g_str_has_prefix (strname, "video/")) {
+    i = 0;                      /* video is 0, audio is 1 */
+    name = "videosink";
+  } else {
+    i = 1;
+    name = "audiosink";
+  }
+  gst_caps_unref (caps);
+
+  fail_unless (i != -1);
+  fail_unless (inputs[i]->sinkpad == NULL);
+  inputs[i]->sinkpad = gst_pad_new (name, GST_PAD_SINK);
+  inputs[i]->output_iter = inputs[i]->input;
+  g_object_set_qdata (G_OBJECT (inputs[i]->sinkpad),
+      g_quark_from_static_string ("test-mux-pad"), inputs[i]);
+  gst_pad_set_chain_function (inputs[i]->sinkpad, _test_sink_pad_chain);
+  gst_pad_set_event_function (inputs[i]->sinkpad, _test_sink_pad_event);
+  gst_pad_set_active (inputs[i]->sinkpad, TRUE);
+  fail_unless (gst_pad_link (pad, inputs[i]->sinkpad) == GST_PAD_LINK_OK);
+}
+
+static void
+check_output (const gchar * location, struct TestInputData *input1,
+    struct TestInputData *input2)
+{
+  GstElement *filesrc;
+  GstElement *demux;
+  struct TestInputData *inputs[2] = { input1, input2 };
+
+  filesrc = gst_element_factory_make ("filesrc", NULL);
+  demux = gst_element_factory_make ("qtdemux", NULL);
+
+  fail_unless (gst_element_link (filesrc, demux));
+
+  g_object_set (filesrc, "location", location, NULL);
+  g_signal_connect (demux, "pad-added", (GCallback) _test_pad_added_cb, inputs);
+
+  fail_unless (gst_element_set_state (demux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_element_set_state (filesrc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+
+  /* FIXME use a main loop */
+  g_usleep (2 * G_USEC_PER_SEC);
+
+  fail_unless (gst_element_set_state (demux,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_element_set_state (filesrc,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (filesrc);
+  gst_object_unref (demux);
+}
+
+/* Muxes a file with qtmux using the inputs provided and
+ * then verifies that the generated file corresponds to the
+ * data in the inputs */
+static void
+run_muxing_test (struct TestInputData *input1, struct TestInputData *input2)
+{
+  gchar *location;
+  GstElement *qtmux;
+  GstElement *filesink;
+
+  location = g_strdup_printf ("%s/%s-%d", g_get_tmp_dir (), "qtmuxtest",
+      g_random_int ());
+  qtmux = gst_check_setup_element ("qtmux");
+  filesink = gst_element_factory_make ("filesink", NULL);
+  g_object_set (filesink, "location", location, NULL);
+  gst_element_link (qtmux, filesink);
+
+  input1->srcpad = setup_src_pad (qtmux, &srcvideorawtemplate, "video_%u");
+  fail_unless (input1->srcpad != NULL);
+  gst_pad_set_active (input1->srcpad, TRUE);
+
+  input2->srcpad = setup_src_pad (qtmux, &srcaudioaactemplate, "audio_%u");
+  fail_unless (input2->srcpad != NULL);
+  gst_pad_set_active (input2->srcpad, TRUE);
+
+  fail_unless (gst_element_set_state (filesink,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE,
+      "could not set filesink to playing");
+  fail_unless (gst_element_set_state (qtmux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  input1->thread =
+      g_thread_new ("test-push-data-1", test_input_push_data, input1);
+  input2->thread =
+      g_thread_new ("test-push-data-2", test_input_push_data, input2);
+
+  /* FIXME set a mainloop and wait for EOS */
+
+  g_thread_join (input1->thread);
+  g_thread_join (input2->thread);
+  input1->thread = NULL;
+  input2->thread = NULL;
+
+  gst_element_set_state (qtmux, GST_STATE_NULL);
+  gst_element_set_state (filesink, GST_STATE_NULL);
+
+  check_output (location, input1, input2);
+
+  gst_object_unref (filesink);
+  test_input_data_clean (input1);
+  test_input_data_clean (input2);
+  gst_check_teardown_element (qtmux);
+
+  /* delete file */
+  g_unlink (location);
+  g_free (location);
+}
+
+GST_START_TEST (test_muxing)
+{
+  struct TestInputData input1, input2;
+  GstCaps *caps;
+
+  test_input_data_init (&input1);
+  test_input_data_init (&input2);
+
+  /* Create the inputs, after calling the run below, all this data is
+   * transfered to it and we have no need to clean up */
+  input1.input = NULL;
+  input1.input =
+      g_list_append (input1.input, gst_event_new_stream_start ("test-1"));
+  caps = gst_caps_from_string
+      ("video/x-raw, width=(int)800, height=(int)600, "
+      "framerate=(fraction)1/1, format=(string)RGB");
+  input1.input = g_list_append (input1.input, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  gst_segment_init (&input1.segment, GST_FORMAT_TIME);
+  input1.input =
+      g_list_append (input1.input, gst_event_new_segment (&input1.segment));
+  input1.input =
+      g_list_append (input1.input, create_buffer (0, GST_CLOCK_TIME_NONE,
+          GST_SECOND, 800 * 600 * 3));
+  input1.input =
+      g_list_append (input1.input, create_buffer (1 * GST_SECOND,
+          GST_CLOCK_TIME_NONE, GST_SECOND, 800 * 600 * 3));
+  input1.input =
+      g_list_append (input1.input, create_buffer (2 * GST_SECOND,
+          GST_CLOCK_TIME_NONE, GST_SECOND, 800 * 600 * 3));
+  input1.input = g_list_append (input1.input, gst_event_new_eos ());
+
+  input2.input = NULL;
+  input2.input =
+      g_list_append (input2.input, gst_event_new_stream_start ("test-2"));
+  caps = gst_caps_from_string
+      ("audio/mpeg, rate=(int)44100, channels=(int)1, mpegversion=(int)4, "
+      "stream-format=(string)raw, framed=(boolean)true");
+  input2.input = g_list_append (input2.input, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  gst_segment_init (&input2.segment, GST_FORMAT_TIME);
+  input2.input =
+      g_list_append (input2.input, gst_event_new_segment (&input2.segment));
+  input2.input =
+      g_list_append (input2.input, create_buffer (0, 0, GST_SECOND, 4096));
+  input2.input =
+      g_list_append (input2.input, create_buffer (1 * GST_SECOND,
+          1 * GST_SECOND, GST_SECOND, 4096));
+  input2.input =
+      g_list_append (input2.input, create_buffer (2 * GST_SECOND,
+          2 * GST_SECOND, GST_SECOND, 4096));
+  input2.input = g_list_append (input2.input, gst_event_new_eos ());
+
+  run_muxing_test (&input1, &input2);
+}
+
+GST_END_TEST;
 
 static Suite *
 qtmux_suite (void)
@@ -945,6 +1278,8 @@ qtmux_suite (void)
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_encodebin_qtmux);
   tcase_add_test (tc_chain, test_encodebin_mp4mux);
+
+  tcase_add_test (tc_chain, test_muxing);
 
   return s;
 }
