@@ -2701,6 +2701,15 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
       rtp_source_update_caps (source, caps);
       g_object_unref (source);
     }
+
+    if (gst_structure_get_uint (s, "rtx-ssrc", &ssrc)) {
+      source =
+          obtain_internal_source (sess, ssrc, &created, GST_CLOCK_TIME_NONE);
+      if (source) {
+        rtp_source_update_caps (source, caps);
+        g_object_unref (source);
+      }
+    }
     RTP_SESSION_UNLOCK (sess);
   }
 }

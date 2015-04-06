@@ -606,9 +606,17 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
       gst_structure_get_int (s, "clock-rate", &data->clock_rate);
 
+      /* The session might need to know the RTX ssrc */
+      caps = gst_caps_copy (caps);
+      gst_caps_set_simple (caps, "rtx-ssrc", G_TYPE_UINT, data->rtx_ssrc, NULL);
+
       GST_DEBUG_OBJECT (rtx, "got clock-rate from caps: %d for ssrc: %u",
           data->clock_rate, ssrc);
       GST_OBJECT_UNLOCK (rtx);
+
+      gst_event_unref (event);
+      event = gst_event_new_caps (caps);
+      gst_caps_unref (caps);
       break;
     }
     default:
