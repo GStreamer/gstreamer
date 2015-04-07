@@ -653,6 +653,53 @@ GST_START_TEST (test_splitmuxsrc_caps_change)
 
 GST_END_TEST;
 
+GST_START_TEST (test_splitmuxsrc_robust_mux)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *sink;
+  gchar *dest_pattern;
+  gchar *in_pattern;
+
+  /* This test creates a new file only by changing the caps, which
+   * qtmux will reject (for now - if qtmux starts supporting caps
+   * changes, this test will break and need fixing/disabling */
+  pipeline =
+      gst_parse_launch
+      ("videotestsrc num-buffers=10 !"
+      "  video/x-raw,width=80,height=64,framerate=10/1 !"
+      "  jpegenc ! splitmuxsink name=splitsink muxer=\"qtmux reserved-bytes-per-sec=200 reserved-moov-update-period=100000000 \" max-size-time=500000000 use-robust-muxing=true",
+      NULL);
+  fail_if (pipeline == NULL);
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+  g_signal_connect (sink, "format-location-full",
+      (GCallback) check_format_location, NULL);
+  dest_pattern = g_build_filename (tmpdir, "out%05d.mp4", NULL);
+  g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
+  g_free (dest_pattern);
+  g_object_unref (sink);
+
+  msg = run_pipeline (pipeline);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  gst_object_unref (pipeline);
+
+  /* Unlike other tests, we don't check an explicit file size, because the overflow detection
+   * can be racy (depends on exactly when buffers get handed to the muxer and when it updates the
+   * reserved duration property. All we care about is that the muxing didn't fail because space ran out */
+
+  in_pattern = g_build_filename (tmpdir, "out*.mp4", NULL);
+  test_playback (in_pattern, 0, GST_SECOND);
+  g_free (in_pattern);
+}
+
+GST_END_TEST;
+
 /* For verifying bug https://bugzilla.gnome.org/show_bug.cgi?id=762893 */
 GST_START_TEST (test_splitmuxsink_reuse_simple)
 {
@@ -687,7 +734,7 @@ splitmux_suite (void)
   TCase *tc_chain = tcase_create ("general");
   TCase *tc_chain_basic = tcase_create ("basic");
   TCase *tc_chain_complex = tcase_create ("complex");
-  TCase *tc_chain_caps_change = tcase_create ("caps_change");
+  TCase *tc_chain_mp4_jpeg = tcase_create ("caps_change");
   gboolean have_theora, have_ogg, have_vorbis, have_matroska, have_qtmux,
       have_jpeg;
 
@@ -708,7 +755,7 @@ splitmux_suite (void)
   suite_add_tcase (s, tc_chain);
   suite_add_tcase (s, tc_chain_basic);
   suite_add_tcase (s, tc_chain_complex);
-  suite_add_tcase (s, tc_chain_caps_change);
+  suite_add_tcase (s, tc_chain_mp4_jpeg);
 
   tcase_add_test (tc_chain_basic, test_splitmuxsink_reuse_simple);
 
@@ -733,9 +780,10 @@ splitmux_suite (void)
 
 
   if (have_qtmux && have_jpeg) {
-    tcase_add_checked_fixture (tc_chain_caps_change, tempdir_setup,
+    tcase_add_checked_fixture (tc_chain_mp4_jpeg, tempdir_setup,
         tempdir_cleanup);
-    tcase_add_test (tc_chain_caps_change, test_splitmuxsrc_caps_change);
+    tcase_add_test (tc_chain_mp4_jpeg, test_splitmuxsrc_caps_change);
+    tcase_add_test (tc_chain_mp4_jpeg, test_splitmuxsrc_robust_mux);
   } else {
     GST_INFO ("Skipping tests, missing plugins: jpegenc or mp4mux");
   }

@@ -165,6 +165,9 @@ struct _GstSplitMuxSink
 
   gboolean need_async_start;
   gboolean async_pending;
+
+  gboolean use_robust_muxing;
+  gboolean muxer_has_reserved_props;
 };
 
 struct _GstSplitMuxSinkClass

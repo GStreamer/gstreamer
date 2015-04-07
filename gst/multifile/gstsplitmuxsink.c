@@ -79,6 +79,7 @@ enum
   PROP_SEND_KEYFRAME_REQUESTS,
   PROP_MAX_FILES,
   PROP_MUXER_OVERHEAD,
+  PROP_USE_ROBUST_MUXING,
   PROP_ALIGNMENT_THRESHOLD,
   PROP_MUXER,
   PROP_SINK
@@ -92,6 +93,7 @@ enum
 #define DEFAULT_ALIGNMENT_THRESHOLD 0
 #define DEFAULT_MUXER "mp4mux"
 #define DEFAULT_SINK "filesink"
+#define DEFAULT_USE_ROBUST_MUXING FALSE
 
 enum
 {
@@ -268,6 +270,17 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
           "The sink element (or element chain) to use (NULL = default filesink)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_USE_ROBUST_MUXING,
+      g_param_spec_boolean ("use-robust-muxing",
+          "Support robust-muxing mode of some muxers",
+          "Check if muxers support robust muxing via the reserved-max-duration and "
+          "reserved-duration-remaining properties and use them if so. "
+          "(Only present on qtmux and mp4mux for now). splitmuxsink may then also "
+          " create new fragments if the reserved header space is about to overflow. "
+          "Note this does not set reserved-moov-update-period - apps should do that manually",
+          DEFAULT_USE_ROBUST_MUXING,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstSplitMuxSink::format-location:
    * @splitmux: the #GstSplitMuxSink
@@ -309,6 +322,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->send_keyframe_requests = DEFAULT_SEND_KEYFRAME_REQUESTS;
   splitmux->next_max_tc_time = GST_CLOCK_TIME_NONE;
   splitmux->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
+  splitmux->use_robust_muxing = DEFAULT_USE_ROBUST_MUXING;
 
   splitmux->threshold_timecode_str = NULL;
 
@@ -370,6 +384,41 @@ gst_splitmux_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/*
+ * Set any time threshold to the muxer, if it has
+ * reserved-max-duration and reserved-duration-remaining
+ * properties. Called when creating/claiming the muxer
+ * in create_elements() */
+static void
+update_muxer_properties (GstSplitMuxSink * sink)
+{
+  GObjectClass *klass;
+  GstClockTime threshold_time;
+
+  sink->muxer_has_reserved_props = FALSE;
+  if (sink->muxer == NULL)
+    return;
+  klass = G_OBJECT_GET_CLASS (sink->muxer);
+  if (g_object_class_find_property (klass, "reserved-max-duration") == NULL)
+    return;
+  if (g_object_class_find_property (klass,
+          "reserved-duration-remaining") == NULL)
+    return;
+  sink->muxer_has_reserved_props = TRUE;
+
+  GST_LOG_OBJECT (sink, "Setting muxer reserved time to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (sink->threshold_time));
+  GST_OBJECT_LOCK (sink);
+  threshold_time = sink->threshold_time;
+  GST_OBJECT_UNLOCK (sink);
+
+  if (threshold_time > 0) {
+    /* Tell the muxer how much space to reserve */
+    GstClockTime muxer_threshold = threshold_time;
+    g_object_set (sink->muxer, "reserved-max-duration", muxer_threshold, NULL);
+  }
+}
+
 static void
 gst_splitmux_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -413,6 +462,13 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (splitmux);
       splitmux->mux_overhead = g_value_get_double (value);
       GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_USE_ROBUST_MUXING:
+      GST_OBJECT_LOCK (splitmux);
+      splitmux->use_robust_muxing = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (splitmux);
+      if (splitmux->use_robust_muxing)
+        update_muxer_properties (splitmux);
       break;
     case PROP_ALIGNMENT_THRESHOLD:
       GST_OBJECT_LOCK (splitmux);
@@ -481,6 +537,11 @@ gst_splitmux_sink_get_property (GObject * object, guint prop_id,
     case PROP_MUXER_OVERHEAD:
       GST_OBJECT_LOCK (splitmux);
       g_value_set_double (value, splitmux->mux_overhead);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_USE_ROBUST_MUXING:
+      GST_OBJECT_LOCK (splitmux);
+      g_value_set_boolean (value, splitmux->use_robust_muxing);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_ALIGNMENT_THRESHOLD:
@@ -1181,6 +1242,64 @@ ctx_set_unblock (MqStreamCtx * ctx)
   ctx->need_unblock = TRUE;
 }
 
+static gboolean
+need_new_fragment (GstSplitMuxSink * splitmux,
+    GstClockTime queued_time, GstClockTime queued_gop_time,
+    guint64 queued_bytes)
+{
+  guint64 thresh_bytes;
+  GstClockTime thresh_time;
+  gboolean check_robust_muxing;
+
+  GST_OBJECT_LOCK (splitmux);
+  thresh_bytes = splitmux->threshold_bytes;
+  thresh_time = splitmux->threshold_time;
+  check_robust_muxing = splitmux->use_robust_muxing
+      && splitmux->muxer_has_reserved_props;
+  GST_OBJECT_UNLOCK (splitmux);
+
+  /* Have we muxed anything into the new file at all? */
+  if (splitmux->fragment_total_bytes <= 0)
+    return FALSE;
+
+  if (thresh_bytes > 0 && queued_bytes >= thresh_bytes)
+    return TRUE;                /* Would overrun byte limit */
+
+  if (thresh_time > 0 && queued_time >= thresh_time)
+    return TRUE;                /* Would overrun byte limit */
+
+  /* Timecode-based threshold accounts for possible rounding errors:
+   * 5us should be bigger than all possible rounding errors but nowhere near
+   * big enough to skip to another frame */
+  if (splitmux->next_max_tc_time != GST_CLOCK_TIME_NONE &&
+      splitmux->reference_ctx->in_running_time >
+      splitmux->next_max_tc_time + 5 * GST_USECOND)
+    return TRUE;                /* Timecode threshold */
+
+  if (check_robust_muxing) {
+    GstClockTime mux_reserved_remain;
+
+    g_object_get (splitmux->muxer,
+        "reserved-duration-remaining", &mux_reserved_remain, NULL);
+
+    GST_LOG_OBJECT (splitmux,
+        "Muxer robust muxing report - %" G_GUINT64_FORMAT
+        " remaining. New GOP would enqueue %" G_GUINT64_FORMAT,
+        mux_reserved_remain, queued_gop_time);
+
+    if (queued_gop_time >= mux_reserved_remain) {
+      GST_INFO_OBJECT (splitmux,
+          "File is about to run out of header room - %" G_GUINT64_FORMAT
+          " remaining. New GOP would enqueue %" G_GUINT64_FORMAT
+          ". Switching to new file", mux_reserved_remain, queued_gop_time);
+      return TRUE;
+    }
+  }
+
+  /* Continue and mux this GOP */
+  return FALSE;
+}
+
 /* Called with splitmux lock held */
 /* Called when entering ProcessingCompleteGop state
  * Assess if mq contents overflowed the current file
@@ -1193,6 +1312,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
 {
   guint64 queued_bytes;
   GstClockTimeDiff queued_time = 0;
+  GstClockTimeDiff queued_gop_time = 0;
   GstClockTimeDiff new_out_ts = splitmux->reference_ctx->in_running_time;
   SplitMuxOutputCommand *cmd;
 
@@ -1204,12 +1324,24 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
    * stream cut-off anyway - so it forms the limit. */
   queued_bytes = splitmux->fragment_total_bytes + splitmux->gop_total_bytes;
   queued_time = splitmux->reference_ctx->in_running_time;
+  /* queued_gop_time tracks how much unwritten data there is waiting to
+   * be written to this fragment including this GOP */
+  if (splitmux->reference_ctx->out_running_time != GST_CLOCK_STIME_NONE)
+    queued_gop_time =
+        splitmux->reference_ctx->in_running_time -
+        splitmux->reference_ctx->out_running_time;
+  else
+    queued_gop_time =
+        splitmux->reference_ctx->in_running_time - splitmux->gop_start_time;
 
   GST_LOG_OBJECT (splitmux, " queued_bytes %" G_GUINT64_FORMAT, queued_bytes);
 
+  g_assert (queued_gop_time >= 0);
   g_assert (queued_time >= splitmux->fragment_start_time);
 
   queued_time -= splitmux->fragment_start_time;
+  if (queued_time < queued_gop_time)
+    queued_gop_time = queued_time;
 
   /* Expand queued bytes estimate by muxer overhead */
   queued_bytes += (queued_bytes * splitmux->mux_overhead);
@@ -1225,18 +1357,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
 
   /* Check for overrun - have we output at least one byte and overrun
    * either threshold? */
-  /* Timecode-based threshold accounts for possible rounding errors:
-   * 5us should be bigger than all possible rounding errors but nowhere near
-   * big enough to skip to another frame */
-  if ((splitmux->fragment_total_bytes > 0 &&
-          ((splitmux->threshold_bytes > 0 &&
-                  queued_bytes > splitmux->threshold_bytes) ||
-              (splitmux->threshold_time > 0 &&
-                  queued_time > splitmux->threshold_time) ||
-              (splitmux->next_max_tc_time != GST_CLOCK_TIME_NONE &&
-                  splitmux->reference_ctx->in_running_time >
-                  splitmux->next_max_tc_time + 5 * GST_USECOND)))) {
-
+  if (need_new_fragment (splitmux, queued_time, queued_gop_time, queued_bytes)) {
     /* Tell the output side to start a new fragment */
     GST_INFO_OBJECT (splitmux,
         "This GOP (dur %" GST_STIME_FORMAT
@@ -2002,6 +2123,10 @@ create_muxer (GstSplitMuxSink * splitmux)
 
       splitmux->muxer = provided_muxer;
       gst_object_unref (provided_muxer);
+    }
+
+    if (splitmux->use_robust_muxing) {
+      update_muxer_properties (splitmux);
     }
   }
 
