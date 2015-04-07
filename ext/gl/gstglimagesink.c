@@ -952,6 +952,13 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         gst_gl_window_set_draw_callback (window, NULL, NULL, NULL);
         gst_gl_window_set_close_callback (window, NULL, NULL, NULL);
 
+        if (glimage_sink->key_sig_id)
+          g_signal_handler_disconnect (window, glimage_sink->key_sig_id);
+        glimage_sink->key_sig_id = 0;
+        if (glimage_sink->mouse_sig_id)
+          g_signal_handler_disconnect (window, glimage_sink->mouse_sig_id);
+        glimage_sink->mouse_sig_id = 0;
+
         gst_object_unref (window);
         gst_object_unref (glimage_sink->context);
         glimage_sink->context = NULL;
