@@ -2382,7 +2382,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   guint64 chunk_offset;
   gint64 last_dts, scaled_duration;
   gint64 pts_offset = 0;
-  gboolean sync = FALSE, do_pts = FALSE;
+  gboolean sync = FALSE;
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (!pad->fourcc)
@@ -2570,7 +2570,6 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   }
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (last_buf))) {
-    do_pts = TRUE;
     last_dts = gst_util_uint64_scale_round (GST_BUFFER_DTS (last_buf),
         atom_trak_get_timescale (pad->trak), GST_SECOND);
     pts_offset =
@@ -2579,7 +2578,6 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   } else {
     pts_offset = 0;
-    do_pts = TRUE;
     last_dts = gst_util_uint64_scale_round (GST_BUFFER_PTS (last_buf),
         atom_trak_get_timescale (pad->trak), GST_SECOND);
   }
@@ -2603,7 +2601,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   /* now we go and register this buffer/sample all over */
   ret = gst_qt_mux_register_and_push_sample (qtmux, pad, last_buf,
       buf == NULL, nsamples, last_dts, scaled_duration, sample_size,
-      chunk_offset, sync, do_pts, pts_offset);
+      chunk_offset, sync, TRUE, pts_offset);
 
   /* if this is sparse and we have a next buffer, check if there is any gap
    * between them to insert an empty sample */
@@ -2626,7 +2624,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       ret =
           gst_qt_mux_register_and_push_sample (qtmux, pad, empty_buf, FALSE, 1,
           last_dts + scaled_duration, empty_duration_scaled,
-          gst_buffer_get_size (empty_buf), qtmux->mdat_size, sync, do_pts, 0);
+          gst_buffer_get_size (empty_buf), qtmux->mdat_size, sync, TRUE, 0);
     } else {
       /* our only case currently is tx3g subtitles, so there is no reason to fill this yet */
       g_assert_not_reached ();
