@@ -59,6 +59,9 @@ typedef enum
   GST_RTCP_TYPE_PSFB    = 206
 } GstRTCPType;
 
+/* FIXME 2.0: backwards compatibility define for enum typo */
+#define GST_RTCP_RTPFB_TYPE_RCTP_SR_REQ GST_RTCP_RTPFB_TYPE_RTCP_SR_REQ
+
 /**
  * GstRTCPFBType:
  * @GST_RTCP_FB_TYPE_INVALID: Invalid type
@@ -66,7 +69,7 @@ typedef enum
  * @GST_RTCP_RTPFB_TYPE_TMMBR: Temporary Maximum Media Stream Bit Rate Request
  * @GST_RTCP_RTPFB_TYPE_TMMBN: Temporary Maximum Media Stream Bit Rate
  *    Notification
- * @GST_RTCP_RTPFB_TYPE_RTCP_SR_SEQ: Request an SR packet for early
+ * @GST_RTCP_RTPFB_TYPE_RTCP_SR_REQ: Request an SR packet for early
  *    synchronization
  * @GST_RTCP_PSFB_TYPE_PLI: Picture Loss Indication
  * @GST_RTCP_PSFB_TYPE_SLI: Slice Loss Indication
@@ -89,7 +92,7 @@ typedef enum
   GST_RTCP_RTPFB_TYPE_TMMBR       = 3,
   GST_RTCP_RTPFB_TYPE_TMMBN       = 4,
   /* RTPFB types assigned in RFC 6051 */
-  GST_RTCP_RTPFB_TYPE_RCTP_SR_REQ = 5,
+  GST_RTCP_RTPFB_TYPE_RTCP_SR_REQ = 5,
   /* PSFB types */
   GST_RTCP_PSFB_TYPE_PLI          = 1,
   GST_RTCP_PSFB_TYPE_SLI          = 2,
