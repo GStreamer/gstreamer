@@ -351,7 +351,8 @@ ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
   /* inform the clip it's no longer in a layer */
   ges_clip_set_layer (clip, NULL);
   /* so neither in a timeline */
-  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), NULL);
+  if (layer->timeline)
+    ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), NULL);
 
   /* Remove our reference to the clip */
   gst_object_unref (clip);
@@ -686,7 +687,13 @@ ges_layer_get_timeline (GESLayer * layer)
 void
 ges_layer_set_timeline (GESLayer * layer, GESTimeline * timeline)
 {
+  GList *tmp;
+
   GST_DEBUG ("layer:%p, timeline:%p", layer, timeline);
+
+  for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
+    ges_timeline_element_set_timeline (tmp->data, timeline);
+  }
 
   layer->timeline = timeline;
 }
