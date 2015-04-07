@@ -112,7 +112,6 @@ on_sink_message (GstBus * bus, GstMessage * message, ProgramData * data)
 int
 main (int argc, char *argv[])
 {
-  gchar *filename = NULL;
   ProgramData *data = NULL;
   gchar *string = NULL;
   GstBus *bus = NULL;
@@ -130,7 +129,6 @@ main (int argc, char *argv[])
   string =
       g_strdup_printf
       ("audiotestsrc num-buffers=200 ! wavenc ! wavparse ! appsink name=testsink");
-  g_free (filename);
   data->source = gst_parse_launch (string, NULL);
   g_free (string);
 
