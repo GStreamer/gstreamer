@@ -2476,7 +2476,7 @@ AG_GST_CHECK_FEATURE(OPENEXR, [openexr library], openexr, [
 dnl *** openh264 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENH264, true)
 AG_GST_CHECK_FEATURE(OPENH264, [openh264 library], openh264, [
-  AG_GST_PKG_CHECK_MODULES(OPENH264, openh264)
+  AG_GST_PKG_CHECK_MODULES(OPENH264, openh264 >= 1.3.0)
 ])
 
 dnl *** OpenJPEG ***
