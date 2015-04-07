@@ -926,6 +926,9 @@ struct TestInputData
 
   /* When comparing ts, the input will be subtracted from this */
   gint64 ts_offset;
+  /* Due to DTS, the segment start might be shifted so this variable
+   * is used to vefity it */
+  gint64 expected_segment_start;
 
   GstPad *sinkpad;
 
@@ -936,6 +939,7 @@ static void
 test_input_data_init (struct TestInputData *data)
 {
   data->ts_offset = 0;
+  data->expected_segment_start = 0;
   data->srcpad = NULL;
   data->sinkpad = NULL;
   data->input = NULL;
@@ -1050,7 +1054,6 @@ _test_sink_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:
-    case GST_EVENT_SEGMENT:
     case GST_EVENT_CAPS:
     case GST_EVENT_EOS:
       fail_unless (test_data->output_iter);
@@ -1058,6 +1061,16 @@ _test_sink_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       compare_event (event, test_data->output_iter->data);
       test_data->output_iter = g_list_next (test_data->output_iter);
       break;
+    case GST_EVENT_SEGMENT:{
+      const GstSegment *segment;
+
+      fail_unless (test_data->output_iter);
+      fail_unless (GST_IS_EVENT (test_data->output_iter->data));
+      gst_event_parse_segment (event, &segment);
+      fail_unless (segment->start == test_data->expected_segment_start);
+      test_data->output_iter = g_list_next (test_data->output_iter);
+      break;
+    }
     case GST_EVENT_TAG:
       /* ignore this event */
       break;
@@ -1380,6 +1393,70 @@ GST_START_TEST (test_muxing_non_zero_segment_different)
 
 GST_END_TEST;
 
+GST_START_TEST (test_muxing_dts_outside_segment)
+{
+  struct TestInputData input1, input2;
+  GstCaps *caps;
+
+  test_input_data_init (&input1);
+  test_input_data_init (&input2);
+
+  /* Create the inputs, after calling the run below, all this data is
+   * transfered to it and we have no need to clean up */
+  input1.input = NULL;
+  input1.input =
+      g_list_append (input1.input, gst_event_new_stream_start ("test-1"));
+  caps = gst_caps_from_string
+      ("video/x-h264, width=(int)800, height=(int)600, "
+      "framerate=(fraction)1/1, stream-format=(string)avc, codec_data=(buffer)0000,"
+      " alignment=(string)au, level=(int)2, profile=(string)high");
+  input1.input = g_list_append (input1.input, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  gst_segment_init (&input1.segment, GST_FORMAT_TIME);
+  input1.segment.start = 1 * GST_SECOND;
+  input1.input =
+      g_list_append (input1.input, gst_event_new_segment (&input1.segment));
+  input1.input =
+      g_list_append (input1.input, create_buffer (1 * GST_SECOND,
+          0, GST_SECOND, 4096));
+  input1.input =
+      g_list_append (input1.input, create_buffer (2 * GST_SECOND,
+          1 * GST_SECOND, GST_SECOND, 4096));
+  input1.input =
+      g_list_append (input1.input, create_buffer (3 * GST_SECOND,
+          2 * GST_SECOND, GST_SECOND, 4096));
+  input1.input = g_list_append (input1.input, gst_event_new_eos ());
+  /* First DTS is 0, first PTS is 1s, so the output segment should
+   * start from 1s to have the first running time == 0 */
+  input1.expected_segment_start = GST_SECOND;
+
+  input2.input = NULL;
+  input2.input =
+      g_list_append (input2.input, gst_event_new_stream_start ("test-2"));
+  caps = gst_caps_from_string
+      ("audio/mpeg, rate=(int)44100, channels=(int)1, mpegversion=(int)4, "
+      "stream-format=(string)raw, framed=(boolean)true");
+  input2.input = g_list_append (input2.input, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  gst_segment_init (&input2.segment, GST_FORMAT_TIME);
+  input2.input =
+      g_list_append (input2.input, gst_event_new_segment (&input2.segment));
+  input2.input =
+      g_list_append (input2.input, create_buffer (0, 0, GST_SECOND,
+          44100 * 4 * 2));
+  input2.input =
+      g_list_append (input2.input, create_buffer (GST_SECOND, GST_SECOND,
+          GST_SECOND, 44100 * 4 * 2));
+  input2.input =
+      g_list_append (input2.input, create_buffer (2 * GST_SECOND,
+          2 * GST_SECOND, GST_SECOND, 44100 * 4 * 2));
+  input2.input = g_list_append (input2.input, gst_event_new_eos ());
+
+  run_muxing_test (&input1, &input2);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtmux_suite (void)
 {
@@ -1420,6 +1497,7 @@ qtmux_suite (void)
   tcase_add_test (tc_chain, test_muxing);
   tcase_add_test (tc_chain, test_muxing_non_zero_segment);
   tcase_add_test (tc_chain, test_muxing_non_zero_segment_different);
+  tcase_add_test (tc_chain, test_muxing_dts_outside_segment);
 
   return s;
 }
