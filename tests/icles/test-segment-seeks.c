@@ -37,6 +37,7 @@ main (int argc, char **argv)
   GstMessage *msg;
   gchar *uri;
   gint64 dur, start, stop;
+  gboolean prerolled = FALSE;
 
   if (argc < 2) {
     g_printerr ("Usage: %s FILENAME\n", argv[0]);
@@ -74,6 +75,7 @@ main (int argc, char **argv)
       GST_CLOCK_TIME_NONE, GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
 
   g_assert (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ERROR);
+  prerolled = TRUE;
 
   gst_message_unref (msg);
 
@@ -86,11 +88,14 @@ main (int argc, char **argv)
   do {
     GstSeekFlags seek_flags;
     gboolean ret;
+    gboolean segment_done = FALSE;
 
     seek_flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_SEGMENT;
 
-    if (start == 0)
+    if (start == 0) {
+      prerolled = FALSE;
       seek_flags |= GST_SEEK_FLAG_FLUSH;
+    }
 
     stop = start + SEGMENT_DURATION;
 
@@ -102,24 +107,34 @@ main (int argc, char **argv)
 
     g_assert (ret);
 
-    if (start == 0) {
-      /* wait for preroll again */
-      msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (playbin),
-          GST_CLOCK_TIME_NONE, GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
+    if (!prerolled) {
+      while (!prerolled) {
+        /* wait for preroll again */
+        msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (playbin),
+            GST_CLOCK_TIME_NONE, GST_MESSAGE_SEGMENT_DONE |
+            GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
 
-      g_assert (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ERROR);
-      gst_message_unref (msg);
+        g_assert (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ERROR);
+        if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_SEGMENT_DONE) {
+          segment_done = TRUE;
+        } else {
+          prerolled = TRUE;
+        }
+        gst_message_unref (msg);
+      }
 
       gst_element_set_state (playbin, GST_STATE_PLAYING);
     }
 
-    /* wait for end of segment */
-    msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (playbin),
-        GST_CLOCK_TIME_NONE, GST_MESSAGE_SEGMENT_DONE | GST_MESSAGE_ERROR);
+    /* wait for end of segment if we didn't get it above already */
+    if (!segment_done) {
+      msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (playbin),
+          GST_CLOCK_TIME_NONE, GST_MESSAGE_SEGMENT_DONE | GST_MESSAGE_ERROR);
 
-    g_assert (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ERROR);
+      g_assert (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ERROR);
 
-    gst_message_unref (msg);
+      gst_message_unref (msg);
+    }
 
     start = stop;
   }
