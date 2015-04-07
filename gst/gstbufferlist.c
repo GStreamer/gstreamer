@@ -274,7 +274,7 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
  *
  * Returns: (transfer none) (nullable): the buffer at @idx in @group
  *     or %NULL when there is no buffer. The buffer remains valid as
- *     long as @list is valid.
+ *     long as @list is valid and buffer is not removed from the list.
  */
 GstBuffer *
 gst_buffer_list_get (GstBufferList * list, guint idx)
