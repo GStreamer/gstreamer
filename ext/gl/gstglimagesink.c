@@ -1580,8 +1580,12 @@ gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
 
   window = gst_gl_context_get_window (gl_sink->context);
 
-  g_signal_handler_disconnect (window, gl_sink->key_sig_id);
-  g_signal_handler_disconnect (window, gl_sink->mouse_sig_id);
+  if (gl_sink->key_sig_id)
+    g_signal_handler_disconnect (window, gl_sink->key_sig_id);
+  gl_sink->key_sig_id = 0;
+  if (gl_sink->mouse_sig_id)
+    g_signal_handler_disconnect (window, gl_sink->mouse_sig_id);
+  gl_sink->mouse_sig_id = 0;
 
   g_atomic_int_set (&gl_sink->to_quit, 1);
 
