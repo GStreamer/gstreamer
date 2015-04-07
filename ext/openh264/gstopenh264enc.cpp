@@ -38,6 +38,7 @@
 #include <wels/codec_api.h>
 #include <wels/codec_app_def.h>
 #include <wels/codec_def.h>
+#include <wels/codec_ver.h>
 
 #define GST_OPENH264ENC_GET_PRIVATE(obj) \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_OPENH264ENC, GstOpenh264EncPrivate))
@@ -682,7 +683,11 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
       openh264enc->priv->scene_change_detection;
   enc_params.bEnableFrameSkip = openh264enc->priv->enable_frame_skip;
   enc_params.bEnableLongTermReference = 0;
+#if OPENH264_MINOR >= 4
+  enc_params.eSpsPpsIdStrategy = CONSTANT_ID;
+#else
   enc_params.bEnableSpsPpsIdAddition = 1;
+#endif
   enc_params.bPrefixNalAddingCtrl = 0;
   enc_params.fMaxFrameRate = fps_n * 1.0 / fps_d;
   enc_params.iLoopFilterDisableIdc = openh264enc->priv->deblocking_mode;
