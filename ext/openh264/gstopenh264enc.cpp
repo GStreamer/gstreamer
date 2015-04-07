@@ -104,14 +104,14 @@ gst_openh264enc_deblocking_mode_get_type (void)
         "Deblocking on, except for slice boundaries", "not-slice-boundaries"},
     {0, NULL, NULL},
   };
-  static volatile GType id = 0;
+  static gsize id = 0;
 
-  if (g_once_init_enter ((gsize *) & id)) {
+  if (g_once_init_enter (& id)) {
     GType _id = g_enum_register_static ("GstOpenh264encDeblockingModes", types);
-    g_once_init_leave ((gsize *) & id, _id);
+    g_once_init_leave (& id, _id);
   }
 
-  return id;
+  return (GType) id;
 }
 
 #define GST_TYPE_OPENH264ENC_SLICE_MODE (gst_openh264enc_slice_mode_get_type ())
@@ -123,14 +123,14 @@ gst_openh264enc_slice_mode_get_type (void)
     {SM_AUTO_SLICE, "Number of slices equal to number of threads", "auto"},
     {0, NULL, NULL},
   };
-  static volatile GType id = 0;
+  static gsize id = 0;
 
-  if (g_once_init_enter ((gsize *) & id)) {
+  if (g_once_init_enter (& id)) {
     GType _id = g_enum_register_static ("GstOpenh264encSliceModes", types);
-    g_once_init_leave ((gsize *) & id, _id);
+    g_once_init_leave (& id, _id);
   }
 
-  return id;
+  return (GType) id;
 }
 
 /* prototypes */
