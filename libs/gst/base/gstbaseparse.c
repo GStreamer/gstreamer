@@ -1137,6 +1137,9 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
         gst_base_parse_drain (parse);
       else
         gst_base_parse_finish_fragment (parse, FALSE);
+      /* Also forward event immediately, there might be no new data
+       * coming afterwards that would allow us to forward it later */
+      forward_immediate = TRUE;
       break;
 
     case GST_EVENT_FLUSH_START:
