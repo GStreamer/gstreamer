@@ -1071,6 +1071,25 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       event = NULL;
       break;
     }
+    case GST_EVENT_SEGMENT_DONE:
+    {
+      GstFlowReturn flow_ret = GST_FLOW_OK;
+
+      flow_ret = gst_video_decoder_drain_out (decoder, TRUE);
+      ret = (flow_ret == GST_FLOW_OK);
+
+      /* Forward SEGMENT_DONE immediately. This is required
+       * because no buffer or serialized event might come
+       * after SEGMENT_DONE and nothing could trigger another
+       * _finish_frame() call.
+       *
+       * The subclass can override this behaviour by overriding
+       * the ::sink_event() vfunc and not chaining up to the
+       * parent class' ::sink_event() until a later time.
+       */
+      forward_immediate = TRUE;
+      break;
+    }
     case GST_EVENT_EOS:
     {
       GstFlowReturn flow_ret = GST_FLOW_OK;

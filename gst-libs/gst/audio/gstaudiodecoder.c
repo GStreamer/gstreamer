@@ -2156,6 +2156,18 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       ret = gst_audio_decoder_push_event (dec, event);
       break;
 
+    case GST_EVENT_SEGMENT_DONE:
+      GST_AUDIO_DECODER_STREAM_LOCK (dec);
+      gst_audio_decoder_drain (dec);
+      GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
+      /* Forward SEGMENT_DONE because no buffer or serialized event might come after
+       * SEGMENT_DONE and nothing could trigger another _finish_frame() call. */
+      if (dec->priv->pending_events)
+        send_pending_events (dec);
+      ret = gst_audio_decoder_push_event (dec, event);
+      break;
+
     case GST_EVENT_EOS:
       GST_AUDIO_DECODER_STREAM_LOCK (dec);
       gst_audio_decoder_drain (dec);
