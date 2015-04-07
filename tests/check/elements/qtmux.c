@@ -924,6 +924,9 @@ struct TestInputData
   GList *input;
   GThread *thread;
 
+  /* When comparing ts, the input will be subtracted from this */
+  gint64 ts_offset;
+
   GstPad *sinkpad;
 
   GList *output_iter;
@@ -932,6 +935,7 @@ struct TestInputData
 static void
 test_input_data_init (struct TestInputData *data)
 {
+  data->ts_offset = 0;
   data->srcpad = NULL;
   data->sinkpad = NULL;
   data->input = NULL;
@@ -1003,11 +1007,16 @@ _test_sink_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   fail_unless (GST_IS_BUFFER (test_data->output_iter->data));
   expected_buffer = test_data->output_iter->data;
 
-  fail_unless (GST_BUFFER_PTS (buffer) == GST_BUFFER_PTS (expected_buffer));
-  fail_unless (GST_BUFFER_DTS (buffer) == GST_BUFFER_DTS (expected_buffer));
+  fail_unless (GST_BUFFER_PTS (buffer) ==
+      (GST_BUFFER_PTS_IS_VALID (expected_buffer) ?
+          GST_BUFFER_PTS (expected_buffer) -
+          test_data->ts_offset : GST_BUFFER_PTS (expected_buffer)));
+  fail_unless (GST_BUFFER_DTS (buffer) ==
+      (GST_BUFFER_DTS_IS_VALID (expected_buffer) ?
+          GST_BUFFER_DTS (expected_buffer) -
+          test_data->ts_offset : GST_BUFFER_DTS (buffer)));
   fail_unless (GST_BUFFER_DURATION (buffer) ==
       GST_BUFFER_DURATION (expected_buffer));
-
 
   test_data->output_iter = g_list_next (test_data->output_iter);
 
@@ -1053,6 +1062,7 @@ _test_sink_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* ignore this event */
       break;
     default:
+      GST_ERROR_OBJECT (pad, "Unexpected event: %" GST_PTR_FORMAT, event);
       fail ("Unexpected event received %s", GST_EVENT_TYPE_NAME (event));
       break;
   }
@@ -1242,6 +1252,134 @@ GST_START_TEST (test_muxing)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_muxing_non_zero_segment)
+{
+  struct TestInputData input1, input2;
+  GstCaps *caps;
+
+  test_input_data_init (&input1);
+  test_input_data_init (&input2);
+
+  /* Create the inputs, after calling the run below, all this data is
+   * transfered to it and we have no need to clean up */
+  input1.input = NULL;
+  input1.input =
+      g_list_append (input1.input, gst_event_new_stream_start ("test-1"));
+  caps = gst_caps_from_string
+      ("video/x-raw, width=(int)800, height=(int)600, "
+      "framerate=(fraction)1/1, format=(string)RGB");
+  input1.input = g_list_append (input1.input, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  gst_segment_init (&input1.segment, GST_FORMAT_TIME);
+  input1.segment.start = 10 * GST_SECOND;
+  input1.input =
+      g_list_append (input1.input, gst_event_new_segment (&input1.segment));
+  input1.input =
+      g_list_append (input1.input, create_buffer (10 * GST_SECOND,
+          GST_CLOCK_TIME_NONE, GST_SECOND, 800 * 600 * 3));
+  input1.input =
+      g_list_append (input1.input, create_buffer (11 * GST_SECOND,
+          GST_CLOCK_TIME_NONE, GST_SECOND, 800 * 600 * 3));
+  input1.input =
+      g_list_append (input1.input, create_buffer (12 * GST_SECOND,
+          GST_CLOCK_TIME_NONE, GST_SECOND, 800 * 600 * 3));
+  input1.input = g_list_append (input1.input, gst_event_new_eos ());
+  input1.ts_offset = GST_SECOND * 10;
+
+  input2.input = NULL;
+  input2.input =
+      g_list_append (input2.input, gst_event_new_stream_start ("test-2"));
+  caps = gst_caps_from_string
+      ("audio/mpeg, rate=(int)44100, channels=(int)1, mpegversion=(int)4, "
+      "stream-format=(string)raw, framed=(boolean)true");
+  input2.input = g_list_append (input2.input, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  gst_segment_init (&input2.segment, GST_FORMAT_TIME);
+  input2.segment.start = 10 * GST_SECOND;
+  input2.input =
+      g_list_append (input2.input, gst_event_new_segment (&input2.segment));
+  input2.input =
+      g_list_append (input2.input, create_buffer (10 * GST_SECOND,
+          10 * GST_SECOND, GST_SECOND, 4096));
+  input2.input =
+      g_list_append (input2.input, create_buffer (11 * GST_SECOND,
+          11 * GST_SECOND, GST_SECOND, 4096));
+  input2.input =
+      g_list_append (input2.input, create_buffer (12 * GST_SECOND,
+          12 * GST_SECOND, GST_SECOND, 4096));
+  input2.input = g_list_append (input2.input, gst_event_new_eos ());
+  input2.ts_offset = GST_SECOND * 10;
+
+  run_muxing_test (&input1, &input2);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_muxing_non_zero_segment_different)
+{
+  struct TestInputData input1, input2;
+  GstCaps *caps;
+
+  test_input_data_init (&input1);
+  test_input_data_init (&input2);
+
+  /* Create the inputs, after calling the run below, all this data is
+   * transfered to it and we have no need to clean up */
+  input1.input = NULL;
+  input1.input =
+      g_list_append (input1.input, gst_event_new_stream_start ("test-1"));
+  caps = gst_caps_from_string
+      ("video/x-raw, width=(int)800, height=(int)600, "
+      "framerate=(fraction)1/1, format=(string)RGB");
+  input1.input = g_list_append (input1.input, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  gst_segment_init (&input1.segment, GST_FORMAT_TIME);
+  input1.segment.start = 5 * GST_SECOND;
+  input1.input =
+      g_list_append (input1.input, gst_event_new_segment (&input1.segment));
+  input1.input =
+      g_list_append (input1.input, create_buffer (5 * GST_SECOND,
+          GST_CLOCK_TIME_NONE, GST_SECOND, 800 * 600 * 3));
+  input1.input =
+      g_list_append (input1.input, create_buffer (6 * GST_SECOND,
+          GST_CLOCK_TIME_NONE, GST_SECOND, 800 * 600 * 3));
+  input1.input =
+      g_list_append (input1.input, create_buffer (7 * GST_SECOND,
+          GST_CLOCK_TIME_NONE, GST_SECOND, 800 * 600 * 3));
+  input1.input = g_list_append (input1.input, gst_event_new_eos ());
+  input1.ts_offset = GST_SECOND * 5;
+
+  input2.input = NULL;
+  input2.input =
+      g_list_append (input2.input, gst_event_new_stream_start ("test-2"));
+  caps = gst_caps_from_string
+      ("audio/mpeg, rate=(int)44100, channels=(int)1, mpegversion=(int)4, "
+      "stream-format=(string)raw, framed=(boolean)true");
+  input2.input = g_list_append (input2.input, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  gst_segment_init (&input2.segment, GST_FORMAT_TIME);
+  input2.segment.start = 10 * GST_SECOND;
+  input2.input =
+      g_list_append (input2.input, gst_event_new_segment (&input2.segment));
+  input2.input =
+      g_list_append (input2.input, create_buffer (10 * GST_SECOND,
+          10 * GST_SECOND, GST_SECOND, 4096));
+  input2.input =
+      g_list_append (input2.input, create_buffer (11 * GST_SECOND,
+          11 * GST_SECOND, GST_SECOND, 4096));
+  input2.input =
+      g_list_append (input2.input, create_buffer (12 * GST_SECOND,
+          12 * GST_SECOND, GST_SECOND, 4096));
+  input2.input = g_list_append (input2.input, gst_event_new_eos ());
+  input2.ts_offset = GST_SECOND * 10;
+
+  run_muxing_test (&input1, &input2);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtmux_suite (void)
 {
@@ -1280,6 +1418,8 @@ qtmux_suite (void)
   tcase_add_test (tc_chain, test_encodebin_mp4mux);
 
   tcase_add_test (tc_chain, test_muxing);
+  tcase_add_test (tc_chain, test_muxing_non_zero_segment);
+  tcase_add_test (tc_chain, test_muxing_non_zero_segment_different);
 
   return s;
 }
