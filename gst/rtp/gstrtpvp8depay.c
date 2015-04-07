@@ -24,6 +24,8 @@
 
 #include "gstrtpvp8depay.h"
 
+#include <gst/video/video.h>
+
 #include <stdio.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_depay_debug);
@@ -189,8 +191,10 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
       if (!self->caps_sent) {
         gst_buffer_unref (out);
         out = NULL;
-        GST_WARNING_OBJECT (self, "Dropping inter-frame before intra-frame");
-
+        GST_INFO_OBJECT (self, "Dropping inter-frame before intra-frame");
+        gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (depay),
+            gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+                TRUE, 0));
       }
     } else {
       GstMapInfo info;
