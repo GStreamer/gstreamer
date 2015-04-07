@@ -1501,7 +1501,20 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 
   pa_operation_unref (o);
 
-  wanted.maxlength = -1;
+  /* There's a bit of a disconnect here between the audio ringbuffer and what
+   * PulseAudio provides. The audio ringbuffer provide a total of buffer_time
+   * worth of buffering, divided into segments of latency_time size. We're
+   * asking PulseAudio to provide a total latency of latency_time, which, with
+   * PA_STREAM_ADJUST_LATENCY, effectively sets itself up as a ringbuffer with
+   * one segment being the hardware buffer, and the other the software buffer.
+   * This segment size is returned as the fragsize.
+   *
+   * Since the two concepts don't map very well, what we do is keep segsize as
+   * it is (unless fragsize is even larger, in which case we use that). We'll
+   * get data from PulseAudio in smaller chunks than we want to pass on as an
+   * element, and we coalesce those chunks in the ringbuffer memory and pass it
+   * on in the expected chunk size. */
+  wanted.maxlength = spec->segsize * spec->segtotal;
   wanted.tlength = -1;
   wanted.prebuf = 0;
   wanted.minreq = -1;
@@ -1574,11 +1587,14 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   GST_INFO_OBJECT (pulsesrc, "fragsize:  %d (wanted %d)",
       actual->fragsize, wanted.fragsize);
 
-  if (actual->fragsize >= wanted.fragsize) {
+  if (actual->fragsize >= spec->segsize) {
     spec->segsize = actual->fragsize;
   } else {
-    spec->segsize = actual->fragsize * (wanted.fragsize / actual->fragsize);
+    /* fragsize is smaller than what we wanted, so let the read function
+     * coalesce the smaller chunks as they come in */
   }
+
+  /* Fix up the total ringbuffer size based on what we actually got */
   spec->segtotal = actual->maxlength / spec->segsize;
 
   if (!pulsesrc->paused) {
