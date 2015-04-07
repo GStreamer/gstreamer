@@ -128,6 +128,11 @@ main (int argc, char *argv[])
   else
     filename = g_strdup ("/usr/share/sounds/ekiga/ring.wav");
 
+  if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
+    g_print ("File %s does not exist\n", filename);
+    return -1;
+  }
+
   data = g_new0 (ProgramData, 1);
 
   data->loop = g_main_loop_new (NULL, FALSE);
