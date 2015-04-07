@@ -542,6 +542,10 @@ gst_core_audio_get_channel_layout (GstCoreAudio * core_audio, gboolean outer)
   return layout;
 }
 
+#define STEREO_CHANNEL_MASK \
+  (GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) | \
+   GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT))
+
 GstCaps *
 gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
 {
@@ -617,43 +621,27 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
         gst_structure_remove_field (out_s, "channel-mask");
       }
 
-      gst_caps_append_structure (caps, out_s);
-
       /* Special cases for upmixing and downmixing.
        * Other than that, the AUs don't upmix or downmix multi-channel audio,
        * e.g. if you push 5.1-surround audio to a stereo configuration,
        * the left and right channels will be played accordingly,
        * and the rest will be dropped. */
 
-      if (channels >= 2 &&
-          (channel_mask & GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT)) &&
-          (channel_mask & GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT))) {
+      if (channels == 1 || (channels == 2 &&
+              (channel_mask == 0 || channel_mask == STEREO_CHANNEL_MASK))) {
 
         /* If have stereo channels, then also offer mono since CoreAudio
-         * upmixes it */
+         * upmixes it. If mono, then also offer stereo since CoreAudio
+         * downmixes to it */
 
-        out_s = gst_structure_copy (out_s);
+        gst_structure_set (out_s, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
 
-        gst_structure_set (out_s, "channels", G_TYPE_INT, 1, NULL);
-        /* Mono has no channel-mask */
-        gst_structure_remove_field (out_s, "channel-mask");
-
-        gst_caps_append_structure (caps, out_s);
-
-      } else if (channels == 1 && channel_mask == 0) {
-
-        /* If mono, then also offer stereo since CoreAudio downmixes to it */
-
-        out_s = gst_structure_copy (out_s);
-
-        gst_structure_set (out_s,
-            "channels", G_TYPE_INT, 1,
-            "channel-mask", GST_TYPE_BITMASK,
-            GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
-            GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT), NULL);
-
-        gst_caps_append_structure (caps, out_s);
+        if (channels == 1)
+          gst_structure_set (out_s, "channel-mask", GST_TYPE_BITMASK,
+              STEREO_CHANNEL_MASK, NULL);
       }
+
+      gst_caps_append_structure (caps, out_s);
     }
   }
 
