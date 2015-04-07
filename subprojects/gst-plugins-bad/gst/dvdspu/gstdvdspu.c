@@ -739,7 +739,7 @@ gstspu_render_composition (GstDVDSpu * dvdspu)
   gint spu_w, spu_h;
   gsize size;
 
-  format = GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_YUV;
+  format = GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB;
 
   switch (dvdspu->spu_input_type) {
     case SPU_INPUT_TYPE_PGS:

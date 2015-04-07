@@ -39,19 +39,12 @@ struct SpuRect {
   gint16 bottom;
 };
 
-/* Store a pre-multiplied YUV colour value */
+/* Store a pre-multiplied ARGB colour value */
 struct SpuColour {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  guint8 B;
+  guint8 G;
+  guint8 R;
   guint8 A;
-  guint8 Y;
-  guint8 U;
-  guint8 V;
-#else
-  guint8 V;
-  guint8 U;
-  guint8 Y;
-  guint8 A;
-#endif
 };
 
 G_END_DECLS

@@ -319,9 +319,9 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
           memcpy (pix, colour, sizeof (*pix));
         } else {
           pix->A = colour->A;
-          pix->Y = colour->Y + pix->Y * inv_A / 255;
-          pix->U = colour->U + pix->U * inv_A / 255;
-          pix->V = colour->V + pix->V * inv_A / 255;
+          pix->R = colour->R + pix->R * inv_A / 255;
+          pix->G = colour->G + pix->G * inv_A / 255;
+          pix->B = colour->B + pix->B * inv_A / 255;
         }
       }
     } else {
@@ -513,6 +513,7 @@ parse_set_palette (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
     state->pgs.palette[i].A = 0;
   for (i = 0; i < n_entries; i++) {
     guint8 n, Y, U, V, A;
+    gint R, G, B;
     n = payload[0];
     Y = payload[1];
     V = payload[2];
@@ -521,15 +522,26 @@ parse_set_palette (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 
 #if DUMP_FULL_PALETTE
     PGS_DUMP ("Entry %3d: Y %3d U %3d V %3d A %3d  ", n, Y, U, V, A);
-    if (((i + 1) % 2) == 0)
-      PGS_DUMP ("\n");
+#endif
+
+    /* Convert to ARGB */
+    R = (298 * Y + 459 * V - 63514) >> 8;
+    G = (298 * Y - 55 * U - 136 * V + 19681) >> 8;
+    B = (298 * Y + 541 * U - 73988) >> 8;
+
+    R = CLAMP (R, 0, 255);
+    G = CLAMP (G, 0, 255);
+    B = CLAMP (B, 0, 255);
+
+#if DUMP_FULL_PALETTE
+    PGS_DUMP ("Entry %3d: A %3d R %3d G %3d B %3d\n", n, A, R, G, B);
 #endif
 
     /* Premultiply the palette entries by the alpha */
     state->pgs.palette[n].A = A;
-    state->pgs.palette[n].Y = Y * A / 255;
-    state->pgs.palette[n].U = U * A / 255;
-    state->pgs.palette[n].V = V * A / 255;
+    state->pgs.palette[n].R = R * A / 255;
+    state->pgs.palette[n].G = G * A / 255;
+    state->pgs.palette[n].B = B * A / 255;
 
     payload += PGS_PALETTE_ENTRY_SIZE;
   }
