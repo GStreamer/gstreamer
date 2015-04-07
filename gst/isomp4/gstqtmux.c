@@ -160,7 +160,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_qt_mux_debug);
  *   the mdat box at EOS.
  *
  * - Fragmented mp4: moov header with track headers at start
- *   but no sample table), followed by N fragments, each containing
+ *   but no sample table, followed by N fragments, each containing
  *   track headers with sample tables followed by some data. Downstream
  *   does not need to be seekable if the 'streamable' flag is TRUE,
  *   as the final mfra and total duration will be omitted.
