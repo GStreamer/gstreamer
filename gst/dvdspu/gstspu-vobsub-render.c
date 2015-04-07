@@ -40,29 +40,42 @@ gstspu_vobsub_recalc_palette (GstDVDSpu * dvdspu,
   if (state->vobsub.current_clut[idx[0]] != 0) {
     for (i = 0; i < 4; i++, dest++) {
       guint32 col = state->vobsub.current_clut[idx[i]];
+      gint A, Y, U, V;
+      gint R, G, B;
 
       /* Convert incoming 4-bit alpha to 8 bit for blending */
-      dest->A = (alpha[i] << 4) | alpha[i];
-      dest->Y = ((col >> 16) & 0xff) * dest->A / 255;
+      A = (alpha[i] << 4) | alpha[i];
+      Y = ((col >> 16) & 0xff);
       /* U/V are stored as V/U in the clut words, so switch them */
-      dest->V = ((col >> 8) & 0xff) * dest->A / 255;
-      dest->U = (col & 0xff) * dest->A / 255;
+      V = ((col >> 8) & 0xff);
+      U = (col & 0xff);
+
+      R = (298 * Y + 459 * V - 63514) >> 8;
+      G = (298 * Y - 55 * U - 136 * V + 19681) >> 8;
+      B = (298 * Y + 541 * U - 73988) >> 8;
+
+      R = CLAMP (R, 0, 255);
+      G = CLAMP (G, 0, 255);
+      B = CLAMP (B, 0, 255);
+
+      dest->A = A;
+      dest->R = R * A / 255;
+      dest->G = G * A / 255;
+      dest->B = B * A / 255;
     }
   } else {
-    int y = 240;
+    int c = 255;
 
     /* The CLUT presumably hasn't been set, so we'll just guess some
      * values for the non-transparent colors (white, grey, black) */
     for (i = 0; i < 4; i++, dest++) {
       dest->A = (alpha[i] << 4) | alpha[i];
       if (alpha[i] != 0) {
-        dest[0].Y = y * dest[0].A / 255;
-        y -= 112;
-        if (y < 0)
-          y = 0;
+        dest->R = dest->G = dest->B = c * dest->A / 255;
+        c -= 128;
+        if (c < 0)
+          c = 0;
       }
-      dest[0].U = 128 * dest[0].A / 255;
-      dest[0].V = 128 * dest[0].A / 255;
     }
   }
 }
@@ -173,7 +186,7 @@ gstspu_vobsub_draw_rle_run (SpuState * state, GstVideoFrame * frame,
     gint16 x, gint16 end, SpuColour * colour)
 {
   GST_TRACE ("Y: %d x: %d end %d %d %d %d %d",
-      state->vobsub.cur_Y, x, end, colour->Y, colour->U, colour->V, colour->A);
+      state->vobsub.cur_Y, x, end, colour->R, colour->G, colour->B, colour->A);
 
   if (colour->A > 0) {
     gint i;
@@ -194,9 +207,9 @@ gstspu_vobsub_draw_rle_run (SpuState * state, GstVideoFrame * frame,
         memcpy (pix, colour, sizeof (*pix));
       } else {
         pix->A = colour->A;
-        pix->Y = colour->Y + pix->Y * inv_A / 255;
-        pix->U = colour->U + pix->U * inv_A / 255;
-        pix->V = colour->V + pix->V * inv_A / 255;
+        pix->R = colour->R + pix->R * inv_A / 255;
+        pix->G = colour->G + pix->G * inv_A / 255;
+        pix->B = colour->B + pix->B * inv_A / 255;
       }
     }
 
