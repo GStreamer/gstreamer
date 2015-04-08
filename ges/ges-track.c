@@ -92,6 +92,7 @@ enum
   ARG_LAST,
   TRACK_ELEMENT_ADDED,
   TRACK_ELEMENT_REMOVED,
+  COMMITED,
   LAST_SIGNAL
 };
 
@@ -311,6 +312,13 @@ composition_duration_cb (GstElement * composition,
 
     g_object_notify_by_pspec (G_OBJECT (track), properties[ARG_DURATION]);
   }
+}
+
+static void
+composition_commited_cb (GstElement * composition, gboolean changed,
+    GESTrack * self)
+{
+  g_signal_emit (self, ges_track_signals[COMMITED], 0);
 }
 
 /* Internal */
@@ -621,6 +629,14 @@ ges_track_class_init (GESTrackClass * klass)
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
 
+  /**
+   * GESTrack::commited:
+   * @track: the #GESTrack
+   */
+  ges_track_signals[COMMITED] =
+      g_signal_new ("commited", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+
   klass->get_mixing_element = NULL;
 }
 
@@ -643,6 +659,8 @@ ges_track_init (GESTrack * self)
 
   g_signal_connect (G_OBJECT (self->priv->composition), "notify::duration",
       G_CALLBACK (composition_duration_cb), self);
+  g_signal_connect (G_OBJECT (self->priv->composition), "commited",
+      G_CALLBACK (composition_commited_cb), self);
 }
 
 /**

@@ -119,6 +119,7 @@ GstPad * ges_timeline_get_pad_for_track (GESTimeline * timeline, GESTrack *track
 GList *ges_timeline_get_tracks (GESTimeline *timeline);
 
 gboolean ges_timeline_commit (GESTimeline * timeline);
+gboolean ges_timeline_commit_sync (GESTimeline * timeline);
 
 GstClockTime ges_timeline_get_duration (GESTimeline *timeline);
 

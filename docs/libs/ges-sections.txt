@@ -364,6 +364,8 @@ ges_timeline_load_from_uri
 ges_timeline_save_to_uri
 ges_timeline_enable_update
 ges_timeline_is_updating
+ges_timeline_commit
+ges_timeline_commit_sync
 <SUBSECTION usage>
 ges_timeline_get_tracks
 ges_timeline_get_layer

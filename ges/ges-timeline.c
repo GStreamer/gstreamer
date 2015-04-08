@@ -190,7 +190,14 @@ struct _GESTimelinePrivate
 
   GHashTable *all_elements;
 
+  /* With GST_OBJECT_LOCK */
   guint expected_async_done;
+  /* With GST_OBJECT_LOCK */
+  guint expected_commited;
+
+  /* For ges_timeline_commit_sync */
+  GMutex commited_lock;
+  GCond commited_cond;
 };
 
 /* private structure to contain our track-related information */
@@ -589,6 +596,10 @@ ges_timeline_class_init (GESTimelineClass * klass)
   /**
    * GESTimeline::commited:
    * @timeline: the #GESTimeline
+   *
+   * This signal will be emitted once the changes initiated by #ges_timeline_commit
+   * have been executed in the backend. Use #ges_timeline_commit_sync if you
+   * don't need to do anything in the meantime.
    */
   ges_timeline_signals[COMMITED] =
       g_signal_new ("commited", G_TYPE_FROM_CLASS (klass),
@@ -610,6 +621,7 @@ ges_timeline_init (GESTimeline * self)
   self->priv->auto_transition = FALSE;
   priv->snapping_distance = 0;
   priv->expected_async_done = 0;
+  priv->expected_commited = 0;
 
   /* Move context initialization */
   init_movecontext (&self->priv->movecontext, TRUE);
@@ -639,6 +651,7 @@ ges_timeline_init (GESTimeline * self)
       G_CALLBACK (select_tracks_for_object_default), NULL);
 
   g_rec_mutex_init (&priv->dyn_mutex);
+  g_mutex_init (&priv->commited_lock);
 }
 
 /* Private methods */
@@ -3024,23 +3037,25 @@ ges_timeline_get_layers (GESTimeline * timeline)
   return res;
 }
 
-/**
- * ges_timeline_commit:
- * @timeline: a #GESTimeline
- *
- * Commits all the pending changes of the clips contained in the
- * @timeline.
- *
- * When timing changes happen in a timeline, the changes are not
- * directly done inside NLE. This method needs to be called so any changes
- * on a clip contained in the timeline actually happen at the media
- * processing level.
- *
- * Returns: %TRUE if something as been commited %FALSE if nothing needed
- * to be commited
- */
-gboolean
-ges_timeline_commit (GESTimeline * timeline)
+static void
+track_commited_cb (GESTrack * track, GESTimeline * timeline)
+{
+  gboolean emit_commited = FALSE;
+  GST_OBJECT_LOCK (timeline);
+  timeline->priv->expected_commited -= 1;
+  if (timeline->priv->expected_commited == 0)
+    emit_commited = TRUE;
+  g_signal_handlers_disconnect_by_func (track, track_commited_cb, timeline);
+  GST_OBJECT_UNLOCK (timeline);
+
+  if (emit_commited) {
+    g_signal_emit (timeline, ges_timeline_signals[COMMITED], 0);
+  }
+}
+
+/* Must be called with the timeline's DYN_LOCK */
+static gboolean
+ges_timeline_commit_unlocked (GESTimeline * timeline)
 {
   GList *tmp;
   gboolean res = TRUE;
@@ -3052,18 +3067,128 @@ ges_timeline_commit (GESTimeline * timeline)
         NULL, NULL, _find_transition_from_auto_transitions);
   }
 
-  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
-    if (!ges_track_commit (GES_TRACK (tmp->data)))
-      res = FALSE;
+  timeline->priv->expected_commited =
+      g_list_length (timeline->priv->priv_tracks);
+
+  if (timeline->priv->expected_commited == 0) {
+    g_signal_emit (timeline, ges_timeline_signals[COMMITED], 0);
+  } else {
+    for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+      g_signal_connect (tmp->data, "commited", G_CALLBACK (track_commited_cb),
+          timeline);
+      if (!ges_track_commit (GES_TRACK (tmp->data)))
+        res = FALSE;
+    }
   }
 
   /* Make sure we reset the context */
   timeline->priv->movecontext.needs_move_ctx = TRUE;
 
-  if (res)
-    g_signal_emit (timeline, ges_timeline_signals[COMMITED], 0);
-
   return res;
+}
+
+/**
+ * ges_timeline_commit:
+ * @timeline: a #GESTimeline
+ *
+ * Commit all the pending changes of the clips contained in the
+ * @timeline.
+ *
+ * When changes happen in a timeline, they are not
+ * directly executed in the non-linear engine. Call this method once you are
+ * done with a set of changes and want it to be executed.
+ *
+ * The GESTimeline::commited signal will be emitted when the (possibly updated)
+ * #GstPipeline is ready to output data again, except if the state of the
+ * timeline was #GST_STATE_READY or #GST_STATE_NULL.
+ *
+ * Note that all the pending changes will automatically be executed when the
+ * timeline goes from #GST_STATE_READY to #GST_STATE_PAUSED, which usually is
+ * triggered by corresponding state changes in a containing #GESPipeline.
+ *
+ * You should not try to change the state of the timeline, seek it or add
+ * tracks to it during a commit operation, that is between a call to this
+ * function and after receiving the GESTimeline::commited signal.
+ *
+ * See #ges_timeline_commit_sync if you don't want to bother with waiting
+ * for the signal.
+ *
+ * Returns: %TRUE if pending changes were commited or %FALSE if nothing needed
+ * to be commited
+ */
+gboolean
+ges_timeline_commit (GESTimeline * timeline)
+{
+  gboolean ret;
+
+  LOCK_DYN (timeline);
+  ret = ges_timeline_commit_unlocked (timeline);
+  UNLOCK_DYN (timeline);
+  return ret;
+}
+
+static void
+commited_cb (GESTimeline * timeline)
+{
+  g_mutex_lock (&timeline->priv->commited_lock);
+  g_cond_signal (&timeline->priv->commited_cond);
+  g_mutex_unlock (&timeline->priv->commited_lock);
+}
+
+/**
+ * ges_timeline_commit_sync:
+ * @timeline: a #GESTimeline
+ *
+ * Commit all the pending changes of the #GESClips contained in the
+ * @timeline.
+ *
+ * Will return once the update is complete, that is when the
+ * (possibly updated) #GstPipeline is ready to output data again, or if the
+ * state of the timeline was #GST_STATE_READY or #GST_STATE_NULL.
+ *
+ * This function will wait for any pending state change of the timeline by
+ * calling #gst_element_get_state with a #GST_CLOCK_TIME_NONE timeout, you
+ * should not try to change the state from another thread before this function
+ * has returned.
+ *
+ * See #ges_timeline_commit for more information.
+ *
+ * Returns: %TRUE if pending changes were commited or %FALSE if nothing needed
+ * to be commited
+ */
+gboolean
+ges_timeline_commit_sync (GESTimeline * timeline)
+{
+  gboolean ret;
+  gboolean wait_for_signal;
+
+  /* Let's make sure our state is stable */
+  gst_element_get_state (GST_ELEMENT (timeline), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+
+  /* Let's make sure no track gets added between now and the actual commiting */
+  LOCK_DYN (timeline);
+  wait_for_signal = g_list_length (timeline->priv->priv_tracks) > 0
+      && GST_STATE (timeline) >= GST_STATE_PAUSED;
+
+  if (!wait_for_signal) {
+    ret = ges_timeline_commit_unlocked (timeline);
+  } else {
+    gulong handler_id =
+        g_signal_connect (timeline, "commited", (GCallback) commited_cb, NULL);
+
+    g_mutex_lock (&timeline->priv->commited_lock);
+
+    ret = ges_timeline_commit_unlocked (timeline);
+    g_cond_wait (&timeline->priv->commited_cond,
+        &timeline->priv->commited_lock);
+    g_mutex_unlock (&timeline->priv->commited_lock);
+    g_signal_handler_disconnect (timeline, handler_id);
+  }
+
+  UNLOCK_DYN (timeline);
+
+  return ret;
 }
 
 /**
