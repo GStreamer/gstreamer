@@ -41,8 +41,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_GLX;
-
 static GstVaapiWindow *
 gst_vaapi_display_glx_create_window (GstVaapiDisplay * display, GstVaapiID id,
     guint width, guint height)
