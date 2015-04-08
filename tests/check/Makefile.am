@@ -1,6 +1,6 @@
 include $(top_srcdir)/common/check.mak
 
-TESTS_ENVIRONMENT = 
+AM_TESTS_ENVIRONMENT = 
 
 plugindir = $(libdir)/gstreamer-@GST_API_VERSION@
 
