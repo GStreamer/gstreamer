@@ -88,6 +88,7 @@ static void nle_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void nle_object_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void nle_object_constructed (GObject * object);
 
 static GstStateChangeReturn nle_object_change_state (GstElement * element,
     GstStateChange transition);
@@ -114,6 +115,7 @@ nle_object_class_init (NleObjectClass * klass)
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (nle_object_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (nle_object_get_property);
+  gobject_class->constructed = GST_DEBUG_FUNCPTR (nle_object_constructed);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (nle_object_dispose);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (nle_object_change_state);
@@ -514,8 +516,6 @@ nle_object_set_property (GObject * object, guint prop_id,
       break;
   }
   GST_OBJECT_UNLOCK (object);
-
-  _update_stop (nleobject);
 }
 
 static void
@@ -553,6 +553,14 @@ nle_object_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+nle_object_constructed (GObject * object)
+{
+  NleObject *nleobject = (NleObject *) object;
+
+  _update_stop (nleobject);
 }
 
 static GstStateChangeReturn

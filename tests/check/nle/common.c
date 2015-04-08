@@ -178,6 +178,7 @@ new_nle_src (const gchar * name, guint64 start, gint64 duration, gint priority)
   g_object_set (G_OBJECT (nlesource),
       "start", start,
       "duration", duration, "inpoint", start, "priority", priority, NULL);
+  nle_object_commit (NLE_OBJECT (nlesource), FALSE);
 
   return nlesource;
 }
