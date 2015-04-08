@@ -53,7 +53,7 @@ create_stream (const gchar * descr)
   return bin;
 }
 
-static gboolean
+static void
 pause_play_stream (GstElement * bin, gint seconds)
 {
   gboolean punch_in;
@@ -85,9 +85,10 @@ pause_play_stream (GstElement * bin, gint seconds)
        * this situation timestamps start from 0.  */
       punch_in = TRUE;
       break;
-    default:
     case GST_STATE_CHANGE_FAILURE:
-      return FALSE;
+      /* fall through to return */
+    default:
+      return;
   }
 
   if (seconds)
@@ -106,8 +107,6 @@ pause_play_stream (GstElement * bin, gint seconds)
 
   /* now set the pipeline to PLAYING */
   gst_element_set_state (bin, GST_STATE_PLAYING);
-
-  return TRUE;
 }
 
 static void
@@ -151,7 +150,8 @@ perform_step (gpointer pstep)
           create_stream
           ("( v4l2src ! videoconvert ! timeoverlay ! queue ! xvimagesink name=v4llive )");
       pause_play_stream (bin1, 0);
-      g_timeout_add_seconds (1, (GSourceFunc) perform_step, GINT_TO_POINTER (1));
+      g_timeout_add_seconds (1, (GSourceFunc) perform_step,
+          GINT_TO_POINTER (1));
       break;
     case 1:
       /* live stream locks on to running_time, pipeline reconfigures latency
@@ -159,14 +159,16 @@ perform_step (gpointer pstep)
       g_print ("creating bin2\n");
       bin2 = create_stream ("( alsasrc ! queue ! alsasink name=alsalive )");
       pause_play_stream (bin2, 0);
-      g_timeout_add_seconds (1, (GSourceFunc) perform_step, GINT_TO_POINTER (2));
+      g_timeout_add_seconds (1, (GSourceFunc) perform_step,
+          GINT_TO_POINTER (2));
       break;
     case 2:
       /* non-live stream, need base_time to align with current running live sources. */
       g_print ("creating bin3\n");
       bin3 = create_stream ("( audiotestsrc ! alsasink name=atnonlive )");
       pause_play_stream (bin3, 0);
-      g_timeout_add_seconds (1, (GSourceFunc) perform_step, GINT_TO_POINTER (3));
+      g_timeout_add_seconds (1, (GSourceFunc) perform_step,
+          GINT_TO_POINTER (3));
       break;
     case 3:
       g_print ("creating bin4\n");
@@ -174,7 +176,8 @@ perform_step (gpointer pstep)
           create_stream
           ("( videotestsrc ! timeoverlay ! videoconvert ! ximagesink name=vtnonlive )");
       pause_play_stream (bin4, 0);
-      g_timeout_add_seconds (1, (GSourceFunc) perform_step, GINT_TO_POINTER (4));
+      g_timeout_add_seconds (1, (GSourceFunc) perform_step,
+          GINT_TO_POINTER (4));
       break;
     case 4:
       /* live stream locks on to running_time */
@@ -183,7 +186,8 @@ perform_step (gpointer pstep)
           create_stream
           ("( videotestsrc is-live=1 ! timeoverlay ! videoconvert ! ximagesink name=vtlive )");
       pause_play_stream (bin5, 0);
-      g_timeout_add_seconds (1, (GSourceFunc) perform_step, GINT_TO_POINTER (5));
+      g_timeout_add_seconds (1, (GSourceFunc) perform_step,
+          GINT_TO_POINTER (5));
       break;
     case 5:
       /* pause the fist live stream for 2 seconds */
@@ -196,7 +200,8 @@ perform_step (gpointer pstep)
       g_print ("PAUSE bin5 for 2 seconds\n");
       pause_play_stream (bin5, 2);
       g_print ("Waiting 5 seconds\n");
-      g_timeout_add_seconds (5, (GSourceFunc) perform_step, GINT_TO_POINTER (6));
+      g_timeout_add_seconds (5, (GSourceFunc) perform_step,
+          GINT_TO_POINTER (6));
       break;
     case 6:
       g_print ("quiting\n");
