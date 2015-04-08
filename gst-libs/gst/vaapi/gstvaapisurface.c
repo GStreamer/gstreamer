@@ -225,7 +225,7 @@ static gboolean
 gst_vaapi_surface_create_from_buffer_proxy (GstVaapiSurface * surface,
     GstVaapiBufferProxy * proxy, const GstVideoInfo * vip)
 {
-#if VA_CHECK_VERSION (0,34,0)
+#if VA_CHECK_VERSION (0,36,0)
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (surface);
   GstVideoFormat format;
   VASurfaceID surface_id;

@@ -77,6 +77,7 @@ to_GstVaapiBufferMemoryType (guint va_type)
 static gboolean
 gst_vaapi_buffer_proxy_acquire_handle (GstVaapiBufferProxy * proxy)
 {
+#if VA_CHECK_VERSION (0,36,0)
   const guint mem_type = proxy->va_info.mem_type;
   VAStatus va_status;
 
@@ -95,11 +96,15 @@ gst_vaapi_buffer_proxy_acquire_handle (GstVaapiBufferProxy * proxy)
   if (proxy->va_info.mem_type != mem_type)
     return FALSE;
   return TRUE;
+#else
+  return FALSE;
+#endif
 }
 
 static gboolean
 gst_vaapi_buffer_proxy_release_handle (GstVaapiBufferProxy * proxy)
 {
+#if VA_CHECK_VERSION (0,36,0)
   VAStatus va_status;
 
   if (!proxy->va_info.handle)
@@ -115,6 +120,9 @@ gst_vaapi_buffer_proxy_release_handle (GstVaapiBufferProxy * proxy)
   if (!vaapi_check_status (va_status, "vaReleaseBufferHandle()"))
     return FALSE;
   return TRUE;
+#else
+  return FALSE;
+#endif
 }
 
 static void
@@ -143,6 +151,7 @@ GstVaapiBufferProxy *
 gst_vaapi_buffer_proxy_new (guintptr handle, guint type, gsize size,
     GDestroyNotify destroy_func, gpointer user_data)
 {
+#if VA_CHECK_VERSION (0,36,0)
   GstVaapiBufferProxy *proxy;
 
   g_return_val_if_fail (handle != 0, NULL);
@@ -171,12 +180,16 @@ error_unsupported_mem_type:
   GST_ERROR ("unsupported buffer type (%d)", proxy->type);
   gst_vaapi_buffer_proxy_unref_internal (proxy);
   return NULL;
+#else
+  return NULL;
+#endif
 }
 
 GstVaapiBufferProxy *
 gst_vaapi_buffer_proxy_new_from_object (GstVaapiObject * object,
     VABufferID buf_id, guint type, GDestroyNotify destroy_func, gpointer data)
 {
+#if VA_CHECK_VERSION (0,36,0)
   GstVaapiBufferProxy *proxy;
 
   g_return_val_if_fail (object != NULL, NULL);
@@ -208,6 +221,9 @@ error_acquire_handle:
   GST_ERROR ("failed to acquire the underlying VA buffer handle");
   gst_vaapi_buffer_proxy_unref_internal (proxy);
   return NULL;
+#else
+  return NULL;
+#endif
 }
 
 /**
@@ -288,7 +304,11 @@ gst_vaapi_buffer_proxy_get_handle (GstVaapiBufferProxy * proxy)
 {
   g_return_val_if_fail (proxy != NULL, 0);
 
+#if VA_CHECK_VERSION (0,36,0)
   return GST_VAAPI_BUFFER_PROXY_HANDLE (proxy);
+#else
+  return 0;
+#endif
 }
 
 /**
@@ -304,5 +324,9 @@ gst_vaapi_buffer_proxy_get_size (GstVaapiBufferProxy * proxy)
 {
   g_return_val_if_fail (proxy != NULL, 0);
 
+#if VA_CHECK_VERSION (0,36,0)
   return GST_VAAPI_BUFFER_PROXY_SIZE (proxy);
+#else
+  return 0;
+#endif
 }

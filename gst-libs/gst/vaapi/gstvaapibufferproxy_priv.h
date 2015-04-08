@@ -68,7 +68,9 @@ struct _GstVaapiBufferProxy {
   gpointer              destroy_data;
   guint                 type;
   VABufferID            va_buf;
+#if VA_CHECK_VERSION (0,36,0)
   VABufferInfo          va_info;
+#endif
 };
 
 G_GNUC_INTERNAL
