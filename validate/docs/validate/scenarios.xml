@@ -23,7 +23,7 @@
     <para>
       To be able to define a list of actions to execute on a <link linkend="GstPipeline"><type>GstPipeline</type></link>, a dedicated file format is used.
       The name of the scenario is the name of the file without its '.scenario' extension.
-      The scenario file file format is based on the <link linkend="GstStructure"><type>GstStructure</type></link> serialized format which is a basic, type aware,
+      The scenario file format is based on the <link linkend="GstStructure"><type>GstStructure</type></link> serialized format which is a basic, type aware,
       key value format.
       It takes the type of the action as first comma separated field, and then
       the key values pair of the form 'parameter=value' separated by commas. The values
