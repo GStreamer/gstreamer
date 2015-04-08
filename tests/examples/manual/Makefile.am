@@ -12,7 +12,7 @@ CHECK_REGISTRY = $(top_builddir)/tests/examples/manual/test-registry.reg
 REGISTRY_ENVIRONMENT = \
         GST_REGISTRY=$(CHECK_REGISTRY)
 
-TESTS_ENVIRONMENT = \
+AM_TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
         GST_PLUGIN_SCANNER=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner \
         GST_PLUGIN_SYSTEM_PATH=                                 \

@@ -7,7 +7,7 @@ GST_TOOLS_DIR = $(top_builddir)/tools
 REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY=$(CHECK_REGISTRY)
 
-TESTS_ENVIRONMENT = \
+AM_TESTS_ENVIRONMENT = \
         GST_STATE_IGNORE_ELEMENTS="$(STATE_IGNORE_ELEMENTS)"	\
         $(REGISTRY_ENVIRONMENT)					\
         GST_PLUGIN_SCANNER_1_0=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner \
