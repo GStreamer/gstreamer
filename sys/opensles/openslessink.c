@@ -65,7 +65,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (U8) "}, "
-        "rate = (int) { " RATES "}, " "channels = (int) [1, 2]")
+        "rate = (int) { " RATES "}, " "channels = (int) [1, 2], "
+        "layout = (string) interleaved")
     );
 
 #define _do_init \

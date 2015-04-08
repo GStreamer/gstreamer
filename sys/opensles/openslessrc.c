@@ -48,7 +48,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
         "rate = (int) 16000, "
-        "channels = (int) 1")
+        "channels = (int) 1, "
+        "layout = (string) interleaved")
     );
 /* *INDENT-ON* */
 
