@@ -51,6 +51,22 @@ struct _KsVideoMediaType
   GstCaps * translated_caps;
 };
 
+typedef struct DVINFO {
+  DWORD dwDVAAuxSrc;
+  DWORD dwDVAAuxCtl;
+  DWORD dwDVAAuxSrc1;
+  DWORD dwDVAAuxCtl1;
+  DWORD dwDVVAuxSrc;
+  DWORD dwDVVAuxCtl;
+  DWORD dwDVReserved[2];
+} DVINFO;
+
+typedef struct KS_DATARANGE_DVVIDEO {
+  KSDATARANGE DataRange;
+  DVINFO DVVideoInfo;
+} KS_DATARANGE_DVVIDEO,*PKS_DATARANGE_DVVIDEO;
+
+
 GList * ks_video_device_list_sort_cameras_first (GList * devices);
 
 KsVideoMediaType * ks_video_media_type_dup (KsVideoMediaType * media_type);

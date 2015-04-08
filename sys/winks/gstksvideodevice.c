@@ -752,13 +752,11 @@ gst_ks_video_device_set_caps (GstKsVideoDevice * self, GstCaps * caps)
   if (!gst_structure_get_int (s, "width", &width) ||
       !gst_structure_get_int (s, "height", &height) ||
       !gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
-    GST_ERROR ("Failed to get width/height/fps");
-    goto error;
+  } else {
+    if (!ks_video_fixate_media_type (media_type->range,
+            media_type->format, width, height, fps_n, fps_d))
+      goto error;
   }
-
-  if (!ks_video_fixate_media_type (media_type->range,
-          media_type->format, width, height, fps_n, fps_d))
-    goto error;
 
   if (priv->cur_media_type != NULL) {
     if (media_type->format_size == priv->cur_media_type->format_size &&
