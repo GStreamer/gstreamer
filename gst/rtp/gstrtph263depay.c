@@ -141,24 +141,10 @@ gst_rtp_h263_parse_framesize (GstRTPBaseDepayload * filter,
     const gchar * media_attr, GstCaps * srccaps)
 {
   gchar *dimension, *endptr;
-  gint pt, width, height;
+  gint width, height;
   GstStructure *d;
 
-  /* <payload type number> <width>-<height> */
-
-  pt = g_ascii_strtoull (media_attr, &endptr, 10);
-  if (pt != GST_RTP_PAYLOAD_H263) {
-    GST_ERROR_OBJECT (filter,
-        "Framesize media attribute has incorrect payload type");
-    return FALSE;
-  } else if (*endptr != ' ') {
-    GST_ERROR_OBJECT (filter,
-        "Framesize media attribute has invalid payload type separator");
-    return FALSE;
-  }
-
-  dimension = endptr + 1;
-  width = g_ascii_strtoull (dimension, &endptr, 10);
+  width = g_ascii_strtoull (media_attr, &endptr, 10);
   if (width <= 0) {
     GST_ERROR_OBJECT (filter,
         "Framesize media attribute width out of valid range");
