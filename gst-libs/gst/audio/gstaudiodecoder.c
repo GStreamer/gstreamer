@@ -1890,12 +1890,6 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
   gint caps_size;
   GstStructure *structure;
 
-  caps = gst_pad_get_current_caps (dec->srcpad);
-  if (caps && !gst_audio_info_from_caps (&dec->priv->ctx.info, caps))
-    goto caps_error;
-  if (caps)
-    gst_caps_unref (caps);
-
   caps = gst_pad_get_allowed_caps (dec->srcpad);
   if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
     goto caps_error;
