@@ -4277,7 +4277,8 @@ gst_decode_bin_post_topology_message (GstDecodeBin * dbin)
 static gboolean
 debug_sticky_event (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
-  GST_DEBUG_OBJECT (pad, "sticky event %s", GST_EVENT_TYPE_NAME (*event));
+  GST_DEBUG_OBJECT (pad, "sticky event %s (%p)", GST_EVENT_TYPE_NAME (*event),
+      *event);
   return TRUE;
 }
 
