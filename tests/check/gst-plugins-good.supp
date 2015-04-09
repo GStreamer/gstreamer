@@ -125,3 +125,12 @@
    fun:jinit_compress_master
    fun:jpeg_start_compress
 }
+
+{
+   <well known zlib bug>
+   Memcheck:Cond
+   fun:inflateReset2
+   fun:inflateInit2_
+   fun:png_create_read_struct_2
+   fun:png_create_read_struct
+}
