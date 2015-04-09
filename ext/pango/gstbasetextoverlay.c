@@ -2273,7 +2273,9 @@ gst_base_text_overlay_text_chain (GstPad * pad, GstObject * parent,
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
       overlay->text_segment.position = clip_start;
 
-    overlay->text_buffer = buffer;
+    overlay->text_buffer = buffer;      /* pass ownership of @buffer */
+    buffer = NULL;
+
     /* That's a new text buffer we need to render */
     overlay->need_render = TRUE;
 
@@ -2284,6 +2286,8 @@ gst_base_text_overlay_text_chain (GstPad * pad, GstObject * parent,
   GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
 
 beach:
+  if (buffer)
+    gst_buffer_unref (buffer);
 
   return ret;
 }
