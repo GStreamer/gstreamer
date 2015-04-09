@@ -248,6 +248,7 @@ gst_splitmux_sink_finalize (GObject * object)
 {
   GstSplitMuxSink *splitmux = GST_SPLITMUX_SINK (object);
   g_cond_clear (&splitmux->data_cond);
+  g_mutex_clear (&splitmux->lock);
   if (splitmux->provided_sink)
     gst_object_unref (splitmux->provided_sink);
   if (splitmux->provided_muxer)
