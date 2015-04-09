@@ -1140,8 +1140,13 @@ gst_audio_base_src_change_state (GstElement * element,
       src->ringbuffer = rb;
       GST_OBJECT_UNLOCK (src);
 
-      if (!gst_audio_ring_buffer_open_device (src->ringbuffer))
+      if (!gst_audio_ring_buffer_open_device (src->ringbuffer)) {
+        GST_OBJECT_LOCK (src);
+        gst_object_unparent (GST_OBJECT_CAST (src->ringbuffer));
+        src->ringbuffer = NULL;
+        GST_OBJECT_UNLOCK (src);
         goto open_failed;
+      }
       break;
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:
