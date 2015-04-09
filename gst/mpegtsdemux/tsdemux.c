@@ -2221,7 +2221,11 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   stream->discont = FALSE;
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buffer)))
-    demux->segment.position = GST_BUFFER_DTS (buffer);
+    demux->segment.position = GST_BUFFER_DTS (buffer) - stream->first_dts;
+  else if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buffer)))
+    demux->segment.position = GST_BUFFER_PTS (buffer) - stream->first_dts;
+  if (demux->segment.position < 0)
+    demux->segment.position = 0;
 
   res = gst_pad_push (stream->pad, buffer);
   /* Record that a buffer was pushed */
