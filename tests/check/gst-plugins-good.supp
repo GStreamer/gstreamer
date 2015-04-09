@@ -134,3 +134,12 @@
    fun:png_create_read_struct_2
    fun:png_create_read_struct
 }
+
+{
+   <apparent strtod bug when trying to parse "infinity" from "interleaved">
+   Memcheck:Addr8
+   fun:__GI___strncasecmp_l
+   fun:____strtod_l_internal
+   fun:gst_value_deserialize_double
+}
+
