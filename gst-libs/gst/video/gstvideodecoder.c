@@ -3439,9 +3439,9 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
   frame->abidata.ABI.ts = frame->dts;
   frame->abidata.ABI.ts2 = frame->pts;
 
-  GST_LOG_OBJECT (decoder, "PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->dts));
-  GST_LOG_OBJECT (decoder, "dist %d", frame->distance_from_sync);
+  GST_LOG_OBJECT (decoder, "PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT
+      ", dist %d", GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->dts),
+      frame->distance_from_sync);
 
   gst_video_codec_frame_ref (frame);
   priv->frames = g_list_append (priv->frames, frame);
