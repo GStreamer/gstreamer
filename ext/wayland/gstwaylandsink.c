@@ -364,10 +364,13 @@ gst_wayland_sink_set_context (GstElement * element, GstContext * context)
   if (gst_context_has_context_type (context,
           GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE)) {
     g_mutex_lock (&sink->display_lock);
-    if (G_LIKELY (!sink->display))
+    if (G_LIKELY (!sink->display)) {
       gst_wayland_sink_set_display_from_context (sink, context);
-    else
+    } else {
       GST_WARNING_OBJECT (element, "changing display handle is not supported");
+      g_mutex_unlock (&sink->display_lock);
+      return;
+    }
     g_mutex_unlock (&sink->display_lock);
   }
 
