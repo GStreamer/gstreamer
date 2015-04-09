@@ -990,16 +990,6 @@ gst_videoaggregator_fill_queues (GstVideoAggregator * vagg,
       vinfo = &pad->info;
 
       /* FIXME: Make all this work with negative rates */
-
-      if ((start_time < GST_BUFFER_TIMESTAMP (buf))
-          || (pad->buffer && start_time < GST_BUFFER_TIMESTAMP (pad->buffer))) {
-        GST_DEBUG_OBJECT (pad, "Buffer from the past, dropping");
-        gst_buffer_unref (buf);
-        gst_aggregator_pad_drop_buffer (bpad);
-        need_more_data = TRUE;
-        continue;
-      }
-
       end_time = GST_BUFFER_DURATION (buf);
 
       if (end_time == -1) {
