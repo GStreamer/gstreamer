@@ -304,10 +304,61 @@ typedef struct
 } RTXReceiveData;
 
 static GstPadProbeReturn
+do_buffer_list_as_buffers_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data, GstPadProbeCallback callback)
+{
+  /* Iterate the buffer list, removing any items that we're
+   * told to drop and creating a new bufferlist. If all buffers
+   * are dropped, return DROP.
+   */
+  guint i, len;
+  GstBufferList *list;
+  GstBufferList *outlist;
+  GstPadProbeInfo buf_info = *info;
+
+  GST_INFO_OBJECT (pad, "probing each buffer in list individually");
+
+  list = gst_pad_probe_info_get_buffer_list (info);
+
+  g_return_val_if_fail (list != NULL, GST_PAD_PROBE_REMOVE);
+
+  len = gst_buffer_list_length (list);
+  outlist = gst_buffer_list_new_sized (len);
+
+  buf_info.type = GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH;
+  for (i = 0; i < len; i++) {
+    GstBuffer *buffer = gst_buffer_list_get (list, i);
+    GstPadProbeReturn ret;
+    buf_info.data = buffer;
+    ret = callback (pad, &buf_info, user_data);
+    /* If the buffer wasn't dropped, add it to the output list */
+    if (ret != GST_PAD_PROBE_DROP)
+      gst_buffer_list_insert (outlist, -1, gst_buffer_ref (buffer));
+  }
+
+  len = gst_buffer_list_length (outlist);
+  if (len == 0) {
+    /* Everything was discarded, drop our outlist */
+    gst_buffer_list_unref (outlist);
+    return GST_PAD_PROBE_DROP;
+  }
+
+  /* Replace the original buffer list with the modified one */
+  gst_buffer_list_unref (list);
+  info->data = outlist;
+  return GST_PAD_PROBE_OK;
+}
+
+static GstPadProbeReturn
 rtprtxsend_srcpad_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer user_data)
 {
   GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+
+  GST_LOG_OBJECT (pad, "here");
+  if (info->type == (GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_PUSH))
+    return do_buffer_list_as_buffers_probe (pad, info, user_data,
+        rtprtxsend_srcpad_probe);
 
   if (info->type == (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH)) {
     GstBuffer *buffer = GST_BUFFER (info->data);
@@ -531,7 +582,8 @@ GST_START_TEST (test_drop_one_sender)
 
   srcpad = gst_element_get_static_pad (rtprtxsend, "src");
   gst_pad_add_probe (srcpad,
-      (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH),
+      (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST |
+          GST_PAD_PROBE_TYPE_PUSH),
       (GstPadProbeCallback) rtprtxsend_srcpad_probe, &send_rtxdata, NULL);
   sinkpad = gst_pad_get_peer (srcpad);
   fail_if (sinkpad == NULL);
