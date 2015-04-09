@@ -3383,7 +3383,7 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
       GST_TIME_ARGS (duration));
 
   /* In reverse playback, just capture and queue frames for later processing */
-  if (decoder->output_segment.rate < 0.0) {
+  if (decoder->input_segment.rate < 0.0) {
     priv->parse_gather =
         g_list_prepend (priv->parse_gather, priv->current_frame);
   } else {
