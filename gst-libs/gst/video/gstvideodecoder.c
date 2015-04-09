@@ -1027,6 +1027,101 @@ _flush_events (GstPad * pad, GList * events)
   return NULL;
 }
 
+/* Must be called holding the GST_VIDEO_DECODER_STREAM_LOCK */
+static gboolean
+gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
+{
+  GstCaps *caps;
+  GstVideoCodecState *state;
+  GstVideoInfo info;
+  gint i;
+  gint caps_size;
+  GstStructure *structure;
+
+  caps = gst_pad_get_allowed_caps (decoder->srcpad);
+  if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
+    goto caps_error;
+
+  /* before fixating, try to use whatever upstream provided */
+  caps = gst_caps_make_writable (caps);
+  caps_size = gst_caps_get_size (caps);
+  if (decoder->priv->input_state && decoder->priv->input_state->caps) {
+    GstCaps *sinkcaps = decoder->priv->input_state->caps;
+    GstStructure *structure = gst_caps_get_structure (sinkcaps, 0);
+    gint width, height;
+    gint par_n, par_d;
+    gint fps_n, fps_d;
+
+    if (gst_structure_get_int (structure, "width", &width)) {
+      for (i = 0; i < caps_size; i++) {
+        gst_structure_set (gst_caps_get_structure (caps, i), "width",
+            G_TYPE_INT, width, NULL);
+      }
+    }
+
+    if (gst_structure_get_int (structure, "height", &height)) {
+      for (i = 0; i < caps_size; i++) {
+        gst_structure_set (gst_caps_get_structure (caps, i), "height",
+            G_TYPE_INT, height, NULL);
+      }
+    }
+
+    if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+      for (i = 0; i < caps_size; i++) {
+        gst_structure_set (gst_caps_get_structure (caps, i), "framerate",
+            GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+      }
+    }
+
+    if (gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n,
+            &par_d)) {
+      for (i = 0; i < caps_size; i++) {
+        gst_structure_set (gst_caps_get_structure (caps, i),
+            "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+      }
+    }
+  }
+
+  for (i = 0; i < caps_size; i++) {
+    structure = gst_caps_get_structure (caps, i);
+    /* Random 1280x720@30 for fixation */
+    gst_structure_fixate_field_nearest_int (structure, "width", 1280);
+    gst_structure_fixate_field_nearest_int (structure, "height", 720);
+    gst_structure_fixate_field_nearest_fraction (structure,
+        "pixel-aspect-ratio", 1, 1);
+    gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+  }
+  caps = gst_caps_fixate (caps);
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (!caps || !gst_video_info_from_caps (&info, caps))
+    goto caps_error;
+
+  GST_INFO_OBJECT (decoder,
+      "Chose default caps %" GST_PTR_FORMAT " for initial gap", caps);
+  state =
+      gst_video_decoder_set_output_state (decoder, info.finfo->format,
+      info.width, info.height, decoder->priv->input_state);
+  gst_video_codec_state_unref (state);
+  gst_caps_unref (caps);
+
+  if (!gst_video_decoder_negotiate (decoder)) {
+    GST_INFO_OBJECT (decoder,
+        "Failed to negotiate default caps for initial gap");
+    gst_pad_mark_reconfigure (decoder->srcpad);
+    return FALSE;
+  }
+
+  return TRUE;
+
+caps_error:
+  {
+    if (caps)
+      gst_caps_unref (caps);
+    return FALSE;
+  }
+}
+
 static gboolean
 gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     GstEvent * event)
@@ -1121,6 +1216,18 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
 
       flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
       ret = (flow_ret == GST_FLOW_OK);
+
+      /* Ensure we have caps before forwarding the event */
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+      if (!decoder->priv->output_state) {
+        if (!gst_video_decoder_negotiate_default_caps (decoder)) {
+          GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+          GST_ELEMENT_ERROR (decoder, STREAM, FORMAT, (NULL),
+              ("Decoder output not negotiated before GAP event."));
+          return FALSE;
+        }
+      }
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
       /* Forward GAP immediately. Everything is drained after
        * the GAP event and we can forward this event immediately
