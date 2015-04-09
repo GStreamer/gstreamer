@@ -216,7 +216,7 @@
  *   gather queue:  9  8  7
  *                        D
  *
- * Whe buffer 4 is received (with a DISCONT), we flush the gather queue like
+ * When buffer 4 is received (with a DISCONT), we flush the gather queue like
  * this:
  *
  *   while (gather)
@@ -1975,6 +1975,7 @@ struct _Timestamp
   GstClockTime pts;
   GstClockTime dts;
   GstClockTime duration;
+  guint flags;
 };
 
 static void
@@ -2001,6 +2002,7 @@ gst_video_decoder_add_timestamp (GstVideoDecoder * decoder, GstBuffer * buffer)
   ts->pts = GST_BUFFER_PTS (buffer);
   ts->dts = GST_BUFFER_DTS (buffer);
   ts->duration = GST_BUFFER_DURATION (buffer);
+  ts->flags = GST_BUFFER_FLAGS (buffer);
 
   priv->timestamps = g_list_append (priv->timestamps, ts);
 }
@@ -2008,7 +2010,7 @@ gst_video_decoder_add_timestamp (GstVideoDecoder * decoder, GstBuffer * buffer)
 static void
 gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
     decoder, guint64 offset, GstClockTime * pts, GstClockTime * dts,
-    GstClockTime * duration)
+    GstClockTime * duration, guint * flags)
 {
 #ifndef GST_DISABLE_GST_DEBUG
   guint64 got_offset = 0;
@@ -2019,6 +2021,7 @@ gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
   *pts = GST_CLOCK_TIME_NONE;
   *dts = GST_CLOCK_TIME_NONE;
   *duration = GST_CLOCK_TIME_NONE;
+  *flags = 0;
 
   g = decoder->priv->timestamps;
   while (g) {
@@ -2030,6 +2033,7 @@ gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
       *pts = ts->pts;
       *dts = ts->dts;
       *duration = ts->duration;
+      *flags = ts->flags;
       g = g->next;
       decoder->priv->timestamps = g_list_remove (decoder->priv->timestamps, ts);
       timestamp_free (ts);
@@ -3355,6 +3359,7 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
   GstBuffer *buffer;
   int n_available;
   GstClockTime pts, dts, duration;
+  guint flags;
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (decoder, "have_frame");
@@ -3371,11 +3376,16 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
   priv->current_frame->input_buffer = buffer;
 
   gst_video_decoder_get_timestamp_at_offset (decoder,
-      priv->frame_offset, &pts, &dts, &duration);
+      priv->frame_offset, &pts, &dts, &duration, &flags);
 
   GST_BUFFER_PTS (buffer) = pts;
   GST_BUFFER_DTS (buffer) = dts;
   GST_BUFFER_DURATION (buffer) = duration;
+  GST_BUFFER_FLAGS (buffer) = flags;
+
+  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (priv->current_frame);
+  }
 
   GST_LOG_OBJECT (decoder, "collected frame size %d, "
       "PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT ", dur %"
