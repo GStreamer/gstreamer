@@ -1984,9 +1984,9 @@ gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
   if (!GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info)) {
     if (!gst_audio_decoder_negotiate_default_caps (dec)) {
+      GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
       GST_ELEMENT_ERROR (dec, STREAM, FORMAT, (NULL),
           ("Decoder output not negotiated before GAP event."));
-      GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
       return FALSE;
     }
   }
