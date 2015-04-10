@@ -682,7 +682,6 @@ const gchar *
 gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
 {
   const gchar *profile = NULL;
-  gint gpcf1 = 0, gpcf2 = 0, gpcf3 = 0;
   gint profile_idc;
 
   g_return_val_if_fail (profile_tier_level != NULL, NULL);
@@ -694,15 +693,11 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
 
   profile_idc = (profile_tier_level[0] & 0x1f);
 
-  gpcf1 = (profile_tier_level[1] & 0x40) >> 6;
-  gpcf2 = (profile_tier_level[1] & 0x20) >> 5;
-  gpcf3 = (profile_tier_level[1] & 0x10) >> 4;
-
-  if (profile_idc == 1 || gpcf1)
+  if (profile_idc == 1)
     profile = "main";
-  else if (profile_idc == 2 || gpcf2)
+  else if (profile_idc == 2)
     profile = "main-10";
-  else if (profile_idc == 3 || gpcf3)
+  else if (profile_idc == 3)
     profile = "main-still-picture";
   else
     profile = NULL;
