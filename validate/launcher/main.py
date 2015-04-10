@@ -338,7 +338,7 @@ You can also set default values with:
 
 Note that all testsuite should be inside python modules, so the directory should contain a __init__.py file
 """,
-                        default=["validate", "ges"])
+                        default=["validate"])
     parser.add_argument("-d", "--debug", dest="debug",
                         action="store_true",
                         help="Let user debug the process on timeout")
