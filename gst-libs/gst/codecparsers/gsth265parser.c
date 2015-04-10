@@ -1222,7 +1222,7 @@ gst_h265_parser_identify_nalu_unchecked (GstH265Parser * parser,
 
   if (nalu->type == GST_H265_NAL_EOS || nalu->type == GST_H265_NAL_EOB) {
     GST_DEBUG ("end-of-seq or end-of-stream nal found");
-    nalu->size = 0;
+    nalu->size = 2;
     return GST_H265_PARSER_OK;
   }
 
