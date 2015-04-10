@@ -1432,6 +1432,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
   }
   segment->position = desired_offset;
   segment->time = desired_offset;
+  segment->start = desired_offset;
 
   /* we stop at the end */
   if (segment->stop == -1)
