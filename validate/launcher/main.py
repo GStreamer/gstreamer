@@ -17,7 +17,6 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import os
-import re
 import sys
 import utils
 import urlparse
@@ -138,35 +137,7 @@ QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "git://anongit.freedesktop.org/gstreamer/gst-integration-testsuites"
 OLD_DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.com/thiblahute/gst-integration-testsuites.git"
-DEFAULT_SYNC_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get medias/defaults/"
-DEFAULT_SYNC_ALL_ASSET_COMMAND = "git fetch origin && git checkout origin/master && git annex get ."
 DEFAULT_TESTSUITES_DIR = os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")
-
-
-def update_assets(options):
-    try:
-        if options.remote_assets_url == DEFAULT_GST_QA_ASSETS_REPO:
-            if re.findall("origin.*%s" % OLD_DEFAULT_GST_QA_ASSETS_REPO,
-                          subprocess.check_output("cd %s && git remote -v" % options.clone_dir, shell=True)):
-                launch_command("cd %s && git remote set-url origin %s" % (options.clone_dir,
-                                                                          DEFAULT_GST_QA_ASSETS_REPO))
-
-        launch_command("cd %s && %s" % (options.clone_dir,
-                                        options.update_assets_command),
-                       fails=True)
-
-    except subprocess.CalledProcessError as e:
-        if "annex" in options.update_assets_command:
-            m = "\n\nMAKE SURE YOU HAVE git-annex INSTALLED!"
-        else:
-            m = ""
-
-        printc("Could not update assets repository\n\nError: %s%s" % (e, m),
-               Colors.FAIL, True)
-
-        return False
-
-    return True
 
 
 def download_assets(options):
@@ -235,7 +206,6 @@ class LauncherConfig(Loggable):
         self.http_bandwith = 1024 * 1024
         self.http_server_dir = None
         self.httponly = False
-        self.update_assets_command = DEFAULT_SYNC_ASSET_COMMAND
         self.get_assets_command = "git clone"
         self.remote_assets_url = DEFAULT_GST_QA_ASSETS_REPO
         self.sync = False
@@ -293,8 +263,6 @@ class LauncherConfig(Loggable):
 
         if self.sync_all is True:
             self.sync = True
-            if self.update_assets_command == DEFAULT_SYNC_ASSET_COMMAND:
-                self.update_assets_command = DEFAULT_SYNC_ALL_ASSET_COMMAND
 
         if not self.sync and not os.path.exists(self.clone_dir) and \
                 self.clone_dir == os.path.join(self.clone_dir, MEDIAS_FOLDER):
@@ -466,9 +434,6 @@ Note that all testsuite should be inside python modules, so the directory should
 
     assets_group = parser.add_argument_group("Handle remote assets")
     assets_group.add_argument(
-        "-u", "--update-assets-command", dest="update_assets_command",
-        help="Command to update assets")
-    assets_group.add_argument(
         "--get-assets-command", dest="get_assets_command",
         help="Command to get assets")
     assets_group.add_argument("--remote-assets-url", dest="remote_assets_url",
@@ -497,16 +462,9 @@ Note that all testsuite should be inside python modules, so the directory should
     if not options.cleanup():
         exit(1)
 
-    if options.remote_assets_url and options.sync:
-        if os.path.exists(options.clone_dir):
-            if not update_assets(options):
-                exit(1)
-        else:
-            if not download_assets(options):
-                exit(1)
-
-            if not update_assets(options):
-                exit(1)
+    if options.remote_assets_url and options.sync and not os.path.exists(options.clone_dir):
+        if not download_assets(options):
+            exit(1)
 
     tests_launcher.set_settings(options, [])
 
