@@ -125,12 +125,10 @@ main (int argc, char **argv)
   gtk_window_set_title (GTK_WINDOW (window), "GstVideoOverlay Gtk+ demo");
 
   video_window = gtk_drawing_area_new ();
-  gtk_widget_set_double_buffered (video_window, FALSE);
   gtk_container_add (GTK_CONTAINER (window), video_window);
   gtk_container_set_border_width (GTK_CONTAINER (window), 16);
 
   gtk_widget_show_all (window);
-  gtk_widget_realize (window);
 
   video_window_xwindow = gtk_widget_get_window (video_window);
   embed_xid = GDK_WINDOW_XID (video_window_xwindow);
