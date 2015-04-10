@@ -747,9 +747,6 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
       READ_UINT8 (nr, used_by_curr_pic_flag[j], 1);
       if (!used_by_curr_pic_flag[j])
         READ_UINT8 (nr, use_delta_flag[j], 1);
-
-      if (used_by_curr_pic_flag[j] || use_delta_flag[j])
-        stRPS->NumDeltaPocs++;
     }
 
     /* 7-47: calcuate NumNegativePics, DeltaPocS0 and UsedByCurrPicS0 */
@@ -839,9 +836,11 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
       }
     }
 
-    /* 7-57 */
-    stRPS->NumDeltaPocs = stRPS->NumPositivePics + stRPS->NumNegativePics;
   }
+
+  /* 7-57 */
+  stRPS->NumDeltaPocs = stRPS->NumPositivePics + stRPS->NumNegativePics;
+
   return TRUE;
 
 error:
