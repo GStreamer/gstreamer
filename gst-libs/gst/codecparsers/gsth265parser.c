@@ -2185,6 +2185,14 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
         goto error;
   }
 
+  /* Skip the byte alignment bits */
+  if (!nal_reader_skip (&nr, 1))
+    goto error;
+  while (!nal_reader_is_byte_aligned (&nr)) {
+    if (!nal_reader_skip (&nr, 1))
+      goto error;
+  }
+
   slice->header_size = nal_reader_get_pos (&nr);
   slice->n_emulation_prevention_bytes = nal_reader_get_epb_count (&nr);
 
