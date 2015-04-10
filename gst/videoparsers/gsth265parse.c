@@ -229,7 +229,7 @@ gst_h265_parse_stop (GstBaseParse * parse)
   GST_DEBUG_OBJECT (parse, "stop");
   gst_h265_parse_reset (h265parse);
 
-  for (i = 0; i < GST_H265_MAX_SPS_COUNT; i++)
+  for (i = 0; i < GST_H265_MAX_VPS_COUNT; i++)
     gst_buffer_replace (&h265parse->vps_nals[i], NULL);
   for (i = 0; i < GST_H265_MAX_SPS_COUNT; i++)
     gst_buffer_replace (&h265parse->sps_nals[i], NULL);
