@@ -484,6 +484,9 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     active_stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
     if (active_stream == NULL)
       continue;
+    /* TODO: support 'application' mimeType */
+    if (active_stream->mimeType == GST_STREAM_APPLICATION)
+      continue;
 
     srcpad = gst_dash_demux_create_pad (demux, active_stream);
     caps = gst_dash_demux_get_input_caps (demux, active_stream);
