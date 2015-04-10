@@ -26,9 +26,8 @@
 
 #include <gst/gst.h>
 
-/* Define to run the asynchronous version. This requires 0.10.31 of the
- * GStreamer core. The async version has the benefit that it doesn't block the
- * main thread but it produces slightly less clear code. */
+/* Define to run the asynchronous version, which has the benefit that it doesn't
+ * block the main thread but it produces slightly less clear code. */
 #define ASYNC_VERSION
 
 static GMainLoop *loop;
