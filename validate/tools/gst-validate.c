@@ -79,7 +79,8 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       break;
     }
     case GST_MESSAGE_EOS:
-      g_main_loop_quit (loop);
+      if (!g_getenv ("GST_VALIDATE_SCENARIO"))
+        g_main_loop_quit (loop);
       break;
     case GST_MESSAGE_ASYNC_DONE:
       break;
