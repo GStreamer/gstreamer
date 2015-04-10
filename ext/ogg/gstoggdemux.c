@@ -2093,7 +2093,6 @@ static GstOggPad *
 gst_ogg_chain_new_stream (GstOggChain * chain, guint32 serialno)
 {
   GstOggPad *ret;
-  GstTagList *list;
   gchar *name;
 
   GST_DEBUG_OBJECT (chain->ogg,
@@ -2114,12 +2113,6 @@ gst_ogg_chain_new_stream (GstOggChain * chain, guint32 serialno)
   ret->map.serialno = serialno;
   if (ogg_stream_init (&ret->map.stream, serialno) != 0)
     goto init_failed;
-
-  /* FIXME: either do something with it or remove it */
-  list = gst_tag_list_new_empty ();
-  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_SERIAL, serialno,
-      NULL);
-  gst_tag_list_unref (list);
 
   GST_DEBUG_OBJECT (chain->ogg,
       "created new ogg src %p for stream with serial %08x", ret, serialno);
