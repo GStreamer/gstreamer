@@ -676,7 +676,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       GstValidateAction *action = (GstValidateAction *) source;
 
       if (_action_check_and_set_printed (action))
-        return;
+        goto out;
 
       g_string_printf (string, "Executing ");
 
@@ -764,6 +764,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
     fflush (log_files[i]);
   }
 
+out:
   g_string_free (string, TRUE);
 }
 
