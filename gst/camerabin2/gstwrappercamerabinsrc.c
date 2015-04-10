@@ -333,27 +333,6 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstPadProbeInfo * info,
   return ret;
 }
 
-static GstPadProbeReturn
-gst_wrapper_camera_src_src_event_probe (GstPad * pad, GstPadProbeInfo * info,
-    gpointer udata)
-{
-  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
-  GstWrapperCameraBinSrc *self = udata;
-  GstEvent *evt = GST_EVENT (info->data);
-
-  switch (GST_EVENT_TYPE (evt)) {
-    case GST_EVENT_SEGMENT:
-      if (self->drop_newseg) {
-        ret = GST_PAD_PROBE_DROP;
-        self->drop_newseg = FALSE;
-      }
-      break;
-    default:
-      break;
-  }
-  return ret;
-}
-
 static void
 gst_wrapper_camera_bin_src_caps_cb (GstPad * pad, GParamSpec * pspec,
     gpointer user_data)
@@ -524,16 +503,6 @@ check_and_replace_src (GstWrapperCameraBinSrc * self)
         (GCallback) gst_wrapper_camera_bin_src_max_zoom_cb, bcamsrc);
   }
 
-  /* add a buffer probe to the src elemento to drop EOS from READY->NULL */
-  {
-    GstPad *pad;
-    pad = gst_element_get_static_pad (self->src_vid_src, "src");
-
-    self->src_event_probe_id =
-        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-        gst_wrapper_camera_src_src_event_probe, self, NULL);
-    gst_object_unref (pad);
-  }
   return TRUE;
 }
 
@@ -1220,7 +1189,6 @@ gst_wrapper_camera_bin_src_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       self->video_renegotiate = TRUE;
       self->image_renegotiate = TRUE;
-      self->drop_newseg = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

@@ -91,9 +91,6 @@ struct _GstWrapperCameraBinSrc
   GstPad *outsel_imgpad;
   GstPad *outsel_vidpad;
 
-  /* For changing caps without losing timestamps */
-  gboolean drop_newseg;
-
   /* Application configurable elements */
   GstElement *app_vid_src;
   GstElement *app_vid_filter;
