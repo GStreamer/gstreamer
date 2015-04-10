@@ -2075,24 +2075,25 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
             pps->num_ref_idx_l1_default_active_minus1;
       }
 
+      /* calculate NumPocTotalCurr */
+      if (slice->short_term_ref_pic_set_sps_flag)
+        CurrRpsIdx = slice->short_term_ref_pic_set_idx;
+      else
+        CurrRpsIdx = sps->num_short_term_ref_pic_sets;
+      stRPS = &sps->short_term_ref_pic_set[CurrRpsIdx];
+      for (i = 0; i < stRPS->NumNegativePics; i++)
+        if (stRPS->UsedByCurrPicS0[i])
+          NumPocTotalCurr++;
+      for (i = 0; i < stRPS->NumPositivePics; i++)
+        if (stRPS->UsedByCurrPicS1[i])
+          NumPocTotalCurr++;
+      for (i = 0;
+          i < (slice->num_long_term_sps + slice->num_long_term_pics); i++)
+        if (UsedByCurrPicLt[i])
+          NumPocTotalCurr++;
+      slice->NumPocTotalCurr = NumPocTotalCurr;
+
       if (pps->lists_modification_present_flag) {
-        /* calculate NumPocTotalCurr */
-        if (slice->short_term_ref_pic_set_sps_flag)
-          CurrRpsIdx = slice->short_term_ref_pic_set_idx;
-        else
-          CurrRpsIdx = sps->num_short_term_ref_pic_sets;
-        stRPS = &sps->short_term_ref_pic_set[CurrRpsIdx];
-        for (i = 0; i < stRPS->NumNegativePics; i++)
-          if (stRPS->UsedByCurrPicS0[i])
-            NumPocTotalCurr++;
-        for (i = 0; i < stRPS->NumPositivePics; i++)
-          if (stRPS->UsedByCurrPicS1[i])
-            NumPocTotalCurr++;
-        for (i = 0;
-            i < (slice->num_long_term_sps + slice->num_long_term_pics); i++)
-          if (UsedByCurrPicLt[i])
-            NumPocTotalCurr++;
-        slice->NumPocTotalCurr = NumPocTotalCurr;
         if (NumPocTotalCurr > 1)
           if (!gst_h265_slice_parse_ref_pic_list_modification (slice, &nr,
                   NumPocTotalCurr))
