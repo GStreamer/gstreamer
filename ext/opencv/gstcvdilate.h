@@ -45,7 +45,7 @@
 #define __GST_CV_DILATE_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+
 #include "gstcvdilateerode.h"
 
 G_BEGIN_DECLS

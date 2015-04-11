@@ -45,7 +45,7 @@
 #define __GST_CV_SOBEL_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+
 #include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS

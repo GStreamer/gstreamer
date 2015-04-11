@@ -45,7 +45,7 @@
 #define __GST_CV_DILATE_ERODE_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+
 #include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS

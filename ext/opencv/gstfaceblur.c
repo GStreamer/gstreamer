@@ -65,6 +65,7 @@
 
 #include "gstopencvutils.h"
 #include "gstfaceblur.h"
+#include <opencv2/imgproc/imgproc_c.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_face_blur_debug);
 #define GST_CAT_DEFAULT gst_face_blur_debug

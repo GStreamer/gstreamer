@@ -51,9 +51,13 @@
 
 #include "gstopencvvideofilter.h"
 /* opencv */
-#include <cv.h>
-#include <cxcore.h>
-#include <highgui.h>
+#include <opencv2/core/version.hpp>
+#ifdef HAVE_HIGHGUI_H
+#include <highgui.h>            // includes highGUI definitions
+#endif
+#ifdef HAVE_OPENCV2_HIGHGUI_HIGHGUI_C_H
+#include <opencv2/highgui/highgui_c.h>            // includes highGUI definitions
+#endif
 #if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
 #include <opencv2/objdetect/objdetect.hpp>
 #endif

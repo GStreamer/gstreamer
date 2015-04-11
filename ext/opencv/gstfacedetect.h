@@ -49,7 +49,7 @@
 #define __GST_FACE_DETECT_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+#include <opencv2/core/version.hpp>
 #include "gstopencvvideofilter.h"
 
 #if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)

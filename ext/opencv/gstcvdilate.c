@@ -48,6 +48,7 @@
 #include <gst/gst.h>
 
 #include "gstcvdilate.h"
+#include <opencv2/imgproc/imgproc_c.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_dilate_debug);
 #define GST_CAT_DEFAULT gst_cv_dilate_debug

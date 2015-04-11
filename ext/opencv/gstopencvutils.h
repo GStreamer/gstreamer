@@ -29,7 +29,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include <cv.h>
+
 
 gboolean
 gst_opencv_get_ipldepth (gint depth, gint bpp, gint * ipldepth);

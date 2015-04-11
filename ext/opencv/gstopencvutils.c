@@ -24,6 +24,7 @@
 #endif
 
 #include "gstopencvutils.h"
+#include <opencv2/core/types_c.h>
 
 static gboolean
 gst_opencv_get_ipl_depth_and_channels (GstStructure * structure,

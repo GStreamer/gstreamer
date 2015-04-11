@@ -47,7 +47,7 @@
 #define __GST_SKIN_DETECT_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+
 #include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS

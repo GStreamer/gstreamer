@@ -49,6 +49,7 @@
 
 #include "gstopencvutils.h"
 #include "gstcvlaplace.h"
+#include <opencv2/imgproc/imgproc_c.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_laplace_debug);
 #define GST_CAT_DEFAULT gst_cv_laplace_debug

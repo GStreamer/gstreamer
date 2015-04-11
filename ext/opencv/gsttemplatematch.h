@@ -47,7 +47,7 @@
 #define __GST_TEMPLATE_MATCH_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+
 #ifdef HAVE_HIGHGUI_H
 #include <highgui.h>            // includes highGUI definitions
 #endif

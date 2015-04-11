@@ -48,7 +48,7 @@
 #define __GST_FACE_BLUR_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+#include <opencv2/core/version.hpp>
 
 #include "gstopencvvideofilter.h"
 

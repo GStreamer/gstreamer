@@ -45,7 +45,7 @@
 #ifndef MOTIONCELLS_H_
 #define MOTIONCELLS_H_
 
-#include <cv.h>                 // includes OpenCV definitions
+#include <opencv2/core/core_c.h>
 #ifdef HAVE_HIGHGUI_H
 #include <highgui.h>            // includes highGUI definitions
 #endif

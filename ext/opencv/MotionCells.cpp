@@ -54,6 +54,7 @@
 #include <math.h>
 #include <gst/gst.h>
 #include "MotionCells.h"
+#include <opencv2/imgproc/imgproc_c.h>
 
 MotionCells::MotionCells ()
 {

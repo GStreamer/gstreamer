@@ -45,7 +45,7 @@
 #define __GST_DISPARITY_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+
 #include <opencv2/legacy/legacy.hpp>
 
 G_BEGIN_DECLS

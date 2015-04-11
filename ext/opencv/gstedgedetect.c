@@ -64,6 +64,7 @@
 
 #include "gstopencvutils.h"
 #include "gstedgedetect.h"
+#include <opencv2/imgproc/imgproc_c.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_edge_detect_debug);
 #define GST_CAT_DEFAULT gst_edge_detect_debug

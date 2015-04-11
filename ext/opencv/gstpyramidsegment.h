@@ -47,7 +47,7 @@
 #define __GST_PYRAMID_SEGMENT_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+#include <opencv2/core/version.hpp>
 
 #if CV_MAJOR_VERSION * 100 + CV_MINOR_VERSION >= 204
 #include <opencv2/legacy/legacy.hpp>
