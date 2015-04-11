@@ -96,8 +96,6 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
   gint width, height;
   GstClockTime latency;
   guint64 offset;
-  GstClockTime startAVFTimestamp;
-  GstClockTime startTimestamp;
 
   GstClockTime lastSampling;
   guint count;
@@ -712,8 +710,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   offset = 0;
   latency = GST_CLOCK_TIME_NONE;
-  startAVFTimestamp = GST_CLOCK_TIME_NONE;
-  startTimestamp = GST_CLOCK_TIME_NONE;
   inputClock = nil;
 
   lastSampling = GST_CLOCK_TIME_NONE;
