@@ -896,15 +896,11 @@ _YUV_to_RGB (GstGLColorConvert * convert)
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
   const gchar *out_format_str = gst_video_format_to_string (out_format);
   gchar *pixel_order = _RGB_pixel_order ("rgba", out_format_str);
-#if GST_GL_HAVE_PLATFORM_EAGL
-  gboolean texture_rg = FALSE;
-#else
   gboolean texture_rg =
       gst_gl_context_check_feature (context, "GL_EXT_texture_rg")
       || gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0)
       || gst_gl_context_check_feature (context, "GL_ARB_texture_rg")
       || gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 0);
-#endif
   gboolean apple_ycbcr = gst_gl_context_check_feature (convert->context,
       "GL_APPLE_ycbcr_422");
   gboolean in_tex_rectangular = FALSE;
@@ -1136,15 +1132,11 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
   const gchar *out_format_str = gst_video_format_to_string (out_format);
   gchar *pixel_order = _RGB_pixel_order ("rgba", out_format_str);
-#if GST_GL_HAVE_PLATFORM_EAGL
-  gboolean texture_rg = FALSE;
-#else
   gboolean texture_rg =
       gst_gl_context_check_feature (context, "GL_EXT_texture_rg")
       || gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0)
       || gst_gl_context_check_feature (context, "GL_ARB_texture_rg")
       || gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 0);
-#endif
 
   info->in_n_textures = 1;
   info->out_n_textures = 1;
