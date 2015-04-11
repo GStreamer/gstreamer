@@ -1224,7 +1224,8 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
           GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
           GST_ELEMENT_ERROR (decoder, STREAM, FORMAT, (NULL),
               ("Decoder output not negotiated before GAP event."));
-          return FALSE;
+          forward_immediate = TRUE;
+          break;
         }
       }
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
