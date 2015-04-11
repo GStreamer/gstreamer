@@ -84,8 +84,6 @@ struct _GstPcapParse
   GstPcapParseLinktype linktype;
 
   gboolean newsegment_sent;
-
-  gint64 buffer_offset;
 };
 
 struct _GstPcapParseClass

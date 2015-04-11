@@ -309,7 +309,6 @@ gst_pcap_parse_reset (GstPcapParse * self)
   self->initialized = FALSE;
   self->swap_endian = FALSE;
   self->cur_packet_size = -1;
-  self->buffer_offset = 0;
   self->cur_ts = GST_CLOCK_TIME_NONE;
   self->base_ts = GST_CLOCK_TIME_NONE;
   self->newsegment_sent = FALSE;
@@ -480,36 +479,34 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           if (gst_pcap_parse_scan_frame (self, data, self->cur_packet_size,
                   &payload_data, &payload_size)) {
             GstBuffer *out_buf;
-            GstMapInfo map;
+            guintptr offset = payload_data - data;
 
-            out_buf = gst_buffer_new_and_alloc (payload_size);
-            if (out_buf) {
+            self->cur_packet_size -= offset;
+            self->cur_packet_size -= payload_size;
 
-              if (GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
-                if (!GST_CLOCK_TIME_IS_VALID (self->base_ts))
-                  self->base_ts = self->cur_ts;
-                if (self->offset >= 0) {
-                  self->cur_ts -= self->base_ts;
-                  self->cur_ts += self->offset;
-                }
+            gst_adapter_unmap (self->adapter);
+            gst_adapter_flush (self->adapter, offset);
+            out_buf = gst_adapter_take_buffer_fast (self->adapter,
+                payload_size);
+
+            if (GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
+              if (!GST_CLOCK_TIME_IS_VALID (self->base_ts))
+                self->base_ts = self->cur_ts;
+              if (self->offset >= 0) {
+                self->cur_ts -= self->base_ts;
+                self->cur_ts += self->offset;
               }
-
-              gst_buffer_map (out_buf, &map, GST_MAP_WRITE);
-              memcpy (map.data, payload_data, payload_size);
-              gst_buffer_unmap (out_buf, &map);
-              GST_BUFFER_TIMESTAMP (out_buf) = self->cur_ts;
-
-
-              if (list == NULL)
-                list = gst_buffer_list_new ();
-              gst_buffer_list_add (list, out_buf);
-
-              self->buffer_offset += payload_size;
             }
-          }
+            GST_BUFFER_TIMESTAMP (out_buf) = self->cur_ts;
 
-          gst_adapter_unmap (self->adapter);
-          gst_adapter_flush (self->adapter, self->cur_packet_size);
+
+            if (list == NULL)
+              list = gst_buffer_list_new ();
+            gst_buffer_list_add (list, out_buf);
+          } else {
+            gst_adapter_unmap (self->adapter);
+            gst_adapter_flush (self->adapter, self->cur_packet_size);
+          }
         }
 
         self->cur_packet_size = -1;
