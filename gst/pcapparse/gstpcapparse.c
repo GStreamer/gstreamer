@@ -453,6 +453,7 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstPcapParse *self = GST_PCAP_PARSE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
+  GstBufferList *list = NULL;
 
   gst_adapter_push (self->adapter, buffer);
 
@@ -498,20 +499,10 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
               gst_buffer_unmap (out_buf, &map);
               GST_BUFFER_TIMESTAMP (out_buf) = self->cur_ts;
 
-              if (!self->newsegment_sent &&
-                  GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
-                GstSegment segment;
 
-                if (self->caps)
-                  gst_pad_set_caps (self->src_pad, self->caps);
-                gst_segment_init (&segment, GST_FORMAT_TIME);
-                segment.start = self->cur_ts;
-                gst_pad_push_event (self->src_pad,
-                    gst_event_new_segment (&segment));
-                self->newsegment_sent = TRUE;
-              }
-
-              ret = gst_pad_push (self->src_pad, out_buf);
+              if (list == NULL)
+                list = gst_buffer_list_new ();
+              gst_buffer_list_add (list, out_buf);
 
               self->buffer_offset += payload_size;
             }
@@ -594,7 +585,27 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
   }
 
+  if (list) {
+    if (!self->newsegment_sent && GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
+      GstSegment segment;
+
+      if (self->caps)
+        gst_pad_set_caps (self->src_pad, self->caps);
+      gst_segment_init (&segment, GST_FORMAT_TIME);
+      segment.start = self->cur_ts;
+      gst_pad_push_event (self->src_pad, gst_event_new_segment (&segment));
+      self->newsegment_sent = TRUE;
+    }
+
+    ret = gst_pad_push_list (self->src_pad, list);
+    list = NULL;
+  }
+
 out:
+
+  if (list)
+    gst_buffer_list_unref (list);
+
   if (ret != GST_FLOW_OK)
     gst_pcap_parse_reset (self);
 
