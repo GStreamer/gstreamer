@@ -900,8 +900,10 @@ _YUV_to_RGB (GstGLColorConvert * convert)
   gboolean texture_rg = FALSE;
 #else
   gboolean texture_rg =
-      gst_gl_context_check_feature (convert->context, "GL_EXT_texture_rg")
-      || gst_gl_context_check_feature (convert->context, "GL_ARB_texture_rg");
+      gst_gl_context_check_feature (context, "GL_EXT_texture_rg")
+      || gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0)
+      || gst_gl_context_check_feature (context, "GL_ARB_texture_rg")
+      || gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 0);
 #endif
   gboolean apple_ycbcr = gst_gl_context_check_feature (convert->context,
       "GL_APPLE_ycbcr_422");
@@ -1138,8 +1140,10 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
   gboolean texture_rg = FALSE;
 #else
   gboolean texture_rg =
-      gst_gl_context_check_feature (convert->context, "GL_EXT_texture_rg")
-      || gst_gl_context_check_feature (convert->context, "GL_ARB_texture_rg");
+      gst_gl_context_check_feature (context, "GL_EXT_texture_rg")
+      || gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0)
+      || gst_gl_context_check_feature (context, "GL_ARB_texture_rg")
+      || gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 0);
 #endif
 
   info->in_n_textures = 1;
