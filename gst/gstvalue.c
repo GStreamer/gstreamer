@@ -5839,6 +5839,7 @@ gst_value_deserialize_bitmask (GValue * dest, const gchar * s)
   if (G_UNLIKELY (dest == NULL || !GST_VALUE_HOLDS_BITMASK (dest)))
     return FALSE;
 
+  errno = 0;
   val = g_ascii_strtoull (s, &endptr, 16);
   if (val == G_MAXUINT64 && (errno == ERANGE || errno == EINVAL))
     return FALSE;
